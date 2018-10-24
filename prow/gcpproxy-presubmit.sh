@@ -29,7 +29,7 @@ ROOT=$(dirname "$WD")
 echo 'Bazel test'
 cd "${ROOT}"
 
-bazel test src/http/http_filter_example:all
+bazel test src/filters/http_filter_example:all
 
 if [[ -n $(git diff) ]]; then
   echo "Uncommitted changes found:"

@@ -9,11 +9,6 @@ load(
 
 load("@envoy_api//bazel:api_build_system.bzl", "api_proto_library")
 
-cc_binary(
-    name = "hello-world",
-    srcs = ["hello-world.cc"],
-)
-
 api_proto_library(
     name = "http_filter_proto",
     srcs = ["http_filter.proto"]
