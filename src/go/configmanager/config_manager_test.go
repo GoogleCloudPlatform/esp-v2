@@ -15,18 +15,25 @@
 package configmanager
 
 import (
+  "encoding/json"
   "net/http"
   "net/http/httptest"
   "testing"
   "reflect"
 
-    //googleapi "google.golang.org/api/googleapi"
+   "cloudesf.googleresource.com/gcpproxy/src/go/proto/google/api"
 )
 
 const (
   serviceName = "bookstore.test.appspot.com"
+)
 
-  fakeConfig = `{ "name": "bookstore.test.appspot.com", "title": "Bookstore","id": "2017-05-01r0"}`
+var (
+  fakeConfig = &api.Service{
+     Name: "bookstore.test.appspot.com",
+     Title: "Bookstore",
+     Id: "2017-05-01r0",
+   }
 )
 
 func TestFetchRollouts(t *testing.T) {
@@ -36,7 +43,7 @@ func TestFetchRollouts(t *testing.T) {
       t.Errorf("Init() got error: %v, want nil", err)
     }
     expectedRolloutInfo := rolloutInfo{
-      configs: map[string]string{
+      configs: map[string]*api.Service{
         "2017-05-01r0": fakeConfig,
       },
     }
@@ -53,7 +60,7 @@ type testEnv struct {
 }
 
 func runTest(t *testing.T, f func(*testEnv)) {
-mockConfig := initMockConfigServer()
+mockConfig := initMockConfigServer(t)
   defer mockConfig.Close()
   fetchConfigURL = mockConfig.URL
 
@@ -71,9 +78,13 @@ mockConfig := initMockConfigServer()
   f(env)
 }
 
-func initMockConfigServer() *httptest.Server {
+func initMockConfigServer(t *testing.T) *httptest.Server {
+  body, err := json.Marshal(fakeConfig)
+  if err != nil {
+    t.Fatal("json.Marshal failed")
+  }
   return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
-    w.Write([]byte(fakeConfig))
+    w.Write(body)
   }))
 }

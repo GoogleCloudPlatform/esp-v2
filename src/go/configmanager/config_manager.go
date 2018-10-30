@@ -15,10 +15,13 @@
 package configmanager
 
 import (
+  "encoding/json"
   "fmt"
   "io/ioutil"
   "net/http"
   "strings"
+  // "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
+  "cloudesf.googleresource.com/gcpproxy/src/go/proto/google/api"
 )
 
 var (
@@ -35,7 +38,7 @@ type ConfigManager struct {
 
 type rolloutInfo struct {
   // TODO(jilinxia): change Service to Bootstrap.
-  configs map[string]string
+  configs map[string]*api.Service
 }
 
 // NewConfigManager creates new instance of ConfigManager.
@@ -44,7 +47,7 @@ func NewConfigManager(name string) (*ConfigManager, error) {
     serviceName: name,
     client:      http.DefaultClient,
     rolloutInfo: &rolloutInfo{
-      configs:  make(map[string]string),
+      configs:  make(map[string]*api.Service),
     },
   }
 
@@ -66,18 +69,22 @@ func (m *ConfigManager) writeBootstrap() string {
   return ""
 }
 
-func (m *ConfigManager) fetchConfig(configId string) (string, error) {
+func (m *ConfigManager) fetchConfig(configId string) (*api.Service, error) {
   token, err := fetchAccessToken()
   if err != nil {
-    return "", fmt.Errorf("fail to get access token")
+    return nil, fmt.Errorf("fail to get access token")
   }
   path := strings.Replace(fetchConfigURL, "$configId", configId, -1)
 
   body, err := callServiceManagement(path, m.serviceName, token, m.client)
   if err != nil {
-    return "", fmt.Errorf("fail to call service management server to get config(%s) of service %s", configId, m.serviceName)
+    return nil, fmt.Errorf("fail to call service management server to get config(%s) of service %s", configId, m.serviceName)
   }
-  return string(body), nil
+  var serviceConfig api.Service
+  if err = json.Unmarshal(body, &serviceConfig); err != nil {
+    return nil, fmt.Errorf("fail to unmarshal serviceConfig")
+  }
+  return &serviceConfig, nil
 }
 
 var callServiceManagement = func(path, serviceName, token string, client *http.Client) ([]byte, error) {

@@ -5,7 +5,7 @@
 #------------------------------------------------------------------------------
 
 SHELL 	:= /bin/bash
-PKG 		:= github.com/envoyproxy/go-control-plane
+PKG 		:= cloudesf.googleresource.com/gcpproxy/configmanager
 
 # Pure Go sources (not vendored and not generated)
 GOFILES		= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
