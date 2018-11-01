@@ -7,12 +7,12 @@ package servicecontrol
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import google_logging_type1 "cloudesf.googleresource.com/gcpproxy/src/go/proto/google/logging/type"
+import google_logging_type1 "cloudesf.googlesource.com/gcpproxy/src/go/proto/google/logging/type"
 import google_protobuf1 "github.com/golang/protobuf/ptypes/any"
 import google_protobuf2 "github.com/golang/protobuf/ptypes/struct"
 import google_protobuf3 "github.com/golang/protobuf/ptypes/timestamp"
-import _ "cloudesf.googleresource.com/gcpproxy/src/go/proto/google/api"
-import _ "cloudesf.googleresource.com/gcpproxy/src/go/proto/google/logging/type"
+import _ "cloudesf.googlesource.com/gcpproxy/src/go/proto/google/api"
+import _ "cloudesf.googlesource.com/gcpproxy/src/go/proto/google/logging/type"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal

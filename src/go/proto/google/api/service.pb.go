@@ -9,8 +9,8 @@ import fmt "fmt"
 import math "math"
 import _ "github.com/golang/protobuf/ptypes/any"
 
-import google_protobuf3 "cloudesf.googleresource.com/gcpproxy/src/go/proto/google/protobuf"
-import google_protobuf4 "cloudesf.googleresource.com/gcpproxy/src/go/proto/google/protobuf"
+import google_protobuf3 "cloudesf.googlesource.com/gcpproxy/src/go/proto/google/protobuf"
+import google_protobuf4 "cloudesf.googlesource.com/gcpproxy/src/go/proto/google/protobuf"
 import google_protobuf5 "github.com/golang/protobuf/ptypes/wrappers"
 
 // Reference imports to suppress errors if they are not otherwise used.

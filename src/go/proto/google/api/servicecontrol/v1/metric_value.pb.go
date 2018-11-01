@@ -8,7 +8,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import google_protobuf3 "github.com/golang/protobuf/ptypes/timestamp"
-import google_type "cloudesf.googleresource.com/gcpproxy/src/go/proto/google/type"
+import google_type "cloudesf.googlesource.com/gcpproxy/src/go/proto/google/type"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal

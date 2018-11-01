@@ -15,90 +15,91 @@
 package configmanager
 
 import (
-  "encoding/json"
-  "fmt"
-  "io/ioutil"
-  "net/http"
-  "strings"
-  // "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
-  "cloudesf.googleresource.com/gcpproxy/src/go/proto/google/api"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
+
+	// "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
+	"cloudesf.googlesource.com/gcpproxy/src/go/proto/google/api"
 )
 
 var (
-  fetchConfigURL  = "https://servicemanagement.googleapis.com/v1/services/$serviceName/configs/$configId"
+	fetchConfigURL = "https://servicemanagement.googleapis.com/v1/services/$serviceName/configs/$configId"
 )
 
 // ConfigManager handles service configuration fetching and updating.
 // TODO(jilinxia): handles multi service name.
 type ConfigManager struct {
-  serviceName      string
-  rolloutInfo      *rolloutInfo
-  client           *http.Client
+	serviceName string
+	rolloutInfo *rolloutInfo
+	client      *http.Client
 }
 
 type rolloutInfo struct {
-  // TODO(jilinxia): change Service to Bootstrap.
-  configs map[string]*api.Service
+	// TODO(jilinxia): change Service to Bootstrap.
+	configs map[string]*api.Service
 }
 
 // NewConfigManager creates new instance of ConfigManager.
 func NewConfigManager(name string) (*ConfigManager, error) {
-  manager := &ConfigManager{
-    serviceName: name,
-    client:      http.DefaultClient,
-    rolloutInfo: &rolloutInfo{
-      configs:  make(map[string]*api.Service),
-    },
-  }
+	manager := &ConfigManager{
+		serviceName: name,
+		client:      http.DefaultClient,
+		rolloutInfo: &rolloutInfo{
+			configs: make(map[string]*api.Service),
+		},
+	}
 
-  return manager, nil
+	return manager, nil
 }
 
-func (m *ConfigManager) Init(configID string) error{
-  serviceConfig, err := m.fetchConfig(configID)
-  if err != nil {
-    // TODO(jilinxia): changes error generation
-    return fmt.Errorf("fail to initialize config manager, %s", err)
-  }
-  m.rolloutInfo.configs[configID] = serviceConfig
-  return nil
+func (m *ConfigManager) Init(configID string) error {
+	serviceConfig, err := m.fetchConfig(configID)
+	if err != nil {
+		// TODO(jilinxia): changes error generation
+		return fmt.Errorf("fail to initialize config manager, %s", err)
+	}
+	m.rolloutInfo.configs[configID] = serviceConfig
+	return nil
 }
 
 // TODO(jilinxia): Implement the translation.
 func (m *ConfigManager) writeBootstrap() string {
-  return ""
+	return ""
 }
 
 func (m *ConfigManager) fetchConfig(configId string) (*api.Service, error) {
-  token, err := fetchAccessToken()
-  if err != nil {
-    return nil, fmt.Errorf("fail to get access token")
-  }
-  path := strings.Replace(fetchConfigURL, "$configId", configId, -1)
+	token, err := fetchAccessToken()
+	if err != nil {
+		return nil, fmt.Errorf("fail to get access token")
+	}
+	path := strings.Replace(fetchConfigURL, "$configId", configId, -1)
 
-  body, err := callServiceManagement(path, m.serviceName, token, m.client)
-  if err != nil {
-    return nil, fmt.Errorf("fail to call service management server to get config(%s) of service %s", configId, m.serviceName)
-  }
-  var serviceConfig api.Service
-  if err = json.Unmarshal(body, &serviceConfig); err != nil {
-    return nil, fmt.Errorf("fail to unmarshal serviceConfig")
-  }
-  return &serviceConfig, nil
+	body, err := callServiceManagement(path, m.serviceName, token, m.client)
+	if err != nil {
+		return nil, fmt.Errorf("fail to call service management server to get config(%s) of service %s", configId, m.serviceName)
+	}
+	var serviceConfig api.Service
+	if err = json.Unmarshal(body, &serviceConfig); err != nil {
+		return nil, fmt.Errorf("fail to unmarshal serviceConfig")
+	}
+	return &serviceConfig, nil
 }
 
 var callServiceManagement = func(path, serviceName, token string, client *http.Client) ([]byte, error) {
-  path = strings.Replace(path, "$serviceName", serviceName, -1)
-  req, _ := http.NewRequest("GET", path, nil)
-  req.Header.Add("Authorization", "Bearer "+token)
-  resp, err := client.Do(req)
-  if err != nil {
-    return nil, err
-  }
-  defer resp.Body.Close()
-  body, err := ioutil.ReadAll(resp.Body)
-  if err != nil {
-    return nil, err
-  }
-  return body, nil
+	path = strings.Replace(path, "$serviceName", serviceName, -1)
+	req, _ := http.NewRequest("GET", path, nil)
+	req.Header.Add("Authorization", "Bearer "+token)
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
 }

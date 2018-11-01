@@ -66,7 +66,7 @@ package api
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import google_protobuf "cloudesf.googleresource.com/gcpproxy/src/go/proto/google/protobuf"
+import google_protobuf "cloudesf.googlesource.com/gcpproxy/src/go/proto/google/protobuf"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal

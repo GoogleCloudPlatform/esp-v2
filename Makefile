@@ -94,6 +94,37 @@ tools.glide:
 		curl https://glide.sh/get | sh; \
 	fi
 
+.PHONY: clean
+clean:
+	@echo "--> cleaning compiled objects and binaries"
+	@go clean -tags netgo -i ./...
+	@rm -rf $(BINDIR)/*
+	@rm -rf bazel-*
+
+# Should always be called before pushing changes.
+.PHONY: check
+check: format.check vet lint
+
+.PHONY: format
+format: tools.goimports
+	@echo "--> formatting code with 'goimports' tool"
+	@goimports -local $(PKG) -w -l $(GOFILES)
+
+.PHONY: format.check
+format.check: tools.goimports
+	@echo "--> checking code formatting with 'goimports' tool"
+	@goimports -local $(PKG) -l $(GOFILES) | sed -e "s/^/\?\t/" | tee >(test -z)
+
+.PHONY: vet
+vet: tools.govet
+	@echo "--> checking code correctness with 'go vet' tool"
+	@go vet ./...
+
+.PHONY: lint
+lint: tools.golint
+	@echo "--> checking code style with 'golint' tool"
+	@echo $(GODIRS) | xargs -n 1 golint
+
 #-----------------------------------------------------------------------------
 # Target : docker
 # ----------------------------------------------------------------------------

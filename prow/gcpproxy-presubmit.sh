@@ -18,20 +18,29 @@
 
 # Fail on any error.
 set -e
-# Display commands being run.
-set -x
 set -u
 
 WD=$(dirname "$0")
 WD=$(cd "$WD"; pwd)
 ROOT=$(dirname "$WD")
+export PATH=$PATH:$GOPATH/bin
 
-echo 'Bazel test'
 cd "${ROOT}"
 
-bazel test src/filters/http_filter_example:all
-
-if [[ -n $(git diff) ]]; then
-  echo "Uncommitted changes found:"
-  git diff
+# golang test
+echo '======================================================'
+echo '=====================   Go test  ====================='
+echo '======================================================'
+if [ ! -d "$GOPATH/bin" ]; then
+  mkdir $GOPATH/bin
 fi
+make tools
+make depend.install
+make test
+make clean
+
+# c++ test
+echo '======================================================'
+echo '===================== Bazel test ====================='
+echo '======================================================'
+bazel test src/filters/http_filter_example:all

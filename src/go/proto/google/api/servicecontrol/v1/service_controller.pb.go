@@ -7,8 +7,8 @@ package servicecontrol
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import _  "cloudesf.googleresource.com/gcpproxy/src/go/proto/google/api"
-import google_rpc "cloudesf.googleresource.com/gcpproxy/src/go/proto/google/rpc"
+import _ "cloudesf.googlesource.com/gcpproxy/src/go/proto/google/api"
+import google_rpc "cloudesf.googlesource.com/gcpproxy/src/go/proto/google/rpc"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal

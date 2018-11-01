@@ -32,7 +32,7 @@ package servicecontrol
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import _ "cloudesf.googleresource.com/gcpproxy/src/go/proto/google/api"
+import _ "cloudesf.googlesource.com/gcpproxy/src/go/proto/google/api"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal

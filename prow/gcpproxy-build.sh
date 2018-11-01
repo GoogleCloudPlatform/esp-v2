@@ -14,24 +14,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Presubmit script triggered by Prow.
+# Build script triggered by Prow.
 
 # Fail on any error.
 set -e
 # Display commands being run.
-set -x
 set -u
 
 WD=$(dirname "$0")
 WD=$(cd "$WD"; pwd)
 ROOT=$(dirname "$WD")
+export PATH=$PATH:$GOPATH/bin
 
-echo 'Bazel test'
 cd "${ROOT}"
 
+# golang build
+echo '======================================================='
+echo '=====================   Go build  ====================='
+echo '======================================================='
+if [ ! -d "$GOPATH/bin" ]; then
+  mkdir $GOPATH/bin
+fi
+make tools
+make depend.install
+make build
+make clean
+
+# c++ build
+echo '======================================================='
+echo '===================== Bazel build ====================='
+echo '======================================================='
 bazel build src/filters/http_filter_example:all
 
-if [[ -n $(git diff) ]]; then
-  echo "Uncommitted changes found:"
-  git diff
-fi
