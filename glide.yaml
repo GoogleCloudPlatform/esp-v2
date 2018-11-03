@@ -1,4 +1,4 @@
-package: github.com/envoyproxy/go-control-plane
+package: cloudesf.googlesource.com/gcpproxy
 import:
 - package: github.com/gogo/protobuf
   version: ^1.1.1
@@ -11,6 +11,9 @@ import:
   version: acbc56f
   subpackages:
   - unix
+- package: golang.org/x/text
+  subpackages:
+  - unicode
 - package: google.golang.org/genproto
   subpackages:
   - googleapis
@@ -25,3 +28,5 @@ import:
   version: 4406edd4e29f5b7e254bdee75ef6354fdf756eb3
 - package: github.com/sirupsen/logrus
   version: ^1.0.4
+- package: github.com/envoyproxy/go-control-plane
+- package: github.com/golang/glog

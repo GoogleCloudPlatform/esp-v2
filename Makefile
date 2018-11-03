@@ -44,7 +44,7 @@ build:
 .PHONY: test
 test:
 	@echo "--> running unit tests"
-	@go test ./src/go/...
+	@go test -v ./src/go/...
 
 #-----------------------------------------------------------------------------
 # Target: go dependencies

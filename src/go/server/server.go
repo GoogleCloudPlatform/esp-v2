@@ -15,16 +15,43 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"net"
+
+	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v2"
+	xds "github.com/envoyproxy/go-control-plane/pkg/server"
+	"github.com/golang/glog"
+	"google.golang.org/grpc"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/configmanager"
 )
 
+var (
+	serviceName = flag.String("service_name", "", "endpoint service name")
+	configID    = flag.String("config_id", "", "initial service config id")
+	port        = flag.Int("port", 8790, "ADS port")
+)
+
 func main() {
-	// TODO(jilinxia): pass in service name.
-	m, _ := configmanager.NewConfigManager("library-example.googleapis.com")
-	err := m.Init("2017-05-01r0")
+	flag.Parse()
+	m, err := configmanager.NewConfigManager(*serviceName, *configID)
 	if err != nil {
-		fmt.Errorf("fail to FetchRollouts")
+		glog.Exitf("fail to initialize config manager: %v", err)
 	}
+	server := xds.NewServer(m.Cache(), nil)
+	grpcServer := grpc.NewServer()
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
+	if err != nil {
+		glog.Exitf("Server failed to listen: %v", err)
+	}
+
+	discovery.RegisterAggregatedDiscoveryServiceServer(grpcServer, server)
+	api.RegisterEndpointDiscoveryServiceServer(grpcServer, server)
+	api.RegisterClusterDiscoveryServiceServer(grpcServer, server)
+	api.RegisterRouteDiscoveryServiceServer(grpcServer, server)
+	api.RegisterListenerDiscoveryServiceServer(grpcServer, server)
+
+	grpcServer.Serve(lis)
 }
