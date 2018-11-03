@@ -1,12 +1,11 @@
-workspace(name = "esf")
+workspace(name = "gcpproxy")
 
 bind(
     name = "boringssl_crypto",
     actual = "//external:ssl",
 )
 
-# When updating envoy sha manually please update the sha in istio.deps file also
-ENVOY_SHA = "15cfc5ad1a4d622126f642fa70699af753a2d310"
+ENVOY_SHA = "de039269f54aa21aa0da21da89a5075aa3db3bb9"
 
 http_archive(
     name = "envoy",
@@ -24,8 +23,6 @@ load("@envoy_api//bazel:repositories.bzl", "api_dependencies")
 api_dependencies()
 
 load("@io_bazel_rules_go//go:def.bzl", "go_rules_dependencies", "go_register_toolchains")
-load("@com_lyft_protoc_gen_validate//bazel:go_proto_library.bzl", "go_proto_repositories")
-go_proto_repositories(shared=0)
 go_rules_dependencies()
 go_register_toolchains()
 
