@@ -16,59 +16,122 @@ package configmanager
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
-	// "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
 	"cloudesf.googlesource.com/gcpproxy/src/go/proto/google/api"
+	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	"github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
+	hcm "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
+	"github.com/envoyproxy/go-control-plane/pkg/cache"
+	"github.com/envoyproxy/go-control-plane/pkg/util"
+	"github.com/golang/glog"
+)
+
+const (
+	listenerAddress = "0.0.0.0"
+	listenerPort    = 8080
 )
 
 var (
-	fetchConfigURL = "https://servicemanagement.googleapis.com/v1/services/$serviceName/configs/$configId"
+	fetchConfigURL = "https://servicemanagement.googleapis.com/v1/services/$serviceName/configs/$configId?view=FULL"
+	node           = "fake node, need to figure out what node name is."
 )
 
 // ConfigManager handles service configuration fetching and updating.
 // TODO(jilinxia): handles multi service name.
 type ConfigManager struct {
 	serviceName string
-	rolloutInfo *rolloutInfo
+	configID    string
 	client      *http.Client
-}
-
-type rolloutInfo struct {
-	// TODO(jilinxia): change Service to Bootstrap.
-	configs map[string]*api.Service
+	cache       cache.SnapshotCache
 }
 
 // NewConfigManager creates new instance of ConfigManager.
-func NewConfigManager(name string) (*ConfigManager, error) {
-	manager := &ConfigManager{
+func NewConfigManager(name, configID string) (*ConfigManager, error) {
+	m := &ConfigManager{
 		serviceName: name,
 		client:      http.DefaultClient,
-		rolloutInfo: &rolloutInfo{
-			configs: make(map[string]*api.Service),
-		},
+		configID:    configID,
 	}
-
-	return manager, nil
+	m.cache = cache.NewSnapshotCache(true, m, m)
+	if err := m.init(); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
-func (m *ConfigManager) Init(configID string) error {
-	serviceConfig, err := m.fetchConfig(configID)
+// init should be called when starting up the server.
+// It calls ServiceManager Server to fetch the service configuration in order
+// to dynamically configure Envoy.
+func (m *ConfigManager) init() error {
+	serviceConfig, err := m.fetchConfig(m.configID)
 	if err != nil {
 		// TODO(jilinxia): changes error generation
 		return fmt.Errorf("fail to initialize config manager, %s", err)
 	}
-	m.rolloutInfo.configs[configID] = serviceConfig
+	// m.rolloutInfo.configs[configID] = serviceConfig
+	snapshot, err := m.makeSnapshot(serviceConfig)
+	if err != nil {
+		return errors.New("fail to make a snapshot")
+	}
+	m.cache.SetSnapshot(node, *snapshot)
 	return nil
 }
 
-// TODO(jilinxia): Implement the translation.
-func (m *ConfigManager) writeBootstrap() string {
-	return ""
+func (m *ConfigManager) makeSnapshot(serviceConfig *api.Service) (*cache.Snapshot, error) {
+	var clusters, endpoints, routes []cache.Resource
+	serverlistener, httpManager := m.makeListener(serviceConfig)
+
+	// HTTP filter configuration
+	httpFilterConfig, err := util.MessageToStruct(httpManager)
+	if err != nil {
+		return nil, err
+	}
+
+	serverlistener.FilterChains = []listener.FilterChain{{
+		Filters: []listener.Filter{{
+			Name:   util.HTTPConnectionManager,
+			Config: httpFilterConfig,
+		}}}}
+
+	snapshot := cache.NewSnapshot(m.configID, endpoints, clusters, routes, []cache.Resource{serverlistener})
+	return &snapshot, nil
 }
+
+func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, *hcm.HttpConnectionManager) {
+	return &v2.Listener{
+			Address: core.Address{Address: &core.Address_SocketAddress{SocketAddress: &core.SocketAddress{
+				Address:       listenerAddress,
+				PortSpecifier: &core.SocketAddress_PortValue{PortValue: uint32(listenerPort)}}}},
+		}, &hcm.HttpConnectionManager{
+			CodecType:  hcm.AUTO,
+			StatPrefix: "ingress_http",
+			RouteSpecifier: &hcm.HttpConnectionManager_Rds{
+				Rds: &hcm.Rds{ConfigSource: core.ConfigSource{
+					ConfigSourceSpecifier: &core.ConfigSource_Ads{Ads: &core.AggregatedConfigSource{}},
+				}},
+			},
+			HttpFilters: []*hcm.HttpFilter{{Name: util.Router}},
+		}
+}
+
+// Implements the ID method for HashNode interface.
+func (m *ConfigManager) ID(node *core.Node) string {
+	return node.GetId()
+}
+
+// Implements the Infof method for Log interface.
+func (m *ConfigManager) Infof(format string, args ...interface{}) { glog.Infof(format, args...) }
+
+// Implements the Errorf method for Log interface.
+func (m *ConfigManager) Errorf(format string, args ...interface{}) { glog.Errorf(format, args...) }
+
+func (m *ConfigManager) Cache() cache.Cache { return m.cache }
 
 func (m *ConfigManager) fetchConfig(configId string) (*api.Service, error) {
 	token, err := fetchAccessToken()

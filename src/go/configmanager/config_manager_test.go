@@ -15,40 +15,64 @@
 package configmanager
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
 
+	"github.com/gogo/protobuf/jsonpb"
+
 	"cloudesf.googlesource.com/gcpproxy/src/go/proto/google/api"
+	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	"github.com/envoyproxy/go-control-plane/pkg/cache"
 )
 
 const (
-	serviceName = "bookstore.test.appspot.com"
+	testServiceName = "bookstore.test.appspot.com"
+	testConfigID    = "2017-05-01r0"
+	fakeNodeID      = "id"
 )
 
 var (
 	fakeConfig = &api.Service{
-		Name:  "bookstore.test.appspot.com",
+		Name:  testServiceName,
 		Title: "Bookstore",
-		Id:    "2017-05-01r0",
+		Id:    testConfigID,
 	}
 )
 
 func TestFetchRollouts(t *testing.T) {
 	runTest(t, func(env *testEnv) {
-		err := env.configManager.Init("2017-05-01r0")
-		if err != nil {
-			t.Errorf("Init() got error: %v, want nil", err)
-		}
-		expectedRolloutInfo := rolloutInfo{
-			configs: map[string]*api.Service{
-				"2017-05-01r0": fakeConfig,
+		ctx := context.Background()
+		// First request, VersionId should be empty.
+		req := v2.DiscoveryRequest{
+			Node: &core.Node{
+				Id: node,
 			},
+			TypeUrl: cache.ListenerType,
 		}
-		if !reflect.DeepEqual(*env.configManager.rolloutInfo, expectedRolloutInfo) {
-			t.Errorf("Init() got config: %v, want: %v", *env.configManager.rolloutInfo, expectedRolloutInfo)
+
+		resp, err := env.configManager.cache.Fetch(ctx, req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		marshaler := &jsonpb.Marshaler{}
+		gotListeners, err := marshaler.MarshalToString(resp.Resources[0])
+
+		expectedListeners := `{"address":{"socketAddress":{"address":"0.0.0.0","portValue":8080}},"filterChains":[{"filters":[{"name":"envoy.http_connection_manager","config":{"http_filters":[{"name":"envoy.router"}],"rds":{"config_source":{"ads":{}}},"stat_prefix":"ingress_http"}}]}]}`
+
+		if resp.Version != testConfigID {
+			t.Errorf("snapshot cache fetch got version: %v, want: %v", resp.Version, testConfigID)
+		}
+		if !reflect.DeepEqual(resp.Request, req) {
+			t.Errorf("snapshot cache fetch got request: %v, want: %v", resp.Request, req)
+		}
+		if gotListeners != expectedListeners {
+			t.Errorf("snapshot cache fetch got Listeners: %s, want: %s", gotListeners, expectedListeners)
 		}
 	})
 }
@@ -68,10 +92,11 @@ func runTest(t *testing.T, f func(*testEnv)) {
 	defer mockMetadata.Close()
 	serviceAccountTokenURL = mockMetadata.URL
 
-	manager, err := NewConfigManager(serviceName)
+	manager, err := NewConfigManager(testServiceName, testConfigID)
 	if err != nil {
 		t.Fatal("fail to initialize ConfigManager")
 	}
+
 	env := &testEnv{
 		configManager: manager,
 	}
@@ -87,4 +112,10 @@ func initMockConfigServer(t *testing.T) *httptest.Server {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(body)
 	}))
+}
+
+type mock struct{}
+
+func (mock) ID(*core.Node) string {
+	return fakeNodeID
 }
