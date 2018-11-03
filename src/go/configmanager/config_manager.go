@@ -26,6 +26,7 @@ import (
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
+	tc "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/envoyproxy/go-control-plane/pkg/util"
@@ -104,6 +105,26 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *api.Service) (*cache.Snapsho
 }
 
 func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, *hcm.HttpConnectionManager) {
+	httpFilters := []*hcm.HttpFilter{}
+	// Add gRPC transcode filter config.
+	transcodeConfig := &tc.GrpcJsonTranscoder{
+		DescriptorSet: &tc.GrpcJsonTranscoder_ProtoDescriptor{
+			// TODO(jilinxia): pass in proto descriptor
+		},
+		Services: []string{serviceConfig.Apis[0].Name},
+	}
+	transcodeConfigStruct, _ := util.MessageToStruct(transcodeConfig)
+	transcodeFilter := &hcm.HttpFilter{
+		Name:   util.GRPCJSONTranscoder,
+		Config: transcodeConfigStruct,
+	}
+
+	httpFilters = append(httpFilters, transcodeFilter)
+
+
+	// TODO(jilinxia): Add Service control filter config.
+	// TODO(jilinxia): Add JWT filter config.
+
 	return &v2.Listener{
 			Address: core.Address{Address: &core.Address_SocketAddress{SocketAddress: &core.SocketAddress{
 				Address:       listenerAddress,
@@ -116,7 +137,7 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 					ConfigSourceSpecifier: &core.ConfigSource_Ads{Ads: &core.AggregatedConfigSource{}},
 				}},
 			},
-			HttpFilters: []*hcm.HttpFilter{{Name: util.Router}},
+			HttpFilters: httpFilters,
 		}
 }
 
