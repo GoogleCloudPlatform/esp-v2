@@ -25,6 +25,7 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/proto/google/api"
+	gp "cloudesf.googlesource.com/gcpproxy/src/go/proto/google/protobuf"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
@@ -41,6 +42,11 @@ var (
 		Name:  testServiceName,
 		Title: "Bookstore",
 		Id:    testConfigID,
+		Apis: []*gp.Api{
+			{
+				Name: testServiceName + ".v1.BookstoreService",
+			},
+		},
 	}
 )
 
@@ -63,16 +69,15 @@ func TestFetchRollouts(t *testing.T) {
 		marshaler := &jsonpb.Marshaler{}
 		gotListeners, err := marshaler.MarshalToString(resp.Resources[0])
 
-		expectedListeners := `{"address":{"socketAddress":{"address":"0.0.0.0","portValue":8080}},"filterChains":[{"filters":[{"name":"envoy.http_connection_manager","config":{"http_filters":[{"name":"envoy.router"}],"rds":{"config_source":{"ads":{}}},"stat_prefix":"ingress_http"}}]}]}`
-
+		wantedListeners := `{"address":{"socketAddress":{"address":"0.0.0.0","portValue":8080}},"filterChains":[{"filters":[{"name":"envoy.http_connection_manager","config":{"http_filters":[{"config":{"proto_descriptor":"","services":["bookstore.test.appspot.com.v1.BookstoreService"]},"name":"envoy.grpc_json_transcoder"}],"rds":{"config_source":{"ads":{}}},"stat_prefix":"ingress_http"}}]}]}`
 		if resp.Version != testConfigID {
 			t.Errorf("snapshot cache fetch got version: %v, want: %v", resp.Version, testConfigID)
 		}
 		if !reflect.DeepEqual(resp.Request, req) {
 			t.Errorf("snapshot cache fetch got request: %v, want: %v", resp.Request, req)
 		}
-		if gotListeners != expectedListeners {
-			t.Errorf("snapshot cache fetch got Listeners: %s, want: %s", gotListeners, expectedListeners)
+		if gotListeners != wantedListeners {
+			t.Errorf("snapshot cache fetch got Listeners: %s, want: %s", gotListeners, wantedListeners)
 		}
 	})
 }
