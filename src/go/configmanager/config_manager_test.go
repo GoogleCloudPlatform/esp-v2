@@ -16,38 +16,53 @@ package configmanager
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
 
-	"github.com/gogo/protobuf/jsonpb"
-
-	"cloudesf.googlesource.com/gcpproxy/src/go/proto/google/api"
-	gp "cloudesf.googlesource.com/gcpproxy/src/go/proto/google/protobuf"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
+	"github.com/gogo/protobuf/jsonpb"
 )
 
 const (
-	testServiceName = "bookstore.test.appspot.com"
-	testConfigID    = "2017-05-01r0"
-	fakeNodeID      = "id"
+	testProjectName  = "bookstore.endpoints.project123.cloud.goog"
+	testEndpointName = "endpoints.examples.bookstore.Bookstore"
+	testConfigID     = "2017-05-01r0"
+	fakeNodeID       = "id"
 )
 
 var (
-	fakeConfig = &api.Service{
-		Name:  testServiceName,
-		Title: "Bookstore",
-		Id:    testConfigID,
-		Apis: []*gp.Api{
-			{
-				Name: testServiceName + ".v1.BookstoreService",
-			},
-		},
-	}
+	fakeConfig = `{` +
+		fmt.Sprintf(`"name": "%s",`, testProjectName) +
+		`"title": "Bookstore gRPC API",` +
+		` "apis": [` +
+		`{` +
+		fmt.Sprintf(`"name": "%s",`, testEndpointName) +
+		`"version": "v1",` +
+		`"syntax": "SYNTAX_PROTO3"` +
+		`}` +
+		`],` +
+		`"sourceInfo": {` +
+		`"sourceFiles": [` +
+		`{` +
+		`"@type": "type.googleapis.com/google.api.servicemanagement.v1.ConfigFile",` +
+		`"filePath": "api_config.yaml",` +
+		`"fileContents": "raw_api_config",` +
+		`"fileType": "SERVICE_CONFIG_YAML"` +
+		`},` +
+		`{` +
+		`"@type": "type.googleapis.com/google.api.servicemanagement.v1.ConfigFile",` +
+		`"filePath": "api_descriptor.pb",` +
+		`"fileContents": "raw_api_descriptor.pb",` +
+		`"fileType": "FILE_DESCRIPTOR_SET_PROTO"` +
+		`}` +
+		`]` +
+		`}` +
+		`}`
 )
 
 func TestFetchRollouts(t *testing.T) {
@@ -69,7 +84,40 @@ func TestFetchRollouts(t *testing.T) {
 		marshaler := &jsonpb.Marshaler{}
 		gotListeners, err := marshaler.MarshalToString(resp.Resources[0])
 
-		wantedListeners := `{"address":{"socketAddress":{"address":"0.0.0.0","portValue":8080}},"filterChains":[{"filters":[{"name":"envoy.http_connection_manager","config":{"http_filters":[{"config":{"proto_descriptor":"","services":["bookstore.test.appspot.com.v1.BookstoreService"]},"name":"envoy.grpc_json_transcoder"}],"rds":{"config_source":{"ads":{}}},"stat_prefix":"ingress_http"}}]}]}`
+		wantedListeners := `{` +
+			`"address":{` +
+			`"socketAddress":{` +
+			`"address":"0.0.0.0",` +
+			`"portValue":8080` +
+			`}` +
+			`},` +
+			`"filterChains":[` +
+			`{` +
+			`"filters":[` +
+			`{` +
+			`"name":"envoy.http_connection_manager",` +
+			`"config":{` +
+			`"http_filters":[` +
+			`{` +
+			`"config":{` +
+			`"proto_descriptor":"",` +
+			fmt.Sprintf(`"services":["%s"]`, testEndpointName) +
+			`},` +
+			`"name":"envoy.grpc_json_transcoder"` +
+			`}` +
+			`],` +
+			`"rds":{` +
+			`"config_source":{` +
+			`"ads":{}` +
+			`}` +
+			`},` +
+			`"stat_prefix":"ingress_http"` +
+			`}` +
+			`}` +
+			`]` +
+			`}` +
+			`]` +
+			`}`
 		if resp.Version != testConfigID {
 			t.Errorf("snapshot cache fetch got version: %v, want: %v", resp.Version, testConfigID)
 		}
@@ -97,9 +145,9 @@ func runTest(t *testing.T, f func(*testEnv)) {
 	defer mockMetadata.Close()
 	serviceAccountTokenURL = mockMetadata.URL
 
-	manager, err := NewConfigManager(testServiceName, testConfigID)
+	manager, err := NewConfigManager(testProjectName, testConfigID)
 	if err != nil {
-		t.Fatal("fail to initialize ConfigManager")
+		t.Fatal("fail to initialize ConfigManager: ", err)
 	}
 
 	env := &testEnv{
@@ -109,13 +157,9 @@ func runTest(t *testing.T, f func(*testEnv)) {
 }
 
 func initMockConfigServer(t *testing.T) *httptest.Server {
-	body, err := json.Marshal(fakeConfig)
-	if err != nil {
-		t.Fatal("json.Marshal failed")
-	}
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(body)
+		w.Write([]byte(fakeConfig))
 	}))
 }
 

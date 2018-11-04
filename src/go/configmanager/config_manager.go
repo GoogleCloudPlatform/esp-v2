@@ -15,10 +15,8 @@
 package configmanager
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -30,6 +28,7 @@ import (
 	hcm "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/envoyproxy/go-control-plane/pkg/util"
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/golang/glog"
 )
 
@@ -75,7 +74,6 @@ func (m *ConfigManager) init() error {
 		// TODO(jilinxia): changes error generation
 		return fmt.Errorf("fail to initialize config manager, %s", err)
 	}
-	// m.rolloutInfo.configs[configID] = serviceConfig
 	snapshot, err := m.makeSnapshot(serviceConfig)
 	if err != nil {
 		return errors.New("fail to make a snapshot")
@@ -107,6 +105,7 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *api.Service) (*cache.Snapsho
 func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, *hcm.HttpConnectionManager) {
 	httpFilters := []*hcm.HttpFilter{}
 	// Add gRPC transcode filter config.
+    // glog.Infof("raw: %s", serviceConfig.SourceInfo)
 	transcodeConfig := &tc.GrpcJsonTranscoder{
 		DescriptorSet: &tc.GrpcJsonTranscoder_ProtoDescriptor{
 			// TODO(jilinxia): pass in proto descriptor
@@ -120,7 +119,6 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 	}
 
 	httpFilters = append(httpFilters, transcodeFilter)
-
 
 	// TODO(jilinxia): Add Service control filter config.
 	// TODO(jilinxia): Add JWT filter config.
@@ -161,18 +159,10 @@ func (m *ConfigManager) fetchConfig(configId string) (*api.Service, error) {
 	}
 	path := strings.Replace(fetchConfigURL, "$configId", configId, -1)
 
-	body, err := callServiceManagement(path, m.serviceName, token, m.client)
-	if err != nil {
-		return nil, fmt.Errorf("fail to call service management server to get config(%s) of service %s", configId, m.serviceName)
-	}
-	var serviceConfig api.Service
-	if err = json.Unmarshal(body, &serviceConfig); err != nil {
-		return nil, fmt.Errorf("fail to unmarshal serviceConfig")
-	}
-	return &serviceConfig, nil
+	return callServiceManagement(path, m.serviceName, token, m.client)
 }
 
-var callServiceManagement = func(path, serviceName, token string, client *http.Client) ([]byte, error) {
+var callServiceManagement = func(path, serviceName, token string, client *http.Client) (*api.Service, error) {
 	path = strings.Replace(path, "$serviceName", serviceName, -1)
 	req, _ := http.NewRequest("GET", path, nil)
 	req.Header.Add("Authorization", "Bearer "+token)
@@ -181,9 +171,11 @@ var callServiceManagement = func(path, serviceName, token string, client *http.C
 		return nil, err
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
+
+	unmarshaler := &jsonpb.Unmarshaler{AllowUnknownFields: true}
+	var serviceConfig api.Service
+	if err = unmarshaler.Unmarshal(resp.Body, &serviceConfig); err != nil {
+		return nil, fmt.Errorf("fail to unmarshal serviceConfig: %s", err)
 	}
-	return body, nil
+	return &serviceConfig, nil
 }

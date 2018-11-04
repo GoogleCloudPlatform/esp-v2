@@ -41,11 +41,15 @@ build:
 # Target: go test
 # ----------------------------------------------------------------------------
 
-.PHONY: test
+.PHONY: test test-debug
 test:
 	@echo "--> running unit tests"
 	@go test -v ./src/go/...
 
+test-debug:
+	@echo "--> running unit tests"
+	@go test -v ./src/go/... --logtostderr
+    
 #-----------------------------------------------------------------------------
 # Target: go dependencies
 #-----------------------------------------------------------------------------
