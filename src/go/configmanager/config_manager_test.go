@@ -107,11 +107,25 @@ func TestFetchRollouts(t *testing.T) {
 			`"name":"envoy.grpc_json_transcoder"` +
 			`}` +
 			`],` +
-			`"rds":{` +
-			`"config_source":{` +
-			`"ads":{}` +
-			`}` +
-			`},` +
+			`"route_config":{` +
+			`"name":"local_route",` +
+      `"virtual_hosts":[` +
+        `{` +
+           `"domains":["*"],` +
+           `"name":"backend",` +
+           `"routes":[` +
+           `{` +
+           	  `"match":{` +
+                 fmt.Sprintf(`"prefix":"%s"`, testEndpointName) +
+           	  `},` +
+           	  `"route":{` +
+           	    `"cluster":"grpc_service"` +
+               `}` +
+               `}`+
+           `]` +
+        `}` +
+      `]`+
+ 			`},` +
 			`"stat_prefix":"ingress_http"` +
 			`}` +
 			`}` +

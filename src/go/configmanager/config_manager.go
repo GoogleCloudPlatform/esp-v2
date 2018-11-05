@@ -23,6 +23,7 @@ import (
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
+	"github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 	tc "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
@@ -138,10 +139,28 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 		}, &hcm.HttpConnectionManager{
 			CodecType:  hcm.AUTO,
 			StatPrefix: "ingress_http",
-			RouteSpecifier: &hcm.HttpConnectionManager_Rds{
-				Rds: &hcm.Rds{ConfigSource: core.ConfigSource{
-					ConfigSourceSpecifier: &core.ConfigSource_Ads{Ads: &core.AggregatedConfigSource{}},
-				}},
+			RouteSpecifier: &hcm.HttpConnectionManager_RouteConfig{
+				RouteConfig: &v2.RouteConfiguration{
+					Name: "local_route",
+					VirtualHosts: []route.VirtualHost{
+						{
+							Name:    "backend",
+							Domains: []string{"*"},
+							Routes: []route.Route{
+								{
+									Match: route.RouteMatch{
+										PathSpecifier: &route.RouteMatch_Prefix{serviceConfig.Apis[0].Name},
+									},
+									Action: &route.Route_Route{
+										Route: &route.RouteAction{
+											ClusterSpecifier: &route.RouteAction_Cluster{"grpc_service"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			HttpFilters: httpFilters,
 		}
