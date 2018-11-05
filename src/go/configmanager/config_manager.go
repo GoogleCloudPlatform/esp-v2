@@ -20,7 +20,6 @@ import (
 	"net/http"
 	"strings"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/proto/google/api"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
@@ -28,8 +27,12 @@ import (
 	hcm "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/envoyproxy/go-control-plane/pkg/util"
-	"github.com/gogo/protobuf/jsonpb"
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
+	api "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 const (
@@ -105,12 +108,17 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *api.Service) (*cache.Snapsho
 func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, *hcm.HttpConnectionManager) {
 	httpFilters := []*hcm.HttpFilter{}
 	// Add gRPC transcode filter config.
-    // glog.Infof("raw: %s", serviceConfig.SourceInfo)
+	var configContent []byte
+	for _, sourceFile := range serviceConfig.GetSourceInfo().GetSourceFiles() {
+		configFile := &servicemanagement.ConfigFile{}
+		ptypes.UnmarshalAny(sourceFile, configFile)
+		if configFile.GetFileType() == servicemanagement.ConfigFile_SERVICE_CONFIG_YAML {
+			configContent = configFile.GetFileContents()
+		}
+	}
 	transcodeConfig := &tc.GrpcJsonTranscoder{
-		DescriptorSet: &tc.GrpcJsonTranscoder_ProtoDescriptor{
-			// TODO(jilinxia): pass in proto descriptor
-		},
-		Services: []string{serviceConfig.Apis[0].Name},
+		DescriptorSet: &tc.GrpcJsonTranscoder_ProtoDescriptorBin{configContent},
+		Services:      []string{serviceConfig.Apis[0].Name},
 	}
 	transcodeConfigStruct, _ := util.MessageToStruct(transcodeConfig)
 	transcodeFilter := &hcm.HttpFilter{
@@ -162,6 +170,13 @@ func (m *ConfigManager) fetchConfig(configId string) (*api.Service, error) {
 	return callServiceManagement(path, m.serviceName, token, m.client)
 }
 
+// Helper to convert Json string to protobuf.Any.
+type funcResolver func(url string) (proto.Message, error)
+
+func (fn funcResolver) Resolve(url string) (proto.Message, error) {
+	return fn(url)
+}
+
 var callServiceManagement = func(path, serviceName, token string, client *http.Client) (*api.Service, error) {
 	path = strings.Replace(path, "$serviceName", serviceName, -1)
 	req, _ := http.NewRequest("GET", path, nil)
@@ -171,8 +186,18 @@ var callServiceManagement = func(path, serviceName, token string, client *http.C
 		return nil, err
 	}
 	defer resp.Body.Close()
-
-	unmarshaler := &jsonpb.Unmarshaler{AllowUnknownFields: true}
+	resolver := funcResolver(func(url string) (proto.Message, error) {
+		switch url {
+		case "type.googleapis.com/google.api.servicemanagement.v1.ConfigFile":
+			return new(servicemanagement.ConfigFile), nil
+		default:
+			return nil, fmt.Errorf("unexpected protobuf.Any type")
+		}
+	})
+	unmarshaler := &jsonpb.Unmarshaler{
+		AllowUnknownFields: true,
+		AnyResolver:        resolver,
+	}
 	var serviceConfig api.Service
 	if err = unmarshaler.Unmarshal(resp.Body, &serviceConfig); err != nil {
 		return nil, fmt.Errorf("fail to unmarshal serviceConfig: %s", err)

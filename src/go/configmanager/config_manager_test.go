@@ -16,6 +16,7 @@ package configmanager
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -51,13 +52,13 @@ var (
 		`{` +
 		`"@type": "type.googleapis.com/google.api.servicemanagement.v1.ConfigFile",` +
 		`"filePath": "api_config.yaml",` +
-		`"fileContents": "raw_api_config",` +
+		fmt.Sprintf(`"fileContents": "%s",`, base64.StdEncoding.EncodeToString([]byte("raw_config"))) +
 		`"fileType": "SERVICE_CONFIG_YAML"` +
 		`},` +
 		`{` +
 		`"@type": "type.googleapis.com/google.api.servicemanagement.v1.ConfigFile",` +
 		`"filePath": "api_descriptor.pb",` +
-		`"fileContents": "raw_api_descriptor.pb",` +
+		fmt.Sprintf(`"fileContents": "%s",`, base64.StdEncoding.EncodeToString([]byte("rawDescriptor"))) +
 		`"fileType": "FILE_DESCRIPTOR_SET_PROTO"` +
 		`}` +
 		`]` +
@@ -100,7 +101,7 @@ func TestFetchRollouts(t *testing.T) {
 			`"http_filters":[` +
 			`{` +
 			`"config":{` +
-			`"proto_descriptor":"",` +
+			fmt.Sprintf(`"proto_descriptor_bin":"%s",`, base64.StdEncoding.EncodeToString([]byte("raw_config"))) +
 			fmt.Sprintf(`"services":["%s"]`, testEndpointName) +
 			`},` +
 			`"name":"envoy.grpc_json_transcoder"` +

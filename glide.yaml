@@ -30,3 +30,7 @@ import:
   version: ^1.0.4
 - package: github.com/envoyproxy/go-control-plane
 - package: github.com/golang/glog
+- package: github.com/golang/protobuf
+  version: 1918e1ff6ffd2be7bed0553df8650672c3bfe80d
+- package: github.com/google/go-genproto
+  version: c830210a61dfaa790e1920f8d0470fc27bc2efbe

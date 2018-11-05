@@ -1,5 +1,5 @@
-hash: e03ea52bf602f48b0e47b1e830ad7c206701f742111d5dd02736174f835ab30d
-updated: 2018-11-01T15:43:53.738205284-07:00
+hash: bbc8b6afbb1bf74401cd28f3564af59a4675766ec403332bd49d928af3015b60
+updated: 2018-11-05T09:35:25.776458496-08:00
 imports:
 - name: github.com/envoyproxy/data-plane-api
   version: 4406edd4e29f5b7e254bdee75ef6354fdf756eb3
@@ -14,6 +14,7 @@ imports:
   - envoy/api/v2/listener
   - envoy/api/v2/route
   - envoy/config/filter/accesslog/v2
+  - envoy/config/filter/http/transcoder/v2
   - envoy/config/filter/network/http_connection_manager/v2
   - envoy/service/discovery/v2
   - envoy/type
@@ -39,16 +40,22 @@ imports:
 - name: github.com/golang/glog
   version: 23def4e6c14b4da8ac2ed8007337bc5eb5007998
 - name: github.com/golang/protobuf
-  version: ab9f9a6dab164b7d1246e0e688b0ab7b94d8553e
+  version: 1918e1ff6ffd2be7bed0553df8650672c3bfe80d
   subpackages:
+  - jsonpb
   - proto
   - protoc-gen-go/descriptor
   - ptypes
   - ptypes/any
   - ptypes/duration
+  - ptypes/empty
   - ptypes/struct
   - ptypes/timestamp
   - ptypes/wrappers
+- name: github.com/google/go-genproto
+  version: c830210a61dfaa790e1920f8d0470fc27bc2efbe
+  subpackages:
+  - googleapis/api/servicemanagement/v1
 - name: github.com/lyft/protoc-gen-validate
   version: f9d2b11e44149635b23a002693b76512b01ae515
   subpackages:
@@ -71,8 +78,20 @@ imports:
   version: a8101f21cf983e773d0c1133ebc5424792003214
   subpackages:
   - googleapis
+  - googleapis/api
+  - googleapis/api/annotations
+  - googleapis/api/configchange
+  - googleapis/api/label
+  - googleapis/api/metric
+  - googleapis/api/monitoredres
+  - googleapis/api/serviceconfig
+  - googleapis/longrunning
   - googleapis/rpc/status
   - opencensus
+  - protobuf/api
+  - protobuf/field_mask
+  - protobuf/ptype
+  - protobuf/source_context
 - name: google.golang.org/grpc
   version: 2e463a05d100327ca47ac218281906921038fd95
   subpackages:
