@@ -28,6 +28,7 @@ import (
 	hcm "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/envoyproxy/go-control-plane/pkg/util"
+	"github.com/gogo/protobuf/types"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
@@ -132,6 +133,13 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 	// TODO(jilinxia): Add Service control filter config.
 	// TODO(jilinxia): Add JWT filter config.
 
+	// Add Envoy Router filter so requests are routed upstream.
+	routerFilter := &hcm.HttpFilter{
+		Name:   util.Router,
+		Config: &types.Struct{},
+	}
+	httpFilters = append(httpFilters, routerFilter)
+
 	return &v2.Listener{
 			Address: core.Address{Address: &core.Address_SocketAddress{SocketAddress: &core.SocketAddress{
 				Address:       listenerAddress,
@@ -149,7 +157,7 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 							Routes: []route.Route{
 								{
 									Match: route.RouteMatch{
-										PathSpecifier: &route.RouteMatch_Prefix{serviceConfig.Apis[0].Name},
+										PathSpecifier: &route.RouteMatch_Prefix{fmt.Sprintf("/%s", serviceConfig.Apis[0].Name)},
 									},
 									Action: &route.Route_Route{
 										Route: &route.RouteAction{
