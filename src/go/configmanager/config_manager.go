@@ -34,6 +34,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
+	"google.golang.org/genproto/googleapis/api/annotations"
 	api "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -110,25 +111,24 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *api.Service) (*cache.Snapsho
 func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, *hcm.HttpConnectionManager) {
 	httpFilters := []*hcm.HttpFilter{}
 	// Add gRPC transcode filter config.
-	var configContent []byte
 	for _, sourceFile := range serviceConfig.GetSourceInfo().GetSourceFiles() {
 		configFile := &servicemanagement.ConfigFile{}
 		ptypes.UnmarshalAny(sourceFile, configFile)
-		if configFile.GetFileType() == servicemanagement.ConfigFile_SERVICE_CONFIG_YAML {
-			configContent = configFile.GetFileContents()
+		if configFile.GetFileType() == servicemanagement.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
+			configContent := configFile.GetFileContents()
+			transcodeConfig := &tc.GrpcJsonTranscoder{
+				DescriptorSet: &tc.GrpcJsonTranscoder_ProtoDescriptorBin{configContent},
+				Services:      []string{serviceConfig.Apis[0].Name},
+			}
+			transcodeConfigStruct, _ := util.MessageToStruct(transcodeConfig)
+			transcodeFilter := &hcm.HttpFilter{
+				Name:   util.GRPCJSONTranscoder,
+				Config: transcodeConfigStruct,
+			}
+			httpFilters = append(httpFilters, transcodeFilter)
+			break
 		}
 	}
-	transcodeConfig := &tc.GrpcJsonTranscoder{
-		DescriptorSet: &tc.GrpcJsonTranscoder_ProtoDescriptorBin{configContent},
-		Services:      []string{serviceConfig.Apis[0].Name},
-	}
-	transcodeConfigStruct, _ := util.MessageToStruct(transcodeConfig)
-	transcodeFilter := &hcm.HttpFilter{
-		Name:   util.GRPCJSONTranscoder,
-		Config: transcodeConfigStruct,
-	}
-
-	httpFilters = append(httpFilters, transcodeFilter)
 
 	// TODO(jilinxia): Add Service control filter config.
 	// TODO(jilinxia): Add JWT filter config.
@@ -217,6 +217,8 @@ var callServiceManagement = func(path, serviceName, token string, client *http.C
 		switch url {
 		case "type.googleapis.com/google.api.servicemanagement.v1.ConfigFile":
 			return new(servicemanagement.ConfigFile), nil
+		case "type.googleapis.com/google.api.HttpRule":
+			return new(annotations.HttpRule), nil
 		default:
 			return nil, fmt.Errorf("unexpected protobuf.Any type")
 		}

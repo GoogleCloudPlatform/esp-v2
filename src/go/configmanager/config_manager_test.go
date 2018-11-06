@@ -152,7 +152,7 @@ func TestFetchRollouts(t *testing.T) {
 			]
 		}
 		`,
-			base64.StdEncoding.EncodeToString([]byte("raw_config")),
+			base64.StdEncoding.EncodeToString([]byte("rawDescriptor")),
 			testEndpointName,
 			testEndpointName)
 
