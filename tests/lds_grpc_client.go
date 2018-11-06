@@ -19,8 +19,8 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
 )
@@ -32,7 +32,7 @@ var (
 func main() {
 	var opts []grpc.DialOption
 
-    opts = append(opts, grpc.WithInsecure())    
+	opts = append(opts, grpc.WithInsecure())
 	addr := fmt.Sprintf("localhost:%d", *port)
 	conn, err := grpc.Dial(addr, opts...)
 	if err != nil {
@@ -47,7 +47,7 @@ func main() {
 			Id: "testNode",
 		},
 	}
-    resp := &v2.DiscoveryResponse{}
+	resp := &v2.DiscoveryResponse{}
 	if resp, err = client.FetchListeners(ctx, req); err != nil {
 		glog.Exitf("discovery: %v", err)
 	}
