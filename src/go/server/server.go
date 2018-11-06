@@ -52,6 +52,7 @@ func main() {
 	api.RegisterClusterDiscoveryServiceServer(grpcServer, server)
 	api.RegisterRouteDiscoveryServiceServer(grpcServer, server)
 	api.RegisterListenerDiscoveryServiceServer(grpcServer, server)
+    fmt.Println("config manager server is running .......")
 
 	grpcServer.Serve(lis)
 }

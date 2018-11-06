@@ -36,6 +36,7 @@ GODIRS		= $(shell go list -f '{{.Dir}}' ./... \
 build:
 	@echo "--> building"
 	@go build ./src/go/...
+	@go build ./tests/configmanager/...
 
 #-----------------------------------------------------------------------------
 # Target: go test

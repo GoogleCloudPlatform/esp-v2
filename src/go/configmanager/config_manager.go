@@ -42,7 +42,7 @@ const (
 
 var (
 	fetchConfigURL = "https://servicemanagement.googleapis.com/v1/services/$serviceName/configs/$configId?view=FULL"
-	node           = "fake node, need to figure out what node name is."
+	node           = "api_proxy"
 )
 
 // ConfigManager handles service configuration fetching and updating.
