@@ -5,7 +5,7 @@ bind(
     actual = "//external:ssl",
 )
 
-ENVOY_SHA = "10948c575c3a410d4666aa2818ce4fc189e84e8b"
+ENVOY_SHA = "de039269f54aa21aa0da21da89a5075aa3db3bb9"
 
 http_archive(
     name = "envoy",
