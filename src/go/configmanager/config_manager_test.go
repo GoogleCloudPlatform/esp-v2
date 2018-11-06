@@ -17,6 +17,7 @@ package configmanager
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -37,33 +38,39 @@ const (
 )
 
 var (
-	fakeConfig = `{` +
-		fmt.Sprintf(`"name": "%s",`, testProjectName) +
-		`"title": "Bookstore gRPC API",` +
-		` "apis": [` +
-		`{` +
-		fmt.Sprintf(`"name": "%s",`, testEndpointName) +
-		`"version": "v1",` +
-		`"syntax": "SYNTAX_PROTO3"` +
-		`}` +
-		`],` +
-		`"sourceInfo": {` +
-		`"sourceFiles": [` +
-		`{` +
-		`"@type": "type.googleapis.com/google.api.servicemanagement.v1.ConfigFile",` +
-		`"filePath": "api_config.yaml",` +
-		fmt.Sprintf(`"fileContents": "%s",`, base64.StdEncoding.EncodeToString([]byte("raw_config"))) +
-		`"fileType": "SERVICE_CONFIG_YAML"` +
-		`},` +
-		`{` +
-		`"@type": "type.googleapis.com/google.api.servicemanagement.v1.ConfigFile",` +
-		`"filePath": "api_descriptor.pb",` +
-		fmt.Sprintf(`"fileContents": "%s",`, base64.StdEncoding.EncodeToString([]byte("rawDescriptor"))) +
-		`"fileType": "FILE_DESCRIPTOR_SET_PROTO"` +
-		`}` +
-		`]` +
-		`}` +
-		`}`
+	fakeConfig = fmt.Sprintf(`
+	{
+		"name":"%s",
+		"title":"Bookstore gRPC API",
+		"apis":[
+			{
+				"name":"%s",
+				"version":"v1",
+				"syntax":"SYNTAX_PROTO3"
+			}
+		],
+		"sourceInfo":{
+			"sourceFiles":[
+				{
+					"@type":"type.googleapis.com/google.api.servicemanagement.v1.ConfigFile",
+					"filePath":"api_config.yaml",
+					"fileContents":"%s",
+					"fileType":"SERVICE_CONFIG_YAML"
+				},
+				{
+					"@type":"type.googleapis.com/google.api.servicemanagement.v1.ConfigFile",
+					"filePath":"api_descriptor.pb",
+					"fileContents":"%s",
+					"fileType":"FILE_DESCRIPTOR_SET_PROTO"
+				}
+			]
+		}
+	}
+	`,
+		testProjectName,
+		testEndpointName,
+		base64.StdEncoding.EncodeToString([]byte("raw_config")),
+		base64.StdEncoding.EncodeToString([]byte("rawDescriptor")))
 )
 
 func TestFetchRollouts(t *testing.T) {
@@ -85,64 +92,81 @@ func TestFetchRollouts(t *testing.T) {
 		marshaler := &jsonpb.Marshaler{}
 		gotListeners, err := marshaler.MarshalToString(resp.Resources[0])
 
-		wantedListeners := `{` +
-			`"address":{` +
-			`"socketAddress":{` +
-			`"address":"0.0.0.0",` +
-			`"portValue":8080` +
-			`}` +
-			`},` +
-			`"filterChains":[` +
-			`{` +
-			`"filters":[` +
-			`{` +
-			`"name":"envoy.http_connection_manager",` +
-			`"config":{` +
-			`"http_filters":[` +
-			`{` +
-			`"config":{` +
-			fmt.Sprintf(`"proto_descriptor_bin":"%s",`, base64.StdEncoding.EncodeToString([]byte("raw_config"))) +
-			fmt.Sprintf(`"services":["%s"]`, testEndpointName) +
-			`},` +
-			`"name":"envoy.grpc_json_transcoder"` +
-			`},` +
-			`{` +
-			`"config":{},` +
-			`"name":"envoy.router"` +
-			`}` +
-			`],` +
-			`"route_config":{` +
-			`"name":"local_route",` +
-			`"virtual_hosts":[` +
-			`{` +
-			`"domains":["*"],` +
-			`"name":"backend",` +
-			`"routes":[` +
-			`{` +
-			`"match":{` +
-			fmt.Sprintf(`"prefix":"/%s"`, testEndpointName) +
-			`},` +
-			`"route":{` +
-			`"cluster":"grpc_service"` +
-			`}` +
-			`}` +
-			`]` +
-			`}` +
-			`]` +
-			`},` +
-			`"stat_prefix":"ingress_http"` +
-			`}` +
-			`}` +
-			`]` +
-			`}` +
-			`]` +
-			`}`
+		wantedListeners := fmt.Sprintf(`
+		{
+			"address":{
+				"socketAddress":{
+					"address":"0.0.0.0",
+					"portValue":8080
+				}
+			},
+			"filterChains":[
+				{
+					"filters":[
+						{
+							"config":{
+								"http_filters":[
+									{
+										"config":{
+											"proto_descriptor_bin":"%s",
+											"services":[
+												"%s"
+											]
+										},
+										"name":"envoy.grpc_json_transcoder"
+									},
+									{
+										"config":{
+
+										},
+										"name":"envoy.router"
+									}
+								],
+								"route_config":{
+									"name":"local_route",
+									"virtual_hosts":[
+										{
+											"domains":[
+												"*"
+											],
+											"name":"backend",
+											"routes":[
+												{
+													"match":{
+														"prefix":"/%s"
+													},
+													"route":{
+														"cluster":"grpc_service"
+													}
+												}
+											]
+										}
+									]
+								},
+								"stat_prefix":"ingress_http"
+							},
+							"name":"envoy.http_connection_manager"
+						}
+					]
+				}
+			]
+		}
+		`,
+			base64.StdEncoding.EncodeToString([]byte("raw_config")),
+			testEndpointName,
+			testEndpointName)
+
 		if resp.Version != testConfigID {
 			t.Errorf("snapshot cache fetch got version: %v, want: %v", resp.Version, testConfigID)
 		}
 		if !reflect.DeepEqual(resp.Request, req) {
 			t.Errorf("snapshot cache fetch got request: %v, want: %v", resp.Request, req)
 		}
+
+		// Normalize both wantedListeners and gotListeners.
+		wantedListeners = normalizeJson(wantedListeners)
+		gotListeners = normalizeJson(gotListeners)
+
 		if gotListeners != wantedListeners {
 			t.Errorf("snapshot cache fetch got Listeners: %s, want: %s", gotListeners, wantedListeners)
 		}
@@ -178,7 +202,7 @@ func runTest(t *testing.T, f func(*testEnv)) {
 func initMockConfigServer(t *testing.T) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(fakeConfig))
+		w.Write([]byte(normalizeJson(fakeConfig)))
 	}))
 }
 
@@ -186,4 +210,11 @@ type mock struct{}
 
 func (mock) ID(*core.Node) string {
 	return fakeNodeID
+}
+
+func normalizeJson(input string) string {
+	var jsonObject map[string]interface{}
+	json.Unmarshal([]byte(input), &jsonObject)
+	outputString, _ := json.Marshal(jsonObject)
+	return string(outputString)
 }
