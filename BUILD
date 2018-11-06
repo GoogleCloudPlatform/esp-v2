@@ -9,7 +9,7 @@ envoy_cc_binary(
     name = "cloudesf-envoy",
     repository = "@envoy",
     deps = [
-        "//src/http/http_filter_example:http_filter_config",
+        "//src/filters/http_filter_example:http_filter_config",
         "@envoy//source/exe:envoy_main_entry_lib",
     ],
 )
