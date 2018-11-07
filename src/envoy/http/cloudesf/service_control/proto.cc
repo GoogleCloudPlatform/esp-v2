@@ -3,7 +3,6 @@
 #include <functional>
 
 #include <time.h>
-#include <uuid/uuid.h>
 #include <chrono>
 
 #include "google/api/metric.pb.h"

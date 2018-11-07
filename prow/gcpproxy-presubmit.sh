@@ -43,4 +43,4 @@ make clean
 echo '======================================================'
 echo '===================== Bazel test ====================='
 echo '======================================================'
-bazel test src/filters/http_filter_example:all
+bazel test //src/...
