@@ -1,16 +1,24 @@
 workspace(name = "gcpproxy")
 
+load(
+     "//:repositories.bzl",
+     "all_dependencies",
+)
+all_dependencies()
+  
 bind(
     name = "boringssl_crypto",
     actual = "//external:ssl",
 )
 
-ENVOY_SHA = "de039269f54aa21aa0da21da89a5075aa3db3bb9"
+# use the istio forked one with a hack for issue:
+# https://github.com/envoyproxy/envoy/issues/4924
+ENVOY_SHA = "a0b180dd3e8f81478d399fe2812e24a478b083f4"
 
 http_archive(
     name = "envoy",
     strip_prefix = "envoy-" + ENVOY_SHA,
-    url = "https://github.com/envoyproxy/envoy/archive/" + ENVOY_SHA + ".zip",
+    url = "https://github.com/istio/envoy/archive/" + ENVOY_SHA + ".zip",
 )
 
 load("@envoy//bazel:repositories.bzl", "envoy_dependencies")
