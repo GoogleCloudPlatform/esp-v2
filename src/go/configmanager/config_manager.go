@@ -24,6 +24,7 @@ import (
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
+	ac "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
 	tc "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
@@ -91,24 +92,23 @@ func (m *ConfigManager) init() error {
 func (m *ConfigManager) makeSnapshot(serviceConfig *api.Service) (*cache.Snapshot, error) {
 	var clusters, endpoints, routes []cache.Resource
 	serverlistener, httpManager := m.makeListener(serviceConfig)
-
 	// HTTP filter configuration
 	httpFilterConfig, err := util.MessageToStruct(httpManager)
 	if err != nil {
 		return nil, err
 	}
-
 	serverlistener.FilterChains = []listener.FilterChain{{
 		Filters: []listener.Filter{{
 			Name:   util.HTTPConnectionManager,
 			Config: httpFilterConfig,
 		}}}}
-
 	snapshot := cache.NewSnapshot(m.configID, endpoints, clusters, routes, []cache.Resource{serverlistener})
 	return &snapshot, nil
 }
-
 func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, *hcm.HttpConnectionManager) {
+	if len(serviceConfig.GetApis()) == 0 {
+		return nil, nil
+	}
 	httpFilters := []*hcm.HttpFilter{}
 	// Add gRPC transcode filter config.
 	for _, sourceFile := range serviceConfig.GetSourceInfo().GetSourceFiles() {
@@ -131,15 +131,15 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 	}
 
 	// TODO(jilinxia): Add Service control filter config.
-	// TODO(jilinxia): Add JWT filter config.
 
+	// Add JWT Authn filter.
+	httpFilters = append(httpFilters, m.makeJwtAuthnFilter(serviceConfig))
 	// Add Envoy Router filter so requests are routed upstream.
 	routerFilter := &hcm.HttpFilter{
 		Name:   util.Router,
 		Config: &types.Struct{},
 	}
 	httpFilters = append(httpFilters, routerFilter)
-
 	return &v2.Listener{
 			Address: core.Address{Address: &core.Address_SocketAddress{SocketAddress: &core.SocketAddress{
 				Address:       listenerAddress,
@@ -174,6 +174,60 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 		}
 }
 
+func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.HttpFilter {
+	auth := serviceConfig.GetAuthentication()
+	providers := make(map[string]*ac.JwtProvider)
+
+	for _, provider := range auth.GetProviders() {
+		jp := &ac.JwtProvider{
+			Issuer:    provider.GetIssuer(),
+			Audiences: []string{provider.GetAudiences()},
+			// TODO(jilinxia): fetch local token.
+			JwksSourceSpecifier: &ac.JwtProvider_LocalJwks{},
+		}
+		providers[provider.GetId()] = jp
+	}
+
+	rules := []*ac.RequirementRule{}
+	for _, rule := range auth.GetRules() {
+		jwtRequirements := []*ac.JwtRequirement{}
+		for _, r := range rule.GetRequirements() {
+			jwtRequirements = append(jwtRequirements, &ac.JwtRequirement{
+				RequiresType: &ac.JwtRequirement_ProviderAndAudiences{
+					ProviderAndAudiences: &ac.ProviderWithAudiences{
+						ProviderName: r.GetProviderId(),
+						Audiences:    strings.Split(r.GetAudiences(), ","),
+					},
+				},
+			})
+		}
+		ruleConfig := &ac.RequirementRule{
+			Match: &route.RouteMatch{
+				PathSpecifier: &route.RouteMatch_Prefix{fmt.Sprintf("/%s", rule.GetSelector())},
+			},
+			Requires: &ac.JwtRequirement{
+				RequiresType: &ac.JwtRequirement_RequiresAll{
+					RequiresAll: &ac.JwtRequirementAndList{
+						Requirements: jwtRequirements,
+					},
+				},
+			},
+		}
+		rules = append(rules, ruleConfig)
+	}
+	jwtAuthentication := &ac.JwtAuthentication{
+		Providers: providers,
+		Rules:     rules,
+	}
+	jas, _ := util.MessageToStruct(jwtAuthentication)
+
+	jwtAuthnFilter := &hcm.HttpFilter{
+		Name:   "envoy.jwt_authn",
+		Config: jas,
+	}
+	return jwtAuthnFilter
+}
+
 // Implements the ID method for HashNode interface.
 func (m *ConfigManager) ID(node *core.Node) string {
 	return node.GetId()
@@ -193,7 +247,6 @@ func (m *ConfigManager) fetchConfig(configId string) (*api.Service, error) {
 		return nil, fmt.Errorf("fail to get access token")
 	}
 	path := strings.Replace(fetchConfigURL, "$configId", configId, -1)
-
 	return callServiceManagement(path, m.serviceName, token, m.client)
 }
 
