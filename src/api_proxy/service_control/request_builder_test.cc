@@ -1,4 +1,4 @@
-#include "src/envoy/http/cloudesf/service_control/proto.h"
+#include "src/api_proxy/service_control/request_builder.h"
 #include "gtest/gtest.h"
 
 #include <assert.h>
@@ -14,11 +14,12 @@ using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
 namespace google {
+namespace api_proxy {
 namespace service_control {
 
 namespace {
 
-const char kTestdata[] = "src/envoy/http/cloudesf/service_control/testdata/";
+const char kTestdata[] = "src/api_proxy/service_control/testdata/";
 
 std::string ReadTestBaseline(const char* input_file_name) {
   std::string file_name = std::string(kTestdata) + input_file_name;
@@ -125,14 +126,15 @@ std::string ReportRequestToString(gasv1::ReportRequest* request) {
   return text;
 }
 
-class ProtoTest : public ::testing::Test {
+class RequestBuilderTest : public ::testing::Test {
  protected:
-  ProtoTest() : scp_({"local_test_log"}, "test_service", "2016-09-19r0") {}
+  RequestBuilderTest()
+      : scp_({"local_test_log"}, "test_service", "2016-09-19r0") {}
 
-  Proto scp_;
+  RequestBuilder scp_;
 };
 
-TEST(Proto, TestProtobufStruct) {
+TEST(RequestBuilder, TestRequestBuilderbufStruct) {
   // Verify if ::google::protobuf::Struct works.
   // If the main binary code is compiled with CXXFLAGS=-std=c++11,
   // and protobuf library is not, ::google::protobuf::Struct will crash.
@@ -142,7 +144,7 @@ TEST(Proto, TestProtobufStruct) {
   ASSERT_FALSE(fields->empty());
 }
 
-TEST_F(ProtoTest, FillGoodCheckRequestTest) {
+TEST_F(RequestBuilderTest, FillGoodCheckRequestTest) {
   CheckRequestInfo info;
   FillOperationInfo(&info);
   FillCheckRequestInfo(&info);
@@ -155,7 +157,7 @@ TEST_F(ProtoTest, FillGoodCheckRequestTest) {
   ASSERT_EQ(expected_text, text);
 }
 
-TEST_F(ProtoTest, FillGoodCheckRequestAndroidIosTest) {
+TEST_F(RequestBuilderTest, FillGoodCheckRequestAndroidIosTest) {
   CheckRequestInfo info;
   FillOperationInfo(&info);
   FillCheckRequestInfo(&info);
@@ -173,7 +175,7 @@ TEST_F(ProtoTest, FillGoodCheckRequestAndroidIosTest) {
   ASSERT_EQ(expected_text, text);
 }
 
-TEST_F(ProtoTest, FillGoodAllocateQuotaRequestTest) {
+TEST_F(RequestBuilderTest, FillGoodAllocateQuotaRequestTest) {
   std::vector<std::pair<std::string, int>> metric_cost_vector = {
       {"metric_first", 1}, {"metric_second", 2}};
 
@@ -191,7 +193,7 @@ TEST_F(ProtoTest, FillGoodAllocateQuotaRequestTest) {
   ASSERT_EQ(expected_text, text);
 }
 
-TEST_F(ProtoTest, FillAllocateQuotaRequestNoMethodNameTest) {
+TEST_F(RequestBuilderTest, FillAllocateQuotaRequestNoMethodNameTest) {
   std::vector<std::pair<std::string, int>> metric_cost_vector = {
       {"metric_first", 1}, {"metric_second", 2}};
 
@@ -211,7 +213,7 @@ TEST_F(ProtoTest, FillAllocateQuotaRequestNoMethodNameTest) {
   ASSERT_EQ(expected_text, text);
 }
 
-TEST_F(ProtoTest, FillNoApiKeyCheckRequestTest) {
+TEST_F(RequestBuilderTest, FillNoApiKeyCheckRequestTest) {
   CheckRequestInfo info;
   info.operation_id = "operation_id";
   info.operation_name = "operation_name";
@@ -226,7 +228,7 @@ TEST_F(ProtoTest, FillNoApiKeyCheckRequestTest) {
   ASSERT_EQ(expected_text, text);
 }
 
-TEST_F(ProtoTest, CheckRequestMissingOperationNameTest) {
+TEST_F(RequestBuilderTest, CheckRequestMissingOperationNameTest) {
   CheckRequestInfo info;
   info.operation_id = "operation_id";
 
@@ -235,7 +237,7 @@ TEST_F(ProtoTest, CheckRequestMissingOperationNameTest) {
             scp_.FillCheckRequest(info, &request).error_code());
 }
 
-TEST_F(ProtoTest, CheckRequestMissingOperationIdTest) {
+TEST_F(RequestBuilderTest, CheckRequestMissingOperationIdTest) {
   CheckRequestInfo info;
   info.operation_name = "operation_name";
 
@@ -244,7 +246,7 @@ TEST_F(ProtoTest, CheckRequestMissingOperationIdTest) {
             scp_.FillCheckRequest(info, &request).error_code());
 }
 
-TEST_F(ProtoTest, FillGoodReportRequestTest) {
+TEST_F(RequestBuilderTest, FillGoodReportRequestTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
   FillReportRequestInfo(&info);
@@ -258,7 +260,7 @@ TEST_F(ProtoTest, FillGoodReportRequestTest) {
   ASSERT_EQ(expected_text, text);
 }
 
-TEST_F(ProtoTest, FillGoodReportRequestByConsumerTest) {
+TEST_F(RequestBuilderTest, FillGoodReportRequestByConsumerTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
   FillReportRequestInfo(&info);
@@ -275,7 +277,7 @@ TEST_F(ProtoTest, FillGoodReportRequestByConsumerTest) {
   ASSERT_EQ(expected_text, text);
 }
 
-TEST_F(ProtoTest, FillStartReportRequestTest) {
+TEST_F(RequestBuilderTest, FillStartReportRequestTest) {
   ReportRequestInfo info;
   info.is_first_report = true;
   info.is_final_report = false;
@@ -290,7 +292,7 @@ TEST_F(ProtoTest, FillStartReportRequestTest) {
   ASSERT_EQ(expected_text, text);
 }
 
-TEST_F(ProtoTest, FillIntermediateReportRequestTest) {
+TEST_F(RequestBuilderTest, FillIntermediateReportRequestTest) {
   ReportRequestInfo info;
   info.is_first_report = false;
   info.is_final_report = false;
@@ -306,7 +308,7 @@ TEST_F(ProtoTest, FillIntermediateReportRequestTest) {
   ASSERT_EQ(expected_text, text);
 }
 
-TEST_F(ProtoTest, FillFinalReportRequestTest) {
+TEST_F(RequestBuilderTest, FillFinalReportRequestTest) {
   ReportRequestInfo info;
   info.is_first_report = false;
   info.is_final_report = true;
@@ -321,7 +323,7 @@ TEST_F(ProtoTest, FillFinalReportRequestTest) {
   ASSERT_EQ(expected_text, text);
 }
 
-TEST_F(ProtoTest, FillReportRequestFailedTest) {
+TEST_F(RequestBuilderTest, FillReportRequestFailedTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
   // Remove api_key to test not api_key case for
@@ -343,7 +345,7 @@ TEST_F(ProtoTest, FillReportRequestFailedTest) {
   ASSERT_EQ(expected_text, text);
 }
 
-TEST_F(ProtoTest, FillReportRequestEmptyOptionalTest) {
+TEST_F(RequestBuilderTest, FillReportRequestEmptyOptionalTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
 
@@ -356,7 +358,7 @@ TEST_F(ProtoTest, FillReportRequestEmptyOptionalTest) {
   ASSERT_EQ(expected_text, text);
 }
 
-TEST_F(ProtoTest, CredentailIdApiKeyTest) {
+TEST_F(RequestBuilderTest, CredentailIdApiKeyTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
 
@@ -367,7 +369,7 @@ TEST_F(ProtoTest, CredentailIdApiKeyTest) {
             "apikey:api_key_x");
 }
 
-TEST_F(ProtoTest, CredentailIdIssuerOnlyTest) {
+TEST_F(RequestBuilderTest, CredentailIdIssuerOnlyTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
   info.api_key = "";
@@ -381,7 +383,7 @@ TEST_F(ProtoTest, CredentailIdIssuerOnlyTest) {
   //            "jwtauth:issuer=YXV0aC1pc3N1ZXI");
 }
 
-TEST_F(ProtoTest, CredentailIdIssuerAudienceTest) {
+TEST_F(RequestBuilderTest, CredentailIdIssuerAudienceTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
   info.api_key = "";
@@ -399,4 +401,5 @@ TEST_F(ProtoTest, CredentailIdIssuerAudienceTest) {
 }  // namespace
 
 }  // namespace service_control
+}  // namespace api_proxy
 }  // namespace google

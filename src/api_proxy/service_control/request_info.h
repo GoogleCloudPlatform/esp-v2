@@ -10,6 +10,7 @@
 #include <string>
 
 namespace google {
+namespace api_proxy {
 namespace service_control {
 
 namespace compute_platform {
@@ -220,4 +221,5 @@ struct ReportRequestInfo : public OperationInfo {
 };
 
 }  // namespace service_control
+}  // namespace api_proxy
 }  // namespace google

@@ -3,21 +3,7 @@ package(default_visibility = ["//visibility:public"])
 
 load(
     "@envoy//bazel:envoy_build_system.bzl",
-    "envoy_cc_binary",
     "envoy_cc_library",
-    "envoy_cc_test",
-)
-
-load(
-    "@envoy_api//bazel:api_build_system.bzl",
-    "api_proto_library",
-)
-
-api_proto_library(
-    name = "config_proto",
-    srcs = ["config.proto"],
-    visibility = ["//visibility:public"],
-    require_py = 0,
 )
 
 envoy_cc_library(
@@ -35,8 +21,8 @@ envoy_cc_library(
     ],
     repository = "@envoy",
     deps = [
-        ":config_proto_cc",
-        "//src/envoy/http/cloudesf/service_control:proto",
+        "//api/envoy/http/service_control:config_proto_cc",
+        "//src/api_proxy/service_control:request_builder_lib",
         "@envoy//source/exe:envoy_common_lib",
     ],
 )

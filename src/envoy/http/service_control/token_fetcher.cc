@@ -1,16 +1,16 @@
-#include "src/envoy/http/cloudesf/token_fetcher.h"
+#include "src/envoy/http/service_control/token_fetcher.h"
 
 #include "common/common/enum_to_int.h"
 #include "common/http/headers.h"
 #include "common/http/message_impl.h"
 #include "common/http/utility.h"
 
-using ::envoy::config::filter::http::cloudesf::HttpUri;
+using ::google::api_proxy::envoy::http::service_control::HttpUri;
 
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
-namespace CloudESF {
+namespace ServiceControl {
 namespace {
 
 const Http::LowerCaseString kMetadataFlavor{"Metadata-Flavor"};
@@ -159,7 +159,7 @@ TokenFetcherPtr TokenFetcher::create(Upstream::ClusterManager& cm) {
   return std::make_unique<TokenFetcherImpl>(cm);
 }
 
-}  // namespace CloudESF
+}  // namespace ServiceControl
 }  // namespace HttpFilters
 }  // namespace Extensions
 }  // namespace Envoy

@@ -1,14 +1,14 @@
 #pragma once
 
+#include "api/envoy/http/service_control/config.pb.h"
 #include "envoy/common/pure.h"
 #include "envoy/upstream/cluster_manager.h"
 #include "google/protobuf/stubs/status.h"
-#include "src/envoy/http/cloudesf/config.pb.h"
 
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
-namespace CloudESF {
+namespace ServiceControl {
 
 class HttpCall {
  public:
@@ -32,10 +32,10 @@ class HttpCall {
    */
   static HttpCall* create(
       Upstream::ClusterManager& cm,
-      const ::envoy::config::filter::http::cloudesf::HttpUri& uri);
+      const ::google::api_proxy::envoy::http::service_control::HttpUri& uri);
 };
 
-}  // namespace CloudESF
+}  // namespace ServiceControl
 }  // namespace HttpFilters
 }  // namespace Extensions
 }  // namespace Envoy

@@ -1,28 +1,13 @@
-/* Copyright 2017 Istio Authors. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 #include "common/http/utility.h"
 
-#include "src/envoy/http/cloudesf/filter.h"
-#include "src/envoy/http/cloudesf/http_call.h"
-#include "src/envoy/http/cloudesf/service_control/proto.h"
+#include "src/envoy/http/service_control/filter.h"
+#include "src/envoy/http/service_control/http_call.h"
 
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
-namespace CloudESF {
+namespace ServiceControl {
 
 void Filter::ExtractRequestInfo(const Http::HeaderMap& headers) {
   uuid_ = config_->random().uuid();
@@ -49,7 +34,7 @@ void Filter::ExtractRequestInfo(const Http::HeaderMap& headers) {
 
 Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
                                                 bool) {
-  ENVOY_LOG(debug, "Called CloudESF Filter : {}", __func__);
+  ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
 
   ExtractRequestInfo(headers);
 
@@ -61,7 +46,7 @@ Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
   if (state_ == Complete) {
     return Http::FilterHeadersStatus::Continue;
   }
-  ENVOY_LOG(debug, "Called CloudESF filter : Stop");
+  ENVOY_LOG(debug, "Called ServiceControl filter : Stop");
   stopped_ = true;
   return Http::FilterHeadersStatus::StopIteration;
 }
@@ -87,7 +72,7 @@ void Filter::onTokenSuccess(const std::string& token, int expires_in) {
   }
 
   // Make a check call
-  ::google::service_control::CheckRequestInfo info;
+  ::google::api_proxy::service_control::CheckRequestInfo info;
   info.operation_id = uuid_;
   info.operation_name = operation_name_;
   info.producer_project_id = config_->config().producer_project_id();
@@ -95,7 +80,7 @@ void Filter::onTokenSuccess(const std::string& token, int expires_in) {
   info.request_start_time = std::chrono::system_clock::now();
 
   ::google::api::servicecontrol::v1::CheckRequest check_request;
-  config_->proto_builder().FillCheckRequest(info, &check_request);
+  config_->builder().FillCheckRequest(info, &check_request);
   ENVOY_LOG(debug, "Sending check : {}", check_request.DebugString());
 
   std::string suffix_uri = config_->config().service_name() + ":check";
@@ -143,8 +128,9 @@ void Filter::onCheckResponse(const ::google::protobuf::util::Status& status,
     return;
   }
 
-  check_status_ = ::google::service_control::Proto::ConvertCheckResponse(
-      response_pb, config_->config().service_name(), &check_response_info_);
+  check_status_ = ::google::api_proxy::service_control::RequestBuilder::
+      ConvertCheckResponse(response_pb, config_->config().service_name(),
+                           &check_response_info_);
   if (!check_status_.ok()) {
     state_ = Responded;
 
@@ -176,7 +162,7 @@ void Filter::onTokenError(TokenFetcher::TokenReceiver::Failure) {
 }
 
 Http::FilterDataStatus Filter::decodeData(Buffer::Instance&, bool) {
-  ENVOY_LOG(debug, "Called CloudESF Filter : {}", __func__);
+  ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (state_ == Calling) {
     return Http::FilterDataStatus::StopIterationAndWatermark;
   }
@@ -184,7 +170,7 @@ Http::FilterDataStatus Filter::decodeData(Buffer::Instance&, bool) {
 }
 
 Http::FilterTrailersStatus Filter::decodeTrailers(Http::HeaderMap&) {
-  ENVOY_LOG(debug, "Called CloudESF Filter : {}", __func__);
+  ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (state_ == Calling) {
     return Http::FilterTrailersStatus::StopIteration;
   }
@@ -200,9 +186,9 @@ void Filter::log(const Http::HeaderMap* /*request_headers*/,
                  const Http::HeaderMap* /*response_headers*/,
                  const Http::HeaderMap* /*response_trailers*/,
                  const StreamInfo::StreamInfo& stream_info) {
-  ENVOY_LOG(debug, "Called CloudESF Filter : {}", __func__);
+  ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
 
-  ::google::service_control::ReportRequestInfo info;
+  ::google::api_proxy::service_control::ReportRequestInfo info;
   info.operation_id = uuid_;
   info.operation_name = operation_name_;
   info.producer_project_id = config_->config().producer_project_id();
@@ -230,7 +216,7 @@ void Filter::log(const Http::HeaderMap* /*request_headers*/,
   info.response_size = stream_info.bytesSent();
 
   ::google::api::servicecontrol::v1::ReportRequest report_request;
-  config_->proto_builder().FillReportRequest(info, &report_request);
+  config_->builder().FillReportRequest(info, &report_request);
   ENVOY_LOG(debug, "Sending report : {}", report_request.DebugString());
 
   std::string suffix_uri = config_->config().service_name() + ":report";
@@ -241,7 +227,7 @@ void Filter::log(const Http::HeaderMap* /*request_headers*/,
   http_call->call(suffix_uri, token_, report_request, dummy_on_done);
 }
 
-}  // namespace CloudESF
+}  // namespace ServiceControl
 }  // namespace HttpFilters
 }  // namespace Extensions
 }  // namespace Envoy

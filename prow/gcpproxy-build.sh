@@ -45,5 +45,5 @@ echo '======================================================='
 echo '===================== Bazel build ====================='
 echo '======================================================='
 bazel build //src/filters/http_filter_example:all
-bazel build //:cloudesf-envoy
+bazel build //src/envoy:envoy
 

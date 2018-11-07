@@ -1,13 +1,13 @@
 #pragma once
 
+#include "api/envoy/http/service_control/config.pb.h"
 #include "envoy/common/pure.h"
 #include "envoy/upstream/cluster_manager.h"
-#include "src/envoy/http/cloudesf/config.pb.h"
 
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
-namespace CloudESF {
+namespace ServiceControl {
 
 class TokenFetcher;
 typedef std::unique_ptr<TokenFetcher> TokenFetcherPtr;
@@ -56,7 +56,7 @@ class TokenFetcher {
    * @param receiver the receiver of the fetched token.
    */
   virtual void fetch(
-      const ::envoy::config::filter::http::cloudesf::HttpUri& uri,
+      const ::google::api_proxy::envoy::http::service_control::HttpUri& uri,
       TokenReceiver& receiver) PURE;
 
   /*
@@ -67,7 +67,7 @@ class TokenFetcher {
   static TokenFetcherPtr create(Upstream::ClusterManager& cm);
 };
 
-}  // namespace CloudESF
+}  // namespace ServiceControl
 }  // namespace HttpFilters
 }  // namespace Extensions
 }  // namespace Envoy

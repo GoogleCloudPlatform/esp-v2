@@ -1,26 +1,35 @@
 
 syntax = "proto3";
 
-package envoy.config.filter.http.cloudesf;
+package google.api_proxy.envoy.http.service_control;
 
 import "google/protobuf/duration.proto";
 import "validate/validate.proto";
 
 message HttpUri {
+  // The uri string including the domain and path.
   string uri = 1;
+
+  // The Envoy cluster name required for Envoy to make a remote call.
   string cluster = 2;
+
+  // The timeout.
   google.protobuf.Duration timeout = 3;
 }
 
 message FilterConfig {
   // The service name for the Google Service Control
   string service_name = 1 [(validate.rules).string.min_bytes = 1];
+
+  // The service config id
   string service_config_id = 2;
+
+  // The producer project id
   string producer_project_id = 3;
 
-  // the uri to fetch access token, e.g. from metadata server
+  // The Http uri to fetch access token, e.g. from metadata server
   HttpUri token_uri = 4;
 
-  // the uri to call service control
+  // The Http uri to call service control
   HttpUri service_control_uri = 5;
 }

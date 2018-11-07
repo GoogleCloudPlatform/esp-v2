@@ -1,4 +1,4 @@
-#include "src/envoy/http/cloudesf/service_control/proto.h"
+#include "src/api_proxy/service_control/request_builder.h"
 
 #include <functional>
 
@@ -27,6 +27,7 @@ using ::google::protobuf::util::error::Code;
 using ::google::service_control_client::DistributionHelper;
 
 namespace google {
+namespace api_proxy {
 namespace service_control {
 
 const char kConsumerQuotaUsedCount[] =
@@ -1026,8 +1027,9 @@ std::vector<const Element*> FilterPointers(
 
 }  // namespace
 
-Proto::Proto(const std::set<std::string>& logs, const std::string& service_name,
-             const std::string& service_config_id)
+RequestBuilder::RequestBuilder(const std::set<std::string>& logs,
+                               const std::string& service_name,
+                               const std::string& service_config_id)
     : logs_(logs.begin(), logs.end()),
       metrics_(FilterPointers<SupportedMetric>(
           supported_metrics, supported_metrics + supported_metrics_count,
@@ -1038,11 +1040,11 @@ Proto::Proto(const std::set<std::string>& logs, const std::string& service_name,
       service_name_(service_name),
       service_config_id_(service_config_id) {}
 
-Proto::Proto(const std::set<std::string>& logs,
-             const std::set<std::string>& metrics,
-             const std::set<std::string>& labels,
-             const std::string& service_name,
-             const std::string& service_config_id)
+RequestBuilder::RequestBuilder(const std::set<std::string>& logs,
+                               const std::set<std::string>& metrics,
+                               const std::set<std::string>& labels,
+                               const std::string& service_name,
+                               const std::string& service_config_id)
     : logs_(logs.begin(), logs.end()),
       metrics_(FilterPointers<SupportedMetric>(
           supported_metrics, supported_metrics + supported_metrics_count,
@@ -1058,7 +1060,7 @@ Proto::Proto(const std::set<std::string>& logs,
       service_name_(service_name),
       service_config_id_(service_config_id) {}
 
-Status Proto::FillAllocateQuotaRequest(
+Status RequestBuilder::FillAllocateQuotaRequest(
     const QuotaRequestInfo& info,
     ::google::api::servicecontrol::v1::AllocateQuotaRequest* request) {
   ::google::api::servicecontrol::v1::QuotaOperation* operation =
@@ -1116,8 +1118,8 @@ Status Proto::FillAllocateQuotaRequest(
   return Status::OK;
 }
 
-Status Proto::FillCheckRequest(const CheckRequestInfo& info,
-                               CheckRequest* request) {
+Status RequestBuilder::FillCheckRequest(const CheckRequestInfo& info,
+                                        CheckRequest* request) {
   Status status = VerifyRequiredCheckFields(info);
   if (!status.ok()) {
     return status;
@@ -1153,8 +1155,8 @@ Status Proto::FillCheckRequest(const CheckRequestInfo& info,
   return Status::OK;
 }
 
-Status Proto::FillReportRequest(const ReportRequestInfo& info,
-                                ReportRequest* request) {
+Status RequestBuilder::FillReportRequest(const ReportRequestInfo& info,
+                                         ReportRequest* request) {
   Status status = VerifyRequiredReportFields(info);
   if (!status.ok()) {
     return status;
@@ -1218,7 +1220,7 @@ Status Proto::FillReportRequest(const ReportRequestInfo& info,
   return Status::OK;
 }
 
-Status Proto::AppendByConsumerOperations(
+Status RequestBuilder::AppendByConsumerOperations(
     const ReportRequestInfo& info,
     ::google::api::servicecontrol::v1::ReportRequest* request,
     Timestamp current_time) {
@@ -1259,7 +1261,7 @@ Status Proto::AppendByConsumerOperations(
   return Status::OK;
 }
 
-Status Proto::ConvertAllocateQuotaResponse(
+Status RequestBuilder::ConvertAllocateQuotaResponse(
     const ::google::api::servicecontrol::v1::AllocateQuotaResponse& response,
     const std::string& service_name) {
   // response.operation_id()
@@ -1299,9 +1301,9 @@ Status Proto::ConvertAllocateQuotaResponse(
   return Status::OK;
 }
 
-Status Proto::ConvertCheckResponse(const CheckResponse& check_response,
-                                   const std::string& service_name,
-                                   CheckResponseInfo* check_response_info) {
+Status RequestBuilder::ConvertCheckResponse(
+    const CheckResponse& check_response, const std::string& service_name,
+    CheckResponseInfo* check_response_info) {
   if (check_response.check_info().consumer_info().project_number() > 0) {
     // Store project id to check_response_info
     check_response_info->consumer_project_id = std::to_string(
@@ -1370,7 +1372,8 @@ Status Proto::ConvertCheckResponse(const CheckResponse& check_response,
   return Status::OK;
 }
 
-bool Proto::IsMetricSupported(const ::google::api::MetricDescriptor& metric) {
+bool RequestBuilder::IsMetricSupported(
+    const ::google::api::MetricDescriptor& metric) {
   for (int i = 0; i < supported_metrics_count; i++) {
     const SupportedMetric& m = supported_metrics[i];
     if (metric.name() == m.name && metric.metric_kind() == m.metric_kind &&
@@ -1381,7 +1384,8 @@ bool Proto::IsMetricSupported(const ::google::api::MetricDescriptor& metric) {
   return false;
 }
 
-bool Proto::IsLabelSupported(const ::google::api::LabelDescriptor& label) {
+bool RequestBuilder::IsLabelSupported(
+    const ::google::api::LabelDescriptor& label) {
   for (int i = 0; i < supported_labels_count; i++) {
     const SupportedLabel& l = supported_labels[i];
     if (label.key() == l.name && label.value_type() == l.value_type) {
@@ -1392,4 +1396,5 @@ bool Proto::IsLabelSupported(const ::google::api::LabelDescriptor& label) {
 }
 
 }  // namespace service_control
+}  // namespace api_proxy
 }  // namespace google

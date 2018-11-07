@@ -48,7 +48,7 @@ static_resources:
             config:
               path: /tmp/envoy-access.log
           http_filters:
-          - name: envoy.filters.http.cloud_esf
+          - name: envoy.filters.http.service_control
             config:
               service_name: bookstore-api.endpoints.qiwzhang-authz.cloud.goog
               token_uri:

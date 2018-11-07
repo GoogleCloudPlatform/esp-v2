@@ -4,16 +4,16 @@
 #include "envoy/access_log/access_log.h"
 #include "envoy/http/filter.h"
 #include "envoy/upstream/cluster_manager.h"
-#include "src/envoy/http/cloudesf/filter_config.h"
-#include "src/envoy/http/cloudesf/http_call.h"
-#include "src/envoy/http/cloudesf/token_fetcher.h"
+#include "src/envoy/http/service_control/filter_config.h"
+#include "src/envoy/http/service_control/http_call.h"
+#include "src/envoy/http/service_control/token_fetcher.h"
 
 #include <string>
 
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
-namespace CloudESF {
+namespace ServiceControl {
 
 // The Envoy filter for Cloud ESF service control client.
 class Filter : public Http::StreamDecoderFilter,
@@ -67,12 +67,12 @@ class Filter : public Http::StreamDecoderFilter,
   std::string api_key_;
   std::string http_method_;
 
-  ::google::service_control::CheckResponseInfo check_response_info_;
+  ::google::api_proxy::service_control::CheckResponseInfo check_response_info_;
   ::google::protobuf::util::Status check_status_;
   HttpCall* check_call_{};
 };
 
-}  // namespace CloudESF
+}  // namespace ServiceControl
 }  // namespace HttpFilters
 }  // namespace Extensions
 }  // namespace Envoy

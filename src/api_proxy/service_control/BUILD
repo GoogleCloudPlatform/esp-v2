@@ -1,13 +1,11 @@
 
 
 cc_library(
-    name = "proto",
-    srcs = [
-        "proto.cc",
-    ],
+    name = "request_builder_lib",
+    srcs = ["request_builder.cc"],
     hdrs = [
-        "info.h",
-        "proto.h",
+        "request_info.h",
+        "request_builder.h",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -16,15 +14,15 @@ cc_library(
 )
 
 cc_test(
-    name = "proto_test",
+    name = "request_builder_test",
     size = "small",
     srcs = [
-        "proto_test.cc",
+        "request_builder_test.cc",
     ],
     data = glob(["testdata/*.golden"]),
     linkstatic = 1,
     deps = [
-        ":proto",
+        ":request_builder_lib",
         "//external:googletest_main",
     ],
 )

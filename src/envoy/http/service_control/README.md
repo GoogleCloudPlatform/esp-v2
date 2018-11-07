@@ -5,8 +5,8 @@
 
 ## run envoy
 
-* change the service_name to your in src/envoy/http/cloudesf/envoy.yaml
-* bazel run //:cloudesf-envoy -- -c $PWD/src/envoy/http/cloudesf/envoy.yaml -l debug
+* change the service_name to your in src/envoy/http/service_control/envoy.yaml
+* bazel run //src/envoy:envoy -- -c $PWD/src/envoy/http/service_control/envoy.yaml -l debug
 
 ## run http client
 

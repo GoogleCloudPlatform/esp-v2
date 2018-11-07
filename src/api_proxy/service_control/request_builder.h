@@ -7,22 +7,27 @@
 #include "google/api/servicecontrol/v1/service_controller.pb.h"
 #include "google/protobuf/stubs/status.h"
 #include "google/protobuf/timestamp.pb.h"
-#include "src/envoy/http/cloudesf/service_control/info.h"
+
+#include "src/api_proxy/service_control/request_info.h"
 
 namespace google {
+namespace api_proxy {
 namespace service_control {
 
-class Proto final {
+class RequestBuilder final {
  public:
-  // Initializes Proto with all supported metrics and labels.
-  Proto(const std::set<std::string>& logs, const std::string& service_name,
-        const std::string& service_config_id);
+  // Initializes RequestBuilder with all supported metrics and labels.
+  RequestBuilder(const std::set<std::string>& logs,
+                 const std::string& service_name,
+                 const std::string& service_config_id);
 
-  // Initializes Proto with specified (and supported) metrics and
+  // Initializes RequestBuilder with specified (and supported) metrics and
   // labels.
-  Proto(const std::set<std::string>& logs, const std::set<std::string>& metrics,
-        const std::set<std::string>& labels, const std::string& service_name,
-        const std::string& service_config_id);
+  RequestBuilder(const std::set<std::string>& logs,
+                 const std::set<std::string>& metrics,
+                 const std::set<std::string>& labels,
+                 const std::string& service_name,
+                 const std::string& service_config_id);
 
   // Fills the CheckRequest protobuf from info.
   // There are some logic inside the Fill functions beside just filling
@@ -80,4 +85,5 @@ class Proto final {
 };
 
 }  // namespace service_control
+}  // namespace api_proxy
 }  // namespace google

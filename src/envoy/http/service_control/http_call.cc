@@ -1,18 +1,18 @@
-#include "src/envoy/http/cloudesf/http_call.h"
+#include "src/envoy/http/service_control/http_call.h"
 
 #include "common/common/enum_to_int.h"
 #include "common/http/headers.h"
 #include "common/http/message_impl.h"
 #include "common/http/utility.h"
 
-using ::envoy::config::filter::http::cloudesf::HttpUri;
+using ::google::api_proxy::envoy::http::service_control::HttpUri;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
-namespace CloudESF {
+namespace ServiceControl {
 namespace {
 
 // const char KApplicationProto[] = "application/x-protobuf";
@@ -143,7 +143,7 @@ HttpCall* HttpCall::create(Upstream::ClusterManager& cm,
   return new HttpCallImpl(cm, http_uri);
 }
 
-}  // namespace CloudESF
+}  // namespace ServiceControl
 }  // namespace HttpFilters
 }  // namespace Extensions
 }  // namespace Envoy
