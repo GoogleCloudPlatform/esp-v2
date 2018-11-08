@@ -6,6 +6,8 @@
 #include "common/http/utility.h"
 
 using ::google::api_proxy::envoy::http::service_control::HttpUri;
+using ::google::protobuf::util::Status;
+using ::google::protobuf::util::error::Code;
 
 namespace Envoy {
 namespace Extensions {
@@ -49,13 +51,17 @@ bool parseJsonToken(const std::string& json_token, std::string* token,
   return true;
 }
 
-Http::MessagePtr PrepareHeaders(const HttpUri& http_uri) {
+Http::MessagePtr prepareHeaders(const HttpUri& http_uri) {
   absl::string_view host, path;
   Http::Utility::extractHostPathFromUri(http_uri.uri(), host, path);
 
   Http::MessagePtr message(new Http::RequestMessageImpl());
   message->headers().insertPath().value(path.data(), path.size());
   message->headers().insertHost().value(host.data(), host.size());
+
+  message->headers().insertMethod().value().setReference(
+      Http::Headers::get().MethodValues.Get);
+  message->headers().addReference(kMetadataFlavor, kGoogle);
 
   return message;
 }
@@ -64,30 +70,24 @@ class TokenFetcherImpl : public TokenFetcher,
                          public Logger::Loggable<Logger::Id::filter>,
                          public Http::AsyncClient::Callbacks {
  public:
-  TokenFetcherImpl(Upstream::ClusterManager& cm) : cm_(cm) {
+  TokenFetcherImpl(Upstream::ClusterManager& cm, DoneFunc on_done)
+      : cm_(cm), on_done_(on_done) {
     ENVOY_LOG(trace, "{}", __func__);
   }
-
-  ~TokenFetcherImpl() { cancel(); }
 
   void cancel() {
-    if (request_ && !complete_) {
+    if (request_) {
       request_->cancel();
       ENVOY_LOG(debug, "fetch access_token [uri = {}]: canceled", uri_->uri());
+      reset();
     }
-    reset();
+    delete this;
   }
 
-  void fetch(const HttpUri& uri, TokenFetcher::TokenReceiver& receiver) {
+  void fetch(const HttpUri& uri) {
     ENVOY_LOG(trace, "{}", __func__);
-    ASSERT(!receiver_);
-    complete_ = false;
-    receiver_ = &receiver;
     uri_ = &uri;
-    Http::MessagePtr message = PrepareHeaders(uri);
-    message->headers().insertMethod().value().setReference(
-        Http::Headers::get().MethodValues.Get);
-    message->headers().addReference(kMetadataFlavor, kGoogle);
+    Http::MessagePtr message = prepareHeaders(uri);
     ENVOY_LOG(debug, "fetch access_token from [uri = {}]: start", uri_->uri());
     request_ =
         cm_.httpAsyncClientForCluster(uri.cluster())
@@ -99,9 +99,9 @@ class TokenFetcherImpl : public TokenFetcher,
   // HTTP async receive methods
   void onSuccess(Http::MessagePtr&& response) {
     ENVOY_LOG(trace, "{}", __func__);
-    complete_ = true;
     const uint64_t status_code =
         Http::Utility::getResponseStatus(response->headers());
+    Result result;
     if (status_code == enumToInt(Http::Code::OK)) {
       ENVOY_LOG(debug, "fetch access_token [uri = {}]: success", uri_->uri());
       if (response->body()) {
@@ -109,54 +109,54 @@ class TokenFetcherImpl : public TokenFetcher,
         const auto body = std::string(
             static_cast<char*>(response->body()->linearize(len)), len);
 
-        std::string token;
-        int expires_in;
         ENVOY_LOG(debug, "fetch access_token JSON: {} succeeded", body);
-        if (parseJsonToken(body, &token, &expires_in)) {
-          ENVOY_LOG(debug, "parsed access_token: {}, expires_in: {}", token,
-                    expires_in);
-          receiver_->onTokenSuccess(token, expires_in);
+        if (parseJsonToken(body, &result.token, &result.expires_in)) {
+          ENVOY_LOG(debug, "parsed access_token: {}, expires_in: {}",
+                    result.token, result.expires_in);
+          on_done_(Status::OK, result);
         } else {
           ENVOY_LOG(debug, "fetch access_token: invalid format");
-          receiver_->onTokenError(
-              TokenFetcher::TokenReceiver::Failure::InvalidToken);
+          on_done_(Status(Code::UNAVAILABLE, "invalid json format"), result);
         }
       } else {
         ENVOY_LOG(debug, "fetch access_token body is empty");
-        receiver_->onTokenError(TokenFetcher::TokenReceiver::Failure::Network);
+        on_done_(Status(Code::UNAVAILABLE, "empty body"), result);
       }
     } else {
       ENVOY_LOG(debug, "fetch access_token: response status code {}",
                 status_code);
-      receiver_->onTokenError(TokenFetcher::TokenReceiver::Failure::Network);
+      on_done_(Status(Code::UNAVAILABLE, "network failure"), result);
     }
     reset();
+    delete this;
   }
 
   void onFailure(Http::AsyncClient::FailureReason reason) {
     ENVOY_LOG(debug, "fetch access_token: network error {}", enumToInt(reason));
-    complete_ = true;
-    receiver_->onTokenError(TokenFetcher::TokenReceiver::Failure::Network);
+    Result result;
+    on_done_(Status(Code::UNAVAILABLE, "network failure"), result);
     reset();
+    delete this;
   }
 
  private:
   Upstream::ClusterManager& cm_;
-  bool complete_{};
-  TokenFetcher::TokenReceiver* receiver_{};
+  DoneFunc on_done_;
   const HttpUri* uri_{};
   Http::AsyncClient::Request* request_{};
 
-  void reset() {
-    request_ = nullptr;
-    receiver_ = nullptr;
-    uri_ = nullptr;
-  }
+  void reset() { request_ = nullptr; }
 };
+
 }  // namespace
 
-TokenFetcherPtr TokenFetcher::create(Upstream::ClusterManager& cm) {
-  return std::make_unique<TokenFetcherImpl>(cm);
+CancelFunc TokenFetcher::fetch(
+    Upstream::ClusterManager& cm,
+    const ::google::api_proxy::envoy::http::service_control::HttpUri& uri,
+    DoneFunc on_done) {
+  auto fetcher = new TokenFetcherImpl(cm, on_done);
+  fetcher->fetch(uri);
+  return [fetcher]() { fetcher->cancel(); };
 }
 
 }  // namespace ServiceControl

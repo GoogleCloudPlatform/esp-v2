@@ -6,7 +6,6 @@
 #include "envoy/upstream/cluster_manager.h"
 #include "src/envoy/http/service_control/filter_config.h"
 #include "src/envoy/http/service_control/http_call.h"
-#include "src/envoy/http/service_control/token_fetcher.h"
 
 #include <string>
 
@@ -18,7 +17,6 @@ namespace ServiceControl {
 // The Envoy filter for Cloud ESF service control client.
 class Filter : public Http::StreamDecoderFilter,
                public AccessLog::Instance,
-               public TokenFetcher::TokenReceiver,
                public Logger::Loggable<Logger::Id::filter> {
  public:
   Filter(FilterConfigSharedPtr config) : config_(config) {}
@@ -34,10 +32,6 @@ class Filter : public Http::StreamDecoderFilter,
   void setDecoderFilterCallbacks(
       Http::StreamDecoderFilterCallbacks& callbacks) override;
 
-  // Implmeneted functions for TokenFetcher::TokenReceiver
-  void onTokenSuccess(const std::string& token, int expires_in) override;
-  void onTokenError(TokenFetcher::TokenReceiver::Failure reason) override;
-
   // Called when the request is completed.
   void log(const Http::HeaderMap* request_headers,
            const Http::HeaderMap* response_headers,
@@ -45,8 +39,11 @@ class Filter : public Http::StreamDecoderFilter,
            const StreamInfo::StreamInfo& stream_info) override;
 
  private:
+  void onTokenDone(const ::google::protobuf::util::Status& status,
+                   const std::string& token);
   void onCheckResponse(const ::google::protobuf::util::Status& status,
                        const std::string& response_json);
+  void rejectRequest(Http::Code code, const std::string& error_msg);
 
   // The callback funcion.
   Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
@@ -60,7 +57,7 @@ class Filter : public Http::StreamDecoderFilter,
   // Mark if request has been stopped.
   bool stopped_ = false;
 
-  TokenFetcherPtr token_fetcher_;
+  CancelFunc token_fetcher_;
   std::string token_;
   std::string uuid_;
   std::string operation_name_;

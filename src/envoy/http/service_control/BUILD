@@ -14,9 +14,11 @@ envoy_cc_library(
         "token_fetcher.cc",
     ],
     hdrs = [
+        "cancel_func.h",
         "filter.h",
         "filter_config.h",
         "http_call.h",
+        "token_cache.h",
         "token_fetcher.h",
     ],
     repository = "@envoy",

@@ -1,70 +1,29 @@
 #pragma once
 
 #include "api/envoy/http/service_control/config.pb.h"
-#include "envoy/common/pure.h"
 #include "envoy/upstream/cluster_manager.h"
+#include "google/protobuf/stubs/status.h"
+#include "src/envoy/http/service_control/cancel_func.h"
 
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 
-class TokenFetcher;
-typedef std::unique_ptr<TokenFetcher> TokenFetcherPtr;
-/**
- * TokenFetcher interface can be used to retrieve remote access_token from
- * GCP metadata server.
- */
 class TokenFetcher {
  public:
-  class TokenReceiver {
-   public:
-    enum class Failure {
-      /* A network error occurred causing Token retrieval failure. */
-      Network,
-      /* A failure occurred when trying to parse the retrieved JSON. */
-      InvalidToken,
-    };
-
-    virtual ~TokenReceiver(){};
-    /*
-     * Successful retrieval callback.
-     * @param token.
-     */
-    virtual void onTokenSuccess(const std::string& token, int expires_in) PURE;
-    /*
-     * Retrieval error callback.
-     * * @param reason the failure reason.
-     */
-    virtual void onTokenError(Failure reason) PURE;
+  struct Result {
+    std::string token;
+    int expires_in;
   };
 
-  virtual ~TokenFetcher(){};
+  using DoneFunc = std::function<void(
+      const ::google::protobuf::util::Status& status, const Result& result)>;
 
-  /*
-   * Cancel any in-flight request.
-   */
-  virtual void cancel() PURE;
-
-  /*
-   * Retrieve a access token from a remote HTTP server.
-   * At most one outstanding request may be in-flight,
-   * i.e. from the invocation of `fetch()` until either
-   * a callback or `cancel()` is invoked, no
-   * additional `fetch()` may be issued.
-   * @param uri the uri to retrieve the token from.
-   * @param receiver the receiver of the fetched token.
-   */
-  virtual void fetch(
+  static CancelFunc fetch(
+      Upstream::ClusterManager& cm,
       const ::google::api_proxy::envoy::http::service_control::HttpUri& uri,
-      TokenReceiver& receiver) PURE;
-
-  /*
-   * Factory method for creating a TokenFetcher.
-   * @param cm the cluster manager to use during Token retrieval
-   * @return a TokenFetcher instance
-   */
-  static TokenFetcherPtr create(Upstream::ClusterManager& cm);
+      DoneFunc on_done);
 };
 
 }  // namespace ServiceControl

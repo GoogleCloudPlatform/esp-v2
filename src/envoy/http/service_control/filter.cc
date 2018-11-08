@@ -40,8 +40,9 @@ Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
 
   state_ = Calling;
   stopped_ = false;
-  token_fetcher_ = TokenFetcher::create(config_->cm());
-  token_fetcher_->fetch(config_->config().token_uri(), *this);
+  token_fetcher_ = config_->getCache().getTokenCache().getToken(
+      [this](const ::google::protobuf::util::Status& status,
+             const std::string& result) { onTokenDone(status, result); });
 
   if (state_ == Complete) {
     return Http::FilterHeadersStatus::Continue;
@@ -53,7 +54,7 @@ Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
 
 void Filter::onDestroy() {
   if (token_fetcher_) {
-    token_fetcher_->cancel();
+    token_fetcher_();
     token_fetcher_ = nullptr;
   }
   if (check_call_) {
@@ -62,15 +63,20 @@ void Filter::onDestroy() {
   }
 }
 
-void Filter::onTokenSuccess(const std::string& token, int expires_in) {
-  ENVOY_LOG(debug, "Fetched access_token : {}, expires_in {}", token,
-            expires_in);
-  token_ = token;
+void Filter::onTokenDone(const ::google::protobuf::util::Status& status,
+                         const std::string& token) {
   // This stream has been reset, abort the callback.
+  token_fetcher_ = nullptr;
   if (state_ == Responded) {
     return;
   }
 
+  if (!status.ok()) {
+    rejectRequest(Http::Code(401), "Failed to fetch access_token");
+    return;
+  }
+
+  token_ = token;
   // Make a check call
   ::google::api_proxy::service_control::CheckRequestInfo info;
   info.operation_id = uuid_;
@@ -93,6 +99,15 @@ void Filter::onTokenSuccess(const std::string& token, int expires_in) {
   check_call_->call(suffix_uri, token_, check_request, on_done);
 }
 
+void Filter::rejectRequest(Http::Code code, const std::string& error_msg) {
+  config_->stats().denied_.inc();
+  state_ = Responded;
+
+  decoder_callbacks_->sendLocalReply(code, error_msg, nullptr);
+  decoder_callbacks_->streamInfo().setResponseFlag(
+      StreamInfo::ResponseFlag::UnauthorizedExternalService);
+}
+
 void Filter::onCheckResponse(const ::google::protobuf::util::Status& status,
                              const std::string& response_json) {
   ENVOY_LOG(debug, "Check response with : {}, body {}", status.ToString(),
@@ -104,12 +119,7 @@ void Filter::onCheckResponse(const ::google::protobuf::util::Status& status,
   }
 
   if (!status.ok()) {
-    state_ = Responded;
-
-    Http::Code code = Http::Code(401);
-    decoder_callbacks_->sendLocalReply(code, "Check failed", nullptr);
-    decoder_callbacks_->streamInfo().setResponseFlag(
-        StreamInfo::ResponseFlag::UnauthorizedExternalService);
+    rejectRequest(Http::Code(401), "Check failed");
     return;
   }
 
@@ -119,12 +129,7 @@ void Filter::onCheckResponse(const ::google::protobuf::util::Status& status,
   const auto json_status =
       Protobuf::util::JsonStringToMessage(response_json, &response_pb, options);
   if (!json_status.ok()) {
-    state_ = Responded;
-
-    Http::Code code = Http::Code(401);
-    decoder_callbacks_->sendLocalReply(code, "Check failed", nullptr);
-    decoder_callbacks_->streamInfo().setResponseFlag(
-        StreamInfo::ResponseFlag::UnauthorizedExternalService);
+    rejectRequest(Http::Code(401), "Check failed");
     return;
   }
 
@@ -132,33 +137,15 @@ void Filter::onCheckResponse(const ::google::protobuf::util::Status& status,
       ConvertCheckResponse(response_pb, config_->config().service_name(),
                            &check_response_info_);
   if (!check_status_.ok()) {
-    state_ = Responded;
-
-    Http::Code code = Http::Code(401);
-    decoder_callbacks_->sendLocalReply(code, "Check failed", nullptr);
-    decoder_callbacks_->streamInfo().setResponseFlag(
-        StreamInfo::ResponseFlag::UnauthorizedExternalService);
+    rejectRequest(Http::Code(401), "Check failed");
     return;
   }
 
+  config_->stats().allowed_.inc();
   state_ = Complete;
   if (stopped_) {
     decoder_callbacks_->continueDecoding();
   }
-}
-
-void Filter::onTokenError(TokenFetcher::TokenReceiver::Failure) {
-  // This stream has been reset, abort the callback.
-  if (state_ == Responded) {
-    return;
-  }
-  state_ = Responded;
-
-  Http::Code code = Http::Code(401);
-  decoder_callbacks_->sendLocalReply(code, "Failed to fetch access_token",
-                                     nullptr);
-  decoder_callbacks_->streamInfo().setResponseFlag(
-      StreamInfo::ResponseFlag::UnauthorizedExternalService);
 }
 
 Http::FilterDataStatus Filter::decodeData(Buffer::Instance&, bool) {

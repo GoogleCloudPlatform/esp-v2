@@ -27,10 +27,10 @@ class FilterFactory
   Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
       const ::google::api_proxy::envoy::http::service_control::FilterConfig&
           proto_config,
-      const std::string&,
+      const std::string& stats_prefix,
       Server::Configuration::FactoryContext& context) override {
-    auto filter_config = std::make_shared<FilterConfig>(
-        proto_config, context.clusterManager(), context.random());
+    auto filter_config =
+        std::make_shared<FilterConfig>(proto_config, stats_prefix, context);
     return
         [filter_config](Http::FilterChainFactoryCallbacks& callbacks) -> void {
           auto filter = std::make_shared<Filter>(filter_config);
