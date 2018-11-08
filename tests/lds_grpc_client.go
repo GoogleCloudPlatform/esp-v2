@@ -44,7 +44,7 @@ func main() {
 
 	req := &v2.DiscoveryRequest{
 		Node: &core.Node{
-			Id: "testNode",
+			Id: "api_proxy",
 		},
 	}
 	resp := &v2.DiscoveryResponse{}

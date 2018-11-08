@@ -41,7 +41,9 @@ import (
 
 const (
 	listenerAddress = "0.0.0.0"
+	clusterAddress  = "127.0.0.1"
 	listenerPort    = 8080
+	backendPort     = 12500
 )
 
 var (
@@ -90,7 +92,7 @@ func (m *ConfigManager) init() error {
 }
 
 func (m *ConfigManager) makeSnapshot(serviceConfig *api.Service) (*cache.Snapshot, error) {
-	var clusters, endpoints, routes []cache.Resource
+	var endpoints, routes []cache.Resource
 	serverlistener, httpManager := m.makeListener(serviceConfig)
 	// HTTP filter configuration
 	httpFilterConfig, err := util.MessageToStruct(httpManager)
@@ -102,9 +104,26 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *api.Service) (*cache.Snapsho
 			Name:   util.HTTPConnectionManager,
 			Config: httpFilterConfig,
 		}}}}
-	snapshot := cache.NewSnapshot(m.configID, endpoints, clusters, routes, []cache.Resource{serverlistener})
+	cluster := &v2.Cluster{
+		Name:     serviceConfig.Apis[0].Name,
+		LbPolicy: v2.Cluster_ROUND_ROBIN,
+		Hosts: []*core.Address{
+			{Address: &core.Address_SocketAddress{
+				SocketAddress: &core.SocketAddress{
+					Address: clusterAddress,
+					PortSpecifier: &core.SocketAddress_PortValue{
+						PortValue: uint32(backendPort),
+					},
+				},
+			},
+			},
+		},
+	}
+
+	snapshot := cache.NewSnapshot(m.configID, endpoints, []cache.Resource{cluster}, routes, []cache.Resource{serverlistener})
 	return &snapshot, nil
 }
+
 func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, *hcm.HttpConnectionManager) {
 	if len(serviceConfig.GetApis()) == 0 {
 		return nil, nil
@@ -129,9 +148,7 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 			break
 		}
 	}
-
 	// TODO(jilinxia): Add Service control filter config.
-
 	// Add JWT Authn filter.
 	httpFilters = append(httpFilters, m.makeJwtAuthnFilter(serviceConfig))
 	// Add Envoy Router filter so requests are routed upstream.
@@ -161,7 +178,7 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 									},
 									Action: &route.Route_Route{
 										Route: &route.RouteAction{
-											ClusterSpecifier: &route.RouteAction_Cluster{"grpc_service"},
+											ClusterSpecifier: &route.RouteAction_Cluster{serviceConfig.Apis[0].Name},
 										},
 									},
 								},
@@ -177,17 +194,19 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.HttpFilter {
 	auth := serviceConfig.GetAuthentication()
 	providers := make(map[string]*ac.JwtProvider)
-
 	for _, provider := range auth.GetProviders() {
 		jp := &ac.JwtProvider{
 			Issuer:    provider.GetIssuer(),
 			Audiences: []string{provider.GetAudiences()},
 			// TODO(jilinxia): fetch local token.
-			JwksSourceSpecifier: &ac.JwtProvider_LocalJwks{},
+			JwksSourceSpecifier: &ac.JwtProvider_LocalJwks{
+				LocalJwks: &core.DataSource{
+					Specifier: &core.DataSource_InlineString{"fake local jwks"},
+				},
+			},
 		}
 		providers[provider.GetId()] = jp
 	}
-
 	rules := []*ac.RequirementRule{}
 	for _, rule := range auth.GetRules() {
 		jwtRequirements := []*ac.JwtRequirement{}
@@ -220,9 +239,8 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.Http
 		Rules:     rules,
 	}
 	jas, _ := util.MessageToStruct(jwtAuthentication)
-
 	jwtAuthnFilter := &hcm.HttpFilter{
-		Name:   "envoy.jwt_authn",
+		Name:   "envoy.http_jwt_authn",
 		Config: jas,
 	}
 	return jwtAuthnFilter

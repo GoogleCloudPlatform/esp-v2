@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package configmanager
 
 import (
@@ -96,7 +97,7 @@ var (
 		base64.StdEncoding.EncodeToString([]byte("rawDescriptor")))
 )
 
-func TestFetchRollouts(t *testing.T) {
+func TestFetchListeners(t *testing.T) {
 	runTest(t, func(env *testEnv) {
 		ctx := context.Background()
 		// First request, VersionId should be empty.
@@ -141,7 +142,9 @@ func TestFetchRollouts(t *testing.T) {
                                                 "firebase": {
                                                	    "audiences":["test_audience1,test_audience2"],
                                                	    "issuer":"https://test_issuer.google.com/",
-                                               	    "local_jwks":null
+                                               	    "local_jwks": {
+                                               	    	"inline_string": "fake local jwks"
+                                               	    }
                                                 }
                                            	},
                                             "rules": [
@@ -174,7 +177,7 @@ func TestFetchRollouts(t *testing.T) {
                                                 }
                                             ]
                                         },
-                                        "name":"envoy.jwt_authn"
+                                        "name":"envoy.http_jwt_authn"
                                     },
                                     {
                                         "config":{
@@ -196,7 +199,7 @@ func TestFetchRollouts(t *testing.T) {
                                                         "prefix":"/%s"
                                                     },
                                                     "route":{
-                                                        "cluster":"grpc_service"
+                                                        "cluster": "%s"
                                                     }
                                                 }
                                             ]
@@ -214,23 +217,77 @@ func TestFetchRollouts(t *testing.T) {
         `,
 			base64.StdEncoding.EncodeToString([]byte("rawDescriptor")),
 			testEndpointName,
+			testEndpointName,
 			testEndpointName)
+
 		if resp.Version != testConfigID {
 			t.Errorf("snapshot cache fetch got version: %v, want: %v", resp.Version, testConfigID)
 		}
 		if !reflect.DeepEqual(resp.Request, req) {
 			t.Errorf("snapshot cache fetch got request: %v, want: %v", resp.Request, req)
 		}
+
 		// Normalize both wantedListeners and gotListeners.
 		wantedListeners = normalizeJson(wantedListeners)
 		gotListeners = normalizeJson(gotListeners)
+
 		if gotListeners != wantedListeners {
 			t.Errorf("snapshot cache fetch got Listeners: %s, want: %s", gotListeners, wantedListeners)
 		}
 	})
 }
 
+func TestFetchClusters(t *testing.T) {
+	runTest(t, func(env *testEnv) {
+		ctx := context.Background()
+		// First request, VersionId should be empty.
+		req := v2.DiscoveryRequest{
+			Node: &core.Node{
+				Id: node,
+			},
+			TypeUrl: cache.ClusterType,
+		}
+
+		resp, err := env.configManager.cache.Fetch(ctx, req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		marshaler := &jsonpb.Marshaler{}
+		gotClusters, err := marshaler.MarshalToString(resp.Resources[0])
+
+		wantedClusters := fmt.Sprintf(`
+	    {
+	    	  "hosts": [
+	    	      {
+	    	      	  "socketAddress": {
+	    	      	  	  "address": "%s",
+	    	      	  	  "portValue": %d
+	    	      	  }
+	    	      }
+	    	  ],
+	    	  "name": "%s"
+	    }`,
+			clusterAddress, backendPort, testEndpointName)
+
+		if resp.Version != testConfigID {
+			t.Errorf("snapshot cache fetch got version: %v, want: %v", resp.Version, testConfigID)
+		}
+		if !reflect.DeepEqual(resp.Request, req) {
+			t.Errorf("snapshot cache fetch got request: %v, want: %v", resp.Request, req)
+		}
+
+		wantedClusters = normalizeJson(wantedClusters)
+		gotClusters = normalizeJson(gotClusters)
+
+		if gotClusters != wantedClusters {
+			t.Errorf("snapshot cache fetch got Clusters: %s, want: %s", gotClusters, wantedClusters)
+		}
+	})
+}
+
 // Test Environment setup.
+
 type testEnv struct {
 	configManager *ConfigManager
 }
@@ -251,6 +308,7 @@ func runTest(t *testing.T, f func(*testEnv)) {
 	}
 	f(env)
 }
+
 func initMockConfigServer(t *testing.T) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -263,6 +321,7 @@ type mock struct{}
 func (mock) ID(*core.Node) string {
 	return fakeNodeID
 }
+
 func normalizeJson(input string) string {
 	var jsonObject map[string]interface{}
 	json.Unmarshal([]byte(input), &jsonObject)
