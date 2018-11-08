@@ -10,21 +10,22 @@ namespace Envoy {
 namespace Http {
 
 class HttpSampleDecoderFilterConfig {
-public:
+ public:
   HttpSampleDecoderFilterConfig(const sample::Decoder& proto_config);
 
   const std::string& key() const { return key_; }
   const std::string& val() const { return val_; }
 
-private:
+ private:
   const std::string key_;
   const std::string val_;
 };
 
-typedef std::shared_ptr<HttpSampleDecoderFilterConfig> HttpSampleDecoderFilterConfigSharedPtr;
+typedef std::shared_ptr<HttpSampleDecoderFilterConfig>
+    HttpSampleDecoderFilterConfigSharedPtr;
 
 class HttpSampleDecoderFilter : public StreamDecoderFilter {
-public:
+ public:
   HttpSampleDecoderFilter(HttpSampleDecoderFilterConfigSharedPtr);
   ~HttpSampleDecoderFilter();
 
@@ -37,7 +38,7 @@ public:
   FilterTrailersStatus decodeTrailers(HeaderMap&) override;
   void setDecoderFilterCallbacks(StreamDecoderFilterCallbacks&) override;
 
-private:
+ private:
   const HttpSampleDecoderFilterConfigSharedPtr config_;
   StreamDecoderFilterCallbacks* decoder_callbacks_;
 
@@ -45,5 +46,5 @@ private:
   const std::string headerValue() const;
 };
 
-} // namespace Http
-} // namespace Envoy
+}  // namespace Http
+}  // namespace Envoy

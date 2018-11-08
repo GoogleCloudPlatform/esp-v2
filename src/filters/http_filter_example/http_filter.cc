@@ -11,7 +11,8 @@ HttpSampleDecoderFilterConfig::HttpSampleDecoderFilterConfig(
     const sample::Decoder& proto_config)
     : key_(proto_config.key()), val_(proto_config.val()) {}
 
-HttpSampleDecoderFilter::HttpSampleDecoderFilter(HttpSampleDecoderFilterConfigSharedPtr config)
+HttpSampleDecoderFilter::HttpSampleDecoderFilter(
+    HttpSampleDecoderFilterConfigSharedPtr config)
     : config_(config) {}
 
 HttpSampleDecoderFilter::~HttpSampleDecoderFilter() {}
@@ -27,7 +28,8 @@ const std::string HttpSampleDecoderFilter::headerValue() const {
   return config_->val();
 }
 
-FilterHeadersStatus HttpSampleDecoderFilter::decodeHeaders(HeaderMap& headers, bool) {
+FilterHeadersStatus HttpSampleDecoderFilter::decodeHeaders(HeaderMap& headers,
+                                                           bool) {
   // add a header
   headers.addCopy(headerKey(), headerValue());
 
@@ -42,9 +44,10 @@ FilterTrailersStatus HttpSampleDecoderFilter::decodeTrailers(HeaderMap&) {
   return FilterTrailersStatus::Continue;
 }
 
-void HttpSampleDecoderFilter::setDecoderFilterCallbacks(StreamDecoderFilterCallbacks& callbacks) {
+void HttpSampleDecoderFilter::setDecoderFilterCallbacks(
+    StreamDecoderFilterCallbacks& callbacks) {
   decoder_callbacks_ = &callbacks;
 }
 
-} // namespace Http
-} // namespace Envoy
+}  // namespace Http
+}  // namespace Envoy

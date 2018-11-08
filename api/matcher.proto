@@ -24,9 +24,10 @@ message Match {
     string path = 2;
 
     // If specified, the route is a regular expression rule meaning that the
-    // regex must match the *:path* header once the query string is removed. The entire path
-    // (without the query string) must match the regex. The rule will not match if only a
-    // subsequence of the *:path* header matches the regex. The regex grammar is defined `here
+    // regex must match the *:path* header once the query string is removed. The
+    // entire path (without the query string) must match the regex. The rule
+    // will not match if only a subsequence of the *:path* header matches the
+    // regex. The regex grammar is defined `here
     // <http://en.cppreference.com/w/cpp/regex/ecmascript>`_.
     //
     // Examples:
@@ -59,13 +60,14 @@ message Match {
 
 // .. attention::
 //
-//   Internally, Envoy always uses the HTTP/2 *:authority* header to represent the HTTP/1 *Host*
-//   header. Thus, if attempting to match on *Host*, match on *:authority* instead.
+//   Internally, Envoy always uses the HTTP/2 *:authority* header to represent
+//   the HTTP/1 *Host* header. Thus, if attempting to match on *Host*, match on
+//   *:authority* instead.
 //
 // .. attention::
 //
-//   To route on HTTP method, use the special HTTP/2 *:method* header. This works for both
-//   HTTP/1 and HTTP/2 as Envoy normalizes headers. E.g.,
+//   To route on HTTP method, use the special HTTP/2 *:method* header. This
+//   works for both HTTP/1 and HTTP/2 as Envoy normalizes headers. E.g.,
 //
 //   .. code-block:: json
 //
@@ -75,10 +77,11 @@ message Match {
 //     }
 //
 // .. attention::
-//   In the absence of any header match specifier, match will default to :ref:`present_match
-//   <envoy_api_field_route.HeaderMatcher.present_match>`. i.e, a request that has the :ref:`name
-//   <envoy_api_field_route.HeaderMatcher.name>` header will match, regardless of the header's
-//   value.
+//   In the absence of any header match specifier, match will default to
+//   :ref:`present_match <envoy_api_field_route.HeaderMatcher.present_match>`.
+//   i.e, a request that has the :ref:`name
+//   <envoy_api_field_route.HeaderMatcher.name>` header will match, regardless
+//   of the header's value.
 //
 message HeaderMatcher {
   // Specifies the name of the header in the request.
@@ -86,13 +89,15 @@ message HeaderMatcher {
 
   // Specifies how the header match will be performed to route the request.
   oneof header_match_specifier {
-    // If specified, header match will be performed based on the value of the header.
+    // If specified, header match will be performed based on the value of the
+    // header.
     string exact_match = 4;
 
-    // If specified, this regex string is a regular expression rule which implies the entire request
-    // header value must match the regex. The rule will not match if only a subsequence of the
-    // request header value matches the regex. The regex grammar used in the value field is defined
-    // `here <http://en.cppreference.com/w/cpp/regex/ecmascript>`_.
+    // If specified, this regex string is a regular expression rule which
+    // implies the entire request header value must match the regex. The rule
+    // will not match if only a subsequence of the request header value matches
+    // the regex. The regex grammar used in the value field is defined `here
+    // <http://en.cppreference.com/w/cpp/regex/ecmascript>`_.
     //
     // Examples:
     //
@@ -101,20 +106,22 @@ message HeaderMatcher {
     // * The regex *\d{3}* does not match the value *123.456*
     string regex_match = 5 [(validate.rules).string.max_bytes = 1024];
 
-    // If specified, header match will be be performed based on whether the header is in the
-    // request.
+    // If specified, header match will be be performed based on whether the
+    // header is in the request.
     bool present_match = 7;
 
-    // If specified, header match will be performed based on the prefix of the header value.
-    // Note: empty prefix is not allowed, please use present_match instead.
+    // If specified, header match will be performed based on the prefix of the
+    // header value. Note: empty prefix is not allowed, please use present_match
+    // instead.
     //
     // Examples:
     //
     // * The prefix *abcd* matches the value *abcdxyz*, but not for *abcxyz*.
     string prefix_match = 9 [(validate.rules).string.min_bytes = 1];
 
-    // If specified, header match will be performed based on the suffix of the header value.
-    // Note: empty suffix is not allowed, please use present_match instead.
+    // If specified, header match will be performed based on the suffix of the
+    // header value. Note: empty suffix is not allowed, please use present_match
+    // instead.
     //
     // Examples:
     //
@@ -122,12 +129,15 @@ message HeaderMatcher {
     string suffix_match = 10 [(validate.rules).string.min_bytes = 1];
   }
 
-  // If specified, the match result will be inverted before checking. Defaults to false.
+  // If specified, the match result will be inverted before checking. Defaults
+  // to false.
   //
   // Examples:
   //
-  // * The regex *\d{3}* does not match the value *1234*, so it will match when inverted.
-  // * The range [-10,0) will match the value -1, so it will not match when inverted.
+  // * The regex *\d{3}* does not match the value *1234*, so it will match when
+  // inverted.
+  // * The range [-10,0) will match the value -1, so it will not match when
+  // inverted.
   bool invert_match = 8;
 }
 
@@ -136,7 +146,7 @@ message HeaderMatcher {
 message QueryParameterMatcher {
   // Specifies the name of a key that must be present in the requested
   // *path*'s query string.
-  string name = 1 [(validate.rules).string = {min_bytes: 1, max_bytes: 1024}];
+  string name = 1 [(validate.rules).string = { min_bytes: 1, max_bytes: 1024 }];
 
   // Specifies the value of the key. If the value is absent, a request
   // that contains the key in its query string will match, whether the

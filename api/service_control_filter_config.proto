@@ -8,7 +8,8 @@ import "validate/validate.proto";
 import "api/matcher.proto";
 
 message Requirement {
-  // If true, allow requests without API Key. Otherwise a valid API key must be provided.
+  // If true, allow requests without API Key. Otherwise a valid API key must be
+  // provided.
   bool allow_unregistered_calls = 1;
 }
 
