@@ -17,6 +17,7 @@ package configmanager
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -200,13 +201,18 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.Http
 	auth := serviceConfig.GetAuthentication()
 	providers := make(map[string]*ac.JwtProvider)
 	for _, provider := range auth.GetProviders() {
+		jwk, err := fetchJwk(provider.GetJwksUri(), m.client)
+		if err != nil {
+			glog.Warningf("fetch jwk from issuer got error: %s", err)
+			break
+		}
 		jp := &ac.JwtProvider{
 			Issuer:    provider.GetIssuer(),
 			Audiences: []string{provider.GetAudiences()},
 			// TODO(jilinxia): fetch local token.
 			JwksSourceSpecifier: &ac.JwtProvider_LocalJwks{
 				LocalJwks: &core.DataSource{
-					Specifier: &core.DataSource_InlineString{"fake local jwks"},
+					Specifier: &core.DataSource_InlineString{string(jwk)},
 				},
 			},
 		}
@@ -225,9 +231,11 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.Http
 				},
 			})
 		}
+		// TODO(jilinxia): make requirement rule work for open API style.
+		m := strings.Split(rule.GetSelector(), ".")
 		ruleConfig := &ac.RequirementRule{
 			Match: &route.RouteMatch{
-				PathSpecifier: &route.RouteMatch_Prefix{fmt.Sprintf("/%s", rule.GetSelector())},
+				PathSpecifier: &route.RouteMatch_Prefix{fmt.Sprintf("/%s/%s", serviceConfig.Apis[0].Name, m[len(m)-1])},
 			},
 			Requires: &ac.JwtRequirement{
 				RequiresType: &ac.JwtRequirement_RequiresAll{
@@ -288,6 +296,9 @@ var callServiceManagement = func(path, serviceName, token string, client *http.C
 	if err != nil {
 		return nil, err
 	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("http call to service management returns not 200 OK: %v", resp.Status)
+	}
 	defer resp.Body.Close()
 	resolver := funcResolver(func(url string) (proto.Message, error) {
 		switch url {
@@ -308,4 +319,21 @@ var callServiceManagement = func(path, serviceName, token string, client *http.C
 		return nil, fmt.Errorf("fail to unmarshal serviceConfig: %s", err)
 	}
 	return &serviceConfig, nil
+}
+
+var fetchJwk = func(path string, client *http.Client) ([]byte, error) {
+	req, _ := http.NewRequest("GET", path, nil)
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("fetching JWK returns not 200 OK: %v", resp.Status)
+	}
+	bytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return bytes, nil
 }

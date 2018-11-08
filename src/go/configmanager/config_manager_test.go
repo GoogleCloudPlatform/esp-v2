@@ -35,10 +35,13 @@ const (
 	testEndpointName = "endpoints.examples.bookstore.Bookstore"
 	testConfigID     = "2017-05-01r0"
 	fakeNodeID       = "id"
+	fakeJwks         = "FAKEJWKS"
 )
 
 var (
-	fakeConfig = fmt.Sprintf(`
+	fakeJwksURL = ""
+	fakeConfig = ``
+	rawFakeConfig  = `
     {
         "name":"%s",
         "title":"Bookstore gRPC API",
@@ -70,7 +73,7 @@ var (
         	      {
         	 	        "id": "firebase",
         	 	        "issuer": "https://test_issuer.google.com/",
-        	 	        "jwks_uri": "https://www.test_jwks_uri.com",
+        	 	        "jwks_uri": "%s",
         	 	        "audiences": "test_audience1,test_audience2"
         	      }
         	  ],
@@ -90,11 +93,7 @@ var (
         	  ]
         }
     }
-    `,
-		testProjectName,
-		testEndpointName,
-		base64.StdEncoding.EncodeToString([]byte("raw_config")),
-		base64.StdEncoding.EncodeToString([]byte("rawDescriptor")))
+    `
 )
 
 func TestFetchListeners(t *testing.T) {
@@ -143,14 +142,14 @@ func TestFetchListeners(t *testing.T) {
                                                	    "audiences":["test_audience1,test_audience2"],
                                                	    "issuer":"https://test_issuer.google.com/",
                                                	    "local_jwks": {
-                                               	    	"inline_string": "fake local jwks"
+                                               	    	"inline_string": "%s"
                                                	    }
                                                 }
                                            	},
                                             "rules": [
                                                 {
                                                 	  "match":{
-                                                		    "prefix":"/endpoints.examples.bookstore.Bookstore.CreateShelf"
+                                                		    "prefix":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
                                                 		},
                                                 		"requires": {
                                                 		    "requires_all": {
@@ -167,7 +166,7 @@ func TestFetchListeners(t *testing.T) {
                                                 },
                                                 {
                                                 	  "match":{
-                                                	  	   "prefix": "/endpoints.examples.bookstore.Bookstore.ListShelf"
+                                                	  	   "prefix": "/endpoints.examples.bookstore.Bookstore/ListShelf"
                                                 	  },
                                                 	  "requires":{
                                                 	  	  "requires_all":{
@@ -216,7 +215,7 @@ func TestFetchListeners(t *testing.T) {
         }
         `,
 			base64.StdEncoding.EncodeToString([]byte("rawDescriptor")),
-			testEndpointName,
+			testEndpointName, fakeJwks,
 			testEndpointName,
 			testEndpointName)
 
@@ -300,6 +299,15 @@ func runTest(t *testing.T, f func(*testEnv)) {
 	mockMetadata := initMockMetadataServer()
 	defer mockMetadata.Close()
 	serviceAccountTokenURL = mockMetadata.URL
+	mockJwksIssuer := initMockJwksIssuer(t)
+	defer mockJwksIssuer.Close()
+	fakeJwksURL = mockJwksIssuer.URL
+
+	fakeConfig = fmt.Sprintf(rawFakeConfig, testProjectName, testEndpointName,
+		base64.StdEncoding.EncodeToString([]byte("raw_config")),
+		base64.StdEncoding.EncodeToString([]byte("rawDescriptor")),
+		fakeJwksURL)
+
 	manager, err := NewConfigManager(testProjectName, testConfigID)
 	if err != nil {
 		t.Fatal("fail to initialize ConfigManager: ", err)
@@ -314,6 +322,12 @@ func initMockConfigServer(t *testing.T) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(normalizeJson(fakeConfig)))
+	}))
+}
+
+func initMockJwksIssuer(t *testing.T) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(fakeJwks))
 	}))
 }
 
