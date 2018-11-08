@@ -25,7 +25,7 @@ EXTENSIONS = {
     # Health checkers
     #
 
-    "envoy.health_checkers.redis":                      "//source/extensions/health_checkers/redis:config",
+    #"envoy.health_checkers.redis":                      "//source/extensions/health_checkers/redis:config",
 
     #
     # HTTP filters
@@ -33,7 +33,7 @@ EXTENSIONS = {
 
     "envoy.filters.http.buffer":                        "//source/extensions/filters/http/buffer:config",
     "envoy.filters.http.cors":                          "//source/extensions/filters/http/cors:config",
-    "envoy.filters.http.dynamo":                        "//source/extensions/filters/http/dynamo:config",
+    #"envoy.filters.http.dynamo":                        "//source/extensions/filters/http/dynamo:config",
     "envoy.filters.http.ext_authz":                     "//source/extensions/filters/http/ext_authz:config",
     "envoy.filters.http.fault":                         "//source/extensions/filters/http/fault:config",
     "envoy.filters.http.grpc_http1_bridge":             "//source/extensions/filters/http/grpc_http1_bridge:config",
@@ -44,11 +44,11 @@ EXTENSIONS = {
     "envoy.filters.http.health_check":                  "//source/extensions/filters/http/health_check:config",
     "envoy.filters.http.ip_tagging":                    "//source/extensions/filters/http/ip_tagging:config",
     "envoy.filters.http.jwt_authn":                     "//source/extensions/filters/http/jwt_authn:config",
-    "envoy.filters.http.lua":                           "//source/extensions/filters/http/lua:config",
+    #"envoy.filters.http.lua":                           "//source/extensions/filters/http/lua:config",
     "envoy.filters.http.ratelimit":                     "//source/extensions/filters/http/ratelimit:config",
     "envoy.filters.http.rbac":                          "//source/extensions/filters/http/rbac:config",
     "envoy.filters.http.router":                        "//source/extensions/filters/http/router:config",
-    "envoy.filters.http.squash":                        "//source/extensions/filters/http/squash:config",
+    #"envoy.filters.http.squash":                        "//source/extensions/filters/http/squash:config",
 
     #
     # Listener filters
@@ -69,16 +69,16 @@ EXTENSIONS = {
     #
 
     "envoy.filters.network.client_ssl_auth":            "//source/extensions/filters/network/client_ssl_auth:config",
-    "envoy.filters.network.dubbo_proxy":                "//source/extensions/filters/network/dubbo_proxy:config",
-    "envoy.filters.network.echo":                       "//source/extensions/filters/network/echo:config",
+    #"envoy.filters.network.dubbo_proxy":                "//source/extensions/filters/network/dubbo_proxy:config",
+    #"envoy.filters.network.echo":                       "//source/extensions/filters/network/echo:config",
     "envoy.filters.network.ext_authz":                  "//source/extensions/filters/network/ext_authz:config",
     "envoy.filters.network.http_connection_manager":    "//source/extensions/filters/network/http_connection_manager:config",
-    "envoy.filters.network.mongo_proxy":                "//source/extensions/filters/network/mongo_proxy:config",
+    #"envoy.filters.network.mongo_proxy":                "//source/extensions/filters/network/mongo_proxy:config",
     "envoy.filters.network.ratelimit":                  "//source/extensions/filters/network/ratelimit:config",
     "envoy.filters.network.rbac":                       "//source/extensions/filters/network/rbac:config",
-    "envoy.filters.network.redis_proxy":                "//source/extensions/filters/network/redis_proxy:config",
+    #"envoy.filters.network.redis_proxy":                "//source/extensions/filters/network/redis_proxy:config",
     "envoy.filters.network.tcp_proxy":                  "//source/extensions/filters/network/tcp_proxy:config",
-    "envoy.filters.network.thrift_proxy":               "//source/extensions/filters/network/thrift_proxy:config",
+    #"envoy.filters.network.thrift_proxy":               "//source/extensions/filters/network/thrift_proxy:config",
     "envoy.filters.network.sni_cluster":                "//source/extensions/filters/network/sni_cluster:config",
 
     #
@@ -92,26 +92,26 @@ EXTENSIONS = {
     # Stat sinks
     #
 
-    "envoy.stat_sinks.dog_statsd":                      "//source/extensions/stat_sinks/dog_statsd:config",
-    "envoy.stat_sinks.hystrix":                         "//source/extensions/stat_sinks/hystrix:config",
+    #"envoy.stat_sinks.dog_statsd":                      "//source/extensions/stat_sinks/dog_statsd:config",
+    #"envoy.stat_sinks.hystrix":                         "//source/extensions/stat_sinks/hystrix:config",
     "envoy.stat_sinks.metrics_service":                 "//source/extensions/stat_sinks/metrics_service:config",
-    "envoy.stat_sinks.statsd":                          "//source/extensions/stat_sinks/statsd:config",
+    #"envoy.stat_sinks.statsd":                          "//source/extensions/stat_sinks/statsd:config",
 
     #
     # Thrift filters
     #
 
-    "envoy.filters.thrift.router":                      "//source/extensions/filters/network/thrift_proxy/router:config",
-    "envoy.filters.thrift.ratelimit":                   "//source/extensions/filters/network/thrift_proxy/filters/ratelimit:config",
+    #"envoy.filters.thrift.router":                      "//source/extensions/filters/network/thrift_proxy/router:config",
+    #"envoy.filters.thrift.ratelimit":                   "//source/extensions/filters/network/thrift_proxy/filters/ratelimit:config",
 
     #
     # Tracers
     #
 
-    "envoy.tracers.dynamic_ot":                         "//source/extensions/tracers/dynamic_ot:config",
-    "envoy.tracers.lightstep":                          "//source/extensions/tracers/lightstep:config",
-    "envoy.tracers.datadog":                            "//source/extensions/tracers/datadog:config",
-    "envoy.tracers.zipkin":                             "//source/extensions/tracers/zipkin:config",
+    #"envoy.tracers.dynamic_ot":                         "//source/extensions/tracers/dynamic_ot:config",
+    #"envoy.tracers.lightstep":                          "//source/extensions/tracers/lightstep:config",
+    #"envoy.tracers.datadog":                            "//source/extensions/tracers/datadog:config",
+    #"envoy.tracers.zipkin":                             "//source/extensions/tracers/zipkin:config",
 
     #
     # Transport sockets
