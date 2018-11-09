@@ -17,7 +17,7 @@ class ThreadLocalCache : public ThreadLocal::ThreadLocalObject {
  public:
   // Load the config from envoy config.
   ThreadLocalCache(
-      const ::google::api_proxy::envoy::http::service_control::FilterConfig&
+      const ::google::api_proxy::envoy::http::service_control::ServiceControlSpec&
           config,
       Upstream::ClusterManager& cm, TimeSource& time_source)
       : token_cache_(cm, time_source, config.token_uri()) {}
@@ -46,10 +46,10 @@ struct ServiceControlFilterStats {
 };
 
 // The Envoy filter config for Cloud ESF service control client.
-class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
+class ServiceControlSpec : public Logger::Loggable<Logger::Id::filter> {
  public:
-  FilterConfig(
-      const ::google::api_proxy::envoy::http::service_control::FilterConfig&
+  ServiceControlSpec(
+      const ::google::api_proxy::envoy::http::service_control::ServiceControlSpec&
           proto_config,
       const std::string& stats_prefix,
       Server::Configuration::FactoryContext& context)
@@ -67,7 +67,7 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
     });
   }
 
-  const ::google::api_proxy::envoy::http::service_control::FilterConfig&
+  const ::google::api_proxy::envoy::http::service_control::ServiceControlSpec&
   config() const {
     return proto_config_;
   }
@@ -94,7 +94,7 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
   }
 
   // The proto config.
-  ::google::api_proxy::envoy::http::service_control::FilterConfig proto_config_;
+  ::google::api_proxy::envoy::http::service_control::ServiceControlSpec proto_config_;
   // The stats for the filter.
   ServiceControlFilterStats stats_;
   Upstream::ClusterManager& cm_;
@@ -104,7 +104,7 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
   ::google::api_proxy::service_control::RequestBuilder builder_;
 };
 
-typedef std::shared_ptr<FilterConfig> FilterConfigSharedPtr;
+typedef std::shared_ptr<ServiceControlSpec> FilterConfigSharedPtr;
 
 }  // namespace ServiceControl
 }  // namespace HttpFilters

@@ -50,7 +50,7 @@ static_resources:
           http_filters:
           - name: envoy.filters.http.service_control
             config:
-              service_name: bookstore-api.endpoints.qiwzhang-authz.cloud.goog
+              service_name: REPLACE_SERVICE_NAME 
               token_uri:
                 cluster: gcp_metadata_cluster
                 uri: http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token
@@ -61,6 +61,13 @@ static_resources:
                 uri: https://servicecontrol.googleapis.com/v1/services/
                 timeout:
                   seconds: 5
+              rules:
+                patterns:
+                  http_method: GET
+                  regex: /test.*
+                requires:
+                  api_key:
+                    allow_without_api_key: true
           - name: envoy.router
           route_config:
             name: backend

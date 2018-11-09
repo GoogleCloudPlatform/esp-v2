@@ -1,6 +1,8 @@
 
 #include "common/http/utility.h"
 
+#include <regex>
+
 #include "src/envoy/http/service_control/filter.h"
 #include "src/envoy/http/service_control/http_call.h"
 
@@ -8,8 +10,31 @@ namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
+namespace {
 
-void Filter::ExtractRequestInfo(const Http::HeaderMap& headers) {
+bool RuleMatches(
+    const ::google::api_proxy::envoy::http::service_control::ServiceControlRule& rule,
+    const std::string& path, const std::string& method) {
+  if (rule.patterns_size() == 0) {
+    return true;
+  }
+  for (const auto& pattern : rule.patterns()) {
+    if (pattern.http_method() != method) {
+      continue;
+    }
+    // TODO(tianyuc): maybe support uri_template match in the future.
+    std::regex regex(pattern.regex());
+    if (!std::regex_match(path, regex)) {
+      continue;
+    }
+    return true;
+  }
+  return false;
+}
+}  // namespace
+
+::google::api_proxy::envoy::http::service_control::ServiceControlRule Filter::ExtractRequestInfo(
+    const Http::HeaderMap& headers) {
   uuid_ = config_->random().uuid();
 
   // operation_name from path
@@ -21,22 +46,37 @@ void Filter::ExtractRequestInfo(const Http::HeaderMap& headers) {
     operation_name_ = std::string(path.c_str(), path.size());
   }
 
-  // api key
-  auto params =
-      Http::Utility::parseQueryString(headers.Path()->value().c_str());
-  const auto& it = params.find("key");
-  if (it != params.end()) {
-    api_key_ = it->second;
-  }
+  // match pattern
+  for (const auto& rule : config_->config().rules()) {
+    if (!RuleMatches(rule, path.c_str(), headers.Method()->value().c_str())) {
+      continue;
+    }
+    ENVOY_LOG(debug, "Rule matched: {} {}", path.c_str(),
+              headers.Method()->value().c_str());
 
-  http_method_ = headers.Method()->value().c_str();
+    http_method_ = headers.Method()->value().c_str();
+    // TODO(tianyuc): refactor the api key requirment logic.
+    auto params =
+        Http::Utility::parseQueryString(headers.Path()->value().c_str());
+    const auto& it = params.find("key");
+    if (it != params.end()) {
+      api_key_ = it->second;
+    }
+    return rule;
+  }
+  return ::google::api_proxy::envoy::http::service_control::ServiceControlRule();
 }
 
 Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
                                                 bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
 
-  ExtractRequestInfo(headers);
+  const auto& rule = ExtractRequestInfo(headers);
+  if (rule.requires_size() == 0) {
+    ENVOY_LOG(debug, "Query match failed.");
+    rejectRequest(Http::Code(401), "Query failed to match any pattern.");
+    return Http::FilterHeadersStatus::StopIteration;
+  }
 
   state_ = Calling;
   stopped_ = false;
