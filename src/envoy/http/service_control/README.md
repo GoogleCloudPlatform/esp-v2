@@ -1,4 +1,3 @@
-
 # Instructions to run service control filter
 
 ## start backend http server at port 8080
