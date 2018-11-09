@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
@@ -44,6 +45,9 @@ const (
 	clusterAddress  = "127.0.0.1"
 	listenerPort    = 8080
 	backendPort     = 12500
+
+	// Cluster Connection timeout in seconds.
+	clusterConnectTimeout = 20
 )
 
 var (
@@ -105,8 +109,9 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *api.Service) (*cache.Snapsho
 			Config: httpFilterConfig,
 		}}}}
 	cluster := &v2.Cluster{
-		Name:     serviceConfig.Apis[0].Name,
-		LbPolicy: v2.Cluster_ROUND_ROBIN,
+		Name:           serviceConfig.Apis[0].Name,
+		LbPolicy:       v2.Cluster_ROUND_ROBIN,
+		ConnectTimeout: time.Duration(clusterConnectTimeout * time.Second),
 		Hosts: []*core.Address{
 			{Address: &core.Address_SocketAddress{
 				SocketAddress: &core.SocketAddress{
