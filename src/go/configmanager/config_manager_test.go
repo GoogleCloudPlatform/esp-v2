@@ -266,9 +266,10 @@ func TestFetchClusters(t *testing.T) {
 	    	      	  }
 	    	      }
 	    	  ],
-	    	  "name": "%s"
+	    	  "name": "%s",
+	    	  "connectTimeout": "%ds"
 	    }`,
-			clusterAddress, backendPort, testEndpointName)
+			clusterAddress, backendPort, testEndpointName, clusterConnectTimeout)
 
 		if resp.Version != testConfigID {
 			t.Errorf("snapshot cache fetch got version: %v, want: %v", resp.Version, testConfigID)
