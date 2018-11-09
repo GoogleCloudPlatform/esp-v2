@@ -39,9 +39,9 @@ const (
 )
 
 var (
-	fakeJwksURL = ""
-	fakeConfig = ``
-	rawFakeConfig  = `
+	fakeJwksURL   = ""
+	fakeConfig    = ``
+	rawFakeConfig = `
     {
         "name":"%s",
         "title":"Bookstore gRPC API",
@@ -176,7 +176,7 @@ func TestFetchListeners(t *testing.T) {
                                                 }
                                             ]
                                         },
-                                        "name":"envoy.http_jwt_authn"
+                                        "name":"envoy.filters.http.jwt_authn"
                                     },
                                     {
                                         "config":{
@@ -268,7 +268,7 @@ func TestFetchClusters(t *testing.T) {
 	    	  "name": "%s",
 	    	  "connectTimeout": "%ds"
 	    }`,
-			clusterAddress, backendPort, testEndpointName, clusterConnectTimeout)
+			*clusterAddress, *clusterPort, testEndpointName, *clusterConnectTimeout/1e9)
 
 		if resp.Version != testConfigID {
 			t.Errorf("snapshot cache fetch got version: %v, want: %v", resp.Version, testConfigID)

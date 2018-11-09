@@ -29,9 +29,9 @@ import (
 )
 
 var (
-	serviceName = flag.String("service_name", "", "endpoint service name")
-	configID    = flag.String("config_id", "", "initial service config id")
-	port        = flag.Int("port", 8790, "ADS port")
+	serviceName   = flag.String("service_name", "", "endpoint service name")
+	configID      = flag.String("config_id", "", "initial service config id")
+	discoveryPort = flag.Int("discovery_port", 8790, "discovery service port")
 )
 
 func main() {
@@ -42,7 +42,7 @@ func main() {
 	}
 	server := xds.NewServer(m.Cache(), nil)
 	grpcServer := grpc.NewServer()
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *discoveryPort))
 	if err != nil {
 		glog.Exitf("Server failed to listen: %v", err)
 	}
