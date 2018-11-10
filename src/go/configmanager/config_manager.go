@@ -219,33 +219,24 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.Http
 	}
 	rules := []*ac.RequirementRule{}
 	for _, rule := range auth.GetRules() {
-		jwtRequirements := []*ac.JwtRequirement{}
-		for _, r := range rule.GetRequirements() {
-			jwtRequirements = append(jwtRequirements, &ac.JwtRequirement{
-				RequiresType: &ac.JwtRequirement_ProviderAndAudiences{
-					ProviderAndAudiences: &ac.ProviderWithAudiences{
-						ProviderName: r.GetProviderId(),
-						Audiences:    strings.Split(r.GetAudiences(), ","),
+		if len(rule.GetRequirements()) != 0 {
+			m.Infof("rule ==================%v", rule)
+			// TODO(jilinxia): make requirement rule work for open API style.
+			m := strings.Split(rule.GetSelector(), ".")
+			ruleConfig := &ac.RequirementRule{
+				Match: &route.RouteMatch{
+					PathSpecifier: &route.RouteMatch_Prefix{fmt.Sprintf("/%s/%s", serviceConfig.Apis[0].Name, m[len(m)-1])},
+				},
+				Requires: &ac.JwtRequirement{
+					RequiresType: &ac.JwtRequirement_ProviderName{
+						ProviderName: rule.GetRequirements()[0].GetProviderId(),
 					},
 				},
-			})
+			}
+			rules = append(rules, ruleConfig)
 		}
-		// TODO(jilinxia): make requirement rule work for open API style.
-		m := strings.Split(rule.GetSelector(), ".")
-		ruleConfig := &ac.RequirementRule{
-			Match: &route.RouteMatch{
-				PathSpecifier: &route.RouteMatch_Prefix{fmt.Sprintf("/%s/%s", serviceConfig.Apis[0].Name, m[len(m)-1])},
-			},
-			Requires: &ac.JwtRequirement{
-				RequiresType: &ac.JwtRequirement_RequiresAll{
-					RequiresAll: &ac.JwtRequirementAndList{
-						Requirements: jwtRequirements,
-					},
-				},
-			},
-		}
-		rules = append(rules, ruleConfig)
 	}
+
 	jwtAuthentication := &ac.JwtAuthentication{
 		Providers: providers,
 		Rules:     rules,
