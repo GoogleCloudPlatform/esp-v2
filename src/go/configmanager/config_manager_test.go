@@ -148,31 +148,15 @@ func TestFetchListeners(t *testing.T) {
                                            	},
                                             "rules": [
                                                 {
-                                                	  "match":{
-                                                		    "prefix":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
-                                                		},
-                                                		"requires": {
-                                                		    "requires_all": {
-                                                		    	  "requirements": [
-                                                		    	      {
-                                                		    	      	  "provider_and_audiences": {
-                                                		    	      	  	  "audiences": ["test_audience1"],
-                                                		    	      	  	  "provider_name":"firebase"
-                                                		    	      	  }
-                                                		    	      }
-                                                		    	  ]
-                                                		   }
-                                                		}
-                                                },
-                                                {
-                                                	  "match":{
-                                                	  	   "prefix": "/endpoints.examples.bookstore.Bookstore/ListShelf"
-                                                	  },
-                                                	  "requires":{
-                                                	  	  "requires_all":{
-                                                	  	  	 "requirements":[]
-                                                	  	  }
-                                                	  }
+                                                    "match":{
+                                                        "prefix":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                                    },
+                                                    "requires": {
+                                                	 "provider_and_audiences": {
+                                                	     "audiences": ["test_audience1"],
+                                                	     "provider_name":"firebase"
+                                                	 }
+                                                    }
                                                 }
                                             ]
                                         },
@@ -266,6 +250,7 @@ func TestFetchClusters(t *testing.T) {
 	    	      }
 	    	  ],
 	    	  "name": "%s",
+		  "http2ProtocolOptions": {},
 	    	  "connectTimeout": "%ds"
 	    }`,
 			*clusterAddress, *clusterPort, testEndpointName, *clusterConnectTimeout/1e9)

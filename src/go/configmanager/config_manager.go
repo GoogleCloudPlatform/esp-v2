@@ -109,9 +109,10 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *api.Service) (*cache.Snapsho
 			Config: httpFilterConfig,
 		}}}}
 	cluster := &v2.Cluster{
-		Name:           serviceConfig.Apis[0].Name,
-		LbPolicy:       v2.Cluster_ROUND_ROBIN,
-		ConnectTimeout: *clusterConnectTimeout,
+		Name:                 serviceConfig.Apis[0].Name,
+		LbPolicy:             v2.Cluster_ROUND_ROBIN,
+		ConnectTimeout:       *clusterConnectTimeout,
+		Http2ProtocolOptions: &core.Http2ProtocolOptions{},
 		Hosts: []*core.Address{
 			{Address: &core.Address_SocketAddress{
 				SocketAddress: &core.SocketAddress{
@@ -141,8 +142,10 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 		if configFile.GetFileType() == servicemanagement.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
 			configContent := configFile.GetFileContents()
 			transcodeConfig := &tc.GrpcJsonTranscoder{
-				DescriptorSet: &tc.GrpcJsonTranscoder_ProtoDescriptorBin{configContent},
-				Services:      []string{serviceConfig.Apis[0].Name},
+				DescriptorSet: &tc.GrpcJsonTranscoder_ProtoDescriptorBin{
+					ProtoDescriptorBin: configContent,
+				},
+				Services: []string{serviceConfig.Apis[0].Name},
 			}
 			transcodeConfigStruct, _ := util.MessageToStruct(transcodeConfig)
 			transcodeFilter := &hcm.HttpFilter{
@@ -218,20 +221,35 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.Http
 		providers[provider.GetId()] = jp
 	}
 	rules := []*ac.RequirementRule{}
+	// TODO(jilinxia): supports multi rules with RequireAll, RequireAny.
 	for _, rule := range auth.GetRules() {
-		if len(rule.GetRequirements()) != 0 {
-			m.Infof("rule ==================%v", rule)
+		var require *ac.JwtRequirement
+		for _, r := range rule.GetRequirements() {
+			audiences := strings.Split(r.GetAudiences(), ",")
+			// TODO(jilinxia): adds unit tests when audiences is empty.
+			if len(audiences) == 0 {
+				require = &ac.JwtRequirement{
+					RequiresType: &ac.JwtRequirement_ProviderName{
+						ProviderName: r.GetProviderId(),
+					},
+				}
+			} else {
+				require = &ac.JwtRequirement{
+					RequiresType: &ac.JwtRequirement_ProviderAndAudiences{
+						ProviderAndAudiences: &ac.ProviderWithAudiences{
+							ProviderName: r.GetProviderId(),
+							Audiences:    strings.Split(r.GetAudiences(), ","),
+						},
+					},
+				}
+			}
 			// TODO(jilinxia): make requirement rule work for open API style.
 			m := strings.Split(rule.GetSelector(), ".")
 			ruleConfig := &ac.RequirementRule{
 				Match: &route.RouteMatch{
 					PathSpecifier: &route.RouteMatch_Prefix{fmt.Sprintf("/%s/%s", serviceConfig.Apis[0].Name, m[len(m)-1])},
 				},
-				Requires: &ac.JwtRequirement{
-					RequiresType: &ac.JwtRequirement_ProviderName{
-						ProviderName: rule.GetRequirements()[0].GetProviderId(),
-					},
-				},
+				Requires: require,
 			}
 			rules = append(rules, ruleConfig)
 		}
