@@ -19,18 +19,18 @@ const std::string FilterName = "envoy.filters.http.service_control";
  */
 class FilterFactory
     : public Common::FactoryBase<
-          ::google::api_proxy::envoy::http::service_control::ServiceControlSpec> {
+          ::google::api_proxy::envoy::http::service_control::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(FilterName) {}
 
  private:
   Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::google::api_proxy::envoy::http::service_control::ServiceControlSpec&
+      const ::google::api_proxy::envoy::http::service_control::FilterConfig&
           proto_config,
       const std::string& stats_prefix,
       Server::Configuration::FactoryContext& context) override {
     auto filter_config =
-        std::make_shared<ServiceControlSpec>(proto_config, stats_prefix, context);
+        std::make_shared<FilterConfig>(proto_config, stats_prefix, context);
     return
         [filter_config](Http::FilterChainFactoryCallbacks& callbacks) -> void {
           auto filter = std::make_shared<Filter>(filter_config);

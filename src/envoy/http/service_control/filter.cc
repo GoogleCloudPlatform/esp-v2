@@ -10,45 +10,60 @@ namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
+
+using ::google::api_proxy::envoy::http::service_control::ServiceControlRule;
+using ::google::protobuf::util::Status;
+using Http::HeaderMap;
+using std::string;
+
 namespace {
 
-bool RuleMatches(
-    const ::google::api_proxy::envoy::http::service_control::ServiceControlRule& rule,
-    const std::string& path, const std::string& method) {
-  if (rule.patterns_size() == 0) {
+bool RuleMatches(const ServiceControlRule &rule, const string &path,
+                 const string &method)
+{
+  if (rule.patterns_size() == 0)
+  {
     return true;
   }
-  for (const auto& pattern : rule.patterns()) {
-    if (pattern.http_method() != method) {
+  for (const auto &pattern : rule.patterns())
+  {
+    if (pattern.http_method() != method)
+    {
       continue;
     }
     // TODO(tianyuc): maybe support uri_template match in the future.
     std::regex regex(pattern.regex());
-    if (!std::regex_match(path, regex)) {
+    if (!std::regex_match(path, regex))
+    {
       continue;
     }
     return true;
   }
   return false;
 }
-}  // namespace
+} // namespace
 
-::google::api_proxy::envoy::http::service_control::ServiceControlRule Filter::ExtractRequestInfo(
-    const Http::HeaderMap& headers) {
+const ServiceControlRule* Filter::ExtractRequestInfo(const HeaderMap &headers)
+{
   uuid_ = config_->random().uuid();
 
   // operation_name from path
-  const auto& path = headers.Path()->value();
-  const char* query_start = Http::Utility::findQueryStringStart(path);
-  if (query_start != nullptr) {
-    operation_name_ = std::string(path.c_str(), query_start - path.c_str());
-  } else {
-    operation_name_ = std::string(path.c_str(), path.size());
+  const auto &path = headers.Path()->value();
+  const char *query_start = Http::Utility::findQueryStringStart(path);
+  if (query_start != nullptr)
+  {
+    operation_name_ = string(path.c_str(), query_start - path.c_str());
+  }
+  else
+  {
+    operation_name_ = string(path.c_str(), path.size());
   }
 
   // match pattern
-  for (const auto& rule : config_->config().rules()) {
-    if (!RuleMatches(rule, path.c_str(), headers.Method()->value().c_str())) {
+  for (const auto &rule : config_->config().rules())
+  {
+    if (!RuleMatches(rule, path.c_str(), headers.Method()->value().c_str()))
+    {
       continue;
     }
     ENVOY_LOG(debug, "Rule matched: {} {}", path.c_str(),
@@ -58,21 +73,23 @@ bool RuleMatches(
     // TODO(tianyuc): refactor the api key requirment logic.
     auto params =
         Http::Utility::parseQueryString(headers.Path()->value().c_str());
-    const auto& it = params.find("key");
-    if (it != params.end()) {
+    const auto &it = params.find("key");
+    if (it != params.end())
+    {
       api_key_ = it->second;
     }
-    return rule;
+    return &rule;
   }
-  return ::google::api_proxy::envoy::http::service_control::ServiceControlRule();
+  return nullptr;
 }
 
-Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
-                                                bool) {
+Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool)
+{
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
 
-  const auto& rule = ExtractRequestInfo(headers);
-  if (rule.requires_size() == 0) {
+  auto* rule = ExtractRequestInfo(headers);
+  if (rule == nullptr)
+  {
     ENVOY_LOG(debug, "Query match failed.");
     rejectRequest(Http::Code(401), "Query failed to match any pattern.");
     return Http::FilterHeadersStatus::StopIteration;
@@ -81,10 +98,12 @@ Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
   state_ = Calling;
   stopped_ = false;
   token_fetcher_ = config_->getCache().getTokenCache().getToken(
-      [this](const ::google::protobuf::util::Status& status,
-             const std::string& result) { onTokenDone(status, result); });
+      [this](const Status &status, const string &result) {
+        onTokenDone(status, result);
+      });
 
-  if (state_ == Complete) {
+  if (state_ == Complete)
+  {
     return Http::FilterHeadersStatus::Continue;
   }
   ENVOY_LOG(debug, "Called ServiceControl filter : Stop");
@@ -92,26 +111,31 @@ Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
   return Http::FilterHeadersStatus::StopIteration;
 }
 
-void Filter::onDestroy() {
-  if (token_fetcher_) {
+void Filter::onDestroy()
+{
+  if (token_fetcher_)
+  {
     token_fetcher_();
     token_fetcher_ = nullptr;
   }
-  if (check_call_) {
+  if (check_call_)
+  {
     check_call_->cancel();
     check_call_ = nullptr;
   }
 }
 
-void Filter::onTokenDone(const ::google::protobuf::util::Status& status,
-                         const std::string& token) {
+void Filter::onTokenDone(const Status &status, const string &token)
+{
   // This stream has been reset, abort the callback.
   token_fetcher_ = nullptr;
-  if (state_ == Responded) {
+  if (state_ == Responded)
+  {
     return;
   }
 
-  if (!status.ok()) {
+  if (!status.ok())
+  {
     rejectRequest(Http::Code(401), "Failed to fetch access_token");
     return;
   }
@@ -129,9 +153,8 @@ void Filter::onTokenDone(const ::google::protobuf::util::Status& status,
   config_->builder().FillCheckRequest(info, &check_request);
   ENVOY_LOG(debug, "Sending check : {}", check_request.DebugString());
 
-  std::string suffix_uri = config_->config().service_name() + ":check";
-  auto on_done = [this](const ::google::protobuf::util::Status& status,
-                        const std::string& body) {
+  string suffix_uri = config_->config().service_name() + ":check";
+  auto on_done = [this](const Status &status, const string &body) {
     onCheckResponse(status, body);
   };
   check_call_ =
@@ -139,7 +162,8 @@ void Filter::onTokenDone(const ::google::protobuf::util::Status& status,
   check_call_->call(suffix_uri, token_, check_request, on_done);
 }
 
-void Filter::rejectRequest(Http::Code code, const std::string& error_msg) {
+void Filter::rejectRequest(Http::Code code, const string &error_msg)
+{
   config_->stats().denied_.inc();
   state_ = Responded;
 
@@ -148,17 +172,20 @@ void Filter::rejectRequest(Http::Code code, const std::string& error_msg) {
       StreamInfo::ResponseFlag::UnauthorizedExternalService);
 }
 
-void Filter::onCheckResponse(const ::google::protobuf::util::Status& status,
-                             const std::string& response_json) {
+void Filter::onCheckResponse(const Status &status,
+                             const string &response_json)
+{
   ENVOY_LOG(debug, "Check response with : {}, body {}", status.ToString(),
             response_json);
   // This stream has been reset, abort the callback.
   check_call_ = nullptr;
-  if (state_ == Responded) {
+  if (state_ == Responded)
+  {
     return;
   }
 
-  if (!status.ok()) {
+  if (!status.ok())
+  {
     rejectRequest(Http::Code(401), "Check failed");
     return;
   }
@@ -168,7 +195,8 @@ void Filter::onCheckResponse(const ::google::protobuf::util::Status& status,
   options.ignore_unknown_fields = true;
   const auto json_status =
       Protobuf::util::JsonStringToMessage(response_json, &response_pb, options);
-  if (!json_status.ok()) {
+  if (!json_status.ok())
+  {
     rejectRequest(Http::Code(401), "Check failed");
     return;
   }
@@ -176,43 +204,51 @@ void Filter::onCheckResponse(const ::google::protobuf::util::Status& status,
   check_status_ = ::google::api_proxy::service_control::RequestBuilder::
       ConvertCheckResponse(response_pb, config_->config().service_name(),
                            &check_response_info_);
-  if (!check_status_.ok()) {
+  if (!check_status_.ok())
+  {
     rejectRequest(Http::Code(401), "Check failed");
     return;
   }
 
   config_->stats().allowed_.inc();
   state_ = Complete;
-  if (stopped_) {
+  if (stopped_)
+  {
     decoder_callbacks_->continueDecoding();
   }
 }
 
-Http::FilterDataStatus Filter::decodeData(Buffer::Instance&, bool) {
+Http::FilterDataStatus Filter::decodeData(Buffer::Instance &, bool)
+{
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
-  if (state_ == Calling) {
+  if (state_ == Calling)
+  {
     return Http::FilterDataStatus::StopIterationAndWatermark;
   }
   return Http::FilterDataStatus::Continue;
 }
 
-Http::FilterTrailersStatus Filter::decodeTrailers(Http::HeaderMap&) {
+Http::FilterTrailersStatus Filter::decodeTrailers(HeaderMap &)
+{
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
-  if (state_ == Calling) {
+  if (state_ == Calling)
+  {
     return Http::FilterTrailersStatus::StopIteration;
   }
   return Http::FilterTrailersStatus::Continue;
 }
 
 void Filter::setDecoderFilterCallbacks(
-    Http::StreamDecoderFilterCallbacks& callbacks) {
+    Http::StreamDecoderFilterCallbacks &callbacks)
+{
   decoder_callbacks_ = &callbacks;
 }
 
-void Filter::log(const Http::HeaderMap* /*request_headers*/,
-                 const Http::HeaderMap* /*response_headers*/,
-                 const Http::HeaderMap* /*response_trailers*/,
-                 const StreamInfo::StreamInfo& stream_info) {
+void Filter::log(const HeaderMap * /*request_headers*/,
+                 const HeaderMap * /*response_headers*/,
+                 const HeaderMap * /*response_trailers*/,
+                 const StreamInfo::StreamInfo &stream_info)
+{
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
 
   ::google::api_proxy::service_control::ReportRequestInfo info;
@@ -221,7 +257,8 @@ void Filter::log(const Http::HeaderMap* /*request_headers*/,
   info.producer_project_id = config_->config().producer_project_id();
 
   if (check_response_info_.is_api_key_valid &&
-      check_response_info_.service_is_activated) {
+      check_response_info_.service_is_activated)
+  {
     info.api_key = api_key_;
   }
 
@@ -246,15 +283,14 @@ void Filter::log(const Http::HeaderMap* /*request_headers*/,
   config_->builder().FillReportRequest(info, &report_request);
   ENVOY_LOG(debug, "Sending report : {}", report_request.DebugString());
 
-  std::string suffix_uri = config_->config().service_name() + ":report";
-  auto dummy_on_done = [](const ::google::protobuf::util::Status&,
-                          const std::string&) {};
-  HttpCall* http_call =
+  string suffix_uri = config_->config().service_name() + ":report";
+  auto dummy_on_done = [](const Status &, const string &) {};
+  HttpCall *http_call =
       HttpCall::create(config_->cm(), config_->config().service_control_uri());
   http_call->call(suffix_uri, token_, report_request, dummy_on_done);
 }
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+} // namespace ServiceControl
+} // namespace HttpFilters
+} // namespace Extensions
+} // namespace Envoy

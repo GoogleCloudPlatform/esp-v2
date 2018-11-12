@@ -16,6 +16,7 @@ package configmanager
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -41,17 +42,15 @@ import (
 	api "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-const (
-	listenerAddress = "0.0.0.0"
-	clusterAddress  = "127.0.0.1"
-	listenerPort    = 8080
-	backendPort     = 12500
-
-	// Cluster Connection timeout in seconds.
-	clusterConnectTimeout = 20
-)
-
 var (
+	listenerAddress = flag.String("listener_address", "0.0.0.0", "listener socket ip address")
+	clusterAddress  = flag.String("cluster_address", "127.0.0.1", "cluster socket ip address")
+
+	listenerPort = flag.Int("listener_port", 8080, "listener port")
+	clusterPort  = flag.Int("cluster_port", 8082, "cluster port")
+
+	clusterConnectTimeout = flag.Duration("cluster_connect_imeout", 20*time.Second, "cluster connect timeout in seconds")
+
 	fetchConfigURL = "https://servicemanagement.googleapis.com/v1/services/$serviceName/configs/$configId?view=FULL"
 	node           = "api_proxy"
 )
@@ -110,15 +109,16 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *api.Service) (*cache.Snapsho
 			Config: httpFilterConfig,
 		}}}}
 	cluster := &v2.Cluster{
-		Name:           serviceConfig.Apis[0].Name,
-		LbPolicy:       v2.Cluster_ROUND_ROBIN,
-		ConnectTimeout: time.Duration(clusterConnectTimeout * time.Second),
+		Name:                 serviceConfig.Apis[0].Name,
+		LbPolicy:             v2.Cluster_ROUND_ROBIN,
+		ConnectTimeout:       *clusterConnectTimeout,
+		Http2ProtocolOptions: &core.Http2ProtocolOptions{},
 		Hosts: []*core.Address{
 			{Address: &core.Address_SocketAddress{
 				SocketAddress: &core.SocketAddress{
-					Address: clusterAddress,
+					Address: *clusterAddress,
 					PortSpecifier: &core.SocketAddress_PortValue{
-						PortValue: uint32(backendPort),
+						PortValue: uint32(*clusterPort),
 					},
 				},
 			},
@@ -142,8 +142,10 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 		if configFile.GetFileType() == servicemanagement.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
 			configContent := configFile.GetFileContents()
 			transcodeConfig := &tc.GrpcJsonTranscoder{
-				DescriptorSet: &tc.GrpcJsonTranscoder_ProtoDescriptorBin{configContent},
-				Services:      []string{serviceConfig.Apis[0].Name},
+				DescriptorSet: &tc.GrpcJsonTranscoder_ProtoDescriptorBin{
+					ProtoDescriptorBin: configContent,
+				},
+				Services: []string{serviceConfig.Apis[0].Name},
 			}
 			transcodeConfigStruct, _ := util.MessageToStruct(transcodeConfig)
 			transcodeFilter := &hcm.HttpFilter{
@@ -165,8 +167,8 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 	httpFilters = append(httpFilters, routerFilter)
 	return &v2.Listener{
 			Address: core.Address{Address: &core.Address_SocketAddress{SocketAddress: &core.SocketAddress{
-				Address:       listenerAddress,
-				PortSpecifier: &core.SocketAddress_PortValue{PortValue: uint32(listenerPort)}}}},
+				Address:       *listenerAddress,
+				PortSpecifier: &core.SocketAddress_PortValue{PortValue: uint32(*listenerPort)}}}},
 		}, &hcm.HttpConnectionManager{
 			CodecType:  hcm.AUTO,
 			StatPrefix: "ingress_http",
@@ -219,41 +221,47 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.Http
 		providers[provider.GetId()] = jp
 	}
 	rules := []*ac.RequirementRule{}
+	// TODO(jilinxia): supports multi rules with RequireAll, RequireAny.
 	for _, rule := range auth.GetRules() {
-		jwtRequirements := []*ac.JwtRequirement{}
+		var require *ac.JwtRequirement
 		for _, r := range rule.GetRequirements() {
-			jwtRequirements = append(jwtRequirements, &ac.JwtRequirement{
-				RequiresType: &ac.JwtRequirement_ProviderAndAudiences{
-					ProviderAndAudiences: &ac.ProviderWithAudiences{
+			audiences := strings.Split(r.GetAudiences(), ",")
+			// TODO(jilinxia): adds unit tests when audiences is empty.
+			if len(audiences) == 0 {
+				require = &ac.JwtRequirement{
+					RequiresType: &ac.JwtRequirement_ProviderName{
 						ProviderName: r.GetProviderId(),
-						Audiences:    strings.Split(r.GetAudiences(), ","),
 					},
-				},
-			})
-		}
-		// TODO(jilinxia): make requirement rule work for open API style.
-		m := strings.Split(rule.GetSelector(), ".")
-		ruleConfig := &ac.RequirementRule{
-			Match: &route.RouteMatch{
-				PathSpecifier: &route.RouteMatch_Prefix{fmt.Sprintf("/%s/%s", serviceConfig.Apis[0].Name, m[len(m)-1])},
-			},
-			Requires: &ac.JwtRequirement{
-				RequiresType: &ac.JwtRequirement_RequiresAll{
-					RequiresAll: &ac.JwtRequirementAndList{
-						Requirements: jwtRequirements,
+				}
+			} else {
+				require = &ac.JwtRequirement{
+					RequiresType: &ac.JwtRequirement_ProviderAndAudiences{
+						ProviderAndAudiences: &ac.ProviderWithAudiences{
+							ProviderName: r.GetProviderId(),
+							Audiences:    strings.Split(r.GetAudiences(), ","),
+						},
 					},
+				}
+			}
+			// TODO(jilinxia): make requirement rule work for open API style.
+			m := strings.Split(rule.GetSelector(), ".")
+			ruleConfig := &ac.RequirementRule{
+				Match: &route.RouteMatch{
+					PathSpecifier: &route.RouteMatch_Prefix{fmt.Sprintf("/%s/%s", serviceConfig.Apis[0].Name, m[len(m)-1])},
 				},
-			},
+				Requires: require,
+			}
+			rules = append(rules, ruleConfig)
 		}
-		rules = append(rules, ruleConfig)
 	}
+
 	jwtAuthentication := &ac.JwtAuthentication{
 		Providers: providers,
 		Rules:     rules,
 	}
 	jas, _ := util.MessageToStruct(jwtAuthentication)
 	jwtAuthnFilter := &hcm.HttpFilter{
-		Name:   "envoy.http_jwt_authn",
+		Name:   "envoy.filters.http.jwt_authn",
 		Config: jas,
 	}
 	return jwtAuthnFilter

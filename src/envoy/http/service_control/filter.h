@@ -52,7 +52,7 @@ class Filter : public Http::StreamDecoderFilter,
   // Returns true if the query matches a pattern in Envoy filter config.
   // Otherwise returns false.
   // TODO(tianyuc): this should return the matched requirements.
-  ::google::api_proxy::envoy::http::service_control::ServiceControlRule 
+  const ::google::api_proxy::envoy::http::service_control::ServiceControlRule* 
     ExtractRequestInfo(const Http::HeaderMap&);
 
   // The state of the request

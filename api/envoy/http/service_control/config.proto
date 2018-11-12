@@ -18,7 +18,7 @@ syntax = "proto3";
 package google.api_proxy.envoy.http.service_control;
 
 import "api/envoy/http/common/matcher.proto";
-import "api/envoy/http/common/requirement.proto";
+import "api/envoy/http/service_control/requirement.proto";
 import "google/protobuf/duration.proto";
 import "validate/validate.proto";
 
@@ -38,10 +38,10 @@ message ServiceControlRule {
   repeated api.envoy.http.common.PatternMatch patterns = 1 [(validate.rules).repeated.min_items = 1];
 
   // The requirments for matched pattern.
-  repeated api.envoy.http.common.Requirement requires = 2 [(validate.rules).repeated.min_items = 1];
+  api.envoy.http.service_control.Requirement requires = 2;
 }
 
-message ServiceControlSpec {
+message FilterConfig {
   // The service name for the Google Service Control
   string service_name = 1 [(validate.rules).string.min_bytes = 1];
 

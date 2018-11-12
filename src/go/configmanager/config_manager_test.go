@@ -39,9 +39,9 @@ const (
 )
 
 var (
-	fakeJwksURL = ""
-	fakeConfig = ``
-	rawFakeConfig  = `
+	fakeJwksURL   = ""
+	fakeConfig    = ``
+	rawFakeConfig = `
     {
         "name":"%s",
         "title":"Bookstore gRPC API",
@@ -148,35 +148,19 @@ func TestFetchListeners(t *testing.T) {
                                            	},
                                             "rules": [
                                                 {
-                                                	  "match":{
-                                                		    "prefix":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
-                                                		},
-                                                		"requires": {
-                                                		    "requires_all": {
-                                                		    	  "requirements": [
-                                                		    	      {
-                                                		    	      	  "provider_and_audiences": {
-                                                		    	      	  	  "audiences": ["test_audience1"],
-                                                		    	      	  	  "provider_name":"firebase"
-                                                		    	      	  }
-                                                		    	      }
-                                                		    	  ]
-                                                		   }
-                                                		}
-                                                },
-                                                {
-                                                	  "match":{
-                                                	  	   "prefix": "/endpoints.examples.bookstore.Bookstore/ListShelf"
-                                                	  },
-                                                	  "requires":{
-                                                	  	  "requires_all":{
-                                                	  	  	 "requirements":[]
-                                                	  	  }
-                                                	  }
+                                                    "match":{
+                                                        "prefix":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                                    },
+                                                    "requires": {
+                                                	 "provider_and_audiences": {
+                                                	     "audiences": ["test_audience1"],
+                                                	     "provider_name":"firebase"
+                                                	 }
+                                                    }
                                                 }
                                             ]
                                         },
-                                        "name":"envoy.http_jwt_authn"
+                                        "name":"envoy.filters.http.jwt_authn"
                                     },
                                     {
                                         "config":{
@@ -266,9 +250,10 @@ func TestFetchClusters(t *testing.T) {
 	    	      }
 	    	  ],
 	    	  "name": "%s",
+		  "http2ProtocolOptions": {},
 	    	  "connectTimeout": "%ds"
 	    }`,
-			clusterAddress, backendPort, testEndpointName, clusterConnectTimeout)
+			*clusterAddress, *clusterPort, testEndpointName, *clusterConnectTimeout/1e9)
 
 		if resp.Version != testConfigID {
 			t.Errorf("snapshot cache fetch got version: %v, want: %v", resp.Version, testConfigID)
