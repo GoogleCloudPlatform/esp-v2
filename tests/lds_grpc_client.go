@@ -19,7 +19,6 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
