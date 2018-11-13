@@ -32,7 +32,7 @@ bool RuleMatches(const ServiceControlRule &rule, const string &path,
       continue;
     }
     // TODO(tianyuc): maybe support uri_template match in the future.
-    std::regex regex(pattern.regex());
+    std::regex regex(pattern.uri_template());
     if (!std::regex_match(path, regex))
     {
       continue;

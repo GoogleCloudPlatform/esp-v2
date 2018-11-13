@@ -8,9 +8,9 @@ DEFAULT_VISIBILITY = [
 package(default_visibility = DEFAULT_VISIBILITY)
 
 api_proto_library(
-    name = "matcher_proto",
+    name = "pattern_proto",
     srcs = [
-        "matcher.proto",
+        "pattern.proto",
     ],
     visibility = DEFAULT_VISIBILITY,
 )

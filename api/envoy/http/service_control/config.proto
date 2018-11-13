@@ -17,7 +17,7 @@ syntax = "proto3";
 
 package google.api_proxy.envoy.http.service_control;
 
-import "api/envoy/http/common/matcher.proto";
+import "api/envoy/http/common/pattern.proto";
 import "api/envoy/http/service_control/requirement.proto";
 import "google/protobuf/duration.proto";
 import "validate/validate.proto";
