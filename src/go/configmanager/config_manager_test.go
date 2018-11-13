@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
@@ -39,236 +40,261 @@ const (
 )
 
 var (
-	fakeJwksURL   = ""
-	fakeConfig    = ``
-	rawFakeConfig = `
-    {
-        "name":"%s",
-        "title":"Bookstore gRPC API",
-        "apis":[
-            {
-                "name":"%s",
-                "version":"v1",
-                "syntax":"SYNTAX_PROTO3"
-            }
-        ],
-        "sourceInfo":{
-            "sourceFiles":[
-                {
-                    "@type":"type.googleapis.com/google.api.servicemanagement.v1.ConfigFile",
-                    "filePath":"api_config.yaml",
-                    "fileContents":"%s",
-                    "fileType":"SERVICE_CONFIG_YAML"
-                },
-                {
-                    "@type":"type.googleapis.com/google.api.servicemanagement.v1.ConfigFile",
-                    "filePath":"api_descriptor.pb",
-                    "fileContents":"%s",
-                    "fileType":"FILE_DESCRIPTOR_SET_PROTO"
-                }
-            ]
-        },
-        "authentication": {
-        	  "providers": [
-        	      {
-        	 	        "id": "firebase",
-        	 	        "issuer": "https://test_issuer.google.com/",
-        	 	        "jwks_uri": "%s",
-        	 	        "audiences": "test_audience1,test_audience2"
-        	      }
-        	  ],
-        	  "rules": [
-                {
-                	  "selector": "endpoints.examples.bookstore.Bookstore.CreateShelf",
-                    "requirements": [
-                        {
-                            "provider_id": "firebase",
-                            "audiences": "test_audience1"
-                        }
-                    ]
-                },
-                {
-                	  "selector": "endpoints.examples.bookstore.Bookstore.ListShelf"
-                }
-        	  ]
-        }
-    }
-    `
+	fakeConfig          = ``
+	fakeProtoDescriptor = base64.StdEncoding.EncodeToString([]byte("rawDescriptor"))
 )
 
 func TestFetchListeners(t *testing.T) {
-	runTest(t, func(env *testEnv) {
-		ctx := context.Background()
-		// First request, VersionId should be empty.
-		req := v2.DiscoveryRequest{
-			Node: &core.Node{
-				Id: node,
-			},
-			TypeUrl: cache.ListenerType,
-		}
-		resp, err := env.configManager.cache.Fetch(ctx, req)
-		if err != nil {
-			t.Fatal(err)
-		}
-		marshaler := &jsonpb.Marshaler{}
-		gotListeners, err := marshaler.MarshalToString(resp.Resources[0])
-		wantedListeners := fmt.Sprintf(`
-        {
-            "address":{
-                "socketAddress":{
-                    "address":"0.0.0.0",
-                    "portValue":8080
-                }
-            },
-            "filterChains":[
-                {
-                    "filters":[
+	testData := []struct {
+		desc              string
+		fakeServiceConfig string
+		wantedListeners   string
+	}{
+		{
+			desc: "Success for gRPC backend",
+			fakeServiceConfig: fmt.Sprintf(`{
+                "name":"%s",
+                "apis":[
+                    {
+                        "name":"%s",
+                        "version":"v1",
+                        "syntax":"SYNTAX_PROTO3"
+                    }
+                ],
+                "sourceInfo":{
+                    "sourceFiles":[
                         {
-                            "config":{
-                                "http_filters":[
-                                    {
-                                        "config":{
-                                            "proto_descriptor_bin":"%s",
-                                            "services":[
-                                                "%s"
-                                            ]
+                            "@type":"type.googleapis.com/google.api.servicemanagement.v1.ConfigFile",
+                            "filePath":"api_descriptor.pb",
+                            "fileContents":"%s",
+                            "fileType":"FILE_DESCRIPTOR_SET_PROTO"
+                        }
+                    ]
+                },
+                "authentication": {
+        	        "providers": [
+        	            {
+        	 	            "id": "firebase",
+        	 	            "issuer": "https://test_issuer.google.com/",
+        	 	            "jwks_uri": "$JWKSURI",
+        	 	            "audiences": "test_audience1,test_audience2"
+        	            }
+        	        ],
+        	        "rules": [
+                        {
+                	        "selector": "endpoints.examples.bookstore.Bookstore.CreateShelf",
+                            "requirements": [
+                                {
+                                    "provider_id": "firebase",
+                                    "audiences": "test_audience1"
+                                }
+                            ]
+                        },
+                        {
+                	        "selector": "endpoints.examples.bookstore.Bookstore.ListShelf"
+                        }
+        	        ]
+                }
+            }`, testProjectName, testEndpointName, fakeProtoDescriptor),
+			wantedListeners: fmt.Sprintf(`{
+                "address":{
+                    "socketAddress":{
+                        "address":"0.0.0.0",
+                        "portValue":8080
+                    }
+                },
+                "filterChains":[
+                    {
+                        "filters":[
+                            {
+                                "config":{
+                                    "http_filters":[
+                                        {
+                                            "config":{
+                                                "proto_descriptor_bin":"%s",
+                                                "services":[
+                                                    "%s"
+                                                ]
+                                            },
+                                            "name":"envoy.grpc_json_transcoder"
                                         },
-                                        "name":"envoy.grpc_json_transcoder"
-                                    },
-                                    {
-                                       "config": {
-                                            "providers": {
-                                                "firebase": {
-                                               	    "audiences":["test_audience1,test_audience2"],
-                                               	    "issuer":"https://test_issuer.google.com/",
-                                               	    "local_jwks": {
-                                               	    	"inline_string": "%s"
-                                               	    }
-                                                }
-                                           	},
-                                            "rules": [
-                                                {
-                                                    "match":{
+                                        {
+                                            "config": {
+                                                "providers": {
+                                                    "firebase": {
+                                               	        "audiences":["test_audience1,test_audience2"],
+                                               	        "issuer":"https://test_issuer.google.com/",
+                                               	        "local_jwks": {
+                                               	    	    "inline_string": "%s"
+                                               	        }
+                                                    }
+                                           	    },
+                                                "rules": [
+                                                    {
+                                                        "match":{
                                                         "prefix":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
                                                     },
                                                     "requires": {
-                                                	 "provider_and_audiences": {
-                                                	     "audiences": ["test_audience1"],
-                                                	     "provider_name":"firebase"
-                                                	 }
+                                                	    "provider_and_audiences": {
+                                                	        "audiences": ["test_audience1"],
+                                                	        "provider_name":"firebase"
+                                                	        }
+                                                        }
                                                     }
-                                                }
-                                            ]
+                                                ]
+                                            },
+                                            "name":"envoy.filters.http.jwt_authn"
                                         },
-                                        "name":"envoy.filters.http.jwt_authn"
-                                    },
-                                    {
-                                        "config":{
-                                        },
-                                        "name":"envoy.router"
-                                    }
-                                ],
-                                "route_config":{
-                                    "name":"local_route",
-                                    "virtual_hosts":[
                                         {
-                                            "domains":[
-                                                "*"
-                                            ],
-                                            "name":"backend",
-                                            "routes":[
-                                                {
-                                                    "match":{
-                                                        "prefix":"/%s"
-                                                    },
-                                                    "route":{
-                                                        "cluster": "%s"
-                                                    }
-                                                }
-                                            ]
+                                            "config":{
+                                            },
+                                            "name":"envoy.router"
                                         }
-                                    ]
+                                    ],
+                                    "route_config":{
+                                        "name":"local_route",
+                                        "virtual_hosts":[
+                                            {
+                                                "domains":[
+                                                    "*"
+                                                ],
+                                                "name":"backend",
+                                                "routes":[
+                                                    {
+                                                        "match":{
+                                                            "prefix":"/%s"
+                                                        },
+                                                        "route":{
+                                                            "cluster": "%s"
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "stat_prefix":"ingress_http"
                                 },
-                                "stat_prefix":"ingress_http"
-                            },
-                            "name":"envoy.http_connection_manager"
-                        }
-                    ]
-                }
-            ]
-        }
-        `,
-			base64.StdEncoding.EncodeToString([]byte("rawDescriptor")),
-			testEndpointName, fakeJwks,
-			testEndpointName,
-			testEndpointName)
+                                "name":"envoy.http_connection_manager"
+                            }
+                        ]
+                    }
+                ]
+            }`,
+				fakeProtoDescriptor,
+				testEndpointName, fakeJwks, testEndpointName, testEndpointName),
+		},
+	}
 
-		if resp.Version != testConfigID {
-			t.Errorf("snapshot cache fetch got version: %v, want: %v", resp.Version, testConfigID)
-		}
-		if !reflect.DeepEqual(resp.Request, req) {
-			t.Errorf("snapshot cache fetch got request: %v, want: %v", resp.Request, req)
-		}
+	for i, tc := range testData {
+		// Overrides fakeConfig for the test case.
+		fakeConfig = tc.fakeServiceConfig
+		runTest(t, func(env *testEnv) {
+			ctx := context.Background()
+			// First request, VersionId should be empty.
+			req := v2.DiscoveryRequest{
+				Node: &core.Node{
+					Id: node,
+				},
+				TypeUrl: cache.ListenerType,
+			}
+			resp, err := env.configManager.cache.Fetch(ctx, req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			marshaler := &jsonpb.Marshaler{}
+			gotListeners, err := marshaler.MarshalToString(resp.Resources[0])
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		// Normalize both wantedListeners and gotListeners.
-		wantedListeners = normalizeJson(wantedListeners)
-		gotListeners = normalizeJson(gotListeners)
+			if resp.Version != testConfigID {
+				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, resp.Version, testConfigID)
+			}
+			if !reflect.DeepEqual(resp.Request, req) {
+				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, resp.Request, req)
+			}
 
-		if gotListeners != wantedListeners {
-			t.Errorf("snapshot cache fetch got Listeners: %s, want: %s", gotListeners, wantedListeners)
-		}
-	})
+			// Normalize both wantedListeners and gotListeners.
+			gotListeners = normalizeJson(gotListeners)
+			if want := normalizeJson(tc.wantedListeners); gotListeners != want {
+				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got Listeners: %s, want: %s", i, tc.desc, gotListeners, want)
+			}
+		})
+	}
 }
 
 func TestFetchClusters(t *testing.T) {
-	runTest(t, func(env *testEnv) {
-		ctx := context.Background()
-		// First request, VersionId should be empty.
-		req := v2.DiscoveryRequest{
-			Node: &core.Node{
-				Id: node,
-			},
-			TypeUrl: cache.ClusterType,
-		}
+	testData := []struct {
+		desc              string
+		fakeServiceConfig string
+		wantedClusters    string
+	}{
+		{
+			desc: "Success for gRPC backend",
+			fakeServiceConfig: fmt.Sprintf(`{
+                "name":"%s",
+                "apis":[
+                    {
+                        "name":"%s",
+                        "version":"v1",
+                        "syntax":"SYNTAX_PROTO3"
+                    }
+                ]
+		    }`, testProjectName, testEndpointName),
+			wantedClusters: fmt.Sprintf(`{
+	    	    "hosts": [
+	    	        {
+	    	      	    "socketAddress": {
+	    	      	  	    "address": "%s",
+	    	      	  	    "portValue": %d
+	    	      	    }
+	    	        }
+	    	    ],
+	    	    "name": "%s",
+		        "http2ProtocolOptions": {},
+	    	    "connectTimeout": "%ds"
+	        }`, *clusterAddress, *clusterPort, testEndpointName, *clusterConnectTimeout/1e9),
+		},
+	}
 
-		resp, err := env.configManager.cache.Fetch(ctx, req)
-		if err != nil {
-			t.Fatal(err)
-		}
+	for i, tc := range testData {
+		// Overrides fakeConfig for the test case.
+		fakeConfig = tc.fakeServiceConfig
 
-		marshaler := &jsonpb.Marshaler{}
-		gotClusters, err := marshaler.MarshalToString(resp.Resources[0])
+		runTest(t, func(env *testEnv) {
+			ctx := context.Background()
+			// First request, VersionId should be empty.
+			req := v2.DiscoveryRequest{
+				Node: &core.Node{
+					Id: node,
+				},
+				TypeUrl: cache.ClusterType,
+			}
 
-		wantedClusters := fmt.Sprintf(`
-	    {
-	    	  "hosts": [
-	    	      {
-	    	      	  "socketAddress": {
-	    	      	  	  "address": "%s",
-	    	      	  	  "portValue": %d
-	    	      	  }
-	    	      }
-	    	  ],
-	    	  "name": "%s",
-		  "http2ProtocolOptions": {},
-	    	  "connectTimeout": "%ds"
-	    }`,
-			*clusterAddress, *clusterPort, testEndpointName, *clusterConnectTimeout/1e9)
+			resp, err := env.configManager.cache.Fetch(ctx, req)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		if resp.Version != testConfigID {
-			t.Errorf("snapshot cache fetch got version: %v, want: %v", resp.Version, testConfigID)
-		}
-		if !reflect.DeepEqual(resp.Request, req) {
-			t.Errorf("snapshot cache fetch got request: %v, want: %v", resp.Request, req)
-		}
+			marshaler := &jsonpb.Marshaler{}
+			gotClusters, err := marshaler.MarshalToString(resp.Resources[0])
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		wantedClusters = normalizeJson(wantedClusters)
-		gotClusters = normalizeJson(gotClusters)
+			if resp.Version != testConfigID {
+				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, resp.Version, testConfigID)
+			}
+			if !reflect.DeepEqual(resp.Request, req) {
+				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, resp.Request, req)
+			}
 
-		if gotClusters != wantedClusters {
-			t.Errorf("snapshot cache fetch got Clusters: %s, want: %s", gotClusters, wantedClusters)
-		}
-	})
+			gotClusters = normalizeJson(gotClusters)
+			if want := normalizeJson(tc.wantedClusters); gotClusters != want {
+				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got Clusters: %s, want: %s", i, tc.desc, gotClusters, want)
+			}
+		})
+	}
 }
 
 // Test Environment setup.
@@ -286,13 +312,9 @@ func runTest(t *testing.T, f func(*testEnv)) {
 	serviceAccountTokenURL = mockMetadata.URL
 	mockJwksIssuer := initMockJwksIssuer(t)
 	defer mockJwksIssuer.Close()
-	fakeJwksURL = mockJwksIssuer.URL
 
-	fakeConfig = fmt.Sprintf(rawFakeConfig, testProjectName, testEndpointName,
-		base64.StdEncoding.EncodeToString([]byte("raw_config")),
-		base64.StdEncoding.EncodeToString([]byte("rawDescriptor")),
-		fakeJwksURL)
-
+	// Replace $JWKSURI here, since it depends on the mock server.
+	fakeConfig = strings.Replace(fakeConfig, "$JWKSURI", mockJwksIssuer.URL, 1)
 	manager, err := NewConfigManager(testProjectName, testConfigID)
 	if err != nil {
 		t.Fatal("fail to initialize ConfigManager: ", err)

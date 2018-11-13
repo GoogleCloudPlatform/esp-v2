@@ -15,7 +15,6 @@
 package configmanager
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -55,6 +54,12 @@ var (
 	node           = "api_proxy"
 )
 
+const (
+	statPrefix      = "ingress_http"
+	routeName       = "local_route"
+	virtualHostName = "backend"
+)
+
 // ConfigManager handles service configuration fetching and updating.
 // TODO(jilinxia): handles multi service name.
 type ConfigManager struct {
@@ -89,7 +94,7 @@ func (m *ConfigManager) init() error {
 	}
 	snapshot, err := m.makeSnapshot(serviceConfig)
 	if err != nil {
-		return errors.New("fail to make a snapshot")
+		return fmt.Errorf("fail to make a snapshot, %s", err)
 	}
 	m.cache.SetSnapshot(node, *snapshot)
 	return nil
@@ -156,7 +161,9 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 			break
 		}
 	}
+
 	// TODO(jilinxia): Add Service control filter config.
+
 	// Add JWT Authn filter.
 	httpFilters = append(httpFilters, m.makeJwtAuthnFilter(serviceConfig))
 	// Add Envoy Router filter so requests are routed upstream.
@@ -171,22 +178,24 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 				PortSpecifier: &core.SocketAddress_PortValue{PortValue: uint32(*listenerPort)}}}},
 		}, &hcm.HttpConnectionManager{
 			CodecType:  hcm.AUTO,
-			StatPrefix: "ingress_http",
+			StatPrefix: statPrefix,
 			RouteSpecifier: &hcm.HttpConnectionManager_RouteConfig{
 				RouteConfig: &v2.RouteConfiguration{
-					Name: "local_route",
+					Name: routeName,
 					VirtualHosts: []route.VirtualHost{
 						{
-							Name:    "backend",
+							Name:    virtualHostName,
 							Domains: []string{"*"},
 							Routes: []route.Route{
 								{
 									Match: route.RouteMatch{
-										PathSpecifier: &route.RouteMatch_Prefix{fmt.Sprintf("/%s", serviceConfig.Apis[0].Name)},
+										PathSpecifier: &route.RouteMatch_Prefix{
+											Prefix: fmt.Sprintf("/%s", serviceConfig.Apis[0].Name)},
 									},
 									Action: &route.Route_Route{
 										Route: &route.RouteAction{
-											ClusterSpecifier: &route.RouteAction_Cluster{serviceConfig.Apis[0].Name},
+											ClusterSpecifier: &route.RouteAction_Cluster{
+												Cluster: serviceConfig.Apis[0].Name},
 										},
 									},
 								},
@@ -211,10 +220,11 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.Http
 		jp := &ac.JwtProvider{
 			Issuer:    provider.GetIssuer(),
 			Audiences: []string{provider.GetAudiences()},
-			// TODO(jilinxia): fetch local token.
 			JwksSourceSpecifier: &ac.JwtProvider_LocalJwks{
 				LocalJwks: &core.DataSource{
-					Specifier: &core.DataSource_InlineString{string(jwk)},
+					Specifier: &core.DataSource_InlineString{
+						InlineString: string(jwk),
+					},
 				},
 			},
 		}
@@ -247,7 +257,9 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.Http
 			m := strings.Split(rule.GetSelector(), ".")
 			ruleConfig := &ac.RequirementRule{
 				Match: &route.RouteMatch{
-					PathSpecifier: &route.RouteMatch_Prefix{fmt.Sprintf("/%s/%s", serviceConfig.Apis[0].Name, m[len(m)-1])},
+					PathSpecifier: &route.RouteMatch_Prefix{
+						Prefix: fmt.Sprintf("/%s/%s", serviceConfig.Apis[0].Name, m[len(m)-1]),
+					},
 				},
 				Requires: require,
 			}
@@ -285,7 +297,7 @@ func (m *ConfigManager) fetchConfig(configId string) (*api.Service, error) {
 	if err != nil {
 		return nil, fmt.Errorf("fail to get access token")
 	}
-	path := strings.Replace(fetchConfigURL, "$configId", configId, -1)
+	path := strings.Replace(fetchConfigURL, "$configId", configId, 1)
 	return callServiceManagement(path, m.serviceName, token, m.client)
 }
 
@@ -297,7 +309,7 @@ func (fn funcResolver) Resolve(url string) (proto.Message, error) {
 }
 
 var callServiceManagement = func(path, serviceName, token string, client *http.Client) (*api.Service, error) {
-	path = strings.Replace(path, "$serviceName", serviceName, -1)
+	path = strings.Replace(path, "$serviceName", serviceName, 1)
 	req, _ := http.NewRequest("GET", path, nil)
 	req.Header.Add("Authorization", "Bearer "+token)
 	resp, err := client.Do(req)
