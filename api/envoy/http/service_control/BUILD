@@ -19,7 +19,7 @@ api_proto_library(
     name = "config_proto",
     srcs = ["config.proto"],
     deps = [
-        "//api/envoy/http/common:matcher_proto",
+        "//api/envoy/http/common:pattern_proto",
         "requirement_proto",
     ],
 )
