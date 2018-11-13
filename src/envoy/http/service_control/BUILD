@@ -39,3 +39,26 @@ envoy_cc_library(
     ],
 )
 
+cc_library(
+    name = "path_matcher_lib",
+    srcs = [
+        "http_template.cc",
+        "http_template.h",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "http_template_test",
+    size = "small",
+    srcs = ["http_template_test.cc"],
+    linkopts = [
+        "-lm",
+        "-lpthread",
+    ],
+    linkstatic = 1,
+    deps = [
+        ":path_matcher_lib",
+        "//external:googletest_main",
+    ],
+)
