@@ -1,0 +1,40 @@
+# Copyright 2018 Google Cloud Platform Proxy Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+FROM golang:alpine
+
+# install tools
+RUN apk update \
+  && apk add git
+
+RUN go get github.com/golang/dep/cmd/dep
+
+# install glide
+RUN go get github.com/Masterminds/glide
+
+# create a working directory
+WORKDIR /go/src/cloudesf.googlesource.com/gcpproxy
+
+# add glide.yaml and glide.lock
+ADD glide.yaml glide.yaml
+ADD glide.lock glide.lock
+
+# install packages
+RUN glide install
+
+# add source code
+ADD src src
+
+# run main.go
+CMD ["go", "run", "src/go/server/server.go"]
