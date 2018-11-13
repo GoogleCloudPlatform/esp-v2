@@ -1,4 +1,8 @@
-
+package(
+    default_visibility = [
+        "//src/api_proxy/service_control:__subpackages__",
+    ]
+)
 
 cc_library(
     name = "request_builder_lib",

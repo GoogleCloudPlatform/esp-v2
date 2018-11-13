@@ -3,6 +3,12 @@ load(
     "envoy_cc_binary",
 )
 
+package(
+    default_visibility = [
+        "//src/envoy:__subpackages__",
+    ]
+)
+
 envoy_cc_binary(
     name = "envoy",
     repository = "@envoy",

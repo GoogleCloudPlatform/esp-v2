@@ -1,9 +1,13 @@
-
-package(default_visibility = ["//visibility:public"])
-
 load(
     "@envoy//bazel:envoy_build_system.bzl",
     "envoy_cc_library",
+)
+
+package(
+    default_visibility = [
+        "//src/envoy/http/service_control:__subpackages__",
+        "//src/envoy:__subpackages__",
+    ]
 )
 
 envoy_cc_library(
@@ -37,6 +41,7 @@ envoy_cc_library(
         ":filter_lib",
         "@envoy//source/exe:envoy_common_lib",
     ],
+    visibility = ["//src/envoy:__subpackages__"]
 )
 
 cc_library(
