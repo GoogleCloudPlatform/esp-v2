@@ -50,7 +50,7 @@ test:
 test-debug:
 	@echo "--> running unit tests"
 	@go test -v ./src/go/... --logtostderr
-    
+
 #-----------------------------------------------------------------------------
 # Target: go dependencies
 #-----------------------------------------------------------------------------
@@ -134,9 +134,12 @@ lint: tools.golint
 # Target : docker
 # ----------------------------------------------------------------------------
 
-.PHONY: docker-build, docker-push
-docker-build:
-	docker build --build-arg IMAGE_ARG=$(IMG):$(TAG)-$(K8S) -t $(IMG):$(VERSION)-$(K8S) .
+.PHONY: docker.build-prow, docker.push-prow, docker.build-configmanager
+docker.build-prow:
+	docker build -f docker/Dockerfile-prow-env --build-arg IMAGE_ARG=$(IMG):$(TAG)-$(K8S) -t $(IMG):$(VERSION)-$(K8S) .
 
-docker-push: docker-build
+docker.push-prow: docker.build-prow
 	docker push $(IMG):$(TAG)-$(K8S)
+
+docker.build-configmanager:
+	docker build -f docker/Dockerfile-configmanager -t configmanager .
