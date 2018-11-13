@@ -6,7 +6,8 @@
 # This list overrides the default list controlling what extensions are compiled
 # into envoy.
 #
-# See https://github.com/envoyproxy/envoy/tree/master/bazel/README.md and https://github.com/envoyproxy/envoy/blob/master/source/extensions/extensions_build_config.bzl
+# See https://github.com/envoyproxy/envoy/tree/master/bazel/README.md
+# and https://github.com/envoyproxy/envoy/blob/master/source/extensions/extensions_build_config.bzl
 EXTENSIONS = {
     #
     # Access loggers
