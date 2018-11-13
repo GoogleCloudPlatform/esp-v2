@@ -44,6 +44,9 @@ cc_library(
     srcs = [
         "http_template.cc",
         "http_template.h",
+        "path_matcher.h",
+        "path_matcher_node.cc",
+        "path_matcher_node.h",
     ],
     visibility = ["//visibility:public"],
 )
@@ -52,6 +55,21 @@ cc_test(
     name = "http_template_test",
     size = "small",
     srcs = ["http_template_test.cc"],
+    linkopts = [
+        "-lm",
+        "-lpthread",
+    ],
+    linkstatic = 1,
+    deps = [
+        ":path_matcher_lib",
+        "//external:googletest_main",
+    ],
+)
+
+cc_test(
+    name = "path_matcher_test",
+    size = "small",
+    srcs = ["path_matcher_test.cc"],
     linkopts = [
         "-lm",
         "-lpthread",
