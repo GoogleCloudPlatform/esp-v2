@@ -4,7 +4,7 @@ Google Cloud Platform API Proxy, a.k.a. APIProxy is a proxy which enables API
 management capabilities for JSON/REST or gRPC API services. The current
 implementation is based on an Envoy proxy server.
 
-GCPProxy provides:
+APIProxy provides:
 
 *   **Features**: authentication (auth0, gitkit), API key validation, JSON to
     gRPC transcoding, as well as API-level monitoring, tracing and logging. More
