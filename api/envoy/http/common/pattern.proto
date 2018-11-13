@@ -25,32 +25,19 @@ package google.api.envoy.http.common;
 //   httpMethod: GET
 // ```
 message Pattern {
-
-  oneof pattern {
-    // URI template to match against as defined by
-    // [rfc6570](https://tools.ietf.org/html/rfc6570). For example, the
-    // following are valid URI templates:
-    //
-    //     /pets
-    //     /pets/{id}
-    //     /dictionary/{term:1}/{term}
-    //     /search{?q*,lang}
-    //
-    string uri_template = 1;
-
-    // EXPERIMENTAL:
-    //
-    // ecmascript style regex-based match as defined by
-    // [EDCA-262](http://en.cppreference.com/w/cpp/regex/ecmascript). For
-    // example,
-    //
-    //     "^/pets/(.*?)?"
-    //
-    string regex = 2;
-  }
+  // URI template to match against as defined by
+  // [rfc6570](https://tools.ietf.org/html/rfc6570). For example, the
+  // following are valid URI templates:
+  //
+  //     /pets
+  //     /pets/{id}
+  //     /dictionary/{term:1}/{term}
+  //     /search{?q*,lang}
+  //
+  string uri_template = 1;
 
   // HTTP request method to match against as defined by
   // [rfc7231](https://tools.ietf.org/html/rfc7231#page-21). For
   // example: GET, HEAD, POST, PUT, DELETE.
-  string http_method = 3;
+  string http_method = 2;
 }
