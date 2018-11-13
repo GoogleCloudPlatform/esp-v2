@@ -50,19 +50,25 @@ test:
 test-debug:
 	@echo "--> running unit tests"
 	@go test -v ./src/go/... --logtostderr
-    
+
 #-----------------------------------------------------------------------------
 # Target: go dependencies
 #-----------------------------------------------------------------------------
 .PHONY: depend.update depend.install
 
-depend.update: tools.glide
+depend.update: tools.glide depend.agentproto
 	@echo "--> updating dependencies from glide.yaml"
 	@glide update
 
-depend.install: tools.glide
+depend.install: tools.glide depend.agentproto
 	@echo "--> installing dependencies from glide.lock "
 	@glide install
+
+depend.agentproto:
+	@echo "--> generating go agent proto files"
+	@bazel build //api/agent:agent_service_go_grpc
+	@mkdir -p src/go/proto/agent
+	@cp -f bazel-bin/api/agent/linux_amd64_stripped/agent_service_go_grpc%/cloudesf.googlesource.com/gcpproxy/src/go/proto/agent/* src/go/proto/agent
 
 vendor:
 	@echo "--> installing dependencies from glide.lock "
