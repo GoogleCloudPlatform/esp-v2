@@ -35,7 +35,7 @@ message HttpUri {
 
 message ServiceControlRule {
   // Use Envoy native RouteMatch so we can use Envoy native matching logic.
-  repeated api.envoy.http.common.PatternMatch patterns = 1 [(validate.rules).repeated.min_items = 1];
+  repeated api.envoy.http.common.Pattern patterns = 1 [(validate.rules).repeated.min_items = 1];
 
   // The requirments for matched pattern.
   api.envoy.http.service_control.Requirement requires = 2;

@@ -16,7 +16,7 @@ syntax = "proto3";
 
 package google.api.envoy.http.common;
 
-// PatternMatch defines a single pattern to match against
+// Pattern defines a single pattern to match against
 // incoming requests. This pattern matcher is not limited to HTTP requests.
 //
 // ```yaml
@@ -24,7 +24,7 @@ package google.api.envoy.http.common;
 //   uriTemplate: /foo/bar
 //   httpMethod: GET
 // ```
-message PatternMatch {
+message Pattern {
 
   oneof pattern {
     // URI template to match against as defined by
