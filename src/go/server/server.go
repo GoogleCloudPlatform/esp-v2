@@ -26,6 +26,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/configmanager"
+	agentpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/agent"
 )
 
 var (
@@ -47,6 +48,10 @@ func main() {
 		glog.Exitf("Server failed to listen: %v", err)
 	}
 
+	// Register API Proxy agent service.
+	agentpb.RegisterAgentServiceServer(grpcServer, configmanager.NewAgentServer())
+
+	// Register Envoy discovery services.
 	discovery.RegisterAggregatedDiscoveryServiceServer(grpcServer, server)
 	api.RegisterEndpointDiscoveryServiceServer(grpcServer, server)
 	api.RegisterClusterDiscoveryServiceServer(grpcServer, server)
