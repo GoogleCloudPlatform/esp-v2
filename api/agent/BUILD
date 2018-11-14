@@ -14,7 +14,7 @@ proto_library(
 go_grpc_library(
   name = "agent_service_go_grpc",
   proto = ":agent_service",
-  importpath = "cloudesf.googlesource.com/gcpproxy/src/go/proto/agent",
+  importpath = "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/agent",
   deps = [
     "@com_github_gogo_protobuf//:gogo_proto_go",
     "@com_github_golang_protobuf//ptypes/duration:go_default_library",

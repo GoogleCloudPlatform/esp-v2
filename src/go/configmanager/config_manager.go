@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
@@ -162,11 +163,17 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 		}
 	}
 
-	// TODO(jilinxia): Add Service control filter config.
-
 	// Add JWT Authn filter.
 	httpFilters = append(httpFilters, m.makeJwtAuthnFilter(serviceConfig))
+
+	// Add service control filter if needed
+	serviceControlFilter := m.makeServiceControlFilter(serviceConfig)
+	if serviceControlFilter != nil {
+		httpFilters = append(httpFilters, serviceControlFilter)
+	}
+
 	// Add Envoy Router filter so requests are routed upstream.
+	// Router filter should be the last.
 	routerFilter := &hcm.HttpFilter{
 		Name:   util.Router,
 		Config: &types.Struct{},
@@ -277,6 +284,22 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.Http
 		Config: jas,
 	}
 	return jwtAuthnFilter
+}
+
+func (m *ConfigManager) makeServiceControlFilter(serviceConfig *api.Service) *hcm.HttpFilter {
+	if serviceConfig.Name == "" || serviceConfig.Control == nil || serviceConfig.Control.Environment == "" {
+		return nil
+	}
+
+	filterConfig := &scpb.FilterConfig{
+		ServiceName: serviceConfig.Name,
+	}
+	jas, _ := util.MessageToStruct(filterConfig)
+	filter := &hcm.HttpFilter{
+		Name:   "envoy.filters.http.service_control",
+		Config: jas,
+	}
+	return filter
 }
 
 // Implements the ID method for HashNode interface.

@@ -26,7 +26,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/configmanager"
-	agentpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/agent"
+	agentpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/agent"
 )
 
 var (

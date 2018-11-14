@@ -17,7 +17,7 @@ package configmanager
 import (
 	"context"
 
-	agentpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/agent"
+	agentpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/agent"
 )
 
 type AgentServer struct {
