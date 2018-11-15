@@ -30,28 +30,45 @@ func TestFetchAccountTokenExpired(t *testing.T) {
 	ts := initMockMetadataServer()
 	defer ts.Close()
 	serviceAccountTokenURL = ts.URL
+	// Get a time stamp and use it through out the test.
+	fakeNow := time.Now()
+	// Make sure the accessToken is empty before the test.
+	metadata.accessToken = ""
+	// Mock the timeNow function.
+	timeNow = func() time.Time { return fakeNow }
 
 	testData := []struct {
-		desc            string
-		curToken        string
-		curTokenTimeout time.Time
-		expectedToken   string
+		desc               string
+		curToken           string
+		curTokenTimeout    time.Time
+		expectedToken      string
+		expectedExpiration time.Duration
 	}{
 		{
-			desc:          "Empty metadata",
-			expectedToken: "ya29.new",
+			desc:               "Empty metadata",
+			expectedToken:      "ya29.new",
+			expectedExpiration: 3599 * time.Second,
 		},
 		{
-			desc:            "token has expired in metadata",
-			curToken:        "ya29.expired",
-			curTokenTimeout: time.Now().Add(-1 * time.Hour),
-			expectedToken:   "ya29.new",
+			desc:               "token has expired in metadata",
+			curToken:           "ya29.expired",
+			curTokenTimeout:    fakeNow.Add(-1 * time.Hour),
+			expectedToken:      "ya29.new",
+			expectedExpiration: 3599 * time.Second,
 		},
 		{
-			desc:            "token is not expired in metadata",
-			curToken:        "ya29.nonexpired",
-			curTokenTimeout: time.Now().Add(1 * time.Hour),
-			expectedToken:   "ya29.nonexpired",
+			desc:               "token is not expired in metadata",
+			curToken:           "ya29.nonexpired",
+			curTokenTimeout:    fakeNow.Add(61 * time.Second),
+			expectedToken:      "ya29.nonexpired",
+			expectedExpiration: 61 * time.Second,
+		},
+		{
+			desc:               "token valid time is below 60 seconds in metadata",
+			curToken:           "ya29.nonexpired",
+			curTokenTimeout:    fakeNow.Add(59 * time.Second),
+			expectedToken:      "ya29.new",
+			expectedExpiration: 3599 * time.Second,
 		},
 	}
 	for i, tc := range testData {
@@ -59,12 +76,15 @@ func TestFetchAccountTokenExpired(t *testing.T) {
 			metadata.accessToken = tc.curToken
 			metadata.tokenTimeout = tc.curTokenTimeout
 		}
-		token, err := fetchAccessToken()
+		token, expires, err := fetchAccessToken()
 		if err != nil {
 			t.Fatal(err)
 		}
 		if !strings.EqualFold(token, tc.expectedToken) {
 			t.Errorf("Test Desc(%d): %s, FetchServiceAccountToken = %s, want %s", i, tc.desc, token, tc.expectedToken)
+		}
+		if expires != tc.expectedExpiration {
+			t.Errorf("Test Desc(%d): %s, Actual expiration = %s, want %s", i, tc.desc, expires, tc.expectedExpiration)
 		}
 	}
 }
