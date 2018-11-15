@@ -333,7 +333,7 @@ func (m *ConfigManager) Errorf(format string, args ...interface{}) { glog.Errorf
 func (m *ConfigManager) Cache() cache.Cache { return m.cache }
 
 func (m *ConfigManager) fetchConfig(configId string) (*api.Service, error) {
-	token, err := fetchAccessToken()
+	token, _, err := fetchAccessToken()
 	if err != nil {
 		return nil, fmt.Errorf("fail to get access token")
 	}

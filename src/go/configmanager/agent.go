@@ -16,15 +16,22 @@ package configmanager
 
 import (
 	"context"
+	"time"
 
 	agentpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/agent"
+	"github.com/golang/protobuf/ptypes/duration"
 )
 
 type AgentServer struct {
 }
 
 func (s *AgentServer) GetAccessToken(ctx context.Context, req *agentpb.GetAccessTokenRequest) (*agentpb.GetAccessTokenResponse, error) {
-	return &agentpb.GetAccessTokenResponse{AccessToken: "TODO"}, nil
+	token, expires, err := fetchAccessToken()
+	if err != nil {
+		return nil, err
+	}
+
+	return &agentpb.GetAccessTokenResponse{AccessToken: token, ExpiresIn: &duration.Duration{Seconds: int64(expires / time.Second)}}, nil
 }
 
 func NewAgentServer() *AgentServer {

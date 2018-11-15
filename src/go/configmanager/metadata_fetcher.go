@@ -23,12 +23,18 @@ import (
 
 var (
 	serviceAccountTokenURL = "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"
+	timeNow                = time.Now
 )
 
 // metadata updates and stores Metadata from GCE.
 var metadata struct {
 	accessToken  string
 	tokenTimeout time.Time
+}
+
+type metadataTokenResponse struct {
+	AccessToken string `json:"access_token"`
+	ExpiresIn   int64  `json:"expires_in"`
 }
 
 var metadataClient http.Client
@@ -48,21 +54,26 @@ var getMetadata = func(path string) ([]byte, error) {
 	return body, nil
 }
 
-func fetchAccessToken() (string, error) {
-	now := time.Now()
-	if metadata.accessToken != "" && !now.After(metadata.tokenTimeout) {
-		return metadata.accessToken, nil
+func fetchAccessToken() (string, time.Duration, error) {
+	now := timeNow()
+
+	// Follow the similar logic as GCE metadata server, where returned token will be valid for at least 60s.
+	if metadata.accessToken != "" && !now.After(metadata.tokenTimeout.Add(-time.Second*60)) {
+		return metadata.accessToken, metadata.tokenTimeout.Sub(now), nil
 	}
+
 	tokenBody, err := getMetadata(serviceAccountTokenURL)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
-	var tokenJSON map[string]interface{}
-	if err = json.Unmarshal(tokenBody, &tokenJSON); err != nil {
-		return "", err
+
+	var resp metadataTokenResponse
+	if err = json.Unmarshal(tokenBody, &resp); err != nil {
+		return "", 0, err
 	}
-	expires := time.Duration(tokenJSON["expires_in"].(float64)) * time.Second
-	metadata.accessToken = tokenJSON["access_token"].(string)
+
+	expires := time.Duration(resp.ExpiresIn) * time.Second
+	metadata.accessToken = resp.AccessToken
 	metadata.tokenTimeout = now.Add(expires)
-	return metadata.accessToken, nil
+	return metadata.accessToken, expires, nil
 }
