@@ -4,12 +4,13 @@
 package service_control
 
 import (
-	common "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
 	fmt "fmt"
+	math "math"
+
+	common "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
 	proto "github.com/golang/protobuf/proto"
 	duration "github.com/golang/protobuf/ptypes/duration"
 	_ "github.com/lyft/protoc-gen-validate/validate"
-	math "math"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

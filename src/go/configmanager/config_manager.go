@@ -227,13 +227,14 @@ func (m *ConfigManager) makeTranscoderFilter(serviceConfig *api.Service) *hcm.Ht
 }
 
 func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.HttpFilter {
-	auth := serviceConfig.GetAuthentication()
-
-	// Skip configuraing JWT authn filter if no methods requires it.
-	if len(auth.GetRules()) == 0 {
+	if serviceConfig == nil {
+		glog.Warning("unexpected empty service config")
 		return nil
 	}
-
+	auth := serviceConfig.GetAuthentication()
+	if len(auth.GetProviders()) == 0 {
+		return nil
+	}
 	providers := make(map[string]*ac.JwtProvider)
 	for _, provider := range auth.GetProviders() {
 		jwk, err := fetchJwk(provider.GetJwksUri(), m.client)
@@ -242,8 +243,7 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.Http
 			break
 		}
 		jp := &ac.JwtProvider{
-			Issuer:    provider.GetIssuer(),
-			Audiences: []string{provider.GetAudiences()},
+			Issuer: provider.GetIssuer(),
 			JwksSourceSpecifier: &ac.JwtProvider_LocalJwks{
 				LocalJwks: &core.DataSource{
 					Specifier: &core.DataSource_InlineString{
@@ -252,16 +252,30 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.Http
 				},
 			},
 		}
+		if len(provider.GetAudiences()) != 0 {
+			jp.Audiences = strings.Split(provider.GetAudiences(), ",")
+		}
 		providers[provider.GetId()] = jp
 	}
+
+	if len(providers) == 0 {
+		return nil
+	}
+
 	rules := []*ac.RequirementRule{}
-	// TODO(jilinxia): supports multi rules with RequireAll, RequireAny.
 	for _, rule := range auth.GetRules() {
-		var require *ac.JwtRequirement
+		if len(rule.GetRequirements()) == 0 {
+			break
+		}
+		// By default, if there are multi requirements, treat it as RequireAny.
+		requires := &ac.JwtRequirement{
+			RequiresType: &ac.JwtRequirement_RequiresAny{
+				RequiresAny: &ac.JwtRequirementOrList{},
+			},
+		}
 		for _, r := range rule.GetRequirements() {
-			audiences := strings.Split(r.GetAudiences(), ",")
-			// TODO(jilinxia): adds unit tests when audiences is empty.
-			if len(audiences) == 0 {
+			var require *ac.JwtRequirement
+			if r.GetAudiences() == "" {
 				require = &ac.JwtRequirement{
 					RequiresType: &ac.JwtRequirement_ProviderName{
 						ProviderName: r.GetProviderId(),
@@ -277,18 +291,22 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.Http
 					},
 				}
 			}
-			// TODO(jilinxia): make requirement rule work for open API style.
-			m := strings.Split(rule.GetSelector(), ".")
-			ruleConfig := &ac.RequirementRule{
-				Match: &route.RouteMatch{
-					PathSpecifier: &route.RouteMatch_Prefix{
-						Prefix: fmt.Sprintf("/%s/%s", serviceConfig.Apis[0].Name, m[len(m)-1]),
-					},
-				},
-				Requires: require,
+			if len(rule.GetRequirements()) == 1 {
+				requires = require
+			} else {
+				requires.GetRequiresAny().Requirements = append(requires.GetRequiresAny().GetRequirements(), require)
 			}
-			rules = append(rules, ruleConfig)
 		}
+		m := strings.Split(rule.GetSelector(), ".")
+		ruleConfig := &ac.RequirementRule{
+			Match: &route.RouteMatch{
+				PathSpecifier: &route.RouteMatch_Prefix{
+					Prefix: fmt.Sprintf("/%s/%s", serviceConfig.Apis[0].Name, m[len(m)-1]),
+				},
+			},
+			Requires: requires,
+		}
+		rules = append(rules, ruleConfig)
 	}
 
 	jwtAuthentication := &ac.JwtAuthentication{

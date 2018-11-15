@@ -33,7 +33,7 @@ GODIRS		= $(shell go list -f '{{.Dir}}' ./... \
 # ----------------------------------------------------------------------------
 
 .PHONY: build
-build:
+build: format
 	@echo "--> building"
 	@go build ./src/go/...
 	@go build ./tests/configmanager/...
@@ -43,11 +43,11 @@ build:
 # ----------------------------------------------------------------------------
 
 .PHONY: test test-debug
-test:
+test: format
 	@echo "--> running unit tests"
 	@go test -v ./src/go/...
 
-test-debug:
+test-debug: format
 	@echo "--> running unit tests"
 	@go test -v ./src/go/... --logtostderr
 

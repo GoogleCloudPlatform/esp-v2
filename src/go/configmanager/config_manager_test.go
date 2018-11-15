@@ -132,116 +132,322 @@ func TestFetchListeners(t *testing.T) {
 				fakeProtoDescriptor, testEndpointName, testEndpointName, testEndpointName),
 		},
 		{
-			desc: "Success for gRPC backend with JWT Authn",
+			desc: "Success for gRPC backend, with Jwt filter, with audiences",
 			fakeServiceConfig: fmt.Sprintf(`{
-				"name":"%s",
-				"apis":[
-					{
-						"name":"%s",
-						"version":"v1",
-						"syntax":"SYNTAX_PROTO3"
-					}
-				],
-				"authentication": {
-					"providers": [
-						{
-							"id": "firebase",
-							"issuer": "https://test_issuer.google.com/",
-							"jwks_uri": "$JWKSURI",
-							"audiences": "test_audience1,test_audience2"
-						}
-					],
-					"rules": [
-						{
-							"selector": "endpoints.examples.bookstore.Bookstore.CreateShelf",
-							"requirements": [
-								{
-									"provider_id": "firebase",
-									"audiences": "test_audience1"
-								}
-							]
-						},
-						{
-							"selector": "endpoints.examples.bookstore.Bookstore.ListShelf"
-						}
-					]
-				}
-			}`, testProjectName, testEndpointName),
+                "apis":[
+                    {
+                        "name":"%s"
+                    }
+                ],
+                "authentication": {
+        	        "providers": [
+        	            {
+        	 	            "id": "firebase",
+        	 	            "issuer": "https://test_issuer.google.com/",
+        	 	            "jwks_uri": "$JWKSURI",
+        	 	            "audiences": "test_audience1,test_audience2"
+        	            }
+        	        ],
+        	        "rules": [
+                        {
+                	        "selector": "endpoints.examples.bookstore.Bookstore.CreateShelf",
+                            "requirements": [
+                                {
+                                    "provider_id": "firebase",
+                                    "audiences": "test_audience1"
+                                }
+                            ]
+                        },
+                        {
+                	        "selector": "endpoints.examples.bookstore.Bookstore.ListShelf"
+                        }
+        	        ]
+                }
+            }`, testEndpointName),
 			wantedListeners: fmt.Sprintf(`{
-				"address":{
-					"socketAddress":{
-						"address":"0.0.0.0",
-						"portValue":8080
-					}
-				},
-				"filterChains":[
-					{
-						"filters":[
-							{
-								"config":{
-									"http_filters":[
-										{
-											"config": {
-												"providers": {
-													"firebase": {
-														"audiences":["test_audience1,test_audience2"],
-														"issuer":"https://test_issuer.google.com/",
-														"local_jwks": {
-															"inline_string": "%s"
-														}
-													}
-												},
-												"rules": [
-													{
-														"match":{
-														"prefix":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
-													},
-													"requires": {
-														"provider_and_audiences": {
-															"audiences": ["test_audience1"],
-															"provider_name":"firebase"
-															}
-														}
-													}
-												]
-											},
-											"name":"envoy.filters.http.jwt_authn"
-										},
-										{
-											"config":{
-											},
-											"name":"envoy.router"
-										}
-									],
-									"route_config":{
-										"name":"local_route",
-										"virtual_hosts":[
-											{
-												"domains":[
-													"*"
-												],
-												"name":"backend",
-												"routes":[
-													{
-														"match":{
-															"prefix":"/%s"
-														},
-														"route":{
-															"cluster": "%s"
-														}
-													}
-												]
-											}
-										]
-									},
-									"stat_prefix":"ingress_http"
-								},
-								"name":"envoy.http_connection_manager"
-							}
-						]
-					}
-				]
-			}`, fakeJwks, testEndpointName, testEndpointName),
+                "filters":[
+                    {
+                        "config":{
+                            "http_filters":[
+                                {
+                                    "config": {
+                                        "providers": {
+                                            "firebase": {
+                                                "audiences":["test_audience1", "test_audience2"],
+                                               	"issuer":"https://test_issuer.google.com/",
+                                               	"local_jwks": {
+                                               	    "inline_string": "%s"
+                                               	}
+                                            }
+                                        },
+                                        "rules": [
+                                            {
+                                                "match":{
+                                                    "prefix":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                                },
+                                                "requires": {
+                                                    "provider_and_audiences": {
+                                                	    "audiences": ["test_audience1"],
+                                                        "provider_name":"firebase"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "name":"envoy.filters.http.jwt_authn"
+                                },
+                                {
+                                    "config":{
+                                    },
+                                    "name":"envoy.router"
+                                 }
+                            ],
+                            "route_config":{
+                                "name":"local_route",
+                                "virtual_hosts":[
+                                    {
+                                        "domains":[
+                                            "*"
+                                        ],
+                                        "name":"backend",
+                                            "routes":[
+                                                {
+                                                    "match":{
+                                                        "prefix":"/%s"
+                                                    },
+                                                    "route":{
+                                                        "cluster": "%s"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                            "stat_prefix":"ingress_http"
+                         },
+                        "name":"envoy.http_connection_manager"
+                    }
+                ]
+            }`, fakeJwks, testEndpointName, testEndpointName),
+		},
+		{
+			desc: "Success for gRPC backend, with Jwt filter, without audiences",
+			fakeServiceConfig: fmt.Sprintf(`{
+                "apis":[
+                    {
+                        "name":"%s"
+                    }
+                ],
+                "authentication": {
+        	        "providers": [
+        	            {
+        	 	            "id": "firebase",
+        	 	            "issuer": "https://test_issuer.google.com/",
+        	 	            "jwks_uri": "$JWKSURI"
+        	            }
+        	        ],
+        	        "rules": [
+                        {
+                	        "selector": "endpoints.examples.bookstore.Bookstore.CreateShelf",
+                            "requirements": [
+                                {
+                                    "provider_id": "firebase"
+                                }
+                            ]
+                        },
+                        {
+                	        "selector": "endpoints.examples.bookstore.Bookstore.ListShelf",
+                            "requirements": [
+                                {
+                                    "provider_id": "firebase"
+                                }
+                            ]
+                        }
+        	        ]
+                }
+            }`, testEndpointName),
+			wantedListeners: fmt.Sprintf(`{
+                "filters":[
+                    {
+                        "config":{
+                            "http_filters":[
+                                {
+                                    "config": {
+                                        "providers": {
+                                            "firebase": {
+                                               	"issuer":"https://test_issuer.google.com/",
+                                               	"local_jwks": {
+                                               	    "inline_string": "%s"
+                                               	}
+                                            }
+                                        },
+                                        "rules": [
+                                            {
+                                                "match":{
+                                                    "prefix":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                                },
+                                                "requires": {
+                                                    "provider_name":"firebase"
+                                                }
+                                            },
+                                            {
+                                                "match":{
+                                                    "prefix":"/endpoints.examples.bookstore.Bookstore/ListShelf"
+                                                },
+                                                "requires": {
+                                                    "provider_name":"firebase"
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "name":"envoy.filters.http.jwt_authn"
+                                },
+                                {
+                                    "config":{
+                                    },
+                                    "name":"envoy.router"
+                                 }
+                            ],
+                            "route_config":{
+                                "name":"local_route",
+                                "virtual_hosts":[
+                                    {
+                                        "domains":[
+                                            "*"
+                                        ],
+                                        "name":"backend",
+                                            "routes":[
+                                                {
+                                                    "match":{
+                                                        "prefix":"/%s"
+                                                    },
+                                                    "route":{
+                                                        "cluster": "%s"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                            "stat_prefix":"ingress_http"
+                         },
+                        "name":"envoy.http_connection_manager"
+                    }
+                ]
+            }`, fakeJwks, testEndpointName, testEndpointName),
+		},
+		{
+			desc: "Success for gRPC backend, with Jwt filter, with multi requirements",
+			fakeServiceConfig: fmt.Sprintf(`{
+                "apis":[
+                    {
+                        "name":"%s"
+                    }
+                ],
+                "authentication": {
+        	        "providers": [
+        	            {
+        	 	            "id": "firebase1",
+        	 	            "issuer": "https://test_issuer.google.com/",
+        	 	            "jwks_uri": "$JWKSURI"
+        	            },
+         	            {
+        	 	            "id": "firebase2",
+        	 	            "issuer": "https://test_issuer.google.com/",
+        	 	            "jwks_uri": "$JWKSURI"
+        	            }
+        	        ],
+        	        "rules": [
+                        {
+                	        "selector": "endpoints.examples.bookstore.Bookstore.CreateShelf",
+                            "requirements": [
+                                {
+                                    "provider_id": "firebase1"
+                                },
+                                {
+                                    "provider_id": "firebase2"
+                                }
+                            ]
+                        }
+        	        ]
+                }
+            }`, testEndpointName),
+			wantedListeners: fmt.Sprintf(`{
+                "filters":[
+                    {
+                        "config":{
+                            "http_filters":[
+                                {
+                                    "config": {
+                                        "providers": {
+                                            "firebase1": {
+                                               	"issuer":"https://test_issuer.google.com/",
+                                               	"local_jwks": {
+                                               	    "inline_string": "%s"
+                                               	}
+                                            },
+                                            "firebase2": {
+                                               	"issuer":"https://test_issuer.google.com/",
+                                               	"local_jwks": {
+                                               	    "inline_string": "%s"
+                                               	}
+                                            }
+                                        },
+                                        "rules": [
+                                            {
+                                                "match":{
+                                                    "prefix":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                                },
+                                                "requires": {
+                                                    "requires_any": {
+                                                    	"requirements": [
+                                                    	    {
+                                                    	    	"provider_name": "firebase1"
+                                                    	    },
+                                                    	    {
+                                                    	    	"provider_name": "firebase2"
+                                                    	    }
+                                                    	]
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "name":"envoy.filters.http.jwt_authn"
+                                },
+                                {
+                                    "config":{
+                                    },
+                                    "name":"envoy.router"
+                                 }
+                            ],
+                            "route_config":{
+                                "name":"local_route",
+                                "virtual_hosts":[
+                                    {
+                                        "domains":[
+                                            "*"
+                                        ],
+                                        "name":"backend",
+                                            "routes":[
+                                                {
+                                                    "match":{
+                                                        "prefix":"/%s"
+                                                    },
+                                                    "route":{
+                                                        "cluster": "%s"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                            "stat_prefix":"ingress_http"
+                         },
+                        "name":"envoy.http_connection_manager"
+                    }
+                ]
+            }`, fakeJwks, fakeJwks, testEndpointName, testEndpointName),
 		},
 		{
 			desc: "Success for gRPC backend with Service Control",
@@ -346,7 +552,7 @@ func TestFetchListeners(t *testing.T) {
 
 			// Normalize both wantedListeners and gotListeners.
 			gotListeners = normalizeJson(gotListeners)
-			if want := normalizeJson(tc.wantedListeners); gotListeners != want {
+			if want := normalizeJson(tc.wantedListeners); gotListeners != want && !strings.Contains(gotListeners, want) {
 				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got Listeners: %s, want: %s", i, tc.desc, gotListeners, want)
 			}
 		})
@@ -444,7 +650,7 @@ func runTest(t *testing.T, f func(*testEnv)) {
 	defer mockJwksIssuer.Close()
 
 	// Replace $JWKSURI here, since it depends on the mock server.
-	fakeConfig = strings.Replace(fakeConfig, "$JWKSURI", mockJwksIssuer.URL, 1)
+	fakeConfig = strings.Replace(fakeConfig, "$JWKSURI", mockJwksIssuer.URL, -1)
 	manager, err := NewConfigManager(testProjectName, testConfigID)
 	if err != nil {
 		t.Fatal("fail to initialize ConfigManager: ", err)
