@@ -42,23 +42,30 @@ import (
 	api "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-var (
-	listenerAddress = flag.String("listener_address", "0.0.0.0", "listener socket ip address")
-	clusterAddress  = flag.String("cluster_address", "127.0.0.1", "cluster socket ip address")
-
-	listenerPort = flag.Int("listener_port", 8080, "listener port")
-	clusterPort  = flag.Int("cluster_port", 8082, "cluster port")
-
-	clusterConnectTimeout = flag.Duration("cluster_connect_imeout", 20*time.Second, "cluster connect timeout in seconds")
-
-	fetchConfigURL = "https://servicemanagement.googleapis.com/v1/services/$serviceName/configs/$configId?view=FULL"
-	node           = "api_proxy"
+const (
+    statPrefix      = "ingress_http"
+    routeName       = "local_route"
+    virtualHostName = "backend"
+    fetchConfigSufix  ="/v1/services/$serviceName/configs/$configId?view=FULL"
 )
 
-const (
-	statPrefix      = "ingress_http"
-	routeName       = "local_route"
-	virtualHostName = "backend"
+var (
+    listenerAddress = flag.String("listener_address", "0.0.0.0", "listener socket ip address")
+    clusterAddress  = flag.String("cluster_address", "127.0.0.1", "cluster socket ip address")
+    serviceManagementURL = flag.String("service_management_url", "https://servicemanagement.googleapis.com", "url of service management server")
+    node           = flag.String("node", "api_proxy", "envoy node id")
+
+    listenerPort = flag.Int("listener_port", 8080, "listener port")
+    clusterPort  = flag.Int("cluster_port", 8082, "cluster port")
+
+    clusterConnectTimeout = flag.Duration("cluster_connect_imeout", 20*time.Second, "cluster connect timeout in seconds")
+
+    fetchConfigURL = func(serviceName, configID string) string {
+        path := *serviceManagementURL + fetchConfigSufix
+        path = strings.Replace(path, "$serviceName", serviceName, 1)
+        path = strings.Replace(path, "$configId", configID, 1)
+        return path
+    }
 )
 
 // ConfigManager handles service configuration fetching and updating.
@@ -97,7 +104,7 @@ func (m *ConfigManager) init() error {
 	if err != nil {
 		return fmt.Errorf("fail to make a snapshot, %s", err)
 	}
-	m.cache.SetSnapshot(node, *snapshot)
+	m.cache.SetSnapshot(*node, *snapshot)
 	return nil
 }
 
@@ -337,8 +344,8 @@ func (m *ConfigManager) fetchConfig(configId string) (*api.Service, error) {
 	if err != nil {
 		return nil, fmt.Errorf("fail to get access token")
 	}
-	path := strings.Replace(fetchConfigURL, "$configId", configId, 1)
-	return callServiceManagement(path, m.serviceName, token, m.client)
+
+	return callServiceManagement(fetchConfigURL(m.serviceName, configId), token, m.client)
 }
 
 // Helper to convert Json string to protobuf.Any.
@@ -348,8 +355,7 @@ func (fn funcResolver) Resolve(url string) (proto.Message, error) {
 	return fn(url)
 }
 
-var callServiceManagement = func(path, serviceName, token string, client *http.Client) (*api.Service, error) {
-	path = strings.Replace(path, "$serviceName", serviceName, 1)
+var callServiceManagement = func(path, token string, client *http.Client) (*api.Service, error) {
 	req, _ := http.NewRequest("GET", path, nil)
 	req.Header.Add("Authorization", "Bearer "+token)
 	resp, err := client.Do(req)

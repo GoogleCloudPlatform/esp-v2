@@ -323,7 +323,7 @@ func TestFetchListeners(t *testing.T) {
 			// First request, VersionId should be empty.
 			req := v2.DiscoveryRequest{
 				Node: &core.Node{
-					Id: node,
+					Id: *node,
 				},
 				TypeUrl: cache.ListenerType,
 			}
@@ -396,7 +396,7 @@ func TestFetchClusters(t *testing.T) {
 			// First request, VersionId should be empty.
 			req := v2.DiscoveryRequest{
 				Node: &core.Node{
-					Id: node,
+					Id: *node,
 				},
 				TypeUrl: cache.ClusterType,
 			}
@@ -436,7 +436,9 @@ type testEnv struct {
 func runTest(t *testing.T, f func(*testEnv)) {
 	mockConfig := initMockConfigServer(t)
 	defer mockConfig.Close()
-	fetchConfigURL = mockConfig.URL
+	fetchConfigURL = func (serviceName, configID string) string {
+		return mockConfig.URL
+	}
 	mockMetadata := initMockMetadataServer()
 	defer mockMetadata.Close()
 	serviceAccountTokenURL = mockMetadata.URL
