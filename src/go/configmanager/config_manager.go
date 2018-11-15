@@ -141,35 +141,23 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 		return nil, nil
 	}
 	httpFilters := []*hcm.HttpFilter{}
-	// Add gRPC transcode filter config.
-	for _, sourceFile := range serviceConfig.GetSourceInfo().GetSourceFiles() {
-		configFile := &servicemanagement.ConfigFile{}
-		ptypes.UnmarshalAny(sourceFile, configFile)
-		if configFile.GetFileType() == servicemanagement.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
-			configContent := configFile.GetFileContents()
-			transcodeConfig := &tc.GrpcJsonTranscoder{
-				DescriptorSet: &tc.GrpcJsonTranscoder_ProtoDescriptorBin{
-					ProtoDescriptorBin: configContent,
-				},
-				Services: []string{serviceConfig.Apis[0].Name},
-			}
-			transcodeConfigStruct, _ := util.MessageToStruct(transcodeConfig)
-			transcodeFilter := &hcm.HttpFilter{
-				Name:   util.GRPCJSONTranscoder,
-				Config: transcodeConfigStruct,
-			}
-			httpFilters = append(httpFilters, transcodeFilter)
-			break
-		}
-	}
 
-	// Add JWT Authn filter.
-	httpFilters = append(httpFilters, m.makeJwtAuthnFilter(serviceConfig))
+	// Add JWT Authn filter if needed.
+	jwtAuthnFilter := m.makeJwtAuthnFilter(serviceConfig)
+	if jwtAuthnFilter != nil {
+		httpFilters = append(httpFilters, jwtAuthnFilter)
+	}
 
 	// Add service control filter if needed
 	serviceControlFilter := m.makeServiceControlFilter(serviceConfig)
 	if serviceControlFilter != nil {
 		httpFilters = append(httpFilters, serviceControlFilter)
+	}
+
+	// Add gRPC transcode filter config  if needed.
+	transcoderFilter := m.makeTranscoderFilter(serviceConfig)
+	if transcoderFilter != nil {
+		httpFilters = append(httpFilters, transcoderFilter)
 	}
 
 	// Add Envoy Router filter so requests are routed upstream.
@@ -215,8 +203,37 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 		}
 }
 
+func (m *ConfigManager) makeTranscoderFilter(serviceConfig *api.Service) *hcm.HttpFilter {
+	for _, sourceFile := range serviceConfig.GetSourceInfo().GetSourceFiles() {
+		configFile := &servicemanagement.ConfigFile{}
+		ptypes.UnmarshalAny(sourceFile, configFile)
+		if configFile.GetFileType() == servicemanagement.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
+			configContent := configFile.GetFileContents()
+			transcodeConfig := &tc.GrpcJsonTranscoder{
+				DescriptorSet: &tc.GrpcJsonTranscoder_ProtoDescriptorBin{
+					ProtoDescriptorBin: configContent,
+				},
+				Services: []string{serviceConfig.Apis[0].Name},
+			}
+			transcodeConfigStruct, _ := util.MessageToStruct(transcodeConfig)
+			transcodeFilter := &hcm.HttpFilter{
+				Name:   util.GRPCJSONTranscoder,
+				Config: transcodeConfigStruct,
+			}
+			return transcodeFilter
+		}
+	}
+	return nil
+}
+
 func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.HttpFilter {
 	auth := serviceConfig.GetAuthentication()
+
+	// Skip configuraing JWT authn filter if no methods requires it.
+	if len(auth.GetRules()) == 0 {
+		return nil
+	}
+
 	providers := make(map[string]*ac.JwtProvider)
 	for _, provider := range auth.GetProviders() {
 		jwk, err := fetchJwk(provider.GetJwksUri(), m.client)

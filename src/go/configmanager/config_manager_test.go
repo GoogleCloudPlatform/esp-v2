@@ -51,7 +51,7 @@ func TestFetchListeners(t *testing.T) {
 		wantedListeners   string
 	}{
 		{
-			desc: "Success for gRPC backend with transcoding and JWT Authz",
+			desc: "Success for gRPC backend with transcoding",
 			fakeServiceConfig: fmt.Sprintf(`{
 				"name":"%s",
 				"apis":[
@@ -68,30 +68,6 @@ func TestFetchListeners(t *testing.T) {
 							"filePath":"api_descriptor.pb",
 							"fileContents":"%s",
 							"fileType":"FILE_DESCRIPTOR_SET_PROTO"
-						}
-					]
-				},
-				"authentication": {
-					"providers": [
-						{
-							"id": "firebase",
-							"issuer": "https://test_issuer.google.com/",
-							"jwks_uri": "$JWKSURI",
-							"audiences": "test_audience1,test_audience2"
-						}
-					],
-					"rules": [
-						{
-							"selector": "endpoints.examples.bookstore.Bookstore.CreateShelf",
-							"requirements": [
-								{
-									"provider_id": "firebase",
-									"audiences": "test_audience1"
-								}
-							]
-						},
-						{
-							"selector": "endpoints.examples.bookstore.Bookstore.ListShelf"
 						}
 					]
 				}
@@ -118,6 +94,92 @@ func TestFetchListeners(t *testing.T) {
 											},
 											"name":"envoy.grpc_json_transcoder"
 										},
+										{
+											"config":{
+											},
+											"name":"envoy.router"
+										}
+									],
+									"route_config":{
+										"name":"local_route",
+										"virtual_hosts":[
+											{
+												"domains":[
+													"*"
+												],
+												"name":"backend",
+												"routes":[
+													{
+														"match":{
+															"prefix":"/%s"
+														},
+														"route":{
+															"cluster": "%s"
+														}
+													}
+												]
+											}
+										]
+									},
+									"stat_prefix":"ingress_http"
+								},
+								"name":"envoy.http_connection_manager"
+							}
+						]
+					}
+				]
+			}`,
+				fakeProtoDescriptor, testEndpointName, testEndpointName, testEndpointName),
+		},
+		{
+			desc: "Success for gRPC backend with JWT Authn",
+			fakeServiceConfig: fmt.Sprintf(`{
+				"name":"%s",
+				"apis":[
+					{
+						"name":"%s",
+						"version":"v1",
+						"syntax":"SYNTAX_PROTO3"
+					}
+				],
+				"authentication": {
+					"providers": [
+						{
+							"id": "firebase",
+							"issuer": "https://test_issuer.google.com/",
+							"jwks_uri": "$JWKSURI",
+							"audiences": "test_audience1,test_audience2"
+						}
+					],
+					"rules": [
+						{
+							"selector": "endpoints.examples.bookstore.Bookstore.CreateShelf",
+							"requirements": [
+								{
+									"provider_id": "firebase",
+									"audiences": "test_audience1"
+								}
+							]
+						},
+						{
+							"selector": "endpoints.examples.bookstore.Bookstore.ListShelf"
+						}
+					]
+				}
+			}`, testProjectName, testEndpointName),
+			wantedListeners: fmt.Sprintf(`{
+				"address":{
+					"socketAddress":{
+						"address":"0.0.0.0",
+						"portValue":8080
+					}
+				},
+				"filterChains":[
+					{
+						"filters":[
+							{
+								"config":{
+									"http_filters":[
 										{
 											"config": {
 												"providers": {
@@ -179,9 +241,7 @@ func TestFetchListeners(t *testing.T) {
 						]
 					}
 				]
-			}`,
-				fakeProtoDescriptor,
-				testEndpointName, fakeJwks, testEndpointName, testEndpointName),
+			}`, fakeJwks, testEndpointName, testEndpointName),
 		},
 		{
 			desc: "Success for gRPC backend with Service Control",
@@ -211,13 +271,6 @@ func TestFetchListeners(t *testing.T) {
 							{
 								"config":{
 									"http_filters":[
-										{
-											"config": {
-												"providers": {},
-												"rules": []
-											},
-											"name":"envoy.filters.http.jwt_authn"
-										},
 										{
 											"config": {
 												"service_name": "%s"
