@@ -13,6 +13,7 @@ package(
 envoy_cc_library(
     name = "filter_lib",
     srcs = [
+        "config_parser.cc",
         "filter.cc",
         "http_call.cc",
         "token_fetcher.cc",
@@ -30,6 +31,7 @@ envoy_cc_library(
         "//api/envoy/http/service_control:config_proto_cc",
         "//src/api_proxy/service_control:request_builder_lib",
         "@envoy//source/exe:envoy_common_lib",
+        "config_parser_lib"
     ],
 )
 
@@ -45,15 +47,37 @@ envoy_cc_library(
 )
 
 cc_library(
-    name = "path_matcher_lib",
+    name = "config_parser_lib",
     srcs = [
+        "config_parser.cc",
         "http_template.cc",
+        "path_matcher_node.cc",
+    ],
+    hdrs = [
+        "config_parser.h",
         "http_template.h",
         "path_matcher.h",
-        "path_matcher_node.cc",
         "path_matcher_node.h",
     ],
+    deps = [
+        "//api/envoy/http/service_control:config_proto_cc",
+    ],
     visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "config_parser_test",
+    size = "small",
+    srcs = ["config_parser_test.cc"],
+    linkopts = [
+        "-lm",
+        "-lpthread",
+    ],
+    linkstatic = 1,
+    deps = [
+        ":config_parser_lib",
+        "//external:googletest_main",
+    ],
 )
 
 cc_test(
@@ -66,7 +90,7 @@ cc_test(
     ],
     linkstatic = 1,
     deps = [
-        ":path_matcher_lib",
+        ":config_parser_lib",
         "//external:googletest_main",
     ],
 )
@@ -81,7 +105,7 @@ cc_test(
     ],
     linkstatic = 1,
     deps = [
-        ":path_matcher_lib",
+        ":config_parser_lib",
         "//external:googletest_main",
     ],
 )

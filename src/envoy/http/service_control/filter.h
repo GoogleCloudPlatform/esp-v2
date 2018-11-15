@@ -4,6 +4,7 @@
 #include "envoy/access_log/access_log.h"
 #include "envoy/http/filter.h"
 #include "envoy/upstream/cluster_manager.h"
+#include "src/envoy/http/service_control/config_parser.h"
 #include "src/envoy/http/service_control/filter_config.h"
 #include "src/envoy/http/service_control/http_call.h"
 
@@ -19,7 +20,10 @@ class Filter : public Http::StreamDecoderFilter,
                public AccessLog::Instance,
                public Logger::Loggable<Logger::Id::filter> {
  public:
-  Filter(FilterConfigSharedPtr config) : config_(config) {}
+  Filter(FilterConfigSharedPtr config) : config_(config) {
+    config_parser_ =  std::unique_ptr<ServiceControlFilterConfigParser>(
+      new ServiceControlFilterConfigParser(config_->config()));
+  }
 
   // Http::StreamFilterBase
   void onDestroy() override;
@@ -51,9 +55,8 @@ class Filter : public Http::StreamDecoderFilter,
 
   // Returns true if the query matches a pattern in Envoy filter config.
   // Otherwise returns false.
-  // TODO(tianyuc): this should return the matched requirements.
-  const ::google::api_proxy::envoy::http::service_control::ServiceControlRule* 
-    ExtractRequestInfo(const Http::HeaderMap&);
+  void ExtractRequestInfo(const Http::HeaderMap&, 
+    ::google::api::envoy::http::service_control::Requirement* requirement);
 
   // The state of the request
   enum State { Init, Calling, Responded, Complete };
@@ -67,6 +70,7 @@ class Filter : public Http::StreamDecoderFilter,
   std::string operation_name_;
   std::string api_key_;
   std::string http_method_;
+  std::unique_ptr<ServiceControlFilterConfigParser> config_parser_;
 
   ::google::api_proxy::service_control::CheckResponseInfo check_response_info_;
   ::google::protobuf::util::Status check_status_;

@@ -11,12 +11,13 @@ package(default_visibility = SERVICE_CONTROL_VEISIBILITY)
 api_proto_library(
     name = "config_proto",
     srcs = [
-        "requirement.proto",
         "config.proto",
+        "requirement.proto",
     ],
     deps = [
         "//api/envoy/http/common:pattern_proto",
     ],
+    visibility = SERVICE_CONTROL_VEISIBILITY,
 )
 
 go_proto_library(

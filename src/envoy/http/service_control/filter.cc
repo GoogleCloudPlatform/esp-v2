@@ -12,38 +12,14 @@ namespace HttpFilters {
 namespace ServiceControl {
 
 using ::google::api_proxy::envoy::http::service_control::ServiceControlRule;
+using ::google::api::envoy::http::service_control::Requirement;
 using ::google::protobuf::util::Status;
+using Envoy::Extensions::HttpFilters::ServiceControl::ServiceControlFilterConfigParser;
 using Http::HeaderMap;
 using std::string;
 
-namespace {
-
-bool RuleMatches(const ServiceControlRule &rule, const string &path,
-                 const string &method)
-{
-  if (rule.patterns_size() == 0)
-  {
-    return true;
-  }
-  for (const auto &pattern : rule.patterns())
-  {
-    if (pattern.http_method() != method)
-    {
-      continue;
-    }
-    // TODO(tianyuc): maybe support uri_template match in the future.
-    std::regex regex(pattern.uri_template());
-    if (!std::regex_match(path, regex))
-    {
-      continue;
-    }
-    return true;
-  }
-  return false;
-}
-} // namespace
-
-const ServiceControlRule* Filter::ExtractRequestInfo(const HeaderMap &headers)
+void Filter::ExtractRequestInfo(const HeaderMap &headers, 
+  Requirement* requirement)
 {
   uuid_ = config_->random().uuid();
 
@@ -59,41 +35,16 @@ const ServiceControlRule* Filter::ExtractRequestInfo(const HeaderMap &headers)
     operation_name_ = string(path.c_str(), path.size());
   }
 
-  // match pattern
-  for (const auto &rule : config_->config().rules())
-  {
-    if (!RuleMatches(rule, path.c_str(), headers.Method()->value().c_str()))
-    {
-      continue;
-    }
-    ENVOY_LOG(debug, "Rule matched: {} {}", path.c_str(),
-              headers.Method()->value().c_str());
-
-    http_method_ = headers.Method()->value().c_str();
-    // TODO(tianyuc): refactor the api key requirment logic.
-    auto params =
-        Http::Utility::parseQueryString(headers.Path()->value().c_str());
-    const auto &it = params.find("key");
-    if (it != params.end())
-    {
-      api_key_ = it->second;
-    }
-    return &rule;
-  }
-  return nullptr;
+  config_parser_->FindRequirement(headers.Method()->value().c_str(), 
+    path.c_str(), requirement);
 }
 
 Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool)
 {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
 
-  auto* rule = ExtractRequestInfo(headers);
-  if (rule == nullptr)
-  {
-    ENVOY_LOG(debug, "Query match failed.");
-    rejectRequest(Http::Code(401), "Query failed to match any pattern.");
-    return Http::FilterHeadersStatus::StopIteration;
-  }
+  Requirement requirement;
+  ExtractRequestInfo(headers, &requirement);
 
   state_ = Calling;
   stopped_ = false;
