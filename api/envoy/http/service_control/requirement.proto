@@ -16,6 +16,8 @@ syntax = "proto3";
 
 package google.api.envoy.http.service_control;
 
+import "validate/validate.proto";
+
 // APIKey defines the explicit configuration for generating the
 // `request.api_key` attribute from HTTP requests.
 //
@@ -66,14 +68,17 @@ message APIKeyRequirement {
 }
 
 message Requirement {
+  // Refers to the service name in FilterConfig.services.service_name.
+  string service_name = 1 [(validate.rules).string.min_bytes = 1];
+
   // The operation name.
-  string operation_name = 1;
+  string operation_name = 2;
 
   // API key related requirements.
-  APIKeyRequirement api_key = 2;
+  APIKeyRequirement api_key = 3;
 
   // Custom labels.
-  repeated string custom_labels = 3;
+  repeated string custom_labels = 4;
 
   // TODO(tianyuc): define more requirments, e.g. metrics, quota and more.
 }

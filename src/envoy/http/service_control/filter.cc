@@ -46,9 +46,13 @@ Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool)
   Requirement requirement;
   ExtractRequestInfo(headers, &requirement);
 
+  // TODO(tianyuc): API key should be parsed from the request.
+  api_key_ = "AIzaSyB3xeV9fv4agFXUpGVyPMtZ2xIMScEazrk";
+
   state_ = Calling;
   stopped_ = false;
-  token_fetcher_ = config_->getCache().getTokenCache().getToken(
+  token_fetcher_ = config_->getCache().getTokenCacheByServiceName(
+    requirement.service_name())->getToken(
       [this](const Status &status, const string &result) {
         onTokenDone(status, result);
       });

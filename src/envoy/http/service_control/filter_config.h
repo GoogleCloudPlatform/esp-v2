@@ -18,14 +18,19 @@ class ThreadLocalCache : public ThreadLocal::ThreadLocalObject {
   // Load the config from envoy config.
   ThreadLocalCache(
       const ::google::api_proxy::envoy::http::service_control::FilterConfig&
-          config,
-      Upstream::ClusterManager& cm, TimeSource& time_source)
-      : token_cache_(cm, time_source, config.token_uri()) {}
+          config, Upstream::ClusterManager& cm, TimeSource& time_source) {
+    for (const auto& service : config.services()) {
+      token_cache_map_[service.service_name()] = 
+        std::unique_ptr<TokenCache>(new TokenCache(cm, time_source, service.token_uri()));
+    }  
+  }
 
-  TokenCache& getTokenCache() { return token_cache_; }
+  TokenCache* getTokenCacheByServiceName(const std::string& service_name) { 
+    return token_cache_map_[service_name].get(); 
+  }
 
  private:
-  TokenCache token_cache_;
+  std::unordered_map<std::string, std::unique_ptr<TokenCache>> token_cache_map_;
 };
 
 /**

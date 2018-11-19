@@ -53,12 +53,12 @@ class Filter : public Http::StreamDecoderFilter,
   Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
   FilterConfigSharedPtr config_;
 
-  // Returns true if the query matches a pattern in Envoy filter config.
-  // Otherwise returns false.
+  // Fills the given requirement if the query matches a pattern in Envoy 
+  // filter config.
   void ExtractRequestInfo(const Http::HeaderMap&, 
     ::google::api::envoy::http::service_control::Requirement* requirement);
 
-  // The state of the request
+  // The state of the request.
   enum State { Init, Calling, Responded, Complete };
   State state_ = Init;
   // Mark if request has been stopped.

@@ -50,21 +50,29 @@ static_resources:
                   - name: envoy.filters.http.service_control
                     config:
                       service_name: REPLACE_SERVICE_NAME
-                      token_uri:
-                        cluster: gcp_metadata_cluster
-                        uri: http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token
-                        timeout:
-                          seconds: 5
                       service_control_uri:
                         cluster: service_control_cluster
                         uri: https://servicecontrol.googleapis.com/v1/services/
                         timeout:
                           seconds: 5
+                      services:
+                        service_name: REPLACE_SERVICE_NAME
+                        token_uri:
+                          cluster: gcp_metadata_cluster
+                          uri: http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token
+                          timeout:
+                            seconds: 5
+                        service_control_uri:
+                          cluster: service_control_cluster
+                          uri: https://servicecontrol.googleapis.com/v1/services/
+                          timeout:
+                            seconds: 5
                       rules:
                         patterns:
                           http_method: GET
-                          uri_template: /get/{foo}
+                          uri_template: /test
                         requires:
+                          service_name: REPLACE_SERVICE_NAME
                           api_key:
                             allow_without_api_key: true
                   - name: envoy.router
