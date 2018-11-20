@@ -11,32 +11,19 @@ namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 
-using ::google::api_proxy::envoy::http::service_control::ServiceControlRule;
 using ::google::api::envoy::http::service_control::Requirement;
+using ::google::api_proxy::envoy::http::service_control::ServiceControlRule;
 using ::google::protobuf::util::Status;
 using Envoy::Extensions::HttpFilters::ServiceControl::ServiceControlFilterConfigParser;
 using Http::HeaderMap;
 using std::string;
 
-void Filter::ExtractRequestInfo(const HeaderMap &headers, 
-  Requirement* requirement)
+void Filter::ExtractRequestInfo(const HeaderMap& headers, Requirement*requirement)
 {
   uuid_ = config_->random().uuid();
-
-  // operation_name from path
   const auto &path = headers.Path()->value();
-  const char *query_start = Http::Utility::findQueryStringStart(path);
-  if (query_start != nullptr)
-  {
-    operation_name_ = string(path.c_str(), query_start - path.c_str());
-  }
-  else
-  {
-    operation_name_ = string(path.c_str(), path.size());
-  }
-
-  config_parser_->FindRequirement(headers.Method()->value().c_str(), 
-    path.c_str(), requirement);
+  config_parser_->FindRequirement(headers.Method()->value().c_str(),
+                                  path.c_str(), requirement);
 }
 
 Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool)
@@ -45,17 +32,24 @@ Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool)
 
   Requirement requirement;
   ExtractRequestInfo(headers, &requirement);
+  // TODO(tianyuc): refactor the error checking logic.
+  if (requirement.service_name() == "") {
+    ENVOY_LOG(debug, "No requirement matched!");
+    rejectRequest(Http::Code(401), "Path does not match any requirement uri_template.");
+    return Http::FilterHeadersStatus::StopIteration;
+  }
+  operation_name_ = requirement.operation_name();
 
   // TODO(tianyuc): API key should be parsed from the request.
   api_key_ = "AIzaSyB3xeV9fv4agFXUpGVyPMtZ2xIMScEazrk";
 
   state_ = Calling;
   stopped_ = false;
-  token_fetcher_ = config_->getCache().getTokenCacheByServiceName(
-    requirement.service_name())->getToken(
-      [this](const Status &status, const string &result) {
-        onTokenDone(status, result);
-      });
+  token_fetcher_ = config_->getCache().getTokenCacheByServiceName(requirement.service_name())
+                       ->getToken(
+                           [this](const Status &status, const string &result) {
+                             onTokenDone(status, result);
+                           });
 
   if (state_ == Complete)
   {
