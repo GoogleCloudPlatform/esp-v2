@@ -134,21 +134,21 @@ func TestFetchListeners(t *testing.T) {
 		{
 			desc: "Success for gRPC backend, with Jwt filter, with audiences",
 			fakeServiceConfig: fmt.Sprintf(`{
-                "apis":[
-                    {
-                        "name":"%s"
-                    }
-                ],
-                "authentication": {
-        	        "providers": [
-        	            {
-        	 	            "id": "firebase",
-        	 	            "issuer": "https://test_issuer.google.com/",
-        	 	            "jwks_uri": "$JWKSURI",
-        	 	            "audiences": "test_audience1,test_audience2"
-        	            }
-        	        ],
-        	        "rules": [
+				"apis":[
+					{
+						"name":"%s"
+					}
+				],
+				"authentication": {
+					"providers": [
+						{
+							"id": "firebase",
+							"issuer": "https://test_issuer.google.com/",
+							"jwks_uri": "$JWKSURI",
+							"audiences": "test_audience1,test_audience2"
+						}
+					],
+					"rules": [
                         {
                 	        "selector": "endpoints.examples.bookstore.Bookstore.CreateShelf",
                             "requirements": [
@@ -460,11 +460,32 @@ func TestFetchListeners(t *testing.T) {
 					{
 						"name":"%s",
 						"version":"v1",
-						"syntax":"SYNTAX_PROTO3"
+						"syntax":"SYNTAX_PROTO3",
+						"methods":[
+							{
+								"name": "ListShelves"
+							},
+							{
+								"name": "CreateShelf"
+							}
+						]
 					}
-				]
+				],
+				"http": {
+					"rules": [
+						{
+							"selector": "endpoints.examples.bookstore.Bookstore.ListShelves",
+							"get": "/v1/shelves"
+						},
+						{
+							"selector": "endpoints.examples.bookstore.Bookstore.CreateShelf",
+							"post": "/v1/shelves",
+							"body": "shelf"
+						}
+					]
+				}
 			}`, testProjectName, testEndpointName),
-			wantedListeners: fmt.Sprintf(`{
+			wantedListeners: `{
 				"address":{
 					"socketAddress":{
 						"address":"0.0.0.0",
@@ -478,10 +499,64 @@ func TestFetchListeners(t *testing.T) {
 								"config":{
 									"http_filters":[
 										{
-											"config": {
-												"service_name": "%s"
+											"config":{
+												"rules":[
+													{
+														"patterns":[
+															{
+																"http_method":"POST",
+																"uri_template":"/endpoints.examples.bookstore.Bookstore/ListShelves"
+															},
+															{
+																"http_method":"GET",
+																"uri_template":"/v1/shelves"
+															}
+														],
+														"requires":{
+															"operation_name":"endpoints.examples.bookstore.Bookstore.ListShelves",
+															"service_name":"bookstore.endpoints.project123.cloud.goog"
+														}
+													},
+													{
+														"patterns":[
+															{
+																"http_method":"POST",
+																"uri_template":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+															},
+															{
+																"http_method":"POST",
+																"uri_template":"/v1/shelves"
+															}
+														],
+														"requires":{
+															"operation_name":"endpoints.examples.bookstore.Bookstore.CreateShelf",
+															"service_name":"bookstore.endpoints.project123.cloud.goog"
+														}
+													}
+												],
+												"service_control_uri":{
+													"cluster":"service_control_cluster",
+													"timeout":"5s",
+													"uri":"https://servicecontrol.googleapis.com/v1/services/"
+												},
+												"service_name":"bookstore.endpoints.project123.cloud.goog",
+												"services":[
+													{
+														"service_control_uri":{
+															"cluster":"service_control_cluster",
+															"timeout":"5s",
+															"uri":"https://servicecontrol.googleapis.com/v1/services/"
+														},
+														"service_name":"bookstore.endpoints.project123.cloud.goog",
+														"token_uri":{
+															"cluster":"gcp_metadata_cluster",
+															"timeout":"5s",
+															"uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
+														}
+													}
+												]
 											},
-											"name": "envoy.filters.http.service_control"
+											"name":"envoy.filters.http.service_control"
 										},
 										{
 											"config":{
@@ -500,10 +575,10 @@ func TestFetchListeners(t *testing.T) {
 												"routes":[
 													{
 														"match":{
-															"prefix":"/%s"
+															"prefix":"/endpoints.examples.bookstore.Bookstore"
 														},
 														"route":{
-															"cluster": "%s"
+															"cluster":"endpoints.examples.bookstore.Bookstore"
 														}
 													}
 												]
@@ -517,7 +592,7 @@ func TestFetchListeners(t *testing.T) {
 						]
 					}
 				]
-			}`, testProjectName, testEndpointName, testEndpointName),
+			}`,
 		},
 	}
 
@@ -642,7 +717,7 @@ type testEnv struct {
 func runTest(t *testing.T, f func(*testEnv)) {
 	mockConfig := initMockConfigServer(t)
 	defer mockConfig.Close()
-	fetchConfigURL = func (serviceName, configID string) string {
+	fetchConfigURL = func(serviceName, configID string) string {
 		return mockConfig.URL
 	}
 	mockMetadata := initMockMetadataServer()
