@@ -57,12 +57,6 @@ message Service {
 
   // The Http uri to call service control
   HttpUri service_control_uri = 5;
-
-  // API name. Used for Chemist report request.
-  string api_name = 6;
-
-  // API version. Used for Chemist report request.
-  string api_version = 7;
 }
 
 message FilterConfig {

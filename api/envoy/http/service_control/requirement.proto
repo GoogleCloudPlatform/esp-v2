@@ -80,5 +80,11 @@ message Requirement {
   // Custom labels.
   repeated string custom_labels = 4;
 
+  // API name. Used for Chemist report request.
+  string api_name = 5;
+
+  // API version. Used for Chemist report request.
+  string api_version = 6;
+
   // TODO(tianyuc): define more requirments, e.g. metrics, quota and more.
 }
