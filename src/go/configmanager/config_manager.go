@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
 	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
@@ -37,35 +38,38 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
 	"google.golang.org/genproto/googleapis/api/annotations"
 	api "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 const (
-    statPrefix      = "ingress_http"
-    routeName       = "local_route"
-    virtualHostName = "backend"
-    fetchConfigSufix  ="/v1/services/$serviceName/configs/$configId?view=FULL"
+	statPrefix        = "ingress_http"
+	routeName         = "local_route"
+	virtualHostName   = "backend"
+	fetchConfigSufix  = "/v1/services/$serviceName/configs/$configId?view=FULL"
+	tokenUri          = "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
+	serviceControlUri = "https://servicecontrol.googleapis.com/v1/services/"
 )
 
 var (
-    listenerAddress = flag.String("listener_address", "0.0.0.0", "listener socket ip address")
-    clusterAddress  = flag.String("cluster_address", "127.0.0.1", "cluster socket ip address")
-    serviceManagementURL = flag.String("service_management_url", "https://servicemanagement.googleapis.com", "url of service management server")
-    node           = flag.String("node", "api_proxy", "envoy node id")
+	listenerAddress      = flag.String("listener_address", "0.0.0.0", "listener socket ip address")
+	clusterAddress       = flag.String("cluster_address", "127.0.0.1", "cluster socket ip address")
+	serviceManagementURL = flag.String("service_management_url", "https://servicemanagement.googleapis.com", "url of service management server")
+	node                 = flag.String("node", "api_proxy", "envoy node id")
 
-    listenerPort = flag.Int("listener_port", 8080, "listener port")
-    clusterPort  = flag.Int("cluster_port", 8082, "cluster port")
+	listenerPort = flag.Int("listener_port", 8080, "listener port")
+	clusterPort  = flag.Int("cluster_port", 8082, "cluster port")
 
-    clusterConnectTimeout = flag.Duration("cluster_connect_imeout", 20*time.Second, "cluster connect timeout in seconds")
+	clusterConnectTimeout = flag.Duration("cluster_connect_imeout", 20*time.Second, "cluster connect timeout in seconds")
 
-    fetchConfigURL = func(serviceName, configID string) string {
-        path := *serviceManagementURL + fetchConfigSufix
-        path = strings.Replace(path, "$serviceName", serviceName, 1)
-        path = strings.Replace(path, "$configId", configID, 1)
-        return path
-    }
+	fetchConfigURL = func(serviceName, configID string) string {
+		path := *serviceManagementURL + fetchConfigSufix
+		path = strings.Replace(path, "$serviceName", serviceName, 1)
+		path = strings.Replace(path, "$configId", configID, 1)
+		return path
+	}
 )
 
 // ConfigManager handles service configuration fetching and updating.
@@ -329,17 +333,97 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.Http
 }
 
 func (m *ConfigManager) makeServiceControlFilter(serviceConfig *api.Service) *hcm.HttpFilter {
-	if serviceConfig.Name == "" || serviceConfig.Control == nil || serviceConfig.Control.Environment == "" {
+	if serviceConfig.GetName() == "" || serviceConfig.GetControl().GetEnvironment() == "" {
 		return nil
 	}
 
-	filterConfig := &scpb.FilterConfig{
-		ServiceName: serviceConfig.Name,
+	service := &scpb.Service{
+		ServiceName: serviceConfig.GetName(),
+		TokenUri: &scpb.HttpUri{
+			Uri:     tokenUri,
+			Cluster: "gcp_metadata_cluster",
+			Timeout: &duration.Duration{Seconds: 5},
+		},
+		ServiceControlUri: &scpb.HttpUri{
+			Uri:     serviceControlUri,
+			Cluster: "service_control_cluster",
+			Timeout: &duration.Duration{Seconds: 5},
+		},
 	}
-	jas, _ := util.MessageToStruct(filterConfig)
+
+	rulesMap := make(map[string]*scpb.ServiceControlRule)
+	for _, api := range serviceConfig.GetApis() {
+		for _, method := range api.GetMethods() {
+			grpcUri := fmt.Sprintf("/%s/%s", api.GetName(), method.GetName())
+			selector := fmt.Sprintf("%s.%s", api.GetName(), method.GetName())
+			rulesMap[selector] = &scpb.ServiceControlRule{
+				Requires: &scpb.Requirement{
+					ServiceName:   serviceConfig.GetName(),
+					OperationName: selector,
+				},
+				Patterns: []*commonpb.Pattern{
+					&commonpb.Pattern{
+						UriTemplate: grpcUri,
+						HttpMethod:  "POST",
+					},
+				},
+			}
+		}
+	}
+
+	for _, httpRule := range serviceConfig.GetHttp().GetRules() {
+		scRule := rulesMap[httpRule.GetSelector()]
+		switch httpPattern := httpRule.GetPattern().(type) {
+		case *annotations.HttpRule_Get:
+			scRule.Patterns = append(scRule.Patterns, &commonpb.Pattern{
+				UriTemplate: httpPattern.Get,
+				HttpMethod:  "GET",
+			})
+
+		case *annotations.HttpRule_Put:
+			scRule.Patterns = append(scRule.Patterns, &commonpb.Pattern{
+				UriTemplate: httpPattern.Put,
+				HttpMethod:  "PUT",
+			})
+
+		case *annotations.HttpRule_Post:
+			scRule.Patterns = append(scRule.Patterns, &commonpb.Pattern{
+				UriTemplate: httpPattern.Post,
+				HttpMethod:  "POST",
+			})
+
+		case *annotations.HttpRule_Delete:
+			scRule.Patterns = append(scRule.Patterns, &commonpb.Pattern{
+				UriTemplate: httpPattern.Delete,
+				HttpMethod:  "DELETE",
+			})
+
+		case *annotations.HttpRule_Patch:
+			scRule.Patterns = append(scRule.Patterns, &commonpb.Pattern{
+				UriTemplate: httpPattern.Patch,
+				HttpMethod:  "PATCH",
+			})
+		}
+	}
+
+	filterConfig := &scpb.FilterConfig{
+		Services:    []*scpb.Service{service},
+		ServiceName: serviceConfig.GetName(),
+		ServiceControlUri: &scpb.HttpUri{
+			Uri:     serviceControlUri,
+			Cluster: "service_control_cluster",
+			Timeout: &duration.Duration{Seconds: 5},
+		},
+	}
+
+	for _, rule := range rulesMap {
+		filterConfig.Rules = append(filterConfig.Rules, rule)
+	}
+
+	scs, _ := util.MessageToStruct(filterConfig)
 	filter := &hcm.HttpFilter{
 		Name:   "envoy.filters.http.service_control",
-		Config: jas,
+		Config: scs,
 	}
 	return filter
 }
