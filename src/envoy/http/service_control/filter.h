@@ -53,10 +53,18 @@ class Filter : public Http::StreamDecoderFilter,
   Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
   FilterConfigSharedPtr config_;
 
-  // Fills the given requirement if the query matches a pattern in Envoy 
+  // Fills the given requirement if the query matches a pattern in Envoy
   // filter config.
-  void ExtractRequestInfo(const Http::HeaderMap&, 
+  void ExtractRequestInfo(const Http::HeaderMap&,
     ::google::api::envoy::http::service_control::Requirement* requirement);
+
+  // Helper functions to extract API key.
+  void ExtractAPIKeyFromQuery(const Http::HeaderMap& headers,
+                              const std::string& query);
+  void ExtractAPIKeyFromHeader(const Http::HeaderMap& headers,
+                               const std::string& header);
+  void ExtractAPIKeyFromCookie(const Http::HeaderMap& headers,
+                               const std::string& cookie);
 
   // The state of the request.
   enum State { Init, Calling, Responded, Complete };

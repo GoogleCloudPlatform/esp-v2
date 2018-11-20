@@ -75,6 +75,8 @@ static_resources:
                           service_name: REPLACE_SERVICE_NAME
                           operation_name: "test"
                           api_key:
+                            api_keys:
+                              query: "key"
                             allow_without_api_key: true
                           api_name: "Bookstore"
                           api_version: "1.0"

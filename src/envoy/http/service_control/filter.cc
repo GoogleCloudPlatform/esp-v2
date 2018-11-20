@@ -1,8 +1,6 @@
 
 #include "common/http/utility.h"
 
-#include <regex>
-
 #include "src/envoy/http/service_control/filter.h"
 #include "src/envoy/http/service_control/http_call.h"
 
@@ -11,6 +9,7 @@ namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 
+using ::google::api::envoy::http::service_control::APIKey;
 using ::google::api::envoy::http::service_control::Requirement;
 using ::google::api_proxy::envoy::http::service_control::ServiceControlRule;
 using ::google::protobuf::util::Status;
@@ -18,7 +17,30 @@ using Envoy::Extensions::HttpFilters::ServiceControl::ServiceControlFilterConfig
 using Http::HeaderMap;
 using std::string;
 
-void Filter::ExtractRequestInfo(const HeaderMap& headers, Requirement*requirement)
+void Filter::ExtractAPIKeyFromQuery(const HeaderMap& headers, const string& query) {
+  auto params =
+    Http::Utility::parseQueryString(headers.Path()->value().c_str());
+  const auto& it = params.find(query);
+  if (it != params.end())
+  {
+    api_key_ = it->second;
+  } else {
+    ENVOY_LOG(debug, "API key not found by query '{}' in path: '{}'",
+      query, headers.Path()->value().c_str());
+  }
+}
+
+void Filter::ExtractAPIKeyFromHeader(const HeaderMap& headers, const string& header) {
+  // TODO(tianyuc): implement API key extraction from header.
+  ENVOY_LOG(debug, "Called ExtractAPIKeyFromHeader: {}, {}", headers, header);
+}
+
+void Filter::ExtractAPIKeyFromCookie(const HeaderMap& headers, const string& cookie) {
+  // TODO(tianyuc): implement API key extraction from cookie.
+  ENVOY_LOG(debug, "Called ExtractAPIKeyFromCookie: {}, {}", headers, cookie);
+}
+
+void Filter::ExtractRequestInfo(const HeaderMap& headers, Requirement* requirement)
 {
   uuid_ = config_->random().uuid();
   const auto &path = headers.Path()->value();
@@ -32,7 +54,6 @@ Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool)
 
   Requirement requirement;
   ExtractRequestInfo(headers, &requirement);
-  // TODO(tianyuc): refactor the error checking logic.
   if (requirement.service_name() == "") {
     ENVOY_LOG(debug, "No requirement matched!");
     rejectRequest(Http::Code(401), "Path does not match any requirement uri_template.");
@@ -40,11 +61,24 @@ Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool)
   }
   operation_name_ = requirement.operation_name();
 
-  // TODO(tianyuc): API key should be parsed from the request.
-  api_key_ = "AIzaSyB3xeV9fv4agFXUpGVyPMtZ2xIMScEazrk";
+  // Extract API key
+  for (const auto& api_key : requirement.api_key().api_keys()) {
+    switch (api_key.key_case()) {
+      case APIKey::kQuery:
+        ExtractAPIKeyFromQuery(headers, api_key.query());
+        break;
+      case APIKey::kHeader:
+        ExtractAPIKeyFromQuery(headers, api_key.header());
+        break;
+      case APIKey::kCookie:
+        ExtractAPIKeyFromCookie(headers, api_key.cookie());
+        break;
+      case APIKey::KEY_NOT_SET:
+        break;
+    }
+  }
   api_name_ = requirement.api_name();
   api_version_ = requirement.api_version();
-
   state_ = Calling;
   stopped_ = false;
   token_fetcher_ = config_->getCache().getTokenCacheByServiceName(requirement.service_name())
