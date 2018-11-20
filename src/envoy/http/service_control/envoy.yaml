@@ -73,6 +73,7 @@ static_resources:
                           uri_template: /test
                         requires:
                           service_name: REPLACE_SERVICE_NAME
+                          operation_name: "test"
                           api_key:
                             allow_without_api_key: true
                   - name: envoy.router
