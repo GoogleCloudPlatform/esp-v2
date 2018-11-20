@@ -42,6 +42,8 @@ Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool)
 
   // TODO(tianyuc): API key should be parsed from the request.
   api_key_ = "AIzaSyB3xeV9fv4agFXUpGVyPMtZ2xIMScEazrk";
+  api_name_ = requirement.api_name();
+  api_version_ = requirement.api_version();
 
   state_ = Calling;
   stopped_ = false;
@@ -213,8 +215,8 @@ void Filter::log(const HeaderMap * /*request_headers*/,
 
   info.request_start_time = std::chrono::system_clock::now();
   info.api_method = operation_name_;
-  info.api_name = "Bookstore";
-  info.api_version = "1.0";
+  info.api_name = api_name_;
+  info.api_version = api_version_;
   info.log_message = operation_name_ + " is called";
 
   info.url = operation_name_;

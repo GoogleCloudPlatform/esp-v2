@@ -76,6 +76,8 @@ static_resources:
                           operation_name: "test"
                           api_key:
                             allow_without_api_key: true
+                          api_name: "Bookstore"
+                          api_version: "1.0"
                   - name: envoy.router
                 route_config:
                   name: backend

@@ -69,6 +69,8 @@ class Filter : public Http::StreamDecoderFilter,
   std::string uuid_;
   std::string operation_name_;
   std::string api_key_;
+  std::string api_name_;
+  std::string api_version_;
   std::string http_method_;
   std::unique_ptr<ServiceControlFilterConfigParser> config_parser_;
 
