@@ -15,7 +15,6 @@
 #include "src/envoy/http/service_control/config_parser.h"
 
 #include "gmock/gmock.h"
-#include "google/protobuf/text_format.h"
 #include "google/protobuf/util/message_differencer.h"
 #include "gtest/gtest.h"
 
@@ -89,6 +88,46 @@ rules {
   }
 })";
 
+const char kFilterConfigSameUri[] = R"(
+service_name: "echo"
+rules {
+  patterns {
+    uri_template: "/same"
+    http_method: "GET"
+  }
+  patterns {
+    uri_template: "/same"
+    http_method: "POST"
+  }
+  requires {
+    operation_name: "Check"
+  }
+})";
+
+const char kFilterConfigDuplicatePattern[] = R"(
+service_name: "echo"
+rules {
+  patterns {
+    uri_template: "/same"
+    http_method: "GET"
+  }
+  patterns {
+    uri_template: "/same"
+    http_method: "GET"
+  }
+  requires {
+    operation_name: "Report"
+  }
+})";
+
+const char kFilterConfigNoPattern[] = R"(
+service_name: "echo"
+rules {
+  requires {
+    operation_name: "Check"
+  }
+})";
+
 TEST(ConfigParserTest, TestConfigEmpty) {
   FilterConfig config;
   auto parser = std::unique_ptr<ServiceControlFilterConfigParser>(
@@ -125,6 +164,68 @@ TEST(ConfigParserTest, TestConfigMultiRule) {
   const char kResult[] = R"(operation_name: "Echo")";
   ASSERT_TRUE(TextFormat::ParseFromString(kResult, &expected));
   EXPECT_TRUE(MessageDifferencer::Equals(requirement, expected));
+}
+
+TEST(ConfigParserTest, TestConfigSamePathGet) {
+  FilterConfig config;
+  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigSameUri, &config));
+  auto parser = std::unique_ptr<ServiceControlFilterConfigParser>(
+      new ServiceControlFilterConfigParser(config));
+  Requirement requirement;
+  parser->FindRequirement("GET", "/same", &requirement);
+
+  Requirement expected;
+  const char kResult[] = R"(operation_name: "Check")";
+  ASSERT_TRUE(TextFormat::ParseFromString(kResult, &expected));
+  EXPECT_TRUE(MessageDifferencer::Equals(requirement, expected));
+}
+
+TEST(ConfigParserTest, TestConfigSamePathPost) {
+  FilterConfig config;
+  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigSameUri, &config));
+  auto parser = std::unique_ptr<ServiceControlFilterConfigParser>(
+      new ServiceControlFilterConfigParser(config));
+  Requirement requirement;
+  parser->FindRequirement("POST", "/same", &requirement);
+
+  Requirement expected;
+  const char kResult[] = R"(operation_name: "Check")";
+  ASSERT_TRUE(TextFormat::ParseFromString(kResult, &expected));
+  EXPECT_TRUE(MessageDifferencer::Equals(requirement, expected));
+}
+
+TEST(ConfigParserTest, TestConfigDuplicatePattern) {
+  FilterConfig config;
+  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigDuplicatePattern, &config));
+  auto parser = std::unique_ptr<ServiceControlFilterConfigParser>(
+      new ServiceControlFilterConfigParser(config));
+  Requirement requirement;
+  parser->FindRequirement("GET", "/same", &requirement);
+
+  Requirement expected;
+  const char kResult[] = R"(operation_name: "Report")";
+  ASSERT_TRUE(TextFormat::ParseFromString(kResult, &expected));
+  EXPECT_TRUE(MessageDifferencer::Equals(requirement, expected));
+}
+
+TEST(ConfigParserTest, TestConfigEmptyPattern) {
+  FilterConfig config;
+  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigNoPattern, &config));
+  auto parser = std::unique_ptr<ServiceControlFilterConfigParser>(
+      new ServiceControlFilterConfigParser(config));
+  Requirement requirement;
+  parser->FindRequirement("GET", "/test", &requirement);
+  EXPECT_TRUE(requirement.operation_name() == "");
+}
+
+TEST(ConfigParserTest, TestConfigUnmatchedPattern) {
+  FilterConfig config;
+  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfig, &config));
+  auto parser = std::unique_ptr<ServiceControlFilterConfigParser>(
+      new ServiceControlFilterConfigParser(config));
+  Requirement requirement;
+  parser->FindRequirement("GET", "/test", &requirement);
+  EXPECT_TRUE(requirement.operation_name() == "");
 }
 
 }  // namespace
