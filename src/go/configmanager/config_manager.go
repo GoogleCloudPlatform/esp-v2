@@ -153,6 +153,13 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 	}
 	httpFilters := []*hcm.HttpFilter{}
 
+	// TODO(bochun): move transcoder last once it could work together with service control filter.
+	// Add gRPC transcode filter config  if needed.
+	transcoderFilter := m.makeTranscoderFilter(serviceConfig)
+	if transcoderFilter != nil {
+		httpFilters = append(httpFilters, transcoderFilter)
+	}
+
 	// Add JWT Authn filter if needed.
 	jwtAuthnFilter := m.makeJwtAuthnFilter(serviceConfig)
 	if jwtAuthnFilter != nil {
@@ -163,12 +170,6 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 	serviceControlFilter := m.makeServiceControlFilter(serviceConfig)
 	if serviceControlFilter != nil {
 		httpFilters = append(httpFilters, serviceControlFilter)
-	}
-
-	// Add gRPC transcode filter config  if needed.
-	transcoderFilter := m.makeTranscoderFilter(serviceConfig)
-	if transcoderFilter != nil {
-		httpFilters = append(httpFilters, transcoderFilter)
 	}
 
 	// Add Envoy Router filter so requests are routed upstream.
@@ -403,6 +404,21 @@ func (m *ConfigManager) makeServiceControlFilter(serviceConfig *api.Service) *hc
 				UriTemplate: httpPattern.Patch,
 				HttpMethod:  "PATCH",
 			})
+		}
+	}
+
+	for _, usageRule := range serviceConfig.GetUsage() {
+		scRule := rulesMap[usageRule.GetSelector()]
+		scRule.Requirement.ApiKey = &scpb.APIKeyRequirement{
+			AllowWithoutApiKey: usageRule.GetAllowUnregisteredCalls(),
+			ApiKeys: []*scpb.APIKey{
+				&APIKey{
+					Query: "key"
+				},
+				&APIKey{
+					Header: "x-api-key"
+				},
+			}
 		}
 	}
 
