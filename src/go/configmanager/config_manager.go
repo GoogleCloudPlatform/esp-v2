@@ -126,10 +126,11 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *api.Service) (*cache.Snapsho
 			Config: httpFilterConfig,
 		}}}}
 	cluster := &v2.Cluster{
-		Name:                 serviceConfig.Apis[0].Name,
-		LbPolicy:             v2.Cluster_ROUND_ROBIN,
-		ConnectTimeout:       *clusterConnectTimeout,
-		Http2ProtocolOptions: &core.Http2ProtocolOptions{},
+		Name:           serviceConfig.Apis[0].Name,
+		LbPolicy:       v2.Cluster_ROUND_ROBIN,
+		ConnectTimeout: *clusterConnectTimeout,
+		// TODO(bochun): uncomment for HTTP2 or gRPC
+		// Http2ProtocolOptions: &core.Http2ProtocolOptions{},
 		Hosts: []*core.Address{
 			{Address: &core.Address_SocketAddress{
 				SocketAddress: &core.SocketAddress{
@@ -153,13 +154,6 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 	}
 	httpFilters := []*hcm.HttpFilter{}
 
-	// TODO(bochun): move transcoder last once it could work together with service control filter.
-	// Add gRPC transcode filter config  if needed.
-	transcoderFilter := m.makeTranscoderFilter(serviceConfig)
-	if transcoderFilter != nil {
-		httpFilters = append(httpFilters, transcoderFilter)
-	}
-
 	// Add JWT Authn filter if needed.
 	jwtAuthnFilter := m.makeJwtAuthnFilter(serviceConfig)
 	if jwtAuthnFilter != nil {
@@ -170,6 +164,12 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 	serviceControlFilter := m.makeServiceControlFilter(serviceConfig)
 	if serviceControlFilter != nil {
 		httpFilters = append(httpFilters, serviceControlFilter)
+	}
+
+	// Add gRPC transcode filter config  if needed.
+	transcoderFilter := m.makeTranscoderFilter(serviceConfig)
+	if transcoderFilter != nil {
+		httpFilters = append(httpFilters, transcoderFilter)
 	}
 
 	// Add Envoy Router filter so requests are routed upstream.
@@ -197,7 +197,8 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 								{
 									Match: route.RouteMatch{
 										PathSpecifier: &route.RouteMatch_Prefix{
-											Prefix: fmt.Sprintf("/%s", serviceConfig.Apis[0].Name)},
+											Prefix: "/",
+										},
 									},
 									Action: &route.Route_Route{
 										Route: &route.RouteAction{
@@ -407,18 +408,18 @@ func (m *ConfigManager) makeServiceControlFilter(serviceConfig *api.Service) *hc
 		}
 	}
 
-	for _, usageRule := range serviceConfig.GetUsage() {
+	for _, usageRule := range serviceConfig.GetUsage().GetRules() {
 		scRule := rulesMap[usageRule.GetSelector()]
-		scRule.Requirement.ApiKey = &scpb.APIKeyRequirement{
+		scRule.Requires.ApiKey = &scpb.APIKeyRequirement{
 			AllowWithoutApiKey: usageRule.GetAllowUnregisteredCalls(),
 			ApiKeys: []*scpb.APIKey{
-				&APIKey{
-					Query: "key"
+				&scpb.APIKey{
+					Key: &scpb.APIKey_Query{"key"},
 				},
-				&APIKey{
-					Header: "x-api-key"
+				&scpb.APIKey{
+					Key: &scpb.APIKey_Header{"x-api-key"},
 				},
-			}
+			},
 		}
 	}
 
