@@ -1,6 +1,18 @@
+// Copyright 2018 Google Cloud Platform Proxy Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #include "common/http/utility.h"
-
 #include "envoy/http/header_map.h"
 #include "src/envoy/http/service_control/filter.h"
 #include "src/envoy/http/service_control/http_call.h"
@@ -42,8 +54,12 @@ void Filter::ExtractAPIKeyFromHeader(const HeaderMap& headers, const string& hea
 }
 
 void Filter::ExtractAPIKeyFromCookie(const HeaderMap& headers, const string& cookie) {
-  // TODO(tianyuc): implement API key extraction from cookie.
-  ENVOY_LOG(debug, "Called ExtractAPIKeyFromCookie: {}, {}", headers, cookie);
+  std::string api_key = Http::Utility::parseCookieValue(headers, cookie);
+  if (api_key != "") {
+    api_key_ = api_key;
+  }
+  ENVOY_LOG(debug, "API key not found by cookie '{}' in headerMap '{}'",
+      cookie, headers);
 }
 
 void Filter::ExtractRequestInfo(const HeaderMap& headers, Requirement* requirement)

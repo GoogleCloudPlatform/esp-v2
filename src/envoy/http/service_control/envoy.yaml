@@ -79,6 +79,8 @@ static_resources:
                               query: "key"
                             api_keys:
                               header: "x-goog-apikey"
+                            api_keys:
+                              cookie: "X-API-KEY"
                             allow_without_api_key: true
                           api_name: "Bookstore"
                           api_version: "1.0"
