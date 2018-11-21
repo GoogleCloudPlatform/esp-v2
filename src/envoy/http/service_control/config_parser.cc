@@ -33,12 +33,10 @@ ServiceControlFilterConfigParser::ServiceControlFilterConfigParser(
 void ServiceControlFilterConfigParser::BuildPathMatcher() {
   PathMatcherBuilder<const Requirement*> pmb;
   for (const auto& rule : config_.rules()) {
-    for (const auto& pattern : rule.patterns()) {
-      if (!pmb.Register(pattern.http_method(), pattern.uri_template(),
-                        string(), &rule.requires())) {
-        GOOGLE_LOG(WARNING)
-            << "Invalid uri_template: " << pattern.uri_template();
-      }
+    if (!pmb.Register(rule.pattern().http_method(), rule.pattern().uri_template(),
+                      string(), &rule.requires())) {
+      GOOGLE_LOG(WARNING)
+          << "Invalid uri_template: " << rule.pattern().uri_template();
     }
   }
   path_matcher_ = pmb.Build();
