@@ -31,14 +31,19 @@ using ::google::protobuf::TextFormat;
 using ::google::protobuf::util::MessageDifferencer;
 using ::testing::ReturnRef;
 
-const char kFilterConfig[] = R"(
+const char kFilterConfigBasic[] = R"(
 service_name: "echo"
 rules {
-  patterns {
+  pattern {
     uri_template: "/get/{foo}"
     http_method: "GET"
   }
-  patterns {
+  requires {
+    operation_name: "Check"
+  }
+}
+rules {
+  pattern {
     uri_template: "/post/{bar}"
     http_method: "POST"
   }
@@ -50,11 +55,16 @@ rules {
 const char kFilterConfigMultiRule[] = R"(
 service_name: "echo"
 rules {
-  patterns {
+  pattern {
     uri_template: "/get/{foo}"
     http_method: "GET"
   }
-  patterns {
+  requires {
+    operation_name: "Check"
+  }
+}
+rules {
+  pattern {
     uri_template: "/post/{bar}"
     http_method: "POST"
   }
@@ -63,11 +73,16 @@ rules {
   }
 }
 rules {
-  patterns {
+  pattern {
     uri_template: "/get2/{foo2}"
     http_method: "GET"
   }
-  patterns {
+  requires {
+    operation_name: "Report"
+  }
+}
+rules {
+  pattern {
     uri_template: "/post2/{bar2}"
     http_method: "POST"
   }
@@ -76,11 +91,16 @@ rules {
   }
 }
 rules {
-  patterns {
+  pattern {
     uri_template: "/{foo2}"
     http_method: "GET"
   }
-  patterns {
+  requires {
+    operation_name: "Echo"
+  }
+}
+rules {
+  pattern {
     uri_template: "/{bar2}"
     http_method: "POST"
   }
@@ -92,11 +112,16 @@ rules {
 const char kFilterConfigSameUri[] = R"(
 service_name: "echo"
 rules {
-  patterns {
+  pattern {
     uri_template: "/same"
     http_method: "GET"
   }
-  patterns {
+  requires {
+    operation_name: "Check"
+  }
+}
+rules {
+  pattern {
     uri_template: "/same"
     http_method: "POST"
   }
@@ -105,14 +130,19 @@ rules {
   }
 })";
 
-const char kFilterConfigDuplicatePattern[] = R"(
+const char kFilterConfigDuplicateRule[] = R"(
 service_name: "echo"
 rules {
-  patterns {
+  pattern {
     uri_template: "/same"
     http_method: "GET"
   }
-  patterns {
+  requires {
+    operation_name: "Report"
+  }
+}
+rules {
+  pattern {
     uri_template: "/same"
     http_method: "GET"
   }
@@ -141,7 +171,7 @@ TEST(ConfigParserTest, TestConfigEmpty) {
 
 TEST(ConfigParserTest, TestConfig) {
   FilterConfig config;
-  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfig, &config));
+  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigBasic, &config));
   auto parser = std::unique_ptr<ServiceControlFilterConfigParser>(
       new ServiceControlFilterConfigParser(config));
   Requirement requirement;
@@ -197,7 +227,7 @@ TEST(ConfigParserTest, TestConfigSamePathPost) {
 
 TEST(ConfigParserTest, TestConfigDuplicatePattern) {
   FilterConfig config;
-  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigDuplicatePattern, &config));
+  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigDuplicateRule, &config));
   auto parser = std::unique_ptr<ServiceControlFilterConfigParser>(
       new ServiceControlFilterConfigParser(config));
   Requirement requirement;
@@ -221,7 +251,7 @@ TEST(ConfigParserTest, TestConfigEmptyPattern) {
 
 TEST(ConfigParserTest, TestConfigUnmatchedPattern) {
   FilterConfig config;
-  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfig, &config));
+  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigBasic, &config));
   auto parser = std::unique_ptr<ServiceControlFilterConfigParser>(
       new ServiceControlFilterConfigParser(config));
   Requirement requirement;
