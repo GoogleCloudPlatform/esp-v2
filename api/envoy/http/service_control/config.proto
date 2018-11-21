@@ -38,7 +38,7 @@ message ServiceControlRule {
   repeated api.envoy.http.common.Pattern patterns = 1 [(validate.rules).repeated.min_items = 1];
 
   // The requirments for matched pattern.
-  api.envoy.http.service_control.Requirement requires = 2;
+  api.envoy.http.service_control.Requirement requires = 2 [(validate.rules).message.required = true];
 }
 
 // Per service config.
