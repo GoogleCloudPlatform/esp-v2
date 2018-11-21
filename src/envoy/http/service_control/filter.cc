@@ -1,6 +1,7 @@
 
 #include "common/http/utility.h"
 
+#include "envoy/http/header_map.h"
 #include "src/envoy/http/service_control/filter.h"
 #include "src/envoy/http/service_control/http_call.h"
 
@@ -15,6 +16,7 @@ using ::google::api_proxy::envoy::http::service_control::ServiceControlRule;
 using ::google::protobuf::util::Status;
 using Envoy::Extensions::HttpFilters::ServiceControl::ServiceControlFilterConfigParser;
 using Http::HeaderMap;
+using Http::LowerCaseString;
 using std::string;
 
 void Filter::ExtractAPIKeyFromQuery(const HeaderMap& headers, const string& query) {
@@ -31,8 +33,12 @@ void Filter::ExtractAPIKeyFromQuery(const HeaderMap& headers, const string& quer
 }
 
 void Filter::ExtractAPIKeyFromHeader(const HeaderMap& headers, const string& header) {
-  // TODO(tianyuc): implement API key extraction from header.
-  ENVOY_LOG(debug, "Called ExtractAPIKeyFromHeader: {}, {}", headers, header);
+  auto* entry = headers.get(LowerCaseString(header));
+  if (entry) {
+    api_key_ = std::string(entry->value().c_str(), entry->value().size());
+  }
+  ENVOY_LOG(debug, "API key not found by header '{}' in headerMap '{}'",
+      header, headers);
 }
 
 void Filter::ExtractAPIKeyFromCookie(const HeaderMap& headers, const string& cookie) {
@@ -68,7 +74,7 @@ Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool)
         ExtractAPIKeyFromQuery(headers, api_key.query());
         break;
       case APIKey::kHeader:
-        ExtractAPIKeyFromQuery(headers, api_key.header());
+        ExtractAPIKeyFromHeader(headers, api_key.header());
         break;
       case APIKey::kCookie:
         ExtractAPIKeyFromCookie(headers, api_key.cookie());
