@@ -111,7 +111,7 @@ func TestFetchListeners(t *testing.T) {
 												"routes":[
 													{
 														"match":{
-															"prefix":"/%s"
+															"prefix":"/"
 														},
 														"route":{
 															"cluster": "%s"
@@ -129,7 +129,7 @@ func TestFetchListeners(t *testing.T) {
 					}
 				]
 			}`,
-				fakeProtoDescriptor, testEndpointName, testEndpointName, testEndpointName),
+				fakeProtoDescriptor, testEndpointName, testEndpointName),
 		},
 		{
 			desc: "Success for gRPC backend, with Jwt filter, with audiences",
@@ -213,7 +213,7 @@ func TestFetchListeners(t *testing.T) {
                                             "routes":[
                                                 {
                                                     "match":{
-                                                        "prefix":"/%s"
+                                                        "prefix":"/"
                                                     },
                                                     "route":{
                                                         "cluster": "%s"
@@ -228,7 +228,7 @@ func TestFetchListeners(t *testing.T) {
                         "name":"envoy.http_connection_manager"
                     }
                 ]
-            }`, fakeJwks, testEndpointName, testEndpointName),
+            }`, fakeJwks, testEndpointName),
 		},
 		{
 			desc: "Success for gRPC backend, with Jwt filter, without audiences",
@@ -319,7 +319,7 @@ func TestFetchListeners(t *testing.T) {
                                             "routes":[
                                                 {
                                                     "match":{
-                                                        "prefix":"/%s"
+                                                        "prefix":"/"
                                                     },
                                                     "route":{
                                                         "cluster": "%s"
@@ -334,7 +334,7 @@ func TestFetchListeners(t *testing.T) {
                         "name":"envoy.http_connection_manager"
                     }
                 ]
-            }`, fakeJwks, testEndpointName, testEndpointName),
+            }`, fakeJwks, testEndpointName),
 		},
 		{
 			desc: "Success for gRPC backend, with Jwt filter, with multi requirements",
@@ -432,7 +432,7 @@ func TestFetchListeners(t *testing.T) {
                                             "routes":[
                                                 {
                                                     "match":{
-                                                        "prefix":"/%s"
+                                                        "prefix":"/"
                                                     },
                                                     "route":{
                                                         "cluster": "%s"
@@ -447,7 +447,7 @@ func TestFetchListeners(t *testing.T) {
                         "name":"envoy.http_connection_manager"
                     }
                 ]
-            }`, fakeJwks, fakeJwks, testEndpointName, testEndpointName),
+            }`, fakeJwks, fakeJwks, testEndpointName),
 		},
 		{
 			desc: "Success for gRPC backend with Service Control",
@@ -502,32 +502,20 @@ func TestFetchListeners(t *testing.T) {
 											"config":{
 												"rules":[
 													{
-														"patterns":[
-															{
-																"http_method":"POST",
-																"uri_template":"/endpoints.examples.bookstore.Bookstore/ListShelves"
-															},
-															{
-																"http_method":"GET",
-																"uri_template":"/v1/shelves"
-															}
-														],
+														"pattern": {
+															"http_method":"GET",
+															"uri_template":"/v1/shelves"
+														},
 														"requires":{
 															"operation_name":"endpoints.examples.bookstore.Bookstore.ListShelves",
 															"service_name":"bookstore.endpoints.project123.cloud.goog"
 														}
 													},
 													{
-														"patterns":[
-															{
-																"http_method":"POST",
-																"uri_template":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
-															},
-															{
-																"http_method":"POST",
-																"uri_template":"/v1/shelves"
-															}
-														],
+														"pattern": {
+															"http_method":"POST",
+															"uri_template":"/v1/shelves"
+														},
 														"requires":{
 															"operation_name":"endpoints.examples.bookstore.Bookstore.CreateShelf",
 															"service_name":"bookstore.endpoints.project123.cloud.goog"
@@ -575,7 +563,7 @@ func TestFetchListeners(t *testing.T) {
 												"routes":[
 													{
 														"match":{
-															"prefix":"/endpoints.examples.bookstore.Bookstore"
+															"prefix":"/"
 														},
 														"route":{
 															"cluster":"endpoints.examples.bookstore.Bookstore"
@@ -662,7 +650,6 @@ func TestFetchClusters(t *testing.T) {
 	    	        }
 	    	    ],
 	    	    "name": "%s",
-		        "http2ProtocolOptions": {},
 	    	    "connectTimeout": "%ds"
 	        }`, *clusterAddress, *clusterPort, testEndpointName, *clusterConnectTimeout/1e9),
 		},

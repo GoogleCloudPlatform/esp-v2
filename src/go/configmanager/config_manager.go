@@ -363,11 +363,9 @@ func (m *ConfigManager) makeServiceControlFilter(serviceConfig *api.Service) *hc
 					ServiceName:   serviceConfig.GetName(),
 					OperationName: selector,
 				},
-				Patterns: []*commonpb.Pattern{
-					&commonpb.Pattern{
-						UriTemplate: grpcUri,
-						HttpMethod:  "POST",
-					},
+				Pattern: &commonpb.Pattern{
+					UriTemplate: grpcUri,
+					HttpMethod:  "POST",
 				},
 			}
 		}
@@ -377,34 +375,34 @@ func (m *ConfigManager) makeServiceControlFilter(serviceConfig *api.Service) *hc
 		scRule := rulesMap[httpRule.GetSelector()]
 		switch httpPattern := httpRule.GetPattern().(type) {
 		case *annotations.HttpRule_Get:
-			scRule.Patterns = append(scRule.Patterns, &commonpb.Pattern{
+			scRule.Pattern = &commonpb.Pattern{
 				UriTemplate: httpPattern.Get,
 				HttpMethod:  "GET",
-			})
+			}
 
 		case *annotations.HttpRule_Put:
-			scRule.Patterns = append(scRule.Patterns, &commonpb.Pattern{
+			scRule.Pattern = &commonpb.Pattern{
 				UriTemplate: httpPattern.Put,
 				HttpMethod:  "PUT",
-			})
+			}
 
 		case *annotations.HttpRule_Post:
-			scRule.Patterns = append(scRule.Patterns, &commonpb.Pattern{
+			scRule.Pattern = &commonpb.Pattern{
 				UriTemplate: httpPattern.Post,
 				HttpMethod:  "POST",
-			})
+			}
 
 		case *annotations.HttpRule_Delete:
-			scRule.Patterns = append(scRule.Patterns, &commonpb.Pattern{
+			scRule.Pattern = &commonpb.Pattern{
 				UriTemplate: httpPattern.Delete,
 				HttpMethod:  "DELETE",
-			})
+			}
 
 		case *annotations.HttpRule_Patch:
-			scRule.Patterns = append(scRule.Patterns, &commonpb.Pattern{
+			scRule.Pattern = &commonpb.Pattern{
 				UriTemplate: httpPattern.Patch,
 				HttpMethod:  "PATCH",
-			})
+			}
 		}
 	}
 
