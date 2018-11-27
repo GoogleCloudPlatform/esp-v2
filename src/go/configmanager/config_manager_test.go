@@ -500,7 +500,7 @@ func TestFetchListeners(t *testing.T) {
 					]
 				}
 			}`, testProjectName, testEndpointName),
-			wantedListeners: `{
+			wantedListeners: fmt.Sprintf(`{
 				"address":{
 					"socketAddress":{
 						"address":"0.0.0.0",
@@ -518,12 +518,32 @@ func TestFetchListeners(t *testing.T) {
 												"rules":[
 													{
 														"pattern": {
+															"http_method":"POST",
+															"uri_template":"/endpoints.examples.bookstore.Bookstore/ListShelves"
+														},
+														"requires":{
+															"operation_name":"endpoints.examples.bookstore.Bookstore.ListShelves",
+															"service_name":"%s"
+														}
+													},
+													{
+														"pattern": {
 															"http_method":"GET",
 															"uri_template":"/v1/shelves"
 														},
 														"requires":{
 															"operation_name":"endpoints.examples.bookstore.Bookstore.ListShelves",
-															"service_name":"bookstore.endpoints.project123.cloud.goog"
+															"service_name":"%s"
+														}
+													},
+													{
+														"pattern": {
+															"http_method":"POST",
+															"uri_template":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+														},
+														"requires":{
+															"operation_name":"endpoints.examples.bookstore.Bookstore.CreateShelf",
+															"service_name":"%s"
 														}
 													},
 													{
@@ -533,7 +553,7 @@ func TestFetchListeners(t *testing.T) {
 														},
 														"requires":{
 															"operation_name":"endpoints.examples.bookstore.Bookstore.CreateShelf",
-															"service_name":"bookstore.endpoints.project123.cloud.goog"
+															"service_name":"%s"
 														}
 													}
 												],
@@ -542,7 +562,7 @@ func TestFetchListeners(t *testing.T) {
 													"timeout":"5s",
 													"uri":"https://servicecontrol.googleapis.com/v1/services/"
 												},
-												"service_name":"bookstore.endpoints.project123.cloud.goog",
+												"service_name":"%s",
 												"services":[
 													{
 														"service_control_uri":{
@@ -550,7 +570,7 @@ func TestFetchListeners(t *testing.T) {
 															"timeout":"5s",
 															"uri":"https://servicecontrol.googleapis.com/v1/services/"
 														},
-														"service_name":"bookstore.endpoints.project123.cloud.goog",
+														"service_name":"%s",
 														"token_uri":{
 															"cluster":"gcp_metadata_cluster",
 															"timeout":"5s",
@@ -595,8 +615,7 @@ func TestFetchListeners(t *testing.T) {
 						]
 					}
 				]
-			}`,
-		},
+			}`, testProjectName, testProjectName, testProjectName, testProjectName, testProjectName, testProjectName)},
 	}
 
 	for i, tc := range testData {

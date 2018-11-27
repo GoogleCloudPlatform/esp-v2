@@ -378,71 +378,103 @@ func (m *ConfigManager) makeServiceControlFilter(serviceConfig *conf.Service) *h
 		},
 	}
 
-	rulesMap := make(map[string]*scpb.ServiceControlRule)
+	rulesMap := make(map[string][]*scpb.ServiceControlRule)
 	for _, api := range serviceConfig.GetApis() {
 		for _, method := range api.GetMethods() {
 			grpcUri := fmt.Sprintf("/%s/%s", api.GetName(), method.GetName())
 			selector := fmt.Sprintf("%s.%s", api.GetName(), method.GetName())
-			rulesMap[selector] = &scpb.ServiceControlRule{
-				Requires: &scpb.Requirement{
-					ServiceName:   serviceConfig.GetName(),
-					OperationName: selector,
-				},
-				Pattern: &commonpb.Pattern{
-					UriTemplate: grpcUri,
-					HttpMethod:  "POST",
+			rulesMap[selector] = []*scpb.ServiceControlRule{
+				&scpb.ServiceControlRule{
+					Requires: &scpb.Requirement{
+						ServiceName:   serviceConfig.GetName(),
+						OperationName: selector,
+					},
+					Pattern: &commonpb.Pattern{
+						UriTemplate: grpcUri,
+						HttpMethod:  "POST",
+					},
 				},
 			}
 		}
 	}
 
 	for _, httpRule := range serviceConfig.GetHttp().GetRules() {
-		scRule := rulesMap[httpRule.GetSelector()]
+		scRules := rulesMap[httpRule.GetSelector()]
 		switch httpPattern := httpRule.GetPattern().(type) {
 		case *annotations.HttpRule_Get:
-			scRule.Pattern = &commonpb.Pattern{
-				UriTemplate: httpPattern.Get,
-				HttpMethod:  "GET",
-			}
-
+			scRules = append(scRules, &scpb.ServiceControlRule{
+				Requires: &scpb.Requirement{
+					ServiceName:   serviceConfig.GetName(),
+					OperationName: httpRule.GetSelector(),
+				},
+				Pattern: &commonpb.Pattern{
+					UriTemplate: httpPattern.Get,
+					HttpMethod:  "GET",
+				},
+			})
 		case *annotations.HttpRule_Put:
-			scRule.Pattern = &commonpb.Pattern{
-				UriTemplate: httpPattern.Put,
-				HttpMethod:  "PUT",
-			}
-
+			scRules = append(scRules, &scpb.ServiceControlRule{
+				Requires: &scpb.Requirement{
+					ServiceName:   serviceConfig.GetName(),
+					OperationName: httpRule.GetSelector(),
+				},
+				Pattern: &commonpb.Pattern{
+					UriTemplate: httpPattern.Put,
+					HttpMethod:  "PUT",
+				},
+			})
 		case *annotations.HttpRule_Post:
-			scRule.Pattern = &commonpb.Pattern{
-				UriTemplate: httpPattern.Post,
-				HttpMethod:  "POST",
-			}
-
+			scRules = append(scRules, &scpb.ServiceControlRule{
+				Requires: &scpb.Requirement{
+					ServiceName:   serviceConfig.GetName(),
+					OperationName: httpRule.GetSelector(),
+				},
+				Pattern: &commonpb.Pattern{
+					UriTemplate: httpPattern.Post,
+					HttpMethod:  "POST",
+				},
+			})
 		case *annotations.HttpRule_Delete:
-			scRule.Pattern = &commonpb.Pattern{
-				UriTemplate: httpPattern.Delete,
-				HttpMethod:  "DELETE",
-			}
-
+			scRules = append(scRules, &scpb.ServiceControlRule{
+				Requires: &scpb.Requirement{
+					ServiceName:   serviceConfig.GetName(),
+					OperationName: httpRule.GetSelector(),
+				},
+				Pattern: &commonpb.Pattern{
+					UriTemplate: httpPattern.Delete,
+					HttpMethod:  "DELETE",
+				},
+			})
 		case *annotations.HttpRule_Patch:
-			scRule.Pattern = &commonpb.Pattern{
-				UriTemplate: httpPattern.Patch,
-				HttpMethod:  "PATCH",
-			}
+			scRules = append(scRules, &scpb.ServiceControlRule{
+				Requires: &scpb.Requirement{
+					ServiceName:   serviceConfig.GetName(),
+					OperationName: httpRule.GetSelector(),
+				},
+				Pattern: &commonpb.Pattern{
+					UriTemplate: httpPattern.Patch,
+					HttpMethod:  "PATCH",
+				},
+			})
 		}
+		rulesMap[httpRule.GetSelector()] = scRules
+
 	}
 
 	for _, usageRule := range serviceConfig.GetUsage().GetRules() {
-		scRule := rulesMap[usageRule.GetSelector()]
-		scRule.Requires.ApiKey = &scpb.APIKeyRequirement{
-			AllowWithoutApiKey: usageRule.GetAllowUnregisteredCalls(),
-			ApiKeys: []*scpb.APIKey{
-				&scpb.APIKey{
-					Key: &scpb.APIKey_Query{"key"},
+		scRules := rulesMap[usageRule.GetSelector()]
+		for _, scRule := range scRules {
+			scRule.Requires.ApiKey = &scpb.APIKeyRequirement{
+				AllowWithoutApiKey: usageRule.GetAllowUnregisteredCalls(),
+				ApiKeys: []*scpb.APIKey{
+					&scpb.APIKey{
+						Key: &scpb.APIKey_Query{"key"},
+					},
+					&scpb.APIKey{
+						Key: &scpb.APIKey_Header{ut.APIKeyHeader},
+					},
 				},
-				&scpb.APIKey{
-					Key: &scpb.APIKey_Header{"x-api-key"},
-				},
-			},
+			}
 		}
 	}
 
@@ -456,8 +488,10 @@ func (m *ConfigManager) makeServiceControlFilter(serviceConfig *conf.Service) *h
 		},
 	}
 
-	for _, rule := range rulesMap {
-		filterConfig.Rules = append(filterConfig.Rules, rule)
+	for _, rules := range rulesMap {
+		for _, rule := range rules {
+			filterConfig.Rules = append(filterConfig.Rules, rule)
+		}
 	}
 
 	scs, _ := util.MessageToStruct(filterConfig)
