@@ -58,7 +58,10 @@ func TestFetchListeners(t *testing.T) {
 					{
 						"name":"%s",
 						"version":"v1",
-						"syntax":"SYNTAX_PROTO3"
+						"syntax":"SYNTAX_PROTO3",
+						"sourceContext": {
+							"fileName": "bookstore.proto"
+						}
 					}
 				],
 				"sourceInfo":{
@@ -136,7 +139,10 @@ func TestFetchListeners(t *testing.T) {
 			fakeServiceConfig: fmt.Sprintf(`{
 				"apis":[
 					{
-						"name":"%s"
+						"name":"%s",
+						"sourceContext": {
+							"fileName": "bookstore.proto"
+						}
 					}
 				],
 				"authentication": {
@@ -235,7 +241,10 @@ func TestFetchListeners(t *testing.T) {
 			fakeServiceConfig: fmt.Sprintf(`{
                 "apis":[
                     {
-                        "name":"%s"
+                        "name":"%s",
+                        "sourceContext": {
+							"fileName": "bookstore.proto"
+						}
                     }
                 ],
                 "authentication": {
@@ -341,8 +350,11 @@ func TestFetchListeners(t *testing.T) {
 			fakeServiceConfig: fmt.Sprintf(`{
                 "apis":[
                     {
-                        "name":"%s"
-                    }
+                        "name":"%s",
+                        "sourceContext": {
+							"fileName": "bookstore.proto"
+						}
+					}
                 ],
                 "authentication": {
         	        "providers": [
@@ -461,6 +473,9 @@ func TestFetchListeners(t *testing.T) {
 						"name":"%s",
 						"version":"v1",
 						"syntax":"SYNTAX_PROTO3",
+                        "sourceContext": {
+							"fileName": "bookstore.proto"
+						},
 						"methods":[
 							{
 								"name": "ListShelves"
@@ -636,8 +651,11 @@ func TestFetchClusters(t *testing.T) {
                     {
                         "name":"%s",
                         "version":"v1",
-                        "syntax":"SYNTAX_PROTO3"
-                    }
+                        "syntax":"SYNTAX_PROTO3",
+                        "sourceContext": {
+							"fileName": "bookstore.proto"
+						}
+					}
                 ]
 		    }`, testProjectName, testEndpointName),
 			wantedClusters: fmt.Sprintf(`{

@@ -24,6 +24,7 @@ import (
 
 	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
 	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
+	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
@@ -41,7 +42,8 @@ import (
 	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
 	"google.golang.org/genproto/googleapis/api/annotations"
-	api "google.golang.org/genproto/googleapis/api/serviceconfig"
+	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	"google.golang.org/genproto/protobuf/api"
 )
 
 const (
@@ -104,6 +106,7 @@ func (m *ConfigManager) init() error {
 		// TODO(jilinxia): changes error generation
 		return fmt.Errorf("fail to initialize config manager, %s", err)
 	}
+
 	snapshot, err := m.makeSnapshot(serviceConfig)
 	if err != nil {
 		return fmt.Errorf("fail to make a snapshot, %s", err)
@@ -112,9 +115,18 @@ func (m *ConfigManager) init() error {
 	return nil
 }
 
-func (m *ConfigManager) makeSnapshot(serviceConfig *api.Service) (*cache.Snapshot, error) {
+func (m *ConfigManager) makeSnapshot(serviceConfig *conf.Service) (*cache.Snapshot, error) {
+	if len(serviceConfig.GetApis()) == 0 {
+		return nil, fmt.Errorf("service config must have one api at least")
+	}
+	// TODO(jilinxia): supports multi apis.
+	endpointApi := serviceConfig.Apis[0]
+
 	var endpoints, routes []cache.Resource
-	serverlistener, httpManager := m.makeListener(serviceConfig)
+	serverlistener, httpManager, err := m.makeListener(serviceConfig, endpointApi)
+	if err != nil {
+		return nil, err
+	}
 	// HTTP filter configuration
 	httpFilterConfig, err := util.MessageToStruct(httpManager)
 	if err != nil {
@@ -126,7 +138,7 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *api.Service) (*cache.Snapsho
 			Config: httpFilterConfig,
 		}}}}
 	cluster := &v2.Cluster{
-		Name:           serviceConfig.Apis[0].Name,
+		Name:           endpointApi.Name,
 		LbPolicy:       v2.Cluster_ROUND_ROBIN,
 		ConnectTimeout: *clusterConnectTimeout,
 		// TODO(bochun): uncomment for HTTP2 or gRPC
@@ -148,14 +160,22 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *api.Service) (*cache.Snapsho
 	return &snapshot, nil
 }
 
-func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, *hcm.HttpConnectionManager) {
-	if len(serviceConfig.GetApis()) == 0 {
-		return nil, nil
+func (m *ConfigManager) makeListener(serviceConfig *conf.Service, endpointApi *api.Api) (*v2.Listener, *hcm.HttpConnectionManager, error) {
+	fileName := endpointApi.GetSourceContext().GetFileName()
+	var backendProtocol ut.BackendProtocol
+	switch {
+	case strings.HasSuffix(fileName, ".proto"):
+		backendProtocol = ut.GRPC
+	case strings.HasSuffix(fileName, ".yaml"):
+		backendProtocol = ut.HTTP
+	default:
+		return nil, nil, fmt.Errorf("unknown backend protocol")
 	}
+
 	httpFilters := []*hcm.HttpFilter{}
 
 	// Add JWT Authn filter if needed.
-	jwtAuthnFilter := m.makeJwtAuthnFilter(serviceConfig)
+	jwtAuthnFilter := m.makeJwtAuthnFilter(serviceConfig, endpointApi)
 	if jwtAuthnFilter != nil {
 		httpFilters = append(httpFilters, jwtAuthnFilter)
 	}
@@ -166,10 +186,12 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 		httpFilters = append(httpFilters, serviceControlFilter)
 	}
 
-	// Add gRPC transcode filter config  if needed.
-	transcoderFilter := m.makeTranscoderFilter(serviceConfig)
-	if transcoderFilter != nil {
-		httpFilters = append(httpFilters, transcoderFilter)
+	// Add gRPC transcode filter config for gRPC backend.
+	if backendProtocol == ut.GRPC {
+		transcoderFilter := m.makeTranscoderFilter(serviceConfig, endpointApi)
+		if transcoderFilter != nil {
+			httpFilters = append(httpFilters, transcoderFilter)
+		}
 	}
 
 	// Add Envoy Router filter so requests are routed upstream.
@@ -179,32 +201,28 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 		Config: &types.Struct{},
 	}
 	httpFilters = append(httpFilters, routerFilter)
-	return &v2.Listener{
-			Address: core.Address{Address: &core.Address_SocketAddress{SocketAddress: &core.SocketAddress{
-				Address:       *listenerAddress,
-				PortSpecifier: &core.SocketAddress_PortValue{PortValue: uint32(*listenerPort)}}}},
-		}, &hcm.HttpConnectionManager{
-			CodecType:  hcm.AUTO,
-			StatPrefix: statPrefix,
-			RouteSpecifier: &hcm.HttpConnectionManager_RouteConfig{
-				RouteConfig: &v2.RouteConfiguration{
-					Name: routeName,
-					VirtualHosts: []route.VirtualHost{
-						{
-							Name:    virtualHostName,
-							Domains: []string{"*"},
-							Routes: []route.Route{
-								{
-									Match: route.RouteMatch{
-										PathSpecifier: &route.RouteMatch_Prefix{
-											Prefix: "/",
-										},
+
+	httpConMgr := &hcm.HttpConnectionManager{
+		CodecType:  hcm.AUTO,
+		StatPrefix: statPrefix,
+		RouteSpecifier: &hcm.HttpConnectionManager_RouteConfig{
+			RouteConfig: &v2.RouteConfiguration{
+				Name: routeName,
+				VirtualHosts: []route.VirtualHost{
+					{
+						Name:    virtualHostName,
+						Domains: []string{"*"},
+						Routes: []route.Route{
+							{
+								Match: route.RouteMatch{
+									PathSpecifier: &route.RouteMatch_Prefix{
+										Prefix: "/",
 									},
-									Action: &route.Route_Route{
-										Route: &route.RouteAction{
-											ClusterSpecifier: &route.RouteAction_Cluster{
-												Cluster: serviceConfig.Apis[0].Name},
-										},
+								},
+								Action: &route.Route_Route{
+									Route: &route.RouteAction{
+										ClusterSpecifier: &route.RouteAction_Cluster{
+											Cluster: endpointApi.Name},
 									},
 								},
 							},
@@ -212,11 +230,18 @@ func (m *ConfigManager) makeListener(serviceConfig *api.Service) (*v2.Listener, 
 					},
 				},
 			},
-			HttpFilters: httpFilters,
-		}
+		},
+		HttpFilters: httpFilters,
+	}
+
+	return &v2.Listener{
+		Address: core.Address{Address: &core.Address_SocketAddress{SocketAddress: &core.SocketAddress{
+			Address:       *listenerAddress,
+			PortSpecifier: &core.SocketAddress_PortValue{PortValue: uint32(*listenerPort)}}}},
+	}, httpConMgr, nil
 }
 
-func (m *ConfigManager) makeTranscoderFilter(serviceConfig *api.Service) *hcm.HttpFilter {
+func (m *ConfigManager) makeTranscoderFilter(serviceConfig *conf.Service, endpointApi *api.Api) *hcm.HttpFilter {
 	for _, sourceFile := range serviceConfig.GetSourceInfo().GetSourceFiles() {
 		configFile := &servicemanagement.ConfigFile{}
 		ptypes.UnmarshalAny(sourceFile, configFile)
@@ -226,7 +251,7 @@ func (m *ConfigManager) makeTranscoderFilter(serviceConfig *api.Service) *hcm.Ht
 				DescriptorSet: &tc.GrpcJsonTranscoder_ProtoDescriptorBin{
 					ProtoDescriptorBin: configContent,
 				},
-				Services: []string{serviceConfig.Apis[0].Name},
+				Services: []string{endpointApi.Name},
 			}
 			transcodeConfigStruct, _ := util.MessageToStruct(transcodeConfig)
 			transcodeFilter := &hcm.HttpFilter{
@@ -239,7 +264,7 @@ func (m *ConfigManager) makeTranscoderFilter(serviceConfig *api.Service) *hcm.Ht
 	return nil
 }
 
-func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.HttpFilter {
+func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *conf.Service, endpointApi *api.Api) *hcm.HttpFilter {
 	if serviceConfig == nil {
 		glog.Warning("unexpected empty service config")
 		return nil
@@ -314,7 +339,7 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.Http
 		ruleConfig := &ac.RequirementRule{
 			Match: &route.RouteMatch{
 				PathSpecifier: &route.RouteMatch_Prefix{
-					Prefix: fmt.Sprintf("/%s/%s", serviceConfig.Apis[0].Name, m[len(m)-1]),
+					Prefix: fmt.Sprintf("/%s/%s", endpointApi.Name, m[len(m)-1]),
 				},
 			},
 			Requires: requires,
@@ -328,13 +353,13 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *api.Service) *hcm.Http
 	}
 	jas, _ := util.MessageToStruct(jwtAuthentication)
 	jwtAuthnFilter := &hcm.HttpFilter{
-		Name:   "envoy.filters.http.jwt_authn",
+		Name:   ut.JwtAuthn,
 		Config: jas,
 	}
 	return jwtAuthnFilter
 }
 
-func (m *ConfigManager) makeServiceControlFilter(serviceConfig *api.Service) *hcm.HttpFilter {
+func (m *ConfigManager) makeServiceControlFilter(serviceConfig *conf.Service) *hcm.HttpFilter {
 	if serviceConfig.GetName() == "" || serviceConfig.GetControl().GetEnvironment() == "" {
 		return nil
 	}
@@ -437,7 +462,7 @@ func (m *ConfigManager) makeServiceControlFilter(serviceConfig *api.Service) *hc
 
 	scs, _ := util.MessageToStruct(filterConfig)
 	filter := &hcm.HttpFilter{
-		Name:   "envoy.filters.http.service_control",
+		Name:   ut.ServiceControl,
 		Config: scs,
 	}
 	return filter
@@ -456,7 +481,7 @@ func (m *ConfigManager) Errorf(format string, args ...interface{}) { glog.Errorf
 
 func (m *ConfigManager) Cache() cache.Cache { return m.cache }
 
-func (m *ConfigManager) fetchConfig(configId string) (*api.Service, error) {
+func (m *ConfigManager) fetchConfig(configId string) (*conf.Service, error) {
 	token, _, err := fetchAccessToken()
 	if err != nil {
 		return nil, fmt.Errorf("fail to get access token")
@@ -472,7 +497,7 @@ func (fn funcResolver) Resolve(url string) (proto.Message, error) {
 	return fn(url)
 }
 
-var callServiceManagement = func(path, token string, client *http.Client) (*api.Service, error) {
+var callServiceManagement = func(path, token string, client *http.Client) (*conf.Service, error) {
 	req, _ := http.NewRequest("GET", path, nil)
 	req.Header.Add("Authorization", "Bearer "+token)
 	resp, err := client.Do(req)
@@ -497,7 +522,7 @@ var callServiceManagement = func(path, token string, client *http.Client) (*api.
 		AllowUnknownFields: true,
 		AnyResolver:        resolver,
 	}
-	var serviceConfig api.Service
+	var serviceConfig conf.Service
 	if err = unmarshaler.Unmarshal(resp.Body, &serviceConfig); err != nil {
 		return nil, fmt.Errorf("fail to unmarshal serviceConfig: %s", err)
 	}
