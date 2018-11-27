@@ -2,7 +2,22 @@ const express = require('express')
 const app = express()
 const port = 8082
 
-app.get('/test', (request, response) => {
+app.get('/echo', (request, response) => {
+  console.log(request.headers)
+  response.send('Headers: ' + JSON.stringify(request.headers) + "\n")
+})
+
+app.post('/echo', (request, response) => {
+  console.log(request.headers)
+  response.send('Headers: ' + JSON.stringify(request.headers) + "\n")
+})
+
+app.get('/echo2', (request, response) => {
+  console.log(request.headers)
+  response.send('Headers: ' + JSON.stringify(request.headers) + "\n")
+})
+
+app.post('/echo2', (request, response) => {
   console.log(request.headers)
   response.send('Headers: ' + JSON.stringify(request.headers) + "\n")
 })
