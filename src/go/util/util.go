@@ -20,6 +20,8 @@ const (
 	ServiceControl = "envoy.filters.http.service_control"
 	// JWT Authn filter.
 	JwtAuthn = "envoy.filters.http.jwt_authn"
+	// APIKey field name in HTTP header map.
+	APIKeyHeader = "x-api-key"
 )
 
 type BackendProtocol int32
