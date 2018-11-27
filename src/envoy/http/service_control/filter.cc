@@ -78,7 +78,7 @@ Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool)
   ExtractRequestInfo(headers, &requirement);
   if (requirement.service_name() == "") {
     ENVOY_LOG(debug, "No requirement matched!");
-    rejectRequest(Http::Code(401), "Path does not match any requirement uri_template.");
+    rejectRequest(Http::Code(404), "Path does not match any requirement uri_template.");
     return Http::FilterHeadersStatus::StopIteration;
   }
   operation_name_ = requirement.operation_name();
