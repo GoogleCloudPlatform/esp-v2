@@ -12,29 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:alpine
+FROM ubuntu:latest
 
-# install tools
-RUN apk update \
-  && apk add git
+ARG SERVICE_NAME
+ARG CONFIG_ID
 
-RUN go get github.com/golang/dep/cmd/dep
+ADD scripts/start_proxy.sh start_proxy.sh
 
-# install glide
-RUN go get github.com/Masterminds/glide
+ADD scripts/envoy_bootstrap_v2_startup.yaml startup.yaml
 
-# create a working directory
-WORKDIR /go/src/cloudesf.googlesource.com/gcpproxy
+ADD vendor/configmanager configmanager
 
-# add glide.yaml and glide.lock
-ADD glide.yaml glide.yaml
-ADD glide.lock glide.lock
+ADD vendor/envoy envoy
 
-# install packages
-RUN glide install
-
-# add source code
-ADD src src
-
-# run main.go
-CMD ["go", "run", "src/go/server/server.go"]
+ENTRYPOINT ["./start_proxy.sh"]
+CMD ["echo $SERVICE_NAME", "echo $CONFIG_ID"]
