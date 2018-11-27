@@ -15,6 +15,7 @@
 package configmanager
 
 import (
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -85,9 +86,12 @@ type ConfigManager struct {
 
 // NewConfigManager creates new instance of ConfigManager.
 func NewConfigManager(name, configID string) (*ConfigManager, error) {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 	m := &ConfigManager{
 		serviceName: name,
-		client:      http.DefaultClient,
+		client:      &http.Client{Transport: tr},
 		configID:    configID,
 	}
 	m.cache = cache.NewSnapshotCache(true, m, m)
