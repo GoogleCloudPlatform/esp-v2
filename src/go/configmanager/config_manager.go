@@ -472,7 +472,7 @@ func (m *ConfigManager) makeServiceControlFilter(serviceConfig *conf.Service) *h
 				AllowWithoutApiKey: usageRule.GetAllowUnregisteredCalls(),
 				ApiKeys: []*scpb.APIKey{
 					&scpb.APIKey{
-						Key: &scpb.APIKey_Query{"key"},
+						Key: &scpb.APIKey_Query{ut.APIKeyQuery},
 					},
 					&scpb.APIKey{
 						Key: &scpb.APIKey_Header{ut.APIKeyHeader},
