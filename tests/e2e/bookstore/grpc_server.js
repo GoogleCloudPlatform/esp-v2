@@ -3,7 +3,7 @@ var protoLoader = require('@grpc/proto-loader');
 
 var PORT = 8082
 const path = require('path');
-const PROTO_PATH = path.join(__dirname, '../proto/bookstore.proto');
+const PROTO_PATH = path.join(__dirname, '/proto/bookstore.proto');
 
 var packageDefinition = protoLoader.loadSync(
   PROTO_PATH, {

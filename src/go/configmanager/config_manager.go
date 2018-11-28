@@ -16,13 +16,12 @@ package configmanager
 
 import (
 	"crypto/tls"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"time"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
 	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
@@ -57,18 +56,8 @@ const (
 )
 
 var (
-	listenerAddress      = flag.String("listener_address", "0.0.0.0", "listener socket ip address")
-	clusterAddress       = flag.String("cluster_address", "127.0.0.1", "cluster socket ip address")
-	serviceManagementURL = flag.String("service_management_url", "https://servicemanagement.googleapis.com", "url of service management server")
-	node                 = flag.String("node", "api_proxy", "envoy node id")
-
-	listenerPort = flag.Int("listener_port", 8080, "listener port")
-	clusterPort  = flag.Int("cluster_port", 8082, "cluster port")
-
-	clusterConnectTimeout = flag.Duration("cluster_connect_imeout", 20*time.Second, "cluster connect timeout in seconds")
-
 	fetchConfigURL = func(serviceName, configID string) string {
-		path := *serviceManagementURL + fetchConfigSufix
+		path := *flags.ServiceManagementURL + fetchConfigSufix
 		path = strings.Replace(path, "$serviceName", serviceName, 1)
 		path = strings.Replace(path, "$configId", configID, 1)
 		return path
@@ -115,7 +104,7 @@ func (m *ConfigManager) init() error {
 	if err != nil {
 		return fmt.Errorf("fail to make a snapshot, %s", err)
 	}
-	m.cache.SetSnapshot(*node, *snapshot)
+	m.cache.SetSnapshot(*flags.Node, *snapshot)
 	return nil
 }
 
@@ -124,6 +113,9 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *conf.Service) (*cache.Snapsh
 		return nil, fmt.Errorf("service config must have one api at least")
 	}
 	// TODO(jilinxia): supports multi apis.
+	if len(serviceConfig.GetApis()) > 1 {
+		return nil, fmt.Errorf("not support multi apis yet")
+	}
 	endpointApi := serviceConfig.Apis[0]
 
 	var endpoints, routes []cache.Resource
@@ -144,20 +136,22 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *conf.Service) (*cache.Snapsh
 	cluster := &v2.Cluster{
 		Name:           endpointApi.Name,
 		LbPolicy:       v2.Cluster_ROUND_ROBIN,
-		ConnectTimeout: *clusterConnectTimeout,
-		// TODO(bochun): uncomment for HTTP2 or gRPC
-		// Http2ProtocolOptions: &core.Http2ProtocolOptions{},
+		ConnectTimeout: *flags.ClusterConnectTimeout,
 		Hosts: []*core.Address{
 			{Address: &core.Address_SocketAddress{
 				SocketAddress: &core.SocketAddress{
-					Address: *clusterAddress,
+					Address: *flags.ClusterAddress,
 					PortSpecifier: &core.SocketAddress_PortValue{
-						PortValue: uint32(*clusterPort),
+						PortValue: uint32(*flags.ClusterPort),
 					},
 				},
 			},
 			},
 		},
+	}
+	// gRPC and HTTP/2 need this configuration.
+	if !*flags.IsHttp1Backend {
+		cluster.Http2ProtocolOptions = &core.Http2ProtocolOptions{}
 	}
 
 	snapshot := cache.NewSnapshot(m.configID, endpoints, []cache.Resource{cluster}, routes, []cache.Resource{serverlistener})
@@ -165,7 +159,7 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *conf.Service) (*cache.Snapsh
 }
 
 func (m *ConfigManager) makeListener(serviceConfig *conf.Service, endpointApi *api.Api) (*v2.Listener, *hcm.HttpConnectionManager, error) {
-	fileName := endpointApi.GetSourceContext().GetFileName()
+	fileName := strings.ToLower(endpointApi.GetSourceContext().GetFileName())
 	var backendProtocol ut.BackendProtocol
 	switch {
 	case strings.HasSuffix(fileName, ".proto"):
@@ -240,8 +234,8 @@ func (m *ConfigManager) makeListener(serviceConfig *conf.Service, endpointApi *a
 
 	return &v2.Listener{
 		Address: core.Address{Address: &core.Address_SocketAddress{SocketAddress: &core.SocketAddress{
-			Address:       *listenerAddress,
-			PortSpecifier: &core.SocketAddress_PortValue{PortValue: uint32(*listenerPort)}}}},
+			Address:       *flags.ListenerAddress,
+			PortSpecifier: &core.SocketAddress_PortValue{PortValue: uint32(*flags.ListenerPort)}}}},
 	}, httpConMgr, nil
 }
 

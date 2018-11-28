@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v2"
 	xds "github.com/envoyproxy/go-control-plane/pkg/server"
@@ -29,21 +30,15 @@ import (
 	agentpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/agent"
 )
 
-var (
-	serviceName   = flag.String("service_name", "", "endpoint service name")
-	configID      = flag.String("config_id", "", "initial service config id")
-	discoveryPort = flag.Int("discovery_port", 8790, "discovery service port")
-)
-
 func main() {
 	flag.Parse()
-	m, err := configmanager.NewConfigManager(*serviceName, *configID)
+	m, err := configmanager.NewConfigManager(*flags.ServiceName, *flags.ConfigID)
 	if err != nil {
 		glog.Exitf("fail to initialize config manager: %v", err)
 	}
 	server := xds.NewServer(m.Cache(), nil)
 	grpcServer := grpc.NewServer()
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *discoveryPort))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *flags.DiscoveryPort))
 	if err != nil {
 		glog.Exitf("Server failed to listen: %v", err)
 	}
