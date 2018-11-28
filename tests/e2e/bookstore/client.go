@@ -11,7 +11,7 @@ import (
 
 	"golang.org/x/oauth2/google"
 
-	bspb "cloudesf.googlesource.com/gcpproxy/examples/bookstore/proto"
+	bspb "cloudesf.googlesource.com/gcpproxy/tests/e2e/bookstore/proto"
 	"github.com/gogo/protobuf/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -33,7 +33,7 @@ var makeHttpCall = func() ([]byte, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("http got error: %v", err)
+		log.Fatal("http got error: ", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {

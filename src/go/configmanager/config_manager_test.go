@@ -25,6 +25,7 @@ import (
 	"strings"
 	"testing"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
@@ -626,7 +627,7 @@ func TestFetchListeners(t *testing.T) {
 			// First request, VersionId should be empty.
 			req := v2.DiscoveryRequest{
 				Node: &core.Node{
-					Id: *node,
+					Id: *flags.Node,
 				},
 				TypeUrl: cache.ListenerType,
 			}
@@ -687,8 +688,9 @@ func TestFetchClusters(t *testing.T) {
 	    	        }
 	    	    ],
 	    	    "name": "%s",
-	    	    "connectTimeout": "%ds"
-	        }`, *clusterAddress, *clusterPort, testEndpointName, *clusterConnectTimeout/1e9),
+	    	    "connectTimeout": "%ds",
+                "http2ProtocolOptions": {}
+	        }`, *flags.ClusterAddress, *flags.ClusterPort, testEndpointName, *flags.ClusterConnectTimeout/1e9),
 		},
 	}
 
@@ -701,7 +703,7 @@ func TestFetchClusters(t *testing.T) {
 			// First request, VersionId should be empty.
 			req := v2.DiscoveryRequest{
 				Node: &core.Node{
-					Id: *node,
+					Id: *flags.Node,
 				},
 				TypeUrl: cache.ClusterType,
 			}

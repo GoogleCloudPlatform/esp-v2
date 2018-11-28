@@ -1,6 +1,10 @@
-hash: bbc8b6afbb1bf74401cd28f3564af59a4675766ec403332bd49d928af3015b60
-updated: 2018-11-05T09:35:25.776458496-08:00
+hash: 3b65398a8a0ad1ac84162ada1a5766d46f982838b6c6cd3798a515ed4fdc9a3a
+updated: 2018-11-28T01:49:34.781117965Z
 imports:
+- name: cloud.google.com/go
+  version: 2a912322007f3a7f0b4e7e96ba0dfd8c4f347d33
+  subpackages:
+  - compute/metadata
 - name: github.com/envoyproxy/data-plane-api
   version: 4406edd4e29f5b7e254bdee75ef6354fdf756eb3
 - name: github.com/envoyproxy/go-control-plane
@@ -14,6 +18,7 @@ imports:
   - envoy/api/v2/listener
   - envoy/api/v2/route
   - envoy/config/filter/accesslog/v2
+  - envoy/config/filter/http/jwt_authn/v2alpha
   - envoy/config/filter/http/transcoder/v2
   - envoy/config/filter/network/http_connection_manager/v2
   - envoy/service/discovery/v2
@@ -56,6 +61,8 @@ imports:
   version: c830210a61dfaa790e1920f8d0470fc27bc2efbe
   subpackages:
   - googleapis/api/servicemanagement/v1
+- name: github.com/gorilla/mux
+  version: 3d80bc801bb034e17cae38591335b3b1110f1c47
 - name: github.com/lyft/protoc-gen-validate
   version: f9d2b11e44149635b23a002693b76512b01ae515
   subpackages:
@@ -66,6 +73,20 @@ imports:
   version: 5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec
   subpackages:
   - context
+  - context/ctxhttp
+  - http2
+  - http2/hpack
+  - idna
+  - internal/timeseries
+  - lex/httplex
+  - trace
+- name: golang.org/x/oauth2
+  version: 8f65e3013ebad444f13bc19536f7865efc793816
+  subpackages:
+  - google
+  - internal
+  - jws
+  - jwt
 - name: golang.org/x/sys
   version: acbc56fc7007d2a01796d5bde54f39e3b3e95945
   subpackages:
@@ -73,7 +94,23 @@ imports:
 - name: golang.org/x/text
   version: e19ae1496984b1c655b8044a65c0300a3c878dd3
   subpackages:
+  - secure/bidirule
+  - transform
   - unicode
+  - unicode/bidi
+  - unicode/norm
+- name: google.golang.org/appengine
+  version: 4a4468ece617fc8205e99368fa2200e9d1fad421
+  subpackages:
+  - internal
+  - internal/app_identity
+  - internal/base
+  - internal/datastore
+  - internal/log
+  - internal/modules
+  - internal/remote_api
+  - internal/urlfetch
+  - urlfetch
 - name: google.golang.org/genproto
   version: a8101f21cf983e773d0c1133ebc5424792003214
   subpackages:
@@ -88,6 +125,7 @@ imports:
   - googleapis/longrunning
   - googleapis/rpc/status
   - opencensus
+  - protobuf
   - protobuf/api
   - protobuf/field_mask
   - protobuf/ptype
