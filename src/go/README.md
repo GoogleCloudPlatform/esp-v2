@@ -28,7 +28,7 @@ go-control-plane need to be satisfied.
 To start the Config Manager, run:
 
 ```shell
-go run server/server.go --logtostderr -v 2 --service_name [YOUR_PROJECT_NAME]  \
+go run server/server.go --logtostderr -v 2 --service_name [YOUR_SERVICE_NAME]  \
 --config_id [YOUR_CONFIG_ID]
 ```
 
