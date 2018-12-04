@@ -746,9 +746,12 @@ func runTest(t *testing.T, f func(*testEnv)) {
 	fetchConfigURL = func(serviceName, configID string) string {
 		return mockConfig.URL
 	}
-	mockMetadata := initMockMetadataServer()
+	mockMetadata := initMockMetadataServer(fakeToken)
 	defer mockMetadata.Close()
-	serviceAccountTokenURL = mockMetadata.URL
+	fetchMetadataURL = func(_ string) string {
+		return mockMetadata.URL
+	}
+
 	mockJwksIssuer := initMockJwksIssuer(t)
 	defer mockJwksIssuer.Close()
 

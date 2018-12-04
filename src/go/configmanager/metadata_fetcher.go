@@ -22,8 +22,15 @@ import (
 )
 
 var (
-	serviceAccountTokenURL = "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"
-	timeNow                = time.Now
+	metadataUrlPrefix         = "http://metadata.google.internal/computeMetadata/v1/instance/"
+	serviceAccountTokenSurfix = "service-accounts/default/token"
+	serviceNameSurfix         = "attributes/endpoints-service-name"
+	configIdSurfix            = "attributes/endpoints-service-version"
+	timeNow                   = time.Now
+
+	fetchMetadataURL = func(surfix string) string {
+		return metadataUrlPrefix + surfix
+	}
 )
 
 // metadata updates and stores Metadata from GCE.
@@ -62,7 +69,7 @@ func fetchAccessToken() (string, time.Duration, error) {
 		return metadata.accessToken, metadata.tokenTimeout.Sub(now), nil
 	}
 
-	tokenBody, err := getMetadata(serviceAccountTokenURL)
+	tokenBody, err := getMetadata(fetchMetadataURL(serviceAccountTokenSurfix))
 	if err != nil {
 		return "", 0, err
 	}
@@ -76,4 +83,20 @@ func fetchAccessToken() (string, time.Duration, error) {
 	metadata.accessToken = resp.AccessToken
 	metadata.tokenTimeout = now.Add(expires)
 	return metadata.accessToken, expires, nil
+}
+
+func fetchServiceName() (string, error) {
+	body, err := getMetadata(fetchMetadataURL(serviceNameSurfix))
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
+}
+
+func fetchConfigId() (string, error) {
+	body, err := getMetadata(fetchMetadataURL(configIdSurfix))
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
 }

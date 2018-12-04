@@ -23,13 +23,17 @@ import (
 )
 
 const (
-	fakeToken = `{"access_token": "ya29.new", "expires_in":3599, "token_type":"Bearer"}`
+	fakeToken       = `{"access_token": "ya29.new", "expires_in":3599, "token_type":"Bearer"}`
+	fakeServiceName = "echo-service"
+	fakeConfigId    = "canary-config"
 )
 
 func TestFetchAccountTokenExpired(t *testing.T) {
-	ts := initMockMetadataServer()
+	ts := initMockMetadataServer(fakeToken)
 	defer ts.Close()
-	serviceAccountTokenURL = ts.URL
+	fetchMetadataURL = func(_ string) string {
+		return ts.URL
+	}
 	// Get a time stamp and use it through out the test.
 	fakeNow := time.Now()
 	// Make sure the accessToken is empty before the test.
@@ -89,9 +93,41 @@ func TestFetchAccountTokenExpired(t *testing.T) {
 	}
 }
 
-func initMockMetadataServer() *httptest.Server {
+func TestFetchServiceName(t *testing.T) {
+	ts := initMockMetadataServer(fakeServiceName)
+	defer ts.Close()
+
+	fetchMetadataURL = func(_ string) string {
+		return ts.URL
+	}
+	name, err := fetchServiceName()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.EqualFold(name, fakeServiceName) {
+		t.Errorf("fetchServiceName = %s, want %s", name, fakeServiceName)
+	}
+}
+
+func TestFetchConfigId(t *testing.T) {
+	ts := initMockMetadataServer(fakeConfigId)
+	defer ts.Close()
+
+	fetchMetadataURL = func(_ string) string {
+		return ts.URL
+	}
+	name, err := fetchConfigId()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.EqualFold(name, fakeConfigId) {
+		t.Errorf("fetchServiceName = %s, want %s", name, fakeConfigId)
+	}
+}
+
+func initMockMetadataServer(resp string) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(fakeToken))
+		w.Write([]byte(resp))
 	}))
 }

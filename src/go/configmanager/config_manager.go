@@ -75,6 +75,21 @@ type ConfigManager struct {
 
 // NewConfigManager creates new instance of ConfigManager.
 func NewConfigManager(name, configID string) (*ConfigManager, error) {
+	var err error
+	if name == "" {
+		name, err = fetchServiceName()
+		if name == "" || err != nil {
+			return nil, fmt.Errorf("failed to read metadata with key endpoints-service-name from metadata server")
+		}
+	}
+
+	if configID == "" {
+		configID, err = fetchConfigId()
+		if configID == "" || err != nil {
+			return nil, fmt.Errorf("failed to read metadata with key endpoints-service-version from metadata server")
+		}
+	}
+
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
