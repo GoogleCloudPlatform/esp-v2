@@ -26,7 +26,7 @@ config_version: 3
 #
 # Name of the service configuration.
 #
-name: bookstore.endpoints.cloudesf-testing.cloud.goog
+name: bookstore.endpoints.YOUR-PROJECT-ID.cloud.goog
 
 #
 # API title to appear in the user interface (Google Cloud Console).

@@ -11,7 +11,7 @@ import (
 
 	"golang.org/x/oauth2/google"
 
-	bspb "cloudesf.googlesource.com/gcpproxy/tests/e2e/bookstore/proto"
+	bspb "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/proto"
 	"github.com/gogo/protobuf/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
