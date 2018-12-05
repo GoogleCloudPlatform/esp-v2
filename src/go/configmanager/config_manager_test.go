@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -48,21 +49,20 @@ var (
 func TestFetchListeners(t *testing.T) {
 	testData := []struct {
 		desc              string
+		backendProtocol   string
 		fakeServiceConfig string
 		wantedListeners   string
 	}{
 		{
-			desc: "Success for gRPC backend with transcoding",
+			desc:            "Success for gRPC backend with transcoding",
+			backendProtocol: "gRPC",
 			fakeServiceConfig: fmt.Sprintf(`{
 				"name":"%s",
 				"apis":[
 					{
 						"name":"%s",
 						"version":"v1",
-						"syntax":"SYNTAX_PROTO3",
-						"sourceContext": {
-							"fileName": "bookstore.proto"
-						}
+						"syntax":"SYNTAX_PROTO3"
 					}
 				],
 				"sourceInfo":{
@@ -136,14 +136,12 @@ func TestFetchListeners(t *testing.T) {
 				fakeProtoDescriptor, testEndpointName, testEndpointName),
 		},
 		{
-			desc: "Success for gRPC backend, with Jwt filter, with audiences",
+			desc:            "Success for gRPC backend, with Jwt filter, with audiences",
+			backendProtocol: "grpc",
 			fakeServiceConfig: fmt.Sprintf(`{
 				"apis":[
 					{
-						"name":"%s",
-						"sourceContext": {
-							"fileName": "bookstore.proto"
-						}
+						"name":"%s"
 					}
 				],
 				"authentication": {
@@ -152,8 +150,13 @@ func TestFetchListeners(t *testing.T) {
 							"id": "firebase",
 							"issuer": "https://test_issuer.google.com/",
 							"jwks_uri": "$JWKSURI",
-							"audiences": "test_audience1,test_audience2"
-						}
+							"audiences": "test_audience1, test_audience2 "
+						},
+                        {
+                            "id": "unknownId",
+                            "issuer": "https://test_issuer.google.com/",
+                            "jwks_uri": "invalidUrl"
+                        }
 					],
 					"rules": [
                         {
@@ -238,14 +241,12 @@ func TestFetchListeners(t *testing.T) {
             }`, fakeJwks, testEndpointName),
 		},
 		{
-			desc: "Success for gRPC backend, with Jwt filter, without audiences",
+			desc:            "Success for gRPC backend, with Jwt filter, without audiences",
+			backendProtocol: "gRPC",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "apis":[
                     {
-                        "name":"%s",
-                        "sourceContext": {
-							"fileName": "bookstore.proto"
-						}
+                        "name":"%s"
                     }
                 ],
                 "authentication": {
@@ -347,7 +348,8 @@ func TestFetchListeners(t *testing.T) {
             }`, fakeJwks, testEndpointName),
 		},
 		{
-			desc: "Success for gRPC backend, with Jwt filter, with multi requirements",
+			desc:            "Success for gRPC backend, with Jwt filter, with multi requirements",
+			backendProtocol: "gRPC",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "apis":[
                     {
@@ -463,7 +465,8 @@ func TestFetchListeners(t *testing.T) {
             }`, fakeJwks, fakeJwks, testEndpointName),
 		},
 		{
-			desc: "Success for gRPC backend with Service Control",
+			desc:            "Success for gRPC backend with Service Control",
+			backendProtocol: "gRPC",
 			fakeServiceConfig: fmt.Sprintf(`{
 				"name":"%s",
 				"control" : {
@@ -622,6 +625,8 @@ func TestFetchListeners(t *testing.T) {
 	for i, tc := range testData {
 		// Overrides fakeConfig for the test case.
 		fakeConfig = tc.fakeServiceConfig
+		flag.Set("backend_protocol", tc.backendProtocol)
+
 		runTest(t, func(env *testEnv) {
 			ctx := context.Background()
 			// First request, VersionId should be empty.

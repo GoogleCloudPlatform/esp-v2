@@ -50,14 +50,14 @@ const (
 	statPrefix        = "ingress_http"
 	routeName         = "local_route"
 	virtualHostName   = "backend"
-	fetchConfigSufix  = "/v1/services/$serviceName/configs/$configId?view=FULL"
+	fetchConfigSuffix = "/v1/services/$serviceName/configs/$configId?view=FULL"
 	tokenUri          = "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
 	serviceControlUri = "https://servicecontrol.googleapis.com/v1/services/"
 )
 
 var (
 	fetchConfigURL = func(serviceName, configID string) string {
-		path := *flags.ServiceManagementURL + fetchConfigSufix
+		path := *flags.ServiceManagementURL + fetchConfigSuffix
 		path = strings.Replace(path, "$serviceName", serviceName, 1)
 		path = strings.Replace(path, "$configId", configID, 1)
 		return path
@@ -132,9 +132,20 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *conf.Service) (*cache.Snapsh
 		return nil, fmt.Errorf("not support multi apis yet")
 	}
 	endpointApi := serviceConfig.Apis[0]
+	var backendProtocol ut.BackendProtocol
+	switch strings.ToLower(*flags.BackendProtocol) {
+	case "http1":
+		backendProtocol = ut.HTTP1
+	case "http2":
+		backendProtocol = ut.HTTP2
+	case "grpc":
+		backendProtocol = ut.GRPC
+	default:
+		return nil, fmt.Errorf("unknown backend protocol")
+	}
 
 	var endpoints, routes []cache.Resource
-	serverlistener, httpManager, err := m.makeListener(serviceConfig, endpointApi)
+	serverlistener, httpManager, err := m.makeListener(serviceConfig, endpointApi, backendProtocol)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +176,7 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *conf.Service) (*cache.Snapsh
 		},
 	}
 	// gRPC and HTTP/2 need this configuration.
-	if !*flags.IsHttp1Backend {
+	if backendProtocol != ut.HTTP1 {
 		cluster.Http2ProtocolOptions = &core.Http2ProtocolOptions{}
 	}
 
@@ -173,30 +184,23 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *conf.Service) (*cache.Snapsh
 	return &snapshot, nil
 }
 
-func (m *ConfigManager) makeListener(serviceConfig *conf.Service, endpointApi *api.Api) (*v2.Listener, *hcm.HttpConnectionManager, error) {
-	fileName := strings.ToLower(endpointApi.GetSourceContext().GetFileName())
-	var backendProtocol ut.BackendProtocol
-	switch {
-	case strings.HasSuffix(fileName, ".proto"):
-		backendProtocol = ut.GRPC
-	case strings.HasSuffix(fileName, ".yaml"):
-		backendProtocol = ut.HTTP
-	default:
-		return nil, nil, fmt.Errorf("unknown backend protocol")
-	}
-
+func (m *ConfigManager) makeListener(serviceConfig *conf.Service, endpointApi *api.Api, backendProtocol ut.BackendProtocol) (*v2.Listener, *hcm.HttpConnectionManager, error) {
 	httpFilters := []*hcm.HttpFilter{}
 
 	// Add JWT Authn filter if needed.
-	jwtAuthnFilter := m.makeJwtAuthnFilter(serviceConfig, endpointApi)
-	if jwtAuthnFilter != nil {
-		httpFilters = append(httpFilters, jwtAuthnFilter)
+	if !*flags.SkipJwtAuthnFilter {
+		jwtAuthnFilter := m.makeJwtAuthnFilter(serviceConfig, endpointApi)
+		if jwtAuthnFilter != nil {
+			httpFilters = append(httpFilters, jwtAuthnFilter)
+		}
 	}
 
 	// Add service control filter if needed
-	serviceControlFilter := m.makeServiceControlFilter(serviceConfig)
-	if serviceControlFilter != nil {
-		httpFilters = append(httpFilters, serviceControlFilter)
+	if !*flags.SkipServiceControlFilter {
+		serviceControlFilter := m.makeServiceControlFilter(serviceConfig)
+		if serviceControlFilter != nil {
+			httpFilters = append(httpFilters, serviceControlFilter)
+		}
 	}
 
 	// Add gRPC transcode filter config for gRPC backend.
@@ -304,7 +308,9 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *conf.Service, endpoint
 			},
 		}
 		if len(provider.GetAudiences()) != 0 {
-			jp.Audiences = strings.Split(provider.GetAudiences(), ",")
+			for _, a := range strings.Split(provider.GetAudiences(), ",") {
+				jp.Audiences = append(jp.Audiences, strings.TrimSpace(a))
+			}
 		}
 		providers[provider.GetId()] = jp
 	}
@@ -333,11 +339,15 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *conf.Service, endpoint
 					},
 				}
 			} else {
+				var audiences []string
+				for _, a := range strings.Split(r.GetAudiences(), ",") {
+					audiences = append(audiences, strings.TrimSpace(a))
+				}
 				require = &ac.JwtRequirement{
 					RequiresType: &ac.JwtRequirement_ProviderAndAudiences{
 						ProviderAndAudiences: &ac.ProviderWithAudiences{
 							ProviderName: r.GetProviderId(),
-							Audiences:    strings.Split(r.GetAudiences(), ","),
+							Audiences:    audiences,
 						},
 					},
 				}

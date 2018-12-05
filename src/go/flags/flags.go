@@ -22,20 +22,26 @@ import (
 )
 
 var (
-	// Service Management related configurations.
-	ServiceName = flag.String("service_name", "", "endpoint service name")
-	ConfigID    = flag.String("config_id", "", "initial service config id")
+	// Service Management related configurations. Must be set.
+	ServiceName     = flag.String("service_name", "", "endpoint service name")
+	ConfigID        = flag.String("config_id", "", "initial service config id")
+	BackendProtocol = flag.String("backend_protocol", "", `must set as one of "grpc", "http1", "http2"`)
 
 	// Envoy specific configurations.
 	ClusterConnectTimeout = flag.Duration("cluster_connect_imeout", 20*time.Second, "cluster connect timeout in seconds")
-	IsHttp1Backend        = flag.Bool("is_http1", false, "must set to true if the backend is HTTP/1 Server")
 
 	// Network related configurations.
 	Node                 = flag.String("node", "api_proxy", "envoy node id")
 	ListenerAddress      = flag.String("listener_address", "0.0.0.0", "listener socket ip address")
 	ClusterAddress       = flag.String("cluster_address", "127.0.0.1", "cluster socket ip address")
 	ServiceManagementURL = flag.String("service_management_url", "https://servicemanagement.googleapis.com", "url of service management server")
-	DiscoveryPort        = flag.Int("discovery_port", 8790, "discovery service port")
-	ListenerPort         = flag.Int("listener_port", 8080, "listener port")
-	ClusterPort          = flag.Int("cluster_port", 8082, "cluster port")
+	MetadataUrl          = flag.String("metadata_url", "http://metadata.google.internal/computeMetadata/v1/instance/", "url of metadata server")
+
+	DiscoveryPort = flag.Int("discovery_port", 8790, "discovery service port")
+	ListenerPort  = flag.Int("listener_port", 8080, "listener port")
+	ClusterPort   = flag.Int("cluster_port", 8082, "cluster port")
+
+	// Flags for testing purpose.
+	SkipServiceControlFilter = flag.Bool("skip_service_control_filter", false, "skip service control filter, for test purpose")
+	SkipJwtAuthnFilter       = flag.Bool("skip_jwt_authn_filter", false, "skip jwt authn filter, for test purpose")
 )

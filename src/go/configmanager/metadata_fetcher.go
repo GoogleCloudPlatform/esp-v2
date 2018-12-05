@@ -19,17 +19,18 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 )
 
 var (
-	metadataUrlPrefix         = "http://metadata.google.internal/computeMetadata/v1/instance/"
-	serviceAccountTokenSurfix = "service-accounts/default/token"
-	serviceNameSurfix         = "attributes/endpoints-service-name"
-	configIdSurfix            = "attributes/endpoints-service-version"
+	serviceAccountTokenSuffix = "service-accounts/default/token"
+	serviceNameSuffix         = "attributes/endpoints-service-name"
+	configIdSuffix            = "attributes/endpoints-service-version"
 	timeNow                   = time.Now
 
-	fetchMetadataURL = func(surfix string) string {
-		return metadataUrlPrefix + surfix
+	fetchMetadataURL = func(suffix string) string {
+		return *flags.MetadataUrl + suffix
 	}
 )
 
@@ -69,7 +70,7 @@ func fetchAccessToken() (string, time.Duration, error) {
 		return metadata.accessToken, metadata.tokenTimeout.Sub(now), nil
 	}
 
-	tokenBody, err := getMetadata(fetchMetadataURL(serviceAccountTokenSurfix))
+	tokenBody, err := getMetadata(fetchMetadataURL(serviceAccountTokenSuffix))
 	if err != nil {
 		return "", 0, err
 	}
@@ -86,7 +87,7 @@ func fetchAccessToken() (string, time.Duration, error) {
 }
 
 func fetchServiceName() (string, error) {
-	body, err := getMetadata(fetchMetadataURL(serviceNameSurfix))
+	body, err := getMetadata(fetchMetadataURL(serviceNameSuffix))
 	if err != nil {
 		return "", err
 	}
@@ -94,7 +95,7 @@ func fetchServiceName() (string, error) {
 }
 
 func fetchConfigId() (string, error) {
-	body, err := getMetadata(fetchMetadataURL(configIdSurfix))
+	body, err := getMetadata(fetchMetadataURL(configIdSuffix))
 	if err != nil {
 		return "", err
 	}
