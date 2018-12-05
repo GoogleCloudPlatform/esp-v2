@@ -21,7 +21,9 @@ import (
 
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	"github.com/gogo/protobuf/proto"
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/jsonpb"
 	"google.golang.org/grpc"
 )
 
@@ -52,7 +54,21 @@ func main() {
 		glog.Exitf("discovery: %v", err)
 	}
 
-	fmt.Println(resp)
+	fmt.Println("Version Info: ", resp.GetVersionInfo())
+	fmt.Println("Type Url: ", resp.GetTypeUrl())
+
+	for _, r := range resp.GetResources() {
+		listener := &v2.Listener{}
+		if err := proto.Unmarshal(r.GetValue(), listener); err != nil {
+			glog.Exitf("Unmarshal got error: %v", err)
+		}
+		marshaler := &jsonpb.Marshaler{}
+		var jsonStr string
+		if jsonStr, err = marshaler.MarshalToString(listener); err != nil {
+			glog.Exitf("fail to unmarshal listener: %v", err)
+		}
+		fmt.Println(jsonStr)
+	}
 	// All fine.
 	return
 }
