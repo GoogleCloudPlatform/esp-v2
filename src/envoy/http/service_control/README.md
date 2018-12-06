@@ -33,9 +33,9 @@ $ KEY=YOUR-API-KEY
 $ curl http://127.0.0.1:9090/test?key=$KEY -v
 
 # GET request with API key in the headers
-$ curl http://127.0.0.1:9090/test --header "x-goog-apikey:$KEY" -v
+$ curl http://127.0.0.1:9090/test --header "x-api-key:$KEY" -v
 
-# GET request that does not match any pattern, this should return path not 
+# GET request that does not match any pattern, this should return path not
 # matched error
 $ curl http://127.0.0.1:9090/tea?key=$KEY -v
 
@@ -43,9 +43,9 @@ $ curl http://127.0.0.1:9090/tea?key=$KEY -v
 $ curl -X POST http://127.0.0.1:9090/test?key=$KEY -v
 
 # POST request with API key in the headers
-$ curl -X POST http://127.0.0.1:9090/test --header "x-goog-apikey:$KEY" -v
+$ curl -X POST http://127.0.0.1:9090/test --header "x-api-key:$KEY" -v
 
-# POST request that does not match any pattern, this should return path not 
+# POST request that does not match any pattern, this should return path not
 # matched error
 $ curl -X POST http://127.0.0.1:9090/tea?key=$KEY -v
 ```

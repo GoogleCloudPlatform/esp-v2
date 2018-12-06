@@ -77,7 +77,7 @@ static_resources:
                             api_key:
                               api_keys:
                                 - query: "key"
-                                - header: "x-goog-apikey"
+                                - header: "x-api-key"
                                 - cookie: "X-API-KEY"
                               allow_without_api_key: true
                             api_name: "Bookstore"
@@ -91,7 +91,7 @@ static_resources:
                             api_key:
                               api_keys:
                                 - query: "key"
-                                - header: "x-goog-apikey"
+                                - header: "x-api-key"
                                 - cookie: "X-API-KEY"
                               allow_without_api_key: true
                             api_name: "Bookstore"
