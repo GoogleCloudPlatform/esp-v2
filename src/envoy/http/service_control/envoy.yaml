@@ -13,13 +13,15 @@ static_resources:
         - socket_address:
             address: 127.0.0.1
             port_value: 8080
-    - name: gcp_metadata_cluster
+    - name: token_cluster
       connect_timeout: 5s
       type: STATIC
       hosts:
         - socket_address:
-            address: 169.254.169.254
-            port_value: 80
+            address: 127.0.0.1
+            port_value: 8790
+      lb_policy: ROUND_ROBIN
+      http2_protocol_options: {}
     - name: service_control_cluster
       connect_timeout: 5s
       type: LOGICAL_DNS
@@ -57,11 +59,7 @@ static_resources:
                           seconds: 5
                       services:
                         service_name: REPLACE_SERVICE_NAME
-                        token_uri:
-                          cluster: gcp_metadata_cluster
-                          uri: http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token
-                          timeout:
-                            seconds: 5
+                        token_cluster: token_cluster
                         service_control_uri:
                           cluster: service_control_cluster
                           uri: https://servicecontrol.googleapis.com/v1/services/

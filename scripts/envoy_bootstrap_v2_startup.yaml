@@ -23,13 +23,6 @@ static_resources:
         port_value: 8790
     lb_policy: ROUND_ROBIN
     http2_protocol_options: {}
-  - name: gcp_metadata_cluster
-    connect_timeout: 5s
-    type: STATIC
-    hosts:
-      - socket_address:
-          address: 169.254.169.254
-          port_value: 80
   - name: service_control_cluster
     connect_timeout: 5s
     type: LOGICAL_DNS

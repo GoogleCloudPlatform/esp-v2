@@ -1,6 +1,6 @@
 #pragma once
 
-#include "api/envoy/http/service_control/config.pb.h"
+#include "envoy/common/time.h"
 #include "envoy/upstream/cluster_manager.h"
 #include "google/protobuf/stubs/status.h"
 #include "src/envoy/http/service_control/cancel_func.h"
@@ -14,16 +14,14 @@ class TokenFetcher {
  public:
   struct Result {
     std::string token;
-    int expires_in;
+    int64_t expires_in;
   };
 
   using DoneFunc = std::function<void(
       const ::google::protobuf::util::Status& status, const Result& result)>;
 
-  static CancelFunc fetch(
-      Upstream::ClusterManager& cm,
-      const ::google::api_proxy::envoy::http::service_control::HttpUri& uri,
-      DoneFunc on_done);
+  static CancelFunc fetch(Upstream::ClusterManager& cm, TimeSource& time_source,
+                          const std::string& token_cluster, DoneFunc on_done);
 };
 
 }  // namespace ServiceControl

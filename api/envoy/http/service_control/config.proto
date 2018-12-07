@@ -57,6 +57,9 @@ message Service {
 
   // The Http uri to call service control
   HttpUri service_control_uri = 5;
+
+  // Envoy Grpc cluster of access token
+  string token_cluster = 6;
 }
 
 message FilterConfig {

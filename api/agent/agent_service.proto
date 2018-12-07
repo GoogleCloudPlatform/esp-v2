@@ -17,6 +17,8 @@ syntax = "proto3";
 
 package google.api_proxy.agent;
 
+option cc_generic_services = true;
+
 import "google/protobuf/duration.proto";
 
 // API Proxy Agent Service

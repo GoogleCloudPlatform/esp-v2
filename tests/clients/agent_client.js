@@ -1,7 +1,7 @@
 var grpc = require('grpc');
 var protoLoader = require('@grpc/proto-loader');
 
-var PROTO_PATH = __dirname + '/../../../api/agent/agent_service.proto';
+var PROTO_PATH = __dirname + '/../../api/agent/agent_service.proto';
 var packageDefinition = protoLoader.loadSync(
   PROTO_PATH, {
     keepCase: true,

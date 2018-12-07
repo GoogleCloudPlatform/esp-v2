@@ -10,24 +10,20 @@ namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 
-// Number of seconds to refetch the token before expires
-const int kRefetchBeforeExpire = 3;
-
 class TokenCache {
  public:
   using DoneFunc =
       std::function<void(const ::google::protobuf::util::Status& status,
                          const std::string& token)>;
 
-  TokenCache(
-      Upstream::ClusterManager& cm, TimeSource& time_source,
-      const ::google::api_proxy::envoy::http::service_control::HttpUri& uri)
-      : cm_(cm), time_source_(time_source), uri_(uri) {}
+  TokenCache(Upstream::ClusterManager& cm, TimeSource& time_source,
+             const std::string& token_cluster)
+      : cm_(cm), time_source_(time_source), token_cluster_(token_cluster) {}
 
   CancelFunc getToken(DoneFunc on_done) {
     if (time_source_.monotonicTime() >= expiration_time_) {
       return TokenFetcher::fetch(
-          cm_, uri_,
+          cm_, time_source_, token_cluster_,
           [this, on_done](const ::google::protobuf::util::Status& status,
                           const TokenFetcher::Result& result) {
             if (!status.ok()) {
@@ -35,9 +31,8 @@ class TokenCache {
               return;
             }
             token_ = result.token;
-            expiration_time_ =
-                time_source_.monotonicTime() +
-                std::chrono::seconds(result.expires_in - kRefetchBeforeExpire);
+            expiration_time_ = time_source_.monotonicTime() +
+                               std::chrono::seconds(result.expires_in);
             on_done(::google::protobuf::util::Status::OK, token_);
           });
     }
@@ -48,7 +43,7 @@ class TokenCache {
  private:
   Upstream::ClusterManager& cm_;
   TimeSource& time_source_;
-  const ::google::api_proxy::envoy::http::service_control::HttpUri& uri_;
+  const std::string& token_cluster_;
   std::string token_;
   std::chrono::steady_clock::time_point expiration_time_;
 };

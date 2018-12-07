@@ -28,6 +28,7 @@ envoy_cc_library(
     ],
     repository = "@envoy",
     deps = [
+        "//api/agent:agent_proto_cc",
         "//api/envoy/http/service_control:config_proto_cc",
         "//src/api_proxy/service_control:request_builder_lib",
         "@envoy//source/exe:envoy_common_lib",
