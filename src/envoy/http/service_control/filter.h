@@ -61,7 +61,7 @@ class Filter : public Http::StreamDecoderFilter,
                    const std::string& token);
   void onCheckResponse(const ::google::protobuf::util::Status& status,
                        const std::string& response_json);
-  void rejectRequest(Http::Code code, const std::string& error_msg);
+  void rejectRequest(Http::Code code, absl::string_view error_msg);
 
   // The callback funcion.
   Http::StreamDecoderFilterCallbacks* decoder_callbacks_;

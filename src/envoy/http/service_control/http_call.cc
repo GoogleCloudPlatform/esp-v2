@@ -94,12 +94,12 @@ class HttpCallImpl : public HttpCall,
 
     Http::MessagePtr message = prepareHeaders(suffix_url, token, body);
     ENVOY_LOG(debug, "http call from [uri = {}]: start", uri_);
-    request_ =
-        cm_.httpAsyncClientForCluster(http_uri_.cluster())
-            .send(
-                std::move(message), *this,
-                std::chrono::milliseconds(
-                    DurationUtil::durationToMilliseconds(http_uri_.timeout())));
+    request_ = cm_.httpAsyncClientForCluster(http_uri_.cluster())
+                   .send(std::move(message), *this,
+                         Http::AsyncClient::RequestOptions().setTimeout(
+                             std::chrono::milliseconds(
+                                 DurationUtil::durationToMilliseconds(
+                                     http_uri_.timeout()))));
   }
 
   // HTTP async receive methods

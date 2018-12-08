@@ -169,12 +169,12 @@ void Filter::onTokenDone(const Status &status, const string &token)
   check_call_->call(suffix_uri, token_, check_request, on_done);
 }
 
-void Filter::rejectRequest(Http::Code code, const string &error_msg)
+void Filter::rejectRequest(Http::Code code, absl::string_view error_msg)
 {
   config_->stats().denied_.inc();
   state_ = Responded;
 
-  decoder_callbacks_->sendLocalReply(code, error_msg, nullptr);
+  decoder_callbacks_->sendLocalReply(code, error_msg, nullptr, absl::nullopt);
   decoder_callbacks_->streamInfo().setResponseFlag(
       StreamInfo::ResponseFlag::UnauthorizedExternalService);
 }

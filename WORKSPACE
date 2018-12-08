@@ -39,14 +39,12 @@ local_repository(
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-# use the istio forked one with a hack for issue:
-# https://github.com/envoyproxy/envoy/issues/4924
-ENVOY_SHA1 = "a0b180dd3e8f81478d399fe2812e24a478b083f4"
+ENVOY_SHA1 = "01d726a41bdd790c16765e1d321cb50590574eb0"  # 12.06.2018
 
 http_archive(
     name = "envoy",
     strip_prefix = "envoy-" + ENVOY_SHA1,
-    url = "https://github.com/istio/envoy/archive/" + ENVOY_SHA1 + ".zip",
+    url = "https://github.com/envoyproxy/envoy/archive/" + ENVOY_SHA1 + ".zip",
 )
 
 # ==============================================================================
