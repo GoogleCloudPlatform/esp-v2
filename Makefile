@@ -32,11 +32,18 @@ GODIRS		= $(shell go list -f '{{.Dir}}' ./... \
 # Target: go build
 # ----------------------------------------------------------------------------
 
+$(BINDIR):
+	@mkdir -p $(BINDIR)
+
 .PHONY: build
 build: format
 	@echo "--> building"
-	@go build ./src/go/...
-	@go build ./tests/...
+	@go build ./src/go/configmanager...
+	@go build ./tests...
+	@go build -o bin/configmanager ./src/go/server/server.go
+	@go build -o bin/echo/server ./tests/endpoints/echo/app.go
+	@bazel build //src/envoy:envoy
+
 
 #-----------------------------------------------------------------------------
 # Target: go test
@@ -45,11 +52,21 @@ build: format
 .PHONY: test test-debug
 test: format
 	@echo "--> running unit tests"
-	@go test -v ./src/go/...
+	@go test ./src/go/...
 
 test-debug: format
 	@echo "--> running unit tests"
 	@go test -v ./src/go/... --logtostderr
+
+.PHONY: integration-test integration-debug
+integration-test: build
+	@echo "--> running integration tests"
+	@go test ./tests/integration/...
+
+integration-debug:
+	@echo "--> running integration tests and showing debug logs"
+	# debug-components can be set as "all", "configmanager", or "envoy".
+	@go test -v ./tests/integration/... --debug-components=all
 
 #-----------------------------------------------------------------------------
 # Target: go dependencies
@@ -73,7 +90,7 @@ depend.apiproto:
 	@mkdir -p src/go/proto/api/agent
 	@cp -f bazel-bin/api/agent/*/agent_service_go_grpc%/cloudesf.googlesource.com/gcpproxy/src/go/proto/api/agent/* src/go/proto/api/agent
 
-  # HTTP filter common
+	# HTTP filter common
 	@bazel build //api/envoy/http/common:pattern_proto_go_proto
 	@mkdir -p src/go/proto/api/envoy/http/common
 	@cp -f bazel-bin/api/envoy/http/common/*/pattern_proto_go_proto%/cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common/* src/go/proto/api/envoy/http/common

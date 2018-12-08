@@ -192,17 +192,28 @@ func TestFetchListeners(t *testing.T) {
                                         },
                                         "rules": [
                                             {
+						"match":{
+						    "regex":""
+						},
+						"requires": {
+						    "provider_and_audiences": {
+							"audiences":["test_audience1"],
+							"provider_name":"firebase"
+						    }
+					        }
+					   },
+					   {
                                                 "match":{
-                                                    "prefix":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                                    "path":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
                                                 },
                                                 "requires": {
                                                     "provider_and_audiences": {
-                                                	    "audiences": ["test_audience1"],
+                                                	"audiences": ["test_audience1"],
                                                         "provider_name":"firebase"
                                                     }
                                                 }
                                             }
-                                        ]
+					]
                                     },
                                     "name":"envoy.filters.http.jwt_authn"
                                 },
@@ -294,21 +305,38 @@ func TestFetchListeners(t *testing.T) {
                                         },
                                         "rules": [
                                             {
+						"match":{
+						    "regex":""
+						},
+						"requires": {
+						    "provider_name":"firebase"
+                                                }
+					    },
+					    {
                                                 "match":{
-                                                    "prefix":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                                    "path":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
                                                 },
                                                 "requires": {
                                                     "provider_name":"firebase"
                                                 }
                                             },
-                                            {
+					    {
+						"match":{
+						    "regex":""
+					        },
+						"requires":{
+						    "provider_name":"firebase"
+						}
+					    },
+					    {
                                                 "match":{
-                                                    "prefix":"/endpoints.examples.bookstore.Bookstore/ListShelf"
+                                                    "path":"/endpoints.examples.bookstore.Bookstore/ListShelf"
                                                 },
                                                 "requires": {
                                                     "provider_name":"firebase"
                                                 }
                                             }
+					   
                                         ]
                                     },
                                     "name":"envoy.filters.http.jwt_authn"
@@ -409,9 +437,26 @@ func TestFetchListeners(t *testing.T) {
                                             }
                                         },
                                         "rules": [
-                                            {
+					    {
+						"match":{
+						    "regex": ""
+					         },
+						 "requires": {
+                                                    "requires_any": {
+                                                    	"requirements": [
+                                                    	    {
+                                                    	    	"provider_name": "firebase1"
+                                                    	    },
+                                                    	    {
+                                                    	    	"provider_name": "firebase2"
+                                                    	    }
+                                                    	]
+                                                    }
+					        } 
+                                            },
+					    {
                                                 "match":{
-                                                    "prefix":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                                    "path":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
                                                 },
                                                 "requires": {
                                                     "requires_any": {

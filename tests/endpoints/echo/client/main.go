@@ -45,21 +45,6 @@ var (
 func main() {
 	flag.Parse()
 
-	if *apiKey == "" || *host == "" {
-		flag.PrintDefaults()
-		os.Exit(1)
-	}
-	if *serviceAccount == "" && *echo == "" {
-		fmt.Fprint(os.Stderr, "Provide one of -echo or -service-account.")
-		flag.PrintDefaults()
-		os.Exit(1)
-	}
-	if *serviceAccount != "" && *echo != "" {
-		fmt.Fprint(os.Stderr, "Provide only one of -echo or -service-account.")
-		flag.PrintDefaults()
-		os.Exit(1)
-	}
-
 	var resp *http.Response
 	var err error
 	if *echo != "" {
