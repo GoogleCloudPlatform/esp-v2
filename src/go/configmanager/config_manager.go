@@ -410,12 +410,8 @@ func (m *ConfigManager) makeServiceControlFilter(serviceConfig *conf.Service) *h
 	}
 
 	service := &scpb.Service{
-		ServiceName: serviceConfig.GetName(),
-		TokenUri: &scpb.HttpUri{
-			Uri:     tokenUri,
-			Cluster: "gcp_metadata_cluster",
-			Timeout: &duration.Duration{Seconds: 5},
-		},
+		ServiceName:  serviceConfig.GetName(),
+		TokenCluster: "ads_cluster",
 		ServiceControlUri: &scpb.HttpUri{
 			Uri:     serviceControlUri,
 			Cluster: "service_control_cluster",

@@ -620,11 +620,7 @@ func TestFetchListeners(t *testing.T) {
 															"uri":"https://servicecontrol.googleapis.com/v1/services/"
 														},
 														"service_name":"%s",
-														"token_uri":{
-															"cluster":"gcp_metadata_cluster",
-															"timeout":"5s",
-															"uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
-														}
+														"token_cluster": "ads_cluster"
 													}
 												]
 											},
