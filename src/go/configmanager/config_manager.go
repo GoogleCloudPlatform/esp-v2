@@ -189,7 +189,7 @@ func (m *ConfigManager) makeListener(serviceConfig *conf.Service, endpointApi *a
 
 	// Add JWT Authn filter if needed.
 	if !*flags.SkipJwtAuthnFilter {
-		jwtAuthnFilter := m.makeJwtAuthnFilter(serviceConfig, endpointApi)
+		jwtAuthnFilter := m.makeJwtAuthnFilter(serviceConfig, endpointApi, backendProtocol)
 		if jwtAuthnFilter != nil {
 			httpFilters = append(httpFilters, jwtAuthnFilter)
 		}
@@ -281,7 +281,7 @@ func (m *ConfigManager) makeTranscoderFilter(serviceConfig *conf.Service, endpoi
 	return nil
 }
 
-func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *conf.Service, endpointApi *api.Api) *hcm.HttpFilter {
+func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *conf.Service, endpointApi *api.Api, backendProtocol ut.BackendProtocol) *hcm.HttpFilter {
 	if serviceConfig == nil {
 		glog.Warning("unexpected empty service config")
 		return nil
@@ -322,7 +322,7 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *conf.Service, endpoint
 	rules := []*ac.RequirementRule{}
 	for _, rule := range auth.GetRules() {
 		if len(rule.GetRequirements()) == 0 {
-			break
+			continue
 		}
 		// By default, if there are multi requirements, treat it as RequireAny.
 		requires := &ac.JwtRequirement{
@@ -358,16 +358,38 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *conf.Service, endpoint
 				requires.GetRequiresAny().Requirements = append(requires.GetRequiresAny().GetRequirements(), require)
 			}
 		}
+		// TODO(jilinxia): makes a unifed function to handle all route matches. 
+		// Including matching path without wildcard, regex with wildcard,
+		// match with header, and query parameters handling.
+		var path string
+		for _, httpRule := range serviceConfig.GetHttp().GetRules() {
+			if rule.GetSelector() == httpRule.GetSelector() {
+				path = httpRule.GetGet()
+			}
+		}
+
 		m := strings.Split(rule.GetSelector(), ".")
 		ruleConfig := &ac.RequirementRule{
 			Match: &route.RouteMatch{
-				PathSpecifier: &route.RouteMatch_Prefix{
-					Prefix: fmt.Sprintf("/%s/%s", endpointApi.Name, m[len(m)-1]),
+				PathSpecifier: &route.RouteMatch_Regex{
+					Regex: path,
 				},
 			},
 			Requires: requires,
 		}
 		rules = append(rules, ruleConfig)
+
+		// For gRPC protocol, needs to add extra match rule for grpc client.
+		if backendProtocol == ut.GRPC {
+			rules = append(rules, &ac.RequirementRule{
+				Match: &route.RouteMatch{
+					PathSpecifier: &route.RouteMatch_Path{
+						Path: fmt.Sprintf("/%s/%s", endpointApi.Name, m[len(m)-1]),
+					},
+				},
+				Requires: requires,
+			})
+		}
 	}
 
 	jwtAuthentication := &ac.JwtAuthentication{

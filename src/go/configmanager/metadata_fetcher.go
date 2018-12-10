@@ -24,9 +24,9 @@ import (
 )
 
 var (
-	serviceAccountTokenSuffix = "service-accounts/default/token"
-	serviceNameSuffix         = "attributes/endpoints-service-name"
-	configIdSuffix            = "attributes/endpoints-service-version"
+	serviceAccountTokenSuffix = "/v1/instance/service-accounts/default/token"
+	serviceNameSuffix         = "/v1/instance/attributes/endpoints-service-name"
+	configIdSuffix            = "/v1/instance/attributes/endpoints-service-version"
 	timeNow                   = time.Now
 
 	fetchMetadataURL = func(suffix string) string {

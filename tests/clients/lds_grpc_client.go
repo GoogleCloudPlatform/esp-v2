@@ -32,6 +32,7 @@ var (
 )
 
 func main() {
+	flag.Parse()
 	var opts []grpc.DialOption
 
 	opts = append(opts, grpc.WithInsecure())
@@ -67,8 +68,9 @@ func main() {
 		if jsonStr, err = marshaler.MarshalToString(listener); err != nil {
 			glog.Exitf("fail to unmarshal listener: %v", err)
 		}
-		fmt.Println(jsonStr)
+		glog.Infof(jsonStr)
 	}
+	glog.Flush()
 	// All fine.
 	return
 }

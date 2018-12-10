@@ -18,7 +18,8 @@ import (
 )
 
 var (
-	addr           = flag.String("addr", "127.0.0.1:8080", "Address of grpc server.")
+	addr           = flag.String("addr", "", "Address of grpc server.")
+	method         = flag.String("method", "", "Method name called.")
 	clientProtocol = flag.String("client_protocol", "http", "client protocol, either Http or gRPC.")
 	token          = flag.String("token", "", "Authentication token.")
 	keyfile        = flag.String("keyfile", "", "Path to a Google service account key file.")
@@ -28,7 +29,7 @@ var (
 var client http.Client
 
 var makeHttpCall = func() ([]byte, error) {
-	req, _ := http.NewRequest("GET", fmt.Sprintf("http://%s/v1/shelves", *addr), nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf("http://%s%s", *addr, *method), nil)
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", *token))
 
 	resp, err := client.Do(req)
@@ -58,12 +59,27 @@ var makeGrpcCall = func() error {
 		ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs("Authorization", fmt.Sprintf("Bearer %s", *token)))
 	}
 
-	req := &types.Empty{}
-	resp, err := client.ListShelves(ctx, req)
-	if err != nil {
-		log.Fatalf("ListShelves got unexpected error: %v", err)
-	} else {
-		log.Printf("grpc got response: %v", resp)
+	switch *method {
+	case "ListShelves":
+		req := &types.Empty{}
+		resp, err := client.ListShelves(ctx, req)
+		if err != nil {
+			log.Fatalf("ListShelves got unexpected error: %v", err)
+		} else {
+			log.Printf("grpc got response: %v", resp)
+		}
+
+	case "GetShelf":
+		req := &bspb.GetShelfRequest{}
+		resp, err := client.GetShelf(ctx, req)
+		if err != nil {
+			log.Fatalf("GetShelf got unexpected error: %v", err)
+		} else {
+			log.Printf("grpc got response: %v", resp)
+		}
+
+	default:
+		log.Fatalf("unexpected method called")
 	}
 	return nil
 }
