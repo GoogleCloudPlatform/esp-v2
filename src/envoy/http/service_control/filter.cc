@@ -46,20 +46,24 @@ void Filter::ExtractAPIKeyFromQuery(const HeaderMap& headers, const string& quer
 
 void Filter::ExtractAPIKeyFromHeader(const HeaderMap& headers, const string& header) {
   auto* entry = headers.get(LowerCaseString(header));
-  if (entry) {
+  if (entry)
+  {
     api_key_ = std::string(entry->value().c_str(), entry->value().size());
+  } else {
+    ENVOY_LOG(debug, "API key not found by header '{}' in headerMap '{}'",
+        header, headers);
   }
-  ENVOY_LOG(debug, "API key not found by header '{}' in headerMap '{}'",
-      header, headers);
 }
 
 void Filter::ExtractAPIKeyFromCookie(const HeaderMap& headers, const string& cookie) {
   std::string api_key = Http::Utility::parseCookieValue(headers, cookie);
-  if (api_key != "") {
+  if (!api_key.empty())
+  {
     api_key_ = api_key;
+  } else {
+    ENVOY_LOG(debug, "API key not found by cookie '{}' in headerMap '{}'",
+        cookie, headers);
   }
-  ENVOY_LOG(debug, "API key not found by cookie '{}' in headerMap '{}'",
-      cookie, headers);
 }
 
 void Filter::ExtractRequestInfo(const HeaderMap& headers, Requirement* requirement)
