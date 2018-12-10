@@ -15,17 +15,17 @@
 package integration
 
 import (
-	"os/exec"
 	"strings"
 	"testing"
 	"time"
 
+	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 )
 
 const (
-	testClient = "../endpoints/bookstore-grpc/client.go"
+	addr = "127.0.0.1:8080"
 )
 
 func TestGrpc(t *testing.T) {
@@ -53,7 +53,7 @@ func TestGrpc(t *testing.T) {
 			desc:           "gRPC client calling gRPC backend",
 			clientProtocol: "grpc",
 			method:         "GetShelf",
-			wantResp:       `theme:"Unknown Book"`,
+			wantResp:       `{"theme":"Unknown Book"}`,
 		},
 		{
 			desc:           "Http client calling gRPC backend",
@@ -64,15 +64,13 @@ func TestGrpc(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		cmd := exec.Command("go", "run", testClient, "--addr=127.0.0.1:8080", "--client_protocol", tc.clientProtocol, "--method", tc.method)
-
-		out, err := cmd.CombinedOutput()
+		resp, err := client.MakeCall(tc.clientProtocol, addr, tc.method, "")
 		if err != nil {
 			t.Errorf("failed to run test: %s", err)
 		}
 
-		if !strings.Contains(string(out), tc.wantResp) {
-			t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, string(out))
+		if !strings.Contains(resp, tc.wantResp) {
+			t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
 		}
 	}
 }
@@ -98,33 +96,59 @@ func TestGrpcJwt(t *testing.T) {
 		method         string
 		token          string
 		wantResp       string
+		wantedError    string
 	}{
 		{
-			desc:           "gPRC client calling gPRC backend, with valid jwt token",
+			desc:           "gPRC client calling gPRC backend, with valid JWT token",
 			clientProtocol: "grpc",
 			method:         "ListShelves",
 			token:          testdata.FakeGoodToken,
-			wantResp:       "shelves:<id:123 theme:\"Shakspeare\" > shelves:<id:124 theme:\"Hamlet\" >",
+			wantResp:       `{"shelves":[{"id":"123","theme":"Shakspeare"},{"id":"124","theme":"Hamlet"}]}`,
 		},
 		{
-			desc:           "Http client calling gPRC backend, with valid jwt token",
+			desc:           "Http client calling gPRC backend, with valid JWT token",
 			clientProtocol: "http",
 			method:         "/v1/shelves",
 			token:          testdata.FakeGoodToken,
 			wantResp:       `{"shelves":[{"id":"123","theme":"Shakspeare"},{"id":"124","theme":"Hamlet"}]}`,
 		},
+		{
+			desc:           "gPRC client calling gPRC backend, without valid JWT token",
+			clientProtocol: "grpc",
+			method:         "ListShelves",
+			wantedError:    "code = Unauthenticated desc = Jwt is missing",
+		},
+		{
+			desc:           "Http client calling gPRC backend, without invalid JWT token",
+			clientProtocol: "http",
+			method:         "/v1/shelves",
+			wantedError:    "401 Unauthorized",
+		},
+		{
+			desc:           "gPRC client calling gPRC backend, with bad JWT token",
+			clientProtocol: "grpc",
+			method:         "ListShelves",
+			token:          testdata.FakeBadToken,
+			wantedError:    "code = Unauthenticated desc = Jwt issuer is not configured",
+		},
+		{
+			desc:           "Http client calling gPRC backend, with bad JWT token",
+			clientProtocol: "http",
+			method:         "/v1/shelves",
+			token:          testdata.FakeBadToken,
+			wantedError:    "401 Unauthorized",
+		},
 	}
 
 	for _, tc := range tests {
-		cmd := exec.Command("go", "run", testClient, "--addr=127.0.0.1:8080", "--client_protocol", tc.clientProtocol, "--method", tc.method, "--token", tc.token)
+		resp, err := client.MakeCall(tc.clientProtocol, addr, tc.method, tc.token)
 
-		out, err := cmd.CombinedOutput()
-		if err != nil {
-			t.Errorf("failed to run test: %s", err)
-		}
-
-		if !strings.Contains(string(out), tc.wantResp) {
-			t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, string(out))
+		if tc.wantedError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantedError)) {
+			t.Errorf("Test (%s): failed, expected err: %s, got: %s", tc.desc, tc.wantedError, err)
+		} else {
+			if !strings.Contains(resp, tc.wantResp) {
+				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
+			}
 		}
 	}
 }

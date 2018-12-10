@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package client
 
 import (
 	"bytes"
@@ -21,98 +21,86 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"errors"
-	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
-	"net/http/httputil"
-	"os"
 	"time"
 
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jws"
 )
 
-var (
-	host   = flag.String("host", "", "The API host. Required.")
-	apiKey = flag.String("api-key", "", "Your API key. Required.")
-
-	echo           = flag.String("echo", "", "Message to echo. Cannot be used with -service-account")
-	serviceAccount = flag.String("service-account", "", "Path to service account JSON file. Cannot be used with -echo.")
-)
-
-func main() {
-	flag.Parse()
-
-	var resp *http.Response
-	var err error
-	if *echo != "" {
-		resp, err = doEcho()
-	} else if *serviceAccount != "" {
-		resp, err = doJWT()
-	}
-	if err != nil {
-		log.Fatal(err)
-	}
-	b, err := httputil.DumpResponse(resp, true)
-	if err != nil {
-		log.Fatal(err)
-	}
-	os.Stdout.Write(b)
-}
-
 // doEcho performs an authenticated echo request using an API key.
-func doEcho() (*http.Response, error) {
+func DoEcho(host, echo, apiKey string) ([]byte, error) {
 	msg := map[string]string{
-		"message": *echo,
+		"message": echo,
 	}
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(msg); err != nil {
 		return nil, err
 	}
-	return http.Post(*host+"/echo?key="+*apiKey, "application/json", &buf)
+	resp, err := http.Post(host+"/echo?key="+apiKey, "application/json", &buf)
+	if err != nil {
+		return nil, fmt.Errorf("http got error: ", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("http response status is not 200 OK: %s", resp.Status)
+	}
+	return ioutil.ReadAll(resp.Body)
 }
 
 // doJWT performs an authenticated request using the credentials in the service account file.
-func doJWT() (*http.Response, error) {
-	sa, err := ioutil.ReadFile(*serviceAccount)
-	if err != nil {
-		return nil, fmt.Errorf("Could not read service account file: %v", err)
-	}
-	conf, err := google.JWTConfigFromJSON(sa)
-	if err != nil {
-		return nil, fmt.Errorf("Could not parse service account JSON: %v", err)
-	}
-	rsaKey, err := parseKey(conf.PrivateKey)
-	if err != nil {
-		return nil, fmt.Errorf("Could not get RSA key: %v", err)
+func DoJWT(host, apiKey, serviceAccount, token string) ([]byte, error) {
+	if serviceAccount != "" {
+		sa, err := ioutil.ReadFile(serviceAccount)
+		if err != nil {
+			return nil, fmt.Errorf("Could not read service account file: %v", err)
+		}
+		conf, err := google.JWTConfigFromJSON(sa)
+		if err != nil {
+			return nil, fmt.Errorf("Could not parse service account JSON: %v", err)
+		}
+		rsaKey, err := parseKey(conf.PrivateKey)
+		if err != nil {
+			return nil, fmt.Errorf("Could not get RSA key: %v", err)
+		}
+
+		iat := time.Now()
+		exp := iat.Add(time.Hour)
+
+		jwt := &jws.ClaimSet{
+			Iss:   "jwt-client.endpoints.sample.google.com",
+			Sub:   "foo!",
+			Aud:   "echo.endpoints.sample.google.com",
+			Scope: "email",
+			Iat:   iat.Unix(),
+			Exp:   exp.Unix(),
+		}
+		jwsHeader := &jws.Header{
+			Algorithm: "RS256",
+			Typ:       "JWT",
+		}
+
+		token, err = jws.Encode(jwsHeader, jwt, rsaKey)
+		if err != nil {
+			return nil, fmt.Errorf("Could not encode JWT: %v", err)
+		}
 	}
 
-	iat := time.Now()
-	exp := iat.Add(time.Hour)
-
-	jwt := &jws.ClaimSet{
-		Iss:   "jwt-client.endpoints.sample.google.com",
-		Sub:   "foo!",
-		Aud:   "echo.endpoints.sample.google.com",
-		Scope: "email",
-		Iat:   iat.Unix(),
-		Exp:   exp.Unix(),
-	}
-	jwsHeader := &jws.Header{
-		Algorithm: "RS256",
-		Typ:       "JWT",
-	}
-
-	msg, err := jws.Encode(jwsHeader, jwt, rsaKey)
+	req, _ := http.NewRequest("GET", host+"/auth/info/googlejwt?key="+apiKey, nil)
+	req.Header.Add("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Could not encode JWT: %v", err)
+		return nil, fmt.Errorf("http got error: ", err)
 	}
+	defer resp.Body.Close()
 
-	req, _ := http.NewRequest("GET", *host+"/auth/info/googlejwt?key="+*apiKey, nil)
-	req.Header.Add("Authorization", "Bearer "+msg)
-	return http.DefaultClient.Do(req)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("http response status is not 200 OK: %s", resp.Status)
+	}
+	return ioutil.ReadAll(resp.Body)
 }
 
 // The following code is copied from golang.org/x/oauth2/internal
