@@ -24,6 +24,14 @@ const (
 	APIKeyHeader = "x-api-key"
 	// APIKey param name for HTTP request.
 	APIKeyQuery = "key"
+
+	// Supported Http Methods.
+	GET    = "GET"
+	PUT    = "PUT"
+	POST   = "POST"
+	DELETE = "DELETE"
+	PATCH  = "PATCH"
+	CUSTOM = "CUSTOM"
 )
 
 type BackendProtocol int32

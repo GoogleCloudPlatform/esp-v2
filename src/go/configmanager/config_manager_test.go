@@ -136,8 +136,7 @@ func TestFetchListeners(t *testing.T) {
 				fakeProtoDescriptor, testEndpointName, testEndpointName),
 		},
 		{
-			desc:            "Success for gRPC backend, with Jwt filter, with audiences",
-			backendProtocol: "grpc",
+			desc: "Success for gRPC backend, with Jwt filter, with audiences, no Http Rules", backendProtocol: "grpc",
 			fakeServiceConfig: fmt.Sprintf(`{
 				"apis":[
 					{
@@ -169,7 +168,7 @@ func TestFetchListeners(t *testing.T) {
                             ]
                         },
                         {
-                	        "selector": "endpoints.examples.bookstore.Bookstore.ListShelf"
+                	        "selector": "endpoints.examples.bookstore.Bookstore.ListShelves"
                         }
         	        ]
                 }
@@ -192,17 +191,6 @@ func TestFetchListeners(t *testing.T) {
                                         },
                                         "rules": [
                                             {
-						"match":{
-						    "regex":""
-						},
-						"requires": {
-						    "provider_and_audiences": {
-							"audiences":["test_audience1"],
-							"provider_name":"firebase"
-						    }
-					        }
-					   },
-					   {
                                                 "match":{
                                                     "path":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
                                                 },
@@ -213,7 +201,7 @@ func TestFetchListeners(t *testing.T) {
                                                     }
                                                 }
                                             }
-					]
+					                    ]
                                     },
                                     "name":"envoy.filters.http.jwt_authn"
                                 },
@@ -260,6 +248,18 @@ func TestFetchListeners(t *testing.T) {
                         "name":"%s"
                     }
                 ],
+                "http": {
+                    "rules": [
+                        {
+                            "selector": "endpoints.examples.bookstore.Bookstore.ListShelves",
+                            "get": "/v1/shelves"
+                        },
+                        {
+                            "selector": "endpoints.examples.bookstore.Bookstore.CreateShelf",
+                            "post": "/v1/shelves"
+                        }
+                    ]
+                },
                 "authentication": {
         	        "providers": [
         	            {
@@ -278,7 +278,7 @@ func TestFetchListeners(t *testing.T) {
                             ]
                         },
                         {
-                	        "selector": "endpoints.examples.bookstore.Bookstore.ListShelf",
+                            "selector": "endpoints.examples.bookstore.Bookstore.ListShelves",
                             "requirements": [
                                 {
                                     "provider_id": "firebase"
@@ -305,14 +305,20 @@ func TestFetchListeners(t *testing.T) {
                                         },
                                         "rules": [
                                             {
-						"match":{
-						    "regex":""
-						},
-						"requires": {
-						    "provider_name":"firebase"
+                                               "match":{
+                                                   "headers": [
+                                                       {
+                                                           "exact_match": "POST",
+                                                           "name" : ":method"
+                                                       }
+                                                   ],
+                                                   "path": "/v1/shelves"
+                                                },
+                                                "requires":{
+                                                    "provider_name":"firebase"
                                                 }
-					    },
-					    {
+                                            },
+					                        {
                                                 "match":{
                                                     "path":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
                                                 },
@@ -320,23 +326,28 @@ func TestFetchListeners(t *testing.T) {
                                                     "provider_name":"firebase"
                                                 }
                                             },
-					    {
-						"match":{
-						    "regex":""
-					        },
-						"requires":{
-						    "provider_name":"firebase"
-						}
-					    },
-					    {
+                                            {
                                                 "match":{
-                                                    "path":"/endpoints.examples.bookstore.Bookstore/ListShelf"
+                                                   "headers": [
+                                                       {
+                                                           "exact_match": "GET",
+                                                           "name" : ":method"
+                                                       }
+                                                   ],
+                                                   "path": "/v1/shelves"
+                                                },
+                                                "requires":{
+                                                    "provider_name":"firebase"
+                                                }
+                                            },
+					                        {
+                                                "match":{
+                                                    "path":"/endpoints.examples.bookstore.Bookstore/ListShelves"
                                                 },
                                                 "requires": {
                                                     "provider_name":"firebase"
                                                 }
                                             }
-					   
                                         ]
                                     },
                                     "name":"envoy.filters.http.jwt_authn"
@@ -376,8 +387,7 @@ func TestFetchListeners(t *testing.T) {
             }`, fakeJwks, testEndpointName),
 		},
 		{
-			desc:            "Success for gRPC backend, with Jwt filter, with multi requirements",
-			backendProtocol: "gRPC",
+			desc: "Success for gRPC backend, with Jwt filter, with multi requirements, matching with regex", backendProtocol: "gRPC",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "apis":[
                     {
@@ -387,6 +397,18 @@ func TestFetchListeners(t *testing.T) {
 						}
 					}
                 ],
+                "http": {
+                    "rules": [
+                        {
+                            "selector": "endpoints.examples.bookstore.Bookstore.GetBook",
+                            "get": "/v1/shelves/{shelf}/books/{book}"
+                        },
+                        {
+                            "selector": "endpoints.examples.bookstore.Bookstore.DeleteBook",
+                            "delete": "/v1/shelves/{shelf}/books/{book}"
+                        }
+                    ]
+                },
                 "authentication": {
         	        "providers": [
         	            {
@@ -402,7 +424,7 @@ func TestFetchListeners(t *testing.T) {
         	        ],
         	        "rules": [
                         {
-                	        "selector": "endpoints.examples.bookstore.Bookstore.CreateShelf",
+                            "selector": "endpoints.examples.bookstore.Bookstore.GetBook",
                             "requirements": [
                                 {
                                     "provider_id": "firebase1"
@@ -437,11 +459,17 @@ func TestFetchListeners(t *testing.T) {
                                             }
                                         },
                                         "rules": [
-					    {
-						"match":{
-						    "regex": ""
-					         },
-						 "requires": {
+                                            {
+                                                "match":{
+                                                    "headers": [
+                                                        {
+                                                            "exact_match": "GET",
+                                                            "name" : ":method"
+                                                        }
+                                                    ],
+                                                    "regex": "/v1/shelves/.*/books/.*"
+                                                },
+						                        "requires": {
                                                     "requires_any": {
                                                     	"requirements": [
                                                     	    {
@@ -452,11 +480,11 @@ func TestFetchListeners(t *testing.T) {
                                                     	    }
                                                     	]
                                                     }
-					        } 
+					                            }
                                             },
-					    {
+					                        {
                                                 "match":{
-                                                    "path":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                                    "path":"/endpoints.examples.bookstore.Bookstore/GetBook"
                                                 },
                                                 "requires": {
                                                     "requires_any": {
@@ -660,7 +688,127 @@ func TestFetchListeners(t *testing.T) {
 						]
 					}
 				]
-			}`, testProjectName, testProjectName, testProjectName, testProjectName, testProjectName, testProjectName)},
+			}`, testProjectName, testProjectName, testProjectName, testProjectName, testProjectName, testProjectName),
+		},
+		{
+			desc:            "Success for HTTP1 backend, with Jwt filter, with audiences",
+			backendProtocol: "http1",
+			fakeServiceConfig: fmt.Sprintf(`{
+                "apis":[
+                    {
+                        "name":"%s"
+                    }
+                ],
+                "http": {
+                    "rules": [
+                        {
+                            "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
+                            "get": "/auth/info/googlejwt"
+                        },
+                        {
+                            "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+                            "post": "/echo",
+                            "body": "message"
+                        }
+                    ]
+                },
+                "authentication": {
+                    "providers": [
+                        {
+                            "id": "firebase",
+                            "issuer": "https://test_issuer.google.com/",
+                            "jwks_uri": "$JWKSURI",
+                            "audiences": "test_audience1, test_audience2 "
+                        }
+                    ],
+                    "rules": [
+                        {
+                            "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo"
+                        },
+                        {
+                            "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
+                            "requirements": [
+                                {
+                                    "provider_id": "firebase",
+                                    "audiences": "test_audience1"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }`, testEndpointName),
+			wantedListeners: fmt.Sprintf(`{
+                "filters":[
+                    {
+                        "config":{
+                            "http_filters":[
+                                {
+                                    "config": {
+                                        "providers": {
+                                            "firebase": {
+                                                "audiences":["test_audience1", "test_audience2"],
+                                                "issuer":"https://test_issuer.google.com/",
+                                                "local_jwks": {
+                                                    "inline_string": "%s"
+                                                }
+                                            }
+                                        },
+                                        "rules": [
+                                            {
+                                                "match":{
+                                                    "headers":[
+                                                        {
+                                                            "exact_match":"GET",
+                                                            "name":":method"
+                                                        }
+                                                    ],
+                                                    "path":"/auth/info/googlejwt"
+                                                },
+                                                "requires": {
+                                                    "provider_and_audiences": {
+                                                    "audiences": ["test_audience1"],
+                                                        "provider_name":"firebase"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "name":"envoy.filters.http.jwt_authn"
+                                },
+                                {
+                                    "config":{
+                                    },
+                                    "name":"envoy.router"
+                                 }
+                            ],
+                            "route_config":{
+                                "name":"local_route",
+                                "virtual_hosts":[
+                                    {
+                                        "domains":[
+                                            "*"
+                                        ],
+                                        "name":"backend",
+                                            "routes":[
+                                                {
+                                                    "match":{
+                                                        "prefix":"/"
+                                                    },
+                                                    "route":{
+                                                        "cluster": "%s"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                            "stat_prefix":"ingress_http"
+                         },
+                        "name":"envoy.http_connection_manager"
+                    }
+                ]
+            }`, fakeJwks, testEndpointName),
+		},
 	}
 
 	for i, tc := range testData {
@@ -708,6 +856,7 @@ func TestFetchClusters(t *testing.T) {
 		desc              string
 		fakeServiceConfig string
 		wantedClusters    string
+		backendProtocol   string
 	}{
 		{
 			desc: "Success for gRPC backend",
@@ -724,6 +873,7 @@ func TestFetchClusters(t *testing.T) {
 					}
                 ]
 		    }`, testProjectName, testEndpointName),
+			backendProtocol: "grpc",
 			wantedClusters: fmt.Sprintf(`{
 	    	    "hosts": [
 	    	        {
@@ -738,11 +888,36 @@ func TestFetchClusters(t *testing.T) {
                 "http2ProtocolOptions": {}
 	        }`, *flags.ClusterAddress, *flags.ClusterPort, testEndpointName, *flags.ClusterConnectTimeout/1e9),
 		},
+		{
+			desc: "Success for HTTP1 backend",
+			fakeServiceConfig: fmt.Sprintf(`{
+                "name":"%s",
+                "apis":[
+                    {
+                        "name":"%s"
+                    }
+                ]
+            }`, testProjectName, testEndpointName),
+			backendProtocol: "http1",
+			wantedClusters: fmt.Sprintf(`{
+                "hosts": [
+                    {
+                        "socketAddress": {
+                            "address": "%s",
+                            "portValue": %d
+                        }
+                    }
+                ],
+                "name": "%s",
+                "connectTimeout": "%ds"
+            }`, *flags.ClusterAddress, *flags.ClusterPort, testEndpointName, *flags.ClusterConnectTimeout/1e9),
+		},
 	}
 
 	for i, tc := range testData {
 		// Overrides fakeConfig for the test case.
 		fakeConfig = tc.fakeServiceConfig
+		flag.Set("backend_protocol", tc.backendProtocol)
 
 		runTest(t, func(env *testEnv) {
 			ctx := context.Background()

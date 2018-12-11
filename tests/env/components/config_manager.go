@@ -32,7 +32,7 @@ type ConfigManagerServer struct {
 
 func NewConfigManagerServer(debugMode bool, args []string) (*ConfigManagerServer, error) {
 	if debugMode {
-		args = append(args, "--logtostderr")
+		args = append(args, "--logtostderr", "--v=2")
 	}
 	glog.Infof("args: %v", args)
 	cmd := exec.Command(xDSPath, args...)

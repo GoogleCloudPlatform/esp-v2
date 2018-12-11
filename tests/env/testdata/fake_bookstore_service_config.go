@@ -39,15 +39,27 @@ const (
         ]
       }
     ],
-    "http": {
+     "http": {
       "rules": [
         {
           "selector": "endpoints.examples.bookstore.Bookstore.ListShelves",
           "get": "/v1/shelves"
         },
         {
+          "selector": "endpoints.examples.bookstore.Bookstore.CreateShelf",
+          "post": "/v1/shelves"
+        },
+        {
           "selector": "endpoints.examples.bookstore.Bookstore.GetShelf",
           "get": "/v1/shelves/{shelf}"
+        },
+        {
+          "selector": "endpoints.examples.bookstore.Bookstore.DeleteBook",
+          "delete": "/v1/shelves/{shelf}/books/{book}"
+        },
+        {
+          "selector": "endpoints.examples.bookstore.Bookstore.GetBook",
+          "GET": "/v1/shelves/{shelf}/books/{book}"
         }
       ]
     },
@@ -55,6 +67,25 @@ const (
       "rules": [
         {
           "selector": "endpoints.examples.bookstore.Bookstore.GetShelf"
+        },
+        {
+          "selector": "endpoints.examples.bookstore.Bookstore.CreateShelf",
+          "requirements": [
+            {
+              "providerId": "google_service_account"
+            }
+          ]
+        },
+        {
+          "selector": "endpoints.examples.bookstore.Bookstore.GetBook"
+        },
+        {
+          "selector": "endpoints.examples.bookstore.Bookstore.DeleteBook",
+          "requirements": [
+            {
+              "providerId": "google_service_account"
+            }
+          ]
         },
         {
           "selector": "endpoints.examples.bookstore.Bookstore.ListShelves",

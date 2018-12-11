@@ -53,18 +53,18 @@ func TestGrpc(t *testing.T) {
 			desc:           "gRPC client calling gRPC backend",
 			clientProtocol: "grpc",
 			method:         "GetShelf",
-			wantResp:       `{"theme":"Unknown Book"}`,
+			wantResp:       `{"theme":"Unknown Shelf"}`,
 		},
 		{
 			desc:           "Http client calling gRPC backend",
 			clientProtocol: "http",
 			method:         "/v1/shelves/125",
-			wantResp:       `{"id":"125","theme":"Unknown Book"}`,
+			wantResp:       `{"id":"125","theme":"Unknown Shelf"}`,
 		},
 	}
 
 	for _, tc := range tests {
-		resp, err := client.MakeCall(tc.clientProtocol, addr, tc.method, "")
+		resp, err := client.MakeCall(tc.clientProtocol, addr, "GET", tc.method, "")
 		if err != nil {
 			t.Errorf("failed to run test: %s", err)
 		}
@@ -93,6 +93,7 @@ func TestGrpcJwt(t *testing.T) {
 	tests := []struct {
 		desc           string
 		clientProtocol string
+		httpMethod     string
 		method         string
 		token          string
 		wantResp       string
@@ -108,6 +109,7 @@ func TestGrpcJwt(t *testing.T) {
 		{
 			desc:           "Http client calling gPRC backend, with valid JWT token",
 			clientProtocol: "http",
+			httpMethod:     "GET",
 			method:         "/v1/shelves",
 			token:          testdata.FakeGoodToken,
 			wantResp:       `{"shelves":[{"id":"123","theme":"Shakspeare"},{"id":"124","theme":"Hamlet"}]}`,
@@ -121,6 +123,7 @@ func TestGrpcJwt(t *testing.T) {
 		{
 			desc:           "Http client calling gPRC backend, without invalid JWT token",
 			clientProtocol: "http",
+			httpMethod:     "GET",
 			method:         "/v1/shelves",
 			wantedError:    "401 Unauthorized",
 		},
@@ -134,17 +137,55 @@ func TestGrpcJwt(t *testing.T) {
 		{
 			desc:           "Http client calling gPRC backend, with bad JWT token",
 			clientProtocol: "http",
+			httpMethod:     "GET",
 			method:         "/v1/shelves",
 			token:          testdata.FakeBadToken,
 			wantedError:    "401 Unauthorized",
 		},
+		{
+			desc:           "Succeed, Jwt RouteMatcher matches by HttpHeader method.",
+			clientProtocol: "http",
+			httpMethod:     "POST",
+			method:         "/v1/shelves",
+			token:          testdata.FakeGoodToken,
+			wantResp:       `{"id":"1","theme":"New Shelf"}`,
+		},
+		{
+			desc:           "Fail, Jwt RouteMatcher matches by HttpHeader method.",
+			clientProtocol: "http",
+			httpMethod:     "POST",
+			method:         "/v1/shelves",
+			wantedError:    "401 Unauthorized",
+		},
+		{
+			desc:           "Succeed, Jwt RouteMatcher works for multi query parameters",
+			clientProtocol: "http",
+			httpMethod:     "DELETE",
+			method:         "/v1/shelves/125/books/001",
+			token:          testdata.FakeGoodToken,
+			wantResp:       "{}",
+		},
+		{
+			desc:           "Fail, Jwt RouteMatcher works for multi query parameters",
+			clientProtocol: "http",
+			httpMethod:     "DELETE",
+			method:         "/v1/shelves/125/books/001",
+			wantedError:    "401 Unauthorized",
+		},
+		{
+			desc:           "Succeed, Jwt RouteMatcher works for multi query parameters and HttpHeader",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves/125/books/001",
+			wantResp:       `{"id":"125","title":"Unknown Book"}`,
+		},
 	}
 
 	for _, tc := range tests {
-		resp, err := client.MakeCall(tc.clientProtocol, addr, tc.method, tc.token)
+		resp, err := client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token)
 
 		if tc.wantedError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantedError)) {
-			t.Errorf("Test (%s): failed, expected err: %s, got: %s", tc.desc, tc.wantedError, err)
+			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantedError, err)
 		} else {
 			if !strings.Contains(resp, tc.wantResp) {
 				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)

@@ -29,9 +29,9 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func MakeCall(clientProtocol, addr, method, token string) (string, error) {
+func MakeCall(clientProtocol, addr, httpMethod, method, token string) (string, error) {
 	if strings.EqualFold(clientProtocol, "http") {
-		resp, err := makeHttpCall(addr, method, token)
+		resp, err := makeHttpCall(addr, httpMethod, method, token)
 		if err != nil {
 			return "", fmt.Errorf("makeHttpCall got unexpected error: %v", err)
 		}
@@ -46,9 +46,9 @@ func MakeCall(clientProtocol, addr, method, token string) (string, error) {
 	return "", nil
 }
 
-var makeHttpCall = func(addr, method, token string) ([]byte, error) {
+var makeHttpCall = func(addr, httpMethod, method, token string) ([]byte, error) {
 	var cli http.Client
-	req, _ := http.NewRequest("GET", fmt.Sprintf("http://%s%s", addr, method), nil)
+	req, _ := http.NewRequest(httpMethod, fmt.Sprintf("http://%s%s", addr, method), nil)
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 
 	resp, err := cli.Do(req)
@@ -85,6 +85,21 @@ var makeGrpcCall = func(addr, method, token string) (string, error) {
 		resp, err := cli.ListShelves(ctx, req)
 		if err != nil {
 			return "", fmt.Errorf("ListShelves got unexpected error: %v", err)
+		} else {
+			respJson, err := marshaler.MarshalToString(resp)
+			if err != nil {
+				return "", fmt.Errorf("MarshalToString failed: %v", err)
+			}
+			return respJson, nil
+		}
+
+	case "CreateShelf":
+		req := &bspb.CreateShelfRequest{
+			Shelf: &bspb.Shelf{},
+		}
+		resp, err := cli.CreateShelf(ctx, req)
+		if err != nil {
+			return "", fmt.Errorf("CreateShelf got unexpected error: %v", err)
 		} else {
 			respJson, err := marshaler.MarshalToString(resp)
 			if err != nil {

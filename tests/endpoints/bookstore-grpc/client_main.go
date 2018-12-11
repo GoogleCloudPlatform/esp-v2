@@ -39,7 +39,7 @@ func main() {
 		*token = jwt.AccessToken
 	}
 
-	resp, err := client.MakeCall(*clientProtocol, *addr, *method, *token)
+	resp, err := client.MakeCall(*clientProtocol, *addr, "GET", *method, *token)
 	if err != nil {
 		log.Fatalf("Makecall failed: %v", err)
 	}

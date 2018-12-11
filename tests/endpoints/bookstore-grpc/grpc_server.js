@@ -30,14 +30,18 @@ function listShelves(call, callback) {
 }
 
 function createShelf(call, callback) {
-  callback(null, {});
+  console.log(call.metadata)
+  callback(null, {
+      id: '001',
+      theme: 'New Shelf'
+  });
 }
 
 function getShelf(call, callback) {
   console.log(call.metadata)
   callback(null, {
       id: call.request.shelf,
-      theme: 'Unknown Book'
+      theme: 'Unknown Shelf'
   });
 }
 
@@ -54,7 +58,11 @@ function createBook(call, callback) {
 }
 
 function getBook(call, callback) {
-  callback(null, {});
+  console.log(call.metadata)
+  callback(null, {
+      id: call.request.shelf,
+      title: 'Unknown Book'
+  });
 }
 
 function deleteBook(call, callback) {

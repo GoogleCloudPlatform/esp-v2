@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
@@ -51,7 +52,6 @@ const (
 	routeName         = "local_route"
 	virtualHostName   = "backend"
 	fetchConfigSuffix = "/v1/services/$serviceName/configs/$configId?view=FULL"
-	tokenUri          = "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
 	serviceControlUri = "https://servicecontrol.googleapis.com/v1/services/"
 )
 
@@ -67,10 +67,18 @@ var (
 // ConfigManager handles service configuration fetching and updating.
 // TODO(jilinxia): handles multi service name.
 type ConfigManager struct {
-	serviceName string
-	configID    string
+	serviceName   string
+	configID      string
+	serviceConfig *conf.Service
+	// httpPathMap stores all operations to http path pairs.
+	httpPathMap map[string]*httpRule
 	client      *http.Client
 	cache       cache.SnapshotCache
+}
+
+type httpRule struct {
+	path   string
+	method string
 }
 
 // NewConfigManager creates new instance of ConfigManager.
@@ -109,13 +117,14 @@ func NewConfigManager(name, configID string) (*ConfigManager, error) {
 // It calls ServiceManager Server to fetch the service configuration in order
 // to dynamically configure Envoy.
 func (m *ConfigManager) init() error {
-	serviceConfig, err := m.fetchConfig(m.configID)
+	var err error
+	m.serviceConfig, err = m.fetchConfig(m.configID)
 	if err != nil {
 		// TODO(jilinxia): changes error generation
 		return fmt.Errorf("fail to initialize config manager, %s", err)
 	}
 
-	snapshot, err := m.makeSnapshot(serviceConfig)
+	snapshot, err := m.makeSnapshot()
 	if err != nil {
 		return fmt.Errorf("fail to make a snapshot, %s", err)
 	}
@@ -123,15 +132,19 @@ func (m *ConfigManager) init() error {
 	return nil
 }
 
-func (m *ConfigManager) makeSnapshot(serviceConfig *conf.Service) (*cache.Snapshot, error) {
-	if len(serviceConfig.GetApis()) == 0 {
+func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
+	if m.serviceConfig == nil {
+		return nil, fmt.Errorf("unexpected empty service config")
+	}
+	if len(m.serviceConfig.GetApis()) == 0 {
 		return nil, fmt.Errorf("service config must have one api at least")
 	}
 	// TODO(jilinxia): supports multi apis.
-	if len(serviceConfig.GetApis()) > 1 {
+	if len(m.serviceConfig.GetApis()) > 1 {
 		return nil, fmt.Errorf("not support multi apis yet")
 	}
-	endpointApi := serviceConfig.Apis[0]
+
+	endpointApi := m.serviceConfig.Apis[0]
 	var backendProtocol ut.BackendProtocol
 	switch strings.ToLower(*flags.BackendProtocol) {
 	case "http1":
@@ -144,8 +157,10 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *conf.Service) (*cache.Snapsh
 		return nil, fmt.Errorf("unknown backend protocol")
 	}
 
+	m.initHttpPathMap()
+
 	var endpoints, routes []cache.Resource
-	serverlistener, httpManager, err := m.makeListener(serviceConfig, endpointApi, backendProtocol)
+	serverlistener, httpManager, err := m.makeListener(endpointApi, backendProtocol)
 	if err != nil {
 		return nil, err
 	}
@@ -184,12 +199,55 @@ func (m *ConfigManager) makeSnapshot(serviceConfig *conf.Service) (*cache.Snapsh
 	return &snapshot, nil
 }
 
-func (m *ConfigManager) makeListener(serviceConfig *conf.Service, endpointApi *api.Api, backendProtocol ut.BackendProtocol) (*v2.Listener, *hcm.HttpConnectionManager, error) {
+func (m *ConfigManager) initHttpPathMap() {
+	m.httpPathMap = make(map[string]*httpRule)
+	for _, r := range m.serviceConfig.GetHttp().GetRules() {
+		var rule *httpRule
+		switch r.GetPattern().(type) {
+		case *annotations.HttpRule_Get:
+			rule = &httpRule{
+				path:   r.GetGet(),
+				method: ut.GET,
+			}
+		case *annotations.HttpRule_Put:
+			rule = &httpRule{
+				path:   r.GetPut(),
+				method: ut.PUT,
+			}
+		case *annotations.HttpRule_Post:
+			rule = &httpRule{
+				path:   r.GetPost(),
+				method: ut.POST,
+			}
+		case *annotations.HttpRule_Delete:
+			rule = &httpRule{
+				path:   r.GetDelete(),
+				method: ut.DELETE,
+			}
+		case *annotations.HttpRule_Patch:
+			rule = &httpRule{
+				path:   r.GetPatch(),
+				method: ut.PATCH,
+			}
+		case *annotations.HttpRule_Custom:
+			rule = &httpRule{
+				path:   r.GetPatch(),
+				method: ut.CUSTOM,
+			}
+		default:
+			glog.Warning("unsupported http method")
+		}
+
+		m.httpPathMap[r.GetSelector()] = rule
+	}
+}
+
+func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.BackendProtocol) (*v2.Listener, *hcm.HttpConnectionManager, error) {
 	httpFilters := []*hcm.HttpFilter{}
 
 	// Add JWT Authn filter if needed.
 	if !*flags.SkipJwtAuthnFilter {
-		jwtAuthnFilter := m.makeJwtAuthnFilter(serviceConfig, endpointApi, backendProtocol)
+		jwtAuthnFilter := m.makeJwtAuthnFilter(endpointApi, backendProtocol)
 		if jwtAuthnFilter != nil {
 			httpFilters = append(httpFilters, jwtAuthnFilter)
 		}
@@ -197,7 +255,7 @@ func (m *ConfigManager) makeListener(serviceConfig *conf.Service, endpointApi *a
 
 	// Add service control filter if needed
 	if !*flags.SkipServiceControlFilter {
-		serviceControlFilter := m.makeServiceControlFilter(serviceConfig)
+		serviceControlFilter := m.makeServiceControlFilter()
 		if serviceControlFilter != nil {
 			httpFilters = append(httpFilters, serviceControlFilter)
 		}
@@ -205,7 +263,7 @@ func (m *ConfigManager) makeListener(serviceConfig *conf.Service, endpointApi *a
 
 	// Add gRPC transcode filter config for gRPC backend.
 	if backendProtocol == ut.GRPC {
-		transcoderFilter := m.makeTranscoderFilter(serviceConfig, endpointApi)
+		transcoderFilter := m.makeTranscoderFilter(endpointApi)
 		if transcoderFilter != nil {
 			httpFilters = append(httpFilters, transcoderFilter)
 		}
@@ -258,8 +316,8 @@ func (m *ConfigManager) makeListener(serviceConfig *conf.Service, endpointApi *a
 	}, httpConMgr, nil
 }
 
-func (m *ConfigManager) makeTranscoderFilter(serviceConfig *conf.Service, endpointApi *api.Api) *hcm.HttpFilter {
-	for _, sourceFile := range serviceConfig.GetSourceInfo().GetSourceFiles() {
+func (m *ConfigManager) makeTranscoderFilter(endpointApi *api.Api) *hcm.HttpFilter {
+	for _, sourceFile := range m.serviceConfig.GetSourceInfo().GetSourceFiles() {
 		configFile := &servicemanagement.ConfigFile{}
 		ptypes.UnmarshalAny(sourceFile, configFile)
 		if configFile.GetFileType() == servicemanagement.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
@@ -281,12 +339,8 @@ func (m *ConfigManager) makeTranscoderFilter(serviceConfig *conf.Service, endpoi
 	return nil
 }
 
-func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *conf.Service, endpointApi *api.Api, backendProtocol ut.BackendProtocol) *hcm.HttpFilter {
-	if serviceConfig == nil {
-		glog.Warning("unexpected empty service config")
-		return nil
-	}
-	auth := serviceConfig.GetAuthentication()
+func (m *ConfigManager) makeJwtAuthnFilter(endpointApi *api.Api, backendProtocol ut.BackendProtocol) *hcm.HttpFilter {
+	auth := m.serviceConfig.GetAuthentication()
 	if len(auth.GetProviders()) == 0 {
 		return nil
 	}
@@ -294,7 +348,7 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *conf.Service, endpoint
 	for _, provider := range auth.GetProviders() {
 		jwk, err := fetchJwk(provider.GetJwksUri(), m.client)
 		if err != nil {
-			glog.Warningf("fetch jwk from issuer got error: %s", err)
+			glog.Warningf("fetch jwk from issuer %s got error: %s", provider.GetIssuer(), err)
 			break
 		}
 		jp := &ac.JwtProvider{
@@ -358,33 +412,23 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *conf.Service, endpoint
 				requires.GetRequiresAny().Requirements = append(requires.GetRequiresAny().GetRequirements(), require)
 			}
 		}
-		// TODO(jilinxia): makes a unifed function to handle all route matches.
-		// Including matching path without wildcard, regex with wildcard,
-		// match with header, and query parameters handling.
-		var path string
-		for _, httpRule := range serviceConfig.GetHttp().GetRules() {
-			if rule.GetSelector() == httpRule.GetSelector() {
-				path = httpRule.GetGet()
+
+		routeMatcher := m.makeHttpRouteMatcher(rule.GetSelector())
+		if routeMatcher != nil {
+			ruleConfig := &ac.RequirementRule{
+				Match:    routeMatcher,
+				Requires: requires,
 			}
+			rules = append(rules, ruleConfig)
 		}
 
-		m := strings.Split(rule.GetSelector(), ".")
-		ruleConfig := &ac.RequirementRule{
-			Match: &route.RouteMatch{
-				PathSpecifier: &route.RouteMatch_Regex{
-					Regex: path,
-				},
-			},
-			Requires: requires,
-		}
-		rules = append(rules, ruleConfig)
-
+		s := strings.Split(rule.GetSelector(), ".")
 		// For gRPC protocol, needs to add extra match rule for grpc client.
 		if backendProtocol == ut.GRPC {
 			rules = append(rules, &ac.RequirementRule{
 				Match: &route.RouteMatch{
 					PathSpecifier: &route.RouteMatch_Path{
-						Path: fmt.Sprintf("/%s/%s", endpointApi.Name, m[len(m)-1]),
+						Path: fmt.Sprintf("/%s/%s", endpointApi.Name, s[len(s)-1]),
 					},
 				},
 				Requires: requires,
@@ -404,13 +448,14 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *conf.Service, endpoint
 	return jwtAuthnFilter
 }
 
-func (m *ConfigManager) makeServiceControlFilter(serviceConfig *conf.Service) *hcm.HttpFilter {
-	if serviceConfig.GetName() == "" || serviceConfig.GetControl().GetEnvironment() == "" {
+func (m *ConfigManager) makeServiceControlFilter() *hcm.HttpFilter {
+	serviceName := m.serviceConfig.GetName()
+	if serviceName == "" || m.serviceConfig.GetControl().GetEnvironment() == "" {
 		return nil
 	}
 
 	service := &scpb.Service{
-		ServiceName:  serviceConfig.GetName(),
+		ServiceName:  serviceName,
 		TokenCluster: "ads_cluster",
 		ServiceControlUri: &scpb.HttpUri{
 			Uri:     serviceControlUri,
@@ -420,81 +465,81 @@ func (m *ConfigManager) makeServiceControlFilter(serviceConfig *conf.Service) *h
 	}
 
 	rulesMap := make(map[string][]*scpb.ServiceControlRule)
-	for _, api := range serviceConfig.GetApis() {
+	for _, api := range m.serviceConfig.GetApis() {
 		for _, method := range api.GetMethods() {
 			grpcUri := fmt.Sprintf("/%s/%s", api.GetName(), method.GetName())
 			selector := fmt.Sprintf("%s.%s", api.GetName(), method.GetName())
 			rulesMap[selector] = []*scpb.ServiceControlRule{
 				&scpb.ServiceControlRule{
 					Requires: &scpb.Requirement{
-						ServiceName:   serviceConfig.GetName(),
+						ServiceName:   serviceName,
 						OperationName: selector,
 					},
 					Pattern: &commonpb.Pattern{
 						UriTemplate: grpcUri,
-						HttpMethod:  "POST",
+						HttpMethod:  ut.POST,
 					},
 				},
 			}
 		}
 	}
 
-	for _, httpRule := range serviceConfig.GetHttp().GetRules() {
+	for _, httpRule := range m.serviceConfig.GetHttp().GetRules() {
 		scRules := rulesMap[httpRule.GetSelector()]
 		switch httpPattern := httpRule.GetPattern().(type) {
 		case *annotations.HttpRule_Get:
 			scRules = append(scRules, &scpb.ServiceControlRule{
 				Requires: &scpb.Requirement{
-					ServiceName:   serviceConfig.GetName(),
+					ServiceName:   serviceName,
 					OperationName: httpRule.GetSelector(),
 				},
 				Pattern: &commonpb.Pattern{
 					UriTemplate: httpPattern.Get,
-					HttpMethod:  "GET",
+					HttpMethod:  ut.GET,
 				},
 			})
 		case *annotations.HttpRule_Put:
 			scRules = append(scRules, &scpb.ServiceControlRule{
 				Requires: &scpb.Requirement{
-					ServiceName:   serviceConfig.GetName(),
+					ServiceName:   serviceName,
 					OperationName: httpRule.GetSelector(),
 				},
 				Pattern: &commonpb.Pattern{
 					UriTemplate: httpPattern.Put,
-					HttpMethod:  "PUT",
+					HttpMethod:  ut.PUT,
 				},
 			})
 		case *annotations.HttpRule_Post:
 			scRules = append(scRules, &scpb.ServiceControlRule{
 				Requires: &scpb.Requirement{
-					ServiceName:   serviceConfig.GetName(),
+					ServiceName:   serviceName,
 					OperationName: httpRule.GetSelector(),
 				},
 				Pattern: &commonpb.Pattern{
 					UriTemplate: httpPattern.Post,
-					HttpMethod:  "POST",
+					HttpMethod:  ut.POST,
 				},
 			})
 		case *annotations.HttpRule_Delete:
 			scRules = append(scRules, &scpb.ServiceControlRule{
 				Requires: &scpb.Requirement{
-					ServiceName:   serviceConfig.GetName(),
+					ServiceName:   serviceName,
 					OperationName: httpRule.GetSelector(),
 				},
 				Pattern: &commonpb.Pattern{
 					UriTemplate: httpPattern.Delete,
-					HttpMethod:  "DELETE",
+					HttpMethod:  ut.DELETE,
 				},
 			})
 		case *annotations.HttpRule_Patch:
 			scRules = append(scRules, &scpb.ServiceControlRule{
 				Requires: &scpb.Requirement{
-					ServiceName:   serviceConfig.GetName(),
+					ServiceName:   serviceName,
 					OperationName: httpRule.GetSelector(),
 				},
 				Pattern: &commonpb.Pattern{
 					UriTemplate: httpPattern.Patch,
-					HttpMethod:  "PATCH",
+					HttpMethod:  ut.PATCH,
 				},
 			})
 		}
@@ -502,7 +547,7 @@ func (m *ConfigManager) makeServiceControlFilter(serviceConfig *conf.Service) *h
 
 	}
 
-	for _, usageRule := range serviceConfig.GetUsage().GetRules() {
+	for _, usageRule := range m.serviceConfig.GetUsage().GetRules() {
 		scRules := rulesMap[usageRule.GetSelector()]
 		for _, scRule := range scRules {
 			scRule.Requires.ApiKey = &scpb.APIKeyRequirement{
@@ -521,7 +566,7 @@ func (m *ConfigManager) makeServiceControlFilter(serviceConfig *conf.Service) *h
 
 	filterConfig := &scpb.FilterConfig{
 		Services:    []*scpb.Service{service},
-		ServiceName: serviceConfig.GetName(),
+		ServiceName: serviceName,
 		ServiceControlUri: &scpb.HttpUri{
 			Uri:     serviceControlUri,
 			Cluster: "service_control_cluster",
@@ -541,6 +586,42 @@ func (m *ConfigManager) makeServiceControlFilter(serviceConfig *conf.Service) *h
 		Config: scs,
 	}
 	return filter
+}
+
+func (m *ConfigManager) makeHttpRouteMatcher(selector string) *route.RouteMatch {
+	var routeMatcher route.RouteMatch
+	httpRule, ok := m.httpPathMap[selector]
+	if !ok {
+		glog.Warningf("no corresponding http path found for selector %s", selector)
+		return nil
+	}
+
+	re := regexp.MustCompile(`[\{[\w\d]+\}`)
+
+	// Replacing query parameters inside "{}" by ".*".
+	if re.MatchString(httpRule.path) {
+		routeMatcher = route.RouteMatch{
+			PathSpecifier: &route.RouteMatch_Regex{
+				Regex: re.ReplaceAllString(httpRule.path, ".*"),
+			},
+		}
+	} else {
+		// Match with HttpHeader method. Some methods may have same path.
+		routeMatcher = route.RouteMatch{
+			PathSpecifier: &route.RouteMatch_Path{
+				Path: httpRule.path,
+			},
+		}
+	}
+	routeMatcher.Headers = []*route.HeaderMatcher{
+		{
+			Name: ":method",
+			HeaderMatchSpecifier: &route.HeaderMatcher_ExactMatch{
+				ExactMatch: httpRule.method,
+			},
+		},
+	}
+	return &routeMatcher
 }
 
 // Implements the ID method for HashNode interface.
