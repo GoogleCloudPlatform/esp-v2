@@ -41,7 +41,7 @@ build: format
 	@go build ./src/go/configmanager...
 	@go build ./tests...
 	@go build -o bin/configmanager ./src/go/server/server.go
-	@go build -o bin/echo/server ./tests/endpoints/echo/app.go
+	@go build -o bin/echo/server ./tests/endpoints/echo/server/app.go
 	@bazel build //src/envoy:envoy
 
 
@@ -66,7 +66,7 @@ integration-test: build
 integration-debug:
 	@echo "--> running integration tests and showing debug logs"
 	# debug-components can be set as "all", "configmanager", or "envoy".
-	@go test -v ./tests/integration/... --debug-components=all
+	@go test -v ./tests/integration/... --debug_components=all
 
 #-----------------------------------------------------------------------------
 # Target: go dependencies

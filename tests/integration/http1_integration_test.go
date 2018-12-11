@@ -15,17 +15,18 @@
 package integration
 
 import (
-	"bytes"
-	"encoding/json"
-	"io/ioutil"
-	"net/http"
 	"strings"
 	"testing"
 	"time"
 
+	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
-	"github.com/golang/glog"
+)
+
+const (
+	echo = "hello"
+	host = "http://localhost:8080"
 )
 
 func TestHttp1Basic(t *testing.T) {
@@ -50,42 +51,19 @@ func TestHttp1Basic(t *testing.T) {
 	}{
 		{
 			desc:     "succeed, no Jwt required",
-			method:   "http://localhost:8080/echo",
 			wantResp: `{"message":"hello"}`,
-		},
-		{
-			desc:     "failed, missing Jwt",
-			method:   "http://localhost:8080/auth/info/googlejwt",
-			wantResp: `Jwt is missing`,
 		},
 	}
 	for _, tc := range testData {
-		var resp *http.Response
-		var err error
-		resp, err = doEcho(tc.method)
+		resp, err := client.DoEcho(host, echo, "")
 		if err != nil {
-			glog.Fatal(err)
-		}
-		out, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			glog.Fatal(err)
+			t.Fatal(err)
 		}
 
-		if !strings.Contains(string(out), tc.wantResp) {
-			t.Errorf("expected: %s, got: %s", tc.wantResp, string(out))
+		if !strings.Contains(string(resp), tc.wantResp) {
+			t.Errorf("expected: %s, got: %s", tc.wantResp, string(resp))
 		}
 	}
-}
-
-func doEcho(method string) (*http.Response, error) {
-	msg := map[string]string{
-		"message": "hello",
-	}
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(msg); err != nil {
-		return nil, err
-	}
-	return http.Post(method, "application/json", &buf)
 }
 
 func TestHttp1Jwt(t *testing.T) {
@@ -100,30 +78,40 @@ func TestHttp1Jwt(t *testing.T) {
 	if err := s.Setup("echo", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-
 	defer s.TearDown()
 
 	time.Sleep(time.Duration(3 * time.Second))
 
-	var resp *http.Response
-	var err error
-	resp, err = doJWT()
-	if err != nil {
-		glog.Fatal(err)
+	testData := []struct {
+		desc        string
+		token       string
+		wantResp    string
+		wantedError string
+	}{
+		{
+			desc:     "succeed, with valid JWT token",
+			token:    testdata.FakeGoodToken,
+			wantResp: `{"id": "anonymous"}`,
+		},
+		{
+			desc:        "succeed, with valid JWT token",
+			token:       testdata.FakeBadToken,
+			wantedError: "401 Unauthorized",
+		},
+		{
+			desc:        "failed, without valid JWT token",
+			wantedError: "401 Unauthorized",
+		},
 	}
-	out, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		glog.Fatal(err)
-	}
-	want := `{"id": "anonymous"}`
+	for _, tc := range testData {
+		resp, err := client.DoJWT(host, "", "", tc.token)
 
-	if !strings.Contains(string(out), want) {
-		t.Errorf("expected: %s, got: %s", want, string(out))
+		if tc.wantedError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantedError)) {
+			t.Errorf("Test (%s): failed, expected err: %s, got: %s", tc.desc, tc.wantedError, err)
+		} else {
+			if !strings.Contains(string(resp), tc.wantResp) {
+				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
+			}
+		}
 	}
-}
-
-func doJWT() (*http.Response, error) {
-	req, _ := http.NewRequest("GET", "http://localhost:8080/auth/info/googlejwt", nil)
-	req.Header.Add("Authorization", "Bearer "+testdata.FakeGoodToken)
-	return http.DefaultClient.Do(req)
 }

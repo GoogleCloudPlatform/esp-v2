@@ -358,7 +358,7 @@ func (m *ConfigManager) makeJwtAuthnFilter(serviceConfig *conf.Service, endpoint
 				requires.GetRequiresAny().Requirements = append(requires.GetRequiresAny().GetRequirements(), require)
 			}
 		}
-		// TODO(jilinxia): makes a unifed function to handle all route matches. 
+		// TODO(jilinxia): makes a unifed function to handle all route matches.
 		// Including matching path without wildcard, regex with wildcard,
 		// match with header, and query parameters handling.
 		var path string
