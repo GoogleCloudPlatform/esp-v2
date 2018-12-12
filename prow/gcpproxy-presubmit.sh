@@ -34,13 +34,22 @@ echo '======================================================'
 if [ ! -d "$GOPATH/bin" ]; then
   mkdir $GOPATH/bin
 fi
+if [ ! -d "bin" ]; then
+  mkdir bin
+fi
+
 make tools
 make depend.install
 make test
-make clean
 
 # c++ test
 echo '======================================================'
 echo '===================== Bazel test ====================='
 echo '======================================================'
 bazel test //src/...
+
+echo '======================================================'
+echo '===================== Integration test  =============='
+echo '======================================================'
+make integration-test
+make clean
