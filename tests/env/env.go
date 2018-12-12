@@ -22,6 +22,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env/components"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/jsonpb"
 )
 
 var (
@@ -58,22 +59,27 @@ func NewTestEnv(mockMetadata, mockServiceManagement, mockServiceControl bool) *T
 
 // SetUp setups Envoy, ConfigManager, and Backend server for test.
 func (e *TestEnv) Setup(backendService string, confArgs []string) error {
-	fakeServiceConfig, ok := testdata.ConfigMap[backendService]
-	if !ok {
-		return fmt.Errorf("not supported backend")
+	// TODO(jilinxia): supports multi providers using mock servers.
+	if e.mockServiceManagement {
+		fakeServiceConfig, ok := testdata.ConfigMap[backendService]
+	  if !ok {
+		  return fmt.Errorf("not supported backend")
 	}
 
-	// TODO(jilinxia): supports multi providers using mock servers.
+	marshaler := &jsonpb.Marshaler{}
+	jsonStr, err := marshaler.MarshalToString(fakeServiceConfig)
+	if err != nil {
+		return fmt.Errorf("fail to unmarshal fakeServiceConfig: %v", err)
+	}
 
-	if e.mockServiceManagement {
-		confArgs = append(confArgs, "--service_management_url="+components.NewMockServiceMrg(fakeServiceConfig).GetURL())
+		confArgs = append(confArgs, "--service_management_url="+components.NewMockServiceMrg(jsonStr).GetURL())
 	}
 
 	if e.mockMetadata {
 		confArgs = append(confArgs, "--metadata_url="+components.NewMockMetadata().GetURL())
 	}
 
-	var err error
+  var err error
 	// Starts XDS.
 	e.configMgr, err = components.NewConfigManagerServer((*debugComponents == "all" || *debugComponents == "configmanager"), confArgs)
 	if err != nil {

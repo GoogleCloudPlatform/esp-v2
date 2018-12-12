@@ -14,69 +14,87 @@
 
 package testdata
 
-const (
-	// TODO(jilinxia): instead of using test Jwt from
-	// https://github.com/istio/istio/blob/master/security/tools/jwt/samples/demo.jwt
-	// implement a mock jwt server.
+import (
+	"google.golang.org/genproto/googleapis/api/annotations"
+	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	"google.golang.org/genproto/protobuf/api"
+)
 
-	FakeEchoConfig = `
-	  {
-      "name": "echo-api.endpoints.cloudesf-testing.cloud.goog",
-      "title": "Endpoints Example",
-      "apis": [
-        {
-          "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-          "version": "1.0.0"
-        }
-      ],
-      "http": {
-        "rules": [
-          {
-            "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt",
-            "get": "/auth/info/googlejwt"
-          },
-          {
-            "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth0",
-            "get": "/auth/info/auth0"
-          },
-          {
-            "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-            "post": "/echo",
-            "body": "message"
-          }
-        ]
-      },
-      "authentication": {
-        "rules": [
-          {
-            "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt",
-            "requirements": [
-              {
-                "providerId": "google_jwt"
-              }
-            ]
-          },
-          {
-            "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth0",
-            "requirements": [
-              {
-                "providerId": "google_jwt",
-                "audiences": "admin.cloud.goog"
-              }
-            ]
-          },
-          {
-            "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo"
-          }
-        ],
-        "providers": [
-          {
-            "id": "google_jwt",
-            "issuer": "testing@secure.istio.io",
-            "jwksUri": "https://raw.githubusercontent.com/istio/istio/master/security/tools/jwt/samples/jwks.json"
-          }
-        ]
-      }
-    }
-  `
+var (
+	FakeEchoConfig = &conf.Service{
+		Name:  "echo-api.endpoints.cloudesf-testing.cloud.goog",
+		Title: "Endpoints Example",
+		Apis: []*api.Api{
+			{
+				Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+				Methods: []*api.Method{
+					{
+						Name:            "Auth_info_google_jwt",
+						RequestTypeUrl:  "type.googleapis.com/google.protobuf.Empty",
+						ResponseTypeUrl: "type.googleapis.com/AuthInfoResponse",
+					},
+					{
+						Name:            "Echo",
+						RequestTypeUrl:  "type.googleapis.com/EchoRequest",
+						ResponseTypeUrl: "type.googleapis.com/EchoMessage",
+					},
+				},
+				Version: "1.0.0",
+			},
+		},
+		Http: &annotations.Http{
+			Rules: []*annotations.HttpRule{
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt",
+					Pattern: &annotations.HttpRule_Get{
+						Get: "/auth/info/googlejwt",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth0",
+					Pattern: &annotations.HttpRule_Get{
+						Get: "/auth/info/auth0",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+					Pattern: &annotations.HttpRule_Post{
+						Post: "/echo",
+					},
+					Body: "message",
+				},
+			},
+		},
+		Authentication: &conf.Authentication{
+			Rules: []*conf.AuthenticationRule{
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt",
+					Requirements: []*conf.AuthRequirement{
+						{
+							ProviderId: "google_jwt",
+						},
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth0",
+					Requirements: []*conf.AuthRequirement{
+						{
+							ProviderId: "google_jwt",
+							Audiences:  "admin.cloud.goog",
+						},
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+				},
+			},
+			Providers: []*conf.AuthProvider{
+				{
+					Id:      "google_jwt",
+					Issuer:  "testing@secure.istio.io",
+					JwksUri: "https://raw.githubusercontent.com/istio/istio/master/security/tools/jwt/samples/jwks.json",
+				},
+			},
+		},
+	}
 )

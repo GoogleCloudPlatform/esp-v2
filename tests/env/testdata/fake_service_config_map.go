@@ -14,9 +14,39 @@
 
 package testdata
 
+import (
+	"io/ioutil"
+
+	"github.com/golang/glog"
+	"github.com/golang/protobuf/ptypes"
+	any "github.com/golang/protobuf/ptypes/any"
+	"github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
+	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+)
+
 var (
-	ConfigMap = map[string]string{
-		"echo":      FakeEchoConfig,
-		"bookstore": FakeBookstoreConfig,
+	ConfigMap = map[string]*conf.Service{
+		"echo": FakeEchoConfig,
 	}
 )
+
+func init() {
+	dat, err := ioutil.ReadFile("../endpoints/bookstore-grpc/proto/api_descriptor.pb")
+	if err != nil {
+		glog.Errorf("error marshalAny for proto descriptor, %s", err)
+	}
+	sourceFile := &servicemanagement.ConfigFile{
+		FilePath:     "api_descriptor.pb",
+		FileContents: dat,
+		FileType:     servicemanagement.ConfigFile_FILE_DESCRIPTOR_SET_PROTO,
+	}
+
+	content, err := ptypes.MarshalAny(sourceFile)
+	if err != nil {
+		glog.Errorf("error marshalAny for proto descriptor")
+	}
+	FakeBookstoreConfig.SourceInfo = &conf.SourceInfo{
+		SourceFiles: []*any.Any{content},
+	}
+	ConfigMap["bookstore"] = FakeBookstoreConfig
+}
