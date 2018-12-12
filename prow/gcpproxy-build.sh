@@ -35,6 +35,9 @@ echo '======================================================='
 if [ ! -d "$GOPATH/bin" ]; then
   mkdir $GOPATH/bin
 fi
+if [ ! -d "bin" ]; then
+  mkdir bin
+fi
 make tools
 make depend.install
 make build

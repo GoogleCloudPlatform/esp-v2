@@ -21,7 +21,7 @@ BINDIR	:= bin
 PKG 	:= cloudesf.googleresource.com/gcpproxy
 
 IMG="gcr.io/cloudesf-testing/gcpproxy-prow"
-TAG := $(shell date +v%Y%m%d)-$(shell git describe --tags --always --dirty)
+TAG := $(shell date +v%Y%m%d)-$(shell git describe --tags --always)
 K8S := master
 
 GOFILES		= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
@@ -172,7 +172,7 @@ lint: tools.golint
 
 .PHONY: docker.build-prow, docker.push-prow, docker.build-configmanager
 docker.build-prow:
-	docker build -f docker/Dockerfile-prow-env --build-arg IMAGE_ARG=$(IMG):$(TAG)-$(K8S) -t $(IMG):$(VERSION)-$(K8S) .
+	docker build -f docker/Dockerfile-prow-env --build-arg IMAGE_ARG=$(IMG):$(TAG)-$(K8S) -t $(IMG):$(TAG)-$(K8S) .
 
 docker.push-prow: docker.build-prow
 	docker push $(IMG):$(TAG)-$(K8S)
