@@ -99,43 +99,29 @@ func TestGrpcJwt(t *testing.T) {
 		wantResp       string
 		wantedError    string
 	}{
+		// Testing JWT is required or not.
 		{
-			desc:           "gPRC client calling gPRC backend, with valid JWT token",
-			clientProtocol: "grpc",
-			method:         "ListShelves",
-			token:          testdata.FakeGoodToken,
-			wantResp:       `{"shelves":[{"id":"123","theme":"Shakspeare"},{"id":"124","theme":"Hamlet"}]}`,
-		},
-		{
-			desc:           "Http client calling gPRC backend, with valid JWT token",
-			clientProtocol: "http",
-			httpMethod:     "GET",
-			method:         "/v1/shelves",
-			token:          testdata.FakeGoodToken,
-			wantResp:       `{"shelves":[{"id":"123","theme":"Shakspeare"},{"id":"124","theme":"Hamlet"}]}`,
-		},
-		{
-			desc:           "gPRC client calling gPRC backend, without valid JWT token",
+			desc:           "Fail for gPRC client, without valid JWT token",
 			clientProtocol: "grpc",
 			method:         "ListShelves",
 			wantedError:    "code = Unauthenticated desc = Jwt is missing",
 		},
 		{
-			desc:           "Http client calling gPRC backend, without invalid JWT token",
+			desc:           "Fail for Http client, without valid JWT token",
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves",
 			wantedError:    "401 Unauthorized",
 		},
 		{
-			desc:           "gPRC client calling gPRC backend, with bad JWT token",
+			desc:           "Fail for gPRC client, with bad JWT token",
 			clientProtocol: "grpc",
 			method:         "ListShelves",
 			token:          testdata.FakeBadToken,
 			wantedError:    "code = Unauthenticated desc = Jwt issuer is not configured",
 		},
 		{
-			desc:           "Http client calling gPRC backend, with bad JWT token",
+			desc:           "Fail for Http client, with bad JWT token",
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves",
@@ -143,7 +129,16 @@ func TestGrpcJwt(t *testing.T) {
 			wantedError:    "401 Unauthorized",
 		},
 		{
-			desc:           "Succeed, Jwt RouteMatcher matches by HttpHeader method.",
+			desc:           "Succeed for gPRC client, with valid JWT token",
+			clientProtocol: "grpc",
+			method:         "CreateShelf",
+			token:          testdata.FakeGoodToken,
+			wantResp:       `{"id":"1","theme":"New Shelf"}`,
+		},
+
+		// Testing JWT RouteMatcher matches by HttpHeader and parameters in "{}", for Http Client only.
+		{
+			desc:           "Succeed for Http client, Jwt RouteMatcher matches by HttpHeader method",
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves",
@@ -151,14 +146,14 @@ func TestGrpcJwt(t *testing.T) {
 			wantResp:       `{"id":"1","theme":"New Shelf"}`,
 		},
 		{
-			desc:           "Fail, Jwt RouteMatcher matches by HttpHeader method.",
+			desc:           "Fail for Http client, Jwt RouteMatcher matches by HttpHeader method",
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves",
 			wantedError:    "401 Unauthorized",
 		},
 		{
-			desc:           "Succeed, Jwt RouteMatcher works for multi query parameters",
+			desc:           "Succeed for Http client, Jwt RouteMatcher works for multi query parameters",
 			clientProtocol: "http",
 			httpMethod:     "DELETE",
 			method:         "/v1/shelves/125/books/001",
@@ -166,18 +161,72 @@ func TestGrpcJwt(t *testing.T) {
 			wantResp:       "{}",
 		},
 		{
-			desc:           "Fail, Jwt RouteMatcher works for multi query parameters",
+			desc:           "Fail for Http client, Jwt RouteMatcher works for multi query parameters",
 			clientProtocol: "http",
 			httpMethod:     "DELETE",
 			method:         "/v1/shelves/125/books/001",
 			wantedError:    "401 Unauthorized",
 		},
 		{
-			desc:           "Succeed, Jwt RouteMatcher works for multi query parameters and HttpHeader",
+			desc:           "Succeed for Http client, Jwt RouteMatcher works for multi query parameters and HttpHeader, no audience",
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves/125/books/001",
 			wantResp:       `{"id":"125","title":"Unknown Book"}`,
+		},
+
+		// Test JWT with audiences.
+		{
+			desc:           "Succeed for gPRC client, with valid JWT token, with single audience",
+			clientProtocol: "grpc",
+			method:         "ListShelves",
+			token:          testdata.FakeGoodTokenSingleAud,
+			wantResp:       `{"shelves":[{"id":"123","theme":"Shakspeare"},{"id":"124","theme":"Hamlet"}]}`,
+		},
+		{
+			desc:           "Succeed for Http client, with valid JWT token, with single audience",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves",
+			token:          testdata.FakeGoodTokenSingleAud,
+			wantResp:       `{"shelves":[{"id":"123","theme":"Shakspeare"},{"id":"124","theme":"Hamlet"}]}`,
+		},
+		{
+			desc:           "Fail for gPRC client, with JWT token but not expected audience",
+			clientProtocol: "grpc",
+			method:         "ListShelves",
+			token:          testdata.FakeGoodToken,
+			wantedError:    "code = Unauthenticated desc = Audiences in Jwt are not allowed",
+		},
+		{
+			desc:           "Fail for Http client, with JWT token but not expected audience",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves",
+			token:          testdata.FakeGoodToken,
+			wantedError:    "401 Unauthorized",
+		},
+		{
+			desc:           "Fail for gPRC client, with JWT token but wrong audience",
+			clientProtocol: "grpc",
+			method:         "ListShelves",
+			token:          testdata.FakeGoodAdminToken,
+			wantedError:    "code = Unauthenticated desc = Audiences in Jwt are not allowed",
+		},
+		{
+			desc:           "Succeed for gPRC client, with JWT token with one audience while multi audiences are allowed",
+			clientProtocol: "grpc",
+			method:         "CreateBook",
+			token:          testdata.FakeGoodAdminToken,
+			wantResp:       `{"title":"New Book"}`,
+		},
+		{
+			desc:           "Succeed for Http client, with JWT token with multi audience while multi audiences are allowed",
+			clientProtocol: "http",
+			httpMethod:     "POST",
+			method:         "/v1/shelves/12345/books",
+			token:          testdata.FakeGoodTokenMultiAud,
+			wantResp:       `{"id":"12345","title":"New Book"}`,
 		},
 	}
 

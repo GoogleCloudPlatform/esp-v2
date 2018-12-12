@@ -54,7 +54,11 @@ function listBooks(call, callback) {
 }
 
 function createBook(call, callback) {
-  callback(null, {});
+  console.log(call.metadata)
+  callback(null, {
+      id: call.request.shelf,
+      title: 'New Book'
+  });
 }
 
 function getBook(call, callback) {

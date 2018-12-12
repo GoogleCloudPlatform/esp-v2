@@ -26,32 +26,7 @@ const (
       "apis": [
         {
           "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-          "methods": [
-            {
-              "name": "AuthInfoFirebase",
-              "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
-              "responseTypeUrl": "type.googleapis.com/AuthInfoResponse"
-            },
-            {
-              "name": "AuthInfoGoogleIdToken",
-              "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
-              "responseTypeUrl": "type.googleapis.com/AuthInfoResponse"
-            },
-            {
-              "name": "Auth_info_google_jwt",
-              "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
-              "responseTypeUrl": "type.googleapis.com/AuthInfoResponse"
-            },
-            {
-              "name": "Echo",
-              "requestTypeUrl": "type.googleapis.com/EchoRequest",
-              "responseTypeUrl": "type.googleapis.com/EchoMessage"
-            }
-          ],
-          "version": "1.0.0",
-          "sourceContext": {
-            "fileName": "openapi.yaml"
-          }
+          "version": "1.0.0"
         }
       ],
       "http": {
@@ -59,6 +34,10 @@ const (
           {
             "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt",
             "get": "/auth/info/googlejwt"
+          },
+          {
+            "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth0",
+            "get": "/auth/info/auth0"
           },
           {
             "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
@@ -74,6 +53,15 @@ const (
             "requirements": [
               {
                 "providerId": "google_jwt"
+              }
+            ]
+          },
+          {
+            "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth0",
+            "requirements": [
+              {
+                "providerId": "google_jwt",
+                "audiences": "admin.cloud.goog"
               }
             ]
           },

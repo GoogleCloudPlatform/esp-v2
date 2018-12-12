@@ -52,7 +52,7 @@ func DoEcho(host, echo, apiKey string) ([]byte, error) {
 }
 
 // doJWT performs an authenticated request using the credentials in the service account file.
-func DoJWT(host, apiKey, serviceAccount, token string) ([]byte, error) {
+func DoJWT(host, method, path, apiKey, serviceAccount, token string) ([]byte, error) {
 	if serviceAccount != "" {
 		sa, err := ioutil.ReadFile(serviceAccount)
 		if err != nil {
@@ -89,7 +89,7 @@ func DoJWT(host, apiKey, serviceAccount, token string) ([]byte, error) {
 		}
 	}
 
-	req, _ := http.NewRequest("GET", host+"/auth/info/googlejwt?key="+apiKey, nil)
+	req, _ := http.NewRequest(method, host+path+"?key="+apiKey, nil)
 	req.Header.Add("Authorization", "Bearer "+token)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

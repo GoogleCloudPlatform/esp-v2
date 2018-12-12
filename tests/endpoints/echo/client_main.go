@@ -24,6 +24,7 @@ import (
 
 var (
 	host   = flag.String("host", "", "The API host. Required.")
+	path   = flag.String("path", "", "url path. Required.")
 	apiKey = flag.String("api-key", "", "Your API key. Required.")
 
 	echo           = flag.String("echo", "", "Message to echo. Cannot be used with -service-account")
@@ -39,7 +40,7 @@ func main() {
 	if *echo != "" {
 		resp, err = client.DoEcho(*host, *apiKey, *echo)
 	} else if *serviceAccount != "" {
-		resp, err = client.DoJWT(*host, *apiKey, *serviceAccount, *token)
+		resp, err = client.DoJWT(*host, "GET", *path, *apiKey, *serviceAccount, *token)
 	}
 	if err != nil {
 		log.Fatal(err)

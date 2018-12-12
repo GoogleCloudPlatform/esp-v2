@@ -66,7 +66,7 @@ func TestHttp1Basic(t *testing.T) {
 	}
 }
 
-func TestHttp1Jwt(t *testing.T) {
+func TestHttp1JWT(t *testing.T) {
 	serviceName := "test-echo"
 	configId := "test-config-id"
 
@@ -84,27 +84,56 @@ func TestHttp1Jwt(t *testing.T) {
 
 	testData := []struct {
 		desc        string
+		httpMethod  string
+		httpPath    string
 		token       string
 		wantResp    string
 		wantedError string
 	}{
 		{
-			desc:     "succeed, with valid JWT token",
-			token:    testdata.FakeGoodToken,
-			wantResp: `{"id": "anonymous"}`,
+			desc:       "Succeed, with valid JWT token",
+			httpMethod: "GET",
+			httpPath:   "/auth/info/googlejwt",
+			token:      testdata.FakeGoodToken,
+			wantResp:   `{"id": "anonymous"}`,
 		},
 		{
-			desc:        "succeed, with valid JWT token",
+			desc:        "Fail, with valid JWT token",
+			httpMethod:  "GET",
+			httpPath:    "/auth/info/googlejwt",
 			token:       testdata.FakeBadToken,
 			wantedError: "401 Unauthorized",
 		},
 		{
-			desc:        "failed, without valid JWT token",
+			desc:        "Fail, without valid JWT token",
+			httpMethod:  "GET",
+			httpPath:    "/auth/info/googlejwt",
+			wantedError: "401 Unauthorized",
+		},
+		{
+			desc:       "Succeed, with valid JWT token, with allowed audience",
+			httpMethod: "GET",
+			httpPath:   "/auth/info/auth0",
+			token:      testdata.FakeGoodAdminToken,
+			wantResp:   `{"id": "anonymous"}`,
+		},
+		{
+			desc:        "Fail, with valid JWT token, without allowed audience",
+			httpMethod:  "GET",
+			httpPath:    "/auth/info/auth0",
+			token:       testdata.FakeGoodToken,
+			wantedError: "401 Unauthorized",
+		},
+		{
+			desc:        "Fail, with valid JWT token, with incorrect audience",
+			httpMethod:  "GET",
+			httpPath:    "/auth/info/auth0",
+			token:       testdata.FakeGoodTokenSingleAud,
 			wantedError: "401 Unauthorized",
 		},
 	}
 	for _, tc := range testData {
-		resp, err := client.DoJWT(host, "", "", tc.token)
+		resp, err := client.DoJWT(host, tc.httpMethod, tc.httpPath, "", "", tc.token)
 
 		if tc.wantedError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantedError)) {
 			t.Errorf("Test (%s): failed, expected err: %s, got: %s", tc.desc, tc.wantedError, err)

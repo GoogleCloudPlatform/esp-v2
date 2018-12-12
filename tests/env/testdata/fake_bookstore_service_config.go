@@ -58,8 +58,12 @@ const (
           "delete": "/v1/shelves/{shelf}/books/{book}"
         },
         {
+          "selector": "endpoints.examples.bookstore.Bookstore.CreateBook",
+          "post": "/v1/shelves/{shelf}/books"
+        },
+        {
           "selector": "endpoints.examples.bookstore.Bookstore.GetBook",
-          "GET": "/v1/shelves/{shelf}/books/{book}"
+          "get": "/v1/shelves/{shelf}/books/{book}"
         }
       ]
     },
@@ -88,10 +92,20 @@ const (
           ]
         },
         {
+          "selector": "endpoints.examples.bookstore.Bookstore.CreateBook",
+          "requirements": [
+            {
+              "providerId": "google_service_account",
+              "audiences": "bookstore_test_client.cloud.goog, admin.cloud.goog"
+            }
+          ]
+        },
+        {
           "selector": "endpoints.examples.bookstore.Bookstore.ListShelves",
           "requirements": [
             {
-              "providerId": "google_service_account"
+              "providerId": "google_service_account",
+              "audiences": "bookstore_test_client.cloud.goog"
             }
           ]
         }

@@ -121,6 +121,19 @@ var makeGrpcCall = func(addr, method, token string) (string, error) {
 			return respJson, nil
 		}
 
+	case "CreateBook":
+		req := &bspb.CreateBookRequest{}
+		resp, err := cli.CreateBook(ctx, req)
+		if err != nil {
+			return "", fmt.Errorf("CreateBook got unexpected error: %v", err)
+		} else {
+			respJson, err := marshaler.MarshalToString(resp)
+			if err != nil {
+				return "", fmt.Errorf("MarshalToString failed: %v", err)
+			}
+			return respJson, nil
+		}
+
 	default:
 		return "", fmt.Errorf("unexpected method called")
 	}

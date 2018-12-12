@@ -47,4 +47,41 @@ const (
       }
     ]
   }`
+
+	// This token is generated, by run gen-jwt.py key.pem -jwks=./test_jwks.json
+	// --expire=3153600000 --aud bookstore_test_client.cloud.goog > test_demo.jwt.
+	// using https://github.com/istio/istio/tree/master/security/tools/jwt/samples
+	FakeGoodTokenSingleAud = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lVcXJZOHQyen" +
+		"BBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJib2" +
+		"9rc3RvcmVfdGVzdF9jbGllbnQuY2xvdWQuZ29vZyIsImV4cCI6NDY5ODIzMTYyMCwiaWF0I" +
+		"joxNTQ0NjMxNjIwLCJpc3MiOiJ0ZXN0aW5nQHNlY3VyZS5pc3Rpby5pbyIsInN1YiI6InRl" +
+		"c3RpbmdAc2VjdXJlLmlzdGlvLmlvIn0.RM7PA2RajHn_1dYwrZweFQ6WhnwDq_w5N4ew2r1" +
+		"XJKIbVn0rZ2maxLpWkWWGfcHeJzve4F6PfERkj9V47xLtjpBkjgwPszjCJ4etWlTek92oHU" +
+		"z0JBqB6iK4GPhkWb2PSpMQGU97x4fP3FoNAa1jVYzZ68CZVflW4-ucr5tZ1oCle6dLa6B6u" +
+		"oPX77J6Aq9247Nd-HnDWjcRCRAbpoU7Oo4bVCpcPXzQAH_nl5bXoXz2oTVcBLHDy_nl9_M0" +
+		"_n2FOS-XQw62drXY0T1PSEnYXtAbQQPMLdnBh_17OGyzvY4BlP_97mprDFbK-bue8Hszljw" +
+		"vjk-JzJJ1r6s3mgYWZw"
+
+		// created by --aud admin.cloud.goog with scripts above
+	FakeGoodAdminToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lVcXJZOHQyenBBM" +
+		"nFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJhZG1pbi" +
+		"5jbG91ZC5nb29nIiwiZXhwIjo0Njk4MjM0NTY3LCJpYXQiOjE1NDQ2MzQ1NjcsImlzcyI6In" +
+		"Rlc3RpbmdAc2VjdXJlLmlzdGlvLmlvIiwic3ViIjoidGVzdGluZ0BzZWN1cmUuaXN0aW8uaW" +
+		"8ifQ.BqrYjROnDJ13ivw8alZML934rtYqrK9BcSURNv2impwyW9Z4tjTkDoaaM4rU9osZD-h" +
+		"u3v6tFeRJHFLNE7C4BEDJj9aSJoM_jGfM3D6ZCvML5pA8Ci_EdqVNvrTtaAm3Qhw_jfEPcHO" +
+		"10f_xi3Y9FMqldPjJ8KUft62Lpqodbtp9kCmx6uZ0vZy_FxI3P4N-p27sCUue07yfiBWSGcJ" +
+		"ss6FsPfaTYlhyMQ3TuUnabOQeD9BsvIXclbjf1QNOuEQQGLdgPZCt6TtNXJ88nvM4CzlA2-g" +
+		"0mRojC-joaETdsBL6Xe9LxgkGXzxR5SbJdy2eI-V5srirnO6_WR2-yBkwJw"
+
+		// created by --aud admin.cloud.goog,bookstore_test_client.cloud.goog
+	FakeGoodTokenMultiAud = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lVcXJZOHQye" +
+		"nBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOlsiY" +
+		"WRtaW4uY2xvdWQuZ29vZyIsImJvb2tzdG9yZV90ZXN0X2NsaWVudC5jbG91ZC5nb29nIl0s" +
+		"ImV4cCI6NDY5ODIzNTc1OCwiaWF0IjoxNTQ0NjM1NzU4LCJpc3MiOiJ0ZXN0aW5nQHNlY3V" +
+		"yZS5pc3Rpby5pbyIsInN1YiI6InRlc3RpbmdAc2VjdXJlLmlzdGlvLmlvIn0.W13l-9IVwI" +
+		"XfAtZPsA4QwGZ9uYRmdUpRxj8gbRF0j_xgCJNbwByRDAiLGJWbozRWZnyMjzUWUHOTOLqPp" +
+		"nlFkS_Gmx8sF2sS8gSQjGIxClaeqCjQAQNHRgA-8DU-MAP8vsDoCqzj8vuhDjVZr1JPxyAH" +
+		"4ze2Ssut1QvaYN8TfcvmWwjWBA4seMj8S9AC0VrjrqzbhvAjF63arKOqtokDlYbf-fN_Nx1" +
+		"WfvaJSd06CHxTs8V-MPGqMkR1HeqgS1LhgVdWCTyvo_1KPzXrGMjXRsT-Oyv8I2BrGF5dhv" +
+		"iXdp21lFou2M7bri_rxPJTU7ui3aoFtJXQEYiwW4tusWiPTA"
 )
