@@ -134,6 +134,19 @@ var makeGrpcCall = func(addr, method, token string) (string, error) {
 			return respJson, nil
 		}
 
+	case "DeleteShelf":
+		req := &bspb.DeleteShelfRequest{}
+		resp, err := cli.DeleteShelf(ctx, req)
+		if err != nil {
+			return "", fmt.Errorf("DeleteShelf got unexpected error: %v", err)
+		} else {
+			respJson, err := marshaler.MarshalToString(resp)
+			if err != nil {
+				return "", fmt.Errorf("MarshalToString failed: %v", err)
+			}
+			return respJson, nil
+		}
+
 	default:
 		return "", fmt.Errorf("unexpected method called")
 	}

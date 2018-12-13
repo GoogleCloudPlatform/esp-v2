@@ -94,7 +94,7 @@ func TestHttp1JWT(t *testing.T) {
 			desc:       "Succeed, with valid JWT token",
 			httpMethod: "GET",
 			httpPath:   "/auth/info/googlejwt",
-			token:      testdata.FakeGoodToken,
+			token:      testdata.FakeCloudToken,
 			wantResp:   `{"id": "anonymous"}`,
 		},
 		{
@@ -114,21 +114,21 @@ func TestHttp1JWT(t *testing.T) {
 			desc:       "Succeed, with valid JWT token, with allowed audience",
 			httpMethod: "GET",
 			httpPath:   "/auth/info/auth0",
-			token:      testdata.FakeGoodAdminToken,
+			token:      testdata.FakeCloudTokenSingleAudience2,
 			wantResp:   `{"id": "anonymous"}`,
 		},
 		{
 			desc:        "Fail, with valid JWT token, without allowed audience",
 			httpMethod:  "GET",
 			httpPath:    "/auth/info/auth0",
-			token:       testdata.FakeGoodToken,
+			token:       testdata.FakeCloudToken,
 			wantedError: "401 Unauthorized",
 		},
 		{
 			desc:        "Fail, with valid JWT token, with incorrect audience",
 			httpMethod:  "GET",
 			httpPath:    "/auth/info/auth0",
-			token:       testdata.FakeGoodTokenSingleAud,
+			token:       testdata.FakeCloudTokenSingleAudience1,
 			wantedError: "401 Unauthorized",
 		},
 	}

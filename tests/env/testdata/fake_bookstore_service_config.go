@@ -58,6 +58,12 @@ var (
 					},
 				},
 				{
+					Selector: "endpoints.examples.bookstore.Bookstore.DeleteShelf",
+					Pattern: &annotations.HttpRule_Delete{
+						Delete: "/v1/shelves/{shelf}",
+					},
+				},
+				{
 					Selector: "endpoints.examples.bookstore.Bookstore.DeleteBook",
 					Pattern: &annotations.HttpRule_Delete{
 						Delete: "/v1/shelves/{shelf}/books/{book}",
@@ -116,6 +122,18 @@ var (
 						{
 							ProviderId: "google_service_account",
 							Audiences:  "bookstore_test_client.cloud.goog",
+						},
+					},
+				},
+				{
+					Selector: "endpoints.examples.bookstore.Bookstore.DeleteShelf",
+					Requirements: []*conf.AuthRequirement{
+						{
+							ProviderId: "google_service_account",
+							Audiences:  "bookstore_test_client.cloud.goog",
+						},
+						{
+							ProviderId: "endpoints_jwt",
 						},
 					},
 				},

@@ -82,7 +82,7 @@ func TestGrpcJwt(t *testing.T) {
 	args := []string{"--service_name=" + serviceName, "--config_id=" + configId,
 		"--skip_service_control_filter=true", "--backend_protocol=grpc"}
 
-	s := env.NewTestEnv( /*mockMetadata=*/ true /*mockServiceManagement=*/, true /*mockServiceControl=*/, true /*mockJwtPrividers=*/, []string{"google_service_account"})
+	s := env.NewTestEnv( /*mockMetadata=*/ true /*mockServiceManagement=*/, true /*mockServiceControl=*/, true /*mockJwtPrividers=*/, []string{"google_service_account", "endpoints_jwt"})
 	if err := s.Setup("bookstore", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -131,7 +131,7 @@ func TestGrpcJwt(t *testing.T) {
 			desc:           "Succeed for gPRC client, with valid JWT token",
 			clientProtocol: "grpc",
 			method:         "CreateShelf",
-			token:          testdata.FakeGoodToken,
+			token:          testdata.FakeCloudToken,
 			wantResp:       `{"id":"1","theme":"New Shelf"}`,
 		},
 
@@ -141,7 +141,7 @@ func TestGrpcJwt(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves",
-			token:          testdata.FakeGoodToken,
+			token:          testdata.FakeCloudToken,
 			wantResp:       `{"id":"1","theme":"New Shelf"}`,
 		},
 		{
@@ -156,7 +156,7 @@ func TestGrpcJwt(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "DELETE",
 			method:         "/v1/shelves/125/books/001",
-			token:          testdata.FakeGoodToken,
+			token:          testdata.FakeCloudToken,
 			wantResp:       "{}",
 		},
 		{
@@ -179,7 +179,7 @@ func TestGrpcJwt(t *testing.T) {
 			desc:           "Succeed for gPRC client, with valid JWT token, with single audience",
 			clientProtocol: "grpc",
 			method:         "ListShelves",
-			token:          testdata.FakeGoodTokenSingleAud,
+			token:          testdata.FakeCloudTokenSingleAudience1,
 			wantResp:       `{"shelves":[{"id":"123","theme":"Shakspeare"},{"id":"124","theme":"Hamlet"}]}`,
 		},
 		{
@@ -187,14 +187,14 @@ func TestGrpcJwt(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves",
-			token:          testdata.FakeGoodTokenSingleAud,
+			token:          testdata.FakeCloudTokenSingleAudience1,
 			wantResp:       `{"shelves":[{"id":"123","theme":"Shakspeare"},{"id":"124","theme":"Hamlet"}]}`,
 		},
 		{
 			desc:           "Fail for gPRC client, with JWT token but not expected audience",
 			clientProtocol: "grpc",
 			method:         "ListShelves",
-			token:          testdata.FakeGoodToken,
+			token:          testdata.FakeCloudToken,
 			wantedError:    "code = Unauthenticated desc = Audiences in Jwt are not allowed",
 		},
 		{
@@ -202,21 +202,21 @@ func TestGrpcJwt(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves",
-			token:          testdata.FakeGoodToken,
+			token:          testdata.FakeCloudToken,
 			wantedError:    "401 Unauthorized",
 		},
 		{
 			desc:           "Fail for gPRC client, with JWT token but wrong audience",
 			clientProtocol: "grpc",
 			method:         "ListShelves",
-			token:          testdata.FakeGoodAdminToken,
+			token:          testdata.FakeCloudTokenSingleAudience2,
 			wantedError:    "code = Unauthenticated desc = Audiences in Jwt are not allowed",
 		},
 		{
 			desc:           "Succeed for gPRC client, with JWT token with one audience while multi audiences are allowed",
 			clientProtocol: "grpc",
 			method:         "CreateBook",
-			token:          testdata.FakeGoodAdminToken,
+			token:          testdata.FakeCloudTokenSingleAudience2,
 			wantResp:       `{"title":"New Book"}`,
 		},
 		{
@@ -224,8 +224,33 @@ func TestGrpcJwt(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves/12345/books",
-			token:          testdata.FakeGoodTokenMultiAud,
+			token:          testdata.FakeCloudTokenMultiAudiences,
 			wantResp:       `{"id":"12345","title":"New Book"}`,
+		},
+
+		// Testing JWT with multiple Providers, token from anyone should work.
+		{
+			desc:           "Succeed for Http client, with multi requirements from different providers",
+			clientProtocol: "http",
+			httpMethod:     "DELETE",
+			method:         "/v1/shelves/120",
+			token:          testdata.FakeEndpointsToken,
+			wantResp:       "{}",
+		},
+		{
+			desc:           "Succeed for gPRC client, with multi requirements from different providers",
+			clientProtocol: "grpc",
+			method:         "DeleteShelf",
+			token:          testdata.FakeCloudTokenSingleAudience1,
+			wantResp:       "{}",
+		},
+		{
+			desc:           "Fail for Http client, with multi requirements from different providers",
+			clientProtocol: "http",
+			httpMethod:     "DELETE",
+			method:         "/v1/shelves/120",
+			token:          testdata.FakeCloudToken,
+			wantedError:    "401 Unauthorized",
 		},
 	}
 
