@@ -31,10 +31,17 @@ function listShelves(call, callback) {
 
 function createShelf(call, callback) {
   console.log(call.metadata)
-  callback(null, {
-      id: '001',
+  if (call.request.shelf.theme == '') {
+    callback(null, {
+      id: call.request.shelf.id,
       theme: 'New Shelf'
-  });
+    });
+  } else {
+    callback(null, {
+      id: call.request.shelf.id,
+      theme: call.request.shelf.theme,
+    });
+  }
 }
 
 function getShelf(call, callback) {
@@ -64,7 +71,7 @@ function createBook(call, callback) {
 function getBook(call, callback) {
   console.log(call.metadata)
   callback(null, {
-      id: call.request.shelf,
+      id: call.request.book,
       title: 'Unknown Book'
   });
 }

@@ -128,11 +128,19 @@ func TestGrpcJwt(t *testing.T) {
 			wantedError:    "401 Unauthorized",
 		},
 		{
+			desc:           "Succeed for Http client, with valid JWT token, with url binding",
+			clientProtocol: "http",
+			httpMethod:     "POST",
+			method:         "/v1/shelves?shelf.id=123",
+			token:          testdata.FakeCloudToken,
+			wantResp:       `{"id":"123","theme":"New Shelf"}`,
+		},
+		{
 			desc:           "Succeed for gPRC client, with valid JWT token",
 			clientProtocol: "grpc",
 			method:         "CreateShelf",
 			token:          testdata.FakeCloudToken,
-			wantResp:       `{"id":"1","theme":"New Shelf"}`,
+			wantResp:       `{"theme":"New Shelf"}`,
 		},
 
 		// Testing JWT RouteMatcher matches by HttpHeader and parameters in "{}", for Http Client only.
@@ -140,9 +148,9 @@ func TestGrpcJwt(t *testing.T) {
 			desc:           "Succeed for Http client, Jwt RouteMatcher matches by HttpHeader method",
 			clientProtocol: "http",
 			httpMethod:     "POST",
-			method:         "/v1/shelves",
+			method:         "/v1/shelves?shelf.id=345&shelf.theme=HurryUp",
 			token:          testdata.FakeCloudToken,
-			wantResp:       `{"id":"1","theme":"New Shelf"}`,
+			wantResp:       `{"id":"345","theme":"HurryUp"}`,
 		},
 		{
 			desc:           "Fail for Http client, Jwt RouteMatcher matches by HttpHeader method",
@@ -170,8 +178,8 @@ func TestGrpcJwt(t *testing.T) {
 			desc:           "Succeed for Http client, Jwt RouteMatcher works for multi query parameters and HttpHeader, no audience",
 			clientProtocol: "http",
 			httpMethod:     "GET",
-			method:         "/v1/shelves/125/books/001",
-			wantResp:       `{"id":"125","title":"Unknown Book"}`,
+			method:         "/v1/shelves/125/books/12345",
+			wantResp:       `{"id":"12345","title":"Unknown Book"}`,
 		},
 
 		// Test JWT with audiences.
