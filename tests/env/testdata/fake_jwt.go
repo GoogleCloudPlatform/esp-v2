@@ -14,8 +14,41 @@
 
 package testdata
 
+var (
+	// MockJwtProviderMap contains key(ProviderId): value(Issuer)
+	MockJwtProviderMap = map[string]*MockJwtProvider{}
+)
+
+type MockJwtProvider struct {
+	Issuer string
+	Jwks   string
+}
+
+// Test Jwks and Jwt Tokens are generated following
+// https://github.com/istio/istio/tree/master/security/tools/jwt/samples.
+func InitMockJwtProviders() {
+	MockJwtProviderMap["google_service_account"] = &MockJwtProvider{
+		Issuer: "testing@secure.istio.io",
+		Jwks:   FakeJwks,
+	}
+	MockJwtProviderMap["google_jwt"] = &MockJwtProvider{
+		Issuer: "testing@secure.istio.io",
+		Jwks:   FakeJwks,
+	}
+}
+
 const (
-	// From https://github.com/istio/istio/blob/master/security/tools/jwt/samples/demo.jwt
+	FakeJwks = `{
+    "keys":[
+      {
+      	"e":"AQAB",
+      	"kid":"DHFbpoIUqrY8t2zpA2qXfCmr5VO5ZEr4RzHU_-envvQ",
+      	"kty":"RSA",
+      	"n":"xAE7eB6qugXyCAG3yhh7pkDkT65pHymX-P7KfIupjf59vsdo91bSP9C8H07pSAGQO1MV_xFj9VswgsCg4R6otmg5PV2He95lZdHtOcU5DXIg_pbhLdKXbi66GlVeK6ABZOUW3WYtnNHD-91gVuoeJT_DwtGGcp4ignkgXfkiEm4sw-4sfb4qdt5oLbyVpmW6x9cfa7vs2WTfURiCrBoUqgBo_-4WTiULmmHSGZHOjzwa8WtrtOQGsAFjIbno85jp6MnGGGZPYZbDAa_b3y5u-YpW7ypZrvD8BgtKVjgtQgZhLAGezMt0ua3DRrWnKqTZ0BJ_EyxOGuHJrLsn00fnMQ"
+      }
+    ]
+  }`
+
 	FakeGoodToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lVcXJZOHQyen" +
 		"BBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ." +
 		"eyJleHAiOjQ2ODU5ODk3MDAsImZvbyI6ImJhciIsImlhdCI6MTUzMjM4OT" +
@@ -36,17 +69,6 @@ const (
 		"CES4LQBqsvvTcLBbBNUvKs_eJyZG71WJuymkkbL5Ki7CB73sQUMl2T3eORC7DJt" +
 		"yn_C9Dxy2cwCzHrLZnnGz839_bX_yi29dI4veYCNBgU-9ZwehqfgSCJWYUoBTrdM06" +
 		"N3jEemlWB83ZY4OXoW0pNx-ecu3asJVbwyxV2_HT6_aUsdHwTYwHv2hXBjdKEfwZxSsBxbKpA"
-
-	FakeJwks = `{
-    "keys":[
-      {
-      	"e":"AQAB",
-      	"kid":"DHFbpoIUqrY8t2zpA2qXfCmr5VO5ZEr4RzHU_-envvQ",
-      	"kty":"RSA",
-      	"n":"xAE7eB6qugXyCAG3yhh7pkDkT65pHymX-P7KfIupjf59vsdo91bSP9C8H07pSAGQO1MV_xFj9VswgsCg4R6otmg5PV2He95lZdHtOcU5DXIg_pbhLdKXbi66GlVeK6ABZOUW3WYtnNHD-91gVuoeJT_DwtGGcp4ignkgXfkiEm4sw-4sfb4qdt5oLbyVpmW6x9cfa7vs2WTfURiCrBoUqgBo_-4WTiULmmHSGZHOjzwa8WtrtOQGsAFjIbno85jp6MnGGGZPYZbDAa_b3y5u-YpW7ypZrvD8BgtKVjgtQgZhLAGezMt0ua3DRrWnKqTZ0BJ_EyxOGuHJrLsn00fnMQ"
-      }
-    ]
-  }`
 
 	// This token is generated, by run gen-jwt.py key.pem -jwks=./test_jwks.json
 	// --expire=3153600000 --aud bookstore_test_client.cloud.goog > test_demo.jwt.

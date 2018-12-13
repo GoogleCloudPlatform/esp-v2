@@ -17,9 +17,6 @@ package components
 import (
 	"net/http"
 	"net/http/httptest"
-
-	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
-	"github.com/golang/glog"
 )
 
 // MockJwtProvider mocks the Jwt provider.
@@ -28,11 +25,10 @@ type MockJwtProvider struct {
 }
 
 // NewMockJwtProvider creates a new Jwt provider.
-func NewMockJwtProvider() *MockJwtProvider {
-	glog.Infof("NewMockJwtProvider -------------------------------")
+func NewMockJwtProvider(jwks string) *MockJwtProvider {
 	return &MockJwtProvider{
 		s: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte(testdata.FakeGoodToken))
+			w.Write([]byte(jwks))
 		}))}
 }
 

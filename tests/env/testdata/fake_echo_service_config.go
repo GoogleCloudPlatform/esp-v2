@@ -88,13 +88,6 @@ var (
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
 				},
 			},
-			Providers: []*conf.AuthProvider{
-				{
-					Id:      "google_jwt",
-					Issuer:  "testing@secure.istio.io",
-					JwksUri: "https://raw.githubusercontent.com/istio/istio/master/security/tools/jwt/samples/jwks.json",
-				},
-			},
 		},
 	}
 )

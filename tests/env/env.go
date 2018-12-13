@@ -23,6 +23,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
+	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 var (
@@ -49,28 +50,46 @@ type TestEnv struct {
 	mockJwtProviders      []string
 }
 
-func NewTestEnv(mockMetadata, mockServiceManagement, mockServiceControl bool) *TestEnv {
+func NewTestEnv(mockMetadata, mockServiceManagement, mockServiceControl bool, mockJwtProviders []string) *TestEnv {
 	return &TestEnv{
 		mockMetadata:          mockMetadata,
 		mockServiceManagement: mockServiceManagement,
 		mockServiceControl:    mockServiceControl,
+		mockJwtProviders:      mockJwtProviders,
 	}
 }
 
 // SetUp setups Envoy, ConfigManager, and Backend server for test.
 func (e *TestEnv) Setup(backendService string, confArgs []string) error {
-	// TODO(jilinxia): supports multi providers using mock servers.
 	if e.mockServiceManagement {
 		fakeServiceConfig, ok := testdata.ConfigMap[backendService]
-	  if !ok {
-		  return fmt.Errorf("not supported backend")
-	}
+		if !ok {
+			return fmt.Errorf("not supported backend")
+		}
+		if len(e.mockJwtProviders) > 0 {
+			testdata.InitMockJwtProviders()
 
-	marshaler := &jsonpb.Marshaler{}
-	jsonStr, err := marshaler.MarshalToString(fakeServiceConfig)
-	if err != nil {
-		return fmt.Errorf("fail to unmarshal fakeServiceConfig: %v", err)
-	}
+			// Add Mock Jwt Providers to the fake ServiceConfig.
+			for _, id := range e.mockJwtProviders {
+				provider, ok := testdata.MockJwtProviderMap[id]
+				if !ok {
+					return fmt.Errorf("not supported jwt provider id")
+				}
+				auth := fakeServiceConfig.GetAuthentication()
+				auth.Providers = append(auth.Providers,
+					&conf.AuthProvider{
+						Id:      id,
+						Issuer:  provider.Issuer,
+						JwksUri: components.NewMockJwtProvider(provider.Jwks).GetURL(),
+					})
+			}
+		}
+
+		marshaler := &jsonpb.Marshaler{}
+		jsonStr, err := marshaler.MarshalToString(fakeServiceConfig)
+		if err != nil {
+			return fmt.Errorf("fail to unmarshal fakeServiceConfig: %v", err)
+		}
 
 		confArgs = append(confArgs, "--service_management_url="+components.NewMockServiceMrg(jsonStr).GetURL())
 	}
@@ -79,7 +98,7 @@ func (e *TestEnv) Setup(backendService string, confArgs []string) error {
 		confArgs = append(confArgs, "--metadata_url="+components.NewMockMetadata().GetURL())
 	}
 
-  var err error
+	var err error
 	// Starts XDS.
 	e.configMgr, err = components.NewConfigManagerServer((*debugComponents == "all" || *debugComponents == "configmanager"), confArgs)
 	if err != nil {

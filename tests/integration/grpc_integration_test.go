@@ -35,7 +35,7 @@ func TestGrpc(t *testing.T) {
 	args := []string{"--service_name=" + serviceName, "--config_id=" + configId,
 		"--skip_service_control_filter=true", "--backend_protocol=grpc"}
 
-	s := env.NewTestEnv(true, true, true)
+	s := env.NewTestEnv( /*mockMetadata=*/ true /*mockServiceManagement=*/, true /*mockServiceControl=*/, true /*mockJwtPrividers=*/, nil)
 
 	if err := s.Setup("bookstore", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -82,8 +82,7 @@ func TestGrpcJwt(t *testing.T) {
 	args := []string{"--service_name=" + serviceName, "--config_id=" + configId,
 		"--skip_service_control_filter=true", "--backend_protocol=grpc"}
 
-	s := env.NewTestEnv(true, true, true)
-
+	s := env.NewTestEnv( /*mockMetadata=*/ true /*mockServiceManagement=*/, true /*mockServiceControl=*/, true /*mockJwtPrividers=*/, []string{"google_service_account"})
 	if err := s.Setup("bookstore", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

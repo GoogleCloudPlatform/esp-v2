@@ -120,13 +120,6 @@ var (
 					},
 				},
 			},
-			Providers: []*conf.AuthProvider{
-				{
-					Id:      "google_service_account",
-					Issuer:  "testing@secure.istio.io",
-					JwksUri: "https://raw.githubusercontent.com/istio/istio/master/security/tools/jwt/samples/jwks.json",
-				},
-			},
 		},
 	}
 )
