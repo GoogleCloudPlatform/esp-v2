@@ -16,6 +16,7 @@ package configmanager
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -90,13 +91,13 @@ func NewConfigManager(name, configID string) (*ConfigManager, error) {
 			return nil, fmt.Errorf("failed to read metadata with key endpoints-service-name from metadata server")
 		}
 	}
-
 	if configID == "" {
 		configID, err = fetchConfigId()
 		if configID == "" || err != nil {
 			return nil, fmt.Errorf("failed to read metadata with key endpoints-service-version from metadata server")
 		}
 	}
+	glog.Infof("create new ConfigManager for service (%v) with configuration id (%v)", name, configID)
 
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -123,7 +124,7 @@ func (m *ConfigManager) init() error {
 		// TODO(jilinxia): changes error generation
 		return fmt.Errorf("fail to initialize config manager, %s", err)
 	}
-
+	m.Infof("got service configuration: %v", m.serviceConfig)
 	snapshot, err := m.makeSnapshot()
 	if err != nil {
 		return fmt.Errorf("fail to make a snapshot, %s", err)
@@ -145,6 +146,7 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	}
 
 	endpointApi := m.serviceConfig.Apis[0]
+	m.Infof("making configuration for api: %v", endpointApi.GetName())
 	var backendProtocol ut.BackendProtocol
 	switch strings.ToLower(*flags.BackendProtocol) {
 	case "http1":
@@ -154,16 +156,18 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	case "grpc":
 		backendProtocol = ut.GRPC
 	default:
-		return nil, fmt.Errorf("unknown backend protocol")
+		return nil, fmt.Errorf(`unknown backend protocol, should be one of "grpc", "http1" or "http2"`)
 	}
 
 	m.initHttpPathMap()
 
 	var endpoints, routes []cache.Resource
+	m.Infof("adding Listener configuration for api: %v", endpointApi.GetName())
 	serverlistener, httpManager, err := m.makeListener(endpointApi, backendProtocol)
 	if err != nil {
 		return nil, err
 	}
+
 	// HTTP filter configuration
 	httpFilterConfig, err := util.MessageToStruct(httpManager)
 	if err != nil {
@@ -174,6 +178,8 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 			Name:   util.HTTPConnectionManager,
 			Config: httpFilterConfig,
 		}}}}
+
+	m.Infof("adding Cluster Configuration for api: %v", endpointApi.GetName())
 	cluster := &v2.Cluster{
 		Name:           endpointApi.Name,
 		LbPolicy:       v2.Cluster_ROUND_ROBIN,
@@ -194,8 +200,10 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	if backendProtocol != ut.HTTP1 {
 		cluster.Http2ProtocolOptions = &core.Http2ProtocolOptions{}
 	}
+	m.Infof("Cluster configuration: %v", cluster)
 
 	snapshot := cache.NewSnapshot(m.configID, endpoints, []cache.Resource{cluster}, routes, []cache.Resource{serverlistener})
+	glog.Infof("Envoy Dynamic Configuration is cached for service: %v", m.serviceName)
 	return &snapshot, nil
 }
 
@@ -250,6 +258,7 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 		jwtAuthnFilter := m.makeJwtAuthnFilter(endpointApi, backendProtocol)
 		if jwtAuthnFilter != nil {
 			httpFilters = append(httpFilters, jwtAuthnFilter)
+			m.Infof("adding JWT Authn Filter config: %v", jwtAuthnFilter)
 		}
 	}
 
@@ -258,6 +267,7 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 		serviceControlFilter := m.makeServiceControlFilter()
 		if serviceControlFilter != nil {
 			httpFilters = append(httpFilters, serviceControlFilter)
+			m.Infof("adding Service Control Filter config: %v", serviceControlFilter)
 		}
 	}
 
@@ -266,6 +276,7 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 		transcoderFilter := m.makeTranscoderFilter(endpointApi)
 		if transcoderFilter != nil {
 			httpFilters = append(httpFilters, transcoderFilter)
+			m.Infof("adding Transcoder Filter config: %v", transcoderFilter)
 		}
 	}
 
@@ -306,8 +317,10 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 				},
 			},
 		},
-		HttpFilters: httpFilters,
 	}
+
+	m.Infof("adding Http Connection Manager config: %v", httpConMgr)
+	httpConMgr.HttpFilters = httpFilters
 
 	return &v2.Listener{
 		Address: core.Address{Address: &core.Address_SocketAddress{SocketAddress: &core.SocketAddress{
@@ -320,6 +333,8 @@ func (m *ConfigManager) makeTranscoderFilter(endpointApi *api.Api) *hcm.HttpFilt
 	for _, sourceFile := range m.serviceConfig.GetSourceInfo().GetSourceFiles() {
 		configFile := &servicemanagement.ConfigFile{}
 		ptypes.UnmarshalAny(sourceFile, configFile)
+		m.Infof("got proto descriptor: %v", string(configFile.GetFileContents()))
+
 		if configFile.GetFileType() == servicemanagement.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
 			configContent := configFile.GetFileContents()
 			transcodeConfig := &tc.GrpcJsonTranscoder{
@@ -440,6 +455,7 @@ func (m *ConfigManager) makeJwtAuthnFilter(endpointApi *api.Api, backendProtocol
 		Providers: providers,
 		Rules:     rules,
 	}
+
 	jas, _ := util.MessageToStruct(jwtAuthentication)
 	jwtAuthnFilter := &hcm.HttpFilter{
 		Name:   ut.JwtAuthn,
@@ -630,7 +646,10 @@ func (m *ConfigManager) ID(node *core.Node) string {
 }
 
 // Implements the Infof method for Log interface.
-func (m *ConfigManager) Infof(format string, args ...interface{}) { glog.Infof(format, args...) }
+func (m *ConfigManager) Infof(format string, args ...interface{}) {
+	outputString, _ := json.MarshalIndent(args, "", "   ")
+	glog.Infof(format, string(outputString))
+}
 
 // Implements the Errorf method for Log interface.
 func (m *ConfigManager) Errorf(format string, args ...interface{}) { glog.Errorf(format, args...) }
