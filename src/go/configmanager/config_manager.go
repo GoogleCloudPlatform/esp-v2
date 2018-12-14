@@ -255,7 +255,7 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 
 	// Add service control filter if needed
 	if !*flags.SkipServiceControlFilter {
-		serviceControlFilter := m.makeServiceControlFilter()
+		serviceControlFilter := m.makeServiceControlFilter(endpointApi, backendProtocol)
 		if serviceControlFilter != nil {
 			httpFilters = append(httpFilters, serviceControlFilter)
 		}
@@ -448,14 +448,13 @@ func (m *ConfigManager) makeJwtAuthnFilter(endpointApi *api.Api, backendProtocol
 	return jwtAuthnFilter
 }
 
-func (m *ConfigManager) makeServiceControlFilter() *hcm.HttpFilter {
-	serviceName := m.serviceConfig.GetName()
-	if serviceName == "" || m.serviceConfig.GetControl().GetEnvironment() == "" {
+func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendProtocol ut.BackendProtocol) *hcm.HttpFilter {
+	if m.serviceConfig.GetControl().GetEnvironment() == "" {
 		return nil
 	}
 
 	service := &scpb.Service{
-		ServiceName:  serviceName,
+		ServiceName:  m.serviceName,
 		TokenCluster: "ads_cluster",
 		ServiceControlUri: &scpb.HttpUri{
 			Uri:     serviceControlUri,
@@ -465,18 +464,17 @@ func (m *ConfigManager) makeServiceControlFilter() *hcm.HttpFilter {
 	}
 
 	rulesMap := make(map[string][]*scpb.ServiceControlRule)
-	for _, api := range m.serviceConfig.GetApis() {
-		for _, method := range api.GetMethods() {
-			grpcUri := fmt.Sprintf("/%s/%s", api.GetName(), method.GetName())
-			selector := fmt.Sprintf("%s.%s", api.GetName(), method.GetName())
+	if backendProtocol == ut.GRPC {
+		for _, method := range endpointApi.GetMethods() {
+			selector := fmt.Sprintf("%s.%s", endpointApi.GetName(), method.GetName())
 			rulesMap[selector] = []*scpb.ServiceControlRule{
 				&scpb.ServiceControlRule{
 					Requires: &scpb.Requirement{
-						ServiceName:   serviceName,
+						ServiceName:   m.serviceName,
 						OperationName: selector,
 					},
 					Pattern: &commonpb.Pattern{
-						UriTemplate: grpcUri,
+						UriTemplate: fmt.Sprintf("/%s/%s", endpointApi.GetName(), method.GetName()),
 						HttpMethod:  ut.POST,
 					},
 				},
@@ -485,66 +483,43 @@ func (m *ConfigManager) makeServiceControlFilter() *hcm.HttpFilter {
 	}
 
 	for _, httpRule := range m.serviceConfig.GetHttp().GetRules() {
-		scRules := rulesMap[httpRule.GetSelector()]
+		var newPattern *commonpb.Pattern
 		switch httpPattern := httpRule.GetPattern().(type) {
 		case *annotations.HttpRule_Get:
-			scRules = append(scRules, &scpb.ServiceControlRule{
-				Requires: &scpb.Requirement{
-					ServiceName:   serviceName,
-					OperationName: httpRule.GetSelector(),
-				},
-				Pattern: &commonpb.Pattern{
-					UriTemplate: httpPattern.Get,
-					HttpMethod:  ut.GET,
-				},
-			})
+			newPattern = &commonpb.Pattern{
+				UriTemplate: httpPattern.Get,
+				HttpMethod:  ut.GET,
+			}
 		case *annotations.HttpRule_Put:
-			scRules = append(scRules, &scpb.ServiceControlRule{
-				Requires: &scpb.Requirement{
-					ServiceName:   serviceName,
-					OperationName: httpRule.GetSelector(),
-				},
-				Pattern: &commonpb.Pattern{
-					UriTemplate: httpPattern.Put,
-					HttpMethod:  ut.PUT,
-				},
-			})
+			newPattern = &commonpb.Pattern{
+				UriTemplate: httpPattern.Put,
+				HttpMethod:  ut.PUT,
+			}
 		case *annotations.HttpRule_Post:
-			scRules = append(scRules, &scpb.ServiceControlRule{
-				Requires: &scpb.Requirement{
-					ServiceName:   serviceName,
-					OperationName: httpRule.GetSelector(),
-				},
-				Pattern: &commonpb.Pattern{
-					UriTemplate: httpPattern.Post,
-					HttpMethod:  ut.POST,
-				},
-			})
+			newPattern = &commonpb.Pattern{
+				UriTemplate: httpPattern.Post,
+				HttpMethod:  ut.POST,
+			}
 		case *annotations.HttpRule_Delete:
-			scRules = append(scRules, &scpb.ServiceControlRule{
-				Requires: &scpb.Requirement{
-					ServiceName:   serviceName,
-					OperationName: httpRule.GetSelector(),
-				},
-				Pattern: &commonpb.Pattern{
-					UriTemplate: httpPattern.Delete,
-					HttpMethod:  ut.DELETE,
-				},
-			})
+			newPattern = &commonpb.Pattern{
+				UriTemplate: httpPattern.Delete,
+				HttpMethod:  ut.DELETE,
+			}
 		case *annotations.HttpRule_Patch:
-			scRules = append(scRules, &scpb.ServiceControlRule{
+			newPattern = &commonpb.Pattern{
+				UriTemplate: httpPattern.Patch,
+				HttpMethod:  ut.PATCH,
+			}
+		}
+
+		rulesMap[httpRule.GetSelector()] = append(rulesMap[httpRule.GetSelector()],
+			&scpb.ServiceControlRule{
 				Requires: &scpb.Requirement{
-					ServiceName:   serviceName,
+					ServiceName:   m.serviceName,
 					OperationName: httpRule.GetSelector(),
 				},
-				Pattern: &commonpb.Pattern{
-					UriTemplate: httpPattern.Patch,
-					HttpMethod:  ut.PATCH,
-				},
+				Pattern: newPattern,
 			})
-		}
-		rulesMap[httpRule.GetSelector()] = scRules
-
 	}
 
 	for _, usageRule := range m.serviceConfig.GetUsage().GetRules() {
@@ -566,7 +541,7 @@ func (m *ConfigManager) makeServiceControlFilter() *hcm.HttpFilter {
 
 	filterConfig := &scpb.FilterConfig{
 		Services:    []*scpb.Service{service},
-		ServiceName: serviceName,
+		ServiceName: m.serviceName,
 		ServiceControlUri: &scpb.HttpUri{
 			Uri:     serviceControlUri,
 			Cluster: "service_control_cluster",
