@@ -14,30 +14,38 @@
 
 package testdata
 
-var (
-	// MockJwtProviderMap contains key(ProviderId): value(Issuer)
-	MockJwtProviderMap = map[string]*MockJwtProvider{}
+import (
+	"cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-type MockJwtProvider struct {
-	Issuer string
-	Jwks   string
-}
+var (
+	// MockJwtProviderMap contains key(ProviderId): value(Issuer)
+	MockJwtProviderMap = map[string]*conf.AuthProvider{}
+)
 
 // Test Jwks and Jwt Tokens are generated following
 // https://github.com/istio/istio/tree/master/security/tools/jwt/samples.
 func InitMockJwtProviders() {
-	MockJwtProviderMap["google_service_account"] = &MockJwtProvider{
-		Issuer: "api-proxy-testing@cloud.goog",
-		Jwks:   FakeCloudJwks,
+	MockJwtProviderMap["google_service_account"] = &conf.AuthProvider{
+		Id:      "google_service_account",
+		Issuer:  "api-proxy-testing@cloud.goog",
+		JwksUri: components.NewMockJwtProvider(FakeCloudJwks).GetURL(),
 	}
-	MockJwtProviderMap["google_jwt"] = &MockJwtProvider{
-		Issuer: "api-proxy-testing@cloud.goog",
-		Jwks:   FakeCloudJwks,
+	MockJwtProviderMap["google_jwt"] = &conf.AuthProvider{
+		Id:      "google_jwt",
+		Issuer:  "api-proxy-testing@cloud.goog",
+		JwksUri: components.NewMockJwtProvider(FakeCloudJwks).GetURL(),
 	}
-	MockJwtProviderMap["endpoints_jwt"] = &MockJwtProvider{
-		Issuer: "jwt-client.endpoints.sample.google.com",
-		Jwks:   FakeEndpointsJwks,
+	MockJwtProviderMap["endpoints_jwt"] = &conf.AuthProvider{
+		Id:      "endpoints_jwt",
+		Issuer:  "jwt-client.endpoints.sample.google.com",
+		JwksUri: components.NewMockJwtProvider(FakeEndpointsJwks).GetURL(),
+	}
+	MockJwtProviderMap["broken_provider"] = &conf.AuthProvider{
+		Id:      "broken_provider",
+		Issuer:  "http://broken_issuer.com",
+		JwksUri: components.NewMockInvalidJwtProvider().GetURL(),
 	}
 }
 

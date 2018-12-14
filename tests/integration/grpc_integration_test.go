@@ -82,7 +82,7 @@ func TestGrpcJwt(t *testing.T) {
 	args := []string{"--service_name=" + serviceName, "--config_id=" + configId,
 		"--skip_service_control_filter=true", "--backend_protocol=grpc"}
 
-	s := env.NewTestEnv( /*mockMetadata=*/ true /*mockServiceManagement=*/, true /*mockServiceControl=*/, true /*mockJwtPrividers=*/, []string{"google_service_account", "endpoints_jwt"})
+	s := env.NewTestEnv( /*mockMetadata=*/ true /*mockServiceManagement=*/, true /*mockServiceControl=*/, true /*mockJwtPrividers=*/, []string{"google_service_account", "endpoints_jwt", "broken_provider"})
 	if err := s.Setup("bookstore", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -236,7 +236,8 @@ func TestGrpcJwt(t *testing.T) {
 			wantResp:       `{"id":"12345","title":"New Book"}`,
 		},
 
-		// Testing JWT with multiple Providers, token from anyone should work.
+		// Testing JWT with multiple Providers, token from anyone should work,
+		// even with an invalid issuer.
 		{
 			desc:           "Succeed for Http client, with multi requirements from different providers",
 			clientProtocol: "http",

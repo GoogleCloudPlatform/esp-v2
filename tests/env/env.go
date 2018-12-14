@@ -23,7 +23,6 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 var (
@@ -68,7 +67,6 @@ func (e *TestEnv) Setup(backendService string, confArgs []string) error {
 		}
 		if len(e.mockJwtProviders) > 0 {
 			testdata.InitMockJwtProviders()
-
 			// Add Mock Jwt Providers to the fake ServiceConfig.
 			for _, id := range e.mockJwtProviders {
 				provider, ok := testdata.MockJwtProviderMap[id]
@@ -76,12 +74,7 @@ func (e *TestEnv) Setup(backendService string, confArgs []string) error {
 					return fmt.Errorf("not supported jwt provider id")
 				}
 				auth := fakeServiceConfig.GetAuthentication()
-				auth.Providers = append(auth.Providers,
-					&conf.AuthProvider{
-						Id:      id,
-						Issuer:  provider.Issuer,
-						JwksUri: components.NewMockJwtProvider(provider.Jwks).GetURL(),
-					})
+				auth.Providers = append(auth.Providers, provider)
 			}
 		}
 
