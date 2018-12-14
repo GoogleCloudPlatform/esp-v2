@@ -37,7 +37,7 @@ type Envoy struct {
 func NewEnvoy(debugMode bool, confPath string) (*Envoy, error) {
 	args := []string{"-c", confPath}
 	if debugMode {
-		args = append(args, "--log-level", "debug")
+		args = append(args, "--log-level", "debug", "--drain-time-s", "1")
 	}
 
 	cmd := exec.Command(envoyPath, args...)

@@ -349,7 +349,7 @@ func (m *ConfigManager) makeJwtAuthnFilter(endpointApi *api.Api, backendProtocol
 		jwk, err := fetchJwk(provider.GetJwksUri(), m.client)
 		if err != nil {
 			glog.Warningf("fetch jwk from issuer %s got error: %s", provider.GetIssuer(), err)
-			break
+			continue
 		}
 		jp := &ac.JwtProvider{
 			Issuer: provider.GetIssuer(),

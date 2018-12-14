@@ -32,6 +32,14 @@ func NewMockJwtProvider(jwks string) *MockJwtProvider {
 		}))}
 }
 
+// NewMockInvalidJwtProvider creates a new Jwt provider which returns error.
+func NewMockInvalidJwtProvider() *MockJwtProvider {
+	return &MockJwtProvider{
+		s: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, `{"code": 503, "message": "service not found"}`, 503)
+		}))}
+}
+
 func (m *MockJwtProvider) GetURL() string {
 	return m.s.URL
 }
