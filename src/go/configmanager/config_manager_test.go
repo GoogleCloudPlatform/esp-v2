@@ -23,14 +23,18 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	"github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/gogo/protobuf/jsonpb"
+	"github.com/gogo/protobuf/types"
+	"google.golang.org/genproto/protobuf/api"
 )
 
 const (
@@ -952,6 +956,97 @@ func TestFetchClusters(t *testing.T) {
 				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got Clusters: %s, want: %s", i, tc.desc, gotClusters, want)
 			}
 		})
+	}
+}
+
+func TestMakeRouteConfig(t *testing.T) {
+	testData := []struct {
+		desc string
+		// Test parameters, in the order of "cors_preset", "cors_allow_origin"
+		// "cors_allow_origin_regex", "cors_allow_methods", "cors_allow_headers"
+		// "cors_expose_headers"
+		params           []string
+		allowCredentials bool
+		wantedError      string
+		wantRoute        *route.CorsPolicy
+	}{
+		{
+			desc:      "No Cors",
+			wantRoute: nil,
+		},
+		{
+			desc:        "Incorrect configured basic Cors",
+			params:      []string{"basic", "", `^https?://.+\\.example\\.com$`, "", "", ""},
+			wantedError: "cors_allow_origin cannot be empty when cors_preset=basic",
+		},
+		{
+			desc:        "Incorrect configured  Cors",
+			params:      []string{"", "", "", "GET", "", ""},
+			wantedError: "cors_preset must be set in order to enable CORS support",
+		},
+		{
+			desc:        "Incorrect configured regex Cors",
+			params:      []string{"cors_with_regexs", "", `^https?://.+\\.example\\.com$`, "", "", ""},
+			wantedError: `cors_preset must be either "basic" or "cors_with_regex"`,
+		},
+		{
+			desc:   "Correct configured basic Cors, with allow methods",
+			params: []string{"basic", "http://example.com", "", "GET,POST,PUT,OPTIONS", "", ""},
+			wantRoute: &route.CorsPolicy{
+				AllowOrigin:      []string{"http://example.com"},
+				AllowMethods:     "GET,POST,PUT,OPTIONS",
+				AllowCredentials: &types.BoolValue{Value: false},
+			},
+		},
+		{
+			desc:   "Correct configured regex Cors, with allow headers",
+			params: []string{"cors_with_regex", "", `^https?://.+\\.example\\.com$`, "", "Origin,Content-Type,Accept", ""},
+			wantRoute: &route.CorsPolicy{
+				AllowOriginRegex: []string{`^https?://.+\\.example\\.com$`},
+				AllowHeaders:     "Origin,Content-Type,Accept",
+				AllowCredentials: &types.BoolValue{Value: false},
+			},
+		},
+		{
+			desc:             "Correct configured regex Cors, with expose headers",
+			params:           []string{"cors_with_regex", "", `^https?://.+\\.example\\.com$`, "", "", "Content-Length"},
+			allowCredentials: true,
+			wantRoute: &route.CorsPolicy{
+				AllowOriginRegex: []string{`^https?://.+\\.example\\.com$`},
+				ExposeHeaders:    "Content-Length",
+				AllowCredentials: &types.BoolValue{Value: true},
+			},
+		},
+	}
+
+	for _, tc := range testData {
+		// Initial flags
+		if tc.params != nil {
+			flag.Set("cors_preset", tc.params[0])
+			flag.Set("cors_allow_origin", tc.params[1])
+			flag.Set("cors_allow_origin_regex", tc.params[2])
+			flag.Set("cors_allow_methods", tc.params[3])
+			flag.Set("cors_allow_headers", tc.params[4])
+			flag.Set("cors_expose_headers", tc.params[5])
+		}
+		flag.Set("cors_allow_credentials", strconv.FormatBool(tc.allowCredentials))
+
+		gotRoute, err := makeRouteConfig(&api.Api{Name: "test-api"})
+		if tc.wantedError != "" {
+			if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
+				t.Errorf("Test (%s): expected err: %v, got: %v", tc.desc, tc.wantedError, err)
+			}
+			continue
+		}
+
+		gotHost := gotRoute.GetVirtualHosts()
+		if len(gotHost) != 1 {
+			t.Errorf("Test (%s): got expected number of virtual host", tc.desc)
+		}
+		gotCors := gotHost[0].GetCors()
+		if !reflect.DeepEqual(gotCors, tc.wantRoute) {
+			t.Errorf("Test (%s): makeRouteConfig failed, got Cors: %s, want: %s", tc.desc, gotCors, tc.wantRoute)
+		}
 	}
 }
 

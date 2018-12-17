@@ -120,7 +120,6 @@ func (m *ConfigManager) init() error {
 	var err error
 	m.serviceConfig, err = m.fetchConfig(m.configID)
 	if err != nil {
-		// TODO(jilinxia): changes error generation
 		return fmt.Errorf("fail to initialize config manager, %s", err)
 	}
 
@@ -277,34 +276,16 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 	}
 	httpFilters = append(httpFilters, routerFilter)
 
+	route, err := makeRouteConfig(endpointApi)
+	if err != nil {
+		return nil, nil, fmt.Errorf("makeHttpConnectionManagerRouteConfig got err: %s", err)
+	}
+
 	httpConMgr := &hcm.HttpConnectionManager{
 		CodecType:  hcm.AUTO,
 		StatPrefix: statPrefix,
 		RouteSpecifier: &hcm.HttpConnectionManager_RouteConfig{
-			RouteConfig: &v2.RouteConfiguration{
-				Name: routeName,
-				VirtualHosts: []route.VirtualHost{
-					{
-						Name:    virtualHostName,
-						Domains: []string{"*"},
-						Routes: []route.Route{
-							{
-								Match: route.RouteMatch{
-									PathSpecifier: &route.RouteMatch_Prefix{
-										Prefix: "/",
-									},
-								},
-								Action: &route.Route_Route{
-									Route: &route.RouteAction{
-										ClusterSpecifier: &route.RouteAction_Cluster{
-											Cluster: endpointApi.Name},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			RouteConfig: route,
 		},
 		HttpFilters: httpFilters,
 	}
@@ -314,6 +295,67 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 			Address:       *flags.ListenerAddress,
 			PortSpecifier: &core.SocketAddress_PortValue{PortValue: uint32(*flags.ListenerPort)}}}},
 	}, httpConMgr, nil
+}
+
+func makeRouteConfig(endpointApi *api.Api) (*v2.RouteConfiguration, error) {
+	var virtualHosts []route.VirtualHost
+	host := route.VirtualHost{
+		Name:    virtualHostName,
+		Domains: []string{"*"},
+		Routes: []route.Route{
+			{
+				Match: route.RouteMatch{
+					PathSpecifier: &route.RouteMatch_Prefix{
+						Prefix: "/",
+					},
+				},
+				Action: &route.Route_Route{
+					Route: &route.RouteAction{
+						ClusterSpecifier: &route.RouteAction_Cluster{
+							Cluster: endpointApi.Name},
+					},
+				},
+			},
+		},
+	}
+
+	switch *flags.CorsPreset {
+	case "basic":
+		org := *flags.CorsAllowOrigin
+		if org == "" {
+			return nil, fmt.Errorf("cors_allow_origin cannot be empty when cors_preset=basic")
+		}
+		host.Cors = &route.CorsPolicy{
+			AllowOrigin: []string{org},
+		}
+	case "cors_with_regex":
+		orgReg := *flags.CorsAllowOriginRegex
+		if orgReg == "" {
+			return nil, fmt.Errorf("cors_allow_origin_regex cannot be empty when cors_preset=cors_with_regex")
+		}
+		host.Cors = &route.CorsPolicy{
+			AllowOriginRegex: []string{orgReg},
+		}
+	case "":
+		if *flags.CorsAllowMethods != "" || *flags.CorsAllowHeaders != "" || *flags.CorsExposeHeaders != "" || *flags.CorsAllowCredentials {
+			return nil, fmt.Errorf("cors_preset must be set in order to enable CORS support")
+		}
+	default:
+		return nil, fmt.Errorf(`cors_preset must be either "basic" or "cors_with_regex"`)
+	}
+
+	if host.GetCors() != nil {
+		host.GetCors().AllowMethods = *flags.CorsAllowMethods
+		host.GetCors().AllowHeaders = *flags.CorsAllowHeaders
+		host.GetCors().ExposeHeaders = *flags.CorsExposeHeaders
+		host.GetCors().AllowCredentials = &types.BoolValue{Value: *flags.CorsAllowCredentials}
+	}
+
+	virtualHosts = append(virtualHosts, host)
+	return &v2.RouteConfiguration{
+		Name:         routeName,
+		VirtualHosts: virtualHosts,
+	}, nil
 }
 
 func (m *ConfigManager) makeTranscoderFilter(endpointApi *api.Api) *hcm.HttpFilter {
