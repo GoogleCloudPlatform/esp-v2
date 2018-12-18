@@ -26,12 +26,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/golang/glog"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jws"
 )
 
 // doEcho performs an authenticated echo request using an API key.
-func DoEcho(host, echo, apiKey string) ([]byte, error) {
+func DoEcho(host, apiKey, echo string) ([]byte, error) {
 	msg := map[string]string{
 		"message": echo,
 	}

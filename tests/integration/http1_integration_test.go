@@ -55,7 +55,7 @@ func TestHttp1Basic(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		resp, err := client.DoEcho(host, echo, "")
+		resp, err := client.DoEcho(host, "", echo)
 		if err != nil {
 			t.Fatal(err)
 		}
