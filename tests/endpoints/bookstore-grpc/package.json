@@ -1,0 +1,14 @@
+{
+  "name": "docker_echo_app",
+  "version": "1.0.0",
+  "description": "Node.js on Docker",
+  "main": "grpc_server.js",
+  "scripts": {
+    "start": "node grpc_server.js"
+  },
+  "dependencies": {
+    "express": "^4.16.1",
+    "grpc": "1.16.1",
+    "@grpc/proto-loader": "^0.3.0"
+  }
+}
