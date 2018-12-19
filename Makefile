@@ -43,6 +43,7 @@ build: format
 	@go build -o bin/configmanager ./src/go/server/server.go
 	@go build -o bin/echo/server ./tests/endpoints/echo/server/app.go
 	@bazel build //src/envoy:envoy
+	@cp -f bazel-bin/src/envoy/envoy bin/
 
 
 #-----------------------------------------------------------------------------
