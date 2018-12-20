@@ -26,7 +26,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/golang/glog"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jws"
 )

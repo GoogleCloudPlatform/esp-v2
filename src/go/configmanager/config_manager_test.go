@@ -105,6 +105,11 @@ func TestFetchListeners(t *testing.T) {
 										{
 											"config":{
 											},
+											"name":"envoy.grpc_web"
+										},
+										{
+											"config":{
+											},
 											"name":"envoy.router"
 										}
 									],
@@ -209,6 +214,11 @@ func TestFetchListeners(t *testing.T) {
                                     },
                                     "name":"envoy.filters.http.jwt_authn"
                                 },
+								{
+									"config":{
+									},
+									"name":"envoy.grpc_web"
+								},
                                 {
                                     "config":{
                                     },
@@ -359,8 +369,13 @@ func TestFetchListeners(t *testing.T) {
                                 {
                                     "config":{
                                     },
+                                    "name":"envoy.grpc_web"
+                                },
+                                {
+                                    "config":{
+                                    },
                                     "name":"envoy.router"
-                                 }
+                                }
                             ],
                             "route_config":{
                                 "name":"local_route",
@@ -510,8 +525,13 @@ func TestFetchListeners(t *testing.T) {
                                 {
                                     "config":{
                                     },
+                                    "name":"envoy.grpc_web"
+                                },
+                                {
+                                    "config":{
+                                    },
                                     "name":"envoy.router"
-                                 }
+                                }
                             ],
                             "route_config":{
                                 "name":"local_route",
@@ -657,6 +677,11 @@ func TestFetchListeners(t *testing.T) {
 												]
 											},
 											"name":"envoy.filters.http.service_control"
+										},
+										{
+											"config":{
+											},
+											"name":"envoy.grpc_web"
 										},
 										{
 											"config":{

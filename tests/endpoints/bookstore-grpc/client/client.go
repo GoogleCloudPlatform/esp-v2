@@ -20,6 +20,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
+	"path"
+	"strconv"
 	"strings"
 
 	bspb "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/proto"
@@ -29,37 +32,63 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func MakeCall(clientProtocol, addr, httpMethod, method, token string) (string, error) {
-	if strings.EqualFold(clientProtocol, "http") {
-		resp, err := makeHttpCall(addr, httpMethod, method, token)
-		if err != nil {
-			return "", fmt.Errorf("makeHttpCall got unexpected error: %v", err)
-		}
-		return string(resp), nil
-	} else {
-		resp, err := makeGrpcCall(addr, method, token)
-		if err != nil {
-			return "", fmt.Errorf("makeGrpcCall got unexpected error: %v", err)
-		}
-		return resp, nil
-	}
-	return "", nil
+var grpcWebHeader []header
+
+const (
+	bookstoreService = "endpoints.examples.bookstore.Bookstore"
+)
+
+type header struct {
+	key string
+	val string
 }
 
-var makeHttpCall = func(addr, httpMethod, method, token string) ([]byte, error) {
+func init() {
+	grpcWebHeader = []header{
+		{"X-User-Agent", "grpc-web-javascript/0.1"},
+		{"Content-Type", "application/grpc-web-text"},
+		{"Accept", "application/grpc-web-text"},
+		{"X-Grpc-Web", "1"},
+	}
+}
+
+func MakeCall(clientProtocol, addr, httpMethod, method, token string) (string, error) {
+	if strings.EqualFold(clientProtocol, "http") {
+		return makeHttpCall(addr, httpMethod, method, token)
+	}
+
+	if strings.EqualFold(clientProtocol, "grpc") {
+		return makeGrpcCall(addr, method, token)
+	}
+
+	if strings.EqualFold(clientProtocol, "grpc-web") {
+		return makeGrpcWebCall(addr, method, token)
+	}
+
+	return "", fmt.Errorf("unsupported client protocol %s", clientProtocol)
+}
+
+var makeHttpCall = func(addr, httpMethod, method, token string) (string, error) {
 	var cli http.Client
 	req, _ := http.NewRequest(httpMethod, fmt.Sprintf("http://%s%s", addr, method), nil)
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 
 	resp, err := cli.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("http got error: ", err)
+		return "", fmt.Errorf("http got error: ", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("http response status is not 200 OK: %s", resp.Status)
+		return "", fmt.Errorf("http response status is not 200 OK: %s", resp.Status)
 	}
-	return ioutil.ReadAll(resp.Body)
+
+	content, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(content), nil
 }
 
 var makeGrpcCall = func(addr, method, token string) (string, error) {
@@ -151,4 +180,48 @@ var makeGrpcCall = func(addr, method, token string) (string, error) {
 		return "", fmt.Errorf("unexpected method called")
 	}
 	return "", nil
+}
+
+var makeGrpcWebCall = func(addr, method, token string) (string, error) {
+	var body string
+	// TODO(kyuc): add other methods and probably set body in a different way...
+	switch method {
+	case "ListShelves":
+		// base64 encoded body for types.Empty
+		body = "AAAAAAA="
+	default:
+		return "", fmt.Errorf("expected method called")
+	}
+
+	u, err := url.Parse("http://" + addr)
+	if err != nil {
+		return "", err
+	}
+	u.Path = path.Join(u.Path, bookstoreService, method)
+	req, err := http.NewRequest("POST", u.String(), strings.NewReader(body))
+	if err != nil {
+		return "", err
+	}
+
+	for _, h := range grpcWebHeader {
+		req.Header.Add(h.key, h.val)
+	}
+	req.Header.Add("Content-Length", strconv.Itoa(len(body)))
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+
+	var client http.Client
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("request got an error: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("response status is not 200 OK: %s", resp.Status)
+	}
+
+	content, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("cannot read response body: %v", err)
+	}
+	return string(content), nil
 }

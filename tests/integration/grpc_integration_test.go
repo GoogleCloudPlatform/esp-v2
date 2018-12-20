@@ -61,6 +61,14 @@ func TestGrpc(t *testing.T) {
 			method:         "/v1/shelves/125",
 			wantResp:       `{"id":"125","theme":"Unknown Shelf"}`,
 		},
+		{
+			desc:           "gRPC Web client calling gRPC backend",
+			clientProtocol: "grpc-web",
+			method:         "ListShelves",
+			// base64 encoded response
+			// TODO(kyuc): consider handling this differently
+			wantResp: "AAAAABwKDgh7EgpTaGFrc3BlYXJlCgoIfBIGSGFtbGV0gAAAACBncnBjLXN0YXR1czowDQpncnBjLW1lc3NhZ2U6T0sNCg==",
+		},
 	}
 
 	for _, tc := range tests {

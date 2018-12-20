@@ -270,13 +270,19 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 		}
 	}
 
-	// Add gRPC transcode filter config for gRPC backend.
+	// Add gRPC transcode filter and gRPCWeb filter configs for gRPC backend.
 	if backendProtocol == ut.GRPC {
 		transcoderFilter := m.makeTranscoderFilter(endpointApi)
 		if transcoderFilter != nil {
 			httpFilters = append(httpFilters, transcoderFilter)
 			m.Infof("adding Transcoder Filter config: %v", transcoderFilter)
 		}
+
+		grpcWebFilter := &hcm.HttpFilter{
+			Name:   util.GRPCWeb,
+			Config: &types.Struct{},
+		}
+		httpFilters = append(httpFilters, grpcWebFilter)
 	}
 
 	// Add Envoy Router filter so requests are routed upstream.
