@@ -107,79 +107,35 @@ var makeGrpcCall = func(addr, method, token string) (string, error) {
 		ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs("Authorization", fmt.Sprintf("Bearer %s", token)))
 	}
 
-	var marshaler jsonpb.Marshaler
+	var respMsg proto.Message
 	switch method {
 	case "ListShelves":
 		req := &types.Empty{}
-		resp, err := cli.ListShelves(ctx, req)
-		if err != nil {
-			return "", fmt.Errorf("ListShelves got unexpected error: %v", err)
-		} else {
-			respJson, err := marshaler.MarshalToString(resp)
-			if err != nil {
-				return "", fmt.Errorf("MarshalToString failed: %v", err)
-			}
-			return respJson, nil
-		}
-
+		respMsg, err = cli.ListShelves(ctx, req)
 	case "CreateShelf":
 		req := &bspb.CreateShelfRequest{
 			Shelf: &bspb.Shelf{},
 		}
-		resp, err := cli.CreateShelf(ctx, req)
-		if err != nil {
-			return "", fmt.Errorf("CreateShelf got unexpected error: %v", err)
-		} else {
-			respJson, err := marshaler.MarshalToString(resp)
-			if err != nil {
-				return "", fmt.Errorf("MarshalToString failed: %v", err)
-			}
-			return respJson, nil
-		}
-
+		respMsg, err = cli.CreateShelf(ctx, req)
 	case "GetShelf":
 		req := &bspb.GetShelfRequest{}
-		resp, err := cli.GetShelf(ctx, req)
-		if err != nil {
-			return "", fmt.Errorf("GetShelf got unexpected error: %v", err)
-		} else {
-			respJson, err := marshaler.MarshalToString(resp)
-			if err != nil {
-				return "", fmt.Errorf("MarshalToString failed: %v", err)
-			}
-			return respJson, nil
-		}
-
+		respMsg, err = cli.GetShelf(ctx, req)
 	case "CreateBook":
 		req := &bspb.CreateBookRequest{}
-		resp, err := cli.CreateBook(ctx, req)
-		if err != nil {
-			return "", fmt.Errorf("CreateBook got unexpected error: %v", err)
-		} else {
-			respJson, err := marshaler.MarshalToString(resp)
-			if err != nil {
-				return "", fmt.Errorf("MarshalToString failed: %v", err)
-			}
-			return respJson, nil
-		}
-
+		respMsg, err = cli.CreateBook(ctx, req)
 	case "DeleteShelf":
 		req := &bspb.DeleteShelfRequest{}
-		resp, err := cli.DeleteShelf(ctx, req)
-		if err != nil {
-			return "", fmt.Errorf("DeleteShelf got unexpected error: %v", err)
-		} else {
-			respJson, err := marshaler.MarshalToString(resp)
-			if err != nil {
-				return "", fmt.Errorf("MarshalToString failed: %v", err)
-			}
-			return respJson, nil
-		}
-
+		respMsg, err = cli.DeleteShelf(ctx, req)
 	default:
 		return "", fmt.Errorf("unexpected method called")
 	}
-	return "", nil
+
+	if err != nil {
+		return "", fmt.Errorf("%v got unexpected error: %v", method, err)
+	}
+
+	var marshaler jsonpb.Marshaler
+	return marshaler.MarshalToString(respMsg)
 }
 
 var makeGrpcWebCall = func(addr, method, token string) (string, error) {
