@@ -33,7 +33,7 @@ func TestGrpc(t *testing.T) {
 	configId := "test-config-id"
 
 	args := []string{"--service_name=" + serviceName, "--config_id=" + configId,
-		"--skip_service_control_filter=true", "--backend_protocol=grpc"}
+		"--skip_service_control_filter=true", "--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv( /*mockMetadata=*/ true /*mockServiceManagement=*/, true /*mockServiceControl=*/, true /*mockJwtPrividers=*/, nil)
 
@@ -88,7 +88,7 @@ func TestGrpcJwt(t *testing.T) {
 	configId := "test-config-id"
 
 	args := []string{"--service_name=" + serviceName, "--config_id=" + configId,
-		"--skip_service_control_filter=true", "--backend_protocol=grpc"}
+		"--skip_service_control_filter=true", "--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv( /*mockMetadata=*/ true /*mockServiceManagement=*/, true /*mockServiceControl=*/, true /*mockJwtPrividers=*/, []string{"google_service_account", "endpoints_jwt", "broken_provider"})
 	if err := s.Setup("bookstore", args); err != nil {

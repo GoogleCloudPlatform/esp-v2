@@ -34,7 +34,7 @@ func TestHttp1Basic(t *testing.T) {
 	configId := "test-config-id"
 
 	args := []string{"--service_name=" + serviceName, "--config_id=" + configId,
-		"--skip_service_control_filter=true", "--backend_protocol=http1"}
+		"--skip_service_control_filter=true", "--backend_protocol=http1", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv( /*mockMetadata=*/ true /*mockServiceManagement=*/, true /*mockServiceControl=*/, true /*mockJwtPrividers=*/, nil)
 
@@ -71,7 +71,7 @@ func TestHttp1JWT(t *testing.T) {
 	configId := "test-config-id"
 
 	args := []string{"--service_name=" + serviceName, "--config_id=" + configId,
-		"--skip_service_control_filter=true", "--backend_protocol=http1"}
+		"--skip_service_control_filter=true", "--backend_protocol=http1", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv( /*mockMetadata=*/ true /*mockServiceManagement=*/, true /*mockServiceControl=*/, true /*mockJwtPrividers=*/, []string{"google_jwt"})
 

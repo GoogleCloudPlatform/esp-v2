@@ -19,9 +19,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
@@ -42,18 +44,19 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/duration"
-	"github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
+	sm "github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
 	"google.golang.org/genproto/googleapis/api/annotations"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/genproto/protobuf/api"
 )
 
 const (
-	statPrefix        = "ingress_http"
-	routeName         = "local_route"
-	virtualHostName   = "backend"
-	fetchConfigSuffix = "/v1/services/$serviceName/configs/$configId?view=FULL"
-	serviceControlUri = "https://servicecontrol.googleapis.com/v1/services/"
+	statPrefix          = "ingress_http"
+	routeName           = "local_route"
+	virtualHostName     = "backend"
+	fetchConfigSuffix   = "/v1/services/$serviceName/configs/$configId?view=FULL"
+	fetchRolloutsSuffix = "/v1/services/$serviceName/rollouts?filter=status=SUCCESS"
+	serviceControlUri   = "https://servicecontrol.googleapis.com/v1/services/"
 )
 
 var (
@@ -63,18 +66,26 @@ var (
 		path = strings.Replace(path, "$configId", configID, 1)
 		return path
 	}
+	fetchRolloutsURL = func(serviceName string) string {
+		path := *flags.ServiceManagementURL + fetchRolloutsSuffix
+		path = strings.Replace(path, "$serviceName", serviceName, 1)
+		return path
+	}
+	checkNewRolloutInterval = 60 * time.Second
 )
 
 // ConfigManager handles service configuration fetching and updating.
 // TODO(jilinxia): handles multi service name.
 type ConfigManager struct {
 	serviceName   string
-	configID      string
+	curRolloutID  string
+	curConfigID   string
 	serviceConfig *conf.Service
 	// httpPathMap stores all operations to http path pairs.
-	httpPathMap map[string]*httpRule
-	client      *http.Client
-	cache       cache.SnapshotCache
+	httpPathMap         map[string]*httpRule
+	client              *http.Client
+	cache               cache.SnapshotCache
+	checkRolloutsTicker *time.Ticker
 }
 
 type httpRule struct {
@@ -91,13 +102,10 @@ func NewConfigManager(name, configID string) (*ConfigManager, error) {
 			return nil, fmt.Errorf("failed to read metadata with key endpoints-service-name from metadata server")
 		}
 	}
-	if configID == "" {
-		configID, err = fetchConfigId()
-		if configID == "" || err != nil {
-			return nil, fmt.Errorf("failed to read metadata with key endpoints-service-version from metadata server")
-		}
+	// TODO(jcwang): try to fetch from metadata, if not found, set to fixed instead of throwing an error
+	if !(*flags.RolloutStrategy == ut.FixedRolloutStrategy || *flags.RolloutStrategy == ut.ManagedRolloutStrategy) {
+		return nil, fmt.Errorf(`failed to set rollout strategy. It must be either "managed" or "fixed"`)
 	}
-	glog.Infof("create new ConfigManager for service (%v) with configuration id (%v)", name, configID)
 
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -105,21 +113,95 @@ func NewConfigManager(name, configID string) (*ConfigManager, error) {
 	m := &ConfigManager{
 		serviceName: name,
 		client:      &http.Client{Transport: tr},
-		configID:    configID,
 	}
 	m.cache = cache.NewSnapshotCache(true, m, m)
-	if err := m.init(); err != nil {
-		return nil, err
+
+	if *flags.RolloutStrategy == ut.ManagedRolloutStrategy {
+		// try to fetch rollouts and get newest config, if failed, NewConfigManager exits with failure
+		if err := m.loadConfigFromRollouts(); err != nil {
+			return nil, err
+		}
+	} else {
+		// rollout strategy is fixed mode
+		if configID == "" {
+			configID, err = fetchConfigId()
+			if configID == "" || err != nil {
+				return nil, fmt.Errorf("failed to read metadata with key endpoints-service-version from metadata server")
+			}
+		}
+		m.curConfigID = configID
+		if err := m.updateSnapshot(); err != nil {
+			return nil, err
+		}
+	}
+	glog.Infof("create new ConfigManager for service (%v) with configuration id (%v)", m.serviceName, m.curConfigID)
+
+	if *flags.RolloutStrategy == ut.ManagedRolloutStrategy {
+		go func() {
+			glog.Infof("start checking new rollouts every %v seconds", checkNewRolloutInterval)
+			m.checkRolloutsTicker = time.NewTicker(checkNewRolloutInterval)
+			for range m.checkRolloutsTicker.C {
+				m.Infof("check new rollouts for service %v", m.serviceName)
+				// only log error and keep checking when fetching rollouts and getting newest config fail
+				if err := m.loadConfigFromRollouts(); err != nil {
+					glog.Errorf("error occurred when checking new rollouts, %v", err)
+				}
+			}
+		}()
 	}
 	return m, nil
 }
 
-// init should be called when starting up the server.
+func (m *ConfigManager) loadConfigFromRollouts() error {
+	var err error
+	var listServiceRolloutsResponse *sm.ListServiceRolloutsResponse
+	listServiceRolloutsResponse, err = m.fetchRollouts()
+	if err != nil {
+		return fmt.Errorf("fail to get rollouts, %s", err)
+	}
+	m.Infof("get rollouts %v", listServiceRolloutsResponse)
+	if len(listServiceRolloutsResponse.Rollouts) == 0 {
+		return fmt.Errorf("no active rollouts")
+	}
+	newRolloutId := listServiceRolloutsResponse.Rollouts[0].RolloutId
+	if m.curRolloutID == newRolloutId {
+		return nil
+	}
+	m.curRolloutID = newRolloutId
+	m.Infof("found new rollout id %v for service %v, %v", m.curRolloutID, m.serviceName)
+
+	trafficPercentStrategy := listServiceRolloutsResponse.Rollouts[0].GetTrafficPercentStrategy()
+	trafficPercentMap := trafficPercentStrategy.GetPercentages()
+	if len(trafficPercentMap) == 0 {
+		return fmt.Errorf("no active rollouts")
+	}
+	var newConfigID string
+	currentMaxPercent := 0.0
+	// take config ID with max traffic percent as new config ID
+	for k, v := range trafficPercentMap {
+		if v > currentMaxPercent {
+			newConfigID = k
+			currentMaxPercent = v
+		}
+	}
+	if newConfigID == m.curConfigID {
+		m.Infof("no new configuration to load for service %v, current configuration id %v", m.serviceName, m.curConfigID)
+		return nil
+	}
+	if !(math.Abs(100.0-currentMaxPercent) < 1e-9) {
+		glog.Warningf("though traffic percentage of configuration %v is %v%%, set it to 100%%", newConfigID, currentMaxPercent)
+	}
+	m.curConfigID = newConfigID
+	m.Infof("found new configuration id %v for service %v", m.curConfigID, m.serviceName)
+	return m.updateSnapshot()
+}
+
+// updateSnapshot should be called when starting up the server.
 // It calls ServiceManager Server to fetch the service configuration in order
 // to dynamically configure Envoy.
-func (m *ConfigManager) init() error {
+func (m *ConfigManager) updateSnapshot() error {
 	var err error
-	m.serviceConfig, err = m.fetchConfig(m.configID)
+	m.serviceConfig, err = m.fetchConfig(m.curConfigID)
 	if err != nil {
 		return fmt.Errorf("fail to initialize config manager, %s", err)
 	}
@@ -201,7 +283,7 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	}
 	m.Infof("Cluster configuration: %v", cluster)
 
-	snapshot := cache.NewSnapshot(m.configID, endpoints, []cache.Resource{cluster}, routes, []cache.Resource{serverlistener})
+	snapshot := cache.NewSnapshot(m.curConfigID, endpoints, []cache.Resource{cluster}, routes, []cache.Resource{serverlistener})
 	glog.Infof("Envoy Dynamic Configuration is cached for service: %v", m.serviceName)
 	return &snapshot, nil
 }
@@ -379,11 +461,11 @@ func makeRouteConfig(endpointApi *api.Api) (*v2.RouteConfiguration, error) {
 
 func (m *ConfigManager) makeTranscoderFilter(endpointApi *api.Api) *hcm.HttpFilter {
 	for _, sourceFile := range m.serviceConfig.GetSourceInfo().GetSourceFiles() {
-		configFile := &servicemanagement.ConfigFile{}
+		configFile := &sm.ConfigFile{}
 		ptypes.UnmarshalAny(sourceFile, configFile)
 		m.Infof("got proto descriptor: %v", string(configFile.GetFileContents()))
 
-		if configFile.GetFileType() == servicemanagement.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
+		if configFile.GetFileType() == sm.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
 			configContent := configFile.GetFileContents()
 			transcodeConfig := &tc.GrpcJsonTranscoder{
 				DescriptorSet: &tc.GrpcJsonTranscoder_ProtoDescriptorBin{
@@ -679,6 +761,16 @@ func (m *ConfigManager) Errorf(format string, args ...interface{}) { glog.Errorf
 
 func (m *ConfigManager) Cache() cache.Cache { return m.cache }
 
+// TODO(jcwang) cleanup here. This function is redundant.
+func (m *ConfigManager) fetchRollouts() (*sm.ListServiceRolloutsResponse, error) {
+	token, _, err := fetchAccessToken()
+	if err != nil {
+		return nil, fmt.Errorf("fail to get access token")
+	}
+
+	return callServiceManagementRollouts(fetchRolloutsURL(m.serviceName), token, m.client)
+}
+
 func (m *ConfigManager) fetchConfig(configId string) (*conf.Service, error) {
 	token, _, err := fetchAccessToken()
 	if err != nil {
@@ -695,21 +787,32 @@ func (fn funcResolver) Resolve(url string) (proto.Message, error) {
 	return fn(url)
 }
 
-var callServiceManagement = func(path, token string, client *http.Client) (*conf.Service, error) {
-	req, _ := http.NewRequest("GET", path, nil)
-	req.Header.Add("Authorization", "Bearer "+token)
-	resp, err := client.Do(req)
-	if err != nil {
+var callServiceManagementRollouts = func(path, token string, client *http.Client) (*sm.ListServiceRolloutsResponse, error) {
+	var err error
+	var resp *http.Response
+	if resp, err = callWithAccessToken(path, token, client); err != nil {
 		return nil, err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("http call to service management returns not 200 OK: %v", resp.Status)
+	defer resp.Body.Close()
+	unmarshaler := &jsonpb.Unmarshaler{}
+	var rolloutsResponse sm.ListServiceRolloutsResponse
+	if err = unmarshaler.Unmarshal(resp.Body, &rolloutsResponse); err != nil {
+		return nil, fmt.Errorf("fail to unmarshal ListServiceRolloutsResponse: %s", err)
+	}
+	return &rolloutsResponse, nil
+}
+
+var callServiceManagement = func(path, token string, client *http.Client) (*conf.Service, error) {
+	var err error
+	var resp *http.Response
+	if resp, err = callWithAccessToken(path, token, client); err != nil {
+		return nil, err
 	}
 	defer resp.Body.Close()
 	resolver := funcResolver(func(url string) (proto.Message, error) {
 		switch url {
 		case "type.googleapis.com/google.api.servicemanagement.v1.ConfigFile":
-			return new(servicemanagement.ConfigFile), nil
+			return new(sm.ConfigFile), nil
 		case "type.googleapis.com/google.api.HttpRule":
 			return new(annotations.HttpRule), nil
 		default:
@@ -717,14 +820,27 @@ var callServiceManagement = func(path, token string, client *http.Client) (*conf
 		}
 	})
 	unmarshaler := &jsonpb.Unmarshaler{
-		AllowUnknownFields: true,
-		AnyResolver:        resolver,
+		AnyResolver: resolver,
 	}
 	var serviceConfig conf.Service
 	if err = unmarshaler.Unmarshal(resp.Body, &serviceConfig); err != nil {
 		return nil, fmt.Errorf("fail to unmarshal serviceConfig: %s", err)
 	}
 	return &serviceConfig, nil
+}
+
+var callWithAccessToken = func(path, token string, client *http.Client) (*http.Response, error) {
+	req, _ := http.NewRequest("GET", path, nil)
+	req.Header.Add("Authorization", "Bearer "+token)
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+		return nil, fmt.Errorf("http call to %s returns not 200 OK: %v", path, resp.Status)
+	}
+	return resp, nil
 }
 
 var fetchJwk = func(path string, client *http.Client) ([]byte, error) {

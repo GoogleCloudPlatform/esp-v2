@@ -25,6 +25,7 @@ var (
 	// Service Management related configurations. Must be set.
 	ServiceName     = flag.String("service_name", "", "endpoint service name")
 	ConfigID        = flag.String("config_id", "", "initial service config id")
+	RolloutStrategy = flag.String("rollout_strategy", "", `service config rollout strategy, must be either "managed" or "fixed"`)
 	BackendProtocol = flag.String("backend_protocol", "", `must set as one of "grpc", "http1", "http2"`)
 
 	// Cors related configurations.

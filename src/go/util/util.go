@@ -32,6 +32,10 @@ const (
 	DELETE = "DELETE"
 	PATCH  = "PATCH"
 	CUSTOM = "CUSTOM"
+
+	// rollout strategy
+	FixedRolloutStrategy   = "fixed"
+	ManagedRolloutStrategy = "managed"
 )
 
 type BackendProtocol int32

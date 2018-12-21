@@ -26,6 +26,9 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
+
+	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
@@ -47,6 +50,7 @@ const (
 
 var (
 	fakeConfig          = ``
+	fakeRollout         = ``
 	fakeProtoDescriptor = base64.StdEncoding.EncodeToString([]byte("rawDescriptor"))
 )
 
@@ -845,7 +849,7 @@ func TestFetchListeners(t *testing.T) {
 		fakeConfig = tc.fakeServiceConfig
 		flag.Set("backend_protocol", tc.backendProtocol)
 
-		runTest(t, func(env *testEnv) {
+		runTest(t, ut.FixedRolloutStrategy, func(env *testEnv) {
 			ctx := context.Background()
 			// First request, VersionId should be empty.
 			req := v2.DiscoveryRequest{
@@ -948,7 +952,7 @@ func TestFetchClusters(t *testing.T) {
 		fakeConfig = tc.fakeServiceConfig
 		flag.Set("backend_protocol", tc.backendProtocol)
 
-		runTest(t, func(env *testEnv) {
+		runTest(t, ut.FixedRolloutStrategy, func(env *testEnv) {
 			ctx := context.Background()
 			// First request, VersionId should be empty.
 			req := v2.DiscoveryRequest{
@@ -1075,18 +1079,167 @@ func TestMakeRouteConfig(t *testing.T) {
 	}
 }
 
+func TestServiceConfigAutoUpdate(t *testing.T) {
+	var oldConfigID, oldRolloutID, newConfigID, newRolloutID string
+	oldConfigID = "2018-12-05r0"
+	oldRolloutID = oldConfigID
+	newConfigID = "2018-12-05r1"
+	newRolloutID = newConfigID
+	testCase := struct {
+		desc                  string
+		fakeOldServiceRollout string
+		fakeNewServiceRollout string
+		fakeOldServiceConfig  string
+		fakeNewServiceConfig  string
+		backendProtocol       string
+	}{
+		desc: "Success for service config auto update",
+		fakeOldServiceRollout: fmt.Sprintf(`{
+			"rollouts": [
+			    {
+			      "rolloutId": "%s",
+			      "createTime": "2018-12-05T19:07:18.438Z",
+			      "createdBy": "mocktest@google.com",
+			      "status": "SUCCESS",
+			      "trafficPercentStrategy": {
+			        "percentages": {
+			          "%s": 100
+			        }
+			      },
+			      "serviceName": "%s"
+			    }
+			  ]
+			}`, oldRolloutID, oldConfigID, testProjectName),
+		fakeNewServiceRollout: fmt.Sprintf(`{
+			"rollouts": [
+			    {
+			      "rolloutId": "%s",
+			      "createTime": "2018-12-05T19:07:18.438Z",
+			      "createdBy": "mocktest@google.com",
+			      "status": "SUCCESS",
+			      "trafficPercentStrategy": {
+			        "percentages": {
+			          "%s": 40,
+			          "%s": 60
+			        }
+			      },
+			      "serviceName": "%s"
+			    },
+			    {
+			      "rolloutId": "%s",
+			      "createTime": "2018-12-05T19:07:18.438Z",
+			      "createdBy": "mocktest@google.com",
+			      "status": "SUCCESS",
+			      "trafficPercentStrategy": {
+			        "percentages": {
+			          "%s": 100
+			        }
+			      },
+			      "serviceName": "%s"
+			    }
+			  ]
+			}`, newRolloutID, oldConfigID, newConfigID, testProjectName,
+			oldRolloutID, oldConfigID, testProjectName),
+		fakeOldServiceConfig: fmt.Sprintf(`{
+				"name": "%s",
+				"title": "Endpoints Example",
+				"documentation": {
+				"summary": "A simple Google Cloud Endpoints API example."
+				},
+				"apis":[
+					{
+						"name":"%s"
+					}
+				],
+				"id": "%s"
+			}`, testProjectName, testEndpointName, oldConfigID),
+		fakeNewServiceConfig: fmt.Sprintf(`{
+				"name": "%s",
+				"title": "Endpoints Example",
+				"documentation": {
+				"summary": "A simple Google Cloud Endpoints API example."
+				},
+				"apis":[
+					{
+						"name":"%s"
+					}
+				],
+				"id": "%s"
+			}`, testProjectName, testEndpointName, newConfigID),
+		backendProtocol: "grpc",
+	}
+
+	// Overrides fakeConfig with fakeOldServiceConfig for the test case.
+	fakeConfig = testCase.fakeOldServiceConfig
+	fakeRollout = testCase.fakeOldServiceRollout
+	checkNewRolloutInterval = 1 * time.Second
+	flag.Set("backend_protocol", testCase.backendProtocol)
+
+	runTest(t, ut.ManagedRolloutStrategy, func(env *testEnv) {
+		var resp *cache.Response
+		var err error
+		ctx := context.Background()
+		req := v2.DiscoveryRequest{
+			Node: &core.Node{
+				Id: *flags.Node,
+			},
+			TypeUrl: cache.ListenerType,
+		}
+		resp, err = env.configManager.cache.Fetch(ctx, req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if resp.Version != oldConfigID {
+			t.Errorf("Test Desc: %s, snapshot cache fetch got version: %v, want: %v", testCase.desc, resp.Version, oldConfigID)
+		}
+		if env.configManager.curRolloutID != oldRolloutID {
+			t.Errorf("Test Desc: %s, config manager rollout id: %v, want: %v", testCase.desc, env.configManager.curRolloutID, oldRolloutID)
+		}
+		if !reflect.DeepEqual(resp.Request, req) {
+			t.Errorf("Test Desc: %s, snapshot cache fetch got request: %v, want: %v", testCase.desc, resp.Request, req)
+		}
+
+		fakeConfig = testCase.fakeNewServiceConfig
+		fakeRollout = testCase.fakeNewServiceRollout
+		time.Sleep(time.Duration(checkNewRolloutInterval + time.Second))
+
+		resp, err = env.configManager.cache.Fetch(ctx, req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if resp.Version != newConfigID {
+			t.Errorf("Test Desc: %s, snapshot cache fetch got version: %v, want: %v", testCase.desc, resp.Version, newConfigID)
+		}
+		if env.configManager.curRolloutID != newRolloutID {
+			t.Errorf("Test Desc: %s, config manager rollout id: %v, want: %v", testCase.desc, env.configManager.curRolloutID, newRolloutID)
+		}
+		if !reflect.DeepEqual(resp.Request, req) {
+			t.Errorf("Test Desc: %s, snapshot cache fetch got request: %v, want: %v", testCase.desc, resp.Request, req)
+		}
+	})
+}
+
 // Test Environment setup.
 
 type testEnv struct {
 	configManager *ConfigManager
 }
 
-func runTest(t *testing.T, f func(*testEnv)) {
+func runTest(t *testing.T, testRolloutStrategy string, f func(*testEnv)) {
 	mockConfig := initMockConfigServer(t)
 	defer mockConfig.Close()
 	fetchConfigURL = func(serviceName, configID string) string {
 		return mockConfig.URL
 	}
+
+	mockRollout := initMockRolloutServer(t)
+	defer mockRollout.Close()
+	fetchRolloutsURL = func(serviceName string) string {
+		return mockRollout.URL
+	}
+
 	mockMetadata := initMockMetadataServer(fakeToken)
 	defer mockMetadata.Close()
 	fetchMetadataURL = func(_ string) string {
@@ -1098,6 +1251,7 @@ func runTest(t *testing.T, f func(*testEnv)) {
 
 	// Replace $JWKSURI here, since it depends on the mock server.
 	fakeConfig = strings.Replace(fakeConfig, "$JWKSURI", mockJwksIssuer.URL, -1)
+	flag.Set("rollout_strategy", testRolloutStrategy)
 	manager, err := NewConfigManager(testProjectName, testConfigID)
 	if err != nil {
 		t.Fatal("fail to initialize ConfigManager: ", err)
@@ -1112,6 +1266,13 @@ func initMockConfigServer(t *testing.T) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(normalizeJson(fakeConfig)))
+	}))
+}
+
+func initMockRolloutServer(t *testing.T) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(normalizeJson(fakeRollout)))
 	}))
 }
 
