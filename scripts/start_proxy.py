@@ -33,6 +33,12 @@ GRPC_PREFIX = "grpc://"
 HTTP_PREFIX = "http://"
 HTTPS_PREFIX = "https://"
 
+# Management service
+MANAGEMENT_ADDRESS = "https://servicemanagement.googleapis.com"
+
+# Metadata service
+METADATA_ADDRESS = "http://169.254.169.254"
+
 def start_proxy(proxy_conf):
     try:
         os.execv(PROXY_STARTER, proxy_conf)
@@ -75,12 +81,85 @@ environment variable or by passing "-k" flag to this script.
         If omitted and -c not specified, API proxy contacts the metadata
         service to fetch the service config ID.  ''')
 
-    parser.add_argument('-a', '--backend', default=DEFAULT_BACKEND, help='''
-    Change the application server address to which API Proxy proxies requests.
-    Default value: {backend}. For HTTPS backends, please use "https://" prefix,
-    e.g. https://127.0.0.1:8082. For HTTP/1.x backends, prefix "http://" is
-    optional. For GRPC backends, please use "grpc://" prefix,
-    e.g. grpc://127.0.0.1:8082.'''.format(backend=DEFAULT_BACKEND))
+    parser.add_argument('-a', '--backend', default=DEFAULT_BACKEND,
+        help=''' Change the application server address to which API Proxy
+        proxies requests. Default value: {backend}. For HTTPS backends,
+        please use "https://" prefix, e.g. https://127.0.0.1:8082.
+        For HTTP/1.x backends, prefix "http://" is optional.
+        For GRPC backends, please use "grpc://" prefix,
+        e.g. grpc://127.0.0.1:8082.'''.format(backend=DEFAULT_BACKEND))
+
+    # Customize management service url prefix.
+    parser.add_argument('-g', '--management',
+        default=MANAGEMENT_ADDRESS,
+        help=argparse.SUPPRESS)
+
+    # Customize metadata service url prefix.
+    parser.add_argument('-m', '--metadata',
+        default=METADATA_ADDRESS,
+        help=argparse.SUPPRESS)
+
+    # CORS presets
+    parser.add_argument('--cors_preset',
+        default=None,
+        help='''
+        Enables setting of CORS headers. This is useful when using a GRPC
+        backend, since a GRPC backend cannot set CORS headers.
+        Specify one of available presets to configure CORS response headers
+        in nginx. Defaults to no preset and therefore no CORS response
+        headers. If no preset is suitable for the use case, use the
+        --nginx_config arg to use a custom nginx config file.
+        Available presets:
+        - basic - Assumes all location paths have the same CORS policy.
+          Responds to preflight OPTIONS requests with an empty 204, and the
+          results of preflight are allowed to be cached for up to 20 days
+          (1728000 seconds). See descriptions for args --cors_allow_origin,
+          --cors_allow_methods, --cors_allow_headers, --cors_expose_headers,
+          --cors_allow_credentials for more granular configurations.
+        - cors_with_regex - Same as basic preset, except that specifying
+          allowed origins in regular expression. See descriptions for args
+          --cors_allow_origin_regex, --cors_allow_methods,
+          --cors_allow_headers, --cors_expose_headers, --cors_allow_credentials
+          for more granular configurations.
+        ''')
+    parser.add_argument('--cors_allow_origin',
+        default='*',
+        help='''
+        Only works when --cors_preset is 'basic'. Configures the CORS header
+        Access-Control-Allow-Origin. Defaults to "*" which allows all origins.
+        ''')
+    parser.add_argument('--cors_allow_origin_regex',
+        default='',
+        help='''
+        Only works when --cors_preset is 'cors_with_regex'. Configures the
+        whitelists of CORS header Access-Control-Allow-Origin with regular
+        expression.
+        ''')
+    parser.add_argument('--cors_allow_methods',
+        default='GET, POST, PUT, PATCH, DELETE, OPTIONS',
+        help='''
+        Only works when --cors_preset is in use. Configures the CORS header
+        Access-Control-Allow-Methods. Defaults to allow common HTTP
+        methods.
+        ''')
+    parser.add_argument('--cors_allow_headers',
+        default='DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization',
+        help='''
+        Only works when --cors_preset is in use. Configures the CORS header
+        Access-Control-Allow-Headers. Defaults to allow common HTTP
+        headers.
+        ''')
+    parser.add_argument('--cors_expose_headers',
+        default='Content-Length,Content-Range',
+        help='''
+        Only works when --cors_preset is in use. Configures the CORS header
+        Access-Control-Expose-Headers. Defaults to allow common response headers.
+        ''')
+    parser.add_argument('--cors_allow_credentials', action='store_true',
+        help='''
+        Only works when --cors_preset is in use. Enable the CORS header
+        Access-Control-Allow-Credentials. By default, this header is disabled.
+        ''')
 
     return parser
 
@@ -123,6 +202,20 @@ if __name__ == '__main__':
         "--config_id", args.version,
         "--cluster_address", cluster_address,
         "--cluster_port", cluster_port,
-        ]
+        "--service_management_url", args.management,
+    ]
+
+    if args.cors_preset:
+        proxy_conf.append([
+        "--cors_preset", args.cors_preset,
+        "--cors_allow_origin", args.cors_allow_origin,
+        "--cors_allow_origin_regex", args.cors_allow_origin_regex,
+        "--cors_allow_methods", args.cors_allow_methods,
+        "--cors_allow_headers", args.cors_allow_headers,
+        "--cors_expose_headers", args.cors_expose_headers,
+        "cors_allow_credentials", args.cors_allow_credentials,
+        ])
+
+
     print (proxy_conf)
     start_proxy(proxy_conf)
