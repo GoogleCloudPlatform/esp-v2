@@ -12,18 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:latest
+FROM gcr.io/google_appengine/python
 
-ARG SERVICE_NAME
-ARG CONFIG_ID
+RUN virtualenv -p python3.6 /env
 
-ADD scripts/start_proxy.sh start_proxy.sh
+# Setting these environment variables are the same as running
+# source /env/bin/activate.
+ENV VIRTUAL_ENV /env
+ENV PATH /env/bin:$PATH
 
-ADD scripts/envoy_bootstrap_v2_startup.yaml startup.yaml
+ADD scripts/* apiproxy/
 
-ADD vendor/configmanager configmanager
+ADD bin/configmanager apiproxy/configmanager
 
-ADD vendor/envoy envoy
+ADD bin/envoy apiproxy/envoy
 
-ENTRYPOINT ["./start_proxy.sh"]
-CMD ["echo $SERVICE_NAME", "echo $CONFIG_ID"]
+RUN pip install -r apiproxy/requirements.txt
+
+ENTRYPOINT ["python", "apiproxy/start_proxy.py"]

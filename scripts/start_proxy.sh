@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2018 Google LLC
+# Copyright 2018 Google Cloud Platform Proxy Authors
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ set -o errexit
 set -o nounset
 
 echo "Starting Proxy......"
-CONFIGMANAGER=${CONFIGMANAGER:-/configmanager}
-ENVOY=${ENVOY:-/envoy}
+CONFIGMANAGER=${CONFIGMANAGER:-apiproxy/configmanager}
+ENVOY=${ENVOY:-apiproxy/envoy}
 
-${CONFIGMANAGER} --service_name $1 --config_id $2 &
-${ENVOY} --v2-config-only -c startup.yaml
+${CONFIGMANAGER}  $@  &
+${ENVOY} --v2-config-only -c apiproxy/envoy_bootstrap_v2_startup.yaml
