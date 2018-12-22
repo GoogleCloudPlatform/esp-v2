@@ -22,12 +22,12 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"strconv"
 	"strings"
 
 	bspb "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/proto"
 	"github.com/gogo/protobuf/types"
 	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -75,7 +75,7 @@ var makeHttpCall = func(addr, httpMethod, method, token string) (string, error) 
 
 	resp, err := cli.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("http got error: ", err)
+		return "", fmt.Errorf("http got error: %v", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
@@ -139,22 +139,31 @@ var makeGrpcCall = func(addr, method, token string) (string, error) {
 }
 
 var makeGrpcWebCall = func(addr, method, token string) (string, error) {
-	var body string
-	// TODO(kyuc): add other methods and probably set body in a different way...
+	var reqMsg proto.Message
 	switch method {
 	case "ListShelves":
-		// base64 encoded body for types.Empty
-		body = "AAAAAAA="
+		reqMsg = &types.Empty{}
+	case "CreateShelf":
+		reqMsg = &bspb.CreateShelfRequest{
+			Shelf: &bspb.Shelf{},
+		}
+	case "GetShelf":
+		reqMsg = &bspb.GetShelfRequest{}
+	case "CreateBook":
+		reqMsg = &bspb.CreateBookRequest{}
+	case "DeleteShelf":
+		reqMsg = &bspb.DeleteShelfRequest{}
 	default:
-		return "", fmt.Errorf("expected method called")
+		return "", fmt.Errorf("unexpected method called")
 	}
+	body := EncodeGrpcWebRequestBody(reqMsg)
 
 	u, err := url.Parse("http://" + addr)
 	if err != nil {
 		return "", err
 	}
 	u.Path = path.Join(u.Path, bookstoreService, method)
-	req, err := http.NewRequest("POST", u.String(), strings.NewReader(body))
+	req, err := http.NewRequest("POST", u.String(), body)
 	if err != nil {
 		return "", err
 	}
@@ -162,7 +171,6 @@ var makeGrpcWebCall = func(addr, method, token string) (string, error) {
 	for _, h := range grpcWebHeader {
 		req.Header.Add(h.key, h.val)
 	}
-	req.Header.Add("Content-Length", strconv.Itoa(len(body)))
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 
 	var client http.Client
