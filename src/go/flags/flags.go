@@ -27,6 +27,7 @@ var (
 	ConfigID        = flag.String("config_id", "", "initial service config id")
 	RolloutStrategy = flag.String("rollout_strategy", "", `service config rollout strategy, must be either "managed" or "fixed"`)
 	BackendProtocol = flag.String("backend_protocol", "", `must set as one of "grpc", "http1", "http2"`)
+	CheckMetadata   = flag.Bool("check_metadata", false, `enable fetching service name, config ID and rollout strategy from service metadata server`)
 
 	// Cors related configurations.
 	CorsPreset           = flag.String("cors_preset", "", `enable CORS support, must be either "basic" or "cors_with_regex"`)

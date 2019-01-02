@@ -160,6 +160,10 @@ environment variable or by passing "-k" flag to this script.
         Only works when --cors_preset is in use. Enable the CORS header
         Access-Control-Allow-Credentials. By default, this header is disabled.
         ''')
+    #TODO(jcwang) fetch access token from --service_account_key
+    parser.add_argument('--check_metadata', action='store_true',
+        help='''Enable fetching service name, service config ID and rollout
+        strategy from the metadata service.''')
 
     return parser
 
@@ -203,6 +207,7 @@ if __name__ == '__main__':
         "--cluster_address", cluster_address,
         "--cluster_port", cluster_port,
         "--service_management_url", args.management,
+        "--check_metadata", str(args.check_metadata),
     ]
 
     if args.cors_preset:

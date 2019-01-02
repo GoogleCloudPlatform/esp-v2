@@ -96,14 +96,24 @@ type httpRule struct {
 // NewConfigManager creates new instance of ConfigManager.
 func NewConfigManager(name, configID string) (*ConfigManager, error) {
 	var err error
-	if name == "" {
-		name, err = fetchServiceName()
-		if name == "" || err != nil {
-			return nil, fmt.Errorf("failed to read metadata with key endpoints-service-name from metadata server")
-		}
+	if name == "" && *flags.CheckMetadata {
+			name, err = fetchServiceName()
+			if name == "" || err != nil {
+				return nil, fmt.Errorf("failed to read metadata with key endpoints-service-name from metadata server")
+			}
+	} else if name == "" && !*flags.CheckMetadata {
+		return nil, fmt.Errorf("service name is not specified")
 	}
-	// TODO(jcwang): try to fetch from metadata, if not found, set to fixed instead of throwing an error
-	if !(*flags.RolloutStrategy == ut.FixedRolloutStrategy || *flags.RolloutStrategy == ut.ManagedRolloutStrategy) {
+	var rolloutStrategy string
+	rolloutStrategy = *flags.RolloutStrategy
+	// try to fetch from metadata, if not found, set to fixed instead of throwing an error
+	if rolloutStrategy == "" && *flags.CheckMetadata {
+		rolloutStrategy, err = fetchRolloutStrategy()
+	}
+	if rolloutStrategy == "" {
+		rolloutStrategy = ut.FixedRolloutStrategy
+	}
+	if !(rolloutStrategy == ut.FixedRolloutStrategy || rolloutStrategy == ut.ManagedRolloutStrategy) {
 		return nil, fmt.Errorf(`failed to set rollout strategy. It must be either "managed" or "fixed"`)
 	}
 
@@ -116,7 +126,7 @@ func NewConfigManager(name, configID string) (*ConfigManager, error) {
 	}
 	m.cache = cache.NewSnapshotCache(true, m, m)
 
-	if *flags.RolloutStrategy == ut.ManagedRolloutStrategy {
+	if rolloutStrategy == ut.ManagedRolloutStrategy {
 		// try to fetch rollouts and get newest config, if failed, NewConfigManager exits with failure
 		if err := m.loadConfigFromRollouts(); err != nil {
 			return nil, err
@@ -124,9 +134,13 @@ func NewConfigManager(name, configID string) (*ConfigManager, error) {
 	} else {
 		// rollout strategy is fixed mode
 		if configID == "" {
-			configID, err = fetchConfigId()
-			if configID == "" || err != nil {
-				return nil, fmt.Errorf("failed to read metadata with key endpoints-service-version from metadata server")
+			if *flags.CheckMetadata {
+				configID, err = fetchConfigId()
+				if configID == "" || err != nil {
+					return nil, fmt.Errorf("failed to read metadata with key endpoints-service-version from metadata server")
+				}
+			} else {
+				return nil, fmt.Errorf("service config id is not specified")
 			}
 		}
 		m.curConfigID = configID
@@ -134,9 +148,10 @@ func NewConfigManager(name, configID string) (*ConfigManager, error) {
 			return nil, err
 		}
 	}
-	glog.Infof("create new ConfigManager for service (%v) with configuration id (%v)", m.serviceName, m.curConfigID)
+	glog.Infof("create new ConfigManager for service (%v) with configuration id (%v), %v rollout strategy",
+		m.serviceName, m.curConfigID, rolloutStrategy)
 
-	if *flags.RolloutStrategy == ut.ManagedRolloutStrategy {
+	if rolloutStrategy == ut.ManagedRolloutStrategy {
 		go func() {
 			glog.Infof("start checking new rollouts every %v seconds", checkNewRolloutInterval)
 			m.checkRolloutsTicker = time.NewTicker(checkNewRolloutInterval)

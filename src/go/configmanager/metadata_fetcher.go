@@ -16,6 +16,7 @@ package configmanager
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -27,6 +28,7 @@ var (
 	serviceAccountTokenSuffix = "/v1/instance/service-accounts/default/token"
 	serviceNameSuffix         = "/v1/instance/attributes/endpoints-service-name"
 	configIdSuffix            = "/v1/instance/attributes/endpoints-service-version"
+	rolloutStrategySuffix     = "/v1/instance/attributes/endpoints-rollout-strategy"
 	timeNow                   = time.Now
 
 	fetchMetadataURL = func(suffix string) string {
@@ -55,6 +57,9 @@ var getMetadata = func(path string) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf(`failed fetching metadata: %v, status code %v"`, path, resp.StatusCode)
+	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -86,6 +91,7 @@ func fetchAccessToken() (string, time.Duration, error) {
 	return metadata.accessToken, expires, nil
 }
 
+//TODO(jcwang): merge these three function, called fetchMetadata(key string)
 func fetchServiceName() (string, error) {
 	body, err := getMetadata(fetchMetadataURL(serviceNameSuffix))
 	if err != nil {
@@ -96,6 +102,14 @@ func fetchServiceName() (string, error) {
 
 func fetchConfigId() (string, error) {
 	body, err := getMetadata(fetchMetadataURL(configIdSuffix))
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
+}
+
+func fetchRolloutStrategy() (string, error) {
+	body, err := getMetadata(fetchMetadataURL(rolloutStrategySuffix))
 	if err != nil {
 		return "", err
 	}
