@@ -97,10 +97,10 @@ type httpRule struct {
 func NewConfigManager(name, configID string) (*ConfigManager, error) {
 	var err error
 	if name == "" && *flags.CheckMetadata {
-			name, err = fetchServiceName()
-			if name == "" || err != nil {
-				return nil, fmt.Errorf("failed to read metadata with key endpoints-service-name from metadata server")
-			}
+		name, err = fetchServiceName()
+		if name == "" || err != nil {
+			return nil, fmt.Errorf("failed to read metadata with key endpoints-service-name from metadata server")
+		}
 	} else if name == "" && !*flags.CheckMetadata {
 		return nil, fmt.Errorf("service name is not specified")
 	}
@@ -280,6 +280,7 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 		Name:           endpointApi.Name,
 		LbPolicy:       v2.Cluster_ROUND_ROBIN,
 		ConnectTimeout: *flags.ClusterConnectTimeout,
+		Type:           v2.Cluster_STRICT_DNS,
 		Hosts: []*core.Address{
 			{Address: &core.Address_SocketAddress{
 				SocketAddress: &core.SocketAddress{

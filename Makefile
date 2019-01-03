@@ -29,22 +29,24 @@ GODIRS		= $(shell go list -f '{{.Dir}}' ./... \
 						| grep -vFf <(go list -f '{{.Dir}}' ./vendor/...))
 
 #-----------------------------------------------------------------------------
-# Target: go build
+# Target: build
 # ----------------------------------------------------------------------------
 
 $(BINDIR):
 	@mkdir -p $(BINDIR)
 
-.PHONY: build
+.PHONY: build build-envoy
 build: format
 	@echo "--> building"
 	@go build ./src/go/configmanager...
 	@go build ./tests...
 	@go build -o bin/configmanager ./src/go/server/server.go
 	@go build -o bin/echo/server ./tests/endpoints/echo/server/app.go
+
+build-envoy:
+	@echo "--> building envoy"
 	@bazel build //src/envoy:envoy
 	@cp -f bazel-bin/src/envoy/envoy bin/
-
 
 #-----------------------------------------------------------------------------
 # Target: go test
@@ -60,7 +62,7 @@ test-debug: format
 	@go test -v ./src/go/... --logtostderr
 
 .PHONY: integration-test integration-debug
-integration-test: build
+integration-test: build build-envoy
 	@echo "--> running integration tests"
 	@go test ./tests/integration/...
 

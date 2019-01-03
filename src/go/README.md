@@ -15,7 +15,18 @@ extra features specifically for APIs on Google Cloud Platform.
     translates it to envoy xDS configuration and caches inside go-control-plane,
     which feeds envoy with dynamic configurations.
 
-*   **Auto Service Configuration Update**: [TBD]
+*   **Auto Service Configuration Update**: When '--rollout_strategy' is set as
+    'managed', no need to set '--version'. Instead, Config Manager calls
+    [Google Service Management](https://cloud.google.com/service-infrastructure/docs/service-management/getting-started) to get the latest rollout, and retrieves
+    the version id with maximum traffic percentage in it. Then, Config Manager
+    fetches the corresponding service config and dynamically configures envoy proxy.
+
+    What is more, Config Manager checks with Google Service Management every 60
+    seconds, to see whether there is new rollout or not. If yes, it will
+    fetches the new deployed service config and updates envoy configurations,
+    automatically and silently.
+    (Note: currently API Proxy doesn't support
+    [Traffic Percentage Strategy](https://github.com/googleapis/googleapis/blob/master/google/api/servicemanagement/v1/resources.proto#L227))
 
 ## Prerequisites:
 
@@ -56,4 +67,37 @@ cloudesf-envoy with the dynamic startup configuration:
 ```shell
 bazel build :cloudesf-envoy &&
 bazel-bin/cloudesf-envoy -l info --v2-config-only -c tools/deploy/envoy_bootstrap_v2_startup.yaml
+```
+
+## Run API Proxy in Docker
+
+* On the VM instance, create your own container network called apiproxy_net.
+
+```shell
+docker network create --driver bridge apiproxy_net
+```
+
+* Build and run Bookstore backend server
+
+```shell
+docker build -f tests/endpoints/bookstore-grpc/Dockerfile -t bookstore .
+
+docker run --detach --name=bookstore --net=apiproxy_net bookstore
+```
+
+* Build and run API Proxy
+
+```shell
+docker build -f docker/Dockerfile-proxy -t apiproxy .
+
+docker run --detach --name=apiproxy  --publish=80:8080 --net=apiproxy_net \
+apiproxy --service=[YOUR_SERVICE_NAME] --version=[YOUR_CONFIG_ID] \
+--backend=grpc://bookstore:8082
+```
+
+* Make gRPC calls
+
+```shell
+go run tests/endpoints/bookstore-grpc/client_main.go --addr=127.0.0.1:80 \
+--method=ListShelves --client_protocol=grpc
 ```
