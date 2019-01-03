@@ -274,7 +274,7 @@ func TestFetchListeners(t *testing.T) {
                         },
                         {
                             "selector": "endpoints.examples.bookstore.Bookstore.CreateShelf",
-                            "post": "/v1/shelves"
+                            "post": "/v1/shelves/{shelf}"
                         }
                     ]
                 },
@@ -330,7 +330,7 @@ func TestFetchListeners(t *testing.T) {
                                                            "name" : ":method"
                                                        }
                                                    ],
-                                                   "path": "/v1/shelves"
+                                                   "regex": "/v1/shelves/[^\\/]+$"
                                                 },
                                                 "requires":{
                                                     "provider_name":"firebase"
@@ -490,7 +490,7 @@ func TestFetchListeners(t *testing.T) {
                                                             "name" : ":method"
                                                         }
                                                     ],
-                                                    "regex": "/v1/shelves/.*/books/.*"
+                                                    "regex": "/v1/shelves/[^\\/]+/books/[^\\/]+$"
                                                 },
 						                        "requires": {
                                                     "requires_any": {

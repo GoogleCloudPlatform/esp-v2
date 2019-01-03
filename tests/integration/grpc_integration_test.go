@@ -121,6 +121,13 @@ func TestGrpcJwt(t *testing.T) {
 			wantedError:    "401 Unauthorized",
 		},
 		{
+			desc:           "Succeed for Http client, JWT rule recognizes {shelf} correctly",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves/25",
+			wantResp:       `{"id":"25","theme":"Unknown Shelf"}`,
+		},
+		{
 			desc:           "Fail for gPRC client, with bad JWT token",
 			clientProtocol: "grpc",
 			method:         "ListShelves",

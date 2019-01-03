@@ -97,10 +97,10 @@ type httpRule struct {
 func NewConfigManager(name, configID string) (*ConfigManager, error) {
 	var err error
 	if name == "" && *flags.CheckMetadata {
-			name, err = fetchServiceName()
-			if name == "" || err != nil {
-				return nil, fmt.Errorf("failed to read metadata with key endpoints-service-name from metadata server")
-			}
+		name, err = fetchServiceName()
+		if name == "" || err != nil {
+			return nil, fmt.Errorf("failed to read metadata with key endpoints-service-name from metadata server")
+		}
 	} else if name == "" && !*flags.CheckMetadata {
 		return nil, fmt.Errorf("service name is not specified")
 	}
@@ -335,7 +335,7 @@ func (m *ConfigManager) initHttpPathMap() {
 			}
 		case *annotations.HttpRule_Custom:
 			rule = &httpRule{
-				path:   r.GetPatch(),
+				path:   r.GetCustom().GetPath(),
 				method: ut.CUSTOM,
 			}
 		default:
@@ -732,13 +732,14 @@ func (m *ConfigManager) makeHttpRouteMatcher(selector string) *route.RouteMatch 
 		return nil
 	}
 
-	re := regexp.MustCompile(`[\{[\w\d]+\}`)
+	re := regexp.MustCompile(`{[^{}]+}`)
 
-	// Replacing query parameters inside "{}" by ".*".
+	// Replacing query parameters inside "{}" by regex "[^\/]+", which means
+	// any character except `/`, also adds `$` to match to the end of the string.
 	if re.MatchString(httpRule.path) {
 		routeMatcher = route.RouteMatch{
 			PathSpecifier: &route.RouteMatch_Regex{
-				Regex: re.ReplaceAllString(httpRule.path, ".*"),
+				Regex: re.ReplaceAllString(httpRule.path, `[^\/]+`) + `$`,
 			},
 		}
 	} else {
