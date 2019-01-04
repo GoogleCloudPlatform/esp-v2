@@ -28,6 +28,9 @@ DEFAULT_PORT = '8082'
 # Default backend
 DEFAULT_BACKEND = "127.0.0.1:8082"
 
+# Default rollout_strategy
+DEFAULT_ROLLOUT_STRATEGY = "fixed"
+
 # Protocol prefixes
 GRPC_PREFIX = "grpc://"
 HTTP_PREFIX = "http://"
@@ -88,6 +91,12 @@ environment variable or by passing "-k" flag to this script.
         For HTTP/1.x backends, prefix "http://" is optional.
         For GRPC backends, please use "grpc://" prefix,
         e.g. grpc://127.0.0.1:8082.'''.format(backend=DEFAULT_BACKEND))
+
+    parser.add_argument('-R', '--rollout_strategy',
+        default=None,
+        help='''The service config rollout strategy, [fixed|managed],
+        Default value: {strategy}'''.format(strategy=DEFAULT_ROLLOUT_STRATEGY),
+        choices=['fixed', 'managed'])
 
     # Customize management service url prefix.
     parser.add_argument('-g', '--management',
@@ -200,6 +209,9 @@ if __name__ == '__main__':
         print ("incorrect backend")
         sys.exit(0)
 
+    if args.rollout_strategy is None or not args.rollout_strategy.strip():
+        args.rollout_strategy = DEFAULT_ROLLOUT_STRATEGY
+
     proxy_conf = ["-v",
         "--backend_protocol", backend_protocol,
         "--service_name", args.service,
@@ -208,6 +220,7 @@ if __name__ == '__main__':
         "--cluster_port", cluster_port,
         "--service_management_url", args.management,
         "--check_metadata", str(args.check_metadata),
+        "--rollout_strategy", args.rollout_strategy,
     ]
 
     if args.cors_preset:
@@ -220,7 +233,6 @@ if __name__ == '__main__':
         "--cors_expose_headers", args.cors_expose_headers,
         "cors_allow_credentials", args.cors_allow_credentials,
         ])
-
 
     print (proxy_conf)
     start_proxy(proxy_conf)

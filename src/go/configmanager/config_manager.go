@@ -280,6 +280,7 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 		Name:           endpointApi.Name,
 		LbPolicy:       v2.Cluster_ROUND_ROBIN,
 		ConnectTimeout: *flags.ClusterConnectTimeout,
+		Type:           v2.Cluster_STRICT_DNS,
 		Hosts: []*core.Address{
 			{Address: &core.Address_SocketAddress{
 				SocketAddress: &core.SocketAddress{

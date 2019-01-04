@@ -918,6 +918,7 @@ func TestFetchClusters(t *testing.T) {
 	    	    ],
 	    	    "name": "%s",
 	    	    "connectTimeout": "%ds",
+                "type":"STRICT_DNS",
                 "http2ProtocolOptions": {}
 	        }`, *flags.ClusterAddress, *flags.ClusterPort, testEndpointName, *flags.ClusterConnectTimeout/1e9),
 		},
@@ -942,8 +943,9 @@ func TestFetchClusters(t *testing.T) {
                     }
                 ],
                 "name": "%s",
-                "connectTimeout": "%ds"
-            }`, *flags.ClusterAddress, *flags.ClusterPort, testEndpointName, *flags.ClusterConnectTimeout/1e9),
+                "connectTimeout": "%ds",
+                "type":"STRICT_DNS"
+           }`, *flags.ClusterAddress, *flags.ClusterPort, testEndpointName, *flags.ClusterConnectTimeout/1e9),
 		},
 	}
 
