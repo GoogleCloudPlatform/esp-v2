@@ -15,38 +15,33 @@
 #ifndef ENVOY_SERVICE_CONTROL_RULE_PARSER_H
 #define ENVOY_SERVICE_CONTROL_RULE_PARSER_H
 
-#include "api/envoy/http/service_control/requirement.pb.h"
 #include "api/envoy/http/service_control/config.pb.h"
-#include "api/envoy/http/service_control/config.pb.validate.h"
-#include "src/envoy/http/service_control/http_template.h"
-#include "src/envoy/http/service_control/path_matcher_node.h"
+#include "api/envoy/http/service_control/requirement.pb.h"
+#include "common/common/logger.h"
 #include "src/envoy/http/service_control/path_matcher.h"
-
-#include <regex>
-#include <vector>
 
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 
-class ServiceControlFilterConfigParser {
+class FilterConfigParser : public Logger::Loggable<Logger::Id::filter> {
  public:
-  ServiceControlFilterConfigParser(
-      const ::google::api_proxy::envoy::http::service_control::FilterConfig& config);
+  FilterConfigParser(
+      const ::google::api_proxy::envoy::http::service_control::FilterConfig&
+          config);
 
-  void FindRequirement(const std::string& http_method, const std::string& path,
-      ::google::api::envoy::http::service_control::Requirement* requirement);
+  const ::google::api::envoy::http::service_control::Requirement*
+  FindRequirement(const std::string& http_method, const std::string& path) const;
 
  private:
   // Build PatchMatcher for extracting api attributes.
   void BuildPathMatcher();
 
-  // The service control filter config.
-  ::google::api_proxy::envoy::http::service_control::FilterConfig config_;
-
   // The path matcher for all url templates
-  PathMatcherPtr<const ::google::api::envoy::http::service_control::Requirement*> path_matcher_;
+  PathMatcherPtr<
+      const ::google::api::envoy::http::service_control::Requirement*>
+      path_matcher_;
 };
 
 }  // namespace ServiceControl

@@ -21,34 +21,29 @@ namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 
-using ::google::api_proxy::envoy::http::service_control::FilterConfig;
 using ::google::api::envoy::http::service_control::Requirement;
-using std::string;
+using ::google::api_proxy::envoy::http::service_control::FilterConfig;
 
-ServiceControlFilterConfigParser::ServiceControlFilterConfigParser(
-    const FilterConfig& config) : config_(config) {
-  BuildPathMatcher();
-}
-
-void ServiceControlFilterConfigParser::BuildPathMatcher() {
+FilterConfigParser::FilterConfigParser(const FilterConfig& config) {
   PathMatcherBuilder<const Requirement*> pmb;
-  for (const auto& rule : config_.rules()) {
-    if (!pmb.Register(rule.pattern().http_method(), rule.pattern().uri_template(),
-                      string(), &rule.requires())) {
-      GOOGLE_LOG(WARNING)
-          << "Invalid uri_template: " << rule.pattern().uri_template();
+  for (const auto& rule : config.rules()) {
+    if (!rule.has_pattern()) {
+      ENVOY_LOG(error, "Empty rule pattern");
+      continue;
+    }
+    const auto& pattern = rule.pattern();
+    if (!pmb.Register(pattern.http_method(), pattern.uri_template(),
+                      std::string(), &rule.requires())) {
+      ENVOY_LOG(error, "Invalid rule pattern: http_method: {}, uri_template {}",
+                pattern.http_method(), pattern.uri_template());
     }
   }
   path_matcher_ = pmb.Build();
 }
 
-void ServiceControlFilterConfigParser::FindRequirement(
-    const string& http_method, const string& path, Requirement* requirement) {
-  const Requirement* matched_requirement =
-      path_matcher_->Lookup(http_method, path);
-  if (matched_requirement) {
-    requirement->MergeFrom(*matched_requirement);
-  }
+const Requirement* FilterConfigParser::FindRequirement(
+    const std::string& http_method, const std::string& path) const {
+  return path_matcher_->Lookup(http_method, path);
 }
 
 }  // namespace ServiceControl

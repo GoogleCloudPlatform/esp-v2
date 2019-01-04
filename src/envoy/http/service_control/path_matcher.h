@@ -256,7 +256,8 @@ bool PathMatcherBuilder<Method>::Register(std::string http_method,
   method_data->variables = std::move(ht->Variables());
   method_data->body_field_path = std::move(body_field_path);
 
-  if (!root_ptr_->InsertPath(path_info, http_method, method_data.get(), true)) {
+  if (!root_ptr_->InsertPath(path_info, http_method, method_data.get(),
+                             false)) {
     return false;
   }
   // Add the method_data to the methods_ vector for cleanup

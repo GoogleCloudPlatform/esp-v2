@@ -20,6 +20,7 @@
 #include "envoy/server/filter_config.h"
 #include "envoy/thread_local/thread_local.h"
 #include "src/api_proxy/service_control/request_builder.h"
+#include "src/envoy/http/service_control/config_parser.h"
 #include "src/envoy/http/service_control/token_cache.h"
 
 namespace Envoy {
@@ -79,7 +80,8 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
         random_(context.random()),
         tls_(context.threadLocal().allocateSlot()),
         builder_({"endpoints_log"}, proto_config_.service_name(),
-                 proto_config_.service_config_id()) {
+                 proto_config_.service_config_id()),
+        rule_parser_(proto_config_) {
     tls_->set([this](Event::Dispatcher& dispatcher)
                   -> ThreadLocal::ThreadLocalObjectSharedPtr {
       return std::make_shared<ThreadLocalCache>(proto_config_, cm_,
@@ -105,6 +107,8 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
 
   ServiceControlFilterStats& stats() { return stats_; }
 
+  const FilterConfigParser& rule_parser() const { return rule_parser_; }
+
  private:
   ServiceControlFilterStats generateStats(const std::string& prefix,
                                           Stats::Scope& scope) {
@@ -122,6 +126,7 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
   // Thread local slot to store per-thread cache
   ThreadLocal::SlotPtr tls_;
   ::google::api_proxy::service_control::RequestBuilder builder_;
+  FilterConfigParser rule_parser_;
 };
 
 typedef std::shared_ptr<FilterConfig> FilterConfigSharedPtr;

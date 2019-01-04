@@ -34,10 +34,7 @@ class Filter : public Http::StreamDecoderFilter,
                public AccessLog::Instance,
                public Logger::Loggable<Logger::Id::filter> {
  public:
-  Filter(FilterConfigSharedPtr config) : config_(config) {
-    config_parser_ =  std::unique_ptr<ServiceControlFilterConfigParser>(
-      new ServiceControlFilterConfigParser(config_->config()));
-  }
+  Filter(FilterConfigSharedPtr config) : config_(config) {}
 
   // Http::StreamFilterBase
   void onDestroy() override;
@@ -63,15 +60,6 @@ class Filter : public Http::StreamDecoderFilter,
                        const std::string& response_json);
   void rejectRequest(Http::Code code, absl::string_view error_msg);
 
-  // The callback funcion.
-  Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
-  FilterConfigSharedPtr config_;
-
-  // Fills the given requirement if the query matches a pattern in Envoy
-  // filter config.
-  void ExtractRequestInfo(const Http::HeaderMap&,
-    ::google::api::envoy::http::service_control::Requirement* requirement);
-
   // Helper functions to extract API key.
   void ExtractAPIKeyFromQuery(const Http::HeaderMap& headers,
                               const std::string& query);
@@ -79,6 +67,10 @@ class Filter : public Http::StreamDecoderFilter,
                                const std::string& header);
   void ExtractAPIKeyFromCookie(const Http::HeaderMap& headers,
                                const std::string& cookie);
+
+  // The callback funcion.
+  Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
+  FilterConfigSharedPtr config_;
 
   // The state of the request.
   enum State { Init, Calling, Responded, Complete };
@@ -94,11 +86,13 @@ class Filter : public Http::StreamDecoderFilter,
   std::string api_name_;
   std::string api_version_;
   std::string http_method_;
-  std::unique_ptr<ServiceControlFilterConfigParser> config_parser_;
 
   ::google::api_proxy::service_control::CheckResponseInfo check_response_info_;
   ::google::protobuf::util::Status check_status_;
   HttpCall* check_call_{};
+
+  bool params_parsed_{false};
+  Http::Utility::QueryParams parsed_params_;
 };
 
 }  // namespace ServiceControl

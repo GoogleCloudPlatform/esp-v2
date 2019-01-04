@@ -13,7 +13,6 @@ package(
 envoy_cc_library(
     name = "filter_lib",
     srcs = [
-        "config_parser.cc",
         "filter.cc",
         "http_call.cc",
         "token_fetcher.cc",
@@ -62,8 +61,8 @@ cc_library(
     ],
     deps = [
         "//api/envoy/http/service_control:config_proto_cc",
+        "@envoy//source/common/common:minimal_logger_lib",
     ],
-    visibility = ["//visibility:public"],
 )
 
 cc_test(

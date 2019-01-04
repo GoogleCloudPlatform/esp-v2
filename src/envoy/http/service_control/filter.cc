@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "src/envoy/http/service_control/filter.h"
 #include "common/http/utility.h"
 #include "envoy/http/header_map.h"
-#include "src/envoy/http/service_control/filter.h"
 #include "src/envoy/http/service_control/http_call.h"
 
 namespace Envoy {
@@ -26,69 +26,64 @@ using ::google::api::envoy::http::service_control::APIKey;
 using ::google::api::envoy::http::service_control::Requirement;
 using ::google::api_proxy::envoy::http::service_control::ServiceControlRule;
 using ::google::protobuf::util::Status;
-using Envoy::Extensions::HttpFilters::ServiceControl::ServiceControlFilterConfigParser;
 using Http::HeaderMap;
 using Http::LowerCaseString;
 using std::string;
 
-void Filter::ExtractAPIKeyFromQuery(const HeaderMap& headers, const string& query) {
-  auto params =
-    Http::Utility::parseQueryString(headers.Path()->value().c_str());
-  const auto& it = params.find(query);
-  if (it != params.end())
-  {
+void Filter::ExtractAPIKeyFromQuery(const HeaderMap &headers,
+                                    const string &query) {
+  if (!params_parsed_) {
+    parsed_params_ =
+        Http::Utility::parseQueryString(headers.Path()->value().c_str());
+    params_parsed_ = true;
+  }
+  const auto &it = parsed_params_.find(query);
+  if (it != parsed_params_.end()) {
     api_key_ = it->second;
   } else {
-    ENVOY_LOG(debug, "API key not found by query '{}' in path: '{}'",
-      query, headers.Path()->value().c_str());
+    ENVOY_LOG(debug, "API key not found by query '{}' in path: '{}'", query,
+              headers.Path()->value().c_str());
   }
 }
 
-void Filter::ExtractAPIKeyFromHeader(const HeaderMap& headers, const string& header) {
-  auto* entry = headers.get(LowerCaseString(header));
-  if (entry)
-  {
+void Filter::ExtractAPIKeyFromHeader(const HeaderMap &headers,
+                                     const string &header) {
+  auto *entry = headers.get(LowerCaseString(header));
+  if (entry) {
     api_key_ = std::string(entry->value().c_str(), entry->value().size());
   } else {
     ENVOY_LOG(debug, "API key not found by header '{}' in headerMap '{}'",
-        header, headers);
+              header, headers);
   }
 }
 
-void Filter::ExtractAPIKeyFromCookie(const HeaderMap& headers, const string& cookie) {
+void Filter::ExtractAPIKeyFromCookie(const HeaderMap &headers,
+                                     const string &cookie) {
   std::string api_key = Http::Utility::parseCookieValue(headers, cookie);
-  if (!api_key.empty())
-  {
+  if (!api_key.empty()) {
     api_key_ = api_key;
   } else {
     ENVOY_LOG(debug, "API key not found by cookie '{}' in headerMap '{}'",
-        cookie, headers);
+              cookie, headers);
   }
 }
 
-void Filter::ExtractRequestInfo(const HeaderMap& headers, Requirement* requirement)
-{
-  uuid_ = config_->random().uuid();
-  const auto &path = headers.Path()->value();
-  config_parser_->FindRequirement(headers.Method()->value().c_str(),
-                                  path.c_str(), requirement);
-}
-
-Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool)
-{
+Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
 
-  Requirement requirement;
-  ExtractRequestInfo(headers, &requirement);
-  if (requirement.service_name() == "") {
+  uuid_ = config_->random().uuid();
+  auto requirement = config_->rule_parser().FindRequirement(
+      headers.Method()->value().c_str(), headers.Path()->value().c_str());
+  if (!requirement) {
     ENVOY_LOG(debug, "No requirement matched!");
-    rejectRequest(Http::Code(404), "Path does not match any requirement uri_template.");
+    rejectRequest(Http::Code(404),
+                  "Path does not match any requirement uri_template.");
     return Http::FilterHeadersStatus::StopIteration;
   }
-  operation_name_ = requirement.operation_name();
+  operation_name_ = requirement->operation_name();
 
   // Extract API key
-  for (const auto& api_key : requirement.api_key().api_keys()) {
+  for (const auto &api_key : requirement->api_key().api_keys()) {
     switch (api_key.key_case()) {
       case APIKey::kQuery:
         ExtractAPIKeyFromQuery(headers, api_key.query());
@@ -103,18 +98,18 @@ Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool)
         break;
     }
   }
-  api_name_ = requirement.api_name();
-  api_version_ = requirement.api_version();
+  api_name_ = requirement->api_name();
+  api_version_ = requirement->api_version();
   state_ = Calling;
   stopped_ = false;
-  token_fetcher_ = config_->getCache().getTokenCacheByServiceName(requirement.service_name())
-                       ->getToken(
-                           [this](const Status &status, const string &result) {
-                             onTokenDone(status, result);
-                           });
+  token_fetcher_ =
+      config_->getCache()
+          .getTokenCacheByServiceName(requirement->service_name())
+          ->getToken([this](const Status &status, const string &result) {
+            onTokenDone(status, result);
+          });
 
-  if (state_ == Complete)
-  {
+  if (state_ == Complete) {
     return Http::FilterHeadersStatus::Continue;
   }
   ENVOY_LOG(debug, "Called ServiceControl filter : Stop");
@@ -122,31 +117,25 @@ Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool)
   return Http::FilterHeadersStatus::StopIteration;
 }
 
-void Filter::onDestroy()
-{
-  if (token_fetcher_)
-  {
+void Filter::onDestroy() {
+  if (token_fetcher_) {
     token_fetcher_();
     token_fetcher_ = nullptr;
   }
-  if (check_call_)
-  {
+  if (check_call_) {
     check_call_->cancel();
     check_call_ = nullptr;
   }
 }
 
-void Filter::onTokenDone(const Status &status, const string &token)
-{
+void Filter::onTokenDone(const Status &status, const string &token) {
   // This stream has been reset, abort the callback.
   token_fetcher_ = nullptr;
-  if (state_ == Responded)
-  {
+  if (state_ == Responded) {
     return;
   }
 
-  if (!status.ok())
-  {
+  if (!status.ok()) {
     rejectRequest(Http::Code(401), "Failed to fetch access_token");
     return;
   }
@@ -173,8 +162,7 @@ void Filter::onTokenDone(const Status &status, const string &token)
   check_call_->call(suffix_uri, token_, check_request, on_done);
 }
 
-void Filter::rejectRequest(Http::Code code, absl::string_view error_msg)
-{
+void Filter::rejectRequest(Http::Code code, absl::string_view error_msg) {
   config_->stats().denied_.inc();
   state_ = Responded;
 
@@ -184,19 +172,16 @@ void Filter::rejectRequest(Http::Code code, absl::string_view error_msg)
 }
 
 void Filter::onCheckResponse(const Status &status,
-                             const string &response_json)
-{
+                             const string &response_json) {
   ENVOY_LOG(debug, "Check response with : {}, body {}", status.ToString(),
             response_json);
   // This stream has been reset, abort the callback.
   check_call_ = nullptr;
-  if (state_ == Responded)
-  {
+  if (state_ == Responded) {
     return;
   }
 
-  if (!status.ok())
-  {
+  if (!status.ok()) {
     rejectRequest(Http::Code(401), "Check failed");
     return;
   }
@@ -206,8 +191,7 @@ void Filter::onCheckResponse(const Status &status,
   options.ignore_unknown_fields = true;
   const auto json_status =
       Protobuf::util::JsonStringToMessage(response_json, &response_pb, options);
-  if (!json_status.ok())
-  {
+  if (!json_status.ok()) {
     rejectRequest(Http::Code(401), "Check failed");
     return;
   }
@@ -215,51 +199,43 @@ void Filter::onCheckResponse(const Status &status,
   check_status_ = ::google::api_proxy::service_control::RequestBuilder::
       ConvertCheckResponse(response_pb, config_->config().service_name(),
                            &check_response_info_);
-  if (!check_status_.ok())
-  {
+  if (!check_status_.ok()) {
     rejectRequest(Http::Code(401), "Check failed");
     return;
   }
 
   config_->stats().allowed_.inc();
   state_ = Complete;
-  if (stopped_)
-  {
+  if (stopped_) {
     decoder_callbacks_->continueDecoding();
   }
 }
 
-Http::FilterDataStatus Filter::decodeData(Buffer::Instance &, bool)
-{
+Http::FilterDataStatus Filter::decodeData(Buffer::Instance &, bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
-  if (state_ == Calling)
-  {
+  if (state_ == Calling) {
     return Http::FilterDataStatus::StopIterationAndWatermark;
   }
   return Http::FilterDataStatus::Continue;
 }
 
-Http::FilterTrailersStatus Filter::decodeTrailers(HeaderMap &)
-{
+Http::FilterTrailersStatus Filter::decodeTrailers(HeaderMap &) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
-  if (state_ == Calling)
-  {
+  if (state_ == Calling) {
     return Http::FilterTrailersStatus::StopIteration;
   }
   return Http::FilterTrailersStatus::Continue;
 }
 
 void Filter::setDecoderFilterCallbacks(
-    Http::StreamDecoderFilterCallbacks &callbacks)
-{
+    Http::StreamDecoderFilterCallbacks &callbacks) {
   decoder_callbacks_ = &callbacks;
 }
 
 void Filter::log(const HeaderMap * /*request_headers*/,
                  const HeaderMap * /*response_headers*/,
                  const HeaderMap * /*response_trailers*/,
-                 const StreamInfo::StreamInfo &stream_info)
-{
+                 const StreamInfo::StreamInfo &stream_info) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
 
   ::google::api_proxy::service_control::ReportRequestInfo info;
@@ -268,8 +244,7 @@ void Filter::log(const HeaderMap * /*request_headers*/,
   info.producer_project_id = config_->config().producer_project_id();
 
   if (check_response_info_.is_api_key_valid &&
-      check_response_info_.service_is_activated)
-  {
+      check_response_info_.service_is_activated) {
     info.api_key = api_key_;
   }
 
@@ -301,7 +276,7 @@ void Filter::log(const HeaderMap * /*request_headers*/,
   http_call->call(suffix_uri, token_, report_request, dummy_on_done);
 }
 
-} // namespace ServiceControl
-} // namespace HttpFilters
-} // namespace Extensions
-} // namespace Envoy
+}  // namespace ServiceControl
+}  // namespace HttpFilters
+}  // namespace Extensions
+}  // namespace Envoy

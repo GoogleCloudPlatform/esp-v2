@@ -16,7 +16,6 @@
 
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
-#include "google/protobuf/util/message_differencer.h"
 #include "gtest/gtest.h"
 
 namespace Envoy {
@@ -26,237 +25,92 @@ namespace ServiceControl {
 namespace {
 
 using ::google::api_proxy::envoy::http::service_control::FilterConfig;
-using ::google::api::envoy::http::service_control::Requirement;
 using ::google::protobuf::TextFormat;
-using ::google::protobuf::util::MessageDifferencer;
-using ::testing::ReturnRef;
-
-const char kFilterConfigBasic[] = R"(
-service_name: "echo"
-rules {
-  pattern {
-    uri_template: "/get/{foo}"
-    http_method: "GET"
-  }
-  requires {
-    operation_name: "Check"
-  }
-}
-rules {
-  pattern {
-    uri_template: "/post/{bar}"
-    http_method: "POST"
-  }
-  requires {
-    operation_name: "Check"
-  }
-})";
-
-const char kFilterConfigMultiRule[] = R"(
-service_name: "echo"
-rules {
-  pattern {
-    uri_template: "/get/{foo}"
-    http_method: "GET"
-  }
-  requires {
-    operation_name: "Check"
-  }
-}
-rules {
-  pattern {
-    uri_template: "/post/{bar}"
-    http_method: "POST"
-  }
-  requires {
-    operation_name: "Check"
-  }
-}
-rules {
-  pattern {
-    uri_template: "/get2/{foo2}"
-    http_method: "GET"
-  }
-  requires {
-    operation_name: "Report"
-  }
-}
-rules {
-  pattern {
-    uri_template: "/post2/{bar2}"
-    http_method: "POST"
-  }
-  requires {
-    operation_name: "Report"
-  }
-}
-rules {
-  pattern {
-    uri_template: "/{foo2}"
-    http_method: "GET"
-  }
-  requires {
-    operation_name: "Echo"
-  }
-}
-rules {
-  pattern {
-    uri_template: "/{bar2}"
-    http_method: "POST"
-  }
-  requires {
-    operation_name: "Echo"
-  }
-})";
-
-const char kFilterConfigSameUri[] = R"(
-service_name: "echo"
-rules {
-  pattern {
-    uri_template: "/same"
-    http_method: "GET"
-  }
-  requires {
-    operation_name: "Check"
-  }
-}
-rules {
-  pattern {
-    uri_template: "/same"
-    http_method: "POST"
-  }
-  requires {
-    operation_name: "Check"
-  }
-})";
-
-const char kFilterConfigDuplicateRule[] = R"(
-service_name: "echo"
-rules {
-  pattern {
-    uri_template: "/same"
-    http_method: "GET"
-  }
-  requires {
-    operation_name: "Report"
-  }
-}
-rules {
-  pattern {
-    uri_template: "/same"
-    http_method: "GET"
-  }
-  requires {
-    operation_name: "Report"
-  }
-})";
-
-const char kFilterConfigNoPattern[] = R"(
-service_name: "echo"
-rules {
-  requires {
-    operation_name: "Check"
-  }
-})";
 
 TEST(ConfigParserTest, TestConfigEmpty) {
   FilterConfig config;
-  auto parser = std::unique_ptr<ServiceControlFilterConfigParser>(
-      new ServiceControlFilterConfigParser(config));
-  Requirement requirement;
-  parser->FindRequirement("GET", "/get", &requirement);
+  FilterConfigParser parser(config);
 
-  EXPECT_TRUE(requirement.operation_name() == "");
+  EXPECT_FALSE(parser.FindRequirement("GET", "/get"));
 }
 
 TEST(ConfigParserTest, TestConfig) {
   FilterConfig config;
+  const char kFilterConfigBasic[] = R"(
+service_name: "echo"
+rules {
+  pattern {
+    uri_template: "/get/{foo}"
+    http_method: "GET"
+  }
+  requires {
+    operation_name: "get_foo"
+  }
+}
+rules {
+  pattern {
+    uri_template: "/post/{bar}"
+    http_method: "POST"
+  }
+  requires {
+    operation_name: "post_bar"
+  }
+})";
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigBasic, &config));
-  auto parser = std::unique_ptr<ServiceControlFilterConfigParser>(
-      new ServiceControlFilterConfigParser(config));
-  Requirement requirement;
-  parser->FindRequirement("GET", "/get/key", &requirement);
+  FilterConfigParser parser(config);
 
-  Requirement expected;
-  const char kResult[] = R"(operation_name: "Check")";
-  ASSERT_TRUE(TextFormat::ParseFromString(kResult, &expected));
-  EXPECT_TRUE(MessageDifferencer::Equals(requirement, expected));
-}
-
-TEST(ConfigParserTest, TestConfigMultiRule) {
-  FilterConfig config;
-  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigMultiRule, &config));
-  auto parser = std::unique_ptr<ServiceControlFilterConfigParser>(
-      new ServiceControlFilterConfigParser(config));
-  Requirement requirement;
-  parser->FindRequirement("POST", "/echo", &requirement);
-
-  Requirement expected;
-  const char kResult[] = R"(operation_name: "Echo")";
-  ASSERT_TRUE(TextFormat::ParseFromString(kResult, &expected));
-  EXPECT_TRUE(MessageDifferencer::Equals(requirement, expected));
-}
-
-TEST(ConfigParserTest, TestConfigSamePathGet) {
-  FilterConfig config;
-  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigSameUri, &config));
-  auto parser = std::unique_ptr<ServiceControlFilterConfigParser>(
-      new ServiceControlFilterConfigParser(config));
-  Requirement requirement;
-  parser->FindRequirement("GET", "/same", &requirement);
-
-  Requirement expected;
-  const char kResult[] = R"(operation_name: "Check")";
-  ASSERT_TRUE(TextFormat::ParseFromString(kResult, &expected));
-  EXPECT_TRUE(MessageDifferencer::Equals(requirement, expected));
-}
-
-TEST(ConfigParserTest, TestConfigSamePathPost) {
-  FilterConfig config;
-  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigSameUri, &config));
-  auto parser = std::unique_ptr<ServiceControlFilterConfigParser>(
-      new ServiceControlFilterConfigParser(config));
-  Requirement requirement;
-  parser->FindRequirement("POST", "/same", &requirement);
-
-  Requirement expected;
-  const char kResult[] = R"(operation_name: "Check")";
-  ASSERT_TRUE(TextFormat::ParseFromString(kResult, &expected));
-  EXPECT_TRUE(MessageDifferencer::Equals(requirement, expected));
+  EXPECT_EQ(parser.FindRequirement("GET", "/get/key")->operation_name(),
+            "get_foo");
+  EXPECT_EQ(parser.FindRequirement("POST", "/post/key")->operation_name(),
+            "post_bar");
+  EXPECT_FALSE(parser.FindRequirement("GET", "/test"));
 }
 
 TEST(ConfigParserTest, TestConfigDuplicatePattern) {
   FilterConfig config;
-  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigDuplicateRule, &config));
-  auto parser = std::unique_ptr<ServiceControlFilterConfigParser>(
-      new ServiceControlFilterConfigParser(config));
-  Requirement requirement;
-  parser->FindRequirement("GET", "/same", &requirement);
+  const char kFilterConfigDuplicateRule[] = R"(
+service_name: "echo"
+rules {
+  pattern {
+    uri_template: "/same"
+    http_method: "GET"
+  }
+  requires {
+    operation_name: "Report1"
+  }
+}
+rules {
+  pattern {
+    uri_template: "/same"
+    http_method: "GET"
+  }
+  requires {
+    operation_name: "Report2"
+  }
+})";
 
-  Requirement expected;
-  const char kResult[] = R"(operation_name: "Report")";
-  ASSERT_TRUE(TextFormat::ParseFromString(kResult, &expected));
-  EXPECT_TRUE(MessageDifferencer::Equals(requirement, expected));
+  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigDuplicateRule, &config));
+  FilterConfigParser parser(config);
+
+  // Not allowed to have duplicated pattern, the second one is not added
+  EXPECT_EQ(parser.FindRequirement("GET", "/same")->operation_name(),
+            "Report1");
 }
 
 TEST(ConfigParserTest, TestConfigEmptyPattern) {
   FilterConfig config;
+  const char kFilterConfigNoPattern[] = R"(
+service_name: "echo"
+rules {
+  requires {
+    operation_name: "Check"
+  }
+})";
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigNoPattern, &config));
-  auto parser = std::unique_ptr<ServiceControlFilterConfigParser>(
-      new ServiceControlFilterConfigParser(config));
-  Requirement requirement;
-  parser->FindRequirement("GET", "/test", &requirement);
-  EXPECT_TRUE(requirement.operation_name() == "");
-}
+  FilterConfigParser parser(config);
 
-TEST(ConfigParserTest, TestConfigUnmatchedPattern) {
-  FilterConfig config;
-  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigBasic, &config));
-  auto parser = std::unique_ptr<ServiceControlFilterConfigParser>(
-      new ServiceControlFilterConfigParser(config));
-  Requirement requirement;
-  parser->FindRequirement("GET", "/test", &requirement);
-  EXPECT_TRUE(requirement.operation_name() == "");
+  // Empty pattern rule is skipped.
+  EXPECT_FALSE(parser.FindRequirement("GET", "/same"));
 }
 
 }  // namespace
