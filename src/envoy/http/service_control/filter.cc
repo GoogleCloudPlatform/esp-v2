@@ -80,6 +80,13 @@ Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool) {
                   "Path does not match any requirement uri_template.");
     return Http::FilterHeadersStatus::StopIteration;
   }
+
+  // TODO add integration tests
+  if (requirement->api_key().allow_without_api_key()) {
+    ENVOY_LOG(debug, "Service control check is not needed");
+    return Http::FilterHeadersStatus::Continue;
+  }
+
   operation_name_ = requirement->operation_name();
 
   // Extract API key
