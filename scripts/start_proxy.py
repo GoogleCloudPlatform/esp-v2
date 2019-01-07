@@ -214,8 +214,8 @@ if __name__ == '__main__':
 
     proxy_conf = ["-v",
         "--backend_protocol", backend_protocol,
-        "--service_name", args.service,
-        "--config_id", args.version,
+        "--service", args.service,
+        "--version", args.version,
         "--cluster_address", cluster_address,
         "--cluster_port", cluster_port,
         "--service_management_url", args.management,
