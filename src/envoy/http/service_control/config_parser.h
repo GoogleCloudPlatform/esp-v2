@@ -18,21 +18,53 @@
 #include "api/envoy/http/service_control/config.pb.h"
 #include "api/envoy/http/service_control/requirement.pb.h"
 #include "common/common/logger.h"
+#include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/http/service_control/path_matcher.h"
+
+#include <unordered_map>
 
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 
+class ServiceContext {
+ public:
+  ServiceContext(
+      const ::google::api::envoy::http::service_control::Service& proto_config)
+      : proto_config_(proto_config),
+        request_builder_({"endpoints_log"}, proto_config_.service_name(),
+                         proto_config_.service_config_id()) {}
+
+  const ::google::api::envoy::http::service_control::Service& config() const {
+    return proto_config_;
+  }
+
+  const ::google::api_proxy::service_control::RequestBuilder& builder() const {
+    return request_builder_;
+  }
+
+ private:
+  const ::google::api::envoy::http::service_control::Service& proto_config_;
+  ::google::api_proxy::service_control::RequestBuilder request_builder_;
+};
+typedef std::unique_ptr<ServiceContext> ServiceContextPtr;
+
 class FilterConfigParser : public Logger::Loggable<Logger::Id::filter> {
  public:
   FilterConfigParser(
-      const ::google::api_proxy::envoy::http::service_control::FilterConfig&
-          config);
+      const ::google::api::envoy::http::service_control::FilterConfig& config);
 
   const ::google::api::envoy::http::service_control::Requirement*
-  FindRequirement(const std::string& http_method, const std::string& path) const;
+  FindRequirement(const std::string& http_method,
+                  const std::string& path) const {
+    return path_matcher_->Lookup(http_method, path);
+  }
+
+  const ServiceContext* FindService(const std::string& name) const {
+    const auto it = service_map_.find(name);
+    return (it != service_map_.end()) ? it->second.get() : nullptr;
+  }
 
  private:
   // Build PatchMatcher for extracting api attributes.
@@ -42,6 +74,9 @@ class FilterConfigParser : public Logger::Loggable<Logger::Id::filter> {
   PathMatcherPtr<
       const ::google::api::envoy::http::service_control::Requirement*>
       path_matcher_;
+
+  // The service map
+  std::unordered_map<std::string, ServiceContextPtr> service_map_;
 };
 
 }  // namespace ServiceControl

@@ -19,7 +19,7 @@
 #include "common/http/message_impl.h"
 #include "common/http/utility.h"
 
-using ::google::api_proxy::envoy::http::service_control::HttpUri;
+using ::google::api::envoy::http::service_control::HttpUri;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 

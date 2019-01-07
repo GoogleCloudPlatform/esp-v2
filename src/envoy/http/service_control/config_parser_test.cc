@@ -24,7 +24,7 @@ namespace HttpFilters {
 namespace ServiceControl {
 namespace {
 
-using ::google::api_proxy::envoy::http::service_control::FilterConfig;
+using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::protobuf::TextFormat;
 
 TEST(ConfigParserTest, TestConfigEmpty) {
@@ -32,18 +32,25 @@ TEST(ConfigParserTest, TestConfigEmpty) {
   FilterConfigParser parser(config);
 
   EXPECT_FALSE(parser.FindRequirement("GET", "/get"));
+  EXPECT_FALSE(parser.FindService("service"));
 }
 
 TEST(ConfigParserTest, TestConfig) {
   FilterConfig config;
   const char kFilterConfigBasic[] = R"(
-service_name: "echo"
+services {
+  service_name: "echo"
+}
+services {
+  service_name: "echo111"
+}
 rules {
   pattern {
     uri_template: "/get/{foo}"
     http_method: "GET"
   }
   requires {
+    service_name: "echo"
     operation_name: "get_foo"
   }
 }
@@ -53,6 +60,7 @@ rules {
     http_method: "POST"
   }
   requires {
+    service_name: "echo111"
     operation_name: "post_bar"
   }
 })";
@@ -64,18 +72,27 @@ rules {
   EXPECT_EQ(parser.FindRequirement("POST", "/post/key")->operation_name(),
             "post_bar");
   EXPECT_FALSE(parser.FindRequirement("GET", "/test"));
+
+  EXPECT_EQ(parser.FindService("echo")->config().service_name(),
+            "echo");
+  EXPECT_EQ(parser.FindService("echo111")->config().service_name(),
+            "echo111");
+  EXPECT_FALSE(parser.FindService("non-existing"));
 }
 
 TEST(ConfigParserTest, TestConfigDuplicatePattern) {
   FilterConfig config;
   const char kFilterConfigDuplicateRule[] = R"(
-service_name: "echo"
+services {
+  service_name: "echo"
+}
 rules {
   pattern {
     uri_template: "/same"
     http_method: "GET"
   }
   requires {
+    service_name: "echo"
     operation_name: "Report1"
   }
 }
@@ -85,6 +102,7 @@ rules {
     http_method: "GET"
   }
   requires {
+    service_name: "echo"
     operation_name: "Report2"
   }
 })";
@@ -100,9 +118,12 @@ rules {
 TEST(ConfigParserTest, TestConfigEmptyPattern) {
   FilterConfig config;
   const char kFilterConfigNoPattern[] = R"(
-service_name: "echo"
+services {
+  service_name: "echo"
+}
 rules {
   requires {
+    service_name: "echo"
     operation_name: "Check"
   }
 })";

@@ -662,12 +662,6 @@ func TestFetchListeners(t *testing.T) {
 														}
 													}
 												],
-												"service_control_uri":{
-													"cluster":"service_control_cluster",
-													"timeout":"5s",
-													"uri":"https://servicecontrol.googleapis.com/v1/services/"
-												},
-												"service_name":"%s",
 												"services":[
 													{
 														"service_control_uri":{
@@ -721,7 +715,7 @@ func TestFetchListeners(t *testing.T) {
 						]
 					}
 				]
-			}`, testProjectName, testProjectName, testProjectName, testProjectName, testProjectName, testProjectName),
+			}`, testProjectName, testProjectName, testProjectName, testProjectName, testProjectName),
 		},
 		{
 			desc:            "Success for HTTP1 backend, with Jwt filter, with audiences",

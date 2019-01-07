@@ -15,7 +15,7 @@
 
 syntax = "proto3";
 
-package google.api_proxy.envoy.http.service_control;
+package google.api.envoy.http.service_control;
 
 import "api/envoy/http/common/pattern.proto";
 import "api/envoy/http/service_control/requirement.proto";
@@ -65,20 +65,4 @@ message FilterConfig {
 
   // The requirement rules for incoming requests.
   repeated ServiceControlRule rules = 2;
-
-  // The service name for the Google Service Control
-  // TODO(tianyuc): move to per service config.
-  string service_name = 3 [(validate.rules).string.min_bytes = 1];
-
-  // The service config id
-  // TODO(tianyuc): move to per service config.
-  string service_config_id = 4;
-
-  // The producer project id
-  // TODO(tianyuc): move to per service config.
-  string producer_project_id = 5;
-
-  // The Http uri to call service control
-  // TODO(tianyuc): move to per service config.
-  HttpUri service_control_uri = 6;
 }
