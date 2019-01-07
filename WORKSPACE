@@ -39,13 +39,12 @@ local_repository(
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-ENVOY_SHA1 = "f69b7e2b3135c6115bff0a5d760837d2f8c291ae"  # 12.21.2018
+ENVOY_SHA1 = "6d6a5692d2f22a4393ec425cc0b0512a784885e4"  # 01.07.2019
 
 http_archive(
     name = "envoy",
     strip_prefix = "envoy-" + ENVOY_SHA1,
-    # from the fork with a fix to https://github.com/envoyproxy/envoy/issues/5311
-    url = "https://github.com/qiwzhang/envoy/archive/" + ENVOY_SHA1 + ".zip",
+    url = "https://github.com/envoyproxy/envoy/archive/" + ENVOY_SHA1 + ".zip",
 )
 
 # ==============================================================================
