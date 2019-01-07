@@ -1062,7 +1062,7 @@ RequestBuilder::RequestBuilder(const std::set<std::string>& logs,
 
 Status RequestBuilder::FillAllocateQuotaRequest(
     const QuotaRequestInfo& info,
-    ::google::api::servicecontrol::v1::AllocateQuotaRequest* request) {
+    ::google::api::servicecontrol::v1::AllocateQuotaRequest* request) const {
   ::google::api::servicecontrol::v1::QuotaOperation* operation =
       request->mutable_allocate_operation();
 
@@ -1119,7 +1119,7 @@ Status RequestBuilder::FillAllocateQuotaRequest(
 }
 
 Status RequestBuilder::FillCheckRequest(const CheckRequestInfo& info,
-                                        CheckRequest* request) {
+                                        CheckRequest* request) const {
   Status status = VerifyRequiredCheckFields(info);
   if (!status.ok()) {
     return status;
@@ -1156,7 +1156,7 @@ Status RequestBuilder::FillCheckRequest(const CheckRequestInfo& info,
 }
 
 Status RequestBuilder::FillReportRequest(const ReportRequestInfo& info,
-                                         ReportRequest* request) {
+                                         ReportRequest* request) const {
   Status status = VerifyRequiredReportFields(info);
   if (!status.ok()) {
     return status;
@@ -1223,7 +1223,7 @@ Status RequestBuilder::FillReportRequest(const ReportRequestInfo& info,
 Status RequestBuilder::AppendByConsumerOperations(
     const ReportRequestInfo& info,
     ::google::api::servicecontrol::v1::ReportRequest* request,
-    Timestamp current_time) {
+    Timestamp current_time) const {
   Operation* op = request->add_operations();
   SetOperationCommonFields(info, current_time, op);
   // issue a new operation id

@@ -27,11 +27,10 @@ envoy_cc_library(
     ],
     repository = "@envoy",
     deps = [
+        ":config_parser_lib",
         "//api/agent:agent_proto_cc",
         "//api/envoy/http/service_control:config_proto_cc",
-        "//src/api_proxy/service_control:request_builder_lib",
         "@envoy//source/exe:envoy_common_lib",
-        "config_parser_lib"
     ],
 )
 
@@ -61,6 +60,7 @@ cc_library(
     ],
     deps = [
         "//api/envoy/http/service_control:config_proto_cc",
+        "//src/api_proxy/service_control:request_builder_lib",
         "@envoy//source/common/common:minimal_logger_lib",
     ],
 )

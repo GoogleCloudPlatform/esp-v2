@@ -19,7 +19,6 @@
 #include "envoy/runtime/runtime.h"
 #include "envoy/server/filter_config.h"
 #include "envoy/thread_local/thread_local.h"
-#include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/http/service_control/config_parser.h"
 #include "src/envoy/http/service_control/token_cache.h"
 
@@ -32,8 +31,7 @@ class ThreadLocalCache : public ThreadLocal::ThreadLocalObject {
  public:
   // Load the config from envoy config.
   ThreadLocalCache(
-      const ::google::api_proxy::envoy::http::service_control::FilterConfig&
-          config,
+      const ::google::api::envoy::http::service_control::FilterConfig& config,
       Upstream::ClusterManager& cm, TimeSource& time_source) {
     for (const auto& service : config.services()) {
       token_cache_map_[service.service_name()] = std::unique_ptr<TokenCache>(
@@ -69,19 +67,16 @@ struct ServiceControlFilterStats {
 // The Envoy filter config for Cloud ESF service control client.
 class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
  public:
-  FilterConfig(
-      const ::google::api_proxy::envoy::http::service_control::FilterConfig&
-          proto_config,
-      const std::string& stats_prefix,
-      Server::Configuration::FactoryContext& context)
+  FilterConfig(const ::google::api::envoy::http::service_control::FilterConfig&
+                   proto_config,
+               const std::string& stats_prefix,
+               Server::Configuration::FactoryContext& context)
       : proto_config_(proto_config),
         stats_(generateStats(stats_prefix, context.scope())),
         cm_(context.clusterManager()),
         random_(context.random()),
         tls_(context.threadLocal().allocateSlot()),
-        builder_({"endpoints_log"}, proto_config_.service_name(),
-                 proto_config_.service_config_id()),
-        rule_parser_(proto_config_) {
+        config_parser_(proto_config_) {
     tls_->set([this](Event::Dispatcher& dispatcher)
                   -> ThreadLocal::ThreadLocalObjectSharedPtr {
       return std::make_shared<ThreadLocalCache>(proto_config_, cm_,
@@ -89,16 +84,13 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
     });
   }
 
-  const ::google::api_proxy::envoy::http::service_control::FilterConfig&
-  config() const {
+  const ::google::api::envoy::http::service_control::FilterConfig& config()
+      const {
     return proto_config_;
   }
 
   Upstream::ClusterManager& cm() { return cm_; }
   Runtime::RandomGenerator& random() { return random_; }
-  ::google::api_proxy::service_control::RequestBuilder& builder() {
-    return builder_;
-  }
 
   // Get per-thread cache object.
   ThreadLocalCache& getCache() const {
@@ -107,7 +99,7 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
 
   ServiceControlFilterStats& stats() { return stats_; }
 
-  const FilterConfigParser& rule_parser() const { return rule_parser_; }
+  const FilterConfigParser& cfg_parser() const { return config_parser_; }
 
  private:
   ServiceControlFilterStats generateStats(const std::string& prefix,
@@ -118,15 +110,14 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
   }
 
   // The proto config.
-  ::google::api_proxy::envoy::http::service_control::FilterConfig proto_config_;
+  ::google::api::envoy::http::service_control::FilterConfig proto_config_;
   // The stats for the filter.
   ServiceControlFilterStats stats_;
   Upstream::ClusterManager& cm_;
   Runtime::RandomGenerator& random_;
   // Thread local slot to store per-thread cache
   ThreadLocal::SlotPtr tls_;
-  ::google::api_proxy::service_control::RequestBuilder builder_;
-  FilterConfigParser rule_parser_;
+  FilterConfigParser config_parser_;
 };
 
 typedef std::shared_ptr<FilterConfig> FilterConfigSharedPtr;

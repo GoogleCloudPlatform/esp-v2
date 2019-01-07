@@ -46,7 +46,7 @@ class HttpCall {
    */
   static HttpCall* create(
       Upstream::ClusterManager& cm,
-      const ::google::api_proxy::envoy::http::service_control::HttpUri& uri);
+      const ::google::api::envoy::http::service_control::HttpUri& uri);
 };
 
 }  // namespace ServiceControl

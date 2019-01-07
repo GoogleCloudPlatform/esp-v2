@@ -23,8 +23,6 @@ namespace HttpFilters {
 namespace ServiceControl {
 
 using ::google::api::envoy::http::service_control::APIKey;
-using ::google::api::envoy::http::service_control::Requirement;
-using ::google::api_proxy::envoy::http::service_control::ServiceControlRule;
 using ::google::protobuf::util::Status;
 using Http::HeaderMap;
 using Http::LowerCaseString;
@@ -72,25 +70,33 @@ Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
 
   uuid_ = config_->random().uuid();
-  auto requirement = config_->rule_parser().FindRequirement(
+  requirement_ = config_->cfg_parser().FindRequirement(
       headers.Method()->value().c_str(), headers.Path()->value().c_str());
-  if (!requirement) {
+  if (!requirement_) {
     ENVOY_LOG(debug, "No requirement matched!");
     rejectRequest(Http::Code(404),
                   "Path does not match any requirement uri_template.");
     return Http::FilterHeadersStatus::StopIteration;
   }
 
+  service_ctx_ =
+      config_->cfg_parser().FindService(requirement_->service_name());
+  if (!service_ctx_) {
+    ENVOY_LOG(debug, "No service matched!");
+    rejectRequest(Http::Code(404), "required service is not configured.");
+    return Http::FilterHeadersStatus::StopIteration;
+  }
+
   // TODO add integration tests
-  if (requirement->api_key().allow_without_api_key()) {
+  if (requirement_->api_key().allow_without_api_key()) {
     ENVOY_LOG(debug, "Service control check is not needed");
     return Http::FilterHeadersStatus::Continue;
   }
 
-  operation_name_ = requirement->operation_name();
+  operation_name_ = requirement_->operation_name();
 
   // Extract API key
-  for (const auto &api_key : requirement->api_key().api_keys()) {
+  for (const auto &api_key : requirement_->api_key().api_keys()) {
     switch (api_key.key_case()) {
       case APIKey::kQuery:
         ExtractAPIKeyFromQuery(headers, api_key.query());
@@ -105,13 +111,13 @@ Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool) {
         break;
     }
   }
-  api_name_ = requirement->api_name();
-  api_version_ = requirement->api_version();
+  api_name_ = requirement_->api_name();
+  api_version_ = requirement_->api_version();
   state_ = Calling;
   stopped_ = false;
   token_fetcher_ =
       config_->getCache()
-          .getTokenCacheByServiceName(requirement->service_name())
+          .getTokenCacheByServiceName(requirement_->service_name())
           ->getToken([this](const Status &status, const string &result) {
             onTokenDone(status, result);
           });
@@ -152,20 +158,20 @@ void Filter::onTokenDone(const Status &status, const string &token) {
   ::google::api_proxy::service_control::CheckRequestInfo info;
   info.operation_id = uuid_;
   info.operation_name = operation_name_;
-  info.producer_project_id = config_->config().producer_project_id();
+  info.producer_project_id = service_ctx_->config().producer_project_id();
   info.api_key = api_key_;
   info.request_start_time = std::chrono::system_clock::now();
 
   ::google::api::servicecontrol::v1::CheckRequest check_request;
-  config_->builder().FillCheckRequest(info, &check_request);
+  service_ctx_->builder().FillCheckRequest(info, &check_request);
   ENVOY_LOG(debug, "Sending check : {}", check_request.DebugString());
 
-  string suffix_uri = config_->config().service_name() + ":check";
+  string suffix_uri = service_ctx_->config().service_name() + ":check";
   auto on_done = [this](const Status &status, const string &body) {
     onCheckResponse(status, body);
   };
-  check_call_ =
-      HttpCall::create(config_->cm(), config_->config().service_control_uri());
+  check_call_ = HttpCall::create(config_->cm(),
+                                 service_ctx_->config().service_control_uri());
   check_call_->call(suffix_uri, token_, check_request, on_done);
 }
 
@@ -204,7 +210,7 @@ void Filter::onCheckResponse(const Status &status,
   }
 
   check_status_ = ::google::api_proxy::service_control::RequestBuilder::
-      ConvertCheckResponse(response_pb, config_->config().service_name(),
+      ConvertCheckResponse(response_pb, service_ctx_->config().service_name(),
                            &check_response_info_);
   if (!check_status_.ok()) {
     rejectRequest(Http::Code(401), "Check failed");
@@ -248,7 +254,7 @@ void Filter::log(const HeaderMap * /*request_headers*/,
   ::google::api_proxy::service_control::ReportRequestInfo info;
   info.operation_id = uuid_;
   info.operation_name = operation_name_;
-  info.producer_project_id = config_->config().producer_project_id();
+  info.producer_project_id = service_ctx_->config().producer_project_id();
 
   if (check_response_info_.is_api_key_valid &&
       check_response_info_.service_is_activated) {
@@ -273,13 +279,13 @@ void Filter::log(const HeaderMap * /*request_headers*/,
   info.response_size = stream_info.bytesSent();
 
   ::google::api::servicecontrol::v1::ReportRequest report_request;
-  config_->builder().FillReportRequest(info, &report_request);
+  service_ctx_->builder().FillReportRequest(info, &report_request);
   ENVOY_LOG(debug, "Sending report : {}", report_request.DebugString());
 
-  string suffix_uri = config_->config().service_name() + ":report";
+  string suffix_uri = service_ctx_->config().service_name() + ":report";
   auto dummy_on_done = [](const Status &, const string &) {};
-  HttpCall *http_call =
-      HttpCall::create(config_->cm(), config_->config().service_control_uri());
+  HttpCall *http_call = HttpCall::create(
+      config_->cm(), service_ctx_->config().service_control_uri());
   http_call->call(suffix_uri, token_, report_request, dummy_on_done);
 }
 

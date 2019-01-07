@@ -703,12 +703,6 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 
 	filterConfig := &scpb.FilterConfig{
 		Services:    []*scpb.Service{service},
-		ServiceName: m.serviceName,
-		ServiceControlUri: &scpb.HttpUri{
-			Uri:     serviceControlUri,
-			Cluster: "service_control_cluster",
-			Timeout: &duration.Duration{Seconds: 5},
-		},
 	}
 
 	for _, rules := range rulesMap {

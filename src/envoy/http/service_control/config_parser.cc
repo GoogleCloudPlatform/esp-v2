@@ -22,7 +22,7 @@ namespace HttpFilters {
 namespace ServiceControl {
 
 using ::google::api::envoy::http::service_control::Requirement;
-using ::google::api_proxy::envoy::http::service_control::FilterConfig;
+using ::google::api::envoy::http::service_control::FilterConfig;
 
 FilterConfigParser::FilterConfigParser(const FilterConfig& config) {
   PathMatcherBuilder<const Requirement*> pmb;
@@ -39,11 +39,10 @@ FilterConfigParser::FilterConfigParser(const FilterConfig& config) {
     }
   }
   path_matcher_ = pmb.Build();
-}
 
-const Requirement* FilterConfigParser::FindRequirement(
-    const std::string& http_method, const std::string& path) const {
-  return path_matcher_->Lookup(http_method, path);
+  for (const auto& service : config.services()) {
+    service_map_[service.service_name()] = ServiceContextPtr(new ServiceContext(service));
+  }
 }
 
 }  // namespace ServiceControl

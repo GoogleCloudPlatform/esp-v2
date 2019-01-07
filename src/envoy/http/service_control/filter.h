@@ -78,6 +78,10 @@ class Filter : public Http::StreamDecoderFilter,
   // Mark if request has been stopped.
   bool stopped_ = false;
 
+  const ::google::api::envoy::http::service_control::Requirement*
+      requirement_{};
+  const ServiceContext* service_ctx_{};
+
   CancelFunc token_fetcher_;
   std::string token_;
   std::string uuid_;
