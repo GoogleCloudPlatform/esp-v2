@@ -847,6 +847,9 @@ func TestFetchListeners(t *testing.T) {
 	for i, tc := range testData {
 		// Overrides fakeConfig for the test case.
 		fakeConfig = tc.fakeServiceConfig
+		flag.Set("service", testProjectName)
+		flag.Set("version", testConfigID)
+		flag.Set("rollout_strategy", ut.FixedRolloutStrategy)
 		flag.Set("backend_protocol", tc.backendProtocol)
 
 		runTest(t, ut.FixedRolloutStrategy, func(env *testEnv) {
@@ -952,6 +955,9 @@ func TestFetchClusters(t *testing.T) {
 	for i, tc := range testData {
 		// Overrides fakeConfig for the test case.
 		fakeConfig = tc.fakeServiceConfig
+		flag.Set("service", testProjectName)
+		flag.Set("version", testConfigID)
+		flag.Set("rollout_strategy", ut.FixedRolloutStrategy)
 		flag.Set("backend_protocol", tc.backendProtocol)
 
 		runTest(t, ut.FixedRolloutStrategy, func(env *testEnv) {
@@ -1175,6 +1181,9 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 	fakeConfig = testCase.fakeOldServiceConfig
 	fakeRollout = testCase.fakeOldServiceRollout
 	checkNewRolloutInterval = 1 * time.Second
+	flag.Set("service", testProjectName)
+	flag.Set("version", testConfigID)
+	flag.Set("rollout_strategy", ut.ManagedRolloutStrategy)
 	flag.Set("backend_protocol", testCase.backendProtocol)
 
 	runTest(t, ut.ManagedRolloutStrategy, func(env *testEnv) {
@@ -1253,8 +1262,7 @@ func runTest(t *testing.T, testRolloutStrategy string, f func(*testEnv)) {
 
 	// Replace $JWKSURI here, since it depends on the mock server.
 	fakeConfig = strings.Replace(fakeConfig, "$JWKSURI", mockJwksIssuer.URL, -1)
-	flag.Set("rollout_strategy", testRolloutStrategy)
-	manager, err := NewConfigManager(testProjectName, testConfigID)
+	manager, err := NewConfigManager()
 	if err != nil {
 		t.Fatal("fail to initialize ConfigManager: ", err)
 	}

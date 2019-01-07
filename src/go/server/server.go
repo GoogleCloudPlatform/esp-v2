@@ -32,7 +32,7 @@ import (
 
 func main() {
 	flag.Parse()
-	m, err := configmanager.NewConfigManager(*flags.ServiceName, *flags.ConfigID)
+	m, err := configmanager.NewConfigManager()
 	if err != nil {
 		glog.Exitf("fail to initialize config manager: %v", err)
 	}

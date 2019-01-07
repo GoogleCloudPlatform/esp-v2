@@ -94,8 +94,9 @@ type httpRule struct {
 }
 
 // NewConfigManager creates new instance of ConfigManager.
-func NewConfigManager(name, configID string) (*ConfigManager, error) {
+func NewConfigManager() (*ConfigManager, error) {
 	var err error
+	name := *flags.ServiceName
 	if name == "" && *flags.CheckMetadata {
 		name, err = fetchServiceName()
 		if name == "" || err != nil {
@@ -133,6 +134,7 @@ func NewConfigManager(name, configID string) (*ConfigManager, error) {
 		}
 	} else {
 		// rollout strategy is fixed mode
+		configID := *flags.ConfigID
 		if configID == "" {
 			if *flags.CheckMetadata {
 				configID, err = fetchConfigId()
