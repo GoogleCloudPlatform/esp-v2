@@ -24,7 +24,7 @@ IMG="gcr.io/cloudesf-testing/gcpproxy-prow"
 TAG := $(shell date +v%Y%m%d)-$(shell git describe --tags --always)
 K8S := master
 
-GOFILES		= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
+GOFILES		= $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./src/go/proto/*")
 GODIRS		= $(shell go list -f '{{.Dir}}' ./... \
 						| grep -vFf <(go list -f '{{.Dir}}' ./vendor/...))
 
@@ -71,6 +71,11 @@ integration-debug:
 	# debug-components can be set as "all", "configmanager", or "envoy".
 	@go test -v ./tests/integration/... --debug_components=all
 
+.PHONY: proto-consistency-test
+proto-consistency-test:
+	@echo "--> checking generated go API proto files are up to date"
+	@sh ./api/scripts/go_proto_consistency_test.sh
+
 #-----------------------------------------------------------------------------
 # Target: go dependencies
 #-----------------------------------------------------------------------------
@@ -86,22 +91,7 @@ depend.install: tools.glide depend.apiproto
 
 depend.apiproto:
 	@echo "--> generating go proto files"
-
-	#TODO(bochun): probably we can programatically generate these.
-	# Agent proto
-	@bazel build //api/agent:agent_service_go_grpc
-	@mkdir -p src/go/proto/api/agent
-	@cp -f bazel-bin/api/agent/*/agent_service_go_grpc%/cloudesf.googlesource.com/gcpproxy/src/go/proto/api/agent/* src/go/proto/api/agent
-
-	# HTTP filter common
-	@bazel build //api/envoy/http/common:pattern_proto_go_proto
-	@mkdir -p src/go/proto/api/envoy/http/common
-	@cp -f bazel-bin/api/envoy/http/common/*/pattern_proto_go_proto%/cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common/* src/go/proto/api/envoy/http/common
-
-	# HTTP filter service_control
-	@bazel build //api/envoy/http/service_control:config_proto_go_proto
-	@mkdir -p src/go/proto/api/envoy/http/service_control
-	@cp -f bazel-bin/api/envoy/http/service_control/*/config_proto_go_proto%/cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control/* src/go/proto/api/envoy/http/service_control
+	@sh ./api/scripts/go_proto_gen.sh
 
 vendor:
 	@echo "--> installing dependencies from glide.lock "

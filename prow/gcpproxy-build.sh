@@ -28,6 +28,12 @@ export PATH=$PATH:$GOPATH/bin
 
 cd "${ROOT}"
 
+# generated go proto files are consistent with original proto
+echo '======================================================='
+echo '================== Proto consistency =================='
+echo '======================================================='
+make proto-consistency-test
+
 # golang build
 echo '======================================================='
 echo '=====================   Go build  ====================='
