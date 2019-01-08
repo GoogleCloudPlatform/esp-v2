@@ -15,15 +15,11 @@ envoy_cc_library(
     srcs = [
         "filter.cc",
         "http_call.cc",
-        "token_fetcher.cc",
     ],
     hdrs = [
-        "cancel_func.h",
         "filter.h",
         "filter_config.h",
         "http_call.h",
-        "token_cache.h",
-        "token_fetcher.h",
     ],
     repository = "@envoy",
     deps = [
@@ -46,14 +42,36 @@ envoy_cc_library(
 )
 
 envoy_cc_library(
+    name = "token_lib",
+    srcs = [
+        "token_fetcher.cc",
+    ],
+    hdrs = [
+        "cancel_func.h",
+        "token_cache.h",
+        "token_fetcher.h",
+    ],
+    repository = "@envoy",
+    deps = [
+        "//api/agent:agent_proto_cc",
+        "//api/envoy/http/service_control:config_proto_cc",
+        "@envoy//include/envoy/common:time_interface",
+        "@envoy//include/envoy/upstream:cluster_manager_interface",
+        "@envoy//source/common/grpc:async_client_lib",
+    ],
+)
+
+envoy_cc_library(
     name = "config_parser_lib",
     srcs = ["config_parser.cc"],
     hdrs = ["config_parser.h"],
     repository = "@envoy",
     deps = [
+        ":token_lib",
         "//api/envoy/http/service_control:config_proto_cc",
         "//src/api_proxy/path_matcher:path_matcher_lib",
         "//src/api_proxy/service_control:request_builder_lib",
+        "@envoy//include/envoy/server:filter_config_interface",
         "@envoy//source/common/protobuf:utility_lib",
     ],
 )
@@ -65,5 +83,6 @@ envoy_cc_test(
     deps = [
         ":config_parser_lib",
         "@envoy//test/test_common:utility_lib",
+        "@envoy//test/mocks/server:server_mocks",
     ],
 )

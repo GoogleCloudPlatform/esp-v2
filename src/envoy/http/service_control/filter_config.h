@@ -18,34 +18,12 @@
 #include "common/common/logger.h"
 #include "envoy/runtime/runtime.h"
 #include "envoy/server/filter_config.h"
-#include "envoy/thread_local/thread_local.h"
 #include "src/envoy/http/service_control/config_parser.h"
-#include "src/envoy/http/service_control/token_cache.h"
 
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
-
-class ThreadLocalCache : public ThreadLocal::ThreadLocalObject {
- public:
-  // Load the config from envoy config.
-  ThreadLocalCache(
-      const ::google::api::envoy::http::service_control::FilterConfig& config,
-      Upstream::ClusterManager& cm, TimeSource& time_source) {
-    for (const auto& service : config.services()) {
-      token_cache_map_[service.service_name()] = std::unique_ptr<TokenCache>(
-          new TokenCache(cm, time_source, service.token_cluster()));
-    }
-  }
-
-  TokenCache* getTokenCacheByServiceName(const std::string& service_name) {
-    return token_cache_map_[service_name].get();
-  }
-
- private:
-  std::unordered_map<std::string, std::unique_ptr<TokenCache>> token_cache_map_;
-};
 
 /**
  * All stats for the service control filter. @see stats_macros.h
@@ -75,14 +53,7 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
         stats_(generateStats(stats_prefix, context.scope())),
         cm_(context.clusterManager()),
         random_(context.random()),
-        tls_(context.threadLocal().allocateSlot()),
-        config_parser_(proto_config_) {
-    tls_->set([this](Event::Dispatcher& dispatcher)
-                  -> ThreadLocal::ThreadLocalObjectSharedPtr {
-      return std::make_shared<ThreadLocalCache>(proto_config_, cm_,
-                                                dispatcher.timeSystem());
-    });
-  }
+        config_parser_(proto_config_, context) {}
 
   const ::google::api::envoy::http::service_control::FilterConfig& config()
       const {
@@ -91,14 +62,7 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
 
   Upstream::ClusterManager& cm() { return cm_; }
   Runtime::RandomGenerator& random() { return random_; }
-
-  // Get per-thread cache object.
-  ThreadLocalCache& getCache() const {
-    return tls_->getTyped<ThreadLocalCache>();
-  }
-
   ServiceControlFilterStats& stats() { return stats_; }
-
   const FilterConfigParser& cfg_parser() const { return config_parser_; }
 
  private:
@@ -115,8 +79,6 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
   ServiceControlFilterStats stats_;
   Upstream::ClusterManager& cm_;
   Runtime::RandomGenerator& random_;
-  // Thread local slot to store per-thread cache
-  ThreadLocal::SlotPtr tls_;
   FilterConfigParser config_parser_;
 };
 

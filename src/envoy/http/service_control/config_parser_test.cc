@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "src/envoy/http/service_control/config_parser.h"
+#include "test/mocks/server/mocks.h"
 #include "test/test_common/utility.h"
 
 #include "gmock/gmock.h"
@@ -25,12 +26,14 @@ namespace HttpFilters {
 namespace ServiceControl {
 namespace {
 
+using Envoy::Server::Configuration::MockFactoryContext;
 using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::protobuf::TextFormat;
 
 TEST(ConfigParserTest, TestConfigEmpty) {
   FilterConfig config;
-  FilterConfigParser parser(config);
+  testing::NiceMock<MockFactoryContext> f_ctx;
+  FilterConfigParser parser(config, f_ctx);
 
   EXPECT_FALSE(parser.FindRequirement("GET", "/get"));
 }
@@ -65,7 +68,8 @@ rules {
   }
 })";
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigBasic, &config));
-  FilterConfigParser parser(config);
+  testing::NiceMock<MockFactoryContext> f_ctx;
+  FilterConfigParser parser(config, f_ctx);
 
   EXPECT_EQ(
       parser.FindRequirement("GET", "/get/key")->config().operation_name(),
@@ -116,7 +120,8 @@ rules {
 })";
 
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigDuplicateRule, &config));
-  EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config),
+  testing::NiceMock<MockFactoryContext> f_ctx;
+  EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config, f_ctx),
                           ProtoValidationException, "Duplicated pattern");
 }
 
@@ -134,7 +139,8 @@ rules {
   }
 })";
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterInvalidService, &config));
-  EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config),
+  testing::NiceMock<MockFactoryContext> f_ctx;
+  EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config, f_ctx),
                           ProtoValidationException, "Invalid service name");
 }
 

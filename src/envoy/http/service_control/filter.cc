@@ -107,12 +107,10 @@ Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool) {
   api_version_ = require_ctx_->config().api_version();
   state_ = Calling;
   stopped_ = false;
-  token_fetcher_ =
-      config_->getCache()
-          .getTokenCacheByServiceName(require_ctx_->config().service_name())
-          ->getToken([this](const Status &status, const string &result) {
-            onTokenDone(status, result);
-          });
+  token_fetcher_ = require_ctx_->service_ctx().getTLCache().token().getToken(
+      [this](const Status &status, const string &result) {
+        onTokenDone(status, result);
+      });
 
   if (state_ == Complete) {
     return Http::FilterHeadersStatus::Continue;

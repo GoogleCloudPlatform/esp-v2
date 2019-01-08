@@ -24,13 +24,17 @@ namespace ServiceControl {
 
 using ::google::api::envoy::http::service_control::FilterConfig;
 
-FilterConfigParser::FilterConfigParser(const FilterConfig& config) {
+FilterConfigParser::FilterConfigParser(
+    const FilterConfig& config,
+    Server::Configuration::FactoryContext& context) {
   for (const auto& service : config.services()) {
     service_map_[service.service_name()] =
-        ServiceContextPtr(new ServiceContext(service));
+        ServiceContextPtr(new ServiceContext(service, context));
   }
 
-  ::google::api_proxy::path_matcher::PathMatcherBuilder<const RequirementContext*> pmb;
+  ::google::api_proxy::path_matcher::PathMatcherBuilder<
+      const RequirementContext*>
+      pmb;
   for (const auto& rule : config.rules()) {
     const auto& pattern = rule.pattern();
     const auto& requirement = rule.requires();
