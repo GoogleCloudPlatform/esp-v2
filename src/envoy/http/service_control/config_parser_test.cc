@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "src/envoy/http/service_control/config_parser.h"
+#include "test/test_common/utility.h"
 
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
@@ -32,7 +33,6 @@ TEST(ConfigParserTest, TestConfigEmpty) {
   FilterConfigParser parser(config);
 
   EXPECT_FALSE(parser.FindRequirement("GET", "/get"));
-  EXPECT_FALSE(parser.FindService("service"));
 }
 
 TEST(ConfigParserTest, TestConfig) {
@@ -67,17 +67,25 @@ rules {
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigBasic, &config));
   FilterConfigParser parser(config);
 
-  EXPECT_EQ(parser.FindRequirement("GET", "/get/key")->operation_name(),
-            "get_foo");
-  EXPECT_EQ(parser.FindRequirement("POST", "/post/key")->operation_name(),
-            "post_bar");
-  EXPECT_FALSE(parser.FindRequirement("GET", "/test"));
-
-  EXPECT_EQ(parser.FindService("echo")->config().service_name(),
+  EXPECT_EQ(
+      parser.FindRequirement("GET", "/get/key")->config().operation_name(),
+      "get_foo");
+  EXPECT_EQ(parser.FindRequirement("GET", "/get/key")
+                ->service_ctx()
+                .config()
+                .service_name(),
             "echo");
-  EXPECT_EQ(parser.FindService("echo111")->config().service_name(),
+
+  EXPECT_EQ(
+      parser.FindRequirement("POST", "/post/key")->config().operation_name(),
+      "post_bar");
+  EXPECT_EQ(parser.FindRequirement("POST", "/post/key")
+                ->service_ctx()
+                .config()
+                .service_name(),
             "echo111");
-  EXPECT_FALSE(parser.FindService("non-existing"));
+
+  EXPECT_FALSE(parser.FindRequirement("GET", "/test"));
 }
 
 TEST(ConfigParserTest, TestConfigDuplicatePattern) {
@@ -108,30 +116,26 @@ rules {
 })";
 
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigDuplicateRule, &config));
-  FilterConfigParser parser(config);
-
-  // Not allowed to have duplicated pattern, the second one is not added
-  EXPECT_EQ(parser.FindRequirement("GET", "/same")->operation_name(),
-            "Report1");
+  EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config),
+                          ProtoValidationException, "Duplicated pattern");
 }
 
 TEST(ConfigParserTest, TestConfigEmptyPattern) {
   FilterConfig config;
-  const char kFilterConfigNoPattern[] = R"(
-services {
-  service_name: "echo"
-}
+  const char kFilterInvalidService[] = R"(
 rules {
+  pattern {
+    uri_template: "/same"
+    http_method: "GET"
+  }
   requires {
     service_name: "echo"
     operation_name: "Check"
   }
 })";
-  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigNoPattern, &config));
-  FilterConfigParser parser(config);
-
-  // Empty pattern rule is skipped.
-  EXPECT_FALSE(parser.FindRequirement("GET", "/same"));
+  ASSERT_TRUE(TextFormat::ParseFromString(kFilterInvalidService, &config));
+  EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config),
+                          ProtoValidationException, "Invalid service name");
 }
 
 }  // namespace

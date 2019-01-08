@@ -14,6 +14,7 @@
 
 #include "src/envoy/http/service_control/config_parser.h"
 
+#include "common/protobuf/utility.h"
 #include "google/protobuf/stubs/logging.h"
 
 namespace Envoy {
@@ -21,28 +22,33 @@ namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 
-using ::google::api::envoy::http::service_control::Requirement;
 using ::google::api::envoy::http::service_control::FilterConfig;
 
 FilterConfigParser::FilterConfigParser(const FilterConfig& config) {
-  PathMatcherBuilder<const Requirement*> pmb;
+  for (const auto& service : config.services()) {
+    service_map_[service.service_name()] =
+        ServiceContextPtr(new ServiceContext(service));
+  }
+
+  ::google::api_proxy::path_matcher::PathMatcherBuilder<const RequirementContext*> pmb;
   for (const auto& rule : config.rules()) {
-    if (!rule.has_pattern()) {
-      ENVOY_LOG(error, "Empty rule pattern");
-      continue;
-    }
     const auto& pattern = rule.pattern();
-    if (!pmb.Register(pattern.http_method(), pattern.uri_template(),
-                      std::string(), &rule.requires())) {
-      ENVOY_LOG(error, "Invalid rule pattern: http_method: {}, uri_template {}",
-                pattern.http_method(), pattern.uri_template());
+    const auto& requirement = rule.requires();
+
+    const auto service_it = service_map_.find(requirement.service_name());
+    if (service_it == service_map_.end()) {
+      throw ProtoValidationException("Invalid service name", requirement);
     }
+
+    RequirementContextPtr require_ctx(
+        new RequirementContext(requirement, *service_it->second));
+    if (!pmb.Register(pattern.http_method(), pattern.uri_template(),
+                      std::string(), require_ctx.get())) {
+      throw ProtoValidationException("Duplicated pattern", pattern);
+    }
+    require_ctx_list_.push_back(std::move(require_ctx));
   }
   path_matcher_ = pmb.Build();
-
-  for (const auto& service : config.services()) {
-    service_map_[service.service_name()] = ServiceContextPtr(new ServiceContext(service));
-  }
 }
 
 }  // namespace ServiceControl

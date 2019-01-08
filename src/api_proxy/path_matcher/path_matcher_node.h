@@ -21,10 +21,9 @@
 #include <unordered_map>
 #include <vector>
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace google {
+namespace api_proxy {
+namespace path_matcher {
 
 typedef std::string HttpMethod;
 
@@ -189,9 +188,8 @@ class PathMatcherNode {
   bool wildcard_;
 };
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace path_matcher
+}  // namespace api_proxy
+}  // namespace google
 
 #endif  // ENVOY_SREVICE_CONTROL_PATH_MATCHER_NODE_H_

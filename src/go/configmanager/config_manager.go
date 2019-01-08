@@ -619,6 +619,8 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 
 	service := &scpb.Service{
 		ServiceName:  m.serviceName,
+		ServiceConfigId: m.curConfigID,
+		ProducerProjectId: m.serviceConfig.GetProducerProjectId(),
 		TokenCluster: "ads_cluster",
 		ServiceControlUri: &scpb.HttpUri{
 			Uri:     serviceControlUri,

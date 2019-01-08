@@ -24,18 +24,20 @@ import "validate/validate.proto";
 
 message HttpUri {
   // The uri string including the domain and path.
-  string uri = 1;
+  string uri = 1 [(validate.rules).string.min_bytes = 1];
 
   // The Envoy cluster name required for Envoy to make a remote call.
-  string cluster = 2;
+  string cluster = 2 [(validate.rules).string.min_bytes = 1];
 
   // The timeout.
-  google.protobuf.Duration timeout = 3;
+  google.protobuf.Duration timeout = 3 [
+    (validate.rules).duration.required = true
+  ];
 }
 
 message ServiceControlRule {
   // Use Envoy native RouteMatch so we can use Envoy native matching logic.
-  api.envoy.http.common.Pattern pattern = 1;
+  api.envoy.http.common.Pattern pattern = 1 [(validate.rules).message.required = true];
 
   // The requirments for matched pattern.
   api.envoy.http.service_control.Requirement requires = 2 [(validate.rules).message.required = true];
@@ -47,16 +49,16 @@ message Service {
   string service_name = 1 [(validate.rules).string.min_bytes = 1];
 
   // The service config id
-  string service_config_id = 2;
+  string service_config_id = 2 [(validate.rules).string.min_bytes = 1];
 
   // The producer project id
-  string producer_project_id = 3;
+  string producer_project_id = 3 [(validate.rules).string.min_bytes = 1];
 
   // The Http uri to call service control
   HttpUri service_control_uri = 5;
 
   // Envoy Grpc cluster of access token
-  string token_cluster = 6;
+  string token_cluster = 6 [(validate.rules).string.min_bytes = 1];
 }
 
 message FilterConfig {

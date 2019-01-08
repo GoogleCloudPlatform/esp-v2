@@ -19,10 +19,9 @@
 #include <string>
 #include <vector>
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace google {
+namespace api_proxy {
+namespace path_matcher {
 
 class HttpTemplate {
  public:
@@ -67,9 +66,8 @@ class HttpTemplate {
   std::vector<Variable> variables_;
 };
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace path_matcher
+}  // namespace api_proxy
+}  // namespace google
 
 #endif  // ENVOY_SREVICE_CONTROL_HTTP_TEMPLATE_H_

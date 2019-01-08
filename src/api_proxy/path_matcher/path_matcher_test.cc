@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-#include "src/envoy/http/service_control/path_matcher.h"
+#include "src/api_proxy/path_matcher/path_matcher.h"
 
 #include <memory>
 #include <ostream>
@@ -25,10 +24,9 @@
 
 using ::testing::ReturnRef;
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace google {
+namespace api_proxy {
+namespace path_matcher {
 
 namespace {
 
@@ -296,7 +294,6 @@ TEST_F(PathMatcherTest, DifferentHttpMethod) {
 
 }  // namespace
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace path_matcher
+}  // namespace api_proxy
+}  // namespace google

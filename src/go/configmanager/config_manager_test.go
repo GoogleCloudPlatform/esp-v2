@@ -44,6 +44,7 @@ const (
 	testProjectName  = "bookstore.endpoints.project123.cloud.goog"
 	testEndpointName = "endpoints.examples.bookstore.Bookstore"
 	testConfigID     = "2017-05-01r0"
+	testProjectId    = "project123"
 	fakeNodeID       = "id"
 	fakeJwks         = "FAKEJWKS"
 )
@@ -570,6 +571,7 @@ func TestFetchListeners(t *testing.T) {
 			backendProtocol: "gRPC",
 			fakeServiceConfig: fmt.Sprintf(`{
 				"name":"%s",
+				"producer_project_id":"%s",
 				"control" : {
 					"environment": "servivcecontrol.googleapis.com"
 				},
@@ -604,7 +606,7 @@ func TestFetchListeners(t *testing.T) {
 						}
 					]
 				}
-			}`, testProjectName, testEndpointName),
+			}`, testProjectName, testProjectId, testEndpointName),
 			wantedListeners: fmt.Sprintf(`{
 				"address":{
 					"socketAddress":{
@@ -670,6 +672,8 @@ func TestFetchListeners(t *testing.T) {
 															"uri":"https://servicecontrol.googleapis.com/v1/services/"
 														},
 														"service_name":"%s",
+														"service_config_id":"%s",
+														"producer_project_id":"%s",
 														"token_cluster": "ads_cluster"
 													}
 												]
@@ -715,7 +719,7 @@ func TestFetchListeners(t *testing.T) {
 						]
 					}
 				]
-			}`, testProjectName, testProjectName, testProjectName, testProjectName, testProjectName),
+			}`, testProjectName, testProjectName, testProjectName, testProjectName, testProjectName, testConfigID, testProjectId),
 		},
 		{
 			desc:            "Success for HTTP1 backend, with Jwt filter, with audiences",

@@ -1,5 +1,5 @@
 hash: 3320b4e5babe9a256cb12c3d40b39942d2118bb4f90e14d576da2184a922578d
-updated: 2018-12-10T18:44:46.765960118Z
+updated: 2019-01-08T19:22:27.838442962Z
 imports:
 - name: cloud.google.com/go
   version: 2a912322007f3a7f0b4e7e96ba0dfd8c4f347d33
@@ -33,7 +33,7 @@ imports:
   - google/api
   - google/rpc
 - name: github.com/gogo/protobuf
-  version: 636bf0302bc95575d69441b25a2603156ffdddf1
+  version: 4cbf7e384e768b4e01799441fdf2a706a5635ae7
   subpackages:
   - gogoproto
   - jsonpb
@@ -68,7 +68,7 @@ imports:
   subpackages:
   - validate
 - name: github.com/sirupsen/logrus
-  version: bcd833dfe83d3cebad139e4a29ed79cb2318bf95
+  version: e1e72e9de974bd926e5c56f83753fba2df402ce5
 - name: golang.org/x/net
   version: 5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec
   subpackages:

@@ -19,13 +19,12 @@
 #include <string>
 #include <unordered_map>
 
-#include "src/envoy/http/service_control/http_template.h"
-#include "src/envoy/http/service_control/path_matcher_node.h"
+#include "src/api_proxy/path_matcher/http_template.h"
+#include "src/api_proxy/path_matcher/path_matcher_node.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace google {
+namespace api_proxy {
+namespace path_matcher {
 
 template <class Method>
 class PathMatcherBuilder;  // required for PathMatcher constructor
@@ -268,7 +267,6 @@ bool PathMatcherBuilder<Method>::Register(std::string http_method,
   return true;
 }
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace path_matcher
+}  // namespace api_proxy
+}  // namespace google

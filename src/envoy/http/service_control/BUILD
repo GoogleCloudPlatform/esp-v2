@@ -1,11 +1,11 @@
 load(
     "@envoy//bazel:envoy_build_system.bzl",
     "envoy_cc_library",
+    "envoy_cc_test",
 )
 
 package(
     default_visibility = [
-        "//src/envoy/http/service_control:__subpackages__",
         "//src/envoy:__subpackages__",
     ]
 )
@@ -45,67 +45,25 @@ envoy_cc_library(
     visibility = ["//src/envoy:__subpackages__"]
 )
 
-cc_library(
+envoy_cc_library(
     name = "config_parser_lib",
-    srcs = [
-        "config_parser.cc",
-        "http_template.cc",
-        "path_matcher_node.cc",
-    ],
-    hdrs = [
-        "config_parser.h",
-        "http_template.h",
-        "path_matcher.h",
-        "path_matcher_node.h",
-    ],
+    srcs = ["config_parser.cc"],
+    hdrs = ["config_parser.h"],
+    repository = "@envoy",
     deps = [
         "//api/envoy/http/service_control:config_proto_cc",
+        "//src/api_proxy/path_matcher:path_matcher_lib",
         "//src/api_proxy/service_control:request_builder_lib",
-        "@envoy//source/common/common:minimal_logger_lib",
+        "@envoy//source/common/protobuf:utility_lib",
     ],
 )
 
-cc_test(
+envoy_cc_test(
     name = "config_parser_test",
-    size = "small",
     srcs = ["config_parser_test.cc"],
-    linkopts = [
-        "-lm",
-        "-lpthread",
-    ],
-    linkstatic = 1,
+    repository = "@envoy",
     deps = [
         ":config_parser_lib",
-        "//external:googletest_main",
-    ],
-)
-
-cc_test(
-    name = "http_template_test",
-    size = "small",
-    srcs = ["http_template_test.cc"],
-    linkopts = [
-        "-lm",
-        "-lpthread",
-    ],
-    linkstatic = 1,
-    deps = [
-        ":config_parser_lib",
-        "//external:googletest_main",
-    ],
-)
-
-cc_test(
-    name = "path_matcher_test",
-    size = "small",
-    srcs = ["path_matcher_test.cc"],
-    linkopts = [
-        "-lm",
-        "-lpthread",
-    ],
-    linkstatic = 1,
-    deps = [
-        ":config_parser_lib",
-        "//external:googletest_main",
+        "@envoy//test/test_common:utility_lib",
     ],
 )

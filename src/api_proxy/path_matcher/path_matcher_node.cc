@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/envoy/http/service_control/path_matcher_node.h"
-#include "src/envoy/http/service_control/http_template.h"
+#include "src/api_proxy/path_matcher/path_matcher_node.h"
+#include "src/api_proxy/path_matcher/http_template.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace google {
+namespace api_proxy {
+namespace path_matcher {
 
 const char HttpMethod_WILD_CARD[] = "*";
 
@@ -241,7 +240,6 @@ bool PathMatcherNode::GetResultForHttpMethod(
   return false;
 }
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace path_matcher
+}  // namespace api_proxy
+}  // namespace google

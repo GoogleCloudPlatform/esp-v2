@@ -17,10 +17,10 @@
 
 #include "api/envoy/http/service_control/config.pb.h"
 #include "api/envoy/http/service_control/requirement.pb.h"
-#include "common/common/logger.h"
+#include "src/api_proxy/path_matcher/path_matcher.h"
 #include "src/api_proxy/service_control/request_builder.h"
-#include "src/envoy/http/service_control/path_matcher.h"
 
+#include <list>
 #include <unordered_map>
 
 namespace Envoy {
@@ -50,31 +50,42 @@ class ServiceContext {
 };
 typedef std::unique_ptr<ServiceContext> ServiceContextPtr;
 
-class FilterConfigParser : public Logger::Loggable<Logger::Id::filter> {
+class RequirementContext {
+ public:
+  RequirementContext(
+      const ::google::api::envoy::http::service_control::Requirement& config,
+      const ServiceContext& service_ctx)
+      : config_(config), service_ctx_(service_ctx) {}
+
+  const ::google::api::envoy::http::service_control::Requirement& config()
+      const {
+    return config_;
+  }
+
+  const ServiceContext& service_ctx() const { return service_ctx_; }
+
+ private:
+  const ::google::api::envoy::http::service_control::Requirement& config_;
+  const ServiceContext& service_ctx_;
+};
+typedef std::unique_ptr<RequirementContext> RequirementContextPtr;
+
+class FilterConfigParser {
  public:
   FilterConfigParser(
       const ::google::api::envoy::http::service_control::FilterConfig& config);
 
-  const ::google::api::envoy::http::service_control::Requirement*
-  FindRequirement(const std::string& http_method,
-                  const std::string& path) const {
+  const RequirementContext* FindRequirement(const std::string& http_method,
+                                            const std::string& path) const {
     return path_matcher_->Lookup(http_method, path);
   }
 
-  const ServiceContext* FindService(const std::string& name) const {
-    const auto it = service_map_.find(name);
-    return (it != service_map_.end()) ? it->second.get() : nullptr;
-  }
-
  private:
-  // Build PatchMatcher for extracting api attributes.
-  void BuildPathMatcher();
-
   // The path matcher for all url templates
-  PathMatcherPtr<
-      const ::google::api::envoy::http::service_control::Requirement*>
-      path_matcher_;
+  ::google::api_proxy::path_matcher::PathMatcherPtr<const RequirementContext*> path_matcher_;
 
+  // Store all RequirementContext objects.
+  std::list<RequirementContextPtr> require_ctx_list_;
   // The service map
   std::unordered_map<std::string, ServiceContextPtr> service_map_;
 };

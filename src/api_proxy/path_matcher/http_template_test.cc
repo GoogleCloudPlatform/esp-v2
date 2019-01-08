@@ -12,17 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/envoy/http/service_control/http_template.h"
+#include "src/api_proxy/path_matcher/http_template.h"
 #include "gtest/gtest.h"
 
 #include <ostream>
 #include <string>
 #include <vector>
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace google {
+namespace api_proxy {
+namespace path_matcher {
 
 typedef std::vector<std::string> Segments;
 typedef HttpTemplate::Variable Variable;
@@ -508,7 +507,6 @@ TEST(HttpTemplate, ParseNonVerbTest) {
   ASSERT_EQ(nullptr, HttpTemplate::Parse("/a/{b=*}/**:"));
 }
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace path_matcher
+}  // namespace api_proxy
+}  // namespace google
