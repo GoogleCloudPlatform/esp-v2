@@ -273,8 +273,8 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	}
 	serverlistener.FilterChains = []listener.FilterChain{{
 		Filters: []listener.Filter{{
-			Name:   util.HTTPConnectionManager,
-			Config: httpFilterConfig,
+			Name:       util.HTTPConnectionManager,
+			ConfigType: &listener.Filter_Config{httpFilterConfig},
 		}}}}
 
 	m.Infof("adding Cluster Configuration for api: %v", endpointApi.GetName())
@@ -379,8 +379,8 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 		}
 
 		grpcWebFilter := &hcm.HttpFilter{
-			Name:   util.GRPCWeb,
-			Config: &types.Struct{},
+			Name:       util.GRPCWeb,
+			ConfigType: &hcm.HttpFilter_Config{&types.Struct{}},
 		}
 		httpFilters = append(httpFilters, grpcWebFilter)
 	}
@@ -388,8 +388,8 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 	// Add Envoy Router filter so requests are routed upstream.
 	// Router filter should be the last.
 	routerFilter := &hcm.HttpFilter{
-		Name:   util.Router,
-		Config: &types.Struct{},
+		Name:       util.Router,
+		ConfigType: &hcm.HttpFilter_Config{&types.Struct{}},
 	}
 	httpFilters = append(httpFilters, routerFilter)
 
@@ -493,8 +493,8 @@ func (m *ConfigManager) makeTranscoderFilter(endpointApi *api.Api) *hcm.HttpFilt
 			}
 			transcodeConfigStruct, _ := util.MessageToStruct(transcodeConfig)
 			transcodeFilter := &hcm.HttpFilter{
-				Name:   util.GRPCJSONTranscoder,
-				Config: transcodeConfigStruct,
+				Name:       util.GRPCJSONTranscoder,
+				ConfigType: &hcm.HttpFilter_Config{transcodeConfigStruct},
 			}
 			return transcodeFilter
 		}
@@ -606,8 +606,8 @@ func (m *ConfigManager) makeJwtAuthnFilter(endpointApi *api.Api, backendProtocol
 
 	jas, _ := util.MessageToStruct(jwtAuthentication)
 	jwtAuthnFilter := &hcm.HttpFilter{
-		Name:   ut.JwtAuthn,
-		Config: jas,
+		Name:       ut.JwtAuthn,
+		ConfigType: &hcm.HttpFilter_Config{jas},
 	}
 	return jwtAuthnFilter
 }
@@ -717,8 +717,8 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 
 	scs, _ := util.MessageToStruct(filterConfig)
 	filter := &hcm.HttpFilter{
-		Name:   ut.ServiceControl,
-		Config: scs,
+		Name:       ut.ServiceControl,
+		ConfigType: &hcm.HttpFilter_Config{scs},
 	}
 	return filter
 }

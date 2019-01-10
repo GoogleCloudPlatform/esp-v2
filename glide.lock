@@ -1,5 +1,5 @@
-hash: 3320b4e5babe9a256cb12c3d40b39942d2118bb4f90e14d576da2184a922578d
-updated: 2019-01-08T19:22:27.838442962Z
+hash: 74d98e8fad42236c5ccb5b3f953abad55798b70654a35cb02351f49adccaca68
+updated: 2019-01-11T00:46:25.106708247Z
 imports:
 - name: cloud.google.com/go
   version: 2a912322007f3a7f0b4e7e96ba0dfd8c4f347d33
@@ -8,7 +8,7 @@ imports:
 - name: github.com/envoyproxy/data-plane-api
   version: 4406edd4e29f5b7e254bdee75ef6354fdf756eb3
 - name: github.com/envoyproxy/go-control-plane
-  version: 691ef0a390474a85401ce3ea90d060110018b9b9
+  version: 8a91fb26f4e6553d2e21fa76e07d33b93a4f66e7
   subpackages:
   - envoy/api/v2
   - envoy/api/v2/auth
