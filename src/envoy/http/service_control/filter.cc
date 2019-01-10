@@ -22,48 +22,74 @@ namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 
-using ::google::api::envoy::http::service_control::APIKey;
+using ::google::api::envoy::http::service_control::APIKeyLocation;
+using ::google::api::envoy::http::service_control::APIKeyRequirement;
 using ::google::protobuf::util::Status;
 using Http::HeaderMap;
 using Http::LowerCaseString;
 using std::string;
 
-void Filter::ExtractAPIKeyFromQuery(const HeaderMap &headers,
+bool Filter::ExtractAPIKeyFromQuery(const HeaderMap &headers,
                                     const string &query) {
   if (!params_parsed_) {
     parsed_params_ =
         Http::Utility::parseQueryString(headers.Path()->value().c_str());
     params_parsed_ = true;
   }
+
   const auto &it = parsed_params_.find(query);
   if (it != parsed_params_.end()) {
     api_key_ = it->second;
-  } else {
-    ENVOY_LOG(debug, "API key not found by query '{}' in path: '{}'", query,
-              headers.Path()->value().c_str());
+    ENVOY_LOG(debug, "api-key: {} from query: {}", api_key_, query);
+    return true;
   }
+  return false;
 }
 
-void Filter::ExtractAPIKeyFromHeader(const HeaderMap &headers,
+bool Filter::ExtractAPIKeyFromHeader(const HeaderMap &headers,
                                      const string &header) {
+  // TODO(qiwzhang): optimize this by using LowerCaseString at init.
   auto *entry = headers.get(LowerCaseString(header));
   if (entry) {
     api_key_ = std::string(entry->value().c_str(), entry->value().size());
-  } else {
-    ENVOY_LOG(debug, "API key not found by header '{}' in headerMap '{}'",
-              header, headers);
+    ENVOY_LOG(debug, "api-key: {} from header: {}", api_key_, header);
+    return true;
   }
+  return false;
 }
 
-void Filter::ExtractAPIKeyFromCookie(const HeaderMap &headers,
+bool Filter::ExtractAPIKeyFromCookie(const HeaderMap &headers,
                                      const string &cookie) {
   std::string api_key = Http::Utility::parseCookieValue(headers, cookie);
   if (!api_key.empty()) {
     api_key_ = api_key;
-  } else {
-    ENVOY_LOG(debug, "API key not found by cookie '{}' in headerMap '{}'",
-              cookie, headers);
+    ENVOY_LOG(debug, "api-key: {} from cookie: {}", api_key_, cookie);
+    return true;
   }
+  return false;
+}
+
+bool Filter::ExtractAPIKey(
+    const HeaderMap &headers,
+    const ::google::protobuf::RepeatedPtrField<
+        ::google::api::envoy::http::service_control::APIKeyLocation>
+        &locations) {
+  for (const auto &location : locations) {
+    switch (location.key_case()) {
+      case APIKeyLocation::kQuery:
+        if (ExtractAPIKeyFromQuery(headers, location.query())) return true;
+        break;
+      case APIKeyLocation::kHeader:
+        if (ExtractAPIKeyFromHeader(headers, location.header())) return true;
+        break;
+      case APIKeyLocation::kCookie:
+        if (ExtractAPIKeyFromCookie(headers, location.cookie())) return true;
+        break;
+      case APIKeyLocation::KEY_NOT_SET:
+        break;
+    }
+  }
+  return false;
 }
 
 Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool) {
@@ -79,32 +105,22 @@ Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool) {
     return Http::FilterHeadersStatus::StopIteration;
   }
 
+  operation_name_ = require_ctx_->config().operation_name();
+  api_name_ = require_ctx_->config().api_name();
+  api_version_ = require_ctx_->config().api_version();
+
   // TODO add integration tests
   if (require_ctx_->config().api_key().allow_without_api_key()) {
     ENVOY_LOG(debug, "Service control check is not needed");
     return Http::FilterHeadersStatus::Continue;
   }
 
-  operation_name_ = require_ctx_->config().operation_name();
-
-  // Extract API key
-  for (const auto &api_key : require_ctx_->config().api_key().api_keys()) {
-    switch (api_key.key_case()) {
-      case APIKey::kQuery:
-        ExtractAPIKeyFromQuery(headers, api_key.query());
-        break;
-      case APIKey::kHeader:
-        ExtractAPIKeyFromHeader(headers, api_key.header());
-        break;
-      case APIKey::kCookie:
-        ExtractAPIKeyFromCookie(headers, api_key.cookie());
-        break;
-      case APIKey::KEY_NOT_SET:
-        break;
-    }
+  if (require_ctx_->config().api_key().locations_size() > 0) {
+    ExtractAPIKey(headers, require_ctx_->config().api_key().locations());
+  } else {
+    ExtractAPIKey(headers, config_->default_api_keys().locations());
   }
-  api_name_ = require_ctx_->config().api_name();
-  api_version_ = require_ctx_->config().api_version();
+
   state_ = Calling;
   stopped_ = false;
 

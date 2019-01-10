@@ -693,14 +693,6 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 		for _, scRule := range scRules {
 			scRule.Requires.ApiKey = &scpb.APIKeyRequirement{
 				AllowWithoutApiKey: usageRule.GetAllowUnregisteredCalls(),
-				ApiKeys: []*scpb.APIKey{
-					&scpb.APIKey{
-						Key: &scpb.APIKey_Query{ut.APIKeyQuery},
-					},
-					&scpb.APIKey{
-						Key: &scpb.APIKey_Header{ut.APIKeyHeader},
-					},
-				},
 			}
 		}
 	}

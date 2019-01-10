@@ -53,7 +53,12 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
         stats_(generateStats(stats_prefix, context.scope())),
         cm_(context.clusterManager()),
         random_(context.random()),
-        config_parser_(proto_config_, context) {}
+        config_parser_(proto_config_, context) {
+    // The default places to extract api-key
+    default_api_keys_.add_locations()->set_query("key");
+    default_api_keys_.add_locations()->set_query("api_key");
+    default_api_keys_.add_locations()->set_header("x-api-key");
+  }
 
   const ::google::api::envoy::http::service_control::FilterConfig& config()
       const {
@@ -64,6 +69,10 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
   Runtime::RandomGenerator& random() { return random_; }
   ServiceControlFilterStats& stats() { return stats_; }
   const FilterConfigParser& cfg_parser() const { return config_parser_; }
+  const ::google::api::envoy::http::service_control::APIKeyRequirement&
+  default_api_keys() const {
+    return default_api_keys_;
+  }
 
  private:
   ServiceControlFilterStats generateStats(const std::string& prefix,
@@ -80,6 +89,9 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
   Upstream::ClusterManager& cm_;
   Runtime::RandomGenerator& random_;
   FilterConfigParser config_parser_;
+
+  ::google::api::envoy::http::service_control::APIKeyRequirement
+      default_api_keys_;
 };
 
 typedef std::shared_ptr<FilterConfig> FilterConfigSharedPtr;
