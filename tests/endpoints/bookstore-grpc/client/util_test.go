@@ -3,13 +3,13 @@ package client
 import (
 	"bytes"
 	"io"
+	"reflect"
 	"strings"
 	"testing"
 
 	bspb "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/proto"
 	"github.com/gogo/protobuf/types"
 	"github.com/golang/protobuf/proto"
-	"reflect"
 )
 
 func readerToString(r io.Reader) string {
@@ -18,7 +18,7 @@ func readerToString(r io.Reader) string {
 	return buf.String()
 }
 
-func TestEncodeGrpcWebRequestBody(t *testing.T) {
+func TestEncodeGRPCWebRequestBody(t *testing.T) {
 	testCases := []struct {
 		reqMsg proto.Message
 		// base64-encoded request body that will be sent by a gRPC-Web client.
@@ -46,7 +46,7 @@ func TestEncodeGrpcWebRequestBody(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		r := EncodeGrpcWebRequestBody(tc.reqMsg)
+		r := EncodeGRPCWebRequestBody(tc.reqMsg)
 		encodedReqBody := readerToString(r)
 		if encodedReqBody != tc.expectedReqBody {
 			t.Errorf("Actual: %v. Expected: %v", encodedReqBody, tc.expectedReqBody)
@@ -54,7 +54,7 @@ func TestEncodeGrpcWebRequestBody(t *testing.T) {
 	}
 }
 
-func TestDecodeGrpcWebResponseBody(t *testing.T) {
+func TestDecodeGRPCWebResponseBody(t *testing.T) {
 	successTrailer := GRPCWebTrailer{"grpc-message": "OK", "grpc-status": "0"}
 	testCases := []struct {
 		desc string
@@ -105,7 +105,7 @@ func TestDecodeGrpcWebResponseBody(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		binaryMsg, trailer, err := DecodeGrpcWebResponseBody(strings.NewReader(tc.encodedRespBody))
+		binaryMsg, trailer, err := DecodeGRPCWebResponseBody(strings.NewReader(tc.encodedRespBody))
 		if err != nil {
 			t.Errorf("%s failed with error: %v,", tc.desc, err)
 			continue

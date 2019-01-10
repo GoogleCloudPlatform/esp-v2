@@ -29,7 +29,7 @@ import (
 	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
 	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
-	"github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
@@ -618,10 +618,10 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 	}
 
 	service := &scpb.Service{
-		ServiceName:  m.serviceName,
-		ServiceConfigId: m.curConfigID,
+		ServiceName:       m.serviceName,
+		ServiceConfigId:   m.curConfigID,
 		ProducerProjectId: m.serviceConfig.GetProducerProjectId(),
-		TokenCluster: "ads_cluster",
+		TokenCluster:      "ads_cluster",
 		ServiceControlUri: &scpb.HttpUri{
 			Uri:     serviceControlUri,
 			Cluster: "service_control_cluster",
@@ -706,7 +706,7 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 	}
 
 	filterConfig := &scpb.FilterConfig{
-		Services:    []*scpb.Service{service},
+		Services: []*scpb.Service{service},
 	}
 
 	for _, rules := range rulesMap {
