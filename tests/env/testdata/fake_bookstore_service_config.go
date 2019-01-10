@@ -54,7 +54,7 @@ var (
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.GetShelf",
 					Pattern: &annotations.HttpRule_Get{
-						Get: "/v1/shelves/{shelf}",
+						Get: "/v1/shelves/{shelf=*}",
 					},
 				},
 				{
@@ -66,19 +66,20 @@ var (
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.DeleteBook",
 					Pattern: &annotations.HttpRule_Delete{
-						Delete: "/v1/shelves/{shelf}/books/{book}",
+						Delete: "/v1/shelves/{shelf=*}/books/{book=*}",
 					},
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.CreateBook",
 					Pattern: &annotations.HttpRule_Post{
-						Post: "/v1/shelves/{shelf}/books",
+						Post: "/v1/shelves/{shelf}/books/",
 					},
+					Body: "book",
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.GetBook",
 					Pattern: &annotations.HttpRule_Get{
-						Get: "/v1/shelves/{shelf}/books/{book}",
+						Get: "/v1/shelves/{shelf=*}/books/{book}",
 					},
 				},
 			},

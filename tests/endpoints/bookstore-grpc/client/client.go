@@ -134,14 +134,24 @@ var makeGRPCCall = func(addr, method, token string, testHeaderValues ...string) 
 		respMsg, err = cli.ListShelves(ctx, req)
 	case "CreateShelf":
 		req := &bspb.CreateShelfRequest{
-			Shelf: &bspb.Shelf{},
+			Shelf: &bspb.Shelf{
+				Id:    14785,
+				Theme: "New Shelf",
+			},
 		}
 		respMsg, err = cli.CreateShelf(ctx, req)
 	case "GetShelf":
-		req := &bspb.GetShelfRequest{}
+		req := &bspb.GetShelfRequest{
+			Shelf: 100,
+		}
 		respMsg, err = cli.GetShelf(ctx, req)
 	case "CreateBook":
-		req := &bspb.CreateBookRequest{}
+		req := &bspb.CreateBookRequest{
+			Book: &bspb.Book{
+				Id:    20050,
+				Title: "Harry Potter",
+			},
+		}
 		respMsg, err = cli.CreateBook(ctx, req)
 	case "DeleteShelf":
 		req := &bspb.DeleteShelfRequest{}
@@ -174,14 +184,24 @@ func MakeGRPCWebCall(addr, method, token string, testHeaderValues ...string) (st
 		respMsg = &bspb.ListShelvesResponse{}
 	case "CreateShelf":
 		reqMsg = &bspb.CreateShelfRequest{
-			Shelf: &bspb.Shelf{},
+			Shelf: &bspb.Shelf{
+				Id:    14785,
+				Theme: "New Shelf",
+			},
 		}
 		respMsg = &bspb.Shelf{}
 	case "GetShelf":
-		reqMsg = &bspb.GetShelfRequest{}
+		reqMsg = &bspb.GetShelfRequest{
+			Shelf: 100,
+		}
 		respMsg = &bspb.Shelf{}
 	case "CreateBook":
-		reqMsg = &bspb.CreateBookRequest{}
+		reqMsg = &bspb.CreateBookRequest{
+			Book: &bspb.Book{
+				Id:    20050,
+				Title: "Harry Potter",
+			},
+		}
 		respMsg = &bspb.Book{}
 	case "DeleteShelf":
 		reqMsg = &bspb.DeleteShelfRequest{}

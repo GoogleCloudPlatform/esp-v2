@@ -36,7 +36,12 @@ func TestHttp1Basic(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--version=" + configId,
 		"--skip_service_control_filter=true", "--backend_protocol=http1", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv( /*mockMetadata=*/ true /*mockServiceManagement=*/, true /*mockServiceControl=*/, true /*mockJwtPrividers=*/, nil)
+	s := env.TestEnv{
+		MockMetadata:          true,
+		MockServiceManagement: true,
+		MockServiceControl:    true,
+		MockJwtProviders:      nil,
+	}
 
 	if err := s.Setup("echo", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -73,7 +78,12 @@ func TestHttp1JWT(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--version=" + configId,
 		"--skip_service_control_filter=true", "--backend_protocol=http1", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv( /*mockMetadata=*/ true /*mockServiceManagement=*/, true /*mockServiceControl=*/, true /*mockJwtPrividers=*/, []string{"google_jwt"})
+	s := env.TestEnv{
+		MockMetadata:          true,
+		MockServiceManagement: true,
+		MockServiceControl:    true,
+		MockJwtProviders:      []string{"google_jwt"},
+	}
 
 	if err := s.Setup("echo", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

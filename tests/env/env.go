@@ -17,7 +17,6 @@ package env
 import (
 	"flag"
 	"fmt"
-	"os/exec"
 
 	"cloudesf.googlesource.com/gcpproxy/tests/env/components"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
@@ -34,41 +33,28 @@ func init() {
 }
 
 type TestEnv struct {
-	serviceName string
-	configId    string
+	MockMetadata          bool
+	MockServiceManagement bool
+	MockServiceControl    bool
+	MockJwtProviders      []string
 
 	envoy           *components.Envoy
 	configMgr       *components.ConfigManagerServer
 	echoBackend     *components.EchoHTTPServer
 	bookstoreServer *components.BookstoreGrpcServer
-
-	cmd                   *exec.Cmd
-	mockMetadata          bool
-	mockServiceManagement bool
-	mockServiceControl    bool
-	mockJwtProviders      []string
-}
-
-func NewTestEnv(mockMetadata, mockServiceManagement, mockServiceControl bool, mockJwtProviders []string) *TestEnv {
-	return &TestEnv{
-		mockMetadata:          mockMetadata,
-		mockServiceManagement: mockServiceManagement,
-		mockServiceControl:    mockServiceControl,
-		mockJwtProviders:      mockJwtProviders,
-	}
 }
 
 // SetUp setups Envoy, ConfigManager, and Backend server for test.
 func (e *TestEnv) Setup(backendService string, confArgs []string) error {
-	if e.mockServiceManagement {
+	if e.MockServiceManagement {
 		fakeServiceConfig, ok := testdata.ConfigMap[backendService]
 		if !ok {
 			return fmt.Errorf("not supported backend")
 		}
-		if len(e.mockJwtProviders) > 0 {
+		if len(e.MockJwtProviders) > 0 {
 			testdata.InitMockJwtProviders()
 			// Add Mock Jwt Providers to the fake ServiceConfig.
-			for _, id := range e.mockJwtProviders {
+			for _, id := range e.MockJwtProviders {
 				provider, ok := testdata.MockJwtProviderMap[id]
 				if !ok {
 					return fmt.Errorf("not supported jwt provider id")
@@ -87,7 +73,7 @@ func (e *TestEnv) Setup(backendService string, confArgs []string) error {
 		confArgs = append(confArgs, "--service_management_url="+components.NewMockServiceMrg(jsonStr).GetURL())
 	}
 
-	if e.mockMetadata {
+	if e.MockMetadata {
 		confArgs = append(confArgs, "--metadata_url="+components.NewMockMetadata().GetURL())
 	}
 

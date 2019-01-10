@@ -45,7 +45,12 @@ func TestGRPC(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--version=" + configID,
 		"--skip_service_control_filter=true", "--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv( /*mockMetadata=*/ true /*mockServiceManagement=*/, true /*mockServiceControl=*/, true /*mockJwtPrividers=*/, nil)
+	s := env.TestEnv{
+		MockMetadata:          true,
+		MockServiceManagement: true,
+		MockServiceControl:    true,
+		MockJwtProviders:      nil,
+	}
 
 	if err := s.Setup("bookstore", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -63,13 +68,13 @@ func TestGRPC(t *testing.T) {
 			desc:           "gRPC client calling gRPC backend",
 			clientProtocol: "grpc",
 			method:         "GetShelf",
-			wantResp:       `{"theme":"Unknown Shelf"}`,
+			wantResp:       `{"id":"100","theme":"Kids"}`,
 		},
 		{
 			desc:           "Http client calling gRPC backend",
 			clientProtocol: "http",
-			method:         "/v1/shelves/125",
-			wantResp:       `{"id":"125","theme":"Unknown Shelf"}`,
+			method:         "/v1/shelves/200",
+			wantResp:       `{"id":"200","theme":"Classic"}`,
 		},
 	}
 
@@ -91,7 +96,13 @@ func TestGRPCWeb(t *testing.T) {
 
 	args := []string{"--service=" + serviceName, "--version=" + configID,
 		"--skip_service_control_filter=true", "--backend_protocol=grpc", "--rollout_strategy=fixed"}
-	s := env.NewTestEnv( /*mockMetadata=*/ true /*mockServiceManagement=*/, true /*mockServiceControl=*/, true /*mockJwtPrividers=*/, nil)
+
+	s := env.TestEnv{
+		MockMetadata:          true,
+		MockServiceManagement: true,
+		MockServiceControl:    true,
+		MockJwtProviders:      nil,
+	}
 
 	if err := s.Setup("bookstore", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -109,7 +120,7 @@ func TestGRPCWeb(t *testing.T) {
 		// Successes:
 		{
 			method:      "ListShelves",
-			wantResp:    `{"shelves":[{"id":"123","theme":"Shakspeare"},{"id":"124","theme":"Hamlet"}]}`,
+			wantResp:    `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantTrailer: successTrailer,
 		},
 		{
@@ -119,7 +130,7 @@ func TestGRPCWeb(t *testing.T) {
 		},
 		{
 			method:      "GetShelf",
-			wantResp:    `{"theme":"Unknown Shelf"}`,
+			wantResp:    `{"id":"100","theme":"Kids"}`,
 			wantTrailer: successTrailer,
 		},
 		// Failures:
@@ -170,7 +181,13 @@ func TestGRPCJwt(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--version=" + configID,
 		"--skip_service_control_filter=true", "--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv( /*mockMetadata=*/ true /*mockServiceManagement=*/, true /*mockServiceControl=*/, true /*mockJwtPrividers=*/, []string{"google_service_account", "endpoints_jwt", "broken_provider"})
+	s := env.TestEnv{
+		MockMetadata:          true,
+		MockServiceManagement: true,
+		MockServiceControl:    true,
+		MockJwtProviders:      []string{"google_service_account", "endpoints_jwt", "broken_provider"},
+	}
+
 	if err := s.Setup("bookstore", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -207,8 +224,8 @@ func TestGRPCJwt(t *testing.T) {
 			desc:           "Succeed for Http client, JWT rule recognizes {shelf} correctly",
 			clientProtocol: "http",
 			httpMethod:     "GET",
-			method:         "/v1/shelves/25",
-			wantResp:       `{"id":"25","theme":"Unknown Shelf"}`,
+			method:         "/v1/shelves/200",
+			wantResp:       `{"id":"200","theme":"Classic"}`,
 		},
 		{
 			desc:             "Fail for gPRC client, with bad JWT token",
@@ -230,16 +247,16 @@ func TestGRPCJwt(t *testing.T) {
 			desc:           "Succeed for Http client, with valid JWT token, with url binding",
 			clientProtocol: "http",
 			httpMethod:     "POST",
-			method:         "/v1/shelves?shelf.id=123",
+			method:         "/v1/shelves?shelf.id=123&shelf.theme=kids",
 			token:          testdata.FakeCloudToken,
-			wantResp:       `{"id":"123","theme":"New Shelf"}`,
+			wantResp:       `{"id":"123","theme":"kids"}`,
 		},
 		{
 			desc:               "Succeed for gPRC client, with valid JWT token",
 			clientProtocol:     "grpc",
 			method:             "CreateShelf",
 			token:              testdata.FakeCloudToken,
-			wantResp:           `{"theme":"New Shelf"}`,
+			wantResp:           `{"id":"14785","theme":"New Shelf"}`,
 			wantGRPCWebTrailer: successTrailer,
 		},
 
@@ -278,8 +295,8 @@ func TestGRPCJwt(t *testing.T) {
 			desc:           "Succeed for Http client, Jwt RouteMatcher works for multi query parameters and HttpHeader, no audience",
 			clientProtocol: "http",
 			httpMethod:     "GET",
-			method:         "/v1/shelves/125/books/12345",
-			wantResp:       `{"id":"12345","title":"Unknown Book"}`,
+			method:         "/v1/shelves/200/books/2001",
+			wantResp:       `{"id":"2001","author":"Shakspeare","title":"Hamlet"}`,
 		},
 
 		// Test JWT with audiences.
@@ -288,7 +305,7 @@ func TestGRPCJwt(t *testing.T) {
 			clientProtocol:     "grpc",
 			method:             "ListShelves",
 			token:              testdata.FakeCloudTokenSingleAudience1,
-			wantResp:           `{"shelves":[{"id":"123","theme":"Shakspeare"},{"id":"124","theme":"Hamlet"}]}`,
+			wantResp:           `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantGRPCWebTrailer: successTrailer,
 		},
 		{
@@ -297,7 +314,7 @@ func TestGRPCJwt(t *testing.T) {
 			httpMethod:     "GET",
 			method:         "/v1/shelves",
 			token:          testdata.FakeCloudTokenSingleAudience1,
-			wantResp:       `{"shelves":[{"id":"123","theme":"Shakspeare"},{"id":"124","theme":"Hamlet"}]}`,
+			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
 		{
 			desc:             "Fail for gPRC client, with JWT token but not expected audience",
@@ -328,16 +345,16 @@ func TestGRPCJwt(t *testing.T) {
 			clientProtocol:     "grpc",
 			method:             "CreateBook",
 			token:              testdata.FakeCloudTokenSingleAudience2,
-			wantResp:           `{"title":"New Book"}`,
+			wantResp:           `{"id":"20050","title":"Harry Potter"}`,
 			wantGRPCWebTrailer: successTrailer,
 		},
 		{
 			desc:           "Succeed for Http client, with JWT token with multi audience while multi audiences are allowed",
 			clientProtocol: "http",
 			httpMethod:     "POST",
-			method:         "/v1/shelves/12345/books",
+			method:         "/v1/shelves/200/books?book.title=Romeo%20and%20Julie",
 			token:          testdata.FakeCloudTokenMultiAudiences,
-			wantResp:       `{"id":"12345","title":"New Book"}`,
+			wantResp:       `{"id":"0","title":"Romeo and Julie"}`,
 		},
 
 		// Testing JWT with multiple Providers, token from anyone should work,
