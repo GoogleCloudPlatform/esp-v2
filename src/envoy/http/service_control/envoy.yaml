@@ -51,14 +51,10 @@ static_resources:
                 http_filters:
                   - name: envoy.filters.http.service_control
                     config:
-                      service_name: REPLACE_SERVICE_NAME
-                      service_control_uri:
-                        cluster: service_control_cluster
-                        uri: https://servicecontrol.googleapis.com/v1/services/
-                        timeout:
-                          seconds: 5
                       services:
                         service_name: REPLACE_SERVICE_NAME
+                        service_config_id: REPLACE_SERVICE_CONFIG_ID
+                        producer_project_id: REPLACE_PROJECT_ID
                         token_cluster: token_cluster
                         service_control_uri:
                           cluster: service_control_cluster

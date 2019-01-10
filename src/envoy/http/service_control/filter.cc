@@ -107,43 +107,7 @@ Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool) {
   api_version_ = require_ctx_->config().api_version();
   state_ = Calling;
   stopped_ = false;
-  token_fetcher_ = require_ctx_->service_ctx().getTLCache().token().getToken(
-      [this](const Status &status, const string &result) {
-        onTokenDone(status, result);
-      });
 
-  if (state_ == Complete) {
-    return Http::FilterHeadersStatus::Continue;
-  }
-  ENVOY_LOG(debug, "Called ServiceControl filter : Stop");
-  stopped_ = true;
-  return Http::FilterHeadersStatus::StopIteration;
-}
-
-void Filter::onDestroy() {
-  if (token_fetcher_) {
-    token_fetcher_();
-    token_fetcher_ = nullptr;
-  }
-  if (check_call_) {
-    check_call_->cancel();
-    check_call_ = nullptr;
-  }
-}
-
-void Filter::onTokenDone(const Status &status, const string &token) {
-  // This stream has been reset, abort the callback.
-  token_fetcher_ = nullptr;
-  if (state_ == Responded) {
-    return;
-  }
-
-  if (!status.ok()) {
-    rejectRequest(Http::Code(401), "Failed to fetch access_token");
-    return;
-  }
-
-  token_ = token;
   // Make a check call
   ::google::api_proxy::service_control::CheckRequestInfo info;
   info.operation_id = uuid_;
@@ -165,7 +129,22 @@ void Filter::onTokenDone(const Status &status, const string &token) {
   check_call_ = HttpCall::create(
       config_->cm(),
       require_ctx_->service_ctx().config().service_control_uri());
-  check_call_->call(suffix_uri, token_, check_request, on_done);
+  check_call_->call(suffix_uri, require_ctx_->service_ctx().token(),
+                    check_request, on_done);
+
+  if (state_ == Complete) {
+    return Http::FilterHeadersStatus::Continue;
+  }
+  ENVOY_LOG(debug, "Called ServiceControl filter : Stop");
+  stopped_ = true;
+  return Http::FilterHeadersStatus::StopIteration;
+}
+
+void Filter::onDestroy() {
+  if (check_call_) {
+    check_call_->cancel();
+    check_call_ = nullptr;
+  }
 }
 
 void Filter::rejectRequest(Http::Code code, absl::string_view error_msg) {
@@ -244,6 +223,9 @@ void Filter::log(const HeaderMap * /*request_headers*/,
                  const HeaderMap * /*response_trailers*/,
                  const StreamInfo::StreamInfo &stream_info) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
+  if (!require_ctx_) {
+    return;
+  }
 
   ::google::api_proxy::service_control::ReportRequestInfo info;
   info.operation_id = uuid_;
@@ -284,7 +266,8 @@ void Filter::log(const HeaderMap * /*request_headers*/,
   HttpCall *http_call = HttpCall::create(
       config_->cm(),
       require_ctx_->service_ctx().config().service_control_uri());
-  http_call->call(suffix_uri, token_, report_request, dummy_on_done);
+  http_call->call(suffix_uri, require_ctx_->service_ctx().token(),
+                  report_request, dummy_on_done);
 }
 
 }  // namespace ServiceControl

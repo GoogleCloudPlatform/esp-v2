@@ -80,8 +80,6 @@ class Filter : public Http::StreamDecoderFilter,
 
   const RequirementContext* require_ctx_{};
 
-  CancelFunc token_fetcher_;
-  std::string token_;
   std::string uuid_;
   std::string operation_name_;
   std::string api_key_;

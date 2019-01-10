@@ -17,11 +17,10 @@
 
 #include "api/envoy/http/service_control/config.pb.h"
 #include "api/envoy/http/service_control/requirement.pb.h"
-#include "envoy/server/filter_config.h"
 #include "envoy/thread_local/thread_local.h"
 #include "src/api_proxy/path_matcher/path_matcher.h"
 #include "src/api_proxy/service_control/request_builder.h"
-#include "src/envoy/http/service_control/token_cache.h"
+#include "src/envoy/http/service_control/token_subscriber.h"
 
 #include <list>
 #include <unordered_map>
@@ -31,21 +30,15 @@ namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 
+// Use shared_ptr to do atomic token update.
+typedef std::shared_ptr<std::string> TokenSharedPtr;
+
 class ThreadLocalCache : public ThreadLocal::ThreadLocalObject {
  public:
-  // Load the config from envoy config.
-  ThreadLocalCache(
-      const ::google::api::envoy::http::service_control::Service& service,
-      Upstream::ClusterManager& cm, TimeSource& time_source)
-      : token_(new TokenCache(cm, time_source, service.token_cluster())) {}
-
-  TokenCache& token() { return *token_; }
-
- private:
-  std::unique_ptr<TokenCache> token_;
+  TokenSharedPtr token_;
 };
 
-class ServiceContext {
+class ServiceContext : public TokenSubscriber::Callback {
  public:
   ServiceContext(
       const ::google::api::envoy::http::service_control::Service& proto_config,
@@ -53,13 +46,14 @@ class ServiceContext {
       : proto_config_(proto_config),
         request_builder_({"endpoints_log"}, proto_config_.service_name(),
                          proto_config_.service_config_id()),
-        tls_(context.threadLocal().allocateSlot()) {
-    Upstream::ClusterManager& cm = context.clusterManager();
-    tls_->set([&proto_config, &cm](Event::Dispatcher& dispatcher)
-                  -> ThreadLocal::ThreadLocalObjectSharedPtr {
-      return std::make_shared<ThreadLocalCache>(proto_config, cm,
-                                                dispatcher.timeSystem());
-    });
+        tls_(context.threadLocal().allocateSlot()),
+        token_subscriber_(
+            context, makeClinetFactory(context, proto_config_.token_cluster()),
+            *this) {
+    tls_->set(
+        [](Event::Dispatcher&) -> ThreadLocal::ThreadLocalObjectSharedPtr {
+          return std::make_shared<ThreadLocalCache>();
+        });
   }
 
   const ::google::api::envoy::http::service_control::Service& config() const {
@@ -75,10 +69,25 @@ class ServiceContext {
     return tls_->getTyped<ThreadLocalCache>();
   }
 
+  // TokenSubscriber::Callback function
+  void onTokenUpdate(const std::string& token) override {
+    TokenSharedPtr new_token = std::make_shared<std::string>(token);
+    tls_->runOnAllThreads([this, new_token]() {
+      tls_->getTyped<ThreadLocalCache>().token_ = new_token;
+    });
+  }
+  const std::string& token() const {
+    static std::string empty_str;
+    return (tls_->getTyped<ThreadLocalCache>().token_)
+               ? *tls_->getTyped<ThreadLocalCache>().token_
+               : empty_str;
+  }
+
  private:
   const ::google::api::envoy::http::service_control::Service& proto_config_;
   ::google::api_proxy::service_control::RequestBuilder request_builder_;
   ThreadLocal::SlotPtr tls_;
+  TokenSubscriber token_subscriber_;
 };
 typedef std::unique_ptr<ServiceContext> ServiceContextPtr;
 
