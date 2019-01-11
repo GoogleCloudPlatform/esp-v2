@@ -61,12 +61,17 @@ class Filter : public Http::StreamDecoderFilter,
   void rejectRequest(Http::Code code, absl::string_view error_msg);
 
   // Helper functions to extract API key.
-  void ExtractAPIKeyFromQuery(const Http::HeaderMap& headers,
+  bool ExtractAPIKeyFromQuery(const Http::HeaderMap& headers,
                               const std::string& query);
-  void ExtractAPIKeyFromHeader(const Http::HeaderMap& headers,
+  bool ExtractAPIKeyFromHeader(const Http::HeaderMap& headers,
                                const std::string& header);
-  void ExtractAPIKeyFromCookie(const Http::HeaderMap& headers,
+  bool ExtractAPIKeyFromCookie(const Http::HeaderMap& headers,
                                const std::string& cookie);
+  bool ExtractAPIKey(
+      const Http::HeaderMap& headers,
+      const ::google::protobuf::RepeatedPtrField<
+          ::google::api::envoy::http::service_control::APIKeyLocation>&
+          locations);
 
   // The callback funcion.
   Http::StreamDecoderFilterCallbacks* decoder_callbacks_;

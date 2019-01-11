@@ -18,12 +18,11 @@ package google.api.envoy.http.service_control;
 
 import "validate/validate.proto";
 
-// APIKey defines the explicit configuration for generating the
-// `request.api_key` attribute from HTTP requests.
+// APIKeyLocation defines the location to extract api key.
 //
 // See https://swagger.io/docs/specification/authentication/api-keys
 // for a general overview of API keys as defined by OpenAPI.
-message APIKey {
+message APIKeyLocation {
   oneof key {
     // API Key is sent as a query parameter. `query` represents the
     // query string parameter name.
@@ -49,21 +48,24 @@ message APIKey {
     // API key is sent in a
     // [cookie](https://swagger.io/docs/specification/authentication/cookie-authentication),
     //
-    // For example, `cookie=X-API-KEY` should be used for the
+    // For example, `cookie=API-KEY` should be used for the
     // following request:
     //
     //     GET /something HTTP/1.1
-    //     Cookie: X-API-KEY=abcdef12345
+    //     Cookie: API-KEY=abcdef12345
     //
     string cookie = 3;
   }
 }
 
 message APIKeyRequirement {
-  // Finds API key from the first location specified.
-  repeated APIKey api_keys = 1;
+  // The locations to extract the api_key. Only one api key is needed,
+  // if multiple locations are specified, the first api key is used.
+  // If the field is empty, default locations will be used.
+  // The default locations are: query paramaters "key", "api_key", and header "x-api-key"
+  repeated APIKeyLocation locations = 1;
 
-  // whether to allow request without api key.
+  // If true, to allow a request without api key and service control Check is not called.
   bool allow_without_api_key = 2;
 }
 
@@ -85,6 +87,4 @@ message Requirement {
 
   // API version. Used for Chemist report request.
   string api_version = 6;
-
-  // TODO(tianyuc): define more requirments, e.g. metrics, quota and more.
 }
