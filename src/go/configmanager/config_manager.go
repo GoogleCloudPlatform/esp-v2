@@ -489,7 +489,8 @@ func (m *ConfigManager) makeTranscoderFilter(endpointApi *api.Api) *hcm.HttpFilt
 				DescriptorSet: &tc.GrpcJsonTranscoder_ProtoDescriptorBin{
 					ProtoDescriptorBin: configContent,
 				},
-				Services: []string{endpointApi.Name},
+				Services:               []string{endpointApi.Name},
+				IgnoredQueryParameters: []string{"key"},
 			}
 			transcodeConfigStruct, _ := util.MessageToStruct(transcodeConfig)
 			transcodeFilter := &hcm.HttpFilter{

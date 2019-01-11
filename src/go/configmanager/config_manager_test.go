@@ -100,6 +100,9 @@ func TestFetchListeners(t *testing.T) {
 									"http_filters":[
 										{
 											"config":{
+												"ignored_query_parameters": [
+													"key"
+												],
 												"proto_descriptor_bin":"%s",
 												"services":[
 													"%s"
