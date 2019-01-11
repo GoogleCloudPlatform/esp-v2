@@ -32,7 +32,7 @@ var (
 	timeNow                   = time.Now
 
 	fetchMetadataURL = func(suffix string) string {
-		return *flags.MetadataUrl + suffix
+		return *flags.MetadataURL + suffix
 	}
 )
 
