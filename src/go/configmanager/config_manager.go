@@ -56,7 +56,6 @@ const (
 	virtualHostName     = "backend"
 	fetchConfigSuffix   = "/v1/services/$serviceName/configs/$configId?view=FULL"
 	fetchRolloutsSuffix = "/v1/services/$serviceName/rollouts?filter=status=SUCCESS"
-	serviceControlUri   = "https://servicecontrol.googleapis.com/v1/services/"
 )
 
 var (
@@ -180,11 +179,11 @@ func (m *ConfigManager) loadConfigFromRollouts() error {
 	if len(listServiceRolloutsResponse.Rollouts) == 0 {
 		return fmt.Errorf("no active rollouts")
 	}
-	newRolloutId := listServiceRolloutsResponse.Rollouts[0].RolloutId
-	if m.curRolloutID == newRolloutId {
+	newRolloutID := listServiceRolloutsResponse.Rollouts[0].RolloutId
+	if m.curRolloutID == newRolloutID {
 		return nil
 	}
-	m.curRolloutID = newRolloutId
+	m.curRolloutID = newRolloutID
 	m.Infof("found new rollout id %v for service %v, %v", m.curRolloutID, m.serviceName)
 
 	trafficPercentStrategy := listServiceRolloutsResponse.Rollouts[0].GetTrafficPercentStrategy()
@@ -624,7 +623,7 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 		ProducerProjectId: m.serviceConfig.GetProducerProjectId(),
 		TokenCluster:      "ads_cluster",
 		ServiceControlUri: &scpb.HttpUri{
-			Uri:     serviceControlUri,
+			Uri:     *flags.ServiceControlURI,
 			Cluster: "service_control_cluster",
 			Timeout: &duration.Duration{Seconds: 5},
 		},
