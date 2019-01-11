@@ -28,9 +28,8 @@ import (
 	"testing"
 	"time"
 
-	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
-
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
+	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
@@ -44,7 +43,7 @@ const (
 	testProjectName  = "bookstore.endpoints.project123.cloud.goog"
 	testEndpointName = "endpoints.examples.bookstore.Bookstore"
 	testConfigID     = "2017-05-01r0"
-	testProjectId    = "project123"
+	testProjectID    = "project123"
 	fakeNodeID       = "id"
 	fakeJwks         = "FAKEJWKS"
 )
@@ -101,6 +100,7 @@ func TestFetchListeners(t *testing.T) {
 										{
 											"config":{
 												"ignored_query_parameters": [
+                                                    "api_key",
 													"key"
 												],
 												"proto_descriptor_bin":"%s",
@@ -609,7 +609,7 @@ func TestFetchListeners(t *testing.T) {
 						}
 					]
 				}
-			}`, testProjectName, testProjectId, testEndpointName),
+			}`, testProjectName, testProjectID, testEndpointName),
 			wantedListeners: fmt.Sprintf(`{
 				"address":{
 					"socketAddress":{
@@ -722,7 +722,7 @@ func TestFetchListeners(t *testing.T) {
 						]
 					}
 				]
-			}`, testProjectName, testProjectName, testProjectName, testProjectName, testProjectName, testConfigID, testProjectId),
+			}`, testProjectName, testProjectName, testProjectName, testProjectName, testProjectName, testConfigID, testProjectID),
 		},
 		{
 			desc:            "Success for HTTP1 backend, with Jwt filter, with audiences",
