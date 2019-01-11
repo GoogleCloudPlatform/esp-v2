@@ -489,7 +489,7 @@ func (m *ConfigManager) makeTranscoderFilter(endpointApi *api.Api) *hcm.HttpFilt
 					ProtoDescriptorBin: configContent,
 				},
 				Services:               []string{endpointApi.Name},
-				IgnoredQueryParameters: []string{"key"},
+				IgnoredQueryParameters: []string{"api_key", "key"},
 			}
 			transcodeConfigStruct, _ := util.MessageToStruct(transcodeConfig)
 			transcodeFilter := &hcm.HttpFilter{
