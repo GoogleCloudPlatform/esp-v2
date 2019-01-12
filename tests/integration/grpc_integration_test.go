@@ -63,6 +63,7 @@ func TestGRPC(t *testing.T) {
 		clientProtocol string
 		method         string
 		wantResp       string
+		wantError      string
 	}{
 		{
 			desc:           "gRPC client calling gRPC backend",
@@ -76,12 +77,30 @@ func TestGRPC(t *testing.T) {
 			method:         "/v1/shelves/200",
 			wantResp:       `{"id":"200","theme":"Classic"}`,
 		},
+		{
+			desc:           `Http client calling gRPC backend with query parameter "key"`,
+			clientProtocol: "http",
+			method:         "/v1/shelves/200?key=foobar",
+			wantResp:       `{"id":"200","theme":"Classic"}`,
+		},
+		{
+			desc:           `Http client calling gRPC backend with query parameter "api_key"`,
+			clientProtocol: "http",
+			method:         "/v1/shelves/200?api_key=foobar",
+			wantResp:       `{"id":"200","theme":"Classic"}`,
+		},
+		{
+			desc:           "Http client calling gRPC backend invalid query parameter",
+			clientProtocol: "http",
+			method:         "/v1/shelves/200?foo=bar",
+			wantError:      "503 Service Unavailable",
+		},
 	}
 
 	for _, tc := range tests {
 		resp, err := client.MakeCall(tc.clientProtocol, addr, "GET", tc.method, "")
-		if err != nil {
-			t.Errorf("failed to run test: %s", err)
+		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
+			t.Errorf("Test (%s): failed, expected: %s, got: %v", tc.desc, tc.wantError, err)
 		}
 
 		if !strings.Contains(resp, tc.wantResp) {
