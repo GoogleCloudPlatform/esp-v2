@@ -20,7 +20,6 @@
 #include "envoy/upstream/cluster_manager.h"
 #include "src/envoy/http/service_control/config_parser.h"
 #include "src/envoy/http/service_control/filter_config.h"
-#include "src/envoy/http/service_control/http_call.h"
 
 #include <string>
 
@@ -54,10 +53,10 @@ class Filter : public Http::StreamDecoderFilter,
            const StreamInfo::StreamInfo& stream_info) override;
 
  private:
-  void onTokenDone(const ::google::protobuf::util::Status& status,
-                   const std::string& token);
-  void onCheckResponse(const ::google::protobuf::util::Status& status,
-                       const std::string& response_json);
+  void onCheckResponse(
+      const ::google::protobuf::util::Status& status,
+      const ::google::api_proxy::service_control::CheckResponseInfo&
+          response_info);
   void rejectRequest(Http::Code code, absl::string_view error_msg);
 
   // Helper functions to extract API key.
@@ -94,7 +93,9 @@ class Filter : public Http::StreamDecoderFilter,
 
   ::google::api_proxy::service_control::CheckResponseInfo check_response_info_;
   ::google::protobuf::util::Status check_status_;
-  HttpCall* check_call_{};
+  // This flag is used to mark if the request is aborted before the check
+  // callback is returned.
+  std::shared_ptr<bool> aborted_;
 
   bool params_parsed_{false};
   Http::Utility::QueryParams parsed_params_;

@@ -14,12 +14,10 @@ envoy_cc_library(
     name = "filter_lib",
     srcs = [
         "filter.cc",
-        "http_call.cc",
     ],
     hdrs = [
         "filter.h",
         "filter_config.h",
-        "http_call.h",
     ],
     repository = "@envoy",
     deps = [
@@ -40,11 +38,42 @@ envoy_cc_library(
 )
 
 envoy_cc_library(
+    name = "http_call_lib",
+    srcs = ["http_call.cc"],
+    hdrs = ["http_call.h"],
+    repository = "@envoy",
+    deps = [
+        "//api/envoy/http/service_control:config_proto_cc",
+        "@envoy//include/envoy/upstream:cluster_manager_interface",
+        "@envoy//source/common/common:enum_to_int",
+        "@envoy//source/common/http:headers_lib",
+        "@envoy//source/common/http:message_lib",
+        "@envoy//source/common/http:utility_lib",
+    ],
+)
+
+envoy_cc_library(
+    name = "client_cache_lib",
+    srcs = ["client_cache.cc"],
+    hdrs = ["client_cache.h"],
+    repository = "@envoy",
+    deps = [
+        ":http_call_lib",
+        "//api/envoy/http/service_control:config_proto_cc",
+        "//external:servicecontrol_client",
+        "//src/api_proxy/service_control:request_builder_lib",
+        "@envoy//include/envoy/event:dispatcher_interface",
+        "@envoy//include/envoy/upstream:cluster_manager_interface",
+    ],
+)
+
+envoy_cc_library(
     name = "config_parser_lib",
     srcs = ["config_parser.cc"],
     hdrs = ["config_parser.h"],
     repository = "@envoy",
     deps = [
+        ":client_cache_lib",
         "//api/envoy/http/service_control:config_proto_cc",
         "//src/api_proxy/path_matcher:path_matcher_lib",
         "//src/api_proxy/service_control:request_builder_lib",

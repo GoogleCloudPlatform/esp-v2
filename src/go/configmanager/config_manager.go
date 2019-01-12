@@ -830,8 +830,10 @@ var callServiceManagement = func(path, token string, client *http.Client) (*conf
 			return new(sm.ConfigFile), nil
 		case "type.googleapis.com/google.api.HttpRule":
 			return new(annotations.HttpRule), nil
+		case "type.googleapis.com/google.protobuf.BoolValue":
+			return new(types.BoolValue), nil
 		default:
-			return nil, fmt.Errorf("unexpected protobuf.Any type")
+			return nil, fmt.Errorf("unexpected protobuf.Any with url: %s", url)
 		}
 	})
 	unmarshaler := &jsonpb.Unmarshaler{
