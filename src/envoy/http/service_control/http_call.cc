@@ -29,10 +29,7 @@ namespace HttpFilters {
 namespace ServiceControl {
 namespace {
 
-// const char KApplicationProto[] = "application/x-protobuf";
-// TODO: (qiwzhang) somehow using x-protobuf occasionally return 400
-// need to figure out why, before that, use json.
-const char KApplicationProto[] = "application/json";
+const char KApplicationProto[] = "application/x-protobuf";
 
 class HttpCallImpl : public HttpCall,
                      public Logger::Loggable<Logger::Id::filter>,
@@ -68,9 +65,8 @@ class HttpCallImpl : public HttpCall,
     message->headers().insertMethod().value().setReference(
         Http::Headers::get().MethodValues.Post);
 
-    //    std::string str_body = body.SerializeAsString();
-    std::string str_body =
-        MessageUtil::getJsonStringFromMessage(body, false, false);
+    std::string str_body;
+    body.SerializeToString(&str_body);
     message->body().reset(
         new Buffer::OwnedImpl(str_body.data(), str_body.size()));
     message->headers().insertContentLength().value(message->body()->length());

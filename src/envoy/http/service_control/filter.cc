@@ -172,10 +172,11 @@ void Filter::rejectRequest(Http::Code code, absl::string_view error_msg) {
       StreamInfo::ResponseFlag::UnauthorizedExternalService);
 }
 
-void Filter::onCheckResponse(const Status &status,
-                             const string &response_json) {
-  ENVOY_LOG(debug, "Check response with : {}, body {}", status.ToString(),
-            response_json);
+void Filter::onCheckResponse(const Status &status, const string &response_str) {
+  ::google::api::servicecontrol::v1::CheckResponse response_pb;
+  response_pb.ParseFromString(response_str);
+  ENVOY_LOG(debug, "Check response with : {}, str_body: {}, pb_body: {}",
+            status.ToString(), response_str, response_pb.DebugString());
   // This stream has been reset, abort the callback.
   check_call_ = nullptr;
   if (state_ == Responded) {
@@ -183,16 +184,6 @@ void Filter::onCheckResponse(const Status &status,
   }
 
   if (!status.ok()) {
-    rejectRequest(Http::Code(401), "Check failed");
-    return;
-  }
-
-  ::google::api::servicecontrol::v1::CheckResponse response_pb;
-  Protobuf::util::JsonParseOptions options;
-  options.ignore_unknown_fields = true;
-  const auto json_status =
-      Protobuf::util::JsonStringToMessage(response_json, &response_pb, options);
-  if (!json_status.ok()) {
     rejectRequest(Http::Code(401), "Check failed");
     return;
   }
@@ -278,7 +269,12 @@ void Filter::log(const HeaderMap * /*request_headers*/,
 
   string suffix_uri =
       require_ctx_->service_ctx().config().service_name() + ":report";
-  auto dummy_on_done = [](const Status &, const string &) {};
+  auto dummy_on_done = [](const Status &status, const string &response_str) {
+    ::google::api::servicecontrol::v1::ReportResponse response_pb;
+    response_pb.ParseFromString(response_str);
+    ENVOY_LOG(debug, "Report response with : {}, str_body: {}, pb_body: {}",
+              status.ToString(), response_str, response_pb.DebugString());
+  };
   HttpCall *http_call = HttpCall::create(
       config_->cm(),
       require_ctx_->service_ctx().config().service_control_uri());
