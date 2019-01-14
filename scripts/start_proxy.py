@@ -224,14 +224,14 @@ if __name__ == '__main__':
     ]
 
     if args.cors_preset:
-        proxy_conf.append([
+        proxy_conf.extend([
         "--cors_preset", args.cors_preset,
         "--cors_allow_origin", args.cors_allow_origin,
         "--cors_allow_origin_regex", args.cors_allow_origin_regex,
         "--cors_allow_methods", args.cors_allow_methods,
         "--cors_allow_headers", args.cors_allow_headers,
         "--cors_expose_headers", args.cors_expose_headers,
-        "cors_allow_credentials", args.cors_allow_credentials,
+        "cors_allow_credentials", str(args.cors_allow_credentials),
         ])
 
     print (proxy_conf)
