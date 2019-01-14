@@ -231,7 +231,7 @@ if __name__ == '__main__':
         "--cors_allow_methods", args.cors_allow_methods,
         "--cors_allow_headers", args.cors_allow_headers,
         "--cors_expose_headers", args.cors_expose_headers,
-        "cors_allow_credentials", str(args.cors_allow_credentials),
+        "--cors_allow_credentials", str(args.cors_allow_credentials),
         ])
 
     print (proxy_conf)
