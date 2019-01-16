@@ -351,6 +351,14 @@ func (m *ConfigManager) initHttpPathMap() {
 func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.BackendProtocol) (*v2.Listener, *hcm.HttpConnectionManager, error) {
 	httpFilters := []*hcm.HttpFilter{}
 
+	if *flags.CorsPreset == "basic" || *flags.CorsPreset == "cors_with_regex" {
+		corsFilter := &hcm.HttpFilter{
+			Name: util.CORS,
+		}
+		httpFilters = append(httpFilters, corsFilter)
+		m.Infof("adding CORS Filter config: %v", corsFilter)
+	}
+
 	// Add JWT Authn filter if needed.
 	if !*flags.SkipJwtAuthnFilter {
 		jwtAuthnFilter := m.makeJwtAuthnFilter(endpointApi, backendProtocol)

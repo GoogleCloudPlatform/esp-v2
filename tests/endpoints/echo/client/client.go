@@ -103,6 +103,32 @@ func DoJWT(host, method, path, apiKey, serviceAccount, token string) ([]byte, er
 	return ioutil.ReadAll(resp.Body)
 }
 
+// DoCorsSimpleRequest sends a simple request with Origin field in request header
+func DoCorsSimpleRequest(host, origin, echo string) (http.Header, error) {
+	msg := map[string]string{
+		"message": echo,
+	}
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(msg); err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", host+"/echo", &buf)
+	if err != nil {
+		return nil, fmt.Errorf("NewRequest got error: ", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Origin", origin)
+	resp, err := http.DefaultClient.Do(req)
+	defer resp.Body.Close()
+	if err != nil {
+		return nil, fmt.Errorf("http got error: ", err)
+	}
+	return resp.Header, nil
+}
+
+//TODO(jcwang) send CORS preflight Request
+
 // The following code is copied from golang.org/x/oauth2/internal
 // Copyright (c) 2009 The oauth2 Authors. All rights reserved.
 
