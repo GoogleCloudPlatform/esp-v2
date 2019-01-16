@@ -13,8 +13,7 @@
 
 namespace Envoy {
 namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace Utils {
 
 // This class fetches a token at the config time in the main thread.
 // It also registers a timer to fetch a new token before expiration.
@@ -30,10 +29,10 @@ namespace ServiceControl {
 //   callback function which should be called when the remote call response is
 //   received.
 //
-class TokenSubscriber : public Init::Target,
-                        public Grpc::TypedAsyncRequestCallbacks<
+class TokenSubscriber : public Envoy::Init::Target,
+                        public Envoy::Grpc::TypedAsyncRequestCallbacks<
                             ::google::api_proxy::agent::GetAccessTokenResponse>,
-                        public Logger::Loggable<Logger::Id::grpc> {
+                        public Envoy::Logger::Loggable<Envoy::Logger::Id::grpc> {
  public:
   class Callback {
    public:
@@ -41,8 +40,8 @@ class TokenSubscriber : public Init::Target,
     virtual void onTokenUpdate(const std::string& token) PURE;
   };
 
-  TokenSubscriber(Server::Configuration::FactoryContext& context,
-                  Grpc::AsyncClientFactoryPtr client_factory,
+  TokenSubscriber(Envoy::Server::Configuration::FactoryContext& context,
+                  Envoy::Grpc::AsyncClientFactoryPtr client_factory,
                   Callback& callback);
 
   virtual ~TokenSubscriber();
@@ -51,36 +50,35 @@ class TokenSubscriber : public Init::Target,
   void initialize(std::function<void()> callback) override;
 
   // Grpc::TypedAsyncRequestCallbacks functions
-  void onCreateInitialMetadata(Http::HeaderMap&) override {}
+  void onCreateInitialMetadata(Envoy::Http::HeaderMap&) override {}
   void onSuccess(
       std::unique_ptr<::google::api_proxy::agent::GetAccessTokenResponse>&&
           response,
-      Tracing::Span&) override;
-  void onFailure(Grpc::Status::GrpcStatus status, const std::string& message,
-                 Tracing::Span&) override;
+      Envoy::Tracing::Span&) override;
+  void onFailure(Envoy::Grpc::Status::GrpcStatus status, const std::string& message,
+                 Envoy::Tracing::Span&) override;
 
  private:
   void runInitializeCallbackIfAny();
   void refresh();
 
-  Grpc::AsyncClientFactoryPtr client_factory_;
+  Envoy::Grpc::AsyncClientFactoryPtr client_factory_;
   Callback& token_callback_;
 
   std::function<void()> initialize_callback_;
 
-  Grpc::AsyncClientPtr async_client_;
-  Grpc::AsyncRequest* active_request_{};
+  Envoy::Grpc::AsyncClientPtr async_client_;
+  Envoy::Grpc::AsyncRequest* active_request_{};
 
-  Event::TimerPtr refresh_timer_;
+  Envoy::Event::TimerPtr refresh_timer_;
 };
 typedef std::unique_ptr<TokenSubscriber> TokenSubscriberPtr;
 
 // Create Async Client Factory
-Grpc::AsyncClientFactoryPtr makeClinetFactory(
-    Server::Configuration::FactoryContext& context,
+Envoy::Grpc::AsyncClientFactoryPtr makeClinetFactory(
+    Envoy::Server::Configuration::FactoryContext& context,
     const std::string& token_cluster);
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
+}  // namespace Utils
 }  // namespace Extensions
 }  // namespace Envoy

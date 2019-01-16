@@ -1,4 +1,4 @@
-#include "src/envoy/http/service_control/token_subscriber.h"
+#include "src/envoy/utils/token_subscriber.h"
 #include "common/grpc/async_client_manager_impl.h"
 
 using ::google::api_proxy::agent::GetAccessTokenRequest;
@@ -6,8 +6,7 @@ using ::google::api_proxy::agent::GetAccessTokenResponse;
 
 namespace Envoy {
 namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace Utils {
 namespace {
 
 // gRPC request timeout
@@ -26,17 +25,17 @@ const google::protobuf::MethodDescriptor& descriptor() {
 
 }  // namespace
 
-Grpc::AsyncClientFactoryPtr makeClinetFactory(
-    Server::Configuration::FactoryContext& context,
+Envoy::Grpc::AsyncClientFactoryPtr makeClinetFactory(
+    Envoy::Server::Configuration::FactoryContext& context,
     const std::string& token_cluster) {
-  envoy::api::v2::core::GrpcService grpc_service;
+  ::envoy::api::v2::core::GrpcService grpc_service;
   grpc_service.mutable_envoy_grpc()->set_cluster_name(token_cluster);
-  return std::make_unique<Grpc::AsyncClientFactoryImpl>(
+  return std::make_unique<Envoy::Grpc::AsyncClientFactoryImpl>(
       context.clusterManager(), grpc_service, true, context.timeSource());
 }
 
-TokenSubscriber::TokenSubscriber(Server::Configuration::FactoryContext& context,
-                                 Grpc::AsyncClientFactoryPtr client_factory,
+TokenSubscriber::TokenSubscriber(Envoy::Server::Configuration::FactoryContext& context,
+                                 Envoy::Grpc::AsyncClientFactoryPtr client_factory,
                                  TokenSubscriber::Callback& callback)
     : client_factory_(std::move(client_factory)), token_callback_(callback) {
   refresh_timer_ =
@@ -65,12 +64,12 @@ void TokenSubscriber::refresh() {
   ENVOY_LOG(debug, "Sending GetAccessToken request");
   active_request_ = async_client_->send(
       descriptor(), GetAccessTokenRequest(), *this,
-      Tracing::NullSpan::instance(),
+      Envoy::Tracing::NullSpan::instance(),
       absl::optional<std::chrono::milliseconds>(kGrpcRequestTimeoutMs));
 }
 
 void TokenSubscriber::onSuccess(
-    std::unique_ptr<GetAccessTokenResponse>&& response, Tracing::Span&) {
+    std::unique_ptr<GetAccessTokenResponse>&& response, Envoy::Tracing::Span&) {
   active_request_ = nullptr;
   ENVOY_LOG(debug, "GetAccessToken got response: {}", response->DebugString());
   token_callback_.onTokenUpdate(response->access_token());
@@ -84,8 +83,8 @@ void TokenSubscriber::onSuccess(
   }
 }
 
-void TokenSubscriber::onFailure(Grpc::Status::GrpcStatus status,
-                                const std::string& message, Tracing::Span&) {
+void TokenSubscriber::onFailure(Envoy::Grpc::Status::GrpcStatus status,
+                                const std::string& message, Envoy::Tracing::Span&) {
   active_request_ = nullptr;
   ENVOY_LOG(debug, "GetAccessToken failed with code: {}, {}", status, message);
   runInitializeCallbackIfAny();
@@ -99,7 +98,6 @@ void TokenSubscriber::runInitializeCallbackIfAny() {
   }
 }
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
+}  // namespace Utils
 }  // namespace Extensions
 }  // namespace Envoy

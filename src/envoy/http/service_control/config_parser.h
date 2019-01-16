@@ -20,7 +20,7 @@
 #include "envoy/thread_local/thread_local.h"
 #include "src/api_proxy/path_matcher/path_matcher.h"
 #include "src/api_proxy/service_control/request_builder.h"
-#include "src/envoy/http/service_control/token_subscriber.h"
+#include "src/envoy/utils/token_subscriber.h"
 
 #include <list>
 #include <unordered_map>
@@ -38,7 +38,8 @@ class ThreadLocalCache : public ThreadLocal::ThreadLocalObject {
   TokenSharedPtr token_;
 };
 
-class ServiceContext : public TokenSubscriber::Callback {
+class ServiceContext :
+  public Utils::TokenSubscriber::Callback {
  public:
   ServiceContext(
       const ::google::api::envoy::http::service_control::Service& proto_config,
@@ -48,8 +49,8 @@ class ServiceContext : public TokenSubscriber::Callback {
                          proto_config_.service_config_id()),
         tls_(context.threadLocal().allocateSlot()),
         token_subscriber_(
-            context, makeClinetFactory(context, proto_config_.token_cluster()),
-            *this) {
+            context, Utils::makeClinetFactory(context,
+              proto_config_.token_cluster()), *this) {
     tls_->set(
         [](Event::Dispatcher&) -> ThreadLocal::ThreadLocalObjectSharedPtr {
           return std::make_shared<ThreadLocalCache>();
@@ -69,13 +70,14 @@ class ServiceContext : public TokenSubscriber::Callback {
     return tls_->getTyped<ThreadLocalCache>();
   }
 
-  // TokenSubscriber::Callback function
+  // Utils::TokenSubscriber::Callback function
   void onTokenUpdate(const std::string& token) override {
     TokenSharedPtr new_token = std::make_shared<std::string>(token);
     tls_->runOnAllThreads([this, new_token]() {
       tls_->getTyped<ThreadLocalCache>().token_ = new_token;
     });
   }
+
   const std::string& token() const {
     static std::string empty_str;
     return (tls_->getTyped<ThreadLocalCache>().token_)
@@ -87,7 +89,7 @@ class ServiceContext : public TokenSubscriber::Callback {
   const ::google::api::envoy::http::service_control::Service& proto_config_;
   ::google::api_proxy::service_control::RequestBuilder request_builder_;
   ThreadLocal::SlotPtr tls_;
-  TokenSubscriber token_subscriber_;
+  Utils::TokenSubscriber token_subscriber_;
 };
 typedef std::unique_ptr<ServiceContext> ServiceContextPtr;
 
