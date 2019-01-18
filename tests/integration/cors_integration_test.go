@@ -27,6 +27,7 @@ const (
 	echoHost = "http://localhost:8080"
 )
 
+// Simple CORS request with basic preset in config manager, response should have CORS headers
 func TestSimpleCorsWithBasicPreset(t *testing.T) {
 	serviceName := "test-echo"
 	configId := "test-config-id"
@@ -68,6 +69,7 @@ func TestSimpleCorsWithBasicPreset(t *testing.T) {
 			corsExposeHeaders: corsExposeHeadersValue,
 		},
 		{
+			// send to an endpoint that requires JWT, response still has CORS headers though the request does not pass through jwt filter
 			desc:              "Succeed, response has CORS headers",
 			path:              "/auth/info/googlejwt",
 			httpMethod:        "GET",
@@ -91,6 +93,8 @@ func TestSimpleCorsWithBasicPreset(t *testing.T) {
 	}
 }
 
+// CORS request Origin is different from cors_allow_origin setting in config manager
+// since these two does not match, envoy CORS filter does not put CORS headers in response
 func TestDifferentOriginSimpleCors(t *testing.T) {
 	serviceName := "test-echo"
 	configId := "test-config-id"
@@ -136,6 +140,7 @@ func TestDifferentOriginSimpleCors(t *testing.T) {
 	}
 }
 
+// Simple CORS request with regex origin in config manager, response should have CORS headers
 func TestSimpleCorsWithRegexPreset(t *testing.T) {
 	serviceName := "test-echo"
 	configId := "test-config-id"
@@ -183,6 +188,7 @@ func TestSimpleCorsWithRegexPreset(t *testing.T) {
 	}
 }
 
+// Preflight CORS request with basic preset in config manager, response should have CORS headers
 func TestPreflightCorsWithBasicPreset(t *testing.T) {
 	serviceName := "test-echo"
 	configId := "test-config-id"
@@ -217,14 +223,15 @@ func TestPreflightCorsWithBasicPreset(t *testing.T) {
 		desc          string
 		respHeaderMap map[string]string
 	}{
-		desc:          "Succeed, response has CORS headers",
-		respHeaderMap: make(map[string]string),
+		desc: "Succeed, response has CORS headers",
+		respHeaderMap: map[string]string{
+			"Access-Control-Allow-Origin":      corsAllowOriginValue,
+			"Access-Control-Allow-Methods":     corsAllowMethodsValue,
+			"Access-Control-Allow-Headers":     corsAllowHeadersValue,
+			"Access-Control-Expose-Headers":    corsExposeHeadersValue,
+			"Access-Control-Allow-Credentials": corsAllowCredentialsValue,
+		},
 	}
-	testData.respHeaderMap["Access-Control-Allow-Origin"] = corsAllowOriginValue
-	testData.respHeaderMap["Access-Control-Allow-Methods"] = corsAllowMethodsValue
-	testData.respHeaderMap["Access-Control-Allow-Headers"] = corsAllowHeadersValue
-	testData.respHeaderMap["Access-Control-Expose-Headers"] = corsExposeHeadersValue
-	testData.respHeaderMap["Access-Control-Allow-Credentials"] = corsAllowCredentialsValue
 
 	respHeader, err := client.DoCorsPreflightRequest(echoHost+"/echo", corsAllowOriginValue, corsRequestMethod, corsRequestHeader)
 	if err != nil {
@@ -239,6 +246,8 @@ func TestPreflightCorsWithBasicPreset(t *testing.T) {
 
 }
 
+// Preflight request Origin is different from cors_allow_origin setting in config manager
+// since these two does not match, envoy CORS filter does not put CORS headers in response
 func TestDifferentOriginPreflightCors(t *testing.T) {
 	serviceName := "test-echo"
 	configId := "test-config-id"
@@ -272,14 +281,15 @@ func TestDifferentOriginPreflightCors(t *testing.T) {
 		desc          string
 		respHeaderMap map[string]string
 	}{
-		desc:          "Fail, response does not have CORS headers",
-		respHeaderMap: make(map[string]string),
+		desc: "Fail, response does not have CORS headers",
+		respHeaderMap: map[string]string{
+			"Access-Control-Allow-Origin":      "",
+			"Access-Control-Allow-Methods":     "",
+			"Access-Control-Allow-Headers":     "",
+			"Access-Control-Expose-Headers":    "",
+			"Access-Control-Allow-Credentials": "",
+		},
 	}
-	testData.respHeaderMap["Access-Control-Allow-Origin"] = ""
-	testData.respHeaderMap["Access-Control-Allow-Methods"] = ""
-	testData.respHeaderMap["Access-Control-Allow-Headers"] = ""
-	testData.respHeaderMap["Access-Control-Expose-Headers"] = ""
-	testData.respHeaderMap["Access-Control-Allow-Credentials"] = ""
 
 	respHeader, err := client.DoCorsPreflightRequest(echoHost+"/echo", corsOrigin, corsRequestMethod, "")
 	if err != nil {
