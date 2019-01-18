@@ -104,16 +104,23 @@ func DoJWT(host, method, path, apiKey, serviceAccount, token string) ([]byte, er
 }
 
 // DoCorsSimpleRequest sends a simple request with Origin field in request header
-func DoCorsSimpleRequest(host, origin, echo string) (http.Header, error) {
-	msg := map[string]string{
-		"message": echo,
+func DoCorsSimpleRequest(url, httpMethod, origin, msg string) (http.Header, error) {
+	var req *http.Request
+	var err error
+	if httpMethod == "GET" || httpMethod == "HEAD" {
+		req, err = http.NewRequest(httpMethod, url, nil)
+	} else if httpMethod == "POST" {
+		msg := map[string]string{
+			"message": msg,
+		}
+		var buf bytes.Buffer
+		if err := json.NewEncoder(&buf).Encode(msg); err != nil {
+			return nil, err
+		}
+		req, err = http.NewRequest("POST", url, &buf)
+	} else {
+		return nil, fmt.Errorf("DoCorsSimpleRequest only supports GET, HEAD and POST", err)
 	}
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(msg); err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", host+"/echo", &buf)
 	if err != nil {
 		return nil, fmt.Errorf("NewRequest got error: ", err)
 	}
@@ -127,7 +134,23 @@ func DoCorsSimpleRequest(host, origin, echo string) (http.Header, error) {
 	return resp.Header, nil
 }
 
-//TODO(jcwang) send CORS preflight Request
+func DoCorsPreflightRequest(url, origin, requestMethod, requestHeader string) (http.Header, error) {
+	req, err := http.NewRequest("OPTIONS", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("NewRequest got error: ", err)
+	}
+	req.Header.Set("Origin", origin)
+	req.Header.Set("Access-Control-Request-Method", requestMethod)
+	if requestHeader != "" {
+		req.Header.Set("Access-Control-Request-Headers", requestHeader)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	defer resp.Body.Close()
+	if err != nil {
+		return nil, fmt.Errorf("http got error: ", err)
+	}
+	return resp.Header, nil
+}
 
 // The following code is copied from golang.org/x/oauth2/internal
 // Copyright (c) 2009 The oauth2 Authors. All rights reserved.

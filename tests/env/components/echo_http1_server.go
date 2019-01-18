@@ -65,7 +65,7 @@ func (e *EchoHTTPServer) Stop() error {
 	}()
 
 	select {
-	case <-time.After(3 * time.Second):
+	case <-time.After(testEnvTTL):
 		if err := e.cmd.Process.Kill(); err != nil {
 			return err
 		}
