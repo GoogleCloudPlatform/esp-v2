@@ -39,8 +39,11 @@ go-control-plane need to be satisfied.
 To start the Config Manager, run:
 
 ```shell
-go run server/server.go --logtostderr -v 2 --service [YOUR_SERVICE_NAME]  \
---version [YOUR_CONFIG_ID]
+go run server/server.go \
+  --logtostderr -v 2 \
+  --service [YOUR_SERVICE_NAME] \
+  --version [YOUR_CONFIG_ID] \
+  --backend_protocol {grpc | http1 | http2}
 ```
 
 if you want to enable glog, add "-log_dir=./log -v=2".
@@ -54,19 +57,40 @@ We have a simple gRPC test client to fetch Listener Discovery Service(LDS)
 response from this Config Manager, just run:
 
 ```shell
-go run tests/lds_grpc_client.go
+go run tests/clients/lds_grpc_client.go
 ```
 
 You can see and check the response.
 
-## Manually Integration with API Proxy
+## Starting a Backend Server for Testing
+### gRPC Bookstore Server
+```shell
+# Install Node.js if you haven't
+# https://github.com/nodesource/distributions/blob/master/README.md#debinstall
 
-Start Config Manager first as instructed above, then build and start
-cloudesf-envoy with the dynamic startup configuration:
+# Install the dependencies if you haven't
+npm install express
+npm install grpc
+npm install @grpc/proto-loader
+
+# Run gRPC server
+node tests/endpoints/bookstore-grpc/grpc_server.js
+```
+
+### HTTP Echo Server
+```shell
+go run tests/endpoints/echo/server/app.go
+```
+
+
+## Manual Integration with API Proxy
+
+Start Config Manager and a backend first as instructed above, then build and start
+Envoy with the dynamic startup configuration:
 
 ```shell
-bazel build :cloudesf-envoy &&
-bazel-bin/cloudesf-envoy -l info --v2-config-only -c tools/deploy/envoy_bootstrap_v2_startup.yaml
+bazel build //src/envoy:envoy &&
+bazel-bin/src/envoy -l info --v2-config-only -c scripts/envoy_bootstrap_v2_startup.yaml
 ```
 
 ## Run API Proxy in Docker
