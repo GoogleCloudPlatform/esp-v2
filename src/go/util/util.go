@@ -22,12 +22,13 @@ const (
 	JwtAuthn = "envoy.filters.http.jwt_authn"
 
 	// Supported Http Methods.
-	GET    = "GET"
-	PUT    = "PUT"
-	POST   = "POST"
-	DELETE = "DELETE"
-	PATCH  = "PATCH"
-	CUSTOM = "CUSTOM"
+	GET     = "GET"
+	PUT     = "PUT"
+	POST    = "POST"
+	DELETE  = "DELETE"
+	PATCH   = "PATCH"
+	OPTIONS = "OPTIONS"
+	CUSTOM  = "CUSTOM"
 
 	// rollout strategy
 	FixedRolloutStrategy   = "fixed"

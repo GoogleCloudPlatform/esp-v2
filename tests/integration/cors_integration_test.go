@@ -303,6 +303,62 @@ func TestDifferentOriginPreflightCors(t *testing.T) {
 	}
 }
 
+// Preflight CORS request with allowCors to allow backends to receive and respond to OPTIONS requests
+func TestPreflightRequestWithAllowCors(t *testing.T) {
+	serviceName := "echo-api.endpoints.cloudesf-testing.cloud.goog"
+	configId := "test-config-id"
+	corsRequestMethod := "PATCH"
+	corsRequestHeader := "X-PINGOTHER"
+	corsOrigin := "http://cloud.google.com"
+	corsAllowOriginValue := "*"
+	corsAllowMethodsValue := "GET, OPTIONS"
+	corsAllowHeadersValue := "Authorization"
+	corsExposeHeadersValue := "Cache-Control,Content-Type,Authorization, X-PINGOTHER"
+	corsAllowCredentialsValue := "true"
+
+	args := []string{"--service=" + serviceName, "--version=" + configId,
+		"--backend_protocol=http1", "--rollout_strategy=fixed"}
+
+	s := env.TestEnv{
+		MockMetadata:          true,
+		MockServiceManagement: true,
+		MockServiceControl:    true,
+		MockJwtProviders:      nil,
+	}
+
+	if err := s.Setup("echo", args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+	defer s.TearDown()
+	time.Sleep(time.Duration(3 * time.Second))
+
+	testData := struct {
+		desc          string
+		respHeaderMap map[string]string
+	}{
+		desc: "Succeed, response has CORS headers",
+		respHeaderMap: map[string]string{
+			"Access-Control-Allow-Origin":      corsAllowOriginValue,
+			"Access-Control-Allow-Methods":     corsAllowMethodsValue,
+			"Access-Control-Allow-Headers":     corsAllowHeadersValue,
+			"Access-Control-Expose-Headers":    corsExposeHeadersValue,
+			"Access-Control-Allow-Credentials": corsAllowCredentialsValue,
+		},
+	}
+
+	respHeader, err := client.DoCorsPreflightRequest(echoHost+"/simplegetcors", corsOrigin, corsRequestMethod, corsRequestHeader)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for key, value := range testData.respHeaderMap {
+		if respHeader.Get(key) != value {
+			t.Errorf("%s expected: %s, got: %s", key, value, respHeader.Get(key))
+		}
+	}
+
+}
+
 // TODO(jcwang) re-enable it later, probably it causes "bind address already in use" somehow on prow
 //package integration
 //
