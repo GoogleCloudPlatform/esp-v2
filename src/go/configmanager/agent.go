@@ -18,20 +18,38 @@ import (
 	"context"
 	"time"
 
-	agentpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/agent"
 	"github.com/golang/protobuf/ptypes/duration"
+
+	agentpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/agent"
 )
 
 type AgentServer struct {
 }
 
-func (s *AgentServer) GetAccessToken(ctx context.Context, req *agentpb.GetAccessTokenRequest) (*agentpb.GetAccessTokenResponse, error) {
+func (s *AgentServer) GetAccessToken(ctx context.Context, req *agentpb.GetAccessTokenRequest) (*agentpb.GetTokenResponse, error) {
 	token, expires, err := fetchAccessToken()
 	if err != nil {
 		return nil, err
 	}
+	return &agentpb.GetTokenResponse{
+		AccessToken: token,
+		ExpiresIn: &duration.Duration{
+			Seconds: int64(expires / time.Second),
+		},
+	}, nil
+}
 
-	return &agentpb.GetAccessTokenResponse{AccessToken: token, ExpiresIn: &duration.Duration{Seconds: int64(expires / time.Second)}}, nil
+func (s *AgentServer) GetIdentityJWTToken(ctx context.Context, req *agentpb.GetIdentityJWTTokenRequest) (*agentpb.GetTokenResponse, error) {
+	token, expires, err := fetchIdentityJWTToken(req.GetAudience())
+	if err != nil {
+		return nil, err
+	}
+	return &agentpb.GetTokenResponse{
+		AccessToken: token,
+		ExpiresIn: &duration.Duration{
+			Seconds: int64(expires / time.Second),
+		},
+	}, nil
 }
 
 func NewAgentServer() *AgentServer {

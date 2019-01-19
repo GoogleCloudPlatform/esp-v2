@@ -43,10 +43,11 @@ namespace Utils {
 //   callback function which should be called when the remote call response is
 //   received.
 //
-class TokenSubscriber : public Envoy::Init::Target,
-                        public Envoy::Grpc::TypedAsyncRequestCallbacks<
-                            ::google::api_proxy::agent::GetAccessTokenResponse>,
-                        public Envoy::Logger::Loggable<Envoy::Logger::Id::grpc> {
+class TokenSubscriber
+    : public Envoy::Init::Target,
+      public Envoy::Grpc::TypedAsyncRequestCallbacks<
+          ::google::api_proxy::agent::GetTokenResponse>,
+      public Envoy::Logger::Loggable<Envoy::Logger::Id::grpc> {
  public:
   class Callback {
    public:
@@ -56,7 +57,7 @@ class TokenSubscriber : public Envoy::Init::Target,
 
   TokenSubscriber(Envoy::Server::Configuration::FactoryContext& context,
                   Envoy::Grpc::AsyncClientFactoryPtr client_factory,
-                  Callback& callback);
+                  Callback& callback, const std::string* audience);
 
   virtual ~TokenSubscriber();
 
@@ -66,11 +67,10 @@ class TokenSubscriber : public Envoy::Init::Target,
   // Grpc::TypedAsyncRequestCallbacks functions
   void onCreateInitialMetadata(Envoy::Http::HeaderMap&) override {}
   void onSuccess(
-      std::unique_ptr<::google::api_proxy::agent::GetAccessTokenResponse>&&
-          response,
+      std::unique_ptr<::google::api_proxy::agent::GetTokenResponse>&& response,
       Envoy::Tracing::Span&) override;
-  void onFailure(Envoy::Grpc::Status::GrpcStatus status, const std::string& message,
-                 Envoy::Tracing::Span&) override;
+  void onFailure(Envoy::Grpc::Status::GrpcStatus status,
+                 const std::string& message, Envoy::Tracing::Span&) override;
 
  private:
   void runInitializeCallbackIfAny();
@@ -85,11 +85,12 @@ class TokenSubscriber : public Envoy::Init::Target,
   Envoy::Grpc::AsyncRequest* active_request_{};
 
   Envoy::Event::TimerPtr refresh_timer_;
+  const std::string* audience_;
 };
 typedef std::unique_ptr<TokenSubscriber> TokenSubscriberPtr;
 
 // Create Async Client Factory
-Envoy::Grpc::AsyncClientFactoryPtr makeClinetFactory(
+Envoy::Grpc::AsyncClientFactoryPtr makeClientFactory(
     Envoy::Server::Configuration::FactoryContext& context,
     const std::string& token_cluster);
 

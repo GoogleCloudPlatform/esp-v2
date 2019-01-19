@@ -27,13 +27,22 @@ import (
 )
 
 const (
-	fakeToken       = `{"access_token": "ya29.new", "expires_in":3599, "token_type":"Bearer"}`
-	fakeServiceName = "echo-service"
-	fakeConfigID    = "canary-config"
-	fakeZonePath    = "projects/4242424242/zones/us-west-1b"
-	fakeZone        = "us-west-1b"
-	fakeProjectID   = "gcpproxy"
+	fakeToken            = `{"access_token": "ya29.new", "expires_in":3599, "token_type":"Bearer"}`
+	fakeIdentityJwtToken = "ya29.new"
+	fakeServiceName      = "echo-service"
+	fakeConfigID         = "canary-config"
+	fakeZonePath         = "projects/4242424242/zones/us-west-1b"
+	fakeZone             = "us-west-1b"
+	fakeProjectID        = "gcpproxy"
 )
+
+type testToken struct {
+	desc               string
+	curToken           string
+	curTokenTimeout    time.Time
+	expectedToken      string
+	expectedExpiration time.Duration
+}
 
 func TestFetchAccountTokenExpired(t *testing.T) {
 	ts := initMockMetadataServer(fakeToken)
@@ -48,13 +57,7 @@ func TestFetchAccountTokenExpired(t *testing.T) {
 	// Mock the timeNow function.
 	timeNow = func() time.Time { return fakeNow }
 
-	testData := []struct {
-		desc               string
-		curToken           string
-		curTokenTimeout    time.Time
-		expectedToken      string
-		expectedExpiration time.Duration
-	}{
+	testData := []testToken{
 		{
 			desc:               "Empty metadata",
 			expectedToken:      "ya29.new",
@@ -96,6 +99,68 @@ func TestFetchAccountTokenExpired(t *testing.T) {
 		}
 		if expires != tc.expectedExpiration {
 			t.Errorf("Test Desc(%d): %s, Actual expiration = %s, want %s", i, tc.desc, expires, tc.expectedExpiration)
+		}
+	}
+}
+
+func TestFetchIdentityJWTTokenBasic(t *testing.T) {
+	ts := initMockMetadataServer(fakeIdentityJwtToken)
+	defer ts.Close()
+	fetchMetadataURL = func(_ string) string {
+		return ts.URL
+	}
+	// Get a timestamp and use it through out the test.
+	fakeNow := time.Now()
+	// Mock the timeNow function.
+	timeNow = func() time.Time { return fakeNow }
+	testData := []testToken{
+		{
+			desc:               "Empty token response",
+			expectedToken:      "ya29.new",
+			expectedExpiration: 3599 * time.Second,
+		},
+		{
+			desc:               "token has expired in token map",
+			curToken:           "ya29.expired",
+			curTokenTimeout:    fakeNow.Add(-1 * time.Hour),
+			expectedToken:      "ya29.new",
+			expectedExpiration: 3599 * time.Second,
+		},
+		{
+			desc:               "token is not expired in token map",
+			curToken:           "ya29.nonexpired",
+			curTokenTimeout:    fakeNow.Add(61 * time.Second),
+			expectedToken:      "ya29.nonexpired",
+			expectedExpiration: 61 * time.Second,
+		},
+		{
+			desc:               "token valid time is below 60 seconds in token map",
+			curToken:           "ya29.nonexpired",
+			curTokenTimeout:    fakeNow.Add(59 * time.Second),
+			expectedToken:      "ya29.new",
+			expectedExpiration: 3599 * time.Second,
+		},
+	}
+
+	fakeAudience := "audience"
+	for i, tc := range testData {
+		// Mocking the last-fetched token.
+		if tc.curToken != "" {
+			audToToken[fakeAudience] = tokenInfo{
+				accessToken:  tc.curToken,
+				tokenTimeout: tc.curTokenTimeout,
+			}
+		}
+
+		token, expires, err := fetchIdentityJWTToken(fakeAudience)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.EqualFold(token, tc.expectedToken) {
+			t.Errorf("Test Desc(%d): %s, token got: %v, want: %s", i, tc.desc, token, tc.expectedToken)
+		}
+		if expires != tc.expectedExpiration {
+			t.Errorf("Test Desc(%d): %s, expiration got: %s, want: %s", i, tc.desc, expires, tc.expectedExpiration)
 		}
 	}
 }

@@ -28,7 +28,7 @@ namespace Utils {
 namespace {
 
 using Envoy::Server::Configuration::MockFactoryContext;
-using ::google::api_proxy::agent::GetAccessTokenResponse;
+using ::google::api_proxy::agent::GetTokenResponse;
 
 using ::testing::_;
 using ::testing::Invoke;
@@ -45,7 +45,7 @@ class TokenSubscriberTest : public testing::Test {
     raw_mock_client_factory_ = new Envoy::Grpc::MockAsyncClientFactory();
     token_sub_.reset(new TokenSubscriber(
         context_, Envoy::Grpc::AsyncClientFactoryPtr(raw_mock_client_factory_),
-        token_callback_));
+        token_callback_, nullptr));
 
     EXPECT_CALL(*raw_mock_client_factory_, create())
         .WillOnce(Invoke([this]() -> Envoy::Grpc::AsyncClientPtr {
@@ -79,7 +79,7 @@ TEST_F(TokenSubscriberTest, TestSuccess) {
   EXPECT_CALL(token_callback_, onTokenUpdate(std::string("TOKEN")));
 
   // Send a Good token
-  GetAccessTokenResponse* token_response = new GetAccessTokenResponse;
+  GetTokenResponse* token_response = new GetTokenResponse;
   token_response->set_access_token("TOKEN");
   token_response->mutable_expires_in()->set_seconds(100);
   client_callback_->onSuccessUntyped(Envoy::ProtobufTypes::MessagePtr(token_response),
@@ -110,7 +110,7 @@ TEST_F(TokenSubscriberTest, TestUpdate) {
   EXPECT_CALL(*raw_mock_client1, send(_, _, _, _, _)).Times(1);
 
   // Send a Good token1
-  GetAccessTokenResponse* token_response = new GetAccessTokenResponse;
+  GetTokenResponse* token_response = new GetTokenResponse;
   token_response->set_access_token("TOKEN1");
   // Will refresh right away if less than 5s
   token_response->mutable_expires_in()->set_seconds(1);
@@ -119,7 +119,7 @@ TEST_F(TokenSubscriberTest, TestUpdate) {
 
   EXPECT_CALL(token_callback_, onTokenUpdate(std::string("TOKEN2")));
 
-  token_response = new GetAccessTokenResponse;
+  token_response = new GetTokenResponse;
   token_response->set_access_token("TOKEN2");
   token_response->mutable_expires_in()->set_seconds(100);
   client_callback_->onSuccessUntyped(Envoy::ProtobufTypes::MessagePtr(token_response),

@@ -28,15 +28,22 @@ import (
 	"github.com/golang/glog"
 )
 
+const (
+	tokenExpiry = 3599
+)
+
 var (
+	// metadata updates and stores Metadata from GCE.
+	metadata tokenInfo
+	// audience -> tokenInfo.
+	audToToken       = make(map[string]tokenInfo)
 	timeNow          = time.Now
 	fetchMetadataURL = func(suffix string) string {
 		return *flags.MetadataURL + suffix
 	}
 )
 
-// metadata updates and stores Metadata from GCE.
-var metadata struct {
+type tokenInfo struct {
 	accessToken  string
 	tokenTimeout time.Time
 }
@@ -110,6 +117,27 @@ func fetchConfigId() (string, error) {
 
 func fetchRolloutStrategy() (string, error) {
 	return fetchMetadata(util.RolloutStrategySuffix)
+}
+
+func fetchIdentityJWTToken(audience string) (string, time.Duration, error) {
+	now := timeNow()
+	// Follow the similar logic as GCE metadata server, where returned token will be valid for at least 60s.
+	if ti, ok := audToToken[audience]; ok && !now.After(ti.tokenTimeout.Add(-time.Second*60)) {
+		return ti.accessToken, ti.tokenTimeout.Sub(now), nil
+	}
+
+	identityTokenURI := util.ServiceAccountTokenSuffix + "?audience=" + audience + "&format=standard"
+	token, err := fetchMetadata(identityTokenURI)
+	if err != nil {
+		return "", 0, err
+	}
+
+	expires := time.Duration(tokenExpiry) * time.Second
+	audToToken[audience] = tokenInfo{
+		accessToken:  token,
+		tokenTimeout: now.Add(expires),
+	}
+	return token, expires, nil
 }
 
 func fetchGCPAttributes() *scpb.GcpAttributes {

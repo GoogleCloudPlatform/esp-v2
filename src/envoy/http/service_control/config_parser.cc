@@ -34,8 +34,8 @@ ServiceContext::ServiceContext(const Service& filter_service,
       tls_(context.threadLocal().allocateSlot()),
       token_subscriber_(
           context,
-          Utils::makeClinetFactory(context, filter_service_.token_cluster()),
-          *this) {
+          Utils::makeClientFactory(context, filter_service_.token_cluster()),
+          *this, nullptr) {
   if (filter_service.has_service_config()) {
     if (!filter_service.service_config().UnpackTo(&origin_service_)) {
       throw ProtoValidationException("Invalid service config", filter_service_);

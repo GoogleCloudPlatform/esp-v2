@@ -13,8 +13,9 @@ envoy_cc_binary(
     name = "envoy",
     repository = "@envoy",
     deps = [
-        "//src/envoy/http/service_control:filter_factory",
+        "//src/envoy/http/backend_auth:filter_factory",
         "//src/envoy/http/path_matcher:filter_factory",
+        "//src/envoy/http/service_control:filter_factory",
         "@envoy//source/exe:envoy_main_entry_lib",
     ],
 )
