@@ -38,3 +38,17 @@ envoy_cc_test(
         "@envoy//test/mocks/server:server_mocks",
     ],
 )
+
+cc_library(
+    name = "metadata_utils_lib",
+    hdrs = [
+        "metadata_utils.h",
+    ],
+    srcs = [
+        "metadata_utils.cc",
+    ],
+    deps = [
+        "@envoy//source/common/protobuf:utility_lib",
+        "@envoy//source/exe:envoy_common_lib",
+    ]
+)
