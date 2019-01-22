@@ -15,7 +15,7 @@
 #include "src/envoy/http/service_control/filter.h"
 #include "common/http/utility.h"
 #include "envoy/http/header_map.h"
-#include "src/envoy/http/service_control/http_call.h"
+#include "src/api_proxy/service_control/request_builder.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -24,6 +24,7 @@ namespace ServiceControl {
 
 using ::google::api::envoy::http::service_control::APIKeyLocation;
 using ::google::api::envoy::http::service_control::APIKeyRequirement;
+using ::google::api_proxy::service_control::CheckResponseInfo;
 using ::google::protobuf::util::Status;
 using Http::HeaderMap;
 using Http::LowerCaseString;
@@ -137,16 +138,16 @@ Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool) {
   require_ctx_->service_ctx().builder().FillCheckRequest(info, &check_request);
   ENVOY_LOG(debug, "Sending check : {}", check_request.DebugString());
 
-  string suffix_uri =
-      require_ctx_->service_ctx().config().service_name() + ":check";
-  auto on_done = [this](const Status &status, const string &body) {
-    onCheckResponse(status, body);
-  };
-  check_call_ = HttpCall::create(
-      config_->cm(),
-      require_ctx_->service_ctx().config().service_control_uri());
-  check_call_->call(suffix_uri, require_ctx_->service_ctx().token(),
-                    check_request, on_done);
+  aborted_.reset(new bool);
+  *aborted_ = false;
+
+  require_ctx_->service_ctx().getTLCache().client_cache().callCheck(
+      check_request,
+      [this, aborted = aborted_](const Status &status,
+                                 const CheckResponseInfo &response_info) {
+        if (*aborted) return;
+        onCheckResponse(status, response_info);
+      });
 
   if (state_ == Complete) {
     return Http::FilterHeadersStatus::Continue;
@@ -157,9 +158,8 @@ Http::FilterHeadersStatus Filter::decodeHeaders(HeaderMap &headers, bool) {
 }
 
 void Filter::onDestroy() {
-  if (check_call_) {
-    check_call_->cancel();
-    check_call_ = nullptr;
+  if (aborted_) {
+    *aborted_ = true;
   }
 }
 
@@ -172,27 +172,12 @@ void Filter::rejectRequest(Http::Code code, absl::string_view error_msg) {
       StreamInfo::ResponseFlag::UnauthorizedExternalService);
 }
 
-void Filter::onCheckResponse(const Status &status, const string &response_str) {
-  ::google::api::servicecontrol::v1::CheckResponse response_pb;
-  response_pb.ParseFromString(response_str);
-  ENVOY_LOG(debug, "Check response with : {}, str_body: {}, pb_body: {}",
-            status.ToString(), response_str, response_pb.DebugString());
-  // This stream has been reset, abort the callback.
-  check_call_ = nullptr;
-  if (state_ == Responded) {
-    return;
-  }
+void Filter::onCheckResponse(const Status &status,
+                             const CheckResponseInfo &response_info) {
+  check_response_info_ = response_info;
+  check_status_ = status;
 
   if (!status.ok()) {
-    rejectRequest(Http::Code(401), "Check failed");
-    return;
-  }
-
-  check_status_ = ::google::api_proxy::service_control::RequestBuilder::
-      ConvertCheckResponse(response_pb,
-                           require_ctx_->service_ctx().config().service_name(),
-                           &check_response_info_);
-  if (!check_status_.ok()) {
     rejectRequest(Http::Code(401), "Check failed");
     return;
   }
@@ -267,19 +252,8 @@ void Filter::log(const HeaderMap * /*request_headers*/,
                                                           &report_request);
   ENVOY_LOG(debug, "Sending report : {}", report_request.DebugString());
 
-  string suffix_uri =
-      require_ctx_->service_ctx().config().service_name() + ":report";
-  auto dummy_on_done = [](const Status &status, const string &response_str) {
-    ::google::api::servicecontrol::v1::ReportResponse response_pb;
-    response_pb.ParseFromString(response_str);
-    ENVOY_LOG(debug, "Report response with : {}, str_body: {}, pb_body: {}",
-              status.ToString(), response_str, response_pb.DebugString());
-  };
-  HttpCall *http_call = HttpCall::create(
-      config_->cm(),
-      require_ctx_->service_ctx().config().service_control_uri());
-  http_call->call(suffix_uri, require_ctx_->service_ctx().token(),
-                  report_request, dummy_on_done);
+  require_ctx_->service_ctx().getTLCache().client_cache().callReport(
+      report_request);
 }
 
 }  // namespace ServiceControl

@@ -17,12 +17,12 @@
 #include "common/protobuf/utility.h"
 #include "google/protobuf/stubs/logging.h"
 
+using ::google::api::envoy::http::service_control::FilterConfig;
+
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
-
-using ::google::api::envoy::http::service_control::FilterConfig;
 
 FilterConfigParser::FilterConfigParser(
     const FilterConfig& config,

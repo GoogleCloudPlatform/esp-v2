@@ -21,6 +21,7 @@
 #include "src/api_proxy/path_matcher/path_matcher.h"
 #include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/utils/token_subscriber.h"
+#include "src/envoy/http/service_control/client_cache.h"
 
 #include <list>
 #include <unordered_map>
@@ -35,7 +36,24 @@ typedef std::shared_ptr<std::string> TokenSharedPtr;
 
 class ThreadLocalCache : public ThreadLocal::ThreadLocalObject {
  public:
+  ThreadLocalCache(
+      const ::google::api::envoy::http::service_control::Service& config,
+      Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher)
+      : client_cache_(config, cm, dispatcher,
+                      [this]() -> const std::string& { return token(); }) {}
+
+  void set_token(TokenSharedPtr token) { token_ = token; }
+
+  const std::string& token() const {
+    static std::string empty_str;
+    return (token_) ? *token_ : empty_str;
+  }
+
+  ClientCache& client_cache() { return client_cache_; }
+
+ private:
   TokenSharedPtr token_;
+  ClientCache client_cache_;
 };
 
 class ServiceContext :
@@ -51,10 +69,11 @@ class ServiceContext :
         token_subscriber_(
             context, Utils::makeClinetFactory(context,
               proto_config_.token_cluster()), *this) {
-    tls_->set(
-        [](Event::Dispatcher&) -> ThreadLocal::ThreadLocalObjectSharedPtr {
-          return std::make_shared<ThreadLocalCache>();
-        });
+    tls_->set([this,
+               &cm = context.clusterManager()](Event::Dispatcher& dispatcher)
+                  -> ThreadLocal::ThreadLocalObjectSharedPtr {
+      return std::make_shared<ThreadLocalCache>(proto_config_, cm, dispatcher);
+    });
   }
 
   const ::google::api::envoy::http::service_control::Service& config() const {
@@ -74,15 +93,8 @@ class ServiceContext :
   void onTokenUpdate(const std::string& token) override {
     TokenSharedPtr new_token = std::make_shared<std::string>(token);
     tls_->runOnAllThreads([this, new_token]() {
-      tls_->getTyped<ThreadLocalCache>().token_ = new_token;
+      tls_->getTyped<ThreadLocalCache>().set_token(new_token);
     });
-  }
-
-  const std::string& token() const {
-    static std::string empty_str;
-    return (tls_->getTyped<ThreadLocalCache>().token_)
-               ? *tls_->getTyped<ThreadLocalCache>().token_
-               : empty_str;
   }
 
  private:
