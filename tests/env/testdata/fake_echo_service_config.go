@@ -38,6 +38,11 @@ var (
 						RequestTypeUrl:  "type.googleapis.com/EchoRequest",
 						ResponseTypeUrl: "type.googleapis.com/EchoMessage",
 					},
+					{
+						Name:            "Simplegetcors",
+						RequestTypeUrl:  "type.googleapis.com/google.protobuf.Empty",
+						ResponseTypeUrl: "type.googleapis.com/SimpleCorsMessage",
+					},
 				},
 				Version: "1.0.0",
 			},
@@ -63,6 +68,12 @@ var (
 					},
 					Body: "message",
 				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
+					Pattern: &annotations.HttpRule_Get{
+						Get: "/simplegetcors",
+					},
+				},
 			},
 		},
 		Authentication: &conf.Authentication{
@@ -87,6 +98,15 @@ var (
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
 				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
+				},
+			},
+		},
+		Endpoints: []*conf.Endpoint{
+			{
+				Name:      "echo-api.endpoints.cloudesf-testing.cloud.goog",
+				AllowCors: true,
 			},
 		},
 	}

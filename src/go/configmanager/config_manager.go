@@ -81,10 +81,11 @@ type ConfigManager struct {
 	curConfigID   string
 	serviceConfig *conf.Service
 	// httpPathMap stores all operations to http path pairs.
-	httpPathMap         map[string]*httpRule
-	client              *http.Client
-	cache               cache.SnapshotCache
-	checkRolloutsTicker *time.Ticker
+	httpPathMap            map[string]*httpRule
+	httpPathWithOptionsSet map[string]bool
+	client                 *http.Client
+	cache                  cache.SnapshotCache
+	checkRolloutsTicker    *time.Ticker
 }
 
 type httpRule struct {
@@ -307,6 +308,7 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 
 func (m *ConfigManager) initHttpPathMap() {
 	m.httpPathMap = make(map[string]*httpRule)
+	m.httpPathWithOptionsSet = make(map[string]bool)
 	for _, r := range m.serviceConfig.GetHttp().GetRules() {
 		var rule *httpRule
 		switch r.GetPattern().(type) {
@@ -338,12 +340,15 @@ func (m *ConfigManager) initHttpPathMap() {
 		case *annotations.HttpRule_Custom:
 			rule = &httpRule{
 				path:   r.GetCustom().GetPath(),
-				method: ut.CUSTOM,
+				method: r.GetCustom().GetKind(),
 			}
 		default:
 			glog.Warning("unsupported http method")
 		}
 
+		if rule.method == ut.OPTIONS {
+			m.httpPathWithOptionsSet[rule.path] = true
+		}
 		m.httpPathMap[r.GetSelector()] = rule
 	}
 }
@@ -620,6 +625,18 @@ func (m *ConfigManager) makeJwtAuthnFilter(endpointApi *api.Api, backendProtocol
 	return jwtAuthnFilter
 }
 
+func (m *ConfigManager) getEndpointAllowCorsFlag() bool {
+	if len(m.serviceConfig.Endpoints) == 0 {
+		return false
+	}
+	for _, endpoint := range m.serviceConfig.Endpoints {
+		if endpoint.GetName() == m.serviceName && endpoint.GetAllowCors() == true {
+			return true
+		}
+	}
+	return false
+}
+
 func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendProtocol ut.BackendProtocol) *hcm.HttpFilter {
 	if m.serviceConfig.GetControl().GetEnvironment() == "" {
 		return nil
@@ -694,6 +711,50 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 				},
 				Pattern: newPattern,
 			})
+	}
+
+	// In order to support CORS. Http method OPTIONS needs to be added to all urls except the ones
+	// already with options. For these OPTIONS methods, auth should be disabled and
+	// AllowWithoutApiKey should be true.
+	if m.getEndpointAllowCorsFlag() {
+		httpPathSet := make(map[string]bool)
+		for _, httpRule := range m.httpPathMap {
+			httpPathSet[httpRule.path] = true
+		}
+
+		// All options have same selector as format: CORS.suffix.
+		// Appends suffix to make sure it is not used by any http rules.
+		corsSelectorBase := "CORS"
+		corsCount := 0
+		for path := range httpPathSet {
+			if _, exist := m.httpPathWithOptionsSet[path]; !exist {
+				corsSelector := ""
+				for {
+					corsSelector = fmt.Sprintf("%s.%d", corsSelectorBase, corsCount)
+					if _, exist := rulesMap[corsSelector]; !exist {
+						break
+					}
+					corsCount++
+				}
+				optionsPattern := &commonpb.Pattern{
+					UriTemplate: path,
+					HttpMethod:  ut.OPTIONS,
+				}
+				// TODO(jcwang) also no need auth (jwt)
+				rulesMap[corsSelector] = []*scpb.ServiceControlRule{
+					{
+						Requires: &scpb.Requirement{
+							ServiceName:   m.serviceName,
+							OperationName: corsSelector,
+							ApiKey: &scpb.APIKeyRequirement{
+								AllowWithoutApiKey: true,
+							},
+						},
+						Pattern: optionsPattern,
+					},
+				}
+			}
+		}
 	}
 
 	for _, usageRule := range m.serviceConfig.GetUsage().GetRules() {

@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -31,7 +32,8 @@ func main() {
 
 	r.Path("/echo").Methods("POST").
 		HandlerFunc(echoHandler)
-
+	r.Path("/simplegetcors").Methods("GET", "OPTIONS").
+		Handler(corsHandler(simpleGetCors))
 	r.Path("/auth/info/googlejwt").Methods("GET").
 		HandlerFunc(authInfoHandler)
 	r.Path("/auth/info/googleidtoken").Methods("GET").
@@ -73,11 +75,26 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 // corsHandler wraps a HTTP handler and applies the appropriate responses for Cross-Origin Resource Sharing.
 type corsHandler http.HandlerFunc
 
-func (h corsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	if r.Method == "OPTIONS" {
-		w.Header().Set("Access-Control-Allow-Headers", "Authorization")
+func simpleGetCors(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		getMessage := fmt.Sprintf("simple get message, time: %v\n", time.Now())
+		w.Write([]byte(getMessage))
 		return
+	}
+	w.Write([]byte(""))
+}
+
+func (h corsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Origin") != "" {
+		fmt.Printf("Origin: %s", r.Header.Get("Origin"))
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		if r.Method == "OPTIONS" {
+			w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Authorization")
+			w.Header().Set("Access-Control-Expose-Headers", "Cache-Control,Content-Type,Authorization, X-PINGOTHER")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			return
+		}
 	}
 	h(w, r)
 }

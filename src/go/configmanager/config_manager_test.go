@@ -843,6 +843,121 @@ func TestFetchListeners(t *testing.T) {
                 ]
             }`, fakeJwks, testEndpointName),
 		},
+		{
+			desc:            "Success for backend that allow CORS",
+			backendProtocol: "http1",
+			fakeServiceConfig: fmt.Sprintf(`{
+                "name":"%s",
+								"producer_project_id":"%s",
+								"control" : {
+										"environment": "servivcecontrol.googleapis.com"
+								},
+								"apis":[
+                    {
+                        "name":"%s",
+                        "methods":[
+														{
+																"name": "Simplegetcors"
+														}
+												]
+                    }
+                ],
+                "http": {
+                    "rules": [
+                        {
+                            "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
+                            "get": "/simplegetcors"
+                        }
+                    ]
+                },
+                "endpoints": [
+										{
+													"name": "%s",
+													"allow_cors": true
+										}
+                ]
+            }`, testProjectName, testProjectID, testEndpointName, testProjectName),
+			wantedListeners: fmt.Sprintf(`{
+			  "filters": [
+			    {
+			      "config": {
+			        "http_filters": [
+			          {
+			            "config": {
+			              "rules": [
+			                {
+			                  "pattern": {
+			                    "http_method": "GET",
+			                    "uri_template": "/simplegetcors"
+			                  },
+			                  "requires": {
+			                    "operation_name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
+			                    "service_name": "%s"
+			                  }
+			                },
+			                {
+			                  "pattern": {
+			                    "http_method": "OPTIONS",
+			                    "uri_template": "/simplegetcors"
+			                  },
+			                  "requires": {
+			                    "api_key": {
+			                      "allow_without_api_key": true
+			                    },
+			                    "operation_name": "CORS.0",
+			                    "service_name": "%s"
+			                  }
+			                }
+			              ],
+			              "services": [
+			                {
+			                  "producer_project_id": "project123",
+			                  "service_config_id": "2017-05-01r0",
+			                  "service_control_uri": {
+			                    "cluster": "service_control_cluster",
+			                    "timeout": "5s",
+			                    "uri": "https://servicecontrol.googleapis.com/v1/services/"
+			                  },
+			                  "service_name": "%s",
+			                  "token_cluster": "ads_cluster"
+			                }
+			              ]
+			            },
+			            "name": "envoy.filters.http.service_control"
+			          },
+			          {
+			            "config": {},
+			            "name": "envoy.router"
+			          }
+			        ],
+			        "route_config": {
+			          "name": "local_route",
+			          "virtual_hosts": [
+			            {
+			              "domains": [
+			                "*"
+			              ],
+			              "name": "backend",
+			              "routes": [
+			                {
+			                  "match": {
+			                    "prefix": "/"
+			                  },
+			                  "route": {
+			                    "cluster": "%s"
+			                  }
+			                }
+			              ]
+			            }
+			          ]
+			        },
+			        "stat_prefix": "ingress_http"
+			      },
+			      "name": "envoy.http_connection_manager"
+			    }
+			  ]
+			}`, testProjectName, testProjectName, testProjectName, testEndpointName),
+		},
 	}
 
 	for i, tc := range testData {
@@ -1231,6 +1346,116 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got request: %v, want: %v", testCase.desc, resp.Request, req)
 		}
 	})
+}
+
+func TestGetEndpointAllowCorsFlag(t *testing.T) {
+	testData := []struct {
+		desc                string
+		fakeServiceConfig   string
+		wantedAllowCorsFlag bool
+	}{
+		{
+			desc: "Return true for endpoint name matching service name",
+			fakeServiceConfig: fmt.Sprintf(`{
+                "name":"%s",
+                "apis":[
+                    {
+                        "name":"%s",
+                        "version":"v1",
+                        "syntax":"SYNTAX_PROTO3",
+                        "sourceContext": {
+														"fileName": "bookstore.proto"
+												}
+										}
+                ],
+								"endpoints": [
+										{
+													"name": "%s",
+													"allow_cors": true
+										}
+                ]
+		    }`, testProjectName, testEndpointName, testProjectName),
+			wantedAllowCorsFlag: true,
+		},
+		{
+			desc: "Return false for not setting allow_cors",
+			fakeServiceConfig: fmt.Sprintf(`{
+                "name":"%s",
+                "apis":[
+                    {
+                        "name":"%s",
+                        "version":"v1",
+                        "syntax":"SYNTAX_PROTO3",
+                        "sourceContext": {
+														"fileName": "bookstore.proto"
+												}
+										}
+                ],
+								"endpoints": [
+										{
+													"name": "%s"
+										}
+                ]
+		    }`, testProjectName, testEndpointName, testProjectName),
+			wantedAllowCorsFlag: false,
+		},
+		{
+			desc: "Return false for endpoint name not matching service name",
+			fakeServiceConfig: fmt.Sprintf(`{
+                "name":"%s",
+                "apis":[
+                    {
+                        "name":"%s",
+                        "version":"v1",
+                        "syntax":"SYNTAX_PROTO3",
+                        "sourceContext": {
+														"fileName": "bookstore.proto"
+												}
+										}
+                ],
+								"endpoints": [
+										{
+													"name": "%s",
+													"allow_cors": true
+										}
+                ]
+		    }`, testProjectName, testEndpointName, "echo.endpoints.project123.cloud.goog"),
+			wantedAllowCorsFlag: false,
+		},
+		{
+			desc: "Return false for empty endpoint field",
+			fakeServiceConfig: fmt.Sprintf(`{
+                "name":"%s",
+                "apis":[
+                    {
+                        "name":"%s",
+                        "version":"v1",
+                        "syntax":"SYNTAX_PROTO3",
+                        "sourceContext": {
+														"fileName": "bookstore.proto"
+												}
+										}
+                ]
+		    }`, testProjectName, testEndpointName),
+			wantedAllowCorsFlag: false,
+		},
+	}
+
+	for i, tc := range testData {
+		// Overrides fakeConfig for the test case.
+		fakeConfig = tc.fakeServiceConfig
+		flag.Set("service", testProjectName)
+		flag.Set("version", testConfigID)
+		flag.Set("rollout_strategy", ut.FixedRolloutStrategy)
+		flag.Set("backend_protocol", "http1")
+
+		runTest(t, ut.FixedRolloutStrategy, func(env *testEnv) {
+			allowCorsFlag := env.configManager.getEndpointAllowCorsFlag()
+			if allowCorsFlag != tc.wantedAllowCorsFlag {
+				t.Errorf("Test Desc(%d): %s, allow CORS flag got: %v, want: %v", i, tc.desc, allowCorsFlag, tc.wantedAllowCorsFlag)
+			}
+		})
+	}
 }
 
 // Test Environment setup.
