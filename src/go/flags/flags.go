@@ -47,7 +47,6 @@ var (
 	ListenerAddress      = flag.String("listener_address", "0.0.0.0", "listener socket ip address")
 	ClusterAddress       = flag.String("cluster_address", "127.0.0.1", "cluster socket ip address")
 	ServiceManagementURL = flag.String("service_management_url", "https://servicemanagement.googleapis.com", "url of service management server")
-	ServiceControlURI    = flag.String("service_control_uri", "https://servicecontrol.googleapis.com/v1/services/", "uri of service control server")
 	MetadataURL          = flag.String("metadata_url", "http://metadata.google.internal/computeMetadata", "url of metadata server")
 
 	DiscoveryPort = flag.Int("discovery_port", 8790, "discovery service port")

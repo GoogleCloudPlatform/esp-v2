@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -153,7 +154,8 @@ func TestFetchListeners(t *testing.T) {
 				fakeProtoDescriptor, testEndpointName, testEndpointName),
 		},
 		{
-			desc: "Success for gRPC backend, with Jwt filter, with audiences, no Http Rules", backendProtocol: "grpc",
+			desc:            "Success for gRPC backend, with Jwt filter, with audiences, no Http Rules",
+			backendProtocol: "grpc",
 			fakeServiceConfig: fmt.Sprintf(`{
 				"apis":[
 					{
@@ -576,7 +578,7 @@ func TestFetchListeners(t *testing.T) {
 				"name":"%s",
 				"producer_project_id":"%s",
 				"control" : {
-					"environment": "servivcecontrol.googleapis.com"
+					"environment": "servicecontrol.googleapis.com"
 				},
 				"apis":[
 					{
@@ -848,18 +850,18 @@ func TestFetchListeners(t *testing.T) {
 			backendProtocol: "http1",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"%s",
-								"producer_project_id":"%s",
-								"control" : {
-										"environment": "servivcecontrol.googleapis.com"
-								},
-								"apis":[
-                    {
+		"producer_project_id":"%s",
+		"control" : {
+			"environment": "servicecontrol.googleapis.com"
+		},
+		"apis":[
+                   {
                         "name":"%s",
                         "methods":[
-														{
-																"name": "Simplegetcors"
-														}
-												]
+			{
+				"name": "Simplegetcors"
+			}
+			]
                     }
                 ],
                 "http": {
@@ -871,10 +873,10 @@ func TestFetchListeners(t *testing.T) {
                     ]
                 },
                 "endpoints": [
-										{
-													"name": "%s",
-													"allow_cors": true
-										}
+		{
+			"name": "%s",
+			"allow_cors": true
+		}
                 ]
             }`, testProjectName, testProjectID, testEndpointName, testProjectName),
 			wantedListeners: fmt.Sprintf(`{
@@ -997,7 +999,9 @@ func TestFetchListeners(t *testing.T) {
 			// Normalize both wantedListeners and gotListeners.
 			gotListeners = normalizeJson(gotListeners)
 			if want := normalizeJson(tc.wantedListeners); gotListeners != want && !strings.Contains(gotListeners, want) {
-				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got Listeners: %s, want: %s", i, tc.desc, gotListeners, want)
+				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got unexpected Listeners", i, tc.desc)
+				t.Errorf("Actual: %s", gotListeners)
+				t.Errorf("Expected: %s", want)
 			}
 		})
 	}
@@ -1007,13 +1011,16 @@ func TestFetchClusters(t *testing.T) {
 	testData := []struct {
 		desc              string
 		fakeServiceConfig string
-		wantedClusters    string
+		wantedClusters    []string
 		backendProtocol   string
 	}{
 		{
 			desc: "Success for gRPC backend",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"%s",
+		"control" : {
+			"environment": "servicecontrol.googleapis.com"
+		},
                 "apis":[
                     {
                         "name":"%s",
@@ -1026,7 +1033,8 @@ func TestFetchClusters(t *testing.T) {
                 ]
 		    }`, testProjectName, testEndpointName),
 			backendProtocol: "grpc",
-			wantedClusters: fmt.Sprintf(`{
+			wantedClusters: []string{
+				fmt.Sprintf(`{
 	    	    "hosts": [
 	    	        {
 	    	      	    "socketAddress": {
@@ -1040,11 +1048,27 @@ func TestFetchClusters(t *testing.T) {
                 "type":"STRICT_DNS",
                 "http2ProtocolOptions": {}
 	        }`, *flags.ClusterAddress, *flags.ClusterPort, testEndpointName, *flags.ClusterConnectTimeout/1e9),
+				`{"name": "service_control_cluster",
+		"connectTimeout": "5s",
+		"type": "LOGICAL_DNS",
+		"dnsLookupFamily": "V4_ONLY",
+	    	"hosts": [ {
+    	      	    "socketAddress": {
+    	      	  	  "address": "servicecontrol.googleapis.com",
+	    	      	  "portValue": 443
+    	      	    }
+    	        } ],
+		"tlsContext": { "sni": "servicecontrol.googleapis.com" }
+		}`,
+			},
 		},
 		{
 			desc: "Success for HTTP1 backend",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"%s",
+		"control" : {
+			"environment": "http://127.0.0.1:8000"
+		},
                 "apis":[
                     {
                         "name":"%s"
@@ -1052,7 +1076,8 @@ func TestFetchClusters(t *testing.T) {
                 ]
             }`, testProjectName, testEndpointName),
 			backendProtocol: "http1",
-			wantedClusters: fmt.Sprintf(`{
+			wantedClusters: []string{
+				fmt.Sprintf(`{
                 "hosts": [
                     {
                         "socketAddress": {
@@ -1065,6 +1090,18 @@ func TestFetchClusters(t *testing.T) {
                 "connectTimeout": "%ds",
                 "type":"STRICT_DNS"
            }`, *flags.ClusterAddress, *flags.ClusterPort, testEndpointName, *flags.ClusterConnectTimeout/1e9),
+				`{"name": "service_control_cluster",
+		"connectTimeout": "5s",
+		"type": "LOGICAL_DNS",
+		"dnsLookupFamily": "V4_ONLY",
+	    	"hosts": [ {
+    	      	    "socketAddress": {
+    	      	  	  "address": "127.0.0.1",
+	    	      	  "portValue": 8000
+    	      	    }
+    	        } ]
+		}`,
+			},
 		},
 	}
 
@@ -1091,12 +1128,6 @@ func TestFetchClusters(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			marshaler := &jsonpb.Marshaler{}
-			gotClusters, err := marshaler.MarshalToString(resp.Resources[0])
-			if err != nil {
-				t.Fatal(err)
-			}
-
 			if resp.Version != testConfigID {
 				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, resp.Version, testConfigID)
 			}
@@ -1104,9 +1135,24 @@ func TestFetchClusters(t *testing.T) {
 				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, resp.Request, req)
 			}
 
-			gotClusters = normalizeJson(gotClusters)
-			if want := normalizeJson(tc.wantedClusters); gotClusters != want {
-				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got Clusters: %s, want: %s", i, tc.desc, gotClusters, want)
+			// configManager.cache may change the order
+			// sort them before comparing results.
+			sorted_sources := resp.Resources
+			sort.Slice(sorted_sources, func(i, j int) bool {
+				return cache.GetResourceName(sorted_sources[i]) < cache.GetResourceName(sorted_sources[j])
+			})
+
+			for idx, want := range tc.wantedClusters {
+				marshaler := &jsonpb.Marshaler{}
+				gotClusters, err := marshaler.MarshalToString(sorted_sources[idx])
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				gotClusters = normalizeJson(gotClusters)
+				if want = normalizeJson(want); gotClusters != want {
+					t.Errorf("Test Desc(%d): %s, idx %d snapshot cache fetch got Clusters: %s, want: %s", i, tc.desc, idx, gotClusters, want)
+				}
 			}
 		})
 	}

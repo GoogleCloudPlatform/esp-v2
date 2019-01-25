@@ -22,6 +22,7 @@ import (
 	"math"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,6 +31,7 @@ import (
 	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	"github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
@@ -76,10 +78,11 @@ var (
 // ConfigManager handles service configuration fetching and updating.
 // TODO(jilinxia): handles multi service name.
 type ConfigManager struct {
-	serviceName   string
-	curRolloutID  string
-	curConfigID   string
-	serviceConfig *conf.Service
+	serviceName       string
+	curRolloutID      string
+	curConfigID       string
+	serviceControlURI string
+	serviceConfig     *conf.Service
 	// httpPathMap stores all operations to http path pairs.
 	httpPathMap            map[string]*httpRule
 	httpPathWithOptionsSet map[string]bool
@@ -259,7 +262,26 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 
 	m.initHttpPathMap()
 
-	var endpoints, routes []cache.Resource
+	var endpoints, routes, clusters []cache.Resource
+	b_c, err := m.makeBackendCluster(endpointApi, backendProtocol)
+	if err != nil {
+		return nil, err
+	}
+	if b_c != nil {
+		clusters = append(clusters, b_c)
+	}
+
+	// Note: makeServiceControlCluster should be called before makeListener
+	// as makeServiceControlFilter is using m.serviceControlURI assigned by
+	// makeServiceControlCluster
+	sc_c, err := m.makeServiceControlCluster()
+	if err != nil {
+		return nil, err
+	}
+	if sc_c != nil {
+		clusters = append(clusters, sc_c)
+	}
+
 	m.Infof("adding Listener configuration for api: %v", endpointApi.GetName())
 	serverlistener, httpManager, err := m.makeListener(endpointApi, backendProtocol)
 	if err != nil {
@@ -277,8 +299,13 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 			ConfigType: &listener.Filter_Config{httpFilterConfig},
 		}}}}
 
-	m.Infof("adding Cluster Configuration for api: %v", endpointApi.GetName())
-	cluster := &v2.Cluster{
+	snapshot := cache.NewSnapshot(m.curConfigID, endpoints, clusters, routes, []cache.Resource{serverlistener})
+	glog.Infof("Envoy Dynamic Configuration is cached for service: %v", m.serviceName)
+	return &snapshot, nil
+}
+
+func (m *ConfigManager) makeBackendCluster(endpointApi *api.Api, backendProtocol ut.BackendProtocol) (*v2.Cluster, error) {
+	c := &v2.Cluster{
 		Name:           endpointApi.Name,
 		LbPolicy:       v2.Cluster_ROUND_ROBIN,
 		ConnectTimeout: *flags.ClusterConnectTimeout,
@@ -297,13 +324,79 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	}
 	// gRPC and HTTP/2 need this configuration.
 	if backendProtocol != ut.HTTP1 {
-		cluster.Http2ProtocolOptions = &core.Http2ProtocolOptions{}
+		c.Http2ProtocolOptions = &core.Http2ProtocolOptions{}
 	}
-	m.Infof("Cluster configuration: %v", cluster)
+	m.Infof("Backend cluster configuration for service %s: %v", endpointApi.GetName(), c)
+	return c, nil
+}
 
-	snapshot := cache.NewSnapshot(m.curConfigID, endpoints, []cache.Resource{cluster}, routes, []cache.Resource{serverlistener})
-	glog.Infof("Envoy Dynamic Configuration is cached for service: %v", m.serviceName)
-	return &snapshot, nil
+func (m *ConfigManager) makeServiceControlCluster() (*v2.Cluster, error) {
+	uri := m.serviceConfig.GetControl().GetEnvironment()
+	if uri == "" {
+		return nil, nil
+	}
+
+	// The assumption about control.environment field. Its format:
+	//   [scheme://] +  host + [:port]
+	// * It should not have any path part
+	// * If scheme is missed, https is the default
+
+	// Default is https
+	scheme := "https"
+	host := uri
+	arr := strings.Split(uri, "://")
+	if len(arr) == 2 {
+		scheme = arr[0]
+		host = arr[1]
+	}
+
+	// This is used in service_control_uri.uri in service control fitler.
+	// Not path part, append /v1/services/ directly on host
+	m.serviceControlURI = scheme + "://" + host + "/v1/services/"
+
+	arr = strings.Split(host, ":")
+	var port int
+	if len(arr) == 2 {
+		var err error
+		port, err = strconv.Atoi(arr[1])
+		if err != nil {
+			return nil, fmt.Errorf("Invalid port: %s, got err: %s", arr[1], err)
+		}
+		host = arr[0]
+	} else {
+		if scheme == "http" {
+			port = 80
+		} else {
+			port = 443
+		}
+	}
+
+	c := &v2.Cluster{
+		Name:            "service_control_cluster",
+		LbPolicy:        v2.Cluster_ROUND_ROBIN,
+		ConnectTimeout:  5 * time.Second,
+		DnsLookupFamily: v2.Cluster_V4_ONLY,
+		Type:            v2.Cluster_LOGICAL_DNS,
+		Hosts: []*core.Address{
+			{Address: &core.Address_SocketAddress{
+				SocketAddress: &core.SocketAddress{
+					Address: host,
+					PortSpecifier: &core.SocketAddress_PortValue{
+						PortValue: uint32(port),
+					},
+				},
+			},
+			},
+		},
+	}
+
+	if scheme == "https" {
+		c.TlsContext = &auth.UpstreamTlsContext{
+			Sni: host,
+		}
+	}
+	m.Infof("adding cluster Configuration for uri: %s: %v", uri, c)
+	return c, nil
 }
 
 func (m *ConfigManager) initHttpPathMap() {
@@ -648,7 +741,7 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 		ProducerProjectId: m.serviceConfig.GetProducerProjectId(),
 		TokenCluster:      "ads_cluster",
 		ServiceControlUri: &scpb.HttpUri{
-			Uri:     *flags.ServiceControlURI,
+			Uri:     m.serviceControlURI,
 			Cluster: "service_control_cluster",
 			Timeout: &duration.Duration{Seconds: 5},
 		},
