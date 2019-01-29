@@ -38,3 +38,4 @@ import:
   version: c830210a61dfaa790e1920f8d0470fc27bc2efbe
 - package: github.com/gorilla/mux
   version: 3d80bc801bb034e17cae38591335b3b1110f1c47
+- package: cloud.google.com/go/logging

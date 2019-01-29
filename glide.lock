@@ -1,10 +1,11 @@
-hash: 74d98e8fad42236c5ccb5b3f953abad55798b70654a35cb02351f49adccaca68
-updated: 2019-01-11T00:46:25.106708247Z
+hash: b314f29671bf8d6d6808f388c5dc12585ebdb33abca70f72b22c891c9027fbdf
+updated: 2019-01-29T11:32:29.743164633-08:00
 imports:
 - name: cloud.google.com/go
   version: 2a912322007f3a7f0b4e7e96ba0dfd8c4f347d33
   subpackages:
   - compute/metadata
+  - logging
 - name: github.com/envoyproxy/data-plane-api
   version: 4406edd4e29f5b7e254bdee75ef6354fdf756eb3
 - name: github.com/envoyproxy/go-control-plane
@@ -131,7 +132,7 @@ imports:
   - protobuf/ptype
   - protobuf/source_context
 - name: google.golang.org/grpc
-  version: df014850f6dee74ba2fc94874043a9f3f75fbfd8
+  version: a02b0774206b209466313a0b525d2c738fe407eb
   subpackages:
   - balancer
   - balancer/base
