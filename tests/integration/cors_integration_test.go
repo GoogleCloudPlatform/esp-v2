@@ -332,28 +332,47 @@ func TestPreflightRequestWithAllowCors(t *testing.T) {
 	defer s.TearDown()
 	time.Sleep(time.Duration(3 * time.Second))
 
-	testData := struct {
+	testData := []struct {
 		desc          string
+		url           string
 		respHeaderMap map[string]string
 	}{
-		desc: "Succeed, response has CORS headers",
-		respHeaderMap: map[string]string{
-			"Access-Control-Allow-Origin":      corsAllowOriginValue,
-			"Access-Control-Allow-Methods":     corsAllowMethodsValue,
-			"Access-Control-Allow-Headers":     corsAllowHeadersValue,
-			"Access-Control-Expose-Headers":    corsExposeHeadersValue,
-			"Access-Control-Allow-Credentials": corsAllowCredentialsValue,
+		{
+			// when allowCors, apiproxy passes preflight CORS request to backend
+			desc: "Succeed, response has CORS headers",
+			url:  echoHost + "/simplegetcors",
+			respHeaderMap: map[string]string{
+				"Access-Control-Allow-Origin":      corsAllowOriginValue,
+				"Access-Control-Allow-Methods":     corsAllowMethodsValue,
+				"Access-Control-Allow-Headers":     corsAllowHeadersValue,
+				"Access-Control-Expose-Headers":    corsExposeHeadersValue,
+				"Access-Control-Allow-Credentials": corsAllowCredentialsValue,
+			},
+		},
+		{
+			// when allowCors, apiproxy passes preflight CORS request without valid jwt token to backend,
+			// even the origin method requires authentication
+			desc: "Succeed without jwt token, response has CORS headers",
+			url:  echoHost + "/auth/info/firebase",
+			respHeaderMap: map[string]string{
+				"Access-Control-Allow-Origin":      corsAllowOriginValue,
+				"Access-Control-Allow-Methods":     corsAllowMethodsValue,
+				"Access-Control-Allow-Headers":     corsAllowHeadersValue,
+				"Access-Control-Expose-Headers":    corsExposeHeadersValue,
+				"Access-Control-Allow-Credentials": corsAllowCredentialsValue,
+			},
 		},
 	}
+	for _, tc := range testData {
+		respHeader, err := client.DoCorsPreflightRequest(tc.url, corsOrigin, corsRequestMethod, corsRequestHeader)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	respHeader, err := client.DoCorsPreflightRequest(echoHost+"/simplegetcors", corsOrigin, corsRequestMethod, corsRequestHeader)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for key, value := range testData.respHeaderMap {
-		if respHeader.Get(key) != value {
-			t.Errorf("%s expected: %s, got: %s", key, value, respHeader.Get(key))
+		for key, value := range tc.respHeaderMap {
+			if respHeader.Get(key) != value {
+				t.Errorf("%s expected: %s, got: %s", key, value, respHeader.Get(key))
+			}
 		}
 	}
 

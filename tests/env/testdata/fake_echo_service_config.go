@@ -43,6 +43,11 @@ var (
 						RequestTypeUrl:  "type.googleapis.com/google.protobuf.Empty",
 						ResponseTypeUrl: "type.googleapis.com/SimpleCorsMessage",
 					},
+					{
+						Name:            "Auth_info_firebase",
+						RequestTypeUrl:  "type.googleapis.com/google.protobuf.Empty",
+						ResponseTypeUrl: "type.googleapis.com/AuthInfoResponse",
+					},
 				},
 				Version: "1.0.0",
 			},
@@ -74,6 +79,12 @@ var (
 						Get: "/simplegetcors",
 					},
 				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_firebase",
+					Pattern: &annotations.HttpRule_Get{
+						Get: "/auth/info/firebase",
+					},
+				},
 			},
 		},
 		Authentication: &conf.Authentication{
@@ -100,6 +111,14 @@ var (
 				},
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_firebase",
+					Requirements: []*conf.AuthRequirement{
+						{
+							ProviderId: "google_jwt",
+						},
+					},
 				},
 			},
 		},

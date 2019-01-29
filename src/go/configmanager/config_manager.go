@@ -833,7 +833,6 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 					UriTemplate: path,
 					HttpMethod:  ut.OPTIONS,
 				}
-				// TODO(jcwang) also no need auth (jwt)
 				rulesMap[corsSelector] = []*scpb.ServiceControlRule{
 					{
 						Requires: &scpb.Requirement{
