@@ -33,8 +33,9 @@ const (
 	TestSimpleCorsWithRegexPreset
 	TestPreflightCorsWithBasicPreset
 	TestDifferentOriginPreflightCors
+	TestGrpcBackendSimpleCors
+	TestGrpcBackendPreflightCors
 	TestPreflightRequestWithAllowCors
-	TestPreflightRequestRequiredJwtWithAllowCors
 	TestGRPC
 	TestGRPCWeb
 	TestGRPCJwt
