@@ -309,6 +309,111 @@ func TestDifferentOriginPreflightCors(t *testing.T) {
 	}
 }
 
+// Simple CORS request with GRPC backend and basic preset in config manager, response should have CORS headers
+func TestGrpcBackendSimpleCors(t *testing.T) {
+	serviceName := "bookstore-service"
+	configId := "test-config-id"
+	corsAllowOriginValue := "http://cloud.google.com"
+	corsExposeHeadersValue := "custom-header-1,custom-header-2"
+
+	args := []string{"--service=" + serviceName, "--version=" + configId,
+		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--cors_preset=basic",
+		"--cors_allow_origin=" + corsAllowOriginValue,
+		"--cors_expose_headers=" + corsExposeHeadersValue}
+
+	s := env.TestEnv{
+		MockMetadata:          true,
+		MockServiceManagement: true,
+		MockServiceControl:    true,
+		MockJwtProviders:      nil,
+	}
+
+	if err := s.Setup(comp.TestGrpcBackendSimpleCors, "bookstore", args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+	defer s.TearDown()
+	time.Sleep(time.Duration(3 * time.Second))
+
+	testData := struct {
+		desc              string
+		corsAllowOrigin   string
+		corsExposeHeaders string
+	}{
+		desc:              "Succeed, response has CORS headers",
+		corsAllowOrigin:   corsAllowOriginValue,
+		corsExposeHeaders: corsExposeHeadersValue,
+	}
+	url := fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, "/v1/shelves/200")
+	respHeader, err := client.DoCorsSimpleRequest(url, "GET", corsAllowOriginValue, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if respHeader.Get("Access-Control-Allow-Origin") != testData.corsAllowOrigin {
+		t.Errorf("Access-Control-Allow-Origin expected: %s, got: %s", testData.corsAllowOrigin, respHeader.Get("Access-Control-Allow-Origin"))
+	}
+	if respHeader.Get("Access-Control-Expose-Headers") != testData.corsExposeHeaders {
+		t.Errorf("Access-Control-Expose-Headers expected: %s, got: %s", testData.corsExposeHeaders, respHeader.Get("Access-Control-Expose-Headers"))
+	}
+}
+
+// Preflight CORS request with GRPC backend and basic preset in config manager, response should have CORS headers
+func TestGrpcBackendPreflightCors(t *testing.T) {
+	serviceName := "test-echo"
+	configId := "test-config-id"
+	corsRequestMethod := "PATCH"
+	corsAllowOriginValue := "http://cloud.google.com"
+	corsAllowMethodsValue := "GET, PATCH, DELETE, OPTIONS"
+	corsAllowHeadersValue := "content-type,x-grpc-web"
+	corsExposeHeadersValue := "custom-header-1,custom-header-2"
+	corsAllowCredentialsValue := "true"
+
+	args := []string{"--service=" + serviceName, "--version=" + configId,
+		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--cors_preset=basic",
+		"--cors_allow_origin=" + corsAllowOriginValue, "--cors_allow_methods=" + corsAllowMethodsValue,
+		"--cors_allow_headers=" + corsAllowHeadersValue,
+		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
+
+	s := env.TestEnv{
+		MockMetadata:          true,
+		MockServiceManagement: true,
+		MockServiceControl:    true,
+		MockJwtProviders:      nil,
+	}
+
+	if err := s.Setup(comp.TestGrpcBackendPreflightCors, "bookstore", args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+	defer s.TearDown()
+	time.Sleep(time.Duration(3 * time.Second))
+
+	testData := struct {
+		desc          string
+		respHeaderMap map[string]string
+	}{
+		desc: "Succeed, response has CORS headers",
+		respHeaderMap: map[string]string{
+			"Access-Control-Allow-Origin":      corsAllowOriginValue,
+			"Access-Control-Allow-Methods":     corsAllowMethodsValue,
+			"Access-Control-Allow-Headers":     corsAllowHeadersValue,
+			"Access-Control-Expose-Headers":    corsExposeHeadersValue,
+			"Access-Control-Allow-Credentials": corsAllowCredentialsValue,
+		},
+	}
+
+	url := fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, "/v1/shelves/200")
+	respHeader, err := client.DoCorsPreflightRequest(url, corsAllowOriginValue, corsRequestMethod, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for key, value := range testData.respHeaderMap {
+		if respHeader.Get(key) != value {
+			t.Errorf("%s expected: %s, got: %s", key, value, respHeader.Get(key))
+		}
+	}
+}
+
 // Preflight CORS request with allowCors to allow backends to receive and respond to OPTIONS requests
 func TestPreflightRequestWithAllowCors(t *testing.T) {
 	serviceName := "echo-api.endpoints.cloudesf-testing.cloud.goog"
@@ -383,118 +488,3 @@ func TestPreflightRequestWithAllowCors(t *testing.T) {
 	}
 
 }
-
-// TODO(jcwang) re-enable it later, probably it causes "bind address already in use" somehow on prow
-//package integration
-//
-//import (
-//	"testing"
-//	"time"
-//
-//	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
-//	"cloudesf.googlesource.com/gcpproxy/tests/env"
-//)
-//
-//const (
-//	bookstoreHost = "http://localhost:8080"
-//)
-//
-//func TestGrpcBackendSimpleCors(t *testing.T) {
-//	serviceName := "bookstore-service"
-//	configId := "test-config-id"
-//	corsAllowOriginValue := "http://cloud.google.com"
-//	corsExposeHeadersValue := "custom-header-1,custom-header-2"
-//
-//	args := []string{"--service=" + serviceName, "--version=" + configId,
-//		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--cors_preset=basic",
-//		"--cors_allow_origin=" + corsAllowOriginValue,
-//		"--cors_expose_headers=" + corsExposeHeadersValue}
-//
-//	s := env.TestEnv{
-//		MockMetadata:          true,
-//		MockServiceManagement: true,
-//		MockServiceControl:    true,
-//		MockJwtProviders:      nil,
-//	}
-//
-//	if err := s.Setup("bookstore", args); err != nil {
-//		t.Fatalf("fail to setup test env, %v", err)
-//	}
-//	defer s.TearDown()
-//	time.Sleep(time.Duration(3 * time.Second))
-//
-//	testData := struct {
-//		desc              string
-//		corsAllowOrigin   string
-//		corsExposeHeaders string
-//	}{
-//		desc:              "Succeed, response has CORS headers",
-//		corsAllowOrigin:   corsAllowOriginValue,
-//		corsExposeHeaders: corsExposeHeadersValue,
-//	}
-//	respHeader, err := client.DoCorsSimpleRequest(bookstoreHost+"/v1/shelves/200", "GET", corsAllowOriginValue, "")
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//
-//	if respHeader.Get("Access-Control-Allow-Origin") != testData.corsAllowOrigin {
-//		t.Errorf("Access-Control-Allow-Origin expected: %s, got: %s", testData.corsAllowOrigin, respHeader.Get("Access-Control-Allow-Origin"))
-//	}
-//	if respHeader.Get("Access-Control-Expose-Headers") != testData.corsExposeHeaders {
-//		t.Errorf("Access-Control-Expose-Headers expected: %s, got: %s", testData.corsExposeHeaders, respHeader.Get("Access-Control-Expose-Headers"))
-//	}
-//}
-//
-//func TestGrpcBackendPreflightCors(t *testing.T) {
-//	serviceName := "test-echo"
-//	configId := "test-config-id"
-//	corsRequestMethod := "PATCH"
-//	corsAllowOriginValue := "http://cloud.google.com"
-//	corsAllowMethodsValue := "GET, PATCH, DELETE, OPTIONS"
-//	corsAllowHeadersValue := "content-type,x-grpc-web"
-//	corsExposeHeadersValue := "custom-header-1,custom-header-2"
-//	corsAllowCredentialsValue := "true"
-//
-//	args := []string{"--service=" + serviceName, "--version=" + configId,
-//		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--cors_preset=basic",
-//		"--cors_allow_origin=" + corsAllowOriginValue, "--cors_allow_methods=" + corsAllowMethodsValue,
-//		"--cors_allow_headers=" + corsAllowHeadersValue,
-//		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
-//
-//	s := env.TestEnv{
-//		MockMetadata:          true,
-//		MockServiceManagement: true,
-//		MockServiceControl:    true,
-//		MockJwtProviders:      nil,
-//	}
-//
-//	if err := s.Setup("bookstore", args); err != nil {
-//		t.Fatalf("fail to setup test env, %v", err)
-//	}
-//	defer s.TearDown()
-//	time.Sleep(time.Duration(3 * time.Second))
-//
-//	testData := struct {
-//		desc          string
-//		respHeaderMap map[string]string
-//	}{
-//		desc:          "Succeed, response has CORS headers",
-//		respHeaderMap: make(map[string]string),
-//	}
-//	testData.respHeaderMap["Access-Control-Allow-Origin"] = corsAllowOriginValue
-//	testData.respHeaderMap["Access-Control-Allow-Methods"] = corsAllowMethodsValue
-//	testData.respHeaderMap["Access-Control-Allow-Headers"] = corsAllowHeadersValue
-//	testData.respHeaderMap["Access-Control-Expose-Headers"] = corsExposeHeadersValue
-//	testData.respHeaderMap["Access-Control-Allow-Credentials"] = corsAllowCredentialsValue
-//
-//	respHeader, err := client.DoCorsPreflightRequest(bookstoreHost+"/v1/shelves/200", corsAllowOriginValue, corsRequestMethod, "")
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//
-//	for key, value := range testData.respHeaderMap {
-//		if respHeader.Get(key) != value {
-//			t.Errorf("%s expected: %s, got: %s", key, value, respHeader.Get(key))
-//		}
-//	}
-//}
