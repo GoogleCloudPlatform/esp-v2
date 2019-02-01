@@ -37,6 +37,7 @@ type TestEnv struct {
 	MockServiceManagement bool
 	MockServiceControl    bool
 	MockJwtProviders      []string
+	Ports                 *components.Ports
 
 	envoy           *components.Envoy
 	configMgr       *components.ConfigManagerServer
@@ -45,7 +46,8 @@ type TestEnv struct {
 }
 
 // SetUp setups Envoy, ConfigManager, and Backend server for test.
-func (e *TestEnv) Setup(backendService string, confArgs []string) error {
+func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) error {
+	e.Ports = components.NewPorts(name)
 	if e.MockServiceManagement {
 		fakeServiceConfig, ok := testdata.ConfigMap[backendService]
 		if !ok {
@@ -77,6 +79,9 @@ func (e *TestEnv) Setup(backendService string, confArgs []string) error {
 		confArgs = append(confArgs, "--metadata_url="+components.NewMockMetadata().GetURL())
 	}
 
+	confArgs = append(confArgs, fmt.Sprintf("--cluster_port=%v", e.Ports.BackendServerPort))
+	confArgs = append(confArgs, fmt.Sprintf("--listener_port=%v", e.Ports.ListenerPort))
+	confArgs = append(confArgs, fmt.Sprintf("--discovery_port=%v", e.Ports.DiscoveryPort))
 	var err error
 	// Starts XDS.
 	e.configMgr, err = components.NewConfigManagerServer((*debugComponents == "all" || *debugComponents == "configmanager"), confArgs)
@@ -89,8 +94,8 @@ func (e *TestEnv) Setup(backendService string, confArgs []string) error {
 	}
 
 	// Starts envoy.
-	envoyConfPath := "../../tests/env/testdata/bootstrap.yaml"
-	e.envoy, err = components.NewEnvoy((*debugComponents == "all" || *debugComponents == "envoy"), envoyConfPath)
+	envoyConfPath := "/tmp/apiproxy-testdata-bootstrap.yaml"
+	e.envoy, err = components.NewEnvoy((*debugComponents == "all" || *debugComponents == "envoy"), envoyConfPath, e.Ports)
 	if err != nil {
 		glog.Errorf("unable to create Envoy %v", err)
 		return err
@@ -104,7 +109,7 @@ func (e *TestEnv) Setup(backendService string, confArgs []string) error {
 	switch backendService {
 	case "echo":
 		// Starts Echo HTTP1 Server
-		e.echoBackend, err = components.NewEchoHTTPServer()
+		e.echoBackend, err = components.NewEchoHTTPServer(e.Ports.BackendServerPort)
 		if err != nil {
 			return err
 		}
@@ -114,7 +119,7 @@ func (e *TestEnv) Setup(backendService string, confArgs []string) error {
 		}
 
 	case "bookstore":
-		e.bookstoreServer, err = components.NewBookstoreGrpcServer()
+		e.bookstoreServer, err = components.NewBookstoreGrpcServer(e.Ports.BackendServerPort)
 		if err != nil {
 			return err
 		}
@@ -130,6 +135,7 @@ func (e *TestEnv) Setup(backendService string, confArgs []string) error {
 
 // TearDown shutdown the servers.
 func (e *TestEnv) TearDown() {
+	glog.Infof("start tearing down...")
 	if err := e.configMgr.Stop(); err != nil {
 		glog.Errorf("error stopping config manager: %v", err)
 	}
@@ -148,4 +154,5 @@ func (e *TestEnv) TearDown() {
 			glog.Errorf("error stopping Bookstore Server: %v", err)
 		}
 	}
+	glog.Infof("finish tearing down...")
 }

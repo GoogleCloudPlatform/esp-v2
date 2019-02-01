@@ -17,6 +17,7 @@ package components
 import (
 	"os"
 	"os/exec"
+	"strconv"
 	"time"
 
 	"github.com/golang/glog"
@@ -31,8 +32,8 @@ type EchoHTTPServer struct {
 	cmd *exec.Cmd
 }
 
-func NewEchoHTTPServer() (*EchoHTTPServer, error) {
-	cmd := exec.Command(echoPath)
+func NewEchoHTTPServer(port uint16) (*EchoHTTPServer, error) {
+	cmd := exec.Command(echoPath, strconv.Itoa(int(port)))
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return &EchoHTTPServer{

@@ -34,7 +34,7 @@ func NewConfigManagerServer(debugMode bool, args []string) (*ConfigManagerServer
 	if debugMode {
 		args = append(args, "--logtostderr", "--v=2")
 	}
-	glog.Infof("args: %v", args)
+	glog.Infof("config manager args: %v", args)
 	cmd := exec.Command(xDSPath, args...)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout

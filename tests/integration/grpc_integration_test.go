@@ -15,6 +15,7 @@
 package integration
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -22,11 +23,8 @@ import (
 
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
+	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
-)
-
-const (
-	addr = "127.0.0.1:8080"
 )
 
 var successTrailer, abortedTrailer, dataLossTrailer, internalTrailer client.GRPCWebTrailer
@@ -52,7 +50,7 @@ func TestGRPC(t *testing.T) {
 		MockJwtProviders:      nil,
 	}
 
-	if err := s.Setup("bookstore", args); err != nil {
+	if err := s.Setup(comp.TestGRPC, "bookstore", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -98,6 +96,7 @@ func TestGRPC(t *testing.T) {
 	}
 
 	for _, tc := range tests {
+		addr := fmt.Sprintf("localhost:%v", s.Ports.ListenerPort)
 		resp, err := client.MakeCall(tc.clientProtocol, addr, "GET", tc.method, "")
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 			t.Errorf("Test (%s): failed, expected: %s, got: %v", tc.desc, tc.wantError, err)
@@ -123,7 +122,7 @@ func TestGRPCWeb(t *testing.T) {
 		MockJwtProviders:      nil,
 	}
 
-	if err := s.Setup("bookstore", args); err != nil {
+	if err := s.Setup(comp.TestGRPCWeb, "bookstore", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -176,6 +175,7 @@ func TestGRPCWeb(t *testing.T) {
 			grpcTestValues = []string{tc.grpcTestValue}
 		}
 
+		addr := fmt.Sprintf("localhost:%v", s.Ports.ListenerPort)
 		resp, trailer, err := client.MakeGRPCWebCall(addr, tc.method, "", grpcTestValues...)
 
 		if err != nil {
@@ -207,7 +207,7 @@ func TestGRPCJwt(t *testing.T) {
 		MockJwtProviders:      []string{"google_service_account", "endpoints_jwt", "broken_provider"},
 	}
 
-	if err := s.Setup("bookstore", args); err != nil {
+	if err := s.Setup(comp.TestGRPCJwt, "bookstore", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -405,6 +405,7 @@ func TestGRPCJwt(t *testing.T) {
 	}
 
 	for _, tc := range tests {
+		addr := fmt.Sprintf("localhost:%v", s.Ports.ListenerPort)
 		resp, err := client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token)
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {

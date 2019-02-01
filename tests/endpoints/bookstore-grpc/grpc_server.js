@@ -124,6 +124,13 @@ function main() {
     GetBook: testDecorator(getBook),
     DeleteBook: testDecorator(deleteBook),
   });
+  if (process.argv.length >= 3) {
+    PORT = parseInt(process.argv[2], 10);
+    if (isNaN(PORT) || PORT < 1024 || PORT > 65535) {
+      console.log(`port ${process.argv[2]} should be integer between 1024-65535`);
+      process.exit(1);
+    }
+  }
   console.log(`listening on port ${PORT}`);
   server.bind(`0.0.0.0:${PORT}`, grpc.ServerCredentials.createInsecure());
   server.start();

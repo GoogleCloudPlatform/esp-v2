@@ -48,7 +48,14 @@ func main() {
 	if portStr := os.Getenv("PORT"); portStr != "" {
 		port, _ = strconv.Atoi(portStr)
 	}
-	fmt.Printf("Echo server is running on port: %d", port)
+	if len(os.Args) >= 2 {
+		var err error
+		port, err = strconv.Atoi(os.Args[1])
+		if err != nil || port < 1024 || port > 65535 {
+			log.Fatalf("port (%v) should be integer between 1024-65535", os.Args[1])
+		}
+	}
+	fmt.Printf("Echo server is running on port: %d\n", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
 }
 

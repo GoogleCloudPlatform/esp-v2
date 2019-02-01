@@ -93,7 +93,7 @@ func DoJWT(host, method, path, apiKey, serviceAccount, token string) ([]byte, er
 	req.Header.Add("Authorization", "Bearer "+token)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("http got error: ", err)
+		return nil, fmt.Errorf("http got error: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -127,10 +127,10 @@ func DoCorsSimpleRequest(url, httpMethod, origin, msg string) (http.Header, erro
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Origin", origin)
 	resp, err := http.DefaultClient.Do(req)
-	defer resp.Body.Close()
 	if err != nil {
 		return nil, fmt.Errorf("http got error: ", err)
 	}
+	defer resp.Body.Close()
 	return resp.Header, nil
 }
 
@@ -145,10 +145,10 @@ func DoCorsPreflightRequest(url, origin, requestMethod, requestHeader string) (h
 		req.Header.Set("Access-Control-Request-Headers", requestHeader)
 	}
 	resp, err := http.DefaultClient.Do(req)
-	defer resp.Body.Close()
 	if err != nil {
 		return nil, fmt.Errorf("http got error: ", err)
 	}
+	defer resp.Body.Close()
 	return resp.Header, nil
 }
 

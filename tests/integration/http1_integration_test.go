@@ -15,18 +15,19 @@
 package integration
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
+	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 )
 
 const (
 	echo = "hello"
-	host = "http://localhost:8080"
 )
 
 func TestHttp1Basic(t *testing.T) {
@@ -43,7 +44,7 @@ func TestHttp1Basic(t *testing.T) {
 		MockJwtProviders:      nil,
 	}
 
-	if err := s.Setup("echo", args); err != nil {
+	if err := s.Setup(comp.TestHttp1Basic, "echo", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -60,6 +61,7 @@ func TestHttp1Basic(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
+		host := fmt.Sprintf("http://localhost:%v", s.Ports.ListenerPort)
 		resp, err := client.DoEcho(host, "", echo)
 		if err != nil {
 			t.Fatal(err)
@@ -85,7 +87,7 @@ func TestHttp1JWT(t *testing.T) {
 		MockJwtProviders:      []string{"google_jwt"},
 	}
 
-	if err := s.Setup("echo", args); err != nil {
+	if err := s.Setup(comp.TestHttp1JWT, "echo", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -143,6 +145,7 @@ func TestHttp1JWT(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
+		host := fmt.Sprintf("http://localhost:%v", s.Ports.ListenerPort)
 		resp, err := client.DoJWT(host, tc.httpMethod, tc.httpPath, "", "", tc.token)
 
 		if tc.wantedError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantedError)) {

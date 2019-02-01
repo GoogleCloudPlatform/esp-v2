@@ -15,16 +15,17 @@
 package integration
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
+	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 )
 
 const (
-	echoMsg  = "hello"
-	echoHost = "http://localhost:8080"
+	echoMsg = "hello"
 )
 
 // Simple CORS request with basic preset in config manager, response should have CORS headers
@@ -46,7 +47,7 @@ func TestSimpleCorsWithBasicPreset(t *testing.T) {
 		MockJwtProviders:      nil,
 	}
 
-	if err := s.Setup("echo", args); err != nil {
+	if err := s.Setup(comp.TestSimpleCorsWithBasicPreset, "echo", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -79,7 +80,8 @@ func TestSimpleCorsWithBasicPreset(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		respHeader, err := client.DoCorsSimpleRequest(echoHost+tc.path, tc.httpMethod, corsAllowOriginValue, tc.msg)
+		url := fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, tc.path)
+		respHeader, err := client.DoCorsSimpleRequest(url, tc.httpMethod, corsAllowOriginValue, tc.msg)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -114,7 +116,7 @@ func TestDifferentOriginSimpleCors(t *testing.T) {
 		MockJwtProviders:      nil,
 	}
 
-	if err := s.Setup("echo", args); err != nil {
+	if err := s.Setup(comp.TestDifferentOriginSimpleCors, "echo", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -127,7 +129,8 @@ func TestDifferentOriginSimpleCors(t *testing.T) {
 		desc:       "Fail, response does not have CORS headers",
 		corsOrigin: corsDifferentOriginValue,
 	}
-	respHeader, err := client.DoCorsSimpleRequest(echoHost+"/echo", "POST", testData.corsOrigin, echoMsg)
+	url := fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, "/echo")
+	respHeader, err := client.DoCorsSimpleRequest(url, "POST", testData.corsOrigin, echoMsg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,7 +163,7 @@ func TestSimpleCorsWithRegexPreset(t *testing.T) {
 		MockJwtProviders:      nil,
 	}
 
-	if err := s.Setup("echo", args); err != nil {
+	if err := s.Setup(comp.TestSimpleCorsWithRegexPreset, "echo", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -175,7 +178,8 @@ func TestSimpleCorsWithRegexPreset(t *testing.T) {
 		corsAllowOrigin:   corsAllowOriginValue,
 		corsExposeHeaders: corsExposeHeadersValue,
 	}
-	respHeader, err := client.DoCorsSimpleRequest(echoHost+"/echo", "POST", corsAllowOriginValue, echoMsg)
+	url := fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, "/echo")
+	respHeader, err := client.DoCorsSimpleRequest(url, "POST", corsAllowOriginValue, echoMsg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -213,7 +217,7 @@ func TestPreflightCorsWithBasicPreset(t *testing.T) {
 		MockJwtProviders:      nil,
 	}
 
-	if err := s.Setup("echo", args); err != nil {
+	if err := s.Setup(comp.TestPreflightCorsWithBasicPreset, "echo", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -233,7 +237,8 @@ func TestPreflightCorsWithBasicPreset(t *testing.T) {
 		},
 	}
 
-	respHeader, err := client.DoCorsPreflightRequest(echoHost+"/echo", corsAllowOriginValue, corsRequestMethod, corsRequestHeader)
+	url := fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, "/echo")
+	respHeader, err := client.DoCorsPreflightRequest(url, corsAllowOriginValue, corsRequestMethod, corsRequestHeader)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -271,7 +276,7 @@ func TestDifferentOriginPreflightCors(t *testing.T) {
 		MockJwtProviders:      nil,
 	}
 
-	if err := s.Setup("echo", args); err != nil {
+	if err := s.Setup(comp.TestDifferentOriginPreflightCors, "echo", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -291,7 +296,8 @@ func TestDifferentOriginPreflightCors(t *testing.T) {
 		},
 	}
 
-	respHeader, err := client.DoCorsPreflightRequest(echoHost+"/echo", corsOrigin, corsRequestMethod, "")
+	url := fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, "/echo")
+	respHeader, err := client.DoCorsPreflightRequest(url, corsOrigin, corsRequestMethod, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -326,7 +332,7 @@ func TestPreflightRequestWithAllowCors(t *testing.T) {
 		MockJwtProviders:      nil,
 	}
 
-	if err := s.Setup("echo", args); err != nil {
+	if err := s.Setup(comp.TestPreflightRequestWithAllowCors, "echo", args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -340,7 +346,7 @@ func TestPreflightRequestWithAllowCors(t *testing.T) {
 		{
 			// when allowCors, apiproxy passes preflight CORS request to backend
 			desc: "Succeed, response has CORS headers",
-			url:  echoHost + "/simplegetcors",
+			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, "/simplegetcors"),
 			respHeaderMap: map[string]string{
 				"Access-Control-Allow-Origin":      corsAllowOriginValue,
 				"Access-Control-Allow-Methods":     corsAllowMethodsValue,
@@ -353,7 +359,7 @@ func TestPreflightRequestWithAllowCors(t *testing.T) {
 			// when allowCors, apiproxy passes preflight CORS request without valid jwt token to backend,
 			// even the origin method requires authentication
 			desc: "Succeed without jwt token, response has CORS headers",
-			url:  echoHost + "/auth/info/firebase",
+			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, "/auth/info/firebase"),
 			respHeaderMap: map[string]string{
 				"Access-Control-Allow-Origin":      corsAllowOriginValue,
 				"Access-Control-Allow-Methods":     corsAllowMethodsValue,

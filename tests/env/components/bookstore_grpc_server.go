@@ -17,6 +17,7 @@ package components
 import (
 	"os"
 	"os/exec"
+	"strconv"
 	"time"
 
 	"github.com/golang/glog"
@@ -30,8 +31,8 @@ type BookstoreGrpcServer struct {
 	cmd *exec.Cmd
 }
 
-func NewBookstoreGrpcServer() (*BookstoreGrpcServer, error) {
-	cmd := exec.Command("node", bookstorePath)
+func NewBookstoreGrpcServer(port uint16) (*BookstoreGrpcServer, error) {
+	cmd := exec.Command("node", bookstorePath, strconv.Itoa(int(port)))
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return &BookstoreGrpcServer{
