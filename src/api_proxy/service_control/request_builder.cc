@@ -513,7 +513,7 @@ const char kServiceControlConsumerProject[] =
 const char kUserAgent[] = "ESP";
 
 // Service agent label value
-// TODO: (qiwzhang) change to CloudESF
+// TODO: (qiwzhang) change to CloudESF: b/123950588
 const char kServiceAgentPrefix[] = "ESP/0.1";
 
 // /credential_id

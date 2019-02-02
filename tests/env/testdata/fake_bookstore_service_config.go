@@ -22,8 +22,9 @@ import (
 
 var (
 	FakeBookstoreConfig = &conf.Service{
-		Name:  "bookstore.endpoints.cloudesf-testing.cloud.goog",
-		Title: "Bookstore gRPC API",
+		Name:              "bookstore.endpoints.cloudesf-testing.cloud.goog",
+		Title:             "Bookstore gRPC API",
+		ProducerProjectId: "producer project",
 		Apis: []*api.Api{
 			{
 				Name: "endpoints.examples.bookstore.Bookstore",
@@ -72,7 +73,7 @@ var (
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.CreateBook",
 					Pattern: &annotations.HttpRule_Post{
-						Post: "/v1/shelves/{shelf}/books/",
+						Post: "/v1/shelves/{shelf}/books",
 					},
 					Body: "book",
 				},

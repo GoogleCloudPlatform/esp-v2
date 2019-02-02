@@ -29,7 +29,7 @@ namespace HttpFilters {
 namespace ServiceControl {
 namespace {
 
-const char KApplicationProto[] = "application/x-protobuf";
+const std::string KApplicationProto("application/x-protobuf");
 
 class HttpCallImpl : public HttpCall,
                      public Logger::Loggable<Logger::Id::filter>,
@@ -75,8 +75,8 @@ class HttpCallImpl : public HttpCall,
     message->headers().insertAuthorization().value(token_value.data(),
                                                    token_value.size());
 
-    message->headers().insertContentType().value(KApplicationProto,
-                                                 sizeof(KApplicationProto));
+    message->headers().insertContentType().value(KApplicationProto.data(),
+                                                 KApplicationProto.size());
     return message;
   }
 
@@ -110,15 +110,9 @@ class HttpCallImpl : public HttpCall,
                          len);
     }
     if (status_code == enumToInt(Http::Code::OK)) {
-      if (!body.empty()) {
-        ENVOY_LOG(debug, "http call [uri = {}]: success with body {}", uri_,
-                  body);
-        on_done_(Status::OK, body);
-      } else {
-        ENVOY_LOG(debug, "http call [uri = {}]: empty response", uri_);
-        on_done_(Status(Code::INTERNAL, "Failed to call service control"),
-                 body);
-      }
+      ENVOY_LOG(debug, "http call [uri = {}]: success with body {}", uri_,
+                body);
+      on_done_(Status::OK, body);
     } else {
       ENVOY_LOG(debug, "http call response status code: {}, body: {}",
                 status_code, body);

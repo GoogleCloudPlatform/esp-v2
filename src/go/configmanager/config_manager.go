@@ -53,11 +53,12 @@ import (
 )
 
 const (
-	statPrefix          = "ingress_http"
-	routeName           = "local_route"
-	virtualHostName     = "backend"
-	fetchConfigSuffix   = "/v1/services/$serviceName/configs/$configId?view=FULL"
-	fetchRolloutsSuffix = "/v1/services/$serviceName/rollouts?filter=status=SUCCESS"
+	statPrefix                = "ingress_http"
+	routeName                 = "local_route"
+	virtualHostName           = "backend"
+	fetchConfigSuffix         = "/v1/services/$serviceName/configs/$configId?view=FULL"
+	fetchRolloutsSuffix       = "/v1/services/$serviceName/rollouts?filter=status=SUCCESS"
+	serviceControlClusterName = "service-control-cluster"
 )
 
 var (
@@ -225,6 +226,10 @@ func (m *ConfigManager) updateSnapshot() error {
 	if err != nil {
 		return fmt.Errorf("fail to initialize config manager, %s", err)
 	}
+	// This should be always true for the one fetched from production servicemanagment
+	// But it may not be so for the ones fetched from mock servicemanagement for integation tests.
+	// Hence use the one from serviceConfig to override it.
+	m.serviceName = m.serviceConfig.GetName()
 	m.Infof("got service configuration: %v", m.serviceConfig)
 	snapshot, err := m.makeSnapshot()
 	if err != nil {
@@ -372,7 +377,7 @@ func (m *ConfigManager) makeServiceControlCluster() (*v2.Cluster, error) {
 	}
 
 	c := &v2.Cluster{
-		Name:            "service_control_cluster",
+		Name:            serviceControlClusterName,
 		LbPolicy:        v2.Cluster_ROUND_ROBIN,
 		ConnectTimeout:  5 * time.Second,
 		DnsLookupFamily: v2.Cluster_V4_ONLY,
@@ -742,7 +747,7 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 		TokenCluster:      "ads_cluster",
 		ServiceControlUri: &scpb.HttpUri{
 			Uri:     m.serviceControlURI,
-			Cluster: "service_control_cluster",
+			Cluster: serviceControlClusterName,
 			Timeout: &duration.Duration{Seconds: 5},
 		},
 	}

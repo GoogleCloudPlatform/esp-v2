@@ -39,10 +39,11 @@ type TestEnv struct {
 	MockJwtProviders      []string
 	Ports                 *components.Ports
 
-	envoy           *components.Envoy
-	configMgr       *components.ConfigManagerServer
-	echoBackend     *components.EchoHTTPServer
-	bookstoreServer *components.BookstoreGrpcServer
+	envoy                *components.Envoy
+	configMgr            *components.ConfigManagerServer
+	echoBackend          *components.EchoHTTPServer
+	bookstoreServer      *components.BookstoreGrpcServer
+	ServiceControlServer *components.MockServiceCtrl
 }
 
 // SetUp setups Envoy, ConfigManager, and Backend server for test.
@@ -64,6 +65,11 @@ func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) e
 				auth := fakeServiceConfig.GetAuthentication()
 				auth.Providers = append(auth.Providers, provider)
 			}
+		}
+
+		if e.MockServiceControl {
+			e.ServiceControlServer = components.NewMockServiceCtrl(fakeServiceConfig.GetName())
+			testdata.SetFakeControlEnvironment(fakeServiceConfig, e.ServiceControlServer.GetURL())
 		}
 
 		marshaler := &jsonpb.Marshaler{}

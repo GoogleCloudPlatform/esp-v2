@@ -22,8 +22,9 @@ import (
 
 var (
 	FakeEchoConfig = &conf.Service{
-		Name:  "echo-api.endpoints.cloudesf-testing.cloud.goog",
-		Title: "Endpoints Example",
+		Name:              "echo-api.endpoints.cloudesf-testing.cloud.goog",
+		Title:             "Endpoints Example",
+		ProducerProjectId: "producer-project",
 		Apis: []*api.Api{
 			{
 				Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",

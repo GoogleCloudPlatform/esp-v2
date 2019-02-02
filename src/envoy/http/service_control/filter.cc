@@ -210,7 +210,7 @@ void Filter::setDecoderFilterCallbacks(
   decoder_callbacks_ = &callbacks;
 }
 
-void Filter::log(const HeaderMap * /*request_headers*/,
+void Filter::log(const HeaderMap *request_headers,
                  const HeaderMap * /*response_headers*/,
                  const HeaderMap * /*response_trailers*/,
                  const StreamInfo::StreamInfo &stream_info) {
@@ -236,12 +236,27 @@ void Filter::log(const HeaderMap * /*request_headers*/,
   info.api_version = api_version_;
   info.log_message = operation_name_ + " is called";
 
-  info.url = operation_name_;
-  info.method = http_method_;
+  if (request_headers) {
+    if (request_headers->Path()) {
+      info.url = request_headers->Path()->value().c_str();
+    }
+    if (request_headers->Method()) {
+      info.method = request_headers->Method()->value().c_str();
+    }
+  }
 
   info.check_response_info = check_response_info_;
   info.response_code = stream_info.responseCode().value_or(500);
   info.status = check_status_;
+
+  // TODO(qiwzhang): figure out frontend_protocol and backend_protocol:
+  // b/123948413
+
+  // TODO(qiwzhang): figure out platform: b/123950206
+
+  // TODO(qiwzhang): figure out backend latency: b/123950502
+
+  // TODO(qiwzhang): sending streaming multiple reports: b/123950356
 
   info.response_code = stream_info.responseCode().value_or(500);
   info.request_size = stream_info.bytesReceived();

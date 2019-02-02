@@ -41,6 +41,7 @@ const (
 	TestGRPCJwt
 	TestHttp1Basic
 	TestHttp1JWT
+	TestServiceControlBasic
 
 	// The number of total tests. has to be the last one.
 	maxTestNum

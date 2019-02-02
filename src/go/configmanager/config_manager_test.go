@@ -672,7 +672,7 @@ func TestFetchListeners(t *testing.T) {
 												"services":[
 													{
 														"service_control_uri":{
-															"cluster":"service_control_cluster",
+															"cluster":"service-control-cluster",
 															"timeout":"5s",
 															"uri":"https://servicecontrol.googleapis.com/v1/services/"
 														},
@@ -916,7 +916,7 @@ func TestFetchListeners(t *testing.T) {
 			                  "producer_project_id": "project123",
 			                  "service_config_id": "2017-05-01r0",
 			                  "service_control_uri": {
-			                    "cluster": "service_control_cluster",
+			                    "cluster": "service-control-cluster",
 			                    "timeout": "5s",
 			                    "uri": "https://servicecontrol.googleapis.com/v1/services/"
 			                  },
@@ -1048,7 +1048,7 @@ func TestFetchClusters(t *testing.T) {
                 "type":"STRICT_DNS",
                 "http2ProtocolOptions": {}
 	        }`, *flags.ClusterAddress, *flags.ClusterPort, testEndpointName, *flags.ClusterConnectTimeout/1e9),
-				`{"name": "service_control_cluster",
+				`{"name": "service-control-cluster",
 		"connectTimeout": "5s",
 		"type": "LOGICAL_DNS",
 		"dnsLookupFamily": "V4_ONLY",
@@ -1090,7 +1090,7 @@ func TestFetchClusters(t *testing.T) {
                 "connectTimeout": "%ds",
                 "type":"STRICT_DNS"
            }`, *flags.ClusterAddress, *flags.ClusterPort, testEndpointName, *flags.ClusterConnectTimeout/1e9),
-				`{"name": "service_control_cluster",
+				`{"name": "service-control-cluster",
 		"connectTimeout": "5s",
 		"type": "LOGICAL_DNS",
 		"dnsLookupFamily": "V4_ONLY",

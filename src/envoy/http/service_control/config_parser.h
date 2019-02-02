@@ -20,8 +20,8 @@
 #include "envoy/thread_local/thread_local.h"
 #include "src/api_proxy/path_matcher/path_matcher.h"
 #include "src/api_proxy/service_control/request_builder.h"
-#include "src/envoy/utils/token_subscriber.h"
 #include "src/envoy/http/service_control/client_cache.h"
+#include "src/envoy/utils/token_subscriber.h"
 
 #include <list>
 #include <unordered_map>
@@ -56,19 +56,21 @@ class ThreadLocalCache : public ThreadLocal::ThreadLocalObject {
   ClientCache client_cache_;
 };
 
-class ServiceContext :
-  public Utils::TokenSubscriber::Callback {
+class ServiceContext : public Utils::TokenSubscriber::Callback {
  public:
   ServiceContext(
       const ::google::api::envoy::http::service_control::Service& proto_config,
       Server::Configuration::FactoryContext& context)
       : proto_config_(proto_config),
+        // TODO(qiwzhang): need to load log_metrics from service config:
+        // b/123961100
         request_builder_({"endpoints_log"}, proto_config_.service_name(),
                          proto_config_.service_config_id()),
         tls_(context.threadLocal().allocateSlot()),
         token_subscriber_(
-            context, Utils::makeClinetFactory(context,
-              proto_config_.token_cluster()), *this) {
+            context,
+            Utils::makeClinetFactory(context, proto_config_.token_cluster()),
+            *this) {
     tls_->set([this,
                &cm = context.clusterManager()](Event::Dispatcher& dispatcher)
                   -> ThreadLocal::ThreadLocalObjectSharedPtr {

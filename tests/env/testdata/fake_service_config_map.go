@@ -50,3 +50,9 @@ func init() {
 	}
 	ConfigMap["bookstore"] = FakeBookstoreConfig
 }
+
+func SetFakeControlEnvironment(cfg *conf.Service, url string) {
+	cfg.Control = &conf.Control{
+		Environment: url,
+	}
+}
