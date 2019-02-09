@@ -113,6 +113,12 @@ const expectedReport = `
             >
           >
           metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/consumer/request_bytes"
+            metric_values: <
+              int64_value: 39
+            >
+          >
+          metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/consumer/request_count"
             metric_values: <
               int64_value: 1
@@ -142,6 +148,12 @@ const expectedReport = `
                   scale: 1
                 >
               >
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/consumer/response_bytes"
+            metric_values: <
+              int64_value: 208
             >
           >
           metric_value_sets: <
@@ -177,6 +189,12 @@ const expectedReport = `
             >
           >
           metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/request_bytes"
+            metric_values: <
+              int64_value: 39
+            >
+          >
+          metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/producer/request_count"
             metric_values: <
               int64_value: 1
@@ -206,6 +224,12 @@ const expectedReport = `
                   scale: 1
                 >
               >
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/response_bytes"
+            metric_values: <
+              int64_value: 208
             >
           >
           metric_value_sets: <
@@ -310,6 +334,8 @@ func TestCreateReport(t *testing.T) {
 		LogMessage:        "Method: ListShelves",
 		RequestSize:       39,
 		ResponseSize:      208,
+		RequestBytes:      39,
+		ResponseBytes:     208,
 		ResponseCode:      503,
 		ErrorType:         "5xx",
 	})

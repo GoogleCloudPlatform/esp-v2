@@ -77,6 +77,7 @@ envoy_cc_library(
         "//api/envoy/http/service_control:config_proto_cc",
         "//src/api_proxy/path_matcher:path_matcher_lib",
         "//src/api_proxy/service_control:request_builder_lib",
+        "//src/api_proxy/service_control:logs_metrics_loader_lib",
         "//src/envoy/utils:token_subscriber_lib",
         "@envoy//source/common/protobuf:utility_lib",
     ],

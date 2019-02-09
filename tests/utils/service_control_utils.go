@@ -330,9 +330,8 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 		createDistMetricSet(&sizeDistOptions,
 			"serviceruntime.googleapis.com/api/producer/request_sizes", er.RequestSize),
 
-		// TODO (qiwzhang): add them back after b/123961100
-		// createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/request_bytes", er.RequestBytes),
-		// createInt64MetricSet("serviceruntime.googleapis.com/api/producer/request_bytes", er.RequestBytes),
+		createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/request_bytes", er.RequestBytes),
+		createInt64MetricSet("serviceruntime.googleapis.com/api/producer/request_bytes", er.RequestBytes),
 	}
 	// TODO(qiwzhang): add latency metrics b/123950502
 	//	for name, _ := range randomMatrics {
@@ -343,11 +342,10 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 			createDistMetricSet(&sizeDistOptions,
 				"serviceruntime.googleapis.com/api/consumer/response_sizes", er.ResponseSize),
 			createDistMetricSet(&sizeDistOptions,
-				"serviceruntime.googleapis.com/api/producer/response_sizes", er.ResponseSize))
+				"serviceruntime.googleapis.com/api/producer/response_sizes", er.ResponseSize),
 
-		// TODO (qiwzhang): add them back after b/123961100
-		// createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/response_bytes", er.ResponseBytes),
-		//createInt64MetricSet("serviceruntime.googleapis.com/api/producer/response_bytes", er.ResponseBytes))
+			createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/response_bytes", er.ResponseBytes),
+			createInt64MetricSet("serviceruntime.googleapis.com/api/producer/response_bytes", er.ResponseBytes))
 	}
 	if er.ErrorType != "" {
 		ms = append(ms,

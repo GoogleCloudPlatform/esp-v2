@@ -45,6 +45,7 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/duration"
 	sm "github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
 	"google.golang.org/genproto/googleapis/api/annotations"
@@ -735,6 +736,24 @@ func (m *ConfigManager) getEndpointAllowCorsFlag() bool {
 	return false
 }
 
+func copyServiceConfigForReportMetrics(src *conf.Service) *any.Any {
+	// Logs and metrics fields are needed by the Envoy HTTP filter
+	// to generate proper Metrics for Report calls.
+	copy := &conf.Service{
+		Logs:               src.GetLogs(),
+		Metrics:            src.GetMetrics(),
+		MonitoredResources: src.GetMonitoredResources(),
+		Monitoring:         src.GetMonitoring(),
+		Logging:            src.GetLogging(),
+	}
+	a, err := ptypes.MarshalAny(copy)
+	if err != nil {
+		glog.Warningf("failed to copy certain service config, error: %v", err)
+		return nil
+	}
+	return a
+}
+
 func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendProtocol ut.BackendProtocol) *hcm.HttpFilter {
 	if m.serviceConfig.GetControl().GetEnvironment() == "" {
 		return nil
@@ -750,6 +769,7 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 			Cluster: serviceControlClusterName,
 			Timeout: &duration.Duration{Seconds: 5},
 		},
+		ServiceConfig: copyServiceConfigForReportMetrics(m.serviceConfig),
 	}
 
 	rulesMap := make(map[string][]*scpb.ServiceControlRule)
@@ -873,7 +893,10 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 		}
 	}
 
-	scs, _ := util.MessageToStruct(filterConfig)
+	scs, err := ut.MessageToStruct(filterConfig)
+	if err != nil {
+		glog.Warningf("failed to convert message to struct: %v", err)
+	}
 	filter := &hcm.HttpFilter{
 		Name:       ut.ServiceControl,
 		ConfigType: &hcm.HttpFilter_Config{scs},

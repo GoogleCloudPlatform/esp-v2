@@ -70,6 +70,7 @@ func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) e
 		if e.MockServiceControl {
 			e.ServiceControlServer = components.NewMockServiceCtrl(fakeServiceConfig.GetName())
 			testdata.SetFakeControlEnvironment(fakeServiceConfig, e.ServiceControlServer.GetURL())
+			testdata.AppendLogMetrics(fakeServiceConfig)
 		}
 
 		marshaler := &jsonpb.Marshaler{}

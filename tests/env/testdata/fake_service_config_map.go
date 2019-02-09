@@ -18,6 +18,7 @@ import (
 	"io/ioutil"
 
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	any "github.com/golang/protobuf/ptypes/any"
 	"github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
@@ -55,4 +56,17 @@ func SetFakeControlEnvironment(cfg *conf.Service, url string) {
 	cfg.Control = &conf.Control{
 		Environment: url,
 	}
+}
+
+func AppendLogMetrics(cfg *conf.Service) {
+	txt, err := ioutil.ReadFile("../env/testdata/logs_metrics.pb.txt")
+	if err != nil {
+		glog.Errorf("error reading logs_metrics.pb.txt, %s", err)
+	}
+
+	lm := &conf.Service{}
+	if err = proto.UnmarshalText(string(txt), lm); err != nil {
+		glog.Errorf("failed to parse the text from logs_metrics.pb.txt, %s", err)
+	}
+	proto.Merge(cfg, lm)
 }

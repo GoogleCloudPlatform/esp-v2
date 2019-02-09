@@ -101,6 +101,8 @@ func TestServiceControlBasic(t *testing.T) {
 			LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo is called",
 			RequestSize:       20,
 			ResponseSize:      19,
+			RequestBytes:      20,
+			ResponseBytes:     19,
 			ResponseCode:      200,
 		}) {
 			t.Errorf("Report request data doesn't match.")

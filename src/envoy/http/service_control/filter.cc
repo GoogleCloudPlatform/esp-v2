@@ -260,7 +260,12 @@ void Filter::log(const HeaderMap *request_headers,
 
   info.response_code = stream_info.responseCode().value_or(500);
   info.request_size = stream_info.bytesReceived();
+  // TODO(qiwzhang): b/123950356, multiple reports will be send for long duration requests.
+  // request_bytes is number of bytes when an intermediate Report is sending.
+  // For now, we only send the final report, request_bytes is the same as request_size.
+  info.request_bytes = stream_info.bytesReceived();
   info.response_size = stream_info.bytesSent();
+  info.response_bytes = stream_info.bytesSent();
 
   ::google::api::servicecontrol::v1::ReportRequest report_request;
   require_ctx_->service_ctx().builder().FillReportRequest(info,

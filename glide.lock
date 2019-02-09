@@ -1,5 +1,5 @@
 hash: b314f29671bf8d6d6808f388c5dc12585ebdb33abca70f72b22c891c9027fbdf
-updated: 2019-01-29T11:32:29.743164633-08:00
+updated: 2019-02-08T21:58:27.199038778Z
 imports:
 - name: cloud.google.com/go
   version: 2a912322007f3a7f0b4e7e96ba0dfd8c4f347d33
@@ -61,6 +61,7 @@ imports:
 - name: github.com/google/go-genproto
   version: c830210a61dfaa790e1920f8d0470fc27bc2efbe
   subpackages:
+  - googleapis/api/servicecontrol/v1
   - googleapis/api/servicemanagement/v1
 - name: github.com/gorilla/mux
   version: 3d80bc801bb034e17cae38591335b3b1110f1c47
@@ -123,8 +124,10 @@ imports:
   - googleapis/api/metric
   - googleapis/api/monitoredres
   - googleapis/api/serviceconfig
+  - googleapis/logging/type
   - googleapis/longrunning
   - googleapis/rpc/status
+  - googleapis/type/money
   - opencensus
   - protobuf
   - protobuf/api

@@ -580,6 +580,19 @@ func TestFetchListeners(t *testing.T) {
 				"control" : {
 					"environment": "servicecontrol.googleapis.com"
 				},
+                                "logging": {
+                                   "producerDestinations": [{
+                                       "logs": [
+				          "endpoints_log"
+				       ],
+				       "monitoredResource": "api"
+				   }]
+				},
+				"logs": [
+				    {
+				       "name": "endpoints_log"
+				    }
+				],
 				"apis":[
 					{
 						"name":"%s",
@@ -679,7 +692,12 @@ func TestFetchListeners(t *testing.T) {
 														"service_name":"%s",
 														"service_config_id":"%s",
 														"producer_project_id":"%s",
-														"token_cluster": "ads_cluster"
+														"token_cluster": "ads_cluster",
+														"service_config":{
+														   "@type":"type.googleapis.com/google.api.Service",
+														   "logging":{"producer_destinations":[{"logs":["endpoints_log"],"monitored_resource":"api"}]},
+														   "logs":[{"name":"endpoints_log"}]
+														 }
 													}
 												]
 											},
@@ -921,7 +939,8 @@ func TestFetchListeners(t *testing.T) {
 			                    "uri": "https://servicecontrol.googleapis.com/v1/services/"
 			                  },
 			                  "service_name": "%s",
-			                  "token_cluster": "ads_cluster"
+			                  "token_cluster": "ads_cluster",
+					  "service_config":{"@type":"type.googleapis.com/google.api.Service"}
 			                }
 			              ]
 			            },
@@ -983,7 +1002,9 @@ func TestFetchListeners(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			marshaler := &jsonpb.Marshaler{}
+			marshaler := &jsonpb.Marshaler{
+				AnyResolver: ut.Resolver,
+			}
 			gotListeners, err := marshaler.MarshalToString(resp.Resources[0])
 			if err != nil {
 				t.Fatal(err)
