@@ -31,13 +31,13 @@ func TestServiceControlBasic(t *testing.T) {
 	configId := "test-config-id"
 
 	args := []string{"--service=" + serviceName, "--version=" + configId,
-		"--skip_jwt_authn_filter", "--backend_protocol=http1", "--rollout_strategy=fixed"}
+		"--backend_protocol=http1", "--rollout_strategy=fixed"}
 
 	s := env.TestEnv{
 		MockMetadata:          true,
 		MockServiceManagement: true,
 		MockServiceControl:    true,
-		MockJwtProviders:      nil,
+		MockJwtProviders:      []string{"google_jwt"},
 	}
 
 	if err := s.Setup(comp.TestServiceControlBasic, "echo", args); err != nil {
@@ -97,6 +97,7 @@ func TestServiceControlBasic(t *testing.T) {
 			ApiKey:            "api-key",
 			ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
 			ProducerProjectID: "producer-project",
+			ConsumerProjectID: "123456",
 			HttpMethod:        "POST",
 			LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo is called",
 			RequestSize:       20,

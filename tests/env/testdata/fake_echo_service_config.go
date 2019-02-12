@@ -75,6 +75,13 @@ var (
 					Body: "message",
 				},
 				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey",
+					Pattern: &annotations.HttpRule_Post{
+						Post: "/echo/nokey",
+					},
+					Body: "message",
+				},
+				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
 					Pattern: &annotations.HttpRule_Get{
 						Get: "/simplegetcors",
@@ -120,6 +127,14 @@ var (
 							ProviderId: "google_jwt",
 						},
 					},
+				},
+			},
+		},
+		Usage: &conf.Usage{
+			Rules: []*conf.UsageRule{
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey",
+					AllowUnregisteredCalls: true,
 				},
 			},
 		},

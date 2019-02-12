@@ -66,6 +66,11 @@ const expectedReport = `
         service_name: "SERVICE_NAME"
         operations: <
           operation_name: "ListShelves"
+          consumer_id: "api_key:api-key"
+          labels: <
+            key: "/credential_id"
+            value: "apikey:api-key"
+          >
           labels: <
             key: "/error_type"
             value: "5xx"
@@ -263,6 +268,12 @@ const expectedReport = `
             severity: ERROR
             struct_payload: <
               fields: <
+                key: "api_key"
+                value: <
+                  string_value: "api-key"
+                >
+              >
+              fields: <
                 key: "api_method"
                 value: <
                   string_value: "ListShelves"
@@ -319,6 +330,122 @@ const expectedReport = `
             >
           >
         >
+        operations: <
+          operation_name: "ListShelves"
+          consumer_id: "api_key:api-key"
+          labels: <
+            key: "/credential_id"
+            value: "apikey:api-key"
+          >
+          labels: <
+            key: "/error_type"
+            value: "5xx"
+          >
+          labels: <
+            key: "/protocol"
+            value: "unknown"
+          >
+          labels: <
+            key: "/response_code"
+            value: "503"
+          >
+          labels: <
+            key: "/response_code_class"
+            value: "5xx"
+          >
+          labels: <
+            key: "/status_code"
+            value: "14"
+          >
+          labels: <
+            key: "cloud.googleapis.com/location"
+            value: "us-central1"
+          >
+          labels: <
+            key: "servicecontrol.googleapis.com/platform"
+            value: "unknown"
+          >
+          labels: <
+            key: "servicecontrol.googleapis.com/service_agent"
+            value: "ESP/"
+          >
+          labels: <
+            key: "servicecontrol.googleapis.com/user_agent"
+            value: "ESP"
+          >
+          labels: <
+            key: "serviceruntime.googleapis.com/api_method"
+            value: "ListShelves"
+          >
+          labels: <
+            key: "serviceruntime.googleapis.com/consumer_project"
+            value: "123456"
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/error_count"
+            metric_values: <
+              int64_value: 1
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/request_count"
+            metric_values: <
+              int64_value: 1
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/request_sizes"
+            metric_values: <
+              distribution_value: <
+                count: 1
+                mean: 39
+                minimum: 39
+                maximum: 39
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 1
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                exponential_buckets: <
+                  num_finite_buckets: 8
+                  growth_factor: 10
+                  scale: 1
+                >
+              >
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/response_sizes"
+            metric_values: <
+              distribution_value: <
+                count: 1
+                mean: 208
+                minimum: 208
+                maximum: 208
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 1
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                exponential_buckets: <
+                  num_finite_buckets: 8
+                  growth_factor: 10
+                  scale: 1
+                >
+              >
+            >
+          >
+        >
         service_config_id: "SERVICE_CONFIG_ID"
 `
 
@@ -328,7 +455,9 @@ func TestCreateReport(t *testing.T) {
 		ServiceConfigID:   "SERVICE_CONFIG_ID",
 		URL:               "/shelves",
 		ApiMethod:         "ListShelves",
+		ApiKey:            "api-key",
 		ProducerProjectID: "endpoints-test",
+		ConsumerProjectID: "123456",
 		Location:          "us-central1",
 		HttpMethod:        "GET",
 		LogMessage:        "Method: ListShelves",

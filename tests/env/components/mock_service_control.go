@@ -23,6 +23,9 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/gorilla/mux"
+
+	"github.com/golang/protobuf/proto"
+	sc "github.com/google/go-genproto/googleapis/api/servicecontrol/v1"
 )
 
 type ServiceRequestType int
@@ -71,6 +74,19 @@ func (h *serviceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write(h.resp.resp_body)
 }
 
+func setOKCheckResponse() []byte {
+	req := &sc.CheckResponse{
+		CheckInfo: &sc.CheckResponse_CheckInfo{
+			ConsumerInfo: &sc.CheckResponse_ConsumerInfo{
+				ProjectNumber: 123456,
+			},
+		},
+	}
+
+	req_b, _ := proto.Marshal(req)
+	return req_b
+}
+
 // NewMockServiceCtrl creates a new HTTP server.
 func NewMockServiceCtrl(service string) *MockServiceCtrl {
 	m := &MockServiceCtrl{
@@ -79,7 +95,7 @@ func NewMockServiceCtrl(service string) *MockServiceCtrl {
 
 	m.check_resp = &serviceResponse{
 		req_type:  CHECK_REQUEST,
-		resp_body: []byte(""),
+		resp_body: setOKCheckResponse(),
 	}
 	m.check_handler = &serviceHandler{
 		m:    m,
