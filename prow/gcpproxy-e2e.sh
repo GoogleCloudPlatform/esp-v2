@@ -17,3 +17,29 @@
 echo '======================================================='
 echo '=====================   e2e test  ====================='
 echo '======================================================='
+
+PROJECT_ID="api_proxy_e2e_test"
+app="bookstore"
+
+# Fail on any error.
+set -e
+# Display commands being run.
+set -u
+
+WD=$(dirname "$0")
+WD=$(cd "$WD"; pwd)
+ROOT=$(dirname "$WD")
+
+uniqueID=test
+
+function e2eGKE() {
+  ${ROOT}/tests/e2e/scripts/e2e-kube.sh \
+  -c $1 \
+  -t $2 \
+  -g $3 \
+  -R $4 \
+  -i ${uniqueID} \
+  -a ${uniqueID}.${PROJECT_ID}.appspot.com
+}
+
+e2eGKE "tight" "http" "bookstore" "fixed"
