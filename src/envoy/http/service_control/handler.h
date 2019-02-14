@@ -71,6 +71,8 @@ class Handler : public Logger::Loggable<Logger::Id::filter> {
           locations);
   void fillOperationInfo(
       ::google::api_proxy::service_control::OperationInfo& info);
+  void fillGCPInfo(
+      ::google::api_proxy::service_control::ReportRequestInfo& info);
   void onCheckResponse(
       Http::HeaderMap& headers, const ::google::protobuf::util::Status& status,
       const ::google::api_proxy::service_control::CheckResponseInfo&

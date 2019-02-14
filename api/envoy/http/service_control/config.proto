@@ -67,10 +67,22 @@ message Service {
   google.protobuf.Any service_config = 7;
 }
 
+message GcpAttributes {
+  // GCP Project ID
+  string project_id = 1;
+  // The zone where the GCP proxy is running (e.g. us-west-1)
+  string zone = 2;
+  // Platform where the GCP Proxy is running: GAE_PLEX, GKE, GCE, or UNKNOWN
+  string platform = 3;
+}
+
 message FilterConfig {
   // A list of services supported on this Envoy server.
   repeated Service services = 1; // ref:multi-service
 
   // The requirement rules for incoming requests.
   repeated ServiceControlRule rules = 2;
+
+  // GCP-related attributes.
+  GcpAttributes gcp_attributes = 3;
 }

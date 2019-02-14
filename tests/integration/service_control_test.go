@@ -82,6 +82,7 @@ func TestServiceControlBasic(t *testing.T) {
 					RequestBytes:      20,
 					ResponseBytes:     19,
 					ResponseCode:      200,
+					Platform:          "GAE Flex",
 				},
 			},
 		},
@@ -106,6 +107,7 @@ func TestServiceControlBasic(t *testing.T) {
 					RequestBytes:      20,
 					ResponseBytes:     19,
 					ResponseCode:      200,
+					Platform:          "GAE Flex",
 				},
 			},
 		},
@@ -124,6 +126,7 @@ func TestServiceControlBasic(t *testing.T) {
 		if err1 != nil {
 			t.Fatalf("GetRequests returns error: %v", err1)
 		}
+
 		for i, wantScRequest := range tc.wantScRequests {
 			switch wantScRequest.(type) {
 			case *utils.ExpectedCheck:

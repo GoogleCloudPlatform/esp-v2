@@ -33,6 +33,11 @@ const (
 	// rollout strategy
 	FixedRolloutStrategy   = "fixed"
 	ManagedRolloutStrategy = "managed"
+
+	// Platforms
+	GAEFlex = "GAE_FLEX"
+	GKE     = "GKE"
+	GCE     = "GCE"
 )
 
 type BackendProtocol int32

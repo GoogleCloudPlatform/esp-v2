@@ -131,6 +131,31 @@ void Handler::fillOperationInfo(
   info.request_start_time = std::chrono::system_clock::now();
 }
 
+void Handler::fillGCPInfo(
+    ::google::api_proxy::service_control::ReportRequestInfo& info) {
+  const auto &filter_config = config_->config();
+  if (!filter_config.has_gcp_attributes()) {
+    info.compute_platform = ::google::api_proxy::service_control::compute_platform::UNKNOWN;
+    return;
+  }
+
+  const auto &gcp_attributes = filter_config.gcp_attributes();
+  if (!gcp_attributes.zone().empty()) {
+    info.location = gcp_attributes.zone();
+  }
+
+  const std::string &platform = gcp_attributes.platform();
+  if (platform == "GAE_FLEX") {
+    info.compute_platform = ::google::api_proxy::service_control::compute_platform::GAE_FLEX;
+  } else if (platform == "GKE") {
+    info.compute_platform = ::google::api_proxy::service_control::compute_platform::GKE;
+  } else if (platform == "GCE") {
+    info.compute_platform = ::google::api_proxy::service_control::compute_platform::GCE;
+  } else {
+    info.compute_platform = ::google::api_proxy::service_control::compute_platform::UNKNOWN;
+  }
+}
+
 void Handler::callCheck(Http::HeaderMap &headers, CheckDoneCallback &callback) {
   check_callback_ = &callback;
 
@@ -197,7 +222,7 @@ void Handler::callReport(const Http::HeaderMap * /*response_headers*/,
   // TODO(qiwzhang): figure out frontend_protocol and backend_protocol:
   // b/123948413
 
-  // TODO(qiwzhang): figure out platform: b/123950206
+  fillGCPInfo(info);
 
   // TODO(qiwzhang): figure out backend latency: b/123950502
 

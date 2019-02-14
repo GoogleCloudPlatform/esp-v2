@@ -640,6 +640,9 @@ func TestFetchListeners(t *testing.T) {
 									"http_filters":[
 										{
 											"config":{
+												"gcp_attributes":{
+													"platform": "GCE"
+												},
 												"rules":[
 													{
 														"pattern": {
@@ -904,6 +907,9 @@ func TestFetchListeners(t *testing.T) {
 			        "http_filters": [
 			          {
 			            "config": {
+						  "gcp_attributes":{
+						 	 "platform": "GCE"
+						  },
 			              "rules": [
 			                {
 			                  "pattern": {
@@ -1544,10 +1550,13 @@ func runTest(t *testing.T, testRolloutStrategy string, f func(*testEnv)) {
 		return mockRollout.URL
 	}
 
-	mockMetadata := initMockMetadataServer(fakeToken)
+	mockMetadata := initMockMetadataServerFromPathResp(
+		map[string]string{
+			serviceAccountTokenSuffix: fakeToken,
+		})
 	defer mockMetadata.Close()
-	fetchMetadataURL = func(_ string) string {
-		return mockMetadata.URL
+	fetchMetadataURL = func(suffix string) string {
+		return mockMetadata.URL + suffix
 	}
 
 	mockJwksIssuer := initMockJwksIssuer(t)

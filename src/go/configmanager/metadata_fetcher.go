@@ -19,17 +19,27 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
+	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
+	"cloudesf.googlesource.com/gcpproxy/src/go/util"
+	"github.com/golang/glog"
 )
 
 var (
+	configIDSuffix          = "/v1/instance/attributes/endpoints-service-version"
+	gaeServerSoftwareSuffix = "/v1/instance/attributes/gae_server_software"
+	kubeEnvSuffix           = "/v1/instance/attributes/kube-env"
+	rolloutStrategySuffix   = "/v1/instance/attributes/endpoints-rollout-strategy"
+	serviceNameSuffix       = "/v1/instance/attributes/endpoints-service-name"
+
 	serviceAccountTokenSuffix = "/v1/instance/service-accounts/default/token"
-	serviceNameSuffix         = "/v1/instance/attributes/endpoints-service-name"
-	configIdSuffix            = "/v1/instance/attributes/endpoints-service-version"
-	rolloutStrategySuffix     = "/v1/instance/attributes/endpoints-rollout-strategy"
-	timeNow                   = time.Now
+	projectIDSuffix           = "/v1/instance/project/project-id"
+	zoneSuffix                = "/v1/instance/zone"
+
+	timeNow = time.Now
 
 	fetchMetadataURL = func(suffix string) string {
 		return *flags.MetadataURL + suffix
@@ -91,27 +101,75 @@ func fetchAccessToken() (string, time.Duration, error) {
 	return metadata.accessToken, expires, nil
 }
 
-//TODO(jcwang): merge these three function, called fetchMetadata(key string)
-func fetchServiceName() (string, error) {
-	body, err := getMetadata(fetchMetadataURL(serviceNameSuffix))
+// TODO(kyuc): perhaps we need some retry logic and timeout?
+func fetchMetadata(key string) (string, error) {
+	body, err := getMetadata(fetchMetadataURL(key))
 	if err != nil {
 		return "", err
 	}
+
 	return string(body), nil
+}
+
+func fetchServiceName() (string, error) {
+	return fetchMetadata(serviceNameSuffix)
 }
 
 func fetchConfigId() (string, error) {
-	body, err := getMetadata(fetchMetadataURL(configIdSuffix))
-	if err != nil {
-		return "", err
-	}
-	return string(body), nil
+	return fetchMetadata(configIDSuffix)
 }
 
 func fetchRolloutStrategy() (string, error) {
-	body, err := getMetadata(fetchMetadataURL(rolloutStrategySuffix))
+	return fetchMetadata(rolloutStrategySuffix)
+}
+
+func fetchGCPAttributes() *scpb.GcpAttributes {
+	// Checking if metadata server is reachable.
+	if _, err := fetchMetadata(""); err != nil {
+		return nil
+	}
+
+	attrs := &scpb.GcpAttributes{}
+	if projectID, err := fetchMetadata(projectIDSuffix); err == nil {
+		attrs.ProjectId = projectID
+	}
+
+	if zone, err := fetchZone(); err == nil {
+		attrs.Zone = zone
+	}
+
+	attrs.Platform = fetchPlatform()
+	return attrs
+}
+
+// Do not directly use this function. Use fetchGCPAttributes instead.
+func fetchZone() (string, error) {
+	zonePath, err := fetchMetadata(zoneSuffix)
 	if err != nil {
 		return "", err
 	}
-	return string(body), nil
+
+	// Zone format: projects/PROJECT_ID/ZONE
+	// Get the substring after the last '/'.
+	index := strings.LastIndex(zonePath, "/")
+	if index == -1 || index+1 >= len(zonePath) {
+		glog.Warningf("Invalid zone format is fetched: %s", zonePath)
+		return "", fmt.Errorf("Invalid zone format: %s", zonePath)
+	}
+	return zonePath[index+1:], nil
+}
+
+// Do not directly use this function. Use fetchGCPAttributes instead.
+func fetchPlatform() string {
+	if _, err := fetchMetadata(gaeServerSoftwareSuffix); err == nil {
+		return util.GAEFlex
+	}
+
+	if _, err := fetchMetadata(kubeEnvSuffix); err == nil {
+		return util.GKE
+	}
+
+	// TODO(kyuc): what about Cloud Run...?
+
+	return util.GCE
 }

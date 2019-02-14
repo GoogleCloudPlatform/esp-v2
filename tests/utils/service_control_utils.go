@@ -355,7 +355,7 @@ func createByConsumerOperation(er *ExpectedReport) *sc.Operation {
 }
 
 func CreateReport(er *ExpectedReport) sc.ReportRequest {
-	send_consumer := er.ApiKey != ""
+	sendConsumer := er.ApiKey != ""
 
 	op := createOperation(er)
 
@@ -367,7 +367,7 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 
 	ms = append(ms,
 		createInt64MetricSet("serviceruntime.googleapis.com/api/producer/request_count", 1))
-	if send_consumer {
+	if sendConsumer {
 		ms = append(ms,
 			createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/request_count", 1))
 	}
@@ -375,7 +375,7 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 	ms = append(ms,
 		createDistMetricSet(&sizeDistOptions,
 			"serviceruntime.googleapis.com/api/producer/request_sizes", er.RequestSize))
-	if send_consumer {
+	if sendConsumer {
 		ms = append(ms,
 			createDistMetricSet(&sizeDistOptions,
 				"serviceruntime.googleapis.com/api/consumer/request_sizes", er.RequestSize))
@@ -383,7 +383,7 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 
 	ms = append(ms,
 		createInt64MetricSet("serviceruntime.googleapis.com/api/producer/request_bytes", er.RequestBytes))
-	if send_consumer {
+	if sendConsumer {
 		ms = append(ms,
 			createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/request_bytes", er.RequestBytes))
 	}
@@ -397,7 +397,7 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 		ms = append(ms,
 			createDistMetricSet(&sizeDistOptions,
 				"serviceruntime.googleapis.com/api/producer/response_sizes", er.ResponseSize))
-		if send_consumer {
+		if sendConsumer {
 			ms = append(ms,
 				createDistMetricSet(&sizeDistOptions,
 					"serviceruntime.googleapis.com/api/consumer/response_sizes", er.ResponseSize))
@@ -405,7 +405,7 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 
 		ms = append(ms,
 			createInt64MetricSet("serviceruntime.googleapis.com/api/producer/response_bytes", er.ResponseBytes))
-		if send_consumer {
+		if sendConsumer {
 			ms = append(ms,
 				createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/response_bytes", er.ResponseBytes))
 		}
@@ -413,11 +413,12 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 	if er.ErrorType != "" {
 		ms = append(ms,
 			createInt64MetricSet("serviceruntime.googleapis.com/api/producer/error_count", 1))
-		if send_consumer {
+		if sendConsumer {
 			ms = append(ms,
 				createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/error_count", 1))
 		}
 	}
+
 	sort.Sort(metricSetSorter(ms))
 	op.MetricValueSets = ms
 
@@ -426,7 +427,7 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 		ServiceConfigId: er.ServiceConfigID,
 		Operations:      []*sc.Operation{op},
 	}
-	if send_consumer {
+	if sendConsumer {
 		erPb.Operations = append(erPb.Operations, createByConsumerOperation(er))
 	}
 	return erPb

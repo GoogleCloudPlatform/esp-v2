@@ -92,6 +92,7 @@ type ConfigManager struct {
 	client                 *http.Client
 	cache                  cache.SnapshotCache
 	checkRolloutsTicker    *time.Ticker
+	gcpAttributes          *scpb.GcpAttributes
 }
 
 type httpRule struct {
@@ -128,9 +129,11 @@ func NewConfigManager() (*ConfigManager, error) {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	m := &ConfigManager{
-		serviceName: name,
-		client:      &http.Client{Transport: tr},
+		serviceName:   name,
+		client:        &http.Client{Transport: tr},
+		gcpAttributes: fetchGCPAttributes(),
 	}
+
 	m.cache = cache.NewSnapshotCache(true, m, m)
 
 	if rolloutStrategy == ut.ManagedRolloutStrategy {
@@ -886,6 +889,10 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 
 	filterConfig := &scpb.FilterConfig{
 		Services: []*scpb.Service{service},
+	}
+
+	if m.gcpAttributes != nil {
+		filterConfig.GcpAttributes = m.gcpAttributes
 	}
 
 	// Map order is not deterministic, so sort by key here to make the filter

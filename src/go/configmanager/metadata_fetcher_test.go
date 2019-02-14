@@ -20,12 +20,19 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
+	"cloudesf.googlesource.com/gcpproxy/src/go/util"
+	"github.com/golang/protobuf/proto"
 )
 
 const (
 	fakeToken       = `{"access_token": "ya29.new", "expires_in":3599, "token_type":"Bearer"}`
 	fakeServiceName = "echo-service"
-	fakeConfigId    = "canary-config"
+	fakeConfigID    = "canary-config"
+	fakeZonePath    = "projects/4242424242/zones/us-west-1b"
+	fakeZone        = "us-west-1b"
+	fakeProjectID   = "gcpproxy"
 )
 
 func TestFetchAccountTokenExpired(t *testing.T) {
@@ -110,7 +117,7 @@ func TestFetchServiceName(t *testing.T) {
 }
 
 func TestFetchConfigId(t *testing.T) {
-	ts := initMockMetadataServer(fakeConfigId)
+	ts := initMockMetadataServer(fakeConfigID)
 	defer ts.Close()
 
 	fetchMetadataURL = func(_ string) string {
@@ -120,14 +127,152 @@ func TestFetchConfigId(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.EqualFold(name, fakeConfigId) {
-		t.Errorf("fetchServiceName = %s, want %s", name, fakeConfigId)
+	if !strings.EqualFold(name, fakeConfigID) {
+		t.Errorf("fetchServiceName = %s, want %s", name, fakeConfigID)
 	}
+}
+
+func TestFetchGCPAttributes(t *testing.T) {
+	testData := []struct {
+		desc                  string
+		mockedResp            map[string]string
+		expectedGCPAttributes *scpb.GcpAttributes
+	}{
+		{
+			desc: "ProjectID",
+			mockedResp: map[string]string{
+				projectIDSuffix: fakeProjectID,
+			},
+			expectedGCPAttributes: &scpb.GcpAttributes{
+				ProjectId: fakeProjectID,
+				Platform:  util.GCE,
+			},
+		},
+		{
+			desc: "Valid Zone",
+			mockedResp: map[string]string{
+				zoneSuffix: fakeZonePath,
+			},
+			expectedGCPAttributes: &scpb.GcpAttributes{
+				Zone:     fakeZone,
+				Platform: util.GCE,
+			},
+		},
+		{
+			desc: "Invalid Zone - without '/'",
+			mockedResp: map[string]string{
+				zoneSuffix: "noslash",
+			},
+			expectedGCPAttributes: &scpb.GcpAttributes{
+				Platform: util.GCE,
+			},
+		},
+		{
+			desc: "Invalid Zone - ends with '/'",
+			mockedResp: map[string]string{
+				zoneSuffix: "project/123123/",
+			},
+			expectedGCPAttributes: &scpb.GcpAttributes{
+				Platform: util.GCE,
+			},
+		},
+		{
+			desc: "Platform - GAE_FLEX",
+			mockedResp: map[string]string{
+				gaeServerSoftwareSuffix: "foo",
+			},
+			expectedGCPAttributes: &scpb.GcpAttributes{
+				Platform: util.GAEFlex,
+			},
+		},
+		{
+			desc: "Platform - GKE",
+			mockedResp: map[string]string{
+				kubeEnvSuffix: "foo",
+			},
+			expectedGCPAttributes: &scpb.GcpAttributes{
+				Platform: util.GKE,
+			},
+		},
+		{
+			desc:       "Platform - GCE",
+			mockedResp: map[string]string{},
+			expectedGCPAttributes: &scpb.GcpAttributes{
+				Platform: util.GCE,
+			},
+		},
+		{
+			desc: "Combined - ProjectID, Zone, and Platform",
+			mockedResp: map[string]string{
+				projectIDSuffix:         fakeProjectID,
+				zoneSuffix:              fakeZonePath,
+				gaeServerSoftwareSuffix: "foo",
+			},
+			expectedGCPAttributes: &scpb.GcpAttributes{
+				ProjectId: fakeProjectID,
+				Zone:      fakeZone,
+				Platform:  util.GAEFlex,
+			},
+		},
+		{
+			desc:                  "No MetadataServer",
+			mockedResp:            nil,
+			expectedGCPAttributes: nil,
+		},
+	}
+
+	errorTmpl := "Test: %s\n  Expected: %s\n  Actual: %s"
+	for _, tc := range testData {
+		ts := initMockMetadataServerFromPathResp(tc.mockedResp)
+		defer ts.Close()
+		if tc.mockedResp == nil {
+			fetchMetadataURL = func(suffix string) string {
+				return "non-existing-url" + suffix
+			}
+		} else {
+			fetchMetadataURL = func(suffix string) string {
+				return ts.URL + suffix
+			}
+		}
+
+		attrs := fetchGCPAttributes()
+		if tc.expectedGCPAttributes == nil && attrs == nil {
+			continue
+		}
+
+		if attrs == nil {
+			t.Errorf(errorTmpl, tc.desc, tc.expectedGCPAttributes, attrs)
+			continue
+		}
+
+		if !proto.Equal(attrs, tc.expectedGCPAttributes) {
+			t.Errorf(errorTmpl, tc.desc, tc.expectedGCPAttributes, attrs)
+		}
+	}
+
 }
 
 func initMockMetadataServer(resp string) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(resp))
+	}))
+}
+
+func initMockMetadataServerFromPathResp(pathResp map[string]string) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		// Root is used to tell if the sever is healthy or not.
+		if r.URL.Path == "" || r.URL.Path == "/" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		if resp, ok := pathResp[r.URL.Path]; ok {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(resp))
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
 	}))
 }
