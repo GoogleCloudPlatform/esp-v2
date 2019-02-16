@@ -17,9 +17,8 @@
 #include "common/common/logger.h"
 #include "envoy/access_log/access_log.h"
 #include "envoy/http/filter.h"
-#include "envoy/upstream/cluster_manager.h"
-#include "src/envoy/http/service_control/config_parser.h"
 #include "src/envoy/http/service_control/filter_config.h"
+#include "src/envoy/http/service_control/handler.h"
 
 #include <string>
 
@@ -31,12 +30,12 @@ namespace ServiceControl {
 // The Envoy filter for Cloud ESF service control client.
 class Filter : public Http::StreamDecoderFilter,
                public AccessLog::Instance,
+               public Handler::CheckDoneCallback,
                public Logger::Loggable<Logger::Id::filter> {
  public:
   Filter(FilterConfigSharedPtr config) : config_(config) {}
 
-  // Http::StreamFilterBase
-  void onDestroy() override;
+  void onDestroy() override {}
 
   // Http::StreamDecoderFilter
   Http::FilterHeadersStatus decodeHeaders(Http::HeaderMap& headers,
@@ -52,53 +51,24 @@ class Filter : public Http::StreamDecoderFilter,
            const Http::HeaderMap* response_trailers,
            const StreamInfo::StreamInfo& stream_info) override;
 
- private:
-  void onCheckResponse(
-      const ::google::protobuf::util::Status& status,
-      const ::google::api_proxy::service_control::CheckResponseInfo&
-          response_info);
-  void rejectRequest(Http::Code code, absl::string_view error_msg);
+  // For Handler::CheckDoneCallback, called when callCheck() is done
+  void onCheckDone(const ::google::protobuf::util::Status& status);
 
-  // Helper functions to extract API key.
-  bool ExtractAPIKeyFromQuery(const Http::HeaderMap& headers,
-                              const std::string& query);
-  bool ExtractAPIKeyFromHeader(const Http::HeaderMap& headers,
-                               const std::string& header);
-  bool ExtractAPIKeyFromCookie(const Http::HeaderMap& headers,
-                               const std::string& cookie);
-  bool ExtractAPIKey(
-      const Http::HeaderMap& headers,
-      const ::google::protobuf::RepeatedPtrField<
-          ::google::api::envoy::http::service_control::APIKeyLocation>&
-          locations);
+ private:
+  void rejectRequest(Http::Code code, absl::string_view error_msg);
 
   // The callback funcion.
   Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
   FilterConfigSharedPtr config_;
+
+  // The service control request handler
+  std::unique_ptr<Handler> handler_;
 
   // The state of the request.
   enum State { Init, Calling, Responded, Complete };
   State state_ = Init;
   // Mark if request has been stopped.
   bool stopped_ = false;
-
-  const RequirementContext* require_ctx_{};
-
-  std::string uuid_;
-  std::string operation_name_;
-  std::string api_key_;
-  std::string api_name_;
-  std::string api_version_;
-  std::string http_method_;
-
-  ::google::api_proxy::service_control::CheckResponseInfo check_response_info_;
-  ::google::protobuf::util::Status check_status_;
-  // This flag is used to mark if the request is aborted before the check
-  // callback is returned.
-  std::shared_ptr<bool> aborted_;
-
-  bool params_parsed_{false};
-  Http::Utility::QueryParams parsed_params_;
 };
 
 }  // namespace ServiceControl

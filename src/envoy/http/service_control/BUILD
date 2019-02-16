@@ -14,10 +14,12 @@ envoy_cc_library(
     name = "filter_lib",
     srcs = [
         "filter.cc",
+        "handler.cc",
     ],
     hdrs = [
         "filter.h",
         "filter_config.h",
+        "handler.h",
     ],
     repository = "@envoy",
     deps = [
