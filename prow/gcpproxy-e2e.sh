@@ -14,21 +14,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Fail on any error.
+set -e
+# Display commands being run.
+set -x
+
 echo '======================================================='
 echo '=====================   e2e test  ====================='
 echo '======================================================='
 
 PROJECT_ID="api_proxy_e2e_test"
-uniqueID=test
-
-# Fail on any error.
-set -e
-# Display commands being run.
-set -u
+UNIQUE_ID=test
 
 WD=$(dirname "$0")
 WD=$(cd "$WD"; pwd)
 ROOT=$(dirname "$WD")
+
+cd "${ROOT}"
+
+if [ ! -d "$GOPATH/bin" ]; then
+  mkdir $GOPATH/bin
+fi
+if [ ! -d "bin" ]; then
+  mkdir bin
+fi
+
+# libraries for go build
+curl https://glide.sh/get | sh
+glide install
+
+# depedencies for envoy build
+apt-get update && \
+    apt-get -y install libtool cmake automake ninja-build curl unzip
 
 function e2eGKE() {
   local OPTIND OPTARG arg
@@ -46,9 +63,29 @@ function e2eGKE() {
   -t ${TEST_TYPE} \
   -g ${BACKEND} \
   -R ${ROLLOUT_STRATEGY} \
-  -i ${uniqueID} \
-  -a ${uniqueID}.${PROJECT_ID}.appspot.com
+  -i ${UNIQUE_ID} \
+  -a ${UNIQUE_ID}.${PROJECT_ID}.appspot.com
 }
 
+function apiProxyGenericDockerImage() {
+  # Generic docker image format. Docker image name is computed using:
+  # git show -q HEAD --pretty=format:"${RELEASE_FLEX_IMAGE_FORMAT}"
+  # The format string can therefore contain format placeholders:
+  # https://git-scm.com/docs/git-show
+  local image_format='gcr.io/cloudesf-testing/api-proxy:git-%H'
+  local image="$(git show -q HEAD \
+    --pretty=format:"${image_format}")"
+  echo -n $image
+  return 0
+}
+
+GENERIC_IMAGE=$(apiProxyGenericDockerImage)
+
+function buildPackages() {
+  ${ROOT}/scripts/robot-release.sh -i ${GENERIC_IMAGE}
+}
+
+buildPackages
+
 # TODO(jilinxia): add other backend tests.
-e2eGKE -c "tight" -t "http" -g "bookstore"  -R "fixed"
+e2eGKE -c "tight" -t "http" -g "bookstore"  -R "fixed" -m ${GENERIC_IMAGE}

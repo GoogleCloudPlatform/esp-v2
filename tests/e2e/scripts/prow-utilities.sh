@@ -14,9 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-E2E_ROOT="$(cd "${DIR}/.." && pwd)"
-. ${DIR}/all-utilities.sh || { echo "Cannot load Bash utilities" ; exit 1 ; }
+. ${ROOT}/scripts/all-utilities.sh || { echo "Cannot load Bash utilities" ; exit 1 ; }
 
 # End to End tests common options
 function e2e_options() {
