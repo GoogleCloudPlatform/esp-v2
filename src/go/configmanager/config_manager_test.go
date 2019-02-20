@@ -644,26 +644,6 @@ func TestFetchListeners(t *testing.T) {
 													{
 														"pattern": {
 															"http_method":"POST",
-															"uri_template":"/endpoints.examples.bookstore.Bookstore/ListShelves"
-														},
-														"requires":{
-															"operation_name":"endpoints.examples.bookstore.Bookstore.ListShelves",
-															"service_name":"%s"
-														}
-													},
-													{
-														"pattern": {
-															"http_method":"GET",
-															"uri_template":"/v1/shelves"
-														},
-														"requires":{
-															"operation_name":"endpoints.examples.bookstore.Bookstore.ListShelves",
-															"service_name":"%s"
-														}
-													},
-													{
-														"pattern": {
-															"http_method":"POST",
 															"uri_template":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
 														},
 														"requires":{
@@ -678,6 +658,26 @@ func TestFetchListeners(t *testing.T) {
 														},
 														"requires":{
 															"operation_name":"endpoints.examples.bookstore.Bookstore.CreateShelf",
+															"service_name":"%s"
+														}
+													},
+													{
+														"pattern": {
+															"http_method":"POST",
+															"uri_template":"/endpoints.examples.bookstore.Bookstore/ListShelves"
+														},
+														"requires":{
+															"operation_name":"endpoints.examples.bookstore.Bookstore.ListShelves",
+															"service_name":"%s"
+														}
+													},
+													{
+														"pattern": {
+															"http_method":"GET",
+															"uri_template":"/v1/shelves"
+														},
+														"requires":{
+															"operation_name":"endpoints.examples.bookstore.Bookstore.ListShelves",
 															"service_name":"%s"
 														}
 													}

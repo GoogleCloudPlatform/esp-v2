@@ -22,6 +22,7 @@ import (
 	"math"
 	"net/http"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -269,23 +270,23 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	m.initHttpPathMap()
 
 	var endpoints, routes, clusters []cache.Resource
-	b_c, err := m.makeBackendCluster(endpointApi, backendProtocol)
+	backendCluster, err := m.makeBackendCluster(endpointApi, backendProtocol)
 	if err != nil {
 		return nil, err
 	}
-	if b_c != nil {
-		clusters = append(clusters, b_c)
+	if backendCluster != nil {
+		clusters = append(clusters, backendCluster)
 	}
 
 	// Note: makeServiceControlCluster should be called before makeListener
 	// as makeServiceControlFilter is using m.serviceControlURI assigned by
 	// makeServiceControlCluster
-	sc_c, err := m.makeServiceControlCluster()
+	scCluster, err := m.makeServiceControlCluster()
 	if err != nil {
 		return nil, err
 	}
-	if sc_c != nil {
-		clusters = append(clusters, sc_c)
+	if scCluster != nil {
+		clusters = append(clusters, scCluster)
 	}
 
 	m.Infof("adding Listener configuration for api: %v", endpointApi.GetName())
@@ -887,8 +888,17 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 		Services: []*scpb.Service{service},
 	}
 
-	for _, rules := range rulesMap {
-		for _, rule := range rules {
+	// Map order is not deterministic, so sort by key here to make the filter
+	// config rules order deterministic. Simply iterating map will introduce
+	// flakiness to the tests.
+	var keys []string
+	for key := range rulesMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		for _, rule := range rulesMap[key] {
 			filterConfig.Rules = append(filterConfig.Rules, rule)
 		}
 	}
