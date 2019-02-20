@@ -116,18 +116,6 @@ imports:
 - name: google.golang.org/genproto
   version: a8101f21cf983e773d0c1133ebc5424792003214
   subpackages:
-  - googleapis
-  - googleapis/api
-  - googleapis/api/annotations
-  - googleapis/api/configchange
-  - googleapis/api/label
-  - googleapis/api/metric
-  - googleapis/api/monitoredres
-  - googleapis/api/serviceconfig
-  - googleapis/logging/type
-  - googleapis/longrunning
-  - googleapis/rpc/status
-  - googleapis/type/money
   - opencensus
   - protobuf
   - protobuf/api
