@@ -16,6 +16,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 
@@ -38,7 +39,8 @@ func main() {
 	var resp []byte
 	var err error
 	if *echo != "" {
-		resp, err = client.DoEcho(*host, *apiKey, *echo)
+		url := fmt.Sprintf("%v%v?key=%v", *host, "/echo", *apiKey)
+		resp, err = client.DoPost(url, *echo)
 	} else if *serviceAccount != "" {
 		resp, err = client.DoJWT(*host, "GET", *path, *apiKey, *serviceAccount, *token)
 	}

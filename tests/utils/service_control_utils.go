@@ -22,9 +22,9 @@ import (
 	"sort"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/struct"
+	structpb "github.com/golang/protobuf/ptypes/struct"
 	sc "github.com/google/go-genproto/googleapis/api/servicecontrol/v1"
-	"google.golang.org/genproto/googleapis/logging/type"
+	ltype "google.golang.org/genproto/googleapis/logging/type"
 )
 
 type ExpectedCheck struct {
@@ -122,9 +122,9 @@ func createReportLabels(er *ExpectedReport) map[string]string {
 		"servicecontrol.googleapis.com/service_agent": "ESP/" + er.Version,
 		"servicecontrol.googleapis.com/user_agent":    "ESP",
 		"serviceruntime.googleapis.com/api_method":    er.ApiMethod,
-		"/response_code":                              response,
-		"/status_code":                                status,
-		"/response_code_class":                        class,
+		"/response_code":       response,
+		"/status_code":         status,
+		"/response_code_class": class,
 	}
 	if er.StatusCode != "" {
 		labels["/status_code"] = er.StatusCode

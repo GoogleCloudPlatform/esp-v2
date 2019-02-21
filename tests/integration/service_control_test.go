@@ -47,18 +47,71 @@ func TestServiceControlBasic(t *testing.T) {
 	time.Sleep(time.Duration(3 * time.Second))
 
 	testData := []struct {
-		desc     string
-		method   string
-		wantResp string
+		desc           string
+		url            string
+		message        string
+		wantResp       string
+		wantScRequests []interface{}
 	}{
 		{
 			desc:     "succeed, no Jwt required",
+			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports.ListenerPort, "/echo", "?key=api-key"),
+			message:  "hello",
 			wantResp: `{"message":"hello"}`,
+			wantScRequests: []interface{}{
+				&utils.ExpectedCheck{
+					Version:         "0.1",
+					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					ConsumerID:      "api_key:api-key",
+					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+				},
+				&utils.ExpectedReport{
+					Version:           "0.1",
+					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:   "test-config-id",
+					URL:               "/echo?key=api-key",
+					ApiKey:            "api-key",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+					ProducerProjectID: "producer-project",
+					ConsumerProjectID: "123456",
+					HttpMethod:        "POST",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo is called",
+					RequestSize:       20,
+					ResponseSize:      19,
+					RequestBytes:      20,
+					ResponseBytes:     19,
+					ResponseCode:      200,
+				},
+			},
+		},
+		{
+			desc:     "succeed, no Jwt required, allow no api key",
+			url:      fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, "/echo/nokey"),
+			message:  "hello",
+			wantResp: `{"message":"hello"}`,
+			wantScRequests: []interface{}{
+				&utils.ExpectedReport{
+					Version:           "0.1",
+					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:   "test-config-id",
+					URL:               "/echo/nokey",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey",
+					ProducerProjectID: "producer-project",
+					ConsumerProjectID: "123456",
+					HttpMethod:        "POST",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey is called",
+					RequestSize:       20,
+					ResponseSize:      19,
+					RequestBytes:      20,
+					ResponseBytes:     19,
+					ResponseCode:      200,
+				},
+			},
 		},
 	}
 	for _, tc := range testData {
-		host := fmt.Sprintf("http://localhost:%v", s.Ports.ListenerPort)
-		resp, err := client.DoEcho(host, "api-key", "hello")
+		resp, err := client.DoPost(tc.url, tc.message)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -67,47 +120,29 @@ func TestServiceControlBasic(t *testing.T) {
 			t.Errorf("expected: %s, got: %s", tc.wantResp, string(resp))
 		}
 
-		sc_requests, err1 := s.ServiceControlServer.GetRequests(2, 3*time.Second)
+		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 3*time.Second)
 		if err1 != nil {
-			t.Errorf("GetRequests returns error: %v", err1)
+			t.Fatalf("GetRequests returns error: %v", err1)
 		}
-		if len(sc_requests) != 2 {
-			t.Errorf("Expected number of requests is 2 ,but got: %d", len(sc_requests))
-		}
-		if sc_requests[0].ReqType != comp.CHECK_REQUEST {
-			t.Errorf("service control request 0: should be Check")
-		}
-		if sc_requests[1].ReqType != comp.REPORT_REQUEST {
-			t.Errorf("service control request 1: should be Report")
-		}
-		if !utils.VerifyCheck(sc_requests[0].ReqBody, &utils.ExpectedCheck{
-			Version:         "0.1",
-			ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
-			ServiceConfigID: "test-config-id",
-			ConsumerID:      "api_key:api-key",
-			OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-		}) {
-			t.Errorf("Check request data doesn't match.")
-		}
-		if !utils.VerifyReport(sc_requests[1].ReqBody, &utils.ExpectedReport{
-			Version:           "0.1",
-			ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
-			ServiceConfigID:   "test-config-id",
-			URL:               "/echo?key=api-key",
-			ApiKey:            "api-key",
-			ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-			ProducerProjectID: "producer-project",
-			ConsumerProjectID: "123456",
-			HttpMethod:        "POST",
-			LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo is called",
-			RequestSize:       20,
-			ResponseSize:      19,
-			RequestBytes:      20,
-			ResponseBytes:     19,
-			ResponseCode:      200,
-		}) {
-			t.Errorf("Report request data doesn't match.")
+		for i, wantScRequest := range tc.wantScRequests {
+			switch wantScRequest.(type) {
+			case *utils.ExpectedCheck:
+				if scRequests[i].ReqType != comp.CHECK_REQUEST {
+					t.Errorf("service control request %v: should be Check", i)
+				}
+				if !utils.VerifyCheck(scRequests[i].ReqBody, wantScRequest.(*utils.ExpectedCheck)) {
+					t.Error("Check request data doesn't match.")
+				}
+			case *utils.ExpectedReport:
+				if scRequests[i].ReqType != comp.REPORT_REQUEST {
+					t.Errorf("service control request %v: should be Report", i)
+				}
+				if !utils.VerifyReport(scRequests[i].ReqBody, wantScRequest.(*utils.ExpectedReport)) {
+					t.Error("Report request data doesn't match.")
+				}
+			default:
+				t.Fatal("unknown service control response type")
+			}
 		}
 	}
-
 }

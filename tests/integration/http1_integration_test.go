@@ -61,8 +61,8 @@ func TestHttp1Basic(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		host := fmt.Sprintf("http://localhost:%v", s.Ports.ListenerPort)
-		resp, err := client.DoEcho(host, "", echo)
+		url := fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, "/echo")
+		resp, err := client.DoPost(url, echo)
 		if err != nil {
 			t.Fatal(err)
 		}
