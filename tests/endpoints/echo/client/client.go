@@ -30,16 +30,16 @@ import (
 	"golang.org/x/oauth2/jws"
 )
 
-// doEcho performs an authenticated echo request using an API key.
-func DoEcho(host, apiKey, echo string) ([]byte, error) {
+// DoPost performs a POST request to a specified url
+func DoPost(url, message string) ([]byte, error) {
 	msg := map[string]string{
-		"message": echo,
+		"message": message,
 	}
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(msg); err != nil {
 		return nil, err
 	}
-	resp, err := http.Post(host+"/echo?key="+apiKey, "application/json", &buf)
+	resp, err := http.Post(url, "application/json", &buf)
 	if err != nil {
 		return nil, fmt.Errorf("http got error: ", err)
 	}
