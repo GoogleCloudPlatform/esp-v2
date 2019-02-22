@@ -42,6 +42,7 @@ const (
 	TestHttp1Basic
 	TestHttp1JWT
 	TestServiceControlBasic
+	TestUnconfiguredRequest
 
 	// The number of total tests. has to be the last one.
 	maxTestNum

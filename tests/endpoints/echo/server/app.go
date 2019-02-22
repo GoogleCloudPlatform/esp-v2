@@ -34,6 +34,8 @@ func main() {
 		HandlerFunc(echoHandler)
 	r.Path("/echo/nokey").Methods("POST").
 		HandlerFunc(echoHandler)
+	r.Path("/anypath/x/y/z").Methods("POST").
+		HandlerFunc(echoHandler)
 	r.Path("/simplegetcors").Methods("GET", "OPTIONS").
 		Handler(corsHandler(simpleGetCors))
 	r.Path("/auth/info/googlejwt").Methods("GET").

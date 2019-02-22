@@ -47,15 +47,19 @@ func TestServiceControlBasic(t *testing.T) {
 	time.Sleep(time.Duration(3 * time.Second))
 
 	testData := []struct {
-		desc           string
-		url            string
-		message        string
-		wantResp       string
-		wantScRequests []interface{}
+		desc                  string
+		url                   string
+		method                string
+		message               string
+		wantResp              string
+		httpCallError         error
+		wantScRequests        []interface{}
+		wantGetScRequestError error
 	}{
 		{
 			desc:     "succeed, no Jwt required",
 			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports.ListenerPort, "/echo", "?key=api-key"),
+			method:   "POST",
 			message:  "hello",
 			wantResp: `{"message":"hello"}`,
 			wantScRequests: []interface{}{
@@ -90,6 +94,7 @@ func TestServiceControlBasic(t *testing.T) {
 			desc:     "succeed, no Jwt required, allow no api key",
 			url:      fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, "/echo/nokey"),
 			message:  "hello",
+			method:   "POST",
 			wantResp: `{"message":"hello"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
@@ -111,15 +116,72 @@ func TestServiceControlBasic(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc:     "succeed for unconfigured POST method, no JWT required",
+			url:      fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, "/anypath/x/y/z"),
+			method:   "POST",
+			message:  "hello",
+			wantResp: `{"message":"hello"}`,
+			wantScRequests: []interface{}{
+				&utils.ExpectedReport{
+					Version:           "0.1",
+					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:   "test-config-id",
+					URL:               "/anypath/x/y/z",
+					ApiMethod:         "_post_anypath",
+					ProducerProjectID: "producer-project",
+					ConsumerProjectID: "123456",
+					HttpMethod:        "POST",
+					LogMessage:        "_post_anypath is called",
+					RequestSize:       20,
+					ResponseSize:      19,
+					RequestBytes:      20,
+					ResponseBytes:     19,
+					ResponseCode:      200,
+					Platform:          "GAE Flex",
+				},
+			},
+		},
+		{
+			desc:                  "fail for not allowing unconfigured GET method",
+			url:                   fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, "/unconfiguredRequest/get"),
+			method:                "GET",
+			httpCallError:         fmt.Errorf("http response status is not 200 OK: 404 Not Found"),
+			wantScRequests:        []interface{}{},
+			wantGetScRequestError: fmt.Errorf("Timeout got 0, expected: 1"),
+		},
 	}
 	for _, tc := range testData {
-		resp, err := client.DoPost(tc.url, tc.message)
-		if err != nil {
-			t.Fatal(err)
+		var resp []byte
+		var err error
+		if tc.method == "POST" {
+			resp, err = client.DoPost(tc.url, tc.message)
+		} else if tc.method == "GET" {
+			resp, err = client.DoGet(tc.url)
+		} else {
+			t.Fatal("unknown HTTP method to call")
 		}
 
-		if !strings.Contains(string(resp), tc.wantResp) {
-			t.Errorf("expected: %s, got: %s", tc.wantResp, string(resp))
+		if tc.httpCallError == nil {
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(string(resp), tc.wantResp) {
+				t.Errorf("expected: %s, got: %s", tc.wantResp, string(resp))
+			}
+		} else {
+			if tc.httpCallError.Error() != err.Error() {
+				t.Errorf("expected Http call error: %v, got: %v", tc.httpCallError, err)
+			}
+		}
+
+		if tc.wantGetScRequestError != nil {
+			scRequests, err1 := s.ServiceControlServer.GetRequests(1, 3*time.Second)
+			if err1.Error() != tc.wantGetScRequestError.Error() {
+				t.Errorf("expected get service control request call error: %v, got: %v", tc.wantGetScRequestError, err1)
+				t.Errorf("got service control requests: %v", scRequests)
+			}
+			return
 		}
 
 		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 3*time.Second)

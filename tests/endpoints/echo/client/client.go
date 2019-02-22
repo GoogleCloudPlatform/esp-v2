@@ -30,6 +30,20 @@ import (
 	"golang.org/x/oauth2/jws"
 )
 
+// DoGet performs a Get request to a specified url
+func DoGet(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("http got error: ", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("http response status is not 200 OK: %s", resp.Status)
+	}
+	return ioutil.ReadAll(resp.Body)
+}
+
 // DoPost performs a POST request to a specified url
 func DoPost(url, message string) ([]byte, error) {
 	msg := map[string]string{

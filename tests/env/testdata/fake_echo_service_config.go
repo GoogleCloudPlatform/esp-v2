@@ -88,6 +88,12 @@ var (
 					},
 				},
 				{
+					Selector: "_post_anypath",
+					Pattern: &annotations.HttpRule_Post{
+						Post: "/**",
+					},
+				},
+				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_firebase",
 					Pattern: &annotations.HttpRule_Get{
 						Get: "/auth/info/firebase",
@@ -121,6 +127,9 @@ var (
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
 				},
 				{
+					Selector: "_post_anypath",
+				},
+				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_firebase",
 					Requirements: []*conf.AuthRequirement{
 						{
@@ -134,6 +143,10 @@ var (
 			Rules: []*conf.UsageRule{
 				{
 					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "_post_anypath",
 					AllowUnregisteredCalls: true,
 				},
 			},
