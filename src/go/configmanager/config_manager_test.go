@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
+	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
@@ -1552,7 +1553,7 @@ func runTest(t *testing.T, testRolloutStrategy string, f func(*testEnv)) {
 
 	mockMetadata := initMockMetadataServerFromPathResp(
 		map[string]string{
-			serviceAccountTokenSuffix: fakeToken,
+			util.ServiceAccountTokenSuffix: fakeToken,
 		})
 	defer mockMetadata.Close()
 	fetchMetadataURL = func(suffix string) string {

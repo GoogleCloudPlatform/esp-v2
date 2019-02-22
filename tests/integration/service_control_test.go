@@ -20,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
@@ -86,7 +87,8 @@ func TestServiceControlBasic(t *testing.T) {
 					RequestBytes:      20,
 					ResponseBytes:     19,
 					ResponseCode:      200,
-					Platform:          "GAE Flex",
+					Platform:          util.GCE,
+					Location:          "test-zone",
 				},
 			},
 		},
@@ -112,7 +114,8 @@ func TestServiceControlBasic(t *testing.T) {
 					RequestBytes:      20,
 					ResponseBytes:     19,
 					ResponseCode:      200,
-					Platform:          "GAE Flex",
+					Platform:          util.GCE,
+					Location:          "test-zone",
 				},
 			},
 		},
@@ -138,7 +141,8 @@ func TestServiceControlBasic(t *testing.T) {
 					RequestBytes:      20,
 					ResponseBytes:     19,
 					ResponseCode:      200,
-					Platform:          "GAE Flex",
+					Platform:          util.GCE,
+					Location:          "test-zone",
 				},
 			},
 		},

@@ -29,18 +29,7 @@ import (
 )
 
 var (
-	configIDSuffix          = "/v1/instance/attributes/endpoints-service-version"
-	gaeServerSoftwareSuffix = "/v1/instance/attributes/gae_server_software"
-	kubeEnvSuffix           = "/v1/instance/attributes/kube-env"
-	rolloutStrategySuffix   = "/v1/instance/attributes/endpoints-rollout-strategy"
-	serviceNameSuffix       = "/v1/instance/attributes/endpoints-service-name"
-
-	serviceAccountTokenSuffix = "/v1/instance/service-accounts/default/token"
-	projectIDSuffix           = "/v1/instance/project/project-id"
-	zoneSuffix                = "/v1/instance/zone"
-
-	timeNow = time.Now
-
+	timeNow          = time.Now
 	fetchMetadataURL = func(suffix string) string {
 		return *flags.MetadataURL + suffix
 	}
@@ -85,7 +74,7 @@ func fetchAccessToken() (string, time.Duration, error) {
 		return metadata.accessToken, metadata.tokenTimeout.Sub(now), nil
 	}
 
-	tokenBody, err := getMetadata(fetchMetadataURL(serviceAccountTokenSuffix))
+	tokenBody, err := getMetadata(fetchMetadataURL(util.ServiceAccountTokenSuffix))
 	if err != nil {
 		return "", 0, err
 	}
@@ -112,15 +101,15 @@ func fetchMetadata(key string) (string, error) {
 }
 
 func fetchServiceName() (string, error) {
-	return fetchMetadata(serviceNameSuffix)
+	return fetchMetadata(util.ServiceNameSuffix)
 }
 
 func fetchConfigId() (string, error) {
-	return fetchMetadata(configIDSuffix)
+	return fetchMetadata(util.ConfigIDSuffix)
 }
 
 func fetchRolloutStrategy() (string, error) {
-	return fetchMetadata(rolloutStrategySuffix)
+	return fetchMetadata(util.RolloutStrategySuffix)
 }
 
 func fetchGCPAttributes() *scpb.GcpAttributes {
@@ -130,7 +119,7 @@ func fetchGCPAttributes() *scpb.GcpAttributes {
 	}
 
 	attrs := &scpb.GcpAttributes{}
-	if projectID, err := fetchMetadata(projectIDSuffix); err == nil {
+	if projectID, err := fetchMetadata(util.ProjectIDSuffix); err == nil {
 		attrs.ProjectId = projectID
 	}
 
@@ -144,7 +133,7 @@ func fetchGCPAttributes() *scpb.GcpAttributes {
 
 // Do not directly use this function. Use fetchGCPAttributes instead.
 func fetchZone() (string, error) {
-	zonePath, err := fetchMetadata(zoneSuffix)
+	zonePath, err := fetchMetadata(util.ZoneSuffix)
 	if err != nil {
 		return "", err
 	}
@@ -161,11 +150,11 @@ func fetchZone() (string, error) {
 
 // Do not directly use this function. Use fetchGCPAttributes instead.
 func fetchPlatform() string {
-	if _, err := fetchMetadata(gaeServerSoftwareSuffix); err == nil {
+	if _, err := fetchMetadata(util.GAEServerSoftwareSuffix); err == nil {
 		return util.GAEFlex
 	}
 
-	if _, err := fetchMetadata(kubeEnvSuffix); err == nil {
+	if _, err := fetchMetadata(util.KubeEnvSuffix); err == nil {
 		return util.GKE
 	}
 

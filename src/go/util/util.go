@@ -30,9 +30,20 @@ const (
 	OPTIONS = "OPTIONS"
 	CUSTOM  = "CUSTOM"
 
-	// rollout strategy
+	// Rollout strategy
 	FixedRolloutStrategy   = "fixed"
 	ManagedRolloutStrategy = "managed"
+
+	// Metadata suffix
+	ConfigIDSuffix          = "/v1/instance/attributes/endpoints-service-version"
+	GAEServerSoftwareSuffix = "/v1/instance/attributes/gae_server_software"
+	KubeEnvSuffix           = "/v1/instance/attributes/kube-env"
+	RolloutStrategySuffix   = "/v1/instance/attributes/endpoints-rollout-strategy"
+	ServiceNameSuffix       = "/v1/instance/attributes/endpoints-service-name"
+
+	ServiceAccountTokenSuffix = "/v1/instance/service-accounts/default/token"
+	ProjectIDSuffix           = "/v1/instance/project/project-id"
+	ZoneSuffix                = "/v1/instance/zone"
 
 	// Platforms
 	GAEFlex = "GAE_FLEX"

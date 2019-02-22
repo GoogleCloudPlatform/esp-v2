@@ -33,7 +33,10 @@ func init() {
 }
 
 type TestEnv struct {
-	MockMetadata          bool
+	// MockMetdata with default responses.
+	MockMetadata bool
+	// A map of path and response to override the default responses.
+	MockMetadataOverride  map[string]string
 	MockServiceManagement bool
 	MockServiceControl    bool
 	MockJwtProviders      []string
@@ -43,6 +46,7 @@ type TestEnv struct {
 	configMgr            *components.ConfigManagerServer
 	echoBackend          *components.EchoHTTPServer
 	bookstoreServer      *components.BookstoreGrpcServer
+	mockMetadataServer   *components.MockMetadataServer
 	ServiceControlServer *components.MockServiceCtrl
 }
 
@@ -83,7 +87,8 @@ func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) e
 	}
 
 	if e.MockMetadata {
-		confArgs = append(confArgs, "--metadata_url="+components.NewMockMetadata().GetURL())
+		e.mockMetadataServer = components.NewMockMetadata(e.MockMetadataOverride)
+		confArgs = append(confArgs, "--metadata_url="+e.mockMetadataServer.GetURL())
 	}
 
 	confArgs = append(confArgs, fmt.Sprintf("--cluster_port=%v", e.Ports.BackendServerPort))

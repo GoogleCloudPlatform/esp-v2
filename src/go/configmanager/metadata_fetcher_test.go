@@ -141,7 +141,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 		{
 			desc: "ProjectID",
 			mockedResp: map[string]string{
-				projectIDSuffix: fakeProjectID,
+				util.ProjectIDSuffix: fakeProjectID,
 			},
 			expectedGCPAttributes: &scpb.GcpAttributes{
 				ProjectId: fakeProjectID,
@@ -151,7 +151,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 		{
 			desc: "Valid Zone",
 			mockedResp: map[string]string{
-				zoneSuffix: fakeZonePath,
+				util.ZoneSuffix: fakeZonePath,
 			},
 			expectedGCPAttributes: &scpb.GcpAttributes{
 				Zone:     fakeZone,
@@ -161,7 +161,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 		{
 			desc: "Invalid Zone - without '/'",
 			mockedResp: map[string]string{
-				zoneSuffix: "noslash",
+				util.ZoneSuffix: "noslash",
 			},
 			expectedGCPAttributes: &scpb.GcpAttributes{
 				Platform: util.GCE,
@@ -170,7 +170,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 		{
 			desc: "Invalid Zone - ends with '/'",
 			mockedResp: map[string]string{
-				zoneSuffix: "project/123123/",
+				util.ZoneSuffix: "project/123123/",
 			},
 			expectedGCPAttributes: &scpb.GcpAttributes{
 				Platform: util.GCE,
@@ -179,7 +179,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 		{
 			desc: "Platform - GAE_FLEX",
 			mockedResp: map[string]string{
-				gaeServerSoftwareSuffix: "foo",
+				util.GAEServerSoftwareSuffix: "foo",
 			},
 			expectedGCPAttributes: &scpb.GcpAttributes{
 				Platform: util.GAEFlex,
@@ -188,7 +188,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 		{
 			desc: "Platform - GKE",
 			mockedResp: map[string]string{
-				kubeEnvSuffix: "foo",
+				util.KubeEnvSuffix: "foo",
 			},
 			expectedGCPAttributes: &scpb.GcpAttributes{
 				Platform: util.GKE,
@@ -204,9 +204,9 @@ func TestFetchGCPAttributes(t *testing.T) {
 		{
 			desc: "Combined - ProjectID, Zone, and Platform",
 			mockedResp: map[string]string{
-				projectIDSuffix:         fakeProjectID,
-				zoneSuffix:              fakeZonePath,
-				gaeServerSoftwareSuffix: "foo",
+				util.ProjectIDSuffix:         fakeProjectID,
+				util.ZoneSuffix:              fakeZonePath,
+				util.GAEServerSoftwareSuffix: "foo",
 			},
 			expectedGCPAttributes: &scpb.GcpAttributes{
 				ProjectId: fakeProjectID,
@@ -252,6 +252,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 
 }
 
+// TODO(kyuc): maybe we can just use MockMetadataServer defined in mock_medata.go
 func initMockMetadataServer(resp string) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
