@@ -23,8 +23,9 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
-	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
+
+	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 )
 
 func TestServiceControlBasic(t *testing.T) {
@@ -194,20 +195,21 @@ func TestServiceControlBasic(t *testing.T) {
 		}
 
 		for i, wantScRequest := range tc.wantScRequests {
+			reqBody := scRequests[i].ReqBody
 			switch wantScRequest.(type) {
 			case *utils.ExpectedCheck:
 				if scRequests[i].ReqType != comp.CHECK_REQUEST {
 					t.Errorf("service control request %v: should be Check", i)
 				}
-				if !utils.VerifyCheck(scRequests[i].ReqBody, wantScRequest.(*utils.ExpectedCheck)) {
-					t.Error("Check request data doesn't match.")
+				if err := utils.VerifyCheck(reqBody, wantScRequest.(*utils.ExpectedCheck)); err != nil {
+					t.Error(err)
 				}
 			case *utils.ExpectedReport:
 				if scRequests[i].ReqType != comp.REPORT_REQUEST {
 					t.Errorf("service control request %v: should be Report", i)
 				}
-				if !utils.VerifyReport(scRequests[i].ReqBody, wantScRequest.(*utils.ExpectedReport)) {
-					t.Error("Report request data doesn't match.")
+				if err := utils.VerifyReport(reqBody, wantScRequest.(*utils.ExpectedReport)); err != nil {
+					t.Error(err)
 				}
 			default:
 				t.Fatal("unknown service control response type")

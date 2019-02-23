@@ -15,13 +15,12 @@
 package utils
 
 import (
-	"bytes"
 	"fmt"
-	"log"
 	"math"
 	"sort"
 
 	"github.com/golang/protobuf/proto"
+
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	sc "github.com/google/go-genproto/googleapis/api/servicecontrol/v1"
 	ltype "google.golang.org/genproto/googleapis/logging/type"
@@ -454,45 +453,48 @@ func stripRandomFields(op *sc.Operation) {
 	}
 }
 
-func compareProto(t, e proto.Message) bool {
-	if proto.Equal(t, e) {
-		return true
+// VerifyCheck verify if the response body is the expected CheckRequest.
+// If the verification fails, it returns an error.
+func VerifyCheck(body []byte, ec *ExpectedCheck) error {
+	got := sc.CheckRequest{}
+	err := proto.Unmarshal(body, &got)
+	if err != nil {
+		return err
 	}
-	var ts bytes.Buffer
-	if err := proto.MarshalText(&ts, t); err == nil {
-		fmt.Println("=== Got:\n", ts.String())
+	stripRandomFields(got.Operation)
+
+	want := CreateCheck(ec)
+	if diff := ProtoDiff(&want, &got); diff != "" {
+		return fmt.Errorf("Diff (-want +got):\n%v", diff)
 	}
-	var es bytes.Buffer
-	if err := proto.MarshalText(&es, e); err == nil {
-		fmt.Println("=== Expected:\n", es.String())
-	}
-	return false
+	return nil
 }
 
-func VerifyCheck(body []byte, er *ExpectedCheck) bool {
-	cr := sc.CheckRequest{}
-	err := proto.Unmarshal(body, &cr)
+// UnmarshalReportRequest returns proto ReportRequest given data.
+func UnmarshalReportRequest(data []byte) (*sc.ReportRequest, error) {
+	rr := &sc.ReportRequest{}
+	err := proto.Unmarshal(data, rr)
 	if err != nil {
-		log.Println("failed to parse body into CheckRequest.")
-		return false
+		return nil, err
 	}
-	stripRandomFields(cr.Operation)
-
-	erPb := CreateCheck(er)
-	return compareProto(&cr, &erPb)
+	return rr, nil
 }
 
-func VerifyReport(body []byte, er *ExpectedReport) bool {
-	cr := sc.ReportRequest{}
-	err := proto.Unmarshal(body, &cr)
+// VerifyReport verify if the response body is the expected ReportRequest.
+// If the verification fails, it returns an error.
+func VerifyReport(body []byte, er *ExpectedReport) error {
+	got, err := UnmarshalReportRequest(body)
 	if err != nil {
-		log.Println("failed to parse body into ReportRequest.")
-		return false
+		return err
 	}
-	for _, op := range cr.Operations {
+
+	for _, op := range got.Operations {
 		stripRandomFields(op)
 	}
 
-	erPb := CreateReport(er)
-	return compareProto(&cr, &erPb)
+	want := CreateReport(er)
+	if diff := ProtoDiff(&want, got); diff != "" {
+		return fmt.Errorf("Diff (-want +got):\n%v", diff)
+	}
+	return nil
 }

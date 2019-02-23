@@ -43,6 +43,7 @@ const (
 	TestHttp1JWT
 	TestServiceControlBasic
 	TestUnconfiguredRequest
+	TestReportGCPAttributes
 
 	// The number of total tests. has to be the last one.
 	maxTestNum
