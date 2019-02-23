@@ -19,20 +19,18 @@
 # End to End tests common options
 function e2e_options() {
   local OPTIND OPTARG arg
-  while getopts :a:b:B:c:d:e:g:i:k:l:r:R:st:v:V: arg; do
+  while getopts :a:b:B:c:m:g:i:k:l:r:R:s:t:v:V: arg; do
     case ${arg} in
       a) APIPROXY_SERVICE="${OPTARG}";;
       b) BOOKSTORE_IMAGE="${OPTARG}";;
       B) BUCKET="${OPTARG}";;
       c) COUPLING_OPTION="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')";;
-      d) DEBIAN_PKG="${OPTARG}";;
-      e) ESP_IMAGE="${OPTARG}";;
+      m) APIPROXY_IMAGE="${OPTARG}";;
       g) BACKEND="${OPTARG}";;
       i) UNIQUE_ID="${OPTARG}";;
       k) API_KEY="${OPTARG}";;
       l) DURATION_IN_HOUR="${OPTARG}";;
-      r) DIRECT_REPO="${OPTARG}";;
-      R) ESP_ROLLOUT_STRATEGY="${OPTARG}";;
+      R) ROLLOUT_STRATEGY="${OPTARG}";;
       s) SKIP_CLEANUP='true';;
       t) TEST_TYPE="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')";;
       v) VM_IMAGE="${OPTARG}";;
@@ -90,7 +88,7 @@ function long_running_test() {
   echo ${api_key}
   echo ${apiproxy_service}
   if [[ "${BACKEND}" == 'bookstore' ]]; then
-    retry -n 20 check_http_service "${host}:81/v1/shelves" ${http_code}
+    retry -n 20 check_http_service "${host}:80/v1/shelves" ${http_code}
     # TODO(jilinxia): add tests
   fi
   return 0
@@ -119,11 +117,21 @@ function get_cluster_host () {
   local COUNT=10
   local SLEEP=15
   for i in $( seq 1 ${COUNT} ); do
-    local host=$(kubectl get service ${APP} | awk '{print $4}' | grep -v EXTERNAL-IP)
+    local host=$(kubectl get service app | awk '{print $4}' | grep -v EXTERNAL-IP)
       [ '<pending>' != $host ] && break
       echo "Waiting for server external ip. Attempt  #$i/${COUNT}... will try again in ${SLEEP} seconds" >&2
       sleep ${SLEEP}
   done
   [ '<pending>' == $host ] && error_exit 'Failed to get the GKE cluster host.'
   echo "$host"
+}
+
+# Convenience method to sed files, works on both linux and mac
+function sed_i() {
+  # Incompatible sed parameter parsing.
+  if sed -i 2>&1 | grep -q 'requires an argument'; then
+    sed -i '' "${@}"
+  else
+    sed -i "${@}"
+  fi
 }

@@ -17,7 +17,11 @@
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${SCRIPT_PATH}/../../.." && pwd)"
 YAML_FILE=${SCRIPT_PATH}/../testdata/grpc-bookstore.yaml
-APP="api-proxy-grpc-bookstore"
+
+ARGS="\
+  \"--backend=grpc://127.0.0.1:8000\",\
+  \"--version=2019-02-11r0\",\
+"
 
 . ${SCRIPT_PATH}/prow-utilities.sh || { echo "Cannot load Bash utilities" ; exit 1 ; }
 e2e_options "${@}"
@@ -25,11 +29,14 @@ e2e_options "${@}"
 TEST_ID="gke-${COUPLING_OPTION}-${TEST_TYPE}-${BACKEND}"
 LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
 
-# Testing protocol
-# TODO(jilinxia): parse arguments
-# TODO(jilinxia): use APIPROXY image, instead of ESP image.
-run kubectl create -f ${YAML_FILE}
+# Parses parameters into config file.
+ARGS="$ARGS \"--service=${APIPROXY_SERVICE}\","
+ARGS="$ARGS \"--rollout_strategy=${ROLLOUT_STRATEGY}\""
+run sed_i "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g" ${YAML_FILE}
+run sed_i "s|ARGS|${ARGS}|g" ${YAML_FILE}
 
+# Creates service on GKE cluster.
+run kubectl create -f ${YAML_FILE}
 HOST=$(get_cluster_host)
 
 # Running Test

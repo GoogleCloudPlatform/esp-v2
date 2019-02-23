@@ -16,8 +16,7 @@
 
 # Fail on any error.
 set -e
-# Display commands being run.
-set -x
+set -u
 
 echo '======================================================='
 echo '=====================   e2e test  ====================='
@@ -47,31 +46,41 @@ glide install
 apt-get update && \
     apt-get -y install libtool cmake automake ninja-build curl unzip
 
+function getApiProxyService() {
+  if [[ "${1}" == "bookstore" ]]; then
+    echo "bookstore.endpoints.cloudesf-testing.cloud.goog"
+    return 0
+  else
+    echo "Service ${1} is not supported."
+    return 1
+  fi
+}
+
 function e2eGKE() {
   local OPTIND OPTARG arg
-  while getopts :c:g:R:t: arg; do
+  while getopts :c:g:m:R:t: arg; do
     case ${arg} in
       c) COUPLING_OPTION="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')";;
       g) BACKEND="${OPTARG}";;
+      m) APIPROXY_IMAGE="${OPTARG}";;
       R) ROLLOUT_STRATEGY="${OPTARG}";;
       t) TEST_TYPE="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')";;
     esac
   done
 
+  local APIPROXY_SERVICE=$(getApiProxyService ${BACKEND})
   ${ROOT}/tests/e2e/scripts/e2e-kube.sh \
+  -a ${APIPROXY_SERVICE} \
   -c ${COUPLING_OPTION} \
   -t ${TEST_TYPE} \
   -g ${BACKEND} \
+  -m ${APIPROXY_IMAGE} \
   -R ${ROLLOUT_STRATEGY} \
-  -i ${UNIQUE_ID} \
-  -a ${UNIQUE_ID}.${PROJECT_ID}.appspot.com
+  -i ${UNIQUE_ID}
 }
 
 function apiProxyGenericDockerImage() {
-  # Generic docker image format. Docker image name is computed using:
-  # git show -q HEAD --pretty=format:"${RELEASE_FLEX_IMAGE_FORMAT}"
-  # The format string can therefore contain format placeholders:
-  # https://git-scm.com/docs/git-show
+  # Generic docker image format. https://git-scm.com/docs/git-show.
   local image_format='gcr.io/cloudesf-testing/api-proxy:git-%H'
   local image="$(git show -q HEAD \
     --pretty=format:"${image_format}")"
@@ -88,4 +97,4 @@ function buildPackages() {
 buildPackages
 
 # TODO(jilinxia): add other backend tests.
-e2eGKE -c "tight" -t "http" -g "bookstore"  -R "fixed" -m ${GENERIC_IMAGE}
+e2eGKE -c "tight" -t "http" -g "bookstore" -R "fixed" -m ${GENERIC_IMAGE}
