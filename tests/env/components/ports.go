@@ -42,6 +42,7 @@ const (
 	TestHttp1Basic
 	TestHttp1JWT
 	TestServiceControlBasic
+	TestServiceControlCache
 	TestUnconfiguredRequest
 	TestReportGCPAttributes
 

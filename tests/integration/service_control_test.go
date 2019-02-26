@@ -217,3 +217,95 @@ func TestServiceControlBasic(t *testing.T) {
 		}
 	}
 }
+
+func TestServiceControlCache(t *testing.T) {
+	serviceName := "test-echo"
+	configId := "test-config-id"
+
+	args := []string{"--service=" + serviceName, "--version=" + configId,
+		"--backend_protocol=http1", "--rollout_strategy=fixed"}
+
+	s := env.TestEnv{
+		MockMetadata:          true,
+		MockServiceManagement: true,
+		MockServiceControl:    true,
+		MockJwtProviders:      []string{"google_jwt"},
+	}
+
+	if err := s.Setup(comp.TestServiceControlCache, "echo", args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+	defer s.TearDown()
+	time.Sleep(time.Duration(3 * time.Second))
+
+	url := fmt.Sprintf("http://localhost:%v%v%v", s.Ports.ListenerPort, "/echo", "?key=api-key")
+	message := "hello"
+	num := 10
+	wantResp := `{"message":"hello"}`
+	for i := 0; i < num; i++ {
+		resp, err := client.DoPost(url, message)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(resp), wantResp) {
+			t.Errorf("expected: %s, got: %s", wantResp, string(resp))
+		}
+	}
+
+	wantScRequests := []interface{}{
+		&utils.ExpectedCheck{
+			Version:         "0.1",
+			ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
+			ServiceConfigID: "test-config-id",
+			ConsumerID:      "api_key:api-key",
+			OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+		},
+		&utils.ExpectedReport{
+			Aggregate:         int64(num),
+			Version:           "0.1",
+			ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
+			ServiceConfigID:   "test-config-id",
+			URL:               "/echo?key=api-key",
+			ApiKey:            "api-key",
+			ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+			ProducerProjectID: "producer-project",
+			ConsumerProjectID: "123456",
+			HttpMethod:        "POST",
+			LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo is called",
+			RequestSize:       20,
+			ResponseSize:      19,
+			RequestBytes:      20,
+			ResponseBytes:     19,
+			ResponseCode:      200,
+			Platform:          util.GCE,
+			Location:          "test-zone",
+		},
+	}
+
+	scRequests, err := s.ServiceControlServer.GetRequests(len(wantScRequests), 3*time.Second)
+	if err != nil {
+		t.Fatalf("GetRequests returns error: %v", err)
+	}
+
+	for i, wantScRequest := range wantScRequests {
+		reqBody := scRequests[i].ReqBody
+		switch wantScRequest.(type) {
+		case *utils.ExpectedCheck:
+			if scRequests[i].ReqType != comp.CHECK_REQUEST {
+				t.Errorf("service control request %v: should be Check", i)
+			}
+			if err := utils.VerifyCheck(reqBody, wantScRequest.(*utils.ExpectedCheck)); err != nil {
+				t.Error(err)
+			}
+		case *utils.ExpectedReport:
+			if scRequests[i].ReqType != comp.REPORT_REQUEST {
+				t.Errorf("service control request %v: should be Report", i)
+			}
+			if err := utils.VerifyReport(reqBody, wantScRequest.(*utils.ExpectedReport)); err != nil {
+				t.Error(err)
+			}
+		default:
+			t.Fatal("unknown service control response type")
+		}
+	}
+}

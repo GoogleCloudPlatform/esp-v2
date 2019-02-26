@@ -90,7 +90,8 @@ func CreateEnvoyConf(path string, ports *Ports) error {
 
 // NewEnvoy creates a new Envoy struct and starts envoy.
 func NewEnvoy(debugMode bool, confPath string, ports *Ports) (*Envoy, error) {
-	args := []string{"-c", confPath}
+	// set concurrency to 1 to have only one worker thread to test client cache.
+	args := []string{"-c", confPath, "--concurrency", "1"}
 	if err := CreateEnvoyConf(confPath, ports); err != nil {
 		return nil, err
 	}

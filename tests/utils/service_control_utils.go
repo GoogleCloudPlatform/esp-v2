@@ -36,6 +36,7 @@ type ExpectedCheck struct {
 }
 
 type ExpectedReport struct {
+	Aggregate         int64
 	Version           string
 	ServiceName       string
 	ServiceConfigID   string
@@ -121,9 +122,9 @@ func createReportLabels(er *ExpectedReport) map[string]string {
 		"servicecontrol.googleapis.com/service_agent": "ESP/" + er.Version,
 		"servicecontrol.googleapis.com/user_agent":    "ESP",
 		"serviceruntime.googleapis.com/api_method":    er.ApiMethod,
-		"/response_code":       response,
-		"/status_code":         status,
-		"/response_code_class": class,
+		"/response_code":                              response,
+		"/status_code":                                status,
+		"/response_code_class":                        class,
 	}
 	if er.StatusCode != "" {
 		labels["/status_code"] = er.StatusCode
@@ -493,8 +494,45 @@ func VerifyReport(body []byte, er *ExpectedReport) error {
 	}
 
 	want := CreateReport(er)
+
+	if er.Aggregate > 1 {
+		AggregateReport(&want, er.Aggregate)
+	}
+
 	if diff := ProtoDiff(&want, got); diff != "" {
 		return fmt.Errorf("Diff (-want +got):\n%v", diff)
 	}
 	return nil
+}
+
+// AggregateReport aggregates N report body into one, as
+// all metric values * N, and its LowEntries appended N times.
+func AggregateReport(pb *sc.ReportRequest, n int64) {
+	for _, op := range pb.Operations {
+		for _, m := range op.MetricValueSets {
+			for _, v := range m.MetricValues {
+				switch x := v.Value.(type) {
+				case *sc.MetricValue_Int64Value:
+					x.Int64Value *= n
+				case *sc.MetricValue_DistributionValue:
+					dist := x.DistributionValue
+					dist.Count *= n
+					bs := []int64{}
+					for _, b := range dist.BucketCounts {
+						bs = append(bs, n*b)
+					}
+					dist.BucketCounts = bs
+				default:
+				}
+			}
+		}
+		if op.LogEntries != nil {
+			logs := []*sc.LogEntry{}
+			// Duplicate logEntry N times.
+			for i := 0; i < int(n); i++ {
+				logs = append(logs, op.LogEntries[0])
+			}
+			op.LogEntries = logs
+		}
+	}
 }

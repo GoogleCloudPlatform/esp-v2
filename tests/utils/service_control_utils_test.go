@@ -15,7 +15,6 @@
 package utils
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -449,8 +448,527 @@ const expectedReport = `
         service_config_id: "SERVICE_CONFIG_ID"
 `
 
+const expectedReport3 = `
+        service_name: "SERVICE_NAME"
+        operations: <
+          operation_name: "ListShelves"
+          consumer_id: "api_key:api-key"
+          labels: <
+            key: "/credential_id"
+            value: "apikey:api-key"
+          >
+          labels: <
+            key: "/error_type"
+            value: "5xx"
+          >
+          labels: <
+            key: "/protocol"
+            value: "unknown"
+          >
+          labels: <
+            key: "/response_code"
+            value: "503"
+          >
+          labels: <
+            key: "/response_code_class"
+            value: "5xx"
+          >
+          labels: <
+            key: "/status_code"
+            value: "14"
+          >
+          labels: <
+            key: "cloud.googleapis.com/location"
+            value: "us-central1"
+          >
+          labels: <
+            key: "servicecontrol.googleapis.com/platform"
+            value: "unknown"
+          >
+          labels: <
+            key: "servicecontrol.googleapis.com/service_agent"
+            value: "ESP/"
+          >
+          labels: <
+            key: "servicecontrol.googleapis.com/user_agent"
+            value: "ESP"
+          >
+          labels: <
+            key: "serviceruntime.googleapis.com/api_method"
+            value: "ListShelves"
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/consumer/error_count"
+            metric_values: <
+              int64_value: 3
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/consumer/request_bytes"
+            metric_values: <
+              int64_value:117
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/consumer/request_count"
+            metric_values: <
+              int64_value: 3
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/consumer/request_sizes"
+            metric_values: <
+              distribution_value: <
+                count: 3
+                mean: 39
+                minimum: 39
+                maximum: 39
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 3
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                exponential_buckets: <
+                  num_finite_buckets: 8
+                  growth_factor: 10
+                  scale: 1
+                >
+              >
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/consumer/response_bytes"
+            metric_values: <
+              int64_value: 624
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/consumer/response_sizes"
+            metric_values: <
+              distribution_value: <
+                count: 3
+                mean: 208
+                minimum: 208
+                maximum: 208
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 3
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                exponential_buckets: <
+                  num_finite_buckets: 8
+                  growth_factor: 10
+                  scale: 1
+                >
+              >
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/error_count"
+            metric_values: <
+              int64_value: 3
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/request_bytes"
+            metric_values: <
+              int64_value: 117
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/request_count"
+            metric_values: <
+              int64_value: 3
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/request_sizes"
+            metric_values: <
+              distribution_value: <
+                count: 3
+                mean: 39
+                minimum: 39
+                maximum: 39
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 3
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                exponential_buckets: <
+                  num_finite_buckets: 8
+                  growth_factor: 10
+                  scale: 1
+                >
+              >
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/response_bytes"
+            metric_values: <
+              int64_value: 624
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/response_sizes"
+            metric_values: <
+              distribution_value: <
+                count: 3
+                mean: 208
+                minimum: 208
+                maximum: 208
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 3
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                exponential_buckets: <
+                  num_finite_buckets: 8
+                  growth_factor: 10
+                  scale: 1
+                >
+              >
+            >
+          >
+          log_entries: <
+            name: "endpoints_log"
+            severity: ERROR
+            struct_payload: <
+              fields: <
+                key: "api_key"
+                value: <
+                  string_value: "api-key"
+                >
+              >
+              fields: <
+                key: "api_method"
+                value: <
+                  string_value: "ListShelves"
+                >
+              >
+              fields: <
+                key: "http_method"
+                value: <
+                  string_value: "GET"
+                >
+              >
+              fields: <
+                key: "http_response_code"
+                value: <
+                  number_value: 503
+                >
+              >
+              fields: <
+                key: "location"
+                value: <
+                  string_value: "us-central1"
+                >
+              >
+              fields: <
+                key: "log_message"
+                value: <
+                  string_value: "Method: ListShelves"
+                >
+              >
+              fields: <
+                key: "producer_project_id"
+                value: <
+                  string_value: "endpoints-test"
+                >
+              >
+              fields: <
+                key: "request_size_in_bytes"
+                value: <
+                  number_value: 39
+                >
+              >
+              fields: <
+                key: "response_size_in_bytes"
+                value: <
+                  number_value: 208
+                >
+              >
+              fields: <
+                key: "url"
+                value: <
+                  string_value: "/shelves"
+                >
+              >
+            >
+          >
+          log_entries: <
+            name: "endpoints_log"
+            severity: ERROR
+            struct_payload: <
+              fields: <
+                key: "api_key"
+                value: <
+                  string_value: "api-key"
+                >
+              >
+              fields: <
+                key: "api_method"
+                value: <
+                  string_value: "ListShelves"
+                >
+              >
+              fields: <
+                key: "http_method"
+                value: <
+                  string_value: "GET"
+                >
+              >
+              fields: <
+                key: "http_response_code"
+                value: <
+                  number_value: 503
+                >
+              >
+              fields: <
+                key: "location"
+                value: <
+                  string_value: "us-central1"
+                >
+              >
+              fields: <
+                key: "log_message"
+                value: <
+                  string_value: "Method: ListShelves"
+                >
+              >
+              fields: <
+                key: "producer_project_id"
+                value: <
+                  string_value: "endpoints-test"
+                >
+              >
+              fields: <
+                key: "request_size_in_bytes"
+                value: <
+                  number_value: 39
+                >
+              >
+              fields: <
+                key: "response_size_in_bytes"
+                value: <
+                  number_value: 208
+                >
+              >
+              fields: <
+                key: "url"
+                value: <
+                  string_value: "/shelves"
+                >
+              >
+            >
+          >
+          log_entries: <
+            name: "endpoints_log"
+            severity: ERROR
+            struct_payload: <
+              fields: <
+                key: "api_key"
+                value: <
+                  string_value: "api-key"
+                >
+              >
+              fields: <
+                key: "api_method"
+                value: <
+                  string_value: "ListShelves"
+                >
+              >
+              fields: <
+                key: "http_method"
+                value: <
+                  string_value: "GET"
+                >
+              >
+              fields: <
+                key: "http_response_code"
+                value: <
+                  number_value: 503
+                >
+              >
+              fields: <
+                key: "location"
+                value: <
+                  string_value: "us-central1"
+                >
+              >
+              fields: <
+                key: "log_message"
+                value: <
+                  string_value: "Method: ListShelves"
+                >
+              >
+              fields: <
+                key: "producer_project_id"
+                value: <
+                  string_value: "endpoints-test"
+                >
+              >
+              fields: <
+                key: "request_size_in_bytes"
+                value: <
+                  number_value: 39
+                >
+              >
+              fields: <
+                key: "response_size_in_bytes"
+                value: <
+                  number_value: 208
+                >
+              >
+              fields: <
+                key: "url"
+                value: <
+                  string_value: "/shelves"
+                >
+              >
+            >
+          >
+        >
+        operations: <
+          operation_name: "ListShelves"
+          consumer_id: "api_key:api-key"
+          labels: <
+            key: "/credential_id"
+            value: "apikey:api-key"
+          >
+          labels: <
+            key: "/error_type"
+            value: "5xx"
+          >
+          labels: <
+            key: "/protocol"
+            value: "unknown"
+          >
+          labels: <
+            key: "/response_code"
+            value: "503"
+          >
+          labels: <
+            key: "/response_code_class"
+            value: "5xx"
+          >
+          labels: <
+            key: "/status_code"
+            value: "14"
+          >
+          labels: <
+            key: "cloud.googleapis.com/location"
+            value: "us-central1"
+          >
+          labels: <
+            key: "servicecontrol.googleapis.com/platform"
+            value: "unknown"
+          >
+          labels: <
+            key: "servicecontrol.googleapis.com/service_agent"
+            value: "ESP/"
+          >
+          labels: <
+            key: "servicecontrol.googleapis.com/user_agent"
+            value: "ESP"
+          >
+          labels: <
+            key: "serviceruntime.googleapis.com/api_method"
+            value: "ListShelves"
+          >
+          labels: <
+            key: "serviceruntime.googleapis.com/consumer_project"
+            value: "123456"
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/error_count"
+            metric_values: <
+              int64_value: 3
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/request_count"
+            metric_values: <
+              int64_value: 3
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/request_sizes"
+            metric_values: <
+              distribution_value: <
+                count: 3
+                mean: 39
+                minimum: 39
+                maximum: 39
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 3
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                exponential_buckets: <
+                  num_finite_buckets: 8
+                  growth_factor: 10
+                  scale: 1
+                >
+              >
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/response_sizes"
+            metric_values: <
+              distribution_value: <
+                count: 3
+                mean: 208
+                minimum: 208
+                maximum: 208
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 3
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                exponential_buckets: <
+                  num_finite_buckets: 8
+                  growth_factor: 10
+                  scale: 1
+                >
+              >
+            >
+          >
+        >
+        service_config_id: "SERVICE_CONFIG_ID"
+`
+
 func TestCreateReport(t *testing.T) {
-	er := CreateReport(&ExpectedReport{
+	got := CreateReport(&ExpectedReport{
 		ServiceName:       "SERVICE_NAME",
 		ServiceConfigID:   "SERVICE_CONFIG_ID",
 		URL:               "/shelves",
@@ -469,15 +987,20 @@ func TestCreateReport(t *testing.T) {
 		ErrorType:         "5xx",
 	})
 
-	expected := sc.ReportRequest{}
-	if err := proto.UnmarshalText(expectedReport, &expected); err != nil {
+	want := sc.ReportRequest{}
+	if err := proto.UnmarshalText(expectedReport, &want); err != nil {
 		t.Fatalf("proto.UnmarshalText: %v", err)
 	}
-	if !proto.Equal(&er, &expected) {
-		var buf bytes.Buffer
-		if err := proto.MarshalText(&buf, &er); err != nil {
-			t.Errorf("proto.MarsalText: %v", err)
-		}
-		t.Errorf("Got:\n===\n%v===\nExpected:\n===\n%v===\n", buf.String(), expectedReport)
+	if diff := ProtoDiff(&want, &got); diff != "" {
+		t.Errorf("Report diff:\n%s", diff)
+	}
+
+	AggregateReport(&got, 3)
+	want3 := sc.ReportRequest{}
+	if err := proto.UnmarshalText(expectedReport3, &want3); err != nil {
+		t.Fatalf("proto.UnmarshalText3: %v", err)
+	}
+	if diff := ProtoDiff(&want3, &got); diff != "" {
+		t.Errorf("Aggregated report diff:\n%s", diff)
 	}
 }
