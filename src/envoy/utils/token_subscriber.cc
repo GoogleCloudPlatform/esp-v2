@@ -16,7 +16,8 @@
 #include "common/grpc/async_client_manager_impl.h"
 
 using ::google::api_proxy::agent::GetAccessTokenRequest;
-using ::google::api_proxy::agent::GetAccessTokenResponse;
+using ::google::api_proxy::agent::GetIdentityJWTTokenRequest;
+using ::google::api_proxy::agent::GetTokenResponse;
 
 namespace Envoy {
 namespace Extensions {
@@ -29,7 +30,7 @@ const std::chrono::milliseconds kGrpcRequestTimeoutMs(5000);
 // Delay after a failed fetch
 const std::chrono::seconds kFailedRequestTimeout(60);
 
-const google::protobuf::MethodDescriptor& descriptor() {
+const google::protobuf::MethodDescriptor& getAccessTokenDescriptor() {
   static const google::protobuf::MethodDescriptor* descriptor =
       ::google::api_proxy::agent::AgentService::descriptor()->FindMethodByName(
           "GetAccessToken");
@@ -37,9 +38,17 @@ const google::protobuf::MethodDescriptor& descriptor() {
   return *descriptor;
 }
 
+const google::protobuf::MethodDescriptor& getIdentityJWTTokenDescriptor() {
+  static const google::protobuf::MethodDescriptor* descriptor =
+      ::google::api_proxy::agent::AgentService::descriptor()->FindMethodByName(
+          "GetIdentityJWTToken");
+  ASSERT(descriptor);
+  return *descriptor;
+}
+
 }  // namespace
 
-Envoy::Grpc::AsyncClientFactoryPtr makeClinetFactory(
+Envoy::Grpc::AsyncClientFactoryPtr makeClientFactory(
     Envoy::Server::Configuration::FactoryContext& context,
     const std::string& token_cluster) {
   ::envoy::api::v2::core::GrpcService grpc_service;
@@ -48,10 +57,13 @@ Envoy::Grpc::AsyncClientFactoryPtr makeClinetFactory(
       context.clusterManager(), grpc_service, true, context.timeSource());
 }
 
-TokenSubscriber::TokenSubscriber(Envoy::Server::Configuration::FactoryContext& context,
-                                 Envoy::Grpc::AsyncClientFactoryPtr client_factory,
-                                 TokenSubscriber::Callback& callback)
-    : client_factory_(std::move(client_factory)), token_callback_(callback) {
+TokenSubscriber::TokenSubscriber(
+    Envoy::Server::Configuration::FactoryContext& context,
+    Envoy::Grpc::AsyncClientFactoryPtr client_factory,
+    TokenSubscriber::Callback& callback, const std::string* audience)
+    : client_factory_(std::move(client_factory)),
+      token_callback_(callback),
+      audience_(audience) {
   refresh_timer_ =
       context.dispatcher().createTimer([this]() -> void { refresh(); });
 
@@ -73,17 +85,27 @@ void TokenSubscriber::refresh() {
   if (active_request_) {
     active_request_->cancel();
   }
-
   async_client_ = client_factory_->create();
-  ENVOY_LOG(debug, "Sending GetAccessToken request");
-  active_request_ = async_client_->send(
-      descriptor(), GetAccessTokenRequest(), *this,
-      Envoy::Tracing::NullSpan::instance(),
-      absl::optional<std::chrono::milliseconds>(kGrpcRequestTimeoutMs));
+  if (audience_ == nullptr) {
+    ENVOY_LOG(debug, "Sending GetAccessToken request");
+    GetAccessTokenRequest req;
+    active_request_ = async_client_->send(
+        getAccessTokenDescriptor(), req, *this,
+        Envoy::Tracing::NullSpan::instance(),
+        absl::optional<std::chrono::milliseconds>(kGrpcRequestTimeoutMs));
+  } else {
+    ENVOY_LOG(debug, "Sending GetIdentityJWTToken request");
+    GetIdentityJWTTokenRequest req;
+    req.set_audience(*audience_);
+    active_request_ = async_client_->send(
+        getIdentityJWTTokenDescriptor(), req, *this,
+        Envoy::Tracing::NullSpan::instance(),
+        absl::optional<std::chrono::milliseconds>(kGrpcRequestTimeoutMs));
+  }
 }
 
-void TokenSubscriber::onSuccess(
-    std::unique_ptr<GetAccessTokenResponse>&& response, Envoy::Tracing::Span&) {
+void TokenSubscriber::onSuccess(std::unique_ptr<GetTokenResponse>&& response,
+                                Envoy::Tracing::Span&) {
   active_request_ = nullptr;
   ENVOY_LOG(debug, "GetAccessToken got response: {}", response->DebugString());
   token_callback_.onTokenUpdate(response->access_token());
@@ -98,7 +120,8 @@ void TokenSubscriber::onSuccess(
 }
 
 void TokenSubscriber::onFailure(Envoy::Grpc::Status::GrpcStatus status,
-                                const std::string& message, Envoy::Tracing::Span&) {
+                                const std::string& message,
+                                Envoy::Tracing::Span&) {
   active_request_ = nullptr;
   ENVOY_LOG(debug, "GetAccessToken failed with code: {}, {}", status, message);
   runInitializeCallbackIfAny();
