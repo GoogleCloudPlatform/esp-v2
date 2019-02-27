@@ -244,7 +244,8 @@ bool PathMatcherBuilder<Method>::Register(std::string http_method,
   if (nullptr == ht) {
     return false;
   }
-  PathMatcherNode::PathInfo path_info = path_matcher::TransformHttpTemplate(*ht);
+  PathMatcherNode::PathInfo path_info =
+      path_matcher::TransformHttpTemplate(*ht);
   if (path_info.path_info().size() == 0) {
     return false;
   }

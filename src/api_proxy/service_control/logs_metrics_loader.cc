@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "src/api_proxy/service_control/logs_metrics_loader.h"
 #include "src/api_proxy/service_control/request_builder.h"
 

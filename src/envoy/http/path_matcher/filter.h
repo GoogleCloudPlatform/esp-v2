@@ -28,9 +28,9 @@ namespace PathMatcher {
 
 class Filter : public Http::StreamDecoderFilter,
                public Logger::Loggable<Logger::Id::filter> {
-public:
+ public:
   Filter(FilterConfigSharedPtr config) : config_(config) {}
-  ~Filter() {};
+  ~Filter(){};
 
   void onDestroy() override;
 
@@ -39,7 +39,7 @@ public:
   Http::FilterTrailersStatus decodeTrailers(Http::HeaderMap&) override;
   void setDecoderFilterCallbacks(Http::StreamDecoderFilterCallbacks&) override;
 
-private:
+ private:
   void rejectRequest(Http::Code code, absl::string_view error_msg);
 
   Http::StreamDecoderFilterCallbacks* decoder_callbacks_;

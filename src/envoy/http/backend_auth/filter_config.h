@@ -44,9 +44,12 @@ struct FilterStats {
 class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
  public:
   FilterConfig(const ::google::api::envoy::http::backend_auth::FilterConfig&
-                   proto_config, const std::string& stats_prefix,
-                   Server::Configuration::FactoryContext& context) : proto_config_(proto_config),
-        stats_(generateStats(stats_prefix, context.scope())), config_parser_(proto_config_, context) {}
+                   proto_config,
+               const std::string& stats_prefix,
+               Server::Configuration::FactoryContext& context)
+      : proto_config_(proto_config),
+        stats_(generateStats(stats_prefix, context.scope())),
+        config_parser_(proto_config_, context) {}
 
   const ::google::api::envoy::http::backend_auth::FilterConfig& config() const {
     return proto_config_;

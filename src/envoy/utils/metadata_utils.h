@@ -26,9 +26,11 @@ namespace Utils {
 
 constexpr char kPathMatcherFilterName[] = "envoy.filters.http.path_matcher";
 
-void setOperationToMetadata(::envoy::api::v2::core::Metadata& metadata, const std::string& operation);
-const std::string& getOperationFromMetadata(const ::envoy::api::v2::core::Metadata& metadata,
-                                            const std::string& default_value);
+void setOperationToMetadata(::envoy::api::v2::core::Metadata& metadata,
+                            const std::string& operation);
+const std::string& getOperationFromMetadata(
+    const ::envoy::api::v2::core::Metadata& metadata,
+    const std::string& default_value);
 
 }  // namespace Utils
 }  // namespace Extensions

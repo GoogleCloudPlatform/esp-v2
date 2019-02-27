@@ -33,13 +33,14 @@ const std::string FilterName = Utils::kPathMatcherFilterName;
  */
 class FilterFactory
     : public Common::FactoryBase<
-        ::google::api::envoy::http::path_matcher::FilterConfig> {
+          ::google::api::envoy::http::path_matcher::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(FilterName) {}
 
  private:
   Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::google::api::envoy::http::path_matcher::FilterConfig& proto_config,
+      const ::google::api::envoy::http::path_matcher::FilterConfig&
+          proto_config,
       const std::string& stats_prefix,
       Server::Configuration::FactoryContext& context) override {
     auto filter_config =

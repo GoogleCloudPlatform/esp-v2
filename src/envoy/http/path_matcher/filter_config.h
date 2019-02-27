@@ -46,33 +46,40 @@ struct FilterStats {
 class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
  public:
   FilterConfig(const ::google::api::envoy::http::path_matcher::FilterConfig&
-                   proto_config, const std::string& stats_prefix,
-                   Server::Configuration::FactoryContext& context) : proto_config_(proto_config),
+                   proto_config,
+               const std::string& stats_prefix,
+               Server::Configuration::FactoryContext& context)
+      : proto_config_(proto_config),
         stats_(generateStats(stats_prefix, context.scope())) {
-    ::google::api_proxy::path_matcher::PathMatcherBuilder<const std::string*> pmb;
+    ::google::api_proxy::path_matcher::PathMatcherBuilder<const std::string*>
+        pmb;
     for (const auto& rule : proto_config_.rules()) {
-      if (!pmb.Register(rule.pattern().http_method(), rule.pattern().uri_template(), std::string(), &rule.operation())) {
+      if (!pmb.Register(rule.pattern().http_method(),
+                        rule.pattern().uri_template(), std::string(),
+                        &rule.operation())) {
         throw ProtoValidationException("Duplicated pattern", rule.pattern());
       }
     }
     path_matcher_ = pmb.Build();
   }
 
-  const std::string* FindOperation(const std::string& http_method, const std::string& path) const {
+  const std::string* FindOperation(const std::string& http_method,
+                                   const std::string& path) const {
     return path_matcher_->Lookup(http_method, path);
   }
 
   FilterStats& stats() { return stats_; }
 
-private:
- FilterStats generateStats(const std::string& prefix, Stats::Scope& scope) {
+ private:
+  FilterStats generateStats(const std::string& prefix, Stats::Scope& scope) {
     const std::string final_prefix = prefix + "path_matcher.";
     return {ALL_BACKEND_AUTH_FILTER_STATS(
         POOL_COUNTER_PREFIX(scope, final_prefix))};
   }
 
   ::google::api::envoy::http::path_matcher::FilterConfig proto_config_;
-  ::google::api_proxy::path_matcher::PathMatcherPtr<const std::string*> path_matcher_;
+  ::google::api_proxy::path_matcher::PathMatcherPtr<const std::string*>
+      path_matcher_;
   FilterStats stats_;
 };
 

@@ -53,11 +53,13 @@ class TokenSubscriberTest : public testing::Test {
         }));
 
     EXPECT_CALL(*raw_mock_client_, send(_, _, _, _, _))
-        .WillOnce(Invoke(
-            [this](const Envoy::Protobuf::MethodDescriptor&, const Envoy::Protobuf::Message&,
-                   Envoy::Grpc::AsyncRequestCallbacks& callback, Envoy::Tracing::Span&,
-                   const absl::optional<std::chrono::milliseconds>&)
-                -> Envoy::Grpc::AsyncRequest* {
+        .WillOnce(
+            Invoke([this](const Envoy::Protobuf::MethodDescriptor&,
+                          const Envoy::Protobuf::Message&,
+                          Envoy::Grpc::AsyncRequestCallbacks& callback,
+                          Envoy::Tracing::Span&,
+                          const absl::optional<std::chrono::milliseconds>&)
+                       -> Envoy::Grpc::AsyncRequest* {
               client_callback_ = &callback;
               return nullptr;
             }));
@@ -82,8 +84,9 @@ TEST_F(TokenSubscriberTest, TestSuccess) {
   GetTokenResponse* token_response = new GetTokenResponse;
   token_response->set_access_token("TOKEN");
   token_response->mutable_expires_in()->set_seconds(100);
-  client_callback_->onSuccessUntyped(Envoy::ProtobufTypes::MessagePtr(token_response),
-                                     Envoy::Tracing::NullSpan::instance());
+  client_callback_->onSuccessUntyped(
+      Envoy::ProtobufTypes::MessagePtr(token_response),
+      Envoy::Tracing::NullSpan::instance());
 
   EXPECT_EQ(init_done_called_, 1);
 }
@@ -114,16 +117,18 @@ TEST_F(TokenSubscriberTest, TestUpdate) {
   token_response->set_access_token("TOKEN1");
   // Will refresh right away if less than 5s
   token_response->mutable_expires_in()->set_seconds(1);
-  client_callback_->onSuccessUntyped(Envoy::ProtobufTypes::MessagePtr(token_response),
-                                     Envoy::Tracing::NullSpan::instance());
+  client_callback_->onSuccessUntyped(
+      Envoy::ProtobufTypes::MessagePtr(token_response),
+      Envoy::Tracing::NullSpan::instance());
 
   EXPECT_CALL(token_callback_, onTokenUpdate(std::string("TOKEN2")));
 
   token_response = new GetTokenResponse;
   token_response->set_access_token("TOKEN2");
   token_response->mutable_expires_in()->set_seconds(100);
-  client_callback_->onSuccessUntyped(Envoy::ProtobufTypes::MessagePtr(token_response),
-                                     Envoy::Tracing::NullSpan::instance());
+  client_callback_->onSuccessUntyped(
+      Envoy::ProtobufTypes::MessagePtr(token_response),
+      Envoy::Tracing::NullSpan::instance());
 
   EXPECT_EQ(init_done_called_, 1);
 }

@@ -31,13 +31,14 @@ const std::string FilterName = "envoy.filters.http.backend_auth";
  */
 class FilterFactory
     : public Common::FactoryBase<
-        ::google::api::envoy::http::backend_auth::FilterConfig> {
+          ::google::api::envoy::http::backend_auth::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(FilterName) {}
 
  private:
   Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::google::api::envoy::http::backend_auth::FilterConfig& proto_config,
+      const ::google::api::envoy::http::backend_auth::FilterConfig&
+          proto_config,
       const std::string& stats_prefix,
       Server::Configuration::FactoryContext& context) override {
     auto filter_config =

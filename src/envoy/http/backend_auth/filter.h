@@ -33,7 +33,7 @@ class Filter : public Http::StreamDecoderFilter,
   ~Filter(){};
 
   // Http::StreamFilterBase
-  void onDestroy() override {};
+  void onDestroy() override{};
 
   // Http::StreamDecoderFilter
   Http::FilterHeadersStatus decodeHeaders(Http::HeaderMap &, bool) override;
@@ -48,7 +48,7 @@ class Filter : public Http::StreamDecoderFilter,
   const FilterConfigSharedPtr config_;
 };
 
-} // namespace BackendAuth
-} // namespace HttpFilters
-} // namespace Extensions
-} // namespace Envoy
+}  // namespace BackendAuth
+}  // namespace HttpFilters
+}  // namespace Extensions
+}  // namespace Envoy

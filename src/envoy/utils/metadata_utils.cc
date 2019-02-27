@@ -22,7 +22,7 @@ constexpr char kOperation[] = "operation";
 }
 
 void setOperationToMetadata(::envoy::api::v2::core::Metadata& metadata,
-    const std::string& operation) {
+                            const std::string& operation) {
   ProtobufWkt::Value value;
   value.set_string_value(operation);
   ProtobufWkt::Struct md;
@@ -30,9 +30,11 @@ void setOperationToMetadata(::envoy::api::v2::core::Metadata& metadata,
   (*metadata.mutable_filter_metadata())[kPathMatcherFilterName].MergeFrom(md);
 }
 
-const std::string& getOperationFromMetadata(const ::envoy::api::v2::core::Metadata& metadata,
+const std::string& getOperationFromMetadata(
+    const ::envoy::api::v2::core::Metadata& metadata,
     const std::string& default_value) {
-  const auto filter_it = metadata.filter_metadata().find(kPathMatcherFilterName);
+  const auto filter_it =
+      metadata.filter_metadata().find(kPathMatcherFilterName);
   // Failure case for missing namespace.
   if (filter_it == metadata.filter_metadata().end()) {
     return default_value;

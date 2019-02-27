@@ -36,12 +36,14 @@ class TokenCache : public ThreadLocal::ThreadLocalObject {
 class AudienceContext : public Utils::TokenSubscriber::Callback {
  public:
   AudienceContext(
-      const ::google::api::envoy::http::backend_auth::BackendAuthRule& proto_config,
+      const ::google::api::envoy::http::backend_auth::BackendAuthRule&
+          proto_config,
       Server::Configuration::FactoryContext& context)
       : tls_(context.threadLocal().allocateSlot()),
         token_subscriber_(
-            context, Utils::makeClientFactory(context,
-            proto_config.token_cluster()), *this, &proto_config.jwt_audience()) {
+            context,
+            Utils::makeClientFactory(context, proto_config.token_cluster()),
+            *this, &proto_config.jwt_audience()) {
     tls_->set(
         [](Event::Dispatcher&) -> ThreadLocal::ThreadLocalObjectSharedPtr {
           return std::make_shared<TokenCache>();
@@ -58,7 +60,7 @@ class AudienceContext : public Utils::TokenSubscriber::Callback {
 
   TokenSharedPtr token() const {
     if (tls_->getTyped<TokenCache>().token_) {
-        return tls_->getTyped<TokenCache>().token_;
+      return tls_->getTyped<TokenCache>().token_;
     }
     return nullptr;
   }

@@ -132,10 +132,11 @@ void Handler::fillOperationInfo(
 }
 
 void Handler::fillGCPInfo(
-    ::google::api_proxy::service_control::ReportRequestInfo& info) {
+    ::google::api_proxy::service_control::ReportRequestInfo &info) {
   const auto &filter_config = config_->config();
   if (!filter_config.has_gcp_attributes()) {
-    info.compute_platform = ::google::api_proxy::service_control::compute_platform::UNKNOWN;
+    info.compute_platform =
+        ::google::api_proxy::service_control::compute_platform::UNKNOWN;
     return;
   }
 
@@ -146,13 +147,17 @@ void Handler::fillGCPInfo(
 
   const std::string &platform = gcp_attributes.platform();
   if (platform == "GAE_FLEX") {
-    info.compute_platform = ::google::api_proxy::service_control::compute_platform::GAE_FLEX;
+    info.compute_platform =
+        ::google::api_proxy::service_control::compute_platform::GAE_FLEX;
   } else if (platform == "GKE") {
-    info.compute_platform = ::google::api_proxy::service_control::compute_platform::GKE;
+    info.compute_platform =
+        ::google::api_proxy::service_control::compute_platform::GKE;
   } else if (platform == "GCE") {
-    info.compute_platform = ::google::api_proxy::service_control::compute_platform::GCE;
+    info.compute_platform =
+        ::google::api_proxy::service_control::compute_platform::GCE;
   } else {
-    info.compute_platform = ::google::api_proxy::service_control::compute_platform::UNKNOWN;
+    info.compute_platform =
+        ::google::api_proxy::service_control::compute_platform::UNKNOWN;
   }
 }
 

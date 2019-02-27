@@ -38,8 +38,8 @@ using Http::LowerCaseString;
 void Filter::onDestroy() {}
 
 FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
-  const std::string* operation = config_->FindOperation(headers.Method()->value().c_str(),
-                                                   headers.Path()->value().c_str());
+  const std::string* operation = config_->FindOperation(
+      headers.Method()->value().c_str(), headers.Path()->value().c_str());
   if (operation == nullptr) {
     rejectRequest(Http::Code(404),
                   "Path does not match any requirement uri_template.");
@@ -47,7 +47,7 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
   }
   ENVOY_LOG(debug, "matched operation: {}", *operation);
   Utils::setOperationToMetadata(
-    decoder_callbacks_->streamInfo().dynamicMetadata(), *operation);
+      decoder_callbacks_->streamInfo().dynamicMetadata(), *operation);
   config_->stats().allowed_.inc();
   return FilterHeadersStatus::Continue;
 }
@@ -61,7 +61,7 @@ FilterTrailersStatus Filter::decodeTrailers(HeaderMap&) {
 }
 
 void Filter::setDecoderFilterCallbacks(
-    Http::StreamDecoderFilterCallbacks &callbacks) {
+    Http::StreamDecoderFilterCallbacks& callbacks) {
   decoder_callbacks_ = &callbacks;
 }
 
