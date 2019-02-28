@@ -20,8 +20,8 @@ import "api/envoy/http/common/pattern.proto";
 import "validate/validate.proto";
 
 message PathMatcherRule {
-
-  // The pattern as defined in https://github.com/googleapis/googleapis/blob/master/google/api/http.proto
+  // The pattern as defined in
+  // https://github.com/googleapis/googleapis/blob/master/google/api/http.proto
   // to match a HTTP request.
   api.envoy.http.common.Pattern pattern = 1;
 

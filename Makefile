@@ -24,9 +24,12 @@ IMG="gcr.io/cloudesf-testing/gcpproxy-prow"
 TAG := $(shell date +v%Y%m%d)-$(shell git describe --tags --always)
 K8S := master
 
-GOFILES		= $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./src/go/proto/*")
-GODIRS		= $(shell go list -f '{{.Dir}}' ./... \
-						| grep -vFf <(go list -f '{{.Dir}}' ./vendor/...))
+CPP_PROTO_FILES = $(shell find . -type f \
+		-regex "./\(src\|api\)/.*[.]\(h\|cc\|proto\)" \
+		-not -path "./vendor/*")
+GOFILES	= $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./src/go/proto/*")
+GODIRS	= $(shell go list -f '{{.Dir}}' ./... \
+					| grep -vFf <(go list -f '{{.Dir}}' ./vendor/...))
 
 #-----------------------------------------------------------------------------
 # Target: build
@@ -153,6 +156,8 @@ check: format.check vet lint
 format: tools.goimports
 	@echo "--> formatting code with 'goimports' tool"
 	@goimports -local $(PKG) -w -l $(GOFILES)
+	@echo "--> formatting code with 'clang-format-7' tool"
+	@echo $(CPP_PROTO_FILES) | xargs clang-format-7 -i
 
 .PHONY: format.check
 format.check: tools.goimports

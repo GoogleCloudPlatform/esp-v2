@@ -62,10 +62,12 @@ message APIKeyRequirement {
   // The locations to extract the api_key. Only one api key is needed,
   // if multiple locations are specified, the first api key is used.
   // If the field is empty, default locations will be used.
-  // The default locations are: query paramaters "key", "api_key", and header "x-api-key"
+  // The default locations are: query paramaters "key", "api_key", and header
+  // "x-api-key"
   repeated APIKeyLocation locations = 1;
 
-  // If true, to allow a request without api key and service control Check is not called.
+  // If true, to allow a request without api key and service control Check is
+  // not called.
   bool allow_without_api_key = 2;
 }
 

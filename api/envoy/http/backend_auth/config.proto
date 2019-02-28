@@ -19,17 +19,17 @@ package google.api.envoy.http.backend_auth;
 import "validate/validate.proto";
 
 message BackendAuthRule {
-    // Operation name.
-    string operation = 1 [(validate.rules).string.min_bytes = 1];
+  // Operation name.
+  string operation = 1 [(validate.rules).string.min_bytes = 1];
 
-    // JWT token sent to the backend.
-    string jwt_audience = 2 [(validate.rules).string.min_bytes = 1];
+  // JWT token sent to the backend.
+  string jwt_audience = 2 [(validate.rules).string.min_bytes = 1];
 
-    // Token cluster address to fetch JWT token.
-    string token_cluster = 3 [(validate.rules).string.min_bytes = 1];
-  }
+  // Token cluster address to fetch JWT token.
+  string token_cluster = 3 [(validate.rules).string.min_bytes = 1];
+}
 
 message FilterConfig {
-    // A list of backend auth rules.
-    repeated BackendAuthRule rules = 1;
+  // A list of backend auth rules.
+  repeated BackendAuthRule rules = 1;
 }

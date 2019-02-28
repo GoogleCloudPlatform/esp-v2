@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 syntax = "proto3";
 
 package google.api_proxy.agent;
@@ -24,13 +23,17 @@ import "google/protobuf/duration.proto";
 // API Proxy Agent Service
 service AgentService {
   // Returns an access token with its expiration time.
-  rpc GetAccessToken(GetAccessTokenRequest) returns (GetTokenResponse) {}
+  rpc GetAccessToken(GetAccessTokenRequest) returns (GetTokenResponse) {
+  }
 
   // Returns an access token based on audience, and token expiration time.
-  rpc GetIdentityJWTToken(GetIdentityJWTTokenRequest) returns (GetTokenResponse) {}
+  rpc GetIdentityJWTToken(GetIdentityJWTTokenRequest)
+      returns (GetTokenResponse) {
+  }
 }
 
-message GetAccessTokenRequest {}
+message GetAccessTokenRequest {
+}
 
 message GetIdentityJWTTokenRequest {
   // Audience that the JWT is intended for.
@@ -44,4 +47,3 @@ message GetTokenResponse {
   // Duration indicating how long the token will expire.
   google.protobuf.Duration expires_in = 2;
 }
-

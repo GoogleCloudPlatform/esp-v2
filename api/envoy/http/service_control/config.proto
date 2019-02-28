@@ -31,17 +31,18 @@ message HttpUri {
   string cluster = 2 [(validate.rules).string.min_bytes = 1];
 
   // The timeout.
-  google.protobuf.Duration timeout = 3 [
-    (validate.rules).duration.required = true
-  ];
+  google.protobuf.Duration timeout = 3
+      [(validate.rules).duration.required = true];
 }
 
 message ServiceControlRule {
   // Use Envoy native RouteMatch so we can use Envoy native matching logic.
-  api.envoy.http.common.Pattern pattern = 1 [(validate.rules).message.required = true];
+  api.envoy.http.common.Pattern pattern = 1
+      [(validate.rules).message.required = true];
 
   // The requirments for matched pattern.
-  api.envoy.http.service_control.Requirement requires = 2 [(validate.rules).message.required = true];
+  api.envoy.http.service_control.Requirement requires = 2
+      [(validate.rules).message.required = true];
 }
 
 // Per service config.
@@ -78,7 +79,7 @@ message GcpAttributes {
 
 message FilterConfig {
   // A list of services supported on this Envoy server.
-  repeated Service services = 1; // ref:multi-service
+  repeated Service services = 1;  // ref:multi-service
 
   // The requirement rules for incoming requests.
   repeated ServiceControlRule rules = 2;
