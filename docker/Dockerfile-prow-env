@@ -19,15 +19,15 @@ LABEL maintainer="jilinxia@google.com"
 ARG IMAGE_ARG
 ENV IMAGE=${IMAGE_ARG}
 
+# clang is used for formatting, TSAN, and ASAN tests
+RUN sh -c 'curl http://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -'
+RUN sh -c 'echo "deb http://apt.llvm.org/stretch/ llvm-toolchain-stretch-7 main" > /etc/apt/sources.list.d/llvm.list'
+
 RUN apt-get update && \
     apt-get -y install \
     wget make cmake python python-pip pkg-config realpath \
     zlib1g-dev curl libtool automake zip time rsync ninja-build \
-    git bash-completion
-
-# clang is used for TSAN and ASAN tests
-RUN sh -c 'curl http://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -'
-RUN sh -c 'echo "deb http://apt.llvm.org/stretch/ llvm-toolchain-stretch-6.0 main" > /etc/apt/sources.list.d/llvm.list'
+    git bash-completion clang-format-7
 
 # install nodejs, which is needed for integration tests
 RUN sh -c 'curl -sL https://deb.nodesource.com/setup_11.x | bash -'
