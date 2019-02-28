@@ -17,6 +17,7 @@
 
 using ::google::api::envoy::http::service_control::APIKeyLocation;
 using ::google::api_proxy::service_control::CheckResponseInfo;
+using ::google::api_proxy::service_control::LatencyInfo;
 using ::google::api_proxy::service_control::OperationInfo;
 using ::google::protobuf::util::Status;
 
@@ -25,8 +26,34 @@ namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 namespace {
+
+// The HTTP header to send consumer project to backend.
 const Http::LowerCaseString kConsumerProjectId("x-endpoint-api-project-id");
+
+inline int64_t convertNsToMs(std::chrono::nanoseconds ns) {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(ns).count();
 }
+
+void fillLatency(const StreamInfo::StreamInfo &stream_info,
+                 LatencyInfo &latency) {
+  if (stream_info.requestComplete()) {
+    latency.request_time_ms =
+        convertNsToMs(stream_info.requestComplete().value());
+  }
+
+  auto start = stream_info.firstUpstreamTxByteSent();
+  auto end = stream_info.lastUpstreamRxByteReceived();
+  if (start && end && end.value() >= start.value()) {
+    latency.backend_time_ms = convertNsToMs(end.value() - start.value());
+  }
+
+  if (latency.backend_time_ms >= 0 &&
+      latency.request_time_ms >= latency.backend_time_ms) {
+    latency.overhead_time_ms =
+        latency.request_time_ms - latency.backend_time_ms;
+  }
+}
+}  // namespace
 
 Handler::Handler(const Http::HeaderMap &headers, FilterConfigSharedPtr config)
     : config_(config) {
@@ -228,8 +255,7 @@ void Handler::callReport(const Http::HeaderMap * /*response_headers*/,
   // b/123948413
 
   fillGCPInfo(info);
-
-  // TODO(qiwzhang): figure out backend latency: b/123950502
+  fillLatency(stream_info, info.latency);
 
   // TODO(qiwzhang): sending streaming multiple reports: b/123950356
 
