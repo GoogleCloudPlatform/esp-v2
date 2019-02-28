@@ -70,18 +70,31 @@ type distOptions struct {
 	Scale   float64
 }
 
+const (
+	MTProducer = 1 + iota
+	MTConsumer
+	MTProducerByConsumer
+)
+
+type MetricType int
+
 var (
 	timeDistOptions = distOptions{29, 2.0, 1e-6}
 	sizeDistOptions = distOptions{8, 10.0, 1}
-	randomMatrics   = map[string]bool{
-		"serviceruntime.googleapis.com/api/consumer/total_latencies":            true,
-		"serviceruntime.googleapis.com/api/producer/total_latencies":            true,
-		"serviceruntime.googleapis.com/api/consumer/backend_latencies":          true,
-		"serviceruntime.googleapis.com/api/producer/backend_latencies":          true,
-		"serviceruntime.googleapis.com/api/consumer/request_overhead_latencies": true,
-		"serviceruntime.googleapis.com/api/producer/request_overhead_latencies": true,
-		"serviceruntime.googleapis.com/api/consumer/streaming_durations":        true,
-		"serviceruntime.googleapis.com/api/producer/streaming_durations":        true,
+	randomMatrics   = map[string]MetricType{
+		"serviceruntime.googleapis.com/api/consumer/total_latencies":                        MTConsumer,
+		"serviceruntime.googleapis.com/api/producer/total_latencies":                        MTProducer,
+		"serviceruntime.googleapis.com/api/producer/by_consumer/total_latencies":            MTProducerByConsumer,
+		"serviceruntime.googleapis.com/api/consumer/backend_latencies":                      MTConsumer,
+		"serviceruntime.googleapis.com/api/producer/backend_latencies":                      MTProducer,
+		"serviceruntime.googleapis.com/api/producer/by_consumer/backend_latencies":          MTProducerByConsumer,
+		"serviceruntime.googleapis.com/api/consumer/request_overhead_latencies":             MTConsumer,
+		"serviceruntime.googleapis.com/api/producer/request_overhead_latencies":             MTProducer,
+		"serviceruntime.googleapis.com/api/producer/by_consumer/request_overhead_latencies": MTProducerByConsumer,
+		// TODO (qiwzhang) b/123950356 to add grpc streaming metrics
+		// "serviceruntime.googleapis.com/api/consumer/streaming_durations":        MTConsumer,
+		// "serviceruntime.googleapis.com/api/producer/streaming_durations":        MTProducer,
+		// "serviceruntime.googleapis.com/api/producer/by_consumer/streaming_durations":        MTProducerByConsumer,
 	}
 	randomLogEntries = []string{
 		"timestamp",
@@ -241,7 +254,7 @@ func createInt64MetricSet(name string, value int64) *sc.MetricValueSet {
 }
 
 func createDistMetricSet(options *distOptions, name string, value int64) *sc.MetricValueSet {
-	buckets := make([]int64, options.Buckets+2, options.Buckets+2)
+	buckets := make([]int64, options.Buckets+2)
 	fValue := float64(value)
 	idx := 0
 	if fValue >= options.Scale {
@@ -278,7 +291,8 @@ func createDistMetricSet(options *distOptions, name string, value int64) *sc.Met
 	}
 }
 
-func updateDistMetricSet(m *sc.MetricValueSet, fValue float64) {
+// Update the metric wtih the value and aggregate it n times.
+func updateDistMetricSet(m *sc.MetricValueSet, fValue float64, n int64) {
 	for _, v := range m.MetricValues {
 		d := v.GetDistributionValue()
 		o := d.GetExponentialBuckets()
@@ -286,6 +300,8 @@ func updateDistMetricSet(m *sc.MetricValueSet, fValue float64) {
 		d.Mean = fValue
 		d.Minimum = fValue
 		d.Maximum = fValue
+		d.Count = n
+		d.SumOfSquaredDeviation = 0
 
 		buckets := d.BucketCounts
 		idx := 0
@@ -298,7 +314,7 @@ func updateDistMetricSet(m *sc.MetricValueSet, fValue float64) {
 		for i, _ := range buckets {
 			buckets[i] = 0
 		}
-		buckets[idx] = 1
+		buckets[idx] = n
 	}
 }
 
@@ -334,10 +350,11 @@ func createByConsumerOperation(er *ExpectedReport) *sc.Operation {
 			"serviceruntime.googleapis.com/api/producer/by_consumer/request_sizes", er.RequestSize),
 	}
 
-	// TODO(qiwzhang): add latency metrics b/123950502
-	//	for name, _ := range byConsumerRandomMatrics {
-	//		ms = append(ms, createDistMetricSet(&timeDistOptions, name, int64(fakeLatency)))
-	//	}
+	for name, t := range randomMatrics {
+		if t == MTProducerByConsumer {
+			ms = append(ms, createDistMetricSet(&timeDistOptions, name, int64(fakeLatency)))
+		}
+	}
 
 	if er.ResponseSize != 0 {
 		ms = append(ms,
@@ -388,10 +405,11 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 			createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/request_bytes", er.RequestBytes))
 	}
 
-	// TODO(qiwzhang): add latency metrics b/123950502
-	//	for name, _ := range randomMatrics {
-	//		ms = append(ms, createDistMetricSet(&timeDistOptions, name, int64(fakeLatency)))
-	//	}
+	for name, t := range randomMatrics {
+		if t == MTProducer || sendConsumer && t == MTConsumer {
+			ms = append(ms, createDistMetricSet(&timeDistOptions, name, int64(fakeLatency)))
+		}
+	}
 
 	if er.ResponseSize != 0 {
 		ms = append(ms,
@@ -433,7 +451,9 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 	return erPb
 }
 
-func stripRandomFields(op *sc.Operation) {
+// Override the random metrics with a fixed value and aggregate it n times.
+// Remove the random fields in LogEntry
+func stripRandomFields(op *sc.Operation, n int64) {
 	// Clear some fields
 	op.OperationId = ""
 	op.StartTime = nil
@@ -441,7 +461,7 @@ func stripRandomFields(op *sc.Operation) {
 
 	for _, m := range op.MetricValueSets {
 		if _, found := randomMatrics[m.MetricName]; found {
-			updateDistMetricSet(m, float64(fakeLatency))
+			updateDistMetricSet(m, float64(fakeLatency), n)
 		}
 	}
 	sort.Sort(metricSetSorter(op.MetricValueSets))
@@ -462,7 +482,7 @@ func VerifyCheck(body []byte, ec *ExpectedCheck) error {
 	if err != nil {
 		return err
 	}
-	stripRandomFields(got.Operation)
+	stripRandomFields(got.Operation, 1)
 
 	want := CreateCheck(ec)
 	if diff := ProtoDiff(&want, &got); diff != "" {
@@ -489,8 +509,14 @@ func VerifyReport(body []byte, er *ExpectedReport) error {
 		return err
 	}
 
+	var n int64
+	if er.Aggregate > 1 {
+		n = er.Aggregate
+	} else {
+		n = 1
+	}
 	for _, op := range got.Operations {
-		stripRandomFields(op)
+		stripRandomFields(op, n)
 	}
 
 	want := CreateReport(er)
@@ -517,9 +543,9 @@ func AggregateReport(pb *sc.ReportRequest, n int64) {
 				case *sc.MetricValue_DistributionValue:
 					dist := x.DistributionValue
 					dist.Count *= n
-					bs := []int64{}
-					for _, b := range dist.BucketCounts {
-						bs = append(bs, n*b)
+					bs := make([]int64, len(dist.BucketCounts))
+					for i := 0; i < len(dist.BucketCounts); i++ {
+						bs[i] = n * dist.BucketCounts[i]
 					}
 					dist.BucketCounts = bs
 				default:

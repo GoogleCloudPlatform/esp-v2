@@ -111,6 +111,53 @@ const expectedReport = `
             value: "ListShelves"
           >
           metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/consumer/backend_latencies"
+            metric_values: <
+              distribution_value: <
+                count: 1
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 1
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
+                >
+              >
+            >
+          >
+          metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/consumer/error_count"
             metric_values: <
               int64_value: 1
@@ -126,6 +173,53 @@ const expectedReport = `
             metric_name: "serviceruntime.googleapis.com/api/consumer/request_count"
             metric_values: <
               int64_value: 1
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/consumer/request_overhead_latencies"
+            metric_values: <
+              distribution_value: <
+                count: 1
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 1
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
+                >
+              >
             >
           >
           metric_value_sets: <
@@ -187,6 +281,100 @@ const expectedReport = `
             >
           >
           metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/consumer/total_latencies"
+            metric_values: <
+              distribution_value: <
+                count: 1
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 1
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
+                >
+              >
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/backend_latencies"
+            metric_values: <
+              distribution_value: <
+                count: 1
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 1
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
+                >
+              >
+            >
+          >
+          metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/producer/error_count"
             metric_values: <
               int64_value: 1
@@ -202,6 +390,53 @@ const expectedReport = `
             metric_name: "serviceruntime.googleapis.com/api/producer/request_count"
             metric_values: <
               int64_value: 1
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/request_overhead_latencies"
+            metric_values: <
+              distribution_value: <
+                count: 1
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 1
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
+                >
+              >
             >
           >
           metric_value_sets: <
@@ -258,6 +493,53 @@ const expectedReport = `
                   num_finite_buckets: 8
                   growth_factor: 10
                   scale: 1
+                >
+              >
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/total_latencies"
+            metric_values: <
+              distribution_value: <
+                count: 1
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 1
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
                 >
               >
             >
@@ -381,6 +663,53 @@ const expectedReport = `
             value: "123456"
           >
           metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/backend_latencies"
+            metric_values: <
+              distribution_value: <
+                count: 1
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 1
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
+                >
+              >
+            >
+          >
+          metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/error_count"
             metric_values: <
               int64_value: 1
@@ -390,6 +719,53 @@ const expectedReport = `
             metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/request_count"
             metric_values: <
               int64_value: 1
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/request_overhead_latencies"
+            metric_values: <
+              distribution_value: <
+                count: 1
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 1
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
+                >
+              >
             >
           >
           metric_value_sets: <
@@ -444,9 +820,56 @@ const expectedReport = `
               >
             >
           >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/total_latencies"
+            metric_values: <
+              distribution_value: <
+                count: 1
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 1
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
+                >
+              >
+            >
+          >
         >
         service_config_id: "SERVICE_CONFIG_ID"
-`
+	`
 
 const expectedReport3 = `
         service_name: "SERVICE_NAME"
@@ -498,6 +921,53 @@ const expectedReport3 = `
             value: "ListShelves"
           >
           metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/consumer/backend_latencies"
+            metric_values: <
+              distribution_value: <
+                count: 3
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 3
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
+                >
+              >
+            >
+          >
+          metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/consumer/error_count"
             metric_values: <
               int64_value: 3
@@ -506,13 +976,60 @@ const expectedReport3 = `
           metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/consumer/request_bytes"
             metric_values: <
-              int64_value:117
+              int64_value: 117
             >
           >
           metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/consumer/request_count"
             metric_values: <
               int64_value: 3
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/consumer/request_overhead_latencies"
+            metric_values: <
+              distribution_value: <
+                count: 3
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 3
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
+                >
+              >
             >
           >
           metric_value_sets: <
@@ -574,6 +1091,100 @@ const expectedReport3 = `
             >
           >
           metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/consumer/total_latencies"
+            metric_values: <
+              distribution_value: <
+                count: 3
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 3
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
+                >
+              >
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/backend_latencies"
+            metric_values: <
+              distribution_value: <
+                count: 3
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 3
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
+                >
+              >
+            >
+          >
+          metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/producer/error_count"
             metric_values: <
               int64_value: 3
@@ -589,6 +1200,53 @@ const expectedReport3 = `
             metric_name: "serviceruntime.googleapis.com/api/producer/request_count"
             metric_values: <
               int64_value: 3
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/request_overhead_latencies"
+            metric_values: <
+              distribution_value: <
+                count: 3
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 3
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
+                >
+              >
             >
           >
           metric_value_sets: <
@@ -645,6 +1303,53 @@ const expectedReport3 = `
                   num_finite_buckets: 8
                   growth_factor: 10
                   scale: 1
+                >
+              >
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/total_latencies"
+            metric_values: <
+              distribution_value: <
+                count: 3
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 3
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
                 >
               >
             >
@@ -900,6 +1605,53 @@ const expectedReport3 = `
             value: "123456"
           >
           metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/backend_latencies"
+            metric_values: <
+              distribution_value: <
+                count: 3
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 3
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
+                >
+              >
+            >
+          >
+          metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/error_count"
             metric_values: <
               int64_value: 3
@@ -909,6 +1661,53 @@ const expectedReport3 = `
             metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/request_count"
             metric_values: <
               int64_value: 3
+            >
+          >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/request_overhead_latencies"
+            metric_values: <
+              distribution_value: <
+                count: 3
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 3
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
+                >
+              >
             >
           >
           metric_value_sets: <
@@ -963,9 +1762,56 @@ const expectedReport3 = `
               >
             >
           >
+          metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/total_latencies"
+            metric_values: <
+              distribution_value: <
+                count: 3
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 3
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
+                >
+              >
+            >
+          >
         >
         service_config_id: "SERVICE_CONFIG_ID"
-`
+	`
 
 func TestCreateReport(t *testing.T) {
 	got := CreateReport(&ExpectedReport{
