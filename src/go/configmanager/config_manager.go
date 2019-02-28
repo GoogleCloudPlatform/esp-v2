@@ -28,17 +28,10 @@ import (
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
-	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
-	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
-	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
-	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
-	ac "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
-	tc "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
-	hcm "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/envoyproxy/go-control-plane/pkg/util"
 	"github.com/gogo/protobuf/types"
@@ -48,10 +41,20 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/duration"
-	sm "github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
 	"google.golang.org/genproto/googleapis/api/annotations"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/genproto/protobuf/api"
+
+	bapb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/backend_auth"
+	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
+	pmpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/path_matcher"
+	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
+	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
+	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	ac "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
+	tc "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
+	hcm "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
+	sm "github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
+	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 const (
@@ -467,6 +470,21 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 		m.Infof("adding CORS Filter config: %v", corsFilter)
 	}
 
+	// TODO(kyuc): once we verify that path matcher works as intended. Path
+	// Mathcher filter can be always enabled since the following filters will
+	// depend on it.
+	//  * Service Control (not using dynamic metadata yet, but will be using it)
+	//  * JWT Auth filter
+	//  * Backend Auth Filter (currently uses dynamic metadata)
+	//  * Dynamic Routing Filter (name TBD -- will be using dynamic metadata )
+	if *flags.EnableBackendRouting {
+		pathMathcherFilter := m.makePathMatcherFilter(endpointApi, backendProtocol)
+		if pathMathcherFilter != nil {
+			httpFilters = append(httpFilters, pathMathcherFilter)
+			m.Infof("adding Path Matcher Filter config: %v", pathMathcherFilter)
+		}
+	}
+
 	// Add JWT Authn filter if needed.
 	if !*flags.SkipJwtAuthnFilter {
 		jwtAuthnFilter := m.makeJwtAuthnFilter(endpointApi, backendProtocol)
@@ -476,7 +494,7 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 		}
 	}
 
-	// Add service control filter if needed
+	// Add Service Control filter if needed.
 	if !*flags.SkipServiceControlFilter {
 		serviceControlFilter := m.makeServiceControlFilter(endpointApi, backendProtocol)
 		if serviceControlFilter != nil {
@@ -485,7 +503,7 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 		}
 	}
 
-	// Add gRPC transcode filter and gRPCWeb filter configs for gRPC backend.
+	// Add gRPC Transcoder filter and gRPCWeb filter configs for gRPC backend.
 	if backendProtocol == ut.GRPC {
 		transcoderFilter := m.makeTranscoderFilter(endpointApi)
 		if transcoderFilter != nil {
@@ -498,6 +516,12 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 			ConfigType: &hcm.HttpFilter_Config{&types.Struct{}},
 		}
 		httpFilters = append(httpFilters, grpcWebFilter)
+	}
+
+	// Add Backend Auth filter if needed.
+	if *flags.EnableBackendRouting {
+		backendAuthFilter := m.makeBackendAuthFilter()
+		httpFilters = append(httpFilters, backendAuthFilter)
 	}
 
 	// Add Envoy Router filter so requests are routed upstream.
@@ -590,6 +614,66 @@ func makeRouteConfig(endpointApi *api.Api) (*v2.RouteConfiguration, error) {
 		Name:         routeName,
 		VirtualHosts: virtualHosts,
 	}, nil
+}
+
+func (m *ConfigManager) makePathMatcherFilter(endpointApi *api.Api, backendProtocol ut.BackendProtocol) *hcm.HttpFilter {
+	rules := []*pmpb.PathMatcherRule{}
+	if backendProtocol == ut.GRPC {
+		for _, method := range endpointApi.GetMethods() {
+			selector := fmt.Sprintf("%s.%s", endpointApi.GetName(), method.GetName())
+			rules = append(rules, &pmpb.PathMatcherRule{
+				Operation: selector,
+				Pattern: &commonpb.Pattern{
+					UriTemplate: fmt.Sprintf("/%s/%s", endpointApi.GetName(), method.GetName()),
+					HttpMethod:  ut.POST,
+				},
+			})
+		}
+	}
+
+	for _, httpRule := range m.serviceConfig.GetHttp().GetRules() {
+		var newPattern *commonpb.Pattern
+		switch httpPattern := httpRule.GetPattern().(type) {
+		case *annotations.HttpRule_Get:
+			newPattern = &commonpb.Pattern{
+				UriTemplate: httpPattern.Get,
+				HttpMethod:  ut.GET,
+			}
+		case *annotations.HttpRule_Put:
+			newPattern = &commonpb.Pattern{
+				UriTemplate: httpPattern.Put,
+				HttpMethod:  ut.PUT,
+			}
+		case *annotations.HttpRule_Post:
+			newPattern = &commonpb.Pattern{
+				UriTemplate: httpPattern.Post,
+				HttpMethod:  ut.POST,
+			}
+		case *annotations.HttpRule_Delete:
+			newPattern = &commonpb.Pattern{
+				UriTemplate: httpPattern.Delete,
+				HttpMethod:  ut.DELETE,
+			}
+		case *annotations.HttpRule_Patch:
+			newPattern = &commonpb.Pattern{
+				UriTemplate: httpPattern.Patch,
+				HttpMethod:  ut.PATCH,
+			}
+		}
+
+		rules = append(rules, &pmpb.PathMatcherRule{
+			Operation: httpRule.GetSelector(),
+			Pattern:   newPattern,
+		})
+	}
+
+	pathMathcherConfig := &pmpb.FilterConfig{Rules: rules}
+	pathMathcherConfigStruct, _ := util.MessageToStruct(pathMathcherConfig)
+	pathMatcherFilter := &hcm.HttpFilter{
+		Name:       ut.PathMatcher,
+		ConfigType: &hcm.HttpFilter_Config{pathMathcherConfigStruct},
+	}
+	return pathMatcherFilter
 }
 
 func (m *ConfigManager) makeTranscoderFilter(endpointApi *api.Api) *hcm.HttpFilter {
@@ -767,7 +851,7 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 		ServiceName:       m.serviceName,
 		ServiceConfigId:   m.curConfigID,
 		ProducerProjectId: m.serviceConfig.GetProducerProjectId(),
-		TokenCluster:      "ads_cluster",
+		TokenCluster:      ut.TokenCluster,
 		ServiceControlUri: &scpb.HttpUri{
 			Uri:     m.serviceControlURI,
 			Cluster: serviceControlClusterName,
@@ -919,6 +1003,27 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 		ConfigType: &hcm.HttpFilter_Config{scs},
 	}
 	return filter
+
+}
+
+func (m *ConfigManager) makeBackendAuthFilter() *hcm.HttpFilter {
+	rules := []*bapb.BackendAuthRule{}
+	for _, rule := range m.serviceConfig.GetBackend().GetRules() {
+		rule.GetJwtAudience()
+		rules = append(rules,
+			&bapb.BackendAuthRule{
+				Operation:    rule.GetSelector(),
+				JwtAudience:  rule.GetJwtAudience(),
+				TokenCluster: ut.TokenCluster,
+			})
+	}
+	backendAuthConfig := &bapb.FilterConfig{Rules: rules}
+	backendAuthConfigStruct, _ := util.MessageToStruct(backendAuthConfig)
+	backendAuthFilter := &hcm.HttpFilter{
+		Name:       ut.BackendAuth,
+		ConfigType: &hcm.HttpFilter_Config{backendAuthConfigStruct},
+	}
+	return backendAuthFilter
 }
 
 func (m *ConfigManager) makeHttpRouteMatcher(selector string) *route.RouteMatch {

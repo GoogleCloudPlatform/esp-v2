@@ -1035,6 +1035,243 @@ func TestFetchListeners(t *testing.T) {
 	}
 }
 
+func TestPathMatcherFilter(t *testing.T) {
+	testData := []struct {
+		desc                  string
+		fakeServiceConfig     string
+		backendProtocol       string
+		wantPathMatcherFilter string
+	}{
+		{
+			desc: "Path Matcher filter - gRPC backend",
+			fakeServiceConfig: fmt.Sprintf(`{
+				"name":"%s",
+				"apis":[
+					{
+						"name":"%s",
+						"version":"v1",
+						"syntax":"SYNTAX_PROTO3",
+                        "sourceContext": {
+							"fileName": "bookstore.proto"
+						},
+						"methods":[
+							{
+								"name": "ListShelves"
+							},
+							{
+								"name": "CreateShelf"
+							}
+						]
+					}
+				],
+				"sourceInfo":{
+					"sourceFiles":[
+						{
+							"@type":"type.googleapis.com/google.api.servicemanagement.v1.ConfigFile",
+							"filePath":"api_descriptor.pb",
+							"fileContents":"%s",
+							"fileType":"FILE_DESCRIPTOR_SET_PROTO"
+						}
+					]
+				}
+			}`, testProjectName, testEndpointName, fakeProtoDescriptor),
+			backendProtocol: "gRPC",
+			wantPathMatcherFilter: `
+              {
+                "config": {
+                  "rules": [
+                    {
+                      "operation": "endpoints.examples.bookstore.Bookstore.ListShelves",
+                      "pattern": {
+                        "http_method": "POST",
+                        "uri_template": "/endpoints.examples.bookstore.Bookstore/ListShelves"
+                      }
+                    },
+                    {
+                      "operation": "endpoints.examples.bookstore.Bookstore.CreateShelf",
+                      "pattern": {
+                        "http_method": "POST",
+                        "uri_template": "/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                      }
+                    }
+                  ]
+                },
+                "name": "envoy.filters.http.path_matcher"
+              }`,
+		},
+		{
+			desc: "Path Matcher filter - HTTP backend",
+			fakeServiceConfig: fmt.Sprintf(`{
+				"name":"%s",
+				"apis":[
+					{
+						"name":"%s"
+					}
+				],
+                "http": {
+                    "rules": [
+                        {
+                            "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
+                            "get": "/auth/info/googlejwt"
+                        },
+                        {
+                            "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+                            "post": "/echo",
+                            "body": "message"
+                        }
+                    ]
+                }
+			}`, testProjectName, testEndpointName),
+			backendProtocol: "http1",
+			wantPathMatcherFilter: `
+              {
+                "config": {
+                  "rules": [
+                    {
+                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
+                      "pattern": {
+                        "http_method": "GET",
+                        "uri_template": "/auth/info/googlejwt"
+                      }
+                    },
+                    {
+                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+                      "pattern": {
+                        "http_method": "POST",
+                        "uri_template": "/echo"
+                      }
+                    }
+                  ]
+                },
+                "name": "envoy.filters.http.path_matcher"
+              }`,
+		},
+	}
+
+	for i, tc := range testData {
+		// Overriding fakeConfig.
+		fakeConfig = tc.fakeServiceConfig
+		flag.Set("service", testProjectName)
+		flag.Set("version", testConfigID)
+		flag.Set("rollout_strategy", ut.FixedRolloutStrategy)
+		flag.Set("backend_protocol", tc.backendProtocol)
+		// TODO(kyuc): modify this when filters other than Backend Auth filter
+		// use Path Matcher filter.
+		flag.Set("enable_backend_routing", "true")
+
+		runTest(t, ut.FixedRolloutStrategy, func(env *testEnv) {
+			ctx := context.Background()
+			// First request, VersionId should be empty.
+			req := v2.DiscoveryRequest{
+				Node: &core.Node{
+					Id: *flags.Node,
+				},
+				TypeUrl: cache.ListenerType,
+			}
+			resp, err := env.configManager.cache.Fetch(ctx, req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			marshaler := &jsonpb.Marshaler{
+				AnyResolver: ut.Resolver,
+			}
+			gotListeners, err := marshaler.MarshalToString(resp.Resources[0])
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			// Normalize both path matcher filter and gotListeners.
+			gotListeners = normalizeJson(gotListeners)
+			want := normalizeJson(tc.wantPathMatcherFilter)
+			if !strings.Contains(gotListeners, want) {
+				t.Errorf("Test Desc(%d): %s, expected Path Matcher filter was not in the listeners", i, tc.desc)
+				t.Errorf("Actual: %s", gotListeners)
+				t.Errorf("Expected: %s", want)
+			}
+		})
+	}
+}
+
+func TestBackendAuthFilter(t *testing.T) {
+	fakeServiceConfig := fmt.Sprintf(`{
+										"name":"%s",
+										"apis":[
+											{
+												"name":"%s"
+											}
+										],
+										"backend": {
+										  "rules": [
+											{
+											  "selector": "foo",
+											  "jwtAudience": "foo.com"
+											},
+											{
+											  "selector": "bar",
+											  "jwtAudience": "bar.com"
+											}
+										  ]
+										}
+									}`, testProjectName, testEndpointName)
+
+	wantBackendAuthFilter := `{
+								"config": {
+								  "rules": [
+									{
+									  "jwt_audience": "foo.com",
+									  "operation": "foo",
+									  "token_cluster": "ads_cluster"
+									},
+									{
+									  "jwt_audience": "bar.com",
+									  "operation": "bar",
+									  "token_cluster": "ads_cluster"
+									}
+								  ]
+								},
+								"name": "envoy.filters.http.backend_auth"
+							  }`
+
+	// Overriding fakeConfig.
+	fakeConfig = fakeServiceConfig
+	flag.Set("service", testProjectName)
+	flag.Set("version", testConfigID)
+	flag.Set("rollout_strategy", ut.FixedRolloutStrategy)
+	flag.Set("backend_protocol", "http1")
+	flag.Set("enable_backend_routing", "true")
+
+	runTest(t, ut.FixedRolloutStrategy, func(env *testEnv) {
+		ctx := context.Background()
+		// First request, VersionId should be empty.
+		req := v2.DiscoveryRequest{
+			Node: &core.Node{
+				Id: *flags.Node,
+			},
+			TypeUrl: cache.ListenerType,
+		}
+		resp, err := env.configManager.cache.Fetch(ctx, req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		marshaler := &jsonpb.Marshaler{
+			AnyResolver: ut.Resolver,
+		}
+		gotListeners, err := marshaler.MarshalToString(resp.Resources[0])
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Normalize both path matcher filter and gotListeners.
+		gotListeners = normalizeJson(gotListeners)
+		want := normalizeJson(wantBackendAuthFilter)
+		if !strings.Contains(gotListeners, want) {
+			t.Errorf("Expected Backend Auth filter was not in the listeners")
+			t.Errorf("Actual: %s", gotListeners)
+			t.Errorf("Expected: %s", want)
+		}
+	})
+}
+
 func TestFetchClusters(t *testing.T) {
 	testData := []struct {
 		desc              string

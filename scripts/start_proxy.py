@@ -174,6 +174,11 @@ environment variable or by passing "-k" flag to this script.
         help='''Enable fetching service name, service config ID and rollout
         strategy from the metadata service.''')
 
+    parser.add_argument('--enable_backend_routing', action='store_true',
+        default=False,
+        help='''Enable apiproxy to route requests according to the
+        "x-google-backend" or "backend" configurationn''')
+
     return parser
 
 
@@ -221,6 +226,7 @@ if __name__ == '__main__':
         "--service_management_url", args.management,
         "--check_metadata", str(args.check_metadata),
         "--rollout_strategy", args.rollout_strategy,
+        "--enable_backend_routing", str(args.enable_backend_routing),
     ]
 
     if args.cors_preset:

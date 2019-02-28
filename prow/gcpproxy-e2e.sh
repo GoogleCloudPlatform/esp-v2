@@ -41,6 +41,12 @@ fi
 # libraries for go build
 curl https://glide.sh/get | sh
 glide install
+# TODO(kyuc): glide will fetch the entire genproto directory and override
+# servceconfig. This is a temporary hack to force using local serviceconfig
+# This can be removed once the upstream service config has the up-to-date
+# backend definition.
+git checkout vendor/google.golang.org/genproto/googleapis/api/serviceconfig/
+
 
 # depedencies for envoy build
 apt-get update && \

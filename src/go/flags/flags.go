@@ -39,6 +39,9 @@ var (
 	CorsExposeHeaders    = flag.String("cors_expose_headers", "", "set Access-Control-Expose-Headers to the specified headers")
 	CorsAllowCredentials = flag.Bool("cors_allow_credentials", false, "whether include the Access-Control-Allow-Credentials header with the value true in responses or not")
 
+	// Backend routing configurations.
+	EnableBackendRouting = flag.Bool("enable_backend_routing", false, `enable apiproxy to route requests according to the "x-google-backend" or "backend" configuration`)
+
 	// Envoy specific configurations.
 	ClusterConnectTimeout = flag.Duration("cluster_connect_imeout", 20*time.Second, "cluster connect timeout in seconds")
 

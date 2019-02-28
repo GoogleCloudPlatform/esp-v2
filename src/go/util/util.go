@@ -14,12 +14,16 @@
 
 package util
 
-// HTTP filter names.
 const (
+	// HTTP filter names.
 	// Service Control filter.
 	ServiceControl = "envoy.filters.http.service_control"
 	// JWT Authn filter.
 	JwtAuthn = "envoy.filters.http.jwt_authn"
+	// Path Matcher filter.
+	PathMatcher = "envoy.filters.http.path_matcher"
+	// Backend Auth filter.
+	BackendAuth = "envoy.filters.http.backend_auth"
 
 	// Supported Http Methods.
 	GET     = "GET"
@@ -29,6 +33,9 @@ const (
 	PATCH   = "PATCH"
 	OPTIONS = "OPTIONS"
 	CUSTOM  = "CUSTOM"
+
+	// Clusters
+	TokenCluster = "ads_cluster"
 
 	// Rollout strategy
 	FixedRolloutStrategy   = "fixed"
