@@ -71,6 +71,7 @@ func TestServiceControlBasic(t *testing.T) {
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
 					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+					CallerIp:        "127.0.0.1",
 				},
 				&utils.ExpectedReport{
 					Version:           "0.1",
@@ -259,6 +260,7 @@ func TestServiceControlCache(t *testing.T) {
 			ServiceConfigID: "test-config-id",
 			ConsumerID:      "api_key:api-key",
 			OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+			CallerIp:        "127.0.0.1",
 		},
 		&utils.ExpectedReport{
 			Aggregate:         int64(num),

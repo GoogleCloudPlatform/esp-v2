@@ -30,6 +30,12 @@ namespace {
 // The HTTP header to send consumer project to backend.
 const Http::LowerCaseString kConsumerProjectId("x-endpoint-api-project-id");
 
+// CheckRequest headers
+const Http::LowerCaseString kIosBundleIdHeader{"x-ios-bundle-identifier"};
+const Http::LowerCaseString kAndroidPackageHeader{"x-android-package"};
+const Http::LowerCaseString kAndroidCertHeader{"x-android-cert"};
+const Http::LowerCaseString kRefererHeader{"referer"};
+
 inline int64_t convertNsToMs(std::chrono::nanoseconds ns) {
   return std::chrono::duration_cast<std::chrono::milliseconds>(ns).count();
 }
@@ -53,6 +59,16 @@ void fillLatency(const StreamInfo::StreamInfo &stream_info,
         latency.request_time_ms - latency.backend_time_ms;
   }
 }
+
+std::string extractHeader(const Envoy::Http::HeaderMap &headers,
+                          const Envoy::Http::LowerCaseString &header) {
+  auto *entry = headers.get(header);
+  if (entry) {
+    return entry->value().c_str();
+  }
+  return "";
+}
+
 }  // namespace
 
 Handler::Handler(const Http::HeaderMap &headers, FilterConfigSharedPtr config)
@@ -188,7 +204,8 @@ void Handler::fillGCPInfo(
   }
 }
 
-void Handler::callCheck(Http::HeaderMap &headers, CheckDoneCallback &callback) {
+void Handler::callCheck(Http::HeaderMap &headers, CheckDoneCallback &callback,
+                        const StreamInfo::StreamInfo &stream_info) {
   check_callback_ = &callback;
 
   // Make a check call
@@ -198,7 +215,13 @@ void Handler::callCheck(Http::HeaderMap &headers, CheckDoneCallback &callback) {
   // Check and Report has different rule to send api-key
   info.api_key = api_key_;
 
-  // TODO(qiwzhang): b/124521039 to fill these api-key restriction used fields
+  info.ios_bundle_id = extractHeader(headers, kIosBundleIdHeader);
+  info.referer = extractHeader(headers, kRefererHeader);
+  info.android_package_name = extractHeader(headers, kAndroidPackageHeader);
+  info.android_cert_fingerprint = extractHeader(headers, kAndroidCertHeader);
+
+  info.client_ip =
+      stream_info.downstreamDirectRemoteAddress()->ip()->addressAsString();
 
   ::google::api::servicecontrol::v1::CheckRequest check_request;
   require_ctx_->service_ctx().builder().FillCheckRequest(info, &check_request);

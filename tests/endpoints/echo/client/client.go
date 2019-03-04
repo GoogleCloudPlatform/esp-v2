@@ -46,6 +46,11 @@ func DoGet(url string) ([]byte, error) {
 
 // DoPost performs a POST request to a specified url
 func DoPost(url, message string) ([]byte, error) {
+	return DoPostWithHeaders(url, message, map[string]string{})
+}
+
+// DoPostWithHeaders performs a POST request to a specified url with the given headers
+func DoPostWithHeaders(url, message string, header map[string]string) ([]byte, error) {
 	msg := map[string]string{
 		"message": message,
 	}
@@ -53,9 +58,21 @@ func DoPost(url, message string) ([]byte, error) {
 	if err := json.NewEncoder(&buf).Encode(msg); err != nil {
 		return nil, err
 	}
-	resp, err := http.Post(url, "application/json", &buf)
+
+	request, err := http.NewRequest("POST", url, &buf)
+
 	if err != nil {
-		return nil, fmt.Errorf("http got error: ", err)
+		return nil, fmt.Errorf("create request error: %v", err)
+	}
+
+	request.Header.Set("Content-Type", "application/json")
+	for k, v := range header {
+		request.Header.Set(k, v)
+	}
+
+	resp, err := http.DefaultClient.Do(request)
+	if err != nil {
+		return nil, fmt.Errorf("http post error: %v", err)
 	}
 	defer resp.Body.Close()
 

@@ -45,7 +45,7 @@ Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap &headers,
   stopped_ = false;
 
   // Make a check call
-  handler_->callCheck(headers, *this);
+  handler_->callCheck(headers, *this, decoder_callbacks_->streamInfo());
 
   if (state_ == Complete) {
     return Http::FilterHeadersStatus::Continue;

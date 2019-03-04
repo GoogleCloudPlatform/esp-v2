@@ -28,6 +28,22 @@ operation: <
   operation_name: "ListShelves"
   consumer_id: "project:endpoints-app"
   labels: <
+    key: "servicecontrol.googleapis.com/android_cert_fingerprint"
+    value: "ABCDESF"
+  >
+  labels: <
+    key: "servicecontrol.googleapis.com/android_package_name"
+    value: "com.google.cloud"
+  >
+  labels: <
+    key: "servicecontrol.googleapis.com/ios_bundle_id"
+    value: "5b40ad6af9a806305a0a56d7cb91b82a27c26909"
+  >
+  labels: <
+    key: "servicecontrol.googleapis.com/referer"
+    value: "referer"
+  >
+  labels: <
     key: "servicecontrol.googleapis.com/caller_ip"
     value: "127.0.0.1"
   >
@@ -44,12 +60,16 @@ operation: <
 
 func TestCreateCheck(t *testing.T) {
 	er := CreateCheck(&ExpectedCheck{
-		Version:         "0.3.4",
-		ServiceName:     "SERVICE_NAME",
-		ServiceConfigID: "SERVICE_CONFIG_ID",
-		ConsumerID:      "project:endpoints-app",
-		OperationName:   "ListShelves",
-		CallerIp:        "127.0.0.1",
+		Version:                "0.3.4",
+		ServiceName:            "SERVICE_NAME",
+		ServiceConfigID:        "SERVICE_CONFIG_ID",
+		ConsumerID:             "project:endpoints-app",
+		OperationName:          "ListShelves",
+		CallerIp:               "127.0.0.1",
+		AndroidCertFingerprint: "ABCDESF",
+		AndroidPackageName:     "com.google.cloud",
+		IosBundleID:            "5b40ad6af9a806305a0a56d7cb91b82a27c26909",
+		Referer:                "referer",
 	})
 
 	expected := sc.CheckRequest{}

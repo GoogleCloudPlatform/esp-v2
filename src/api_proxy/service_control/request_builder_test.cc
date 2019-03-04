@@ -72,6 +72,12 @@ void FillCheckRequestInfo(CheckRequestInfo* request) {
   request->referer = "referer";
 }
 
+void FillCheckRequestAndroidInfo(CheckRequestInfo* request) {
+  request->android_package_name = "com.google.cloud";
+  request->android_cert_fingerprint = "ABCDESF";
+  request->ios_bundle_id = "5b40ad6af9a806305a0a56d7cb91b82a27c26909";
+}
+
 void FillAllocateQuotaRequestInfo(QuotaRequestInfo* request) {
   request->client_ip = "1.2.3.4";
   request->referer = "referer";
@@ -175,10 +181,7 @@ TEST_F(RequestBuilderTest, FillGoodCheckRequestAndroidIosTest) {
   CheckRequestInfo info;
   FillOperationInfo(&info);
   FillCheckRequestInfo(&info);
-
-  info.android_package_name = "com.google.cloud";
-  info.android_cert_fingerprint = "ABCDESF";
-  info.ios_bundle_id = "5b40ad6af9a806305a0a56d7cb91b82a27c26909";
+  FillCheckRequestAndroidInfo(&info);
 
   gasv1::CheckRequest request;
   ASSERT_TRUE(scp_.FillCheckRequest(info, &request).ok());

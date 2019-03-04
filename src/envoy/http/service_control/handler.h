@@ -49,7 +49,8 @@ class Handler : public Logger::Loggable<Logger::Id::filter> {
   };
   // Make an async check call.
   // The headers could be modified by adding some.
-  void callCheck(Http::HeaderMap& headers, CheckDoneCallback& callback);
+  void callCheck(Http::HeaderMap& headers, CheckDoneCallback& callback,
+                 const StreamInfo::StreamInfo& stream_info);
 
   // Make a report call.
   void callReport(const Http::HeaderMap* response_headers,

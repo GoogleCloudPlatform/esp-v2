@@ -903,7 +903,7 @@ const int supported_labels_count =
 const char kConsumerIdApiKey[] = "api_key:";
 const char kConsumerIdProject[] = "project:";
 
-// Following names for for Log struct_playload field names:
+// Following names for Log struct_playload field names:
 const char kLogFieldNameTimestamp[] = "timestamp";
 const char kLogFieldNameApiName[] = "api_name";
 const char kLogFieldNameApiVersion[] = "api_version";

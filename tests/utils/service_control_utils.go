@@ -27,12 +27,17 @@ import (
 )
 
 type ExpectedCheck struct {
-	Version         string
-	ServiceName     string
-	ServiceConfigID string
-	ConsumerID      string
-	OperationName   string
-	CallerIp        string
+	Version                string
+	ServiceName            string
+	ServiceConfigID        string
+	ConsumerID             string
+	OperationName          string
+	CallerIp               string
+	AndroidCertFingerprint string
+	AndroidPackageName     string
+	ApiKey                 string
+	IosBundleID            string
+	Referer                string
 }
 
 type ExpectedReport struct {
@@ -120,6 +125,23 @@ func CreateCheck(er *ExpectedCheck) sc.CheckRequest {
 		erPb.Operation.Labels["servicecontrol.googleapis.com/caller_ip"] =
 			er.CallerIp
 	}
+
+	if er.AndroidCertFingerprint != "" {
+		erPb.Operation.Labels["servicecontrol.googleapis.com/android_cert_fingerprint"] = er.AndroidCertFingerprint
+	}
+
+	if er.AndroidPackageName != "" {
+		erPb.Operation.Labels["servicecontrol.googleapis.com/android_package_name"] = er.AndroidPackageName
+	}
+
+	if er.IosBundleID != "" {
+		erPb.Operation.Labels["servicecontrol.googleapis.com/ios_bundle_id"] = er.IosBundleID
+	}
+
+	if er.Referer != "" {
+		erPb.Operation.Labels["servicecontrol.googleapis.com/referer"] = er.Referer
+	}
+
 	return erPb
 }
 
@@ -474,20 +496,31 @@ func stripRandomFields(op *sc.Operation, n int64) {
 	}
 }
 
+// UnmarshalCheckRequest returns proto CheckRequest given data.
+func UnmarshalCheckRequest(data []byte) (*sc.CheckRequest, error) {
+	rr := &sc.CheckRequest{}
+	err := proto.Unmarshal(data, rr)
+	if err != nil {
+		return nil, err
+	}
+	return rr, nil
+}
+
 // VerifyCheck verify if the response body is the expected CheckRequest.
 // If the verification fails, it returns an error.
 func VerifyCheck(body []byte, ec *ExpectedCheck) error {
-	got := sc.CheckRequest{}
-	err := proto.Unmarshal(body, &got)
+	got, err := UnmarshalCheckRequest(body)
 	if err != nil {
 		return err
 	}
 	stripRandomFields(got.Operation, 1)
 
 	want := CreateCheck(ec)
-	if diff := ProtoDiff(&want, &got); diff != "" {
+
+	if diff := ProtoDiff(&want, got); diff != "" {
 		return fmt.Errorf("Diff (-want +got):\n%v", diff)
 	}
+
 	return nil
 }
 
