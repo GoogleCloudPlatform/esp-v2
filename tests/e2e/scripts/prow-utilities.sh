@@ -87,9 +87,20 @@ function long_running_test() {
   echo ${host}
   echo ${api_key}
   echo ${apiproxy_service}
+  # TODO(jilinxia): add tests for other backends.
   if [[ "${BACKEND}" == 'bookstore' ]]; then
-    retry -n 20 check_http_service "${host}:80/v1/shelves" ${http_code}
+    retry -n 20 check_http_service "${host}:80/shelves" ${http_code}
     # TODO(jilinxia): add tests
+    status=${?}
+    if [[ ${status} -eq 0 ]]; then
+      echo 'Running long running test.'
+      run_nonfatal "${SCRIPT_PATH}/linux-test-kb-long-run.sh" \
+        -h "${host}" \
+        -l "${duration_in_hour}" \
+        -a "${api_key}" \
+        -s "${apiproxy_service}" 2>&1 | tee "${log_file}"
+      status=${PIPESTATUS[0]}
+    fi
   fi
   return 0
 }
@@ -122,8 +133,13 @@ function get_cluster_host () {
       echo "Waiting for server external ip. Attempt  #$i/${COUNT}... will try again in ${SLEEP} seconds" >&2
       sleep ${SLEEP}
   done
-  [ '<pending>' == $host ] && error_exit 'Failed to get the GKE cluster host.'
-  echo "$host"
+  if [[ '<pending>' == $host ]]; then
+    echo 'Failed to get the GKE cluster host.'
+    return 1
+  else
+    echo "$host"
+    return 0
+  fi
 }
 
 # Convenience method to sed files, works on both linux and mac
@@ -134,4 +150,11 @@ function sed_i() {
   else
     sed -i "${@}"
   fi
+}
+
+# Creating and activating a service
+function create_service() {
+  local swagger_json="${1}"
+  echo 'Deploying service'
+  retry -n 3 run ${GCLOUD} endpoints services deploy "${swagger_json}"
 }

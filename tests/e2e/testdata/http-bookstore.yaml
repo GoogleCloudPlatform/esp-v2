@@ -40,11 +40,11 @@ spec:
       containers:
       - name: apiproxy
         image: APIPROXY_IMAGE
-        # the latest service config version is 2019-02-11r0
+        # the latest service config version is 2019-03-04r4
         args: [ARGS]
         ports:
           - containerPort: 8080
       - name: bookstore
-        image: gcr.io/endpointsv2/python-grpc-bookstore-server:1
+        image: gcr.io/endpoints-jenkins/bookstore:0.3
         ports:
-          - containerPort: 8000
+          - containerPort: 8081

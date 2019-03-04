@@ -16,11 +16,11 @@
 
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${SCRIPT_PATH}/../../.." && pwd)"
-YAML_FILE=${SCRIPT_PATH}/../testdata/grpc-bookstore.yaml
+YAML_FILE=${SCRIPT_PATH}/../testdata/http-bookstore.yaml
 
 ARGS="\
-  \"--backend=grpc://127.0.0.1:8000\",\
-  \"--version=2019-02-11r0\",\
+  \"--backend=http://127.0.0.1:8081\",\
+  \"--version=2019-03-04r4\",\
 "
 
 . ${SCRIPT_PATH}/prow-utilities.sh || { echo "Cannot load Bash utilities" ; exit 1 ; }
@@ -28,6 +28,20 @@ e2e_options "${@}"
 
 TEST_ID="gke-${COUPLING_OPTION}-${TEST_TYPE}-${BACKEND}"
 LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
+
+# Parses parameters into config file.
+ARGS="$ARGS \"--service=${APIPROXY_SERVICE}\","
+ARGS="$ARGS \"--rollout_strategy=${ROLLOUT_STRATEGY}\""
+run sed_i "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g" ${YAML_FILE}
+run sed_i "s|ARGS|${ARGS}|g" ${YAML_FILE}
+
+# Push service config to service management servie. Only need to run when there
+# is changes in the service config, and also remember to update the version
+# number in kubernetes config.
+#
+# SERVICE_IDL="${SCRIPT_PATH}/../testdata/bookstore_swagger_template.json"
+# run sed -i "s|\${ENDPOINT_SERVICE}|${APIPROXY_SERVICE}|g" ${SERVICE_IDL}
+# create_service "${SERVICE_IDL}"
 
 # Parses parameters into config file.
 ARGS="$ARGS \"--service=${APIPROXY_SERVICE}\","
