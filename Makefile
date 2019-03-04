@@ -84,10 +84,20 @@ proto-consistency-test:
 depend.update: tools.glide depend.apiproto
 	@echo "--> updating dependencies from glide.yaml"
 	@glide update
+	# TODO(kyuc): glide will fetch the entire genproto directory and override
+	# servceconfig. This is a temporary hack to force using local serviceconfig
+	# This can be removed once the upstream service config has the up-to-date
+	# backend definition.
+	@git checkout vendor/google.golang.org/genproto/googleapis/api/serviceconfig/
 
 depend.install: tools.glide depend.apiproto
 	@echo "--> installing dependencies from glide.lock "
 	@glide install
+	# TODO(kyuc): glide will fetch the entire genproto directory and override
+	# servceconfig. This is a temporary hack to force using local serviceconfig
+	# This can be removed once the upstream service config has the up-to-date
+	# backend definition.
+	@git checkout vendor/google.golang.org/genproto/googleapis/api/serviceconfig/
 
 depend.apiproto:
 	@echo "--> generating go proto files"
