@@ -156,6 +156,9 @@ check: format.check vet lint
 format: tools.goimports
 	@echo "--> formatting code with 'goimports' tool"
 	@goimports -local $(PKG) -w -l $(GOFILES)
+
+.PHONY: clang-format
+clang-format:
 	@echo "--> formatting code with 'clang-format-7' tool"
 	@echo $(CPP_PROTO_FILES) | xargs clang-format-7 -i
 
