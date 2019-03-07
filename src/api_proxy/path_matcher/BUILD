@@ -9,6 +9,7 @@ cc_library(
     name = "path_matcher_lib",
     srcs = [
         "http_template.cc",
+        "path_matcher.cc",
         "path_matcher_node.cc",
     ],
     hdrs = [
