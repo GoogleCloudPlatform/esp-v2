@@ -29,7 +29,7 @@ namespace PathMatcher {
 const std::string FilterName = Utils::kPathMatcherFilterName;
 
 /**
- * Config registration for cloudESF path matcher filter.
+ * Config registration for API Proxy path matcher filter.
  */
 class FilterFactory
     : public Common::FactoryBase<

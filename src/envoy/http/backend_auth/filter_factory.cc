@@ -27,7 +27,7 @@ namespace BackendAuth {
 const std::string FilterName = "envoy.filters.http.backend_auth";
 
 /**
- * Config registration for cloudESF backend auth filter.
+ * Config registration for API Proxy backend auth filter.
  */
 class FilterFactory
     : public Common::FactoryBase<

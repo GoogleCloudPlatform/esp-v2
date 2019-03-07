@@ -116,7 +116,7 @@ Status LogsMetricsLoader::AddLoggingDestinations(
       continue;  // Skip bad monitored resource.
     }
 
-    // Store names of logs ESP should log into.
+    // Store names of logs API Proxy should log into.
     for (int l = 0, lsize = ld.logs_size(); l < lsize; l++) {
       const std::string& log_name = ld.logs(l);
       s = AddLogLabels(log_descriptors, log_name, labels);
@@ -189,14 +189,14 @@ Status LogsMetricsLoader::LoadLogsMetrics(const Service& service,
 
   Status s = Status::OK;
 
-  // ESP logs into all producer destination logs.
+  // API Proxy logs into all producer destination logs.
   const Logging& logging = service.logging();
   s = AddLoggingDestinations(logging.producer_destinations(),
                              service.monitored_resources(), service.logs(),
                              logs, &labels_map);
   if (!s.ok()) return s;
 
-  // ESP reports producer and consumer metrics.
+  // API Proxy reports producer and consumer metrics.
   const Monitoring& monitoring = service.monitoring();
   s = AddMonitoringDestinations(monitoring.producer_destinations(),
                                 service.monitored_resources(),

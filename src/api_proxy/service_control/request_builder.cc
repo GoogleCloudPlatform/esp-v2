@@ -116,7 +116,7 @@ Status AddDistributionMetric(const DistributionHelperOptions& options,
   return Status::OK;
 }
 
-// Metrics supported by ESP.
+// Metrics supported by API Proxy.
 
 Status set_int64_metric_to_constant_1(const SupportedMetric& m,
                                       const ReportRequestInfo& info,
@@ -523,12 +523,11 @@ const char kServiceControlConsumerProject[] =
 
 // User agent label value
 // The value for kUserAgent should be configured at service control server.
-// Now it is configured as "ESP".
-const char kUserAgent[] = "ESP";
+// Now it is configured as "APIPROXY".
+const char kUserAgent[] = "APIPROXY";
 
 // Service agent label value
-// TODO: (qiwzhang) change to CloudESF: b/123950588
-const char kServiceAgentPrefix[] = "ESP/0.1";
+const char kServiceAgentPrefix[] = "APIPROXY/0.1";
 
 // /credential_id
 Status set_credential_id(const SupportedLabel& l, const ReportRequestInfo& info,
