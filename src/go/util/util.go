@@ -49,6 +49,7 @@ const (
 	ServiceNameSuffix       = "/v1/instance/attributes/endpoints-service-name"
 
 	ServiceAccountTokenSuffix = "/v1/instance/service-accounts/default/token"
+	IdentityTokenSuffix       = "/v1/instance/service-accounts/default/identity"
 	ProjectIDSuffix           = "/v1/instance/project/project-id"
 	ZoneSuffix                = "/v1/instance/zone"
 

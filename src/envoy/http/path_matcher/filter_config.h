@@ -31,7 +31,7 @@ namespace PathMatcher {
 
 // clang-format off
 #define ALL_BACKEND_AUTH_FILTER_STATS(COUNTER)     \
-  COUNTER(allowed)                                    \
+  COUNTER(allowed)                                 \
   COUNTER(denied)
 // clang-format on
 
@@ -55,8 +55,8 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
         pmb;
     for (const auto& rule : proto_config_.rules()) {
       if (!pmb.Register(rule.pattern().http_method(),
-                        rule.pattern().uri_template(), std::string(),
-                        &rule.operation())) {
+                        rule.pattern().uri_template(),
+                        /*body_field_path=*/"", &rule.operation())) {
         throw ProtoValidationException("Duplicated pattern", rule.pattern());
       }
     }

@@ -22,17 +22,19 @@ import (
 )
 
 const (
-	fakeToken       = `{"access_token": "ya29.new", "expires_in":3599, "token_type":"Bearer"}`
-	fakeServiceName = "test-service"
-	fakeConfigID    = "test-config"
-	fakeZonePath    = "projects/4242424242/zones/test-zone"
-	fakeProjectID   = "test-project-id"
+	fakeToken         = `{"access_token": "ya29.new", "expires_in":3599, "token_type":"Bearer"}`
+	fakeIdentityToken = "ya29.new"
+	fakeServiceName   = "test-service"
+	fakeConfigID      = "test-config"
+	fakeZonePath      = "projects/4242424242/zones/test-zone"
+	fakeProjectID     = "test-project-id"
 )
 
 var defaultResp = map[string]string{
 	util.ConfigIDSuffix:            fakeConfigID,
 	util.ServiceNameSuffix:         fakeServiceName,
 	util.ServiceAccountTokenSuffix: fakeToken,
+	util.IdentityTokenSuffix:       fakeIdentityToken,
 	util.ProjectIDSuffix:           fakeProjectID,
 	util.ZoneSuffix:                fakeZonePath,
 }

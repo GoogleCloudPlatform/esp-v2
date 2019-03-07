@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// TODO(kyuc): Add unit tests and integration tests.
+// TODO(kyuc): Add unit tests
 
 #include <string>
 
@@ -40,21 +40,30 @@ constexpr char kBearer[] = "Bearer ";
 FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
   const std::string& operation = getOperationFromMetadata(
       decoder_callbacks_->streamInfo().dynamicMetadata(), "");
+  // NOTE: this shouldn't happen in practice because Path Matcher filter would
+  // have already rejected the request.
   if (operation == "") {
-    rejectRequest(Http::Code(404), "No operation found from DynamicMetadata.");
-    return Http::FilterHeadersStatus::Continue;
+    ENVOY_LOG(debug, "No operation found from DynamicMetadata");
+    return FilterHeadersStatus::Continue;
   }
-  ENVOY_LOG(debug, "find operation: {}", operation);
-  const TokenSharedPtr jwt_token = config_->cfg_parser().getJwtToken(operation);
 
+  ENVOY_LOG(debug, "Found operation: {}", operation);
+  const std::string& audience =
+      config_->cfg_parser().getAudienceContext(operation);
+  if (audience == "") {
+    // JWT Token is not required for this operation.
+    return FilterHeadersStatus::Continue;
+  }
+
+  const TokenSharedPtr jwt_token = config_->cfg_parser().getJwtToken(audience);
   if (!jwt_token) {
-    rejectRequest(Http::Code(401), "No JWT token found for operation.");
-    return Http::FilterHeadersStatus::StopIteration;
+    ENVOY_LOG(debug, "Token not found for audience: {}", audience);
+    return FilterHeadersStatus::Continue;
   }
   const auto& authorization = Http::Headers::get().Authorization;
   headers.remove(authorization);
   headers.addCopy(authorization, kBearer + *jwt_token);
-  config_->stats().allowed_.inc();
+  config_->stats().token_added_.inc();
   return FilterHeadersStatus::Continue;
 }
 
@@ -69,14 +78,6 @@ FilterTrailersStatus Filter::decodeTrailers(HeaderMap&) {
 void Filter::setDecoderFilterCallbacks(
     Http::StreamDecoderFilterCallbacks& callbacks) {
   decoder_callbacks_ = &callbacks;
-}
-
-void Filter::rejectRequest(Http::Code code, absl::string_view error_msg) {
-  config_->stats().denied_.inc();
-
-  decoder_callbacks_->sendLocalReply(code, error_msg, nullptr, absl::nullopt);
-  decoder_callbacks_->streamInfo().setResponseFlag(
-      StreamInfo::ResponseFlag::UnauthorizedExternalService);
 }
 
 }  // namespace BackendAuth

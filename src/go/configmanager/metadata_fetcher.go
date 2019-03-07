@@ -126,7 +126,7 @@ func fetchIdentityJWTToken(audience string) (string, time.Duration, error) {
 		return ti.accessToken, ti.tokenTimeout.Sub(now), nil
 	}
 
-	identityTokenURI := util.ServiceAccountTokenSuffix + "?audience=" + audience + "&format=standard"
+	identityTokenURI := util.IdentityTokenSuffix + "?audience=" + audience + "&format=standard"
 	token, err := fetchMetadata(identityTokenURI)
 	if err != nil {
 		return "", 0, err

@@ -46,6 +46,8 @@ func main() {
 		Handler(corsHandler(authInfoHandler))
 	r.Path("/auth/info/auth0").Methods("GET").
 		HandlerFunc(authInfoHandler)
+	r.Path("/bearertoken").Methods("GET").
+		HandlerFunc(bearerTokenHandler)
 
 	http.Handle("/", r)
 	port := 8082
@@ -124,6 +126,13 @@ func authInfoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write(b)
+}
+
+// bearerTokenHandler reads "Authorization" header
+func bearerTokenHandler(w http.ResponseWriter, r *http.Request) {
+	bearerToken := r.Header.Get("Authorization")
+	resp := fmt.Sprintf(`{"Authorization": "%s"}`, bearerToken)
+	w.Write([]byte(resp))
 }
 
 // errorf writes a swagger-compliant error response.

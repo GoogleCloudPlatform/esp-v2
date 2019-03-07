@@ -29,8 +29,7 @@ namespace BackendAuth {
 
 // clang-format off
 #define ALL_BACKEND_AUTH_FILTER_STATS(COUNTER)     \
-  COUNTER(allowed)                                    \
-  COUNTER(denied)
+  COUNTER(token_added)                             \
 // clang-format on
 
 /**

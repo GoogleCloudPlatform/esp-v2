@@ -42,8 +42,6 @@ class Filter : public Http::StreamDecoderFilter,
   void setDecoderFilterCallbacks(Http::StreamDecoderFilterCallbacks &) override;
 
  private:
-  void rejectRequest(Http::Code code, absl::string_view error_msg);
-
   Http::StreamDecoderFilterCallbacks *decoder_callbacks_;
   const FilterConfigSharedPtr config_;
 };

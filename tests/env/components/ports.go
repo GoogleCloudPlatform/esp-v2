@@ -41,6 +41,7 @@ const (
 	TestGRPCJwt
 	TestHttp1Basic
 	TestHttp1JWT
+	TestHttp1BackendAuth
 	TestServiceControlBasic
 	TestServiceControlCache
 	TestServiceControlAndroid

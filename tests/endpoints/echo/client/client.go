@@ -34,7 +34,7 @@ import (
 func DoGet(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("http got error: ", err)
+		return nil, fmt.Errorf("http got error: %v", err)
 	}
 	defer resp.Body.Close()
 

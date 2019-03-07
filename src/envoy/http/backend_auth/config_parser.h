@@ -78,12 +78,17 @@ class FilterConfigParser {
       const ::google::api::envoy::http::backend_auth::FilterConfig& config,
       Server::Configuration::FactoryContext& context);
 
-  const TokenSharedPtr getJwtToken(const std::string& operation) const {
+  const std::string& getAudienceContext(const std::string& operation) const {
+    static const std::string empty = "";
     auto operation_it = operation_map_.find(operation);
     if (operation_it == operation_map_.end()) {
-      return nullptr;
+      return empty;
     }
-    auto audience_it = audience_map_.find(operation_it->second);
+    return operation_it->second;
+  }
+
+  const TokenSharedPtr getJwtToken(const std::string& audience) const {
+    auto audience_it = audience_map_.find(audience);
     if (audience_it == audience_map_.end()) {
       return nullptr;
     }
