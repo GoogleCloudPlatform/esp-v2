@@ -59,13 +59,30 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
                         /*body_field_path=*/"", &rule.operation())) {
         throw ProtoValidationException("Duplicated pattern", rule.pattern());
       }
+      if (rule.extract_path_parameters()) {
+        path_params_operations_.insert(rule.operation());
+      }
     }
     path_matcher_ = pmb.Build();
   }
 
+  // TODO(kyuc): discuss with qiwzhang@ whether this member function is needed.
   const std::string* FindOperation(const std::string& http_method,
                                    const std::string& path) const {
     return path_matcher_->Lookup(http_method, path);
+  }
+
+  // TODO(kyuc): discuss with qiwzhang@ whether this member function is needed.
+  const std::string* FindOperation(
+      const std::string& http_method, const std::string& path,
+      std::vector<google::api_proxy::path_matcher::VariableBinding>*
+          variable_bindings) const {
+    return path_matcher_->Lookup(http_method, path, variable_bindings);
+  }
+
+  bool NeedPathParametersExtraction(const std::string& operation) {
+    auto operation_it = path_params_operations_.find(operation);
+    return operation_it != path_params_operations_.end();
   }
 
   FilterStats& stats() { return stats_; }
@@ -80,6 +97,7 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
   ::google::api::envoy::http::path_matcher::FilterConfig proto_config_;
   ::google::api_proxy::path_matcher::PathMatcherPtr<const std::string*>
       path_matcher_;
+  std::unordered_set<std::string> path_params_operations_;
   FilterStats stats_;
 };
 
@@ -88,4 +106,4 @@ typedef std::shared_ptr<FilterConfig> FilterConfigSharedPtr;
 }  // namespace PathMatcher
 }  // namespace HttpFilters
 }  // namespace Extensions
-}  // namespace Envoy
+}  //  namespace Envoy

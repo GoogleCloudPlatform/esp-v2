@@ -72,6 +72,10 @@ class PathMatcher {
   ~PathMatcher(){};
 
   Method Lookup(const std::string& http_method, const std::string& path,
+                std::vector<VariableBinding>* variable_bindings) const;
+
+  // TODO(kyuc): consider removing this method.
+  Method Lookup(const std::string& http_method, const std::string& path,
                 const std::string& query_params,
                 std::vector<VariableBinding>* variable_bindings,
                 std::string* body_field_path) const;
@@ -176,6 +180,34 @@ PathMatcher<Method>::PathMatcher(PathMatcherBuilder<Method>&& builder)
     : root_ptr_(std::move(builder.root_ptr_)),
       custom_verbs_(std::move(builder.custom_verbs_)),
       methods_(std::move(builder.methods_)) {}
+
+template <class Method>
+Method PathMatcher<Method>::Lookup(
+    const std::string& http_method, const std::string& path,
+    std::vector<VariableBinding>* variable_bindings) const {
+  const std::vector<std::string> parts =
+      ExtractRequestParts(path, custom_verbs_);
+
+  // If service_name has not been registered to ESP and strict_service_matching_
+  // is set to false, tries to lookup the method in all registered services.
+  if (root_ptr_ == nullptr) {
+    return nullptr;
+  }
+
+  PathMatcherLookupResult lookup_result =
+      LookupInPathMatcherNode(*root_ptr_, parts, http_method);
+  // Return nullptr if nothing is found.
+  // Not need to check duplication. Only first item is stored for duplicated
+  if (lookup_result.data == nullptr) {
+    return nullptr;
+  }
+  MethodData* method_data = reinterpret_cast<MethodData*>(lookup_result.data);
+  if (variable_bindings != nullptr) {
+    variable_bindings->clear();
+    ExtractBindingsFromPath(method_data->variables, parts, variable_bindings);
+  }
+  return method_data->method;
+}
 
 // Lookup is a wrapper method for the recursive node Lookup. First, the wrapper
 // splits the request path into slash-separated path parts. Next, the method

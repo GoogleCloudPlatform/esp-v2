@@ -15,10 +15,11 @@
 #ifndef METADATA_UTILS_H_
 #define METADATA_UTILS_H_
 
+#include <string>
+#include <vector>
+
 #include "common/http/utility.h"
 #include "common/protobuf/utility.h"
-
-#include <string>
 
 namespace Envoy {
 namespace Extensions {
@@ -26,11 +27,21 @@ namespace Utils {
 
 constexpr char kPathMatcherFilterName[] = "envoy.filters.http.path_matcher";
 
-void setOperationToMetadata(::envoy::api::v2::core::Metadata& metadata,
-                            const std::string& operation);
-const std::string& getOperationFromMetadata(
+// TODO(kyuc): add unit tests.
+
+// Field names of the Path Matcher filter metadata:
+constexpr char kOperation[] = "operation";
+constexpr char kQueryParams[] = "query_params";
+
+// Sets a string value in the PathMatcher Metadata.
+void setStringMetadata(::envoy::api::v2::core::Metadata& metadata,
+                       const std::string& field_name, const std::string& value);
+
+// Returns a string value in the PathMatcher Metadata.
+// Returns an empty string if the value is not found.
+const std::string& getStringMetadata(
     const ::envoy::api::v2::core::Metadata& metadata,
-    const std::string& default_value);
+    const std::string& field_name);
 
 }  // namespace Utils
 }  // namespace Extensions

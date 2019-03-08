@@ -20,6 +20,7 @@
 #include "common/http/utility.h"
 #include "common/protobuf/utility.h"
 #include "envoy/server/filter_config.h"
+#include "src/api_proxy/path_matcher/variable_binding_utils.h"
 #include "src/envoy/http/path_matcher/filter_config.h"
 #include "src/envoy/utils/metadata_utils.h"
 
@@ -28,6 +29,9 @@ namespace Extensions {
 namespace HttpFilters {
 namespace PathMatcher {
 
+using ::envoy::api::v2::core::Metadata;
+using ::google::api_proxy::path_matcher::VariableBinding;
+using ::google::api_proxy::path_matcher::VariableBindingsToQueryParameters;
 using ::google::protobuf::util::Status;
 using Http::FilterDataStatus;
 using Http::FilterHeadersStatus;
@@ -38,16 +42,29 @@ using Http::LowerCaseString;
 void Filter::onDestroy() {}
 
 FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
-  const std::string* operation = config_->FindOperation(
-      headers.Method()->value().c_str(), headers.Path()->value().c_str());
+  const std::string& method = headers.Method()->value().c_str();
+  const std::string& path = headers.Path()->value().c_str();
+  const std::string* operation = config_->FindOperation(method, path);
   if (operation == nullptr) {
     rejectRequest(Http::Code(404),
-                  "Path does not match any requirement uri_template.");
+                  "Path does not match any requirement URI template.");
     return Http::FilterHeadersStatus::StopIteration;
   }
+
   ENVOY_LOG(debug, "matched operation: {}", *operation);
-  Utils::setOperationToMetadata(
-      decoder_callbacks_->streamInfo().dynamicMetadata(), *operation);
+  Metadata& metadata = decoder_callbacks_->streamInfo().dynamicMetadata();
+  Utils::setStringMetadata(metadata, Utils::kOperation, *operation);
+
+  if (config_->NeedPathParametersExtraction(*operation)) {
+    std::vector<VariableBinding> variable_bindings;
+    operation = config_->FindOperation(method, path, &variable_bindings);
+    if (!variable_bindings.empty()) {
+      const std::string query_params =
+          VariableBindingsToQueryParameters(variable_bindings);
+      Utils::setStringMetadata(metadata, Utils::kQueryParams, query_params);
+    }
+  }
+
   config_->stats().allowed_.inc();
   return FilterHeadersStatus::Continue;
 }
