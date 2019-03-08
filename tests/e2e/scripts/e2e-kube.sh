@@ -20,7 +20,6 @@ YAML_FILE=${SCRIPT_PATH}/../testdata/http-bookstore.yaml
 
 ARGS="\
   \"--backend=http://127.0.0.1:8081\",\
-  \"--version=2019-03-04r4\",\
 "
 
 . ${SCRIPT_PATH}/prow-utilities.sh || { echo "Cannot load Bash utilities" ; exit 1 ; }
@@ -39,9 +38,9 @@ run sed_i "s|ARGS|${ARGS}|g" ${YAML_FILE}
 # is changes in the service config, and also remember to update the version
 # number in kubernetes config.
 #
-# SERVICE_IDL="${SCRIPT_PATH}/../testdata/bookstore_swagger_template.json"
-# run sed -i "s|\${ENDPOINT_SERVICE}|${APIPROXY_SERVICE}|g" ${SERVICE_IDL}
-# create_service "${SERVICE_IDL}"
+SERVICE_IDL="${SCRIPT_PATH}/../testdata/bookstore_swagger_template.json"
+run sed -i "s|\${ENDPOINT_SERVICE}|${APIPROXY_SERVICE}|g" ${SERVICE_IDL}
+create_service "${SERVICE_IDL}"
 
 # Parses parameters into config file.
 ARGS="$ARGS \"--service=${APIPROXY_SERVICE}\","

@@ -103,4 +103,4 @@ function buildPackages() {
 buildPackages
 
 # TODO(jilinxia): add other backend tests.
-e2eGKE -c "tight" -t "http" -g "bookstore" -R "fixed" -m ${GENERIC_IMAGE}
+e2eGKE -c "tight" -t "http" -g "bookstore" -R "managed" -m ${GENERIC_IMAGE}
