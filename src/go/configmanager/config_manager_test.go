@@ -29,16 +29,19 @@ import (
 	"testing"
 	"time"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/configmanager/testdata"
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
-	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
-	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/types"
 	"google.golang.org/genproto/protobuf/api"
+
+	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
+	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 const (
@@ -996,7 +999,7 @@ func TestFetchListeners(t *testing.T) {
 		flag.Set("rollout_strategy", ut.FixedRolloutStrategy)
 		flag.Set("backend_protocol", tc.backendProtocol)
 
-		runTest(t, ut.FixedRolloutStrategy, func(env *testEnv) {
+		runTest(t, func(env *testEnv) {
 			ctx := context.Background()
 			// First request, VersionId should be empty.
 			req := v2.DiscoveryRequest{
@@ -1030,6 +1033,97 @@ func TestFetchListeners(t *testing.T) {
 				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got unexpected Listeners", i, tc.desc)
 				t.Errorf("Actual: %s", gotListeners)
 				t.Errorf("Expected: %s", want)
+			}
+		})
+	}
+}
+
+func TestDynamicBackendRouting(t *testing.T) {
+	testData := []struct {
+		desc              string
+		fakeServiceConfig string
+		backendProtocol   string
+		wantedClusters    []string
+		wantedListener    string
+	}{
+		{
+			desc:              "Success for http1 with dynamic routing",
+			fakeServiceConfig: marshalServiceConfigToString(testdata.FakeConfigForDynamicRouting, t),
+			backendProtocol:   "http1",
+			wantedClusters:    testdata.FakeWantedClustersForDynamicRouting,
+			wantedListener:    testdata.FakeWantedListenerForDynamicRouting,
+		},
+	}
+
+	marshaler := &jsonpb.Marshaler{}
+	for i, tc := range testData {
+		// Overrides fakeConfig for the test case.
+		fakeConfig = tc.fakeServiceConfig
+		flag.Set("service", testProjectName)
+		flag.Set("version", testConfigID)
+		flag.Set("rollout_strategy", ut.FixedRolloutStrategy)
+		flag.Set("backend_protocol", tc.backendProtocol)
+		flag.Set("enable_backend_routing", "true")
+
+		runTest(t, func(env *testEnv) {
+			ctx := context.Background()
+			// First request, VersionId should be empty.
+			reqForClusters := v2.DiscoveryRequest{
+				Node: &core.Node{
+					Id: *flags.Node,
+				},
+				TypeUrl: cache.ClusterType,
+			}
+
+			respForClusters, err := env.configManager.cache.Fetch(ctx, reqForClusters)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if respForClusters.Version != testConfigID {
+				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, respForClusters.Version, testConfigID)
+			}
+			if !reflect.DeepEqual(respForClusters.Request, reqForClusters) {
+				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, respForClusters.Request, reqForClusters)
+			}
+
+			sortedClusters := sortResources(respForClusters)
+			for idx, want := range tc.wantedClusters {
+				gotCluster, err := marshaler.MarshalToString(sortedClusters[idx])
+				if err != nil {
+					t.Fatal(err)
+				}
+				gotCluster = normalizeJson(gotCluster)
+				if want = normalizeJson(want); gotCluster != want {
+					t.Errorf("Test Desc(%d): %s, idx %d snapshot cache fetch got Cluster: %s, want: %s", i, tc.desc, idx, gotCluster, want)
+				}
+			}
+
+			reqForListener := v2.DiscoveryRequest{
+				Node: &core.Node{
+					Id: *flags.Node,
+				},
+				TypeUrl: cache.ListenerType,
+			}
+
+			respForListener, err := env.configManager.cache.Fetch(ctx, reqForListener)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if respForListener.Version != testConfigID {
+				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, respForListener.Version, testConfigID)
+			}
+			if !reflect.DeepEqual(respForListener.Request, reqForListener) {
+				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, respForListener.Request, reqForListener)
+			}
+
+			gotListener, err := marshaler.MarshalToString(respForListener.Resources[0])
+			if err != nil {
+				t.Fatal(err)
+			}
+			gotListener = normalizeJson(gotListener)
+			if wantListener := normalizeJson(tc.wantedListener); gotListener != wantListener {
+				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got Listener: %s, want: %s", i, tc.desc, gotListener, wantListener)
 			}
 		})
 	}
@@ -1159,7 +1253,7 @@ func TestPathMatcherFilter(t *testing.T) {
 		// use Path Matcher filter.
 		flag.Set("enable_backend_routing", "true")
 
-		runTest(t, ut.FixedRolloutStrategy, func(env *testEnv) {
+		runTest(t, func(env *testEnv) {
 			ctx := context.Background()
 			// First request, VersionId should be empty.
 			req := v2.DiscoveryRequest{
@@ -1240,7 +1334,7 @@ func TestBackendAuthFilter(t *testing.T) {
 	flag.Set("backend_protocol", "http1")
 	flag.Set("enable_backend_routing", "true")
 
-	runTest(t, ut.FixedRolloutStrategy, func(env *testEnv) {
+	runTest(t, func(env *testEnv) {
 		ctx := context.Background()
 		// First request, VersionId should be empty.
 		req := v2.DiscoveryRequest{
@@ -1378,7 +1472,7 @@ func TestFetchClusters(t *testing.T) {
 		flag.Set("rollout_strategy", ut.FixedRolloutStrategy)
 		flag.Set("backend_protocol", tc.backendProtocol)
 
-		runTest(t, ut.FixedRolloutStrategy, func(env *testEnv) {
+		runTest(t, func(env *testEnv) {
 			ctx := context.Background()
 			// First request, VersionId should be empty.
 			req := v2.DiscoveryRequest{
@@ -1613,7 +1707,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 	flag.Set("rollout_strategy", ut.ManagedRolloutStrategy)
 	flag.Set("backend_protocol", testCase.backendProtocol)
 
-	runTest(t, ut.ManagedRolloutStrategy, func(env *testEnv) {
+	runTest(t, func(env *testEnv) {
 		var resp *cache.Response
 		var err error
 		ctx := context.Background()
@@ -1760,10 +1854,103 @@ func TestGetEndpointAllowCorsFlag(t *testing.T) {
 		flag.Set("rollout_strategy", ut.FixedRolloutStrategy)
 		flag.Set("backend_protocol", "http1")
 
-		runTest(t, ut.FixedRolloutStrategy, func(env *testEnv) {
+		runTest(t, func(env *testEnv) {
 			allowCorsFlag := env.configManager.getEndpointAllowCorsFlag()
 			if allowCorsFlag != tc.wantedAllowCorsFlag {
 				t.Errorf("Test Desc(%d): %s, allow CORS flag got: %v, want: %v", i, tc.desc, allowCorsFlag, tc.wantedAllowCorsFlag)
+			}
+		})
+	}
+}
+
+func TestExtractBackendAddress(t *testing.T) {
+	fakeServiceConfig := fmt.Sprintf(`{
+				"name":"%s",
+				"apis":[
+					{
+						"name":"%s",
+						"version":"v1",
+						"syntax":"SYNTAX_PROTO3",
+						"sourceContext": {
+							"fileName": "bookstore.proto"
+						}
+					}
+				],
+				"endpoints": [
+					{
+						"name": "%s"
+					}
+				]
+			}`, testProjectName, testEndpointName, testProjectName)
+	testData := []struct {
+		desc           string
+		url            string
+		wantedHostname string
+		wantedPort     uint32
+		wantedErr      string
+	}{
+		{
+			desc:           "successful for https url, ends without slash",
+			url:            "https://abc.example.org",
+			wantedHostname: "abc.example.org",
+			wantedPort:     443,
+			wantedErr:      "",
+		},
+		{
+			desc:           "successful for https url, ends with slash",
+			url:            "https://abcde.google.org/",
+			wantedHostname: "abcde.google.org",
+			wantedPort:     443,
+			wantedErr:      "",
+		},
+		{
+			desc:           "successful for https url, ends with path",
+			url:            "https://abcde.youtube.com/api/",
+			wantedHostname: "abcde.youtube.com",
+			wantedPort:     443,
+			wantedErr:      "",
+		},
+		{
+			desc:           "successful for https url with custome port",
+			url:            "https://abcde.youtube.com:8989/api/",
+			wantedHostname: "abcde.youtube.com",
+			wantedPort:     8989,
+			wantedErr:      "",
+		},
+		{
+			desc:           "fail for http url",
+			url:            "http://abcde.youtube.com:8989/api/",
+			wantedHostname: "",
+			wantedPort:     0,
+			wantedErr:      "dynamic routing only supports HTTPS",
+		},
+		{
+			desc:           "fail for https url with IP address",
+			url:            "https://192.168.0.1/api/",
+			wantedHostname: "",
+			wantedPort:     0,
+			wantedErr:      "dynamic routing only supports domain name, got IP address: 192.168.0.1",
+		},
+	}
+
+	fakeConfig = fakeServiceConfig
+	for i, tc := range testData {
+		// Overrides fakeConfig for the test case.
+		flag.Set("service", testProjectName)
+		flag.Set("version", testConfigID)
+		flag.Set("rollout_strategy", ut.FixedRolloutStrategy)
+		flag.Set("backend_protocol", "http1")
+
+		runTest(t, func(env *testEnv) {
+			hostname, port, err := env.configManager.extractBackendAddress(tc.url)
+			if hostname != tc.wantedHostname {
+				t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, hostname, tc.wantedHostname)
+			}
+			if port != tc.wantedPort {
+				t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, port, tc.wantedPort)
+			}
+			if (err == nil && tc.wantedErr != "") || (err != nil && tc.wantedErr == "") {
+				t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, err, tc.wantedErr)
 			}
 		})
 	}
@@ -1775,7 +1962,7 @@ type testEnv struct {
 	configManager *ConfigManager
 }
 
-func runTest(t *testing.T, testRolloutStrategy string, f func(*testEnv)) {
+func runTest(t *testing.T, f func(*testEnv)) {
 	mockConfig := initMockConfigServer(t)
 	defer mockConfig.Close()
 	fetchConfigURL = func(serviceName, configID string) string {
@@ -1830,6 +2017,25 @@ func initMockJwksIssuer(t *testing.T) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fakeJwks))
 	}))
+}
+
+func sortResources(response *cache.Response) []cache.Resource {
+	// configManager.cache may change the order
+	// sort them before comparing results.
+	sortedResources := response.Resources
+	sort.Slice(sortedResources, func(i, j int) bool {
+		return cache.GetResourceName(sortedResources[i]) < cache.GetResourceName(sortedResources[j])
+	})
+	return sortedResources
+}
+
+func marshalServiceConfigToString(serviceConfig *conf.Service, t *testing.T) string {
+	m := &jsonpb.Marshaler{}
+	jsonStr, err := m.MarshalToString(serviceConfig)
+	if err != nil {
+		t.Fatal("fail to convert service config to string: ", err)
+	}
+	return jsonStr
 }
 
 type mock struct{}

@@ -20,7 +20,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"net"
 	"net/http"
+	"net/url"
 	"regexp"
 	"sort"
 	"strconv"
@@ -92,6 +94,7 @@ type ConfigManager struct {
 	// httpPathMap stores all operations to http path pairs.
 	httpPathMap            map[string]*httpRule
 	httpPathWithOptionsSet map[string]bool
+	backendRoutingInfos    []backendRoutingInfo
 	client                 *http.Client
 	cache                  cache.SnapshotCache
 	checkRolloutsTicker    *time.Ticker
@@ -101,6 +104,18 @@ type ConfigManager struct {
 type httpRule struct {
 	path   string
 	method string
+}
+
+type backendRoutingInfo struct {
+	selector        string
+	translationType conf.BackendRule_PathTranslation
+	backend         backendInfo
+}
+
+type backendInfo struct {
+	name     string
+	hostname string
+	port     uint32
 }
 
 // NewConfigManager creates new instance of ConfigManager.
@@ -295,6 +310,14 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 		clusters = append(clusters, scCluster)
 	}
 
+	if *flags.EnableBackendRouting {
+		dynamicRoutingBackendMap, err := m.processBackendRoutingInfo()
+		if err != nil {
+			return nil, err
+		}
+		m.addBackendRoutingClusters(dynamicRoutingBackendMap, &clusters)
+	}
+
 	m.Infof("adding Listener configuration for api: %v", endpointApi.GetName())
 	serverlistener, httpManager, err := m.makeListener(endpointApi, backendProtocol)
 	if err != nil {
@@ -315,6 +338,33 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	snapshot := cache.NewSnapshot(m.curConfigID, endpoints, clusters, routes, []cache.Resource{serverlistener})
 	glog.Infof("Envoy Dynamic Configuration is cached for service: %v", m.serviceName)
 	return &snapshot, nil
+}
+
+func (m *ConfigManager) addBackendRoutingClusters(dynamicRoutingBackendMap map[string]backendInfo, clusters *[]cache.Resource) {
+	for _, v := range dynamicRoutingBackendMap {
+		c := &v2.Cluster{
+			Name:           v.name,
+			LbPolicy:       v2.Cluster_ROUND_ROBIN,
+			ConnectTimeout: *flags.ClusterConnectTimeout,
+			Type:           v2.Cluster_LOGICAL_DNS,
+			Hosts: []*core.Address{
+				{Address: &core.Address_SocketAddress{
+					SocketAddress: &core.SocketAddress{
+						Address: v.hostname,
+						PortSpecifier: &core.SocketAddress_PortValue{
+							PortValue: v.port,
+						},
+					},
+				},
+				},
+			},
+			TlsContext: &auth.UpstreamTlsContext{
+				Sni: v.hostname,
+			},
+		}
+		*clusters = append(*clusters, c)
+		m.Infof("Add backend routing cluster configuration for %v: %v", v.name, c)
+	}
 }
 
 func (m *ConfigManager) makeBackendCluster(endpointApi *api.Api, backendProtocol ut.BackendProtocol) (*v2.Cluster, error) {
@@ -459,6 +509,62 @@ func (m *ConfigManager) initHttpPathMap() {
 	}
 }
 
+func (m *ConfigManager) extractBackendAddress(address string) (string, uint32, error) {
+	backendUrl, err := url.Parse(address)
+	if err != nil {
+		return "", 0, err
+	}
+	if backendUrl.Scheme != "https" {
+		return "", 0, fmt.Errorf("dynamic routing only supports HTTPS")
+	}
+	hostname := backendUrl.Hostname()
+	if net.ParseIP(hostname) != nil {
+		return "", 0, fmt.Errorf("dynamic routing only supports domain name, got IP address: %v", hostname)
+	}
+	var port uint32 = 443
+	if backendUrl.Port() != "" {
+		// for cases like "https://example.org:8080"
+		var port64 uint64
+		var err error
+		if port64, err = strconv.ParseUint(backendUrl.Port(), 10, 32); err != nil {
+			return "", 0, err
+		}
+		port = uint32(port64)
+	}
+	return hostname, port, nil
+}
+
+func (m *ConfigManager) processBackendRoutingInfo() (map[string]backendInfo, error) {
+	dynamicRoutingBackendMap := make(map[string]backendInfo)
+	for _, r := range m.serviceConfig.Backend.GetRules() {
+		// for CONSTANT_ADDRESS and APPEND_PATH_TO_ADDRESS
+		if r.PathTranslation != conf.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
+			var err error
+			var hostname string
+			var port uint32
+			hostname, port, err = m.extractBackendAddress(r.Address)
+			if err != nil {
+				return nil, err
+			}
+			address := fmt.Sprintf("%v:%v", hostname, port)
+			if _, exist := dynamicRoutingBackendMap[address]; !exist {
+				backendSelector := fmt.Sprintf("DynamicRouting.%v", len(dynamicRoutingBackendMap))
+				dynamicRoutingBackendMap[address] = backendInfo{
+					name:     backendSelector,
+					hostname: hostname,
+					port:     port,
+				}
+			}
+			m.backendRoutingInfos = append(m.backendRoutingInfos, backendRoutingInfo{
+				selector:        r.Selector,
+				translationType: r.PathTranslation,
+				backend:         dynamicRoutingBackendMap[address],
+			})
+		}
+	}
+	return dynamicRoutingBackendMap, nil
+}
+
 func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.BackendProtocol) (*v2.Listener, *hcm.HttpConnectionManager, error) {
 	httpFilters := []*hcm.HttpFilter{}
 
@@ -537,6 +643,11 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 		return nil, nil, fmt.Errorf("makeHttpConnectionManagerRouteConfig got err: %s", err)
 	}
 
+	if *flags.EnableBackendRouting {
+		if err := m.addDynamicRoutingConfig(route); err != nil {
+			return nil, nil, err
+		}
+	}
 	httpConMgr := &hcm.HttpConnectionManager{
 		CodecType:  hcm.AUTO,
 		StatPrefix: statPrefix,
@@ -553,6 +664,33 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 			Address:       *flags.ListenerAddress,
 			PortSpecifier: &core.SocketAddress_PortValue{PortValue: uint32(*flags.ListenerPort)}}}},
 	}, httpConMgr, nil
+}
+
+func (m *ConfigManager) addDynamicRoutingConfig(routeConfig *v2.RouteConfiguration) error {
+	var backendRoutes []route.Route
+	for _, v := range m.backendRoutingInfos {
+		var routeMatcher *route.RouteMatch
+		if routeMatcher = m.makeHttpRouteMatcher(v.selector); routeMatcher == nil {
+			return fmt.Errorf("error making HTTP route matcher for selector: %v", v.selector)
+		}
+		r := route.Route{
+			Match: *routeMatcher,
+			Action: &route.Route_Route{
+				Route: &route.RouteAction{
+					ClusterSpecifier: &route.RouteAction_Cluster{
+						Cluster: v.backend.name,
+					},
+					HostRewriteSpecifier: &route.RouteAction_HostRewrite{
+						HostRewrite: v.backend.hostname,
+					},
+				},
+			},
+		}
+		backendRoutes = append(backendRoutes, r)
+	}
+	// has to be backend routing first because the first route that matches will be used in envoy route filter
+	routeConfig.VirtualHosts[0].Routes = append(backendRoutes, routeConfig.VirtualHosts[0].Routes...)
+	return nil
 }
 
 func makeRouteConfig(endpointApi *api.Api) (*v2.RouteConfiguration, error) {
@@ -776,8 +914,7 @@ func (m *ConfigManager) makeJwtAuthnFilter(endpointApi *api.Api, backendProtocol
 			}
 		}
 
-		routeMatcher := m.makeHttpRouteMatcher(rule.GetSelector())
-		if routeMatcher != nil {
+		if routeMatcher := m.makeHttpRouteMatcher(rule.GetSelector()); routeMatcher != nil {
 			ruleConfig := &ac.RequirementRule{
 				Match:    routeMatcher,
 				Requires: requires,
