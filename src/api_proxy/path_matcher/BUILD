@@ -17,6 +17,9 @@ cc_library(
         "path_matcher.h",
         "path_matcher_node.h",
     ],
+    deps = [
+        "//external:abseil_strings",
+    ],
 )
 
 cc_test(
