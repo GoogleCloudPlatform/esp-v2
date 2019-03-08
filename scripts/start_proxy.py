@@ -212,33 +212,52 @@ if __name__ == '__main__':
         cluster_port = DEFAULT_PORT
     else:
         print ("incorrect backend")
-        sys.exit(0)
+        sys.exit(1)
 
     if args.rollout_strategy is None or not args.rollout_strategy.strip():
         args.rollout_strategy = DEFAULT_ROLLOUT_STRATEGY
 
     proxy_conf = ["-v",
         "--backend_protocol", backend_protocol,
-        "--service", args.service,
-        "--version", args.version,
         "--cluster_address", cluster_address,
         "--cluster_port", cluster_port,
         "--service_management_url", args.management,
-        "--check_metadata", str(args.check_metadata),
         "--rollout_strategy", args.rollout_strategy,
-        "--enable_backend_routing", str(args.enable_backend_routing),
     ]
+
+    if args.service:
+        proxy_conf.append(
+          "--service", args.service,
+        )
+    if args.version:
+        if args.rollout_strategy != DEFAULT_ROLLOUT_STRATEGY:
+          print ("when version is set, rollout strategy should be fixed mode.")
+          sys.exit(1)
+        proxy_conf.append([
+          "--version", args.version,
+        ])
+    if args.check_metadata:
+        proxy_conf.append(
+          "--check_metadata",
+        )
+    if args.enable_backend_routing:
+        proxy_conf.append([
+          "--enable_backend_routing",
+        ])
 
     if args.cors_preset:
         proxy_conf.extend([
-        "--cors_preset", args.cors_preset,
-        "--cors_allow_origin", args.cors_allow_origin,
-        "--cors_allow_origin_regex", args.cors_allow_origin_regex,
-        "--cors_allow_methods", args.cors_allow_methods,
-        "--cors_allow_headers", args.cors_allow_headers,
-        "--cors_expose_headers", args.cors_expose_headers,
-        "--cors_allow_credentials", str(args.cors_allow_credentials),
+          "--cors_preset", args.cors_preset,
+          "--cors_allow_origin", args.cors_allow_origin,
+          "--cors_allow_origin_regex", args.cors_allow_origin_regex,
+          "--cors_allow_methods", args.cors_allow_methods,
+          "--cors_allow_headers", args.cors_allow_headers,
+          "--cors_expose_headers", args.cors_expose_headers,
         ])
+        if args.cors_allow_credentials:
+            proxy_conf.append(
+              "--cors_allow_credentials"
+            )
 
     print (proxy_conf)
     start_proxy(proxy_conf)

@@ -40,7 +40,6 @@ spec:
       containers:
       - name: apiproxy
         image: APIPROXY_IMAGE
-        # the latest service config version is 2019-03-04r4
         args: [ARGS]
         ports:
           - containerPort: 8080
