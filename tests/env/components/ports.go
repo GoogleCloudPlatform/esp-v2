@@ -49,6 +49,8 @@ const (
 	TestServiceControlRequestInDynamicRouting
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
+	TestServiceControlProtocolWithGRPCBackend
+	TestServiceControlProtocolWithHTTPBackend
 	TestUnconfiguredRequest
 
 	// The number of total tests. has to be the last one.
