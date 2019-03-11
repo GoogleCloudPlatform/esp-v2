@@ -1252,11 +1252,13 @@ func TestPathMatcherFilter(t *testing.T) {
 				"backend": {
 				  "rules": [
 					{
+					  "address": "https://mybackend.com",
 					  "selector": "1.cloudesf_testing_cloud_goog.Foo",
 					  "pathTranslation": "CONSTANT_ADDRESS",
 					  "jwtAudience": "mybackend.com"
 					},
 					{
+					  "address": "https://mybackend.com",
 					  "selector": "1.cloudesf_testing_cloud_goog.Bar",
 					  "pathTranslation": "APPEND_PATH_TO_ADDRESS",
 					  "jwtAudience": "mybackend.com"
