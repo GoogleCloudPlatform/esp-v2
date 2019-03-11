@@ -22,6 +22,8 @@
 #include "google/protobuf/struct.pb.h"
 #include "google/protobuf/text_format.h"
 
+#include "src/api_proxy/utils/version.h"
+
 namespace gasv1 = ::google::api::servicecontrol::v1;
 using ::google::protobuf::Timestamp;
 using ::google::protobuf::util::Status;
@@ -33,6 +35,7 @@ namespace service_control {
 
 namespace {
 
+const char kFakeVersion[] = "TEST.0.0";
 const char kTestdata[] = "src/api_proxy/service_control/testdata/";
 
 std::string ReadTestBaseline(const char* input_file_name) {
@@ -51,11 +54,10 @@ std::string ReadTestBaseline(const char* input_file_name) {
   // Replace instances of {{service_agent_version}} with the expected service
   // agent version.
   std::string placeholder = "{{service_agent_version}}";
-  std::string value = "0.1";
   size_t current = 0;
   while ((current = contents.find(placeholder, current)) != std::string::npos) {
-    contents.replace(current, placeholder.length(), value);
-    current += value.length();
+    contents.replace(current, placeholder.length(), kFakeVersion);
+    current += strlen(kFakeVersion);
   }
   return contents;
 }
@@ -148,6 +150,11 @@ std::string ReportRequestToString(gasv1::ReportRequest* request) {
 
 class RequestBuilderTest : public ::testing::Test {
  protected:
+  static void SetUpTestCase() {
+    // Inject the fake version in the singleton version instance.
+    utils::Version::instance().set(kFakeVersion);
+  }
+
   RequestBuilderTest()
       : scp_({"local_test_log"}, "test_service", "2016-09-19r0") {}
 

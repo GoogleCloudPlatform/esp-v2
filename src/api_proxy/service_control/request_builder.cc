@@ -23,6 +23,8 @@
 #include "google/protobuf/timestamp.pb.h"
 #include "utils/distribution_helper.h"
 
+#include "src/api_proxy/utils/version.h"
+
 using ::google::api::servicecontrol::v1::CheckError;
 using ::google::api::servicecontrol::v1::CheckRequest;
 using ::google::api::servicecontrol::v1::CheckResponse;
@@ -527,7 +529,11 @@ const char kServiceControlConsumerProject[] =
 const char kUserAgent[] = "APIPROXY";
 
 // Service agent label value
-const char kServiceAgentPrefix[] = "APIPROXY/0.1";
+const char kServiceAgentPrefix[] = "APIPROXY/";
+
+const std::string get_service_agent() {
+  return kServiceAgentPrefix + utils::Version::instance().get();
+}
 
 // /credential_id
 Status set_credential_id(const SupportedLabel& l, const ReportRequestInfo& info,
@@ -661,7 +667,7 @@ Status set_platform(const SupportedLabel& l, const ReportRequestInfo& info,
 // servicecontrol.googleapis.com/service_agent
 Status set_service_agent(const SupportedLabel& l, const ReportRequestInfo& info,
                          Map<std::string, std::string>* labels) {
-  (*labels)[l.name] = kServiceAgentPrefix;
+  (*labels)[l.name] = get_service_agent();
   return Status::OK;
 }
 
@@ -1116,7 +1122,7 @@ Status RequestBuilder::FillAllocateQuotaRequest(
     (*labels)[kServiceControlReferer] = info.referer;
   }
   (*labels)[kServiceControlUserAgent] = kUserAgent;
-  (*labels)[kServiceControlServiceAgent] = kServiceAgentPrefix;
+  (*labels)[kServiceControlServiceAgent] = get_service_agent();
 
   if (info.metric_cost_vector) {
     for (auto metric : *info.metric_cost_vector) {
@@ -1152,7 +1158,7 @@ Status RequestBuilder::FillCheckRequest(const CheckRequestInfo& info,
     (*labels)[kServiceControlReferer] = info.referer;
   }
   (*labels)[kServiceControlUserAgent] = kUserAgent;
-  (*labels)[kServiceControlServiceAgent] = kServiceAgentPrefix;
+  (*labels)[kServiceControlServiceAgent] = get_service_agent();
 
   if (!info.android_package_name.empty()) {
     (*labels)[kServiceControlAndroidPackageName] = info.android_package_name;

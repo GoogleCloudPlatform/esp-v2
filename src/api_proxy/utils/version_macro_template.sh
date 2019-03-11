@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-VERSION=$(cat $1)
+VERSION=$(tail -n1 $1)
 
 cat <<EOF
 #ifndef API_PROXY_VERSION_MACRO_H_
