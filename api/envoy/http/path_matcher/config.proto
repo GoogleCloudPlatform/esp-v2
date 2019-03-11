@@ -27,6 +27,9 @@ message PathMatcherRule {
 
   // Operation name.
   string operation = 2 [(validate.rules).string.min_bytes = 1];
+
+  // Whether the pattern path parameter extraction.
+  bool extract_path_parameters = 3;
 }
 
 message FilterConfig {

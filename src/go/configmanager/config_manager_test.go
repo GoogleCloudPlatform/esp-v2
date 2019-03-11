@@ -1202,19 +1202,19 @@ func TestPathMatcherFilter(t *testing.T) {
 						"name":"%s"
 					}
 				],
-                "http": {
-                    "rules": [
-                        {
-                            "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
-                            "get": "/auth/info/googlejwt"
-                        },
-                        {
-                            "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-                            "post": "/echo",
-                            "body": "message"
-                        }
-                    ]
-                }
+				"http": {
+ 					"rules": [
+						{
+							"selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
+							"get": "/auth/info/googlejwt"
+						},
+						{
+							"selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+							"post": "/echo",
+							"body": "message"
+						}
+					]
+				}
 			}`, testProjectName, testEndpointName),
 			backendProtocol: "http1",
 			wantPathMatcherFilter: `
@@ -1233,6 +1233,67 @@ func TestPathMatcherFilter(t *testing.T) {
                       "pattern": {
                         "http_method": "POST",
                         "uri_template": "/echo"
+                      }
+                    }
+                  ]
+                },
+                "name": "envoy.filters.http.path_matcher"
+              }`,
+		},
+		{
+			desc: "Path Matcher filter - HTTP backend with path parameters",
+			fakeServiceConfig: `{
+				"name":"foo.endpoints.bar.cloud.goog",
+				"apis":[
+					{
+						"name":"endpoints.test.foo.Bar"
+					}
+				],
+				"backend": {
+				  "rules": [
+					{
+					  "selector": "1.cloudesf_testing_cloud_goog.Foo",
+					  "pathTranslation": "CONSTANT_ADDRESS",
+					  "jwtAudience": "mybackend.com"
+					},
+					{
+					  "selector": "1.cloudesf_testing_cloud_goog.Bar",
+					  "pathTranslation": "APPEND_PATH_TO_ADDRESS",
+					  "jwtAudience": "mybackend.com"
+					}
+				  ]
+				},
+                "http": {
+                    "rules": [
+                        {
+                           "selector": "1.cloudesf_testing_cloud_goog.Foo",
+                           "get": "foo/{id}"
+                        },
+                        {
+                            "selector": "1.cloudesf_testing_cloud_goog.Bar",
+                            "get": "foo"
+                        }
+                    ]
+                }
+			}`,
+			backendProtocol: "http1",
+			wantPathMatcherFilter: `
+              {
+                "config": {
+                  "rules": [
+                    {
+                      "extract_path_parameters": true,
+                      "operation": "1.cloudesf_testing_cloud_goog.Foo",
+                      "pattern": {
+                        "http_method": "GET",
+                        "uri_template": "foo/{id}"
+                      }
+                    },
+                    {
+                      "operation": "1.cloudesf_testing_cloud_goog.Bar",
+                      "pattern": {
+                        "http_method": "GET",
+                        "uri_template": "foo"
                       }
                     }
                   ]

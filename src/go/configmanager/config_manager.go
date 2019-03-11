@@ -754,6 +754,10 @@ func makeRouteConfig(endpointApi *api.Api) (*v2.RouteConfiguration, error) {
 	}, nil
 }
 
+func hasPathParameter(httpPattern string) bool {
+	return strings.ContainsRune(httpPattern, '{')
+}
+
 func (m *ConfigManager) makePathMatcherFilter(endpointApi *api.Api, backendProtocol ut.BackendProtocol) *hcm.HttpFilter {
 	rules := []*pmpb.PathMatcherRule{}
 	if backendProtocol == ut.GRPC {
@@ -766,6 +770,13 @@ func (m *ConfigManager) makePathMatcherFilter(endpointApi *api.Api, backendProto
 					HttpMethod:  ut.POST,
 				},
 			})
+		}
+	}
+
+	constantAddressRules := make(map[string]bool)
+	for _, rule := range m.serviceConfig.GetBackend().GetRules() {
+		if rule.GetPathTranslation() == conf.BackendRule_CONSTANT_ADDRESS {
+			constantAddressRules[rule.GetSelector()] = true
 		}
 	}
 
@@ -799,10 +810,17 @@ func (m *ConfigManager) makePathMatcherFilter(endpointApi *api.Api, backendProto
 			}
 		}
 
-		rules = append(rules, &pmpb.PathMatcherRule{
+		newRule := &pmpb.PathMatcherRule{
 			Operation: httpRule.GetSelector(),
 			Pattern:   newPattern,
-		})
+		}
+
+		isConstantAddress := constantAddressRules[httpRule.GetSelector()]
+		if isConstantAddress && hasPathParameter(newPattern.UriTemplate) {
+			newRule.ExtractPathParameters = true
+		}
+
+		rules = append(rules, newRule)
 	}
 
 	pathMathcherConfig := &pmpb.FilterConfig{Rules: rules}

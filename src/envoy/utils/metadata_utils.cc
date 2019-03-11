@@ -17,32 +17,33 @@
 namespace Envoy {
 namespace Extensions {
 namespace Utils {
-namespace {
-constexpr char kOperation[] = "operation";
-}
 
-void setOperationToMetadata(::envoy::api::v2::core::Metadata& metadata,
-                            const std::string& operation) {
-  ProtobufWkt::Value value;
-  value.set_string_value(operation);
+using ::envoy::api::v2::core::Metadata;
+
+void setStringMetadata(Metadata& metadata, const std::string& field_name,
+                       const std::string& value) {
+  ProtobufWkt::Value proto_value;
+  proto_value.set_string_value(value);
   ProtobufWkt::Struct md;
-  (*md.mutable_fields())[kOperation] = value;
+  (*md.mutable_fields())[field_name] = proto_value;
   (*metadata.mutable_filter_metadata())[kPathMatcherFilterName].MergeFrom(md);
 }
 
-const std::string& getOperationFromMetadata(
-    const ::envoy::api::v2::core::Metadata& metadata,
-    const std::string& default_value) {
+const std::string& getStringMetadata(const Metadata& metadata,
+                                     const std::string& field_name) {
+  static const std::string empty;
   const auto filter_it =
       metadata.filter_metadata().find(kPathMatcherFilterName);
+
   // Failure case for missing namespace.
   if (filter_it == metadata.filter_metadata().end()) {
-    return default_value;
+    return empty;
   }
+
   // Failure case for missing key.
-  const auto fields_it = filter_it->second.fields().find(kOperation);
+  const auto fields_it = filter_it->second.fields().find(field_name);
   if (fields_it == filter_it->second.fields().end()) {
-    return default_value;
+    return empty;
   }
   return fields_it->second.string_value();
 }

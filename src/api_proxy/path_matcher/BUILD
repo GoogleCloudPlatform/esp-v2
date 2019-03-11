@@ -51,3 +51,33 @@ cc_test(
         "//external:googletest_main",
     ],
 )
+
+cc_library(
+    name = "variable_binding_utils_lib",
+    hdrs = [
+        "variable_binding_utils.h",
+    ],
+    srcs = [
+        "variable_binding_utils.cc",
+    ],
+    deps = [
+        ":path_matcher_lib",
+    ],
+)
+
+cc_test(
+    name = "variable_binding_utils_test",
+    size = "small",
+    srcs = [
+        "variable_binding_utils_test.cc",
+    ],
+    linkopts = [
+        "-lm",
+        "-lpthread",
+    ],
+    linkstatic = 1,
+    deps = [
+        ":variable_binding_utils_lib",
+        "//external:googletest_main",
+    ],
+)

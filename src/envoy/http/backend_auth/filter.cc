@@ -31,15 +31,14 @@ using Http::FilterHeadersStatus;
 using Http::FilterTrailersStatus;
 using Http::HeaderMap;
 using Http::LowerCaseString;
-using Utils::getOperationFromMetadata;
 
 namespace {
 constexpr char kBearer[] = "Bearer ";
 }  // namespace
 
 FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
-  const std::string& operation = getOperationFromMetadata(
-      decoder_callbacks_->streamInfo().dynamicMetadata(), "");
+  const std::string& operation = Utils::getStringMetadata(
+      decoder_callbacks_->streamInfo().dynamicMetadata(), Utils::kOperation);
   // NOTE: this shouldn't happen in practice because Path Matcher filter would
   // have already rejected the request.
   if (operation == "") {
