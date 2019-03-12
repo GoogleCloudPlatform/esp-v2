@@ -21,3 +21,7 @@ cp -f bazel-bin/api/envoy/http/path_matcher/*/config_proto_go_proto%/cloudesf.go
 bazel build //api/envoy/http/backend_auth:config_proto_go_proto
 mkdir -p src/go/proto/api/envoy/http/backend_auth
 cp -f bazel-bin/api/envoy/http/backend_auth/*/config_proto_go_proto%/cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/backend_auth/* src/go/proto/api/envoy/http/backend_auth
+# HTTP filter backend_routing
+bazel build //api/envoy/http/backend_routing:config_proto_go_proto
+mkdir -p src/go/proto/api/envoy/http/backend_routing
+cp -f bazel-bin/api/envoy/http/backend_routing/*/config_proto_go_proto%/cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/backend_routing/* src/go/proto/api/envoy/http/backend_routing
