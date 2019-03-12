@@ -21,12 +21,10 @@ RUN virtualenv -p python3.6 /env
 ENV VIRTUAL_ENV /env
 ENV PATH /env/bin:$PATH
 
-ADD scripts/* apiproxy/
+ADD docker/generic/* apiproxy/
 
 ADD bin/configmanager apiproxy/configmanager
 
 ADD bin/envoy apiproxy/envoy
-
-RUN pip install -r apiproxy/requirements.txt
 
 ENTRYPOINT ["python", "apiproxy/start_proxy.py"]
