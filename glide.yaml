@@ -15,7 +15,9 @@ import:
   subpackages:
   - unicode
 - package: google.golang.org/genproto
+  version: 6e86cb5d2f12401bdd82a5eccbd701b5a697e63e
   subpackages:
+  - googleapis
   - opencensus
   - protobuf
 - package: google.golang.org/grpc

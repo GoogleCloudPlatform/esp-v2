@@ -1,5 +1,5 @@
-hash: b314f29671bf8d6d6808f388c5dc12585ebdb33abca70f72b22c891c9027fbdf
-updated: 2019-02-08T21:58:27.199038778Z
+hash: b1203c168751f9dd47c32d7ace38c320658adcce1fc686951cbbfe5a2076dd8c
+updated: 2019-03-12T18:26:22.903668644Z
 imports:
 - name: cloud.google.com/go
   version: 2a912322007f3a7f0b4e7e96ba0dfd8c4f347d33
@@ -34,7 +34,7 @@ imports:
   - google/api
   - google/rpc
 - name: github.com/gogo/protobuf
-  version: 4cbf7e384e768b4e01799441fdf2a706a5635ae7
+  version: ba06b47c162d49f2af050fb4c75bcbc86a159d5c
   subpackages:
   - gogoproto
   - jsonpb
@@ -70,7 +70,7 @@ imports:
   subpackages:
   - validate
 - name: github.com/sirupsen/logrus
-  version: e1e72e9de974bd926e5c56f83753fba2df402ce5
+  version: dae0fa8d5b0c810a8ab733fbd5510c7cae84eca4
 - name: golang.org/x/net
   version: 5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec
   subpackages:
@@ -114,8 +114,19 @@ imports:
   - internal/urlfetch
   - urlfetch
 - name: google.golang.org/genproto
-  version: a8101f21cf983e773d0c1133ebc5424792003214
+  version: 6e86cb5d2f12401bdd82a5eccbd701b5a697e63e
   subpackages:
+  - googleapis
+  - googleapis/api/annotations
+  - googleapis/api/configchange
+  - googleapis/api/label
+  - googleapis/api/metric
+  - googleapis/api/monitoredres
+  - googleapis/api/serviceconfig
+  - googleapis/logging/type
+  - googleapis/longrunning
+  - googleapis/rpc/status
+  - googleapis/type/money
   - opencensus
   - protobuf
   - protobuf/api
@@ -123,7 +134,7 @@ imports:
   - protobuf/ptype
   - protobuf/source_context
 - name: google.golang.org/grpc
-  version: a02b0774206b209466313a0b525d2c738fe407eb
+  version: 2fdaae294f38ed9a121193c51ec99fecd3b13eb7
   subpackages:
   - balancer
   - balancer/base
