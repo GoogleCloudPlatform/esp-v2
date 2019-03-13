@@ -49,11 +49,11 @@ operation: <
   >
   labels: <
     key: "servicecontrol.googleapis.com/service_agent"
-    value: "ESP/0.3.4"
+    value: "APIPROXY/0.3.4"
   >
   labels: <
     key: "servicecontrol.googleapis.com/user_agent"
-    value: "ESP"
+    value: "APIPROXY"
   >
  >
 `
@@ -120,11 +120,11 @@ const expectedReport = `
           >
           labels: <
             key: "servicecontrol.googleapis.com/service_agent"
-            value: "ESP/"
+            value: "APIPROXY/"
           >
           labels: <
             key: "servicecontrol.googleapis.com/user_agent"
-            value: "ESP"
+            value: "APIPROXY"
           >
           labels: <
             key: "serviceruntime.googleapis.com/api_method"
@@ -668,11 +668,11 @@ const expectedReport = `
           >
           labels: <
             key: "servicecontrol.googleapis.com/service_agent"
-            value: "ESP/"
+            value: "APIPROXY/"
           >
           labels: <
             key: "servicecontrol.googleapis.com/user_agent"
-            value: "ESP"
+            value: "APIPROXY"
           >
           labels: <
             key: "serviceruntime.googleapis.com/api_method"
@@ -930,11 +930,11 @@ const expectedReport3 = `
           >
           labels: <
             key: "servicecontrol.googleapis.com/service_agent"
-            value: "ESP/"
+            value: "APIPROXY/"
           >
           labels: <
             key: "servicecontrol.googleapis.com/user_agent"
-            value: "ESP"
+            value: "APIPROXY"
           >
           labels: <
             key: "serviceruntime.googleapis.com/api_method"
@@ -1610,11 +1610,11 @@ const expectedReport3 = `
           >
           labels: <
             key: "servicecontrol.googleapis.com/service_agent"
-            value: "ESP/"
+            value: "APIPROXY/"
           >
           labels: <
             key: "servicecontrol.googleapis.com/user_agent"
-            value: "ESP"
+            value: "APIPROXY"
           >
           labels: <
             key: "serviceruntime.googleapis.com/api_method"

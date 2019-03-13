@@ -45,11 +45,11 @@ operations {
   }
   labels {
     key: "servicecontrol.googleapis.com/service_agent"
-    value: "ESP/{{service_agent_version}}"
+    value: "APIPROXY/{{service_agent_version}}"
   }
   labels {
     key: "servicecontrol.googleapis.com/user_agent"
-    value: "ESP"
+    value: "APIPROXY"
   }
   labels {
     key: "serviceruntime.googleapis.com/api_method"

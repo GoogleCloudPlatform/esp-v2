@@ -27,7 +27,7 @@ namespace ServiceControl {
 const std::string FilterName = "envoy.filters.http.service_control";
 
 /**
- * Config registration for cloudESF service control filter.
+ * Config registration for API Proxy service control filter.
  */
 class FilterFactory
     : public Common::FactoryBase<

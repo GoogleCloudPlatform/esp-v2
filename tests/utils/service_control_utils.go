@@ -116,8 +116,8 @@ func CreateCheck(er *ExpectedCheck) sc.CheckRequest {
 			OperationName: er.OperationName,
 			ConsumerId:    er.ConsumerID,
 			Labels: map[string]string{
-				"servicecontrol.googleapis.com/user_agent":    "ESP",
-				"servicecontrol.googleapis.com/service_agent": "ESP/" + er.Version,
+				"servicecontrol.googleapis.com/user_agent":    "APIPROXY",
+				"servicecontrol.googleapis.com/service_agent": "APIPROXY/" + er.Version,
 			},
 		},
 	}
@@ -154,8 +154,8 @@ func responseCodes(code int) (response, status, class string) {
 func createReportLabels(er *ExpectedReport) map[string]string {
 	response, status, class := responseCodes(er.ResponseCode)
 	labels := map[string]string{
-		"servicecontrol.googleapis.com/service_agent": "ESP/" + er.Version,
-		"servicecontrol.googleapis.com/user_agent":    "ESP",
+		"servicecontrol.googleapis.com/service_agent": "APIPROXY/" + er.Version,
+		"servicecontrol.googleapis.com/user_agent":    "APIPROXY",
 		"serviceruntime.googleapis.com/api_method":    er.ApiMethod,
 		"/response_code":       response,
 		"/status_code":         status,
