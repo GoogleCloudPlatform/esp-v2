@@ -1,5 +1,5 @@
-hash: b1203c168751f9dd47c32d7ace38c320658adcce1fc686951cbbfe5a2076dd8c
-updated: 2019-03-12T18:26:22.903668644Z
+hash: 2bc4d9abb45d44efee4fc632c0deea4a500052f2f112975fecd02b6a07a18c56
+updated: 2019-03-13T18:13:51.395918494Z
 imports:
 - name: cloud.google.com/go
   version: 2a912322007f3a7f0b4e7e96ba0dfd8c4f347d33
@@ -114,9 +114,10 @@ imports:
   - internal/urlfetch
   - urlfetch
 - name: google.golang.org/genproto
-  version: 6e86cb5d2f12401bdd82a5eccbd701b5a697e63e
+  version: 5fe7a883aa19554f42890211544aa549836af7b7
   subpackages:
   - googleapis
+  - googleapis/api
   - googleapis/api/annotations
   - googleapis/api/configchange
   - googleapis/api/label
