@@ -1303,6 +1303,68 @@ func TestPathMatcherFilter(t *testing.T) {
                 "name": "envoy.filters.http.path_matcher"
               }`,
 		},
+		{
+			desc: "Path Matcher filter - Segment Name Mapping for snake-case field",
+			fakeServiceConfig: `{
+				"name":"foo.endpoints.bar.cloud.goog",
+				"apis":[
+					{
+						"name":"endpoints.test.foo.Bar"
+					}
+				],
+				"types": [
+				  {
+					"fields": [
+					  {
+						"name": "foo_bar",
+						"jsonName": "fooBar"
+					  }
+					]
+				  }
+				],
+				"backend": {
+				  "rules": [
+					{
+					  "address": "https://mybackend.com",
+					  "selector": "1.cloudesf_testing_cloud_goog.Foo",
+					  "pathTranslation": "CONSTANT_ADDRESS",
+					  "jwtAudience": "mybackend.com"
+					}
+				  ]
+				},
+                "http": {
+                    "rules": [
+                        {
+                           "selector": "1.cloudesf_testing_cloud_goog.Foo",
+                           "get": "foo/{foo_bar}"
+                        }
+                    ]
+                }
+			}`,
+			backendProtocol: "http1",
+			wantPathMatcherFilter: `
+              {
+                "config": {
+                  "segment_names": [
+                    {
+                      "json_name": "fooBar",
+                      "snake_name": "foo_bar"
+                    }
+                  ],
+                  "rules": [
+                    {
+                      "extract_path_parameters": true,
+                      "operation": "1.cloudesf_testing_cloud_goog.Foo",
+                      "pattern": {
+                        "http_method": "GET",
+                        "uri_template": "foo/{foo_bar}"
+                      }
+                    }
+                  ]
+                },
+                "name": "envoy.filters.http.path_matcher"
+              }`,
+		},
 	}
 
 	for i, tc := range testData {

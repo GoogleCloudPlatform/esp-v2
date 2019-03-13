@@ -823,7 +823,24 @@ func (m *ConfigManager) makePathMatcherFilter(endpointApi *api.Api, backendProto
 		rules = append(rules, newRule)
 	}
 
+	// Create snake name to JSON name mapping.
+	var segmentNames []*pmpb.SegmentName
+	for _, t := range m.serviceConfig.GetTypes() {
+		for _, f := range t.GetFields() {
+			if strings.ContainsRune(f.GetName(), '_') {
+				segmentNames = append(segmentNames, &pmpb.SegmentName{
+					SnakeName: f.GetName(),
+					JsonName:  f.GetJsonName(),
+				})
+			}
+		}
+	}
+
 	pathMathcherConfig := &pmpb.FilterConfig{Rules: rules}
+	if len(segmentNames) > 0 {
+		pathMathcherConfig.SegmentNames = segmentNames
+	}
+
 	pathMathcherConfigStruct, _ := util.MessageToStruct(pathMathcherConfig)
 	pathMatcherFilter := &hcm.HttpFilter{
 		Name:       ut.PathMatcher,

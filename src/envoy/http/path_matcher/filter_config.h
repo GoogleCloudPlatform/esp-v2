@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <unordered_map>
+
 #include "api/envoy/http/path_matcher/config.pb.h"
 #include "common/common/logger.h"
 #include "envoy/runtime/runtime.h"
@@ -64,6 +66,11 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
       }
     }
     path_matcher_ = pmb.Build();
+
+    for (const auto& segment_name : proto_config_.segment_names()) {
+      snake_to_json_.emplace(segment_name.snake_name(),
+                             segment_name.json_name());
+    }
   }
 
   // TODO(kyuc): discuss with qiwzhang@ whether this member function is needed.
@@ -80,12 +87,20 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
     return path_matcher_->Lookup(http_method, path, variable_bindings);
   }
 
+  // Returns whether an operation needs path parameter extraction.
+  // NOTE: path parameter extraction is only needed when backend rule path
+  // translation is CONSTANT_ADDRESS.
   bool NeedPathParametersExtraction(const std::string& operation) {
     auto operation_it = path_params_operations_.find(operation);
     return operation_it != path_params_operations_.end();
   }
 
   FilterStats& stats() { return stats_; }
+
+  // Returns the mapping between snake-case segment name to JSON name.
+  const std::unordered_map<std::string, std::string> snake_to_json() {
+    return snake_to_json_;
+  }
 
  private:
   FilterStats generateStats(const std::string& prefix, Stats::Scope& scope) {
@@ -97,6 +112,9 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
   ::google::api::envoy::http::path_matcher::FilterConfig proto_config_;
   ::google::api_proxy::path_matcher::PathMatcherPtr<const std::string*>
       path_matcher_;
+  // Mapping between snake-case segment name to JSON name as specified in
+  // `Service.types` (e.g. "foo_bar" -> "fooBar").
+  std::unordered_map<std::string, std::string> snake_to_json_;
   std::unordered_set<std::string> path_params_operations_;
   FilterStats stats_;
 };

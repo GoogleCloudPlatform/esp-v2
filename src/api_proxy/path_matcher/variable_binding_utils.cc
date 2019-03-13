@@ -14,20 +14,33 @@
 
 #include "src/api_proxy/path_matcher/variable_binding_utils.h"
 
+#include "absl/strings/match.h"
+
 namespace google {
 namespace api_proxy {
 namespace path_matcher {
 
 const std::string VariableBindingsToQueryParameters(
-    const std::vector<VariableBinding>& variable_bindings) {
+    const std::vector<VariableBinding>& variable_bindings,
+    const std::unordered_map<std::string, std::string>& snake_to_json) {
   std::string query_params;
   for (size_t i = 0; i < variable_bindings.size(); i++) {
     const VariableBinding& variable_binding = variable_bindings[i];
     for (size_t j = 0; j < variable_binding.field_path.size(); j++) {
-      // TODO(kyuc): convert to jsonName specified in `Service` config if it's
-      // snake case.
       const std::string& segment = variable_binding.field_path[j];
-      query_params.append(segment);
+
+      // If the segment has JSON name, use JSON name instead.
+      if (absl::StrContains(segment, "_")) {
+        auto json_name_it = snake_to_json.find(segment);
+        if (json_name_it != snake_to_json.end()) {
+          query_params.append(json_name_it->second);
+        } else {
+          query_params.append(segment);
+        }
+      } else {
+        query_params.append(segment);
+      }
+
       if (j < variable_binding.field_path.size() - 1) {
         query_params.append(".");
       }

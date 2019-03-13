@@ -62,6 +62,7 @@ cc_library(
     ],
     deps = [
         ":path_matcher_lib",
+        "//external:abseil_strings",
     ],
 )
 

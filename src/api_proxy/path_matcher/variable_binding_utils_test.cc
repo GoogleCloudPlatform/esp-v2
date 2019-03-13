@@ -20,18 +20,54 @@ namespace google {
 namespace api_proxy {
 namespace path_matcher {
 
-TEST(VariableBindingsToQueryParameters, NoSnakeToJsonNameConversion) {
-  EXPECT_EQ(VariableBindingsToQueryParameters({}), "");
-  EXPECT_EQ(VariableBindingsToQueryParameters({
-                {{"id"}, "42"},
-            }),
+TEST(VariableBindingsToQueryParameters, WithoutSnakeToJsonNameConversion) {
+  EXPECT_EQ(VariableBindingsToQueryParameters(/*variable_bindings=*/{},
+                                              /*snake_to_json=*/{}),
+            "");
+  EXPECT_EQ(VariableBindingsToQueryParameters(
+                /*variable_bindings=*/
+                {
+                    {{"id"}, "42"},
+                },
+                /*snake_to_json=*/
+                {}),
             "id=42");
-  EXPECT_EQ(VariableBindingsToQueryParameters({
-                {{"id"}, "42"},
-                {{"foo", "bar", "baz"}, "value"},
-                {{"x", "y"}, "abc"},
-            }),
+  EXPECT_EQ(VariableBindingsToQueryParameters(
+                /*variable_bindings=*/
+                {
+                    {{"id"}, "42"},
+                    {{"foo", "bar", "baz"}, "value"},
+                    {{"x", "y"}, "abc"},
+                },
+                /*snake_to_json=*/
+                {}),
             "id=42&foo.bar.baz=value&x.y=abc");
+}
+
+TEST(VariableBindingsToQueryParameters, WithSnakeToJsonNameConversion) {
+  EXPECT_EQ(VariableBindingsToQueryParameters(
+                /*variable_bindings=*/
+                {
+                    {{"foo_bar"}, "42"},
+                },
+                /*snake_to_json=*/
+                {{"foo_bar", "fooBar"}}),
+            "fooBar=42");
+
+  EXPECT_EQ(VariableBindingsToQueryParameters(
+                /*variable_bindings=*/
+                {
+                    {{"foo_foo", "bar_bar"}, "value"},
+                    {{"book_shelf", "book_id"}, "42"},
+                },
+                /*snake_to_json=*/
+                {
+                    {"foo_foo", "fooFoo"},
+                    {"bar_bar", "barBar"},
+                    {"book_shelf", "bookShelf"},
+                    {"book_id", "bookId"},
+                }),
+            "fooFoo.barBar=value&bookShelf.bookId=42");
 }
 
 }  // namespace path_matcher

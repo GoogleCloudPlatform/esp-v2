@@ -59,8 +59,8 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
     std::vector<VariableBinding> variable_bindings;
     operation = config_->FindOperation(method, path, &variable_bindings);
     if (!variable_bindings.empty()) {
-      const std::string query_params =
-          VariableBindingsToQueryParameters(variable_bindings);
+      const std::string query_params = VariableBindingsToQueryParameters(
+          variable_bindings, config_->snake_to_json());
       Utils::setStringMetadata(metadata, Utils::kQueryParams, query_params);
     }
   }

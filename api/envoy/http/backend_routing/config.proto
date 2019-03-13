@@ -32,10 +32,10 @@ message BackendRoutingRule {
   // e.g. for backend address: https://example.cloudfunctions.net/getUser
   // path prefix is /getUser(/foo)
   string path_prefix = 3;
-
 }
 
 message FilterConfig {
-  // A list of backend routing rules for those selectors which needs path translation
+  // A list of backend routing rules for those selectors which needs path
+  // translation
   repeated BackendRoutingRule rules = 1;
 }

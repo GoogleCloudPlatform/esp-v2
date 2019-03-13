@@ -16,6 +16,7 @@
 #define API_PROXY_PATH_MATHCER_VARIABLE_BINDING_UTILS_H_
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "src/api_proxy/path_matcher/path_matcher.h"
@@ -25,13 +26,16 @@ namespace api_proxy {
 namespace path_matcher {
 
 // Converts `VariableBinding`s to a query parameter string.
-// For example, given the following `VariableBinding`s:
+// For example, given the following `VariableBinding`s and
+// snake-cased to JSON map {"foo_bar": "fooBar"}:
+//  * {"foo_bar"}  : "42"
 //  * {"foo", "bar"} : "42"
 //  * {"a", "b", "c"}: "xyz"
-// it returns "foo.bar=42&a.b.c=xyz".
+// it returns "fooBar=42&foo.bar=42&a.b.c=xyz".
 const std::string VariableBindingsToQueryParameters(
     const std::vector<google::api_proxy::path_matcher::VariableBinding>&
-        variable_bindings);
+        variable_bindings,
+    const std::unordered_map<std::string, std::string>& snake_to_json);
 
 }  // namespace path_matcher
 }  // namespace api_proxy

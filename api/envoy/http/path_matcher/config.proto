@@ -32,6 +32,19 @@ message PathMatcherRule {
   bool extract_path_parameters = 3;
 }
 
+// FieldName stores the snake name to JSON name mapping as specified in
+// Service config.
+// For example, for a URI template: /{foo_bar}
+//  * snake_name = "foo_bar"
+//  * json_name = "fooBar"
+message SegmentName {
+  // Snake name of a segment.
+  string snake_name = 1;
+  // JSON name of a segment.
+  string json_name = 2;
+}
+
 message FilterConfig {
   repeated PathMatcherRule rules = 1;
+  repeated SegmentName segment_names = 2;
 }
