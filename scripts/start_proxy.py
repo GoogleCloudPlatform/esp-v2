@@ -226,14 +226,14 @@ if __name__ == '__main__':
     ]
 
     if args.service:
-        proxy_conf.append(
-          "--service", args.service,
+        proxy_conf.extend(
+         [ "--service", args.service]
         )
     if args.version:
         if args.rollout_strategy != DEFAULT_ROLLOUT_STRATEGY:
           print ("when version is set, rollout strategy should be fixed mode.")
           sys.exit(1)
-        proxy_conf.append([
+        proxy_conf.extend([
           "--version", args.version,
         ])
     if args.check_metadata:
@@ -241,9 +241,9 @@ if __name__ == '__main__':
           "--check_metadata",
         )
     if args.enable_backend_routing:
-        proxy_conf.append([
-          "--enable_backend_routing",
-        ])
+        proxy_conf.append(
+          "--enable_backend_routing"
+        )
 
     if args.cors_preset:
         proxy_conf.extend([
