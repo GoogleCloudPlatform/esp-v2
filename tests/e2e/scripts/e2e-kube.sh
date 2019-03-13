@@ -40,7 +40,6 @@ run sed_i "s|ARGS|${ARGS}|g" ${YAML_FILE}
 #
 SERVICE_IDL="${SCRIPT_PATH}/../testdata/bookstore_swagger_template.json"
 run sed -i "s|\${ENDPOINT_SERVICE}|${APIPROXY_SERVICE}|g" ${SERVICE_IDL}
-create_service "${SERVICE_IDL}"
 
 # Parses parameters into config file.
 ARGS="$ARGS \"--service=${APIPROXY_SERVICE}\","
@@ -61,3 +60,12 @@ run_nonfatal long_running_test \
   "${LOG_DIR}" \
   "${TEST_ID}" \
   "${UNIQUE_ID}"
+STATUS=${?}
+
+# Deploy new config and check new rollout on /endpoints_status
+if [[ ("${ROLLOUT_STRATEGY}" == "managed") && ("${BACKEND}" == "bookstore") ]] ; then
+  # Deploy new service config
+  create_service "${SERVICE_IDL}"
+fi
+
+exit ${STATUS}

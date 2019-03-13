@@ -102,7 +102,7 @@ function long_running_test() {
       status=${PIPESTATUS[0]}
     fi
   fi
-  return 0
+  return ${status}
 }
 
 # Check for host http return code.
