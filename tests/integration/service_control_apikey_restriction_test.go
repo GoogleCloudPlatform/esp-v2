@@ -65,7 +65,7 @@ func TestServiceControlApiKeyRestriction(t *testing.T) {
 			message:  "hello",
 			wantResp: `{"message":"hello"}`,
 			wantScRequest: &utils.ExpectedCheck{
-				Version:                "0.1",
+				Version:                utils.APIProxyVersion,
 				ServiceName:            "echo-api.endpoints.cloudesf-testing.cloud.goog",
 				ServiceConfigID:        "test-config-id",
 				ConsumerID:             "api_key:api-key",

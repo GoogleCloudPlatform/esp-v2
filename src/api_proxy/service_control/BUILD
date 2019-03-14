@@ -13,6 +13,7 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//src/api_proxy/utils:version_lib",
         "//external:servicecontrol_client",
     ],
 )

@@ -66,7 +66,7 @@ func TestServiceControlBasic(t *testing.T) {
 			wantResp: `{"message":"hello"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         "0.1",
+					Version:         utils.APIProxyVersion,
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
@@ -74,7 +74,7 @@ func TestServiceControlBasic(t *testing.T) {
 					CallerIp:        "127.0.0.1",
 				},
 				&utils.ExpectedReport{
-					Version:           "0.1",
+					Version:           utils.APIProxyVersion,
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/echo?key=api-key",
@@ -102,7 +102,7 @@ func TestServiceControlBasic(t *testing.T) {
 			wantResp: `{"message":"hello"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           "0.1",
+					Version:           utils.APIProxyVersion,
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/echo/nokey",
@@ -129,7 +129,7 @@ func TestServiceControlBasic(t *testing.T) {
 			wantResp: `{"message":"hello"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           "0.1",
+					Version:           utils.APIProxyVersion,
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/anypath/x/y/z",
@@ -255,7 +255,7 @@ func TestServiceControlCache(t *testing.T) {
 
 	wantScRequests := []interface{}{
 		&utils.ExpectedCheck{
-			Version:         "0.1",
+			Version:         utils.APIProxyVersion,
 			ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 			ServiceConfigID: "test-config-id",
 			ConsumerID:      "api_key:api-key",
@@ -264,7 +264,7 @@ func TestServiceControlCache(t *testing.T) {
 		},
 		&utils.ExpectedReport{
 			Aggregate:         int64(num),
-			Version:           "0.1",
+			Version:           utils.APIProxyVersion,
 			ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 			ServiceConfigID:   "test-config-id",
 			URL:               "/echo?key=api-key",
