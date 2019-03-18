@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express()
+// This port is used by the backend settings in envoy.yaml
 const port = 8082
 
 app.get('/echo', (request, response) => {

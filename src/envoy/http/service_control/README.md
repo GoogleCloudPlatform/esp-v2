@@ -1,12 +1,20 @@
 # Instructions to run service control filter
 
-## start backend http server at port 8080
+## Start the backend http server
+
+With HTTP Backend:
 
 ```bash
-$ node tools/backend/http_server.js
+$ node tests/endpoints/http/http_server.js
 ```
 
-## start up envoy
+With GRPC Backend
+
+```bash
+$ node tests/endpoints/bookstore-grpc/grpc_server.js
+```
+
+## Start up envoy
 
 Update the service_name to yours in `src/envoy/http/service_control/envoy.yaml`
 
@@ -14,7 +22,9 @@ Update the service_name to yours in `src/envoy/http/service_control/envoy.yaml`
 $ sed 's/REPLACE_SERVICE_NAME/{YOUR_SERVICE_NAME}' src/envoy/http/service_control/envoy.yaml
 ```
 
-Then start up Envoy by
+To test the CheckRequest code path, update `allow_with_api_key: false`.
+
+Start up Envoy:
 
 ```bash
 $ bazel run //src/envoy:envoy -- -c $PWD/src/envoy/http/service_control/envoy.yaml -l debug
@@ -23,12 +33,18 @@ $ bazel run //src/envoy:envoy -- -c $PWD/src/envoy/http/service_control/envoy.ya
 `envoy.yaml` defines the Envoy's listener port is `9090` and then Envoy routes the request
 to the backend at port `8080`
 
-## send http request with api key
+## Send requests
+
+First set your API Key:
 
 ```bash
 # Get your api-key.
 $ KEY=YOUR-API-KEY
+```
 
+### With HTTP Backend
+
+```bash
 # GET request with API key in the query
 $ curl http://127.0.0.1:9090/test?key=$KEY -v
 
@@ -48,4 +64,18 @@ $ curl -X POST http://127.0.0.1:9090/test --header "x-api-key:$KEY" -v
 # POST request that does not match any pattern, this should return path not
 # matched error
 $ curl -X POST http://127.0.0.1:9090/tea?key=$KEY -v
+```
+
+### With GRPC Backend:
+
+Send GRPC request:
+
+```bash
+go run tests/endpoints/bookstore-grpc/client_main.go -addr 127.0.0.1:9090 -method=DeleteShelf -client_protocol=grpc -apikey=$KEY
+```
+
+Send HTTP request:
+
+```bash
+go run tests/endpoints/bookstore-grpc/client_main.go -addr 127.0.0.1:9090 -method=DeleteShelf -client_protocol=http -apikey=$KEY
 ```

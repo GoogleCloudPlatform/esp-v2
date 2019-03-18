@@ -45,7 +45,7 @@ func TestServiceControlApiKeyRestriction(t *testing.T) {
 		MockJwtProviders:      []string{"google_jwt"},
 	}
 
-	if err := s.Setup(comp.TestServiceControlAndroid, "echo", args); err != nil {
+	if err := s.Setup(comp.TestServiceControlAPIKeyRestriction, "echo", args); err != nil {
 		t.Fatalf("failed to setup test env, %v", err)
 	}
 	defer s.TearDown()

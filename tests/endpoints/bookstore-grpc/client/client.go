@@ -34,44 +34,39 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var grpcWebHeader []header
+var grpcWebHeader = http.Header{
+	"X-User-Agent": []string{"grpc-web-javascript/0.1"},
+	"Content-Type": []string{"application/grpc-web-text"},
+	"Accept":       []string{"application/grpc-web-text"},
+	"X-Grpc-Web":   []string{"1"},
+}
 
 const (
 	bookstoreService = "endpoints.examples.bookstore.Bookstore"
 	// Test header key used to force backend to return non-OK status.
 	// Refer to tests/endpoints/bookstore_grpc/grpc_server.js for detail.
-	testHeaderKey = "x-grpc-test"
+	TestHeaderKey = "x-grpc-test"
 )
 
-type header struct {
-	key string
-	val string
-}
-
-func init() {
-	grpcWebHeader = []header{
-		{"X-User-Agent", "grpc-web-javascript/0.1"},
-		{"Content-Type", "application/grpc-web-text"},
-		{"Accept", "application/grpc-web-text"},
-		{"X-Grpc-Web", "1"},
+func addAllHeaders(req *http.Request, header http.Header) {
+	for key, valueList := range header {
+		for _, value := range valueList {
+			(*req).Header.Add(key, value)
+		}
 	}
 }
 
 // MakeCall returns response in JSON.
 // For gRPC-web, use MakeGRPCWebCall instead.
-// testHeaderValues must have zero or one element and it is used to force the backend to return
-// non-OK status.
-func MakeCall(clientProtocol, addr, httpMethod, method, token string, testHeaderValues ...string) (string, error) {
-	if len(testHeaderValues) > 2 {
-		return "", errors.New("testHeaderValues must have zero or one element.")
-	}
-
+//
+// For HTTP, add client.TestHeaderKey to header force the backend to return non-OK status.
+func MakeCall(clientProtocol, addr, httpMethod, method, token string, header http.Header) (string, error) {
 	if strings.EqualFold(clientProtocol, "http") {
-		return makeHTTPCall(addr, httpMethod, method, token, testHeaderValues...)
+		return makeHTTPCall(addr, httpMethod, method, token, header)
 	}
 
 	if strings.EqualFold(clientProtocol, "grpc") {
-		return makeGRPCCall(addr, method, token)
+		return makeGRPCCall(addr, method, token, header)
 	}
 
 	if strings.EqualFold(clientProtocol, "grpc-web") {
@@ -81,13 +76,11 @@ func MakeCall(clientProtocol, addr, httpMethod, method, token string, testHeader
 	return "", fmt.Errorf("unsupported client protocol %s", clientProtocol)
 }
 
-var makeHTTPCall = func(addr, httpMethod, method, token string, testHeaderValues ...string) (string, error) {
+var makeHTTPCall = func(addr, httpMethod, method, token string, header http.Header) (string, error) {
 	var cli http.Client
 	req, _ := http.NewRequest(httpMethod, fmt.Sprintf("http://%s%s", addr, method), nil)
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
-	for _, val := range testHeaderValues {
-		req.Header.Add(testHeaderKey, val)
-	}
+	addAllHeaders(req, header)
 
 	resp, err := cli.Do(req)
 	if err != nil {
@@ -107,7 +100,7 @@ var makeHTTPCall = func(addr, httpMethod, method, token string, testHeaderValues
 	return string(content), nil
 }
 
-var makeGRPCCall = func(addr, method, token string, testHeaderValues ...string) (string, error) {
+var makeGRPCCall = func(addr, method, token string, header http.Header) (string, error) {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithInsecure())
 	conn, err := grpc.Dial(addr, opts...)
@@ -123,8 +116,10 @@ var makeGRPCCall = func(addr, method, token string, testHeaderValues ...string) 
 		ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs("Authorization", fmt.Sprintf("Bearer %s", token)))
 	}
 
-	for _, val := range testHeaderValues {
-		ctx = metadata.AppendToOutgoingContext(ctx, testHeaderKey, val)
+	for key, valueList := range header {
+		for _, value := range valueList {
+			ctx = metadata.AppendToOutgoingContext(ctx, key, value)
+		}
 	}
 
 	var respMsg proto.Message
@@ -169,13 +164,8 @@ var makeGRPCCall = func(addr, method, token string, testHeaderValues ...string) 
 }
 
 // MakeGRPCWebCall returns response in JSON and gRPC-Web trailer.
-// testHeaderValues must have zero or one element and it is used to force the backend to return
-// non-OK status.
-func MakeGRPCWebCall(addr, method, token string, testHeaderValues ...string) (string, GRPCWebTrailer, error) {
-	if len(testHeaderValues) > 2 {
-		return "", nil, errors.New("testHeaderValues must have zero or one element.")
-	}
-
+// Add client.TestHeaderKey to header to force the backend to return a non-OK status.
+func MakeGRPCWebCall(addr, method, token string, header http.Header) (string, GRPCWebTrailer, error) {
 	var reqMsg proto.Message
 	var respMsg proto.Message
 	switch method {
@@ -221,13 +211,9 @@ func MakeGRPCWebCall(addr, method, token string, testHeaderValues ...string) (st
 		return "", nil, err
 	}
 
-	for _, h := range grpcWebHeader {
-		req.Header.Add(h.key, h.val)
-	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
-	for _, val := range testHeaderValues {
-		req.Header.Add(testHeaderKey, val)
-	}
+	addAllHeaders(req, header)
+	addAllHeaders(req, grpcWebHeader)
 
 	var client http.Client
 	resp, err := client.Do(req)

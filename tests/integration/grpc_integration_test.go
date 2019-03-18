@@ -16,6 +16,7 @@ package integration
 
 import (
 	"fmt"
+	"net/http"
 	"reflect"
 	"strings"
 	"testing"
@@ -97,7 +98,7 @@ func TestGRPC(t *testing.T) {
 
 	for _, tc := range tests {
 		addr := fmt.Sprintf("localhost:%v", s.Ports.ListenerPort)
-		resp, err := client.MakeCall(tc.clientProtocol, addr, "GET", tc.method, "")
+		resp, err := client.MakeCall(tc.clientProtocol, addr, "GET", tc.method, "", http.Header{})
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 			t.Errorf("Test (%s): failed, expected: %s, got: %v", tc.desc, tc.wantError, err)
 		}
@@ -170,13 +171,13 @@ func TestGRPCWeb(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		grpcTestValues := []string{}
+		grpcTestHeader := http.Header{}
 		if tc.grpcTestValue != "" {
-			grpcTestValues = []string{tc.grpcTestValue}
+			grpcTestHeader.Add(client.TestHeaderKey, tc.grpcTestValue)
 		}
 
 		addr := fmt.Sprintf("localhost:%v", s.Ports.ListenerPort)
-		resp, trailer, err := client.MakeGRPCWebCall(addr, tc.method, "", grpcTestValues...)
+		resp, trailer, err := client.MakeGRPCWebCall(addr, tc.method, "", grpcTestHeader)
 
 		if err != nil {
 			t.Errorf("failed to run test: %s", err)
@@ -406,7 +407,7 @@ func TestGRPCJwt(t *testing.T) {
 
 	for _, tc := range tests {
 		addr := fmt.Sprintf("localhost:%v", s.Ports.ListenerPort)
-		resp, err := client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token)
+		resp, err := client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, http.Header{})
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
@@ -422,7 +423,7 @@ func TestGRPCJwt(t *testing.T) {
 		}
 
 		grpcWebDesc := strings.Replace(tc.desc, "gRPC", "gRPC-Web", -1)
-		grpcWebResp, trailer, err := client.MakeGRPCWebCall(addr, tc.method, tc.token)
+		grpcWebResp, trailer, err := client.MakeGRPCWebCall(addr, tc.method, tc.token, http.Header{})
 		if tc.wantGRPCWebError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantGRPCWebError)) {
 			t.Errorf("Test (%s): failed\n  expected: %v\n  got: %v", grpcWebDesc, tc.wantGRPCWebError, err)
 		}

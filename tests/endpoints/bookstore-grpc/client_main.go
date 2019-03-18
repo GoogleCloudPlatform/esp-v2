@@ -18,14 +18,20 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
+	"net/http"
 
 	"golang.org/x/oauth2/google"
 
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
 )
 
+const (
+	apiKeyHeader = "x-api-key"
+)
+
 var (
 	addr           = flag.String("addr", "", "Address of grpc server.")
+	apikey         = flag.String("apikey", "", "The API Key")
 	method         = flag.String("method", "", "Method name called.")
 	clientProtocol = flag.String("client_protocol", "http", "client protocol, either Http or gRPC.")
 	token          = flag.String("token", "", "Authentication token.")
@@ -53,7 +59,12 @@ func main() {
 		*token = jwt.AccessToken
 	}
 
-	resp, err := client.MakeCall(*clientProtocol, *addr, "GET", *method, *token)
+	header := http.Header{}
+	if *apikey != "" {
+		header.Add(apiKeyHeader, *apikey)
+	}
+
+	resp, err := client.MakeCall(*clientProtocol, *addr, "GET", *method, *token, header)
 	if err != nil {
 		log.Fatalf("Makecall failed: %v", err)
 	}

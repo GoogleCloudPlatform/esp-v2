@@ -42,9 +42,9 @@ const (
 	TestHttp1Basic
 	TestHttp1JWT
 	TestHttp1BackendAuth
+	TestServiceControlAPIKeyRestriction
 	TestServiceControlBasic
 	TestServiceControlCache
-	TestServiceControlAndroid
 	TestUnconfiguredRequest
 	TestReportGCPAttributes
 

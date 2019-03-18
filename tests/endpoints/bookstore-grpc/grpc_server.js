@@ -1,6 +1,7 @@
 var grpc = require('grpc');
 var protoLoader = require('@grpc/proto-loader');
 
+// This port is used by the backend settings in envoy.yaml
 var PORT = 8082;
 const path = require('path');
 const PROTO_PATH = path.join(__dirname, '/proto/bookstore.proto');
