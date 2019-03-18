@@ -116,13 +116,11 @@ func TestFetchListeners(t *testing.T) {
 											"name":"envoy.grpc_json_transcoder"
 										},
 										{
-											"config":{
-											},
+											"config":{},
 											"name":"envoy.grpc_web"
 										},
 										{
-											"config":{
-											},
+											"config":{},
 											"name":"envoy.router"
 										}
 									],
@@ -322,6 +320,27 @@ func TestFetchListeners(t *testing.T) {
                         "config":{
                             "http_filters":[
                                 {
+                                  "config": {
+                                    "rules": [
+                                      {
+                                        "operation": "endpoints.examples.bookstore.Bookstore.ListShelves",
+                                        "pattern": {
+                                          "http_method": "GET",
+                                          "uri_template": "/v1/shelves"
+                                        }
+                                      },
+                                      {
+                                        "operation": "endpoints.examples.bookstore.Bookstore.CreateShelf",
+                                        "pattern": {
+                                          "http_method": "POST",
+                                          "uri_template": "/v1/shelves/{shelf}"
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  "name": "envoy.filters.http.path_matcher"
+                                },
+                                {
                                     "config": {
                                         "providers": {
                                             "firebase": {
@@ -475,6 +494,27 @@ func TestFetchListeners(t *testing.T) {
                     {
                         "config":{
                             "http_filters":[
+                                {
+                                  "config": {
+                                    "rules": [
+                                      {
+                                        "operation": "endpoints.examples.bookstore.Bookstore.GetBook",
+                                        "pattern": {
+                                          "http_method": "GET",
+                                          "uri_template": "/v1/shelves/{shelf}/books/{book}"
+                                        }
+                                      },
+                                      {
+                                        "operation": "endpoints.examples.bookstore.Bookstore.DeleteBook",
+                                        "pattern": {
+                                          "http_method": "DELETE",
+                                          "uri_template": "/v1/shelves/{shelf}/books/{book}"
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  "name": "envoy.filters.http.path_matcher"
+                                },
                                 {
                                     "config": {
                                         "providers": {
@@ -643,6 +683,41 @@ func TestFetchListeners(t *testing.T) {
 								"config":{
 									"http_filters":[
 										{
+										  "config": {
+											"rules": [
+											  {
+												"operation": "endpoints.examples.bookstore.Bookstore.ListShelves",
+												"pattern": {
+												  "http_method": "POST",
+												  "uri_template": "/endpoints.examples.bookstore.Bookstore/ListShelves"
+												}
+											  },
+											  {
+												"operation": "endpoints.examples.bookstore.Bookstore.CreateShelf",
+												"pattern": {
+												  "http_method": "POST",
+												  "uri_template": "/endpoints.examples.bookstore.Bookstore/CreateShelf"
+												}
+											  },
+											  {
+												"operation": "endpoints.examples.bookstore.Bookstore.ListShelves",
+												"pattern": {
+												  "http_method": "GET",
+												  "uri_template": "/v1/shelves"
+												}
+											  },
+											  {
+												"operation": "endpoints.examples.bookstore.Bookstore.CreateShelf",
+												"pattern": {
+												  "http_method": "POST",
+												  "uri_template": "/v1/shelves"
+												}
+											  }
+											]
+										  },
+										  "name": "envoy.filters.http.path_matcher"
+										},
+										{
 											"config":{
 												"gcp_attributes":{
 													"platform": "GCE"
@@ -804,6 +879,27 @@ func TestFetchListeners(t *testing.T) {
                         "config":{
                             "http_filters":[
                                 {
+                                  "config": {
+                                    "rules": [
+                                      {
+                                        "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
+                                        "pattern": {
+                                          "http_method": "GET",
+                                          "uri_template": "/auth/info/googlejwt"
+                                        }
+                                      },
+                                      {
+                                        "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+                                        "pattern": {
+                                          "http_method": "POST",
+                                          "uri_template": "/echo"
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  "name": "envoy.filters.http.path_matcher"
+                                },
+                                {
                                     "config": {
                                         "providers": {
                                             "firebase": {
@@ -909,6 +1005,27 @@ func TestFetchListeners(t *testing.T) {
 			    {
 			      "config": {
 			        "http_filters": [
+			          {
+			            "config": {
+			              "rules": [
+			            	  {
+			            	    "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
+			            	    "pattern": {
+			            	  	"http_method": "GET",
+			            	  	"uri_template": "/simplegetcors"
+			            	    }
+			            	  },
+			            	  {
+			            	    "operation": "CORS.0",
+			            	    "pattern": {
+			            	  	"http_method": "OPTIONS",
+			            	  	"uri_template": "/simplegetcors"
+			            	    }
+			                 }
+			              ]
+			            },
+			          "name": "envoy.filters.http.path_matcher"
+			          },
 			          {
 			            "config": {
 						  "gcp_attributes":{
@@ -1304,6 +1421,54 @@ func TestPathMatcherFilter(t *testing.T) {
               }`,
 		},
 		{
+			desc: "Path Matcher filter - CORS support",
+			fakeServiceConfig: `{
+                "name":"foo.endpoints.bar.cloud.goog",
+                "apis":[
+                  {
+                    "name":"endpoints.test.foo.Bar"
+                  }
+                ],
+                "http": {
+                    "rules": [
+                        {
+                           "selector": "1.cloudesf_testing_cloud_goog.Foo",
+                           "get": "foo"
+                        }
+                    ]
+                },
+                "endpoints": [
+                  {
+                    "name":"foo.endpoints.bar.cloud.goog",
+                    "allow_cors": true
+                  }
+                ]
+			}`,
+			backendProtocol: "http1",
+			wantPathMatcherFilter: `
+			  {
+				"config": {
+				  "rules": [
+					{
+					  "operation": "1.cloudesf_testing_cloud_goog.Foo",
+					  "pattern": {
+						"http_method": "GET",
+						"uri_template": "foo"
+					  }
+					},
+					{
+					  "operation": "CORS.0",
+					  "pattern": {
+						"http_method": "OPTIONS",
+						"uri_template": "foo"
+					  }
+					}
+				  ]
+				},
+				"name": "envoy.filters.http.path_matcher"
+			  } `,
+		},
+		{
 			desc: "Path Matcher filter - Segment Name Mapping for snake-case field",
 			fakeServiceConfig: `{
 				"name":"foo.endpoints.bar.cloud.goog",
@@ -1374,9 +1539,6 @@ func TestPathMatcherFilter(t *testing.T) {
 		flag.Set("version", testConfigID)
 		flag.Set("rollout_strategy", ut.FixedRolloutStrategy)
 		flag.Set("backend_protocol", tc.backendProtocol)
-		// TODO(kyuc): modify this when filters other than Backend Auth filter
-		// use Path Matcher filter.
-		flag.Set("enable_backend_routing", "true")
 
 		runTest(t, func(env *testEnv) {
 			ctx := context.Background()

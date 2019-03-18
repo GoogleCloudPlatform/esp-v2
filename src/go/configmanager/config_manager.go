@@ -576,19 +576,15 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 		m.Infof("adding CORS Filter config: %v", corsFilter)
 	}
 
-	// TODO(kyuc): once we verify that path matcher works as intended. Path
-	// Mathcher filter can be always enabled since the following filters will
-	// depend on it.
-	//  * Service Control (not using dynamic metadata yet, but will be using it)
-	//  * JWT Auth filter
-	//  * Backend Auth Filter (currently uses dynamic metadata)
-	//  * Dynamic Routing Filter (name TBD -- will be using dynamic metadata )
-	if *flags.EnableBackendRouting {
-		pathMathcherFilter := m.makePathMatcherFilter(endpointApi, backendProtocol)
-		if pathMathcherFilter != nil {
-			httpFilters = append(httpFilters, pathMathcherFilter)
-			m.Infof("adding Path Matcher Filter config: %v", pathMathcherFilter)
-		}
+	// Add Path Matcher filter. The following filters rely on the dynamic
+	// metadata populated by Path Matcher filter.
+	// * Service Control filter
+	// * Backend Authentication filter
+	// * Backend Routing filter (WIP)
+	pathMathcherFilter := m.makePathMatcherFilter(endpointApi, backendProtocol)
+	if pathMathcherFilter != nil {
+		httpFilters = append(httpFilters, pathMathcherFilter)
+		m.Infof("adding Path Matcher Filter config: %v", pathMathcherFilter)
 	}
 
 	// Add JWT Authn filter if needed.
@@ -762,9 +758,9 @@ func (m *ConfigManager) makePathMatcherFilter(endpointApi *api.Api, backendProto
 	rules := []*pmpb.PathMatcherRule{}
 	if backendProtocol == ut.GRPC {
 		for _, method := range endpointApi.GetMethods() {
-			selector := fmt.Sprintf("%s.%s", endpointApi.GetName(), method.GetName())
+			operation := fmt.Sprintf("%s.%s", endpointApi.GetName(), method.GetName())
 			rules = append(rules, &pmpb.PathMatcherRule{
-				Operation: selector,
+				Operation: operation,
 				Pattern: &commonpb.Pattern{
 					UriTemplate: fmt.Sprintf("/%s/%s", endpointApi.GetName(), method.GetName()),
 					HttpMethod:  ut.POST,
@@ -821,6 +817,49 @@ func (m *ConfigManager) makePathMatcherFilter(endpointApi *api.Api, backendProto
 		}
 
 		rules = append(rules, newRule)
+	}
+
+	operationSet := make(map[string]bool)
+	for _, rule := range rules {
+		operationSet[rule.Operation] = true
+	}
+
+	// In order to support CORS. HTTP method OPTIONS needs to be added to all
+	// urls except the ones already with options. For these OPTIONS methods,
+	// auth should be disabled and AllowWithoutApiKey should be true.
+	if m.getEndpointAllowCorsFlag() {
+		// All options have their operation as the following format: CORS.suffix.
+		// Appends suffix to make sure it is not used by any http rules.
+		corsOperationBase := "CORS"
+		corsID := 0
+		for operation := range m.httpPathMap {
+			path := m.httpPathMap[operation].path
+			if _, exist := m.httpPathWithOptionsSet[path]; !exist {
+				corsOperation := ""
+				for {
+					corsOperation = fmt.Sprintf("%s.%d", corsOperationBase, corsID)
+					corsID++
+					if !operationSet[corsOperation] {
+						break
+					}
+				}
+
+				optionsPattern := &commonpb.Pattern{
+					UriTemplate: path,
+					HttpMethod:  ut.OPTIONS,
+				}
+
+				newRule := &pmpb.PathMatcherRule{
+					Operation: corsOperation,
+					Pattern:   optionsPattern,
+				}
+				rules = append(rules, newRule)
+			}
+		}
+	}
+
+	if len(rules) == 0 {
+		return nil
 	}
 
 	// Create snake name to JSON name mapping.
@@ -1032,6 +1071,7 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 		ServiceConfig: copyServiceConfigForReportMetrics(m.serviceConfig),
 	}
 
+	// TODO(kyuc): replace Pattern with operation.
 	rulesMap := make(map[string][]*scpb.ServiceControlRule)
 	if backendProtocol == ut.GRPC {
 		for _, method := range endpointApi.GetMethods() {
@@ -1095,16 +1135,12 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 	// already with options. For these OPTIONS methods, auth should be disabled and
 	// AllowWithoutApiKey should be true.
 	if m.getEndpointAllowCorsFlag() {
-		httpPathSet := make(map[string]bool)
-		for _, httpRule := range m.httpPathMap {
-			httpPathSet[httpRule.path] = true
-		}
-
 		// All options have same selector as format: CORS.suffix.
 		// Appends suffix to make sure it is not used by any http rules.
 		corsSelectorBase := "CORS"
 		corsCount := 0
-		for path := range httpPathSet {
+		for operation := range m.httpPathMap {
+			path := m.httpPathMap[operation].path
 			if _, exist := m.httpPathWithOptionsSet[path]; !exist {
 				corsSelector := ""
 				for {

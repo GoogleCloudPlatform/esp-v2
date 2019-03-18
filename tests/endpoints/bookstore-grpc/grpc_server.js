@@ -1,7 +1,7 @@
 var grpc = require('grpc');
 var protoLoader = require('@grpc/proto-loader');
 
-var PORT = 8082
+var PORT = 8082;
 const path = require('path');
 const PROTO_PATH = path.join(__dirname, '/proto/bookstore.proto');
 
@@ -32,7 +32,7 @@ function listShelves(call, callback) {
   var found = [];
   for (var key in bookstoreDatabase) {
     found.push(
-        {id: bookstoreDatabase[key].id, theme: bookstoreDatabase[key].theme})
+      {id: bookstoreDatabase[key].id, theme: bookstoreDatabase[key].theme});
   }
   callback(null, {shelves: found});
 }

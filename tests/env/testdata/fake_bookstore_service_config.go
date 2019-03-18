@@ -34,6 +34,41 @@ var (
 						RequestTypeUrl:  "type.googleapis.com/google.protobuf.Empty",
 						ResponseTypeUrl: "type.googleapis.com/endpoints.examples.bookstore.ListShelvesResponse",
 					},
+					{
+						Name:            "CreateShelf",
+						RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.CreateShelfRequest",
+						ResponseTypeUrl: "type.googleapis.com/endpoints.examples.bookstore.Shelf",
+					},
+					{
+						Name:            "GetShelf",
+						RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.GetShelf",
+						ResponseTypeUrl: "type.googleapis.com/endpoints.examples.bookstore.Shelf",
+					},
+					{
+						Name:            "DeleteShelf",
+						RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.DeleteShelfRequest",
+						ResponseTypeUrl: "type.googleapis.com/google.protobuf.Empty",
+					},
+					{
+						Name:            "ListBooks",
+						RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.ListBooksRequest",
+						ResponseTypeUrl: "type.googleapis.com/endpoints.examples.bookstore.ListBooksResponse",
+					},
+					{
+						Name:            "CreateBook",
+						RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.CreateBookRequest",
+						ResponseTypeUrl: "type.googleapis.com/endpoints.examples.bookstore.Book",
+					},
+					{
+						Name:            "GetBook",
+						RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.GetBookRequest",
+						ResponseTypeUrl: "type.googleapis.com/endpoints.examples.bookstore.Book",
+					},
+					{
+						Name:            "DeleteBook",
+						RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.DeleteBookRequest",
+						ResponseTypeUrl: "type.googleapis.com/google.protobuf.Empty",
+					},
 				},
 			},
 		},
