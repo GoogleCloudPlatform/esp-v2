@@ -103,18 +103,13 @@ func TestReportGCPAttributes(t *testing.T) {
 		"--backend_protocol=http1", "--rollout_strategy=fixed"}
 
 	for _, tc := range testdata {
-		s := env.TestEnv{
-			MockMetadata:          true,
-			MockMetadataOverride:  tc.mockMetadataOverride,
-			MockServiceManagement: true,
-			MockServiceControl:    true,
-			MockJwtProviders:      []string{"google_jwt"},
-		}
-		if err := s.Setup(comp.TestReportGCPAttributes, "echo", args); err != nil {
+		s := env.NewTestEnv(comp.TestReportGCPAttributes, "echo", []string{"google_jwt"})
+		s.OverrideMockMetadata(tc.mockMetadataOverride)
+		if err := s.Setup(args); err != nil {
 			t.Fatalf("Test(%s): fail to setup test env, %v", tc.desc, err)
 		}
 
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, "/echo/nokey")
+		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo/nokey")
 		_, err := client.DoPost(url, "hello")
 		if err != nil {
 			t.Fatal(err)

@@ -28,27 +28,27 @@ import (
 
 // All integration tests should be listed here to get their test ids
 const (
-	TestSimpleCorsWithBasicPreset uint16 = iota
-	TestDifferentOriginSimpleCors
-	TestSimpleCorsWithRegexPreset
-	TestPreflightCorsWithBasicPreset
+	TestAsymmetricKeys uint16 = iota
 	TestDifferentOriginPreflightCors
-	TestGrpcBackendSimpleCors
-	TestGrpcBackendPreflightCors
-	TestPreflightRequestWithAllowCors
+	TestDifferentOriginSimpleCors
+	TestDynamicRouting
 	TestGRPC
-	TestGRPCWeb
 	TestGRPCJwt
+	TestGRPCWeb
+	TestGrpcBackendPreflightCors
+	TestGrpcBackendSimpleCors
+	TestHttp1BackendAuth
 	TestHttp1Basic
 	TestHttp1JWT
-	TestHttp1BackendAuth
+	TestPreflightCorsWithBasicPreset
+	TestPreflightRequestWithAllowCors
+	TestReportGCPAttributes
 	TestServiceControlAPIKeyRestriction
 	TestServiceControlBasic
 	TestServiceControlCache
+	TestSimpleCorsWithBasicPreset
+	TestSimpleCorsWithRegexPreset
 	TestUnconfiguredRequest
-	TestReportGCPAttributes
-	TestDynamicRouting
-
 	// The number of total tests. has to be the last one.
 	maxTestNum
 )

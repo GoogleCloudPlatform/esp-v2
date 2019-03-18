@@ -40,18 +40,11 @@ func init() {
 func TestGRPC(t *testing.T) {
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
-
 	args := []string{"--service=" + serviceName, "--version=" + configID,
 		"--skip_service_control_filter=true", "--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.TestEnv{
-		MockMetadata:          true,
-		MockServiceManagement: true,
-		MockServiceControl:    true,
-		MockJwtProviders:      nil,
-	}
-
-	if err := s.Setup(comp.TestGRPC, "bookstore", args); err != nil {
+	s := env.NewTestEnv(comp.TestGRPC, "bookstore", nil)
+	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -96,7 +89,7 @@ func TestGRPC(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		addr := fmt.Sprintf("localhost:%v", s.Ports.ListenerPort)
+		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
 		resp, err := client.MakeCall(tc.clientProtocol, addr, "GET", tc.method, "", http.Header{})
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 			t.Errorf("Test (%s): failed, expected: %s, got: %v", tc.desc, tc.wantError, err)
@@ -111,18 +104,11 @@ func TestGRPC(t *testing.T) {
 func TestGRPCWeb(t *testing.T) {
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
-
 	args := []string{"--service=" + serviceName, "--version=" + configID,
 		"--skip_service_control_filter=true", "--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.TestEnv{
-		MockMetadata:          true,
-		MockServiceManagement: true,
-		MockServiceControl:    true,
-		MockJwtProviders:      nil,
-	}
-
-	if err := s.Setup(comp.TestGRPCWeb, "bookstore", args); err != nil {
+	s := env.NewTestEnv(comp.TestGRPCWeb, "bookstore", nil)
+	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -174,7 +160,7 @@ func TestGRPCWeb(t *testing.T) {
 			grpcTestHeader.Add(client.TestHeaderKey, tc.grpcTestValue)
 		}
 
-		addr := fmt.Sprintf("localhost:%v", s.Ports.ListenerPort)
+		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
 		resp, trailer, err := client.MakeGRPCWebCall(addr, tc.method, "", grpcTestHeader)
 
 		if err != nil {
@@ -195,18 +181,11 @@ func TestGRPCWeb(t *testing.T) {
 func TestGRPCJwt(t *testing.T) {
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
-
 	args := []string{"--service=" + serviceName, "--version=" + configID,
 		"--skip_service_control_filter=true", "--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.TestEnv{
-		MockMetadata:          true,
-		MockServiceManagement: true,
-		MockServiceControl:    true,
-		MockJwtProviders:      []string{"google_service_account", "endpoints_jwt", "broken_provider"},
-	}
-
-	if err := s.Setup(comp.TestGRPCJwt, "bookstore", args); err != nil {
+	s := env.NewTestEnv(comp.TestGRPCJwt, "bookstore", []string{"google_service_account", "endpoints_jwt", "broken_provider"})
+	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -224,7 +203,7 @@ func TestGRPCJwt(t *testing.T) {
 	}{
 		// Testing JWT is required or not.
 		{
-			desc:             "Fail for gPRC client, without valid JWT token",
+			desc:             "Fail for gRPC client, without valid JWT token",
 			clientProtocol:   "grpc",
 			method:           "ListShelves",
 			wantError:        "code = Unauthenticated desc = Jwt is missing",
@@ -245,7 +224,7 @@ func TestGRPCJwt(t *testing.T) {
 			wantResp:       `{"id":"200","theme":"Classic"}`,
 		},
 		{
-			desc:             "Fail for gPRC client, with bad JWT token",
+			desc:             "Fail for gRPC client, with bad JWT token",
 			clientProtocol:   "grpc",
 			method:           "ListShelves",
 			token:            testdata.FakeBadToken,
@@ -269,7 +248,7 @@ func TestGRPCJwt(t *testing.T) {
 			wantResp:       `{"id":"123","theme":"kids"}`,
 		},
 		{
-			desc:               "Succeed for gPRC client, with valid JWT token",
+			desc:               "Succeed for gRPC client, with valid JWT token",
 			clientProtocol:     "grpc",
 			method:             "CreateShelf",
 			token:              testdata.FakeCloudToken,
@@ -318,7 +297,7 @@ func TestGRPCJwt(t *testing.T) {
 
 		// Test JWT with audiences.
 		{
-			desc:               "Succeed for gPRC client, with valid JWT token, with single audience",
+			desc:               "Succeed for gRPC client, with valid JWT token, with single audience",
 			clientProtocol:     "grpc",
 			method:             "ListShelves",
 			token:              testdata.FakeCloudTokenSingleAudience1,
@@ -334,7 +313,7 @@ func TestGRPCJwt(t *testing.T) {
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
 		{
-			desc:             "Fail for gPRC client, with JWT token but not expected audience",
+			desc:             "Fail for gRPC client, with JWT token but not expected audience",
 			clientProtocol:   "grpc",
 			method:           "ListShelves",
 			token:            testdata.FakeCloudToken,
@@ -350,7 +329,7 @@ func TestGRPCJwt(t *testing.T) {
 			wantError:      "401 Unauthorized",
 		},
 		{
-			desc:             "Fail for gPRC client, with JWT token but wrong audience",
+			desc:             "Fail for gRPC client, with JWT token but wrong audience",
 			clientProtocol:   "grpc",
 			method:           "ListShelves",
 			token:            testdata.FakeCloudTokenSingleAudience2,
@@ -358,7 +337,7 @@ func TestGRPCJwt(t *testing.T) {
 			wantGRPCWebError: "401 Unauthorized",
 		},
 		{
-			desc:               "Succeed for gPRC client, with JWT token with one audience while multi audiences are allowed",
+			desc:               "Succeed for gRPC client, with JWT token with one audience while multi audiences are allowed",
 			clientProtocol:     "grpc",
 			method:             "CreateBook",
 			token:              testdata.FakeCloudTokenSingleAudience2,
@@ -385,7 +364,7 @@ func TestGRPCJwt(t *testing.T) {
 			wantResp:       "{}",
 		},
 		{
-			desc:               "Succeed for gPRC client, with multi requirements from different providers",
+			desc:               "Succeed for gRPC client, with multi requirements from different providers",
 			clientProtocol:     "grpc",
 			method:             "DeleteShelf",
 			token:              testdata.FakeCloudTokenSingleAudience1,
@@ -403,7 +382,7 @@ func TestGRPCJwt(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		addr := fmt.Sprintf("localhost:%v", s.Ports.ListenerPort)
+		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
 		resp, err := client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, http.Header{})
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {

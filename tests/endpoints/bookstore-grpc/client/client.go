@@ -257,3 +257,28 @@ func MakeGRPCWebCall(addr, method, token string, header http.Header) (string, GR
 
 	return respJSON, trailer, nil
 }
+
+func MakeTokenInQueryCall(addr, httpMethod, method, token string) (string, error) {
+	var cli http.Client
+	req, _ := http.NewRequest(httpMethod, fmt.Sprintf("http://%s%s", addr, method), nil)
+	if token != "" {
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	}
+
+	resp, err := cli.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("http got error: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("http response status is not 200 OK: %s", resp.Status)
+	}
+
+	content, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(content), nil
+}

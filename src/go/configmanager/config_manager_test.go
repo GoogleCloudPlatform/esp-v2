@@ -105,7 +105,8 @@ func TestFetchListeners(t *testing.T) {
 											"config":{
 												"ignored_query_parameters": [
                                                     "api_key",
-													"key"
+													"key",
+													"access_token"
 												],
 												"proto_descriptor_bin":"%s",
 												"services":[

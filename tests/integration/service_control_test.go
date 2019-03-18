@@ -35,14 +35,8 @@ func TestServiceControlBasic(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--version=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed"}
 
-	s := env.TestEnv{
-		MockMetadata:          true,
-		MockServiceManagement: true,
-		MockServiceControl:    true,
-		MockJwtProviders:      []string{"google_jwt"},
-	}
-
-	if err := s.Setup(comp.TestServiceControlBasic, "echo", args); err != nil {
+	s := env.NewTestEnv(comp.TestServiceControlBasic, "echo", []string{"google_jwt"})
+	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -59,7 +53,7 @@ func TestServiceControlBasic(t *testing.T) {
 	}{
 		{
 			desc:     "succeed, no Jwt required",
-			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports.ListenerPort, "/echo", "?key=api-key"),
+			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key"),
 			method:   "POST",
 			message:  "hello",
 			wantResp: `{"message":"hello"}`,
@@ -95,7 +89,7 @@ func TestServiceControlBasic(t *testing.T) {
 		},
 		{
 			desc:     "succeed, no Jwt required, allow no api key",
-			url:      fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, "/echo/nokey"),
+			url:      fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo/nokey"),
 			message:  "hello",
 			method:   "POST",
 			wantResp: `{"message":"hello"}`,
@@ -122,7 +116,7 @@ func TestServiceControlBasic(t *testing.T) {
 		},
 		{
 			desc:     "succeed for unconfigured POST method, no JWT required",
-			url:      fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, "/anypath/x/y/z"),
+			url:      fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/anypath/x/y/z"),
 			method:   "POST",
 			message:  "hello",
 			wantResp: `{"message":"hello"}`,
@@ -149,7 +143,7 @@ func TestServiceControlBasic(t *testing.T) {
 		},
 		{
 			desc:                  "fail for not allowing unconfigured GET method",
-			url:                   fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, "/unconfiguredRequest/get"),
+			url:                   fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/unconfiguredRequest/get"),
 			method:                "GET",
 			httpCallError:         fmt.Errorf("http response status is not 200 OK: 404 Not Found"),
 			wantScRequests:        []interface{}{},
@@ -225,19 +219,13 @@ func TestServiceControlCache(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--version=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed"}
 
-	s := env.TestEnv{
-		MockMetadata:          true,
-		MockServiceManagement: true,
-		MockServiceControl:    true,
-		MockJwtProviders:      []string{"google_jwt"},
-	}
-
-	if err := s.Setup(comp.TestServiceControlCache, "echo", args); err != nil {
+	s := env.NewTestEnv(comp.TestServiceControlCache, "echo", []string{"google_jwt"})
+	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
 
-	url := fmt.Sprintf("http://localhost:%v%v%v", s.Ports.ListenerPort, "/echo", "?key=api-key")
+	url := fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key")
 	message := "hello"
 	num := 10
 	wantResp := `{"message":"hello"}`

@@ -33,15 +33,9 @@ func TestDynamicRouting(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--version=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--enable_backend_routing", "--skip_service_control_filter"}
 
-	s := env.TestEnv{
-		MockMetadata:                true,
-		MockServiceManagement:       true,
-		MockServiceControl:          true,
-		MockJwtProviders:            nil,
-		EnableDynamicRoutingBackend: true,
-	}
-
-	if err := s.Setup(comp.TestDynamicRouting, "echo", args); err != nil {
+	s := env.NewTestEnv(comp.TestDynamicRouting, "echo", nil)
+	s.EnableDynamicRoutingBackend()
+	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -133,7 +127,7 @@ func TestDynamicRouting(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, tc.path)
+		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
 		var gotResp []byte
 		var err error
 		if tc.method == "GET" {

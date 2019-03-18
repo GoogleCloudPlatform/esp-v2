@@ -35,7 +35,7 @@ const (
 )
 
 var (
-	debugComponents = flag.String("debug_components", "", `display debug logs for components, can be "all", "envoy", "configmanager"`)
+	debugComponents = flag.String("debug_components", "configmanager", `display debug logs for components, can be "all", "envoy", "configmanager"`)
 )
 
 func init() {
@@ -43,23 +43,51 @@ func init() {
 }
 
 type TestEnv struct {
-	// MockMetdata with default responses.
-	MockMetadata bool
-	// A map of path and response to override the default responses.
-	MockMetadataOverride        map[string]string
-	MockServiceManagement       bool
-	MockServiceControl          bool
-	MockJwtProviders            []string
-	EnableDynamicRoutingBackend bool
-	Ports                       *components.Ports
+	enableDynamicRoutingBackend bool
+	mockMetadata                bool
+	mockServiceControl          bool
+	mockServiceManagement       bool
+	backendService              string
+	mockJwtProviders            []string
+	mockMetadataOverride        map[string]string
+	bookstoreServer             *components.BookstoreGrpcServer
+	configMgr                   *components.ConfigManagerServer
+	dynamicRoutingBackend       *components.EchoHTTPServer
+	echoBackend                 *components.EchoHTTPServer
+	envoy                       *components.Envoy
+	fakeServiceConfig           *conf.Service
+	mockMetadataServer          *components.MockMetadataServer
+	ports                       *components.Ports
 
-	envoy                 *components.Envoy
-	configMgr             *components.ConfigManagerServer
-	echoBackend           *components.EchoHTTPServer
-	bookstoreServer       *components.BookstoreGrpcServer
-	dynamicRoutingBackend *components.EchoHTTPServer
-	mockMetadataServer    *components.MockMetadataServer
-	ServiceControlServer  *components.MockServiceCtrl
+	ServiceControlServer *components.MockServiceCtrl
+}
+
+func NewTestEnv(name uint16, backendService string, jwtProviders []string) *TestEnv {
+	return &TestEnv{
+		mockMetadata:          true,
+		mockServiceManagement: true,
+		mockServiceControl:    true,
+		backendService:        backendService,
+		ports:                 components.NewPorts(name),
+		fakeServiceConfig:     proto.Clone(testdata.ConfigMap[backendService]).(*conf.Service),
+		mockJwtProviders:      jwtProviders,
+	}
+}
+
+func (e *TestEnv) OverrideMockMetadata(newMetdaData map[string]string) {
+	e.mockMetadataOverride = newMetdaData
+}
+
+func (e *TestEnv) EnableDynamicRoutingBackend() {
+	e.enableDynamicRoutingBackend = true
+}
+
+func (e *TestEnv) Ports() *components.Ports {
+	return e.ports
+}
+
+func (e *TestEnv) OverrideAuthentication(authentication *conf.Authentication) {
+	e.fakeServiceConfig.Authentication = authentication
 }
 
 func addDynamicRoutingBackendPort(serviceConfig *conf.Service, port uint16) error {
@@ -83,41 +111,31 @@ func addDynamicRoutingBackendPort(serviceConfig *conf.Service, port uint16) erro
 }
 
 // SetUp setups Envoy, ConfigManager, and Backend server for test.
-func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) error {
-	e.Ports = components.NewPorts(name)
-	if e.MockServiceManagement {
-		baseServiceConfig, ok := testdata.ConfigMap[backendService]
-		if !ok {
-			return fmt.Errorf("not supported backend")
-		}
-
-		// Deep copy is needed because when `MockJwtProviders` is specified it
-		// modifies Service.Authentication and other tests that uses the same
-		// Service configuration may be affected by this.
-		fakeServiceConfig := proto.Clone(baseServiceConfig).(*conf.Service)
-		if err := addDynamicRoutingBackendPort(fakeServiceConfig, e.Ports.DynamicRoutingBackendPort); err != nil {
+func (e *TestEnv) Setup(confArgs []string) error {
+	if e.mockServiceManagement {
+		if err := addDynamicRoutingBackendPort(e.fakeServiceConfig, e.ports.DynamicRoutingBackendPort); err != nil {
 			return err
 		}
-		if len(e.MockJwtProviders) > 0 {
+		if len(e.mockJwtProviders) > 0 {
 			// Add Mock Jwt Providers to the fake ServiceConfig.
-			for _, id := range e.MockJwtProviders {
+			for _, id := range e.mockJwtProviders {
 				provider, ok := testdata.MockJwtProviderMap[id]
 				if !ok {
 					return fmt.Errorf("not supported jwt provider id: %v", id)
 				}
-				auth := fakeServiceConfig.GetAuthentication()
+				auth := e.fakeServiceConfig.GetAuthentication()
 				auth.Providers = append(auth.Providers, provider)
 			}
 		}
 
-		if e.MockServiceControl {
-			e.ServiceControlServer = components.NewMockServiceCtrl(fakeServiceConfig.GetName())
-			testdata.SetFakeControlEnvironment(fakeServiceConfig, e.ServiceControlServer.GetURL())
-			testdata.AppendLogMetrics(fakeServiceConfig)
+		if e.mockServiceControl {
+			e.ServiceControlServer = components.NewMockServiceCtrl(e.fakeServiceConfig.GetName())
+			testdata.SetFakeControlEnvironment(e.fakeServiceConfig, e.ServiceControlServer.GetURL())
+			testdata.AppendLogMetrics(e.fakeServiceConfig)
 		}
 
 		marshaler := &jsonpb.Marshaler{}
-		jsonStr, err := marshaler.MarshalToString(fakeServiceConfig)
+		jsonStr, err := marshaler.MarshalToString(e.fakeServiceConfig)
 		if err != nil {
 			return fmt.Errorf("fail to unmarshal fakeServiceConfig: %v", err)
 		}
@@ -125,14 +143,14 @@ func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) e
 		confArgs = append(confArgs, "--service_management_url="+components.NewMockServiceMrg(jsonStr).GetURL())
 	}
 
-	if e.MockMetadata {
-		e.mockMetadataServer = components.NewMockMetadata(e.MockMetadataOverride)
+	if e.mockMetadata {
+		e.mockMetadataServer = components.NewMockMetadata(e.mockMetadataOverride)
 		confArgs = append(confArgs, "--metadata_url="+e.mockMetadataServer.GetURL())
 	}
 
-	confArgs = append(confArgs, fmt.Sprintf("--cluster_port=%v", e.Ports.BackendServerPort))
-	confArgs = append(confArgs, fmt.Sprintf("--listener_port=%v", e.Ports.ListenerPort))
-	confArgs = append(confArgs, fmt.Sprintf("--discovery_port=%v", e.Ports.DiscoveryPort))
+	confArgs = append(confArgs, fmt.Sprintf("--cluster_port=%v", e.ports.BackendServerPort))
+	confArgs = append(confArgs, fmt.Sprintf("--listener_port=%v", e.ports.ListenerPort))
+	confArgs = append(confArgs, fmt.Sprintf("--discovery_port=%v", e.ports.DiscoveryPort))
 
 	// Starts XDS.
 	var err error
@@ -149,7 +167,7 @@ func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) e
 	// Starts envoy.
 	envoyConfPath := "/tmp/apiproxy-testdata-bootstrap.yaml"
 	debugEnvoy := *debugComponents == "all" || *debugComponents == "envoy"
-	e.envoy, err = components.NewEnvoy(debugEnvoy, envoyConfPath, e.Ports)
+	e.envoy, err = components.NewEnvoy(debugEnvoy, envoyConfPath, e.ports)
 	if err != nil {
 		glog.Errorf("unable to create Envoy %v", err)
 		return err
@@ -159,10 +177,9 @@ func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) e
 		return err
 	}
 
-	switch backendService {
+	switch e.backendService {
 	case "echo":
-		// Starts Echo HTTP1 Server
-		e.echoBackend, err = components.NewEchoHTTPServer(e.Ports.BackendServerPort, false, false)
+		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.BackendServerPort, false, false)
 		if err != nil {
 			return err
 		}
@@ -170,7 +187,7 @@ func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) e
 			return err
 		}
 	case "bookstore":
-		e.bookstoreServer, err = components.NewBookstoreGrpcServer(e.Ports.BackendServerPort)
+		e.bookstoreServer, err = components.NewBookstoreGrpcServer(e.ports.BackendServerPort)
 		if err != nil {
 			return err
 		}
@@ -181,8 +198,8 @@ func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) e
 		return fmt.Errorf("please specify the correct backend service name")
 	}
 
-	if e.EnableDynamicRoutingBackend {
-		e.dynamicRoutingBackend, err = components.NewEchoHTTPServer(e.Ports.DynamicRoutingBackendPort, true, true)
+	if e.enableDynamicRoutingBackend {
+		e.dynamicRoutingBackend, err = components.NewEchoHTTPServer(e.ports.DynamicRoutingBackendPort, true, true)
 		if err != nil {
 			return err
 		}

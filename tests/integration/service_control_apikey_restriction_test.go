@@ -30,7 +30,6 @@ import (
 func TestServiceControlApiKeyRestriction(t *testing.T) {
 	serviceName := "test-echo"
 	configID := "test-config-id"
-
 	args := []string{
 		"--service=" + serviceName,
 		"--version=" + configID,
@@ -38,14 +37,8 @@ func TestServiceControlApiKeyRestriction(t *testing.T) {
 		"--rollout_strategy=fixed",
 	}
 
-	s := env.TestEnv{
-		MockMetadata:          true,
-		MockServiceControl:    true,
-		MockServiceManagement: true,
-		MockJwtProviders:      []string{"google_jwt"},
-	}
-
-	if err := s.Setup(comp.TestServiceControlAPIKeyRestriction, "echo", args); err != nil {
+	s := env.NewTestEnv(comp.TestServiceControlAPIKeyRestriction, "echo", []string{"google_jwt"})
+	if err := s.Setup(args); err != nil {
 		t.Fatalf("failed to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -60,7 +53,7 @@ func TestServiceControlApiKeyRestriction(t *testing.T) {
 	}{
 		{
 			desc:     "success, with android headers",
-			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports.ListenerPort, "/echo", "?key=api-key"),
+			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key"),
 			message:  "hello",
 			wantResp: `{"message":"hello"}`,
 			wantScRequest: &utils.ExpectedCheck{
