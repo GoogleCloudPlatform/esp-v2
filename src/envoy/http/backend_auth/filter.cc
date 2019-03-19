@@ -41,7 +41,7 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
       decoder_callbacks_->streamInfo().dynamicMetadata(), Utils::kOperation);
   // NOTE: this shouldn't happen in practice because Path Matcher filter would
   // have already rejected the request.
-  if (operation == "") {
+  if (operation.empty()) {
     ENVOY_LOG(debug, "No operation found from DynamicMetadata");
     return FilterHeadersStatus::Continue;
   }
@@ -49,7 +49,7 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
   ENVOY_LOG(debug, "Found operation: {}", operation);
   const std::string& audience =
       config_->cfg_parser().getAudienceContext(operation);
-  if (audience == "") {
+  if (audience.empty()) {
     // JWT Token is not required for this operation.
     return FilterHeadersStatus::Continue;
   }

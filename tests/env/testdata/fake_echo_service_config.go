@@ -106,6 +106,30 @@ var (
 						Get: "/bearertoken",
 					},
 				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetById",
+					Pattern: &annotations.HttpRule_Get{
+						Get: "/pet/{pet_id}/num/{number}",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchPet",
+					Pattern: &annotations.HttpRule_Get{
+						Get: "/searchpet",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchDogsWithSlash",
+					Pattern: &annotations.HttpRule_Get{
+						Get: "/searchdog",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.ListPets",
+					Pattern: &annotations.HttpRule_Get{
+						Get: "/pets/{category}/year/{no}",
+					},
+				},
 			},
 		},
 		Authentication: &conf.Authentication{
@@ -166,10 +190,46 @@ var (
 		},
 		Backend: &conf.Backend{
 			Rules: []*conf.BackendRule{
+				// TODO (kyuc) in backend_auth config, only selector with backend auth configured should appear
+				// &conf.BackendRule{
+				//	Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+				//},
 				&conf.BackendRule{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bearertoken",
 					Authentication: &conf.BackendRule_JwtAudience{
 						JwtAudience: "mybackend.com",
+					},
+				},
+				&conf.BackendRule{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetById",
+					Address:         "https://localhost:-1/dynamicrouting/getpetbyid",
+					PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+					Authentication: &conf.BackendRule_JwtAudience{
+						JwtAudience: "https://localhost/dynamicrouting/getpetbyid",
+					},
+				},
+				&conf.BackendRule{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchPet",
+					Address:         "https://localhost:-1/dynamicrouting/searchpet",
+					PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
+					Authentication: &conf.BackendRule_JwtAudience{
+						JwtAudience: "https://localhost/dynamicrouting/searchpet",
+					},
+				},
+				&conf.BackendRule{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchDogsWithSlash",
+					Address:         "https://localhost:-1/dynamicrouting/searchdogs/",
+					PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
+					Authentication: &conf.BackendRule_JwtAudience{
+						JwtAudience: "https://localhost/dynamicrouting/searchpet",
+					},
+				},
+				&conf.BackendRule{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.ListPets",
+					Address:         "https://localhost:-1/dynamicrouting/listpet",
+					PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
+					Authentication: &conf.BackendRule_JwtAudience{
+						JwtAudience: "https://localhost/dynamicrouting/listpet",
 					},
 				},
 			},

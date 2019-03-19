@@ -47,6 +47,7 @@ import (
 	"google.golang.org/genproto/protobuf/api"
 
 	bapb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/backend_auth"
+	brpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/backend_routing"
 	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
 	pmpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/path_matcher"
 	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
@@ -126,6 +127,7 @@ type backendRoutingInfo struct {
 	selector        string
 	translationType conf.BackendRule_PathTranslation
 	backend         backendInfo
+	uri             string
 }
 
 type backendInfo struct {
@@ -525,17 +527,18 @@ func (m *ConfigManager) initHttpPathMap() {
 	}
 }
 
-func (m *ConfigManager) extractBackendAddress(address string) (string, uint32, error) {
+// parameter: URL, return value: hostname, port, path, error (not nil if parse URL fails)
+func (m *ConfigManager) extractBackendAddress(address string) (string, uint32, string, error) {
 	backendUrl, err := url.Parse(address)
 	if err != nil {
-		return "", 0, err
+		return "", 0, "", err
 	}
 	if backendUrl.Scheme != "https" {
-		return "", 0, fmt.Errorf("dynamic routing only supports HTTPS")
+		return "", 0, "", fmt.Errorf("dynamic routing only supports HTTPS")
 	}
 	hostname := backendUrl.Hostname()
 	if net.ParseIP(hostname) != nil {
-		return "", 0, fmt.Errorf("dynamic routing only supports domain name, got IP address: %v", hostname)
+		return "", 0, "", fmt.Errorf("dynamic routing only supports domain name, got IP address: %v", hostname)
 	}
 	var port uint32 = 443
 	if backendUrl.Port() != "" {
@@ -543,11 +546,13 @@ func (m *ConfigManager) extractBackendAddress(address string) (string, uint32, e
 		var port64 uint64
 		var err error
 		if port64, err = strconv.ParseUint(backendUrl.Port(), 10, 32); err != nil {
-			return "", 0, err
+			return "", 0, "", err
 		}
 		port = uint32(port64)
 	}
-	return hostname, port, nil
+	// if uri ends with a slash like "/getUser/" or "/", remove last slash
+	uri := strings.TrimSuffix(backendUrl.RequestURI(), "/")
+	return hostname, port, uri, nil
 }
 
 func (m *ConfigManager) processBackendRoutingInfo() (map[string]backendInfo, error) {
@@ -555,10 +560,7 @@ func (m *ConfigManager) processBackendRoutingInfo() (map[string]backendInfo, err
 	for _, r := range m.serviceConfig.Backend.GetRules() {
 		// for CONSTANT_ADDRESS and APPEND_PATH_TO_ADDRESS
 		if r.PathTranslation != conf.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
-			var err error
-			var hostname string
-			var port uint32
-			hostname, port, err = m.extractBackendAddress(r.Address)
+			hostname, port, uri, err := m.extractBackendAddress(r.Address)
 			if err != nil {
 				return nil, err
 			}
@@ -575,6 +577,7 @@ func (m *ConfigManager) processBackendRoutingInfo() (map[string]backendInfo, err
 				selector:        r.Selector,
 				translationType: r.PathTranslation,
 				backend:         dynamicRoutingBackendMap[address],
+				uri:             uri,
 			})
 		}
 	}
@@ -636,10 +639,14 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 		httpFilters = append(httpFilters, grpcWebFilter)
 	}
 
-	// Add Backend Auth filter if needed.
+	// Add Backend Auth filter and Backend Routing if needed.
 	if *flags.EnableBackendRouting {
 		backendAuthFilter := m.makeBackendAuthFilter()
 		httpFilters = append(httpFilters, backendAuthFilter)
+		m.Infof("adding Backend Auth Filter config: %v", backendAuthFilter)
+		backendRoutingFilter := m.makeBackendRoutingFilter()
+		httpFilters = append(httpFilters, backendRoutingFilter)
+		m.Infof("adding Backend Routing Filter config: %v", backendRoutingFilter)
 	}
 
 	// Add Envoy Router filter so requests are routed upstream.
@@ -1167,6 +1174,24 @@ func (m *ConfigManager) makeBackendAuthFilter() *hcm.HttpFilter {
 		ConfigType: &hcm.HttpFilter_Config{backendAuthConfigStruct},
 	}
 	return backendAuthFilter
+}
+
+func (m *ConfigManager) makeBackendRoutingFilter() *hcm.HttpFilter {
+	rules := []*brpb.BackendRoutingRule{}
+	for _, v := range m.backendRoutingInfos {
+		rules = append(rules, &brpb.BackendRoutingRule{
+			Operation:      v.selector,
+			IsConstAddress: v.translationType == conf.BackendRule_CONSTANT_ADDRESS,
+			PathPrefix:     v.uri,
+		})
+	}
+	backendRoutingConfig := &brpb.FilterConfig{Rules: rules}
+	backendRoutingConfigStruct, _ := util.MessageToStruct(backendRoutingConfig)
+	backendRoutingFilter := &hcm.HttpFilter{
+		Name:       ut.BackendRouting,
+		ConfigType: &hcm.HttpFilter_Config{backendRoutingConfigStruct},
+	}
+	return backendRoutingFilter
 }
 
 func (m *ConfigManager) makeHttpRouteMatcher(selector string) *route.RouteMatch {

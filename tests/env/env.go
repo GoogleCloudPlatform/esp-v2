@@ -17,6 +17,7 @@ package env
 import (
 	"flag"
 	"fmt"
+	"strings"
 
 	"cloudesf.googlesource.com/gcpproxy/tests/env/components"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
@@ -24,7 +25,7 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 
-	scpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 var (
@@ -43,6 +44,7 @@ type TestEnv struct {
 	MockServiceManagement bool
 	MockServiceControl    bool
 	MockJwtProviders      []string
+	UseHttpsBackend       bool
 	Ports                 *components.Ports
 
 	envoy                *components.Envoy
@@ -51,6 +53,26 @@ type TestEnv struct {
 	bookstoreServer      *components.BookstoreGrpcServer
 	mockMetadataServer   *components.MockMetadataServer
 	ServiceControlServer *components.MockServiceCtrl
+}
+
+func addDynamicRoutingBackendPort(serviceConfig *conf.Service, port uint16) error {
+	for _, v := range serviceConfig.Backend.GetRules() {
+		if v.PathTranslation != conf.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
+			urlPrefix := "https://localhost:"
+			i := strings.Index(v.Address, urlPrefix)
+			if i == -1 {
+				return fmt.Errorf("failed to find port number")
+			}
+			portAndPathStr := v.Address[i+len(urlPrefix):]
+			pathIndex := strings.Index(portAndPathStr, "/")
+			if pathIndex == -1 {
+				v.Address = fmt.Sprintf("https://localhost:%v", port)
+			} else {
+				v.Address = fmt.Sprintf("https://localhost:%v%v", port, portAndPathStr[pathIndex:])
+			}
+		}
+	}
+	return nil
 }
 
 // SetUp setups Envoy, ConfigManager, and Backend server for test.
@@ -65,7 +87,10 @@ func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) e
 		// Deep copy is needed because when `MockJwtProviders` is specified it
 		// modifies Service.Authentication and other tests that uses the same
 		// Service configuration may be affected by this.
-		fakeServiceConfig := proto.Clone(baseServiceConfig).(*scpb.Service)
+		fakeServiceConfig := proto.Clone(baseServiceConfig).(*conf.Service)
+		if err := addDynamicRoutingBackendPort(fakeServiceConfig, e.Ports.BackendServerPort); err != nil {
+			return err
+		}
 		if len(e.MockJwtProviders) > 0 {
 			testdata.InitMockJwtProviders()
 			// Add Mock Jwt Providers to the fake ServiceConfig.
@@ -129,7 +154,7 @@ func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) e
 	switch backendService {
 	case "echo":
 		// Starts Echo HTTP1 Server
-		e.echoBackend, err = components.NewEchoHTTPServer(e.Ports.BackendServerPort)
+		e.echoBackend, err = components.NewEchoHTTPServer(e.Ports.BackendServerPort, e.UseHttpsBackend)
 		if err != nil {
 			return err
 		}

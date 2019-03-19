@@ -42,7 +42,7 @@ struct ServiceControlFilterStats {
   ALL_SERVICE_CONTROL_FILTER_STATS(GENERATE_COUNTER_STRUCT)
 };
 
-// The Envoy filter config for Cloud ESF service control client.
+// The Envoy filter config for API Proxy service control client.
 class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
  public:
   FilterConfig(const ::google::api::envoy::http::service_control::FilterConfig&

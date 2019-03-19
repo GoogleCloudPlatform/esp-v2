@@ -15,16 +15,18 @@
 package components
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
-	"strconv"
 	"time"
 
 	"github.com/golang/glog"
 )
 
 const (
-	echoPath = "../../bin/echo/server"
+	echoPath      = "../../bin/echo/server"
+	httpsCertPath = "../env/testdata/localhost.crt"
+	httpsKeyPath  = "../env/testdata/localhost.key"
 )
 
 // Echo stores data for Echo HTTP/1 backend process.
@@ -32,8 +34,13 @@ type EchoHTTPServer struct {
 	cmd *exec.Cmd
 }
 
-func NewEchoHTTPServer(port uint16) (*EchoHTTPServer, error) {
-	cmd := exec.Command(echoPath, strconv.Itoa(int(port)))
+func NewEchoHTTPServer(port uint16, enableHttps bool) (*EchoHTTPServer, error) {
+	portFlag := fmt.Sprintf("--port=%v", port)
+	enableHttpsFlag := fmt.Sprintf("--enable_https=%v", enableHttps)
+	httpsCertPathFlag := fmt.Sprintf("--https_cert_path=%v", httpsCertPath)
+	httpsKeyPathFlag := fmt.Sprintf("--https_key_path=%v", httpsKeyPath)
+
+	cmd := exec.Command(echoPath, portFlag, enableHttpsFlag, httpsCertPathFlag, httpsKeyPathFlag)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return &EchoHTTPServer{

@@ -2131,49 +2131,72 @@ func TestExtractBackendAddress(t *testing.T) {
 		url            string
 		wantedHostname string
 		wantedPort     uint32
-		wantedErr      string
+		wantURI        string
+		wantErr        string
 	}{
 		{
 			desc:           "successful for https url, ends without slash",
 			url:            "https://abc.example.org",
 			wantedHostname: "abc.example.org",
 			wantedPort:     443,
-			wantedErr:      "",
+			wantURI:        "",
+			wantErr:        "",
 		},
 		{
 			desc:           "successful for https url, ends with slash",
 			url:            "https://abcde.google.org/",
 			wantedHostname: "abcde.google.org",
 			wantedPort:     443,
-			wantedErr:      "",
+			wantURI:        "",
+			wantErr:        "",
 		},
 		{
 			desc:           "successful for https url, ends with path",
 			url:            "https://abcde.youtube.com/api/",
 			wantedHostname: "abcde.youtube.com",
 			wantedPort:     443,
-			wantedErr:      "",
+			wantURI:        "/api",
+			wantErr:        "",
 		},
 		{
-			desc:           "successful for https url with custome port",
+			desc:           "successful for https url with custom port",
 			url:            "https://abcde.youtube.com:8989/api/",
 			wantedHostname: "abcde.youtube.com",
 			wantedPort:     8989,
-			wantedErr:      "",
+			wantURI:        "/api",
+			wantErr:        "",
 		},
 		{
 			desc:           "fail for http url",
 			url:            "http://abcde.youtube.com:8989/api/",
 			wantedHostname: "",
 			wantedPort:     0,
-			wantedErr:      "dynamic routing only supports HTTPS",
+			wantURI:        "",
+			wantErr:        "dynamic routing only supports HTTPS",
 		},
 		{
 			desc:           "fail for https url with IP address",
 			url:            "https://192.168.0.1/api/",
 			wantedHostname: "",
 			wantedPort:     0,
-			wantedErr:      "dynamic routing only supports domain name, got IP address: 192.168.0.1",
+			wantURI:        "",
+			wantErr:        "dynamic routing only supports domain name, got IP address: 192.168.0.1",
+		},
+		{
+			desc:           "successful for https url, path ends with slash",
+			url:            "https://abc.example.org/path/to/",
+			wantedHostname: "abc.example.org",
+			wantedPort:     443,
+			wantURI:        "/path/to",
+			wantErr:        "",
+		},
+		{
+			desc:           "successful for https url, path ends without slash",
+			url:            "https://abc.example.org/path",
+			wantedHostname: "abc.example.org",
+			wantedPort:     443,
+			wantURI:        "/path",
+			wantErr:        "",
 		},
 	}
 
@@ -2186,15 +2209,18 @@ func TestExtractBackendAddress(t *testing.T) {
 		flag.Set("backend_protocol", "http1")
 
 		runTest(t, func(env *testEnv) {
-			hostname, port, err := env.configManager.extractBackendAddress(tc.url)
+			hostname, port, uri, err := env.configManager.extractBackendAddress(tc.url)
 			if hostname != tc.wantedHostname {
 				t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, hostname, tc.wantedHostname)
 			}
 			if port != tc.wantedPort {
 				t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, port, tc.wantedPort)
 			}
-			if (err == nil && tc.wantedErr != "") || (err != nil && tc.wantedErr == "") {
-				t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, err, tc.wantedErr)
+			if uri != tc.wantURI {
+				t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, uri, tc.wantURI)
+			}
+			if (err == nil && tc.wantErr != "") || (err != nil && tc.wantErr == "") {
+				t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, err, tc.wantErr)
 			}
 		})
 	}

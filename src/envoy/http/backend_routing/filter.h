@@ -1,4 +1,4 @@
-// Copyright 2018 Google Cloud Platform Proxy Authors
+// Copyright 2019 Google Cloud Platform Proxy Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,17 +19,17 @@
 #include "common/common/logger.h"
 #include "envoy/http/filter.h"
 #include "envoy/http/header_map.h"
-#include "src/envoy/http/backend_auth/filter_config.h"
+#include "src/envoy/http/backend_routing/filter_config.h"
 
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
-namespace BackendAuth {
+namespace BackendRouting {
 
 class Filter : public Http::StreamDecoderFilter,
                public Logger::Loggable<Logger::Id::filter> {
  public:
-  Filter(FilterConfigSharedPtr config) : config_(config) {}
+  Filter(FilterConfigSharedPtr config);
   ~Filter(){};
 
   // Http::StreamFilterBase
@@ -44,9 +44,13 @@ class Filter : public Http::StreamDecoderFilter,
  private:
   Http::StreamDecoderFilterCallbacks *decoder_callbacks_;
   const FilterConfigSharedPtr config_;
+  std::unordered_map<
+      std::string,
+      ::google::api::envoy::http::backend_routing::BackendRoutingRule>
+      backend_routing_map_;
 };
 
-}  // namespace BackendAuth
+}  // namespace BackendRouting
 }  // namespace HttpFilters
 }  // namespace Extensions
 }  // namespace Envoy

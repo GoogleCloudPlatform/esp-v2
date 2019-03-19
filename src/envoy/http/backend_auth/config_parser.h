@@ -14,12 +14,12 @@
 #ifndef ENVOY_BACKEND_AUTH_RULE_PARSER_H
 #define ENVOY_BACKEND_AUTH_RULE_PARSER_H
 
+#include <list>
+#include <unordered_map>
+
 #include "api/envoy/http/backend_auth/config.pb.h"
 #include "envoy/thread_local/thread_local.h"
 #include "src/envoy/utils/token_subscriber.h"
-
-#include <list>
-#include <unordered_map>
 
 namespace Envoy {
 namespace Extensions {

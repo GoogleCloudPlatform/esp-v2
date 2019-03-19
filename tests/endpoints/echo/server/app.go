@@ -17,17 +17,27 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
 )
 
+type dynamicRoutingResponse struct {
+	Path     string `json:"Path"`
+	RawQuery string `json:"RawQuery"`
+}
+
 func main() {
+	port := flag.Int("port", 8082, "server port")
+	isHttps := flag.Bool("enable_https", false, "true for HTTPS, false for HTTP")
+	httpsCertPath := flag.String("https_cert_path", "../../../env/testdata/localhost.crt", "path for HTTPS cert path")
+	httpsKeyPath := flag.String("https_key_path", "../../../env/testdata/localhost.key", "path for HTTPS key path")
+	flag.Parse()
+
 	r := mux.NewRouter()
 
 	r.Path("/echo").Methods("POST").
@@ -48,21 +58,21 @@ func main() {
 		HandlerFunc(authInfoHandler)
 	r.Path("/bearertoken").Methods("GET").
 		HandlerFunc(bearerTokenHandler)
+	r.PathPrefix("/dynamicrouting").Methods("GET").
+		HandlerFunc(dynamicRoutingHandler)
 
 	http.Handle("/", r)
-	port := 8082
-	if portStr := os.Getenv("PORT"); portStr != "" {
-		port, _ = strconv.Atoi(portStr)
+	if *port < 1024 || *port > 65535 {
+		log.Fatalf("port (%v) should be integer between 1024-65535", *port)
 	}
-	if len(os.Args) >= 2 {
-		var err error
-		port, err = strconv.Atoi(os.Args[1])
-		if err != nil || port < 1024 || port > 65535 {
-			log.Fatalf("port (%v) should be integer between 1024-65535", os.Args[1])
-		}
+	fmt.Printf("Echo server is running on port: %d, is_https: %v\n", *port, *isHttps)
+	var err error
+	if *isHttps {
+		err = http.ListenAndServeTLS(fmt.Sprintf(":%d", *port), *httpsCertPath, *httpsKeyPath, nil)
+	} else {
+		err = http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
 	}
-	fmt.Printf("Echo server is running on port: %d\n", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
+	log.Fatal(err)
 }
 
 // echoHandler reads a JSON object from the body, and writes it back out.
@@ -83,6 +93,19 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write(b)
+}
+
+// dynamicEoutingHandler reads URL from request header, and writes it back out.
+func dynamicRoutingHandler(w http.ResponseWriter, r *http.Request) {
+	resp := dynamicRoutingResponse{
+		Path:     r.URL.Path,
+		RawQuery: r.URL.RawQuery,
+	}
+	respByte, err := json.Marshal(resp)
+	if err != nil {
+		w.Write([]byte(fmt.Sprintf("error handling dynamic routing path: %v", err)))
+	}
+	w.Write(respByte)
 }
 
 // corsHandler wraps a HTTP handler and applies the appropriate responses for Cross-Origin Resource Sharing.

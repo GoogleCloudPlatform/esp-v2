@@ -24,6 +24,8 @@ const (
 	PathMatcher = "envoy.filters.http.path_matcher"
 	// Backend Auth filter.
 	BackendAuth = "envoy.filters.http.backend_auth"
+	// Backend Routing filter.
+	BackendRouting = "envoy.filters.http.backend_routing"
 
 	// Supported Http Methods.
 	GET     = "GET"

@@ -27,7 +27,7 @@ namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 
-// The Envoy filter for Cloud ESF service control client.
+// The Envoy filter for API Proxy service control client.
 class Filter : public Http::StreamDecoderFilter,
                public AccessLog::Instance,
                public Handler::CheckDoneCallback,
