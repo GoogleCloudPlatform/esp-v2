@@ -16,10 +16,10 @@ $ node tests/endpoints/bookstore-grpc/grpc_server.js
 
 ## Start up envoy
 
-Update the service_name to yours in `src/envoy/http/service_control/envoy.yaml`
+Update the service_name to yours in `src/envoy/http/service_control/testdata/envoy.yaml`
 
 ```bash
-$ sed 's/REPLACE_SERVICE_NAME/{YOUR_SERVICE_NAME}' src/envoy/http/service_control/envoy.yaml
+$ sed 's/REPLACE_SERVICE_NAME/{YOUR_SERVICE_NAME}' src/envoy/http/service_control/testdata/envoy.yaml
 ```
 
 To test the CheckRequest code path, update `allow_with_api_key: false`.
@@ -27,7 +27,7 @@ To test the CheckRequest code path, update `allow_with_api_key: false`.
 Start up Envoy:
 
 ```bash
-$ bazel run //src/envoy:envoy -- -c $PWD/src/envoy/http/service_control/envoy.yaml -l debug
+$ bazel run //src/envoy:envoy -- -c $PWD/src/envoy/http/service_control/testdata/envoy.yaml -l debug
 ```
 
 `envoy.yaml` defines the Envoy's listener port is `9090` and then Envoy routes the request

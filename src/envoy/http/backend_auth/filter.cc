@@ -14,9 +14,9 @@
 
 // TODO(kyuc): Add unit tests
 
-#include <string>
-
 #include "src/envoy/http/backend_auth/filter.h"
+
+#include <string>
 
 #include "src/envoy/utils/metadata_utils.h"
 

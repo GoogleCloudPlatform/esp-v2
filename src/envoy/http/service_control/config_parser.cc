@@ -63,31 +63,29 @@ FilterConfigParser::FilterConfigParser(
     const FilterConfig& config,
     Server::Configuration::FactoryContext& context) {
   for (const auto& service : config.services()) {
-    service_map_[service.service_name()] =
-        ServiceContextPtr(new ServiceContext(service, context));
+    service_map_.emplace(
+        service.service_name(),
+        ServiceContextPtr(new ServiceContext(service, context)));
   }
 
-  ::google::api_proxy::path_matcher::PathMatcherBuilder<
-      const RequirementContext*>
-      pmb;
-  for (const auto& rule : config.rules()) {
-    const auto& pattern = rule.pattern();
-    const auto& requirement = rule.requires();
+  if (service_map_.size() < static_cast<size_t>(config.services_size())) {
+    throw ProtoValidationException("Duplicated service names", config);
+  }
 
+  for (const auto& requirement : config.requirements()) {
     const auto service_it = service_map_.find(requirement.service_name());
     if (service_it == service_map_.end()) {
       throw ProtoValidationException("Invalid service name", requirement);
     }
-
-    RequirementContextPtr require_ctx(
-        new RequirementContext(requirement, *service_it->second));
-    if (!pmb.Register(pattern.http_method(), pattern.uri_template(),
-                      std::string(), require_ctx.get())) {
-      throw ProtoValidationException("Duplicated pattern", pattern);
-    }
-    require_ctx_list_.push_back(std::move(require_ctx));
+    requirements_map_.emplace(requirement.operation_name(),
+                              RequirementContextPtr(new RequirementContext(
+                                  requirement, *service_it->second)));
   }
-  path_matcher_ = pmb.Build();
+
+  if (requirements_map_.size() <
+      static_cast<size_t>(config.requirements_size())) {
+    throw ProtoValidationException("Duplicated operation names", config);
+  }
 }
 
 }  // namespace ServiceControl

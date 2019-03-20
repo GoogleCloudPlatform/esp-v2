@@ -24,6 +24,7 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         ":config_parser_lib",
+        "//src/envoy/utils:metadata_utils_lib",
         "@envoy//source/exe:envoy_common_lib",
     ],
 )
@@ -77,7 +78,6 @@ envoy_cc_library(
     deps = [
         ":client_cache_lib",
         "//api/envoy/http/service_control:config_proto_cc",
-        "//src/api_proxy/path_matcher:path_matcher_lib",
         "//src/api_proxy/service_control:request_builder_lib",
         "//src/api_proxy/service_control:logs_metrics_loader_lib",
         "//src/envoy/utils:token_subscriber_lib",

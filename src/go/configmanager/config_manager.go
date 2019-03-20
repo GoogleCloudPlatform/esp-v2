@@ -85,6 +85,18 @@ var (
 
 // ConfigManager handles service configuration fetching and updating.
 // TODO(jilinxia): handles multi service name.
+// TODO(taoxuy): refactor ConfigManager struct to have a solid struct for all service config info,
+// Rough outline:
+// type ServiceInfo struct {
+//     operations []*MethodInfo
+// }
+
+// type MethodInfo struct {
+//     httpRule        httpRule
+//     backendRule     backendRule
+//     authRule        authRule
+//     isGenerated     bool
+// }
 type ConfigManager struct {
 	serviceName       string
 	curRolloutID      string
@@ -94,11 +106,15 @@ type ConfigManager struct {
 	// httpPathMap stores all operations to http path pairs.
 	httpPathMap            map[string]*httpRule
 	httpPathWithOptionsSet map[string]bool
-	backendRoutingInfos    []backendRoutingInfo
-	client                 *http.Client
-	cache                  cache.SnapshotCache
-	checkRolloutsTicker    *time.Ticker
-	gcpAttributes          *scpb.GcpAttributes
+	// All non-generated operations
+	operationSet map[string]bool
+	// Generated OPTIONS operation for CORS.
+	generatedOptionsOperations []string
+	backendRoutingInfos        []backendRoutingInfo
+	client                     *http.Client
+	cache                      cache.SnapshotCache
+	checkRolloutsTicker        *time.Ticker
+	gcpAttributes              *scpb.GcpAttributes
 }
 
 type httpRule struct {
@@ -580,7 +596,7 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 	// metadata populated by Path Matcher filter.
 	// * Service Control filter
 	// * Backend Authentication filter
-	// * Backend Routing filter (WIP)
+	// * Backend Routing filter (WIP) 
 	pathMathcherFilter := m.makePathMatcherFilter(endpointApi, backendProtocol)
 	if pathMathcherFilter != nil {
 		httpFilters = append(httpFilters, pathMathcherFilter)
@@ -804,6 +820,7 @@ func (m *ConfigManager) makePathMatcherFilter(endpointApi *api.Api, backendProto
 				UriTemplate: httpPattern.Patch,
 				HttpMethod:  ut.PATCH,
 			}
+			// TODO(kyuc): might need to handle HttpRule_Custom as well
 		}
 
 		newRule := &pmpb.PathMatcherRule{
@@ -819,14 +836,14 @@ func (m *ConfigManager) makePathMatcherFilter(endpointApi *api.Api, backendProto
 		rules = append(rules, newRule)
 	}
 
-	operationSet := make(map[string]bool)
+	m.operationSet = make(map[string]bool)
 	for _, rule := range rules {
-		operationSet[rule.Operation] = true
+		m.operationSet[rule.Operation] = true
 	}
 
+	// TODO(kyuc): should we support CORS for gRPC?
 	// In order to support CORS. HTTP method OPTIONS needs to be added to all
-	// urls except the ones already with options. For these OPTIONS methods,
-	// auth should be disabled and AllowWithoutApiKey should be true.
+	// urls except the ones already with options.
 	if m.getEndpointAllowCorsFlag() {
 		// All options have their operation as the following format: CORS.suffix.
 		// Appends suffix to make sure it is not used by any http rules.
@@ -839,7 +856,7 @@ func (m *ConfigManager) makePathMatcherFilter(endpointApi *api.Api, backendProto
 				for {
 					corsOperation = fmt.Sprintf("%s.%d", corsOperationBase, corsID)
 					corsID++
-					if !operationSet[corsOperation] {
+					if !m.operationSet[corsOperation] {
 						break
 					}
 				}
@@ -853,6 +870,7 @@ func (m *ConfigManager) makePathMatcherFilter(endpointApi *api.Api, backendProto
 					Operation: corsOperation,
 					Pattern:   optionsPattern,
 				}
+				m.generatedOptionsOperations = append(m.generatedOptionsOperations, corsOperation)
 				rules = append(rules, newRule)
 			}
 		}
@@ -1028,7 +1046,7 @@ func (m *ConfigManager) getEndpointAllowCorsFlag() bool {
 		return false
 	}
 	for _, endpoint := range m.serviceConfig.Endpoints {
-		if endpoint.GetName() == m.serviceName && endpoint.GetAllowCors() == true {
+		if endpoint.GetName() == m.serviceName && endpoint.GetAllowCors() {
 			return true
 		}
 	}
@@ -1071,111 +1089,31 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 		ServiceConfig: copyServiceConfigForReportMetrics(m.serviceConfig),
 	}
 
-	// TODO(kyuc): replace Pattern with operation.
-	rulesMap := make(map[string][]*scpb.ServiceControlRule)
-	if backendProtocol == ut.GRPC {
-		for _, method := range endpointApi.GetMethods() {
-			selector := fmt.Sprintf("%s.%s", endpointApi.GetName(), method.GetName())
-			rulesMap[selector] = []*scpb.ServiceControlRule{
-				&scpb.ServiceControlRule{
-					Requires: &scpb.Requirement{
-						ServiceName:   m.serviceName,
-						OperationName: selector,
-					},
-					Pattern: &commonpb.Pattern{
-						UriTemplate: fmt.Sprintf("/%s/%s", endpointApi.GetName(), method.GetName()),
-						HttpMethod:  ut.POST,
-					},
-				},
-			}
+	requirementMap := make(map[string]*scpb.Requirement)
+	for operation := range m.operationSet {
+		requirementMap[operation] = &scpb.Requirement{
+			ServiceName:   m.serviceName,
+			OperationName: operation,
 		}
 	}
 
-	for _, httpRule := range m.serviceConfig.GetHttp().GetRules() {
-		var newPattern *commonpb.Pattern
-		switch httpPattern := httpRule.GetPattern().(type) {
-		case *annotations.HttpRule_Get:
-			newPattern = &commonpb.Pattern{
-				UriTemplate: httpPattern.Get,
-				HttpMethod:  ut.GET,
-			}
-		case *annotations.HttpRule_Put:
-			newPattern = &commonpb.Pattern{
-				UriTemplate: httpPattern.Put,
-				HttpMethod:  ut.PUT,
-			}
-		case *annotations.HttpRule_Post:
-			newPattern = &commonpb.Pattern{
-				UriTemplate: httpPattern.Post,
-				HttpMethod:  ut.POST,
-			}
-		case *annotations.HttpRule_Delete:
-			newPattern = &commonpb.Pattern{
-				UriTemplate: httpPattern.Delete,
-				HttpMethod:  ut.DELETE,
-			}
-		case *annotations.HttpRule_Patch:
-			newPattern = &commonpb.Pattern{
-				UriTemplate: httpPattern.Patch,
-				HttpMethod:  ut.PATCH,
-			}
-		}
-
-		rulesMap[httpRule.GetSelector()] = append(rulesMap[httpRule.GetSelector()],
-			&scpb.ServiceControlRule{
-				Requires: &scpb.Requirement{
-					ServiceName:   m.serviceName,
-					OperationName: httpRule.GetSelector(),
+	// For these OPTIONS methods, auth should be disabled and AllowWithoutApiKey
+	// should be true for each CORS
+	for _, corsOperation := range m.generatedOptionsOperations {
+		requirementMap[corsOperation] =
+			&scpb.Requirement{
+				ServiceName:   m.serviceName,
+				OperationName: corsOperation,
+				ApiKey: &scpb.APIKeyRequirement{
+					AllowWithoutApiKey: true,
 				},
-				Pattern: newPattern,
-			})
-	}
-
-	// In order to support CORS. Http method OPTIONS needs to be added to all urls except the ones
-	// already with options. For these OPTIONS methods, auth should be disabled and
-	// AllowWithoutApiKey should be true.
-	if m.getEndpointAllowCorsFlag() {
-		// All options have same selector as format: CORS.suffix.
-		// Appends suffix to make sure it is not used by any http rules.
-		corsSelectorBase := "CORS"
-		corsCount := 0
-		for operation := range m.httpPathMap {
-			path := m.httpPathMap[operation].path
-			if _, exist := m.httpPathWithOptionsSet[path]; !exist {
-				corsSelector := ""
-				for {
-					corsSelector = fmt.Sprintf("%s.%d", corsSelectorBase, corsCount)
-					if _, exist := rulesMap[corsSelector]; !exist {
-						break
-					}
-					corsCount++
-				}
-				optionsPattern := &commonpb.Pattern{
-					UriTemplate: path,
-					HttpMethod:  ut.OPTIONS,
-				}
-				rulesMap[corsSelector] = []*scpb.ServiceControlRule{
-					{
-						Requires: &scpb.Requirement{
-							ServiceName:   m.serviceName,
-							OperationName: corsSelector,
-							ApiKey: &scpb.APIKeyRequirement{
-								AllowWithoutApiKey: true,
-							},
-						},
-						Pattern: optionsPattern,
-					},
-				}
 			}
-		}
 	}
 
 	for _, usageRule := range m.serviceConfig.GetUsage().GetRules() {
-		scRules := rulesMap[usageRule.GetSelector()]
-		for _, scRule := range scRules {
-			scRule.Requires.ApiKey = &scpb.APIKeyRequirement{
-				AllowWithoutApiKey: usageRule.GetAllowUnregisteredCalls(),
-			}
+		requirement := requirementMap[usageRule.GetSelector()]
+		requirement.ApiKey = &scpb.APIKeyRequirement{
+			AllowWithoutApiKey: usageRule.GetAllowUnregisteredCalls(),
 		}
 	}
 
@@ -1190,16 +1128,14 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 	// Map order is not deterministic, so sort by key here to make the filter
 	// config rules order deterministic. Simply iterating map will introduce
 	// flakiness to the tests.
-	var keys []string
-	for key := range rulesMap {
-		keys = append(keys, key)
+	var operations []string
+	for operation := range requirementMap {
+		operations = append(operations, operation)
 	}
-	sort.Strings(keys)
+	sort.Strings(operations)
 
-	for _, key := range keys {
-		for _, rule := range rulesMap[key] {
-			filterConfig.Rules = append(filterConfig.Rules, rule)
-		}
+	for _, operation := range operations {
+		filterConfig.Requirements = append(filterConfig.Requirements, requirementMap[operation])
 	}
 
 	scs, err := ut.MessageToStruct(filterConfig)
@@ -1211,7 +1147,6 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 		ConfigType: &hcm.HttpFilter_Config{scs},
 	}
 	return filter
-
 }
 
 func (m *ConfigManager) makeBackendAuthFilter() *hcm.HttpFilter {

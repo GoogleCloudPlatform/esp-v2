@@ -15,17 +15,15 @@
 #ifndef ENVOY_SERVICE_CONTROL_RULE_PARSER_H
 #define ENVOY_SERVICE_CONTROL_RULE_PARSER_H
 
+#include <unordered_map>
+
 #include "api/envoy/http/service_control/config.pb.h"
 #include "api/envoy/http/service_control/requirement.pb.h"
 #include "envoy/thread_local/thread_local.h"
 #include "google/api/service.pb.h"
-#include "src/api_proxy/path_matcher/path_matcher.h"
 #include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/http/service_control/client_cache.h"
 #include "src/envoy/utils/token_subscriber.h"
-
-#include <list>
-#include <unordered_map>
 
 namespace Envoy {
 namespace Extensions {
@@ -122,19 +120,19 @@ class FilterConfigParser {
       const ::google::api::envoy::http::service_control::FilterConfig& config,
       Server::Configuration::FactoryContext& context);
 
-  const RequirementContext* FindRequirement(const std::string& http_method,
-                                            const std::string& path) const {
-    return path_matcher_->Lookup(http_method, path);
+  const RequirementContext* FindRequirement(
+      const std::string& operation) const {
+    const auto requirement_it = requirements_map_.find(operation);
+    if (requirement_it == requirements_map_.end()) {
+      return nullptr;
+    }
+    return requirement_it->second.get();
   }
 
  private:
-  // The path matcher for all url templates
-  ::google::api_proxy::path_matcher::PathMatcherPtr<const RequirementContext*>
-      path_matcher_;
-
-  // Store all RequirementContext objects.
-  std::list<RequirementContextPtr> require_ctx_list_;
-  // The service map
+  // Operation name to RequirementContext map.
+  std::unordered_map<std::string, RequirementContextPtr> requirements_map_;
+  // Service name to ServiceContext map.
   std::unordered_map<std::string, ServiceContextPtr> service_map_;
 };
 

@@ -722,47 +722,15 @@ func TestFetchListeners(t *testing.T) {
 												"gcp_attributes":{
 													"platform": "GCE"
 												},
-												"rules":[
-													{
-														"pattern": {
-															"http_method":"POST",
-															"uri_template":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
-														},
-														"requires":{
-															"operation_name":"endpoints.examples.bookstore.Bookstore.CreateShelf",
-															"service_name":"%s"
-														}
-													},
-													{
-														"pattern": {
-															"http_method":"POST",
-															"uri_template":"/v1/shelves"
-														},
-														"requires":{
-															"operation_name":"endpoints.examples.bookstore.Bookstore.CreateShelf",
-															"service_name":"%s"
-														}
-													},
-													{
-														"pattern": {
-															"http_method":"POST",
-															"uri_template":"/endpoints.examples.bookstore.Bookstore/ListShelves"
-														},
-														"requires":{
-															"operation_name":"endpoints.examples.bookstore.Bookstore.ListShelves",
-															"service_name":"%s"
-														}
-													},
-													{
-														"pattern": {
-															"http_method":"GET",
-															"uri_template":"/v1/shelves"
-														},
-														"requires":{
-															"operation_name":"endpoints.examples.bookstore.Bookstore.ListShelves",
-															"service_name":"%s"
-														}
-													}
+												"requirements": [
+												  {
+													"operation_name": "endpoints.examples.bookstore.Bookstore.CreateShelf",
+													"service_name": "bookstore.endpoints.project123.cloud.goog"
+												  },
+												  {
+													"operation_name": "endpoints.examples.bookstore.Bookstore.ListShelves",
+													"service_name": "bookstore.endpoints.project123.cloud.goog"
+												  }
 												],
 												"services":[
 													{
@@ -824,7 +792,7 @@ func TestFetchListeners(t *testing.T) {
 						]
 					}
 				]
-			}`, testProjectName, testProjectName, testProjectName, testProjectName, testProjectName, testConfigID, testProjectID),
+			}`, testProjectName, testConfigID, testProjectID),
 		},
 		{
 			desc:            "Success for HTTP1 backend, with Jwt filter, with audiences",
@@ -1007,6 +975,7 @@ func TestFetchListeners(t *testing.T) {
 			        "http_filters": [
 			          {
 			            "config": {
+
 			              "rules": [
 			            	  {
 			            	    "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
@@ -1031,31 +1000,19 @@ func TestFetchListeners(t *testing.T) {
 						  "gcp_attributes":{
 						 	 "platform": "GCE"
 						  },
-			              "rules": [
-			                {
-			                  "pattern": {
-			                    "http_method": "GET",
-			                    "uri_template": "/simplegetcors"
-			                  },
-			                  "requires": {
-			                    "operation_name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
-			                    "service_name": "%s"
-			                  }
-			                },
-			                {
-			                  "pattern": {
-			                    "http_method": "OPTIONS",
-			                    "uri_template": "/simplegetcors"
-			                  },
-			                  "requires": {
-			                    "api_key": {
-			                      "allow_without_api_key": true
-			                    },
-			                    "operation_name": "CORS.0",
-			                    "service_name": "%s"
-			                  }
-			                }
-			              ],
+						  "requirements": [
+							{
+							  "operation_name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
+							  "service_name": "bookstore.endpoints.project123.cloud.goog"
+							},
+							{
+							  "api_key": {
+								"allow_without_api_key": true
+							},
+							  "operation_name": "CORS.0",
+							  "service_name": "bookstore.endpoints.project123.cloud.goog"
+							}
+						  ],
 			              "services": [
 			                {
 			                  "producer_project_id": "project123",
@@ -1104,7 +1061,7 @@ func TestFetchListeners(t *testing.T) {
 			      "name": "envoy.http_connection_manager"
 			    }
 			  ]
-			}`, testProjectName, testProjectName, testProjectName, testEndpointName),
+			}`, testProjectName, testEndpointName),
 		},
 	}
 

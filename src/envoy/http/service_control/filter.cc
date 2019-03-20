@@ -14,16 +14,29 @@
 
 #include "src/envoy/http/service_control/filter.h"
 
+#include "src/envoy/utils/metadata_utils.h"
+
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 
-Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap &headers,
+Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
                                                 bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
+  const std::string& operation = Utils::getStringMetadata(
+      decoder_callbacks_->streamInfo().dynamicMetadata(), Utils::kOperation);
 
-  handler_.reset(new Handler(headers, config_));
+  // TODO(kyuc): the following check might not be necessary.
+  // NOTE: this shouldn't happen in practice because Path Matcher filter would
+  // have already rejected the request.
+  if (operation.empty()) {
+    ENVOY_LOG(debug, "No operation found from DynamicMetadata");
+    rejectRequest(Http::Code(404), "Method does not exist.");
+    return Http::FilterHeadersStatus::StopIteration;
+  }
+
+  handler_.reset(new Handler(headers, operation, config_));
   if (!handler_->isConfigured()) {
     rejectRequest(Http::Code(404), "Method does not exist.");
     return Http::FilterHeadersStatus::StopIteration;
@@ -55,7 +68,7 @@ Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap &headers,
   return Http::FilterHeadersStatus::StopIteration;
 }
 
-void Filter::onCheckDone(const ::google::protobuf::util::Status &status) {
+void Filter::onCheckDone(const ::google::protobuf::util::Status& status) {
   if (!status.ok()) {
     rejectRequest(Http::Code(401), "Check failed");
     return;
@@ -77,7 +90,7 @@ void Filter::rejectRequest(Http::Code code, absl::string_view error_msg) {
       StreamInfo::ResponseFlag::UnauthorizedExternalService);
 }
 
-Http::FilterDataStatus Filter::decodeData(Buffer::Instance &, bool) {
+Http::FilterDataStatus Filter::decodeData(Buffer::Instance&, bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (state_ == Calling) {
     return Http::FilterDataStatus::StopIterationAndWatermark;
@@ -85,7 +98,7 @@ Http::FilterDataStatus Filter::decodeData(Buffer::Instance &, bool) {
   return Http::FilterDataStatus::Continue;
 }
 
-Http::FilterTrailersStatus Filter::decodeTrailers(Http::HeaderMap &) {
+Http::FilterTrailersStatus Filter::decodeTrailers(Http::HeaderMap&) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (state_ == Calling) {
     return Http::FilterTrailersStatus::StopIteration;
@@ -94,18 +107,23 @@ Http::FilterTrailersStatus Filter::decodeTrailers(Http::HeaderMap &) {
 }
 
 void Filter::setDecoderFilterCallbacks(
-    Http::StreamDecoderFilterCallbacks &callbacks) {
+    Http::StreamDecoderFilterCallbacks& callbacks) {
   decoder_callbacks_ = &callbacks;
 }
 
-void Filter::log(const Http::HeaderMap *request_headers,
-                 const Http::HeaderMap *response_headers,
-                 const Http::HeaderMap *response_trailers,
-                 const StreamInfo::StreamInfo &stream_info) {
+void Filter::log(const Http::HeaderMap* request_headers,
+                 const Http::HeaderMap* response_headers,
+                 const Http::HeaderMap* response_trailers,
+                 const StreamInfo::StreamInfo& stream_info) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (!handler_) {
     if (!request_headers) return;
-    handler_.reset(new Handler(*request_headers, config_));
+
+    // TODO(kyuc): double check if this stream_info is equivalent to the one
+    // from decoder_callbacks_.
+    const std::string& operation = Utils::getStringMetadata(
+        stream_info.dynamicMetadata(), Utils::kOperation);
+    handler_.reset(new Handler(*request_headers, operation, config_));
   }
 
   if (!handler_->isConfigured()) {

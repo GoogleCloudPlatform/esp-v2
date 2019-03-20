@@ -17,7 +17,6 @@ syntax = "proto3";
 
 package google.api.envoy.http.service_control;
 
-import "api/envoy/http/common/pattern.proto";
 import "api/envoy/http/service_control/requirement.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
@@ -33,16 +32,6 @@ message HttpUri {
   // The timeout.
   google.protobuf.Duration timeout = 3
       [(validate.rules).duration.required = true];
-}
-
-message ServiceControlRule {
-  // Use Envoy native RouteMatch so we can use Envoy native matching logic.
-  api.envoy.http.common.Pattern pattern = 1
-      [(validate.rules).message.required = true];
-
-  // The requirments for matched pattern.
-  api.envoy.http.service_control.Requirement requires = 2
-      [(validate.rules).message.required = true];
 }
 
 // Per service config.
@@ -82,7 +71,7 @@ message FilterConfig {
   repeated Service services = 1;  // ref:multi-service
 
   // The requirement rules for incoming requests.
-  repeated ServiceControlRule rules = 2;
+  repeated Requirement requirements = 2;
 
   // GCP-related attributes.
   GcpAttributes gcp_attributes = 3;

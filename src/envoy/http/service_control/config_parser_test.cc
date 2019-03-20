@@ -30,15 +30,15 @@ using Envoy::Server::Configuration::MockFactoryContext;
 using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::protobuf::TextFormat;
 
-TEST(ConfigParserTest, TestConfigEmpty) {
+TEST(ConfigParserTest, EmtpyConfig) {
   FilterConfig config;
   testing::NiceMock<MockFactoryContext> f_ctx;
   FilterConfigParser parser(config, f_ctx);
 
-  EXPECT_FALSE(parser.FindRequirement("GET", "/get"));
+  EXPECT_FALSE(parser.FindRequirement("foo"));
 }
 
-TEST(ConfigParserTest, TestConfig) {
+TEST(ConfigParserTest, ValidConfig) {
   FilterConfig config;
   const char kFilterConfigBasic[] = R"(
 services {
@@ -47,96 +47,77 @@ services {
 services {
   service_name: "echo111"
 }
-rules {
-  pattern {
-    uri_template: "/get/{foo}"
-    http_method: "GET"
-  }
-  requires {
-    service_name: "echo"
-    operation_name: "get_foo"
-  }
+requirements {
+  service_name: "echo"
+  operation_name: "get_foo"
 }
-rules {
-  pattern {
-    uri_template: "/post/{bar}"
-    http_method: "POST"
-  }
-  requires {
-    service_name: "echo111"
-    operation_name: "post_bar"
-  }
+requirements {
+  service_name: "echo111"
+  operation_name: "post_bar"
 })";
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigBasic, &config));
   testing::NiceMock<MockFactoryContext> f_ctx;
   FilterConfigParser parser(config, f_ctx);
 
+  EXPECT_EQ(parser.FindRequirement("get_foo")->config().operation_name(),
+            "get_foo");
   EXPECT_EQ(
-      parser.FindRequirement("GET", "/get/key")->config().operation_name(),
-      "get_foo");
-  EXPECT_EQ(parser.FindRequirement("GET", "/get/key")
-                ->service_ctx()
-                .config()
-                .service_name(),
-            "echo");
+      parser.FindRequirement("get_foo")->service_ctx().config().service_name(),
+      "echo");
 
+  EXPECT_EQ(parser.FindRequirement("post_bar")->config().operation_name(),
+            "post_bar");
   EXPECT_EQ(
-      parser.FindRequirement("POST", "/post/key")->config().operation_name(),
-      "post_bar");
-  EXPECT_EQ(parser.FindRequirement("POST", "/post/key")
-                ->service_ctx()
-                .config()
-                .service_name(),
-            "echo111");
+      parser.FindRequirement("post_bar")->service_ctx().config().service_name(),
+      "echo111");
 
-  EXPECT_FALSE(parser.FindRequirement("GET", "/test"));
+  EXPECT_FALSE(parser.FindRequirement("non-existing-operation"));
 }
 
-TEST(ConfigParserTest, TestConfigDuplicatePattern) {
+TEST(ConfigParserTest, DuplicatedServiceNames) {
   FilterConfig config;
-  const char kFilterConfigDuplicateRule[] = R"(
+  const char kConfigWithDupliacedService[] = R"(
+services {
+  service_name: "dup"
+}
+services {
+  service_name: "dup"
+})";
+  ASSERT_TRUE(
+      TextFormat::ParseFromString(kConfigWithDupliacedService, &config));
+  testing::NiceMock<MockFactoryContext> f_ctx;
+  EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config, f_ctx),
+                          ProtoValidationException, "Duplicated service names");
+}
+
+TEST(ConfigParserTest, DuplicatedOperationNames) {
+  FilterConfig config;
+  const char kConfigWithDupliacedService[] = R"(
 services {
   service_name: "echo"
 }
-rules {
-  pattern {
-    uri_template: "/same"
-    http_method: "GET"
-  }
-  requires {
-    service_name: "echo"
-    operation_name: "Report1"
-  }
+requirements {
+  service_name: "echo"
+  operation_name: "get_foo"
 }
-rules {
-  pattern {
-    uri_template: "/same"
-    http_method: "GET"
-  }
-  requires {
-    service_name: "echo"
-    operation_name: "Report2"
-  }
+requirements {
+  service_name: "echo"
+  operation_name: "get_foo"
 })";
-
-  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigDuplicateRule, &config));
+  ASSERT_TRUE(
+      TextFormat::ParseFromString(kConfigWithDupliacedService, &config));
   testing::NiceMock<MockFactoryContext> f_ctx;
   EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config, f_ctx),
-                          ProtoValidationException, "Duplicated pattern");
+                          ProtoValidationException,
+                          "Duplicated operation names");
 }
 
-TEST(ConfigParserTest, TestConfigEmptyPattern) {
+TEST(ConfigParserTest, InvalidServiceInRequirement) {
   FilterConfig config;
   const char kFilterInvalidService[] = R"(
-rules {
-  pattern {
-    uri_template: "/same"
-    http_method: "GET"
-  }
-  requires {
-    service_name: "echo"
-    operation_name: "Check"
-  }
+requirements {
+  service_name: "non-existing-service"
+  operation_name: "Check"
 })";
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterInvalidService, &config));
   testing::NiceMock<MockFactoryContext> f_ctx;

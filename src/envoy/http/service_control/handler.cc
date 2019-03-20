@@ -40,8 +40,8 @@ inline int64_t convertNsToMs(std::chrono::nanoseconds ns) {
   return std::chrono::duration_cast<std::chrono::milliseconds>(ns).count();
 }
 
-void fillLatency(const StreamInfo::StreamInfo &stream_info,
-                 LatencyInfo &latency) {
+void fillLatency(const StreamInfo::StreamInfo& stream_info,
+                 LatencyInfo& latency) {
   if (stream_info.requestComplete()) {
     latency.request_time_ms =
         convertNsToMs(stream_info.requestComplete().value());
@@ -60,9 +60,9 @@ void fillLatency(const StreamInfo::StreamInfo &stream_info,
   }
 }
 
-std::string extractHeader(const Envoy::Http::HeaderMap &headers,
-                          const Envoy::Http::LowerCaseString &header) {
-  auto *entry = headers.get(header);
+std::string extractHeader(const Envoy::Http::HeaderMap& headers,
+                          const Envoy::Http::LowerCaseString& header) {
+  auto* entry = headers.get(header);
   if (entry) {
     return entry->value().c_str();
   }
@@ -71,11 +71,12 @@ std::string extractHeader(const Envoy::Http::HeaderMap &headers,
 
 }  // namespace
 
-Handler::Handler(const Http::HeaderMap &headers, FilterConfigSharedPtr config)
+Handler::Handler(const Http::HeaderMap& headers, const std::string& operation,
+                 FilterConfigSharedPtr config)
     : config_(config) {
   http_method_ = headers.Method()->value().c_str();
   path_ = headers.Path()->value().c_str();
-  require_ctx_ = config_->cfg_parser().FindRequirement(http_method_, path_);
+  require_ctx_ = config_->cfg_parser().FindRequirement(operation);
   if (!require_ctx_) {
     ENVOY_LOG(debug, "No requirement matched!");
     return;
@@ -102,15 +103,15 @@ Handler::~Handler() {
   }
 }
 
-bool Handler::extractAPIKeyFromQuery(const Http::HeaderMap &headers,
-                                     const std::string &query) {
+bool Handler::extractAPIKeyFromQuery(const Http::HeaderMap& headers,
+                                     const std::string& query) {
   if (!params_parsed_) {
     parsed_params_ =
         Http::Utility::parseQueryString(headers.Path()->value().c_str());
     params_parsed_ = true;
   }
 
-  const auto &it = parsed_params_.find(query);
+  const auto& it = parsed_params_.find(query);
   if (it != parsed_params_.end()) {
     api_key_ = it->second;
     ENVOY_LOG(debug, "api-key: {} from query: {}", api_key_, query);
@@ -119,10 +120,10 @@ bool Handler::extractAPIKeyFromQuery(const Http::HeaderMap &headers,
   return false;
 }
 
-bool Handler::extractAPIKeyFromHeader(const Http::HeaderMap &headers,
-                                      const std::string &header) {
+bool Handler::extractAPIKeyFromHeader(const Http::HeaderMap& headers,
+                                      const std::string& header) {
   // TODO(qiwzhang): optimize this by using LowerCaseString at init.
-  auto *entry = headers.get(Http::LowerCaseString(header));
+  auto* entry = headers.get(Http::LowerCaseString(header));
   if (entry) {
     api_key_ = std::string(entry->value().c_str(), entry->value().size());
     ENVOY_LOG(debug, "api-key: {} from header: {}", api_key_, header);
@@ -131,8 +132,8 @@ bool Handler::extractAPIKeyFromHeader(const Http::HeaderMap &headers,
   return false;
 }
 
-bool Handler::extractAPIKeyFromCookie(const Http::HeaderMap &headers,
-                                      const std::string &cookie) {
+bool Handler::extractAPIKeyFromCookie(const Http::HeaderMap& headers,
+                                      const std::string& cookie) {
   std::string api_key = Http::Utility::parseCookieValue(headers, cookie);
   if (!api_key.empty()) {
     api_key_ = api_key;
@@ -143,11 +144,11 @@ bool Handler::extractAPIKeyFromCookie(const Http::HeaderMap &headers,
 }
 
 bool Handler::extractAPIKey(
-    const Http::HeaderMap &headers,
+    const Http::HeaderMap& headers,
     const ::google::protobuf::RepeatedPtrField<
-        ::google::api::envoy::http::service_control::APIKeyLocation>
-        &locations) {
-  for (const auto &location : locations) {
+        ::google::api::envoy::http::service_control::APIKeyLocation>&
+        locations) {
+  for (const auto& location : locations) {
     switch (location.key_case()) {
       case APIKeyLocation::kQuery:
         if (extractAPIKeyFromQuery(headers, location.query())) return true;
@@ -166,7 +167,7 @@ bool Handler::extractAPIKey(
 }
 
 void Handler::fillOperationInfo(
-    ::google::api_proxy::service_control::OperationInfo &info) {
+    ::google::api_proxy::service_control::OperationInfo& info) {
   info.operation_id = uuid_;
   info.operation_name = require_ctx_->config().operation_name();
   info.producer_project_id =
@@ -175,20 +176,20 @@ void Handler::fillOperationInfo(
 }
 
 void Handler::fillGCPInfo(
-    ::google::api_proxy::service_control::ReportRequestInfo &info) {
-  const auto &filter_config = config_->config();
+    ::google::api_proxy::service_control::ReportRequestInfo& info) {
+  const auto& filter_config = config_->config();
   if (!filter_config.has_gcp_attributes()) {
     info.compute_platform =
         ::google::api_proxy::service_control::compute_platform::UNKNOWN;
     return;
   }
 
-  const auto &gcp_attributes = filter_config.gcp_attributes();
+  const auto& gcp_attributes = filter_config.gcp_attributes();
   if (!gcp_attributes.zone().empty()) {
     info.location = gcp_attributes.zone();
   }
 
-  const std::string &platform = gcp_attributes.platform();
+  const std::string& platform = gcp_attributes.platform();
   if (platform == "GAE_FLEX") {
     info.compute_platform =
         ::google::api_proxy::service_control::compute_platform::GAE_FLEX;
@@ -204,8 +205,8 @@ void Handler::fillGCPInfo(
   }
 }
 
-void Handler::callCheck(Http::HeaderMap &headers, CheckDoneCallback &callback,
-                        const StreamInfo::StreamInfo &stream_info) {
+void Handler::callCheck(Http::HeaderMap& headers, CheckDoneCallback& callback,
+                        const StreamInfo::StreamInfo& stream_info) {
   check_callback_ = &callback;
 
   // Make a check call
@@ -231,14 +232,14 @@ void Handler::callCheck(Http::HeaderMap &headers, CheckDoneCallback &callback,
   require_ctx_->service_ctx().getTLCache().client_cache().callCheck(
       check_request,
       [this, aborted = aborted_, &headers](
-          const Status &status, const CheckResponseInfo &response_info) {
+          const Status& status, const CheckResponseInfo& response_info) {
         if (*aborted) return;
         onCheckResponse(headers, status, response_info);
       });
 }
 
-void Handler::onCheckResponse(Http::HeaderMap &headers, const Status &status,
-                              const CheckResponseInfo &response_info) {
+void Handler::onCheckResponse(Http::HeaderMap& headers, const Status& status,
+                              const CheckResponseInfo& response_info) {
   check_response_info_ = response_info;
   check_status_ = status;
 
@@ -251,9 +252,9 @@ void Handler::onCheckResponse(Http::HeaderMap &headers, const Status &status,
   check_callback_->onCheckDone(status);
 }
 
-void Handler::callReport(const Http::HeaderMap * /*response_headers*/,
-                         const Http::HeaderMap * /*response_trailers*/,
-                         const StreamInfo::StreamInfo &stream_info) {
+void Handler::callReport(const Http::HeaderMap* /*response_headers*/,
+                         const Http::HeaderMap* /*response_trailers*/,
+                         const StreamInfo::StreamInfo& stream_info) {
   ::google::api_proxy::service_control::ReportRequestInfo info;
   fillOperationInfo(info);
 

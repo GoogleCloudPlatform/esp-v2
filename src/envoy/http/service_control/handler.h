@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <string>
+
 #include "common/common/logger.h"
 #include "envoy/common/pure.h"
 #include "envoy/http/header_map.h"
@@ -28,7 +30,8 @@ namespace ServiceControl {
 // The request handler to call Check and Report
 class Handler : public Logger::Loggable<Logger::Id::filter> {
  public:
-  Handler(const Http::HeaderMap& headers, FilterConfigSharedPtr config);
+  Handler(const Http::HeaderMap& headers, const std::string& operation,
+          FilterConfigSharedPtr config);
   virtual ~Handler();
 
   // Return false if the request is not configured.

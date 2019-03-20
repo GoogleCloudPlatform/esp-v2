@@ -49,6 +49,21 @@ static_resources:
                     config:
                       path: /tmp/envoy-access.log
                 http_filters:
+                  - name: envoy.filters.http.path_matcher
+                    config:
+                      rules:
+                        - pattern:
+                            uri_template: /test
+                            http_method: GET
+                          operation: "test"
+                        - pattern:
+                            uri_template: /test
+                            http_method: POST
+                          operation: "test"
+                        - pattern:
+                            uri_template: /endpoints.examples.bookstore.Bookstore/DeleteShelf
+                            http_method: POST
+                          operation: "DeleteShelf"
                   - name: envoy.filters.http.service_control
                     config:
                       services:
@@ -61,42 +76,20 @@ static_resources:
                           uri: https://servicecontrol.googleapis.com/v1/services/
                           timeout:
                             seconds: 5
-                      rules:
-                        - pattern:
-                            uri_template: /test
-                            http_method: GET
-                          requires:
-                            service_name: REPLACE_SERVICE_NAME
-                            operation_name: "test"
-                            api_key:
-                              locations:
-                                - query: "key"
-                                - header: "x-api-key"
-                                - cookie: "X-API-KEY"
-                              allow_without_api_key: true
-                            api_name: "Bookstore"
-                            api_version: "1.0"
-                        - pattern:
-                            uri_template: /test
-                            http_method: POST
-                          requires:
-                            service_name: REPLACE_SERVICE_NAME
-                            operation_name: "test"
-                            api_key:
-                              locations:
-                                - query: "key"
-                                - header: "x-api-key"
-                                - cookie: "X-API-KEY"
-                              allow_without_api_key: true
-                            api_name: "Bookstore"
-                            api_version: "1.0"
-                        - pattern:
-                            uri_template: /endpoints.examples.bookstore.Bookstore/DeleteShelf
-                            http_method: POST
-                          requires:
-                            service_name: REPLACE_SERVICE_NAME
-                            operation_name: "DeleteShelf"
-                            api_key:
+                      requirements:
+                        - service_name: REPLACE_SERVICE_NAME
+                          operation_name: "test"
+                          api_key:
+                            locations:
+                              - query: "key"
+                              - header: "x-api-key"
+                              - cookie: "X-API-KEY"
+                            allow_without_api_key: true
+                          api_name: "Bookstore"
+                          api_version: "1.0"
+                        - service_name: REPLACE_SERVICE_NAME
+                          operation_name: "DeleteShelf"
+                          api_key:
                   - name: envoy.router
                 route_config:
                   name: backend
