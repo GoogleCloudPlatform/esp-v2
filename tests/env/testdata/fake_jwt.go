@@ -16,6 +16,7 @@ package testdata
 
 import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env/components"
+
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -24,9 +25,9 @@ var (
 	MockJwtProviderMap = map[string]*conf.AuthProvider{}
 )
 
-// Test Jwks and Jwt Tokens are generated following
-// https://github.com/istio/istio/tree/master/security/tools/jwt/samples.
-func InitMockJwtProviders() {
+func init() {
+	// Test Jwks and Jwt Tokens are generated following
+	// https://github.com/istio/istio/tree/master/security/tools/jwt/samples.
 	MockJwtProviderMap["google_service_account"] = &conf.AuthProvider{
 		Id:      "google_service_account",
 		Issuer:  "api-proxy-testing@cloud.goog",

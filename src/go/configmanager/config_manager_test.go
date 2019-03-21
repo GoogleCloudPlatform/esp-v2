@@ -49,7 +49,6 @@ const (
 	testEndpointName = "endpoints.examples.bookstore.Bookstore"
 	testConfigID     = "2017-05-01r0"
 	testProjectID    = "project123"
-	fakeNodeID       = "id"
 	fakeJwks         = "FAKEJWKS"
 )
 
@@ -2306,12 +2305,6 @@ func marshalServiceConfigToString(serviceConfig *conf.Service, t *testing.T) str
 		t.Fatal("fail to convert service config to string: ", err)
 	}
 	return jsonStr
-}
-
-type mock struct{}
-
-func (mock) ID(*core.Node) string {
-	return fakeNodeID
 }
 
 func normalizeJson(input string) string {

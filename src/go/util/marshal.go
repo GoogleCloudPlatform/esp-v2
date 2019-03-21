@@ -22,8 +22,9 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/types"
-	sm "github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
 	"google.golang.org/genproto/googleapis/api/annotations"
+
+	sm "github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
