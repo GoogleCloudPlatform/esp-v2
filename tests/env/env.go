@@ -22,6 +22,9 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
+
+	scpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 var (
@@ -54,10 +57,15 @@ type TestEnv struct {
 func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) error {
 	e.Ports = components.NewPorts(name)
 	if e.MockServiceManagement {
-		fakeServiceConfig, ok := testdata.ConfigMap[backendService]
+		baseServiceConfig, ok := testdata.ConfigMap[backendService]
 		if !ok {
 			return fmt.Errorf("not supported backend")
 		}
+
+		// Deep copy is needed because when `MockJwtProviders` is specified it
+		// modifies Service.Authentication and other tests that uses the same
+		// Service configuration may be affected by this.
+		fakeServiceConfig := proto.Clone(baseServiceConfig).(*scpb.Service)
 		if len(e.MockJwtProviders) > 0 {
 			testdata.InitMockJwtProviders()
 			// Add Mock Jwt Providers to the fake ServiceConfig.
@@ -140,7 +148,7 @@ func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) e
 			return err
 		}
 	default:
-		return fmt.Errorf("please specific the correct backend service name")
+		return fmt.Errorf("please specify the correct backend service name")
 	}
 	return nil
 }
