@@ -146,11 +146,10 @@ func NewConfigManager() (*ConfigManager, error) {
 	} else if name == "" && !*flags.CheckMetadata {
 		return nil, fmt.Errorf("service name is not specified")
 	}
-	var rolloutStrategy string
-	rolloutStrategy = *flags.RolloutStrategy
+	rolloutStrategy := *flags.RolloutStrategy
 	// try to fetch from metadata, if not found, set to fixed instead of throwing an error
 	if rolloutStrategy == "" && *flags.CheckMetadata {
-		rolloutStrategy, err = fetchRolloutStrategy()
+		rolloutStrategy, _ = fetchRolloutStrategy()
 	}
 	if rolloutStrategy == "" {
 		rolloutStrategy = ut.FixedRolloutStrategy
@@ -274,8 +273,7 @@ func (m *ConfigManager) updateSnapshot() error {
 	if err != nil {
 		return fmt.Errorf("fail to make a snapshot, %s", err)
 	}
-	m.cache.SetSnapshot(*flags.Node, *snapshot)
-	return nil
+	return m.cache.SetSnapshot(*flags.Node, *snapshot)
 }
 
 func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
@@ -596,7 +594,7 @@ func (m *ConfigManager) makeListener(endpointApi *api.Api, backendProtocol ut.Ba
 	// metadata populated by Path Matcher filter.
 	// * Service Control filter
 	// * Backend Authentication filter
-	// * Backend Routing filter (WIP) 
+	// * Backend Routing filter (WIP)
 	pathMathcherFilter := m.makePathMatcherFilter(endpointApi, backendProtocol)
 	if pathMathcherFilter != nil {
 		httpFilters = append(httpFilters, pathMathcherFilter)
@@ -1042,9 +1040,6 @@ func (m *ConfigManager) makeJwtAuthnFilter(endpointApi *api.Api, backendProtocol
 }
 
 func (m *ConfigManager) getEndpointAllowCorsFlag() bool {
-	if len(m.serviceConfig.Endpoints) == 0 {
-		return false
-	}
 	for _, endpoint := range m.serviceConfig.Endpoints {
 		if endpoint.GetName() == m.serviceName && endpoint.GetAllowCors() {
 			return true
@@ -1206,20 +1201,21 @@ func (m *ConfigManager) makeHttpRouteMatcher(selector string) *route.RouteMatch 
 	return &routeMatcher
 }
 
-// Implements the ID method for HashNode interface.
+// ID Implements the ID method for HashNode interface.
 func (m *ConfigManager) ID(node *core.Node) string {
 	return node.GetId()
 }
 
-// Implements the Infof method for Log interface.
+// Infof implements the Infof method for Log interface.
 func (m *ConfigManager) Infof(format string, args ...interface{}) {
 	outputString, _ := json.MarshalIndent(args, "", "   ")
 	glog.Infof(format, string(outputString))
 }
 
-// Implements the Errorf method for Log interface.
+// Errorf implements the Errorf method for Log interface.
 func (m *ConfigManager) Errorf(format string, args ...interface{}) { glog.Errorf(format, args...) }
 
+// Cache returns snapshot cache.
 func (m *ConfigManager) Cache() cache.Cache { return m.cache }
 
 // TODO(jcwang) cleanup here. This function is redundant.
@@ -1316,9 +1312,5 @@ var fetchJwk = func(path string, client *http.Client) ([]byte, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("fetching JWK returns not 200 OK: %v", resp.Status)
 	}
-	bytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	return bytes, nil
+	return ioutil.ReadAll(resp.Body)
 }

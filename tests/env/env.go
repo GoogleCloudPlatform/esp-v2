@@ -67,12 +67,11 @@ func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) e
 		// Service configuration may be affected by this.
 		fakeServiceConfig := proto.Clone(baseServiceConfig).(*scpb.Service)
 		if len(e.MockJwtProviders) > 0 {
-			testdata.InitMockJwtProviders()
 			// Add Mock Jwt Providers to the fake ServiceConfig.
 			for _, id := range e.MockJwtProviders {
 				provider, ok := testdata.MockJwtProviderMap[id]
 				if !ok {
-					return fmt.Errorf("not supported jwt provider id")
+					return fmt.Errorf("not supported jwt provider id: %v", id)
 				}
 				auth := fakeServiceConfig.GetAuthentication()
 				auth.Providers = append(auth.Providers, provider)

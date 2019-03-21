@@ -21,9 +21,10 @@ import (
 	"testing"
 	"time"
 
-	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/golang/protobuf/proto"
+
+	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
 )
 
 const (
@@ -317,7 +318,6 @@ func TestFetchGCPAttributes(t *testing.T) {
 
 }
 
-// TODO(kyuc): maybe we can just use MockMetadataServer defined in mock_medata.go
 func initMockMetadataServer(resp string) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

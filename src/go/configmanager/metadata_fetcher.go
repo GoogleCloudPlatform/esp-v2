@@ -23,9 +23,10 @@ import (
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
-	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/golang/glog"
+
+	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
 )
 
 const (
@@ -66,11 +67,7 @@ var getMetadata = func(path string) ([]byte, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf(`failed fetching metadata: %v, status code %v"`, path, resp.StatusCode)
 	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	return body, nil
+	return ioutil.ReadAll(resp.Body)
 }
 
 func fetchAccessToken() (string, time.Duration, error) {
