@@ -17,7 +17,6 @@ package components
 import (
 	"os"
 	"os/exec"
-	"time"
 
 	"github.com/golang/glog"
 )
@@ -27,7 +26,7 @@ const (
 )
 
 type ConfigManagerServer struct {
-	cmd *exec.Cmd
+	*Cmd
 }
 
 func NewConfigManagerServer(debugMode bool, args []string) (*ConfigManagerServer, error) {
@@ -39,34 +38,9 @@ func NewConfigManagerServer(debugMode bool, args []string) (*ConfigManagerServer
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return &ConfigManagerServer{
-		cmd: cmd,
+		Cmd: &Cmd{
+			name: "ConfigManager",
+			Cmd:  cmd,
+		},
 	}, nil
-}
-
-// Start starts the ConfigManager process.
-func (c *ConfigManagerServer) Start() error {
-	glog.Infof("Starting Config Manager Server...")
-	return c.cmd.Start()
-}
-
-// Stop stops the ConfigManager process.
-func (c *ConfigManagerServer) Stop() error {
-	glog.Infof("Stop Config Manager server...")
-	done := make(chan error, 1)
-	go func() {
-		done <- c.cmd.Wait()
-	}()
-
-	select {
-	case <-time.After(testEnvTTL):
-		glog.Infof("Config Manager killed as timeout reached")
-		err := c.cmd.Process.Kill()
-		if err != nil {
-			return err
-		}
-	case err := <-done:
-		glog.Infof("stop Config Manager ... done\n")
-		return err
-	}
-	return nil
 }

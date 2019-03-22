@@ -1,4 +1,4 @@
-// Copyright 2018 Google Cloud Platform Proxy Authors
+// Copyright 2019 Google Cloud Platform Proxy Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,9 +18,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"time"
-
-	"github.com/golang/glog"
 )
 
 const (
@@ -31,7 +28,7 @@ const (
 
 // Echo stores data for Echo HTTP/1 backend process.
 type EchoHTTPServer struct {
-	cmd *exec.Cmd
+	*Cmd
 }
 
 func NewEchoHTTPServer(port uint16, enableHttps bool) (*EchoHTTPServer, error) {
@@ -44,42 +41,9 @@ func NewEchoHTTPServer(port uint16, enableHttps bool) (*EchoHTTPServer, error) {
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return &EchoHTTPServer{
-		cmd: cmd,
+		Cmd: &Cmd{
+			name: "EchoHttpServer",
+			Cmd:  cmd,
+		},
 	}, nil
-}
-
-// Start starts the Echo process.
-func (e *EchoHTTPServer) Start() <-chan error {
-	glog.Infof("Starting Echo HTTP/1 Server...")
-	errCh := make(chan error)
-	go func() {
-		err := e.cmd.Start()
-		if err != nil {
-			errCh <- err
-		}
-	}()
-
-	// wait for server up.
-	time.AfterFunc(1*time.Second, func() { close(errCh) })
-	return errCh
-}
-
-// Stop stops the Echo process.
-func (e *EchoHTTPServer) Stop() error {
-	glog.Infof("Stop Echo server...")
-	done := make(chan error, 1)
-	go func() {
-		done <- e.cmd.Wait()
-	}()
-
-	select {
-	case <-time.After(testEnvTTL):
-		if err := e.cmd.Process.Kill(); err != nil {
-			return err
-		}
-	case err := <-done:
-		glog.Infof("stop Echo ... done\n")
-		return err
-	}
-	return nil
 }

@@ -49,7 +49,6 @@ func TestHttp1Basic(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
-	time.Sleep(time.Duration(3 * time.Second))
 
 	testData := []struct {
 		desc     string

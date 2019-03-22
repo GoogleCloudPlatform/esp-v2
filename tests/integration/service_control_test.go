@@ -46,7 +46,6 @@ func TestServiceControlBasic(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
-	time.Sleep(time.Duration(3 * time.Second))
 
 	testData := []struct {
 		desc                  string
@@ -237,7 +236,6 @@ func TestServiceControlCache(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
-	time.Sleep(time.Duration(3 * time.Second))
 
 	url := fmt.Sprintf("http://localhost:%v%v%v", s.Ports.ListenerPort, "/echo", "?key=api-key")
 	message := "hello"

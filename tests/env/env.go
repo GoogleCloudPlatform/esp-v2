@@ -18,6 +18,7 @@ import (
 	"flag"
 	"fmt"
 	"strings"
+	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/tests/env/components"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
@@ -26,6 +27,11 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+)
+
+const (
+	// Additional wait time after `TestEnv.Setup`
+	setupWaitTime = time.Duration(1 * time.Second)
 )
 
 var (
@@ -126,75 +132,75 @@ func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) e
 	confArgs = append(confArgs, fmt.Sprintf("--cluster_port=%v", e.Ports.BackendServerPort))
 	confArgs = append(confArgs, fmt.Sprintf("--listener_port=%v", e.Ports.ListenerPort))
 	confArgs = append(confArgs, fmt.Sprintf("--discovery_port=%v", e.Ports.DiscoveryPort))
-	var err error
+
 	// Starts XDS.
-	e.configMgr, err = components.NewConfigManagerServer((*debugComponents == "all" || *debugComponents == "configmanager"), confArgs)
+	var err error
+	debugConfigMgr := *debugComponents == "all" || *debugComponents == "configmanager"
+	e.configMgr, err = components.NewConfigManagerServer(debugConfigMgr, confArgs)
 	if err != nil {
 		return err
 	}
-	err = e.configMgr.Start()
-	if err != nil {
+
+	if err = e.configMgr.Start(); err != nil {
 		return err
 	}
 
 	// Starts envoy.
 	envoyConfPath := "/tmp/apiproxy-testdata-bootstrap.yaml"
-	e.envoy, err = components.NewEnvoy((*debugComponents == "all" || *debugComponents == "envoy"), envoyConfPath, e.Ports)
+	debugEnvoy := *debugComponents == "all" || *debugComponents == "envoy"
+	e.envoy, err = components.NewEnvoy(debugEnvoy, envoyConfPath, e.Ports)
 	if err != nil {
 		glog.Errorf("unable to create Envoy %v", err)
 		return err
 	}
 
-	err = e.envoy.Start()
-	if err != nil {
+	if err = e.envoy.StartAndWait(); err != nil {
 		return err
 	}
 
 	switch backendService {
 	case "echo":
-		// Starts Echo HTTP1 Server
 		e.echoBackend, err = components.NewEchoHTTPServer(e.Ports.BackendServerPort, e.UseHttpsBackend)
 		if err != nil {
 			return err
 		}
-		errCh := e.echoBackend.Start()
-		if err = <-errCh; err != nil {
+		if err := e.echoBackend.StartAndWait(); err != nil {
 			return err
 		}
-
 	case "bookstore":
 		e.bookstoreServer, err = components.NewBookstoreGrpcServer(e.Ports.BackendServerPort)
 		if err != nil {
 			return err
 		}
-		errCh := e.bookstoreServer.Start()
-		if err = <-errCh; err != nil {
+		if err := e.bookstoreServer.StartAndWait(); err != nil {
 			return err
 		}
 	default:
 		return fmt.Errorf("please specify the correct backend service name")
 	}
+
+	time.Sleep(setupWaitTime)
 	return nil
 }
 
 // TearDown shutdown the servers.
 func (e *TestEnv) TearDown() {
 	glog.Infof("start tearing down...")
-	if err := e.configMgr.Stop(); err != nil {
+	if err := e.configMgr.StopAndWait(); err != nil {
 		glog.Errorf("error stopping config manager: %v", err)
 	}
 
-	if err := e.envoy.Stop(); err != nil {
+	if err := e.envoy.StopAndWait(); err != nil {
 		glog.Errorf("error stopping envoy: %v", err)
 	}
 
 	if e.echoBackend != nil {
-		if err := e.echoBackend.Stop(); err != nil {
+		if err := e.echoBackend.StopAndWait(); err != nil {
 			glog.Errorf("error stopping Echo Server: %v", err)
 		}
 	}
 	if e.bookstoreServer != nil {
-		if err := e.bookstoreServer.Stop(); err != nil {
+		if err := e.bookstoreServer.StopAndWait(); err != nil {
 			glog.Errorf("error stopping Bookstore Server: %v", err)
 		}
 	}
