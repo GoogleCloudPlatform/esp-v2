@@ -31,13 +31,14 @@ type EchoHTTPServer struct {
 	*Cmd
 }
 
-func NewEchoHTTPServer(port uint16, enableHttps bool) (*EchoHTTPServer, error) {
+func NewEchoHTTPServer(port uint16, enableHttps bool, enableRootPathHandler bool) (*EchoHTTPServer, error) {
 	portFlag := fmt.Sprintf("--port=%v", port)
 	enableHttpsFlag := fmt.Sprintf("--enable_https=%v", enableHttps)
+	enableRootPathHandlerFlag := fmt.Sprintf("--enable_root_path_handler=%v", enableRootPathHandler)
 	httpsCertPathFlag := fmt.Sprintf("--https_cert_path=%v", httpsCertPath)
 	httpsKeyPathFlag := fmt.Sprintf("--https_key_path=%v", httpsKeyPath)
 
-	cmd := exec.Command(echoPath, portFlag, enableHttpsFlag, httpsCertPathFlag, httpsKeyPathFlag)
+	cmd := exec.Command(echoPath, portFlag, enableHttpsFlag, enableRootPathHandlerFlag, httpsCertPathFlag, httpsKeyPathFlag)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return &EchoHTTPServer{

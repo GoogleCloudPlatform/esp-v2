@@ -34,6 +34,7 @@ type dynamicRoutingResponse struct {
 func main() {
 	port := flag.Int("port", 8082, "server port")
 	isHttps := flag.Bool("enable_https", false, "true for HTTPS, false for HTTP")
+	enableRootPathHandler := flag.Bool("enable_root_path_handler", false, "true for adding root path for dynamic routing handler")
 	httpsCertPath := flag.String("https_cert_path", "../../../env/testdata/localhost.crt", "path for HTTPS cert path")
 	httpsKeyPath := flag.String("https_key_path", "../../../env/testdata/localhost.key", "path for HTTPS key path")
 	flag.Parse()
@@ -60,6 +61,10 @@ func main() {
 		HandlerFunc(bearerTokenHandler)
 	r.PathPrefix("/dynamicrouting").Methods("GET").
 		HandlerFunc(dynamicRoutingHandler)
+	if *enableRootPathHandler {
+		r.PathPrefix("/").Methods("GET").
+			HandlerFunc(dynamicRoutingHandler)
+	}
 
 	http.Handle("/", r)
 	if *port < 1024 || *port > 65535 {

@@ -56,15 +56,16 @@ const (
 const (
 	portBase uint16 = 20000
 	// Maximum number of ports used in each test.
-	portNum uint16 = 4
+	portNum uint16 = 5
 )
 
 // Ports stores all used ports
 type Ports struct {
-	BackendServerPort uint16
-	ListenerPort      uint16
-	DiscoveryPort     uint16
-	AdminPort         uint16
+	BackendServerPort         uint16
+	DynamicRoutingBackendPort uint16
+	ListenerPort              uint16
+	DiscoveryPort             uint16
+	AdminPort                 uint16
 }
 
 func allocPortBase(name uint16) uint16 {
@@ -101,9 +102,10 @@ func NewPorts(name uint16) *Ports {
 	base := allocPortBase(name)
 	glog.Infof("Ports generated for test(%v) is from %v - %v", name, base, base+3)
 	return &Ports{
-		BackendServerPort: base,
-		ListenerPort:      base + 1,
-		DiscoveryPort:     base + 2,
-		AdminPort:         base + 3,
+		BackendServerPort:         base,
+		DynamicRoutingBackendPort: base + 1,
+		ListenerPort:              base + 2,
+		DiscoveryPort:             base + 3,
+		AdminPort:                 base + 4,
 	}
 }

@@ -46,19 +46,20 @@ type TestEnv struct {
 	// MockMetdata with default responses.
 	MockMetadata bool
 	// A map of path and response to override the default responses.
-	MockMetadataOverride  map[string]string
-	MockServiceManagement bool
-	MockServiceControl    bool
-	MockJwtProviders      []string
-	UseHttpsBackend       bool
-	Ports                 *components.Ports
+	MockMetadataOverride        map[string]string
+	MockServiceManagement       bool
+	MockServiceControl          bool
+	MockJwtProviders            []string
+	EnableDynamicRoutingBackend bool
+	Ports                       *components.Ports
 
-	envoy                *components.Envoy
-	configMgr            *components.ConfigManagerServer
-	echoBackend          *components.EchoHTTPServer
-	bookstoreServer      *components.BookstoreGrpcServer
-	mockMetadataServer   *components.MockMetadataServer
-	ServiceControlServer *components.MockServiceCtrl
+	envoy                 *components.Envoy
+	configMgr             *components.ConfigManagerServer
+	echoBackend           *components.EchoHTTPServer
+	bookstoreServer       *components.BookstoreGrpcServer
+	dynamicRoutingBackend *components.EchoHTTPServer
+	mockMetadataServer    *components.MockMetadataServer
+	ServiceControlServer  *components.MockServiceCtrl
 }
 
 func addDynamicRoutingBackendPort(serviceConfig *conf.Service, port uint16) error {
@@ -94,7 +95,7 @@ func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) e
 		// modifies Service.Authentication and other tests that uses the same
 		// Service configuration may be affected by this.
 		fakeServiceConfig := proto.Clone(baseServiceConfig).(*conf.Service)
-		if err := addDynamicRoutingBackendPort(fakeServiceConfig, e.Ports.BackendServerPort); err != nil {
+		if err := addDynamicRoutingBackendPort(fakeServiceConfig, e.Ports.DynamicRoutingBackendPort); err != nil {
 			return err
 		}
 		if len(e.MockJwtProviders) > 0 {
@@ -160,7 +161,8 @@ func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) e
 
 	switch backendService {
 	case "echo":
-		e.echoBackend, err = components.NewEchoHTTPServer(e.Ports.BackendServerPort, e.UseHttpsBackend)
+		// Starts Echo HTTP1 Server
+		e.echoBackend, err = components.NewEchoHTTPServer(e.Ports.BackendServerPort, false, false)
 		if err != nil {
 			return err
 		}
@@ -179,6 +181,15 @@ func (e *TestEnv) Setup(name uint16, backendService string, confArgs []string) e
 		return fmt.Errorf("please specify the correct backend service name")
 	}
 
+	if e.EnableDynamicRoutingBackend {
+		e.dynamicRoutingBackend, err = components.NewEchoHTTPServer(e.Ports.DynamicRoutingBackendPort, true, true)
+		if err != nil {
+			return err
+		}
+		if err := e.dynamicRoutingBackend.StartAndWait(); err != nil {
+			return err
+		}
+	}
 	time.Sleep(setupWaitTime)
 	return nil
 }
@@ -202,6 +213,11 @@ func (e *TestEnv) TearDown() {
 	if e.bookstoreServer != nil {
 		if err := e.bookstoreServer.StopAndWait(); err != nil {
 			glog.Errorf("error stopping Bookstore Server: %v", err)
+		}
+	}
+	if e.dynamicRoutingBackend != nil {
+		if err := e.dynamicRoutingBackend.StopAndWait(); err != nil {
+			glog.Errorf("error stopping Dynamic Routing Echo Server: %v", err)
 		}
 	}
 	glog.Infof("finish tearing down...")

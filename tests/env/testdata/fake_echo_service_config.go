@@ -125,6 +125,18 @@ var (
 					},
 				},
 				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.AppendToRoot",
+					Pattern: &annotations.HttpRule_Get{
+						Get: "/searchroot",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.AppendToRootWithSlash",
+					Pattern: &annotations.HttpRule_Get{
+						Get: "/searchrootwithslash",
+					},
+				},
+				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.ListPets",
 					Pattern: &annotations.HttpRule_Get{
 						Get: "/pets/{category}/year/{no}",
@@ -221,6 +233,22 @@ var (
 					PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &conf.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/dynamicrouting/searchpet",
+					},
+				},
+				&conf.BackendRule{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.AppendToRoot",
+					Address:         "https://localhost:-1",
+					PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
+					Authentication: &conf.BackendRule_JwtAudience{
+						JwtAudience: "https://localhost/searchroot",
+					},
+				},
+				&conf.BackendRule{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.AppendToRootWithSlash",
+					Address:         "https://localhost:-1/",
+					PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
+					Authentication: &conf.BackendRule_JwtAudience{
+						JwtAudience: "https://localhost/searchrootwithslash",
 					},
 				},
 				&conf.BackendRule{
