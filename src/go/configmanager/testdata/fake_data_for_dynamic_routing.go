@@ -133,7 +133,6 @@ var (
 			},
 		},
 	}
-	// TODO (kyuc) in backend_auth config, only selector with backend auth configured should appear
 	FakeWantedClustersForDynamicRouting = []string{
 		`
 {
@@ -283,10 +282,6 @@ var (
               {
                 "config": {
                   "rules": [
-                    {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-                      "token_cluster": "ads_cluster"
-                    },
                     {
                       "jwt_audience": "https://us-central1-cloud-esf.cloudfunctions.net/hello",
                       "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.Hello",

@@ -190,10 +190,9 @@ var (
 		},
 		Backend: &conf.Backend{
 			Rules: []*conf.BackendRule{
-				// TODO (kyuc) in backend_auth config, only selector with backend auth configured should appear
-				// &conf.BackendRule{
-				//	Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-				//},
+				&conf.BackendRule{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+				},
 				&conf.BackendRule{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bearertoken",
 					Authentication: &conf.BackendRule_JwtAudience{

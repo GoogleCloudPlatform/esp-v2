@@ -1540,6 +1540,9 @@ func TestBackendAuthFilter(t *testing.T) {
 										"backend": {
 										  "rules": [
 											{
+											  "selector": "ignore_me"
+											},
+											{
 											  "selector": "foo",
 											  "jwtAudience": "foo.com"
 											},

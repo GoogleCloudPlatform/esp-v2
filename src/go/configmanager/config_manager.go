@@ -1154,7 +1154,9 @@ func (m *ConfigManager) makeServiceControlFilter(endpointApi *api.Api, backendPr
 func (m *ConfigManager) makeBackendAuthFilter() *hcm.HttpFilter {
 	rules := []*bapb.BackendAuthRule{}
 	for _, rule := range m.serviceConfig.GetBackend().GetRules() {
-		rule.GetJwtAudience()
+		if rule.GetSelector() == "" || rule.GetJwtAudience() == "" {
+			continue
+		}
 		rules = append(rules,
 			&bapb.BackendAuthRule{
 				Operation:    rule.GetSelector(),
