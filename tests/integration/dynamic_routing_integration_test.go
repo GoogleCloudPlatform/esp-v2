@@ -17,7 +17,6 @@ package integration
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
@@ -46,7 +45,6 @@ func TestDynamicRouting(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
-	time.Sleep(time.Duration(3 * time.Second))
 
 	// TODO(jcwang) match ESP backend routing tests:
 	// https://github.com/cloudendpoints/esp/blob/master/src/nginx/t/backend_routing_append_path.t

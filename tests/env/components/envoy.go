@@ -18,14 +18,12 @@ import (
 	"os"
 	"os/exec"
 	"text/template"
-	"time"
 
 	"github.com/golang/glog"
 )
 
 const (
-	testEnvTTL = time.Second
-	envoyPath  = "../../bazel-bin/src/envoy/envoy"
+	envoyPath = "../../bazel-bin/src/envoy/envoy"
 )
 const envoyConfBootstrapYaml = `
 node:
@@ -63,8 +61,7 @@ admin:
 
 // Envoy stores data for Envoy process
 type Envoy struct {
-	cmd    *exec.Cmd
-	baseID string
+	*Cmd
 }
 
 // CreateEnvoyConf create envoy config.
@@ -103,32 +100,9 @@ func NewEnvoy(debugMode bool, confPath string, ports *Ports) (*Envoy, error) {
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return &Envoy{
-		cmd: cmd,
+		Cmd: &Cmd{
+			name: "Envoy",
+			Cmd:  cmd,
+		},
 	}, nil
-}
-
-// Start starts the envoy process
-func (s *Envoy) Start() error {
-	return s.cmd.Start()
-}
-
-// Stop stops the envoy process
-func (s *Envoy) Stop() error {
-	glog.Infof("stop envoy ...\n")
-	done := make(chan error, 1)
-	go func() {
-		done <- s.cmd.Wait()
-	}()
-
-	select {
-	case <-time.After(testEnvTTL):
-		glog.Infof("envoy killed as timeout reached")
-		if err := s.cmd.Process.Kill(); err != nil {
-			return err
-		}
-	case err := <-done:
-		glog.Infof("stop envoy ... done\n")
-		return err
-	}
-	return nil
 }

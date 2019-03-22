@@ -114,8 +114,6 @@ func TestReportGCPAttributes(t *testing.T) {
 			t.Fatalf("Test(%s): fail to setup test env, %v", tc.desc, err)
 		}
 
-		time.Sleep(time.Duration(3 * time.Second))
-
 		url := fmt.Sprintf("http://localhost:%v%v", s.Ports.ListenerPort, "/echo/nokey")
 		_, err := client.DoPost(url, "hello")
 		if err != nil {

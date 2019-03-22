@@ -21,6 +21,7 @@ import (
 
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
+
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 )
 
@@ -51,7 +52,6 @@ func TestSimpleCorsWithBasicPreset(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
-	time.Sleep(time.Duration(3 * time.Second))
 
 	testData := []struct {
 		desc              string
@@ -120,7 +120,6 @@ func TestDifferentOriginSimpleCors(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
-	time.Sleep(time.Duration(3 * time.Second))
 
 	testData := struct {
 		desc       string
@@ -167,7 +166,6 @@ func TestSimpleCorsWithRegexPreset(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
-	time.Sleep(time.Duration(3 * time.Second))
 
 	testData := struct {
 		desc              string

@@ -1,4 +1,4 @@
-// Copyright 2018 Google Cloud Platform Proxy Authors
+// Copyright 2019 Google Cloud Platform Proxy Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,9 +18,6 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
-	"time"
-
-	"github.com/golang/glog"
 )
 
 const (
@@ -28,7 +25,7 @@ const (
 )
 
 type BookstoreGrpcServer struct {
-	cmd *exec.Cmd
+	*Cmd
 }
 
 func NewBookstoreGrpcServer(port uint16) (*BookstoreGrpcServer, error) {
@@ -36,43 +33,9 @@ func NewBookstoreGrpcServer(port uint16) (*BookstoreGrpcServer, error) {
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return &BookstoreGrpcServer{
-		cmd: cmd,
+		Cmd: &Cmd{
+			name: "BookstoreGrpcServer",
+			Cmd:  cmd,
+		},
 	}, nil
-}
-
-// Start starts the Bookstore process.
-func (b *BookstoreGrpcServer) Start() <-chan error {
-	errCh := make(chan error)
-	go func() {
-		err := b.cmd.Start()
-		if err != nil {
-			errCh <- err
-		}
-	}()
-
-	// wait for grpc server up.
-	time.AfterFunc(1*time.Second, func() { close(errCh) })
-	return errCh
-}
-
-// Stop stops the Bookstore process.
-func (b *BookstoreGrpcServer) Stop() error {
-	glog.Infof("Stop xDS server...")
-
-	done := make(chan error, 1)
-	go func() {
-		done <- b.cmd.Wait()
-	}()
-
-	select {
-	case <-time.After(testEnvTTL):
-		glog.Infof("BookstoreGrpcServer killed as timeout reached")
-		if err := b.cmd.Process.Kill(); err != nil {
-			return err
-		}
-	case err := <-done:
-		glog.Infof("stop BookstoreGrpcServer ... done\n")
-		return err
-	}
-	return nil
 }
