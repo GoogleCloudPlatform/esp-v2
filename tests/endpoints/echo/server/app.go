@@ -27,8 +27,7 @@ import (
 )
 
 type dynamicRoutingResponse struct {
-	Path     string `json:"Path"`
-	RawQuery string `json:"RawQuery"`
+	RequestURI string `json:"RequestURI"`
 }
 
 func main() {
@@ -103,8 +102,7 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 // dynamicEoutingHandler reads URL from request header, and writes it back out.
 func dynamicRoutingHandler(w http.ResponseWriter, r *http.Request) {
 	resp := dynamicRoutingResponse{
-		Path:     r.URL.Path,
-		RawQuery: r.URL.RawQuery,
+		RequestURI: r.URL.RequestURI(),
 	}
 	respByte, err := json.Marshal(resp)
 	if err != nil {

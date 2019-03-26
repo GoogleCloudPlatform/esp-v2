@@ -144,6 +144,12 @@ var (
 					},
 				},
 				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.ListShelves",
+					Pattern: &annotations.HttpRule_Get{
+						Get: "/shelves",
+					},
+				},
+				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetBookInfoWithSnakeCase",
 					Pattern: &annotations.HttpRule_Get{
 						Get: "/shelves/{s_h_e_l_f}/books/info/{b_o_o_k}",
@@ -256,6 +262,10 @@ var (
 					AllowUnregisteredCalls: true,
 				},
 				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.ListShelves",
+					AllowUnregisteredCalls: true,
+				},
+				{
 					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetBookInfoWithSnakeCase",
 					AllowUnregisteredCalls: true,
 				},
@@ -328,6 +338,14 @@ var (
 					PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &conf.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/dynamicrouting/listpet",
+					},
+				},
+				&conf.BackendRule{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.ListShelves",
+					Address:         "https://localhost:-1/dynamicrouting/shelves",
+					PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+					Authentication: &conf.BackendRule_JwtAudience{
+						JwtAudience: "https://localhost/dynamicrouting/shelves",
 					},
 				},
 				&conf.BackendRule{

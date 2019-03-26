@@ -71,10 +71,15 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
       // has query parameters in original url
       const std::string& originalQueryParam =
           originalPath.substr(originalQueryParamPos);
-      newPath = absl::StrCat(rule.path_prefix(), originalQueryParam, "&",
-                             queryParamFromPathParam);
+      newPath = absl::StrCat(rule.path_prefix(), originalQueryParam);
+      if (!queryParamFromPathParam.empty()) {
+        newPath = absl::StrCat(newPath, "&", queryParamFromPathParam);
+      }
     } else {
-      newPath = absl::StrCat(rule.path_prefix(), "?", queryParamFromPathParam);
+      newPath = rule.path_prefix();
+      if (!queryParamFromPathParam.empty()) {
+        newPath = absl::StrCat(newPath, "?", queryParamFromPathParam);
+      }
     }
     config_->stats().constant_address_request_.inc();
     ENVOY_LOG(debug,
