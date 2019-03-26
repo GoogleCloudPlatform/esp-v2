@@ -1,6 +1,16 @@
-# Instructions to run service control filter
+# Service Control Filter
 
-## Start the backend http server
+Also known as the Service Control filter.
+
+This filter checks whether an operation is allowed.
+
+It also reports logs and metrics about the request and operation.
+
+More information is available at the [ServiceController documentation](https://cloud.google.com/service-infrastructure/docs/service-control/reference/rpc/google.api.servicecontrol.v1#google.api.servicecontrol.v1.ServiceController).
+
+## Instructions to run service control filter
+
+### Start the backend http server
 
 With HTTP Backend:
 
@@ -14,7 +24,7 @@ With GRPC Backend
 $ node tests/endpoints/bookstore-grpc/grpc_server.js
 ```
 
-## Start up envoy
+### Start up envoy
 
 Update the service_name to yours in `src/envoy/http/service_control/testdata/envoy.yaml`
 
@@ -33,7 +43,7 @@ $ bazel run //src/envoy:envoy -- -c $PWD/src/envoy/http/service_control/testdata
 `envoy.yaml` defines the Envoy's listener port is `9090` and then Envoy routes the request
 to the backend at port `8080`
 
-## Send requests
+### Send requests
 
 First set your API Key:
 
@@ -42,7 +52,7 @@ First set your API Key:
 $ KEY=YOUR-API-KEY
 ```
 
-### With HTTP Backend
+#### With HTTP Backend
 
 ```bash
 # GET request with API key in the query
@@ -66,7 +76,7 @@ $ curl -X POST http://127.0.0.1:9090/test --header "x-api-key:$KEY" -v
 $ curl -X POST http://127.0.0.1:9090/tea?key=$KEY -v
 ```
 
-### With GRPC Backend:
+#### With GRPC Backend:
 
 Send GRPC request:
 
