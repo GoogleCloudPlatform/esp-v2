@@ -19,6 +19,7 @@ import (
 	"google.golang.org/genproto/protobuf/api"
 
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	ptype "google.golang.org/genproto/protobuf/ptype"
 )
 
 var (
@@ -142,6 +143,44 @@ var (
 						Get: "/pets/{category}/year/{no}",
 					},
 				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetBookInfoWithSnakeCase",
+					Pattern: &annotations.HttpRule_Get{
+						Get: "/shelves/{s_h_e_l_f}/books/info/{b_o_o_k}",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetBookIdWithSnakeCase",
+					Pattern: &annotations.HttpRule_Get{
+						Get: "/shelves/{s_h_e_l_f.i_d}/books/id/{b_o_o_k.id}",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchPetWithServiceControlVerification",
+					Pattern: &annotations.HttpRule_Post{
+						Post: "/sc/searchpet",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetByIdWithServiceControlVerification",
+					Pattern: &annotations.HttpRule_Post{
+						Post: "/sc/pet/{pet_id}/num/{number}",
+					},
+				},
+			},
+		},
+		Types: []*ptype.Type{
+			{
+				Fields: []*ptype.Field{
+					&ptype.Field{
+						JsonName: "BOOK",
+						Name:     "b_o_o_k",
+					},
+					&ptype.Field{
+						JsonName: "SHELF",
+						Name:     "s_h_e_l_f",
+					},
+				},
 			},
 		},
 		Authentication: &conf.Authentication{
@@ -190,6 +229,38 @@ var (
 				},
 				{
 					Selector:               "_post_anypath",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetById",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchPet",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchDogsWithSlash",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.AppendToRoot",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.AppendToRootWithSlash",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.ListPets",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetBookInfoWithSnakeCase",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetBookIdWithSnakeCase",
 					AllowUnregisteredCalls: true,
 				},
 			},
@@ -257,6 +328,38 @@ var (
 					PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &conf.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/dynamicrouting/listpet",
+					},
+				},
+				&conf.BackendRule{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetBookInfoWithSnakeCase",
+					Address:         "https://localhost:-1/dynamicrouting/bookinfo",
+					PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+					Authentication: &conf.BackendRule_JwtAudience{
+						JwtAudience: "https://localhost/dynamicrouting/bookinfo",
+					},
+				},
+				&conf.BackendRule{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetBookIdWithSnakeCase",
+					Address:         "https://localhost:-1/dynamicrouting/bookid",
+					PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+					Authentication: &conf.BackendRule_JwtAudience{
+						JwtAudience: "https://localhost/dynamicrouting/bookid",
+					},
+				},
+				&conf.BackendRule{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchPetWithServiceControlVerification",
+					Address:         "https://localhost:-1/dynamicrouting/",
+					PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
+					Authentication: &conf.BackendRule_JwtAudience{
+						JwtAudience: "https://localhost/dynamicrouting",
+					},
+				},
+				&conf.BackendRule{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetByIdWithServiceControlVerification",
+					Address:         "https://localhost:-1/dynamicrouting/",
+					PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+					Authentication: &conf.BackendRule_JwtAudience{
+						JwtAudience: "https://localhost/dynamicrouting",
 					},
 				},
 			},

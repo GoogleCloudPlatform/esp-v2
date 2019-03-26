@@ -59,7 +59,7 @@ func main() {
 		HandlerFunc(authInfoHandler)
 	r.Path("/bearertoken").Methods("GET").
 		HandlerFunc(bearerTokenHandler)
-	r.PathPrefix("/dynamicrouting").Methods("GET").
+	r.PathPrefix("/dynamicrouting").Methods("GET", "POST").
 		HandlerFunc(dynamicRoutingHandler)
 	if *enableRootPathHandler {
 		r.PathPrefix("/").Methods("GET").

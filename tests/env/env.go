@@ -35,7 +35,7 @@ const (
 )
 
 var (
-	debugComponents = flag.String("debug_components", "configmanager", `display debug logs for components, can be "all", "envoy", "configmanager"`)
+	debugComponents = flag.String("debug_components", "", `display debug logs for components, can be "all", "envoy", "configmanager"`)
 )
 
 func init() {
