@@ -87,14 +87,14 @@ var makeHTTPCall = func(addr, httpMethod, method, token string, header http.Head
 		return "", fmt.Errorf("http got error: %v", err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("http response status is not 200 OK: %s", resp.Status)
-	}
 
 	content, err := ioutil.ReadAll(resp.Body)
-
 	if err != nil {
 		return "", err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, string(content))
 	}
 
 	return string(content), nil
@@ -221,8 +221,10 @@ func MakeGRPCWebCall(addr, method, token string, header http.Header) (string, GR
 		return "", nil, fmt.Errorf("request got an error: %v", err)
 	}
 	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
-		return "", nil, fmt.Errorf("response status is not 200 OK: %s", resp.Status)
+		content, _ := ioutil.ReadAll(resp.Body)
+		return "", nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, string(content))
 	}
 
 	bytesMsg, trailer, err := DecodeGRPCWebResponseBody(resp.Body)
@@ -270,14 +272,14 @@ func MakeTokenInQueryCall(addr, httpMethod, method, token string) (string, error
 		return "", fmt.Errorf("http got error: %v", err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("http response status is not 200 OK: %s", resp.Status)
-	}
 
 	content, err := ioutil.ReadAll(resp.Body)
-
 	if err != nil {
 		return "", err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, string(content))
 	}
 
 	return string(content), nil

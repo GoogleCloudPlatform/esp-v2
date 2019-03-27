@@ -207,14 +207,14 @@ func TestGRPCJwt(t *testing.T) {
 			clientProtocol:   "grpc",
 			method:           "ListShelves",
 			wantError:        "code = Unauthenticated desc = Jwt is missing",
-			wantGRPCWebError: "401 Unauthorized",
+			wantGRPCWebError: "401 Unauthorized, Jwt is missing",
 		},
 		{
 			desc:           "Fail for Http client, without valid JWT token",
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves",
-			wantError:      "401 Unauthorized",
+			wantError:      "401 Unauthorized, Jwt is missing",
 		},
 		{
 			desc:           "Succeed for Http client, JWT rule recognizes {shelf} correctly",
@@ -229,7 +229,7 @@ func TestGRPCJwt(t *testing.T) {
 			method:           "ListShelves",
 			token:            testdata.FakeBadToken,
 			wantError:        "code = Unauthenticated desc = Jwt issuer is not configured",
-			wantGRPCWebError: "401 Unauthorized",
+			wantGRPCWebError: "401 Unauthorized, Jwt issuer is not configured",
 		},
 		{
 			desc:           "Fail for Http client, with bad JWT token",
@@ -237,7 +237,7 @@ func TestGRPCJwt(t *testing.T) {
 			httpMethod:     "GET",
 			method:         "/v1/shelves",
 			token:          testdata.FakeBadToken,
-			wantError:      "401 Unauthorized",
+			wantError:      "401 Unauthorized, Jwt issuer is not configured",
 		},
 		{
 			desc:           "Succeed for Http client, with valid JWT token, with url binding",
@@ -270,7 +270,7 @@ func TestGRPCJwt(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves",
-			wantError:      "401 Unauthorized",
+			wantError:      "401 Unauthorized, Jwt is missing",
 		},
 		{
 			desc:           "Succeed for Http client, Jwt RouteMatcher works for multi query parameters",
@@ -285,7 +285,7 @@ func TestGRPCJwt(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "DELETE",
 			method:         "/v1/shelves/125/books/001",
-			wantError:      "401 Unauthorized",
+			wantError:      "401 Unauthorized, Jwt is missing",
 		},
 		{
 			desc:           "Succeed for Http client, Jwt RouteMatcher works for multi query parameters and HttpHeader, no audience",
@@ -318,7 +318,7 @@ func TestGRPCJwt(t *testing.T) {
 			method:           "ListShelves",
 			token:            testdata.FakeCloudToken,
 			wantError:        "code = Unauthenticated desc = Audiences in Jwt are not allowed",
-			wantGRPCWebError: "401 Unauthorized",
+			wantGRPCWebError: "401 Unauthorized, Audiences in Jwt are not allowed",
 		},
 		{
 			desc:           "Fail for Http client, with JWT token but not expected audience",
@@ -326,7 +326,7 @@ func TestGRPCJwt(t *testing.T) {
 			httpMethod:     "GET",
 			method:         "/v1/shelves",
 			token:          testdata.FakeCloudToken,
-			wantError:      "401 Unauthorized",
+			wantError:      "401 Unauthorized, Audiences in Jwt are not allowed",
 		},
 		{
 			desc:             "Fail for gRPC client, with JWT token but wrong audience",
@@ -334,7 +334,7 @@ func TestGRPCJwt(t *testing.T) {
 			method:           "ListShelves",
 			token:            testdata.FakeCloudTokenSingleAudience2,
 			wantError:        "code = Unauthenticated desc = Audiences in Jwt are not allowed",
-			wantGRPCWebError: "401 Unauthorized",
+			wantGRPCWebError: "401 Unauthorized, Audiences in Jwt are not allowed",
 		},
 		{
 			desc:               "Succeed for gRPC client, with JWT token with one audience while multi audiences are allowed",
@@ -377,7 +377,7 @@ func TestGRPCJwt(t *testing.T) {
 			httpMethod:     "DELETE",
 			method:         "/v1/shelves/120",
 			token:          testdata.FakeCloudToken,
-			wantError:      "401 Unauthorized",
+			wantError:      "401 Unauthorized, Jwt issuer is not configured",
 		},
 	}
 

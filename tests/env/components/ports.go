@@ -50,7 +50,6 @@ const (
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
 	TestUnconfiguredRequest
-
 	// The number of total tests. has to be the last one.
 	maxTestNum
 )

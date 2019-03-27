@@ -58,7 +58,6 @@ func init() {
 		Issuer:  "rs256-issuer",
 		JwksUri: components.NewMockJwtProvider(PubKeys).GetURL(),
 	}
-
 }
 
 const (

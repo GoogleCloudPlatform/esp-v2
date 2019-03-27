@@ -23,9 +23,9 @@ import (
 
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
-	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	testdata "cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -76,7 +76,7 @@ func TestAsymmetricKeys(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
-			wantError:      "401 Unauthorized",
+			wantError:      "401 Unauthorized, Jwt is missing",
 		},
 		{
 			desc:           "ES256Token",
