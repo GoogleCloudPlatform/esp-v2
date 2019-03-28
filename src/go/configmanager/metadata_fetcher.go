@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
@@ -35,9 +36,10 @@ const (
 
 var (
 	// metadata updates and stores Metadata from GCE.
-	metadata tokenInfo
+	metadata   tokenInfo
+	metdataMux sync.Mutex
 	// audience -> tokenInfo.
-	audToToken       = make(map[string]tokenInfo)
+	audToToken       sync.Map
 	timeNow          = time.Now
 	fetchMetadataURL = func(suffix string) string {
 		return *flags.MetadataURL + suffix
@@ -72,8 +74,10 @@ var getMetadata = func(path string) ([]byte, error) {
 
 func fetchAccessToken() (string, time.Duration, error) {
 	now := timeNow()
-
-	// Follow the similar logic as GCE metadata server, where returned token will be valid for at least 60s.
+	// Follow the similar logic as GCE metadata server, where returned token will be valid for at
+	// least 60s.
+	metdataMux.Lock()
+	defer metdataMux.Unlock()
 	if metadata.accessToken != "" && !now.After(metadata.tokenTimeout.Add(-time.Second*60)) {
 		return metadata.accessToken, metadata.tokenTimeout.Sub(now), nil
 	}
@@ -118,9 +122,13 @@ func fetchRolloutStrategy() (string, error) {
 
 func fetchIdentityJWTToken(audience string) (string, time.Duration, error) {
 	now := timeNow()
-	// Follow the similar logic as GCE metadata server, where returned token will be valid for at least 60s.
-	if ti, ok := audToToken[audience]; ok && !now.After(ti.tokenTimeout.Add(-time.Second*60)) {
-		return ti.accessToken, ti.tokenTimeout.Sub(now), nil
+	// Follow the similar logic as GCE metadata server, where returned token will be valid for at
+	// least 60s.
+	if ti, ok := audToToken.Load(audience); ok {
+		info := ti.(tokenInfo)
+		if !now.After(info.tokenTimeout.Add(-time.Second * 60)) {
+			return info.accessToken, info.tokenTimeout.Sub(now), nil
+		}
 	}
 
 	identityTokenURI := util.IdentityTokenSuffix + "?audience=" + audience + "&format=standard"
@@ -130,10 +138,11 @@ func fetchIdentityJWTToken(audience string) (string, time.Duration, error) {
 	}
 
 	expires := time.Duration(tokenExpiry) * time.Second
-	audToToken[audience] = tokenInfo{
+	audToToken.Store(audience, tokenInfo{
 		accessToken:  token,
 		tokenTimeout: now.Add(expires),
-	}
+	},
+	)
 	return token, expires, nil
 }
 

@@ -29,6 +29,7 @@ import (
 // All integration tests should be listed here to get their test ids
 const (
 	TestAsymmetricKeys uint16 = iota
+	TestBackendAuth
 	TestDifferentOriginPreflightCors
 	TestDifferentOriginSimpleCors
 	TestDynamicRouting
@@ -37,7 +38,6 @@ const (
 	TestGRPCWeb
 	TestGrpcBackendPreflightCors
 	TestGrpcBackendSimpleCors
-	TestHttp1BackendAuth
 	TestHttp1Basic
 	TestHttp1JWT
 	TestPreflightCorsWithBasicPreset

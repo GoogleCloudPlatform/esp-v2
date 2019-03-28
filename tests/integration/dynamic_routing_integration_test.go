@@ -1,4 +1,4 @@
-// Copyright 2018 Google Cloud Platform Proxy Authors
+// Copyright 2019 Google Cloud Platform Proxy Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,20 +23,26 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
+	"google.golang.org/genproto/googleapis/api/annotations"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
+var testDynamicRoutingArgs = []string{
+	"--service=test-echo",
+	"--version=test-config-id",
+	"--backend_protocol=http1",
+	"--rollout_strategy=fixed",
+	"--enable_backend_routing",
+}
+
+// TODO(kyuc): use `TestEnv.Override*` to modify service config rather than hardcoding it in
+// fake_echo_service_config.go
 func TestDynamicRouting(t *testing.T) {
-	serviceName := "test-echo"
-	configId := "test-config-id"
-
-	args := []string{"--service=" + serviceName, "--version=" + configId,
-		"--backend_protocol=http1", "--rollout_strategy=fixed", "--enable_backend_routing"}
-
 	s := env.NewTestEnv(comp.TestDynamicRouting, "echo", nil)
 	s.EnableDynamicRoutingBackend()
-	if err := s.Setup(args); err != nil {
+	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -176,24 +182,120 @@ func TestDynamicRouting(t *testing.T) {
 			}
 			continue
 		}
-		gotRespStr := utils.NormalizeJson(string(gotResp))
+		gotRespStr := string(gotResp)
+		if !utils.JsonEqual(gotRespStr, tc.wantResp) {
+			t.Errorf("response want: %s, got: %s", tc.wantResp, gotRespStr)
+		}
+	}
+}
 
-		if gotRespStr != utils.NormalizeJson(tc.wantResp) {
-			t.Errorf("response expected: %s, got: %s", tc.wantResp, gotRespStr)
+func TestBackendAuth(t *testing.T) {
+	s := env.NewTestEnv(comp.TestBackendAuth, "echo", nil)
+	s.EnableDynamicRoutingBackend()
+	s.AppendHttpRules([]*annotations.HttpRule{
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.BearertokenConstantAddress",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/bearertoken/constant/{foo}",
+			},
+		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.BearertokenAppendAddress",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/bearertoken/append",
+			},
+		},
+	})
+
+	s.AppendUsageRules([]*conf.UsageRule{
+		{
+			Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.BearertokenConstantAddress",
+			AllowUnregisteredCalls: true,
+		},
+	})
+
+	s.AppendBackendRules([]*conf.BackendRule{
+		{
+			Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.BearertokenConstantAddress",
+			Address:         "https://localhost:-1/bearertoken/constant",
+			PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+			Authentication: &conf.BackendRule_JwtAudience{
+				JwtAudience: "https://localhost/bearertoken/constant",
+			},
+		},
+		{
+			Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.BearertokenAppendAddress",
+			Address:         "https://localhost:-1",
+			PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
+			Authentication: &conf.BackendRule_JwtAudience{
+				JwtAudience: "https://localhost/bearertoken/append",
+			},
+		},
+	})
+
+	if err := s.Setup(testDynamicRoutingArgs); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+	defer s.TearDown()
+
+	// TODO(kyuc): Think about a way to verify JWT audience in the payload. At least return
+	// different tokens for constant and append.
+	testData := []struct {
+		desc     string
+		method   string
+		path     string
+		message  string
+		wantResp string
+	}{
+		{
+			desc:     "Add Bearer token for CONSTANT_ADDRESS backend that requires JWT token",
+			method:   "GET",
+			path:     "/bearertoken/constant/42",
+			wantResp: `{"Authorization": "Bearer ya29.new", "RequestURI": "/bearertoken/constant?foo=42"}`,
+		},
+		{
+			desc:     "Add Bearer token for APPEND_PATH_TO_ADDRESS backend that requires JWT token",
+			method:   "GET",
+			path:     "/bearertoken/append?key=api-key",
+			wantResp: `{"Authorization": "Bearer ya29.new", "RequestURI": "/bearertoken/append?key=api-key"}`,
+		},
+		{
+			desc:     "Do not reject backend that doesn't require JWT token",
+			method:   "POST",
+			path:     "/echo?key=api-key",
+			message:  "hello",
+			wantResp: `{"message":"hello"}`,
+		},
+	}
+
+	for _, tc := range testData {
+		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		var resp []byte
+		var err error
+		switch tc.method {
+		case "GET":
+			resp, err = client.DoGet(url)
+		case "POST":
+			resp, err = client.DoPost(url, tc.message)
+		default:
+			t.Fatalf("Test Desc(%s): unsupported HTTP Method %s", tc.desc, tc.path)
+		}
+
+		if err != nil {
+			t.Fatalf("Test Desc(%s): %v", tc.desc, err)
+		}
+
+		gotResp := string(resp)
+		if !utils.JsonEqual(gotResp, tc.wantResp) {
+			t.Errorf("Test Desc(%s): want: %s, got: %s", tc.desc, tc.wantResp, gotResp)
 		}
 	}
 }
 
 func TestServiceControlRequestForDynamicRouting(t *testing.T) {
-	serviceName := "test-echo"
-	configId := "test-config-id"
-
-	args := []string{"--service=" + serviceName, "--version=" + configId,
-		"--backend_protocol=http1", "--rollout_strategy=fixed", "--enable_backend_routing"}
-
 	s := env.NewTestEnv(comp.TestServiceControlRequestInDynamicRouting, "echo", nil)
 	s.EnableDynamicRoutingBackend()
-	if err := s.Setup(args); err != nil {
+	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
@@ -201,7 +303,6 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 	testData := []struct {
 		desc           string
 		path           string
-		method         string
 		message        string
 		wantResp       string
 		wantScRequests []interface{}
@@ -269,9 +370,9 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 					HttpMethod:        "POST",
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchPetWithServiceControlVerification is called",
 					RequestSize:       20,
-					ResponseSize:      75,
+					ResponseSize:      71,
 					RequestBytes:      20,
-					ResponseBytes:     75,
+					ResponseBytes:     71,
 					ResponseCode:      200,
 					Platform:          util.GCE,
 					Location:          "test-zone",
@@ -305,9 +406,9 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 					HttpMethod:        "POST",
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetByIdWithServiceControlVerification is called",
 					RequestSize:       20,
-					ResponseSize:      91,
+					ResponseSize:      77,
 					RequestBytes:      20,
-					ResponseBytes:     91,
+					ResponseBytes:     77,
 					ResponseCode:      200,
 					Platform:          util.GCE,
 					Location:          "test-zone",
@@ -325,14 +426,15 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		gotRespStr := utils.NormalizeJson(string(gotResp))
+		gotRespStr := string(gotResp)
 
-		if gotRespStr != utils.NormalizeJson(tc.wantResp) {
-			t.Errorf("Test Desc(%s): response expected: %s, got: %s", tc.desc, tc.wantResp, gotRespStr)
+		if !utils.JsonEqual(gotRespStr, tc.wantResp) {
+			t.Errorf("Test Desc(%s): response want: %s, got: %s", tc.desc, tc.wantResp, gotRespStr)
 		}
-		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 3*time.Second)
-		if err1 != nil {
-			t.Fatalf("Test Desc(%s): GetRequests returns error: %v", tc.desc, err1)
+
+		scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 2*time.Second)
+		if err != nil {
+			t.Fatalf("Test Desc(%s): GetRequests returns error: %v", tc.desc, err)
 		}
 
 		for i, wantScRequest := range tc.wantScRequests {

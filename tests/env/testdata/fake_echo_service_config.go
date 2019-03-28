@@ -102,12 +102,6 @@ var (
 					},
 				},
 				{
-					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bearertoken",
-					Pattern: &annotations.HttpRule_Get{
-						Get: "/bearertoken",
-					},
-				},
-				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetById",
 					Pattern: &annotations.HttpRule_Get{
 						Get: "/pet/{pet_id}/num/{number}",
@@ -285,12 +279,6 @@ var (
 			Rules: []*conf.BackendRule{
 				&conf.BackendRule{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-				},
-				&conf.BackendRule{
-					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bearertoken",
-					Authentication: &conf.BackendRule_JwtAudience{
-						JwtAudience: "mybackend.com",
-					},
 				},
 				&conf.BackendRule{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetById",

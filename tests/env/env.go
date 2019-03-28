@@ -25,6 +25,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
+	"google.golang.org/genproto/googleapis/api/annotations"
 
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
@@ -74,20 +75,39 @@ func NewTestEnv(name uint16, backendService string, jwtProviders []string) *Test
 	}
 }
 
+// OverrideMockMetadata overrides mock metadata values given path to response map.
 func (e *TestEnv) OverrideMockMetadata(newMetdaData map[string]string) {
 	e.mockMetadataOverride = newMetdaData
 }
 
+// EnableDynamicRoutingBackend enables dynamic routing backend server.
 func (e *TestEnv) EnableDynamicRoutingBackend() {
 	e.enableDynamicRoutingBackend = true
 }
 
+// Ports returns test environment ports.
 func (e *TestEnv) Ports() *components.Ports {
 	return e.ports
 }
 
+// OverrideAuthentication overrides Service.Authentication.
 func (e *TestEnv) OverrideAuthentication(authentication *conf.Authentication) {
 	e.fakeServiceConfig.Authentication = authentication
+}
+
+// AppendHttpRules appends Service.Http.Rules.
+func (e *TestEnv) AppendHttpRules(rules []*annotations.HttpRule) {
+	e.fakeServiceConfig.Http.Rules = append(e.fakeServiceConfig.Http.Rules, rules...)
+}
+
+// AppendBackendRules appends Service.Backend.Rules.
+func (e *TestEnv) AppendBackendRules(rules []*conf.BackendRule) {
+	e.fakeServiceConfig.Backend.Rules = append(e.fakeServiceConfig.Backend.Rules, rules...)
+}
+
+// AppendUsageRules appends Service.Usage.Rules.
+func (e *TestEnv) AppendUsageRules(rules []*conf.UsageRule) {
+	e.fakeServiceConfig.Usage.Rules = append(e.fakeServiceConfig.Usage.Rules, rules...)
 }
 
 func addDynamicRoutingBackendPort(serviceConfig *conf.Service, port uint16) error {

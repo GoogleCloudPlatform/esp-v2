@@ -16,6 +16,12 @@ package utils
 
 import "encoding/json"
 
+// JsonEqual compares two JSON strings after normalizing them.
+func JsonEqual(x, y string) bool {
+	return NormalizeJson(x) == NormalizeJson(y)
+}
+
+// NormalizeJson returns normalized JSON string.
 func NormalizeJson(input string) string {
 	var jsonObject map[string]interface{}
 	json.Unmarshal([]byte(input), &jsonObject)

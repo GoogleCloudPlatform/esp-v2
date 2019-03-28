@@ -147,10 +147,12 @@ func TestFetchIdentityJWTTokenBasic(t *testing.T) {
 	for i, tc := range testData {
 		// Mocking the last-fetched token.
 		if tc.curToken != "" {
-			audToToken[fakeAudience] = tokenInfo{
-				accessToken:  tc.curToken,
-				tokenTimeout: tc.curTokenTimeout,
-			}
+			audToToken.Store(fakeAudience,
+				tokenInfo{
+					accessToken:  tc.curToken,
+					tokenTimeout: tc.curTokenTimeout,
+				},
+			)
 		}
 
 		token, expires, err := fetchIdentityJWTToken(fakeAudience)

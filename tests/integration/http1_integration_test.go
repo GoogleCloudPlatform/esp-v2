@@ -46,7 +46,6 @@ func TestHttp1Basic(t *testing.T) {
 
 	testData := []struct {
 		desc     string
-		method   string
 		wantResp string
 	}{
 		{
@@ -142,65 +141,6 @@ func TestHttp1JWT(t *testing.T) {
 			if !strings.Contains(string(resp), tc.wantResp) {
 				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
 			}
-		}
-	}
-}
-
-func TestHttp1BackendAuth(t *testing.T) {
-	serviceName := "test-echo"
-	configID := "test-config-id"
-
-	args := []string{"--service=" + serviceName, "--version=" + configID,
-		"--skip_service_control_filter=true", "--backend_protocol=http1", "--rollout_strategy=fixed",
-		"--enable_backend_routing"}
-
-	s := env.NewTestEnv(comp.TestHttp1BackendAuth, "echo", nil)
-	if err := s.Setup(args); err != nil {
-		t.Fatalf("fail to setup test env, %v", err)
-	}
-	defer s.TearDown()
-	time.Sleep(time.Duration(3 * time.Second))
-
-	testData := []struct {
-		desc       string
-		httpMethod string
-		httpPath   string
-		message    string
-		wantResp   string
-	}{
-		{
-			desc:       "Add Bearer token for backend that requires JWT token",
-			httpMethod: "GET",
-			httpPath:   "/bearertoken",
-			wantResp:   `{"Authorization": "Bearer ya29.new"}`,
-		},
-		{
-			desc:       "Do not reject backend that doesn't require JWT token",
-			httpMethod: "POST",
-			httpPath:   "/echo",
-			message:    "hello",
-			wantResp:   `{"message":"hello"}`,
-		},
-	}
-	for _, tc := range testData {
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.httpPath)
-		var resp []byte
-		var err error
-		switch tc.httpMethod {
-		case "GET":
-			resp, err = client.DoGet(url)
-		case "POST":
-			resp, err = client.DoPost(url, tc.message)
-		default:
-			t.Fatalf("Test Desc(%s): unsupported HTTP Method %s", tc.desc, tc.httpPath)
-		}
-
-		if err != nil {
-			t.Fatalf("Test Desc(%s): %v", tc.desc, err)
-		}
-
-		if !strings.Contains(string(resp), tc.wantResp) {
-			t.Errorf("Test Desc(%s): expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
 		}
 	}
 }

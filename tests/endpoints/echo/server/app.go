@@ -26,10 +26,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type dynamicRoutingResponse struct {
-	RequestURI string `json:"RequestURI"`
-}
-
 func main() {
 	port := flag.Int("port", 8082, "server port")
 	isHttps := flag.Bool("enable_https", false, "true for HTTPS, false for HTTP")
@@ -56,7 +52,7 @@ func main() {
 		Handler(corsHandler(authInfoHandler))
 	r.Path("/auth/info/auth0").Methods("GET").
 		HandlerFunc(authInfoHandler)
-	r.Path("/bearertoken").Methods("GET").
+	r.PathPrefix("/bearertoken/").Methods("GET").
 		HandlerFunc(bearerTokenHandler)
 	r.PathPrefix("/dynamicrouting").Methods("GET", "POST").
 		HandlerFunc(dynamicRoutingHandler)
@@ -101,14 +97,8 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 
 // dynamicEoutingHandler reads URL from request header, and writes it back out.
 func dynamicRoutingHandler(w http.ResponseWriter, r *http.Request) {
-	resp := dynamicRoutingResponse{
-		RequestURI: r.URL.RequestURI(),
-	}
-	respByte, err := json.Marshal(resp)
-	if err != nil {
-		w.Write([]byte(fmt.Sprintf("error handling dynamic routing path: %v", err)))
-	}
-	w.Write(respByte)
+	resp := fmt.Sprintf(`{"RequestURI": "%s"}`, r.URL.RequestURI())
+	w.Write([]byte(resp))
 }
 
 // corsHandler wraps a HTTP handler and applies the appropriate responses for Cross-Origin Resource Sharing.
@@ -154,10 +144,11 @@ func authInfoHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(b)
 }
 
-// bearerTokenHandler reads "Authorization" header
+// bearerTokenHandler reads "Authorization" header and request URI.
 func bearerTokenHandler(w http.ResponseWriter, r *http.Request) {
 	bearerToken := r.Header.Get("Authorization")
-	resp := fmt.Sprintf(`{"Authorization": "%s"}`, bearerToken)
+	reqURI := r.URL.RequestURI()
+	resp := fmt.Sprintf(`{"Authorization": "%s", "RequestURI": "%s"}`, bearerToken, reqURI)
 	w.Write([]byte(resp))
 }
 
