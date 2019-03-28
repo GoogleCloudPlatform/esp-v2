@@ -730,6 +730,7 @@ func TestFetchListeners(t *testing.T) {
                                                 ],
                                                 "services":[
                                                     {
+                                                        "backend_protocol": "grpc",
                                                         "service_control_uri":{
                                                             "cluster":"service-control-cluster",
                                                             "timeout":"5s",
@@ -1011,6 +1012,7 @@ func TestFetchListeners(t *testing.T) {
                           ],
                           "services": [
                             {
+                              "backend_protocol": "http1",
                               "producer_project_id": "project123",
                               "service_config_id": "2017-05-01r0",
                               "service_control_uri": {

@@ -393,6 +393,7 @@ func createByConsumerOperation(er *ExpectedReport) *sc.Operation {
 	return op
 }
 
+// CreateReport makes a service_controller.proto ReportRequest out of an ExpectedReport
 func CreateReport(er *ExpectedReport) sc.ReportRequest {
 	sendConsumer := er.ApiKey != ""
 
@@ -532,6 +533,32 @@ func UnmarshalReportRequest(data []byte) (*sc.ReportRequest, error) {
 		return nil, err
 	}
 	return rr, nil
+}
+
+// VerifyReportRequestOperationLabel verifies whether a ReportRequest has the correct
+// value for the label specified
+func VerifyReportRequestOperationLabel(body []byte, label, value string) error {
+	got, err := UnmarshalReportRequest(body)
+	if err != nil {
+		return err
+	}
+
+	if len(got.Operations) == 0 {
+		return fmt.Errorf("Report is missing Operations")
+
+	}
+
+	for _, op := range got.Operations {
+		if gotValue, ok := op.Labels[label]; ok {
+			if gotValue != value {
+				return fmt.Errorf("Mismatched value for label %v:\nWant %v\nGot %v",
+					label, value, gotValue)
+			}
+			return nil
+		}
+	}
+
+	return fmt.Errorf("No operations contained label %v", label)
 }
 
 // VerifyReport verify if the response body is the expected ReportRequest.

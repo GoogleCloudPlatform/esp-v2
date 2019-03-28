@@ -55,6 +55,9 @@ message Service {
   // Not easy to import the googleapis/google/api/service.proto
   // Use any to work around it.
   google.protobuf.Any service_config = 7;
+
+  // The protocol of the backend, either "grpc", "http1", or "http2"
+  string backend_protocol = 8;
 }
 
 message GcpAttributes {

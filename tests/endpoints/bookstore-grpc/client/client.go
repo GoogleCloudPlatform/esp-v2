@@ -42,8 +42,10 @@ var grpcWebHeader = http.Header{
 }
 
 const (
+	// APIKeyHeaderKey is used to pass the API Key to the backend
+	APIKeyHeaderKey  = "x-api-key"
 	bookstoreService = "endpoints.examples.bookstore.Bookstore"
-	// Test header key used to force backend to return non-OK status.
+	// TestHeaderKey is used to force backend to return non-OK status.
 	// Refer to tests/endpoints/bookstore_grpc/grpc_server.js for detail.
 	TestHeaderKey = "x-grpc-test"
 )

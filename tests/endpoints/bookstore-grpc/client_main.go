@@ -25,10 +25,6 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
 )
 
-const (
-	apiKeyHeader = "x-api-key"
-)
-
 var (
 	addr           = flag.String("addr", "", "Address of grpc server.")
 	apikey         = flag.String("apikey", "", "The API Key")
@@ -61,7 +57,7 @@ func main() {
 
 	header := http.Header{}
 	if *apikey != "" {
-		header.Add(apiKeyHeader, *apikey)
+		header.Add(client.APIKeyHeaderKey, *apikey)
 	}
 
 	resp, err := client.MakeCall(*clientProtocol, *addr, "GET", *method, *token, header)

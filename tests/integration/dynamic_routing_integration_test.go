@@ -229,6 +229,7 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
 					ProducerProjectID: "producer-project",
 					ConsumerProjectID: "123456",
+					FrontendProtocol:  "http",
 					HttpMethod:        "POST",
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo is called",
 					RequestSize:       20,
@@ -264,6 +265,7 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchPetWithServiceControlVerification",
 					ProducerProjectID: "producer-project",
 					ConsumerProjectID: "123456",
+					FrontendProtocol:  "http",
 					HttpMethod:        "POST",
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchPetWithServiceControlVerification is called",
 					RequestSize:       20,
@@ -299,6 +301,7 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetByIdWithServiceControlVerification",
 					ProducerProjectID: "producer-project",
 					ConsumerProjectID: "123456",
+					FrontendProtocol:  "http",
 					HttpMethod:        "POST",
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetByIdWithServiceControlVerification is called",
 					RequestSize:       20,
@@ -327,7 +330,7 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 		if gotRespStr != utils.NormalizeJson(tc.wantResp) {
 			t.Errorf("Test Desc(%s): response expected: %s, got: %s", tc.desc, tc.wantResp, gotRespStr)
 		}
-		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 2*time.Second)
+		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 3*time.Second)
 		if err1 != nil {
 			t.Fatalf("Test Desc(%s): GetRequests returns error: %v", tc.desc, err1)
 		}

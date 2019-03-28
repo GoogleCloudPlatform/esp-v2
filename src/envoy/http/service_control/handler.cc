@@ -13,12 +13,14 @@
 // limitations under the License.
 
 #include "src/envoy/http/service_control/handler.h"
+#include "absl/strings/match.h"
 #include "common/http/utility.h"
 
 using ::google::api::envoy::http::service_control::APIKeyLocation;
 using ::google::api_proxy::service_control::CheckResponseInfo;
 using ::google::api_proxy::service_control::LatencyInfo;
 using ::google::api_proxy::service_control::OperationInfo;
+using ::google::api_proxy::service_control::protocol::Protocol;
 using ::google::protobuf::util::Status;
 
 namespace Envoy {
@@ -26,6 +28,8 @@ namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 namespace {
+
+const std::string kContentTypeApplicationGrpcPrefix = "application/grpc";
 
 // The HTTP header to send consumer project to backend.
 const Http::LowerCaseString kConsumerProjectId("x-endpoint-api-project-id");
@@ -35,6 +39,7 @@ const Http::LowerCaseString kIosBundleIdHeader{"x-ios-bundle-identifier"};
 const Http::LowerCaseString kAndroidPackageHeader{"x-android-package"};
 const Http::LowerCaseString kAndroidCertHeader{"x-android-cert"};
 const Http::LowerCaseString kRefererHeader{"referer"};
+const Http::LowerCaseString kContentTypeHeader{"content-type"};
 
 inline int64_t convertNsToMs(std::chrono::nanoseconds ns) {
   return std::chrono::duration_cast<std::chrono::milliseconds>(ns).count();
@@ -67,6 +72,39 @@ std::string extractHeader(const Envoy::Http::HeaderMap& headers,
     return entry->value().c_str();
   }
   return "";
+}
+
+bool isGrpcRequest(const std::string& content_type) {
+  // Formally defined as:
+  // `application/grpc(-web(-text))[+proto/+json/+thrift/{custom}]`
+  //
+  // The worst case is `application/grpc{custom}`. Just check the beginning.
+  return absl::StartsWith(content_type, kContentTypeApplicationGrpcPrefix);
+}
+
+Protocol getFrontendProtocol(const std::string& content_type, bool http) {
+  if (isGrpcRequest(content_type)) {
+    return Protocol::GRPC;
+  }
+
+  if (!http) {
+    return Protocol::UNKNOWN;
+  }
+
+  // TODO(toddbeckman) figure out HTTPS
+  return Protocol::HTTP;
+}
+
+Protocol getBackendProtocol(const std::string& protocol) {
+  if (protocol == "http1" || protocol == "http2") {
+    return Protocol::HTTP;
+  }
+
+  if (protocol == "grpc") {
+    return Protocol::GRPC;
+  }
+
+  return Protocol::UNKNOWN;
 }
 
 }  // namespace
@@ -252,7 +290,7 @@ void Handler::onCheckResponse(Http::HeaderMap& headers, const Status& status,
   check_callback_->onCheckDone(status);
 }
 
-void Handler::callReport(const Http::HeaderMap* /*response_headers*/,
+void Handler::callReport(const Http::HeaderMap* response_headers,
                          const Http::HeaderMap* /*response_trailers*/,
                          const StreamInfo::StreamInfo& stream_info) {
   ::google::api_proxy::service_control::ReportRequestInfo info;
@@ -275,8 +313,12 @@ void Handler::callReport(const Http::HeaderMap* /*response_headers*/,
   info.response_code = stream_info.responseCode().value_or(500);
   info.status = check_status_;
 
-  // TODO(qiwzhang): figure out frontend_protocol and backend_protocol:
-  // b/123948413
+  info.frontend_protocol =
+      getFrontendProtocol(extractHeader(*response_headers, kContentTypeHeader),
+                          stream_info.protocol().has_value());
+
+  info.backend_protocol = getBackendProtocol(
+      require_ctx_->service_ctx().config().backend_protocol());
 
   fillGCPInfo(info);
   fillLatency(stream_info, info.latency);

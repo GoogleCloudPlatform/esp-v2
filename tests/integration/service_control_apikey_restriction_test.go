@@ -27,7 +27,7 @@ import (
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 )
 
-func TestServiceControlApiKeyRestriction(t *testing.T) {
+func TestServiceControlAPIKeyRestriction(t *testing.T) {
 	serviceName := "test-echo"
 	configID := "test-config-id"
 	args := []string{

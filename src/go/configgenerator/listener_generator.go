@@ -400,6 +400,7 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo, backendProtocol ut.Ba
 	if serviceInfo == nil || serviceInfo.ServiceConfig().GetControl().GetEnvironment() == "" {
 		return nil
 	}
+	lowercaseProtocol := strings.ToLower(*flags.BackendProtocol)
 	serviceName := serviceInfo.ServiceConfig().GetName()
 	service := &scpb.Service{
 		ServiceName:       serviceName,
@@ -411,7 +412,8 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo, backendProtocol ut.Ba
 			Cluster: serviceControlClusterName,
 			Timeout: &duration.Duration{Seconds: 5},
 		},
-		ServiceConfig: copyServiceConfigForReportMetrics(serviceInfo.ServiceConfig()),
+		ServiceConfig:   copyServiceConfigForReportMetrics(serviceInfo.ServiceConfig()),
+		BackendProtocol: lowercaseProtocol,
 	}
 
 	requirementMap := make(map[string]*scpb.Requirement)
