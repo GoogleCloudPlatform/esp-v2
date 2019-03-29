@@ -246,6 +246,43 @@
           }
         }
       }
+    },
+    "/version": {
+      "get": {
+        "description": "Returns a version of the application.",
+        "operationId": "getVersion",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Version of the application.",
+            "schema": {
+              "$ref": "#/definitions/version"
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/restricted": {
+      "get": {
+        "description": "API to test key restriction",
+        "operationId": "keyRestriction",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "get restricted response"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
     }
   },
   "definitions": {

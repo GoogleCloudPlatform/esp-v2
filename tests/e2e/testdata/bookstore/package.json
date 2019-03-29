@@ -1,0 +1,24 @@
+{
+  "name": "bookstore",
+  "version": "0.0.1",
+  "description": "A Google Cloud Endpoints example implementation of a simple bookstore API.",
+  "main": "bookstore.js",
+  "scripts": {
+    "start": "node bookstore.js",
+    "test": "npm install && cd ./test && npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://endpoints.googlesource.com/endpoints"
+  },
+  "author": "Google Inc.",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "body-parser": "^1.12.2",
+    "express": "^4.12.3",
+    "swagger-tools": "0.8.*"
+  },
+  "engines" : {
+    "node" : ">=4.1.2"
+  }
+}
