@@ -44,7 +44,10 @@ fi
 
 # Download api Keys with restrictions from Cloud storage.
 TEMP_DIR="$(mktemp -d)"
-POST_FILE="${ROOT}/e2e/testdata/35k.json"
+API_RESTRICTION_KEYS_FILE="${TEMP_DIR}/apiproxy-e2e-key-restriction.json"
+gsutil cp gs://apiproxy-testing-client-secret-files/restricted_api_keys.json \
+      "${API_RESTRICTION_KEYS_FILE}" \
+        || error_exit "Failed to download API key with restrictions file."
 
 END_TIME=$(date +"%s")
 END_TIME=$((END_TIME + DURATION_IN_HOUR * 60 * 60))
@@ -74,6 +77,14 @@ while true; do
       --api_key=${API_KEY} \
       --auth_token=${JWT_TOKEN} \
       --allow_unverified_cert=true \
+    || ((BOOKSTORE_FAILURES++))
+
+  echo "Starting bookstore API Key restriction test at $(date)."
+  python ${ROOT}/tests/e2e/client/apiproxy_bookstore_key_restriction_test.py \
+      --host=${HOST} \
+      --allow_unverified_cert=true \
+      --key_restriction_tests=${ROOT}/tests/e2e/testdata/bookstore/key_restriction_test.json.template \
+      --key_restriction_keys_file=${API_RESTRICTION_KEYS_FILE} \
     || ((BOOKSTORE_FAILURES++))
 
   # TODO(jilinxia): add other tests.

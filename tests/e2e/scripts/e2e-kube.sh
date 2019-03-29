@@ -16,7 +16,7 @@
 
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${SCRIPT_PATH}/../../.." && pwd)"
-YAML_FILE=${SCRIPT_PATH}/../testdata/http-bookstore.yaml
+YAML_FILE=${SCRIPT_PATH}/../testdata/bookstore/http-bookstore.yaml
 
 ARGS="\
   \"--backend=http://127.0.0.1:8081\",\
@@ -38,7 +38,7 @@ run sed_i "s|ARGS|${ARGS}|g" ${YAML_FILE}
 # is changes in the service config, and also remember to update the version
 # number in kubernetes config.
 #
-SERVICE_IDL="${SCRIPT_PATH}/../testdata/bookstore_swagger_template.json"
+SERVICE_IDL="${SCRIPT_PATH}/../testdata/bookstore/bookstore_swagger_template.json"
 run sed -i "s|\${ENDPOINT_SERVICE}|${APIPROXY_SERVICE}|g" ${SERVICE_IDL}
 
 # Parses parameters into config file.

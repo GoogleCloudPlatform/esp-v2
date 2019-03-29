@@ -1,0 +1,79 @@
+{
+  "ios": [{
+      "description": "iOS bundle id match",
+      "path": "/restricted",
+      "api_key": "${api_key_ios}",
+      "key_restriction": {
+        "ios": ["com.google.cloud.apiproxy.testApp"]
+      },
+      "headers": {
+        "X-Ios-Bundle-Identifier": "com.google.cloud.apiproxy.testApp"
+      },
+      "status_code": 200
+    }, {
+      "description": "iOS bundle id mismatch",
+      "path": "/restricted",
+      "api_key": "${api_key_ios}",
+      "key_restriction": {
+        "ios": ["com.google.cloud.esp.testApp"]
+      },
+      "headers": {
+        "X-Ios-Bundle-Identifier": "com.google.cloud.apiproxy.testApp2"
+      },
+      "status_code": 401
+    }],
+  "referer": [{
+      "description": "http referer match",
+      "path": "/restricted",
+      "api_key": "${api_key_referrers}",
+      "key_restriction": {
+        "referrers": ["*.google.com/*"]
+      },
+      "headers": {
+        "Referer": "myapp.google.com/good.html"
+      },
+      "status_code": 200
+    }, {
+      "description": "http referer mismatch",
+      "path": "/restricted",
+      "api_key": "${api_key_referrers}",
+      "key_restriction": {
+        "referrers": ["*.google.com/*"]
+      },
+      "headers": {
+        "Referer": "myapp.verizonwireless.com/bad.html"
+      },
+      "status_code": 401
+    }],
+  "android": [{
+      "description": "Positive Android key restriction",
+      "path": "/restricted",
+      "api_key": "${api_key_android}",
+      "key_restriction": {
+        "android": [{
+          "package": "com.google.could.apiproxy.myapplication",
+          "fingerprint": "BC:E5:A7:62:38:D6:AE:E7:F6:18:B7:2D:F3:56:CD:A0:2E:50:AA:1E"
+        }]
+      },
+      "headers": {
+        "X-Android-Package": "com.google.could.apiproxy.myapplication",
+        "X-Android-Cert": "BCE5A76238D6AEE7F618B72DF356CDA02E50AA1E"
+      },
+      "status_code": 200
+    }, {
+      "description": "Invalid certificate",
+      "path": "/restricted",
+      "api_key": "${api_key_android}",
+      "key_restriction": {
+        "android": [{
+          "package": "com.google.could.apiproxy.myapplication",
+          "fingerprint": "BC:E5:A7:62:38:D6:AE:E7:F6:18:B7:2D:F3:56:CD:A0:2E:50:AA:1E"
+        }]
+      },
+      "headers": {
+        "X-Android-Package": "com.google.cloud.apiproxy.myapplication",
+        "X-Android-Cert": "D8AA439759EEC595266A07EE1C378EF4F0C805C9"
+      },
+      "status_code": 401
+    }]
+}
