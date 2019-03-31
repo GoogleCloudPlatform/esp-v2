@@ -102,6 +102,9 @@ func (e *TestEnv) AppendHttpRules(rules []*annotations.HttpRule) {
 
 // AppendBackendRules appends Service.Backend.Rules.
 func (e *TestEnv) AppendBackendRules(rules []*conf.BackendRule) {
+	if e.fakeServiceConfig.Backend == nil {
+		e.fakeServiceConfig.Backend = &conf.Backend{}
+	}
 	e.fakeServiceConfig.Backend.Rules = append(e.fakeServiceConfig.Backend.Rules, rules...)
 }
 

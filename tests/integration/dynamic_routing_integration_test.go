@@ -37,11 +37,249 @@ var testDynamicRoutingArgs = []string{
 	"--enable_backend_routing",
 }
 
-// TODO(kyuc): use `TestEnv.Override*` to modify service config rather than hardcoding it in
-// fake_echo_service_config.go
-func TestDynamicRouting(t *testing.T) {
-	s := env.NewTestEnv(comp.TestDynamicRouting, "echo", nil)
+func NewDynamicRoutingTestEnv(port uint16) *env.TestEnv {
+	s := env.NewTestEnv(port, "echo", nil)
 	s.EnableDynamicRoutingBackend()
+	s.AppendHttpRules([]*annotations.HttpRule{
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetById",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/pet/{pet_id}/num/{number}",
+			},
+		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchPet",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/searchpet",
+			},
+		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchDogsWithSlash",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/searchdog",
+			},
+		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.AppendToRoot",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/searchroot",
+			},
+		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.AppendToRootWithSlash",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/searchrootwithslash",
+			},
+		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.ListPets",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/pets/{category}/year/{no}",
+			},
+		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.ListShelves",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/shelves",
+			},
+		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetBookInfoWithSnakeCase",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/shelves/{s_h_e_l_f}/books/info/{b_o_o_k}",
+			},
+		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetBookIdWithSnakeCase",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/shelves/{s_h_e_l_f.i_d}/books/id/{b_o_o_k.id}",
+			},
+		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchPetWithServiceControlVerification",
+			Pattern: &annotations.HttpRule_Post{
+				Post: "/sc/searchpet",
+			},
+		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetByIdWithServiceControlVerification",
+			Pattern: &annotations.HttpRule_Post{
+				Post: "/sc/pet/{pet_id}/num/{number}",
+			},
+		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.BearertokenConstantAddress",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/bearertoken/constant/{foo}",
+			},
+		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.BearertokenAppendAddress",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/bearertoken/append",
+			},
+		},
+	})
+	s.AppendUsageRules(
+		[]*conf.UsageRule{
+			{
+				Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetById",
+				AllowUnregisteredCalls: true,
+			},
+			{
+				Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchPet",
+				AllowUnregisteredCalls: true,
+			},
+			{
+				Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchDogsWithSlash",
+				AllowUnregisteredCalls: true,
+			},
+			{
+				Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.AppendToRoot",
+				AllowUnregisteredCalls: true,
+			},
+			{
+				Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.AppendToRootWithSlash",
+				AllowUnregisteredCalls: true,
+			},
+			{
+				Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.ListPets",
+				AllowUnregisteredCalls: true,
+			},
+			{
+				Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.ListShelves",
+				AllowUnregisteredCalls: true,
+			},
+			{
+				Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetBookInfoWithSnakeCase",
+				AllowUnregisteredCalls: true,
+			},
+			{
+				Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetBookIdWithSnakeCase",
+				AllowUnregisteredCalls: true,
+			},
+			{
+				Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.BearertokenConstantAddress",
+				AllowUnregisteredCalls: true,
+			},
+		})
+
+	s.AppendBackendRules(
+		[]*conf.BackendRule{
+			{
+				Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+			},
+			{
+				Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetById",
+				Address:         "https://localhost:-1/dynamicrouting/getpetbyid",
+				PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+				Authentication: &conf.BackendRule_JwtAudience{
+					JwtAudience: "https://localhost/dynamicrouting/getpetbyid",
+				},
+			},
+			{
+				Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchPet",
+				Address:         "https://localhost:-1/dynamicrouting/searchpet",
+				PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
+				Authentication: &conf.BackendRule_JwtAudience{
+					JwtAudience: "https://localhost/dynamicrouting/searchpet",
+				},
+			},
+			{
+				Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchDogsWithSlash",
+				Address:         "https://localhost:-1/dynamicrouting/searchdogs/",
+				PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
+				Authentication: &conf.BackendRule_JwtAudience{
+					JwtAudience: "https://localhost/dynamicrouting/searchpet",
+				},
+			},
+			{
+				Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.AppendToRoot",
+				Address:         "https://localhost:-1",
+				PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
+				Authentication: &conf.BackendRule_JwtAudience{
+					JwtAudience: "https://localhost/searchroot",
+				},
+			},
+			{
+				Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.AppendToRootWithSlash",
+				Address:         "https://localhost:-1/",
+				PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
+				Authentication: &conf.BackendRule_JwtAudience{
+					JwtAudience: "https://localhost/searchrootwithslash",
+				},
+			},
+			{
+				Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.ListPets",
+				Address:         "https://localhost:-1/dynamicrouting/listpet",
+				PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
+				Authentication: &conf.BackendRule_JwtAudience{
+					JwtAudience: "https://localhost/dynamicrouting/listpet",
+				},
+			},
+			{
+				Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.ListShelves",
+				Address:         "https://localhost:-1/dynamicrouting/shelves",
+				PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+				Authentication: &conf.BackendRule_JwtAudience{
+					JwtAudience: "https://localhost/dynamicrouting/shelves",
+				},
+			},
+			{
+				Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetBookInfoWithSnakeCase",
+				Address:         "https://localhost:-1/dynamicrouting/bookinfo",
+				PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+				Authentication: &conf.BackendRule_JwtAudience{
+					JwtAudience: "https://localhost/dynamicrouting/bookinfo",
+				},
+			},
+			{
+				Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetBookIdWithSnakeCase",
+				Address:         "https://localhost:-1/dynamicrouting/bookid",
+				PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+				Authentication: &conf.BackendRule_JwtAudience{
+					JwtAudience: "https://localhost/dynamicrouting/bookid",
+				},
+			},
+			{
+				Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchPetWithServiceControlVerification",
+				Address:         "https://localhost:-1/dynamicrouting/",
+				PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
+				Authentication: &conf.BackendRule_JwtAudience{
+					JwtAudience: "https://localhost/dynamicrouting",
+				},
+			},
+			{
+				Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetByIdWithServiceControlVerification",
+				Address:         "https://localhost:-1/dynamicrouting/",
+				PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+				Authentication: &conf.BackendRule_JwtAudience{
+					JwtAudience: "https://localhost/dynamicrouting",
+				},
+			},
+			{
+				Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.BearertokenConstantAddress",
+				Address:         "https://localhost:-1/bearertoken/constant",
+				PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+				Authentication: &conf.BackendRule_JwtAudience{
+					JwtAudience: "https://localhost/bearertoken/constant",
+				},
+			},
+			{
+				Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.BearertokenAppendAddress",
+				Address:         "https://localhost:-1",
+				PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
+				Authentication: &conf.BackendRule_JwtAudience{
+					JwtAudience: "https://localhost/bearertoken/append",
+				},
+			},
+		})
+
+	return s
+}
+
+func TestDynamicRouting(t *testing.T) {
+	s := NewDynamicRoutingTestEnv(comp.TestDynamicRouting)
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -190,49 +428,7 @@ func TestDynamicRouting(t *testing.T) {
 }
 
 func TestBackendAuth(t *testing.T) {
-	s := env.NewTestEnv(comp.TestBackendAuth, "echo", nil)
-	s.EnableDynamicRoutingBackend()
-	s.AppendHttpRules([]*annotations.HttpRule{
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.BearertokenConstantAddress",
-			Pattern: &annotations.HttpRule_Get{
-				Get: "/bearertoken/constant/{foo}",
-			},
-		},
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.BearertokenAppendAddress",
-			Pattern: &annotations.HttpRule_Get{
-				Get: "/bearertoken/append",
-			},
-		},
-	})
-
-	s.AppendUsageRules([]*conf.UsageRule{
-		{
-			Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.BearertokenConstantAddress",
-			AllowUnregisteredCalls: true,
-		},
-	})
-
-	s.AppendBackendRules([]*conf.BackendRule{
-		{
-			Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.BearertokenConstantAddress",
-			Address:         "https://localhost:-1/bearertoken/constant",
-			PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
-			Authentication: &conf.BackendRule_JwtAudience{
-				JwtAudience: "https://localhost/bearertoken/constant",
-			},
-		},
-		{
-			Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.BearertokenAppendAddress",
-			Address:         "https://localhost:-1",
-			PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
-			Authentication: &conf.BackendRule_JwtAudience{
-				JwtAudience: "https://localhost/bearertoken/append",
-			},
-		},
-	})
-
+	s := NewDynamicRoutingTestEnv(comp.TestBackendAuth)
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -293,8 +489,7 @@ func TestBackendAuth(t *testing.T) {
 }
 
 func TestServiceControlRequestForDynamicRouting(t *testing.T) {
-	s := env.NewTestEnv(comp.TestServiceControlRequestInDynamicRouting, "echo", nil)
-	s.EnableDynamicRoutingBackend()
+	s := NewDynamicRoutingTestEnv(comp.TestServiceControlRequestInDynamicRouting)
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
