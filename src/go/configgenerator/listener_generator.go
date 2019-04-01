@@ -136,6 +136,9 @@ func MakeListener(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtoco
 		RouteSpecifier: &hcm.HttpConnectionManager_RouteConfig{
 			RouteConfig: route,
 		},
+
+		UseRemoteAddress:  &types.BoolValue{Value: *flags.EnvoyUseRemoteAddress},
+		XffNumTrustedHops: uint32(*flags.EnvoyXffNumTrustedHops),
 	}
 
 	glog.Infof("adding Http Connection Manager config: %v", httpConMgr)

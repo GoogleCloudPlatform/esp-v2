@@ -1,4 +1,59 @@
 {
+  "ip": [{
+      "description": "192.16.31.84 will be the remote IP address.",
+      "path": "/restricted",
+      "api_key": "${api_key_ip}",
+      "key_restriction": {
+        "ip": ["192.16.31.84"]
+      },
+      "headers": {
+        "X-Forwarded-For": "192.16.31.84, 172.17.131.252, 172.17.131.251"
+      },
+      "status_code": 200
+    }, {
+      "description": "172.17.131.252 will be the remote IP address.",
+      "path": "/restricted",
+      "api_key": "${api_key_ip}",
+      "key_restriction": {
+        "ip": ["192.16.31.84"]
+      },
+      "headers": {
+        "X-Forwarded-For": "172.17.131.252, 172.17.131.251, 192.16.31.84"
+      },
+      "status_code": 401
+    }, {
+      "description": "172.17.131.252 will be the remote IP address.",
+      "path": "/restricted",
+      "api_key": "${api_key_ip}",
+      "key_restriction": {
+        "ip": ["192.16.31.84"]
+      },
+      "headers": {
+        "X-Forwarded-For": "172.17.131.252, 192.16.31.84, 172.17.131.251"
+      },
+      "status_code": 401
+    }, {
+      "description": "192.16.31.88 will be the remote IP address.",
+      "path": "/restricted",
+      "api_key": "${api_key_ip}",
+      "key_restriction": {
+        "ip": ["192.16.31.84"]
+      },
+      "headers": {
+        "X-Forwarded-For": "192.16.31.88"
+      },
+      "status_code": 401
+    }, {
+      "description": "No XFF header. The IP address of the last proxy mismatch",
+      "path": "/restricted",
+      "api_key": "${api_key_ip}",
+      "key_restriction": {
+        "ip": ["192.16.31.84"]
+      },
+      "headers": {
+      },
+      "status_code": 401
+    }],
   "ios": [{
       "description": "iOS bundle id match",
       "path": "/restricted",

@@ -260,7 +260,7 @@ void Handler::callCheck(Http::HeaderMap& headers, CheckDoneCallback& callback,
   info.android_cert_fingerprint = extractHeader(headers, kAndroidCertHeader);
 
   info.client_ip =
-      stream_info.downstreamDirectRemoteAddress()->ip()->addressAsString();
+      stream_info.downstreamRemoteAddress()->ip()->addressAsString();
 
   ::google::api::servicecontrol::v1::CheckRequest check_request;
   require_ctx_->service_ctx().builder().FillCheckRequest(info, &check_request);
