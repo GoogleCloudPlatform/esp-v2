@@ -41,8 +41,7 @@ var defaultResp = map[string]string{
 
 // MockMetadata mocks the Metadata server.
 type MockMetadataServer struct {
-	s    *httptest.Server
-	resp map[string]string
+	s *httptest.Server
 }
 
 // NewMockMetadata creates a new HTTP server.
@@ -52,10 +51,8 @@ func NewMockMetadata(pathResp map[string]string) *MockMetadataServer {
 		mockPathResp[k] = v
 	}
 
-	if pathResp != nil {
-		for k, v := range pathResp {
-			mockPathResp[k] = v
-		}
+	for k, v := range pathResp {
+		mockPathResp[k] = v
 	}
 
 	return &MockMetadataServer{
@@ -65,6 +62,14 @@ func NewMockMetadata(pathResp map[string]string) *MockMetadataServer {
 			// Root is used to tell if the sever is healthy or not.
 			if r.URL.Path == "" || r.URL.Path == "/" {
 				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			// Check if path + query exists in the response map.
+			pathWithQuery := r.URL.Path + "?" + r.URL.RawQuery
+			if resp, ok := mockPathResp[pathWithQuery]; ok {
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte(resp))
 				return
 			}
 

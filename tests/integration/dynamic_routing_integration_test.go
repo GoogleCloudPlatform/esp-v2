@@ -429,13 +429,17 @@ func TestDynamicRouting(t *testing.T) {
 
 func TestBackendAuth(t *testing.T) {
 	s := NewDynamicRoutingTestEnv(comp.TestBackendAuth)
+	s.OverrideMockMetadata(
+		map[string]string{
+			util.IdentityTokenSuffix + "?audience=https://localhost/bearertoken/constant&format=standard": "ya29.constant",
+			util.IdentityTokenSuffix + "?audience=https://localhost/bearertoken/append&format=standard":   "ya29.append",
+		})
+
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
 
-	// TODO(kyuc): Think about a way to verify JWT audience in the payload. At least return
-	// different tokens for constant and append.
 	testData := []struct {
 		desc     string
 		method   string
@@ -447,13 +451,13 @@ func TestBackendAuth(t *testing.T) {
 			desc:     "Add Bearer token for CONSTANT_ADDRESS backend that requires JWT token",
 			method:   "GET",
 			path:     "/bearertoken/constant/42",
-			wantResp: `{"Authorization": "Bearer ya29.new", "RequestURI": "/bearertoken/constant?foo=42"}`,
+			wantResp: `{"Authorization": "Bearer ya29.constant", "RequestURI": "/bearertoken/constant?foo=42"}`,
 		},
 		{
 			desc:     "Add Bearer token for APPEND_PATH_TO_ADDRESS backend that requires JWT token",
 			method:   "GET",
 			path:     "/bearertoken/append?key=api-key",
-			wantResp: `{"Authorization": "Bearer ya29.new", "RequestURI": "/bearertoken/append?key=api-key"}`,
+			wantResp: `{"Authorization": "Bearer ya29.append", "RequestURI": "/bearertoken/append?key=api-key"}`,
 		},
 		{
 			desc:     "Do not reject backend that doesn't require JWT token",
