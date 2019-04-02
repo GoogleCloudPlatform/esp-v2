@@ -582,7 +582,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 			}
 		}
 		if tc.checkServiceControl {
-			scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 2*time.Second)
+			scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 3*time.Second)
 			if err != nil {
 				t.Fatalf("Test Desc(%s): GetRequests returns error: %v", tc.desc, err)
 			}

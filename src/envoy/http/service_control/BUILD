@@ -14,18 +14,20 @@ envoy_cc_library(
     name = "filter_lib",
     srcs = [
         "filter.cc",
-        "handler.cc",
+        "handler_impl.cc",
     ],
     hdrs = [
         "filter.h",
         "filter_config.h",
         "handler.h",
+        "handler_impl.h",
     ],
     repository = "@envoy",
     deps = [
         ":config_parser_lib",
         "//src/envoy/utils:filter_state_utils_lib",
         "//src/envoy/utils:status_http_code_lib",
+        "@envoy//source/common/http:headers_lib",
         "@envoy//source/exe:envoy_common_lib",
     ],
 )
@@ -39,6 +41,17 @@ envoy_cc_library(
         "@envoy//source/exe:envoy_common_lib",
     ],
     visibility = ["//src/envoy:__subpackages__"]
+)
+
+envoy_cc_test(
+    name = "filter_test",
+    srcs = ["filter_test.cc", "mocks.h"],
+    repository = "@envoy",
+    deps = [
+        ":filter_lib",
+        "@envoy//test/test_common:utility_lib",
+        "@envoy//test/mocks/server:server_mocks",
+    ],
 )
 
 envoy_cc_library(

@@ -17,6 +17,7 @@
 #include "common/common/logger.h"
 #include "envoy/access_log/access_log.h"
 #include "envoy/http/filter.h"
+#include "envoy/http/header_map.h"
 #include "src/envoy/http/service_control/filter_config.h"
 #include "src/envoy/http/service_control/handler.h"
 
@@ -28,12 +29,14 @@ namespace HttpFilters {
 namespace ServiceControl {
 
 // The Envoy filter for API Proxy service control client.
-class Filter : public Http::StreamDecoderFilter,
-               public AccessLog::Instance,
-               public Handler::CheckDoneCallback,
-               public Logger::Loggable<Logger::Id::filter> {
+class ServiceControlFilter : public Http::StreamDecoderFilter,
+                             public AccessLog::Instance,
+                             public ServiceControlHandler::CheckDoneCallback,
+                             public Logger::Loggable<Logger::Id::filter> {
  public:
-  Filter(FilterConfigSharedPtr config) : config_(config) {}
+  ServiceControlFilter(FilterConfigSharedPtr config,
+                       const ServiceControlHandlerFactory& factory)
+      : config_(config), factory_(factory) {}
 
   void onDestroy() override {}
 
@@ -60,9 +63,10 @@ class Filter : public Http::StreamDecoderFilter,
   // The callback funcion.
   Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
   FilterConfigSharedPtr config_;
+  const ServiceControlHandlerFactory& factory_;
 
   // The service control request handler
-  std::unique_ptr<Handler> handler_;
+  std::unique_ptr<ServiceControlHandler> handler_;
 
   // The state of the request.
   enum State { Init, Calling, Responded, Complete };

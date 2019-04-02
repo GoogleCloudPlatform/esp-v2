@@ -41,14 +41,14 @@ namespace ServiceControl {
 struct ServiceControlFilterStats {
   ALL_SERVICE_CONTROL_FILTER_STATS(GENERATE_COUNTER_STRUCT)
 };
-
 // The Envoy filter config for API Proxy service control client.
-class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
+class ServiceControlFilterConfig : public Logger::Loggable<Logger::Id::filter> {
  public:
-  FilterConfig(const ::google::api::envoy::http::service_control::FilterConfig&
-                   proto_config,
-               const std::string& stats_prefix,
-               Server::Configuration::FactoryContext& context)
+  ServiceControlFilterConfig(
+      const ::google::api::envoy::http::service_control::FilterConfig&
+          proto_config,
+      const std::string& stats_prefix,
+      Server::Configuration::FactoryContext& context)
       : proto_config_(proto_config),
         stats_(generateStats(stats_prefix, context.scope())),
         cm_(context.clusterManager()),
@@ -60,13 +60,13 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
     default_api_keys_.add_locations()->set_header("x-api-key");
   }
 
-  const ::google::api::envoy::http::service_control::FilterConfig& config()
+  const ::google::api::envoy::http::service_control::FilterConfig& proto()
       const {
     return proto_config_;
   }
 
   Upstream::ClusterManager& cm() { return cm_; }
-  Runtime::RandomGenerator& random() { return random_; }
+  Runtime::RandomGenerator& random() const { return random_; }
   ServiceControlFilterStats& stats() { return stats_; }
   const FilterConfigParser& cfg_parser() const { return config_parser_; }
   const ::google::api::envoy::http::service_control::APIKeyRequirement&
@@ -94,7 +94,7 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
       default_api_keys_;
 };
 
-typedef std::shared_ptr<FilterConfig> FilterConfigSharedPtr;
+typedef std::shared_ptr<ServiceControlFilterConfig> FilterConfigSharedPtr;
 
 }  // namespace ServiceControl
 }  // namespace HttpFilters

@@ -1,0 +1,237 @@
+// Copyright 2019 Google Cloud Platform Proxy Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include "envoy/http/header_map.h"
+#include "gmock/gmock.h"
+#include "google/protobuf/text_format.h"
+#include "gtest/gtest.h"
+#include "test/mocks/server/mocks.h"
+#include "test/test_common/utility.h"
+
+#include "src/envoy/http/service_control/filter.h"
+#include "src/envoy/http/service_control/handler.h"
+#include "src/envoy/http/service_control/mocks.h"
+
+using Envoy::Http::MockStreamDecoderFilterCallbacks;
+using Envoy::Server::Configuration::MockFactoryContext;
+using ::google::api::envoy::http::service_control::FilterConfig;
+using ::google::protobuf::TextFormat;
+using ::google::protobuf::util::Status;
+using ::google::protobuf::util::error::Code;
+using ::testing::_;
+using ::testing::Invoke;
+using ::testing::Mock;
+using ::testing::Ref;
+using ::testing::Return;
+
+namespace Envoy {
+namespace Extensions {
+namespace HttpFilters {
+namespace ServiceControl {
+namespace {
+
+const Status kBadStatus(Code::UNAUTHENTICATED, "test");
+
+class FilterTest : public ::testing::Test {
+ protected:
+  void SetUp() override {
+    FilterConfigSharedPtr filter_config =
+        std::make_shared<ServiceControlFilterConfig>(FilterConfig(), "",
+                                                     mock_factory_context_);
+    filter_ = std::make_unique<ServiceControlFilter>(filter_config,
+                                                     mock_handler_factory_);
+    filter_->setDecoderFilterCallbacks(mock_decoder_callbacks_);
+  }
+
+  std::unique_ptr<ServiceControlFilter> filter_;
+  testing::NiceMock<MockStreamDecoderFilterCallbacks> mock_decoder_callbacks_;
+  testing::NiceMock<MockFactoryContext> mock_factory_context_;
+  testing::NiceMock<MockServiceControlHandlerFactory> mock_handler_factory_;
+  testing::NiceMock<MockBuffer> mock_buffer_;
+  Http::TestHeaderMapImpl headers_;
+};
+
+TEST_F(FilterTest, DecodeHeadersSyncOKStatus) {
+  // Test: If onCall is called with OK status, return Continue
+  testing::NiceMock<MockServiceControlHandler> mock_handler;
+  EXPECT_CALL(mock_handler_factory_, createHandler_(_, _, _))
+      .WillOnce(Return(&mock_handler));
+
+  // Call onCheckDone synchronously
+  EXPECT_CALL(mock_handler, callCheck(_, _))
+      .WillOnce(Invoke([](Http::HeaderMap&,
+                          ServiceControlHandler::CheckDoneCallback& callback) {
+        callback.onCheckDone(Status::OK);
+      }));
+  EXPECT_EQ(Http::FilterHeadersStatus::Continue,
+            filter_->decodeHeaders(headers_, true));
+}
+
+TEST_F(FilterTest, DecodeHeadersSyncBadStatus) {
+  // Test: If onCall is called with a bad status, reject and return stop
+  testing::NiceMock<MockServiceControlHandler> mock_handler;
+  EXPECT_CALL(mock_handler_factory_, createHandler_(_, _, _))
+      .WillOnce(Return(&mock_handler));
+
+  // Call onCheckDone synchronously
+  EXPECT_CALL(mock_handler, callCheck(_, _))
+      .WillOnce(Invoke([](Http::HeaderMap&,
+                          ServiceControlHandler::CheckDoneCallback& callback) {
+        callback.onCheckDone(kBadStatus);
+      }));
+
+  // TODO(toddbeckman) Figure out how to EXPECT_CALL sendLocalReply directly
+  EXPECT_CALL(
+      mock_decoder_callbacks_.stream_info_,
+      setResponseFlag(StreamInfo::ResponseFlag::UnauthorizedExternalService));
+
+  EXPECT_EQ(Http::FilterHeadersStatus::StopIteration,
+            filter_->decodeHeaders(headers_, true));
+}
+
+TEST_F(FilterTest, DecodeHeadersAsyncGoodStatus) {
+  // Test: While Filter is Calling/stopped, onCheckDone calls
+  // continueDecoding
+  ::testing::NiceMock<MockServiceControlHandler> mock_handler;
+  EXPECT_CALL(mock_handler_factory_, createHandler_(_, _, _))
+      .WillOnce(Return(&mock_handler));
+
+  ServiceControlHandler::CheckDoneCallback* stored_check_done_callback;
+
+  // Store CheckDoneCallback but do not call it yet
+  EXPECT_CALL(mock_handler, callCheck(_, _))
+      // This invocation works around SaveArg storing the value to
+      // the pointer in a way that does not work with the interface
+      .WillOnce(Invoke([&stored_check_done_callback](
+                           Http::HeaderMap&,
+                           ServiceControlHandler::CheckDoneCallback& callback) {
+        stored_check_done_callback = &callback;
+      }));
+  EXPECT_EQ(Http::FilterHeadersStatus::StopIteration,
+            filter_->decodeHeaders(headers_, true));
+
+  EXPECT_CALL(mock_decoder_callbacks_, continueDecoding());
+  stored_check_done_callback->onCheckDone(Status::OK);
+}
+
+TEST_F(FilterTest, DecodeHeadersAsyncBadStatus) {
+  // Test: When status is not ok, the request is rejected and
+  // continueDecoding is not called
+  EXPECT_CALL(mock_decoder_callbacks_, continueDecoding()).Times(0);
+
+  testing::NiceMock<MockServiceControlHandler> mock_handler;
+  EXPECT_CALL(mock_handler_factory_, createHandler_(_, _, _))
+      .WillOnce(Return(&mock_handler));
+
+  ServiceControlHandler::CheckDoneCallback* stored_check_done_callback;
+
+  // Store CheckDoneCallback but do not call it yet
+  EXPECT_CALL(mock_handler, callCheck(_, _))
+      .WillOnce(
+          // This invocation works around SaveArg storing the value to
+          // the pointer in a way that does not work with the interface
+          Invoke([&stored_check_done_callback](
+                     Http::HeaderMap&,
+                     ServiceControlHandler::CheckDoneCallback& callback) {
+            stored_check_done_callback = &callback;
+          }));
+  EXPECT_EQ(Http::FilterHeadersStatus::StopIteration,
+            filter_->decodeHeaders(headers_, true));
+
+  // Filter should reject this request
+  // TODO(toddbeckman) Figure out how to EXPECT_CALL sendLocalReply directly
+  EXPECT_CALL(
+      mock_decoder_callbacks_.stream_info_,
+      setResponseFlag(StreamInfo::ResponseFlag::UnauthorizedExternalService));
+  stored_check_done_callback->onCheckDone(kBadStatus);
+}
+
+TEST_F(FilterTest, LogWithoutHandlerOrHeaders) {
+  // Test: If no handler and no headers, a handler is not created
+  EXPECT_CALL(mock_handler_factory_, createHandler_(_, _, _)).Times(0);
+
+  // Filter has no handler. If it tries to callReport, it will seg fault
+  filter_->log(nullptr, &headers_, &headers_,
+               mock_decoder_callbacks_.stream_info_);
+}
+
+TEST_F(FilterTest, LogWithoutHandler) {
+  // Test: When a Filter has no Handler yet, another is created for log()
+  testing::NiceMock<MockServiceControlHandler> mock_handler;
+  EXPECT_CALL(mock_handler_factory_, createHandler_(_, _, _))
+      .WillOnce(Return(&mock_handler));
+  EXPECT_CALL(mock_handler, callReport(_, _, _));
+  filter_->log(&headers_, &headers_, &headers_,
+               mock_decoder_callbacks_.stream_info_);
+}
+
+TEST_F(FilterTest, LogWithHandler) {
+  // Test: When a Filter has a Handler from decodeHeaders,
+  // that one is used for log() and another is not created
+  testing::NiceMock<MockServiceControlHandler> mock_handler;
+  EXPECT_CALL(mock_handler_factory_, createHandler_(_, _, _))
+      .WillOnce(Return(&mock_handler));
+  filter_->decodeHeaders(headers_, true);
+
+  EXPECT_CALL(mock_handler_factory_, createHandler_(_, _, _)).Times(0);
+  EXPECT_CALL(mock_handler, callReport(_, _, _));
+  filter_->log(&headers_, &headers_, &headers_,
+               mock_decoder_callbacks_.stream_info_);
+}
+
+TEST_F(FilterTest, DecodeHelpersWhileStopped) {
+  // This puts the Filter into a stopped state
+  testing::NiceMock<MockServiceControlHandler> mock_handler;
+  EXPECT_CALL(mock_handler_factory_, createHandler_(_, _, _))
+      .WillOnce(Return(&mock_handler));
+  EXPECT_EQ(Http::FilterHeadersStatus::StopIteration,
+            filter_->decodeHeaders(headers_, true));
+
+  // Test: While Filter is Calling/stopped, decodeData returns Stop
+  EXPECT_EQ(Http::FilterDataStatus::StopIterationAndWatermark,
+            filter_->decodeData(mock_buffer_, true));
+
+  // Test: While Filter is Calling/stopped, decodeTrailers returns Stop
+  EXPECT_EQ(Http::FilterTrailersStatus::StopIteration,
+            filter_->decodeTrailers(headers_));
+}
+
+TEST_F(FilterTest, DecodeHelpersWhileContinuing) {
+  // This puts the Filter into a continue state
+  testing::NiceMock<MockServiceControlHandler> mock_handler;
+  EXPECT_CALL(mock_handler_factory_, createHandler_(_, _, _))
+      .WillOnce(Return(&mock_handler));
+  EXPECT_CALL(mock_handler, callCheck(_, _))
+      .WillOnce(Invoke([](Http::HeaderMap&,
+                          ServiceControlHandler::CheckDoneCallback& callback) {
+        callback.onCheckDone(Status::OK);
+      }));
+  EXPECT_EQ(Http::FilterHeadersStatus::Continue,
+            filter_->decodeHeaders(headers_, true));
+
+  // Test: When Filter is Complete, decodeData returns Continue
+  EXPECT_EQ(Http::FilterDataStatus::Continue,
+            filter_->decodeData(mock_buffer_, true));
+
+  // Test: When Filter is Complete, decodeTrailers returns Continue
+  EXPECT_EQ(Http::FilterTrailersStatus::Continue,
+            filter_->decodeTrailers(headers_));
+}
+
+}  // namespace
+
+}  // namespace ServiceControl
+}  // namespace HttpFilters
+}  // namespace Extensions
+}  // namespace Envoy

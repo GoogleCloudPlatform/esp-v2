@@ -12,63 +12,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/envoy/http/service_control/filter.h"
+#include "envoy/http/header_map.h"
 
+#include "src/envoy/http/service_control/filter.h"
+#include "src/envoy/http/service_control/handler.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/status_http_code.h"
+
+using ::google::protobuf::util::error::Code;
 
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 
-Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
-                                                bool) {
+Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
+    Http::HeaderMap& headers, bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
-  absl::string_view operation = Utils::getStringFilterState(
-      decoder_callbacks_->streamInfo().filterState(), Utils::kOperation);
 
-  // NOTE: this shouldn't happen in practice because Path Matcher filter would
-  // have already rejected the request.
-  if (operation.empty()) {
-    ENVOY_LOG(debug, "No operation found from FilterState");
-    rejectRequest(Http::Code(404), "Method does not exist.");
-    return Http::FilterHeadersStatus::StopIteration;
-  }
-
-  handler_.reset(new Handler(headers, operation, config_));
-  if (!handler_->isConfigured()) {
-    rejectRequest(Http::Code(404), "Method does not exist.");
-    return Http::FilterHeadersStatus::StopIteration;
-  }
-
-  if (!handler_->isCheckRequired()) {
-    return Http::FilterHeadersStatus::Continue;
-  }
-
-  if (!handler_->hasApiKey()) {
-    rejectRequest(Http::Code(401),
-                  "Method doesn't allow unregistered callers (callers without "
-                  "established identity). Please use API Key or other form of "
-                  "API consumer identity to call this API.");
-    return Http::FilterHeadersStatus::StopIteration;
-  }
+  handler_ = std::move(factory_.createHandler(
+      headers, decoder_callbacks_->streamInfo(), *config_));
 
   state_ = Calling;
   stopped_ = false;
 
-  // Make a check call
-  handler_->callCheck(headers, *this, decoder_callbacks_->streamInfo());
+  handler_->callCheck(headers, *this);
 
+  // If success happens synchronously, continue now.
   if (state_ == Complete) {
     return Http::FilterHeadersStatus::Continue;
   }
+
+  // Stop for now. If an async request is made, it will continue in onCheckDone.
   ENVOY_LOG(debug, "Called ServiceControl filter : Stop");
   stopped_ = true;
   return Http::FilterHeadersStatus::StopIteration;
 }
 
-void Filter::onCheckDone(const ::google::protobuf::util::Status& status) {
+void ServiceControlFilter::onCheckDone(
+    const ::google::protobuf::util::Status& status) {
   if (!status.ok()) {
     rejectRequest(Utils::statusToHttpCode(status.error_code()),
                   status.ToString());
@@ -82,7 +64,8 @@ void Filter::onCheckDone(const ::google::protobuf::util::Status& status) {
   }
 }
 
-void Filter::rejectRequest(Http::Code code, absl::string_view error_msg) {
+void ServiceControlFilter::rejectRequest(Http::Code code,
+                                         absl::string_view error_msg) {
   config_->stats().denied_.inc();
   state_ = Responded;
 
@@ -91,7 +74,8 @@ void Filter::rejectRequest(Http::Code code, absl::string_view error_msg) {
       StreamInfo::ResponseFlag::UnauthorizedExternalService);
 }
 
-Http::FilterDataStatus Filter::decodeData(Buffer::Instance&, bool) {
+Http::FilterDataStatus ServiceControlFilter::decodeData(Buffer::Instance&,
+                                                        bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (state_ == Calling) {
     return Http::FilterDataStatus::StopIterationAndWatermark;
@@ -99,7 +83,8 @@ Http::FilterDataStatus Filter::decodeData(Buffer::Instance&, bool) {
   return Http::FilterDataStatus::Continue;
 }
 
-Http::FilterTrailersStatus Filter::decodeTrailers(Http::HeaderMap&) {
+Http::FilterTrailersStatus ServiceControlFilter::decodeTrailers(
+    Http::HeaderMap&) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (state_ == Calling) {
     return Http::FilterTrailersStatus::StopIteration;
@@ -107,30 +92,23 @@ Http::FilterTrailersStatus Filter::decodeTrailers(Http::HeaderMap&) {
   return Http::FilterTrailersStatus::Continue;
 }
 
-void Filter::setDecoderFilterCallbacks(
+void ServiceControlFilter::setDecoderFilterCallbacks(
     Http::StreamDecoderFilterCallbacks& callbacks) {
   decoder_callbacks_ = &callbacks;
 }
 
-void Filter::log(const Http::HeaderMap* request_headers,
-                 const Http::HeaderMap* response_headers,
-                 const Http::HeaderMap* response_trailers,
-                 const StreamInfo::StreamInfo& stream_info) {
+void ServiceControlFilter::log(const Http::HeaderMap* request_headers,
+                               const Http::HeaderMap* response_headers,
+                               const Http::HeaderMap* response_trailers,
+                               const StreamInfo::StreamInfo& stream_info) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (!handler_) {
     if (!request_headers) return;
-
-    absl::string_view operation = Utils::getStringFilterState(
-        stream_info.filterState(), Utils::kOperation);
-    handler_.reset(new Handler(*request_headers, operation, config_));
+    handler_ = std::move(
+        factory_.createHandler(*request_headers, stream_info, *config_));
   }
 
-  if (!handler_->isConfigured()) {
-    return;
-  }
-
-  handler_->callReport(request_headers, response_headers, response_trailers,
-                       stream_info);
+  handler_->callReport(request_headers, response_headers, response_trailers);
 }
 
 }  // namespace ServiceControl

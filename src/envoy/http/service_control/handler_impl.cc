@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/envoy/http/service_control/handler.h"
+#include "src/envoy/http/service_control/handler_impl.h"
 #include "absl/strings/match.h"
 #include "common/http/utility.h"
+#include "envoy/http/header_map.h"
+#include "src/envoy/http/service_control/handler.h"
+#include "src/envoy/utils/filter_state_utils.h"
 
 using ::google::api::envoy::http::service_control::APIKeyLocation;
 using ::google::api_proxy::service_control::CheckResponseInfo;
@@ -22,6 +25,7 @@ using ::google::api_proxy::service_control::LatencyInfo;
 using ::google::api_proxy::service_control::OperationInfo;
 using ::google::api_proxy::service_control::protocol::Protocol;
 using ::google::protobuf::util::Status;
+using ::google::protobuf::util::error::Code;
 
 namespace Envoy {
 namespace Extensions {
@@ -119,20 +123,32 @@ Protocol getBackendProtocol(const std::string& protocol) {
 
 }  // namespace
 
-Handler::Handler(const Http::HeaderMap& headers, absl::string_view operation,
-                 FilterConfigSharedPtr config)
-    : config_(config) {
+ServiceControlHandlerImpl::ServiceControlHandlerImpl(
+    const Http::HeaderMap& headers, const StreamInfo::StreamInfo& stream_info,
+    const ServiceControlFilterConfig& config)
+    : config_(config), stream_info_(stream_info) {
   http_method_ = headers.Method()->value().c_str();
   path_ = headers.Path()->value().c_str();
   request_header_size_ = headers.byteSize();
-  require_ctx_ = config_->cfg_parser().FindRequirement(operation);
+
+  const absl::string_view operation = Utils::getStringFilterState(
+      stream_info_.filterState(), Utils::kOperation);
+
+  // NOTE: this shouldn't happen in practice because Path Matcher filter would
+  // have already rejected the request.
+  if (operation.empty()) {
+    ENVOY_LOG(debug, "No operation found");
+    return;
+  }
+
+  require_ctx_ = config_.cfg_parser().FindRequirement(operation);
   if (!require_ctx_) {
     ENVOY_LOG(debug, "No requirement matched!");
     return;
   }
 
   // This uuid is shared for Check and report
-  uuid_ = config_->random().uuid();
+  uuid_ = config_.random().uuid();
 
   if (!isCheckRequired()) {
     ENVOY_LOG(debug, "Service control check is not needed");
@@ -142,18 +158,18 @@ Handler::Handler(const Http::HeaderMap& headers, absl::string_view operation,
   if (require_ctx_->config().api_key().locations_size() > 0) {
     extractAPIKey(headers, require_ctx_->config().api_key().locations());
   } else {
-    extractAPIKey(headers, config_->default_api_keys().locations());
+    extractAPIKey(headers, config_.default_api_keys().locations());
   }
 }
 
-Handler::~Handler() {
+ServiceControlHandlerImpl::~ServiceControlHandlerImpl() {
   if (aborted_) {
     *aborted_ = true;
   }
 }
 
-bool Handler::extractAPIKeyFromQuery(const Http::HeaderMap& headers,
-                                     const std::string& query) {
+bool ServiceControlHandlerImpl::extractAPIKeyFromQuery(
+    const Http::HeaderMap& headers, const std::string& query) {
   if (!params_parsed_) {
     parsed_params_ =
         Http::Utility::parseQueryString(headers.Path()->value().c_str());
@@ -169,8 +185,8 @@ bool Handler::extractAPIKeyFromQuery(const Http::HeaderMap& headers,
   return false;
 }
 
-bool Handler::extractAPIKeyFromHeader(const Http::HeaderMap& headers,
-                                      const std::string& header) {
+bool ServiceControlHandlerImpl::extractAPIKeyFromHeader(
+    const Http::HeaderMap& headers, const std::string& header) {
   // TODO(qiwzhang): optimize this by using LowerCaseString at init.
   auto* entry = headers.get(Http::LowerCaseString(header));
   if (entry) {
@@ -181,8 +197,8 @@ bool Handler::extractAPIKeyFromHeader(const Http::HeaderMap& headers,
   return false;
 }
 
-bool Handler::extractAPIKeyFromCookie(const Http::HeaderMap& headers,
-                                      const std::string& cookie) {
+bool ServiceControlHandlerImpl::extractAPIKeyFromCookie(
+    const Http::HeaderMap& headers, const std::string& cookie) {
   std::string api_key = Http::Utility::parseCookieValue(headers, cookie);
   if (!api_key.empty()) {
     api_key_ = api_key;
@@ -192,7 +208,7 @@ bool Handler::extractAPIKeyFromCookie(const Http::HeaderMap& headers,
   return false;
 }
 
-bool Handler::extractAPIKey(
+bool ServiceControlHandlerImpl::extractAPIKey(
     const Http::HeaderMap& headers,
     const ::google::protobuf::RepeatedPtrField<
         ::google::api::envoy::http::service_control::APIKeyLocation>&
@@ -215,7 +231,7 @@ bool Handler::extractAPIKey(
   return false;
 }
 
-void Handler::fillOperationInfo(
+void ServiceControlHandlerImpl::fillOperationInfo(
     ::google::api_proxy::service_control::OperationInfo& info) {
   info.operation_id = uuid_;
   info.operation_name = require_ctx_->config().operation_name();
@@ -224,9 +240,9 @@ void Handler::fillOperationInfo(
   info.request_start_time = std::chrono::system_clock::now();
 }
 
-void Handler::fillGCPInfo(
+void ServiceControlHandlerImpl::fillGCPInfo(
     ::google::api_proxy::service_control::ReportRequestInfo& info) {
-  const auto& filter_config = config_->config();
+  const auto& filter_config = config_.proto();
   if (!filter_config.has_gcp_attributes()) {
     info.compute_platform =
         ::google::api_proxy::service_control::compute_platform::UNKNOWN;
@@ -254,8 +270,27 @@ void Handler::fillGCPInfo(
   }
 }
 
-void Handler::callCheck(Http::HeaderMap& headers, CheckDoneCallback& callback,
-                        const StreamInfo::StreamInfo& stream_info) {
+void ServiceControlHandlerImpl::callCheck(Http::HeaderMap& headers,
+                                          CheckDoneCallback& callback) {
+  if (!isConfigured()) {
+    callback.onCheckDone(Status(Code::NOT_FOUND, "Method does not exist."));
+    return;
+  }
+
+  if (!isCheckRequired()) {
+    callback.onCheckDone(Status::OK);
+    return;
+  }
+
+  if (!hasApiKey()) {
+    callback.onCheckDone(
+        Status(Code::UNAUTHENTICATED,
+               "Method doesn't allow unregistered callers (callers without "
+               "established identity). Please use API Key or other form of "
+               "API consumer identity to call this API."));
+    return;
+  }
+
   check_callback_ = &callback;
 
   // Make a check call
@@ -271,7 +306,7 @@ void Handler::callCheck(Http::HeaderMap& headers, CheckDoneCallback& callback,
   info.android_cert_fingerprint = extractHeader(headers, kAndroidCertHeader);
 
   info.client_ip =
-      stream_info.downstreamRemoteAddress()->ip()->addressAsString();
+      stream_info_.downstreamRemoteAddress()->ip()->addressAsString();
 
   ::google::api::servicecontrol::v1::CheckRequest check_request;
   require_ctx_->service_ctx().builder().FillCheckRequest(info, &check_request);
@@ -287,9 +322,11 @@ void Handler::callCheck(Http::HeaderMap& headers, CheckDoneCallback& callback,
       });
 }
 
-void Handler::onCheckResponse(Http::HeaderMap& headers, const Status& status,
-                              const CheckResponseInfo& response_info) {
+void ServiceControlHandlerImpl::onCheckResponse(
+    Http::HeaderMap& headers, const Status& status,
+    const CheckResponseInfo& response_info) {
   check_response_info_ = response_info;
+
   check_status_ = status;
 
   // Set consumer project_id to backend.
@@ -298,13 +335,17 @@ void Handler::onCheckResponse(Http::HeaderMap& headers, const Status& status,
                             response_info.consumer_project_id);
   }
 
-  check_callback_->onCheckDone(status);
+  check_callback_->onCheckDone(check_status_);
 }
 
-void Handler::callReport(const Http::HeaderMap* request_headers,
-                         const Http::HeaderMap* response_headers,
-                         const Http::HeaderMap* response_trailers,
-                         const StreamInfo::StreamInfo& stream_info) {
+void ServiceControlHandlerImpl::callReport(
+    const Http::HeaderMap* request_headers,
+    const Http::HeaderMap* response_headers,
+    const Http::HeaderMap* response_trailers) {
+  if (!isConfigured()) {
+    return;
+  }
+
   ::google::api_proxy::service_control::ReportRequestInfo info;
   fillOperationInfo(info);
 
@@ -322,11 +363,10 @@ void Handler::callReport(const Http::HeaderMap* request_headers,
   info.log_message = info.api_method + " is called";
 
   info.check_response_info = check_response_info_;
-  info.response_code = stream_info.responseCode().value_or(500);
   info.status = check_status_;
 
-  info.frontend_protocol =
-      getFrontendProtocol(response_headers, stream_info.protocol().has_value());
+  info.frontend_protocol = getFrontendProtocol(
+      response_headers, stream_info_.protocol().has_value());
 
   info.backend_protocol = getBackendProtocol(
       require_ctx_->service_ctx().config().backend_protocol());
@@ -336,18 +376,18 @@ void Handler::callReport(const Http::HeaderMap* request_headers,
   }
 
   fillGCPInfo(info);
-  fillLatency(stream_info, info.latency);
+  fillLatency(stream_info_, info.latency);
 
   // TODO(qiwzhang): sending streaming multiple reports: b/123950356
 
-  info.response_code = stream_info.responseCode().value_or(500);
+  info.response_code = stream_info_.responseCode().value_or(500);
 
   // TODO(qiwzhang): b/123950356, multiple reports will be send for long
   // duration requests. request_bytes is number of bytes when an intermediate
   // Report is sending. For now, we only send the final report, request_bytes is
   // the same as request_size.
-  info.request_size = stream_info.bytesReceived() + request_header_size_;
-  info.request_bytes = stream_info.bytesReceived() + request_header_size_;
+  info.request_size = stream_info_.bytesReceived() + request_header_size_;
+  info.request_bytes = stream_info_.bytesReceived() + request_header_size_;
 
   uint64_t response_header_size = 0;
   if (response_headers) {
@@ -356,8 +396,8 @@ void Handler::callReport(const Http::HeaderMap* request_headers,
   if (response_trailers) {
     response_header_size += response_trailers->byteSize();
   }
-  info.response_size = stream_info.bytesSent() + response_header_size;
-  info.response_bytes = stream_info.bytesSent() + response_header_size;
+  info.response_size = stream_info_.bytesSent() + response_header_size;
+  info.response_bytes = stream_info_.bytesSent() + response_header_size;
 
   ::google::api::servicecontrol::v1::ReportRequest report_request;
   require_ctx_->service_ctx().builder().FillReportRequest(info,

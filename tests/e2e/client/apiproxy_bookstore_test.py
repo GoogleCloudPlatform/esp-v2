@@ -63,7 +63,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
                 self.assertEqual(r.status_code, 401)
                 self.assertEqual(
                     r.text,
-                    ('Method doesn\'t allow unregistered callers (callers without '
+                    ('UNAUTHENTICATED:Method doesn\'t allow unregistered callers (callers without '
                      'established identity). Please use API Key or other form of '
                      'API consumer identity to call this API.'))
                 print 'Completed Negative test.'
