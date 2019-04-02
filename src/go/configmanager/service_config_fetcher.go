@@ -1,0 +1,184 @@
+// Copyright 2019 Google Cloud Platform Proxy Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package configmanager
+
+import (
+	"crypto/tls"
+	"fmt"
+	"math"
+	"net/http"
+	"strings"
+	"time"
+
+	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
+	"github.com/gogo/protobuf/types"
+	"github.com/golang/glog"
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
+	"google.golang.org/genproto/googleapis/api/annotations"
+
+	sm "github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
+	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+)
+
+const (
+	fetchConfigSuffix   = "/v1/services/$serviceName/configs/$configId?view=FULL"
+	fetchRolloutsSuffix = "/v1/services/$serviceName/rollouts?filter=status=SUCCESS"
+)
+
+var (
+	fetchConfigURL = func(serviceName, configID string) string {
+		path := *flags.ServiceManagementURL + fetchConfigSuffix
+		path = strings.Replace(path, "$serviceName", serviceName, 1)
+		path = strings.Replace(path, "$configId", configID, 1)
+		return path
+	}
+	fetchRolloutsURL = func(serviceName string) string {
+		path := *flags.ServiceManagementURL + fetchRolloutsSuffix
+		path = strings.Replace(path, "$serviceName", serviceName, 1)
+		return path
+	}
+	checkNewRolloutInterval = 60 * time.Second
+
+	serviceConfigFetcherClient = &http.Client{Transport: &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}}
+)
+
+func loadConfigFromRollouts(serviceName, curRolloutID, curConfigID string) (string, string, error) {
+	var err error
+	var listServiceRolloutsResponse *sm.ListServiceRolloutsResponse
+	listServiceRolloutsResponse, err = fetchRollouts(serviceName)
+	if err != nil {
+		return "", "", fmt.Errorf("fail to get rollouts, %s", err)
+	}
+	glog.Infof("get rollouts %v", listServiceRolloutsResponse)
+	if len(listServiceRolloutsResponse.Rollouts) == 0 {
+		return "", "", fmt.Errorf("no active rollouts")
+	}
+	newRolloutID := listServiceRolloutsResponse.Rollouts[0].RolloutId
+	if newRolloutID == curRolloutID {
+		return curRolloutID, curConfigID, nil
+	}
+	glog.Infof("found new rollout id %v for service %v", newRolloutID, serviceName)
+
+	trafficPercentStrategy := listServiceRolloutsResponse.Rollouts[0].GetTrafficPercentStrategy()
+	trafficPercentMap := trafficPercentStrategy.GetPercentages()
+	if len(trafficPercentMap) == 0 {
+		return "", "", fmt.Errorf("no active rollouts")
+	}
+	var newConfigID string
+	currentMaxPercent := 0.0
+	// take config ID with max traffic percent as new config ID
+	for k, v := range trafficPercentMap {
+		if v > currentMaxPercent {
+			newConfigID = k
+			currentMaxPercent = v
+		}
+	}
+	if newConfigID == curConfigID {
+		glog.Infof("no new configuration to load for service %v, current configuration id %v", serviceName, curConfigID)
+		return newRolloutID, curConfigID, nil
+	}
+	if !(math.Abs(100.0-currentMaxPercent) < 1e-9) {
+		glog.Warningf("though traffic percentage of configuration %v is %v%%, set it to 100%%", newConfigID, currentMaxPercent)
+	}
+	glog.Infof("found new configuration id %v for service %v", curConfigID, serviceName)
+	return newRolloutID, newConfigID, nil
+}
+
+// TODO(jcwang) cleanup here. This function is redundant.
+func fetchRollouts(serviceName string) (*sm.ListServiceRolloutsResponse, error) {
+	token, _, err := fetchAccessToken()
+	if err != nil {
+		return nil, fmt.Errorf("fail to get access token")
+	}
+
+	return callServiceManagementRollouts(fetchRolloutsURL(serviceName), token)
+}
+
+func fetchConfig(serviceName, configId string) (*conf.Service, error) {
+	token, _, err := fetchAccessToken()
+	if err != nil {
+		return nil, fmt.Errorf("fail to get access token")
+	}
+
+	return callServiceManagement(fetchConfigURL(serviceName, configId), token)
+}
+
+var callServiceManagementRollouts = func(path, token string) (*sm.ListServiceRolloutsResponse, error) {
+	var err error
+	var resp *http.Response
+	if resp, err = callWithAccessToken(path, token); err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	unmarshaler := &jsonpb.Unmarshaler{}
+	var rolloutsResponse sm.ListServiceRolloutsResponse
+	if err = unmarshaler.Unmarshal(resp.Body, &rolloutsResponse); err != nil {
+		return nil, fmt.Errorf("fail to unmarshal ListServiceRolloutsResponse: %s", err)
+	}
+	return &rolloutsResponse, nil
+}
+
+// Helper to convert Json string to protobuf.Any.
+type funcResolver func(url string) (proto.Message, error)
+
+func (fn funcResolver) Resolve(url string) (proto.Message, error) {
+	return fn(url)
+}
+
+var callServiceManagement = func(path, token string) (*conf.Service, error) {
+	var err error
+	var resp *http.Response
+	if resp, err = callWithAccessToken(path, token); err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	resolver := funcResolver(func(url string) (proto.Message, error) {
+		switch url {
+		case "type.googleapis.com/google.api.servicemanagement.v1.ConfigFile":
+			return new(sm.ConfigFile), nil
+		case "type.googleapis.com/google.api.HttpRule":
+			return new(annotations.HttpRule), nil
+		case "type.googleapis.com/google.protobuf.BoolValue":
+			return new(types.BoolValue), nil
+		default:
+			return nil, fmt.Errorf("unexpected protobuf.Any with url: %s", url)
+		}
+	})
+	unmarshaler := &jsonpb.Unmarshaler{
+		AnyResolver: resolver,
+	}
+	var serviceConfig conf.Service
+	if err = unmarshaler.Unmarshal(resp.Body, &serviceConfig); err != nil {
+		return nil, fmt.Errorf("fail to unmarshal serviceConfig: %s", err)
+	}
+	return &serviceConfig, nil
+}
+
+var callWithAccessToken = func(path, token string) (*http.Response, error) {
+	req, _ := http.NewRequest("GET", path, nil)
+	req.Header.Add("Authorization", "Bearer "+token)
+	resp, err := serviceConfigFetcherClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+		return nil, fmt.Errorf("http call to %s returns not 200 OK: %v", path, resp.Status)
+	}
+	return resp, nil
+}

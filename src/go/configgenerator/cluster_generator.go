@@ -35,7 +35,38 @@ const (
 	serviceControlClusterName = "service-control-cluster"
 )
 
-func MakeBackendCluster(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtocol) (*v2.Cluster, error) {
+func MakeClusters(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtocol) ([]cache.Resource, error) {
+	var clusters []cache.Resource
+	backendCluster, err := makeBackendCluster(serviceInfo, backendProtocol)
+	if err != nil {
+		return nil, err
+	}
+	if backendCluster != nil {
+		clusters = append(clusters, backendCluster)
+	}
+
+	// Note: makeServiceControlCluster should be called before makeListener
+	// as makeServiceControlFilter is using m.serviceControlURI assigned by
+	// makeServiceControlCluster
+	scCluster, err := makeServiceControlCluster(serviceInfo)
+	if err != nil {
+		return nil, err
+	}
+	if scCluster != nil {
+		clusters = append(clusters, scCluster)
+	}
+
+	brClusters, err := makeBackendRoutingClusters(serviceInfo)
+	if err != nil {
+		return nil, err
+	}
+	if brClusters != nil {
+		clusters = append(clusters, brClusters...)
+	}
+	return clusters, nil
+}
+
+func makeBackendCluster(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtocol) (*v2.Cluster, error) {
 	c := &v2.Cluster{
 		Name:           serviceInfo.ApiName,
 		LbPolicy:       v2.Cluster_ROUND_ROBIN,
@@ -61,7 +92,7 @@ func MakeBackendCluster(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendP
 	return c, nil
 }
 
-func MakeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error) {
+func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error) {
 	uri := serviceInfo.ServiceConfig().GetControl().GetEnvironment()
 	if uri == "" {
 		return nil, nil
@@ -130,7 +161,7 @@ func MakeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error)
 	return c, nil
 }
 
-func MakeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
+func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
 	var brClusters []cache.Resource
 	for _, v := range serviceInfo.DynamicRoutingBackendMap {
 		c := &v2.Cluster{
