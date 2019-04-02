@@ -157,9 +157,9 @@ func createReportLabels(er *ExpectedReport) map[string]string {
 		"servicecontrol.googleapis.com/service_agent": "APIPROXY/" + er.Version,
 		"servicecontrol.googleapis.com/user_agent":    "APIPROXY",
 		"serviceruntime.googleapis.com/api_method":    er.ApiMethod,
-		"/response_code":       response,
-		"/status_code":         status,
-		"/response_code_class": class,
+		"/response_code":                              response,
+		"/status_code":                                status,
+		"/response_code_class":                        class,
 	}
 	if er.StatusCode != "" {
 		labels["/status_code"] = er.StatusCode
@@ -229,12 +229,8 @@ func createLogEntry(er *ExpectedReport) *sc.LogEntry {
 	if er.Location != "" {
 		pl["location"] = makeStringValue(er.Location)
 	}
-	if er.RequestSize != 0 {
-		pl["request_size_in_bytes"] = makeNumberValue(er.RequestSize)
-	}
-	if er.ResponseSize != 0 {
-		pl["response_size_in_bytes"] = makeNumberValue(er.ResponseSize)
-	}
+	pl["request_size_in_bytes"] = makeNumberValue(er.RequestSize)
+	pl["response_size_in_bytes"] = makeNumberValue(er.ResponseSize)
 	if er.LogMessage != "" {
 		pl["log_message"] = makeStringValue(er.LogMessage)
 	}
@@ -370,6 +366,8 @@ func createByConsumerOperation(er *ExpectedReport) *sc.Operation {
 		createInt64MetricSet("serviceruntime.googleapis.com/api/producer/by_consumer/request_count", 1),
 		createDistMetricSet(&sizeDistOptions,
 			"serviceruntime.googleapis.com/api/producer/by_consumer/request_sizes", er.RequestSize),
+		createDistMetricSet(&sizeDistOptions,
+			"serviceruntime.googleapis.com/api/producer/by_consumer/response_sizes", er.ResponseSize),
 	}
 
 	for name, t := range randomMatrics {
@@ -378,11 +376,6 @@ func createByConsumerOperation(er *ExpectedReport) *sc.Operation {
 		}
 	}
 
-	if er.ResponseSize != 0 {
-		ms = append(ms,
-			createDistMetricSet(&sizeDistOptions,
-				"serviceruntime.googleapis.com/api/producer/by_consumer/response_sizes", er.ResponseSize))
-	}
 	if er.ErrorType != "" {
 		ms = append(ms,
 			createInt64MetricSet("serviceruntime.googleapis.com/api/producer/by_consumer/error_count", 1))
@@ -403,29 +396,41 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 		createLogEntry(er),
 	}
 
-	ms := []*sc.MetricValueSet{}
+	ms := []*sc.MetricValueSet{
+		createInt64MetricSet("serviceruntime.googleapis.com/api/producer/request_count", 1),
+		createDistMetricSet(&sizeDistOptions,
+			"serviceruntime.googleapis.com/api/producer/request_sizes", er.RequestSize),
+		createDistMetricSet(&sizeDistOptions,
+			"serviceruntime.googleapis.com/api/producer/response_sizes", er.ResponseSize),
+	}
 
-	ms = append(ms,
-		createInt64MetricSet("serviceruntime.googleapis.com/api/producer/request_count", 1))
 	if sendConsumer {
 		ms = append(ms,
 			createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/request_count", 1))
-	}
-
-	ms = append(ms,
-		createDistMetricSet(&sizeDistOptions,
-			"serviceruntime.googleapis.com/api/producer/request_sizes", er.RequestSize))
-	if sendConsumer {
 		ms = append(ms,
 			createDistMetricSet(&sizeDistOptions,
 				"serviceruntime.googleapis.com/api/consumer/request_sizes", er.RequestSize))
+		ms = append(ms,
+			createDistMetricSet(&sizeDistOptions,
+				"serviceruntime.googleapis.com/api/consumer/response_sizes", er.ResponseSize))
 	}
 
-	ms = append(ms,
-		createInt64MetricSet("serviceruntime.googleapis.com/api/producer/request_bytes", er.RequestBytes))
-	if sendConsumer {
+	if er.RequestBytes != 0 {
 		ms = append(ms,
-			createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/request_bytes", er.RequestBytes))
+			createInt64MetricSet("serviceruntime.googleapis.com/api/producer/request_bytes", er.RequestBytes))
+		if sendConsumer {
+			ms = append(ms,
+				createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/request_bytes", er.RequestBytes))
+		}
+	}
+
+	if er.ResponseBytes != 0 {
+		ms = append(ms,
+			createInt64MetricSet("serviceruntime.googleapis.com/api/producer/response_bytes", er.ResponseBytes))
+		if sendConsumer {
+			ms = append(ms,
+				createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/response_bytes", er.ResponseBytes))
+		}
 	}
 
 	for name, t := range randomMatrics {
@@ -434,23 +439,6 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 		}
 	}
 
-	if er.ResponseSize != 0 {
-		ms = append(ms,
-			createDistMetricSet(&sizeDistOptions,
-				"serviceruntime.googleapis.com/api/producer/response_sizes", er.ResponseSize))
-		if sendConsumer {
-			ms = append(ms,
-				createDistMetricSet(&sizeDistOptions,
-					"serviceruntime.googleapis.com/api/consumer/response_sizes", er.ResponseSize))
-		}
-
-		ms = append(ms,
-			createInt64MetricSet("serviceruntime.googleapis.com/api/producer/response_bytes", er.ResponseBytes))
-		if sendConsumer {
-			ms = append(ms,
-				createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/response_bytes", er.ResponseBytes))
-		}
-	}
 	if er.ErrorType != "" {
 		ms = append(ms,
 			createInt64MetricSet("serviceruntime.googleapis.com/api/producer/error_count", 1))

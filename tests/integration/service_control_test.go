@@ -24,6 +24,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
+	"google.golang.org/genproto/googleapis/api/annotations"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 )
@@ -36,6 +37,15 @@ func TestServiceControlBasic(t *testing.T) {
 		"--backend_protocol=http1", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestServiceControlBasic, "echo", []string{"google_jwt"})
+	s.AppendHttpRules([]*annotations.HttpRule{
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/simpleget",
+			},
+		},
+	})
+
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -51,6 +61,43 @@ func TestServiceControlBasic(t *testing.T) {
 		wantScRequests        []interface{}
 		wantGetScRequestError error
 	}{
+		{
+			desc:     "succeed GET, no Jwt required",
+			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/simpleget", "?key=api-key"),
+			method:   "GET",
+			message:  "",
+			wantResp: "simple get message",
+			wantScRequests: []interface{}{
+				&utils.ExpectedCheck{
+					Version:         utils.APIProxyVersion,
+					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					ConsumerID:      "api_key:api-key",
+					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",
+					CallerIp:        "127.0.0.1",
+				},
+				&utils.ExpectedReport{
+					Version:           utils.APIProxyVersion,
+					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:   "test-config-id",
+					URL:               "/simpleget?key=api-key",
+					ApiKey:            "api-key",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",
+					ProducerProjectID: "producer-project",
+					ConsumerProjectID: "123456",
+					FrontendProtocol:  "http",
+					HttpMethod:        "GET",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget is called",
+					RequestSize:       0,
+					ResponseSize:      18,
+					RequestBytes:      0,
+					ResponseBytes:     18,
+					ResponseCode:      200,
+					Platform:          util.GCE,
+					Location:          "test-zone",
+				},
+			},
+		},
 		{
 			desc:     "succeed, no Jwt required",
 			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key"),

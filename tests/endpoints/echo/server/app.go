@@ -42,6 +42,8 @@ func main() {
 		HandlerFunc(echoHandler)
 	r.Path("/anypath/x/y/z").Methods("POST").
 		HandlerFunc(echoHandler)
+	r.Path("/simpleget").Methods("GET").
+		HandlerFunc(simpleGet)
 	r.Path("/simplegetcors").Methods("GET", "OPTIONS").
 		Handler(corsHandler(simpleGetCors))
 	r.Path("/auth/info/googlejwt").Methods("GET").
@@ -103,6 +105,10 @@ func dynamicRoutingHandler(w http.ResponseWriter, r *http.Request) {
 
 // corsHandler wraps a HTTP handler and applies the appropriate responses for Cross-Origin Resource Sharing.
 type corsHandler http.HandlerFunc
+
+func simpleGet(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("simple get message"))
+}
 
 func simpleGetCors(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
