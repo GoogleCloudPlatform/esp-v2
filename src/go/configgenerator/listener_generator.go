@@ -16,13 +16,12 @@ package configgenerator
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"sort"
 	"strings"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	"github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 	"github.com/envoyproxy/go-control-plane/pkg/util"
 	"github.com/gogo/protobuf/types"
@@ -51,9 +50,7 @@ const (
 	statPrefix = "ingress_http"
 )
 
-var jwkClient http.Client
-
-func MakeListener(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtocol) (*v2.Listener, *hcm.HttpConnectionManager, error) {
+func MakeListener(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtocol) (*v2.Listener, error) {
 	httpFilters := []*hcm.HttpFilter{}
 
 	if *flags.CorsPreset == "basic" || *flags.CorsPreset == "cors_with_regex" {
@@ -107,6 +104,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtoco
 		}
 		httpFilters = append(httpFilters, grpcWebFilter)
 	}
+
 	// Add Backend Auth filter and Backend Routing if needed.
 	if *flags.EnableBackendRouting {
 		backendAuthFilter := makeBackendAuthFilter(serviceInfo)
@@ -127,7 +125,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtoco
 
 	route, err := MakeRouteConfig(serviceInfo)
 	if err != nil {
-		return nil, nil, fmt.Errorf("makeHttpConnectionManagerRouteConfig got err: %s", err)
+		return nil, fmt.Errorf("makeHttpConnectionManagerRouteConfig got err: %s", err)
 	}
 
 	httpConMgr := &hcm.HttpConnectionManager{
@@ -141,11 +139,34 @@ func MakeListener(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtoco
 	glog.Infof("adding Http Connection Manager config: %v", httpConMgr)
 	httpConMgr.HttpFilters = httpFilters
 
+	// HTTP filter configuration
+	httpFilterConfig, err := util.MessageToStruct(httpConMgr)
+	if err != nil {
+		return nil, err
+	}
+
 	return &v2.Listener{
-		Address: core.Address{Address: &core.Address_SocketAddress{SocketAddress: &core.SocketAddress{
-			Address:       *flags.ListenerAddress,
-			PortSpecifier: &core.SocketAddress_PortValue{PortValue: uint32(*flags.ListenerPort)}}}},
-	}, httpConMgr, nil
+		Address: core.Address{
+			Address: &core.Address_SocketAddress{
+				SocketAddress: &core.SocketAddress{
+					Address: *flags.ListenerAddress,
+					PortSpecifier: &core.SocketAddress_PortValue{
+						PortValue: uint32(*flags.ListenerPort),
+					},
+				},
+			},
+		},
+		FilterChains: []listener.FilterChain{
+			{
+				Filters: []listener.Filter{
+					{
+						Name:       util.HTTPConnectionManager,
+						ConfigType: &listener.Filter_Config{httpFilterConfig},
+					},
+				},
+			},
+		},
+	}, nil
 }
 
 func makePathMatcherFilter(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtocol) *hcm.HttpFilter {
@@ -477,19 +498,6 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo, backendProtocol ut.Ba
 		ConfigType: &hcm.HttpFilter_Config{scs},
 	}
 	return filter
-}
-
-var fetchJwk = func(path string) ([]byte, error) {
-	req, _ := http.NewRequest("GET", path, nil)
-	resp, err := jwkClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("fetching JWK returns not 200 OK: %v", resp.Status)
-	}
-	return ioutil.ReadAll(resp.Body)
 }
 
 func copyServiceConfigForReportMetrics(src *conf.Service) *any.Any {

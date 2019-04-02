@@ -21,9 +21,10 @@ import (
 	"strings"
 	"testing"
 
-	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 	"github.com/gogo/protobuf/types"
+
+	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 )
 
 func TestMakeRouteConfig(t *testing.T) {
