@@ -169,8 +169,7 @@ var (
 		},
 		Endpoints: []*conf.Endpoint{
 			{
-				Name:      "echo-api.endpoints.cloudesf-testing.cloud.goog",
-				AllowCors: true,
+				Name: "echo-api.endpoints.cloudesf-testing.cloud.goog",
 			},
 		},
 	}

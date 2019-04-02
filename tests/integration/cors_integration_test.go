@@ -19,8 +19,11 @@ import (
 	"testing"
 	"time"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
+	"cloudesf.googlesource.com/gcpproxy/tests/utils"
+	"google.golang.org/genproto/googleapis/api/annotations"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 )
@@ -195,7 +198,6 @@ func TestPreflightCorsWithBasicPreset(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
-	time.Sleep(time.Duration(3 * time.Second))
 
 	testData := struct {
 		desc          string
@@ -212,7 +214,7 @@ func TestPreflightCorsWithBasicPreset(t *testing.T) {
 	}
 
 	url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo")
-	respHeader, err := client.DoCorsPreflightRequest(url, corsAllowOriginValue, corsRequestMethod, corsRequestHeader)
+	respHeader, err := client.DoCorsPreflightRequest(url, corsAllowOriginValue, corsRequestMethod, corsRequestHeader, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -248,7 +250,6 @@ func TestDifferentOriginPreflightCors(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
-	time.Sleep(time.Duration(3 * time.Second))
 
 	testData := struct {
 		desc          string
@@ -265,7 +266,7 @@ func TestDifferentOriginPreflightCors(t *testing.T) {
 	}
 
 	url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo")
-	respHeader, err := client.DoCorsPreflightRequest(url, corsOrigin, corsRequestMethod, "")
+	respHeader, err := client.DoCorsPreflightRequest(url, corsOrigin, corsRequestMethod, "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -294,7 +295,6 @@ func TestGrpcBackendSimpleCors(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
-	time.Sleep(time.Duration(3 * time.Second))
 
 	testData := struct {
 		desc              string
@@ -341,7 +341,6 @@ func TestGrpcBackendPreflightCors(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
-	time.Sleep(time.Duration(3 * time.Second))
 
 	testData := struct {
 		desc          string
@@ -358,7 +357,7 @@ func TestGrpcBackendPreflightCors(t *testing.T) {
 	}
 
 	url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/v1/shelves/200")
-	respHeader, err := client.DoCorsPreflightRequest(url, corsAllowOriginValue, corsRequestMethod, "")
+	respHeader, err := client.DoCorsPreflightRequest(url, corsAllowOriginValue, corsRequestMethod, "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -387,11 +386,11 @@ func TestPreflightRequestWithAllowCors(t *testing.T) {
 		"--backend_protocol=http1", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestPreflightRequestWithAllowCors, "echo", nil)
+	s.SetAllowCors()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
-	time.Sleep(time.Duration(3 * time.Second))
 
 	testData := []struct {
 		desc          string
@@ -425,7 +424,7 @@ func TestPreflightRequestWithAllowCors(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		respHeader, err := client.DoCorsPreflightRequest(tc.url, corsOrigin, corsRequestMethod, corsRequestHeader)
+		respHeader, err := client.DoCorsPreflightRequest(tc.url, corsOrigin, corsRequestMethod, corsRequestHeader, "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -436,5 +435,330 @@ func TestPreflightRequestWithAllowCors(t *testing.T) {
 			}
 		}
 	}
+}
 
+func TestServiceControlRequestWithAllowCors(t *testing.T) {
+	serviceName := "echo-api.endpoints.cloudesf-testing.cloud.goog"
+	configId := "test-config-id"
+	corsRequestMethod := "PATCH"
+	corsRequestHeader := "X-PINGOTHER"
+	referer := "http://google.com/bootstore/root"
+	corsOrigin := "http://cloud.google.com"
+	corsAllowOriginValue := "*"
+	corsAllowMethodsValue := "GET, OPTIONS"
+	corsAllowHeadersValue := "Authorization"
+	corsExposeHeadersValue := "Cache-Control,Content-Type,Authorization, X-PINGOTHER"
+	corsAllowCredentialsValue := "true"
+
+	args := []string{"--service=" + serviceName, "--version=" + configId,
+		"--backend_protocol=http1", "--rollout_strategy=fixed"}
+
+	s := env.NewTestEnv(comp.TestServiceControlRequestWithAllowCors, "echo", nil)
+	s.SetAllowCors()
+	s.AppendHttpRules([]*annotations.HttpRule{
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.ListShelves",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/bookstore/shelves",
+			},
+		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.CorsShelves",
+			Pattern: &annotations.HttpRule_Custom{
+				Custom: &annotations.CustomHttpPattern{
+					Kind: "OPTIONS",
+					Path: "/bookstore/shelves",
+				},
+			},
+		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.GetShelf",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/bookstore/shelves/{shelf}",
+			},
+		},
+	})
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+	defer s.TearDown()
+
+	testData := []struct {
+		desc                string
+		url                 string
+		respHeaderMap       map[string]string
+		checkServiceControl bool
+		wantScRequests      []interface{}
+	}{
+		{
+			desc: "Succeed, response has CORS headers, service control sends check and report request",
+			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/bookstore/shelves?key=api-key"),
+			respHeaderMap: map[string]string{
+				"Access-Control-Allow-Origin":      corsAllowOriginValue,
+				"Access-Control-Allow-Methods":     corsAllowMethodsValue,
+				"Access-Control-Allow-Headers":     corsAllowHeadersValue,
+				"Access-Control-Expose-Headers":    corsExposeHeadersValue,
+				"Access-Control-Allow-Credentials": corsAllowCredentialsValue,
+			},
+			checkServiceControl: true,
+			wantScRequests: []interface{}{
+				&utils.ExpectedCheck{
+					Version:         utils.APIProxyVersion,
+					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					ConsumerID:      "api_key:api-key",
+					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.CorsShelves",
+					CallerIp:        "127.0.0.1",
+					Referer:         referer,
+				},
+				&utils.ExpectedReport{
+					Version:           utils.APIProxyVersion,
+					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:   "test-config-id",
+					URL:               "/bookstore/shelves?key=api-key",
+					ApiKey:            "api-key",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.CorsShelves",
+					ProducerProjectID: "producer-project",
+					ConsumerProjectID: "123456",
+					FrontendProtocol:  "http",
+					HttpMethod:        "OPTIONS",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.CorsShelves is called",
+					RequestSize:       0,
+					ResponseSize:      0,
+					RequestBytes:      0,
+					ResponseBytes:     0,
+					ResponseCode:      204,
+					Platform:          util.GCE,
+					Location:          "test-zone",
+				},
+			},
+		},
+		{
+			desc: "Succeed, request without API key, response has CORS headers, service control sends report request only",
+			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/bookstore/shelves/1"),
+			respHeaderMap: map[string]string{
+				"Access-Control-Allow-Origin":      corsAllowOriginValue,
+				"Access-Control-Allow-Methods":     corsAllowMethodsValue,
+				"Access-Control-Allow-Headers":     corsAllowHeadersValue,
+				"Access-Control-Expose-Headers":    corsExposeHeadersValue,
+				"Access-Control-Allow-Credentials": corsAllowCredentialsValue,
+			},
+			checkServiceControl: true,
+			wantScRequests: []interface{}{
+				&utils.ExpectedReport{
+					Version:           utils.APIProxyVersion,
+					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:   "test-config-id",
+					URL:               "/bookstore/shelves/1",
+					ApiKey:            "",
+					ApiMethod:         "CORS.4",
+					ProducerProjectID: "producer-project",
+					ConsumerProjectID: "123456",
+					FrontendProtocol:  "http",
+					HttpMethod:        "OPTIONS",
+					LogMessage:        "CORS.4 is called",
+					RequestSize:       0,
+					ResponseSize:      0,
+					RequestBytes:      0,
+					ResponseBytes:     0,
+					ResponseCode:      204,
+					Platform:          util.GCE,
+					Location:          "test-zone",
+				},
+			},
+		},
+	}
+	for _, tc := range testData {
+		respHeader, err := client.DoCorsPreflightRequest(tc.url, corsOrigin, corsRequestMethod, corsRequestHeader, referer)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		for key, value := range tc.respHeaderMap {
+			if respHeader.Get(key) != value {
+				t.Errorf("%s expected: %s, got: %s", key, value, respHeader.Get(key))
+			}
+		}
+		if tc.checkServiceControl {
+			scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 2*time.Second)
+			if err != nil {
+				t.Fatalf("Test Desc(%s): GetRequests returns error: %v", tc.desc, err)
+			}
+			for i, wantScRequest := range tc.wantScRequests {
+				reqBody := scRequests[i].ReqBody
+				switch wantScRequest.(type) {
+				case *utils.ExpectedCheck:
+					if scRequests[i].ReqType != comp.CHECK_REQUEST {
+						t.Errorf("Test Desc(%s): service control request %v: should be Check", tc.desc, i)
+					}
+					if err := utils.VerifyCheck(reqBody, wantScRequest.(*utils.ExpectedCheck)); err != nil {
+						t.Error(err)
+					}
+				case *utils.ExpectedReport:
+					if scRequests[i].ReqType != comp.REPORT_REQUEST {
+						t.Errorf("Test Desc(%s): service control request %v: should be Report", tc.desc, i)
+					}
+					if err := utils.VerifyReport(reqBody, wantScRequest.(*utils.ExpectedReport)); err != nil {
+						t.Error(err)
+					}
+				default:
+					t.Fatalf("Test Desc(%s): unknown service control response type", tc.desc)
+				}
+			}
+		}
+	}
+}
+
+func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
+	serviceName := "echo-api.endpoints.cloudesf-testing.cloud.goog"
+	configId := "test-config-id"
+	corsRequestMethod := "PATCH"
+	corsRequestHeader := "X-PINGOTHER"
+	referer := "http://google.com/bootstore/root"
+	corsOrigin := "http://cloud.google.com"
+	corsAllowOriginValue := "*"
+	corsAllowMethodsValue := "GET, OPTIONS"
+	corsAllowHeadersValue := "Authorization"
+	corsExposeHeadersValue := "Cache-Control,Content-Type,Authorization, X-PINGOTHER"
+	corsAllowCredentialsValue := "true"
+
+	args := []string{"--service=" + serviceName, "--version=" + configId,
+		"--backend_protocol=http1", "--rollout_strategy=fixed"}
+
+	s := env.NewTestEnv(comp.TestServiceControlRequestWithoutAllowCors, "echo", nil)
+	s.AppendHttpRules([]*annotations.HttpRule{
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.ListShelves",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/bookstore/shelves",
+			},
+		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.CorsShelves",
+			Pattern: &annotations.HttpRule_Custom{
+				Custom: &annotations.CustomHttpPattern{
+					Kind: "OPTIONS",
+					Path: "/bookstore/shelves",
+				},
+			},
+		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.GetShelf",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/bookstore/shelves/{shelf}",
+			},
+		},
+	})
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+	defer s.TearDown()
+
+	testData := []struct {
+		desc                  string
+		url                   string
+		respHeaderMap         map[string]string
+		checkServiceControl   bool
+		wantScRequests        []interface{}
+		wantGetScRequestError error
+	}{
+		{
+			desc: "Succeed, request has API key, response has CORS headers, service control sends check and report request",
+			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/bookstore/shelves?key=api-key"),
+			respHeaderMap: map[string]string{
+				"Access-Control-Allow-Origin":      corsAllowOriginValue,
+				"Access-Control-Allow-Methods":     corsAllowMethodsValue,
+				"Access-Control-Allow-Headers":     corsAllowHeadersValue,
+				"Access-Control-Expose-Headers":    corsExposeHeadersValue,
+				"Access-Control-Allow-Credentials": corsAllowCredentialsValue,
+			},
+			checkServiceControl: true,
+			wantScRequests: []interface{}{
+				&utils.ExpectedCheck{
+					Version:         utils.APIProxyVersion,
+					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					ConsumerID:      "api_key:api-key",
+					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.CorsShelves",
+					CallerIp:        "127.0.0.1",
+					Referer:         referer,
+				},
+				&utils.ExpectedReport{
+					Version:           utils.APIProxyVersion,
+					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:   "test-config-id",
+					URL:               "/bookstore/shelves?key=api-key",
+					ApiKey:            "api-key",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.CorsShelves",
+					ProducerProjectID: "producer-project",
+					ConsumerProjectID: "123456",
+					FrontendProtocol:  "http",
+					HttpMethod:        "OPTIONS",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.CorsShelves is called",
+					RequestSize:       0,
+					ResponseSize:      0,
+					RequestBytes:      0,
+					ResponseBytes:     0,
+					ResponseCode:      204,
+					Platform:          util.GCE,
+					Location:          "test-zone",
+				},
+			},
+		},
+		{
+			desc:                  "Succeed, request without API key, response should fail, service control does not send report request since path matcher filter has already reject the request",
+			url:                   fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/bookstore/shelves/1"),
+			respHeaderMap:         map[string]string{},
+			checkServiceControl:   true,
+			wantScRequests:        []interface{}{},
+			wantGetScRequestError: fmt.Errorf("Timeout got 0, expected: 1"),
+		},
+	}
+	for _, tc := range testData {
+		respHeader, err := client.DoCorsPreflightRequest(tc.url, corsOrigin, corsRequestMethod, corsRequestHeader, referer)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		for key, value := range tc.respHeaderMap {
+			if respHeader.Get(key) != value {
+				t.Errorf("%s expected: %s, got: %s", key, value, respHeader.Get(key))
+			}
+		}
+		if tc.checkServiceControl {
+			if tc.wantGetScRequestError != nil {
+				scRequests, err := s.ServiceControlServer.GetRequests(1, 3*time.Second)
+				if err.Error() != tc.wantGetScRequestError.Error() {
+					t.Errorf("expected get service control request call error: %v, got: %v", tc.wantGetScRequestError, err)
+					t.Errorf("got service control requests: %v", scRequests)
+				}
+				continue
+			}
+			scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 2*time.Second)
+			if err != nil {
+				t.Fatalf("Test Desc(%s): GetRequests returns error: %v", tc.desc, err)
+			}
+			for i, wantScRequest := range tc.wantScRequests {
+				reqBody := scRequests[i].ReqBody
+				switch wantScRequest.(type) {
+				case *utils.ExpectedCheck:
+					if scRequests[i].ReqType != comp.CHECK_REQUEST {
+						t.Errorf("Test Desc(%s): service control request %v: should be Check", tc.desc, i)
+					}
+					if err := utils.VerifyCheck(reqBody, wantScRequest.(*utils.ExpectedCheck)); err != nil {
+						t.Error(err)
+					}
+				case *utils.ExpectedReport:
+					if scRequests[i].ReqType != comp.REPORT_REQUEST {
+						t.Errorf("Test Desc(%s): service control request %v: should be Report", tc.desc, i)
+					}
+					if err := utils.VerifyReport(reqBody, wantScRequest.(*utils.ExpectedReport)); err != nil {
+						t.Error(err)
+					}
+				default:
+					t.Fatalf("Test Desc(%s): unknown service control response type", tc.desc)
+				}
+			}
+		}
+	}
 }

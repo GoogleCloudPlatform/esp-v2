@@ -230,7 +230,7 @@ func TestServiceControlBasic(t *testing.T) {
 				t.Errorf("expected get service control request call error: %v, got: %v", tc.wantGetScRequestError, err1)
 				t.Errorf("got service control requests: %v", scRequests)
 			}
-			return
+			continue
 		}
 
 		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 3*time.Second)

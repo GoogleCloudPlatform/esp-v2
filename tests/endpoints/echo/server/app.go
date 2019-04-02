@@ -46,6 +46,8 @@ func main() {
 		HandlerFunc(simpleGet)
 	r.Path("/simplegetcors").Methods("GET", "OPTIONS").
 		Handler(corsHandler(simpleGetCors))
+	r.Path("/bookstore/shelves").Methods("OPTIONS").Handler(corsHandler(simpleGetCors))
+	r.Path("/bookstore/shelves/{shelfId}").Methods("OPTIONS").Handler(corsHandler(simpleGetCors))
 	r.Path("/auth/info/googlejwt").Methods("GET").
 		HandlerFunc(authInfoHandler)
 	r.Path("/auth/info/googleidtoken").Methods("GET").
@@ -116,7 +118,7 @@ func simpleGetCors(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(getMessage))
 		return
 	}
-	w.Write([]byte(""))
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h corsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -128,6 +130,7 @@ func (h corsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Access-Control-Allow-Headers", "Authorization")
 			w.Header().Set("Access-Control-Expose-Headers", "Cache-Control,Content-Type,Authorization, X-PINGOTHER")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 	}

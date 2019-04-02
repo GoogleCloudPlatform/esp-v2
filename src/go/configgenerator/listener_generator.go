@@ -218,7 +218,14 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo, backendProtocol ut.Backe
 				UriTemplate: httpPattern.Patch,
 				HttpMethod:  ut.PATCH,
 			}
-			// TODO(kyuc): might need to handle HttpRule_Custom as well
+		// TODO(kyuc): might need to handle HttpRule_Custom as well
+		case *annotations.HttpRule_Custom:
+			if httpPattern.Custom.Kind == ut.OPTIONS {
+				newPattern = &commonpb.Pattern{
+					UriTemplate: httpPattern.Custom.Path,
+					HttpMethod:  ut.OPTIONS,
+				}
+			}
 		}
 
 		newRule := &pmpb.PathMatcherRule{
@@ -243,12 +250,22 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo, backendProtocol ut.Backe
 	// In order to support CORS. HTTP method OPTIONS needs to be added to all
 	// urls except the ones already with options.
 	if serviceInfo.GetEndpointAllowCorsFlag() {
+		httpPathArray := make([]*sc.HttpRule, 0)
+		for _, v := range serviceInfo.HttpPathMap {
+			httpPathArray = append(httpPathArray, v)
+		}
+		sort.Slice(httpPathArray, func(i, j int) bool {
+			if httpPathArray[i].Path == httpPathArray[j].Path {
+				return httpPathArray[i].Method < httpPathArray[i].Method
+			}
+			return httpPathArray[i].Path < httpPathArray[j].Path
+		})
 		// All options have their operation as the following format: CORS.suffix.
 		// Appends suffix to make sure it is not used by any http rules.
 		corsOperationBase := "CORS"
 		corsID := 0
-		for operation := range serviceInfo.HttpPathMap {
-			path := serviceInfo.HttpPathMap[operation].Path
+		for _, v := range httpPathArray {
+			path := v.Path
 			if _, exist := serviceInfo.HttpPathWithOptionsSet[path]; !exist {
 				corsOperation := ""
 				for {

@@ -113,6 +113,11 @@ func (e *TestEnv) AppendUsageRules(rules []*conf.UsageRule) {
 	e.fakeServiceConfig.Usage.Rules = append(e.fakeServiceConfig.Usage.Rules, rules...)
 }
 
+// SetAllowCors Sets AllowCors in API endpoint to true.
+func (e *TestEnv) SetAllowCors() {
+	e.fakeServiceConfig.Endpoints[0].AllowCors = true
+}
+
 func addDynamicRoutingBackendPort(serviceConfig *conf.Service, port uint16) error {
 	for _, v := range serviceConfig.Backend.GetRules() {
 		if v.PathTranslation != conf.BackendRule_PATH_TRANSLATION_UNSPECIFIED {

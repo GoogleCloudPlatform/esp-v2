@@ -165,7 +165,7 @@ func DoCorsSimpleRequest(url, httpMethod, origin, msg string) (http.Header, erro
 	return resp.Header, nil
 }
 
-func DoCorsPreflightRequest(url, origin, requestMethod, requestHeader string) (http.Header, error) {
+func DoCorsPreflightRequest(url, origin, requestMethod, requestHeader, referer string) (http.Header, error) {
 	req, err := http.NewRequest("OPTIONS", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("NewRequest got error: ", err)
@@ -174,6 +174,9 @@ func DoCorsPreflightRequest(url, origin, requestMethod, requestHeader string) (h
 	req.Header.Set("Access-Control-Request-Method", requestMethod)
 	if requestHeader != "" {
 		req.Header.Set("Access-Control-Request-Headers", requestHeader)
+	}
+	if referer != "" {
+		req.Header.Set("Referer", referer)
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
