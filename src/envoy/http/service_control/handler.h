@@ -96,6 +96,7 @@ class Handler : public Logger::Loggable<Logger::Id::filter> {
   std::string http_method_;
   std::string uuid_;
   std::string api_key_;
+  uint64_t request_header_size_;
 
   CheckDoneCallback* check_callback_{};
   ::google::api_proxy::service_control::CheckResponseInfo check_response_info_;

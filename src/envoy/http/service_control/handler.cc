@@ -82,9 +82,15 @@ bool isGrpcRequest(const std::string& content_type) {
   return absl::StartsWith(content_type, kContentTypeApplicationGrpcPrefix);
 }
 
-Protocol getFrontendProtocol(const std::string& content_type, bool http) {
-  if (isGrpcRequest(content_type)) {
-    return Protocol::GRPC;
+Protocol getFrontendProtocol(const Http::HeaderMap* response_headers,
+                             bool http) {
+  // response_headers could be nullptr
+  if (response_headers) {
+    const std::string& content_type =
+        extractHeader(*response_headers, kContentTypeHeader);
+    if (isGrpcRequest(content_type)) {
+      return Protocol::GRPC;
+    }
   }
 
   if (!http) {
@@ -114,6 +120,7 @@ Handler::Handler(const Http::HeaderMap& headers, const std::string& operation,
     : config_(config) {
   http_method_ = headers.Method()->value().c_str();
   path_ = headers.Path()->value().c_str();
+  request_header_size_ = headers.byteSize();
   require_ctx_ = config_->cfg_parser().FindRequirement(operation);
   if (!require_ctx_) {
     ENVOY_LOG(debug, "No requirement matched!");
@@ -291,7 +298,7 @@ void Handler::onCheckResponse(Http::HeaderMap& headers, const Status& status,
 }
 
 void Handler::callReport(const Http::HeaderMap* response_headers,
-                         const Http::HeaderMap* /*response_trailers*/,
+                         const Http::HeaderMap* response_trailers,
                          const StreamInfo::StreamInfo& stream_info) {
   ::google::api_proxy::service_control::ReportRequestInfo info;
   fillOperationInfo(info);
@@ -314,8 +321,7 @@ void Handler::callReport(const Http::HeaderMap* response_headers,
   info.status = check_status_;
 
   info.frontend_protocol =
-      getFrontendProtocol(extractHeader(*response_headers, kContentTypeHeader),
-                          stream_info.protocol().has_value());
+      getFrontendProtocol(response_headers, stream_info.protocol().has_value());
 
   info.backend_protocol = getBackendProtocol(
       require_ctx_->service_ctx().config().backend_protocol());
@@ -326,14 +332,23 @@ void Handler::callReport(const Http::HeaderMap* response_headers,
   // TODO(qiwzhang): sending streaming multiple reports: b/123950356
 
   info.response_code = stream_info.responseCode().value_or(500);
-  info.request_size = stream_info.bytesReceived();
+
   // TODO(qiwzhang): b/123950356, multiple reports will be send for long
   // duration requests. request_bytes is number of bytes when an intermediate
   // Report is sending. For now, we only send the final report, request_bytes is
   // the same as request_size.
-  info.request_bytes = stream_info.bytesReceived();
-  info.response_size = stream_info.bytesSent();
-  info.response_bytes = stream_info.bytesSent();
+  info.request_size = stream_info.bytesReceived() + request_header_size_;
+  info.request_bytes = stream_info.bytesReceived() + request_header_size_;
+
+  uint64_t response_header_size = 0;
+  if (response_headers) {
+    response_header_size += response_headers->byteSize();
+  }
+  if (response_trailers) {
+    response_header_size += response_trailers->byteSize();
+  }
+  info.response_size = stream_info.bytesSent() + response_header_size;
+  info.response_bytes = stream_info.bytesSent() + response_header_size;
 
   ::google::api::servicecontrol::v1::ReportRequest report_request;
   require_ctx_->service_ctx().builder().FillReportRequest(info,
