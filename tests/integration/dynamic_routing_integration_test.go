@@ -532,10 +532,10 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 					FrontendProtocol:  "http",
 					HttpMethod:        "POST",
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo is called",
-					RequestSize:       20,
-					ResponseSize:      19,
-					RequestBytes:      20,
-					ResponseBytes:     19,
+					RequestSize:       238,
+					ResponseSize:      156,
+					RequestBytes:      238,
+					ResponseBytes:     156,
 					ResponseCode:      200,
 					Platform:          util.GCE,
 					Location:          "test-zone",
@@ -568,10 +568,10 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 					FrontendProtocol:  "http",
 					HttpMethod:        "POST",
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.SearchPetWithServiceControlVerification is called",
-					RequestSize:       20,
-					ResponseSize:      71,
-					RequestBytes:      20,
-					ResponseBytes:     71,
+					RequestSize:       259,
+					ResponseSize:      208,
+					RequestBytes:      259,
+					ResponseBytes:     208,
 					ResponseCode:      200,
 					Platform:          util.GCE,
 					Location:          "test-zone",
@@ -604,10 +604,10 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 					FrontendProtocol:  "http",
 					HttpMethod:        "POST",
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetByIdWithServiceControlVerification is called",
-					RequestSize:       20,
-					ResponseSize:      77,
-					RequestBytes:      20,
-					ResponseBytes:     77,
+					RequestSize:       262,
+					ResponseSize:      214,
+					RequestBytes:      262,
+					ResponseBytes:     214,
 					ResponseCode:      200,
 					Platform:          util.GCE,
 					Location:          "test-zone",
@@ -631,7 +631,7 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 			t.Errorf("Test Desc(%s): response want: %s, got: %s", tc.desc, tc.wantResp, gotRespStr)
 		}
 
-		scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 2*time.Second)
+		scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 3*time.Second)
 		if err != nil {
 			t.Fatalf("Test Desc(%s): GetRequests returns error: %v", tc.desc, err)
 		}
