@@ -141,7 +141,9 @@ func TestFetchListeners(t *testing.T) {
                                             }
                                         ]
                                     },
-                                    "stat_prefix":"ingress_http"
+                                    "stat_prefix":"ingress_http",
+                                    "use_remote_address":false,
+                                    "xff_num_trusted_hops":2
                                 },
                                 "name":"envoy.http_connection_manager"
                             }
@@ -254,7 +256,9 @@ func TestFetchListeners(t *testing.T) {
                                         }
                                     ]
                                 },
-                            "stat_prefix":"ingress_http"
+                            "stat_prefix":"ingress_http",
+                            "use_remote_address":false,
+                            "xff_num_trusted_hops":2
                          },
                         "name":"envoy.http_connection_manager"
                     }
@@ -427,8 +431,10 @@ func TestFetchListeners(t *testing.T) {
                                         }
                                     ]
                                 },
-                            "stat_prefix":"ingress_http"
-                         },
+                            "stat_prefix":"ingress_http",
+                            "use_remote_address":false,
+                            "xff_num_trusted_hops":2
+                        },
                         "name":"envoy.http_connection_manager"
                     }
                 ]
@@ -604,8 +610,10 @@ func TestFetchListeners(t *testing.T) {
                                         }
                                     ]
                                 },
-                            "stat_prefix":"ingress_http"
-                         },
+                            "stat_prefix":"ingress_http",
+                            "use_remote_address":false,
+                            "xff_num_trusted_hops":2
+                        },
                         "name":"envoy.http_connection_manager"
                     }
                 ]
@@ -782,7 +790,9 @@ func TestFetchListeners(t *testing.T) {
                                             }
                                         ]
                                     },
-                                    "stat_prefix":"ingress_http"
+                                    "stat_prefix":"ingress_http",
+                                    "use_remote_address":false,
+                                    "xff_num_trusted_hops":2
                                 },
                                 "name":"envoy.http_connection_manager"
                             }
@@ -924,8 +934,10 @@ func TestFetchListeners(t *testing.T) {
                                         }
                                     ]
                                 },
-                            "stat_prefix":"ingress_http"
-                         },
+                            "stat_prefix":"ingress_http",
+                            "use_remote_address":false,
+                            "xff_num_trusted_hops":2
+                        },
                         "name":"envoy.http_connection_manager"
                     }
                 ]
@@ -1054,7 +1066,9 @@ func TestFetchListeners(t *testing.T) {
                         }
                       ]
                     },
-                    "stat_prefix": "ingress_http"
+                    "stat_prefix":"ingress_http",
+                    "use_remote_address":false,
+                    "xff_num_trusted_hops":2
                   },
                   "name": "envoy.http_connection_manager"
                 }

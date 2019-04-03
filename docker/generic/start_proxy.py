@@ -179,6 +179,15 @@ environment variable or by passing "-k" flag to this script.
         help='''Enable apiproxy to route requests according to the
         "x-google-backend" or "backend" configurationn''')
 
+    parser.add_argument('--envoy_use_remote_address', action='store_true',
+        default=False,
+        help='''Envoy HttpConnectionManager configuration, please refer to envoy
+        documentation for detailed information.''')
+
+    parser.add_argument('--envoy_xff_num_trusted_hops', default="2",
+        help='''Envoy HttpConnectionManager configuration, please refer to envoy
+        documentation for detailed information.''')
+
     return parser
 
 
@@ -244,6 +253,13 @@ if __name__ == '__main__':
         proxy_conf.append(
           "--enable_backend_routing"
         )
+    if args.envoy_use_remote_address:
+        proxy_conf.append(
+          "--envoy_use_remote_address"
+        )
+    proxy_conf.extend([
+        "--envoy_xff_num_trusted_hops", args.envoy_xff_num_trusted_hops,
+        ])
 
     if args.cors_preset:
         proxy_conf.extend([
