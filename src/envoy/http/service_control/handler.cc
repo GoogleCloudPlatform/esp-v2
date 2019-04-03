@@ -56,6 +56,9 @@ void fillLatency(const StreamInfo::StreamInfo& stream_info,
   auto end = stream_info.lastUpstreamRxByteReceived();
   if (start && end && end.value() >= start.value()) {
     latency.backend_time_ms = convertNsToMs(end.value() - start.value());
+  } else {
+    // for cases like request is rejected at service control filter (does not reach backend)
+    latency.backend_time_ms = 0;
   }
 
   if (latency.backend_time_ms >= 0 &&
