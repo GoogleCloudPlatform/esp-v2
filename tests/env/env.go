@@ -43,11 +43,15 @@ func init() {
 	flag.Parse()
 }
 
+// A ServiceManagementServer is a HTTP server hosting mock service configs.
+type ServiceManagementServer interface {
+	Start(serviceConfig string) (URL string)
+}
+
 type TestEnv struct {
 	enableDynamicRoutingBackend bool
 	mockMetadata                bool
 	mockServiceControl          bool
-	mockServiceManagement       bool
 	backendService              string
 	mockJwtProviders            []string
 	mockMetadataOverride        map[string]string
@@ -58,6 +62,7 @@ type TestEnv struct {
 	envoy                       *components.Envoy
 	fakeServiceConfig           *conf.Service
 	mockMetadataServer          *components.MockMetadataServer
+	mockServiceManagementServer ServiceManagementServer
 	ports                       *components.Ports
 
 	ServiceControlServer *components.MockServiceCtrl
@@ -65,19 +70,25 @@ type TestEnv struct {
 
 func NewTestEnv(name uint16, backendService string, jwtProviders []string) *TestEnv {
 	return &TestEnv{
-		mockMetadata:          true,
-		mockServiceManagement: true,
-		mockServiceControl:    true,
-		backendService:        backendService,
-		ports:                 components.NewPorts(name),
-		fakeServiceConfig:     proto.Clone(testdata.ConfigMap[backendService]).(*conf.Service),
-		mockJwtProviders:      jwtProviders,
+		mockMetadata:                true,
+		mockServiceManagementServer: components.NewMockServiceMrg(),
+		mockServiceControl:          true,
+		backendService:              backendService,
+		ports:                       components.NewPorts(name),
+		fakeServiceConfig:           proto.Clone(testdata.ConfigMap[backendService]).(*conf.Service),
+		mockJwtProviders:            jwtProviders,
 	}
 }
 
 // OverrideMockMetadata overrides mock metadata values given path to response map.
 func (e *TestEnv) OverrideMockMetadata(newMetdaData map[string]string) {
 	e.mockMetadataOverride = newMetdaData
+}
+
+// OverrideMockServiceManagement replaces mock Service Management implementation by a custom server.
+// Set s nil to turn off service management.
+func (e *TestEnv) OverrideMockServiceManagementServer(s ServiceManagementServer) {
+	e.mockServiceManagementServer = s
 }
 
 // EnableDynamicRoutingBackend enables dynamic routing backend server.
@@ -140,7 +151,7 @@ func addDynamicRoutingBackendPort(serviceConfig *conf.Service, port uint16) erro
 
 // SetUp setups Envoy, ConfigManager, and Backend server for test.
 func (e *TestEnv) Setup(confArgs []string) error {
-	if e.mockServiceManagement {
+	if e.mockServiceManagementServer != nil {
 		if err := addDynamicRoutingBackendPort(e.fakeServiceConfig, e.ports.DynamicRoutingBackendPort); err != nil {
 			return err
 		}
@@ -168,7 +179,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 			return fmt.Errorf("fail to unmarshal fakeServiceConfig: %v", err)
 		}
 
-		confArgs = append(confArgs, "--service_management_url="+components.NewMockServiceMrg(jsonStr).GetURL())
+		confArgs = append(confArgs, "--service_management_url="+e.mockServiceManagementServer.Start(jsonStr))
 	}
 
 	if e.mockMetadata {
