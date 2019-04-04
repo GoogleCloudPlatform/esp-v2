@@ -301,7 +301,8 @@ void Handler::onCheckResponse(Http::HeaderMap& headers, const Status& status,
   check_callback_->onCheckDone(status);
 }
 
-void Handler::callReport(const Http::HeaderMap* response_headers,
+void Handler::callReport(const Http::HeaderMap* request_headers,
+                         const Http::HeaderMap* response_headers,
                          const Http::HeaderMap* response_trailers,
                          const StreamInfo::StreamInfo& stream_info) {
   ::google::api_proxy::service_control::ReportRequestInfo info;
@@ -329,6 +330,10 @@ void Handler::callReport(const Http::HeaderMap* response_headers,
 
   info.backend_protocol = getBackendProtocol(
       require_ctx_->service_ctx().config().backend_protocol());
+
+  if (request_headers) {
+    info.referer = extractHeader(*request_headers, kRefererHeader);
+  }
 
   fillGCPInfo(info);
   fillLatency(stream_info, info.latency);

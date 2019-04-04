@@ -55,6 +55,7 @@ func TestServiceControlBasic(t *testing.T) {
 		desc                  string
 		url                   string
 		method                string
+		requestHeader         map[string]string
 		message               string
 		wantResp              string
 		httpCallError         error
@@ -222,6 +223,38 @@ func TestServiceControlBasic(t *testing.T) {
 			},
 		},
 		{
+			desc:    "succeed with request with referer header, no Jwt required, allow no api key (unregistered request), service control sends report (with referer information) only",
+			url:     fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo/nokey"),
+			message: "hi",
+			method:  "POST",
+			requestHeader: map[string]string{
+				"Referer": "http://google.com/bookstore/root",
+			},
+			wantResp: `{"message":"hi"}`,
+			wantScRequests: []interface{}{
+				&utils.ExpectedReport{
+					Version:           utils.APIProxyVersion,
+					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:   "test-config-id",
+					URL:               "/echo/nokey",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey",
+					ProducerProjectID: "producer-project",
+					ConsumerProjectID: "123456",
+					HttpMethod:        "POST",
+					FrontendProtocol:  "http",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey is called",
+					Referer:           "http://google.com/bookstore/root",
+					RequestSize:       268,
+					ResponseSize:      153,
+					RequestBytes:      268,
+					ResponseBytes:     153,
+					ResponseCode:      200,
+					Platform:          util.GCE,
+					Location:          "test-zone",
+				},
+			},
+		},
+		{
 			desc:     "succeed for unconfigured requests with any path (/**) and POST method, no JWT required, service control sends report request only",
 			url:      fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/anypath/x/y/z"),
 			method:   "POST",
@@ -262,7 +295,7 @@ func TestServiceControlBasic(t *testing.T) {
 		var resp []byte
 		var err error
 		if tc.method == "POST" {
-			resp, err = client.DoPost(tc.url, tc.message)
+			resp, err = client.DoPostWithHeaders(tc.url, tc.message, tc.requestHeader)
 		} else if tc.method == "GET" {
 			resp, err = client.DoGet(tc.url)
 		} else {

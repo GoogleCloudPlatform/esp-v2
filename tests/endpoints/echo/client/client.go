@@ -46,11 +46,14 @@ func DoGet(url string) ([]byte, error) {
 
 // DoPost performs a POST request to a specified url
 func DoPost(url, message string) ([]byte, error) {
-	return DoPostWithHeaders(url, message, map[string]string{})
+	return DoPostWithHeaders(url, message, nil)
 }
 
 // DoPostWithHeaders performs a POST request to a specified url with the given headers
 func DoPostWithHeaders(url, message string, header map[string]string) ([]byte, error) {
+	if header == nil {
+		header = map[string]string{}
+	}
 	msg := map[string]string{
 		"message": message,
 	}
