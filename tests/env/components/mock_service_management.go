@@ -21,17 +21,23 @@ import (
 
 // MockServiceMrg mocks the Service Management server.
 type MockServiceMrg struct {
-	s *httptest.Server
+	s             *httptest.Server
+	serviceConfig string
 }
 
 // NewMockServiceMrg creates a new HTTP server.
-func NewMockServiceMrg(config string) *MockServiceMrg {
-	return &MockServiceMrg{
-		s: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte(config))
-		}))}
+func NewMockServiceMrg() *MockServiceMrg {
+	m := &MockServiceMrg{}
+	m.s = httptest.NewUnstartedServer(m)
+	return m
 }
 
-func (m *MockServiceMrg) GetURL() string {
+func (m *MockServiceMrg) Start(serviceConfig string) (URL string) {
+	m.serviceConfig = serviceConfig
+	m.s.Start()
 	return m.s.URL
+}
+
+func (m *MockServiceMrg) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(m.serviceConfig))
 }
