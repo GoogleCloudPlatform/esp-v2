@@ -13,19 +13,19 @@
 // limitations under the License.
 
 // TODO(jcwang): Add tests
+#include "src/envoy/http/backend_routing/filter.h"
 
 #include <string>
 
 #include "common/http/headers.h"
-#include "src/envoy/http/backend_routing/filter.h"
-
-#include "src/envoy/utils/metadata_utils.h"
+#include "src/envoy/utils/filter_state_utils.h"
 
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
 namespace BackendRouting {
 
+using ::Envoy::StreamInfo::FilterState;
 using ::google::api::envoy::http::backend_routing::BackendRoutingRule;
 using ::google::protobuf::util::Status;
 using Http::FilterDataStatus;
@@ -41,8 +41,10 @@ Filter::Filter(FilterConfigSharedPtr config) : config_(config) {
 }
 
 FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
-  const std::string& operation = Utils::getStringMetadata(
-      decoder_callbacks_->streamInfo().dynamicMetadata(), Utils::kOperation);
+  const FilterState& filter_state =
+      decoder_callbacks_->streamInfo().filterState();
+  absl::string_view operation =
+      Utils::getStringFilterState(filter_state, Utils::kOperation);
   // NOTE: this shouldn't happen in practice because Path Matcher filter would
   // have already rejected the request.
   if (operation.empty()) {
@@ -51,7 +53,8 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
   }
 
   ENVOY_LOG(debug, "Found operation: {}", operation);
-  auto it = backend_routing_map_.find(operation);
+  // TODO(kyuc): add a comparator to the map to avoid copy.
+  auto it = backend_routing_map_.find(std::string(operation));
   if (it == backend_routing_map_.end()) {
     ENVOY_LOG(debug, "No backend routing rule found for operation {}",
               operation);
@@ -62,9 +65,8 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
   ENVOY_LOG(debug, "backend routing for operation {}, old path: {}", operation,
             headers.Path()->value().c_str());
   if (rule.is_const_address()) {  // CONSTANT_ADDRESS
-    const std::string queryParamFromPathParam = Utils::getStringMetadata(
-        decoder_callbacks_->streamInfo().dynamicMetadata(),
-        Utils::kQueryParams);
+    absl::string_view queryParamFromPathParam =
+        Utils::getStringFilterState(filter_state, Utils::kQueryParams);
     const std::string& originalPath = headers.Path()->value().c_str();
     std::size_t originalQueryParamPos = originalPath.find('?');
     if (originalQueryParamPos != std::string::npos) {

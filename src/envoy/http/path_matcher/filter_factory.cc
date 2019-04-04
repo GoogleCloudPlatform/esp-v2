@@ -16,7 +16,6 @@
 #include "api/envoy/http/path_matcher/config.pb.validate.h"
 #include "src/envoy/http/path_matcher/filter.h"
 #include "src/envoy/http/path_matcher/filter_config.h"
-#include "src/envoy/utils/metadata_utils.h"
 
 #include "envoy/registry/registry.h"
 #include "extensions/filters/http/common/factory_base.h"
@@ -26,7 +25,7 @@ namespace Extensions {
 namespace HttpFilters {
 namespace PathMatcher {
 
-const std::string FilterName = Utils::kPathMatcherFilterName;
+constexpr char kPathMatcherFilterName[] = "envoy.filters.http.path_matcher";
 
 /**
  * Config registration for API Proxy path matcher filter.
@@ -35,7 +34,7 @@ class FilterFactory
     : public Common::FactoryBase<
           ::google::api::envoy::http::path_matcher::FilterConfig> {
  public:
-  FilterFactory() : FactoryBase(FilterName) {}
+  FilterFactory() : FactoryBase(kPathMatcherFilterName) {}
 
  private:
   Http::FilterFactoryCb createFilterFactoryFromProtoTyped(

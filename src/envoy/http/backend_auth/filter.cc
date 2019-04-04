@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "src/envoy/utils/metadata_utils.h"
+#include "src/envoy/utils/filter_state_utils.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -37,8 +37,8 @@ constexpr char kBearer[] = "Bearer ";
 }  // namespace
 
 FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
-  const std::string& operation = Utils::getStringMetadata(
-      decoder_callbacks_->streamInfo().dynamicMetadata(), Utils::kOperation);
+  absl::string_view operation = Utils::getStringFilterState(
+      decoder_callbacks_->streamInfo().filterState(), Utils::kOperation);
   // NOTE: this shouldn't happen in practice because Path Matcher filter would
   // have already rejected the request.
   if (operation.empty()) {
@@ -47,8 +47,10 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
   }
 
   ENVOY_LOG(debug, "Found operation: {}", operation);
+  // TODO(kyuc): modify getAudienceContext to take absl::string_view to avoid
+  // copy.
   const std::string& audience =
-      config_->cfg_parser().getAudienceContext(operation);
+      config_->cfg_parser().getAudienceContext(std::string(operation));
   if (audience.empty()) {
     // JWT Token is not required for this operation.
     return FilterHeadersStatus::Continue;

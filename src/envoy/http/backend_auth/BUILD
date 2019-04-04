@@ -33,7 +33,7 @@ envoy_cc_library(
     deps = [
         ":config_parser_lib",
         "//api/envoy/http/backend_auth:config_proto_cc",
-        "//src/envoy/utils:metadata_utils_lib",
+        "//src/envoy/utils:filter_state_utils_lib",
     ],
 )
 

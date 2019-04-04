@@ -24,7 +24,7 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         ":config_parser_lib",
-        "//src/envoy/utils:metadata_utils_lib",
+        "//src/envoy/utils:filter_state_utils_lib",
         "@envoy//source/exe:envoy_common_lib",
     ],
 )

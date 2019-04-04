@@ -22,14 +22,14 @@
 #include "envoy/server/filter_config.h"
 #include "src/api_proxy/path_matcher/variable_binding_utils.h"
 #include "src/envoy/http/path_matcher/filter_config.h"
-#include "src/envoy/utils/metadata_utils.h"
+#include "src/envoy/utils/filter_state_utils.h"
 
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
 namespace PathMatcher {
 
-using ::envoy::api::v2::core::Metadata;
+using ::Envoy::StreamInfo::FilterState;
 using ::google::api_proxy::path_matcher::VariableBinding;
 using ::google::api_proxy::path_matcher::VariableBindingsToQueryParameters;
 using ::google::protobuf::util::Status;
@@ -52,8 +52,8 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
   }
 
   ENVOY_LOG(debug, "matched operation: {}", *operation);
-  Metadata& metadata = decoder_callbacks_->streamInfo().dynamicMetadata();
-  Utils::setStringMetadata(metadata, Utils::kOperation, *operation);
+  FilterState& filter_state = decoder_callbacks_->streamInfo().filterState();
+  Utils::setStringFilterState(filter_state, Utils::kOperation, *operation);
 
   if (config_->NeedPathParametersExtraction(*operation)) {
     std::vector<VariableBinding> variable_bindings;
@@ -61,7 +61,8 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
     if (!variable_bindings.empty()) {
       const std::string query_params = VariableBindingsToQueryParameters(
           variable_bindings, config_->snake_to_json());
-      Utils::setStringMetadata(metadata, Utils::kQueryParams, query_params);
+      Utils::setStringFilterState(filter_state, Utils::kQueryParams,
+                                  query_params);
     }
   }
 

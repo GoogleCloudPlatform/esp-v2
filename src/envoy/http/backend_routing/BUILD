@@ -32,7 +32,7 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         "//api/envoy/http/backend_routing:config_proto_cc",
-        "//src/envoy/utils:metadata_utils_lib",
+        "//src/envoy/utils:filter_state_utils_lib",
         "@envoy//source/exe:envoy_common_lib",
         "@envoy//source/common/protobuf:utility_lib",
         "@envoy//source/common/http:headers_lib",

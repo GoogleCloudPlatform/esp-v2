@@ -14,7 +14,7 @@
 
 #include "src/envoy/http/service_control/filter.h"
 
-#include "src/envoy/utils/metadata_utils.h"
+#include "src/envoy/utils/filter_state_utils.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -24,19 +24,20 @@ namespace ServiceControl {
 Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
                                                 bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
-  const std::string& operation = Utils::getStringMetadata(
-      decoder_callbacks_->streamInfo().dynamicMetadata(), Utils::kOperation);
+  absl::string_view operation = Utils::getStringFilterState(
+      decoder_callbacks_->streamInfo().filterState(), Utils::kOperation);
 
   // TODO(kyuc): the following check might not be necessary.
   // NOTE: this shouldn't happen in practice because Path Matcher filter would
   // have already rejected the request.
   if (operation.empty()) {
-    ENVOY_LOG(debug, "No operation found from DynamicMetadata");
+    ENVOY_LOG(debug, "No operation found from FilterState");
     rejectRequest(Http::Code(404), "Method does not exist.");
     return Http::FilterHeadersStatus::StopIteration;
   }
 
-  handler_.reset(new Handler(headers, operation, config_));
+  // TODO(kyuc): modify handler to take absl::string_view to avoid copy.
+  handler_.reset(new Handler(headers, std::string(operation), config_));
   if (!handler_->isConfigured()) {
     rejectRequest(Http::Code(404), "Method does not exist.");
     return Http::FilterHeadersStatus::StopIteration;
@@ -119,11 +120,11 @@ void Filter::log(const Http::HeaderMap* request_headers,
   if (!handler_) {
     if (!request_headers) return;
 
-    // TODO(kyuc): double check if this stream_info is equivalent to the one
-    // from decoder_callbacks_.
-    const std::string& operation = Utils::getStringMetadata(
-        stream_info.dynamicMetadata(), Utils::kOperation);
-    handler_.reset(new Handler(*request_headers, operation, config_));
+    // TODO(kyuc): modify handler to take string_view to avoid copy.
+    absl::string_view operation = Utils::getStringFilterState(
+        stream_info.filterState(), Utils::kOperation);
+    handler_.reset(
+        new Handler(*request_headers, std::string(operation), config_));
   }
 
   if (!handler_->isConfigured()) {

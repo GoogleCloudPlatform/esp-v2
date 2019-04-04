@@ -39,16 +39,17 @@ envoy_cc_test(
     ],
 )
 
-cc_library(
-    name = "metadata_utils_lib",
+envoy_cc_library(
+    name = "filter_state_utils_lib",
     hdrs = [
-        "metadata_utils.h",
+        "filter_state_utils.h",
     ],
     srcs = [
-        "metadata_utils.cc",
+        "filter_state_utils.cc",
     ],
+    repository = "@envoy",
     deps = [
-        "@envoy//source/common/protobuf:utility_lib",
+        "@envoy//source/common/router:string_accessor_lib",
         "@envoy//source/exe:envoy_common_lib",
     ]
 )
