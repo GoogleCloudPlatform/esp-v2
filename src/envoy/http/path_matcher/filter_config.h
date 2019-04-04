@@ -73,13 +73,11 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
     }
   }
 
-  // TODO(kyuc): discuss with qiwzhang@ whether this member function is needed.
   const std::string* FindOperation(const std::string& http_method,
                                    const std::string& path) const {
     return path_matcher_->Lookup(http_method, path);
   }
 
-  // TODO(kyuc): discuss with qiwzhang@ whether this member function is needed.
   const std::string* FindOperation(
       const std::string& http_method, const std::string& path,
       std::vector<google::api_proxy::path_matcher::VariableBinding>*
@@ -98,7 +96,7 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
   FilterStats& stats() { return stats_; }
 
   // Returns the mapping between snake-case segment name to JSON name.
-  const std::unordered_map<std::string, std::string> snake_to_json() {
+  const absl::flat_hash_map<std::string, std::string>& snake_to_json() {
     return snake_to_json_;
   }
 
@@ -114,8 +112,8 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
       path_matcher_;
   // Mapping between snake-case segment name to JSON name as specified in
   // `Service.types` (e.g. "foo_bar" -> "fooBar").
-  std::unordered_map<std::string, std::string> snake_to_json_;
-  std::unordered_set<std::string> path_params_operations_;
+  absl::flat_hash_map<std::string, std::string> snake_to_json_;
+  absl::flat_hash_set<std::string> path_params_operations_;
   FilterStats stats_;
 };
 

@@ -44,7 +44,7 @@ class Filter : public Http::StreamDecoderFilter,
  private:
   Http::StreamDecoderFilterCallbacks *decoder_callbacks_;
   const FilterConfigSharedPtr config_;
-  std::unordered_map<
+  absl::flat_hash_map<
       std::string,
       ::google::api::envoy::http::backend_routing::BackendRoutingRule>
       backend_routing_map_;

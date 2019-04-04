@@ -30,7 +30,7 @@ namespace ServiceControl {
 // The request handler to call Check and Report
 class Handler : public Logger::Loggable<Logger::Id::filter> {
  public:
-  Handler(const Http::HeaderMap& headers, const std::string& operation,
+  Handler(const Http::HeaderMap& headers, absl::string_view operation,
           FilterConfigSharedPtr config);
   virtual ~Handler();
 

@@ -78,7 +78,7 @@ class FilterConfigParser {
       const ::google::api::envoy::http::backend_auth::FilterConfig& config,
       Server::Configuration::FactoryContext& context);
 
-  const std::string& getAudienceContext(const std::string& operation) const {
+  absl::string_view getAudienceContext(absl::string_view operation) const {
     static const std::string empty = "";
     auto operation_it = operation_map_.find(operation);
     if (operation_it == operation_map_.end()) {
@@ -87,7 +87,7 @@ class FilterConfigParser {
     return operation_it->second;
   }
 
-  const TokenSharedPtr getJwtToken(const std::string& audience) const {
+  const TokenSharedPtr getJwtToken(absl::string_view audience) const {
     auto audience_it = audience_map_.find(audience);
     if (audience_it == audience_map_.end()) {
       return nullptr;
@@ -96,8 +96,8 @@ class FilterConfigParser {
   }
 
  private:
-  std::unordered_map<std::string, std::string> operation_map_;
-  std::unordered_map<std::string, AudienceContextPtr> audience_map_;
+  absl::flat_hash_map<std::string, std::string> operation_map_;
+  absl::flat_hash_map<std::string, AudienceContextPtr> audience_map_;
 };
 
 }  // namespace BackendAuth

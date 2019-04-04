@@ -47,10 +47,8 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
   }
 
   ENVOY_LOG(debug, "Found operation: {}", operation);
-  // TODO(kyuc): modify getAudienceContext to take absl::string_view to avoid
-  // copy.
-  const std::string& audience =
-      config_->cfg_parser().getAudienceContext(std::string(operation));
+  absl::string_view audience =
+      config_->cfg_parser().getAudienceContext(operation);
   if (audience.empty()) {
     // JWT Token is not required for this operation.
     return FilterHeadersStatus::Continue;

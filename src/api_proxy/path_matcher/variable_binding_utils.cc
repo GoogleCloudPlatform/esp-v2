@@ -22,7 +22,7 @@ namespace path_matcher {
 
 const std::string VariableBindingsToQueryParameters(
     const std::vector<VariableBinding>& variable_bindings,
-    const std::unordered_map<std::string, std::string>& snake_to_json) {
+    const absl::flat_hash_map<std::string, std::string>& snake_to_json) {
   std::string query_params;
   for (size_t i = 0; i < variable_bindings.size(); i++) {
     const VariableBinding& variable_binding = variable_bindings[i];

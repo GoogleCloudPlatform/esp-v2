@@ -120,8 +120,7 @@ class FilterConfigParser {
       const ::google::api::envoy::http::service_control::FilterConfig& config,
       Server::Configuration::FactoryContext& context);
 
-  const RequirementContext* FindRequirement(
-      const std::string& operation) const {
+  const RequirementContext* FindRequirement(absl::string_view operation) const {
     const auto requirement_it = requirements_map_.find(operation);
     if (requirement_it == requirements_map_.end()) {
       return nullptr;
@@ -131,9 +130,9 @@ class FilterConfigParser {
 
  private:
   // Operation name to RequirementContext map.
-  std::unordered_map<std::string, RequirementContextPtr> requirements_map_;
+  absl::flat_hash_map<std::string, RequirementContextPtr> requirements_map_;
   // Service name to ServiceContext map.
-  std::unordered_map<std::string, ServiceContextPtr> service_map_;
+  absl::flat_hash_map<std::string, ServiceContextPtr> service_map_;
 };
 
 }  // namespace ServiceControl

@@ -57,7 +57,8 @@ void fillLatency(const StreamInfo::StreamInfo& stream_info,
   if (start && end && end.value() >= start.value()) {
     latency.backend_time_ms = convertNsToMs(end.value() - start.value());
   } else {
-    // for cases like request is rejected at service control filter (does not reach backend)
+    // for cases like request is rejected at service control filter (does not
+    // reach backend)
     latency.backend_time_ms = 0;
   }
 
@@ -118,7 +119,7 @@ Protocol getBackendProtocol(const std::string& protocol) {
 
 }  // namespace
 
-Handler::Handler(const Http::HeaderMap& headers, const std::string& operation,
+Handler::Handler(const Http::HeaderMap& headers, absl::string_view operation,
                  FilterConfigSharedPtr config)
     : config_(config) {
   http_method_ = headers.Method()->value().c_str();

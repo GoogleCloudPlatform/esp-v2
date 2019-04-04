@@ -20,6 +20,14 @@ def abseil_repositories(bind = True):
             name = "abseil_time",
             actual = "@com_google_absl//absl/time:time",
         )
+        native.bind(
+            name = "abseil_flat_hash_map",
+            actual = "@com_google_absl//absl/container:flat_hash_map",
+        )
+        native.bind(
+          name = "abseil_flat_hash_set",
+          actual = "@com_google_absl//absl/container:flat_hash_set",
+        )
 
     _cctz_repositories(bind)
 

@@ -53,8 +53,7 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
   }
 
   ENVOY_LOG(debug, "Found operation: {}", operation);
-  // TODO(kyuc): add a comparator to the map to avoid copy.
-  auto it = backend_routing_map_.find(std::string(operation));
+  auto it = backend_routing_map_.find(operation);
   if (it == backend_routing_map_.end()) {
     ENVOY_LOG(debug, "No backend routing rule found for operation {}",
               operation);

@@ -27,7 +27,6 @@ Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
   absl::string_view operation = Utils::getStringFilterState(
       decoder_callbacks_->streamInfo().filterState(), Utils::kOperation);
 
-  // TODO(kyuc): the following check might not be necessary.
   // NOTE: this shouldn't happen in practice because Path Matcher filter would
   // have already rejected the request.
   if (operation.empty()) {
@@ -36,8 +35,7 @@ Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
     return Http::FilterHeadersStatus::StopIteration;
   }
 
-  // TODO(kyuc): modify handler to take absl::string_view to avoid copy.
-  handler_.reset(new Handler(headers, std::string(operation), config_));
+  handler_.reset(new Handler(headers, operation, config_));
   if (!handler_->isConfigured()) {
     rejectRequest(Http::Code(404), "Method does not exist.");
     return Http::FilterHeadersStatus::StopIteration;
@@ -120,11 +118,9 @@ void Filter::log(const Http::HeaderMap* request_headers,
   if (!handler_) {
     if (!request_headers) return;
 
-    // TODO(kyuc): modify handler to take string_view to avoid copy.
     absl::string_view operation = Utils::getStringFilterState(
         stream_info.filterState(), Utils::kOperation);
-    handler_.reset(
-        new Handler(*request_headers, std::string(operation), config_));
+    handler_.reset(new Handler(*request_headers, operation, config_));
   }
 
   if (!handler_->isConfigured()) {

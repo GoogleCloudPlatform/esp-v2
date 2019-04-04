@@ -16,9 +16,10 @@
 #define API_PROXY_PATH_MATHCER_VARIABLE_BINDING_UTILS_H_
 
 #include <string>
-#include <unordered_map>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/strings/str_split.h"
 #include "src/api_proxy/path_matcher/path_matcher.h"
 
 namespace google {
@@ -35,7 +36,7 @@ namespace path_matcher {
 const std::string VariableBindingsToQueryParameters(
     const std::vector<google::api_proxy::path_matcher::VariableBinding>&
         variable_bindings,
-    const std::unordered_map<std::string, std::string>& snake_to_json);
+    const absl::flat_hash_map<std::string, std::string>& snake_to_json);
 
 }  // namespace path_matcher
 }  // namespace api_proxy
