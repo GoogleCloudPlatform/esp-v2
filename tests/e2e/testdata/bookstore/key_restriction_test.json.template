@@ -20,7 +20,7 @@
       "headers": {
         "X-Forwarded-For": "172.17.131.252, 172.17.131.251, 192.16.31.84"
       },
-      "status_code": 401
+      "status_code": 403
     }, {
       "description": "172.17.131.252 will be the remote IP address.",
       "path": "/restricted",
@@ -31,7 +31,7 @@
       "headers": {
         "X-Forwarded-For": "172.17.131.252, 192.16.31.84, 172.17.131.251"
       },
-      "status_code": 401
+      "status_code": 403
     }, {
       "description": "192.16.31.88 will be the remote IP address.",
       "path": "/restricted",
@@ -42,7 +42,7 @@
       "headers": {
         "X-Forwarded-For": "192.16.31.88"
       },
-      "status_code": 401
+      "status_code": 403
     }, {
       "description": "No XFF header. The IP address of the last proxy mismatch",
       "path": "/restricted",
@@ -52,7 +52,7 @@
       },
       "headers": {
       },
-      "status_code": 401
+      "status_code": 403
     }],
   "ios": [{
       "description": "iOS bundle id match",
@@ -75,7 +75,7 @@
       "headers": {
         "X-Ios-Bundle-Identifier": "com.google.cloud.apiproxy.testApp2"
       },
-      "status_code": 401
+      "status_code": 403
     }],
   "referer": [{
       "description": "http referer match",
@@ -98,7 +98,7 @@
       "headers": {
         "Referer": "myapp.verizonwireless.com/bad.html"
       },
-      "status_code": 401
+      "status_code": 403
     }],
   "android": [{
       "description": "Positive Android key restriction",
@@ -129,6 +129,6 @@
         "X-Android-Package": "com.google.cloud.apiproxy.myapplication",
         "X-Android-Cert": "D8AA439759EEC595266A07EE1C378EF4F0C805C9"
       },
-      "status_code": 401
+      "status_code": 403
     }]
 }

@@ -25,6 +25,7 @@ envoy_cc_library(
     deps = [
         ":config_parser_lib",
         "//src/envoy/utils:filter_state_utils_lib",
+        "//src/envoy/utils:status_http_code_lib",
         "@envoy//source/exe:envoy_common_lib",
     ],
 )

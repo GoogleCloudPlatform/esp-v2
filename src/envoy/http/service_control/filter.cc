@@ -15,6 +15,7 @@
 #include "src/envoy/http/service_control/filter.h"
 
 #include "src/envoy/utils/filter_state_utils.h"
+#include "src/envoy/utils/status_http_code.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -69,7 +70,8 @@ Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
 
 void Filter::onCheckDone(const ::google::protobuf::util::Status& status) {
   if (!status.ok()) {
-    rejectRequest(Http::Code(401), "Check failed");
+    rejectRequest(Utils::statusToHttpCode(status.error_code()),
+                  status.ToString());
     return;
   }
 

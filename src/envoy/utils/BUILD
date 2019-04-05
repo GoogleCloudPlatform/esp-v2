@@ -53,3 +53,14 @@ envoy_cc_library(
         "@envoy//source/exe:envoy_common_lib",
     ]
 )
+
+envoy_cc_library(
+    name = "status_http_code_lib",
+    hdrs = ["status_http_code.h"],
+    srcs = ["status_http_code.cc"],
+    repository = "@envoy",
+    deps = [
+        "//external:protobuf",
+        "@envoy//include/envoy/http:codes_interface",
+    ]
+)
