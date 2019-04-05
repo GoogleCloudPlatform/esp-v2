@@ -32,12 +32,14 @@ func NewMockServiceMrg() *MockServiceMrg {
 	return m
 }
 
+// Start lanuches a mock ServiceManagement server.
 func (m *MockServiceMrg) Start(serviceConfig string) (URL string) {
 	m.serviceConfig = serviceConfig
 	m.s.Start()
 	return m.s.URL
 }
 
+// ServeHTTP responds to requests with static service config message.
 func (m *MockServiceMrg) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(m.serviceConfig))
 }

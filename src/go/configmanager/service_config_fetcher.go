@@ -160,7 +160,8 @@ var callServiceManagement = func(path, token string) (*conf.Service, error) {
 		}
 	})
 	unmarshaler := &jsonpb.Unmarshaler{
-		AnyResolver: resolver,
+		AllowUnknownFields: true,
+		AnyResolver:        resolver,
 	}
 	var serviceConfig conf.Service
 	if err = unmarshaler.Unmarshal(resp.Body, &serviceConfig); err != nil {
