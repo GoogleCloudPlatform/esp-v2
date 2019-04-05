@@ -56,7 +56,8 @@ class Handler : public Logger::Loggable<Logger::Id::filter> {
                  const StreamInfo::StreamInfo& stream_info);
 
   // Make a report call.
-  void callReport(const Http::HeaderMap* response_headers,
+  void callReport(const Http::HeaderMap* request_headers,
+                  const Http::HeaderMap* response_headers,
                   const Http::HeaderMap* response_trailers,
                   const StreamInfo::StreamInfo& stream_info);
 

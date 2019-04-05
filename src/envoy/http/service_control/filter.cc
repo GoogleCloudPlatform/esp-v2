@@ -127,7 +127,8 @@ void Filter::log(const Http::HeaderMap* request_headers,
     return;
   }
 
-  handler_->callReport(response_headers, response_trailers, stream_info);
+  handler_->callReport(request_headers, response_headers, response_trailers,
+                       stream_info);
 }
 
 }  // namespace ServiceControl
