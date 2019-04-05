@@ -18,6 +18,7 @@
 #include "envoy/http/header_map.h"
 #include "src/envoy/http/service_control/handler.h"
 #include "src/envoy/utils/filter_state_utils.h"
+#include "src/envoy/utils/http_header_utils.h"
 
 using ::google::api::envoy::http::service_control::APIKeyLocation;
 using ::google::api_proxy::service_control::CheckResponseInfo;
@@ -73,15 +74,6 @@ void fillLatency(const StreamInfo::StreamInfo& stream_info,
   }
 }
 
-std::string extractHeader(const Envoy::Http::HeaderMap& headers,
-                          const Envoy::Http::LowerCaseString& header) {
-  auto* entry = headers.get(header);
-  if (entry) {
-    return entry->value().c_str();
-  }
-  return "";
-}
-
 bool isGrpcRequest(const std::string& content_type) {
   // Formally defined as:
   // `application/grpc(-web(-text))[+proto/+json/+thrift/{custom}]`
@@ -95,7 +87,7 @@ Protocol getFrontendProtocol(const Http::HeaderMap* response_headers,
   // response_headers could be nullptr
   if (response_headers) {
     const std::string& content_type =
-        extractHeader(*response_headers, kContentTypeHeader);
+        Utils::extractHeader(*response_headers, kContentTypeHeader);
     if (isGrpcRequest(content_type)) {
       return Protocol::GRPC;
     }
@@ -127,7 +119,8 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     const Http::HeaderMap& headers, const StreamInfo::StreamInfo& stream_info,
     const ServiceControlFilterConfig& config)
     : config_(config), stream_info_(stream_info) {
-  http_method_ = headers.Method()->value().c_str();
+  http_method_ = Utils::getRequestHTTPMethodWithOverride(
+      headers.Method()->value().c_str(), headers);
   path_ = headers.Path()->value().c_str();
   request_header_size_ = headers.byteSize();
 
@@ -300,10 +293,12 @@ void ServiceControlHandlerImpl::callCheck(Http::HeaderMap& headers,
   // Check and Report has different rule to send api-key
   info.api_key = api_key_;
 
-  info.ios_bundle_id = extractHeader(headers, kIosBundleIdHeader);
-  info.referer = extractHeader(headers, kRefererHeader);
-  info.android_package_name = extractHeader(headers, kAndroidPackageHeader);
-  info.android_cert_fingerprint = extractHeader(headers, kAndroidCertHeader);
+  info.ios_bundle_id = Utils::extractHeader(headers, kIosBundleIdHeader);
+  info.referer = Utils::extractHeader(headers, kRefererHeader);
+  info.android_package_name =
+      Utils::extractHeader(headers, kAndroidPackageHeader);
+  info.android_cert_fingerprint =
+      Utils::extractHeader(headers, kAndroidCertHeader);
 
   info.client_ip =
       stream_info_.downstreamRemoteAddress()->ip()->addressAsString();
@@ -372,7 +367,7 @@ void ServiceControlHandlerImpl::callReport(
       require_ctx_->service_ctx().config().backend_protocol());
 
   if (request_headers) {
-    info.referer = extractHeader(*request_headers, kRefererHeader);
+    info.referer = Utils::extractHeader(*request_headers, kRefererHeader);
   }
 
   fillGCPInfo(info);

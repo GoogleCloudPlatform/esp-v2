@@ -46,6 +46,7 @@ const (
 	TestServiceControlAPIKeyRestriction
 	TestServiceControlBasic
 	TestServiceControlCache
+	TestServiceControlReportResponseCode
 	TestServiceControlRequestInDynamicRouting
 	TestServiceControlRequestWithAllowCors
 	TestServiceControlRequestWithoutAllowCors

@@ -36,6 +36,7 @@ envoy_cc_library(
         "//src/api_proxy/path_matcher:path_matcher_lib",
         "//src/api_proxy/path_matcher:variable_binding_utils_lib",
         "//src/envoy/utils:filter_state_utils_lib",
+        "//src/envoy/utils:http_header_utils_lib",
         "@envoy//source/exe:envoy_common_lib",
         "@envoy//source/common/protobuf:utility_lib",
     ],

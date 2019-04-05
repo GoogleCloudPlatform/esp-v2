@@ -27,6 +27,7 @@ import (
 	"google.golang.org/genproto/googleapis/api/annotations"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func TestServiceControlBasic(t *testing.T) {
@@ -44,7 +45,20 @@ func TestServiceControlBasic(t *testing.T) {
 				Get: "/simpleget",
 			},
 		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/echo/nokey/OverrideAsGet",
+			},
+		},
 	})
+	s.AppendUsageRules(
+		[]*conf.UsageRule{
+			{
+				Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get",
+				AllowUnregisteredCalls: true,
+			},
+		})
 
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -89,6 +103,7 @@ func TestServiceControlBasic(t *testing.T) {
 					FrontendProtocol:  "http",
 					HttpMethod:        "GET",
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget is called",
+					StatusCode:        "0",
 					RequestSize:       178,
 					ResponseSize:      155,
 					RequestBytes:      178,
@@ -126,6 +141,7 @@ func TestServiceControlBasic(t *testing.T) {
 					FrontendProtocol:  "http",
 					HttpMethod:        "POST",
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo is called",
+					StatusCode:        "0",
 					RequestSize:       238,
 					ResponseSize:      156,
 					RequestBytes:      238,
@@ -184,6 +200,7 @@ func TestServiceControlBasic(t *testing.T) {
 					HttpMethod:        "POST",
 					FrontendProtocol:  "http",
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey is called",
+					StatusCode:        "0",
 					RequestSize:       232,
 					ResponseSize:      156,
 					RequestBytes:      232,
@@ -212,6 +229,7 @@ func TestServiceControlBasic(t *testing.T) {
 					HttpMethod:        "POST",
 					FrontendProtocol:  "http",
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey is called",
+					StatusCode:        "0",
 					RequestSize:       244,
 					ResponseSize:      156,
 					RequestBytes:      244,
@@ -244,10 +262,43 @@ func TestServiceControlBasic(t *testing.T) {
 					FrontendProtocol:  "http",
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey is called",
 					Referer:           "http://google.com/bookstore/root",
+					StatusCode:        "0",
 					RequestSize:       268,
 					ResponseSize:      153,
 					RequestBytes:      268,
 					ResponseBytes:     153,
+					ResponseCode:      200,
+					Platform:          util.GCE,
+					Location:          "test-zone",
+				},
+			},
+		},
+		{
+			desc:    "succeed, no Jwt required,no api key required, with X-HTTP-Method-Override as GET, service control sends report only and it has GET as HTTP method",
+			url:     fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo/nokey/OverrideAsGet"),
+			message: "hello hello",
+			method:  "POST",
+			requestHeader: map[string]string{
+				"X-HTTP-Method-Override": "GET",
+			},
+			wantResp: `{"message":"hello hello"}`,
+			wantScRequests: []interface{}{
+				&utils.ExpectedReport{
+					Version:           utils.APIProxyVersion,
+					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:   "test-config-id",
+					URL:               "/echo/nokey/OverrideAsGet",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get",
+					ProducerProjectID: "producer-project",
+					ConsumerProjectID: "123456",
+					HttpMethod:        "GET",
+					FrontendProtocol:  "http",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get is called",
+					StatusCode:        "0",
+					RequestSize:       277,
+					ResponseSize:      162,
+					RequestBytes:      277,
+					ResponseBytes:     162,
 					ResponseCode:      200,
 					Platform:          util.GCE,
 					Location:          "test-zone",
@@ -272,6 +323,7 @@ func TestServiceControlBasic(t *testing.T) {
 					HttpMethod:        "POST",
 					FrontendProtocol:  "http",
 					LogMessage:        "_post_anypath is called",
+					StatusCode:        "0",
 					RequestSize:       235,
 					ResponseSize:      156,
 					RequestBytes:      235,
@@ -317,7 +369,7 @@ func TestServiceControlBasic(t *testing.T) {
 
 		if tc.wantGetScRequestError != nil {
 			scRequests, err1 := s.ServiceControlServer.GetRequests(1, 3*time.Second)
-			if err1.Error() != tc.wantGetScRequestError.Error() {
+			if err1 == nil || err1.Error() != tc.wantGetScRequestError.Error() {
 				t.Errorf("expected get service control request call error: %v, got: %v", tc.wantGetScRequestError, err1)
 				t.Errorf("got service control requests: %v", scRequests)
 			}
@@ -402,6 +454,7 @@ func TestServiceControlCache(t *testing.T) {
 			FrontendProtocol:  "http",
 			HttpMethod:        "POST",
 			LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo is called",
+			StatusCode:        "0",
 			RequestSize:       238,
 			ResponseSize:      156,
 			RequestBytes:      238,

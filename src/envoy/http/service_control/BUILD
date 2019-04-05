@@ -27,6 +27,7 @@ envoy_cc_library(
         ":config_parser_lib",
         "//src/envoy/utils:filter_state_utils_lib",
         "//src/envoy/utils:status_http_code_lib",
+        "//src/envoy/utils:http_header_utils_lib",
         "@envoy//source/common/http:headers_lib",
         "@envoy//source/exe:envoy_common_lib",
     ],

@@ -40,10 +40,16 @@ func main() {
 		HandlerFunc(echoHandler)
 	r.Path("/echo/nokey").Methods("POST").
 		HandlerFunc(echoHandler)
+	r.Path("/echo/nokey/OverrideAsGet").Methods("POST").
+		HandlerFunc(echoHandler)
 	r.Path("/anypath/x/y/z").Methods("POST").
 		HandlerFunc(echoHandler)
 	r.Path("/simpleget").Methods("GET").
 		HandlerFunc(simpleGet)
+	r.Path("/simpleget/304").Methods("GET").
+		HandlerFunc(simpleGetNotModified)
+	r.Path("/simpleget/403").Methods("GET").
+		HandlerFunc(simpleGetForbidden)
 	r.Path("/simplegetcors").Methods("GET", "OPTIONS").
 		Handler(corsHandler(simpleGetCors))
 	r.Path("/bookstore/shelves").Methods("OPTIONS").Handler(corsHandler(simpleGetCors))
@@ -110,6 +116,14 @@ type corsHandler http.HandlerFunc
 
 func simpleGet(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("simple get message"))
+}
+
+func simpleGetNotModified(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotModified)
+}
+
+func simpleGetForbidden(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusForbidden)
 }
 
 func simpleGetCors(w http.ResponseWriter, r *http.Request) {

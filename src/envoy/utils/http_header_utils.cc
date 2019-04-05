@@ -1,0 +1,48 @@
+// Copyright 2019 Google Cloud Platform Proxy Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include "src/envoy/utils/http_header_utils.h"
+
+namespace Envoy {
+namespace Extensions {
+namespace Utils {
+
+namespace {
+// TODO(kyuc): refactor it to be safe, move it to a class or make the type char*
+const Http::LowerCaseString kHttpMethodOverrideHeader{"x-http-method-override"};
+}  // namespace
+
+std::string extractHeader(const Envoy::Http::HeaderMap& headers,
+                          const Envoy::Http::LowerCaseString& header) {
+  auto* entry = headers.get(header);
+  if (entry) {
+    return entry->value().c_str();
+  }
+  return "";
+}
+
+std::string getRequestHTTPMethodWithOverride(
+    const std::string& originalMethod, const Envoy::Http::HeaderMap& headers) {
+  const std::string overrideMethodValue =
+      extractHeader(headers, kHttpMethodOverrideHeader);
+  if (overrideMethodValue.empty()) {
+    return originalMethod;
+  } else {
+    return overrideMethodValue;
+  }
+}
+
+}  // namespace Utils
+}  // namespace Extensions
+}  // namespace Envoy

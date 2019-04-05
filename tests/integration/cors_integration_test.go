@@ -524,6 +524,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 					HttpMethod:        "OPTIONS",
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.CorsShelves is called",
 					Referer:           referer,
+					StatusCode:        "0",
 					RequestSize:       333,
 					ResponseSize:      311,
 					RequestBytes:      333,
@@ -559,6 +560,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 					HttpMethod:        "OPTIONS",
 					LogMessage:        "CORS.4 is called",
 					Referer:           referer,
+					StatusCode:        "0",
 					RequestSize:       323,
 					ResponseSize:      311,
 					RequestBytes:      323,
@@ -698,6 +700,7 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 					HttpMethod:        "OPTIONS",
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.CorsShelves is called",
 					Referer:           referer,
+					StatusCode:        "0",
 					RequestSize:       333,
 					ResponseSize:      311,
 					RequestBytes:      333,
@@ -731,7 +734,7 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 		if tc.checkServiceControl {
 			if tc.wantGetScRequestError != nil {
 				scRequests, err := s.ServiceControlServer.GetRequests(1, 3*time.Second)
-				if err.Error() != tc.wantGetScRequestError.Error() {
+				if err == nil || err.Error() != tc.wantGetScRequestError.Error() {
 					t.Errorf("expected get service control request call error: %v, got: %v", tc.wantGetScRequestError, err)
 					t.Errorf("got service control requests: %v", scRequests)
 				}

@@ -64,3 +64,13 @@ envoy_cc_library(
         "@envoy//include/envoy/http:codes_interface",
     ]
 )
+
+envoy_cc_library(
+    name = "http_header_utils_lib",
+    hdrs = ["http_header_utils.h"],
+    srcs = ["http_header_utils.cc"],
+    repository = "@envoy",
+    deps = [
+        "@envoy//source/exe:envoy_common_lib",
+    ]
+)

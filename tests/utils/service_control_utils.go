@@ -145,20 +145,18 @@ func CreateCheck(er *ExpectedCheck) sc.CheckRequest {
 	return erPb
 }
 
-func responseCodes(code int) (response, status, class string) {
+func responseCodes(code int) (response, class string) {
 	return fmt.Sprintf("%d", code),
-		fmt.Sprintf("%d", HttpResponseCodeToStatusCode(code)),
 		fmt.Sprintf("%dxx", code/100)
 }
 
 func createReportLabels(er *ExpectedReport) map[string]string {
-	response, status, class := responseCodes(er.ResponseCode)
+	response, class := responseCodes(er.ResponseCode)
 	labels := map[string]string{
 		"servicecontrol.googleapis.com/service_agent": "APIPROXY/" + er.Version,
 		"servicecontrol.googleapis.com/user_agent":    "APIPROXY",
 		"serviceruntime.googleapis.com/api_method":    er.ApiMethod,
 		"/response_code":       response,
-		"/status_code":         status,
 		"/response_code_class": class,
 	}
 	if er.StatusCode != "" {

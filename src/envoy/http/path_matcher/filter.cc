@@ -23,6 +23,7 @@
 #include "src/api_proxy/path_matcher/variable_binding_utils.h"
 #include "src/envoy/http/path_matcher/filter_config.h"
 #include "src/envoy/utils/filter_state_utils.h"
+#include "src/envoy/utils/http_header_utils.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -42,7 +43,8 @@ using Http::LowerCaseString;
 void Filter::onDestroy() {}
 
 FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
-  const std::string& method = headers.Method()->value().c_str();
+  const std::string method = Utils::getRequestHTTPMethodWithOverride(
+      headers.Method()->value().c_str(), headers);
   const std::string& path = headers.Path()->value().c_str();
   const std::string* operation = config_->FindOperation(method, path);
   if (operation == nullptr) {
