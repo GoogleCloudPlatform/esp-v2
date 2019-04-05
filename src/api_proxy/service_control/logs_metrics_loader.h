@@ -44,7 +44,7 @@ class LogsMetricsLoader final {
       std::map<std::string, const ::google::api::LabelDescriptor&>* labels);
 
   ::google::protobuf::util::Status AddLogLabels(
-      const ::google::protobuf::RepeatedPtrField< ::google::api::LogDescriptor>&
+      const ::google::protobuf::RepeatedPtrField<::google::api::LogDescriptor>&
           descriptors,
       const std::string& log_name,
       std::map<std::string, const ::google::api::LabelDescriptor&>* labels);
@@ -60,7 +60,7 @@ class LogsMetricsLoader final {
           ::google::api::Logging_LoggingDestination>& destinations,
       const ::google::protobuf::RepeatedPtrField<
           ::google::api::MonitoredResourceDescriptor>& monitored_resources,
-      const ::google::protobuf::RepeatedPtrField< ::google::api::LogDescriptor>&
+      const ::google::protobuf::RepeatedPtrField<::google::api::LogDescriptor>&
           log_descriptors,
       std::set<std::string>* logs,
       std::map<std::string, const ::google::api::LabelDescriptor&>* labels);

@@ -42,6 +42,7 @@ MANAGEMENT_ADDRESS = "https://servicemanagement.googleapis.com"
 # Metadata service
 METADATA_ADDRESS = "http://169.254.169.254"
 
+
 def start_proxy(proxy_conf):
     try:
         os.execv(PROXY_STARTER, proxy_conf)
@@ -50,16 +51,20 @@ def start_proxy(proxy_conf):
         logging.error(err.strerror)
         sys.exit(3)
 
+
 class ArgumentParser(argparse.ArgumentParser):
+
     def error(self, message):
         self.print_help(sys.stderr)
         self.exit(4, '%s: error: %s\n' % (self.prog, message))
 
+
 # Notes: These flags should get aligned with that of ESP at
 # https://github.com/cloudendpoints/esp/blob/master/start_esp/start_esp.py#L420
 def make_argparser():
-    parser = ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-            description = '''
+    parser = ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description='''
 API Proxy start-up script. This script starts ConfigManager and Envoy.
 
 The service name and config ID are optional. If not supplied, the ConfigManager
@@ -72,19 +77,26 @@ to provide a service account credentials file by setting "creds_key"
 environment variable or by passing "-k" flag to this script.
             ''')
 
-    parser.add_argument('-s', '--service',
-        default = "",
+    parser.add_argument(
+        '-s',
+        '--service',
+        default="",
         help=''' Set the name of the Endpoints service.  If omitted and -c not
         specified, API proxy contacts the metadata service to fetch the service
         name.  ''')
 
-    parser.add_argument('-v', '--version',
-        default = "",
+    parser.add_argument(
+        '-v',
+        '--version',
+        default="",
         help=''' Set the service config ID of the Endpoints service.
         If omitted and -c not specified, API proxy contacts the metadata
         service to fetch the service config ID.  ''')
 
-    parser.add_argument('-a', '--backend', default=DEFAULT_BACKEND,
+    parser.add_argument(
+        '-a',
+        '--backend',
+        default=DEFAULT_BACKEND,
         help=''' Change the application server address to which API Proxy
         proxies requests. Default value: {backend}. For HTTPS backends,
         please use "https://" prefix, e.g. https://127.0.0.1:8082.
@@ -92,24 +104,28 @@ environment variable or by passing "-k" flag to this script.
         For GRPC backends, please use "grpc://" prefix,
         e.g. grpc://127.0.0.1:8082.'''.format(backend=DEFAULT_BACKEND))
 
-    parser.add_argument('-R', '--rollout_strategy',
+    parser.add_argument(
+        '-R',
+        '--rollout_strategy',
         default=None,
         help='''The service config rollout strategy, [fixed|managed],
         Default value: {strategy}'''.format(strategy=DEFAULT_ROLLOUT_STRATEGY),
         choices=['fixed', 'managed'])
 
     # Customize management service url prefix.
-    parser.add_argument('-g', '--management',
+    parser.add_argument(
+        '-g',
+        '--management',
         default=MANAGEMENT_ADDRESS,
         help=argparse.SUPPRESS)
 
     # Customize metadata service url prefix.
-    parser.add_argument('-m', '--metadata',
-        default=METADATA_ADDRESS,
-        help=argparse.SUPPRESS)
+    parser.add_argument(
+        '-m', '--metadata', default=METADATA_ADDRESS, help=argparse.SUPPRESS)
 
     # CORS presets
-    parser.add_argument('--cors_preset',
+    parser.add_argument(
+        '--cors_preset',
         default=None,
         help='''
         Enables setting of CORS headers. This is useful when using a GRPC
@@ -131,62 +147,96 @@ environment variable or by passing "-k" flag to this script.
           --cors_allow_headers, --cors_expose_headers, --cors_allow_credentials
           for more granular configurations.
         ''')
-    parser.add_argument('--cors_allow_origin',
+    parser.add_argument(
+        '--cors_allow_origin',
         default='*',
         help='''
         Only works when --cors_preset is 'basic'. Configures the CORS header
         Access-Control-Allow-Origin. Defaults to "*" which allows all origins.
         ''')
-    parser.add_argument('--cors_allow_origin_regex',
+    parser.add_argument(
+        '--cors_allow_origin_regex',
         default='',
         help='''
         Only works when --cors_preset is 'cors_with_regex'. Configures the
         whitelists of CORS header Access-Control-Allow-Origin with regular
         expression.
         ''')
-    parser.add_argument('--cors_allow_methods',
+    parser.add_argument(
+        '--cors_allow_methods',
         default='GET, POST, PUT, PATCH, DELETE, OPTIONS',
         help='''
         Only works when --cors_preset is in use. Configures the CORS header
         Access-Control-Allow-Methods. Defaults to allow common HTTP
         methods.
         ''')
-    parser.add_argument('--cors_allow_headers',
-        default='DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization',
+    parser.add_argument(
+        '--cors_allow_headers',
+        default=
+        'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization',
         help='''
         Only works when --cors_preset is in use. Configures the CORS header
         Access-Control-Allow-Headers. Defaults to allow common HTTP
         headers.
         ''')
-    parser.add_argument('--cors_expose_headers',
+    parser.add_argument(
+        '--cors_expose_headers',
         default='Content-Length,Content-Range',
         help='''
         Only works when --cors_preset is in use. Configures the CORS header
         Access-Control-Expose-Headers. Defaults to allow common response headers.
         ''')
-    parser.add_argument('--cors_allow_credentials', action='store_true',
+    parser.add_argument(
+        '--cors_allow_credentials',
+        action='store_true',
         help='''
         Only works when --cors_preset is in use. Enable the CORS header
         Access-Control-Allow-Credentials. By default, this header is disabled.
         ''')
     #TODO(jcwang) fetch access token from --service_account_key
-    parser.add_argument('--check_metadata', action='store_true',
+    parser.add_argument(
+        '--check_metadata',
+        action='store_true',
         help='''Enable fetching service name, service config ID and rollout
         strategy from the metadata service.''')
 
-    parser.add_argument('--enable_backend_routing', action='store_true',
+    parser.add_argument(
+        '--enable_backend_routing',
+        action='store_true',
         default=False,
         help='''Enable apiproxy to route requests according to the
         "x-google-backend" or "backend" configurationn''')
 
-    parser.add_argument('--envoy_use_remote_address', action='store_true',
+    parser.add_argument(
+        '--envoy_use_remote_address',
+        action='store_true',
         default=False,
         help='''Envoy HttpConnectionManager configuration, please refer to envoy
         documentation for detailed information.''')
 
-    parser.add_argument('--envoy_xff_num_trusted_hops', default="2",
+    parser.add_argument(
+        '--envoy_xff_num_trusted_hops',
+        default="2",
         help='''Envoy HttpConnectionManager configuration, please refer to envoy
         documentation for detailed information.''')
+
+    parser.add_argument(
+        '--log_request_headers',
+        default=None,
+        help='''Log corresponding request headers through
+        service control, separated by comma. Example, when
+        --log_request_headers=foo,bar, endpoint log will have
+        request_headers: foo=foo_value;bar=bar_value if values are available;
+        ''')
+
+    parser.add_argument(
+        '--log_response_headers',
+        default=None,
+        help='''Log corresponding response headers through
+        service control, separated by comma. Example, when
+        --log_response_headers=foo,bar, endpoint log will have
+        response_headers: foo=foo_value;bar=bar_value if values are available;
+        ''')
 
     return parser
 
@@ -214,66 +264,77 @@ if __name__ == '__main__':
 
     cluster_args = backends.split(':')
     if len(cluster_args) == 2:
-        cluster_address =  cluster_args[0]
+        cluster_address = cluster_args[0]
         cluster_port = cluster_args[1]
     elif len(cluster_args) == 1:
-        cluster_address =  cluster_args[0]
+        cluster_address = cluster_args[0]
         cluster_port = DEFAULT_PORT
     else:
-        print ("incorrect backend")
+        print("incorrect backend")
         sys.exit(1)
 
     if args.rollout_strategy is None or not args.rollout_strategy.strip():
         args.rollout_strategy = DEFAULT_ROLLOUT_STRATEGY
-
-    proxy_conf = ["-v",
-        "--backend_protocol", backend_protocol,
-        "--cluster_address", cluster_address,
-        "--cluster_port", cluster_port,
-        "--service_management_url", args.management,
-        "--rollout_strategy", args.rollout_strategy,
+    proxy_conf = [
+        "-v",
+        "--backend_protocol",
+        backend_protocol,
+        "--cluster_address",
+        cluster_address,
+        "--cluster_port",
+        cluster_port,
+        "--service_management_url",
+        args.management,
+        "--rollout_strategy",
+        args.rollout_strategy,
+        "--envoy_xff_num_trusted_hops",
+        args.envoy_xff_num_trusted_hops,
     ]
 
+    if args.log_request_headers:
+        proxy_conf.extend(["--log-request-headers", args.log_request_headers])
+
+    if args.log_response_headers:
+        proxy_conf.extend(["--log-response-headers", args.log_response_headers])
+
     if args.service:
-        proxy_conf.extend(
-         [ "--service", args.service]
-        )
+        proxy_conf.extend(["--service", args.service])
+
     if args.version:
         if args.rollout_strategy != DEFAULT_ROLLOUT_STRATEGY:
-          print ("when version is set, rollout strategy should be fixed mode.")
-          sys.exit(1)
+            print("when version is set, rollout strategy should be fixed mode.")
+            sys.exit(1)
         proxy_conf.extend([
-          "--version", args.version,
+            "--version",
+            args.version,
         ])
+
     if args.check_metadata:
-        proxy_conf.append(
-          "--check_metadata",
-        )
+        proxy_conf.append("--check_metadata",)
+
     if args.enable_backend_routing:
-        proxy_conf.append(
-          "--enable_backend_routing"
-        )
+        proxy_conf.append("--enable_backend_routing")
+
     if args.envoy_use_remote_address:
-        proxy_conf.append(
-          "--envoy_use_remote_address"
-        )
-    proxy_conf.extend([
-        "--envoy_xff_num_trusted_hops", args.envoy_xff_num_trusted_hops,
-        ])
+        proxy_conf.append("--envoy_use_remote_address")
 
     if args.cors_preset:
         proxy_conf.extend([
-          "--cors_preset", args.cors_preset,
-          "--cors_allow_origin", args.cors_allow_origin,
-          "--cors_allow_origin_regex", args.cors_allow_origin_regex,
-          "--cors_allow_methods", args.cors_allow_methods,
-          "--cors_allow_headers", args.cors_allow_headers,
-          "--cors_expose_headers", args.cors_expose_headers,
+            "--cors_preset",
+            args.cors_preset,
+            "--cors_allow_origin",
+            args.cors_allow_origin,
+            "--cors_allow_origin_regex",
+            args.cors_allow_origin_regex,
+            "--cors_allow_methods",
+            args.cors_allow_methods,
+            "--cors_allow_headers",
+            args.cors_allow_headers,
+            "--cors_expose_headers",
+            args.cors_expose_headers,
         ])
         if args.cors_allow_credentials:
-            proxy_conf.append(
-              "--cors_allow_credentials"
-            )
+            proxy_conf.append("--cors_allow_credentials")
 
-    print (proxy_conf)
+    print(proxy_conf)
     start_proxy(proxy_conf)

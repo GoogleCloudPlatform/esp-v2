@@ -25,9 +25,9 @@ namespace path_matcher {
 
 class HttpTemplate {
  public:
-  static std::unique_ptr<HttpTemplate> Parse(const std::string &ht);
-  const std::vector<std::string> &segments() const { return segments_; }
-  const std::string &verb() const { return verb_; }
+  static std::unique_ptr<HttpTemplate> Parse(const std::string& ht);
+  const std::vector<std::string>& segments() const { return segments_; }
+  const std::string& verb() const { return verb_; }
 
   // The info about a variable binding {variable=subpath} in the template.
   struct Variable {
@@ -46,7 +46,7 @@ class HttpTemplate {
     bool has_wildcard_path;
   };
 
-  std::vector<Variable> &Variables() { return variables_; }
+  std::vector<Variable>& Variables() { return variables_; }
 
   // '/.': match any single path segment.
   static const char kSingleParameterKey[];
@@ -56,8 +56,8 @@ class HttpTemplate {
   static const char kWildCardPathKey[];
 
  private:
-  HttpTemplate(std::vector<std::string> &&segments, std::string &&verb,
-               std::vector<Variable> &&variables)
+  HttpTemplate(std::vector<std::string>&& segments, std::string&& verb,
+               std::vector<Variable>&& variables)
       : segments_(std::move(segments)),
         verb_(std::move(verb)),
         variables_(std::move(variables)) {}

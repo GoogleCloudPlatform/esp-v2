@@ -36,13 +36,13 @@ class Filter : public Http::StreamDecoderFilter,
   void onDestroy() override{};
 
   // Http::StreamDecoderFilter
-  Http::FilterHeadersStatus decodeHeaders(Http::HeaderMap &, bool) override;
-  Http::FilterDataStatus decodeData(Buffer::Instance &, bool) override;
-  Http::FilterTrailersStatus decodeTrailers(Http::HeaderMap &) override;
-  void setDecoderFilterCallbacks(Http::StreamDecoderFilterCallbacks &) override;
+  Http::FilterHeadersStatus decodeHeaders(Http::HeaderMap&, bool) override;
+  Http::FilterDataStatus decodeData(Buffer::Instance&, bool) override;
+  Http::FilterTrailersStatus decodeTrailers(Http::HeaderMap&) override;
+  void setDecoderFilterCallbacks(Http::StreamDecoderFilterCallbacks&) override;
 
  private:
-  Http::StreamDecoderFilterCallbacks *decoder_callbacks_;
+  Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
   const FilterConfigSharedPtr config_;
 };
 

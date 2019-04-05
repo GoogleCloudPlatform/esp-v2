@@ -39,7 +39,7 @@ namespace {
 // Verb     = ":" LITERAL ;
 class Parser {
  public:
-  Parser(const std::string &input)
+  Parser(const std::string& input)
       : input_(input), tb_(0), te_(0), in_variable_(false) {}
 
   bool Parse() {
@@ -50,9 +50,9 @@ class Parser {
     return true;
   }
 
-  std::vector<std::string> &segments() { return segments_; }
-  std::string &verb() { return verb_; }
-  std::vector<HttpTemplate::Variable> &variables() { return variables_; }
+  std::vector<std::string>& segments() { return segments_; }
+  std::string& verb() { return verb_; }
+  std::vector<HttpTemplate::Variable>& variables() { return variables_; }
 
   // only constant path segments are allowed after '**'.
   bool ValidateParts() {
@@ -214,7 +214,7 @@ class Parser {
     return result && AddFieldIdentifier(std::move(idf));
   }
 
-  bool ParseLiteral(std::string *lit) {
+  bool ParseLiteral(std::string* lit) {
     if (!EnsureCurrent()) {
       return false;
     }
@@ -273,7 +273,7 @@ class Parser {
     return tb_ < te_ && te_ <= input_.size() ? input_[te_ - 1] : -1;
   }
 
-  HttpTemplate::Variable &CurrentVariable() { return variables_.back(); }
+  HttpTemplate::Variable& CurrentVariable() { return variables_.back(); }
 
   bool StartVariable() {
     if (!in_variable_) {
@@ -319,13 +319,13 @@ class Parser {
     }
   }
 
-  bool ValidateVariable(const HttpTemplate::Variable &var) {
+  bool ValidateVariable(const HttpTemplate::Variable& var) {
     return !var.field_path.empty() && (var.start_segment < var.end_segment) &&
            (var.end_segment <= static_cast<int>(segments_.size()));
   }
 
   void PostProcessVariables() {
-    for (auto &var : variables_) {
+    for (auto& var : variables_) {
       if (var.has_wildcard_path) {
         // if the variable contains a '**', store the end_positon
         // relative to the end, such that -1 corresponds to the end
@@ -343,7 +343,7 @@ class Parser {
     }
   }
 
-  const std::string &input_;
+  const std::string& input_;
 
   // Token delimiter indexes
   size_t tb_;
@@ -365,7 +365,7 @@ const char HttpTemplate::kWildCardPathPartKey[] = "*";
 
 const char HttpTemplate::kWildCardPathKey[] = "**";
 
-std::unique_ptr<HttpTemplate> HttpTemplate::Parse(const std::string &ht) {
+std::unique_ptr<HttpTemplate> HttpTemplate::Parse(const std::string& ht) {
   Parser p(ht);
   if (!p.Parse() || !p.ValidateParts()) {
     return nullptr;

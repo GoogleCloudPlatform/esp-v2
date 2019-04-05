@@ -909,22 +909,24 @@ const char kConsumerIdApiKey[] = "api_key:";
 const char kConsumerIdProject[] = "project:";
 
 // Following names for Log struct_playload field names:
-const char kLogFieldNameTimestamp[] = "timestamp";
+const char kLogFieldNameApiKey[] = "api_key";
+const char kLogFieldNameApiMethod[] = "api_method";
 const char kLogFieldNameApiName[] = "api_name";
 const char kLogFieldNameApiVersion[] = "api_version";
-const char kLogFieldNameApiMethod[] = "api_method";
-const char kLogFieldNameApiKey[] = "api_key";
-const char kLogFieldNameProducerProjectId[] = "producer_project_id";
-const char kLogFieldNameReferer[] = "referer";
-const char kLogFieldNameLocation[] = "location";
-const char kLogFieldNameRequestSize[] = "request_size_in_bytes";
-const char kLogFieldNameResponseSize[] = "response_size_in_bytes";
+const char kLogFieldNameErrorCause[] = "error_cause";
 const char kLogFieldNameHttpMethod[] = "http_method";
 const char kLogFieldNameHttpResponseCode[] = "http_response_code";
+const char kLogFieldNameLocation[] = "location";
 const char kLogFieldNameLogMessage[] = "log_message";
+const char kLogFieldNameProducerProjectId[] = "producer_project_id";
+const char kLogFieldNameReferer[] = "referer";
+const char kLogFieldNameRequestHeaders[] = "request_headers";
 const char kLogFieldNameRequestLatency[] = "request_latency_in_ms";
+const char kLogFieldNameRequestSize[] = "request_size_in_bytes";
+const char kLogFieldNameResponseHeaders[] = "response_headers";
+const char kLogFieldNameResponseSize[] = "response_size_in_bytes";
+const char kLogFieldNameTimestamp[] = "timestamp";
 const char kLogFieldNameUrl[] = "url";
-const char kLogFieldNameErrorCause[] = "error_cause";
 
 // Convert timestamp from time_point to Timestamp
 Timestamp CreateTimestamp(std::chrono::system_clock::time_point tp) {
@@ -1014,12 +1016,19 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
   }
 
   (*fields)[kLogFieldNameHttpResponseCode].set_number_value(info.response_code);
-
   if (info.request_size >= 0) {
     (*fields)[kLogFieldNameRequestSize].set_number_value(info.request_size);
   }
+  if (!info.request_headers.empty()) {
+    (*fields)[kLogFieldNameRequestHeaders].set_string_value(
+        info.request_headers);
+  }
   if (info.response_size >= 0) {
     (*fields)[kLogFieldNameResponseSize].set_number_value(info.response_size);
+  }
+  if (!info.response_headers.empty()) {
+    (*fields)[kLogFieldNameResponseHeaders].set_string_value(
+        info.response_headers);
   }
   if (info.latency.request_time_ms >= 0) {
     (*fields)[kLogFieldNameRequestLatency].set_number_value(

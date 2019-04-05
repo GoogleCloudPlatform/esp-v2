@@ -43,7 +43,6 @@ class ServiceControlHandler {
                           const Http::HeaderMap* response_headers,
                           const Http::HeaderMap* response_trailers) PURE;
 };
-
 typedef std::unique_ptr<ServiceControlHandler> ServiceControlHandlerPtr;
 
 class ServiceControlHandlerFactory {

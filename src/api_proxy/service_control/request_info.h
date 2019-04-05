@@ -30,7 +30,7 @@ namespace compute_platform {
 
 enum ComputePlatform { UNKNOWN = 0, GAE_FLEX = 1, GCE = 2, GKE = 3 };
 
-inline const char *ToString(ComputePlatform p) {
+inline const char* ToString(ComputePlatform p) {
   switch (p) {
     case GAE_FLEX:
       return "GAE Flex";
@@ -50,7 +50,7 @@ namespace protocol {
 
 enum Protocol { UNKNOWN = 0, HTTP = 1, HTTPS = 2, GRPC = 3 };
 
-inline const char *ToString(Protocol p) {
+inline const char* ToString(Protocol p) {
   switch (p) {
     case HTTP:
       return "http";
@@ -146,7 +146,7 @@ struct CheckResponseInfo {
 struct QuotaRequestInfo : public OperationInfo {
   std::string method_name;
 
-  const std::vector<std::pair<std::string, int>> *metric_cost_vector;
+  const std::vector<std::pair<std::string, int>>* metric_cost_vector;
 };
 
 // Information to fill Report request protobuf.
@@ -199,8 +199,14 @@ struct ReportRequestInfo : public OperationInfo {
   // request message size till the current time point.
   int64_t request_bytes;
 
+  // The request headers logged
+  std::string request_headers;
+
   // response message size till the current time point.
   int64_t response_bytes;
+
+  // The request headers logged
+  std::string response_headers;
 
   // number of messages for a stream.
   int64_t streaming_request_message_counts;

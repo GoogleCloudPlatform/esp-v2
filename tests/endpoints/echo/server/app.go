@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -101,6 +102,14 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		errorf(w, http.StatusInternalServerError, "Could not marshal JSON: %v", err)
 		return
+	}
+
+	for key, vals := range r.Header {
+		if strings.HasPrefix(key, "Fake-Header-Key") {
+			for _, val := range vals {
+				w.Header().Add(fmt.Sprintf("Echo-%s", key), val)
+			}
+		}
 	}
 	w.Write(b)
 }
