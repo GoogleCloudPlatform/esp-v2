@@ -17,6 +17,7 @@
 #include "envoy/http/header_map.h"
 #include "gmock/gmock.h"
 #include "src/envoy/http/service_control/handler.h"
+#include "src/envoy/http/service_control/service_control_call.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -25,9 +26,6 @@ namespace ServiceControl {
 
 class MockServiceControlHandler : public ServiceControlHandler {
  public:
-  MockServiceControlHandler() {}
-  ~MockServiceControlHandler() {}
-
   MOCK_METHOD2(callCheck,
                void(Http::HeaderMap& headers, CheckDoneCallback& callback));
 
@@ -38,9 +36,6 @@ class MockServiceControlHandler : public ServiceControlHandler {
 
 class MockServiceControlHandlerFactory : public ServiceControlHandlerFactory {
  public:
-  MockServiceControlHandlerFactory() {}
-  ~MockServiceControlHandlerFactory() {}
-
   ServiceControlHandlerPtr createHandler(
       const Http::HeaderMap& headers, const StreamInfo::StreamInfo& stream_info,
       const ServiceControlFilterConfig& config) const override {
@@ -53,6 +48,34 @@ class MockServiceControlHandlerFactory : public ServiceControlHandlerFactory {
       ServiceControlHandler*(const Http::HeaderMap& headers,
                              const StreamInfo::StreamInfo& stream_info,
                              const ServiceControlFilterConfig& config));
+};
+
+class MockServiceControlCall : public ServiceControlCall {
+ public:
+  MOCK_METHOD2(
+      callCheck,
+      void(
+          const ::google::api_proxy::service_control::CheckRequestInfo& request,
+          CheckDoneFunc on_done));
+
+  MOCK_METHOD1(
+      callReport,
+      void(const ::google::api_proxy::service_control::ReportRequestInfo&
+               request));
+};
+
+class MockServiceControlCallFactory : public ServiceControlCallFactory {
+ public:
+  ServiceControlCallPtr create(
+      const ::google::api::envoy::http::service_control::Service& config)
+      override {
+    return ServiceControlCallPtr{create_(config)};
+  }
+
+  MOCK_CONST_METHOD1(
+      create_,
+      ServiceControlCall*(
+          const ::google::api::envoy::http::service_control::Service& config));
 };
 
 }  // namespace ServiceControl

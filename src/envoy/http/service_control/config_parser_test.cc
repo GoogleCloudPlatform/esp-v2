@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "src/envoy/http/service_control/config_parser.h"
-#include "test/mocks/server/mocks.h"
+#include "src/envoy/http/service_control/mocks.h"
 #include "test/test_common/utility.h"
 
 #include "gmock/gmock.h"
@@ -26,14 +26,13 @@ namespace HttpFilters {
 namespace ServiceControl {
 namespace {
 
-using Envoy::Server::Configuration::MockFactoryContext;
 using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::protobuf::TextFormat;
 
 TEST(ConfigParserTest, EmtpyConfig) {
   FilterConfig config;
-  testing::NiceMock<MockFactoryContext> f_ctx;
-  FilterConfigParser parser(config, f_ctx);
+  testing::NiceMock<MockServiceControlCallFactory> mock_factory;
+  FilterConfigParser parser(config, mock_factory);
 
   EXPECT_FALSE(parser.FindRequirement("foo"));
 }
@@ -56,8 +55,8 @@ requirements {
   operation_name: "post_bar"
 })";
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigBasic, &config));
-  testing::NiceMock<MockFactoryContext> f_ctx;
-  FilterConfigParser parser(config, f_ctx);
+  testing::NiceMock<MockServiceControlCallFactory> mock_factory;
+  FilterConfigParser parser(config, mock_factory);
 
   EXPECT_EQ(parser.FindRequirement("get_foo")->config().operation_name(),
             "get_foo");
@@ -85,8 +84,8 @@ services {
 })";
   ASSERT_TRUE(
       TextFormat::ParseFromString(kConfigWithDupliacedService, &config));
-  testing::NiceMock<MockFactoryContext> f_ctx;
-  EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config, f_ctx),
+  testing::NiceMock<MockServiceControlCallFactory> mock_factory;
+  EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config, mock_factory),
                           ProtoValidationException, "Duplicated service names");
 }
 
@@ -106,8 +105,8 @@ requirements {
 })";
   ASSERT_TRUE(
       TextFormat::ParseFromString(kConfigWithDupliacedService, &config));
-  testing::NiceMock<MockFactoryContext> f_ctx;
-  EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config, f_ctx),
+  testing::NiceMock<MockServiceControlCallFactory> mock_factory;
+  EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config, mock_factory),
                           ProtoValidationException,
                           "Duplicated operation names");
 }
@@ -120,8 +119,8 @@ requirements {
   operation_name: "Check"
 })";
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterInvalidService, &config));
-  testing::NiceMock<MockFactoryContext> f_ctx;
-  EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config, f_ctx),
+  testing::NiceMock<MockServiceControlCallFactory> mock_factory;
+  EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config, mock_factory),
                           ProtoValidationException, "Invalid service name");
 }
 

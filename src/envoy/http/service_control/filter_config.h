@@ -19,6 +19,7 @@
 #include "envoy/runtime/runtime.h"
 #include "envoy/server/filter_config.h"
 #include "src/envoy/http/service_control/config_parser.h"
+#include "src/envoy/http/service_control/service_control_call_impl.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -53,7 +54,8 @@ class ServiceControlFilterConfig : public Logger::Loggable<Logger::Id::filter> {
         stats_(generateStats(stats_prefix, context.scope())),
         cm_(context.clusterManager()),
         random_(context.random()),
-        config_parser_(proto_config_, context) {
+        call_factory_(context),
+        config_parser_(proto_config_, call_factory_) {
     // The default places to extract api-key
     default_api_keys_.add_locations()->set_query("key");
     default_api_keys_.add_locations()->set_query("api_key");
@@ -88,6 +90,7 @@ class ServiceControlFilterConfig : public Logger::Loggable<Logger::Id::filter> {
   ServiceControlFilterStats stats_;
   Upstream::ClusterManager& cm_;
   Runtime::RandomGenerator& random_;
+  ServiceControlCallFactoryImpl call_factory_;
   FilterConfigParser config_parser_;
 
   ::google::api::envoy::http::service_control::APIKeyRequirement

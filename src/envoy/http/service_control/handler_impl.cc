@@ -308,15 +308,10 @@ void ServiceControlHandlerImpl::callCheck(Http::HeaderMap& headers,
   info.client_ip =
       stream_info_.downstreamRemoteAddress()->ip()->addressAsString();
 
-  ::google::api::servicecontrol::v1::CheckRequest check_request;
-  require_ctx_->service_ctx().builder().FillCheckRequest(info, &check_request);
-  ENVOY_LOG(debug, "Sending check : {}", check_request.DebugString());
-
   aborted_.reset(new bool(false));
-  require_ctx_->service_ctx().getTLCache().client_cache().callCheck(
-      check_request,
-      [this, aborted = aborted_, &headers](
-          const Status& status, const CheckResponseInfo& response_info) {
+  require_ctx_->service_ctx().call().callCheck(
+      info, [this, aborted = aborted_, &headers](
+                const Status& status, const CheckResponseInfo& response_info) {
         if (*aborted) return;
         onCheckResponse(headers, status, response_info);
       });
@@ -399,13 +394,7 @@ void ServiceControlHandlerImpl::callReport(
   info.response_size = stream_info_.bytesSent() + response_header_size;
   info.response_bytes = stream_info_.bytesSent() + response_header_size;
 
-  ::google::api::servicecontrol::v1::ReportRequest report_request;
-  require_ctx_->service_ctx().builder().FillReportRequest(info,
-                                                          &report_request);
-  ENVOY_LOG(debug, "Sending report : {}", report_request.DebugString());
-
-  require_ctx_->service_ctx().getTLCache().client_cache().callReport(
-      report_request);
+  require_ctx_->service_ctx().call().callReport(info);
 }
 
 }  // namespace ServiceControl
