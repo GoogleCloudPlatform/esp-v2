@@ -27,7 +27,8 @@ import (
 
 var (
 	ConfigMap = map[string]*conf.Service{
-		"echo": FakeEchoConfig,
+		"echo":                  FakeEchoConfig,
+		"echoForDynamicRouting": FakeEchoConfigForDynamicRouting,
 	}
 )
 
