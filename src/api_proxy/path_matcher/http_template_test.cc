@@ -28,16 +28,16 @@ typedef HttpTemplate::Variable Variable;
 typedef std::vector<Variable> Variables;
 typedef std::vector<std::string> FieldPath;
 
-bool operator==(const Variable &v1, const Variable &v2) {
+bool operator==(const Variable& v1, const Variable& v2) {
   return v1.field_path == v2.field_path &&
          v1.start_segment == v2.start_segment &&
          v1.end_segment == v2.end_segment &&
          v1.has_wildcard_path == v2.has_wildcard_path;
 }
 
-std::string FieldPathToString(const FieldPath &fp) {
+std::string FieldPathToString(const FieldPath& fp) {
   std::string s;
-  for (const auto &f : fp) {
+  for (const auto& f : fp) {
     if (!s.empty()) {
       s += ".";
     }
@@ -46,14 +46,14 @@ std::string FieldPathToString(const FieldPath &fp) {
   return s;
 }
 
-std::ostream &operator<<(std::ostream &os, const Variable &var) {
+std::ostream& operator<<(std::ostream& os, const Variable& var) {
   return os << "{ " << FieldPathToString(var.field_path) << ", ["
             << var.start_segment << ", " << var.end_segment << "), "
             << var.has_wildcard_path << "}";
 }
 
-std::ostream &operator<<(std::ostream &os, const Variables &vars) {
-  for (const auto &var : vars) {
+std::ostream& operator<<(std::ostream& os, const Variables& vars) {
+  for (const auto& var : vars) {
     os << var << std::endl;
   }
   return os;

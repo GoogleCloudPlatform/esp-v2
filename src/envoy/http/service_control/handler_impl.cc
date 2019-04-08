@@ -224,6 +224,22 @@ bool ServiceControlHandlerImpl::extractAPIKey(
   return false;
 }
 
+void ServiceControlHandlerImpl::fillLoggedHeader(
+    const Http::HeaderMap* headers,
+    const ::google::protobuf::RepeatedPtrField<::std::string>& log_headers,
+    std::string& info_header_field) {
+  if (headers == nullptr) {
+    return;
+  }
+  for (const auto& log_header : log_headers) {
+    auto* entry = headers->get(Http::LowerCaseString(log_header));
+    if (entry) {
+      info_header_field =
+          info_header_field + log_header + "=" + entry->value().c_str() + ";";
+    }
+  }
+}
+
 void ServiceControlHandlerImpl::fillOperationInfo(
     ::google::api_proxy::service_control::OperationInfo& info) {
   info.operation_id = uuid_;
@@ -338,6 +354,12 @@ void ServiceControlHandlerImpl::callReport(
 
   ::google::api_proxy::service_control::ReportRequestInfo info;
   fillOperationInfo(info);
+  fillLoggedHeader(request_headers,
+                   require_ctx_->service_ctx().config().log_request_headers(),
+                   info.request_headers);
+  fillLoggedHeader(response_headers,
+                   require_ctx_->service_ctx().config().log_response_headers(),
+                   info.response_headers);
 
   // Check and Report has different rule to send api-key
   if (check_response_info_.is_api_key_valid &&

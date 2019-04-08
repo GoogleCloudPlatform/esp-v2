@@ -63,4 +63,9 @@ var (
 	// Envoy configurations.
 	EnvoyUseRemoteAddress  = flag.Bool("envoy_use_remote_address", false, "Envoy HttpConnectionManager configuration, please refer to envoy documentation for detailed information.")
 	EnvoyXffNumTrustedHops = flag.Int("envoy_xff_num_trusted_hops", 2, "Envoy HttpConnectionManager configuration, please refer to envoy documentation for detailed information.")
+
+	LogRequestHeaders = flag.String("log_request_headers", "", `Log corresponding request headers through service control, separated by comma. Example, when --log_request_headers=
+	foo,bar, endpoint log will have request_headers: foo=foo_value;bar=bar_value if values are available;`)
+	LogResponseHeaders = flag.String("log_response_headers", "", `Log corresponding response headers through service control, separated by comma. Example, when --log_response_headers=
+	foo,bar,endpoint log will have response_headers: foo=foo_value;bar=bar_value if values are available.`)
 )

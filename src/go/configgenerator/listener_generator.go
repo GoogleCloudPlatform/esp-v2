@@ -456,6 +456,18 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo, backendProtocol ut.Ba
 		ServiceConfig:   copyServiceConfigForReportMetrics(serviceInfo.ServiceConfig()),
 		BackendProtocol: lowercaseProtocol,
 	}
+	if *flags.LogRequestHeaders != "" {
+		service.LogRequestHeaders = strings.Split(*flags.LogRequestHeaders, ",")
+		for i := range service.LogRequestHeaders {
+			service.LogRequestHeaders[i] = strings.TrimSpace(service.LogRequestHeaders[i])
+		}
+	}
+	if *flags.LogResponseHeaders != "" {
+		service.LogResponseHeaders = strings.Split(*flags.LogResponseHeaders, ",")
+		for i := range service.LogResponseHeaders {
+			service.LogResponseHeaders[i] = strings.TrimSpace(service.LogResponseHeaders[i])
+		}
+	}
 
 	requirementMap := make(map[string]*scpb.Requirement)
 	for operation := range serviceInfo.OperationSet {

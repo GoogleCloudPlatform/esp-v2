@@ -55,6 +55,10 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
       const ::google::protobuf::RepeatedPtrField<
           ::google::api::envoy::http::service_control::APIKeyLocation>&
           locations);
+  void fillLoggedHeader(
+      const Http::HeaderMap* headers,
+      const ::google::protobuf::RepeatedPtrField<::std::string>& log_headers,
+      std::string& info_log_header_field);
   void fillOperationInfo(
       ::google::api_proxy::service_control::OperationInfo& info);
   void fillGCPInfo(

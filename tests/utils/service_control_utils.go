@@ -67,6 +67,8 @@ type ExpectedReport struct {
 	BackendProtocol   string
 	Platform          string
 	JwtAuth           string
+	RequestHeaders    string
+	ResponseHeaders   string
 }
 
 type distOptions struct {
@@ -240,6 +242,12 @@ func createLogEntry(er *ExpectedReport) *sc.LogEntry {
 	}
 	if er.ErrorCause != "" {
 		pl["error_cause"] = makeStringValue(er.ErrorCause)
+	}
+	if er.RequestHeaders != "" {
+		pl["request_headers"] = makeStringValue(er.RequestHeaders)
+	}
+	if er.ResponseHeaders != "" {
+		pl["response_headers"] = makeStringValue(er.ResponseHeaders)
 	}
 
 	severity := ltype.LogSeverity_INFO

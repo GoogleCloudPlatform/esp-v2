@@ -58,6 +58,12 @@ message Service {
 
   // The protocol of the backend, either "grpc", "http1", or "http2"
   string backend_protocol = 8;
+
+  // The array of request headers demanded to be logged
+  repeated string log_request_headers = 9;
+
+  // The array of response headers demanded to be logged
+  repeated string log_response_headers = 10;
 }
 
 message GcpAttributes {

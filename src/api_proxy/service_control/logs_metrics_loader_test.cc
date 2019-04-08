@@ -40,7 +40,7 @@ using ::testing::Property;
 using ::testing::UnorderedElementsAre;
 
 template <class Message>
-Message Parse(const char *text) {
+Message Parse(const char* text) {
   ::google::protobuf::TextFormat::Parser parser;
   ::google::protobuf::io::ArrayInputStream input(text, strlen(text));
   Message msg;
@@ -51,22 +51,22 @@ Message Parse(const char *text) {
 
 const char unsupported_prefix[] = "unsupported/";
 
-bool StartsWith(const std::string &value, const char *prefix, size_t size) {
+bool StartsWith(const std::string& value, const char* prefix, size_t size) {
   return value.compare(0, size, prefix) == 0;
 }
 
-bool IsLabelSupported(const LabelDescriptor &ld) {
+bool IsLabelSupported(const LabelDescriptor& ld) {
   return !StartsWith(ld.key(), unsupported_prefix,
                      sizeof(unsupported_prefix) - 1);
 }
 
-bool IsMetricSupported(const MetricDescriptor &md) {
+bool IsMetricSupported(const MetricDescriptor& md) {
   return !StartsWith(md.name(), unsupported_prefix,
                      sizeof(unsupported_prefix) - 1);
 }
 
-typedef std::map<std::string, const LabelDescriptor &> LabelMap;
-typedef std::map<std::string, const MetricDescriptor &> MetricMap;
+typedef std::map<std::string, const LabelDescriptor&> LabelMap;
+typedef std::map<std::string, const MetricDescriptor&> MetricMap;
 
 }  // namespace
 
