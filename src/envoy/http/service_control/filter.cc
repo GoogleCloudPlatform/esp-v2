@@ -16,7 +16,6 @@
 
 #include "src/envoy/http/service_control/filter.h"
 #include "src/envoy/http/service_control/handler.h"
-#include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/status_http_code.h"
 
 using ::google::protobuf::util::error::Code;
@@ -30,8 +29,8 @@ Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
     Http::HeaderMap& headers, bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
 
-  handler_ = std::move(factory_.createHandler(
-      headers, decoder_callbacks_->streamInfo(), *config_));
+  handler_ = std::move(
+      factory_.createHandler(headers, decoder_callbacks_->streamInfo()));
 
   state_ = Calling;
   stopped_ = false;
@@ -57,7 +56,7 @@ void ServiceControlFilter::onCheckDone(
     return;
   }
 
-  config_->stats().allowed_.inc();
+  stats_.allowed_.inc();
   state_ = Complete;
   if (stopped_) {
     decoder_callbacks_->continueDecoding();
@@ -66,7 +65,7 @@ void ServiceControlFilter::onCheckDone(
 
 void ServiceControlFilter::rejectRequest(Http::Code code,
                                          absl::string_view error_msg) {
-  config_->stats().denied_.inc();
+  stats_.denied_.inc();
   state_ = Responded;
 
   decoder_callbacks_->sendLocalReply(code, error_msg, nullptr, absl::nullopt);
@@ -104,8 +103,7 @@ void ServiceControlFilter::log(const Http::HeaderMap* request_headers,
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (!handler_) {
     if (!request_headers) return;
-    handler_ = std::move(
-        factory_.createHandler(*request_headers, stream_info, *config_));
+    handler_ = std::move(factory_.createHandler(*request_headers, stream_info));
   }
 
   handler_->callReport(request_headers, response_headers, response_trailers);

@@ -15,8 +15,6 @@
 #include "src/envoy/http/service_control/handler_impl.h"
 #include "absl/strings/match.h"
 #include "common/http/utility.h"
-#include "envoy/http/header_map.h"
-#include "src/envoy/http/service_control/handler.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
 
@@ -117,8 +115,8 @@ Protocol getBackendProtocol(const std::string& protocol) {
 
 ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     const Http::HeaderMap& headers, const StreamInfo::StreamInfo& stream_info,
-    const ServiceControlFilterConfig& config)
-    : config_(config), stream_info_(stream_info) {
+    const std::string& uuid, const FilterConfigParser& cfg_parser)
+    : cfg_parser_(cfg_parser), stream_info_(stream_info), uuid_(uuid) {
   http_method_ = Utils::getRequestHTTPMethodWithOverride(
       headers.Method()->value().c_str(), headers);
   path_ = headers.Path()->value().c_str();
@@ -134,14 +132,11 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     return;
   }
 
-  require_ctx_ = config_.cfg_parser().FindRequirement(operation);
+  require_ctx_ = cfg_parser_.FindRequirement(operation);
   if (!require_ctx_) {
     ENVOY_LOG(debug, "No requirement matched!");
     return;
   }
-
-  // This uuid is shared for Check and report
-  uuid_ = config_.random().uuid();
 
   if (!isCheckRequired()) {
     ENVOY_LOG(debug, "Service control check is not needed");
@@ -151,7 +146,7 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
   if (require_ctx_->config().api_key().locations_size() > 0) {
     extractAPIKey(headers, require_ctx_->config().api_key().locations());
   } else {
-    extractAPIKey(headers, config_.default_api_keys().locations());
+    extractAPIKey(headers, cfg_parser_.default_api_keys().locations());
   }
 }
 
@@ -235,7 +230,7 @@ void ServiceControlHandlerImpl::fillOperationInfo(
 
 void ServiceControlHandlerImpl::fillGCPInfo(
     ::google::api_proxy::service_control::ReportRequestInfo& info) {
-  const auto& filter_config = config_.proto();
+  const auto& filter_config = cfg_parser_.config();
   if (!filter_config.has_gcp_attributes()) {
     info.compute_platform =
         ::google::api_proxy::service_control::compute_platform::UNKNOWN;

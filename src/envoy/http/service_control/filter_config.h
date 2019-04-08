@@ -19,6 +19,8 @@
 #include "envoy/runtime/runtime.h"
 #include "envoy/server/filter_config.h"
 #include "src/envoy/http/service_control/config_parser.h"
+#include "src/envoy/http/service_control/filter_stats.h"
+#include "src/envoy/http/service_control/handler_impl.h"
 #include "src/envoy/http/service_control/service_control_call_impl.h"
 
 namespace Envoy {
@@ -26,75 +28,28 @@ namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 
-/**
- * All stats for the service control filter. @see stats_macros.h
- */
-
-// clang-format off
-#define ALL_SERVICE_CONTROL_FILTER_STATS(COUNTER)     \
-  COUNTER(allowed)                                    \
-  COUNTER(denied)
-// clang-format on
-
-/**
- * Wrapper struct for service control filter stats. @see stats_macros.h
- */
-struct ServiceControlFilterStats {
-  ALL_SERVICE_CONTROL_FILTER_STATS(GENERATE_COUNTER_STRUCT)
-};
 // The Envoy filter config for API Proxy service control client.
-class ServiceControlFilterConfig : public Logger::Loggable<Logger::Id::filter> {
+class ServiceControlFilterConfig : public Logger::Loggable<Logger::Id::filter>,
+                                   public ServiceControlFilterStatBase {
  public:
   ServiceControlFilterConfig(
       const ::google::api::envoy::http::service_control::FilterConfig&
           proto_config,
       const std::string& stats_prefix,
       Server::Configuration::FactoryContext& context)
-      : proto_config_(proto_config),
-        stats_(generateStats(stats_prefix, context.scope())),
-        cm_(context.clusterManager()),
-        random_(context.random()),
+      : ServiceControlFilterStatBase(stats_prefix, context.scope()),
         call_factory_(context),
-        config_parser_(proto_config_, call_factory_) {
-    // The default places to extract api-key
-    default_api_keys_.add_locations()->set_query("key");
-    default_api_keys_.add_locations()->set_query("api_key");
-    default_api_keys_.add_locations()->set_header("x-api-key");
-  }
+        config_parser_(proto_config, call_factory_),
+        handler_factory_(context.random(), config_parser_) {}
 
-  const ::google::api::envoy::http::service_control::FilterConfig& proto()
-      const {
-    return proto_config_;
-  }
-
-  Upstream::ClusterManager& cm() { return cm_; }
-  Runtime::RandomGenerator& random() const { return random_; }
-  ServiceControlFilterStats& stats() { return stats_; }
-  const FilterConfigParser& cfg_parser() const { return config_parser_; }
-  const ::google::api::envoy::http::service_control::APIKeyRequirement&
-  default_api_keys() const {
-    return default_api_keys_;
+  const ServiceControlHandlerFactory& handler_factory() const {
+    return handler_factory_;
   }
 
  private:
-  ServiceControlFilterStats generateStats(const std::string& prefix,
-                                          Stats::Scope& scope) {
-    const std::string final_prefix = prefix + "service_control.";
-    return {ALL_SERVICE_CONTROL_FILTER_STATS(
-        POOL_COUNTER_PREFIX(scope, final_prefix))};
-  }
-
-  // The proto config.
-  ::google::api::envoy::http::service_control::FilterConfig proto_config_;
-  // The stats for the filter.
-  ServiceControlFilterStats stats_;
-  Upstream::ClusterManager& cm_;
-  Runtime::RandomGenerator& random_;
   ServiceControlCallFactoryImpl call_factory_;
   FilterConfigParser config_parser_;
-
-  ::google::api::envoy::http::service_control::APIKeyRequirement
-      default_api_keys_;
+  ServiceControlHandlerFactoryImpl handler_factory_;
 };
 
 typedef std::shared_ptr<ServiceControlFilterConfig> FilterConfigSharedPtr;

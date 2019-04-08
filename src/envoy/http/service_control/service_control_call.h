@@ -14,10 +14,9 @@
 
 #pragma once
 
-#include <functional>
-
 #include "envoy/common/pure.h"
-#include "src/api_proxy/service_control/request_info.h"
+
+#include "api/envoy/http/service_control/config.pb.h"
 #include "src/envoy/http/service_control/check_done_func.h"
 
 namespace Envoy {

@@ -16,7 +16,6 @@
 #include "api/envoy/http/service_control/config.pb.validate.h"
 #include "src/envoy/http/service_control/filter.h"
 #include "src/envoy/http/service_control/filter_config.h"
-#include "src/envoy/http/service_control/handler_impl.h"
 
 #include "envoy/registry/registry.h"
 #include "extensions/filters/http/common/factory_base.h"
@@ -45,18 +44,15 @@ class FilterFactory
       Server::Configuration::FactoryContext& context) override {
     auto filter_config = std::make_shared<ServiceControlFilterConfig>(
         proto_config, stats_prefix, context);
-    const ServiceControlHandlerFactory& factory = handler_factory_;
-    return [&factory, filter_config](
-               Http::FilterChainFactoryCallbacks& callbacks) -> void {
-      auto filter =
-          std::make_shared<ServiceControlFilter>(filter_config, factory);
-      callbacks.addStreamDecoderFilter(
-          Http::StreamDecoderFilterSharedPtr(filter));
-      callbacks.addAccessLogHandler(AccessLog::InstanceSharedPtr(filter));
-    };
+    return
+        [filter_config](Http::FilterChainFactoryCallbacks& callbacks) -> void {
+          auto filter = std::make_shared<ServiceControlFilter>(
+              filter_config->stats(), filter_config->handler_factory());
+          callbacks.addStreamDecoderFilter(
+              Http::StreamDecoderFilterSharedPtr(filter));
+          callbacks.addAccessLogHandler(AccessLog::InstanceSharedPtr(filter));
+        };
   }
-
-  ServiceControlHandlerFactoryImpl handler_factory_;
 };
 
 /**

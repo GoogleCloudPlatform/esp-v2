@@ -16,7 +16,7 @@
 
 #include "envoy/common/pure.h"
 #include "envoy/http/header_map.h"
-#include "src/envoy/http/service_control/filter_config.h"
+#include "envoy/stream_info/stream_info.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -51,8 +51,8 @@ class ServiceControlHandlerFactory {
   virtual ~ServiceControlHandlerFactory() {}
 
   virtual ServiceControlHandlerPtr createHandler(
-      const Http::HeaderMap& headers, const StreamInfo::StreamInfo& stream_info,
-      const ServiceControlFilterConfig& filter_config) const PURE;
+      const Http::HeaderMap& headers,
+      const StreamInfo::StreamInfo& stream_info) const PURE;
 };
 
 }  // namespace ServiceControl

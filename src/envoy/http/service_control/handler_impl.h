@@ -18,8 +18,10 @@
 
 #include "common/common/logger.h"
 #include "envoy/http/header_map.h"
+#include "envoy/http/query_params.h"
+#include "envoy/runtime/runtime.h"
 #include "src/api_proxy/service_control/request_builder.h"
-#include "src/envoy/http/service_control/filter_config.h"
+#include "src/envoy/http/service_control/config_parser.h"
 #include "src/envoy/http/service_control/handler.h"
 
 namespace Envoy {
@@ -33,7 +35,8 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
  public:
   ServiceControlHandlerImpl(const Http::HeaderMap& headers,
                             const StreamInfo::StreamInfo& stream_info,
-                            const ServiceControlFilterConfig& config);
+                            const std::string& uuid,
+                            const FilterConfigParser& cfg_parser);
   virtual ~ServiceControlHandlerImpl();
 
   void callCheck(Http::HeaderMap& headers, CheckDoneCallback& callback);
@@ -73,8 +76,8 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
       const ::google::api_proxy::service_control::CheckResponseInfo&
           response_info);
 
-  // The filer config.
-  const ServiceControlFilterConfig& config_;
+  // The filter config parser.
+  const FilterConfigParser& cfg_parser_;
 
   // The metadata for the request
   const StreamInfo::StreamInfo& stream_info_;
@@ -103,15 +106,22 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
 
 class ServiceControlHandlerFactoryImpl : public ServiceControlHandlerFactory {
  public:
-  ServiceControlHandlerFactoryImpl() {}
-  ~ServiceControlHandlerFactoryImpl() {}
+  ServiceControlHandlerFactoryImpl(Runtime::RandomGenerator& random,
+                                   const FilterConfigParser& cfg_parser)
+      : random_(random), cfg_parser_(cfg_parser) {}
 
   ServiceControlHandlerPtr createHandler(
-      const Http::HeaderMap& headers, const StreamInfo::StreamInfo& stream_info,
-      const ServiceControlFilterConfig& config) const override {
-    return std::make_unique<ServiceControlHandlerImpl>(headers, stream_info,
-                                                       config);
+      const Http::HeaderMap& headers,
+      const StreamInfo::StreamInfo& stream_info) const override {
+    return std::make_unique<ServiceControlHandlerImpl>(
+        headers, stream_info, random_.uuid(), cfg_parser_);
   }
+
+ private:
+  // Random object.
+  Runtime::RandomGenerator& random_;
+  // The filter config parser.
+  const FilterConfigParser& cfg_parser_;
 };
 
 }  // namespace ServiceControl

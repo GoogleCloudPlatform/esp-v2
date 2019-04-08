@@ -14,6 +14,9 @@
 
 #pragma once
 
+#include <functional>
+#include "src/api_proxy/service_control/request_info.h"
+
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {

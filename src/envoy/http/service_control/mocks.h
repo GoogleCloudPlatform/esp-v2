@@ -37,17 +37,15 @@ class MockServiceControlHandler : public ServiceControlHandler {
 class MockServiceControlHandlerFactory : public ServiceControlHandlerFactory {
  public:
   ServiceControlHandlerPtr createHandler(
-      const Http::HeaderMap& headers, const StreamInfo::StreamInfo& stream_info,
-      const ServiceControlFilterConfig& config) const override {
-    return ServiceControlHandlerPtr{
-        createHandler_(headers, stream_info, config)};
+      const Http::HeaderMap& headers,
+      const StreamInfo::StreamInfo& stream_info) const override {
+    return ServiceControlHandlerPtr{createHandler_(headers, stream_info)};
   }
 
-  MOCK_CONST_METHOD3(
+  MOCK_CONST_METHOD2(
       createHandler_,
       ServiceControlHandler*(const Http::HeaderMap& headers,
-                             const StreamInfo::StreamInfo& stream_info,
-                             const ServiceControlFilterConfig& config));
+                             const StreamInfo::StreamInfo& stream_info));
 };
 
 class MockServiceControlCall : public ServiceControlCall {

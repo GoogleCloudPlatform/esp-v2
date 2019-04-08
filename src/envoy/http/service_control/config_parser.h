@@ -71,6 +71,11 @@ class FilterConfigParser {
       const ::google::api::envoy::http::service_control::FilterConfig& config,
       ServiceControlCallFactory& factory);
 
+  const ::google::api::envoy::http::service_control::FilterConfig& config()
+      const {
+    return config_;
+  }
+
   const RequirementContext* FindRequirement(absl::string_view operation) const {
     const auto requirement_it = requirements_map_.find(operation);
     if (requirement_it == requirements_map_.end()) {
@@ -79,11 +84,21 @@ class FilterConfigParser {
     return requirement_it->second.get();
   }
 
+  const ::google::api::envoy::http::service_control::APIKeyRequirement&
+  default_api_keys() const {
+    return default_api_keys_;
+  }
+
  private:
+  // The proto config.
+  ::google::api::envoy::http::service_control::FilterConfig config_;
   // Operation name to RequirementContext map.
   absl::flat_hash_map<std::string, RequirementContextPtr> requirements_map_;
   // Service name to ServiceContext map.
   absl::flat_hash_map<std::string, ServiceContextPtr> service_map_;
+  // The default locations to extract api-key.
+  ::google::api::envoy::http::service_control::APIKeyRequirement
+      default_api_keys_;
 };
 
 }  // namespace ServiceControl
