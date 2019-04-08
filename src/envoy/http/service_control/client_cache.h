@@ -20,6 +20,7 @@
 #include "envoy/upstream/cluster_manager.h"
 #include "include/service_control_client.h"
 #include "src/api_proxy/service_control/request_info.h"
+#include "src/envoy/http/service_control/check_done_func.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -34,12 +35,8 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
       Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher,
       std::function<const std::string&()> token_fn);
 
-  void callCheck(
-      const ::google::api::servicecontrol::v1::CheckRequest& request,
-      std::function<
-          void(const ::google::protobuf::util::Status& status,
-               const ::google::api_proxy::service_control::CheckResponseInfo&)>
-          on_done);
+  void callCheck(const ::google::api::servicecontrol::v1::CheckRequest& request,
+                 CheckDoneFunc on_done);
 
   void callReport(
       const ::google::api::servicecontrol::v1::ReportRequest& request);

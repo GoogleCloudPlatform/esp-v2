@@ -73,7 +73,10 @@ envoy_cc_library(
 envoy_cc_library(
     name = "client_cache_lib",
     srcs = ["client_cache.cc"],
-    hdrs = ["client_cache.h"],
+    hdrs = [
+        "client_cache.h",
+        "check_done_func.h",
+    ],
     repository = "@envoy",
     deps = [
         ":http_call_lib",
@@ -91,6 +94,20 @@ envoy_cc_library(
     hdrs = ["config_parser.h"],
     repository = "@envoy",
     deps = [
+        ":service_control_call_lib",
+    ],
+)
+
+envoy_cc_library(
+    name = "service_control_call_lib",
+    srcs = ["service_control_call_impl.cc"],
+    hdrs = [
+        "check_done_func.h",
+        "service_control_call.h",
+        "service_control_call_impl.h",
+    ],
+    repository = "@envoy",
+    deps = [
         ":client_cache_lib",
         "//api/envoy/http/service_control:config_proto_cc",
         "//src/api_proxy/service_control:request_builder_lib",
@@ -102,10 +119,14 @@ envoy_cc_library(
 
 envoy_cc_test(
     name = "config_parser_test",
-    srcs = ["config_parser_test.cc"],
+    srcs = [
+        "config_parser_test.cc",
+        "mocks.h",
+    ],
     repository = "@envoy",
     deps = [
         ":config_parser_lib",
+        ":filter_lib",
         "@envoy//test/test_common:utility_lib",
         "@envoy//test/mocks/server:server_mocks",
     ],
