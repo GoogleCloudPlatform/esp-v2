@@ -217,7 +217,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	}
 
 	switch e.backendService {
-	case "echo":
+	case "echo", "echoForDynamicRouting":
 		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.BackendServerPort, false, false)
 		if err != nil {
 			return err
