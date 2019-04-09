@@ -27,7 +27,7 @@ import (
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 )
 
-func TestMakeRouteConfig(t *testing.T) {
+func TestMakeRouteConfigForCors(t *testing.T) {
 	testData := []struct {
 		desc string
 		// Test parameters, in the order of "cors_preset", "cors_allow_origin"

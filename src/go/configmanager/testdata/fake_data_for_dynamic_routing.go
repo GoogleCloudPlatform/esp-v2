@@ -35,6 +35,21 @@ var (
 						RequestTypeUrl:  "type.googleapis.com/EchoRequest",
 						ResponseTypeUrl: "type.googleapis.com/EchoMessage",
 					},
+					{
+						Name: "dynamic_routing_Hello",
+					},
+					{
+						Name: "dynamic_routing_Search",
+					},
+					{
+						Name: "dynamic_routing_GetPetById",
+					},
+					{
+						Name: "dynamic_routing_AddPet",
+					},
+					{
+						Name: "dynamic_routing_ListPets",
+					},
 				},
 				Version: "1.0.0",
 			},
@@ -49,31 +64,31 @@ var (
 					Body: "message",
 				},
 				{
-					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.Hello",
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello",
 					Pattern: &annotations.HttpRule_Get{
 						Get: "/hello",
 					},
 				},
 				{
-					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.Search",
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search",
 					Pattern: &annotations.HttpRule_Get{
 						Get: "/search",
 					},
 				},
 				{
-					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetById",
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
 					Pattern: &annotations.HttpRule_Get{
 						Get: "/pet/{pet_id}",
 					},
 				},
 				{
-					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.AddPet",
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet",
 					Pattern: &annotations.HttpRule_Post{
 						Post: "/pet",
 					},
 				},
 				{
-					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.ListPets",
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets",
 					Pattern: &annotations.HttpRule_Get{
 						Get: "/pets",
 					},
@@ -85,45 +100,45 @@ var (
 				&conf.BackendRule{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
 				},
-				// goes to cluster DynamicRouting.0
+				// goes to cluster DynamicRouting_0
 				&conf.BackendRule{
-					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.Hello",
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello",
 					Address:         "https://us-central1-cloud-esf.cloudfunctions.net/hello",
 					PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &conf.BackendRule_JwtAudience{
 						JwtAudience: "https://us-central1-cloud-esf.cloudfunctions.net/hello",
 					},
 				},
-				// goes to cluster DynamicRouting.1
+				// goes to cluster DynamicRouting_1
 				&conf.BackendRule{
-					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.Search",
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search",
 					Address:         "https://us-west2-cloud-esf.cloudfunctions.net/search",
 					PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
 					Authentication: &conf.BackendRule_JwtAudience{
 						JwtAudience: "https://us-west2-cloud-esf.cloudfunctions.net/search",
 					},
 				},
-				// goes to cluster DynamicRouting.2
+				// goes to cluster DynamicRouting_2
 				&conf.BackendRule{
-					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetById",
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
 					Address:         "https://pets.appspot.com:8008/api",
 					PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &conf.BackendRule_JwtAudience{
 						JwtAudience: "1083071298623-e...t.apps.googleusercontent.com",
 					},
 				},
-				// goes to cluster DynamicRouting.3
+				// goes to cluster DynamicRouting_3
 				&conf.BackendRule{
-					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.AddPet",
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet",
 					Address:         "https://pets.appspot.com/api",
 					PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &conf.BackendRule_JwtAudience{
 						JwtAudience: "1083071298623-e...t.apps.googleusercontent.com",
 					},
 				},
-				// goes to cluster DynamicRouting.3
+				// goes to cluster DynamicRouting_3
 				&conf.BackendRule{
-					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.ListPets",
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets",
 					Address:         "https://pets.appspot.com/api",
 					PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &conf.BackendRule_JwtAudience{
@@ -133,6 +148,7 @@ var (
 			},
 		},
 	}
+
 	FakeWantedClustersForDynamicRouting = []string{
 		`
 {
@@ -150,7 +166,7 @@ var (
 }`,
 		`
 {
-  "name": "DynamicRouting.0",
+  "name": "DynamicRouting_0",
   "type": "LOGICAL_DNS",
   "connectTimeout": "20s",
   "hosts": [
@@ -167,7 +183,7 @@ var (
 }
 `, `
 {
-  "name": "DynamicRouting.1",
+  "name": "DynamicRouting_1",
   "type": "LOGICAL_DNS",
   "connectTimeout": "20s",
   "hosts": [
@@ -183,7 +199,7 @@ var (
   }
 }`, `
 {
-  "name": "DynamicRouting.2",
+  "name": "DynamicRouting_2",
   "type": "LOGICAL_DNS",
   "connectTimeout": "20s",
   "hosts": [
@@ -199,7 +215,7 @@ var (
   }
 }`, `
 {
-  "name": "DynamicRouting.3",
+  "name": "DynamicRouting_3",
   "type": "LOGICAL_DNS",
   "connectTimeout": "20s",
   "hosts": [
@@ -241,38 +257,38 @@ var (
                       }
                     },
                     {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.Hello",
-                      "pattern": {
-                        "http_method": "GET",
-                        "uri_template": "/hello"
-                      }
-                    },
-                    {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.Search",
-                      "pattern": {
-                        "http_method": "GET",
-                        "uri_template": "/search"
-                      }
-                    },
-                    {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetById",
-                      "pattern": {
-                        "http_method": "GET",
-                        "uri_template": "/pet/{pet_id}"
-                      }
-                    },
-                    {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.AddPet",
+                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet",
                       "pattern": {
                         "http_method": "POST",
                         "uri_template": "/pet"
                       }
                     },
                     {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.ListPets",
+                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
+                      "pattern": {
+                        "http_method": "GET",
+                        "uri_template": "/pet/{pet_id}"
+                      }
+                    },
+                    {
+                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello",
+                      "pattern": {
+                        "http_method": "GET",
+                        "uri_template": "/hello"
+                      }
+                    },
+                    {
+                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets",
                       "pattern": {
                         "http_method": "GET",
                         "uri_template": "/pets"
+                      }
+                    },
+                    {
+                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search",
+                      "pattern": {
+                        "http_method": "GET",
+                        "uri_template": "/search"
                       }
                     }
                   ]
@@ -282,29 +298,29 @@ var (
               {
                 "config": {
                   "rules": [
+                     {
+                      "jwt_audience": "1083071298623-e...t.apps.googleusercontent.com",
+                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet",
+                      "token_cluster": "ads_cluster"
+                    },
+                    {
+                      "jwt_audience": "1083071298623-e...t.apps.googleusercontent.com",
+                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
+                      "token_cluster": "ads_cluster"
+                    },
                     {
                       "jwt_audience": "https://us-central1-cloud-esf.cloudfunctions.net/hello",
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.Hello",
+                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello",
+                      "token_cluster": "ads_cluster"
+                    },
+                    {
+                      "jwt_audience": "1083071298623-e...t.apps.googleusercontent.com",
+                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets",
                       "token_cluster": "ads_cluster"
                     },
                     {
                       "jwt_audience": "https://us-west2-cloud-esf.cloudfunctions.net/search",
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.Search",
-                      "token_cluster": "ads_cluster"
-                    },
-                    {
-                      "jwt_audience": "1083071298623-e...t.apps.googleusercontent.com",
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetById",
-                      "token_cluster": "ads_cluster"
-                    },
-                    {
-                      "jwt_audience": "1083071298623-e...t.apps.googleusercontent.com",
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.AddPet",
-                      "token_cluster": "ads_cluster"
-                    },
-                    {
-                      "jwt_audience": "1083071298623-e...t.apps.googleusercontent.com",
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.ListPets",
+                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search",
                       "token_cluster": "ads_cluster"
                     }
                   ]
@@ -315,25 +331,25 @@ var (
                 "config": {
                   "rules": [
                     {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.Hello",
+                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet",
+                      "path_prefix": "/api"
+                    },
+                    {
+                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
+                      "path_prefix": "/api"
+                    },
+                    {
+                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello",
                       "path_prefix": "/hello"
                     },
                     {
+                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets",
+                      "path_prefix": "/api"
+                    },
+                    {
                       "is_const_address": true,
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.Search",
+                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search",
                       "path_prefix": "/search"
-                    },
-                    {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.GetPetById",
-                      "path_prefix": "/api"
-                    },
-                    {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.AddPet",
-                      "path_prefix": "/api"
-                    },
-                    {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing.ListPets",
-                      "path_prefix": "/api"
                     }
                   ]
                 },
@@ -357,30 +373,15 @@ var (
                       "match": {
                         "headers": [
                           {
-                            "exact_match": "GET",
+                            "exact_match": "POST",
                             "name": ":method"
                           }
                         ],
-                        "path": "/hello"
+                        "path": "/pet"
                       },
                       "route": {
-                        "cluster": "DynamicRouting.0",
-                        "host_rewrite": "us-central1-cloud-esf.cloudfunctions.net"
-                      }
-                    },
-                    {
-                      "match": {
-                        "headers": [
-                          {
-                            "exact_match": "GET",
-                            "name": ":method"
-                          }
-                        ],
-                        "path": "/search"
-                      },
-                      "route": {
-                        "cluster": "DynamicRouting.1",
-                        "host_rewrite": "us-west2-cloud-esf.cloudfunctions.net"
+                        "cluster": "DynamicRouting_3",
+                        "host_rewrite": "pets.appspot.com"
                       }
                     },
                     {
@@ -394,7 +395,7 @@ var (
                         "regex": "/pet/[^\\/]+$"
                       },
                       "route": {
-                        "cluster": "DynamicRouting.2",
+                        "cluster": "DynamicRouting_2",
                         "host_rewrite": "pets.appspot.com"
                       }
                     },
@@ -402,15 +403,15 @@ var (
                       "match": {
                         "headers": [
                           {
-                            "exact_match": "POST",
+                            "exact_match": "GET",
                             "name": ":method"
                           }
                         ],
-                        "path": "/pet"
+                        "path": "/hello"
                       },
                       "route": {
-                        "cluster": "DynamicRouting.3",
-                        "host_rewrite": "pets.appspot.com"
+                        "cluster": "DynamicRouting_0",
+                        "host_rewrite": "us-central1-cloud-esf.cloudfunctions.net"
                       }
                     },
                     {
@@ -424,8 +425,23 @@ var (
                         "path": "/pets"
                       },
                       "route": {
-                        "cluster": "DynamicRouting.3",
+                        "cluster": "DynamicRouting_3",
                         "host_rewrite": "pets.appspot.com"
+                      }
+                    },
+                    {
+                      "match": {
+                        "headers": [
+                          {
+                            "exact_match": "GET",
+                            "name": ":method"
+                          }
+                        ],
+                        "path": "/search"
+                      },
+                      "route": {
+                        "cluster": "DynamicRouting_1",
+                        "host_rewrite": "us-west2-cloud-esf.cloudfunctions.net"
                       }
                     },
                     {

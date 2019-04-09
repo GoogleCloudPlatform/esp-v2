@@ -16,7 +16,6 @@ package configgenerator
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
@@ -29,7 +28,6 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/duration"
-	"google.golang.org/genproto/googleapis/api/annotations"
 
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	bapb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/backend_auth"
@@ -50,7 +48,7 @@ const (
 	statPrefix = "ingress_http"
 )
 
-func MakeListener(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtocol) (*v2.Listener, error) {
+func MakeListener(serviceInfo *sc.ServiceInfo) (*v2.Listener, error) {
 	httpFilters := []*hcm.HttpFilter{}
 
 	if *flags.CorsPreset == "basic" || *flags.CorsPreset == "cors_with_regex" {
@@ -66,7 +64,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtoco
 	// * Service Control filter
 	// * Backend Authentication filter
 	// * Backend Routing filter (WIP)
-	pathMathcherFilter := makePathMatcherFilter(serviceInfo, backendProtocol)
+	pathMathcherFilter := makePathMatcherFilter(serviceInfo)
 	if pathMathcherFilter != nil {
 		httpFilters = append(httpFilters, pathMathcherFilter)
 		glog.Infof("adding Path Matcher Filter config: %v", pathMathcherFilter)
@@ -74,7 +72,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtoco
 
 	// Add JWT Authn filter if needed.
 	if !*flags.SkipJwtAuthnFilter {
-		jwtAuthnFilter := makeJwtAuthnFilter(serviceInfo, backendProtocol)
+		jwtAuthnFilter := makeJwtAuthnFilter(serviceInfo)
 		if jwtAuthnFilter != nil {
 			httpFilters = append(httpFilters, jwtAuthnFilter)
 			glog.Infof("adding JWT Authn Filter config: %v", jwtAuthnFilter)
@@ -83,7 +81,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtoco
 
 	// Add Service Control filter if needed.
 	if !*flags.SkipServiceControlFilter {
-		serviceControlFilter := makeServiceControlFilter(serviceInfo, backendProtocol)
+		serviceControlFilter := makeServiceControlFilter(serviceInfo)
 		if serviceControlFilter != nil {
 			httpFilters = append(httpFilters, serviceControlFilter)
 			glog.Infof("adding Service Control Filter config: %v", serviceControlFilter)
@@ -91,11 +89,11 @@ func MakeListener(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtoco
 	}
 
 	// Add gRPC Transcoder filter and gRPCWeb filter configs for gRPC backend.
-	if backendProtocol == ut.GRPC {
+	if serviceInfo.BackendProtocol == ut.GRPC {
 		transcoderFilter := makeTranscoderFilter(serviceInfo)
 		if transcoderFilter != nil {
 			httpFilters = append(httpFilters, transcoderFilter)
-			glog.Infof("adding Transcoder Filter config: %v", transcoderFilter)
+			glog.Infof("adding Transcoder Filter config...")
 		}
 
 		grpcWebFilter := &hcm.HttpFilter{
@@ -172,125 +170,32 @@ func MakeListener(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtoco
 	}, nil
 }
 
-func makePathMatcherFilter(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtocol) *hcm.HttpFilter {
+func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	rules := []*pmpb.PathMatcherRule{}
-	if backendProtocol == ut.GRPC {
-		for _, method := range serviceInfo.ServiceConfig().GetApis()[0].GetMethods() {
-			rules = append(rules, &pmpb.PathMatcherRule{
-				Operation: fmt.Sprintf("%s.%s", serviceInfo.ApiName, method.GetName()),
+	for _, operation := range serviceInfo.Operations {
+		method := serviceInfo.Methods[operation]
+		// Adds PathMatcherRule for gRPC method.
+		if serviceInfo.BackendProtocol == ut.GRPC {
+			newGrpcRule := &pmpb.PathMatcherRule{
+				Operation: operation,
 				Pattern: &commonpb.Pattern{
-					UriTemplate: fmt.Sprintf("/%s/%s", serviceInfo.ApiName, method.GetName()),
+					UriTemplate: fmt.Sprintf("/%s/%s", serviceInfo.ApiName, method.ShortName),
 					HttpMethod:  ut.POST,
 				},
-			})
-		}
-	}
-
-	constantAddressRules := make(map[string]bool)
-	for _, rule := range serviceInfo.ServiceConfig().GetBackend().GetRules() {
-		if rule.GetPathTranslation() == conf.BackendRule_CONSTANT_ADDRESS {
-			constantAddressRules[rule.GetSelector()] = true
-		}
-	}
-
-	for _, httpRule := range serviceInfo.ServiceConfig().GetHttp().GetRules() {
-		var newPattern *commonpb.Pattern
-		switch httpPattern := httpRule.GetPattern().(type) {
-		case *annotations.HttpRule_Get:
-			newPattern = &commonpb.Pattern{
-				UriTemplate: httpPattern.Get,
-				HttpMethod:  ut.GET,
 			}
-		case *annotations.HttpRule_Put:
-			newPattern = &commonpb.Pattern{
-				UriTemplate: httpPattern.Put,
-				HttpMethod:  ut.PUT,
-			}
-		case *annotations.HttpRule_Post:
-			newPattern = &commonpb.Pattern{
-				UriTemplate: httpPattern.Post,
-				HttpMethod:  ut.POST,
-			}
-		case *annotations.HttpRule_Delete:
-			newPattern = &commonpb.Pattern{
-				UriTemplate: httpPattern.Delete,
-				HttpMethod:  ut.DELETE,
-			}
-		case *annotations.HttpRule_Patch:
-			newPattern = &commonpb.Pattern{
-				UriTemplate: httpPattern.Patch,
-				HttpMethod:  ut.PATCH,
-			}
-		// TODO(kyuc): might need to handle HttpRule_Custom as well
-		case *annotations.HttpRule_Custom:
-			if httpPattern.Custom.Kind == ut.OPTIONS {
-				newPattern = &commonpb.Pattern{
-					UriTemplate: httpPattern.Custom.Path,
-					HttpMethod:  ut.OPTIONS,
-				}
-			}
+			rules = append(rules, newGrpcRule)
 		}
 
-		newRule := &pmpb.PathMatcherRule{
-			Operation: httpRule.GetSelector(),
-			Pattern:   newPattern,
-		}
-
-		isConstantAddress := constantAddressRules[httpRule.GetSelector()]
-		if isConstantAddress && hasPathParameter(newPattern.UriTemplate) {
-			newRule.ExtractPathParameters = true
-		}
-
-		rules = append(rules, newRule)
-	}
-
-	serviceInfo.OperationSet = make(map[string]bool)
-	for _, rule := range rules {
-		serviceInfo.OperationSet[rule.Operation] = true
-	}
-
-	// TODO(kyuc): should we support CORS for gRPC?
-	// In order to support CORS. HTTP method OPTIONS needs to be added to all
-	// urls except the ones already with options.
-	if serviceInfo.GetEndpointAllowCorsFlag() {
-		httpPathArray := make([]*sc.HttpRule, 0)
-		for _, v := range serviceInfo.HttpPathMap {
-			httpPathArray = append(httpPathArray, v)
-		}
-		sort.Slice(httpPathArray, func(i, j int) bool {
-			if httpPathArray[i].Path == httpPathArray[j].Path {
-				return httpPathArray[i].Method < httpPathArray[i].Method
+		// Adds PathMatcherRule for HTTP method, whose HttpRule is not empty.
+		if method.HttpRule.UriTemplate != "" && method.HttpRule.HttpMethod != "" {
+			newHttpRule := &pmpb.PathMatcherRule{
+				Operation: operation,
+				Pattern:   &method.HttpRule,
 			}
-			return httpPathArray[i].Path < httpPathArray[j].Path
-		})
-		// All options have their operation as the following format: CORS.suffix.
-		// Appends suffix to make sure it is not used by any http rules.
-		corsOperationBase := "CORS"
-		corsID := 0
-		for _, v := range httpPathArray {
-			path := v.Path
-			if _, exist := serviceInfo.HttpPathWithOptionsSet[path]; !exist {
-				corsOperation := ""
-				for {
-					corsOperation = fmt.Sprintf("%s.%d", corsOperationBase, corsID)
-					corsID++
-					if !serviceInfo.OperationSet[corsOperation] {
-						break
-					}
-				}
-
-				optionsPattern := &commonpb.Pattern{
-					UriTemplate: path,
-					HttpMethod:  ut.OPTIONS,
-				}
-
-				newRule := &pmpb.PathMatcherRule{
-					Operation: corsOperation,
-					Pattern:   optionsPattern,
-				}
-				serviceInfo.GeneratedOptionsOperations = append(serviceInfo.GeneratedOptionsOperations, corsOperation)
-				rules = append(rules, newRule)
+			if method.BackendRule.TranslationType == conf.BackendRule_CONSTANT_ADDRESS && hasPathParameter(newHttpRule.Pattern.UriTemplate) {
+				newHttpRule.ExtractPathParameters = true
 			}
+			rules = append(rules, newHttpRule)
 		}
 	}
 
@@ -298,22 +203,9 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo, backendProtocol ut.Backe
 		return nil
 	}
 
-	// Create snake name to JSON name mapping.
-	var segmentNames []*pmpb.SegmentName
-	for _, t := range serviceInfo.ServiceConfig().GetTypes() {
-		for _, f := range t.GetFields() {
-			if strings.ContainsRune(f.GetName(), '_') {
-				segmentNames = append(segmentNames, &pmpb.SegmentName{
-					SnakeName: f.GetName(),
-					JsonName:  f.GetJsonName(),
-				})
-			}
-		}
-	}
-
 	pathMathcherConfig := &pmpb.FilterConfig{Rules: rules}
-	if len(segmentNames) > 0 {
-		pathMathcherConfig.SegmentNames = segmentNames
+	if len(serviceInfo.SegmentNames) > 0 {
+		pathMathcherConfig.SegmentNames = serviceInfo.SegmentNames
 	}
 
 	pathMathcherConfigStruct, _ := util.MessageToStruct(pathMathcherConfig)
@@ -328,7 +220,7 @@ func hasPathParameter(httpPattern string) bool {
 	return strings.ContainsRune(httpPattern, '{')
 }
 
-func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtocol) *hcm.HttpFilter {
+func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	auth := serviceInfo.ServiceConfig().GetAuthentication()
 	if len(auth.GetProviders()) == 0 {
 		return nil
@@ -402,9 +294,9 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendP
 			}
 		}
 
-		if httpRule, ok := serviceInfo.HttpPathMap[rule.GetSelector()]; ok {
+		if method, ok := serviceInfo.Methods[rule.GetSelector()]; ok {
 			ruleConfig := &ac.RequirementRule{
-				Match:    makeHttpRouteMatcher(httpRule),
+				Match:    makeHttpRouteMatcher(&method.HttpRule),
 				Requires: requires,
 			}
 			rules = append(rules, ruleConfig)
@@ -412,7 +304,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendP
 
 		s := strings.Split(rule.GetSelector(), ".")
 		// For gRPC protocol, needs to add extra match rule for grpc client.
-		if backendProtocol == ut.GRPC {
+		if serviceInfo.BackendProtocol == ut.GRPC {
 			rules = append(rules, &ac.RequirementRule{
 				Match: &route.RouteMatch{
 					PathSpecifier: &route.RouteMatch_Path{
@@ -437,7 +329,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendP
 	return jwtAuthnFilter
 }
 
-func makeServiceControlFilter(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtocol) *hcm.HttpFilter {
+func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	if serviceInfo == nil || serviceInfo.ServiceConfig().GetControl().GetEnvironment() == "" {
 		return nil
 	}
@@ -457,56 +349,29 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo, backendProtocol ut.Ba
 		BackendProtocol: lowercaseProtocol,
 	}
 
-	requirementMap := make(map[string]*scpb.Requirement)
-	for operation := range serviceInfo.OperationSet {
-		requirementMap[operation] = &scpb.Requirement{
-			ServiceName:   serviceName,
-			OperationName: operation,
-		}
-	}
-
-	// For these OPTIONS methods, auth should be disabled and AllowWithoutApiKey
-	// should be true for each CORS
-	for _, corsOperation := range serviceInfo.GeneratedOptionsOperations {
-		requirementMap[corsOperation] =
-			&scpb.Requirement{
-				ServiceName:   serviceName,
-				OperationName: corsOperation,
-				ApiKey: &scpb.APIKeyRequirement{
-					AllowWithoutApiKey: true,
-				},
-			}
-	}
-
-	for _, usageRule := range serviceInfo.ServiceConfig().GetUsage().GetRules() {
-		requirement, ok := requirementMap[usageRule.GetSelector()]
-		if !ok {
-			continue
-		}
-		requirement.ApiKey = &scpb.APIKeyRequirement{
-			AllowWithoutApiKey: usageRule.GetAllowUnregisteredCalls(),
-		}
-	}
-
 	filterConfig := &scpb.FilterConfig{
 		Services: []*scpb.Service{service},
 	}
-
 	if serviceInfo.GcpAttributes != nil {
 		filterConfig.GcpAttributes = serviceInfo.GcpAttributes
 	}
 
-	// Map order is not deterministic, so sort by key here to make the filter
-	// config rules order deterministic. Simply iterating map will introduce
-	// flakiness to the tests.
-	var operations []string
-	for operation := range requirementMap {
-		operations = append(operations, operation)
-	}
-	sort.Strings(operations)
+	for _, operation := range serviceInfo.Operations {
+		method := serviceInfo.Methods[operation]
+		requirement := &scpb.Requirement{
+			ServiceName:   serviceName,
+			OperationName: operation,
+		}
 
-	for _, operation := range operations {
-		filterConfig.Requirements = append(filterConfig.Requirements, requirementMap[operation])
+		// For these OPTIONS methods, auth should be disabled and AllowWithoutApiKey
+		// should be true for each CORS.
+		if method.IsGeneratedOption || method.AllowUnregisteredCalls {
+			requirement.ApiKey = &scpb.APIKeyRequirement{
+				AllowWithoutApiKey: true,
+			}
+		}
+
+		filterConfig.Requirements = append(filterConfig.Requirements, requirement)
 	}
 
 	scs, err := ut.MessageToStruct(filterConfig)
@@ -566,15 +431,15 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 
 func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	rules := []*bapb.BackendAuthRule{}
-	for _, rule := range serviceInfo.ServiceConfig().GetBackend().GetRules() {
-		if rule.GetSelector() == "" || rule.GetJwtAudience() == "" {
+	for _, operation := range serviceInfo.Operations {
+		method := serviceInfo.Methods[operation]
+		if method.BackendRule.JwtAudience == "" {
 			continue
 		}
-		rule.GetJwtAudience()
 		rules = append(rules,
 			&bapb.BackendAuthRule{
-				Operation:    rule.GetSelector(),
-				JwtAudience:  rule.GetJwtAudience(),
+				Operation:    operation,
+				JwtAudience:  method.BackendRule.JwtAudience,
 				TokenCluster: ut.TokenCluster,
 			})
 	}
@@ -589,13 +454,17 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 
 func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	rules := []*brpb.BackendRoutingRule{}
-	for _, v := range serviceInfo.BackendRoutingInfos {
-		rules = append(rules, &brpb.BackendRoutingRule{
-			Operation:      v.Selector,
-			IsConstAddress: v.TranslationType == conf.BackendRule_CONSTANT_ADDRESS,
-			PathPrefix:     v.Uri,
-		})
+	for _, operation := range serviceInfo.Operations {
+		method := serviceInfo.Methods[operation]
+		if method.BackendRule.TranslationType != conf.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
+			rules = append(rules, &brpb.BackendRoutingRule{
+				Operation:      operation,
+				IsConstAddress: method.BackendRule.TranslationType == conf.BackendRule_CONSTANT_ADDRESS,
+				PathPrefix:     method.BackendRule.Uri,
+			})
+		}
 	}
+
 	backendRoutingConfig := &brpb.FilterConfig{Rules: rules}
 	backendRoutingConfigStruct, _ := util.MessageToStruct(backendRoutingConfig)
 	backendRoutingFilter := &hcm.HttpFilter{

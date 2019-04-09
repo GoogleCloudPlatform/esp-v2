@@ -90,7 +90,7 @@ var (
 					},
 				},
 				{
-					Selector: "_post_anypath",
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog._post_anypath",
 					Pattern: &annotations.HttpRule_Post{
 						Post: "/**",
 					},
@@ -143,7 +143,7 @@ var (
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
 				},
 				{
-					Selector: "_post_anypath",
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog._post_anypath",
 				},
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_firebase",
@@ -162,7 +162,7 @@ var (
 					AllowUnregisteredCalls: true,
 				},
 				{
-					Selector:               "_post_anypath",
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog._post_anypath",
 					AllowUnregisteredCalls: true,
 				},
 			},

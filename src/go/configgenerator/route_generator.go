@@ -23,7 +23,9 @@ import (
 	"github.com/gogo/protobuf/types"
 
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
+	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 const (
@@ -101,14 +103,14 @@ func MakeRouteConfig(serviceInfo *sc.ServiceInfo) (*v2.RouteConfiguration, error
 
 func makeDynamicRoutingConfig(serviceInfo *sc.ServiceInfo) ([]route.Route, error) {
 	var backendRoutes []route.Route
-	for _, v := range serviceInfo.BackendRoutingInfos {
+	for _, operation := range serviceInfo.Operations {
+		method := serviceInfo.Methods[operation]
 		var routeMatcher *route.RouteMatch
-		operation, ok := serviceInfo.HttpPathMap[v.Selector]
-		if !ok {
+		if method.BackendRule.TranslationType == conf.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
 			continue
 		}
-		if routeMatcher = makeHttpRouteMatcher(operation); routeMatcher == nil {
-			return nil, fmt.Errorf("error making HTTP route matcher for selector: %v", v.Selector)
+		if routeMatcher = makeHttpRouteMatcher(&method.HttpRule); routeMatcher == nil {
+			return nil, fmt.Errorf("error making HTTP route matcher for selector: %v", operation)
 		}
 
 		r := route.Route{
@@ -116,10 +118,10 @@ func makeDynamicRoutingConfig(serviceInfo *sc.ServiceInfo) ([]route.Route, error
 			Action: &route.Route_Route{
 				Route: &route.RouteAction{
 					ClusterSpecifier: &route.RouteAction_Cluster{
-						Cluster: v.Backend.Name,
+						Cluster: method.BackendRule.ClusterName,
 					},
 					HostRewriteSpecifier: &route.RouteAction_HostRewrite{
-						HostRewrite: v.Backend.Hostname,
+						HostRewrite: method.BackendRule.Hostname,
 					},
 				},
 			},
@@ -129,7 +131,7 @@ func makeDynamicRoutingConfig(serviceInfo *sc.ServiceInfo) ([]route.Route, error
 	return backendRoutes, nil
 }
 
-func makeHttpRouteMatcher(httpRule *sc.HttpRule) *route.RouteMatch {
+func makeHttpRouteMatcher(httpRule *commonpb.Pattern) *route.RouteMatch {
 	if httpRule == nil {
 		return nil
 	}
@@ -138,17 +140,17 @@ func makeHttpRouteMatcher(httpRule *sc.HttpRule) *route.RouteMatch {
 
 	// Replacing query parameters inside "{}" by regex "[^\/]+", which means
 	// any character except `/`, also adds `$` to match to the end of the string.
-	if re.MatchString(httpRule.Path) {
+	if re.MatchString(httpRule.UriTemplate) {
 		routeMatcher = route.RouteMatch{
 			PathSpecifier: &route.RouteMatch_Regex{
-				Regex: re.ReplaceAllString(httpRule.Path, `[^\/]+`) + `$`,
+				Regex: re.ReplaceAllString(httpRule.UriTemplate, `[^\/]+`) + `$`,
 			},
 		}
 	} else {
 		// Match with HttpHeader method. Some methods may have same path.
 		routeMatcher = route.RouteMatch{
 			PathSpecifier: &route.RouteMatch_Path{
-				Path: httpRule.Path,
+				Path: httpRule.UriTemplate,
 			},
 		}
 	}
@@ -156,7 +158,7 @@ func makeHttpRouteMatcher(httpRule *sc.HttpRule) *route.RouteMatch {
 		{
 			Name: ":method",
 			HeaderMatchSpecifier: &route.HeaderMatcher_ExactMatch{
-				ExactMatch: httpRule.Method,
+				ExactMatch: httpRule.HttpMethod,
 			},
 		},
 	}

@@ -16,11 +16,15 @@ package configinfo
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 	"github.com/golang/glog"
 	"google.golang.org/genproto/googleapis/api/annotations"
 
+	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
+	pmpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/path_matcher"
 	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -28,44 +32,33 @@ import (
 
 // ServiceInfo contains service level information.
 type ServiceInfo struct {
-	Name string
-	// TODO(jilinxia): update this when supporting multi apis.
+	Name     string
 	ApiName  string
 	ConfigID string
 
-	serviceConfig *conf.Service
-	GcpAttributes *scpb.GcpAttributes
+	// A sorted array to store all the method name for this service.
+	// Should always iterate this array to avoid test fail due to order issue.
+	Operations []string
+	// Stores all methods info for this service, using selector as key.
+	Methods map[string]*methodInfo
+	// Stores information about backend clusters for re-routing.
+	BackendRoutingClusters []*backendRoutingCluster
+	// Stores url segment names, mapping snake name to Json name.
+	SegmentNames []*pmpb.SegmentName
 
+	AllowCors         bool
 	ServiceControlURI string
-	// TODO(jilinxia): move all the following maps into MethodInfo.
-	DynamicRoutingBackendMap map[string]backendInfo
-	// All non-generated operations
-	OperationSet map[string]bool
-	// HttpPathMap stores all operations to http path pairs.
-	HttpPathMap            map[string]*HttpRule
-	HttpPathWithOptionsSet map[string]bool
-	// Generated OPTIONS operation for CORS.
-	GeneratedOptionsOperations []string
-	BackendRoutingInfos        []backendRoutingInfo
+	BackendProtocol   ut.BackendProtocol
+	GcpAttributes     *scpb.GcpAttributes
+	// Keep a pointer to original service config. Should always process rules
+	// inside ServiceInfo.
+	serviceConfig *conf.Service
 }
 
-// HttpRule includes information for HTTP rules.
-type HttpRule struct {
-	Path   string
-	Method string
-}
-
-type backendInfo struct {
-	Name     string
-	Hostname string
-	Port     uint32
-}
-
-type backendRoutingInfo struct {
-	Selector        string
-	TranslationType conf.BackendRule_PathTranslation
-	Backend         backendInfo
-	Uri             string
+type backendRoutingCluster struct {
+	ClusterName string
+	Hostname    string
+	Port        uint32
 }
 
 // NewServiceInfoFromServiceConfig returns an instance of ServiceInfo.
@@ -81,21 +74,42 @@ func NewServiceInfoFromServiceConfig(serviceConfig *conf.Service, id string) (*S
 		return nil, fmt.Errorf("not support multi apis yet")
 	}
 
+	var backendProtocol ut.BackendProtocol
+	switch strings.ToLower(*flags.BackendProtocol) {
+	case "http1":
+		backendProtocol = ut.HTTP1
+	case "http2":
+		backendProtocol = ut.HTTP2
+	case "grpc":
+		backendProtocol = ut.GRPC
+	default:
+		return nil, fmt.Errorf(`unknown backend protocol, should be one of "grpc", "http1" or "http2"`)
+	}
+
 	serviceInfo := &ServiceInfo{
-		Name:          serviceConfig.GetName(),
-		ConfigID:      id,
-		serviceConfig: serviceConfig,
+		Name:            serviceConfig.GetName(),
+		ApiName:         serviceConfig.GetApis()[0].GetName(),
+		ConfigID:        id,
+		serviceConfig:   serviceConfig,
+		BackendProtocol: backendProtocol,
 	}
 
+	// Order matters.
+	serviceInfo.processEndpoints()
+	serviceInfo.processApis()
 	serviceInfo.processHttpRule()
-
-	if *flags.EnableBackendRouting {
-		if err := serviceInfo.processBackendRule(); err != nil {
-			return nil, err
-		}
+	serviceInfo.processUsageRule()
+	if err := serviceInfo.processBackendRule(); err != nil {
+		return nil, err
 	}
+	serviceInfo.processTypes()
 
-	serviceInfo.ApiName = serviceConfig.GetApis()[0].GetName()
+	// Sort Methods according to name.
+	for operation := range serviceInfo.Methods {
+		serviceInfo.Operations = append(serviceInfo.Operations, operation)
+	}
+	sort.Strings(serviceInfo.Operations)
+
 	return serviceInfo, nil
 }
 
@@ -104,88 +118,170 @@ func (s *ServiceInfo) ServiceConfig() *conf.Service {
 	return s.serviceConfig
 }
 
+func (s *ServiceInfo) processApis() {
+	s.Methods = make(map[string]*methodInfo)
+	api := s.serviceConfig.GetApis()[0]
+	for _, method := range api.GetMethods() {
+		s.Methods[fmt.Sprintf("%s.%s", api.GetName(), method.GetName())] =
+			&methodInfo{
+				ShortName: method.GetName(),
+			}
+	}
+}
+
+func (s *ServiceInfo) processEndpoints() {
+	for _, endpoint := range s.ServiceConfig().GetEndpoints() {
+		if endpoint.GetName() == s.ServiceConfig().GetName() && endpoint.GetAllowCors() {
+			s.AllowCors = true
+		}
+	}
+}
+
 func (s *ServiceInfo) processHttpRule() {
-	s.HttpPathMap = make(map[string]*HttpRule)
-	s.HttpPathWithOptionsSet = make(map[string]bool)
+	// An temporary map to record generated OPTION methods, to avoid duplication.
+	httpPathWithOptionsSet := make(map[string]bool)
+
 	for _, r := range s.ServiceConfig().GetHttp().GetRules() {
-		var rule *HttpRule
+		method := s.getOrCreateMethod(r.GetSelector())
 		switch r.GetPattern().(type) {
 		case *annotations.HttpRule_Get:
-			rule = &HttpRule{
-				Path:   r.GetGet(),
-				Method: ut.GET,
+			method.HttpRule = commonpb.Pattern{
+				UriTemplate: r.GetGet(),
+				HttpMethod:  ut.GET,
 			}
 		case *annotations.HttpRule_Put:
-			rule = &HttpRule{
-				Path:   r.GetPut(),
-				Method: ut.PUT,
+			method.HttpRule = commonpb.Pattern{
+				UriTemplate: r.GetPut(),
+				HttpMethod:  ut.PUT,
 			}
 		case *annotations.HttpRule_Post:
-			rule = &HttpRule{
-				Path:   r.GetPost(),
-				Method: ut.POST,
+			method.HttpRule = commonpb.Pattern{
+				UriTemplate: r.GetPost(),
+				HttpMethod:  ut.POST,
 			}
 		case *annotations.HttpRule_Delete:
-			rule = &HttpRule{
-				Path:   r.GetDelete(),
-				Method: ut.DELETE,
+			method.HttpRule = commonpb.Pattern{
+				UriTemplate: r.GetDelete(),
+				HttpMethod:  ut.DELETE,
 			}
 		case *annotations.HttpRule_Patch:
-			rule = &HttpRule{
-				Path:   r.GetPatch(),
-				Method: ut.PATCH,
+			method.HttpRule = commonpb.Pattern{
+				UriTemplate: r.GetPatch(),
+				HttpMethod:  ut.PATCH,
 			}
 		case *annotations.HttpRule_Custom:
-			rule = &HttpRule{
-				Path:   r.GetCustom().GetPath(),
-				Method: r.GetCustom().GetKind(),
+			method.HttpRule = commonpb.Pattern{
+				UriTemplate: r.GetCustom().GetPath(),
+				HttpMethod:  r.GetCustom().GetKind(),
 			}
+			httpPathWithOptionsSet[r.GetCustom().GetPath()] = true
 		default:
 			glog.Warning("unsupported http method")
 		}
+	}
 
-		if rule.Method == ut.OPTIONS {
-			s.HttpPathWithOptionsSet[rule.Path] = true
+	// In order to support CORS. HTTP method OPTIONS needs to be added to all
+	// urls except the ones already with options.
+	if s.AllowCors {
+		index := 0
+		for _, r := range s.ServiceConfig().GetHttp().GetRules() {
+			method := s.Methods[r.GetSelector()]
+			if method.HttpRule.HttpMethod != "OPTIONS" {
+				if _, exist := httpPathWithOptionsSet[method.HttpRule.UriTemplate]; !exist {
+					s.addOptionMethod(index, method.HttpRule.UriTemplate)
+					httpPathWithOptionsSet[method.HttpRule.UriTemplate] = true
+					index++
+				}
+			}
 		}
-		s.HttpPathMap[r.GetSelector()] = rule
+	}
+}
+
+func (s *ServiceInfo) addOptionMethod(index int, path string) {
+	// All options have their operation as the following format: CORS_suffix.
+	// Appends suffix to make sure it is not used by any http rules.
+	corsOperationBase := "CORS"
+	corsOperation := fmt.Sprintf("%s_%d", corsOperationBase, index)
+	s.Methods[fmt.Sprintf("%s.%s", s.ApiName, corsOperation)] = &methodInfo{
+		ShortName: corsOperation,
+		HttpRule: commonpb.Pattern{
+			UriTemplate: path,
+			HttpMethod:  ut.OPTIONS,
+		},
+		IsGeneratedOption: true,
 	}
 }
 
 func (s *ServiceInfo) processBackendRule() error {
-	s.DynamicRoutingBackendMap = make(map[string]backendInfo)
+	if !*flags.EnableBackendRouting {
+		return nil
+	}
+	backendRoutingClustersMap := make(map[string]string)
+
 	for _, r := range s.ServiceConfig().Backend.GetRules() {
-		// for CONSTANT_ADDRESS and APPEND_PATH_TO_ADDRESS
 		if r.PathTranslation != conf.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
 			hostname, port, uri, err := ut.ParseURL(r.Address)
 			if err != nil {
 				return err
 			}
 			address := fmt.Sprintf("%v:%v", hostname, port)
-			if _, exist := s.DynamicRoutingBackendMap[address]; !exist {
-				backendSelector := fmt.Sprintf("DynamicRouting.%v", len(s.DynamicRoutingBackendMap))
-				s.DynamicRoutingBackendMap[address] = backendInfo{
-					Name:     backendSelector,
-					Hostname: hostname,
-					Port:     port,
-				}
+			if _, exist := backendRoutingClustersMap[address]; !exist {
+				backendSelector := fmt.Sprintf("DynamicRouting_%v", len(s.BackendRoutingClusters))
+				s.BackendRoutingClusters = append(s.BackendRoutingClusters,
+					&backendRoutingCluster{
+						ClusterName: backendSelector,
+						Hostname:    hostname,
+						Port:        port,
+					})
+				backendRoutingClustersMap[address] = backendSelector
 			}
-			s.BackendRoutingInfos = append(s.BackendRoutingInfos, backendRoutingInfo{
-				Selector:        r.Selector,
-				TranslationType: r.PathTranslation,
-				Backend:         s.DynamicRoutingBackendMap[address],
+
+			clusterName := backendRoutingClustersMap[address]
+
+			method := s.getOrCreateMethod(r.GetSelector())
+
+			method.BackendRule = backendInfo{
+				ClusterName:     clusterName,
 				Uri:             uri,
-			})
+				Hostname:        hostname,
+				TranslationType: r.PathTranslation,
+				JwtAudience:     r.GetJwtAudience(),
+			}
 		}
 	}
 	return nil
 }
 
-// TODO(jilinxia): this should be stored a bit.
-func (s *ServiceInfo) GetEndpointAllowCorsFlag() bool {
-	for _, endpoint := range s.ServiceConfig().GetEndpoints() {
-		if endpoint.GetName() == s.ServiceConfig().GetName() && endpoint.GetAllowCors() {
-			return true
+func (s *ServiceInfo) processUsageRule() {
+	for _, r := range s.ServiceConfig().GetUsage().GetRules() {
+		method := s.getOrCreateMethod(r.GetSelector())
+		method.AllowUnregisteredCalls = r.GetAllowUnregisteredCalls()
+	}
+}
+
+func (s *ServiceInfo) processTypes() {
+	// Create snake name to JSON name mapping.
+	for _, t := range s.ServiceConfig().GetTypes() {
+		for _, f := range t.GetFields() {
+			if strings.ContainsRune(f.GetName(), '_') {
+				s.SegmentNames = append(s.SegmentNames, &pmpb.SegmentName{
+					SnakeName: f.GetName(),
+					JsonName:  f.GetJsonName(),
+				})
+			}
 		}
 	}
-	return false
+}
+
+// get the methodInfo by full name, and create a new one if not exists.
+// Ideally, all selector name in service config rules should exist in the api
+// methods.
+func (s *ServiceInfo) getOrCreateMethod(name string) *methodInfo {
+	if s.Methods[name] == nil {
+		names := strings.Split(name, ".")
+		s.Methods[name] = &methodInfo{
+			ShortName: names[len(names)-1],
+		}
+	}
+	return s.Methods[name]
 }
