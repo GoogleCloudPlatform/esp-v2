@@ -1,5 +1,5 @@
 hash: 2bc4d9abb45d44efee4fc632c0deea4a500052f2f112975fecd02b6a07a18c56
-updated: 2019-03-13T18:13:51.395918494Z
+updated: 2019-04-05T08:52:50.931521246-06:00
 imports:
 - name: cloud.google.com/go
   version: 2a912322007f3a7f0b4e7e96ba0dfd8c4f347d33
@@ -70,7 +70,7 @@ imports:
   subpackages:
   - validate
 - name: github.com/sirupsen/logrus
-  version: dae0fa8d5b0c810a8ab733fbd5510c7cae84eca4
+  version: 8bdbc7bcc01dcbb8ec23dc8a28e332258d25251f
 - name: golang.org/x/net
   version: 5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec
   subpackages:
@@ -135,7 +135,7 @@ imports:
   - protobuf/ptype
   - protobuf/source_context
 - name: google.golang.org/grpc
-  version: 2fdaae294f38ed9a121193c51ec99fecd3b13eb7
+  version: 3507fb8e1a5ad030303c106fef3a47c9fdad16ad
   subpackages:
   - balancer
   - balancer/base

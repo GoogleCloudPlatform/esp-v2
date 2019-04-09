@@ -198,7 +198,6 @@ envoy_cc_test(
     name = "filter_test",
     srcs = [
         "filter_test.cc",
-        "mocks.h",
     ],
     repository = "@envoy",
     deps = [
@@ -213,6 +212,7 @@ envoy_cc_test(
 envoy_cc_test(
     name = "handler_test",
     srcs = [
+        "handler_impl_test.cc",
         "handler_utils_test.cc",
     ],
     repository = "@envoy",

@@ -67,7 +67,7 @@ message Service {
 
   // Minimum amount of time (milliseconds) between sending intermediate
   // reports on a stream.
-  int64 min_stream_report_interval_ms = 11;
+  uint64 min_stream_report_interval_ms = 11;
 }
 
 message GcpAttributes {
@@ -75,7 +75,7 @@ message GcpAttributes {
   string project_id = 1;
   // The zone where the GCP proxy is running (e.g. us-west-1)
   string zone = 2;
-  // Platform where the GCP Proxy is running: GAE_PLEX, GKE, GCE, or UNKNOWN
+  // Platform where the GCP Proxy is running: GAE_FLEX, GKE, GCE, or UNKNOWN
   string platform = 3;
 }
 

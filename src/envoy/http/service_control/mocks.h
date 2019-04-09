@@ -80,6 +80,14 @@ class MockServiceControlCallFactory : public ServiceControlCallFactory {
           const ::google::api::envoy::http::service_control::Service& config));
 };
 
+class MockCheckDoneCallback : public ServiceControlHandler::CheckDoneCallback {
+ public:
+  MockCheckDoneCallback() {}
+  ~MockCheckDoneCallback() {}
+
+  MOCK_METHOD1(onCheckDone, void(const ::google::protobuf::util::Status&));
+};
+
 }  // namespace ServiceControl
 }  // namespace HttpFilters
 }  // namespace Extensions
