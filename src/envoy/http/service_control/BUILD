@@ -7,51 +7,47 @@ load(
 package(
     default_visibility = [
         "//src/envoy:__subpackages__",
-    ]
-)
-
-envoy_cc_library(
-    name = "filter_lib",
-    srcs = [
-        "filter.cc",
-        "handler_impl.cc",
-    ],
-    hdrs = [
-        "filter.h",
-        "filter_config.h",
-        "handler.h",
-        "handler_impl.h",
-    ],
-    repository = "@envoy",
-    deps = [
-        ":config_parser_lib",
-        "//src/envoy/utils:filter_state_utils_lib",
-        "//src/envoy/utils:status_http_code_lib",
-        "//src/envoy/utils:http_header_utils_lib",
-        "@envoy//source/common/http:headers_lib",
-        "@envoy//source/exe:envoy_common_lib",
     ],
 )
 
 envoy_cc_library(
-    name = "filter_factory",
-    srcs = ["filter_factory.cc"],
+    name = "check_done_func_lib",
+    hdrs = ["check_done_func.h"],
     repository = "@envoy",
     deps = [
-        ":filter_lib",
-        "@envoy//source/exe:envoy_common_lib",
+        "//src/api_proxy/service_control:request_builder_lib",
     ],
-    visibility = ["//src/envoy:__subpackages__"]
 )
 
-envoy_cc_test(
-    name = "filter_test",
-    srcs = ["filter_test.cc", "mocks.h"],
+envoy_cc_library(
+    name = "service_control_call_interface",
+    hdrs = ["service_control_call.h"],
     repository = "@envoy",
     deps = [
-        ":filter_lib",
-        "@envoy//test/test_common:utility_lib",
-        "@envoy//test/mocks/server:server_mocks",
+        ":check_done_func_lib",
+        "//api/envoy/http/service_control:config_proto_cc",
+    ],
+)
+
+envoy_cc_library(
+    name = "handler_interface",
+    hdrs = ["handler.h"],
+    repository = "@envoy",
+    deps = [
+        ":check_done_func_lib",
+        "@envoy//include/envoy/http:header_map_interface",
+        "@envoy//include/envoy/stream_info:stream_info_interface",
+    ],
+)
+
+envoy_cc_library(
+    name = "config_parser_lib",
+    srcs = ["config_parser.cc"],
+    hdrs = ["config_parser.h"],
+    repository = "@envoy",
+    deps = [
+        ":service_control_call_interface",
+        "@envoy//source/common/protobuf:utility_lib",
     ],
 )
 
@@ -75,45 +71,111 @@ envoy_cc_library(
     srcs = ["client_cache.cc"],
     hdrs = [
         "client_cache.h",
-        "check_done_func.h",
     ],
     repository = "@envoy",
     deps = [
+        ":check_done_func_lib",
         ":http_call_lib",
-        "//api/envoy/http/service_control:config_proto_cc",
         "//external:servicecontrol_client",
-        "//src/api_proxy/service_control:request_builder_lib",
         "@envoy//include/envoy/event:dispatcher_interface",
         "@envoy//include/envoy/upstream:cluster_manager_interface",
     ],
 )
 
 envoy_cc_library(
-    name = "config_parser_lib",
-    srcs = ["config_parser.cc"],
-    hdrs = ["config_parser.h"],
+    name = "service_control_call_impl_lib",
+    srcs = ["service_control_call_impl.cc"],
+    hdrs = ["service_control_call_impl.h"],
     repository = "@envoy",
     deps = [
-        ":service_control_call_lib",
+        ":client_cache_lib",
+        ":service_control_call_interface",
+        "//src/api_proxy/service_control:logs_metrics_loader_lib",
+        "//src/envoy/utils:token_subscriber_lib",
+        "@envoy//source/common/protobuf:utility_lib",
     ],
 )
 
 envoy_cc_library(
-    name = "service_control_call_lib",
-    srcs = ["service_control_call_impl.cc"],
+    name = "handler_impl_lib",
+    srcs = [
+        "handler_impl.cc",
+    ],
     hdrs = [
-        "check_done_func.h",
-        "service_control_call.h",
-        "service_control_call_impl.h",
+        "handler_impl.h",
     ],
     repository = "@envoy",
     deps = [
-        ":client_cache_lib",
-        "//api/envoy/http/service_control:config_proto_cc",
-        "//src/api_proxy/service_control:request_builder_lib",
-        "//src/api_proxy/service_control:logs_metrics_loader_lib",
-        "//src/envoy/utils:token_subscriber_lib",
-        "@envoy//source/common/protobuf:utility_lib",
+        ":config_parser_lib",
+        ":handler_interface",
+        "//src/envoy/utils:filter_state_utils_lib",
+        "//src/envoy/utils:http_header_utils_lib",
+        "@envoy//source/common/http:headers_lib",
+    ],
+)
+
+envoy_cc_library(
+    name = "filter_stats_lib",
+    hdrs = [
+        "filter_stats.h",
+    ],
+    repository = "@envoy",
+    deps = [
+        "@envoy//source/exe:envoy_common_lib",
+    ],
+)
+
+envoy_cc_library(
+    name = "filter_lib",
+    srcs = [
+        "filter.cc",
+    ],
+    hdrs = [
+        "filter.h",
+    ],
+    repository = "@envoy",
+    deps = [
+        ":filter_stats_lib",
+        ":handler_interface",
+        "//src/envoy/utils:status_http_code_lib",
+        "@envoy//source/common/http:headers_lib",
+        "@envoy//source/exe:envoy_common_lib",
+    ],
+)
+
+envoy_cc_library(
+    name = "filter_config_lib",
+    hdrs = [
+        "filter_config.h",
+    ],
+    repository = "@envoy",
+    deps = [
+        ":filter_stats_lib",
+        ":handler_impl_lib",
+        ":service_control_call_impl_lib",
+        "@envoy//source/exe:envoy_common_lib",
+    ],
+)
+
+envoy_cc_library(
+    name = "filter_factory",
+    srcs = ["filter_factory.cc"],
+    repository = "@envoy",
+    visibility = ["//src/envoy:__subpackages__"],
+    deps = [
+        ":filter_config_lib",
+        ":filter_lib",
+        "@envoy//source/exe:envoy_common_lib",
+    ],
+)
+
+envoy_cc_library(
+    name = "mocks_lib",
+    hdrs = ["mocks.h"],
+    repository = "@envoy",
+    deps = [
+        ":handler_interface",
+        ":service_control_call_interface",
     ],
 )
 
@@ -121,13 +183,27 @@ envoy_cc_test(
     name = "config_parser_test",
     srcs = [
         "config_parser_test.cc",
-        "mocks.h",
     ],
     repository = "@envoy",
     deps = [
         ":config_parser_lib",
-        ":filter_lib",
+        ":mocks_lib",
         "@envoy//test/test_common:utility_lib",
+    ],
+)
+
+envoy_cc_test(
+    name = "filter_test",
+    srcs = [
+        "filter_test.cc",
+        "mocks.h",
+    ],
+    repository = "@envoy",
+    deps = [
+        ":filter_lib",
+        ":mocks_lib",
         "@envoy//test/mocks/server:server_mocks",
+        "@envoy//test/mocks/stats:stats_mocks",
+        "@envoy//test/test_common:utility_lib",
     ],
 )

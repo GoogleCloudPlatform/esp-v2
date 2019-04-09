@@ -18,7 +18,7 @@
 #include "envoy/access_log/access_log.h"
 #include "envoy/http/filter.h"
 #include "envoy/http/header_map.h"
-#include "src/envoy/http/service_control/filter_config.h"
+#include "src/envoy/http/service_control/filter_stats.h"
 #include "src/envoy/http/service_control/handler.h"
 
 #include <string>
@@ -34,9 +34,9 @@ class ServiceControlFilter : public Http::StreamDecoderFilter,
                              public ServiceControlHandler::CheckDoneCallback,
                              public Logger::Loggable<Logger::Id::filter> {
  public:
-  ServiceControlFilter(FilterConfigSharedPtr config,
+  ServiceControlFilter(ServiceControlFilterStats& stats,
                        const ServiceControlHandlerFactory& factory)
-      : config_(config), factory_(factory) {}
+      : stats_(stats), factory_(factory) {}
 
   void onDestroy() override {}
 
@@ -62,7 +62,7 @@ class ServiceControlFilter : public Http::StreamDecoderFilter,
 
   // The callback funcion.
   Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
-  FilterConfigSharedPtr config_;
+  ServiceControlFilterStats& stats_;
   const ServiceControlHandlerFactory& factory_;
 
   // The service control request handler

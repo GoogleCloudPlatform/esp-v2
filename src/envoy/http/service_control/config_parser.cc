@@ -24,18 +24,19 @@ namespace HttpFilters {
 namespace ServiceControl {
 
 FilterConfigParser::FilterConfigParser(const FilterConfig& config,
-                                       ServiceControlCallFactory& factory) {
-  for (const auto& service : config.services()) {
+                                       ServiceControlCallFactory& factory)
+    : config_(config) {
+  for (const auto& service : config_.services()) {
     service_map_.emplace(
         service.service_name(),
         ServiceContextPtr(new ServiceContext(service, factory)));
   }
 
-  if (service_map_.size() < static_cast<size_t>(config.services_size())) {
-    throw ProtoValidationException("Duplicated service names", config);
+  if (service_map_.size() < static_cast<size_t>(config_.services_size())) {
+    throw ProtoValidationException("Duplicated service names", config_);
   }
 
-  for (const auto& requirement : config.requirements()) {
+  for (const auto& requirement : config_.requirements()) {
     const auto service_it = service_map_.find(requirement.service_name());
     if (service_it == service_map_.end()) {
       throw ProtoValidationException("Invalid service name", requirement);
@@ -46,9 +47,14 @@ FilterConfigParser::FilterConfigParser(const FilterConfig& config,
   }
 
   if (requirements_map_.size() <
-      static_cast<size_t>(config.requirements_size())) {
-    throw ProtoValidationException("Duplicated operation names", config);
+      static_cast<size_t>(config_.requirements_size())) {
+    throw ProtoValidationException("Duplicated operation names", config_);
   }
+
+  // The default places to extract api-key
+  default_api_keys_.add_locations()->set_query("key");
+  default_api_keys_.add_locations()->set_query("api_key");
+  default_api_keys_.add_locations()->set_header("x-api-key");
 }
 
 }  // namespace ServiceControl
