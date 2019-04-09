@@ -20,7 +20,7 @@ genrule(
 )
 
 cc_library(
-    name = "version_lib",
+    name = "utils",
     srcs = [
         "version.cc",
     ],
@@ -41,7 +41,7 @@ cc_test(
         "-lpthread",
     ],
     deps = [
-        ":version_lib",
+        ":utils",
         "//external:googletest_main",
     ],
 )

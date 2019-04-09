@@ -14,9 +14,11 @@
 
 #pragma once
 
+#include "envoy/buffer/buffer.h"
 #include "envoy/common/pure.h"
 #include "envoy/http/header_map.h"
 #include "envoy/stream_info/stream_info.h"
+#include "src/api_proxy/service_control/request_info.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -42,6 +44,13 @@ class ServiceControlHandler {
   virtual void callReport(const Http::HeaderMap* request_headers,
                           const Http::HeaderMap* response_headers,
                           const Http::HeaderMap* response_trailers) PURE;
+
+  // Collect decode data, if the stream report interval has passed,
+  // make an intermediate report call for long-lived gRPC streaming.
+  virtual void collectDecodeData(
+      Buffer::Instance& request_data,
+      std::chrono::system_clock::time_point now =
+          std::chrono::system_clock::now()) PURE;
 };
 typedef std::unique_ptr<ServiceControlHandler> ServiceControlHandlerPtr;
 

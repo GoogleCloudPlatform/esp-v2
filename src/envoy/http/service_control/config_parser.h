@@ -21,6 +21,9 @@
 #include "api/envoy/http/service_control/requirement.pb.h"
 #include "src/envoy/http/service_control/service_control_call.h"
 
+// Default minimum interval (milliseconds) for streaming reports.
+#define kDefaultMinStreamReportIntervalMs 10000
+
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
@@ -31,10 +34,19 @@ class ServiceContext {
   ServiceContext(
       const ::google::api::envoy::http::service_control::Service& config,
       ServiceControlCallFactory& factory)
-      : config_(config), service_control_call_(factory.create(config)) {}
+      : config_(config), service_control_call_(factory.create(config)) {
+    min_stream_report_interval_ms_ = config_.min_stream_report_interval_ms();
+    if (!min_stream_report_interval_ms_) {
+      min_stream_report_interval_ms_ = kDefaultMinStreamReportIntervalMs;
+    }
+  }
 
   const ::google::api::envoy::http::service_control::Service& config() const {
     return config_;
+  }
+
+  int64_t get_min_stream_report_interval_ms() const {
+    return min_stream_report_interval_ms_;
   }
 
   ServiceControlCall& call() const { return *service_control_call_; }
@@ -42,6 +54,7 @@ class ServiceContext {
  private:
   const ::google::api::envoy::http::service_control::Service& config_;
   ServiceControlCallPtr service_control_call_;
+  int64_t min_stream_report_interval_ms_;
 };
 typedef std::unique_ptr<ServiceContext> ServiceContextPtr;
 
