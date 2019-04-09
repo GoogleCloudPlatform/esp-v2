@@ -23,8 +23,6 @@ namespace Envoy {
 namespace Extensions {
 namespace Utils {
 
-// TODO(kyuc): add unit tests.
-
 // Data names in `FilterState` set by Path Matcher filter:
 constexpr char kOperation[] = "envoy.filters.http.path_matcher.operation";
 constexpr char kQueryParams[] = "envoy.filters.http.path_matcher.query_params";

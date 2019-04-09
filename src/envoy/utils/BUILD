@@ -54,6 +54,16 @@ envoy_cc_library(
     ]
 )
 
+envoy_cc_test(
+    name = "filter_state_utils_test",
+    srcs = ["filter_state_utils_test.cc"],
+    repository = "@envoy",
+    deps = [
+        ":filter_state_utils_lib",
+        "@envoy//test/test_common:utility_lib",
+        "@envoy//source/common/stream_info:filter_state_lib",
+    ],
+)
 envoy_cc_library(
     name = "status_http_code_lib",
     hdrs = ["status_http_code.h"],
