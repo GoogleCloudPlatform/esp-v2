@@ -7,17 +7,17 @@ load(
 package(
     default_visibility = [
         "//src/envoy:__subpackages__",
-    ]
+    ],
 )
 
 envoy_cc_library(
     name = "filter_factory",
     srcs = ["filter_factory.cc"],
     repository = "@envoy",
+    visibility = ["//src/envoy:__subpackages__"],
     deps = [
         ":filter_lib",
     ],
-    visibility = ["//src/envoy:__subpackages__"]
 )
 
 envoy_cc_library(

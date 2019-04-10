@@ -1,20 +1,20 @@
 package(
     default_visibility = [
         "//src/api_proxy/service_control:__subpackages__",
-    ]
+    ],
 )
 
 cc_library(
     name = "request_builder_lib",
     srcs = ["request_builder.cc"],
     hdrs = [
-        "request_info.h",
         "request_builder.h",
+        "request_info.h",
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//src/api_proxy/utils:version_lib",
         "//external:servicecontrol_client",
+        "//src/api_proxy/utils:version_lib",
     ],
 )
 

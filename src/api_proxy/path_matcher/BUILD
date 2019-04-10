@@ -1,8 +1,7 @@
-
 package(
     default_visibility = [
         "//src/envoy:__subpackages__",
-    ]
+    ],
 )
 
 cc_library(
@@ -54,16 +53,16 @@ cc_test(
 
 cc_library(
     name = "variable_binding_utils_lib",
-    hdrs = [
-        "variable_binding_utils.h",
-    ],
     srcs = [
         "variable_binding_utils.cc",
     ],
+    hdrs = [
+        "variable_binding_utils.h",
+    ],
     deps = [
         ":path_matcher_lib",
-        "//external:abseil_strings",
         "//external:abseil_flat_hash_map",
+        "//external:abseil_strings",
     ],
 )
 

@@ -71,7 +71,7 @@ api_dependencies()
 # ==============================================================================
 # Load Go dependencies and register Go toolchains.
 
-load("@io_bazel_rules_go//go:def.bzl", "go_rules_dependencies", "go_register_toolchains")
+load("@io_bazel_rules_go//go:def.bzl", "go_register_toolchains", "go_rules_dependencies")
 
 go_rules_dependencies()
 

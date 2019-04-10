@@ -103,9 +103,9 @@ vendor:
 #----------------------------------------------------------------------------
 # Target:  go tools
 #----------------------------------------------------------------------------
-.PHONY: tools tools.glide tools.goimports tools.golint tools.govet
+.PHONY: tools tools.glide tools.goimports tools.golint tools.govet tools.buildifier
 
-tools: tools.glide tools.goimports tools.golint tools.govet
+tools: tools.glide tools.goimports tools.golint tools.govet tools.buildifier
 
 tools.goimports:
 	@command -v goimports >/dev/null ; if [ $$? -ne 0 ]; then \
@@ -131,6 +131,12 @@ tools.glide:
 		curl https://glide.sh/get | sh; \
 	fi
 
+tools.buildifier:
+	@command -v buildifier >/dev/null ; if [ $$? -ne 0 ]; then \
+		echo "--> installing buildifier"; \
+		go get github.com/bazelbuild/buildtools/buildifier; \
+	fi
+
 .PHONY: clean
 clean:
 	@echo "--> cleaning compiled objects and binaries"
@@ -143,9 +149,11 @@ clean:
 check: format.check vet lint
 
 .PHONY: format
-format: tools.goimports
+format: tools.goimports tools.buildifier
 	@echo "--> formatting code with 'goimports' tool"
 	@goimports -local $(PKG) -w -l $(GOFILES)
+	@echo "--> formatting BUILD files with 'buildifier' tool"
+	@buildifier -r WORKSPACE ./src/ ./api/
 
 .PHONY: clang-format
 clang-format:

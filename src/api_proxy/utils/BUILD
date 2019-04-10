@@ -37,11 +37,11 @@ cc_test(
     srcs = [
         "version_test.cc",
     ],
+    linkopts = [
+        "-lpthread",
+    ],
     deps = [
         ":version_lib",
         "//external:googletest_main",
-    ],
-    linkopts = [
-        "-lpthread",
     ],
 )

@@ -7,7 +7,7 @@ load(
 package(
     default_visibility = [
         "//src/envoy:__subpackages__",
-    ]
+    ],
 )
 
 envoy_cc_library(
@@ -34,24 +34,24 @@ envoy_cc_test(
     deps = [
         ":token_subscriber_lib",
         "@envoy//source/common/tracing:http_tracer_lib",
-        "@envoy//test/test_common:utility_lib",
         "@envoy//test/mocks/server:server_mocks",
+        "@envoy//test/test_common:utility_lib",
     ],
 )
 
 envoy_cc_library(
     name = "filter_state_utils_lib",
-    hdrs = [
-        "filter_state_utils.h",
-    ],
     srcs = [
         "filter_state_utils.cc",
+    ],
+    hdrs = [
+        "filter_state_utils.h",
     ],
     repository = "@envoy",
     deps = [
         "@envoy//source/common/router:string_accessor_lib",
         "@envoy//source/exe:envoy_common_lib",
-    ]
+    ],
 )
 
 envoy_cc_test(
@@ -60,27 +60,28 @@ envoy_cc_test(
     repository = "@envoy",
     deps = [
         ":filter_state_utils_lib",
-        "@envoy//test/test_common:utility_lib",
         "@envoy//source/common/stream_info:filter_state_lib",
+        "@envoy//test/test_common:utility_lib",
     ],
 )
+
 envoy_cc_library(
     name = "status_http_code_lib",
-    hdrs = ["status_http_code.h"],
     srcs = ["status_http_code.cc"],
+    hdrs = ["status_http_code.h"],
     repository = "@envoy",
     deps = [
         "//external:protobuf",
         "@envoy//include/envoy/http:codes_interface",
-    ]
+    ],
 )
 
 envoy_cc_library(
     name = "http_header_utils_lib",
-    hdrs = ["http_header_utils.h"],
     srcs = ["http_header_utils.cc"],
+    hdrs = ["http_header_utils.h"],
     repository = "@envoy",
     deps = [
         "@envoy//source/exe:envoy_common_lib",
-    ]
+    ],
 )

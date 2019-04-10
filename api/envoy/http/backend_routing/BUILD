@@ -1,5 +1,5 @@
 load("@envoy_api//bazel:api_build_system.bzl", "api_proto_library")
-load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library", "go_grpc_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_grpc_library", "go_proto_library")
 
 BACKEND_ROUTING_VISIBILITY = [
     "//api/envoy/http/backend_routing:__subpackages__",

@@ -7,7 +7,7 @@ load(
 package(
     default_visibility = [
         "//src/envoy:__subpackages__",
-    ]
+    ],
 )
 
 envoy_cc_library(
@@ -33,9 +33,8 @@ envoy_cc_library(
     deps = [
         "//api/envoy/http/backend_routing:config_proto_cc",
         "//src/envoy/utils:filter_state_utils_lib",
-        "@envoy//source/exe:envoy_common_lib",
-        "@envoy//source/common/protobuf:utility_lib",
         "@envoy//source/common/http:headers_lib",
+        "@envoy//source/common/protobuf:utility_lib",
+        "@envoy//source/exe:envoy_common_lib",
     ],
 )
-
