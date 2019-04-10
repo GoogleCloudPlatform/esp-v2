@@ -543,6 +543,12 @@ operations {
           number_value: 1048576
         }
       }
+      fields {
+        key: "timestamp"
+        value {
+          number_value: 100000.0001
+        }
+      }
     }
     name: "local_test_log"
     timestamp {

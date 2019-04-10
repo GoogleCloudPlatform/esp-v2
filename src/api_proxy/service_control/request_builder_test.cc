@@ -108,25 +108,7 @@ void FillReportRequestInfo(ReportRequestInfo* request) {
   request->response_bytes = 1024 * 1024;
 }
 
-void SetFixTimeStamps(gasv1::Operation* op) {
-  Timestamp fix_time;
-  fix_time.set_seconds(100000);
-  fix_time.set_nanos(100000);
-  *op->mutable_start_time() = fix_time;
-  *op->mutable_end_time() = fix_time;
-  if (op->log_entries().size() > 0) {
-    *op->mutable_log_entries(0)->mutable_timestamp() = fix_time;
-    op->mutable_log_entries(0)
-        ->mutable_struct_payload()
-        ->mutable_fields()
-        ->erase("timestamp");
-  }
-}
-
 std::string CheckRequestToString(gasv1::CheckRequest* request) {
-  gasv1::Operation* op = request->mutable_operation();
-  SetFixTimeStamps(op);
-
   std::string text;
   google::protobuf::TextFormat::PrintToString(*request, &text);
   return text;
@@ -139,10 +121,6 @@ std::string AllocateQuotaRequestToString(gasv1::AllocateQuotaRequest* request) {
 }
 
 std::string ReportRequestToString(gasv1::ReportRequest* request) {
-  for (int i = 0; i < request->operations_size(); i++) {
-    SetFixTimeStamps(request->mutable_operations(i));
-  }
-
   std::string text;
   google::protobuf::TextFormat::PrintToString(*request, &text);
   return text;
@@ -156,9 +134,11 @@ class RequestBuilderTest : public ::testing::Test {
   }
 
   RequestBuilderTest()
-      : scp_({"local_test_log"}, "test_service", "2016-09-19r0") {}
+      : scp_({"local_test_log"}, "test_service", "2016-09-19r0"),
+        mock_now_(std::chrono::nanoseconds(100000000100000)) {}
 
   RequestBuilder scp_;
+  std::chrono::system_clock::time_point mock_now_;
 };
 
 TEST(RequestBuilder, TestRequestBuilderbufStruct) {
@@ -177,7 +157,7 @@ TEST_F(RequestBuilderTest, FillGoodCheckRequestTest) {
   FillCheckRequestInfo(&info);
 
   gasv1::CheckRequest request;
-  ASSERT_TRUE(scp_.FillCheckRequest(info, &request).ok());
+  ASSERT_TRUE(scp_.FillCheckRequest(info, &request, mock_now_).ok());
 
   std::string text = CheckRequestToString(&request);
   std::string expected_text = ReadTestBaseline("check_request.golden");
@@ -191,7 +171,7 @@ TEST_F(RequestBuilderTest, FillGoodCheckRequestAndroidIosTest) {
   FillCheckRequestAndroidInfo(&info);
 
   gasv1::CheckRequest request;
-  ASSERT_TRUE(scp_.FillCheckRequest(info, &request).ok());
+  ASSERT_TRUE(scp_.FillCheckRequest(info, &request, mock_now_).ok());
 
   std::string text = CheckRequestToString(&request);
   std::string expected_text =
@@ -244,7 +224,7 @@ TEST_F(RequestBuilderTest, FillNoApiKeyCheckRequestTest) {
   info.producer_project_id = "project_id";
 
   gasv1::CheckRequest request;
-  ASSERT_TRUE(scp_.FillCheckRequest(info, &request).ok());
+  ASSERT_TRUE(scp_.FillCheckRequest(info, &request, mock_now_).ok());
 
   std::string text = CheckRequestToString(&request);
   std::string expected_text =
@@ -258,7 +238,7 @@ TEST_F(RequestBuilderTest, CheckRequestMissingOperationNameTest) {
 
   gasv1::CheckRequest request;
   ASSERT_EQ(Code::INVALID_ARGUMENT,
-            scp_.FillCheckRequest(info, &request).error_code());
+            scp_.FillCheckRequest(info, &request, mock_now_).error_code());
 }
 
 TEST_F(RequestBuilderTest, CheckRequestMissingOperationIdTest) {
@@ -267,7 +247,7 @@ TEST_F(RequestBuilderTest, CheckRequestMissingOperationIdTest) {
 
   gasv1::CheckRequest request;
   ASSERT_EQ(Code::INVALID_ARGUMENT,
-            scp_.FillCheckRequest(info, &request).error_code());
+            scp_.FillCheckRequest(info, &request, mock_now_).error_code());
 }
 
 TEST_F(RequestBuilderTest, FillGoodReportRequestTest) {
@@ -277,7 +257,7 @@ TEST_F(RequestBuilderTest, FillGoodReportRequestTest) {
   info.backend_protocol = protocol::GRPC;
 
   gasv1::ReportRequest request;
-  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request, mock_now_).ok());
 
   std::string text = ReportRequestToString(&request);
   std::string expected_text = ReadTestBaseline("report_request.golden");
@@ -293,7 +273,7 @@ TEST_F(RequestBuilderTest, FillGoodReportRequestByConsumerTest) {
       ::google::protobuf::StringPiece("12345");
 
   gasv1::ReportRequest request;
-  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request, mock_now_).ok());
 
   std::string text = ReportRequestToString(&request);
   std::string expected_text =
@@ -309,7 +289,7 @@ TEST_F(RequestBuilderTest, FillStartReportRequestTest) {
   FillReportRequestInfo(&info);
 
   gasv1::ReportRequest request;
-  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request, mock_now_).ok());
 
   std::string text = ReportRequestToString(&request);
   std::string expected_text = ReadTestBaseline("first_report_request.golden");
@@ -324,7 +304,7 @@ TEST_F(RequestBuilderTest, FillIntermediateReportRequestTest) {
   FillReportRequestInfo(&info);
 
   gasv1::ReportRequest request;
-  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request, mock_now_).ok());
 
   std::string text = ReportRequestToString(&request);
   std::string expected_text =
@@ -340,7 +320,7 @@ TEST_F(RequestBuilderTest, FillFinalReportRequestTest) {
   FillReportRequestInfo(&info);
 
   gasv1::ReportRequest request;
-  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request, mock_now_).ok());
 
   std::string text = ReportRequestToString(&request);
   std::string expected_text = ReadTestBaseline("final_report_request.golden");
@@ -362,7 +342,7 @@ TEST_F(RequestBuilderTest, FillReportRequestFailedTest) {
   info.status = Status(Code::PERMISSION_DENIED, "");
 
   gasv1::ReportRequest request;
-  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request, mock_now_).ok());
 
   std::string text = ReportRequestToString(&request);
   std::string expected_text = ReadTestBaseline("report_request_failed.golden");
@@ -374,7 +354,7 @@ TEST_F(RequestBuilderTest, FillReportRequestEmptyOptionalTest) {
   FillOperationInfo(&info);
 
   gasv1::ReportRequest request;
-  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request, mock_now_).ok());
 
   std::string text = ReportRequestToString(&request);
   std::string expected_text =
@@ -387,7 +367,7 @@ TEST_F(RequestBuilderTest, CredentailIdApiKeyTest) {
   FillOperationInfo(&info);
 
   gasv1::ReportRequest request;
-  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request, mock_now_).ok());
 
   ASSERT_EQ(request.operations(0).labels().at("/credential_id"),
             "apikey:api_key_x");
@@ -400,7 +380,7 @@ TEST_F(RequestBuilderTest, CredentailIdIssuerOnlyTest) {
   info.auth_issuer = "auth-issuer";
 
   gasv1::ReportRequest request;
-  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request, mock_now_).ok());
 
   // TODO: (qiwzhang) credentail_id for auth is disabled for now
   //  ASSERT_EQ(request.operations(0).labels().at("/credential_id"),
@@ -415,7 +395,7 @@ TEST_F(RequestBuilderTest, CredentailIdIssuerAudienceTest) {
   info.auth_audience = "auth-audience";
 
   gasv1::ReportRequest request;
-  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request, mock_now_).ok());
 
   // TODO: (qiwzhang) credentail_id for auth is disabled for now
   // ASSERT_EQ(request.operations(0).labels().at("/credential_id"),
