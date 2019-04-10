@@ -271,7 +271,15 @@ func TestFetchListeners(t *testing.T) {
 			fakeServiceConfig: fmt.Sprintf(`{
                 "apis":[
                     {
-                        "name":"%s"
+                        "name":"%s",
+                        "methods": [
+                          {
+                             "name": "ListShelves"
+                          },
+                          {
+                             "name": "CreateShelf"
+                          }
+                        ]
                     }
                 ],
                 "http": {
@@ -323,10 +331,10 @@ func TestFetchListeners(t *testing.T) {
                                   "config": {
                                     "rules": [
                                       {
-                                        "operation": "endpoints.examples.bookstore.Bookstore.ListShelves",
-                                        "pattern": {
-                                          "http_method": "GET",
-                                          "uri_template": "/v1/shelves"
+                                        "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
+                                        "pattern":{
+                                            "http_method":"POST",
+                                            "uri_template":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
                                         }
                                       },
                                       {
@@ -334,6 +342,20 @@ func TestFetchListeners(t *testing.T) {
                                         "pattern": {
                                           "http_method": "POST",
                                           "uri_template": "/v1/shelves/{shelf}"
+                                        }
+                                      },
+                                      {
+                                         "operation":"endpoints.examples.bookstore.Bookstore.ListShelves",
+                                         "pattern": {
+                                            "http_method":"POST",
+                                            "uri_template":"/endpoints.examples.bookstore.Bookstore/ListShelves"
+                                        }
+                                      },
+                                      {
+                                        "operation": "endpoints.examples.bookstore.Bookstore.ListShelves",
+                                        "pattern": {
+                                          "http_method": "GET",
+                                          "uri_template": "/v1/shelves"
                                         }
                                       }
                                     ]
@@ -448,7 +470,15 @@ func TestFetchListeners(t *testing.T) {
                         "name":"%s",
                         "sourceContext": {
                             "fileName": "bookstore.proto"
-                        }
+                        },
+                        "methods": [
+                          {
+                             "name": "GetBook"
+                          },
+                          {
+                             "name": "DeleteBook"
+                          }
+                        ]
                     }
                 ],
                 "http": {
@@ -500,16 +530,30 @@ func TestFetchListeners(t *testing.T) {
                                   "config": {
                                     "rules": [
                                       {
-                                        "operation": "endpoints.examples.bookstore.Bookstore.GetBook",
-                                        "pattern": {
-                                          "http_method": "GET",
-                                          "uri_template": "/v1/shelves/{shelf}/books/{book}"
+                                        "operation":"endpoints.examples.bookstore.Bookstore.DeleteBook",
+                                        "pattern":{
+                                            "http_method":"POST",
+                                            "uri_template":"/endpoints.examples.bookstore.Bookstore/DeleteBook"
                                         }
                                       },
                                       {
                                         "operation": "endpoints.examples.bookstore.Bookstore.DeleteBook",
                                         "pattern": {
                                           "http_method": "DELETE",
+                                          "uri_template": "/v1/shelves/{shelf}/books/{book}"
+                                        }
+                                      },
+                                      {
+                                        "operation":"endpoints.examples.bookstore.Bookstore.GetBook",
+                                        "pattern":{
+                                            "http_method":"POST",
+                                            "uri_template":"/endpoints.examples.bookstore.Bookstore/GetBook"
+                                        }
+                                      },
+                                      {
+                                        "operation": "endpoints.examples.bookstore.Bookstore.GetBook",
+                                        "pattern": {
+                                          "http_method": "GET",
                                           "uri_template": "/v1/shelves/{shelf}/books/{book}"
                                         }
                                       }
@@ -628,13 +672,14 @@ func TestFetchListeners(t *testing.T) {
                 "control" : {
                     "environment": "servicecontrol.googleapis.com"
                 },
-                                "logging": {
-                                   "producerDestinations": [{
-                                       "logs": [
+                "logging": {
+                    "producerDestinations": [{
+                    "logs": [
                           "endpoints_log"
                        ],
-                       "monitoredResource": "api"
-                   }]
+                    "monitoredResource": "api"
+                   }
+                   ]
                 },
                 "logs": [
                     {
@@ -690,13 +735,6 @@ func TestFetchListeners(t *testing.T) {
                                           "config": {
                                             "rules": [
                                               {
-                                                "operation": "endpoints.examples.bookstore.Bookstore.ListShelves",
-                                                "pattern": {
-                                                  "http_method": "POST",
-                                                  "uri_template": "/endpoints.examples.bookstore.Bookstore/ListShelves"
-                                                }
-                                              },
-                                              {
                                                 "operation": "endpoints.examples.bookstore.Bookstore.CreateShelf",
                                                 "pattern": {
                                                   "http_method": "POST",
@@ -704,16 +742,23 @@ func TestFetchListeners(t *testing.T) {
                                                 }
                                               },
                                               {
-                                                "operation": "endpoints.examples.bookstore.Bookstore.ListShelves",
+                                                "operation": "endpoints.examples.bookstore.Bookstore.CreateShelf",
                                                 "pattern": {
-                                                  "http_method": "GET",
+                                                  "http_method": "POST",
                                                   "uri_template": "/v1/shelves"
                                                 }
                                               },
                                               {
-                                                "operation": "endpoints.examples.bookstore.Bookstore.CreateShelf",
+                                                "operation": "endpoints.examples.bookstore.Bookstore.ListShelves",
                                                 "pattern": {
                                                   "http_method": "POST",
+                                                  "uri_template": "/endpoints.examples.bookstore.Bookstore/ListShelves"
+                                                }
+                                              },
+                                              {
+                                                "operation": "endpoints.examples.bookstore.Bookstore.ListShelves",
+                                                "pattern": {
+                                                  "http_method": "GET",
                                                   "uri_template": "/v1/shelves"
                                                 }
                                               }
@@ -804,10 +849,18 @@ func TestFetchListeners(t *testing.T) {
 		{
 			desc:            "Success for HTTP1 backend, with Jwt filter, with audiences",
 			backendProtocol: "http1",
-			fakeServiceConfig: fmt.Sprintf(`{
+			fakeServiceConfig: `{
                 "apis":[
                     {
-                        "name":"%s"
+                        "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+                        "methods": [
+                          {
+                             "name": "Echo_Auth_Jwt"
+                          },
+                          {
+                             "name": "Echo"
+                          }
+                        ]
                     }
                 ],
                 "http": {
@@ -847,7 +900,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                     ]
                 }
-            }`, testEndpointName),
+            }`,
 			wantedListeners: fmt.Sprintf(`{
                 "filters":[
                     {
@@ -857,17 +910,17 @@ func TestFetchListeners(t *testing.T) {
                                   "config": {
                                     "rules": [
                                       {
-                                        "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
-                                        "pattern": {
-                                          "http_method": "GET",
-                                          "uri_template": "/auth/info/googlejwt"
-                                        }
-                                      },
-                                      {
                                         "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
                                         "pattern": {
                                           "http_method": "POST",
                                           "uri_template": "/echo"
+                                        }
+                                      },
+                                      {
+                                        "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
+                                        "pattern": {
+                                          "http_method": "GET",
+                                          "uri_template": "/auth/info/googlejwt"
                                         }
                                       }
                                     ]
@@ -927,7 +980,7 @@ func TestFetchListeners(t *testing.T) {
                                                         "prefix":"/"
                                                     },
                                                     "route":{
-                                                        "cluster": "%s"
+                                                        "cluster": "1.echo_api_endpoints_cloudesf_testing_cloud_goog"
                                                     }
                                                 }
                                             ]
@@ -941,25 +994,25 @@ func TestFetchListeners(t *testing.T) {
                         "name":"envoy.http_connection_manager"
                     }
                 ]
-            }`, fakeJwks, testEndpointName),
+            }`, fakeJwks),
 		},
 		{
 			desc:            "Success for backend that allow CORS",
 			backendProtocol: "http1",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"%s",
-        "producer_project_id":"%s",
-        "control" : {
-            "environment": "servicecontrol.googleapis.com"
-        },
-        "apis":[
-                   {
-                        "name":"%s",
+                "producer_project_id":"%s",
+                "control" : {
+                    "environment": "servicecontrol.googleapis.com"
+                },
+                "apis":[
+                    {
+                        "name":"1.echo_api_endpoints_cloudesf_testing_cloud_goog",
                         "methods":[
-            {
-                "name": "Simplegetcors"
-            }
-            ]
+                            {
+                                "name": "Simplegetcors"
+                            }
+                        ]
                     }
                 ],
                 "http": {
@@ -971,109 +1024,104 @@ func TestFetchListeners(t *testing.T) {
                     ]
                 },
                 "endpoints": [
-        {
-            "name": "%s",
-            "allow_cors": true
-        }
+                    {
+                        "name": "%s",
+                        "allow_cors": true
+                    }
                 ]
-            }`, testProjectName, testProjectID, testEndpointName, testProjectName),
-			wantedListeners: fmt.Sprintf(`{
-              "filters": [
-                {
-                  "config": {
-                    "http_filters": [
-                      {
+            }`, testProjectName, testProjectID, testProjectName),
+			wantedListeners: `{
+                "filters":[
+                    {
                         "config": {
-
-                          "rules": [
-                              {
-                                "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
-                                "pattern": {
-                                "http_method": "GET",
-                                "uri_template": "/simplegetcors"
+                            "http_filters":[
+                                {
+                                    "config":{
+                                        "rules":[
+                                            {
+                                                "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_0",
+                                                "pattern":{
+                                                    "http_method":"OPTIONS",
+                                                    "uri_template":"/simplegetcors"
+                                                }
+                                            },
+                                            {
+                                                "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
+                                                "pattern":{
+                                                    "http_method":"GET",
+                                                    "uri_template":"/simplegetcors"
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "name":"envoy.filters.http.path_matcher"
+                                },
+                                {
+                                    "config":{
+                                        "gcp_attributes":{"platform":"GCE"},
+                                        "requirements":[
+                                             {
+                                                "api_key":{
+                                                    "allow_without_api_key":true
+                                                },
+                                                "operation_name":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_0",
+                                                "service_name":"bookstore.endpoints.project123.cloud.goog"
+                                            },
+                                            {
+                                                "operation_name":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
+                                                "service_name":"bookstore.endpoints.project123.cloud.goog"
+                                            }
+                                        ],
+                                        "services":[
+                                            {
+                                                "backend_protocol":"http1",
+                                                "producer_project_id":"project123",
+                                                "service_config":{
+                                                    "@type":"type.googleapis.com/google.api.Service"
+                                                },
+                                                "service_config_id":"2017-05-01r0",
+                                                "service_control_uri": {
+                                                    "cluster":"service-control-cluster",
+                                                    "timeout":"5s",
+                                                    "uri":"https://servicecontrol.googleapis.com/v1/services/"
+                                                },
+                                                "service_name":"bookstore.endpoints.project123.cloud.goog",
+                                                "token_cluster":"ads_cluster"
+                                            }
+                                        ]
+                                    },
+                                    "name":"envoy.filters.http.service_control"
+                                },
+                                {
+                                    "config":{},
+                                    "name":"envoy.router"
                                 }
-                              },
-                              {
-                                "operation": "CORS.0",
-                                "pattern": {
-                                "http_method": "OPTIONS",
-                                "uri_template": "/simplegetcors"
-                                }
-                             }
-                          ]
-                        },
-                      "name": "envoy.filters.http.path_matcher"
-                      },
-                      {
-                        "config": {
-                          "gcp_attributes":{
-                             "platform": "GCE"
-                          },
-                          "requirements": [
-                            {
-                              "operation_name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
-                              "service_name": "bookstore.endpoints.project123.cloud.goog"
+                            ],
+                            "route_config":{
+                                "name":"local_route",
+                                "virtual_hosts":[
+                                    {
+                                        "domains":["*"],
+                                        "name":"backend",
+                                        "routes":[
+                                            {
+                                                "match":{"prefix":"/"},
+                                                "route":{
+                                                    "cluster":"1.echo_api_endpoints_cloudesf_testing_cloud_goog"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                ]
                             },
-                            {
-                              "api_key": {
-                                "allow_without_api_key": true
-                            },
-                              "operation_name": "CORS.0",
-                              "service_name": "bookstore.endpoints.project123.cloud.goog"
-                            }
-                          ],
-                          "services": [
-                            {
-                              "backend_protocol": "http1",
-                              "producer_project_id": "project123",
-                              "service_config_id": "2017-05-01r0",
-                              "service_control_uri": {
-                                "cluster": "service-control-cluster",
-                                "timeout": "5s",
-                                "uri": "https://servicecontrol.googleapis.com/v1/services/"
-                              },
-                              "service_name": "%s",
-                              "token_cluster": "ads_cluster",
-                      "service_config":{"@type":"type.googleapis.com/google.api.Service"}
-                            }
-                          ]
+                            "stat_prefix":"ingress_http",
+                            "use_remote_address":false,
+                            "xff_num_trusted_hops":2
                         },
-                        "name": "envoy.filters.http.service_control"
-                      },
-                      {
-                        "config": {},
-                        "name": "envoy.router"
-                      }
-                    ],
-                    "route_config": {
-                      "name": "local_route",
-                      "virtual_hosts": [
-                        {
-                          "domains": [
-                            "*"
-                          ],
-                          "name": "backend",
-                          "routes": [
-                            {
-                              "match": {
-                                "prefix": "/"
-                              },
-                              "route": {
-                                "cluster": "%s"
-                              }
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    "stat_prefix":"ingress_http",
-                    "use_remote_address":false,
-                    "xff_num_trusted_hops":2
-                  },
-                  "name": "envoy.http_connection_manager"
-                }
-              ]
-            }`, testProjectName, testEndpointName),
+                        "name":"envoy.http_connection_manager"
+                    }
+                ]
+            }`,
 		},
 	}
 

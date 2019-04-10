@@ -15,12 +15,14 @@
 package configgenerator
 
 import (
+	"flag"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"google.golang.org/genproto/protobuf/api"
 
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
@@ -114,6 +116,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 	}
 
 	for i, tc := range testData {
+		flag.Set("backend_protocol", tc.backendProtocol)
 		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
 		if err != nil {
 			t.Fatal(err)
@@ -126,6 +129,96 @@ func TestMakeServiceControlCluster(t *testing.T) {
 
 		if !reflect.DeepEqual(cluster, tc.wantedCluster) {
 			t.Errorf("Test Desc(%d): %s, makeServiceControlCluster got Clusters: %v, want: %v", i, tc.desc, cluster, tc.wantedCluster)
+		}
+	}
+}
+
+func TestMakeBackendRoutingCluster(t *testing.T) {
+	testData := []struct {
+		desc              string
+		fakeServiceConfig *conf.Service
+		wantedClusters    []cache.Resource
+		backendProtocol   string
+	}{
+		{
+			desc: "Success for HTTP backend",
+			fakeServiceConfig: &conf.Service{
+				Name: testProjectName,
+				Apis: []*api.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*api.Method{
+							{
+								Name: "Foo",
+							},
+							{
+								Name: "Bar",
+							},
+						},
+					},
+				},
+				Backend: &conf.Backend{
+					Rules: []*conf.BackendRule{
+						{
+							Address:         "https://mybackend.com",
+							Selector:        "1.cloudesf_testing_cloud_goog.Foo",
+							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &conf.BackendRule_JwtAudience{
+								JwtAudience: "mybackend.com",
+							},
+						},
+						{
+							Address:         "https://mybackend.com",
+							Selector:        "1.cloudesf_testing_cloud_goog.Bar",
+							PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
+							Authentication: &conf.BackendRule_JwtAudience{
+								JwtAudience: "mybackend.com",
+							},
+						},
+					},
+				},
+			},
+			backendProtocol: "http1",
+			wantedClusters: []cache.Resource{
+				&v2.Cluster{
+					Name:           "DynamicRouting_0",
+					ConnectTimeout: 20 * time.Second,
+					Type:           v2.Cluster_LOGICAL_DNS,
+					Hosts: []*core.Address{
+						{
+							Address: &core.Address_SocketAddress{
+								SocketAddress: &core.SocketAddress{
+									Address: "mybackend.com",
+									PortSpecifier: &core.SocketAddress_PortValue{
+										PortValue: 443,
+									},
+								},
+							},
+						},
+					},
+					TlsContext: &auth.UpstreamTlsContext{
+						Sni: "mybackend.com",
+					},
+				},
+			},
+		},
+	}
+
+	for i, tc := range testData {
+		flag.Set("backend_protocol", tc.backendProtocol)
+		flag.Set("enable_backend_routing", "true")
+		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		clusters, err := makeBackendRoutingClusters(fakeServiceInfo)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !reflect.DeepEqual(clusters, tc.wantedClusters) {
+			t.Errorf("Test Desc(%d): %s, makeBackendRoutingClusters got: %v, want: %v", i, tc.desc, clusters, tc.wantedClusters)
 		}
 	}
 }

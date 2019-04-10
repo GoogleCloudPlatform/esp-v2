@@ -35,9 +35,9 @@ const (
 	serviceControlClusterName = "service-control-cluster"
 )
 
-func MakeClusters(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtocol) ([]cache.Resource, error) {
+func MakeClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
 	var clusters []cache.Resource
-	backendCluster, err := makeBackendCluster(serviceInfo, backendProtocol)
+	backendCluster, err := makeBackendCluster(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func MakeClusters(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtoco
 	return clusters, nil
 }
 
-func makeBackendCluster(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendProtocol) (*v2.Cluster, error) {
+func makeBackendCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error) {
 	c := &v2.Cluster{
 		Name:           serviceInfo.ApiName,
 		LbPolicy:       v2.Cluster_ROUND_ROBIN,
@@ -85,7 +85,7 @@ func makeBackendCluster(serviceInfo *sc.ServiceInfo, backendProtocol ut.BackendP
 		},
 	}
 	// gRPC and HTTP/2 need this configuration.
-	if backendProtocol != ut.HTTP1 {
+	if serviceInfo.BackendProtocol != ut.HTTP1 {
 		c.Http2ProtocolOptions = &core.Http2ProtocolOptions{}
 	}
 	glog.Infof("Backend cluster configuration for service %s: %v", serviceInfo.Name, c)
@@ -163,9 +163,9 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error)
 
 func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
 	var brClusters []cache.Resource
-	for _, v := range serviceInfo.DynamicRoutingBackendMap {
+	for _, v := range serviceInfo.BackendRoutingClusters {
 		c := &v2.Cluster{
-			Name:           v.Name,
+			Name:           v.ClusterName,
 			LbPolicy:       v2.Cluster_ROUND_ROBIN,
 			ConnectTimeout: *flags.ClusterConnectTimeout,
 			Type:           v2.Cluster_LOGICAL_DNS,
@@ -185,7 +185,7 @@ func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, 
 			},
 		}
 		brClusters = append(brClusters, c)
-		glog.Infof("Add backend routing cluster configuration for %v: %v", v.Name, c)
+		glog.Infof("Add backend routing cluster configuration for %v: %v", v.ClusterName, c)
 	}
 	return brClusters, nil
 }

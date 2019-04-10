@@ -17,7 +17,6 @@ package configmanager
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
@@ -155,26 +154,14 @@ func (m *ConfigManager) updateSnapshot() error {
 func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	m.Infof("making configuration for api: %v", m.serviceInfo.ApiName)
 
-	var backendProtocol ut.BackendProtocol
-	switch strings.ToLower(*flags.BackendProtocol) {
-	case "http1":
-		backendProtocol = ut.HTTP1
-	case "http2":
-		backendProtocol = ut.HTTP2
-	case "grpc":
-		backendProtocol = ut.GRPC
-	default:
-		return nil, fmt.Errorf(`unknown backend protocol, should be one of "grpc", "http1" or "http2"`)
-	}
-
 	var endpoints, routes []cache.Resource
-	clusters, err := gen.MakeClusters(m.serviceInfo, backendProtocol)
+	clusters, err := gen.MakeClusters(m.serviceInfo)
 	if err != nil {
 		return nil, err
 	}
 
 	m.Infof("adding Listener configuration for api: %v", m.serviceInfo.Name)
-	listener, err := gen.MakeListener(m.serviceInfo, backendProtocol)
+	listener, err := gen.MakeListener(m.serviceInfo)
 	if err != nil {
 		return nil, err
 	}

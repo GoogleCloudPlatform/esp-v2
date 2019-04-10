@@ -17,6 +17,7 @@ package configgenerator
 import (
 	"encoding/base64"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"strings"
 	"testing"
@@ -29,7 +30,6 @@ import (
 	"google.golang.org/genproto/protobuf/ptype"
 
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
-	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 	sm "github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
@@ -84,6 +84,7 @@ func TestTranscoderFilter(t *testing.T) {
 	}
 
 	for i, tc := range testData {
+		flag.Set("backend_protocol", "gRPC")
 		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
 		if err != nil {
 			t.Fatal(err)
@@ -106,7 +107,15 @@ func TestBackendAuthFilter(t *testing.T) {
 		Name: testProjectName,
 		Apis: []*api.Api{
 			{
-				Name: testApiName,
+				Name: "testapi",
+				Methods: []*api.Method{
+					{
+						Name: "foo",
+					},
+					{
+						Name: "bar",
+					},
+				},
 			},
 		},
 		Backend: &conf.Backend{
@@ -115,13 +124,17 @@ func TestBackendAuthFilter(t *testing.T) {
 					Selector: "ignore_me",
 				},
 				{
-					Selector: "foo",
+					Selector:        "testapi.foo",
+					Address:         "https://testapi.com/foo",
+					PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
 					Authentication: &conf.BackendRule_JwtAudience{
 						JwtAudience: "foo.com",
 					},
 				},
 				{
-					Selector: "bar",
+					Selector:        "testapi.bar",
+					Address:         "https://testapi.com/foo",
+					PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
 					Authentication: &conf.BackendRule_JwtAudience{
 						JwtAudience: "bar.com",
 					},
@@ -129,19 +142,18 @@ func TestBackendAuthFilter(t *testing.T) {
 			},
 		},
 	}
-
 	wantBackendAuthFilter :=
 		`{
         "config": {
           "rules": [
             {
-              "jwt_audience": "foo.com",
-              "operation": "foo",
+              "jwt_audience": "bar.com",
+              "operation": "testapi.bar",
               "token_cluster": "ads_cluster"
             },
             {
-              "jwt_audience": "bar.com",
-              "operation": "bar",
+              "jwt_audience": "foo.com",
+              "operation": "testapi.foo",
               "token_cluster": "ads_cluster"
             }
           ]
@@ -149,6 +161,8 @@ func TestBackendAuthFilter(t *testing.T) {
       "name": "envoy.filters.http.backend_auth"
     }`
 
+	flag.Set("backend_protocol", "http2")
+	flag.Set("enable_backend_routing", "true")
 	fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID)
 	if err != nil {
 		t.Fatal(err)
@@ -168,7 +182,7 @@ func TestPathMatcherFilter(t *testing.T) {
 	testData := []struct {
 		desc                  string
 		fakeServiceConfig     *conf.Service
-		backendProtocol       ut.BackendProtocol
+		backendProtocol       string
 		wantPathMatcherFilter string
 	}{
 		{
@@ -189,30 +203,30 @@ func TestPathMatcherFilter(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: ut.GRPC,
+			backendProtocol: "GRPC",
 			wantPathMatcherFilter: `
-        {
-          "config": {
-            "rules": [
-              {
-                "operation": "endpoints.examples.bookstore.Bookstore.ListShelves",
-                "pattern": {
-                  "http_method": "POST",
-                  "uri_template": "/endpoints.examples.bookstore.Bookstore/ListShelves"
-                }
-              },
-              {
-                "operation": "endpoints.examples.bookstore.Bookstore.CreateShelf",
-                "pattern": {
-                  "http_method": "POST",
-                  "uri_template": "/endpoints.examples.bookstore.Bookstore/CreateShelf"
-                }
-              }
-            ]
-          },
-          "name": "envoy.filters.http.path_matcher"
-        }
-      `,
+			        {
+			          "config": {
+			            "rules": [
+			              {
+			                "operation": "endpoints.examples.bookstore.Bookstore.CreateShelf",
+			                "pattern": {
+			                  "http_method": "POST",
+			                  "uri_template": "/endpoints.examples.bookstore.Bookstore/CreateShelf"
+			                }
+			              },
+			              {
+			                "operation": "endpoints.examples.bookstore.Bookstore.ListShelves",
+			                "pattern": {
+			                  "http_method": "POST",
+			                  "uri_template": "/endpoints.examples.bookstore.Bookstore/ListShelves"
+			                }
+			              }
+			            ]
+			          },
+			          "name": "envoy.filters.http.path_matcher"
+			        }
+			      `,
 		},
 		{
 			desc: "Path Matcher filter - HTTP backend",
@@ -220,7 +234,15 @@ func TestPathMatcherFilter(t *testing.T) {
 				Name: testProjectName,
 				Apis: []*api.Api{
 					{
-						Name: testApiName,
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*api.Method{
+							{
+								Name: "Echo_Auth_Jwt",
+							},
+							{
+								Name: "Echo",
+							},
+						},
 					},
 				},
 				Http: &annotations.Http{
@@ -241,30 +263,30 @@ func TestPathMatcherFilter(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: ut.HTTP1,
+			backendProtocol: "HTTP1",
 			wantPathMatcherFilter: `
-        {
-          "config": {
-            "rules": [
-              {
-                "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
-                "pattern": {
-                  "http_method": "GET",
-                  "uri_template": "/auth/info/googlejwt"
-                }
-              },
-              {
-                "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-                "pattern": {
-                  "http_method": "POST",
-                  "uri_template": "/echo"
-                }
-              }
-            ]
-          },
-          "name": "envoy.filters.http.path_matcher"
-        }
-      `,
+			        {
+			          "config": {
+			            "rules": [
+			              {
+			                "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+			                "pattern": {
+			                  "http_method": "POST",
+			                  "uri_template": "/echo"
+			                }
+			              },
+			              {
+			                "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
+			                "pattern": {
+			                  "http_method": "GET",
+			                  "uri_template": "/auth/info/googlejwt"
+			                }
+			              }
+			            ]
+			          },
+			          "name": "envoy.filters.http.path_matcher"
+			        }
+			      `,
 		},
 		{
 			desc: "Path Matcher filter - HTTP backend with path parameters",
@@ -272,7 +294,15 @@ func TestPathMatcherFilter(t *testing.T) {
 				Name: "foo.endpoints.bar.cloud.goog",
 				Apis: []*api.Api{
 					{
-						Name: "endpoints.test.foo.Bar",
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*api.Method{
+							{
+								Name: "Foo",
+							},
+							{
+								Name: "Bar",
+							},
+						},
 					},
 				},
 				Backend: &conf.Backend{
@@ -312,31 +342,31 @@ func TestPathMatcherFilter(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: ut.HTTP1,
+			backendProtocol: "HTTP1",
 			wantPathMatcherFilter: `
-        {
-          "config": {
-            "rules": [
-              {
-                "extract_path_parameters": true,
-                "operation": "1.cloudesf_testing_cloud_goog.Foo",
-                "pattern": {
-                  "http_method": "GET",
-                  "uri_template": "foo/{id}"
-                }
-              },
-              {
-                "operation": "1.cloudesf_testing_cloud_goog.Bar",
-                "pattern": {
-                  "http_method": "GET",
-                  "uri_template": "foo"
-                }
-              }
-            ]
-          },
-          "name": "envoy.filters.http.path_matcher"
-        }
-      `,
+			        {
+			          "config": {
+			            "rules": [
+			              {
+			                "operation": "1.cloudesf_testing_cloud_goog.Bar",
+			                "pattern": {
+			                  "http_method": "GET",
+			                  "uri_template": "foo"
+			                }
+			              },
+			              {
+			                "extract_path_parameters": true,
+			                "operation": "1.cloudesf_testing_cloud_goog.Foo",
+			                "pattern": {
+			                  "http_method": "GET",
+			                  "uri_template": "foo/{id}"
+			                }
+			              }
+			            ]
+			          },
+			          "name": "envoy.filters.http.path_matcher"
+			        }
+			      `,
 		},
 		{
 			desc: "Path Matcher filter - CORS support",
@@ -344,7 +374,12 @@ func TestPathMatcherFilter(t *testing.T) {
 				Name: "foo.endpoints.bar.cloud.goog",
 				Apis: []*api.Api{
 					{
-						Name: "endpoints.test.foo.Bar",
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*api.Method{
+							{
+								Name: "Foo",
+							},
+						},
 					},
 				},
 				Endpoints: []*conf.Endpoint{
@@ -364,30 +399,30 @@ func TestPathMatcherFilter(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: ut.HTTP1,
+			backendProtocol: "HTTP1",
 			wantPathMatcherFilter: `
-        {
-         "config": {
-            "rules": [
-              {
-                "operation": "1.cloudesf_testing_cloud_goog.Foo",
-                "pattern": {
-                  "http_method": "GET",
-                  "uri_template": "foo"
-                }
-              },
-              {
-                "operation": "CORS.0",
-                "pattern": {
-                  "http_method": "OPTIONS",
-                  "uri_template": "foo"
-                }
-              }
-            ]
-          },
-          "name": "envoy.filters.http.path_matcher"
-        }
-      `,
+			        {
+			         "config": {
+			            "rules": [
+			              {
+			                "operation": "1.cloudesf_testing_cloud_goog.CORS_0",
+			                "pattern": {
+			                  "http_method": "OPTIONS",
+			                  "uri_template": "foo"
+			                }
+			              },
+			              {
+			                "operation": "1.cloudesf_testing_cloud_goog.Foo",
+			                "pattern": {
+			                  "http_method": "GET",
+			                  "uri_template": "foo"
+			                }
+			              }
+			            ]
+			          },
+			          "name": "envoy.filters.http.path_matcher"
+			        }
+			      `,
 		},
 		{
 			desc: "Path Matcher filter - Segment Name Mapping for snake-case field",
@@ -395,7 +430,12 @@ func TestPathMatcherFilter(t *testing.T) {
 				Name: "foo.endpoints.bar.cloud.goog",
 				Apis: []*api.Api{
 					{
-						Name: "endpoints.test.foo.Bar",
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*api.Method{
+							{
+								Name: "Foo",
+							},
+						},
 					},
 				},
 				Types: []*ptype.Type{
@@ -431,40 +471,41 @@ func TestPathMatcherFilter(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: ut.HTTP1,
+			backendProtocol: "http1",
 			wantPathMatcherFilter: `
-        {
-          "config": {
-          "segment_names": [
-            {
-              "json_name": "fooBar",
-              "snake_name": "foo_bar"
-            }
-          ],
-          "rules": [
-            {
-              "extract_path_parameters": true,
-              "operation": "1.cloudesf_testing_cloud_goog.Foo",
-              "pattern": {
-                "http_method": "GET",
-                "uri_template": "foo/{foo_bar}"
-              }
-            }
-          ]
-        },
-        "name": "envoy.filters.http.path_matcher"
-      }`,
+			        {
+			          "config": {
+			          "segment_names": [
+			            {
+			              "json_name": "fooBar",
+			              "snake_name": "foo_bar"
+			            }
+			          ],
+			          "rules": [
+			            {
+			              "extract_path_parameters": true,
+			              "operation": "1.cloudesf_testing_cloud_goog.Foo",
+			              "pattern": {
+			                "http_method": "GET",
+			                "uri_template": "foo/{foo_bar}"
+			              }
+			            }
+			          ]
+			        },
+			        "name": "envoy.filters.http.path_matcher"
+			      }`,
 		},
 	}
 
 	for i, tc := range testData {
+		flag.Set("backend_protocol", tc.backendProtocol)
+		flag.Set("enable_backend_routing", "true")
 		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
 		if err != nil {
 			t.Fatal(err)
 		}
-
 		marshaler := &jsonpb.Marshaler{}
-		gotFilter, err := marshaler.MarshalToString(makePathMatcherFilter(fakeServiceInfo, tc.backendProtocol))
+		gotFilter, err := marshaler.MarshalToString(makePathMatcherFilter(fakeServiceInfo))
 
 		// Normalize both path matcher filter and gotListeners.
 		gotFilter = normalizeJson(gotFilter)

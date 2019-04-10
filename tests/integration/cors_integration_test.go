@@ -457,13 +457,13 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 	s.SetAllowCors()
 	s.AppendHttpRules([]*annotations.HttpRule{
 		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.ListShelves",
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.ListShelves",
 			Pattern: &annotations.HttpRule_Get{
 				Get: "/bookstore/shelves",
 			},
 		},
 		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.CorsShelves",
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CorsShelves",
 			Pattern: &annotations.HttpRule_Custom{
 				Custom: &annotations.CustomHttpPattern{
 					Kind: "OPTIONS",
@@ -472,7 +472,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 			},
 		},
 		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.GetShelf",
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.GetShelf",
 			Pattern: &annotations.HttpRule_Get{
 				Get: "/bookstore/shelves/{shelf}",
 			},
@@ -507,7 +507,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
-					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.CorsShelves",
+					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CorsShelves",
 					CallerIp:        "127.0.0.1",
 					Referer:         referer,
 				},
@@ -517,12 +517,12 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 					ServiceConfigID:   "test-config-id",
 					URL:               "/bookstore/shelves?key=api-key",
 					ApiKey:            "api-key",
-					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.CorsShelves",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CorsShelves",
 					ProducerProjectID: "producer-project",
 					ConsumerProjectID: "123456",
 					FrontendProtocol:  "http",
 					HttpMethod:        "OPTIONS",
-					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.CorsShelves is called",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CorsShelves is called",
 					Referer:           referer,
 					StatusCode:        "0",
 					RequestSize:       333,
@@ -553,12 +553,12 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 					ServiceConfigID:   "test-config-id",
 					URL:               "/bookstore/shelves/1",
 					ApiKey:            "",
-					ApiMethod:         "CORS.4",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_7",
 					ProducerProjectID: "producer-project",
 					ConsumerProjectID: "123456",
 					FrontendProtocol:  "http",
 					HttpMethod:        "OPTIONS",
-					LogMessage:        "CORS.4 is called",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_7 is called",
 					Referer:           referer,
 					StatusCode:        "0",
 					RequestSize:       323,
@@ -632,13 +632,13 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 	s := env.NewTestEnv(comp.TestServiceControlRequestWithoutAllowCors, "echo", nil)
 	s.AppendHttpRules([]*annotations.HttpRule{
 		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.ListShelves",
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.ListShelves",
 			Pattern: &annotations.HttpRule_Get{
 				Get: "/bookstore/shelves",
 			},
 		},
 		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.CorsShelves",
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CorsShelves",
 			Pattern: &annotations.HttpRule_Custom{
 				Custom: &annotations.CustomHttpPattern{
 					Kind: "OPTIONS",
@@ -647,7 +647,7 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 			},
 		},
 		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.GetShelf",
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.GetShelf",
 			Pattern: &annotations.HttpRule_Get{
 				Get: "/bookstore/shelves/{shelf}",
 			},
@@ -683,7 +683,7 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
-					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.CorsShelves",
+					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CorsShelves",
 					CallerIp:        "127.0.0.1",
 					Referer:         referer,
 				},
@@ -693,12 +693,12 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 					ServiceConfigID:   "test-config-id",
 					URL:               "/bookstore/shelves?key=api-key",
 					ApiKey:            "api-key",
-					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.CorsShelves",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CorsShelves",
 					ProducerProjectID: "producer-project",
 					ConsumerProjectID: "123456",
 					FrontendProtocol:  "http",
 					HttpMethod:        "OPTIONS",
-					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Bookstore.CorsShelves is called",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CorsShelves is called",
 					Referer:           referer,
 					StatusCode:        "0",
 					RequestSize:       333,
