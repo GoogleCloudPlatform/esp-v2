@@ -928,20 +928,14 @@ const char kLogFieldNameResponseSize[] = "response_size_in_bytes";
 const char kLogFieldNameTimestamp[] = "timestamp";
 const char kLogFieldNameUrl[] = "url";
 
-// Convert timestamp from time_point to Timestamp
+// Convert time point to proto Timestamp
 Timestamp CreateTimestamp(std::chrono::system_clock::time_point tp) {
-  Timestamp time_stamp;
-  long long nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                        tp.time_since_epoch())
-                        .count();
-
-  time_stamp.set_seconds(nanos / 1000000000);
-  time_stamp.set_nanos(nanos % 1000000000);
-  return time_stamp;
-}
-
-Timestamp GetCurrentTimestamp() {
-  return CreateTimestamp(std::chrono::system_clock::now());
+  long long timestamp_ns =
+    std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch()).count();
+  Timestamp timestamp;
+  timestamp.set_seconds(timestamp_ns / 1000000000);
+  timestamp.set_nanos(timestamp_ns % 1000000000);
+  return timestamp;
 }
 
 Status VerifyRequiredCheckFields(const OperationInfo& info) {
@@ -1147,7 +1141,8 @@ Status RequestBuilder::FillAllocateQuotaRequest(
 }
 
 Status RequestBuilder::FillCheckRequest(const CheckRequestInfo& info,
-                                        CheckRequest* request) const {
+                                        CheckRequest* request,
+                                        std::chrono::system_clock::time_point now) const {
   Status status = VerifyRequiredCheckFields(info);
   if (!status.ok()) {
     return status;
@@ -1155,7 +1150,7 @@ Status RequestBuilder::FillCheckRequest(const CheckRequestInfo& info,
   request->set_service_name(service_name_);
   request->set_service_config_id(service_config_id_);
 
-  Timestamp current_time = GetCurrentTimestamp();
+  Timestamp current_time = CreateTimestamp(now);
   Operation* op = request->mutable_operation();
   SetOperationCommonFields(info, current_time, op);
 
@@ -1184,7 +1179,8 @@ Status RequestBuilder::FillCheckRequest(const CheckRequestInfo& info,
 }
 
 Status RequestBuilder::FillReportRequest(const ReportRequestInfo& info,
-                                         ReportRequest* request) const {
+                                         ReportRequest* request,
+                                         std::chrono::system_clock::time_point now) const {
   Status status = VerifyRequiredReportFields(info);
   if (!status.ok()) {
     return status;
@@ -1192,7 +1188,7 @@ Status RequestBuilder::FillReportRequest(const ReportRequestInfo& info,
   request->set_service_name(service_name_);
   request->set_service_config_id(service_config_id_);
 
-  Timestamp current_time = GetCurrentTimestamp();
+  Timestamp current_time = CreateTimestamp(now);
   Operation* op = request->add_operations();
   SetOperationCommonFields(info, current_time, op);
 

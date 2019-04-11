@@ -236,12 +236,13 @@ void ServiceControlHandlerImpl::fillLoggedHeader(
 }
 
 void ServiceControlHandlerImpl::fillOperationInfo(
-    ::google::api_proxy::service_control::OperationInfo& info) {
+    ::google::api_proxy::service_control::OperationInfo& info,
+    std::chrono::system_clock::time_point now) {
   info.operation_id = uuid_;
   info.operation_name = require_ctx_->config().operation_name();
   info.producer_project_id =
       require_ctx_->service_ctx().config().producer_project_id();
-  info.request_start_time = std::chrono::system_clock::now();
+  info.request_start_time = now;
 }
 
 void ServiceControlHandlerImpl::fillGCPInfo(

@@ -63,7 +63,8 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
       const ::google::protobuf::RepeatedPtrField<::std::string>& log_headers,
       std::string& info_log_header_field);
   void fillOperationInfo(
-      ::google::api_proxy::service_control::OperationInfo& info);
+      ::google::api_proxy::service_control::OperationInfo& info,
+      std::chrono::system_clock::time_point now = std::chrono::system_clock::now());
   void fillGCPInfo(
       ::google::api_proxy::service_control::ReportRequestInfo& info);
 

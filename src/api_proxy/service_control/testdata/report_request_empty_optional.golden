@@ -75,6 +75,12 @@ operations {
           string_value: "project_id"
         }
       }
+      fields {
+        key: "timestamp"
+        value {
+          number_value: 100000.0001
+        }
+      }
     }
     name: "local_test_log"
     timestamp {
