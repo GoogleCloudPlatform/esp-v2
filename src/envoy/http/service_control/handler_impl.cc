@@ -13,7 +13,10 @@
 // limitations under the License.
 
 #include "src/envoy/http/service_control/handler_impl.h"
+
+#include <chrono>
 #include "absl/strings/match.h"
+
 #include "common/http/utility.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
@@ -115,8 +118,12 @@ Protocol getBackendProtocol(const std::string& protocol) {
 
 ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     const Http::HeaderMap& headers, const StreamInfo::StreamInfo& stream_info,
-    const std::string& uuid, const FilterConfigParser& cfg_parser)
-    : cfg_parser_(cfg_parser), stream_info_(stream_info), uuid_(uuid) {
+    const std::string& uuid, const FilterConfigParser& cfg_parser,
+    std::chrono::system_clock::time_point now)
+    : cfg_parser_(cfg_parser),
+      stream_info_(stream_info),
+      uuid_(uuid),
+      last_reported_(now) {
   http_method_ = Utils::getRequestHTTPMethodWithOverride(
       headers.Method()->value().c_str(), headers);
   path_ = headers.Path()->value().c_str();
@@ -275,6 +282,29 @@ void ServiceControlHandlerImpl::fillGCPInfo(
   }
 }
 
+void ServiceControlHandlerImpl::prepareReportRequest(
+    ::google::api_proxy::service_control::ReportRequestInfo& info) {
+  fillOperationInfo(info);
+
+  // Check and Report has different rule to send api-key
+  if (check_response_info_.is_api_key_valid &&
+      check_response_info_.service_is_activated) {
+    info.api_key = api_key_;
+  }
+
+  info.url = path_;
+  info.method = http_method_;
+  info.api_method = require_ctx_->config().operation_name();
+  info.api_name = require_ctx_->config().api_name();
+  info.api_version = require_ctx_->config().api_version();
+  info.log_message = info.api_method + " is called";
+
+  info.check_response_info = check_response_info_;
+  info.status = check_status_;
+
+  fillGCPInfo(info);
+}
+
 void ServiceControlHandlerImpl::callCheck(Http::HeaderMap& headers,
                                           CheckDoneCallback& callback) {
   if (!isConfigured()) {
@@ -349,29 +379,13 @@ void ServiceControlHandlerImpl::callReport(
   }
 
   ::google::api_proxy::service_control::ReportRequestInfo info;
-  fillOperationInfo(info);
+  prepareReportRequest(info);
   fillLoggedHeader(request_headers,
                    require_ctx_->service_ctx().config().log_request_headers(),
                    info.request_headers);
   fillLoggedHeader(response_headers,
                    require_ctx_->service_ctx().config().log_response_headers(),
                    info.response_headers);
-
-  // Check and Report has different rule to send api-key
-  if (check_response_info_.is_api_key_valid &&
-      check_response_info_.service_is_activated) {
-    info.api_key = api_key_;
-  }
-
-  info.url = path_;
-  info.method = http_method_;
-  info.api_method = require_ctx_->config().operation_name();
-  info.api_name = require_ctx_->config().api_name();
-  info.api_version = require_ctx_->config().api_version();
-  info.log_message = info.api_method + " is called";
-
-  info.check_response_info = check_response_info_;
-  info.status = check_status_;
 
   info.frontend_protocol = getFrontendProtocol(
       response_headers, stream_info_.protocol().has_value());
@@ -383,17 +397,10 @@ void ServiceControlHandlerImpl::callReport(
     info.referer = Utils::extractHeader(*request_headers, kRefererHeader);
   }
 
-  fillGCPInfo(info);
   fillLatency(stream_info_, info.latency);
-
-  // TODO(qiwzhang): sending streaming multiple reports: b/123950356
 
   info.response_code = stream_info_.responseCode().value_or(500);
 
-  // TODO(qiwzhang): b/123950356, multiple reports will be send for long
-  // duration requests. request_bytes is number of bytes when an intermediate
-  // Report is sending. For now, we only send the final report, request_bytes is
-  // the same as request_size.
   info.request_size = stream_info_.bytesReceived() + request_header_size_;
   info.request_bytes = stream_info_.bytesReceived() + request_header_size_;
 
@@ -408,6 +415,44 @@ void ServiceControlHandlerImpl::callReport(
   info.response_bytes = stream_info_.bytesSent() + response_header_size;
 
   require_ctx_->service_ctx().call().callReport(info);
+}
+
+void ServiceControlHandlerImpl::collectDecodeData(
+    Buffer::Instance& request_data, std::chrono::system_clock::time_point now) {
+  if (streaming_info_.is_first_report) {
+    streaming_info_.start_time = now;
+  }
+  // TODO(b/123950356): Should count proto messages, which may not align with
+  // data chunks.
+  streaming_info_.request_message_count++;
+  streaming_info_.request_bytes += request_data.length();
+  // Avoid reporting more frequently than the configured interval.
+  if (std::chrono::duration_cast<std::chrono::milliseconds>(now -
+                                                            last_reported_)
+          .count() <
+      require_ctx_->service_ctx().get_min_stream_report_interval_ms()) {
+    return;
+  }
+
+  ::google::api_proxy::service_control::ReportRequestInfo info;
+  prepareReportRequest(info);
+
+  info.request_bytes = streaming_info_.request_bytes;
+  info.response_bytes = streaming_info_.response_bytes;
+  info.streaming_request_message_counts = streaming_info_.request_message_count;
+  info.streaming_response_message_counts =
+      streaming_info_.response_message_count;
+
+  info.streaming_durations =
+      std::chrono::duration_cast<std::chrono::microseconds>(
+          now - streaming_info_.start_time)
+          .count();
+  info.is_first_report = streaming_info_.is_first_report;
+  info.is_final_report = false;
+
+  require_ctx_->service_ctx().call().callReport(info);
+  last_reported_ = now;
+  streaming_info_.is_first_report = false;
 }
 
 }  // namespace ServiceControl

@@ -14,6 +14,8 @@
 
 #include "envoy/http/header_map.h"
 
+#include <chrono>
+
 #include "src/envoy/http/service_control/filter.h"
 #include "src/envoy/http/service_control/handler.h"
 #include "src/envoy/utils/status_http_code.h"
@@ -73,9 +75,14 @@ void ServiceControlFilter::rejectRequest(Http::Code code,
       StreamInfo::ResponseFlag::UnauthorizedExternalService);
 }
 
-Http::FilterDataStatus ServiceControlFilter::decodeData(Buffer::Instance&,
-                                                        bool) {
+Http::FilterDataStatus ServiceControlFilter::decodeData(Buffer::Instance& data,
+                                                        bool end_stream) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
+
+  if (!end_stream && data.length() > 0) {
+    handler_->collectDecodeData(data, std::chrono::system_clock::now());
+  }
+
   if (state_ == Calling) {
     return Http::FilterDataStatus::StopIterationAndWatermark;
   }

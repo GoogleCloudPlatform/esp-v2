@@ -930,8 +930,9 @@ const char kLogFieldNameUrl[] = "url";
 
 // Convert time point to proto Timestamp
 Timestamp CreateTimestamp(std::chrono::system_clock::time_point tp) {
-  long long timestamp_ns =
-    std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch()).count();
+  long long timestamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                               tp.time_since_epoch())
+                               .count();
   Timestamp timestamp;
   timestamp.set_seconds(timestamp_ns / 1000000000);
   timestamp.set_nanos(timestamp_ns % 1000000000);
@@ -1140,9 +1141,9 @@ Status RequestBuilder::FillAllocateQuotaRequest(
   return Status::OK;
 }
 
-Status RequestBuilder::FillCheckRequest(const CheckRequestInfo& info,
-                                        CheckRequest* request,
-                                        std::chrono::system_clock::time_point now) const {
+Status RequestBuilder::FillCheckRequest(
+    const CheckRequestInfo& info, CheckRequest* request,
+    std::chrono::system_clock::time_point now) const {
   Status status = VerifyRequiredCheckFields(info);
   if (!status.ok()) {
     return status;
@@ -1178,9 +1179,9 @@ Status RequestBuilder::FillCheckRequest(const CheckRequestInfo& info,
   return Status::OK;
 }
 
-Status RequestBuilder::FillReportRequest(const ReportRequestInfo& info,
-                                         ReportRequest* request,
-                                         std::chrono::system_clock::time_point now) const {
+Status RequestBuilder::FillReportRequest(
+    const ReportRequestInfo& info, ReportRequest* request,
+    std::chrono::system_clock::time_point now) const {
   Status status = VerifyRequiredReportFields(info);
   if (!status.ok()) {
     return status;

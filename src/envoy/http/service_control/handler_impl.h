@@ -14,13 +14,16 @@
 
 #pragma once
 
+#include <chrono>
 #include <string>
 
 #include "common/common/logger.h"
+#include "envoy/buffer/buffer.h"
 #include "envoy/http/header_map.h"
 #include "envoy/http/query_params.h"
 #include "envoy/runtime/runtime.h"
 #include "src/api_proxy/service_control/request_builder.h"
+#include "src/api_proxy/service_control/request_info.h"
 #include "src/envoy/http/service_control/config_parser.h"
 #include "src/envoy/http/service_control/handler.h"
 
@@ -36,7 +39,9 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   ServiceControlHandlerImpl(const Http::HeaderMap& headers,
                             const StreamInfo::StreamInfo& stream_info,
                             const std::string& uuid,
-                            const FilterConfigParser& cfg_parser);
+                            const FilterConfigParser& cfg_parser,
+                            std::chrono::system_clock::time_point now =
+                                std::chrono::system_clock::now());
   virtual ~ServiceControlHandlerImpl();
 
   void callCheck(Http::HeaderMap& headers, CheckDoneCallback& callback);
@@ -44,6 +49,10 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   void callReport(const Http::HeaderMap* request_headers,
                   const Http::HeaderMap* response_headers,
                   const Http::HeaderMap* response_trailers);
+
+  void collectDecodeData(Buffer::Instance& request_data,
+                               std::chrono::system_clock::time_point now =
+                                   std::chrono::system_clock::now());
 
  private:
   // Helper functions to extract API key.
@@ -64,9 +73,14 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
       std::string& info_log_header_field);
   void fillOperationInfo(
       ::google::api_proxy::service_control::OperationInfo& info,
-      std::chrono::system_clock::time_point now = std::chrono::system_clock::now());
+      std::chrono::system_clock::time_point now =
+          std::chrono::system_clock::now());
   void fillGCPInfo(
       ::google::api_proxy::service_control::ReportRequestInfo& info);
+  void prepareReportRequest(
+      ::google::api_proxy::service_control::ReportRequestInfo& info);
+  void finishCallReport(
+      const ::google::api_proxy::service_control::ReportRequestInfo& info);
 
   bool isConfigured() const { return require_ctx_ != nullptr; }
 
@@ -107,6 +121,11 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   // callback is returned.
   std::shared_ptr<bool> aborted_;
   uint64_t request_header_size_;
+
+  // Intermediate data for reporting on streaming.
+  ::google::api_proxy::service_control::StreamingRequestInfo streaming_info_;
+  // Interval timer for sending intermittent reports.
+  std::chrono::system_clock::time_point last_reported_;
 };
 
 class ServiceControlHandlerFactoryImpl : public ServiceControlHandlerFactory {

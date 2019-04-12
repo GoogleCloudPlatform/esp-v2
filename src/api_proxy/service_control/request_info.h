@@ -17,7 +17,6 @@
 #include "google/api/quota.pb.h"
 #include "google/protobuf/stubs/status.h"
 
-#include <time.h>
 #include <chrono>
 #include <memory>
 #include <string>
@@ -237,6 +236,29 @@ struct ReportRequestInfo : public OperationInfo {
         streaming_durations(0),
         is_first_report(true),
         is_final_report(true) {}
+};
+
+// Intermediate streaming information for an active request.
+struct StreamingRequestInfo {
+  // Nanosecond timestamp of the first message in the stream.
+  std::chrono::system_clock::time_point start_time;
+  // Request message size till the current time point.
+  int64_t request_bytes;
+  // Response message size till the current time point.
+  int64_t response_bytes;
+  // Number of request messages for a stream.
+  int64_t request_message_count;
+  // Number of response messages for a stream.
+  int64_t response_message_count;
+  // Flag to indicate the first report.
+  bool is_first_report;
+
+  StreamingRequestInfo()
+      : request_bytes(0),
+        response_bytes(0),
+        request_message_count(0),
+        response_message_count(0),
+        is_first_report(true) {}
 };
 
 }  // namespace service_control
