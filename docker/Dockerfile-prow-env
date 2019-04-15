@@ -37,8 +37,8 @@ RUN npm install grpc
 RUN npm install @grpc/proto-loader
 
 # install bazel
-RUN INSTALLER="bazel-0.18.0-installer-linux-x86_64.sh"; \
-    DOWNLOAD_URL="https://github.com/bazelbuild/bazel/releases/download/0.18.0/${INSTALLER}"; \
+RUN INSTALLER="bazel-0.24.1-installer-linux-x86_64.sh"; \
+    DOWNLOAD_URL="https://github.com/bazelbuild/bazel/releases/download/0.24.1/${INSTALLER}"; \
     wget -q "${DOWNLOAD_URL}" && \
     chmod +x "${INSTALLER}" && "./${INSTALLER}" && rm "${INSTALLER}"
 
