@@ -1,5 +1,5 @@
-hash: 2bc4d9abb45d44efee4fc632c0deea4a500052f2f112975fecd02b6a07a18c56
-updated: 2019-04-05T08:52:50.931521246-06:00
+hash: 521297c63252bdd35ba001e3b10131f8a6245c21e970c690251eba6b2bab2a7c
+updated: 2019-04-16T05:05:49.535169091Z
 imports:
 - name: cloud.google.com/go
   version: 2a912322007f3a7f0b4e7e96ba0dfd8c4f347d33
@@ -46,7 +46,7 @@ imports:
 - name: github.com/golang/glog
   version: 23def4e6c14b4da8ac2ed8007337bc5eb5007998
 - name: github.com/golang/protobuf
-  version: 1918e1ff6ffd2be7bed0553df8650672c3bfe80d
+  version: b5d812f8a3706043e23a9cd5babf2e5423744d30
   subpackages:
   - jsonpb
   - proto
@@ -135,7 +135,7 @@ imports:
   - protobuf/ptype
   - protobuf/source_context
 - name: google.golang.org/grpc
-  version: 3507fb8e1a5ad030303c106fef3a47c9fdad16ad
+  version: 236199dd5f8031d698fb64091194aecd1c3895b2
   subpackages:
   - balancer
   - balancer/base
@@ -150,6 +150,7 @@ imports:
   - grpclog
   - internal
   - internal/backoff
+  - internal/balancerload
   - internal/binarylog
   - internal/channelz
   - internal/envconfig

@@ -57,6 +57,7 @@ class ServiceControlFilter : public Http::StreamFilter,
   Http::FilterDataStatus encodeData(Buffer::Instance& headers,
                                     bool end_stream) override;
   Http::FilterTrailersStatus encodeTrailers(Http::HeaderMap&) override;
+  Http::FilterMetadataStatus encodeMetadata(Http::MetadataMap&) override;
   void setEncoderFilterCallbacks(
       Http::StreamEncoderFilterCallbacks& callbacks) override;
 

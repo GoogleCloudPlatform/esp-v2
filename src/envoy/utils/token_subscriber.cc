@@ -54,7 +54,8 @@ Envoy::Grpc::AsyncClientFactoryPtr makeClientFactory(
   ::envoy::api::v2::core::GrpcService grpc_service;
   grpc_service.mutable_envoy_grpc()->set_cluster_name(token_cluster);
   return std::make_unique<Envoy::Grpc::AsyncClientFactoryImpl>(
-      context.clusterManager(), grpc_service, true, context.timeSource());
+      context.clusterManager(), grpc_service, /*skip_cluster_check=*/true,
+      context.timeSource());
 }
 
 TokenSubscriber::TokenSubscriber(
@@ -63,22 +64,19 @@ TokenSubscriber::TokenSubscriber(
     TokenSubscriber::Callback& callback, const std::string* audience)
     : client_factory_(std::move(client_factory)),
       token_callback_(callback),
-      audience_(audience) {
+      active_request_(nullptr),
+      audience_(audience),
+      init_target_("TokenSubscriber", [this] { refresh(); }) {
   refresh_timer_ =
       context.dispatcher().createTimer([this]() -> void { refresh(); });
 
-  context.initManager().registerTarget(*this);
+  context.initManager().add(init_target_);
 }
 
 TokenSubscriber::~TokenSubscriber() {
   if (active_request_) {
     active_request_->cancel();
   }
-}
-
-void TokenSubscriber::initialize(std::function<void()> callback) {
-  initialize_callback_ = callback;
-  refresh();
 }
 
 void TokenSubscriber::refresh() {
@@ -109,7 +107,7 @@ void TokenSubscriber::onSuccess(std::unique_ptr<GetTokenResponse>&& response,
   active_request_ = nullptr;
   ENVOY_LOG(debug, "GetAccessToken got response: {}", response->DebugString());
   token_callback_.onTokenUpdate(response->access_token());
-  runInitializeCallbackIfAny();
+  init_target_.ready();
   // Update the token 5 seconds before the expiration
   if (response->expires_in().seconds() <= 5) {
     refresh();
@@ -124,15 +122,8 @@ void TokenSubscriber::onFailure(Envoy::Grpc::Status::GrpcStatus status,
                                 Envoy::Tracing::Span&) {
   active_request_ = nullptr;
   ENVOY_LOG(debug, "GetAccessToken failed with code: {}, {}", status, message);
-  runInitializeCallbackIfAny();
+  init_target_.ready();
   refresh_timer_->enableTimer(kFailedRequestTimeout);
-}
-
-void TokenSubscriber::runInitializeCallbackIfAny() {
-  if (initialize_callback_) {
-    initialize_callback_();
-    initialize_callback_ = nullptr;
-  }
 }
 
 }  // namespace Utils

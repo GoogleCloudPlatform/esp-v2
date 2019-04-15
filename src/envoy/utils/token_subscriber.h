@@ -17,11 +17,11 @@
 #include "api/agent/agent_service.pb.h"
 #include "common/common/logger.h"
 #include "common/grpc/async_client_impl.h"
+#include "common/init/target_impl.h"
 #include "envoy/common/pure.h"
 #include "envoy/common/time.h"
 #include "envoy/event/dispatcher.h"
 #include "envoy/grpc/async_client_manager.h"
-#include "envoy/init/init.h"
 #include "envoy/server/filter_config.h"
 #include "envoy/upstream/cluster_manager.h"
 
@@ -29,23 +29,20 @@ namespace Envoy {
 namespace Extensions {
 namespace Utils {
 
-// This class fetches a token at the config time in the main thread.
-// It also registers a timer to fetch a new token before expiration.
+// `TokenSubscriber` class fetches a token at the config time in the main
+// thread. It also registers a timer to fetch a new token before expiration.
 //
-// It is using InitManager object. This is how InitManager works:
+// It uses `Init::Manager` object. This is how `Init::Manager` works:
 //
-// * If your filter needs to make an async remote call, and needs to
-//   wait for the response to continue the data flow, you need to
-//   implement a Init::Target and register your Init::Target with InitManager.
+// * If your filter needs to make an async remote call, and needs to wait for
+//   the response to continue the data flow, you need register your
+//   `Init::Target` with `Init::Manager::add`.
 //
-// * InitManager calls each InitTarget initialize() function at the main thread.
-//   Each target starts to make its remote call. This function passes in a
-//   callback function which should be called when the remote call response is
-//   received.
-//
+// * `Init::Manager` initializes registered `Init::Target`s at the main thread.
+//   Each target starts to make its remote call and signals `ready` to manager
+//   when it is initialized.
 class TokenSubscriber
-    : public Envoy::Init::Target,
-      public Envoy::Grpc::TypedAsyncRequestCallbacks<
+    : public Envoy::Grpc::TypedAsyncRequestCallbacks<
           ::google::api_proxy::agent::GetTokenResponse>,
       public Envoy::Logger::Loggable<Envoy::Logger::Id::grpc> {
  public:
@@ -55,14 +52,12 @@ class TokenSubscriber
     virtual void onTokenUpdate(const std::string& token) PURE;
   };
 
+  // TODO(kyuc): Maybe add a name that gets passed to Init::TargetImpl.
   TokenSubscriber(Envoy::Server::Configuration::FactoryContext& context,
                   Envoy::Grpc::AsyncClientFactoryPtr client_factory,
                   Callback& callback, const std::string* audience);
 
   virtual ~TokenSubscriber();
-
-  // Init::Target function
-  void initialize(std::function<void()> callback) override;
 
   // Grpc::TypedAsyncRequestCallbacks functions
   void onCreateInitialMetadata(Envoy::Http::HeaderMap&) override {}
@@ -73,19 +68,17 @@ class TokenSubscriber
                  const std::string& message, Envoy::Tracing::Span&) override;
 
  private:
-  void runInitializeCallbackIfAny();
   void refresh();
 
   Envoy::Grpc::AsyncClientFactoryPtr client_factory_;
   Callback& token_callback_;
-
-  std::function<void()> initialize_callback_;
 
   Envoy::Grpc::AsyncClientPtr async_client_;
   Envoy::Grpc::AsyncRequest* active_request_{};
 
   Envoy::Event::TimerPtr refresh_timer_;
   const std::string* audience_;
+  Envoy::Init::TargetImpl init_target_;
 };
 typedef std::unique_ptr<TokenSubscriber> TokenSubscriberPtr;
 

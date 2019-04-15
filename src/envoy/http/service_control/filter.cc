@@ -128,6 +128,11 @@ Http::FilterTrailersStatus ServiceControlFilter::encodeTrailers(
   return Http::FilterTrailersStatus::Continue;
 }
 
+Http::FilterMetadataStatus ServiceControlFilter::encodeMetadata(
+    Http::MetadataMap&) {
+  return Http::FilterMetadataStatus::Continue;
+}
+
 void ServiceControlFilter::setEncoderFilterCallbacks(
     Http::StreamEncoderFilterCallbacks& callbacks) {
   encoder_callbacks_ = &callbacks;

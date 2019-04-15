@@ -90,7 +90,7 @@ Envoy with the dynamic startup configuration:
 
 ```shell
 bazel build //src/envoy:envoy &&
-bazel-bin/src/envoy -l info --v2-config-only -c scripts/envoy_bootstrap_v2_startup.yaml
+bazel-bin/src/envoy -l info -c scripts/envoy_bootstrap_v2_startup.yaml
 ```
 
 ## Run API Proxy in Docker

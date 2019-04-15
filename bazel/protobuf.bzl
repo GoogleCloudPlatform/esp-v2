@@ -14,7 +14,7 @@
 
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
-GOOGLE_PROTOBUF_SHA1 = "fa252ec2a54acb24ddc87d48fed1ecfd458445fd"  # Match SHA used by Envoy
+GOOGLE_PROTOBUF_SHA1 = "582743bf40c5d3639a70f98f183914a2c0cd0680"  # Match SHA used by Envoy
 PUBREF_PROTOBUF_SHA1 = "563b674a2ce6650d459732932ea2bc98c9c9a9bf"  # Nov 28, 2017 (bazel 0.8.0 support)
 
 def protobuf_repositories(load_repo = True, bind = True):

@@ -22,4 +22,4 @@ CONFIGMANAGER=${CONFIGMANAGER:-apiproxy/configmanager}
 ENVOY=${ENVOY:-apiproxy/envoy}
 
 ${CONFIGMANAGER}  $@  &
-${ENVOY} --v2-config-only -c apiproxy/envoy_bootstrap_v2_startup.yaml
+${ENVOY} -c apiproxy/envoy_bootstrap_v2_startup.yaml

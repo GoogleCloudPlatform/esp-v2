@@ -14,7 +14,8 @@
 
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 
-GOOGLEAPIS_SHA1 = "ec795a6a63eaf529c225ec45fa9de535bff53c99"
+GOOGLEAPIS_SHA1 = "d642131a6e6582fc226caf9893cb7fe7885b3411" # May 23, 2018
+
 GOOGLEAPIS_BUILD_FILE = """
 package(default_visibility = ["//visibility:public"])
 

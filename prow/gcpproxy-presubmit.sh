@@ -18,12 +18,15 @@
 
 # Fail on any error.
 set -e
+# Display commands being run.
 set -u
 
 WD=$(dirname "$0")
 WD=$(cd "$WD"; pwd)
 ROOT=$(dirname "$WD")
 export PATH=$PATH:$GOPATH/bin
+
+bazel clean
 
 cd "${ROOT}"
 

@@ -19,11 +19,11 @@ envoy_cc_library(
         "//api/agent:agent_proto_cc",
         "@envoy//include/envoy/common:time_interface",
         "@envoy//include/envoy/event:dispatcher_interface",
-        "@envoy//include/envoy/init:init_interface",
         "@envoy//include/envoy/server:filter_config_interface",
         "@envoy//include/envoy/upstream:cluster_manager_interface",
         "@envoy//source/common/grpc:async_client_lib",
         "@envoy//source/common/grpc:async_client_manager_lib",
+        "@envoy//source/common/init:target_lib",
     ],
 )
 
@@ -34,6 +34,7 @@ envoy_cc_test(
     deps = [
         ":token_subscriber_lib",
         "@envoy//source/common/tracing:http_tracer_lib",
+        "@envoy//test/mocks/init:init_mocks",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/test_common:utility_lib",
     ],

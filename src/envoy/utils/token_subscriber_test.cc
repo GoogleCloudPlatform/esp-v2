@@ -16,6 +16,7 @@
 
 #include "common/tracing/http_tracer_impl.h"
 #include "test/mocks/grpc/mocks.h"
+#include "test/mocks/init/mocks.h"
 #include "test/mocks/server/mocks.h"
 #include "test/test_common/utility.h"
 
@@ -27,11 +28,12 @@ namespace Extensions {
 namespace Utils {
 namespace {
 
-using Envoy::Server::Configuration::MockFactoryContext;
+using ::Envoy::Server::Configuration::MockFactoryContext;
 using ::google::api_proxy::agent::GetTokenResponse;
 
 using ::testing::_;
 using ::testing::Invoke;
+using ::testing::ReturnRef;
 
 class MockTokenSubscriberCallback : public TokenSubscriber::Callback {
  public:
@@ -41,6 +43,12 @@ class MockTokenSubscriberCallback : public TokenSubscriber::Callback {
 class TokenSubscriberTest : public testing::Test {
  public:
   TokenSubscriberTest() {
+    Init::TargetHandlePtr init_target_handle;
+    EXPECT_CALL(context_.init_manager_, add(_))
+        .WillOnce(Invoke([&init_target_handle](const Init::Target& target) {
+          init_target_handle = target.createHandle("test");
+        }));
+
     raw_mock_client_ = new Envoy::Grpc::MockAsyncClient();
     raw_mock_client_factory_ = new Envoy::Grpc::MockAsyncClientFactory();
     token_sub_.reset(new TokenSubscriber(
@@ -64,45 +72,44 @@ class TokenSubscriberTest : public testing::Test {
               return nullptr;
             }));
 
-    // InitManager should call this function.
-    token_sub_->initialize([this]() { init_done_called_++; });
+    // TokenSubscriber must call `ready` to signal Init::Manager once it
+    // finishes initializing.
+    EXPECT_CALL(init_watcher_, ready());
+    // Init::Manager should initialize its targets.
+    init_target_handle->initialize(init_watcher_);
   }
 
-  testing::NiceMock<MockFactoryContext> context_;
+  NiceMock<Init::ExpectableWatcherImpl> init_watcher_;
+  NiceMock<MockFactoryContext> context_;
   MockTokenSubscriberCallback token_callback_;
   Envoy::Grpc::AsyncRequestCallbacks* client_callback_{};
   Envoy::Grpc::MockAsyncClient* raw_mock_client_{};
   Envoy::Grpc::MockAsyncClientFactory* raw_mock_client_factory_{};
-  int init_done_called_{};
   TokenSubscriberPtr token_sub_;
 };
 
-TEST_F(TokenSubscriberTest, TestSuccess) {
+TEST_F(TokenSubscriberTest, CallOnTokenUpdateOnSuccess) {
   EXPECT_CALL(token_callback_, onTokenUpdate(std::string("TOKEN")));
 
-  // Send a Good token
+  // Send a good token
   GetTokenResponse* token_response = new GetTokenResponse;
   token_response->set_access_token("TOKEN");
   token_response->mutable_expires_in()->set_seconds(100);
   client_callback_->onSuccessUntyped(
       Envoy::ProtobufTypes::MessagePtr(token_response),
       Envoy::Tracing::NullSpan::instance());
-
-  EXPECT_EQ(init_done_called_, 1);
 }
 
-TEST_F(TokenSubscriberTest, TestFailure) {
+TEST_F(TokenSubscriberTest, DoNotCallOnTokenUpdateOnFailure) {
   // Not called on failure.
   EXPECT_CALL(token_callback_, onTokenUpdate(_)).Times(0);
 
-  // Send a Good token
+  // Send a bad token
   client_callback_->onFailure(Envoy::Grpc::Status::GrpcStatus::Internal, "",
                               Envoy::Tracing::NullSpan::instance());
-
-  EXPECT_EQ(init_done_called_, 1);
 }
 
-TEST_F(TokenSubscriberTest, TestUpdate) {
+TEST_F(TokenSubscriberTest, RefreshOnceTokenExpires) {
   EXPECT_CALL(token_callback_, onTokenUpdate(std::string("TOKEN1")));
 
   auto* raw_mock_client1 = new Envoy::Grpc::MockAsyncClient;
@@ -112,10 +119,10 @@ TEST_F(TokenSubscriberTest, TestUpdate) {
       }));
   EXPECT_CALL(*raw_mock_client1, send(_, _, _, _, _)).Times(1);
 
-  // Send a Good token1
+  // Send a good token `TOKEN1`
   GetTokenResponse* token_response = new GetTokenResponse;
   token_response->set_access_token("TOKEN1");
-  // Will refresh right away if less than 5s
+  // Will refresh right away if the token expires in less than 5s.
   token_response->mutable_expires_in()->set_seconds(1);
   client_callback_->onSuccessUntyped(
       Envoy::ProtobufTypes::MessagePtr(token_response),
@@ -129,8 +136,6 @@ TEST_F(TokenSubscriberTest, TestUpdate) {
   client_callback_->onSuccessUntyped(
       Envoy::ProtobufTypes::MessagePtr(token_response),
       Envoy::Tracing::NullSpan::instance());
-
-  EXPECT_EQ(init_done_called_, 1);
 }
 
 }  // namespace

@@ -25,14 +25,20 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities'; exit 1; }
 
 ${BAZEL} clean \
- || error_exit 'Failed to ${BAZEL} clean before the release build.'
+ || error_exit "Failed to ${BAZEL} clean before the release build."
 
 # Build binaries
 if [ ! -d "${ROOT}/bin" ]; then
   mkdir ${ROOT}/bin
 fi
 
-${BAZEL} build //src/envoy:envoy
+echo "Building Envoy"
+${BAZEL} version
+
+# TODO(kyuc): remove `experimental_cc_skylark_api_enabled_packages` flag once
+# prow bazel is upgraded to 22+.
+${BAZEL} build //src/envoy:envoy \
+  --experimental_cc_skylark_api_enabled_packages=@rules_foreign_cc//tools/build_defs,tools/build_defs,@foreign_cc_impl
 
 cp -f ${ROOT}/bazel-bin/src/envoy/envoy ${ROOT}/bin/
 

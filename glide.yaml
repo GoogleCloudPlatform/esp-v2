@@ -34,7 +34,7 @@ import:
   version: 8a91fb26f4e6553d2e21fa76e07d33b93a4f66e7
 - package: github.com/golang/glog
 - package: github.com/golang/protobuf
-  version: 1918e1ff6ffd2be7bed0553df8650672c3bfe80d
+  version: b5d812f8a3706043e23a9cd5babf2e5423744d30
 - package: github.com/google/go-genproto
   version: c830210a61dfaa790e1920f8d0470fc27bc2efbe
 - package: github.com/gorilla/mux
