@@ -100,9 +100,11 @@ envoy_cc_library(
     name = "handler_impl_lib",
     srcs = [
         "handler_impl.cc",
+        "handler_utils.cc",
     ],
     hdrs = [
         "handler_impl.h",
+        "handler_utils.h",
     ],
     repository = "@envoy",
     deps = [
@@ -201,6 +203,22 @@ envoy_cc_test(
     repository = "@envoy",
     deps = [
         ":filter_lib",
+        ":mocks_lib",
+        "@envoy//test/mocks/server:server_mocks",
+        "@envoy//test/mocks/stats:stats_mocks",
+        "@envoy//test/test_common:utility_lib",
+    ],
+)
+
+envoy_cc_test(
+    name = "handler_test",
+    srcs = [
+        "handler_utils_test.cc",
+    ],
+    repository = "@envoy",
+    deps = [
+        ":config_parser_lib",
+        ":handler_impl_lib",
         ":mocks_lib",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/mocks/stats:stats_mocks",

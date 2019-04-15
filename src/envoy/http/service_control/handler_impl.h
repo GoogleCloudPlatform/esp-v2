@@ -51,32 +51,14 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
                   const Http::HeaderMap* response_trailers);
 
   void collectDecodeData(Buffer::Instance& request_data,
-                               std::chrono::system_clock::time_point now =
-                                   std::chrono::system_clock::now());
+                         std::chrono::system_clock::time_point now =
+                             std::chrono::system_clock::now());
 
  private:
-  // Helper functions to extract API key.
-  bool extractAPIKeyFromQuery(const Http::HeaderMap& headers,
-                              const std::string& query);
-  bool extractAPIKeyFromHeader(const Http::HeaderMap& headers,
-                               const std::string& header);
-  bool extractAPIKeyFromCookie(const Http::HeaderMap& headers,
-                               const std::string& cookie);
-  bool extractAPIKey(
-      const Http::HeaderMap& headers,
-      const ::google::protobuf::RepeatedPtrField<
-          ::google::api::envoy::http::service_control::APIKeyLocation>&
-          locations);
-  void fillLoggedHeader(
-      const Http::HeaderMap* headers,
-      const ::google::protobuf::RepeatedPtrField<::std::string>& log_headers,
-      std::string& info_log_header_field);
   void fillOperationInfo(
       ::google::api_proxy::service_control::OperationInfo& info,
       std::chrono::system_clock::time_point now =
           std::chrono::system_clock::now());
-  void fillGCPInfo(
-      ::google::api_proxy::service_control::ReportRequestInfo& info);
   void prepareReportRequest(
       ::google::api_proxy::service_control::ReportRequestInfo& info);
   void finishCallReport(
@@ -103,10 +85,6 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
 
   // The matched requirement
   const RequirementContext* require_ctx_{};
-
-  // cached parsed query parameters
-  bool params_parsed_{false};
-  Http::Utility::QueryParams parsed_params_;
 
   std::string path_;
   std::string http_method_;

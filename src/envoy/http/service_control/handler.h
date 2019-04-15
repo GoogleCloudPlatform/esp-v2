@@ -47,10 +47,9 @@ class ServiceControlHandler {
 
   // Collect decode data, if the stream report interval has passed,
   // make an intermediate report call for long-lived gRPC streaming.
-  virtual void collectDecodeData(
-      Buffer::Instance& request_data,
-      std::chrono::system_clock::time_point now =
-          std::chrono::system_clock::now()) PURE;
+  virtual void collectDecodeData(Buffer::Instance& request_data,
+                                 std::chrono::system_clock::time_point now =
+                                     std::chrono::system_clock::now()) PURE;
 };
 typedef std::unique_ptr<ServiceControlHandler> ServiceControlHandlerPtr;
 

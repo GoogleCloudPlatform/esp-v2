@@ -18,6 +18,7 @@
 #include "absl/strings/match.h"
 
 #include "common/http/utility.h"
+#include "src/envoy/http/service_control/handler_utils.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
 
@@ -33,9 +34,6 @@ namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
-namespace {
-
-const std::string kContentTypeApplicationGrpcPrefix = "application/grpc";
 
 // The HTTP header to send consumer project to backend.
 const Http::LowerCaseString kConsumerProjectId("x-endpoint-api-project-id");
@@ -45,76 +43,6 @@ const Http::LowerCaseString kIosBundleIdHeader{"x-ios-bundle-identifier"};
 const Http::LowerCaseString kAndroidPackageHeader{"x-android-package"};
 const Http::LowerCaseString kAndroidCertHeader{"x-android-cert"};
 const Http::LowerCaseString kRefererHeader{"referer"};
-const Http::LowerCaseString kContentTypeHeader{"content-type"};
-
-inline int64_t convertNsToMs(std::chrono::nanoseconds ns) {
-  return std::chrono::duration_cast<std::chrono::milliseconds>(ns).count();
-}
-
-void fillLatency(const StreamInfo::StreamInfo& stream_info,
-                 LatencyInfo& latency) {
-  if (stream_info.requestComplete()) {
-    latency.request_time_ms =
-        convertNsToMs(stream_info.requestComplete().value());
-  }
-
-  auto start = stream_info.firstUpstreamTxByteSent();
-  auto end = stream_info.lastUpstreamRxByteReceived();
-  if (start && end && end.value() >= start.value()) {
-    latency.backend_time_ms = convertNsToMs(end.value() - start.value());
-  } else {
-    // for cases like request is rejected at service control filter (does not
-    // reach backend)
-    latency.backend_time_ms = 0;
-  }
-
-  if (latency.backend_time_ms >= 0 &&
-      latency.request_time_ms >= latency.backend_time_ms) {
-    latency.overhead_time_ms =
-        latency.request_time_ms - latency.backend_time_ms;
-  }
-}
-
-bool isGrpcRequest(const std::string& content_type) {
-  // Formally defined as:
-  // `application/grpc(-web(-text))[+proto/+json/+thrift/{custom}]`
-  //
-  // The worst case is `application/grpc{custom}`. Just check the beginning.
-  return absl::StartsWith(content_type, kContentTypeApplicationGrpcPrefix);
-}
-
-Protocol getFrontendProtocol(const Http::HeaderMap* response_headers,
-                             bool http) {
-  // response_headers could be nullptr
-  if (response_headers) {
-    const std::string& content_type =
-        Utils::extractHeader(*response_headers, kContentTypeHeader);
-    if (isGrpcRequest(content_type)) {
-      return Protocol::GRPC;
-    }
-  }
-
-  if (!http) {
-    return Protocol::UNKNOWN;
-  }
-
-  // TODO(toddbeckman) figure out HTTPS
-  return Protocol::HTTP;
-}
-
-Protocol getBackendProtocol(const std::string& protocol) {
-  if (protocol == "http1" || protocol == "http2") {
-    return Protocol::HTTP;
-  }
-
-  if (protocol == "grpc") {
-    return Protocol::GRPC;
-  }
-
-  return Protocol::UNKNOWN;
-}
-
-}  // namespace
 
 ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     const Http::HeaderMap& headers, const StreamInfo::StreamInfo& stream_info,
@@ -151,94 +79,17 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
   }
 
   if (require_ctx_->config().api_key().locations_size() > 0) {
-    extractAPIKey(headers, require_ctx_->config().api_key().locations());
+    extractAPIKey(headers, require_ctx_->config().api_key().locations(),
+                  api_key_);
   } else {
-    extractAPIKey(headers, cfg_parser_.default_api_keys().locations());
+    extractAPIKey(headers, cfg_parser_.default_api_keys().locations(),
+                  api_key_);
   }
 }
 
 ServiceControlHandlerImpl::~ServiceControlHandlerImpl() {
   if (aborted_) {
     *aborted_ = true;
-  }
-}
-
-bool ServiceControlHandlerImpl::extractAPIKeyFromQuery(
-    const Http::HeaderMap& headers, const std::string& query) {
-  if (!params_parsed_) {
-    parsed_params_ =
-        Http::Utility::parseQueryString(headers.Path()->value().c_str());
-    params_parsed_ = true;
-  }
-
-  const auto& it = parsed_params_.find(query);
-  if (it != parsed_params_.end()) {
-    api_key_ = it->second;
-    ENVOY_LOG(debug, "api-key: {} from query: {}", api_key_, query);
-    return true;
-  }
-  return false;
-}
-
-bool ServiceControlHandlerImpl::extractAPIKeyFromHeader(
-    const Http::HeaderMap& headers, const std::string& header) {
-  // TODO(qiwzhang): optimize this by using LowerCaseString at init.
-  auto* entry = headers.get(Http::LowerCaseString(header));
-  if (entry) {
-    api_key_ = std::string(entry->value().c_str(), entry->value().size());
-    ENVOY_LOG(debug, "api-key: {} from header: {}", api_key_, header);
-    return true;
-  }
-  return false;
-}
-
-bool ServiceControlHandlerImpl::extractAPIKeyFromCookie(
-    const Http::HeaderMap& headers, const std::string& cookie) {
-  std::string api_key = Http::Utility::parseCookieValue(headers, cookie);
-  if (!api_key.empty()) {
-    api_key_ = api_key;
-    ENVOY_LOG(debug, "api-key: {} from cookie: {}", api_key_, cookie);
-    return true;
-  }
-  return false;
-}
-
-bool ServiceControlHandlerImpl::extractAPIKey(
-    const Http::HeaderMap& headers,
-    const ::google::protobuf::RepeatedPtrField<
-        ::google::api::envoy::http::service_control::APIKeyLocation>&
-        locations) {
-  for (const auto& location : locations) {
-    switch (location.key_case()) {
-      case APIKeyLocation::kQuery:
-        if (extractAPIKeyFromQuery(headers, location.query())) return true;
-        break;
-      case APIKeyLocation::kHeader:
-        if (extractAPIKeyFromHeader(headers, location.header())) return true;
-        break;
-      case APIKeyLocation::kCookie:
-        if (extractAPIKeyFromCookie(headers, location.cookie())) return true;
-        break;
-      case APIKeyLocation::KEY_NOT_SET:
-        break;
-    }
-  }
-  return false;
-}
-
-void ServiceControlHandlerImpl::fillLoggedHeader(
-    const Http::HeaderMap* headers,
-    const ::google::protobuf::RepeatedPtrField<::std::string>& log_headers,
-    std::string& info_header_field) {
-  if (headers == nullptr) {
-    return;
-  }
-  for (const auto& log_header : log_headers) {
-    auto* entry = headers->get(Http::LowerCaseString(log_header));
-    if (entry) {
-      info_header_field =
-          info_header_field + log_header + "=" + entry->value().c_str() + ";";
-    }
   }
 }
 
@@ -250,36 +101,6 @@ void ServiceControlHandlerImpl::fillOperationInfo(
   info.producer_project_id =
       require_ctx_->service_ctx().config().producer_project_id();
   info.request_start_time = now;
-}
-
-void ServiceControlHandlerImpl::fillGCPInfo(
-    ::google::api_proxy::service_control::ReportRequestInfo& info) {
-  const auto& filter_config = cfg_parser_.config();
-  if (!filter_config.has_gcp_attributes()) {
-    info.compute_platform =
-        ::google::api_proxy::service_control::compute_platform::UNKNOWN;
-    return;
-  }
-
-  const auto& gcp_attributes = filter_config.gcp_attributes();
-  if (!gcp_attributes.zone().empty()) {
-    info.location = gcp_attributes.zone();
-  }
-
-  const std::string& platform = gcp_attributes.platform();
-  if (platform == "GAE_FLEX") {
-    info.compute_platform =
-        ::google::api_proxy::service_control::compute_platform::GAE_FLEX;
-  } else if (platform == "GKE") {
-    info.compute_platform =
-        ::google::api_proxy::service_control::compute_platform::GKE;
-  } else if (platform == "GCE") {
-    info.compute_platform =
-        ::google::api_proxy::service_control::compute_platform::GCE;
-  } else {
-    info.compute_platform =
-        ::google::api_proxy::service_control::compute_platform::UNKNOWN;
-  }
 }
 
 void ServiceControlHandlerImpl::prepareReportRequest(
@@ -302,7 +123,7 @@ void ServiceControlHandlerImpl::prepareReportRequest(
   info.check_response_info = check_response_info_;
   info.status = check_status_;
 
-  fillGCPInfo(info);
+  fillGCPInfo(cfg_parser_.config(), info);
 }
 
 void ServiceControlHandlerImpl::callCheck(Http::HeaderMap& headers,
@@ -318,11 +139,12 @@ void ServiceControlHandlerImpl::callCheck(Http::HeaderMap& headers,
   }
 
   if (!hasApiKey()) {
-    callback.onCheckDone(
+    check_status_ =
         Status(Code::UNAUTHENTICATED,
                "Method doesn't allow unregistered callers (callers without "
                "established identity). Please use API Key or other form of "
-               "API consumer identity to call this API."));
+               "API consumer identity to call this API.");
+    callback.onCheckDone(check_status_);
     return;
   }
 
@@ -387,11 +209,10 @@ void ServiceControlHandlerImpl::callReport(
                    require_ctx_->service_ctx().config().log_response_headers(),
                    info.response_headers);
 
-  info.frontend_protocol = getFrontendProtocol(
-      response_headers, stream_info_.protocol().has_value());
+  info.frontend_protocol = getFrontendProtocol(response_headers, stream_info_);
 
-  info.backend_protocol = getBackendProtocol(
-      require_ctx_->service_ctx().config().backend_protocol());
+  info.backend_protocol =
+      getBackendProtocol(require_ctx_->service_ctx().config());
 
   if (request_headers) {
     info.referer = Utils::extractHeader(*request_headers, kRefererHeader);
