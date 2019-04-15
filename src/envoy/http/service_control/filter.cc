@@ -103,6 +103,36 @@ void ServiceControlFilter::setDecoderFilterCallbacks(
   decoder_callbacks_ = &callbacks;
 }
 
+Http::FilterHeadersStatus ServiceControlFilter::encode100ContinueHeaders(
+    Http::HeaderMap&) {
+  return Http::FilterHeadersStatus::Continue;
+}
+
+Http::FilterHeadersStatus ServiceControlFilter::encodeHeaders(Http::HeaderMap&,
+                                                              bool) {
+  return Http::FilterHeadersStatus::Continue;
+}
+
+Http::FilterDataStatus ServiceControlFilter::encodeData(Buffer::Instance& data,
+                                                        bool end_stream) {
+  ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
+
+  if (!end_stream && data.length() > 0) {
+    handler_->collectEncodeData(data, std::chrono::system_clock::now());
+  }
+  return Http::FilterDataStatus::Continue;
+}
+
+Http::FilterTrailersStatus ServiceControlFilter::encodeTrailers(
+    Http::HeaderMap&) {
+  return Http::FilterTrailersStatus::Continue;
+}
+
+void ServiceControlFilter::setEncoderFilterCallbacks(
+    Http::StreamEncoderFilterCallbacks& callbacks) {
+  encoder_callbacks_ = &callbacks;
+}
+
 void ServiceControlFilter::log(const Http::HeaderMap* request_headers,
                                const Http::HeaderMap* response_headers,
                                const Http::HeaderMap* response_trailers,

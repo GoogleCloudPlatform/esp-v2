@@ -36,6 +36,10 @@ class MockServiceControlHandler : public ServiceControlHandler {
   MOCK_METHOD2(collectDecodeData,
                void(Buffer::Instance& request_data,
                     std::chrono::system_clock::time_point now));
+
+  MOCK_METHOD2(collectEncodeData,
+               void(Buffer::Instance& response_data,
+                    std::chrono::system_clock::time_point now));
 };
 
 class MockServiceControlHandlerFactory : public ServiceControlHandlerFactory {

@@ -57,6 +57,8 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
   path_ = headers.Path()->value().c_str();
   request_header_size_ = headers.byteSize();
 
+  is_grpc_ = Envoy::Grpc::Common::hasGrpcContentType(headers);
+
   const absl::string_view operation = Utils::getStringFilterState(
       stream_info_.filterState(), Utils::kOperation);
 
@@ -240,13 +242,36 @@ void ServiceControlHandlerImpl::callReport(
 
 void ServiceControlHandlerImpl::collectDecodeData(
     Buffer::Instance& request_data, std::chrono::system_clock::time_point now) {
+  if (!is_grpc_) {
+    return;
+  }
+
+  Envoy::Utils::IncrementMessageCounter(request_data, &grpc_request_counter_);
+  streaming_info_.request_message_count = grpc_request_counter_.count;
+  streaming_info_.request_bytes += request_data.length();
+
+  tryIntermediateReport(now);
+}
+
+void ServiceControlHandlerImpl::collectEncodeData(
+    Buffer::Instance& response_data,
+    std::chrono::system_clock::time_point now) {
+  if (!is_grpc_) {
+    return;
+  }
+
+  Envoy::Utils::IncrementMessageCounter(response_data, &grpc_response_counter_);
+  streaming_info_.response_message_count = grpc_response_counter_.count;
+  streaming_info_.response_bytes += response_data.length();
+
+  tryIntermediateReport(now);
+}
+
+void ServiceControlHandlerImpl::tryIntermediateReport(
+    std::chrono::system_clock::time_point now) {
   if (streaming_info_.is_first_report) {
     streaming_info_.start_time = now;
   }
-  // TODO(b/123950356): Should count proto messages, which may not align with
-  // data chunks.
-  streaming_info_.request_message_count++;
-  streaming_info_.request_bytes += request_data.length();
   // Avoid reporting more frequently than the configured interval.
   if (std::chrono::duration_cast<std::chrono::milliseconds>(now -
                                                             last_reported_)

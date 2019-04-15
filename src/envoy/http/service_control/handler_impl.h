@@ -18,6 +18,8 @@
 #include <string>
 
 #include "common/common/logger.h"
+#include "common/grpc/codec.h"
+#include "common/grpc/common.h"
 #include "envoy/buffer/buffer.h"
 #include "envoy/http/header_map.h"
 #include "envoy/http/query_params.h"
@@ -26,6 +28,7 @@
 #include "src/api_proxy/service_control/request_info.h"
 #include "src/envoy/http/service_control/config_parser.h"
 #include "src/envoy/http/service_control/handler.h"
+#include "src/envoy/utils/message_counter.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -54,6 +57,10 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
                          std::chrono::system_clock::time_point now =
                              std::chrono::system_clock::now());
 
+  void collectEncodeData(Buffer::Instance& response_data,
+                         std::chrono::system_clock::time_point now =
+                             std::chrono::system_clock::now());
+
  private:
   void fillOperationInfo(
       ::google::api_proxy::service_control::OperationInfo& info,
@@ -63,6 +70,7 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
       ::google::api_proxy::service_control::ReportRequestInfo& info);
   void finishCallReport(
       const ::google::api_proxy::service_control::ReportRequestInfo& info);
+  void tryIntermediateReport(std::chrono::system_clock::time_point now);
 
   bool isConfigured() const { return require_ctx_ != nullptr; }
 
@@ -101,6 +109,9 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   uint64_t request_header_size_;
 
   // Intermediate data for reporting on streaming.
+  bool is_grpc_;
+  Utils::GrpcMessageCounter grpc_request_counter_;
+  Utils::GrpcMessageCounter grpc_response_counter_;
   ::google::api_proxy::service_control::StreamingRequestInfo streaming_info_;
   // Interval timer for sending intermittent reports.
   std::chrono::system_clock::time_point last_reported_;

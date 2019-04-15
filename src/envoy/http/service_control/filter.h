@@ -29,7 +29,7 @@ namespace HttpFilters {
 namespace ServiceControl {
 
 // The Envoy filter for API Proxy service control client.
-class ServiceControlFilter : public Http::StreamDecoderFilter,
+class ServiceControlFilter : public Http::StreamFilter,
                              public AccessLog::Instance,
                              public ServiceControlHandler::CheckDoneCallback,
                              public Logger::Loggable<Logger::Id::filter> {
@@ -43,10 +43,22 @@ class ServiceControlFilter : public Http::StreamDecoderFilter,
   // Http::StreamDecoderFilter
   Http::FilterHeadersStatus decodeHeaders(Http::HeaderMap& headers,
                                           bool) override;
-  Http::FilterDataStatus decodeData(Buffer::Instance&, bool) override;
+  Http::FilterDataStatus decodeData(Buffer::Instance& headers,
+                                    bool end_stream) override;
   Http::FilterTrailersStatus decodeTrailers(Http::HeaderMap&) override;
   void setDecoderFilterCallbacks(
       Http::StreamDecoderFilterCallbacks& callbacks) override;
+
+  // Http::StreamEncoderFilter
+  Http::FilterHeadersStatus encode100ContinueHeaders(
+      Http::HeaderMap& headers) override;
+  Http::FilterHeadersStatus encodeHeaders(Http::HeaderMap& headers,
+                                          bool) override;
+  Http::FilterDataStatus encodeData(Buffer::Instance& headers,
+                                    bool end_stream) override;
+  Http::FilterTrailersStatus encodeTrailers(Http::HeaderMap&) override;
+  void setEncoderFilterCallbacks(
+      Http::StreamEncoderFilterCallbacks& callbacks) override;
 
   // Called when the request is completed.
   void log(const Http::HeaderMap* request_headers,
@@ -62,6 +74,7 @@ class ServiceControlFilter : public Http::StreamDecoderFilter,
 
   // The callback funcion.
   Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
+  Http::StreamEncoderFilterCallbacks* encoder_callbacks_;
   ServiceControlFilterStats& stats_;
   const ServiceControlHandlerFactory& factory_;
 

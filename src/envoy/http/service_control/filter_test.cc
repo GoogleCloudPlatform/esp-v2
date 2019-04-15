@@ -242,12 +242,31 @@ TEST_F(FilterTest, DecodeDataSendStreamReport) {
         callback.onCheckDone(Status::OK);
       }));
   EXPECT_EQ(Http::FilterHeadersStatus::Continue,
-            filter_->decodeHeaders(headers_, true));
+            filter_->decodeHeaders(headers_, /*end_stream=*/true));
 
   mock_buffer_.add("filler");
 
   EXPECT_CALL(*mock_handler, collectDecodeData(_, _));
-  filter_->decodeData(mock_buffer_, false);
+  filter_->decodeData(mock_buffer_, /*end_stream=*/false);
+}
+
+TEST_F(FilterTest, EncodeDataSendStreamReport) {
+  // This puts the Filter into a continue state
+  auto* mock_handler = new testing::NiceMock<MockServiceControlHandler>();
+  EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
+      .WillOnce(Return(mock_handler));
+  EXPECT_CALL(*mock_handler, callCheck(_, _))
+      .WillOnce(Invoke([](Http::HeaderMap&,
+                          ServiceControlHandler::CheckDoneCallback& callback) {
+        callback.onCheckDone(Status::OK);
+      }));
+  EXPECT_EQ(Http::FilterHeadersStatus::Continue,
+            filter_->decodeHeaders(headers_, /*end_stream=*/true));
+
+  mock_buffer_.add("filler");
+
+  EXPECT_CALL(*mock_handler, collectEncodeData(_, _));
+  filter_->encodeData(mock_buffer_, /*end_stream=*/false);
 }
 
 }  // namespace
