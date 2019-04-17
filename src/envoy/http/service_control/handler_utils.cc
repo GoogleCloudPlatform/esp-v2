@@ -12,15 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/envoy/http/service_control/handler_utils.h"
+#include <sstream>
+#include <vector>
+
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_split.h"
 #include "api/envoy/http/service_control/config.pb.h"
 #include "common/common/logger.h"
 #include "common/http/utility.h"
 #include "envoy/http/header_map.h"
 #include "envoy/server/filter_config.h"
+#include "extensions/filters/http/well_known_names.h"
 #include "src/api_proxy/service_control/request_builder.h"
+#include "src/envoy/http/service_control/handler_utils.h"
 
 using ::google::api::envoy::http::service_control::APIKeyLocation;
 using ::google::api::envoy::http::service_control::Service;
@@ -37,6 +42,9 @@ namespace HttpFilters {
 namespace ServiceControl {
 
 namespace {
+
+// Delimeter used in jwt payload key path
+const char kJwtPayLoadsDelimeter = '.';
 
 const std::string kContentTypeApplicationGrpcPrefix = "application/grpc";
 const Http::LowerCaseString kContentTypeHeader{"content-type"};
@@ -82,6 +90,31 @@ bool extractAPIKeyFromCookie(const Http::HeaderMap& headers,
     return true;
   }
   return false;
+}
+
+void extractJwtPayload(const ProtobufWkt::Value& value,
+                       const std::string& jwt_payload_path,
+                       std::string& info_jwt_payloads) {
+  switch (value.kind_case()) {
+    case ::google::protobuf::Value::kNullValue:
+      absl::StrAppend(&info_jwt_payloads, jwt_payload_path, "=;");
+      return;
+    case ::google::protobuf::Value::kNumberValue:
+      absl::StrAppend(&info_jwt_payloads, jwt_payload_path, "=",
+                      std::to_string(static_cast<long>(value.number_value())),
+                      ";");
+      return;
+    case ::google::protobuf::Value::kBoolValue:
+      absl::StrAppend(&info_jwt_payloads, jwt_payload_path, "=",
+                      value.bool_value() ? "true" : "false", ";");
+      return;
+    case ::google::protobuf::Value::kStringValue:
+      absl::StrAppend(&info_jwt_payloads, jwt_payload_path, "=",
+                      value.string_value(), ";");
+      return;
+    default:
+      return;
+  }
 }
 
 bool isGrpcRequest(const std::string& content_type) {
@@ -195,6 +228,24 @@ Protocol getBackendProtocol(const Service& service) {
   }
 
   return Protocol::UNKNOWN;
+}
+
+// TODO(taoxuy): Add Unit Test
+void fillJwtPayloads(const envoy::api::v2::core::Metadata& metadata,
+                     const std::string& jwt_payload_metadata_name,
+                     const ::google::protobuf::RepeatedPtrField<::std::string>&
+                         jwt_payload_paths,
+                     std::string& info_jwt_payloads) {
+  for (const std::string& jwt_payload_path : jwt_payload_paths) {
+    std::vector<std::string> steps =
+        absl::StrSplit(jwt_payload_path, kJwtPayLoadsDelimeter);
+    steps.insert(steps.begin(), jwt_payload_metadata_name);
+    const ProtobufWkt::Value& value = Config::Metadata::metadataValue(
+        metadata, HttpFilters::HttpFilterNames::get().JwtAuthn, steps);
+    if (&value != &ProtobufWkt::Value::default_instance()) {
+      extractJwtPayload(value, jwt_payload_path, info_jwt_payloads);
+    }
+  };
 }
 
 bool extractAPIKey(

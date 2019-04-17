@@ -26,6 +26,8 @@ const (
 	BackendAuth = "envoy.filters.http.backend_auth"
 	// Backend Routing filter.
 	BackendRouting = "envoy.filters.http.backend_routing"
+	// The field name for jwt payload passed into metadata
+	JwtPayloadMetadataName = "jwt_payloads"
 
 	// Supported Http Methods.
 	GET     = "GET"

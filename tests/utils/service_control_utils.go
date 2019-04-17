@@ -18,9 +18,11 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"testing"
 
 	"github.com/golang/protobuf/proto"
 
+	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	sc "github.com/google/go-genproto/googleapis/api/servicecontrol/v1"
 	ltype "google.golang.org/genproto/googleapis/logging/type"
@@ -69,6 +71,7 @@ type ExpectedReport struct {
 	JwtAuth           string
 	RequestHeaders    string
 	ResponseHeaders   string
+	JwtPayloads       string
 }
 
 type distOptions struct {
@@ -248,6 +251,9 @@ func createLogEntry(er *ExpectedReport) *sc.LogEntry {
 	}
 	if er.ResponseHeaders != "" {
 		pl["response_headers"] = makeStringValue(er.ResponseHeaders)
+	}
+	if er.JwtPayloads != "" {
+		pl["jwt_payloads"] = makeStringValue(er.JwtPayloads)
 	}
 
 	severity := ltype.LogSeverity_INFO
@@ -614,5 +620,31 @@ func AggregateReport(pb *sc.ReportRequest, n int64) {
 			}
 			op.LogEntries = logs
 		}
+	}
+}
+
+func CheckScRequest(t *testing.T, scRequests []*comp.ServiceRequest, wantScRequests []interface{}) {
+	for i, wantScRequest := range wantScRequests {
+		scRequest := scRequests[i]
+		reqBody := scRequest.ReqBody
+		switch wantScRequest.(type) {
+		case *ExpectedCheck:
+			if scRequest.ReqType != comp.CHECK_REQUEST {
+				t.Errorf("service control request %v: should be Check", i)
+			}
+			if err := VerifyCheck(reqBody, wantScRequest.(*ExpectedCheck)); err != nil {
+				t.Error(err)
+			}
+		case *ExpectedReport:
+			if scRequest.ReqType != comp.REPORT_REQUEST {
+				t.Errorf("service control request %v: should be Report", i)
+			}
+			if err := VerifyReport(reqBody, wantScRequest.(*ExpectedReport)); err != nil {
+				t.Error(err)
+			}
+		default:
+			t.Fatal("unknown service control response type")
+		}
+
 	}
 }

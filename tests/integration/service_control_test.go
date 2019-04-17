@@ -30,28 +30,6 @@ import (
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-func checkScRequest(t *testing.T, index int, scRequest *comp.ServiceRequest, wantScRequest interface{}) {
-	reqBody := scRequest.ReqBody
-	switch wantScRequest.(type) {
-	case *utils.ExpectedCheck:
-		if scRequest.ReqType != comp.CHECK_REQUEST {
-			t.Errorf("service control request %v: should be Check", index)
-		}
-		if err := utils.VerifyCheck(reqBody, wantScRequest.(*utils.ExpectedCheck)); err != nil {
-			t.Error(err)
-		}
-	case *utils.ExpectedReport:
-		if scRequest.ReqType != comp.REPORT_REQUEST {
-			t.Errorf("service control request %v: should be Report", index)
-		}
-		if err := utils.VerifyReport(reqBody, wantScRequest.(*utils.ExpectedReport)); err != nil {
-			t.Error(err)
-		}
-	default:
-		t.Fatal("unknown service control response type")
-	}
-}
-
 func TestServiceControlBasic(t *testing.T) {
 	serviceName := "test-echo"
 	configId := "test-config-id"
@@ -403,125 +381,7 @@ func TestServiceControlBasic(t *testing.T) {
 			t.Fatalf("GetRequests returns error: %v", err1)
 		}
 
-		for i, wantScRequest := range tc.wantScRequests {
-			checkScRequest(t, i, scRequests[i], wantScRequest)
-		}
-	}
-}
-
-func TestServiceControlLogHeaders(t *testing.T) {
-	serviceName := "test-echo"
-	configId := "test-config-id"
-
-	args := []string{"--service=" + serviceName, "--version=" + configId,
-		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers", "--log_request_headers=Fake-Header-Key0,Fake-Header-Key1,Fake-Header-Key2,Non-Existing-Header-Key", "--log_response_headers=Echo-Fake-Header-Key0,Echo-Fake-Header-Key1,Echo-Fake-Header-Key2,Non-Existing-Header-Key"}
-
-	s := env.NewTestEnv(comp.TestServiceControlLogHeaders, "echo", []string{"google_jwt"})
-	s.AppendHttpRules([]*annotations.HttpRule{
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",
-			Pattern: &annotations.HttpRule_Get{
-				Get: "/simpleget",
-			},
-		},
-	})
-
-	if err := s.Setup(args); err != nil {
-		t.Fatalf("fail to setup test env, %v", err)
-	}
-	defer s.TearDown()
-
-	testData := []struct {
-		desc                  string
-		url                   string
-		method                string
-		requestHeader         map[string]string
-		message               string
-		wantResp              string
-		httpCallError         error
-		wantScRequests        []interface{}
-		wantGetScRequestError error
-	}{
-		{
-			desc:     "succeed, log required request headers and response headers",
-			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key-2"),
-			method:   "POST",
-			message:  "hello",
-			wantResp: `{"message":"hello"}`,
-			requestHeader: map[string]string{
-				"Fake-Header-Key0": "FakeHeaderVal0",
-				"Fake-Header-Key1": "FakeHeaderVal1",
-				"Fake-Header-Key2": "FakeHeaderVal2",
-				"Fake-Header-Key3": "FakeHeaderVal3",
-				"Fake-Header-Key4": "FakeHeaderVal4",
-			},
-			wantScRequests: []interface{}{
-				&utils.ExpectedCheck{
-					Version:         utils.APIProxyVersion,
-					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
-					ServiceConfigID: "test-config-id",
-					ConsumerID:      "api_key:api-key-2",
-					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-					CallerIp:        "127.0.0.1",
-				},
-				&utils.ExpectedReport{
-					Version:     utils.APIProxyVersion,
-					ServiceName: "echo-api.endpoints.cloudesf-testing.cloud.goog", ServiceConfigID: "test-config-id",
-					URL:               "/echo?key=api-key-2",
-					ApiKey:            "api-key-2",
-					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-					ProducerProjectID: "producer-project",
-					ConsumerProjectID: "123456",
-					FrontendProtocol:  "http",
-					HttpMethod:        "POST",
-					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo is called",
-					StatusCode:        "0",
-					RequestSize:       390,
-					ResponseSize:      301,
-					RequestBytes:      390,
-					ResponseBytes:     301,
-					ResponseCode:      200,
-					Platform:          util.GCE,
-					Location:          "test-zone",
-					RequestHeaders:    "Fake-Header-Key0=FakeHeaderVal0;Fake-Header-Key1=FakeHeaderVal1;Fake-Header-Key2=FakeHeaderVal2;",
-					ResponseHeaders:   "Echo-Fake-Header-Key0=FakeHeaderVal0;Echo-Fake-Header-Key1=FakeHeaderVal1;Echo-Fake-Header-Key2=FakeHeaderVal2;",
-				},
-			},
-		},
-	}
-	for _, tc := range testData {
-		resp, err := client.DoPostWithHeaders(tc.url, tc.message, tc.requestHeader)
-
-		if tc.httpCallError == nil {
-			if err != nil {
-				t.Fatal(err)
-			}
-			if !strings.Contains(string(resp), tc.wantResp) {
-				t.Errorf("expected: %s, got: %s", tc.wantResp, string(resp))
-			}
-		} else {
-			if tc.httpCallError.Error() != err.Error() {
-				t.Errorf("expected Http call error: %v, got: %v", tc.httpCallError, err)
-			}
-		}
-
-		if tc.wantGetScRequestError != nil {
-			scRequests, err1 := s.ServiceControlServer.GetRequests(1, 3*time.Second)
-			if err1.Error() != tc.wantGetScRequestError.Error() {
-				t.Errorf("expected get service control request call error: %v, got: %v", tc.wantGetScRequestError, err1)
-				t.Errorf("got service control requests: %v", scRequests)
-			}
-			continue
-		}
-
-		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 3*time.Second)
-		if err1 != nil {
-			t.Fatalf("GetRequests returns error: %v", err1)
-		}
-
-		for i, wantScRequest := range tc.wantScRequests {
-			checkScRequest(t, i, scRequests[i], wantScRequest)
-		}
+		utils.CheckScRequest(t, scRequests, tc.wantScRequests)
 	}
 }
 
@@ -590,7 +450,5 @@ func TestServiceControlCache(t *testing.T) {
 		t.Fatalf("GetRequests returns error: %v", err)
 	}
 
-	for i, wantScRequest := range wantScRequests {
-		checkScRequest(t, i, scRequests[i], wantScRequest)
-	}
+	utils.CheckScRequest(t, scRequests, wantScRequests)
 }

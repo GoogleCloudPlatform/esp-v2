@@ -207,6 +207,9 @@ struct ReportRequestInfo : public OperationInfo {
   // The request headers logged
   std::string response_headers;
 
+  // The jwt payloads logged
+  std::string jwt_payloads;
+
   // number of messages for a stream.
   int64_t streaming_request_message_counts;
 

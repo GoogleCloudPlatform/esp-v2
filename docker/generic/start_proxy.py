@@ -238,6 +238,16 @@ environment variable or by passing "-k" flag to this script.
         response_headers: foo=foo_value;bar=bar_value if values are available;
         ''')
 
+    parser.add_argument(
+        '--log_jwt_payloads',
+        default=None,
+        help='''
+        Log corresponding JWT JSON payload primitive fields through service control,
+        separated by comma. Example, when --log_jwt_payload=sub,project_id, log
+        will have jwt_payload: sub=[SUBJECT];project_id=[PROJECT_ID]
+        if the fields are available. The value must be a primitive field,
+        JSON objects and arrays will not be logged.
+        ''')
     return parser
 
 
@@ -292,10 +302,13 @@ if __name__ == '__main__':
     ]
 
     if args.log_request_headers:
-        proxy_conf.extend(["--log-request-headers", args.log_request_headers])
+        proxy_conf.extend(["--log_request_headers", args.log_request_headers])
 
     if args.log_response_headers:
-        proxy_conf.extend(["--log-response-headers", args.log_response_headers])
+        proxy_conf.extend(["--log_response_headers", args.log_response_headers])
+
+    if args.log_jwt_payloads:
+        proxy_conf.extend(["--log_jwt_payloads", args.log_jwt_payloads])
 
     if args.service:
         proxy_conf.extend(["--service", args.service])

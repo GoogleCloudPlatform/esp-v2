@@ -916,6 +916,7 @@ const char kLogFieldNameApiVersion[] = "api_version";
 const char kLogFieldNameErrorCause[] = "error_cause";
 const char kLogFieldNameHttpMethod[] = "http_method";
 const char kLogFieldNameHttpResponseCode[] = "http_response_code";
+const char kLogFieldNameJwtPayloads[] = "jwt_payloads";
 const char kLogFieldNameLocation[] = "location";
 const char kLogFieldNameLogMessage[] = "log_message";
 const char kLogFieldNameProducerProjectId[] = "producer_project_id";
@@ -1031,6 +1032,9 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
   }
   if (!info.method.empty()) {
     (*fields)[kLogFieldNameHttpMethod].set_string_value(info.method);
+  }
+  if (!info.jwt_payloads.empty()) {
+    (*fields)[kLogFieldNameJwtPayloads].set_string_value(info.jwt_payloads);
   }
 }
 

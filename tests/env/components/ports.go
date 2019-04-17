@@ -47,6 +47,7 @@ const (
 	TestServiceControlBasic
 	TestServiceControlCache
 	TestServiceControlLogHeaders
+	TestServiceControlLogJwtPayloads
 	TestServiceControlReportResponseCode
 	TestServiceControlRequestInDynamicRouting
 	TestServiceControlRequestWithAllowCors

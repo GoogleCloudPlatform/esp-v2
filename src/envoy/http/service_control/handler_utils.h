@@ -15,6 +15,7 @@
 #include "absl/strings/match.h"
 #include "api/envoy/http/service_control/config.pb.h"
 #include "api/envoy/http/service_control/requirement.pb.h"
+#include "common/config/metadata.h"
 #include "common/http/utility.h"
 #include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/utils/filter_state_utils.h"
@@ -52,6 +53,13 @@ void fillLoggedHeader(
 // info provided.
 void fillLatency(const StreamInfo::StreamInfo& stream_info,
                  ::google::api_proxy::service_control::LatencyInfo& latency);
+
+// Fills the jwt payload of the info provided
+void fillJwtPayloads(const envoy::api::v2::core::Metadata& metadata,
+                     const std::string& jwt_payload_metadata_name,
+                     const ::google::protobuf::RepeatedPtrField<::std::string>&
+                         jwt_payload_paths,
+                     std::string& info_jwt_payloads);
 
 // Returns the protocol of the frontend request or UNKNOWN if not found
 ::google::api_proxy::service_control::protocol::Protocol getFrontendProtocol(

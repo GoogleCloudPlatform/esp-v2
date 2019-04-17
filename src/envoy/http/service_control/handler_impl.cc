@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/envoy/http/service_control/handler_impl.h"
-
 #include <chrono>
-#include "absl/strings/match.h"
 
+#include "absl/strings/match.h"
 #include "common/http/utility.h"
+#include "src/envoy/http/service_control/handler_impl.h"
 #include "src/envoy/http/service_control/handler_utils.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
@@ -210,6 +209,11 @@ void ServiceControlHandlerImpl::callReport(
   fillLoggedHeader(response_headers,
                    require_ctx_->service_ctx().config().log_response_headers(),
                    info.response_headers);
+  fillJwtPayloads(
+      stream_info_.dynamicMetadata(),
+      require_ctx_->service_ctx().config().jwt_payload_metadata_name(),
+      require_ctx_->service_ctx().config().log_jwt_payloads(),
+      info.jwt_payloads);
 
   info.frontend_protocol = getFrontendProtocol(response_headers, stream_info_);
 

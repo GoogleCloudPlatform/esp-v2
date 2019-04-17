@@ -113,8 +113,10 @@ envoy_cc_library(
         "//src/envoy/utils:filter_state_utils_lib",
         "//src/envoy/utils:http_header_utils_lib",
         "//src/envoy/utils:message_counter_lib",
-        "@envoy//source/common/http:headers_lib",
+        "@envoy//source/common/config:metadata_lib",
         "@envoy//source/common/grpc:common_lib",
+        "@envoy//source/common/http:headers_lib",
+        "@envoy//source/extensions/filters/http:well_known_names",
     ],
 )
 

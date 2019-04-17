@@ -58,9 +58,25 @@ func init() {
 		Issuer:  "rs256-issuer",
 		JwksUri: components.NewMockJwtProvider(PubKeys).GetURL(),
 	}
+	MockJwtProviderMap["service_control_jwt_payload_auth"] = &conf.AuthProvider{
+		Id:      "service_control_jwt_payload_auth",
+		Issuer:  "es256-issuer",
+		JwksUri: components.NewMockJwtProvider(ServiceControlJwtPayloadPubKeys).GetURL(),
+	}
 }
 
 const (
+	ServiceControlJwtPayloadPubKeys = `{
+ "keys": [
+  {
+    "e":"AQAB",
+    "kid":"DHFbpoIUqrY8t2zpA2qXfCmr5VO5ZEr4RzHU_-envvQ",
+    "kty":"RSA",
+    "n":"xAE7eB6qugXyCAG3yhh7pkDkT65pHymX-P7KfIupjf59vsdo91bSP9C8H07pSAGQO1MV_xFj9VswgsCg4R6otmg5PV2He95lZdHtOcU5DXIg_pbhLdKXbi66GlVeK6ABZOUW3WYtnNHD-91gVuoeJT_DwtGGcp4ignkgXfkiEm4sw-4sfb4qdt5oLbyVpmW6x9cfa7vs2WTfURiCrBoUqgBo_-4WTiULmmHSGZHOjzwa8WtrtOQGsAFjIbno85jp6MnGGGZPYZbDAa_b3y5u-YpW7ypZrvD8BgtKVjgtQgZhLAGezMt0ua3DRrWnKqTZ0BJ_EyxOGuHJrLsn00fnMQ"
+  }
+ ]
+}`
+
 	PubKeys = `{
 		"keys": [
 		{
@@ -80,6 +96,31 @@ const (
 		}
 		]
 	}`
+
+	// Generated with payloads:
+	//	{
+	//	"aud": "ok_audience_1",
+	//	"exp": 4703162488,
+	//	"foo": {
+	//	"foo_list": [
+	//	true,
+	//	false
+	//	],
+	//	"foo_bool": true
+	//	},
+	//	"google": {
+	//	"compute_engine": {
+	//	"project_id": "cloudendpoint_testing",
+	//	"zone": "us_west1_a",
+	//	}
+	//	"project_number": 12345,
+	//	"google_bool": false
+	//	},
+	//	"iat": 1549412881,
+	//	"iss": "es256-issuer",
+	//	"sub": "es256-issuer"
+	//	}
+	ServiceControlJwtPayloadToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lVcXJZOHQyenBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJva19hdWRpZW5jZV8xIiwiZXhwIjo0NzAzMTYyNDg4LCJmb28iOnsiZm9vX2Jvb2wiOnRydWUsImZvb19saXN0IjpbdHJ1ZSxmYWxzZV19LCJnb29nbGUiOnsiY29tcHV0ZV9lbmdpbmUiOnsicHJvamVjdF9pZCI6ImNsb3VkZW5kcG9pbnRfdGVzdGluZyIsInpvbmUiOiJ1c193ZXN0MV9hIn0sImdvb2dsZV9ib29sIjpmYWxzZSwicHJvamVjdF9udW1iZXIiOjEyMzQ1fSwiaWF0IjoxNTQ5NTYyNDg4LCJpc3MiOiJlczI1Ni1pc3N1ZXIiLCJzdWIiOiJlczI1Ni1pc3N1ZXIifQ.SnQ66iwlS80VFvtL-8jeEyqtaxaqW0CgN0W4DoJ5imwatHm1If_ty7EbjZUf-ilUawxD_G-xV6_YJ59JX-C6X3SD_yYYrhJZac1V99awCxG3LxTpziiOLzTOY28-xayHNwKLQT_qwM3RoJ4eFO1jOzcwxZdvGiyBBuoaht0cygqqFecfxjaBHtGwfyxQcR__FNFxZ2JGwL9PK4ytttFFOey1FOIyDM3kd3O2NwMAb8zfI2vPwKizEEYnWqgsfNkzckp02W4s01IgOPc5s2XMUjnWoSk_is1Hc527jvIOQhnSDZyHqt9QfsDKdNvZ0qj7E_3p2rbaaTiInogDsvj0aA"
 
 	Es256Token = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjFhIn0.eyJpc3MiOiJlczI1Ni1pc3N1ZXIiLCJzdWIiOiJlczI1Ni1pc3N1ZXIiLCJhdWQiOiJva19hdWRpZW5jZSJ9.hz9IUedX6WTbuxQSbcXBSKfvF2hK48o06CnxJn-5vyOkWfUNroJjb3JokQpweF9XFI8RxeMGPKFMdHb8qyIlqA"
 

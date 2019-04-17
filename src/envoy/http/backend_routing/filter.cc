@@ -74,12 +74,12 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
           originalPath.substr(originalQueryParamPos);
       newPath = absl::StrCat(rule.path_prefix(), originalQueryParam);
       if (!queryParamFromPathParam.empty()) {
-        newPath = absl::StrCat(newPath, "&", queryParamFromPathParam);
+        absl::StrAppend(&newPath, "&", queryParamFromPathParam);
       }
     } else {
       newPath = rule.path_prefix();
       if (!queryParamFromPathParam.empty()) {
-        newPath = absl::StrCat(newPath, "?", queryParamFromPathParam);
+        absl::StrAppend(&newPath, "?", queryParamFromPathParam);
       }
     }
     config_->stats().constant_address_request_.inc();

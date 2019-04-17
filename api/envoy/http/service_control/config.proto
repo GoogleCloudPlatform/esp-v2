@@ -68,6 +68,12 @@ message Service {
   // Minimum amount of time (milliseconds) between sending intermediate
   // reports on a stream.
   uint64 min_stream_report_interval_ms = 11;
+
+  // The array of jwt payloads demanded to be logged
+  repeated string log_jwt_payloads = 12;
+
+  // The field name for jwt payload passed into metadata
+  string jwt_payload_metadata_name = 13;
 }
 
 message GcpAttributes {
