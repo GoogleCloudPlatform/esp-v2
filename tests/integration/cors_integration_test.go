@@ -451,7 +451,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 	corsAllowCredentialsValue := "true"
 
 	args := []string{"--service=" + serviceName, "--version=" + configId,
-		"--backend_protocol=http1", "--rollout_strategy=fixed"}
+		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlRequestWithAllowCors, "echo", nil)
 	s.SetAllowCors()
@@ -526,9 +526,9 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 					Referer:           referer,
 					StatusCode:        "0",
 					RequestSize:       333,
-					ResponseSize:      311,
+					ResponseSize:      281,
 					RequestBytes:      333,
-					ResponseBytes:     311,
+					ResponseBytes:     281,
 					ResponseCode:      204,
 					Platform:          util.GCE,
 					Location:          "test-zone",
@@ -562,9 +562,9 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 					Referer:           referer,
 					StatusCode:        "0",
 					RequestSize:       323,
-					ResponseSize:      311,
+					ResponseSize:      281,
 					RequestBytes:      323,
-					ResponseBytes:     311,
+					ResponseBytes:     281,
 					ResponseCode:      204,
 					Platform:          util.GCE,
 					Location:          "test-zone",
@@ -627,7 +627,7 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 	corsAllowCredentialsValue := "true"
 
 	args := []string{"--service=" + serviceName, "--version=" + configId,
-		"--backend_protocol=http1", "--rollout_strategy=fixed"}
+		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlRequestWithoutAllowCors, "echo", nil)
 	s.AppendHttpRules([]*annotations.HttpRule{
@@ -702,9 +702,9 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 					Referer:           referer,
 					StatusCode:        "0",
 					RequestSize:       333,
-					ResponseSize:      311,
+					ResponseSize:      281,
 					RequestBytes:      333,
-					ResponseBytes:     311,
+					ResponseBytes:     281,
 					ResponseCode:      204,
 					Platform:          util.GCE,
 					Location:          "test-zone",

@@ -57,7 +57,7 @@ func TestServiceControlBasic(t *testing.T) {
 	configId := "test-config-id"
 
 	args := []string{"--service=" + serviceName, "--version=" + configId,
-		"--backend_protocol=http1", "--rollout_strategy=fixed"}
+		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlBasic, "echo", []string{"google_jwt"})
 	s.AppendHttpRules([]*annotations.HttpRule{
@@ -127,9 +127,9 @@ func TestServiceControlBasic(t *testing.T) {
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget is called",
 					StatusCode:        "0",
 					RequestSize:       178,
-					ResponseSize:      155,
+					ResponseSize:      125,
 					RequestBytes:      178,
-					ResponseBytes:     155,
+					ResponseBytes:     125,
 					ResponseCode:      200,
 					Platform:          util.GCE,
 					Location:          "test-zone",
@@ -165,9 +165,9 @@ func TestServiceControlBasic(t *testing.T) {
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo is called",
 					StatusCode:        "0",
 					RequestSize:       238,
-					ResponseSize:      156,
+					ResponseSize:      126,
 					RequestBytes:      238,
-					ResponseBytes:     156,
+					ResponseBytes:     126,
 					ResponseCode:      200,
 					Platform:          util.GCE,
 					Location:          "test-zone",
@@ -224,9 +224,9 @@ func TestServiceControlBasic(t *testing.T) {
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey is called",
 					StatusCode:        "0",
 					RequestSize:       232,
-					ResponseSize:      156,
+					ResponseSize:      126,
 					RequestBytes:      232,
-					ResponseBytes:     156,
+					ResponseBytes:     126,
 					ResponseCode:      200,
 					Platform:          util.GCE,
 					Location:          "test-zone",
@@ -253,9 +253,9 @@ func TestServiceControlBasic(t *testing.T) {
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey is called",
 					StatusCode:        "0",
 					RequestSize:       244,
-					ResponseSize:      156,
+					ResponseSize:      126,
 					RequestBytes:      244,
-					ResponseBytes:     156,
+					ResponseBytes:     126,
 					ResponseCode:      200,
 					Platform:          util.GCE,
 					Location:          "test-zone",
@@ -286,9 +286,9 @@ func TestServiceControlBasic(t *testing.T) {
 					Referer:           "http://google.com/bookstore/root",
 					StatusCode:        "0",
 					RequestSize:       268,
-					ResponseSize:      153,
+					ResponseSize:      123,
 					RequestBytes:      268,
-					ResponseBytes:     153,
+					ResponseBytes:     123,
 					ResponseCode:      200,
 					Platform:          util.GCE,
 					Location:          "test-zone",
@@ -318,9 +318,9 @@ func TestServiceControlBasic(t *testing.T) {
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get is called",
 					StatusCode:        "0",
 					RequestSize:       277,
-					ResponseSize:      162,
+					ResponseSize:      132,
 					RequestBytes:      277,
-					ResponseBytes:     162,
+					ResponseBytes:     132,
 					ResponseCode:      200,
 					Platform:          util.GCE,
 					Location:          "test-zone",
@@ -347,9 +347,9 @@ func TestServiceControlBasic(t *testing.T) {
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog._post_anypath is called",
 					StatusCode:        "0",
 					RequestSize:       235,
-					ResponseSize:      156,
+					ResponseSize:      126,
 					RequestBytes:      235,
-					ResponseBytes:     156,
+					ResponseBytes:     126,
 					ResponseCode:      200,
 					Platform:          util.GCE,
 					Location:          "test-zone",
@@ -414,7 +414,7 @@ func TestServiceControlLogHeaders(t *testing.T) {
 	configId := "test-config-id"
 
 	args := []string{"--service=" + serviceName, "--version=" + configId,
-		"--backend_protocol=http1", "--rollout_strategy=fixed", "--log_request_headers=Fake-Header-Key0,Fake-Header-Key1,Fake-Header-Key2,Non-Existing-Header-Key", "--log_response_headers=Echo-Fake-Header-Key0,Echo-Fake-Header-Key1,Echo-Fake-Header-Key2,Non-Existing-Header-Key"}
+		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers", "--log_request_headers=Fake-Header-Key0,Fake-Header-Key1,Fake-Header-Key2,Non-Existing-Header-Key", "--log_response_headers=Echo-Fake-Header-Key0,Echo-Fake-Header-Key1,Echo-Fake-Header-Key2,Non-Existing-Header-Key"}
 
 	s := env.NewTestEnv(comp.TestServiceControlLogHeaders, "echo", []string{"google_jwt"})
 	s.AppendHttpRules([]*annotations.HttpRule{
@@ -477,9 +477,9 @@ func TestServiceControlLogHeaders(t *testing.T) {
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo is called",
 					StatusCode:        "0",
 					RequestSize:       390,
-					ResponseSize:      331,
+					ResponseSize:      301,
 					RequestBytes:      390,
-					ResponseBytes:     331,
+					ResponseBytes:     301,
 					ResponseCode:      200,
 					Platform:          util.GCE,
 					Location:          "test-zone",
@@ -530,7 +530,7 @@ func TestServiceControlCache(t *testing.T) {
 	configId := "test-config-id"
 
 	args := []string{"--service=" + serviceName, "--version=" + configId,
-		"--backend_protocol=http1", "--rollout_strategy=fixed"}
+		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlCache, "echo", []string{"google_jwt"})
 	if err := s.Setup(args); err != nil {
@@ -576,9 +576,9 @@ func TestServiceControlCache(t *testing.T) {
 			LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo is called",
 			StatusCode:        "0",
 			RequestSize:       238,
-			ResponseSize:      156,
+			ResponseSize:      126,
 			RequestBytes:      238,
-			ResponseBytes:     156,
+			ResponseBytes:     126,
 			ResponseCode:      200,
 			Platform:          util.GCE,
 			Location:          "test-zone",

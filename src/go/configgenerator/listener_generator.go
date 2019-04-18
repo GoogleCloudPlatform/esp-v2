@@ -38,6 +38,7 @@ import (
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	ac "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
+	rt "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
 	tc "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	sm "github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
@@ -115,10 +116,8 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2.Listener, error) {
 
 	// Add Envoy Router filter so requests are routed upstream.
 	// Router filter should be the last.
-	routerFilter := &hcm.HttpFilter{
-		Name:       util.Router,
-		ConfigType: &hcm.HttpFilter_Config{&types.Struct{}},
-	}
+
+	routerFilter := makeRouterFilter()
 	httpFilters = append(httpFilters, routerFilter)
 
 	route, err := MakeRouteConfig(serviceInfo)
@@ -484,4 +483,15 @@ func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 		ConfigType: &hcm.HttpFilter_Config{backendRoutingConfigStruct},
 	}
 	return backendRoutingFilter
+}
+
+func makeRouterFilter() *hcm.HttpFilter {
+	router, _ := util.MessageToStruct(&rt.Router{
+		SuppressEnvoyHeaders: *flags.SuppressEnvoyHeaders,
+	})
+	routerFilter := &hcm.HttpFilter{
+		Name:       util.Router,
+		ConfigType: &hcm.HttpFilter_Config{router},
+	}
+	return routerFilter
 }
