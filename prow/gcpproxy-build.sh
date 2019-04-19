@@ -28,7 +28,7 @@ export PATH=$PATH:$GOPATH/bin
 
 cd "${ROOT}"
 
-bazel clean 
+bazel clean
 
 # generated go proto files are consistent with original proto
 echo '======================================================='

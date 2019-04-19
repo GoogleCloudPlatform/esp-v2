@@ -1,5 +1,5 @@
-hash: 521297c63252bdd35ba001e3b10131f8a6245c21e970c690251eba6b2bab2a7c
-updated: 2019-04-16T05:05:49.535169091Z
+hash: 555b703b9aacdd7a2520079981089ab526e3dec30a7a35b7afd1be7b6b063f60
+updated: 2019-04-19T23:15:30.319486492Z
 imports:
 - name: cloud.google.com/go
   version: 2a912322007f3a7f0b4e7e96ba0dfd8c4f347d33
@@ -9,7 +9,7 @@ imports:
 - name: github.com/envoyproxy/data-plane-api
   version: 4406edd4e29f5b7e254bdee75ef6354fdf756eb3
 - name: github.com/envoyproxy/go-control-plane
-  version: 8a91fb26f4e6553d2e21fa76e07d33b93a4f66e7
+  version: ba018e4c2c1e3c9d5a27347b8c24aac59d6ae1da
   subpackages:
   - envoy/api/v2
   - envoy/api/v2/auth
@@ -20,6 +20,7 @@ imports:
   - envoy/api/v2/route
   - envoy/config/filter/accesslog/v2
   - envoy/config/filter/http/jwt_authn/v2alpha
+  - envoy/config/filter/http/router/v2
   - envoy/config/filter/http/transcoder/v2
   - envoy/config/filter/network/http_connection_manager/v2
   - envoy/service/discovery/v2
@@ -28,8 +29,12 @@ imports:
   - pkg/log
   - pkg/server
   - pkg/util
+- name: github.com/envoyproxy/protoc-gen-validate
+  version: d6164de4910977d3c3c8dbd9299b5064ea9e7c2b
+  subpackages:
+  - validate
 - name: github.com/gogo/googleapis
-  version: 0cd9801be74a10d5ac39d69626eac8255ffcd502
+  version: 8558fb44d2f1fc223118afc694129d2c2d2924d1
   subpackages:
   - google/api
   - google/rpc
@@ -72,7 +77,7 @@ imports:
 - name: github.com/sirupsen/logrus
   version: 8bdbc7bcc01dcbb8ec23dc8a28e332258d25251f
 - name: golang.org/x/net
-  version: 5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec
+  version: 1c05540f6879653db88113bc4a2b70aec4bd491f
   subpackages:
   - context
   - context/ctxhttp
@@ -94,7 +99,7 @@ imports:
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: e19ae1496984b1c655b8044a65c0300a3c878dd3
+  version: b19bf474d317b857955b12035d2c5acb57ce8b01
   subpackages:
   - secure/bidirule
   - transform
@@ -135,7 +140,7 @@ imports:
   - protobuf/ptype
   - protobuf/source_context
 - name: google.golang.org/grpc
-  version: 236199dd5f8031d698fb64091194aecd1c3895b2
+  version: 25c4f928eaa6d96443009bd842389fb4fa48664e
   subpackages:
   - balancer
   - balancer/base
@@ -169,5 +174,5 @@ imports:
   - status
   - tap
 - name: istio.io/gogo-genproto
-  version: dd2b5b6a8f1400838165245e704a011a30154a44
+  version: 6d926a6e6feb2c0a1a72234b4aafa638dca29956
 testImports: []

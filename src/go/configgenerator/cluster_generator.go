@@ -68,10 +68,10 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
 
 func makeBackendCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error) {
 	c := &v2.Cluster{
-		Name:           serviceInfo.ApiName,
-		LbPolicy:       v2.Cluster_ROUND_ROBIN,
-		ConnectTimeout: *flags.ClusterConnectTimeout,
-		Type:           v2.Cluster_STRICT_DNS,
+		Name:                 serviceInfo.ApiName,
+		LbPolicy:             v2.Cluster_ROUND_ROBIN,
+		ConnectTimeout:       *flags.ClusterConnectTimeout,
+		ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_STRICT_DNS},
 		Hosts: []*core.Address{
 			{Address: &core.Address_SocketAddress{
 				SocketAddress: &core.SocketAddress{
@@ -134,11 +134,11 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error)
 	}
 
 	c := &v2.Cluster{
-		Name:            serviceControlClusterName,
-		LbPolicy:        v2.Cluster_ROUND_ROBIN,
-		ConnectTimeout:  5 * time.Second,
-		DnsLookupFamily: v2.Cluster_V4_ONLY,
-		Type:            v2.Cluster_LOGICAL_DNS,
+		Name:                 serviceControlClusterName,
+		LbPolicy:             v2.Cluster_ROUND_ROBIN,
+		ConnectTimeout:       5 * time.Second,
+		DnsLookupFamily:      v2.Cluster_V4_ONLY,
+		ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
 		Hosts: []*core.Address{
 			{Address: &core.Address_SocketAddress{
 				SocketAddress: &core.SocketAddress{
@@ -165,10 +165,10 @@ func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, 
 	var brClusters []cache.Resource
 	for _, v := range serviceInfo.BackendRoutingClusters {
 		c := &v2.Cluster{
-			Name:           v.ClusterName,
-			LbPolicy:       v2.Cluster_ROUND_ROBIN,
-			ConnectTimeout: *flags.ClusterConnectTimeout,
-			Type:           v2.Cluster_LOGICAL_DNS,
+			Name:                 v.ClusterName,
+			LbPolicy:             v2.Cluster_ROUND_ROBIN,
+			ConnectTimeout:       *flags.ClusterConnectTimeout,
+			ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
 			Hosts: []*core.Address{
 				{Address: &core.Address_SocketAddress{
 					SocketAddress: &core.SocketAddress{

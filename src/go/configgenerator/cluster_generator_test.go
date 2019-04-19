@@ -59,10 +59,10 @@ func TestMakeServiceControlCluster(t *testing.T) {
 			},
 			backendProtocol: "grpc",
 			wantedCluster: &v2.Cluster{
-				Name:            "service-control-cluster",
-				ConnectTimeout:  5 * time.Second,
-				Type:            v2.Cluster_LOGICAL_DNS,
-				DnsLookupFamily: v2.Cluster_V4_ONLY,
+				Name:                 "service-control-cluster",
+				ConnectTimeout:       5 * time.Second,
+				ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
+				DnsLookupFamily:      v2.Cluster_V4_ONLY,
 				Hosts: []*core.Address{
 					{
 						Address: &core.Address_SocketAddress{
@@ -95,10 +95,10 @@ func TestMakeServiceControlCluster(t *testing.T) {
 			},
 			backendProtocol: "http1",
 			wantedCluster: &v2.Cluster{
-				Name:            "service-control-cluster",
-				ConnectTimeout:  5 * time.Second,
-				Type:            v2.Cluster_LOGICAL_DNS,
-				DnsLookupFamily: v2.Cluster_V4_ONLY,
+				Name:                 "service-control-cluster",
+				ConnectTimeout:       5 * time.Second,
+				ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
+				DnsLookupFamily:      v2.Cluster_V4_ONLY,
 				Hosts: []*core.Address{
 					{
 						Address: &core.Address_SocketAddress{
@@ -181,9 +181,9 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 			backendProtocol: "http1",
 			wantedClusters: []cache.Resource{
 				&v2.Cluster{
-					Name:           "DynamicRouting_0",
-					ConnectTimeout: 20 * time.Second,
-					Type:           v2.Cluster_LOGICAL_DNS,
+					Name:                 "DynamicRouting_0",
+					ConnectTimeout:       20 * time.Second,
+					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
 					Hosts: []*core.Address{
 						{
 							Address: &core.Address_SocketAddress{

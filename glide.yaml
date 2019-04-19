@@ -31,7 +31,7 @@ import:
 - package: github.com/sirupsen/logrus
   version: ^1.0.4
 - package: github.com/envoyproxy/go-control-plane
-  version: 8a91fb26f4e6553d2e21fa76e07d33b93a4f66e7
+  version: ba018e4c2c1e3c9d5a27347b8c24aac59d6ae1da
 - package: github.com/golang/glog
 - package: github.com/golang/protobuf
   version: b5d812f8a3706043e23a9cd5babf2e5423744d30

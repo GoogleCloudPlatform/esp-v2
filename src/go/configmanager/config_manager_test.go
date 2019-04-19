@@ -199,6 +199,19 @@ func TestFetchListeners(t *testing.T) {
                             "http_filters":[
                                 {
                                     "config": {
+                                        "filter_state_rules": {
+                                          "name": "envoy.filters.http.path_matcher.operation",
+                                          "requires": {
+                                            "endpoints.examples.bookstore.Bookstore.CreateShelf": {
+                                              "provider_and_audiences": {
+                                                "audiences": [
+                                                  "test_audience1"
+                                                ],
+                                                "provider_name": "firebase"
+                                              }
+                                            }
+                                          }
+                                        },
                                         "providers": {
                                             "firebase": {
                                                 "audiences":["test_audience1", "test_audience2"],
@@ -207,20 +220,7 @@ func TestFetchListeners(t *testing.T) {
                                                     "inline_string": "%s"
                                                 }
                                             }
-                                        },
-                                        "rules": [
-                                            {
-                                                "match":{
-                                                    "path":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
-                                                },
-                                                "requires": {
-                                                    "provider_and_audiences": {
-                                                    "audiences": ["test_audience1"],
-                                                        "provider_name":"firebase"
-                                                    }
-                                                }
-                                            }
-                                        ]
+                                        }
                                     },
                                     "name":"envoy.filters.http.jwt_authn"
                                 },
@@ -364,6 +364,17 @@ func TestFetchListeners(t *testing.T) {
                                 },
                                 {
                                     "config": {
+                                        "filter_state_rules": {
+                                          "name": "envoy.filters.http.path_matcher.operation",
+                                          "requires": {
+                                            "endpoints.examples.bookstore.Bookstore.CreateShelf": {
+                                              "provider_name": "firebase"
+                                            },
+                                            "endpoints.examples.bookstore.Bookstore.ListShelves": {
+                                              "provider_name": "firebase"
+                                            }
+                                          }
+                                        },
                                         "providers": {
                                             "firebase": {
                                                 "issuer":"https://test_issuer.google.com/",
@@ -371,53 +382,7 @@ func TestFetchListeners(t *testing.T) {
                                                     "inline_string": "%s"
                                                 }
                                             }
-                                        },
-                                        "rules": [
-                                            {
-                                               "match":{
-                                                   "headers": [
-                                                       {
-                                                           "exact_match": "POST",
-                                                           "name" : ":method"
-                                                       }
-                                                   ],
-                                                   "regex": "/v1/shelves/[^\\/]+$"
-                                                },
-                                                "requires":{
-                                                    "provider_name":"firebase"
-                                                }
-                                            },
-                                            {
-                                                "match":{
-                                                    "path":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
-                                                },
-                                                "requires": {
-                                                    "provider_name":"firebase"
-                                                }
-                                            },
-                                            {
-                                                "match":{
-                                                   "headers": [
-                                                       {
-                                                           "exact_match": "GET",
-                                                           "name" : ":method"
-                                                       }
-                                                   ],
-                                                   "path": "/v1/shelves"
-                                                },
-                                                "requires":{
-                                                    "provider_name":"firebase"
-                                                }
-                                            },
-                                            {
-                                                "match":{
-                                                    "path":"/endpoints.examples.bookstore.Bookstore/ListShelves"
-                                                },
-                                                "requires": {
-                                                    "provider_name":"firebase"
-                                                }
-                                            }
-                                        ]
+                                        }
                                     },
                                     "name":"envoy.filters.http.jwt_authn"
                                 },
@@ -563,6 +528,23 @@ func TestFetchListeners(t *testing.T) {
                                 },
                                 {
                                     "config": {
+                                        "filter_state_rules": {
+                                          "name": "envoy.filters.http.path_matcher.operation",
+                                          "requires": {
+                                            "endpoints.examples.bookstore.Bookstore.GetBook": {
+                                              "requires_any": {
+                                                "requirements": [
+                                                  {
+                                                    "provider_name": "firebase1"
+                                                  },
+                                                  {
+                                                    "provider_name": "firebase2"
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          }
+                                        },
                                         "providers": {
                                             "firebase1": {
                                                 "issuer":"https://test_issuer.google.com/",
@@ -576,49 +558,7 @@ func TestFetchListeners(t *testing.T) {
                                                     "inline_string": "%s"
                                                 }
                                             }
-                                        },
-                                        "rules": [
-                                            {
-                                                "match":{
-                                                    "headers": [
-                                                        {
-                                                            "exact_match": "GET",
-                                                            "name" : ":method"
-                                                        }
-                                                    ],
-                                                    "regex": "/v1/shelves/[^\\/]+/books/[^\\/]+$"
-                                                },
-                                                "requires": {
-                                                    "requires_any": {
-                                                        "requirements": [
-                                                            {
-                                                                "provider_name": "firebase1"
-                                                            },
-                                                            {
-                                                                "provider_name": "firebase2"
-                                                            }
-                                                        ]
-                                                    }
-                                                }
-                                            },
-                                            {
-                                                "match":{
-                                                    "path":"/endpoints.examples.bookstore.Bookstore/GetBook"
-                                                },
-                                                "requires": {
-                                                    "requires_any": {
-                                                        "requirements": [
-                                                            {
-                                                                "provider_name": "firebase1"
-                                                            },
-                                                            {
-                                                                "provider_name": "firebase2"
-                                                            }
-                                                        ]
-                                                    }
-                                                }
-                                            }
-                                        ]
+                                        }
                                     },
                                     "name":"envoy.filters.http.jwt_authn"
                                 },
@@ -929,6 +869,19 @@ func TestFetchListeners(t *testing.T) {
                                 },
                                 {
                                     "config": {
+                                        "filter_state_rules": {
+                                          "name": "envoy.filters.http.path_matcher.operation",
+                                          "requires": {
+                                            "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt": {
+                                              "provider_and_audiences": {
+                                                "audiences": [
+                                                  "test_audience1"
+                                                ],
+                                                "provider_name": "firebase"
+                                              }
+                                            }
+                                          }
+                                        },
                                         "providers": {
                                             "firebase": {
                                                 "audiences":["test_audience1", "test_audience2"],
@@ -937,26 +890,7 @@ func TestFetchListeners(t *testing.T) {
                                                     "inline_string": "%s"
                                                 }
                                             }
-                                        },
-                                        "rules": [
-                                            {
-                                                "match":{
-                                                    "headers":[
-                                                        {
-                                                            "exact_match":"GET",
-                                                            "name":":method"
-                                                        }
-                                                    ],
-                                                    "path":"/auth/info/googlejwt"
-                                                },
-                                                "requires": {
-                                                    "provider_and_audiences": {
-                                                    "audiences": ["test_audience1"],
-                                                        "provider_name":"firebase"
-                                                    }
-                                                }
-                                            }
-                                        ]
+                                        }
                                     },
                                     "name":"envoy.filters.http.jwt_authn"
                                 },

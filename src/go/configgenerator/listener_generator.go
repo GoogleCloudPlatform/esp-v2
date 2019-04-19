@@ -21,7 +21,6 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
-	"github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 	"github.com/envoyproxy/go-control-plane/pkg/util"
 	"github.com/gogo/protobuf/types"
 	"github.com/golang/glog"
@@ -62,9 +61,10 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2.Listener, error) {
 
 	// Add Path Matcher filter. The following filters rely on the dynamic
 	// metadata populated by Path Matcher filter.
+	// * Jwt Authentication filter
 	// * Service Control filter
 	// * Backend Authentication filter
-	// * Backend Routing filter (WIP)
+	// * Backend Routing filter
 	pathMathcherFilter := makePathMatcherFilter(serviceInfo)
 	if pathMathcherFilter != nil {
 		httpFilters = append(httpFilters, pathMathcherFilter)
@@ -261,71 +261,19 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 		return nil
 	}
 
-	rules := []*ac.RequirementRule{}
+	requirements := make(map[string]*ac.JwtRequirement)
 	for _, rule := range auth.GetRules() {
-		if len(rule.GetRequirements()) == 0 {
-			continue
-		}
-		// By default, if there are multi requirements, treat it as RequireAny.
-		requires := &ac.JwtRequirement{
-			RequiresType: &ac.JwtRequirement_RequiresAny{
-				RequiresAny: &ac.JwtRequirementOrList{},
-			},
-		}
-		for _, r := range rule.GetRequirements() {
-			var require *ac.JwtRequirement
-			if r.GetAudiences() == "" {
-				require = &ac.JwtRequirement{
-					RequiresType: &ac.JwtRequirement_ProviderName{
-						ProviderName: r.GetProviderId(),
-					},
-				}
-			} else {
-				var audiences []string
-				for _, a := range strings.Split(r.GetAudiences(), ",") {
-					audiences = append(audiences, strings.TrimSpace(a))
-				}
-				require = &ac.JwtRequirement{
-					RequiresType: &ac.JwtRequirement_ProviderAndAudiences{
-						ProviderAndAudiences: &ac.ProviderWithAudiences{
-							ProviderName: r.GetProviderId(),
-							Audiences:    audiences,
-						},
-					},
-				}
-			}
-			if len(rule.GetRequirements()) == 1 {
-				requires = require
-			} else {
-				requires.GetRequiresAny().Requirements = append(requires.GetRequiresAny().GetRequirements(), require)
-			}
-		}
-
-		if method, ok := serviceInfo.Methods[rule.GetSelector()]; ok {
-			ruleConfig := &ac.RequirementRule{
-				Match:    makeHttpRouteMatcher(&method.HttpRule),
-				Requires: requires,
-			}
-			rules = append(rules, ruleConfig)
-		}
-
-		s := strings.Split(rule.GetSelector(), ".")
-		// For gRPC protocol, needs to add extra match rule for grpc client.
-		if serviceInfo.BackendProtocol == ut.GRPC {
-			rules = append(rules, &ac.RequirementRule{
-				Match: &route.RouteMatch{
-					PathSpecifier: &route.RouteMatch_Path{
-						Path: fmt.Sprintf("/%s/%s", serviceInfo.ApiName, s[len(s)-1]),
-					},
-				},
-				Requires: requires,
-			})
+		if len(rule.GetRequirements()) > 0 {
+			requirements[rule.GetSelector()] = makeJwtRequirement(rule.GetRequirements())
 		}
 	}
 
 	jwtAuthentication := &ac.JwtAuthentication{
 		Providers: providers,
-		Rules:     rules,
+		FilterStateRules: &ac.FilterStateRule{
+			Name:     "envoy.filters.http.path_matcher.operation",
+			Requires: requirements,
+		},
 	}
 
 	jas, _ := util.MessageToStruct(jwtAuthentication)
@@ -334,6 +282,46 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 		ConfigType: &hcm.HttpFilter_Config{jas},
 	}
 	return jwtAuthnFilter
+}
+
+func makeJwtRequirement(requirements []*conf.AuthRequirement) *ac.JwtRequirement {
+	// By default, if there are multi requirements, treat it as RequireAny.
+	requires := &ac.JwtRequirement{
+		RequiresType: &ac.JwtRequirement_RequiresAny{
+			RequiresAny: &ac.JwtRequirementOrList{},
+		},
+	}
+
+	for _, r := range requirements {
+		var require *ac.JwtRequirement
+		if r.GetAudiences() == "" {
+			require = &ac.JwtRequirement{
+				RequiresType: &ac.JwtRequirement_ProviderName{
+					ProviderName: r.GetProviderId(),
+				},
+			}
+		} else {
+			var audiences []string
+			for _, a := range strings.Split(r.GetAudiences(), ",") {
+				audiences = append(audiences, strings.TrimSpace(a))
+			}
+			require = &ac.JwtRequirement{
+				RequiresType: &ac.JwtRequirement_ProviderAndAudiences{
+					ProviderAndAudiences: &ac.ProviderWithAudiences{
+						ProviderName: r.GetProviderId(),
+						Audiences:    audiences,
+					},
+				},
+			}
+		}
+		if len(requirements) == 1 {
+			requires = require
+		} else {
+			requires.GetRequiresAny().Requirements = append(requires.GetRequiresAny().GetRequirements(), require)
+		}
+	}
+
+	return requires
 }
 
 func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
