@@ -176,5 +176,8 @@ var (
 				},
 			},
 		},
+		Usage: &conf.Usage{
+			Rules: []*conf.UsageRule{},
+		},
 	}
 )

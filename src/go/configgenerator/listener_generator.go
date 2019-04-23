@@ -247,13 +247,9 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 			}
 		}
 		// TODO(taoxuy): add unit test
-		if *flags.LogJwtPayloads != "" {
-			// If non empty, successfully verified JWT payloads will be written to StreamInfo DynamicMetadata
-			// in the format as: *namespace* is the jwt_authn filter name as **envoy.filters.http.jwt_authn**
-			// The value is the *protobuf::Struct*. The value of this field will be the key for its *fields*
-			// and the value is the *protobuf::Struct* converted from JWT JSON payload.
-			jp.PayloadInMetadata = ut.JwtPayloadMetadataName
-		}
+		// the JWT Payload will be send to metadata by envoy and it will be used by service control filter
+		// for logging and setting credential_id
+		jp.PayloadInMetadata = ut.JwtPayloadMetadataName
 		providers[provider.GetId()] = jp
 	}
 
@@ -361,9 +357,7 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 			service.LogJwtPayloads[i] = strings.TrimSpace(service.LogJwtPayloads[i])
 		}
 	}
-	if *flags.LogJwtPayloads != "" {
-		service.JwtPayloadMetadataName = ut.JwtPayloadMetadataName
-	}
+	service.JwtPayloadMetadataName = ut.JwtPayloadMetadataName
 
 	filterConfig := &scpb.FilterConfig{
 		Services: []*scpb.Service{service},

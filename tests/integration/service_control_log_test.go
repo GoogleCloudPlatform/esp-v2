@@ -28,13 +28,13 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 	"google.golang.org/genproto/googleapis/api/annotations"
 
-	bookstoreClient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
+	bsClient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func TestServiceControlLogHeaders(t *testing.T) {
-	serviceName := "test-echo"
+	serviceName := "test-bookstore"
 	configId := "test-config-id"
 
 	args := []string{"--service=" + serviceName, "--version=" + configId,
@@ -118,20 +118,21 @@ func TestServiceControlLogHeaders(t *testing.T) {
 
 		if tc.httpCallError == nil {
 			if err != nil {
-				t.Fatal(err)
+				t.Fatalf("Test (%s): failed, %v", tc.desc, err)
 			}
 			if !strings.Contains(string(resp), tc.wantResp) {
-				t.Errorf("expected: %s, got: %s", tc.wantResp, string(resp))
+				t.Errorf("Test (%s): failed,  expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
 			}
 		} else {
 			if tc.httpCallError.Error() != err.Error() {
-				t.Errorf("expected Http call error: %v, got: %v", tc.httpCallError, err)
+				t.Errorf("Test (%s): failed,  expected Http call error: %v, got: %v", tc.desc, tc.httpCallError, err)
 			}
 		}
 
 		if tc.wantGetScRequestError != nil {
 			scRequests, err1 := s.ServiceControlServer.GetRequests(1, 3*time.Second)
 			if err1.Error() != tc.wantGetScRequestError.Error() {
+				t.Errorf("Test (%s): failed", tc.desc)
 				t.Errorf("expected get service control request call error: %v, got: %v", tc.wantGetScRequestError, err1)
 				t.Errorf("got service control requests: %v", scRequests)
 			}
@@ -140,15 +141,14 @@ func TestServiceControlLogHeaders(t *testing.T) {
 
 		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 3*time.Second)
 		if err1 != nil {
-			t.Fatalf("GetRequests returns error: %v", err1)
+			t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err1)
 		}
-
-		utils.CheckScRequest(t, scRequests, tc.wantScRequests)
+		utils.CheckScRequest(t, scRequests, tc.wantScRequests, tc.desc)
 	}
 }
 
 func TestServiceControlLogJwtPayloads(t *testing.T) {
-	serviceName := "test-echo"
+	serviceName := "test-bookstore"
 	configId := "test-config-id"
 
 	args := []string{"--service=" + serviceName, "--version=" + configId,
@@ -232,23 +232,25 @@ func TestServiceControlLogJwtPayloads(t *testing.T) {
 	}
 	for _, tc := range testData {
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-		resp, err := bookstoreClient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, http.Header{})
+		resp, err := bsClient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, http.Header{})
+
 		if tc.httpCallError == nil {
 			if err != nil {
-				t.Fatal(err)
+				t.Fatalf("Test (%s): failed, %v", tc.desc, err)
 			}
 			if !strings.Contains(string(resp), tc.wantResp) {
-				t.Errorf("expected: %s, got: %s", tc.wantResp, string(resp))
+				t.Errorf("Test (%s): failed,  expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
 			}
 		} else {
 			if tc.httpCallError.Error() != err.Error() {
-				t.Errorf("expected Http call error: %v, got: %v", tc.httpCallError, err)
+				t.Errorf("Test (%s): failed,  expected Http call error: %v, got: %v", tc.desc, tc.httpCallError, err)
 			}
 		}
 
 		if tc.wantGetScRequestError != nil {
 			scRequests, err1 := s.ServiceControlServer.GetRequests(1, 3*time.Second)
 			if err1.Error() != tc.wantGetScRequestError.Error() {
+				t.Errorf("Test (%s): failed", tc.desc)
 				t.Errorf("expected get service control request call error: %v, got: %v", tc.wantGetScRequestError, err1)
 				t.Errorf("got service control requests: %v", scRequests)
 			}
@@ -257,9 +259,8 @@ func TestServiceControlLogJwtPayloads(t *testing.T) {
 
 		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 3*time.Second)
 		if err1 != nil {
-			t.Fatalf("GetRequests returns error: %v", err1)
+			t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err1)
 		}
-
-		utils.CheckScRequest(t, scRequests, tc.wantScRequests)
+		utils.CheckScRequest(t, scRequests, tc.wantScRequests, tc.desc)
 	}
 }

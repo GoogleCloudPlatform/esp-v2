@@ -11,19 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 #include "src/api_proxy/service_control/request_builder.h"
-
-#include <functional>
 
 #include <time.h>
 #include <chrono>
+#include <functional>
 
+#include "absl/strings/str_cat.h"
+#include "common/common/base64.h"
 #include "google/api/metric.pb.h"
 #include "google/protobuf/timestamp.pb.h"
-#include "utils/distribution_helper.h"
-
 #include "src/api_proxy/utils/version.h"
+#include "utils/distribution_helper.h"
 
 using ::google::api::servicecontrol::v1::CheckError;
 using ::google::api::servicecontrol::v1::CheckRequest;
@@ -540,9 +539,22 @@ Status set_credential_id(const SupportedLabel& l, const ReportRequestInfo& info,
                          Map<std::string, std::string>* labels) {
   // The rule to set /credential_id is:
   // 1) If api_key is available, set it as apiKey:API-KEY
+  // 2) If auth issuer and audience both are available, set it as:
+  //    jwtAuth:issuer=base64(issuer)&audience=base64(audience)
   if (!info.api_key.empty()) {
     std::string credential_id("apikey:");
     credential_id += info.api_key;
+    (*labels)[l.name] = credential_id;
+  } else if (!info.auth_issuer.empty()) {
+    std::string base64_issuer = Envoy::Base64Url::encode(
+        info.auth_issuer.data(), info.auth_issuer.size());
+    std::string credential_id = absl::StrCat("jwtauth:issuer=", base64_issuer);
+    // auth audience is optional
+    if (!info.auth_audience.empty()) {
+      std::string base64_audience = Envoy::Base64Url::encode(
+          info.auth_audience.data(), info.auth_audience.size());
+      absl::StrAppend(&credential_id, "&audience=", base64_audience);
+    }
     (*labels)[l.name] = credential_id;
   }
   return Status::OK;

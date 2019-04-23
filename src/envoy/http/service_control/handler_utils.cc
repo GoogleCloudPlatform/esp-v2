@@ -15,7 +15,6 @@
 #include <sstream>
 #include <vector>
 
-#include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "api/envoy/http/service_control/config.pb.h"
@@ -245,7 +244,20 @@ void fillJwtPayloads(const envoy::api::v2::core::Metadata& metadata,
     if (&value != &ProtobufWkt::Value::default_instance()) {
       extractJwtPayload(value, jwt_payload_path, info_jwt_payloads);
     }
-  };
+  }
+}
+
+void fillJwtPayload(const envoy::api::v2::core::Metadata& metadata,
+                    const std::string& jwt_payload_metadata_name,
+                    const std::string& jwt_payload_path,
+                    std::string& info_iss_or_aud) {
+  std::vector<std::string> steps = {jwt_payload_metadata_name,
+                                    jwt_payload_path};
+  const ProtobufWkt::Value& value = Config::Metadata::metadataValue(
+      metadata, HttpFilters::HttpFilterNames::get().JwtAuthn, steps);
+  if (&value != &ProtobufWkt::Value::default_instance()) {
+    absl::StrAppend(&info_iss_or_aud, value.string_value());
+  }
 }
 
 bool extractAPIKey(

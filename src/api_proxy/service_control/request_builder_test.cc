@@ -382,9 +382,8 @@ TEST_F(RequestBuilderTest, CredentailIdIssuerOnlyTest) {
   gasv1::ReportRequest request;
   ASSERT_TRUE(scp_.FillReportRequest(info, &request, mock_now_).ok());
 
-  // TODO: (qiwzhang) credentail_id for auth is disabled for now
-  //  ASSERT_EQ(request.operations(0).labels().at("/credential_id"),
-  //            "jwtauth:issuer=YXV0aC1pc3N1ZXI");
+  ASSERT_EQ(request.operations(0).labels().at("/credential_id"),
+            "jwtauth:issuer=YXV0aC1pc3N1ZXI");
 }
 
 TEST_F(RequestBuilderTest, CredentailIdIssuerAudienceTest) {
@@ -397,9 +396,8 @@ TEST_F(RequestBuilderTest, CredentailIdIssuerAudienceTest) {
   gasv1::ReportRequest request;
   ASSERT_TRUE(scp_.FillReportRequest(info, &request, mock_now_).ok());
 
-  // TODO: (qiwzhang) credentail_id for auth is disabled for now
-  // ASSERT_EQ(request.operations(0).labels().at("/credential_id"),
-  //          "jwtauth:issuer=YXV0aC1pc3N1ZXI&audience=YXV0aC1hdWRpZW5jZQ");
+  ASSERT_EQ(request.operations(0).labels().at("/credential_id"),
+            "jwtauth:issuer=YXV0aC1pc3N1ZXI&audience=YXV0aC1hdWRpZW5jZQ");
 }
 
 }  // namespace

@@ -43,6 +43,9 @@ const Http::LowerCaseString kAndroidPackageHeader{"x-android-package"};
 const Http::LowerCaseString kAndroidCertHeader{"x-android-cert"};
 const Http::LowerCaseString kRefererHeader{"referer"};
 
+constexpr char JwtPayloadIssuerPath[] = "iss";
+constexpr char JwtPayloadAuidencePath[] = "aud";
+
 ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     const Http::HeaderMap& headers, const StreamInfo::StreamInfo& stream_info,
     const std::string& uuid, const FilterConfigParser& cfg_parser,
@@ -214,6 +217,16 @@ void ServiceControlHandlerImpl::callReport(
       require_ctx_->service_ctx().config().jwt_payload_metadata_name(),
       require_ctx_->service_ctx().config().log_jwt_payloads(),
       info.jwt_payloads);
+
+  fillJwtPayload(
+      stream_info_.dynamicMetadata(),
+      require_ctx_->service_ctx().config().jwt_payload_metadata_name(),
+      JwtPayloadIssuerPath, info.auth_issuer);
+
+  fillJwtPayload(
+      stream_info_.dynamicMetadata(),
+      require_ctx_->service_ctx().config().jwt_payload_metadata_name(),
+      JwtPayloadAuidencePath, info.auth_audience);
 
   info.frontend_protocol = getFrontendProtocol(response_headers, stream_info_);
 

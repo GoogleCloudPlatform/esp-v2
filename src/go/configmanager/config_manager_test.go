@@ -218,7 +218,8 @@ func TestFetchListeners(t *testing.T) {
                                                 "issuer":"https://test_issuer.google.com/",
                                                 "local_jwks": {
                                                     "inline_string": "%s"
-                                                }
+                                                },
+                                                "payload_in_metadata":"jwt_payloads"
                                             }
                                         }
                                     },
@@ -380,7 +381,8 @@ func TestFetchListeners(t *testing.T) {
                                                 "issuer":"https://test_issuer.google.com/",
                                                 "local_jwks": {
                                                     "inline_string": "%s"
-                                                }
+                                                },
+                                                "payload_in_metadata":"jwt_payloads"
                                             }
                                         }
                                     },
@@ -550,13 +552,15 @@ func TestFetchListeners(t *testing.T) {
                                                 "issuer":"https://test_issuer.google.com/",
                                                 "local_jwks": {
                                                     "inline_string": "%s"
-                                                }
+                                                },
+                                                "payload_in_metadata":"jwt_payloads"
                                             },
                                             "firebase2": {
                                                 "issuer":"https://test_issuer.google.com/",
                                                 "local_jwks": {
                                                     "inline_string": "%s"
-                                                }
+                                                },
+                                                "payload_in_metadata":"jwt_payloads"
                                             }
                                         }
                                     },
@@ -724,6 +728,7 @@ func TestFetchListeners(t *testing.T) {
                                                 "services":[
                                                     {
                                                         "backend_protocol": "grpc",
+                                                        "jwt_payload_metadata_name": "jwt_payloads",
                                                         "service_control_uri":{
                                                             "cluster":"service-control-cluster",
                                                             "timeout":"5s",
@@ -888,7 +893,8 @@ func TestFetchListeners(t *testing.T) {
                                                 "issuer":"https://test_issuer.google.com/",
                                                 "local_jwks": {
                                                     "inline_string": "%s"
-                                                }
+                                                },
+                                                "payload_in_metadata":"jwt_payloads"
                                             }
                                         }
                                     },
@@ -1009,6 +1015,7 @@ func TestFetchListeners(t *testing.T) {
                                         "services":[
                                             {
                                                 "backend_protocol":"http1",
+                                                "jwt_payload_metadata_name": "jwt_payloads",
                                                 "producer_project_id":"project123",
                                                 "service_config":{
                                                     "@type":"type.googleapis.com/google.api.Service"

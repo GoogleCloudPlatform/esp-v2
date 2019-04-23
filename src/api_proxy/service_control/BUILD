@@ -13,8 +13,10 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//external:abseil_strings",
         "//external:servicecontrol_client",
         "//src/api_proxy/utils",
+        "@envoy//source/common/common:base64_lib",
     ],
 )
 

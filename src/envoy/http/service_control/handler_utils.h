@@ -61,6 +61,11 @@ void fillJwtPayloads(const envoy::api::v2::core::Metadata& metadata,
                          jwt_payload_paths,
                      std::string& info_jwt_payloads);
 
+void fillJwtPayload(const envoy::api::v2::core::Metadata& metadata,
+                    const std::string& jwt_payload_metadata_name,
+                    const std::string& jwt_payload_path,
+                    std::string& info_iss_or_aud);
+
 // Returns the protocol of the frontend request or UNKNOWN if not found
 ::google::api_proxy::service_control::protocol::Protocol getFrontendProtocol(
     const Http::HeaderMap* response_headers,

@@ -57,6 +57,7 @@ const (
 	TestServiceControlProtocolWithGRPCBackend
 	TestServiceControlProtocolWithHTTPBackend
 	TestUnconfiguredRequest
+	TestServiceControlCredentialId
 	// The number of total tests. has to be the last one.
 	maxTestNum
 )

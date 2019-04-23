@@ -11,6 +11,10 @@ operations {
     nanos: 100000
   }
   labels {
+    key: "/credential_id"
+    value: "jwtauth:issuer=YXV0aC1pc3N1ZXI&audience=YXV0aC1hdWRpZW5jZQ"
+  }
+  labels {
     key: "/error_type"
     value: "4xx"
   }

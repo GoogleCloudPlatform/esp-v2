@@ -623,28 +623,27 @@ func AggregateReport(pb *sc.ReportRequest, n int64) {
 	}
 }
 
-func CheckScRequest(t *testing.T, scRequests []*comp.ServiceRequest, wantScRequests []interface{}) {
+func CheckScRequest(t *testing.T, scRequests []*comp.ServiceRequest, wantScRequests []interface{}, desc string) {
 	for i, wantScRequest := range wantScRequests {
 		scRequest := scRequests[i]
 		reqBody := scRequest.ReqBody
 		switch wantScRequest.(type) {
 		case *ExpectedCheck:
 			if scRequest.ReqType != comp.CHECK_REQUEST {
-				t.Errorf("service control request %v: should be Check", i)
+				t.Errorf("Test (%s): failed, service control request %v: should be Check", desc, i)
 			}
 			if err := VerifyCheck(reqBody, wantScRequest.(*ExpectedCheck)); err != nil {
 				t.Error(err)
 			}
 		case *ExpectedReport:
 			if scRequest.ReqType != comp.REPORT_REQUEST {
-				t.Errorf("service control request %v: should be Report", i)
+				t.Errorf("Test (%s): failed, service control request %v: should be Report", desc, i)
 			}
 			if err := VerifyReport(reqBody, wantScRequest.(*ExpectedReport)); err != nil {
-				t.Error(err)
+				t.Errorf("Test (%s): failed,  %v", desc, err)
 			}
 		default:
-			t.Fatal("unknown service control response type")
+			t.Fatalf("Test (%s): failed, unknown service control response type", desc)
 		}
-
 	}
 }
