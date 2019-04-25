@@ -44,7 +44,7 @@ func TestMockServiceControl(t *testing.T) {
 		t.Errorf("Wrong response status: %v", resp.StatusCode)
 	}
 
-	rr, err := s.GetRequests(1, 3*time.Second)
+	rr, err := s.GetRequests(1)
 	if err != nil {
 		t.Errorf("GetRequests failed with: %v", err)
 	}
@@ -64,7 +64,8 @@ func TestMockServiceControl(t *testing.T) {
 	}
 
 	// try to read it again
-	rr, err = s.GetRequests(1, 1*time.Second)
+	s.SetGetRequestsTimeout(500 * time.Millisecond)
+	rr, err = s.GetRequests(1)
 	if err == nil {
 		t.Errorf("Expected timeout error")
 	}

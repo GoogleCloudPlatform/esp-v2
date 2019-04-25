@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
@@ -189,7 +188,7 @@ func runTest(t *testing.T, env *env.TestEnv, tc testDataStruct) {
 		t.Errorf("expected %s, got %s", tc.wantResp, string(resp))
 	}
 
-	scRequests, err := env.ServiceControlServer.GetRequests(1, 3*time.Second)
+	scRequests, err := env.ServiceControlServer.GetRequests(1)
 	if err != nil {
 		t.Fatalf("GetRequest returns error: %v", err)
 	}

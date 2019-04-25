@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
@@ -152,7 +151,7 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 		}
 
 		if tc.wantGetScRequestError != nil {
-			scRequests, err1 := s.ServiceControlServer.GetRequests(1, 3*time.Second)
+			scRequests, err1 := s.ServiceControlServer.GetRequests(1)
 			if err1 == nil || err1.Error() != tc.wantGetScRequestError.Error() {
 				t.Errorf("Test desc (%v) expected get service control request call error: %v, got: %v", tc.desc, tc.wantGetScRequestError, err1)
 				t.Errorf("Test desc (%v) got service control requests: %v", tc.desc, scRequests)
@@ -160,7 +159,7 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 			continue
 		}
 
-		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 3*time.Second)
+		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
 		if err1 != nil {
 			t.Fatalf("Test desc (%v) GetRequests returns error: %v", tc.desc, err1)
 		}

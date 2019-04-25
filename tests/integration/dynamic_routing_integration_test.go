@@ -17,7 +17,6 @@ package integration
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
@@ -398,7 +397,7 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 			t.Errorf("Test Desc(%s): response want: %s, got: %s", tc.desc, tc.wantResp, gotRespStr)
 		}
 
-		scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 3*time.Second)
+		scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
 		if err != nil {
 			t.Fatalf("Test Desc(%s): GetRequests returns error: %v", tc.desc, err)
 		}

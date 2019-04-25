@@ -17,7 +17,6 @@ package integration
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
@@ -115,7 +114,7 @@ func TestReportGCPAttributes(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		scRequests, err := s.ServiceControlServer.GetRequests(1, 3*time.Second)
+		scRequests, err := s.ServiceControlServer.GetRequests(1)
 		if err != nil {
 			t.Fatalf("Test(%s): GetRequests returns error: %v", tc.desc, err)
 		}

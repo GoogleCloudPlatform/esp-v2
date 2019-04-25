@@ -20,7 +20,6 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
@@ -113,7 +112,7 @@ func TestServiceControlProtocolWithGRPCBackend(t *testing.T) {
 		}
 
 		var body []byte
-		scRequests, err := s.ServiceControlServer.GetRequests(1+tc.numRequestsToSkip, 3*time.Second)
+		scRequests, err := s.ServiceControlServer.GetRequests(1 + tc.numRequestsToSkip)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -175,7 +174,7 @@ func TestServiceControlProtocolWithHTTPBackend(t *testing.T) {
 		t.Errorf("expected: %s, got: %s", wantResp, string(resp))
 	}
 
-	scRequests, err := s.ServiceControlServer.GetRequests(1, 3*time.Second)
+	scRequests, err := s.ServiceControlServer.GetRequests(1)
 	if err != nil {
 		t.Fatal(err)
 	}

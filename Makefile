@@ -67,10 +67,12 @@ test-debug: format
 .PHONY: integration-test integration-debug
 integration-test: build build-envoy
 	@echo "--> running integration tests"
+	@go test ./tests/env/...
 	@go test ./tests/integration/...
 
 integration-debug:
 	@echo "--> running integration tests and showing debug logs"
+	@go test -v ./tests/env/...
 	# debug-components can be set as "all", "configmanager", or "envoy".
 	@go test -v ./tests/integration/... --debug_components=all
 

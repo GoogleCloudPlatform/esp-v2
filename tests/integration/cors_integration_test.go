@@ -17,7 +17,6 @@ package integration
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
@@ -584,7 +583,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 			}
 		}
 		if tc.checkServiceControl {
-			scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 3*time.Second)
+			scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
 			if err != nil {
 				t.Fatalf("Test Desc(%s): GetRequests returns error: %v", tc.desc, err)
 			}
@@ -733,14 +732,14 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 		}
 		if tc.checkServiceControl {
 			if tc.wantGetScRequestError != nil {
-				scRequests, err := s.ServiceControlServer.GetRequests(1, 3*time.Second)
+				scRequests, err := s.ServiceControlServer.GetRequests(1)
 				if err == nil || err.Error() != tc.wantGetScRequestError.Error() {
 					t.Errorf("expected get service control request call error: %v, got: %v", tc.wantGetScRequestError, err)
 					t.Errorf("got service control requests: %v", scRequests)
 				}
 				continue
 			}
-			scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 2*time.Second)
+			scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
 			if err != nil {
 				t.Fatalf("Test Desc(%s): GetRequests returns error: %v", tc.desc, err)
 			}

@@ -35,25 +35,28 @@ const (
 	REPORT_REQUEST
 )
 
+const defaultTimeout = 2500 * time.Millisecond
+
 type ServiceRequest struct {
 	ReqType ServiceRequestType
 	ReqBody []byte
 }
 
 type serviceResponse struct {
-	req_type  ServiceRequestType
-	resp_body []byte
+	reqType  ServiceRequestType
+	respBody []byte
 }
 
 // MockServiceMrg mocks the Service Management server.
 type MockServiceCtrl struct {
-	s              *httptest.Server
-	ch             chan *ServiceRequest
-	count          int
-	check_resp     *serviceResponse
-	report_resp    *serviceResponse
-	check_handler  http.Handler
-	report_handler http.Handler
+	s                  *httptest.Server
+	ch                 chan *ServiceRequest
+	count              int
+	checkResp          *serviceResponse
+	reportResp         *serviceResponse
+	checkHandler       http.Handler
+	reportHandler      http.Handler
+	getRequestsTimeout time.Duration
 }
 
 type serviceHandler struct {
@@ -62,16 +65,16 @@ type serviceHandler struct {
 }
 
 func (h *serviceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	glog.Infof("Mock service control handler: %v", h.resp.req_type)
+	glog.Infof("Mock service control handler: %v", h.resp.reqType)
 
 	req := &ServiceRequest{
-		ReqType: h.resp.req_type,
+		ReqType: h.resp.reqType,
 	}
 	req.ReqBody, _ = ioutil.ReadAll(r.Body)
 
 	h.m.ch <- req
 	h.m.count++
-	w.Write(h.resp.resp_body)
+	w.Write(h.resp.respBody)
 }
 
 func setOKCheckResponse() []byte {
@@ -90,49 +93,57 @@ func setOKCheckResponse() []byte {
 // NewMockServiceCtrl creates a new HTTP server.
 func NewMockServiceCtrl(service string) *MockServiceCtrl {
 	m := &MockServiceCtrl{
-		ch: make(chan *ServiceRequest, 100),
+		ch:                 make(chan *ServiceRequest, 100),
+		getRequestsTimeout: defaultTimeout,
 	}
 
-	m.check_resp = &serviceResponse{
-		req_type:  CHECK_REQUEST,
-		resp_body: setOKCheckResponse(),
+	m.checkResp = &serviceResponse{
+		reqType:  CHECK_REQUEST,
+		respBody: setOKCheckResponse(),
 	}
-	m.check_handler = &serviceHandler{
+	m.checkHandler = &serviceHandler{
 		m:    m,
-		resp: m.check_resp,
+		resp: m.checkResp,
 	}
 
-	m.report_resp = &serviceResponse{
-		req_type:  REPORT_REQUEST,
-		resp_body: []byte(""),
+	m.reportResp = &serviceResponse{
+		reqType:  REPORT_REQUEST,
+		respBody: []byte(""),
 	}
-	m.report_handler = &serviceHandler{
+	m.reportHandler = &serviceHandler{
 		m:    m,
-		resp: m.report_resp,
+		resp: m.reportResp,
 	}
 
 	check_path := "/v1/services/" + service + ":check"
 	report_path := "/v1/services/" + service + ":report"
 	r := mux.NewRouter()
-	r.Path(check_path).Methods("POST").Handler(m.check_handler)
-	r.Path(report_path).Methods("POST").Handler(m.report_handler)
+	r.Path(check_path).Methods("POST").Handler(m.checkHandler)
+	r.Path(report_path).Methods("POST").Handler(m.reportHandler)
 
 	glog.Infof("Start mock service control server for service: %s\n", service)
 	m.s = httptest.NewServer(r)
 	return m
 }
 
+// GetURL returns the URL of MockServiceCtrl.
 func (m *MockServiceCtrl) GetURL() string {
 	return m.s.URL
 }
 
-func (m *MockServiceCtrl) GetRequests(n int, timeout time.Duration) ([]*ServiceRequest, error) {
+// SetGetRequestsTimeout sets the timeout for GetRequests.
+func (m *MockServiceCtrl) SetGetRequestsTimeout(timeout time.Duration) {
+	m.getRequestsTimeout = timeout
+}
+
+// GetRequests returns a slice of requests received.
+func (m *MockServiceCtrl) GetRequests(n int) ([]*ServiceRequest, error) {
 	r := make([]*ServiceRequest, n)
 	for i := 0; i < n; i++ {
 		select {
 		case d := <-m.ch:
 			r[i] = d
-		case <-time.After(timeout):
+		case <-time.After(m.getRequestsTimeout):
 			return nil, fmt.Errorf("Timeout got %d, expected: %d", i, n)
 		}
 	}

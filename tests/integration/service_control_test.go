@@ -19,7 +19,6 @@ import (
 	"net/http"
 	"strings"
 	"testing"
-	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
@@ -370,7 +369,7 @@ func TestServiceControlBasic(t *testing.T) {
 		}
 
 		if tc.wantGetScRequestError != nil {
-			scRequests, err1 := s.ServiceControlServer.GetRequests(1, 3*time.Second)
+			scRequests, err1 := s.ServiceControlServer.GetRequests(1)
 			if err1 == nil || err1.Error() != tc.wantGetScRequestError.Error() {
 				t.Errorf("Test (%s): failed", tc.desc)
 				t.Errorf("expected get service control request call error: %v, got: %v", tc.wantGetScRequestError, err1)
@@ -379,7 +378,7 @@ func TestServiceControlBasic(t *testing.T) {
 			continue
 		}
 
-		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 3*time.Second)
+		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
 		if err1 != nil {
 			t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err1)
 		}
@@ -449,7 +448,7 @@ func TestServiceControlCache(t *testing.T) {
 		},
 	}
 
-	scRequests, err := s.ServiceControlServer.GetRequests(len(wantScRequests), 3*time.Second)
+	scRequests, err := s.ServiceControlServer.GetRequests(len(wantScRequests))
 	if err != nil {
 		t.Fatalf("GetRequests returns error: %v", err)
 	}
@@ -589,7 +588,7 @@ func TestServiceControlCredentialId(t *testing.T) {
 		}
 
 		if tc.wantGetScRequestError != nil {
-			scRequests, err1 := s.ServiceControlServer.GetRequests(1, 3*time.Second)
+			scRequests, err1 := s.ServiceControlServer.GetRequests(1)
 			if err1.Error() != tc.wantGetScRequestError.Error() {
 				t.Errorf("Test (%s): failed", tc.desc)
 				t.Errorf("expected get service control request call error: %v, got: %v", tc.wantGetScRequestError, err1)
@@ -598,7 +597,7 @@ func TestServiceControlCredentialId(t *testing.T) {
 			continue
 		}
 
-		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests), 3*time.Second)
+		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
 		if err1 != nil {
 			t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err1)
 		}
