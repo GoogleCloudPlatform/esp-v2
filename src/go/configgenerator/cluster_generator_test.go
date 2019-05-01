@@ -128,7 +128,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 		}
 
 		if !reflect.DeepEqual(cluster, tc.wantedCluster) {
-			t.Errorf("Test Desc(%d): %s, makeServiceControlCluster got Clusters: %v, want: %v", i, tc.desc, cluster, tc.wantedCluster)
+			t.Errorf("Test Desc(%d): %s, makeServiceControlCluster\ngot Clusters: %v,\nwant: %v", i, tc.desc, cluster, tc.wantedCluster)
 		}
 	}
 }
@@ -220,5 +220,97 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 		if !reflect.DeepEqual(clusters, tc.wantedClusters) {
 			t.Errorf("Test Desc(%d): %s, makeBackendRoutingClusters got: %v, want: %v", i, tc.desc, clusters, tc.wantedClusters)
 		}
+	}
+}
+
+func TestMakeProviderCluster(t *testing.T) {
+	testData := []struct {
+		desc              string
+		fakeServiceConfig *conf.Service
+		wantedClusters    []cache.Resource
+		backendProtocol   string
+	}{
+		{
+			desc: "Success for making providers",
+			fakeServiceConfig: &conf.Service{
+				Apis: []*api.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Authentication: &conf.Authentication{
+					Providers: []*conf.AuthProvider{
+						&conf.AuthProvider{
+							Id:      "auth_provider_0",
+							Issuer:  "issuer_0",
+							JwksUri: "https://metadata.com/pkey",
+						},
+						&conf.AuthProvider{
+							Id:      "auth_provider_1",
+							Issuer:  "issuer_1",
+							JwksUri: "http://metadata.com/pkey",
+						},
+					},
+				},
+			},
+			wantedClusters: []cache.Resource{
+				&v2.Cluster{
+					Name:                 "issuer_0",
+					ConnectTimeout:       20 * time.Second,
+					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
+					DnsLookupFamily:      v2.Cluster_V4_ONLY,
+					Hosts: []*core.Address{
+						{
+							Address: &core.Address_SocketAddress{
+								SocketAddress: &core.SocketAddress{
+									Address: "metadata.com",
+									PortSpecifier: &core.SocketAddress_PortValue{
+										PortValue: 443,
+									},
+								},
+							},
+						},
+					},
+					TlsContext: &auth.UpstreamTlsContext{
+						Sni: "metadata.com",
+					},
+				},
+				&v2.Cluster{
+					Name:                 "issuer_1",
+					ConnectTimeout:       20 * time.Second,
+					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
+					DnsLookupFamily:      v2.Cluster_V4_ONLY,
+					Hosts: []*core.Address{
+						{
+							Address: &core.Address_SocketAddress{
+								SocketAddress: &core.SocketAddress{
+									Address: "metadata.com",
+									PortSpecifier: &core.SocketAddress_PortValue{
+										PortValue: 80,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for i, tc := range testData {
+		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		clusters, err := makeProviderCluster(fakeServiceInfo)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !reflect.DeepEqual(clusters, tc.wantedClusters) {
+			t.Errorf("Test Desc(%d): %s, makeProviderClusters\ngot: %v,\nwant: %v", i, tc.desc, clusters, tc.wantedClusters)
+		}
+
 	}
 }

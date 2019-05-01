@@ -18,10 +18,11 @@ import (
 	"testing"
 )
 
-func TestParseURL(t *testing.T) {
+func TestParseURI(t *testing.T) {
 	testData := []struct {
 		desc           string
 		url            string
+		wantedScheme   string
 		wantedHostname string
 		wantedPort     uint32
 		wantURI        string
@@ -30,6 +31,7 @@ func TestParseURL(t *testing.T) {
 		{
 			desc:           "successful for https url, ends without slash",
 			url:            "https://abc.example.org",
+			wantedScheme:   "https",
 			wantedHostname: "abc.example.org",
 			wantedPort:     443,
 			wantURI:        "",
@@ -38,6 +40,7 @@ func TestParseURL(t *testing.T) {
 		{
 			desc:           "successful for https url, ends with slash",
 			url:            "https://abcde.google.org/",
+			wantedScheme:   "https",
 			wantedHostname: "abcde.google.org",
 			wantedPort:     443,
 			wantURI:        "",
@@ -46,6 +49,7 @@ func TestParseURL(t *testing.T) {
 		{
 			desc:           "successful for https url, ends with path",
 			url:            "https://abcde.youtube.com/api/",
+			wantedScheme:   "https",
 			wantedHostname: "abcde.youtube.com",
 			wantedPort:     443,
 			wantURI:        "/api",
@@ -54,47 +58,59 @@ func TestParseURL(t *testing.T) {
 		{
 			desc:           "successful for https url with custom port",
 			url:            "https://abcde.youtube.com:8989/api/",
+			wantedScheme:   "https",
 			wantedHostname: "abcde.youtube.com",
 			wantedPort:     8989,
 			wantURI:        "/api",
 			wantErr:        "",
 		},
 		{
-			desc:           "fail for http url",
+			desc:           "successful for http url",
 			url:            "http://abcde.youtube.com:8989/api/",
-			wantedHostname: "",
-			wantedPort:     0,
-			wantURI:        "",
-			wantErr:        "dynamic routing only supports HTTPS",
-		},
-		{
-			desc:           "fail for https url with IP address",
-			url:            "https://192.168.0.1/api/",
-			wantedHostname: "",
-			wantedPort:     0,
-			wantURI:        "",
-			wantErr:        "dynamic routing only supports domain name, got IP address: 192.168.0.1",
+			wantedScheme:   "http",
+			wantedHostname: "abcde.youtube.com",
+			wantedPort:     8989,
+			wantURI:        "/api",
 		},
 		{
 			desc:           "successful for https url, path ends with slash",
 			url:            "https://abc.example.org/path/to/",
+			wantedScheme:   "https",
 			wantedHostname: "abc.example.org",
 			wantedPort:     443,
 			wantURI:        "/path/to",
-			wantErr:        "",
 		},
 		{
 			desc:           "successful for https url, path ends without slash",
 			url:            "https://abc.example.org/path",
+			wantedScheme:   "https",
 			wantedHostname: "abc.example.org",
 			wantedPort:     443,
 			wantURI:        "/path",
-			wantErr:        "",
+		},
+		{
+			desc:           "successful for https url with port and path in the same time",
+			url:            "https://abc.example.org:8000/path",
+			wantedScheme:   "https",
+			wantedHostname: "abc.example.org",
+			wantedPort:     8000,
+			wantURI:        "/path",
+		},
+		{
+			desc:           "successful for url without scheme",
+			url:            "abc.example.org",
+			wantedScheme:   "https",
+			wantedHostname: "abc.example.org",
+			wantedPort:     443,
+			wantURI:        "",
 		},
 	}
 
 	for i, tc := range testData {
-		hostname, port, uri, err := ParseURL(tc.url)
+		scheme, hostname, port, uri, err := ParseURI(tc.url)
+		if scheme != tc.wantedScheme {
+			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, scheme, tc.wantedScheme)
+		}
 		if hostname != tc.wantedHostname {
 			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, hostname, tc.wantedHostname)
 		}

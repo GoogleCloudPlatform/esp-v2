@@ -329,3 +329,60 @@ func TestMethods(t *testing.T) {
 		}
 	}
 }
+
+func TestProcessBackendRule(t *testing.T) {
+	testData := []struct {
+		desc              string
+		fakeServiceConfig *conf.Service
+		wantedAllowCors   bool
+		wantedErr         string
+	}{
+		{
+			desc: "Failed for dynamic routing only supports HTTPS",
+			fakeServiceConfig: &conf.Service{
+				Apis: []*api.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &conf.Backend{
+					Rules: []*conf.BackendRule{
+						{
+							Address:         "http://192.168.0.1/api/",
+							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+						},
+					},
+				},
+			},
+			wantedErr: "Failed for dynamic routing only supports HTTPS",
+		},
+		{
+			desc: "Fail, dynamic routing only supports domain name, got IP address: 192.168.0.1",
+			fakeServiceConfig: &conf.Service{
+				Apis: []*api.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &conf.Backend{
+					Rules: []*conf.BackendRule{
+						{
+							Address:         "https://192.168.0.1/api/",
+							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+						},
+					},
+				},
+			},
+			wantedErr: "dynamic routing only supports domain name, got IP address: 192.168.0.1",
+		},
+	}
+
+	for i, tc := range testData {
+		flag.Set("backend_protocol", "grpc")
+		flag.Set("enable_backend_routing", "true")
+		_, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
+		if (err == nil && tc.wantedErr != "") || (err != nil && tc.wantedErr == "") {
+			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, err, tc.wantedErr)
+		}
+	}
+}

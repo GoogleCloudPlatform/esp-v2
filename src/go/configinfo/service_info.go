@@ -16,6 +16,7 @@ package configinfo
 
 import (
 	"fmt"
+	"net"
 	"sort"
 	"strings"
 
@@ -220,9 +221,15 @@ func (s *ServiceInfo) processBackendRule() error {
 
 	for _, r := range s.ServiceConfig().Backend.GetRules() {
 		if r.PathTranslation != conf.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
-			hostname, port, uri, err := ut.ParseURL(r.Address)
+			scheme, hostname, port, uri, err := ut.ParseURI(r.Address)
 			if err != nil {
 				return err
+			}
+			if scheme != "https" {
+				return fmt.Errorf("dynamic routing only supports HTTPS")
+			}
+			if net.ParseIP(hostname) != nil {
+				return fmt.Errorf("dynamic routing only supports domain name, got IP address: %v", hostname)
 			}
 			address := fmt.Sprintf("%v:%v", hostname, port)
 			if _, exist := backendRoutingClustersMap[address]; !exist {

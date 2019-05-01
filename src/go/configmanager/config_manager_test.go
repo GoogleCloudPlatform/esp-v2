@@ -169,11 +169,6 @@ func TestFetchListeners(t *testing.T) {
                             "issuer": "https://test_issuer.google.com/",
                             "jwks_uri": "$JWKSURI",
                             "audiences": "test_audience1, test_audience2 "
-                        },
-                        {
-                            "id": "unknownId",
-                            "issuer": "https://test_issuer.google.com/",
-                            "jwks_uri": "invalidUrl"
                         }
                     ],
                     "rules": [
@@ -216,8 +211,12 @@ func TestFetchListeners(t *testing.T) {
                                             "firebase": {
                                                 "audiences":["test_audience1", "test_audience2"],
                                                 "issuer":"https://test_issuer.google.com/",
-                                                "local_jwks": {
-                                                    "inline_string": "%s"
+                                                "remote_jwks":{
+                                                    "cache_duration":"300s",
+                                                    "http_uri":{
+                                                        "cluster":"https://test_issuer.google.com/",
+                                                        "uri":"$JWKSURI"
+                                                  }
                                                 },
                                                 "payload_in_metadata":"jwt_payloads"
                                             }
@@ -264,7 +263,7 @@ func TestFetchListeners(t *testing.T) {
                         "name":"envoy.http_connection_manager"
                     }
                 ]
-            }`, fakeJwks, testEndpointName),
+            }`, testEndpointName),
 		},
 		{
 			desc:            "Success for gRPC backend, with Jwt filter, without audiences",
@@ -379,8 +378,12 @@ func TestFetchListeners(t *testing.T) {
                                         "providers": {
                                             "firebase": {
                                                 "issuer":"https://test_issuer.google.com/",
-                                                "local_jwks": {
-                                                    "inline_string": "%s"
+                                                "remote_jwks":{
+                                                    "cache_duration":"300s",
+                                                    "http_uri":{
+                                                        "cluster":"https://test_issuer.google.com/",
+                                                        "uri":"$JWKSURI"
+                                                  }
                                                 },
                                                 "payload_in_metadata":"jwt_payloads"
                                             }
@@ -427,7 +430,7 @@ func TestFetchListeners(t *testing.T) {
                         "name":"envoy.http_connection_manager"
                     }
                 ]
-            }`, fakeJwks, testEndpointName),
+            }`, testEndpointName),
 		},
 		{
 			desc: "Success for gRPC backend, with Jwt filter, with multi requirements, matching with regex", backendProtocol: "gRPC",
@@ -550,15 +553,23 @@ func TestFetchListeners(t *testing.T) {
                                         "providers": {
                                             "firebase1": {
                                                 "issuer":"https://test_issuer.google.com/",
-                                                "local_jwks": {
-                                                    "inline_string": "%s"
+                                                "remote_jwks":{
+                                                    "cache_duration":"300s",
+                                                    "http_uri":{
+                                                        "cluster":"https://test_issuer.google.com/",
+                                                        "uri":"$JWKSURI"
+                                                  }
                                                 },
                                                 "payload_in_metadata":"jwt_payloads"
                                             },
                                             "firebase2": {
                                                 "issuer":"https://test_issuer.google.com/",
-                                                "local_jwks": {
-                                                    "inline_string": "%s"
+                                                "remote_jwks":{
+                                                    "cache_duration":"300s",
+                                                    "http_uri":{
+                                                        "cluster":"https://test_issuer.google.com/",
+                                                        "uri":"$JWKSURI"
+                                                  }
                                                 },
                                                 "payload_in_metadata":"jwt_payloads"
                                             }
@@ -605,7 +616,7 @@ func TestFetchListeners(t *testing.T) {
                         "name":"envoy.http_connection_manager"
                     }
                 ]
-            }`, fakeJwks, fakeJwks, testEndpointName),
+            }`, testEndpointName),
 		},
 		{
 			desc:            "Success for gRPC backend with Service Control",
@@ -891,8 +902,12 @@ func TestFetchListeners(t *testing.T) {
                                             "firebase": {
                                                 "audiences":["test_audience1", "test_audience2"],
                                                 "issuer":"https://test_issuer.google.com/",
-                                                "local_jwks": {
-                                                    "inline_string": "%s"
+                                                "remote_jwks":{
+                                                    "cache_duration":"300s",
+                                                    "http_uri":{
+                                                        "cluster":"https://test_issuer.google.com/",
+                                                        "uri":"$JWKSURI"
+                                                  }
                                                 },
                                                 "payload_in_metadata":"jwt_payloads"
                                             }
@@ -934,7 +949,7 @@ func TestFetchListeners(t *testing.T) {
                         "name":"envoy.http_connection_manager"
                     }
                 ]
-            }`, fakeJwks),
+            }`),
 		},
 		{
 			desc:            "Success for backend that allow CORS",
@@ -1377,11 +1392,6 @@ func runTest(t *testing.T, f func(*testEnv)) {
 		return mockMetadata.URL + suffix
 	}
 
-	mockJwksIssuer := initMockJwksIssuer(t)
-	defer mockJwksIssuer.Close()
-
-	// Replace $JWKSURI here, since it depends on the mock server.
-	fakeConfig = strings.Replace(fakeConfig, "$JWKSURI", mockJwksIssuer.URL, -1)
 	manager, err := NewConfigManager()
 	if err != nil {
 		t.Fatal("fail to initialize ConfigManager: ", err)
@@ -1403,12 +1413,6 @@ func initMockRolloutServer(t *testing.T) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(normalizeJson(fakeRollout)))
-	}))
-}
-
-func initMockJwksIssuer(t *testing.T) *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(fakeJwks))
 	}))
 }
 

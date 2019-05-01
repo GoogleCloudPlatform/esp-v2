@@ -22,30 +22,33 @@ import (
 	"strings"
 )
 
-// parameter: URL, return value: hostname, port, path, error (not nil if parse URL fails)
-func ParseURL(address string) (string, uint32, string, error) {
-	backendUrl, err := url.Parse(address)
+// ParseURI parses uri into scheme, hostname, port, path with err(if exist).
+// If uri has no scheme, it will be regarded as https.
+func ParseURI(uri string) (string, string, uint32, string, error) {
+	arr := strings.Split(uri, "://")
+	scheme := "https"
+	if len(arr) == 1 {
+		uri = fmt.Sprintf("%s://%s", scheme, uri)
+	} else {
+		scheme = arr[0]
+	}
+
+	u, err := url.Parse(uri)
 	if err != nil {
-		return "", 0, "", err
+		return "", "", 0, "", err
 	}
-	if backendUrl.Scheme != "https" {
-		return "", 0, "", fmt.Errorf("dynamic routing only supports HTTPS")
-	}
-	hostname := backendUrl.Hostname()
-	if net.ParseIP(hostname) != nil {
-		return "", 0, "", fmt.Errorf("dynamic routing only supports domain name, got IP address: %v", hostname)
-	}
-	var port uint32 = 443
-	if backendUrl.Port() != "" {
-		// for cases like "https://example.org:8080"
-		var port64 uint64
-		var err error
-		if port64, err = strconv.ParseUint(backendUrl.Port(), 10, 32); err != nil {
-			return "", 0, "", err
+
+	_, port, _ := net.SplitHostPort(u.Host)
+	if port == "" {
+		port = "443"
+		if u.Scheme == "http" {
+			port = "80"
 		}
-		port = uint32(port64)
 	}
-	// if uri ends with a slash like "/getUser/" or "/", remove last slash
-	uri := strings.TrimSuffix(backendUrl.RequestURI(), "/")
-	return hostname, port, uri, nil
+
+	portVal, err := strconv.Atoi(port)
+	if err != nil {
+		return "", "", 0, "", err
+	}
+	return scheme, u.Hostname(), uint32(portVal), strings.TrimSuffix(u.RequestURI(), "/"), nil
 }

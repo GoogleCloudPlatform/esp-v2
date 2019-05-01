@@ -16,8 +16,6 @@ package configgenerator
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
@@ -63,7 +61,56 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
 	if brClusters != nil {
 		clusters = append(clusters, brClusters...)
 	}
+
+	providerClusters, err := makeProviderCluster(serviceInfo)
+	if err != nil {
+		return nil, err
+	}
+	if providerClusters != nil {
+		clusters = append(clusters, providerClusters...)
+	}
 	return clusters, nil
+}
+
+func makeProviderCluster(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
+	var providerClusters []cache.Resource
+	authn := serviceInfo.ServiceConfig().GetAuthentication()
+	for _, provider := range authn.GetProviders() {
+		scheme, hostname, port, _, err := ut.ParseURI(provider.JwksUri)
+		if err != nil {
+			continue
+		}
+
+		c := &v2.Cluster{
+			Name:           provider.GetIssuer(),
+			LbPolicy:       v2.Cluster_ROUND_ROBIN,
+			ConnectTimeout: *flags.ClusterConnectTimeout,
+			// Note: It may not be V4.
+			DnsLookupFamily:      v2.Cluster_V4_ONLY,
+			ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
+			Hosts: []*core.Address{
+				{
+					Address: &core.Address_SocketAddress{
+						SocketAddress: &core.SocketAddress{
+							Address: hostname,
+							PortSpecifier: &core.SocketAddress_PortValue{
+								PortValue: port,
+							},
+						},
+					},
+				},
+			},
+		}
+		providerClusters = append(providerClusters, c)
+
+		if scheme == "https" {
+			c.TlsContext = &auth.UpstreamTlsContext{
+				Sni: hostname,
+			}
+		}
+		glog.Infof("Add provider cluster configuration for %v: %v", provider.JwksUri, c)
+	}
+	return providerClusters, nil
 }
 
 func makeBackendCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error) {
@@ -103,36 +150,15 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error)
 	// * It should not have any path part
 	// * If scheme is missed, https is the default
 
-	// Default is https
-	scheme := "https"
-	host := uri
-	arr := strings.Split(uri, "://")
-	if len(arr) == 2 {
-		scheme = arr[0]
-		host = arr[1]
+	scheme, hostname, port, path, err := ut.ParseURI(uri)
+	if err != nil {
+		return nil, err
+	}
+	if path != "" {
+		return nil, fmt.Errorf("Invalid uri: service control should not have path part: %s, %s", uri, path)
 	}
 
-	// This is used in service_control_uri.uri in service control fitler.
-	// Not path part, append /v1/services/ directly on host
-	serviceInfo.ServiceControlURI = scheme + "://" + host + "/v1/services/"
-
-	arr = strings.Split(host, ":")
-	var port int
-	if len(arr) == 2 {
-		var err error
-		port, err = strconv.Atoi(arr[1])
-		if err != nil {
-			return nil, fmt.Errorf("Invalid port: %s, got err: %s", arr[1], err)
-		}
-		host = arr[0]
-	} else {
-		if scheme == "http" {
-			port = 80
-		} else {
-			port = 443
-		}
-	}
-
+	serviceInfo.ServiceControlURI = scheme + "://" + hostname + "/v1/services/"
 	c := &v2.Cluster{
 		Name:                 serviceControlClusterName,
 		LbPolicy:             v2.Cluster_ROUND_ROBIN,
@@ -142,9 +168,9 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error)
 		Hosts: []*core.Address{
 			{Address: &core.Address_SocketAddress{
 				SocketAddress: &core.SocketAddress{
-					Address: host,
+					Address: hostname,
 					PortSpecifier: &core.SocketAddress_PortValue{
-						PortValue: uint32(port),
+						PortValue: port,
 					},
 				},
 			},
@@ -154,7 +180,7 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error)
 
 	if scheme == "https" {
 		c.TlsContext = &auth.UpstreamTlsContext{
-			Sni: host,
+			Sni: hostname,
 		}
 	}
 	glog.Infof("adding cluster Configuration for uri: %s: %v", uri, c)

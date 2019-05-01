@@ -226,17 +226,18 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	}
 	providers := make(map[string]*ac.JwtProvider)
 	for _, provider := range auth.GetProviders() {
-		jwk, err := fetchJwk(provider.GetJwksUri())
-		if err != nil {
-			glog.Warningf("fetch jwk from issuer %s got error: %s", provider.GetIssuer(), err)
-			continue
-		}
 		jp := &ac.JwtProvider{
 			Issuer: provider.GetIssuer(),
-			JwksSourceSpecifier: &ac.JwtProvider_LocalJwks{
-				LocalJwks: &core.DataSource{
-					Specifier: &core.DataSource_InlineString{
-						InlineString: string(jwk),
+			JwksSourceSpecifier: &ac.JwtProvider_RemoteJwks{
+				RemoteJwks: &ac.RemoteJwks{
+					HttpUri: &core.HttpUri{
+						Uri: provider.GetJwksUri(),
+						HttpUpstreamType: &core.HttpUri_Cluster{
+							Cluster: provider.GetIssuer(),
+						},
+					},
+					CacheDuration: &types.Duration{
+						Seconds: int64(300),
 					},
 				},
 			},
