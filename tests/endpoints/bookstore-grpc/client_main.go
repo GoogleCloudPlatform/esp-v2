@@ -19,6 +19,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 
 	"golang.org/x/oauth2/google"
 
@@ -33,6 +34,7 @@ var (
 	token          = flag.String("token", "", "Authentication token.")
 	keyfile        = flag.String("keyfile", "", "Path to a Google service account key file.")
 	audience       = flag.String("audience", "", "Audience.")
+	headers        = flag.String("headers", "", "http headers, key and value should be seperated by ':'")
 )
 
 func main() {
@@ -58,6 +60,12 @@ func main() {
 	header := http.Header{}
 	if *apikey != "" {
 		header.Add(client.APIKeyHeaderKey, *apikey)
+	}
+	for _, h := range strings.Split(*headers, ",") {
+		if h != "" {
+			key_value := strings.Split(h, ":")
+			header.Add(key_value[0], key_value[1])
+		}
 	}
 
 	resp, err := client.MakeCall(*clientProtocol, *addr, "GET", *method, *token, header)

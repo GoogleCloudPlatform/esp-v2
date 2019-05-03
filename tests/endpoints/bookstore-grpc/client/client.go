@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -114,7 +113,6 @@ var makeGRPCCall = func(addr, method, token string, header http.Header) (string,
 	cli := bspb.NewBookstoreClient(conn)
 	ctx := context.Background()
 	if token != "" {
-		log.Printf("Using authentication token: %s", token)
 		ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs("Authorization", fmt.Sprintf("Bearer %s", token)))
 	}
 
@@ -144,6 +142,7 @@ var makeGRPCCall = func(addr, method, token string, header http.Header) (string,
 		respMsg, err = cli.GetShelf(ctx, req)
 	case "CreateBook":
 		req := &bspb.CreateBookRequest{
+			Shelf: 200,
 			Book: &bspb.Book{
 				Id:    20050,
 				Title: "Harry Potter",
