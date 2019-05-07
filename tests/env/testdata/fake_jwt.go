@@ -58,6 +58,11 @@ func init() {
 		Issuer:  "rs256-issuer",
 		JwksUri: components.NewMockJwtProvider(PubKeys).GetURL(),
 	}
+	MockJwtProviderMap["invalid_jwks_provider"] = &conf.AuthProvider{
+		Id:      "invalid_jwks_provider",
+		Issuer:  "invalid_jwks_provider",
+		JwksUri: components.NewMockJwtProvider("invalid-jwks").GetURL(),
+	}
 	MockJwtProviderMap["service_control_jwt_payload_auth"] = &conf.AuthProvider{
 		Id:      "service_control_jwt_payload_auth",
 		Issuer:  "es256-issuer",
@@ -226,4 +231,16 @@ const (
 		"CES4LQBqsvvTcLBbBNUvKs_eJyZG71WJuymkkbL5Ki7CB73sQUMl2T3eORC7DJt" +
 		"yn_C9Dxy2cwCzHrLZnnGz839_bX_yi29dI4veYCNBgU-9ZwehqfgSCJWYUoBTrdM06" +
 		"N3jEemlWB83ZY4OXoW0pNx-ecu3asJVbwyxV2_HT6_aUsdHwTYwHv2hXBjdKEfwZxSsBxbKpA"
+
+	// ./gen-jwt.py key.pem -jwks=./jwks.json --expire=3153600000 --iss="invalid_jwks_provider" --aud bookstore_test_client.cloud.goog
+	FakeInvalidJwksProviderToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lVc" +
+		"XJZOHQyenBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ.eyJh" +
+		"dWQiOiJib29rc3RvcmVfdGVzdF9jbGllbnQuY2xvdWQuZ29vZyIsImV4cCI6NDcwOTkyND" +
+		"Y4NSwiaWF0IjoxNTU2MzI0Njg1LCJpc3MiOiJpbnZhbGlkX2p3a3NfcHJvdmlkZXIiLCJz" +
+		"dWIiOiJpbnZhbGlkX2p3a3NfcHJvdmlkZXIifQ.WbaMjVS6kyMuTBlvumtAcYlYtt2l-nW" +
+		"KNzZOXrVBU_Fg6RLXEsit0EWOhdOh0BQgFtTlUgD2H9iVWsCcWFe5zFQOSOBJplW8OdCgr" +
+		"KUzPu_ADehemlx30K_J8mz224k1ve2YiHWFYoKPp7dp-B4xTODjvqNEajFrnX-" +
+		"WV5dUcY6y9WIaGWqqMfYjb2Jcojf__JWFOgQwB1vYfGLErhaPpmObWnJi7rDIRDa-hFOfx" +
+		"1MXZIWNE9dZKjD8xUUlGC_BsJ62uaNVGTpHV5h_uhehTIX9xmsQwsDGGlyKn4SxVTXvKkY" +
+		"6der_JVuTHz1kkbGWjqwa3o1vwFs5gS3nT94ClQ"
 )

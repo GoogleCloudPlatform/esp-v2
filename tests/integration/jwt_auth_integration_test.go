@@ -23,9 +23,9 @@ import (
 
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
+	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	testdata "cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -35,7 +35,8 @@ func TestAsymmetricKeys(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--version=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestAsymmetricKeys, "bookstore", []string{"test_auth", "test_auth_1"})
+	s := env.NewTestEnv(comp.TestAsymmetricKeys, "bookstore", []string{"test_auth", "test_auth_1",
+		"invalid_jwks_provider"})
 	s.OverrideAuthentication(&conf.Authentication{
 		Rules: []*conf.AuthenticationRule{
 			{
@@ -48,6 +49,10 @@ func TestAsymmetricKeys(t *testing.T) {
 					{
 						ProviderId: "test_auth_1",
 						Audiences:  "ok_audience",
+					},
+					{
+						ProviderId: "invalid_jwks_provider",
+						Audiences:  "bookstore_test_client.cloud.goog",
 					},
 				},
 			},
@@ -101,6 +106,14 @@ func TestAsymmetricKeys(t *testing.T) {
 			method:         "/v1/shelves?key=api-key&access_token=" + testdata.Rs256Token,
 			queryInToken:   true,
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
+		},
+		{
+			desc:           "Provider will provide wrong-format jwks",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves?key=api-key",
+			token:          testdata.FakeInvalidJwksProviderToken,
+			wantError:      "401 Unauthorized, Jwks remote fetch is failed",
 		},
 	}
 
