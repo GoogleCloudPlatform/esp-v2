@@ -14,7 +14,7 @@
 
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
-GOOGLE_PROTOBUF_SHA1 = "582743bf40c5d3639a70f98f183914a2c0cd0680"  # Match SHA used by Envoy
+GOOGLE_PROTOBUF_SHA1 = "6973c3a5041636c1d8dc5f7f6c8c1f3c15bc63d6"  # Match SHA used by Envoy: 3.7.1
 PUBREF_PROTOBUF_SHA1 = "563b674a2ce6650d459732932ea2bc98c9c9a9bf"  # Nov 28, 2017 (bazel 0.8.0 support)
 
 def protobuf_repositories(load_repo = True, bind = True):
@@ -22,7 +22,7 @@ def protobuf_repositories(load_repo = True, bind = True):
         git_repository(
             name = "com_google_protobuf",
             commit = GOOGLE_PROTOBUF_SHA1,
-            remote = "https://github.com/google/protobuf.git",
+            remote = "https://github.com/protocolbuffers/protobuf.git",
         )
         git_repository(
             name = "org_pubref_rules_protobuf",

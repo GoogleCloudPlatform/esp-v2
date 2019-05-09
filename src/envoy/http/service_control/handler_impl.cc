@@ -54,9 +54,9 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
       stream_info_(stream_info),
       uuid_(uuid),
       last_reported_(now) {
-  http_method_ = Utils::getRequestHTTPMethodWithOverride(
-      headers.Method()->value().c_str(), headers);
-  path_ = headers.Path()->value().c_str();
+  http_method_ = std::string(Utils::getRequestHTTPMethodWithOverride(
+      headers.Method()->value().getStringView(), headers));
+  path_ = std::string(headers.Path()->value().getStringView());
   request_header_size_ = headers.byteSize();
 
   is_grpc_ = Envoy::Grpc::Common::hasGrpcContentType(headers);
@@ -161,12 +161,13 @@ void ServiceControlHandlerImpl::callCheck(Http::HeaderMap& headers,
   // Check and Report has different rule to send api-key
   info.api_key = api_key_;
 
-  info.ios_bundle_id = Utils::extractHeader(headers, kIosBundleIdHeader);
-  info.referer = Utils::extractHeader(headers, kRefererHeader);
+  info.ios_bundle_id =
+      std::string(Utils::extractHeader(headers, kIosBundleIdHeader));
+  info.referer = std::string(Utils::extractHeader(headers, kRefererHeader));
   info.android_package_name =
-      Utils::extractHeader(headers, kAndroidPackageHeader);
+      std::string(Utils::extractHeader(headers, kAndroidPackageHeader));
   info.android_cert_fingerprint =
-      Utils::extractHeader(headers, kAndroidCertHeader);
+      std::string(Utils::extractHeader(headers, kAndroidCertHeader));
 
   info.client_ip =
       stream_info_.downstreamRemoteAddress()->ip()->addressAsString();
@@ -234,7 +235,8 @@ void ServiceControlHandlerImpl::callReport(
       getBackendProtocol(require_ctx_->service_ctx().config());
 
   if (request_headers) {
-    info.referer = Utils::extractHeader(*request_headers, kRefererHeader);
+    info.referer =
+        std::string(Utils::extractHeader(*request_headers, kRefererHeader));
   }
 
   fillLatency(stream_info_, info.latency);

@@ -43,9 +43,9 @@ using Http::LowerCaseString;
 void Filter::onDestroy() {}
 
 FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
-  const std::string method = Utils::getRequestHTTPMethodWithOverride(
-      headers.Method()->value().c_str(), headers);
-  const std::string& path = headers.Path()->value().c_str();
+  std::string method(Utils::getRequestHTTPMethodWithOverride(
+      headers.Method()->value().getStringView(), headers));
+  std::string path(headers.Path()->value().getStringView());
   const std::string* operation = config_->FindOperation(method, path);
   if (operation == nullptr) {
     rejectRequest(Http::Code(404),
