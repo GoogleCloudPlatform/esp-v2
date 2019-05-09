@@ -29,6 +29,7 @@ import (
 // All integration tests should be listed here to get their test ids
 const (
 	TestAsymmetricKeys uint16 = iota
+	TestAuthOKCheckFail
 	TestBackendAuth
 	TestDifferentOriginPreflightCors
 	TestDifferentOriginSimpleCors

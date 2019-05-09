@@ -131,10 +131,15 @@ func DoJWT(host, method, path, apiKey, serviceAccount, token string) ([]byte, er
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("http response status is not 200 OK: %s", resp.Status)
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("http got error: %v", err)
 	}
-	return ioutil.ReadAll(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, string(bodyBytes))
+	}
+	return bodyBytes, err
 }
 
 // DoCorsSimpleRequest sends a simple request with Origin field in request header

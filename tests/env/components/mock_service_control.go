@@ -77,7 +77,7 @@ func (h *serviceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write(h.resp.respBody)
 }
 
-func setOKCheckResponse() []byte {
+func SetOKCheckResponse() []byte {
 	req := &sc.CheckResponse{
 		CheckInfo: &sc.CheckResponse_CheckInfo{
 			ConsumerInfo: &sc.CheckResponse_ConsumerInfo{
@@ -85,7 +85,6 @@ func setOKCheckResponse() []byte {
 			},
 		},
 	}
-
 	req_b, _ := proto.Marshal(req)
 	return req_b
 }
@@ -99,7 +98,7 @@ func NewMockServiceCtrl(service string) *MockServiceCtrl {
 
 	m.checkResp = &serviceResponse{
 		reqType:  CHECK_REQUEST,
-		respBody: setOKCheckResponse(),
+		respBody: SetOKCheckResponse(),
 	}
 	m.checkHandler = &serviceHandler{
 		m:    m,
@@ -134,6 +133,12 @@ func (m *MockServiceCtrl) GetURL() string {
 // SetGetRequestsTimeout sets the timeout for GetRequests.
 func (m *MockServiceCtrl) SetGetRequestsTimeout(timeout time.Duration) {
 	m.getRequestsTimeout = timeout
+}
+
+// SetCheckResponse sets the response for the check of the service control.
+func (m *MockServiceCtrl) SetCheckResponse(checkResponse *sc.CheckResponse) {
+	req_b, _ := proto.Marshal(checkResponse)
+	m.checkResp.respBody = req_b
 }
 
 // GetRequests returns a slice of requests received.

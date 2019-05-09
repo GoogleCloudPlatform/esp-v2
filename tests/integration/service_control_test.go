@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
@@ -29,6 +30,7 @@ import (
 
 	bsClient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	sc "github.com/google/go-genproto/googleapis/api/servicecontrol/v1"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -603,4 +605,113 @@ func TestServiceControlCredentialId(t *testing.T) {
 		}
 		utils.CheckScRequest(t, scRequests, tc.wantScRequests, tc.desc)
 	}
+}
+
+func TestAuthOKCheckFail(t *testing.T) {
+	serviceName := "echo-service"
+	configID := "test-config-id"
+	args := []string{"--service=" + serviceName, "--version=" + configID,
+		"--backend_protocol=http1", "--rollout_strategy=fixed"}
+
+	s := env.NewTestEnv(comp.TestAuthOKCheckFail, "echo", []string{"google_jwt"})
+
+	comp.ResetReqCnt()
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+	defer s.TearDown()
+	s.ServiceControlServer.SetCheckResponse(
+		&sc.CheckResponse{
+			CheckInfo: &sc.CheckResponse_CheckInfo{
+				ConsumerInfo: &sc.CheckResponse_ConsumerInfo{
+					ProjectNumber: 123456,
+				},
+			},
+			CheckErrors: []*sc.CheckError{
+				&sc.CheckError{
+					Code: sc.CheckError_PROJECT_INVALID,
+				},
+			},
+		},
+	)
+	type reqCnt struct {
+		key string
+		cnt int
+	}
+	time.Sleep(time.Duration(5 * time.Second))
+	tc := struct {
+		desc           string
+		httpMethod     string
+		httpPath       string
+		apiKey         string
+		token          string
+		wantMsReq      reqCnt
+		wantPdReq      reqCnt
+		wantError      string
+		wantScRequests []interface{}
+	}{
+		desc:       "Auth passed but check failed",
+		httpMethod: "GET",
+		httpPath:   "/auth/info/googlejwt",
+		apiKey:     "api-key",
+		token:      testdata.FakeCloudToken,
+		wantMsReq:  reqCnt{"/v1/instance/service-accounts/default/token", 1},
+		wantPdReq:  reqCnt{"google_jwt", 1},
+		wantError:  "400 Bad Request, INVALID_ARGUMENT:Client project not valid. Please pass a valid project",
+		wantScRequests: []interface{}{
+			&utils.ExpectedCheck{
+				Version:         utils.APIProxyVersion,
+				ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
+				ServiceConfigID: "test-config-id",
+				ConsumerID:      "api_key:api-key",
+				OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt",
+				CallerIp:        "127.0.0.1",
+			},
+			&utils.ExpectedReport{
+				Version:     utils.APIProxyVersion,
+				ServiceName: "echo-api.endpoints.cloudesf-testing.cloud.goog", ServiceConfigID: "test-config-id",
+				URL:               "/auth/info/googlejwt?key=api-key",
+				ApiKey:            "api-key",
+				ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt",
+				ProducerProjectID: "producer-project",
+				ConsumerProjectID: "123456",
+				FrontendProtocol:  "http",
+				HttpMethod:        "GET",
+				LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt is called",
+				ErrorType:         "4xx",
+				StatusCode:        "3",
+				RequestSize:       188,
+				ResponseSize:      163,
+				RequestBytes:      188,
+				ResponseBytes:     163,
+				ResponseCode:      400,
+				Platform:          util.GCE,
+				Location:          "test-zone",
+			},
+		},
+	}
+
+	host := fmt.Sprintf("http://localhost:%v", s.Ports().ListenerPort)
+	_, err := client.DoJWT(host, tc.httpMethod, tc.httpPath, tc.apiKey, "", tc.token)
+
+	if realCnt := s.MockMetadataServer.GetReqCnt(tc.wantMsReq.key); realCnt != tc.wantMsReq.cnt {
+		t.Errorf("Test (%s): failed, %s on MetadataServer should be requested by %v times not %v times.", tc.desc, tc.wantPdReq.key, tc.wantMsReq.cnt, realCnt)
+	}
+
+	provider, ok := comp.JwtProviders[tc.wantPdReq.key]
+	if !ok {
+		t.Errorf("Test (%s): failed, the provider is not inited.", tc.desc)
+	} else if realCnt := provider.GetReqCnt(); realCnt != tc.wantPdReq.cnt {
+		t.Errorf("Test (%s): failed, pubkey of %s shoud be fetched by %v times instead of %v times.", tc.desc, tc.wantPdReq.key, tc.wantPdReq.cnt, realCnt)
+	}
+
+	if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
+		t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
+	}
+
+	scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
+	if err1 != nil {
+		t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err1)
+	}
+	utils.CheckScRequest(t, scRequests, tc.wantScRequests, tc.desc)
 }

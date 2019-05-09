@@ -17,29 +17,54 @@ package components
 import (
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 )
 
 // MockJwtProvider mocks the Jwt provider.
 type MockJwtProvider struct {
-	s *httptest.Server
+	s   *httptest.Server
+	cnt *int32
 }
 
+// JwtProviders is used to refer all created provider object with issuer
+var JwtProviders = make(map[string]*MockJwtProvider)
+
 // NewMockJwtProvider creates a new Jwt provider.
-func NewMockJwtProvider(jwks string) *MockJwtProvider {
-	return &MockJwtProvider{
-		s: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte(jwks))
-		}))}
+func NewMockJwtProvider(issuer, jwks string) *MockJwtProvider {
+	mockJwtProvider := &MockJwtProvider{
+		cnt: new(int32),
+	}
+	mockJwtProvider.s = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(mockJwtProvider.cnt, 1)
+		w.Write([]byte(jwks))
+	}))
+	JwtProviders[issuer] = mockJwtProvider
+	return mockJwtProvider
 }
 
 // NewMockInvalidJwtProvider creates a new Jwt provider which returns error.
-func NewMockInvalidJwtProvider() *MockJwtProvider {
-	return &MockJwtProvider{
-		s: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			http.Error(w, `{"code": 503, "message": "service not found"}`, 503)
-		}))}
+func NewMockInvalidJwtProvider(issuer string) *MockJwtProvider {
+	mockJwtProvider := &MockJwtProvider{
+		cnt: new(int32),
+	}
+	mockJwtProvider.s = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(mockJwtProvider.cnt, 1)
+		http.Error(w, `{"code": 503, "message": "service not found"}`, 503)
+	}))
+	JwtProviders[issuer] = mockJwtProvider
+	return mockJwtProvider
 }
 
 func (m *MockJwtProvider) GetURL() string {
 	return m.s.URL
+}
+
+func (m *MockJwtProvider) GetReqCnt() int {
+	return int(atomic.LoadInt32(m.cnt))
+}
+
+func ResetReqCnt() {
+	for _, pd := range JwtProviders {
+		atomic.SwapInt32(pd.cnt, 0)
+	}
 }
