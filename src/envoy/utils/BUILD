@@ -67,17 +67,6 @@ envoy_cc_test(
 )
 
 envoy_cc_library(
-    name = "status_http_code_lib",
-    srcs = ["status_http_code.cc"],
-    hdrs = ["status_http_code.h"],
-    repository = "@envoy",
-    deps = [
-        "//external:protobuf",
-        "@envoy//include/envoy/http:codes_interface",
-    ],
-)
-
-envoy_cc_library(
     name = "http_header_utils_lib",
     srcs = ["http_header_utils.cc"],
     hdrs = ["http_header_utils.h"],

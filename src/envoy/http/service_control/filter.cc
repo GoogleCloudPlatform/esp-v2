@@ -12,15 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "common/grpc/status.h"
 #include "envoy/http/header_map.h"
 
 #include <chrono>
 
 #include "src/envoy/http/service_control/filter.h"
 #include "src/envoy/http/service_control/handler.h"
-#include "src/envoy/utils/status_http_code.h"
-
-using ::google::protobuf::util::error::Code;
 
 namespace Envoy {
 namespace Extensions {
@@ -53,8 +51,11 @@ Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
 void ServiceControlFilter::onCheckDone(
     const ::google::protobuf::util::Status& status) {
   if (!status.ok()) {
-    rejectRequest(Utils::statusToHttpCode(status.error_code()),
-                  status.ToString());
+    // protobuf::util::Status.error_code is the same as Envoy GrpcStatus
+    // This cast is safe.
+    auto http_code = Grpc::Utility::grpcToHttpStatus(
+        static_cast<Grpc::Status::GrpcStatus>(status.error_code()));
+    rejectRequest(static_cast<Http::Code>(http_code), status.ToString());
     return;
   }
 
