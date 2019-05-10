@@ -25,14 +25,14 @@ namespace Extensions {
 namespace Utils {
 
 // Returns HTTP header value if the header is found, otherwise empty string
-std::string extractHeader(const Envoy::Http::HeaderMap& headers,
-                          const Envoy::Http::LowerCaseString& header);
+absl::string_view extractHeader(const Envoy::Http::HeaderMap& headers,
+                                const Envoy::Http::LowerCaseString& header);
 
 // Get the HTTP method to be used for the request. This method understands the
 // x-http-method-override header and if present, returns the
 // x-http-method-override method. Otherwise, the actual HTTP method is returned.
-std::string getRequestHTTPMethodWithOverride(
-    const std::string& originalMethod, const Envoy::Http::HeaderMap& headers);
+absl::string_view getRequestHTTPMethodWithOverride(
+    absl::string_view originalMethod, const Envoy::Http::HeaderMap& headers);
 
 }  // namespace Utils
 }  // namespace Extensions

@@ -57,8 +57,8 @@ bool extractAPIKeyFromQuery(const Http::HeaderMap& headers,
                             Http::Utility::QueryParams& parsed_params,
                             std::string& api_key) {
   if (!were_params_parsed) {
-    parsed_params =
-        Http::Utility::parseQueryString(headers.Path()->value().c_str());
+    parsed_params = Http::Utility::parseQueryString(
+        headers.Path()->value().getStringView());
     were_params_parsed = true;
   }
 
@@ -75,7 +75,7 @@ bool extractAPIKeyFromHeader(const Http::HeaderMap& headers,
   // TODO(qiwzhang): optimize this by using LowerCaseString at init.
   auto* entry = headers.get(Http::LowerCaseString(header));
   if (entry) {
-    api_key = entry->value().c_str();
+    api_key = std::string(entry->value().getStringView());
     return true;
   }
   return false;
@@ -116,7 +116,7 @@ void extractJwtPayload(const ProtobufWkt::Value& value,
   }
 }
 
-bool isGrpcRequest(const std::string& content_type) {
+bool isGrpcRequest(absl::string_view content_type) {
   // Formally defined as:
   // `application/grpc(-web(-text))[+proto/+json/+thrift/{custom}]`
   //
@@ -169,7 +169,7 @@ void fillLoggedHeader(
     if (entry) {
       absl::StrAppend(
           &info_header_field,
-          absl::StrCat(log_header, "=", entry->value().c_str(), ";"));
+          absl::StrCat(log_header, "=", entry->value().getStringView(), ";"));
     }
   }
 }
@@ -200,7 +200,7 @@ void fillLatency(const StreamInfo::StreamInfo& stream_info,
 Protocol getFrontendProtocol(const Http::HeaderMap* response_headers,
                              const StreamInfo::StreamInfo& stream_info) {
   if (response_headers != nullptr) {
-    const std::string& content_type =
+    auto content_type =
         Utils::extractHeader(*response_headers, kContentTypeHeader);
     if (isGrpcRequest(content_type)) {
       return Protocol::GRPC;

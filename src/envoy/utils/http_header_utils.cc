@@ -23,24 +23,22 @@ namespace {
 const Http::LowerCaseString kHttpMethodOverrideHeader{"x-http-method-override"};
 }  // namespace
 
-std::string extractHeader(const Envoy::Http::HeaderMap& headers,
-                          const Envoy::Http::LowerCaseString& header) {
-  auto* entry = headers.get(header);
+absl::string_view extractHeader(const Envoy::Http::HeaderMap& headers,
+                                const Envoy::Http::LowerCaseString& header) {
+  const auto* entry = headers.get(header);
   if (entry) {
-    return entry->value().c_str();
+    return entry->value().getStringView();
   }
   return "";
 }
 
-std::string getRequestHTTPMethodWithOverride(
-    const std::string& originalMethod, const Envoy::Http::HeaderMap& headers) {
-  const std::string overrideMethodValue =
-      extractHeader(headers, kHttpMethodOverrideHeader);
-  if (overrideMethodValue.empty()) {
-    return originalMethod;
-  } else {
-    return overrideMethodValue;
+absl::string_view getRequestHTTPMethodWithOverride(
+    absl::string_view originalMethod, const Envoy::Http::HeaderMap& headers) {
+  const auto* entry = headers.get(kHttpMethodOverrideHeader);
+  if (entry) {
+    return entry->value().getStringView();
   }
+  return originalMethod;
 }
 
 }  // namespace Utils
