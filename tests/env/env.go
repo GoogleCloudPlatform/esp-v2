@@ -61,7 +61,7 @@ type TestEnv struct {
 	echoBackend                 *components.EchoHTTPServer
 	envoy                       *components.Envoy
 	fakeServiceConfig           *conf.Service
-	mockMetadataServer          *components.MockMetadataServer
+	MockMetadataServer          *components.MockMetadataServer
 	mockServiceManagementServer ServiceManagementServer
 	ports                       *components.Ports
 
@@ -183,8 +183,8 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	}
 
 	if e.mockMetadata {
-		e.mockMetadataServer = components.NewMockMetadata(e.mockMetadataOverride)
-		confArgs = append(confArgs, "--metadata_url="+e.mockMetadataServer.GetURL())
+		e.MockMetadataServer = components.NewMockMetadata(e.mockMetadataOverride)
+		confArgs = append(confArgs, "--metadata_url="+e.MockMetadataServer.GetURL())
 	}
 
 	confArgs = append(confArgs, fmt.Sprintf("--cluster_port=%v", e.ports.BackendServerPort))

@@ -17,6 +17,7 @@ package components
 import (
 	"net/http"
 	"net/http/httptest"
+	"sync"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 )
@@ -41,7 +42,9 @@ var defaultResp = map[string]string{
 
 // MockMetadata mocks the Metadata server.
 type MockMetadataServer struct {
-	s *httptest.Server
+	s        *httptest.Server
+	reqCache map[string]int
+	mtx      sync.RWMutex
 }
 
 // NewMockMetadata creates a new HTTP server.
@@ -55,34 +58,47 @@ func NewMockMetadata(pathResp map[string]string) *MockMetadataServer {
 		mockPathResp[k] = v
 	}
 
-	return &MockMetadataServer{
-		s: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
+	m := &MockMetadataServer{
+		reqCache: make(map[string]int),
+	}
+	m.s = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		reqURI := r.URL.RequestURI()
+		m.mtx.Lock()
+		reqCnt, _ := m.reqCache[reqURI]
+		m.reqCache[reqURI] = reqCnt + 1
+		m.mtx.Unlock()
+		if r.URL.Path == "" || r.URL.Path == "/" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 
-			// Root is used to tell if the sever is healthy or not.
-			if r.URL.Path == "" || r.URL.Path == "/" {
-				w.WriteHeader(http.StatusOK)
-				return
-			}
+		// Check if path + query exists in the response map.
+		pathWithQuery := r.URL.Path + "?" + r.URL.RawQuery
+		if resp, ok := mockPathResp[pathWithQuery]; ok {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(resp))
+			return
+		}
 
-			// Check if path + query exists in the response map.
-			pathWithQuery := r.URL.Path + "?" + r.URL.RawQuery
-			if resp, ok := mockPathResp[pathWithQuery]; ok {
-				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(resp))
-				return
-			}
-
-			if resp, ok := mockPathResp[r.URL.Path]; ok {
-				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(resp))
-			} else {
-				w.WriteHeader(http.StatusNotFound)
-			}
-		}))}
+		if resp, ok := mockPathResp[r.URL.Path]; ok {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(resp))
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	return m
 }
 
 // GetURL returns the URL of the MockMetadataServer.
 func (m *MockMetadataServer) GetURL() string {
 	return m.s.URL
+}
+
+func (m *MockMetadataServer) GetReqCnt(reqURI string) int {
+	m.mtx.RLock()
+	reqCnt, _ := m.reqCache[reqURI]
+	m.mtx.RUnlock()
+	return reqCnt
 }

@@ -31,42 +31,42 @@ func init() {
 	MockJwtProviderMap["google_service_account"] = &conf.AuthProvider{
 		Id:      "google_service_account",
 		Issuer:  "api-proxy-testing@cloud.goog",
-		JwksUri: components.NewMockJwtProvider(FakeCloudJwks).GetURL(),
+		JwksUri: components.NewMockJwtProvider("google_service_account", FakeCloudJwks).GetURL(),
 	}
 	MockJwtProviderMap["google_jwt"] = &conf.AuthProvider{
 		Id:      "google_jwt",
 		Issuer:  "api-proxy-testing@cloud.goog",
-		JwksUri: components.NewMockJwtProvider(FakeCloudJwks).GetURL(),
+		JwksUri: components.NewMockJwtProvider("google_jwt", FakeCloudJwks).GetURL(),
 	}
 	MockJwtProviderMap["endpoints_jwt"] = &conf.AuthProvider{
 		Id:      "endpoints_jwt",
 		Issuer:  "jwt-client.endpoints.sample.google.com",
-		JwksUri: components.NewMockJwtProvider(FakeEndpointsJwks).GetURL(),
+		JwksUri: components.NewMockJwtProvider("jwt-client.endpoints.sample.google.com", FakeEndpointsJwks).GetURL(),
 	}
 	MockJwtProviderMap["broken_provider"] = &conf.AuthProvider{
 		Id:      "broken_provider",
 		Issuer:  "http://broken_issuer.com",
-		JwksUri: components.NewMockInvalidJwtProvider().GetURL(),
+		JwksUri: components.NewMockInvalidJwtProvider("http://broken_issuer.com").GetURL(),
 	}
 	MockJwtProviderMap["test_auth"] = &conf.AuthProvider{
 		Id:      "test_auth",
 		Issuer:  "es256-issuer",
-		JwksUri: components.NewMockJwtProvider(PubKeys).GetURL(),
+		JwksUri: components.NewMockJwtProvider("es256-issuer", PubKeys).GetURL(),
 	}
 	MockJwtProviderMap["test_auth_1"] = &conf.AuthProvider{
 		Id:      "test_auth_1",
 		Issuer:  "rs256-issuer",
-		JwksUri: components.NewMockJwtProvider(PubKeys).GetURL(),
+		JwksUri: components.NewMockJwtProvider("test_auth_1", PubKeys).GetURL(),
 	}
 	MockJwtProviderMap["invalid_jwks_provider"] = &conf.AuthProvider{
 		Id:      "invalid_jwks_provider",
 		Issuer:  "invalid_jwks_provider",
-		JwksUri: components.NewMockJwtProvider("invalid-jwks").GetURL(),
+		JwksUri: components.NewMockJwtProvider("invalid_jwks_provider", "invalid-jwks").GetURL(),
 	}
 	MockJwtProviderMap["service_control_jwt_payload_auth"] = &conf.AuthProvider{
 		Id:      "service_control_jwt_payload_auth",
 		Issuer:  "es256-issuer",
-		JwksUri: components.NewMockJwtProvider(ServiceControlJwtPayloadPubKeys).GetURL(),
+		JwksUri: components.NewMockJwtProvider("service_control_jwt_payload_auth", ServiceControlJwtPayloadPubKeys).GetURL(),
 	}
 }
 
