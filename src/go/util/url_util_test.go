@@ -15,7 +15,13 @@
 package util
 
 import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
+
+	"github.com/gorilla/mux"
 )
 
 func TestParseURI(t *testing.T) {
@@ -120,8 +126,55 @@ func TestParseURI(t *testing.T) {
 		if uri != tc.wantURI {
 			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, uri, tc.wantURI)
 		}
-		if (err == nil && tc.wantErr != "") || (err != nil && tc.wantErr == "") {
+		if (err == nil && tc.wantErr != "") || (err != nil && err.Error() != tc.wantErr) {
 			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, err, tc.wantErr)
 		}
 	}
+}
+
+func TestResolveJwksUriUsingOpenID(t *testing.T) {
+	r := mux.NewRouter()
+	jwksUriEntry, _ := json.Marshal(map[string]string{"jwks_uri": "this-is-jwksUri"})
+	r.Path("/.well-known/openid-configuration/").Methods("GET").Handler(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Write(jwksUriEntry)
+		}))
+	openIDServer := httptest.NewServer(r)
+
+	invalidOpenIDServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("{}"))
+	}))
+
+	testData := []struct {
+		desc    string
+		issuer  string
+		wantUri string
+		wantErr string
+	}{
+		{
+			desc:    "Success, with correct jwks_uri",
+			issuer:  openIDServer.URL,
+			wantUri: "this-is-jwksUri",
+		},
+		{
+			desc:    "Fail, with wrong jwks_uri entry in openIDServer",
+			issuer:  invalidOpenIDServer.URL,
+			wantErr: "Invalid jwks_uri",
+		},
+		{
+			desc:    "Fail, with non-exist server referred by issuer using openID",
+			issuer:  "http://aaaaaaa.bbbbbbbbbbbbb.cccccccccc",
+			wantErr: "Failed to fetch jwks_uri from http://aaaaaaa.bbbbbbbbbbbbb.cccccccccc/.well-known/openid-configuration/",
+		},
+	}
+	for i, tc := range testData {
+		uri, err := ResolveJwksUriUsingOpenID(tc.issuer)
+		if uri != tc.wantUri {
+			t.Errorf("Test Desc(%d): %s, resolve jwksUri by openID got: %v, want: %v", i, tc.desc, uri, tc.wantUri)
+		}
+		if (err == nil && tc.wantErr != "") || (err != nil && !strings.Contains(err.Error(), tc.wantErr)) {
+			t.Errorf("Test Desc(%d): %s, resolve jwksUri by openID got: %v, want: %v", i, tc.desc, err, tc.wantErr)
+		}
+	}
+
 }

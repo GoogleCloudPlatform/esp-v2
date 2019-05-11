@@ -15,8 +15,11 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -51,4 +54,45 @@ func ParseURI(uri string) (string, string, uint32, string, error) {
 		return "", "", 0, "", err
 	}
 	return scheme, u.Hostname(), uint32(portVal), strings.TrimSuffix(u.RequestURI(), "/"), nil
+}
+
+// Note: the path of openID discovery may be https
+var getRemoteContent = func(path string) ([]byte, error) {
+	req, _ := http.NewRequest("GET", path, nil)
+	client := &http.Client{}
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("Fetching JwkUri returns not 200 OK: %v", resp.Status)
+	}
+	return ioutil.ReadAll(resp.Body)
+}
+
+func ResolveJwksUriUsingOpenID(uri string) (string, error) {
+	if !strings.HasPrefix(uri, "http") {
+		uri = fmt.Sprintf("https://%s", uri)
+	}
+	uri = strings.TrimSuffix(uri, "/")
+	uri = fmt.Sprintf("%s%s", uri, OpenIDDiscoveryCfgURLSuffix)
+
+	body, err := getRemoteContent(uri)
+	if err != nil {
+		return "", fmt.Errorf("Failed to fetch jwks_uri from %s: %v", uri, err)
+	}
+
+	var data map[string]interface{}
+	if err := json.Unmarshal(body, &data); err != nil {
+		return "", err
+	}
+
+	jwksURI, ok := data["jwks_uri"].(string)
+	if !ok {
+		return "", fmt.Errorf("Invalid jwks_uri %v in openID discovery configuration", data["jwks_uri"])
+	}
+	return jwksURI, nil
 }

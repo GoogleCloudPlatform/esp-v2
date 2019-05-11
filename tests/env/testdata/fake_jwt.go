@@ -15,19 +15,52 @@
 package testdata
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	"github.com/golang/glog"
 
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 var (
 	// MockJwtProviderMap contains key(ProviderId): value(Issuer)
-	MockJwtProviderMap = map[string]*conf.AuthProvider{}
+	MockJwtProviderMap         = map[string]*conf.AuthProvider{}
+	openIDProviderAddr         = "127.0.0.1:32025"
+	openIDInvalidProviderAddr  = "127.0.0.1:32026"
+	openIDNonexistProviderAddr = "127.0.0.1:32027"
 )
 
 func init() {
 	// Test Jwks and Jwt Tokens are generated following
 	// https://github.com/istio/istio/tree/master/security/tools/jwt/samples.
+	openIDJwks := components.NewMockJwtProvider("Issuer", ServiceControlJwtPayloadPubKeys).GetURL()
+	jwksUriEntry, _ := json.Marshal(map[string]string{"jwks_uri": openIDJwks})
+	_, err := components.NewOpenIDServer(openIDProviderAddr, string(jwksUriEntry))
+	if err != nil {
+		glog.Fatalf("Fail to init provider %s, %v.", "openID_provier", err)
+	}
+	MockJwtProviderMap["openID_provider"] = &conf.AuthProvider{
+		Id:     "openID_provider",
+		Issuer: fmt.Sprintf("http://%s", openIDProviderAddr),
+	}
+
+	jwksUriEntry, _ = json.Marshal(map[string]string{"issuer": openIDJwks})
+	_, err = components.NewOpenIDServer(openIDInvalidProviderAddr, string(jwksUriEntry))
+	if err != nil {
+		glog.Fatalf("Fail to init provider %s, %v.", "openID_invalid_provier", err)
+	}
+	MockJwtProviderMap["openID_invalid_provider"] = &conf.AuthProvider{
+		Id:     "openID_invalid_provider",
+		Issuer: fmt.Sprintf("http://%s", openIDInvalidProviderAddr),
+	}
+
+	MockJwtProviderMap["openID_nonexist_provider"] = &conf.AuthProvider{
+		Id:     "openID_nonexist_provider",
+		Issuer: fmt.Sprintf("http://%s", openIDNonexistProviderAddr),
+	}
+
 	MockJwtProviderMap["google_service_account"] = &conf.AuthProvider{
 		Id:      "google_service_account",
 		Issuer:  "api-proxy-testing@cloud.goog",
@@ -63,6 +96,11 @@ func init() {
 		Issuer:  "invalid_jwks_provider",
 		JwksUri: components.NewMockJwtProvider("invalid_jwks_provider", "invalid-jwks").GetURL(),
 	}
+	MockJwtProviderMap["nonexist_jwks_provider"] = &conf.AuthProvider{
+		Id:      "nonexist_jwks_provider",
+		Issuer:  "nonexist_jwks_provider",
+		JwksUri: "http://metadata.com/pkey",
+	}
 	MockJwtProviderMap["service_control_jwt_payload_auth"] = &conf.AuthProvider{
 		Id:      "service_control_jwt_payload_auth",
 		Issuer:  "es256-issuer",
@@ -72,15 +110,15 @@ func init() {
 
 const (
 	ServiceControlJwtPayloadPubKeys = `{
- "keys": [
-  {
-    "e":"AQAB",
-    "kid":"DHFbpoIUqrY8t2zpA2qXfCmr5VO5ZEr4RzHU_-envvQ",
-    "kty":"RSA",
-    "n":"xAE7eB6qugXyCAG3yhh7pkDkT65pHymX-P7KfIupjf59vsdo91bSP9C8H07pSAGQO1MV_xFj9VswgsCg4R6otmg5PV2He95lZdHtOcU5DXIg_pbhLdKXbi66GlVeK6ABZOUW3WYtnNHD-91gVuoeJT_DwtGGcp4ignkgXfkiEm4sw-4sfb4qdt5oLbyVpmW6x9cfa7vs2WTfURiCrBoUqgBo_-4WTiULmmHSGZHOjzwa8WtrtOQGsAFjIbno85jp6MnGGGZPYZbDAa_b3y5u-YpW7ypZrvD8BgtKVjgtQgZhLAGezMt0ua3DRrWnKqTZ0BJ_EyxOGuHJrLsn00fnMQ"
-  }
- ]
-}`
+	 "keys": [
+		{
+			"e":"AQAB",
+			"kid":"DHFbpoIUqrY8t2zpA2qXfCmr5VO5ZEr4RzHU_-envvQ",
+			"kty":"RSA",
+			"n":"xAE7eB6qugXyCAG3yhh7pkDkT65pHymX-P7KfIupjf59vsdo91bSP9C8H07pSAGQO1MV_xFj9VswgsCg4R6otmg5PV2He95lZdHtOcU5DXIg_pbhLdKXbi66GlVeK6ABZOUW3WYtnNHD-91gVuoeJT_DwtGGcp4ignkgXfkiEm4sw-4sfb4qdt5oLbyVpmW6x9cfa7vs2WTfURiCrBoUqgBo_-4WTiULmmHSGZHOjzwa8WtrtOQGsAFjIbno85jp6MnGGGZPYZbDAa_b3y5u-YpW7ypZrvD8BgtKVjgtQgZhLAGezMt0ua3DRrWnKqTZ0BJ_EyxOGuHJrLsn00fnMQ"
+		}
+	 ]
+	}`
 
 	PubKeys = `{
 		"keys": [
@@ -243,4 +281,53 @@ const (
 		"WV5dUcY6y9WIaGWqqMfYjb2Jcojf__JWFOgQwB1vYfGLErhaPpmObWnJi7rDIRDa-hFOfx" +
 		"1MXZIWNE9dZKjD8xUUlGC_BsJ62uaNVGTpHV5h_uhehTIX9xmsQwsDGGlyKn4SxVTXvKkY" +
 		"6der_JVuTHz1kkbGWjqwa3o1vwFs5gS3nT94ClQ"
+
+	// ./gen-jwt.py key.pem -jwks=./jwks.json --expire=3153600000 --iss="nonexist_jwks_provider" --aud bookstore_test_client.cloud.goog
+	FakeNonexistJwksProviderToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJ" +
+		"wb0lVcXJZOHQyenBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1Qif" +
+		"Q.eyJhdWQiOiJib29rc3RvcmVfdGVzdF9jbGllbnQuY2xvdWQuZ29vZyIsImV4cCI6NDcx" +
+		"MTA0OTc3MiwiaWF0IjoxNTU3NDQ5NzcyLCJpc3MiOiJub25leGlzdF9qd2tzX3Byb3ZpZG" +
+		"VyIiwic3ViIjoibm9uZXhpc3Rfandrc19wcm92aWRlciJ9.w56DsKD9Y0VMZn85JvDwds4" +
+		"lVjLcj4MEBQgF8lYproPkIR_URO0fcBy28k656y1eBDgldqS7k79_KNTcxWHShoUFXrcCD" +
+		"k-_Q3RlBT_DJFhT2qlqhSYnQkqLjhpU7LGjbObi988DscTbzGiJ1VjKhVpEITiho867r11" +
+		"Ou48cubokIJTE0T-" +
+		"2MKZxKsYn8NRVpdyy39Bp3IUv9AUbk4qEKB69pbfSt5H2Z6P_waYfv6m-GieQZWGlhO90Y" +
+		"ytoPuPekKhe8JVV2f5yCwLE89S9ZD8779_1G4UGOsyBfxGvOicoZ9nqtGbJYHnqMN3gjh-" +
+		"BWr3cm9Mswm8TCkP0Lv2cvQ"
+
+		// ./gen-jwt.py key.pem -jwks=jwks.json --expire=3153600000 --iss=http://127.0.0.1:32025 --aud=ok_audience
+	FakeOpenIDToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lV" +
+		"cXJZOHQyenBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ.eyJ" +
+		"hdWQiOiJva19hdWRpZW5jZSIsImV4cCI6NDcxMTcxODE2MiwiaWF0IjoxNTU4MTE4MTYyL" +
+		"CJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjMyMDI1Iiwic3ViIjoiaHR0cDovLzEyNy4wLjA" +
+		"uMTozMjAyNSJ9.O2dM3kilFqDfwrG8qtYMPyy8c_mnSiulsIp_KkfI4tUdaATV5M5Hf-1e" +
+		"VPGJXjmkzqG_hf8JHAF8yzjODWt7Cj_6xG21gW2n4NlnVdKb9a3iSQYecZ4hNwiQmCjKNy" +
+		"r8vrCkp6wEUShMZvjN330UivnRnHLsyjEliqqL9R9r7TQkM1VpJcm-0G25g7KxKmPC4kuO" +
+		"KsjIidjnEuFTuj_gM0PvC_hzK6vHt0vlQ-HfmB1ybKfYR0e1EBEjpWiU5c3u6uHxyUeBTR" +
+		"-ATE_AMNnYROxvP9U62ICA10GQYMn-KO5hkzALih2ZsaXbY5iwC9gllf1plpJiNuWpWmqN" +
+		"3KSmDA"
+
+	// ./gen-jwt.py key.pem -jwks=jwks.json --expire=3153600000 --iss=http://127.0.0.1:32026 --aud=ok_audience
+	FakeInvalidOpenIDToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lV" +
+		"cXJZOHQyenBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ.eyJ" +
+		"hdWQiOiJva19hdWRpZW5jZSIsImV4cCI6NDcxMTcxOTE2MCwiaWF0IjoxNTU4MTE5MTYwL" +
+		"CJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjMyMDI2Iiwic3ViIjoiaHR0cDovLzEyNy4wLjA" +
+		"uMTozMjAyNiJ9.ih2BG89Of6MTA331_UVPEif_XTw5WOjnZiVjTIta3i1gaG3suDRTYyd4" +
+		"Hn4OvDMpiO-cm1eXbU_n940oFLcjr2HMSxDDSHopCjAB5KedFEi4Mb0V7GQ-stn9UsVvv7" +
+		"MQbRY7GBxWmuxyYMXNmzUHvLVT41-UEu6jheIfyQV8nrXfVAIdQSWJSuQnq8_C88cPCIu5" +
+		"ZaUv2AMZVFgarjvdJz45JCEKXToX-36_6K6iRGrrgN6k1j8re3tyITxHtkBMwB7EyY7aRK" +
+		"qjWCGaGFreIGKNzY8Chcw_a8HZAAz7nNfkkBuIgZs2GEVwkqQeDWgtrct1oztS8bYcguro" +
+		"zMsCFw"
+
+	// ./gen-jwt.py key.pem -jwks=jwks.json --expire=3153600000 --iss=http://127.0.0.1:32027 --aud=ok_audience
+	FakeNonexistOpenIDToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lV" +
+		"cXJZOHQyenBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ.eyJ" +
+		"hdWQiOiJva19hdWRpZW5jZSIsImV4cCI6NDcxMTcxOTMzNCwiaWF0IjoxNTU4MTE5MzM0L" +
+		"CJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjMyMDI3Iiwic3ViIjoiaHR0cDovLzEyNy4wLjA" +
+		"uMTozMjAyNyJ9.jXody0fj7PMdYaINWggZch4fnoFo7bGeF6cMqJnwgdanSSW_FcwXsx2X" +
+		"dWoHLF153Qt0OGAZOE29ffti9LLkKzyYAGjsvatbPj0crtSAwQAzCyqy8-BMXBxawfNWuK" +
+		"Inmvyk1Xn9Hf-midyqlQdQGztDwksleTFxFQzd3MoTY7z8Pw_WxTrpQTI1HAjboE6OnsH4" +
+		"rLcncoKX5MX8kOnEZjO0US1nfbPHQnpjKdgq_42uusJVCYau__zMMoEhLlCYxTKrdmWQ_j" +
+		"LW0v8IOSbixa74w9TwlCr0TKzsd-8e4Jr4gksDNxtzJWPwKAuvvd6J9q5CZXQ-WmszDNCK" +
+		"vYbOQA"
 )

@@ -15,9 +15,13 @@
 package components
 
 import (
+	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
+
+	"github.com/gorilla/mux"
 )
 
 // MockJwtProvider mocks the Jwt provider.
@@ -53,6 +57,26 @@ func NewMockInvalidJwtProvider(issuer string) *MockJwtProvider {
 	}))
 	JwtProviders[issuer] = mockJwtProvider
 	return mockJwtProvider
+}
+
+// NewOpenIDServer creates a new Jwt provider with fixed addres.
+func NewOpenIDServer(addr, jwksUriEntry string) (*MockJwtProvider, error) {
+	l, err := net.Listen("tcp", addr)
+	if err != nil {
+		return nil, fmt.Errorf("Fail to create OpenIDServer %v", err)
+	}
+	r := mux.NewRouter()
+	r.Path("/.well-known/openid-configuration/").Methods("GET").Handler(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte(jwksUriEntry))
+		}))
+	mockJwtProvider := &MockJwtProvider{
+		s: httptest.NewUnstartedServer(r),
+	}
+	mockJwtProvider.s.Listener.Close()
+	mockJwtProvider.s.Listener = l
+	mockJwtProvider.s.Start()
+	return mockJwtProvider, nil
 }
 
 func (m *MockJwtProvider) GetURL() string {

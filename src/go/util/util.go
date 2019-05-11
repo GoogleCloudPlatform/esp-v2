@@ -28,6 +28,8 @@ const (
 	BackendRouting = "envoy.filters.http.backend_routing"
 	// The field name for jwt payload passed into metadata
 	JwtPayloadMetadataName = "jwt_payloads"
+	// Fake jwks uri used when jwksUri is unavaliable
+	FakeJwksUri = "http://aaaaaaaaaaaaa.bbbbbbbbbbbbb.cccccccccccc/inaccessible_pkey"
 
 	// Supported Http Methods.
 	GET     = "GET"
@@ -52,10 +54,11 @@ const (
 	RolloutStrategySuffix   = "/v1/instance/attributes/endpoints-rollout-strategy"
 	ServiceNameSuffix       = "/v1/instance/attributes/endpoints-service-name"
 
-	ServiceAccountTokenSuffix = "/v1/instance/service-accounts/default/token"
-	IdentityTokenSuffix       = "/v1/instance/service-accounts/default/identity"
-	ProjectIDSuffix           = "/v1/instance/project/project-id"
-	ZoneSuffix                = "/v1/instance/zone"
+	ServiceAccountTokenSuffix   = "/v1/instance/service-accounts/default/token"
+	IdentityTokenSuffix         = "/v1/instance/service-accounts/default/identity"
+	ProjectIDSuffix             = "/v1/instance/project/project-id"
+	ZoneSuffix                  = "/v1/instance/zone"
+	OpenIDDiscoveryCfgURLSuffix = "/.well-known/openid-configuration/"
 
 	// Platforms
 	GAEFlex = "GAE_FLEX"

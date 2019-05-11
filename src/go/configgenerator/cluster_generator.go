@@ -62,7 +62,7 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
 		clusters = append(clusters, brClusters...)
 	}
 
-	providerClusters, err := makeProviderCluster(serviceInfo)
+	providerClusters, err := makeJwtProviderClusters(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -72,13 +72,31 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
 	return clusters, nil
 }
 
-func makeProviderCluster(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
+func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
 	var providerClusters []cache.Resource
 	authn := serviceInfo.ServiceConfig().GetAuthentication()
 	for _, provider := range authn.GetProviders() {
-		scheme, hostname, port, _, err := ut.ParseURI(provider.JwksUri)
+		jwksUri := provider.GetJwksUri()
+
+		// Note: When jwksUri is empty, proxy will try to find jwksUri by openID
+		// discovery. If error happens during this process, a fake and unaccessible
+		// jwksUri will be filled instead.
+		if jwksUri == "" {
+			jwksUriByOpenID, err := ut.ResolveJwksUriUsingOpenID(provider.GetIssuer())
+			if err != nil {
+				glog.Warning(err.Error())
+				jwksUri = ut.FakeJwksUri
+			} else {
+				jwksUri = jwksUriByOpenID
+			}
+			provider.JwksUri = jwksUri
+		}
+
+		scheme, hostname, port, _, err := ut.ParseURI(jwksUri)
 		if err != nil {
-			continue
+			glog.Warningf("Fail to parse jwksUri %s with error %v", jwksUri, err)
+			scheme, hostname, port, _, _ = ut.ParseURI(ut.FakeJwksUri)
+			provider.JwksUri = ut.FakeJwksUri
 		}
 
 		c := &v2.Cluster{

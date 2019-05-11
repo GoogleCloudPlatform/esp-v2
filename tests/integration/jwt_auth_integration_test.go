@@ -36,7 +36,8 @@ func TestAsymmetricKeys(t *testing.T) {
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestAsymmetricKeys, "bookstore", []string{"test_auth", "test_auth_1",
-		"invalid_jwks_provider"})
+		"invalid_jwks_provider", "nonexist_jwks_provider", "openID_provider",
+		"openID_invalid_provider", "openID_nonexist_provider"})
 	s.OverrideAuthentication(&conf.Authentication{
 		Rules: []*conf.AuthenticationRule{
 			{
@@ -54,6 +55,22 @@ func TestAsymmetricKeys(t *testing.T) {
 						ProviderId: "invalid_jwks_provider",
 						Audiences:  "bookstore_test_client.cloud.goog",
 					},
+					{
+						ProviderId: "nonexist_jwks_provider",
+						Audiences:  "bookstore_test_client.cloud.goog",
+					},
+					{
+						ProviderId: "openID_provider",
+						Audiences:  "ok_audience",
+					},
+					{
+						ProviderId: "openID_invalid_provider",
+						Audiences:  "ok_audience",
+					},
+					{
+						ProviderId: "openID_nonexist_provider",
+						Audiences:  "ok_audience",
+					},
 				},
 			},
 		},
@@ -63,7 +80,6 @@ func TestAsymmetricKeys(t *testing.T) {
 	}
 	defer s.TearDown()
 	time.Sleep(time.Duration(5 * time.Second))
-
 	tests := []struct {
 		desc               string
 		clientProtocol     string
@@ -77,14 +93,14 @@ func TestAsymmetricKeys(t *testing.T) {
 		wantGRPCWebTrailer client.GRPCWebTrailer
 	}{
 		{
-			desc:           "No JWT passed in.",
+			desc:           "Failed, no JWT passed in.",
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
 			wantError:      "401 Unauthorized, Jwt is missing",
 		},
 		{
-			desc:           "ES256Token",
+			desc:           "Succeeded, with right token",
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
@@ -92,7 +108,7 @@ func TestAsymmetricKeys(t *testing.T) {
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
 		{
-			desc:           "RS256-signed jwt token is passed in \"Authorization: Bearer\" header",
+			desc:           "Succeeded, wth jwt token passed in \"Authorization: Bearer\" header",
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
@@ -100,7 +116,7 @@ func TestAsymmetricKeys(t *testing.T) {
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
 		{
-			desc:           "RS256-signed jwt token is passed in query",
+			desc:           "Succeeded, with jwt token passed in query",
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key&access_token=" + testdata.Rs256Token,
@@ -108,12 +124,48 @@ func TestAsymmetricKeys(t *testing.T) {
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
 		{
-			desc:           "Provider will provide wrong-format jwks",
+			desc:           "Failed, provider providing wrong-format jwks",
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
 			token:          testdata.FakeInvalidJwksProviderToken,
 			wantError:      "401 Unauthorized, Jwks remote fetch is failed",
+		},
+		{
+			desc:           "Failed, provider not existing",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves?key=api-key",
+			token:          testdata.FakeNonexistJwksProviderToken,
+			wantError:      "401 Unauthorized, Jwks remote fetch is failed",
+		},
+		{
+			desc:           "Succeeded, using openID discovery",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves?key=api-key",
+			token:          testdata.FakeOpenIDToken,
+			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
+		},
+		{
+			desc:           "Failed, the provider found by openID discovery providing invalid jwks",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves?key=api-key",
+			token:          testdata.FakeInvalidOpenIDToken,
+			// Note: The detailed error should be Jwks remote fetch is failed while envoy may inaccurate
+			// detailed error(issuer is not configured).
+			wantError: "401 Unauthorized",
+		},
+		{
+			desc:           "Failed, the provider got by openID discover not existing",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves?key=api-key",
+			token:          testdata.FakeNonexistOpenIDToken,
+			// Note: The detailed error should be Jwks remote fetch is failed while envoy may inaccurate
+			// detailed error(issuer is not configured).
+			wantError: "401 Unauthorized",
 		},
 	}
 

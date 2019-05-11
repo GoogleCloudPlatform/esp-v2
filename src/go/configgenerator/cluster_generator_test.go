@@ -15,7 +15,10 @@
 package configgenerator
 
 import (
+	"encoding/json"
 	"flag"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
@@ -23,9 +26,11 @@ import (
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
+	"github.com/gorilla/mux"
 	"google.golang.org/genproto/protobuf/api"
 
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
+	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
@@ -223,34 +228,34 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 	}
 }
 
-func TestMakeProviderCluster(t *testing.T) {
+func TestMakeJwtProviderClusters(t *testing.T) {
+	_, fakeJwksUriHost, _, _, _ := ut.ParseURI(ut.FakeJwksUri)
+
+	r := mux.NewRouter()
+	jwksUriEntry, _ := json.Marshal(map[string]string{"jwks_uri": "this-is-jwksUri"})
+	r.Path("/.well-known/openid-configuration/").Methods("GET").Handler(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Write(jwksUriEntry)
+		}))
+	openIDServer := httptest.NewServer(r)
+
 	testData := []struct {
-		desc              string
-		fakeServiceConfig *conf.Service
-		wantedClusters    []cache.Resource
-		backendProtocol   string
+		desc           string
+		fakeProviders  []*conf.AuthProvider
+		wantedClusters []cache.Resource
 	}{
 		{
-			desc: "Success for making providers",
-			fakeServiceConfig: &conf.Service{
-				Apis: []*api.Api{
-					{
-						Name: testApiName,
-					},
+			desc: "Use https jwksUri and http jwksUri",
+			fakeProviders: []*conf.AuthProvider{
+				&conf.AuthProvider{
+					Id:      "auth_provider",
+					Issuer:  "issuer_0",
+					JwksUri: "https://metadata.com/pkey",
 				},
-				Authentication: &conf.Authentication{
-					Providers: []*conf.AuthProvider{
-						&conf.AuthProvider{
-							Id:      "auth_provider_0",
-							Issuer:  "issuer_0",
-							JwksUri: "https://metadata.com/pkey",
-						},
-						&conf.AuthProvider{
-							Id:      "auth_provider_1",
-							Issuer:  "issuer_1",
-							JwksUri: "http://metadata.com/pkey",
-						},
-					},
+				&conf.AuthProvider{
+					Id:      "auth_provider",
+					Issuer:  "issuer_1",
+					JwksUri: "http://metadata.com/pkey",
 				},
 			},
 			wantedClusters: []cache.Resource{
@@ -295,21 +300,121 @@ func TestMakeProviderCluster(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "With wrong-format jwksUri, use FakeJwksUri",
+			fakeProviders: []*conf.AuthProvider{
+				&conf.AuthProvider{
+					Id:      "auth_provider",
+					Issuer:  "issuer_2",
+					JwksUri: "%",
+				}},
+			wantedClusters: []cache.Resource{
+				&v2.Cluster{
+					Name:                 "issuer_2",
+					ConnectTimeout:       20 * time.Second,
+					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
+					DnsLookupFamily:      v2.Cluster_V4_ONLY,
+					Hosts: []*core.Address{
+						{
+							Address: &core.Address_SocketAddress{
+								SocketAddress: &core.SocketAddress{
+									Address: fakeJwksUriHost,
+									PortSpecifier: &core.SocketAddress_PortValue{
+										PortValue: 80,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			desc: "Empty jwksUri, use jwksUri acquired by openID",
+			fakeProviders: []*conf.AuthProvider{
+				&conf.AuthProvider{
+					Id:     "auth_provider",
+					Issuer: openIDServer.URL,
+				},
+			},
+			wantedClusters: []cache.Resource{
+				&v2.Cluster{
+					Name:                 openIDServer.URL,
+					ConnectTimeout:       20 * time.Second,
+					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
+					DnsLookupFamily:      v2.Cluster_V4_ONLY,
+					Hosts: []*core.Address{
+						{
+							Address: &core.Address_SocketAddress{
+								SocketAddress: &core.SocketAddress{
+									Address: "this-is-jwksUri",
+									PortSpecifier: &core.SocketAddress_PortValue{
+										PortValue: 443,
+									},
+								},
+							},
+						},
+					},
+					TlsContext: &auth.UpstreamTlsContext{
+						Sni: "this-is-jwksUri",
+					},
+				},
+			},
+		},
+		{
+			desc: "Empty jwksUri and no jwksUri acquired by openID, use FakeJwksUri",
+			fakeProviders: []*conf.AuthProvider{
+				&conf.AuthProvider{
+					Id:     "auth_provider",
+					Issuer: "aaaaa.bbbbbb.ccccc/inaccessible_uri/",
+				},
+			},
+			wantedClusters: []cache.Resource{
+				&v2.Cluster{
+					Name:                 "aaaaa.bbbbbb.ccccc/inaccessible_uri/",
+					ConnectTimeout:       20 * time.Second,
+					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
+					DnsLookupFamily:      v2.Cluster_V4_ONLY,
+					Hosts: []*core.Address{
+						{
+							Address: &core.Address_SocketAddress{
+								SocketAddress: &core.SocketAddress{
+									Address: fakeJwksUriHost,
+									PortSpecifier: &core.SocketAddress_PortValue{
+										PortValue: 80,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
-
 	for i, tc := range testData {
-		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
+		fakeServiceConfig := &conf.Service{
+			Apis: []*api.Api{
+				{
+					Name: testApiName,
+				},
+			},
+			Authentication: &conf.Authentication{
+				Providers: tc.fakeProviders,
+			},
+		}
+
+		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		clusters, err := makeProviderCluster(fakeServiceInfo)
+		clusters, err := makeJwtProviderClusters(fakeServiceInfo)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		if !reflect.DeepEqual(clusters, tc.wantedClusters) {
-			t.Errorf("Test Desc(%d): %s, makeProviderClusters\ngot: %v,\nwant: %v", i, tc.desc, clusters, tc.wantedClusters)
+			t.Errorf("Test Desc(%d): %s, makeJwtProviderClusters\ngot: %v,\nwant: %v", i, tc.desc, clusters, tc.wantedClusters)
 		}
 
 	}
