@@ -38,10 +38,15 @@ func DoGet(url string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("http response status is not 200 OK: %s", resp.Status)
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("http got error: %v", err)
 	}
-	return ioutil.ReadAll(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, string(bodyBytes))
+	}
+	return bodyBytes, err
 }
 
 // DoPost performs a POST request to a specified url
@@ -79,10 +84,15 @@ func DoPostWithHeaders(url, message string, header map[string]string) ([]byte, e
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("http response status is not 200 OK: %s", resp.Status)
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("http got error: %v", err)
 	}
-	return ioutil.ReadAll(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, string(bodyBytes))
+	}
+	return bodyBytes, err
 }
 
 // doJWT performs an authenticated request using the credentials in the service account file.

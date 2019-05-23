@@ -554,7 +554,6 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 					ApiKey:            "",
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_7",
 					ProducerProjectID: "producer-project",
-					ConsumerProjectID: "123456",
 					FrontendProtocol:  "http",
 					HttpMethod:        "OPTIONS",
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_7 is called",

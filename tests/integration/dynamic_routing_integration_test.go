@@ -16,6 +16,7 @@ package integration
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
@@ -178,7 +179,7 @@ func TestDynamicRouting(t *testing.T) {
 				t.Fatal(err)
 			}
 		} else {
-			if tc.httpCallError.Error() != err.Error() {
+			if !strings.Contains(err.Error(), tc.httpCallError.Error()) {
 				t.Errorf("expected Http call error: %v, got: %v", tc.httpCallError, err)
 			}
 			continue

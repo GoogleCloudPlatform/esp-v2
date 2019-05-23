@@ -91,7 +91,6 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 					URL:               "/simpleget/304",
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetNotModified",
 					ProducerProjectID: "producer-project",
-					ConsumerProjectID: "123456",
 					FrontendProtocol:  "http",
 					HttpMethod:        "GET",
 					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetNotModified is called",
@@ -118,7 +117,6 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 					URL:               "/simpleget/403",
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetForbidden",
 					ProducerProjectID: "producer-project",
-					ConsumerProjectID: "123456",
 					ErrorType:         "4xx",
 					FrontendProtocol:  "http",
 					HttpMethod:        "GET",
@@ -145,14 +143,14 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 				t.Errorf("Test desc (%v) expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
 			}
 		} else {
-			if tc.httpCallError.Error() != err.Error() {
+			if !strings.Contains(err.Error(), tc.httpCallError.Error()) {
 				t.Errorf("Test desc (%v) expected Http call error: %v, got: %v", tc.desc, tc.httpCallError, err)
 			}
 		}
 
 		if tc.wantGetScRequestError != nil {
 			scRequests, err1 := s.ServiceControlServer.GetRequests(1)
-			if err1 == nil || err1.Error() != tc.wantGetScRequestError.Error() {
+			if err1 == nil || strings.Contains(err1.Error(), tc.wantGetScRequestError.Error()) {
 				t.Errorf("Test desc (%v) expected get service control request call error: %v, got: %v", tc.desc, tc.wantGetScRequestError, err1)
 				t.Errorf("Test desc (%v) got service control requests: %v", tc.desc, scRequests)
 			}

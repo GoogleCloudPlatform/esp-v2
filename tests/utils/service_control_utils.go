@@ -161,8 +161,8 @@ func createReportLabels(er *ExpectedReport) map[string]string {
 		"servicecontrol.googleapis.com/service_agent": "APIPROXY/" + er.Version,
 		"servicecontrol.googleapis.com/user_agent":    "APIPROXY",
 		"serviceruntime.googleapis.com/api_method":    er.ApiMethod,
-		"/response_code":                              response,
-		"/response_code_class":                        class,
+		"/response_code":       response,
+		"/response_code_class": class,
 	}
 	if er.StatusCode != "" {
 		labels["/status_code"] = er.StatusCode
@@ -401,6 +401,7 @@ func createByConsumerOperation(er *ExpectedReport) *sc.Operation {
 // CreateReport makes a service_controller.proto ReportRequest out of an ExpectedReport
 func CreateReport(er *ExpectedReport) sc.ReportRequest {
 	sendConsumer := er.ApiKey != ""
+	sendByConsumer := er.ConsumerProjectID != ""
 
 	op := createOperation(er)
 
@@ -468,7 +469,7 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 		ServiceConfigId: er.ServiceConfigID,
 		Operations:      []*sc.Operation{op},
 	}
-	if sendConsumer {
+	if sendByConsumer {
 		erPb.Operations = append(erPb.Operations, createByConsumerOperation(er))
 	}
 	return erPb
