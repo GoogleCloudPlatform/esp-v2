@@ -13,9 +13,10 @@
 // limitations under the License.
 
 #include "src/envoy/utils/token_subscriber.h"
+#include "src/envoy/utils/json_struct.h"
 
+#include "common/http/message_impl.h"
 #include "common/tracing/http_tracer_impl.h"
-#include "test/mocks/grpc/mocks.h"
 #include "test/mocks/init/mocks.h"
 #include "test/mocks/server/mocks.h"
 #include "test/test_common/utility.h"
@@ -29,10 +30,10 @@ namespace Utils {
 namespace {
 
 using ::Envoy::Server::Configuration::MockFactoryContext;
-using ::google::api_proxy::agent::GetTokenResponse;
 
 using ::testing::_;
 using ::testing::Invoke;
+using ::testing::Return;
 using ::testing::ReturnRef;
 
 class MockTokenSubscriberCallback : public TokenSubscriber::Callback {
@@ -41,33 +42,28 @@ class MockTokenSubscriberCallback : public TokenSubscriber::Callback {
 };
 
 class TokenSubscriberTest : public testing::Test {
- public:
-  TokenSubscriberTest() {
+ protected:
+  void SetUp() override {
     Init::TargetHandlePtr init_target_handle;
     EXPECT_CALL(context_.init_manager_, add(_))
         .WillOnce(Invoke([&init_target_handle](const Init::Target& target) {
           init_target_handle = target.createHandle("test");
         }));
 
-    raw_mock_client_ = new Envoy::Grpc::MockAsyncClient();
-    raw_mock_client_factory_ = new Envoy::Grpc::MockAsyncClientFactory();
-    token_sub_.reset(new TokenSubscriber(
-        context_, Envoy::Grpc::AsyncClientFactoryPtr(raw_mock_client_factory_),
-        token_callback_, nullptr));
+    token_sub_.reset(
+        new TokenSubscriber(context_, token_callback_, "fake_token_cluster",
+                            "http://fake_token_server/uri_suffix", true));
 
-    EXPECT_CALL(*raw_mock_client_factory_, create())
-        .WillOnce(Invoke([this]() -> Envoy::Grpc::AsyncClientPtr {
-          return Envoy::Grpc::AsyncClientPtr(raw_mock_client_);
-        }));
-
-    EXPECT_CALL(*raw_mock_client_, send(_, _, _, _, _))
-        .WillOnce(
-            Invoke([this](const Envoy::Protobuf::MethodDescriptor&,
-                          const Envoy::Protobuf::Message&,
-                          Envoy::Grpc::AsyncRequestCallbacks& callback,
-                          Envoy::Tracing::Span&,
-                          const absl::optional<std::chrono::milliseconds>&)
-                       -> Envoy::Grpc::AsyncRequest* {
+    raw_mock_client_ =
+        std::make_unique<NiceMock<Envoy::Http::MockAsyncClient>>();
+    EXPECT_CALL(context_.cluster_manager_, httpAsyncClientForCluster(_))
+        .WillRepeatedly(ReturnRef(*raw_mock_client_));
+    EXPECT_CALL(*raw_mock_client_, send_(_, _, _))
+        .WillRepeatedly(
+            Invoke([this](const Envoy::Http::MessagePtr&,
+                          Envoy::Http::AsyncClient::Callbacks& callback,
+                          const Envoy::Http::AsyncClient::RequestOptions&) {
+              call_count_++;
               client_callback_ = &callback;
               return nullptr;
             }));
@@ -79,63 +75,81 @@ class TokenSubscriberTest : public testing::Test {
     init_target_handle->initialize(init_watcher_);
   }
 
+  int call_count_ = 0;
+
   NiceMock<Init::ExpectableWatcherImpl> init_watcher_;
   NiceMock<MockFactoryContext> context_;
   MockTokenSubscriberCallback token_callback_;
-  Envoy::Grpc::AsyncRequestCallbacks* client_callback_{};
-  Envoy::Grpc::MockAsyncClient* raw_mock_client_{};
-  Envoy::Grpc::MockAsyncClientFactory* raw_mock_client_factory_{};
+  Envoy::Http::AsyncClient::Callbacks* client_callback_{};
+  std::unique_ptr<NiceMock<Envoy::Http::MockAsyncClient>> raw_mock_client_;
   TokenSubscriberPtr token_sub_;
 };
 
 TEST_F(TokenSubscriberTest, CallOnTokenUpdateOnSuccess) {
   EXPECT_CALL(token_callback_, onTokenUpdate(std::string("TOKEN")));
+  EXPECT_EQ(call_count_, 1);
+
+  Envoy::Http::HeaderMapImplPtr headers{new Envoy::Http::TestHeaderMapImpl{
+      {":status", "200"},
+  }};
 
   // Send a good token
-  GetTokenResponse* token_response = new GetTokenResponse;
-  token_response->set_access_token("TOKEN");
-  token_response->mutable_expires_in()->set_seconds(100);
-  client_callback_->onSuccessUntyped(
-      Envoy::ProtobufTypes::MessagePtr(token_response),
-      Envoy::Tracing::NullSpan::instance());
+  Envoy::Http::MessagePtr response(
+      new Envoy::Http::RequestMessageImpl(std::move(headers)));
+
+  std::string str_body(R"({
+    "access_token":"TOKEN",
+    "expires_in":3597523200
+  })");
+  response->body().reset(
+      new Buffer::OwnedImpl(str_body.data(), str_body.size()));
+
+  client_callback_->onSuccess(std::move(response));
 }
 
 TEST_F(TokenSubscriberTest, DoNotCallOnTokenUpdateOnFailure) {
   // Not called on failure.
   EXPECT_CALL(token_callback_, onTokenUpdate(_)).Times(0);
+  EXPECT_EQ(call_count_, 1);
 
   // Send a bad token
-  client_callback_->onFailure(Envoy::Grpc::Status::GrpcStatus::Internal, "",
-                              Envoy::Tracing::NullSpan::instance());
+  client_callback_->onFailure(Envoy::Http::AsyncClient::FailureReason::Reset);
 }
 
 TEST_F(TokenSubscriberTest, RefreshOnceTokenExpires) {
-  EXPECT_CALL(token_callback_, onTokenUpdate(std::string("TOKEN1")));
-
-  auto* raw_mock_client1 = new Envoy::Grpc::MockAsyncClient;
-  EXPECT_CALL(*raw_mock_client_factory_, create())
-      .WillOnce(Invoke([raw_mock_client1]() -> Envoy::Grpc::AsyncClientPtr {
-        return Envoy::Grpc::AsyncClientPtr(raw_mock_client1);
-      }));
-  EXPECT_CALL(*raw_mock_client1, send(_, _, _, _, _)).Times(1);
-
   // Send a good token `TOKEN1`
-  GetTokenResponse* token_response = new GetTokenResponse;
-  token_response->set_access_token("TOKEN1");
-  // Will refresh right away if the token expires in less than 5s.
-  token_response->mutable_expires_in()->set_seconds(1);
-  client_callback_->onSuccessUntyped(
-      Envoy::ProtobufTypes::MessagePtr(token_response),
-      Envoy::Tracing::NullSpan::instance());
+  EXPECT_EQ(call_count_, 1);
+  EXPECT_CALL(token_callback_, onTokenUpdate(std::string("TOKEN1")));
+  Envoy::Http::HeaderMapImplPtr headers1{new Envoy::Http::TestHeaderMapImpl{
+      {":status", "200"},
+  }};
+  Envoy::Http::MessagePtr response1(
+      new Envoy::Http::RequestMessageImpl(std::move(headers1)));
+  std::string str_body1(R"({
+    "access_token":"TOKEN1",
+    "expires_in":1
+  })");
+  response1->body().reset(
+      new Buffer::OwnedImpl(str_body1.data(), str_body1.size()));
+  client_callback_->onSuccess(std::move(response1));
 
+  // the onSuccess handler should immediately call refresh
+  EXPECT_EQ(call_count_, 2);
+
+  // Send a good token `TOKEN2`
   EXPECT_CALL(token_callback_, onTokenUpdate(std::string("TOKEN2")));
-
-  token_response = new GetTokenResponse;
-  token_response->set_access_token("TOKEN2");
-  token_response->mutable_expires_in()->set_seconds(100);
-  client_callback_->onSuccessUntyped(
-      Envoy::ProtobufTypes::MessagePtr(token_response),
-      Envoy::Tracing::NullSpan::instance());
+  Envoy::Http::HeaderMapImplPtr headers2{new Envoy::Http::TestHeaderMapImpl{
+      {":status", "200"},
+  }};
+  Envoy::Http::MessagePtr response2(
+      new Envoy::Http::RequestMessageImpl(std::move(headers2)));
+  std::string str_body2(R"({
+    "access_token":"TOKEN2",
+    "expires_in":100
+  })");
+  response2->body().reset(
+      new Buffer::OwnedImpl(str_body2.data(), str_body2.size()));
+  client_callback_->onSuccess(std::move(response2));
 }
 
 }  // namespace

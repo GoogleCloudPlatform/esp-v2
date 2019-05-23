@@ -149,14 +149,15 @@ func TestBackendAuthFilter(t *testing.T) {
             {
               "jwt_audience": "bar.com",
               "operation": "testapi.bar",
-              "token_cluster": "ads_cluster"
+              "token_cluster": "metadata-cluster"
             },
             {
               "jwt_audience": "foo.com",
               "operation": "testapi.foo",
-              "token_cluster": "ads_cluster"
+              "token_cluster": "metadata-cluster"
             }
-          ]
+          ],
+          "token_url":"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity"
         },
       "name": "envoy.filters.http.backend_auth"
     }`

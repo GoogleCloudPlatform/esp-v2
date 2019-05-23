@@ -26,10 +26,16 @@ message BackendAuthRule {
   string jwt_audience = 2 [(validate.rules).string.min_bytes = 1];
 
   // Token cluster address to fetch JWT token.
+  // TODO(toddbeckman): This field can be moved to the FilterConfig
   string token_cluster = 3 [(validate.rules).string.min_bytes = 1];
 }
 
 message FilterConfig {
   // A list of backend auth rules.
   repeated BackendAuthRule rules = 1;
+
+  // Token server url. Default is
+  // http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity
+  // Query parameters are added by the filter
+  string token_url = 2;
 }

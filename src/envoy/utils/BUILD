@@ -11,18 +11,44 @@ package(
 )
 
 envoy_cc_library(
+    name = "json_struct_lib",
+    srcs = ["json_struct.cc"],
+    hdrs = ["json_struct.h"],
+    repository = "@envoy",
+    deps = [
+        "@envoy//source/common/buffer:buffer_lib",
+        "@envoy//source/common/grpc:status_lib",
+        "@envoy//source/common/protobuf:utility_lib",
+    ],
+)
+
+envoy_cc_test(
+    name = "json_struct_test",
+    srcs = [
+        "json_struct_test.cc",
+    ],
+    repository = "@envoy",
+    deps = [
+        ":json_struct_lib",
+        "@envoy//test/test_common:utility_lib",
+    ],
+)
+
+envoy_cc_library(
     name = "token_subscriber_lib",
     srcs = ["token_subscriber.cc"],
     hdrs = ["token_subscriber.h"],
     repository = "@envoy",
     deps = [
-        "//api/agent:agent_proto_cc",
+        ":json_struct_lib",
         "@envoy//include/envoy/common:time_interface",
         "@envoy//include/envoy/event:dispatcher_interface",
         "@envoy//include/envoy/server:filter_config_interface",
         "@envoy//include/envoy/upstream:cluster_manager_interface",
-        "@envoy//source/common/grpc:async_client_lib",
-        "@envoy//source/common/grpc:async_client_manager_lib",
+        "@envoy//source/common/common:enum_to_int",
+        "@envoy//source/common/http:headers_lib",
+        "@envoy//source/common/http:message_lib",
+        "@envoy//source/common/http:utility_lib",
         "@envoy//source/common/init:target_lib",
     ],
 )

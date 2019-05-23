@@ -92,6 +92,7 @@ envoy_cc_library(
         ":service_control_call_interface",
         "//src/api_proxy/service_control:logs_metrics_loader_lib",
         "//src/envoy/utils:token_subscriber_lib",
+        "@envoy//include/envoy/server:filter_config_interface",
         "@envoy//source/common/protobuf:utility_lib",
     ],
 )

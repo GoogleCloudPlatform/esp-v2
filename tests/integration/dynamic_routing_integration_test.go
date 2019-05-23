@@ -186,8 +186,8 @@ func TestBackendAuth(t *testing.T) {
 	s := NewDynamicRoutingTestEnv(comp.TestBackendAuth)
 	s.OverrideMockMetadata(
 		map[string]string{
-			util.IdentityTokenSuffix + "?audience=https://localhost/bearertoken/constant&format=standard": "ya29.constant",
-			util.IdentityTokenSuffix + "?audience=https://localhost/bearertoken/append&format=standard":   "ya29.append",
+			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",
+			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/append":   "ya29.append",
 		})
 
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {

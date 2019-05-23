@@ -16,22 +16,26 @@ package util
 
 const (
 	// HTTP filter names.
-	// Service Control filter.
+
+	// ServiceControl filter.
 	ServiceControl = "envoy.filters.http.service_control"
-	// JWT Authn filter.
+
+	// JwtAuthn filter.
 	JwtAuthn = "envoy.filters.http.jwt_authn"
-	// Path Matcher filter.
+	// PathMatcher filter.
 	PathMatcher = "envoy.filters.http.path_matcher"
-	// Backend Auth filter.
+	// BackendAuth filter.
 	BackendAuth = "envoy.filters.http.backend_auth"
-	// Backend Routing filter.
+	// BackendRouting filter.
 	BackendRouting = "envoy.filters.http.backend_routing"
-	// The field name for jwt payload passed into metadata
+	// JwtPayloadMetadataName is the field name passed into metadata
 	JwtPayloadMetadataName = "jwt_payloads"
-	// Fake jwks uri used when jwksUri is unavaliable
+
+	// FakeJwksUri used when jwksUri is unavaliable
 	FakeJwksUri = "http://aaaaaaaaaaaaa.bbbbbbbbbbbbb.cccccccccccc/inaccessible_pkey"
 
 	// Supported Http Methods.
+
 	GET     = "GET"
 	PUT     = "PUT"
 	POST    = "POST"
@@ -40,14 +44,13 @@ const (
 	OPTIONS = "OPTIONS"
 	CUSTOM  = "CUSTOM"
 
-	// Clusters
-	TokenCluster = "ads_cluster"
-
 	// Rollout strategy
+
 	FixedRolloutStrategy   = "fixed"
 	ManagedRolloutStrategy = "managed"
 
 	// Metadata suffix
+
 	ConfigIDSuffix          = "/v1/instance/attributes/endpoints-service-version"
 	GAEServerSoftwareSuffix = "/v1/instance/attributes/gae_server_software"
 	KubeEnvSuffix           = "/v1/instance/attributes/kube-env"
@@ -61,6 +64,7 @@ const (
 	OpenIDDiscoveryCfgURLSuffix = "/.well-known/openid-configuration/"
 
 	// Platforms
+
 	GAEFlex = "GAE_FLEX"
 	GKE     = "GKE"
 	GCE     = "GCE"

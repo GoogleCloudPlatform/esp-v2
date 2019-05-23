@@ -13,59 +13,59 @@
 // limitations under the License.
 
 #include "src/envoy/utils/token_subscriber.h"
-#include "common/grpc/async_client_manager_impl.h"
-
-using ::google::api_proxy::agent::GetAccessTokenRequest;
-using ::google::api_proxy::agent::GetIdentityJWTTokenRequest;
-using ::google::api_proxy::agent::GetTokenResponse;
+#include "absl/strings/str_cat.h"
+#include "common/common/enum_to_int.h"
+#include "common/http/headers.h"
+#include "common/http/message_impl.h"
+#include "common/http/utility.h"
+#include "src/envoy/utils/json_struct.h"
 
 namespace Envoy {
 namespace Extensions {
 namespace Utils {
 namespace {
 
-// gRPC request timeout
-const std::chrono::milliseconds kGrpcRequestTimeoutMs(5000);
+// Required header when fetching from the metadata server
+const Envoy::Http::LowerCaseString kMetadataFlavorKey("Metadata-Flavor");
+const char kMetadataFlavor[]{"Google"};
+
+// request timeout
+const std::chrono::milliseconds kRequestTimeoutMs(5000);
 
 // Delay after a failed fetch
 const std::chrono::seconds kFailedRequestTimeout(60);
 
-const google::protobuf::MethodDescriptor& getAccessTokenDescriptor() {
-  static const google::protobuf::MethodDescriptor* descriptor =
-      ::google::api_proxy::agent::AgentService::descriptor()->FindMethodByName(
-          "GetAccessToken");
-  ASSERT(descriptor);
-  return *descriptor;
-}
+// If no expiration is provided in the response, refresh in this time.
+const std::chrono::seconds kDefaultTokenExpiry(3599);
 
-const google::protobuf::MethodDescriptor& getIdentityJWTTokenDescriptor() {
-  static const google::protobuf::MethodDescriptor* descriptor =
-      ::google::api_proxy::agent::AgentService::descriptor()->FindMethodByName(
-          "GetIdentityJWTToken");
-  ASSERT(descriptor);
-  return *descriptor;
+Envoy::Http::MessagePtr prepareHeaders(const std::string& token_url) {
+  absl::string_view host, path;
+  Http::Utility::extractHostPathFromUri(token_url, host, path);
+
+  Envoy::Http::HeaderMapImplPtr headers{new Envoy::Http::HeaderMapImpl{
+      {Envoy::Http::Headers::get().Method, "GET"},
+      {Envoy::Http::Headers::get().Host, std::string(host)},
+      {Envoy::Http::Headers::get().Path, std::string(path)},
+      {kMetadataFlavorKey, kMetadataFlavor}}};
+
+  Envoy::Http::MessagePtr message(
+      new Envoy::Http::RequestMessageImpl(std::move(headers)));
+
+  return message;
 }
 
 }  // namespace
 
-Envoy::Grpc::AsyncClientFactoryPtr makeClientFactory(
-    Envoy::Server::Configuration::FactoryContext& context,
-    const std::string& token_cluster) {
-  ::envoy::api::v2::core::GrpcService grpc_service;
-  grpc_service.mutable_envoy_grpc()->set_cluster_name(token_cluster);
-  return std::make_unique<Envoy::Grpc::AsyncClientFactoryImpl>(
-      context.clusterManager(), grpc_service, /*skip_cluster_check=*/true,
-      context.timeSource());
-}
-
 TokenSubscriber::TokenSubscriber(
     Envoy::Server::Configuration::FactoryContext& context,
-    Envoy::Grpc::AsyncClientFactoryPtr client_factory,
-    TokenSubscriber::Callback& callback, const std::string* audience)
-    : client_factory_(std::move(client_factory)),
+    TokenSubscriber::Callback& callback, const std::string& token_cluster,
+    const std::string& token_url, const bool json_response)
+    : cm_(context.clusterManager()),
       token_callback_(callback),
+      token_cluster_(token_cluster),
+      token_url_(token_url),
+      json_response_(json_response),
       active_request_(nullptr),
-      audience_(audience),
       init_target_("TokenSubscriber", [this] { refresh(); }) {
   refresh_timer_ =
       context.dispatcher().createTimer([this]() -> void { refresh(); });
@@ -83,45 +83,93 @@ void TokenSubscriber::refresh() {
   if (active_request_) {
     active_request_->cancel();
   }
-  async_client_ = client_factory_->create();
-  if (audience_ == nullptr) {
-    ENVOY_LOG(debug, "Sending GetAccessToken request");
-    GetAccessTokenRequest req;
-    active_request_ = async_client_->send(
-        getAccessTokenDescriptor(), req, *this,
-        Envoy::Tracing::NullSpan::instance(),
-        absl::optional<std::chrono::milliseconds>(kGrpcRequestTimeoutMs));
-  } else {
-    ENVOY_LOG(debug, "Sending GetIdentityJWTToken request");
-    GetIdentityJWTTokenRequest req;
-    req.set_audience(*audience_);
-    active_request_ = async_client_->send(
-        getIdentityJWTTokenDescriptor(), req, *this,
-        Envoy::Tracing::NullSpan::instance(),
-        absl::optional<std::chrono::milliseconds>(kGrpcRequestTimeoutMs));
-  }
+
+  ENVOY_LOG(debug, "Sending GetAccessToken request");
+
+  Envoy::Http::MessagePtr message = prepareHeaders(token_url_);
+
+  const struct Envoy::Http::AsyncClient::RequestOptions options =
+      Envoy::Http::AsyncClient::RequestOptions()
+          .setTimeout(kRequestTimeoutMs)
+          // Metadata server rejects X-Forwarded-For requests
+          .setSendXff(false);
+
+  active_request_ = cm_.httpAsyncClientForCluster(token_cluster_)
+                        .send(std::move(message), *this, options);
 }
 
-void TokenSubscriber::onSuccess(std::unique_ptr<GetTokenResponse>&& response,
-                                Envoy::Tracing::Span&) {
-  active_request_ = nullptr;
-  ENVOY_LOG(debug, "GetAccessToken got response: {}", response->DebugString());
-  token_callback_.onTokenUpdate(response->access_token());
+void TokenSubscriber::onSuccess(Envoy::Http::MessagePtr&& response) {
   init_target_.ready();
+
+  ENVOY_LOG(debug, "GetAccessToken got response: {}", response->bodyAsString());
+  active_request_ = nullptr;
+
+  const uint64_t status_code =
+      Envoy::Http::Utility::getResponseStatus(response->headers());
+
+  if (status_code == enumToInt(Envoy::Http::Code::OK)) {
+    ENVOY_LOG(debug, "GetAccessToken success");
+  } else {
+    ENVOY_LOG(debug, "GetAccessToken failed: {}", status_code);
+    return;
+  }
+
+  std::string token;
+  std::chrono::seconds expires_in;
+
+  if (json_response_) {
+    // access token response is a JSON payload
+    /*
+    {
+      "access_token": "string",
+      "expires_in": uint
+    }
+    */
+    ::google::protobuf::util::JsonParseOptions options;
+    ::google::protobuf::Struct response_pb;
+    const auto parse_status = ::google::protobuf::util::JsonStringToMessage(
+        response->bodyAsString(), &response_pb, options);
+    if (!parse_status.ok()) {
+      ENVOY_LOG(debug, "Parsing response failed: {}", parse_status.ToString());
+      return;
+    }
+    JsonStruct json_struct(response_pb);
+
+    if (!json_struct.get_string("access_token", &token).ok()) {
+      ENVOY_LOG(debug,
+                "Parsing response failed. Could not find `access_token`");
+      return;
+    }
+
+    int expires_seconds;
+    if (!json_struct.get_int("expires_in", &expires_seconds).ok()) {
+      ENVOY_LOG(debug, "Parsing response failed. Could not find `expires_in`");
+      return;
+    }
+    expires_in = std::chrono::seconds(expires_seconds);
+  } else {
+    // identity response is a string in the body
+    token = response->bodyAsString();
+    expires_in = kDefaultTokenExpiry;
+  }
+
   // Update the token 5 seconds before the expiration
-  if (response->expires_in().seconds() <= 5) {
+  if (expires_in.count() <= 5) {
     refresh();
   } else {
-    refresh_timer_->enableTimer(
-        std::chrono::seconds(response->expires_in().seconds() - 5));
+    refresh_timer_->enableTimer(expires_in - std::chrono::seconds(5));
   }
+
+  ENVOY_LOG(debug, "Got token: {}", token);
+  token_callback_.onTokenUpdate(token);
 }
 
-void TokenSubscriber::onFailure(Envoy::Grpc::Status::GrpcStatus status,
-                                const std::string& message,
-                                Envoy::Tracing::Span&) {
+void TokenSubscriber::onFailure(
+    Envoy::Http::AsyncClient::FailureReason reason) {
+  init_target_.ready();
   active_request_ = nullptr;
-  ENVOY_LOG(debug, "GetAccessToken failed with code: {}, {}", status, message);
+  ENVOY_LOG(debug, "GetAccessToken failed with code: {}, {}",
+            enumToInt(reason));
   init_target_.ready();
   refresh_timer_->enableTimer(kFailedRequestTimeout);
 }

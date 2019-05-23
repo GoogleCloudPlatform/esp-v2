@@ -25,13 +25,22 @@ namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 
+namespace {
+
+const char kDefaultTokenUrl[]{
+    "http://metadata.google.internal/computeMetadata/v1/instance/"
+    "service-accounts/default/token"};
+
+}  // namespace
+
 ServiceControlCallImpl::ServiceControlCallImpl(
-    const Service& config, Server::Configuration::FactoryContext& context)
+    const Service& config, Server::Configuration::FactoryContext& context,
+    const std::string& token_url)
     : config_(config),
       tls_(context.threadLocal().allocateSlot()),
-      token_subscriber_(
-          context, Utils::makeClientFactory(context, config.token_cluster()),
-          *this, /*audience=*/nullptr) {
+      token_subscriber_(context, *this, config.token_cluster(),
+                        token_url.empty() ? kDefaultTokenUrl : token_url,
+                        /*json_response=*/true) {
   if (config.has_service_config()) {
     ::google::api::Service origin_service;
     if (!config.service_config().UnpackTo(&origin_service)) {

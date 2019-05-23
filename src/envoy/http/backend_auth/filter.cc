@@ -18,6 +18,8 @@
 
 #include <string>
 
+#include "common/http/headers.h"
+#include "common/http/utility.h"
 #include "src/envoy/utils/filter_state_utils.h"
 
 namespace Envoy {
@@ -57,8 +59,14 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
   const TokenSharedPtr jwt_token = config_->cfg_parser().getJwtToken(audience);
   if (!jwt_token) {
     ENVOY_LOG(debug, "Token not found for audience: {}", audience);
-    return FilterHeadersStatus::Continue;
+    decoder_callbacks_->sendLocalReply(Http::Code::InternalServerError,
+                                       "missing tokens", nullptr,
+                                       absl::nullopt);
+    decoder_callbacks_->streamInfo().setResponseFlag(
+        StreamInfo::ResponseFlag::UnauthorizedExternalService);
+    return FilterHeadersStatus::StopIteration;
   }
+
   const auto& authorization = Http::Headers::get().Authorization;
   headers.remove(authorization);
   headers.addCopy(authorization, kBearer + *jwt_token);

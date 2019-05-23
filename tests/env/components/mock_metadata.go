@@ -15,6 +15,7 @@
 package components
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -40,7 +41,7 @@ var defaultResp = map[string]string{
 	util.ZoneSuffix:                fakeZonePath,
 }
 
-// MockMetadata mocks the Metadata server.
+// MockMetadataServer mocks the Metadata server.
 type MockMetadataServer struct {
 	s        *httptest.Server
 	reqCache map[string]int
@@ -88,6 +89,7 @@ func NewMockMetadata(pathResp map[string]string) *MockMetadataServer {
 			w.WriteHeader(http.StatusNotFound)
 		}
 	}))
+	fmt.Println("started metadata server at " + m.GetURL())
 	return m
 }
 

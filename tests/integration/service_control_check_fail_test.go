@@ -168,7 +168,8 @@ func TestServiceControlCheckError(t *testing.T) {
 					},
 				},
 			},
-			wantRequestsToMetaServer: &expectedRequestCount{"/v1/instance/service-accounts/default/token", 1},
+			// Note: first request is from Config Manager, second is from API Proxy
+			wantRequestsToMetaServer: &expectedRequestCount{"/v1/instance/service-accounts/default/token", 2},
 			wantRequestsToProvider:   &expectedRequestCount{"google_jwt", 1},
 			wantError:                "400 Bad Request, INVALID_ARGUMENT:Client project not valid. Please pass a valid project",
 			wantScRequests: []interface{}{
@@ -217,14 +218,14 @@ func TestServiceControlCheckError(t *testing.T) {
 		}
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
-			t.Errorf("Test (%s): failed,  expected Http call error: %v, got: %v", tc.desc, tc.wantError, err)
+			t.Errorf("Test (%s): failed\nexpected: %v\ngot: %v", tc.desc, tc.wantError, err)
 		} else if !strings.Contains(string(resp), tc.wantResp) {
-			t.Errorf("Test (%s): failed,  expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
+			t.Errorf("Test (%s): failed\nexpected: %s\ngot: %s", tc.desc, tc.wantResp, string(resp))
 		}
 
 		if tc.wantRequestsToMetaServer != nil {
 			if realCnt := s.MockMetadataServer.GetReqCnt(tc.wantRequestsToMetaServer.key); realCnt != tc.wantRequestsToMetaServer.cnt {
-				t.Errorf("Test (%s): failed, %s on MetadataServer should be requested by %v times not %v times.", tc.desc, tc.wantRequestsToProvider.key, tc.wantRequestsToMetaServer.cnt, realCnt)
+				t.Errorf("Test (%s): failed, %s on MetadataServer should be requested %v times not %v times.", tc.desc, tc.wantRequestsToProvider.key, tc.wantRequestsToMetaServer.cnt, realCnt)
 			}
 		}
 
@@ -233,7 +234,7 @@ func TestServiceControlCheckError(t *testing.T) {
 			if !ok {
 				t.Errorf("Test (%s): failed, the provider is not inited.", tc.desc)
 			} else if realCnt := provider.GetReqCnt(); realCnt != tc.wantRequestsToProvider.cnt {
-				t.Errorf("Test (%s): failed, pubkey of %s shoud be fetched by %v times instead of %v times.", tc.desc, tc.wantRequestsToProvider.key, tc.wantRequestsToProvider.cnt, realCnt)
+				t.Errorf("Test (%s): failed, pubkey of %s shoud be fetched %v times instead of %v times.", tc.desc, tc.wantRequestsToProvider.key, tc.wantRequestsToProvider.cnt, realCnt)
 			}
 		}
 

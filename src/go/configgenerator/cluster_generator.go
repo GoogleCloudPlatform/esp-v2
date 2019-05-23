@@ -31,8 +31,10 @@ import (
 
 const (
 	serviceControlClusterName = "service-control-cluster"
+	metadataServerClusterName = "metadata-cluster"
 )
 
+// MakeClusters provides dynamic cluster settings for Envoy
 func MakeClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
 	var clusters []cache.Resource
 	backendCluster, err := makeBackendCluster(serviceInfo)
@@ -41,6 +43,14 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
 	}
 	if backendCluster != nil {
 		clusters = append(clusters, backendCluster)
+	}
+
+	metadataCluster, err := makeMetadataCluster(serviceInfo)
+	if err != nil {
+		return nil, err
+	}
+	if metadataCluster != nil {
+		clusters = append(clusters, metadataCluster)
 	}
 
 	// Note: makeServiceControlCluster should be called before makeListener
@@ -70,6 +80,40 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
 		clusters = append(clusters, providerClusters...)
 	}
 	return clusters, nil
+}
+
+func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error) {
+	scheme, hostname, port, _, err := ut.ParseURI(*flags.MetadataURL)
+	if err != nil {
+		return nil, err
+	}
+
+	c := &v2.Cluster{
+		Name:           metadataServerClusterName,
+		LbPolicy:       v2.Cluster_ROUND_ROBIN,
+		ConnectTimeout: *flags.ClusterConnectTimeout,
+		ClusterDiscoveryType: &v2.Cluster_Type{
+			Type: v2.Cluster_STRICT_DNS,
+		},
+		Hosts: []*core.Address{{
+			Address: &core.Address_SocketAddress{
+				SocketAddress: &core.SocketAddress{
+					Address: hostname,
+					PortSpecifier: &core.SocketAddress_PortValue{
+						PortValue: port,
+					},
+				},
+			},
+		}},
+	}
+
+	if scheme == "https" {
+		c.TlsContext = &auth.UpstreamTlsContext{
+			Sni: hostname,
+		}
+	}
+
+	return c, nil
 }
 
 func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {

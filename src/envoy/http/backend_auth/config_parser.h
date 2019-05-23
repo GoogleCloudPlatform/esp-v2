@@ -17,6 +17,8 @@
 #include <list>
 #include <unordered_map>
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/strings/str_cat.h"
 #include "api/envoy/http/backend_auth/config.pb.h"
 #include "envoy/thread_local/thread_local.h"
 #include "src/envoy/utils/token_subscriber.h"
@@ -25,7 +27,6 @@ namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
 namespace BackendAuth {
-
 // Use shared_ptr to do atomic token update.
 typedef std::shared_ptr<std::string> TokenSharedPtr;
 class TokenCache : public ThreadLocal::ThreadLocalObject {
@@ -38,17 +39,8 @@ class AudienceContext : public Utils::TokenSubscriber::Callback {
   AudienceContext(
       const ::google::api::envoy::http::backend_auth::BackendAuthRule&
           proto_config,
-      Server::Configuration::FactoryContext& context)
-      : tls_(context.threadLocal().allocateSlot()),
-        token_subscriber_(
-            context,
-            Utils::makeClientFactory(context, proto_config.token_cluster()),
-            *this, &proto_config.jwt_audience()) {
-    tls_->set(
-        [](Event::Dispatcher&) -> ThreadLocal::ThreadLocalObjectSharedPtr {
-          return std::make_shared<TokenCache>();
-        });
-  }
+      Server::Configuration::FactoryContext& context,
+      const std::string& token_server_url);
 
   // TokenSubscriber::Callback function
   void onTokenUpdate(const std::string& token) override {

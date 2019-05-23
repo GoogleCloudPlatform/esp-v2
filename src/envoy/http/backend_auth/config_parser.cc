@@ -23,6 +23,32 @@ using ::google::api::envoy::http::backend_auth::FilterConfig;
 
 // TODO(kyuc): add unit tests for all possible backend rule configs.
 
+namespace {
+
+// TODO(toddbeckman): Figure out if this should be abstracted to the config
+const char kDefaultIdentityUrl[]{
+    "http://metadata.google.internal/computeMetadata/v1/instance/"
+    "service-accounts/default/identity"};
+
+}  // namespace
+
+AudienceContext::AudienceContext(
+    const ::google::api::envoy::http::backend_auth::BackendAuthRule&
+        proto_config,
+    Server::Configuration::FactoryContext& context,
+    const std::string& token_url)
+    : tls_(context.threadLocal().allocateSlot()),
+      token_subscriber_(
+          context, *this, proto_config.token_cluster(),
+          absl::StrCat(
+              token_url.empty() ? kDefaultIdentityUrl : token_url,
+              "?format=standard&audience=", proto_config.jwt_audience()),
+          /*json_response=*/false) {
+  tls_->set([](Event::Dispatcher&) -> ThreadLocal::ThreadLocalObjectSharedPtr {
+    return std::make_shared<TokenCache>();
+  });
+}
+
 FilterConfigParser::FilterConfigParser(
     const FilterConfig& config,
     Server::Configuration::FactoryContext& context) {
@@ -30,8 +56,8 @@ FilterConfigParser::FilterConfigParser(
     operation_map_[rule.operation()] = rule.jwt_audience();
     auto it = audience_map_.find(rule.jwt_audience());
     if (it == audience_map_.end()) {
-      audience_map_[rule.jwt_audience()] =
-          AudienceContextPtr(new AudienceContext(rule, context));
+      audience_map_[rule.jwt_audience()] = AudienceContextPtr(
+          new AudienceContext(rule, context, config.token_url()));
     }
   }
 }

@@ -37,7 +37,6 @@ using ::google::protobuf::util::error::Code;
 using ::testing::_;
 using ::testing::Ref;
 using ::testing::Return;
-using ::testing::ReturnRef;
 using ::testing::SaveArg;
 
 namespace Envoy {
@@ -132,7 +131,7 @@ class HandlerTest : public ::testing::Test {
 
     FilterConfig proto_config;
     ASSERT_TRUE(TextFormat::ParseFromString(filter_config, &proto_config));
-    EXPECT_CALL(mock_call_factory_, create_(_)).WillOnce(Return(mock_call_));
+    EXPECT_CALL(mock_call_factory_, create_(_, _)).WillOnce(Return(mock_call_));
     cfg_parser_ =
         std::make_unique<FilterConfigParser>(proto_config, mock_call_factory_);
   }

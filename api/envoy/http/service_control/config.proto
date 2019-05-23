@@ -48,7 +48,8 @@ message Service {
   // The Http uri to call service control
   HttpUri service_control_uri = 5;
 
-  // Envoy Grpc cluster of access token
+  // Cluster to fetch access token (Google metadata service)
+  // TODO(toddbeckman): This can be moved to the FilterConfig
   string token_cluster = 6 [(validate.rules).string.min_bytes = 1];
 
   // Some of service config fields needed by Envoy filter.
@@ -94,4 +95,10 @@ message FilterConfig {
 
   // GCP-related attributes.
   GcpAttributes gcp_attributes = 3;
+
+  // TODO(toddbeckman): This field and token_cluster can be converted to HttpUri
+
+  // Token server url. Default is
+  // http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token
+  string token_url = 4;
 }

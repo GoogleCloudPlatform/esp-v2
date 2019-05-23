@@ -301,29 +301,30 @@ var (
                      {
                       "jwt_audience": "1083071298623-e...t.apps.googleusercontent.com",
                       "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet",
-                      "token_cluster": "ads_cluster"
+                      "token_cluster": "metadata-cluster"
                     },
                     {
                       "jwt_audience": "1083071298623-e...t.apps.googleusercontent.com",
                       "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
-                      "token_cluster": "ads_cluster"
+                      "token_cluster": "metadata-cluster"
                     },
                     {
                       "jwt_audience": "https://us-central1-cloud-esf.cloudfunctions.net/hello",
                       "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello",
-                      "token_cluster": "ads_cluster"
+                      "token_cluster": "metadata-cluster"
                     },
                     {
                       "jwt_audience": "1083071298623-e...t.apps.googleusercontent.com",
                       "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets",
-                      "token_cluster": "ads_cluster"
+                      "token_cluster": "metadata-cluster"
                     },
                     {
                       "jwt_audience": "https://us-west2-cloud-esf.cloudfunctions.net/search",
                       "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search",
-                      "token_cluster": "ads_cluster"
+                      "token_cluster": "metadata-cluster"
                     }
-                  ]
+                  ],
+                  "token_url":"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity"
                 },
                 "name": "envoy.filters.http.backend_auth"
               },

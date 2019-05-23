@@ -48,7 +48,8 @@ const (
 	statPrefix = "ingress_http"
 )
 
-func MakeListener(serviceInfo *sc.ServiceInfo) (*v2.Listener, error) {
+// MakeListeners provides dynamic listener settings for Envoy
+func MakeListeners(serviceInfo *sc.ServiceInfo) (*v2.Listener, error) {
 	httpFilters := []*hcm.HttpFilter{}
 
 	if *flags.CorsPreset == "basic" || *flags.CorsPreset == "cors_with_regex" {
@@ -325,13 +326,14 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	if serviceInfo == nil || serviceInfo.ServiceConfig().GetControl().GetEnvironment() == "" {
 		return nil
 	}
+
 	lowercaseProtocol := strings.ToLower(*flags.BackendProtocol)
 	serviceName := serviceInfo.ServiceConfig().GetName()
 	service := &scpb.Service{
 		ServiceName:       serviceName,
 		ServiceConfigId:   serviceInfo.ConfigID,
 		ProducerProjectId: serviceInfo.ServiceConfig().GetProducerProjectId(),
-		TokenCluster:      ut.TokenCluster,
+		TokenCluster:      metadataServerClusterName,
 		ServiceControlUri: &scpb.HttpUri{
 			Uri:     serviceInfo.ServiceControlURI,
 			Cluster: serviceControlClusterName,
@@ -363,7 +365,9 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 
 	filterConfig := &scpb.FilterConfig{
 		Services: []*scpb.Service{service},
+		TokenUrl: fmt.Sprintf("%s%s", *flags.MetadataURL, ut.ServiceAccountTokenSuffix),
 	}
+
 	if serviceInfo.GcpAttributes != nil {
 		filterConfig.GcpAttributes = serviceInfo.GcpAttributes
 	}
@@ -453,10 +457,13 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 			&bapb.BackendAuthRule{
 				Operation:    operation,
 				JwtAudience:  method.BackendRule.JwtAudience,
-				TokenCluster: ut.TokenCluster,
+				TokenCluster: metadataServerClusterName,
 			})
 	}
-	backendAuthConfig := &bapb.FilterConfig{Rules: rules}
+	backendAuthConfig := &bapb.FilterConfig{
+		Rules:    rules,
+		TokenUrl: fmt.Sprintf("%s%s", *flags.MetadataURL, ut.IdentityTokenSuffix),
+	}
 	backendAuthConfigStruct, _ := util.MessageToStruct(backendAuthConfig)
 	backendAuthFilter := &hcm.HttpFilter{
 		Name:       ut.BackendAuth,

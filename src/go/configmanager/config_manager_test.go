@@ -748,14 +748,15 @@ func TestFetchListeners(t *testing.T) {
                                                         "service_name":"%s",
                                                         "service_config_id":"%s",
                                                         "producer_project_id":"%s",
-                                                        "token_cluster": "ads_cluster",
+                                                        "token_cluster": "metadata-cluster",
                                                         "service_config":{
                                                            "@type":"type.googleapis.com/google.api.Service",
                                                            "logging":{"producer_destinations":[{"logs":["endpoints_log"],"monitored_resource":"api"}]},
                                                            "logs":[{"name":"endpoints_log"}]
                                                          }
                                                     }
-                                                ]
+                                                ],
+                                                "token_url":"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"
                                             },
                                             "name":"envoy.filters.http.service_control"
                                         },
@@ -1042,9 +1043,10 @@ func TestFetchListeners(t *testing.T) {
                                                     "uri":"https://servicecontrol.googleapis.com/v1/services/"
                                                 },
                                                 "service_name":"bookstore.endpoints.project123.cloud.goog",
-                                                "token_cluster":"ads_cluster"
+                                                "token_cluster":"metadata-cluster"
                                             }
-                                        ]
+                                        ],
+                                        "token_url":"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"
                                     },
                                     "name":"envoy.filters.http.service_control"
                                 },

@@ -33,8 +33,9 @@ class ServiceContext {
  public:
   ServiceContext(
       const ::google::api::envoy::http::service_control::Service& config,
-      ServiceControlCallFactory& factory)
-      : config_(config), service_control_call_(factory.create(config)) {
+      ServiceControlCallFactory& factory, const std::string& token_url)
+      : config_(config),
+        service_control_call_(factory.create(config, token_url)) {
     min_stream_report_interval_ms_ = config_.min_stream_report_interval_ms();
     if (!min_stream_report_interval_ms_) {
       min_stream_report_interval_ms_ = kDefaultMinStreamReportIntervalMs;

@@ -161,7 +161,7 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	}
 
 	m.Infof("adding Listener configuration for api: %v", m.serviceInfo.Name)
-	listener, err := gen.MakeListener(m.serviceInfo)
+	listener, err := gen.MakeListeners(m.serviceInfo)
 	if err != nil {
 		return nil, err
 	}

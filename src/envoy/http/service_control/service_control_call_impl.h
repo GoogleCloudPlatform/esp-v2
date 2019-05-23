@@ -15,7 +15,10 @@
 #pragma once
 
 #include "api/envoy/http/service_control/config.pb.h"
+#include "common/common/logger.h"
+#include "envoy/server/filter_config.h"
 #include "envoy/thread_local/thread_local.h"
+#include "envoy/upstream/cluster_manager.h"
 #include "google/api/service.pb.h"
 #include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/http/service_control/client_cache.h"
@@ -52,13 +55,15 @@ class ThreadLocalCache : public ThreadLocal::ThreadLocalObject {
   ClientCache client_cache_;
 };
 
-class ServiceControlCallImpl : public ServiceControlCall,
-                               public Utils::TokenSubscriber::Callback,
-                               public Logger::Loggable<Logger::Id::filter> {
+class ServiceControlCallImpl
+    : public ServiceControlCall,
+      public Envoy::Extensions::Utils::TokenSubscriber::Callback,
+      public Logger::Loggable<Logger::Id::filter> {
  public:
   ServiceControlCallImpl(
       const ::google::api::envoy::http::service_control::Service& config,
-      Server::Configuration::FactoryContext& context);
+      Server::Configuration::FactoryContext& context,
+      const std::string& token_url);
 
   void callCheck(
       const ::google::api_proxy::service_control::CheckRequestInfo& request,
@@ -73,7 +78,7 @@ class ServiceControlCallImpl : public ServiceControlCall,
     return tls_->getTyped<ThreadLocalCache>();
   }
 
-  // Utils::TokenSubscriber::Callback function
+  // TokenSubscriber::Callback
   void onTokenUpdate(const std::string& token) override {
     TokenSharedPtr new_token = std::make_shared<std::string>(token);
     tls_->runOnAllThreads([this, new_token]() {
@@ -85,7 +90,7 @@ class ServiceControlCallImpl : public ServiceControlCall,
   std::unique_ptr<::google::api_proxy::service_control::RequestBuilder>
       request_builder_;
   ThreadLocal::SlotPtr tls_;
-  Utils::TokenSubscriber token_subscriber_;
+  Envoy::Extensions::Utils::TokenSubscriber token_subscriber_;
 };
 
 class ServiceControlCallFactoryImpl : public ServiceControlCallFactory {
@@ -94,9 +99,10 @@ class ServiceControlCallFactoryImpl : public ServiceControlCallFactory {
       : context_(context) {}
 
   ServiceControlCallPtr create(
-      const ::google::api::envoy::http::service_control::Service& config)
-      override {
-    return std::make_unique<ServiceControlCallImpl>(config, context_);
+      const ::google::api::envoy::http::service_control::Service& config,
+      const std::string& token_url) override {
+    return std::make_unique<ServiceControlCallImpl>(config, context_,
+                                                    token_url);
   }
 
  private:

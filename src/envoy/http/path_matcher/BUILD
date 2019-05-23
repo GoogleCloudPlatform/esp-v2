@@ -31,7 +31,6 @@ envoy_cc_library(
     ],
     repository = "@envoy",
     deps = [
-        "//api/agent:agent_proto_cc",
         "//api/envoy/http/path_matcher:config_proto_cc",
         "//src/api_proxy/path_matcher:path_matcher_lib",
         "//src/api_proxy/path_matcher:variable_binding_utils_lib",

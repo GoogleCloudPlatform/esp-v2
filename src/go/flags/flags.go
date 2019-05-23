@@ -23,6 +23,7 @@ import (
 
 var (
 	// Service Management related configurations. Must be set.
+
 	ServiceName     = flag.String("service", "", "endpoint service name")
 	ConfigID        = flag.String("version", "", "initial service config id")
 	RolloutStrategy = flag.String("rollout_strategy", "fixed", `service config rollout strategy, must be either "managed" or "fixed"`)
@@ -30,6 +31,7 @@ var (
 	CheckMetadata   = flag.Bool("check_metadata", false, `enable fetching service name, config ID and rollout strategy from service metadata server`)
 
 	// Cors related configurations.
+
 	CorsPreset           = flag.String("cors_preset", "", `enable CORS support, must be either "basic" or "cors_with_regex"`)
 	CorsAllowOrigin      = flag.String("cors_allow_origin", "", "set Access-Control-Allow-Origin to a specific origin")
 	CorsAllowOriginRegex = flag.String("cors_allow_origin_regex", "", "set Access-Control-Allow-Origin to a regular expression")
@@ -40,12 +42,15 @@ var (
 	CorsAllowCredentials = flag.Bool("cors_allow_credentials", false, "whether include the Access-Control-Allow-Credentials header with the value true in responses or not")
 
 	// Backend routing configurations.
+
 	EnableBackendRouting = flag.Bool("enable_backend_routing", false, `enable apiproxy to route requests according to the "x-google-backend" or "backend" configuration`)
 
 	// Envoy specific configurations.
+
 	ClusterConnectTimeout = flag.Duration("cluster_connect_imeout", 20*time.Second, "cluster connect timeout in seconds")
 
 	// Network related configurations.
+
 	Node                 = flag.String("node", "api_proxy", "envoy node id")
 	ListenerAddress      = flag.String("listener_address", "0.0.0.0", "listener socket ip address")
 	ClusterAddress       = flag.String("cluster_address", "127.0.0.1", "cluster socket ip address")
@@ -57,10 +62,12 @@ var (
 	ClusterPort   = flag.Int("cluster_port", 8082, "cluster port")
 
 	// Flags for testing purpose.
+
 	SkipServiceControlFilter = flag.Bool("skip_service_control_filter", false, "skip service control filter, for test purpose")
 	SkipJwtAuthnFilter       = flag.Bool("skip_jwt_authn_filter", false, "skip jwt authn filter, for test purpose")
 
 	// Envoy configurations.
+
 	EnvoyUseRemoteAddress  = flag.Bool("envoy_use_remote_address", false, "Envoy HttpConnectionManager configuration, please refer to envoy documentation for detailed information.")
 	EnvoyXffNumTrustedHops = flag.Int("envoy_xff_num_trusted_hops", 2, "Envoy HttpConnectionManager configuration, please refer to envoy documentation for detailed information.")
 

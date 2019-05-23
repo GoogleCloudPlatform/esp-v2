@@ -107,9 +107,16 @@ ClientCache::ClientCache(
   options.check_transport = [this](const CheckRequest& request,
                                    CheckResponse* response,
                                    TransportDoneFunc on_done) {
+    const std::string& token = token_fn_();
+    if (token.empty()) {
+      on_done(
+          Status(Code::UNAUTHENTICATED,
+                 std::string("Missing access token for service control call")));
+      return;
+    }
     auto* call = HttpCall::create(cm_, config_.service_control_uri());
     call->call(
-        config_.service_name() + ":check", token_fn_(), request,
+        config_.service_name() + ":check", token, request,
         [this, response, on_done](const Status& status,
                                   const std::string& body) {
           if (status.ok()) {
@@ -133,9 +140,16 @@ ClientCache::ClientCache(
   options.report_transport = [this](const ReportRequest& request,
                                     ReportResponse* response,
                                     TransportDoneFunc on_done) {
+    const std::string& token = token_fn_();
+    if (token.empty()) {
+      on_done(
+          Status(Code::UNAUTHENTICATED,
+                 std::string("Missing access token for service control call")));
+      return;
+    }
     auto* call = HttpCall::create(cm_, config_.service_control_uri());
     call->call(
-        config_.service_name() + ":report", token_fn_(), request,
+        config_.service_name() + ":report", token, request,
         [this, response, on_done](const Status& status,
                                   const std::string& body) {
           if (status.ok()) {

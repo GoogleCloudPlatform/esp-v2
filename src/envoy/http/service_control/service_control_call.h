@@ -44,7 +44,8 @@ class ServiceControlCallFactory {
   virtual ~ServiceControlCallFactory() {}
 
   virtual ServiceControlCallPtr create(
-      const ::google::api::envoy::http::service_control::Service& config) PURE;
+      const ::google::api::envoy::http::service_control::Service& config,
+      const std::string& token_url) PURE;
 };
 
 }  // namespace ServiceControl

@@ -14,14 +14,13 @@
 
 #pragma once
 
-#include "api/agent/agent_service.pb.h"
 #include "common/common/logger.h"
-#include "common/grpc/async_client_impl.h"
 #include "common/init/target_impl.h"
 #include "envoy/common/pure.h"
 #include "envoy/common/time.h"
 #include "envoy/event/dispatcher.h"
-#include "envoy/grpc/async_client_manager.h"
+#include "envoy/http/async_client.h"
+#include "envoy/http/message.h"
 #include "envoy/server/filter_config.h"
 #include "envoy/upstream/cluster_manager.h"
 
@@ -42,9 +41,8 @@ namespace Utils {
 //   Each target starts to make its remote call and signals `ready` to manager
 //   when it is initialized.
 class TokenSubscriber
-    : public Envoy::Grpc::TypedAsyncRequestCallbacks<
-          ::google::api_proxy::agent::GetTokenResponse>,
-      public Envoy::Logger::Loggable<Envoy::Logger::Id::grpc> {
+    : public Envoy::Http::AsyncClient::Callbacks,
+      public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   class Callback {
    public:
@@ -54,38 +52,30 @@ class TokenSubscriber
 
   // TODO(kyuc): Maybe add a name that gets passed to Init::TargetImpl.
   TokenSubscriber(Envoy::Server::Configuration::FactoryContext& context,
-                  Envoy::Grpc::AsyncClientFactoryPtr client_factory,
-                  Callback& callback, const std::string* audience);
+                  Callback& callback, const std::string& token_cluster,
+                  const std::string& token_url, const bool json_response);
 
   virtual ~TokenSubscriber();
 
-  // Grpc::TypedAsyncRequestCallbacks functions
-  void onCreateInitialMetadata(Envoy::Http::HeaderMap&) override {}
-  void onSuccess(
-      std::unique_ptr<::google::api_proxy::agent::GetTokenResponse>&& response,
-      Envoy::Tracing::Span&) override;
-  void onFailure(Envoy::Grpc::Status::GrpcStatus status,
-                 const std::string& message, Envoy::Tracing::Span&) override;
-
  private:
+  // Envoy::Http::AsyncClient::Callbacks
+  void onSuccess(Envoy::Http::MessagePtr&& response) override;
+  void onFailure(Envoy::Http::AsyncClient::FailureReason reason) override;
+
   void refresh();
 
-  Envoy::Grpc::AsyncClientFactoryPtr client_factory_;
+  Upstream::ClusterManager& cm_;
   Callback& token_callback_;
+  const std::string& token_cluster_;
+  const std::string token_url_;
+  const bool json_response_;
 
-  Envoy::Grpc::AsyncClientPtr async_client_;
-  Envoy::Grpc::AsyncRequest* active_request_{};
+  Envoy::Http::AsyncClient::Request* active_request_{};
 
   Envoy::Event::TimerPtr refresh_timer_;
-  const std::string* audience_;
   Envoy::Init::TargetImpl init_target_;
 };
 typedef std::unique_ptr<TokenSubscriber> TokenSubscriberPtr;
-
-// Create Async Client Factory
-Envoy::Grpc::AsyncClientFactoryPtr makeClientFactory(
-    Envoy::Server::Configuration::FactoryContext& context,
-    const std::string& token_cluster);
 
 }  // namespace Utils
 }  // namespace Extensions

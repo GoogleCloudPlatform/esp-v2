@@ -85,7 +85,7 @@ func (e *TestEnv) OverrideMockMetadata(newMetdaData map[string]string) {
 	e.mockMetadataOverride = newMetdaData
 }
 
-// OverrideMockServiceManagement replaces mock Service Management implementation by a custom server.
+// OverrideMockServiceManagementServer replaces mock Service Management implementation by a custom server.
 // Set s nil to turn off service management.
 func (e *TestEnv) OverrideMockServiceManagementServer(s ServiceManagementServer) {
 	e.mockServiceManagementServer = s
@@ -149,7 +149,7 @@ func addDynamicRoutingBackendPort(serviceConfig *conf.Service, port uint16) erro
 	return nil
 }
 
-// SetUp setups Envoy, ConfigManager, and Backend server for test.
+// Setup setups Envoy, ConfigManager, and Backend server for test.
 func (e *TestEnv) Setup(confArgs []string) error {
 	if e.mockServiceManagementServer != nil {
 		if err := addDynamicRoutingBackendPort(e.fakeServiceConfig, e.ports.DynamicRoutingBackendPort); err != nil {
