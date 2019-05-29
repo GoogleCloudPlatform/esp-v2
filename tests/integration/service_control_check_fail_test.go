@@ -212,12 +212,8 @@ func TestServiceControlCheckError(t *testing.T) {
 		var err error
 		if tc.token != "" {
 			resp, err = client.DoJWT(fmt.Sprintf("http://localhost:%v", s.Ports().ListenerPort), tc.method, tc.path, tc.apiKey, "", tc.token)
-		} else if tc.method == "POST" {
-			resp, err = client.DoPostWithHeaders(tc.url, tc.message, tc.requestHeader)
-		} else if tc.method == "GET" {
-			resp, err = client.DoGet(tc.url)
 		} else {
-			t.Fatalf("Test (%s): failed, unknown HTTP method to call", tc.desc)
+			resp, err = client.DoWithHeaders(tc.url, tc.method, tc.message, nil)
 		}
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {

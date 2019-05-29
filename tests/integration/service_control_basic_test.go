@@ -16,18 +16,15 @@ package integration
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 	"testing"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
-	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 	"google.golang.org/genproto/googleapis/api/annotations"
 
-	bsClient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
@@ -340,15 +337,7 @@ func TestServiceControlBasic(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		var resp []byte
-		var err error
-		if tc.method == "POST" {
-			resp, err = client.DoPostWithHeaders(tc.url, tc.message, tc.requestHeader)
-		} else if tc.method == "GET" {
-			resp, err = client.DoGet(tc.url)
-		} else {
-			t.Fatalf("Test (%s): failed, unknown HTTP method to call", tc.desc)
-		}
+		resp, err := client.DoWithHeaders(tc.url, tc.method, tc.message, tc.requestHeader)
 		if tc.httpCallError == nil {
 			if err != nil {
 				t.Fatalf("Test (%s): failed, %v", tc.desc, err)
@@ -365,221 +354,6 @@ func TestServiceControlBasic(t *testing.T) {
 		if tc.wantGetScRequestError != nil {
 			scRequests, err1 := s.ServiceControlServer.GetRequests(1)
 			if err1 == nil || err1.Error() != tc.wantGetScRequestError.Error() {
-				t.Errorf("Test (%s): failed", tc.desc)
-				t.Errorf("expected get service control request call error: %v, got: %v", tc.wantGetScRequestError, err1)
-				t.Errorf("got service control requests: %v", scRequests)
-			}
-			continue
-		}
-
-		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
-		if err1 != nil {
-			t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err1)
-		}
-		utils.CheckScRequest(t, scRequests, tc.wantScRequests, tc.desc)
-	}
-}
-
-func TestServiceControlCache(t *testing.T) {
-	serviceName := "test-echo"
-	configId := "test-config-id"
-
-	args := []string{"--service=" + serviceName, "--version=" + configId,
-		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
-
-	s := env.NewTestEnv(comp.TestServiceControlCache, "echo", []string{"google_jwt"})
-	if err := s.Setup(args); err != nil {
-		t.Fatalf("fail to setup test env, %v", err)
-	}
-	defer s.TearDown()
-
-	url := fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key")
-	message := "hello"
-	num := 10
-	wantResp := `{"message":"hello"}`
-	for i := 0; i < num; i++ {
-		resp, err := client.DoPost(url, message)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !strings.Contains(string(resp), wantResp) {
-			t.Errorf("expected: %s, got: %s", wantResp, string(resp))
-		}
-	}
-
-	wantScRequests := []interface{}{
-		&utils.ExpectedCheck{
-			Version:         utils.APIProxyVersion,
-			ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
-			ServiceConfigID: "test-config-id",
-			ConsumerID:      "api_key:api-key",
-			OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-			CallerIp:        "127.0.0.1",
-		},
-		&utils.ExpectedReport{
-			Aggregate:         int64(num),
-			Version:           utils.APIProxyVersion,
-			ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
-			ServiceConfigID:   "test-config-id",
-			URL:               "/echo?key=api-key",
-			ApiKey:            "api-key",
-			ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-			ProducerProjectID: "producer-project",
-			ConsumerProjectID: "123456",
-			FrontendProtocol:  "http",
-			HttpMethod:        "POST",
-			LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo is called",
-			StatusCode:        "0",
-			RequestSize:       238,
-			ResponseSize:      126,
-			RequestBytes:      238,
-			ResponseBytes:     126,
-			ResponseCode:      200,
-			Platform:          util.GCE,
-			Location:          "test-zone",
-		},
-	}
-
-	scRequests, err := s.ServiceControlServer.GetRequests(len(wantScRequests))
-	if err != nil {
-		t.Fatalf("GetRequests returns error: %v", err)
-	}
-
-	utils.CheckScRequest(t, scRequests, wantScRequests, "TestServiceControlCache")
-}
-
-func TestServiceControlCredentialId(t *testing.T) {
-	serviceName := "test-bookstore"
-	configId := "test-config-id"
-
-	args := []string{"--service=" + serviceName, "--version=" + configId,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--suppress_envoy_headers",
-	}
-	s := env.NewTestEnv(comp.TestServiceControlLogJwtPayloads, "bookstore", []string{"google_jwt"})
-
-	s.OverrideAuthentication(&conf.Authentication{Rules: []*conf.AuthenticationRule{
-		{
-			Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-			Requirements: []*conf.AuthRequirement{
-				{
-					ProviderId: "google_jwt",
-				},
-			},
-		},
-	},
-	})
-
-	s.AppendUsageRules([]*conf.UsageRule{
-		{
-			Selector:               "endpoints.examples.bookstore.Bookstore.ListShelves",
-			AllowUnregisteredCalls: true,
-		},
-	})
-
-	if err := s.Setup(args); err != nil {
-		t.Fatalf("fail to setup test env, %v", err)
-	}
-	defer s.TearDown()
-
-	testData := []struct {
-		desc                  string
-		clientProtocol        string
-		method                string
-		httpMethod            string
-		token                 string
-		requestHeader         map[string]string
-		message               string
-		usageRules            []*conf.UsageRule
-		authenticationRules   []*conf.AuthenticationRule
-		wantResp              string
-		httpCallError         error
-		wantScRequests        []interface{}
-		wantGetScRequestError error
-	}{
-		{
-			desc:           "success; When api_key is unavaliable, the label credential_id is iss and the check request is skipped",
-			clientProtocol: "http",
-			method:         "/v1/shelves",
-			httpMethod:     "GET",
-			token:          testdata.FakeCloudToken,
-			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
-			wantScRequests: []interface{}{
-				&utils.ExpectedReport{
-					Version:           utils.APIProxyVersion,
-					ServiceName:       "bookstore.endpoints.cloudesf-testing.cloud.goog",
-					ServiceConfigID:   "test-config-id",
-					URL:               "/v1/shelves",
-					JwtAuth:           "issuer=YXBpLXByb3h5LXRlc3RpbmdAY2xvdWQuZ29vZw",
-					ApiMethod:         "endpoints.examples.bookstore.Bookstore.ListShelves",
-					ProducerProjectID: "producer project",
-					FrontendProtocol:  "http",
-					BackendProtocol:   "grpc",
-					HttpMethod:        "GET",
-					LogMessage:        "endpoints.examples.bookstore.Bookstore.ListShelves is called",
-					StatusCode:        "0",
-					RequestSize:       167,
-					ResponseSize:      291,
-					RequestBytes:      167,
-					ResponseBytes:     291,
-					ResponseCode:      200,
-					Platform:          util.GCE,
-					Location:          "test-zone",
-				},
-			},
-		},
-		{
-			desc:           "success; When api_key is unavaliable, the label credential_id is iss plus aud and the check request is skipped",
-			clientProtocol: "http",
-			method:         "/v1/shelves",
-			httpMethod:     "GET",
-			token:          testdata.FakeCloudTokenSingleAudience1,
-			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
-			wantScRequests: []interface{}{
-				&utils.ExpectedReport{
-					Version:           utils.APIProxyVersion,
-					ServiceName:       "bookstore.endpoints.cloudesf-testing.cloud.goog",
-					ServiceConfigID:   "test-config-id",
-					URL:               "/v1/shelves",
-					JwtAuth:           "issuer=YXBpLXByb3h5LXRlc3RpbmdAY2xvdWQuZ29vZw&audience=Ym9va3N0b3JlX3Rlc3RfY2xpZW50LmNsb3VkLmdvb2c",
-					ApiMethod:         "endpoints.examples.bookstore.Bookstore.ListShelves",
-					ProducerProjectID: "producer project",
-					FrontendProtocol:  "http",
-					BackendProtocol:   "grpc",
-					HttpMethod:        "GET",
-					LogMessage:        "endpoints.examples.bookstore.Bookstore.ListShelves is called",
-					StatusCode:        "0",
-					RequestSize:       167,
-					ResponseSize:      291,
-					RequestBytes:      167,
-					ResponseBytes:     291,
-					ResponseCode:      200,
-					Platform:          util.GCE,
-					Location:          "test-zone",
-				},
-			},
-		},
-	}
-
-	for _, tc := range testData {
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-		resp, err := bsClient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, http.Header{})
-
-		if tc.httpCallError == nil {
-			if err != nil {
-				t.Fatalf("Test (%s): failed, %v", tc.desc, err)
-			}
-			if !strings.Contains(string(resp), tc.wantResp) {
-				t.Errorf("Test (%s): failed,  expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
-			}
-		} else {
-			if tc.httpCallError.Error() != err.Error() {
-				t.Errorf("Test (%s): failed,  expected Http call error: %v, got: %v", tc.desc, tc.httpCallError, err)
-			}
-		}
-
-		if tc.wantGetScRequestError != nil {
-			scRequests, err1 := s.ServiceControlServer.GetRequests(1)
-			if err1.Error() != tc.wantGetScRequestError.Error() {
 				t.Errorf("Test (%s): failed", tc.desc)
 				t.Errorf("expected get service control request call error: %v, got: %v", tc.wantGetScRequestError, err1)
 				t.Errorf("got service control requests: %v", scRequests)

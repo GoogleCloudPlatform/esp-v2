@@ -163,16 +163,7 @@ func TestDynamicRouting(t *testing.T) {
 	}
 	for _, tc := range testData {
 		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
-		var gotResp []byte
-		var err error
-		if tc.method == "GET" {
-			gotResp, err = client.DoGet(url)
-
-		} else if tc.method == "POST" {
-			gotResp, err = client.DoPost(url, tc.message)
-		} else {
-			t.Fatalf("unknown HTTP method (%v) to call", tc.method)
-		}
+		gotResp, err := client.DoWithHeaders(url, tc.method, tc.message, nil)
 
 		if tc.httpCallError == nil {
 			if err != nil {
@@ -234,16 +225,7 @@ func TestBackendAuth(t *testing.T) {
 
 	for _, tc := range testData {
 		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
-		var resp []byte
-		var err error
-		switch tc.method {
-		case "GET":
-			resp, err = client.DoGet(url)
-		case "POST":
-			resp, err = client.DoPost(url, tc.message)
-		default:
-			t.Fatalf("Test Desc(%s): unsupported HTTP Method %s", tc.desc, tc.path)
-		}
+		resp, err := client.DoWithHeaders(url, tc.method, tc.message, nil)
 
 		if err != nil {
 			t.Fatalf("Test Desc(%s): %v", tc.desc, err)

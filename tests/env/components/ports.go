@@ -55,6 +55,7 @@ const (
 	TestServiceControlRequestInDynamicRouting
 	TestServiceControlRequestWithAllowCors
 	TestServiceControlRequestWithoutAllowCors
+	TestServiceControlALlHTTPMethod
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
 	TestServiceControlProtocolWithGRPCBackend

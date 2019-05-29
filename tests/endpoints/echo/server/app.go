@@ -67,6 +67,18 @@ func main() {
 		HandlerFunc(bearerTokenHandler)
 	r.PathPrefix("/dynamicrouting").Methods("GET", "POST").
 		HandlerFunc(dynamicRoutingHandler)
+
+	r.PathPrefix("/echoMethod").Methods("GET").
+		HandlerFunc(echoMethodHandler)
+	r.PathPrefix("/echoMethod").Methods("POST").
+		HandlerFunc(echoMethodHandler)
+	r.PathPrefix("/echoMethod").Methods("PUT").
+		HandlerFunc(echoMethodHandler)
+	r.PathPrefix("/echoMethod").Methods("DELETE").
+		HandlerFunc(echoMethodHandler)
+	r.PathPrefix("/echoMethod").Methods("PATCH").
+		HandlerFunc(echoMethodHandler)
+
 	if *enableRootPathHandler {
 		r.PathPrefix("/").Methods("GET").
 			HandlerFunc(dynamicRoutingHandler)
@@ -84,6 +96,12 @@ func main() {
 		err = http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
 	}
 	log.Fatal(err)
+}
+
+// echoMethodHandler reads a method from the header, and writes it back out.
+func echoMethodHandler(w http.ResponseWriter, r *http.Request) {
+	resp := fmt.Sprintf(`{"RequestMethod": "%s"}`, r.Method)
+	w.Write([]byte(resp))
 }
 
 // echoHandler reads a JSON object from the body, and writes it back out.

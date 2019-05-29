@@ -208,15 +208,7 @@ func TestServiceControlAPIKeyDefaultLocation(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		var resp []byte
-		var err error
-		if tc.method == "POST" {
-			resp, err = client.DoPostWithHeaders(tc.url, tc.message, tc.requestHeader)
-		} else if tc.method == "GET" {
-			resp, err = client.DoGet(tc.url)
-		} else {
-			t.Fatalf("Test (%s): failed, unknown HTTP method to call", tc.desc)
-		}
+		resp, err := client.DoWithHeaders(tc.url, tc.method, tc.message, tc.requestHeader)
 		if tc.httpCallError == nil {
 			if err != nil {
 				t.Fatalf("Test (%s): failed, %v", tc.desc, err)

@@ -32,55 +32,50 @@ import (
 
 // DoGet performs a Get request to a specified url
 func DoGet(url string) ([]byte, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, fmt.Errorf("http got error: %v", err)
-	}
-	defer resp.Body.Close()
-
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("http got error: %v", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, string(bodyBytes))
-	}
-	return bodyBytes, err
+	return DoWithHeaders(url, "GET", "", nil)
 }
 
 // DoPost performs a POST request to a specified url
 func DoPost(url, message string) ([]byte, error) {
-	return DoPostWithHeaders(url, message, nil)
+	return DoWithHeaders(url, "POST", message, nil)
 }
 
-// DoPostWithHeaders performs a POST request to a specified url with the given headers
-func DoPostWithHeaders(url, message string, header map[string]string) ([]byte, error) {
-	if header == nil {
-		header = map[string]string{}
-	}
-	msg := map[string]string{
-		"message": message,
-	}
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(msg); err != nil {
-		return nil, err
-	}
+// DoPostWithHeaders performs a POST request to a specified url with given headers and message
+func DoPostWithHeaders(url, message string, headers map[string]string) ([]byte, error) {
+	return DoWithHeaders(url, "POST", message, headers)
+}
 
-	request, err := http.NewRequest("POST", url, &buf)
+// DoWithHeaders performs a GET/POST/PUT/DELETE/PATCH request to a specified url with given headers and message(if provided)
+func DoWithHeaders(url, method, message string, headers map[string]string) ([]byte, error) {
+	var request *http.Request
+	var err error
+	if method == "DELETE" || method == "GET" {
+		request, err = http.NewRequest(method, url, nil)
+	} else {
+		msg := map[string]string{
+			"message": message,
+		}
+		var buf bytes.Buffer
+		if err := json.NewEncoder(&buf).Encode(msg); err != nil {
+			return nil, err
+		}
+		request, err = http.NewRequest(method, url, &buf)
+	}
 
 	if err != nil {
 		return nil, fmt.Errorf("create request error: %v", err)
 	}
 
-	request.Header.Set("Content-Type", "application/json")
-	for k, v := range header {
-		request.Header.Set(k, v)
+	if method == "POST" || method == "PATCH" || method == "PUT" {
+		request.Header.Set("Content-Type", "application/json")
+		for k, v := range headers {
+			request.Header.Set(k, v)
+		}
 	}
 
 	resp, err := http.DefaultClient.Do(request)
 	if err != nil {
-		return nil, fmt.Errorf("http post error: %v", err)
+		return nil, fmt.Errorf("http %s error: %v", method, err)
 	}
 	defer resp.Body.Close()
 
@@ -95,7 +90,7 @@ func DoPostWithHeaders(url, message string, header map[string]string) ([]byte, e
 	return bodyBytes, err
 }
 
-// doJWT performs an authenticated request using the credentials in the service account file.
+// DoJWT performs an authenticated request using the credentials in the service account file.
 func DoJWT(host, method, path, apiKey, serviceAccount, token string) ([]byte, error) {
 	if serviceAccount != "" {
 		sa, err := ioutil.ReadFile(serviceAccount)
