@@ -75,7 +75,12 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   bool isConfigured() const { return require_ctx_ != nullptr; }
 
   bool isCheckRequired() const {
-    return !require_ctx_->config().api_key().allow_without_api_key();
+    return !require_ctx_->config().api_key().allow_without_api_key() &&
+           !require_ctx_->config().skip_service_control();
+  }
+
+  bool isReportRequired() const {
+    return !require_ctx_->config().skip_service_control();
   }
 
   bool hasApiKey() const { return !api_key_.empty(); }

@@ -16,21 +16,18 @@ package integration
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 	"testing"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
-	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 	"google.golang.org/genproto/googleapis/api/annotations"
 
-	bsClient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
+
 func TestServiceControlAllHTTPMethods(t *testing.T) {
 	serviceName := "test-echo"
 	configId := "test-config-id"

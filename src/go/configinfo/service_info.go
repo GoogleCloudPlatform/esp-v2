@@ -263,6 +263,7 @@ func (s *ServiceInfo) processUsageRule() {
 	for _, r := range s.ServiceConfig().GetUsage().GetRules() {
 		method := s.getOrCreateMethod(r.GetSelector())
 		method.AllowUnregisteredCalls = r.GetAllowUnregisteredCalls()
+		method.SkipServiceControl = r.GetSkipServiceControl()
 	}
 }
 

@@ -19,12 +19,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
 
-	"github.com/golang/protobuf/proto"
 	sc "github.com/google/go-genproto/googleapis/api/servicecontrol/v1"
 )
 
@@ -51,7 +52,7 @@ type serviceResponse struct {
 type MockServiceCtrl struct {
 	s                  *httptest.Server
 	ch                 chan *ServiceRequest
-	count              int
+	count              *int32
 	checkResp          *serviceResponse
 	reportResp         *serviceResponse
 	checkHandler       http.Handler
@@ -70,10 +71,10 @@ func (h *serviceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	req := &ServiceRequest{
 		ReqType: h.resp.reqType,
 	}
+	atomic.AddInt32(h.m.count, 1)
 	req.ReqBody, _ = ioutil.ReadAll(r.Body)
-
 	h.m.ch <- req
-	h.m.count++
+
 	w.Write(h.resp.respBody)
 }
 
@@ -93,6 +94,7 @@ func SetOKCheckResponse() []byte {
 func NewMockServiceCtrl(service string) *MockServiceCtrl {
 	m := &MockServiceCtrl{
 		ch:                 make(chan *ServiceRequest, 100),
+		count:              new(int32),
 		getRequestsTimeout: defaultTimeout,
 	}
 
@@ -128,6 +130,16 @@ func NewMockServiceCtrl(service string) *MockServiceCtrl {
 // GetURL returns the URL of MockServiceCtrl.
 func (m *MockServiceCtrl) GetURL() string {
 	return m.s.URL
+}
+
+// GetRequestCount returns the request count of MockServiceCtrl.
+func (m *MockServiceCtrl) GetRequestCount() int {
+	return int(atomic.LoadInt32(m.count))
+}
+
+// ResetRequestCount resets the request count of MockServiceCtrl.
+func (m *MockServiceCtrl) ResetRequestCount() {
+	atomic.StoreInt32(m.count, 0)
 }
 
 // SetGetRequestsTimeout sets the timeout for GetRequests.

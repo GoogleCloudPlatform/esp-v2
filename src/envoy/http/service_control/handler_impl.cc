@@ -201,7 +201,7 @@ void ServiceControlHandlerImpl::callReport(
     const Http::HeaderMap* request_headers,
     const Http::HeaderMap* response_headers,
     const Http::HeaderMap* response_trailers) {
-  if (!isConfigured()) {
+  if (!isConfigured() || !isReportRequired()) {
     return;
   }
 

@@ -340,6 +340,7 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 		ServiceConfig:   copyServiceConfigForReportMetrics(serviceInfo.ServiceConfig()),
 		BackendProtocol: lowercaseProtocol,
 	}
+
 	if *flags.LogRequestHeaders != "" {
 		service.LogRequestHeaders = strings.Split(*flags.LogRequestHeaders, ",")
 		for i := range service.LogRequestHeaders {
@@ -370,8 +371,9 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
 		requirement := &scpb.Requirement{
-			ServiceName:   serviceName,
-			OperationName: operation,
+			ServiceName:        serviceName,
+			OperationName:      operation,
+			SkipServiceControl: method.SkipServiceControl,
 		}
 
 		// For these OPTIONS methods, auth should be disabled and AllowWithoutApiKey

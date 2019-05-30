@@ -26,6 +26,7 @@ type methodInfo struct {
 	BackendRule            backendInfo
 	AllowUnregisteredCalls bool
 	IsGeneratedOption      bool
+	SkipServiceControl     bool
 }
 
 // bakcendInfo stores information from Backend rule for backend rerouting.

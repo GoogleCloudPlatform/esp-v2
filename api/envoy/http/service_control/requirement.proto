@@ -89,4 +89,8 @@ message Requirement {
 
   // API version. Used for Chemist report request.
   string api_version = 6;
+
+  // If true, the selected method should skip service control and the control
+  // plane features, such as quota and billing.
+  bool skip_service_control = 7;
 }
