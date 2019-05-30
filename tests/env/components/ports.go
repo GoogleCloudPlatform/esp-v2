@@ -54,6 +54,7 @@ const (
 	TestServiceControlCheckError
 	TestServiceControlRequestInDynamicRouting
 	TestServiceControlRequestWithAllowCors
+	TestServiceControlReportFailed
 	TestServiceControlRequestWithoutAllowCors
 	TestServiceControlALlHTTPMethod
 	TestSimpleCorsWithBasicPreset

@@ -44,8 +44,9 @@ type ServiceRequest struct {
 }
 
 type serviceResponse struct {
-	reqType  ServiceRequestType
-	respBody []byte
+	reqType        ServiceRequestType
+	respBody       []byte
+	respStatusCode int
 }
 
 // MockServiceMrg mocks the Service Management server.
@@ -75,6 +76,9 @@ func (h *serviceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	req.ReqBody, _ = ioutil.ReadAll(r.Body)
 	h.m.ch <- req
 
+	if h.resp.respStatusCode != 0 {
+		w.WriteHeader(h.resp.respStatusCode)
+	}
 	w.Write(h.resp.respBody)
 }
 
@@ -132,8 +136,7 @@ func (m *MockServiceCtrl) GetURL() string {
 	return m.s.URL
 }
 
-// GetRequestCount returns the request count of MockServiceCtrl.
-func (m *MockServiceCtrl) GetRequestCount() int {
+func (m *MockServiceCtrl) getRequestCount() int {
 	return int(atomic.LoadInt32(m.count))
 }
 
@@ -153,6 +156,11 @@ func (m *MockServiceCtrl) SetCheckResponse(checkResponse *sc.CheckResponse) {
 	m.checkResp.respBody = req_b
 }
 
+// SetReportResponseStatus sets the status of the report response of the service control.
+func (m *MockServiceCtrl) SetReportResponseStatus(statusCode int) {
+	m.reportResp.respStatusCode = statusCode
+}
+
 // GetRequests returns a slice of requests received.
 func (m *MockServiceCtrl) GetRequests(n int) ([]*ServiceRequest, error) {
 	r := make([]*ServiceRequest, n)
@@ -165,4 +173,17 @@ func (m *MockServiceCtrl) GetRequests(n int) ([]*ServiceRequest, error) {
 		}
 	}
 	return r, nil
+}
+
+// VerifyRequestCount Verifies the current exact request count with the want request count
+func (m *MockServiceCtrl) VerifyRequestCount(wantRequestCount int) error {
+	_, err := m.GetRequests(wantRequestCount)
+	if err != nil {
+		return fmt.Errorf("expected service count request count: %v, got %v", wantRequestCount, m.getRequestCount())
+	}
+	_, err = m.GetRequests(1)
+	if err == nil {
+		return fmt.Errorf("expected service count request count: %v, got %v", wantRequestCount, m.getRequestCount())
+	}
+	return nil
 }

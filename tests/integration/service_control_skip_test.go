@@ -83,13 +83,9 @@ func TestServiceControlSkipUsage(t *testing.T) {
 			t.Errorf("Test (%s): failed,  expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
 		}
 
-		_, err = s.ServiceControlServer.GetRequests(tc.wantScRequestCount)
+		err = s.ServiceControlServer.VerifyRequestCount(tc.wantScRequestCount)
 		if err != nil {
-			t.Fatalf("Test (%s): failed, expected service count request count: %v, got %v", tc.desc, tc.wantScRequestCount, s.ServiceControlServer.GetRequestCount())
-		}
-		_, err = s.ServiceControlServer.GetRequests(1)
-		if err == nil {
-			t.Fatalf("Test (%s): failed, expected service count request count: %v, got %v", tc.desc, tc.wantScRequestCount, s.ServiceControlServer.GetRequestCount())
+			t.Fatalf("Test (%s): failed, %s", tc.desc, err.Error())
 		}
 	}
 }

@@ -151,3 +151,43 @@ func TestMockServiceControlCheckError(t *testing.T) {
 		}
 	}
 }
+
+func TestMockServiceControlReportStatus(t *testing.T) {
+	testdata := []struct {
+		name                 string
+		reportStatusCode     int
+		wantReportStatusCode int
+	}{
+		{
+			name:                 "mmm",
+			wantReportStatusCode: 200,
+		},
+		{
+			name:                 "mmm",
+			reportStatusCode:     http.StatusInternalServerError,
+			wantReportStatusCode: http.StatusInternalServerError,
+		},
+	}
+
+	for _, tc := range testdata {
+		s := NewMockServiceCtrl(tc.name)
+		if tc.reportStatusCode != 0 {
+			s.SetReportResponseStatus(tc.reportStatusCode)
+		}
+
+		url := s.GetURL() + "/v1/services/mmm:report"
+		req := &sc.CheckRequest{
+			ServiceName: tc.name,
+		}
+		req_body, _ := proto.Marshal(req)
+		reqq, _ := http.NewRequest("POST", url, bytes.NewReader(req_body))
+		resp, err := http.DefaultClient.Do(reqq)
+		if err != nil {
+			t.Errorf("Failed in request: %v", err)
+		}
+		defer resp.Body.Close()
+		if tc.wantReportStatusCode != resp.StatusCode {
+			t.Errorf("Failed in status code, expected: %v, go: %v", tc.wantReportStatusCode, resp.StatusCode)
+		}
+	}
+}
