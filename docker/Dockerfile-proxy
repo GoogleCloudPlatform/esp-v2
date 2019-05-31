@@ -27,4 +27,10 @@ ADD bin/configmanager apiproxy/configmanager
 
 ADD bin/envoy apiproxy/envoy
 
+# create envoy user and group
+RUN groupadd -g 999 envoy && \
+    useradd -r -u 999 -g envoy envoy
+# run as user envoy
+USER envoy
+
 ENTRYPOINT ["python", "apiproxy/start_proxy.py"]
