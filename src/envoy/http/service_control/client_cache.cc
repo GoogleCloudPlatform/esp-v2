@@ -130,7 +130,7 @@ ClientCache::ClientCache(
             response->ParseFromString(body);
             ENVOY_LOG(
                 error,
-                "Failed to call report, error: {}, str body: {}, pb body: {}",
+                "Failed to call check, error: {}, str body: {}, pb body: {}",
                 status.ToString(), body, response->DebugString());
           }
           on_done(status);
