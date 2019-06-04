@@ -21,5 +21,9 @@ echo "Starting Proxy......"
 CONFIGMANAGER=${CONFIGMANAGER:-apiproxy/configmanager}
 ENVOY=${ENVOY:-apiproxy/envoy}
 
+# Optional args for Envoy. Example, to set the logging level:
+# docker run -e 'ENVOY_ARGS="-l debug"' ...
+ENVOY_ARGS=${ENVOY_ARGS:-""}
+
 ${CONFIGMANAGER}  $@  &
-${ENVOY} -c apiproxy/envoy_bootstrap_v2_startup.yaml
+${ENVOY} -c apiproxy/envoy_bootstrap_v2_startup.yaml ${ENVOY_ARGS}
