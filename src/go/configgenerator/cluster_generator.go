@@ -16,6 +16,7 @@ package configgenerator
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
@@ -248,6 +249,12 @@ func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, 
 				Sni: v.Hostname,
 			},
 		}
+
+		if strings.HasSuffix(v.Hostname, ".run.app") {
+			// The IPv6 DNS lookup Cloud Run does not resolve properly
+			c.DnsLookupFamily = v2.Cluster_V4_ONLY
+		}
+
 		brClusters = append(brClusters, c)
 		glog.Infof("Add backend routing cluster configuration for %v: %v", v.ClusterName, c)
 	}

@@ -173,6 +173,58 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "Success for Cloud Run backend",
+			fakeServiceConfig: &conf.Service{
+				Name: testProjectName,
+				Apis: []*api.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog.run.app",
+						Methods: []*api.Method{
+							{
+								Name: "Foo",
+							},
+							{
+								Name: "Bar",
+							},
+						},
+					},
+				},
+				Backend: &conf.Backend{
+					Rules: []*conf.BackendRule{
+						{
+							Address:         "https://mybackend.run.app",
+							Selector:        "1.cloudesf_testing_cloud_goog.Foo",
+							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &conf.BackendRule_JwtAudience{
+								JwtAudience: "mybackend.run.app",
+							},
+						},
+						{
+							Address:         "https://mybackend.run.app",
+							Selector:        "1.cloudesf_testing_cloud_goog.Bar",
+							PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
+							Authentication: &conf.BackendRule_JwtAudience{
+								JwtAudience: "mybackend.run.app",
+							},
+						},
+					},
+				},
+			},
+			backendProtocol: "http1",
+			wantedClusters: []cache.Resource{
+				&v2.Cluster{
+					Name:                 "DynamicRouting_0",
+					ConnectTimeout:       20 * time.Second,
+					DnsLookupFamily:      v2.Cluster_V4_ONLY,
+					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
+					LoadAssignment:       createLoadAssignment("mybackend.run.app", 443),
+					TlsContext: &auth.UpstreamTlsContext{
+						Sni: "mybackend.run.app",
+					},
+				},
+			},
+		},
 	}
 
 	for i, tc := range testData {
