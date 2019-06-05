@@ -44,32 +44,34 @@ const (
 	TestPreflightCorsWithBasicPreset
 	TestPreflightRequestWithAllowCors
 	TestReportGCPAttributes
-	TestServiceControlAPIKeyRestriction
-	TestServiceControlBasic
+	TestServiceControlALlHTTPMethod
 	TestServiceControlAPIKeyCustomLocation
 	TestServiceControlAPIKeyDefaultLocation
+	TestServiceControlAPIKeyRestriction
+	TestServiceControlBasic
 	TestServiceControlCache
+	TestServiceControlCheckError
+	TestServiceControlNetworkFailFlagClosed
+	TestServiceControlNetworkFailFlagOpen
+	TestServiceControlCheckTimeout
+	TestServiceControlCheckWrongServerName
+	TestServiceControlCredentialId
+	TestServiceControlJwtAuthFail
 	TestServiceControlLogHeaders
 	TestServiceControlLogJwtPayloads
-	TestServiceControlReportResponseCode
-	TestServiceControlCheckError
-	TestServiceControlCheckNetworkFailOpen
-	TestServiceControlCheckNetworkFailClosed
-	TestServiceControlRequestInDynamicRouting
-	TestServiceControlRequestWithAllowCors
-	TestServiceControlReportFailed
-	TestServiceControlRequestWithoutAllowCors
-	TestServiceControlALlHTTPMethod
-	TestSimpleCorsWithBasicPreset
-	TestSimpleCorsWithRegexPreset
-	TestServiceControlJwtAuthFail
 	TestServiceControlProtocolWithGRPCBackend
-	TestServiceControlSkip
+	TestServiceControlProtocolWithHTTPBackend
 	TestServiceControlQuota
 	TestServiceControlQuotaExhausted
-	TestServiceControlProtocolWithHTTPBackend
+	TestServiceControlReportNetworkFail
+	TestServiceControlReportResponseCode
+	TestServiceControlRequestInDynamicRouting
+	TestServiceControlRequestWithAllowCors
+	TestServiceControlRequestWithoutAllowCors
+	TestServiceControlSkip
+	TestSimpleCorsWithBasicPreset
+	TestSimpleCorsWithRegexPreset
 	TestUnconfiguredRequest
-	TestServiceControlCredentialId
 	// The number of total tests. has to be the last one.
 	maxTestNum
 )

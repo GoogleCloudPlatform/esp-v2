@@ -27,13 +27,13 @@ import (
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 )
 
-func TestServiceControlReportFailed(t *testing.T) {
+func TestServiceControlReportNetworkFail(t *testing.T) {
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--version=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestServiceControlReportFailed, "bookstore", nil)
+	s := env.NewTestEnv(comp.TestServiceControlReportNetworkFail, "bookstore", nil)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

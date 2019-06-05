@@ -54,6 +54,7 @@ type serviceResponse struct {
 type MockServiceCtrl struct {
 	s                  *httptest.Server
 	ch                 chan *ServiceRequest
+	url                string
 	count              *int32
 	serviceName        string
 	checkResp          *serviceResponse
@@ -157,7 +158,15 @@ func (m *MockServiceCtrl) OverrideCheckHandler(checkHandler http.Handler) {
 
 // GetURL returns the URL of MockServiceCtrl.
 func (m *MockServiceCtrl) GetURL() string {
+	if m.url != "" {
+		return m.url
+	}
 	return m.s.URL
+}
+
+// GetURL returns the URL of MockServiceCtrl.
+func (m *MockServiceCtrl) SetURL(url string) {
+	m.url = url
 }
 
 func (m *MockServiceCtrl) getRequestCount() int {
