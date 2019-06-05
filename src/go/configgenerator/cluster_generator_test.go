@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
-	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/gorilla/mux"
 	"google.golang.org/genproto/protobuf/api"
@@ -68,18 +67,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 				ConnectTimeout:       5 * time.Second,
 				ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
 				DnsLookupFamily:      v2.Cluster_V4_ONLY,
-				Hosts: []*core.Address{
-					{
-						Address: &core.Address_SocketAddress{
-							SocketAddress: &core.SocketAddress{
-								Address: testServiceControlEnv,
-								PortSpecifier: &core.SocketAddress_PortValue{
-									PortValue: 443,
-								},
-							},
-						},
-					},
-				},
+				LoadAssignment:       createLoadAssignment(testServiceControlEnv, 443),
 				TlsContext: &auth.UpstreamTlsContext{
 					Sni: "servicecontrol.googleapis.com",
 				},
@@ -104,18 +92,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 				ConnectTimeout:       5 * time.Second,
 				ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
 				DnsLookupFamily:      v2.Cluster_V4_ONLY,
-				Hosts: []*core.Address{
-					{
-						Address: &core.Address_SocketAddress{
-							SocketAddress: &core.SocketAddress{
-								Address: "127.0.0.1",
-								PortSpecifier: &core.SocketAddress_PortValue{
-									PortValue: 8000,
-								},
-							},
-						},
-					},
-				},
+				LoadAssignment:       createLoadAssignment("127.0.0.1", 8000),
 			},
 		},
 	}
@@ -189,18 +166,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					Name:                 "DynamicRouting_0",
 					ConnectTimeout:       20 * time.Second,
 					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
-					Hosts: []*core.Address{
-						{
-							Address: &core.Address_SocketAddress{
-								SocketAddress: &core.SocketAddress{
-									Address: "mybackend.com",
-									PortSpecifier: &core.SocketAddress_PortValue{
-										PortValue: 443,
-									},
-								},
-							},
-						},
-					},
+					LoadAssignment:       createLoadAssignment("mybackend.com", 443),
 					TlsContext: &auth.UpstreamTlsContext{
 						Sni: "mybackend.com",
 					},
@@ -264,18 +230,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					ConnectTimeout:       20 * time.Second,
 					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      v2.Cluster_V4_ONLY,
-					Hosts: []*core.Address{
-						{
-							Address: &core.Address_SocketAddress{
-								SocketAddress: &core.SocketAddress{
-									Address: "metadata.com",
-									PortSpecifier: &core.SocketAddress_PortValue{
-										PortValue: 443,
-									},
-								},
-							},
-						},
-					},
+					LoadAssignment:       createLoadAssignment("metadata.com", 443),
 					TlsContext: &auth.UpstreamTlsContext{
 						Sni: "metadata.com",
 					},
@@ -285,18 +240,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					ConnectTimeout:       20 * time.Second,
 					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      v2.Cluster_V4_ONLY,
-					Hosts: []*core.Address{
-						{
-							Address: &core.Address_SocketAddress{
-								SocketAddress: &core.SocketAddress{
-									Address: "metadata.com",
-									PortSpecifier: &core.SocketAddress_PortValue{
-										PortValue: 80,
-									},
-								},
-							},
-						},
-					},
+					LoadAssignment:       createLoadAssignment("metadata.com", 80),
 				},
 			},
 		},
@@ -314,18 +258,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					ConnectTimeout:       20 * time.Second,
 					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      v2.Cluster_V4_ONLY,
-					Hosts: []*core.Address{
-						{
-							Address: &core.Address_SocketAddress{
-								SocketAddress: &core.SocketAddress{
-									Address: fakeJwksUriHost,
-									PortSpecifier: &core.SocketAddress_PortValue{
-										PortValue: 80,
-									},
-								},
-							},
-						},
-					},
+					LoadAssignment:       createLoadAssignment(fakeJwksUriHost, 80),
 				},
 			},
 		},
@@ -343,18 +276,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					ConnectTimeout:       20 * time.Second,
 					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      v2.Cluster_V4_ONLY,
-					Hosts: []*core.Address{
-						{
-							Address: &core.Address_SocketAddress{
-								SocketAddress: &core.SocketAddress{
-									Address: "this-is-jwksUri",
-									PortSpecifier: &core.SocketAddress_PortValue{
-										PortValue: 443,
-									},
-								},
-							},
-						},
-					},
+					LoadAssignment:       createLoadAssignment("this-is-jwksUri", 443),
 					TlsContext: &auth.UpstreamTlsContext{
 						Sni: "this-is-jwksUri",
 					},
@@ -375,18 +297,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					ConnectTimeout:       20 * time.Second,
 					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      v2.Cluster_V4_ONLY,
-					Hosts: []*core.Address{
-						{
-							Address: &core.Address_SocketAddress{
-								SocketAddress: &core.SocketAddress{
-									Address: fakeJwksUriHost,
-									PortSpecifier: &core.SocketAddress_PortValue{
-										PortValue: 80,
-									},
-								},
-							},
-						},
-					},
+					LoadAssignment:       createLoadAssignment(fakeJwksUriHost, 80),
 				},
 			},
 		},

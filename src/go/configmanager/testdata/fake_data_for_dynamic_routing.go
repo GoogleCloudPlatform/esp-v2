@@ -155,28 +155,42 @@ var (
   "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
   "type": "STRICT_DNS",
   "connectTimeout": "20s",
-  "hosts": [
-    {
-      "socketAddress": {
-        "address": "127.0.0.1",
-        "portValue": 8082
-      }
-    }
-  ]
+  "loadAssignment": {
+    "clusterName": "127.0.0.1",
+    "endpoints": [{
+       "lbEndpoints": [{
+         "endpoint": {
+          "address": {
+	    "socketAddress": {
+	      "address": "127.0.0.1",
+	      "portValue": 8082
+	    }
+	  }
+	}
+      }]
+   }]
+  }
 }`,
 		`
 {
   "name": "DynamicRouting_0",
   "type": "LOGICAL_DNS",
   "connectTimeout": "20s",
-  "hosts": [
-    {
-      "socketAddress": {
-        "address": "us-central1-cloud-esf.cloudfunctions.net",
-        "portValue": 443
-      }
-    }
-  ],
+  "loadAssignment": {
+    "clusterName": "us-central1-cloud-esf.cloudfunctions.net",
+    "endpoints": [{
+       "lbEndpoints": [{
+         "endpoint": {
+          "address": {
+	    "socketAddress": {
+	      "address": "us-central1-cloud-esf.cloudfunctions.net",
+	      "portValue": 443
+	    }
+	  }
+	}
+      }]
+   }]
+  },
   "tlsContext": {
     "sni": "us-central1-cloud-esf.cloudfunctions.net"
   }
@@ -186,14 +200,21 @@ var (
   "name": "DynamicRouting_1",
   "type": "LOGICAL_DNS",
   "connectTimeout": "20s",
-  "hosts": [
-    {
-      "socketAddress": {
-        "address": "us-west2-cloud-esf.cloudfunctions.net",
-        "portValue": 443
-      }
-    }
-  ],
+  "loadAssignment": {
+    "clusterName": "us-west2-cloud-esf.cloudfunctions.net",
+    "endpoints": [{
+       "lbEndpoints": [{
+         "endpoint": {
+          "address": {
+	    "socketAddress": {
+	      "address": "us-west2-cloud-esf.cloudfunctions.net",
+	      "portValue": 443
+	    }
+	  }
+	}
+      }]
+   }]
+  },
   "tlsContext": {
     "sni": "us-west2-cloud-esf.cloudfunctions.net"
   }
@@ -202,14 +223,21 @@ var (
   "name": "DynamicRouting_2",
   "type": "LOGICAL_DNS",
   "connectTimeout": "20s",
-  "hosts": [
-    {
-      "socketAddress": {
-        "address": "pets.appspot.com",
-        "portValue": 8008
-      }
-    }
-  ],
+  "loadAssignment":{
+    "clusterName":"pets.appspot.com",
+    "endpoints":[{
+       "lbEndpoints":[{
+         "endpoint":{
+          "address":{
+	    "socketAddress":{
+	      "address":"pets.appspot.com",
+	      "portValue":8008
+	    }
+	  }
+	}
+      }]
+   }]
+  },
   "tlsContext": {
     "sni": "pets.appspot.com"
   }
@@ -218,14 +246,21 @@ var (
   "name": "DynamicRouting_3",
   "type": "LOGICAL_DNS",
   "connectTimeout": "20s",
-  "hosts": [
-    {
-      "socketAddress": {
-        "address": "pets.appspot.com",
-        "portValue": 443
-      }
-    }
-  ],
+  "loadAssignment":{
+    "clusterName":"pets.appspot.com",
+    "endpoints":[{
+       "lbEndpoints":[{
+         "endpoint":{
+          "address":{
+	    "socketAddress":{
+	      "address":"pets.appspot.com",
+	      "portValue":443
+	    }
+	  }
+	}
+      }]
+   }]
+  },
   "tlsContext": {
     "sni": "pets.appspot.com"
   }

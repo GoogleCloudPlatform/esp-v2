@@ -21,6 +21,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	"github.com/envoyproxy/go-control-plane/envoy/api/v2/endpoint"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/golang/glog"
 
@@ -95,16 +96,7 @@ func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error) {
 		ClusterDiscoveryType: &v2.Cluster_Type{
 			Type: v2.Cluster_STRICT_DNS,
 		},
-		Hosts: []*core.Address{{
-			Address: &core.Address_SocketAddress{
-				SocketAddress: &core.SocketAddress{
-					Address: hostname,
-					PortSpecifier: &core.SocketAddress_PortValue{
-						PortValue: port,
-					},
-				},
-			},
-		}},
+		LoadAssignment: createLoadAssignment(hostname, port),
 	}
 
 	if scheme == "https" {
@@ -114,6 +106,31 @@ func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error) {
 	}
 
 	return c, nil
+}
+
+func createLoadAssignment(hostname string, port uint32) *v2.ClusterLoadAssignment {
+	return &v2.ClusterLoadAssignment{
+		ClusterName: hostname,
+		Endpoints: []endpoint.LocalityLbEndpoints{{
+			LbEndpoints: []endpoint.LbEndpoint{{
+				HostIdentifier: &endpoint.LbEndpoint_Endpoint{
+					Endpoint: &endpoint.Endpoint{
+						Address: &core.Address{
+							Address: &core.Address_SocketAddress{
+								SocketAddress: &core.SocketAddress{
+									Address: hostname,
+									PortSpecifier: &core.SocketAddress_PortValue{
+										PortValue: port,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			}},
+		},
+	}
 }
 
 func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
@@ -150,18 +167,7 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, err
 			// Note: It may not be V4.
 			DnsLookupFamily:      v2.Cluster_V4_ONLY,
 			ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
-			Hosts: []*core.Address{
-				{
-					Address: &core.Address_SocketAddress{
-						SocketAddress: &core.SocketAddress{
-							Address: hostname,
-							PortSpecifier: &core.SocketAddress_PortValue{
-								PortValue: port,
-							},
-						},
-					},
-				},
-			},
+			LoadAssignment:       createLoadAssignment(hostname, port),
 		}
 		providerClusters = append(providerClusters, c)
 
@@ -181,17 +187,7 @@ func makeBackendCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error) {
 		LbPolicy:             v2.Cluster_ROUND_ROBIN,
 		ConnectTimeout:       *flags.ClusterConnectTimeout,
 		ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_STRICT_DNS},
-		Hosts: []*core.Address{
-			{Address: &core.Address_SocketAddress{
-				SocketAddress: &core.SocketAddress{
-					Address: *flags.ClusterAddress,
-					PortSpecifier: &core.SocketAddress_PortValue{
-						PortValue: uint32(*flags.ClusterPort),
-					},
-				},
-			},
-			},
-		},
+		LoadAssignment:       createLoadAssignment(*flags.ClusterAddress, uint32(*flags.ClusterPort)),
 	}
 	// gRPC and HTTP/2 need this configuration.
 	if serviceInfo.BackendProtocol != ut.HTTP1 {
@@ -227,17 +223,7 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error)
 		ConnectTimeout:       5 * time.Second,
 		DnsLookupFamily:      v2.Cluster_V4_ONLY,
 		ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
-		Hosts: []*core.Address{
-			{Address: &core.Address_SocketAddress{
-				SocketAddress: &core.SocketAddress{
-					Address: hostname,
-					PortSpecifier: &core.SocketAddress_PortValue{
-						PortValue: port,
-					},
-				},
-			},
-			},
-		},
+		LoadAssignment:       createLoadAssignment(hostname, port),
 	}
 
 	if scheme == "https" {
@@ -257,17 +243,7 @@ func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, 
 			LbPolicy:             v2.Cluster_ROUND_ROBIN,
 			ConnectTimeout:       *flags.ClusterConnectTimeout,
 			ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
-			Hosts: []*core.Address{
-				{Address: &core.Address_SocketAddress{
-					SocketAddress: &core.SocketAddress{
-						Address: v.Hostname,
-						PortSpecifier: &core.SocketAddress_PortValue{
-							PortValue: v.Port,
-						},
-					},
-				},
-				},
-			},
+			LoadAssignment:       createLoadAssignment(v.Hostname, v.Port),
 			TlsContext: &auth.UpstreamTlsContext{
 				Sni: v.Hostname,
 			},
