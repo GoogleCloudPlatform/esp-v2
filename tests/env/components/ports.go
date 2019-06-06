@@ -46,6 +46,7 @@ const (
 	TestReportGCPAttributes
 	TestServiceControlAPIKeyRestriction
 	TestServiceControlBasic
+	TestServiceControlAPIKeyCustomLocation
 	TestServiceControlAPIKeyDefaultLocation
 	TestServiceControlCache
 	TestServiceControlLogHeaders

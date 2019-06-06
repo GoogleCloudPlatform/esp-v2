@@ -100,6 +100,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *conf.Service, id string) (*S
 	serviceInfo.processApis()
 	serviceInfo.processHttpRule()
 	serviceInfo.processUsageRule()
+	serviceInfo.processSystemParameters()
 	if err := serviceInfo.processBackendRule(); err != nil {
 		return nil, err
 	}
@@ -265,6 +266,40 @@ func (s *ServiceInfo) processUsageRule() {
 		method.AllowUnregisteredCalls = r.GetAllowUnregisteredCalls()
 		method.SkipServiceControl = r.GetSkipServiceControl()
 	}
+}
+
+func (s *ServiceInfo) processSystemParameters() {
+	for _, rule := range s.ServiceConfig().GetSystemParameters().GetRules() {
+		apiKeyLocationParameters := []*conf.SystemParameter{}
+		for _, parameter := range rule.GetParameters() {
+			if parameter.GetName() == ut.APIKeyParameterName {
+				apiKeyLocationParameters = append(apiKeyLocationParameters, parameter)
+			}
+		}
+		extractAPIKeyLocations(s.getOrCreateMethod(rule.GetSelector()), apiKeyLocationParameters)
+	}
+}
+
+func extractAPIKeyLocations(method *methodInfo, parameters []*conf.SystemParameter) {
+	var urlQueryNames, headerNames []*scpb.APIKeyLocation
+	for _, parameter := range parameters {
+		if urlQueryName := parameter.GetUrlQueryParameter(); urlQueryName != "" {
+			urlQueryNames = append(urlQueryNames, &scpb.APIKeyLocation{
+				Key: &scpb.APIKeyLocation_Query{
+					Query: urlQueryName,
+				},
+			})
+		}
+		if headerName := parameter.GetHttpHeader(); headerName != "" {
+			headerNames = append(headerNames, &scpb.APIKeyLocation{
+				Key: &scpb.APIKeyLocation_Header{
+					Header: headerName,
+				},
+			})
+		}
+	}
+	method.APIKeyLocations = append(method.APIKeyLocations, urlQueryNames...)
+	method.APIKeyLocations = append(method.APIKeyLocations, headerNames...)
 }
 
 func (s *ServiceInfo) processTypes() {

@@ -68,6 +68,9 @@ const (
 	GAEFlex = "GAE_FLEX"
 	GKE     = "GKE"
 	GCE     = "GCE"
+
+	// System Parameter Name
+	APIKeyParameterName = "api_key"
 )
 
 type BackendProtocol int32

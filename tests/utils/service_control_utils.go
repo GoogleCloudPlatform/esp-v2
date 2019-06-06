@@ -648,3 +648,19 @@ func CheckScRequest(t *testing.T, scRequests []*comp.ServiceRequest, wantScReque
 		}
 	}
 }
+
+func CheckAPIKey(t *testing.T, scCheck *comp.ServiceRequest, wantApiKey string, desc string) {
+	if scCheck.ReqType != comp.CHECK_REQUEST {
+		t.Errorf("Test (%s): failed, the service control request should be Check", desc)
+	}
+
+	body := scCheck.ReqBody
+	got, err := UnmarshalCheckRequest(body)
+	if err != nil {
+		t.Fatalf("Test (%s): failed, %v: ", desc)
+	}
+
+	if gotApiKey := got.Operation.ConsumerId[8:]; gotApiKey != wantApiKey {
+		t.Errorf("Test (%s): failed, expected apiKey: %s, got %s", desc, wantApiKey, gotApiKey)
+	}
+}

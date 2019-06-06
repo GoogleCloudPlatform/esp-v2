@@ -24,6 +24,7 @@ import (
 	"google.golang.org/genproto/protobuf/api"
 
 	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
+	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
@@ -116,6 +117,176 @@ func TestProcessEndpoints(t *testing.T) {
 
 		if serviceInfo.AllowCors != tc.wantedAllowCors {
 			t.Errorf("Test Desc(%d): %s, allow CORS flag got: %v, want: %v", i, tc.desc, serviceInfo.AllowCors, tc.wantedAllowCors)
+		}
+	}
+}
+
+func TestExtractAPIKeyLocations(t *testing.T) {
+	testData := []struct {
+		desc                   string
+		fakeServiceConfig      *conf.Service
+		wantedSystemParameters map[string][]*conf.SystemParameter
+		wantMethods            map[string]*methodInfo
+	}{
+
+		{
+			desc: "Succeed, only url query",
+			fakeServiceConfig: &conf.Service{
+				Apis: []*api.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*api.Method{
+							{
+								Name: "echo",
+							},
+						},
+					},
+				},
+				SystemParameters: &conf.SystemParameters{
+					Rules: []*conf.SystemParameterRule{
+						{
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo",
+							Parameters: []*conf.SystemParameter{
+								{
+									Name:       "api_key",
+									HttpHeader: "header_name",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantMethods: map[string]*methodInfo{
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &methodInfo{
+					ShortName: "echo",
+					APIKeyLocations: []*scpb.APIKeyLocation{
+						{
+							Key: &scpb.APIKeyLocation_Header{
+								Header: "header_name",
+							},
+						},
+					},
+				},
+			},
+		},
+
+		{
+			desc: "Succeed, only header",
+			fakeServiceConfig: &conf.Service{
+				Apis: []*api.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*api.Method{
+							{
+								Name: "echo",
+							},
+						},
+					},
+				},
+				SystemParameters: &conf.SystemParameters{
+					Rules: []*conf.SystemParameterRule{
+						{
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo",
+							Parameters: []*conf.SystemParameter{
+								{
+									Name:              "api_key",
+									UrlQueryParameter: "query_name",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantMethods: map[string]*methodInfo{
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &methodInfo{
+					ShortName: "echo",
+					APIKeyLocations: []*scpb.APIKeyLocation{
+						{
+							Key: &scpb.APIKeyLocation_Query{
+								Query: "query_name",
+							},
+						},
+					},
+				},
+			},
+		},
+
+		{
+			desc: "Succeed, url query plus header",
+			fakeServiceConfig: &conf.Service{
+				Apis: []*api.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*api.Method{
+							{
+								Name: "echo",
+							},
+						},
+					},
+				},
+				SystemParameters: &conf.SystemParameters{
+					Rules: []*conf.SystemParameterRule{
+						{
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo",
+							Parameters: []*conf.SystemParameter{
+								{
+									Name:              "api_key",
+									HttpHeader:        "header_name_1",
+									UrlQueryParameter: "query_name_1",
+								},
+								{
+									Name:              "api_key",
+									HttpHeader:        "header_name_2",
+									UrlQueryParameter: "query_name_2",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantMethods: map[string]*methodInfo{
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &methodInfo{
+					ShortName: "echo",
+					APIKeyLocations: []*scpb.APIKeyLocation{
+						{
+							Key: &scpb.APIKeyLocation_Query{
+								Query: "query_name_1",
+							},
+						},
+						{
+							Key: &scpb.APIKeyLocation_Query{
+								Query: "query_name_2",
+							},
+						},
+						{
+							Key: &scpb.APIKeyLocation_Header{
+								Header: "header_name_1",
+							},
+						},
+						{
+							Key: &scpb.APIKeyLocation_Header{
+								Header: "header_name_2",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	for i, tc := range testData {
+		flag.Set("backend_protocol", "grpc")
+		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(serviceInfo.Methods) != len(tc.wantMethods) {
+			t.Errorf("Test Desc(%d): %s, got: %v, wanted: %v", i, tc.desc, serviceInfo.Methods, tc.wantMethods)
+		}
+		for key, gotMethod := range serviceInfo.Methods {
+			wantMethod := tc.wantMethods[key]
+			if eq := reflect.DeepEqual(gotMethod, wantMethod); !eq {
+				t.Errorf("Test Desc(%d): %s, \ngot: %v,\nwanted: %v", i, tc.desc, gotMethod, wantMethod)
+			}
 		}
 	}
 }

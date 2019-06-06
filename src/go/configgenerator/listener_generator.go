@@ -388,6 +388,13 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 			}
 		}
 
+		if method.APIKeyLocations != nil {
+			if requirement.ApiKey == nil {
+				requirement.ApiKey = &scpb.APIKeyRequirement{}
+			}
+			requirement.ApiKey.Locations = method.APIKeyLocations
+		}
+
 		filterConfig.Requirements = append(filterConfig.Requirements, requirement)
 	}
 
