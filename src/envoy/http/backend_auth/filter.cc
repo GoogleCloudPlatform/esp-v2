@@ -36,6 +36,13 @@ using Http::LowerCaseString;
 
 namespace {
 constexpr char kBearer[] = "Bearer ";
+
+struct RcDetailsValues {
+  // The request is rejected due to missing backend auth token.
+  const std::string MissingBackendToken = "missing_backend_token";
+};
+typedef ConstSingleton<RcDetailsValues> RcDetails;
+
 }  // namespace
 
 FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
@@ -60,8 +67,8 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
   if (!jwt_token) {
     ENVOY_LOG(debug, "Token not found for audience: {}", audience);
     decoder_callbacks_->sendLocalReply(Http::Code::InternalServerError,
-                                       "missing tokens", nullptr,
-                                       absl::nullopt);
+                                       "missing tokens", nullptr, absl::nullopt,
+                                       RcDetails::get().MissingBackendToken);
     decoder_callbacks_->streamInfo().setResponseFlag(
         StreamInfo::ResponseFlag::UnauthorizedExternalService);
     return FilterHeadersStatus::StopIteration;

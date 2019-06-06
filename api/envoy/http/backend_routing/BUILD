@@ -21,6 +21,6 @@ go_proto_library(
     importpath = "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/backend_routing",
     proto = ":config_proto",
     deps = [
-        "@com_lyft_protoc_gen_validate//validate:go_default_library",
+        "@com_envoyproxy_protoc_gen_validate//validate:go_default_library",
     ],
 )

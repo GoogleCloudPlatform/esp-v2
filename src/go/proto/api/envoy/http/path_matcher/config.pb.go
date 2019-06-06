@@ -6,8 +6,8 @@ package google_api_envoy_http_path_matcher
 import (
 	common "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
 	fmt "fmt"
+	_ "github.com/envoyproxy/protoc-gen-validate/validate"
 	proto "github.com/golang/protobuf/proto"
-	_ "github.com/lyft/protoc-gen-validate/validate"
 	math "math"
 )
 

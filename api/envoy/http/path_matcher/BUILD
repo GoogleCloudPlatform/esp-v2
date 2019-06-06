@@ -25,6 +25,6 @@ go_proto_library(
     proto = ":config_proto",
     deps = [
         "//api/envoy/http/common:pattern_proto_go_proto",
-        "@com_lyft_protoc_gen_validate//validate:go_default_library",
+        "@com_envoyproxy_protoc_gen_validate//validate:go_default_library",
     ],
 )

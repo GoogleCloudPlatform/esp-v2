@@ -24,6 +24,16 @@ namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
+namespace {
+
+struct RcDetailsValues {
+  // Rejected by service control check call.
+  const std::string RejectedByServiceControlCheck =
+      "rejected_by_service_control_check";
+};
+typedef ConstSingleton<RcDetailsValues> RcDetails;
+
+}  // namespace
 
 Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
     Http::HeaderMap& headers, bool) {
@@ -71,7 +81,9 @@ void ServiceControlFilter::rejectRequest(Http::Code code,
   stats_.denied_.inc();
   state_ = Responded;
 
-  decoder_callbacks_->sendLocalReply(code, error_msg, nullptr, absl::nullopt);
+  decoder_callbacks_->sendLocalReply(
+      code, error_msg, nullptr, absl::nullopt,
+      RcDetails::get().RejectedByServiceControlCheck);
   decoder_callbacks_->streamInfo().setResponseFlag(
       StreamInfo::ResponseFlag::UnauthorizedExternalService);
 }

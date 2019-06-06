@@ -25,24 +25,28 @@
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
 
+using ::google::api_proxy::path_matcher::VariableBinding;
+using ::google::api_proxy::path_matcher::VariableBindingsToQueryParameters;
+using ::google::protobuf::util::Status;
+
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
 namespace PathMatcher {
+namespace {
 
-using ::Envoy::StreamInfo::FilterState;
-using ::google::api_proxy::path_matcher::VariableBinding;
-using ::google::api_proxy::path_matcher::VariableBindingsToQueryParameters;
-using ::google::protobuf::util::Status;
-using Http::FilterDataStatus;
-using Http::FilterHeadersStatus;
-using Http::FilterTrailersStatus;
-using Http::HeaderMap;
-using Http::LowerCaseString;
+struct RcDetailsValues {
+  // The path is not defined in the service config.
+  const std::string PathNotDefined = "path_not_defined";
+};
+typedef ConstSingleton<RcDetailsValues> RcDetails;
+
+}  // namespace
 
 void Filter::onDestroy() {}
 
-FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
+Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
+                                                bool) {
   std::string method(Utils::getRequestHTTPMethodWithOverride(
       headers.Method()->value().getStringView(), headers));
   std::string path(headers.Path()->value().getStringView());
@@ -54,7 +58,8 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
   }
 
   ENVOY_LOG(debug, "matched operation: {}", *operation);
-  FilterState& filter_state = decoder_callbacks_->streamInfo().filterState();
+  StreamInfo::FilterState& filter_state =
+      decoder_callbacks_->streamInfo().filterState();
   Utils::setStringFilterState(filter_state, Utils::kOperation, *operation);
 
   if (config_->NeedPathParametersExtraction(*operation)) {
@@ -69,15 +74,15 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
   }
 
   config_->stats().allowed_.inc();
-  return FilterHeadersStatus::Continue;
+  return Http::FilterHeadersStatus::Continue;
 }
 
-FilterDataStatus Filter::decodeData(Buffer::Instance&, bool) {
-  return FilterDataStatus::Continue;
+Http::FilterDataStatus Filter::decodeData(Buffer::Instance&, bool) {
+  return Http::FilterDataStatus::Continue;
 }
 
-FilterTrailersStatus Filter::decodeTrailers(HeaderMap&) {
-  return FilterTrailersStatus::Continue;
+Http::FilterTrailersStatus Filter::decodeTrailers(Http::HeaderMap&) {
+  return Http::FilterTrailersStatus::Continue;
 }
 
 void Filter::setDecoderFilterCallbacks(
@@ -88,7 +93,8 @@ void Filter::setDecoderFilterCallbacks(
 void Filter::rejectRequest(Http::Code code, absl::string_view error_msg) {
   config_->stats().denied_.inc();
 
-  decoder_callbacks_->sendLocalReply(code, error_msg, nullptr, absl::nullopt);
+  decoder_callbacks_->sendLocalReply(code, error_msg, nullptr, absl::nullopt,
+                                     RcDetails::get().PathNotDefined);
   decoder_callbacks_->streamInfo().setResponseFlag(
       StreamInfo::ResponseFlag::UnauthorizedExternalService);
 }
