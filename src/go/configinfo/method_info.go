@@ -16,6 +16,7 @@ package configinfo
 
 import (
 	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
+	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -27,6 +28,7 @@ type methodInfo struct {
 	AllowUnregisteredCalls bool
 	IsGeneratedOption      bool
 	SkipServiceControl     bool
+	APIKeyLocations        []*scpb.APIKeyLocation
 }
 
 // bakcendInfo stores information from Backend rule for backend rerouting.

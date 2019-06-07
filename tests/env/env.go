@@ -106,6 +106,11 @@ func (e *TestEnv) OverrideAuthentication(authentication *conf.Authentication) {
 	e.fakeServiceConfig.Authentication = authentication
 }
 
+// OverrideSystemParameters overrides Service.SystemParameters.
+func (e *TestEnv) OverrideSystemParameters(systemParameters *conf.SystemParameters) {
+	e.fakeServiceConfig.SystemParameters = systemParameters
+}
+
 // AppendHttpRules appends Service.Http.Rules.
 func (e *TestEnv) AppendHttpRules(rules []*annotations.HttpRule) {
 	e.fakeServiceConfig.Http.Rules = append(e.fakeServiceConfig.Http.Rules, rules...)
