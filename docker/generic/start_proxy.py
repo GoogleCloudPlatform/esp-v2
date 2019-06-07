@@ -23,7 +23,7 @@ import re
 PROXY_STARTER = "apiproxy/start_proxy.sh"
 
 # Default HTTP/1.x port
-DEFAULT_PORT = '8082'
+DEFAULT_PORT = '80'
 
 # Default backend
 DEFAULT_BACKEND = "127.0.0.1:8082"
@@ -103,6 +103,14 @@ environment variable or by passing "-k" flag to this script.
         For HTTP/1.x backends, prefix "http://" is optional.
         For GRPC backends, please use "grpc://" prefix,
         e.g. grpc://127.0.0.1:8082.'''.format(backend=DEFAULT_BACKEND))
+
+    parser.add_argument(
+        '--backend_protocol',
+        default=None,
+        help='''Backend Protocol. Overrides the protocol in --backend.
+        Choices: [http1|http2|grpc].
+        Default value: http1.''',
+        choices=['http1', 'http2', 'grpc'])
 
     parser.add_argument(
         '-R',
@@ -256,20 +264,24 @@ if __name__ == '__main__':
     args = parser.parse_args()
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
-    if args.backend.startswith(GRPC_PREFIX):
-        backend_protocol = "grpc"
-        backends = args.backend[len(GRPC_PREFIX):]
-    elif args.backend.startswith(HTTP_PREFIX):
-        backend_protocol = "http1"
-        backends = args.backend[len(HTTP_PREFIX):]
-    elif args.backend.startswith(HTTPS_PREFIX):
-        backend_protocol = "http2"
-        backend = args.backend[len(HTTPS_PREFIX):]
-        if not re.search(r':[0-9]+$', backend):
-            backend = backend + ':443'
-        backends = backend
+    if args.backend_protocol is None:
+        if args.backend.startswith(GRPC_PREFIX):
+            backend_protocol = "grpc"
+            backends = args.backend[len(GRPC_PREFIX):]
+        elif args.backend.startswith(HTTP_PREFIX):
+            backend_protocol = "http1"
+            backends = args.backend[len(HTTP_PREFIX):]
+        elif args.backend.startswith(HTTPS_PREFIX):
+            backend_protocol = "http2"
+            backend = args.backend[len(HTTPS_PREFIX):]
+            if not re.search(r':[0-9]+$', backend):
+                backend = backend + ':443'
+            backends = backend
+        else:
+            backend_protocol = "http1"
+            backends = args.backend
     else:
-        backend_protocol = "http1"
+        backend_protocol = args.backend_protocol
         backends = args.backend
 
     cluster_args = backends.split(':')

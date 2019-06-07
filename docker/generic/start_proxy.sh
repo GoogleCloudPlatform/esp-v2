@@ -25,5 +25,5 @@ ENVOY=${ENVOY:-apiproxy/envoy}
 # docker run -e 'ENVOY_ARGS="-l debug"' ...
 ENVOY_ARGS=${ENVOY_ARGS:-""}
 
-${CONFIGMANAGER}  $@  &
+${CONFIGMANAGER} $@ &
 ${ENVOY} -c apiproxy/envoy_bootstrap_v2_startup.yaml ${ENVOY_ARGS}
