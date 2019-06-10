@@ -69,6 +69,10 @@ class ServiceControlCallImpl
       const ::google::api_proxy::service_control::CheckRequestInfo& request,
       CheckDoneFunc on_done) override;
 
+  void callQuota(
+      const ::google::api_proxy::service_control::QuotaRequestInfo& info,
+      QuotaDoneFunc on_done) override;
+
   void callReport(const ::google::api_proxy::service_control::ReportRequestInfo&
                       request) override;
 

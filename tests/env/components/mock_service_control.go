@@ -33,6 +33,7 @@ type ServiceRequestType int
 
 const (
 	CHECK_REQUEST = 1 + iota
+	QUOTA_REQUEST
 	REPORT_REQUEST
 )
 
@@ -55,8 +56,10 @@ type MockServiceCtrl struct {
 	ch                 chan *ServiceRequest
 	count              *int32
 	checkResp          *serviceResponse
+	quotaResp          *serviceResponse
 	reportResp         *serviceResponse
 	checkHandler       http.Handler
+	quotaHandler       http.Handler
 	reportHandler      http.Handler
 	getRequestsTimeout time.Duration
 }
@@ -111,6 +114,15 @@ func NewMockServiceCtrl(service string) *MockServiceCtrl {
 		resp: m.checkResp,
 	}
 
+	m.quotaResp = &serviceResponse{
+		reqType:  QUOTA_REQUEST,
+		respBody: []byte(""),
+	}
+	m.quotaHandler = &serviceHandler{
+		m:    m,
+		resp: m.quotaResp,
+	}
+
 	m.reportResp = &serviceResponse{
 		reqType:  REPORT_REQUEST,
 		respBody: []byte(""),
@@ -121,9 +133,12 @@ func NewMockServiceCtrl(service string) *MockServiceCtrl {
 	}
 
 	check_path := "/v1/services/" + service + ":check"
+	quota_path := "/v1/services/" + service + ":allocateQuota"
 	report_path := "/v1/services/" + service + ":report"
+
 	r := mux.NewRouter()
 	r.Path(check_path).Methods("POST").Handler(m.checkHandler)
+	r.Path(quota_path).Methods("POST").Handler(m.quotaHandler)
 	r.Path(report_path).Methods("POST").Handler(m.reportHandler)
 
 	glog.Infof("Start mock service control server for service: %s\n", service)
@@ -154,6 +169,13 @@ func (m *MockServiceCtrl) SetGetRequestsTimeout(timeout time.Duration) {
 func (m *MockServiceCtrl) SetCheckResponse(checkResponse *sc.CheckResponse) {
 	req_b, _ := proto.Marshal(checkResponse)
 	m.checkResp.respBody = req_b
+}
+
+// SetCheckResponse sets the response for the check of the service control.
+func (m *MockServiceCtrl) SetQuotaResponse(quotaResponse *sc.AllocateQuotaResponse) {
+	fmt.Println(quotaResponse)
+	req_b, _ := proto.Marshal(quotaResponse)
+	m.quotaResp.respBody = req_b
 }
 
 // SetReportResponseStatus sets the status of the report response of the service control.

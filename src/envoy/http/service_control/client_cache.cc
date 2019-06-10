@@ -20,6 +20,8 @@ using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
+using ::google::api::servicecontrol::v1::AllocateQuotaRequest;
+using ::google::api::servicecontrol::v1::AllocateQuotaResponse;
 using ::google::api::servicecontrol::v1::CheckRequest;
 using ::google::api::servicecontrol::v1::CheckResponse;
 using ::google::api::servicecontrol::v1::ReportRequest;
@@ -47,6 +49,10 @@ const int kCheckAggregationEntries = 10000;
 const int kCheckAggregationFlushIntervalMs = 60000;
 const int kCheckAggregationExpirationMs = 300000;
 
+// Default config for quota aggregator
+const int kQuotaAggregationEntries = 10000;
+const int kQuotaAggregationFlushIntervalMs = 1000;
+
 // Default config for report aggregator
 const int kReportAggregationEntries = 10000;
 const int kReportAggregationFlushIntervalMs = 1000;
@@ -59,6 +65,12 @@ CheckAggregationOptions getCheckAggregationOptions() {
   return CheckAggregationOptions(kCheckAggregationEntries,
                                  kCheckAggregationFlushIntervalMs,
                                  kCheckAggregationExpirationMs);
+}
+
+// Generates QuotaAggregationOptions.
+QuotaAggregationOptions getQuotaAggregationOptions() {
+  return QuotaAggregationOptions(kQuotaAggregationEntries,
+                                 kQuotaAggregationFlushIntervalMs);
 }
 
 // Generates ReportAggregationOptions.
@@ -101,7 +113,7 @@ ClientCache::ClientCache(
     std::function<const std::string&()> token_fn)
     : config_(config), cm_(cm), dispatcher_(dispatcher), token_fn_(token_fn) {
   ServiceControlClientOptions options(getCheckAggregationOptions(),
-                                      QuotaAggregationOptions(),
+                                      getQuotaAggregationOptions(),
                                       getReportAggregationOptions());
 
   options.check_transport = [this](const CheckRequest& request,
@@ -135,6 +147,38 @@ ClientCache::ClientCache(
           }
           on_done(status);
         });
+  };
+
+  options.quota_transport = [this](const AllocateQuotaRequest& request,
+                                   AllocateQuotaResponse* response,
+                                   TransportDoneFunc on_done) {
+    const std::string& token = token_fn_();
+    if (token.empty()) {
+      on_done(
+          Status(Code::UNAUTHENTICATED,
+                 std::string("Missing access token for service control call")));
+      return;
+    }
+    auto* call = HttpCall::create(cm_, config_.service_control_uri());
+    call->call(config_.service_name() + ":allocateQuota", token, request,
+               [this, response, on_done](const Status& status,
+                                         const std::string& body) {
+                 if (status.ok()) {
+                   // Handle 200 response
+                   if (!response->ParseFromString(body)) {
+                     on_done(Status(Code::INVALID_ARGUMENT,
+                                    std::string("Invalid response")));
+                     return;
+                   }
+                 } else {
+                   response->ParseFromString(body);
+                   ENVOY_LOG(error,
+                             "Failed to call allocateQuota, error: {}, str "
+                             "body: {}, pb body: {}",
+                             status.ToString(), body, response->DebugString());
+                 }
+                 on_done(status);
+               });
   };
 
   options.report_transport = [this](const ReportRequest& request,
@@ -198,6 +242,26 @@ void ClientCache::callCheck(
                    }
                    delete response;
                  });
+}
+
+void ClientCache::callQuota(
+    const ::google::api::servicecontrol::v1::AllocateQuotaRequest& request,
+    std::function<void(const ::google::protobuf::util::Status& status)>
+        on_done) {
+  AllocateQuotaResponse* response = new AllocateQuotaResponse;
+  client_->Quota(
+      request, response, [this, response, on_done](const Status& status) {
+        if (status.ok()) {
+          on_done(::google::api_proxy::service_control::RequestBuilder::
+                      ConvertAllocateQuotaResponse(*response,
+                                                   config_.service_name()));
+        } else {
+          on_done(Status(static_cast<google::protobuf::util::error::Code>(
+                             status.error_code()),
+                         status.error_message()));
+        }
+        delete response;
+      });
 }
 
 void ClientCache::callReport(const ReportRequest& request) {

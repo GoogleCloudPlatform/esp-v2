@@ -29,6 +29,7 @@ type methodInfo struct {
 	IsGeneratedOption      bool
 	SkipServiceControl     bool
 	APIKeyLocations        []*scpb.APIKeyLocation
+	MetricCosts            []*scpb.MetricCost
 }
 
 // bakcendInfo stores information from Backend rule for backend rerouting.

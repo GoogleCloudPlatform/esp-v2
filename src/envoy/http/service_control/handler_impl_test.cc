@@ -29,6 +29,7 @@ using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::api_proxy::service_control::CheckRequestInfo;
 using ::google::api_proxy::service_control::CheckResponseInfo;
 using ::google::api_proxy::service_control::OperationInfo;
+using ::google::api_proxy::service_control::QuotaRequestInfo;
 using ::google::api_proxy::service_control::ReportRequestInfo;
 using ::google::api_proxy::service_control::protocol::Protocol;
 using ::google::protobuf::TextFormat;
@@ -103,6 +104,26 @@ requirements {
   service_name: "echo"
   api_name: "test_api"
   api_version: "test_version"
+  operation_name: "get_header_key_quota"
+  api_key: {
+    allow_without_api_key: false
+    locations: {
+      header: "x-api-key"
+    }
+  }
+  metric_costs: {
+    name: "metric_name_1"
+    cost: 2
+  }
+  metric_costs: {
+    name: "metric_name_1"
+    cost: 2
+  }
+}
+requirements {
+  service_name: "echo"
+  api_name: "test_api"
+  api_version: "test_version"
   operation_name: "get_cookie_key"
   api_key: {
     allow_without_api_key: false
@@ -159,6 +180,16 @@ MATCHER_P(MatchesCheckInfo, expect, "") {
 
   if (arg.operation_id != "test-uuid") return false;
   if (arg.operation_name != "get_header_key") return false;
+  if (arg.producer_project_id != "project-id") return false;
+  return true;
+}
+
+MATCHER_P(MatchesQuotaInfo, expect, "") {
+  if (arg.method_name != expect.method_name) return false;
+  if (arg.metric_cost_vector != expect.metric_cost_vector) return false;
+
+  if (arg.operation_id != "test-uuid") return false;
+  if (arg.operation_name != expect.method_name) return false;
   if (arg.producer_project_id != "project-id") return false;
   return true;
 }
@@ -266,6 +297,7 @@ TEST_F(HandlerTest, HandlerCheckNotNeeded) {
                                     *cfg_parser_);
 
   EXPECT_CALL(*mock_call_, callCheck(_, _)).Times(0);
+  EXPECT_CALL(*mock_call_, callQuota(_, _)).Times(0);
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
   handler.callCheck(headers, mock_check_done_callback_);
 
@@ -296,6 +328,7 @@ TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
              "established identity). Please use API Key or other form of "
              "API consumer identity to call this API.");
   EXPECT_CALL(*mock_call_, callCheck(_, _)).Times(0);
+  EXPECT_CALL(*mock_call_, callQuota(_, _)).Times(0);
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(bad_status));
   handler.callCheck(headers, mock_check_done_callback_);
 
@@ -385,9 +418,45 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
   handler.callReport(&headers, &response_headers, &headers);
 }
 
+TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
+  // Test: Quota is required and succeeds.
+  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+                              Utils::kOperation, "get_header_key_quota");
+  Http::TestHeaderMapImpl headers{
+      {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
+  Http::TestHeaderMapImpl response_headers{
+      {"content-type", "application/grpc"}};
+  ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
+                                    *cfg_parser_);
+  CheckResponseInfo response_info;
+  response_info.is_api_key_valid = true;
+  response_info.service_is_activated = true;
+
+  EXPECT_CALL(*mock_call_, callCheck(_, _))
+      .WillOnce(Invoke(
+          [&response_info](const CheckRequestInfo&, CheckDoneFunc on_done) {
+            on_done(Status::OK, response_info);
+          }));
+  QuotaRequestInfo expected_quota_info;
+  expected_quota_info.method_name = "get_header_key_quota";
+  expected_quota_info.metric_cost_vector =
+      cfg_parser_->FindRequirement("get_header_key_quota")->metric_costs();
+
+  EXPECT_CALL(*mock_call_, callQuota(MatchesQuotaInfo(expected_quota_info), _))
+      .WillOnce(Invoke([](const QuotaRequestInfo&, QuotaDoneFunc on_done) {
+        on_done(Status::OK);
+      }));
+
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
+  handler.callCheck(headers, mock_check_done_callback_);
+
+  EXPECT_CALL(*mock_call_, callReport(_));
+  handler.callReport(&headers, &response_headers, &headers);
+}
+
 TEST_F(HandlerTest, HandlerFailCheckSync) {
-  // Test: Check is required and a request is made, but service control returns
-  // a bad status.
+  // Test: Check is required and a request is made, but service control
+  // returns a bad status.
   Utils::setStringFilterState(mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key");
   Http::TestHeaderMapImpl headers{
@@ -419,6 +488,45 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, headers)));
+  handler.callReport(&headers, &response_headers, &headers);
+}
+
+TEST_F(HandlerTest, HandlerFailQuotaSync) {
+  // Test: Check is required and a request is made, but service control
+  // returns a bad status.
+  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+                              Utils::kOperation, "get_header_key_quota");
+  Http::TestHeaderMapImpl headers{
+      {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
+  Http::TestHeaderMapImpl response_headers{
+      {"content-type", "application/grpc"}};
+  ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
+                                    *cfg_parser_);
+  CheckResponseInfo response_info;
+  response_info.is_api_key_valid = true;
+  response_info.service_is_activated = true;
+
+  EXPECT_CALL(*mock_call_, callCheck(_, _))
+      .WillOnce(Invoke(
+          [&response_info](const CheckRequestInfo&, CheckDoneFunc on_done) {
+            on_done(Status::OK, response_info);
+          }));
+  QuotaRequestInfo expected_quota_info;
+  expected_quota_info.method_name = "get_header_key_quota";
+  expected_quota_info.metric_cost_vector =
+      cfg_parser_->FindRequirement("get_header_key_quota")->metric_costs();
+
+  Status bad_status = Status(Code::RESOURCE_EXHAUSTED,
+                             "test bad status returned from service control");
+  EXPECT_CALL(*mock_call_, callQuota(MatchesQuotaInfo(expected_quota_info), _))
+      .WillOnce(
+          Invoke([bad_status](const QuotaRequestInfo&, QuotaDoneFunc on_done) {
+            on_done(bad_status);
+          }));
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(bad_status));
+  handler.callCheck(headers, mock_check_done_callback_);
+
+  EXPECT_CALL(*mock_call_, callReport(_));
   handler.callReport(&headers, &response_headers, &headers);
 }
 
@@ -463,9 +571,57 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckAsync) {
   handler.callReport(&headers, &response_headers, &headers);
 }
 
+TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
+  // Test: Check is required and succeeds, even when the done callback is not
+  // called until later.
+  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+                              Utils::kOperation, "get_header_key_quota");
+  Http::TestHeaderMapImpl headers{
+      {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
+  Http::TestHeaderMapImpl response_headers{
+      {"content-type", "application/grpc"}};
+  ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
+                                    *cfg_parser_);
+
+  CheckResponseInfo response_info;
+  response_info.is_api_key_valid = true;
+  response_info.service_is_activated = true;
+  EXPECT_CALL(*mock_call_, callCheck(_, _))
+      .WillOnce(Invoke(
+          [&response_info](const CheckRequestInfo&, CheckDoneFunc on_done) {
+            on_done(Status::OK, response_info);
+          }));
+
+  QuotaRequestInfo expected_quota_info;
+  expected_quota_info.method_name = "get_header_key_quota";
+  expected_quota_info.metric_cost_vector =
+      cfg_parser_->FindRequirement("get_header_key_quota")->metric_costs();
+  // Store the done callback
+  QuotaDoneFunc stored_on_done;
+  EXPECT_CALL(*mock_call_, callQuota(MatchesQuotaInfo(expected_quota_info), _))
+      .WillOnce(Invoke(
+          [&stored_on_done](const QuotaRequestInfo&, QuotaDoneFunc on_done) {
+            stored_on_done = on_done;
+          }));
+  handler.callCheck(headers, mock_check_done_callback_);
+
+  // Async, later call the done callback
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
+  stored_on_done(Status::OK);
+
+  ReportRequestInfo expected_report_info;
+  expected_report_info.operation_name = "get_header_key_quota";
+  expected_report_info.api_key = "foobar";
+  expected_report_info.status = Status::OK;
+  EXPECT_CALL(*mock_call_,
+              callReport(MatchesReportInfo(expected_report_info, headers,
+                                           response_headers, headers)));
+  handler.callReport(&headers, &response_headers, &headers);
+}
+
 TEST_F(HandlerTest, HandlerFailCheckAsync) {
-  // Test: Check is required and a request is made, but later on service control
-  // returns a bad status.
+  // Test: Check is required and a request is made, but later on service
+  // control returns a bad status.
   Utils::setStringFilterState(mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key");
   Http::TestHeaderMapImpl headers{
@@ -490,6 +646,7 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
             stored_on_done = on_done;
           }));
   handler.callCheck(headers, mock_check_done_callback_);
+  EXPECT_CALL(*mock_call_, callQuota(_, _)).Times(0);
 
   // Async, later call the done callback
   Status bad_status = Status(Code::PERMISSION_DENIED,
@@ -506,9 +663,59 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
   handler.callReport(&headers, &response_headers, &headers);
 }
 
-TEST_F(HandlerTest, HandlerOnCheckDoneSkippedIfAborted) {
-  // Test: If the handler is aborted before service control responds, done
-  // callback is not called.
+TEST_F(HandlerTest, HandlerFailQuotaAsync) {
+  // Test: Quota is required and a request is made, but later on service
+  // control returns a bad status.
+  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+                              Utils::kOperation, "get_header_key_quota");
+  Http::TestHeaderMapImpl headers{
+      {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
+  Http::TestHeaderMapImpl response_headers{
+      {"content-type", "application/grpc"}};
+  ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
+                                    *cfg_parser_);
+
+  CheckResponseInfo response_info;
+  response_info.is_api_key_valid = true;
+  response_info.service_is_activated = true;
+  EXPECT_CALL(*mock_call_, callCheck(_, _))
+      .WillOnce(Invoke(
+          [&response_info](const CheckRequestInfo&, CheckDoneFunc on_done) {
+            on_done(Status::OK, response_info);
+          }));
+
+  QuotaRequestInfo expected_quota_info;
+  expected_quota_info.method_name = "get_header_key_quota";
+  expected_quota_info.metric_cost_vector =
+      cfg_parser_->FindRequirement("get_header_key_quota")->metric_costs();
+  // Store the done callback
+  QuotaDoneFunc stored_on_done;
+  EXPECT_CALL(*mock_call_, callQuota(MatchesQuotaInfo(expected_quota_info), _))
+      .WillOnce(Invoke(
+          [&stored_on_done](const QuotaRequestInfo&, QuotaDoneFunc on_done) {
+            stored_on_done = on_done;
+          }));
+  handler.callCheck(headers, mock_check_done_callback_);
+
+  // Async, later call the done callback
+  Status bad_status = Status(Code::RESOURCE_EXHAUSTED,
+                             "test bad status returned from service control");
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(bad_status));
+  stored_on_done(bad_status);
+
+  ReportRequestInfo expected_report_info;
+  expected_report_info.operation_name = "get_header_key_quota";
+  expected_report_info.api_key = "foobar";
+  expected_report_info.status = bad_status;
+  EXPECT_CALL(*mock_call_,
+              callReport(MatchesReportInfo(expected_report_info, headers,
+                                           response_headers, headers)));
+  handler.callReport(&headers, &response_headers, &headers);
+}
+
+TEST_F(HandlerTest, HandlerOnCheckDoneSkippedIfAbortedForCheckCallback) {
+  // Test: If the handler is aborted before service control check responds,
+  // checkDone callback is not called.
   Utils::setStringFilterState(mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key");
   Http::TestHeaderMapImpl headers{

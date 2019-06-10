@@ -73,6 +73,15 @@ void ServiceControlCallImpl::callCheck(
   getTLCache().client_cache().callCheck(request, on_done);
 }
 
+void ServiceControlCallImpl::callQuota(
+    const ::google::api_proxy::service_control::QuotaRequestInfo& info,
+    QuotaDoneFunc on_done) {
+  ::google::api::servicecontrol::v1::AllocateQuotaRequest request;
+  request_builder_->FillAllocateQuotaRequest(info, &request);
+  ENVOY_LOG(debug, "Sending allocateQuota : {}", request.DebugString());
+  getTLCache().client_cache().callQuota(request, on_done);
+}
+
 void ServiceControlCallImpl::callReport(
     const ::google::api_proxy::service_control::ReportRequestInfo& info) {
   ::google::api::servicecontrol::v1::ReportRequest request;

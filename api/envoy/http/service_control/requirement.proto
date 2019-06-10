@@ -71,6 +71,14 @@ message APIKeyRequirement {
   bool allow_without_api_key = 2;
 }
 
+message MetricCost {
+  // The name of the metric cost
+  string name = 1;
+
+  // The cost of the metric cost
+  int64 cost = 2;
+}
+
 message Requirement {
   // Refers to the service name in FilterConfig.services.service_name.
   string service_name = 1 [(validate.rules).string.min_bytes = 1];
@@ -93,4 +101,7 @@ message Requirement {
   // If true, the selected method should skip service control and the control
   // plane features, such as quota and billing.
   bool skip_service_control = 7;
+
+  // The metric costs for this selector.
+  repeated MetricCost metric_costs = 8;
 }

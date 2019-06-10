@@ -378,6 +378,7 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 			ServiceName:        serviceName,
 			OperationName:      operation,
 			SkipServiceControl: method.SkipServiceControl,
+			MetricCosts:        method.MetricCosts,
 		}
 
 		// For these OPTIONS methods, auth should be disabled and AllowWithoutApiKey

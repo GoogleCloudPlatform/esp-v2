@@ -64,6 +64,11 @@ class MockServiceControlCall : public ServiceControlCall {
           const ::google::api_proxy::service_control::CheckRequestInfo& request,
           CheckDoneFunc on_done));
 
+  MOCK_METHOD2(
+      callQuota,
+      void(const ::google::api_proxy::service_control::QuotaRequestInfo& info,
+           QuotaDoneFunc on_done));
+
   MOCK_METHOD1(
       callReport,
       void(const ::google::api_proxy::service_control::ReportRequestInfo&

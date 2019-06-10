@@ -20,7 +20,7 @@
 #include "envoy/upstream/cluster_manager.h"
 #include "include/service_control_client.h"
 #include "src/api_proxy/service_control/request_info.h"
-#include "src/envoy/http/service_control/check_done_func.h"
+#include "src/envoy/http/service_control/service_control_callback_func.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -37,6 +37,10 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
 
   void callCheck(const ::google::api::servicecontrol::v1::CheckRequest& request,
                  CheckDoneFunc on_done);
+
+  void callQuota(
+      const ::google::api::servicecontrol::v1::AllocateQuotaRequest& request,
+      QuotaDoneFunc on_done);
 
   void callReport(
       const ::google::api::servicecontrol::v1::ReportRequest& request);

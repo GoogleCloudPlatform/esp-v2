@@ -62,6 +62,8 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
                              std::chrono::system_clock::now());
 
  private:
+  void callQuota();
+
   void fillOperationInfo(
       ::google::api_proxy::service_control::OperationInfo& info,
       std::chrono::system_clock::time_point now =
@@ -73,6 +75,11 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   void tryIntermediateReport(std::chrono::system_clock::time_point now);
 
   bool isConfigured() const { return require_ctx_ != nullptr; }
+
+  bool isQuotaRequired() const {
+    return !require_ctx_->config().skip_service_control() &&
+           require_ctx_->config().metric_costs().size() != 0;
+  }
 
   bool isCheckRequired() const {
     return !require_ctx_->config().api_key().allow_without_api_key() &&

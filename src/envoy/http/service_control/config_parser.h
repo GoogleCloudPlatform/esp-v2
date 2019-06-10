@@ -64,7 +64,12 @@ class RequirementContext {
   RequirementContext(
       const ::google::api::envoy::http::service_control::Requirement& config,
       const ServiceContext& service_ctx)
-      : config_(config), service_ctx_(service_ctx) {}
+      : config_(config), service_ctx_(service_ctx) {
+    for (const auto& metric_cost : config.metric_costs()) {
+      metric_costs_.push_back(
+          std::make_pair(metric_cost.name(), metric_cost.cost()));
+    }
+  }
 
   const ::google::api::envoy::http::service_control::Requirement& config()
       const {
@@ -73,9 +78,14 @@ class RequirementContext {
 
   const ServiceContext& service_ctx() const { return service_ctx_; }
 
+  const std::vector<std::pair<std::string, int>>* metric_costs() const {
+    return &metric_costs_;
+  }
+
  private:
   const ::google::api::envoy::http::service_control::Requirement& config_;
   const ServiceContext& service_ctx_;
+  std::vector<std::pair<std::string, int>> metric_costs_;
 };
 typedef std::unique_ptr<RequirementContext> RequirementContextPtr;
 
