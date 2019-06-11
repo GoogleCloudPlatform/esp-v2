@@ -341,6 +341,7 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 		},
 		ServiceConfig:   copyServiceConfigForReportMetrics(serviceInfo.ServiceConfig()),
 		BackendProtocol: lowercaseProtocol,
+		NetworkFailOpen: *flags.ServiceControlNetworkFailOpen,
 	}
 
 	if *flags.LogRequestHeaders != "" {

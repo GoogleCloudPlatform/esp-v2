@@ -52,6 +52,7 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
   std::function<const std::string&()> token_fn_;
   std::unique_ptr<::google::service_control_client::ServiceControlClient>
       client_;
+  const bool network_fail_open_;
 };
 
 }  // namespace ServiceControl

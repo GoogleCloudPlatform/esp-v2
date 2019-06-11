@@ -52,6 +52,7 @@ MANAGEMENT_ADDRESS = "https://servicemanagement.googleapis.com"
 # Metadata service
 METADATA_ADDRESS = "http://169.254.169.254"
 
+
 def gen_bootstrap_conf(args):
     cmd = [BOOTSTRAP_CMD]
 
@@ -63,6 +64,7 @@ def gen_bootstrap_conf(args):
     os.environ["BOOTSTRAP_FILE"] = bootstrap_file
     print(cmd)
     subprocess.call(cmd)
+
 
 def start_proxy(proxy_conf):
     try:
@@ -277,6 +279,14 @@ environment variable or by passing "-k" flag to this script.
         if the fields are available. The value must be a primitive field,
         JSON objects and arrays will not be logged.
         ''')
+    parser.add_argument(
+        '--service_control_network_fail_open',
+        default=True,
+        action='store_true',
+        help='''
+        In case of network failures when connecting to Google service control,
+        the requests will be allowed if this flag is on. Default is on.
+        ''')
     return parser
 
 
@@ -345,6 +355,10 @@ if __name__ == '__main__':
 
     if args.service:
         proxy_conf.extend(["--service", args.service])
+
+    #  NOTE: It is true by default in configmangager's flags.
+    if not args.service_control_network_fail_open:
+        proxy_conf.extend(["--service_control_network_fail_open=false"])
 
     if args.version:
         if args.rollout_strategy != DEFAULT_ROLLOUT_STRATEGY:

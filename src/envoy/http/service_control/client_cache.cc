@@ -111,7 +111,11 @@ ClientCache::ClientCache(
     const ::google::api::envoy::http::service_control::Service& config,
     Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher,
     std::function<const std::string&()> token_fn)
-    : config_(config), cm_(cm), dispatcher_(dispatcher), token_fn_(token_fn) {
+    : config_(config),
+      cm_(cm),
+      dispatcher_(dispatcher),
+      token_fn_(token_fn),
+      network_fail_open_(config.network_fail_open()) {
   ServiceControlClientOptions options(getCheckAggregationOptions(),
                                       getQuotaAggregationOptions(),
                                       getReportAggregationOptions());
@@ -238,7 +242,11 @@ void ClientCache::callCheck(
                              *response, config_.service_name(), &response_info);
                      on_done(status, response_info);
                    } else {
-                     on_done(status, response_info);
+                     if (network_fail_open_) {
+                       on_done(Status::OK, response_info);
+                     } else {
+                       on_done(status, response_info);
+                     }
                    }
                    delete response;
                  });

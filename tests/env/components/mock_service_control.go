@@ -55,6 +55,7 @@ type MockServiceCtrl struct {
 	s                  *httptest.Server
 	ch                 chan *ServiceRequest
 	count              *int32
+	serviceName        string
 	checkResp          *serviceResponse
 	quotaResp          *serviceResponse
 	reportResp         *serviceResponse
@@ -98,10 +99,11 @@ func SetOKCheckResponse() []byte {
 }
 
 // NewMockServiceCtrl creates a new HTTP server.
-func NewMockServiceCtrl(service string) *MockServiceCtrl {
+func NewMockServiceCtrl(serviceName string) *MockServiceCtrl {
 	m := &MockServiceCtrl{
 		ch:                 make(chan *ServiceRequest, 100),
 		count:              new(int32),
+		serviceName:        serviceName,
 		getRequestsTimeout: defaultTimeout,
 	}
 
@@ -132,18 +134,25 @@ func NewMockServiceCtrl(service string) *MockServiceCtrl {
 		resp: m.reportResp,
 	}
 
-	check_path := "/v1/services/" + service + ":check"
-	quota_path := "/v1/services/" + service + ":allocateQuota"
-	report_path := "/v1/services/" + service + ":report"
-
-	r := mux.NewRouter()
-	r.Path(check_path).Methods("POST").Handler(m.checkHandler)
-	r.Path(quota_path).Methods("POST").Handler(m.quotaHandler)
-	r.Path(report_path).Methods("POST").Handler(m.reportHandler)
-
-	glog.Infof("Start mock service control server for service: %s\n", service)
-	m.s = httptest.NewServer(r)
 	return m
+}
+
+func (m *MockServiceCtrl) Setup() {
+	r := mux.NewRouter()
+	checkPath := "/v1/services/" + m.serviceName + ":check"
+	quotaPath := "/v1/services/" + m.serviceName + ":allocateQuota"
+	reportPath := "/v1/services/" + m.serviceName + ":report"
+	r.Path(checkPath).Methods("POST").Handler(m.checkHandler)
+	r.Path(quotaPath).Methods("POST").Handler(m.quotaHandler)
+	r.Path(reportPath).Methods("POST").Handler(m.reportHandler)
+
+	glog.Infof("Start mock service control server for service: %s\n", m.serviceName)
+	m.s = httptest.NewServer(r)
+}
+
+// OverrideCheckHandler overrides the service control check handler before setup.
+func (m *MockServiceCtrl) OverrideCheckHandler(checkHandler http.Handler) {
+	m.checkHandler = checkHandler
 }
 
 // GetURL returns the URL of MockServiceCtrl.

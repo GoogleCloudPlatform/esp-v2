@@ -75,6 +75,10 @@ message Service {
 
   // The field name for jwt payload passed into metadata
   string jwt_payload_metadata_name = 13;
+
+  // In case of failing to connect to service control service, the requests
+  // are allowed if this field is true.  Default is true.
+  bool network_fail_open = 14;
 }
 
 message GcpAttributes {

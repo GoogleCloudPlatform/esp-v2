@@ -117,15 +117,10 @@ struct OperationInfo {
 
 // Information to fill Check request protobuf.
 struct CheckRequestInfo : public OperationInfo {
-  // Whether the method allow unregistered calls.
-  bool allow_unregistered_calls;
-
   // used for api key restriction check
   std::string android_package_name;
   std::string android_cert_fingerprint;
   std::string ios_bundle_id;
-
-  CheckRequestInfo() : allow_unregistered_calls(false) {}
 };
 
 // Stores the information substracted from the check response.

@@ -53,6 +53,8 @@ const (
 	TestServiceControlLogJwtPayloads
 	TestServiceControlReportResponseCode
 	TestServiceControlCheckError
+	TestServiceControlCheckNetworkFailOpen
+	TestServiceControlCheckNetworkFailClosed
 	TestServiceControlRequestInDynamicRouting
 	TestServiceControlRequestWithAllowCors
 	TestServiceControlReportFailed

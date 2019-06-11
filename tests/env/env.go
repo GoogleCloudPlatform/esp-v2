@@ -51,7 +51,7 @@ type ServiceManagementServer interface {
 type TestEnv struct {
 	enableDynamicRoutingBackend bool
 	mockMetadata                bool
-	mockServiceControl          bool
+	enableScNetworkFailOpen     bool
 	backendService              string
 	mockJwtProviders            []string
 	mockMetadataOverride        map[string]string
@@ -69,14 +69,15 @@ type TestEnv struct {
 }
 
 func NewTestEnv(name uint16, backendService string, jwtProviders []string) *TestEnv {
+	fakeServiceConfig := proto.Clone(testdata.ConfigMap[backendService]).(*conf.Service)
 	return &TestEnv{
 		mockMetadata:                true,
 		mockServiceManagementServer: components.NewMockServiceMrg(),
-		mockServiceControl:          true,
 		backendService:              backendService,
 		ports:                       components.NewPorts(name),
-		fakeServiceConfig:           proto.Clone(testdata.ConfigMap[backendService]).(*conf.Service),
+		fakeServiceConfig:           fakeServiceConfig,
 		mockJwtProviders:            jwtProviders,
+		ServiceControlServer:        components.NewMockServiceCtrl(fakeServiceConfig.GetName()),
 	}
 }
 
@@ -129,6 +130,11 @@ func (e *TestEnv) AppendBackendRules(rules []*conf.BackendRule) {
 	e.fakeServiceConfig.Backend.Rules = append(e.fakeServiceConfig.Backend.Rules, rules...)
 }
 
+// EnableScNetworkFailOpen sets enableScNetworkFailOpen to be true.
+func (e *TestEnv) EnableScNetworkFailOpen() {
+	e.enableScNetworkFailOpen = true
+}
+
 // AppendUsageRules appends Service.Usage.Rules.
 func (e *TestEnv) AppendUsageRules(rules []*conf.UsageRule) {
 	e.fakeServiceConfig.Usage.Rules = append(e.fakeServiceConfig.Usage.Rules, rules...)
@@ -177,11 +183,9 @@ func (e *TestEnv) Setup(confArgs []string) error {
 			}
 		}
 
-		if e.mockServiceControl {
-			e.ServiceControlServer = components.NewMockServiceCtrl(e.fakeServiceConfig.GetName())
-			testdata.SetFakeControlEnvironment(e.fakeServiceConfig, e.ServiceControlServer.GetURL())
-			testdata.AppendLogMetrics(e.fakeServiceConfig)
-		}
+		e.ServiceControlServer.Setup()
+		testdata.SetFakeControlEnvironment(e.fakeServiceConfig, e.ServiceControlServer.GetURL())
+		testdata.AppendLogMetrics(e.fakeServiceConfig)
 
 		marshaler := &jsonpb.Marshaler{}
 		jsonStr, err := marshaler.MarshalToString(e.fakeServiceConfig)
@@ -190,6 +194,10 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		}
 
 		confArgs = append(confArgs, "--service_management_url="+e.mockServiceManagementServer.Start(jsonStr))
+	}
+
+	if !e.enableScNetworkFailOpen {
+		confArgs = append(confArgs, "--service_control_network_fail_open=false")
 	}
 
 	if e.mockMetadata {
