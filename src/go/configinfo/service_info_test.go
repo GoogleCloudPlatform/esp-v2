@@ -18,6 +18,7 @@ import (
 	"flag"
 	"fmt"
 	"reflect"
+	"sort"
 	"testing"
 
 	"google.golang.org/genproto/googleapis/api/annotations"
@@ -554,6 +555,112 @@ func TestProcessBackendRule(t *testing.T) {
 		_, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
 		if (err == nil && tc.wantedErr != "") || (err != nil && tc.wantedErr == "") {
 			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, err, tc.wantedErr)
+		}
+	}
+}
+
+func TestProcessQuota(t *testing.T) {
+	testData := []struct {
+		desc              string
+		fakeServiceConfig *conf.Service
+		wantMethods       map[string]*methodInfo
+	}{
+		{
+			desc: "Succeed, simple case",
+			fakeServiceConfig: &conf.Service{
+				Apis: []*api.Api{
+					{
+						Name: testApiName,
+						Methods: []*api.Method{
+							{
+								Name: "ListShelves",
+							},
+						},
+					},
+				},
+				Quota: &conf.Quota{
+					MetricRules: []*conf.MetricRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
+							MetricCosts: map[string]int64{
+								"metric_a": 2,
+								"metric_b": 1,
+							},
+						},
+					},
+				},
+			},
+			wantMethods: map[string]*methodInfo{
+				fmt.Sprintf("%s.%s", testApiName, "ListShelves"): &methodInfo{
+					ShortName: "ListShelves",
+					MetricCosts: []*scpb.MetricCost{
+						{
+							Name: "metric_a",
+							Cost: 2,
+						},
+						{
+							Name: "metric_b",
+							Cost: 1,
+						},
+					},
+				},
+			},
+		},
+		{
+			desc: "Succeed, two metric cost items",
+			fakeServiceConfig: &conf.Service{
+				Apis: []*api.Api{
+					{
+						Name: testApiName,
+						Methods: []*api.Method{
+							{
+								Name: "ListShelves",
+							},
+						},
+					},
+				},
+				Quota: &conf.Quota{
+					MetricRules: []*conf.MetricRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
+							MetricCosts: map[string]int64{
+								"metric_c": 2,
+								"metric_a": 3,
+							},
+						},
+					},
+				},
+			},
+			wantMethods: map[string]*methodInfo{
+				fmt.Sprintf("%s.%s", testApiName, "ListShelves"): &methodInfo{
+					ShortName: "ListShelves",
+					MetricCosts: []*scpb.MetricCost{
+						{
+							Name: "metric_a",
+							Cost: 3,
+						},
+						{
+							Name: "metric_c",
+							Cost: 2,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for i, tc := range testData {
+		flag.Set("backend_protocol", "grpc")
+		flag.Set("enable_backend_routing", "true")
+		serviceInfo, _ := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
+
+		for key, gotMethod := range serviceInfo.Methods {
+			wantMethod := tc.wantMethods[key]
+
+			sort.Slice(gotMethod.MetricCosts, func(i, j int) bool { return gotMethod.MetricCosts[i].Name < gotMethod.MetricCosts[j].Name })
+			if eq := reflect.DeepEqual(gotMethod, wantMethod); !eq {
+				t.Errorf("Test Desc(%d): %s,\ngot Method: %v,\nwant Method: %v", i, tc.desc, gotMethod, wantMethod)
+			}
 		}
 	}
 }

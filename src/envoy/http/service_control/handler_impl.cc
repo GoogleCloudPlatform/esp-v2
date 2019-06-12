@@ -181,6 +181,27 @@ void ServiceControlHandlerImpl::callCheck(Http::HeaderMap& headers,
       });
 }
 
+// TODO(taoxuy): add unit test
+void ServiceControlHandlerImpl::callQuota() {
+  if (!isQuotaRequired()) {
+    check_callback_->onCheckDone(check_status_);
+    return;
+  }
+
+  ::google::api_proxy::service_control::QuotaRequestInfo info;
+  fillOperationInfo(info);
+
+  info.method_name = require_ctx_->config().operation_name();
+  info.metric_cost_vector = require_ctx_->metric_costs();
+
+  require_ctx_->service_ctx().call().callQuota(
+      info, [this, aborted = aborted_](const Status& status) {
+        if (*aborted) return;
+        check_status_ = status;
+        check_callback_->onCheckDone(status);
+      });
+}
+
 void ServiceControlHandlerImpl::onCheckResponse(
     Http::HeaderMap& headers, const Status& status,
     const CheckResponseInfo& response_info) {
@@ -194,7 +215,12 @@ void ServiceControlHandlerImpl::onCheckResponse(
                             response_info.consumer_project_id);
   }
 
-  check_callback_->onCheckDone(check_status_);
+  if (!check_status_.ok()) {
+    check_callback_->onCheckDone(check_status_);
+    return;
+  }
+
+  callQuota();
 }
 
 void ServiceControlHandlerImpl::callReport(

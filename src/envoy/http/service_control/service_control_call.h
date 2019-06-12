@@ -17,7 +17,7 @@
 #include "envoy/common/pure.h"
 
 #include "api/envoy/http/service_control/config.pb.h"
-#include "src/envoy/http/service_control/check_done_func.h"
+#include "src/envoy/http/service_control/service_control_callback_func.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -31,6 +31,10 @@ class ServiceControlCall {
   virtual void callCheck(
       const ::google::api_proxy::service_control::CheckRequestInfo& request,
       CheckDoneFunc on_done) PURE;
+
+  virtual void callQuota(
+      const ::google::api_proxy::service_control::QuotaRequestInfo& info,
+      QuotaDoneFunc on_done) PURE;
 
   virtual void callReport(
       const ::google::api_proxy::service_control::ReportRequestInfo& request)

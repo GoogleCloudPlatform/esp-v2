@@ -111,6 +111,11 @@ func (e *TestEnv) OverrideSystemParameters(systemParameters *conf.SystemParamete
 	e.fakeServiceConfig.SystemParameters = systemParameters
 }
 
+// OverrideQuota overrides Service.Quota.
+func (e *TestEnv) OverrideQuota(quota *conf.Quota) {
+	e.fakeServiceConfig.Quota = quota
+}
+
 // AppendHttpRules appends Service.Http.Rules.
 func (e *TestEnv) AppendHttpRules(rules []*annotations.HttpRule) {
 	e.fakeServiceConfig.Http.Rules = append(e.fakeServiceConfig.Http.Rules, rules...)

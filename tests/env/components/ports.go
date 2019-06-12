@@ -62,6 +62,8 @@ const (
 	TestSimpleCorsWithRegexPreset
 	TestServiceControlProtocolWithGRPCBackend
 	TestServiceControlSkip
+	TestServiceControlQuota
+	TestServiceControlQuotaExhausted
 	TestServiceControlProtocolWithHTTPBackend
 	TestUnconfiguredRequest
 	TestServiceControlCredentialId

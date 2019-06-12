@@ -11,8 +11,8 @@ package(
 )
 
 envoy_cc_library(
-    name = "check_done_func_lib",
-    hdrs = ["check_done_func.h"],
+    name = "service_control_callback_func_lib",
+    hdrs = ["service_control_callback_func.h"],
     repository = "@envoy",
     deps = [
         "//src/api_proxy/service_control:request_builder_lib",
@@ -24,7 +24,7 @@ envoy_cc_library(
     hdrs = ["service_control_call.h"],
     repository = "@envoy",
     deps = [
-        ":check_done_func_lib",
+        ":service_control_callback_func_lib",
         "//api/envoy/http/service_control:config_proto_cc",
     ],
 )
@@ -34,7 +34,7 @@ envoy_cc_library(
     hdrs = ["handler.h"],
     repository = "@envoy",
     deps = [
-        ":check_done_func_lib",
+        ":service_control_callback_func_lib",
         "@envoy//include/envoy/http:header_map_interface",
         "@envoy//include/envoy/stream_info:stream_info_interface",
     ],
@@ -74,8 +74,8 @@ envoy_cc_library(
     ],
     repository = "@envoy",
     deps = [
-        ":check_done_func_lib",
         ":http_call_lib",
+        ":service_control_callback_func_lib",
         "//external:servicecontrol_client",
         "@envoy//include/envoy/event:dispatcher_interface",
         "@envoy//include/envoy/upstream:cluster_manager_interface",

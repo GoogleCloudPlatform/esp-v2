@@ -42,6 +42,15 @@ type ExpectedCheck struct {
 	Referer                string
 }
 
+type ExpectedQuota struct {
+	ConsumerID      string
+	MethodName      string
+	QuotaMetrics    map[string]int64
+	QuotaMode       sc.QuotaOperation_QuotaMode
+	ServiceConfigID string
+	ServiceName     string
+}
+
 type ExpectedReport struct {
 	Aggregate         int64
 	Version           string
@@ -508,6 +517,16 @@ func UnmarshalCheckRequest(data []byte) (*sc.CheckRequest, error) {
 	return rr, nil
 }
 
+// UnmarshalQuotaRequest returns proto AllocateQuotaRequest given data.
+func UnmarshalQuotaRequest(data []byte) (*sc.AllocateQuotaRequest, error) {
+	rr := &sc.AllocateQuotaRequest{}
+	err := proto.Unmarshal(data, rr)
+	if err != nil {
+		return nil, err
+	}
+	return rr, nil
+}
+
 // VerifyCheck verify if the response body is the expected CheckRequest.
 // If the verification fails, it returns an error.
 func VerifyCheck(body []byte, ec *ExpectedCheck) error {
@@ -592,6 +611,56 @@ func VerifyReport(body []byte, er *ExpectedReport) error {
 	return nil
 }
 
+// VerifyQuota verify if the response body is the expected AllocateQuotaRequest.
+// If the verification fails, it returns an error.
+func VerifyQuota(body []byte, er *ExpectedQuota) error {
+	got, err := UnmarshalQuotaRequest(body)
+	if err != nil {
+		return err
+	}
+
+	got.AllocateOperation.OperationId = ""
+
+	quotaMetrics := []*sc.MetricValueSet{}
+	for key, val := range er.QuotaMetrics {
+		quotaMetrics = append(quotaMetrics, &sc.MetricValueSet{
+			MetricName: key,
+			MetricValues: []*sc.MetricValue{
+				{
+					Value: &sc.MetricValue_Int64Value{
+						Int64Value: val,
+					},
+				},
+			},
+		})
+	}
+	sort.Slice(quotaMetrics, func(i, j int) bool {
+		return quotaMetrics[i].MetricName < quotaMetrics[j].MetricName
+	})
+	sort.Slice(got.AllocateOperation.QuotaMetrics, func(i, j int) bool {
+		return got.AllocateOperation.QuotaMetrics[i].MetricName < got.AllocateOperation.QuotaMetrics[j].MetricName
+	})
+
+	want := sc.AllocateQuotaRequest{
+		ServiceName: er.ServiceName,
+		AllocateOperation: &sc.QuotaOperation{
+			MethodName:   er.MethodName,
+			ConsumerId:   er.ConsumerID,
+			QuotaMetrics: quotaMetrics,
+			QuotaMode:    er.QuotaMode,
+			Labels: map[string]string{
+				"servicecontrol.googleapis.com/service_agent": "APIPROXY/0.0.1",
+				"servicecontrol.googleapis.com/user_agent":    "APIPROXY",
+			},
+		},
+		ServiceConfigId: er.ServiceConfigID,
+	}
+	if diff := ProtoDiff(&want, got); diff != "" {
+		return fmt.Errorf("Diff (-want +got):\n%v", diff)
+	}
+	return nil
+}
+
 // AggregateReport aggregates N report body into one, as
 // all metric values * N, and its LowEntries appended N times.
 func AggregateReport(pb *sc.ReportRequest, n int64) {
@@ -634,7 +703,14 @@ func CheckScRequest(t *testing.T, scRequests []*comp.ServiceRequest, wantScReque
 				t.Errorf("Test (%s): failed, service control request %v: should be Check", desc, i)
 			}
 			if err := VerifyCheck(reqBody, wantScRequest.(*ExpectedCheck)); err != nil {
-				t.Error(err)
+				t.Errorf("Test (%s): failed,  %v", desc, err)
+			}
+		case *ExpectedQuota:
+			if scRequest.ReqType != comp.QUOTA_REQUEST {
+				t.Errorf("Test (%s): failed, service control request %v: should be Quota", desc, i)
+			}
+			if err := VerifyQuota(reqBody, wantScRequest.(*ExpectedQuota)); err != nil {
+				t.Errorf("Test (%s): failed,  %v", desc, err)
 			}
 		case *ExpectedReport:
 			if scRequest.ReqType != comp.REPORT_REQUEST {

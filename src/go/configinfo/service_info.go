@@ -98,6 +98,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *conf.Service, id string) (*S
 	// Order matters.
 	serviceInfo.processEndpoints()
 	serviceInfo.processApis()
+	serviceInfo.processQuota()
 	serviceInfo.processHttpRule()
 	serviceInfo.processUsageRule()
 	serviceInfo.processSystemParameters()
@@ -128,6 +129,19 @@ func (s *ServiceInfo) processApis() {
 			&methodInfo{
 				ShortName: method.GetName(),
 			}
+	}
+}
+
+func (s *ServiceInfo) processQuota() {
+	for _, metricRule := range s.ServiceConfig().GetQuota().GetMetricRules() {
+		var metricCosts []*scpb.MetricCost
+		for name, cost := range metricRule.GetMetricCosts() {
+			metricCosts = append(metricCosts, &scpb.MetricCost{
+				Name: name,
+				Cost: cost,
+			})
+		}
+		s.Methods[metricRule.GetSelector()].MetricCosts = metricCosts
 	}
 }
 
