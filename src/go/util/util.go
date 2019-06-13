@@ -59,7 +59,7 @@ const (
 
 	ServiceAccountTokenSuffix   = "/v1/instance/service-accounts/default/token"
 	IdentityTokenSuffix         = "/v1/instance/service-accounts/default/identity"
-	ProjectIDSuffix             = "/v1/instance/project/project-id"
+	ProjectIDSuffix             = "/v1/project/project-id"
 	ZoneSuffix                  = "/v1/instance/zone"
 	OpenIDDiscoveryCfgURLSuffix = "/.well-known/openid-configuration/"
 

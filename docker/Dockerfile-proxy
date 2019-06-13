@@ -22,14 +22,14 @@ ENV VIRTUAL_ENV /env
 ENV PATH /env/bin:$PATH
 
 ADD docker/generic/* apiproxy/
+ADD bin/* apiproxy/
 
-ADD bin/configmanager apiproxy/configmanager
-
-ADD bin/envoy apiproxy/envoy
+# Stackdriver is using grpc call. It needs its roots.pem at /usr/share/grpc
+RUN mkdir -p /usr/share/grpc && cp apiproxy/grpc_roots.pem /usr/share/grpc/
 
 # create envoy user and group
-RUN groupadd -g 999 envoy && \
-    useradd -r -u 999 -g envoy envoy
+RUN groupadd -g 999 envoy && useradd -r -u 999 -g envoy envoy
+
 # run as user envoy
 USER envoy
 

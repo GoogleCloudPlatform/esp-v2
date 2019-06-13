@@ -29,10 +29,6 @@ done
 
 [[ -n "${IMAGE}" ]] || error_exit "Specify required image argument via '-i'"
 
-echo "Checking if docker image ${IMAGE} exists.."
-gcloud docker -- pull "${IMAGE}" \
-  && { echo "Image ${IMAGE} already exists; skipping"; exit 0; }
-
 echo "Building API PROXY docker image."
 
 retry -n 3 docker build --no-cache -t "${IMAGE}" \

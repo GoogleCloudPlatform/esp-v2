@@ -26,4 +26,4 @@ ENVOY=${ENVOY:-apiproxy/envoy}
 ENVOY_ARGS=${ENVOY_ARGS:-""}
 
 ${CONFIGMANAGER} $@ &
-${ENVOY} -c apiproxy/envoy_bootstrap_v2_startup.yaml ${ENVOY_ARGS}
+${ENVOY} -c ${BOOTSTRAP_FILE} ${ENVOY_ARGS}

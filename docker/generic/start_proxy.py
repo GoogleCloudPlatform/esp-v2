@@ -15,12 +15,22 @@
 import argparse
 import logging
 import os
+import subprocess
 import threading
 import sys
 import re
 
 # Location of start proxy script
 PROXY_STARTER = "apiproxy/start_proxy.sh"
+
+# The command to generate Envoy bootstrap config
+BOOTSTRAP_CMD = "apiproxy/bootstrap"
+
+# bootstrap config file will write here.
+# By default, envoy writes some logs to /tmp too
+# If root file system is read-only, this folder should be
+# mounted from tmpfs.
+DEFAULT_CONFIG_DIR = "/tmp"
 
 # Default HTTP/1.x port
 DEFAULT_PORT = '80'
@@ -42,6 +52,17 @@ MANAGEMENT_ADDRESS = "https://servicemanagement.googleapis.com"
 # Metadata service
 METADATA_ADDRESS = "http://169.254.169.254"
 
+def gen_bootstrap_conf(args):
+    cmd = [BOOTSTRAP_CMD]
+
+    # TODO(qiwzhang): pass tracing flags to bootstrap_cmd
+
+    bootstrap_file = DEFAULT_CONFIG_DIR + "/bootstrap.json"
+    cmd.append(bootstrap_file)
+    # Use environment variable to pass it to start_proxy.sh
+    os.environ["BOOTSTRAP_FILE"] = bootstrap_file
+    print(cmd)
+    subprocess.call(cmd)
 
 def start_proxy(proxy_conf):
     try:
@@ -360,6 +381,8 @@ if __name__ == '__main__':
         ])
         if args.cors_allow_credentials:
             proxy_conf.append("--cors_allow_credentials")
+
+    gen_bootstrap_conf(args)
 
     print(proxy_conf)
     start_proxy(proxy_conf)

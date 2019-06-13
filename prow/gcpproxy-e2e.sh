@@ -22,12 +22,11 @@ echo '======================================================='
 echo '=====================   e2e test  ====================='
 echo '======================================================='
 
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+. ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities'; exit 1; }
+
 PROJECT_ID="api_proxy_e2e_test"
 UNIQUE_ID=test
-
-WD=$(dirname "$0")
-WD=$(cd "$WD"; pwd)
-ROOT=$(dirname "$WD")
 
 cd "${ROOT}"
 
@@ -79,22 +78,11 @@ function e2eGKE() {
   -i ${UNIQUE_ID}
 }
 
-function apiProxyGenericDockerImage() {
-  # Generic docker image format. https://git-scm.com/docs/git-show.
-  local image_format='gcr.io/cloudesf-testing/api-proxy:git-%H'
-  local image="$(git show -q HEAD \
-    --pretty=format:"${image_format}")"
-  echo -n $image
-  return 0
-}
+IMAGE=$(get_image_name_with_sha)
+echo "Use image: ${IMAGE}"
 
-GENERIC_IMAGE=$(apiProxyGenericDockerImage)
-
-function buildPackages() {
-  ${ROOT}/scripts/robot-release.sh -i ${GENERIC_IMAGE}
-}
-
-buildPackages
+# IMAGE veriable will be set by the script
+${ROOT}/scripts/robot-release.sh -i ${IMAGE}
 
 # TODO(jilinxia): add other backend tests.
-e2eGKE -c "tight" -t "http" -g "bookstore" -R "managed" -m ${GENERIC_IMAGE}
+e2eGKE -c "tight" -t "http" -g "bookstore" -R "managed" -m ${IMAGE}

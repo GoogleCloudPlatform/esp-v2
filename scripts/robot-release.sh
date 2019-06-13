@@ -14,38 +14,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-while getopts :i: arg; do
-  case ${arg} in
-    i) IMAGE="${OPTARG}";;
-    *) echo "Invalid argument -${OPTARG}, ignoring.";;
-  esac
-done
-
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities'; exit 1; }
 
-${BAZEL} clean \
- || error_exit "Failed to ${BAZEL} clean before the release build."
+IMAGE=$(get_image_name_with_sha)
+while getopts :i: arg; do
+    case ${arg} in
+        i) IMAGE="${OPTARG}";;
+    *) echo "Invalid argument -${OPTARG}, ignoring.";;
+    esac
+done
+
+echo "Checking if docker image ${IMAGE} exists.."
+gcloud docker -- pull "${IMAGE}" \
+  && { echo "Image ${IMAGE} already exists; skipping"; exit 0; }
+
+echo "Building Envoy"
+${BAZEL} version
 
 # Build binaries
 if [ ! -d "${ROOT}/bin" ]; then
   mkdir ${ROOT}/bin
 fi
 
-echo "Building Envoy"
-${BAZEL} version
-
-# TODO(kyuc): remove `experimental_cc_skylark_api_enabled_packages` flag once
-# prow bazel is upgraded to 22+.
-${BAZEL} build //src/envoy:envoy \
-  --experimental_cc_skylark_api_enabled_packages=@rules_foreign_cc//tools/build_defs,tools/build_defs,@foreign_cc_impl
-
-cp -f ${ROOT}/bazel-bin/src/envoy/envoy ${ROOT}/bin/
-
-go build -o ${ROOT}/bin/configmanager ${ROOT}/src/go/server/server.go
+make -C ${ROOT} build
+make -C ${ROOT} build-envoy
 
 # Build docker container image for GKE/GCE deployment.
-if  [[ -n "${IMAGE}" ]]; then
-  ${ROOT}/scripts/linux-build-docker.sh -i "${IMAGE}" \
+${ROOT}/scripts/linux-build-docker.sh -i "${IMAGE}" \
     || error_exit 'Failed to build a generic Docker Image.'
-fi

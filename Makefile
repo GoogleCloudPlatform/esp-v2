@@ -44,6 +44,7 @@ build: format
 	@go build ./src/go/configmanager...
 	@go build ./tests...
 	@go build -o bin/configmanager ./src/go/server/server.go
+	@go build -o bin/bootstrap ./src/go/bootstrap/main/main.go
 	@go build -o bin/echo/server ./tests/endpoints/echo/server/app.go
 
 build-envoy:

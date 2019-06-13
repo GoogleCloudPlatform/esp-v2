@@ -320,3 +320,11 @@ function get_tool() {
     || { echo "Failed to upload ${tool_name} to ${TOOLS_BUCKET}"; return 1; }
   return 0
 }
+
+function get_image_name_with_sha() {
+    # Generic docker image format. https://git-scm.com/docs/git-show.
+    local image_format='gcr.io/cloudesf-testing/api-proxy:git-%H'
+    local image="$(git show -q HEAD --pretty=format:"${image_format}")"
+    echo -n $image
+    return 0
+}
