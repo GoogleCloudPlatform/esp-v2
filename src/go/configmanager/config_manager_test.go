@@ -57,6 +57,7 @@ var (
 func TestFetchListeners(t *testing.T) {
 	testData := []struct {
 		desc              string
+		enableTracing     bool
 		backendProtocol   string
 		fakeServiceConfig string
 		wantedListeners   string
@@ -965,6 +966,7 @@ func TestFetchListeners(t *testing.T) {
 		},
 		{
 			desc:            "Success for backend that allow CORS",
+			enableTracing:   true,
 			backendProtocol: "http1",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"%s",
@@ -1086,6 +1088,7 @@ func TestFetchListeners(t *testing.T) {
                             },
                             "stat_prefix":"ingress_http",
                             "use_remote_address":false,
+                            "tracing":{},
                             "xff_num_trusted_hops":2
                         },
                         "name":"envoy.http_connection_manager"
@@ -1102,6 +1105,11 @@ func TestFetchListeners(t *testing.T) {
 		flag.Set("version", testConfigID)
 		flag.Set("rollout_strategy", ut.FixedRolloutStrategy)
 		flag.Set("backend_protocol", tc.backendProtocol)
+		if tc.enableTracing {
+			flag.Set("enable_tracing", "true")
+		} else {
+			flag.Set("enable_tracing", "false")
+		}
 
 		runTest(t, func(env *testEnv) {
 			ctx := context.Background()
@@ -1168,6 +1176,7 @@ func TestDynamicBackendRouting(t *testing.T) {
 		flag.Set("rollout_strategy", ut.FixedRolloutStrategy)
 		flag.Set("backend_protocol", tc.backendProtocol)
 		flag.Set("enable_backend_routing", "true")
+		flag.Set("enable_tracing", "false")
 
 		runTest(t, func(env *testEnv) {
 			ctx := context.Background()
@@ -1331,6 +1340,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 	flag.Set("version", testConfigID)
 	flag.Set("rollout_strategy", ut.ManagedRolloutStrategy)
 	flag.Set("backend_protocol", testCase.backendProtocol)
+	flag.Set("enable_tracing", "false")
 
 	runTest(t, func(env *testEnv) {
 		var resp *cache.Response

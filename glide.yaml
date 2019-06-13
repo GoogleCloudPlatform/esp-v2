@@ -25,13 +25,14 @@ import:
 - package: github.com/lyft/protoc-gen-validate
   version: f9d2b11e44149635b23a002693b76512b01ae515
 - package: istio.io/gogo-genproto
+  vension: e88dc8b0e4dba2caf977ab9ec040cc2081db103f
 - package: github.com/gogo/googleapis
 - package: github.com/envoyproxy/data-plane-api
   version: 4406edd4e29f5b7e254bdee75ef6354fdf756eb3
 - package: github.com/sirupsen/logrus
   version: ^1.0.4
 - package: github.com/envoyproxy/go-control-plane
-  version: ba018e4c2c1e3c9d5a27347b8c24aac59d6ae1da
+  version: c7e2a120463a2209c6a0871d778f4eab96457e6b
 - package: github.com/golang/glog
 - package: github.com/golang/protobuf
   version: b5d812f8a3706043e23a9cd5babf2e5423744d30

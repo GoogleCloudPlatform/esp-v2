@@ -137,6 +137,9 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) (*v2.Listener, error) {
 		UseRemoteAddress:  &types.BoolValue{Value: *flags.EnvoyUseRemoteAddress},
 		XffNumTrustedHops: uint32(*flags.EnvoyXffNumTrustedHops),
 	}
+	if *flags.EnableTracing {
+		httpConMgr.Tracing = &hcm.HttpConnectionManager_Tracing{}
+	}
 
 	glog.Infof("adding Http Connection Manager config: %v", httpConMgr)
 	httpConMgr.HttpFilters = httpFilters
