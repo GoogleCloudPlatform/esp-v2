@@ -37,8 +37,10 @@ class ThreadLocalCache : public ThreadLocal::ThreadLocalObject {
  public:
   ThreadLocalCache(
       const ::google::api::envoy::http::service_control::Service& config,
+      const ::google::api::envoy::http::service_control::FilterConfig&
+          filter_config,
       Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher)
-      : client_cache_(config, cm, dispatcher,
+      : client_cache_(config, filter_config, cm, dispatcher,
                       [this]() -> const std::string& { return token(); }) {}
 
   void set_token(TokenSharedPtr token) { token_ = token; }
@@ -62,6 +64,8 @@ class ServiceControlCallImpl
  public:
   ServiceControlCallImpl(
       const ::google::api::envoy::http::service_control::Service& config,
+      const ::google::api::envoy::http::service_control::FilterConfig&
+          filter_config,
       Server::Configuration::FactoryContext& context,
       const std::string& token_url);
 
@@ -104,9 +108,11 @@ class ServiceControlCallFactoryImpl : public ServiceControlCallFactory {
 
   ServiceControlCallPtr create(
       const ::google::api::envoy::http::service_control::Service& config,
+      const ::google::api::envoy::http::service_control::FilterConfig&
+          filter_config,
       const std::string& token_url) override {
-    return std::make_unique<ServiceControlCallImpl>(config, context_,
-                                                    token_url);
+    return std::make_unique<ServiceControlCallImpl>(config, filter_config,
+                                                    context_, token_url);
   }
 
  private:

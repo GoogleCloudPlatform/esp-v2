@@ -31,7 +31,9 @@ namespace ServiceControl {
 class ClientCache : public Logger::Loggable<Logger::Id::filter> {
  public:
   ClientCache(
-      const ::google::api::envoy::http::service_control::Service& proto_config,
+      const ::google::api::envoy::http::service_control::Service& config,
+      const ::google::api::envoy::http::service_control::FilterConfig&
+          filter_config,
       Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher,
       std::function<const std::string&()> token_fn);
 
@@ -46,13 +48,27 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
       const ::google::api::servicecontrol::v1::ReportRequest& request);
 
  private:
+  void InitHttpRequestSetting(
+      const ::google::api::envoy::http::service_control::FilterConfig&
+          filter_config);
+
   const ::google::api::envoy::http::service_control::Service& config_;
   Upstream::ClusterManager& cm_;
   Event::Dispatcher& dispatcher_;
   std::function<const std::string&()> token_fn_;
   std::unique_ptr<::google::service_control_client::ServiceControlClient>
       client_;
-  const bool network_fail_open_;
+  bool network_fail_open_;
+
+  // the configurable timeouts
+  uint32_t check_timeout_ms_;
+  uint32_t report_timeout_ms_;
+  uint32_t quota_timeout_ms_;
+
+  // the configurable retries
+  uint32_t check_retries_;
+  uint32_t report_retries_;
+  uint32_t quota_retries_;
 };
 
 }  // namespace ServiceControl

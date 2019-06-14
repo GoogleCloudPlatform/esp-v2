@@ -29,7 +29,7 @@ FilterConfigParser::FilterConfigParser(const FilterConfig& config,
   for (const auto& service : config_.services()) {
     service_map_.emplace(service.service_name(),
                          ServiceContextPtr(new ServiceContext(
-                             service, factory, config.token_url())));
+                             service, config, factory, config.token_url())));
   }
 
   if (service_map_.size() < static_cast<size_t>(config_.services_size())) {

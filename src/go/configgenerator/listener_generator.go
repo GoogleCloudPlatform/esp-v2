@@ -27,6 +27,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/duration"
+	"github.com/golang/protobuf/ptypes/wrappers"
 
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	bapb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/backend_auth"
@@ -322,6 +323,32 @@ func makeJwtRequirement(requirements []*conf.AuthRequirement) *ac.JwtRequirement
 	return requires
 }
 
+func makeServiceControlCallingConfig() *scpb.ServiceControlCallingConfig {
+	setting := &scpb.ServiceControlCallingConfig{}
+	setting.NetworkFailOpen = &wrappers.BoolValue{Value: *flags.ServiceControlNetworkFailOpen}
+
+	if *flags.ScCheckTimeoutMs > 0 {
+		setting.CheckTimeoutMs = &wrappers.UInt32Value{Value: uint32(*flags.ScCheckTimeoutMs)}
+	}
+	if *flags.ScQuotaTimeoutMs > 0 {
+		setting.QuotaTimeoutMs = &wrappers.UInt32Value{Value: uint32(*flags.ScQuotaTimeoutMs)}
+	}
+	if *flags.ScReportTimeoutMs > 0 {
+		setting.ReportTimeoutMs = &wrappers.UInt32Value{Value: uint32(*flags.ScReportTimeoutMs)}
+	}
+
+	if *flags.ScCheckRetries > -1 {
+		setting.CheckRetries = &wrappers.UInt32Value{Value: uint32(*flags.ScCheckRetries)}
+	}
+	if *flags.ScQuotaRetries > -1 {
+		setting.QuotaRetries = &wrappers.UInt32Value{Value: uint32(*flags.ScQuotaRetries)}
+	}
+	if *flags.ScReportRetries > -1 {
+		setting.ReportRetries = &wrappers.UInt32Value{Value: uint32(*flags.ScReportRetries)}
+	}
+	return setting
+}
+
 func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	if serviceInfo == nil || serviceInfo.ServiceConfig().GetControl().GetEnvironment() == "" {
 		return nil
@@ -341,7 +368,6 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 		},
 		ServiceConfig:   copyServiceConfigForReportMetrics(serviceInfo.ServiceConfig()),
 		BackendProtocol: lowercaseProtocol,
-		NetworkFailOpen: *flags.ServiceControlNetworkFailOpen,
 	}
 
 	if *flags.LogRequestHeaders != "" {
@@ -365,8 +391,9 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	service.JwtPayloadMetadataName = ut.JwtPayloadMetadataName
 
 	filterConfig := &scpb.FilterConfig{
-		Services: []*scpb.Service{service},
-		TokenUrl: fmt.Sprintf("%s%s", *flags.MetadataURL, ut.ServiceAccountTokenSuffix),
+		Services:        []*scpb.Service{service},
+		TokenUrl:        fmt.Sprintf("%s%s", *flags.MetadataURL, ut.ServiceAccountTokenSuffix),
+		ScCallingConfig: makeServiceControlCallingConfig(),
 	}
 
 	if serviceInfo.GcpAttributes != nil {

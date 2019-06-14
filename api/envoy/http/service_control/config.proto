@@ -19,6 +19,7 @@ package google.api.envoy.http.service_control;
 
 import "api/envoy/http/service_control/requirement.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/wrappers.proto";
 import "google/protobuf/duration.proto";
 import "validate/validate.proto";
 
@@ -32,6 +33,33 @@ message HttpUri {
   // The timeout.
   google.protobuf.Duration timeout = 3
       [(validate.rules).duration.required = true];
+}
+
+message ServiceControlCallingConfig {
+  // In case of failing to connect to service control service, the requests
+  // are allowed if this field is true. The default is true.
+  google.protobuf.BoolValue network_fail_open = 1;
+
+  // The timeout in millisecond for the Check call. If not set,
+  // the default is 1000.
+  google.protobuf.UInt32Value check_timeout_ms = 2;
+
+  // The timeout in millisecond for the Quota call. If not set,
+  // the default is 1000.
+  google.protobuf.UInt32Value quota_timeout_ms = 3;
+
+  // The timeout in millisecond for the Report call. If not set,
+  // the default is 2000.
+  google.protobuf.UInt32Value report_timeout_ms = 4;
+
+  // The retry times for the Check call. If not set, the default is 3.
+  google.protobuf.UInt32Value check_retries = 5;
+
+  // The retry times for the Quota call. If not set, the default is 1.
+  google.protobuf.UInt32Value quota_retries = 6;
+
+  // The retry times for the Report call. If not set, the default is 5.
+  google.protobuf.UInt32Value report_retries = 7;
 }
 
 // Per service config.
@@ -75,10 +103,6 @@ message Service {
 
   // The field name for jwt payload passed into metadata
   string jwt_payload_metadata_name = 13;
-
-  // In case of failing to connect to service control service, the requests
-  // are allowed if this field is true.  Default is true.
-  bool network_fail_open = 14;
 }
 
 message GcpAttributes {
@@ -105,4 +129,7 @@ message FilterConfig {
   // Token server url. Default is
   // http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token
   string token_url = 4;
+
+  // The service control call configuration.
+  ServiceControlCallingConfig sc_calling_config = 5;
 }

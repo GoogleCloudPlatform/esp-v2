@@ -33,9 +33,12 @@ class ServiceContext {
  public:
   ServiceContext(
       const ::google::api::envoy::http::service_control::Service& config,
+      const ::google::api::envoy::http::service_control::FilterConfig&
+          filter_config,
       ServiceControlCallFactory& factory, const std::string& token_url)
       : config_(config),
-        service_control_call_(factory.create(config, token_url)) {
+        service_control_call_(
+            factory.create(config, filter_config, token_url)) {
     min_stream_report_interval_ms_ = config_.min_stream_report_interval_ms();
     if (!min_stream_report_interval_ms_) {
       min_stream_report_interval_ms_ = kDefaultMinStreamReportIntervalMs;
@@ -99,7 +102,6 @@ class FilterConfigParser {
       const {
     return config_;
   }
-
   const RequirementContext* FindRequirement(absl::string_view operation) const {
     const auto requirement_it = requirements_map_.find(operation);
     if (requirement_it == requirements_map_.end()) {
