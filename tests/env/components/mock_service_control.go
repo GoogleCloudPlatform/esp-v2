@@ -143,6 +143,7 @@ func (m *MockServiceCtrl) Setup() {
 	checkPath := "/v1/services/" + m.serviceName + ":check"
 	quotaPath := "/v1/services/" + m.serviceName + ":allocateQuota"
 	reportPath := "/v1/services/" + m.serviceName + ":report"
+
 	r.Path(checkPath).Methods("POST").Handler(m.checkHandler)
 	r.Path(quotaPath).Methods("POST").Handler(m.quotaHandler)
 	r.Path(reportPath).Methods("POST").Handler(m.reportHandler)
@@ -154,6 +155,11 @@ func (m *MockServiceCtrl) Setup() {
 // OverrideCheckHandler overrides the service control check handler before setup.
 func (m *MockServiceCtrl) OverrideCheckHandler(checkHandler http.Handler) {
 	m.checkHandler = checkHandler
+}
+
+// OverrideQuotaHandler overrides the service control quota handler before setup.
+func (m *MockServiceCtrl) OverrideQuotaHandler(quotaHandler http.Handler) {
+	m.quotaHandler = quotaHandler
 }
 
 // GetURL returns the URL of MockServiceCtrl.
@@ -169,13 +175,22 @@ func (m *MockServiceCtrl) SetURL(url string) {
 	m.url = url
 }
 
-func (m *MockServiceCtrl) getRequestCount() int {
+func (m *MockServiceCtrl) GetRequestCount() int {
 	return int(atomic.LoadInt32(m.count))
+}
+
+func (m *MockServiceCtrl) CacheRequest(req *ServiceRequest) {
+	m.ch <- req
 }
 
 // ResetRequestCount resets the request count of MockServiceCtrl.
 func (m *MockServiceCtrl) ResetRequestCount() {
 	atomic.StoreInt32(m.count, 0)
+}
+
+// IncrementRequestCount increments the request count of MockServiceCtrl.
+func (m *MockServiceCtrl) IncrementRequestCount() {
+	atomic.AddInt32(m.count, 1)
 }
 
 // SetGetRequestsTimeout sets the timeout for GetRequests.
@@ -219,11 +234,11 @@ func (m *MockServiceCtrl) GetRequests(n int) ([]*ServiceRequest, error) {
 func (m *MockServiceCtrl) VerifyRequestCount(wantRequestCount int) error {
 	_, err := m.GetRequests(wantRequestCount)
 	if err != nil {
-		return fmt.Errorf("expected service count request count: %v, got %v", wantRequestCount, m.getRequestCount())
+		return fmt.Errorf("expected service count request count: %v, got %v", wantRequestCount, m.GetRequestCount())
 	}
 	_, err = m.GetRequests(1)
 	if err == nil {
-		return fmt.Errorf("expected service count request count: %v, got %v", wantRequestCount, m.getRequestCount())
+		return fmt.Errorf("expected service count request count: %v, got %v", wantRequestCount, m.GetRequestCount())
 	}
 	return nil
 }
