@@ -62,6 +62,7 @@ const (
 	TestServiceControlALlHTTPMethod
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
+	TestServiceControlJwtAuthFail
 	TestServiceControlProtocolWithGRPCBackend
 	TestServiceControlSkip
 	TestServiceControlQuota

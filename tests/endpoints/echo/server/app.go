@@ -51,6 +51,8 @@ func main() {
 		HandlerFunc(simpleGetNotModified)
 	r.Path("/simpleget/403").Methods("GET").
 		HandlerFunc(simpleGetForbidden)
+	r.Path("/simpleget/401").Methods("GET").
+		HandlerFunc(simpleGetUnauthorized)
 	r.Path("/simplegetcors").Methods("GET", "OPTIONS").
 		Handler(corsHandler(simpleGetCors))
 	r.Path("/bookstore/shelves").Methods("OPTIONS").Handler(corsHandler(simpleGetCors))
@@ -151,6 +153,10 @@ func simpleGetNotModified(w http.ResponseWriter, r *http.Request) {
 
 func simpleGetForbidden(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusForbidden)
+}
+
+func simpleGetUnauthorized(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusUnauthorized)
 }
 
 func simpleGetCors(w http.ResponseWriter, r *http.Request) {

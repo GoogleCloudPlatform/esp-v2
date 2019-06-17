@@ -45,6 +45,12 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 			},
 		},
 		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetUnauthorized",
+			Pattern: &annotations.HttpRule_Get{
+				Get: "/simpleget/401",
+			},
+		},
+		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetForbidden",
 			Pattern: &annotations.HttpRule_Get{
 				Get: "/simpleget/403",
@@ -127,6 +133,33 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 					RequestBytes:      170,
 					ResponseBytes:     99,
 					ResponseCode:      403,
+					Platform:          util.GCE,
+					Location:          "test-zone",
+				},
+			},
+		},
+		{
+			desc:          "succeed, service control still sends report when the request is rejected by the backend with 401 so the status code is 16",
+			url:           fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/simpleget/401"),
+			httpCallError: fmt.Errorf("http response status is not 200 OK: 401 Unauthorized"),
+			wantScRequests: []interface{}{
+				&utils.ExpectedReport{
+					Version:           utils.APIProxyVersion,
+					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:   "test-config-id",
+					URL:               "/simpleget/401",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetUnauthorized",
+					ProducerProjectID: "producer-project",
+					ErrorType:         "4xx",
+					FrontendProtocol:  "http",
+					HttpMethod:        "GET",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetUnauthorized is called",
+					StatusCode:        "16",
+					RequestSize:       170,
+					ResponseSize:      266,
+					RequestBytes:      170,
+					ResponseBytes:     266,
+					ResponseCode:      401,
 					Platform:          util.GCE,
 					Location:          "test-zone",
 				},
