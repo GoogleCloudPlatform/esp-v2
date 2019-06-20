@@ -238,7 +238,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 						},
 					},
 					CacheDuration: &types.Duration{
-						Seconds: int64(300),
+						Seconds: int64(*flags.JwksCacheDurationInS),
 					},
 				},
 			},

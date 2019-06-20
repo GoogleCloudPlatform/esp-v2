@@ -83,4 +83,6 @@ var (
 
 	ServiceControlNetworkFailOpen = flag.Bool("service_control_network_fail_open", true, ` In case of network failures when connecting to Google service control,
         the requests will be allowed if this flag is on. Default is on.`)
+
+	JwksCacheDurationInS = flag.Int("jwks_cache_duration_in_s", 300, "Specify JWT public key cache duration in seconds. Default is 5 minutes.")
 )

@@ -287,6 +287,13 @@ environment variable or by passing "-k" flag to this script.
         In case of network failures when connecting to Google service control,
         the requests will be allowed if this flag is on. Default is on.
         ''')
+    parser.add_argument(
+        '--jwks_cache_duration_in_s',
+        default='300',
+        help='''
+        Specify JWT public key cache duration in seconds. Default is 5 minutes.'''
+    )
+
     return parser
 
 
@@ -329,19 +336,12 @@ if __name__ == '__main__':
     if args.rollout_strategy is None or not args.rollout_strategy.strip():
         args.rollout_strategy = DEFAULT_ROLLOUT_STRATEGY
     proxy_conf = [
-        "-v",
-        "--backend_protocol",
-        backend_protocol,
-        "--cluster_address",
-        cluster_address,
-        "--cluster_port",
-        cluster_port,
-        "--service_management_url",
-        args.management,
-        "--rollout_strategy",
-        args.rollout_strategy,
-        "--envoy_xff_num_trusted_hops",
-        args.envoy_xff_num_trusted_hops,
+        "-v", "--backend_protocol", backend_protocol, "--cluster_address",
+        cluster_address, "--cluster_port", cluster_port,
+        "--service_management_url", args.management, "--rollout_strategy",
+        args.rollout_strategy, "--envoy_xff_num_trusted_hops",
+        args.envoy_xff_num_trusted_hops, "--jwks_cache_duration_in_s",
+        args.jwks_cache_duration_in_s
     ]
 
     if args.log_request_headers:
