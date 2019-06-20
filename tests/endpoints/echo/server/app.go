@@ -192,7 +192,7 @@ func authInfoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b, err := base64.StdEncoding.DecodeString(encodedInfo)
+	b, err := base64.StdEncoding.WithPadding(base64.NoPadding).DecodeString(encodedInfo)
 	if err != nil {
 		errorf(w, http.StatusInternalServerError, "Could not decode auth info: %v", err)
 		return

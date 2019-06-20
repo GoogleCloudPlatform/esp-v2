@@ -221,6 +221,7 @@ func TestFetchListeners(t *testing.T) {
                                                         "uri":"$JWKSURI"
                                                   }
                                                 },
+                                                "forward_payload_header": "X-Endpoint-API-UserInfo",
                                                 "payload_in_metadata":"jwt_payloads"
                                             }
                                         }
@@ -390,6 +391,7 @@ func TestFetchListeners(t *testing.T) {
                                                         "uri":"$JWKSURI"
                                                   }
                                                 },
+                                                "forward_payload_header": "X-Endpoint-API-UserInfo",
                                                 "payload_in_metadata":"jwt_payloads"
                                             }
                                         }
@@ -567,6 +569,7 @@ func TestFetchListeners(t *testing.T) {
                                                         "uri":"$JWKSURI"
                                                   }
                                                 },
+                                                "forward_payload_header": "X-Endpoint-API-UserInfo",
                                                 "payload_in_metadata":"jwt_payloads"
                                             },
                                             "firebase2": {
@@ -580,6 +583,7 @@ func TestFetchListeners(t *testing.T) {
                                                         "uri":"$JWKSURI"
                                                   }
                                                 },
+                                                "forward_payload_header": "X-Endpoint-API-UserInfo",
                                                 "payload_in_metadata":"jwt_payloads"
                                             }
                                         }
@@ -927,6 +931,7 @@ func TestFetchListeners(t *testing.T) {
                                                         "uri":"$JWKSURI"
                                                   }
                                                 },
+                                                "forward_payload_header": "X-Endpoint-API-UserInfo",
                                                 "payload_in_metadata":"jwt_payloads"
                                             }
                                         }
