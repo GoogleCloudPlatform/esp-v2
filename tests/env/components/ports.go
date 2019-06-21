@@ -64,6 +64,7 @@ const (
 	TestServiceControlProtocolWithHTTPBackend
 	TestServiceControlQuota
 	TestServiceControlQuotaExhausted
+	TestServiceControlQuotaUnavailable
 	TestServiceControlReportNetworkFail
 	TestServiceControlReportResponseCode
 	TestServiceControlRequestInDynamicRouting

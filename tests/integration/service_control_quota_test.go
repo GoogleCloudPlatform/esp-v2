@@ -16,6 +16,7 @@ package integration
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"testing"
@@ -55,23 +56,22 @@ func TestServiceControlQuota(t *testing.T) {
 	defer s.TearDown()
 
 	testData := []struct {
-		desc                  string
-		clientProtocol        string
-		method                string
-		httpMethod            string
-		token                 string
-		requestHeader         map[string]string
-		message               string
-		wantResp              string
-		httpCallError         error
-		wantScRequests        []interface{}
-		wantGetScRequestError error
+		desc           string
+		clientProtocol string
+		method         string
+		httpMethod     string
+		token          string
+		requestHeader  map[string]string
+		message        string
+		wantResp       string
+		wantScRequests []interface{}
 	}{
 		{
 			desc:           "succeed, quota allocation works well",
 			clientProtocol: "http",
 			method:         "/v1/shelves?key=api-key",
 			httpMethod:     "GET",
+			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
 					Version:         utils.APIProxyVersion,
@@ -137,6 +137,87 @@ func TestServiceControlQuota(t *testing.T) {
 	}
 }
 
+type unavailableQuotaServiceHandler struct {
+	m *comp.MockServiceCtrl
+}
+
+func (h *unavailableQuotaServiceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	req := &comp.ServiceRequest{
+		ReqType: comp.QUOTA_REQUEST,
+	}
+	req.ReqBody, _ = ioutil.ReadAll(r.Body)
+	h.m.CacheRequest(req)
+	h.m.IncrementRequestCount()
+
+	w.WriteHeader(404)
+}
+
+func TestServiceControlQuotaUnavailable(t *testing.T) {
+	serviceName := "test-bookstore"
+	configId := "test-config-id"
+
+	args := []string{"--service=" + serviceName, "--version=" + configId,
+		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
+
+	s := env.NewTestEnv(comp.TestServiceControlQuotaUnavailable, "bookstore", nil)
+	s.OverrideQuota(&conf.Quota{
+		MetricRules: []*conf.MetricRule{
+			{
+				Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
+				MetricCosts: map[string]int64{
+					"metrics_first":  2,
+					"metrics_second": 1,
+				},
+			},
+		},
+	})
+	s.ServiceControlServer.OverrideQuotaHandler(&unavailableQuotaServiceHandler{m: s.ServiceControlServer})
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+	defer s.TearDown()
+
+	type testdata struct {
+		desc                  string
+		clientProtocol        string
+		method                string
+		httpMethod            string
+		token                 string
+		requestHeader         map[string]string
+		message               string
+		wantResp              string
+		wantScRequestCount    int
+		wantScRequests        []interface{}
+		wantGetScRequestError error
+	}
+
+	tc := testdata{
+		desc:               "succeed, when the service control quota api is unavailable, the request still passes and works well",
+		clientProtocol:     "http",
+		method:             "/v1/shelves?key=api-key",
+		httpMethod:         "GET",
+		wantResp:           `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
+		wantScRequestCount: 3,
+	}
+
+	for i := 0; i < 3; i++ {
+		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		resp, err := bsClient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, http.Header{})
+
+		if err != nil {
+			t.Fatalf("Test (%s): failed, %v", tc.desc, err)
+		}
+		if !strings.Contains(string(resp), tc.wantResp) {
+			t.Errorf("Test (%s): failed,  expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
+		}
+
+		err = s.ServiceControlServer.VerifyRequestCount(tc.wantScRequestCount)
+		if err != nil {
+			t.Fatalf("Test (%s): failed, %s", tc.desc, err.Error())
+		}
+	}
+}
+
 func TestServiceControlQuotaExhausted(t *testing.T) {
 	serviceName := "test-bookstore"
 	configId := "test-config-id"
@@ -188,6 +269,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 			clientProtocol: "http",
 			method:         "/v1/shelves?key=api-key",
 			httpMethod:     "GET",
+			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
 					Version:         utils.APIProxyVersion,
