@@ -16,7 +16,6 @@ package integration
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -87,6 +86,7 @@ func TestAsymmetricKeys(t *testing.T) {
 		method             string
 		queryInToken       bool
 		token              string
+		headers            map[string][]string
 		wantResp           string
 		wantError          string
 		wantGRPCWebError   string
@@ -114,6 +114,16 @@ func TestAsymmetricKeys(t *testing.T) {
 			method:         "/v1/shelves?key=api-key",
 			token:          testdata.Rs256Token,
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
+		},
+		{
+			desc:           "Succeeded, wth jwt token passed in \"x-goog-iap-jwt-assertion\" header",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves?key=api-key",
+			headers: map[string][]string{
+				"x-goog-iap-jwt-assertion": []string{testdata.Rs256Token},
+			},
+			wantResp: `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
 		{
 			desc:           "Succeeded, with jwt token passed in query",
@@ -176,7 +186,7 @@ func TestAsymmetricKeys(t *testing.T) {
 		if tc.queryInToken {
 			resp, err = client.MakeTokenInQueryCall(addr, tc.httpMethod, tc.method, tc.token)
 		} else {
-			resp, err = client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, http.Header{})
+			resp, err = client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, tc.headers)
 		}
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {

@@ -242,6 +242,18 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 					},
 				},
 			},
+			FromHeaders: []*ac.JwtHeader{
+				{
+					Name:        "Authorization",
+					ValuePrefix: "Bearer ",
+				},
+				{
+					Name: "X-Goog-Iap-Jwt-Assertion",
+				},
+			},
+			FromParams: []string{
+				"access_token",
+			},
 		}
 		if len(provider.GetAudiences()) != 0 {
 			for _, a := range strings.Split(provider.GetAudiences(), ",") {

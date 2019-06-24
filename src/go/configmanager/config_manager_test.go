@@ -210,6 +210,8 @@ func TestFetchListeners(t *testing.T) {
                                         "providers": {
                                             "firebase": {
                                                 "audiences":["test_audience1", "test_audience2"],
+                                                "from_headers":[{"name":"Authorization","value_prefix":"Bearer "},{"name":"X-Goog-Iap-Jwt-Assertion"}],
+                                                "from_params":["access_token"],
                                                 "issuer":"https://test_issuer.google.com/",
                                                 "remote_jwks":{
                                                     "cache_duration":"300s",
@@ -378,6 +380,8 @@ func TestFetchListeners(t *testing.T) {
                                         "providers": {
                                             "firebase": {
                                                 "issuer":"https://test_issuer.google.com/",
+                                                "from_headers":[{"name":"Authorization","value_prefix":"Bearer "},{"name":"X-Goog-Iap-Jwt-Assertion"}],
+                                                "from_params":["access_token"],
                                                 "remote_jwks":{
                                                     "cache_duration":"300s",
                                                     "http_uri":{
@@ -553,6 +557,8 @@ func TestFetchListeners(t *testing.T) {
                                         "providers": {
                                             "firebase1": {
                                                 "issuer":"https://test_issuer.google.com/",
+                                                "from_headers":[{"name":"Authorization","value_prefix":"Bearer "},{"name":"X-Goog-Iap-Jwt-Assertion"}],
+                                                "from_params":["access_token"],
                                                 "remote_jwks":{
                                                     "cache_duration":"300s",
                                                     "http_uri":{
@@ -564,6 +570,8 @@ func TestFetchListeners(t *testing.T) {
                                             },
                                             "firebase2": {
                                                 "issuer":"https://test_issuer.google.com/",
+                                                "from_headers":[{"name":"Authorization","value_prefix":"Bearer "},{"name":"X-Goog-Iap-Jwt-Assertion"}],
+                                                "from_params":["access_token"],
                                                 "remote_jwks":{
                                                     "cache_duration":"300s",
                                                     "http_uri":{
@@ -903,6 +911,8 @@ func TestFetchListeners(t *testing.T) {
                                         "providers": {
                                             "firebase": {
                                                 "audiences":["test_audience1", "test_audience2"],
+                                                "from_headers":[{"name":"Authorization","value_prefix":"Bearer "},{"name":"X-Goog-Iap-Jwt-Assertion"}],
+                                                "from_params":["access_token"],
                                                 "issuer":"https://test_issuer.google.com/",
                                                 "remote_jwks":{
                                                     "cache_duration":"300s",
