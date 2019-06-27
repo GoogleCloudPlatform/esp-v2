@@ -157,9 +157,14 @@ func (m *MockServiceCtrl) OverrideCheckHandler(checkHandler http.Handler) {
 	m.checkHandler = checkHandler
 }
 
-// OverrideQuotaHandler overrides the service control quota handler before setup.
+// OverrideQuoatHandler overrides the service control quota handler before setup.
 func (m *MockServiceCtrl) OverrideQuotaHandler(quotaHandler http.Handler) {
 	m.quotaHandler = quotaHandler
+}
+
+// OverrideReportHandler overrides the service control report handler before setup.
+func (m *MockServiceCtrl) OverrideReportHandler(reportHandler http.Handler) {
+	m.reportHandler = reportHandler
 }
 
 // GetURL returns the URL of MockServiceCtrl.

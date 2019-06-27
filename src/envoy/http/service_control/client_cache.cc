@@ -42,23 +42,38 @@ namespace ServiceControl {
 namespace {
 
 // Default config for check aggregator
-const int kCheckAggregationEntries = 10000;
+const uint32_t kCheckAggregationEntries = 10000;
 // Check doesn't support quota yet. It is safe to increase
 // the cache life of check results.
 // Cache life is 5 minutes. It will be refreshed every minute.
-const int kCheckAggregationFlushIntervalMs = 60000;
-const int kCheckAggregationExpirationMs = 300000;
+const uint32_t kCheckAggregationFlushIntervalMs = 60000;
+const uint32_t kCheckAggregationExpirationMs = 300000;
 
 // Default config for quota aggregator
-const int kQuotaAggregationEntries = 10000;
-const int kQuotaAggregationFlushIntervalMs = 1000;
+const uint32_t kQuotaAggregationEntries = 10000;
+const uint32_t kQuotaAggregationFlushIntervalMs = 1000;
 
 // Default config for report aggregator
-const int kReportAggregationEntries = 10000;
-const int kReportAggregationFlushIntervalMs = 1000;
+const uint32_t kReportAggregationEntries = 10000;
+const uint32_t kReportAggregationFlushIntervalMs = 1000;
 
 // The default connection timeout for check requests.
-const int kCheckDefaultTimeoutInMs = 5000;
+const uint32_t kCheckDefaultTimeoutInMs = 1000;
+// The default connection timeout for allocate quota requests.
+const uint32_t kAllocateQuotaDefaultTimeoutInMs = 1000;
+// The default connection timeout for report requests.
+const uint32_t kReportDefaultTimeoutInMs = 2000;
+
+// The default number of retries for check calls.
+const uint32_t kCheckDefaultNumberOfRetries = 3;
+// The default number of retries for allocate quota calls.
+// Allocate quota has fail_open policy, retry once is enough.
+const uint32_t kAllocateQuotaDefaultNumberOfRetries = 1;
+// The default number of retries for report calls.
+const uint32_t kReportDefaultNumberOfRetries = 5;
+
+// The default value for network_fail_open flag.
+const bool kDefaultNetworkFailOpen = true;
 
 // Generates CheckAggregationOptions.
 CheckAggregationOptions getCheckAggregationOptions() {
@@ -107,32 +122,58 @@ class EnvoyPeriodicTimer
 
 }  // namespace
 
+void ClientCache::InitHttpRequestSetting(const FilterConfig& filter_config) {
+  if (!filter_config.has_sc_calling_config()) {
+    network_fail_open_ = kDefaultNetworkFailOpen;
+    check_timeout_ms_ = kCheckDefaultTimeoutInMs;
+    quota_timeout_ms_ = kAllocateQuotaDefaultTimeoutInMs;
+    report_timeout_ms_ = kReportDefaultTimeoutInMs;
+    check_retries_ = kCheckDefaultNumberOfRetries;
+    quota_retries_ = kAllocateQuotaDefaultNumberOfRetries;
+    report_retries_ = kReportDefaultNumberOfRetries;
+    return;
+  }
+  const auto& sc_calling_config = filter_config.sc_calling_config();
+  network_fail_open_ = sc_calling_config.has_network_fail_open()
+                           ? sc_calling_config.network_fail_open().value()
+                           : true;
+  check_timeout_ms_ = sc_calling_config.has_check_timeout_ms()
+                          ? sc_calling_config.check_timeout_ms().value()
+                          : kCheckDefaultTimeoutInMs;
+  quota_timeout_ms_ = sc_calling_config.has_quota_timeout_ms()
+                          ? sc_calling_config.quota_timeout_ms().value()
+                          : kAllocateQuotaDefaultTimeoutInMs;
+  report_timeout_ms_ = sc_calling_config.has_report_timeout_ms()
+                           ? sc_calling_config.report_timeout_ms().value()
+                           : kReportDefaultTimeoutInMs;
+
+  check_retries_ = sc_calling_config.has_check_retries()
+                       ? sc_calling_config.check_retries().value()
+                       : kCheckDefaultNumberOfRetries;
+  quota_retries_ = sc_calling_config.has_quota_retries()
+                       ? sc_calling_config.quota_retries().value()
+                       : kAllocateQuotaDefaultNumberOfRetries;
+  report_retries_ = sc_calling_config.has_report_retries()
+                        ? sc_calling_config.report_retries().value()
+                        : kReportDefaultNumberOfRetries;
+}
+
 ClientCache::ClientCache(
     const ::google::api::envoy::http::service_control::Service& config,
-    Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher,
-    std::function<const std::string&()> token_fn)
-    : config_(config),
-      cm_(cm),
-      dispatcher_(dispatcher),
-      token_fn_(token_fn),
-      network_fail_open_(config.network_fail_open()) {
+    const FilterConfig& filter_config, Upstream::ClusterManager& cm,
+    Event::Dispatcher& dispatcher, std::function<const std::string&()> token_fn)
+    : config_(config), cm_(cm), dispatcher_(dispatcher), token_fn_(token_fn) {
   ServiceControlClientOptions options(getCheckAggregationOptions(),
                                       getQuotaAggregationOptions(),
                                       getReportAggregationOptions());
 
+  InitHttpRequestSetting(filter_config);
   options.check_transport = [this](const CheckRequest& request,
                                    CheckResponse* response,
                                    TransportDoneFunc on_done) {
-    const std::string& token = token_fn_();
-    if (token.empty()) {
-      on_done(
-          Status(Code::UNAUTHENTICATED,
-                 std::string("Missing access token for service control call")));
-      return;
-    }
-    auto* call = HttpCall::create(cm_, config_.service_control_uri());
-    call->call(
-        config_.service_name() + ":check", token, request,
+    auto* call = HttpCall::create(
+        cm_, config_.service_control_uri(), config_.service_name() + ":check",
+        token_fn_, request, check_timeout_ms_, check_retries_,
         [this, response, on_done](const Status& status,
                                   const std::string& body) {
           if (status.ok()) {
@@ -151,53 +192,43 @@ ClientCache::ClientCache(
           }
           on_done(status);
         });
+    call->call();
   };
 
   options.quota_transport = [this](const AllocateQuotaRequest& request,
                                    AllocateQuotaResponse* response,
                                    TransportDoneFunc on_done) {
-    const std::string& token = token_fn_();
-    if (token.empty()) {
-      on_done(
-          Status(Code::UNAUTHENTICATED,
-                 std::string("Missing access token for service control call")));
-      return;
-    }
-    auto* call = HttpCall::create(cm_, config_.service_control_uri());
-    call->call(config_.service_name() + ":allocateQuota", token, request,
-               [this, response, on_done](const Status& status,
-                                         const std::string& body) {
-                 if (status.ok()) {
-                   // Handle 200 response
-                   if (!response->ParseFromString(body)) {
-                     on_done(Status(Code::INVALID_ARGUMENT,
-                                    std::string("Invalid response")));
-                     return;
-                   }
-                 } else {
-                   response->ParseFromString(body);
-                   ENVOY_LOG(error,
-                             "Failed to call allocateQuota, error: {}, str "
-                             "body: {}, pb body: {}",
-                             status.ToString(), body, response->DebugString());
-                 }
-                 on_done(status);
-               });
+    auto* call = HttpCall::create(
+        cm_, config_.service_control_uri(),
+        config_.service_name() + ":allocateQuota", token_fn_, request,
+        quota_timeout_ms_, quota_retries_,
+        [this, response, on_done](const Status& status,
+                                  const std::string& body) {
+          if (status.ok()) {
+            // Handle 200 response
+            if (!response->ParseFromString(body)) {
+              on_done(Status(Code::INVALID_ARGUMENT,
+                             std::string("Invalid response")));
+              return;
+            }
+          } else {
+            response->ParseFromString(body);
+            ENVOY_LOG(error,
+                      "Failed to call allocateQuota, error: {}, str "
+                      "body: {}, pb body: {}",
+                      status.ToString(), body, response->DebugString());
+          }
+          on_done(status);
+        });
+    call->call();
   };
 
   options.report_transport = [this](const ReportRequest& request,
                                     ReportResponse* response,
                                     TransportDoneFunc on_done) {
-    const std::string& token = token_fn_();
-    if (token.empty()) {
-      on_done(
-          Status(Code::UNAUTHENTICATED,
-                 std::string("Missing access token for service control call")));
-      return;
-    }
-    auto* call = HttpCall::create(cm_, config_.service_control_uri());
-    call->call(
-        config_.service_name() + ":report", token, request,
+    auto* call = HttpCall::create(
+        cm_, config_.service_control_uri(), config_.service_name() + ":report",
+        token_fn_, request, report_timeout_ms_, report_retries_,
         [this, response, on_done](const Status& status,
                                   const std::string& body) {
           if (status.ok()) {
@@ -216,6 +247,7 @@ ClientCache::ClientCache(
           }
           on_done(status);
         });
+    call->call();
   };
 
   options.periodic_timer = [this](int interval_ms,

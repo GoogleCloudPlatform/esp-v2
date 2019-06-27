@@ -285,14 +285,56 @@ environment variable or by passing "-k" flag to this script.
         action='store_true',
         help='''
         In case of network failures when connecting to Google service control,
-        the requests will be allowed if this flag is on. Default is on.
+        the requests will be allowed if this flag is on. The default is on.
         ''')
     parser.add_argument(
         '--jwks_cache_duration_in_s',
         default='300',
         help='''
-        Specify JWT public key cache duration in seconds. Default is 5 minutes.'''
+        Specify JWT public key cache duration in seconds. The default is 5 minutes.'''
     )
+    parser.add_argument(
+        '--service_control_check_timeout_ms',
+        default=0,
+        help='''
+        Set the timeout in millisecond for service control Check request.
+        Must be > 0 and the default is 1000 if not set.
+        ''')
+    parser.add_argument(
+        '--service_control_quota_timeout_ms',
+        default=0,
+        help='''
+        Set the timeout in millisecond for service control Quota request.
+        Must be > 0 and the default is 1000 if not set.
+        ''')
+    parser.add_argument(
+        '--service_control_report_timeout_ms',
+        default=0,
+        help='''
+        Set the timeout in millisecond for service control Report request.
+        Must be > 0 and the default is 2000 if not set.
+        ''')
+    parser.add_argument(
+        '--service_control_check_retries',
+        default=-1,
+        help='''
+        Set the retry times for service control Check request.
+        Must be >= 0 and the default is 3 if not set.
+        ''')
+    parser.add_argument(
+        '--service_control_quota_retries',
+        default=-1,
+        help='''
+        Set the retry times for service control Quota request.
+        Must be >= 0 and the default is 1 if not set.
+        ''')
+    parser.add_argument(
+        '--service_control_report_retries',
+        default=-1,
+        help='''
+        Set the retry times for service control Report request.
+        Must be >= 0 and the default is 5 if not set.
+        ''')
 
     return parser
 
@@ -355,6 +397,42 @@ if __name__ == '__main__':
 
     if args.service:
         proxy_conf.extend(["--service", args.service])
+
+    if args.service_control_check_retries > 0:
+        proxy_conf.extend([
+            "--service_control_check_retries",
+            str(args.service_control_check_retries)
+        ])
+
+    if args.service_control_quota_retries > 0:
+        proxy_conf.extend([
+            "--service_control_quota_retries",
+            str(args.service_control_quota_retries)
+        ])
+
+    if args.service_control_report_retries > 0:
+        proxy_conf.extend([
+            "--service_control_report_retries",
+            str(args.service_control_report_retries)
+        ])
+
+    if args.service_control_check_timeout_ms > -1:
+        proxy_conf.extend([
+            "--service_control_check_timeout_ms",
+            str(args.service_control_check_timeout_ms)
+        ])
+
+    if args.service_control_quota_timeout_ms > -1:
+        proxy_conf.extend([
+            "--service_control_quota_timeout_ms",
+            str(args.service_control_quota_timeout_ms)
+        ])
+
+    if args.service_control_report_timeout_ms > -1:
+        proxy_conf.extend([
+            "--service_control_report_timeout_ms",
+            str(args.service_control_report_timeout_ms)
+        ])
 
     #  NOTE: It is true by default in configmangager's flags.
     if not args.service_control_network_fail_open:

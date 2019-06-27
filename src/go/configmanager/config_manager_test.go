@@ -748,7 +748,6 @@ func TestFetchListeners(t *testing.T) {
                                                     {
                                                         "backend_protocol": "grpc",
                                                         "jwt_payload_metadata_name": "jwt_payloads",
-                                                        "network_fail_open":true,
                                                         "service_control_uri":{
                                                             "cluster":"service-control-cluster",
                                                             "timeout":"5s",
@@ -765,6 +764,7 @@ func TestFetchListeners(t *testing.T) {
                                                          }
                                                     }
                                                 ],
+                                                "sc_calling_config":{"network_fail_open":true},
                                                 "token_url":"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"
                                             },
                                             "name":"envoy.filters.http.service_control"
@@ -1043,7 +1043,6 @@ func TestFetchListeners(t *testing.T) {
                                             {
                                                 "backend_protocol":"http1",
                                                 "jwt_payload_metadata_name": "jwt_payloads",
-                                                "network_fail_open":true,
                                                 "producer_project_id":"project123",
                                                 "service_config":{
                                                     "@type":"type.googleapis.com/google.api.Service"
@@ -1058,6 +1057,7 @@ func TestFetchListeners(t *testing.T) {
                                                 "token_cluster":"metadata-cluster"
                                             }
                                         ],
+                                        "sc_calling_config":{"network_fail_open":true},
                                         "token_url":"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"
                                     },
                                     "name":"envoy.filters.http.service_control"

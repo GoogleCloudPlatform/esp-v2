@@ -36,9 +36,7 @@ class HttpCall {
    */
   virtual void cancel() PURE;
 
-  virtual void call(const std::string& suffix_url, const std::string& token,
-                    const Protobuf::Message& body, DoneFunc on_done) PURE;
-
+  virtual void call() PURE;
   /*
    * Factory method for creating a HttpCall.
    * @param cm the cluster manager to use during Token retrieval
@@ -46,7 +44,11 @@ class HttpCall {
    */
   static HttpCall* create(
       Upstream::ClusterManager& cm,
-      const ::google::api::envoy::http::service_control::HttpUri& uri);
+      const ::google::api::envoy::http::service_control::HttpUri& uri,
+      const std::string& suffix_url,
+      std::function<const std::string&()> token_fn,
+      const Protobuf::Message& body, uint32_t timeout_ms, uint32_t retries,
+      HttpCall::DoneFunc on_done);
 };
 
 }  // namespace ServiceControl

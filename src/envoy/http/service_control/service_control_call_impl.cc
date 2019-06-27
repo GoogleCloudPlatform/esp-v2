@@ -16,6 +16,7 @@
 
 #include "src/api_proxy/service_control/logs_metrics_loader.h"
 
+using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::api::envoy::http::service_control::Service;
 using ::google::api_proxy::service_control::LogsMetricsLoader;
 using ::google::api_proxy::service_control::RequestBuilder;
@@ -34,7 +35,8 @@ const char kDefaultTokenUrl[]{
 }  // namespace
 
 ServiceControlCallImpl::ServiceControlCallImpl(
-    const Service& config, Server::Configuration::FactoryContext& context,
+    const Service& config, const FilterConfig& filter_config,
+    Server::Configuration::FactoryContext& context,
     const std::string& token_url)
     : config_(config),
       tls_(context.threadLocal().allocateSlot()),
@@ -57,11 +59,12 @@ ServiceControlCallImpl::ServiceControlCallImpl(
         {"endpoints_log"}, config.service_name(), config.service_config_id()));
   }
 
-  tls_->set(
-      [this, &cm = context.clusterManager()](Event::Dispatcher& dispatcher)
-          -> ThreadLocal::ThreadLocalObjectSharedPtr {
-        return std::make_shared<ThreadLocalCache>(config_, cm, dispatcher);
-      });
+  tls_->set([this, &cm = context.clusterManager(),
+             filter_config](Event::Dispatcher& dispatcher)
+                -> ThreadLocal::ThreadLocalObjectSharedPtr {
+    return std::make_shared<ThreadLocalCache>(config_, filter_config, cm,
+                                              dispatcher);
+  });
 }
 
 void ServiceControlCallImpl::callCheck(
