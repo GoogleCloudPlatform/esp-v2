@@ -18,9 +18,14 @@ import (
 	"flag"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap"
 	"github.com/golang/glog"
+)
+
+var (
+	AdsConnectTimeout = flag.Duration("ads_connect_imeout", 10*time.Second, "ads connect timeout in seconds")
 )
 
 func main() {
@@ -32,7 +37,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	json_conf := bootstrap.CreateBootstrapConfig()
+	json_conf := bootstrap.CreateBootstrapConfig(AdsConnectTimeout)
 	err := ioutil.WriteFile(out_path, []byte(json_conf), 0644)
 	if err != nil {
 		glog.Exitf("failed to write config to %v, error: %v", out_path, err)
