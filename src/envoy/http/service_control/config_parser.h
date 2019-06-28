@@ -38,7 +38,7 @@ class ServiceContext {
       ServiceControlCallFactory& factory, const std::string& token_url)
       : config_(config),
         service_control_call_(
-            factory.create(config, filter_config, token_url)) {
+            factory.create(config_, filter_config, token_url)) {
     min_stream_report_interval_ms_ = config_.min_stream_report_interval_ms();
     if (!min_stream_report_interval_ms_) {
       min_stream_report_interval_ms_ = kDefaultMinStreamReportIntervalMs;
@@ -117,7 +117,7 @@ class FilterConfigParser {
 
  private:
   // The proto config.
-  ::google::api::envoy::http::service_control::FilterConfig config_;
+  const ::google::api::envoy::http::service_control::FilterConfig config_;
   // Operation name to RequirementContext map.
   absl::flat_hash_map<std::string, RequirementContextPtr> requirements_map_;
   // Service name to ServiceContext map.

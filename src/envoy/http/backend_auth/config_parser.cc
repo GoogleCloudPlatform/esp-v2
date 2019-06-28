@@ -36,12 +36,14 @@ AudienceContext::AudienceContext(
     const ::google::api::envoy::http::backend_auth::BackendAuthRule&
         proto_config,
     Server::Configuration::FactoryContext& context,
-    const std::string& token_url)
+    const FilterConfig& filter_config)
     : tls_(context.threadLocal().allocateSlot()),
       token_subscriber_(
-          context, *this, proto_config.token_cluster(),
+          context, *this, filter_config.access_token().remote_token().cluster(),
           absl::StrCat(
-              token_url.empty() ? kDefaultIdentityUrl : token_url,
+              filter_config.access_token().remote_token().uri().empty()
+                  ? kDefaultIdentityUrl
+                  : filter_config.access_token().remote_token().uri(),
               "?format=standard&audience=", proto_config.jwt_audience()),
           /*json_response=*/false) {
   tls_->set([](Event::Dispatcher&) -> ThreadLocal::ThreadLocalObjectSharedPtr {
@@ -56,8 +58,8 @@ FilterConfigParser::FilterConfigParser(
     operation_map_[rule.operation()] = rule.jwt_audience();
     auto it = audience_map_.find(rule.jwt_audience());
     if (it == audience_map_.end()) {
-      audience_map_[rule.jwt_audience()] = AudienceContextPtr(
-          new AudienceContext(rule, context, config.token_url()));
+      audience_map_[rule.jwt_audience()] =
+          AudienceContextPtr(new AudienceContext(rule, context, config));
     }
   }
 }

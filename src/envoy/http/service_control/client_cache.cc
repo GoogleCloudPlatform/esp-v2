@@ -162,7 +162,11 @@ ClientCache::ClientCache(
     const ::google::api::envoy::http::service_control::Service& config,
     const FilterConfig& filter_config, Upstream::ClusterManager& cm,
     Event::Dispatcher& dispatcher, std::function<const std::string&()> token_fn)
-    : config_(config), cm_(cm), dispatcher_(dispatcher), token_fn_(token_fn) {
+    : config_(config),
+      service_control_uri_(filter_config.service_control_uri()),
+      cm_(cm),
+      dispatcher_(dispatcher),
+      token_fn_(token_fn) {
   ServiceControlClientOptions options(getCheckAggregationOptions(),
                                       getQuotaAggregationOptions(),
                                       getReportAggregationOptions());
@@ -172,8 +176,8 @@ ClientCache::ClientCache(
                                    CheckResponse* response,
                                    TransportDoneFunc on_done) {
     auto* call = HttpCall::create(
-        cm_, config_.service_control_uri(), config_.service_name() + ":check",
-        token_fn_, request, check_timeout_ms_, check_retries_,
+        cm_, service_control_uri_, config_.service_name() + ":check", token_fn_,
+        request, check_timeout_ms_, check_retries_,
         [this, response, on_done](const Status& status,
                                   const std::string& body) {
           if (status.ok()) {
@@ -199,9 +203,8 @@ ClientCache::ClientCache(
                                    AllocateQuotaResponse* response,
                                    TransportDoneFunc on_done) {
     auto* call = HttpCall::create(
-        cm_, config_.service_control_uri(),
-        config_.service_name() + ":allocateQuota", token_fn_, request,
-        quota_timeout_ms_, quota_retries_,
+        cm_, service_control_uri_, config_.service_name() + ":allocateQuota",
+        token_fn_, request, quota_timeout_ms_, quota_retries_,
         [this, response, on_done](const Status& status,
                                   const std::string& body) {
           if (status.ok()) {
@@ -227,7 +230,7 @@ ClientCache::ClientCache(
                                     ReportResponse* response,
                                     TransportDoneFunc on_done) {
     auto* call = HttpCall::create(
-        cm_, config_.service_control_uri(), config_.service_name() + ":report",
+        cm_, service_control_uri_, config_.service_name() + ":report",
         token_fn_, request, report_timeout_ms_, report_retries_,
         [this, response, on_done](const Status& status,
                                   const std::string& body) {

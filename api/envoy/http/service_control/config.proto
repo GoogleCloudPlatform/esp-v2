@@ -22,18 +22,7 @@ import "google/protobuf/any.proto";
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/duration.proto";
 import "validate/validate.proto";
-
-message HttpUri {
-  // The uri string including the domain and path.
-  string uri = 1 [(validate.rules).string.min_bytes = 1];
-
-  // The Envoy cluster name required for Envoy to make a remote call.
-  string cluster = 2 [(validate.rules).string.min_bytes = 1];
-
-  // The timeout.
-  google.protobuf.Duration timeout = 3
-      [(validate.rules).duration.required = true];
-}
+import "api/envoy/http/common/base.proto";
 
 message ServiceControlCallingConfig {
   // In case of failing to connect to service control service, the requests
@@ -61,7 +50,6 @@ message ServiceControlCallingConfig {
   // The retry times for the Report call. If not set, the default is 5.
   google.protobuf.UInt32Value report_retries = 7;
 }
-
 // Per service config.
 message Service {
   // The service name for the Google Service Control
@@ -73,36 +61,29 @@ message Service {
   // The producer project id
   string producer_project_id = 3 [(validate.rules).string.min_bytes = 1];
 
-  // The Http uri to call service control
-  HttpUri service_control_uri = 5;
-
-  // Cluster to fetch access token (Google metadata service)
-  // TODO(toddbeckman): This can be moved to the FilterConfig
-  string token_cluster = 6 [(validate.rules).string.min_bytes = 1];
-
   // Some of service config fields needed by Envoy filter.
   // Not easy to import the googleapis/google/api/service.proto
   // Use any to work around it.
-  google.protobuf.Any service_config = 7;
+  google.protobuf.Any service_config = 4;
 
   // The protocol of the backend, either "grpc", "http1", or "http2"
-  string backend_protocol = 8;
+  string backend_protocol = 5;
 
   // The array of request headers demanded to be logged
-  repeated string log_request_headers = 9;
+  repeated string log_request_headers = 6;
 
   // The array of response headers demanded to be logged
-  repeated string log_response_headers = 10;
+  repeated string log_response_headers = 7;
 
   // Minimum amount of time (milliseconds) between sending intermediate
   // reports on a stream.
-  uint64 min_stream_report_interval_ms = 11;
+  uint64 min_stream_report_interval_ms = 8;
 
   // The array of jwt payloads demanded to be logged
-  repeated string log_jwt_payloads = 12;
+  repeated string log_jwt_payloads = 9;
 
   // The field name for jwt payload passed into metadata
-  string jwt_payload_metadata_name = 13;
+  string jwt_payload_metadata_name = 10;
 }
 
 message GcpAttributes {
@@ -124,12 +105,12 @@ message FilterConfig {
   // GCP-related attributes.
   GcpAttributes gcp_attributes = 3;
 
-  // TODO(toddbeckman): This field and token_cluster can be converted to HttpUri
-
-  // Token server url. Default is
-  // http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token
-  string token_url = 4;
+  // The access token information.
+  api.envoy.http.common.AccessToken access_token = 4;
 
   // The service control call configuration.
   ServiceControlCallingConfig sc_calling_config = 5;
+
+  // The Http uri to call service control
+  api.envoy.http.common.HttpUri service_control_uri = 6;
 }

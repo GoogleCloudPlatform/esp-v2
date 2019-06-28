@@ -16,7 +16,7 @@ syntax = "proto3";
 
 package google.api.envoy.http.path_matcher;
 
-import "api/envoy/http/common/pattern.proto";
+import "api/envoy/http/common/base.proto";
 import "validate/validate.proto";
 
 message PathMatcherRule {

@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "api/envoy/http/service_control/config.pb.h"
+#include "api/envoy/http/common/base.pb.h"
 #include "envoy/common/pure.h"
 #include "envoy/upstream/cluster_manager.h"
 #include "google/protobuf/stubs/status.h"
@@ -44,7 +44,7 @@ class HttpCall {
    */
   static HttpCall* create(
       Upstream::ClusterManager& cm,
-      const ::google::api::envoy::http::service_control::HttpUri& uri,
+      const ::google::api::envoy::http::common::HttpUri& uri,
       const std::string& suffix_url,
       std::function<const std::string&()> token_fn,
       const Protobuf::Message& body, uint32_t timeout_ms, uint32_t retries,

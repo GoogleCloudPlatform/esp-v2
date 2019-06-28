@@ -148,16 +148,20 @@ func TestBackendAuthFilter(t *testing.T) {
           "rules": [
             {
               "jwt_audience": "bar.com",
-              "operation": "testapi.bar",
-              "token_cluster": "metadata-cluster"
+              "operation": "testapi.bar"
             },
             {
               "jwt_audience": "foo.com",
-              "operation": "testapi.foo",
-              "token_cluster": "metadata-cluster"
+              "operation": "testapi.foo"
             }
           ],
-          "token_url":"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity"
+          "access_token": {
+            "remote_token": {
+              "cluster": "metadata-cluster",
+              "uri": "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity",
+              "timeout":"5s"
+            }
+          }
         },
       "name": "envoy.filters.http.backend_auth"
     }`
@@ -175,7 +179,7 @@ func TestBackendAuthFilter(t *testing.T) {
 	want := normalizeJson(wantBackendAuthFilter)
 
 	if !strings.Contains(gotFilter, want) {
-		t.Errorf("makeBackendAuthFilter failed, got: %s, want: %s", gotFilter, want)
+		t.Errorf("makeBackendAuthFilter failed, got: %s, \n\twant: %s", gotFilter, want)
 	}
 }
 

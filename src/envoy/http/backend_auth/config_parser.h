@@ -40,7 +40,7 @@ class AudienceContext : public Utils::TokenSubscriber::Callback {
       const ::google::api::envoy::http::backend_auth::BackendAuthRule&
           proto_config,
       Server::Configuration::FactoryContext& context,
-      const std::string& token_server_url);
+      const ::google::api::envoy::http::backend_auth::FilterConfig& config);
 
   // TokenSubscriber::Callback function
   void onTokenUpdate(const std::string& token) override {

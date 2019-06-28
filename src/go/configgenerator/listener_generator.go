@@ -372,14 +372,8 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 		ServiceName:       serviceName,
 		ServiceConfigId:   serviceInfo.ConfigID,
 		ProducerProjectId: serviceInfo.ServiceConfig().GetProducerProjectId(),
-		TokenCluster:      metadataServerClusterName,
-		ServiceControlUri: &scpb.HttpUri{
-			Uri:     serviceInfo.ServiceControlURI,
-			Cluster: serviceControlClusterName,
-			Timeout: &duration.Duration{Seconds: 5},
-		},
-		ServiceConfig:   copyServiceConfigForReportMetrics(serviceInfo.ServiceConfig()),
-		BackendProtocol: lowercaseProtocol,
+		ServiceConfig:     copyServiceConfigForReportMetrics(serviceInfo.ServiceConfig()),
+		BackendProtocol:   lowercaseProtocol,
 	}
 
 	if *flags.LogRequestHeaders != "" {
@@ -403,9 +397,23 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	service.JwtPayloadMetadataName = ut.JwtPayloadMetadataName
 
 	filterConfig := &scpb.FilterConfig{
-		Services:        []*scpb.Service{service},
-		TokenUrl:        fmt.Sprintf("%s%s", *flags.MetadataURL, ut.ServiceAccountTokenSuffix),
+		Services: []*scpb.Service{service},
+		AccessToken: &commonpb.AccessToken{
+			TokenType: &commonpb.AccessToken_RemoteToken{
+				RemoteToken: &commonpb.HttpUri{
+					Uri:     fmt.Sprintf("%s%s", *flags.MetadataURL, ut.ServiceAccountTokenSuffix),
+					Cluster: metadataServerClusterName,
+					// TODO(taoxuy): make token_subscriber use this timeout
+					Timeout: &duration.Duration{Seconds: 5},
+				},
+			},
+		},
 		ScCallingConfig: makeServiceControlCallingConfig(),
+		ServiceControlUri: &commonpb.HttpUri{
+			Uri:     serviceInfo.ServiceControlURI,
+			Cluster: serviceControlClusterName,
+			Timeout: &duration.Duration{Seconds: 5},
+		},
 	}
 
 	if serviceInfo.GcpAttributes != nil {
@@ -503,14 +511,22 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 		}
 		rules = append(rules,
 			&bapb.BackendAuthRule{
-				Operation:    operation,
-				JwtAudience:  method.BackendRule.JwtAudience,
-				TokenCluster: metadataServerClusterName,
+				Operation:   operation,
+				JwtAudience: method.BackendRule.JwtAudience,
 			})
 	}
 	backendAuthConfig := &bapb.FilterConfig{
-		Rules:    rules,
-		TokenUrl: fmt.Sprintf("%s%s", *flags.MetadataURL, ut.IdentityTokenSuffix),
+		Rules: rules,
+		AccessToken: &commonpb.AccessToken{
+			TokenType: &commonpb.AccessToken_RemoteToken{
+				RemoteToken: &commonpb.HttpUri{
+					Uri:     fmt.Sprintf("%s%s", *flags.MetadataURL, ut.IdentityTokenSuffix),
+					Cluster: metadataServerClusterName,
+					// TODO(taoxuy): make token_subscriber use this timeout
+					Timeout: &duration.Duration{Seconds: 5},
+				},
+			},
+		},
 	}
 	backendAuthConfigStruct, _ := util.MessageToStruct(backendAuthConfig)
 	backendAuthFilter := &hcm.HttpFilter{

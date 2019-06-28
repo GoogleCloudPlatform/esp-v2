@@ -19,7 +19,7 @@
 #include "common/http/message_impl.h"
 #include "common/http/utility.h"
 
-using ::google::api::envoy::http::service_control::HttpUri;
+using ::google::api::envoy::http::common::HttpUri;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 namespace Envoy {
@@ -46,6 +46,7 @@ class HttpCallImpl : public HttpCall,
         timeout_ms_(timeout_ms),
         token_fn_(token_fn) {
     uri_ = http_uri_.uri() + suffix_url;
+
     Http::Utility::extractHostPathFromUri(uri_, host_, path_);
     body.SerializeToString(&str_body_);
 

@@ -15,7 +15,7 @@ api_proto_library(
     ],
     visibility = PATH_MATCHER_VISIBILITY,
     deps = [
-        "//api/envoy/http/common:pattern_proto",
+        "//api/envoy/http/common:base_proto",
     ],
 )
 
@@ -24,7 +24,7 @@ go_proto_library(
     importpath = "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/path_matcher",
     proto = ":config_proto",
     deps = [
-        "//api/envoy/http/common:pattern_proto_go_proto",
+        "//api/envoy/http/common:base_proto_go_proto",
         "@com_envoyproxy_protoc_gen_validate//validate:go_default_library",
     ],
 )

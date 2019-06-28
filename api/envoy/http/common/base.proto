@@ -16,6 +16,9 @@ syntax = "proto3";
 
 package google.api.envoy.http.common;
 
+import "google/protobuf/duration.proto";
+import "validate/validate.proto";
+
 // Pattern defines a single pattern to match against
 // incoming requests. This pattern matcher is not limited to HTTP requests.
 //
@@ -40,4 +43,43 @@ message Pattern {
   // [rfc7231](https://tools.ietf.org/html/rfc7231#page-21). For
   // example: GET, HEAD, POST, PUT, DELETE.
   string http_method = 2;
+}
+
+message HttpUri {
+  // The uri string including the domain and path.
+  string uri = 1 [(validate.rules).string.min_bytes = 1];
+
+  // The Envoy cluster name required for Envoy to make a remote call.
+  string cluster = 2 [(validate.rules).string.min_bytes = 1];
+
+  // The timeout.
+  google.protobuf.Duration timeout = 3
+      [(validate.rules).duration.required = true];
+}
+
+/* TODO(taoxuy): replace with envoy internal DataSource proto */
+message DataSource {
+  oneof specifier {
+    option (validate.required) = true;
+
+    // Local filesystem data source.
+    string filename = 1 [(validate.rules).string.min_bytes = 1];
+
+    // String inlined in the configuration.
+    string inline_string = 2 [(validate.rules).string.min_bytes = 1];
+  }
+}
+
+message AccessToken {
+  oneof token_type {
+    // remote_token contains:
+    // - Token server uri. The Default is
+    //   http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity
+    //   Query parameters are added by the filter
+    // - Token cluster address to fetch JWT token.
+    HttpUri remote_token = 1;
+
+    // The local path or inline content of the service account json file.
+    DataSource service_account_secret = 2;
+  }
 }

@@ -14,6 +14,9 @@ api_proto_library(
         "config.proto",
     ],
     visibility = BACKEND_AUTH_VISIBILITY,
+    deps = [
+        "//api/envoy/http/common:base_proto",
+    ],
 )
 
 go_proto_library(
@@ -21,6 +24,7 @@ go_proto_library(
     importpath = "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/backend_auth",
     proto = ":config_proto",
     deps = [
+        "//api/envoy/http/common:base_proto_go_proto",
         "@com_envoyproxy_protoc_gen_validate//validate:go_default_library",
     ],
 )

@@ -53,6 +53,7 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
           filter_config);
 
   const ::google::api::envoy::http::service_control::Service& config_;
+  const ::google::api::envoy::http::common::HttpUri& service_control_uri_;
   Upstream::ClusterManager& cm_;
   Event::Dispatcher& dispatcher_;
   std::function<const std::string&()> token_fn_;

@@ -15,6 +15,9 @@ api_proto_library(
         "requirement.proto",
     ],
     visibility = SERVICE_CONTROL_VEISIBILITY,
+    deps = [
+        "//api/envoy/http/common:base_proto",
+    ],
 )
 
 go_proto_library(
@@ -22,6 +25,7 @@ go_proto_library(
     importpath = "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control",
     proto = ":config_proto",
     deps = [
+        "//api/envoy/http/common:base_proto_go_proto",
         "@com_envoyproxy_protoc_gen_validate//validate:go_default_library",
     ],
 )

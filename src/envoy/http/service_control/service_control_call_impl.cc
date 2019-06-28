@@ -40,7 +40,8 @@ ServiceControlCallImpl::ServiceControlCallImpl(
     const std::string& token_url)
     : config_(config),
       tls_(context.threadLocal().allocateSlot()),
-      token_subscriber_(context, *this, config.token_cluster(),
+      token_subscriber_(context, *this,
+                        filter_config.access_token().remote_token().cluster(),
                         token_url.empty() ? kDefaultTokenUrl : token_url,
                         /*json_response=*/true) {
   if (config.has_service_config()) {
@@ -60,7 +61,7 @@ ServiceControlCallImpl::ServiceControlCallImpl(
   }
 
   tls_->set([this, &cm = context.clusterManager(),
-             filter_config](Event::Dispatcher& dispatcher)
+             &filter_config](Event::Dispatcher& dispatcher)
                 -> ThreadLocal::ThreadLocalObjectSharedPtr {
     return std::make_shared<ThreadLocalCache>(config_, filter_config, cm,
                                               dispatcher);

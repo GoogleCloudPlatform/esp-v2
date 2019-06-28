@@ -748,15 +748,9 @@ func TestFetchListeners(t *testing.T) {
                                                     {
                                                         "backend_protocol": "grpc",
                                                         "jwt_payload_metadata_name": "jwt_payloads",
-                                                        "service_control_uri":{
-                                                            "cluster":"service-control-cluster",
-                                                            "timeout":"5s",
-                                                            "uri":"https://servicecontrol.googleapis.com/v1/services/"
-                                                        },
                                                         "service_name":"%s",
                                                         "service_config_id":"%s",
                                                         "producer_project_id":"%s",
-                                                        "token_cluster": "metadata-cluster",
                                                         "service_config":{
                                                            "@type":"type.googleapis.com/google.api.Service",
                                                            "logging":{"producer_destinations":[{"logs":["endpoints_log"],"monitored_resource":"api"}]},
@@ -764,8 +758,19 @@ func TestFetchListeners(t *testing.T) {
                                                          }
                                                     }
                                                 ],
+                                                "service_control_uri":{
+                                                            "cluster":"service-control-cluster",
+                                                            "timeout":"5s",
+                                                            "uri":"https://servicecontrol.googleapis.com/v1/services/"
+                                                },
                                                 "sc_calling_config":{"network_fail_open":true},
-                                                "token_url":"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"
+                                                "access_token":{
+                                                  "remote_token":{
+                                                    "cluster":"metadata-cluster",
+                                                    "uri":"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token",
+                                                    "timeout":"5s"
+                                                  }
+                                                }
                                             },
                                             "name":"envoy.filters.http.service_control"
                                         },
@@ -1048,17 +1053,23 @@ func TestFetchListeners(t *testing.T) {
                                                     "@type":"type.googleapis.com/google.api.Service"
                                                 },
                                                 "service_config_id":"2017-05-01r0",
-                                                "service_control_uri": {
+                                                "service_name":"bookstore.endpoints.project123.cloud.goog"
+                                            }
+                                        ],
+                                        "sc_calling_config":{"network_fail_open":true},
+                                        "service_control_uri": {
                                                     "cluster":"service-control-cluster",
                                                     "timeout":"5s",
                                                     "uri":"https://servicecontrol.googleapis.com/v1/services/"
                                                 },
-                                                "service_name":"bookstore.endpoints.project123.cloud.goog",
-                                                "token_cluster":"metadata-cluster"
-                                            }
-                                        ],
-                                        "sc_calling_config":{"network_fail_open":true},
-                                        "token_url":"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"
+
+                                        "access_token":{
+                                          "remote_token":{
+                                            "cluster":"metadata-cluster",
+                                            "uri":"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token",
+                                            "timeout":"5s"
+                                          }
+                                        }
                                     },
                                     "name":"envoy.filters.http.service_control"
                                 },
@@ -1227,7 +1238,7 @@ func TestDynamicBackendRouting(t *testing.T) {
 			}
 			gotListener = normalizeJson(gotListener)
 			if wantListener := normalizeJson(tc.wantedListener); gotListener != wantListener {
-				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got Listener: %s, want: %s", i, tc.desc, gotListener, wantListener)
+				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got Listener: %s,\n\t want: %s", i, tc.desc, gotListener, wantListener)
 			}
 		})
 	}
