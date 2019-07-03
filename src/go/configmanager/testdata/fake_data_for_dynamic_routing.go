@@ -157,18 +157,22 @@ var (
   "connectTimeout": "20s",
   "loadAssignment": {
     "clusterName": "127.0.0.1",
-    "endpoints": [{
-       "lbEndpoints": [{
-         "endpoint": {
-          "address": {
-	    "socketAddress": {
-	      "address": "127.0.0.1",
-	      "portValue": 8082
-	    }
-	  }
-	}
-      }]
-   }]
+    "endpoints": [
+      {
+       "lbEndpoints": [
+         {
+           "endpoint": {
+             "address": {
+	              "socketAddress": {
+	                "address": "127.0.0.1",
+	                "portValue": 8082
+	              }
+	            }
+	          }
+          }
+        ]
+      }
+    ]
   }
 }`,
 		`
@@ -178,24 +182,28 @@ var (
   "connectTimeout": "20s",
   "loadAssignment": {
     "clusterName": "us-central1-cloud-esf.cloudfunctions.net",
-    "endpoints": [{
-       "lbEndpoints": [{
-         "endpoint": {
-          "address": {
-	    "socketAddress": {
-	      "address": "us-central1-cloud-esf.cloudfunctions.net",
-	      "portValue": 443
-	    }
-	  }
-	}
-      }]
-   }]
+    "endpoints": [
+      {
+        "lbEndpoints": [
+          {
+            "endpoint": {
+              "address": {
+	              "socketAddress": {
+	                "address": "us-central1-cloud-esf.cloudfunctions.net",
+	                "portValue": 443
+	              }
+	            }
+	          }
+          }
+        ]
+      }
+    ]
   },
   "tlsContext": {
     "sni": "us-central1-cloud-esf.cloudfunctions.net"
   }
-}
-`, `
+}`,
+		`
 {
   "name": "DynamicRouting_1",
   "type": "LOGICAL_DNS",
@@ -225,48 +233,56 @@ var (
   "connectTimeout": "20s",
   "loadAssignment":{
     "clusterName":"pets.appspot.com",
-    "endpoints":[{
-       "lbEndpoints":[{
-         "endpoint":{
-          "address":{
-	    "socketAddress":{
-	      "address":"pets.appspot.com",
-	      "portValue":8008
-	    }
-	  }
-	}
-      }]
-   }]
+    "endpoints":[
+      {
+        "lbEndpoints":[
+          {
+            "endpoint":{
+              "address":{
+	              "socketAddress":{
+	                "address":"pets.appspot.com",
+	                "portValue":8008
+	              }
+	            }
+	          }
+          }
+        ]
+      }
+    ]
   },
   "tlsContext": {
     "sni": "pets.appspot.com"
   }
-}`, `
+}`,
+		`
 {
   "name": "DynamicRouting_3",
   "type": "LOGICAL_DNS",
   "connectTimeout": "20s",
   "loadAssignment":{
     "clusterName":"pets.appspot.com",
-    "endpoints":[{
-       "lbEndpoints":[{
-         "endpoint":{
-          "address":{
-	    "socketAddress":{
-	      "address":"pets.appspot.com",
-	      "portValue":443
-	    }
-	  }
-	}
-      }]
-   }]
+    "endpoints":[
+      {
+        "lbEndpoints":[
+          {
+            "endpoint":{
+              "address":{
+	              "socketAddress":{
+	                "address":"pets.appspot.com",
+	                "portValue":443
+	              }
+	            }
+	          }
+          }
+        ]
+      }
+    ]
   },
   "tlsContext": {
     "sni": "pets.appspot.com"
   }
-}
-`,
-	}
+}`}
+
 	FakeWantedListenerForDynamicRouting = `
 {
   "address": {

@@ -15,30 +15,28 @@
 package bootstrap
 
 import (
-	"flag"
+	"fmt"
 	"time"
 
 	"github.com/gogo/protobuf/jsonpb"
 
+	gen "cloudesf.googlesource.com/gcpproxy/src/go/configgenerator"
+	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
+	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	boot "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
-
-	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
+	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-var (
-	AdsConnectTimeout = flag.Duration("ads_connect_imeout", 10*time.Second, "ads connect timeout in seconds")
-)
-
-// CreateBoostrapConfig outputs envoy bootstrap static config
-func CreateBootstrapConfig() string {
+// CreateBoostrapConfig outputs envoy bootstrap config for xDS.
+func CreateBootstrapConfig(ads_connect_timeout *time.Duration) string {
 	boot := &boot.Bootstrap{
 		// Node info
-		Node: &core.Node{
-			Id:      "api_proxy",
-			Cluster: "api_proxy_cluster",
-		},
+		Node: createNode(),
+
+		// admin
+		Admin: createAdmin(),
 
 		// Dynamic resource
 		DynamicResources: &boot.Bootstrap_DynamicResources{
@@ -70,27 +68,12 @@ func CreateBootstrapConfig() string {
 				v2.Cluster{
 					Name:           "ads_cluster",
 					LbPolicy:       v2.Cluster_ROUND_ROBIN,
-					ConnectTimeout: *AdsConnectTimeout,
+					ConnectTimeout: *ads_connect_timeout,
 					ClusterDiscoveryType: &v2.Cluster_Type{
 						Type: v2.Cluster_STRICT_DNS,
 					},
 					Http2ProtocolOptions: &core.Http2ProtocolOptions{},
 					LoadAssignment:       ut.CreateLoadAssignment("127.0.0.1", 8790),
-				},
-			},
-		},
-
-		// admin
-		Admin: &boot.Admin{
-			AccessLogPath: "/dev/null",
-			Address: &core.Address{
-				Address: &core.Address_SocketAddress{
-					SocketAddress: &core.SocketAddress{
-						Address: "0.0.0.0",
-						PortSpecifier: &core.SocketAddress_PortValue{
-							PortValue: 8001,
-						},
-					},
 				},
 			},
 		},
@@ -101,4 +84,57 @@ func CreateBootstrapConfig() string {
 	}
 	json_str, _ := marshaler.MarshalToString(boot)
 	return json_str
+}
+
+// ServiceToBoostrapConfig outputs envoy bootstrap config from service config.
+// id is the service configuration ID. It is generated when deploying
+// service config to ServiceManagement Server, example: 2017-02-13r0.
+func ServiceToBoostrapConfig(serviceConfig *conf.Service, id string) (*boot.Bootstrap, error) {
+	bootstrap := &boot.Bootstrap{
+		Node:  createNode(),
+		Admin: createAdmin(),
+	}
+
+	serviceInfo, err := sc.NewServiceInfoFromServiceConfig(serviceConfig, id)
+	if err != nil {
+		return nil, fmt.Errorf("fail to initialize ServiceInfo, %s", err)
+	}
+
+	listener, err := gen.MakeListeners(serviceInfo)
+	if err != nil {
+		return nil, err
+	}
+	clusters, err := gen.MakeClusters(serviceInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	bootstrap.StaticResources = &boot.Bootstrap_StaticResources{
+		Listeners: []v2.Listener{*listener},
+		Clusters:  clusters,
+	}
+	return bootstrap, nil
+}
+
+func createNode() *core.Node {
+	return &core.Node{
+		Id:      "api_proxy",
+		Cluster: "api_proxy_cluster",
+	}
+}
+
+func createAdmin() *boot.Admin {
+	return &boot.Admin{
+		AccessLogPath: "/dev/null",
+		Address: &core.Address{
+			Address: &core.Address_SocketAddress{
+				SocketAddress: &core.SocketAddress{
+					Address: "0.0.0.0",
+					PortSpecifier: &core.SocketAddress_PortValue{
+						PortValue: 8001,
+					},
+				},
+			},
+		},
+	}
 }

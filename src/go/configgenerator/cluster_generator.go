@@ -22,7 +22,6 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/golang/glog"
 
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
@@ -36,14 +35,14 @@ const (
 )
 
 // MakeClusters provides dynamic cluster settings for Envoy
-func MakeClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
-	var clusters []cache.Resource
+func MakeClusters(serviceInfo *sc.ServiceInfo) ([]v2.Cluster, error) {
+	var clusters []v2.Cluster
 	backendCluster, err := makeBackendCluster(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
 	if backendCluster != nil {
-		clusters = append(clusters, backendCluster)
+		clusters = append(clusters, *backendCluster)
 	}
 
 	metadataCluster, err := makeMetadataCluster(serviceInfo)
@@ -51,7 +50,7 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
 		return nil, err
 	}
 	if metadataCluster != nil {
-		clusters = append(clusters, metadataCluster)
+		clusters = append(clusters, *metadataCluster)
 	}
 
 	// Note: makeServiceControlCluster should be called before makeListener
@@ -62,7 +61,7 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
 		return nil, err
 	}
 	if scCluster != nil {
-		clusters = append(clusters, scCluster)
+		clusters = append(clusters, *scCluster)
 	}
 
 	brClusters, err := makeBackendRoutingClusters(serviceInfo)
@@ -108,8 +107,8 @@ func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error) {
 	return c, nil
 }
 
-func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
-	var providerClusters []cache.Resource
+func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]v2.Cluster, error) {
+	var providerClusters []v2.Cluster
 	authn := serviceInfo.ServiceConfig().GetAuthentication()
 	for _, provider := range authn.GetProviders() {
 		jwksUri := provider.GetJwksUri()
@@ -135,7 +134,7 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, err
 			provider.JwksUri = ut.FakeJwksUri
 		}
 
-		c := &v2.Cluster{
+		c := v2.Cluster{
 			Name:           provider.GetIssuer(),
 			LbPolicy:       v2.Cluster_ROUND_ROBIN,
 			ConnectTimeout: *flags.ClusterConnectTimeout,
@@ -144,13 +143,13 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, err
 			ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
 			LoadAssignment:       ut.CreateLoadAssignment(hostname, port),
 		}
-		providerClusters = append(providerClusters, c)
-
 		if scheme == "https" {
 			c.TlsContext = &auth.UpstreamTlsContext{
 				Sni: hostname,
 			}
 		}
+		providerClusters = append(providerClusters, c)
+
 		glog.Infof("Add provider cluster configuration for %v: %v", provider.JwksUri, c)
 	}
 	return providerClusters, nil
@@ -210,10 +209,10 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error)
 	return c, nil
 }
 
-func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]cache.Resource, error) {
-	var brClusters []cache.Resource
+func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]v2.Cluster, error) {
+	var brClusters []v2.Cluster
 	for _, v := range serviceInfo.BackendRoutingClusters {
-		c := &v2.Cluster{
+		c := v2.Cluster{
 			Name:                 v.ClusterName,
 			LbPolicy:             v2.Cluster_ROUND_ROBIN,
 			ConnectTimeout:       *flags.ClusterConnectTimeout,

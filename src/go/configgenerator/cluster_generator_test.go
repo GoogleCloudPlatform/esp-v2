@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
-	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/gorilla/mux"
 	"google.golang.org/genproto/protobuf/api"
 
@@ -45,7 +44,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 	testData := []struct {
 		desc              string
 		fakeServiceConfig *conf.Service
-		wantedCluster     *v2.Cluster
+		wantedCluster     v2.Cluster
 		backendProtocol   string
 	}{
 		{
@@ -62,7 +61,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 				},
 			},
 			backendProtocol: "grpc",
-			wantedCluster: &v2.Cluster{
+			wantedCluster: v2.Cluster{
 				Name:                 "service-control-cluster",
 				ConnectTimeout:       5 * time.Second,
 				ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
@@ -87,7 +86,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 				},
 			},
 			backendProtocol: "http1",
-			wantedCluster: &v2.Cluster{
+			wantedCluster: v2.Cluster{
 				Name:                 "service-control-cluster",
 				ConnectTimeout:       5 * time.Second,
 				ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
@@ -109,7 +108,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if !reflect.DeepEqual(cluster, tc.wantedCluster) {
+		if !reflect.DeepEqual(cluster, &tc.wantedCluster) {
 			t.Errorf("Test Desc(%d): %s, makeServiceControlCluster\ngot Clusters: %v,\nwant: %v", i, tc.desc, cluster, tc.wantedCluster)
 		}
 	}
@@ -119,7 +118,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 	testData := []struct {
 		desc              string
 		fakeServiceConfig *conf.Service
-		wantedClusters    []cache.Resource
+		wantedClusters    []v2.Cluster
 		backendProtocol   string
 	}{
 		{
@@ -161,8 +160,8 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 				},
 			},
 			backendProtocol: "http1",
-			wantedClusters: []cache.Resource{
-				&v2.Cluster{
+			wantedClusters: []v2.Cluster{
+				{
 					Name:                 "DynamicRouting_0",
 					ConnectTimeout:       20 * time.Second,
 					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
@@ -212,8 +211,8 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 				},
 			},
 			backendProtocol: "http1",
-			wantedClusters: []cache.Resource{
-				&v2.Cluster{
+			wantedClusters: []v2.Cluster{
+				{
 					Name:                 "DynamicRouting_0",
 					ConnectTimeout:       20 * time.Second,
 					DnsLookupFamily:      v2.Cluster_V4_ONLY,
@@ -260,7 +259,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 	testData := []struct {
 		desc           string
 		fakeProviders  []*conf.AuthProvider
-		wantedClusters []cache.Resource
+		wantedClusters []v2.Cluster
 	}{
 		{
 			desc: "Use https jwksUri and http jwksUri",
@@ -276,8 +275,8 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					JwksUri: "http://metadata.com/pkey",
 				},
 			},
-			wantedClusters: []cache.Resource{
-				&v2.Cluster{
+			wantedClusters: []v2.Cluster{
+				{
 					Name:                 "issuer_0",
 					ConnectTimeout:       20 * time.Second,
 					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
@@ -287,7 +286,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 						Sni: "metadata.com",
 					},
 				},
-				&v2.Cluster{
+				{
 					Name:                 "issuer_1",
 					ConnectTimeout:       20 * time.Second,
 					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
@@ -304,8 +303,8 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					Issuer:  "issuer_2",
 					JwksUri: "%",
 				}},
-			wantedClusters: []cache.Resource{
-				&v2.Cluster{
+			wantedClusters: []v2.Cluster{
+				{
 					Name:                 "issuer_2",
 					ConnectTimeout:       20 * time.Second,
 					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
@@ -322,8 +321,8 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					Issuer: openIDServer.URL,
 				},
 			},
-			wantedClusters: []cache.Resource{
-				&v2.Cluster{
+			wantedClusters: []v2.Cluster{
+				{
 					Name:                 openIDServer.URL,
 					ConnectTimeout:       20 * time.Second,
 					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
@@ -343,8 +342,8 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					Issuer: "aaaaa.bbbbbb.ccccc/inaccessible_uri/",
 				},
 			},
-			wantedClusters: []cache.Resource{
-				&v2.Cluster{
+			wantedClusters: []v2.Cluster{
+				{
 					Name:                 "aaaaa.bbbbbb.ccccc/inaccessible_uri/",
 					ConnectTimeout:       20 * time.Second,
 					ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},

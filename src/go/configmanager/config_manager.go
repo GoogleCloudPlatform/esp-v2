@@ -16,6 +16,7 @@ package configmanager
 
 import (
 	"encoding/json"
+
 	"fmt"
 	"time"
 
@@ -154,10 +155,13 @@ func (m *ConfigManager) updateSnapshot() error {
 func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	m.Infof("making configuration for api: %v", m.serviceInfo.ApiName)
 
-	var endpoints, routes []cache.Resource
+	var clusterResources, endpoints, routes []cache.Resource
 	clusters, err := gen.MakeClusters(m.serviceInfo)
 	if err != nil {
 		return nil, err
+	}
+	for i, _ := range clusters {
+		clusterResources = append(clusterResources, &clusters[i])
 	}
 
 	m.Infof("adding Listener configuration for api: %v", m.serviceInfo.Name)
@@ -166,7 +170,7 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 		return nil, err
 	}
 
-	snapshot := cache.NewSnapshot(m.curConfigID, endpoints, clusters, routes, []cache.Resource{listener})
+	snapshot := cache.NewSnapshot(m.curConfigID, endpoints, clusterResources, routes, []cache.Resource{listener})
 	m.Infof("Envoy Dynamic Configuration is cached for service: %v", m.serviceName)
 	return &snapshot, nil
 }
