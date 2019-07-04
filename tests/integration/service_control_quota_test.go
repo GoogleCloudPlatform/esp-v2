@@ -27,8 +27,8 @@ import (
 
 	bsClient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	sc "github.com/google/go-genproto/googleapis/api/servicecontrol/v1"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	sc "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
 func TestServiceControlQuota(t *testing.T) {

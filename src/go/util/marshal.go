@@ -24,8 +24,8 @@ import (
 	"github.com/gogo/protobuf/types"
 	"google.golang.org/genproto/googleapis/api/annotations"
 
-	sm "github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	sm "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
 // Helper to convert Json string to protobuf.Any.

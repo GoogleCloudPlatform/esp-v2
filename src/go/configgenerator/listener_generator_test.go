@@ -30,8 +30,8 @@ import (
 	"google.golang.org/genproto/protobuf/ptype"
 
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
-	sm "github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	sm "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
 var (
