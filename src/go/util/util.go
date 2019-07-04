@@ -17,9 +17,24 @@ package util
 const (
 	// HTTP filter names.
 
+	// Buffer HTTP filter
+	Buffer = "envoy.buffer"
+	// CORS HTTP filter
+	CORS = "envoy.cors"
+	// GRPCJSONTranscoder HTTP filter
+	GRPCJSONTranscoder = "envoy.grpc_json_transcoder"
+	// GRPCWeb HTTP filter
+	GRPCWeb = "envoy.grpc_web"
+	// Router HTTP filter
+	Router = "envoy.router"
+	// Health checking HTTP filter
+	HealthCheck = "envoy.health_check"
+	// Echo network filter
+	Echo = "envoy.echo"
+	// HTTPConnectionManager network filter
+	HTTPConnectionManager = "envoy.http_connection_manager"
 	// ServiceControl filter.
 	ServiceControl = "envoy.filters.http.service_control"
-
 	// JwtAuthn filter.
 	JwtAuthn = "envoy.filters.http.jwt_authn"
 	// PathMatcher filter.
@@ -28,9 +43,9 @@ const (
 	BackendAuth = "envoy.filters.http.backend_auth"
 	// BackendRouting filter.
 	BackendRouting = "envoy.filters.http.backend_routing"
+
 	// JwtPayloadMetadataName is the field name passed into metadata
 	JwtPayloadMetadataName = "jwt_payloads"
-
 	// FakeJwksUri used when jwksUri is unavaliable
 	FakeJwksUri = "http://aaaaaaaaaaaaa.bbbbbbbbbbbbb.cccccccccccc/inaccessible_pkey"
 

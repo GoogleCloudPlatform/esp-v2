@@ -50,6 +50,9 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 	}
 })
 
+// MessageToStruct encodes a protobuf Message into a Struct. Hilariously, it
+// uses JSON as the intermediary
+// author:glen@turbinelabs.io
 func MessageToStruct(msg proto.Message) (*types.Struct, error) {
 	if msg == nil {
 		return nil, errors.New("nil message")
@@ -73,4 +76,18 @@ func MessageToStruct(msg proto.Message) (*types.Struct, error) {
 	}
 
 	return pbs, nil
+}
+
+// StructToMessage decodes a protobuf Message from a Struct.
+func StructToMessage(pbst *types.Struct, out proto.Message) error {
+	if pbst == nil {
+		return errors.New("nil struct")
+	}
+
+	buf := &bytes.Buffer{}
+	if err := (&jsonpb.Marshaler{OrigName: true}).Marshal(buf, pbst); err != nil {
+		return err
+	}
+
+	return jsonpb.Unmarshal(buf, out)
 }

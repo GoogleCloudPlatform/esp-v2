@@ -21,7 +21,6 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
-	"github.com/envoyproxy/go-control-plane/pkg/util"
 	"github.com/gogo/protobuf/types"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
@@ -55,7 +54,7 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) (*v2.Listener, error) {
 
 	if *flags.CorsPreset == "basic" || *flags.CorsPreset == "cors_with_regex" {
 		corsFilter := &hcm.HttpFilter{
-			Name: util.CORS,
+			Name: ut.CORS,
 		}
 		httpFilters = append(httpFilters, corsFilter)
 		glog.Infof("adding CORS Filter config: %v", corsFilter)
@@ -100,7 +99,7 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) (*v2.Listener, error) {
 		}
 
 		grpcWebFilter := &hcm.HttpFilter{
-			Name:       util.GRPCWeb,
+			Name:       ut.GRPCWeb,
 			ConfigType: &hcm.HttpFilter_Config{&types.Struct{}},
 		}
 		httpFilters = append(httpFilters, grpcWebFilter)
@@ -145,7 +144,7 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) (*v2.Listener, error) {
 	httpConMgr.HttpFilters = httpFilters
 
 	// HTTP filter configuration
-	httpFilterConfig, err := util.MessageToStruct(httpConMgr)
+	httpFilterConfig, err := ut.MessageToStruct(httpConMgr)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +164,7 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) (*v2.Listener, error) {
 			{
 				Filters: []listener.Filter{
 					{
-						Name:       util.HTTPConnectionManager,
+						Name:       ut.HTTPConnectionManager,
 						ConfigType: &listener.Filter_Config{httpFilterConfig},
 					},
 				},
@@ -212,7 +211,7 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 		pathMathcherConfig.SegmentNames = serviceInfo.SegmentNames
 	}
 
-	pathMathcherConfigStruct, _ := util.MessageToStruct(pathMathcherConfig)
+	pathMathcherConfigStruct, _ := ut.MessageToStruct(pathMathcherConfig)
 	pathMatcherFilter := &hcm.HttpFilter{
 		Name:       ut.PathMatcher,
 		ConfigType: &hcm.HttpFilter_Config{pathMathcherConfigStruct},
@@ -290,7 +289,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 		},
 	}
 
-	jas, _ := util.MessageToStruct(jwtAuthentication)
+	jas, _ := ut.MessageToStruct(jwtAuthentication)
 	jwtAuthnFilter := &hcm.HttpFilter{
 		Name:       ut.JwtAuthn,
 		ConfigType: &hcm.HttpFilter_Config{jas},
@@ -494,9 +493,9 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 				Services:               []string{serviceInfo.ApiName},
 				IgnoredQueryParameters: []string{"api_key", "key", "access_token"},
 			}
-			transcodeConfigStruct, _ := util.MessageToStruct(transcodeConfig)
+			transcodeConfigStruct, _ := ut.MessageToStruct(transcodeConfig)
 			transcodeFilter := &hcm.HttpFilter{
-				Name:       util.GRPCJSONTranscoder,
+				Name:       ut.GRPCJSONTranscoder,
 				ConfigType: &hcm.HttpFilter_Config{transcodeConfigStruct},
 			}
 			return transcodeFilter
@@ -531,7 +530,7 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 			},
 		},
 	}
-	backendAuthConfigStruct, _ := util.MessageToStruct(backendAuthConfig)
+	backendAuthConfigStruct, _ := ut.MessageToStruct(backendAuthConfig)
 	backendAuthFilter := &hcm.HttpFilter{
 		Name:       ut.BackendAuth,
 		ConfigType: &hcm.HttpFilter_Config{backendAuthConfigStruct},
@@ -553,7 +552,7 @@ func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	}
 
 	backendRoutingConfig := &brpb.FilterConfig{Rules: rules}
-	backendRoutingConfigStruct, _ := util.MessageToStruct(backendRoutingConfig)
+	backendRoutingConfigStruct, _ := ut.MessageToStruct(backendRoutingConfig)
 	backendRoutingFilter := &hcm.HttpFilter{
 		Name:       ut.BackendRouting,
 		ConfigType: &hcm.HttpFilter_Config{backendRoutingConfigStruct},
@@ -562,11 +561,11 @@ func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 }
 
 func makeRouterFilter() *hcm.HttpFilter {
-	router, _ := util.MessageToStruct(&rt.Router{
+	router, _ := ut.MessageToStruct(&rt.Router{
 		SuppressEnvoyHeaders: *flags.SuppressEnvoyHeaders,
 	})
 	routerFilter := &hcm.HttpFilter{
-		Name:       util.Router,
+		Name:       ut.Router,
 		ConfigType: &hcm.HttpFilter_Config{router},
 	}
 	return routerFilter
