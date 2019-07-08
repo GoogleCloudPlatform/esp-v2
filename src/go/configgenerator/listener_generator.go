@@ -41,8 +41,8 @@ import (
 	rt "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
 	tc "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
-	sm "github.com/google/go-genproto/googleapis/api/servicemanagement/v1"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	sm "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
 const (

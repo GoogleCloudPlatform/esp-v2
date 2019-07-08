@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-	sc "github.com/google/go-genproto/googleapis/api/servicecontrol/v1"
+	sc "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
 const expectedCheck = `

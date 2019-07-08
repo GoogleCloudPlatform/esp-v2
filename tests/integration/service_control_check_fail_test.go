@@ -26,7 +26,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	sc "github.com/google/go-genproto/googleapis/api/servicecontrol/v1"
+	sc "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
 func TestServiceControlCheckError(t *testing.T) {

@@ -24,7 +24,7 @@ import (
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 	structpb "github.com/golang/protobuf/ptypes/struct"
-	sc "github.com/google/go-genproto/googleapis/api/servicecontrol/v1"
+	sc "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 	ltype "google.golang.org/genproto/googleapis/logging/type"
 )
 
