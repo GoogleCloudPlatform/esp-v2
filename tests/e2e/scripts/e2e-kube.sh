@@ -27,10 +27,12 @@ e2e_options "${@}"
 
 TEST_ID="gke-${COUPLING_OPTION}-${TEST_TYPE}-${BACKEND}"
 LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
+PROJECT_ID="cloudesf-testing"
 
 # Parses parameters into config file.
 ARGS="$ARGS \"--service=${APIPROXY_SERVICE}\","
-ARGS="$ARGS \"--rollout_strategy=${ROLLOUT_STRATEGY}\""
+ARGS="$ARGS \"--rollout_strategy=${ROLLOUT_STRATEGY}\","
+ARGS="$ARGS \"--enable_tracing\", \"--tracing_project_id=${PROJECT_ID}\", \"--tracing_sample_rate=1.0\""
 run sed_i "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g" ${YAML_FILE}
 run sed_i "s|ARGS|${ARGS}|g" ${YAML_FILE}
 
@@ -40,12 +42,6 @@ run sed_i "s|ARGS|${ARGS}|g" ${YAML_FILE}
 #
 SERVICE_IDL="${SCRIPT_PATH}/../testdata/bookstore/bookstore_swagger_template.json"
 run sed -i "s|\${ENDPOINT_SERVICE}|${APIPROXY_SERVICE}|g" ${SERVICE_IDL}
-
-# Parses parameters into config file.
-ARGS="$ARGS \"--service=${APIPROXY_SERVICE}\","
-ARGS="$ARGS \"--rollout_strategy=${ROLLOUT_STRATEGY}\""
-run sed_i "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g" ${YAML_FILE}
-run sed_i "s|ARGS|${ARGS}|g" ${YAML_FILE}
 
 # Creates service on GKE cluster.
 run kubectl create -f ${YAML_FILE}

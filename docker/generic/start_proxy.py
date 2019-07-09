@@ -56,7 +56,16 @@ METADATA_ADDRESS = "http://169.254.169.254"
 def gen_bootstrap_conf(args):
     cmd = [BOOTSTRAP_CMD]
 
-    # TODO(qiwzhang): pass tracing flags to bootstrap_cmd
+    if args.enable_tracing:
+        cmd.append("--enable_tracing",)
+        if args.tracing_project_id:
+            cmd.extend(["--tracing_project_id", args.tracing_project_id])
+        if args.tracing_sample_rate:
+            cmd.extend(["--tracing_sample_rate", str(args.tracing_sample_rate)])
+        if args.tracing_incoming_context:
+            cmd.extend(["--tracing_incoming_context", args.tracing_incoming_context])
+        if args.tracing_outgoing_context:
+            cmd.extend(["--tracing_outgoing_context", args.tracing_outgoing_context])
 
     bootstrap_file = DEFAULT_CONFIG_DIR + "/bootstrap.json"
     cmd.append(bootstrap_file)
@@ -336,6 +345,22 @@ environment variable or by passing "-k" flag to this script.
         Must be >= 0 and the default is 5 if not set.
         ''')
 
+    parser.add_argument(
+        '--enable_tracing',
+        action='store_true',
+        default=False,
+        help='''Enable Stackdriver tracing. The flag tracing_project_id must be specified. Default is off''')
+    parser.add_argument(
+        '--tracing_project_id', default="", help="The Google project id for Stack driver tracing")
+    parser.add_argument(
+        '--tracing_sample_rate', default=0.001, help="tracing sampling rate from 0.0 to 1.0")
+    parser.add_argument(
+        '--tracing_incoming_context', default="", help='''
+        comma separated incoming trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)''')
+    parser.add_argument(
+        '--tracing_outgoing_context', default="", help='''
+        comma separated outgoing trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)''')
+
     return parser
 
 
@@ -449,6 +474,9 @@ if __name__ == '__main__':
 
     if args.check_metadata:
         proxy_conf.append("--check_metadata",)
+
+    if args.enable_tracing:
+        proxy_conf.append("--enable_tracing",)
 
     if args.enable_backend_routing:
         proxy_conf.append("--enable_backend_routing")

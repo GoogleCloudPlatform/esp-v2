@@ -170,8 +170,8 @@ func createReportLabels(er *ExpectedReport) map[string]string {
 		"servicecontrol.googleapis.com/service_agent": "APIPROXY/" + er.Version,
 		"servicecontrol.googleapis.com/user_agent":    "APIPROXY",
 		"serviceruntime.googleapis.com/api_method":    er.ApiMethod,
-		"/response_code":       response,
-		"/response_code_class": class,
+		"/response_code":                              response,
+		"/response_code_class":                        class,
 	}
 	if er.StatusCode != "" {
 		labels["/status_code"] = er.StatusCode

@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bootstrap
+package static
 
 import (
 	"encoding/json"
 	"flag"
 	"testing"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap/testdata"
+	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap/static/testdata"
 	"github.com/gogo/protobuf/jsonpb"
 
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"

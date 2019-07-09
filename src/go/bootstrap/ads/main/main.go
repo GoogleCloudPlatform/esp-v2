@@ -17,15 +17,17 @@ package main
 import (
 	"flag"
 	"io/ioutil"
-	"os"
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap"
+	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap/ads"
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/golang/glog"
 )
 
 var (
 	AdsConnectTimeout = flag.Duration("ads_connect_imeout", 10*time.Second, "ads connect timeout in seconds")
+	EnableTracing     = flag.Bool("enable_tracing", false, "Enable stack driver tracing")
 )
 
 func main() {
@@ -34,13 +36,22 @@ func main() {
 	glog.Infof("Output path: %s", out_path)
 	if out_path == "" {
 		glog.Exitf("Please specify a path to write bootstrap config file")
-		os.Exit(1)
 	}
 
-	json_conf := bootstrap.CreateBootstrapConfig(AdsConnectTimeout)
-	err := ioutil.WriteFile(out_path, []byte(json_conf), 0644)
+	bt := ads.CreateBootstrapConfig(AdsConnectTimeout)
+	if *EnableTracing {
+		var err error
+		if bt.Tracing, err = bootstrap.CreateTracing(); err != nil {
+			glog.Exitf("failed to create tracing config, error: %v", err)
+		}
+	}
+
+	marshaler := &jsonpb.Marshaler{
+		Indent: "  ",
+	}
+	json_str, _ := marshaler.MarshalToString(bt)
+	err := ioutil.WriteFile(out_path, []byte(json_str), 0644)
 	if err != nil {
 		glog.Exitf("failed to write config to %v, error: %v", out_path, err)
-		os.Exit(1)
 	}
 }
