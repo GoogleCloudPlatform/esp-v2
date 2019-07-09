@@ -21,6 +21,7 @@
 #include "test/mocks/server/mocks.h"
 #include "test/test_common/utility.h"
 
+#include "gmock/gmock-generated-function-mockers.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
@@ -33,13 +34,9 @@ using ::Envoy::Server::Configuration::MockFactoryContext;
 
 using ::testing::_;
 using ::testing::Invoke;
+using ::testing::MockFunction;
 using ::testing::Return;
 using ::testing::ReturnRef;
-
-class MockTokenSubscriberCallback : public TokenSubscriber::Callback {
- public:
-  MOCK_METHOD1(onTokenUpdate, void(const std::string& token));
-};
 
 class TokenSubscriberTest : public testing::Test {
  protected:
@@ -50,9 +47,9 @@ class TokenSubscriberTest : public testing::Test {
           init_target_handle = target.createHandle("test");
         }));
 
-    token_sub_.reset(
-        new TokenSubscriber(context_, token_callback_, "fake_token_cluster",
-                            "http://fake_token_server/uri_suffix", true));
+    token_sub_.reset(new TokenSubscriber(
+        context_, "fake_token_cluster", "http://fake_token_server/uri_suffix",
+        true, token_callback_.AsStdFunction()));
 
     raw_mock_client_ =
         std::make_unique<NiceMock<Envoy::Http::MockAsyncClient>>();
@@ -79,14 +76,14 @@ class TokenSubscriberTest : public testing::Test {
 
   NiceMock<Init::ExpectableWatcherImpl> init_watcher_;
   NiceMock<MockFactoryContext> context_;
-  MockTokenSubscriberCallback token_callback_;
+  MockFunction<int(std::string)> token_callback_;
   Envoy::Http::AsyncClient::Callbacks* client_callback_{};
   std::unique_ptr<NiceMock<Envoy::Http::MockAsyncClient>> raw_mock_client_;
   TokenSubscriberPtr token_sub_;
 };
 
 TEST_F(TokenSubscriberTest, CallOnTokenUpdateOnSuccess) {
-  EXPECT_CALL(token_callback_, onTokenUpdate(std::string("TOKEN")));
+  EXPECT_CALL(token_callback_, Call(std::string("TOKEN")));
   EXPECT_EQ(call_count_, 1);
 
   Envoy::Http::HeaderMapImplPtr headers{new Envoy::Http::TestHeaderMapImpl{
@@ -109,7 +106,7 @@ TEST_F(TokenSubscriberTest, CallOnTokenUpdateOnSuccess) {
 
 TEST_F(TokenSubscriberTest, DoNotCallOnTokenUpdateOnFailure) {
   // Not called on failure.
-  EXPECT_CALL(token_callback_, onTokenUpdate(_)).Times(0);
+  EXPECT_CALL(token_callback_, Call(_)).Times(0);
   EXPECT_EQ(call_count_, 1);
 
   // Send a bad token
@@ -119,7 +116,7 @@ TEST_F(TokenSubscriberTest, DoNotCallOnTokenUpdateOnFailure) {
 TEST_F(TokenSubscriberTest, RefreshOnceTokenExpires) {
   // Send a good token `TOKEN1`
   EXPECT_EQ(call_count_, 1);
-  EXPECT_CALL(token_callback_, onTokenUpdate(std::string("TOKEN1")));
+  EXPECT_CALL(token_callback_, Call(std::string("TOKEN1")));
   Envoy::Http::HeaderMapImplPtr headers1{new Envoy::Http::TestHeaderMapImpl{
       {":status", "200"},
   }};
@@ -137,7 +134,7 @@ TEST_F(TokenSubscriberTest, RefreshOnceTokenExpires) {
   EXPECT_EQ(call_count_, 2);
 
   // Send a good token `TOKEN2`
-  EXPECT_CALL(token_callback_, onTokenUpdate(std::string("TOKEN2")));
+  EXPECT_CALL(token_callback_, Call(std::string("TOKEN2")));
   Envoy::Http::HeaderMapImplPtr headers2{new Envoy::Http::TestHeaderMapImpl{
       {":status", "200"},
   }};

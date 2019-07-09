@@ -13,9 +13,11 @@
 // limitations under the License.
 
 #include "src/envoy/http/service_control/service_control_call_impl.h"
-
 #include "src/api_proxy/service_control/logs_metrics_loader.h"
 
+using Envoy::Extensions::Utils::ServiceAccountToken;
+using Envoy::Extensions::Utils::TokenSubscriber;
+using ::google::api::envoy::http::common::AccessToken;
 using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::api::envoy::http::service_control::Service;
 using ::google::api_proxy::service_control::LogsMetricsLoader;
@@ -27,6 +29,13 @@ namespace HttpFilters {
 namespace ServiceControl {
 
 namespace {
+// The service_control service name. used for as audience to generate JWT token.
+const char kServiceControlService[] =
+    "/google.api.servicecontrol.v1.ServiceController";
+
+// The quota_control service name. used for as audience to generate JWT token.
+const char kQuotaControlService[] =
+    "/google.api.servicecontrol.v1.QuotaController";
 
 const char kDefaultTokenUrl[]{
     "http://metadata.google.internal/computeMetadata/v1/instance/"
@@ -36,14 +45,64 @@ const char kDefaultTokenUrl[]{
 
 ServiceControlCallImpl::ServiceControlCallImpl(
     const Service& config, const FilterConfig& filter_config,
-    Server::Configuration::FactoryContext& context,
-    const std::string& token_url)
+    Server::Configuration::FactoryContext& context)
     : config_(config),
-      tls_(context.threadLocal().allocateSlot()),
-      token_subscriber_(context, *this,
-                        filter_config.access_token().remote_token().cluster(),
-                        token_url.empty() ? kDefaultTokenUrl : token_url,
-                        /*json_response=*/true) {
+      filter_config_(filter_config),
+      tls_(context.threadLocal().allocateSlot()) {
+  tls_->set(
+      [this, &cm = context.clusterManager()](Event::Dispatcher& dispatcher)
+          -> ThreadLocal::ThreadLocalObjectSharedPtr {
+        return std::make_shared<ThreadLocalCache>(config_, filter_config_, cm,
+                                                  dispatcher);
+      });
+
+  switch (filter_config.access_token().token_type_case()) {
+    case AccessToken::kRemoteToken: {
+      const std::string& token_uri =
+          filter_config.access_token().remote_token().uri();
+      const std::string& token_cluster =
+          filter_config.access_token().remote_token().cluster();
+      token_sub_ptr_ = std::make_unique<TokenSubscriber>(
+          context, token_cluster,
+          token_uri.empty() ? kDefaultTokenUrl : token_uri,
+          /*json_response=*/true, [this](const std::string& token) {
+            TokenSharedPtr new_token = std::make_shared<std::string>(token);
+            tls_->runOnAllThreads([this, new_token]() {
+              tls_->getTyped<ThreadLocalCache>().set_sc_token(new_token);
+              tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
+            });
+          });
+    } break;
+    case AccessToken::kServiceAccountSecret: {
+      const std::string service_control_auidence =
+          filter_config.service_control_uri().uri() + kServiceControlService;
+      sc_token_gen_ptr_ = std::make_unique<ServiceAccountToken>(
+          context,
+          filter_config.access_token().service_account_secret().inline_string(),
+          service_control_auidence, [this](const std::string& token) {
+            TokenSharedPtr new_token = std::make_shared<std::string>(token);
+            tls_->runOnAllThreads([this, new_token]() {
+              tls_->getTyped<ThreadLocalCache>().set_sc_token(new_token);
+            });
+          });
+
+      const std::string quota_audience =
+          filter_config.service_control_uri().uri() + kQuotaControlService;
+      quota_token_gen_ptr_ = std::make_unique<ServiceAccountToken>(
+          context,
+          filter_config.access_token().service_account_secret().inline_string(),
+          quota_audience, [this](const std::string& token) {
+            TokenSharedPtr new_token = std::make_shared<std::string>(token);
+            tls_->runOnAllThreads([this, new_token]() {
+              tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
+            });
+          });
+    } break;
+    default:
+      ENVOY_LOG(error, "No access token set!");
+      break;
+  }
+
   if (config.has_service_config()) {
     ::google::api::Service origin_service;
     if (!config.service_config().UnpackTo(&origin_service)) {
@@ -59,14 +118,7 @@ ServiceControlCallImpl::ServiceControlCallImpl(
     request_builder_.reset(new RequestBuilder(
         {"endpoints_log"}, config.service_name(), config.service_config_id()));
   }
-
-  tls_->set([this, &cm = context.clusterManager(),
-             &filter_config](Event::Dispatcher& dispatcher)
-                -> ThreadLocal::ThreadLocalObjectSharedPtr {
-    return std::make_shared<ThreadLocalCache>(config_, filter_config, cm,
-                                              dispatcher);
-  });
-}
+}  // namespace ServiceControl
 
 void ServiceControlCallImpl::callCheck(
     const ::google::api_proxy::service_control::CheckRequestInfo& info,

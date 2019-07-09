@@ -108,6 +108,9 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) (*ldspb.Listener, error) {
 
 	// Add Backend Auth filter and Backend Routing if needed.
 	if *flags.EnableBackendRouting {
+		if *flags.ServiceAccountKey != "" {
+			return nil, fmt.Errorf("ServiceAccountKey is set(proxy runs on Non-GCP) while backendRouting is not allowed on Non-GCP")
+		}
 		backendAuthFilter := makeBackendAuthFilter(serviceInfo)
 		httpFilters = append(httpFilters, backendAuthFilter)
 		glog.Infof("adding Backend Auth Filter config: %v", backendAuthFilter)
@@ -404,21 +407,12 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	service.JwtPayloadMetadataName = ut.JwtPayloadMetadataName
 
 	filterConfig := &scpb.FilterConfig{
-		Services: []*scpb.Service{service},
-		AccessToken: &commonpb.AccessToken{
-			TokenType: &commonpb.AccessToken_RemoteToken{
-				RemoteToken: &commonpb.HttpUri{
-					Uri:     fmt.Sprintf("%s%s", *flags.MetadataURL, ut.ServiceAccountTokenSuffix),
-					Cluster: metadataServerClusterName,
-					// TODO(taoxuy): make token_subscriber use this timeout
-					Timeout: &duration.Duration{Seconds: 5},
-				},
-			},
-		},
+		Services:        []*scpb.Service{service},
+		AccessToken:     serviceInfo.AccessToken,
 		ScCallingConfig: makeServiceControlCallingConfig(),
 		ServiceControlUri: &commonpb.HttpUri{
 			Uri:     serviceInfo.ServiceControlURI,
-			Cluster: serviceControlClusterName,
+			Cluster: ut.ServiceControlClusterName,
 			Timeout: &duration.Duration{Seconds: 5},
 		},
 	}
@@ -528,7 +522,7 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 			TokenType: &commonpb.AccessToken_RemoteToken{
 				RemoteToken: &commonpb.HttpUri{
 					Uri:     fmt.Sprintf("%s%s", *flags.MetadataURL, ut.IdentityTokenSuffix),
-					Cluster: metadataServerClusterName,
+					Cluster: ut.MetadataServerClusterName,
 					// TODO(taoxuy): make token_subscriber use this timeout
 					Timeout: &duration.Duration{Seconds: 5},
 				},

@@ -27,10 +27,9 @@ FilterConfigParser::FilterConfigParser(const FilterConfig& config,
                                        ServiceControlCallFactory& factory)
     : config_(config) {
   for (const auto& service : config_.services()) {
-    service_map_.emplace(service.service_name(),
-                         ServiceContextPtr(new ServiceContext(
-                             service, config_, factory,
-                             config_.access_token().remote_token().uri())));
+    service_map_.emplace(
+        service.service_name(),
+        ServiceContextPtr(new ServiceContext(service, config_, factory)));
   }
 
   if (service_map_.size() < static_cast<size_t>(config_.services_size())) {

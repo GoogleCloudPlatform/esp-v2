@@ -80,18 +80,16 @@ class MockServiceControlCallFactory : public ServiceControlCallFactory {
   ServiceControlCallPtr create(
       const ::google::api::envoy::http::service_control::Service& config,
       const ::google::api::envoy::http::service_control::FilterConfig&
-          filter_config,
-      const std::string& token_url) override {
-    return ServiceControlCallPtr{create_(config, filter_config, token_url)};
+          filter_config) override {
+    return ServiceControlCallPtr{create_(config, filter_config)};
   }
 
-  MOCK_CONST_METHOD3(
+  MOCK_CONST_METHOD2(
       create_,
       ServiceControlCall*(
           const ::google::api::envoy::http::service_control::Service& config,
           const ::google::api::envoy::http::service_control::FilterConfig&
-              filter_config,
-          const std::string& token_url));
+              filter_config));
 };
 
 class MockCheckDoneCallback : public ServiceControlHandler::CheckDoneCallback {

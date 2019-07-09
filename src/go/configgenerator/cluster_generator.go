@@ -30,11 +30,6 @@ import (
 	protocolpb "github.com/envoyproxy/data-plane-api/api/protocol"
 )
 
-const (
-	serviceControlClusterName = "service-control-cluster"
-	metadataServerClusterName = "metadata-cluster"
-)
-
 // MakeClusters provides dynamic cluster settings for Envoy
 func MakeClusters(serviceInfo *sc.ServiceInfo) ([]*cdspb.Cluster, error) {
 	var clusters []*cdspb.Cluster
@@ -91,7 +86,7 @@ func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*cdspb.Cluster, error) {
 
 	connectTimeoutProto := ptypes.DurationProto(*flags.ClusterConnectTimeout)
 	c := &cdspb.Cluster{
-		Name:           metadataServerClusterName,
+		Name:           ut.MetadataServerClusterName,
 		LbPolicy:       cdspb.Cluster_ROUND_ROBIN,
 		ConnectTimeout: connectTimeoutProto,
 		ClusterDiscoveryType: &cdspb.Cluster_Type{
@@ -197,7 +192,7 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*cdspb.Cluster, err
 	connectTimeoutProto := ptypes.DurationProto(5 * time.Second)
 	serviceInfo.ServiceControlURI = scheme + "://" + hostname + "/v1/services/"
 	c := &cdspb.Cluster{
-		Name:                 serviceControlClusterName,
+		Name:                 ut.ServiceControlClusterName,
 		LbPolicy:             cdspb.Cluster_ROUND_ROBIN,
 		ConnectTimeout:       connectTimeoutProto,
 		DnsLookupFamily:      cdspb.Cluster_V4_ONLY,

@@ -16,12 +16,14 @@ package configinfo
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net"
 	"sort"
 	"strings"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/ptypes/duration"
 	"google.golang.org/genproto/googleapis/api/annotations"
 
 	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
@@ -54,6 +56,7 @@ type ServiceInfo struct {
 	// Keep a pointer to original service config. Should always process rules
 	// inside ServiceInfo.
 	serviceConfig *conf.Service
+	AccessToken   *commonpb.AccessToken
 }
 
 type backendRoutingCluster struct {
@@ -102,6 +105,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *conf.Service, id string) (*S
 	serviceInfo.processHttpRule()
 	serviceInfo.processUsageRule()
 	serviceInfo.processSystemParameters()
+	serviceInfo.processAccessToken()
 	if err := serviceInfo.processBackendRule(); err != nil {
 		return nil, err
 	}
@@ -129,6 +133,32 @@ func (s *ServiceInfo) processApis() {
 			&methodInfo{
 				ShortName: method.GetName(),
 			}
+	}
+}
+
+func (s *ServiceInfo) processAccessToken() {
+	if *flags.ServiceAccountKey != "" {
+		data, _ := ioutil.ReadFile(*flags.ServiceAccountKey)
+		s.AccessToken = &commonpb.AccessToken{
+			TokenType: &commonpb.AccessToken_ServiceAccountSecret{
+				ServiceAccountSecret: &commonpb.DataSource{
+					Specifier: &commonpb.DataSource_InlineString{
+						InlineString: string(data),
+					},
+				},
+			},
+		}
+		return
+	}
+	s.AccessToken = &commonpb.AccessToken{
+		TokenType: &commonpb.AccessToken_RemoteToken{
+			RemoteToken: &commonpb.HttpUri{
+				Uri:     fmt.Sprintf("%s%s", *flags.MetadataURL, ut.ServiceAccountTokenSuffix),
+				Cluster: ut.MetadataServerClusterName,
+				// TODO(taoxuy): make token_subscriber use this timeout
+				Timeout: &duration.Duration{Seconds: 5},
+			},
+		},
 	}
 }
 

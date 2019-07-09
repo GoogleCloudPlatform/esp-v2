@@ -34,22 +34,13 @@ class TokenCache : public ThreadLocal::ThreadLocalObject {
   TokenSharedPtr token_;
 };
 
-class AudienceContext : public Utils::TokenSubscriber::Callback {
+class AudienceContext {
  public:
   AudienceContext(
       const ::google::api::envoy::http::backend_auth::BackendAuthRule&
           proto_config,
       Server::Configuration::FactoryContext& context,
       const ::google::api::envoy::http::backend_auth::FilterConfig& config);
-
-  // TokenSubscriber::Callback function
-  void onTokenUpdate(const std::string& token) override {
-    TokenSharedPtr new_token = std::make_shared<std::string>(token);
-    tls_->runOnAllThreads([this, new_token]() {
-      tls_->getTyped<TokenCache>().token_ = new_token;
-    });
-  }
-
   TokenSharedPtr token() const {
     if (tls_->getTyped<TokenCache>().token_) {
       return tls_->getTyped<TokenCache>().token_;
@@ -59,7 +50,7 @@ class AudienceContext : public Utils::TokenSubscriber::Callback {
 
  private:
   ThreadLocal::SlotPtr tls_;
-  Utils::TokenSubscriber token_subscriber_;
+  Utils::TokenSubscriberPtr token_sub_ptr_;
 };
 
 typedef std::unique_ptr<AudienceContext> AudienceContextPtr;

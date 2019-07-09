@@ -44,17 +44,12 @@ class TokenSubscriber
     : public Envoy::Http::AsyncClient::Callbacks,
       public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
-  class Callback {
-   public:
-    virtual ~Callback() {}
-    virtual void onTokenUpdate(const std::string& token) PURE;
-  };
-
+  using TokenUpdateFunc = std::function<void(const std::string& token)>;
   // TODO(kyuc): Maybe add a name that gets passed to Init::TargetImpl.
   TokenSubscriber(Envoy::Server::Configuration::FactoryContext& context,
-                  Callback& callback, const std::string& token_cluster,
-                  const std::string& token_url, const bool json_response);
-
+                  const std::string& token_cluster,
+                  const std::string& token_url, const bool json_response,
+                  TokenUpdateFunc callback);
   virtual ~TokenSubscriber();
 
  private:
@@ -65,11 +60,11 @@ class TokenSubscriber
   void refresh();
 
   Upstream::ClusterManager& cm_;
-  Callback& token_callback_;
   const std::string& token_cluster_;
   const std::string token_url_;
   const bool json_response_;
 
+  TokenUpdateFunc callback_;
   Envoy::Http::AsyncClient::Request* active_request_{};
 
   Envoy::Event::TimerPtr refresh_timer_;

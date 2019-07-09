@@ -97,20 +97,30 @@ func loadConfigFromRollouts(serviceName, curRolloutID, curConfigID string) (stri
 	return newRolloutID, newConfigID, nil
 }
 
+func accessToken() (string, time.Duration, error) {
+	if *flags.NonGCP && *flags.ServiceAccountKey == "" {
+		return "", 0, fmt.Errorf("If --non_gcp is specified, --service_account_key has to be specified.")
+	}
+	if *flags.ServiceAccountKey != "" {
+		return util.GenerateAccessToken(*flags.ServiceAccountKey)
+	}
+	return fetchAccessToken()
+}
+
 // TODO(jcwang) cleanup here. This function is redundant.
 func fetchRollouts(serviceName string) (*sm.ListServiceRolloutsResponse, error) {
-	token, _, err := fetchAccessToken()
+	token, _, err := accessToken()
 	if err != nil {
-		return nil, fmt.Errorf("fail to get access token")
+		return nil, fmt.Errorf("fail to get access token: %v", err)
 	}
 
 	return callServiceManagementRollouts(fetchRolloutsURL(serviceName), token)
 }
 
 func fetchConfig(serviceName, configId string) (*conf.Service, error) {
-	token, _, err := fetchAccessToken()
+	token, _, err := accessToken()
 	if err != nil {
-		return nil, fmt.Errorf("fail to get access token")
+		return nil, fmt.Errorf("fail to get access tokenm: %v", err)
 	}
 
 	return callServiceManagement(fetchConfigURL(serviceName, configId), token)

@@ -35,7 +35,8 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
       const ::google::api::envoy::http::service_control::FilterConfig&
           filter_config,
       Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher,
-      std::function<const std::string&()> token_fn);
+      std::function<const std::string&()> sc_token_fn,
+      std::function<const std::string&()> quota_token_fn);
 
   void callCheck(const ::google::api::servicecontrol::v1::CheckRequest& request,
                  CheckDoneFunc on_done);
@@ -56,7 +57,8 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
   const ::google::api::envoy::http::common::HttpUri& service_control_uri_;
   Upstream::ClusterManager& cm_;
   Event::Dispatcher& dispatcher_;
-  std::function<const std::string&()> token_fn_;
+  std::function<const std::string&()> sc_token_fn_;
+  std::function<const std::string&()> quota_token_fn_;
   std::unique_ptr<::google::service_control_client::ServiceControlClient>
       client_;
   bool network_fail_open_;

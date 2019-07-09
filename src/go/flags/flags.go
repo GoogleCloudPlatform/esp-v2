@@ -23,55 +23,54 @@ import (
 
 var (
 	// Service Management related configurations. Must be set.
-
 	BackendProtocol = flag.String("backend_protocol", "", `must set as one of "grpc", "http1", "http2"`)
 
 	// Cors related configurations.
-
-	CorsPreset           = flag.String("cors_preset", "", `enable CORS support, must be either "basic" or "cors_with_regex"`)
+	CorsAllowCredentials = flag.Bool("cors_allow_credentials", false, "whether include the Access-Control-Allow-Credentials header with the value true in responses or not")
+	CorsAllowHeaders     = flag.String("cors_allow_headers", "", "set Access-Control-Allow-Headers to the specified HTTP headers")
+	CorsAllowMethods     = flag.String("cors_allow_methods", "", "set Access-Control-Allow-Methods to the specified HTTP methods")
 	CorsAllowOrigin      = flag.String("cors_allow_origin", "", "set Access-Control-Allow-Origin to a specific origin")
 	CorsAllowOriginRegex = flag.String("cors_allow_origin_regex", "", "set Access-Control-Allow-Origin to a regular expression")
-
-	CorsAllowMethods     = flag.String("cors_allow_methods", "", "set Access-Control-Allow-Methods to the specified HTTP methods")
-	CorsAllowHeaders     = flag.String("cors_allow_headers", "", "set Access-Control-Allow-Headers to the specified HTTP headers")
 	CorsExposeHeaders    = flag.String("cors_expose_headers", "", "set Access-Control-Expose-Headers to the specified headers")
-	CorsAllowCredentials = flag.Bool("cors_allow_credentials", false, "whether include the Access-Control-Allow-Credentials header with the value true in responses or not")
+	CorsPreset           = flag.String("cors_preset", "", `enable CORS support, must be either "basic" or "cors_with_regex"`)
 
 	// Backend routing configurations.
-
 	EnableBackendRouting = flag.Bool("enable_backend_routing", false, `enable apiproxy to route requests according to the "x-google-backend" or "backend" configuration`)
 
 	// Envoy specific configurations.
-
 	ClusterConnectTimeout = flag.Duration("cluster_connect_imeout", 20*time.Second, "cluster connect timeout in seconds")
 
 	// Network related configurations.
-
-	Node                 = flag.String("node", "api_proxy", "envoy node id")
-	ListenerAddress      = flag.String("listener_address", "0.0.0.0", "listener socket ip address")
 	ClusterAddress       = flag.String("cluster_address", "127.0.0.1", "cluster socket ip address")
-	ServiceManagementURL = flag.String("service_management_url", "https://servicemanagement.googleapis.com", "url of service management server")
+	ListenerAddress      = flag.String("listener_address", "0.0.0.0", "listener socket ip address")
 	MetadataURL          = flag.String("metadata_url", "http://metadata.google.internal/computeMetadata", "url of metadata server")
+	Node                 = flag.String("node", "api_proxy", "envoy node id")
+	ServiceManagementURL = flag.String("service_management_url", "https://servicemanagement.googleapis.com", "url of service management server")
 
-	ListenerPort = flag.Int("listener_port", 8080, "listener port")
 	ClusterPort  = flag.Int("cluster_port", 8082, "cluster port")
+	ListenerPort = flag.Int("listener_port", 8080, "listener port")
+
+	// Flags for non_gcp deployment.
+	NonGCP = flag.Bool("non_gcp", false, `By default, the proxy tries to talk to GCP metadata server to get VM location in the first few requests. Setting this flag
+  to true to skip this step`)
+	ServiceAccountKey = flag.String("service_account_key", "", `Use the service account key JSON file to access the service control and the
+	service management.  You can also set {creds_key} environment variable to the location of the service account credentials JSON file. If the option is
+  omitted, the proxy contacts the metadata service to fetch an access token`)
 
 	// Flags for testing purpose.
-
-	SkipServiceControlFilter = flag.Bool("skip_service_control_filter", false, "skip service control filter, for test purpose")
 	SkipJwtAuthnFilter       = flag.Bool("skip_jwt_authn_filter", false, "skip jwt authn filter, for test purpose")
+	SkipServiceControlFilter = flag.Bool("skip_service_control_filter", false, "skip service control filter, for test purpose")
 
 	// Envoy configurations.
-
 	EnvoyUseRemoteAddress  = flag.Bool("envoy_use_remote_address", false, "Envoy HttpConnectionManager configuration, please refer to envoy documentation for detailed information.")
 	EnvoyXffNumTrustedHops = flag.Int("envoy_xff_num_trusted_hops", 2, "Envoy HttpConnectionManager configuration, please refer to envoy documentation for detailed information.")
 
+	LogJwtPayloads = flag.String("log_jwt_payloads", "", `Log corresponding JWT JSON payload primitive fields through service control, separated by comma. Example, when --log_jwt_payload=sub,project_id, log
+	will have jwt_payload: sub=[SUBJECT];project_id=[PROJECT_ID] if the fields are available. The value must be a primitive field, JSON objects and arrays will not be logged.`)
 	LogRequestHeaders = flag.String("log_request_headers", "", `Log corresponding request headers through service control, separated by comma. Example, when --log_request_headers=
 	foo,bar, endpoint log will have request_headers: foo=foo_value;bar=bar_value if values are available;`)
 	LogResponseHeaders = flag.String("log_response_headers", "", `Log corresponding response headers through service control, separated by comma. Example, when --log_response_headers=
 	foo,bar,endpoint log will have response_headers: foo=foo_value;bar=bar_value if values are available.`)
-	LogJwtPayloads = flag.String("log_jwt_payloads", "", `Log corresponding JWT JSON payload primitive fields through service control, separated by comma. Example, when --log_jwt_payload=sub,project_id, log
-	will have jwt_payload: sub=[SUBJECT];project_id=[PROJECT_ID] if the fields are available. The value must be a primitive field, JSON objects and arrays will not be logged.`)
 
 	SuppressEnvoyHeaders = flag.Bool("suppress_envoy_headers", false, `Do not add any additional x-envoy- headers to requests or responses. This only affects the router filter
 	generated *x-envoy-* headers, other Envoy filters and the HTTP connection manager may continue to set x-envoy- headers.`)

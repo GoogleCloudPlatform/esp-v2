@@ -52,6 +52,9 @@ MANAGEMENT_ADDRESS = "https://servicemanagement.googleapis.com"
 # Metadata service
 METADATA_ADDRESS = "http://169.254.169.254"
 
+# Google default application credentials environment variable
+GOOGLE_CREDS_KEY = "GOOGLE_APPLICATION_CREDENTIALS"
+
 
 def gen_bootstrap_conf(args):
     cmd = [BOOTSTRAP_CMD]
@@ -63,9 +66,11 @@ def gen_bootstrap_conf(args):
         if args.tracing_sample_rate:
             cmd.extend(["--tracing_sample_rate", str(args.tracing_sample_rate)])
         if args.tracing_incoming_context:
-            cmd.extend(["--tracing_incoming_context", args.tracing_incoming_context])
+            cmd.extend(
+                ["--tracing_incoming_context", args.tracing_incoming_context])
         if args.tracing_outgoing_context:
-            cmd.extend(["--tracing_outgoing_context", args.tracing_outgoing_context])
+            cmd.extend(
+                ["--tracing_outgoing_context", args.tracing_outgoing_context])
 
     bootstrap_file = DEFAULT_CONFIG_DIR + "/bootstrap.json"
     cmd.append(bootstrap_file)
@@ -233,7 +238,6 @@ environment variable or by passing "-k" flag to this script.
         Only works when --cors_preset is in use. Enable the CORS header
         Access-Control-Allow-Credentials. By default, this header is disabled.
         ''')
-    #TODO(jcwang) fetch access token from --service_account_key
     parser.add_argument(
         '--check_metadata',
         action='store_true',
@@ -344,23 +348,50 @@ environment variable or by passing "-k" flag to this script.
         Set the retry times for service control Report request.
         Must be >= 0 and the default is 5 if not set.
         ''')
-
     parser.add_argument(
         '--enable_tracing',
         action='store_true',
         default=False,
-        help='''Enable Stackdriver tracing. The flag tracing_project_id must be specified. Default is off''')
+        help=
+        '''Enable Stackdriver tracing. The flag tracing_project_id must be specified. Default is off'''
+    )
     parser.add_argument(
-        '--tracing_project_id', default="", help="The Google project id for Stack driver tracing")
+        '--tracing_project_id',
+        default="",
+        help="The Google project id for Stack driver tracing")
     parser.add_argument(
-        '--tracing_sample_rate', default=0.001, help="tracing sampling rate from 0.0 to 1.0")
+        '--tracing_sample_rate',
+        default=0.001,
+        help="tracing sampling rate from 0.0 to 1.0")
     parser.add_argument(
-        '--tracing_incoming_context', default="", help='''
-        comma separated incoming trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)''')
+        '--tracing_incoming_context',
+        default="",
+        help='''
+        comma separated incoming trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)'''
+    )
     parser.add_argument(
-        '--tracing_outgoing_context', default="", help='''
-        comma separated outgoing trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)''')
-
+        '--tracing_outgoing_context',
+        default="",
+        help='''
+        comma separated outgoing trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)'''
+    )
+    parser.add_argument(
+        '--non_gcp',
+        action='store_true',
+        default=False,
+        help='''
+        By default, the proxy tries to talk to GCP metadata server to get VM
+        location in the first few requests. Setting this flag to true to skip
+        this step.
+        ''')
+    parser.add_argument(
+        '--service_account_key',
+        help='''
+        Use the service account key JSON file to access the service control and the
+        service management.  You can also set {creds_key} environment variable to
+        the location of the service account credentials JSON file. If the option is
+        omitted, the proxy contacts the metadata service to fetch an access token.
+        '''.format(creds_key=GOOGLE_CREDS_KEY))
     return parser
 
 
@@ -479,6 +510,11 @@ if __name__ == '__main__':
         proxy_conf.append("--enable_tracing",)
 
     if args.enable_backend_routing:
+        if args.non_gcp:
+            print(
+                "Flag --enable_backend_routing cannot be used together with --non_gcp."
+            )
+            sys.exit(3)
         proxy_conf.append("--enable_backend_routing")
 
     if args.envoy_use_remote_address:
@@ -503,6 +539,19 @@ if __name__ == '__main__':
             proxy_conf.append("--cors_allow_credentials")
 
     gen_bootstrap_conf(args)
+    # Set credentials file from the environment variable
+    if args.service_account_key is None and GOOGLE_CREDS_KEY in os.environ:
+        args.service_account_key = os.environ[GOOGLE_CREDS_KEY]
 
+    if args.non_gcp and args.service_account_key is None:
+        print(
+            "If --non_gcp is specified, --service_account_key has to be specified."
+        )
+        sys.exit(3)
+
+    if args.service_account_key:
+        proxy_conf.extend(["--service_account_key", args.service_account_key])
+    if args.non_gcp:
+        proxy_conf.append("--non_gcp")
     print(proxy_conf)
     start_proxy(proxy_conf)

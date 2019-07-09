@@ -23,6 +23,7 @@
 #include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/http/service_control/client_cache.h"
 #include "src/envoy/http/service_control/service_control_call.h"
+#include "src/envoy/utils/service_account_token.h"
 #include "src/envoy/utils/token_subscriber.h"
 
 namespace Envoy {
@@ -41,33 +42,47 @@ class ThreadLocalCache : public ThreadLocal::ThreadLocalObject {
           filter_config,
       Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher)
       : client_cache_(config, filter_config, cm, dispatcher,
-                      [this]() -> const std::string& { return token(); }) {}
+                      [this, &filter_config]() -> const std::string& {
+                        return sc_token();
+                      },
+                      [this, &filter_config]() -> const std::string& {
+                        return quota_token();
+                      }) {}
 
-  void set_token(TokenSharedPtr token) { token_ = token; }
+  void set_sc_token(TokenSharedPtr sc_token) { sc_token_ = sc_token; }
+  const std::string& sc_token() const {
+    return (sc_token_) ? *sc_token_ : empty_token();
+  }
 
-  const std::string& token() const {
+  void set_quota_token(TokenSharedPtr quota_token) {
+    quota_token_ = quota_token;
+  }
+  const std::string& quota_token() const {
+    return (quota_token_) ? *quota_token_ : empty_token();
+  }
+
+  const std::string& empty_token() const {
     static const std::string* const kEmptyToken = new std::string;
-    return (token_) ? *token_ : *kEmptyToken;
+    return *kEmptyToken;
   }
 
   ClientCache& client_cache() { return client_cache_; }
 
  private:
   TokenSharedPtr token_;
+  TokenSharedPtr sc_token_;
+  TokenSharedPtr quota_token_;
   ClientCache client_cache_;
 };
 
-class ServiceControlCallImpl
-    : public ServiceControlCall,
-      public Envoy::Extensions::Utils::TokenSubscriber::Callback,
-      public Logger::Loggable<Logger::Id::filter> {
+class ServiceControlCallImpl : public ServiceControlCall,
+                               public Logger::Loggable<Logger::Id::filter> {
  public:
   ServiceControlCallImpl(
       const ::google::api::envoy::http::service_control::Service& config,
       const ::google::api::envoy::http::service_control::FilterConfig&
           filter_config,
-      Server::Configuration::FactoryContext& context,
-      const std::string& token_url);
+      Server::Configuration::FactoryContext& context);
 
   void callCheck(
       const ::google::api_proxy::service_control::CheckRequestInfo& request,
@@ -86,20 +101,16 @@ class ServiceControlCallImpl
     return tls_->getTyped<ThreadLocalCache>();
   }
 
-  // TokenSubscriber::Callback
-  void onTokenUpdate(const std::string& token) override {
-    TokenSharedPtr new_token = std::make_shared<std::string>(token);
-    tls_->runOnAllThreads([this, new_token]() {
-      tls_->getTyped<ThreadLocalCache>().set_token(new_token);
-    });
-  }
-
   const ::google::api::envoy::http::service_control::Service& config_;
+  const ::google::api::envoy::http::service_control::FilterConfig&
+      filter_config_;
   std::unique_ptr<::google::api_proxy::service_control::RequestBuilder>
       request_builder_;
   ThreadLocal::SlotPtr tls_;
-  Envoy::Extensions::Utils::TokenSubscriber token_subscriber_;
-};
+  Utils::TokenSubscriberPtr token_sub_ptr_;
+  Utils::ServiceAccountTokenPtr sc_token_gen_ptr_;
+  Utils::ServiceAccountTokenPtr quota_token_gen_ptr_;
+};  // namespace ServiceControl
 
 class ServiceControlCallFactoryImpl : public ServiceControlCallFactory {
  public:
@@ -109,10 +120,9 @@ class ServiceControlCallFactoryImpl : public ServiceControlCallFactory {
   ServiceControlCallPtr create(
       const ::google::api::envoy::http::service_control::Service& config,
       const ::google::api::envoy::http::service_control::FilterConfig&
-          filter_config,
-      const std::string& token_url) override {
+          filter_config) override {
     return std::make_unique<ServiceControlCallImpl>(config, filter_config,
-                                                    context_, token_url);
+                                                    context_);
   }
 
  private:

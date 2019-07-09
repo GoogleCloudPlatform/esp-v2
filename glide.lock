@@ -1,8 +1,8 @@
 hash: 0433f5b6a9eec88b3f52755ddc21f28a4b13b289e10c85326b2242342f55097e
-updated: 2019-06-28T19:10:04.683132181Z
+updated: 2019-07-09T21:18:04.986450242Z
 imports:
 - name: cloud.google.com/go
-  version: 2a912322007f3a7f0b4e7e96ba0dfd8c4f347d33
+  version: 47e9997a900f84e1bb1f0ca292099c576566de04
   subpackages:
   - compute/metadata
   - logging
@@ -70,9 +70,6 @@ imports:
   - ptypes/wrappers
 - name: github.com/google/go-genproto
   version: c830210a61dfaa790e1920f8d0470fc27bc2efbe
-  subpackages:
-  - googleapis/api/servicecontrol/v1
-  - googleapis/api/servicemanagement/v1
 - name: github.com/gorilla/mux
   version: 3d80bc801bb034e17cae38591335b3b1110f1c47
 - name: github.com/lyft/protoc-gen-validate
@@ -80,18 +77,18 @@ imports:
 - name: github.com/sirupsen/logrus
   version: 839c75faf7f98a33d445d181f3018b5c3409a45e
 - name: golang.org/x/net
-  version: 5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec
+  version: da137c7871d730100384dbcf36e6f8fa493aef5b
   subpackages:
   - context
   - context/ctxhttp
+  - http/httpguts
   - http2
   - http2/hpack
   - idna
   - internal/timeseries
-  - lex/httplex
   - trace
 - name: golang.org/x/oauth2
-  version: 8f65e3013ebad444f13bc19536f7865efc793816
+  version: 0f29369cfe4552d0e4bcddc57cc75f4d7e672a33
   subpackages:
   - google
   - internal
@@ -102,7 +99,7 @@ imports:
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: e19ae1496984b1c655b8044a65c0300a3c878dd3
+  version: 342b2e1fbaa52c93f31447ad2c6abc048c63e475
   subpackages:
   - secure/bidirule
   - transform
@@ -110,7 +107,7 @@ imports:
   - unicode/bidi
   - unicode/norm
 - name: google.golang.org/appengine
-  version: 4a4468ece617fc8205e99368fa2200e9d1fad421
+  version: b2f4a3cf3c67576a2ee09e1fe62656a5086ce880
   subpackages:
   - internal
   - internal/app_identity
@@ -132,6 +129,8 @@ imports:
   - googleapis/api/metric
   - googleapis/api/monitoredres
   - googleapis/api/serviceconfig
+  - googleapis/api/servicecontrol/v1
+  - googleapis/api/servicemanagement/v1
   - googleapis/logging/type
   - googleapis/longrunning
   - googleapis/rpc/status
@@ -143,7 +142,7 @@ imports:
   - protobuf/ptype
   - protobuf/source_context
 - name: google.golang.org/grpc
-  version: 501c41df7f472c740d0674ff27122f3f48c80ce7
+  version: 1d89a3c832915b2314551c1d2a506874d62e53f7
   subpackages:
   - balancer
   - balancer/base
@@ -173,6 +172,7 @@ imports:
   - resolver
   - resolver/dns
   - resolver/passthrough
+  - serviceconfig
   - stats
   - status
   - tap

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
+
 #include "src/envoy/http/backend_auth/config_parser.h"
 
 namespace Envoy {
@@ -20,6 +22,7 @@ namespace HttpFilters {
 namespace BackendAuth {
 
 using ::google::api::envoy::http::backend_auth::FilterConfig;
+using Utils::TokenSubscriber;
 
 // TODO(kyuc): add unit tests for all possible backend rule configs.
 
@@ -37,18 +40,29 @@ AudienceContext::AudienceContext(
         proto_config,
     Server::Configuration::FactoryContext& context,
     const FilterConfig& filter_config)
-    : tls_(context.threadLocal().allocateSlot()),
-      token_subscriber_(
-          context, *this, filter_config.access_token().remote_token().cluster(),
-          absl::StrCat(
-              filter_config.access_token().remote_token().uri().empty()
-                  ? kDefaultIdentityUrl
-                  : filter_config.access_token().remote_token().uri(),
-              "?format=standard&audience=", proto_config.jwt_audience()),
-          /*json_response=*/false) {
+    : tls_(context.threadLocal().allocateSlot()) {
   tls_->set([](Event::Dispatcher&) -> ThreadLocal::ThreadLocalObjectSharedPtr {
     return std::make_shared<TokenCache>();
   });
+
+  const std::string& token_uri =
+      filter_config.access_token().remote_token().uri();
+  const std::string& token_cluster =
+      filter_config.access_token().remote_token().cluster();
+
+  const std::string real_token_uri =
+      absl::StrCat(token_uri.empty() ? kDefaultIdentityUrl : token_uri,
+                   "?format=standard&audience=", proto_config.jwt_audience());
+  TokenSubscriber::TokenUpdateFunc callback = [this](const std::string& token) {
+    TokenSharedPtr new_token = std::make_shared<std::string>(token);
+    tls_->runOnAllThreads([this, new_token]() {
+      tls_->getTyped<TokenCache>().token_ = new_token;
+    });
+  };
+
+  token_sub_ptr_ =
+      std::make_unique<TokenSubscriber>(context, token_cluster, real_token_uri,
+                                        /*json_response=*/false, callback);
 }
 
 FilterConfigParser::FilterConfigParser(

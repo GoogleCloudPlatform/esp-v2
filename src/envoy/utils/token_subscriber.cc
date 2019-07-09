@@ -36,7 +36,7 @@ const std::chrono::milliseconds kRequestTimeoutMs(5000);
 const std::chrono::seconds kFailedRequestTimeout(60);
 
 // If no expiration is provided in the response, refresh in this time.
-const std::chrono::seconds kDefaultTokenExpiry(3599);
+const std::chrono::seconds kSubscriberDefaultTokenExpiry(3599);
 
 Envoy::Http::MessagePtr prepareHeaders(const std::string& token_url) {
   absl::string_view host, path;
@@ -58,13 +58,13 @@ Envoy::Http::MessagePtr prepareHeaders(const std::string& token_url) {
 
 TokenSubscriber::TokenSubscriber(
     Envoy::Server::Configuration::FactoryContext& context,
-    TokenSubscriber::Callback& callback, const std::string& token_cluster,
-    const std::string& token_url, const bool json_response)
+    const std::string& token_cluster, const std::string& token_url,
+    const bool json_response, TokenUpdateFunc callback)
     : cm_(context.clusterManager()),
-      token_callback_(callback),
       token_cluster_(token_cluster),
       token_url_(token_url),
       json_response_(json_response),
+      callback_(callback),
       active_request_(nullptr),
       init_target_("TokenSubscriber", [this] { refresh(); }) {
   refresh_timer_ =
@@ -150,7 +150,7 @@ void TokenSubscriber::onSuccess(Envoy::Http::MessagePtr&& response) {
   } else {
     // identity response is a string in the body
     token = response->bodyAsString();
-    expires_in = kDefaultTokenExpiry;
+    expires_in = kSubscriberDefaultTokenExpiry;
   }
 
   // Update the token 5 seconds before the expiration
@@ -161,7 +161,7 @@ void TokenSubscriber::onSuccess(Envoy::Http::MessagePtr&& response) {
   }
 
   ENVOY_LOG(debug, "Got token: {}", token);
-  token_callback_.onTokenUpdate(token);
+  callback_(token);
 }
 
 void TokenSubscriber::onFailure(

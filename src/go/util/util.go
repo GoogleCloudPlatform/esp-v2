@@ -78,6 +78,12 @@ const (
 	ZoneSuffix                  = "/v1/instance/zone"
 	OpenIDDiscoveryCfgURLSuffix = "/.well-known/openid-configuration/"
 
+	// The metadata server cluster name.
+	MetadataServerClusterName = "metadata-cluster"
+
+	// The service control server cluster name.
+	ServiceControlClusterName = "service-control-cluster"
+
 	// Platforms
 
 	GAEFlex = "GAE_FLEX"

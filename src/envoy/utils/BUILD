@@ -41,6 +41,8 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         ":json_struct_lib",
+        "//api/envoy/http/common:base_proto_cc",
+        "//src/api_proxy/auth:lib",
         "@envoy//include/envoy/common:time_interface",
         "@envoy//include/envoy/event:dispatcher_interface",
         "@envoy//include/envoy/server:filter_config_interface",
@@ -53,12 +55,40 @@ envoy_cc_library(
     ],
 )
 
+envoy_cc_library(
+    name = "service_account_token_lib",
+    srcs = ["service_account_token.cc"],
+    hdrs = ["service_account_token.h"],
+    repository = "@envoy",
+    deps = [
+        ":json_struct_lib",
+        "//api/envoy/http/common:base_proto_cc",
+        "//src/api_proxy/auth:lib",
+        "@envoy//include/envoy/event:dispatcher_interface",
+        "@envoy//include/envoy/server:filter_config_interface",
+        "@envoy//include/envoy/upstream:cluster_manager_interface",
+        "@envoy//source/common/init:target_lib",
+    ],
+)
+
 envoy_cc_test(
     name = "token_subscriber_test",
     srcs = ["token_subscriber_test.cc"],
     repository = "@envoy",
     deps = [
         ":token_subscriber_lib",
+        "@envoy//test/mocks/init:init_mocks",
+        "@envoy//test/mocks/server:server_mocks",
+        "@envoy//test/test_common:utility_lib",
+    ],
+)
+
+envoy_cc_test(
+    name = "service_account_token_test",
+    srcs = ["service_account_token_test.cc"],
+    repository = "@envoy",
+    deps = [
+        ":service_account_token_lib",
         "@envoy//source/common/tracing:http_tracer_lib",
         "@envoy//test/mocks/init:init_mocks",
         "@envoy//test/mocks/server:server_mocks",
