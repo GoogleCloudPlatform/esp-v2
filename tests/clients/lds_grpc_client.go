@@ -19,8 +19,9 @@ import (
 	"flag"
 	"fmt"
 
-	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	basepb "github.com/envoyproxy/data-plane-api/api/base"
+	discoverypb "github.com/envoyproxy/data-plane-api/api/discovery"
+	ldspb "github.com/envoyproxy/data-plane-api/api/lds"
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
@@ -42,15 +43,15 @@ func main() {
 		glog.Exitf("failed to connect to server: %v", err)
 	}
 
-	client := v2.NewListenerDiscoveryServiceClient(conn)
+	client := ldspb.NewListenerDiscoveryServiceClient(conn)
 	ctx := context.Background()
 
-	req := &v2.DiscoveryRequest{
-		Node: &core.Node{
+	req := &discoverypb.DiscoveryRequest{
+		Node: &basepb.Node{
 			Id: "api_proxy",
 		},
 	}
-	resp := &v2.DiscoveryResponse{}
+	resp := &discoverypb.DiscoveryResponse{}
 	if resp, err = client.FetchListeners(ctx, req); err != nil {
 		glog.Exitf("discovery: %v", err)
 	}
@@ -59,7 +60,7 @@ func main() {
 	fmt.Println("Type Url: ", resp.GetTypeUrl())
 
 	for _, r := range resp.GetResources() {
-		listener := &v2.Listener{}
+		listener := &ldspb.Listener{}
 		if err := proto.Unmarshal(r.GetValue(), listener); err != nil {
 			glog.Exitf("Unmarshal got error: %v", err)
 		}

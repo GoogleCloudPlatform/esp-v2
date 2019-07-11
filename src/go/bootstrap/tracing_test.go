@@ -20,9 +20,10 @@ import (
 	"strings"
 	"testing"
 
-	trace "github.com/envoyproxy/go-control-plane/envoy/config/trace/v2"
-	types "github.com/gogo/protobuf/types"
-	opencensus "istio.io/gogo-genproto/opencensus/proto/trace/v1"
+	"github.com/golang/protobuf/ptypes"
+
+	opencensuspb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
+	tracepb "github.com/envoyproxy/data-plane-api/api/trace"
 )
 
 func TestTracingConfig(t *testing.T) {
@@ -30,7 +31,7 @@ func TestTracingConfig(t *testing.T) {
 		desc       string
 		flags      map[string]string
 		wantError  string
-		wantResult *trace.OpenCensusConfig
+		wantResult *tracepb.OpenCensusConfig
 	}{
 		{
 			desc:      "Failed with missing tracing_project_id",
@@ -42,10 +43,10 @@ func TestTracingConfig(t *testing.T) {
 			flags: map[string]string{
 				"tracing_project_id": "project_id",
 			},
-			wantResult: &trace.OpenCensusConfig{
-				TraceConfig: &opencensus.TraceConfig{
-					Sampler: &opencensus.TraceConfig_ProbabilitySampler{
-						ProbabilitySampler: &opencensus.ProbabilitySampler{
+			wantResult: &tracepb.OpenCensusConfig{
+				TraceConfig: &opencensuspb.TraceConfig{
+					Sampler: &opencensuspb.TraceConfig_ProbabilitySampler{
+						ProbabilitySampler: &opencensuspb.ProbabilitySampler{
 							SamplingProbability: *TracingSamplingRate,
 						},
 					},
@@ -78,22 +79,22 @@ func TestTracingConfig(t *testing.T) {
 				"tracing_incoming_context": "traceparent,grpc-trace-bin",
 				"tracing_outgoing_context": "x-cloud-trace-context",
 			},
-			wantResult: &trace.OpenCensusConfig{
-				TraceConfig: &opencensus.TraceConfig{
-					Sampler: &opencensus.TraceConfig_ProbabilitySampler{
-						ProbabilitySampler: &opencensus.ProbabilitySampler{
+			wantResult: &tracepb.OpenCensusConfig{
+				TraceConfig: &opencensuspb.TraceConfig{
+					Sampler: &opencensuspb.TraceConfig_ProbabilitySampler{
+						ProbabilitySampler: &opencensuspb.ProbabilitySampler{
 							SamplingProbability: 0.001,
 						},
 					},
 				},
 				StackdriverExporterEnabled: true,
 				StackdriverProjectId:       "project_id",
-				IncomingTraceContext: []trace.OpenCensusConfig_TraceContext{
-					trace.OpenCensusConfig_trace_context,
-					trace.OpenCensusConfig_grpc_trace_bin,
+				IncomingTraceContext: []tracepb.OpenCensusConfig_TraceContext{
+					tracepb.OpenCensusConfig_TRACE_CONTEXT,
+					tracepb.OpenCensusConfig_GRPC_TRACE_BIN,
 				},
-				OutgoingTraceContext: []trace.OpenCensusConfig_TraceContext{
-					trace.OpenCensusConfig_cloud_trace_context,
+				OutgoingTraceContext: []tracepb.OpenCensusConfig_TraceContext{
+					tracepb.OpenCensusConfig_CLOUD_TRACE_CONTEXT,
 				},
 			},
 		},
@@ -115,11 +116,11 @@ func TestTracingConfig(t *testing.T) {
 				"tracing_outgoing_context": "",
 				"tracing_sample_rate":      "0.0",
 			},
-			wantResult: &trace.OpenCensusConfig{
-				TraceConfig: &opencensus.TraceConfig{
-					Sampler: &opencensus.TraceConfig_ConstantSampler{
-						ConstantSampler: &opencensus.ConstantSampler{
-							Decision: opencensus.ConstantSampler_ALWAYS_PARENT,
+			wantResult: &tracepb.OpenCensusConfig{
+				TraceConfig: &opencensuspb.TraceConfig{
+					Sampler: &opencensuspb.TraceConfig_ConstantSampler{
+						ConstantSampler: &opencensuspb.ConstantSampler{
+							Decision: opencensuspb.ConstantSampler_ALWAYS_PARENT,
 						},
 					},
 				},
@@ -135,11 +136,11 @@ func TestTracingConfig(t *testing.T) {
 				"tracing_outgoing_context": "",
 				"tracing_sample_rate":      "1.0",
 			},
-			wantResult: &trace.OpenCensusConfig{
-				TraceConfig: &opencensus.TraceConfig{
-					Sampler: &opencensus.TraceConfig_ConstantSampler{
-						ConstantSampler: &opencensus.ConstantSampler{
-							Decision: opencensus.ConstantSampler_ALWAYS_ON,
+			wantResult: &tracepb.OpenCensusConfig{
+				TraceConfig: &opencensuspb.TraceConfig{
+					Sampler: &opencensuspb.TraceConfig_ConstantSampler{
+						ConstantSampler: &opencensuspb.ConstantSampler{
+							Decision: opencensuspb.ConstantSampler_ALWAYS_ON,
 						},
 					},
 				},
@@ -155,10 +156,10 @@ func TestTracingConfig(t *testing.T) {
 				"tracing_outgoing_context": "",
 				"tracing_sample_rate":      "0.5",
 			},
-			wantResult: &trace.OpenCensusConfig{
-				TraceConfig: &opencensus.TraceConfig{
-					Sampler: &opencensus.TraceConfig_ProbabilitySampler{
-						ProbabilitySampler: &opencensus.ProbabilitySampler{
+			wantResult: &tracepb.OpenCensusConfig{
+				TraceConfig: &opencensuspb.TraceConfig{
+					Sampler: &opencensuspb.TraceConfig_ProbabilitySampler{
+						ProbabilitySampler: &opencensuspb.ProbabilitySampler{
 							SamplingProbability: 0.5,
 						},
 					},
@@ -189,8 +190,8 @@ func TestTracingConfig(t *testing.T) {
 				t.Errorf("Test (%s): failed, expected config name is wrong", tc.desc)
 			}
 
-			gotCfg := &trace.OpenCensusConfig{}
-			if err := types.UnmarshalAny(got.Http.GetTypedConfig(), gotCfg); err != nil {
+			gotCfg := &tracepb.OpenCensusConfig{}
+			if err := ptypes.UnmarshalAny(got.Http.GetTypedConfig(), gotCfg); err != nil {
 				t.Errorf("Test (%s): failed, failed to unmarshall any", tc.desc)
 			}
 			if !reflect.DeepEqual(gotCfg, tc.wantResult) {

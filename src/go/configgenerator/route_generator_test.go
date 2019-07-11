@@ -21,10 +21,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
-	"github.com/gogo/protobuf/types"
+	"github.com/golang/protobuf/ptypes/wrappers"
 
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
+	routepb "github.com/envoyproxy/data-plane-api/api/route"
 )
 
 func TestMakeRouteConfigForCors(t *testing.T) {
@@ -36,7 +36,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		params           []string
 		allowCredentials bool
 		wantedError      string
-		wantRoute        *route.CorsPolicy
+		wantRoute        *routepb.CorsPolicy
 	}{
 		{
 			desc:      "No Cors",
@@ -60,29 +60,29 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		{
 			desc:   "Correct configured basic Cors, with allow methods",
 			params: []string{"basic", "http://example.com", "", "GET,POST,PUT,OPTIONS", "", ""},
-			wantRoute: &route.CorsPolicy{
+			wantRoute: &routepb.CorsPolicy{
 				AllowOrigin:      []string{"http://example.com"},
 				AllowMethods:     "GET,POST,PUT,OPTIONS",
-				AllowCredentials: &types.BoolValue{Value: false},
+				AllowCredentials: &wrappers.BoolValue{Value: false},
 			},
 		},
 		{
 			desc:   "Correct configured regex Cors, with allow headers",
 			params: []string{"cors_with_regex", "", `^https?://.+\\.example\\.com$`, "", "Origin,Content-Type,Accept", ""},
-			wantRoute: &route.CorsPolicy{
+			wantRoute: &routepb.CorsPolicy{
 				AllowOriginRegex: []string{`^https?://.+\\.example\\.com$`},
 				AllowHeaders:     "Origin,Content-Type,Accept",
-				AllowCredentials: &types.BoolValue{Value: false},
+				AllowCredentials: &wrappers.BoolValue{Value: false},
 			},
 		},
 		{
 			desc:             "Correct configured regex Cors, with expose headers",
 			params:           []string{"cors_with_regex", "", `^https?://.+\\.example\\.com$`, "", "", "Content-Length"},
 			allowCredentials: true,
-			wantRoute: &route.CorsPolicy{
+			wantRoute: &routepb.CorsPolicy{
 				AllowOriginRegex: []string{`^https?://.+\\.example\\.com$`},
 				ExposeHeaders:    "Content-Length",
-				AllowCredentials: &types.BoolValue{Value: true},
+				AllowCredentials: &wrappers.BoolValue{Value: true},
 			},
 		},
 	}

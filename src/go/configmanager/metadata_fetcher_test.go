@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
-	"github.com/golang/protobuf/proto"
+	"github.com/gogo/protobuf/proto"
 
 	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
 )

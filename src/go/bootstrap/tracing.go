@@ -19,10 +19,10 @@ import (
 	"fmt"
 	"strings"
 
-	types "github.com/gogo/protobuf/types"
+	"github.com/golang/protobuf/ptypes"
 
-	trace "github.com/envoyproxy/go-control-plane/envoy/config/trace/v2"
-	opencensus "istio.io/gogo-genproto/opencensus/proto/trace/v1"
+	opencensuspb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
+	tracepb "github.com/envoyproxy/data-plane-api/api/trace"
 )
 
 var (
@@ -33,8 +33,8 @@ var (
 	TracingProjectId = flag.String("tracing_project_id", "", "The Google project id required for Stack driver tracing")
 )
 
-func createTraceContexts(ctx_str string) ([]trace.OpenCensusConfig_TraceContext, error) {
-	out := []trace.OpenCensusConfig_TraceContext{}
+func createTraceContexts(ctx_str string) ([]tracepb.OpenCensusConfig_TraceContext, error) {
+	out := []tracepb.OpenCensusConfig_TraceContext{}
 
 	if ctx_str == "" {
 		return out, nil
@@ -43,11 +43,11 @@ func createTraceContexts(ctx_str string) ([]trace.OpenCensusConfig_TraceContext,
 	for _, ctx := range strings.Split(ctx_str, ",") {
 		switch ctx {
 		case "traceparent":
-			out = append(out, trace.OpenCensusConfig_trace_context)
+			out = append(out, tracepb.OpenCensusConfig_TRACE_CONTEXT)
 		case "grpc-trace-bin":
-			out = append(out, trace.OpenCensusConfig_grpc_trace_bin)
+			out = append(out, tracepb.OpenCensusConfig_GRPC_TRACE_BIN)
 		case "x-cloud-trace-context":
-			out = append(out, trace.OpenCensusConfig_cloud_trace_context)
+			out = append(out, tracepb.OpenCensusConfig_CLOUD_TRACE_CONTEXT)
 		default:
 			return out, fmt.Errorf("Invalid trace context: %v. It must be one of (traceparent|grpc-trace-bin|x-cloud-trace-context)", ctx)
 		}
@@ -57,13 +57,13 @@ func createTraceContexts(ctx_str string) ([]trace.OpenCensusConfig_TraceContext,
 }
 
 // CreateTracing outputs envoy tracing config
-func CreateTracing() (*trace.Tracing, error) {
+func CreateTracing() (*tracepb.Tracing, error) {
 	if *TracingProjectId == "" {
 		return nil, fmt.Errorf("tracing_project_id must be specified for StackDriver tracing")
 	}
 
-	cfg := &trace.OpenCensusConfig{
-		TraceConfig:                &opencensus.TraceConfig{},
+	cfg := &tracepb.OpenCensusConfig{
+		TraceConfig:                &opencensuspb.TraceConfig{},
 		StackdriverExporterEnabled: true,
 		StackdriverProjectId:       *TracingProjectId,
 	}
@@ -81,33 +81,33 @@ func CreateTracing() (*trace.Tracing, error) {
 	}
 
 	if *TracingSamplingRate == 1.0 {
-		cfg.TraceConfig.Sampler = &opencensus.TraceConfig_ConstantSampler{
-			ConstantSampler: &opencensus.ConstantSampler{
-				Decision: opencensus.ConstantSampler_ALWAYS_ON,
+		cfg.TraceConfig.Sampler = &opencensuspb.TraceConfig_ConstantSampler{
+			ConstantSampler: &opencensuspb.ConstantSampler{
+				Decision: opencensuspb.ConstantSampler_ALWAYS_ON,
 			},
 		}
 	} else if *TracingSamplingRate == 0.0 {
-		cfg.TraceConfig.Sampler = &opencensus.TraceConfig_ConstantSampler{
-			ConstantSampler: &opencensus.ConstantSampler{
-				Decision: opencensus.ConstantSampler_ALWAYS_PARENT,
+		cfg.TraceConfig.Sampler = &opencensuspb.TraceConfig_ConstantSampler{
+			ConstantSampler: &opencensuspb.ConstantSampler{
+				Decision: opencensuspb.ConstantSampler_ALWAYS_PARENT,
 			},
 		}
 	} else {
 		if *TracingSamplingRate < 0.0 || *TracingSamplingRate > 1.0 {
 			return nil, fmt.Errorf("Invalid trace sampling rate: %v. It must be >= 0.0 and <= 1.0", *TracingSamplingRate)
 		}
-		cfg.TraceConfig.Sampler = &opencensus.TraceConfig_ProbabilitySampler{
-			ProbabilitySampler: &opencensus.ProbabilitySampler{
+		cfg.TraceConfig.Sampler = &opencensuspb.TraceConfig_ProbabilitySampler{
+			ProbabilitySampler: &opencensuspb.ProbabilitySampler{
 				SamplingProbability: *TracingSamplingRate,
 			},
 		}
 	}
 
-	v, _ := types.MarshalAny(cfg)
-	return &trace.Tracing{
-		Http: &trace.Tracing_Http{
+	v, _ := ptypes.MarshalAny(cfg)
+	return &tracepb.Tracing{
+		Http: &tracepb.Tracing_Http{
 			Name:       "envoy.tracers.opencensus",
-			ConfigType: &trace.Tracing_Http_TypedConfig{v},
+			ConfigType: &tracepb.Tracing_Http_TypedConfig{TypedConfig: v},
 		},
 	}, nil
 }

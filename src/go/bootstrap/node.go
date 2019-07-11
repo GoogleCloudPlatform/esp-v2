@@ -15,12 +15,12 @@
 package bootstrap
 
 import (
-	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	basepb "github.com/envoyproxy/data-plane-api/api/base"
 )
 
 // CreateBoostrapConfig outputs Node struct for bootstrap config
-func CreateNode() *core.Node {
-	return &core.Node{
+func CreateNode() *basepb.Node {
+	return &basepb.Node{
 		Id:      "api_proxy",
 		Cluster: "api_proxy_cluster",
 	}

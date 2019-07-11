@@ -19,11 +19,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/gogo/protobuf/jsonpb"
-	"github.com/gogo/protobuf/proto"
-	"github.com/gogo/protobuf/types"
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/genproto/googleapis/api/annotations"
 
+	structpb "github.com/golang/protobuf/ptypes/struct"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 	sm "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
@@ -42,7 +43,7 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 	case "type.googleapis.com/google.api.HttpRule":
 		return new(annotations.HttpRule), nil
 	case "type.googleapis.com/google.protobuf.BoolValue":
-		return new(types.BoolValue), nil
+		return new(wrappers.BoolValue), nil
 	case "type.googleapis.com/google.api.Service":
 		return new(conf.Service), nil
 	default:
@@ -53,7 +54,7 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 // MessageToStruct encodes a protobuf Message into a Struct. Hilariously, it
 // uses JSON as the intermediary
 // author:glen@turbinelabs.io
-func MessageToStruct(msg proto.Message) (*types.Struct, error) {
+func MessageToStruct(msg proto.Message) (*structpb.Struct, error) {
 	if msg == nil {
 		return nil, errors.New("nil message")
 	}
@@ -67,7 +68,7 @@ func MessageToStruct(msg proto.Message) (*types.Struct, error) {
 		return nil, err
 	}
 
-	pbs := &types.Struct{}
+	pbs := &structpb.Struct{}
 	u := &jsonpb.Unmarshaler{
 		AnyResolver: Resolver,
 	}
@@ -79,7 +80,7 @@ func MessageToStruct(msg proto.Message) (*types.Struct, error) {
 }
 
 // StructToMessage decodes a protobuf Message from a Struct.
-func StructToMessage(pbst *types.Struct, out proto.Message) error {
+func StructToMessage(pbst *structpb.Struct, out proto.Message) error {
 	if pbst == nil {
 		return errors.New("nil struct")
 	}

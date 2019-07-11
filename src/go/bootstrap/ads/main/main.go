@@ -21,8 +21,9 @@ import (
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap"
 	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap/ads"
-	"github.com/gogo/protobuf/jsonpb"
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/ptypes"
 )
 
 var (
@@ -38,7 +39,8 @@ func main() {
 		glog.Exitf("Please specify a path to write bootstrap config file")
 	}
 
-	bt := ads.CreateBootstrapConfig(AdsConnectTimeout)
+	connectTimeoutProto := ptypes.DurationProto(*AdsConnectTimeout)
+	bt := ads.CreateBootstrapConfig(connectTimeoutProto)
 	if *EnableTracing {
 		var err error
 		if bt.Tracing, err = bootstrap.CreateTracing(); err != nil {
