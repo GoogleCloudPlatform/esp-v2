@@ -84,24 +84,27 @@ proto-consistency-test:
 
 #-----------------------------------------------------------------------------
 # Target: go dependencies
+#
+# To install dependencies:
+#   1) make depend.install
+#   2) make depend.apiproto
+#
+# Note that `depend.install` will delete generated protos in vendor/,
+# so `depend.apiproto` must be run everytime `depend.install` is run.
 #-----------------------------------------------------------------------------
 .PHONY: depend.update depend.install
 
-depend.update: tools.glide depend.apiproto
+depend.update: tools.glide
 	@echo "--> updating dependencies from glide.yaml"
 	@glide update
 
-depend.install: tools.glide depend.apiproto
+depend.install: tools.glide
 	@echo "--> installing dependencies from glide.lock "
 	@glide install
 
 depend.apiproto:
 	@echo "--> generating go proto files"
 	@sh ./api/scripts/go_proto_gen.sh
-
-vendor:
-	@echo "--> installing dependencies from glide.lock "
-	@glide install
 
 #----------------------------------------------------------------------------
 # Target:  go tools
