@@ -35,7 +35,7 @@ func TestServiceControlQuota(t *testing.T) {
 	serviceName := "test-bookstore"
 	configId := "test-config-id"
 
-	args := []string{"--service=" + serviceName, "--version=" + configId,
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlQuota, "bookstore", nil)
@@ -156,7 +156,7 @@ func TestServiceControlQuotaUnavailable(t *testing.T) {
 	serviceName := "test-bookstore"
 	configId := "test-config-id"
 
-	args := []string{"--service=" + serviceName, "--version=" + configId,
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlQuotaUnavailable, "bookstore", nil)
@@ -222,7 +222,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 	serviceName := "test-bookstore"
 	configId := "test-config-id"
 
-	args := []string{"--service=" + serviceName, "--version=" + configId,
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlQuotaExhausted, "bookstore", nil)

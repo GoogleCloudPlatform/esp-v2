@@ -25,7 +25,7 @@ var (
 	// Service Management related configurations. Must be set.
 
 	ServiceName     = flag.String("service", "", "endpoint service name")
-	ConfigID        = flag.String("version", "", "initial service config id")
+	ConfigID        = flag.String("service_config_id", "", "initial service config id")
 	RolloutStrategy = flag.String("rollout_strategy", "fixed", `service config rollout strategy, must be either "managed" or "fixed"`)
 	BackendProtocol = flag.String("backend_protocol", "", `must set as one of "grpc", "http1", "http2"`)
 	CheckMetadata   = flag.Bool("check_metadata", false, `enable fetching service name, config ID and rollout strategy from service metadata server`)

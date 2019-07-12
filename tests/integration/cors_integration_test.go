@@ -38,7 +38,7 @@ func TestSimpleCorsWithBasicPreset(t *testing.T) {
 	corsAllowOriginValue := "http://cloud.google.com"
 	corsExposeHeadersValue := "Content-Length,Content-Range"
 
-	args := []string{"--service=" + serviceName, "--version=" + configId,
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--cors_preset=basic",
 		"--cors_allow_origin=" + corsAllowOriginValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue}
@@ -100,7 +100,7 @@ func TestDifferentOriginSimpleCors(t *testing.T) {
 	corsDifferentOriginValue := "http://www.google.com"
 	corsExposeHeadersValue := "Content-Length,Content-Range"
 
-	args := []string{"--service=" + serviceName, "--version=" + configId,
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--cors_preset=basic",
 		"--cors_allow_origin=" + corsAllowOriginValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue}
@@ -140,7 +140,7 @@ func TestSimpleCorsWithRegexPreset(t *testing.T) {
 	corsAllowOriginValue := "http://gcpproxy.cloud.google.com"
 	corsExposeHeadersValue := "Content-Length,Content-Range"
 
-	args := []string{"--service=" + serviceName, "--version=" + configId, "--backend_protocol=http1",
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configId, "--backend_protocol=http1",
 		"--rollout_strategy=fixed", "--cors_preset=cors_with_regex",
 		"--cors_allow_origin_regex=" + corsAllowOriginRegex,
 		"--cors_expose_headers=" + corsExposeHeadersValue}
@@ -186,7 +186,7 @@ func TestPreflightCorsWithBasicPreset(t *testing.T) {
 	corsExposeHeadersValue := "Content-Length,Content-Range"
 	corsAllowCredentialsValue := "true"
 
-	args := []string{"--service=" + serviceName, "--version=" + configId,
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--cors_preset=basic",
 		"--cors_allow_origin=" + corsAllowOriginValue, "--cors_allow_methods=" + corsAllowMethodsValue,
 		"--cors_allow_headers=" + corsAllowHeadersValue,
@@ -238,7 +238,7 @@ func TestDifferentOriginPreflightCors(t *testing.T) {
 	corsAllowHeadersValue := "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
 	corsExposeHeadersValue := "Content-Length,Content-Range"
 
-	args := []string{"--service=" + serviceName, "--version=" + configId,
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--cors_preset=basic",
 		"--cors_allow_origin=" + corsAllowOriginValue, "--cors_allow_methods=" + corsAllowMethodsValue,
 		"--cors_allow_headers=" + corsAllowHeadersValue,
@@ -284,7 +284,7 @@ func TestGrpcBackendSimpleCors(t *testing.T) {
 	corsAllowOriginValue := "http://cloud.google.com"
 	corsExposeHeadersValue := "custom-header-1,custom-header-2"
 
-	args := []string{"--service=" + serviceName, "--version=" + configId,
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--cors_preset=basic",
 		"--cors_allow_origin=" + corsAllowOriginValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue}
@@ -329,7 +329,7 @@ func TestGrpcBackendPreflightCors(t *testing.T) {
 	corsExposeHeadersValue := "custom-header-1,custom-header-2"
 	corsAllowCredentialsValue := "true"
 
-	args := []string{"--service=" + serviceName, "--version=" + configId,
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--cors_preset=basic",
 		"--cors_allow_origin=" + corsAllowOriginValue, "--cors_allow_methods=" + corsAllowMethodsValue,
 		"--cors_allow_headers=" + corsAllowHeadersValue,
@@ -381,7 +381,7 @@ func TestPreflightRequestWithAllowCors(t *testing.T) {
 	corsExposeHeadersValue := "Cache-Control,Content-Type,Authorization, X-PINGOTHER"
 	corsAllowCredentialsValue := "true"
 
-	args := []string{"--service=" + serviceName, "--version=" + configId,
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestPreflightRequestWithAllowCors, "echo", nil)
@@ -449,7 +449,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 	corsExposeHeadersValue := "Cache-Control,Content-Type,Authorization, X-PINGOTHER"
 	corsAllowCredentialsValue := "true"
 
-	args := []string{"--service=" + serviceName, "--version=" + configId,
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlRequestWithAllowCors, "echo", nil)
@@ -624,7 +624,7 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 	corsExposeHeadersValue := "Cache-Control,Content-Type,Authorization, X-PINGOTHER"
 	corsAllowCredentialsValue := "true"
 
-	args := []string{"--service=" + serviceName, "--version=" + configId,
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlRequestWithoutAllowCors, "echo", nil)

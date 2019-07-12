@@ -64,7 +64,7 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 	}
 
 	for _, tc := range testdata {
-		args := []string{"--service=" + serviceName, "--version=" + configID,
+		args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 			"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 		s := env.NewTestEnv(tc.allocatedPort, "bookstore", nil)
 		s.ServiceControlServer.SetURL(tc.serviceControlURL)
@@ -97,7 +97,7 @@ func (h *checkTimeoutServiceHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 func TestServiceControlCheckTimeout(t *testing.T) {
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
-	args := []string{"--service=" + serviceName, "--version=" + configID,
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestServiceControlCheckTimeout, "bookstore", nil)
@@ -148,7 +148,7 @@ func (h *localServiceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 func TestServiceControlNetworkFailFlag(t *testing.T) {
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
-	args := []string{"--service=" + serviceName, "--version=" + configID,
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
 	tests := []struct {

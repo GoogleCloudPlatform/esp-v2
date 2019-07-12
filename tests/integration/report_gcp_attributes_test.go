@@ -98,7 +98,7 @@ func TestReportGCPAttributes(t *testing.T) {
 
 	serviceName := "test-echo"
 	configID := "test-config-id"
-	args := []string{"--service=" + serviceName, "--version=" + configID,
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--backend_protocol=http1", "--rollout_strategy=fixed"}
 
 	for _, tc := range testdata {
