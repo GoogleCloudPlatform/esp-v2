@@ -27,6 +27,13 @@ bind(
 )
 
 # ==============================================================================
+# Load google protobuf dependencies due to https://github.com/protocolbuffers/protobuf/issues/5472
+
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+
+protobuf_deps()
+
+# ==============================================================================
 # Envoy extension configuration override. Must be before the envoy repository.
 
 local_repository(
@@ -52,7 +59,7 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 # 6) Fix all backward incompatiblity issues.
 # 7) Run `make proto-consistency-test` and fix inconsistency if there is any.
 
-ENVOY_SHA1 = "5d3214d4d8e1d77937f0f1278d3ac816d9a3d888"  # 06.06.2019
+ENVOY_SHA1 = "7ef20d7609fb6f570a058fcf4b4e000922d7eeba"  # 07.12.2019
 
 # TODO(kyuc): add sha256
 http_archive(

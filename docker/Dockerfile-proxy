@@ -12,14 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/google_appengine/python
+FROM python:3.6-buster
 
-RUN virtualenv -p python3.6 /env
-
-# Setting these environment variables are the same as running
-# source /env/bin/activate.
-ENV VIRTUAL_ENV /env
-ENV PATH /env/bin:$PATH
+ENV PATH /bin:$PATH
 
 ADD docker/generic/* apiproxy/
 ADD bin/* apiproxy/

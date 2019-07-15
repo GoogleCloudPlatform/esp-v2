@@ -1,7 +1,7 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-ABSEIL_COMMIT = "cc8dcd307b76a575d2e3e0958a4fe4c7193c2f68"  # same as Envoy
-ABSEIL_SHA256 = "e35082e88b9da04f4d68094c05ba112502a5063712f3021adfa465306d238c76"
+ABSEIL_COMMIT = "61c9bf3e3e1c28a4aa6d7f1be4b37fd473bb5529"  # same as Envoy: 2019-06-05
+ABSEIL_SHA256 = "7ddf863ddced6fa5bf7304103f9c7aa619c20a2fcf84475512c8d3834b9d14fa"
 
 def abseil_repositories(bind = True):
     http_archive(
