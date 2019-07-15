@@ -41,9 +41,9 @@ $(BINDIR):
 .PHONY: build build-envoy
 build: format
 	@echo "--> building"
-	@go build ./src/go/configmanager...
+	@go build ./src/go/...
 	@go build ./tests...
-	@go build -o bin/configmanager ./src/go/server/server.go
+	@go build -o bin/configmanager ./src/go/configmanager/main/server.go
 	@go build -o bin/bootstrap ./src/go/bootstrap/ads/main/main.go
 	@go build -o bin/echo/server ./tests/endpoints/echo/server/app.go
 

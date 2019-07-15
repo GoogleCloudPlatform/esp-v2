@@ -16,6 +16,7 @@ package configmanager
 
 import (
 	"encoding/json"
+	"flag"
 
 	"fmt"
 	"time"
@@ -28,6 +29,14 @@ import (
 	gen "cloudesf.googlesource.com/gcpproxy/src/go/configgenerator"
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
+)
+
+var (
+	// These flags are used by config manage only.
+	ServiceName     = flag.String("service", "", "endpoint service name")
+	ServiceConfigID = flag.String("service_config_id", "", "initial service config id")
+	RolloutStrategy = flag.String("rollout_strategy", "fixed", `service config rollout strategy, must be either "managed" or "fixed"`)
+	CheckMetadata   = flag.Bool("check_metadata", false, `enable fetching service name, config ID and rollout strategy from service metadata server`)
 )
 
 // ConfigManager handles service configuration fetching and updating.
@@ -45,18 +54,19 @@ type ConfigManager struct {
 // NewConfigManager creates new instance of ConfigManager.
 func NewConfigManager() (*ConfigManager, error) {
 	var err error
-	name := *flags.ServiceName
-	if name == "" && *flags.CheckMetadata {
+	name := *ServiceName
+	checkMetadata := *CheckMetadata
+	if name == "" && checkMetadata {
 		name, err = fetchServiceName()
 		if name == "" || err != nil {
 			return nil, fmt.Errorf("failed to read metadata with key endpoints-service-name from metadata server")
 		}
-	} else if name == "" && !*flags.CheckMetadata {
+	} else if name == "" && !checkMetadata {
 		return nil, fmt.Errorf("service name is not specified")
 	}
-	rolloutStrategy := *flags.RolloutStrategy
+	rolloutStrategy := *RolloutStrategy
 	// try to fetch from metadata, if not found, set to fixed instead of throwing an error
-	if rolloutStrategy == "" && *flags.CheckMetadata {
+	if rolloutStrategy == "" && checkMetadata {
 		rolloutStrategy, _ = fetchRolloutStrategy()
 	}
 	if rolloutStrategy == "" {
@@ -87,9 +97,9 @@ func NewConfigManager() (*ConfigManager, error) {
 		}
 	} else {
 		// rollout strategy is fixed mode
-		configID := *flags.ConfigID
+		configID := *ServiceConfigID
 		if configID == "" {
-			if *flags.CheckMetadata {
+			if checkMetadata {
 				configID, err = fetchConfigId()
 				if configID == "" || err != nil {
 					return nil, fmt.Errorf("failed to read metadata with key endpoints-service-version from metadata server")

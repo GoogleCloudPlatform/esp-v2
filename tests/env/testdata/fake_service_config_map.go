@@ -20,9 +20,10 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	"google.golang.org/genproto/googleapis/api/servicemanagement/v1"
+
 	any "github.com/golang/protobuf/ptypes/any"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
-	"google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
 var (

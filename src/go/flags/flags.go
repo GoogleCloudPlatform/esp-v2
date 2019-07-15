@@ -24,11 +24,7 @@ import (
 var (
 	// Service Management related configurations. Must be set.
 
-	ServiceName     = flag.String("service", "", "endpoint service name")
-	ConfigID        = flag.String("service_config_id", "", "initial service config id")
-	RolloutStrategy = flag.String("rollout_strategy", "fixed", `service config rollout strategy, must be either "managed" or "fixed"`)
 	BackendProtocol = flag.String("backend_protocol", "", `must set as one of "grpc", "http1", "http2"`)
-	CheckMetadata   = flag.Bool("check_metadata", false, `enable fetching service name, config ID and rollout strategy from service metadata server`)
 
 	// Cors related configurations.
 
@@ -57,9 +53,8 @@ var (
 	ServiceManagementURL = flag.String("service_management_url", "https://servicemanagement.googleapis.com", "url of service management server")
 	MetadataURL          = flag.String("metadata_url", "http://metadata.google.internal/computeMetadata", "url of metadata server")
 
-	DiscoveryPort = flag.Int("discovery_port", 8790, "discovery service port")
-	ListenerPort  = flag.Int("listener_port", 8080, "listener port")
-	ClusterPort   = flag.Int("cluster_port", 8082, "cluster port")
+	ListenerPort = flag.Int("listener_port", 8080, "listener port")
+	ClusterPort  = flag.Int("cluster_port", 8082, "cluster port")
 
 	// Flags for testing purpose.
 
