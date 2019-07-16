@@ -21,8 +21,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	any "github.com/golang/protobuf/ptypes/any"
-	"google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	"google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
 var (

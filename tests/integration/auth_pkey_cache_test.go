@@ -52,7 +52,7 @@ func TestAuthJwksCache(t *testing.T) {
 			method:                 "GET",
 			token:                  testdata.FakeCloudToken,
 			wantRequestsToProvider: &expectedRequestCount{"google_jwt", 1},
-			wantResp:               `{"id": "anonymous"}`,
+			wantResp:               `{"exp":4698318356,"iat":1544718356,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
 		},
 		{
 			desc:                   "Success, the customized jwks cache duration is 1s so 10 request to the jwks provider will be made",
@@ -62,7 +62,7 @@ func TestAuthJwksCache(t *testing.T) {
 			jwksCacheDurationInS:   1,
 			token:                  testdata.FakeCloudToken,
 			wantRequestsToProvider: &expectedRequestCount{"google_jwt", 5},
-			wantResp:               `{"id": "anonymous"}`,
+			wantResp:               `{"exp":4698318356,"iat":1544718356,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
 		},
 	}
 	for _, tc := range testData {

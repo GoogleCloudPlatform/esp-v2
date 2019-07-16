@@ -257,6 +257,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 			FromParams: []string{
 				"access_token",
 			},
+			ForwardPayloadHeader: "X-Endpoint-API-UserInfo",
 		}
 		if len(provider.GetAudiences()) != 0 {
 			for _, a := range strings.Split(provider.GetAudiences(), ",") {

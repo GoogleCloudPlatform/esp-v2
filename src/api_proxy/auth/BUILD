@@ -23,8 +23,8 @@ envoy_basic_cc_library(
         "json_util.cc",
     ],
     hdrs = [
-        "json_util.h",
         "grpc_internals.h",
+        "json_util.h",
     ],
     visibility = ["//visibility:private"],
     deps = [

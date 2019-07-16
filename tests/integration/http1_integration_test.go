@@ -94,7 +94,7 @@ func TestHttp1JWT(t *testing.T) {
 			httpMethod: "GET",
 			httpPath:   "/auth/info/googlejwt",
 			token:      testdata.FakeCloudToken,
-			wantResp:   `{"id": "anonymous"}`,
+			wantResp:   `{"exp":4698318356,"iat":1544718356,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
 		},
 		{
 			desc:        "Fail, with valid JWT token",
@@ -114,7 +114,7 @@ func TestHttp1JWT(t *testing.T) {
 			httpMethod: "GET",
 			httpPath:   "/auth/info/auth0",
 			token:      testdata.FakeCloudTokenSingleAudience2,
-			wantResp:   `{"id": "anonymous"}`,
+			wantResp:   `{"aud":"admin.cloud.goog","exp":4698318995,"iat":1544718995,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
 		},
 		{
 			desc:        "Fail, with valid JWT token, without allowed audience",
