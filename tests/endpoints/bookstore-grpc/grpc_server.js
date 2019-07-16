@@ -57,22 +57,46 @@ function deleteShelf(call, callback) {
 
 function listBooks(call, callback) {
   console.log(call.metadata);
-  callback(null, []);
+  var found = [];
+  if (call.request.shelf in bookstoreDatabase){
+    books = bookstoreDatabase[call.request.shelf].books;
+    for (var key in books) {
+      found.push({
+        id:books[key].id, author:books[key].author, title:books[key].title
+      });
+    }
+  }
+  callback(null, {books: found});
 }
 
 function createBook(call, callback) {
   console.log(call.metadata);
-  callback(null, {id: call.request.book.id, title: call.request.book.title});
+  if (!(call.request.shelf in bookstoreDatabase)) {
+    bookstoreDatabase[call.request.shelf] = {id: call.request.shelf, books:{}};
+  }
+  var book = {id: call.request.book.id, title: call.request.book.title, author:call.request.book.author};
+  bookstoreDatabase[call.request.shelf].books[call.request.book.id] = book
+  callback(null, book);
 }
 
 function getBook(call, callback) {
   console.log(call.metadata);
+  if (!(call.request.shelf in bookstoreDatabase) || !(call.request.book in bookstoreDatabase[call.request.shelf].books)) {
+    callback({
+          code: grpc.status.NOT_FOUND,  // 5
+          message: 'NOT_FOUND',
+        });
+    return;
+  }
   callback(
       null, bookstoreDatabase[call.request.shelf].books[call.request.book]);
 }
 
 function deleteBook(call, callback) {
   console.log(call.metadata);
+  if ((call.request.shelf in bookstoreDatabase) && (call.request.book in bookstoreDatabase[call.request.shelf].books)) {
+    delete bookstoreDatabase[call.request.shelf].books[call.request.book]
+  }
   callback(null, {});
 }
 

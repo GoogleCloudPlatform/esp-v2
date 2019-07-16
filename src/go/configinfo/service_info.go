@@ -159,34 +159,35 @@ func (s *ServiceInfo) processHttpRule() {
 
 	for _, r := range s.ServiceConfig().GetHttp().GetRules() {
 		method := s.getOrCreateMethod(r.GetSelector())
+		var httpRule *commonpb.Pattern
 		switch r.GetPattern().(type) {
 		case *annotations.HttpRule_Get:
-			method.HttpRule = commonpb.Pattern{
+			httpRule = &commonpb.Pattern{
 				UriTemplate: r.GetGet(),
 				HttpMethod:  ut.GET,
 			}
 		case *annotations.HttpRule_Put:
-			method.HttpRule = commonpb.Pattern{
+			httpRule = &commonpb.Pattern{
 				UriTemplate: r.GetPut(),
 				HttpMethod:  ut.PUT,
 			}
 		case *annotations.HttpRule_Post:
-			method.HttpRule = commonpb.Pattern{
+			httpRule = &commonpb.Pattern{
 				UriTemplate: r.GetPost(),
 				HttpMethod:  ut.POST,
 			}
 		case *annotations.HttpRule_Delete:
-			method.HttpRule = commonpb.Pattern{
+			httpRule = &commonpb.Pattern{
 				UriTemplate: r.GetDelete(),
 				HttpMethod:  ut.DELETE,
 			}
 		case *annotations.HttpRule_Patch:
-			method.HttpRule = commonpb.Pattern{
+			httpRule = &commonpb.Pattern{
 				UriTemplate: r.GetPatch(),
 				HttpMethod:  ut.PATCH,
 			}
 		case *annotations.HttpRule_Custom:
-			method.HttpRule = commonpb.Pattern{
+			httpRule = &commonpb.Pattern{
 				UriTemplate: r.GetCustom().GetPath(),
 				HttpMethod:  r.GetCustom().GetKind(),
 			}
@@ -194,6 +195,7 @@ func (s *ServiceInfo) processHttpRule() {
 		default:
 			glog.Warning("unsupported http method")
 		}
+		method.HttpRule = append(method.HttpRule, httpRule)
 	}
 
 	// In order to support CORS. HTTP method OPTIONS needs to be added to all
@@ -202,11 +204,14 @@ func (s *ServiceInfo) processHttpRule() {
 		index := 0
 		for _, r := range s.ServiceConfig().GetHttp().GetRules() {
 			method := s.Methods[r.GetSelector()]
-			if method.HttpRule.HttpMethod != "OPTIONS" {
-				if _, exist := httpPathWithOptionsSet[method.HttpRule.UriTemplate]; !exist {
-					s.addOptionMethod(index, method.HttpRule.UriTemplate)
-					httpPathWithOptionsSet[method.HttpRule.UriTemplate] = true
-					index++
+			for _, httpRule := range method.HttpRule {
+				if httpRule.HttpMethod != "OPTIONS" {
+					if _, exist := httpPathWithOptionsSet[httpRule.UriTemplate]; !exist {
+						s.addOptionMethod(index, httpRule.UriTemplate)
+						httpPathWithOptionsSet[httpRule.UriTemplate] = true
+						index++
+					}
+
 				}
 			}
 		}
@@ -220,9 +225,11 @@ func (s *ServiceInfo) addOptionMethod(index int, path string) {
 	corsOperation := fmt.Sprintf("%s_%d", corsOperationBase, index)
 	s.Methods[fmt.Sprintf("%s.%s", s.ApiName, corsOperation)] = &methodInfo{
 		ShortName: corsOperation,
-		HttpRule: commonpb.Pattern{
-			UriTemplate: path,
-			HttpMethod:  ut.OPTIONS,
+		HttpRule: []*commonpb.Pattern{
+			{
+				UriTemplate: path,
+				HttpMethod:  ut.OPTIONS,
+			},
 		},
 		IsGeneratedOption: true,
 	}

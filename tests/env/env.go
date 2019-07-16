@@ -55,7 +55,7 @@ type TestEnv struct {
 	backendService              string
 	mockJwtProviders            []string
 	mockMetadataOverride        map[string]string
-	bookstoreServer             *components.BookstoreGrpcServer
+	BookstoreServer             *components.BookstoreGrpcServer
 	configMgr                   *components.ConfigManagerServer
 	dynamicRoutingBackend       *components.EchoHTTPServer
 	echoBackend                 *components.EchoHTTPServer
@@ -244,11 +244,11 @@ func (e *TestEnv) Setup(confArgs []string) error {
 			return err
 		}
 	case "bookstore":
-		e.bookstoreServer, err = components.NewBookstoreGrpcServer(e.ports.BackendServerPort)
+		e.BookstoreServer, err = components.NewBookstoreGrpcServer(e.ports.BackendServerPort)
 		if err != nil {
 			return err
 		}
-		if err := e.bookstoreServer.StartAndWait(); err != nil {
+		if err := e.BookstoreServer.StartAndWait(); err != nil {
 			return err
 		}
 	default:
@@ -284,8 +284,8 @@ func (e *TestEnv) TearDown() {
 			glog.Errorf("error stopping Echo Server: %v", err)
 		}
 	}
-	if e.bookstoreServer != nil {
-		if err := e.bookstoreServer.StopAndWait(); err != nil {
+	if e.BookstoreServer != nil {
+		if err := e.BookstoreServer.StopAndWait(); err != nil {
 			glog.Errorf("error stopping Bookstore Server: %v", err)
 		}
 	}

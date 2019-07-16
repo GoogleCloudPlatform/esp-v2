@@ -350,8 +350,7 @@ func TestGRPCJwt(t *testing.T) {
 			httpMethod:     "POST",
 			method:         "/v1/shelves/200/books?book.title=Romeo%20and%20Julie",
 			token:          testdata.FakeCloudTokenMultiAudiences,
-			wantResp:       `{"id":"0","title":"Romeo and Julie"}`,
-		},
+			wantResp:       `{"id":"0","author":"","title":"Romeo and Julie"}`},
 
 		// Testing JWT with multiple Providers, token from anyone should work,
 		// even with an invalid issuer.

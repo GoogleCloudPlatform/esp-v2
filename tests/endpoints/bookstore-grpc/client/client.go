@@ -15,6 +15,7 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -82,6 +83,34 @@ var makeHTTPCall = func(addr, httpMethod, method, token string, header http.Head
 	req, _ := http.NewRequest(httpMethod, fmt.Sprintf("http://%s%s", addr, method), nil)
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 	addAllHeaders(req, header)
+
+	resp, err := cli.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("http got error: %v", err)
+	}
+	defer resp.Body.Close()
+
+	content, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, string(content))
+	}
+
+	return string(content), nil
+}
+var MakeHttpCallWithBody = func(addr, httpMethod, method, token string, bodyBytes []byte) (string, error) {
+	var cli http.Client
+	var req *http.Request
+
+	if bodyBytes == nil {
+		req, _ = http.NewRequest(httpMethod, fmt.Sprintf("http://%s%s", addr, method), nil)
+	} else {
+		req, _ = http.NewRequest(httpMethod, fmt.Sprintf("http://%s%s", addr, method), bytes.NewBuffer(bodyBytes))
+	}
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 
 	resp, err := cli.Do(req)
 	if err != nil {

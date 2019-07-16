@@ -100,10 +100,24 @@ var (
 					},
 				},
 				{
+					Selector: "endpoints.examples.bookstore.Bookstore.ListBooks",
+					Pattern: &annotations.HttpRule_Get{
+						Get: "/v1/shelves/{shelf}/books",
+					},
+				},
+
+				{
 					Selector: "endpoints.examples.bookstore.Bookstore.DeleteBook",
 					Pattern: &annotations.HttpRule_Delete{
 						Delete: "/v1/shelves/{shelf=*}/books/{book=*}",
 					},
+				},
+				{
+					Selector: "endpoints.examples.bookstore.Bookstore.CreateBook",
+					Pattern: &annotations.HttpRule_Post{
+						Post: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
+					},
+					Body: "book.title",
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.CreateBook",

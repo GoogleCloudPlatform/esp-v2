@@ -109,24 +109,26 @@ func makeDynamicRoutingConfig(serviceInfo *sc.ServiceInfo) ([]route.Route, error
 		if method.BackendRule.TranslationType == conf.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
 			continue
 		}
-		if routeMatcher = makeHttpRouteMatcher(&method.HttpRule); routeMatcher == nil {
-			return nil, fmt.Errorf("error making HTTP route matcher for selector: %v", operation)
-		}
+		for _, httpRule := range method.HttpRule {
+			if routeMatcher = makeHttpRouteMatcher(httpRule); routeMatcher == nil {
+				return nil, fmt.Errorf("error making HTTP route matcher for selector: %v", operation)
+			}
 
-		r := route.Route{
-			Match: *routeMatcher,
-			Action: &route.Route_Route{
-				Route: &route.RouteAction{
-					ClusterSpecifier: &route.RouteAction_Cluster{
-						Cluster: method.BackendRule.ClusterName,
-					},
-					HostRewriteSpecifier: &route.RouteAction_HostRewrite{
-						HostRewrite: method.BackendRule.Hostname,
+			r := route.Route{
+				Match: *routeMatcher,
+				Action: &route.Route_Route{
+					Route: &route.RouteAction{
+						ClusterSpecifier: &route.RouteAction_Cluster{
+							Cluster: method.BackendRule.ClusterName,
+						},
+						HostRewriteSpecifier: &route.RouteAction_HostRewrite{
+							HostRewrite: method.BackendRule.Hostname,
+						},
 					},
 				},
-			},
+			}
+			backendRoutes = append(backendRoutes, r)
 		}
-		backendRoutes = append(backendRoutes, r)
 	}
 	return backendRoutes, nil
 }

@@ -122,6 +122,7 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) (*v2.Listener, error) {
 	httpFilters = append(httpFilters, routerFilter)
 
 	route, err := MakeRouteConfig(serviceInfo)
+
 	if err != nil {
 		return nil, fmt.Errorf("makeHttpConnectionManagerRouteConfig got err: %s", err)
 	}
@@ -190,15 +191,17 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 		}
 
 		// Adds PathMatcherRule for HTTP method, whose HttpRule is not empty.
-		if method.HttpRule.UriTemplate != "" && method.HttpRule.HttpMethod != "" {
-			newHttpRule := &pmpb.PathMatcherRule{
-				Operation: operation,
-				Pattern:   &method.HttpRule,
+		for _, httpRule := range method.HttpRule {
+			if httpRule.UriTemplate != "" && httpRule.HttpMethod != "" {
+				newHttpRule := &pmpb.PathMatcherRule{
+					Operation: operation,
+					Pattern:   httpRule,
+				}
+				if method.BackendRule.TranslationType == conf.BackendRule_CONSTANT_ADDRESS && hasPathParameter(newHttpRule.Pattern.UriTemplate) {
+					newHttpRule.ExtractPathParameters = true
+				}
+				rules = append(rules, newHttpRule)
 			}
-			if method.BackendRule.TranslationType == conf.BackendRule_CONSTANT_ADDRESS && hasPathParameter(newHttpRule.Pattern.UriTemplate) {
-				newHttpRule.ExtractPathParameters = true
-			}
-			rules = append(rules, newHttpRule)
 		}
 	}
 

@@ -366,16 +366,20 @@ func TestMethods(t *testing.T) {
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo": &methodInfo{
 					ShortName: "Echo",
-					HttpRule: commonpb.Pattern{
-						UriTemplate: "/echo",
-						HttpMethod:  ut.POST,
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/echo",
+							HttpMethod:  ut.POST,
+						},
 					},
 				},
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt": &methodInfo{
 					ShortName: "Echo_Auth_Jwt",
-					HttpRule: commonpb.Pattern{
-						UriTemplate: "/auth/info/googlejwt",
-						HttpMethod:  ut.GET,
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/auth/info/googlejwt",
+							HttpMethod:  ut.GET,
+						},
 					},
 				},
 			},
@@ -446,38 +450,47 @@ func TestMethods(t *testing.T) {
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoCors": &methodInfo{
 					ShortName: "EchoCors",
-					HttpRule: commonpb.Pattern{
-						UriTemplate: "/echo",
-						HttpMethod:  ut.OPTIONS,
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/echo",
+							HttpMethod:  ut.OPTIONS,
+						},
 					},
 				},
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo": &methodInfo{
 					ShortName: "Echo",
-					HttpRule: commonpb.Pattern{
-						UriTemplate: "/echo",
-						HttpMethod:  ut.POST,
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/echo",
+							HttpMethod:  ut.POST,
+						},
 					},
 				},
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_0": &methodInfo{
 					ShortName: "CORS_0",
-					HttpRule: commonpb.Pattern{
-						UriTemplate: "/auth/info/googlejwt",
-						HttpMethod:  ut.OPTIONS,
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/auth/info/googlejwt",
+							HttpMethod:  ut.OPTIONS,
+						},
 					},
 					IsGeneratedOption: true,
 				},
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt": &methodInfo{
 					ShortName: "Echo_Auth_Jwt",
-					HttpRule: commonpb.Pattern{
+					HttpRule: []*commonpb.Pattern{{
 						UriTemplate: "/auth/info/googlejwt",
 						HttpMethod:  ut.GET,
+					},
 					},
 				},
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth": &methodInfo{
 					ShortName: "Echo_Auth",
-					HttpRule: commonpb.Pattern{
-						UriTemplate: "/auth/info/googlejwt",
-						HttpMethod:  ut.POST,
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/auth/info/googlejwt",
+							HttpMethod:  ut.POST,
+						},
 					},
 				},
 			},

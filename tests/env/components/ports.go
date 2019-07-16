@@ -78,6 +78,9 @@ const (
 	TestServiceControlSkip
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
+	TestTranscodingErrors
+	TestTranscodingServiceUnavailableError
+	TestTranscodingBindings
 	TestUnconfiguredRequest
 	// The number of total tests. has to be the last one.
 	maxTestNum
