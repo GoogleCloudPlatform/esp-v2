@@ -468,7 +468,7 @@ if __name__ == '__main__':
             print("when version is set, rollout strategy should be fixed mode.")
             sys.exit(1)
         proxy_conf.extend([
-            "--version",
+            "--service_config_id",
             args.version,
         ])
 

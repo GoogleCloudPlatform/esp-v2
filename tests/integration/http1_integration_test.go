@@ -35,7 +35,7 @@ func TestHttp1Basic(t *testing.T) {
 	serviceName := "test-echo"
 	configID := "test-config-id"
 
-	args := []string{"--service=" + serviceName, "--version=" + configID,
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--skip_service_control_filter=true", "--backend_protocol=http1", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestHttp1Basic, "echo", nil)
@@ -70,7 +70,7 @@ func TestHttp1JWT(t *testing.T) {
 	serviceName := "test-echo"
 	configID := "test-config-id"
 
-	args := []string{"--service=" + serviceName, "--version=" + configID,
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--skip_service_control_filter=true", "--backend_protocol=http1", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestHttp1JWT, "echo", []string{"google_jwt"})

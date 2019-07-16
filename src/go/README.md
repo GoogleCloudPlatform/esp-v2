@@ -16,7 +16,7 @@ extra features specifically for APIs on Google Cloud Platform.
     which feeds envoy with dynamic configurations.
 
 *   **Auto Service Configuration Update**: When '--rollout_strategy' is set as
-    'managed', no need to set '--version'. Instead, Config Manager calls
+    'managed', no need to set '--service_config_id'. Instead, Config Manager calls
     [Google Service Management](https://cloud.google.com/service-infrastructure/docs/service-management/getting-started) to get the latest rollout, and retrieves
     the version id with maximum traffic percentage in it. Then, Config Manager
     fetches the corresponding service config and dynamically configures envoy proxy.
@@ -42,7 +42,7 @@ To start the Config Manager, run:
 go run server/server.go \
   --logtostderr -v 2 \
   --service [YOUR_SERVICE_NAME] \
-  --version [YOUR_CONFIG_ID] \
+  --service_config_id [YOUR_CONFIG_ID] \
   --backend_protocol {grpc | http1 | http2}
 ```
 
@@ -115,7 +115,7 @@ docker run --detach --name=bookstore --net=apiproxy_net bookstore
 docker build -f docker/Dockerfile-proxy -t apiproxy .
 
 docker run --detach --name=apiproxy  --publish=80:8080 --net=apiproxy_net \
-apiproxy --service=[YOUR_SERVICE_NAME] --version=[YOUR_CONFIG_ID] \
+apiproxy --service=[YOUR_SERVICE_NAME] --service_config_id=[YOUR_CONFIG_ID] \
 --backend=grpc://bookstore:8082
 ```
 

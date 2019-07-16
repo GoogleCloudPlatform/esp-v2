@@ -29,7 +29,7 @@ import (
 
 var testDynamicRoutingArgs = []string{
 	"--service=test-echo",
-	"--version=test-config-id",
+	"--service_config_id=test-config-id",
 	"--backend_protocol=http1",
 	"--rollout_strategy=fixed",
 	"--enable_backend_routing",

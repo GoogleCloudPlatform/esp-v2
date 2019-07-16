@@ -1113,7 +1113,7 @@ func TestFetchListeners(t *testing.T) {
 		// Overrides fakeConfig for the test case.
 		fakeConfig = tc.fakeServiceConfig
 		flag.Set("service", testProjectName)
-		flag.Set("version", testConfigID)
+		flag.Set("service_config_id", testConfigID)
 		flag.Set("rollout_strategy", ut.FixedRolloutStrategy)
 		flag.Set("backend_protocol", tc.backendProtocol)
 		if tc.enableTracing {
@@ -1183,7 +1183,7 @@ func TestDynamicBackendRouting(t *testing.T) {
 		// Overrides fakeConfig for the test case.
 		fakeConfig = tc.fakeServiceConfig
 		flag.Set("service", testProjectName)
-		flag.Set("version", testConfigID)
+		flag.Set("service_config_id", testConfigID)
 		flag.Set("rollout_strategy", ut.FixedRolloutStrategy)
 		flag.Set("backend_protocol", tc.backendProtocol)
 		flag.Set("enable_backend_routing", "true")
@@ -1348,7 +1348,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 	fakeRollout = testCase.fakeOldServiceRollout
 	checkNewRolloutInterval = 1 * time.Second
 	flag.Set("service", testProjectName)
-	flag.Set("version", testConfigID)
+	flag.Set("service_config_id", testConfigID)
 	flag.Set("rollout_strategy", ut.ManagedRolloutStrategy)
 	flag.Set("backend_protocol", testCase.backendProtocol)
 	flag.Set("enable_tracing", "false")

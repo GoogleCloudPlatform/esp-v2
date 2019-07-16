@@ -11,6 +11,6 @@ To run API Proxy Docker image, run
 ```shell
 docker run --rm -it -p 8080:8080 gcpproxy
 --service=bookstore.endpoints.cloudesf-testing.cloud.goog
---version=2018-11-09r0
+--service_config_id=2018-11-09r0
 --backend=grpc://127.0.0.1:8082
 ```
