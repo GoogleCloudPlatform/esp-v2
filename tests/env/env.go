@@ -55,7 +55,7 @@ type TestEnv struct {
 	backendService              string
 	mockJwtProviders            []string
 	mockMetadataOverride        map[string]string
-	BookstoreServer             *components.BookstoreGrpcServer
+	bookstoreServer             *components.BookstoreGrpcServer
 	configMgr                   *components.ConfigManagerServer
 	dynamicRoutingBackend       *components.EchoHTTPServer
 	echoBackend                 *components.EchoHTTPServer
@@ -244,11 +244,11 @@ func (e *TestEnv) Setup(confArgs []string) error {
 			return err
 		}
 	case "bookstore":
-		e.BookstoreServer, err = components.NewBookstoreGrpcServer(e.ports.BackendServerPort)
+		e.bookstoreServer, err = components.NewBookstoreGrpcServer(e.ports.BackendServerPort)
 		if err != nil {
 			return err
 		}
-		if err := e.BookstoreServer.StartAndWait(); err != nil {
+		if err := e.bookstoreServer.StartAndWait(); err != nil {
 			return err
 		}
 	default:
@@ -268,6 +268,24 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	return nil
 }
 
+func (e *TestEnv) StopBackendServer() error {
+	var retErr error
+	// Only one backend is instantiated for test.
+	if e.echoBackend != nil {
+		if err := e.echoBackend.StopAndWait(); err != nil {
+			retErr = err
+		}
+		e.echoBackend = nil
+	}
+	if e.bookstoreServer != nil {
+		if err := e.bookstoreServer.StopAndWait(); err != nil {
+			retErr = err
+		}
+		e.bookstoreServer = nil
+	}
+	return retErr
+}
+
 // TearDown shutdown the servers.
 func (e *TestEnv) TearDown() {
 	glog.Infof("start tearing down...")
@@ -284,8 +302,8 @@ func (e *TestEnv) TearDown() {
 			glog.Errorf("error stopping Echo Server: %v", err)
 		}
 	}
-	if e.BookstoreServer != nil {
-		if err := e.BookstoreServer.StopAndWait(); err != nil {
+	if e.bookstoreServer != nil {
+		if err := e.bookstoreServer.StopAndWait(); err != nil {
 			glog.Errorf("error stopping Bookstore Server: %v", err)
 		}
 	}
