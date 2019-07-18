@@ -17,9 +17,7 @@
 # Presubmit script triggered by Prow.
 
 # Fail on any error.
-set -e
-# Display commands being run.
-set -u
+set -eo pipefail
 
 WD=$(dirname "$0")
 WD=$(cd "$WD"; pwd)

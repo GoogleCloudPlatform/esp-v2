@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Fail on any error.
+set -eo pipefail
+
 # This script runs a long-running test against it.
 
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -58,7 +61,7 @@ BOOKSTORE_FAILURES=0
 detect_memory_leak_init ${HOST}
 
 while true; do
-  ((RUN_COUNT++))
+  RUN_COUNT=$((RUN_COUNT + 1))
 
   #######################
   # Insert tests here
