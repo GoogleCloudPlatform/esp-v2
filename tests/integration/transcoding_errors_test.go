@@ -49,11 +49,9 @@ func TestTranscodingServiceUnavailableError(t *testing.T) {
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	if err := s.BookstoreServer.StopAndWait(); err != nil {
-		t.Errorf("Test : failed, expected")
+	if err := s.StopBackendServer(); err != nil {
+		t.Fatalf("fail to shut down backend, %v", err)
 	}
-	s.BookstoreServer = nil
-
 	tc := TranscodingTestType{
 		desc:           "failed with 503, no backend",
 		clientProtocol: "http",

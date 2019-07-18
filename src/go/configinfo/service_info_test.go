@@ -495,6 +495,58 @@ func TestMethods(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "Succeed for multiple url Pattern",
+			fakeServiceConfig: &conf.Service{
+				Name: testProjectName,
+				Apis: []*api.Api{
+					{
+						Name: "endpoints.examples.bookstore.Bookstore",
+						Methods: []*api.Method{
+							{
+								Name:            "CreateBook",
+								RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.CreateBookRequest",
+								ResponseTypeUrl: "type.googleapis.com/endpoints.examples.bookstore.Book",
+							},
+						},
+					},
+				},
+				Http: &annotations.Http{
+					Rules: []*annotations.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.CreateBook",
+							Pattern: &annotations.HttpRule_Post{
+								Post: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
+							},
+							Body: "book.title",
+						},
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.CreateBook",
+							Pattern: &annotations.HttpRule_Post{
+								Post: "/v1/shelves/{shelf}/books",
+							},
+							Body: "book",
+						},
+					},
+				},
+			},
+			backendProtocol: "grpc",
+			wantMethods: map[string]*methodInfo{
+				"endpoints.examples.bookstore.Bookstore.CreateBook": &methodInfo{
+					ShortName: "CreateBook",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
+							HttpMethod:  ut.POST,
+						},
+						{
+							UriTemplate: "/v1/shelves/{shelf}/books",
+							HttpMethod:  ut.POST,
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for i, tc := range testData {
