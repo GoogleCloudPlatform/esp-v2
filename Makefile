@@ -80,7 +80,7 @@ integration-debug:
 .PHONY: proto-consistency-test
 proto-consistency-test:
 	@echo "--> checking generated go API proto files are up to date"
-	@sh ./api/scripts/go_proto_consistency_test.sh
+	./api/scripts/go_proto_consistency_test.sh
 
 #-----------------------------------------------------------------------------
 # Target: go dependencies
@@ -104,7 +104,7 @@ depend.install: tools.glide
 
 depend.apiproto:
 	@echo "--> generating go proto files"
-	@sh ./api/scripts/go_proto_gen.sh
+	./api/scripts/go_proto_gen.sh
 
 #----------------------------------------------------------------------------
 # Target:  go tools

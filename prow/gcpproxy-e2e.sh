@@ -15,8 +15,7 @@
 # limitations under the License.
 
 # Fail on any error.
-set -e
-set -u
+set -eo pipefail
 
 echo '======================================================='
 echo '=====================   e2e test  ====================='

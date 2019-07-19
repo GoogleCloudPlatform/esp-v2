@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Fail on any error.
+set -eo pipefail
+
 # Setting SUDO if not running as root.
 if [[ $UID -ne 0 ]]; then
   SUDO=sudo

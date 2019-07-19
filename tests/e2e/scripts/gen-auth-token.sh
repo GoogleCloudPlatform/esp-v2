@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Fail on any error.
+set -eo pipefail
+
 # Script to generate auth token based on `src/tools/auth_token_gen`
 
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
