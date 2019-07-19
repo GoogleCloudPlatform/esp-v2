@@ -17,7 +17,6 @@ package configmanager
 import (
 	"encoding/json"
 	"flag"
-
 	"fmt"
 	"time"
 
@@ -29,6 +28,9 @@ import (
 	gen "cloudesf.googlesource.com/gcpproxy/src/go/configgenerator"
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
+	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	gogo "github.com/gogo/protobuf/proto"
+	goproto "github.com/golang/protobuf/proto"
 )
 
 var (
@@ -170,8 +172,13 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	if err != nil {
 		return nil, err
 	}
-	for i, _ := range clusters {
-		clusterResources = append(clusterResources, &clusters[i])
+	for i := range clusters {
+		gogoCluster := &v2.Cluster{}
+		err := ConvertGoprotoToGogo(clusters[i], gogoCluster)
+		if err != nil {
+			return nil, err
+		}
+		clusterResources = append(clusterResources, gogoCluster)
 	}
 
 	m.Infof("adding Listener configuration for api: %v", m.serviceInfo.Name)
@@ -179,13 +186,17 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	if err != nil {
 		return nil, err
 	}
+	gogoListener := &v2.Listener{}
+	err = ConvertGoprotoToGogo(listener, gogoListener)
+	if err != nil {
+		return nil, err
+	}
 
-	snapshot := cache.NewSnapshot(m.curConfigID, endpoints, clusterResources, routes, []cache.Resource{listener})
+	snapshot := cache.NewSnapshot(m.curConfigID, endpoints, clusterResources, routes, []cache.Resource{gogoListener})
 	m.Infof("Envoy Dynamic Configuration is cached for service: %v", m.serviceName)
 	return &snapshot, nil
 }
 
-// ID Implements the ID method for HashNode interface.
 func (m *ConfigManager) ID(node *core.Node) string {
 	return node.GetId()
 }
@@ -201,3 +212,15 @@ func (m *ConfigManager) Errorf(format string, args ...interface{}) { glog.Errorf
 
 // Cache returns snapshot cache.
 func (m *ConfigManager) Cache() cache.Cache { return m.cache }
+
+// Convert a proto from official go-proto to gogo
+// Implications:
+// - Inefficient due to serialization and deserialization
+// - Will compile successfully, but may cause undefined behavior at runtime
+func ConvertGoprotoToGogo(in goproto.Message, out gogo.Message) error {
+	data, err := goproto.Marshal(in)
+	if err != nil {
+		return err
+	}
+	return gogo.Unmarshal(data, out)
+}

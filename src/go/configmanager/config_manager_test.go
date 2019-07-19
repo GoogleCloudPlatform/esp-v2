@@ -34,10 +34,13 @@ import (
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/gogo/protobuf/jsonpb"
+	"github.com/gogo/protobuf/types"
+	"google.golang.org/genproto/googleapis/api/annotations"
 
-	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	gogoproto "github.com/gogo/protobuf/proto"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	sm "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
 const (
@@ -1119,7 +1122,7 @@ func TestFetchListeners(t *testing.T) {
 		fakeConfig = tc.fakeServiceConfig
 		flag.Set("service", testProjectName)
 		flag.Set("service_config_id", testConfigID)
-		flag.Set("rollout_strategy", ut.FixedRolloutStrategy)
+		flag.Set("rollout_strategy", util.FixedRolloutStrategy)
 		flag.Set("backend_protocol", tc.backendProtocol)
 		if tc.enableTracing {
 			flag.Set("enable_tracing", "true")
@@ -1141,7 +1144,7 @@ func TestFetchListeners(t *testing.T) {
 				t.Fatal(err)
 			}
 			marshaler := &jsonpb.Marshaler{
-				AnyResolver: ut.Resolver,
+				AnyResolver: Resolver,
 			}
 			gotListeners, err := marshaler.MarshalToString(resp.Resources[0])
 			if err != nil {
@@ -1156,8 +1159,8 @@ func TestFetchListeners(t *testing.T) {
 			}
 
 			// Normalize both wantedListeners and gotListeners.
-			gotListeners = normalizeJson(gotListeners)
-			if want := normalizeJson(tc.wantedListeners); gotListeners != want && !strings.Contains(gotListeners, want) {
+			gotListeners = normalizeJson(gotListeners, t)
+			if want := normalizeJson(tc.wantedListeners, t); gotListeners != want && !strings.Contains(gotListeners, want) {
 				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got unexpected Listeners", i, tc.desc)
 				t.Errorf("Actual: %s", gotListeners)
 				t.Errorf("Expected: %s", want)
@@ -1189,7 +1192,7 @@ func TestDynamicBackendRouting(t *testing.T) {
 		fakeConfig = tc.fakeServiceConfig
 		flag.Set("service", testProjectName)
 		flag.Set("service_config_id", testConfigID)
-		flag.Set("rollout_strategy", ut.FixedRolloutStrategy)
+		flag.Set("rollout_strategy", util.FixedRolloutStrategy)
 		flag.Set("backend_protocol", tc.backendProtocol)
 		flag.Set("enable_backend_routing", "true")
 		flag.Set("enable_tracing", "false")
@@ -1222,8 +1225,8 @@ func TestDynamicBackendRouting(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				gotCluster = normalizeJson(gotCluster)
-				if want = normalizeJson(want); gotCluster != want {
+				gotCluster = normalizeJson(gotCluster, t)
+				if want = normalizeJson(want, t); gotCluster != want {
 					t.Errorf("Test Desc(%d): %s, idx %d snapshot cache fetch got Cluster: %s, want: %s", i, tc.desc, idx, gotCluster, want)
 				}
 			}
@@ -1250,8 +1253,8 @@ func TestDynamicBackendRouting(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			gotListener = normalizeJson(gotListener)
-			if wantListener := normalizeJson(tc.wantedListener); gotListener != wantListener {
+			gotListener = normalizeJson(gotListener, t)
+			if wantListener := normalizeJson(tc.wantedListener, t); gotListener != wantListener {
 				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got Listener: %s,\n\t want: %s", i, tc.desc, gotListener, wantListener)
 			}
 		})
@@ -1354,7 +1357,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 	checkNewRolloutInterval = 1 * time.Second
 	flag.Set("service", testProjectName)
 	flag.Set("service_config_id", testConfigID)
-	flag.Set("rollout_strategy", ut.ManagedRolloutStrategy)
+	flag.Set("rollout_strategy", util.ManagedRolloutStrategy)
 	flag.Set("backend_protocol", testCase.backendProtocol)
 	flag.Set("enable_tracing", "false")
 
@@ -1445,14 +1448,20 @@ func runTest(t *testing.T, f func(*testEnv)) {
 func initMockConfigServer(t *testing.T) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(normalizeJson(fakeConfig)))
+		_, err := w.Write([]byte(normalizeJson(fakeConfig, t)))
+		if err != nil {
+			t.Fatal("fail to write config: ", err)
+		}
 	}))
 }
 
 func initMockRolloutServer(t *testing.T) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(normalizeJson(fakeRollout)))
+		_, err := w.Write([]byte(normalizeJson(fakeRollout, t)))
+		if err != nil {
+			t.Fatal("fail to write rollout config: ", err)
+		}
 	}))
 }
 
@@ -1475,9 +1484,33 @@ func marshalServiceConfigToString(serviceConfig *conf.Service, t *testing.T) str
 	return jsonStr
 }
 
-func normalizeJson(input string) string {
+func normalizeJson(input string, t *testing.T) string {
 	var jsonObject map[string]interface{}
-	json.Unmarshal([]byte(input), &jsonObject)
+	err := json.Unmarshal([]byte(input), &jsonObject)
+	if err != nil {
+		t.Fatal("fail to normalize json: ", err)
+	}
 	outputString, _ := json.Marshal(jsonObject)
 	return string(outputString)
 }
+
+type FuncResolver func(url string) (gogoproto.Message, error)
+
+func (fn FuncResolver) Resolve(url string) (gogoproto.Message, error) {
+	return fn(url)
+}
+
+var Resolver = FuncResolver(func(url string) (gogoproto.Message, error) {
+	switch url {
+	case "type.googleapis.com/google.api.servicemanagement.v1.ConfigFile":
+		return new(sm.ConfigFile), nil
+	case "type.googleapis.com/google.api.HttpRule":
+		return new(annotations.HttpRule), nil
+	case "type.googleapis.com/google.protobuf.BoolValue":
+		return new(types.BoolValue), nil
+	case "type.googleapis.com/google.api.Service":
+		return new(conf.Service), nil
+	default:
+		return nil, fmt.Errorf("unexpected protobuf.Any with url: %s", url)
+	}
+})

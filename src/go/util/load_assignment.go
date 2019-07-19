@@ -15,26 +15,29 @@
 package util
 
 import (
-	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-
-	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	"github.com/envoyproxy/go-control-plane/envoy/api/v2/endpoint"
+	addresspb "github.com/envoyproxy/data-plane-api/api/address"
+	edspb "github.com/envoyproxy/data-plane-api/api/eds"
+	endpointpb "github.com/envoyproxy/data-plane-api/api/endpoint"
 )
 
 // CreateLoadAssignment creates a ClusterLoadAssignment
-func CreateLoadAssignment(hostname string, port uint32) *v2.ClusterLoadAssignment {
-	return &v2.ClusterLoadAssignment{
+func CreateLoadAssignment(hostname string, port uint32) *edspb.ClusterLoadAssignment {
+	return &edspb.ClusterLoadAssignment{
 		ClusterName: hostname,
-		Endpoints: []endpoint.LocalityLbEndpoints{{
-			LbEndpoints: []endpoint.LbEndpoint{{
-				HostIdentifier: &endpoint.LbEndpoint_Endpoint{
-					Endpoint: &endpoint.Endpoint{
-						Address: &core.Address{
-							Address: &core.Address_SocketAddress{
-								SocketAddress: &core.SocketAddress{
-									Address: hostname,
-									PortSpecifier: &core.SocketAddress_PortValue{
-										PortValue: port,
+		Endpoints: []*endpointpb.LocalityLbEndpoints{
+			{
+				LbEndpoints: []*endpointpb.LbEndpoint{
+					{
+						HostIdentifier: &endpointpb.LbEndpoint_Endpoint{
+							Endpoint: &endpointpb.Endpoint{
+								Address: &addresspb.Address{
+									Address: &addresspb.Address_SocketAddress{
+										SocketAddress: &addresspb.SocketAddress{
+											Address: hostname,
+											PortSpecifier: &addresspb.SocketAddress_PortValue{
+												PortValue: port,
+											},
+										},
 									},
 								},
 							},
@@ -42,7 +45,6 @@ func CreateLoadAssignment(hostname string, port uint32) *v2.ClusterLoadAssignmen
 					},
 				},
 			},
-			}},
 		},
 	}
 }

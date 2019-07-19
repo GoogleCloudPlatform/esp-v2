@@ -23,11 +23,9 @@ import (
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
-	"github.com/gogo/protobuf/types"
+	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
-	"google.golang.org/genproto/googleapis/api/annotations"
 
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 	sm "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
@@ -133,13 +131,6 @@ var callServiceManagementRollouts = func(path, token string) (*sm.ListServiceRol
 	return &rolloutsResponse, nil
 }
 
-// Helper to convert Json string to protobuf.Any.
-type funcResolver func(url string) (proto.Message, error)
-
-func (fn funcResolver) Resolve(url string) (proto.Message, error) {
-	return fn(url)
-}
-
 var callServiceManagement = func(path, token string) (*conf.Service, error) {
 	var err error
 	var resp *http.Response
@@ -147,21 +138,9 @@ var callServiceManagement = func(path, token string) (*conf.Service, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	resolver := funcResolver(func(url string) (proto.Message, error) {
-		switch url {
-		case "type.googleapis.com/google.api.servicemanagement.v1.ConfigFile":
-			return new(sm.ConfigFile), nil
-		case "type.googleapis.com/google.api.HttpRule":
-			return new(annotations.HttpRule), nil
-		case "type.googleapis.com/google.protobuf.BoolValue":
-			return new(types.BoolValue), nil
-		default:
-			return nil, fmt.Errorf("unexpected protobuf.Any with url: %s", url)
-		}
-	})
 	unmarshaler := &jsonpb.Unmarshaler{
 		AllowUnknownFields: true,
-		AnyResolver:        resolver,
+		AnyResolver:        util.Resolver,
 	}
 	var serviceConfig conf.Service
 	if err = unmarshaler.Unmarshal(resp.Body, &serviceConfig); err != nil {

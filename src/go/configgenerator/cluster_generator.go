@@ -20,13 +20,14 @@ import (
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
-	"github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
-	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/ptypes"
 
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
-	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	cdspb "github.com/envoyproxy/data-plane-api/api/cds"
+	certpb "github.com/envoyproxy/data-plane-api/api/cert"
+	protocolpb "github.com/envoyproxy/data-plane-api/api/protocol"
 )
 
 const (
@@ -35,14 +36,14 @@ const (
 )
 
 // MakeClusters provides dynamic cluster settings for Envoy
-func MakeClusters(serviceInfo *sc.ServiceInfo) ([]v2.Cluster, error) {
-	var clusters []v2.Cluster
+func MakeClusters(serviceInfo *sc.ServiceInfo) ([]*cdspb.Cluster, error) {
+	var clusters []*cdspb.Cluster
 	backendCluster, err := makeBackendCluster(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
 	if backendCluster != nil {
-		clusters = append(clusters, *backendCluster)
+		clusters = append(clusters, backendCluster)
 	}
 
 	metadataCluster, err := makeMetadataCluster(serviceInfo)
@@ -50,7 +51,7 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]v2.Cluster, error) {
 		return nil, err
 	}
 	if metadataCluster != nil {
-		clusters = append(clusters, *metadataCluster)
+		clusters = append(clusters, metadataCluster)
 	}
 
 	// Note: makeServiceControlCluster should be called before makeListener
@@ -61,7 +62,7 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]v2.Cluster, error) {
 		return nil, err
 	}
 	if scCluster != nil {
-		clusters = append(clusters, *scCluster)
+		clusters = append(clusters, scCluster)
 	}
 
 	brClusters, err := makeBackendRoutingClusters(serviceInfo)
@@ -82,24 +83,25 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]v2.Cluster, error) {
 	return clusters, nil
 }
 
-func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error) {
+func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*cdspb.Cluster, error) {
 	scheme, hostname, port, _, err := ut.ParseURI(*flags.MetadataURL)
 	if err != nil {
 		return nil, err
 	}
 
-	c := &v2.Cluster{
+	connectTimeoutProto := ptypes.DurationProto(*flags.ClusterConnectTimeout)
+	c := &cdspb.Cluster{
 		Name:           metadataServerClusterName,
-		LbPolicy:       v2.Cluster_ROUND_ROBIN,
-		ConnectTimeout: *flags.ClusterConnectTimeout,
-		ClusterDiscoveryType: &v2.Cluster_Type{
-			Type: v2.Cluster_STRICT_DNS,
+		LbPolicy:       cdspb.Cluster_ROUND_ROBIN,
+		ConnectTimeout: connectTimeoutProto,
+		ClusterDiscoveryType: &cdspb.Cluster_Type{
+			Type: cdspb.Cluster_STRICT_DNS,
 		},
 		LoadAssignment: ut.CreateLoadAssignment(hostname, port),
 	}
 
 	if scheme == "https" {
-		c.TlsContext = &auth.UpstreamTlsContext{
+		c.TlsContext = &certpb.UpstreamTlsContext{
 			Sni: hostname,
 		}
 	}
@@ -107,8 +109,8 @@ func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error) {
 	return c, nil
 }
 
-func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]v2.Cluster, error) {
-	var providerClusters []v2.Cluster
+func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*cdspb.Cluster, error) {
+	var providerClusters []*cdspb.Cluster
 	authn := serviceInfo.ServiceConfig().GetAuthentication()
 	for _, provider := range authn.GetProviders() {
 		jwksUri := provider.GetJwksUri()
@@ -134,17 +136,18 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]v2.Cluster, error) 
 			provider.JwksUri = ut.FakeJwksUri
 		}
 
-		c := v2.Cluster{
+		connectTimeoutProto := ptypes.DurationProto(*flags.ClusterConnectTimeout)
+		c := &cdspb.Cluster{
 			Name:           provider.GetIssuer(),
-			LbPolicy:       v2.Cluster_ROUND_ROBIN,
-			ConnectTimeout: *flags.ClusterConnectTimeout,
+			LbPolicy:       cdspb.Cluster_ROUND_ROBIN,
+			ConnectTimeout: connectTimeoutProto,
 			// Note: It may not be V4.
-			DnsLookupFamily:      v2.Cluster_V4_ONLY,
-			ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
+			DnsLookupFamily:      cdspb.Cluster_V4_ONLY,
+			ClusterDiscoveryType: &cdspb.Cluster_Type{cdspb.Cluster_LOGICAL_DNS},
 			LoadAssignment:       ut.CreateLoadAssignment(hostname, port),
 		}
 		if scheme == "https" {
-			c.TlsContext = &auth.UpstreamTlsContext{
+			c.TlsContext = &certpb.UpstreamTlsContext{
 				Sni: hostname,
 			}
 		}
@@ -155,23 +158,24 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]v2.Cluster, error) 
 	return providerClusters, nil
 }
 
-func makeBackendCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error) {
-	c := &v2.Cluster{
+func makeBackendCluster(serviceInfo *sc.ServiceInfo) (*cdspb.Cluster, error) {
+	connectTimeoutProto := ptypes.DurationProto(*flags.ClusterConnectTimeout)
+	c := &cdspb.Cluster{
 		Name:                 serviceInfo.ApiName,
-		LbPolicy:             v2.Cluster_ROUND_ROBIN,
-		ConnectTimeout:       *flags.ClusterConnectTimeout,
-		ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_STRICT_DNS},
+		LbPolicy:             cdspb.Cluster_ROUND_ROBIN,
+		ConnectTimeout:       connectTimeoutProto,
+		ClusterDiscoveryType: &cdspb.Cluster_Type{cdspb.Cluster_STRICT_DNS},
 		LoadAssignment:       ut.CreateLoadAssignment(*flags.ClusterAddress, uint32(*flags.ClusterPort)),
 	}
 	// gRPC and HTTP/2 need this configuration.
 	if serviceInfo.BackendProtocol != ut.HTTP1 {
-		c.Http2ProtocolOptions = &core.Http2ProtocolOptions{}
+		c.Http2ProtocolOptions = &protocolpb.Http2ProtocolOptions{}
 	}
 	glog.Infof("Backend cluster configuration for service %s: %v", serviceInfo.Name, c)
 	return c, nil
 }
 
-func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error) {
+func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*cdspb.Cluster, error) {
 	uri := serviceInfo.ServiceConfig().GetControl().GetEnvironment()
 	if uri == "" {
 		return nil, nil
@@ -190,18 +194,19 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error)
 		return nil, fmt.Errorf("Invalid uri: service control should not have path part: %s, %s", uri, path)
 	}
 
+	connectTimeoutProto := ptypes.DurationProto(5 * time.Second)
 	serviceInfo.ServiceControlURI = scheme + "://" + hostname + "/v1/services/"
-	c := &v2.Cluster{
+	c := &cdspb.Cluster{
 		Name:                 serviceControlClusterName,
-		LbPolicy:             v2.Cluster_ROUND_ROBIN,
-		ConnectTimeout:       5 * time.Second,
-		DnsLookupFamily:      v2.Cluster_V4_ONLY,
-		ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
+		LbPolicy:             cdspb.Cluster_ROUND_ROBIN,
+		ConnectTimeout:       connectTimeoutProto,
+		DnsLookupFamily:      cdspb.Cluster_V4_ONLY,
+		ClusterDiscoveryType: &cdspb.Cluster_Type{cdspb.Cluster_LOGICAL_DNS},
 		LoadAssignment:       ut.CreateLoadAssignment(hostname, port),
 	}
 
 	if scheme == "https" {
-		c.TlsContext = &auth.UpstreamTlsContext{
+		c.TlsContext = &certpb.UpstreamTlsContext{
 			Sni: hostname,
 		}
 	}
@@ -209,23 +214,25 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2.Cluster, error)
 	return c, nil
 }
 
-func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]v2.Cluster, error) {
-	var brClusters []v2.Cluster
+func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]*cdspb.Cluster, error) {
+	var brClusters []*cdspb.Cluster
+
+	connectTimeoutProto := ptypes.DurationProto(*flags.ClusterConnectTimeout)
 	for _, v := range serviceInfo.BackendRoutingClusters {
-		c := v2.Cluster{
+		c := &cdspb.Cluster{
 			Name:                 v.ClusterName,
-			LbPolicy:             v2.Cluster_ROUND_ROBIN,
-			ConnectTimeout:       *flags.ClusterConnectTimeout,
-			ClusterDiscoveryType: &v2.Cluster_Type{v2.Cluster_LOGICAL_DNS},
+			LbPolicy:             cdspb.Cluster_ROUND_ROBIN,
+			ConnectTimeout:       connectTimeoutProto,
+			ClusterDiscoveryType: &cdspb.Cluster_Type{cdspb.Cluster_LOGICAL_DNS},
 			LoadAssignment:       ut.CreateLoadAssignment(v.Hostname, v.Port),
-			TlsContext: &auth.UpstreamTlsContext{
+			TlsContext: &certpb.UpstreamTlsContext{
 				Sni: v.Hostname,
 			},
 		}
 
 		if strings.HasSuffix(v.Hostname, ".run.app") {
 			// The IPv6 DNS lookup Cloud Run does not resolve properly
-			c.DnsLookupFamily = v2.Cluster_V4_ONLY
+			c.DnsLookupFamily = cdspb.Cluster_V4_ONLY
 		}
 
 		brClusters = append(brClusters, c)

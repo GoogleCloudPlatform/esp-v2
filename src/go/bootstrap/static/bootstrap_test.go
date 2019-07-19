@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap/static/testdata"
-	"github.com/gogo/protobuf/jsonpb"
+	"github.com/golang/protobuf/jsonpb"
 
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 )

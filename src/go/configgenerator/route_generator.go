@@ -19,12 +19,12 @@ import (
 	"regexp"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
-	"github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
-	"github.com/gogo/protobuf/types"
+	"github.com/golang/protobuf/ptypes/wrappers"
 
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
-	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	rdspb "github.com/envoyproxy/data-plane-api/api/rds"
+	routepb "github.com/envoyproxy/data-plane-api/api/route"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -33,9 +33,9 @@ const (
 	virtualHostName = "backend"
 )
 
-func MakeRouteConfig(serviceInfo *sc.ServiceInfo) (*v2.RouteConfiguration, error) {
-	var virtualHosts []route.VirtualHost
-	host := route.VirtualHost{
+func MakeRouteConfig(serviceInfo *sc.ServiceInfo) (*rdspb.RouteConfiguration, error) {
+	var virtualHosts []*routepb.VirtualHost
+	host := routepb.VirtualHost{
 		Name:    virtualHostName,
 		Domains: []string{"*"},
 	}
@@ -48,15 +48,15 @@ func MakeRouteConfig(serviceInfo *sc.ServiceInfo) (*v2.RouteConfiguration, error
 		host.Routes = brRoute
 	}
 
-	host.Routes = append(host.Routes, route.Route{
-		Match: route.RouteMatch{
-			PathSpecifier: &route.RouteMatch_Prefix{
+	host.Routes = append(host.Routes, &routepb.Route{
+		Match: &routepb.RouteMatch{
+			PathSpecifier: &routepb.RouteMatch_Prefix{
 				Prefix: "/",
 			},
 		},
-		Action: &route.Route_Route{
-			Route: &route.RouteAction{
-				ClusterSpecifier: &route.RouteAction_Cluster{
+		Action: &routepb.Route_Route{
+			Route: &routepb.RouteAction{
+				ClusterSpecifier: &routepb.RouteAction_Cluster{
 					Cluster: serviceInfo.ApiName},
 			},
 		},
@@ -68,7 +68,7 @@ func MakeRouteConfig(serviceInfo *sc.ServiceInfo) (*v2.RouteConfiguration, error
 		if org == "" {
 			return nil, fmt.Errorf("cors_allow_origin cannot be empty when cors_preset=basic")
 		}
-		host.Cors = &route.CorsPolicy{
+		host.Cors = &routepb.CorsPolicy{
 			AllowOrigin: []string{org},
 		}
 	case "cors_with_regex":
@@ -76,7 +76,7 @@ func MakeRouteConfig(serviceInfo *sc.ServiceInfo) (*v2.RouteConfiguration, error
 		if orgReg == "" {
 			return nil, fmt.Errorf("cors_allow_origin_regex cannot be empty when cors_preset=cors_with_regex")
 		}
-		host.Cors = &route.CorsPolicy{
+		host.Cors = &routepb.CorsPolicy{
 			AllowOriginRegex: []string{orgReg},
 		}
 	case "":
@@ -91,21 +91,21 @@ func MakeRouteConfig(serviceInfo *sc.ServiceInfo) (*v2.RouteConfiguration, error
 		host.GetCors().AllowMethods = *flags.CorsAllowMethods
 		host.GetCors().AllowHeaders = *flags.CorsAllowHeaders
 		host.GetCors().ExposeHeaders = *flags.CorsExposeHeaders
-		host.GetCors().AllowCredentials = &types.BoolValue{Value: *flags.CorsAllowCredentials}
+		host.GetCors().AllowCredentials = &wrappers.BoolValue{Value: *flags.CorsAllowCredentials}
 	}
 
-	virtualHosts = append(virtualHosts, host)
-	return &v2.RouteConfiguration{
+	virtualHosts = append(virtualHosts, &host)
+	return &rdspb.RouteConfiguration{
 		Name:         routeName,
 		VirtualHosts: virtualHosts,
 	}, nil
 }
 
-func makeDynamicRoutingConfig(serviceInfo *sc.ServiceInfo) ([]route.Route, error) {
-	var backendRoutes []route.Route
+func makeDynamicRoutingConfig(serviceInfo *sc.ServiceInfo) ([]*routepb.Route, error) {
+	var backendRoutes []*routepb.Route
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
-		var routeMatcher *route.RouteMatch
+		var routeMatcher *routepb.RouteMatch
 		if method.BackendRule.TranslationType == conf.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
 			continue
 		}
@@ -114,52 +114,52 @@ func makeDynamicRoutingConfig(serviceInfo *sc.ServiceInfo) ([]route.Route, error
 				return nil, fmt.Errorf("error making HTTP route matcher for selector: %v", operation)
 			}
 
-			r := route.Route{
-				Match: *routeMatcher,
-				Action: &route.Route_Route{
-					Route: &route.RouteAction{
-						ClusterSpecifier: &route.RouteAction_Cluster{
+			r := routepb.Route{
+				Match: routeMatcher,
+				Action: &routepb.Route_Route{
+					Route: &routepb.RouteAction{
+						ClusterSpecifier: &routepb.RouteAction_Cluster{
 							Cluster: method.BackendRule.ClusterName,
 						},
-						HostRewriteSpecifier: &route.RouteAction_HostRewrite{
+						HostRewriteSpecifier: &routepb.RouteAction_HostRewrite{
 							HostRewrite: method.BackendRule.Hostname,
 						},
 					},
 				},
 			}
-			backendRoutes = append(backendRoutes, r)
+			backendRoutes = append(backendRoutes, &r)
 		}
 	}
 	return backendRoutes, nil
 }
 
-func makeHttpRouteMatcher(httpRule *commonpb.Pattern) *route.RouteMatch {
+func makeHttpRouteMatcher(httpRule *commonpb.Pattern) *routepb.RouteMatch {
 	if httpRule == nil {
 		return nil
 	}
-	var routeMatcher route.RouteMatch
+	var routeMatcher routepb.RouteMatch
 	re := regexp.MustCompile(`{[^{}]+}`)
 
 	// Replacing query parameters inside "{}" by regex "[^\/]+", which means
 	// any character except `/`, also adds `$` to match to the end of the string.
 	if re.MatchString(httpRule.UriTemplate) {
-		routeMatcher = route.RouteMatch{
-			PathSpecifier: &route.RouteMatch_Regex{
+		routeMatcher = routepb.RouteMatch{
+			PathSpecifier: &routepb.RouteMatch_Regex{
 				Regex: re.ReplaceAllString(httpRule.UriTemplate, `[^\/]+`) + `$`,
 			},
 		}
 	} else {
 		// Match with HttpHeader method. Some methods may have same path.
-		routeMatcher = route.RouteMatch{
-			PathSpecifier: &route.RouteMatch_Path{
+		routeMatcher = routepb.RouteMatch{
+			PathSpecifier: &routepb.RouteMatch_Path{
 				Path: httpRule.UriTemplate,
 			},
 		}
 	}
-	routeMatcher.Headers = []*route.HeaderMatcher{
+	routeMatcher.Headers = []*routepb.HeaderMatcher{
 		{
 			Name: ":method",
-			HeaderMatchSpecifier: &route.HeaderMatcher_ExactMatch{
+			HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
 				ExactMatch: httpRule.HttpMethod,
 			},
 		},

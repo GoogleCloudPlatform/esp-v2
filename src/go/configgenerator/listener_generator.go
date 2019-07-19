@@ -19,9 +19,6 @@ import (
 	"strings"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
-	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	"github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
-	"github.com/gogo/protobuf/types"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
@@ -35,11 +32,15 @@ import (
 	pmpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/path_matcher"
 	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
-	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	ac "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
-	rt "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
-	tc "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
-	hcm "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
+	addresspb "github.com/envoyproxy/data-plane-api/api/address"
+	hcm "github.com/envoyproxy/data-plane-api/api/http_connection_manager"
+	httpuripb "github.com/envoyproxy/data-plane-api/api/http_uri"
+	ac "github.com/envoyproxy/data-plane-api/api/jwt_authn"
+	ldspb "github.com/envoyproxy/data-plane-api/api/lds"
+	listenerpb "github.com/envoyproxy/data-plane-api/api/listener"
+	rt "github.com/envoyproxy/data-plane-api/api/router"
+	tc "github.com/envoyproxy/data-plane-api/api/transcoder"
+	structpb "github.com/golang/protobuf/ptypes/struct"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 	sm "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
@@ -49,7 +50,7 @@ const (
 )
 
 // MakeListeners provides dynamic listener settings for Envoy
-func MakeListeners(serviceInfo *sc.ServiceInfo) (*v2.Listener, error) {
+func MakeListeners(serviceInfo *sc.ServiceInfo) (*ldspb.Listener, error) {
 	httpFilters := []*hcm.HttpFilter{}
 
 	if *flags.CorsPreset == "basic" || *flags.CorsPreset == "cors_with_regex" {
@@ -100,7 +101,7 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) (*v2.Listener, error) {
 
 		grpcWebFilter := &hcm.HttpFilter{
 			Name:       ut.GRPCWeb,
-			ConfigType: &hcm.HttpFilter_Config{&types.Struct{}},
+			ConfigType: &hcm.HttpFilter_Config{Config: &structpb.Struct{}},
 		}
 		httpFilters = append(httpFilters, grpcWebFilter)
 	}
@@ -128,13 +129,13 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) (*v2.Listener, error) {
 	}
 
 	httpConMgr := &hcm.HttpConnectionManager{
-		CodecType:  hcm.AUTO,
+		CodecType:  hcm.HttpConnectionManager_AUTO,
 		StatPrefix: statPrefix,
 		RouteSpecifier: &hcm.HttpConnectionManager_RouteConfig{
 			RouteConfig: route,
 		},
 
-		UseRemoteAddress:  &types.BoolValue{Value: *flags.EnvoyUseRemoteAddress},
+		UseRemoteAddress:  &wrappers.BoolValue{Value: *flags.EnvoyUseRemoteAddress},
 		XffNumTrustedHops: uint32(*flags.EnvoyXffNumTrustedHops),
 	}
 	if *flags.EnableTracing {
@@ -150,23 +151,23 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) (*v2.Listener, error) {
 		return nil, err
 	}
 
-	return &v2.Listener{
-		Address: core.Address{
-			Address: &core.Address_SocketAddress{
-				SocketAddress: &core.SocketAddress{
+	return &ldspb.Listener{
+		Address: &addresspb.Address{
+			Address: &addresspb.Address_SocketAddress{
+				SocketAddress: &addresspb.SocketAddress{
 					Address: *flags.ListenerAddress,
-					PortSpecifier: &core.SocketAddress_PortValue{
+					PortSpecifier: &addresspb.SocketAddress_PortValue{
 						PortValue: uint32(*flags.ListenerPort),
 					},
 				},
 			},
 		},
-		FilterChains: []listener.FilterChain{
+		FilterChains: []*listenerpb.FilterChain{
 			{
-				Filters: []listener.Filter{
+				Filters: []*listenerpb.Filter{
 					{
 						Name:       ut.HTTPConnectionManager,
-						ConfigType: &listener.Filter_Config{httpFilterConfig},
+						ConfigType: &listenerpb.Filter_Config{httpFilterConfig},
 					},
 				},
 			},
@@ -237,13 +238,13 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 			Issuer: provider.GetIssuer(),
 			JwksSourceSpecifier: &ac.JwtProvider_RemoteJwks{
 				RemoteJwks: &ac.RemoteJwks{
-					HttpUri: &core.HttpUri{
+					HttpUri: &httpuripb.HttpUri{
 						Uri: provider.GetJwksUri(),
-						HttpUpstreamType: &core.HttpUri_Cluster{
+						HttpUpstreamType: &httpuripb.HttpUri_Cluster{
 							Cluster: provider.GetIssuer(),
 						},
 					},
-					CacheDuration: &types.Duration{
+					CacheDuration: &duration.Duration{
 						Seconds: int64(*flags.JwksCacheDurationInS),
 					},
 				},
@@ -570,7 +571,7 @@ func makeRouterFilter() *hcm.HttpFilter {
 	})
 	routerFilter := &hcm.HttpFilter{
 		Name:       ut.Router,
-		ConfigType: &hcm.HttpFilter_Config{router},
+		ConfigType: &hcm.HttpFilter_Config{Config: router},
 	}
 	return routerFilter
 }

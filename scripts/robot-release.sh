@@ -37,6 +37,7 @@ if [ ! -d "${ROOT}/bin" ]; then
   mkdir ${ROOT}/bin
 fi
 
+make -C ${ROOT} depend.apiproto
 make -C ${ROOT} build
 make -C ${ROOT} build-envoy
 

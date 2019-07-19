@@ -20,17 +20,16 @@ import (
 	bt "cloudesf.googlesource.com/gcpproxy/src/go/bootstrap"
 	gen "cloudesf.googlesource.com/gcpproxy/src/go/configgenerator"
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
-
-	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	boot "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
+	bootstrappb "github.com/envoyproxy/data-plane-api/api/bootstrap"
+	ldspb "github.com/envoyproxy/data-plane-api/api/lds"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 // ServiceToBoostrapConfig outputs envoy bootstrap config from service config.
 // id is the service configuration ID. It is generated when deploying
 // service config to ServiceManagement Server, example: 2017-02-13r0.
-func ServiceToBoostrapConfig(serviceConfig *conf.Service, id string) (*boot.Bootstrap, error) {
-	bootstrap := &boot.Bootstrap{
+func ServiceToBoostrapConfig(serviceConfig *conf.Service, id string) (*bootstrappb.Bootstrap, error) {
+	bootstrap := &bootstrappb.Bootstrap{
 		Node:  bt.CreateNode(),
 		Admin: bt.CreateAdmin(),
 	}
@@ -49,9 +48,11 @@ func ServiceToBoostrapConfig(serviceConfig *conf.Service, id string) (*boot.Boot
 		return nil, err
 	}
 
-	bootstrap.StaticResources = &boot.Bootstrap_StaticResources{
-		Listeners: []v2.Listener{*listener},
-		Clusters:  clusters,
+	bootstrap.StaticResources = &bootstrappb.Bootstrap_StaticResources{
+		Listeners: []*ldspb.Listener{
+			listener,
+		},
+		Clusters: clusters,
 	}
 	return bootstrap, nil
 }
