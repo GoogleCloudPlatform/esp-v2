@@ -1,0 +1,19 @@
+# Configuration options slightly modified from:
+# https://github.com/bazelbuild/bazel-toolchains/blob/master/bazelrc/bazel-0.24.0.bazelrc
+# Only the remote cache options were used
+
+# Note this file is templated.
+# CI scripts will auto-replace templates with real values and move it to the repo root.
+
+# The following flags enable the remote cache so action results can be shared
+# across machines, developers, and workspaces.
+build --remote_cache=remotebuildexecution.googleapis.com
+build --tls_enabled=true
+build --remote_timeout=3600
+build --auth_enabled=true
+build --spawn_strategy=standalone
+build --strategy=Javac=standalone
+build --strategy=Closure=standalone
+build --strategy=Genrule=standalone
+build --host_platform_remote_properties_override='properties:{name:"cache-silo-key" value:"CACHE_SILO_NAME"}'
+build --remote_instance_name=projects/CACHE_PROJECT_ID/instances/default_instance

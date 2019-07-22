@@ -24,9 +24,13 @@ WD=$(cd "$WD"; pwd)
 ROOT=$(dirname "$WD")
 export PATH=$PATH:$GOPATH/bin
 
-bazel clean
-
 cd "${ROOT}"
+. ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities'; exit 1; }
+
+echo '======================================================='
+echo '===================== Setup Cache ====================='
+echo '======================================================='
+try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}"
 
 # golang test
 echo '======================================================'

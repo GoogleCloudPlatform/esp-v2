@@ -331,3 +331,47 @@ function get_image_name_with_sha() {
     echo -n $image
     return 0
 }
+
+# Attempts to setup bazel to use a remote cache
+# On non-Prow hosts, the remote cache will not be used
+function try_setup_bazel_remote_cache() {
+
+    local prow_job_id=$1
+    local docker_image_name=$2
+    local root_dir=$3
+    local gcp_project_id="cloudesf-testing"
+
+    # Determine if this job is running on a non-Prow host. All Prow jobs must have this env var
+    # https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md#job-environment-variables
+    if [[ -z "${prow_job_id}" ]]; then
+        echo "PROW_JOB_ID not set. Script continuing without bazel remote cache on non-Prow host.";
+        return 0;
+    fi
+    echo "Setting up remote bazel cache on Prow host. Prow Job ID: ${prow_job_id}"
+
+    # Variables must be set to determine cache location
+    if [[ -z "${gcp_project_id}" ]]; then
+        echo "PROJECT_ID not set, cannot determine remote cache location.";
+        exit 2;
+    fi
+    echo "Cache Project ID: ${gcp_project_id}"
+    if [[ -z "${docker_image_name}" ]]; then
+        echo "IMAGE not set, cannot determine cache silo.";
+        exit 2;
+    fi
+
+    # Cache silo name is determined by docker image name.
+    # This works because the environment is consistent in any containers of this docker image.
+    # Also, replace special characters that RBE does not accept with a '/'
+    local cache_silo=$(echo "${docker_image_name}" | tr @: /)
+    echo "Original Image Name: ${docker_image_name}"
+    echo "Cache Silo Name: ${cache_silo}"
+
+    # Append Prow bazelrc to workspace's bazelrc so that all commands will default to using it
+    cat "${root_dir}/prow/.bazelrc" >> "${root_dir}/.bazelrc"
+
+    # Replace templates with real environment variables
+    # Use @ as delimiter because docker image name may have '/'
+    sed -i -e "s@CACHE_SILO_NAME@${cache_silo}@g" ${root_dir}/.bazelrc
+    sed -i -e "s@CACHE_PROJECT_ID@${gcp_project_id}@g" ${root_dir}/.bazelrc
+}
