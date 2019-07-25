@@ -14,10 +14,16 @@
 
 package util
 
-import "testing"
+import (
+	"testing"
+
+	"cloudesf.googlesource.com/gcpproxy/src/go/util/testdata"
+)
 
 func TestGenerateAccessToken(t *testing.T) {
-	token, duration, err := GenerateAccessToken("testdata/key.json")
+	fakeKeyData := []byte(testdata.FakeServiceAccountKeyData)
+
+	token, duration, err := generateAccessToken(fakeKeyData)
 	if token == "" || duration == 0 || err != nil {
 		t.Errorf("Test : Fail to make access token, got token: %s, duration: %v, err: %v", token, duration, err)
 	}

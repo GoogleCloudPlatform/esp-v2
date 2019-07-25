@@ -102,7 +102,7 @@ func accessToken() (string, time.Duration, error) {
 		return "", 0, fmt.Errorf("If --non_gcp is specified, --service_account_key has to be specified.")
 	}
 	if *flags.ServiceAccountKey != "" {
-		return util.GenerateAccessToken(*flags.ServiceAccountKey)
+		return util.GenerateAccessTokenFromFile(*flags.ServiceAccountKey)
 	}
 	return fetchAccessToken()
 }

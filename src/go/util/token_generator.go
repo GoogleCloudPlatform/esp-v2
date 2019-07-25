@@ -28,12 +28,17 @@ var (
 	}
 )
 
-func GenerateAccessToken(serviceAccountKey string) (string, time.Duration, error) {
+func GenerateAccessTokenFromFile(serviceAccountKey string) (string, time.Duration, error) {
 	data, err := ioutil.ReadFile(serviceAccountKey)
 	if err != nil {
 		return "", 0, err
 	}
-	creds, err := google.CredentialsFromJSON(oauth2.NoContext, data, _GOOGLE_API_SCOPE...)
+
+	return generateAccessToken(data)
+}
+
+func generateAccessToken(keyData []byte) (string, time.Duration, error) {
+	creds, err := google.CredentialsFromJSON(oauth2.NoContext, keyData, _GOOGLE_API_SCOPE...)
 	if err != nil {
 		return "", 0, err
 	}
