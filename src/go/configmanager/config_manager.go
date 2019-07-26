@@ -51,25 +51,31 @@ type ConfigManager struct {
 
 	cache               cache.SnapshotCache
 	checkRolloutsTicker *time.Ticker
+
+	metadataFetcher *MetadataFetcher
 }
 
 // NewConfigManager creates new instance of ConfigManager.
-func NewConfigManager() (*ConfigManager, error) {
+// mf is set to nil on non-gcp deployments
+func NewConfigManager(mf *MetadataFetcher) (*ConfigManager, error) {
 	var err error
 	name := *ServiceName
 	checkMetadata := *CheckMetadata
-	if name == "" && checkMetadata {
-		name, err = fetchServiceName()
+
+	if name == "" && checkMetadata && mf != nil {
+		name, err = mf.fetchServiceName()
 		if name == "" || err != nil {
 			return nil, fmt.Errorf("failed to read metadata with key endpoints-service-name from metadata server")
 		}
 	} else if name == "" && !checkMetadata {
-		return nil, fmt.Errorf("service name is not specified")
+		return nil, fmt.Errorf("service name is not specified, required because metadata fetching is disabled")
+	} else if name == "" && mf == nil {
+		return nil, fmt.Errorf("service name is not specified, required on a non-gcp deployment")
 	}
 	rolloutStrategy := *RolloutStrategy
 	// try to fetch from metadata, if not found, set to fixed instead of throwing an error
-	if rolloutStrategy == "" && checkMetadata {
-		rolloutStrategy, _ = fetchRolloutStrategy()
+	if rolloutStrategy == "" && checkMetadata && mf != nil {
+		rolloutStrategy, _ = mf.fetchRolloutStrategy()
 	}
 	if rolloutStrategy == "" {
 		rolloutStrategy = ut.FixedRolloutStrategy
@@ -79,14 +85,15 @@ func NewConfigManager() (*ConfigManager, error) {
 	}
 
 	m := &ConfigManager{
-		serviceName: name,
+		serviceName:     name,
+		metadataFetcher: mf,
 	}
 
 	m.cache = cache.NewSnapshotCache(true, m, m)
 
 	if rolloutStrategy == ut.ManagedRolloutStrategy {
 		// try to fetch rollouts and get newest config, if failed, NewConfigManager exits with failure
-		newRolloutID, newConfigID, err := loadConfigFromRollouts(m.serviceName, m.curRolloutID, m.curConfigID)
+		newRolloutID, newConfigID, err := loadConfigFromRollouts(m.serviceName, m.curRolloutID, m.curConfigID, mf)
 		if err != nil {
 			return nil, err
 		}
@@ -101,13 +108,15 @@ func NewConfigManager() (*ConfigManager, error) {
 		// rollout strategy is fixed mode
 		configID := *ServiceConfigID
 		if configID == "" {
-			if checkMetadata {
-				configID, err = fetchConfigId()
+			if checkMetadata && mf != nil {
+				configID, err = mf.fetchConfigId()
 				if configID == "" || err != nil {
 					return nil, fmt.Errorf("failed to read metadata with key endpoints-service-version from metadata server")
 				}
-			} else {
-				return nil, fmt.Errorf("service config id is not specified")
+			} else if !checkMetadata {
+				return nil, fmt.Errorf("service config id is not specified, required because metadata fetching is disabled")
+			} else if mf == nil {
+				return nil, fmt.Errorf("service config id is not specified, required on a non-gcp deployment")
 			}
 		}
 		m.curConfigID = configID
@@ -125,7 +134,7 @@ func NewConfigManager() (*ConfigManager, error) {
 			for range m.checkRolloutsTicker.C {
 				m.Infof("check new rollouts for service %v", m.serviceName)
 				// only log error and keep checking when fetching rollouts and getting newest config fail
-				newRolloutID, newConfigID, err := loadConfigFromRollouts(m.serviceName, m.curRolloutID, m.curConfigID)
+				newRolloutID, newConfigID, err := loadConfigFromRollouts(m.serviceName, m.curRolloutID, m.curConfigID, mf)
 				if err != nil {
 					glog.Errorf("error occurred when checking new rollouts, %v", err)
 				}
@@ -146,7 +155,7 @@ func NewConfigManager() (*ConfigManager, error) {
 // It calls ServiceManager Server to fetch the service configuration in order
 // to dynamically configure Envoy.
 func (m *ConfigManager) updateSnapshot() error {
-	serviceConfig, err := fetchConfig(m.serviceName, m.curConfigID)
+	serviceConfig, err := fetchConfig(m.serviceName, m.curConfigID, m.metadataFetcher)
 	if err != nil {
 		return fmt.Errorf("fail to fetch service config, %s", err)
 	}
@@ -155,7 +164,9 @@ func (m *ConfigManager) updateSnapshot() error {
 		return fmt.Errorf("fail to initialize ServiceInfo, %s", err)
 	}
 
-	m.serviceInfo.GcpAttributes = fetchGCPAttributes()
+	if m.metadataFetcher != nil {
+		m.serviceInfo.GcpAttributes = m.metadataFetcher.fetchGCPAttributes()
+	}
 
 	snapshot, err := m.makeSnapshot()
 	if err != nil {

@@ -15,8 +15,6 @@
 package configmanager
 
 import (
-	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -46,17 +44,16 @@ type testToken struct {
 }
 
 func TestFetchAccountTokenExpired(t *testing.T) {
-	ts := initMockMetadataServer(fakeToken)
+	ts := util.InitMockServer(t, fakeToken)
 	defer ts.Close()
-	fetchMetadataURL = func(_ string) string {
-		return ts.URL
-	}
+
 	// Get a time stamp and use it through out the test.
 	fakeNow := time.Now()
+
+	mf := NewMockMetadataFetcher(t, ts.URL, fakeNow)
+
 	// Make sure the accessToken is empty before the test.
-	metadata.accessToken = ""
-	// Mock the timeNow function.
-	timeNow = func() time.Time { return fakeNow }
+	mf.tokenInfo.accessToken = ""
 
 	testData := []testToken{
 		{
@@ -88,10 +85,10 @@ func TestFetchAccountTokenExpired(t *testing.T) {
 	}
 	for i, tc := range testData {
 		if tc.curToken != "" {
-			metadata.accessToken = tc.curToken
-			metadata.tokenTimeout = tc.curTokenTimeout
+			mf.tokenInfo.accessToken = tc.curToken
+			mf.tokenInfo.tokenTimeout = tc.curTokenTimeout
 		}
-		token, expires, err := fetchAccessToken()
+		token, expires, err := mf.fetchAccessToken()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -105,15 +102,14 @@ func TestFetchAccountTokenExpired(t *testing.T) {
 }
 
 func TestFetchIdentityJWTTokenBasic(t *testing.T) {
-	ts := initMockMetadataServer(fakeIdentityJwtToken)
+	ts := util.InitMockServer(t, fakeIdentityJwtToken)
 	defer ts.Close()
-	fetchMetadataURL = func(_ string) string {
-		return ts.URL
-	}
-	// Get a timestamp and use it through out the test.
+
+	// Get a time stamp and use it through out the test.
 	fakeNow := time.Now()
-	// Mock the timeNow function.
-	timeNow = func() time.Time { return fakeNow }
+
+	mf := NewMockMetadataFetcher(t, ts.URL, fakeNow)
+
 	testData := []testToken{
 		{
 			desc:               "Empty token response",
@@ -147,7 +143,7 @@ func TestFetchIdentityJWTTokenBasic(t *testing.T) {
 	for i, tc := range testData {
 		// Mocking the last-fetched token.
 		if tc.curToken != "" {
-			audToToken.Store(fakeAudience,
+			mf.audToToken.Store(fakeAudience,
 				tokenInfo{
 					accessToken:  tc.curToken,
 					tokenTimeout: tc.curTokenTimeout,
@@ -155,7 +151,7 @@ func TestFetchIdentityJWTTokenBasic(t *testing.T) {
 			)
 		}
 
-		token, expires, err := fetchIdentityJWTToken(fakeAudience)
+		token, expires, err := mf.fetchIdentityJWTToken(fakeAudience)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -169,13 +165,12 @@ func TestFetchIdentityJWTTokenBasic(t *testing.T) {
 }
 
 func TestFetchServiceName(t *testing.T) {
-	ts := initMockMetadataServer(fakeServiceName)
+	ts := util.InitMockServer(t, fakeServiceName)
 	defer ts.Close()
 
-	fetchMetadataURL = func(_ string) string {
-		return ts.URL
-	}
-	name, err := fetchServiceName()
+	mf := NewMockMetadataFetcher(t, ts.URL, time.Now())
+
+	name, err := mf.fetchServiceName()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -185,13 +180,12 @@ func TestFetchServiceName(t *testing.T) {
 }
 
 func TestFetchConfigId(t *testing.T) {
-	ts := initMockMetadataServer(fakeConfigID)
+	ts := util.InitMockServer(t, fakeConfigID)
 	defer ts.Close()
 
-	fetchMetadataURL = func(_ string) string {
-		return ts.URL
-	}
-	name, err := fetchConfigId()
+	mf := NewMockMetadataFetcher(t, ts.URL, time.Now())
+
+	name, err := mf.fetchConfigId()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -291,19 +285,17 @@ func TestFetchGCPAttributes(t *testing.T) {
 
 	errorTmpl := "Test: %s\n  Expected: %s\n  Actual: %s"
 	for _, tc := range testData {
-		ts := initMockMetadataServerFromPathResp(tc.mockedResp)
+		ts := util.InitMockServerFromPathResp(t, tc.mockedResp)
 		defer ts.Close()
+
+		mockBaseUrl := ts.URL
 		if tc.mockedResp == nil {
-			fetchMetadataURL = func(suffix string) string {
-				return "non-existing-url" + suffix
-			}
-		} else {
-			fetchMetadataURL = func(suffix string) string {
-				return ts.URL + suffix
-			}
+			mockBaseUrl = "non-existing-url-287924837"
 		}
 
-		attrs := fetchGCPAttributes()
+		mf := NewMockMetadataFetcher(t, mockBaseUrl, time.Now())
+
+		attrs := mf.fetchGCPAttributes()
 		if tc.expectedGCPAttributes == nil && attrs == nil {
 			continue
 		}
@@ -318,29 +310,4 @@ func TestFetchGCPAttributes(t *testing.T) {
 		}
 	}
 
-}
-
-func initMockMetadataServer(resp string) *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(resp))
-	}))
-}
-
-func initMockMetadataServerFromPathResp(pathResp map[string]string) *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		// Root is used to tell if the sever is healthy or not.
-		if r.URL.Path == "" || r.URL.Path == "/" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		if resp, ok := pathResp[r.URL.Path]; ok {
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(resp))
-		} else {
-			w.WriteHeader(http.StatusNotFound)
-		}
-	}))
 }

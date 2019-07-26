@@ -1426,16 +1426,15 @@ func runTest(t *testing.T, f func(*testEnv)) {
 		return mockRollout.URL
 	}
 
-	mockMetadata := initMockMetadataServerFromPathResp(
+	mockMetadataServer := util.InitMockServerFromPathResp(t,
 		map[string]string{
 			util.ServiceAccountTokenSuffix: fakeToken,
 		})
-	defer mockMetadata.Close()
-	fetchMetadataURL = func(suffix string) string {
-		return mockMetadata.URL + suffix
-	}
+	defer mockMetadataServer.Close()
 
-	manager, err := NewConfigManager()
+	metadataFetcher := NewMockMetadataFetcher(t, mockMetadataServer.URL, time.Now())
+
+	manager, err := NewConfigManager(metadataFetcher)
 	if err != nil {
 		t.Fatal("fail to initialize ConfigManager: ", err)
 	}

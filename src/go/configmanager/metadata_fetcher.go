@@ -34,18 +34,6 @@ const (
 	tokenExpiry = 3599
 )
 
-var (
-	// metadata updates and stores Metadata from GCE.
-	metadata   tokenInfo
-	metdataMux sync.Mutex
-	// audience -> tokenInfo.
-	audToToken       sync.Map
-	timeNow          = time.Now
-	fetchMetadataURL = func(suffix string) string {
-		return *flags.MetadataURL + suffix
-	}
-)
-
 type tokenInfo struct {
 	accessToken  string
 	tokenTimeout time.Time
@@ -56,12 +44,33 @@ type metadataTokenResponse struct {
 	ExpiresIn   int64  `json:"expires_in"`
 }
 
-var metadataClient http.Client
+type MetadataFetcher struct {
+	client  http.Client
+	baseUrl string
+	timeNow func() time.Time
 
-var getMetadata = func(path string) ([]byte, error) {
+	mux sync.Mutex
+	// metadata updates and stores Metadata from GCE.
+	tokenInfo tokenInfo
+	// audience -> tokenInfo.
+	audToToken sync.Map
+}
+
+func NewMetadataFetcher() *MetadataFetcher {
+	return &MetadataFetcher{
+		baseUrl: *flags.MetadataURL,
+		timeNow: time.Now,
+	}
+}
+
+func (mf *MetadataFetcher) createUrl(suffix string) string {
+	return mf.baseUrl + suffix
+}
+
+func (mf *MetadataFetcher) getMetadata(path string) ([]byte, error) {
 	req, _ := http.NewRequest("GET", path, nil)
 	req.Header.Add("Metadata-Flavor", "Google")
-	resp, err := metadataClient.Do(req)
+	resp, err := mf.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -72,17 +81,17 @@ var getMetadata = func(path string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-func fetchAccessToken() (string, time.Duration, error) {
-	now := timeNow()
+func (mf *MetadataFetcher) fetchAccessToken() (string, time.Duration, error) {
+	now := mf.timeNow()
 	// Follow the similar logic as GCE metadata server, where returned token will be valid for at
 	// least 60s.
-	metdataMux.Lock()
-	defer metdataMux.Unlock()
-	if metadata.accessToken != "" && !now.After(metadata.tokenTimeout.Add(-time.Second*60)) {
-		return metadata.accessToken, metadata.tokenTimeout.Sub(now), nil
+	mf.mux.Lock()
+	defer mf.mux.Unlock()
+	if mf.tokenInfo.accessToken != "" && !now.After(mf.tokenInfo.tokenTimeout.Add(-time.Second*60)) {
+		return mf.tokenInfo.accessToken, mf.tokenInfo.tokenTimeout.Sub(now), nil
 	}
 
-	tokenBody, err := getMetadata(fetchMetadataURL(util.ServiceAccountTokenSuffix))
+	tokenBody, err := mf.getMetadata(mf.createUrl(util.ServiceAccountTokenSuffix))
 	if err != nil {
 		return "", 0, err
 	}
@@ -93,14 +102,14 @@ func fetchAccessToken() (string, time.Duration, error) {
 	}
 
 	expires := time.Duration(resp.ExpiresIn) * time.Second
-	metadata.accessToken = resp.AccessToken
-	metadata.tokenTimeout = now.Add(expires)
-	return metadata.accessToken, expires, nil
+	mf.tokenInfo.accessToken = resp.AccessToken
+	mf.tokenInfo.tokenTimeout = now.Add(expires)
+	return mf.tokenInfo.accessToken, expires, nil
 }
 
 // TODO(kyuc): perhaps we need some retry logic and timeout?
-func fetchMetadata(key string) (string, error) {
-	body, err := getMetadata(fetchMetadataURL(key))
+func (mf *MetadataFetcher) fetchMetadata(key string) (string, error) {
+	body, err := mf.getMetadata(mf.createUrl(key))
 	if err != nil {
 		return "", err
 	}
@@ -108,23 +117,23 @@ func fetchMetadata(key string) (string, error) {
 	return string(body), nil
 }
 
-func fetchServiceName() (string, error) {
-	return fetchMetadata(util.ServiceNameSuffix)
+func (mf *MetadataFetcher) fetchServiceName() (string, error) {
+	return mf.fetchMetadata(util.ServiceNameSuffix)
 }
 
-func fetchConfigId() (string, error) {
-	return fetchMetadata(util.ConfigIDSuffix)
+func (mf *MetadataFetcher) fetchConfigId() (string, error) {
+	return mf.fetchMetadata(util.ConfigIDSuffix)
 }
 
-func fetchRolloutStrategy() (string, error) {
-	return fetchMetadata(util.RolloutStrategySuffix)
+func (mf *MetadataFetcher) fetchRolloutStrategy() (string, error) {
+	return mf.fetchMetadata(util.RolloutStrategySuffix)
 }
 
-func fetchIdentityJWTToken(audience string) (string, time.Duration, error) {
-	now := timeNow()
+func (mf *MetadataFetcher) fetchIdentityJWTToken(audience string) (string, time.Duration, error) {
+	now := mf.timeNow()
 	// Follow the similar logic as GCE metadata server, where returned token will be valid for at
 	// least 60s.
-	if ti, ok := audToToken.Load(audience); ok {
+	if ti, ok := mf.audToToken.Load(audience); ok {
 		info := ti.(tokenInfo)
 		if !now.After(info.tokenTimeout.Add(-time.Second * 60)) {
 			return info.accessToken, info.tokenTimeout.Sub(now), nil
@@ -132,13 +141,13 @@ func fetchIdentityJWTToken(audience string) (string, time.Duration, error) {
 	}
 
 	identityTokenURI := util.IdentityTokenSuffix + "?audience=" + audience + "&format=standard"
-	token, err := fetchMetadata(identityTokenURI)
+	token, err := mf.fetchMetadata(identityTokenURI)
 	if err != nil {
 		return "", 0, err
 	}
 
 	expires := time.Duration(tokenExpiry) * time.Second
-	audToToken.Store(audience, tokenInfo{
+	mf.audToToken.Store(audience, tokenInfo{
 		accessToken:  token,
 		tokenTimeout: now.Add(expires),
 	},
@@ -146,28 +155,28 @@ func fetchIdentityJWTToken(audience string) (string, time.Duration, error) {
 	return token, expires, nil
 }
 
-func fetchGCPAttributes() *scpb.GcpAttributes {
+func (mf *MetadataFetcher) fetchGCPAttributes() *scpb.GcpAttributes {
 	// Checking if metadata server is reachable.
-	if _, err := fetchMetadata(""); err != nil {
+	if _, err := mf.fetchMetadata(""); err != nil {
 		return nil
 	}
 
 	attrs := &scpb.GcpAttributes{}
-	if projectID, err := fetchMetadata(util.ProjectIDSuffix); err == nil {
+	if projectID, err := mf.fetchMetadata(util.ProjectIDSuffix); err == nil {
 		attrs.ProjectId = projectID
 	}
 
-	if zone, err := fetchZone(); err == nil {
+	if zone, err := mf.fetchZone(); err == nil {
 		attrs.Zone = zone
 	}
 
-	attrs.Platform = fetchPlatform()
+	attrs.Platform = mf.fetchPlatform()
 	return attrs
 }
 
 // Do not directly use this function. Use fetchGCPAttributes instead.
-func fetchZone() (string, error) {
-	zonePath, err := fetchMetadata(util.ZoneSuffix)
+func (mf *MetadataFetcher) fetchZone() (string, error) {
+	zonePath, err := mf.fetchMetadata(util.ZoneSuffix)
 	if err != nil {
 		return "", err
 	}
@@ -183,12 +192,12 @@ func fetchZone() (string, error) {
 }
 
 // Do not directly use this function. Use fetchGCPAttributes instead.
-func fetchPlatform() string {
-	if _, err := fetchMetadata(util.GAEServerSoftwareSuffix); err == nil {
+func (mf *MetadataFetcher) fetchPlatform() string {
+	if _, err := mf.fetchMetadata(util.GAEServerSoftwareSuffix); err == nil {
 		return util.GAEFlex
 	}
 
-	if _, err := fetchMetadata(util.KubeEnvSuffix); err == nil {
+	if _, err := mf.fetchMetadata(util.KubeEnvSuffix); err == nil {
 		return util.GKE
 	}
 

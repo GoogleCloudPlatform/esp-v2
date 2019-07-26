@@ -55,10 +55,10 @@ var (
 	}}
 )
 
-func loadConfigFromRollouts(serviceName, curRolloutID, curConfigID string) (string, string, error) {
+func loadConfigFromRollouts(serviceName, curRolloutID, curConfigID string, mf *MetadataFetcher) (string, string, error) {
 	var err error
 	var listServiceRolloutsResponse *sm.ListServiceRolloutsResponse
-	listServiceRolloutsResponse, err = fetchRollouts(serviceName)
+	listServiceRolloutsResponse, err = fetchRollouts(serviceName, mf)
 	if err != nil {
 		return "", "", fmt.Errorf("fail to get rollouts, %s", err)
 	}
@@ -97,19 +97,19 @@ func loadConfigFromRollouts(serviceName, curRolloutID, curConfigID string) (stri
 	return newRolloutID, newConfigID, nil
 }
 
-func accessToken() (string, time.Duration, error) {
-	if *flags.NonGCP && *flags.ServiceAccountKey == "" {
+func accessToken(mf *MetadataFetcher) (string, time.Duration, error) {
+	if mf == nil && *flags.ServiceAccountKey == "" {
 		return "", 0, fmt.Errorf("If --non_gcp is specified, --service_account_key has to be specified.")
 	}
 	if *flags.ServiceAccountKey != "" {
 		return util.GenerateAccessTokenFromFile(*flags.ServiceAccountKey)
 	}
-	return fetchAccessToken()
+	return mf.fetchAccessToken()
 }
 
 // TODO(jcwang) cleanup here. This function is redundant.
-func fetchRollouts(serviceName string) (*sm.ListServiceRolloutsResponse, error) {
-	token, _, err := accessToken()
+func fetchRollouts(serviceName string, mf *MetadataFetcher) (*sm.ListServiceRolloutsResponse, error) {
+	token, _, err := accessToken(mf)
 	if err != nil {
 		return nil, fmt.Errorf("fail to get access token: %v", err)
 	}
@@ -117,8 +117,8 @@ func fetchRollouts(serviceName string) (*sm.ListServiceRolloutsResponse, error) 
 	return callServiceManagementRollouts(fetchRolloutsURL(serviceName), token)
 }
 
-func fetchConfig(serviceName, configId string) (*conf.Service, error) {
-	token, _, err := accessToken()
+func fetchConfig(serviceName, configId string, mf *MetadataFetcher) (*conf.Service, error) {
+	token, _, err := accessToken(mf)
 	if err != nil {
 		return nil, fmt.Errorf("fail to get access tokenm: %v", err)
 	}

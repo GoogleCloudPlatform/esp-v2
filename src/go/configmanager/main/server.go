@@ -23,6 +23,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/configmanager"
+	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 
 	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v2"
@@ -35,7 +36,14 @@ var (
 
 func main() {
 	flag.Parse()
-	m, err := configmanager.NewConfigManager()
+
+	var mf *configmanager.MetadataFetcher
+	if !*flags.NonGCP {
+		glog.Info("running on GCP, initializing metadata fetcher")
+		mf = configmanager.NewMetadataFetcher()
+	}
+
+	m, err := configmanager.NewConfigManager(mf)
 	if err != nil {
 		glog.Exitf("fail to initialize config manager: %v", err)
 	}
