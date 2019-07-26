@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package configmanager
+package metadata
 
 import (
 	"strings"
@@ -44,13 +44,13 @@ type testToken struct {
 }
 
 func TestFetchAccountTokenExpired(t *testing.T) {
-	ts := util.InitMockServer(t, fakeToken)
+	ts := util.InitMockServer(fakeToken)
 	defer ts.Close()
 
 	// Get a time stamp and use it through out the test.
 	fakeNow := time.Now()
 
-	mf := NewMockMetadataFetcher(t, ts.URL, fakeNow)
+	mf := NewMockMetadataFetcher(ts.URL, fakeNow)
 
 	// Make sure the accessToken is empty before the test.
 	mf.tokenInfo.accessToken = ""
@@ -88,7 +88,7 @@ func TestFetchAccountTokenExpired(t *testing.T) {
 			mf.tokenInfo.accessToken = tc.curToken
 			mf.tokenInfo.tokenTimeout = tc.curTokenTimeout
 		}
-		token, expires, err := mf.fetchAccessToken()
+		token, expires, err := mf.FetchAccessToken()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -102,13 +102,13 @@ func TestFetchAccountTokenExpired(t *testing.T) {
 }
 
 func TestFetchIdentityJWTTokenBasic(t *testing.T) {
-	ts := util.InitMockServer(t, fakeIdentityJwtToken)
+	ts := util.InitMockServer(fakeIdentityJwtToken)
 	defer ts.Close()
 
 	// Get a time stamp and use it through out the test.
 	fakeNow := time.Now()
 
-	mf := NewMockMetadataFetcher(t, ts.URL, fakeNow)
+	mf := NewMockMetadataFetcher(ts.URL, fakeNow)
 
 	testData := []testToken{
 		{
@@ -151,7 +151,7 @@ func TestFetchIdentityJWTTokenBasic(t *testing.T) {
 			)
 		}
 
-		token, expires, err := mf.fetchIdentityJWTToken(fakeAudience)
+		token, expires, err := mf.FetchIdentityJWTToken(fakeAudience)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -165,12 +165,12 @@ func TestFetchIdentityJWTTokenBasic(t *testing.T) {
 }
 
 func TestFetchServiceName(t *testing.T) {
-	ts := util.InitMockServer(t, fakeServiceName)
+	ts := util.InitMockServer(fakeServiceName)
 	defer ts.Close()
 
-	mf := NewMockMetadataFetcher(t, ts.URL, time.Now())
+	mf := NewMockMetadataFetcher(ts.URL, time.Now())
 
-	name, err := mf.fetchServiceName()
+	name, err := mf.FetchServiceName()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -180,12 +180,12 @@ func TestFetchServiceName(t *testing.T) {
 }
 
 func TestFetchConfigId(t *testing.T) {
-	ts := util.InitMockServer(t, fakeConfigID)
+	ts := util.InitMockServer(fakeConfigID)
 	defer ts.Close()
 
-	mf := NewMockMetadataFetcher(t, ts.URL, time.Now())
+	mf := NewMockMetadataFetcher(ts.URL, time.Now())
 
-	name, err := mf.fetchConfigId()
+	name, err := mf.FetchConfigId()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -285,7 +285,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 
 	errorTmpl := "Test: %s\n  Expected: %s\n  Actual: %s"
 	for _, tc := range testData {
-		ts := util.InitMockServerFromPathResp(t, tc.mockedResp)
+		ts := util.InitMockServerFromPathResp(tc.mockedResp)
 		defer ts.Close()
 
 		mockBaseUrl := ts.URL
@@ -293,9 +293,9 @@ func TestFetchGCPAttributes(t *testing.T) {
 			mockBaseUrl = "non-existing-url-287924837"
 		}
 
-		mf := NewMockMetadataFetcher(t, mockBaseUrl, time.Now())
+		mf := NewMockMetadataFetcher(mockBaseUrl, time.Now())
 
-		attrs := mf.fetchGCPAttributes()
+		attrs := mf.FetchGCPAttributes()
 		if tc.expectedGCPAttributes == nil && attrs == nil {
 			continue
 		}

@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
+	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
@@ -55,7 +56,7 @@ var (
 	}}
 )
 
-func loadConfigFromRollouts(serviceName, curRolloutID, curConfigID string, mf *MetadataFetcher) (string, string, error) {
+func loadConfigFromRollouts(serviceName, curRolloutID, curConfigID string, mf *metadata.MetadataFetcher) (string, string, error) {
 	var err error
 	var listServiceRolloutsResponse *sm.ListServiceRolloutsResponse
 	listServiceRolloutsResponse, err = fetchRollouts(serviceName, mf)
@@ -97,18 +98,18 @@ func loadConfigFromRollouts(serviceName, curRolloutID, curConfigID string, mf *M
 	return newRolloutID, newConfigID, nil
 }
 
-func accessToken(mf *MetadataFetcher) (string, time.Duration, error) {
+func accessToken(mf *metadata.MetadataFetcher) (string, time.Duration, error) {
 	if mf == nil && *flags.ServiceAccountKey == "" {
 		return "", 0, fmt.Errorf("If --non_gcp is specified, --service_account_key has to be specified.")
 	}
 	if *flags.ServiceAccountKey != "" {
 		return util.GenerateAccessTokenFromFile(*flags.ServiceAccountKey)
 	}
-	return mf.fetchAccessToken()
+	return mf.FetchAccessToken()
 }
 
 // TODO(jcwang) cleanup here. This function is redundant.
-func fetchRollouts(serviceName string, mf *MetadataFetcher) (*sm.ListServiceRolloutsResponse, error) {
+func fetchRollouts(serviceName string, mf *metadata.MetadataFetcher) (*sm.ListServiceRolloutsResponse, error) {
 	token, _, err := accessToken(mf)
 	if err != nil {
 		return nil, fmt.Errorf("fail to get access token: %v", err)
@@ -117,7 +118,7 @@ func fetchRollouts(serviceName string, mf *MetadataFetcher) (*sm.ListServiceRoll
 	return callServiceManagementRollouts(fetchRolloutsURL(serviceName), token)
 }
 
-func fetchConfig(serviceName, configId string, mf *MetadataFetcher) (*conf.Service, error) {
+func fetchConfig(serviceName, configId string, mf *metadata.MetadataFetcher) (*conf.Service, error) {
 	token, _, err := accessToken(mf)
 	if err != nil {
 		return nil, fmt.Errorf("fail to get access tokenm: %v", err)

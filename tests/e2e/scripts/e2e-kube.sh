@@ -40,10 +40,9 @@ PROJECT_ID="cloudesf-testing"
 # Parses parameters into config file.
 ARGS="$ARGS \"--service=${APIPROXY_SERVICE}\","
 ARGS="$ARGS \"--rollout_strategy=${ROLLOUT_STRATEGY}\","
-ARGS="$ARGS \"--enable_tracing\", \"--tracing_project_id=${PROJECT_ID}\", \"--tracing_sample_rate=1.0\""
+ARGS="$ARGS \"--enable_tracing\", \"--tracing_sample_rate=1.0\""
 sed "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g"  ${YAML_TEMPLATE} \
   | sed "s|ARGS|${ARGS}|g" | tee ${YAML_FILE}
-
 
 # Push service config to service management servie. Only need to run when there
 # is changes in the service config, and also remember to update the version

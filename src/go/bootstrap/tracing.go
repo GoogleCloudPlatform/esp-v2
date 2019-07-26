@@ -29,8 +29,6 @@ var (
 	TracingSamplingRate    = flag.Float64("tracing_sample_rate", 0.001, "tracing sampling rate from 0.0 to 1.0")
 	TracingIncomingContext = flag.String("tracing_incoming_context", "", "comma separated incoming trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)")
 	TracingOutgoingContext = flag.String("tracing_outgoing_context", "", "comma separated outgoing trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)")
-
-	TracingProjectId = flag.String("tracing_project_id", "", "The Google project id required for Stack driver tracing")
 )
 
 func createTraceContexts(ctx_str string) ([]tracepb.OpenCensusConfig_TraceContext, error) {
@@ -57,15 +55,12 @@ func createTraceContexts(ctx_str string) ([]tracepb.OpenCensusConfig_TraceContex
 }
 
 // CreateTracing outputs envoy tracing config
-func CreateTracing() (*tracepb.Tracing, error) {
-	if *TracingProjectId == "" {
-		return nil, fmt.Errorf("tracing_project_id must be specified for StackDriver tracing")
-	}
+func CreateTracing(tracingProjectId string) (*tracepb.Tracing, error) {
 
 	cfg := &tracepb.OpenCensusConfig{
 		TraceConfig:                &opencensuspb.TraceConfig{},
 		StackdriverExporterEnabled: true,
-		StackdriverProjectId:       *TracingProjectId,
+		StackdriverProjectId:       tracingProjectId,
 	}
 
 	if ctx, err := createTraceContexts(*TracingIncomingContext); err == nil {

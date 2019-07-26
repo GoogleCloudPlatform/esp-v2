@@ -43,7 +43,6 @@ var (
 	// Network related configurations.
 	ClusterAddress       = flag.String("cluster_address", "127.0.0.1", "cluster socket ip address")
 	ListenerAddress      = flag.String("listener_address", "0.0.0.0", "listener socket ip address")
-	MetadataURL          = flag.String("metadata_url", "http://metadata.google.internal/computeMetadata", "url of metadata server")
 	Node                 = flag.String("node", "api_proxy", "envoy node id")
 	ServiceManagementURL = flag.String("service_management_url", "https://servicemanagement.googleapis.com", "url of service management server")
 
