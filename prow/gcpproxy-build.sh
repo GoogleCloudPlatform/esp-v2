@@ -50,7 +50,6 @@ if [ ! -d "bin" ]; then
 fi
 make tools
 make depend.install
-make depend.apiproto
 make build
 make clean
 

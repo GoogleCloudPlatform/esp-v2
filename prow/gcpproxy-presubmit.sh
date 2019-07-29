@@ -45,7 +45,6 @@ fi
 
 make tools
 make depend.install
-make depend.apiproto
 make test
 
 # c++ test

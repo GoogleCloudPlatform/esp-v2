@@ -43,7 +43,6 @@ fi
 
 # libraries for go build
 curl https://glide.sh/get | sh
-glide install
 
 # depedencies for envoy build
 apt-get update && \
