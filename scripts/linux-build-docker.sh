@@ -20,7 +20,8 @@ set -eo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities'; exit 1; }
 
-DOCKERFILE="Dockerfile-proxy"
+DOCKERFILE_ENVOY="Dockerfile-envoy"
+DOCKERFILE_PROXY="Dockerfile-proxy"
 DOCKERFILE_PATH="${ROOT}/docker"
 
 while getopts :i: arg; do
@@ -30,18 +31,37 @@ while getopts :i: arg; do
   esac
 done
 
-[[ -n "${IMAGE}" ]] || error_exit "Specify required image argument via '-i'"
+ENVOY_IMAGE_GENERAL_NAME='gcr.io/cloudesf-testing/envoy-binary'
+ENVOY_IMAGE_SHA_NAME=$(get_envoy_image_name_with_sha)
+ENVOY_IMAGE_LATEST_NAME="${ENVOY_IMAGE_GENERAL_NAME}:latest"
 
-echo "Building API PROXY docker image."
+PROXY_IMAGE_SHA_NAME=$(get_proxy_image_name_with_sha)
 
-retry -n 3 docker build --no-cache -t "${IMAGE}" \
-  -f "${DOCKERFILE_PATH}/${DOCKERFILE}" \
+echo "Building ENVOY docker image."
+
+retry -n 3 docker build --no-cache -t "${ENVOY_IMAGE_SHA_NAME}" \
+  -t "${ENVOY_IMAGE_LATEST_NAME}" -f "${DOCKERFILE_PATH}/${DOCKERFILE_ENVOY}" \
   "${ROOT}/" \
   || error_exit "Docker image build failed."
 
-echo "Pushing Docker image: ${IMAGE}"
+echo "Pushing Docker image: ${ENVOY_IMAGE_SHA_NAME}"
 
 # Try 10 times, shortest wait is 10 seconds, exponential back-off.
 retry -n 10 -s 10 \
-    gcloud docker -- push "${IMAGE}" \
+    gcloud docker -- push "${ENVOY_IMAGE_GENERAL_NAME}" \
+  || error_exit "Failed to upload Docker image to gcr."
+
+
+echo "Building API PROXY docker image."
+
+retry -n 3 docker build --no-cache -t "${PROXY_IMAGE_SHA_NAME}" \
+  -f "${DOCKERFILE_PATH}/${DOCKERFILE_PROXY}" \
+  "${ROOT}/" \
+  || error_exit "Docker image build failed."
+
+echo "Pushing Docker image: ${PROXY_IMAGE_SHA_NAME}"
+
+# Try 10 times, shortest wait is 10 seconds, exponential back-off.
+retry -n 10 -s 10 \
+    gcloud docker -- push "${PROXY_IMAGE_SHA_NAME}" \
   || error_exit "Failed to upload Docker image to gcr."

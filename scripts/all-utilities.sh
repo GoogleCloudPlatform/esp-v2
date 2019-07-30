@@ -324,7 +324,15 @@ function get_tool() {
   return 0
 }
 
-function get_image_name_with_sha() {
+function get_envoy_image_name_with_sha() {
+    # Generic docker image format. https://git-scm.com/docs/git-show.
+    local image_format='gcr.io/cloudesf-testing/envoy-binary:git-%H'
+    local image="$(git show -q HEAD --pretty=format:"${image_format}")"
+    echo -n $image
+    return 0
+}
+
+function get_proxy_image_name_with_sha() {
     # Generic docker image format. https://git-scm.com/docs/git-show.
     local image_format='gcr.io/cloudesf-testing/api-proxy:git-%H'
     local image="$(git show -q HEAD --pretty=format:"${image_format}")"
