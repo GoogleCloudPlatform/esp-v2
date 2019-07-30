@@ -62,7 +62,7 @@ message APIKeyRequirement {
   // The locations to extract the api_key. Only one api key is needed,
   // if multiple locations are specified, the first api key is used.
   // If the field is empty, default locations will be used.
-  // The default locations are: query paramaters "key", "api_key", and header
+  // The default locations are: query parameters "key", "api_key", and header
   // "x-api-key"
   repeated APIKeyLocation locations = 1;
 

@@ -32,7 +32,7 @@ func NewMockServiceMrg() *MockServiceMrg {
 	return m
 }
 
-// Start lanuches a mock ServiceManagement server.
+// Start launches a mock ServiceManagement server.
 func (m *MockServiceMrg) Start(serviceConfig string) (URL string) {
 	m.serviceConfig = serviceConfig
 	m.s.Start()

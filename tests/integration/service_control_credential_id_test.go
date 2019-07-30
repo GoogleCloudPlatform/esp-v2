@@ -78,7 +78,7 @@ func TestServiceControlCredentialId(t *testing.T) {
 		wantGetScRequestError error
 	}{
 		{
-			desc:           "success; When api_key is unavaliable, the label credential_id is iss and the check request is skipped",
+			desc:           "success; When api_key is unavailable, the label credential_id is iss and the check request is skipped",
 			clientProtocol: "http",
 			method:         "/v1/shelves",
 			httpMethod:     "GET",
@@ -109,7 +109,7 @@ func TestServiceControlCredentialId(t *testing.T) {
 			},
 		},
 		{
-			desc:           "success; When api_key is unavaliable, the label credential_id is iss plus aud and the check request is skipped",
+			desc:           "success; When api_key is unavailable, the label credential_id is iss plus aud and the check request is skipped",
 			clientProtocol: "http",
 			method:         "/v1/shelves",
 			httpMethod:     "GET",

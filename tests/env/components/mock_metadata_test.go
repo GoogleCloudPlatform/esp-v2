@@ -76,7 +76,7 @@ func TestMockMetadata(t *testing.T) {
 			wantedResp: fakeConfigID,
 		},
 		{
-			desc:       "Sucess, using query url",
+			desc:       "Success, using query url",
 			url:        "/foo?bar",
 			wantedResp: "foo_bar_val",
 		},

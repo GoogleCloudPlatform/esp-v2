@@ -327,7 +327,7 @@ class Parser {
   void PostProcessVariables() {
     for (auto& var : variables_) {
       if (var.has_wildcard_path) {
-        // if the variable contains a '**', store the end_positon
+        // if the variable contains a '**', store the end_position
         // relative to the end, such that -1 corresponds to the end
         // of the path. As we only support fixed path after '**',
         // this will allow the matcher code to reconstruct the variable
@@ -336,7 +336,7 @@ class Parser {
 
         if (!verb_.empty()) {
           // a custom verb will add an additional segment, so
-          // the end_postion needs a -1
+          // the end_position needs a -1
           --var.end_segment;
         }
       }

@@ -147,12 +147,23 @@ clean:
 .PHONY: check
 check: format.check vet lint
 
+.PHONY: spelling.check
+spelling.check:
+	@echo "--> checking spelling"
+	@tools/spelling/check_spelling.sh check
+
+.PHONY: spelling.fix
+spelling.fix:
+	@echo "--> fixing spelling"
+	@tools/spelling/check_spelling.sh fix
+
 .PHONY: format
 format: tools.goimports tools.buildifier
 	@echo "--> formatting code with 'goimports' tool"
 	@goimports -local $(PKG) -w -l $(GOFILES)
 	@echo "--> formatting BUILD files with 'buildifier' tool"
 	@buildifier -r WORKSPACE ./src/ ./api/
+	@make spelling.fix
 
 .PHONY: clang-format
 clang-format:
@@ -163,6 +174,7 @@ clang-format:
 format.check: tools.goimports
 	@echo "--> checking code formatting with 'goimports' tool"
 	@goimports -local $(PKG) -l $(GOFILES) | sed -e "s/^/\?\t/" | tee >(test -z)
+	@make spelling.check
 
 .PHONY: vet
 vet: tools.govet

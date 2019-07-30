@@ -59,7 +59,7 @@ func NewMockInvalidJwtProvider(issuer string) *MockJwtProvider {
 	return mockJwtProvider
 }
 
-// NewOpenIDServer creates a new Jwt provider with fixed addres.
+// NewOpenIDServer creates a new Jwt provider with fixed address.
 func NewOpenIDServer(addr, jwksUriEntry string) (*MockJwtProvider, error) {
 	l, err := net.Listen("tcp", addr)
 	if err != nil {

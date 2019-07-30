@@ -44,7 +44,7 @@ fi
 # libraries for go build
 curl https://glide.sh/get | sh
 
-# depedencies for envoy build
+# dependencies for envoy build
 apt-get update && \
     apt-get -y install libtool cmake automake ninja-build curl unzip
 

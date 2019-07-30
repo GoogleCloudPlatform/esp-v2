@@ -46,7 +46,7 @@ const (
 
 	// JwtPayloadMetadataName is the field name passed into metadata
 	JwtPayloadMetadataName = "jwt_payloads"
-	// FakeJwksUri used when jwksUri is unavaliable
+	// FakeJwksUri used when jwksUri is unavailable
 	FakeJwksUri = "http://aaaaaaaaaaaaa.bbbbbbbbbbbbb.cccccccccccc/inaccessible_pkey"
 
 	// Supported Http Methods.
