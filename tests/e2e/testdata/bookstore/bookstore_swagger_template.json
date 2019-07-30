@@ -17,6 +17,122 @@
     "https"
   ],
   "paths": {
+    "/echo": {
+      "delete": {
+        "description": "Echo Delete Message",
+        "operationId": "echoDeleteMessage",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "204": {
+            "description": "delete message response"
+          }
+        }
+      },
+      "get": {
+        "description": "Echo Get Message",
+        "operationId": "echoGetMessage",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "get message response"
+          }
+        }
+      },
+      "patch": {
+        "description": "Echo Patch Message",
+        "operationId": "echoPatchMessage",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "patch message response"
+          }
+        }
+      },
+      "post": {
+        "description": "Echo Post Message",
+        "operationId": "echoPostMessage",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "post message response"
+          }
+        }
+      },
+      "put": {
+        "description": "Echo Put Message",
+        "operationId": "echoPutMessage",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "put message response"
+          }
+        }
+      }
+    },
+    "/echo/auth": {
+      "get": {
+        "description": "Echo Get Message Authed",
+        "operationId": "echoGetMessageAuthed",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "get message response"
+          }
+        },
+        "security": [
+          {
+            "test_jwk":  [],
+            "api_key": []
+          },
+          {
+            "test_x509": [],
+            "api_key": []
+          },
+          {
+            "test_symmetric": [],
+            "api_key": []
+          }
+        ]
+      },
+      "post": {
+        "description": "Echo Post Message Authed",
+        "operationId": "echoPostMessageAuthed",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "post message response"
+          }
+        },
+        "security": [
+          {
+            "test_jwk":  [],
+            "api_key": []
+          },
+          {
+            "test_x509": [],
+            "api_key": []
+          },
+          {
+            "test_symmetric": [],
+            "api_key": []
+          }
+        ]
+      }
+    },
     "/shelves": {
       "get": {
         "description": "Returns all shelves in the bookstore.",
