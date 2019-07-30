@@ -330,7 +330,7 @@ func createDistMetricSet(options *distOptions, name string, value int64) *sc.Met
 	}
 }
 
-// Update the metric wtih the value and aggregate it n times.
+// Update the metric with the value and aggregate it n times.
 func updateDistMetricSet(m *sc.MetricValueSet, fValue float64, n int64) {
 	for _, v := range m.MetricValues {
 		d := v.GetDistributionValue()

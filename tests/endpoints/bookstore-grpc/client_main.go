@@ -34,7 +34,7 @@ var (
 	token          = flag.String("token", "", "Authentication token.")
 	keyfile        = flag.String("keyfile", "", "Path to a Google service account key file.")
 	audience       = flag.String("audience", "", "Audience.")
-	headers        = flag.String("headers", "", "http headers, key and value should be seperated by ':'")
+	headers        = flag.String("headers", "", "http headers, key and value should be separated by ':'")
 )
 
 func main() {

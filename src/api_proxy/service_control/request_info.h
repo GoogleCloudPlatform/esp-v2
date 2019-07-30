@@ -123,7 +123,7 @@ struct CheckRequestInfo : public OperationInfo {
   std::string ios_bundle_id;
 };
 
-// Stores the information substracted from the check response.
+// Stores the information subtracted from the check response.
 struct CheckResponseInfo {
   // If the request have a valid api key.
   bool is_api_key_valid;

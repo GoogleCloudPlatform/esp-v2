@@ -91,7 +91,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 			wantResp:                `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
 		{
-			desc:                    "Sucessful, the timeout length is longer than the sleep time of handler",
+			desc:                    "Successful, the timeout length is longer than the sleep time of handler",
 			clientProtocol:          "http",
 			httpMethod:              "GET",
 			sleepTimes:              3,
