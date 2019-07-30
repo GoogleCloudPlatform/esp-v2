@@ -19,6 +19,7 @@ set -eo pipefail
 
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${SCRIPT_PATH}/../../.." && pwd)"
+YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/bookstore/http-bookstore.yaml.template
 YAML_FILE=${SCRIPT_PATH}/../testdata/bookstore/http-bookstore.yaml
 
 ARGS="\
@@ -36,8 +37,9 @@ PROJECT_ID="cloudesf-testing"
 ARGS="$ARGS \"--service=${APIPROXY_SERVICE}\","
 ARGS="$ARGS \"--rollout_strategy=${ROLLOUT_STRATEGY}\","
 ARGS="$ARGS \"--enable_tracing\", \"--tracing_project_id=${PROJECT_ID}\", \"--tracing_sample_rate=1.0\""
-run sed_i "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g" ${YAML_FILE}
-run sed_i "s|ARGS|${ARGS}|g" ${YAML_FILE}
+sed "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g"  ${YAML_TEMPLATE} \
+  | sed "s|ARGS|${ARGS}|g" | tee ${YAML_FILE}
+
 
 # Push service config to service management servie. Only need to run when there
 # is changes in the service config, and also remember to update the version
