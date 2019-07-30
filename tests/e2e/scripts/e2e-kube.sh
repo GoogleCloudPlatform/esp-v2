@@ -29,6 +29,10 @@ ARGS="\
 . ${SCRIPT_PATH}/prow-utilities.sh || { echo "Cannot load Bash utilities" ; exit 1 ; }
 e2e_options "${@}"
 
+. ${SCRIPT_PATH}/linux-install-wrk.sh || { echo "Cannot load Bash utilities" ; exit 1 ; }
+echo "Installing tools if necessary"
+update_wrk
+
 TEST_ID="gke-${COUPLING_OPTION}-${TEST_TYPE}-${BACKEND}"
 LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
 PROJECT_ID="cloudesf-testing"

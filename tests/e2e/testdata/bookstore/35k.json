@@ -1,0 +1,1474 @@
+[
+{
+ "producer_project_id": "apiproxy-load-test",
+ "name": "apiproxy-load-test.appspot.com",
+ "apis": [
+  {
+   "methods": [
+    {
+     "name": "GetMessage",
+     "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
+     "responseTypeUrl": "type.googleapis.com/google.protobuf.Value"
+    },
+    {
+     "name": "DeleteMessage",
+     "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
+     "responseTypeUrl": "type.googleapis.com/google.protobuf.Value"
+    },
+    {
+     "name": "PatchMessage",
+     "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
+     "responseTypeUrl": "type.googleapis.com/google.protobuf.Value"
+    },
+    {
+     "name": "PostMessage",
+     "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
+     "responseTypeUrl": "type.googleapis.com/google.protobuf.Value"
+    },
+    {
+     "name": "PutMessage",
+     "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
+     "responseTypeUrl": "type.googleapis.com/google.protobuf.Value"
+    },
+    {
+     "name": "GetMessageAuthed",
+     "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
+     "responseTypeUrl": "type.googleapis.com/google.protobuf.Value"
+    },
+    {
+     "name": "PostMessageAuthed",
+     "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
+     "responseTypeUrl": "type.googleapis.com/google.protobuf.Value"
+    },
+    {
+     "name": "ListShelves",
+     "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
+     "responseTypeUrl": "type.googleapis.com/ListShelvesResponse"
+    },
+    {
+     "name": "CreateShelf",
+     "requestTypeUrl": "type.googleapis.com/CreateShelfRequest",
+     "responseTypeUrl": "type.googleapis.com/Shelf"
+    },
+    {
+     "name": "GetShelf",
+     "requestTypeUrl": "type.googleapis.com/GetShelfRequest",
+     "responseTypeUrl": "type.googleapis.com/Shelf"
+    },
+    {
+     "name": "DeleteShelf",
+     "requestTypeUrl": "type.googleapis.com/DeleteShelfRequest",
+     "responseTypeUrl": "type.googleapis.com/google.protobuf.Value"
+    },
+    {
+     "name": "ListBooks",
+     "requestTypeUrl": "type.googleapis.com/ListBooksRequest",
+     "responseTypeUrl": "type.googleapis.com/ListBooksResponse"
+    },
+    {
+     "name": "CreateBook",
+     "requestTypeUrl": "type.googleapis.com/CreateBookRequest",
+     "responseTypeUrl": "type.googleapis.com/Book"
+    },
+    {
+     "name": "GetBook",
+     "requestTypeUrl": "type.googleapis.com/GetBookRequest",
+     "responseTypeUrl": "type.googleapis.com/Book"
+    },
+    {
+     "name": "DeleteBook",
+     "requestTypeUrl": "type.googleapis.com/DeleteBookRequest",
+     "responseTypeUrl": "type.googleapis.com/google.protobuf.Value"
+    }
+   ],
+   "version": "v1",
+   "sourceContext": {}
+  }
+ ],
+ "backend": {
+  "rules": [
+   {
+    "selector": "GetMessage"
+   },
+   {
+    "selector": "DeleteMessage"
+   },
+   {
+    "selector": "PatchMessage"
+   },
+   {
+    "selector": "PostMessage"
+   },
+   {
+    "selector": "PutMessage"
+   },
+   {
+    "selector": "GetMessageAuthed"
+   },
+   {
+    "selector": "PostMessageAuthed"
+   },
+   {
+    "selector": "ListShelves"
+   },
+   {
+    "selector": "CreateShelf"
+   },
+   {
+    "selector": "GetShelf"
+   },
+   {
+    "selector": "DeleteShelf"
+   },
+   {
+    "selector": "ListBooks"
+   },
+   {
+    "selector": "CreateBook"
+   },
+   {
+    "selector": "GetBook"
+   },
+   {
+    "selector": "DeleteBook"
+   }
+  ]
+ },
+ "http": {
+  "rules": [
+   {
+    "selector": "GetMessage",
+    "get": "/echo"
+   },
+   {
+    "selector": "DeleteMessage",
+    "delete": "/echo"
+   },
+   {
+    "selector": "PatchMessage",
+    "patch": "/echo"
+   },
+   {
+    "selector": "PostMessage",
+    "post": "/echo"
+   },
+   {
+    "selector": "PutMessage",
+    "put": "/echo"
+   },
+   {
+    "selector": "GetMessageAuthed",
+    "get": "/echo/auth"
+   },
+   {
+    "selector": "PostMessageAuthed",
+    "post": "/echo/auth"
+   },
+   {
+    "selector": "ListShelves",
+    "get": "/shelves"
+   },
+   {
+    "selector": "CreateShelf",
+    "post": "/shelves"
+   },
+   {
+    "selector": "GetShelf",
+    "get": "/shelves/{shelf}"
+   },
+   {
+    "selector": "DeleteShelf",
+    "delete": "/shelves/{shelf}"
+   },
+   {
+    "selector": "ListBooks",
+    "get": "/shelves/{shelf}/books"
+   },
+   {
+    "selector": "CreateBook",
+    "post": "/shelves/{shelf}/books"
+   },
+   {
+    "selector": "GetBook",
+    "get": "/shelves/{shelf}/books/{book}"
+   },
+   {
+    "selector": "DeleteBook",
+    "delete": "/shelves/{shelf}/books/{book}"
+   }
+  ]
+ },
+ "authentication": {
+  "rules": [
+   {
+    "selector": "GetMessageAuthed",
+    "requirements": [
+     {
+      "providerId": "test_jwk"
+     },
+     {
+      "providerId": "test_x509"
+     },
+     {
+      "providerId": "test_symmetric",
+      "audiences": "test.echo.audience"
+     }
+    ]
+   },
+   {
+    "selector": "PostMessageAuthed",
+    "requirements": [
+     {
+      "providerId": "test_jwk"
+     },
+     {
+      "providerId": "test_x509"
+     },
+     {
+      "providerId": "test_symmetric",
+      "audiences": "test.echo.audience"
+     }
+    ]
+   },
+   {
+    "selector": "CreateShelf",
+    "requirements": [
+     {
+      "providerId": "google_id_token",
+      "audiences": "848149964201.apps.googleusercontent.com,841077041629.apps.googleusercontent.com,488010225785-g97tab3t7jdj51fr8vbqvmh4bfic3g5k.apps.googleusercontent.com,488010225785-qvp4qbiak296t4afcej35dh4maoufmhc.apps.googleusercontent.com"
+     },
+     {
+      "providerId": "google_identity_toolkit"
+     },
+     {
+      "providerId": "auth0_symmetric",
+      "audiences": "sI0N2qOcfYoizZtstfnkEbsUWt6bluT0"
+     },
+     {
+      "providerId": "auth0_jwk",
+      "audiences": "Uuts8fJWf1yieO9Ocv0Uk6LBqsUTePQq"
+     },
+     {
+      "providerId": "test_jwk"
+     },
+     {
+      "providerId": "test_x509"
+     },
+     {
+      "providerId": "test_symmetric",
+      "audiences": "test.esp.audience"
+     }
+    ]
+   },
+   {
+    "selector": "GetShelf",
+    "requirements": [
+     {
+      "providerId": "google_id_token",
+      "audiences": "848149964201.apps.googleusercontent.com,841077041629.apps.googleusercontent.com,488010225785-g97tab3t7jdj51fr8vbqvmh4bfic3g5k.apps.googleusercontent.com,488010225785-qvp4qbiak296t4afcej35dh4maoufmhc.apps.googleusercontent.com"
+     },
+     {
+      "providerId": "google_identity_toolkit",
+      "audiences": "esp-test-client"
+     },
+     {
+      "providerId": "auth0_symmetric",
+      "audiences": "sI0N2qOcfYoizZtstfnkEbsUWt6bluT0"
+     },
+     {
+      "providerId": "auth0_jwk",
+      "audiences": "Uuts8fJWf1yieO9Ocv0Uk6LBqsUTePQq"
+     },
+     {
+      "providerId": "test_jwk"
+     },
+     {
+      "providerId": "test_x509"
+     },
+     {
+      "providerId": "test_symmetric",
+      "audiences": "test.esp.audience"
+     }
+    ]
+   },
+   {
+    "selector": "GetBook",
+    "requirements": [
+     {
+      "providerId": "google_id_token",
+      "audiences": "848149964201.apps.googleusercontent.com,841077041629.apps.googleusercontent.com,488010225785-g97tab3t7jdj51fr8vbqvmh4bfic3g5k.apps.googleusercontent.com,488010225785-qvp4qbiak296t4afcej35dh4maoufmhc.apps.googleusercontent.com"
+     },
+     {
+      "providerId": "google_identity_toolkit",
+      "audiences": "esp-test-client"
+     },
+     {
+      "providerId": "auth0_symmetric",
+      "audiences": "sI0N2qOcfYoizZtstfnkEbsUWt6bluT0"
+     },
+     {
+      "providerId": "auth0_jwk",
+      "audiences": "Uuts8fJWf1yieO9Ocv0Uk6LBqsUTePQq"
+     },
+     {
+      "providerId": "test_jwk"
+     },
+     {
+      "providerId": "test_x509"
+     },
+     {
+      "providerId": "test_symmetric",
+      "audiences": "test.esp.audience"
+     }
+    ]
+   }
+  ],
+  "providers": [
+   {
+    "id": "auth0_jwk",
+    "issuer": "https://esp-jwk.auth0.com/",
+    "jwksUri": "https://esp-jwk.auth0.com/.well-known/jwks.json"
+   },
+   {
+    "id": "auth0_symmetric",
+    "issuer": "https://esp-symmetric.auth0.com/",
+    "jwksUri": "http://169.254.169.254/computeMetadata/v1/project/attributes/auth-key-https_esp-symmetric_auth0_com"
+   },
+   {
+    "id": "google_id_token",
+    "issuer": "https://accounts.google.com",
+    "jwksUri": "https://www.googleapis.com/oauth2/v1/certs"
+   },
+   {
+    "id": "google_identity_toolkit",
+    "issuer": "https://securetoken.google.com",
+    "jwksUri": "https://www.googleapis.com/service_accounts/v1/metadata/x509/securetoken@system.gserviceaccount.com"
+   },
+   {
+    "id": "test_jwk",
+    "issuer": "test-client@esp-test-client.iam.gserviceaccount.com",
+    "jwksUri": "https://www.googleapis.com/service_accounts/v1/jwk/test-client@esp-test-client.iam.gserviceaccount.com"
+   },
+   {
+    "id": "test_symmetric",
+    "issuer": "https://test.esp.client",
+    "jwksUri": "http://169.254.169.254/computeMetadata/v1/project/attributes/auth-key-test_esp_client"
+   },
+   {
+    "id": "test_x509",
+    "issuer": "23028304136-fbju1j1cdfpc5q9q6s23gm56trn0c9ti@developer.gserviceaccount.com",
+    "jwksUri": "https://www.googleapis.com/service_accounts/v1/metadata/x509/23028304136-fbju1j1cdfpc5q9q6s23gm56trn0c9ti@developer.gserviceaccount.com"
+   }
+  ]
+ },
+ "usage": {
+  "rules": [
+   {
+    "selector": "GetMessage"
+   },
+   {
+    "selector": "DeleteMessage"
+   },
+   {
+    "selector": "PatchMessage"
+   },
+   {
+    "selector": "PostMessage"
+   },
+   {
+    "selector": "PutMessage"
+   },
+   {
+    "selector": "GetMessageAuthed"
+   },
+   {
+    "selector": "PostMessageAuthed"
+   },
+   {
+    "selector": "ListShelves",
+    "allowUnregisteredCalls": true
+   },
+   {
+    "selector": "CreateShelf"
+   },
+   {
+    "selector": "GetShelf",
+    "allowUnregisteredCalls": true
+   },
+   {
+    "selector": "DeleteShelf"
+   },
+   {
+    "selector": "ListBooks"
+   },
+   {
+    "selector": "CreateBook"
+   },
+   {
+    "selector": "GetBook"
+   },
+   {
+    "selector": "DeleteBook"
+   }
+  ]
+ },
+ "control": {
+  "environment": "servicecontrol.googleapis.com"
+ },
+ "logs": [
+  {
+   "name": "endpoints_log"
+  }
+ ],
+ "metrics": [
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/request_count",
+   "labels": [
+    {
+     "key": "/credential_id"
+    },
+    {
+     "key": "/protocol"
+    },
+    {
+     "key": "/response_code"
+    },
+    {
+     "key": "/response_code_class"
+    },
+    {
+     "key": "/status_code"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/error_count",
+   "labels": [
+    {
+     "key": "/credential_id"
+    },
+    {
+     "key": "/error_type"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/total_latencies",
+   "labels": [
+    {
+     "key": "/credential_id"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/request_count",
+   "labels": [
+    {
+     "key": "/protocol"
+    },
+    {
+     "key": "/response_code"
+    },
+    {
+     "key": "/response_code_class"
+    },
+    {
+     "key": "/status_code"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/error_count",
+   "labels": [
+    {
+     "key": "/error_type"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/total_latencies",
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user",
+   "labels": [
+    {
+     "key": "/credential_id"
+    },
+    {
+     "key": "/end_user"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user_country",
+   "labels": [
+    {
+     "key": "/credential_id"
+    },
+    {
+     "key": "/end_user_country"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/top_request_count_by_referer",
+   "labels": [
+    {
+     "key": "/credential_id"
+    },
+    {
+     "key": "/referer"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/top_request_count_by_consumer",
+   "labels": [
+    {
+     "key": "/protocol"
+    },
+    {
+     "key": "/response_code"
+    },
+    {
+     "key": "/consumer_id"
+    },
+    {
+     "key": "/status_code"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/quota_used_count",
+   "labels": [
+    {
+     "key": "/credential_id"
+    },
+    {
+     "key": "/quota_group_name"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/quota_billable_count",
+   "labels": [
+    {
+     "key": "/quota_group_name"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/request_overhead_latencies",
+   "labels": [
+    {
+     "key": "/credential_id"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/backend_latencies",
+   "labels": [
+    {
+     "key": "/credential_id"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/request_sizes",
+   "labels": [
+    {
+     "key": "/credential_id"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/response_sizes",
+   "labels": [
+    {
+     "key": "/credential_id"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/request_overhead_latencies",
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/backend_latencies",
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/request_sizes",
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/response_sizes",
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer",
+   "labels": [
+    {
+     "key": "/consumer_id"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/top_response_sizes_by_consumer",
+   "labels": [
+    {
+     "key": "/consumer_id"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  }
+ ],
+ "monitoredResources": [
+  {
+   "type": "endpoints.googleapis.com/api",
+   "labels": [
+    {
+     "key": "cloud.googleapis.com/location"
+    },
+    {
+     "key": "cloud.googleapis.com/uid"
+    },
+    {
+     "key": "serviceruntime.googleapis.com/api_version"
+    },
+    {
+     "key": "serviceruntime.googleapis.com/api_method"
+    },
+    {
+     "key": "cloud.googleapis.com/project"
+    },
+    {
+     "key": "cloud.googleapis.com/service"
+    }
+   ]
+  }
+ ],
+ "logging": {
+  "producerDestinations": [
+   {
+    "logs": [
+     "endpoints_log"
+    ],
+    "monitoredResource": "endpoints.googleapis.com/api"
+   }
+  ]
+ },
+ "monitoring": {
+  "producerDestinations": [
+   {
+    "monitoredResource": "endpoints.googleapis.com/api",
+    "metrics": [
+     "serviceruntime.googleapis.com/api/producer/request_count",
+     "serviceruntime.googleapis.com/api/producer/error_count",
+     "serviceruntime.googleapis.com/api/producer/total_latencies",
+     "serviceruntime.googleapis.com/api/producer/request_overhead_latencies",
+     "serviceruntime.googleapis.com/api/producer/backend_latencies",
+     "serviceruntime.googleapis.com/api/producer/request_sizes",
+     "serviceruntime.googleapis.com/api/producer/response_sizes",
+     "serviceruntime.googleapis.com/api/producer/top_request_count_by_consumer",
+     "serviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer",
+     "serviceruntime.googleapis.com/api/producer/top_response_sizes_by_consumer"
+    ]
+   }
+  ],
+  "consumerDestinations": [
+   {
+    "monitoredResource": "endpoints.googleapis.com/api",
+    "metrics": [
+     "serviceruntime.googleapis.com/api/consumer/request_count",
+     "serviceruntime.googleapis.com/api/consumer/error_count",
+     "serviceruntime.googleapis.com/api/consumer/quota_used_count",
+     "serviceruntime.googleapis.com/api/consumer/total_latencies",
+     "serviceruntime.googleapis.com/api/consumer/request_overhead_latencies",
+     "serviceruntime.googleapis.com/api/consumer/backend_latencies",
+     "serviceruntime.googleapis.com/api/consumer/request_sizes",
+     "serviceruntime.googleapis.com/api/consumer/response_sizes",
+     "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user",
+     "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user_country",
+     "serviceruntime.googleapis.com/api/consumer/top_request_count_by_referer"
+    ]
+   }
+  ]
+ }
+},
+{
+ "producer_project_id": "esp-load-test",
+ "name": "esp-load-test.appspot.com",
+ "apis": [
+  {
+   "methods": [
+    {
+     "name": "GetMessage",
+     "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
+     "responseTypeUrl": "type.googleapis.com/google.protobuf.Value"
+    },
+    {
+     "name": "DeleteMessage",
+     "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
+     "responseTypeUrl": "type.googleapis.com/google.protobuf.Value"
+    },
+    {
+     "name": "PatchMessage",
+     "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
+     "responseTypeUrl": "type.googleapis.com/google.protobuf.Value"
+    },
+    {
+     "name": "PostMessage",
+     "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
+     "responseTypeUrl": "type.googleapis.com/google.protobuf.Value"
+    },
+    {
+     "name": "PutMessage",
+     "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
+     "responseTypeUrl": "type.googleapis.com/google.protobuf.Value"
+    },
+    {
+     "name": "GetMessageAuthed",
+     "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
+     "responseTypeUrl": "type.googleapis.com/google.protobuf.Value"
+    },
+    {
+     "name": "PostMessageAuthed",
+     "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
+     "responseTypeUrl": "type.googleapis.com/google.protobuf.Value"
+    },
+    {
+     "name": "ListShelves",
+     "requestTypeUrl": "type.googleapis.com/google.protobuf.Empty",
+     "responseTypeUrl": "type.googleapis.com/ListShelvesResponse"
+    },
+    {
+     "name": "CreateShelf",
+     "requestTypeUrl": "type.googleapis.com/CreateShelfRequest",
+     "responseTypeUrl": "type.googleapis.com/Shelf"
+    },
+    {
+     "name": "GetShelf",
+     "requestTypeUrl": "type.googleapis.com/GetShelfRequest",
+     "responseTypeUrl": "type.googleapis.com/Shelf"
+    },
+    {
+     "name": "DeleteShelf",
+     "requestTypeUrl": "type.googleapis.com/DeleteShelfRequest",
+     "responseTypeUrl": "type.googleapis.com/google.protobuf.Value"
+    },
+    {
+     "name": "ListBooks",
+     "requestTypeUrl": "type.googleapis.com/ListBooksRequest",
+     "responseTypeUrl": "type.googleapis.com/ListBooksResponse"
+    },
+    {
+     "name": "CreateBook",
+     "requestTypeUrl": "type.googleapis.com/CreateBookRequest",
+     "responseTypeUrl": "type.googleapis.com/Book"
+    },
+    {
+     "name": "GetBook",
+     "requestTypeUrl": "type.googleapis.com/GetBookRequest",
+     "responseTypeUrl": "type.googleapis.com/Book"
+    },
+    {
+     "name": "DeleteBook",
+     "requestTypeUrl": "type.googleapis.com/DeleteBookRequest",
+     "responseTypeUrl": "type.googleapis.com/google.protobuf.Value"
+    }
+   ],
+   "version": "v1",
+   "sourceContext": {}
+  }
+ ],
+ "backend": {
+  "rules": [
+   {
+    "selector": "GetMessage"
+   },
+   {
+    "selector": "DeleteMessage"
+   },
+   {
+    "selector": "PatchMessage"
+   },
+   {
+    "selector": "PostMessage"
+   },
+   {
+    "selector": "PutMessage"
+   },
+   {
+    "selector": "GetMessageAuthed"
+   },
+   {
+    "selector": "PostMessageAuthed"
+   },
+   {
+    "selector": "ListShelves"
+   },
+   {
+    "selector": "CreateShelf"
+   },
+   {
+    "selector": "GetShelf"
+   },
+   {
+    "selector": "DeleteShelf"
+   },
+   {
+    "selector": "ListBooks"
+   },
+   {
+    "selector": "CreateBook"
+   },
+   {
+    "selector": "GetBook"
+   },
+   {
+    "selector": "DeleteBook"
+   }
+  ]
+ },
+ "http": {
+  "rules": [
+   {
+    "selector": "GetMessage",
+    "get": "/echo"
+   },
+   {
+    "selector": "DeleteMessage",
+    "delete": "/echo"
+   },
+   {
+    "selector": "PatchMessage",
+    "patch": "/echo"
+   },
+   {
+    "selector": "PostMessage",
+    "post": "/echo"
+   },
+   {
+    "selector": "PutMessage",
+    "put": "/echo"
+   },
+   {
+    "selector": "GetMessageAuthed",
+    "get": "/echo/auth"
+   },
+   {
+    "selector": "PostMessageAuthed",
+    "post": "/echo/auth"
+   },
+   {
+    "selector": "ListShelves",
+    "get": "/shelves"
+   },
+   {
+    "selector": "CreateShelf",
+    "post": "/shelves"
+   },
+   {
+    "selector": "GetShelf",
+    "get": "/shelves/{shelf}"
+   },
+   {
+    "selector": "DeleteShelf",
+    "delete": "/shelves/{shelf}"
+   },
+   {
+    "selector": "ListBooks",
+    "get": "/shelves/{shelf}/books"
+   },
+   {
+    "selector": "CreateBook",
+    "post": "/shelves/{shelf}/books"
+   },
+   {
+    "selector": "GetBook",
+    "get": "/shelves/{shelf}/books/{book}"
+   },
+   {
+    "selector": "DeleteBook",
+    "delete": "/shelves/{shelf}/books/{book}"
+   }
+  ]
+ },
+ "authentication": {
+  "rules": [
+   {
+    "selector": "GetMessageAuthed",
+    "requirements": [
+     {
+      "providerId": "test_jwk"
+     },
+     {
+      "providerId": "test_x509"
+     },
+     {
+      "providerId": "test_symmetric",
+      "audiences": "test.echo.audience"
+     }
+    ]
+   },
+   {
+    "selector": "PostMessageAuthed",
+    "requirements": [
+     {
+      "providerId": "test_jwk"
+     },
+     {
+      "providerId": "test_x509"
+     },
+     {
+      "providerId": "test_symmetric",
+      "audiences": "test.echo.audience"
+     }
+    ]
+   },
+   {
+    "selector": "CreateShelf",
+    "requirements": [
+     {
+      "providerId": "google_id_token",
+      "audiences": "848149964201.apps.googleusercontent.com,841077041629.apps.googleusercontent.com,488010225785-g97tab3t7jdj51fr8vbqvmh4bfic3g5k.apps.googleusercontent.com,488010225785-qvp4qbiak296t4afcej35dh4maoufmhc.apps.googleusercontent.com"
+     },
+     {
+      "providerId": "google_identity_toolkit"
+     },
+     {
+      "providerId": "auth0_symmetric",
+      "audiences": "sI0N2qOcfYoizZtstfnkEbsUWt6bluT0"
+     },
+     {
+      "providerId": "auth0_jwk",
+      "audiences": "Uuts8fJWf1yieO9Ocv0Uk6LBqsUTePQq"
+     },
+     {
+      "providerId": "test_jwk"
+     },
+     {
+      "providerId": "test_x509"
+     },
+     {
+      "providerId": "test_symmetric",
+      "audiences": "test.esp.audience"
+     }
+    ]
+   },
+   {
+    "selector": "GetShelf",
+    "requirements": [
+     {
+      "providerId": "google_id_token",
+      "audiences": "848149964201.apps.googleusercontent.com,841077041629.apps.googleusercontent.com,488010225785-g97tab3t7jdj51fr8vbqvmh4bfic3g5k.apps.googleusercontent.com,488010225785-qvp4qbiak296t4afcej35dh4maoufmhc.apps.googleusercontent.com"
+     },
+     {
+      "providerId": "google_identity_toolkit",
+      "audiences": "esp-test-client"
+     },
+     {
+      "providerId": "auth0_symmetric",
+      "audiences": "sI0N2qOcfYoizZtstfnkEbsUWt6bluT0"
+     },
+     {
+      "providerId": "auth0_jwk",
+      "audiences": "Uuts8fJWf1yieO9Ocv0Uk6LBqsUTePQq"
+     },
+     {
+      "providerId": "test_jwk"
+     },
+     {
+      "providerId": "test_x509"
+     },
+     {
+      "providerId": "test_symmetric",
+      "audiences": "test.esp.audience"
+     }
+    ]
+   },
+   {
+    "selector": "GetBook",
+    "requirements": [
+     {
+      "providerId": "google_id_token",
+      "audiences": "848149964201.apps.googleusercontent.com,841077041629.apps.googleusercontent.com,488010225785-g97tab3t7jdj51fr8vbqvmh4bfic3g5k.apps.googleusercontent.com,488010225785-qvp4qbiak296t4afcej35dh4maoufmhc.apps.googleusercontent.com"
+     },
+     {
+      "providerId": "google_identity_toolkit",
+      "audiences": "esp-test-client"
+     },
+     {
+      "providerId": "auth0_symmetric",
+      "audiences": "sI0N2qOcfYoizZtstfnkEbsUWt6bluT0"
+     },
+     {
+      "providerId": "auth0_jwk",
+      "audiences": "Uuts8fJWf1yieO9Ocv0Uk6LBqsUTePQq"
+     },
+     {
+      "providerId": "test_jwk"
+     },
+     {
+      "providerId": "test_x509"
+     },
+     {
+      "providerId": "test_symmetric",
+      "audiences": "test.esp.audience"
+     }
+    ]
+   }
+  ],
+  "providers": [
+   {
+    "id": "auth0_jwk",
+    "issuer": "https://esp-jwk.auth0.com/",
+    "jwksUri": "https://esp-jwk.auth0.com/.well-known/jwks.json"
+   },
+   {
+    "id": "auth0_symmetric",
+    "issuer": "https://esp-symmetric.auth0.com/",
+    "jwksUri": "http://169.254.169.254/computeMetadata/v1/project/attributes/auth-key-https_esp-symmetric_auth0_com"
+   },
+   {
+    "id": "google_id_token",
+    "issuer": "https://accounts.google.com",
+    "jwksUri": "https://www.googleapis.com/oauth2/v1/certs"
+   },
+   {
+    "id": "google_identity_toolkit",
+    "issuer": "https://securetoken.google.com",
+    "jwksUri": "https://www.googleapis.com/service_accounts/v1/metadata/x509/securetoken@system.gserviceaccount.com"
+   },
+   {
+    "id": "test_jwk",
+    "issuer": "test-client@esp-test-client.iam.gserviceaccount.com",
+    "jwksUri": "https://www.googleapis.com/service_accounts/v1/jwk/test-client@esp-test-client.iam.gserviceaccount.com"
+   },
+   {
+    "id": "test_symmetric",
+    "issuer": "https://test.esp.client",
+    "jwksUri": "http://169.254.169.254/computeMetadata/v1/project/attributes/auth-key-test_esp_client"
+   },
+   {
+    "id": "test_x509",
+    "issuer": "23028304136-fbju1j1cdfpc5q9q6s23gm56trn0c9ti@developer.gserviceaccount.com",
+    "jwksUri": "https://www.googleapis.com/service_accounts/v1/metadata/x509/23028304136-fbju1j1cdfpc5q9q6s23gm56trn0c9ti@developer.gserviceaccount.com"
+   }
+  ]
+ },
+ "usage": {
+  "rules": [
+   {
+    "selector": "GetMessage"
+   },
+   {
+    "selector": "DeleteMessage"
+   },
+   {
+    "selector": "PatchMessage"
+   },
+   {
+    "selector": "PostMessage"
+   },
+   {
+    "selector": "PutMessage"
+   },
+   {
+    "selector": "GetMessageAuthed"
+   },
+   {
+    "selector": "PostMessageAuthed"
+   },
+   {
+    "selector": "ListShelves",
+    "allowUnregisteredCalls": true
+   },
+   {
+    "selector": "CreateShelf"
+   },
+   {
+    "selector": "GetShelf",
+    "allowUnregisteredCalls": true
+   },
+   {
+    "selector": "DeleteShelf"
+   },
+   {
+    "selector": "ListBooks"
+   },
+   {
+    "selector": "CreateBook"
+   },
+   {
+    "selector": "GetBook"
+   },
+   {
+    "selector": "DeleteBook"
+   }
+  ]
+ },
+ "control": {
+  "environment": "servicecontrol.googleapis.com"
+ },
+ "logs": [
+  {
+   "name": "endpoints_log"
+  }
+ ],
+ "metrics": [
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/request_count",
+   "labels": [
+    {
+     "key": "/credential_id"
+    },
+    {
+     "key": "/protocol"
+    },
+    {
+     "key": "/response_code"
+    },
+    {
+     "key": "/response_code_class"
+    },
+    {
+     "key": "/status_code"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/error_count",
+   "labels": [
+    {
+     "key": "/credential_id"
+    },
+    {
+     "key": "/error_type"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/total_latencies",
+   "labels": [
+    {
+     "key": "/credential_id"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/request_count",
+   "labels": [
+    {
+     "key": "/protocol"
+    },
+    {
+     "key": "/response_code"
+    },
+    {
+     "key": "/response_code_class"
+    },
+    {
+     "key": "/status_code"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/error_count",
+   "labels": [
+    {
+     "key": "/error_type"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/total_latencies",
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user",
+   "labels": [
+    {
+     "key": "/credential_id"
+    },
+    {
+     "key": "/end_user"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user_country",
+   "labels": [
+    {
+     "key": "/credential_id"
+    },
+    {
+     "key": "/end_user_country"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/top_request_count_by_referer",
+   "labels": [
+    {
+     "key": "/credential_id"
+    },
+    {
+     "key": "/referer"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/top_request_count_by_consumer",
+   "labels": [
+    {
+     "key": "/protocol"
+    },
+    {
+     "key": "/response_code"
+    },
+    {
+     "key": "/consumer_id"
+    },
+    {
+     "key": "/status_code"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/quota_used_count",
+   "labels": [
+    {
+     "key": "/credential_id"
+    },
+    {
+     "key": "/quota_group_name"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/quota_billable_count",
+   "labels": [
+    {
+     "key": "/quota_group_name"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "INT64"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/request_overhead_latencies",
+   "labels": [
+    {
+     "key": "/credential_id"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/backend_latencies",
+   "labels": [
+    {
+     "key": "/credential_id"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/request_sizes",
+   "labels": [
+    {
+     "key": "/credential_id"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/consumer/response_sizes",
+   "labels": [
+    {
+     "key": "/credential_id"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/request_overhead_latencies",
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/backend_latencies",
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/request_sizes",
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/response_sizes",
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer",
+   "labels": [
+    {
+     "key": "/consumer_id"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  },
+  {
+   "name": "serviceruntime.googleapis.com/api/producer/top_response_sizes_by_consumer",
+   "labels": [
+    {
+     "key": "/consumer_id"
+    }
+   ],
+   "metricKind": "DELTA",
+   "valueType": "DISTRIBUTION"
+  }
+ ],
+ "monitoredResources": [
+  {
+   "type": "endpoints.googleapis.com/api",
+   "labels": [
+    {
+     "key": "cloud.googleapis.com/location"
+    },
+    {
+     "key": "cloud.googleapis.com/uid"
+    },
+    {
+     "key": "serviceruntime.googleapis.com/api_version"
+    },
+    {
+     "key": "serviceruntime.googleapis.com/api_method"
+    },
+    {
+     "key": "cloud.googleapis.com/project"
+    },
+    {
+     "key": "cloud.googleapis.com/service"
+    }
+   ]
+  }
+ ],
+ "logging": {
+  "producerDestinations": [
+   {
+    "logs": [
+     "endpoints_log"
+    ],
+    "monitoredResource": "endpoints.googleapis.com/api"
+   }
+  ]
+ },
+ "monitoring": {
+  "producerDestinations": [
+   {
+    "monitoredResource": "endpoints.googleapis.com/api",
+    "metrics": [
+     "serviceruntime.googleapis.com/api/producer/request_count",
+     "serviceruntime.googleapis.com/api/producer/error_count",
+     "serviceruntime.googleapis.com/api/producer/total_latencies",
+     "serviceruntime.googleapis.com/api/producer/request_overhead_latencies",
+     "serviceruntime.googleapis.com/api/producer/backend_latencies",
+     "serviceruntime.googleapis.com/api/producer/request_sizes",
+     "serviceruntime.googleapis.com/api/producer/response_sizes",
+     "serviceruntime.googleapis.com/api/producer/top_request_count_by_consumer",
+     "serviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer",
+     "serviceruntime.googleapis.com/api/producer/top_response_sizes_by_consumer"
+    ]
+   }
+  ],
+  "consumerDestinations": [
+   {
+    "monitoredResource": "endpoints.googleapis.com/api",
+    "metrics": [
+     "serviceruntime.googleapis.com/api/consumer/request_count",
+     "serviceruntime.googleapis.com/api/consumer/error_count",
+     "serviceruntime.googleapis.com/api/consumer/quota_used_count",
+     "serviceruntime.googleapis.com/api/consumer/total_latencies",
+     "serviceruntime.googleapis.com/api/consumer/request_overhead_latencies",
+     "serviceruntime.googleapis.com/api/consumer/backend_latencies",
+     "serviceruntime.googleapis.com/api/consumer/request_sizes",
+     "serviceruntime.googleapis.com/api/consumer/response_sizes",
+     "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user",
+     "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user_country",
+     "serviceruntime.googleapis.com/api/consumer/top_request_count_by_referer"
+    ]
+   }
+  ]
+ }
+}
+]

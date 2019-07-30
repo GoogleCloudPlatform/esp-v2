@@ -90,6 +90,17 @@ while true; do
       --key_restriction_keys_file=${API_RESTRICTION_KEYS_FILE} \
     || ((BOOKSTORE_FAILURES++))
 
+  POST_FILE="${ROOT}/tests/e2e/testdata/bookstore/35k.json"
+  echo "Starting stress test at $(date)."
+  python ${ROOT}/tests/e2e/client/apiproxy_client.py \
+    --test=stress \
+    --host=${HOST} \
+    --api_key=${API_KEY} \
+    --auth_token=${JWT_TOKEN} \
+    --post_file=${POST_FILE} \
+    --test_data=${ROOT}/tests/e2e/testdata/bookstore/test_data.json.temp \
+    || ((STRESS_FAILURES++))
+
   # TODO(jilinxia): add other tests.
 
   #######################

@@ -46,7 +46,9 @@ curl https://glide.sh/get | sh
 
 # dependencies for envoy build
 apt-get update && \
-    apt-get -y install libtool cmake automake ninja-build curl unzip
+    apt-get -y install libtool cmake automake ninja-build curl unzip libssl-dev
+
+pip install python-gflags
 
 function getApiProxyService() {
   if [[ "${1}" == "bookstore" ]]; then

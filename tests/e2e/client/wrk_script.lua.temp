@@ -1,0 +1,75 @@
+-- WRK script template
+-- Parameters:
+--   OUT: output file for JSON summary
+--   ERR: error response file prefix per thread
+--   HTTP_METHOD: request method
+--   REQUEST_BODY_FILE: request body file name
+
+-- Global completion callback
+done = function(summary, latency, requests)
+  print("=== wrk done")
+
+  local f = io.open("${OUT}", 'w')
+  f:write("{")
+
+  errors = summary.errors
+  failed = errors.connect + errors.read + errors.write + errors.timeout
+  f:write(string.format("\"Failed requests\":[%d,\"number\"],", failed));
+  f:write(string.format("\"Timeout requests\":[%d,\"number\"],", errors.timeout));
+  f:write(string.format("\"Non-2xx responses\":[%d,\"number\"],", errors.status))
+
+  -- latency and duration are measured in microseconds
+  for _, p in pairs({50, 66, 75, 80, 90, 95, 98, 99}) do
+     n = latency:percentile(p)
+     f:write(string.format("\"Latency percentile: %d%%\":[%g,\"ms\"],", p, n / 1000.0))
+  end
+  f:write(string.format("\"Latency percentile: 100%%\":[%g,\"ms\"],", latency.max / 1000.0))
+  f:write(string.format("\"Latency percentile: mean\":[%g,\"ms\"],", latency.mean / 1000.0))
+  f:write(string.format("\"Complete requests\":[%g,\"number\"],", summary.requests))
+  f:write(string.format("\"Requests per second\":[%g,\"qps\"],", summary.requests / summary.duration * 1000000))
+  f:write(string.format("\"Transfer rate\":[%g,\"Kbytes/sec\"]", summary.bytes / 1024 / summary.duration * 1000000))
+
+  f:write("}\n")
+  f:close()
+end
+
+-- Thread locals
+local counter = 0
+
+setup = function(thread)
+  thread:set("id", counter)
+  counter = counter + 1
+end
+
+init = function(args)
+  print(string.format("=== wrk thread init %d", id))
+  local filename = string.format("${ERR}_%d", id)
+  error_file = io.open(filename, "w")
+end
+
+-- Handle response per thread (affects wrk performance)
+response = function(status, headers, body)
+  if status ~= 200 and status ~= ${EXPECTED_STATUS} then
+    error_file:write("{\"status\":")
+    error_file:write(status)
+    error_file:write(",\"Content-Type\":\"")
+    error_file:write(headers['Content-Type'] or '')
+    error_file:write("\",\"body\":")
+    local escaped_body = string.gsub(body, "\n", "\\n")
+    error_file:write(escaped_body)
+    error_file:write("}\n")
+  end
+end
+
+-- Read request body from a file
+function read(file)
+  local f = io.open(file, "rb")
+  local content = f:read("*all")
+  f:close()
+  return content
+end
+
+wrk.method = "${HTTP_METHOD}"
+wrk.body   = read("${REQUEST_BODY_FILE}")
+
+-- vim: set filetype=lua :
