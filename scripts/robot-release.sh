@@ -20,17 +20,13 @@ set -eo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities'; exit 1; }
 
-IMAGE=$(get_image_name_with_sha)
-while getopts :i: arg; do
-    case ${arg} in
-        i) IMAGE="${OPTARG}";;
-    *) echo "Invalid argument -${OPTARG}, ignoring.";;
-    esac
-done
+PROXY_IMAGE_SHA_NAME=$(get_proxy_image_name_with_sha)
+ENVOY_IMAGE_SHA_NAME=$(get_envoy_image_name_with_sha)
 
-echo "Checking if docker image ${IMAGE} exists.."
-gcloud docker -- pull "${IMAGE}" \
-  && { echo "Image ${IMAGE} already exists; skipping"; exit 0; }
+echo "Checking if docker image ${PROXY_IMAGE_SHA_NAME} and image ${ENVOY_IMAGE_SHA_NAME} exists.."
+gcloud docker -- pull "${PROXY_IMAGE_SHA_NAME}" \
+  && gcloud docker -- pull "${ENVOY_IMAGE_SHA_NAME}" \
+  && { echo "Both image ${PROXY_IMAGE_SHA_NAME} and image ${ENVOY_IMAGE_SHA_NAME} already exists; skipping"; exit 0; }
 
 echo "Building Envoy"
 ${BAZEL} version
@@ -45,5 +41,5 @@ make -C ${ROOT} build
 make -C ${ROOT} build-envoy
 
 # Build docker container image for GKE/GCE deployment.
-${ROOT}/scripts/linux-build-docker.sh -i "${IMAGE}" \
+${ROOT}/scripts/linux-build-docker.sh \
     || error_exit 'Failed to build a generic Docker Image.'

@@ -83,11 +83,9 @@ function e2eGKE() {
   -i ${UNIQUE_ID}
 }
 
-IMAGE=$(get_image_name_with_sha)
-echo "Use image: ${IMAGE}"
 
 # IMAGE veriable will be set by the script
-${ROOT}/scripts/robot-release.sh -i ${IMAGE}
+${ROOT}/scripts/robot-release.sh
 
 # TODO(jilinxia): add other backend tests.
-e2eGKE -c "tight" -t "http" -g "bookstore" -R "managed" -m ${IMAGE}
+e2eGKE -c "tight" -t "http" -g "bookstore" -R "managed" -m $(get_proxy_image_name_with_sha)
