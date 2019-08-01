@@ -69,8 +69,20 @@ func TestGRPC(t *testing.T) {
 			wantResp:       `{"id":"200","theme":"Classic"}`,
 		},
 		{
+			desc:           "Http2 client calling gRPC backend",
+			clientProtocol: "http2",
+			method:         "/v1/shelves/200?api_key=foobar",
+			wantResp:       `{"id":"200","theme":"Classic"}`,
+		},
+		{
 			desc:           `Http client calling gRPC backend with query parameter "key"`,
 			clientProtocol: "http",
+			method:         "/v1/shelves/200?key=foobar",
+			wantResp:       `{"id":"200","theme":"Classic"}`,
+		},
+		{
+			desc:           `Http2 client calling gRPC backend with query parameter "key"`,
+			clientProtocol: "http2",
 			method:         "/v1/shelves/200?key=foobar",
 			wantResp:       `{"id":"200","theme":"Classic"}`,
 		},

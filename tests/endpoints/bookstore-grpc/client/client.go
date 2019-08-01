@@ -17,10 +17,13 @@ package client
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
+	"golang.org/x/net/http2"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"path"
@@ -67,6 +70,9 @@ func MakeCall(clientProtocol, addr, httpMethod, method, token string, header htt
 		return makeHTTPCall(addr, httpMethod, method, token, header)
 	}
 
+	if strings.EqualFold(clientProtocol, "http2") {
+		return makeHTTP2Call(addr, httpMethod, method, token, header)
+	}
 	if strings.EqualFold(clientProtocol, "grpc") {
 		return makeGRPCCall(addr, method, token, header)
 	}
@@ -101,6 +107,39 @@ var makeHTTPCall = func(addr, httpMethod, method, token string, header http.Head
 
 	return string(content), nil
 }
+
+func makeHTTP2Call(addr, httpMethod, method, token string, header http.Header) (string, error) {
+	cli := http.Client{
+		// Skip TLS dial
+		Transport: &http2.Transport{
+			AllowHTTP: true,
+			DialTLS: func(network, addr string, cfg *tls.Config) (net.Conn, error) {
+				return net.Dial(network, addr)
+			},
+		},
+	}
+	req, _ := http.NewRequest(httpMethod, fmt.Sprintf("http://%s%s", addr, method), nil)
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	addAllHeaders(req, header)
+
+	resp, err := cli.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("http got error: %v", err)
+	}
+	defer resp.Body.Close()
+
+	content, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, string(content))
+	}
+
+	return string(content), nil
+}
+
 var MakeHttpCallWithBody = func(addr, httpMethod, method, token string, bodyBytes []byte) (string, error) {
 	var cli http.Client
 	var req *http.Request
