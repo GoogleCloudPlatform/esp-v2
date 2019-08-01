@@ -17,6 +17,9 @@
 # Fail on any error.
 set -eo pipefail
 
+TOOLS_BUCKET="apiproxy_tools"
+PLATFORM="GCE"
+
 # Setting SUDO if not running as root.
 if [[ $UID -ne 0 ]]; then
   SUDO=sudo

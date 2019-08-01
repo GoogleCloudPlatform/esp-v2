@@ -53,10 +53,8 @@ function build_wrk() {
   && ${SUDO} chmod a+rx /usr/local/bin/wrk \
   || error_exit "wrk build failed."
 
-  # TODO(jilinxia): cache wrk into GCS bucket.
-  # update_tool wrk "${WRK_VERSION}" ./wrk
+  update_tool wrk "${WRK_VERSION}" ./wrk
   set_wrk
-  echo $WRK
   popd
 }
 
