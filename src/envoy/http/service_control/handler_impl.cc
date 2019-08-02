@@ -131,6 +131,7 @@ void ServiceControlHandlerImpl::prepareReportRequest(
 }
 
 void ServiceControlHandlerImpl::callCheck(Http::HeaderMap& headers,
+                                          Envoy::Tracing::Span& parent_span,
                                           CheckDoneCallback& callback) {
   if (!isConfigured()) {
     callback.onCheckDone(Status(Code::NOT_FOUND, "Method does not exist."));
@@ -174,8 +175,8 @@ void ServiceControlHandlerImpl::callCheck(Http::HeaderMap& headers,
 
   aborted_.reset(new bool(false));
   require_ctx_->service_ctx().call().callCheck(
-      info, [this, aborted = aborted_, &headers](
-                const Status& status, const CheckResponseInfo& response_info) {
+      info, parent_span, [this, aborted = aborted_, &headers](
+          const Status& status, const CheckResponseInfo& response_info) {
         if (*aborted) return;
         onCheckResponse(headers, status, response_info);
       });

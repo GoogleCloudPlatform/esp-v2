@@ -15,7 +15,7 @@
 #pragma once
 
 #include "envoy/common/pure.h"
-
+#include "envoy/tracing/http_tracer.h"
 #include "api/envoy/http/service_control/config.pb.h"
 #include "src/envoy/http/service_control/service_control_callback_func.h"
 
@@ -28,9 +28,10 @@ class ServiceControlCall {
  public:
   virtual ~ServiceControlCall() {}
 
-  virtual void callCheck(
-      const ::google::api_proxy::service_control::CheckRequestInfo& request,
-      CheckDoneFunc on_done) PURE;
+  virtual void
+  callCheck(const ::google::api_proxy::service_control::CheckRequestInfo& request,
+            Envoy::Tracing::Span& parent_span,
+            CheckDoneFunc on_done) PURE;
 
   virtual void callQuota(
       const ::google::api_proxy::service_control::QuotaRequestInfo& info,

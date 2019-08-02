@@ -26,6 +26,7 @@ envoy_cc_library(
     deps = [
         ":service_control_callback_func_lib",
         "//api/envoy/http/service_control:config_proto_cc",
+        "@envoy//include/envoy/tracing:http_tracer_interface",
     ],
 )
 
@@ -81,6 +82,7 @@ envoy_cc_library(
         "//external:servicecontrol_client",
         "@envoy//include/envoy/event:dispatcher_interface",
         "@envoy//include/envoy/upstream:cluster_manager_interface",
+        "@envoy//source/common/tracing:http_tracer_lib",
     ],
 )
 
@@ -213,6 +215,7 @@ envoy_cc_test(
         ":mocks_lib",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/mocks/stats:stats_mocks",
+        "@envoy//test/mocks/tracing:tracing_mocks",
         "@envoy//test/test_common:utility_lib",
     ],
 )
@@ -230,6 +233,7 @@ envoy_cc_test(
         ":mocks_lib",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/mocks/stats:stats_mocks",
+        "@envoy//test/mocks/tracing:tracing_mocks",
         "@envoy//test/test_common:utility_lib",
     ],
 )

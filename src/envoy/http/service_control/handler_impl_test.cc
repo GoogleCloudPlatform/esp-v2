@@ -18,6 +18,7 @@
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
 #include "test/mocks/server/mocks.h"
+#include "test/mocks/tracing/mocks.h"
 
 #include "src/envoy/http/service_control/handler_impl.h"
 #include "src/envoy/http/service_control/mocks.h"
@@ -155,6 +156,8 @@ class HandlerTest : public ::testing::Test {
     EXPECT_CALL(mock_call_factory_, create_(_, _)).WillOnce(Return(mock_call_));
     cfg_parser_ =
         std::make_unique<FilterConfigParser>(proto_config, mock_call_factory_);
+
+    mock_span_ = std::make_unique<Envoy::Tracing::MockSpan>();
   }
 
   testing::NiceMock<MockCheckDoneCallback> mock_check_done_callback_;
@@ -164,6 +167,9 @@ class HandlerTest : public ::testing::Test {
   // This pointer is managed by cfg_parser
   testing::NiceMock<MockServiceControlCall>* mock_call_;
   std::unique_ptr<FilterConfigParser> cfg_parser_;
+
+  // Tracing mocks
+  std::unique_ptr<Envoy::Tracing::MockSpan> mock_span_;
 };
 
 MATCHER_P(MatchesCheckInfo, expect, "") {
@@ -262,8 +268,8 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
 
   EXPECT_CALL(mock_check_done_callback_,
               onCheckDone(Status(Code::NOT_FOUND, "Method does not exist.")));
-  EXPECT_CALL(*mock_call_, callCheck(_, _)).Times(0);
-  handler.callCheck(headers, mock_check_done_callback_);
+  EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
+  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   EXPECT_CALL(*mock_call_, callReport(_)).Times(0);
   handler.callReport(&headers, &headers, &headers);
@@ -279,8 +285,8 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
                                     *cfg_parser_);
   EXPECT_CALL(mock_check_done_callback_,
               onCheckDone(Status(Code::NOT_FOUND, "Method does not exist.")));
-  EXPECT_CALL(*mock_call_, callCheck(_, _)).Times(0);
-  handler.callCheck(headers, mock_check_done_callback_);
+  EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
+  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   EXPECT_CALL(*mock_call_, callReport(_)).Times(0);
   handler.callReport(&headers, &headers, &headers);
@@ -296,10 +302,10 @@ TEST_F(HandlerTest, HandlerCheckNotNeeded) {
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_);
 
-  EXPECT_CALL(*mock_call_, callCheck(_, _)).Times(0);
+  EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   EXPECT_CALL(*mock_call_, callQuota(_, _)).Times(0);
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
-  handler.callCheck(headers, mock_check_done_callback_);
+  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   // no api key is set on this info
   ReportRequestInfo expected_report_info;
@@ -327,10 +333,10 @@ TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
              "Method doesn't allow unregistered callers (callers without "
              "established identity). Please use API Key or other form of "
              "API consumer identity to call this API.");
-  EXPECT_CALL(*mock_call_, callCheck(_, _)).Times(0);
+  EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   EXPECT_CALL(*mock_call_, callQuota(_, _)).Times(0);
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(bad_status));
-  handler.callCheck(headers, mock_check_done_callback_);
+  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   // no api key is set on this info
   ReportRequestInfo expected_report_info;
@@ -367,13 +373,16 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithApiKeyRestrictionFields) {
   expected_check_info.android_cert_fingerprint = "cert-123";
   expected_check_info.ios_bundle_id = "ios-bundle-id";
   expected_check_info.referer = "referer";
-  EXPECT_CALL(*mock_call_, callCheck(MatchesCheckInfo(expected_check_info), _))
+  EXPECT_CALL(*mock_call_,
+              callCheck(MatchesCheckInfo(expected_check_info), _, _))
       .WillOnce(Invoke(
-          [&response_info](const CheckRequestInfo&, CheckDoneFunc on_done) {
+          [&response_info](const CheckRequestInfo&,
+                           Envoy::Tracing::Span&,
+                           CheckDoneFunc on_done) {
             on_done(Status::OK, response_info);
           }));
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
-  handler.callCheck(headers, mock_check_done_callback_);
+  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   ReportRequestInfo expected_report_info;
   expected_report_info.api_key = "foobar";
@@ -401,13 +410,16 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
 
   CheckRequestInfo expected_check_info;
   expected_check_info.api_key = "foobar";
-  EXPECT_CALL(*mock_call_, callCheck(MatchesCheckInfo(expected_check_info), _))
+  EXPECT_CALL(*mock_call_,
+              callCheck(MatchesCheckInfo(expected_check_info), _, _))
       .WillOnce(Invoke(
-          [&response_info](const CheckRequestInfo&, CheckDoneFunc on_done) {
+          [&response_info](const CheckRequestInfo&,
+                           Envoy::Tracing::Span&,
+                           CheckDoneFunc on_done) {
             on_done(Status::OK, response_info);
           }));
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
-  handler.callCheck(headers, mock_check_done_callback_);
+  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   ReportRequestInfo expected_report_info;
   expected_report_info.api_key = "foobar";
@@ -432,9 +444,11 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
   response_info.is_api_key_valid = true;
   response_info.service_is_activated = true;
 
-  EXPECT_CALL(*mock_call_, callCheck(_, _))
+  EXPECT_CALL(*mock_call_, callCheck(_, _, _))
       .WillOnce(Invoke(
-          [&response_info](const CheckRequestInfo&, CheckDoneFunc on_done) {
+          [&response_info](const CheckRequestInfo&,
+                           Envoy::Tracing::Span&,
+                           CheckDoneFunc on_done) {
             on_done(Status::OK, response_info);
           }));
   QuotaRequestInfo expected_quota_info;
@@ -448,7 +462,7 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
       }));
 
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
-  handler.callCheck(headers, mock_check_done_callback_);
+  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   EXPECT_CALL(*mock_call_, callReport(_));
   handler.callReport(&headers, &response_headers, &headers);
@@ -474,13 +488,15 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
   response_info.service_is_activated = false;
   CheckRequestInfo expected_check_info;
   expected_check_info.api_key = "foobar";
-  EXPECT_CALL(*mock_call_, callCheck(MatchesCheckInfo(expected_check_info), _))
+  EXPECT_CALL(*mock_call_,
+              callCheck(MatchesCheckInfo(expected_check_info), _, _))
       .WillOnce(Invoke([&response_info, bad_status](const CheckRequestInfo&,
+                                                    Envoy::Tracing::Span&,
                                                     CheckDoneFunc on_done) {
         on_done(bad_status, response_info);
       }));
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(bad_status));
-  handler.callCheck(headers, mock_check_done_callback_);
+  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   // no api key is set on this info
   ReportRequestInfo expected_report_info;
@@ -506,9 +522,11 @@ TEST_F(HandlerTest, HandlerFailQuotaSync) {
   response_info.is_api_key_valid = true;
   response_info.service_is_activated = true;
 
-  EXPECT_CALL(*mock_call_, callCheck(_, _))
+  EXPECT_CALL(*mock_call_, callCheck(_, _, _))
       .WillOnce(Invoke(
-          [&response_info](const CheckRequestInfo&, CheckDoneFunc on_done) {
+          [&response_info](const CheckRequestInfo&,
+                           Envoy::Tracing::Span&,
+                           CheckDoneFunc on_done) {
             on_done(Status::OK, response_info);
           }));
   QuotaRequestInfo expected_quota_info;
@@ -524,7 +542,7 @@ TEST_F(HandlerTest, HandlerFailQuotaSync) {
             on_done(bad_status);
           }));
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(bad_status));
-  handler.callCheck(headers, mock_check_done_callback_);
+  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   EXPECT_CALL(*mock_call_, callReport(_));
   handler.callReport(&headers, &response_headers, &headers);
@@ -551,12 +569,15 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckAsync) {
 
   // Store the done callback
   CheckDoneFunc stored_on_done;
-  EXPECT_CALL(*mock_call_, callCheck(MatchesCheckInfo(expected_check_info), _))
+  EXPECT_CALL(*mock_call_,
+              callCheck(MatchesCheckInfo(expected_check_info), _, _))
       .WillOnce(Invoke(
-          [&stored_on_done](const CheckRequestInfo&, CheckDoneFunc on_done) {
+          [&stored_on_done](const CheckRequestInfo&,
+                            Envoy::Tracing::Span&,
+                            CheckDoneFunc on_done) {
             stored_on_done = on_done;
           }));
-  handler.callCheck(headers, mock_check_done_callback_);
+  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   // Async, later call the done callback
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
@@ -586,9 +607,11 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
   CheckResponseInfo response_info;
   response_info.is_api_key_valid = true;
   response_info.service_is_activated = true;
-  EXPECT_CALL(*mock_call_, callCheck(_, _))
+  EXPECT_CALL(*mock_call_, callCheck(_, _, _))
       .WillOnce(Invoke(
-          [&response_info](const CheckRequestInfo&, CheckDoneFunc on_done) {
+          [&response_info](const CheckRequestInfo&,
+                           Envoy::Tracing::Span&,
+                           CheckDoneFunc on_done) {
             on_done(Status::OK, response_info);
           }));
 
@@ -603,7 +626,7 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
           [&stored_on_done](const QuotaRequestInfo&, QuotaDoneFunc on_done) {
             stored_on_done = on_done;
           }));
-  handler.callCheck(headers, mock_check_done_callback_);
+  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   // Async, later call the done callback
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
@@ -640,12 +663,15 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
 
   // Store the done callback
   CheckDoneFunc stored_on_done;
-  EXPECT_CALL(*mock_call_, callCheck(MatchesCheckInfo(expected_check_info), _))
+  EXPECT_CALL(*mock_call_,
+              callCheck(MatchesCheckInfo(expected_check_info), _, _))
       .WillOnce(Invoke(
-          [&stored_on_done](const CheckRequestInfo&, CheckDoneFunc on_done) {
+          [&stored_on_done](const CheckRequestInfo&,
+                            Envoy::Tracing::Span&,
+                            CheckDoneFunc on_done) {
             stored_on_done = on_done;
           }));
-  handler.callCheck(headers, mock_check_done_callback_);
+  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
   EXPECT_CALL(*mock_call_, callQuota(_, _)).Times(0);
 
   // Async, later call the done callback
@@ -678,9 +704,11 @@ TEST_F(HandlerTest, HandlerFailQuotaAsync) {
   CheckResponseInfo response_info;
   response_info.is_api_key_valid = true;
   response_info.service_is_activated = true;
-  EXPECT_CALL(*mock_call_, callCheck(_, _))
+  EXPECT_CALL(*mock_call_, callCheck(_, _, _))
       .WillOnce(Invoke(
-          [&response_info](const CheckRequestInfo&, CheckDoneFunc on_done) {
+          [&response_info](const CheckRequestInfo&,
+                           Envoy::Tracing::Span&,
+                           CheckDoneFunc on_done) {
             on_done(Status::OK, response_info);
           }));
 
@@ -695,7 +723,7 @@ TEST_F(HandlerTest, HandlerFailQuotaAsync) {
           [&stored_on_done](const QuotaRequestInfo&, QuotaDoneFunc on_done) {
             stored_on_done = on_done;
           }));
-  handler.callCheck(headers, mock_check_done_callback_);
+  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   // Async, later call the done callback
   Status bad_status = Status(Code::RESOURCE_EXHAUSTED,
@@ -725,12 +753,14 @@ TEST_F(HandlerTest, HandlerOnCheckDoneSkippedIfAbortedForCheckCallback) {
   {
     ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                       *cfg_parser_);
-    EXPECT_CALL(*mock_call_, callCheck(_, _))
+    EXPECT_CALL(*mock_call_, callCheck(_, _, _))
         .WillOnce(Invoke(
-            [&stored_on_done](const CheckRequestInfo&, CheckDoneFunc on_done) {
+            [&stored_on_done](const CheckRequestInfo&,
+                              Envoy::Tracing::Span&,
+                              CheckDoneFunc on_done) {
               stored_on_done = on_done;
             }));
-    handler.callCheck(headers, mock_check_done_callback_);
+    handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
     // The handler goes out of scope now, so it is aborted and destroyed
   }
 
@@ -777,13 +807,15 @@ TEST_F(HandlerTest, HandlerCollectDecodeData) {
   CheckResponseInfo response_info;
   response_info.is_api_key_valid = true;
   response_info.service_is_activated = true;
-  EXPECT_CALL(*mock_call_, callCheck(_, _))
+  EXPECT_CALL(*mock_call_, callCheck(_, _, _))
       .WillOnce(Invoke(
-          [&response_info](const CheckRequestInfo&, CheckDoneFunc on_done) {
+          [&response_info](const CheckRequestInfo&,
+                           Envoy::Tracing::Span&,
+                           CheckDoneFunc on_done) {
             on_done(Status::OK, response_info);
           }));
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
-  handler.callCheck(headers, mock_check_done_callback_);
+  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   testing::NiceMock<Envoy::MockBuffer> mock_buffer;
   mock_buffer.writeByte(0);  // gRPC flags
@@ -852,13 +884,15 @@ TEST_F(HandlerTest, HandlerCollectEncodeData) {
   CheckResponseInfo response_info;
   response_info.is_api_key_valid = true;
   response_info.service_is_activated = true;
-  EXPECT_CALL(*mock_call_, callCheck(_, _))
+  EXPECT_CALL(*mock_call_, callCheck(_, _, _))
       .WillOnce(Invoke(
-          [&response_info](const CheckRequestInfo&, CheckDoneFunc on_done) {
+          [&response_info](const CheckRequestInfo&,
+                           Envoy::Tracing::Span&,
+                           CheckDoneFunc on_done) {
             on_done(Status::OK, response_info);
           }));
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
-  handler.callCheck(headers, mock_check_done_callback_);
+  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   testing::NiceMock<Envoy::MockBuffer> mock_buffer;
   mock_buffer.writeByte(0);  // gRPC flags

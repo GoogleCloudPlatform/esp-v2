@@ -269,6 +269,7 @@ ClientCache::ClientCache(
 
 void ClientCache::callCheck(
     const CheckRequest& request,
+    Envoy::Tracing::Span&,
     std::function<void(const Status&, const CheckResponseInfo&)> on_done) {
   CheckResponse* response = new CheckResponse;
   client_->Check(request, response,
