@@ -562,6 +562,7 @@ func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 func makeRouterFilter() *hcm.HttpFilter {
 	router, _ := ut.MessageToStruct(&rt.Router{
 		SuppressEnvoyHeaders: *flags.SuppressEnvoyHeaders,
+		StartChildSpan:       *flags.EnableTracing,
 	})
 	routerFilter := &hcm.HttpFilter{
 		Name:       ut.Router,
