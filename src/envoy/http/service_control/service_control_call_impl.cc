@@ -49,12 +49,20 @@ ServiceControlCallImpl::ServiceControlCallImpl(
     : config_(config),
       filter_config_(filter_config),
       tls_(context.threadLocal().allocateSlot()) {
+
   tls_->set(
-      [this, &cm = context.clusterManager()](Event::Dispatcher& dispatcher)
+      [this, &cm = context.clusterManager(), &
+          time_source = context.timeSource()]
+          (Event::Dispatcher& dispatcher)
           -> ThreadLocal::ThreadLocalObjectSharedPtr {
-        return std::make_shared<ThreadLocalCache>(config_, filter_config_, cm,
-                                                  dispatcher);
-      });
+        return std::make_shared<ThreadLocalCache>(config_,
+                                                  filter_config_,
+                                                  cm,
+                                                  time_source,
+                                                  dispatcher
+        );
+      }
+  );
 
   switch (filter_config.access_token().token_type_case()) {
     case AccessToken::kRemoteToken: {

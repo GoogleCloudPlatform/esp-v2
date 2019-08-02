@@ -38,14 +38,15 @@ class ThreadLocalCache : public ThreadLocal::ThreadLocalObject {
  public:
   ThreadLocalCache(
       const ::google::api::envoy::http::service_control::Service& config,
-      const ::google::api::envoy::http::service_control::FilterConfig&
-          filter_config,
-      Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher)
-      : client_cache_(config, filter_config, cm, dispatcher,
-                      [this, &filter_config]() -> const std::string& {
+      const ::google::api::envoy::http::service_control::FilterConfig& filter_config,
+      Upstream::ClusterManager& cm,
+      Envoy::TimeSource& time_source,
+      Event::Dispatcher& dispatcher)
+      : client_cache_(config, filter_config, cm, time_source, dispatcher,
+                      [this]() -> const std::string& {
                         return sc_token();
                       },
-                      [this, &filter_config]() -> const std::string& {
+                      [this]() -> const std::string& {
                         return quota_token();
                       }) {}
 
