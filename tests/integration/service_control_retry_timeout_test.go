@@ -249,7 +249,7 @@ func TestServiceControlReportRetry(t *testing.T) {
 		handler.sleepLengthMs = tc.sleepLengthMs
 
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-		bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, "", nil)
+		_, _ = bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, "", nil)
 
 		// Report is unblocked and wait it to be flushed once after 1s.
 		// TODO(taoxuy): add customized aggregation options

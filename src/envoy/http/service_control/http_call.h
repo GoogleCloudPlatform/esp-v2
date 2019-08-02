@@ -16,6 +16,7 @@
 
 #include "api/envoy/http/common/base.pb.h"
 #include "envoy/common/pure.h"
+#include "envoy/tracing/http_tracer.h"
 #include "envoy/upstream/cluster_manager.h"
 #include "google/protobuf/stubs/status.h"
 
@@ -48,7 +49,8 @@ class HttpCall {
       const std::string& suffix_url,
       std::function<const std::string&()> token_fn,
       const Protobuf::Message& body, uint32_t timeout_ms, uint32_t retries,
-      HttpCall::DoneFunc on_done);
+      Envoy::Tracing::Span& parent_span, Envoy::TimeSource& time_source,
+      const std::string& trace_operation_name, HttpCall::DoneFunc on_done);
 };
 
 }  // namespace ServiceControl
