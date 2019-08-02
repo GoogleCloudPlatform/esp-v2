@@ -101,7 +101,14 @@ while true; do
     --test_data=${ROOT}/tests/e2e/testdata/bookstore/test_data.json.temp \
     || ((STRESS_FAILURES++))
 
-  # TODO(jilinxia): add other tests.
+  echo "Starting negative stress test."
+  python ${ROOT}/tests/e2e/client/apiproxy_client.py \
+    --test=negative \
+    --test_data=${ROOT}/tests/e2e/testdata/bookstore/negative_test_data.json.temp \
+    --host=${HOST} \
+    --api_key=${API_KEY} \
+    --auth_token=${JWT_TOKEN} \
+    --post_file=${POST_FILE} \
 
   #######################
   # End of test suite
