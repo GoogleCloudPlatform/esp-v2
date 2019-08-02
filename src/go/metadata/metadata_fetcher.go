@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package configmanager
+package metadata
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -23,11 +24,14 @@ import (
 	"sync"
 	"time"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/golang/glog"
 
 	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
+)
+
+var (
+	MetadataURL = flag.String("metadata_url", "http://metadata.google.internal/computeMetadata", "url of metadata server")
 )
 
 const (
@@ -56,12 +60,15 @@ type MetadataFetcher struct {
 	audToToken sync.Map
 }
 
-func NewMetadataFetcher() *MetadataFetcher {
-	return &MetadataFetcher{
-		baseUrl: *flags.MetadataURL,
-		timeNow: time.Now,
+// Allows for unit tests to inject a mock constructor
+var (
+	NewMetadataFetcher = func() *MetadataFetcher {
+		return &MetadataFetcher{
+			baseUrl: *MetadataURL,
+			timeNow: time.Now,
+		}
 	}
-}
+)
 
 func (mf *MetadataFetcher) createUrl(suffix string) string {
 	return mf.baseUrl + suffix
@@ -81,7 +88,7 @@ func (mf *MetadataFetcher) getMetadata(path string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-func (mf *MetadataFetcher) fetchAccessToken() (string, time.Duration, error) {
+func (mf *MetadataFetcher) FetchAccessToken() (string, time.Duration, error) {
 	now := mf.timeNow()
 	// Follow the similar logic as GCE metadata server, where returned token will be valid for at
 	// least 60s.
@@ -117,19 +124,19 @@ func (mf *MetadataFetcher) fetchMetadata(key string) (string, error) {
 	return string(body), nil
 }
 
-func (mf *MetadataFetcher) fetchServiceName() (string, error) {
+func (mf *MetadataFetcher) FetchServiceName() (string, error) {
 	return mf.fetchMetadata(util.ServiceNameSuffix)
 }
 
-func (mf *MetadataFetcher) fetchConfigId() (string, error) {
+func (mf *MetadataFetcher) FetchConfigId() (string, error) {
 	return mf.fetchMetadata(util.ConfigIDSuffix)
 }
 
-func (mf *MetadataFetcher) fetchRolloutStrategy() (string, error) {
+func (mf *MetadataFetcher) FetchRolloutStrategy() (string, error) {
 	return mf.fetchMetadata(util.RolloutStrategySuffix)
 }
 
-func (mf *MetadataFetcher) fetchIdentityJWTToken(audience string) (string, time.Duration, error) {
+func (mf *MetadataFetcher) FetchIdentityJWTToken(audience string) (string, time.Duration, error) {
 	now := mf.timeNow()
 	// Follow the similar logic as GCE metadata server, where returned token will be valid for at
 	// least 60s.
@@ -155,14 +162,14 @@ func (mf *MetadataFetcher) fetchIdentityJWTToken(audience string) (string, time.
 	return token, expires, nil
 }
 
-func (mf *MetadataFetcher) fetchGCPAttributes() *scpb.GcpAttributes {
+func (mf *MetadataFetcher) FetchGCPAttributes() *scpb.GcpAttributes {
 	// Checking if metadata server is reachable.
 	if _, err := mf.fetchMetadata(""); err != nil {
 		return nil
 	}
 
 	attrs := &scpb.GcpAttributes{}
-	if projectID, err := mf.fetchMetadata(util.ProjectIDSuffix); err == nil {
+	if projectID, err := mf.FetchProjectId(); err == nil {
 		attrs.ProjectId = projectID
 	}
 
@@ -172,6 +179,10 @@ func (mf *MetadataFetcher) fetchGCPAttributes() *scpb.GcpAttributes {
 
 	attrs.Platform = mf.fetchPlatform()
 	return attrs
+}
+
+func (mf *MetadataFetcher) FetchProjectId() (string, error) {
+	return mf.fetchMetadata(util.ProjectIDSuffix)
 }
 
 // Do not directly use this function. Use fetchGCPAttributes instead.

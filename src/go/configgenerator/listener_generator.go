@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
+	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
@@ -521,7 +522,7 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 		AccessToken: &commonpb.AccessToken{
 			TokenType: &commonpb.AccessToken_RemoteToken{
 				RemoteToken: &commonpb.HttpUri{
-					Uri:     fmt.Sprintf("%s%s", *flags.MetadataURL, ut.IdentityTokenSuffix),
+					Uri:     fmt.Sprintf("%s%s", *metadata.MetadataURL, ut.IdentityTokenSuffix),
 					Cluster: ut.MetadataServerClusterName,
 					// TODO(taoxuy): make token_subscriber use this timeout
 					Timeout: &duration.Duration{Seconds: 5},

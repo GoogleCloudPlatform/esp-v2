@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
+	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/golang/glog"
@@ -52,18 +53,18 @@ type ConfigManager struct {
 	cache               cache.SnapshotCache
 	checkRolloutsTicker *time.Ticker
 
-	metadataFetcher *MetadataFetcher
+	metadataFetcher *metadata.MetadataFetcher
 }
 
 // NewConfigManager creates new instance of ConfigManager.
 // mf is set to nil on non-gcp deployments
-func NewConfigManager(mf *MetadataFetcher) (*ConfigManager, error) {
+func NewConfigManager(mf *metadata.MetadataFetcher) (*ConfigManager, error) {
 	var err error
 	name := *ServiceName
 	checkMetadata := *CheckMetadata
 
 	if name == "" && checkMetadata && mf != nil {
-		name, err = mf.fetchServiceName()
+		name, err = mf.FetchServiceName()
 		if name == "" || err != nil {
 			return nil, fmt.Errorf("failed to read metadata with key endpoints-service-name from metadata server")
 		}
@@ -75,7 +76,7 @@ func NewConfigManager(mf *MetadataFetcher) (*ConfigManager, error) {
 	rolloutStrategy := *RolloutStrategy
 	// try to fetch from metadata, if not found, set to fixed instead of throwing an error
 	if rolloutStrategy == "" && checkMetadata && mf != nil {
-		rolloutStrategy, _ = mf.fetchRolloutStrategy()
+		rolloutStrategy, _ = mf.FetchRolloutStrategy()
 	}
 	if rolloutStrategy == "" {
 		rolloutStrategy = ut.FixedRolloutStrategy
@@ -109,7 +110,7 @@ func NewConfigManager(mf *MetadataFetcher) (*ConfigManager, error) {
 		configID := *ServiceConfigID
 		if configID == "" {
 			if checkMetadata && mf != nil {
-				configID, err = mf.fetchConfigId()
+				configID, err = mf.FetchConfigId()
 				if configID == "" || err != nil {
 					return nil, fmt.Errorf("failed to read metadata with key endpoints-service-version from metadata server")
 				}
@@ -165,7 +166,7 @@ func (m *ConfigManager) updateSnapshot() error {
 	}
 
 	if m.metadataFetcher != nil {
-		m.serviceInfo.GcpAttributes = m.metadataFetcher.fetchGCPAttributes()
+		m.serviceInfo.GcpAttributes = m.metadataFetcher.FetchGCPAttributes()
 	}
 
 	snapshot, err := m.makeSnapshot()

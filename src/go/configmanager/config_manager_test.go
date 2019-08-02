@@ -30,6 +30,7 @@ import (
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/configmanager/testdata"
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
+	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
@@ -49,6 +50,7 @@ const (
 	testConfigID     = "2017-05-01r0"
 	testProjectID    = "project123"
 	fakeJwks         = "FAKEJWKS"
+	fakeToken        = `{"access_token": "ya29.new", "expires_in":3599, "token_type":"Bearer"}`
 )
 
 var (
@@ -1426,13 +1428,12 @@ func runTest(t *testing.T, f func(*testEnv)) {
 		return mockRollout.URL
 	}
 
-	mockMetadataServer := util.InitMockServerFromPathResp(t,
-		map[string]string{
-			util.ServiceAccountTokenSuffix: fakeToken,
-		})
+	mockMetadataServer := util.InitMockServerFromPathResp(map[string]string{
+		util.ServiceAccountTokenSuffix: fakeToken,
+	})
 	defer mockMetadataServer.Close()
 
-	metadataFetcher := NewMockMetadataFetcher(t, mockMetadataServer.URL, time.Now())
+	metadataFetcher := metadata.NewMockMetadataFetcher(mockMetadataServer.URL, time.Now())
 
 	manager, err := NewConfigManager(metadataFetcher)
 	if err != nil {

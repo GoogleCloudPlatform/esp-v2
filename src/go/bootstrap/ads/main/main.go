@@ -16,11 +16,13 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap"
 	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap/ads"
+	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
@@ -28,7 +30,10 @@ import (
 
 var (
 	AdsConnectTimeout = flag.Duration("ads_connect_imeout", 10*time.Second, "ads connect timeout in seconds")
-	EnableTracing     = flag.Bool("enable_tracing", false, "Enable stack driver tracing")
+	EnableTracing     = flag.Bool("enable_tracing", false, `enable stackdriver tracing`)
+	NonGCP            = flag.Bool("non_gcp", false, `By default, the proxy tries to talk to GCP metadata server to get VM location in the first few requests. Setting this flag
+  to true to skip this step`)
+	TracingProjectId = flag.String("tracing_project_id", "", "The Google project id required for Stack driver tracing. If not set, will automatically use fetch it from GCP Metadata server")
 )
 
 func main() {
@@ -41,9 +46,15 @@ func main() {
 
 	connectTimeoutProto := ptypes.DurationProto(*AdsConnectTimeout)
 	bt := ads.CreateBootstrapConfig(connectTimeoutProto)
+
 	if *EnableTracing {
-		var err error
-		if bt.Tracing, err = bootstrap.CreateTracing(); err != nil {
+
+		tracingProjectId, err := getTracingProjectId()
+		if err != nil {
+			glog.Exitf("failed to get project-id for tracing, error: %v", err)
+		}
+
+		if bt.Tracing, err = bootstrap.CreateTracing(tracingProjectId); err != nil {
 			glog.Exitf("failed to create tracing config, error: %v", err)
 		}
 	}
@@ -56,4 +67,21 @@ func main() {
 	if err != nil {
 		glog.Exitf("failed to write config to %v, error: %v", out_path, err)
 	}
+}
+
+func getTracingProjectId() (string, error) {
+
+	// If user specified a project-id, use that
+	projectId := *TracingProjectId
+	if projectId != "" {
+		return projectId, nil
+	}
+
+	// Otherwise determine project-id automatically
+	glog.Infof("tracing_project_id was not specified, attempting to fetch it from GCP Metadata server")
+	if *NonGCP {
+		return "", fmt.Errorf("tracing_project_id was not specified and can not be fetched from GCP Metadata server on non-GCP runtime")
+	}
+
+	return metadata.NewMetadataFetcher().FetchProjectId()
 }
