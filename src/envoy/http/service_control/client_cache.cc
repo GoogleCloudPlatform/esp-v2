@@ -135,32 +135,34 @@ void ClientCache::InitHttpRequestSetting(const FilterConfig& filter_config) {
   }
   const auto& sc_calling_config = filter_config.sc_calling_config();
   network_fail_open_ = sc_calling_config.has_network_fail_open()
-                           ? sc_calling_config.network_fail_open().value()
-                           : true;
+                       ? sc_calling_config.network_fail_open().value()
+                       : true;
   check_timeout_ms_ = sc_calling_config.has_check_timeout_ms()
-                          ? sc_calling_config.check_timeout_ms().value()
-                          : kCheckDefaultTimeoutInMs;
+                      ? sc_calling_config.check_timeout_ms().value()
+                      : kCheckDefaultTimeoutInMs;
   quota_timeout_ms_ = sc_calling_config.has_quota_timeout_ms()
-                          ? sc_calling_config.quota_timeout_ms().value()
-                          : kAllocateQuotaDefaultTimeoutInMs;
+                      ? sc_calling_config.quota_timeout_ms().value()
+                      : kAllocateQuotaDefaultTimeoutInMs;
   report_timeout_ms_ = sc_calling_config.has_report_timeout_ms()
-                           ? sc_calling_config.report_timeout_ms().value()
-                           : kReportDefaultTimeoutInMs;
+                       ? sc_calling_config.report_timeout_ms().value()
+                       : kReportDefaultTimeoutInMs;
 
   check_retries_ = sc_calling_config.has_check_retries()
-                       ? sc_calling_config.check_retries().value()
-                       : kCheckDefaultNumberOfRetries;
+                   ? sc_calling_config.check_retries().value()
+                   : kCheckDefaultNumberOfRetries;
   quota_retries_ = sc_calling_config.has_quota_retries()
-                       ? sc_calling_config.quota_retries().value()
-                       : kAllocateQuotaDefaultNumberOfRetries;
+                   ? sc_calling_config.quota_retries().value()
+                   : kAllocateQuotaDefaultNumberOfRetries;
   report_retries_ = sc_calling_config.has_report_retries()
-                        ? sc_calling_config.report_retries().value()
-                        : kReportDefaultNumberOfRetries;
+                    ? sc_calling_config.report_retries().value()
+                    : kReportDefaultNumberOfRetries;
 }
 
 ClientCache::ClientCache(
     const ::google::api::envoy::http::service_control::Service& config,
-    const FilterConfig& filter_config, Upstream::ClusterManager& cm,
+    const FilterConfig& filter_config,
+    Upstream::ClusterManager& cm,
+    Envoy::TimeSource& time_source,
     Event::Dispatcher& dispatcher,
     std::function<const std::string&()> sc_token_fn,
     std::function<const std::string&()> quota_token_fn)
@@ -169,7 +171,9 @@ ClientCache::ClientCache(
       cm_(cm),
       dispatcher_(dispatcher),
       sc_token_fn_(sc_token_fn),
-      quota_token_fn_(quota_token_fn) {
+      quota_token_fn_(quota_token_fn),
+      time_source_(time_source) {
+
   ServiceControlClientOptions options(getCheckAggregationOptions(),
                                       getQuotaAggregationOptions(),
                                       getReportAggregationOptions());

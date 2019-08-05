@@ -32,9 +32,10 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
  public:
   ClientCache(
       const ::google::api::envoy::http::service_control::Service& config,
-      const ::google::api::envoy::http::service_control::FilterConfig&
-          filter_config,
-      Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher,
+      const ::google::api::envoy::http::service_control::FilterConfig& filter_config,
+      Upstream::ClusterManager& cm,
+      Envoy::TimeSource& time_source,
+      Event::Dispatcher& dispatcher,
       std::function<const std::string&()> sc_token_fn,
       std::function<const std::string&()> quota_token_fn);
 
@@ -62,6 +63,7 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
   std::unique_ptr<::google::service_control_client::ServiceControlClient>
       client_;
   bool network_fail_open_;
+  Envoy::TimeSource& time_source_;
 
   // the configurable timeouts
   uint32_t check_timeout_ms_;
