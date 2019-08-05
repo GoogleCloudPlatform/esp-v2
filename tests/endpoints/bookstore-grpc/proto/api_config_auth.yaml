@@ -26,7 +26,7 @@ config_version: 3
 #
 # Name of the service configuration.
 #
-name: grpc-bookstore.endpoints.cloudesf-testing.cloud.goog
+name: grpc-bookstore.endpoints.<YOUR_PROJECT_ID>.cloud.goog
 
 #
 # API title to appear in the user interface (Google Cloud Console).
@@ -49,9 +49,10 @@ usage:
 authentication:
   providers:
   - id: google_service_account
-    # Replace SERVICE-ACCOUNT-ID with your service account's email address.
-    issuer: "245521401045-compute@developer.gserviceaccount.com"
-    jwks_uri: https://www.googleapis.com/service_accounts/v1/jwk/245521401045-compute@developer.gserviceaccount.com
+    # Replace SERVICE-ACCOUNT-ID with your service account's email address,
+    # for example: "123456789-compute@developer.gserviceaccount.com"
+    issuer: SERVICE-ACCOUNT-ID
+    jwks_uri: https://www.googleapis.com/service_accounts/v1/jwk/SERVICE-ACCOUNT-ID
     audiences: cloudesf-test-client
   rules:
   # This auth rule will apply to all methods.

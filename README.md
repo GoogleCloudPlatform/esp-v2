@@ -16,4 +16,19 @@ APIProxy provides:
 *   **Platform flexibility**: support the deployment on any cloud or on-premise
     environment.
 
-*   **Superb performance and** scalability: low latency and high throughput
+*   **Superb performance and scalability**: low latency and high throughput
+
+## Getting APIProxy
+
+To download the source code, clone the APIProxy repository:
+
+* git clone  "https://cloudesf.googlesource.com/gcpproxy"
+
+## APIProxy Tutorial
+
+To find out more about building, running, and testing APIProxy, please review:
+
+* [Run APIProxy on Kubernetes] (/tests/endpoints/bookstore-grpc/README.md)
+
+
+
