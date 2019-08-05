@@ -38,6 +38,7 @@ class ServiceControlHandler {
   // Make an async check call.
   // The headers could be modified by adding some.
   virtual void callCheck(Http::HeaderMap& headers,
+                         Envoy::Tracing::Span& parent_span,
                          CheckDoneCallback& callback) PURE;
 
   // Make a report call.

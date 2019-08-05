@@ -18,6 +18,7 @@
 #include "common/common/logger.h"
 #include "envoy/event/dispatcher.h"
 #include "envoy/upstream/cluster_manager.h"
+#include "envoy/tracing/http_tracer.h"
 #include "include/service_control_client.h"
 #include "src/api_proxy/service_control/request_info.h"
 #include "src/envoy/http/service_control/service_control_callback_func.h"
@@ -40,6 +41,7 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
       std::function<const std::string&()> quota_token_fn);
 
   void callCheck(const ::google::api::servicecontrol::v1::CheckRequest& request,
+                 Envoy::Tracing::Span& parent_span,
                  CheckDoneFunc on_done);
 
   void callQuota(

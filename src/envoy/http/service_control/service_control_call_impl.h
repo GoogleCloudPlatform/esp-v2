@@ -85,9 +85,10 @@ class ServiceControlCallImpl : public ServiceControlCall,
           filter_config,
       Server::Configuration::FactoryContext& context);
 
-  void callCheck(
-      const ::google::api_proxy::service_control::CheckRequestInfo& request,
-      CheckDoneFunc on_done) override;
+  void
+  callCheck(const ::google::api_proxy::service_control::CheckRequestInfo& request,
+            Envoy::Tracing::Span& parent_span,
+            CheckDoneFunc on_done) override;
 
   void callQuota(
       const ::google::api_proxy::service_control::QuotaRequestInfo& info,

@@ -39,13 +39,15 @@ Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
     Http::HeaderMap& headers, bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
 
-  handler_ = std::move(
-      factory_.createHandler(headers, decoder_callbacks_->streamInfo()));
+  Envoy::Tracing::Span& parent_span = decoder_callbacks_->activeSpan();
+
+  handler_ = std::move(factory_.createHandler(
+      headers, decoder_callbacks_->streamInfo()));
 
   state_ = Calling;
   stopped_ = false;
 
-  handler_->callCheck(headers, *this);
+  handler_->callCheck(headers, parent_span, *this);
 
   // If success happens synchronously, continue now.
   if (state_ == Complete) {

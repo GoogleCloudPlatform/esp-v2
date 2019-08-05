@@ -80,7 +80,8 @@ ServiceControlCallImpl::ServiceControlCallImpl(
               tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
             });
           });
-    } break;
+    }
+      break;
     case AccessToken::kServiceAccountSecret: {
       const std::string service_control_auidence =
           filter_config.service_control_uri().uri() + kServiceControlService;
@@ -105,7 +106,8 @@ ServiceControlCallImpl::ServiceControlCallImpl(
               tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
             });
           });
-    } break;
+    }
+      break;
     default:
       ENVOY_LOG(error, "No access token set!");
       break;
@@ -130,11 +132,12 @@ ServiceControlCallImpl::ServiceControlCallImpl(
 
 void ServiceControlCallImpl::callCheck(
     const ::google::api_proxy::service_control::CheckRequestInfo& info,
+    Envoy::Tracing::Span& parent_span,
     CheckDoneFunc on_done) {
   ::google::api::servicecontrol::v1::CheckRequest request;
   request_builder_->FillCheckRequest(info, &request);
   ENVOY_LOG(debug, "Sending check : {}", request.DebugString());
-  getTLCache().client_cache().callCheck(request, on_done);
+  getTLCache().client_cache().callCheck(request, parent_span, on_done);
 }
 
 void ServiceControlCallImpl::callQuota(
