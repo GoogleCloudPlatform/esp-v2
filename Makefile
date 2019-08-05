@@ -60,6 +60,7 @@ build-envoy:
 test: format
 	@echo "--> running unit tests"
 	@go test ./src/go/...
+	@python3 -m unittest tests/start_proxy/start_proxy_test.py
 
 test-debug: format
 	@echo "--> running unit tests"

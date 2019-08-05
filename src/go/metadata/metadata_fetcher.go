@@ -62,8 +62,11 @@ type MetadataFetcher struct {
 
 // Allows for unit tests to inject a mock constructor
 var (
-	NewMetadataFetcher = func() *MetadataFetcher {
+	NewMetadataFetcher = func(metadataFetcherTimeout time.Duration) *MetadataFetcher {
 		return &MetadataFetcher{
+			client: http.Client{
+				Timeout: metadataFetcherTimeout,
+			},
 			baseUrl: *MetadataURL,
 			timeNow: time.Now,
 		}

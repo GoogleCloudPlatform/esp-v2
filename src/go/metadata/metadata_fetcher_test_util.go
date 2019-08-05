@@ -17,7 +17,7 @@ func NewMockMetadataFetcher(baseUrl string, now time.Time) *MetadataFetcher {
 // Injects the mock constructor into source code. Mock metadata fetcher only created
 // when source code calls constructor.
 func SetMockMetadataFetcher(baseUrl string, now time.Time) {
-	NewMetadataFetcher = func() *MetadataFetcher {
+	NewMetadataFetcher = func(metadataFetcherTimeout time.Duration) *MetadataFetcher {
 		return &MetadataFetcher{
 			baseUrl: baseUrl,
 			timeNow: func() time.Time {

@@ -50,10 +50,17 @@ var (
 		return path
 	}
 
-	serviceConfigFetcherClient = &http.Client{Transport: &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}}
+	serviceConfigFetcherClient = newServiceConfigFetcherClient(true, *HttpRequestTimeout)
 )
+
+func newServiceConfigFetcherClient(insecureSkipVerify bool, timeout time.Duration) *http.Client {
+	return &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureSkipVerify},
+		},
+		Timeout: timeout,
+	}
+}
 
 func loadConfigFromRollouts(serviceName, curRolloutID, curConfigID string, mf *metadata.MetadataFetcher) (string, string, error) {
 	var err error

@@ -26,6 +26,7 @@ var (
 	_GOOGLE_API_SCOPE = []string{
 		"https://www.googleapis.com/auth/service.management.readonly",
 	}
+	tokenCache = &oauth2.Token{}
 )
 
 func GenerateAccessTokenFromFile(serviceAccountKey string) (string, time.Duration, error) {
@@ -38,6 +39,12 @@ func GenerateAccessTokenFromFile(serviceAccountKey string) (string, time.Duratio
 }
 
 func generateAccessToken(keyData []byte) (string, time.Duration, error) {
+	now := time.Now()
+	// Follow the similar logic as GCE metadata server, where returned token will be valid for at
+	// least 60s.
+	if tokenCache.AccessToken != "" && !now.After(tokenCache.Expiry.Add(-time.Second*60)) {
+		return tokenCache.AccessToken, tokenCache.Expiry.Sub(now), nil
+	}
 	creds, err := google.CredentialsFromJSON(oauth2.NoContext, keyData, _GOOGLE_API_SCOPE...)
 	if err != nil {
 		return "", 0, err
@@ -47,5 +54,6 @@ func generateAccessToken(keyData []byte) (string, time.Duration, error) {
 	if err != nil {
 		return "", 0, err
 	}
+	tokenCache = token
 	return token.AccessToken, token.Expiry.Sub(time.Now()), nil
 }

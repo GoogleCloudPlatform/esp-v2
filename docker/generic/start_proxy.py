@@ -71,13 +71,17 @@ def gen_bootstrap_conf(args):
         if args.tracing_outgoing_context:
             cmd.extend(
                 ["--tracing_outgoing_context", args.tracing_outgoing_context])
+    if args.http_request_timeout:
+        cmd.extend(
+            ["--http_request_timeout",
+             str(args.http_request_timeout)])
 
     bootstrap_file = DEFAULT_CONFIG_DIR + "/bootstrap.json"
     cmd.append(bootstrap_file)
     # Use environment variable to pass it to start_proxy.sh
     os.environ["BOOTSTRAP_FILE"] = bootstrap_file
     print(cmd)
-    subprocess.call(cmd)
+    return cmd
 
 
 def start_proxy(proxy_conf):
@@ -90,7 +94,6 @@ def start_proxy(proxy_conf):
 
 
 class ArgumentParser(argparse.ArgumentParser):
-
     def error(self, message):
         self.print_help(sys.stderr)
         self.exit(4, '%s: error: %s\n' % (self.prog, message))
@@ -307,6 +310,13 @@ environment variable or by passing "-k" flag to this script.
         Specify JWT public key cache duration in seconds. The default is 5 minutes.'''
     )
     parser.add_argument(
+        '--http_request_timeout',
+        default='5s',
+        help='''
+        Set the timeout in second for all the requests made by config manager.
+        Must be > 0 and the default is 5 seconds if not set.
+        ''')
+    parser.add_argument(
         '--service_control_check_timeout_ms',
         default=0,
         help='''
@@ -460,6 +470,11 @@ if __name__ == '__main__':
     if args.service:
         proxy_conf.extend(["--service", args.service])
 
+    if args.http_request_timeout:
+        proxy_conf.extend(
+            ["--http_request_timeout",
+             str(args.http_request_timeout)])
+
     if args.service_control_check_retries > 0:
         proxy_conf.extend([
             "--service_control_check_retries",
@@ -553,7 +568,7 @@ if __name__ == '__main__':
         if args.cors_allow_credentials:
             proxy_conf.append("--cors_allow_credentials")
 
-    gen_bootstrap_conf(args)
+    subprocess.call(gen_bootstrap_conf(args))
     # Set credentials file from the environment variable
     if args.service_account_key is None and GOOGLE_CREDS_KEY in os.environ:
         args.service_account_key = os.environ[GOOGLE_CREDS_KEY]

@@ -50,7 +50,7 @@ func TestFetchAccountTokenExpired(t *testing.T) {
 	// Get a time stamp and use it through out the test.
 	fakeNow := time.Now()
 
-	mf := NewMockMetadataFetcher(ts.URL, fakeNow)
+	mf := NewMockMetadataFetcher(ts.GetURL(), fakeNow)
 
 	// Make sure the accessToken is empty before the test.
 	mf.tokenInfo.accessToken = ""
@@ -108,7 +108,7 @@ func TestFetchIdentityJWTTokenBasic(t *testing.T) {
 	// Get a time stamp and use it through out the test.
 	fakeNow := time.Now()
 
-	mf := NewMockMetadataFetcher(ts.URL, fakeNow)
+	mf := NewMockMetadataFetcher(ts.GetURL(), fakeNow)
 
 	testData := []testToken{
 		{
@@ -168,7 +168,7 @@ func TestFetchServiceName(t *testing.T) {
 	ts := util.InitMockServer(fakeServiceName)
 	defer ts.Close()
 
-	mf := NewMockMetadataFetcher(ts.URL, time.Now())
+	mf := NewMockMetadataFetcher(ts.GetURL(), time.Now())
 
 	name, err := mf.FetchServiceName()
 	if err != nil {
@@ -183,7 +183,7 @@ func TestFetchConfigId(t *testing.T) {
 	ts := util.InitMockServer(fakeConfigID)
 	defer ts.Close()
 
-	mf := NewMockMetadataFetcher(ts.URL, time.Now())
+	mf := NewMockMetadataFetcher(ts.GetURL(), time.Now())
 
 	name, err := mf.FetchConfigId()
 	if err != nil {
@@ -310,4 +310,19 @@ func TestFetchGCPAttributes(t *testing.T) {
 		}
 	}
 
+}
+
+func TestMetadataFetcherTimeout(t *testing.T) {
+	timeout := 1 * time.Second
+	mf := NewMetadataFetcher(timeout)
+	server := util.InitMockServer(`{}`)
+	_, err := mf.getMetadata(server.GetURL())
+	if err != nil {
+		t.Errorf("TestMetadataFetcherTimeout: the metadata fetcher should get the config but get the error %v", err)
+	}
+	server.SetSleepTime(2 * timeout)
+	_, err = mf.getMetadata(server.GetURL())
+	if err == nil || !strings.Contains(err.Error(), "Client.Timeout exceeded while awaiting headers") {
+		t.Errorf("TestMetadataFetcherTimeout: the metadata fetcher get the config but should get timeout error")
+	}
 }

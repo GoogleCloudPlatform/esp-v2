@@ -33,7 +33,8 @@ var (
 	EnableTracing     = flag.Bool("enable_tracing", false, `enable stackdriver tracing`)
 	NonGCP            = flag.Bool("non_gcp", false, `By default, the proxy tries to talk to GCP metadata server to get VM location in the first few requests. Setting this flag
   to true to skip this step`)
-	TracingProjectId = flag.String("tracing_project_id", "", "The Google project id required for Stack driver tracing. If not set, will automatically use fetch it from GCP Metadata server")
+	TracingProjectId       = flag.String("tracing_project_id", "", "The Google project id required for Stack driver tracing. If not set, will automatically use fetch it from GCP Metadata server")
+	MetadataFetcherTimeout = *flag.Duration("http_request_timeout", 5*time.Second, `Set the timeout in second for all requests made by config manager. Must be > 0 and the default is 5 seconds if not set.`)
 )
 
 func main() {
@@ -83,5 +84,5 @@ func getTracingProjectId() (string, error) {
 		return "", fmt.Errorf("tracing_project_id was not specified and can not be fetched from GCP Metadata server on non-GCP runtime")
 	}
 
-	return metadata.NewMetadataFetcher().FetchProjectId()
+	return metadata.NewMetadataFetcher(MetadataFetcherTimeout).FetchProjectId()
 }
