@@ -20,9 +20,9 @@ import (
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
-	"github.com/gogo/protobuf/proto"
 
 	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
+	goproto "github.com/golang/protobuf/proto"
 )
 
 const (
@@ -305,7 +305,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 			continue
 		}
 
-		if !proto.Equal(attrs, tc.expectedGCPAttributes) {
+		if !goproto.Equal(attrs, tc.expectedGCPAttributes) {
 			t.Errorf(errorTmpl, tc.desc, tc.expectedGCPAttributes, attrs)
 		}
 	}
