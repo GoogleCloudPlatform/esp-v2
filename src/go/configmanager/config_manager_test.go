@@ -980,7 +980,7 @@ func TestFetchListeners(t *testing.T) {
             }`),
 		},
 		{
-			desc:            "Success for backend that allow CORS",
+			desc:            "Success for backend that allow CORS, with tracing enabled",
 			enableTracing:   true,
 			backendProtocol: "http1",
 			fakeServiceConfig: fmt.Sprintf(`{
@@ -1086,7 +1086,9 @@ func TestFetchListeners(t *testing.T) {
                                     "name":"envoy.filters.http.service_control"
                                 },
                                 {
-                                    "config":{},
+                                    "config":{
+																			"start_child_span":true
+																		},
                                     "name":"envoy.router"
                                 }
                             ],
