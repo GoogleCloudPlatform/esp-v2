@@ -1,5 +1,5 @@
-load("@envoy_api//bazel:api_build_system.bzl", "api_go_grpc_library", "api_proto_library")
-load("@io_bazel_rules_go//proto:def.bzl", "go_grpc_library", "go_proto_library")
+load("@envoy_api//bazel:api_build_system.bzl", "api_proto_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 
 DEFAULT_VISIBILITY = [
     "//api/envoy/http:__subpackages__",
@@ -16,8 +16,8 @@ api_proto_library(
     visibility = DEFAULT_VISIBILITY,
 )
 
-go_grpc_library(
-    name = "base_proto_go_proto",
+go_proto_library(
+    name = "base_go_proto",
     importpath = "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common",
     proto = ":base_proto",
     deps = [
