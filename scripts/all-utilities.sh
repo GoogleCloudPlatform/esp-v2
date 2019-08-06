@@ -199,8 +199,8 @@ __EOF__
 # 3) call detect_memory_leak_final() at the end.
 function detect_memory_leak_init() {
   local host=${1}
-  # host format has to be: proto://host:port.   port is optonal.
-  STATUS_SERVER="http:$(echo $host|awk -F : '{ print $2 }'):8090"
+  # host format has to be: proto://host:port.
+  STATUS_SERVER="http://${host}:8001"
   echo "STATUS_SERVER: ${STATUS_SERVER}"
 
   START_MEMORY_USAGE=0
@@ -211,11 +211,12 @@ function detect_memory_leak_check() {
   local run_count=${1}
   local local_json="$(mktemp /tmp/XXXXXX.json)"
 
-  curl "${STATUS_SERVER}/endpoints_status" > "${local_json}"
+  curl "${STATUS_SERVER}/memory" > "${local_json}"
+
   python -m json.tool "${local_json}"
 
   local curr_usage=$(python -c "import json, sys; obj = json.load(open(\"${local_json}\")); \
-      print obj['processes'][0]['memoryUsage']")
+      print obj['allocated']")
   rm "${local_json}"
   [[ -n "${curr_usage}" ]] || { echo "Could not extract memory usage"; return 1; }
 
