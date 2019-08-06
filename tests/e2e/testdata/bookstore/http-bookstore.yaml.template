@@ -22,6 +22,11 @@ spec:
   - port: 80
     targetPort: 8080
     protocol: TCP
+    name: http
+  - port: 8001
+    targetPort: 8001
+    protocol: TCP
+    name: admin
   selector:
     app: app
   type: LoadBalancer

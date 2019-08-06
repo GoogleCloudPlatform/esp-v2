@@ -20,7 +20,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"golang.org/x/net/http2"
 	"io"
 	"io/ioutil"
 	"net"
@@ -29,12 +28,14 @@ import (
 	"path"
 	"strings"
 
-	bspb "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/proto"
 	"github.com/gogo/protobuf/types"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
+	"golang.org/x/net/http2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+
+	bspb "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/proto"
 )
 
 var grpcWebHeader = http.Header{
