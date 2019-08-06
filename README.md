@@ -18,17 +18,25 @@ APIProxy provides:
 
 *   **Superb performance and scalability**: low latency and high throughput
 
-## Getting APIProxy
+## Released APIProxy docker images
 
-To download the source code, clone the APIProxy repository:
+TODO(jilinxia)
 
-* git clone  "https://cloudesf.googlesource.com/gcpproxy"
+## Repository Structure
+
+TODO(jilinxia)
+
+## Contributing
+
+Your contributions are welcome. Please follow the contributor [guidelines](CONTRIBUTING.md).
+
+* [Developer guide](DEVELOPER.md)
 
 ## APIProxy Tutorial
 
 To find out more about building, running, and testing APIProxy, please review:
 
-* [Run APIProxy on Kubernetes] (/tests/endpoints/bookstore-grpc/README.md)
+* [Run APIProxy on Kubernetes](https://cloudesf.googlesource.com/gcpproxy/+/refs/heads/master/tests/endpoints/bookstore-grpc/)
 
 
 
