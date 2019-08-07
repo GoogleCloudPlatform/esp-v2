@@ -16,6 +16,7 @@
 #include "gtest/gtest.h"
 
 #include <assert.h>
+#include <chrono>
 #include <fstream>
 #include <string>
 
@@ -36,10 +37,14 @@ namespace service_control {
 namespace {
 
 const char kFakeVersion[] = "TEST.0.0";
-const char kTestdata[] = "src/api_proxy/service_control/testdata/";
 
-std::string ReadTestBaseline(const char* input_file_name) {
-  std::string file_name = std::string(kTestdata) + input_file_name;
+// Must reference testdata with absolute path
+const char* kTestBase = std::getenv("TEST_SRCDIR");
+const char kTestData[] = "/gcpproxy/src/api_proxy/service_control/testdata/";
+
+std::string ReadTestBaseline(const std::string& input_file_name) {
+  std::string file_name =
+      std::string(kTestBase) + std::string(kTestData) + input_file_name;
 
   std::string contents;
   std::ifstream input_file;
@@ -135,7 +140,7 @@ class RequestBuilderTest : public ::testing::Test {
 
   RequestBuilderTest()
       : scp_({"local_test_log"}, "test_service", "2016-09-19r0"),
-        mock_now_(std::chrono::nanoseconds(100000000100000)) {}
+        mock_now_(std::chrono::microseconds(100000000100)) {}
 
   RequestBuilder scp_;
   std::chrono::system_clock::time_point mock_now_;
