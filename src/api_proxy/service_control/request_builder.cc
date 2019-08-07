@@ -35,7 +35,6 @@ using ::google::api::servicecontrol::v1::Operation;
 using ::google::api::servicecontrol::v1::QuotaError;
 using ::google::api::servicecontrol::v1::ReportRequest;
 using ::google::protobuf::Map;
-using ::google::protobuf::StringPiece;
 using ::google::protobuf::Timestamp;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
@@ -212,7 +211,7 @@ Status set_distribution_metric_to_streaming_request_message_counts(
     const SupportedMetric& m, const ReportRequestInfo& info,
     Operation* operation) {
   if (info.streaming_request_message_counts > 0) {
-    AddDistributionMetric(size_distribution, m.name,
+    (void)AddDistributionMetric(size_distribution, m.name,
                           info.streaming_request_message_counts, operation);
   }
   return Status::OK;
@@ -221,7 +220,7 @@ Status set_distribution_metric_to_streaming_response_message_counts(
     const SupportedMetric& m, const ReportRequestInfo& info,
     Operation* operation) {
   if (info.streaming_response_message_counts > 0) {
-    AddDistributionMetric(size_distribution, m.name,
+    (void)AddDistributionMetric(size_distribution, m.name,
                           info.streaming_response_message_counts, operation);
   }
   return Status::OK;
@@ -231,7 +230,7 @@ Status set_distribution_metric_to_streaming_durations(
     const SupportedMetric& m, const ReportRequestInfo& info,
     Operation* operation) {
   if (info.streaming_durations > 0) {
-    AddDistributionMetric(time_distribution, m.name, info.streaming_durations,
+    (void)AddDistributionMetric(time_distribution, m.name, info.streaming_durations,
                           operation);
   }
   return Status::OK;

@@ -185,7 +185,7 @@ ClientCache::ClientCache(
     auto* call = HttpCall::create(
         cm_, service_control_uri_, config_.service_name() + ":check",
         sc_token_fn_, request, check_timeout_ms_, check_retries_,
-        [this, response, on_done](const Status& status,
+        [response, on_done](const Status& status,
                                   const std::string& body) {
           if (status.ok()) {
             // Handle 200 response
@@ -212,7 +212,7 @@ ClientCache::ClientCache(
     auto* call = HttpCall::create(
         cm_, service_control_uri_, config_.service_name() + ":allocateQuota",
         quota_token_fn_, request, quota_timeout_ms_, quota_retries_,
-        [this, response, on_done](const Status& status,
+        [response, on_done](const Status& status,
                                   const std::string& body) {
           if (status.ok()) {
             // Handle 200 response
@@ -239,7 +239,7 @@ ClientCache::ClientCache(
     auto* call = HttpCall::create(
         cm_, service_control_uri_, config_.service_name() + ":report",
         sc_token_fn_, request, report_timeout_ms_, report_retries_,
-        [this, response, on_done](const Status& status,
+        [response, on_done](const Status& status,
                                   const std::string& body) {
           if (status.ok()) {
             // Handle 200 response
