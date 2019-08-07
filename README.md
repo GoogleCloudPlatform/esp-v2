@@ -30,13 +30,11 @@ TODO(jilinxia)
 
 Your contributions are welcome. Please follow the contributor [guidelines](CONTRIBUTING.md).
 
-* [Developer guide](DEVELOPER.md)
+* [Developer Guide](DEVELOPER.md)
 
 ## APIProxy Tutorial
 
 To find out more about building, running, and testing APIProxy, please review:
 
-* [Run APIProxy on Kubernetes](https://cloudesf.googlesource.com/gcpproxy/+/refs/heads/master/tests/endpoints/bookstore-grpc/)
-
-
+* [Run APIProxy on Kubernetes](/doc/apiproxi-on-k8s.md)
 
