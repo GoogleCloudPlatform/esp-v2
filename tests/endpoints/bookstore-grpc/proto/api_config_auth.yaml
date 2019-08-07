@@ -55,7 +55,6 @@ authentication:
     jwks_uri: https://www.googleapis.com/service_accounts/v1/jwk/SERVICE-ACCOUNT-ID
     audiences: cloudesf-test-client
   rules:
-  # This auth rule will apply to all methods.
   - selector: endpoints.examples.bookstore.Bookstore.ListShelves
     requirements:
       - provider_id: google_service_account

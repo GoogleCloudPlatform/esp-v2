@@ -43,20 +43,6 @@ set_bazel
 set_gcloud
 set_wrk
 
-function set_git() {
-  if [[ ! -e "${HOME}/.gitconfig" ]]; then
-    cat > "${HOME}/.gitconfig" << EOF
-[user]
-  name = Jenkins
-  email = hudson.jenkins.esp@gmail.com
-EOF
-  fi
-  # In order to have bazel fetch PRs
-  git config --global --add remote.origin.fetch \
-    "+refs/pull/*/head:refs/remotes/origin/pr/*" \
-    || error_exit 'Cannot set git config.'
-}
-
 # Exit with a message and an exit code.
 # Arguments:
 #   $1 - string with an error message
@@ -260,46 +246,6 @@ function extract_key_from_test_env_file() {
   cat "${json_path}" \
     | python -c "import json,sys;obj=json.load(sys.stdin);print obj['${key}']" \
     || { echo "Could not extract ${key} from ${json_path}"; return 1; }
-}
-
-# Current gcloud account may not have permission to deploy an GAE Flex
-# application in an esp-load-test project. The following will activate
-# esp-load-test service account.
-function activate_service_account() {
-  local project="${1}"
-  local remote_json_name=''
-  local service_account=''
-  local local_json="$(mktemp /tmp/XXXXXX.secret.json)"
-  case "${project}" in
-    esp-load-test)
-      remote_json_name='esp-load-test-08fcbb64ace1.json'
-      service_account='service-control-in-load-test@esp-load-test.iam.gserviceaccount.com'
-      ;;
-    esp-long-run)
-      remote_json_name='esp-long-run-f92945d40e0b.json'
-      service_account='deploy-esp-vm@esp-long-run.iam.gserviceaccount.com'
-      ;;
-    *)
-      echo "Project ${project} does not have associated credentials."
-      return 1
-      ;;
-  esac
-  echo "Downloading ${project} service account"
-  retry -n 5 -s 10 gsutil cp \
-    "gs://client-secret-files/${remote_json_name}" "${local_json}" \
-    || error_exit "Could not download secret keys for ${project}"
-  echo "Gcloud auth activate ${project} service account."
-  retry -n 2 ${GCLOUD} auth activate-service-account --key-file "${local_json}" \
-    || error_exit "Could not activate ${service_account}."
-  trap "${GCLOUD} auth revoke ${service_account}" EXIT
-}
-
-# Clearing apt cache.
-function clear_apt() {
-  echo 'Clearing apt source lists'
-  ${SUDO} rm -rf /var/lib/apt/lists/*
-  ${SUDO} apt-get update --fix-missing -qq && return 0
-  return 1
 }
 
 function update_tool() {
