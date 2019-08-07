@@ -269,8 +269,7 @@ TEST_F(RequestBuilderTest, FillGoodReportRequestByConsumerTest) {
   FillOperationInfo(&info);
   FillReportRequestInfo(&info);
   info.backend_protocol = protocol::GRPC;
-  info.check_response_info.consumer_project_id =
-      ::google::protobuf::StringPiece("12345");
+  info.check_response_info.consumer_project_id = "12345";
 
   gasv1::ReportRequest request;
   ASSERT_TRUE(scp_.FillReportRequest(info, &request, mock_now_).ok());

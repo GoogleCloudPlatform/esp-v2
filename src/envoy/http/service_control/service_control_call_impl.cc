@@ -1,3 +1,5 @@
+#include <memory>
+
 // Copyright 2019 Google Cloud Platform Proxy Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -108,8 +110,7 @@ ServiceControlCallImpl::ServiceControlCallImpl(
           });
     }
       break;
-    default:
-      ENVOY_LOG(error, "No access token set!");
+    default:ENVOY_LOG(error, "No access token set!");
       break;
   }
 
@@ -120,7 +121,7 @@ ServiceControlCallImpl::ServiceControlCallImpl(
     }
 
     std::set<std::string> logs, metrics, labels;
-    LogsMetricsLoader::Load(origin_service, &logs, &metrics, &labels);
+    (void)LogsMetricsLoader::Load(origin_service, &logs, &metrics, &labels);
     request_builder_.reset(new RequestBuilder(logs, metrics, labels,
                                               config.service_name(),
                                               config.service_config_id()));
@@ -135,7 +136,7 @@ void ServiceControlCallImpl::callCheck(
     Envoy::Tracing::Span& parent_span,
     CheckDoneFunc on_done) {
   ::google::api::servicecontrol::v1::CheckRequest request;
-  request_builder_->FillCheckRequest(info, &request);
+  (void)request_builder_->FillCheckRequest(info, &request);
   ENVOY_LOG(debug, "Sending check : {}", request.DebugString());
   getTLCache().client_cache().callCheck(request, parent_span, on_done);
 }
@@ -144,7 +145,7 @@ void ServiceControlCallImpl::callQuota(
     const ::google::api_proxy::service_control::QuotaRequestInfo& info,
     QuotaDoneFunc on_done) {
   ::google::api::servicecontrol::v1::AllocateQuotaRequest request;
-  request_builder_->FillAllocateQuotaRequest(info, &request);
+  (void)request_builder_->FillAllocateQuotaRequest(info, &request);
   ENVOY_LOG(debug, "Sending allocateQuota : {}", request.DebugString());
   getTLCache().client_cache().callQuota(request, on_done);
 }
@@ -152,7 +153,7 @@ void ServiceControlCallImpl::callQuota(
 void ServiceControlCallImpl::callReport(
     const ::google::api_proxy::service_control::ReportRequestInfo& info) {
   ::google::api::servicecontrol::v1::ReportRequest request;
-  request_builder_->FillReportRequest(info, &request);
+  (void)request_builder_->FillReportRequest(info, &request);
   ENVOY_LOG(debug, "Sending report : {}", request.DebugString());
   getTLCache().client_cache().callReport(request);
 }

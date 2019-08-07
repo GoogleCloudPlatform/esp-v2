@@ -41,8 +41,8 @@ Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
 
   Envoy::Tracing::Span& parent_span = decoder_callbacks_->activeSpan();
 
-  handler_ = std::move(factory_.createHandler(
-      headers, decoder_callbacks_->streamInfo()));
+  handler_ = factory_.createHandler(
+      headers, decoder_callbacks_->streamInfo());
 
   state_ = Calling;
   stopped_ = false;
@@ -160,7 +160,7 @@ void ServiceControlFilter::log(const Http::HeaderMap* request_headers,
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (!handler_) {
     if (!request_headers) return;
-    handler_ = std::move(factory_.createHandler(*request_headers, stream_info));
+    handler_ = factory_.createHandler(*request_headers, stream_info);
   }
 
   handler_->callReport(request_headers, response_headers, response_trailers);
