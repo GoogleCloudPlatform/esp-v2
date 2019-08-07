@@ -99,7 +99,7 @@ Check the apiproxy image name and args.
 
 * Update the args, change the service name to YOUR_PROJECT_ID.
 
-The --rollout_strategy=managed option configures CloudESF to use the latest deployed service configuration. When you specify this option, within a minute after you deploy a new service configuration, CloudESF detects the change and automatically begins using it. We recommend that you specify this option instead of a specific configuration ID for CloudESF to use.
+The --rollout_strategy=managed option configures APIProxy to use the latest deployed service configuration. When you specify this option, within a minute after you deploy a new service configuration, APIProxy detects the change and automatically begins using it. We recommend that you specify this option instead of a specific configuration ID for APIProxy to use.
 
 * Deploy service on kubernetes
 
@@ -177,7 +177,7 @@ curl --header "x-api-key: $API_KEY " http://$HOST/v1/shelves?access_token=$JWT_T
 
 ## Monitoring the API
 
-CloudESF is integrated with multi Google Services for API management and monitoring, including Service Management, Stackdriver Logging, and Stackdriver trace.  So, you can monitor your API on Pantheon UI by: Service Stats, including QPS, ErrorRate, Latency,  Request/Response Size etc.
+APIProxy is integrated with multi Google Services for API management and monitoring, including Service Management, Stackdriver Logging, and Stackdriver trace.  So, you can monitor your API on Pantheon UI by: Service Stats, including QPS, ErrorRate, Latency,  Request/Response Size etc.
 
 ## Cleaning up
 
