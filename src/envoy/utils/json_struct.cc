@@ -14,7 +14,6 @@
 
 #include "json_struct.h"
 
-using ::google::protobuf::Struct;
 using ::google::protobuf::Value;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;

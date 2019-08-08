@@ -25,7 +25,6 @@
 
 using ::google::api::envoy::http::service_control::APIKeyRequirement;
 using ::google::api::envoy::http::service_control::FilterConfig;
-using ::google::api::envoy::http::service_control::GcpAttributes;
 using ::google::api::envoy::http::service_control::Service;
 using ::google::api_proxy::service_control::LatencyInfo;
 using ::google::api_proxy::service_control::ReportRequestInfo;
@@ -35,7 +34,6 @@ using ::google::api_proxy::service_control::compute_platform::GCE;
 using ::google::api_proxy::service_control::compute_platform::GKE;
 using ::google::api_proxy::service_control::compute_platform::UNKNOWN;
 using ::google::api_proxy::service_control::protocol::Protocol;
-using ::google::protobuf::RepeatedPtrField;
 using ::google::protobuf::TextFormat;
 
 namespace Envoy {
@@ -145,13 +143,13 @@ TEST(ServiceControlUtils, FillLoggedHeader) {
   };
 
   for (const auto& test : test_cases) {
-    Service service;
-    ASSERT_TRUE(TextFormat::ParseFromString(test.service_proto, &service));
+    Service service_tc;
+    ASSERT_TRUE(TextFormat::ParseFromString(test.service_proto, &service_tc));
 
-    std::string output;
+    std::string output_tc;
 
-    fillLoggedHeader(&test.headers, service.log_request_headers(), output);
-    EXPECT_EQ(test.expected_output, output);
+    fillLoggedHeader(&test.headers, service_tc.log_request_headers(), output_tc);
+    EXPECT_EQ(test.expected_output, output_tc);
   }
 
   // Test: The headers contain the logged header twice.

@@ -31,7 +31,6 @@ using ::google::api_proxy::service_control::CheckResponseInfo;
 using ::google::service_control_client::CheckAggregationOptions;
 using ::google::service_control_client::QuotaAggregationOptions;
 using ::google::service_control_client::ReportAggregationOptions;
-using ::google::service_control_client::ServiceControlClient;
 using ::google::service_control_client::ServiceControlClientOptions;
 using ::google::service_control_client::TransportDoneFunc;
 

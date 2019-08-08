@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
+
 #include "src/envoy/utils/service_account_token.h"
 #include "src/envoy/utils/json_struct.h"
 
@@ -31,11 +33,7 @@ namespace {
 using ::Envoy::Server::Configuration::MockFactoryContext;
 
 using ::testing::_;
-using ::testing::Invoke;
 using ::testing::MockFunction;
-using ::testing::Return;
-using ::testing::ReturnRef;
-using ::testing::TypedEq;
 
 const std::string kTestServiceAccountKey = R"({
   "type": "service_account",
@@ -60,9 +58,10 @@ class ServiceAccountTokenTest : public testing::Test {
 
 TEST_F(ServiceAccountTokenTest, MakeCallbackOnRefresh) {
   EXPECT_CALL(token_callback_, Call(_)).Times(1);
-  sc_token_.reset(new ServiceAccountToken(context_, kTestServiceAccountKey,
-                                          "audience",
-                                          token_callback_.AsStdFunction()));
+  sc_token_ = std::make_unique<ServiceAccountToken>(context_,
+                                                    kTestServiceAccountKey,
+                                                    "audience",
+                                                    token_callback_.AsStdFunction());
 }
 }  // namespace
 }  // namespace Utils

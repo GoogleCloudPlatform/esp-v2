@@ -35,7 +35,6 @@ using ::Envoy::Server::Configuration::MockFactoryContext;
 using ::testing::_;
 using ::testing::Invoke;
 using ::testing::MockFunction;
-using ::testing::Return;
 using ::testing::ReturnRef;
 
 class TokenSubscriberTest : public testing::Test {

@@ -26,32 +26,32 @@ namespace ServiceControl {
 
 class ServiceControlCall {
  public:
-  virtual ~ServiceControlCall() {}
+  virtual ~ServiceControlCall() = default;
 
   virtual void
-  callCheck(const ::google::api_proxy::service_control::CheckRequestInfo& request,
-            Envoy::Tracing::Span& parent_span,
-            CheckDoneFunc on_done) PURE;
+  callCheck(
+      const ::google::api_proxy::service_control::CheckRequestInfo& request_info,
+      Envoy::Tracing::Span& parent_span,
+      CheckDoneFunc on_done) PURE;
 
   virtual void callQuota(
-      const ::google::api_proxy::service_control::QuotaRequestInfo& info,
+      const ::google::api_proxy::service_control::QuotaRequestInfo& request_info,
       QuotaDoneFunc on_done) PURE;
 
   virtual void callReport(
-      const ::google::api_proxy::service_control::ReportRequestInfo& request)
-      PURE;
+      const ::google::api_proxy::service_control::ReportRequestInfo& request_info) PURE;
 };
 
 typedef std::unique_ptr<ServiceControlCall> ServiceControlCallPtr;
 
 class ServiceControlCallFactory {
  public:
-  virtual ~ServiceControlCallFactory() {}
+  virtual ~ServiceControlCallFactory() = default;
 
   virtual ServiceControlCallPtr create(
       const ::google::api::envoy::http::service_control::Service& config,
       const ::google::api::envoy::http::service_control::FilterConfig&
-          filter_config) PURE;
+      filter_config) PURE;
 };
 
 }  // namespace ServiceControl

@@ -27,12 +27,10 @@ namespace Extensions {
 namespace HttpFilters {
 namespace BackendAuth {
 
-using ::google::protobuf::util::Status;
 using Http::FilterDataStatus;
 using Http::FilterHeadersStatus;
 using Http::FilterTrailersStatus;
 using Http::HeaderMap;
-using Http::LowerCaseString;
 
 namespace {
 constexpr char kBearer[] = "Bearer ";

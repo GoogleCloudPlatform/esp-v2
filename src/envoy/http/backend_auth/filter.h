@@ -30,7 +30,7 @@ class Filter : public Http::StreamDecoderFilter,
                public Logger::Loggable<Logger::Id::filter> {
  public:
   Filter(FilterConfigSharedPtr config) : config_(config) {}
-  ~Filter(){};
+  ~Filter() override = default;
 
   // Http::StreamFilterBase
   void onDestroy() override{};

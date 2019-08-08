@@ -27,14 +27,10 @@
 
 using Envoy::Http::MockStreamDecoderFilterCallbacks;
 using Envoy::Server::Configuration::MockFactoryContext;
-using ::google::api::envoy::http::service_control::FilterConfig;
-using ::google::protobuf::TextFormat;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 using ::testing::_;
 using ::testing::Invoke;
-using ::testing::Mock;
-using ::testing::Ref;
 using ::testing::Return;
 
 namespace Envoy {

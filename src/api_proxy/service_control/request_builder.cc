@@ -1305,7 +1305,7 @@ Status RequestBuilder::ConvertAllocateQuotaResponse(
     const ::google::api::servicecontrol::v1::AllocateQuotaResponse& response,
     const std::string& service_name) {
   // response.operation_id()
-  if (response.allocate_errors().size() == 0) {
+  if (response.allocate_errors().empty()) {
     return Status::OK;
   }
 
@@ -1350,7 +1350,7 @@ Status RequestBuilder::ConvertCheckResponse(
         check_response.check_info().consumer_info().project_number());
   }
 
-  if (check_response.check_errors().size() == 0) {
+  if (check_response.check_errors().empty()) {
     return Status::OK;
   }
 

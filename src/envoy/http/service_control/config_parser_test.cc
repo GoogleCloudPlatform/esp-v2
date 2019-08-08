@@ -29,7 +29,7 @@ namespace {
 using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::protobuf::TextFormat;
 
-TEST(ConfigParserTest, EmtpyConfig) {
+TEST(ConfigParserTest, EmptyConfig) {
   FilterConfig config;
   testing::NiceMock<MockServiceControlCallFactory> mock_factory;
   FilterConfigParser parser(config, mock_factory);

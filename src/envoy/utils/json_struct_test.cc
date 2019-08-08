@@ -17,7 +17,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
 namespace Envoy {

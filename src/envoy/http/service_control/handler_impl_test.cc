@@ -29,7 +29,6 @@ using Envoy::StreamInfo::MockStreamInfo;
 using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::api_proxy::service_control::CheckRequestInfo;
 using ::google::api_proxy::service_control::CheckResponseInfo;
-using ::google::api_proxy::service_control::OperationInfo;
 using ::google::api_proxy::service_control::QuotaRequestInfo;
 using ::google::api_proxy::service_control::ReportRequestInfo;
 using ::google::api_proxy::service_control::protocol::Protocol;
@@ -37,9 +36,7 @@ using ::google::protobuf::TextFormat;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 using ::testing::_;
-using ::testing::Ref;
 using ::testing::Return;
-using ::testing::SaveArg;
 
 namespace Envoy {
 namespace Extensions {
@@ -223,7 +220,7 @@ MATCHER_P4(MatchesReportInfo, expect, request_headers, response_headers,
   std::string operation_name =
       (expect.operation_name.empty() ? "get_header_key"
                                      : expect.operation_name);
-  MATCH_DEFAULT_REPORT_INFO(arg, expect, operation_name);
+  MATCH_DEFAULT_REPORT_INFO(arg, expect, operation_name)
 
   if (arg.backend_protocol != Protocol::GRPC) return false;
   if (arg.frontend_protocol != Protocol::GRPC) return false;
@@ -247,7 +244,7 @@ MATCHER_P(MatchesDataReportInfo, expect, "") {
   std::string operation_name =
       (expect.operation_name.empty() ? "get_header_key"
                                      : expect.operation_name);
-  MATCH_DEFAULT_REPORT_INFO(arg, expect, operation_name);
+  MATCH_DEFAULT_REPORT_INFO(arg, expect, operation_name)
 
   // the buffer implementation is doing.
   if (arg.request_bytes != expect.request_bytes) return false;

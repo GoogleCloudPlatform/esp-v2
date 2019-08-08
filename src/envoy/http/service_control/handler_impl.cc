@@ -21,11 +21,8 @@
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
 
-using ::google::api::envoy::http::service_control::APIKeyLocation;
 using ::google::api_proxy::service_control::CheckResponseInfo;
-using ::google::api_proxy::service_control::LatencyInfo;
 using ::google::api_proxy::service_control::OperationInfo;
-using ::google::api_proxy::service_control::protocol::Protocol;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 

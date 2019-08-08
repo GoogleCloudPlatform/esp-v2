@@ -24,7 +24,7 @@ const std::chrono::seconds kRefresherDefaultTokenExpiry(3600 - 5);
 
 }  // namespace
 
-ServiceAccountToken ::ServiceAccountToken(
+ServiceAccountToken::ServiceAccountToken(
     Envoy::Server::Configuration::FactoryContext& context,
     const std::string& service_account_key, const std::string& audience,
     TokenUpdateFunc callback)
@@ -47,7 +47,6 @@ void ServiceAccountToken::refresh() {
 
   // Update the token every 1 hour.
   refresh_timer_->enableTimer(kRefresherDefaultTokenExpiry);
-  return;
 }
 
 }  // namespace Utils

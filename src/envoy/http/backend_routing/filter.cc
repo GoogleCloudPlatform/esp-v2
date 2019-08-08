@@ -27,7 +27,6 @@ namespace BackendRouting {
 
 using ::Envoy::StreamInfo::FilterState;
 using ::google::api::envoy::http::backend_routing::BackendRoutingRule;
-using ::google::protobuf::util::Status;
 using Http::FilterDataStatus;
 using Http::FilterHeadersStatus;
 using Http::FilterTrailersStatus;

@@ -45,23 +45,23 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
                             const FilterConfigParser& cfg_parser,
                             std::chrono::system_clock::time_point now =
                                 std::chrono::system_clock::now());
-  virtual ~ServiceControlHandlerImpl();
+  ~ServiceControlHandlerImpl() override;
 
   void callCheck(Http::HeaderMap& headers,
                  Envoy::Tracing::Span& parent_span,
-                 CheckDoneCallback& callback);
+                 CheckDoneCallback& callback) override;
 
   void callReport(const Http::HeaderMap* request_headers,
                   const Http::HeaderMap* response_headers,
-                  const Http::HeaderMap* response_trailers);
+                  const Http::HeaderMap* response_trailers) override;
 
   void collectDecodeData(Buffer::Instance& request_data,
                          std::chrono::system_clock::time_point now =
-                             std::chrono::system_clock::now());
+                             std::chrono::system_clock::now()) override;
 
   void collectEncodeData(Buffer::Instance& response_data,
                          std::chrono::system_clock::time_point now =
-                             std::chrono::system_clock::now());
+                             std::chrono::system_clock::now()) override;
 
  private:
   void callQuota();
@@ -72,15 +72,13 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
           std::chrono::system_clock::now());
   void prepareReportRequest(
       ::google::api_proxy::service_control::ReportRequestInfo& info);
-  void finishCallReport(
-      const ::google::api_proxy::service_control::ReportRequestInfo& info);
   void tryIntermediateReport(std::chrono::system_clock::time_point now);
 
   bool isConfigured() const { return require_ctx_ != nullptr; }
 
   bool isQuotaRequired() const {
     return !require_ctx_->config().skip_service_control() &&
-           require_ctx_->config().metric_costs().size() != 0;
+           !require_ctx_->config().metric_costs().empty();
   }
 
   bool isCheckRequired() const {

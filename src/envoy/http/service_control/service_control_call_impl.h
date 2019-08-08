@@ -82,20 +82,21 @@ class ServiceControlCallImpl : public ServiceControlCall,
   ServiceControlCallImpl(
       const ::google::api::envoy::http::service_control::Service& config,
       const ::google::api::envoy::http::service_control::FilterConfig&
-          filter_config,
+      filter_config,
       Server::Configuration::FactoryContext& context);
 
   void
-  callCheck(const ::google::api_proxy::service_control::CheckRequestInfo& request,
-            Envoy::Tracing::Span& parent_span,
-            CheckDoneFunc on_done) override;
+  callCheck(
+      const ::google::api_proxy::service_control::CheckRequestInfo& request_info,
+      Envoy::Tracing::Span& parent_span,
+      CheckDoneFunc on_done) override;
 
   void callQuota(
-      const ::google::api_proxy::service_control::QuotaRequestInfo& info,
+      const ::google::api_proxy::service_control::QuotaRequestInfo& request_info,
       QuotaDoneFunc on_done) override;
 
-  void callReport(const ::google::api_proxy::service_control::ReportRequestInfo&
-                      request) override;
+  void callReport(
+      const ::google::api_proxy::service_control::ReportRequestInfo& request_info) override;
 
  private:
   // Get thread local cache object.
@@ -116,13 +117,13 @@ class ServiceControlCallImpl : public ServiceControlCall,
 
 class ServiceControlCallFactoryImpl : public ServiceControlCallFactory {
  public:
-  ServiceControlCallFactoryImpl(Server::Configuration::FactoryContext& context)
-      : context_(context) {}
+  explicit ServiceControlCallFactoryImpl(
+      Server::Configuration::FactoryContext& context) : context_(context) {}
 
   ServiceControlCallPtr create(
       const ::google::api::envoy::http::service_control::Service& config,
       const ::google::api::envoy::http::service_control::FilterConfig&
-          filter_config) override {
+      filter_config) override {
     return std::make_unique<ServiceControlCallImpl>(config, filter_config,
                                                     context_);
   }

@@ -43,7 +43,7 @@ class ServiceControlFilter : public Http::StreamFilter,
   // Http::StreamDecoderFilter
   Http::FilterHeadersStatus decodeHeaders(Http::HeaderMap& headers,
                                           bool) override;
-  Http::FilterDataStatus decodeData(Buffer::Instance& headers,
+  Http::FilterDataStatus decodeData(Buffer::Instance& data,
                                     bool end_stream) override;
   Http::FilterTrailersStatus decodeTrailers(Http::HeaderMap&) override;
   void setDecoderFilterCallbacks(
@@ -54,7 +54,7 @@ class ServiceControlFilter : public Http::StreamFilter,
       Http::HeaderMap& headers) override;
   Http::FilterHeadersStatus encodeHeaders(Http::HeaderMap& headers,
                                           bool) override;
-  Http::FilterDataStatus encodeData(Buffer::Instance& headers,
+  Http::FilterDataStatus encodeData(Buffer::Instance& data,
                                     bool end_stream) override;
   Http::FilterTrailersStatus encodeTrailers(Http::HeaderMap&) override;
   Http::FilterMetadataStatus encodeMetadata(Http::MetadataMap&) override;
@@ -68,7 +68,7 @@ class ServiceControlFilter : public Http::StreamFilter,
            const StreamInfo::StreamInfo& stream_info) override;
 
   // For Handler::CheckDoneCallback, called when callCheck() is done
-  void onCheckDone(const ::google::protobuf::util::Status& status);
+  void onCheckDone(const ::google::protobuf::util::Status& status) override;
 
  private:
   void rejectRequest(Http::Code code, absl::string_view error_msg);

@@ -27,11 +27,11 @@ namespace ServiceControl {
 
 class ServiceControlHandler {
  public:
-  virtual ~ServiceControlHandler() {}
+  virtual ~ServiceControlHandler() = default;
 
   class CheckDoneCallback {
    public:
-    virtual ~CheckDoneCallback() {}
+    virtual ~CheckDoneCallback() = default;
     virtual void onCheckDone(const ::google::protobuf::util::Status&) PURE;
   };
 
@@ -62,7 +62,7 @@ typedef std::unique_ptr<ServiceControlHandler> ServiceControlHandlerPtr;
 
 class ServiceControlHandlerFactory {
  public:
-  virtual ~ServiceControlHandlerFactory() {}
+  virtual ~ServiceControlHandlerFactory() = default;
 
   virtual ServiceControlHandlerPtr createHandler(
       const Http::HeaderMap& headers,

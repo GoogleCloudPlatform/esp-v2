@@ -121,7 +121,7 @@ ServiceControlCallImpl::ServiceControlCallImpl(
     }
 
     std::set<std::string> logs, metrics, labels;
-    (void)LogsMetricsLoader::Load(origin_service, &logs, &metrics, &labels);
+    (void) LogsMetricsLoader::Load(origin_service, &logs, &metrics, &labels);
     request_builder_.reset(new RequestBuilder(logs, metrics, labels,
                                               config.service_name(),
                                               config.service_config_id()));
@@ -132,28 +132,28 @@ ServiceControlCallImpl::ServiceControlCallImpl(
 }  // namespace ServiceControl
 
 void ServiceControlCallImpl::callCheck(
-    const ::google::api_proxy::service_control::CheckRequestInfo& info,
+    const ::google::api_proxy::service_control::CheckRequestInfo& request_info,
     Envoy::Tracing::Span& parent_span,
     CheckDoneFunc on_done) {
   ::google::api::servicecontrol::v1::CheckRequest request;
-  (void)request_builder_->FillCheckRequest(info, &request);
+  (void) request_builder_->FillCheckRequest(request_info, &request);
   ENVOY_LOG(debug, "Sending check : {}", request.DebugString());
   getTLCache().client_cache().callCheck(request, parent_span, on_done);
 }
 
 void ServiceControlCallImpl::callQuota(
-    const ::google::api_proxy::service_control::QuotaRequestInfo& info,
+    const ::google::api_proxy::service_control::QuotaRequestInfo& request_info,
     QuotaDoneFunc on_done) {
   ::google::api::servicecontrol::v1::AllocateQuotaRequest request;
-  (void)request_builder_->FillAllocateQuotaRequest(info, &request);
+  (void) request_builder_->FillAllocateQuotaRequest(request_info, &request);
   ENVOY_LOG(debug, "Sending allocateQuota : {}", request.DebugString());
   getTLCache().client_cache().callQuota(request, on_done);
 }
 
 void ServiceControlCallImpl::callReport(
-    const ::google::api_proxy::service_control::ReportRequestInfo& info) {
+    const ::google::api_proxy::service_control::ReportRequestInfo& request_info) {
   ::google::api::servicecontrol::v1::ReportRequest request;
-  (void)request_builder_->FillReportRequest(info, &request);
+  (void) request_builder_->FillReportRequest(request_info, &request);
   ENVOY_LOG(debug, "Sending report : {}", request.DebugString());
   getTLCache().client_cache().callReport(request);
 }

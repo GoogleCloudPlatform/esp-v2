@@ -26,7 +26,6 @@
 #include "src/api_proxy/utils/version.h"
 
 namespace gasv1 = ::google::api::servicecontrol::v1;
-using ::google::protobuf::Timestamp;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 

@@ -172,7 +172,7 @@ void ExtractBindingsFromQueryParameters(
   // Query parameters may also contain system parameters such as `api_key`.
   // We'll need to ignore these. Example:
   //      book.id=123&book.author=Neal%20Stephenson&api_key=AIzaSyAz7fhBkC35D2M
-  std::vector<std::string> params = absl::StrSplit(query_params, "&");
+  std::vector<std::string> params = absl::StrSplit(query_params, '&');
   for (const auto& param : params) {
     size_t pos = param.find('=');
     if (pos != 0 && pos != std::string::npos) {
@@ -184,7 +184,7 @@ void ExtractBindingsFromQueryParameters(
         // sequence of field names that identify the (potentially deep) field
         // in the request, e.g. `book.author.name`.
         VariableBinding binding;
-        binding.field_path = absl::StrSplit(name, ".");
+        binding.field_path = absl::StrSplit(name, '.');
         binding.value = UrlUnescapeString(param.substr(pos + 1), true);
         bindings->emplace_back(std::move(binding));
       }
@@ -211,8 +211,8 @@ std::vector<std::string> ExtractRequestParts(
   }
 
   std::vector<std::string> result;
-  if (path.size() > 0) {
-    result = absl::StrSplit(path.substr(1), "/");
+  if (!path.empty()) {
+    result = absl::StrSplit(path.substr(1), '/');
   }
   // Removes all trailing empty parts caused by extra "/".
   while (!result.empty() && (*(--result.end())).empty()) {

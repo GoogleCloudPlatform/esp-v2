@@ -28,12 +28,8 @@
 
 using ::google::api::envoy::http::service_control::APIKeyLocation;
 using ::google::api::envoy::http::service_control::Service;
-using ::google::api_proxy::service_control::CheckResponseInfo;
 using ::google::api_proxy::service_control::LatencyInfo;
-using ::google::api_proxy::service_control::OperationInfo;
 using ::google::api_proxy::service_control::protocol::Protocol;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
 
 namespace Envoy {
 namespace Extensions {
@@ -96,7 +92,9 @@ void extractJwtPayload(const ProtobufWkt::Value& value,
                        std::string& info_jwt_payloads) {
   switch (value.kind_case()) {
     case ::google::protobuf::Value::kNullValue:
-      absl::StrAppend(&info_jwt_payloads, jwt_payload_path, "=;");
+      absl::StrAppend(&info_jwt_payloads,
+                      jwt_payload_path,
+                      "=;");
       return;
     case ::google::protobuf::Value::kNumberValue:
       absl::StrAppend(&info_jwt_payloads, jwt_payload_path, "=",
@@ -111,8 +109,7 @@ void extractJwtPayload(const ProtobufWkt::Value& value,
       absl::StrAppend(&info_jwt_payloads, jwt_payload_path, "=",
                       value.string_value(), ";");
       return;
-    default:
-      return;
+    default:return;
   }
 }
 
@@ -128,7 +125,7 @@ bool isGrpcRequest(absl::string_view content_type) {
 
 void fillGCPInfo(
     const ::google::api::envoy::http::service_control::FilterConfig&
-        filter_config,
+    filter_config,
     ::google::api_proxy::service_control::ReportRequestInfo& info) {
   if (!filter_config.has_gcp_attributes()) {
     info.compute_platform =
@@ -167,9 +164,8 @@ void fillLoggedHeader(
   for (const auto& log_header : log_headers) {
     auto* entry = headers->get(Http::LowerCaseString(log_header));
     if (entry) {
-      absl::StrAppend(
-          &info_header_field,
-          absl::StrCat(log_header, "=", entry->value().getStringView(), ";"));
+      absl::StrAppend(&info_header_field, log_header, "=",
+                      entry->value().getStringView(), ";");
     }
   }
 }
@@ -233,7 +229,7 @@ Protocol getBackendProtocol(const Service& service) {
 void fillJwtPayloads(const envoy::api::v2::core::Metadata& metadata,
                      const std::string& jwt_payload_metadata_name,
                      const ::google::protobuf::RepeatedPtrField<::std::string>&
-                         jwt_payload_paths,
+                     jwt_payload_paths,
                      std::string& info_jwt_payloads) {
   for (const std::string& jwt_payload_path : jwt_payload_paths) {
     std::vector<std::string> steps =
@@ -285,8 +281,7 @@ bool extractAPIKey(
         if (extractAPIKeyFromCookie(headers, location.cookie(), api_key))
           return true;
         break;
-      case APIKeyLocation::KEY_NOT_SET:
-        break;
+      case APIKeyLocation::KEY_NOT_SET:break;
     }
   }
   return false;
