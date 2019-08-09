@@ -60,6 +60,12 @@ function getApiProxyService() {
   fi
 }
 
+function getUniqueID() {
+  local uuid=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 32 | head -n 1)
+  echo "${1}-${uuid}"
+  return 0
+}
+
 function e2eGKE() {
   local OPTIND OPTARG arg
   while getopts :c:g:m:R:t: arg; do
@@ -73,9 +79,10 @@ function e2eGKE() {
   done
 
   local APIPROXY_SERVICE=$(getApiProxyService ${BACKEND})
+  local UNIQUE_ID=$(getUniqueID "gke-${TEST_TYPE}-${BACKEND}")
+
   ${ROOT}/tests/e2e/scripts/e2e-kube.sh \
   -a ${APIPROXY_SERVICE} \
-  -c ${COUPLING_OPTION} \
   -t ${TEST_TYPE} \
   -g ${BACKEND} \
   -m ${APIPROXY_IMAGE} \

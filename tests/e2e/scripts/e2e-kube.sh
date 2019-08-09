@@ -33,7 +33,7 @@ e2e_options "${@}"
 echo "Installing tools if necessary"
 update_wrk
 
-TEST_ID="gke-${COUPLING_OPTION}-${TEST_TYPE}-${BACKEND}"
+TEST_ID="gke-${TEST_TYPE}-${BACKEND}"
 LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
 PROJECT_ID="cloudesf-testing"
 
@@ -52,8 +52,10 @@ SERVICE_IDL="${SCRIPT_PATH}/../testdata/bookstore/bookstore_swagger_template.jso
 run sed -i "s|\${ENDPOINT_SERVICE}|${APIPROXY_SERVICE}|g" ${SERVICE_IDL}
 
 # Creates service on GKE cluster.
-run kubectl create -f ${YAML_FILE}
-HOST=$(get_cluster_host)
+NAMESPACE="${UNIQUE_ID}"
+run kubectl create namespace "${NAMESPACE}" || error_exit "Namespace already exists"
+run kubectl create -f ${YAML_FILE} --namespace "${NAMESPACE}"
+HOST=$(get_cluster_host "${NAMESPACE}")
 
 # Running Test
 run_nonfatal long_running_test \

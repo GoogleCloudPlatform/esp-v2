@@ -22,12 +22,11 @@ set -eo pipefail
 # End to End tests common options
 function e2e_options() {
   local OPTIND OPTARG arg
-  while getopts :a:b:B:c:m:g:i:k:l:r:R:s:t:v:V: arg; do
+  while getopts :a:b:B:m:g:i:k:l:r:R:s:t:v:V: arg; do
     case ${arg} in
       a) APIPROXY_SERVICE="${OPTARG}";;
       b) BOOKSTORE_IMAGE="${OPTARG}";;
       B) BUCKET="${OPTARG}";;
-      c) COUPLING_OPTION="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')";;
       m) APIPROXY_IMAGE="${OPTARG}";;
       g) BACKEND="${OPTARG}";;
       i) UNIQUE_ID="${OPTARG}";;
@@ -131,7 +130,7 @@ function get_cluster_host () {
   local COUNT=10
   local SLEEP=15
   for i in $( seq 1 ${COUNT} ); do
-    local host=$(kubectl get service app | awk '{print $4}' | grep -v EXTERNAL-IP)
+    local host=$(kubectl get service app -n ${1}| awk '{print $4}' | grep -v EXTERNAL-IP)
       [ '<pending>' != $host ] && break
       echo "Waiting for server external ip. Attempt  #$i/${COUNT}... will try again in ${SLEEP} seconds" >&2
       sleep ${SLEEP}
