@@ -37,10 +37,14 @@ RUN npm install grpc
 RUN npm install @grpc/proto-loader
 
 # install bazel
-RUN INSTALLER="bazel-0.24.1-installer-linux-x86_64.sh"; \
-    DOWNLOAD_URL="https://github.com/bazelbuild/bazel/releases/download/0.24.1/${INSTALLER}"; \
+RUN INSTALLER="bazel-0.28.1-installer-linux-x86_64.sh"; \
+    DOWNLOAD_URL="https://github.com/bazelbuild/bazel/releases/download/0.28.1/${INSTALLER}"; \
     wget -q "${DOWNLOAD_URL}" && \
     chmod +x "${INSTALLER}" && "./${INSTALLER}" && rm "${INSTALLER}"
+
+# install Bazelisk
+RUN wget -O /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v0.0.8/bazelisk-linux-amd64 && \
+    chmod +x /usr/local/bin/bazel
 
 # install golang and setup Go standard envs
 ENV GOPATH /go

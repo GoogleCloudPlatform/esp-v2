@@ -42,6 +42,6 @@ cc_test(
     ],
     deps = [
         ":utils",
-        "//external:googletest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )

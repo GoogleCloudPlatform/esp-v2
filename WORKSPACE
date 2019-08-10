@@ -14,31 +14,10 @@
 
 workspace(name = "gcpproxy")
 
-# ==============================================================================
-# Load all non-envoy repositories first.
-
-load("//bazel:repositories.bzl", "all_repositories")
-
-all_repositories()
-
 bind(
     name = "boringssl_crypto",
     actual = "//external:ssl",
 )
-
-load("@io_bazel_rules_python//python:pip.bzl", "pip_import", "pip_repositories")
-
-pip_import(
-    name = "grpc_python_dependencies",
-    requirements = "@com_github_grpc_grpc//:requirements.bazel.txt",
-)
-
-# ==============================================================================
-# Load google protobuf dependencies due to https://github.com/protocolbuffers/protobuf/issues/5472
-
-load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
-
-protobuf_deps()
 
 # ==============================================================================
 # Envoy extension configuration override. Must be before the envoy repository.
@@ -66,7 +45,7 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 # 6) Fix all backward incompatibility issues.
 # 7) Run `make proto-consistency-test` and fix inconsistency if there is any.
 
-ENVOY_SHA1 = "7ef20d7609fb6f570a058fcf4b4e000922d7eeba"  # 07.12.2019
+ENVOY_SHA1 = "7eed7332d513248a07e493bb8ec7bb3081a18b3e"  # 08.21.2019
 
 # TODO(kyuc): add sha256
 http_archive(
@@ -77,6 +56,10 @@ http_archive(
 
 # ==============================================================================
 # Load remaining envoy dependencies.
+load("@envoy//bazel:api_binding.bzl", "envoy_api_binding")
+
+envoy_api_binding()
+
 load("@envoy//bazel:api_repositories.bzl", "envoy_api_dependencies")
 
 envoy_api_dependencies()
@@ -85,32 +68,29 @@ load("@envoy//bazel:repositories.bzl", "envoy_dependencies")
 
 envoy_dependencies()
 
+load("@envoy//bazel:dependency_imports.bzl", "envoy_dependency_imports")
+
+envoy_dependency_imports()
+
+# ==============================================================================
+# Load service control repositories
+load("//bazel:repositories.bzl", "service_control_repositories")
+
+service_control_repositories()
+
+load("@io_bazel_rules_python//python:pip.bzl", "pip_import", "pip_repositories")
+
+pip_import(
+    name = "grpc_python_dependencies",
+    requirements = "@com_github_grpc_grpc//:requirements.bazel.txt",
+)
+
+# ==============================================================================
 load("@com_github_grpc_grpc//bazel:grpc_python_deps.bzl", "grpc_python_deps")
+load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps", "grpc_test_only_deps")
 
 grpc_python_deps()
-
-load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps", "grpc_test_only_deps")
 
 grpc_deps()
 
 grpc_test_only_deps()
-
-load("@rules_foreign_cc//:workspace_definitions.bzl", "rules_foreign_cc_dependencies")
-
-rules_foreign_cc_dependencies()
-
-# ==============================================================================
-# Configure C/C++ compiler.
-
-load("@envoy//bazel:cc_configure.bzl", "cc_configure")
-
-cc_configure()
-
-# ==============================================================================
-# Load Go dependencies and register Go toolchains.
-
-load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
-
-go_rules_dependencies()
-
-go_register_toolchains()

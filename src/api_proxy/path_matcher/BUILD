@@ -32,7 +32,7 @@ cc_test(
     linkstatic = 1,
     deps = [
         ":path_matcher_lib",
-        "//external:googletest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -47,7 +47,7 @@ cc_test(
     linkstatic = 1,
     deps = [
         ":path_matcher_lib",
-        "//external:googletest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -79,6 +79,6 @@ cc_test(
     linkstatic = 1,
     deps = [
         ":variable_binding_utils_lib",
-        "//external:googletest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )

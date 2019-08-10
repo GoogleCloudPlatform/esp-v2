@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
-
-GOOGLEAPIS_SHA1 = "d642131a6e6582fc226caf9893cb7fe7885b3411" # May 23, 2018
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 GOOGLEAPIS_BUILD_FILE = """
 package(default_visibility = ["//visibility:public"])
@@ -30,7 +28,7 @@ cc_proto_library(
     include = ".",
     visibility = ["//visibility:public"],
     deps = [
-        "//external:cc_wkt_protos",
+        "@com_google_protobuf//:cc_wkt_protos",
     ],
     protoc = "//external:protoc",
     default_runtime = "//external:protobuf",
@@ -75,14 +73,16 @@ cc_proto_library(
         "google/api/control.proto",
         "google/api/documentation.proto",
         "google/api/endpoint.proto",
+        "google/api/experimental/experimental.proto",
+        "google/api/experimental/authorization_config.proto",
         "google/api/label.proto",
+        "google/api/launch_stage.proto",
         "google/api/log.proto",
         "google/api/logging.proto",
         "google/api/metric.proto",
-        "google/api/experimental/experimental.proto",
-        "google/api/experimental/authorization_config.proto",
         "google/api/monitored_resource.proto",
         "google/api/monitoring.proto",
+        "google/api/resource.proto",
         "google/api/quota.proto",
         "google/api/service.proto",
         "google/api/source_info.proto",
@@ -93,7 +93,7 @@ cc_proto_library(
     visibility = ["//visibility:public"],
     deps = [
         ":http_api_protos",
-        "//external:cc_wkt_protos",
+        "@com_google_protobuf//:cc_wkt_protos",
     ],
     protoc = "//external:protoc",
     default_runtime = "//external:protobuf",
@@ -110,7 +110,7 @@ cc_proto_library(
     visibility = ["//visibility:public"],
     deps = [
         ":service_config",
-        "//external:cc_wkt_protos",
+        "@com_google_protobuf//:cc_wkt_protos",
     ],
 )
 
@@ -123,17 +123,19 @@ cc_proto_library(
     protoc = "//external:protoc",
     default_runtime = "//external:protobuf",
     deps = [
-        "//external:cc_wkt_protos",
+        "@com_google_protobuf//:cc_wkt_protos",
     ],
 )
 """
 
 def googleapis_repositories(bind = True):
-    new_git_repository(
+    http_archive(
         name = "com_github_googleapis_googleapis",
         build_file_content = GOOGLEAPIS_BUILD_FILE,
-        commit = GOOGLEAPIS_SHA1,
-        remote = "https://github.com/googleapis/googleapis.git",
+        patch_cmds = ["find . -type f -name '*BUILD*' | xargs rm"],
+        strip_prefix = "googleapis-275cdfcdc3188a60456f43acd139b8cc037379f4",  # May 14, 2019
+        url = "https://github.com/googleapis/googleapis/archive/275cdfcdc3188a60456f43acd139b8cc037379f4.tar.gz",
+        sha256 = "d07a9bf06bb02b51ff6e913211cedc7511430af550b6a775908c33c8ee218985",
     )
 
     if bind:

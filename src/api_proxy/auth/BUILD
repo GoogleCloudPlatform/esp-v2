@@ -42,6 +42,6 @@ cc_test(
     linkstatic = 1,
     deps = [
         ":json_util_lib",
-        "//external:googletest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )

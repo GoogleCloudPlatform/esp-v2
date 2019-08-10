@@ -1,1 +1,2 @@
 # Placeholder file for Prow
+build --define=grpc_no_ares=true
