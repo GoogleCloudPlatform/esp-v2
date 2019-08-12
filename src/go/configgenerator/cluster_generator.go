@@ -16,7 +16,6 @@ package configgenerator
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
@@ -225,10 +224,15 @@ func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]*cdspb.Cluster, 
 				Sni: v.Hostname,
 			},
 		}
-
-		if strings.HasSuffix(v.Hostname, ".run.app") {
-			// The IPv6 DNS lookup Cloud Run does not resolve properly
+		switch *flags.BackendDnsLookupFamily {
+		case "auto":
+			c.DnsLookupFamily = cdspb.Cluster_AUTO
+		case "v4only":
 			c.DnsLookupFamily = cdspb.Cluster_V4_ONLY
+		case "v6only":
+			c.DnsLookupFamily = cdspb.Cluster_V6_ONLY
+		default:
+			return nil, fmt.Errorf("Invalid DnsLookupFamily: %s; Only auto, v4only or v6only are valid.", *flags.BackendDnsLookupFamily)
 		}
 
 		brClusters = append(brClusters, c)

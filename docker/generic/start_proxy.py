@@ -15,10 +15,10 @@
 import argparse
 import logging
 import os
-import subprocess
-import threading
-import sys
 import re
+import subprocess
+import sys
+import threading
 
 # Location of start proxy script
 PROXY_STARTER = "apiproxy/start_proxy.sh"
@@ -60,7 +60,7 @@ def gen_bootstrap_conf(args):
     cmd = [BOOTSTRAP_CMD]
 
     if args.enable_tracing:
-        cmd.append("--enable_tracing",)
+        cmd.append("--enable_tracing", )
         if args.tracing_project_id:
             cmd.extend(["--tracing_project_id", args.tracing_project_id])
         if args.tracing_sample_rate:
@@ -392,6 +392,12 @@ environment variable or by passing "-k" flag to this script.
         the location of the service account credentials JSON file. If the option is
         omitted, the proxy contacts the metadata service to fetch an access token.
         '''.format(creds_key=GOOGLE_CREDS_KEY))
+    parser.add_argument(
+        '--backend_dns_lookup_family',
+        default="auto",
+        help='''
+        Define the dns lookup family for all backends. The options are "auto", "v4only" and "v6only". The default is "auto".
+        ''')
     return parser
 
 
@@ -504,10 +510,10 @@ if __name__ == '__main__':
         ])
 
     if args.check_metadata:
-        proxy_conf.append("--check_metadata",)
+        proxy_conf.append("--check_metadata", )
 
     if args.enable_tracing:
-        proxy_conf.append("--enable_tracing",)
+        proxy_conf.append("--enable_tracing", )
 
     if args.enable_backend_routing:
         if args.non_gcp:
@@ -516,6 +522,15 @@ if __name__ == '__main__':
             )
             sys.exit(3)
         proxy_conf.append("--enable_backend_routing")
+    if args.backend_dns_lookup_family not in {"auto", "v4only", "v6only"}:
+        print(
+            "Invalid DnsLookupFamily: %s; Only auto, v4only or v6only are valid.".formt(
+                args.backend_dns_lookup_family)
+        )
+        sys.exit(3)
+    else:
+        proxy_conf.extend(
+            ["--backend_dns_lookup_family", args.backend_dns_lookup_family])
 
     if args.envoy_use_remote_address:
         proxy_conf.append("--envoy_use_remote_address")

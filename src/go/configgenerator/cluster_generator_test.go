@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -117,10 +118,12 @@ func TestMakeServiceControlCluster(t *testing.T) {
 
 func TestMakeBackendRoutingCluster(t *testing.T) {
 	testData := []struct {
-		desc              string
-		fakeServiceConfig *conf.Service
-		wantedClusters    []*cdspb.Cluster
-		backendProtocol   string
+		desc                   string
+		fakeServiceConfig      *conf.Service
+		backendDnsLookupFamily string
+		backendProtocol        string
+		wantedClusters         []*cdspb.Cluster
+		wantedError            string
 	}{
 		{
 			desc: "Success for HTTP backend",
@@ -174,7 +177,8 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 			},
 		},
 		{
-			desc: "Success for Cloud Run backend",
+			desc:                   "Succeess, providing correct backend_dns_lookup_family flag",
+			backendDnsLookupFamily: "v4only",
 			fakeServiceConfig: &conf.Service{
 				Name: testProjectName,
 				Apis: []*api.Api{
@@ -183,9 +187,6 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 						Methods: []*api.Method{
 							{
 								Name: "Foo",
-							},
-							{
-								Name: "Bar",
 							},
 						},
 					},
@@ -196,14 +197,6 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 							Address:         "https://mybackend.run.app",
 							Selector:        "1.cloudesf_testing_cloud_goog.Foo",
 							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
-							Authentication: &conf.BackendRule_JwtAudience{
-								JwtAudience: "mybackend.run.app",
-							},
-						},
-						{
-							Address:         "https://mybackend.run.app",
-							Selector:        "1.cloudesf_testing_cloud_goog.Bar",
-							PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
 							Authentication: &conf.BackendRule_JwtAudience{
 								JwtAudience: "mybackend.run.app",
 							},
@@ -225,11 +218,45 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc:                   "Failure, providing incorrect backend_dns_lookup_family flag",
+			backendDnsLookupFamily: "v5only",
+			fakeServiceConfig: &conf.Service{
+				Name: testProjectName,
+				Apis: []*api.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog.run.app",
+						Methods: []*api.Method{
+							{
+								Name: "Foo",
+							},
+						},
+					},
+				},
+				Backend: &conf.Backend{
+					Rules: []*conf.BackendRule{
+						{
+							Address:         "https://mybackend.run.app",
+							Selector:        "1.cloudesf_testing_cloud_goog.Foo",
+							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &conf.BackendRule_JwtAudience{
+								JwtAudience: "mybackend.run.app",
+							},
+						},
+					},
+				},
+			},
+			backendProtocol: "http1",
+			wantedError:     "Invalid DnsLookupFamily: v5only;",
+		},
 	}
 
 	for i, tc := range testData {
 		flag.Set("backend_protocol", tc.backendProtocol)
 		flag.Set("enable_backend_routing", "true")
+		if tc.backendDnsLookupFamily != "" {
+			flag.Set("backend_dns_lookup_family", tc.backendDnsLookupFamily)
+		}
 		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
 		if err != nil {
 			t.Fatal(err)
@@ -237,10 +264,13 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 
 		clusters, err := makeBackendRoutingClusters(fakeServiceInfo)
 		if err != nil {
-			t.Fatal(err)
+			if tc.wantedError == "" || !strings.Contains(err.Error(), tc.wantedError) {
+				t.Fatal(err)
+
+			}
 		}
 
-		if !reflect.DeepEqual(clusters, tc.wantedClusters) {
+		if tc.wantedClusters != nil && !reflect.DeepEqual(clusters, tc.wantedClusters) {
 			t.Errorf("Test Desc(%d): %s, makeBackendRoutingClusters got: %v, want: %v", i, tc.desc, clusters, tc.wantedClusters)
 		}
 	}
