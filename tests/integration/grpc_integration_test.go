@@ -38,9 +38,8 @@ func init() {
 }
 
 func TestGRPC(t *testing.T) {
-	serviceName := "bookstore-service"
 	configID := "test-config-id"
-	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
+	args := []string{"--service_config_id=" + configID,
 		"--skip_service_control_filter=true", "--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPC, "bookstore", nil)

@@ -86,14 +86,11 @@ func CreateEnvoyConf(path string, ports *Ports) error {
 }
 
 // NewEnvoy creates a new Envoy struct and starts envoy.
-func NewEnvoy(debugMode bool, confPath string, ports *Ports) (*Envoy, error) {
+func NewEnvoy(args []string, confPath string, ports *Ports) (*Envoy, error) {
 	// set concurrency to 1 to have only one worker thread to test client cache.
-	args := []string{"-c", confPath, "--concurrency", "1"}
+	args = append(args, "-c", confPath, "--concurrency", "1")
 	if err := CreateEnvoyConf(confPath, ports); err != nil {
 		return nil, err
-	}
-	if debugMode {
-		args = append(args, "--log-level", "debug", "--drain-time-s", "1")
 	}
 
 	cmd := exec.Command(envoyPath, args...)

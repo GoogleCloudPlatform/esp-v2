@@ -28,7 +28,6 @@ import (
 )
 
 func TestAuthJwksCache(t *testing.T) {
-	serviceName := "test-echo"
 	configId := "test-config-id"
 
 	type expectedRequestCount struct {
@@ -66,7 +65,7 @@ func TestAuthJwksCache(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
+		args := []string{"--service_config_id=" + configId,
 			"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 		s := env.NewTestEnv(comp.TestAuthJwksCache, "echo", []string{"google_jwt"})

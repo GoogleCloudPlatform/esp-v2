@@ -42,6 +42,7 @@ const (
 	TestGrpcBackendSimpleCors
 	TestHttp1Basic
 	TestHttp1JWT
+	TestManagedServiceConfig
 	TestPreflightCorsWithBasicPreset
 	TestPreflightRequestWithAllowCors
 	TestReportGCPAttributes

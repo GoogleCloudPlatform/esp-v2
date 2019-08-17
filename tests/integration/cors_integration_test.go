@@ -33,12 +33,11 @@ const (
 
 // Simple CORS request with basic preset in config manager, response should have CORS headers
 func TestSimpleCorsWithBasicPreset(t *testing.T) {
-	serviceName := "test-echo"
 	configId := "test-config-id"
 	corsAllowOriginValue := "http://cloud.google.com"
 	corsExposeHeadersValue := "Content-Length,Content-Range"
 
-	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
+	args := []string{"--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--cors_preset=basic",
 		"--cors_allow_origin=" + corsAllowOriginValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue}

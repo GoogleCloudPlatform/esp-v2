@@ -1358,8 +1358,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 	// Overrides fakeConfig with fakeOldServiceConfig for the test case.
 	fakeConfig = testCase.fakeOldServiceConfig
 	fakeRollout = testCase.fakeOldServiceRollout
-	checkNewRolloutInterval = 1 * time.Second
-	flag.Set("service", testProjectName)
+	flag.Set("check_rollout_interval", "1s")
 	flag.Set("service_config_id", testConfigID)
 	flag.Set("rollout_strategy", util.ManagedRolloutStrategy)
 	flag.Set("backend_protocol", testCase.backendProtocol)
@@ -1392,7 +1391,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 
 		fakeConfig = testCase.fakeNewServiceConfig
 		fakeRollout = testCase.fakeNewServiceRollout
-		time.Sleep(time.Duration(checkNewRolloutInterval + time.Second))
+		time.Sleep(time.Duration(*checkNewRolloutInterval + time.Second))
 
 		resp, err = env.configManager.cache.Fetch(ctx, req)
 		if err != nil {

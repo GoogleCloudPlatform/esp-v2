@@ -37,10 +37,8 @@ type testDataStruct struct {
 }
 
 func TestServiceControlAPIKeyRestriction(t *testing.T) {
-	serviceName := "test-echo"
 	configID := "test-config-id"
 	args := []string{
-		"--service=" + serviceName,
 		"--service_config_id=" + configID,
 		"--backend_protocol=http1",
 		"--rollout_strategy=fixed",

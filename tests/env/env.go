@@ -17,13 +17,13 @@ package env
 import (
 	"flag"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/tests/env/components"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/genproto/googleapis/api/annotations"
 
@@ -45,7 +45,7 @@ func init() {
 
 // A ServiceManagementServer is a HTTP server hosting mock service configs.
 type ServiceManagementServer interface {
-	Start(serviceConfig string) (URL string)
+	Start() (URL string)
 }
 
 type TestEnv struct {
@@ -64,21 +64,26 @@ type TestEnv struct {
 	MockMetadataServer          *components.MockMetadataServer
 	mockServiceManagementServer ServiceManagementServer
 	ports                       *components.Ports
-
-	ServiceControlServer *components.MockServiceCtrl
+	envoyDrainTimeInSec         int
+	ServiceControlServer        *components.MockServiceCtrl
 }
 
 func NewTestEnv(name uint16, backendService string, jwtProviders []string) *TestEnv {
 	fakeServiceConfig := proto.Clone(testdata.ConfigMap[backendService]).(*conf.Service)
 	return &TestEnv{
 		mockMetadata:                true,
-		mockServiceManagementServer: components.NewMockServiceMrg(),
+		mockServiceManagementServer: components.NewMockServiceMrg(fakeServiceConfig.GetName(), fakeServiceConfig),
 		backendService:              backendService,
 		ports:                       components.NewPorts(name),
 		fakeServiceConfig:           fakeServiceConfig,
 		mockJwtProviders:            jwtProviders,
 		ServiceControlServer:        components.NewMockServiceCtrl(fakeServiceConfig.GetName()),
 	}
+}
+
+// SetEnvoyDrainTimeInSec
+func (e *TestEnv) SetEnvoyDrainTimeInSec(envoyDrainTimeInSec int) {
+	e.envoyDrainTimeInSec = envoyDrainTimeInSec
 }
 
 // OverrideMockMetadata overrides mock metadata values given path to response map.
@@ -187,13 +192,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		testdata.SetFakeControlEnvironment(e.fakeServiceConfig, e.ServiceControlServer.GetURL())
 		testdata.AppendLogMetrics(e.fakeServiceConfig)
 
-		marshaler := &jsonpb.Marshaler{}
-		jsonStr, err := marshaler.MarshalToString(e.fakeServiceConfig)
-		if err != nil {
-			return fmt.Errorf("fail to unmarshal fakeServiceConfig: %v", err)
-		}
-
-		confArgs = append(confArgs, "--service_management_url="+e.mockServiceManagementServer.Start(jsonStr))
+		confArgs = append(confArgs, "--service_management_url="+e.mockServiceManagementServer.Start())
 	}
 
 	if !e.enableScNetworkFailOpen {
@@ -208,6 +207,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	confArgs = append(confArgs, fmt.Sprintf("--cluster_port=%v", e.ports.BackendServerPort))
 	confArgs = append(confArgs, fmt.Sprintf("--listener_port=%v", e.ports.ListenerPort))
 	confArgs = append(confArgs, fmt.Sprintf("--discovery_port=%v", e.ports.DiscoveryPort))
+	confArgs = append(confArgs, fmt.Sprintf("--service=%v", e.fakeServiceConfig.Name))
 
 	// Starts XDS.
 	var err error
@@ -223,8 +223,18 @@ func (e *TestEnv) Setup(confArgs []string) error {
 
 	// Starts envoy.
 	envoyConfPath := "/tmp/apiproxy-testdata-bootstrap.yaml"
-	debugEnvoy := *debugComponents == "all" || *debugComponents == "envoy"
-	e.envoy, err = components.NewEnvoy(debugEnvoy, envoyConfPath, e.ports)
+	envoyArgs := []string{}
+	if *debugComponents == "all" || *debugComponents == "envoy" {
+		envoyArgs = append(envoyArgs, "--log-level", "debug")
+		if e.envoyDrainTimeInSec == 0 {
+			envoyArgs = append(envoyArgs, "--drain-time-s", "1")
+		}
+	}
+	if e.envoyDrainTimeInSec != 0 {
+		envoyArgs = append(envoyArgs, "--drain-time-s", strconv.Itoa(e.envoyDrainTimeInSec))
+	}
+
+	e.envoy, err = components.NewEnvoy(envoyArgs, envoyConfPath, e.ports)
 	if err != nil {
 		glog.Errorf("unable to create Envoy %v", err)
 		return err

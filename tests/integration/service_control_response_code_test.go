@@ -30,10 +30,9 @@ import (
 )
 
 func TestServiceControlReportResponseCode(t *testing.T) {
-	serviceName := "test-echo"
 	configId := "test-config-id"
 
-	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
+	args := []string{"--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestServiceControlReportResponseCode, "echo", nil)

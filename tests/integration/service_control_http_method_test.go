@@ -29,10 +29,9 @@ import (
 )
 
 func TestServiceControlAllHTTPMethods(t *testing.T) {
-	serviceName := "test-echo"
 	configId := "test-config-id"
 
-	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
+	args := []string{"--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlALlHTTPMethod, "echo", nil)

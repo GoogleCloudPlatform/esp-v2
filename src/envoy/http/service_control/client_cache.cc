@@ -159,10 +159,8 @@ void ClientCache::InitHttpRequestSetting(const FilterConfig& filter_config) {
 
 ClientCache::ClientCache(
     const ::google::api::envoy::http::service_control::Service& config,
-    const FilterConfig& filter_config,
-    Upstream::ClusterManager& cm,
-    Envoy::TimeSource& time_source,
-    Event::Dispatcher& dispatcher,
+    const FilterConfig& filter_config, Upstream::ClusterManager& cm,
+    Envoy::TimeSource& time_source, Event::Dispatcher& dispatcher,
     std::function<const std::string&()> sc_token_fn,
     std::function<const std::string&()> quota_token_fn)
     : config_(config),
@@ -171,8 +169,8 @@ ClientCache::ClientCache(
       dispatcher_(dispatcher),
       sc_token_fn_(sc_token_fn),
       quota_token_fn_(quota_token_fn),
+      report_suffix_url_(config_.service_name() + ":report"),
       time_source_(time_source) {
-
   ServiceControlClientOptions options(getCheckAggregationOptions(),
                                       getQuotaAggregationOptions(),
                                       getReportAggregationOptions());
@@ -184,8 +182,7 @@ ClientCache::ClientCache(
     auto* call = HttpCall::create(
         cm_, service_control_uri_, config_.service_name() + ":check",
         sc_token_fn_, request, check_timeout_ms_, check_retries_,
-        [response, on_done](const Status& status,
-                                  const std::string& body) {
+        [response, on_done](const Status& status, const std::string& body) {
           if (status.ok()) {
             // Handle 200 response
             if (!response->ParseFromString(body)) {
@@ -211,8 +208,7 @@ ClientCache::ClientCache(
     auto* call = HttpCall::create(
         cm_, service_control_uri_, config_.service_name() + ":allocateQuota",
         quota_token_fn_, request, quota_timeout_ms_, quota_retries_,
-        [response, on_done](const Status& status,
-                                  const std::string& body) {
+        [response, on_done](const Status& status, const std::string& body) {
           if (status.ok()) {
             // Handle 200 response
             if (!response->ParseFromString(body)) {
@@ -236,10 +232,9 @@ ClientCache::ClientCache(
                                     ReportResponse* response,
                                     TransportDoneFunc on_done) {
     auto* call = HttpCall::create(
-        cm_, service_control_uri_, config_.service_name() + ":report",
-        sc_token_fn_, request, report_timeout_ms_, report_retries_,
-        [response, on_done](const Status& status,
-                                  const std::string& body) {
+        cm_, service_control_uri_, report_suffix_url_, sc_token_fn_, request,
+        report_timeout_ms_, report_retries_,
+        [response, on_done](const Status& status, const std::string& body) {
           if (status.ok()) {
             // Handle 200 response
             if (!response->ParseFromString(body)) {
@@ -271,8 +266,7 @@ ClientCache::ClientCache(
 }
 
 void ClientCache::callCheck(
-    const CheckRequest& request,
-    Envoy::Tracing::Span&,
+    const CheckRequest& request, Envoy::Tracing::Span&,
     std::function<void(const Status&, const CheckResponseInfo&)> on_done) {
   CheckResponse* response = new CheckResponse;
   client_->Check(request, response,
@@ -280,8 +274,8 @@ void ClientCache::callCheck(
                    CheckResponseInfo response_info;
                    if (status.ok()) {
                      Status status = ::google::api_proxy::service_control::
-                         RequestBuilder::ConvertCheckResponse(
-                             *response, config_.service_name(), &response_info);
+                     RequestBuilder::ConvertCheckResponse(
+                         *response, config_.service_name(), &response_info);
                      on_done(status, response_info);
                    } else {
                      if (network_fail_open_) {
@@ -297,14 +291,14 @@ void ClientCache::callCheck(
 void ClientCache::callQuota(
     const ::google::api::servicecontrol::v1::AllocateQuotaRequest& request,
     std::function<void(const ::google::protobuf::util::Status& status)>
-        on_done) {
+    on_done) {
   AllocateQuotaResponse* response = new AllocateQuotaResponse;
   client_->Quota(
       request, response, [this, response, on_done](const Status& status) {
         if (status.ok()) {
           on_done(::google::api_proxy::service_control::RequestBuilder::
-                      ConvertAllocateQuotaResponse(*response,
-                                                   config_.service_name()));
+                  ConvertAllocateQuotaResponse(*response,
+                                               config_.service_name()));
         } else {
           on_done(Status(static_cast<google::protobuf::util::error::Code>(
                              status.error_code()),

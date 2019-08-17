@@ -17,8 +17,8 @@
 #include "api/envoy/http/service_control/config.pb.h"
 #include "common/common/logger.h"
 #include "envoy/event/dispatcher.h"
-#include "envoy/upstream/cluster_manager.h"
 #include "envoy/tracing/http_tracer.h"
+#include "envoy/upstream/cluster_manager.h"
 #include "include/service_control_client.h"
 #include "src/api_proxy/service_control/request_info.h"
 #include "src/envoy/http/service_control/service_control_callback_func.h"
@@ -33,16 +33,15 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
  public:
   ClientCache(
       const ::google::api::envoy::http::service_control::Service& config,
-      const ::google::api::envoy::http::service_control::FilterConfig& filter_config,
-      Upstream::ClusterManager& cm,
-      Envoy::TimeSource& time_source,
+      const ::google::api::envoy::http::service_control::FilterConfig&
+          filter_config,
+      Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
       Event::Dispatcher& dispatcher,
       std::function<const std::string&()> sc_token_fn,
       std::function<const std::string&()> quota_token_fn);
 
   void callCheck(const ::google::api::servicecontrol::v1::CheckRequest& request,
-                 Envoy::Tracing::Span& parent_span,
-                 CheckDoneFunc on_done);
+                 Envoy::Tracing::Span& parent_span, CheckDoneFunc on_done);
 
   void callQuota(
       const ::google::api::servicecontrol::v1::AllocateQuotaRequest& request,
@@ -57,13 +56,15 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
           filter_config);
 
   const ::google::api::envoy::http::service_control::Service& config_;
-  const ::google::api::envoy::http::common::HttpUri& service_control_uri_;
+  const ::google::api::envoy::http::common::HttpUri service_control_uri_;
   Upstream::ClusterManager& cm_;
   Event::Dispatcher& dispatcher_;
   std::function<const std::string&()> sc_token_fn_;
   std::function<const std::string&()> quota_token_fn_;
-  std::unique_ptr<::google::service_control_client::ServiceControlClient>
-      client_;
+
+  // Report transport may be called at destructor. Cache the report_suffix_url value here
+  // so the transport callback function would not need to access other potential destructed objects.
+  std::string report_suffix_url_;
   bool network_fail_open_;
   Envoy::TimeSource& time_source_;
 
@@ -76,6 +77,12 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
   uint32_t check_retries_;
   uint32_t report_retries_;
   uint32_t quota_retries_;
+
+  // When service control client is destroyed, it will flush out some batched reports and call
+  // report_transport_func to send them. Since report_transport_func is using some member variables,
+  // placing the client_ as the last one to make sure it is destroyed first.
+  std::unique_ptr<::google::service_control_client::ServiceControlClient>
+      client_;
 };
 
 }  // namespace ServiceControl
