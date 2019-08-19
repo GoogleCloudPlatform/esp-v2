@@ -45,10 +45,11 @@ var (
 // ConfigManager handles service configuration fetching and updating.
 // TODO(jilinxia): handles multi service name.
 type ConfigManager struct {
-	serviceName  string
-	serviceInfo  *sc.ServiceInfo
-	curRolloutID string
-	curConfigID  string
+	serviceName        string
+	serviceInfo        *sc.ServiceInfo
+	envoyConfigOptions sc.EnvoyConfigOptions
+	curRolloutID       string
+	curConfigID        string
 
 	cache               cache.SnapshotCache
 	checkRolloutsTicker *time.Ticker
@@ -86,8 +87,9 @@ func NewConfigManager(mf *metadata.MetadataFetcher) (*ConfigManager, error) {
 	}
 
 	m := &ConfigManager{
-		serviceName:     name,
-		metadataFetcher: mf,
+		serviceName:        name,
+		metadataFetcher:    mf,
+		envoyConfigOptions: sc.EnvoyConfigOptionsFromFlags(),
 	}
 
 	m.cache = cache.NewSnapshotCache(true, m, m)
@@ -180,7 +182,7 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	m.Infof("making configuration for api: %v", m.serviceInfo.ApiName)
 
 	var clusterResources, endpoints, routes []cache.Resource
-	clusters, err := gen.MakeClusters(m.serviceInfo)
+	clusters, err := gen.MakeClusters(m.serviceInfo, m.envoyConfigOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +196,7 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	}
 
 	m.Infof("adding Listener configuration for api: %v", m.serviceInfo.Name)
-	listener, err := gen.MakeListeners(m.serviceInfo)
+	listener, err := gen.MakeListeners(m.serviceInfo, m.envoyConfigOptions)
 	if err != nil {
 		return nil, err
 	}

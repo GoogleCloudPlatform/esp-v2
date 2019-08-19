@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"strings"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
@@ -51,10 +50,10 @@ const (
 )
 
 // MakeListeners provides dynamic listener settings for Envoy
-func MakeListeners(serviceInfo *sc.ServiceInfo) (*ldspb.Listener, error) {
+func MakeListeners(serviceInfo *sc.ServiceInfo, options sc.EnvoyConfigOptions) (*ldspb.Listener, error) {
 	httpFilters := []*hcm.HttpFilter{}
 
-	if *flags.CorsPreset == "basic" || *flags.CorsPreset == "cors_with_regex" {
+	if options.CorsPreset == "basic" || options.CorsPreset == "cors_with_regex" {
 		corsFilter := &hcm.HttpFilter{
 			Name: ut.CORS,
 		}
@@ -75,8 +74,8 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) (*ldspb.Listener, error) {
 	}
 
 	// Add JWT Authn filter if needed.
-	if !*flags.SkipJwtAuthnFilter {
-		jwtAuthnFilter := makeJwtAuthnFilter(serviceInfo)
+	if !options.SkipJwtAuthnFilter {
+		jwtAuthnFilter := makeJwtAuthnFilter(serviceInfo, options)
 		if jwtAuthnFilter != nil {
 			httpFilters = append(httpFilters, jwtAuthnFilter)
 			glog.Infof("adding JWT Authn Filter config: %v", jwtAuthnFilter)
@@ -84,8 +83,8 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) (*ldspb.Listener, error) {
 	}
 
 	// Add Service Control filter if needed.
-	if !*flags.SkipServiceControlFilter {
-		serviceControlFilter := makeServiceControlFilter(serviceInfo)
+	if !options.SkipServiceControlFilter {
+		serviceControlFilter := makeServiceControlFilter(serviceInfo, options)
 		if serviceControlFilter != nil {
 			httpFilters = append(httpFilters, serviceControlFilter)
 			glog.Infof("adding Service Control Filter config: %v", serviceControlFilter)
@@ -108,8 +107,8 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) (*ldspb.Listener, error) {
 	}
 
 	// Add Backend Auth filter and Backend Routing if needed.
-	if *flags.EnableBackendRouting {
-		if *flags.ServiceAccountKey != "" {
+	if options.EnableBackendRouting {
+		if options.ServiceAccountKey != "" {
 			return nil, fmt.Errorf("ServiceAccountKey is set(proxy runs on Non-GCP) while backendRouting is not allowed on Non-GCP")
 		}
 		backendAuthFilter := makeBackendAuthFilter(serviceInfo)
@@ -123,7 +122,7 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) (*ldspb.Listener, error) {
 	// Add Envoy Router filter so requests are routed upstream.
 	// Router filter should be the last.
 
-	routerFilter := makeRouterFilter()
+	routerFilter := makeRouterFilter(options)
 	httpFilters = append(httpFilters, routerFilter)
 
 	route, err := MakeRouteConfig(serviceInfo)
@@ -139,10 +138,10 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) (*ldspb.Listener, error) {
 			RouteConfig: route,
 		},
 
-		UseRemoteAddress:  &wrappers.BoolValue{Value: *flags.EnvoyUseRemoteAddress},
-		XffNumTrustedHops: uint32(*flags.EnvoyXffNumTrustedHops),
+		UseRemoteAddress:  &wrappers.BoolValue{Value: options.EnvoyUseRemoteAddress},
+		XffNumTrustedHops: uint32(options.EnvoyXffNumTrustedHops),
 	}
-	if *flags.EnableTracing {
+	if options.EnableTracing {
 		httpConMgr.Tracing = &hcm.HttpConnectionManager_Tracing{}
 	}
 
@@ -159,9 +158,9 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) (*ldspb.Listener, error) {
 		Address: &addresspb.Address{
 			Address: &addresspb.Address_SocketAddress{
 				SocketAddress: &addresspb.SocketAddress{
-					Address: *flags.ListenerAddress,
+					Address: options.ListenerAddress,
 					PortSpecifier: &addresspb.SocketAddress_PortValue{
-						PortValue: uint32(*flags.ListenerPort),
+						PortValue: uint32(options.ListenerPort),
 					},
 				},
 			},
@@ -231,7 +230,7 @@ func hasPathParameter(httpPattern string) bool {
 	return strings.ContainsRune(httpPattern, '{')
 }
 
-func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
+func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo, options sc.EnvoyConfigOptions) *hcm.HttpFilter {
 	auth := serviceInfo.ServiceConfig().GetAuthentication()
 	if len(auth.GetProviders()) == 0 {
 		return nil
@@ -249,7 +248,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 						},
 					},
 					CacheDuration: &duration.Duration{
-						Seconds: int64(*flags.JwksCacheDurationInS),
+						Seconds: int64(options.JwksCacheDurationInS),
 					},
 				},
 			},
@@ -346,38 +345,38 @@ func makeJwtRequirement(requirements []*conf.AuthRequirement) *ac.JwtRequirement
 	return requires
 }
 
-func makeServiceControlCallingConfig() *scpb.ServiceControlCallingConfig {
+func makeServiceControlCallingConfig(options sc.EnvoyConfigOptions) *scpb.ServiceControlCallingConfig {
 	setting := &scpb.ServiceControlCallingConfig{}
-	setting.NetworkFailOpen = &wrappers.BoolValue{Value: *flags.ServiceControlNetworkFailOpen}
+	setting.NetworkFailOpen = &wrappers.BoolValue{Value: options.ServiceControlNetworkFailOpen}
 
-	if *flags.ScCheckTimeoutMs > 0 {
-		setting.CheckTimeoutMs = &wrappers.UInt32Value{Value: uint32(*flags.ScCheckTimeoutMs)}
+	if options.ScCheckTimeoutMs > 0 {
+		setting.CheckTimeoutMs = &wrappers.UInt32Value{Value: uint32(options.ScCheckTimeoutMs)}
 	}
-	if *flags.ScQuotaTimeoutMs > 0 {
-		setting.QuotaTimeoutMs = &wrappers.UInt32Value{Value: uint32(*flags.ScQuotaTimeoutMs)}
+	if options.ScQuotaTimeoutMs > 0 {
+		setting.QuotaTimeoutMs = &wrappers.UInt32Value{Value: uint32(options.ScQuotaTimeoutMs)}
 	}
-	if *flags.ScReportTimeoutMs > 0 {
-		setting.ReportTimeoutMs = &wrappers.UInt32Value{Value: uint32(*flags.ScReportTimeoutMs)}
+	if options.ScReportTimeoutMs > 0 {
+		setting.ReportTimeoutMs = &wrappers.UInt32Value{Value: uint32(options.ScReportTimeoutMs)}
 	}
 
-	if *flags.ScCheckRetries > -1 {
-		setting.CheckRetries = &wrappers.UInt32Value{Value: uint32(*flags.ScCheckRetries)}
+	if options.ScCheckRetries > -1 {
+		setting.CheckRetries = &wrappers.UInt32Value{Value: uint32(options.ScCheckRetries)}
 	}
-	if *flags.ScQuotaRetries > -1 {
-		setting.QuotaRetries = &wrappers.UInt32Value{Value: uint32(*flags.ScQuotaRetries)}
+	if options.ScQuotaRetries > -1 {
+		setting.QuotaRetries = &wrappers.UInt32Value{Value: uint32(options.ScQuotaRetries)}
 	}
-	if *flags.ScReportRetries > -1 {
-		setting.ReportRetries = &wrappers.UInt32Value{Value: uint32(*flags.ScReportRetries)}
+	if options.ScReportRetries > -1 {
+		setting.ReportRetries = &wrappers.UInt32Value{Value: uint32(options.ScReportRetries)}
 	}
 	return setting
 }
 
-func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
+func makeServiceControlFilter(serviceInfo *sc.ServiceInfo, options sc.EnvoyConfigOptions) *hcm.HttpFilter {
 	if serviceInfo == nil || serviceInfo.ServiceConfig().GetControl().GetEnvironment() == "" {
 		return nil
 	}
 
-	lowercaseProtocol := strings.ToLower(*flags.BackendProtocol)
+	lowercaseProtocol := strings.ToLower(options.BackendProtocol)
 	serviceName := serviceInfo.ServiceConfig().GetName()
 	service := &scpb.Service{
 		ServiceName:       serviceName,
@@ -387,20 +386,20 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 		BackendProtocol:   lowercaseProtocol,
 	}
 
-	if *flags.LogRequestHeaders != "" {
-		service.LogRequestHeaders = strings.Split(*flags.LogRequestHeaders, ",")
+	if options.LogRequestHeaders != "" {
+		service.LogRequestHeaders = strings.Split(options.LogRequestHeaders, ",")
 		for i := range service.LogRequestHeaders {
 			service.LogRequestHeaders[i] = strings.TrimSpace(service.LogRequestHeaders[i])
 		}
 	}
-	if *flags.LogResponseHeaders != "" {
-		service.LogResponseHeaders = strings.Split(*flags.LogResponseHeaders, ",")
+	if options.LogResponseHeaders != "" {
+		service.LogResponseHeaders = strings.Split(options.LogResponseHeaders, ",")
 		for i := range service.LogResponseHeaders {
 			service.LogResponseHeaders[i] = strings.TrimSpace(service.LogResponseHeaders[i])
 		}
 	}
-	if *flags.LogJwtPayloads != "" {
-		service.LogJwtPayloads = strings.Split(*flags.LogJwtPayloads, ",")
+	if options.LogJwtPayloads != "" {
+		service.LogJwtPayloads = strings.Split(options.LogJwtPayloads, ",")
 		for i := range service.LogJwtPayloads {
 			service.LogJwtPayloads[i] = strings.TrimSpace(service.LogJwtPayloads[i])
 		}
@@ -410,7 +409,7 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	filterConfig := &scpb.FilterConfig{
 		Services:        []*scpb.Service{service},
 		AccessToken:     serviceInfo.AccessToken,
-		ScCallingConfig: makeServiceControlCallingConfig(),
+		ScCallingConfig: makeServiceControlCallingConfig(options),
 		ServiceControlUri: &commonpb.HttpUri{
 			Uri:     serviceInfo.ServiceControlURI,
 			Cluster: ut.ServiceControlClusterName,
@@ -560,10 +559,10 @@ func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	return backendRoutingFilter
 }
 
-func makeRouterFilter() *hcm.HttpFilter {
+func makeRouterFilter(options sc.EnvoyConfigOptions) *hcm.HttpFilter {
 	router, _ := ut.MessageToStruct(&rt.Router{
-		SuppressEnvoyHeaders: *flags.SuppressEnvoyHeaders,
-		StartChildSpan:       *flags.EnableTracing,
+		SuppressEnvoyHeaders: options.SuppressEnvoyHeaders,
+		StartChildSpan:       options.EnableTracing,
 	})
 	routerFilter := &hcm.HttpFilter{
 		Name:       ut.Router,

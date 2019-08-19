@@ -22,12 +22,13 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap/static/testdata"
 	"github.com/golang/protobuf/jsonpb"
 
+	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 )
 
 func TestServiceToBoostrapConfig(t *testing.T) {
 	flag.Set("backend_protocol", "HTTP1")
-	gotBootstrap, err := ServiceToBoostrapConfig(testdata.FakeBookstoreConfig, testdata.FakeConfigID)
+	gotBootstrap, err := ServiceToBoostrapConfig(testdata.FakeBookstoreConfig, testdata.FakeConfigID, sc.EnvoyConfigOptionsFromFlags())
 	if err != nil {
 		t.Fatal(err)
 	}

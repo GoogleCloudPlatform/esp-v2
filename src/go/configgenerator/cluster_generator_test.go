@@ -262,7 +262,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		clusters, err := makeBackendRoutingClusters(fakeServiceInfo)
+		clusters, err := makeBackendRoutingClusters(fakeServiceInfo, sc.EnvoyConfigOptionsFromFlags())
 		if err != nil {
 			if tc.wantedError == "" || !strings.Contains(err.Error(), tc.wantedError) {
 				t.Fatal(err)
@@ -401,7 +401,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		clusters, err := makeJwtProviderClusters(fakeServiceInfo)
+		clusters, err := makeJwtProviderClusters(fakeServiceInfo, sc.EnvoyConfigOptionsFromFlags())
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -28,7 +28,7 @@ import (
 // ServiceToBoostrapConfig outputs envoy bootstrap config from service config.
 // id is the service configuration ID. It is generated when deploying
 // service config to ServiceManagement Server, example: 2017-02-13r0.
-func ServiceToBoostrapConfig(serviceConfig *conf.Service, id string) (*bootstrappb.Bootstrap, error) {
+func ServiceToBoostrapConfig(serviceConfig *conf.Service, id string, options sc.EnvoyConfigOptions) (*bootstrappb.Bootstrap, error) {
 	bootstrap := &bootstrappb.Bootstrap{
 		Node:  bt.CreateNode(),
 		Admin: bt.CreateAdmin(),
@@ -39,11 +39,11 @@ func ServiceToBoostrapConfig(serviceConfig *conf.Service, id string) (*bootstrap
 		return nil, fmt.Errorf("fail to initialize ServiceInfo, %s", err)
 	}
 
-	listener, err := gen.MakeListeners(serviceInfo)
+	listener, err := gen.MakeListeners(serviceInfo, options)
 	if err != nil {
 		return nil, err
 	}
-	clusters, err := gen.MakeClusters(serviceInfo)
+	clusters, err := gen.MakeClusters(serviceInfo, options)
 	if err != nil {
 		return nil, err
 	}
