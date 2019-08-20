@@ -3,6 +3,16 @@
 APIProxy is based on Envoy Proxy in C++ and Config Manager in Golang. Envoy is
 built using Bazel, and Config Manager is built using Make.
 
+## Installing Bazelisk as Bazel
+
+It is recommended to use [Bazelisk](https://github.com/bazelbuild/bazelisk) installed as `bazel`, to avoid Bazel compatibility issues.
+On Linux, run the following commands:
+
+```
+sudo wget -O /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v0.0.8/bazelisk-linux-amd64
+sudo chmod +x /usr/local/bin/bazel
+```
+
 ## Install Envoy dependencies
 
 To get started building Envoy locally, following the instructions from [Envoy](https://github.com/envoyproxy/envoy/blob/master/bazel/README.md#quick-start-bazel-build-for-developers).
