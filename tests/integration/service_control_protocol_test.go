@@ -30,11 +30,9 @@ import (
 )
 
 func TestServiceControlProtocolWithGRPCBackend(t *testing.T) {
-	serviceName := "bookstore-service"
 	configID := "test-config-id"
 
 	args := []string{
-		"--service=" + serviceName,
 		"--service_config_id=" + configID,
 		"--backend_protocol=grpc",
 		"--rollout_strategy=fixed",

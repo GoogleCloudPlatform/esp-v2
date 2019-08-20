@@ -16,26 +16,24 @@ package integration
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 	"testing"
 	"time"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
-	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-func TestServiceControlJwtAuthFail(t *testing.T) {
+func TestManagedServiceConfig(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
+		"--backend_protocol=grpc", "--rollout_strategy=managed", "--check_rollout_interval=1s"}
+	s := env.NewTestEnv(comp.TestManagedServiceConfig, "bookstore", []string{"test_auth"})
+	s.SetEnvoyDrainTimeInSec(1)
 
-	s := env.NewTestEnv(comp.TestServiceControlJwtAuthFail, "bookstore", []string{"test_auth"})
 	s.OverrideAuthentication(&conf.Authentication{
 		Rules: []*conf.AuthenticationRule{
 			{
@@ -53,7 +51,6 @@ func TestServiceControlJwtAuthFail(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	defer s.TearDown()
-	time.Sleep(time.Duration(5 * time.Second))
 	tests := []struct {
 		desc               string
 		clientProtocol     string
@@ -61,66 +58,52 @@ func TestServiceControlJwtAuthFail(t *testing.T) {
 		method             string
 		queryInToken       bool
 		token              string
+		headers            map[string][]string
 		wantResp           string
 		wantError          string
 		wantGRPCWebError   string
 		wantGRPCWebTrailer client.GRPCWebTrailer
-		wantScRequests     []interface{}
 	}{
 		{
-			desc:           "Failed, the request without token was rejected in jwt auth filter so the decodeHeader was not called while report was still done",
+			desc:           "Fail, since the request doesn't have token",
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
 			wantError:      "401 Unauthorized, Jwt is missing",
-			wantScRequests: []interface{}{
-				&utils.ExpectedReport{
-					Version:           utils.APIProxyVersion,
-					ServiceName:       "bookstore.endpoints.cloudesf-testing.cloud.goog",
-					ServiceConfigID:   "test-config-id",
-					URL:               "/v1/shelves?key=api-key",
-					ApiMethod:         "endpoints.examples.bookstore.Bookstore.ListShelves",
-					ProducerProjectID: "producer project",
-					ApiKey:            "api-key",
-					FrontendProtocol:  "http",
-					BackendProtocol:   "grpc",
-					HttpMethod:        "GET",
-					LogMessage:        "endpoints.examples.bookstore.Bookstore.ListShelves is called",
-					ErrorType:         "4xx",
-					StatusCode:        "0",
-					RequestSize:       198,
-					ResponseSize:      106,
-					RequestBytes:      198,
-					ResponseBytes:     106,
-					ResponseCode:      401,
-					Platform:          util.GCE,
-					Location:          "test-zone",
-				},
-			},
+		},
+		{
+			desc:           "Success, the new service config doesn't require authz for this API",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves?key=api-key",
+			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
 	}
 
-	for _, tc := range tests {
+	for idx, tc := range tests {
+		// Remove the authentication in service config and wait envoy to update.
+		if idx == 1 {
+			s.OverrideAuthentication(&conf.Authentication{})
+			time.Sleep(time.Second * 2)
+		}
+
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
 		var resp string
 		var err error
 		if tc.queryInToken {
 			resp, err = client.MakeTokenInQueryCall(addr, tc.httpMethod, tc.method, tc.token)
 		} else {
-			resp, err = client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, http.Header{})
+			resp, err = client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, tc.headers)
 		}
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
+			t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
 			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
 		} else {
 			if !strings.Contains(resp, tc.wantResp) {
 				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
+				t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
 			}
 		}
-		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
-		if err1 != nil {
-			t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err1)
-		}
-		utils.CheckScRequest(t, scRequests, tc.wantScRequests, tc.desc)
 	}
 }

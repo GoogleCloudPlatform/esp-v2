@@ -28,7 +28,6 @@ import (
 )
 
 func TestServiceControlCheckNetworkFail(t *testing.T) {
-	serviceName := "bookstore-service"
 	configID := "test-config-id"
 
 	time.Sleep(time.Duration(5 * time.Second))
@@ -64,7 +63,7 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 	}
 
 	for _, tc := range testdata {
-		args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
+		args := []string{"--service_config_id=" + configID,
 			"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 		s := env.NewTestEnv(tc.allocatedPort, "bookstore", nil)
 		s.ServiceControlServer.SetURL(tc.serviceControlURL)

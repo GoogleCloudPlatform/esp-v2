@@ -28,9 +28,8 @@ import (
 )
 
 func TestServiceControlReportNetworkFail(t *testing.T) {
-	serviceName := "bookstore-service"
 	configID := "test-config-id"
-	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
+	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--service_control_report_retries=0"}
 
 	s := env.NewTestEnv(comp.TestServiceControlReportNetworkFail, "bookstore", nil)

@@ -30,10 +30,9 @@ import (
 )
 
 func TestServiceControlCredentialId(t *testing.T) {
-	serviceName := "test-bookstore"
 	configId := "test-config-id"
 
-	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
+	args := []string{"--service_config_id=" + configId,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--suppress_envoy_headers",
 	}
 	s := env.NewTestEnv(comp.TestServiceControlLogJwtPayloads, "bookstore", []string{"google_jwt"})

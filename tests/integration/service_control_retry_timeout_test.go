@@ -45,9 +45,8 @@ func (h *retryServiceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 }
 
 func TestServiceControlCheckRetry(t *testing.T) {
-	serviceName := "bookstore-service"
 	configID := "test-config-id"
-	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
+	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--service_control_check_retries=2", "--service_control_check_timeout_ms=100"}
 	s := env.NewTestEnv(comp.TestServiceControlCheckRetry, "bookstore", nil)
 	handler := retryServiceHandler{

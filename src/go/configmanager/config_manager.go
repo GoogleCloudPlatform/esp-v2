@@ -36,10 +36,11 @@ import (
 
 var (
 	// These flags are used by config manage only.
-	ServiceName     = flag.String("service", "", "endpoint service name")
-	ServiceConfigID = flag.String("service_config_id", "", "initial service config id")
-	RolloutStrategy = flag.String("rollout_strategy", "fixed", `service config rollout strategy, must be either "managed" or "fixed"`)
-	CheckMetadata   = flag.Bool("check_metadata", false, `enable fetching service name, config ID and rollout strategy from service metadata server`)
+	ServiceName             = flag.String("service", "", "endpoint service name")
+	ServiceConfigID         = flag.String("service_config_id", "", "initial service config id")
+	RolloutStrategy         = flag.String("rollout_strategy", "fixed", `service config rollout strategy, must be either "managed" or "fixed"`)
+	CheckMetadata           = flag.Bool("check_metadata", false, `enable fetching service name, config ID and rollout strategy from service metadata server`)
+	checkNewRolloutInterval = flag.Duration("check_rollout_interval", 60*time.Second, `the interval periodically to call servicemanagment to check the latest rollout.`)
 )
 
 // ConfigManager handles service configuration fetching and updating.
@@ -132,8 +133,8 @@ func NewConfigManager(mf *metadata.MetadataFetcher) (*ConfigManager, error) {
 
 	if rolloutStrategy == ut.ManagedRolloutStrategy {
 		go func() {
-			glog.Infof("start checking new rollouts every %v seconds", checkNewRolloutInterval)
-			m.checkRolloutsTicker = time.NewTicker(checkNewRolloutInterval)
+			glog.Infof("start checking new rollouts every %v seconds", *checkNewRolloutInterval)
+			m.checkRolloutsTicker = time.NewTicker(*checkNewRolloutInterval)
 			for range m.checkRolloutsTicker.C {
 				m.Infof("check new rollouts for service %v", m.serviceName)
 				// only log error and keep checking when fetching rollouts and getting newest config fail

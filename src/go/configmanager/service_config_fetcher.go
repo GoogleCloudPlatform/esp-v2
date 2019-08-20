@@ -49,7 +49,6 @@ var (
 		path = strings.Replace(path, "$serviceName", serviceName, 1)
 		return path
 	}
-	checkNewRolloutInterval = 60 * time.Second
 
 	serviceConfigFetcherClient = &http.Client{Transport: &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -64,6 +63,7 @@ func loadConfigFromRollouts(serviceName, curRolloutID, curConfigID string, mf *m
 		return "", "", fmt.Errorf("fail to get rollouts, %s", err)
 	}
 	glog.Infof("get rollouts %v", listServiceRolloutsResponse)
+
 	if len(listServiceRolloutsResponse.Rollouts) == 0 {
 		return "", "", fmt.Errorf("no active rollouts")
 	}
@@ -123,7 +123,6 @@ func fetchConfig(serviceName, configId string, mf *metadata.MetadataFetcher) (*c
 	if err != nil {
 		return nil, fmt.Errorf("fail to get access tokenm: %v", err)
 	}
-
 	return callServiceManagement(fetchConfigURL(serviceName, configId), token)
 }
 
@@ -145,6 +144,7 @@ var callServiceManagementRollouts = func(path, token string) (*sm.ListServiceRol
 var callServiceManagement = func(path, token string) (*conf.Service, error) {
 	var err error
 	var resp *http.Response
+
 	if resp, err = callWithAccessToken(path, token); err != nil {
 		return nil, err
 	}
