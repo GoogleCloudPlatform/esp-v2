@@ -47,8 +47,7 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
                                 std::chrono::system_clock::now());
   ~ServiceControlHandlerImpl() override;
 
-  void callCheck(Http::HeaderMap& headers,
-                 Envoy::Tracing::Span& parent_span,
+  void callCheck(Http::HeaderMap& headers, Envoy::Tracing::Span& parent_span,
                  CheckDoneCallback& callback) override;
 
   void callReport(const Http::HeaderMap* request_headers,

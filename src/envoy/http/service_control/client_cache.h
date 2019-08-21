@@ -62,8 +62,9 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
   std::function<const std::string&()> sc_token_fn_;
   std::function<const std::string&()> quota_token_fn_;
 
-  // Report transport may be called at destructor. Cache the report_suffix_url value here
-  // so the transport callback function would not need to access other potential destructed objects.
+  // Report transport may be called at destructor. Cache the report_suffix_url
+  // value here so the transport callback function would not need to access
+  // other potential destructed objects.
   std::string report_suffix_url_;
   bool network_fail_open_;
   Envoy::TimeSource& time_source_;
@@ -78,9 +79,10 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
   uint32_t report_retries_;
   uint32_t quota_retries_;
 
-  // When service control client is destroyed, it will flush out some batched reports and call
-  // report_transport_func to send them. Since report_transport_func is using some member variables,
-  // placing the client_ as the last one to make sure it is destroyed first.
+  // When service control client is destroyed, it will flush out some batched
+  // reports and call report_transport_func to send them. Since
+  // report_transport_func is using some member variables, placing the client_
+  // as the last one to make sure it is destroyed first.
   std::unique_ptr<::google::service_control_client::ServiceControlClient>
       client_;
 };

@@ -14,8 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/envoy/http/service_control/service_control_call_impl.h"
 #include "src/api_proxy/service_control/logs_metrics_loader.h"
+#include "src/envoy/http/service_control/service_control_call_impl.h"
 
 using Envoy::Extensions::Utils::ServiceAccountToken;
 using Envoy::Extensions::Utils::TokenSubscriber;
@@ -51,20 +51,12 @@ ServiceControlCallImpl::ServiceControlCallImpl(
     : config_(config),
       filter_config_(filter_config),
       tls_(context.threadLocal().allocateSlot()) {
-
-  tls_->set(
-      [this, &cm = context.clusterManager(), &
-          time_source = context.timeSource()]
-          (Event::Dispatcher& dispatcher)
-          -> ThreadLocal::ThreadLocalObjectSharedPtr {
-        return std::make_shared<ThreadLocalCache>(config_,
-                                                  filter_config_,
-                                                  cm,
-                                                  time_source,
-                                                  dispatcher
-        );
-      }
-  );
+  tls_->set([this, &cm = context.clusterManager(),
+             &time_source = context.timeSource()](Event::Dispatcher& dispatcher)
+                -> ThreadLocal::ThreadLocalObjectSharedPtr {
+    return std::make_shared<ThreadLocalCache>(config_, filter_config_, cm,
+                                              time_source, dispatcher);
+  });
 
   switch (filter_config.access_token().token_type_case()) {
     case AccessToken::kRemoteToken: {
@@ -82,8 +74,7 @@ ServiceControlCallImpl::ServiceControlCallImpl(
               tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
             });
           });
-    }
-      break;
+    } break;
     case AccessToken::kServiceAccountSecret: {
       const std::string service_control_auidence =
           filter_config.service_control_uri().uri() + kServiceControlService;
@@ -108,9 +99,9 @@ ServiceControlCallImpl::ServiceControlCallImpl(
               tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
             });
           });
-    }
-      break;
-    default:ENVOY_LOG(error, "No access token set!");
+    } break;
+    default:
+      ENVOY_LOG(error, "No access token set!");
       break;
   }
 
@@ -121,7 +112,7 @@ ServiceControlCallImpl::ServiceControlCallImpl(
     }
 
     std::set<std::string> logs, metrics, labels;
-    (void) LogsMetricsLoader::Load(origin_service, &logs, &metrics, &labels);
+    (void)LogsMetricsLoader::Load(origin_service, &logs, &metrics, &labels);
     request_builder_.reset(new RequestBuilder(logs, metrics, labels,
                                               config.service_name(),
                                               config.service_config_id()));
@@ -133,10 +124,9 @@ ServiceControlCallImpl::ServiceControlCallImpl(
 
 void ServiceControlCallImpl::callCheck(
     const ::google::api_proxy::service_control::CheckRequestInfo& request_info,
-    Envoy::Tracing::Span& parent_span,
-    CheckDoneFunc on_done) {
+    Envoy::Tracing::Span& parent_span, CheckDoneFunc on_done) {
   ::google::api::servicecontrol::v1::CheckRequest request;
-  (void) request_builder_->FillCheckRequest(request_info, &request);
+  (void)request_builder_->FillCheckRequest(request_info, &request);
   ENVOY_LOG(debug, "Sending check : {}", request.DebugString());
   getTLCache().client_cache().callCheck(request, parent_span, on_done);
 }
@@ -145,15 +135,16 @@ void ServiceControlCallImpl::callQuota(
     const ::google::api_proxy::service_control::QuotaRequestInfo& request_info,
     QuotaDoneFunc on_done) {
   ::google::api::servicecontrol::v1::AllocateQuotaRequest request;
-  (void) request_builder_->FillAllocateQuotaRequest(request_info, &request);
+  (void)request_builder_->FillAllocateQuotaRequest(request_info, &request);
   ENVOY_LOG(debug, "Sending allocateQuota : {}", request.DebugString());
   getTLCache().client_cache().callQuota(request, on_done);
 }
 
 void ServiceControlCallImpl::callReport(
-    const ::google::api_proxy::service_control::ReportRequestInfo& request_info) {
+    const ::google::api_proxy::service_control::ReportRequestInfo&
+        request_info) {
   ::google::api::servicecontrol::v1::ReportRequest request;
-  (void) request_builder_->FillReportRequest(request_info, &request);
+  (void)request_builder_->FillReportRequest(request_info, &request);
   ENVOY_LOG(debug, "Sending report : {}", request.DebugString());
   getTLCache().client_cache().callReport(request);
 }

@@ -14,9 +14,9 @@
 
 #pragma once
 
+#include "api/envoy/http/service_control/config.pb.h"
 #include "envoy/common/pure.h"
 #include "envoy/tracing/http_tracer.h"
-#include "api/envoy/http/service_control/config.pb.h"
 #include "src/envoy/http/service_control/service_control_callback_func.h"
 
 namespace Envoy {
@@ -28,18 +28,19 @@ class ServiceControlCall {
  public:
   virtual ~ServiceControlCall() = default;
 
-  virtual void
-  callCheck(
-      const ::google::api_proxy::service_control::CheckRequestInfo& request_info,
-      Envoy::Tracing::Span& parent_span,
-      CheckDoneFunc on_done) PURE;
+  virtual void callCheck(
+      const ::google::api_proxy::service_control::CheckRequestInfo&
+          request_info,
+      Envoy::Tracing::Span& parent_span, CheckDoneFunc on_done) PURE;
 
   virtual void callQuota(
-      const ::google::api_proxy::service_control::QuotaRequestInfo& request_info,
+      const ::google::api_proxy::service_control::QuotaRequestInfo&
+          request_info,
       QuotaDoneFunc on_done) PURE;
 
   virtual void callReport(
-      const ::google::api_proxy::service_control::ReportRequestInfo& request_info) PURE;
+      const ::google::api_proxy::service_control::ReportRequestInfo&
+          request_info) PURE;
 };
 
 typedef std::unique_ptr<ServiceControlCall> ServiceControlCallPtr;
@@ -51,7 +52,7 @@ class ServiceControlCallFactory {
   virtual ServiceControlCallPtr create(
       const ::google::api::envoy::http::service_control::Service& config,
       const ::google::api::envoy::http::service_control::FilterConfig&
-      filter_config) PURE;
+          filter_config) PURE;
 };
 
 }  // namespace ServiceControl

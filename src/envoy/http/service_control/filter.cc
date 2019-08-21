@@ -41,8 +41,7 @@ Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
 
   Envoy::Tracing::Span& parent_span = decoder_callbacks_->activeSpan();
 
-  handler_ = factory_.createHandler(
-      headers, decoder_callbacks_->streamInfo());
+  handler_ = factory_.createHandler(headers, decoder_callbacks_->streamInfo());
 
   state_ = Calling;
   stopped_ = false;

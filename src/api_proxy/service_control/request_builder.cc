@@ -212,7 +212,8 @@ Status set_distribution_metric_to_streaming_request_message_counts(
     Operation* operation) {
   if (info.streaming_request_message_counts > 0) {
     (void)AddDistributionMetric(size_distribution, m.name,
-                          info.streaming_request_message_counts, operation);
+                                info.streaming_request_message_counts,
+                                operation);
   }
   return Status::OK;
 }
@@ -221,7 +222,8 @@ Status set_distribution_metric_to_streaming_response_message_counts(
     Operation* operation) {
   if (info.streaming_response_message_counts > 0) {
     (void)AddDistributionMetric(size_distribution, m.name,
-                          info.streaming_response_message_counts, operation);
+                                info.streaming_response_message_counts,
+                                operation);
   }
   return Status::OK;
 }
@@ -230,8 +232,8 @@ Status set_distribution_metric_to_streaming_durations(
     const SupportedMetric& m, const ReportRequestInfo& info,
     Operation* operation) {
   if (info.streaming_durations > 0) {
-    (void)AddDistributionMetric(time_distribution, m.name, info.streaming_durations,
-                          operation);
+    (void)AddDistributionMetric(time_distribution, m.name,
+                                info.streaming_durations, operation);
   }
   return Status::OK;
 }

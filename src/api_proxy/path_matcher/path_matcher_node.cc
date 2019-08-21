@@ -30,7 +30,7 @@ namespace {
 // verifying the old value and still insert quickly without having to look up
 // twice. Unlike UpdateReturnCopy this also does not come with the issue of an
 // undefined previous* in case new data was inserted.
-template<class Collection>
+template <class Collection>
 typename Collection::value_type::second_type* InsertOrReturnExisting(
     Collection* const collection, const typename Collection::value_type& vt) {
   std::pair<typename Collection::iterator, bool> ret = collection->insert(vt);
@@ -42,7 +42,7 @@ typename Collection::value_type::second_type* InsertOrReturnExisting(
 }
 
 // Same as above, except for explicit key and data.
-template<class Collection>
+template <class Collection>
 typename Collection::value_type::second_type* InsertOrReturnExisting(
     Collection* const collection,
     const typename Collection::value_type::first_type& key,
@@ -55,7 +55,7 @@ typename Collection::value_type::second_type* InsertOrReturnExisting(
 // a pointee is constructed and added to the map. In that case, the new
 // pointee is value-initialized (aka "default-constructed").
 // Useful for containers of the form Map<Key, Ptr>, where Ptr is pointer-like.
-template<class Collection>
+template <class Collection>
 typename Collection::value_type::second_type& LookupOrInsertNew(
     Collection* const collection,
     const typename Collection::value_type::first_type& key) {
@@ -71,7 +71,7 @@ typename Collection::value_type::second_type& LookupOrInsertNew(
 
 // A convinent function to lookup a STL colllection with two keys.
 // Lookup key1 first, if not found, lookup key2, or return nullptr.
-template<class Collection>
+template <class Collection>
 const typename Collection::value_type::second_type* Find2KeysOrNull(
     const Collection& collection,
     const typename Collection::value_type::first_type& key1,
@@ -166,8 +166,8 @@ void PathMatcherNode::LookupPath(const RequestPathParts::const_iterator current,
   }
 
   for (const std::string& child_key :
-      {HttpTemplate::kSingleParameterKey, HttpTemplate::kWildCardPathPartKey,
-       HttpTemplate::kWildCardPathKey}) {
+       {HttpTemplate::kSingleParameterKey, HttpTemplate::kWildCardPathPartKey,
+        HttpTemplate::kWildCardPathKey}) {
     if (LookupPathFromChild(child_key, current, end, http_method, result)) {
       return;
     }

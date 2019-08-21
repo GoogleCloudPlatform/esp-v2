@@ -74,8 +74,7 @@ TEST_F(FilterTest, DecodeHeadersSyncOKStatus) {
 
   // Call onCheckDone synchronously
   EXPECT_CALL(*mock_handler, callCheck(_, _, _))
-      .WillOnce(Invoke([](Http::HeaderMap&,
-                          Envoy::Tracing::Span&,
+      .WillOnce(Invoke([](Http::HeaderMap&, Envoy::Tracing::Span&,
                           ServiceControlHandler::CheckDoneCallback& callback) {
         callback.onCheckDone(Status::OK);
       }));
@@ -91,8 +90,7 @@ TEST_F(FilterTest, DecodeHeadersSyncBadStatus) {
 
   // Call onCheckDone synchronously
   EXPECT_CALL(*mock_handler, callCheck(_, _, _))
-      .WillOnce(Invoke([](Http::HeaderMap&,
-                          Envoy::Tracing::Span&,
+      .WillOnce(Invoke([](Http::HeaderMap&, Envoy::Tracing::Span&,
                           ServiceControlHandler::CheckDoneCallback& callback) {
         callback.onCheckDone(kBadStatus);
       }));
@@ -120,9 +118,8 @@ TEST_F(FilterTest, DecodeHeadersAsyncGoodStatus) {
       // This invocation works around SaveArg storing the value to
       // the pointer in a way that does not work with the interface
       .WillOnce(Invoke([&stored_check_done_callback](
-          Http::HeaderMap&,
-          Envoy::Tracing::Span&,
-          ServiceControlHandler::CheckDoneCallback& callback) {
+                           Http::HeaderMap&, Envoy::Tracing::Span&,
+                           ServiceControlHandler::CheckDoneCallback& callback) {
         stored_check_done_callback = &callback;
       }));
   EXPECT_EQ(Http::FilterHeadersStatus::StopIteration,
@@ -149,9 +146,8 @@ TEST_F(FilterTest, DecodeHeadersAsyncBadStatus) {
           // This invocation works around SaveArg storing the value to
           // the pointer in a way that does not work with the interface
           Invoke([&stored_check_done_callback](
-              Http::HeaderMap&,
-              Envoy::Tracing::Span&,
-              ServiceControlHandler::CheckDoneCallback& callback) {
+                     Http::HeaderMap&, Envoy::Tracing::Span&,
+                     ServiceControlHandler::CheckDoneCallback& callback) {
             stored_check_done_callback = &callback;
           }));
   EXPECT_EQ(Http::FilterHeadersStatus::StopIteration,
@@ -221,8 +217,7 @@ TEST_F(FilterTest, DecodeHelpersWhileContinuing) {
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
       .WillOnce(Return(mock_handler));
   EXPECT_CALL(*mock_handler, callCheck(_, _, _))
-      .WillOnce(Invoke([](Http::HeaderMap&,
-                          Envoy::Tracing::Span&,
+      .WillOnce(Invoke([](Http::HeaderMap&, Envoy::Tracing::Span&,
                           ServiceControlHandler::CheckDoneCallback& callback) {
         callback.onCheckDone(Status::OK);
       }));
@@ -244,8 +239,7 @@ TEST_F(FilterTest, DecodeDataSendStreamReport) {
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
       .WillOnce(Return(mock_handler));
   EXPECT_CALL(*mock_handler, callCheck(_, _, _))
-      .WillOnce(Invoke([](Http::HeaderMap&,
-                          Envoy::Tracing::Span&,
+      .WillOnce(Invoke([](Http::HeaderMap&, Envoy::Tracing::Span&,
                           ServiceControlHandler::CheckDoneCallback& callback) {
         callback.onCheckDone(Status::OK);
       }));
@@ -264,8 +258,7 @@ TEST_F(FilterTest, EncodeDataSendStreamReport) {
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
       .WillOnce(Return(mock_handler));
   EXPECT_CALL(*mock_handler, callCheck(_, _, _))
-      .WillOnce(Invoke([](Http::HeaderMap&,
-                          Envoy::Tracing::Span&,
+      .WillOnce(Invoke([](Http::HeaderMap&, Envoy::Tracing::Span&,
                           ServiceControlHandler::CheckDoneCallback& callback) {
         callback.onCheckDone(Status::OK);
       }));

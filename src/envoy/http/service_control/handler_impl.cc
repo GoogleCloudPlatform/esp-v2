@@ -172,7 +172,8 @@ void ServiceControlHandlerImpl::callCheck(Http::HeaderMap& headers,
 
   aborted_.reset(new bool(false));
   require_ctx_->service_ctx().call().callCheck(
-      info, parent_span, [this, aborted = aborted_, &headers](
+      info, parent_span,
+      [this, aborted = aborted_, &headers](
           const Status& status, const CheckResponseInfo& response_info) {
         if (*aborted) return;
         onCheckResponse(headers, status, response_info);

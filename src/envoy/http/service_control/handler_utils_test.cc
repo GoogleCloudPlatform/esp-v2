@@ -148,7 +148,8 @@ TEST(ServiceControlUtils, FillLoggedHeader) {
 
     std::string output_tc;
 
-    fillLoggedHeader(&test.headers, service_tc.log_request_headers(), output_tc);
+    fillLoggedHeader(&test.headers, service_tc.log_request_headers(),
+                     output_tc);
     EXPECT_EQ(test.expected_output, output_tc);
   }
 

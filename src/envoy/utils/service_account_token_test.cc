@@ -14,8 +14,8 @@
 
 #include <memory>
 
-#include "src/envoy/utils/service_account_token.h"
 #include "src/envoy/utils/json_struct.h"
+#include "src/envoy/utils/service_account_token.h"
 
 #include "test/mocks/init/mocks.h"
 #include "test/mocks/server/mocks.h"
@@ -58,10 +58,9 @@ class ServiceAccountTokenTest : public testing::Test {
 
 TEST_F(ServiceAccountTokenTest, MakeCallbackOnRefresh) {
   EXPECT_CALL(token_callback_, Call(_)).Times(1);
-  sc_token_ = std::make_unique<ServiceAccountToken>(context_,
-                                                    kTestServiceAccountKey,
-                                                    "audience",
-                                                    token_callback_.AsStdFunction());
+  sc_token_ = std::make_unique<ServiceAccountToken>(
+      context_, kTestServiceAccountKey, "audience",
+      token_callback_.AsStdFunction());
 }
 }  // namespace
 }  // namespace Utils

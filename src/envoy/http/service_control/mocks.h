@@ -26,27 +26,21 @@ namespace ServiceControl {
 
 class MockServiceControlHandler : public ServiceControlHandler {
  public:
-  MOCK_METHOD3(callCheck, void(
-      Http::HeaderMap& headers,
-      Envoy::Tracing::Span& parent_span,
-      CheckDoneCallback & callback)
-  );
+  MOCK_METHOD3(callCheck,
+               void(Http::HeaderMap& headers, Envoy::Tracing::Span& parent_span,
+                    CheckDoneCallback& callback));
 
-  MOCK_METHOD3(callReport, void(
-      const Http::HeaderMap* request_headers,
-      const Http::HeaderMap* response_headers,
-      const Http::HeaderMap* response_trailers)
-  );
+  MOCK_METHOD3(callReport, void(const Http::HeaderMap* request_headers,
+                                const Http::HeaderMap* response_headers,
+                                const Http::HeaderMap* response_trailers));
 
-  MOCK_METHOD2(collectDecodeData, void(
-      Buffer::Instance& request_data,
-      std::chrono::system_clock::time_point now)
-  );
+  MOCK_METHOD2(collectDecodeData,
+               void(Buffer::Instance& request_data,
+                    std::chrono::system_clock::time_point now));
 
-  MOCK_METHOD2(collectEncodeData, void(
-      Buffer::Instance& response_data,
-      std::chrono::system_clock::time_point now)
-  );
+  MOCK_METHOD2(collectEncodeData,
+               void(Buffer::Instance& response_data,
+                    std::chrono::system_clock::time_point now));
 };
 
 class MockServiceControlHandlerFactory : public ServiceControlHandlerFactory {
@@ -59,9 +53,8 @@ class MockServiceControlHandlerFactory : public ServiceControlHandlerFactory {
 
   MOCK_CONST_METHOD2(
       createHandler_,
-      ServiceControlHandler*(
-          const Http::HeaderMap& headers,
-          const StreamInfo::StreamInfo& stream_info));
+      ServiceControlHandler*(const Http::HeaderMap& headers,
+                             const StreamInfo::StreamInfo& stream_info));
 };
 
 class MockServiceControlCall : public ServiceControlCall {
@@ -70,20 +63,17 @@ class MockServiceControlCall : public ServiceControlCall {
       callCheck,
       void(
           const ::google::api_proxy::service_control::CheckRequestInfo& request,
-          Envoy::Tracing::Span& parent_span,
-          CheckDoneFunc on_done));
+          Envoy::Tracing::Span& parent_span, CheckDoneFunc on_done));
 
   MOCK_METHOD2(
       callQuota,
-      void(
-          const ::google::api_proxy::service_control::QuotaRequestInfo& info,
-          QuotaDoneFunc on_done));
+      void(const ::google::api_proxy::service_control::QuotaRequestInfo& info,
+           QuotaDoneFunc on_done));
 
   MOCK_METHOD1(
       callReport,
-      void(
-          const ::google::api_proxy::service_control::ReportRequestInfo&
-          request));
+      void(const ::google::api_proxy::service_control::ReportRequestInfo&
+               request));
 };
 
 class MockServiceControlCallFactory : public ServiceControlCallFactory {
@@ -91,7 +81,7 @@ class MockServiceControlCallFactory : public ServiceControlCallFactory {
   ServiceControlCallPtr create(
       const ::google::api::envoy::http::service_control::Service& config,
       const ::google::api::envoy::http::service_control::FilterConfig&
-      filter_config) override {
+          filter_config) override {
     return ServiceControlCallPtr{create_(config, filter_config)};
   }
 
@@ -100,7 +90,7 @@ class MockServiceControlCallFactory : public ServiceControlCallFactory {
       ServiceControlCall*(
           const ::google::api::envoy::http::service_control::Service& config,
           const ::google::api::envoy::http::service_control::FilterConfig&
-          filter_config));
+              filter_config));
 };
 
 class MockCheckDoneCallback : public ServiceControlHandler::CheckDoneCallback {
@@ -108,8 +98,7 @@ class MockCheckDoneCallback : public ServiceControlHandler::CheckDoneCallback {
   MockCheckDoneCallback() {}
   ~MockCheckDoneCallback() {}
 
-  MOCK_METHOD1(onCheckDone, void(
-      const ::google::protobuf::util::Status&));
+  MOCK_METHOD1(onCheckDone, void(const ::google::protobuf::util::Status&));
 };
 
 }  // namespace ServiceControl
