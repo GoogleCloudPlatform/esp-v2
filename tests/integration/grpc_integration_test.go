@@ -39,8 +39,7 @@ func init() {
 
 func TestGRPC(t *testing.T) {
 	configID := "test-config-id"
-	args := []string{"--service_config_id=" + configID,
-		"--skip_service_control_filter=true", "--backend_protocol=grpc", "--rollout_strategy=fixed"}
+	args := []string{"--service_config_id=" + configID, "--backend_protocol=grpc", "--skip_service_control_filter=true", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPC, "bookstore", nil)
 	if err := s.Setup(args); err != nil {
