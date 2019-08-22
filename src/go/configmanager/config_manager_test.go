@@ -31,14 +31,14 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
 	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
-	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
-	"github.com/gogo/protobuf/jsonpb"
-	"github.com/gogo/protobuf/types"
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/genproto/googleapis/api/annotations"
 
-	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	gogoproto "github.com/gogo/protobuf/proto"
+	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 	sm "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
@@ -1135,8 +1135,8 @@ func TestFetchListeners(t *testing.T) {
 		runTest(t, opts, func(env *testEnv) {
 			ctx := context.Background()
 			// First request, VersionId should be empty.
-			req := v2.DiscoveryRequest{
-				Node: &core.Node{
+			req := v2pb.DiscoveryRequest{
+				Node: &corepb.Node{
 					Id: opts.Node,
 				},
 				TypeUrl: cache.ListenerType,
@@ -1204,8 +1204,8 @@ func TestDynamicBackendRouting(t *testing.T) {
 		runTest(t, opts, func(env *testEnv) {
 			ctx := context.Background()
 			// First request, VersionId should be empty.
-			reqForClusters := v2.DiscoveryRequest{
-				Node: &core.Node{
+			reqForClusters := v2pb.DiscoveryRequest{
+				Node: &corepb.Node{
 					Id: opts.Node,
 				},
 				TypeUrl: cache.ClusterType,
@@ -1235,8 +1235,8 @@ func TestDynamicBackendRouting(t *testing.T) {
 				}
 			}
 
-			reqForListener := v2.DiscoveryRequest{
-				Node: &core.Node{
+			reqForListener := v2pb.DiscoveryRequest{
+				Node: &corepb.Node{
 					Id: opts.Node,
 				},
 				TypeUrl: cache.ListenerType,
@@ -1370,8 +1370,8 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		var resp *cache.Response
 		var err error
 		ctx := context.Background()
-		req := v2.DiscoveryRequest{
-			Node: &core.Node{
+		req := v2pb.DiscoveryRequest{
+			Node: &corepb.Node{
 				Id: opts.Node,
 			},
 			TypeUrl: cache.ListenerType,
@@ -1496,20 +1496,20 @@ func normalizeJson(input string, t *testing.T) string {
 	return string(outputString)
 }
 
-type FuncResolver func(url string) (gogoproto.Message, error)
+type FuncResolver func(url string) (proto.Message, error)
 
-func (fn FuncResolver) Resolve(url string) (gogoproto.Message, error) {
+func (fn FuncResolver) Resolve(url string) (proto.Message, error) {
 	return fn(url)
 }
 
-var Resolver = FuncResolver(func(url string) (gogoproto.Message, error) {
+var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 	switch url {
 	case "type.googleapis.com/google.api.servicemanagement.v1.ConfigFile":
 		return new(sm.ConfigFile), nil
 	case "type.googleapis.com/google.api.HttpRule":
 		return new(annotations.HttpRule), nil
 	case "type.googleapis.com/google.protobuf.BoolValue":
-		return new(types.BoolValue), nil
+		return new(wrappers.BoolValue), nil
 	case "type.googleapis.com/google.api.Service":
 		return new(conf.Service), nil
 	default:

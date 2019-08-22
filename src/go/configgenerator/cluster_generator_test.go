@@ -26,8 +26,8 @@ import (
 	"google.golang.org/genproto/protobuf/api"
 
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
-	cdspb "github.com/envoyproxy/data-plane-api/api/cds"
-	certpb "github.com/envoyproxy/data-plane-api/api/cert"
+	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -42,7 +42,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 	testData := []struct {
 		desc              string
 		fakeServiceConfig *conf.Service
-		wantedCluster     cdspb.Cluster
+		wantedCluster     v2pb.Cluster
 		backendProtocol   string
 	}{
 		{
@@ -59,13 +59,13 @@ func TestMakeServiceControlCluster(t *testing.T) {
 				},
 			},
 			backendProtocol: "grpc",
-			wantedCluster: cdspb.Cluster{
+			wantedCluster: v2pb.Cluster{
 				Name:                 "service-control-cluster",
 				ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
-				ClusterDiscoveryType: &cdspb.Cluster_Type{Type: cdspb.Cluster_LOGICAL_DNS},
-				DnsLookupFamily:      cdspb.Cluster_V4_ONLY,
+				ClusterDiscoveryType: &v2pb.Cluster_Type{Type: v2pb.Cluster_LOGICAL_DNS},
+				DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
 				LoadAssignment:       ut.CreateLoadAssignment(testServiceControlEnv, 443),
-				TlsContext: &certpb.UpstreamTlsContext{
+				TlsContext: &authpb.UpstreamTlsContext{
 					Sni: "servicecontrol.googleapis.com",
 				},
 			},
@@ -84,11 +84,11 @@ func TestMakeServiceControlCluster(t *testing.T) {
 				},
 			},
 			backendProtocol: "http1",
-			wantedCluster: cdspb.Cluster{
+			wantedCluster: v2pb.Cluster{
 				Name:                 "service-control-cluster",
 				ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
-				ClusterDiscoveryType: &cdspb.Cluster_Type{cdspb.Cluster_LOGICAL_DNS},
-				DnsLookupFamily:      cdspb.Cluster_V4_ONLY,
+				ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+				DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
 				LoadAssignment:       ut.CreateLoadAssignment("127.0.0.1", 8000),
 			},
 		},
@@ -119,7 +119,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 		fakeServiceConfig      *conf.Service
 		backendDnsLookupFamily string
 		backendProtocol        string
-		wantedClusters         []*cdspb.Cluster
+		wantedClusters         []*v2pb.Cluster
 		wantedError            string
 	}{
 		{
@@ -161,13 +161,13 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 				},
 			},
 			backendProtocol: "http1",
-			wantedClusters: []*cdspb.Cluster{
+			wantedClusters: []*v2pb.Cluster{
 				{
 					Name:                 "DynamicRouting_0",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &cdspb.Cluster_Type{cdspb.Cluster_LOGICAL_DNS},
+					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       ut.CreateLoadAssignment("mybackend.com", 443),
-					TlsContext: &certpb.UpstreamTlsContext{
+					TlsContext: &authpb.UpstreamTlsContext{
 						Sni: "mybackend.com",
 					},
 				},
@@ -202,14 +202,14 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 				},
 			},
 			backendProtocol: "http1",
-			wantedClusters: []*cdspb.Cluster{
+			wantedClusters: []*v2pb.Cluster{
 				{
 					Name:                 "DynamicRouting_0",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					DnsLookupFamily:      cdspb.Cluster_V4_ONLY,
-					ClusterDiscoveryType: &cdspb.Cluster_Type{Type: cdspb.Cluster_LOGICAL_DNS},
+					DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
+					ClusterDiscoveryType: &v2pb.Cluster_Type{Type: v2pb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       ut.CreateLoadAssignment("mybackend.run.app", 443),
-					TlsContext: &certpb.UpstreamTlsContext{
+					TlsContext: &authpb.UpstreamTlsContext{
 						Sni: "mybackend.run.app",
 					},
 				},
@@ -280,7 +280,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 	testData := []struct {
 		desc           string
 		fakeProviders  []*conf.AuthProvider
-		wantedClusters []*cdspb.Cluster
+		wantedClusters []*v2pb.Cluster
 	}{
 		{
 			desc: "Use https jwksUri and http jwksUri",
@@ -296,22 +296,22 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					JwksUri: "http://metadata.com/pkey",
 				},
 			},
-			wantedClusters: []*cdspb.Cluster{
+			wantedClusters: []*v2pb.Cluster{
 				{
 					Name:                 "issuer_0",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &cdspb.Cluster_Type{cdspb.Cluster_LOGICAL_DNS},
-					DnsLookupFamily:      cdspb.Cluster_V4_ONLY,
+					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
 					LoadAssignment:       ut.CreateLoadAssignment("metadata.com", 443),
-					TlsContext: &certpb.UpstreamTlsContext{
+					TlsContext: &authpb.UpstreamTlsContext{
 						Sni: "metadata.com",
 					},
 				},
 				{
 					Name:                 "issuer_1",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &cdspb.Cluster_Type{cdspb.Cluster_LOGICAL_DNS},
-					DnsLookupFamily:      cdspb.Cluster_V4_ONLY,
+					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
 					LoadAssignment:       ut.CreateLoadAssignment("metadata.com", 80),
 				},
 			},
@@ -324,12 +324,12 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					Issuer:  "issuer_2",
 					JwksUri: "%",
 				}},
-			wantedClusters: []*cdspb.Cluster{
+			wantedClusters: []*v2pb.Cluster{
 				{
 					Name:                 "issuer_2",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &cdspb.Cluster_Type{cdspb.Cluster_LOGICAL_DNS},
-					DnsLookupFamily:      cdspb.Cluster_V4_ONLY,
+					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
 					LoadAssignment:       ut.CreateLoadAssignment(fakeJwksUriHost, 80),
 				},
 			},

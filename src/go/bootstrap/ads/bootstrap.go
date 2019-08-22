@@ -19,11 +19,9 @@ import (
 
 	bt "cloudesf.googlesource.com/gcpproxy/src/go/bootstrap"
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
-	bootstrappb "github.com/envoyproxy/data-plane-api/api/bootstrap"
-	cdspb "github.com/envoyproxy/data-plane-api/api/cds"
-	configsourcepb "github.com/envoyproxy/data-plane-api/api/config_source"
-	grpcservicepb "github.com/envoyproxy/data-plane-api/api/grpc_service"
-	protocolpb "github.com/envoyproxy/data-plane-api/api/protocol"
+	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
 )
 
 // CreateBoostrapConfig outputs envoy bootstrap config for xDS.
@@ -38,21 +36,21 @@ func CreateBootstrapConfig(adsConnectTimeout *duration.Duration, adsHostname str
 
 		// Dynamic resource
 		DynamicResources: &bootstrappb.Bootstrap_DynamicResources{
-			LdsConfig: &configsourcepb.ConfigSource{
-				ConfigSourceSpecifier: &configsourcepb.ConfigSource_Ads{
-					Ads: &configsourcepb.AggregatedConfigSource{},
+			LdsConfig: &corepb.ConfigSource{
+				ConfigSourceSpecifier: &corepb.ConfigSource_Ads{
+					Ads: &corepb.AggregatedConfigSource{},
 				},
 			},
-			CdsConfig: &configsourcepb.ConfigSource{
-				ConfigSourceSpecifier: &configsourcepb.ConfigSource_Ads{
-					Ads: &configsourcepb.AggregatedConfigSource{},
+			CdsConfig: &corepb.ConfigSource{
+				ConfigSourceSpecifier: &corepb.ConfigSource_Ads{
+					Ads: &corepb.AggregatedConfigSource{},
 				},
 			},
-			AdsConfig: &configsourcepb.ApiConfigSource{
-				ApiType: configsourcepb.ApiConfigSource_GRPC,
-				GrpcServices: []*grpcservicepb.GrpcService{{
-					TargetSpecifier: &grpcservicepb.GrpcService_EnvoyGrpc_{
-						EnvoyGrpc: &grpcservicepb.GrpcService_EnvoyGrpc{
+			AdsConfig: &corepb.ApiConfigSource{
+				ApiType: corepb.ApiConfigSource_GRPC,
+				GrpcServices: []*corepb.GrpcService{{
+					TargetSpecifier: &corepb.GrpcService_EnvoyGrpc_{
+						EnvoyGrpc: &corepb.GrpcService_EnvoyGrpc{
 							ClusterName: "ads_cluster",
 						},
 					},
@@ -62,15 +60,15 @@ func CreateBootstrapConfig(adsConnectTimeout *duration.Duration, adsHostname str
 
 		// Static resource
 		StaticResources: &bootstrappb.Bootstrap_StaticResources{
-			Clusters: []*cdspb.Cluster{
+			Clusters: []*v2pb.Cluster{
 				{
 					Name:           "ads_cluster",
-					LbPolicy:       cdspb.Cluster_ROUND_ROBIN,
+					LbPolicy:       v2pb.Cluster_ROUND_ROBIN,
 					ConnectTimeout: adsConnectTimeout,
-					ClusterDiscoveryType: &cdspb.Cluster_Type{
-						Type: cdspb.Cluster_STRICT_DNS,
+					ClusterDiscoveryType: &v2pb.Cluster_Type{
+						Type: v2pb.Cluster_STRICT_DNS,
 					},
-					Http2ProtocolOptions: &protocolpb.Http2ProtocolOptions{},
+					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{},
 					LoadAssignment:       ut.CreateLoadAssignment(adsHostname, adsPort),
 				},
 			},

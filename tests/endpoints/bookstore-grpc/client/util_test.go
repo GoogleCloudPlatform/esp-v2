@@ -21,9 +21,10 @@ import (
 	"strings"
 	"testing"
 
-	bspb "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/proto"
-	"github.com/gogo/protobuf/types"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/empty"
+
+	bookstorepb "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/proto"
 )
 
 func readerToString(r io.Reader) string {
@@ -39,18 +40,18 @@ func TestEncodeGRPCWebRequestBody(t *testing.T) {
 		expectedReqBody string
 	}{
 		{
-			reqMsg:          &types.Empty{},
+			reqMsg:          &empty.Empty{},
 			expectedReqBody: "AAAAAAA=",
 		},
 
 		{
-			reqMsg:          &bspb.GetShelfRequest{Shelf: 123},
+			reqMsg:          &bookstorepb.GetShelfRequest{Shelf: 123},
 			expectedReqBody: "AAAAAAIIew==",
 		},
 		{
-			reqMsg: &bspb.CreateBookRequest{
+			reqMsg: &bookstorepb.CreateBookRequest{
 				Shelf: 123,
-				Book: &bspb.Book{
+				Book: &bookstorepb.Book{
 					Id:     42,
 					Author: "J. D. Salinger",
 					Title:  "The Catcher in the Rye",
@@ -81,14 +82,14 @@ func TestDecodeGRPCWebResponseBody(t *testing.T) {
 		{
 			desc:            "ListShelves",
 			encodedRespBody: "AAAAABwKDgh7EgpTaGFrc3BlYXJlCgoIfBIGSGFtbGV0gAAAACBncnBjLXN0YXR1czowDQpncnBjLW1lc3NhZ2U6T0sNCg==",
-			actualMsg:       &bspb.ListShelvesResponse{},
-			expectedMsg: &bspb.ListShelvesResponse{
-				Shelves: []*bspb.Shelf{
-					&bspb.Shelf{
+			actualMsg:       &bookstorepb.ListShelvesResponse{},
+			expectedMsg: &bookstorepb.ListShelvesResponse{
+				Shelves: []*bookstorepb.Shelf{
+					{
 						Id:    123,
 						Theme: "Shakspeare",
 					},
-					&bspb.Shelf{
+					{
 						Id:    124,
 						Theme: "Hamlet",
 					},
@@ -99,8 +100,8 @@ func TestDecodeGRPCWebResponseBody(t *testing.T) {
 		{
 			desc:            "GetShelf",
 			encodedRespBody: "AAAAABEIexINVW5rbm93biBTaGVsZg==gAAAACBncnBjLXN0YXR1czowDQpncnBjLW1lc3NhZ2U6T0sNCg==",
-			actualMsg:       &bspb.Shelf{},
-			expectedMsg: &bspb.Shelf{
+			actualMsg:       &bookstorepb.Shelf{},
+			expectedMsg: &bookstorepb.Shelf{
 				Id:    123,
 				Theme: "Unknown Shelf",
 			},
@@ -109,8 +110,8 @@ func TestDecodeGRPCWebResponseBody(t *testing.T) {
 		{
 			desc:            "CreateBook",
 			encodedRespBody: "AAAAAAwIexoITmV3IEJvb2s=gAAAACBncnBjLXN0YXR1czowDQpncnBjLW1lc3NhZ2U6T0sNCg==",
-			actualMsg:       &bspb.Book{},
-			expectedMsg: &bspb.Book{
+			actualMsg:       &bookstorepb.Book{},
+			expectedMsg: &bookstorepb.Book{
 				Id:    123,
 				Title: "New Book",
 			},

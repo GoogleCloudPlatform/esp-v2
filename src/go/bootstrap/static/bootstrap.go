@@ -22,8 +22,8 @@ import (
 
 	gen "cloudesf.googlesource.com/gcpproxy/src/go/configgenerator"
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
-	bootstrappb "github.com/envoyproxy/data-plane-api/api/bootstrap"
-	ldspb "github.com/envoyproxy/data-plane-api/api/lds"
+	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -57,7 +57,7 @@ func ServiceToBootstrapConfig(serviceConfig *conf.Service, id string, opts optio
 	}
 
 	bt.StaticResources = &bootstrappb.Bootstrap_StaticResources{
-		Listeners: []*ldspb.Listener{
+		Listeners: []*v2pb.Listener{
 			listener,
 		},
 		Clusters: clusters,

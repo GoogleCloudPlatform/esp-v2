@@ -109,14 +109,10 @@ integration-debug: build build-envoy build-grpc-interop build-grpc-echo
 .PHONY: depend.update depend.install
 
 depend.update: tools.glide
-	@echo "--> updating dependencies from glide.yaml"
-	@glide update
 	@echo "--> generating go proto files"
 	./api/scripts/go_proto_gen.sh
 
 depend.install: tools.glide
-	@echo "--> installing dependencies from glide.lock "
-	@glide install
 	@echo "--> generating go proto files"
 	./api/scripts/go_proto_gen.sh
 

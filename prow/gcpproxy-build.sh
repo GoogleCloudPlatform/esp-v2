@@ -42,6 +42,7 @@ fi
 if [ ! -d "bin" ]; then
   mkdir bin
 fi
+export GO111MODULE=on
 make tools
 make depend.install
 make build

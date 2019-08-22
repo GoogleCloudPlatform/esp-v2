@@ -25,8 +25,8 @@ import (
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
 
-	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v2"
+	v2grpc "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	discoverypb "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v2"
 	xds "github.com/envoyproxy/go-control-plane/pkg/server"
 )
 
@@ -56,11 +56,11 @@ func main() {
 	}
 
 	// Register Envoy discovery services.
-	discovery.RegisterAggregatedDiscoveryServiceServer(grpcServer, server)
-	api.RegisterEndpointDiscoveryServiceServer(grpcServer, server)
-	api.RegisterClusterDiscoveryServiceServer(grpcServer, server)
-	api.RegisterRouteDiscoveryServiceServer(grpcServer, server)
-	api.RegisterListenerDiscoveryServiceServer(grpcServer, server)
+	discoverypb.RegisterAggregatedDiscoveryServiceServer(grpcServer, server)
+	v2grpc.RegisterEndpointDiscoveryServiceServer(grpcServer, server)
+	v2grpc.RegisterClusterDiscoveryServiceServer(grpcServer, server)
+	v2grpc.RegisterRouteDiscoveryServiceServer(grpcServer, server)
+	v2grpc.RegisterListenerDiscoveryServiceServer(grpcServer, server)
 	fmt.Printf("config manager server is running at %s .......\n", lis.Addr())
 
 	if err := grpcServer.Serve(lis); err != nil {

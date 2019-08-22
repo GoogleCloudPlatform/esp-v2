@@ -22,8 +22,8 @@ import (
 	"github.com/golang/protobuf/ptypes/wrappers"
 
 	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
-	rdspb "github.com/envoyproxy/data-plane-api/api/rds"
-	routepb "github.com/envoyproxy/data-plane-api/api/route"
+	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -32,7 +32,7 @@ const (
 	virtualHostName = "backend"
 )
 
-func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*rdspb.RouteConfiguration, error) {
+func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*v2pb.RouteConfiguration, error) {
 	var virtualHosts []*routepb.VirtualHost
 	host := routepb.VirtualHost{
 		Name:    virtualHostName,
@@ -95,7 +95,7 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*rdspb.RouteConfigura
 	}
 
 	virtualHosts = append(virtualHosts, &host)
-	return &rdspb.RouteConfiguration{
+	return &v2pb.RouteConfiguration{
 		Name:         routeName,
 		VirtualHosts: virtualHosts,
 	}, nil

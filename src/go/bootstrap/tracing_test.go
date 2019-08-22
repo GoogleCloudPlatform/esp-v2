@@ -26,7 +26,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 
 	opencensuspb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
-	tracepb "github.com/envoyproxy/data-plane-api/api/trace"
+	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v2"
 )
 
 const (

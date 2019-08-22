@@ -23,7 +23,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 	"github.com/golang/protobuf/ptypes/wrappers"
 
-	routepb "github.com/envoyproxy/data-plane-api/api/route"
+	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 )
 
 func TestMakeRouteConfigForCors(t *testing.T) {

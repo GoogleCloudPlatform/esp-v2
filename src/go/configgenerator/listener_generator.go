@@ -33,14 +33,13 @@ import (
 	pmpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/path_matcher"
 	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
-	addresspb "github.com/envoyproxy/data-plane-api/api/address"
-	hcm "github.com/envoyproxy/data-plane-api/api/http_connection_manager"
-	httpuripb "github.com/envoyproxy/data-plane-api/api/http_uri"
-	ac "github.com/envoyproxy/data-plane-api/api/jwt_authn"
-	ldspb "github.com/envoyproxy/data-plane-api/api/lds"
-	listenerpb "github.com/envoyproxy/data-plane-api/api/listener"
-	rt "github.com/envoyproxy/data-plane-api/api/router"
-	tc "github.com/envoyproxy/data-plane-api/api/transcoder"
+	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	listenerpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
+	jwtpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
+	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
+	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
+	hcmpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 	sm "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
@@ -51,11 +50,11 @@ const (
 )
 
 // MakeListener provides a dynamic listener for Envoy
-func MakeListener(serviceInfo *sc.ServiceInfo) (*ldspb.Listener, error) {
-	httpFilters := []*hcm.HttpFilter{}
+func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
+	httpFilters := []*hcmpb.HttpFilter{}
 
 	if serviceInfo.Options.CorsPreset == "basic" || serviceInfo.Options.CorsPreset == "cors_with_regex" {
-		corsFilter := &hcm.HttpFilter{
+		corsFilter := &hcmpb.HttpFilter{
 			Name: ut.CORS,
 		}
 		httpFilters = append(httpFilters, corsFilter)
@@ -100,9 +99,9 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*ldspb.Listener, error) {
 			glog.Infof("adding Transcoder Filter config...")
 		}
 
-		grpcWebFilter := &hcm.HttpFilter{
+		grpcWebFilter := &hcmpb.HttpFilter{
 			Name:       ut.GRPCWeb,
-			ConfigType: &hcm.HttpFilter_Config{Config: &structpb.Struct{}},
+			ConfigType: &hcmpb.HttpFilter_Config{Config: &structpb.Struct{}},
 		}
 		httpFilters = append(httpFilters, grpcWebFilter)
 	}
@@ -132,10 +131,10 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*ldspb.Listener, error) {
 		return nil, fmt.Errorf("makeHttpConnectionManagerRouteConfig got err: %s", err)
 	}
 
-	httpConMgr := &hcm.HttpConnectionManager{
-		CodecType:  hcm.HttpConnectionManager_AUTO,
+	httpConMgr := &hcmpb.HttpConnectionManager{
+		CodecType:  hcmpb.HttpConnectionManager_AUTO,
 		StatPrefix: statPrefix,
-		RouteSpecifier: &hcm.HttpConnectionManager_RouteConfig{
+		RouteSpecifier: &hcmpb.HttpConnectionManager_RouteConfig{
 			RouteConfig: route,
 		},
 
@@ -143,7 +142,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*ldspb.Listener, error) {
 		XffNumTrustedHops: uint32(serviceInfo.Options.EnvoyXffNumTrustedHops),
 	}
 	if serviceInfo.Options.EnableTracing {
-		httpConMgr.Tracing = &hcm.HttpConnectionManager_Tracing{}
+		httpConMgr.Tracing = &hcmpb.HttpConnectionManager_Tracing{}
 	}
 
 	glog.Infof("adding Http Connection Manager config: %v", httpConMgr)
@@ -155,12 +154,12 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*ldspb.Listener, error) {
 		return nil, err
 	}
 
-	return &ldspb.Listener{
-		Address: &addresspb.Address{
-			Address: &addresspb.Address_SocketAddress{
-				SocketAddress: &addresspb.SocketAddress{
+	return &v2pb.Listener{
+		Address: &corepb.Address{
+			Address: &corepb.Address_SocketAddress{
+				SocketAddress: &corepb.SocketAddress{
 					Address: serviceInfo.Options.ListenerAddress,
-					PortSpecifier: &addresspb.SocketAddress_PortValue{
+					PortSpecifier: &corepb.SocketAddress_PortValue{
 						PortValue: uint32(serviceInfo.Options.ListenerPort),
 					},
 				},
@@ -179,7 +178,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*ldspb.Listener, error) {
 	}, nil
 }
 
-func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
+func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	rules := []*pmpb.PathMatcherRule{}
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
@@ -220,9 +219,9 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	}
 
 	pathMathcherConfigStruct, _ := ut.MessageToStruct(pathMathcherConfig)
-	pathMatcherFilter := &hcm.HttpFilter{
+	pathMatcherFilter := &hcmpb.HttpFilter{
 		Name:       ut.PathMatcher,
-		ConfigType: &hcm.HttpFilter_Config{pathMathcherConfigStruct},
+		ConfigType: &hcmpb.HttpFilter_Config{pathMathcherConfigStruct},
 	}
 	return pathMatcherFilter
 }
@@ -231,20 +230,20 @@ func hasPathParameter(httpPattern string) bool {
 	return strings.ContainsRune(httpPattern, '{')
 }
 
-func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
+func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	auth := serviceInfo.ServiceConfig().GetAuthentication()
 	if len(auth.GetProviders()) == 0 {
 		return nil
 	}
-	providers := make(map[string]*ac.JwtProvider)
+	providers := make(map[string]*jwtpb.JwtProvider)
 	for _, provider := range auth.GetProviders() {
-		jp := &ac.JwtProvider{
+		jp := &jwtpb.JwtProvider{
 			Issuer: provider.GetIssuer(),
-			JwksSourceSpecifier: &ac.JwtProvider_RemoteJwks{
-				RemoteJwks: &ac.RemoteJwks{
-					HttpUri: &httpuripb.HttpUri{
+			JwksSourceSpecifier: &jwtpb.JwtProvider_RemoteJwks{
+				RemoteJwks: &jwtpb.RemoteJwks{
+					HttpUri: &corepb.HttpUri{
 						Uri: provider.GetJwksUri(),
-						HttpUpstreamType: &httpuripb.HttpUri_Cluster{
+						HttpUpstreamType: &corepb.HttpUri_Cluster{
 							Cluster: provider.GetIssuer(),
 						},
 					},
@@ -253,7 +252,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 					},
 				},
 			},
-			FromHeaders: []*ac.JwtHeader{
+			FromHeaders: []*jwtpb.JwtHeader{
 				{
 					Name:        "Authorization",
 					ValuePrefix: "Bearer ",
@@ -283,42 +282,42 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 		return nil
 	}
 
-	requirements := make(map[string]*ac.JwtRequirement)
+	requirements := make(map[string]*jwtpb.JwtRequirement)
 	for _, rule := range auth.GetRules() {
 		if len(rule.GetRequirements()) > 0 {
 			requirements[rule.GetSelector()] = makeJwtRequirement(rule.GetRequirements())
 		}
 	}
 
-	jwtAuthentication := &ac.JwtAuthentication{
+	jwtAuthentication := &jwtpb.JwtAuthentication{
 		Providers: providers,
-		FilterStateRules: &ac.FilterStateRule{
+		FilterStateRules: &jwtpb.FilterStateRule{
 			Name:     "envoy.filters.http.path_matcher.operation",
 			Requires: requirements,
 		},
 	}
 
 	jas, _ := ut.MessageToStruct(jwtAuthentication)
-	jwtAuthnFilter := &hcm.HttpFilter{
+	jwtAuthnFilter := &hcmpb.HttpFilter{
 		Name:       ut.JwtAuthn,
-		ConfigType: &hcm.HttpFilter_Config{jas},
+		ConfigType: &hcmpb.HttpFilter_Config{jas},
 	}
 	return jwtAuthnFilter
 }
 
-func makeJwtRequirement(requirements []*conf.AuthRequirement) *ac.JwtRequirement {
+func makeJwtRequirement(requirements []*conf.AuthRequirement) *jwtpb.JwtRequirement {
 	// By default, if there are multi requirements, treat it as RequireAny.
-	requires := &ac.JwtRequirement{
-		RequiresType: &ac.JwtRequirement_RequiresAny{
-			RequiresAny: &ac.JwtRequirementOrList{},
+	requires := &jwtpb.JwtRequirement{
+		RequiresType: &jwtpb.JwtRequirement_RequiresAny{
+			RequiresAny: &jwtpb.JwtRequirementOrList{},
 		},
 	}
 
 	for _, r := range requirements {
-		var require *ac.JwtRequirement
+		var require *jwtpb.JwtRequirement
 		if r.GetAudiences() == "" {
-			require = &ac.JwtRequirement{
-				RequiresType: &ac.JwtRequirement_ProviderName{
+			require = &jwtpb.JwtRequirement{
+				RequiresType: &jwtpb.JwtRequirement_ProviderName{
 					ProviderName: r.GetProviderId(),
 				},
 			}
@@ -327,9 +326,9 @@ func makeJwtRequirement(requirements []*conf.AuthRequirement) *ac.JwtRequirement
 			for _, a := range strings.Split(r.GetAudiences(), ",") {
 				audiences = append(audiences, strings.TrimSpace(a))
 			}
-			require = &ac.JwtRequirement{
-				RequiresType: &ac.JwtRequirement_ProviderAndAudiences{
-					ProviderAndAudiences: &ac.ProviderWithAudiences{
+			require = &jwtpb.JwtRequirement{
+				RequiresType: &jwtpb.JwtRequirement_ProviderAndAudiences{
+					ProviderAndAudiences: &jwtpb.ProviderWithAudiences{
 						ProviderName: r.GetProviderId(),
 						Audiences:    audiences,
 					},
@@ -372,7 +371,7 @@ func makeServiceControlCallingConfig(opts options.ConfigGeneratorOptions) *scpb.
 	return setting
 }
 
-func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
+func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	if serviceInfo == nil || serviceInfo.ServiceConfig().GetControl().GetEnvironment() == "" {
 		return nil
 	}
@@ -453,9 +452,9 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	if err != nil {
 		glog.Warningf("failed to convert message to struct: %v", err)
 	}
-	filter := &hcm.HttpFilter{
+	filter := &hcmpb.HttpFilter{
 		Name:       ut.ServiceControl,
-		ConfigType: &hcm.HttpFilter_Config{scs},
+		ConfigType: &hcmpb.HttpFilter_Config{scs},
 	}
 	return filter
 }
@@ -478,7 +477,7 @@ func copyServiceConfigForReportMetrics(src *conf.Service) *any.Any {
 	return a
 }
 
-func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
+func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	for _, sourceFile := range serviceInfo.ServiceConfig().GetSourceInfo().GetSourceFiles() {
 		configFile := &sm.ConfigFile{}
 		ptypes.UnmarshalAny(sourceFile, configFile)
@@ -486,17 +485,17 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 
 		if configFile.GetFileType() == sm.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
 			configContent := configFile.GetFileContents()
-			transcodeConfig := &tc.GrpcJsonTranscoder{
-				DescriptorSet: &tc.GrpcJsonTranscoder_ProtoDescriptorBin{
+			transcodeConfig := &transcoderpb.GrpcJsonTranscoder{
+				DescriptorSet: &transcoderpb.GrpcJsonTranscoder_ProtoDescriptorBin{
 					ProtoDescriptorBin: configContent,
 				},
 				Services:               []string{serviceInfo.ApiName},
 				IgnoredQueryParameters: []string{"api_key", "key", "access_token"},
 			}
 			transcodeConfigStruct, _ := ut.MessageToStruct(transcodeConfig)
-			transcodeFilter := &hcm.HttpFilter{
+			transcodeFilter := &hcmpb.HttpFilter{
 				Name:       ut.GRPCJSONTranscoder,
-				ConfigType: &hcm.HttpFilter_Config{transcodeConfigStruct},
+				ConfigType: &hcmpb.HttpFilter_Config{transcodeConfigStruct},
 			}
 			return transcodeFilter
 		}
@@ -504,7 +503,7 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	return nil
 }
 
-func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
+func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	rules := []*bapb.BackendAuthRule{}
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
@@ -531,14 +530,14 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 		},
 	}
 	backendAuthConfigStruct, _ := ut.MessageToStruct(backendAuthConfig)
-	backendAuthFilter := &hcm.HttpFilter{
+	backendAuthFilter := &hcmpb.HttpFilter{
 		Name:       ut.BackendAuth,
-		ConfigType: &hcm.HttpFilter_Config{backendAuthConfigStruct},
+		ConfigType: &hcmpb.HttpFilter_Config{backendAuthConfigStruct},
 	}
 	return backendAuthFilter
 }
 
-func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
+func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	rules := []*brpb.BackendRoutingRule{}
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
@@ -553,21 +552,21 @@ func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 
 	backendRoutingConfig := &brpb.FilterConfig{Rules: rules}
 	backendRoutingConfigStruct, _ := ut.MessageToStruct(backendRoutingConfig)
-	backendRoutingFilter := &hcm.HttpFilter{
+	backendRoutingFilter := &hcmpb.HttpFilter{
 		Name:       ut.BackendRouting,
-		ConfigType: &hcm.HttpFilter_Config{backendRoutingConfigStruct},
+		ConfigType: &hcmpb.HttpFilter_Config{backendRoutingConfigStruct},
 	}
 	return backendRoutingFilter
 }
 
-func makeRouterFilter(opts options.ConfigGeneratorOptions) *hcm.HttpFilter {
-	router, _ := ut.MessageToStruct(&rt.Router{
+func makeRouterFilter(opts options.ConfigGeneratorOptions) *hcmpb.HttpFilter {
+	router, _ := ut.MessageToStruct(&routerpb.Router{
 		SuppressEnvoyHeaders: opts.SuppressEnvoyHeaders,
 		StartChildSpan:       opts.EnableTracing,
 	})
-	routerFilter := &hcm.HttpFilter{
+	routerFilter := &hcmpb.HttpFilter{
 		Name:       ut.Router,
-		ConfigType: &hcm.HttpFilter_Config{Config: router},
+		ConfigType: &hcmpb.HttpFilter_Config{Config: router},
 	}
 	return routerFilter
 }

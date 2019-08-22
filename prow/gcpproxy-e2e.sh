@@ -36,6 +36,7 @@ fi
 if [ ! -d "bin" ]; then
   mkdir bin
 fi
+export GO111MODULE=on
 
 # libraries for go build
 curl https://glide.sh/get | sh

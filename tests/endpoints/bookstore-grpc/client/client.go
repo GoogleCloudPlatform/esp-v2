@@ -28,14 +28,15 @@ import (
 	"path"
 	"strings"
 
-	"github.com/gogo/protobuf/types"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/empty"
 	"golang.org/x/net/http2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	bspb "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/proto"
+	bookstoregrpc "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/proto"
+	bookstorepb "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/proto"
 )
 
 var grpcWebHeader = http.Header{
@@ -179,7 +180,7 @@ var makeGRPCCall = func(addr, method, token string, header http.Header) (string,
 	}
 	defer conn.Close()
 
-	cli := bspb.NewBookstoreClient(conn)
+	cli := bookstoregrpc.NewBookstoreClient(conn)
 	ctx := context.Background()
 	if token != "" {
 		ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs("Authorization", fmt.Sprintf("Bearer %s", token)))
@@ -194,32 +195,32 @@ var makeGRPCCall = func(addr, method, token string, header http.Header) (string,
 	var respMsg proto.Message
 	switch method {
 	case "ListShelves":
-		req := &types.Empty{}
+		req := &empty.Empty{}
 		respMsg, err = cli.ListShelves(ctx, req)
 	case "CreateShelf":
-		req := &bspb.CreateShelfRequest{
-			Shelf: &bspb.Shelf{
+		req := &bookstorepb.CreateShelfRequest{
+			Shelf: &bookstorepb.Shelf{
 				Id:    14785,
 				Theme: "New Shelf",
 			},
 		}
 		respMsg, err = cli.CreateShelf(ctx, req)
 	case "GetShelf":
-		req := &bspb.GetShelfRequest{
+		req := &bookstorepb.GetShelfRequest{
 			Shelf: 100,
 		}
 		respMsg, err = cli.GetShelf(ctx, req)
 	case "CreateBook":
-		req := &bspb.CreateBookRequest{
+		req := &bookstorepb.CreateBookRequest{
 			Shelf: 200,
-			Book: &bspb.Book{
+			Book: &bookstorepb.Book{
 				Id:    20050,
 				Title: "Harry Potter",
 			},
 		}
 		respMsg, err = cli.CreateBook(ctx, req)
 	case "DeleteShelf":
-		req := &bspb.DeleteShelfRequest{}
+		req := &bookstorepb.DeleteShelfRequest{}
 		respMsg, err = cli.DeleteShelf(ctx, req)
 	default:
 		return "", fmt.Errorf("unexpected method called")
@@ -240,32 +241,32 @@ func MakeGRPCWebCall(addr, method, token string, header http.Header) (string, GR
 	var respMsg proto.Message
 	switch method {
 	case "ListShelves":
-		reqMsg = &types.Empty{}
-		respMsg = &bspb.ListShelvesResponse{}
+		reqMsg = &empty.Empty{}
+		respMsg = &bookstorepb.ListShelvesResponse{}
 	case "CreateShelf":
-		reqMsg = &bspb.CreateShelfRequest{
-			Shelf: &bspb.Shelf{
+		reqMsg = &bookstorepb.CreateShelfRequest{
+			Shelf: &bookstorepb.Shelf{
 				Id:    14785,
 				Theme: "New Shelf",
 			},
 		}
-		respMsg = &bspb.Shelf{}
+		respMsg = &bookstorepb.Shelf{}
 	case "GetShelf":
-		reqMsg = &bspb.GetShelfRequest{
+		reqMsg = &bookstorepb.GetShelfRequest{
 			Shelf: 100,
 		}
-		respMsg = &bspb.Shelf{}
+		respMsg = &bookstorepb.Shelf{}
 	case "CreateBook":
-		reqMsg = &bspb.CreateBookRequest{
-			Book: &bspb.Book{
+		reqMsg = &bookstorepb.CreateBookRequest{
+			Book: &bookstorepb.Book{
 				Id:    20050,
 				Title: "Harry Potter",
 			},
 		}
-		respMsg = &bspb.Book{}
+		respMsg = &bookstorepb.Book{}
 	case "DeleteShelf":
-		reqMsg = &bspb.DeleteShelfRequest{}
-		respMsg = &types.Empty{}
+		reqMsg = &bookstorepb.DeleteShelfRequest{}
+		respMsg = &empty.Empty{}
 	default:
 		return "", nil, fmt.Errorf("unexpected method called")
 	}

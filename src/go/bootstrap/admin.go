@@ -15,19 +15,19 @@
 package bootstrap
 
 import (
-	addresspb "github.com/envoyproxy/data-plane-api/api/address"
-	bootstrappb "github.com/envoyproxy/data-plane-api/api/bootstrap"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
 )
 
 // CreateAdmin outputs Admin struct for bootstrap config
 func CreateAdmin(adminPort uint32) *bootstrappb.Admin {
 	return &bootstrappb.Admin{
 		AccessLogPath: "/dev/null",
-		Address: &addresspb.Address{
-			Address: &addresspb.Address_SocketAddress{
-				SocketAddress: &addresspb.SocketAddress{
+		Address: &corepb.Address{
+			Address: &corepb.Address_SocketAddress{
+				SocketAddress: &corepb.SocketAddress{
 					Address: "0.0.0.0",
-					PortSpecifier: &addresspb.SocketAddress_PortValue{
+					PortSpecifier: &corepb.SocketAddress_PortValue{
 						PortValue: adminPort,
 					},
 				},
