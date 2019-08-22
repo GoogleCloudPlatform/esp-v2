@@ -12,17 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load(":abseil.bzl", "abseil_repositories")
-load(":googleapis.bzl", "googleapis_repositories")
-load(":googletest.bzl", "googletest_repositories")
-load(":protobuf.bzl", "protobuf_repositories")
-load(":service_control.bzl", "service_control_client_repositories")
-load(":bazel_rules_python.bzl", "bazel_rules_python_repositories")
+load(
+    "@bazel_tools//tools/build_defs/repo:git.bzl",
+    "git_repository",
+)
 
-def all_repositories():
-    abseil_repositories()
-    googletest_repositories()
-    protobuf_repositories()
-    googleapis_repositories()
-    service_control_client_repositories()
-    bazel_rules_python_repositories()
+def bazel_rules_python_repositories(load_repo = True):
+    if load_repo:
+        git_repository(
+            name = "io_bazel_rules_python",
+            commit = "a558949cce478e537c6474c3bc5848a7d90e42c0",
+            remote = "https://github.com/bazelbuild/rules_python.git",
+        )

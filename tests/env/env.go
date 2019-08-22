@@ -56,6 +56,7 @@ type TestEnv struct {
 	mockJwtProviders            []string
 	mockMetadataOverride        map[string]string
 	bookstoreServer             *components.BookstoreGrpcServer
+	grpcInteropServer           *components.GrpcInteropGrpcServer
 	configMgr                   *components.ConfigManagerServer
 	dynamicRoutingBackend       *components.EchoHTTPServer
 	echoBackend                 *components.EchoHTTPServer
@@ -261,6 +262,14 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		if err := e.bookstoreServer.StartAndWait(); err != nil {
 			return err
 		}
+	case "grpc-interop":
+		e.grpcInteropServer, err = components.NewGrpcInteropGrpcServer(e.ports.BackendServerPort)
+		if err != nil {
+			return err
+		}
+		if err := e.grpcInteropServer.StartAndWait(); err != nil {
+			return err
+		}
 	default:
 		return fmt.Errorf("please specify the correct backend service name")
 	}
@@ -315,6 +324,11 @@ func (e *TestEnv) TearDown() {
 	if e.bookstoreServer != nil {
 		if err := e.bookstoreServer.StopAndWait(); err != nil {
 			glog.Errorf("error stopping Bookstore Server: %v", err)
+		}
+	}
+	if e.grpcInteropServer != nil {
+		if err := e.grpcInteropServer.StopAndWait(); err != nil {
+			glog.Errorf("error stopping GrpcInterop Server: %v", err)
 		}
 	}
 	if e.dynamicRoutingBackend != nil {

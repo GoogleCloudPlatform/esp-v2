@@ -38,6 +38,8 @@ const (
 	TestGRPC
 	TestGRPCJwt
 	TestGRPCWeb
+	TestGRPCInterops
+	TestGRPCInteropMiniStress
 	TestGrpcBackendPreflightCors
 	TestGrpcBackendSimpleCors
 	TestHttp1Basic

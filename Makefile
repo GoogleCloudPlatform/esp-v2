@@ -49,14 +49,24 @@ build: format
 
 build-envoy:
 	@echo "--> building envoy"
-	@bazel build //src/envoy:envoy
+	@bazel build //src/envoy:envoy --define=grpc_no_ares=true
 	@cp -f bazel-bin/src/envoy/envoy bin/
+
+build-grpc-interop:
+	@echo "--> building the grpc-interop-test client and server"
+	@bazel build @com_github_grpc_grpc//test/cpp/interop:interop_client --define=grpc_no_ares=true
+	@bazel build @com_github_grpc_grpc//test/cpp/interop:interop_server --define=grpc_no_ares=true
+	@bazel build @com_github_grpc_grpc//test/cpp/interop:stress_test --define=grpc_no_ares=true
+	@cp -f bazel-bin/external/com_github_grpc_grpc/test/cpp/interop/interop_client bin/
+	@cp -f bazel-bin/external/com_github_grpc_grpc/test/cpp/interop/interop_server bin/
+	@cp -f bazel-bin/external/com_github_grpc_grpc/test/cpp/interop/stress_test bin/
+
 
 #-----------------------------------------------------------------------------
 # Target: go test
 # ----------------------------------------------------------------------------
 
-.PHONY: test test-debug
+.PHONY: test test-debug test-envoy
 test: format
 	@echo "--> running unit tests"
 	@go test ./src/go/...
@@ -66,8 +76,13 @@ test-debug: format
 	@echo "--> running unit tests"
 	@go test -v ./src/go/... --logtostderr
 
+test-envoy: format
+	@echo "--> running envoy's unit tests"
+	@bazel test //src/... --define=grpc_no_ares=true
+
+
 .PHONY: integration-test integration-debug
-integration-test: build build-envoy
+integration-test: build build-envoy build-grpc-interop
 	@echo "--> running integration tests"
 	@go test ./tests/env/...
 	@go test ./tests/integration/...

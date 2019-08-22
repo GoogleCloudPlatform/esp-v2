@@ -29,13 +29,16 @@ var (
 	ConfigMap = map[string]*conf.Service{
 		"echo":                  FakeEchoConfig,
 		"echoForDynamicRouting": FakeEchoConfigForDynamicRouting,
+		"bookstore":             FakeBookstoreConfig,
+		"grpc-interop":          FakeGRPCInteropConfig,
 	}
 )
 
-func init() {
-	dat, err := ioutil.ReadFile("../endpoints/bookstore-grpc/proto/api_descriptor.pb")
+func generateSourceInfo(addr string) *conf.SourceInfo {
+	dat, err := ioutil.ReadFile(addr)
 	if err != nil {
 		glog.Errorf("error marshalAny for proto descriptor, %s", err)
+		return nil
 	}
 	sourceFile := &servicemanagement.ConfigFile{
 		FilePath:     "api_descriptor.pb",
@@ -46,11 +49,16 @@ func init() {
 	content, err := ptypes.MarshalAny(sourceFile)
 	if err != nil {
 		glog.Errorf("error marshalAny for proto descriptor")
+		return nil
 	}
-	FakeBookstoreConfig.SourceInfo = &conf.SourceInfo{
+	return &conf.SourceInfo{
 		SourceFiles: []*any.Any{content},
 	}
-	ConfigMap["bookstore"] = FakeBookstoreConfig
+}
+
+func init() {
+	FakeGRPCInteropConfig.SourceInfo = generateSourceInfo("../endpoints/grpc-interop/proto/api_descriptor.pb")
+	FakeBookstoreConfig.SourceInfo = generateSourceInfo("../endpoints/bookstore-grpc/proto/api_descriptor.pb")
 }
 
 func SetFakeControlEnvironment(cfg *conf.Service, url string) {
