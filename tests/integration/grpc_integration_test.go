@@ -39,7 +39,7 @@ func init() {
 
 func TestGRPC(t *testing.T) {
 	configID := "test-config-id"
-	args := []string{"--service_config_id=" + configID, "--backend_protocol=grpc", "--skip_service_control_filter=true", "--rollout_strategy=fixed"}
+	args := []string{"--service_config_id=" + configID, "--backend_protocol=grpc",  "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPC, "bookstore", nil)
 	if err := s.Setup(args); err != nil {
@@ -51,6 +51,7 @@ func TestGRPC(t *testing.T) {
 		desc           string
 		clientProtocol string
 		method         string
+		header         http.Header
 		wantResp       string
 		wantError      string
 	}{
@@ -58,12 +59,13 @@ func TestGRPC(t *testing.T) {
 			desc:           "gRPC client calling gRPC backend",
 			clientProtocol: "grpc",
 			method:         "GetShelf",
+			header:         http.Header{"x-api-key": []string{"api-key"}},
 			wantResp:       `{"id":"100","theme":"Kids"}`,
 		},
 		{
 			desc:           "Http client calling gRPC backend",
 			clientProtocol: "http",
-			method:         "/v1/shelves/200",
+			method:         "/v1/shelves/200?key=api-key",
 			wantResp:       `{"id":"200","theme":"Classic"}`,
 		},
 		{
@@ -93,14 +95,14 @@ func TestGRPC(t *testing.T) {
 		{
 			desc:           "Http client calling gRPC backend invalid query parameter",
 			clientProtocol: "http",
-			method:         "/v1/shelves/200?foo=bar",
+			method:         "/v1/shelves/200?key=api_key&&foo=bar",
 			wantError:      "503 Service Unavailable",
 		},
 	}
 
 	for _, tc := range tests {
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-		resp, err := client.MakeCall(tc.clientProtocol, addr, "GET", tc.method, "", http.Header{})
+		resp, err := client.MakeCall(tc.clientProtocol, addr, "GET", tc.method, "", tc.header)
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 			t.Errorf("Test (%s): failed, expected: %s, got: %v", tc.desc, tc.wantError, err)
 		}
@@ -115,7 +117,7 @@ func TestGRPCWeb(t *testing.T) {
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
-		"--skip_service_control_filter=true", "--backend_protocol=grpc", "--rollout_strategy=fixed"}
+		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPCWeb, "bookstore", nil)
 	if err := s.Setup(args); err != nil {
@@ -124,54 +126,52 @@ func TestGRPCWeb(t *testing.T) {
 	defer s.TearDown()
 
 	tests := []struct {
-		desc          string
-		method        string
-		grpcTestValue string
-		wantResp      string
-		wantTrailer   client.GRPCWebTrailer
+		desc        string
+		method      string
+		header      http.Header
+		wantResp    string
+		wantTrailer client.GRPCWebTrailer
 	}{
 		// Successes:
 		{
 			method:      "ListShelves",
+			header:      http.Header{"x-api-key": []string{"api-key"}},
 			wantResp:    `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantTrailer: successTrailer,
 		},
 		{
 			method:      "DeleteShelf",
+			header:      http.Header{"x-api-key": []string{"api-key"}},
 			wantResp:    "{}",
 			wantTrailer: successTrailer,
 		},
 		{
 			method:      "GetShelf",
+			header:      http.Header{"x-api-key": []string{"api-key"}},
 			wantResp:    `{"id":"100","theme":"Kids"}`,
 			wantTrailer: successTrailer,
 		},
 		// Failures:
 		{
-			method:        "GetShelf",
-			grpcTestValue: "ABORTED",
-			wantTrailer:   abortedTrailer,
+			method:      "GetShelf",
+			header:      http.Header{"x-api-key": []string{"api-key"}, client.TestHeaderKey: []string{"ABORTED"}},
+			wantTrailer: abortedTrailer,
 		},
 		{
-			method:        "DeleteShelf",
-			grpcTestValue: "INTERNAL",
-			wantTrailer:   internalTrailer,
+			method:      "DeleteShelf",
+			header:      http.Header{"x-api-key": []string{"api-key"}, client.TestHeaderKey: []string{"INTERNAL"}},
+			wantTrailer: internalTrailer,
 		},
 		{
-			method:        "ListShelves",
-			grpcTestValue: "DATA_LOSS",
-			wantTrailer:   dataLossTrailer,
+			method:      "ListShelves",
+			header:      http.Header{"x-api-key": []string{"api-key"}, client.TestHeaderKey: []string{"DATA_LOSS"}},
+			wantTrailer: dataLossTrailer,
 		},
 	}
 
 	for _, tc := range tests {
-		grpcTestHeader := http.Header{}
-		if tc.grpcTestValue != "" {
-			grpcTestHeader.Add(client.TestHeaderKey, tc.grpcTestValue)
-		}
-
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-		resp, trailer, err := client.MakeGRPCWebCall(addr, tc.method, "", grpcTestHeader)
+		resp, trailer, err := client.MakeGRPCWebCall(addr, tc.method, "", tc.header)
 
 		if err != nil {
 			t.Errorf("failed to run test: %s", err)
@@ -192,7 +192,7 @@ func TestGRPCJwt(t *testing.T) {
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
-		"--skip_service_control_filter=true", "--backend_protocol=grpc", "--rollout_strategy=fixed"}
+		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPCJwt, "bookstore", []string{"google_service_account", "endpoints_jwt", "broken_provider"})
 	if err := s.Setup(args); err != nil {
@@ -206,6 +206,7 @@ func TestGRPCJwt(t *testing.T) {
 		httpMethod         string
 		method             string
 		token              string
+		header             http.Header
 		wantResp           string
 		wantError          string
 		wantGRPCWebError   string
@@ -230,7 +231,7 @@ func TestGRPCJwt(t *testing.T) {
 			desc:           "Succeed for Http client, JWT rule recognizes {shelf} correctly",
 			clientProtocol: "http",
 			httpMethod:     "GET",
-			method:         "/v1/shelves/200",
+			method:         "/v1/shelves/200?key=api-key",
 			wantResp:       `{"id":"200","theme":"Classic"}`,
 		},
 		{
@@ -253,7 +254,7 @@ func TestGRPCJwt(t *testing.T) {
 			desc:           "Succeed for Http client, with valid JWT token, with url binding",
 			clientProtocol: "http",
 			httpMethod:     "POST",
-			method:         "/v1/shelves?shelf.id=123&shelf.theme=kids",
+			method:         "/v1/shelves?key=api-key&&shelf.id=123&shelf.theme=kids",
 			token:          testdata.FakeCloudToken,
 			wantResp:       `{"id":"123","theme":"kids"}`,
 		},
@@ -262,16 +263,16 @@ func TestGRPCJwt(t *testing.T) {
 			clientProtocol:     "grpc",
 			method:             "CreateShelf",
 			token:              testdata.FakeCloudToken,
+			header:             http.Header{"x-api-key": []string{"api-key"}},
 			wantResp:           `{"id":"14785","theme":"New Shelf"}`,
 			wantGRPCWebTrailer: successTrailer,
 		},
-
 		// Testing JWT RouteMatcher matches by HttpHeader and parameters in "{}", for Http Client only.
 		{
 			desc:           "Succeed for Http client, Jwt RouteMatcher matches by HttpHeader method",
 			clientProtocol: "http",
 			httpMethod:     "POST",
-			method:         "/v1/shelves?shelf.id=345&shelf.theme=HurryUp",
+			method:         "/v1/shelves?key=api-key&&shelf.id=345&shelf.theme=HurryUp",
 			token:          testdata.FakeCloudToken,
 			wantResp:       `{"id":"345","theme":"HurryUp"}`,
 		},
@@ -286,7 +287,7 @@ func TestGRPCJwt(t *testing.T) {
 			desc:           "Succeed for Http client, Jwt RouteMatcher works for multi query parameters",
 			clientProtocol: "http",
 			httpMethod:     "DELETE",
-			method:         "/v1/shelves/125/books/001",
+			method:         "/v1/shelves/125/books/001?key=api-key",
 			token:          testdata.FakeCloudToken,
 			wantResp:       "{}",
 		},
@@ -301,7 +302,7 @@ func TestGRPCJwt(t *testing.T) {
 			desc:           "Succeed for Http client, Jwt RouteMatcher works for multi query parameters and HttpHeader, no audience",
 			clientProtocol: "http",
 			httpMethod:     "GET",
-			method:         "/v1/shelves/200/books/2001",
+			method:         "/v1/shelves/200/books/2001?key=api-key",
 			wantResp:       `{"id":"2001","author":"Shakspeare","title":"Hamlet"}`,
 		},
 
@@ -311,6 +312,7 @@ func TestGRPCJwt(t *testing.T) {
 			clientProtocol:     "grpc",
 			method:             "ListShelves",
 			token:              testdata.FakeCloudTokenSingleAudience1,
+			header:             http.Header{"x-api-key": []string{"api-key"}},
 			wantResp:           `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantGRPCWebTrailer: successTrailer,
 		},
@@ -318,7 +320,7 @@ func TestGRPCJwt(t *testing.T) {
 			desc:           "Succeed for Http client, with valid JWT token, with single audience",
 			clientProtocol: "http",
 			httpMethod:     "GET",
-			method:         "/v1/shelves",
+			method:         "/v1/shelves?key=api-key",
 			token:          testdata.FakeCloudTokenSingleAudience1,
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
@@ -351,6 +353,7 @@ func TestGRPCJwt(t *testing.T) {
 			clientProtocol:     "grpc",
 			method:             "CreateBook",
 			token:              testdata.FakeCloudTokenSingleAudience2,
+			header:             http.Header{"x-api-key": []string{"api-key"}},
 			wantResp:           `{"id":"20050","title":"Harry Potter"}`,
 			wantGRPCWebTrailer: successTrailer,
 		},
@@ -358,17 +361,17 @@ func TestGRPCJwt(t *testing.T) {
 			desc:           "Succeed for Http client, with JWT token with multi audience while multi audiences are allowed",
 			clientProtocol: "http",
 			httpMethod:     "POST",
-			method:         "/v1/shelves/200/books?book.title=Romeo%20and%20Julie",
+			method:         "/v1/shelves/200/books?key=api-key&&book.title=Romeo%20and%20Julie",
 			token:          testdata.FakeCloudTokenMultiAudiences,
-			wantResp:       `{"id":"0","author":"","title":"Romeo and Julie"}`},
-
+			wantResp:       `{"id":"0","author":"","title":"Romeo and Julie"}`,
+		},
 		// Testing JWT with multiple Providers, token from anyone should work,
 		// even with an invalid issuer.
 		{
 			desc:           "Succeed for Http client, with multi requirements from different providers",
 			clientProtocol: "http",
 			httpMethod:     "DELETE",
-			method:         "/v1/shelves/120",
+			method:         "/v1/shelves/120?key=api-key",
 			token:          testdata.FakeEndpointsToken,
 			wantResp:       "{}",
 		},
@@ -377,6 +380,7 @@ func TestGRPCJwt(t *testing.T) {
 			clientProtocol:     "grpc",
 			method:             "DeleteShelf",
 			token:              testdata.FakeCloudTokenSingleAudience1,
+			header:             http.Header{"x-api-key": []string{"api-key"}},
 			wantResp:           "{}",
 			wantGRPCWebTrailer: successTrailer,
 		},
@@ -384,7 +388,7 @@ func TestGRPCJwt(t *testing.T) {
 			desc:           "Fail for Http client, with multi requirements from different providers",
 			clientProtocol: "http",
 			httpMethod:     "DELETE",
-			method:         "/v1/shelves/120",
+			method:         "/v1/shelves/120?key=api-key",
 			token:          testdata.FakeCloudToken,
 			wantError:      "401 Unauthorized, Jwt issuer is not configured",
 		},
@@ -392,7 +396,7 @@ func TestGRPCJwt(t *testing.T) {
 
 	for _, tc := range tests {
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-		resp, err := client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, http.Header{})
+		resp, err := client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, tc.header)
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
@@ -408,7 +412,7 @@ func TestGRPCJwt(t *testing.T) {
 		}
 
 		grpcWebDesc := strings.Replace(tc.desc, "gRPC", "gRPC-Web", -1)
-		grpcWebResp, trailer, err := client.MakeGRPCWebCall(addr, tc.method, tc.token, http.Header{})
+		grpcWebResp, trailer, err := client.MakeGRPCWebCall(addr, tc.method, tc.token, tc.header)
 		if tc.wantGRPCWebError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantGRPCWebError)) {
 			t.Errorf("Test (%s): failed\n  expected: %v\n  got: %v", grpcWebDesc, tc.wantGRPCWebError, err)
 		}
