@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/envoy/http/service_control/http_call.h"
+#include <memory>
 
 #include "common/common/enum_to_int.h"
 #include "common/http/headers.h"
 #include "common/http/message_impl.h"
 #include "common/http/utility.h"
+#include "common/tracing/http_tracer_impl.h"
+#include "src/envoy/http/service_control/http_call.h"
 
 using ::google::api::envoy::http::common::HttpUri;
 using ::google::protobuf::util::Status;
@@ -38,13 +40,19 @@ class HttpCallImpl : public HttpCall,
                const std::string& suffix_url,
                std::function<const std::string&()> token_fn,
                const Protobuf::Message& body, uint32_t timeout_ms,
-               uint32_t retries, HttpCall::DoneFunc on_done)
+               uint32_t retries, Envoy::Tracing::Span& parent_span,
+               Envoy::TimeSource& time_source,
+               const std::string& trace_operation_name,
+               HttpCall::DoneFunc on_done)
       : cm_(cm),
         http_uri_(uri),
         retries_(retries),
         request_count_(0),
         timeout_ms_(timeout_ms),
-        token_fn_(token_fn) {
+        token_fn_(token_fn),
+        parent_span_(parent_span),
+        time_source_(time_source),
+        trace_operation_name_(trace_operation_name) {
     uri_ = http_uri_.uri() + suffix_url;
 
     Http::Utility::extractHostPathFromUri(uri_, host_, path_);
@@ -64,6 +72,11 @@ class HttpCallImpl : public HttpCall,
     ENVOY_LOG(trace, "{}", __func__);
     const uint64_t status_code =
         Http::Utility::getResponseStatus(response->headers());
+
+    request_span_->setTag(Tracing::Tags::get().HttpStatusCode,
+                          std::to_string(status_code));
+    request_span_->finishSpan();
+
     std::string body;
     if (response->body()) {
       const auto len = response->body()->length();
@@ -87,9 +100,22 @@ class HttpCallImpl : public HttpCall,
     delete this;
   }
 
-  void onFailure(Http::AsyncClient::FailureReason /* reason */) override {
+  void onFailure(Http::AsyncClient::FailureReason reason) override {
     // The status code in reason is always 0.
     ENVOY_LOG(debug, "http call network error");
+
+    switch (reason) {
+      case Http::AsyncClient::FailureReason::Reset:
+        request_span_->setTag(Tracing::Tags::get().Error,
+                              "the stream has been reset");
+        break;
+      default:
+        request_span_->setTag(Tracing::Tags::get().Error,
+                              "unknown network error");
+        break;
+    }
+    request_span_->finishSpan();
+
     if (attemptRetry(0)) {
       return;
     }
@@ -114,6 +140,7 @@ class HttpCallImpl : public HttpCall,
               "after {} times failures, retrying http call [uri = {}], with "
               "{} remaining chances",
               request_count_, uri_, retries_);
+
     reset();
     makeOneCall();
     return true;
@@ -129,6 +156,22 @@ class HttpCallImpl : public HttpCall,
           "");
       return;
     }
+
+    // Trace the request
+    auto span_name = request_count_ == 1
+                         ? trace_operation_name_
+                         : absl::StrCat(trace_operation_name_, " - Retry ",
+                                        request_count_ - 1);
+    request_span_ =
+        parent_span_.spawnChild(Envoy::Tracing::EgressConfig::get(), span_name,
+                                time_source_.systemTime());
+    request_span_->setTag(Tracing::Tags::get().Component,
+                          Tracing::Tags::get().Proxy);
+    request_span_->setTag(Tracing::Tags::get().UpstreamCluster,
+                          http_uri_.cluster());
+    request_span_->setTag(Tracing::Tags::get().HttpUrl, uri_);
+    request_span_->setTag(Tracing::Tags::get().HttpMethod, "POST");
+
     Http::MessagePtr message = prepareHeaders(token);
     ENVOY_LOG(debug, "http call from [uri = {}]: start", uri_);
     request_ = cm_.httpAsyncClientForCluster(http_uri_.cluster())
@@ -138,8 +181,15 @@ class HttpCallImpl : public HttpCall,
   }
 
   void cancel() override {
+    if (request_span_) {
+      request_span_->setTag(Tracing::Tags::get().Error,
+                            Tracing::Tags::get().Canceled);
+      request_span_->finishSpan();
+    }
+
     if (request_) {
       request_->cancel();
+      delete request_;
       ENVOY_LOG(debug, "Http call [uri = {}]: canceled", uri_);
       reset();
     }
@@ -156,8 +206,8 @@ class HttpCallImpl : public HttpCall,
     message->headers().insertMethod().value().setReference(
         Http::Headers::get().MethodValues.Post);
 
-    message->body().reset(
-        new Buffer::OwnedImpl(str_body_.data(), str_body_.size()));
+    message->body() =
+        std::make_unique<Buffer::OwnedImpl>(str_body_.data(), str_body_.size());
     message->headers().insertContentLength().value(message->body()->length());
 
     // assume token is not empty
@@ -176,7 +226,7 @@ class HttpCallImpl : public HttpCall,
   // The request
   Http::AsyncClient::Request* request_{};
 
-  // The callback function when request finsihed
+  // The callback function when request finished
   HttpCall::DoneFunc on_done_;
 
   // The serialized request body
@@ -200,17 +250,26 @@ class HttpCallImpl : public HttpCall,
 
   // The function for getting token
   std::function<const std::string&()> token_fn_;
+
+  // Tracing data
+  Envoy::Tracing::Span& parent_span_;
+  Envoy::TimeSource& time_source_;
+  Envoy::Tracing::SpanPtr request_span_;
+  const std::string trace_operation_name_;
 };
 
 }  // namespace
 
-HttpCall* HttpCall::create(Upstream::ClusterManager& cm, const HttpUri& uri,
-                           const std::string& suffix_url,
-                           std::function<const std::string&()> token_fn,
-                           const Protobuf::Message& body, uint32_t timeout_ms,
-                           uint32_t retries, HttpCall::DoneFunc on_done) {
+HttpCall* HttpCall::create(
+    Upstream::ClusterManager& cm,
+    const ::google::api::envoy::http::common::HttpUri& uri,
+    const std::string& suffix_url, std::function<const std::string&()> token_fn,
+    const Protobuf::Message& body, uint32_t timeout_ms, uint32_t retries,
+    Envoy::Tracing::Span& parent_span, Envoy::TimeSource& time_source,
+    const std::string& trace_operation_name, HttpCall::DoneFunc on_done) {
   return new HttpCallImpl(cm, uri, suffix_url, token_fn, body, timeout_ms,
-                          retries, on_done);
+                          retries, parent_span, time_source,
+                          trace_operation_name, on_done);
 }
 
 }  // namespace ServiceControl

@@ -64,6 +64,7 @@ envoy_cc_library(
         "@envoy//source/common/http:headers_lib",
         "@envoy//source/common/http:message_lib",
         "@envoy//source/common/http:utility_lib",
+        "@envoy//source/common/tracing:http_tracer_lib",
     ],
 )
 
@@ -231,6 +232,23 @@ envoy_cc_test(
         ":config_parser_lib",
         ":handler_impl_lib",
         ":mocks_lib",
+        "@envoy//test/mocks/server:server_mocks",
+        "@envoy//test/mocks/stats:stats_mocks",
+        "@envoy//test/mocks/tracing:tracing_mocks",
+        "@envoy//test/test_common:utility_lib",
+    ],
+)
+
+envoy_cc_test(
+    name = "http_call_test",
+    srcs = [
+        "http_call_test.cc",
+    ],
+    repository = "@envoy",
+    deps = [
+        ":http_call_lib",
+        ":mocks_lib",
+        "@envoy//test/mocks:common_lib",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/mocks/stats:stats_mocks",
         "@envoy//test/mocks/tracing:tracing_mocks",

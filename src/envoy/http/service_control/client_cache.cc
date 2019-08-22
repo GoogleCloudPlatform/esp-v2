@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "src/envoy/http/service_control/client_cache.h"
+#include "common/tracing/http_tracer_impl.h"
 #include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/http/service_control/http_call.h"
 
@@ -179,9 +180,13 @@ ClientCache::ClientCache(
   options.check_transport = [this](const CheckRequest& request,
                                    CheckResponse* response,
                                    TransportDoneFunc on_done) {
+    // Don't support tracing on this transport
+    auto& null_span = Envoy::Tracing::NullSpan::instance();
+
     auto* call = HttpCall::create(
         cm_, service_control_uri_, config_.service_name() + ":check",
-        sc_token_fn_, request, check_timeout_ms_, check_retries_,
+        sc_token_fn_, request, check_timeout_ms_, check_retries_, null_span,
+        time_source_, "Service Control remote call: Check",
         [response, on_done](const Status& status, const std::string& body) {
           if (status.ok()) {
             // Handle 200 response
@@ -205,9 +210,13 @@ ClientCache::ClientCache(
   options.quota_transport = [this](const AllocateQuotaRequest& request,
                                    AllocateQuotaResponse* response,
                                    TransportDoneFunc on_done) {
+    // Don't support tracing on this transport
+    auto& null_span = Envoy::Tracing::NullSpan::instance();
+
     auto* call = HttpCall::create(
         cm_, service_control_uri_, config_.service_name() + ":allocateQuota",
-        quota_token_fn_, request, quota_timeout_ms_, quota_retries_,
+        quota_token_fn_, request, quota_timeout_ms_, quota_retries_, null_span,
+        time_source_, "Service Control remote call: Allocate Quota",
         [response, on_done](const Status& status, const std::string& body) {
           if (status.ok()) {
             // Handle 200 response
@@ -231,9 +240,13 @@ ClientCache::ClientCache(
   options.report_transport = [this](const ReportRequest& request,
                                     ReportResponse* response,
                                     TransportDoneFunc on_done) {
+    // Don't support tracing on this transport
+    auto& null_span = Envoy::Tracing::NullSpan::instance();
+
     auto* call = HttpCall::create(
         cm_, service_control_uri_, report_suffix_url_, sc_token_fn_, request,
-        report_timeout_ms_, report_retries_,
+        report_timeout_ms_, report_retries_, null_span, time_source_,
+        "Service Control remote call: Report",
         [response, on_done](const Status& status, const std::string& body) {
           if (status.ok()) {
             // Handle 200 response
@@ -266,17 +279,44 @@ ClientCache::ClientCache(
 }
 
 void ClientCache::callCheck(
-    const CheckRequest& request, Envoy::Tracing::Span&,
+    const CheckRequest& request, Envoy::Tracing::Span& parent_span,
     std::function<void(const Status&, const CheckResponseInfo&)> on_done) {
-  CheckResponse* response = new CheckResponse;
+  auto check_transport = [this, &parent_span](const CheckRequest& request,
+                                              CheckResponse* response,
+                                              TransportDoneFunc on_done) {
+    auto* call = HttpCall::create(
+        cm_, service_control_uri_, config_.service_name() + ":check",
+        sc_token_fn_, request, check_timeout_ms_, check_retries_, parent_span,
+        time_source_, "Service Control remote call: Check",
+        [response, on_done](const Status& status, const std::string& body) {
+          if (status.ok()) {
+            // Handle 200 response
+            if (!response->ParseFromString(body)) {
+              on_done(Status(Code::INVALID_ARGUMENT,
+                             std::string("Invalid response")));
+              return;
+            }
+          } else {
+            response->ParseFromString(body);
+            ENVOY_LOG(
+                error,
+                "Failed to call check, error: {}, str body: {}, pb body: {}",
+                status.ToString(), body, response->DebugString());
+          }
+          on_done(status);
+        });
+    call->call();
+  };
+
+  auto* response = new CheckResponse;
   client_->Check(request, response,
                  [this, response, on_done](const Status& status) {
                    CheckResponseInfo response_info;
                    if (status.ok()) {
-                     Status status = ::google::api_proxy::service_control::
-                         RequestBuilder::ConvertCheckResponse(
+                     Status converted_status = ::google::api_proxy::
+                         service_control::RequestBuilder::ConvertCheckResponse(
                              *response, config_.service_name(), &response_info);
-                     on_done(status, response_info);
+                     on_done(converted_status, response_info);
                    } else {
                      if (network_fail_open_) {
                        on_done(Status::OK, response_info);
@@ -285,14 +325,15 @@ void ClientCache::callCheck(
                      }
                    }
                    delete response;
-                 });
+                 },
+                 check_transport);
 }
 
 void ClientCache::callQuota(
     const ::google::api::servicecontrol::v1::AllocateQuotaRequest& request,
     std::function<void(const ::google::protobuf::util::Status& status)>
         on_done) {
-  AllocateQuotaResponse* response = new AllocateQuotaResponse;
+  auto* response = new AllocateQuotaResponse;
   client_->Quota(
       request, response, [this, response, on_done](const Status& status) {
         if (status.ok()) {
@@ -309,7 +350,7 @@ void ClientCache::callQuota(
 }
 
 void ClientCache::callReport(const ReportRequest& request) {
-  ReportResponse* response = new ReportResponse;
+  auto* response = new ReportResponse;
   client_->Report(request, response,
                   [response](const Status&) { delete response; });
 }
