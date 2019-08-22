@@ -12,12 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load(":googleapis.bzl", "googleapis_repositories")
-load(":service_control.bzl", "service_control_client_repositories")
-load(":bazel_rules_python.bzl", "bazel_rules_python_repositories")
-
-def service_control_repositories():
-    googleapis_repositories()
-    service_control_client_repositories()
-    bazel_rules_python_repositories()
-
+def grpc_bindings():
+    native.bind(
+        name = "grpc_lib",
+        actual = "@com_github_grpc_grpc//:grpc++_codegen_proto",
+    )

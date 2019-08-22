@@ -94,3 +94,7 @@ grpc_python_deps()
 grpc_deps()
 
 grpc_test_only_deps()
+
+load("//bazel:grpc.bzl", "grpc_bindings")
+
+grpc_bindings()

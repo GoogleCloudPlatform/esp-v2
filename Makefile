@@ -52,6 +52,14 @@ build-envoy:
 	@bazel build //src/envoy:envoy
 	@cp -f bazel-bin/src/envoy/envoy bin/
 
+build-grpc-echo:
+	@echo "--> building grpc-echo"
+	@bazel build --cxxopt='-std=c++14' tests/endpoints/grpc-echo:grpc-test-client --incompatible_no_support_tools_in_action_inputs=false
+	@bazel build //tests/endpoints/grpc-echo:grpc-test-server --incompatible_no_support_tools_in_action_inputs=false
+	@cp -f bazel-bin/tests/endpoints/grpc-echo/grpc-test-client bin/grpc_echo_client
+	@cp -f bazel-bin/tests/endpoints/grpc-echo/grpc-test-server bin/grpc_echo_server
+
+
 build-grpc-interop:
 	@echo "--> building the grpc-interop-test client and server"
 	@bazel build @com_github_grpc_grpc//test/cpp/interop:interop_client
@@ -82,7 +90,7 @@ test-envoy: format
 
 
 .PHONY: integration-test integration-debug
-integration-test: build build-envoy build-grpc-interop
+integration-test: build build-envoy build-grpc-interop build-grpc-echo
 	@echo "--> running integration tests"
 	@go test ./tests/env/...
 	@go test ./tests/integration/...

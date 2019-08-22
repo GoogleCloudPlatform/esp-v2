@@ -1,0 +1,387 @@
+// Copyright 2018 Google Cloud Platform Proxy Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package test.grpc;
+
+import "google/api/servicecontrol/v1/service_controller.proto";
+
+// The test service definition.
+service Test {
+  // A simple, non-streaming API call that echoes its input.
+  rpc Echo(EchoRequest) returns (EchoResponse) {
+  }
+
+  // A bi-directional stream.
+  rpc EchoStream(stream EchoRequest) returns (stream EchoResponse) {
+  }
+
+  // Cork support.  While corked, the server will accept incoming
+  // calls, but will not complete them; instead, it streams back the
+  // current number of corked calls.  Only one cork call may be
+  // outstanding at any given time.
+  //
+  // The request stream is ignored (messages sent to it are
+  // discarded).  It's there in order to keep the request open,
+  // indicating to the server that the cork is in progress.  To end
+  // the cork, half-close the request.
+  rpc Cork(stream CorkRequest) returns (stream CorkState) {
+  }
+
+  // Echo service control report request
+  rpc EchoReport(google.api.servicecontrol.v1.ReportRequest)
+    returns (google.api.servicecontrol.v1.ReportRequest) {
+  }
+}
+
+// The echo request message.
+message EchoRequest {
+  // The text to echo back in the response.
+  bytes text = 1;
+
+  // The final RPC status to use for the response.
+  CallStatus return_status = 2;
+
+  // If non 0, the text payload is randomly generated.
+  // The payload size is random between 0 and value of this field.
+  int32 random_payload_max_size = 3;
+
+  // If non 0, the text payload is generated with space characters
+  // The payload size is specified by the value of this field.
+  int32 space_payload_size = 6;
+
+  // The metadata that server should return
+  map<string, bytes> return_initial_metadata = 4;
+  map<string, bytes> return_trailing_metadata = 5;
+}
+
+// The echo response message.
+message EchoResponse {
+  // The text supplied by the EchoRequest.
+  bytes text = 101;
+
+  // The length of time that's elapsed since the start of the RPC.
+  fixed64 elapsed_micros = 102;
+
+  // The metadata server received
+  map<string, bytes> received_metadata = 103;
+}
+
+// A configuration to use for a GRPC call.
+message CallConfig {
+  // The API key to use for the request.
+  string api_key = 1;
+
+  // If true, use SSL to connect.
+  bool use_ssl = 2;
+
+  // Authorization: Bearer token.
+  string auth_token = 3;
+
+  // Additional metadata to send to server
+  map<string, bytes> metadata = 4;
+
+  enum CompressionAlgorithm {
+    NONE = 0;
+    DEFLATE = 1;
+    GZIP = 2;
+  }
+  // Compression algorithm the request
+  CompressionAlgorithm compression = 5;
+}
+
+// The outcome of a GRPC call.
+message CallStatus {
+  // The GRPC status code to use in the response.
+  int32 code = 1;
+
+  // The message to include in the response.
+  string details = 2;
+}
+
+// Messages used for cork support.
+message CorkRequest {
+}
+message CorkState {
+  int64 current_corked_calls = 1;
+}
+
+// Describes an echo test.
+message EchoTest {
+  // The request to use for the test.
+  EchoRequest request = 1;
+
+  // The configuration to use for the test.
+  CallConfig call_config = 2;
+
+  // The final RPC status to expect in the response.
+  CallStatus expected_status = 3;
+
+  // The expected metadata keys that the grpc server should receive.
+  repeated string expected_metadata_keys = 4;
+}
+
+message EchoResult {
+  // The result of test -- i.e. the returned text.
+  string text = 1;
+
+  // The result of metadata -- only diff of actual and expected
+  message MetadataResult {
+    string key = 1;
+    bytes expected = 2;
+    bytes actual = 3;
+  }
+
+  repeated MetadataResult metadata_result = 2;
+
+  int32 verified_metadata = 3;
+}
+
+// Describes an echo stream test.
+message EchoStreamTest {
+  // The requests to use for the back-and-forth streamed messages.  If
+  // there are fewer elements than specified by the 'count' field, the
+  // last element will be repeated to fill out the requested 'count'.
+  repeated EchoRequest request = 1;
+
+  // The number of times to ping-pong messages back and forth.
+  int32 count = 2;
+
+  // The delay between streaming messages (from the client).
+  int32 delay_ms = 3;
+
+  // The configuration to use for the test.
+  CallConfig call_config = 4;
+
+  // The final RPC status to expect in the response.
+  CallStatus expected_status = 5;
+
+  // The duration of the echo stream.
+  int32 duration_in_sec = 6;
+}
+
+message EchoStreamResult {
+  // The number of messages that were received by the client, as
+  // echoed by the server.
+  int32 count = 1;
+}
+
+// Describes an echo report test.
+message EchoReportTest {
+  // The request to use for the test.
+  google.api.servicecontrol.v1.ReportRequest request = 1;
+}
+
+message EchoReportResult {
+  // The response
+  google.api.servicecontrol.v1.ReportRequest response = 1;
+}
+
+// Describes a parallel test.
+message ParallelTest {
+  // The tests to exercise.
+  repeated ParallelSubtest subtests = 1;
+
+  // The number of tests to run in parallel.
+  int32 parallel_limit = 2;
+
+  // The number of tests to run.
+  int32 test_count = 3;
+
+  // The test is marked as failed if failed_number is over this rate.
+  float allowed_failure_rate = 4;
+}
+
+message ParallelSubtest {
+  // The weight of this subtest.
+  //
+  // For a weight of N, the subtest will be randomly picked N times
+  // out of (sum N over all subtests) -- i.e. if the total of the
+  // weights is 100, each individual subtest's weight is the
+  // percentage of the time that subtest will be selected.
+  int32 weight = 1;
+
+  // The particular test to exercise.
+  oneof plan {
+    EchoTest echo = 2;
+    EchoStreamTest echo_stream = 3;
+  }
+}
+
+// For stress tests, many of failures have same status
+// Aggregate the same status into this one.
+message AggregatedCallStatus {
+  int32 count = 1;
+  string start_time = 2;
+  string end_time = 3;
+  CallStatus status = 4;
+}
+
+message ParallelSubtestStats {
+  int32 succeeded_count = 1;
+  int32 failed_count = 2;
+  int64 mean_latency_micros = 3;
+  int64 stddev_latency_micros = 4;
+
+  repeated AggregatedCallStatus failures = 5;
+}
+
+message ParallelResult {
+  int64 total_time_micros = 1;
+
+  // There's one ParallelSubtestStats in the result, in order, for
+  // each ParallelSubtest in the plan.
+  repeated ParallelSubtestStats stats = 2;
+}
+
+// Describes a call limit probe, validating flow control correctness.
+// Note that this may yield a result that's less than the actual call
+// limit (especially in scenarios where cpu cycles per wall clock time
+// duration varies over the course of the test), yielding a false
+// positive result.
+//
+// TL;DR: If tests using this feature appear to be flaky, it's
+// probably a real problem that's occasionally masked by the execution
+// environment.
+message ProbeCallLimitTest {
+  // The amount of time to wait for a probe to return information via
+  // the outstanding cork call.
+  int64 timeout_ms = 1;
+
+  // The request to use.
+  EchoRequest request = 2;
+}
+
+message ProbeCallLimitResult {
+  int64 call_limit = 1;
+}
+
+// Describes a test that probes the limits on the number of messages
+// that can be outstanding in a streaming call (i.e. where the server
+// is running too slowly to keep up with the client and flow control
+// is kicking in).
+message ProbeDownstreamMessageLimitTest {
+  // The request to use for the streamed messages.
+  EchoRequest request = 1;
+
+  // The amount of time to wait for a message to be accepted by
+  // libgrpc for processing -- if this amount of time passes without a
+  // message being accepted, the test assumes that flow control is
+  // pushing back on the incoming message stream.
+  int64 timeout_ms = 2;
+}
+
+message ProbeDownstreamMessageLimitResult {
+  // The number of messages that were sent by the client before
+  // backpressure appeared to be applied.
+  int64 message_limit = 1;
+}
+
+// Describes a test that probes the limits on the number of messages
+// to downstream that can be outstanding in a streaming call
+// (i.e. where the client is running too slowly to keep up with the
+// server and flow control is kicking in).
+message ProbeUpstreamMessageLimitTest {
+  // The request to use for the streamed messages.
+  EchoRequest request = 1;
+
+  // The amount of time to wait for a message to be accepted by
+  // libgrpc for processing -- if this amount of time passes without a
+  // message being accepted, the test assumes that flow control is
+  // pushing back on the incoming message stream.
+  int64 timeout_ms = 2;
+}
+
+message ProbeUpstreamMessageLimitResult {
+  // The number of messages that were sent by the client before
+  // backpressure appeared to be applied.  (In this test, since the
+  // client isn't processing echoed responses, and the server is
+  // simply echoing messages as it receives them, this backpressure is
+  // pushing back on the server, which is then pushing back on the
+  // client.)
+  int64 message_limit = 1;
+}
+
+// Client may receive grpc detail message. It is in JSON format as:
+// {
+//  "created":"@1468448442.366709868",
+//  "description":"RST_STREAM",
+//  "file":"frame_rst_stream.c",
+//  "file_line":107,
+//  "http2_error":7
+// }
+// Use this proto messgae to extract its description and http2_error
+message GrpcErrorDetail {
+  // error description
+  string description = 1;
+
+  // http2_error code.
+  int32 http2_error = 2;
+}
+
+// A particular test to be run.
+message TestPlan {
+  oneof plan {
+    EchoTest echo = 1;
+    EchoStreamTest echo_stream = 2;
+    ParallelTest parallel = 3;
+    ProbeCallLimitTest probe_call_limit = 4;
+    ProbeDownstreamMessageLimitTest probe_downstream_message_limit = 5;
+    ProbeUpstreamMessageLimitTest probe_upstream_message_limit = 6;
+    EchoReportTest echo_report = 7;
+  }
+}
+
+// Tests to be run.
+message TestPlans {
+  repeated TestPlan plans = 1;
+
+  // The address of the server to use.  Typically, this points to the
+  // nginx GRPC server address.
+  string server_addr = 2;
+
+  // The address of the backend, without any intermediary proxies.
+  // This is used for tests which need a control path to the backend
+  // server even when flow control is pushing back on messages being
+  // sent via the proxy server.
+  string direct_addr = 3;
+
+  // If set, include a warmup Echo RPC on the connection before going on
+  // to the actual test.
+  EchoTest warmup = 4;
+}
+
+// The result of a test.
+message TestResult {
+  // The final status returned by the RPC call.
+  CallStatus status = 1;
+  oneof result {
+    EchoResult echo = 2;
+    EchoStreamResult echo_stream = 3;
+    ParallelResult parallel = 4;
+    ProbeCallLimitResult probe_call_limit = 5;
+    ProbeDownstreamMessageLimitResult probe_downstream_message_limit = 6;
+    ProbeUpstreamMessageLimitResult probe_upstream_message_limit = 7;
+    EchoReportResult echo_report = 8;
+  }
+
+  // Additional metadata that can be added by ESP during the Check processing.
+  map<string, bytes> additional_metadata = 9;
+}
+
+// Test results.
+message TestResults {
+  repeated TestResult results = 1;
+}

@@ -57,6 +57,7 @@ type TestEnv struct {
 	mockMetadataOverride        map[string]string
 	bookstoreServer             *components.BookstoreGrpcServer
 	grpcInteropServer           *components.GrpcInteropGrpcServer
+	grpcEchoServer              *components.GrpcEchoGrpcServer
 	configMgr                   *components.ConfigManagerServer
 	dynamicRoutingBackend       *components.EchoHTTPServer
 	echoBackend                 *components.EchoHTTPServer
@@ -270,6 +271,14 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		if err := e.grpcInteropServer.StartAndWait(); err != nil {
 			return err
 		}
+	case "grpc-echo":
+		e.grpcEchoServer, err = components.NewGrpcEchoGrpcServer(e.ports.BackendServerPort)
+		if err != nil {
+			return err
+		}
+		if err := e.grpcEchoServer.StartAndWait(); err != nil {
+			return err
+		}
 	default:
 		return fmt.Errorf("please specify the correct backend service name")
 	}
@@ -329,6 +338,11 @@ func (e *TestEnv) TearDown() {
 	if e.grpcInteropServer != nil {
 		if err := e.grpcInteropServer.StopAndWait(); err != nil {
 			glog.Errorf("error stopping GrpcInterop Server: %v", err)
+		}
+	}
+	if e.grpcEchoServer != nil {
+		if err := e.grpcEchoServer.StopAndWait(); err != nil {
+			glog.Errorf("error stopping GrpcEcho Server: %v", err)
 		}
 	}
 	if e.dynamicRoutingBackend != nil {

@@ -21,6 +21,6 @@ def bazel_rules_python_repositories(load_repo = True):
     if load_repo:
         git_repository(
             name = "io_bazel_rules_python",
-            commit = "a558949cce478e537c6474c3bc5848a7d90e42c0",
+            commit = "8b5d0683a7d878b28fffe464779c8a53659fc645",
             remote = "https://github.com/bazelbuild/rules_python.git",
         )

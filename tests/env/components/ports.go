@@ -36,6 +36,7 @@ const (
 	TestDifferentOriginSimpleCors
 	TestDynamicRouting
 	TestGRPC
+	TestGRPCErrors
 	TestGRPCJwt
 	TestGRPCWeb
 	TestGRPCInterops

@@ -31,6 +31,7 @@ var (
 		"echoForDynamicRouting": FakeEchoConfigForDynamicRouting,
 		"bookstore":             FakeBookstoreConfig,
 		"grpc-interop":          FakeGRPCInteropConfig,
+		"grpc-echo":             FakeGRPCEchoConfig,
 	}
 )
 
@@ -57,6 +58,7 @@ func generateSourceInfo(addr string) *conf.SourceInfo {
 }
 
 func init() {
+	FakeGRPCEchoConfig.SourceInfo = generateSourceInfo("../endpoints/grpc-echo/proto/api_descriptor.pb")
 	FakeGRPCInteropConfig.SourceInfo = generateSourceInfo("../endpoints/grpc-interop/proto/api_descriptor.pb")
 	FakeBookstoreConfig.SourceInfo = generateSourceInfo("../endpoints/bookstore-grpc/proto/api_descriptor.pb")
 }
