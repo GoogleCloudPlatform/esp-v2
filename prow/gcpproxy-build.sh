@@ -32,12 +32,6 @@ echo '===================== Setup Cache ====================='
 echo '======================================================='
 try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}"
 
-# generated go proto files are consistent with original proto
-echo '======================================================='
-echo '================== Proto consistency =================='
-echo '======================================================='
-make proto-consistency-test
-
 # golang build
 echo '======================================================='
 echo '=====================   Go build  ====================='

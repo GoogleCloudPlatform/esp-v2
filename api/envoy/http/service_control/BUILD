@@ -1,12 +1,13 @@
 load("@envoy_api//bazel:api_build_system.bzl", "api_proto_library")
 load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 
-SERVICE_CONTROL_VEISIBILITY = [
+SERVICE_CONTROL_VISIBILITY = [
     "//api/envoy/http/service_control:__subpackages__",
     "//src/envoy/http/service_control:__subpackages__",
+    "//src/go:__subpackages__",
 ]
 
-package(default_visibility = SERVICE_CONTROL_VEISIBILITY)
+package(default_visibility = SERVICE_CONTROL_VISIBILITY)
 
 api_proto_library(
     name = "config_proto",
@@ -14,7 +15,7 @@ api_proto_library(
         "config.proto",
         "requirement.proto",
     ],
-    visibility = SERVICE_CONTROL_VEISIBILITY,
+    visibility = SERVICE_CONTROL_VISIBILITY,
     deps = [
         "//api/envoy/http/common:base_proto",
     ],

@@ -93,11 +93,6 @@ integration-debug:
 	# debug-components can be set as "all", "configmanager", or "envoy".
 	@go test -v ./tests/integration/... --debug_components=all
 
-.PHONY: proto-consistency-test
-proto-consistency-test:
-	@echo "--> checking generated go API proto files are up to date"
-	./api/scripts/go_proto_consistency_test.sh
-
 #-----------------------------------------------------------------------------
 # Target: go dependencies
 #-----------------------------------------------------------------------------

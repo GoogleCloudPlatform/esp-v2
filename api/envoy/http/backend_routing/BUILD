@@ -4,6 +4,7 @@ load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 BACKEND_ROUTING_VISIBILITY = [
     "//api/envoy/http/backend_routing:__subpackages__",
     "//src/envoy/http/backend_routing:__subpackages__",
+    "//src/go:__subpackages__",
 ]
 
 package(default_visibility = BACKEND_ROUTING_VISIBILITY)

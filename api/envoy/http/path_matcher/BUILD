@@ -4,6 +4,7 @@ load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 PATH_MATCHER_VISIBILITY = [
     "//api/envoy/http/path_matcher:__subpackages__",
     "//src/envoy/http/path_matcher:__subpackages__",
+    "//src/go:__subpackages__",
 ]
 
 package(default_visibility = PATH_MATCHER_VISIBILITY)

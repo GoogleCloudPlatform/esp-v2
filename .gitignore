@@ -2,3 +2,5 @@ bazel-*
 vendor/
 bin/
 *.pyc
+node_modules/
+src/go/proto/
