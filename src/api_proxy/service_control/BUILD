@@ -31,7 +31,7 @@ cc_test(
     linkstatic = 1,
     deps = [
         ":request_builder_lib",
-        "//external:googletest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -42,8 +42,8 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":request_builder_lib",
-        "//external:googletest_prod",
         "//external:service_config",
+        "@com_google_googletest//:gtest_prod",
     ],
 )
 
@@ -56,6 +56,6 @@ cc_test(
     linkstatic = 1,
     deps = [
         ":logs_metrics_loader_lib",
-        "//external:googletest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )

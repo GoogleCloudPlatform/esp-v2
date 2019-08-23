@@ -14,13 +14,15 @@
 
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
-SERVICE_CONTROL_CLIENT_SHA1 = "8189638f8e2c410010befe5dbd81e267a15e3e17"
+# July 1, 2019
+SERVICE_CONTROL_CLIENT_SHA1 = "ea87b64276b52ea2e650e18c5416a29bc7500278"
 
 def service_control_client_repositories(bind = True):
     git_repository(
         name = "servicecontrol_client_git",
         commit = SERVICE_CONTROL_CLIENT_SHA1,
         remote = "https://github.com/cloudendpoints/service-control-client-cxx.git",
+	repo_mapping = {"@googleapis_git": "@com_github_googleapis_googleapis"},
     )
 
     if bind:

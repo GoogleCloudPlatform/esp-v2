@@ -120,14 +120,14 @@ func TestHttp1JWT(t *testing.T) {
 			httpMethod:  "GET",
 			httpPath:    "/auth/info/auth0",
 			token:       testdata.FakeCloudToken,
-			wantedError: "401 Unauthorized",
+			wantedError: "403 Forbidden",
 		},
 		{
 			desc:        "Fail, with valid JWT token, with incorrect audience",
 			httpMethod:  "GET",
 			httpPath:    "/auth/info/auth0",
 			token:       testdata.FakeCloudTokenSingleAudience1,
-			wantedError: "401 Unauthorized",
+			wantedError: "403 Forbidden",
 		},
 	}
 	for _, tc := range testData {

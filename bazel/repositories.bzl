@@ -12,17 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load(":abseil.bzl", "abseil_repositories")
 load(":googleapis.bzl", "googleapis_repositories")
-load(":googletest.bzl", "googletest_repositories")
-load(":protobuf.bzl", "protobuf_repositories")
 load(":service_control.bzl", "service_control_client_repositories")
 load(":bazel_rules_python.bzl", "bazel_rules_python_repositories")
 
-def all_repositories():
-    abseil_repositories()
-    googletest_repositories()
-    protobuf_repositories()
+def service_control_repositories():
     googleapis_repositories()
     service_control_client_repositories()
     bazel_rules_python_repositories()
