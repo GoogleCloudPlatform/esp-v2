@@ -16,7 +16,7 @@ package testdata
 
 var (
 	grpcEchoServiceConfigJsonStr = `{
-  "producer_project_id": "producer project",
+  "producer_project_id": "producer-project",
   "name": "echo.endpoints.cloudesf-testing.cloud.goog",
   "title": "GRPC Echo Test",
   "apis": [{

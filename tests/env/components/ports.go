@@ -38,6 +38,8 @@ const (
 	TestGRPC
 	TestGRPCErrors
 	TestGRPCJwt
+	TestGRPCFallback
+	TestGRPCLargeRequest
 	TestGRPCWeb
 	TestGRPCInterops
 	TestGRPCInteropMiniStress

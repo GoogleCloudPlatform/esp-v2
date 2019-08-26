@@ -26,6 +26,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/genproto/googleapis/api/annotations"
+	"google.golang.org/genproto/protobuf/api"
 
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
@@ -93,6 +94,11 @@ func (e *TestEnv) OverrideMockMetadata(newMetdaData map[string]string) {
 	e.mockMetadataOverride = newMetdaData
 }
 
+// OverrideBackend overrides mock backend.
+func (e *TestEnv) OverrideBackendService(newBackendService string) {
+	e.backendService = newBackendService
+}
+
 // OverrideMockServiceManagementServer replaces mock Service Management implementation by a custom server.
 // Set s nil to turn off service management.
 func (e *TestEnv) OverrideMockServiceManagementServer(s ServiceManagementServer) {
@@ -122,6 +128,11 @@ func (e *TestEnv) OverrideSystemParameters(systemParameters *conf.SystemParamete
 // OverrideQuota overrides Service.Quota.
 func (e *TestEnv) OverrideQuota(quota *conf.Quota) {
 	e.fakeServiceConfig.Quota = quota
+}
+
+// AppendApiMethods appends methods to the service config.
+func (e *TestEnv) AppendApiMethods(methods []*api.Method) {
+	e.fakeServiceConfig.Apis[0].Methods = append(e.fakeServiceConfig.Apis[0].Methods, methods...)
 }
 
 // AppendHttpRules appends Service.Http.Rules.
