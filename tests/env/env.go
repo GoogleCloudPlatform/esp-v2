@@ -68,6 +68,7 @@ type TestEnv struct {
 	ports                       *components.Ports
 	envoyDrainTimeInSec         int
 	ServiceControlServer        *components.MockServiceCtrl
+	FakeStackdriverServer       *components.FakeTraceServer
 }
 
 func NewTestEnv(name uint16, backendService string, jwtProviders []string) *TestEnv {
@@ -170,6 +171,11 @@ func addDynamicRoutingBackendPort(serviceConfig *conf.Service, port uint16) erro
 		}
 	}
 	return nil
+}
+
+func (e *TestEnv) SetupFakeTraceServer() {
+	// Start fake stackdriver server
+	e.FakeStackdriverServer = components.NewFakeStackdriver(e.ports.FakeStackdriverPort)
 }
 
 // Setup setups Envoy, ConfigManager, and Backend server for test.
@@ -350,5 +356,11 @@ func (e *TestEnv) TearDown() {
 			glog.Errorf("error stopping Dynamic Routing Echo Server: %v", err)
 		}
 	}
+
+	// Only need to stop the stackdriver server if it was ever enabled
+	if e.FakeStackdriverServer != nil {
+		e.FakeStackdriverServer.StopAndWait()
+	}
+
 	glog.Infof("finish tearing down...")
 }

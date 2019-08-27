@@ -59,6 +59,7 @@ const (
 	TestServiceControlCheckNetworkFailClosed
 	TestServiceControlCheckNetworkFailOpen
 	TestServiceControlCheckRetry
+	TestServiceControlCheckTracesWithRetry
 	TestServiceControlCheckTimeout
 	TestServiceControlCheckWrongServerName
 	TestServiceControlCredentialId
@@ -79,7 +80,8 @@ const (
 	TestServiceControlRequestInDynamicRouting
 	TestServiceControlRequestWithAllowCors
 	TestServiceControlRequestWithoutAllowCors
-	TestServiceControlSkip
+	TestServiceControlSkipUsage
+	TestServiceControlSkipUsageTraces
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
 	TestTranscodingErrors
@@ -93,7 +95,7 @@ const (
 const (
 	portBase uint16 = 20000
 	// Maximum number of ports used in each test.
-	portNum uint16 = 5
+	portNum uint16 = 6
 )
 
 // Ports stores all used ports
@@ -103,6 +105,7 @@ type Ports struct {
 	ListenerPort              uint16
 	DiscoveryPort             uint16
 	AdminPort                 uint16
+	FakeStackdriverPort       uint16
 }
 
 func allocPortBase(name uint16) uint16 {
@@ -144,5 +147,6 @@ func NewPorts(name uint16) *Ports {
 		ListenerPort:              base + 2,
 		DiscoveryPort:             base + 3,
 		AdminPort:                 base + 4,
+		FakeStackdriverPort:       base + 5,
 	}
 }

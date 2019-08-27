@@ -70,7 +70,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 		wantHandlerRequestCount int32
 	}{
 		{
-			desc:                    "Failed, the proxy will do 3 times check request and the handler all sleep over",
+			desc:                    "Backend unresponsive, the proxy will retry the check request 3 times and fail",
 			clientProtocol:          "http",
 			httpMethod:              "GET",
 			sleepTimes:              3,
@@ -80,21 +80,21 @@ func TestServiceControlCheckRetry(t *testing.T) {
 			wantError:               `500 Internal Server Error, INTERNAL:Failed to call service control`,
 		},
 		{
-			desc:                    "Successful, the proxy will do 3 times check request and get the response in the last request",
+			desc:                    "Backend responsive, the proxy will retry the check request 3 times and get the response in the last request",
 			clientProtocol:          "http",
 			httpMethod:              "GET",
 			sleepTimes:              2,
-			sleepLengthMs:           200,
+			sleepLengthMs:           200, // The handler will sleep too long twice, so envoy will retry these requests
 			method:                  "/v1/shelves?key=api-key-1",
 			wantHandlerRequestCount: 3,
 			wantResp:                `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
 		{
-			desc:                    "Successful, the timeout length is longer than the sleep time of handler",
+			desc:                    "Backend responsive, the proxy will do a check request once and get a response with no retries",
 			clientProtocol:          "http",
 			httpMethod:              "GET",
 			sleepTimes:              3,
-			sleepLengthMs:           0,
+			sleepLengthMs:           0, // The handler will not sleep, so envoy's request to the backend should be successful
 			method:                  "/v1/shelves?key=api-key-2",
 			wantHandlerRequestCount: 1,
 			wantResp:                `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
