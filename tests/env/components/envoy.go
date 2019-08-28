@@ -25,6 +25,8 @@ import (
 const (
 	envoyPath = "../../bazel-bin/src/envoy/envoy"
 )
+
+// TODO(b/140134401): Instead of hardcoding the YAML here, use our bootstrapper
 const envoyConfBootstrapYaml = `
 node:
   id: "api_proxy"
@@ -51,6 +53,18 @@ static_resources:
     lb_policy: ROUND_ROBIN
     http2_protocol_options: {}
 
+tracing:
+  http:
+    name: envoy.tracers.opencensus
+    typedConfig:
+      "@type": type.googleapis.com/envoy.config.trace.v2.OpenCensusConfig
+      traceConfig:
+        constantSampler:
+          decision: ALWAYS_ON
+      stackdriverExporterEnabled: true
+      stackdriverProjectId: fake-123
+      stackdriverAddress: "localhost:{{.FakeStackdriverPort}}"
+
 admin:
   access_log_path: /dev/null
   address:
@@ -73,6 +87,13 @@ func CreateEnvoyConf(path string, ports *Ports) error {
 		return err
 	}
 
+	// Output the final bootstrap config to the console to improve debuggability
+	glog.Infof("Envoy bootstrap config below")
+	if err := tmpl.Execute(os.Stdout, ports); err != nil {
+		return err
+	}
+
+	// Write the final bootstrap config to the filesystem for envoy
 	yamlFile, err := os.Create(path)
 	if err != nil {
 		glog.Errorf("failed to create YAML file %v: %v", path, err)

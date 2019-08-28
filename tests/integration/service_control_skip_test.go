@@ -32,7 +32,7 @@ func TestServiceControlSkipUsage(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlSkip, "echo", nil)
+	s := env.NewTestEnv(comp.TestServiceControlSkipUsage, "echo", nil)
 	s.AppendUsageRules(
 		[]*conf.UsageRule{
 			{
