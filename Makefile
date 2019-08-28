@@ -92,14 +92,15 @@ test-envoy: format
 .PHONY: integration-test integration-debug
 integration-test: build build-envoy build-grpc-interop build-grpc-echo
 	@echo "--> running integration tests"
-	@go test ./tests/env/...
-	@go test ./tests/integration/...
+	# logtostderr will cause all glogs in the test framework to print to the console (not too much bloat)
+	@go test ./tests/env/... --logtostderr
+	@go test ./tests/integration/... --logtostderr
 
 integration-debug:
 	@echo "--> running integration tests and showing debug logs"
-	@go test -v ./tests/env/...
+	@go test -v ./tests/env/... --logtostderr
 	# debug-components can be set as "all", "configmanager", or "envoy".
-	@go test -v ./tests/integration/... --debug_components=all
+	@go test -v ./tests/integration/... --debug_components=all --logtostderr
 
 #-----------------------------------------------------------------------------
 # Target: go dependencies

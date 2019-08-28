@@ -100,7 +100,7 @@ const (
 	portNum uint16 = 6
 )
 
-// Ports stores all used ports
+// Ports stores all used ports and other ids for shared resources
 type Ports struct {
 	BackendServerPort         uint16
 	DynamicRoutingBackendPort uint16
@@ -110,15 +110,15 @@ type Ports struct {
 	FakeStackdriverPort       uint16
 }
 
-func allocPortBase(name uint16) uint16 {
-	base := portBase + name*portNum
+func allocPortBase(testId uint16) uint16 {
+	base := portBase + testId*portNum
 	for i := 0; i < 10; i++ {
 		if allPortFree(base, portNum) {
 			return base
 		}
 		base += maxTestNum * portNum
 	}
-	glog.Warningf("test(%v) could not find free ports, continue the test...", name)
+	glog.Warningf("test(%v) could not find free ports, continue the test...", testId)
 	return base
 }
 
@@ -140,10 +140,9 @@ func IsPortUsed(port uint16) bool {
 }
 
 // NewPorts allocate all ports based on test id.
-func NewPorts(name uint16) *Ports {
-	base := allocPortBase(name)
-	glog.Infof("Ports generated for test(%v) is from %v - %v", name, base, base+3)
-	return &Ports{
+func NewPorts(testId uint16) *Ports {
+	base := allocPortBase(testId)
+	ports := &Ports{
 		BackendServerPort:         base,
 		DynamicRoutingBackendPort: base + 1,
 		ListenerPort:              base + 2,
@@ -151,4 +150,6 @@ func NewPorts(name uint16) *Ports {
 		AdminPort:                 base + 4,
 		FakeStackdriverPort:       base + 5,
 	}
+	glog.Infof(fmt.Sprintf("Ports generated for test(%v) are: %+v", testId, ports))
+	return ports
 }

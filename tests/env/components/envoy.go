@@ -15,105 +15,67 @@
 package components
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
-	"text/template"
+	"strconv"
 
 	"github.com/golang/glog"
 )
 
 const (
-	envoyPath = "../../bazel-bin/src/envoy/envoy"
+	envoyPath        = "../../bazel-bin/src/envoy/envoy"
+	bootstrapperPath = "../../bin/bootstrap"
 )
-
-// TODO(b/140134401): Instead of hardcoding the YAML here, use our bootstrapper
-const envoyConfBootstrapYaml = `
-node:
-  id: "api_proxy"
-  cluster: "api_proxy_cluster"
-
-dynamic_resources:
-  lds_config: {ads: {}}
-  cds_config: {ads: {}}
-  ads_config:
-    api_type: GRPC
-    grpc_services:
-      envoy_grpc:
-        cluster_name: ads_cluster
-
-static_resources:
-  clusters:
-  - name: ads_cluster
-    connect_timeout: { seconds: 5 }
-    type: STATIC
-    hosts:
-    - socket_address:
-        address: 127.0.0.1
-        port_value: {{.DiscoveryPort}}
-    lb_policy: ROUND_ROBIN
-    http2_protocol_options: {}
-
-tracing:
-  http:
-    name: envoy.tracers.opencensus
-    typedConfig:
-      "@type": type.googleapis.com/envoy.config.trace.v2.OpenCensusConfig
-      traceConfig:
-        constantSampler:
-          decision: ALWAYS_ON
-      stackdriverExporterEnabled: true
-      stackdriverProjectId: fake-123
-      stackdriverAddress: "localhost:{{.FakeStackdriverPort}}"
-
-admin:
-  access_log_path: /dev/null
-  address:
-    socket_address:
-      address: 0.0.0.0
-      port_value: {{.AdminPort}}
-`
 
 // Envoy stores data for Envoy process
 type Envoy struct {
 	*Cmd
 }
 
-// CreateEnvoyConf create envoy config.
-func CreateEnvoyConf(path string, ports *Ports) error {
-	confTmpl := envoyConfBootstrapYaml
-	tmpl, err := template.New("test").Parse(confTmpl)
-	if err != nil {
-		glog.Errorf("failed to parse config YAML template: %v", err)
-		return err
+// createEnvoyConf create envoy config.
+func createEnvoyConf(configPath string, ports *Ports) error {
+
+	glog.Infof("Outputting envoy bootstrap config to: %v", configPath)
+
+	args := []string{
+		"--enable_tracing=true",
+		"--tracing_sample_rate=1.0",
+		"--tracing_project_id=testing-project-123",
+		"--non_gcp=true",
+		fmt.Sprintf("--discovery_address=http://127.0.0.1:%v", ports.DiscoveryPort),
+		fmt.Sprintf("--admin_port=%v", ports.AdminPort),
+		// This address must be in gRPC format: https://github.com/grpc/grpc/blob/master/doc/naming.md
+		fmt.Sprintf("--tracing_stackdriver_address=ipv4:127.0.0.1:%v", ports.FakeStackdriverPort),
+		configPath,
 	}
 
-	// Output the final bootstrap config to the console to improve debuggability
-	glog.Infof("Envoy bootstrap config below")
-	if err := tmpl.Execute(os.Stdout, ports); err != nil {
-		return err
-	}
-
-	// Write the final bootstrap config to the filesystem for envoy
-	yamlFile, err := os.Create(path)
-	if err != nil {
-		glog.Errorf("failed to create YAML file %v: %v", path, err)
-		return err
-	}
-	defer func() {
-		_ = yamlFile.Close()
-	}()
-
-	return tmpl.Execute(yamlFile, ports)
+	// Call bootstrapper to create the bootstrap config
+	glog.Infof("Calling bootstrapper at %v with args: %v", bootstrapperPath, args)
+	cmd := exec.Command(bootstrapperPath, args...)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	return cmd.Run()
 }
 
 // NewEnvoy creates a new Envoy struct and starts envoy.
-func NewEnvoy(args []string, confPath string, ports *Ports) (*Envoy, error) {
-	// set concurrency to 1 to have only one worker thread to test client cache.
-	args = append(args, "-c", confPath, "--concurrency", "1")
-	if err := CreateEnvoyConf(confPath, ports); err != nil {
+func NewEnvoy(args []string, confPath string, ports *Ports, testId uint16) (*Envoy, error) {
+
+	if err := createEnvoyConf(confPath, ports); err != nil {
 		return nil, err
 	}
 
+	args = append(args,
+		"-c", confPath,
+		// Set concurrency to 1 to have only one worker thread to test client cache.
+		"--concurrency", "1",
+		// Allows multiple envoys to run on a single machine. If one test fails to stop envoy, this ID
+		// will allow other tests to run afterwords without conflicting.
+		// See: https://www.envoyproxy.io/docs/envoy/latest/operations/cli#cmdoption-base-id
+		"--base-id", strconv.Itoa(int(testId)),
+	)
+
+	glog.Infof("Calling envoy at %v with args: %v", envoyPath, args)
 	cmd := exec.Command(envoyPath, args...)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout

@@ -50,6 +50,7 @@ type ServiceManagementServer interface {
 }
 
 type TestEnv struct {
+	testId                      uint16
 	enableDynamicRoutingBackend bool
 	mockMetadata                bool
 	enableScNetworkFailOpen     bool
@@ -72,13 +73,15 @@ type TestEnv struct {
 	FakeStackdriverServer       *components.FakeTraceServer
 }
 
-func NewTestEnv(name uint16, backendService string, jwtProviders []string) *TestEnv {
+func NewTestEnv(testId uint16, backendService string, jwtProviders []string) *TestEnv {
+	glog.Infof("Running test function #%v", testId)
 	fakeServiceConfig := proto.Clone(testdata.ConfigMap[backendService]).(*conf.Service)
 	return &TestEnv{
+		testId:                      testId,
 		mockMetadata:                true,
 		mockServiceManagementServer: components.NewMockServiceMrg(fakeServiceConfig.GetName(), fakeServiceConfig),
 		backendService:              backendService,
-		ports:                       components.NewPorts(name),
+		ports:                       components.NewPorts(testId),
 		fakeServiceConfig:           fakeServiceConfig,
 		mockJwtProviders:            jwtProviders,
 		ServiceControlServer:        components.NewMockServiceCtrl(fakeServiceConfig.GetName()),
@@ -241,8 +244,8 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	}
 
 	// Starts envoy.
-	envoyConfPath := "/tmp/apiproxy-testdata-bootstrap.yaml"
-	envoyArgs := []string{}
+	envoyConfPath := fmt.Sprintf("/tmp/apiproxy-testdata-bootstrap-%v.yaml", e.testId)
+	var envoyArgs []string
 	if *debugComponents == "all" || *debugComponents == "envoy" {
 		envoyArgs = append(envoyArgs, "--log-level", "debug")
 		if e.envoyDrainTimeInSec == 0 {
@@ -253,7 +256,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		envoyArgs = append(envoyArgs, "--drain-time-s", strconv.Itoa(e.envoyDrainTimeInSec))
 	}
 
-	e.envoy, err = components.NewEnvoy(envoyArgs, envoyConfPath, e.ports)
+	e.envoy, err = components.NewEnvoy(envoyArgs, envoyConfPath, e.ports, e.testId)
 	if err != nil {
 		glog.Errorf("unable to create Envoy %v", err)
 		return err

@@ -31,7 +31,7 @@ import (
 )
 
 var (
-	DiscoveryPort = flag.Int("discovery_port", 8790, "discovery service port")
+	DiscoveryPort = flag.Int("discovery_port", 8790, "Port that configmanager should serve ADS")
 )
 
 func main() {
