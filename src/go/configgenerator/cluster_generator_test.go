@@ -100,7 +100,8 @@ func TestMakeServiceControlCluster(t *testing.T) {
 
 	for i, tc := range testData {
 		flag.Set("backend_protocol", tc.backendProtocol)
-		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
+		options := sc.EnvoyConfigOptionsFromFlags()
+		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -257,12 +258,13 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 		if tc.backendDnsLookupFamily != "" {
 			flag.Set("backend_dns_lookup_family", tc.backendDnsLookupFamily)
 		}
-		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
+		options := sc.EnvoyConfigOptionsFromFlags()
+		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		clusters, err := makeBackendRoutingClusters(fakeServiceInfo, sc.EnvoyConfigOptionsFromFlags())
+		clusters, err := makeBackendRoutingClusters(fakeServiceInfo)
 		if err != nil {
 			if tc.wantedError == "" || !strings.Contains(err.Error(), tc.wantedError) {
 				t.Fatal(err)
@@ -396,12 +398,13 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 			},
 		}
 
-		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID)
+		options := sc.EnvoyConfigOptionsFromFlags()
+		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, options)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		clusters, err := makeJwtProviderClusters(fakeServiceInfo, sc.EnvoyConfigOptionsFromFlags())
+		clusters, err := makeJwtProviderClusters(fakeServiceInfo)
 		if err != nil {
 			t.Fatal(err)
 		}

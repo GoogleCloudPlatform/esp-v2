@@ -26,9 +26,9 @@ import (
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 )
 
-func TestServiceToBoostrapConfig(t *testing.T) {
+func TestServiceToBootstrapConfig(t *testing.T) {
 	flag.Set("backend_protocol", "HTTP1")
-	gotBootstrap, err := ServiceToBoostrapConfig(testdata.FakeBookstoreConfig, testdata.FakeConfigID, sc.EnvoyConfigOptionsFromFlags())
+	gotBootstrap, err := ServiceToBootstrapConfig(testdata.FakeBookstoreConfig, testdata.FakeConfigID, sc.EnvoyConfigOptionsFromFlags())
 	if err != nil {
 		t.Fatal(err)
 	}

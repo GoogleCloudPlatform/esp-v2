@@ -30,9 +30,9 @@ import (
 )
 
 // MakeClusters provides dynamic cluster settings for Envoy
-func MakeClusters(serviceInfo *sc.ServiceInfo, options sc.EnvoyConfigOptions) ([]*cdspb.Cluster, error) {
+func MakeClusters(serviceInfo *sc.ServiceInfo) ([]*cdspb.Cluster, error) {
 	var clusters []*cdspb.Cluster
-	backendCluster, err := makeBackendCluster(serviceInfo, options)
+	backendCluster, err := makeBackendCluster(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func MakeClusters(serviceInfo *sc.ServiceInfo, options sc.EnvoyConfigOptions) ([
 		clusters = append(clusters, backendCluster)
 	}
 
-	metadataCluster, err := makeMetadataCluster(serviceInfo, options)
+	metadataCluster, err := makeMetadataCluster(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func MakeClusters(serviceInfo *sc.ServiceInfo, options sc.EnvoyConfigOptions) ([
 		clusters = append(clusters, scCluster)
 	}
 
-	brClusters, err := makeBackendRoutingClusters(serviceInfo, options)
+	brClusters, err := makeBackendRoutingClusters(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func MakeClusters(serviceInfo *sc.ServiceInfo, options sc.EnvoyConfigOptions) ([
 		clusters = append(clusters, brClusters...)
 	}
 
-	providerClusters, err := makeJwtProviderClusters(serviceInfo, options)
+	providerClusters, err := makeJwtProviderClusters(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -77,13 +77,13 @@ func MakeClusters(serviceInfo *sc.ServiceInfo, options sc.EnvoyConfigOptions) ([
 	return clusters, nil
 }
 
-func makeMetadataCluster(serviceInfo *sc.ServiceInfo, options sc.EnvoyConfigOptions) (*cdspb.Cluster, error) {
+func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*cdspb.Cluster, error) {
 	scheme, hostname, port, _, err := ut.ParseURI(*metadata.MetadataURL)
 	if err != nil {
 		return nil, err
 	}
 
-	connectTimeoutProto := ptypes.DurationProto(options.ClusterConnectTimeout)
+	connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
 	c := &cdspb.Cluster{
 		Name:           ut.MetadataServerClusterName,
 		LbPolicy:       cdspb.Cluster_ROUND_ROBIN,
@@ -103,7 +103,7 @@ func makeMetadataCluster(serviceInfo *sc.ServiceInfo, options sc.EnvoyConfigOpti
 	return c, nil
 }
 
-func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo, options sc.EnvoyConfigOptions) ([]*cdspb.Cluster, error) {
+func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*cdspb.Cluster, error) {
 	var providerClusters []*cdspb.Cluster
 	authn := serviceInfo.ServiceConfig().GetAuthentication()
 	for _, provider := range authn.GetProviders() {
@@ -130,7 +130,7 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo, options sc.EnvoyConfig
 			provider.JwksUri = ut.FakeJwksUri
 		}
 
-		connectTimeoutProto := ptypes.DurationProto(options.ClusterConnectTimeout)
+		connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
 		c := &cdspb.Cluster{
 			Name:           provider.GetIssuer(),
 			LbPolicy:       cdspb.Cluster_ROUND_ROBIN,
@@ -152,14 +152,14 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo, options sc.EnvoyConfig
 	return providerClusters, nil
 }
 
-func makeBackendCluster(serviceInfo *sc.ServiceInfo, options sc.EnvoyConfigOptions) (*cdspb.Cluster, error) {
-	connectTimeoutProto := ptypes.DurationProto(options.ClusterConnectTimeout)
+func makeBackendCluster(serviceInfo *sc.ServiceInfo) (*cdspb.Cluster, error) {
+	connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
 	c := &cdspb.Cluster{
 		Name:                 serviceInfo.ApiName,
 		LbPolicy:             cdspb.Cluster_ROUND_ROBIN,
 		ConnectTimeout:       connectTimeoutProto,
 		ClusterDiscoveryType: &cdspb.Cluster_Type{cdspb.Cluster_STRICT_DNS},
-		LoadAssignment:       ut.CreateLoadAssignment(options.ClusterAddress, uint32(options.ClusterPort)),
+		LoadAssignment:       ut.CreateLoadAssignment(serviceInfo.Options.ClusterAddress, uint32(serviceInfo.Options.ClusterPort)),
 	}
 	// gRPC and HTTP/2 need this configuration.
 	if serviceInfo.BackendProtocol != ut.HTTP1 {
@@ -208,10 +208,10 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*cdspb.Cluster, err
 	return c, nil
 }
 
-func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo, options sc.EnvoyConfigOptions) ([]*cdspb.Cluster, error) {
+func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]*cdspb.Cluster, error) {
 	var brClusters []*cdspb.Cluster
 
-	connectTimeoutProto := ptypes.DurationProto(options.ClusterConnectTimeout)
+	connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
 	for _, v := range serviceInfo.BackendRoutingClusters {
 		c := &cdspb.Cluster{
 			Name:                 v.ClusterName,
@@ -223,7 +223,7 @@ func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo, options sc.EnvoyCon
 				Sni: v.Hostname,
 			},
 		}
-		switch options.BackendDnsLookupFamily {
+		switch serviceInfo.Options.BackendDnsLookupFamily {
 		case "auto":
 			c.DnsLookupFamily = cdspb.Cluster_AUTO
 		case "v4only":
@@ -231,7 +231,7 @@ func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo, options sc.EnvoyCon
 		case "v6only":
 			c.DnsLookupFamily = cdspb.Cluster_V6_ONLY
 		default:
-			return nil, fmt.Errorf("Invalid DnsLookupFamily: %s; Only auto, v4only or v6only are valid.", options.BackendDnsLookupFamily)
+			return nil, fmt.Errorf("Invalid DnsLookupFamily: %s; Only auto, v4only or v6only are valid.", serviceInfo.Options.BackendDnsLookupFamily)
 		}
 
 		brClusters = append(brClusters, c)

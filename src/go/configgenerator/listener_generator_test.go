@@ -85,7 +85,9 @@ func TestTranscoderFilter(t *testing.T) {
 
 	for i, tc := range testData {
 		flag.Set("backend_protocol", "gRPC")
-		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
+
+		options := sc.EnvoyConfigOptionsFromFlags()
+		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -168,7 +170,8 @@ func TestBackendAuthFilter(t *testing.T) {
 
 	flag.Set("backend_protocol", "http2")
 	flag.Set("enable_backend_routing", "true")
-	fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID)
+	options := sc.EnvoyConfigOptionsFromFlags()
+	fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, options)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -505,7 +508,9 @@ func TestPathMatcherFilter(t *testing.T) {
 	for i, tc := range testData {
 		flag.Set("backend_protocol", tc.backendProtocol)
 		flag.Set("enable_backend_routing", "true")
-		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
+
+		options := sc.EnvoyConfigOptionsFromFlags()
+		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
 		if err != nil {
 			t.Fatal(err)
 		}
