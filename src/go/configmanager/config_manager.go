@@ -164,7 +164,7 @@ func (m *ConfigManager) updateSnapshot() error {
 	if err != nil {
 		return fmt.Errorf("fail to fetch service config, %s", err)
 	}
-	m.serviceInfo, err = sc.NewServiceInfoFromServiceConfig(serviceConfig, m.curConfigID)
+	m.serviceInfo, err = sc.NewServiceInfoFromServiceConfig(serviceConfig, m.curConfigID, m.envoyConfigOptions)
 	if err != nil {
 		return fmt.Errorf("fail to initialize ServiceInfo, %s", err)
 	}
@@ -184,7 +184,7 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	m.Infof("making configuration for api: %v", m.serviceInfo.ApiName)
 
 	var clusterResources, endpoints, routes []cache.Resource
-	clusters, err := gen.MakeClusters(m.serviceInfo, m.envoyConfigOptions)
+	clusters, err := gen.MakeClusters(m.serviceInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +198,7 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	}
 
 	m.Infof("adding Listener configuration for api: %v", m.serviceInfo.Name)
-	listener, err := gen.MakeListeners(m.serviceInfo, m.envoyConfigOptions)
+	listener, err := gen.MakeListener(m.serviceInfo)
 	if err != nil {
 		return nil, err
 	}

@@ -111,7 +111,8 @@ func TestProcessEndpoints(t *testing.T) {
 
 	for i, tc := range testData {
 		flag.Set("backend_protocol", "grpc")
-		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
+		options := EnvoyConfigOptionsFromFlags()
+		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -276,7 +277,9 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 	}
 	for i, tc := range testData {
 		flag.Set("backend_protocol", "grpc")
-		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
+
+		options := EnvoyConfigOptionsFromFlags()
+		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -551,7 +554,9 @@ func TestMethods(t *testing.T) {
 
 	for i, tc := range testData {
 		flag.Set("backend_protocol", tc.backendProtocol)
-		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
+
+		options := EnvoyConfigOptionsFromFlags()
+		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -617,7 +622,9 @@ func TestProcessBackendRule(t *testing.T) {
 	for i, tc := range testData {
 		flag.Set("backend_protocol", "grpc")
 		flag.Set("enable_backend_routing", "true")
-		_, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
+
+		options := EnvoyConfigOptionsFromFlags()
+		_, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
 		if (err == nil && tc.wantedErr != "") || (err != nil && tc.wantedErr == "") {
 			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, err, tc.wantedErr)
 		}
@@ -717,7 +724,9 @@ func TestProcessQuota(t *testing.T) {
 	for i, tc := range testData {
 		flag.Set("backend_protocol", "grpc")
 		flag.Set("enable_backend_routing", "true")
-		serviceInfo, _ := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID)
+
+		options := EnvoyConfigOptionsFromFlags()
+		serviceInfo, _ := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
 
 		for key, gotMethod := range serviceInfo.Methods {
 			wantMethod := tc.wantMethods[key]

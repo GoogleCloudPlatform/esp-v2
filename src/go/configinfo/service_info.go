@@ -21,7 +21,6 @@ import (
 	"sort"
 	"strings"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes/duration"
@@ -58,6 +57,7 @@ type ServiceInfo struct {
 	// inside ServiceInfo.
 	serviceConfig *conf.Service
 	AccessToken   *commonpb.AccessToken
+	Options       EnvoyConfigOptions
 }
 
 type backendRoutingCluster struct {
@@ -67,7 +67,7 @@ type backendRoutingCluster struct {
 }
 
 // NewServiceInfoFromServiceConfig returns an instance of ServiceInfo.
-func NewServiceInfoFromServiceConfig(serviceConfig *conf.Service, id string) (*ServiceInfo, error) {
+func NewServiceInfoFromServiceConfig(serviceConfig *conf.Service, id string, options EnvoyConfigOptions) (*ServiceInfo, error) {
 	if serviceConfig == nil {
 		return nil, fmt.Errorf("unexpected empty service config")
 	}
@@ -80,7 +80,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *conf.Service, id string) (*S
 	}
 
 	var backendProtocol ut.BackendProtocol
-	switch strings.ToLower(*flags.BackendProtocol) {
+	switch strings.ToLower(options.BackendProtocol) {
 	case "http1":
 		backendProtocol = ut.HTTP1
 	case "http2":
@@ -97,6 +97,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *conf.Service, id string) (*S
 		ConfigID:        id,
 		serviceConfig:   serviceConfig,
 		BackendProtocol: backendProtocol,
+		Options:         options,
 	}
 
 	// Order matters.
@@ -138,8 +139,8 @@ func (s *ServiceInfo) processApis() {
 }
 
 func (s *ServiceInfo) processAccessToken() {
-	if *flags.ServiceAccountKey != "" {
-		data, _ := ioutil.ReadFile(*flags.ServiceAccountKey)
+	if s.Options.ServiceAccountKey != "" {
+		data, _ := ioutil.ReadFile(s.Options.ServiceAccountKey)
 		s.AccessToken = &commonpb.AccessToken{
 			TokenType: &commonpb.AccessToken_ServiceAccountSecret{
 				ServiceAccountSecret: &commonpb.DataSource{
@@ -267,7 +268,7 @@ func (s *ServiceInfo) addOptionMethod(index int, path string) {
 }
 
 func (s *ServiceInfo) processBackendRule() error {
-	if !*flags.EnableBackendRouting {
+	if !s.Options.EnableBackendRouting {
 		return nil
 	}
 	backendRoutingClustersMap := make(map[string]string)

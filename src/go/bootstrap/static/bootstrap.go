@@ -25,25 +25,25 @@ import (
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-// ServiceToBoostrapConfig outputs envoy bootstrap config from service config.
+// ServiceToBootstrapConfig outputs envoy bootstrap config from service config.
 // id is the service configuration ID. It is generated when deploying
 // service config to ServiceManagement Server, example: 2017-02-13r0.
-func ServiceToBoostrapConfig(serviceConfig *conf.Service, id string, options sc.EnvoyConfigOptions) (*bootstrappb.Bootstrap, error) {
+func ServiceToBootstrapConfig(serviceConfig *conf.Service, id string, options sc.EnvoyConfigOptions) (*bootstrappb.Bootstrap, error) {
 	bootstrap := &bootstrappb.Bootstrap{
 		Node:  bt.CreateNode(),
 		Admin: bt.CreateAdmin(),
 	}
 
-	serviceInfo, err := sc.NewServiceInfoFromServiceConfig(serviceConfig, id)
+	serviceInfo, err := sc.NewServiceInfoFromServiceConfig(serviceConfig, id, options)
 	if err != nil {
 		return nil, fmt.Errorf("fail to initialize ServiceInfo, %s", err)
 	}
 
-	listener, err := gen.MakeListeners(serviceInfo, options)
+	listener, err := gen.MakeListener(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
-	clusters, err := gen.MakeClusters(serviceInfo, options)
+	clusters, err := gen.MakeClusters(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
