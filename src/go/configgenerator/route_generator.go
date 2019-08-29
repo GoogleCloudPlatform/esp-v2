@@ -18,10 +18,9 @@ import (
 	"fmt"
 	"regexp"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
+	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	"github.com/golang/protobuf/ptypes/wrappers"
 
-	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
 	rdspb "github.com/envoyproxy/data-plane-api/api/rds"
 	routepb "github.com/envoyproxy/data-plane-api/api/route"
@@ -33,14 +32,14 @@ const (
 	virtualHostName = "backend"
 )
 
-func MakeRouteConfig(serviceInfo *sc.ServiceInfo) (*rdspb.RouteConfiguration, error) {
+func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*rdspb.RouteConfiguration, error) {
 	var virtualHosts []*routepb.VirtualHost
 	host := routepb.VirtualHost{
 		Name:    virtualHostName,
 		Domains: []string{"*"},
 	}
 
-	if *flags.EnableBackendRouting {
+	if serviceInfo.Options.EnableBackendRouting {
 		brRoute, err := makeDynamicRoutingConfig(serviceInfo)
 		if err != nil {
 			return nil, err
@@ -62,9 +61,9 @@ func MakeRouteConfig(serviceInfo *sc.ServiceInfo) (*rdspb.RouteConfiguration, er
 		},
 	})
 
-	switch *flags.CorsPreset {
+	switch serviceInfo.Options.CorsPreset {
 	case "basic":
-		org := *flags.CorsAllowOrigin
+		org := serviceInfo.Options.CorsAllowOrigin
 		if org == "" {
 			return nil, fmt.Errorf("cors_allow_origin cannot be empty when cors_preset=basic")
 		}
@@ -72,7 +71,7 @@ func MakeRouteConfig(serviceInfo *sc.ServiceInfo) (*rdspb.RouteConfiguration, er
 			AllowOrigin: []string{org},
 		}
 	case "cors_with_regex":
-		orgReg := *flags.CorsAllowOriginRegex
+		orgReg := serviceInfo.Options.CorsAllowOriginRegex
 		if orgReg == "" {
 			return nil, fmt.Errorf("cors_allow_origin_regex cannot be empty when cors_preset=cors_with_regex")
 		}
@@ -80,7 +79,8 @@ func MakeRouteConfig(serviceInfo *sc.ServiceInfo) (*rdspb.RouteConfiguration, er
 			AllowOriginRegex: []string{orgReg},
 		}
 	case "":
-		if *flags.CorsAllowMethods != "" || *flags.CorsAllowHeaders != "" || *flags.CorsExposeHeaders != "" || *flags.CorsAllowCredentials {
+		if serviceInfo.Options.CorsAllowMethods != "" || serviceInfo.Options.CorsAllowHeaders != "" ||
+			serviceInfo.Options.CorsExposeHeaders != "" || serviceInfo.Options.CorsAllowCredentials {
 			return nil, fmt.Errorf("cors_preset must be set in order to enable CORS support")
 		}
 	default:
@@ -88,10 +88,10 @@ func MakeRouteConfig(serviceInfo *sc.ServiceInfo) (*rdspb.RouteConfiguration, er
 	}
 
 	if host.GetCors() != nil {
-		host.GetCors().AllowMethods = *flags.CorsAllowMethods
-		host.GetCors().AllowHeaders = *flags.CorsAllowHeaders
-		host.GetCors().ExposeHeaders = *flags.CorsExposeHeaders
-		host.GetCors().AllowCredentials = &wrappers.BoolValue{Value: *flags.CorsAllowCredentials}
+		host.GetCors().AllowMethods = serviceInfo.Options.CorsAllowMethods
+		host.GetCors().AllowHeaders = serviceInfo.Options.CorsAllowHeaders
+		host.GetCors().ExposeHeaders = serviceInfo.Options.CorsExposeHeaders
+		host.GetCors().AllowCredentials = &wrappers.BoolValue{Value: serviceInfo.Options.CorsAllowCredentials}
 	}
 
 	virtualHosts = append(virtualHosts, &host)
@@ -101,7 +101,7 @@ func MakeRouteConfig(serviceInfo *sc.ServiceInfo) (*rdspb.RouteConfiguration, er
 	}, nil
 }
 
-func makeDynamicRoutingConfig(serviceInfo *sc.ServiceInfo) ([]*routepb.Route, error) {
+func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, error) {
 	var backendRoutes []*routepb.Route
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]

@@ -17,7 +17,6 @@ package configgenerator
 import (
 	"encoding/base64"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"strings"
 	"testing"
@@ -29,7 +28,7 @@ import (
 	"google.golang.org/genproto/protobuf/api"
 	"google.golang.org/genproto/protobuf/ptype"
 
-	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
+	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 	sm "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
@@ -84,10 +83,9 @@ func TestTranscoderFilter(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		flag.Set("backend_protocol", "gRPC")
-
-		options := sc.EnvoyConfigOptionsFromFlags()
-		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
+		options := configinfo.DefaultEnvoyConfigOptions()
+		options.BackendProtocol = "gRPC"
+		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -168,10 +166,10 @@ func TestBackendAuthFilter(t *testing.T) {
       "name": "envoy.filters.http.backend_auth"
     }`
 
-	flag.Set("backend_protocol", "http2")
-	flag.Set("enable_backend_routing", "true")
-	options := sc.EnvoyConfigOptionsFromFlags()
-	fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, options)
+	options := configinfo.DefaultEnvoyConfigOptions()
+	options.BackendProtocol = "http2"
+	options.EnableBackendRouting = true
+	fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, options)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -506,11 +504,10 @@ func TestPathMatcherFilter(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		flag.Set("backend_protocol", tc.backendProtocol)
-		flag.Set("enable_backend_routing", "true")
-
-		options := sc.EnvoyConfigOptionsFromFlags()
-		fakeServiceInfo, err := sc.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
+		options := configinfo.DefaultEnvoyConfigOptions()
+		options.BackendProtocol = tc.backendProtocol
+		options.EnableBackendRouting = true
+		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
 		if err != nil {
 			t.Fatal(err)
 		}

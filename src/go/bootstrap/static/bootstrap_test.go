@@ -16,19 +16,19 @@ package static
 
 import (
 	"encoding/json"
-	"flag"
 	"testing"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap/static/testdata"
+	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	"github.com/golang/protobuf/jsonpb"
 
-	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 )
 
 func TestServiceToBootstrapConfig(t *testing.T) {
-	flag.Set("backend_protocol", "HTTP1")
-	gotBootstrap, err := ServiceToBootstrapConfig(testdata.FakeBookstoreConfig, testdata.FakeConfigID, sc.EnvoyConfigOptionsFromFlags())
+	options := configinfo.DefaultEnvoyConfigOptions()
+	options.BackendProtocol = "HTTP1"
+	gotBootstrap, err := ServiceToBootstrapConfig(testdata.FakeBookstoreConfig, testdata.FakeConfigID, options)
 	if err != nil {
 		t.Fatal(err)
 	}

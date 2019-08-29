@@ -19,9 +19,14 @@ package flags
 import (
 	"flag"
 	"time"
+
+	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 )
 
 var (
+	// These flags are kept in sync with configinfo.EnvoyConfigOptions.
+	// When adding or changing default values, update configinfo.DefaultEnvoyConfigOptions.
+
 	// Service Management related configurations. Must be set.
 	BackendProtocol = flag.String("backend_protocol", "", `must set as one of "grpc", "http1", "http2"`)
 
@@ -90,3 +95,44 @@ var (
 
 	EnableTracing = flag.Bool("enable_tracing", false, `enable stackdriver tracing`)
 )
+
+func EnvoyConfigOptionsFromFlags() configinfo.EnvoyConfigOptions {
+	return configinfo.EnvoyConfigOptions{
+		BackendProtocol:               *BackendProtocol,
+		CorsAllowCredentials:          *CorsAllowCredentials,
+		CorsAllowHeaders:              *CorsAllowHeaders,
+		CorsAllowMethods:              *CorsAllowMethods,
+		CorsAllowOrigin:               *CorsAllowOrigin,
+		CorsAllowOriginRegex:          *CorsAllowOriginRegex,
+		CorsExposeHeaders:             *CorsExposeHeaders,
+		CorsPreset:                    *CorsPreset,
+		EnableBackendRouting:          *EnableBackendRouting,
+		BackendDnsLookupFamily:        *BackendDnsLookupFamily,
+		ClusterConnectTimeout:         *ClusterConnectTimeout,
+		ClusterAddress:                *ClusterAddress,
+		ListenerAddress:               *ListenerAddress,
+		Node:                          *Node,
+		ServiceManagementURL:          *ServiceManagementURL,
+		ClusterPort:                   *ClusterPort,
+		ListenerPort:                  *ListenerPort,
+		NonGCP:                        *NonGCP,
+		ServiceAccountKey:             *ServiceAccountKey,
+		SkipJwtAuthnFilter:            *SkipJwtAuthnFilter,
+		SkipServiceControlFilter:      *SkipServiceControlFilter,
+		EnvoyUseRemoteAddress:         *EnvoyUseRemoteAddress,
+		EnvoyXffNumTrustedHops:        *EnvoyXffNumTrustedHops,
+		LogJwtPayloads:                *LogJwtPayloads,
+		LogRequestHeaders:             *LogRequestHeaders,
+		LogResponseHeaders:            *LogResponseHeaders,
+		SuppressEnvoyHeaders:          *SuppressEnvoyHeaders,
+		ServiceControlNetworkFailOpen: *ServiceControlNetworkFailOpen,
+		JwksCacheDurationInS:          *JwksCacheDurationInS,
+		ScCheckTimeoutMs:              *ScCheckTimeoutMs,
+		ScQuotaTimeoutMs:              *ScQuotaTimeoutMs,
+		ScReportTimeoutMs:             *ScReportTimeoutMs,
+		ScCheckRetries:                *ScCheckRetries,
+		ScQuotaRetries:                *ScQuotaRetries,
+		ScReportRetries:               *ScReportRetries,
+		EnableTracing:                 *EnableTracing,
+	}
+}

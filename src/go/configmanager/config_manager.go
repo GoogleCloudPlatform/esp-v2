@@ -20,14 +20,13 @@ import (
 	"fmt"
 	"time"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
+	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/golang/glog"
 
 	gen "cloudesf.googlesource.com/gcpproxy/src/go/configgenerator"
-	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	gogo "github.com/gogo/protobuf/proto"
@@ -48,8 +47,8 @@ var (
 // TODO(jilinxia): handles multi service name.
 type ConfigManager struct {
 	serviceName        string
-	serviceInfo        *sc.ServiceInfo
-	envoyConfigOptions sc.EnvoyConfigOptions
+	serviceInfo        *configinfo.ServiceInfo
+	envoyConfigOptions configinfo.EnvoyConfigOptions
 	curRolloutID       string
 	curConfigID        string
 
@@ -61,7 +60,7 @@ type ConfigManager struct {
 
 // NewConfigManager creates new instance of ConfigManager.
 // mf is set to nil on non-gcp deployments
-func NewConfigManager(mf *metadata.MetadataFetcher) (*ConfigManager, error) {
+func NewConfigManager(mf *metadata.MetadataFetcher, options configinfo.EnvoyConfigOptions) (*ConfigManager, error) {
 	var err error
 	name := *ServiceName
 	checkMetadata := *CheckMetadata
@@ -91,7 +90,7 @@ func NewConfigManager(mf *metadata.MetadataFetcher) (*ConfigManager, error) {
 	m := &ConfigManager{
 		serviceName:        name,
 		metadataFetcher:    mf,
-		envoyConfigOptions: sc.EnvoyConfigOptionsFromFlags(),
+		envoyConfigOptions: options,
 	}
 
 	m.cache = cache.NewSnapshotCache(true, m, m)
@@ -164,7 +163,7 @@ func (m *ConfigManager) updateSnapshot() error {
 	if err != nil {
 		return fmt.Errorf("fail to fetch service config, %s", err)
 	}
-	m.serviceInfo, err = sc.NewServiceInfoFromServiceConfig(serviceConfig, m.curConfigID, m.envoyConfigOptions)
+	m.serviceInfo, err = configinfo.NewServiceInfoFromServiceConfig(serviceConfig, m.curConfigID, m.envoyConfigOptions)
 	if err != nil {
 		return fmt.Errorf("fail to initialize ServiceInfo, %s", err)
 	}
@@ -177,7 +176,7 @@ func (m *ConfigManager) updateSnapshot() error {
 	if err != nil {
 		return fmt.Errorf("fail to make a snapshot, %s", err)
 	}
-	return m.cache.SetSnapshot(*flags.Node, *snapshot)
+	return m.cache.SetSnapshot(m.envoyConfigOptions.Node, *snapshot)
 }
 
 func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
