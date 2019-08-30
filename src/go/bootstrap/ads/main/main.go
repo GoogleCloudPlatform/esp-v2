@@ -26,15 +26,18 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
+
+	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 )
 
 var (
-	AdsConnectTimeout = flag.Duration("ads_connect_imeout", 10*time.Second, "ads connect timeout in seconds")
-	EnableTracing     = flag.Bool("enable_tracing", false, `enable stackdriver tracing`)
-	NonGCP            = flag.Bool("non_gcp", false, `By default, the proxy tries to talk to GCP metadata server to get VM location in the first few requests. Setting this flag
-  to true to skip this step`)
+	AdsConnectTimeout      = flag.Duration("ads_connect_timeout", 10*time.Second, "ads connect timeout in seconds")
+	AdminPort              = flag.Int("admin_port", 8001, "Port that envoy should serve the admin page on")
+	DiscoveryAddress       = flag.String("discovery_address", "127.0.0.1:8790", "Address that envoy should use to contact ADS. Defaults to config manager's address, but can be a remote address.")
+	EnableTracing          = flag.Bool("enable_tracing", false, `enable stackdriver tracing`)
+	NonGCP                 = flag.Bool("non_gcp", false, `By default, the proxy tries to talk to GCP metadata server to get VM location in the first few requests. Setting this flag to true to skip this step`)
 	TracingProjectId       = flag.String("tracing_project_id", "", "The Google project id required for Stack driver tracing. If not set, will automatically use fetch it from GCP Metadata server")
-	MetadataFetcherTimeout = *flag.Duration("http_request_timeout", 5*time.Second, `Set the timeout in second for all requests made by config manager. Must be > 0 and the default is 5 seconds if not set.`)
+	MetadataFetcherTimeout = flag.Duration("http_request_timeout", 5*time.Second, `Set the timeout in second for all requests made by config manager. Must be > 0 and the default is 5 seconds if not set.`)
 )
 
 func main() {
@@ -45,8 +48,17 @@ func main() {
 		glog.Exitf("Please specify a path to write bootstrap config file")
 	}
 
+	// Parse the ADS address
+	_, adsHostname, adsPort, _, err := ut.ParseURI(*DiscoveryAddress)
+	if err != nil {
+		glog.Exitf("failed to parse discovery address: %v", err)
+	}
+
 	connectTimeoutProto := ptypes.DurationProto(*AdsConnectTimeout)
-	bt := ads.CreateBootstrapConfig(connectTimeoutProto)
+	bt, err := ads.CreateBootstrapConfig(connectTimeoutProto, adsHostname, adsPort, uint32(*AdminPort))
+	if err != nil {
+		glog.Exitf("failed to create bootstrap config, error: %v", err)
+	}
 
 	if *EnableTracing {
 
@@ -64,7 +76,7 @@ func main() {
 		Indent: "  ",
 	}
 	json_str, _ := marshaler.MarshalToString(bt)
-	err := ioutil.WriteFile(out_path, []byte(json_str), 0644)
+	err = ioutil.WriteFile(out_path, []byte(json_str), 0644)
 	if err != nil {
 		glog.Exitf("failed to write config to %v, error: %v", out_path, err)
 	}
@@ -84,5 +96,5 @@ func getTracingProjectId() (string, error) {
 		return "", fmt.Errorf("tracing_project_id was not specified and can not be fetched from GCP Metadata server on non-GCP runtime")
 	}
 
-	return metadata.NewMetadataFetcher(MetadataFetcherTimeout).FetchProjectId()
+	return metadata.NewMetadataFetcher(*MetadataFetcherTimeout).FetchProjectId()
 }

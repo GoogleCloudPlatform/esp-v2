@@ -27,13 +27,14 @@ import (
 )
 
 // CreateBoostrapConfig outputs envoy bootstrap config for xDS.
-func CreateBootstrapConfig(ads_connect_timeout *duration.Duration) *bootstrappb.Bootstrap {
+func CreateBootstrapConfig(adsConnectTimeout *duration.Duration, adsHostname string, adsPort uint32, adminPort uint32) (*bootstrappb.Bootstrap, error) {
+
 	return &bootstrappb.Bootstrap{
 		// Node info
 		Node: bt.CreateNode(),
 
 		// admin
-		Admin: bt.CreateAdmin(),
+		Admin: bt.CreateAdmin(adminPort),
 
 		// Dynamic resource
 		DynamicResources: &bootstrappb.Bootstrap_DynamicResources{
@@ -65,14 +66,14 @@ func CreateBootstrapConfig(ads_connect_timeout *duration.Duration) *bootstrappb.
 				{
 					Name:           "ads_cluster",
 					LbPolicy:       cdspb.Cluster_ROUND_ROBIN,
-					ConnectTimeout: ads_connect_timeout,
+					ConnectTimeout: adsConnectTimeout,
 					ClusterDiscoveryType: &cdspb.Cluster_Type{
 						Type: cdspb.Cluster_STRICT_DNS,
 					},
 					Http2ProtocolOptions: &protocolpb.Http2ProtocolOptions{},
-					LoadAssignment:       ut.CreateLoadAssignment("127.0.0.1", 8790),
+					LoadAssignment:       ut.CreateLoadAssignment(adsHostname, adsPort),
 				},
 			},
 		},
-	}
+	}, nil
 }

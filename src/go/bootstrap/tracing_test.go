@@ -27,7 +27,8 @@ import (
 )
 
 const (
-	fakeFlagProjectId = "fake-flag-project-id"
+	fakeFlagProjectId      = "fake-flag-project-id"
+	fakeStackdriverAddress = "dns:non-existent-address:2840"
 )
 
 func TestTracingConfig(t *testing.T) {
@@ -165,6 +166,28 @@ func TestTracingConfig(t *testing.T) {
 				},
 				StackdriverExporterEnabled: true,
 				StackdriverProjectId:       fakeFlagProjectId,
+			},
+		},
+		{
+			desc: "Success with custom stackdriver address",
+			flags: map[string]string{
+				"tracing_stackdriver_address": fakeStackdriverAddress,
+				"tracing_incoming_context":    "",
+				"tracing_outgoing_context":    "",
+				"tracing_sample_rate":         "0.5",
+			},
+			tracingProjectId: fakeFlagProjectId,
+			wantResult: &tracepb.OpenCensusConfig{
+				TraceConfig: &opencensuspb.TraceConfig{
+					Sampler: &opencensuspb.TraceConfig_ProbabilitySampler{
+						ProbabilitySampler: &opencensuspb.ProbabilitySampler{
+							SamplingProbability: 0.5,
+						},
+					},
+				},
+				StackdriverExporterEnabled: true,
+				StackdriverProjectId:       fakeFlagProjectId,
+				StackdriverAddress:         fakeStackdriverAddress,
 			},
 		},
 	}

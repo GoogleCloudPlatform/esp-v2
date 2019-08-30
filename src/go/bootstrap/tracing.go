@@ -26,9 +26,10 @@ import (
 )
 
 var (
-	TracingSamplingRate    = flag.Float64("tracing_sample_rate", 0.001, "tracing sampling rate from 0.0 to 1.0")
-	TracingIncomingContext = flag.String("tracing_incoming_context", "", "comma separated incoming trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)")
-	TracingOutgoingContext = flag.String("tracing_outgoing_context", "", "comma separated outgoing trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)")
+	TracingStackdriverAddress = flag.String("tracing_stackdriver_address", "", "By default, the Stackdriver exporter will connect to production Stackdriver. If this is non-empty, it will connect to this address. It must be in the gRPC format.")
+	TracingSamplingRate       = flag.Float64("tracing_sample_rate", 0.001, "tracing sampling rate from 0.0 to 1.0")
+	TracingIncomingContext    = flag.String("tracing_incoming_context", "", "comma separated incoming trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)")
+	TracingOutgoingContext    = flag.String("tracing_outgoing_context", "", "comma separated outgoing trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)")
 )
 
 func createTraceContexts(ctx_str string) ([]tracepb.OpenCensusConfig_TraceContext, error) {
@@ -61,6 +62,10 @@ func CreateTracing(tracingProjectId string) (*tracepb.Tracing, error) {
 		TraceConfig:                &opencensuspb.TraceConfig{},
 		StackdriverExporterEnabled: true,
 		StackdriverProjectId:       tracingProjectId,
+	}
+
+	if *TracingStackdriverAddress != "" {
+		cfg.StackdriverAddress = *TracingStackdriverAddress
 	}
 
 	if ctx, err := createTraceContexts(*TracingIncomingContext); err == nil {

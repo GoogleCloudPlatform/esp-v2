@@ -31,7 +31,7 @@ import (
 func ServiceToBootstrapConfig(serviceConfig *conf.Service, id string, options sc.EnvoyConfigOptions) (*bootstrappb.Bootstrap, error) {
 	bootstrap := &bootstrappb.Bootstrap{
 		Node:  bt.CreateNode(),
-		Admin: bt.CreateAdmin(),
+		Admin: bt.CreateAdmin(8001),
 	}
 
 	serviceInfo, err := sc.NewServiceInfoFromServiceConfig(serviceConfig, id, options)

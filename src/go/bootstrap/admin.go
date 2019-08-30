@@ -20,7 +20,7 @@ import (
 )
 
 // CreateAdmin outputs Admin struct for bootstrap config
-func CreateAdmin() *bootstrappb.Admin {
+func CreateAdmin(adminPort uint32) *bootstrappb.Admin {
 	return &bootstrappb.Admin{
 		AccessLogPath: "/dev/null",
 		Address: &addresspb.Address{
@@ -28,7 +28,7 @@ func CreateAdmin() *bootstrappb.Admin {
 				SocketAddress: &addresspb.SocketAddress{
 					Address: "0.0.0.0",
 					PortSpecifier: &addresspb.SocketAddress_PortValue{
-						PortValue: 8001,
+						PortValue: adminPort,
 					},
 				},
 			},
