@@ -31,7 +31,14 @@ import (
 )
 
 var (
-	MetadataURL = flag.String("metadata_url", "http://metadata.google.internal/computeMetadata", "url of metadata server")
+	//Suspected Envoy has listener initialization bug: if a http filter needs to use
+	//a cluster with DSN lookup for initialization, e.g. fetching a remote access
+	//token, the cluster is not ready so the whole listener is destroyed. ADS will
+	//repeatedly send the same listener again until the cluster is ready. Then the
+	//listener is marked as ready but the whole Envoy server is not marked as ready
+	//(worker did not start) somehow. To work around this problem, use IP for
+	//metadata server to fetch access token.
+	MetadataURL = flag.String("metadata_url", "http://169.254.169.254/computeMetadata", "url of metadata server")
 )
 
 const (

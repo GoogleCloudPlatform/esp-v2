@@ -28,9 +28,17 @@ using Utils::TokenSubscriber;
 
 namespace {
 
-// TODO(toddbeckman): Figure out if this should be abstracted to the config
+// TODO(toddbeckman): Figure out if this url should be abstracted to the config.
+
+// Suspected Envoy has listener initialization bug: if a http filter needs to
+// use a cluster with DSN lookup for initialization, e.g. fetching a remote
+// access token, the cluster is not ready so the whole listener is destroyed.
+// ADS will repeatedly send the same listener again until the cluster is ready.
+// Then the listener is marked as ready but the whole Envoy server is not marked
+// as ready (worker did not start) somehow. To work around this problem, use IP
+// for metadata server to fetch access token.
 const char kDefaultIdentityUrl[]{
-    "http://metadata.google.internal/computeMetadata/v1/instance/"
+    "http://169.254.169.254/computeMetadata/v1/instance/"
     "service-accounts/default/identity"};
 
 }  // namespace

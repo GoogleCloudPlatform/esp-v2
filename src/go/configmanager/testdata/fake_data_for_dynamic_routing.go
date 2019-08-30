@@ -373,7 +373,7 @@ var (
                   "access_token":{
                     "remote_token":{
                       "cluster":"metadata-cluster",
-                      "uri":"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity",
+                      "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity",
                       "timeout":"5s"
                     }
                   }

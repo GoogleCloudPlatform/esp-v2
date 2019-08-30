@@ -112,7 +112,7 @@ var (
     	  {
     	    "connectTimeout":"20s",
     	    "loadAssignment":{
-    	      "clusterName":"metadata.google.internal",
+    	      "clusterName":"169.254.169.254",
     	      "endpoints":[
     	        {
     	          "lbEndpoints":[
@@ -120,7 +120,7 @@ var (
     	              "endpoint":{
     	  	            "address":{
     	   	              "socketAddress":{
-    	  		  	  	    "address":"metadata.google.internal",
+    	  		  	  	    "address":"169.254.169.254",
                             "portValue":80
     	  		  	  	  }
     	  		  	  	}

@@ -777,7 +777,7 @@ func TestFetchListeners(t *testing.T) {
                                                 "access_token":{
                                                   "remote_token":{
                                                     "cluster":"metadata-cluster",
-                                                    "uri":"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token",
+                                                    "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token",
                                                     "timeout":"5s"
                                                   }
                                                 }
@@ -1078,7 +1078,7 @@ func TestFetchListeners(t *testing.T) {
                                         "access_token":{
                                           "remote_token":{
                                             "cluster":"metadata-cluster",
-                                            "uri":"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token",
+                                            "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token",
                                             "timeout":"5s"
                                           }
                                         }
