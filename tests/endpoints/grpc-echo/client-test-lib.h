@@ -17,9 +17,31 @@
 namespace test {
 namespace grpc {
 
+// Options for JSON output. These should be OR'd together so must be 2^n.
+enum JsonOptions {
+  // Use the default behavior (useful when no options are needed).
+      DEFAULT = 0,
+
+  // Enables pretty printing of the output.
+      PRETTY_PRINT = 1,
+
+  // Prints default values for primitive fields.
+      OUTPUT_DEFAULTS = 2,
+};
+
+// Converts a protobuf into a JSON string. The options field is a OR'd set of
+// the available JsonOptions.
+::google::protobuf::util::Status JsonToProto(const std::string &json,
+                                              ::google::protobuf::Message *message);
+
+// Converts a protobuf into a JSON string and writes it into the output stream.
+// The options parameter is an OR'd set of the available JsonOptions.
+::google::protobuf::util::Status ProtoToJson(const ::google::protobuf::Message& message,
+                   ::google::protobuf::io::ZeroCopyOutputStream* json,
+                   int options);
+
 // Runs the supplied test plans, adding one result for each test.
 void RunTestPlans(const TestPlans &plans, TestResults *results);
-
 }  // namespace grpc
 
 }  // namespace test

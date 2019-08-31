@@ -29,8 +29,6 @@ using ::google::protobuf::util::TypeResolver;
 using ::google::protobuf::util::error::Code;
 
 namespace {
-const char kTypeUrlPrefix[] = "type.googleapis.com";
-const char kRpcStatusTypeUrl[] = "type.googleapis.com/google.rpc.Status";
 std::string ReadInput(std::istream& src) {
   std::string contents;
   src.seekg(0, std::ios::end);
@@ -42,47 +40,6 @@ std::string ReadInput(std::istream& src) {
   contents.assign((std::istreambuf_iterator<char>(src)),
                   (std::istreambuf_iterator<char>()));
   return contents;
-}
-
-// Creation function used by static lazy init.
-TypeResolver* CreateTypeResolver() {
-  return ::google::protobuf::util::NewTypeResolverForDescriptorPool(
-      kTypeUrlPrefix, ::google::protobuf::DescriptorPool::generated_pool());
-}
-
-TypeResolver* GetTypeResolver() {
-  static TypeResolver* resolver = CreateTypeResolver();
-  return resolver;
-}
-
-std::string GetTypeUrl(const Message& message) {
-  return std::string(kTypeUrlPrefix) + "/" +
-         message.GetDescriptor()->full_name();
-}
-
-Status FromProto(const ::google::protobuf::util::Status& proto_status) {
-  if (proto_status.ok()) {
-    return Status::OK;
-  }
-  return proto_status;
-}
-
-Status JsonToProto(const std::string& json, Message* message) {
-  ::google::protobuf::util::JsonParseOptions options;
-  options.ignore_unknown_fields = true;
-  std::string binary;
-  ::google::protobuf::util::Status status =
-      ::google::protobuf::util::JsonToBinaryString(
-          GetTypeResolver(), GetTypeUrl(*message), json, &binary, options);
-  if (!status.ok()) {
-    return FromProto(status);
-  }
-  if (message->ParseFromString(binary)) {
-    return Status::OK;
-  }
-  return Status(
-      Code::INTERNAL,
-      "Unable to parse bytes generated from JsonToBinaryString as proto.");
 }
 }  // namespace
 
@@ -107,8 +64,8 @@ int main(int argc, char** argv) {
       // Try Text
       plans.Clear();
       if (!TextFormat::ParseFromString(contents, &plans)) {
-        std::cerr << "Failed to parse text TestPlans proto from stdin"
-                  << std::endl;
+        std::cerr << "Failed to parse text TestPlans proto from stdin:"
+                  << contents << std::endl;
         return EXIT_FAILURE;
       }
     }
@@ -122,10 +79,7 @@ int main(int argc, char** argv) {
   {
     OstreamOutputStream out(&std::cout);
     if (json_format) {
-      // ::google::api_manager::utils::ProtoToJson(
-      // results, &out, ::google::api_manager::utils::PRETTY_PRINT);
-      std::cout << ::Envoy::MessageUtil::getJsonStringFromMessage(results, true,
-                                                                  false);
+      ProtoToJson(results, &out, test::grpc::PRETTY_PRINT);
     } else {
       TextFormat::Print(results, &out);
     }

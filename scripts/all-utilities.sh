@@ -333,3 +333,8 @@ function try_setup_bazel_remote_cache() {
     sed -i -e "s@CACHE_SILO_NAME@${cache_silo}@g" ${root_dir}/.bazelrc
     sed -i -e "s@CACHE_PROJECT_ID@${gcp_project_id}@g" ${root_dir}/.bazelrc
 }
+
+# Build dependent binary for e2e
+function build_e2e_dependency(){
+  make -C ${ROOT} build-grpc-echo
+}
