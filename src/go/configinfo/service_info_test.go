@@ -15,7 +15,6 @@
 package configinfo
 
 import (
-	"flag"
 	"fmt"
 	"reflect"
 	"sort"
@@ -110,8 +109,8 @@ func TestProcessEndpoints(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		flag.Set("backend_protocol", "grpc")
-		options := EnvoyConfigOptionsFromFlags()
+		options := DefaultEnvoyConfigOptions()
+		options.BackendProtocol = "grpc"
 		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
 		if err != nil {
 			t.Fatal(err)
@@ -130,7 +129,6 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 		wantedSystemParameters map[string][]*conf.SystemParameter
 		wantMethods            map[string]*methodInfo
 	}{
-
 		{
 			desc: "Succeed, only url query",
 			fakeServiceConfig: &conf.Service{
@@ -276,9 +274,8 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 		},
 	}
 	for i, tc := range testData {
-		flag.Set("backend_protocol", "grpc")
-
-		options := EnvoyConfigOptionsFromFlags()
+		options := DefaultEnvoyConfigOptions()
+		options.BackendProtocol = "grpc"
 		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
 		if err != nil {
 			t.Fatal(err)
@@ -553,9 +550,8 @@ func TestMethods(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		flag.Set("backend_protocol", tc.backendProtocol)
-
-		options := EnvoyConfigOptionsFromFlags()
+		options := DefaultEnvoyConfigOptions()
+		options.BackendProtocol = tc.backendProtocol
 		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
 		if err != nil {
 			t.Fatal(err)
@@ -620,10 +616,9 @@ func TestProcessBackendRule(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		flag.Set("backend_protocol", "grpc")
-		flag.Set("enable_backend_routing", "true")
-
-		options := EnvoyConfigOptionsFromFlags()
+		options := DefaultEnvoyConfigOptions()
+		options.BackendProtocol = "grpc"
+		options.EnableBackendRouting = true
 		_, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
 		if (err == nil && tc.wantedErr != "") || (err != nil && tc.wantedErr == "") {
 			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, err, tc.wantedErr)
@@ -722,10 +717,9 @@ func TestProcessQuota(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		flag.Set("backend_protocol", "grpc")
-		flag.Set("enable_backend_routing", "true")
-
-		options := EnvoyConfigOptionsFromFlags()
+		options := DefaultEnvoyConfigOptions()
+		options.BackendProtocol = "grpc"
+		options.EnableBackendRouting = true
 		serviceInfo, _ := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
 
 		for key, gotMethod := range serviceInfo.Methods {

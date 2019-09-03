@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
+	"cloudesf.googlesource.com/gcpproxy/src/go/configmanager/flags"
 	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/golang/glog"

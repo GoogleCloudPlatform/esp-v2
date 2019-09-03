@@ -4,8 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
+//     http://www.apache.org/licenses/LICENSE-2.0 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,8 +27,8 @@ import (
 	"testing"
 	"time"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	"cloudesf.googlesource.com/gcpproxy/src/go/configmanager/testdata"
-	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
@@ -1124,22 +1123,21 @@ func TestFetchListeners(t *testing.T) {
 	for i, tc := range testData {
 		// Overrides fakeConfig for the test case.
 		fakeConfig = tc.fakeServiceConfig
+		options := configinfo.DefaultEnvoyConfigOptions()
+		options.BackendProtocol = tc.backendProtocol
+		options.EnableTracing = tc.enableTracing
+
 		flag.Set("service", testProjectName)
 		flag.Set("service_config_id", testConfigID)
 		flag.Set("rollout_strategy", util.FixedRolloutStrategy)
-		flag.Set("backend_protocol", tc.backendProtocol)
-		if tc.enableTracing {
-			flag.Set("enable_tracing", "true")
-		} else {
-			flag.Set("enable_tracing", "false")
-		}
+		flag.Set("check_rollout_interval", "100ms")
 
-		runTest(t, func(env *testEnv) {
+		runTest(t, options, func(env *testEnv) {
 			ctx := context.Background()
 			// First request, VersionId should be empty.
 			req := v2.DiscoveryRequest{
 				Node: &core.Node{
-					Id: *flags.Node,
+					Id: options.Node,
 				},
 				TypeUrl: cache.ListenerType,
 			}
@@ -1194,19 +1192,21 @@ func TestDynamicBackendRouting(t *testing.T) {
 	for i, tc := range testData {
 		// Overrides fakeConfig for the test case.
 		fakeConfig = tc.fakeServiceConfig
+		options := configinfo.DefaultEnvoyConfigOptions()
+		options.BackendProtocol = tc.backendProtocol
+		options.EnableBackendRouting = true
+
 		flag.Set("service", testProjectName)
 		flag.Set("service_config_id", testConfigID)
 		flag.Set("rollout_strategy", util.FixedRolloutStrategy)
-		flag.Set("backend_protocol", tc.backendProtocol)
-		flag.Set("enable_backend_routing", "true")
-		flag.Set("enable_tracing", "false")
+		flag.Set("check_rollout_interval", "100ms")
 
-		runTest(t, func(env *testEnv) {
+		runTest(t, options, func(env *testEnv) {
 			ctx := context.Background()
 			// First request, VersionId should be empty.
 			reqForClusters := v2.DiscoveryRequest{
 				Node: &core.Node{
-					Id: *flags.Node,
+					Id: options.Node,
 				},
 				TypeUrl: cache.ClusterType,
 			}
@@ -1237,7 +1237,7 @@ func TestDynamicBackendRouting(t *testing.T) {
 
 			reqForListener := v2.DiscoveryRequest{
 				Node: &core.Node{
-					Id: *flags.Node,
+					Id: options.Node,
 				},
 				TypeUrl: cache.ListenerType,
 			}
@@ -1358,19 +1358,21 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 	// Overrides fakeConfig with fakeOldServiceConfig for the test case.
 	fakeConfig = testCase.fakeOldServiceConfig
 	fakeRollout = testCase.fakeOldServiceRollout
-	flag.Set("check_rollout_interval", "1s")
+
+	options := configinfo.DefaultEnvoyConfigOptions()
+	options.BackendProtocol = testCase.backendProtocol
+
 	flag.Set("service_config_id", testConfigID)
 	flag.Set("rollout_strategy", util.ManagedRolloutStrategy)
-	flag.Set("backend_protocol", testCase.backendProtocol)
-	flag.Set("enable_tracing", "false")
+	flag.Set("check_rollout_interval", "100ms")
 
-	runTest(t, func(env *testEnv) {
+	runTest(t, options, func(env *testEnv) {
 		var resp *cache.Response
 		var err error
 		ctx := context.Background()
 		req := v2.DiscoveryRequest{
 			Node: &core.Node{
-				Id: *flags.Node,
+				Id: options.Node,
 			},
 			TypeUrl: cache.ListenerType,
 		}
@@ -1416,7 +1418,7 @@ type testEnv struct {
 	configManager *ConfigManager
 }
 
-func runTest(t *testing.T, f func(*testEnv)) {
+func runTest(t *testing.T, options configinfo.EnvoyConfigOptions, f func(*testEnv)) {
 	mockConfig := initMockConfigServer(t)
 	defer mockConfig.Close()
 	fetchConfigURL = func(serviceName, configID string) string {
@@ -1436,7 +1438,7 @@ func runTest(t *testing.T, f func(*testEnv)) {
 
 	metadataFetcher := metadata.NewMockMetadataFetcher(mockMetadataServer.URL, time.Now())
 
-	manager, err := NewConfigManager(metadataFetcher)
+	manager, err := NewConfigManager(metadataFetcher, options)
 	if err != nil {
 		t.Fatal("fail to initialize ConfigManager: ", err)
 	}
@@ -1448,7 +1450,6 @@ func runTest(t *testing.T, f func(*testEnv)) {
 
 func initMockConfigServer(t *testing.T) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		_, err := w.Write([]byte(normalizeJson(fakeConfig, t)))
 		if err != nil {
 			t.Fatal("fail to write config: ", err)

@@ -220,6 +220,5 @@ func TestTracingConfig(t *testing.T) {
 				t.Errorf("Test (%s): failed, got : %v, want: %v", tc.desc, gotCfg, tc.wantResult)
 			}
 		}
-
 	}
 }

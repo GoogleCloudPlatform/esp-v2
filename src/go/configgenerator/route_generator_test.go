@@ -15,15 +15,13 @@
 package configgenerator
 
 import (
-	"flag"
 	"reflect"
-	"strconv"
 	"strings"
 	"testing"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	"github.com/golang/protobuf/ptypes/wrappers"
 
-	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	routepb "github.com/envoyproxy/data-plane-api/api/route"
 )
 
@@ -88,18 +86,21 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		// Initial flags
+		options := configinfo.DefaultEnvoyConfigOptions()
 		if tc.params != nil {
-			flag.Set("cors_preset", tc.params[0])
-			flag.Set("cors_allow_origin", tc.params[1])
-			flag.Set("cors_allow_origin_regex", tc.params[2])
-			flag.Set("cors_allow_methods", tc.params[3])
-			flag.Set("cors_allow_headers", tc.params[4])
-			flag.Set("cors_expose_headers", tc.params[5])
+			options.CorsPreset = tc.params[0]
+			options.CorsAllowOrigin = tc.params[1]
+			options.CorsAllowOriginRegex = tc.params[2]
+			options.CorsAllowMethods = tc.params[3]
+			options.CorsAllowHeaders = tc.params[4]
+			options.CorsExposeHeaders = tc.params[5]
 		}
-		flag.Set("cors_allow_credentials", strconv.FormatBool(tc.allowCredentials))
+		options.CorsAllowCredentials = tc.allowCredentials
 
-		gotRoute, err := MakeRouteConfig(&sc.ServiceInfo{Name: "test-api"})
+		gotRoute, err := MakeRouteConfig(&configinfo.ServiceInfo{
+			Name:    "test-api",
+			Options: options,
+		})
 		if tc.wantedError != "" {
 			if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
 				t.Errorf("Test (%s): expected err: %v, got: %v", tc.desc, tc.wantedError, err)

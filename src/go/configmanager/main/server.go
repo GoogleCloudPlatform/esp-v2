@@ -20,7 +20,7 @@ import (
 	"net"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/configmanager"
-	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
+	"cloudesf.googlesource.com/gcpproxy/src/go/configmanager/flags"
 	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
@@ -43,7 +43,7 @@ func main() {
 		mf = metadata.NewMetadataFetcher(*configmanager.HttpRequestTimeout)
 	}
 
-	m, err := configmanager.NewConfigManager(mf)
+	m, err := configmanager.NewConfigManager(mf, flags.EnvoyConfigOptionsFromFlags())
 	if err != nil {
 		glog.Exitf("fail to initialize config manager: %v", err)
 	}

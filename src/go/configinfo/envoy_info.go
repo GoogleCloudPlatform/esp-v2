@@ -2,8 +2,6 @@ package configinfo
 
 import (
 	"time"
-
-	"cloudesf.googlesource.com/gcpproxy/src/go/flags"
 )
 
 // EnvoyConfigOptions describes the possible overrides for the service config to envoy config translation.
@@ -67,44 +65,46 @@ type EnvoyConfigOptions struct {
 	EnableTracing bool
 }
 
-// EnvoyConfigOptionsFromFlags returns a new EnvoyConfigOptions derived from passed in flag values.
-func EnvoyConfigOptionsFromFlags() EnvoyConfigOptions {
+// DefaultEnvoyConfigOptions returns EnvoyConfigOptions with default values.
+//
+// The default values are expected to match the default values from the flags.
+func DefaultEnvoyConfigOptions() EnvoyConfigOptions {
 	return EnvoyConfigOptions{
-		BackendProtocol:               *flags.BackendProtocol,
-		CorsAllowCredentials:          *flags.CorsAllowCredentials,
-		CorsAllowHeaders:              *flags.CorsAllowHeaders,
-		CorsAllowMethods:              *flags.CorsAllowMethods,
-		CorsAllowOrigin:               *flags.CorsAllowOrigin,
-		CorsAllowOriginRegex:          *flags.CorsAllowOriginRegex,
-		CorsExposeHeaders:             *flags.CorsExposeHeaders,
-		CorsPreset:                    *flags.CorsPreset,
-		EnableBackendRouting:          *flags.EnableBackendRouting,
-		BackendDnsLookupFamily:        *flags.BackendDnsLookupFamily,
-		ClusterConnectTimeout:         *flags.ClusterConnectTimeout,
-		ClusterAddress:                *flags.ClusterAddress,
-		ListenerAddress:               *flags.ListenerAddress,
-		Node:                          *flags.Node,
-		ServiceManagementURL:          *flags.ServiceManagementURL,
-		ClusterPort:                   *flags.ClusterPort,
-		ListenerPort:                  *flags.ListenerPort,
-		NonGCP:                        *flags.NonGCP,
-		ServiceAccountKey:             *flags.ServiceAccountKey,
-		SkipJwtAuthnFilter:            *flags.SkipJwtAuthnFilter,
-		SkipServiceControlFilter:      *flags.SkipServiceControlFilter,
-		EnvoyUseRemoteAddress:         *flags.EnvoyUseRemoteAddress,
-		EnvoyXffNumTrustedHops:        *flags.EnvoyXffNumTrustedHops,
-		LogJwtPayloads:                *flags.LogJwtPayloads,
-		LogRequestHeaders:             *flags.LogRequestHeaders,
-		LogResponseHeaders:            *flags.LogResponseHeaders,
-		SuppressEnvoyHeaders:          *flags.SuppressEnvoyHeaders,
-		ServiceControlNetworkFailOpen: *flags.ServiceControlNetworkFailOpen,
-		JwksCacheDurationInS:          *flags.JwksCacheDurationInS,
-		ScCheckTimeoutMs:              *flags.ScCheckTimeoutMs,
-		ScQuotaTimeoutMs:              *flags.ScQuotaTimeoutMs,
-		ScReportTimeoutMs:             *flags.ScReportTimeoutMs,
-		ScCheckRetries:                *flags.ScCheckRetries,
-		ScQuotaRetries:                *flags.ScQuotaRetries,
-		ScReportRetries:               *flags.ScReportRetries,
-		EnableTracing:                 *flags.EnableTracing,
+		BackendDnsLookupFamily:        "auto",
+		BackendProtocol:               "", // Required flag with no default
+		ClusterAddress:                "127.0.0.1",
+		ClusterConnectTimeout:         20 * time.Second,
+		ClusterPort:                   8082,
+		CorsAllowCredentials:          false,
+		CorsAllowHeaders:              "",
+		CorsAllowMethods:              "",
+		CorsAllowOrigin:               "",
+		CorsAllowOriginRegex:          "",
+		CorsExposeHeaders:             "",
+		CorsPreset:                    "",
+		EnableBackendRouting:          false,
+		EnableTracing:                 false,
+		EnvoyUseRemoteAddress:         false,
+		EnvoyXffNumTrustedHops:        2,
+		JwksCacheDurationInS:          300,
+		ListenerAddress:               "0.0.0.0",
+		ListenerPort:                  8080,
+		LogJwtPayloads:                "",
+		LogRequestHeaders:             "",
+		LogResponseHeaders:            "",
+		Node:                          "api_proxy",
+		NonGCP:                        false,
+		ServiceAccountKey:             "",
+		ServiceControlNetworkFailOpen: true,
+		ServiceManagementURL:          "https://servicemanagement.googleapis.com",
+		ScCheckRetries:                -1,
+		ScCheckTimeoutMs:              0,
+		ScQuotaRetries:                -1,
+		ScQuotaTimeoutMs:              0,
+		ScReportRetries:               -1,
+		ScReportTimeoutMs:             0,
+		SkipJwtAuthnFilter:            false,
+		SkipServiceControlFilter:      false,
+		SuppressEnvoyHeaders:          false,
 	}
 }
