@@ -20,6 +20,7 @@ import (
 	"flag"
 	"time"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/commonflags"
 	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 )
 
@@ -44,7 +45,7 @@ var (
 	BackendDnsLookupFamily = flag.String("backend_dns_lookup_family", "auto", `Define the dns lookup family for all backends. The options are "auto", "v4only" and "v6only". The default is "auto".`)
 
 	// Envoy specific configurations.
-	ClusterConnectTimeout = flag.Duration("cluster_connect_imeout", 20*time.Second, "cluster connect timeout in seconds")
+	ClusterConnectTimeout = flag.Duration("cluster_connect_timeout", 20*time.Second, "cluster connect timeout in seconds")
 
 	// Network related configurations.
 	ClusterAddress       = flag.String("cluster_address", "127.0.0.1", "cluster socket ip address")
@@ -56,8 +57,6 @@ var (
 	ListenerPort = flag.Int("listener_port", 8080, "listener port")
 
 	// Flags for non_gcp deployment.
-	NonGCP = flag.Bool("non_gcp", false, `By default, the proxy tries to talk to GCP metadata server to get VM location in the first few requests. Setting this flag
-  to true to skip this step`)
 	ServiceAccountKey = flag.String("service_account_key", "", `Use the service account key JSON file to access the service control and the
 	service management.  You can also set {creds_key} environment variable to the location of the service account credentials JSON file. If the option is
   omitted, the proxy contacts the metadata service to fetch an access token`)
@@ -92,12 +91,11 @@ var (
 	ScCheckRetries  = flag.Int("service_control_check_retries", -1, `Set the retry times for service control Check request. Must be >= 0 and the default is 3 if not set.`)
 	ScQuotaRetries  = flag.Int("service_control_quota_retries", -1, `Set the retry times for service control Quota request. Must be >= 0 and the default is 1 if not set.`)
 	ScReportRetries = flag.Int("service_control_report_retries", -1, `Set the retry times for service control Report request. Must be >= 0 and the default is 5 if not set.`)
-
-	EnableTracing = flag.Bool("enable_tracing", false, `enable stackdriver tracing`)
 )
 
 func EnvoyConfigOptionsFromFlags() configinfo.EnvoyConfigOptions {
 	return configinfo.EnvoyConfigOptions{
+		CommonOptions:                 commonflags.DefaultCommonOptionsFromFlags(),
 		BackendProtocol:               *BackendProtocol,
 		CorsAllowCredentials:          *CorsAllowCredentials,
 		CorsAllowHeaders:              *CorsAllowHeaders,
@@ -115,7 +113,6 @@ func EnvoyConfigOptionsFromFlags() configinfo.EnvoyConfigOptions {
 		ServiceManagementURL:          *ServiceManagementURL,
 		ClusterPort:                   *ClusterPort,
 		ListenerPort:                  *ListenerPort,
-		NonGCP:                        *NonGCP,
 		ServiceAccountKey:             *ServiceAccountKey,
 		SkipJwtAuthnFilter:            *SkipJwtAuthnFilter,
 		SkipServiceControlFilter:      *SkipServiceControlFilter,
@@ -133,6 +130,5 @@ func EnvoyConfigOptionsFromFlags() configinfo.EnvoyConfigOptions {
 		ScCheckRetries:                *ScCheckRetries,
 		ScQuotaRetries:                *ScQuotaRetries,
 		ScReportRetries:               *ScReportRetries,
-		EnableTracing:                 *EnableTracing,
 	}
 }

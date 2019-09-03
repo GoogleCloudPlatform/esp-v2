@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package flags
+package commonflags
 
 import (
 	"reflect"
@@ -21,12 +21,12 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 )
 
-func TestDefaultEnvoyConfigOptions(t *testing.T) {
-	defaultOptions := configinfo.DefaultEnvoyConfigOptions()
-	actualOptions := EnvoyConfigOptionsFromFlags()
+func TestDefaultCommonOptions(t *testing.T) {
+	defaultOptions := configinfo.DefaultCommonOptions()
+	actualOptions := DefaultCommonOptionsFromFlags()
 
 	if !reflect.DeepEqual(defaultOptions, actualOptions) {
-		t.Fatalf("DefaultEnvoyConfigOptions does not match envoyConfigOptionsFromFlags:\nhave: %v\nwant: %v",
+		t.Fatalf("DefaultCommonOptions does not match DefaultCommonOptionsFromFlags:\nhave: %v\nwant: %v",
 			defaultOptions, actualOptions)
 	}
 }

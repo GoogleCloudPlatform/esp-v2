@@ -36,14 +36,15 @@ var (
 
 func main() {
 	flag.Parse()
+	options := flags.EnvoyConfigOptionsFromFlags()
 
 	var mf *metadata.MetadataFetcher
-	if !*flags.NonGCP {
+	if !options.NonGCP {
 		glog.Info("running on GCP, initializing metadata fetcher")
-		mf = metadata.NewMetadataFetcher(*configmanager.HttpRequestTimeout)
+		mf = metadata.NewMetadataFetcher(options.MetadataFetcherTimeout)
 	}
 
-	m, err := configmanager.NewConfigManager(mf, flags.EnvoyConfigOptionsFromFlags())
+	m, err := configmanager.NewConfigManager(mf, options)
 	if err != nil {
 		glog.Exitf("fail to initialize config manager: %v", err)
 	}

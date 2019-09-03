@@ -28,7 +28,7 @@ Config Manager can be configured to use these filters. See the
 [flags file][Config Manager flags] for usage information.
 
 [Config Manager]: ../go/README.md
-[Config Manager flags]: ../go/flags/flags.go
+[Config Manager flags]: ../go/configmanager/flags/flags.go
 [Envoy filter example]: https://github.com/envoyproxy/envoy-filter-example
 [Envoy Home]: https://www.envoyproxy.io/
 [example envoy]: http/service_control/testdata/envoy.yaml
