@@ -30,10 +30,6 @@ echo '===================== Setup Cache ====================='
 echo '======================================================='
 try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}"
 
-echo '======================================================='
-echo '=====================   e2e test  ====================='
-echo '======================================================='
-
 if [ ! -d "$GOPATH/bin" ]; then
   mkdir $GOPATH/bin
 fi
@@ -96,7 +92,11 @@ function e2eGKE() {
 # IMAGE veriable will be set by the script
 ${ROOT}/scripts/robot-release.sh
 
-build_e2e_dependency
+echo '======================================================='
+echo '=====================   e2e test  ====================='
+echo '======================================================='
+make build-grpc-echo
+
 # TODO(jilinxia): add other backend tests.
 e2eGKE -c "tight" -t "http" -g "bookstore" -R "managed" -m $(get_proxy_image_name_with_sha)
 e2eGKE -c "tight" -t "http2" -g "echo" -R "managed" -m $(get_proxy_image_name_with_sha)
