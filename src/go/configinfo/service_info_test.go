@@ -15,17 +15,22 @@
 package configinfo
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"sort"
 	"testing"
 
+	"github.com/gorilla/mux"
 	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/genproto/protobuf/api"
 
 	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
 	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
+
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -729,6 +734,73 @@ func TestProcessQuota(t *testing.T) {
 			if eq := reflect.DeepEqual(gotMethod, wantMethod); !eq {
 				t.Errorf("Test Desc(%d): %s,\ngot Method: %v,\nwant Method: %v", i, tc.desc, gotMethod, wantMethod)
 			}
+		}
+	}
+}
+
+func TestProcessEmptyJwksUriByOpenID(t *testing.T) {
+	r := mux.NewRouter()
+	jwksUriEntry, _ := json.Marshal(map[string]string{"jwks_uri": "this-is-jwksUri"})
+	r.Path("/.well-known/openid-configuration/").Methods("GET").Handler(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Write(jwksUriEntry)
+		}))
+	openIDServer := httptest.NewServer(r)
+
+	testData := []struct {
+		desc              string
+		fakeServiceConfig *conf.Service
+		wantedJwksUri     string
+	}{
+		{
+			desc: "Empty jwksUri, use jwksUri acquired by openID",
+			fakeServiceConfig: &conf.Service{
+				Apis: []*api.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Authentication: &conf.Authentication{
+					Providers: []*conf.AuthProvider{
+						{
+							Id:     "auth_provider",
+							Issuer: openIDServer.URL,
+						},
+					},
+				},
+			},
+			wantedJwksUri: "this-is-jwksUri",
+		},
+		{
+			desc: "Empty jwksUri and no jwksUri acquired by openID, use FakeJwksUri",
+			fakeServiceConfig: &conf.Service{
+				Apis: []*api.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Authentication: &conf.Authentication{
+					Providers: []*conf.AuthProvider{
+						{
+							Id:     "auth_provider",
+							Issuer: "aaaaa.bbbbbb.ccccc/inaccessible_uri/",
+						},
+					},
+				},
+			},
+			wantedJwksUri: ut.FakeJwksUri,
+		},
+	}
+
+	for i, tc := range testData {
+		options := DefaultEnvoyConfigOptions()
+		options.BackendProtocol = "http1"
+		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
+		if err != nil {
+			t.Errorf("Test Desc(%d): %s, process jwksUri got %v", i, tc.desc, err)
+		}
+		if jwksUri := serviceInfo.serviceConfig.Authentication.Providers[0].JwksUri; jwksUri != tc.wantedJwksUri {
+			t.Errorf("Test Desc(%d): %s, process jwksUri got: %v, want: %v", i, tc.desc, jwksUri, tc.wantedJwksUri)
 		}
 	}
 }

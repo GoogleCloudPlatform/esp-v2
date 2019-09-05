@@ -112,6 +112,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *conf.Service, id string, opt
 		return nil, err
 	}
 	serviceInfo.processTypes()
+	serviceInfo.processEmptyJwksUriByOpenID()
 
 	// Sort Methods according to name.
 	for operation := range serviceInfo.Methods {
@@ -125,6 +126,27 @@ func NewServiceInfoFromServiceConfig(serviceConfig *conf.Service, id string, opt
 // Returns the pointer of the ServiceConfig that this API belongs to.
 func (s *ServiceInfo) ServiceConfig() *conf.Service {
 	return s.serviceConfig
+}
+
+func (s *ServiceInfo) processEmptyJwksUriByOpenID() {
+	authn := s.serviceConfig.GetAuthentication()
+	for _, provider := range authn.GetProviders() {
+		jwksUri := provider.GetJwksUri()
+
+		// Note: When jwksUri is empty, proxy will try to find jwksUri by openID
+		// discovery. If error happens during this process, a fake and unaccessible
+		// jwksUri will be filled instead.
+		if jwksUri == "" {
+			jwksUriByOpenID, err := ut.ResolveJwksUriUsingOpenID(provider.GetIssuer())
+			if err != nil {
+				glog.Warning(err.Error())
+				jwksUri = ut.FakeJwksUri
+			} else {
+				jwksUri = jwksUriByOpenID
+			}
+			provider.JwksUri = jwksUri
+		}
+	}
 }
 
 func (s *ServiceInfo) processApis() {
