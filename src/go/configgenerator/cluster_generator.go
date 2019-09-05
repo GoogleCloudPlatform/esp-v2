@@ -108,21 +108,6 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*cdspb.Cluster, err
 	authn := serviceInfo.ServiceConfig().GetAuthentication()
 	for _, provider := range authn.GetProviders() {
 		jwksUri := provider.GetJwksUri()
-
-		// Note: When jwksUri is empty, proxy will try to find jwksUri by openID
-		// discovery. If error happens during this process, a fake and unaccessible
-		// jwksUri will be filled instead.
-		if jwksUri == "" {
-			jwksUriByOpenID, err := ut.ResolveJwksUriUsingOpenID(provider.GetIssuer())
-			if err != nil {
-				glog.Warning(err.Error())
-				jwksUri = ut.FakeJwksUri
-			} else {
-				jwksUri = jwksUriByOpenID
-			}
-			provider.JwksUri = jwksUri
-		}
-
 		scheme, hostname, port, _, err := ut.ParseURI(jwksUri)
 		if err != nil {
 			glog.Warningf("Fail to parse jwksUri %s with error %v", jwksUri, err)

@@ -15,9 +15,6 @@
 package configgenerator
 
 import (
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
@@ -25,7 +22,6 @@ import (
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	"github.com/golang/protobuf/ptypes"
-	"github.com/gorilla/mux"
 	"google.golang.org/genproto/protobuf/api"
 
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
@@ -280,14 +276,6 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 func TestMakeJwtProviderClusters(t *testing.T) {
 	_, fakeJwksUriHost, _, _, _ := ut.ParseURI(ut.FakeJwksUri)
 
-	r := mux.NewRouter()
-	jwksUriEntry, _ := json.Marshal(map[string]string{"jwks_uri": "this-is-jwksUri"})
-	r.Path("/.well-known/openid-configuration/").Methods("GET").Handler(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Write(jwksUriEntry)
-		}))
-	openIDServer := httptest.NewServer(r)
-
 	testData := []struct {
 		desc           string
 		fakeProviders  []*conf.AuthProvider
@@ -338,45 +326,6 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 			wantedClusters: []*cdspb.Cluster{
 				{
 					Name:                 "issuer_2",
-					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &cdspb.Cluster_Type{cdspb.Cluster_LOGICAL_DNS},
-					DnsLookupFamily:      cdspb.Cluster_V4_ONLY,
-					LoadAssignment:       ut.CreateLoadAssignment(fakeJwksUriHost, 80),
-				},
-			},
-		},
-		{
-			desc: "Empty jwksUri, use jwksUri acquired by openID",
-			fakeProviders: []*conf.AuthProvider{
-				&conf.AuthProvider{
-					Id:     "auth_provider",
-					Issuer: openIDServer.URL,
-				},
-			},
-			wantedClusters: []*cdspb.Cluster{
-				{
-					Name:                 openIDServer.URL,
-					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &cdspb.Cluster_Type{cdspb.Cluster_LOGICAL_DNS},
-					DnsLookupFamily:      cdspb.Cluster_V4_ONLY,
-					LoadAssignment:       ut.CreateLoadAssignment("this-is-jwksUri", 443),
-					TlsContext: &certpb.UpstreamTlsContext{
-						Sni: "this-is-jwksUri",
-					},
-				},
-			},
-		},
-		{
-			desc: "Empty jwksUri and no jwksUri acquired by openID, use FakeJwksUri",
-			fakeProviders: []*conf.AuthProvider{
-				&conf.AuthProvider{
-					Id:     "auth_provider",
-					Issuer: "aaaaa.bbbbbb.ccccc/inaccessible_uri/",
-				},
-			},
-			wantedClusters: []*cdspb.Cluster{
-				{
-					Name:                 "aaaaa.bbbbbb.ccccc/inaccessible_uri/",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &cdspb.Cluster_Type{cdspb.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      cdspb.Cluster_V4_ONLY,
