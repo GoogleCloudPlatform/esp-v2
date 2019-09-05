@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/genproto/protobuf/api"
 
@@ -94,9 +95,9 @@ func TestMakeServiceControlCluster(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		options := configinfo.DefaultEnvoyConfigOptions()
-		options.BackendProtocol = tc.backendProtocol
-		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = tc.backendProtocol
+		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -248,13 +249,13 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		options := configinfo.DefaultEnvoyConfigOptions()
-		options.BackendProtocol = tc.backendProtocol
-		options.EnableBackendRouting = true
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = tc.backendProtocol
+		opts.EnableBackendRouting = true
 		if tc.backendDnsLookupFamily != "" {
-			options.BackendDnsLookupFamily = tc.backendDnsLookupFamily
+			opts.BackendDnsLookupFamily = tc.backendDnsLookupFamily
 		}
-		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
+		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -346,9 +347,9 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 			},
 		}
 
-		options := configinfo.DefaultEnvoyConfigOptions()
-		options.BackendProtocol = "http2"
-		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, options)
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = "http2"
+		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
 		}

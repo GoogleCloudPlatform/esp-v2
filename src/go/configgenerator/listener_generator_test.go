@@ -21,6 +21,7 @@ import (
 	"strings"
 	"testing"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
@@ -83,9 +84,9 @@ func TestTranscoderFilter(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		options := configinfo.DefaultEnvoyConfigOptions()
-		options.BackendProtocol = "gRPC"
-		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = "gRPC"
+		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -166,10 +167,10 @@ func TestBackendAuthFilter(t *testing.T) {
       "name": "envoy.filters.http.backend_auth"
     }`
 
-	options := configinfo.DefaultEnvoyConfigOptions()
-	options.BackendProtocol = "http2"
-	options.EnableBackendRouting = true
-	fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, options)
+	opts := options.DefaultConfigGeneratorOptions()
+	opts.BackendProtocol = "http2"
+	opts.EnableBackendRouting = true
+	fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -504,10 +505,10 @@ func TestPathMatcherFilter(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		options := configinfo.DefaultEnvoyConfigOptions()
-		options.BackendProtocol = tc.backendProtocol
-		options.EnableBackendRouting = true
-		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = tc.backendProtocol
+		opts.EnableBackendRouting = true
+		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
 		}

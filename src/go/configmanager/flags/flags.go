@@ -21,12 +21,12 @@ import (
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/commonflags"
-	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 )
 
 var (
-	// These flags are kept in sync with configinfo.EnvoyConfigOptions.
-	// When adding or changing default values, update configinfo.DefaultEnvoyConfigOptions.
+	// These flags are kept in sync with options.ConfigGeneratorOptions.
+	// When adding or changing default values, update options.DefaultConfigGeneratorOptions.
 
 	// Service Management related configurations. Must be set.
 	BackendProtocol = flag.String("backend_protocol", "", `must set as one of "grpc", "http1", "http2"`)
@@ -93,8 +93,8 @@ var (
 	ScReportRetries = flag.Int("service_control_report_retries", -1, `Set the retry times for service control Report request. Must be >= 0 and the default is 5 if not set.`)
 )
 
-func EnvoyConfigOptionsFromFlags() configinfo.EnvoyConfigOptions {
-	return configinfo.EnvoyConfigOptions{
+func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
+	return options.ConfigGeneratorOptions{
 		CommonOptions:                 commonflags.DefaultCommonOptionsFromFlags(),
 		BackendProtocol:               *BackendProtocol,
 		CorsAllowCredentials:          *CorsAllowCredentials,

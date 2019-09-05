@@ -22,6 +22,7 @@ import (
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/golang/glog"
@@ -48,7 +49,7 @@ var (
 type ConfigManager struct {
 	serviceName        string
 	serviceInfo        *configinfo.ServiceInfo
-	envoyConfigOptions configinfo.EnvoyConfigOptions
+	envoyConfigOptions options.ConfigGeneratorOptions
 	curRolloutID       string
 	curConfigID        string
 
@@ -60,7 +61,7 @@ type ConfigManager struct {
 
 // NewConfigManager creates new instance of ConfigManager.
 // mf is set to nil on non-gcp deployments
-func NewConfigManager(mf *metadata.MetadataFetcher, options configinfo.EnvoyConfigOptions) (*ConfigManager, error) {
+func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGeneratorOptions) (*ConfigManager, error) {
 	var err error
 	name := *ServiceName
 	checkMetadata := *CheckMetadata
@@ -90,7 +91,7 @@ func NewConfigManager(mf *metadata.MetadataFetcher, options configinfo.EnvoyConf
 	m := &ConfigManager{
 		serviceName:        name,
 		metadataFetcher:    mf,
-		envoyConfigOptions: options,
+		envoyConfigOptions: opts,
 	}
 
 	m.cache = cache.NewSnapshotCache(true, m, m)

@@ -18,13 +18,13 @@ import (
 	"flag"
 	"time"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 )
 
 var (
 	// Any flags in this file are used by both the ADS Bootstrapper (startup) and Config Generation via the static bootstrapper or config manager.
-	// These flags are kept in sync with configinfo.CommonOptions.
-	// When adding or changing default values, update configinfo.DefaultCommonOptions.
+	// These flags are kept in sync with options.CommonOptions.
+	// When adding or changing default values, update options.DefaultCommonOptions.
 
 	AdminPort                 = flag.Int("admin_port", 8001, "Port that envoy should serve the admin page on")
 	EnableTracing             = flag.Bool("enable_tracing", false, `enable stackdriver tracing`)
@@ -37,8 +37,8 @@ var (
 	TracingOutgoingContext    = flag.String("tracing_outgoing_context", "", "comma separated outgoing trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)")
 )
 
-func DefaultCommonOptionsFromFlags() configinfo.CommonOptions {
-	return configinfo.CommonOptions{
+func DefaultCommonOptionsFromFlags() options.CommonOptions {
+	return options.CommonOptions{
 		AdminPort:                 *AdminPort,
 		EnableTracing:             *EnableTracing,
 		MetadataFetcherTimeout:    *MetadataFetcherTimeout,
