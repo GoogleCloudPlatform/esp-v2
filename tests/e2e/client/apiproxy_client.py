@@ -169,6 +169,7 @@ if __name__ == "__main__":
         sys.exit(
             ('Load test failed:\n'
              '  {} failed requests,\n'
-             '  {} non-2xx responses.').format(failed, non2xx))
+             '  {} non-2xx responses.\n'
+             '  {} completed response.').format(failed, non2xx, completed))
 
     print "All load tests are successful."

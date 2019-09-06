@@ -39,13 +39,13 @@ genrule(
         "@com_github_googleapis_googleapis//:google/logging/type/log_severity.proto",
         "@com_github_googleapis_googleapis//:google/type/money.proto",
         "@com_google_protobuf//:well_known_protos",
-        "grpc-test.proto",
+        "proto/grpc-test.proto",
     ],
     outs = ["grpc-test.descriptor"],
-    cmd = """$(location //external:protoc) $(location :grpc-test.proto) \
+    cmd = """$(location //external:protoc) $(location :proto/grpc-test.proto) \
         -I$$(dirname $(location @com_github_googleapis_googleapis//:google/rpc/status.proto))/../.. \
         -Iexternal/com_google_protobuf/src \
-        -I$$(dirname $(location :grpc-test.proto)) \
+        -I$$(dirname $(location :proto/grpc-test.proto)) \
         --include_imports --descriptor_set_out=$@""",
     tools = ["//external:protoc"],
 )

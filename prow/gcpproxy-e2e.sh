@@ -54,6 +54,9 @@ function getApiProxyService() {
   if [[ "${1}" == "bookstore" ]]; then
     echo "bookstore.endpoints.cloudesf-testing.cloud.goog"
     return 0
+  elif [[ "${1}" == "echo" ]]; then
+    echo "echo.endpoints.cloudesf-testing.cloud.goog"
+    return 0
   else
     echo "Service ${1} is not supported."
     return 1
@@ -90,9 +93,10 @@ function e2eGKE() {
   -i ${UNIQUE_ID}
 }
 
-
 # IMAGE veriable will be set by the script
 ${ROOT}/scripts/robot-release.sh
 
+build_e2e_dependency
 # TODO(jilinxia): add other backend tests.
 e2eGKE -c "tight" -t "http" -g "bookstore" -R "managed" -m $(get_proxy_image_name_with_sha)
+e2eGKE -c "tight" -t "http2" -g "echo" -R "managed" -m $(get_proxy_image_name_with_sha)

@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "tests/endpoints/grpc-echo/client-test-lib.h"
-
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
@@ -29,6 +27,7 @@
 
 #include "google/protobuf/util/message_differencer.h"
 #include "test/test_common/utility.h"
+#include "tests/endpoints/grpc-echo/client-test-lib.h"
 // #include "src/api_manager/utils/marshalling.h"
 
 using ::google::api::servicecontrol::v1::ReportRequest;
@@ -49,8 +48,85 @@ using ::grpc::SslCredentialsOptions;
 using ::grpc::Status;
 using ::grpc::StatusCode;
 
+using ::google::protobuf::Message;
+using ::google::protobuf::TextFormat;
+using ::google::protobuf::io::IstreamInputStream;
+using ::google::protobuf::io::OstreamOutputStream;
+using ::google::protobuf::util::TypeResolver;
+using ::google::protobuf::util::error::Code;
+const char kTypeUrlPrefix[] = "type.googleapis.com";
+const char kRpcStatusTypeUrl[] = "type.googleapis.com/google.rpc.Status";
+
+
 namespace test {
 namespace grpc {
+namespace {
+// Creation function used by static lazy init.
+TypeResolver* CreateTypeResolver() {
+  return ::google::protobuf::util::NewTypeResolverForDescriptorPool(
+      kTypeUrlPrefix, ::google::protobuf::DescriptorPool::generated_pool());
+}
+
+TypeResolver* GetTypeResolver() {
+  static TypeResolver* resolver = CreateTypeResolver();
+  return resolver;
+}
+
+std::string GetTypeUrl(const Message& message) {
+  return std::string(kTypeUrlPrefix) + "/" +
+      message.GetDescriptor()->full_name();
+}
+
+::google::protobuf::util::Status FromProto(
+    const ::google::protobuf::util::Status &proto_status) {
+  if (proto_status.ok()) {
+    return ::google::protobuf::util::Status::OK;
+  }
+  return proto_status;
+}
+}
+
+::google::protobuf::util::Status JsonToProto(const std::string &json,
+                                             Message *message) {
+  ::google::protobuf::util::JsonParseOptions options;
+  options.ignore_unknown_fields = true;
+  std::string binary;
+  ::google::protobuf::util::Status status =
+      ::google::protobuf::util::JsonToBinaryString(
+          GetTypeResolver(), GetTypeUrl(*message), json, &binary, options);
+  if (!status.ok()) {
+    return FromProto(status);
+  }
+  if (message->ParseFromString(binary)) {
+    return ::google::protobuf::util::Status::OK;
+  }
+  return ::google::protobuf::util::Status(
+      Code::INTERNAL,
+      "Unable to parse bytes generated from JsonToBinaryString as proto.");
+}
+
+::google::protobuf::util::Status ProtoToJson(const Message& message,
+                   ::google::protobuf::io::ZeroCopyOutputStream* json,
+                   int options) {
+  ::google::protobuf::util::JsonPrintOptions json_options;
+  if (options & JsonOptions::PRETTY_PRINT) {
+    json_options.add_whitespace = true;
+  }
+  if (options & JsonOptions::OUTPUT_DEFAULTS) {
+    json_options.always_print_primitive_fields = true;
+  }
+  // TODO: Skip going to bytes and use ProtoObjectSource directly.
+  std::string binary = message.SerializeAsString();
+  ::google::protobuf::io::ArrayInputStream binary_stream(binary.data(),
+                                                         binary.size());
+  ::google::protobuf::util::Status status =
+      ::google::protobuf::util::BinaryToJsonStream(
+          GetTypeResolver(), GetTypeUrl(message), &binary_stream, json,
+          json_options);
+  return FromProto(status);
+}
+
+
 namespace {
 
 typedef std::function<void(bool)> Tag;
@@ -158,10 +234,9 @@ std::string GetStatusAggregationKey(const CallStatus &status) {
   ::test::grpc::GrpcErrorDetail grpc_error;
   // grpc error message has time stamp fields.
   // only keep description and http2_error fields as key.
-  ::Envoy::TestUtility::loadFromJson(details, grpc_error);
-  // if (::google::api_manager::utils::JsonToProto(details, &grpc_error).ok()) {
-  grpc_error.SerializeToString(&details);
-  // }
+  if (JsonToProto(details, &grpc_error).ok()) {
+    grpc_error.SerializeToString(&details);
+  }
   return details + std::to_string(status.code());
 }
 

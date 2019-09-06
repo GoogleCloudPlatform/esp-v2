@@ -19,11 +19,8 @@ set -eo pipefail
 
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${SCRIPT_PATH}/../../.." && pwd)"
-YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/bookstore/http-bookstore.yaml.template
-YAML_FILE=${SCRIPT_PATH}/../testdata/bookstore/http-bookstore.yaml
-
 ARGS="\
-  \"--backend=http://127.0.0.1:8081\",\
+  \"--backend=127.0.0.1:8081\",\
 "
 
 . ${SCRIPT_PATH}/prow-utilities.sh || { echo "Cannot load Bash utilities" ; exit 1 ; }
@@ -41,6 +38,21 @@ PROJECT_ID="cloudesf-testing"
 ARGS="$ARGS \"--service=${APIPROXY_SERVICE}\","
 ARGS="$ARGS \"--rollout_strategy=${ROLLOUT_STRATEGY}\","
 ARGS="$ARGS \"--enable_tracing\", \"--tracing_sample_rate=1.0\""
+ case "${BACKEND}" in
+   'bookstore' )
+      YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/bookstore/http-bookstore.yaml.template
+      YAML_FILE=${SCRIPT_PATH}/../testdata/bookstore/http-bookstore.yaml
+      ARGS="$ARGS , \"--backend_protocol=http1\"";;
+   'echo'      )
+      YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/grpc-echo/grpc-echo.yaml.template
+      YAML_FILE=${SCRIPT_PATH}/../testdata/grpc-echo/grpc-echo.yaml
+      ARGS="$ARGS , \"--backend_protocol=grpc\"";;
+     *         )
+    echo "Invalid backend ${BACKEND}"
+    return 1;;
+
+ esac
+
 sed "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g"  ${YAML_TEMPLATE} \
   | sed "s|ARGS|${ARGS}|g" | tee ${YAML_FILE}
 
@@ -48,8 +60,23 @@ sed "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g"  ${YAML_TEMPLATE} \
 # is changes in the service config, and also remember to update the version
 # number in kubernetes config.
 #
-SERVICE_IDL="${SCRIPT_PATH}/../testdata/bookstore/bookstore_swagger_template.json"
-run sed -i "s|\${ENDPOINT_SERVICE}|${APIPROXY_SERVICE}|g" ${SERVICE_IDL}
+case "${BACKEND}" in
+   'bookstore' )
+      SERVICE_IDL="${SCRIPT_PATH}/../testdata/bookstore/bookstore_swagger_template.json"
+      CREATE_SERVICE_ARGS="${SERVICE_IDL}"
+      ;;
+   'echo'      )
+      SERVICE_YAML="${ROOT}/tests/endpoints/grpc-echo/grpc-test.yaml"
+      SERVICE_DSCP="${ROOT}/bazel-genfiles/tests/endpoints/grpc-echo/grpc-test.descriptor"
+      CREATE_SERVICE_ARGS="${SERVICE_YAML} ${SERVICE_DSCP}"
+      ARGS="$ARGS -g";;
+   *          )
+    echo "Invalid backend ${BACKEND}"
+    return 1;;
+esac
+
+
+create_service ${CREATE_SERVICE_ARGS}
 
 # Creates service on GKE cluster.
 NAMESPACE="${UNIQUE_ID}"

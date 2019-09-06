@@ -1,0 +1,30 @@
+type: google.api.Service
+config_version: 3
+name: echo.endpoints.cloudesf-testing.cloud.goog
+title: GRPC Echo Test
+apis:
+  - name: test.grpc.Test
+authentication:
+  rules:
+    - selector: test.grpc.Test.EchoStream
+      requirements:
+        - provider_id: test_jwk
+  providers:
+    - id: test_jwk
+      issuer: 245521401045-compute@developer.gserviceaccount.com
+      jwks_uri: https://www.googleapis.com/service_accounts/v1/jwk/245521401045-compute@developer.gserviceaccount.com
+usage:
+  rules:
+    - selector: test.grpc.Test.Echo
+      allow_unregistered_calls: true
+http:
+  rules:
+    - selector: test.grpc.Test.Echo
+      post: "/echo"
+      body: "*"
+    - selector: test.grpc.Test.EchoReport
+      post: "/echoreport"
+      body: "*"
+    - selector: test.grpc.Test.EchoStream
+      post: "/echostream"
+      body: "*"

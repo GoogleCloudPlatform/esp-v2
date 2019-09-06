@@ -17,27 +17,30 @@
 # Fail on any error.
 set -eo pipefail
 
-. ${ROOT}/scripts/all-utilities.sh || { echo "Cannot load Bash utilities" ; exit 1 ; }
+. ${ROOT}/scripts/all-utilities.sh || {
+  echo "Cannot load Bash utilities"
+  exit 1
+}
 
 # End to End tests common options
 function e2e_options() {
   local OPTIND OPTARG arg
   while getopts :a:b:B:m:g:i:k:l:r:R:s:t:v:V: arg; do
     case ${arg} in
-      a) APIPROXY_SERVICE="${OPTARG}";;
-      b) BOOKSTORE_IMAGE="${OPTARG}";;
-      B) BUCKET="${OPTARG}";;
-      m) APIPROXY_IMAGE="${OPTARG}";;
-      g) BACKEND="${OPTARG}";;
-      i) UNIQUE_ID="${OPTARG}";;
-      k) API_KEY="${OPTARG}";;
-      l) DURATION_IN_HOUR="${OPTARG}";;
-      R) ROLLOUT_STRATEGY="${OPTARG}";;
-      s) SKIP_CLEANUP='true';;
-      t) TEST_TYPE="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')";;
-      v) VM_IMAGE="${OPTARG}";;
-      V) ENDPOINTS_RUNTIME_VERSION="${OPTARG}";;
-      *) e2e_usage "Invalid option: -${OPTARG}";;
+    a) APIPROXY_SERVICE="${OPTARG}" ;;
+    b) BOOKSTORE_IMAGE="${OPTARG}" ;;
+    B) BUCKET="${OPTARG}" ;;
+    m) APIPROXY_IMAGE="${OPTARG}" ;;
+    g) BACKEND="${OPTARG}" ;;
+    i) UNIQUE_ID="${OPTARG}" ;;
+    k) API_KEY="${OPTARG}" ;;
+    l) DURATION_IN_HOUR="${OPTARG}" ;;
+    R) ROLLOUT_STRATEGY="${OPTARG}" ;;
+    s) SKIP_CLEANUP='true' ;;
+    t) TEST_TYPE="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')" ;;
+    v) VM_IMAGE="${OPTARG}" ;;
+    V) ENDPOINTS_RUNTIME_VERSION="${OPTARG}" ;;
+    *) e2e_usage "Invalid option: -${OPTARG}" ;;
     esac
   done
   if [[ -z ${API_KEY} ]]; then
@@ -103,12 +106,24 @@ function long_running_test() {
         -s "${apiproxy_service}" 2>&1 | tee "${log_file}"
       status=${PIPESTATUS[0]}
     fi
+  elif [[ "${BACKEND}" == 'echo' ]]; then
+    retry -n 20 check_grpc_service "${host}:80"
+    status=${?}
+    if [[ ${status} -eq 0 ]]; then
+      run_nonfatal "${SCRIPT_PATH}"/linux-grpc-test-long-run.sh"" \
+        -g "${host}" \
+        -g "${host}" \
+        -l "${duration_in_hour}" \
+        -a "${api_key}" \
+        -s "${apiproxy_service}" 2>&1 | tee "${log_file}"
+      status=${PIPESTATUS[0]}
+    fi
   fi
   return ${status}
 }
 
 # Check for host http return code.
-function check_http_service () {
+function check_http_service() {
   local host=${1}
   echo $host
   local http_code="${2}"
@@ -125,15 +140,35 @@ function check_http_service () {
     return 1
   fi
 }
+function check_grpc_service() {
+  local host=${1}
+  cat <<EOF | "${ROOT}/bin/grpc_echo_client"
+server_addr: "${host}"
+plans {
+  echo {
+    request {
+      text: "Hello, world!"
+    }
+  }
+}
+EOF
+  local status=${?}
+  if [[ ${status} -eq 0 ]]; then
+    echo "Service is available at: ${host}"
+  else
+    echo "Service ${host} is not ready"
+  fi
+  return ${status}
+}
 
-function get_cluster_host () {
+function get_cluster_host() {
   local COUNT=10
   local SLEEP=15
-  for i in $( seq 1 ${COUNT} ); do
-    local host=$(kubectl get service app -n ${1}| awk '{print $4}' | grep -v EXTERNAL-IP)
-      [ '<pending>' != $host ] && break
-      echo "Waiting for server external ip. Attempt  #$i/${COUNT}... will try again in ${SLEEP} seconds" >&2
-      sleep ${SLEEP}
+  for i in $(seq 1 ${COUNT}); do
+    local host=$(kubectl get service app -n ${1} | awk '{print $4}' | grep -v EXTERNAL-IP)
+    [ '<pending>' != $host ] && break
+    echo "Waiting for server external ip. Attempt  #$i/${COUNT}... will try again in ${SLEEP} seconds" >&2
+    sleep ${SLEEP}
   done
   if [[ '<pending>' == $host ]]; then
     echo 'Failed to get the GKE cluster host.'
@@ -156,7 +191,18 @@ function sed_i() {
 
 # Creating and activating a service
 function create_service() {
-  local swagger_json="${1}"
   echo 'Deploying service'
+  case "$#" in
+  '1')
+  local swagger_json="${1}"
   retry -n 3 run ${GCLOUD} endpoints services deploy "${swagger_json}"
+  ;;
+  '2')
+  retry -n 3 run ${GCLOUD} endpoints services deploy ${@:1}
+  ;;
+  *)
+  echo "Invalid arguments ${@} provided for create service"
+  return 1;
+  ;;
+  esac
 }
