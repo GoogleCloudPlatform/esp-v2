@@ -102,6 +102,8 @@ void ServiceControlHandlerImpl::fillOperationInfo(
   info.producer_project_id =
       require_ctx_->service_ctx().config().producer_project_id();
   info.request_start_time = now;
+  info.client_ip =
+      stream_info_.downstreamRemoteAddress()->ip()->addressAsString();
 }
 
 void ServiceControlHandlerImpl::prepareReportRequest(
@@ -166,9 +168,6 @@ void ServiceControlHandlerImpl::callCheck(Http::HeaderMap& headers,
       std::string(Utils::extractHeader(headers, kAndroidPackageHeader));
   info.android_cert_fingerprint =
       std::string(Utils::extractHeader(headers, kAndroidCertHeader));
-
-  info.client_ip =
-      stream_info_.downstreamRemoteAddress()->ip()->addressAsString();
 
   aborted_.reset(new bool(false));
   require_ctx_->service_ctx().call().callCheck(

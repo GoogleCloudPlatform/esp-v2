@@ -628,6 +628,12 @@ const expectedReport = `
                   string_value: "/shelves"
                 >
               >
+              fields: <
+                key: "client_ip"
+                value: <
+                  string_value: "127.0.0.1"
+                >
+              >
             >
           >
         >
@@ -1438,70 +1444,10 @@ const expectedReport3 = `
                   string_value: "/shelves"
                 >
               >
-            >
-          >
-          log_entries: <
-            name: "endpoints_log"
-            severity: ERROR
-            struct_payload: <
               fields: <
-                key: "api_key"
+                key: "client_ip"
                 value: <
-                  string_value: "api-key"
-                >
-              >
-              fields: <
-                key: "api_method"
-                value: <
-                  string_value: "ListShelves"
-                >
-              >
-              fields: <
-                key: "http_method"
-                value: <
-                  string_value: "GET"
-                >
-              >
-              fields: <
-                key: "http_response_code"
-                value: <
-                  number_value: 503
-                >
-              >
-              fields: <
-                key: "location"
-                value: <
-                  string_value: "us-central1"
-                >
-              >
-              fields: <
-                key: "log_message"
-                value: <
-                  string_value: "Method: ListShelves"
-                >
-              >
-              fields: <
-                key: "producer_project_id"
-                value: <
-                  string_value: "endpoints-test"
-                >
-              >
-              fields: <
-                key: "request_size_in_bytes"
-                value: <
-                  number_value: 39
-                >
-              >
-              fields: <
-                key: "response_size_in_bytes"
-                value: <
-                  number_value: 208
-                >
-              >
-              fields: <
-                key: "url"
-                value: <
-                  string_value: "/shelves"
+                  string_value: "127.0.0.1"
                 >
               >
             >
@@ -1568,6 +1514,84 @@ const expectedReport3 = `
                 key: "url"
                 value: <
                   string_value: "/shelves"
+                >
+              >
+              fields: <
+                key: "client_ip"
+                value: <
+                  string_value: "127.0.0.1"
+                >
+              >
+            >
+          >
+          log_entries: <
+            name: "endpoints_log"
+            severity: ERROR
+            struct_payload: <
+              fields: <
+                key: "api_key"
+                value: <
+                  string_value: "api-key"
+                >
+              >
+              fields: <
+                key: "api_method"
+                value: <
+                  string_value: "ListShelves"
+                >
+              >
+              fields: <
+                key: "http_method"
+                value: <
+                  string_value: "GET"
+                >
+              >
+              fields: <
+                key: "http_response_code"
+                value: <
+                  number_value: 503
+                >
+              >
+              fields: <
+                key: "location"
+                value: <
+                  string_value: "us-central1"
+                >
+              >
+              fields: <
+                key: "log_message"
+                value: <
+                  string_value: "Method: ListShelves"
+                >
+              >
+              fields: <
+                key: "producer_project_id"
+                value: <
+                  string_value: "endpoints-test"
+                >
+              >
+              fields: <
+                key: "request_size_in_bytes"
+                value: <
+                  number_value: 39
+                >
+              >
+              fields: <
+                key: "response_size_in_bytes"
+                value: <
+                  number_value: 208
+                >
+              >
+              fields: <
+                key: "url"
+                value: <
+                  string_value: "/shelves"
+                >
+              >
+              fields: <
+                key: "client_ip"
+                value: <
+                  string_value: "127.0.0.1"
                 >
               >
             >
@@ -1850,6 +1874,7 @@ func TestCreateReport(t *testing.T) {
 		RequestBytes:      39,
 		ResponseBytes:     208,
 		ResponseCode:      503,
+		StatusCode:        "14",
 		ErrorType:         "5xx",
 	})
 
