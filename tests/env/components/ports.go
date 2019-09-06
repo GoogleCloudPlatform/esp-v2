@@ -36,15 +36,17 @@ const (
 	TestDifferentOriginSimpleCors
 	TestDynamicRouting
 	TestGRPC
-	TestGRPCErrors
-	TestGRPCJwt
-	TestGRPCFallback
-	TestGRPCLargeRequest
-	TestGRPCWeb
-	TestGRPCInterops
-	TestGRPCInteropMiniStress
 	TestGrpcBackendPreflightCors
 	TestGrpcBackendSimpleCors
+	TestGRPCErrors
+	TestGRPCFallback
+	TestGRPCInteropMiniStress
+	TestGRPCInterops
+	TestGRPCJwt
+	TestGRPCMetadata
+	TestGRPCMinistress
+	TestGRPCStreaming
+	TestGRPCWeb
 	TestHttp1Basic
 	TestHttp1JWT
 	TestManagedServiceConfig
@@ -61,8 +63,8 @@ const (
 	TestServiceControlCheckNetworkFailClosed
 	TestServiceControlCheckNetworkFailOpen
 	TestServiceControlCheckRetry
-	TestServiceControlCheckTracesWithRetry
 	TestServiceControlCheckTimeout
+	TestServiceControlCheckTracesWithRetry
 	TestServiceControlCheckWrongServerName
 	TestServiceControlCredentialId
 	TestServiceControlJwtAuthFail
@@ -86,9 +88,9 @@ const (
 	TestServiceControlSkipUsageTraces
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
+	TestTranscodingBindings
 	TestTranscodingErrors
 	TestTranscodingServiceUnavailableError
-	TestTranscodingBindings
 	TestUnconfiguredRequest
 	// The number of total tests. has to be the last one.
 	maxTestNum

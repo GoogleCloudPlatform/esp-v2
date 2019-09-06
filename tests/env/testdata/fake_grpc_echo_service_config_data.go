@@ -17,7 +17,7 @@ package testdata
 var (
 	grpcEchoServiceConfigJsonStr = `{
   "producer_project_id": "producer-project",
-  "name": "echo.endpoints.cloudesf-testing.cloud.goog",
+  "name": "grpc-echo.endpoints.cloudesf-testing.cloud.goog",
   "title": "GRPC Echo Test",
   "apis": [{
     "name": "test.grpc.Test",
@@ -909,25 +909,6 @@ var (
     }]
   },
   "quota": {
-  },
-  "authentication": {
-    "rules": [{
-      "selector": "test.grpc.Test.EchoStream",
-      "requirements": [{
-        "providerId": "test_jwk"
-      }]
-    }],
-    "providers": [{
-      "id": "test_jwk",
-      "issuer": "test-client@esp-test-client.iam.gserviceaccount.com",
-      "jwksUri": "https://www.googleapis.com/service_accounts/v1/jwk/test-client@esp-test-client.iam.gserviceaccount.com"
-    }]
-  },
-  "usage": {
-    "rules": [{
-      "selector": "test.grpc.Test.Echo",
-      "allowUnregisteredCalls": true
-    }]
   },
   "endpoints": [{
     "name": "echo.endpoints.cloudesf-testing.cloud.goog"

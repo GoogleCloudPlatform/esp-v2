@@ -26,6 +26,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	grpcEchoClient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/grpc-echo/client"
 )
 
 var successTrailer, abortedTrailer, dataLossTrailer, internalTrailer client.GRPCWebTrailer
@@ -424,5 +425,74 @@ func TestGRPCJwt(t *testing.T) {
 		if !reflect.DeepEqual(trailer, tc.wantGRPCWebTrailer) {
 			t.Errorf("Test (%s): failed\n  expected: %s\n  got: %s", grpcWebDesc, tc.wantGRPCWebTrailer, trailer)
 		}
+	}
+}
+
+func TestGRPCMetadata(t *testing.T) {
+	configID := "test-config-id"
+	args := []string{"--service_config_id=" + configID,
+		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
+
+	s := env.NewTestEnv(comp.TestGRPCMetadata, "grpc-echo", nil)
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+	defer s.TearDown()
+
+	testPlans := `
+plans {
+  echo {
+    call_config {
+      api_key: "this-is-an-api-key"
+      metadata {
+        key: "client-text"
+        value: "text"
+      }
+      metadata {
+        key: "client-binary-bin"
+        value: "\\n\\v\\n\\v"
+      }
+    }
+    request {
+      text: "Hello, world!"
+      return_initial_metadata {
+        key: "initial-text"
+        value: "text"
+      }
+      return_initial_metadata {
+        key: "initial-binary-bin"
+        value: "\\n\\v\\n\\v"
+      }
+      return_trailing_metadata {
+        key: "trailing-text"
+        value: "text"
+      }
+      return_trailing_metadata {
+        key: "trailing-binary-bin"
+        value: "\\n\\v\\n\\v"
+      }
+    }
+  }
+}`
+	wantResult := `
+results {
+  echo {
+    text: "Hello, world!"
+    verified_metadata: 6
+  }
+}
+`
+
+	result, err := grpcEchoClient.RunGRPCEchoTest(testPlans, s.Ports().ListenerPort)
+	if err != nil {
+		t.Errorf("Error during running test: %v", err)
+	}
+	if !strings.Contains(result, wantResult) {
+		t.Errorf("The results are different,\nreceived:\n%s,\nwanted:\n%s", result, wantResult)
+	}
+
+	_, err = s.ServiceControlServer.GetRequests(2)
+	if err != nil {
+		t.Fatalf("GetRequests returns error: %v", err)
 	}
 }
