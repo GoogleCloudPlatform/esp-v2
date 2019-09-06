@@ -941,6 +941,7 @@ const char kLogFieldNameResponseHeaders[] = "response_headers";
 const char kLogFieldNameResponseSize[] = "response_size_in_bytes";
 const char kLogFieldNameTimestamp[] = "timestamp";
 const char kLogFieldNameUrl[] = "url";
+const char kLogFieldNameClientIp[] = "client_ip";
 
 // Convert time point to proto Timestamp
 Timestamp CreateTimestamp(std::chrono::system_clock::time_point tp) {
@@ -1045,6 +1046,9 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
   }
   if (!info.method.empty()) {
     (*fields)[kLogFieldNameHttpMethod].set_string_value(info.method);
+  }
+  if (!info.client_ip.empty()) {
+    (*fields)[kLogFieldNameClientIp].set_string_value(info.client_ip);
   }
   if (!info.jwt_payloads.empty()) {
     (*fields)[kLogFieldNameJwtPayloads].set_string_value(info.jwt_payloads);

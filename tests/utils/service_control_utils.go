@@ -264,6 +264,7 @@ func createLogEntry(er *ExpectedReport) *sc.LogEntry {
 	if er.JwtPayloads != "" {
 		pl["jwt_payloads"] = makeStringValue(er.JwtPayloads)
 	}
+	pl["client_ip"] = makeStringValue("127.0.0.1")
 
 	severity := ltype.LogSeverity_INFO
 	if er.ResponseCode >= 400 {
@@ -651,6 +652,7 @@ func VerifyQuota(body []byte, er *ExpectedQuota) error {
 			Labels: map[string]string{
 				"servicecontrol.googleapis.com/service_agent": "APIPROXY/0.0.1",
 				"servicecontrol.googleapis.com/user_agent":    "APIPROXY",
+				"servicecontrol.googleapis.com/caller_ip":    "127.0.0.1",
 			},
 		},
 		ServiceConfigId: er.ServiceConfigID,
@@ -733,7 +735,7 @@ func CheckAPIKey(t *testing.T, scCheck *comp.ServiceRequest, wantApiKey string, 
 	body := scCheck.ReqBody
 	got, err := UnmarshalCheckRequest(body)
 	if err != nil {
-		t.Fatalf("Test (%s): failed, %v: ", desc)
+		t.Fatalf("Test (%s): failed, %v: ", desc, err)
 	}
 
 	if gotApiKey := got.Operation.ConsumerId[8:]; gotApiKey != wantApiKey {
