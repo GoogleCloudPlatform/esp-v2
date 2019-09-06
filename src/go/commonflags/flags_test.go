@@ -18,11 +18,11 @@ import (
 	"reflect"
 	"testing"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 )
 
 func TestDefaultCommonOptions(t *testing.T) {
-	defaultOptions := configinfo.DefaultCommonOptions()
+	defaultOptions := options.DefaultCommonOptions()
 	actualOptions := DefaultCommonOptionsFromFlags()
 
 	if !reflect.DeepEqual(defaultOptions, actualOptions) {

@@ -27,9 +27,9 @@ import (
 	"testing"
 	"time"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	"cloudesf.googlesource.com/gcpproxy/src/go/configmanager/testdata"
 	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
@@ -1123,21 +1123,21 @@ func TestFetchListeners(t *testing.T) {
 	for i, tc := range testData {
 		// Overrides fakeConfig for the test case.
 		fakeConfig = tc.fakeServiceConfig
-		options := configinfo.DefaultEnvoyConfigOptions()
-		options.BackendProtocol = tc.backendProtocol
-		options.EnableTracing = tc.enableTracing
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = tc.backendProtocol
+		opts.EnableTracing = tc.enableTracing
 
 		flag.Set("service", testProjectName)
 		flag.Set("service_config_id", testConfigID)
 		flag.Set("rollout_strategy", util.FixedRolloutStrategy)
 		flag.Set("check_rollout_interval", "100ms")
 
-		runTest(t, options, func(env *testEnv) {
+		runTest(t, opts, func(env *testEnv) {
 			ctx := context.Background()
 			// First request, VersionId should be empty.
 			req := v2.DiscoveryRequest{
 				Node: &core.Node{
-					Id: options.Node,
+					Id: opts.Node,
 				},
 				TypeUrl: cache.ListenerType,
 			}
@@ -1192,21 +1192,21 @@ func TestDynamicBackendRouting(t *testing.T) {
 	for i, tc := range testData {
 		// Overrides fakeConfig for the test case.
 		fakeConfig = tc.fakeServiceConfig
-		options := configinfo.DefaultEnvoyConfigOptions()
-		options.BackendProtocol = tc.backendProtocol
-		options.EnableBackendRouting = true
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = tc.backendProtocol
+		opts.EnableBackendRouting = true
 
 		flag.Set("service", testProjectName)
 		flag.Set("service_config_id", testConfigID)
 		flag.Set("rollout_strategy", util.FixedRolloutStrategy)
 		flag.Set("check_rollout_interval", "100ms")
 
-		runTest(t, options, func(env *testEnv) {
+		runTest(t, opts, func(env *testEnv) {
 			ctx := context.Background()
 			// First request, VersionId should be empty.
 			reqForClusters := v2.DiscoveryRequest{
 				Node: &core.Node{
-					Id: options.Node,
+					Id: opts.Node,
 				},
 				TypeUrl: cache.ClusterType,
 			}
@@ -1237,7 +1237,7 @@ func TestDynamicBackendRouting(t *testing.T) {
 
 			reqForListener := v2.DiscoveryRequest{
 				Node: &core.Node{
-					Id: options.Node,
+					Id: opts.Node,
 				},
 				TypeUrl: cache.ListenerType,
 			}
@@ -1359,20 +1359,20 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 	fakeConfig = testCase.fakeOldServiceConfig
 	fakeRollout = testCase.fakeOldServiceRollout
 
-	options := configinfo.DefaultEnvoyConfigOptions()
-	options.BackendProtocol = testCase.backendProtocol
+	opts := options.DefaultConfigGeneratorOptions()
+	opts.BackendProtocol = testCase.backendProtocol
 
 	flag.Set("service_config_id", testConfigID)
 	flag.Set("rollout_strategy", util.ManagedRolloutStrategy)
 	flag.Set("check_rollout_interval", "100ms")
 
-	runTest(t, options, func(env *testEnv) {
+	runTest(t, opts, func(env *testEnv) {
 		var resp *cache.Response
 		var err error
 		ctx := context.Background()
 		req := v2.DiscoveryRequest{
 			Node: &core.Node{
-				Id: options.Node,
+				Id: opts.Node,
 			},
 			TypeUrl: cache.ListenerType,
 		}
@@ -1418,7 +1418,7 @@ type testEnv struct {
 	configManager *ConfigManager
 }
 
-func runTest(t *testing.T, options configinfo.EnvoyConfigOptions, f func(*testEnv)) {
+func runTest(t *testing.T, opts options.ConfigGeneratorOptions, f func(*testEnv)) {
 	mockConfig := initMockConfigServer(t)
 	defer mockConfig.Close()
 	fetchConfigURL = func(serviceName, configID string) string {
@@ -1438,7 +1438,7 @@ func runTest(t *testing.T, options configinfo.EnvoyConfigOptions, f func(*testEn
 
 	metadataFetcher := metadata.NewMockMetadataFetcher(mockMetadataServer.URL, time.Now())
 
-	manager, err := NewConfigManager(metadataFetcher, options)
+	manager, err := NewConfigManager(metadataFetcher, opts)
 	if err != nil {
 		t.Fatal("fail to initialize ConfigManager: ", err)
 	}

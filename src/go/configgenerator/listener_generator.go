@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
@@ -345,28 +346,28 @@ func makeJwtRequirement(requirements []*conf.AuthRequirement) *ac.JwtRequirement
 	return requires
 }
 
-func makeServiceControlCallingConfig(options sc.EnvoyConfigOptions) *scpb.ServiceControlCallingConfig {
+func makeServiceControlCallingConfig(opts options.ConfigGeneratorOptions) *scpb.ServiceControlCallingConfig {
 	setting := &scpb.ServiceControlCallingConfig{}
-	setting.NetworkFailOpen = &wrappers.BoolValue{Value: options.ServiceControlNetworkFailOpen}
+	setting.NetworkFailOpen = &wrappers.BoolValue{Value: opts.ServiceControlNetworkFailOpen}
 
-	if options.ScCheckTimeoutMs > 0 {
-		setting.CheckTimeoutMs = &wrappers.UInt32Value{Value: uint32(options.ScCheckTimeoutMs)}
+	if opts.ScCheckTimeoutMs > 0 {
+		setting.CheckTimeoutMs = &wrappers.UInt32Value{Value: uint32(opts.ScCheckTimeoutMs)}
 	}
-	if options.ScQuotaTimeoutMs > 0 {
-		setting.QuotaTimeoutMs = &wrappers.UInt32Value{Value: uint32(options.ScQuotaTimeoutMs)}
+	if opts.ScQuotaTimeoutMs > 0 {
+		setting.QuotaTimeoutMs = &wrappers.UInt32Value{Value: uint32(opts.ScQuotaTimeoutMs)}
 	}
-	if options.ScReportTimeoutMs > 0 {
-		setting.ReportTimeoutMs = &wrappers.UInt32Value{Value: uint32(options.ScReportTimeoutMs)}
+	if opts.ScReportTimeoutMs > 0 {
+		setting.ReportTimeoutMs = &wrappers.UInt32Value{Value: uint32(opts.ScReportTimeoutMs)}
 	}
 
-	if options.ScCheckRetries > -1 {
-		setting.CheckRetries = &wrappers.UInt32Value{Value: uint32(options.ScCheckRetries)}
+	if opts.ScCheckRetries > -1 {
+		setting.CheckRetries = &wrappers.UInt32Value{Value: uint32(opts.ScCheckRetries)}
 	}
-	if options.ScQuotaRetries > -1 {
-		setting.QuotaRetries = &wrappers.UInt32Value{Value: uint32(options.ScQuotaRetries)}
+	if opts.ScQuotaRetries > -1 {
+		setting.QuotaRetries = &wrappers.UInt32Value{Value: uint32(opts.ScQuotaRetries)}
 	}
-	if options.ScReportRetries > -1 {
-		setting.ReportRetries = &wrappers.UInt32Value{Value: uint32(options.ScReportRetries)}
+	if opts.ScReportRetries > -1 {
+		setting.ReportRetries = &wrappers.UInt32Value{Value: uint32(opts.ScReportRetries)}
 	}
 	return setting
 }
@@ -559,10 +560,10 @@ func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) *hcm.HttpFilter {
 	return backendRoutingFilter
 }
 
-func makeRouterFilter(options sc.EnvoyConfigOptions) *hcm.HttpFilter {
+func makeRouterFilter(opts options.ConfigGeneratorOptions) *hcm.HttpFilter {
 	router, _ := ut.MessageToStruct(&rt.Router{
-		SuppressEnvoyHeaders: options.SuppressEnvoyHeaders,
-		StartChildSpan:       options.EnableTracing,
+		SuppressEnvoyHeaders: opts.SuppressEnvoyHeaders,
+		StartChildSpan:       opts.EnableTracing,
 	})
 	routerFilter := &hcm.HttpFilter{
 		Name:       ut.Router,

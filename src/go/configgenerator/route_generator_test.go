@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 	"github.com/golang/protobuf/ptypes/wrappers"
 
 	routepb "github.com/envoyproxy/data-plane-api/api/route"
@@ -86,20 +87,20 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		options := configinfo.DefaultEnvoyConfigOptions()
+		opts := options.DefaultConfigGeneratorOptions()
 		if tc.params != nil {
-			options.CorsPreset = tc.params[0]
-			options.CorsAllowOrigin = tc.params[1]
-			options.CorsAllowOriginRegex = tc.params[2]
-			options.CorsAllowMethods = tc.params[3]
-			options.CorsAllowHeaders = tc.params[4]
-			options.CorsExposeHeaders = tc.params[5]
+			opts.CorsPreset = tc.params[0]
+			opts.CorsAllowOrigin = tc.params[1]
+			opts.CorsAllowOriginRegex = tc.params[2]
+			opts.CorsAllowMethods = tc.params[3]
+			opts.CorsAllowHeaders = tc.params[4]
+			opts.CorsExposeHeaders = tc.params[5]
 		}
-		options.CorsAllowCredentials = tc.allowCredentials
+		opts.CorsAllowCredentials = tc.allowCredentials
 
 		gotRoute, err := MakeRouteConfig(&configinfo.ServiceInfo{
 			Name:    "test-api",
-			Options: options,
+			Options: opts,
 		})
 		if tc.wantedError != "" {
 			if err == nil || !strings.Contains(err.Error(), tc.wantedError) {

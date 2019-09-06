@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes/duration"
 	"google.golang.org/genproto/googleapis/api/annotations"
@@ -57,7 +58,7 @@ type ServiceInfo struct {
 	// inside ServiceInfo.
 	serviceConfig *conf.Service
 	AccessToken   *commonpb.AccessToken
-	Options       EnvoyConfigOptions
+	Options       options.ConfigGeneratorOptions
 }
 
 type backendRoutingCluster struct {
@@ -67,7 +68,7 @@ type backendRoutingCluster struct {
 }
 
 // NewServiceInfoFromServiceConfig returns an instance of ServiceInfo.
-func NewServiceInfoFromServiceConfig(serviceConfig *conf.Service, id string, options EnvoyConfigOptions) (*ServiceInfo, error) {
+func NewServiceInfoFromServiceConfig(serviceConfig *conf.Service, id string, opts options.ConfigGeneratorOptions) (*ServiceInfo, error) {
 	if serviceConfig == nil {
 		return nil, fmt.Errorf("unexpected empty service config")
 	}
@@ -80,7 +81,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *conf.Service, id string, opt
 	}
 
 	var backendProtocol ut.BackendProtocol
-	switch strings.ToLower(options.BackendProtocol) {
+	switch strings.ToLower(opts.BackendProtocol) {
 	case "http1":
 		backendProtocol = ut.HTTP1
 	case "http2":
@@ -97,7 +98,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *conf.Service, id string, opt
 		ConfigID:        id,
 		serviceConfig:   serviceConfig,
 		BackendProtocol: backendProtocol,
-		Options:         options,
+		Options:         opts,
 	}
 
 	// Order matters.

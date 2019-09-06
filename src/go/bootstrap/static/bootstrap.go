@@ -17,6 +17,8 @@ package static
 import (
 	"fmt"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
+
 	bt "cloudesf.googlesource.com/gcpproxy/src/go/bootstrap"
 	gen "cloudesf.googlesource.com/gcpproxy/src/go/configgenerator"
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
@@ -28,13 +30,13 @@ import (
 // ServiceToBootstrapConfig outputs envoy bootstrap config from service config.
 // id is the service configuration ID. It is generated when deploying
 // service config to ServiceManagement Server, example: 2017-02-13r0.
-func ServiceToBootstrapConfig(serviceConfig *conf.Service, id string, options sc.EnvoyConfigOptions) (*bootstrappb.Bootstrap, error) {
+func ServiceToBootstrapConfig(serviceConfig *conf.Service, id string, opts options.ConfigGeneratorOptions) (*bootstrappb.Bootstrap, error) {
 	bootstrap := &bootstrappb.Bootstrap{
 		Node:  bt.CreateNode(),
 		Admin: bt.CreateAdmin(8001),
 	}
 
-	serviceInfo, err := sc.NewServiceInfoFromServiceConfig(serviceConfig, id, options)
+	serviceInfo, err := sc.NewServiceInfoFromServiceConfig(serviceConfig, id, opts)
 	if err != nil {
 		return nil, fmt.Errorf("fail to initialize ServiceInfo, %s", err)
 	}

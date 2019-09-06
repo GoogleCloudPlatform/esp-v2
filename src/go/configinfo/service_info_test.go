@@ -23,6 +23,7 @@ import (
 	"sort"
 	"testing"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 	"github.com/gorilla/mux"
 	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/genproto/protobuf/api"
@@ -114,9 +115,9 @@ func TestProcessEndpoints(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		options := DefaultEnvoyConfigOptions()
-		options.BackendProtocol = "grpc"
-		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = "grpc"
+		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -279,9 +280,9 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 		},
 	}
 	for i, tc := range testData {
-		options := DefaultEnvoyConfigOptions()
-		options.BackendProtocol = "grpc"
-		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = "grpc"
+		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -555,9 +556,9 @@ func TestMethods(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		options := DefaultEnvoyConfigOptions()
-		options.BackendProtocol = tc.backendProtocol
-		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = tc.backendProtocol
+		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -621,10 +622,10 @@ func TestProcessBackendRule(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		options := DefaultEnvoyConfigOptions()
-		options.BackendProtocol = "grpc"
-		options.EnableBackendRouting = true
-		_, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = "grpc"
+		opts.EnableBackendRouting = true
+		_, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if (err == nil && tc.wantedErr != "") || (err != nil && tc.wantedErr == "") {
 			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, err, tc.wantedErr)
 		}
@@ -722,10 +723,10 @@ func TestProcessQuota(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		options := DefaultEnvoyConfigOptions()
-		options.BackendProtocol = "grpc"
-		options.EnableBackendRouting = true
-		serviceInfo, _ := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = "grpc"
+		opts.EnableBackendRouting = true
+		serviceInfo, _ := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 
 		for key, gotMethod := range serviceInfo.Methods {
 			wantMethod := tc.wantMethods[key]
@@ -793,9 +794,9 @@ func TestProcessEmptyJwksUriByOpenID(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		options := DefaultEnvoyConfigOptions()
-		options.BackendProtocol = "http1"
-		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, options)
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = "http1"
+		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Errorf("Test Desc(%d): %s, process jwksUri got %v", i, tc.desc, err)
 		}

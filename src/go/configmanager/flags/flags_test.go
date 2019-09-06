@@ -18,15 +18,15 @@ import (
 	"reflect"
 	"testing"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 )
 
 func TestDefaultEnvoyConfigOptions(t *testing.T) {
-	defaultOptions := configinfo.DefaultEnvoyConfigOptions()
+	defaultOptions := options.DefaultConfigGeneratorOptions()
 	actualOptions := EnvoyConfigOptionsFromFlags()
 
 	if !reflect.DeepEqual(defaultOptions, actualOptions) {
-		t.Fatalf("DefaultEnvoyConfigOptions does not match envoyConfigOptionsFromFlags:\nhave: %v\nwant: %v",
+		t.Fatalf("DefaultConfigGeneratorOptions does not match envoyConfigOptionsFromFlags:\nhave: %v\nwant: %v",
 			defaultOptions, actualOptions)
 	}
 }
