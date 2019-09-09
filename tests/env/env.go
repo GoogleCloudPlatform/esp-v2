@@ -33,7 +33,7 @@ import (
 
 const (
 	// Additional wait time after `TestEnv.Setup`
-	setupWaitTime = time.Duration(1 * time.Second)
+	setupWaitTime = time.Duration(4 * time.Second)
 )
 
 var (

@@ -157,9 +157,10 @@ function main() {
       process.exit(1);
     }
   }
-  console.log(`listening on port ${PORT}`);
+  console.log(`GRPC Bookstore server binding to port ${PORT}`);
   server.bind(`0.0.0.0:${PORT}`, grpc.ServerCredentials.createInsecure());
   server.start();
+  console.log(`GRPC Bookstore server ready`);
 }
 
 main();
