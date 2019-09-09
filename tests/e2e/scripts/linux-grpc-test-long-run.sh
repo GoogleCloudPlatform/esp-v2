@@ -31,7 +31,7 @@ ROOT="$(cd "${SCRIPT_PATH}/../../.." && pwd)"
 
 API_KEY=''
 SERVICE_NAME="echo.endpoints.cloudesf-testing.cloud.goog"
-GRPC_HOST=''
+HOST=''
 DURATION_IN_HOUR=0
 
 REQUEST_COUNT=10000
@@ -39,7 +39,7 @@ REQUEST_COUNT=10000
 while getopts :a:g:h:l:s: arg; do
   case ${arg} in
   a) API_KEY="${OPTARG}" ;;
-  g) GRPC_HOST="${OPTARG}" ;;
+  g) HOST="${OPTARG}" ;;
   l) DURATION_IN_HOUR="${OPTARG}" ;;
   s) SERVICE_NAME="${OPTARG}" ;;
   *) echo "Invalid option: -${OPTARG}" ;;
@@ -51,7 +51,7 @@ if ! [[ -n "${API_KEY}" ]]; then
   API_KEY="${ENDPOINTS_JENKINS_API_KEY}"
 fi
 
-[[ -n "${GRPC_HOST}" ]] || error_exit 'Please specify a host with -h option.'
+[[ -n "${HOST}" ]] || error_exit 'Please specify a host with -h option.'
 
 # Nginx default max_concurrent_streams is 128.
 # If CONCURRENT > 128, some requests will fail with RST_STREAM.
@@ -89,7 +89,7 @@ function grpc_test_pass_through() {
 
     local AUTH_TOKEN=$("${ROOT}/tests/e2e/scripts/gen-auth-token.sh" -a "${SERVICE_NAME}")
     python "${ROOT}/tests/e2e/client/grpc/grpc_stress_input.py" \
-      --server="${GRPC_HOST}:80" \
+      --server="${HOST}:80" \
       --allowed_failure_rate=0.3 \
       --api_key="${API_KEY}" \
       --auth_token="${AUTH_TOKEN}" \
@@ -118,12 +118,26 @@ function grpc_test_pass_through() {
   return $failures
 }
 
+function grpc_test_transcode() {
+  echo "Starting grpc transcode stress test at $(date)."
+
+  # Generating token for each run, that they expire in 1 hour.
+  local AUTH_TOKEN=$("${ROOT}/tests/e2e/scripts/gen-auth-token.sh" -a "${SERVICE_NAME}")
+  python ${ROOT}/tests/e2e/client/apiproxy_client.py \
+      --test=stress \
+      --host="http://${HOST}:80" \
+      --api_key="${API_KEY}" \
+      --auth_token="${AUTH_TOKEN}" \
+      --test_data="${ROOT}/tests/e2e/testdata/grpc-echo/grpc_test_data.json" \
+      --root="${ROOT}"
+}
+
 # Issue a request to allow Endpoints-Runtime to fetch metadata.
 # If sending N requests concurrently, N-1 requests will fail while the
 # first request is fetching the metadata.
 
 cat <<EOF | "${ROOT}/bin/grpc_echo_client"
-server_addr: "${GRPC_HOST}:80"
+server_addr: "${HOST}:80"
 plans {
   echo {
     request {
@@ -137,7 +151,7 @@ END_TIME=$((END_TIME + DURATION_IN_HOUR * 60 * 60))
 RUN_COUNT=0
 GRPC_STRESS_FAILURES=0
 HTTP_STRESS_FAILURES=0
-detect_memory_leak_init "${GRPC_HOST}"
+detect_memory_leak_init "${HOST}"
 # ${ROOT}/tests/client/esp_client.py needs to run at that folder.
 #pushd ${ROOT}/tests/client > /dev/null
 while true; do
@@ -148,7 +162,9 @@ while true; do
   #######################
   RUN_COUNT=$((RUN_COUNT++))
   grpc_test_pass_through || ((GRPC_STRESS_FAILURES++))
-  #TODO(taoxuy):add transcoding test
+  grpc_test_transcode || ((HTTP_STRESS_FAILURES++))
+
+  #TODO(taoxuy):add transcoding fuzz test
   detect_memory_leak_check ${RUN_COUNT}
   # Break if test has run long enough.
   [[ $(date +"%s") -lt ${END_TIME} ]] || break

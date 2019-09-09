@@ -67,7 +67,7 @@ case "${BACKEND}" in
       ;;
    'echo'      )
       SERVICE_YAML="${ROOT}/tests/endpoints/grpc-echo/grpc-test.yaml"
-      SERVICE_DSCP="${ROOT}/bazel-genfiles/tests/endpoints/grpc-echo/grpc-test.descriptor"
+      SERVICE_DSCP="${ROOT}/tests/endpoints/grpc-echo/proto/api_descriptor.pb"
       CREATE_SERVICE_ARGS="${SERVICE_YAML} ${SERVICE_DSCP}"
       ARGS="$ARGS -g";;
    *          )

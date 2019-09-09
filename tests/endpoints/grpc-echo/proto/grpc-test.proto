@@ -17,15 +17,24 @@ syntax = "proto3";
 package test.grpc;
 
 import "google/api/servicecontrol/v1/service_controller.proto";
+import "google/api/annotations.proto";
 
 // The test service definition.
 service Test {
   // A simple, non-streaming API call that echoes its input.
   rpc Echo(EchoRequest) returns (EchoResponse) {
+    option (google.api.http) = {
+      post: "/echo",
+      body: "*",
+    };
   }
 
   // A bi-directional stream.
   rpc EchoStream(stream EchoRequest) returns (stream EchoResponse) {
+    option (google.api.http) = {
+      post: "/echostream",
+      body: "*",
+    };
   }
 
   // Cork support.  While corked, the server will accept incoming
@@ -43,6 +52,10 @@ service Test {
   // Echo service control report request
   rpc EchoReport(google.api.servicecontrol.v1.ReportRequest)
     returns (google.api.servicecontrol.v1.ReportRequest) {
+    option (google.api.http) = {
+      post: "/echoreport",
+      body: "*",
+    };
   }
 }
 
