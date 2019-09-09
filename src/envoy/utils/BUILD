@@ -24,6 +24,7 @@ envoy_cc_library(
 
 envoy_cc_test(
     name = "json_struct_test",
+    size = "small",
     srcs = [
         "json_struct_test.cc",
     ],
@@ -73,6 +74,7 @@ envoy_cc_library(
 
 envoy_cc_test(
     name = "token_subscriber_test",
+    size = "small",
     srcs = ["token_subscriber_test.cc"],
     repository = "@envoy",
     deps = [
@@ -85,6 +87,7 @@ envoy_cc_test(
 
 envoy_cc_test(
     name = "service_account_token_test",
+    size = "small",
     srcs = ["service_account_token_test.cc"],
     repository = "@envoy",
     deps = [
@@ -113,6 +116,7 @@ envoy_cc_library(
 
 envoy_cc_test(
     name = "filter_state_utils_test",
+    size = "small",
     srcs = ["filter_state_utils_test.cc"],
     repository = "@envoy",
     deps = [
@@ -145,6 +149,7 @@ envoy_cc_library(
 
 envoy_cc_test(
     name = "message_counter_test",
+    size = "small",
     srcs = [
         "message_counter_test.cc",
     ],

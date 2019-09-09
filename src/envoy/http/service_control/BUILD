@@ -194,6 +194,7 @@ envoy_cc_library(
 
 envoy_cc_test(
     name = "config_parser_test",
+    size = "small",
     srcs = [
         "config_parser_test.cc",
     ],
@@ -207,6 +208,7 @@ envoy_cc_test(
 
 envoy_cc_test(
     name = "filter_test",
+    size = "small",
     srcs = [
         "filter_test.cc",
     ],
@@ -223,6 +225,7 @@ envoy_cc_test(
 
 envoy_cc_test(
     name = "handler_test",
+    size = "small",
     srcs = [
         "handler_impl_test.cc",
         "handler_utils_test.cc",
@@ -241,6 +244,7 @@ envoy_cc_test(
 
 envoy_cc_test(
     name = "http_call_test",
+    size = "small",
     srcs = [
         "http_call_test.cc",
     ],
