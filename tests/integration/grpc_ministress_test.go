@@ -15,8 +15,8 @@
 package integration
 
 import (
-	"testing"
 	"regexp"
+	"testing"
 
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/grpc-echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
@@ -123,7 +123,7 @@ results {
 	if err != nil {
 		t.Errorf("Error during running test: %v", err)
 	}
-	if !wantResult.MatchString(result){
+	if !wantResult.MatchString(result) {
 		t.Errorf("The results are different,\nreceived:\n%s,\nwanted:\n%s", result, wantResult)
 	}
 }
