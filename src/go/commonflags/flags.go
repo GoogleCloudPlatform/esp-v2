@@ -28,7 +28,7 @@ var (
 
 	AdminPort                 = flag.Int("admin_port", 8001, "Port that envoy should serve the admin page on")
 	EnableTracing             = flag.Bool("enable_tracing", false, `enable stackdriver tracing`)
-	MetadataFetcherTimeout    = flag.Duration("metadata_request_timeout", 5*time.Second, `Set the timeout in second for all requests made by config manager. Must be > 0 and the default is 5 seconds if not set.`)
+	HttpRequestTimeout        = flag.Duration("http_request_timeout", 5*time.Second, `Set the timeout in second for all requests. Must be > 0 and the default is 5 seconds if not set.`)
 	NonGCP                    = flag.Bool("non_gcp", false, `By default, the proxy tries to talk to GCP metadata server to get VM location in the first few requests. Setting this flag to true to skip this step`)
 	TracingProjectId          = flag.String("tracing_project_id", "", "The Google project id required for Stack driver tracing. If not set, will automatically use fetch it from GCP Metadata server")
 	TracingStackdriverAddress = flag.String("tracing_stackdriver_address", "", "By default, the Stackdriver exporter will connect to production Stackdriver. If this is non-empty, it will connect to this address. It must be in the gRPC format.")
@@ -41,7 +41,7 @@ func DefaultCommonOptionsFromFlags() options.CommonOptions {
 	return options.CommonOptions{
 		AdminPort:                 *AdminPort,
 		EnableTracing:             *EnableTracing,
-		MetadataFetcherTimeout:    *MetadataFetcherTimeout,
+		HttpRequestTimeout:        *HttpRequestTimeout,
 		NonGCP:                    *NonGCP,
 		TracingProjectId:          *TracingProjectId,
 		TracingStackdriverAddress: *TracingStackdriverAddress,

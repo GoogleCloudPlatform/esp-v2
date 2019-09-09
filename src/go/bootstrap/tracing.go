@@ -15,25 +15,20 @@
 package bootstrap
 
 import (
-	"flag"
 	"fmt"
 	"strings"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
+	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 
 	opencensuspb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
 	tracepb "github.com/envoyproxy/data-plane-api/api/trace"
 )
 
-var (
-	TracingStackdriverAddress = flag.String("tracing_stackdriver_address", "", "By default, the Stackdriver exporter will connect to production Stackdriver. If this is non-empty, it will connect to this address. It must be in the gRPC format.")
-	TracingSamplingRate       = flag.Float64("tracing_sample_rate", 0.001, "tracing sampling rate from 0.0 to 1.0")
-	TracingIncomingContext    = flag.String("tracing_incoming_context", "", "comma separated incoming trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)")
-	TracingOutgoingContext    = flag.String("tracing_outgoing_context", "", "comma separated outgoing trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)")
-)
-
 func createTraceContexts(ctx_str string) ([]tracepb.OpenCensusConfig_TraceContext, error) {
-	out := []tracepb.OpenCensusConfig_TraceContext{}
+	var out []tracepb.OpenCensusConfig_TraceContext
 
 	if ctx_str == "" {
 		return out, nil
@@ -55,50 +50,67 @@ func createTraceContexts(ctx_str string) ([]tracepb.OpenCensusConfig_TraceContex
 	return out, nil
 }
 
+func GetTracingProjectId(opts options.CommonOptions) (string, error) {
+
+	// If user specified a project-id, use that
+	projectId := opts.TracingProjectId
+	if projectId != "" {
+		return projectId, nil
+	}
+
+	// Otherwise determine project-id automatically
+	glog.Infof("tracing_project_id was not specified, attempting to fetch it from GCP Metadata server")
+	if opts.NonGCP {
+		return "", fmt.Errorf("tracing_project_id was not specified and can not be fetched from GCP Metadata server on non-GCP runtime")
+	}
+
+	return metadata.NewMetadataFetcher(opts.HttpRequestTimeout).FetchProjectId()
+}
+
 // CreateTracing outputs envoy tracing config
-func CreateTracing(tracingProjectId string) (*tracepb.Tracing, error) {
+func CreateTracing(opts options.CommonOptions) (*tracepb.Tracing, error) {
 
 	cfg := &tracepb.OpenCensusConfig{
 		TraceConfig:                &opencensuspb.TraceConfig{},
 		StackdriverExporterEnabled: true,
-		StackdriverProjectId:       tracingProjectId,
+		StackdriverProjectId:       opts.TracingProjectId,
 	}
 
-	if *TracingStackdriverAddress != "" {
-		cfg.StackdriverAddress = *TracingStackdriverAddress
+	if opts.TracingStackdriverAddress != "" {
+		cfg.StackdriverAddress = opts.TracingStackdriverAddress
 	}
 
-	if ctx, err := createTraceContexts(*TracingIncomingContext); err == nil {
+	if ctx, err := createTraceContexts(opts.TracingIncomingContext); err == nil {
 		cfg.IncomingTraceContext = ctx
 	} else {
 		return nil, err
 	}
 
-	if ctx, err := createTraceContexts(*TracingOutgoingContext); err == nil {
+	if ctx, err := createTraceContexts(opts.TracingOutgoingContext); err == nil {
 		cfg.OutgoingTraceContext = ctx
 	} else {
 		return nil, err
 	}
 
-	if *TracingSamplingRate == 1.0 {
+	if opts.TracingSamplingRate == 1.0 {
 		cfg.TraceConfig.Sampler = &opencensuspb.TraceConfig_ConstantSampler{
 			ConstantSampler: &opencensuspb.ConstantSampler{
 				Decision: opencensuspb.ConstantSampler_ALWAYS_ON,
 			},
 		}
-	} else if *TracingSamplingRate == 0.0 {
+	} else if opts.TracingSamplingRate == 0.0 {
 		cfg.TraceConfig.Sampler = &opencensuspb.TraceConfig_ConstantSampler{
 			ConstantSampler: &opencensuspb.ConstantSampler{
 				Decision: opencensuspb.ConstantSampler_ALWAYS_PARENT,
 			},
 		}
 	} else {
-		if *TracingSamplingRate < 0.0 || *TracingSamplingRate > 1.0 {
-			return nil, fmt.Errorf("Invalid trace sampling rate: %v. It must be >= 0.0 and <= 1.0", *TracingSamplingRate)
+		if opts.TracingSamplingRate < 0.0 || opts.TracingSamplingRate > 1.0 {
+			return nil, fmt.Errorf("Invalid trace sampling rate: %v. It must be >= 0.0 and <= 1.0", opts.TracingSamplingRate)
 		}
 		cfg.TraceConfig.Sampler = &opencensuspb.TraceConfig_ProbabilitySampler{
 			ProbabilitySampler: &opencensuspb.ProbabilitySampler{
-				SamplingProbability: *TracingSamplingRate,
+				SamplingProbability: opts.TracingSamplingRate,
 			},
 		}
 	}

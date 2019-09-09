@@ -16,13 +16,11 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"io/ioutil"
-	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap"
 	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap/ads"
-	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
+	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap/ads/flags"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
@@ -30,44 +28,30 @@ import (
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 )
 
-var (
-	AdsConnectTimeout      = flag.Duration("ads_connect_timeout", 10*time.Second, "ads connect timeout in seconds")
-	AdminPort              = flag.Int("admin_port", 8001, "Port that envoy should serve the admin page on")
-	DiscoveryAddress       = flag.String("discovery_address", "127.0.0.1:8790", "Address that envoy should use to contact ADS. Defaults to config manager's address, but can be a remote address.")
-	EnableTracing          = flag.Bool("enable_tracing", false, `enable stackdriver tracing`)
-	NonGCP                 = flag.Bool("non_gcp", false, `By default, the proxy tries to talk to GCP metadata server to get VM location in the first few requests. Setting this flag to true to skip this step`)
-	TracingProjectId       = flag.String("tracing_project_id", "", "The Google project id required for Stack driver tracing. If not set, will automatically use fetch it from GCP Metadata server")
-	MetadataFetcherTimeout = flag.Duration("http_request_timeout", 5*time.Second, `Set the timeout in second for all requests made by config manager. Must be > 0 and the default is 5 seconds if not set.`)
-)
-
 func main() {
 	flag.Parse()
-	out_path := flag.Arg(0)
-	glog.Infof("Output path: %s", out_path)
-	if out_path == "" {
+	outPath := flag.Arg(0)
+	glog.Infof("Output path: %s", outPath)
+	if outPath == "" {
 		glog.Exitf("Please specify a path to write bootstrap config file")
 	}
 
+	opts := flags.DefaultBootstrapperOptionsFromFlags()
+
 	// Parse the ADS address
-	_, adsHostname, adsPort, _, err := ut.ParseURI(*DiscoveryAddress)
+	_, adsHostname, adsPort, _, err := ut.ParseURI(opts.DiscoveryAddress)
 	if err != nil {
 		glog.Exitf("failed to parse discovery address: %v", err)
 	}
 
-	connectTimeoutProto := ptypes.DurationProto(*AdsConnectTimeout)
-	bt, err := ads.CreateBootstrapConfig(connectTimeoutProto, adsHostname, adsPort, uint32(*AdminPort))
+	connectTimeoutProto := ptypes.DurationProto(opts.AdsConnectTimeout)
+	bt, err := ads.CreateBootstrapConfig(connectTimeoutProto, adsHostname, adsPort, uint32(opts.AdminPort))
 	if err != nil {
 		glog.Exitf("failed to create bootstrap config, error: %v", err)
 	}
 
-	if *EnableTracing {
-
-		tracingProjectId, err := getTracingProjectId()
-		if err != nil {
-			glog.Exitf("failed to get project-id for tracing, error: %v", err)
-		}
-
-		if bt.Tracing, err = bootstrap.CreateTracing(tracingProjectId); err != nil {
+	if opts.EnableTracing {
+		if bt.Tracing, err = bootstrap.CreateTracing(opts.CommonOptions); err != nil {
 			glog.Exitf("failed to create tracing config, error: %v", err)
 		}
 	}
@@ -75,26 +59,9 @@ func main() {
 	marshaler := &jsonpb.Marshaler{
 		Indent: "  ",
 	}
-	json_str, _ := marshaler.MarshalToString(bt)
-	err = ioutil.WriteFile(out_path, []byte(json_str), 0644)
+	jsonStr, _ := marshaler.MarshalToString(bt)
+	err = ioutil.WriteFile(outPath, []byte(jsonStr), 0644)
 	if err != nil {
-		glog.Exitf("failed to write config to %v, error: %v", out_path, err)
+		glog.Exitf("failed to write config to %v, error: %v", outPath, err)
 	}
-}
-
-func getTracingProjectId() (string, error) {
-
-	// If user specified a project-id, use that
-	projectId := *TracingProjectId
-	if projectId != "" {
-		return projectId, nil
-	}
-
-	// Otherwise determine project-id automatically
-	glog.Infof("tracing_project_id was not specified, attempting to fetch it from GCP Metadata server")
-	if *NonGCP {
-		return "", fmt.Errorf("tracing_project_id was not specified and can not be fetched from GCP Metadata server on non-GCP runtime")
-	}
-
-	return metadata.NewMetadataFetcher(*MetadataFetcherTimeout).FetchProjectId()
 }

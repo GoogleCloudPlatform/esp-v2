@@ -17,9 +17,9 @@ package static
 import (
 	"fmt"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap"
 	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 
-	bt "cloudesf.googlesource.com/gcpproxy/src/go/bootstrap"
 	gen "cloudesf.googlesource.com/gcpproxy/src/go/configgenerator"
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	bootstrappb "github.com/envoyproxy/data-plane-api/api/bootstrap"
@@ -31,9 +31,9 @@ import (
 // id is the service configuration ID. It is generated when deploying
 // service config to ServiceManagement Server, example: 2017-02-13r0.
 func ServiceToBootstrapConfig(serviceConfig *conf.Service, id string, opts options.ConfigGeneratorOptions) (*bootstrappb.Bootstrap, error) {
-	bootstrap := &bootstrappb.Bootstrap{
-		Node:  bt.CreateNode(),
-		Admin: bt.CreateAdmin(8001),
+	bt := &bootstrappb.Bootstrap{
+		Node:  bootstrap.CreateNode(),
+		Admin: bootstrap.CreateAdmin(uint32(opts.AdminPort)),
 	}
 
 	serviceInfo, err := sc.NewServiceInfoFromServiceConfig(serviceConfig, id, opts)
@@ -50,11 +50,17 @@ func ServiceToBootstrapConfig(serviceConfig *conf.Service, id string, opts optio
 		return nil, err
 	}
 
-	bootstrap.StaticResources = &bootstrappb.Bootstrap_StaticResources{
+	if opts.EnableTracing {
+		if bt.Tracing, err = bootstrap.CreateTracing(opts.CommonOptions); err != nil {
+			return nil, fmt.Errorf("failed to create tracing config, error: %v", err)
+		}
+	}
+
+	bt.StaticResources = &bootstrappb.Bootstrap_StaticResources{
 		Listeners: []*ldspb.Listener{
 			listener,
 		},
 		Clusters: clusters,
 	}
-	return bootstrap, nil
+	return bt, nil
 }

@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/commonflags"
 	"cloudesf.googlesource.com/gcpproxy/src/go/configmanager/flags"
 	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
@@ -50,7 +51,8 @@ var (
 		return path
 	}
 
-	serviceConfigFetcherClient = newServiceConfigFetcherClient(true, *HttpRequestTimeout)
+	// TODO(b/140269465): Move this to options instead of flags
+	serviceConfigFetcherClient = newServiceConfigFetcherClient(true, *commonflags.HttpRequestTimeout)
 )
 
 func newServiceConfigFetcherClient(insecureSkipVerify bool, timeout time.Duration) *http.Client {

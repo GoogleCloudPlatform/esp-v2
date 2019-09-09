@@ -41,7 +41,7 @@ func main() {
 	var mf *metadata.MetadataFetcher
 	if !options.NonGCP {
 		glog.Info("running on GCP, initializing metadata fetcher")
-		mf = metadata.NewMetadataFetcher(options.MetadataFetcherTimeout)
+		mf = metadata.NewMetadataFetcher(options.HttpRequestTimeout)
 	}
 
 	m, err := configmanager.NewConfigManager(mf, options)

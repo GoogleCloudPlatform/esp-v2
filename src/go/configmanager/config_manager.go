@@ -38,7 +38,6 @@ var (
 	// These flags are used by config manage only.
 	checkNewRolloutInterval = flag.Duration("check_rollout_interval", 60*time.Second, `the interval periodically to call servicemanagment to check the latest rollout.`)
 	CheckMetadata           = flag.Bool("check_metadata", false, `enable fetching service name, config ID and rollout strategy from service metadata server`)
-	HttpRequestTimeout      = flag.Duration("http_request_timeout", 5*time.Second, `Set the timeout in second for all requests made by config manager. Must be > 0 and the default is 5 seconds if not set.`)
 	RolloutStrategy         = flag.String("rollout_strategy", "fixed", `service config rollout strategy, must be either "managed" or "fixed"`)
 	ServiceConfigID         = flag.String("service_config_id", "", "initial service config id")
 	ServiceName             = flag.String("service", "", "endpoint service name")

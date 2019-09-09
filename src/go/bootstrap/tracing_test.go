@@ -15,11 +15,14 @@
 package bootstrap
 
 import (
-	"flag"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
+	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/golang/protobuf/ptypes"
 
 	opencensuspb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
@@ -27,68 +30,69 @@ import (
 )
 
 const (
-	fakeFlagProjectId      = "fake-flag-project-id"
+	fakeOptsProjectId      = "fake-opts-project-id"
+	fakeMetadataProjectId  = "fake-metadata-project-id"
 	fakeStackdriverAddress = "dns:non-existent-address:2840"
+	fakeTracingSampleRate  = 0.291
 )
 
 func TestTracingConfig(t *testing.T) {
 	testData := []struct {
-		desc             string
-		flags            map[string]string
-		tracingProjectId string
-		wantError        string
-		wantResult       *tracepb.OpenCensusConfig
+		desc                      string
+		tracingProjectId          string
+		tracingSampleRate         float64
+		tracingIncomingContext    string
+		tracingOutgoingContext    string
+		tracingStackdriverAddress string
+		wantError                 string
+		wantResult                *tracepb.OpenCensusConfig
 	}{
 		{
-			desc:             "Success with default tracing",
-			flags:            map[string]string{},
-			tracingProjectId: fakeFlagProjectId,
+			desc:              "Success with default tracing",
+			tracingProjectId:  fakeOptsProjectId,
+			tracingSampleRate: fakeTracingSampleRate,
 			wantResult: &tracepb.OpenCensusConfig{
 				TraceConfig: &opencensuspb.TraceConfig{
 					Sampler: &opencensuspb.TraceConfig_ProbabilitySampler{
 						ProbabilitySampler: &opencensuspb.ProbabilitySampler{
-							SamplingProbability: *TracingSamplingRate,
+							SamplingProbability: fakeTracingSampleRate,
 						},
 					},
 				},
 				StackdriverExporterEnabled: true,
-				StackdriverProjectId:       fakeFlagProjectId,
+				StackdriverProjectId:       fakeOptsProjectId,
 			},
 		},
 		{
-			desc: "Failed with invalid tracing_incoming_context",
-			flags: map[string]string{
-				"tracing_incoming_context": "aaa",
-			},
-			tracingProjectId: fakeFlagProjectId,
-			wantError:        "Invalid trace context: aaa",
+			desc:                   "Failed with invalid tracing_incoming_context",
+			tracingProjectId:       fakeOptsProjectId,
+			tracingSampleRate:      fakeTracingSampleRate,
+			tracingIncomingContext: "aaa",
+			wantError:              "Invalid trace context: aaa",
 		},
 		{
-			desc: "Failed with invalid tracing_outgoing_context",
-			flags: map[string]string{
-				"tracing_incoming_context": "",
-				"tracing_outgoing_context": "bbb",
-			},
-			tracingProjectId: fakeFlagProjectId,
-			wantError:        "Invalid trace context: bbb",
+			desc:                   "Failed with invalid tracing_outgoing_context",
+			tracingProjectId:       fakeOptsProjectId,
+			tracingSampleRate:      fakeTracingSampleRate,
+			tracingOutgoingContext: "bbb",
+			wantError:              "Invalid trace context: bbb",
 		},
 		{
-			desc: "Success with some tracing contexts",
-			flags: map[string]string{
-				"tracing_incoming_context": "traceparent,grpc-trace-bin",
-				"tracing_outgoing_context": "x-cloud-trace-context",
-			},
-			tracingProjectId: fakeFlagProjectId,
+			desc:                   "Success with some tracing contexts",
+			tracingProjectId:       fakeOptsProjectId,
+			tracingSampleRate:      fakeTracingSampleRate,
+			tracingIncomingContext: "traceparent,grpc-trace-bin",
+			tracingOutgoingContext: "x-cloud-trace-context",
 			wantResult: &tracepb.OpenCensusConfig{
 				TraceConfig: &opencensuspb.TraceConfig{
 					Sampler: &opencensuspb.TraceConfig_ProbabilitySampler{
 						ProbabilitySampler: &opencensuspb.ProbabilitySampler{
-							SamplingProbability: 0.001,
+							SamplingProbability: fakeTracingSampleRate,
 						},
 					},
 				},
 				StackdriverExporterEnabled: true,
-				StackdriverProjectId:       fakeFlagProjectId,
+				StackdriverProjectId:       fakeOptsProjectId,
 				IncomingTraceContext: []tracepb.OpenCensusConfig_TraceContext{
 					tracepb.OpenCensusConfig_TRACE_CONTEXT,
 					tracepb.OpenCensusConfig_GRPC_TRACE_BIN,
@@ -99,23 +103,15 @@ func TestTracingConfig(t *testing.T) {
 			},
 		},
 		{
-			desc: "Failed with invalid sampling rate",
-			flags: map[string]string{
-				"tracing_incoming_context": "",
-				"tracing_outgoing_context": "",
-				"tracing_sample_rate":      "2.1",
-			},
-			tracingProjectId: fakeFlagProjectId,
-			wantError:        "Invalid trace sampling rate: 2.1",
+			desc:              "Failed with invalid sampling rate",
+			tracingProjectId:  fakeOptsProjectId,
+			tracingSampleRate: 2.1,
+			wantError:         "Invalid trace sampling rate: 2.1",
 		},
 		{
-			desc: "Success with sample rate 0.0",
-			flags: map[string]string{
-				"tracing_incoming_context": "",
-				"tracing_outgoing_context": "",
-				"tracing_sample_rate":      "0.0",
-			},
-			tracingProjectId: fakeFlagProjectId,
+			desc:              "Success with sample rate 0.0",
+			tracingProjectId:  fakeOptsProjectId,
+			tracingSampleRate: 0.0,
 			wantResult: &tracepb.OpenCensusConfig{
 				TraceConfig: &opencensuspb.TraceConfig{
 					Sampler: &opencensuspb.TraceConfig_ConstantSampler{
@@ -125,17 +121,13 @@ func TestTracingConfig(t *testing.T) {
 					},
 				},
 				StackdriverExporterEnabled: true,
-				StackdriverProjectId:       fakeFlagProjectId,
+				StackdriverProjectId:       fakeOptsProjectId,
 			},
 		},
 		{
-			desc: "Success with sample rate 1.0",
-			flags: map[string]string{
-				"tracing_incoming_context": "",
-				"tracing_outgoing_context": "",
-				"tracing_sample_rate":      "1.0",
-			},
-			tracingProjectId: fakeFlagProjectId,
+			desc:              "Success with sample rate 1.0",
+			tracingProjectId:  fakeOptsProjectId,
+			tracingSampleRate: 1.0,
 			wantResult: &tracepb.OpenCensusConfig{
 				TraceConfig: &opencensuspb.TraceConfig{
 					Sampler: &opencensuspb.TraceConfig_ConstantSampler{
@@ -145,17 +137,13 @@ func TestTracingConfig(t *testing.T) {
 					},
 				},
 				StackdriverExporterEnabled: true,
-				StackdriverProjectId:       fakeFlagProjectId,
+				StackdriverProjectId:       fakeOptsProjectId,
 			},
 		},
 		{
-			desc: "Success with sample rate 0.5",
-			flags: map[string]string{
-				"tracing_incoming_context": "",
-				"tracing_outgoing_context": "",
-				"tracing_sample_rate":      "0.5",
-			},
-			tracingProjectId: fakeFlagProjectId,
+			desc:              "Success with sample rate 0.5",
+			tracingProjectId:  fakeOptsProjectId,
+			tracingSampleRate: 0.5,
 			wantResult: &tracepb.OpenCensusConfig{
 				TraceConfig: &opencensuspb.TraceConfig{
 					Sampler: &opencensuspb.TraceConfig_ProbabilitySampler{
@@ -165,28 +153,24 @@ func TestTracingConfig(t *testing.T) {
 					},
 				},
 				StackdriverExporterEnabled: true,
-				StackdriverProjectId:       fakeFlagProjectId,
+				StackdriverProjectId:       fakeOptsProjectId,
 			},
 		},
 		{
-			desc: "Success with custom stackdriver address",
-			flags: map[string]string{
-				"tracing_stackdriver_address": fakeStackdriverAddress,
-				"tracing_incoming_context":    "",
-				"tracing_outgoing_context":    "",
-				"tracing_sample_rate":         "0.5",
-			},
-			tracingProjectId: fakeFlagProjectId,
+			desc:                      "Success with custom stackdriver address",
+			tracingProjectId:          fakeOptsProjectId,
+			tracingSampleRate:         fakeTracingSampleRate,
+			tracingStackdriverAddress: fakeStackdriverAddress,
 			wantResult: &tracepb.OpenCensusConfig{
 				TraceConfig: &opencensuspb.TraceConfig{
 					Sampler: &opencensuspb.TraceConfig_ProbabilitySampler{
 						ProbabilitySampler: &opencensuspb.ProbabilitySampler{
-							SamplingProbability: 0.5,
+							SamplingProbability: fakeTracingSampleRate,
 						},
 					},
 				},
 				StackdriverExporterEnabled: true,
-				StackdriverProjectId:       fakeFlagProjectId,
+				StackdriverProjectId:       fakeOptsProjectId,
 				StackdriverAddress:         fakeStackdriverAddress,
 			},
 		},
@@ -194,11 +178,15 @@ func TestTracingConfig(t *testing.T) {
 
 	for _, tc := range testData {
 
-		for fk, fv := range tc.flags {
-			flag.Set(fk, fv)
-		}
+		opts := options.DefaultCommonOptions()
+		opts.NonGCP = true
+		opts.TracingProjectId = tc.tracingProjectId
+		opts.TracingSamplingRate = tc.tracingSampleRate
+		opts.TracingIncomingContext = tc.tracingIncomingContext
+		opts.TracingOutgoingContext = tc.tracingOutgoingContext
+		opts.TracingStackdriverAddress = tc.tracingStackdriverAddress
 
-		got, err := CreateTracing(tc.tracingProjectId)
+		got, err := CreateTracing(opts)
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
@@ -221,4 +209,86 @@ func TestTracingConfig(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestDetermineProjectId(t *testing.T) {
+	testData := []struct {
+		desc             string
+		nonGcp           bool
+		tracingProjectId string
+		runServer        bool
+		wantError        string
+		wantResult       string
+	}{
+		{
+			desc:             "tracing_project_id not specified, but successfully discovered",
+			nonGcp:           false,
+			tracingProjectId: "",
+			runServer:        true,
+			wantResult:       fakeMetadataProjectId,
+		},
+		{
+			desc:             "tracing_project_id not specified, and non GCP runtime",
+			nonGcp:           true,
+			tracingProjectId: "",
+			runServer:        false,
+			wantError:        "tracing_project_id was not specified and can not be fetched from GCP Metadata server on non-GCP runtime",
+		},
+		{
+			desc:             "tracing_project_id not specified, and error fetching from metadata server",
+			nonGcp:           false,
+			tracingProjectId: "",
+			runServer:        false,
+			wantError:        " ", // Allow any error message, depends on underlying http client error
+		},
+		{
+			desc:             "tracing_project_id specified, successfully used",
+			nonGcp:           false,
+			tracingProjectId: fakeOptsProjectId,
+			wantResult:       fakeOptsProjectId,
+		},
+	}
+
+	for _, tc := range testData {
+
+		runTest(t, tc.runServer, func() {
+
+			opts := options.DefaultCommonOptions()
+			opts.NonGCP = tc.nonGcp
+			opts.TracingProjectId = tc.tracingProjectId
+
+			got, err := GetTracingProjectId(opts)
+
+			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
+				t.Errorf("Test (%s): failed, got err: %v, want err: %v", tc.desc, err, tc.wantError)
+			}
+
+			if tc.wantError == "" && err != nil {
+				t.Errorf("Test (%s): failed, got err: %v, want no err", tc.desc, err)
+			}
+
+			if !reflect.DeepEqual(got, tc.wantResult) {
+				t.Errorf("Test (%s): failed, got: %v, want: %v", tc.desc, got, tc.wantResult)
+			}
+
+		})
+
+	}
+}
+
+func runTest(t *testing.T, shouldRunServer bool, f func()) {
+
+	if shouldRunServer {
+		// Run a mock server and point injected client to mock server
+		mockMetadataServer := util.InitMockServerFromPathResp(map[string]string{
+			util.ProjectIDSuffix: fakeMetadataProjectId,
+		})
+		defer mockMetadataServer.Close()
+		metadata.SetMockMetadataFetcher(mockMetadataServer.URL, time.Now())
+	} else {
+		// Point injected client to non-existent url
+		metadata.SetMockMetadataFetcher("non-existent-url-39874983", time.Now())
+	}
+
+	f()
 }
