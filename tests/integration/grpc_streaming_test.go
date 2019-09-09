@@ -75,9 +75,9 @@ results {
 			CallerIp:        "127.0.0.1",
 		},
 		&utils.ExpectedReport{
-			Version:     utils.APIProxyVersion,
-			ServiceName: "grpc-echo.endpoints.cloudesf-testing.cloud.goog",
-			ServiceConfigID: "test-config-id",
+			Version:           utils.APIProxyVersion,
+			ServiceName:       "grpc-echo.endpoints.cloudesf-testing.cloud.goog",
+			ServiceConfigID:   "test-config-id",
 			URL:               "/test.grpc.Test/EchoStream",
 			ApiKey:            "this-is-an-api-key",
 			ApiMethod:         "test.grpc.Test.EchoStream",

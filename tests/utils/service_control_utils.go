@@ -652,7 +652,7 @@ func VerifyQuota(body []byte, er *ExpectedQuota) error {
 			Labels: map[string]string{
 				"servicecontrol.googleapis.com/service_agent": "APIPROXY/0.0.1",
 				"servicecontrol.googleapis.com/user_agent":    "APIPROXY",
-				"servicecontrol.googleapis.com/caller_ip":    "127.0.0.1",
+				"servicecontrol.googleapis.com/caller_ip":     "127.0.0.1",
 			},
 		},
 		ServiceConfigId: er.ServiceConfigID,

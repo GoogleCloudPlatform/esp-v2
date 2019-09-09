@@ -25,8 +25,8 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 
-	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 	grpcEchoClient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/grpc-echo/client"
+	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 )
 
 var successTrailer, abortedTrailer, dataLossTrailer, internalTrailer client.GRPCWebTrailer
