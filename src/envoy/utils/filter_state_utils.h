@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef FILTER_STATE_UTILS_H_
-#define FILTER_STATE_UTILS_H_
-
+#pragma once
 #include <string>
 
 #include "envoy/stream_info/filter_state.h"
@@ -40,5 +38,3 @@ absl::string_view getStringFilterState(
 }  // namespace Utils
 }  // namespace Extensions
 }  // namespace Envoy
-
-#endif  // FILTER_STATE_UTILS_H_

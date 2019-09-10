@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UTILS_H_
-#define UTILS_H_
+#pragma once
 
 #include <string>
 
@@ -37,5 +36,3 @@ absl::string_view getRequestHTTPMethodWithOverride(
 }  // namespace Utils
 }  // namespace Extensions
 }  // namespace Envoy
-
-#endif  // UTILS_H_

@@ -11,9 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#ifndef API_PROXY_UTILS_VERSION_H_
-#define API_PROXY_UTILS_VERSION_H_
-
+#pragma once
 #include <string>
 
 namespace google {
@@ -42,5 +40,3 @@ class Version final {
 }  // namespace utils
 }  // namespace api_proxy
 }  // namespace google
-
-#endif  // API_PROXY_UTILS_VERSION_H_

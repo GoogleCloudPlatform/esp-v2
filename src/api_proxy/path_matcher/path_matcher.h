@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef API_PROXY_PATH_MATCHER_H_
-#define API_PROXY_PATH_MATCHER_H_
+#pragma once
 
 #include <cstddef>
 #include <memory>
@@ -325,5 +324,3 @@ bool PathMatcherBuilder<Method>::Register(std::string http_method,
 }  // namespace path_matcher
 }  // namespace api_proxy
 }  // namespace google
-
-#endif  // API_PROXY_PATH_MATCHER_H_

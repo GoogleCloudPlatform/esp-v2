@@ -14,10 +14,7 @@
 VERSION=$(tail -n1 $1)
 
 cat <<EOF
-#ifndef API_PROXY_VERSION_MACRO_H_
-#define API_PROXY_VERSION_MACRO_H_
 
+#pragma once
 #define API_PROXY_VERSION_STRING "${VERSION}"
-
-#endif // #ifndef API_PROXY_VERSION_MACRO_H_
 EOF
