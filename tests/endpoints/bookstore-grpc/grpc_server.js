@@ -1,5 +1,6 @@
 var grpc = require('grpc');
 var protoLoader = require('@grpc/proto-loader');
+var health = require('grpc-health-check');
 
 // This port is used by the backend settings in envoy.yaml
 var PORT = 8082;
@@ -139,7 +140,9 @@ function testDecorator(f) {
  * sample server port
  */
 function main() {
-  var server = new grpc.Server();
+  let server = new grpc.Server();
+
+  // Bookstore service
   server.addService(bookstore_proto.Bookstore.service, {
     ListShelves: testDecorator(listShelves),
     CreateShelf: testDecorator(createShelf),
@@ -150,6 +153,14 @@ function main() {
     GetBook: testDecorator(getBook),
     DeleteBook: testDecorator(deleteBook),
   });
+
+  // Health service following standard protocol
+  const statusMap = {
+    "": proto.grpc.health.v1.HealthCheckResponse.ServingStatus.SERVING,
+  };
+  let healthImpl = new health.Implementation(statusMap);
+  server.addService(health.service, healthImpl);
+
   if (process.argv.length >= 3) {
     PORT = parseInt(process.argv[2], 10);
     if (isNaN(PORT) || PORT < 1024 || PORT > 65535) {

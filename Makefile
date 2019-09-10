@@ -96,6 +96,7 @@ test-envoy: format
 .PHONY: integration-test integration-debug
 integration-test: build build-envoy build-grpc-interop build-grpc-echo
 	@echo "--> running integration tests"
+	# Default timeout for go test is 10 minutes. Our test suite takes a little longer...
 	# logtostderr will cause all glogs in the test framework to print to the console (not too much bloat)
 	@go test -v -timeout 20m ./tests/env/... --logtostderr
 	@go test -v -p 32 -timeout 20m ./tests/integration/... --logtostderr

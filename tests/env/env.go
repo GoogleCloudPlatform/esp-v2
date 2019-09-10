@@ -33,7 +33,7 @@ import (
 
 const (
 	// Additional wait time after `TestEnv.Setup`
-	setupWaitTime = time.Duration(4 * time.Second)
+	setupWaitTime = time.Duration(1 * time.Second)
 )
 
 var (
@@ -67,6 +67,7 @@ type TestEnv struct {
 	envoyDrainTimeInSec         int
 	ServiceControlServer        *components.MockServiceCtrl
 	FakeStackdriverServer       *components.FakeTraceServer
+	healthRegistry              *components.HealthRegistry
 }
 
 func NewTestEnv(testId uint16, backendService string) *TestEnv {
@@ -81,6 +82,7 @@ func NewTestEnv(testId uint16, backendService string) *TestEnv {
 		fakeServiceConfig:           fakeServiceConfig,
 		mockJwtProviders:            make(map[string]bool),
 		ServiceControlServer:        components.NewMockServiceCtrl(fakeServiceConfig.GetName()),
+		healthRegistry:              components.NewHealthRegistry(),
 	}
 }
 
@@ -243,14 +245,14 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	// Starts XDS.
 	var err error
 	debugConfigMgr := *debugComponents == "all" || *debugComponents == "configmanager"
-	e.configMgr, err = components.NewConfigManagerServer(debugConfigMgr, confArgs)
+	e.configMgr, err = components.NewConfigManagerServer(debugConfigMgr, e.ports, confArgs)
 	if err != nil {
 		return err
 	}
-
 	if err = e.configMgr.Start(); err != nil {
 		return err
 	}
+	e.healthRegistry.RegisterHealthChecker(e.configMgr)
 
 	// Starts envoy.
 	envoyConfPath := fmt.Sprintf("/tmp/apiproxy-testdata-bootstrap-%v.yaml", e.testId)
@@ -269,6 +271,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		glog.Errorf("unable to create Envoy %v", err)
 		return err
 	}
+	e.healthRegistry.RegisterHealthChecker(e.envoy)
 
 	if err = e.envoy.StartAndWait(); err != nil {
 		return err
@@ -291,6 +294,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		if err := e.bookstoreServer.StartAndWait(); err != nil {
 			return err
 		}
+		e.healthRegistry.RegisterHealthChecker(e.bookstoreServer)
 	case "grpc-interop":
 		e.grpcInteropServer, err = components.NewGrpcInteropGrpcServer(e.ports.BackendServerPort)
 		if err != nil {
@@ -320,7 +324,14 @@ func (e *TestEnv) Setup(confArgs []string) error {
 			return err
 		}
 	}
+
 	time.Sleep(setupWaitTime)
+
+	// Run health checks
+	if err := e.healthRegistry.RunAllHealthChecks(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -334,6 +345,7 @@ func (e *TestEnv) StopBackendServer() error {
 		e.echoBackend = nil
 	}
 	if e.bookstoreServer != nil {
+		e.healthRegistry.DeregisterHealthChecker(e.bookstoreServer)
 		if err := e.bookstoreServer.StopAndWait(); err != nil {
 			retErr = err
 		}
@@ -345,6 +357,11 @@ func (e *TestEnv) StopBackendServer() error {
 // TearDown shutdown the servers.
 func (e *TestEnv) TearDown() {
 	glog.Infof("start tearing down...")
+
+	// Run all health checks. If they fail, our test causes a server to become unhealthy...
+	if err := e.healthRegistry.RunAllHealthChecks(); err != nil {
+		glog.Errorf("health check failure during teardown: %v", err)
+	}
 
 	if e.configMgr != nil {
 		if err := e.configMgr.StopAndWait(); err != nil {

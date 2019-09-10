@@ -15,6 +15,7 @@
 package components
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"strconv"
@@ -26,6 +27,7 @@ const (
 
 type BookstoreGrpcServer struct {
 	*Cmd
+	grpcPort uint16
 }
 
 func NewBookstoreGrpcServer(port uint16) (*BookstoreGrpcServer, error) {
@@ -37,5 +39,16 @@ func NewBookstoreGrpcServer(port uint16) (*BookstoreGrpcServer, error) {
 			name: "BookstoreGrpcServer",
 			Cmd:  cmd,
 		},
+		grpcPort: port,
 	}, nil
+}
+
+func (s BookstoreGrpcServer) String() string {
+	return "Nodejs Bookstore gRPC Server"
+}
+
+func (s BookstoreGrpcServer) CheckHealth() error {
+	opts := NewHealthCheckOptions()
+	addr := fmt.Sprintf("localhost:%v", s.grpcPort)
+	return GrpcHealthCheck(addr, opts)
 }

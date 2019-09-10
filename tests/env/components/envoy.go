@@ -31,6 +31,7 @@ const (
 // Envoy stores data for Envoy process
 type Envoy struct {
 	*Cmd
+	adminPort uint16
 }
 
 // createEnvoyConf create envoy config.
@@ -80,5 +81,16 @@ func NewEnvoy(args []string, bootstrapArgs []string, confPath string, ports *Por
 			name: "Envoy",
 			Cmd:  cmd,
 		},
+		adminPort: ports.AdminPort,
 	}, nil
+}
+
+func (s Envoy) String() string {
+	return "Envoy Proxy Admin HTTP Endpoint"
+}
+
+func (s Envoy) CheckHealth() error {
+	opts := NewHealthCheckOptions()
+	addr := fmt.Sprintf("http://localhost:%v", s.adminPort)
+	return HttpHealthCheck(addr, "/ready", opts)
 }

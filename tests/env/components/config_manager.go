@@ -15,6 +15,7 @@
 package components
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 
@@ -27,9 +28,10 @@ const (
 
 type ConfigManagerServer struct {
 	*Cmd
+	grpcPort uint16
 }
 
-func NewConfigManagerServer(debugMode bool, args []string) (*ConfigManagerServer, error) {
+func NewConfigManagerServer(debugMode bool, ports *Ports, args []string) (*ConfigManagerServer, error) {
 	if debugMode {
 		args = append(args, "--logtostderr", "--v=2")
 	}
@@ -42,5 +44,16 @@ func NewConfigManagerServer(debugMode bool, args []string) (*ConfigManagerServer
 			name: "ConfigManager",
 			Cmd:  cmd,
 		},
+		grpcPort: ports.DiscoveryPort,
 	}, nil
+}
+
+func (s ConfigManagerServer) String() string {
+	return "Config Manager gRPC Server"
+}
+
+func (s ConfigManagerServer) CheckHealth() error {
+	opts := NewHealthCheckOptions()
+	addr := fmt.Sprintf("localhost:%v", s.grpcPort)
+	return GrpcConnectionCheck(addr, opts)
 }
