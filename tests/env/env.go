@@ -194,6 +194,9 @@ func (e *TestEnv) SetupFakeTraceServer() {
 
 // Setup setups Envoy, ConfigManager, and Backend server for test.
 func (e *TestEnv) Setup(confArgs []string) error {
+	var envoyArgs []string
+	var bootstrapperArgs []string
+
 	if e.mockServiceManagementServer != nil {
 		if err := addDynamicRoutingBackendPort(e.fakeServiceConfig, e.ports.DynamicRoutingBackendPort); err != nil {
 			return err
@@ -224,6 +227,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	if e.mockMetadata {
 		e.MockMetadataServer = components.NewMockMetadata(e.mockMetadataOverride)
 		confArgs = append(confArgs, "--metadata_url="+e.MockMetadataServer.GetURL())
+		bootstrapperArgs = append(bootstrapperArgs, "--metadata_url="+e.MockMetadataServer.GetURL())
 	}
 
 	confArgs = append(confArgs, fmt.Sprintf("--cluster_port=%v", e.ports.BackendServerPort))
@@ -245,7 +249,6 @@ func (e *TestEnv) Setup(confArgs []string) error {
 
 	// Starts envoy.
 	envoyConfPath := fmt.Sprintf("/tmp/apiproxy-testdata-bootstrap-%v.yaml", e.testId)
-	var envoyArgs []string
 	if *debugComponents == "all" || *debugComponents == "envoy" {
 		envoyArgs = append(envoyArgs, "--log-level", "debug")
 		if e.envoyDrainTimeInSec == 0 {
@@ -256,7 +259,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		envoyArgs = append(envoyArgs, "--drain-time-s", strconv.Itoa(e.envoyDrainTimeInSec))
 	}
 
-	e.envoy, err = components.NewEnvoy(envoyArgs, envoyConfPath, e.ports, e.testId)
+	e.envoy, err = components.NewEnvoy(envoyArgs, bootstrapperArgs, envoyConfPath, e.ports, e.testId)
 	if err != nil {
 		glog.Errorf("unable to create Envoy %v", err)
 		return err

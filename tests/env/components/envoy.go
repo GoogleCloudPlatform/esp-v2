@@ -34,34 +34,30 @@ type Envoy struct {
 }
 
 // createEnvoyConf create envoy config.
-func createEnvoyConf(configPath string, ports *Ports) error {
+func createEnvoyConf(configPath string, bootstrapArgs []string, ports *Ports) error {
 
 	glog.Infof("Outputting envoy bootstrap config to: %v", configPath)
 
-	args := []string{
-		"--enable_tracing=true",
-		"--tracing_sample_rate=1.0",
-		"--tracing_project_id=testing-project-123",
-		"--non_gcp=true",
-		fmt.Sprintf("--discovery_address=http://127.0.0.1:%v", ports.DiscoveryPort),
-		fmt.Sprintf("--admin_port=%v", ports.AdminPort),
-		// This address must be in gRPC format: https://github.com/grpc/grpc/blob/master/doc/naming.md
-		fmt.Sprintf("--tracing_stackdriver_address=ipv4:127.0.0.1:%v", ports.FakeStackdriverPort),
-		configPath,
-	}
+	bootstrapArgs = append(bootstrapArgs, "--enable_tracing=true")
+	bootstrapArgs = append(bootstrapArgs, "--tracing_sample_rate=1.0")
+	bootstrapArgs = append(bootstrapArgs, fmt.Sprintf("--discovery_address=http://127.0.0.1:%v", ports.DiscoveryPort))
+	bootstrapArgs = append(bootstrapArgs, fmt.Sprintf("--admin_port=%v", ports.AdminPort))
+	// This address must be in gRPC format: https://github.com/grpc/grpc/blob/master/doc/naming.md
+	bootstrapArgs = append(bootstrapArgs, fmt.Sprintf("--tracing_stackdriver_address=ipv4:127.0.0.1:%v", ports.FakeStackdriverPort))
+	bootstrapArgs = append(bootstrapArgs, configPath)
 
 	// Call bootstrapper to create the bootstrap config
-	glog.Infof("Calling bootstrapper at %v with args: %v", bootstrapperPath, args)
-	cmd := exec.Command(bootstrapperPath, args...)
+	glog.Infof("Calling bootstrapper at %v with args: %v", bootstrapperPath, bootstrapArgs)
+	cmd := exec.Command(bootstrapperPath, bootstrapArgs...)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return cmd.Run()
 }
 
 // NewEnvoy creates a new Envoy struct and starts envoy.
-func NewEnvoy(args []string, confPath string, ports *Ports, testId uint16) (*Envoy, error) {
+func NewEnvoy(args []string, bootstrapArgs []string, confPath string, ports *Ports, testId uint16) (*Envoy, error) {
 
-	if err := createEnvoyConf(confPath, ports); err != nil {
+	if err := createEnvoyConf(confPath, bootstrapArgs, ports); err != nil {
 		return nil, err
 	}
 

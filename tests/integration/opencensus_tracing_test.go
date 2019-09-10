@@ -16,6 +16,7 @@ package integration
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -34,8 +35,20 @@ func checkWantSpans(env *env.TestEnv, wantSpanNames []string) error {
 
 		select {
 		case span := <-env.FakeStackdriverServer.RcvSpan:
+
+			// Check name
 			if wantName != span.DisplayName.Value {
 				return fmt.Errorf("expected span name: %s, got span with name: %s", wantName, span.DisplayName.Value)
+			}
+
+			// Check attributes
+			if len(span.Attributes.AttributeMap) == 0 {
+				return fmt.Errorf("expected span %s to have more than 0 attributes attached to it", wantName)
+			}
+
+			// Check for project id
+			if !strings.Contains(span.Name, comp.FakeProjectID) {
+				return fmt.Errorf("expected span %s to have the project id in its name, but got name: %s", wantName, span.Name)
 			}
 
 		// Prevents test from being frozen if envoy fails to create spans
