@@ -32,9 +32,6 @@ RUN apt-get update && \
 # install nodejs, which is needed for integration tests
 RUN sh -c 'curl -sL https://deb.nodesource.com/setup_11.x | bash -'
 RUN apt-get install -y nodejs
-RUN npm install express
-RUN npm install grpc
-RUN npm install @grpc/proto-loader
 
 # install bazel
 RUN INSTALLER="bazel-0.28.1-installer-linux-x86_64.sh"; \

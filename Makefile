@@ -104,7 +104,7 @@ integration-debug: build build-envoy build-grpc-interop build-grpc-echo
 	@go test -v -timeout 20m ./tests/integration/... --debug_components=all --logtostderr
 
 #-----------------------------------------------------------------------------
-# Target: go dependencies
+# Target: dependencies
 #-----------------------------------------------------------------------------
 .PHONY: depend.update depend.install
 
@@ -119,6 +119,11 @@ depend.install: tools.glide
 	@glide install
 	@echo "--> generating go proto files"
 	./api/scripts/go_proto_gen.sh
+
+depend.install.endpoints:
+	@echo "--> updating dependencies from package.json"
+	@npm install ./tests/endpoints/bookstore-grpc/ --no-package-lock
+	@npm install ./tests/e2e/testdata/bookstore/ --no-package-lock
 
 #----------------------------------------------------------------------------
 # Target:  go tools
