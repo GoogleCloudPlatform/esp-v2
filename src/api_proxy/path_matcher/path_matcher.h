@@ -147,11 +147,12 @@ class PathMatcherBuilder {
 
 void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
                              const std::vector<std::string>& parts,
-                             std::vector<VariableBinding>* bindings);
+                             std::vector<VariableBinding>* bindings,
+                             bool keep_binding_escaped);
 
 void ExtractBindingsFromQueryParameters(
     const std::string& query_params, const std::set<std::string>& system_params,
-    std::vector<VariableBinding>* bindings);
+    std::vector<VariableBinding>* bindings, bool keep_binding_escaped);
 
 // Converts a request path into a format that can be used to perform a request
 // lookup in the PathMatcher trie. This utility method sanitizes the request
@@ -204,7 +205,8 @@ Method PathMatcher<Method>::Lookup(
   MethodData* method_data = reinterpret_cast<MethodData*>(lookup_result.data);
   if (variable_bindings != nullptr) {
     variable_bindings->clear();
-    ExtractBindingsFromPath(method_data->variables, parts, variable_bindings);
+    ExtractBindingsFromPath(method_data->variables, parts, variable_bindings,
+                            /*keep_binding_escaped=*/true);
   }
   return method_data->method;
 }
@@ -243,10 +245,11 @@ Method PathMatcher<Method>::Lookup(
   MethodData* method_data = reinterpret_cast<MethodData*>(lookup_result.data);
   if (variable_bindings != nullptr) {
     variable_bindings->clear();
-    ExtractBindingsFromPath(method_data->variables, parts, variable_bindings);
+    ExtractBindingsFromPath(method_data->variables, parts, variable_bindings,
+                            /*keep_binding_escaped=*/false);
     ExtractBindingsFromQueryParameters(
         query_params, method_data->method->system_query_parameter_names(),
-        variable_bindings);
+        variable_bindings, /*keep_binding_escaped=*/false);
   }
   if (body_field_path != nullptr) {
     *body_field_path = method_data->body_field_path;

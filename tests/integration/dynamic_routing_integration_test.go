@@ -71,16 +71,22 @@ func TestDynamicRouting(t *testing.T) {
 			wantResp: `{"RequestURI":"/dynamicrouting/getpetbyid?pet_id=123&number=987"}`,
 		},
 		{
-			desc:     "Succeed, CONSTANT_ADDRESS path translation is correct, original URL has query parameters, original query parameters should appear first and query parameters converted from path parameters appear later",
-			path:     "/pet/31/num/565?lang=US&zone=us-west1",
+			desc:     "Succeed, CONSTANT_ADDRESS path translation is correct with escaped path segment",
+			path:     "/pet/a%20b/num/9%3B8",
 			method:   "GET",
-			wantResp: `{"RequestURI":"/dynamicrouting/getpetbyid?lang=US&zone=us-west1&pet_id=31&number=565"}`,
+			wantResp: `{"RequestURI":"/dynamicrouting/getpetbyid?pet_id=a%20b&number=9%3B8"}`,
 		},
 		{
 			desc:     "Succeed, CONSTANT_ADDRESS path translation is correct, original URL has query parameters, original query parameters should appear first and query parameters converted from path parameters appear later",
 			path:     "/pet/31/num/565?lang=US&zone=us-west1",
 			method:   "GET",
 			wantResp: `{"RequestURI":"/dynamicrouting/getpetbyid?lang=US&zone=us-west1&pet_id=31&number=565"}`,
+		},
+		{
+			desc:     "Succeed, CONSTANT_ADDRESS path translation is correct, original URL has query parameters, original query parameters should appear first and query parameters converted from path parameters appear later. Both have escaped characters",
+			path:     "/pet/a%20b/num/9%3B8?lang=U%20S&zone=us%3Bwest",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/getpetbyid?lang=U%20S&zone=us%3Bwest&pet_id=a%20b&number=9%3B8"}`,
 		},
 		{
 			desc:     "Succeed, CONSTANT_ADDRESS path translation with snake case is correct",
@@ -107,6 +113,12 @@ func TestDynamicRouting(t *testing.T) {
 			wantResp: `{"RequestURI":"/dynamicrouting/shelves?q=story"}`,
 		},
 		{
+			desc:     "Succeed, CONSTANT_ADDRESS path translation is correct for cases that does not have path parameter but has query parameter and escaped characters",
+			path:     "/shelves?q=story%3Bbooks",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/shelves?q=story%3Bbooks"}`,
+		},
+		{
 			desc:     "Succeed, APPEND_PATH_TO_ADDRESS path translation is correct, appends original URL to backend address (https://domain/base/path)",
 			path:     "/searchpet",
 			method:   "GET",
@@ -131,16 +143,34 @@ func TestDynamicRouting(t *testing.T) {
 			wantResp: `{"RequestURI":"/dynamicrouting/searchdogs/searchdog?timezone=UTC"}`,
 		},
 		{
+			desc:     "Succeed, APPEND_PATH_TO_ADDRESS path translation with query parameter is correct, appends original URL to backend address that ends with slash (https://domain/base/path/), query parameter with escaped characters",
+			path:     "/searchdog?timezone=U%20C%3BT",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/searchdogs/searchdog?timezone=U%20C%3BT"}`,
+		},
+		{
 			desc:     "Succeed, APPEND_PATH_TO_ADDRESS path translation is correct, original URL has path parameters",
 			path:     "/pets/cat/year/2018",
 			method:   "GET",
 			wantResp: `{"RequestURI":"/dynamicrouting/listpet/pets/cat/year/2018"}`,
 		},
 		{
+			desc:     "Succeed, APPEND_PATH_TO_ADDRESS path translation is correct, original URL has path parameters and escaped characters",
+			path:     "/pets/c%20t/year/2018%3B2019",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/listpet/pets/c%20t/year/2018%3B2019"}`,
+		},
+		{
 			desc:     "Succeed, APPEND_PATH_TO_ADDRESS path translation is correct, original URL has path parameters and query parameters",
 			path:     "/pets/dog/year/2019?lang=US&zone=us-west1",
 			method:   "GET",
 			wantResp: `{"RequestURI":"/dynamicrouting/listpet/pets/dog/year/2019?lang=US&zone=us-west1"}`,
+		},
+		{
+			desc:     "Succeed, APPEND_PATH_TO_ADDRESS path translation is correct, original URL has path parameters and query parameters. Both have escaped characters",
+			path:     "/pets/d%20g/year/2019%3B2020?lang=U%20S&zone=us%3Bwest",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/listpet/pets/d%20g/year/2019%3B2020?lang=U%20S&zone=us%3Bwest"}`,
 		},
 		{
 			desc:     "Succeed, APPEND_PATH_TO_ADDRESS path translation is correct, backend address is root path with slash (https://domain/)",
