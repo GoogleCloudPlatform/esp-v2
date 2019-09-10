@@ -39,9 +39,9 @@ namespace ServiceControl {
 namespace {
 
 // Delimeter used in jwt payload key path
-const char kJwtPayLoadsDelimeter = '.';
+constexpr char kJwtPayLoadsDelimeter = '.';
 
-const std::string kContentTypeApplicationGrpcPrefix = "application/grpc";
+constexpr char kContentTypeApplicationGrpcPrefix[] = "application/grpc";
 const Http::LowerCaseString kContentTypeHeader{"content-type"};
 
 inline int64_t convertNsToMs(std::chrono::nanoseconds ns) {

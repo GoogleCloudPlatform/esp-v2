@@ -30,7 +30,7 @@ namespace HttpFilters {
 namespace ServiceControl {
 namespace {
 
-const std::string KApplicationProto("application/x-protobuf");
+constexpr absl::string_view KApplicationProto = "application/x-protobuf";
 
 class HttpCallImpl : public HttpCall,
                      public Logger::Loggable<Logger::Id::filter>,
@@ -150,10 +150,9 @@ class HttpCallImpl : public HttpCall,
     request_count_++;
     std::string token = token_fn_();
     if (token.empty()) {
-      on_done_(
-          Status(Code::INTERNAL,
-                 std::string("Missing access token for service control call")),
-          "");
+      on_done_(Status(Code::INTERNAL,
+                      "Missing access token for service control call"),
+               "");
       return;
     }
 
