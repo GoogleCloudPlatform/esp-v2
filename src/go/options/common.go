@@ -33,8 +33,8 @@ type CommonOptions struct {
 	TracingOutgoingContext    string
 
 	// Flags for metadata
-	NonGCP                 bool
-	MetadataFetcherTimeout time.Duration
+	NonGCP             bool
+	HttpRequestTimeout time.Duration
 }
 
 // DefaultCommonOptions returns CommonOptions with default values.
@@ -44,7 +44,7 @@ func DefaultCommonOptions() CommonOptions {
 	return CommonOptions{
 		AdminPort:                 8001,
 		EnableTracing:             false,
-		MetadataFetcherTimeout:    5 * time.Second,
+		HttpRequestTimeout:        5 * time.Second,
 		NonGCP:                    false,
 		TracingProjectId:          "",
 		TracingStackdriverAddress: "",
