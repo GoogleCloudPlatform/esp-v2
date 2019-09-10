@@ -37,7 +37,7 @@ namespace {
 // Then the listener is marked as ready but the whole Envoy server is not marked
 // as ready (worker did not start) somehow. To work around this problem, use IP
 // for metadata server to fetch access token.
-const char kDefaultIdentityUrl[]{
+constexpr char kDefaultIdentityUrl[]{
     "http://169.254.169.254/computeMetadata/v1/instance/"
     "service-accounts/default/identity"};
 

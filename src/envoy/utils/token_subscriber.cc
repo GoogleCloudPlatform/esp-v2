@@ -27,7 +27,7 @@ namespace {
 
 // Required header when fetching from the metadata server
 const Envoy::Http::LowerCaseString kMetadataFlavorKey("Metadata-Flavor");
-const char kMetadataFlavor[]{"Google"};
+constexpr char kMetadataFlavor[]{"Google"};
 
 // request timeout
 const std::chrono::milliseconds kRequestTimeoutMs(5000);

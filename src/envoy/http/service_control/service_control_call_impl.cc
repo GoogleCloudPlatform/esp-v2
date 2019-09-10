@@ -32,11 +32,11 @@ namespace ServiceControl {
 
 namespace {
 // The service_control service name. used for as audience to generate JWT token.
-const char kServiceControlService[] =
+constexpr char kServiceControlService[] =
     "/google.api.servicecontrol.v1.ServiceController";
 
 // The quota_control service name. used for as audience to generate JWT token.
-const char kQuotaControlService[] =
+constexpr char kQuotaControlService[] =
     "/google.api.servicecontrol.v1.QuotaController";
 
 // Suspected Envoy has listener initialization bug: if a http filter needs to
@@ -46,7 +46,7 @@ const char kQuotaControlService[] =
 // Then the listener is marked as ready but the whole Envoy server is not marked
 // as ready (worker did not start) somehow. To work around this problem, use IP
 // for metadata server to fetch access token.
-const char kDefaultTokenUrl[]{
+constexpr char kDefaultTokenUrl[]{
     "http://169.254.169.254/computeMetadata/v1/instance/"
     "service-accounts/default/token"};
 
