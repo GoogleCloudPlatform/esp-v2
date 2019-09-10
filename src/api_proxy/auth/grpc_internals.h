@@ -12,8 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef API_MANAGER_AUTH_LIB_GRPC_INTERNALS_H_
-#define API_MANAGER_AUTH_LIB_GRPC_INTERNALS_H_
+#pragma once
 
 // This header file is for internal use only since it declares grpc
 // internals that auth depends on. A public header file should not
@@ -29,5 +28,3 @@
 #include "src/core/lib/security/credentials/jwt/json_token.h"
 #include "src/core/lib/security/credentials/jwt/jwt_verifier.h"
 #include "src/core/lib/slice/b64.h"
-
-#endif  // API_MANAGER_AUTH_LIB_GRPC_INTERNALS_H_

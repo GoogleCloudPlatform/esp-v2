@@ -11,9 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#ifndef ENVOY_BACKEND_AUTH_RULE_PARSER_H
-#define ENVOY_BACKEND_AUTH_RULE_PARSER_H
-
+#pragma once
 #include <list>
 #include <unordered_map>
 
@@ -87,5 +85,3 @@ class FilterConfigParser {
 }  // namespace HttpFilters
 }  // namespace Extensions
 }  // namespace Envoy
-
-#endif  // ENVOY_BACKEND_AUTH_RULE_PARSER_H

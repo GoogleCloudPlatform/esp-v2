@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ENVOY_SREVICE_CONTROL_PATH_MATCHER_NODE_H_
-#define ENVOY_SREVICE_CONTROL_PATH_MATCHER_NODE_H_
+#pragma once
 
 #include <map>
 #include <memory>
@@ -191,5 +190,3 @@ class PathMatcherNode {
 }  // namespace path_matcher
 }  // namespace api_proxy
 }  // namespace google
-
-#endif  // ENVOY_SREVICE_CONTROL_PATH_MATCHER_NODE_H_

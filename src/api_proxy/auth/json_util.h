@@ -12,8 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef API_MANAGER_AUTH_LIB_JSON_UTIL_H_
-#define API_MANAGER_AUTH_LIB_JSON_UTIL_H_
+#pragma once
 
 // This header file is for internal use only since it declares json
 // util functions that auth depends on. A public header file should not
@@ -25,28 +24,26 @@ namespace api_proxy {
 namespace auth {
 
 // Gets given JSON property by key name.
-const grpc_json *GetProperty(const grpc_json *json, const char *key);
+const grpc_json* GetProperty(const grpc_json* json, const char* key);
 
 // Gets the primitive value of the json with given path, separated by ".".
-bool GetPrimitiveFieldValue(const std::string &json,
-                            const std::string &payload_path,
-                            std::string *payload_value);
+bool GetPrimitiveFieldValue(const std::string& json,
+                            const std::string& payload_path,
+                            std::string* payload_value);
 
 // Gets string value by key or nullptr if no such key or property is not string
 // type.
-const char *GetStringValue(const grpc_json *json, const char *key);
+const char* GetStringValue(const grpc_json* json, const char* key);
 
 // Gets a value of a number property with a given key, or nullptr if no such key
 // exists or the property is property is not number type.
-const char *GetNumberValue(const grpc_json *json, const char *key);
+const char* GetNumberValue(const grpc_json* json, const char* key);
 
 // Fill grpc_child with key, value and type, and setup links from/to
 // brother/parents.
-void FillChild(grpc_json *child, grpc_json *brother, grpc_json *parent,
-               const char *key, const char *value, grpc_json_type type);
+void FillChild(grpc_json* child, grpc_json* brother, grpc_json* parent,
+               const char* key, const char* value, grpc_json_type type);
 
 }  // namespace auth
 }  // namespace api_proxy
 }  // namespace google
-
-#endif  // API_MANAGER_AUTH_LIB_JSON_UTIL_H_

@@ -11,9 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-#ifndef API_PROXY_PATH_MATHCER_VARIABLE_BINDING_UTILS_H_
-#define API_PROXY_PATH_MATHCER_VARIABLE_BINDING_UTILS_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -41,5 +39,3 @@ const std::string VariableBindingsToQueryParameters(
 }  // namespace path_matcher
 }  // namespace api_proxy
 }  // namespace google
-
-#endif  // API_PROXY_PATH_MATHCER_VARIABLE_BINDING_UTILS_H_

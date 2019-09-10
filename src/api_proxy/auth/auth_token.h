@@ -12,8 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef API_MANAGER_AUTH_LIB_AUTH_TOKEN_H_
-#define API_MANAGER_AUTH_LIB_AUTH_TOKEN_H_
+#pragma once
 
 #include <stddef.h>
 
@@ -23,13 +22,11 @@ namespace auth {
 
 // Parse a json secret and generate auth_token
 // Returned pointer need to be freed by grpc_free
-char *get_auth_token(const char *json_secret, const char *audience);
+char* get_auth_token(const char* json_secret, const char* audience);
 
 // Free a buffer allocated by gRPC library.
-void grpc_free(char *token);
+void grpc_free(char* token);
 
 }  // namespace auth
 }  // namespace api_proxy
 }  // namespace google
-
-#endif  // API_MANAGER_AUTH_LIB_AUTH_TOKEN_H_
