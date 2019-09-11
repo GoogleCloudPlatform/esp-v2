@@ -35,7 +35,7 @@ func TestServiceControlCredentialId(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--suppress_envoy_headers",
 	}
-	s := env.NewTestEnv(comp.TestServiceControlLogJwtPayloads, "bookstore", []string{"google_jwt"})
+	s := env.NewTestEnv(comp.TestServiceControlLogJwtPayloads, "bookstore")
 
 	s.OverrideAuthentication(&conf.Authentication{Rules: []*conf.AuthenticationRule{
 		{

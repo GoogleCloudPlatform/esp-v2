@@ -23,6 +23,7 @@ import (
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
+	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 
 	bsClient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
@@ -37,7 +38,7 @@ func TestServiceControlQuota(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlQuota, "bookstore", nil)
+	s := env.NewTestEnv(comp.TestServiceControlQuota, "bookstore")
 	s.OverrideQuota(&conf.Quota{
 		MetricRules: []*conf.MetricRule{
 			{
@@ -69,6 +70,7 @@ func TestServiceControlQuota(t *testing.T) {
 			desc:           "succeed, quota allocation works well",
 			clientProtocol: "http",
 			method:         "/v1/shelves?key=api-key",
+			token:          testdata.FakeCloudTokenMultiAudiences,
 			httpMethod:     "GET",
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantScRequests: []interface{}{
@@ -105,9 +107,9 @@ func TestServiceControlQuota(t *testing.T) {
 					HttpMethod:        "GET",
 					LogMessage:        "endpoints.examples.bookstore.Bookstore.ListShelves is called",
 					StatusCode:        "0",
-					RequestSize:       198,
+					RequestSize:       430,
 					ResponseSize:      291,
-					RequestBytes:      198,
+					RequestBytes:      430,
 					ResponseBytes:     291,
 					ResponseCode:      200,
 					Platform:          util.GCE,
@@ -158,7 +160,7 @@ func TestServiceControlQuotaUnavailable(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlQuotaUnavailable, "bookstore", nil)
+	s := env.NewTestEnv(comp.TestServiceControlQuotaUnavailable, "bookstore")
 	s.OverrideQuota(&conf.Quota{
 		MetricRules: []*conf.MetricRule{
 			{
@@ -176,7 +178,7 @@ func TestServiceControlQuotaUnavailable(t *testing.T) {
 	}
 	defer s.TearDown()
 
-	type testdata struct {
+	type testType struct {
 		desc                  string
 		clientProtocol        string
 		method                string
@@ -190,10 +192,11 @@ func TestServiceControlQuotaUnavailable(t *testing.T) {
 		wantGetScRequestError error
 	}
 
-	tc := testdata{
+	tc := testType{
 		desc:               "succeed, when the service control quota api is unavailable, the request still passes and works well",
 		clientProtocol:     "http",
 		method:             "/v1/shelves?key=api-key",
+		token:              testdata.FakeCloudTokenMultiAudiences,
 		httpMethod:         "GET",
 		wantResp:           `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		wantScRequestCount: 3,
@@ -224,7 +227,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlQuotaExhausted, "bookstore", nil)
+	s := env.NewTestEnv(comp.TestServiceControlQuotaExhausted, "bookstore")
 	s.OverrideQuota(&conf.Quota{
 		MetricRules: []*conf.MetricRule{
 			{
@@ -267,6 +270,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 			desc:           "succeed, the first request of failed quota allocation is replied with success",
 			clientProtocol: "http",
 			method:         "/v1/shelves?key=api-key",
+			token:          testdata.FakeCloudTokenMultiAudiences,
 			httpMethod:     "GET",
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantScRequests: []interface{}{
@@ -304,9 +308,9 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 					HttpMethod:        "GET",
 					LogMessage:        "endpoints.examples.bookstore.Bookstore.ListShelves is called",
 					StatusCode:        "0",
-					RequestSize:       198,
+					RequestSize:       430,
 					ResponseSize:      291,
-					RequestBytes:      198,
+					RequestBytes:      430,
 					ResponseBytes:     291,
 					// It always allow the first request, then cache its cost, accumulate all costs for 1 second,
 					// then call remote allocateQuota,  if fail, the next request will be failed with 429.
@@ -321,6 +325,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 			desc:           "failed, the requests after failed qutoa allocation request will be denied",
 			clientProtocol: "http",
 			method:         "/v1/shelves?key=api-key",
+			token:          testdata.FakeCloudTokenMultiAudiences,
 			httpMethod:     "GET",
 			httpCallError:  fmt.Errorf("429 Too Many Requests, RESOURCE_EXHAUSTED"),
 			wantScRequests: []interface{}{
@@ -350,9 +355,9 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 					LogMessage:        "endpoints.examples.bookstore.Bookstore.ListShelves is called",
 					ErrorType:         "4xx",
 					StatusCode:        "8",
-					RequestSize:       198,
+					RequestSize:       430,
 					ResponseSize:      110,
-					RequestBytes:      198,
+					RequestBytes:      430,
 					ResponseBytes:     110,
 					// It always allow the first request, then cache its cost, accumulate all costs for 1 second,
 					// then call remote allocateQuota,  if fail, the next request will be failed with 429.

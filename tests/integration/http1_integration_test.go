@@ -37,7 +37,7 @@ func TestHttp1Basic(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--skip_service_control_filter=true", "--backend_protocol=http1", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestHttp1Basic, "echo", nil)
+	s := env.NewTestEnv(comp.TestHttp1Basic, "echo")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -72,7 +72,7 @@ func TestHttp1JWT(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--skip_service_control_filter=true", "--backend_protocol=http1", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestHttp1JWT, "echo", []string{"google_jwt"})
+	s := env.NewTestEnv(comp.TestHttp1JWT, "echo")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

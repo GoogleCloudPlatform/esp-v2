@@ -29,7 +29,7 @@ func TestGRPCErrors(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestGRPCErrors, "grpc-echo", nil)
+	s := env.NewTestEnv(comp.TestGRPCErrors, "grpc-echo")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

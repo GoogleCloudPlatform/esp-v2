@@ -34,7 +34,7 @@ func TestGRPCFallback(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestGRPCFallback, "bookstore", nil)
+	s := env.NewTestEnv(comp.TestGRPCFallback, "bookstore")
 	s.OverrideBackendService("grpc-echo")
 	s.AppendApiMethods([]*api.Method{
 		{

@@ -55,7 +55,7 @@ type TestEnv struct {
 	mockMetadata                bool
 	enableScNetworkFailOpen     bool
 	backendService              string
-	mockJwtProviders            []string
+	mockJwtProviders            map[string]bool
 	mockMetadataOverride        map[string]string
 	bookstoreServer             *components.BookstoreGrpcServer
 	grpcInteropServer           *components.GrpcInteropGrpcServer
@@ -73,7 +73,7 @@ type TestEnv struct {
 	FakeStackdriverServer       *components.FakeTraceServer
 }
 
-func NewTestEnv(testId uint16, backendService string, jwtProviders []string) *TestEnv {
+func NewTestEnv(testId uint16, backendService string) *TestEnv {
 	glog.Infof("Running test function #%v", testId)
 	fakeServiceConfig := proto.Clone(testdata.ConfigMap[backendService]).(*conf.Service)
 	return &TestEnv{
@@ -83,7 +83,7 @@ func NewTestEnv(testId uint16, backendService string, jwtProviders []string) *Te
 		backendService:              backendService,
 		ports:                       components.NewPorts(testId),
 		fakeServiceConfig:           fakeServiceConfig,
-		mockJwtProviders:            jwtProviders,
+		mockJwtProviders:            make(map[string]bool),
 		ServiceControlServer:        components.NewMockServiceCtrl(fakeServiceConfig.GetName()),
 	}
 }
@@ -198,16 +198,25 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		if err := addDynamicRoutingBackendPort(e.fakeServiceConfig, e.ports.DynamicRoutingBackendPort); err != nil {
 			return err
 		}
-		if len(e.mockJwtProviders) > 0 {
-			// Add Mock Jwt Providers to the fake ServiceConfig.
-			for _, id := range e.mockJwtProviders {
-				provider, ok := testdata.MockJwtProviderMap[id]
-				if !ok {
-					return fmt.Errorf("not supported jwt provider id: %v", id)
+
+		for _, rule := range e.fakeServiceConfig.GetAuthentication().GetRules() {
+			for _, req := range rule.GetRequirements() {
+				if reqId := req.GetProviderId(); reqId != "" {
+					e.mockJwtProviders[reqId] = true
 				}
-				auth := e.fakeServiceConfig.GetAuthentication()
-				auth.Providers = append(auth.Providers, provider)
 			}
+		}
+
+		for id, ok := range e.mockJwtProviders {
+			if !ok {
+				continue
+			}
+			provider, ok := testdata.MockJwtProviderMap[id]
+			if !ok {
+				return fmt.Errorf("not supported jwt provider id: %v", id)
+			}
+			auth := e.fakeServiceConfig.GetAuthentication()
+			auth.Providers = append(auth.Providers, provider)
 		}
 
 		e.ServiceControlServer.Setup()

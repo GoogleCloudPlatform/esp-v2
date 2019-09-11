@@ -32,7 +32,7 @@ func TestServiceControlReportNetworkFail(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--service_control_report_retries=0"}
 
-	s := env.NewTestEnv(comp.TestServiceControlReportNetworkFail, "bookstore", nil)
+	s := env.NewTestEnv(comp.TestServiceControlReportNetworkFail, "bookstore")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

@@ -42,7 +42,7 @@ func TestSimpleCorsWithBasicPreset(t *testing.T) {
 		"--cors_allow_origin=" + corsAllowOriginValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
-	s := env.NewTestEnv(comp.TestSimpleCorsWithBasicPreset, "echo", nil)
+	s := env.NewTestEnv(comp.TestSimpleCorsWithBasicPreset, "echo")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -104,7 +104,7 @@ func TestDifferentOriginSimpleCors(t *testing.T) {
 		"--cors_allow_origin=" + corsAllowOriginValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
-	s := env.NewTestEnv(comp.TestDifferentOriginSimpleCors, "echo", nil)
+	s := env.NewTestEnv(comp.TestDifferentOriginSimpleCors, "echo")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -144,7 +144,7 @@ func TestSimpleCorsWithRegexPreset(t *testing.T) {
 		"--cors_allow_origin_regex=" + corsAllowOriginRegex,
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
-	s := env.NewTestEnv(comp.TestSimpleCorsWithRegexPreset, "echo", nil)
+	s := env.NewTestEnv(comp.TestSimpleCorsWithRegexPreset, "echo")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -191,7 +191,7 @@ func TestPreflightCorsWithBasicPreset(t *testing.T) {
 		"--cors_allow_headers=" + corsAllowHeadersValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
 
-	s := env.NewTestEnv(comp.TestPreflightCorsWithBasicPreset, "echo", nil)
+	s := env.NewTestEnv(comp.TestPreflightCorsWithBasicPreset, "echo")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -243,7 +243,7 @@ func TestDifferentOriginPreflightCors(t *testing.T) {
 		"--cors_allow_headers=" + corsAllowHeadersValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
 
-	s := env.NewTestEnv(comp.TestDifferentOriginPreflightCors, "echo", nil)
+	s := env.NewTestEnv(comp.TestDifferentOriginPreflightCors, "echo")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -288,7 +288,7 @@ func TestGrpcBackendSimpleCors(t *testing.T) {
 		"--cors_allow_origin=" + corsAllowOriginValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
-	s := env.NewTestEnv(comp.TestGrpcBackendSimpleCors, "bookstore", nil)
+	s := env.NewTestEnv(comp.TestGrpcBackendSimpleCors, "bookstore")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -334,7 +334,7 @@ func TestGrpcBackendPreflightCors(t *testing.T) {
 		"--cors_allow_headers=" + corsAllowHeadersValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
 
-	s := env.NewTestEnv(comp.TestGrpcBackendPreflightCors, "bookstore", nil)
+	s := env.NewTestEnv(comp.TestGrpcBackendPreflightCors, "bookstore")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -383,7 +383,7 @@ func TestPreflightRequestWithAllowCors(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestPreflightRequestWithAllowCors, "echo", nil)
+	s := env.NewTestEnv(comp.TestPreflightRequestWithAllowCors, "echo")
 	s.SetAllowCors()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -451,7 +451,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlRequestWithAllowCors, "echo", nil)
+	s := env.NewTestEnv(comp.TestServiceControlRequestWithAllowCors, "echo")
 	s.SetAllowCors()
 	s.AppendHttpRules([]*annotations.HttpRule{
 		{
@@ -626,7 +626,7 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlRequestWithoutAllowCors, "echo", nil)
+	s := env.NewTestEnv(comp.TestServiceControlRequestWithoutAllowCors, "echo")
 	s.AppendHttpRules([]*annotations.HttpRule{
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.ListShelves",

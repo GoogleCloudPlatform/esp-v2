@@ -53,7 +53,7 @@ func TestGRPCInterops(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestGRPCInterops, "grpc-interop", nil)
+	s := env.NewTestEnv(comp.TestGRPCInterops, "grpc-interop")
 	clientPath := fmt.Sprintf("%s/interop_client", clientBinPath)
 	_, err := os.Stat(clientPath)
 	if os.IsNotExist(err) {
@@ -95,7 +95,7 @@ func TestGRPCInteropMiniStress(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestGRPCInteropMiniStress, "grpc-interop", nil)
+	s := env.NewTestEnv(comp.TestGRPCInteropMiniStress, "grpc-interop")
 	clientPath := fmt.Sprintf("%s/stress_test", clientBinPath)
 	_, err := os.Stat(clientPath)
 	if os.IsNotExist(err) {

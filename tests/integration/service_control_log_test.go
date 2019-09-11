@@ -38,7 +38,7 @@ func TestServiceControlLogHeaders(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers", "--log_request_headers=Fake-Header-Key0,Fake-Header-Key1,Fake-Header-Key2,Non-Existing-Header-Key", "--log_response_headers=Echo-Fake-Header-Key0,Echo-Fake-Header-Key1,Echo-Fake-Header-Key2,Non-Existing-Header-Key"}
 
-	s := env.NewTestEnv(comp.TestServiceControlLogHeaders, "echo", []string{"google_jwt"})
+	s := env.NewTestEnv(comp.TestServiceControlLogHeaders, "echo")
 	s.AppendHttpRules([]*annotations.HttpRule{
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",
@@ -153,7 +153,7 @@ func TestServiceControlLogJwtPayloads(t *testing.T) {
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--suppress_envoy_headers", `--log_jwt_payloads=exp,foo.foo_list,google,google.compute_engine.project_id,google.project_number,google.google_bool,foo.foo_bool,google.compute_engine.not_existed,aud,not_existed`,
 	}
 
-	s := env.NewTestEnv(comp.TestServiceControlLogJwtPayloads, "bookstore", []string{"service_control_jwt_payload_auth"})
+	s := env.NewTestEnv(comp.TestServiceControlLogJwtPayloads, "bookstore")
 	s.OverrideAuthentication(&conf.Authentication{
 		Rules: []*conf.AuthenticationRule{
 			{

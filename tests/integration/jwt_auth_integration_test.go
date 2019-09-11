@@ -33,9 +33,7 @@ func TestAsymmetricKeys(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestAsymmetricKeys, "bookstore", []string{"test_auth", "test_auth_1",
-		"invalid_jwks_provider", "nonexist_jwks_provider", "openID_provider",
-		"openID_invalid_provider", "openID_nonexist_provider"})
+	s := env.NewTestEnv(comp.TestAsymmetricKeys, "bookstore")
 	s.OverrideAuthentication(&conf.Authentication{
 		Rules: []*conf.AuthenticationRule{
 			{
