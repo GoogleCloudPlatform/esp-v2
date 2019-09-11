@@ -134,7 +134,8 @@ std::string UrlUnescapeString(const std::string& part,
 
 void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
                              const std::vector<std::string>& parts,
-                             std::vector<VariableBinding>* bindings) {
+                             std::vector<VariableBinding>* bindings,
+                             bool keep_binding_escaped) {
   for (const auto& var : vars) {
     // Determine the subpath bound to the variable based on the
     // [start_segment, end_segment) segment range of the variable.
@@ -155,7 +156,11 @@ void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
     // Joins parts with "/"  to form a path string.
     for (size_t i = var.start_segment; i < end_segment; ++i) {
       // For multipart matches only unescape non-reserved characters.
-      binding.value += UrlUnescapeString(parts[i], !is_multipart);
+      if (keep_binding_escaped) {
+        binding.value += parts[i];
+      } else {
+        binding.value += UrlUnescapeString(parts[i], !is_multipart);
+      }
       if (i < end_segment - 1) {
         binding.value += "/";
       }
@@ -166,7 +171,7 @@ void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
 
 void ExtractBindingsFromQueryParameters(
     const std::string& query_params, const std::set<std::string>& system_params,
-    std::vector<VariableBinding>* bindings) {
+    std::vector<VariableBinding>* bindings, bool keep_binding_escaped) {
   // The bindings in URL the query parameters have the following form:
   //      <field_path1>=value1&<field_path2>=value2&...&<field_pathN>=valueN
   // Query parameters may also contain system parameters such as `api_key`.
@@ -185,7 +190,11 @@ void ExtractBindingsFromQueryParameters(
         // in the request, e.g. `book.author.name`.
         VariableBinding binding;
         binding.field_path = absl::StrSplit(name, '.');
-        binding.value = UrlUnescapeString(param.substr(pos + 1), true);
+        if (keep_binding_escaped) {
+          binding.value = param.substr(pos + 1);
+        } else {
+          binding.value = UrlUnescapeString(param.substr(pos + 1), true);
+        }
         bindings->emplace_back(std::move(binding));
       }
     }
