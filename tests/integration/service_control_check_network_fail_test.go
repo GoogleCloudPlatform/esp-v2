@@ -23,6 +23,7 @@ import (
 
 	bsclient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 )
@@ -65,7 +66,7 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 	for _, tc := range testdata {
 		args := []string{"--service_config_id=" + configID,
 			"--backend_protocol=grpc", "--rollout_strategy=fixed"}
-		s := env.NewTestEnv(tc.allocatedPort, "bookstore", nil)
+		s := env.NewTestEnv(tc.allocatedPort, "bookstore")
 		s.ServiceControlServer.SetURL(tc.serviceControlURL)
 		if err := s.Setup(args); err != nil {
 			t.Fatalf("fail to setup test env, %v", err)
@@ -99,7 +100,7 @@ func TestServiceControlCheckTimeout(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestServiceControlCheckTimeout, "bookstore", nil)
+	s := env.NewTestEnv(comp.TestServiceControlCheckTimeout, "bookstore")
 	s.ServiceControlServer.SetURL("http://wrong_service_control_server_name")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -157,6 +158,7 @@ func TestServiceControlNetworkFailFlag(t *testing.T) {
 		clientProtocol  string
 		httpMethod      string
 		method          string
+		token           string
 		checkFailStatus int
 		wantResp        string
 		wantError       string
@@ -168,6 +170,7 @@ func TestServiceControlNetworkFailFlag(t *testing.T) {
 			clientProtocol:  "http",
 			httpMethod:      "GET",
 			method:          "/v1/shelves?key=api-key",
+			token:           testdata.FakeCloudTokenMultiAudiences,
 			wantResp:        `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
 		{
@@ -177,12 +180,13 @@ func TestServiceControlNetworkFailFlag(t *testing.T) {
 			clientProtocol:  "http",
 			httpMethod:      "GET",
 			method:          "/v1/shelves?key=api-key",
+			token:           testdata.FakeCloudTokenMultiAudiences,
 			wantError:       "500 Internal Server Error, INTERNAL:Failed to call service control",
 		},
 	}
 
 	for _, tc := range tests {
-		s := env.NewTestEnv(tc.port, "bookstore", nil)
+		s := env.NewTestEnv(tc.port, "bookstore")
 		s.ServiceControlServer.OverrideCheckHandler(&localServiceHandler{
 			m: s.ServiceControlServer,
 		})
@@ -196,7 +200,7 @@ func TestServiceControlNetworkFailFlag(t *testing.T) {
 
 		s.ServiceControlServer.ResetRequestCount()
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-		resp, err := bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, "", nil)
+		resp, err := bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, nil)
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)

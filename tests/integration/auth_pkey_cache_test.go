@@ -68,7 +68,7 @@ func TestAuthJwksCache(t *testing.T) {
 		args := []string{"--service_config_id=" + configId,
 			"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-		s := env.NewTestEnv(comp.TestAuthJwksCache, "echo", []string{"google_jwt"})
+		s := env.NewTestEnv(comp.TestAuthJwksCache, "echo")
 		if tc.jwksCacheDurationInS != 0 {
 			args = append(args, fmt.Sprintf("--jwks_cache_duration_in_s=%v", tc.jwksCacheDurationInS))
 		}

@@ -35,7 +35,7 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestServiceControlReportResponseCode, "echo", nil)
+	s := env.NewTestEnv(comp.TestServiceControlReportResponseCode, "echo")
 	s.AppendHttpRules([]*annotations.HttpRule{
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetNotModified",

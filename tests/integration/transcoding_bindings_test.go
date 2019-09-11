@@ -46,7 +46,7 @@ func TestTranscodingBindings(t *testing.T) {
 		wantGRPCWebTrailer client.GRPCWebTrailer
 	}
 
-	s := env.NewTestEnv(comp.TestTranscodingBindings, "bookstore", []string{})
+	s := env.NewTestEnv(comp.TestTranscodingBindings, "bookstore")
 	s.OverrideAuthentication(&conf.Authentication{
 		Rules: []*conf.AuthenticationRule{},
 	})

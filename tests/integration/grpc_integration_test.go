@@ -42,7 +42,7 @@ func TestGRPC(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID, "--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestGRPC, "bookstore", nil)
+	s := env.NewTestEnv(comp.TestGRPC, "bookstore")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -120,7 +120,7 @@ func TestGRPCWeb(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestGRPCWeb, "bookstore", nil)
+	s := env.NewTestEnv(comp.TestGRPCWeb, "bookstore")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -129,6 +129,7 @@ func TestGRPCWeb(t *testing.T) {
 	tests := []struct {
 		desc        string
 		method      string
+		token       string
 		header      http.Header
 		wantResp    string
 		wantTrailer client.GRPCWebTrailer
@@ -136,18 +137,21 @@ func TestGRPCWeb(t *testing.T) {
 		// Successes:
 		{
 			method:      "ListShelves",
+			token:       testdata.FakeCloudTokenMultiAudiences,
 			header:      http.Header{"x-api-key": []string{"api-key"}},
 			wantResp:    `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantTrailer: successTrailer,
 		},
 		{
 			method:      "DeleteShelf",
+			token:       testdata.FakeCloudTokenMultiAudiences,
 			header:      http.Header{"x-api-key": []string{"api-key"}},
 			wantResp:    "{}",
 			wantTrailer: successTrailer,
 		},
 		{
 			method:      "GetShelf",
+			token:       testdata.FakeCloudTokenMultiAudiences,
 			header:      http.Header{"x-api-key": []string{"api-key"}},
 			wantResp:    `{"id":"100","theme":"Kids"}`,
 			wantTrailer: successTrailer,
@@ -155,16 +159,19 @@ func TestGRPCWeb(t *testing.T) {
 		// Failures:
 		{
 			method:      "GetShelf",
+			token:       testdata.FakeCloudTokenMultiAudiences,
 			header:      http.Header{"x-api-key": []string{"api-key"}, client.TestHeaderKey: []string{"ABORTED"}},
 			wantTrailer: abortedTrailer,
 		},
 		{
 			method:      "DeleteShelf",
+			token:       testdata.FakeCloudTokenMultiAudiences,
 			header:      http.Header{"x-api-key": []string{"api-key"}, client.TestHeaderKey: []string{"INTERNAL"}},
 			wantTrailer: internalTrailer,
 		},
 		{
 			method:      "ListShelves",
+			token:       testdata.FakeCloudTokenMultiAudiences,
 			header:      http.Header{"x-api-key": []string{"api-key"}, client.TestHeaderKey: []string{"DATA_LOSS"}},
 			wantTrailer: dataLossTrailer,
 		},
@@ -172,7 +179,7 @@ func TestGRPCWeb(t *testing.T) {
 
 	for _, tc := range tests {
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-		resp, trailer, err := client.MakeGRPCWebCall(addr, tc.method, "", tc.header)
+		resp, trailer, err := client.MakeGRPCWebCall(addr, tc.method, tc.token, tc.header)
 
 		if err != nil {
 			t.Errorf("failed to run test: %s", err)
@@ -195,7 +202,7 @@ func TestGRPCJwt(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestGRPCJwt, "bookstore", []string{"google_service_account", "endpoints_jwt", "broken_provider"})
+	s := env.NewTestEnv(comp.TestGRPCJwt, "bookstore")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -433,7 +440,7 @@ func TestGRPCMetadata(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestGRPCMetadata, "grpc-echo", nil)
+	s := env.NewTestEnv(comp.TestGRPCMetadata, "grpc-echo")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

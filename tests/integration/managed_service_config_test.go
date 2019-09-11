@@ -31,7 +31,7 @@ func TestManagedServiceConfig(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=managed", "--check_rollout_interval=1s"}
-	s := env.NewTestEnv(comp.TestManagedServiceConfig, "bookstore", []string{"test_auth"})
+	s := env.NewTestEnv(comp.TestManagedServiceConfig, "bookstore")
 	s.SetEnvoyDrainTimeInSec(1)
 
 	s.OverrideAuthentication(&conf.Authentication{

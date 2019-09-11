@@ -35,7 +35,7 @@ func TestServiceControlCheckError(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlCheckError, "echo", []string{"google_jwt"})
+	s := env.NewTestEnv(comp.TestServiceControlCheckError, "echo")
 	comp.ResetReqCnt()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

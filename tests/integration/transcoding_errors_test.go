@@ -21,6 +21,7 @@ import (
 
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
+	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 )
@@ -44,7 +45,7 @@ func TestTranscodingServiceUnavailableError(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestTranscodingServiceUnavailableError, "bookstore", nil)
+	s := env.NewTestEnv(comp.TestTranscodingServiceUnavailableError, "bookstore")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -79,7 +80,7 @@ func TestTranscodingErrors(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestTranscodingErrors, "bookstore", nil)
+	s := env.NewTestEnv(comp.TestTranscodingErrors, "bookstore")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -91,6 +92,7 @@ func TestTranscodingErrors(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves/200/books/2002?key=api-key",
+			token:          testdata.FakeCloudTokenMultiAudiences,
 			noBackend:      true,
 			wantErr:        "404 Not Found",
 		},
@@ -99,16 +101,17 @@ func TestTranscodingErrors(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves/0/books?key=api-key",
+			token:          testdata.FakeCloudTokenMultiAudiences,
 			bodyBytes:      []byte(`NO_BRACES_JSON`),
 			noBackend:      true,
 			wantErr:        "400 Bad Request, Unexpected token",
 		},
-
 		{
 			desc:           "failed with 400, not closed json",
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves/0/books?key=api-key",
+			token:          testdata.FakeCloudTokenMultiAudiences,
 			bodyBytes:      []byte(`{"theme" : "Children"`),
 			noBackend:      true,
 			wantErr:        "400 Bad Request, Unexpected end of string. Expected , or } after key:value pair",
@@ -118,6 +121,7 @@ func TestTranscodingErrors(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves/0/books?key=api-key",
+			token:          testdata.FakeCloudTokenMultiAudiences,
 			bodyBytes:      []byte(`{"theme"  "Children"}`),
 			noBackend:      true,
 			wantErr:        "400 Bad Request, Expected : between key:value pair",
@@ -127,6 +131,7 @@ func TestTranscodingErrors(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves/0/books?key=api-key",
+			token:          testdata.FakeCloudTokenMultiAudiences,
 			bodyBytes:      []byte(`{"theme" : "Children"}EXTRA`),
 			noBackend:      true,
 			wantErr:        "400 Bad Request, Parsing terminated before end of input",

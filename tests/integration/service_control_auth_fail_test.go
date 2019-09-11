@@ -35,7 +35,7 @@ func TestServiceControlJwtAuthFail(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestServiceControlJwtAuthFail, "bookstore", []string{"test_auth"})
+	s := env.NewTestEnv(comp.TestServiceControlJwtAuthFail, "bookstore")
 	s.OverrideAuthentication(&conf.Authentication{
 		Rules: []*conf.AuthenticationRule{
 			{

@@ -21,6 +21,7 @@ import (
 
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
+	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 
 	bsclient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
@@ -65,7 +66,7 @@ func TestServiceControlCheckTracesWithRetry(t *testing.T) {
 		"--service_control_check_timeout_ms=100",
 		"--enable_tracing=true",
 	}
-	s := env.NewTestEnv(comp.TestServiceControlCheckTracesWithRetry, "bookstore", nil)
+	s := env.NewTestEnv(comp.TestServiceControlCheckTracesWithRetry, "bookstore")
 	s.SetupFakeTraceServer()
 	handler := retryServiceHandler{
 		m: s.ServiceControlServer,
@@ -81,6 +82,7 @@ func TestServiceControlCheckTracesWithRetry(t *testing.T) {
 		clientProtocol string
 		httpMethod     string
 		method         string
+		token          string
 		sleepTimes     int32
 		sleepLengthMs  int
 		wantSpanNames  []string
@@ -92,6 +94,7 @@ func TestServiceControlCheckTracesWithRetry(t *testing.T) {
 			sleepTimes:     3,
 			sleepLengthMs:  200,
 			method:         "/v1/shelves?key=api-key-0",
+			token:          testdata.FakeCloudTokenMultiAudiences,
 			wantSpanNames: []string{
 				"Service Control remote call: Check",
 				"Service Control remote call: Check - Retry 1",
@@ -106,6 +109,7 @@ func TestServiceControlCheckTracesWithRetry(t *testing.T) {
 			sleepTimes:     2,
 			sleepLengthMs:  200, // The handler will sleep too long twice, so envoy will retry these requests
 			method:         "/v1/shelves?key=api-key-1",
+			token:          testdata.FakeCloudTokenMultiAudiences,
 			wantSpanNames: []string{
 				"Service Control remote call: Check",
 				"Service Control remote call: Check - Retry 1",
@@ -121,6 +125,7 @@ func TestServiceControlCheckTracesWithRetry(t *testing.T) {
 			sleepTimes:     3,
 			sleepLengthMs:  0, // The handler will not sleep, so envoy's request to the backend should be successful
 			method:         "/v1/shelves?key=api-key-2",
+			token:          testdata.FakeCloudTokenMultiAudiences,
 			wantSpanNames: []string{
 				"Service Control remote call: Check",
 				"router endpoints.examples.bookstore.Bookstore egress",
@@ -135,7 +140,7 @@ func TestServiceControlCheckTracesWithRetry(t *testing.T) {
 		handler.sleepLengthMs = tc.sleepLengthMs
 
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-		_, _ = bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, "", nil)
+		_, _ = bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, nil)
 
 		if err := checkWantSpans(s, tc.wantSpanNames); err != nil {
 			t.Errorf("Test (%s) failed: %v", tc.desc, err)
@@ -154,7 +159,7 @@ func TestServiceControlSkipUsageTraces(t *testing.T) {
 		"--enable_tracing=true",
 	}
 
-	s := env.NewTestEnv(comp.TestServiceControlSkipUsageTraces, "echo", nil)
+	s := env.NewTestEnv(comp.TestServiceControlSkipUsageTraces, "echo")
 	s.SetupFakeTraceServer()
 	s.AppendUsageRules(
 		[]*conf.UsageRule{

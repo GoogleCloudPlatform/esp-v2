@@ -37,7 +37,7 @@ var testDynamicRoutingArgs = []string{
 }
 
 func NewDynamicRoutingTestEnv(port uint16) *env.TestEnv {
-	s := env.NewTestEnv(port, "echoForDynamicRouting", nil)
+	s := env.NewTestEnv(port, "echoForDynamicRouting")
 	s.EnableDynamicRoutingBackend()
 	return s
 }

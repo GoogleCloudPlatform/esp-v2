@@ -40,7 +40,7 @@ func TestServiceControlProtocolWithGRPCBackend(t *testing.T) {
 
 	headerWithAPIKey := http.Header{bookstore.APIKeyHeaderKey: []string{"foobar"}}
 
-	s := env.NewTestEnv(comp.TestServiceControlProtocolWithGRPCBackend, "bookstore", nil)
+	s := env.NewTestEnv(comp.TestServiceControlProtocolWithGRPCBackend, "bookstore")
 
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -130,7 +130,7 @@ func TestServiceControlProtocolWithGRPCBackend(t *testing.T) {
 
 		if tc.wantBackendProtocol == "" {
 			if err == nil ||
-				err.Error() != "No operations contained label servicecontrol.googleapis.com/backend_protocol" {
+					err.Error() != "No operations contained label servicecontrol.googleapis.com/backend_protocol" {
 				t.Errorf("Test (%s): Expected no backend protocol, got, %v", tc.desc, err)
 			}
 		} else if err != nil {
@@ -150,8 +150,7 @@ func TestServiceControlProtocolWithHTTPBackend(t *testing.T) {
 		"--rollout_strategy=fixed",
 	}
 
-	s := env.NewTestEnv(comp.TestServiceControlProtocolWithHTTPBackend, "echo",
-		[]string{"google_jwt"})
+	s := env.NewTestEnv(comp.TestServiceControlProtocolWithHTTPBackend, "echo")
 
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

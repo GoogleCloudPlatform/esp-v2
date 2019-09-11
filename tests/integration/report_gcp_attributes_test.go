@@ -101,7 +101,7 @@ func TestReportGCPAttributes(t *testing.T) {
 		"--backend_protocol=http1", "--rollout_strategy=fixed"}
 
 	for _, tc := range testdata {
-		s := env.NewTestEnv(comp.TestReportGCPAttributes, "echo", []string{"google_jwt"})
+		s := env.NewTestEnv(comp.TestReportGCPAttributes, "echo")
 		s.OverrideMockMetadata(tc.mockMetadataOverride)
 		if err := s.Setup(args); err != nil {
 			t.Fatalf("Test(%s): fail to setup test env, %v", tc.desc, err)

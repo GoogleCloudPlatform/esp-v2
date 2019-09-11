@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
+	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 
 	bsclient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
@@ -48,7 +49,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--service_control_check_retries=2", "--service_control_check_timeout_ms=100"}
-	s := env.NewTestEnv(comp.TestServiceControlCheckRetry, "bookstore", nil)
+	s := env.NewTestEnv(comp.TestServiceControlCheckRetry, "bookstore")
 	handler := retryServiceHandler{
 		m: s.ServiceControlServer,
 	}
@@ -62,6 +63,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 		desc                    string
 		clientProtocol          string
 		httpMethod              string
+		token                   string
 		method                  string
 		sleepTimes              int32
 		sleepLengthMs           int
@@ -76,6 +78,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 			sleepTimes:              3,
 			sleepLengthMs:           200,
 			method:                  "/v1/shelves?key=api-key-0",
+			token:                   testdata.FakeCloudTokenMultiAudiences,
 			wantHandlerRequestCount: 3,
 			wantError:               `500 Internal Server Error, INTERNAL:Failed to call service control`,
 		},
@@ -86,6 +89,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 			sleepTimes:              2,
 			sleepLengthMs:           200, // The handler will sleep too long twice, so envoy will retry these requests
 			method:                  "/v1/shelves?key=api-key-1",
+			token:                   testdata.FakeCloudTokenMultiAudiences,
 			wantHandlerRequestCount: 3,
 			wantResp:                `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
@@ -96,6 +100,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 			sleepTimes:              3,
 			sleepLengthMs:           0, // The handler will not sleep, so envoy's request to the backend should be successful
 			method:                  "/v1/shelves?key=api-key-2",
+			token:                   testdata.FakeCloudTokenMultiAudiences,
 			wantHandlerRequestCount: 1,
 			wantResp:                `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
@@ -107,7 +112,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 		handler.sleepLengthMs = tc.sleepLengthMs
 
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-		resp, err := bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, "", nil)
+		resp, err := bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, nil)
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
 		} else if !strings.Contains(resp, tc.wantResp) {
@@ -125,7 +130,7 @@ func TestServiceControlQuotaRetry(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--service_control_quota_retries=2", "--service_control_quota_timeout_ms=100"}
-	s := env.NewTestEnv(comp.TestServiceControlQuotaRetry, "bookstore", nil)
+	s := env.NewTestEnv(comp.TestServiceControlQuotaRetry, "bookstore")
 	s.OverrideQuota(&conf.Quota{
 		MetricRules: []*conf.MetricRule{
 			{
@@ -158,6 +163,7 @@ func TestServiceControlQuotaRetry(t *testing.T) {
 		clientProtocol          string
 		httpMethod              string
 		method                  string
+		token                   string
 		sleepTimes              int32
 		sleepLengthMs           int
 		wantHandlerRequestCount int32
@@ -169,6 +175,7 @@ func TestServiceControlQuotaRetry(t *testing.T) {
 			sleepTimes:              3,
 			sleepLengthMs:           200,
 			method:                  "/v1/shelves?key=api-key-0",
+			token:                   testdata.FakeCloudTokenMultiAudiences,
 			wantHandlerRequestCount: 3,
 		},
 		{
@@ -178,6 +185,7 @@ func TestServiceControlQuotaRetry(t *testing.T) {
 			sleepTimes:              3,
 			sleepLengthMs:           0,
 			method:                  "/v1/shelves/200?key=api-key-1",
+			token:                   testdata.FakeCloudTokenMultiAudiences,
 			wantHandlerRequestCount: 1,
 		},
 	}
@@ -188,7 +196,7 @@ func TestServiceControlQuotaRetry(t *testing.T) {
 		handler.sleepLengthMs = tc.sleepLengthMs
 
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-		bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, "", nil)
+		bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, nil)
 
 		// Quota is unblocked and wait it to be flushed once after 1s.
 		time.Sleep(time.Millisecond * 2000)
@@ -203,7 +211,7 @@ func TestServiceControlReportRetry(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--service_control_report_retries=2", "--service_control_report_timeout_ms=100"}
-	s := env.NewTestEnv(comp.TestServiceControlReportRetry, "bookstore", nil)
+	s := env.NewTestEnv(comp.TestServiceControlReportRetry, "bookstore")
 
 	handler := retryServiceHandler{
 		m: s.ServiceControlServer,
