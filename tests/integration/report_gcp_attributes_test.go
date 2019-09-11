@@ -32,6 +32,7 @@ const (
 )
 
 func TestReportGCPAttributes(t *testing.T) {
+	t.Parallel()
 	testdata := []struct {
 		desc                 string
 		mockMetadataOverride map[string]string

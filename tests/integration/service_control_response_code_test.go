@@ -30,6 +30,7 @@ import (
 )
 
 func TestServiceControlReportResponseCode(t *testing.T) {
+	t.Parallel()
 	configId := "test-config-id"
 
 	args := []string{"--service_config_id=" + configId,

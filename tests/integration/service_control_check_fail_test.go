@@ -30,13 +30,15 @@ import (
 )
 
 func TestServiceControlCheckError(t *testing.T) {
+	t.Parallel()
 	configId := "test-config-id"
+	provider := "service_control_check_error_only"
 
 	args := []string{"--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlCheckError, "echo")
-	comp.ResetReqCnt()
+	comp.ResetReqCnt(provider)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -151,10 +153,10 @@ func TestServiceControlCheckError(t *testing.T) {
 		},
 		{
 			desc:   "Failed, the request passed auth but failed in check with PROJECT_INVALID",
-			path:   "/auth/info/googlejwt",
+			path:   "/auth/info/serviceControlCheckErrorOnly",
 			apiKey: "api-key",
 			method: "GET",
-			token:  testdata.FakeCloudToken,
+			token:  testdata.FakeServiceControlCheckErrorOnlyToken,
 			mockedCheckResponse: &sc.CheckResponse{
 				CheckInfo: &sc.CheckResponse_CheckInfo{
 					ConsumerInfo: &sc.CheckResponse_ConsumerInfo{
@@ -169,7 +171,7 @@ func TestServiceControlCheckError(t *testing.T) {
 			},
 			// Note: first request is from Config Manager, second is from API Proxy
 			wantRequestsToMetaServer: &expectedRequestCount{"/v1/instance/service-accounts/default/token", 2},
-			wantRequestsToProvider:   &expectedRequestCount{"google_jwt", 1},
+			wantRequestsToProvider:   &expectedRequestCount{provider, 1},
 			wantError:                "400 Bad Request, INVALID_ARGUMENT:Client project not valid. Please pass a valid project",
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
@@ -177,25 +179,26 @@ func TestServiceControlCheckError(t *testing.T) {
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
-					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt",
+					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_service_control_check_error_only",
 					CallerIp:        "127.0.0.1",
 				},
 				&utils.ExpectedReport{
-					Version:     utils.APIProxyVersion,
-					ServiceName: "echo-api.endpoints.cloudesf-testing.cloud.goog", ServiceConfigID: "test-config-id",
-					URL:               "/auth/info/googlejwt?key=api-key",
+					Version:           utils.APIProxyVersion,
+					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:   "test-config-id",
+					URL:               "/auth/info/serviceControlCheckErrorOnly?key=api-key",
 					ApiKey:            "api-key",
-					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_service_control_check_error_only",
 					ProducerProjectID: "producer-project",
 					ConsumerProjectID: "123456",
 					FrontendProtocol:  "http",
 					HttpMethod:        "GET",
-					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt is called",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_service_control_check_error_only is called",
 					ErrorType:         "4xx",
 					StatusCode:        "3",
-					RequestSize:       357,
+					RequestSize:       386,
 					ResponseSize:      163,
-					RequestBytes:      357,
+					RequestBytes:      386,
 					ResponseBytes:     163,
 					ResponseCode:      400,
 					Platform:          util.GCE,

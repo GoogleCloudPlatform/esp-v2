@@ -43,6 +43,7 @@ func NewDynamicRoutingTestEnv(port uint16) *env.TestEnv {
 }
 
 func TestDynamicRouting(t *testing.T) {
+	t.Parallel()
 	s := NewDynamicRoutingTestEnv(comp.TestDynamicRouting)
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -213,6 +214,7 @@ func TestDynamicRouting(t *testing.T) {
 }
 
 func TestBackendAuth(t *testing.T) {
+	t.Parallel()
 	s := NewDynamicRoutingTestEnv(comp.TestBackendAuth)
 	s.OverrideMockMetadata(
 		map[string]string{
@@ -269,6 +271,7 @@ func TestBackendAuth(t *testing.T) {
 }
 
 func TestServiceControlRequestForDynamicRouting(t *testing.T) {
+	t.Parallel()
 	s := NewDynamicRoutingTestEnv(comp.TestServiceControlRequestInDynamicRouting)
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

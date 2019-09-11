@@ -63,6 +63,24 @@ var (
 						Get: "/auth/info/googlejwt",
 					},
 				},
+				// In order to support integration test parallelization(tests share the providers objects),
+				// the echo's api 1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_auth_jwks_cache_test_only
+				// and its provider auth_jwks_cache_test_only can only be used by TestAuthJwksCache.
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_auth_jwks_cache_test_only",
+					Pattern: &annotations.HttpRule_Get{
+						Get: "/auth/info/authJwksCacheTestOnly",
+					},
+				},
+				// In order to support integration test parallelization(tests share the providers objects),
+				// the echo's api 1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_service_control_check_error_only"
+				// and its provider service_control_check_error_only can only be used by TestServiceControlCheckError.
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_service_control_check_error_only",
+					Pattern: &annotations.HttpRule_Get{
+						Get: "/auth/info/serviceControlCheckErrorOnly",
+					},
+				},
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth0",
 					Pattern: &annotations.HttpRule_Get{
@@ -124,6 +142,22 @@ var (
 					Requirements: []*conf.AuthRequirement{
 						{
 							ProviderId: "google_jwt",
+						},
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_auth_jwks_cache_test_only",
+					Requirements: []*conf.AuthRequirement{
+						{
+							ProviderId: "auth_jwks_cache_test_only",
+						},
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_service_control_check_error_only",
+					Requirements: []*conf.AuthRequirement{
+						{
+							ProviderId: "service_control_check_error_only",
 						},
 					},
 				},

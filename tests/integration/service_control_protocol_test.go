@@ -30,6 +30,7 @@ import (
 )
 
 func TestServiceControlProtocolWithGRPCBackend(t *testing.T) {
+	t.Parallel()
 	configID := "test-config-id"
 
 	args := []string{
@@ -130,7 +131,7 @@ func TestServiceControlProtocolWithGRPCBackend(t *testing.T) {
 
 		if tc.wantBackendProtocol == "" {
 			if err == nil ||
-					err.Error() != "No operations contained label servicecontrol.googleapis.com/backend_protocol" {
+				err.Error() != "No operations contained label servicecontrol.googleapis.com/backend_protocol" {
 				t.Errorf("Test (%s): Expected no backend protocol, got, %v", tc.desc, err)
 			}
 		} else if err != nil {
@@ -140,6 +141,7 @@ func TestServiceControlProtocolWithGRPCBackend(t *testing.T) {
 }
 
 func TestServiceControlProtocolWithHTTPBackend(t *testing.T) {
+	t.Parallel()
 	serviceName := "test-echo"
 	configID := "test-config-id"
 

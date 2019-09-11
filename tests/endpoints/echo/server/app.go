@@ -59,6 +59,10 @@ func main() {
 	r.Path("/bookstore/shelves/{shelfId}").Methods("OPTIONS").Handler(corsHandler(simpleGetCors))
 	r.Path("/auth/info/googlejwt").Methods("GET").
 		HandlerFunc(authInfoHandler)
+	r.Path("/auth/info/authJwksCacheTestOnly").Methods("GET").
+		HandlerFunc(authInfoHandler)
+	r.Path("/auth/info/serviceControlCheckErrorOnly").Methods("GET").
+		HandlerFunc(authInfoHandler)
 	r.Path("/auth/info/googleidtoken").Methods("GET").
 		HandlerFunc(authInfoHandler)
 	r.Path("/auth/info/firebase").Methods("GET", "OPTIONS").

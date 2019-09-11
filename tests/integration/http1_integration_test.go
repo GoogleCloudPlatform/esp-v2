@@ -32,6 +32,7 @@ const (
 )
 
 func TestHttp1Basic(t *testing.T) {
+	t.Parallel()
 	configID := "test-config-id"
 
 	args := []string{"--service_config_id=" + configID,
@@ -66,6 +67,7 @@ func TestHttp1Basic(t *testing.T) {
 }
 
 func TestHttp1JWT(t *testing.T) {
+	t.Parallel()
 	serviceName := "test-echo"
 	configID := "test-config-id"
 

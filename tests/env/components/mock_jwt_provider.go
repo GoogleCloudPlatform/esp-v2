@@ -87,8 +87,7 @@ func (m *MockJwtProvider) GetReqCnt() int {
 	return int(atomic.LoadInt32(m.cnt))
 }
 
-func ResetReqCnt() {
-	for _, pd := range JwtProviders {
-		atomic.SwapInt32(pd.cnt, 0)
-	}
+func ResetReqCnt(issuer string) {
+	provider := JwtProviders[issuer]
+	atomic.SwapInt32(provider.cnt, 0)
 }

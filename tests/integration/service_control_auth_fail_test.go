@@ -31,6 +31,7 @@ import (
 )
 
 func TestServiceControlJwtAuthFail(t *testing.T) {
+	t.Parallel()
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}

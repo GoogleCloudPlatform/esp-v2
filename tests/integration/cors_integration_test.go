@@ -33,6 +33,7 @@ const (
 
 // Simple CORS request with basic preset in config manager, response should have CORS headers
 func TestSimpleCorsWithBasicPreset(t *testing.T) {
+	t.Parallel()
 	configId := "test-config-id"
 	corsAllowOriginValue := "http://cloud.google.com"
 	corsExposeHeadersValue := "Content-Length,Content-Range"
@@ -93,6 +94,7 @@ func TestSimpleCorsWithBasicPreset(t *testing.T) {
 // CORS request Origin is different from cors_allow_origin setting in config manager
 // since these two does not match, envoy CORS filter does not put CORS headers in response
 func TestDifferentOriginSimpleCors(t *testing.T) {
+	t.Parallel()
 	serviceName := "test-echo"
 	configId := "test-config-id"
 	corsAllowOriginValue := "http://cloud.google.com"
@@ -133,6 +135,7 @@ func TestDifferentOriginSimpleCors(t *testing.T) {
 
 // Simple CORS request with regex origin in config manager, response should have CORS headers
 func TestSimpleCorsWithRegexPreset(t *testing.T) {
+	t.Parallel()
 	serviceName := "test-echo"
 	configId := "test-config-id"
 	corsAllowOriginRegex := "^https?://.+\\.google\\.com$"
@@ -175,6 +178,7 @@ func TestSimpleCorsWithRegexPreset(t *testing.T) {
 
 // Preflight CORS request with basic preset in config manager, response should have CORS headers
 func TestPreflightCorsWithBasicPreset(t *testing.T) {
+	t.Parallel()
 	serviceName := "test-echo"
 	configId := "test-config-id"
 	corsRequestMethod := "PATCH"
@@ -228,6 +232,7 @@ func TestPreflightCorsWithBasicPreset(t *testing.T) {
 // Preflight request Origin is different from cors_allow_origin setting in config manager
 // since these two does not match, envoy CORS filter does not put CORS headers in response
 func TestDifferentOriginPreflightCors(t *testing.T) {
+	t.Parallel()
 	serviceName := "test-echo"
 	configId := "test-config-id"
 	corsRequestMethod := "PATCH"
@@ -278,6 +283,7 @@ func TestDifferentOriginPreflightCors(t *testing.T) {
 
 // Simple CORS request with GRPC backend and basic preset in config manager, response should have CORS headers
 func TestGrpcBackendSimpleCors(t *testing.T) {
+	t.Parallel()
 	serviceName := "bookstore-service"
 	configId := "test-config-id"
 	corsAllowOriginValue := "http://cloud.google.com"
@@ -319,6 +325,7 @@ func TestGrpcBackendSimpleCors(t *testing.T) {
 
 // Preflight CORS request with GRPC backend and basic preset in config manager, response should have CORS headers
 func TestGrpcBackendPreflightCors(t *testing.T) {
+	t.Parallel()
 	serviceName := "test-echo"
 	configId := "test-config-id"
 	corsRequestMethod := "PATCH"
@@ -369,6 +376,7 @@ func TestGrpcBackendPreflightCors(t *testing.T) {
 
 // Preflight CORS request with allowCors to allow backends to receive and respond to OPTIONS requests
 func TestPreflightRequestWithAllowCors(t *testing.T) {
+	t.Parallel()
 	serviceName := "echo-api.endpoints.cloudesf-testing.cloud.goog"
 	configId := "test-config-id"
 	corsRequestMethod := "PATCH"
@@ -436,6 +444,7 @@ func TestPreflightRequestWithAllowCors(t *testing.T) {
 }
 
 func TestServiceControlRequestWithAllowCors(t *testing.T) {
+	t.Parallel()
 	serviceName := "echo-api.endpoints.cloudesf-testing.cloud.goog"
 	configId := "test-config-id"
 	corsRequestMethod := "PATCH"
@@ -551,11 +560,11 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 					ServiceConfigID:   "test-config-id",
 					URL:               "/bookstore/shelves/1",
 					ApiKey:            "",
-					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_7",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_9",
 					ProducerProjectID: "producer-project",
 					FrontendProtocol:  "http",
 					HttpMethod:        "OPTIONS",
-					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_7 is called",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_9 is called",
 					Referer:           referer,
 					StatusCode:        "0",
 					RequestSize:       323,
@@ -611,6 +620,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 }
 
 func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
+	t.Parallel()
 	serviceName := "echo-api.endpoints.cloudesf-testing.cloud.goog"
 	configId := "test-config-id"
 	corsRequestMethod := "PATCH"

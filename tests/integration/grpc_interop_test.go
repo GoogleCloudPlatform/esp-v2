@@ -48,6 +48,7 @@ func runAndWait(cmd *exec.Cmd, t *testing.T) {
 }
 
 func TestGRPCInterops(t *testing.T) {
+	t.Parallel()
 	serviceName := "grpc-interop-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
@@ -90,6 +91,7 @@ func TestGRPCInterops(t *testing.T) {
 }
 
 func TestGRPCInteropMiniStress(t *testing.T) {
+	t.Parallel()
 	serviceName := "grpc-interop-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,

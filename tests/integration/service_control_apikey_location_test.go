@@ -28,6 +28,7 @@ import (
 )
 
 func TestServiceControlAPIKeyDefaultLocation(t *testing.T) {
+	t.Parallel()
 	configId := "test-config-id"
 	args := []string{"--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
@@ -102,6 +103,7 @@ func TestServiceControlAPIKeyDefaultLocation(t *testing.T) {
 }
 
 func TestServiceControlAPIKeyCustomLocation(t *testing.T) {
+	t.Parallel()
 	serviceName := "test-echo"
 	configId := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,

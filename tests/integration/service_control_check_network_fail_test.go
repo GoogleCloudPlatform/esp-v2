@@ -29,6 +29,7 @@ import (
 )
 
 func TestServiceControlCheckNetworkFail(t *testing.T) {
+	t.Parallel()
 	configID := "test-config-id"
 
 	time.Sleep(time.Duration(5 * time.Second))
@@ -95,6 +96,7 @@ func (h *checkTimeoutServiceHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 }
 
 func TestServiceControlCheckTimeout(t *testing.T) {
+	t.Parallel()
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
@@ -146,6 +148,7 @@ func (h *localServiceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 }
 
 func TestServiceControlNetworkFailFlag(t *testing.T) {
+	t.Parallel()
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
