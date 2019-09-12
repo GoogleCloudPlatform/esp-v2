@@ -33,6 +33,7 @@ import (
 )
 
 func TestServiceControlLogHeaders(t *testing.T) {
+	t.Parallel()
 	configId := "test-config-id"
 
 	args := []string{"--service_config_id=" + configId,
@@ -146,6 +147,7 @@ func TestServiceControlLogHeaders(t *testing.T) {
 }
 
 func TestServiceControlLogJwtPayloads(t *testing.T) {
+	t.Parallel()
 	serviceName := "test-bookstore"
 	configId := "test-config-id"
 

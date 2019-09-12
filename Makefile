@@ -95,7 +95,7 @@ integration-test: build build-envoy build-grpc-interop build-grpc-echo
 	@echo "--> running integration tests"
 	# logtostderr will cause all glogs in the test framework to print to the console (not too much bloat)
 	@go test -v -timeout 20m ./tests/env/... --logtostderr
-	@go test -v -timeout 20m ./tests/integration/... --logtostderr
+	@go test -v -p 32 -timeout 20m ./tests/integration/... --logtostderr
 
 integration-debug: build build-envoy build-grpc-interop build-grpc-echo
 	@echo "--> running integration tests and showing debug logs"

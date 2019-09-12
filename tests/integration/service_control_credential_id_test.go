@@ -30,12 +30,13 @@ import (
 )
 
 func TestServiceControlCredentialId(t *testing.T) {
+	t.Parallel()
 	configId := "test-config-id"
 
 	args := []string{"--service_config_id=" + configId,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--suppress_envoy_headers",
 	}
-	s := env.NewTestEnv(comp.TestServiceControlLogJwtPayloads, "bookstore")
+	s := env.NewTestEnv(comp.TestServiceControlCredentialId, "bookstore")
 
 	s.OverrideAuthentication(&conf.Authentication{Rules: []*conf.AuthenticationRule{
 		{

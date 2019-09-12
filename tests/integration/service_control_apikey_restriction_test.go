@@ -37,6 +37,7 @@ type testDataStruct struct {
 }
 
 func TestServiceControlAPIKeyRestriction(t *testing.T) {
+	t.Parallel()
 	configID := "test-config-id"
 	args := []string{
 		"--service_config_id=" + configID,
@@ -126,6 +127,7 @@ func TestServiceControlAPIKeyRestriction(t *testing.T) {
 }
 
 func TestServiceControlAPIKeyIpRestriction(t *testing.T) {
+	t.Parallel()
 	serviceName := "test-echo"
 	configID := "test-config-id"
 	args := []string{
@@ -137,7 +139,7 @@ func TestServiceControlAPIKeyIpRestriction(t *testing.T) {
 		"--envoy_xff_num_trusted_hops=1",
 	}
 
-	s := env.NewTestEnv(comp.TestServiceControlAPIKeyRestriction, "echo")
+	s := env.NewTestEnv(comp.TestServiceControlAPIKeyIpRestriction, "echo")
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("failed to setup test env, %v", err)
 	}

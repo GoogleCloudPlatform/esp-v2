@@ -71,6 +71,22 @@ func init() {
 		Issuer:  "api-proxy-testing@cloud.goog",
 		JwksUri: components.NewMockJwtProvider("google_jwt", FakeCloudJwks).GetURL(),
 	}
+	// In order to support integration test parallelization(tests share the providers objects),
+	// the echo's api 1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_auth_jwks_cache_test_only
+	// and its provider auth_jwks_cache_test_only can only be used by TestAuthJwksCache.
+	MockJwtProviderMap["auth_jwks_cache_test_only"] = &conf.AuthProvider{
+		Id:      "auth_jwks_cache_test_only",
+		Issuer:  "auth_jwks_cache_test_only",
+		JwksUri: components.NewMockJwtProvider("auth_jwks_cache_test_only", ServiceControlJwtPayloadPubKeys).GetURL(),
+	}
+	// In order to support integration test parallelization(tests share the providers objects),
+	// the echo's api 1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_service_control_check_error_only"
+	// and its provider service_control_check_error_only can only be used by TestServiceControlCheckError.
+	MockJwtProviderMap["service_control_check_error_only"] = &conf.AuthProvider{
+		Id:      "service_control_check_error_only",
+		Issuer:  "service_control_check_error_only",
+		JwksUri: components.NewMockJwtProvider("service_control_check_error_only", ServiceControlJwtPayloadPubKeys).GetURL(),
+	}
 	MockJwtProviderMap["endpoints_jwt"] = &conf.AuthProvider{
 		Id:      "endpoints_jwt",
 		Issuer:  "jwt-client.endpoints.sample.google.com",
@@ -163,11 +179,32 @@ const (
 	//	"iss": "es256-issuer",
 	//	"sub": "es256-issuer"
 	//	}
-	ServiceControlJwtPayloadToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lVcXJZOHQyenBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJva19hdWRpZW5jZV8xIiwiZXhwIjo0NzAzMTYyNDg4LCJmb28iOnsiZm9vX2Jvb2wiOnRydWUsImZvb19saXN0IjpbdHJ1ZSxmYWxzZV19LCJnb29nbGUiOnsiY29tcHV0ZV9lbmdpbmUiOnsicHJvamVjdF9pZCI6ImNsb3VkZW5kcG9pbnRfdGVzdGluZyIsInpvbmUiOiJ1c193ZXN0MV9hIn0sImdvb2dsZV9ib29sIjpmYWxzZSwicHJvamVjdF9udW1iZXIiOjEyMzQ1fSwiaWF0IjoxNTQ5NTYyNDg4LCJpc3MiOiJlczI1Ni1pc3N1ZXIiLCJzdWIiOiJlczI1Ni1pc3N1ZXIifQ.SnQ66iwlS80VFvtL-8jeEyqtaxaqW0CgN0W4DoJ5imwatHm1If_ty7EbjZUf-ilUawxD_G-xV6_YJ59JX-C6X3SD_yYYrhJZac1V99awCxG3LxTpziiOLzTOY28-xayHNwKLQT_qwM3RoJ4eFO1jOzcwxZdvGiyBBuoaht0cygqqFecfxjaBHtGwfyxQcR__FNFxZ2JGwL9PK4ytttFFOey1FOIyDM3kd3O2NwMAb8zfI2vPwKizEEYnWqgsfNkzckp02W4s01IgOPc5s2XMUjnWoSk_is1Hc527jvIOQhnSDZyHqt9QfsDKdNvZ0qj7E_3p2rbaaTiInogDsvj0aA"
+	ServiceControlJwtPayloadToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lVcX" +
+		"JZOHQyenBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ.eyJhd" +
+		"WQiOiJva19hdWRpZW5jZV8xIiwiZXhwIjo0NzAzMTYyNDg4LCJmb28iOnsiZm9vX2Jvb2w" +
+		"iOnRydWUsImZvb19saXN0IjpbdHJ1ZSxmYWxzZV19LCJnb29nbGUiOnsiY29tcHV0ZV9lb" +
+		"mdpbmUiOnsicHJvamVjdF9pZCI6ImNsb3VkZW5kcG9pbnRfdGVzdGluZyIsInpvbmUiOiJ" +
+		"1c193ZXN0MV9hIn0sImdvb2dsZV9ib29sIjpmYWxzZSwicHJvamVjdF9udW1iZXIiOjEyM" +
+		"zQ1fSwiaWF0IjoxNTQ5NTYyNDg4LCJpc3MiOiJlczI1Ni1pc3N1ZXIiLCJzdWIiOiJlczI" +
+		"1Ni1pc3N1ZXIifQ.SnQ66iwlS80VFvtL-8jeEyqtaxaqW0CgN0W4DoJ5imwatHm1If_ty7" +
+		"EbjZUf-ilUawxD_G-xV6_YJ59JX-C6X3SD_yYYrhJZac1V99awCxG3LxTpziiOLzTOY28-" +
+		"xayHNwKLQT_qwM3RoJ4eFO1jOzcwxZdvGiyBBuoaht0cygqqFecfxjaBHtGwfyxQcR__FN" +
+		"FxZ2JGwL9PK4ytttFFOey1FOIyDM3kd3O2NwMAb8zfI2vPwKizEEYnWqgsfNkzckp02W4s" +
+		"01IgOPc5s2XMUjnWoSk_is1Hc527jvIOQhnSDZyHqt9QfsDKdNvZ0qj7E_3p2rbaaTiIno" +
+		"gDsvj0aA"
 
-	Es256Token = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjFhIn0.eyJpc3MiOiJlczI1Ni1pc3N1ZXIiLCJzdWIiOiJlczI1Ni1pc3N1ZXIiLCJhdWQiOiJva19hdWRpZW5jZSJ9.hz9IUedX6WTbuxQSbcXBSKfvF2hK48o06CnxJn-5vyOkWfUNroJjb3JokQpweF9XFI8RxeMGPKFMdHb8qyIlqA"
+	Es256Token = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjFhIn0.eyJpc3MiO" +
+		"iJlczI1Ni1pc3N1ZXIiLCJzdWIiOiJlczI1Ni1pc3N1ZXIiLCJhdWQiOiJva19hdWRpZW5" +
+		"jZSJ9.hz9IUedX6WTbuxQSbcXBSKfvF2hK48o06CnxJn-5vyOkWfUNroJjb3JokQpweF9X" +
+		"FI8RxeMGPKFMdHb8qyIlqA"
 
-	Rs256Token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjJiIn0.eyJpc3MiOiJyczI1Ni1pc3N1ZXIiLCJzdWIiOiJyczI1Ni1pc3N1ZXIiLCJhdWQiOiJva19hdWRpZW5jZSJ9.Idf-XyipQCoMmIkI8TT3LgHUseV5AG-tJGhGrEldto-q44oNz9ZEd3KoJ3TlZGKknfEfaSCndsFR_yeHrI1CLdQ7kIs2SaRQP2aG4QqJAwn0-kFoTSUwxqQtV428AKrMrTeahu6ZGOGqwaLMOKP2F7pzI2sCFAYMwLCLhbHzvzRwhIPekG8iENj5YDS5_C5GtFtUV4iL7e6KS7ZqRTljqZB6HUjG7TL_QMZuQ7S44bLGePgx8AeMlEqBzFizG7cJKvGJjsSTiuxvESBnPNpjm4bNFLgLXULoRsoXgU3i1DKQ0r12uztARJpq79diXf-ln7tV-TCwOXlubbb2hiP6-A"
+	Rs256Token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjJiIn0.eyJpc3MiO" +
+		"iJyczI1Ni1pc3N1ZXIiLCJzdWIiOiJyczI1Ni1pc3N1ZXIiLCJhdWQiOiJva19hdWRpZW5" +
+		"jZSJ9.Idf-XyipQCoMmIkI8TT3LgHUseV5AG-tJGhGrEldto-q44oNz9ZEd3KoJ3TlZGKk" +
+		"nfEfaSCndsFR_yeHrI1CLdQ7kIs2SaRQP2aG4QqJAwn0-kFoTSUwxqQtV428AKrMrTeahu" +
+		"6ZGOGqwaLMOKP2F7pzI2sCFAYMwLCLhbHzvzRwhIPekG8iENj5YDS5_C5GtFtUV4iL7e6K" +
+		"S7ZqRTljqZB6HUjG7TL_QMZuQ7S44bLGePgx8AeMlEqBzFizG7cJKvGJjsSTiuxvESBnPN" +
+		"pjm4bNFLgLXULoRsoXgU3i1DKQ0r12uztARJpq79diXf-ln7tV-TCwOXlubbb2hiP6-A"
 
 	// All the JWT and JWKS data are generated following
 	// https://github.com/istio/istio/tree/master/security/tools/jwt/samples
@@ -295,7 +332,7 @@ const (
 		"ytoPuPekKhe8JVV2f5yCwLE89S9ZD8779_1G4UGOsyBfxGvOicoZ9nqtGbJYHnqMN3gjh-" +
 		"BWr3cm9Mswm8TCkP0Lv2cvQ"
 
-		// ./gen-jwt.py key.pem -jwks=jwks.json --expire=3153600000 --iss=http://127.0.0.1:32025 --aud=ok_audience
+	// ./gen-jwt.py key.pem -jwks=jwks.json --expire=3153600000 --iss=http://127.0.0.1:32025 --aud=ok_audience
 	FakeOpenIDToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lV" +
 		"cXJZOHQyenBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ.eyJ" +
 		"hdWQiOiJva19hdWRpZW5jZSIsImV4cCI6NDcxMTcxODE2MiwiaWF0IjoxNTU4MTE4MTYyL" +
@@ -330,4 +367,28 @@ const (
 		"rLcncoKX5MX8kOnEZjO0US1nfbPHQnpjKdgq_42uusJVCYau__zMMoEhLlCYxTKrdmWQ_j" +
 		"LW0v8IOSbixa74w9TwlCr0TKzsd-8e4Jr4gksDNxtzJWPwKAuvvd6J9q5CZXQ-WmszDNCK" +
 		"vYbOQA"
+
+	// ./gen-jwt.py key.pem -jwks=./jwks.json --expire=3153600000
+	// --iss="auth_jwks_cache_test_only"  > demo.jwt
+	FakeAuthJwksCacheTestOnlyToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lVc" +
+		"XJZOHQyenBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ.eyJl" +
+		"eHAiOjQ3MjE3NDEyMzEsImlhdCI6MTU2ODE0MTIzMSwiaXNzIjoiYXV0aF9qd2tzX2NhY2" +
+		"hlX3Rlc3Rfb25seSIsInN1YiI6ImF1dGhfandrc19jYWNoZV90ZXN0X29ubHkifQ.GdUMv" +
+		"v4PCB5JPRss3X-HAExfNwhi8ae4aqdNBvPh-AdWju9SfVzHk1WzR24wnKwvWFAfQB5E903" +
+		"LO3I-VpzIqDvZTAiwmsOyWsLxU6Xg3uWDEPJ2LUozj6GqyrI31uGmsw3OiNciUWb1OF5ZF" +
+		"OQDZyMr-7JejRa0d6F4i68eeu56k2EmJ0khJwR4kD6o8ulSlnqhpPxWbs2HS5xWdd9OAw_" +
+		"lh8xFrHd_og30Fux5YTFr1Fs63HDPTuHNhG259xKAgNkukLsJGzeP7dKJ0vOMyadgIhGoV" +
+		"rC0vu5Of5r8wqJhC81WOLU9Gu9rY6gwpCpc27mbkeuV7mqWw9TbKTsyMg"
+
+	// ./gen-jwt.py key.pem -jwks=./jwks.json --expire=3153600000
+	// --iss="service_control_check_error_only"  > demo.jwt
+	FakeServiceControlCheckErrorOnlyToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJ" +
+		"wb0lVcXJZOHQyenBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ" +
+		".eyJleHAiOjQ3MjE3NDE0MDksImlhdCI6MTU2ODE0MTQwOSwiaXNzIjoic2VydmljZV9jb2" +
+		"50cm9sX2NoZWNrX2Vycm9yX29ubHkiLCJzdWIiOiJzZXJ2aWNlX2NvbnRyb2xfY2hlY2tfZ" +
+		"XJyb3Jfb25seSJ9.KM-BQ0IGNr-VFz36cMkA1r_SY0Q9MiYG8EiK2zxRzNXAH29OkO-ybU9" +
+		"jco5pcDm7XStyRaCN-zdjvQhp0hWJx_IM3w59gF4oNYc0uyongkWmHn4pNphWTbUqrbKHmt" +
+		"go1wCvCJ_z08TjH_XSN0m9ctM10QhzCK9AUw6HKm8LW9UQEop0eB2olHbT0SxoW9lsFbFKz" +
+		"SB5LO2ee_Mcxh7UIXjW84UHesBy4lnow1OaqgWYkV-9IA22XfE1Irq67YOcVJDDMv86P8Dm" +
+		"4V6d2g79a3l9I3s3egJ__1Dk84pF3WGWFAlDd7nxKygB9oQdlEYQa8_cCkEOfD8HF-zCsQzFcA"
 )

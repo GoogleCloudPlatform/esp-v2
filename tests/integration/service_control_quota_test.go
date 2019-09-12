@@ -33,6 +33,7 @@ import (
 )
 
 func TestServiceControlQuota(t *testing.T) {
+	t.Parallel()
 	configId := "test-config-id"
 
 	args := []string{"--service_config_id=" + configId,
@@ -154,6 +155,7 @@ func (h *unavailableQuotaServiceHandler) ServeHTTP(w http.ResponseWriter, r *htt
 }
 
 func TestServiceControlQuotaUnavailable(t *testing.T) {
+	t.Parallel()
 	serviceName := "test-bookstore"
 	configId := "test-config-id"
 
@@ -221,6 +223,7 @@ func TestServiceControlQuotaUnavailable(t *testing.T) {
 }
 
 func TestServiceControlQuotaExhausted(t *testing.T) {
+	t.Parallel()
 	serviceName := "test-bookstore"
 	configId := "test-config-id"
 

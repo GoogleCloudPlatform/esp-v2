@@ -30,7 +30,6 @@ import (
 const (
 	TestAsymmetricKeys uint16 = iota
 	TestAuthJwksCache
-	TestAuthOKCheckFail
 	TestBackendAuth
 	TestDifferentOriginPreflightCors
 	TestDifferentOriginSimpleCors
@@ -56,12 +55,11 @@ const (
 	TestServiceControlALlHTTPMethod
 	TestServiceControlAPIKeyCustomLocation
 	TestServiceControlAPIKeyDefaultLocation
+	TestServiceControlAPIKeyIpRestriction
 	TestServiceControlAPIKeyRestriction
 	TestServiceControlBasic
 	TestServiceControlCache
 	TestServiceControlCheckError
-	TestServiceControlCheckNetworkFailClosed
-	TestServiceControlCheckNetworkFailOpen
 	TestServiceControlCheckRetry
 	TestServiceControlCheckTimeout
 	TestServiceControlCheckTracesWithRetry
@@ -91,7 +89,6 @@ const (
 	TestTranscodingBindings
 	TestTranscodingErrors
 	TestTranscodingServiceUnavailableError
-	TestUnconfiguredRequest
 	// The number of total tests. has to be the last one.
 	maxTestNum
 )

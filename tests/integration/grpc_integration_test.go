@@ -39,6 +39,7 @@ func init() {
 }
 
 func TestGRPC(t *testing.T) {
+	t.Parallel()
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID, "--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
@@ -115,6 +116,7 @@ func TestGRPC(t *testing.T) {
 }
 
 func TestGRPCWeb(t *testing.T) {
+	t.Parallel()
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
@@ -197,6 +199,7 @@ func TestGRPCWeb(t *testing.T) {
 }
 
 func TestGRPCJwt(t *testing.T) {
+	t.Parallel()
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,

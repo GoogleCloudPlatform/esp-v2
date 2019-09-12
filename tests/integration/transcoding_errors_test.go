@@ -41,6 +41,7 @@ type TranscodingTestType struct {
 }
 
 func TestTranscodingServiceUnavailableError(t *testing.T) {
+	t.Parallel()
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
@@ -75,6 +76,7 @@ func TestTranscodingServiceUnavailableError(t *testing.T) {
 }
 
 func TestTranscodingErrors(t *testing.T) {
+	t.Parallel()
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
