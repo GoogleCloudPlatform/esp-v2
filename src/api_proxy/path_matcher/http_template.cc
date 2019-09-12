@@ -359,11 +359,11 @@ class Parser {
 
 }  // namespace
 
-const char HttpTemplate::kSingleParameterKey[] = "/.";
+constexpr char HttpTemplate::kSingleParameterKey[] = "/.";
 
-const char HttpTemplate::kWildCardPathPartKey[] = "*";
+constexpr char HttpTemplate::kWildCardPathPartKey[] = "*";
 
-const char HttpTemplate::kWildCardPathKey[] = "**";
+constexpr char HttpTemplate::kWildCardPathKey[] = "**";
 
 std::unique_ptr<HttpTemplate> HttpTemplate::Parse(const std::string& ht) {
   Parser p(ht);

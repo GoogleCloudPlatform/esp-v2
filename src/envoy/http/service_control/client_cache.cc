@@ -42,38 +42,38 @@ namespace ServiceControl {
 namespace {
 
 // Default config for check aggregator
-const uint32_t kCheckAggregationEntries = 10000;
+constexpr uint32_t kCheckAggregationEntries = 10000;
 // Check doesn't support quota yet. It is safe to increase
 // the cache life of check results.
 // Cache life is 5 minutes. It will be refreshed every minute.
-const uint32_t kCheckAggregationFlushIntervalMs = 60000;
-const uint32_t kCheckAggregationExpirationMs = 300000;
+constexpr uint32_t kCheckAggregationFlushIntervalMs = 60000;
+constexpr uint32_t kCheckAggregationExpirationMs = 300000;
 
 // Default config for quota aggregator
-const uint32_t kQuotaAggregationEntries = 10000;
-const uint32_t kQuotaAggregationFlushIntervalMs = 1000;
+constexpr uint32_t kQuotaAggregationEntries = 10000;
+constexpr uint32_t kQuotaAggregationFlushIntervalMs = 1000;
 
 // Default config for report aggregator
-const uint32_t kReportAggregationEntries = 10000;
-const uint32_t kReportAggregationFlushIntervalMs = 1000;
+constexpr uint32_t kReportAggregationEntries = 10000;
+constexpr uint32_t kReportAggregationFlushIntervalMs = 1000;
 
 // The default connection timeout for check requests.
-const uint32_t kCheckDefaultTimeoutInMs = 1000;
+constexpr uint32_t kCheckDefaultTimeoutInMs = 1000;
 // The default connection timeout for allocate quota requests.
-const uint32_t kAllocateQuotaDefaultTimeoutInMs = 1000;
+constexpr uint32_t kAllocateQuotaDefaultTimeoutInMs = 1000;
 // The default connection timeout for report requests.
-const uint32_t kReportDefaultTimeoutInMs = 2000;
+constexpr uint32_t kReportDefaultTimeoutInMs = 2000;
 
 // The default number of retries for check calls.
-const uint32_t kCheckDefaultNumberOfRetries = 3;
+constexpr uint32_t kCheckDefaultNumberOfRetries = 3;
 // The default number of retries for allocate quota calls.
 // Allocate quota has fail_open policy, retry once is enough.
-const uint32_t kAllocateQuotaDefaultNumberOfRetries = 1;
+constexpr uint32_t kAllocateQuotaDefaultNumberOfRetries = 1;
 // The default number of retries for report calls.
-const uint32_t kReportDefaultNumberOfRetries = 5;
+constexpr uint32_t kReportDefaultNumberOfRetries = 5;
 
 // The default value for network_fail_open flag.
-const bool kDefaultNetworkFailOpen = true;
+constexpr bool kDefaultNetworkFailOpen = true;
 
 // Generates CheckAggregationOptions.
 CheckAggregationOptions getCheckAggregationOptions() {

@@ -30,26 +30,26 @@ namespace auth {
 namespace {
 
 // Delimiter of the jwt payloads
-const char kJwtPayloadsDelimeter = '.';
+constexpr char kJwtPayloadsDelimeter = '.';
 
-bool isNullOrEmpty(const char *str) { return str == nullptr || *str == '\0'; }
+bool isNullOrEmpty(const char* str) { return str == nullptr || *str == '\0'; }
 
 }  // namespace
 
-const grpc_json *GetProperty(const grpc_json *json, const char *key) {
+const grpc_json* GetProperty(const grpc_json* json, const char* key) {
   if (json == nullptr || key == nullptr) {
     return nullptr;
   }
-  const grpc_json *cur;
+  const grpc_json* cur;
   for (cur = json->child; cur != nullptr; cur = cur->next) {
     if (strcmp(cur->key, key) == 0) return cur;
   }
   return nullptr;
 }
 
-const char *GetPropertyValue(const grpc_json *json, const char *key,
+const char* GetPropertyValue(const grpc_json* json, const char* key,
                              grpc_json_type type) {
-  const grpc_json *cur = GetProperty(json, key);
+  const grpc_json* cur = GetProperty(json, key);
   if (cur != nullptr) {
     if (cur->type != type) {
       gpr_log(GPR_ERROR, "Unexpected type of a %s field [%s]: %d", key,
@@ -60,7 +60,7 @@ const char *GetPropertyValue(const grpc_json *json, const char *key,
   }
   return nullptr;
 }
-void Split(const std::string &s, char delim, std::vector<std::string> *elems) {
+void Split(const std::string& s, char delim, std::vector<std::string>* elems) {
   std::stringstream ss(s);
   std::string item;
   while (std::getline(ss, item, delim)) {
@@ -68,21 +68,21 @@ void Split(const std::string &s, char delim, std::vector<std::string> *elems) {
   }
 }
 
-bool GetPrimitiveFieldValue(const std::string &json_str,
-                            const std::string &payload_path,
-                            std::string *payload_value) {
-  char *json_copy = strdup(json_str.c_str());
-  grpc_json *json_root =
+bool GetPrimitiveFieldValue(const std::string& json_str,
+                            const std::string& payload_path,
+                            std::string* payload_value) {
+  char* json_copy = strdup(json_str.c_str());
+  grpc_json* json_root =
       grpc_json_parse_string_with_len(json_copy, strlen(json_copy));
   if (!json_root) {
     gpr_free(json_copy);
     return false;
   }
 
-  const grpc_json *json = json_root;
+  const grpc_json* json = json_root;
   std::vector<std::string> path_fields;
   Split(payload_path, kJwtPayloadsDelimeter, &path_fields);
-  for (const auto &path_field : path_fields) {
+  for (const auto& path_field : path_fields) {
     json = GetProperty(json, path_field.c_str());
   }
   if (!json) {
@@ -112,16 +112,16 @@ bool GetPrimitiveFieldValue(const std::string &json_str,
   return true;
 }
 
-const char *GetStringValue(const grpc_json *json, const char *key) {
+const char* GetStringValue(const grpc_json* json, const char* key) {
   return GetPropertyValue(json, key, GRPC_JSON_STRING);
 }
 
-const char *GetNumberValue(const grpc_json *json, const char *key) {
+const char* GetNumberValue(const grpc_json* json, const char* key) {
   return GetPropertyValue(json, key, GRPC_JSON_NUMBER);
 }
 
-void FillChild(grpc_json *child, grpc_json *brother, grpc_json *parent,
-               const char *key, const char *value, grpc_json_type type) {
+void FillChild(grpc_json* child, grpc_json* brother, grpc_json* parent,
+               const char* key, const char* value, grpc_json_type type) {
   if (isNullOrEmpty(key) || isNullOrEmpty(value)) {
     return;
   }

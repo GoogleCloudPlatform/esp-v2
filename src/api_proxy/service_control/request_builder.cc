@@ -44,10 +44,10 @@ namespace google {
 namespace api_proxy {
 namespace service_control {
 
-const char kConsumerQuotaUsedCount[] =
+constexpr char kConsumerQuotaUsedCount[] =
     "serviceruntime.googleapis.com/api/consumer/quota_used_count";
 
-const char kQuotaName[] = "/quota_name";
+constexpr char kQuotaName[] = "/quota_name";
 
 struct SupportedMetric {
   const char* name;
@@ -504,32 +504,34 @@ const SupportedMetric supported_metrics[] = {
 const int supported_metrics_count =
     sizeof(supported_metrics) / sizeof(supported_metrics[0]);
 
-const char kServiceControlCallerIp[] =
+constexpr char kServiceControlCallerIp[] =
     "servicecontrol.googleapis.com/caller_ip";
-const char kServiceControlReferer[] = "servicecontrol.googleapis.com/referer";
-const char kServiceControlServiceAgent[] =
+constexpr char kServiceControlReferer[] =
+    "servicecontrol.googleapis.com/referer";
+constexpr char kServiceControlServiceAgent[] =
     "servicecontrol.googleapis.com/service_agent";
-const char kServiceControlUserAgent[] =
+constexpr char kServiceControlUserAgent[] =
     "servicecontrol.googleapis.com/user_agent";
-const char kServiceControlPlatform[] = "servicecontrol.googleapis.com/platform";
-const char kServiceControlAndroidPackageName[] =
+constexpr char kServiceControlPlatform[] =
+    "servicecontrol.googleapis.com/platform";
+constexpr char kServiceControlAndroidPackageName[] =
     "servicecontrol.googleapis.com/android_package_name";
-const char kServiceControlAndroidCertFingerprint[] =
+constexpr char kServiceControlAndroidCertFingerprint[] =
     "servicecontrol.googleapis.com/android_cert_fingerprint";
-const char kServiceControlIosBundleId[] =
+constexpr char kServiceControlIosBundleId[] =
     "servicecontrol.googleapis.com/ios_bundle_id";
-const char kServiceControlBackendProtocol[] =
+constexpr char kServiceControlBackendProtocol[] =
     "servicecontrol.googleapis.com/backend_protocol";
-const char kServiceControlConsumerProject[] =
+constexpr char kServiceControlConsumerProject[] =
     "serviceruntime.googleapis.com/consumer_project";
 
 // User agent label value
 // The value for kUserAgent should be configured at service control server.
 // Now it is configured as "APIPROXY".
-const char kUserAgent[] = "APIPROXY";
+constexpr char kUserAgent[] = "APIPROXY";
 
 // Service agent label value
-const char kServiceAgentPrefix[] = "APIPROXY/";
+constexpr char kServiceAgentPrefix[] = "APIPROXY/";
 
 const std::string get_service_agent() {
   return kServiceAgentPrefix + utils::Version::instance().get();
@@ -561,8 +563,8 @@ Status set_credential_id(const SupportedLabel& l, const ReportRequestInfo& info,
   return Status::OK;
 }
 
-const char* error_types[10] = {"0xx", "1xx", "2xx", "3xx", "4xx",
-                               "5xx", "6xx", "7xx", "8xx", "9xx"};
+constexpr const char* error_types[10] = {"0xx", "1xx", "2xx", "3xx", "4xx",
+                                         "5xx", "6xx", "7xx", "8xx", "9xx"};
 
 // /error_type
 Status set_error_type(const SupportedLabel& l, const ReportRequestInfo& info,
@@ -918,30 +920,30 @@ const int supported_labels_count =
 // "servicecontrol.googleapis.com/credential_project_number"
 
 // Define Service Control constant strings
-const char kConsumerIdApiKey[] = "api_key:";
-const char kConsumerIdProject[] = "project:";
+constexpr char kConsumerIdApiKey[] = "api_key:";
+constexpr char kConsumerIdProject[] = "project:";
 
 // Following names for Log struct_playload field names:
-const char kLogFieldNameApiKey[] = "api_key";
-const char kLogFieldNameApiMethod[] = "api_method";
-const char kLogFieldNameApiName[] = "api_name";
-const char kLogFieldNameApiVersion[] = "api_version";
-const char kLogFieldNameErrorCause[] = "error_cause";
-const char kLogFieldNameHttpMethod[] = "http_method";
-const char kLogFieldNameHttpResponseCode[] = "http_response_code";
-const char kLogFieldNameJwtPayloads[] = "jwt_payloads";
-const char kLogFieldNameLocation[] = "location";
-const char kLogFieldNameLogMessage[] = "log_message";
-const char kLogFieldNameProducerProjectId[] = "producer_project_id";
-const char kLogFieldNameReferer[] = "referer";
-const char kLogFieldNameRequestHeaders[] = "request_headers";
-const char kLogFieldNameRequestLatency[] = "request_latency_in_ms";
-const char kLogFieldNameRequestSize[] = "request_size_in_bytes";
-const char kLogFieldNameResponseHeaders[] = "response_headers";
-const char kLogFieldNameResponseSize[] = "response_size_in_bytes";
-const char kLogFieldNameTimestamp[] = "timestamp";
-const char kLogFieldNameUrl[] = "url";
-const char kLogFieldNameClientIp[] = "client_ip";
+constexpr char kLogFieldNameApiKey[] = "api_key";
+constexpr char kLogFieldNameApiMethod[] = "api_method";
+constexpr char kLogFieldNameApiName[] = "api_name";
+constexpr char kLogFieldNameApiVersion[] = "api_version";
+constexpr char kLogFieldNameErrorCause[] = "error_cause";
+constexpr char kLogFieldNameHttpMethod[] = "http_method";
+constexpr char kLogFieldNameHttpResponseCode[] = "http_response_code";
+constexpr char kLogFieldNameJwtPayloads[] = "jwt_payloads";
+constexpr char kLogFieldNameLocation[] = "location";
+constexpr char kLogFieldNameLogMessage[] = "log_message";
+constexpr char kLogFieldNameProducerProjectId[] = "producer_project_id";
+constexpr char kLogFieldNameReferer[] = "referer";
+constexpr char kLogFieldNameRequestHeaders[] = "request_headers";
+constexpr char kLogFieldNameRequestLatency[] = "request_latency_in_ms";
+constexpr char kLogFieldNameRequestSize[] = "request_size_in_bytes";
+constexpr char kLogFieldNameResponseHeaders[] = "response_headers";
+constexpr char kLogFieldNameResponseSize[] = "response_size_in_bytes";
+constexpr char kLogFieldNameTimestamp[] = "timestamp";
+constexpr char kLogFieldNameUrl[] = "url";
+constexpr char kLogFieldNameClientIp[] = "client_ip";
 
 // Convert time point to proto Timestamp
 Timestamp CreateTimestamp(std::chrono::system_clock::time_point tp) {
@@ -1333,9 +1335,9 @@ Status RequestBuilder::ConvertAllocateQuotaResponse(
       return Status(Code::PERMISSION_DENIED, error.description());
 
     case ::google::api::servicecontrol::v1::QuotaError::PROJECT_DELETED:
-    // Consumer's project has been marked as deleted (soft deletion).
+      // Consumer's project has been marked as deleted (soft deletion).
     case ::google::api::servicecontrol::v1::QuotaError::API_KEY_INVALID:
-    // Specified API key is invalid.
+      // Specified API key is invalid.
     case ::google::api::servicecontrol::v1::QuotaError::API_KEY_EXPIRED:
       // Specified API Key has expired.
       return Status(Code::INVALID_ARGUMENT, error.description());

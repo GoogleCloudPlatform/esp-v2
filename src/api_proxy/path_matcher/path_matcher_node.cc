@@ -19,7 +19,7 @@ namespace google {
 namespace api_proxy {
 namespace path_matcher {
 
-const char HttpMethod_WILD_CARD[] = "*";
+constexpr char HttpMethod_WILD_CARD[] = "*";
 
 namespace {
 
