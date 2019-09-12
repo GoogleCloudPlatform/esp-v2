@@ -48,7 +48,7 @@ ENV GOPATH /go
 ENV PATH /usr/local/go/bin:$PATH
 ENV PATH $GOPATH/bin:$PATH
 
-ENV GO_TARBALL "go1.11.1.linux-amd64.tar.gz"
+ENV GO_TARBALL "go1.13.linux-amd64.tar.gz"
 RUN wget -q "https://storage.googleapis.com/golang/${GO_TARBALL}" && \
     tar xzf "${GO_TARBALL}" -C /usr/local && \
     rm "${GO_TARBALL}"

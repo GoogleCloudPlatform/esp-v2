@@ -40,10 +40,6 @@ var (
 	debugComponents = flag.String("debug_components", "", `display debug logs for components, can be "all", "envoy", "configmanager"`)
 )
 
-func init() {
-	flag.Parse()
-}
-
 // A ServiceManagementServer is a HTTP server hosting mock service configs.
 type ServiceManagementServer interface {
 	Start() (URL string)
