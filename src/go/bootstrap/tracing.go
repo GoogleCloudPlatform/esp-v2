@@ -50,7 +50,7 @@ func createTraceContexts(ctx_str string) ([]tracepb.OpenCensusConfig_TraceContex
 	return out, nil
 }
 
-func GetTracingProjectId(opts options.CommonOptions) (string, error) {
+func getTracingProjectId(opts options.CommonOptions) (string, error) {
 
 	// If user specified a project-id, use that
 	projectId := opts.TracingProjectId
@@ -70,10 +70,20 @@ func GetTracingProjectId(opts options.CommonOptions) (string, error) {
 // CreateTracing outputs envoy tracing config
 func CreateTracing(opts options.CommonOptions) (*tracepb.Tracing, error) {
 
+	projectId, err := getTracingProjectId(opts)
+	if err != nil {
+		return nil, err
+	}
+
 	cfg := &tracepb.OpenCensusConfig{
-		TraceConfig:                &opencensuspb.TraceConfig{},
+		TraceConfig: &opencensuspb.TraceConfig{
+			MaxNumberOfAttributes:    opts.TracingMaxNumAttributes,
+			MaxNumberOfAnnotations:   opts.TracingMaxNumAnnotations,
+			MaxNumberOfMessageEvents: opts.TracingMaxNumMessageEvents,
+			MaxNumberOfLinks:         opts.TracingMaxNumLinks,
+		},
 		StackdriverExporterEnabled: true,
-		StackdriverProjectId:       opts.TracingProjectId,
+		StackdriverProjectId:       projectId,
 	}
 
 	if opts.TracingStackdriverAddress != "" {

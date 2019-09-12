@@ -29,7 +29,7 @@ const (
 	fakeServiceName   = "test-service"
 	fakeConfigID      = "test-config"
 	fakeZonePath      = "projects/4242424242/zones/test-zone"
-	fakeProjectID     = "test-project-id"
+	FakeProjectID     = "test-project-id"
 )
 
 var defaultResp = map[string]string{
@@ -37,7 +37,7 @@ var defaultResp = map[string]string{
 	util.ServiceNameSuffix:         fakeServiceName,
 	util.ServiceAccountTokenSuffix: fakeToken,
 	util.IdentityTokenSuffix:       fakeIdentityToken,
-	util.ProjectIDSuffix:           fakeProjectID,
+	util.ProjectIDSuffix:           FakeProjectID,
 	util.ZoneSuffix:                fakeZonePath,
 }
 

@@ -25,12 +25,16 @@ type CommonOptions struct {
 	AdminPort int
 
 	// Flags for tracing
-	EnableTracing             bool
-	TracingProjectId          string
-	TracingStackdriverAddress string
-	TracingSamplingRate       float64
-	TracingIncomingContext    string
-	TracingOutgoingContext    string
+	EnableTracing              bool
+	TracingProjectId           string
+	TracingStackdriverAddress  string
+	TracingSamplingRate        float64
+	TracingIncomingContext     string
+	TracingOutgoingContext     string
+	TracingMaxNumAttributes    int64
+	TracingMaxNumAnnotations   int64
+	TracingMaxNumMessageEvents int64
+	TracingMaxNumLinks         int64
 
 	// Flags for metadata
 	NonGCP             bool
@@ -42,14 +46,18 @@ type CommonOptions struct {
 // The default values are expected to match the default values from the flags.
 func DefaultCommonOptions() CommonOptions {
 	return CommonOptions{
-		AdminPort:                 8001,
-		EnableTracing:             false,
-		HttpRequestTimeout:        5 * time.Second,
-		NonGCP:                    false,
-		TracingProjectId:          "",
-		TracingStackdriverAddress: "",
-		TracingSamplingRate:       0.001,
-		TracingIncomingContext:    "",
-		TracingOutgoingContext:    "",
+		AdminPort:                  8001,
+		EnableTracing:              false,
+		HttpRequestTimeout:         5 * time.Second,
+		NonGCP:                     false,
+		TracingProjectId:           "",
+		TracingStackdriverAddress:  "",
+		TracingSamplingRate:        0.001,
+		TracingIncomingContext:     "",
+		TracingOutgoingContext:     "",
+		TracingMaxNumAttributes:    32,
+		TracingMaxNumAnnotations:   32,
+		TracingMaxNumMessageEvents: 128,
+		TracingMaxNumLinks:         128,
 	}
 }
