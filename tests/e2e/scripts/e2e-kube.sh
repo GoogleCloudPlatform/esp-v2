@@ -37,7 +37,7 @@ PROJECT_ID="cloudesf-testing"
 # Parses parameters into config file.
 ARGS="$ARGS \"--service=${APIPROXY_SERVICE}\","
 ARGS="$ARGS \"--rollout_strategy=${ROLLOUT_STRATEGY}\","
-ARGS="$ARGS \"--enable_tracing\", \"--tracing_sample_rate=1.0\""
+ARGS="$ARGS \"--enable_tracing\", \"--tracing_sample_rate=0.005\""
  case "${BACKEND}" in
    'bookstore' )
       YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/bookstore/http-bookstore.yaml.template
