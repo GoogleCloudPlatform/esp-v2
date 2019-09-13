@@ -20,13 +20,14 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
-	any "github.com/golang/protobuf/ptypes/any"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
-	"google.golang.org/genproto/googleapis/api/servicemanagement/v1"
+
+	anypb "github.com/golang/protobuf/ptypes/any"
+	scpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
 var (
-	ConfigMap = map[string]*conf.Service{
+	ConfigMap = map[string]*scpb.Service{
 		"echo":                  FakeEchoConfig,
 		"echoForDynamicRouting": FakeEchoConfigForDynamicRouting,
 		"bookstore":             FakeBookstoreConfig,
@@ -35,16 +36,16 @@ var (
 	}
 )
 
-func generateSourceInfo(addr string) *conf.SourceInfo {
+func generateSourceInfo(addr string) *scpb.SourceInfo {
 	dat, err := ioutil.ReadFile(addr)
 	if err != nil {
 		glog.Errorf("error marshalAny for proto descriptor, %s", err)
 		return nil
 	}
-	sourceFile := &servicemanagement.ConfigFile{
+	sourceFile := &smpb.ConfigFile{
 		FilePath:     "api_descriptor.pb",
 		FileContents: dat,
-		FileType:     servicemanagement.ConfigFile_FILE_DESCRIPTOR_SET_PROTO,
+		FileType:     smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO,
 	}
 
 	content, err := ptypes.MarshalAny(sourceFile)
@@ -52,30 +53,30 @@ func generateSourceInfo(addr string) *conf.SourceInfo {
 		glog.Errorf("error marshalAny for proto descriptor")
 		return nil
 	}
-	return &conf.SourceInfo{
-		SourceFiles: []*any.Any{content},
+	return &scpb.SourceInfo{
+		SourceFiles: []*anypb.Any{content},
 	}
 }
 
 func init() {
-	FakeGRPCEchoConfig.SourceInfo = generateSourceInfo("../endpoints/grpc-echo/proto/api_descriptor.pb")
-	FakeGRPCInteropConfig.SourceInfo = generateSourceInfo("../endpoints/grpc-interop/proto/api_descriptor.pb")
-	FakeBookstoreConfig.SourceInfo = generateSourceInfo("../endpoints/bookstore-grpc/proto/api_descriptor.pb")
+	FakeGRPCEchoConfig.SourceInfo = generateSourceInfo("../endpoints/grpc_echo/proto/api_descriptor.pb")
+	FakeGRPCInteropConfig.SourceInfo = generateSourceInfo("../endpoints/grpc_interop/proto/api_descriptor.pb")
+	FakeBookstoreConfig.SourceInfo = generateSourceInfo("../endpoints/bookstore_grpc/proto/api_descriptor.pb")
 }
 
-func SetFakeControlEnvironment(cfg *conf.Service, url string) {
-	cfg.Control = &conf.Control{
+func SetFakeControlEnvironment(cfg *scpb.Service, url string) {
+	cfg.Control = &scpb.Control{
 		Environment: url,
 	}
 }
 
-func AppendLogMetrics(cfg *conf.Service) {
+func AppendLogMetrics(cfg *scpb.Service) {
 	txt, err := ioutil.ReadFile("../env/testdata/logs_metrics.pb.txt")
 	if err != nil {
 		glog.Errorf("error reading logs_metrics.pb.txt, %s", err)
 	}
 
-	lm := &conf.Service{}
+	lm := &scpb.Service{}
 	if err = proto.UnmarshalText(string(txt), lm); err != nil {
 		glog.Errorf("failed to parse the text from logs_metrics.pb.txt, %s", err)
 	}

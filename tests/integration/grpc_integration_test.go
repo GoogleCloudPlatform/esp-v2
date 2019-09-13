@@ -21,11 +21,11 @@ import (
 	"strings"
 	"testing"
 
-	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
+	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 
-	grpcEchoClient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/grpc-echo/client"
+	grpcEchoClient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/grpc_echo/client"
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 )
 

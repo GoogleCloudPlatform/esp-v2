@@ -27,7 +27,7 @@
 
 #include "google/protobuf/util/message_differencer.h"
 #include "test/test_common/utility.h"
-#include "tests/endpoints/grpc-echo/client-test-lib.h"
+#include "tests/endpoints/grpc_echo/client-test-lib.h"
 // #include "src/api_manager/utils/marshalling.h"
 
 using ::google::api::servicecontrol::v1::ReportRequest;

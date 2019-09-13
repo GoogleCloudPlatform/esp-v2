@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
-	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/grpc-echo/client"
+	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/grpc_echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 	"google.golang.org/genproto/googleapis/api/annotations"

@@ -22,9 +22,9 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/empty"
 
-	bookstorepb "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/proto"
+	bookstorepb "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/proto"
+	emptypb "github.com/golang/protobuf/ptypes/empty"
 )
 
 func readerToString(r io.Reader) string {
@@ -40,7 +40,7 @@ func TestEncodeGRPCWebRequestBody(t *testing.T) {
 		expectedReqBody string
 	}{
 		{
-			reqMsg:          &empty.Empty{},
+			reqMsg:          &emptypb.Empty{},
 			expectedReqBody: "AAAAAAA=",
 		},
 

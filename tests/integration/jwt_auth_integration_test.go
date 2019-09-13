@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
+	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 

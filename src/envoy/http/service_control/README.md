@@ -21,7 +21,7 @@ $ node tests/endpoints/http/http_server.js
 With GRPC Backend
 
 ```bash
-$ node tests/endpoints/bookstore-grpc/grpc_server.js
+$ node tests/endpoints/bookstore_grpc/grpc_server.js
 ```
 
 ### Start up envoy
@@ -81,11 +81,11 @@ $ curl -X POST http://127.0.0.1:9090/tea?key=$KEY -v
 Send GRPC request:
 
 ```bash
-go run tests/endpoints/bookstore-grpc/client_main.go -addr 127.0.0.1:9090 -method=DeleteShelf -client_protocol=grpc -apikey=$KEY
+go run tests/endpoints/bookstore_grpc/client_main.go -addr 127.0.0.1:9090 -method=DeleteShelf -client_protocol=grpc -apikey=$KEY
 ```
 
 Send HTTP request:
 
 ```bash
-go run tests/endpoints/bookstore-grpc/client_main.go -addr 127.0.0.1:9090 -method=DeleteShelf -client_protocol=http -apikey=$KEY
+go run tests/endpoints/bookstore_grpc/client_main.go -addr 127.0.0.1:9090 -method=DeleteShelf -client_protocol=http -apikey=$KEY
 ```

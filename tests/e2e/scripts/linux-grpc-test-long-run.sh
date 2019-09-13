@@ -130,7 +130,7 @@ function grpc_test_transcode() {
       --host="http://${HOST}:80" \
       --api_key="${API_KEY}" \
       --auth_token="${AUTH_TOKEN}" \
-      --test_data="${ROOT}/tests/e2e/testdata/grpc-echo/grpc_test_data.json" \
+      --test_data="${ROOT}/tests/e2e/testdata/grpc_echo/grpc_test_data.json" \
       --root="${ROOT}")
 }
 

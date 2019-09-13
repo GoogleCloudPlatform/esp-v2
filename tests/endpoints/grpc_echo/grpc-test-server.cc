@@ -20,7 +20,7 @@
 #include <set>
 #include <string>
 
-#include "tests/endpoints/grpc-echo/proto/grpc-test.grpc.pb.h"
+#include "tests/endpoints/grpc_echo/proto/grpc-test.grpc.pb.h"
 
 using ::google::api::servicecontrol::v1::ReportRequest;
 using ::grpc::InsecureServerCredentials;

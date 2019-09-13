@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "tests/endpoints/grpc-echo/proto/grpc-test.grpc.pb.h"
+#include "tests/endpoints/grpc_echo/proto/grpc-test.grpc.pb.h"
 
 namespace test {
 namespace grpc {

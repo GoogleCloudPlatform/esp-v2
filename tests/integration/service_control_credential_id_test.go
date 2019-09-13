@@ -24,7 +24,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 
-	bsClient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
+	bsClient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/client"
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )

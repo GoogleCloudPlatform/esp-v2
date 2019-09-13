@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
-	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
+	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 

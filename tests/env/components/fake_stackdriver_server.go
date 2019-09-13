@@ -20,9 +20,10 @@ import (
 	"net"
 
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
+	emptypb "github.com/golang/protobuf/ptypes/empty"
+	cloudtracegrpc "google.golang.org/genproto/googleapis/devtools/cloudtrace/v2"
 	cloudtracepb "google.golang.org/genproto/googleapis/devtools/cloudtrace/v2"
 )
 
@@ -32,11 +33,11 @@ type FakeTraceServer struct {
 	server  *grpc.Server
 }
 
-func (s *FakeTraceServer) BatchWriteSpans(ctx context.Context, req *cloudtracepb.BatchWriteSpansRequest) (*empty.Empty, error) {
+func (s *FakeTraceServer) BatchWriteSpans(ctx context.Context, req *cloudtracepb.BatchWriteSpansRequest) (*emptypb.Empty, error) {
 	for _, span := range req.Spans {
 		s.RcvSpan <- span
 	}
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 func (s *FakeTraceServer) CreateSpan(ctx context.Context, span *cloudtracepb.Span) (*cloudtracepb.Span, error) {
@@ -55,7 +56,7 @@ func NewFakeStackdriver(port uint16) *FakeTraceServer {
 		RcvSpan: make(chan *cloudtracepb.Span, 10),
 		server:  grpcServer,
 	}
-	cloudtracepb.RegisterTraceServiceServer(grpcServer, fsds)
+	cloudtracegrpc.RegisterTraceServiceServer(grpcServer, fsds)
 
 	go func() {
 		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))

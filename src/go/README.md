@@ -74,7 +74,7 @@ npm install grpc
 npm install @grpc/proto-loader
 
 # Run gRPC server
-node tests/endpoints/bookstore-grpc/grpc_server.js
+node tests/endpoints/bookstore_grpc/grpc_server.js
 ```
 
 ### HTTP Echo Server
@@ -104,7 +104,7 @@ docker network create --driver bridge apiproxy_net
 * Build and run Bookstore backend server
 
 ```shell
-docker build -f tests/endpoints/bookstore-grpc/Dockerfile -t bookstore .
+docker build -f tests/endpoints/bookstore_grpc/Dockerfile -t bookstore .
 
 docker run --detach --name=bookstore --net=apiproxy_net bookstore
 ```
@@ -122,6 +122,6 @@ apiproxy --service=[YOUR_SERVICE_NAME] --service_config_id=[YOUR_CONFIG_ID] \
 * Make gRPC calls
 
 ```shell
-go run tests/endpoints/bookstore-grpc/client_main.go --addr=127.0.0.1:80 \
+go run tests/endpoints/bookstore_grpc/client_main.go --addr=127.0.0.1:80 \
 --method=ListShelves --client_protocol=grpc
 ```

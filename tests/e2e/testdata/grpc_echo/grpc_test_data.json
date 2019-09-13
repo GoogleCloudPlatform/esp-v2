@@ -3,18 +3,18 @@
     {
       "labels": { "http_method": "POST",  "auth": "None", "api_key": "None" },
       "url": "${HOST}/echo",
-      "post_file": "${ROOT}/tests/e2e/testdata/grpc-echo/grpc_echo.json"
+      "post_file": "${ROOT}/tests/e2e/testdata/grpc_echo/grpc_echo.json"
     },
     {
       "labels": { "http_method": "POST",  "auth": "None", "api_key": "None" },
       "url": "${HOST}/echoreport?key=${API_KEY}",
-      "post_file": "${ROOT}/tests/e2e/testdata/grpc-echo/grpc_large_report.json"
+      "post_file": "${ROOT}/tests/e2e/testdata/grpc_echo/grpc_large_report.json"
     },
     {
       "labels": { "http_method": "POST",  "auth": "Yes", "api_key": "Yes" },
       "url": "${HOST}/echostream?key=${API_KEY}",
       "headers": [ "Authorization: Bearer ${JWT_TOKEN}" ],
-      "post_file": "${ROOT}/tests/e2e/testdata/grpc-echo/grpc_echostream.json"
+      "post_file": "${ROOT}/tests/e2e/testdata/grpc_echo/grpc_echostream.json"
     }
   ]
 }

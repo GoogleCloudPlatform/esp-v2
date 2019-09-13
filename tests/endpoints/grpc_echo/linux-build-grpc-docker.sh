@@ -14,8 +14,8 @@ GRPC_ROOT="${ROOT}/tests/endpoints/grpc-echo"
   exit 1
 }
 
-TEST_SERVER_TARGET='//tests/endpoints/grpc-echo:grpc-test-server'
-TEST_SERVER_BIN='tests/endpoints/grpc-echo/grpc-test-server'
+TEST_SERVER_TARGET='//tests/endpoints/grpc_echo:grpc-test-server'
+TEST_SERVER_BIN='tests/endpoints/grpc_echo/grpc-test-server'
 TEST_SERVER_ARGS='0.0.0.0:8081'
 
 while getopts :i:o arg; do

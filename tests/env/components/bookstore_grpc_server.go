@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	bookstorePath = "../endpoints/bookstore-grpc/grpc_server.js"
+	bookstorePath = "../endpoints/bookstore_grpc/grpc_server.js"
 )
 
 type BookstoreGrpcServer struct {

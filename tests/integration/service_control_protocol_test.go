@@ -24,7 +24,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 
-	bookstore "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/client"
+	bookstore "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/client"
 	echoclient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 )

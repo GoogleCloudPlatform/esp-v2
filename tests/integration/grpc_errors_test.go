@@ -18,7 +18,7 @@ import (
 	"strings"
 	"testing"
 
-	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/grpc-echo/client"
+	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/grpc_echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 )

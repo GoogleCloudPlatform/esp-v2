@@ -30,13 +30,13 @@ import (
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/empty"
 	"golang.org/x/net/http2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	bookstoregrpc "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/proto"
-	bookstorepb "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/proto"
+	bookstoregrpc "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/proto"
+	bookstorepb "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/proto"
+	emptypb "github.com/golang/protobuf/ptypes/empty"
 )
 
 var grpcWebHeader = http.Header{
@@ -195,7 +195,7 @@ var makeGRPCCall = func(addr, method, token string, header http.Header) (string,
 	var respMsg proto.Message
 	switch method {
 	case "ListShelves":
-		req := &empty.Empty{}
+		req := &emptypb.Empty{}
 		respMsg, err = cli.ListShelves(ctx, req)
 	case "CreateShelf":
 		req := &bookstorepb.CreateShelfRequest{
@@ -241,7 +241,7 @@ func MakeGRPCWebCall(addr, method, token string, header http.Header) (string, GR
 	var respMsg proto.Message
 	switch method {
 	case "ListShelves":
-		reqMsg = &empty.Empty{}
+		reqMsg = &emptypb.Empty{}
 		respMsg = &bookstorepb.ListShelvesResponse{}
 	case "CreateShelf":
 		reqMsg = &bookstorepb.CreateShelfRequest{
@@ -266,7 +266,7 @@ func MakeGRPCWebCall(addr, method, token string, header http.Header) (string, GR
 		respMsg = &bookstorepb.Book{}
 	case "DeleteShelf":
 		reqMsg = &bookstorepb.DeleteShelfRequest{}
-		respMsg = &empty.Empty{}
+		respMsg = &emptypb.Empty{}
 	default:
 		return "", nil, fmt.Errorf("unexpected method called")
 	}

@@ -26,15 +26,15 @@ This document describes how to run APIProxy with
 
 ## Configuring Endpoints
 
-The bookstore-grpc sample contains the files that you need to copy locally and configure.
+The bookstore_grpc sample contains the files that you need to copy locally and configure.
 
 To configure Endpoints:
 
-Go to directory: gcpproxy/tests/endpoints/bookstore-grpc
+Go to directory: gcpproxy/tests/endpoints/bookstore_grpc
 
-Create a self-contained protobuf descriptor file from your service .proto file, or use the existing [one](https://cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/proto/api_descriptor.pb)
+Create a self-contained protobuf descriptor file from your service .proto file, or use the existing [one](https://cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/proto/api_descriptor.pb)
 
-Open the [service configuration file](https://cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore-grpc/proto/api_config_auth.yaml). This file defines the gRPC API configuration for the Bookstore service.
+Open the [service configuration file](https://cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/proto/api_config_auth.yaml). This file defines the gRPC API configuration for the Bookstore service.
 
 Note the following:
   Replace <YOUR_PROJECT_ID> in your api_config.yaml file with your GCP project ID.
@@ -104,7 +104,7 @@ The --rollout_strategy=managed option configures APIProxy to use the latest depl
 * Deploy service on kubernetes
 
 ```
-kubectl create -f tests/endpoints/bookstore-grpc/bookstore-k8s.yaml
+kubectl create -f tests/endpoints/bookstore_grpc/bookstore-k8s.yaml
 ```
 
 ## Testing the API
@@ -123,7 +123,7 @@ We can test with different scenario by running the following scripts:
 **1. Reject if no jwt token**
 
 ```
-go run tests/endpoints/bookstore-grpc/client_main.go --addr=$HOST:80 --method=ListShelves --client_protocol=grpc
+go run tests/endpoints/bookstore_grpc/client_main.go --addr=$HOST:80 --method=ListShelves --client_protocol=grpc
 ```
 
 **2. Reject if no API KEY**
@@ -133,7 +133,7 @@ Download GoogleServiceAccount from your cloud project to generate JWT token, gen
 ```
 JWT_TOKEN=`./tests/e2e/scripts/gen-auth-token.sh -a cloudesf-test-client -s YourSecretFile`
 
-go run tests/endpoints/bookstore-grpc/client_main.go --addr=$HOST:80 --method=ListShelves --client_protocol=grpc --token=$JWT_TOKEN
+go run tests/endpoints/bookstore_grpc/client_main.go --addr=$HOST:80 --method=ListShelves --client_protocol=grpc --token=$JWT_TOKEN
 ```
 
 **3. Succeed**
@@ -141,7 +141,7 @@ go run tests/endpoints/bookstore-grpc/client_main.go --addr=$HOST:80 --method=Li
 ```
 API_KEY=YOUR API KEY
 
-go run tests/endpoints/bookstore-grpc/client_main.go --addr=$HOST:80 --method=ListShelves --client_protocol=grpc --token=$JWT_TOKEN --apikey=$API_KEY
+go run tests/endpoints/bookstore_grpc/client_main.go --addr=$HOST:80 --method=ListShelves --client_protocol=grpc --token=$JWT_TOKEN --apikey=$API_KEY
 ```
 
 **4. Invalid audience**
@@ -149,7 +149,7 @@ go run tests/endpoints/bookstore-grpc/client_main.go --addr=$HOST:80 --method=Li
 ```
 JWT_TOKEN_INVALID_AUD=`./tests/e2e/scripts/gen-auth-token.sh -a unauthorized-client  -s YourSecretFile`
 
-go run tests/endpoints/bookstore-grpc/client_main.go --addr=$HOST:80 --method=ListShelves --client_protocol=grpc --token=$JWT_TOKEN_INVALID_AUD --apikey=$API_KEY
+go run tests/endpoints/bookstore_grpc/client_main.go --addr=$HOST:80 --method=ListShelves --client_protocol=grpc --token=$JWT_TOKEN_INVALID_AUD --apikey=$API_KEY
 ```
 
 ### Tests with HTTP client
