@@ -24,6 +24,7 @@ from string import Template
 WRK_PATH = os.environ.get('WRK_PATH', '/usr/local/bin/wrk')
 SCRIPT_DIR = os.path.dirname(__file__)
 
+
 def test(run, n, c, t, d):
     """Run a test and extract its results.
     Args:
@@ -37,16 +38,17 @@ def test(run, n, c, t, d):
         t: number of threads
         d: test duration in seconds
     Returns:
-        metrics: is a dict of metric name to a tuple of (value, unit)
+        result: a list of all kinds of result, including Complete requests, failed requests and so on
+        metrics: a list of (Latency percentile: (value, unit))
         errors: a list of non-200 responses
     """
     cmd = [WRK_PATH,
-            '-t', str(t),
-            '--timeout', '2m',
-            '-c', str(c),
-            '-d', str(d) + 's',
-            '-s', os.path.join(SCRIPT_DIR, "wrk_script.lua"),
-            '-H', '"Content-Type:application/json"']
+           '-t', str(t),
+           '--timeout', '2m',
+           '-c', str(c),
+           '-d', str(d) + 's',
+           '-s', os.path.join(SCRIPT_DIR, "wrk_script.lua"),
+           '-H', '"Content-Type:application/json"']
 
     if 'headers' in run:
         for h in run['headers']:
@@ -67,11 +69,11 @@ def test(run, n, c, t, d):
     expected_status = run.get('expected_status', '200')
     with open(os.path.join(SCRIPT_DIR, 'wrk_script.lua'), 'w') as f:
         f.write(Template(wrk_script).substitute(
-                HTTP_METHOD=wrk_method,
-                REQUEST_BODY_FILE=wrk_body_file,
-                EXPECTED_STATUS=expected_status,
-                OUT=os.path.join(SCRIPT_DIR, wrk_out),
-                ERR=os.path.join(SCRIPT_DIR, wrk_err)))
+            HTTP_METHOD=wrk_method,
+            REQUEST_BODY_FILE=wrk_body_file,
+            EXPECTED_STATUS=expected_status,
+            OUT=os.path.join(SCRIPT_DIR, wrk_out),
+            ERR=os.path.join(SCRIPT_DIR, wrk_err)))
 
     cmd += [run['url']]
 
@@ -82,14 +84,22 @@ def test(run, n, c, t, d):
         sys.exit('Test failed')
 
     with open(os.path.join(SCRIPT_DIR, wrk_out), 'r') as f:
-        metrics = json.load(f)
+        records = json.load(f)
 
-    for k in metrics.keys():
-        metrics[k] = tuple(metrics[k])
+    metricOrder = ["Latency percentile: {}".format(i) for i in
+                   ["50%", "66%", "75%", "80%", "90%", "95%", "98%", "99%",
+                    "100%", "mean"]]
+    resultOrder = ["Complete requests", "Failed requests",
+                   "Failed requests by read", "Failed requests by write",
+                   "Failed requests by timeout",
+                   "Non-2xx responses", "Requests per second", "Transfer rate"]
+
+    metrics = [(k, records[k]) for k in metricOrder]
+    result = [(k, records[k]) for k in resultOrder]
 
     errors = []
     for i in range(0, t):
         with open(os.path.join(SCRIPT_DIR, wrk_err + '_' + str(i)), 'r') as f:
             errors.extend(f.readlines())
 
-    return metrics, errors
+    return result, metrics, errors

@@ -15,6 +15,9 @@ done = function(summary, latency, requests)
   errors = summary.errors
   failed = errors.connect + errors.read + errors.write + errors.timeout
   f:write(string.format("\"Failed requests\":[%d,\"number\"],", failed));
+  f:write(string.format("\"Failed requests by read\":[%d,\"number\"],", errors.read));
+  f:write(string.format("\"Failed requests by write\":[%d,\"number\"],", errors.write));
+  f:write(string.format("\"Failed requests by timeout\":[%d,\"number\"],", errors.timeout));
   f:write(string.format("\"Timeout requests\":[%d,\"number\"],", errors.timeout));
   f:write(string.format("\"Non-2xx responses\":[%d,\"number\"],", errors.status))
 

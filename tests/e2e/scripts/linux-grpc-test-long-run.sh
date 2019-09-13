@@ -88,7 +88,7 @@ function grpc_test_pass_through() {
     # Generating token for each run, that they expire in 1 hour.
 
     local AUTH_TOKEN=$("${ROOT}/tests/e2e/scripts/gen-auth-token.sh" -a "${SERVICE_NAME}")
-    python "${ROOT}/tests/e2e/client/grpc/grpc_stress_input.py" \
+    (set -x; python "${ROOT}/tests/e2e/client/grpc/grpc_stress_input.py" \
       --server="${HOST}:80" \
       --allowed_failure_rate=0.3 \
       --api_key="${API_KEY}" \
@@ -97,7 +97,7 @@ function grpc_test_pass_through() {
       --concurrent="${CONCURRENT}" \
       --requests_per_stream="${STREAM_COUNT}" \
       --random_payload_max_size="${RANDOM_PAYLOAD_SIZE}" \
-      --random_payload_max_size="${RANDOM_PAYLOAD_SIZE}" >"${tmp_file}"
+      --random_payload_max_size="${RANDOM_PAYLOAD_SIZE}" >"${tmp_file}")
     # gRPC test client occasionally aborted. Retry up to 5 times.
 
     local count=0
@@ -118,18 +118,23 @@ function grpc_test_pass_through() {
   return $failures
 }
 
+
 function grpc_test_transcode() {
   echo "Starting grpc transcode stress test at $(date)."
 
   # Generating token for each run, that they expire in 1 hour.
   local AUTH_TOKEN=$("${ROOT}/tests/e2e/scripts/gen-auth-token.sh" -a "${SERVICE_NAME}")
-  python ${ROOT}/tests/e2e/client/apiproxy_client.py \
+#  echo "python ${ROOT}/tests/e2e/client/apiproxy_client.py --test=stress \\
+#--host=http://${HOST}:80  --api_key=${API_KEY} --auth_token=${AUTH_TOKEN} \\
+#--test_data=${ROOT}/tests/e2e/testdata/grpc-echo/grpc_test_data.json --root=${ROOT}"
+
+  (set -x; python ${ROOT}/tests/e2e/client/apiproxy_client.py \
       --test=stress \
       --host="http://${HOST}:80" \
       --api_key="${API_KEY}" \
       --auth_token="${AUTH_TOKEN}" \
       --test_data="${ROOT}/tests/e2e/testdata/grpc-echo/grpc_test_data.json" \
-      --root="${ROOT}"
+      --root="${ROOT}")
 }
 
 # Issue a request to allow Endpoints-Runtime to fetch metadata.

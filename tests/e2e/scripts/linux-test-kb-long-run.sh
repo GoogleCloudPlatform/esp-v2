@@ -75,40 +75,40 @@ while true; do
   echo "Auth token is: ${JWT_TOKEN}"
 
   echo "Starting bookstore test at $(date)."
-  python ${ROOT}/tests/e2e/client/apiproxy_bookstore_test.py \
+  (set -x; python ${ROOT}/tests/e2e/client/apiproxy_bookstore_test.py \
       --host=${HOST} \
       --api_key=${API_KEY} \
       --auth_token=${JWT_TOKEN} \
-      --allow_unverified_cert=true \
+      --allow_unverified_cert=true) \
     || ((BOOKSTORE_FAILURES++))
 
   echo "Starting bookstore API Key restriction test at $(date)."
-  python ${ROOT}/tests/e2e/client/apiproxy_bookstore_key_restriction_test.py \
+  (set -x; python ${ROOT}/tests/e2e/client/apiproxy_bookstore_key_restriction_test.py \
       --host=${HOST} \
       --allow_unverified_cert=true \
       --key_restriction_tests=${ROOT}/tests/e2e/testdata/bookstore/key_restriction_test.json.template \
-      --key_restriction_keys_file=${API_RESTRICTION_KEYS_FILE} \
+      --key_restriction_keys_file=${API_RESTRICTION_KEYS_FILE}) \
     || ((BOOKSTORE_FAILURES++))
 
   POST_FILE="${ROOT}/tests/e2e/testdata/bookstore/35k.json"
   echo "Starting stress test at $(date)."
-  python ${ROOT}/tests/e2e/client/apiproxy_client.py \
+  (set -x; python ${ROOT}/tests/e2e/client/apiproxy_client.py \
     --test=stress \
     --host=${HOST} \
     --api_key=${API_KEY} \
     --auth_token=${JWT_TOKEN} \
     --post_file=${POST_FILE} \
-    --test_data=${ROOT}/tests/e2e/testdata/bookstore/test_data.json.temp \
+    --test_data=${ROOT}/tests/e2e/testdata/bookstore/test_data.json.temp )\
     || ((STRESS_FAILURES++))
 
   echo "Starting negative stress test."
-  python ${ROOT}/tests/e2e/client/apiproxy_client.py \
+  (set -x; python ${ROOT}/tests/e2e/client/apiproxy_client.py \
     --test=negative \
     --test_data=${ROOT}/tests/e2e/testdata/bookstore/negative_test_data.json.temp \
     --host=${HOST} \
     --api_key=${API_KEY} \
     --auth_token=${JWT_TOKEN} \
-    --post_file=${POST_FILE} \
+    --post_file=${POST_FILE})\
 
   #######################
   # End of test suite
