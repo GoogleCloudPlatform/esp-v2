@@ -27,8 +27,10 @@ import (
 	cloudtracepb "google.golang.org/genproto/googleapis/devtools/cloudtrace/v2"
 )
 
-// FakeTraceServer implements all of the cloud trace v3 RPCs (see cloudtracepb.TraceServiceServer)
+// FakeTraceServer implements the cloud trace v3 RPCs (see cloudtracegrpc.TraceServiceServer)
 type FakeTraceServer struct {
+	cloudtracegrpc.TraceServiceServer
+
 	RcvSpan chan *cloudtracepb.Span
 	server  *grpc.Server
 }
@@ -49,7 +51,7 @@ func (s *FakeTraceServer) StopAndWait() {
 	s.server.Stop()
 }
 
-func NewFakeStackdriver(port uint16) *FakeTraceServer {
+func NewFakeStackdriver() *FakeTraceServer {
 
 	grpcServer := grpc.NewServer()
 	fsds := &FakeTraceServer{
@@ -58,17 +60,19 @@ func NewFakeStackdriver(port uint16) *FakeTraceServer {
 	}
 	cloudtracegrpc.RegisterTraceServiceServer(grpcServer, fsds)
 
+	return fsds
+}
+
+func (s *FakeTraceServer) StartStackdriverServer(port uint16) {
 	go func() {
 		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 		glog.Infof("Stackdriver trace server listening on port %v\n", port)
 		if err != nil {
 			glog.Fatalf("failed to listen: %v", err)
 		}
-		err = grpcServer.Serve(lis)
+		err = s.server.Serve(lis)
 		if err != nil {
 			glog.Fatalf("fake stackdriver server terminated abnormally: %v", err)
 		}
 	}()
-
-	return fsds
 }

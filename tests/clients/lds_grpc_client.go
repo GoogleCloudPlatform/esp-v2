@@ -72,7 +72,6 @@ func main() {
 		}
 		glog.Infof(jsonStr)
 	}
-	glog.Flush()
 	// All fine.
 	return
 }

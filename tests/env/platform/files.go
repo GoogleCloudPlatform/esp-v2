@@ -39,6 +39,7 @@ const (
 	// Other files
 	HttpsCert
 	HttpsKey
+	LogMetrics
 )
 
 var fileMap = map[RuntimeFile]string{
@@ -56,6 +57,7 @@ var fileMap = map[RuntimeFile]string{
 	FakeBookstoreConfig:     "../endpoints/bookstore_grpc/proto/api_descriptor.pb",
 	HttpsCert:               "../env/testdata/localhost.crt",
 	HttpsKey:                "../env/testdata/localhost.key",
+	LogMetrics:              "../env/testdata/logs_metrics.pb.txt",
 }
 
 // Get the runtime file path for the specified file.

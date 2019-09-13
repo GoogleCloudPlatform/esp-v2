@@ -15,7 +15,6 @@
 package configmanager
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"time"
@@ -205,8 +204,7 @@ func (m *ConfigManager) ID(node *corepb.Node) string {
 
 // Infof implements the Infof method for Log interface.
 func (m *ConfigManager) Infof(format string, args ...interface{}) {
-	outputString, _ := json.MarshalIndent(args, "", "   ")
-	glog.Infof(format, string(outputString))
+	glog.Infof(format, args...)
 }
 
 // Errorf implements the Errorf method for Log interface.
