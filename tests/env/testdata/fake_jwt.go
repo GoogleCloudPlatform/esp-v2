@@ -47,11 +47,6 @@ var (
 			Keys:   FakeEndpointsJwks,
 		},
 		{
-			Id:     EndpointsJwtProvider,
-			Issuer: JwtEndpointsIssuer,
-			Keys:   FakeEndpointsJwks,
-		},
-		{
 			Id:     TestAuthProvider,
 			Issuer: Es256Issuer,
 			Keys:   PubKeys,

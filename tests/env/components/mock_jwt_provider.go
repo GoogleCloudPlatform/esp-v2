@@ -57,12 +57,17 @@ func NewFakeJwtService() *FakeJwtService {
 }
 
 // Setup non-OpenId providers.
-func (fjs *FakeJwtService) SetupJwt(ports *Ports) error {
+func (fjs *FakeJwtService) SetupJwt(requestedProviders map[string]bool, ports *Ports) error {
 
 	// Setup non-OpenID providers
 	for i, config := range testdata.ProviderConfigs {
 		var provider *MockJwtProvider
 		var err error
+
+		// Check if this was requested
+		if _, ok := requestedProviders[config.Id]; !ok {
+			continue
+		}
 
 		// Create fake provider
 		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackHost(), ports.JwtRangeBase+uint16(i))

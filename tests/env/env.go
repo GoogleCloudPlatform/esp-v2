@@ -51,7 +51,6 @@ type TestEnv struct {
 	mockMetadata                bool
 	enableScNetworkFailOpen     bool
 	backendService              string
-	mockJwtProviders            []string
 	mockMetadataOverride        map[string]string
 	bookstoreServer             *bookserver.BookstoreServer
 	grpcInteropServer           *components.GrpcInteropGrpcServer
@@ -83,7 +82,6 @@ func NewTestEnv(testId uint16, backendService string) *TestEnv {
 		backendService:              backendService,
 		ports:                       components.NewPorts(testId),
 		fakeServiceConfig:           fakeServiceConfig,
-		mockJwtProviders:            []string{},
 		ServiceControlServer:        components.NewMockServiceCtrl(fakeServiceConfig.GetName()),
 		healthRegistry:              components.NewHealthRegistry(),
 		FakeJwtService:              components.NewFakeJwtService(),
@@ -198,10 +196,7 @@ func (e *TestEnv) SetupFakeTraceServer() {
 func (e *TestEnv) Setup(confArgs []string) error {
 	var envoyArgs []string
 	var bootstrapperArgs []string
-
-	if err := e.FakeJwtService.SetupJwt(e.ports); err != nil {
-		return err
-	}
+	mockJwtProviders := make(map[string]bool)
 
 	if e.mockServiceManagementServer != nil {
 		if err := addDynamicRoutingBackendPort(e.fakeServiceConfig, e.ports.DynamicRoutingBackendPort); err != nil {
@@ -211,12 +206,17 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		for _, rule := range e.fakeServiceConfig.GetAuthentication().GetRules() {
 			for _, req := range rule.GetRequirements() {
 				if providerId := req.GetProviderId(); providerId != "" {
-					e.mockJwtProviders = append(e.mockJwtProviders, providerId)
+					mockJwtProviders[providerId] = true
 				}
 			}
 		}
 
-		for _, providerId := range e.mockJwtProviders {
+		glog.Infof("Requested JWT providers for this test: %v", mockJwtProviders)
+		if err := e.FakeJwtService.SetupJwt(mockJwtProviders, e.ports); err != nil {
+			return err
+		}
+
+		for providerId, _ := range mockJwtProviders {
 			provider, ok := e.FakeJwtService.ProviderMap[providerId]
 			if !ok {
 				return fmt.Errorf("not supported jwt provider id: %v", providerId)

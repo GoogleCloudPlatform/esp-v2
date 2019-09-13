@@ -64,5 +64,5 @@ echo '======================================================'
 echo '===================== Integration test  =============='
 echo '======================================================'
 make depend.install.endpoints
-make integration-debug
+make integration-test
 make clean
