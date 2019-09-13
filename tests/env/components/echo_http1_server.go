@@ -18,12 +18,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-)
 
-const (
-	echoPath      = "../../bin/echo/server"
-	httpsCertPath = "../env/testdata/localhost.crt"
-	httpsKeyPath  = "../env/testdata/localhost.key"
+	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 )
 
 // Echo stores data for Echo HTTP/1 backend process.
@@ -35,10 +31,10 @@ func NewEchoHTTPServer(port uint16, enableHttps bool, enableRootPathHandler bool
 	portFlag := fmt.Sprintf("--port=%v", port)
 	enableHttpsFlag := fmt.Sprintf("--enable_https=%v", enableHttps)
 	enableRootPathHandlerFlag := fmt.Sprintf("--enable_root_path_handler=%v", enableRootPathHandler)
-	httpsCertPathFlag := fmt.Sprintf("--https_cert_path=%v", httpsCertPath)
-	httpsKeyPathFlag := fmt.Sprintf("--https_key_path=%v", httpsKeyPath)
+	httpsCertPathFlag := fmt.Sprintf("--https_cert_path=%v", platform.GetFilePath(platform.HttpsCert))
+	httpsKeyPathFlag := fmt.Sprintf("--https_key_path=%v", platform.GetFilePath(platform.HttpsKey))
 
-	cmd := exec.Command(echoPath, portFlag, enableHttpsFlag, enableRootPathHandlerFlag, httpsCertPathFlag, httpsKeyPathFlag)
+	cmd := exec.Command(platform.GetFilePath(platform.Echo), portFlag, enableHttpsFlag, enableRootPathHandlerFlag, httpsCertPathFlag, httpsKeyPathFlag)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return &EchoHTTPServer{

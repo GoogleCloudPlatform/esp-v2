@@ -21,6 +21,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/grpc_echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
+	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
@@ -72,7 +73,7 @@ results {
 			ServiceConfigID: "test-config-id",
 			ConsumerID:      "api_key:this-is-an-api-key",
 			OperationName:   "test.grpc.Test.EchoStream",
-			CallerIp:        "127.0.0.1",
+			CallerIp:        platform.GetLoopbackAddress(),
 		},
 		&utils.ExpectedReport{
 			Version:           utils.APIProxyVersion,

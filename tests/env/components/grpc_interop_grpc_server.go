@@ -18,10 +18,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-)
 
-const (
-	grpcInteropPath = "../../bin/interop_server"
+	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 )
 
 type GrpcInteropGrpcServer struct {
@@ -29,7 +27,7 @@ type GrpcInteropGrpcServer struct {
 }
 
 func NewGrpcInteropGrpcServer(port uint16) (*GrpcInteropGrpcServer, error) {
-	cmd := exec.Command(grpcInteropPath, fmt.Sprintf("--port=%v", port))
+	cmd := exec.Command(platform.GetFilePath(platform.GrpcInteropServer), fmt.Sprintf("--port=%v", port))
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return &GrpcInteropGrpcServer{

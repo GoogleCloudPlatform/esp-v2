@@ -18,10 +18,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-)
 
-const (
-	grpcEchoPath = "../../bin/grpc_echo_server"
+	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 )
 
 type GrpcEchoGrpcServer struct {
@@ -29,7 +27,7 @@ type GrpcEchoGrpcServer struct {
 }
 
 func NewGrpcEchoGrpcServer(port uint16) (*GrpcEchoGrpcServer, error) {
-	cmd := exec.Command(grpcEchoPath, fmt.Sprintf("127.0.0.1:%v", port))
+	cmd := exec.Command(platform.GetFilePath(platform.GrpcEcho), fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), port))
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return &GrpcEchoGrpcServer{

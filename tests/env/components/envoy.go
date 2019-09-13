@@ -20,12 +20,8 @@ import (
 	"os/exec"
 	"strconv"
 
+	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 	"github.com/golang/glog"
-)
-
-const (
-	envoyPath        = "../../bazel-bin/src/envoy/envoy"
-	bootstrapperPath = "../../bin/bootstrap"
 )
 
 // Envoy stores data for Envoy process
@@ -41,15 +37,16 @@ func createEnvoyConf(configPath string, bootstrapArgs []string, ports *Ports) er
 
 	bootstrapArgs = append(bootstrapArgs, "--enable_tracing=true")
 	bootstrapArgs = append(bootstrapArgs, "--tracing_sample_rate=1.0")
-	bootstrapArgs = append(bootstrapArgs, fmt.Sprintf("--discovery_address=http://127.0.0.1:%v", ports.DiscoveryPort))
+	bootstrapArgs = append(bootstrapArgs, fmt.Sprintf("--discovery_address=http://%v:%v", platform.GetLoopbackAddress(), ports.DiscoveryPort))
 	bootstrapArgs = append(bootstrapArgs, fmt.Sprintf("--admin_port=%v", ports.AdminPort))
 	// This address must be in gRPC format: https://github.com/grpc/grpc/blob/master/doc/naming.md
-	bootstrapArgs = append(bootstrapArgs, fmt.Sprintf("--tracing_stackdriver_address=ipv4:127.0.0.1:%v", ports.FakeStackdriverPort))
+	bootstrapArgs = append(bootstrapArgs, fmt.Sprintf("--tracing_stackdriver_address=%v:%v:%v", platform.GetIpProtocol(), platform.GetLoopbackAddress(), ports.FakeStackdriverPort))
+	bootstrapArgs = append(bootstrapArgs, "--admin_address", platform.GetAnyAddress())
 	bootstrapArgs = append(bootstrapArgs, configPath)
 
 	// Call bootstrapper to create the bootstrap config
-	glog.Infof("Calling bootstrapper at %v with args: %v", bootstrapperPath, bootstrapArgs)
-	cmd := exec.Command(bootstrapperPath, bootstrapArgs...)
+	glog.Infof("Calling bootstrapper at %v with args: %v", platform.GetFilePath(platform.Bootstrapper), bootstrapArgs)
+	cmd := exec.Command(platform.GetFilePath(platform.Bootstrapper), bootstrapArgs...)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return cmd.Run()
@@ -72,8 +69,8 @@ func NewEnvoy(args []string, bootstrapArgs []string, confPath string, ports *Por
 		"--base-id", strconv.Itoa(int(testId)),
 	)
 
-	glog.Infof("Calling envoy at %v with args: %v", envoyPath, args)
-	cmd := exec.Command(envoyPath, args...)
+	glog.Infof("Calling envoy at %v with args: %v", platform.GetFilePath(platform.Envoy), args)
+	cmd := exec.Command(platform.GetFilePath(platform.Envoy), args...)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return &Envoy{

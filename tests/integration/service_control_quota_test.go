@@ -23,6 +23,7 @@ import (
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
+	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 
@@ -81,7 +82,7 @@ func TestServiceControlQuota(t *testing.T) {
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
 					OperationName:   "endpoints.examples.bookstore.Bookstore.ListShelves",
-					CallerIp:        "127.0.0.1",
+					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedQuota{
 					ServiceName: "bookstore.endpoints.cloudesf-testing.cloud.goog",
@@ -283,7 +284,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
 					OperationName:   "endpoints.examples.bookstore.Bookstore.ListShelves",
-					CallerIp:        "127.0.0.1",
+					CallerIp:        platform.GetLoopbackAddress(),
 				},
 
 				&utils.ExpectedQuota{

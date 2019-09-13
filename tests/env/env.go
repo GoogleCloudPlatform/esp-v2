@@ -195,6 +195,8 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	var envoyArgs []string
 	var bootstrapperArgs []string
 
+	testdata.SetupSourceInfo()
+
 	if e.mockServiceManagementServer != nil {
 		if err := addDynamicRoutingBackendPort(e.fakeServiceConfig, e.ports.DynamicRoutingBackendPort); err != nil {
 			return err

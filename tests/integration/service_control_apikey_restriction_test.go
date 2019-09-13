@@ -21,6 +21,7 @@ import (
 
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
+	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
@@ -68,7 +69,7 @@ func TestServiceControlAPIKeyRestriction(t *testing.T) {
 				AndroidPackageName:     "com.google.cloud",
 				IosBundleID:            "5b40ad6af9a806305a0a56d7cb91b82a27c26909",
 				Referer:                "referer",
-				CallerIp:               "127.0.0.1",
+				CallerIp:               platform.GetLoopbackAddress(),
 			},
 		},
 		{
@@ -116,7 +117,7 @@ func TestServiceControlAPIKeyRestriction(t *testing.T) {
 				ConsumerID:      "api_key:api-key",
 				OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
 				ApiKey:          "api-key",
-				CallerIp:        "127.0.0.1",
+				CallerIp:        platform.GetLoopbackAddress(),
 			},
 		},
 	}

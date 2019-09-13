@@ -19,11 +19,8 @@ import (
 	"os"
 	"os/exec"
 
+	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 	"github.com/golang/glog"
-)
-
-const (
-	xDSPath = "../../bin/configmanager"
 )
 
 type ConfigManagerServer struct {
@@ -32,11 +29,17 @@ type ConfigManagerServer struct {
 }
 
 func NewConfigManagerServer(debugMode bool, ports *Ports, args []string) (*ConfigManagerServer, error) {
+
+	args = append(args, "--cluster_address", platform.GetLoopbackHost())
+	args = append(args, "--listener_address", platform.GetAnyAddress())
+	args = append(args, "--backend_dns_lookup_family", platform.GetDnsFamily())
+
 	if debugMode {
 		args = append(args, "--logtostderr", "--v=2")
 	}
+
 	glog.Infof("config manager args: %v", args)
-	cmd := exec.Command(xDSPath, args...)
+	cmd := exec.Command(platform.GetFilePath(platform.ConfigManager), args...)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return &ConfigManagerServer{

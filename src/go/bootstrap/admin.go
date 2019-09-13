@@ -28,7 +28,7 @@ func CreateAdmin(opts options.CommonOptions) *bootstrappb.Admin {
 		Address: &corepb.Address{
 			Address: &corepb.Address_SocketAddress{
 				SocketAddress: &corepb.SocketAddress{
-					Address: "0.0.0.0",
+					Address: opts.AdminAddress,
 					PortSpecifier: &corepb.SocketAddress_PortValue{
 						PortValue: uint32(opts.AdminPort),
 					},

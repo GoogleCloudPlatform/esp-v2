@@ -16,19 +16,15 @@ package integration
 
 import (
 	"fmt"
-	"go/build"
 	"os"
 	"os/exec"
 	"syscall"
 	"testing"
 
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
+	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-)
-
-var (
-	clientBinPath = fmt.Sprintf("%s/src/cloudesf.googlesource.com/gcpproxy/bin", build.Default.GOPATH)
 )
 
 func runAndWait(cmd *exec.Cmd, t *testing.T) {
@@ -55,7 +51,7 @@ func TestGRPCInterops(t *testing.T) {
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPCInterops, "grpc-interop")
-	clientPath := fmt.Sprintf("%s/interop_client", clientBinPath)
+	clientPath := platform.GetFilePath(platform.GrpcInteropClient)
 	_, err := os.Stat(clientPath)
 	if os.IsNotExist(err) {
 		t.Fatalf("TestGRPCInteropMiniStress: grpc-interop test binaris are not built. Please run make build-grpc-interop.")
@@ -99,7 +95,7 @@ func TestGRPCInteropMiniStress(t *testing.T) {
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPCInteropMiniStress, "grpc-interop")
-	clientPath := fmt.Sprintf("%s/stress_test", clientBinPath)
+	clientPath := platform.GetFilePath(platform.GrpcInteropStressClient)
 	_, err := os.Stat(clientPath)
 	if os.IsNotExist(err) {
 		t.Fatalf("TestGRPCInteropMiniStress: grpc-interop test binaris are not built. Please run make build-grpc-interop.")

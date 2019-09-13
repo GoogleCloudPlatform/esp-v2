@@ -21,6 +21,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
+	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 	"google.golang.org/genproto/googleapis/api/annotations"
 
@@ -515,7 +516,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
 					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CorsShelves",
-					CallerIp:        "127.0.0.1",
+					CallerIp:        platform.GetLoopbackAddress(),
 					Referer:         referer,
 				},
 				&utils.ExpectedReport{
@@ -691,7 +692,7 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
 					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CorsShelves",
-					CallerIp:        "127.0.0.1",
+					CallerIp:        platform.GetLoopbackAddress(),
 					Referer:         referer,
 				},
 				&utils.ExpectedReport{

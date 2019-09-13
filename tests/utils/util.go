@@ -14,7 +14,9 @@
 
 package utils
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 // JsonEqual compares two JSON strings after normalizing them.
 func JsonEqual(x, y string) bool {

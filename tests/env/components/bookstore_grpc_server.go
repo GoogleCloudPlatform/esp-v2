@@ -19,10 +19,8 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
-)
 
-const (
-	bookstorePath = "../endpoints/bookstore_grpc/grpc_server.js"
+	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 )
 
 type BookstoreGrpcServer struct {
@@ -31,7 +29,7 @@ type BookstoreGrpcServer struct {
 }
 
 func NewBookstoreGrpcServer(port uint16) (*BookstoreGrpcServer, error) {
-	cmd := exec.Command("node", bookstorePath, strconv.Itoa(int(port)))
+	cmd := exec.Command("node", platform.GetFilePath(platform.GrpcBookstore), strconv.Itoa(int(port)))
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return &BookstoreGrpcServer{

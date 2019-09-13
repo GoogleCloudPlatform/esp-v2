@@ -17,6 +17,7 @@ package testdata
 import (
 	"io/ioutil"
 
+	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
@@ -58,10 +59,10 @@ func generateSourceInfo(addr string) *scpb.SourceInfo {
 	}
 }
 
-func init() {
-	FakeGRPCEchoConfig.SourceInfo = generateSourceInfo("../endpoints/grpc_echo/proto/api_descriptor.pb")
-	FakeGRPCInteropConfig.SourceInfo = generateSourceInfo("../endpoints/grpc_interop/proto/api_descriptor.pb")
-	FakeBookstoreConfig.SourceInfo = generateSourceInfo("../endpoints/bookstore_grpc/proto/api_descriptor.pb")
+func SetupSourceInfo() {
+	FakeGRPCEchoConfig.SourceInfo = generateSourceInfo(platform.GetFilePath(platform.FakeGRPCEchoConfig))
+	FakeGRPCInteropConfig.SourceInfo = generateSourceInfo(platform.GetFilePath(platform.FakeGRPCInteropConfig))
+	FakeBookstoreConfig.SourceInfo = generateSourceInfo(platform.GetFilePath(platform.FakeBookstoreConfig))
 }
 
 func SetFakeControlEnvironment(cfg *scpb.Service, url string) {

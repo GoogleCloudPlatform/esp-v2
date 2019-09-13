@@ -25,7 +25,7 @@ var (
 	// Any flags in this file are used by both the ADS Bootstrapper (startup) and Config Generation via the static bootstrapper or config manager.
 	// These flags are kept in sync with options.CommonOptions.
 	// When adding or changing default values, update options.DefaultCommonOptions.
-
+	AdminAddress               = flag.String("admin_address", "0.0.0.0", "Address that envoy should serve the admin page on. Supports both ipv4 and ipv6 addresses.")
 	AdminPort                  = flag.Int("admin_port", 8001, "Port that envoy should serve the admin page on")
 	EnableTracing              = flag.Bool("enable_tracing", false, `enable stackdriver tracing`)
 	HttpRequestTimeout         = flag.Duration("http_request_timeout", 5*time.Second, `Set the timeout in second for all requests. Must be > 0 and the default is 5 seconds if not set.`)
@@ -53,6 +53,8 @@ var (
 
 func DefaultCommonOptionsFromFlags() options.CommonOptions {
 	return options.CommonOptions{
+		AdminAddress: *AdminAddress,
+
 		AdminPort:                  *AdminPort,
 		EnableTracing:              *EnableTracing,
 		HttpRequestTimeout:         *HttpRequestTimeout,

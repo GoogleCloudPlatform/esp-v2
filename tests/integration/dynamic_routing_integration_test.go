@@ -22,6 +22,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
+	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
@@ -299,7 +300,7 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
 					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-					CallerIp:        "127.0.0.1",
+					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
 					Version:           utils.APIProxyVersion,
@@ -336,7 +337,7 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
 					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchPetWithServiceControlVerification",
-					CallerIp:        "127.0.0.1",
+					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
 					Version:           utils.APIProxyVersion,
@@ -373,7 +374,7 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
 					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetByIdWithServiceControlVerification",
-					CallerIp:        "127.0.0.1",
+					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
 					Version:           utils.APIProxyVersion,
