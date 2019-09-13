@@ -83,6 +83,9 @@ flags.DEFINE_string('test_data', 'test_data.json.temp',
 flags.DEFINE_string('host', 'localhost:8080',
         'Server location')
 
+flags.DEFINE_string('root', '',
+                    'Root Path')
+
 flags.DEFINE_string('api_key', '',
         'API key')
 
@@ -118,6 +121,7 @@ if __name__ == "__main__":
     with open(FLAGS.test_data) as f:
         test_data = json.loads(Template(f.read()).substitute(
                 HOST=FLAGS.host,
+                ROOT=FLAGS.root,
                 API_KEY=FLAGS.api_key,
                 JWT_TOKEN=FLAGS.auth_token,
                 POST_FILE=FLAGS.post_file))

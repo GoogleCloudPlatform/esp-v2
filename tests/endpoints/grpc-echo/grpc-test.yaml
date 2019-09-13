@@ -17,14 +17,3 @@ usage:
   rules:
     - selector: test.grpc.Test.Echo
       allow_unregistered_calls: true
-http:
-  rules:
-    - selector: test.grpc.Test.Echo
-      post: "/echo"
-      body: "*"
-    - selector: test.grpc.Test.EchoReport
-      post: "/echoreport"
-      body: "*"
-    - selector: test.grpc.Test.EchoStream
-      post: "/echostream"
-      body: "*"

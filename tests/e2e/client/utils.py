@@ -19,8 +19,9 @@ import json
 import ssl
 import subprocess
 
+
 def IssueCommand(cmd, force_info_log=False, suppress_warning=False,
-        env=None):
+    env=None):
     """Tries running the provided command once.
     Args:
       cmd: A list of strings such as is given to the subprocess.Popen()
@@ -44,6 +45,7 @@ def IssueCommand(cmd, force_info_log=False, suppress_warning=False,
     print '=== Finished with code %d' % rc
     return stdout, rc
 
+
 COLOR_RED = '\033[91m'
 COLOR_GREEN = '\033[92m'
 COLOR_END = '\033[0m'
@@ -51,33 +53,37 @@ COLOR_END = '\033[0m'
 HTTPS_PREFIX = 'https://'
 HTTP_PREFIX = 'http://'
 
+
 def green(text):
     return COLOR_GREEN + text + COLOR_END
+
 
 def red(text):
     return COLOR_RED + text + COLOR_END
 
+
 def http_connection(host, allow_unverified_cert):
-  if host.startswith(HTTPS_PREFIX):
-      host = host[len(HTTPS_PREFIX):]
-      print 'Use https to connect: %s' % host
-      if allow_unverified_cert:
-          try:
-            return httplib.HTTPSConnection(
-                host, timeout=5, context=ssl._create_unverified_context())
-          except AttributeError:
-            # Legacy versions of python do not check certificate.
-            return httplib.HTTPSConnection(
-                host, timeout=5)
-      else:
-          return httplib.HTTPSConnection(host)
-  else:
-      if host.startswith(HTTP_PREFIX):
-          host = host[len(HTTP_PREFIX):]
-      else:
-          host = host
-      print 'Use http to connect: %s' % host
-      return httplib.HTTPConnection(host)
+    if host.startswith(HTTPS_PREFIX):
+        host = host[len(HTTPS_PREFIX):]
+        print 'Use https to connect: %s' % host
+        if allow_unverified_cert:
+            try:
+                return httplib.HTTPSConnection(
+                    host, timeout=5, context=ssl._create_unverified_context())
+            except AttributeError:
+                # Legacy versions of python do not check certificate.
+                return httplib.HTTPSConnection(
+                    host, timeout=5)
+        else:
+            return httplib.HTTPSConnection(host)
+    else:
+        if host.startswith(HTTP_PREFIX):
+            host = host[len(HTTP_PREFIX):]
+        else:
+            host = host
+        print 'Use http to connect: %s' % host
+        return httplib.HTTPConnection(host)
+
 
 class Response(object):
     """A class to wrap around httplib.response class."""
@@ -105,6 +111,12 @@ class Response(object):
             return True
         except ValueError as e:
             return False
+
+    def __str__(self):
+        return "status_code: {}, text: {}, headers: {}".format(self.status_code,
+                                                               self.text,
+                                                               self.headers)
+
 
 class ApiProxyClientTest(object):
     def __init__(self, host, allow_unverified_cert, verbose=False):
@@ -142,7 +154,7 @@ class ApiProxyClientTest(object):
             self.fail(msg)
 
     def _call_http(self, path, api_key=None, auth=None, data=None, method=None,
-                   userHeaders = {}):
+        userHeaders={}):
         """Makes a http call and returns its response."""
         url = path
         if api_key:

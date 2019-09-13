@@ -59,6 +59,7 @@ build-grpc-echo:
 	@bazel build tests/endpoints/grpc-echo:grpc-test_descriptor --incompatible_no_support_tools_in_action_inputs=false
 	@cp -f bazel-bin/tests/endpoints/grpc-echo/grpc-test-client bin/grpc_echo_client
 	@cp -f bazel-bin/tests/endpoints/grpc-echo/grpc-test-server bin/grpc_echo_server
+	@cp -f bazel-genfiles/tests/endpoints/grpc-echo/grpc-test.descriptor tests/endpoints/grpc-echo/proto/api_descriptor.pb
 
 
 build-grpc-interop:
