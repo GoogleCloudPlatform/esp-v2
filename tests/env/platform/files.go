@@ -43,21 +43,21 @@ const (
 )
 
 var fileMap = map[RuntimeFile]string{
-	GrpcBookstore:           "../endpoints/bookstore_grpc/grpc_server.js",
-	Bootstrapper:            "../../bin/bootstrap",
-	ConfigManager:           "../../bin/configmanager",
-	Echo:                    "../../bin/echo/server",
-	Envoy:                   "../../bazel-bin/src/envoy/envoy",
-	GrpcEcho:                "../../bin/grpc_echo_server",
-	GrpcInteropClient:       "../../bin/interop_client",
-	GrpcInteropServer:       "../../bin/interop_server",
-	GrpcInteropStressClient: "../../bin/stress_test",
-	FakeGRPCEchoConfig:      "../endpoints/grpc_echo/proto/api_descriptor.pb",
-	FakeGRPCInteropConfig:   "../endpoints/grpc_interop/proto/api_descriptor.pb",
-	FakeBookstoreConfig:     "../endpoints/bookstore_grpc/proto/api_descriptor.pb",
-	HttpsCert:               "../env/testdata/localhost.crt",
-	HttpsKey:                "../env/testdata/localhost.key",
-	LogMetrics:              "../env/testdata/logs_metrics.pb.txt",
+	GrpcBookstore:           "../../endpoints/bookstore_grpc/grpc_server.js",
+	Bootstrapper:            "../../../bin/bootstrap",
+	ConfigManager:           "../../../bin/configmanager",
+	Echo:                    "../../../bin/echo/server",
+	Envoy:                   "../../../bazel-bin/src/envoy/envoy",
+	GrpcEcho:                "../../../bin/grpc_echo_server",
+	GrpcInteropClient:       "../../../bin/interop_client",
+	GrpcInteropServer:       "../../../bin/interop_server",
+	GrpcInteropStressClient: "../../../bin/stress_test",
+	FakeGRPCEchoConfig:      "../../endpoints/grpc_echo/proto/api_descriptor.pb",
+	FakeGRPCInteropConfig:   "../../endpoints/grpc_interop/proto/api_descriptor.pb",
+	FakeBookstoreConfig:     "../../endpoints/bookstore_grpc/proto/api_descriptor.pb",
+	HttpsCert:               "../../env/testdata/localhost.crt",
+	HttpsKey:                "../../env/testdata/localhost.key",
+	LogMetrics:              "../../env/testdata/logs_metrics.pb.txt",
 }
 
 // Get the runtime file path for the specified file.
