@@ -15,7 +15,10 @@
 package ads
 
 import (
-	"github.com/golang/protobuf/ptypes/duration"
+	"fmt"
+
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
+	"github.com/golang/protobuf/ptypes"
 
 	bt "cloudesf.googlesource.com/gcpproxy/src/go/bootstrap"
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
@@ -24,15 +27,24 @@ import (
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
 )
 
-// CreateBoostrapConfig outputs envoy bootstrap config for xDS.
-func CreateBootstrapConfig(adsConnectTimeout *duration.Duration, adsHostname string, adsPort uint32, adminPort uint32) (*bootstrappb.Bootstrap, error) {
+// CreateBootstrapConfig outputs envoy bootstrap config for xDS.
+func CreateBootstrapConfig(opts options.AdsBootstrapperOptions) (*bootstrappb.Bootstrap, error) {
+
+	// Parse the ADS address
+	_, adsHostname, adsPort, _, err := ut.ParseURI(opts.DiscoveryAddress)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse discovery address: %v", err)
+	}
+
+	// Parse ADS connect timeout
+	connectTimeoutProto := ptypes.DurationProto(opts.AdsConnectTimeout)
 
 	return &bootstrappb.Bootstrap{
 		// Node info
-		Node: bt.CreateNode(),
+		Node: bt.CreateNode(opts.CommonOptions),
 
 		// admin
-		Admin: bt.CreateAdmin(adminPort),
+		Admin: bt.CreateAdmin(opts.CommonOptions),
 
 		// Dynamic resource
 		DynamicResources: &bootstrappb.Bootstrap_DynamicResources{
@@ -64,7 +76,7 @@ func CreateBootstrapConfig(adsConnectTimeout *duration.Duration, adsHostname str
 				{
 					Name:           "ads_cluster",
 					LbPolicy:       v2pb.Cluster_ROUND_ROBIN,
-					ConnectTimeout: adsConnectTimeout,
+					ConnectTimeout: connectTimeoutProto,
 					ClusterDiscoveryType: &v2pb.Cluster_Type{
 						Type: v2pb.Cluster_STRICT_DNS,
 					},

@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"time"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 
@@ -78,7 +77,7 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, error) {
 }
 
 func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
-	scheme, hostname, port, _, err := ut.ParseURI(*metadata.MetadataURL)
+	scheme, hostname, port, _, err := ut.ParseURI(serviceInfo.Options.MetadataURL)
 	if err != nil {
 		return nil, err
 	}

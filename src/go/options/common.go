@@ -23,6 +23,7 @@ import (
 type CommonOptions struct {
 	// Flags for envoy
 	AdminPort int
+	Node      string
 
 	// Flags for tracing
 	EnableTracing              bool
@@ -39,6 +40,7 @@ type CommonOptions struct {
 	// Flags for metadata
 	NonGCP             bool
 	HttpRequestTimeout time.Duration
+	MetadataURL        string
 }
 
 // DefaultCommonOptions returns CommonOptions with default values.
@@ -49,6 +51,7 @@ func DefaultCommonOptions() CommonOptions {
 		AdminPort:                  8001,
 		EnableTracing:              false,
 		HttpRequestTimeout:         5 * time.Second,
+		Node:                       "api_proxy",
 		NonGCP:                     false,
 		TracingProjectId:           "",
 		TracingStackdriverAddress:  "",
@@ -59,5 +62,6 @@ func DefaultCommonOptions() CommonOptions {
 		TracingMaxNumAnnotations:   32,
 		TracingMaxNumMessageEvents: 128,
 		TracingMaxNumLinks:         128,
+		MetadataURL:                "http://169.254.169.254/computeMetadata",
 	}
 }

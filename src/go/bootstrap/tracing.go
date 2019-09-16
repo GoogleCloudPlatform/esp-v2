@@ -64,7 +64,7 @@ func getTracingProjectId(opts options.CommonOptions) (string, error) {
 		return "", fmt.Errorf("tracing_project_id was not specified and can not be fetched from GCP Metadata server on non-GCP runtime")
 	}
 
-	return metadata.NewMetadataFetcher(opts.HttpRequestTimeout).FetchProjectId()
+	return metadata.NewMetadataFetcher(opts).FetchProjectId()
 }
 
 // CreateTracing outputs envoy tracing config

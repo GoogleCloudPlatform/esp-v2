@@ -23,9 +23,6 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap/ads/flags"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/ptypes"
-
-	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 )
 
 func main() {
@@ -37,15 +34,7 @@ func main() {
 	}
 
 	opts := flags.DefaultBootstrapperOptionsFromFlags()
-
-	// Parse the ADS address
-	_, adsHostname, adsPort, _, err := ut.ParseURI(opts.DiscoveryAddress)
-	if err != nil {
-		glog.Exitf("failed to parse discovery address: %v", err)
-	}
-
-	connectTimeoutProto := ptypes.DurationProto(opts.AdsConnectTimeout)
-	bt, err := ads.CreateBootstrapConfig(connectTimeoutProto, adsHostname, adsPort, uint32(opts.AdminPort))
+	bt, err := ads.CreateBootstrapConfig(opts)
 	if err != nil {
 		glog.Exitf("failed to create bootstrap config, error: %v", err)
 	}

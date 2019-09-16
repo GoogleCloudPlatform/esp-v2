@@ -29,6 +29,7 @@ var (
 	AdminPort                  = flag.Int("admin_port", 8001, "Port that envoy should serve the admin page on")
 	EnableTracing              = flag.Bool("enable_tracing", false, `enable stackdriver tracing`)
 	HttpRequestTimeout         = flag.Duration("http_request_timeout", 5*time.Second, `Set the timeout in second for all requests. Must be > 0 and the default is 5 seconds if not set.`)
+	Node                       = flag.String("node", "api_proxy", "envoy node id")
 	NonGCP                     = flag.Bool("non_gcp", false, `By default, the proxy tries to talk to GCP metadata server to get VM location in the first few requests. Setting this flag to true to skip this step`)
 	TracingProjectId           = flag.String("tracing_project_id", "", "The Google project id required for Stack driver tracing. If not set, will automatically use fetch it from GCP Metadata server")
 	TracingStackdriverAddress  = flag.String("tracing_stackdriver_address", "", "By default, the Stackdriver exporter will connect to production Stackdriver. If this is non-empty, it will connect to this address. It must be in the gRPC format.")
@@ -39,6 +40,15 @@ var (
 	TracingMaxNumAnnotations   = flag.Int64("tracing_max_num_annotations", 32, "Sets the maximum number of annotations that each span can contain. Defaults to the maximum allowed by Stackdriver. In practice, the number of annotations published will be much less.")
 	TracingMaxNumMessageEvents = flag.Int64("tracing_max_num_message_events", 128, "Sets the maximum number of message events that each span can contain. Defaults to the maximum allowed by Stackdriver. In practice, the number of message events published will be much less.")
 	TracingMaxNumLinks         = flag.Int64("tracing_max_num_links", 128, "Sets the maximum number of links that each span can contain. Defaults to the maximum allowed by Stackdriver. In practice, the number of links published will be much less.")
+
+	//Suspected Envoy has listener initialization bug: if a http filter needs to use
+	//a cluster with DSN lookup for initialization, e.g. fetching a remote access
+	//token, the cluster is not ready so the whole listener is destroyed. ADS will
+	//repeatedly send the same listener again until the cluster is ready. Then the
+	//listener is marked as ready but the whole Envoy server is not marked as ready
+	//(worker did not start) somehow. To work around this problem, use IP for
+	//metadata server to fetch access token.
+	MetadataURL = flag.String("metadata_url", "http://169.254.169.254/computeMetadata", "url of metadata server")
 )
 
 func DefaultCommonOptionsFromFlags() options.CommonOptions {
@@ -46,6 +56,7 @@ func DefaultCommonOptionsFromFlags() options.CommonOptions {
 		AdminPort:                  *AdminPort,
 		EnableTracing:              *EnableTracing,
 		HttpRequestTimeout:         *HttpRequestTimeout,
+		Node:                       *Node,
 		NonGCP:                     *NonGCP,
 		TracingProjectId:           *TracingProjectId,
 		TracingStackdriverAddress:  *TracingStackdriverAddress,
@@ -56,5 +67,6 @@ func DefaultCommonOptionsFromFlags() options.CommonOptions {
 		TracingMaxNumAnnotations:   *TracingMaxNumAnnotations,
 		TracingMaxNumMessageEvents: *TracingMaxNumMessageEvents,
 		TracingMaxNumLinks:         *TracingMaxNumLinks,
+		MetadataURL:                *MetadataURL,
 	}
 }

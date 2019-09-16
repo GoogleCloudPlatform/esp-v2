@@ -45,7 +45,6 @@ type ConfigGeneratorOptions struct {
 	// Network related configurations.
 	ClusterAddress       string
 	ListenerAddress      string
-	Node                 string
 	ServiceManagementURL string
 	ClusterPort          int
 	ListenerPort         int
@@ -108,7 +107,6 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		LogJwtPayloads:                "",
 		LogRequestHeaders:             "",
 		LogResponseHeaders:            "",
-		Node:                          "api_proxy",
 		ServiceAccountKey:             "",
 		ServiceControlNetworkFailOpen: true,
 		ServiceManagementURL:          "https://servicemanagement.googleapis.com",

@@ -15,13 +15,17 @@
 package bootstrap
 
 import (
+	"fmt"
+
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
+
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 )
 
-// CreateBoostrapConfig outputs Node struct for bootstrap config
-func CreateNode() *corepb.Node {
+// CreateBootstrapConfig outputs Node struct for bootstrap config
+func CreateNode(opts options.CommonOptions) *corepb.Node {
 	return &corepb.Node{
-		Id:      "api_proxy",
-		Cluster: "api_proxy_cluster",
+		Id:      opts.Node,
+		Cluster: fmt.Sprintf("%s_cluster", opts.Node),
 	}
 }

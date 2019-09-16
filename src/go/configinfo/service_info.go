@@ -21,7 +21,6 @@ import (
 	"sort"
 	"strings"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
 	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes/duration"
@@ -178,7 +177,7 @@ func (s *ServiceInfo) processAccessToken() {
 	s.AccessToken = &commonpb.AccessToken{
 		TokenType: &commonpb.AccessToken_RemoteToken{
 			RemoteToken: &commonpb.HttpUri{
-				Uri:     fmt.Sprintf("%s%s", *metadata.MetadataURL, ut.ServiceAccountTokenSuffix),
+				Uri:     fmt.Sprintf("%s%s", s.Options.MetadataURL, ut.ServiceAccountTokenSuffix),
 				Cluster: ut.MetadataServerClusterName,
 				// TODO(taoxuy): make token_subscriber use this timeout
 				Timeout: &duration.Duration{Seconds: 5},

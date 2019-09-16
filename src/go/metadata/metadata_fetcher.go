@@ -16,7 +16,6 @@ package metadata
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -24,21 +23,11 @@ import (
 	"sync"
 	"time"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/golang/glog"
 
 	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
-)
-
-var (
-	//Suspected Envoy has listener initialization bug: if a http filter needs to use
-	//a cluster with DSN lookup for initialization, e.g. fetching a remote access
-	//token, the cluster is not ready so the whole listener is destroyed. ADS will
-	//repeatedly send the same listener again until the cluster is ready. Then the
-	//listener is marked as ready but the whole Envoy server is not marked as ready
-	//(worker did not start) somehow. To work around this problem, use IP for
-	//metadata server to fetch access token.
-	MetadataURL = flag.String("metadata_url", "http://169.254.169.254/computeMetadata", "url of metadata server")
 )
 
 const (
@@ -69,12 +58,12 @@ type MetadataFetcher struct {
 
 // Allows for unit tests to inject a mock constructor
 var (
-	NewMetadataFetcher = func(metadataFetcherTimeout time.Duration) *MetadataFetcher {
+	NewMetadataFetcher = func(opts options.CommonOptions) *MetadataFetcher {
 		return &MetadataFetcher{
 			client: http.Client{
-				Timeout: metadataFetcherTimeout,
+				Timeout: opts.HttpRequestTimeout,
 			},
-			baseUrl: *MetadataURL,
+			baseUrl: opts.MetadataURL,
 			timeNow: time.Now,
 		}
 	}

@@ -15,12 +15,14 @@
 package bootstrap
 
 import (
+	"cloudesf.googlesource.com/gcpproxy/src/go/options"
+
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
 )
 
 // CreateAdmin outputs Admin struct for bootstrap config
-func CreateAdmin(adminPort uint32) *bootstrappb.Admin {
+func CreateAdmin(opts options.CommonOptions) *bootstrappb.Admin {
 	return &bootstrappb.Admin{
 		AccessLogPath: "/dev/null",
 		Address: &corepb.Address{
@@ -28,7 +30,7 @@ func CreateAdmin(adminPort uint32) *bootstrappb.Admin {
 				SocketAddress: &corepb.SocketAddress{
 					Address: "0.0.0.0",
 					PortSpecifier: &corepb.SocketAddress_PortValue{
-						PortValue: adminPort,
+						PortValue: uint32(opts.AdminPort),
 					},
 				},
 			},
