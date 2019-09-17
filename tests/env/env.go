@@ -345,12 +345,17 @@ func (e *TestEnv) StopBackendServer() error {
 // TearDown shutdown the servers.
 func (e *TestEnv) TearDown() {
 	glog.Infof("start tearing down...")
-	if err := e.configMgr.StopAndWait(); err != nil {
-		glog.Errorf("error stopping config manager: %v", err)
+
+	if e.configMgr != nil {
+		if err := e.configMgr.StopAndWait(); err != nil {
+			glog.Errorf("error stopping config manager: %v", err)
+		}
 	}
 
-	if err := e.envoy.StopAndWait(); err != nil {
-		glog.Errorf("error stopping envoy: %v", err)
+	if e.envoy != nil {
+		if err := e.envoy.StopAndWait(); err != nil {
+			glog.Errorf("error stopping envoy: %v", err)
+		}
 	}
 
 	if e.echoBackend != nil {

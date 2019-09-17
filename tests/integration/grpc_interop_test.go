@@ -61,10 +61,11 @@ func TestGRPCInterops(t *testing.T) {
 		t.Fatalf("TestGRPCInteropMiniStress: grpc-interop test binaris are not built. Please run make build-grpc-interop.")
 	}
 
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
+
 	serverPortFlag := fmt.Sprintf("--server_port=%v", s.Ports().ListenerPort)
 	testcases := []string{
 		"cancel_after_begin",
@@ -104,10 +105,11 @@ func TestGRPCInteropMiniStress(t *testing.T) {
 		t.Fatalf("TestGRPCInteropMiniStress: grpc-interop test binaris are not built. Please run make build-grpc-interop.")
 	}
 
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
+
 	serverAddrFlag := fmt.Sprintf("--server_addresses=localhost:%v", s.Ports().ListenerPort)
 	testcasesFlag := "--test_cases=empty_unary:10,large_unary:10,empty_stream:10,client_streaming:10,ping_pong:20,server_streaming:10,status_code_and_message:10,custom_metadata:10"
 	cmd := exec.Command(clientPath, serverAddrFlag, testcasesFlag, "--test_duration_secs=10", "--num_channels_per_server=200", "--num_stubs_per_channel=1")

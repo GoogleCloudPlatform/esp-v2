@@ -66,40 +66,42 @@ func TestAuthJwksCache(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		args := []string{"--service_config_id=" + configId,
-			"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
+		func() {
+			args := []string{"--service_config_id=" + configId,
+				"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-		s := env.NewTestEnv(comp.TestAuthJwksCache, "echo")
-		if tc.jwksCacheDurationInS != 0 {
-			args = append(args, fmt.Sprintf("--jwks_cache_duration_in_s=%v", tc.jwksCacheDurationInS))
-		}
-		comp.ResetReqCnt(provider)
-		if err := s.Setup(args); err != nil {
-			t.Fatalf("fail to setup test env, %v", err)
-		}
-
-		var resp []byte
-		for i := 0; i < 5; i++ {
-			resp, _ = client.DoJWT(fmt.Sprintf("http://localhost:%v", s.Ports().ListenerPort), tc.method, tc.path, tc.apiKey, "", tc.token)
-			// Sleep as long as the customized cache duration to make caches expires
+			s := env.NewTestEnv(comp.TestAuthJwksCache, "echo")
 			if tc.jwksCacheDurationInS != 0 {
-				time.Sleep(time.Duration(tc.jwksCacheDurationInS) * time.Second)
+				args = append(args, fmt.Sprintf("--jwks_cache_duration_in_s=%v", tc.jwksCacheDurationInS))
 			}
-		}
+			comp.ResetReqCnt(provider)
 
-		if !strings.Contains(string(resp), tc.wantResp) {
-			t.Errorf("Test (%s): failed\nexpected: %s\ngot: %s", tc.desc, tc.wantResp, string(resp))
-		}
-
-		if tc.wantRequestsToProvider != nil {
-			provider, ok := comp.JwtProviders[tc.wantRequestsToProvider.key]
-			if !ok {
-				t.Errorf("Test (%s): failed, the provider is not inited.", tc.desc)
-			} else if realCnt := provider.GetReqCnt(); realCnt != tc.wantRequestsToProvider.cnt {
-				t.Errorf("Test (%s): failed, pubkey of %s shoud be fetched %v times instead of %v times.", tc.desc, tc.wantRequestsToProvider.key, tc.wantRequestsToProvider.cnt, realCnt)
+			defer s.TearDown()
+			if err := s.Setup(args); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
 			}
-		}
 
-		s.TearDown()
+			var resp []byte
+			for i := 0; i < 5; i++ {
+				resp, _ = client.DoJWT(fmt.Sprintf("http://localhost:%v", s.Ports().ListenerPort), tc.method, tc.path, tc.apiKey, "", tc.token)
+				// Sleep as long as the customized cache duration to make caches expires
+				if tc.jwksCacheDurationInS != 0 {
+					time.Sleep(time.Duration(tc.jwksCacheDurationInS) * time.Second)
+				}
+			}
+
+			if !strings.Contains(string(resp), tc.wantResp) {
+				t.Errorf("Test (%s): failed\nexpected: %s\ngot: %s", tc.desc, tc.wantResp, string(resp))
+			}
+
+			if tc.wantRequestsToProvider != nil {
+				provider, ok := comp.JwtProviders[tc.wantRequestsToProvider.key]
+				if !ok {
+					t.Errorf("Test (%s): failed, the provider is not inited.", tc.desc)
+				} else if realCnt := provider.GetReqCnt(); realCnt != tc.wantRequestsToProvider.cnt {
+					t.Errorf("Test (%s): failed, pubkey of %s shoud be fetched %v times instead of %v times.", tc.desc, tc.wantRequestsToProvider.key, tc.wantRequestsToProvider.cnt, realCnt)
+				}
+			}
+		}()
 	}
 }

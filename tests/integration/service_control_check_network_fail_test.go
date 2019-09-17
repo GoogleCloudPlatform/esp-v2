@@ -65,24 +65,27 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 	}
 
 	for _, tc := range testdata {
-		args := []string{"--service_config_id=" + configID,
-			"--backend_protocol=grpc", "--rollout_strategy=fixed"}
-		s := env.NewTestEnv(tc.allocatedPort, "bookstore")
-		s.ServiceControlServer.SetURL(tc.serviceControlURL)
-		if err := s.Setup(args); err != nil {
-			t.Fatalf("fail to setup test env, %v", err)
-		}
+		func() {
+			args := []string{"--service_config_id=" + configID,
+				"--backend_protocol=grpc", "--rollout_strategy=fixed"}
+			s := env.NewTestEnv(tc.allocatedPort, "bookstore")
+			s.ServiceControlServer.SetURL(tc.serviceControlURL)
 
-		s.ServiceControlServer.ResetRequestCount()
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-		resp, err := bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, "", nil)
+			defer s.TearDown()
+			if err := s.Setup(args); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
 
-		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
-			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
-		} else if !strings.Contains(resp, tc.wantResp) {
-			t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
-		}
-		s.TearDown()
+			s.ServiceControlServer.ResetRequestCount()
+			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			resp, err := bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, "", nil)
+
+			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
+				t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
+			} else if !strings.Contains(resp, tc.wantResp) {
+				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
+			}
+		}()
 	}
 }
 
@@ -104,10 +107,10 @@ func TestServiceControlCheckTimeout(t *testing.T) {
 
 	s := env.NewTestEnv(comp.TestServiceControlCheckTimeout, "bookstore")
 	s.ServiceControlServer.SetURL("http://wrong_service_control_server_name")
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	time.Sleep(time.Duration(5 * time.Second))
 	type test struct {
@@ -189,28 +192,29 @@ func TestServiceControlNetworkFailFlag(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		s := env.NewTestEnv(tc.port, "bookstore")
-		s.ServiceControlServer.OverrideCheckHandler(&localServiceHandler{
-			m: s.ServiceControlServer,
-		})
-		if tc.networkFailOpen {
-			s.EnableScNetworkFailOpen()
-		}
+		func() {
+			s := env.NewTestEnv(tc.port, "bookstore")
+			s.ServiceControlServer.OverrideCheckHandler(&localServiceHandler{
+				m: s.ServiceControlServer,
+			})
+			if tc.networkFailOpen {
+				s.EnableScNetworkFailOpen()
+			}
 
-		if err := s.Setup(args); err != nil {
-			t.Fatalf("fail to setup test env, %v", err)
-		}
+			defer s.TearDown()
+			if err := s.Setup(args); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
 
-		s.ServiceControlServer.ResetRequestCount()
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-		resp, err := bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, nil)
+			s.ServiceControlServer.ResetRequestCount()
+			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			resp, err := bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, nil)
 
-		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
-			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
-		} else if !strings.Contains(resp, tc.wantResp) {
-			t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
-		}
-
-		s.TearDown()
+			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
+				t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
+			} else if !strings.Contains(resp, tc.wantResp) {
+				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
+			}
+		}()
 	}
 }

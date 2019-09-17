@@ -39,10 +39,10 @@ func TestHttp1Basic(t *testing.T) {
 		"--skip_service_control_filter=true", "--backend_protocol=http1", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestHttp1Basic, "echo")
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := []struct {
 		desc     string
@@ -75,10 +75,10 @@ func TestHttp1JWT(t *testing.T) {
 		"--skip_service_control_filter=true", "--backend_protocol=http1", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestHttp1JWT, "echo")
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	time.Sleep(time.Duration(3 * time.Second))
 

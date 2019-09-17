@@ -29,10 +29,10 @@ func TestGRPCMinistress(t *testing.T) {
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPCMinistress, "grpc-echo")
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testPlans := `
 plans {

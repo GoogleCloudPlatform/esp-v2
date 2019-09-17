@@ -43,10 +43,10 @@ func TestServiceControlProtocolWithGRPCBackend(t *testing.T) {
 
 	s := env.NewTestEnv(comp.TestServiceControlProtocolWithGRPCBackend, "bookstore")
 
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	tests := []struct {
 		desc                 string
@@ -154,10 +154,10 @@ func TestServiceControlProtocolWithHTTPBackend(t *testing.T) {
 
 	s := env.NewTestEnv(comp.TestServiceControlProtocolWithHTTPBackend, "echo")
 
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	desc := "http for frontend protocol"
 	protocol := "http"

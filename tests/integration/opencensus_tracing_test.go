@@ -85,10 +85,10 @@ func TestServiceControlCheckTracesWithRetry(t *testing.T) {
 		m: s.ServiceControlServer,
 	}
 	s.ServiceControlServer.OverrideCheckHandler(&handler)
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	tests := []struct {
 		desc           string
@@ -182,10 +182,10 @@ func TestServiceControlSkipUsageTraces(t *testing.T) {
 			},
 		},
 	)
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := []struct {
 		desc          string

@@ -102,46 +102,48 @@ func TestReportGCPAttributes(t *testing.T) {
 		"--backend_protocol=http1", "--rollout_strategy=fixed"}
 
 	for _, tc := range testdata {
-		s := env.NewTestEnv(comp.TestReportGCPAttributes, "echo")
-		s.OverrideMockMetadata(tc.mockMetadataOverride)
-		if err := s.Setup(args); err != nil {
-			t.Fatalf("Test(%s): fail to setup test env, %v", tc.desc, err)
-		}
+		func() {
+			s := env.NewTestEnv(comp.TestReportGCPAttributes, "echo")
+			s.OverrideMockMetadata(tc.mockMetadataOverride)
 
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo/nokey")
-		_, err := client.DoPost(url, "hello")
-		if err != nil {
-			t.Fatal(err)
-		}
+			defer s.TearDown()
+			if err := s.Setup(args); err != nil {
+				t.Fatalf("Test(%s): fail to setup test env, %v", tc.desc, err)
+			}
 
-		scRequests, err := s.ServiceControlServer.GetRequests(1)
-		if err != nil {
-			t.Fatalf("Test(%s): GetRequests returns error: %v", tc.desc, err)
-		}
+			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo/nokey")
+			_, err := client.DoPost(url, "hello")
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		if scRequests[0].ReqType != comp.REPORT_REQUEST {
-			t.Fatalf("Test(%s): service control request: should be Report", tc.desc)
-		}
+			scRequests, err := s.ServiceControlServer.GetRequests(1)
+			if err != nil {
+				t.Fatalf("Test(%s): GetRequests returns error: %v", tc.desc, err)
+			}
 
-		gotRequest, err := utils.UnmarshalReportRequest(scRequests[0].ReqBody)
-		if err != nil {
-			t.Fatalf("Test(%s): %v", tc.desc, err)
-		}
+			if scRequests[0].ReqType != comp.REPORT_REQUEST {
+				t.Fatalf("Test(%s): service control request: should be Report", tc.desc)
+			}
 
-		if len(gotRequest.GetOperations()) != 1 {
-			t.Fatalf("Test(%s): service control request: number of operations should be 1", tc.desc)
-		}
+			gotRequest, err := utils.UnmarshalReportRequest(scRequests[0].ReqBody)
+			if err != nil {
+				t.Fatalf("Test(%s): %v", tc.desc, err)
+			}
 
-		labels := gotRequest.GetOperations()[0].GetLabels()
+			if len(gotRequest.GetOperations()) != 1 {
+				t.Fatalf("Test(%s): service control request: number of operations should be 1", tc.desc)
+			}
 
-		if gotPlatform := labels[platformKey]; gotPlatform != tc.wantPlatform {
-			t.Errorf("Test(%s): Platform does not match got: %v: want: %v", tc.desc, gotPlatform, tc.wantPlatform)
-		}
+			labels := gotRequest.GetOperations()[0].GetLabels()
 
-		if gotLocation := labels[locationKey]; gotLocation != tc.wantLocation {
-			t.Errorf("Test(%s): Location does not match got: %v: want: %v", tc.desc, gotLocation, tc.wantLocation)
-		}
+			if gotPlatform := labels[platformKey]; gotPlatform != tc.wantPlatform {
+				t.Errorf("Test(%s): Platform does not match got: %v: want: %v", tc.desc, gotPlatform, tc.wantPlatform)
+			}
 
-		s.TearDown()
+			if gotLocation := labels[locationKey]; gotLocation != tc.wantLocation {
+				t.Errorf("Test(%s): Location does not match got: %v: want: %v", tc.desc, gotLocation, tc.wantLocation)
+			}
+		}()
 	}
 }

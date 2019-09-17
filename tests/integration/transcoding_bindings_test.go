@@ -51,11 +51,12 @@ func TestTranscodingBindings(t *testing.T) {
 	s.OverrideAuthentication(&conf.Authentication{
 		Rules: []*conf.AuthenticationRule{},
 	})
+
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	time.Sleep(time.Duration(5 * time.Second))
-	defer s.TearDown()
 
 	tests := []testType{
 		// Binding shelf=100 in ListBooksRequest

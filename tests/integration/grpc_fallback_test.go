@@ -58,10 +58,11 @@ func TestGRPCFallback(t *testing.T) {
 			AllowUnregisteredCalls: true,
 		},
 	})
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
+
 	testPlans := `
 plans {
   echo {

@@ -48,10 +48,11 @@ func TestManagedServiceConfig(t *testing.T) {
 			},
 		},
 	})
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
+
 	tests := []struct {
 		desc               string
 		clientProtocol     string

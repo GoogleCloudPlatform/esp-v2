@@ -47,6 +47,8 @@ func TestTranscodingServiceUnavailableError(t *testing.T) {
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestTranscodingServiceUnavailableError, "bookstore")
+
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -72,7 +74,6 @@ func TestTranscodingServiceUnavailableError(t *testing.T) {
 			t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
 		}
 	}
-	s.TearDown()
 }
 
 func TestTranscodingErrors(t *testing.T) {
@@ -83,10 +84,10 @@ func TestTranscodingErrors(t *testing.T) {
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestTranscodingErrors, "bookstore")
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	tests := []TranscodingTestType{
 		{

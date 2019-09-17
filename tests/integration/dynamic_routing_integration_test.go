@@ -45,10 +45,11 @@ func NewDynamicRoutingTestEnv(port uint16) *env.TestEnv {
 func TestDynamicRouting(t *testing.T) {
 	t.Parallel()
 	s := NewDynamicRoutingTestEnv(comp.TestDynamicRouting)
+
+	defer s.TearDown()
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := []struct {
 		desc          string
@@ -222,10 +223,10 @@ func TestBackendAuth(t *testing.T) {
 			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/append":   "ya29.append",
 		})
 
+	defer s.TearDown()
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := []struct {
 		desc     string
@@ -273,10 +274,11 @@ func TestBackendAuth(t *testing.T) {
 func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 	t.Parallel()
 	s := NewDynamicRoutingTestEnv(comp.TestServiceControlRequestInDynamicRouting)
+
+	defer s.TearDown()
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := []struct {
 		desc           string

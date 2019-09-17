@@ -46,10 +46,10 @@ func TestServiceControlAPIKeyRestriction(t *testing.T) {
 	}
 
 	s := env.NewTestEnv(comp.TestServiceControlAPIKeyRestriction, "echo")
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("failed to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := []testDataStruct{
 		{
@@ -140,10 +140,11 @@ func TestServiceControlAPIKeyIpRestriction(t *testing.T) {
 	}
 
 	s := env.NewTestEnv(comp.TestServiceControlAPIKeyIpRestriction, "echo")
+
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("failed to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := []testDataStruct{
 		{

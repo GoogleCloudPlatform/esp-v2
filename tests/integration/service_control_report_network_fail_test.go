@@ -34,10 +34,10 @@ func TestServiceControlReportNetworkFail(t *testing.T) {
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--service_control_report_retries=0"}
 
 	s := env.NewTestEnv(comp.TestServiceControlReportNetworkFail, "bookstore")
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	time.Sleep(time.Duration(5 * time.Second))
 	tests := []struct {

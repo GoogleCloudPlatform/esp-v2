@@ -44,10 +44,10 @@ func TestSimpleCorsWithBasicPreset(t *testing.T) {
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
 	s := env.NewTestEnv(comp.TestSimpleCorsWithBasicPreset, "echo")
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := []struct {
 		desc              string
@@ -107,10 +107,10 @@ func TestDifferentOriginSimpleCors(t *testing.T) {
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
 	s := env.NewTestEnv(comp.TestDifferentOriginSimpleCors, "echo")
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := struct {
 		desc       string
@@ -148,10 +148,10 @@ func TestSimpleCorsWithRegexPreset(t *testing.T) {
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
 	s := env.NewTestEnv(comp.TestSimpleCorsWithRegexPreset, "echo")
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := struct {
 		desc              string
@@ -196,10 +196,10 @@ func TestPreflightCorsWithBasicPreset(t *testing.T) {
 		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
 
 	s := env.NewTestEnv(comp.TestPreflightCorsWithBasicPreset, "echo")
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := struct {
 		desc          string
@@ -249,10 +249,10 @@ func TestDifferentOriginPreflightCors(t *testing.T) {
 		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
 
 	s := env.NewTestEnv(comp.TestDifferentOriginPreflightCors, "echo")
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := struct {
 		desc          string
@@ -295,10 +295,10 @@ func TestGrpcBackendSimpleCors(t *testing.T) {
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
 	s := env.NewTestEnv(comp.TestGrpcBackendSimpleCors, "bookstore")
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := struct {
 		desc              string
@@ -342,10 +342,10 @@ func TestGrpcBackendPreflightCors(t *testing.T) {
 		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
 
 	s := env.NewTestEnv(comp.TestGrpcBackendPreflightCors, "bookstore")
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := struct {
 		desc          string
@@ -393,10 +393,10 @@ func TestPreflightRequestWithAllowCors(t *testing.T) {
 
 	s := env.NewTestEnv(comp.TestPreflightRequestWithAllowCors, "echo")
 	s.SetAllowCors()
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := []struct {
 		desc          string
@@ -485,10 +485,10 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 			},
 		},
 	})
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := []struct {
 		desc                string
@@ -660,10 +660,10 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 			},
 		},
 	})
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := []struct {
 		desc                  string

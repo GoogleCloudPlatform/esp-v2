@@ -51,10 +51,10 @@ func TestServiceControlQuota(t *testing.T) {
 			},
 		},
 	})
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := []struct {
 		desc           string
@@ -175,10 +175,10 @@ func TestServiceControlQuotaUnavailable(t *testing.T) {
 		},
 	})
 	s.ServiceControlServer.OverrideQuotaHandler(&unavailableQuotaServiceHandler{m: s.ServiceControlServer})
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	type testType struct {
 		desc                  string
@@ -242,10 +242,10 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 			},
 		},
 	})
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	s.ServiceControlServer.SetQuotaResponse(
 		&sc.AllocateQuotaResponse{

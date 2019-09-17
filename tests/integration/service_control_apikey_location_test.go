@@ -34,10 +34,10 @@ func TestServiceControlAPIKeyDefaultLocation(t *testing.T) {
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlAPIKeyDefaultLocation, "echo")
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := []struct {
 		desc                  string
@@ -129,10 +129,10 @@ func TestServiceControlAPIKeyCustomLocation(t *testing.T) {
 			},
 		},
 	})
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
 
 	testData := []struct {
 		desc          string

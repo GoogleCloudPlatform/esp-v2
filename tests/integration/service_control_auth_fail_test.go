@@ -50,10 +50,11 @@ func TestServiceControlJwtAuthFail(t *testing.T) {
 			},
 		},
 	})
+	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
+
 	time.Sleep(time.Duration(5 * time.Second))
 	tests := []struct {
 		desc               string
