@@ -2,8 +2,8 @@
 # This script builds docker image for grpc test server.
 # It can build either grpc-echo-server or grpc-interop-server.
 # Its usage:
-#   linux-build-grpc-docker -i grpc-echo-server-docker-image
-#   linux-build-grpc-docker -o -i grpc-interop-server-docker-image
+#   linux-build-grpc-docker -i gcr.io/cloudesf-testing/grpc-echo-server
+#   linux-build-grpc-docker -o -i gcr.io/cloudesf-testing/grpc-interop-server
 
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
@@ -22,14 +22,13 @@ while getopts :i:o arg; do
   case ${arg} in
   i) IMAGE="${OPTARG}" ;;
   o)
-    TEST_SERVER_TARGET='@com_github_grpc_grpc//tests/cpp/interop:interop_server'
-    TEST_SERVER_BIN='external/com_github_grpc_grpc/tests/cpp/interop/interop_server'
+    TEST_SERVER_TARGET='@com_github_grpc_grpc//test/cpp/interop:interop_server'
+    TEST_SERVER_BIN='external/com_github_grpc_grpc/test/cpp/interop/interop_server'
     TEST_SERVER_ARGS='--port=8081'
     ;;
   *) error_exit "Unrecognized argument -${OPTARG}" ;;
   esac
 done
-IMAGE='gcr.io/cloudesf-testing/grpc-echo-server'
 
 [[ -n "${IMAGE}" ]] || error_exit "Specify required image argument via '-i'"
 
@@ -42,7 +41,7 @@ gcloud docker -- pull "${IMAGE}" &&
 
 BAZEL_TARGET="${ROOT}/bazel-bin/${TEST_SERVER_BIN}"
 if ! [[ -e "${BAZEL_TARGET}" ]]; then
-  echo "Building ${TEST_SERVER_BIN}"
+  echo "Building ${TEST_SERVER_TARGET}"
   bazel build --config=release "${TEST_SERVER_TARGET}" \
     || error_exit 'Could not build ${TEST_SERVER_BIN}'
 fi

@@ -112,12 +112,16 @@ function long_running_test() {
     if [[ ${status} -eq 0 ]]; then
       run_nonfatal "${SCRIPT_PATH}"/linux-grpc-test-long-run.sh"" \
         -g "${host}" \
-        -g "${host}" \
         -l "${duration_in_hour}" \
         -a "${api_key}" \
         -s "${apiproxy_service}" 2>&1 | tee "${log_file}"
       status=${PIPESTATUS[0]}
     fi
+  elif [[ "${BACKEND}" == 'interop' ]]; then
+    run_nonfatal "${SCRIPT_PATH}"/test-grpc-interop.sh \
+      -h "${host}:80" \
+      -l "${duration_in_hour}" 2>&1 | tee "${log_file}"
+    status=${PIPESTATUS[0]}
   fi
   return ${status}
 }

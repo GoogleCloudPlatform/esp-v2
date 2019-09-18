@@ -54,6 +54,9 @@ function getApiProxyService() {
   elif [[ "${1}" == "echo" ]]; then
     echo "echo.endpoints.cloudesf-testing.cloud.goog"
     return 0
+  elif [[ "${1}" == "interop" ]]; then
+    echo "interop.endpoints.cloudesf-testing.cloud.goog"
+    return 0
   else
     echo "Service ${1} is not supported."
     return 1
@@ -97,7 +100,9 @@ echo '======================================================='
 echo '=====================   e2e test  ====================='
 echo '======================================================='
 make build-grpc-echo
+make build-grpc-interop
 
 # TODO(jilinxia): add other backend tests.
 e2eGKE -c "tight" -t "http" -g "bookstore" -R "managed" -m $(get_proxy_image_name_with_sha)
 e2eGKE -c "tight" -t "http2" -g "echo" -R "managed" -m $(get_proxy_image_name_with_sha)
+e2eGKE -c "tight" -t "http2" -g "interop" -R "managed" -m $(get_proxy_image_name_with_sha)
