@@ -48,7 +48,8 @@ spec:
         args: [ARGS]
         ports:
           - containerPort: 8080
-      - name: grpc-echo
-        image: gcr.io/cloudesf-testing/grpc-echo-server:latest
+          - containerPort: 8001
+      - name: grpc-interop
+        image: gcr.io/cloudesf-testing/grpc-interop-server:latest
         ports:
           - containerPort: 8081

@@ -65,9 +65,11 @@ build-grpc-echo:
 build-grpc-interop:
 	@echo "--> building the grpc-interop-test client and server"
 	@bazel build @com_github_grpc_grpc//test/cpp/interop:interop_client
+	@bazel build @com_github_grpc_grpc//test/cpp/interop:metrics_client
 	@bazel build @com_github_grpc_grpc//test/cpp/interop:interop_server
 	@bazel build @com_github_grpc_grpc//test/cpp/interop:stress_test
 	@cp -f bazel-bin/external/com_github_grpc_grpc/test/cpp/interop/interop_client bin/
+	@cp -f bazel-bin/external/com_github_grpc_grpc/test/cpp/interop/metrics_client bin/
 	@cp -f bazel-bin/external/com_github_grpc_grpc/test/cpp/interop/interop_server bin/
 	@cp -f bazel-bin/external/com_github_grpc_grpc/test/cpp/interop/stress_test bin/
 

@@ -47,6 +47,10 @@ ARGS="$ARGS \"--enable_tracing\", \"--tracing_sample_rate=0.005\""
       YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/grpc-echo/grpc-echo.yaml.template
       YAML_FILE=${SCRIPT_PATH}/../testdata/grpc-echo/grpc-echo.yaml
       ARGS="$ARGS , \"--backend_protocol=grpc\"";;
+   'interop'      )
+      YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/grpc-interop/grpc-interop.yaml.template
+      YAML_FILE=${SCRIPT_PATH}/../testdata/grpc-interop/grpc-interop.yaml
+      ARGS="$ARGS , \"--backend_protocol=grpc\"";;
      *         )
     echo "Invalid backend ${BACKEND}"
     return 1;;
@@ -68,6 +72,11 @@ case "${BACKEND}" in
    'echo'      )
       SERVICE_YAML="${ROOT}/tests/endpoints/grpc-echo/grpc-test.yaml"
       SERVICE_DSCP="${ROOT}/tests/endpoints/grpc-echo/proto/api_descriptor.pb"
+      CREATE_SERVICE_ARGS="${SERVICE_YAML} ${SERVICE_DSCP}"
+      ARGS="$ARGS -g";;
+   'interop'      )
+      SERVICE_YAML="${ROOT}/tests/endpoints/grpc-interop/grpc-interop.yaml"
+      SERVICE_DSCP="${ROOT}/tests/endpoints/grpc-interop/proto/api_descriptor.pb"
       CREATE_SERVICE_ARGS="${SERVICE_YAML} ${SERVICE_DSCP}"
       ARGS="$ARGS -g";;
    *          )

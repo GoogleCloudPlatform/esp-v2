@@ -124,9 +124,6 @@ function grpc_test_transcode() {
 
   # Generating token for each run, that they expire in 1 hour.
   local AUTH_TOKEN=$("${ROOT}/tests/e2e/scripts/gen-auth-token.sh" -a "${SERVICE_NAME}")
-#  echo "python ${ROOT}/tests/e2e/client/apiproxy_client.py --test=stress \\
-#--host=http://${HOST}:80  --api_key=${API_KEY} --auth_token=${AUTH_TOKEN} \\
-#--test_data=${ROOT}/tests/e2e/testdata/grpc-echo/grpc_test_data.json --root=${ROOT}"
 
   (set -x; python ${ROOT}/tests/e2e/client/apiproxy_client.py \
       --test=stress \

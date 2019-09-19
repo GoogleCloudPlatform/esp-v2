@@ -1,0 +1,10 @@
+type: google.api.Service
+config_version: 3
+title: GRPC Interop Test
+name: interop.endpoints.cloudesf-testing.cloud.goog
+apis:
+  - name: grpc.testing.TestService
+usage:
+  rules:
+    - selector: grpc.testing.TestService.*
+      allow_unregistered_calls: true

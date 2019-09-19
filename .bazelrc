@@ -5,3 +5,6 @@ build --define=grpc_no_ares=true
 
 # Required by envoy and grpc-echo
 build --incompatible_disable_deprecated_attr_params=false
+
+# Release builds
+build:release -c opt
