@@ -175,7 +175,7 @@ TEST_F(FilterTest, LogWithoutHandler) {
   auto* mock_handler = new testing::NiceMock<MockServiceControlHandler>();
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
       .WillOnce(Return(mock_handler));
-  EXPECT_CALL(*mock_handler, callReport(_, _, _));
+  EXPECT_CALL(*mock_handler, callReport(_, _, _, _));
   filter_->log(&headers_, &headers_, &headers_,
                mock_decoder_callbacks_.stream_info_);
 }
@@ -189,7 +189,7 @@ TEST_F(FilterTest, LogWithHandler) {
   filter_->decodeHeaders(headers_, true);
 
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _)).Times(0);
-  EXPECT_CALL(*mock_handler, callReport(_, _, _));
+  EXPECT_CALL(*mock_handler, callReport(_, _, _, _));
   filter_->log(&headers_, &headers_, &headers_,
                mock_decoder_callbacks_.stream_info_);
 }

@@ -403,6 +403,9 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 			service.LogJwtPayloads[i] = strings.TrimSpace(service.LogJwtPayloads[i])
 		}
 	}
+	if serviceInfo.Options.MinStreamReportIntervalMs != 0 {
+		service.MinStreamReportIntervalMs = serviceInfo.Options.MinStreamReportIntervalMs
+	}
 	service.JwtPayloadMetadataName = ut.JwtPayloadMetadataName
 
 	filterConfig := &scpb.FilterConfig{

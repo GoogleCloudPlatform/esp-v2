@@ -48,8 +48,7 @@ class FilterFactory
         [filter_config](Http::FilterChainFactoryCallbacks& callbacks) -> void {
           auto filter = std::make_shared<ServiceControlFilter>(
               filter_config->stats(), filter_config->handler_factory());
-          callbacks.addStreamDecoderFilter(
-              Http::StreamDecoderFilterSharedPtr(filter));
+          callbacks.addStreamFilter(Http::StreamFilterSharedPtr(filter));
           callbacks.addAccessLogHandler(AccessLog::InstanceSharedPtr(filter));
         };
   }

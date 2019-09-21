@@ -52,7 +52,9 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
 
   void callReport(const Http::HeaderMap* request_headers,
                   const Http::HeaderMap* response_headers,
-                  const Http::HeaderMap* response_trailers) override;
+                  const Http::HeaderMap* response_trailers,
+                  std::chrono::system_clock::time_point now =
+                      std::chrono::system_clock::now()) override;
 
   void collectDecodeData(Buffer::Instance& request_data,
                          std::chrono::system_clock::time_point now =
@@ -61,6 +63,9 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   void collectEncodeData(Buffer::Instance& response_data,
                          std::chrono::system_clock::time_point now =
                              std::chrono::system_clock::now()) override;
+
+  virtual void processResponseHeaders(
+      const Http::HeaderMap& response_headers) override;
 
  private:
   void callQuota();
@@ -118,13 +123,17 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   // callback is returned.
   std::shared_ptr<bool> aborted_;
   uint64_t request_header_size_;
+  uint64_t response_header_size_;
+
+  // The frontend protocol only for intermediate reports.
+  ::google::api_proxy::service_control::protocol::Protocol frontend_protocol_;
 
   // Intermediate data for reporting on streaming.
   bool is_grpc_;
   Utils::GrpcMessageCounter grpc_request_counter_;
   Utils::GrpcMessageCounter grpc_response_counter_;
   ::google::api_proxy::service_control::StreamingRequestInfo streaming_info_;
-  // Interval timer for sending intermittent reports.
+  // Interval timer for sending intermediate reports.
   std::chrono::system_clock::time_point last_reported_;
 };
 

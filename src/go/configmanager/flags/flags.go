@@ -74,6 +74,7 @@ var (
 	foo,bar, endpoint log will have request_headers: foo=foo_value;bar=bar_value if values are available;`)
 	LogResponseHeaders = flag.String("log_response_headers", "", `Log corresponding response headers through service control, separated by comma. Example, when --log_response_headers=
 	foo,bar,endpoint log will have response_headers: foo=foo_value;bar=bar_value if values are available.`)
+	MinStreamReportIntervalMs = flag.Uint64("min_stream_report_interval_ms", 0, `Minimum amount of time (milliseconds) between sending intermediate reports on a stream and the default is 10000 if not set.`)
 
 	SuppressEnvoyHeaders = flag.Bool("suppress_envoy_headers", false, `Do not add any additional x-envoy- headers to requests or responses. This only affects the router filter
 	generated *x-envoy-* headers, other Envoy filters and the HTTP connection manager may continue to set x-envoy- headers.`)
@@ -119,6 +120,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		LogJwtPayloads:                *LogJwtPayloads,
 		LogRequestHeaders:             *LogRequestHeaders,
 		LogResponseHeaders:            *LogResponseHeaders,
+		MinStreamReportIntervalMs:     *MinStreamReportIntervalMs,
 		SuppressEnvoyHeaders:          *SuppressEnvoyHeaders,
 		ServiceControlNetworkFailOpen: *ServiceControlNetworkFailOpen,
 		JwksCacheDurationInS:          *JwksCacheDurationInS,

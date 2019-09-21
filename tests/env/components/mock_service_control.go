@@ -235,6 +235,20 @@ func (m *MockServiceCtrl) GetRequests(n int) ([]*ServiceRequest, error) {
 	return r, nil
 }
 
+// GetRequests returns a slice of requests received.
+func (m *MockServiceCtrl) GetAllRequests() []*ServiceRequest {
+	r := []*ServiceRequest{}
+	for {
+		select {
+		case d := <-m.ch:
+			r = append(r, d)
+		case <-time.After(m.getRequestsTimeout):
+			return r
+		}
+	}
+
+}
+
 // VerifyRequestCount Verifies the current exact request count with the want request count
 func (m *MockServiceCtrl) VerifyRequestCount(wantRequestCount int) error {
 	_, err := m.GetRequests(wantRequestCount)

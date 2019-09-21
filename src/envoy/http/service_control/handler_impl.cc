@@ -50,6 +50,8 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     : cfg_parser_(cfg_parser),
       stream_info_(stream_info),
       uuid_(uuid),
+      request_header_size_(0),
+      response_header_size_(0),
       last_reported_(now) {
   http_method_ = std::string(Utils::getRequestHTTPMethodWithOverride(
       headers.Method()->value().getStringView(), headers));
@@ -221,10 +223,17 @@ void ServiceControlHandlerImpl::onCheckResponse(
   callQuota();
 }
 
+void ServiceControlHandlerImpl::processResponseHeaders(
+    const Http::HeaderMap& response_headers) {
+  frontend_protocol_ = getFrontendProtocol(&response_headers, stream_info_);
+  response_header_size_ = response_headers.byteSize();
+}
+
 void ServiceControlHandlerImpl::callReport(
     const Http::HeaderMap* request_headers,
     const Http::HeaderMap* response_headers,
-    const Http::HeaderMap* response_trailers) {
+    const Http::HeaderMap* response_trailers,
+    std::chrono::system_clock::time_point now) {
   if (!isConfigured() || !isReportRequired()) {
     return;
   }
@@ -254,7 +263,6 @@ void ServiceControlHandlerImpl::callReport(
       JwtPayloadAuidencePath, info.auth_audience);
 
   info.frontend_protocol = getFrontendProtocol(response_headers, stream_info_);
-
   info.backend_protocol =
       getBackendProtocol(require_ctx_->service_ctx().config());
 
@@ -279,6 +287,20 @@ void ServiceControlHandlerImpl::callReport(
   }
   info.response_size = stream_info_.bytesSent() + response_header_size;
   info.response_bytes = stream_info_.bytesSent() + response_header_size;
+
+  info.streaming_request_message_counts = streaming_info_.request_message_count;
+  info.streaming_response_message_counts =
+      streaming_info_.response_message_count;
+
+  // Check if the streaming start time has been set.
+  if (streaming_info_.start_time.time_since_epoch().count() != 0) {
+    info.streaming_durations =
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            now - streaming_info_.start_time)
+            .count();
+  }
+
+  info.is_first_report = streaming_info_.is_first_report;
 
   require_ctx_->service_ctx().call().callReport(info);
 }
@@ -315,6 +337,7 @@ void ServiceControlHandlerImpl::tryIntermediateReport(
   if (streaming_info_.is_first_report) {
     streaming_info_.start_time = now;
   }
+
   // Avoid reporting more frequently than the configured interval.
   if (std::chrono::duration_cast<std::chrono::milliseconds>(now -
                                                             last_reported_)
@@ -326,19 +349,12 @@ void ServiceControlHandlerImpl::tryIntermediateReport(
   ::google::api_proxy::service_control::ReportRequestInfo info;
   prepareReportRequest(info);
 
-  info.request_bytes = streaming_info_.request_bytes;
-  info.response_bytes = streaming_info_.response_bytes;
-  info.streaming_request_message_counts = streaming_info_.request_message_count;
-  info.streaming_response_message_counts =
-      streaming_info_.response_message_count;
+  info.request_bytes = streaming_info_.request_bytes + request_header_size_;
+  info.response_bytes = streaming_info_.response_bytes + response_header_size_;
 
-  info.streaming_durations =
-      std::chrono::duration_cast<std::chrono::microseconds>(
-          now - streaming_info_.start_time)
-          .count();
+  info.frontend_protocol = frontend_protocol_;
   info.is_first_report = streaming_info_.is_first_report;
   info.is_final_report = false;
-
   require_ctx_->service_ctx().call().callReport(info);
   last_reported_ = now;
   streaming_info_.is_first_report = false;

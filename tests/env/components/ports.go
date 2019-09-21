@@ -45,6 +45,7 @@ const (
 	TestGRPCMetadata
 	TestGRPCMinistress
 	TestGRPCStreaming
+	TestGRPCLongStreaming
 	TestGRPCWeb
 	TestHttp1Basic
 	TestHttp1JWT
