@@ -37,21 +37,29 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 # 2) Check if there was any change in WORKSPACE of Envoy upstream. GCP Proxy
 # WORKSPACE should resemble the Envoy upstream WORKSPACE.
 # 3) Check if envoy_build_config/extensions_build_config.bzl is up-to-date.
-# Replace it with the one from upstream and comment out unneeded extensions.
-# 4) Check if `GOOGLE_PROTOBUF_SHA1` in bazel/protobuf.bzl matches with the
-# version that Envoy uses.
-# 5) Check if `ABSL_COMMIT` and `ABSL_SHA256` in bazel/abseil.bzl matches with
-# the version that Envoy uses.
-# 6) Fix all backward incompatibility issues.
-# 7) Run `make proto-consistency-test` and fix inconsistency if there is any.
+# Try to match it with the one in source/extensions and comment out unneeded extensions.
 
-ENVOY_SHA1 = "7eed7332d513248a07e493bb8ec7bb3081a18b3e"  # 08.21.2019
+ENVOY_SHA1 = "1f7f90f7d1bdfaaab4e20198a09a52b678eab5d1"  # 09.23.2019
 
-# TODO(kyuc): add sha256
+ENVOY_SHA256 = "84932aa9694e3b5574c06d873c245fe9515f73d7ae47521c30392e0dec06907a"
+
 http_archive(
     name = "envoy",
+    sha256 = ENVOY_SHA256,
     strip_prefix = "envoy-" + ENVOY_SHA1,
     url = "https://github.com/envoyproxy/envoy/archive/" + ENVOY_SHA1 + ".zip",
+)
+
+# A hack to load zlib first before loading envoy_dependencies.
+# grpc_deps() is using @zlib directly. But Envoy doesn't have @zlib, it only
+# binds zlib to net_zlib so grpc_deps() fails.
+# It is copied from https://github.com/grpc/grpc/blob/master/bazel/grpc_deps.bzl
+http_archive(
+    name = "zlib",
+    build_file = "//bazel:zlib.BUILD",
+    sha256 = "6d4d6640ca3121620995ee255945161821218752b551a1a180f4215f7d124d45",
+    strip_prefix = "zlib-cacf7f1d4e3d44d871b605da3b647f07d718623f",
+    url = "https://github.com/madler/zlib/archive/cacf7f1d4e3d44d871b605da3b647f07d718623f.tar.gz",
 )
 
 # ==============================================================================

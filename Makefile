@@ -116,7 +116,7 @@ integration-debug: build build-envoy build-grpc-interop build-grpc-echo
 	@echo "--> running integration tests and showing debug logs"
 	@go test -v -timeout 20m ./tests/env/... --logtostderr
 	# debug-components can be set as "all", "configmanager", or "envoy".
-	@go test -v -timeout 20m ./tests/integration/... --debug_components=all --logtostderr
+	@go test -v -timeout 20m ./tests/integration/... --debug_components=envoy --logtostderr
 
 #-----------------------------------------------------------------------------
 # Target: dependencies
