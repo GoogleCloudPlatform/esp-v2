@@ -47,6 +47,9 @@ gcloud docker -- pull "${PROXY_IMAGE_SHA_NAME}" \
   && gcloud docker -- pull "${ENVOY_IMAGE_SHA_NAME}" \
   && { echo "Both image ${PROXY_IMAGE_SHA_NAME} and image ${ENVOY_IMAGE_SHA_NAME} already exists; skipping"; exit 0; }
 
-# Build docker container image for GKE/GCE deployment.
-${ROOT}/scripts/linux-build-docker.sh \
+echo '======================================================='
+echo '================= Cloud Build Docker =================='
+echo '======================================================='
+
+${ROOT}/scripts/cloud-build-docker.sh \
     || error_exit 'Failed to build a generic Docker Image.'
