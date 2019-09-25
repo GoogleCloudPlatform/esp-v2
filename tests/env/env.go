@@ -51,7 +51,7 @@ type TestEnv struct {
 	mockMetadata                bool
 	enableScNetworkFailOpen     bool
 	backendService              string
-	mockJwtProviders            map[string]bool
+	mockJwtProviders            []string
 	mockMetadataOverride        map[string]string
 	bookstoreServer             *components.BookstoreGrpcServer
 	grpcInteropServer           *components.GrpcInteropGrpcServer
@@ -68,6 +68,7 @@ type TestEnv struct {
 	ServiceControlServer        *components.MockServiceCtrl
 	FakeStackdriverServer       *components.FakeTraceServer
 	healthRegistry              *components.HealthRegistry
+	FakeJwtService              *components.FakeJwtService
 }
 
 func NewTestEnv(testId uint16, backendService string) *TestEnv {
@@ -80,9 +81,10 @@ func NewTestEnv(testId uint16, backendService string) *TestEnv {
 		backendService:              backendService,
 		ports:                       components.NewPorts(testId),
 		fakeServiceConfig:           fakeServiceConfig,
-		mockJwtProviders:            make(map[string]bool),
+		mockJwtProviders:            []string{},
 		ServiceControlServer:        components.NewMockServiceCtrl(fakeServiceConfig.GetName()),
 		healthRegistry:              components.NewHealthRegistry(),
+		FakeJwtService:              components.NewFakeJwtService(),
 	}
 }
 
@@ -197,6 +199,10 @@ func (e *TestEnv) Setup(confArgs []string) error {
 
 	testdata.SetupSourceInfo()
 
+	if err := e.FakeJwtService.SetupJwt(); err != nil {
+		return err
+	}
+
 	if e.mockServiceManagementServer != nil {
 		if err := addDynamicRoutingBackendPort(e.fakeServiceConfig, e.ports.DynamicRoutingBackendPort); err != nil {
 			return err
@@ -204,22 +210,19 @@ func (e *TestEnv) Setup(confArgs []string) error {
 
 		for _, rule := range e.fakeServiceConfig.GetAuthentication().GetRules() {
 			for _, req := range rule.GetRequirements() {
-				if reqId := req.GetProviderId(); reqId != "" {
-					e.mockJwtProviders[reqId] = true
+				if providerId := req.GetProviderId(); providerId != "" {
+					e.mockJwtProviders = append(e.mockJwtProviders, providerId)
 				}
 			}
 		}
 
-		for id, ok := range e.mockJwtProviders {
+		for _, providerId := range e.mockJwtProviders {
+			provider, ok := e.FakeJwtService.ProviderMap[providerId]
 			if !ok {
-				continue
-			}
-			provider, ok := testdata.MockJwtProviderMap[id]
-			if !ok {
-				return fmt.Errorf("not supported jwt provider id: %v", id)
+				return fmt.Errorf("not supported jwt provider id: %v", providerId)
 			}
 			auth := e.fakeServiceConfig.GetAuthentication()
-			auth.Providers = append(auth.Providers, provider)
+			auth.Providers = append(auth.Providers, provider.AuthProvider)
 		}
 
 		e.ServiceControlServer.Setup()

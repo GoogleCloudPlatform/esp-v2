@@ -33,13 +33,12 @@ import (
 func TestServiceControlCheckError(t *testing.T) {
 	t.Parallel()
 	configId := "test-config-id"
-	provider := "service_control_check_error_only"
+	provider := testdata.GoogleJwtProvider
 
 	args := []string{"--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlCheckError, "echo")
-	comp.ResetReqCnt(provider)
 	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -155,10 +154,10 @@ func TestServiceControlCheckError(t *testing.T) {
 		},
 		{
 			desc:   "Failed, the request passed auth but failed in check with PROJECT_INVALID",
-			path:   "/auth/info/serviceControlCheckErrorOnly",
+			path:   "/auth/info/googlejwt",
 			apiKey: "api-key",
 			method: "GET",
-			token:  testdata.FakeServiceControlCheckErrorOnlyToken,
+			token:  testdata.FakeCloudToken,
 			mockedCheckResponse: &sc.CheckResponse{
 				CheckInfo: &sc.CheckResponse_CheckInfo{
 					ConsumerInfo: &sc.CheckResponse_ConsumerInfo{
@@ -181,26 +180,25 @@ func TestServiceControlCheckError(t *testing.T) {
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
-					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_service_control_check_error_only",
+					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt",
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
-					Version:           utils.APIProxyVersion,
-					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
-					ServiceConfigID:   "test-config-id",
-					URL:               "/auth/info/serviceControlCheckErrorOnly?key=api-key",
+					Version:     utils.APIProxyVersion,
+					ServiceName: "echo-api.endpoints.cloudesf-testing.cloud.goog", ServiceConfigID: "test-config-id",
+					URL:               "/auth/info/googlejwt?key=api-key",
 					ApiKey:            "api-key",
-					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_service_control_check_error_only",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt",
 					ProducerProjectID: "producer-project",
 					ConsumerProjectID: "123456",
 					FrontendProtocol:  "http",
 					HttpMethod:        "GET",
-					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_service_control_check_error_only is called",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt is called",
 					ErrorType:         "4xx",
 					StatusCode:        "3",
-					RequestSize:       386,
+					RequestSize:       357,
 					ResponseSize:      163,
-					RequestBytes:      386,
+					RequestBytes:      357,
 					ResponseBytes:     163,
 					ResponseCode:      400,
 					Platform:          util.GCE,
@@ -234,7 +232,7 @@ func TestServiceControlCheckError(t *testing.T) {
 		}
 
 		if tc.wantRequestsToProvider != nil {
-			provider, ok := comp.JwtProviders[tc.wantRequestsToProvider.key]
+			provider, ok := s.FakeJwtService.ProviderMap[tc.wantRequestsToProvider.key]
 			if !ok {
 				t.Errorf("Test (%s): failed, the provider is not inited.", tc.desc)
 			} else if realCnt := provider.GetReqCnt(); realCnt != tc.wantRequestsToProvider.cnt {

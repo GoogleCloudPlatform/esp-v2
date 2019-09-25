@@ -14,116 +14,100 @@
 
 package testdata
 
-import (
-	"encoding/json"
-	"fmt"
-
-	"cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	"github.com/golang/glog"
-
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
-)
-
-var (
-	// MockJwtProviderMap contains key(ProviderId): value(Issuer)
-	MockJwtProviderMap         = map[string]*conf.AuthProvider{}
-	openIDProviderAddr         = "127.0.0.1:32025"
-	openIDInvalidProviderAddr  = "127.0.0.1:32026"
-	openIDNonexistProviderAddr = "127.0.0.1:32027"
-)
-
-func init() {
-	// Test Jwks and Jwt Tokens are generated following
-	// https://github.com/istio/istio/tree/master/security/tools/jwt/samples.
-	openIDJwks := components.NewMockJwtProvider("Issuer", ServiceControlJwtPayloadPubKeys).GetURL()
-	jwksUriEntry, _ := json.Marshal(map[string]string{"jwks_uri": openIDJwks})
-	_, err := components.NewOpenIDServer(openIDProviderAddr, string(jwksUriEntry))
-	if err != nil {
-		glog.Fatalf("Fail to init provider %s, %v.", "openID_provier", err)
-	}
-	MockJwtProviderMap["openID_provider"] = &conf.AuthProvider{
-		Id:     "openID_provider",
-		Issuer: fmt.Sprintf("http://%s", openIDProviderAddr),
-	}
-
-	jwksUriEntry, _ = json.Marshal(map[string]string{"issuer": openIDJwks})
-	_, err = components.NewOpenIDServer(openIDInvalidProviderAddr, string(jwksUriEntry))
-	if err != nil {
-		glog.Fatalf("Fail to init provider %s, %v.", "openID_invalid_provier", err)
-	}
-	MockJwtProviderMap["openID_invalid_provider"] = &conf.AuthProvider{
-		Id:     "openID_invalid_provider",
-		Issuer: fmt.Sprintf("http://%s", openIDInvalidProviderAddr),
-	}
-
-	MockJwtProviderMap["openID_nonexist_provider"] = &conf.AuthProvider{
-		Id:     "openID_nonexist_provider",
-		Issuer: fmt.Sprintf("http://%s", openIDNonexistProviderAddr),
-	}
-
-	MockJwtProviderMap["google_service_account"] = &conf.AuthProvider{
-		Id:      "google_service_account",
-		Issuer:  "api-proxy-testing@cloud.goog",
-		JwksUri: components.NewMockJwtProvider("google_service_account", FakeCloudJwks).GetURL(),
-	}
-	MockJwtProviderMap["google_jwt"] = &conf.AuthProvider{
-		Id:      "google_jwt",
-		Issuer:  "api-proxy-testing@cloud.goog",
-		JwksUri: components.NewMockJwtProvider("google_jwt", FakeCloudJwks).GetURL(),
-	}
-	// In order to support integration test parallelization(tests share the providers objects),
-	// the echo's api 1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_auth_jwks_cache_test_only
-	// and its provider auth_jwks_cache_test_only can only be used by TestAuthJwksCache.
-	MockJwtProviderMap["auth_jwks_cache_test_only"] = &conf.AuthProvider{
-		Id:      "auth_jwks_cache_test_only",
-		Issuer:  "auth_jwks_cache_test_only",
-		JwksUri: components.NewMockJwtProvider("auth_jwks_cache_test_only", ServiceControlJwtPayloadPubKeys).GetURL(),
-	}
-	// In order to support integration test parallelization(tests share the providers objects),
-	// the echo's api 1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_service_control_check_error_only"
-	// and its provider service_control_check_error_only can only be used by TestServiceControlCheckError.
-	MockJwtProviderMap["service_control_check_error_only"] = &conf.AuthProvider{
-		Id:      "service_control_check_error_only",
-		Issuer:  "service_control_check_error_only",
-		JwksUri: components.NewMockJwtProvider("service_control_check_error_only", ServiceControlJwtPayloadPubKeys).GetURL(),
-	}
-	MockJwtProviderMap["endpoints_jwt"] = &conf.AuthProvider{
-		Id:      "endpoints_jwt",
-		Issuer:  "jwt-client.endpoints.sample.google.com",
-		JwksUri: components.NewMockJwtProvider("jwt-client.endpoints.sample.google.com", FakeEndpointsJwks).GetURL(),
-	}
-	MockJwtProviderMap["broken_provider"] = &conf.AuthProvider{
-		Id:      "broken_provider",
-		Issuer:  "http://broken_issuer.com",
-		JwksUri: components.NewMockInvalidJwtProvider("http://broken_issuer.com").GetURL(),
-	}
-	MockJwtProviderMap["test_auth"] = &conf.AuthProvider{
-		Id:      "test_auth",
-		Issuer:  "es256-issuer",
-		JwksUri: components.NewMockJwtProvider("es256-issuer", PubKeys).GetURL(),
-	}
-	MockJwtProviderMap["test_auth_1"] = &conf.AuthProvider{
-		Id:      "test_auth_1",
-		Issuer:  "rs256-issuer",
-		JwksUri: components.NewMockJwtProvider("test_auth_1", PubKeys).GetURL(),
-	}
-	MockJwtProviderMap["invalid_jwks_provider"] = &conf.AuthProvider{
-		Id:      "invalid_jwks_provider",
-		Issuer:  "invalid_jwks_provider",
-		JwksUri: components.NewMockJwtProvider("invalid_jwks_provider", "invalid-jwks").GetURL(),
-	}
-	MockJwtProviderMap["nonexist_jwks_provider"] = &conf.AuthProvider{
-		Id:      "nonexist_jwks_provider",
-		Issuer:  "nonexist_jwks_provider",
-		JwksUri: "http://metadata.com/pkey",
-	}
-	MockJwtProviderMap["service_control_jwt_payload_auth"] = &conf.AuthProvider{
-		Id:      "service_control_jwt_payload_auth",
-		Issuer:  "es256-issuer",
-		JwksUri: components.NewMockJwtProvider("service_control_jwt_payload_auth", ServiceControlJwtPayloadPubKeys).GetURL(),
-	}
+type ProviderConfig struct {
+	Id               string
+	Issuer           string
+	Keys             string
+	IsInvalid        bool   // If invalid, then a server that always returns 503 is started up
+	IsNonexistent    bool   // If non-existent, then a server is not started up
+	HardcodedJwksUri string // This needs to be set for non-existent, since the URL cannot be derived
 }
 
+var (
+	// Configuration for non-OpenID providers.
+	ProviderConfigs = []*ProviderConfig{
+		{
+			Id:        BrokenProvider,
+			Issuer:    BrokenIssuer,
+			IsInvalid: true,
+		},
+		{
+			Id:     GoogleServiceAccountProvider,
+			Issuer: ApiProxyTestingIssuer,
+			Keys:   FakeCloudJwks,
+		},
+		{
+			Id:     GoogleJwtProvider,
+			Issuer: ApiProxyTestingIssuer,
+			Keys:   FakeCloudJwks,
+		}, {
+
+			Id:     EndpointsJwtProvider,
+			Issuer: JwtEndpointsIssuer,
+			Keys:   FakeEndpointsJwks,
+		},
+		{
+			Id:     EndpointsJwtProvider,
+			Issuer: JwtEndpointsIssuer,
+			Keys:   FakeEndpointsJwks,
+		},
+		{
+			Id:     TestAuthProvider,
+			Issuer: Es256Issuer,
+			Keys:   PubKeys,
+		},
+		{
+			Id:     TestAuth1Provider,
+			Issuer: Rs256Issuer,
+			Keys:   PubKeys,
+		},
+		{
+			Id:     InvalidProvider,
+			Issuer: InvalidIssuer,
+			Keys:   "invalid-jwks",
+		},
+		{
+			Id:               NonexistentProvider,
+			Issuer:           NonexistentIssuer,
+			IsNonexistent:    true,
+			HardcodedJwksUri: "http://metadata.com/pkey",
+		},
+		{
+			Id:     ServiceControlProvider,
+			Issuer: Es256Issuer,
+			Keys:   ServiceControlJwtPayloadPubKeys,
+		},
+	}
+)
+
+// Providers
+const (
+	OpenIdProvider               string = "openID_provider"
+	OpenIdInvalidProvider        string = "openID_invalid_provider"
+	OpenIdNonexistentProvider    string = "openID_nonexist_provider"
+	GoogleServiceAccountProvider string = "google_service_account"
+	GoogleJwtProvider            string = "google_jwt"
+	EndpointsJwtProvider         string = "endpoints_jwt"
+	BrokenProvider               string = "broken_provider"
+	TestAuthProvider             string = "test_auth"
+	TestAuth1Provider            string = "test_auth_1"
+	InvalidProvider              string = "invalid_jwks_provider"
+	NonexistentProvider          string = "nonexist_jwks_provider"
+	ServiceControlProvider       string = "service_control_jwt_payload_auth"
+)
+
+// Issuers
+const (
+	ApiProxyTestingIssuer string = "api-proxy-testing@cloud.goog"
+	JwtEndpointsIssuer    string = "jwt-client.endpoints.sample.google.com"
+	BrokenIssuer          string = "http://broken_issuer.com"
+	Es256Issuer           string = "es256-issuer"
+	Rs256Issuer           string = "rs256-issuer"
+	InvalidIssuer         string = "invalid_jwks_provider"
+	NonexistentIssuer     string = "nonexist_jwks_provider"
+)
+
+// Keys and tokens
 const (
 	ServiceControlJwtPayloadPubKeys = `{
 	 "keys": [
@@ -367,28 +351,4 @@ const (
 		"rLcncoKX5MX8kOnEZjO0US1nfbPHQnpjKdgq_42uusJVCYau__zMMoEhLlCYxTKrdmWQ_j" +
 		"LW0v8IOSbixa74w9TwlCr0TKzsd-8e4Jr4gksDNxtzJWPwKAuvvd6J9q5CZXQ-WmszDNCK" +
 		"vYbOQA"
-
-	// ./gen-jwt.py key.pem -jwks=./jwks.json --expire=3153600000
-	// --iss="auth_jwks_cache_test_only"  > demo.jwt
-	FakeAuthJwksCacheTestOnlyToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lVc" +
-		"XJZOHQyenBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ.eyJl" +
-		"eHAiOjQ3MjE3NDEyMzEsImlhdCI6MTU2ODE0MTIzMSwiaXNzIjoiYXV0aF9qd2tzX2NhY2" +
-		"hlX3Rlc3Rfb25seSIsInN1YiI6ImF1dGhfandrc19jYWNoZV90ZXN0X29ubHkifQ.GdUMv" +
-		"v4PCB5JPRss3X-HAExfNwhi8ae4aqdNBvPh-AdWju9SfVzHk1WzR24wnKwvWFAfQB5E903" +
-		"LO3I-VpzIqDvZTAiwmsOyWsLxU6Xg3uWDEPJ2LUozj6GqyrI31uGmsw3OiNciUWb1OF5ZF" +
-		"OQDZyMr-7JejRa0d6F4i68eeu56k2EmJ0khJwR4kD6o8ulSlnqhpPxWbs2HS5xWdd9OAw_" +
-		"lh8xFrHd_og30Fux5YTFr1Fs63HDPTuHNhG259xKAgNkukLsJGzeP7dKJ0vOMyadgIhGoV" +
-		"rC0vu5Of5r8wqJhC81WOLU9Gu9rY6gwpCpc27mbkeuV7mqWw9TbKTsyMg"
-
-	// ./gen-jwt.py key.pem -jwks=./jwks.json --expire=3153600000
-	// --iss="service_control_check_error_only"  > demo.jwt
-	FakeServiceControlCheckErrorOnlyToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJ" +
-		"wb0lVcXJZOHQyenBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ" +
-		".eyJleHAiOjQ3MjE3NDE0MDksImlhdCI6MTU2ODE0MTQwOSwiaXNzIjoic2VydmljZV9jb2" +
-		"50cm9sX2NoZWNrX2Vycm9yX29ubHkiLCJzdWIiOiJzZXJ2aWNlX2NvbnRyb2xfY2hlY2tfZ" +
-		"XJyb3Jfb25seSJ9.KM-BQ0IGNr-VFz36cMkA1r_SY0Q9MiYG8EiK2zxRzNXAH29OkO-ybU9" +
-		"jco5pcDm7XStyRaCN-zdjvQhp0hWJx_IM3w59gF4oNYc0uyongkWmHn4pNphWTbUqrbKHmt" +
-		"go1wCvCJ_z08TjH_XSN0m9ctM10QhzCK9AUw6HKm8LW9UQEop0eB2olHbT0SxoW9lsFbFKz" +
-		"SB5LO2ee_Mcxh7UIXjW84UHesBy4lnow1OaqgWYkV-9IA22XfE1Irq67YOcVJDDMv86P8Dm" +
-		"4V6d2g79a3l9I3s3egJ__1Dk84pF3WGWFAlDd7nxKygB9oQdlEYQa8_cCkEOfD8HF-zCsQzFcA"
 )

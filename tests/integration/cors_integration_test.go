@@ -561,11 +561,11 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 					ServiceConfigID:   "test-config-id",
 					URL:               "/bookstore/shelves/1",
 					ApiKey:            "",
-					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_9",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_7",
 					ProducerProjectID: "producer-project",
 					FrontendProtocol:  "http",
 					HttpMethod:        "OPTIONS",
-					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_9 is called",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_7 is called",
 					Referer:           referer,
 					StatusCode:        "0",
 					RequestSize:       323,
@@ -610,7 +610,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 						t.Errorf("Test Desc(%s): service control request %v: should be Report", tc.desc, i)
 					}
 					if err := utils.VerifyReport(reqBody, wantScRequest.(*utils.ExpectedReport)); err != nil {
-						t.Error(err)
+						t.Errorf("Test Desc(%s): got err %v", tc.desc, err)
 					}
 				default:
 					t.Fatalf("Test Desc(%s): unknown service control response type", tc.desc)

@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"time"
 
+	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jws"
 )
@@ -110,7 +111,7 @@ func DoJWT(host, method, path, apiKey, serviceAccount, token string) ([]byte, er
 		exp := iat.Add(time.Hour)
 
 		jwt := &jws.ClaimSet{
-			Iss:   "jwt-client.endpoints.sample.google.com",
+			Iss:   testdata.JwtEndpointsIssuer,
 			Sub:   "foo!",
 			Aud:   "echo.endpoints.sample.google.com",
 			Scope: "email",

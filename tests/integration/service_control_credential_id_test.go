@@ -43,7 +43,7 @@ func TestServiceControlCredentialId(t *testing.T) {
 			Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
 			Requirements: []*conf.AuthRequirement{
 				{
-					ProviderId: "google_jwt",
+					ProviderId: testdata.GoogleJwtProvider,
 				},
 			},
 		},

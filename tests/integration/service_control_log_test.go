@@ -163,7 +163,7 @@ func TestServiceControlLogJwtPayloads(t *testing.T) {
 				Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
 				Requirements: []*conf.AuthRequirement{
 					{
-						ProviderId: "service_control_jwt_payload_auth",
+						ProviderId: testdata.ServiceControlProvider,
 						Audiences:  "ok_audience_1",
 					},
 				},

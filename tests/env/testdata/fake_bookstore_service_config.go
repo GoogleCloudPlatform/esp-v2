@@ -143,7 +143,7 @@ var (
 					Selector: "endpoints.examples.bookstore.Bookstore.CreateShelf",
 					Requirements: []*conf.AuthRequirement{
 						{
-							ProviderId: "google_service_account",
+							ProviderId: GoogleServiceAccountProvider,
 						},
 					},
 				},
@@ -154,7 +154,7 @@ var (
 					Selector: "endpoints.examples.bookstore.Bookstore.DeleteBook",
 					Requirements: []*conf.AuthRequirement{
 						{
-							ProviderId: "google_service_account",
+							ProviderId: GoogleServiceAccountProvider,
 						},
 					},
 				},
@@ -162,7 +162,7 @@ var (
 					Selector: "endpoints.examples.bookstore.Bookstore.CreateBook",
 					Requirements: []*conf.AuthRequirement{
 						{
-							ProviderId: "google_service_account",
+							ProviderId: GoogleServiceAccountProvider,
 							Audiences:  "bookstore_test_client.cloud.goog, admin.cloud.goog",
 						},
 					},
@@ -171,7 +171,7 @@ var (
 					Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
 					Requirements: []*conf.AuthRequirement{
 						{
-							ProviderId: "google_service_account",
+							ProviderId: GoogleServiceAccountProvider,
 							Audiences:  "bookstore_test_client.cloud.goog",
 						},
 					},
@@ -180,11 +180,11 @@ var (
 					Selector: "endpoints.examples.bookstore.Bookstore.DeleteShelf",
 					Requirements: []*conf.AuthRequirement{
 						{
-							ProviderId: "google_service_account",
+							ProviderId: GoogleServiceAccountProvider,
 							Audiences:  "bookstore_test_client.cloud.goog",
 						},
 						{
-							ProviderId: "endpoints_jwt",
+							ProviderId: EndpointsJwtProvider,
 						},
 					},
 				},

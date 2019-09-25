@@ -30,7 +30,7 @@ import (
 func TestAuthJwksCache(t *testing.T) {
 	t.Parallel()
 	configId := "test-config-id"
-	provider := "auth_jwks_cache_test_only"
+	provider := testdata.GoogleJwtProvider
 	type expectedRequestCount struct {
 		key string
 		cnt int
@@ -47,22 +47,22 @@ func TestAuthJwksCache(t *testing.T) {
 	}{
 		{
 			desc:                   "Success, the default jwks cache duration is 300s so only 1 request to the jwks provider will be made",
-			path:                   "/auth/info/authJwksCacheTestOnly",
+			path:                   "/auth/info/googlejwt",
 			apiKey:                 "api-key",
 			method:                 "GET",
-			token:                  testdata.FakeAuthJwksCacheTestOnlyToken,
+			token:                  testdata.FakeCloudToken,
 			wantRequestsToProvider: &expectedRequestCount{provider, 1},
-			wantResp:               `{"exp":4721741231,"iat":1568141231,"iss":"auth_jwks_cache_test_only","sub":"auth_jwks_cache_test_only"}`,
+			wantResp:               `{"exp":4698318356,"iat":1544718356,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
 		},
 		{
 			desc:                   "Success, the customized jwks cache duration is 1s so 10 request to the jwks provider will be made",
-			path:                   "/auth/info/authJwksCacheTestOnly",
+			path:                   "/auth/info/googlejwt",
 			apiKey:                 "api-key",
 			method:                 "GET",
 			jwksCacheDurationInS:   1,
-			token:                  testdata.FakeAuthJwksCacheTestOnlyToken,
+			token:                  testdata.FakeCloudToken,
 			wantRequestsToProvider: &expectedRequestCount{provider, 5},
-			wantResp:               `{"exp":4721741231,"iat":1568141231,"iss":"auth_jwks_cache_test_only","sub":"auth_jwks_cache_test_only"}`,
+			wantResp:               `{"exp":4698318356,"iat":1544718356,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
 		},
 	}
 	for _, tc := range testData {
@@ -79,7 +79,7 @@ func TestAuthJwksCache(t *testing.T) {
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
-			comp.ResetReqCnt(provider)
+			s.FakeJwtService.ResetReqCnt(provider)
 
 			var resp []byte
 			for i := 0; i < 5; i++ {
@@ -95,7 +95,7 @@ func TestAuthJwksCache(t *testing.T) {
 			}
 
 			if tc.wantRequestsToProvider != nil {
-				provider, ok := comp.JwtProviders[tc.wantRequestsToProvider.key]
+				provider, ok := s.FakeJwtService.ProviderMap[tc.wantRequestsToProvider.key]
 				if !ok {
 					t.Errorf("Test (%s): failed, the provider is not inited.", tc.desc)
 				} else if realCnt := provider.GetReqCnt(); realCnt != tc.wantRequestsToProvider.cnt {

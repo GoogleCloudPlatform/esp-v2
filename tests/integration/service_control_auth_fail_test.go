@@ -24,6 +24,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
+	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
@@ -43,7 +44,7 @@ func TestServiceControlJwtAuthFail(t *testing.T) {
 				Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
 				Requirements: []*conf.AuthRequirement{
 					{
-						ProviderId: "test_auth",
+						ProviderId: testdata.TestAuthProvider,
 						Audiences:  "ok_audience",
 					},
 				},

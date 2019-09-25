@@ -35,37 +35,40 @@ func TestAsymmetricKeys(t *testing.T) {
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestAsymmetricKeys, "bookstore")
+	if err := s.FakeJwtService.SetupOpenId(); err != nil {
+		t.Fatalf("fail to setup open id servers: %v", err)
+	}
 	s.OverrideAuthentication(&conf.Authentication{
 		Rules: []*conf.AuthenticationRule{
 			{
 				Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
 				Requirements: []*conf.AuthRequirement{
 					{
-						ProviderId: "test_auth",
+						ProviderId: testdata.TestAuthProvider,
 						Audiences:  "ok_audience",
 					},
 					{
-						ProviderId: "test_auth_1",
+						ProviderId: testdata.TestAuth1Provider,
 						Audiences:  "ok_audience",
 					},
 					{
-						ProviderId: "invalid_jwks_provider",
+						ProviderId: testdata.InvalidProvider,
 						Audiences:  "bookstore_test_client.cloud.goog",
 					},
 					{
-						ProviderId: "nonexist_jwks_provider",
+						ProviderId: testdata.NonexistentProvider,
 						Audiences:  "bookstore_test_client.cloud.goog",
 					},
 					{
-						ProviderId: "openID_provider",
+						ProviderId: testdata.OpenIdProvider,
 						Audiences:  "ok_audience",
 					},
 					{
-						ProviderId: "openID_invalid_provider",
+						ProviderId: testdata.OpenIdInvalidProvider,
 						Audiences:  "ok_audience",
 					},
 					{
-						ProviderId: "openID_nonexist_provider",
+						ProviderId: testdata.OpenIdNonexistentProvider,
 						Audiences:  "ok_audience",
 					},
 				},
