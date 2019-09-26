@@ -32,10 +32,6 @@ echo '===================== Setup Cache ====================='
 echo '======================================================='
 try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}"
 
-# golang build
-echo '======================================================='
-echo '=====================   Go build  ====================='
-echo '======================================================='
 if [ ! -d "$GOPATH/bin" ]; then
   mkdir $GOPATH/bin
 fi
@@ -43,13 +39,5 @@ if [ ! -d "bin" ]; then
   mkdir bin
 fi
 export GO111MODULE=on
-make tools
-make depend.install
-make build
-make clean
 
-# c++ build
-echo '======================================================='
-echo '===================== Bazel build ====================='
-echo '======================================================='
-make build-envoy
+${ROOT}/scripts/robot-release.sh

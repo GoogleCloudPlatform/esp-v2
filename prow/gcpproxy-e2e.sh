@@ -93,14 +93,41 @@ function e2eGKE() {
   -i ${UNIQUE_ID}
 }
 
-# IMAGE veriable will be set by the script
-${ROOT}/scripts/robot-release.sh
+function waitAPIProxyImage() {
+  local PROXY_IMAGE_SHA_NAME=$(get_proxy_image_name_with_sha)
+  local ENVOY_IMAGE_SHA_NAME=$(get_envoy_image_name_with_sha)
+  echo "Checking if the image ${PROXY_IMAGE_SHA_NAME} and the image ${ENVOY_IMAGE_SHA_NAME} exist..."
+
+  # Wait 20mins.
+  local WAIT_IMAGE_TIMEOUT=1200
+  local SLEEP_UNIT=5
+
+  while true; do
+    gcloud docker -- pull "${PROXY_IMAGE_SHA_NAME}" \
+      && gcloud docker -- pull "${ENVOY_IMAGE_SHA_NAME}" \
+      && { echo "Found the image ${PROXY_IMAGE_SHA_NAME} and the image ${ENVOY_IMAGE_SHA_NAME} exist"; break; }
+
+    if [ ${WAIT_IMAGE_TIMEOUT} -gt 0 ]; then
+      echo "Waiting images with ${WAIT_IMAGE_TIMEOUT}s left"
+      sleep ${SLEEP_UNIT}
+      WAIT_IMAGE_TIMEOUT=$((WAIT_IMAGE_TIMEOUT-SLEEP_UNIT))
+    else
+      return 1;
+    fi
+  done
+  return 0;
+}
+
+# build clients
+make build-grpc-echo
+make build-grpc-interop
+
+# Wait for image build and push.
+waitAPIProxyImage || { echo "Failed in waiting images;"; exit 1; }
 
 echo '======================================================='
 echo '=====================   e2e test  ====================='
 echo '======================================================='
-make build-grpc-echo
-make build-grpc-interop
 
 # TODO(jilinxia): add other backend tests.
 e2eGKE -c "tight" -t "http" -g "bookstore" -R "managed" -m $(get_proxy_image_name_with_sha)
