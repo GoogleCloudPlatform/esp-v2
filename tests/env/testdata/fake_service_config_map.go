@@ -15,6 +15,7 @@
 package testdata
 
 import (
+	"fmt"
 	"io/ioutil"
 
 	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
@@ -28,7 +29,7 @@ import (
 )
 
 var (
-	ConfigMap = map[string]*scpb.Service{
+	configMap = map[string]*scpb.Service{
 		"echo":                  FakeEchoConfig,
 		"echoForDynamicRouting": FakeEchoConfigForDynamicRouting,
 		"bookstore":             FakeBookstoreConfig,
@@ -37,11 +38,10 @@ var (
 	}
 )
 
-func generateSourceInfo(addr string) *scpb.SourceInfo {
+func generateSourceInfo(addr string) (*scpb.SourceInfo, error) {
 	dat, err := ioutil.ReadFile(addr)
 	if err != nil {
-		glog.Errorf("error marshalAny for proto descriptor, %s", err)
-		return nil
+		return nil, fmt.Errorf("error marshalAny for proto descriptor, %s", err)
 	}
 	sourceFile := &smpb.ConfigFile{
 		FilePath:     "api_descriptor.pb",
@@ -51,18 +51,36 @@ func generateSourceInfo(addr string) *scpb.SourceInfo {
 
 	content, err := ptypes.MarshalAny(sourceFile)
 	if err != nil {
-		glog.Errorf("error marshalAny for proto descriptor")
-		return nil
+		return nil, fmt.Errorf("error marshalAny for proto descriptor")
 	}
 	return &scpb.SourceInfo{
 		SourceFiles: []*anypb.Any{content},
-	}
+	}, nil
 }
 
-func SetupSourceInfo() {
-	FakeGRPCEchoConfig.SourceInfo = generateSourceInfo(platform.GetFilePath(platform.FakeGRPCEchoConfig))
-	FakeGRPCInteropConfig.SourceInfo = generateSourceInfo(platform.GetFilePath(platform.FakeGRPCInteropConfig))
-	FakeBookstoreConfig.SourceInfo = generateSourceInfo(platform.GetFilePath(platform.FakeBookstoreConfig))
+func SetupServiceConfig(backendService string) *scpb.Service {
+
+	var err error
+	serviceConfig := proto.Clone(configMap[backendService]).(*scpb.Service)
+
+	switch backendService {
+	case "bookstore":
+		serviceConfig.SourceInfo, err = generateSourceInfo(platform.GetFilePath(platform.FakeBookstoreConfig))
+		break
+	case "grpc-interop":
+		serviceConfig.SourceInfo, err = generateSourceInfo(platform.GetFilePath(platform.FakeGRPCInteropConfig))
+		break
+	case "grpc-echo":
+		serviceConfig.SourceInfo, err = generateSourceInfo(platform.GetFilePath(platform.FakeGRPCEchoConfig))
+		break
+	}
+
+	if err != nil {
+		glog.Errorf("fail to setup service config for %v, got err: %v", backendService, err)
+		return nil
+	}
+
+	return serviceConfig
 }
 
 func SetFakeControlEnvironment(cfg *scpb.Service, url string) {

@@ -24,7 +24,6 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env/components"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/proto"
 	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/genproto/protobuf/api"
 
@@ -73,7 +72,9 @@ type TestEnv struct {
 
 func NewTestEnv(testId uint16, backendService string) *TestEnv {
 	glog.Infof("Running test function #%v", testId)
-	fakeServiceConfig := proto.Clone(testdata.ConfigMap[backendService]).(*conf.Service)
+
+	fakeServiceConfig := testdata.SetupServiceConfig(backendService)
+
 	return &TestEnv{
 		testId:                      testId,
 		mockMetadata:                true,
@@ -196,8 +197,6 @@ func (e *TestEnv) SetupFakeTraceServer() {
 func (e *TestEnv) Setup(confArgs []string) error {
 	var envoyArgs []string
 	var bootstrapperArgs []string
-
-	testdata.SetupSourceInfo()
 
 	if err := e.FakeJwtService.SetupJwt(); err != nil {
 		return err
