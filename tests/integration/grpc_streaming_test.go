@@ -89,7 +89,6 @@ results {
 			HttpMethod:            "POST",
 			LogMessage:            "test.grpc.Test.EchoStream is called",
 			StatusCode:            "0",
-			GrpcStreaming:         true,
 			ConsumerStreamReqCnt:  10,
 			ConsumerStreamRespCnt: 10,
 			ProducerStreamReqCnt:  10,
@@ -243,7 +242,7 @@ plans {
 		}
 
 		// In case intermediate reports are batched, we get the last second operation.
-		if (len(finalReport.Operations) < 2) {
+		if len(finalReport.Operations) < 2 {
 			t.Fatalf("Should have at least 2 operations but now only have %v operations", len(finalReport.Operations))
 		}
 		finalOperation := finalReport.Operations[len(finalReport.Operations)-2]

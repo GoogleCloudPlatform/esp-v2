@@ -292,13 +292,10 @@ void ServiceControlHandlerImpl::callReport(
   info.streaming_response_message_counts =
       streaming_info_.response_message_count;
 
-  // Check if the streaming start time has been set.
-  if (streaming_info_.start_time.time_since_epoch().count() != 0) {
-    info.streaming_durations =
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            now - streaming_info_.start_time)
-            .count();
-  }
+  info.streaming_durations =
+      std::chrono::duration_cast<std::chrono::microseconds>(
+          now - stream_info_.startTime())
+          .count();
 
   info.is_first_report = streaming_info_.is_first_report;
 
@@ -313,7 +310,6 @@ void ServiceControlHandlerImpl::collectDecodeData(
 
   Envoy::Utils::IncrementMessageCounter(request_data, &grpc_request_counter_);
   streaming_info_.request_message_count = grpc_request_counter_.count;
-  streaming_info_.request_bytes += request_data.length();
 
   tryIntermediateReport(now);
 }
@@ -327,17 +323,12 @@ void ServiceControlHandlerImpl::collectEncodeData(
 
   Envoy::Utils::IncrementMessageCounter(response_data, &grpc_response_counter_);
   streaming_info_.response_message_count = grpc_response_counter_.count;
-  streaming_info_.response_bytes += response_data.length();
 
   tryIntermediateReport(now);
 }
 
 void ServiceControlHandlerImpl::tryIntermediateReport(
     std::chrono::system_clock::time_point now) {
-  if (streaming_info_.is_first_report) {
-    streaming_info_.start_time = now;
-  }
-
   // Avoid reporting more frequently than the configured interval.
   if (std::chrono::duration_cast<std::chrono::milliseconds>(now -
                                                             last_reported_)
@@ -349,8 +340,8 @@ void ServiceControlHandlerImpl::tryIntermediateReport(
   ::google::api_proxy::service_control::ReportRequestInfo info;
   prepareReportRequest(info);
 
-  info.request_bytes = streaming_info_.request_bytes + request_header_size_;
-  info.response_bytes = streaming_info_.response_bytes + response_header_size_;
+  info.request_bytes = stream_info_.bytesReceived() + request_header_size_;
+  info.response_bytes = stream_info_.bytesSent() + response_header_size_;
 
   info.frontend_protocol = frontend_protocol_;
   info.is_first_report = streaming_info_.is_first_report;

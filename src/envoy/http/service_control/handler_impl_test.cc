@@ -165,6 +165,8 @@ class HandlerTest : public ::testing::Test {
   testing::NiceMock<MockServiceControlCall>* mock_call_;
   std::unique_ptr<FilterConfigParser> cfg_parser_;
 
+  std::chrono::time_point<std::chrono::system_clock> epoch_{};
+
   // Tracing mocks
   std::unique_ptr<Envoy::Tracing::MockSpan> mock_span_;
 };
@@ -259,6 +261,7 @@ MATCHER_P(MatchesDataReportInfo, expect, "") {
 
   return true;
 }
+
 TEST_F(HandlerTest, HandlerNoOperationFound) {
   // Test: If no operation is found, check should 404 and report should do
   // nothing
@@ -317,7 +320,7 @@ TEST_F(HandlerTest, HandlerCheckNotNeeded) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers);
+  handler.callReport(&headers, &response_headers, &headers, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
@@ -347,7 +350,7 @@ TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers);
+  handler.callReport(&headers, &response_headers, &headers, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithApiKeyRestrictionFields) {
@@ -392,7 +395,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithApiKeyRestrictionFields) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers);
+  handler.callReport(&headers, &response_headers, &headers, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
@@ -428,7 +431,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers);
+  handler.callReport(&headers, &response_headers, &headers, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
@@ -465,7 +468,7 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   EXPECT_CALL(*mock_call_, callReport(_));
-  handler.callReport(&headers, &response_headers, &headers);
+  handler.callReport(&headers, &response_headers, &headers, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerFailCheckSync) {
@@ -504,7 +507,7 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers);
+  handler.callReport(&headers, &response_headers, &headers, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerFailQuotaSync) {
@@ -544,7 +547,7 @@ TEST_F(HandlerTest, HandlerFailQuotaSync) {
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   EXPECT_CALL(*mock_call_, callReport(_));
-  handler.callReport(&headers, &response_headers, &headers);
+  handler.callReport(&headers, &response_headers, &headers, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerSuccessfulCheckAsync) {
@@ -586,7 +589,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckAsync) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers);
+  handler.callReport(&headers, &response_headers, &headers, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
@@ -635,7 +638,7 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers);
+  handler.callReport(&headers, &response_headers, &headers, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerFailCheckAsync) {
@@ -680,7 +683,7 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers);
+  handler.callReport(&headers, &response_headers, &headers, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerFailQuotaAsync) {
@@ -731,7 +734,7 @@ TEST_F(HandlerTest, HandlerFailQuotaAsync) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers);
+  handler.callReport(&headers, &response_headers, &headers, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerOnCheckDoneSkippedIfAbortedForCheckCallback) {
@@ -780,7 +783,7 @@ TEST_F(HandlerTest, HandlerReportWithoutCheck) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers);
+  handler.callReport(&headers, &response_headers, &headers, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerCollectDecodeData) {
@@ -843,6 +846,9 @@ TEST_F(HandlerTest, HandlerCollectDecodeData) {
   expected_report_info.request_bytes =
       mock_buffer.length() * 3 + headers.byteSize();
   expected_report_info.response_bytes = response_headers.byteSize();
+  mock_stream_info_.bytes_received_ = mock_buffer.length() * 3;
+  mock_stream_info_.bytes_sent_ = 0;
+
   EXPECT_CALL(*mock_call_,
               callReport(MatchesDataReportInfo(expected_report_info)))
       .Times(1);
@@ -853,6 +859,9 @@ TEST_F(HandlerTest, HandlerCollectDecodeData) {
   expected_report_info.is_first_report = false;
   expected_report_info.request_bytes =
       mock_buffer.length() * 4 + headers.byteSize();
+  mock_stream_info_.bytes_received_ = mock_buffer.length() * 4;
+  mock_stream_info_.bytes_sent_ = 0;
+
   EXPECT_CALL(*mock_call_,
               callReport(MatchesDataReportInfo(expected_report_info)))
       .Times(1);
@@ -922,6 +931,9 @@ TEST_F(HandlerTest, HandlerCollectEncodeData) {
   expected_report_info.request_bytes = headers.byteSize();
   expected_report_info.response_bytes =
       mock_buffer.length() * 3 + response_headers.byteSize();
+  mock_stream_info_.bytes_received_ = 0;
+  mock_stream_info_.bytes_sent_ = mock_buffer.length() * 3;
+
   EXPECT_CALL(*mock_call_,
               callReport(MatchesDataReportInfo(expected_report_info)))
       .Times(1);
@@ -932,6 +944,8 @@ TEST_F(HandlerTest, HandlerCollectEncodeData) {
   expected_report_info.is_first_report = false;
   expected_report_info.response_bytes =
       mock_buffer.length() * 4 + response_headers.byteSize();
+  mock_stream_info_.bytes_sent_ = mock_buffer.length() * 4;
+
   EXPECT_CALL(*mock_call_,
               callReport(MatchesDataReportInfo(expected_report_info)))
       .Times(1);
@@ -975,13 +989,9 @@ TEST_F(HandlerTest, FinalReports) {
   std::chrono::system_clock::time_point start_time =
       std::chrono::system_clock::now();
   std::chrono::system_clock::time_point time = start_time;
+  mock_stream_info_.start_time_ = start_time;
 
-  time += std::chrono::milliseconds(201);
-  // Now the start_time of streaming_info_ has been set.
-  start_time = time;
   handler.collectDecodeData(mock_buffer, time);
-
-  time += std::chrono::milliseconds(200);
   handler.collectEncodeData(mock_buffer, time);
 
   time += std::chrono::milliseconds(200);
@@ -990,7 +1000,8 @@ TEST_F(HandlerTest, FinalReports) {
           .count();
   ReportRequestInfo expected_report_info;
   expected_report_info.api_key = "foobar";
-  expected_report_info.is_first_report = false;
+
+  expected_report_info.is_first_report = true;
   expected_report_info.is_final_report = true;
   expected_report_info.status = Status::OK;
 
