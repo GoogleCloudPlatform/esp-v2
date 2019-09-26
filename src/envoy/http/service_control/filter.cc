@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "common/grpc/status.h"
-#include "envoy/http/header_map.h"
-
 #include <chrono>
 
+#include "common/grpc/status.h"
+#include "envoy/http/header_map.h"
 #include "src/envoy/http/service_control/filter.h"
 #include "src/envoy/http/service_control/handler.h"
 
@@ -92,9 +91,8 @@ void ServiceControlFilter::rejectRequest(Http::Code code,
 Http::FilterDataStatus ServiceControlFilter::decodeData(Buffer::Instance& data,
                                                         bool end_stream) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
-
   if (!end_stream && data.length() > 0) {
-    handler_->collectDecodeData(data, std::chrono::system_clock::now());
+    handler_->collectDecodeData(data);
   }
 
   if (state_ == Calling) {
@@ -122,17 +120,23 @@ Http::FilterHeadersStatus ServiceControlFilter::encode100ContinueHeaders(
   return Http::FilterHeadersStatus::Continue;
 }
 
-Http::FilterHeadersStatus ServiceControlFilter::encodeHeaders(Http::HeaderMap&,
-                                                              bool) {
+Http::FilterHeadersStatus ServiceControlFilter::encodeHeaders(
+    Http::HeaderMap& headers, bool) {
+  ENVOY_LOG(debug, "Called ServiceControl Filter : {} before", __func__);
+
+  // For the cases the decodeHeaders not called, like the request get failed in
+  // the Jwt-Authn filter, the handler_ is not initialized.
+  if (handler_ != nullptr) {
+    handler_->processResponseHeaders(headers);
+  }
   return Http::FilterHeadersStatus::Continue;
 }
 
 Http::FilterDataStatus ServiceControlFilter::encodeData(Buffer::Instance& data,
                                                         bool end_stream) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
-
   if (!end_stream && data.length() > 0) {
-    handler_->collectEncodeData(data, std::chrono::system_clock::now());
+    handler_->collectEncodeData(data);
   }
   return Http::FilterDataStatus::Continue;
 }

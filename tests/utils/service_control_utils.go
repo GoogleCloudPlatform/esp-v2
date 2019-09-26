@@ -52,35 +52,40 @@ type ExpectedQuota struct {
 }
 
 type ExpectedReport struct {
-	Aggregate         int64
-	Version           string
-	ServiceName       string
-	ServiceConfigID   string
-	ApiVersion        string
-	ApiMethod         string
-	ApiKey            string
-	ProducerProjectID string
-	ConsumerProjectID string
-	URL               string
-	Location          string
-	HttpMethod        string
-	LogMessage        string
-	RequestSize       int64
-	ResponseSize      int64
-	RequestBytes      int64
-	ResponseBytes     int64
-	ResponseCode      int
-	Referer           string
-	StatusCode        string
-	ErrorCause        string
-	ErrorType         string
-	FrontendProtocol  string
-	BackendProtocol   string
-	Platform          string
-	JwtAuth           string
-	RequestHeaders    string
-	ResponseHeaders   string
-	JwtPayloads       string
+	Aggregate             int64
+	Version               string
+	ServiceName           string
+	ServiceConfigID       string
+	ApiVersion            string
+	ApiMethod             string
+	ApiKey                string
+	ProducerProjectID     string
+	ConsumerProjectID     string
+	URL                   string
+	Location              string
+	HttpMethod            string
+	LogMessage            string
+	GrpcStreaming         bool
+	ConsumerStreamReqCnt  int64
+	ConsumerStreamRespCnt int64
+	ProducerStreamReqCnt  int64
+	ProducerStreamRespCnt int64
+	RequestSize           int64
+	ResponseSize          int64
+	RequestBytes          int64
+	ResponseBytes         int64
+	ResponseCode          int
+	Referer               string
+	StatusCode            string
+	ErrorCause            string
+	ErrorType             string
+	FrontendProtocol      string
+	BackendProtocol       string
+	Platform              string
+	JwtAuth               string
+	RequestHeaders        string
+	ResponseHeaders       string
+	JwtPayloads           string
 }
 
 type distOptions struct {
@@ -93,6 +98,8 @@ const (
 	MTProducer = 1 + iota
 	MTConsumer
 	MTProducerByConsumer
+	MTProducerUnderGrpcStream
+	MTConsumerUnderGrpcStream
 )
 
 type MetricType int
@@ -110,10 +117,8 @@ var (
 		"serviceruntime.googleapis.com/api/consumer/request_overhead_latencies":             MTConsumer,
 		"serviceruntime.googleapis.com/api/producer/request_overhead_latencies":             MTProducer,
 		"serviceruntime.googleapis.com/api/producer/by_consumer/request_overhead_latencies": MTProducerByConsumer,
-		// TODO (qiwzhang) b/123950356 to add grpc streaming metrics
-		// "serviceruntime.googleapis.com/api/consumer/streaming_durations":        MTConsumer,
-		// "serviceruntime.googleapis.com/api/producer/streaming_durations":        MTProducer,
-		// "serviceruntime.googleapis.com/api/producer/by_consumer/streaming_durations":        MTProducerByConsumer,
+		"serviceruntime.googleapis.com/api/consumer/streaming_durations":                    MTConsumerUnderGrpcStream,
+		"serviceruntime.googleapis.com/api/producer/streaming_durations":                    MTProducerUnderGrpcStream,
 	}
 	randomLogEntries = []string{
 		"timestamp",
@@ -426,6 +431,22 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 		createDistMetricSet(&sizeDistOptions,
 			"serviceruntime.googleapis.com/api/producer/response_sizes", er.ResponseSize),
 	}
+	if er.ConsumerStreamReqCnt != 0 {
+		ms = append(ms,
+			createDistMetricSet(&sizeDistOptions, "serviceruntime.googleapis.com/api/consumer/streaming_request_message_counts", er.ConsumerStreamReqCnt))
+	}
+	if er.ConsumerStreamRespCnt != 0 {
+		ms = append(ms,
+			createDistMetricSet(&sizeDistOptions, "serviceruntime.googleapis.com/api/consumer/streaming_response_message_counts", er.ConsumerStreamRespCnt))
+	}
+	if er.ProducerStreamReqCnt != 0 {
+		ms = append(ms,
+			createDistMetricSet(&sizeDistOptions, "serviceruntime.googleapis.com/api/producer/streaming_request_message_counts", er.ProducerStreamReqCnt))
+	}
+	if er.ProducerStreamRespCnt != 0 {
+		ms = append(ms,
+			createDistMetricSet(&sizeDistOptions, "serviceruntime.googleapis.com/api/producer/streaming_response_message_counts", er.ProducerStreamRespCnt))
+	}
 
 	if sendConsumer {
 		ms = append(ms,
@@ -458,6 +479,9 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 
 	for name, t := range randomMatrics {
 		if t == MTProducer || sendConsumer && t == MTConsumer {
+			ms = append(ms, createDistMetricSet(&timeDistOptions, name, int64(fakeLatency)))
+		}
+		if er.GrpcStreaming && (t == MTProducerUnderGrpcStream || sendConsumer && t == MTConsumerUnderGrpcStream) {
 			ms = append(ms, createDistMetricSet(&timeDistOptions, name, int64(fakeLatency)))
 		}
 	}
@@ -586,6 +610,7 @@ func VerifyReportRequestOperationLabel(body []byte, label, value string) error {
 // If the verification fails, it returns an error.
 func VerifyReport(body []byte, er *ExpectedReport) error {
 	got, err := UnmarshalReportRequest(body)
+
 	if err != nil {
 		return err
 	}

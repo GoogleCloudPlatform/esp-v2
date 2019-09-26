@@ -60,9 +60,10 @@ type ConfigGeneratorOptions struct {
 	EnvoyUseRemoteAddress  bool
 	EnvoyXffNumTrustedHops int
 
-	LogJwtPayloads     string
-	LogRequestHeaders  string
-	LogResponseHeaders string
+	LogJwtPayloads            string
+	LogRequestHeaders         string
+	LogResponseHeaders        string
+	MinStreamReportIntervalMs uint64
 
 	SuppressEnvoyHeaders bool
 

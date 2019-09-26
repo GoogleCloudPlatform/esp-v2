@@ -239,6 +239,7 @@ struct ReportRequestInfo : public OperationInfo {
 // Intermediate streaming information for an active request.
 struct StreamingRequestInfo {
   // Nanosecond timestamp of the first message in the stream.
+  // It will be set to epoch by default constructor.
   std::chrono::system_clock::time_point start_time;
   // Request message size till the current time point.
   int64_t request_bytes;

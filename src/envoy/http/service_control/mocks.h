@@ -30,9 +30,10 @@ class MockServiceControlHandler : public ServiceControlHandler {
                void(Http::HeaderMap& headers, Envoy::Tracing::Span& parent_span,
                     CheckDoneCallback& callback));
 
-  MOCK_METHOD3(callReport, void(const Http::HeaderMap* request_headers,
+  MOCK_METHOD4(callReport, void(const Http::HeaderMap* request_headers,
                                 const Http::HeaderMap* response_headers,
-                                const Http::HeaderMap* response_trailers));
+                                const Http::HeaderMap* response_trailers,
+                                std::chrono::system_clock::time_point now));
 
   MOCK_METHOD2(collectDecodeData,
                void(Buffer::Instance& request_data,
@@ -41,6 +42,9 @@ class MockServiceControlHandler : public ServiceControlHandler {
   MOCK_METHOD2(collectEncodeData,
                void(Buffer::Instance& response_data,
                     std::chrono::system_clock::time_point now));
+
+  MOCK_METHOD1(processResponseHeaders,
+               void(const Http::HeaderMap& response_headers));
 };
 
 class MockServiceControlHandlerFactory : public ServiceControlHandlerFactory {
