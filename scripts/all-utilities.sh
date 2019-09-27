@@ -274,9 +274,17 @@ function get_tool() {
   return 0
 }
 
+function get_envoy_image_name() {
+  echo -n 'gcr.io/cloudesf-testing/envoy-binary'
+}
+
+function get_proxy_image_name() {
+  echo -n 'gcr.io/cloudesf-testing/api-proxy'
+}
+
 function get_envoy_image_name_with_sha() {
     # Generic docker image format. https://git-scm.com/docs/git-show.
-    local image_format='gcr.io/cloudesf-testing/envoy-binary:git-%H'
+    local image_format="$(get_envoy_image_name):git-%H"
     local image="$(git show -q HEAD --pretty=format:"${image_format}")"
     echo -n $image
     return 0
@@ -284,11 +292,12 @@ function get_envoy_image_name_with_sha() {
 
 function get_proxy_image_name_with_sha() {
     # Generic docker image format. https://git-scm.com/docs/git-show.
-    local image_format='gcr.io/cloudesf-testing/api-proxy:git-%H'
+    local image_format="$(get_proxy_image_name):git-%H"
     local image="$(git show -q HEAD --pretty=format:"${image_format}")"
     echo -n $image
     return 0
 }
+
 
 # Attempts to setup bazel to use a remote cache
 # On non-Prow hosts, the remote cache will not be used

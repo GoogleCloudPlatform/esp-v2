@@ -31,12 +31,11 @@ while getopts :i: arg; do
   esac
 done
 
-ENVOY_IMAGE_GENERAL_NAME='gcr.io/cloudesf-testing/envoy-binary'
-ENVOY_IMAGE_SHA_NAME=$(get_envoy_image_name_with_sha)
-ENVOY_IMAGE_LATEST_NAME="${ENVOY_IMAGE_GENERAL_NAME}:latest"
+SUBSTITUTIONS_ARG="_ENVOY_IMAGE_SHA_NAME=$(get_envoy_image_name_with_sha),\
+_ENVOY_IMAGE_LATEST_NAME=$(get_envoy_image_name):latest,_PROXY_IMAGE_SHA_NAME=\
+$(get_proxy_image_name_with_sha)"
 
-PROXY_IMAGE_SHA_NAME=$(get_proxy_image_name_with_sha)
-
+set -x
 gcloud builds submit  ${ROOT} --config ${DOCKERFILE_PATH}/cloudbuild.yaml \
-  --substitutions _ENVOY_IMAGE_SHA_NAME=${ENVOY_IMAGE_SHA_NAME},_ENVOY_IMAGE_LATEST_NAME=${ENVOY_IMAGE_LATEST_NAME},_PROXY_IMAGE_SHA_NAME=${PROXY_IMAGE_SHA_NAME} \
+  --substitutions ${SUBSTITUTIONS_ARG}\
   --project cloudesf-testing || { exit 1;}

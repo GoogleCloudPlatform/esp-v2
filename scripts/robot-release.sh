@@ -20,6 +20,19 @@ set -eo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities'; exit 1; }
 
+
+function checkImageExistence() {
+    local image_name=$1
+    local sha=$2
+    if gcloud container images list-tags ${image_name} | grep -q ${sha}; then
+      return 0;
+    else
+      return 1;
+    fi
+}
+
+
+
 # golang build
 echo '======================================================='
 echo '====================== Go build ======================='
@@ -35,17 +48,13 @@ echo '===================== Bazel build ====================='
 echo '======================================================='
 make build-envoy
 
-echo '======================================================='
-echo '=================== Docker Release ===================='
-echo '======================================================='
+echo "Checking if docker image $(get_envoy_image_name_with_sha) and image $(get_proxy_image_name_with_sha) exists.."
 
-PROXY_IMAGE_SHA_NAME=$(get_proxy_image_name_with_sha)
-ENVOY_IMAGE_SHA_NAME=$(get_envoy_image_name_with_sha)
+checkImageExistence $(get_envoy_image_name) $(git rev-parse HEAD) \
+  && checkImageExistence $(get_proxy_image_name) $(git rev-parse HEAD) \
+  && { echo "Both image $(get_envoy_image_name_with_sha) and image $(get_proxy_image_name_with_sha) already exists; Skip."; exit 0; }
 
-echo "Checking if docker image ${PROXY_IMAGE_SHA_NAME} and image ${ENVOY_IMAGE_SHA_NAME} exists.."
-gcloud docker -- pull "${PROXY_IMAGE_SHA_NAME}" \
-  && gcloud docker -- pull "${ENVOY_IMAGE_SHA_NAME}" \
-  && { echo "Both image ${PROXY_IMAGE_SHA_NAME} and image ${ENVOY_IMAGE_SHA_NAME} already exists; skipping"; exit 0; }
+echo "Docker image $(get_envoy_image_name_with_sha) and image $(get_proxy_image_name_with_sha) don't exist; Start to build."
 
 echo '======================================================='
 echo '================= Cloud Build Docker =================='
