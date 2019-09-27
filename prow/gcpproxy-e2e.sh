@@ -117,13 +117,17 @@ function waitAPIProxyImage() {
   done
   return 0;
 }
+function downloadClientBinaries() {
+  gsutil -m cp "gs://apiproxy-testing-presubmit-binaries/*" ${ROOT}/bin/
+  mv ${ROOT}/bin/api_descriptor.pb ${ROOT}/tests/endpoints/grpc_echo/proto/api_descriptor.pb
+  chmod +x ${ROOT}/bin/*
+}
 
-# build clients
-make build-grpc-echo
-make build-grpc-interop
 
 # Wait for image build and push.
 waitAPIProxyImage || { echo "Failed in waiting images;"; exit 1; }
+
+downloadClientBinaries || { echo "Failed in downloading client binaries;"; exit 1; }
 
 echo '======================================================='
 echo '=====================   e2e test  ====================='

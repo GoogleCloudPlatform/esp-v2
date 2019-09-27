@@ -31,11 +31,9 @@ function checkImageExistence() {
     fi
 }
 
-
-
 # golang build
 echo '======================================================='
-echo '====================== Go build ======================='
+echo '================= Build ConfigManager ================='
 echo '======================================================='
 
 make tools
@@ -44,14 +42,14 @@ make build
 
 # c++ build
 echo '======================================================='
-echo '===================== Bazel build ====================='
+echo '===================== Build Envoy ====================='
 echo '======================================================='
 make build-envoy
 
 echo "Checking if docker image $(get_envoy_image_name_with_sha) and image $(get_proxy_image_name_with_sha) exists.."
 
-checkImageExistence $(get_envoy_image_name) $(git rev-parse HEAD) \
-  && checkImageExistence $(get_proxy_image_name) $(git rev-parse HEAD) \
+checkImageExistence $(get_envoy_image_name) $(get_sha) \
+  && checkImageExistence $(get_proxy_image_name) $(get_sha) \
   && { echo "Both image $(get_envoy_image_name_with_sha) and image $(get_proxy_image_name_with_sha) already exists; Skip."; exit 0; }
 
 echo "Docker image $(get_envoy_image_name_with_sha) and image $(get_proxy_image_name_with_sha) don't exist; Start to build."
