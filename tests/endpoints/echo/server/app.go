@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 	"github.com/gorilla/mux"
 )
 
@@ -31,8 +32,8 @@ func main() {
 	port := flag.Int("port", 8082, "server port")
 	isHttps := flag.Bool("enable_https", false, "true for HTTPS, false for HTTP")
 	enableRootPathHandler := flag.Bool("enable_root_path_handler", false, "true for adding root path for dynamic routing handler")
-	httpsCertPath := flag.String("https_cert_path", "../../../env/testdata/localhost.crt", "path for HTTPS cert path")
-	httpsKeyPath := flag.String("https_key_path", "../../../env/testdata/localhost.key", "path for HTTPS key path")
+	httpsCertPath := flag.String("https_cert_path", platform.GetFilePath(platform.HttpsCert), "path for HTTPS cert path")
+	httpsKeyPath := flag.String("https_key_path", platform.GetFilePath(platform.HttpsKey), "path for HTTPS key path")
 	flag.Parse()
 
 	r := mux.NewRouter()

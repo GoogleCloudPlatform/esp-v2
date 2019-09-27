@@ -1,12 +1,11 @@
-var grpc = require('grpc');
+var grpc = require('@grpc/grpc-js');
 var protoLoader = require('@grpc/proto-loader');
 var health = require('grpc-health-check');
 
 // This port is used by the backend settings in envoy.yaml
 var PORT = 8082;
 const path = require('path');
-// TODO(taoxuy): make bookstore.proto work for js server
-const PROTO_PATH = path.join(__dirname, '/proto/bookstore_js.proto');
+const PROTO_PATH = path.join(__dirname, '/proto/bookstore.proto');
 
 var packageDefinition = protoLoader.loadSync(PROTO_PATH, {
   keepCase: true,
@@ -168,10 +167,21 @@ function main() {
       process.exit(1);
     }
   }
+
   console.log(`GRPC Bookstore server binding to port ${PORT}`);
-  server.bind(`0.0.0.0:${PORT}`, grpc.ServerCredentials.createInsecure());
-  server.start();
-  console.log(`GRPC Bookstore server ready`);
+  server.bindAsync(`0.0.0.0:${PORT}`, grpc.ServerCredentials.createInsecure(), function (error, actualPort) {
+    if (error) {
+      console.log(error);
+      return;
+    }
+    if (actualPort !== PORT) {
+      console.log(`Binded to ${actualPort} instead of ${PORT}`);
+      return;
+    }
+
+    server.start();
+    console.log(`GRPC Bookstore server ready`);
+  });
 }
 
 main();
