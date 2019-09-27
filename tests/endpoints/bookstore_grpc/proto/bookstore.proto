@@ -23,14 +23,13 @@ option java_outer_classname = "BookstoreProto";
 option java_package = "com.google.endpoints.examples.bookstore";
 
 import "google/api/annotations.proto";
-import "google/protobuf/empty.proto";
 
 // A simple Bookstore API.
 //
 // The API manages shelves and books resources. Shelves contain books.
 service Bookstore {
   // Returns a list of all shelves in the bookstore.
-  rpc ListShelves(google.protobuf.Empty) returns (ListShelvesResponse) {
+  rpc ListShelves(Empty) returns (ListShelvesResponse) {
     // Define HTTP mapping.
     // Client example (Assuming your service is hosted at the given
     // 'DOMAIN_NAME'):
@@ -57,7 +56,7 @@ service Bookstore {
     };
   }
   // Deletes a shelf, including all books that are stored on the shelf.
-  rpc DeleteShelf(DeleteShelfRequest) returns (google.protobuf.Empty) {
+  rpc DeleteShelf(DeleteShelfRequest) returns (Empty) {
     // Client example - deletes the second shelf:
     //   curl -X DELETE http://DOMAIN_NAME/v1/shelves/2
     option (google.api.http) = {
@@ -95,7 +94,7 @@ service Bookstore {
     };
   }
   // Deletes a book from a shelf.
-  rpc DeleteBook(DeleteBookRequest) returns (google.protobuf.Empty) {
+  rpc DeleteBook(DeleteBookRequest) returns (Empty) {
     // Client example - delete the first book from the first shelf:
     //   curl -X DELETE http://DOMAIN_NAME/v1/shelves/1/books/1
     option (google.api.http) = {
@@ -103,6 +102,8 @@ service Bookstore {
     };
   }
 }
+
+message Empty{}
 
 // A shelf resource.
 message Shelf {
