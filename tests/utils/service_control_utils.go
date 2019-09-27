@@ -65,7 +65,6 @@ type ExpectedReport struct {
 	Location              string
 	HttpMethod            string
 	LogMessage            string
-	GrpcStreaming         bool
 	ConsumerStreamReqCnt  int64
 	ConsumerStreamRespCnt int64
 	ProducerStreamReqCnt  int64
@@ -142,7 +141,7 @@ func CreateCheck(er *ExpectedCheck) sc.CheckRequest {
 	}
 	if er.CallerIp != "" {
 		erPb.Operation.Labels["servicecontrol.googleapis.com/caller_ip"] =
-			er.CallerIp
+				er.CallerIp
 	}
 
 	if er.AndroidCertFingerprint != "" {
@@ -166,7 +165,7 @@ func CreateCheck(er *ExpectedCheck) sc.CheckRequest {
 
 func responseCodes(code int) (response, class string) {
 	return fmt.Sprintf("%d", code),
-		fmt.Sprintf("%dxx", code/100)
+			fmt.Sprintf("%dxx", code/100)
 }
 
 func createReportLabels(er *ExpectedReport) map[string]string {
@@ -481,7 +480,7 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 		if t == MTProducer || sendConsumer && t == MTConsumer {
 			ms = append(ms, createDistMetricSet(&timeDistOptions, name, int64(fakeLatency)))
 		}
-		if er.GrpcStreaming && (t == MTProducerUnderGrpcStream || sendConsumer && t == MTConsumerUnderGrpcStream) {
+		if t == MTProducerUnderGrpcStream || sendConsumer && t == MTConsumerUnderGrpcStream {
 			ms = append(ms, createDistMetricSet(&timeDistOptions, name, int64(fakeLatency)))
 		}
 	}

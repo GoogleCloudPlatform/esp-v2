@@ -102,7 +102,6 @@ results {
 				FrontendProtocol:      "grpc",
 				HttpMethod:            "POST",
 				LogMessage:            "endpoints.examples.bookstore.Bookstore.Unspecified is called",
-				GrpcStreaming:         true,
 				ProducerStreamRespCnt: 1,
 				StatusCode:            "0",
 				RequestSize:           332,
