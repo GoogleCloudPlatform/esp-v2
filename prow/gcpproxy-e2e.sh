@@ -134,6 +134,18 @@ echo '=====================   e2e test  ====================='
 echo '======================================================='
 
 # TODO(jilinxia): add other backend tests.
-e2eGKE -c "tight" -t "http" -g "bookstore" -R "managed" -m $(get_proxy_image_name_with_sha)
-e2eGKE -c "tight" -t "http2" -g "echo" -R "managed" -m $(get_proxy_image_name_with_sha)
-e2eGKE -c "tight" -t "http2" -g "interop" -R "managed" -m $(get_proxy_image_name_with_sha)
+case ${TEST_CASE} in
+  "tight-http-bookstore-managed" )
+    e2eGKE -c "tight" -t "http" -g "bookstore" -R "managed" -m $(get_proxy_image_name_with_sha)
+  ;;
+  "tight-grpc-echo-managed" )
+    e2eGKE -c "tight" -t "grpc" -g "echo" -R "managed" -m $(get_proxy_image_name_with_sha)
+  ;;
+  "tight-grpc-interop-managed")
+    e2eGKE -c "tight" -t "grpc" -g "interop" -R "managed" -m $(get_proxy_image_name_with_sha)
+  ;;
+  * )
+    echo "No such test case ${TEST_CASE}"
+    exit 1
+  ;;
+esac
