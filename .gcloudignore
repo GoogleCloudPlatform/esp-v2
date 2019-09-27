@@ -1,2 +1,7 @@
-#!include:.gitignore
+# Ignore everything
+/[!.]*
+/.?*
+
+# Only allow files used in building dockers
 !bin/
+!docker/
