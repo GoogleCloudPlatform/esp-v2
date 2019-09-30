@@ -190,7 +190,7 @@ func addDynamicRoutingBackendPort(serviceConfig *conf.Service, port uint16) erro
 
 func (e *TestEnv) SetupFakeTraceServer() {
 	// Start fake stackdriver server
-	e.FakeStackdriverServer = components.NewFakeStackdriver(e.ports.FakeStackdriverPort)
+	e.FakeStackdriverServer = components.NewFakeStackdriver()
 }
 
 // Setup setups Envoy, ConfigManager, and Backend server for test.
@@ -198,7 +198,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	var envoyArgs []string
 	var bootstrapperArgs []string
 
-	if err := e.FakeJwtService.SetupJwt(); err != nil {
+	if err := e.FakeJwtService.SetupJwt(e.ports); err != nil {
 		return err
 	}
 
@@ -226,7 +226,9 @@ func (e *TestEnv) Setup(confArgs []string) error {
 
 		e.ServiceControlServer.Setup()
 		testdata.SetFakeControlEnvironment(e.fakeServiceConfig, e.ServiceControlServer.GetURL())
-		testdata.AppendLogMetrics(e.fakeServiceConfig)
+		if err := testdata.AppendLogMetrics(e.fakeServiceConfig); err != nil {
+			return err
+		}
 
 		confArgs = append(confArgs, "--service_management_url="+e.mockServiceManagementServer.Start())
 	}
@@ -239,6 +241,10 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		e.MockMetadataServer = components.NewMockMetadata(e.mockMetadataOverride)
 		confArgs = append(confArgs, "--metadata_url="+e.MockMetadataServer.GetURL())
 		bootstrapperArgs = append(bootstrapperArgs, "--metadata_url="+e.MockMetadataServer.GetURL())
+	}
+
+	if e.FakeStackdriverServer != nil {
+		e.FakeStackdriverServer.StartStackdriverServer(e.ports.FakeStackdriverPort)
 	}
 
 	confArgs = append(confArgs, fmt.Sprintf("--cluster_port=%v", e.ports.BackendServerPort))
@@ -270,7 +276,10 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		envoyArgs = append(envoyArgs, "--drain-time-s", strconv.Itoa(e.envoyDrainTimeInSec))
 	}
 
-	e.envoy, err = components.NewEnvoy(envoyArgs, bootstrapperArgs, envoyConfPath, e.ports, e.testId)
+	// Enable tracing if the stackdriver server was setup for this test
+	shouldEnableTrace := e.FakeStackdriverServer != nil
+
+	e.envoy, err = components.NewEnvoy(envoyArgs, bootstrapperArgs, envoyConfPath, shouldEnableTrace, e.ports, e.testId)
 	if err != nil {
 		glog.Errorf("unable to create Envoy %v", err)
 		return err
@@ -365,6 +374,10 @@ func (e *TestEnv) TearDown() {
 	// Run all health checks. If they fail, our test causes a server to become unhealthy...
 	if err := e.healthRegistry.RunAllHealthChecks(); err != nil {
 		glog.Errorf("health check failure during teardown: %v", err)
+	}
+
+	if e.FakeJwtService != nil {
+		e.FakeJwtService.TearDown()
 	}
 
 	if e.configMgr != nil {

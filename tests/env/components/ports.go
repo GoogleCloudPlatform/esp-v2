@@ -19,6 +19,7 @@ import (
 	"net"
 	"time"
 
+	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	"github.com/golang/glog"
 )
 
@@ -96,8 +97,22 @@ const (
 
 const (
 	portBase uint16 = 20000
-	// Maximum number of ports used in each test.
+
+	// Maximum number of ports used by non-jwt components.
 	portNum uint16 = 6
+)
+
+var (
+	// Maximum number of ports used by jwt fake servers.
+	jwtPortNum = uint16(len(testdata.ProviderConfigs))
+
+	// Ports allocated to Jwt open-id servers
+	preAllocatedPorts = map[uint16]bool{
+		32024: true,
+		32025: true,
+		32026: true,
+		32027: true,
+	}
 )
 
 // Ports stores all used ports and other ids for shared resources
@@ -108,16 +123,23 @@ type Ports struct {
 	DiscoveryPort             uint16
 	AdminPort                 uint16
 	FakeStackdriverPort       uint16
+	JwtRangeBase              uint16
 }
 
 func allocPortBase(testId uint16) uint16 {
-	base := portBase + testId*portNum
+
+	// The maximum number of ports a single test can use
+	maxPortsPerTest := portNum + jwtPortNum
+
+	// Find a range of ports that is not taken
+	base := portBase + testId*maxPortsPerTest
 	for i := 0; i < 10; i++ {
-		if allPortFree(base, portNum) {
+		if allPortFree(base, maxPortsPerTest) {
 			return base
 		}
-		base += maxTestNum * portNum
+		base += maxTestNum * maxPortsPerTest
 	}
+
 	glog.Warningf("test(%v) could not find free ports, continue the test...", testId)
 	return base
 }
@@ -134,6 +156,14 @@ func allPortFree(base uint16, ports uint16) bool {
 
 // IsPortUsed checks if a port is used
 func IsPortUsed(port uint16) bool {
+
+	// Check if this is pre-allocated and should not be used
+	_, ok := preAllocatedPorts[port]
+	if ok {
+		return true
+	}
+
+	// Check if anything is listening on this port
 	serverPort := fmt.Sprintf("localhost:%v", port)
 	_, err := net.DialTimeout("tcp", serverPort, 100*time.Millisecond)
 	return err == nil
@@ -149,6 +179,7 @@ func NewPorts(testId uint16) *Ports {
 		DiscoveryPort:             base + 3,
 		AdminPort:                 base + 4,
 		FakeStackdriverPort:       base + 5,
+		JwtRangeBase:              base + 6,
 	}
 	glog.Infof(fmt.Sprintf("Ports generated for test(%v) are: %+v", testId, ports))
 	return ports

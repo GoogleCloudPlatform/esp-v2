@@ -141,7 +141,7 @@ func CreateCheck(er *ExpectedCheck) sc.CheckRequest {
 	}
 	if er.CallerIp != "" {
 		erPb.Operation.Labels["servicecontrol.googleapis.com/caller_ip"] =
-				er.CallerIp
+			er.CallerIp
 	}
 
 	if er.AndroidCertFingerprint != "" {
@@ -165,7 +165,7 @@ func CreateCheck(er *ExpectedCheck) sc.CheckRequest {
 
 func responseCodes(code int) (response, class string) {
 	return fmt.Sprintf("%d", code),
-			fmt.Sprintf("%dxx", code/100)
+		fmt.Sprintf("%dxx", code/100)
 }
 
 func createReportLabels(er *ExpectedReport) map[string]string {

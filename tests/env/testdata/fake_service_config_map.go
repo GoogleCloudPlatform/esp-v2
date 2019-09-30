@@ -89,15 +89,17 @@ func SetFakeControlEnvironment(cfg *scpb.Service, url string) {
 	}
 }
 
-func AppendLogMetrics(cfg *scpb.Service) {
-	txt, err := ioutil.ReadFile("../env/testdata/logs_metrics.pb.txt")
+func AppendLogMetrics(cfg *scpb.Service) error {
+	txt, err := ioutil.ReadFile(platform.GetFilePath(platform.LogMetrics))
 	if err != nil {
-		glog.Errorf("error reading logs_metrics.pb.txt, %s", err)
+		return fmt.Errorf("error reading logs_metrics.pb.txt, %s", err)
 	}
 
 	lm := &scpb.Service{}
 	if err = proto.UnmarshalText(string(txt), lm); err != nil {
-		glog.Errorf("failed to parse the text from logs_metrics.pb.txt, %s", err)
+		return fmt.Errorf("failed to parse the text from logs_metrics.pb.txt, %s", err)
 	}
 	proto.Merge(cfg, lm)
+
+	return nil
 }

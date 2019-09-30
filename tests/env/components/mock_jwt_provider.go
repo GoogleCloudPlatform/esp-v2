@@ -22,6 +22,7 @@ import (
 	"net/http/httptest"
 	"sync/atomic"
 
+	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	"github.com/golang/glog"
 	"github.com/gorilla/mux"
@@ -31,6 +32,7 @@ import (
 
 // These addresses must be hardcoded to match the keys generated in fake_jwt.go
 const (
+	openIdServerAddr           = "127.0.0.1:32024"
 	openIDProviderAddr         = "127.0.0.1:32025"
 	openIDInvalidProviderAddr  = "127.0.0.1:32026"
 	openIDNonexistProviderAddr = "127.0.0.1:32027"
@@ -55,19 +57,25 @@ func NewFakeJwtService() *FakeJwtService {
 }
 
 // Setup non-OpenId providers.
-func (fjs *FakeJwtService) SetupJwt() error {
+func (fjs *FakeJwtService) SetupJwt(ports *Ports) error {
 
 	// Setup non-OpenID providers
-	for _, config := range testdata.ProviderConfigs {
+	for i, config := range testdata.ProviderConfigs {
 		var provider *MockJwtProvider
+		var err error
 
 		// Create fake provider
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackHost(), ports.JwtRangeBase+uint16(i))
 		if config.IsInvalid {
-			provider = newMockInvalidJwtProvider()
+			provider, err = newMockInvalidJwtProvider(addr)
 		} else if config.IsNonexistent {
 			provider = &MockJwtProvider{}
 		} else {
-			provider = newMockJwtProvider(config.Keys)
+			provider, err = newMockJwtProvider(addr, config.Keys)
+		}
+
+		if err != nil {
+			return err
 		}
 
 		// Set auth id and issuer
@@ -95,7 +103,10 @@ func (fjs *FakeJwtService) SetupJwt() error {
 func (fjs *FakeJwtService) SetupOpenId() error {
 	// Test Jwks and Jwt Tokens are generated following
 	// https://github.com/istio/istio/tree/master/security/tools/jwt/samples.
-	openID := newMockJwtProvider(testdata.ServiceControlJwtPayloadPubKeys)
+	openID, err := newMockJwtProvider(openIdServerAddr, testdata.ServiceControlJwtPayloadPubKeys)
+	if err != nil {
+		return fmt.Errorf("fail to init open_id server: %v", err)
+	}
 	glog.Infof("Setup JWT provider open_id with address %v", openID.GetURL())
 
 	// OpenIdProvider
@@ -142,40 +153,66 @@ func (fjs *FakeJwtService) SetupOpenId() error {
 	return nil
 }
 
+// Stops all running servers.
+func (fjs *FakeJwtService) TearDown() {
+	for _, provider := range fjs.ProviderMap {
+
+		// Some providers may be mocks with no server. Don't shut those down
+		if provider.s != nil {
+			provider.s.Close()
+		}
+
+	}
+}
+
 func (fjs *FakeJwtService) ResetReqCnt(provider string) {
 	mockJwtProvider := fjs.ProviderMap[provider]
 	atomic.SwapInt32(mockJwtProvider.cnt, 0)
 }
 
 // newMockJwtProvider creates a new Jwt provider.
-func newMockJwtProvider(jwks string) *MockJwtProvider {
+func newMockJwtProvider(addr, jwks string) (*MockJwtProvider, error) {
+	l, err := net.Listen("tcp", addr)
+	if err != nil {
+		return nil, fmt.Errorf("fail to create MockJwtProvider %v", err)
+	}
 	mockJwtProvider := &MockJwtProvider{
 		cnt: new(int32),
 	}
-	mockJwtProvider.s = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mockJwtProvider.s = httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		atomic.AddInt32(mockJwtProvider.cnt, 1)
 		w.Write([]byte(jwks))
 	}))
-	return mockJwtProvider
+	mockJwtProvider.s.Listener.Close()
+	mockJwtProvider.s.Listener = l
+	mockJwtProvider.s.Start()
+	return mockJwtProvider, nil
 }
 
 // newMockInvalidJwtProvider creates a new Jwt provider which returns error.
-func newMockInvalidJwtProvider() *MockJwtProvider {
+func newMockInvalidJwtProvider(addr string) (*MockJwtProvider, error) {
+	l, err := net.Listen("tcp", addr)
+	if err != nil {
+		return nil, fmt.Errorf("fail to create invalid MockJwtProvider %v", err)
+	}
 	mockJwtProvider := &MockJwtProvider{
 		cnt: new(int32),
 	}
-	mockJwtProvider.s = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mockJwtProvider.s = httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		atomic.AddInt32(mockJwtProvider.cnt, 1)
 		http.Error(w, `{"code": 503, "message": "service not found"}`, 503)
 	}))
-	return mockJwtProvider
+	mockJwtProvider.s.Listener.Close()
+	mockJwtProvider.s.Listener = l
+	mockJwtProvider.s.Start()
+	return mockJwtProvider, nil
 }
 
 // newOpenIDServer creates a new Jwt provider with fixed address.
 func newOpenIDServer(addr, jwksUriEntry string) (*MockJwtProvider, error) {
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
-		return nil, fmt.Errorf("Fail to create OpenIDServer %v", err)
+		return nil, fmt.Errorf("fail to create OpenIDServer %v", err)
 	}
 	r := mux.NewRouter()
 	r.Path("/.well-known/openid-configuration/").Methods("GET").Handler(
