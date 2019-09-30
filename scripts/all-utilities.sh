@@ -173,7 +173,7 @@ function create_status_file() {
   "testId": "${test_id}",
   "date": "$(date +%s)",
   "runId": "${run_id}",
-  "headCommitHash": "$(git rev-parse --verify HEAD)"
+  "headCommitHash": "$(get_sha)"
 }
 __EOF__
   return 0
@@ -272,6 +272,10 @@ function get_tool() {
   ${GSUTIL} cp "${remote_path}" "${local_path}" \
     || { echo "Failed to upload ${tool_name} to ${TOOLS_BUCKET}"; return 1; }
   return 0
+}
+
+function get_sha() {
+  echo "$(git rev-parse --verify HEAD)"
 }
 
 function get_envoy_image_name() {

@@ -38,7 +38,7 @@ GODIRS	= $(shell go list -f '{{.Dir}}' ./... \
 $(BINDIR):
 	@mkdir -p $(BINDIR)
 
-.PHONY: build build-envoy
+.PHONY: build build-envoy build-grpc-echo build-grpc-interop upload-e2e-client-binaries
 build: format
 	@echo "--> building"
 	@go build ./src/go/...
@@ -72,6 +72,17 @@ build-grpc-interop:
 	@cp -f bazel-bin/external/com_github_grpc_grpc/test/cpp/interop/metrics_client bin/
 	@cp -f bazel-bin/external/com_github_grpc_grpc/test/cpp/interop/interop_server bin/
 	@cp -f bazel-bin/external/com_github_grpc_grpc/test/cpp/interop/stress_test bin/
+
+# This target is to upload e2e client binaries so once they get updated,
+# this target should be executed.
+upload-e2e-client-binaries: build-grpc-echo build-grpc-interop
+	@mkdir -p /tmp/apiproxy-test-presubmit-binaries/
+	@cp -n bin/interop_client /tmp/apiproxy-test-presubmit-binaries/interop_client
+	@cp -n bin/metrics_client /tmp/apiproxy-test-presubmit-binaries/metrics_client
+	@cp -n bin/stress_test /tmp/apiproxy-test-presubmit-binaries/stress_test
+	@cp -n bin/grpc_echo_client /tmp/apiproxy-test-presubmit-binaries/grpc_echo_client
+	@cp -n tests/endpoints/grpc_echo/proto/api_descriptor.pb /tmp/apiproxy-test-presubmit-binaries/api_descriptor.pb
+	@gsutil cp -Z -r /tmp/apiproxy-test-presubmit-binaries/* "gs://apiproxy-testing-presubmit-binaries/"
 
 
 #-----------------------------------------------------------------------------

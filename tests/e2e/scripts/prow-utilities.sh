@@ -50,8 +50,7 @@ function e2e_options() {
     [[ -n "${API_KEY}" ]] || error_exit 'Could not set api key.'
   fi
   if [[ -n "${BUCKET}" ]]; then
-    local git_commit="$(git rev-parse --verify HEAD)"
-    REMOTE_LOG_DIR="gs://${BUCKET}/${git_commit}/logs/${UNIQUE_ID}"
+    REMOTE_LOG_DIR="gs://${BUCKET}/$(get_sha)/logs/${UNIQUE_ID}"
   fi
 }
 
