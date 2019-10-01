@@ -50,7 +50,7 @@ func main() {
 	}
 	server := xds.NewServer(m.Cache(), nil)
 	grpcServer := grpc.NewServer()
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *DiscoveryPort))
+	lis, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", *DiscoveryPort))
 	if err != nil {
 		glog.Exitf("Server failed to listen: %v", err)
 	}

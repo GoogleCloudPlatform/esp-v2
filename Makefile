@@ -133,7 +133,6 @@ depend.install: tools.glide
 
 depend.install.endpoints:
 	@echo "--> updating dependencies from package.json"
-	@npm install ./tests/endpoints/bookstore_grpc/ --no-package-lock
 	@npm install ./tests/e2e/testdata/bookstore/ --no-package-lock
 
 #----------------------------------------------------------------------------

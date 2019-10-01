@@ -125,7 +125,7 @@ func TestTranscodingBindings(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves/100/books?key=api-key",
-			wantResp:       `{"books":[{"id":"4","author":"Leo Tolstoy","title":"War and Peace"},{"id":"5","author":"Mark","title":"The Adventures of Huckleberry Finn"},{"id":"6","author":"Foo/Bar/Baz","title":"The Adventures of Huckleberry Finn"},{"id":"1001","title":"Alphabet"}]}`,
+			wantResp:       `{"books":[{"id":"1001","title":"Alphabet"},{"id":"4","author":"Leo Tolstoy","title":"War and Peace"},{"id":"5","author":"Mark","title":"The Adventures of Huckleberry Finn"},{"id":"6","author":"Foo/Bar/Baz","title":"The Adventures of Huckleberry Finn"}]}`,
 		},
 	}
 	for _, tc := range tests {

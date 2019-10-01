@@ -32,7 +32,7 @@ import (
 var successTrailer, abortedTrailer, dataLossTrailer, internalTrailer client.GRPCWebTrailer
 
 func init() {
-	successTrailer = client.GRPCWebTrailer{"grpc-message": "OK", "grpc-status": "0"}
+	successTrailer = client.GRPCWebTrailer{"grpc-message": "", "grpc-status": "0"}
 	abortedTrailer = client.GRPCWebTrailer{"grpc-message": "ABORTED", "grpc-status": "10"}
 	internalTrailer = client.GRPCWebTrailer{"grpc-message": "INTERNAL", "grpc-status": "13"}
 	dataLossTrailer = client.GRPCWebTrailer{"grpc-message": "DATA_LOSS", "grpc-status": "15"}
@@ -98,7 +98,7 @@ func TestGRPC(t *testing.T) {
 			desc:           "Http client calling gRPC backend invalid query parameter, causing transcoding to fail by default",
 			clientProtocol: "http",
 			method:         "/v1/shelves/200?key=api_key&foo=bar",
-			wantError:      "415 Unsupported Media Type", // Transcoder does not send an application/grpc to the backend
+			wantError:      "503 Service Unavailable", // Transcoder does not send an application/grpc to the backend
 		},
 	}
 
@@ -374,7 +374,7 @@ func TestGRPCJwt(t *testing.T) {
 			httpMethod:     "POST",
 			method:         "/v1/shelves/200/books?key=api-key&&book.title=Romeo%20and%20Julie",
 			token:          testdata.FakeCloudTokenMultiAudiences,
-			wantResp:       `{"id":"0","author":"","title":"Romeo and Julie"}`,
+			wantResp:       `{"title":"Romeo and Julie"}`,
 		},
 		// Testing JWT with multiple Providers, token from anyone should work,
 		// even with an invalid issuer.
