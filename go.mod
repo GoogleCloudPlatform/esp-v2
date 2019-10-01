@@ -5,7 +5,7 @@ go 1.13
 require (
 	cloud.google.com/go v0.41.1-0.20190709211438-47e9997a900f // indirect
 	github.com/census-instrumentation/opencensus-proto v0.2.1
-	github.com/envoyproxy/go-control-plane v0.9.0
+	github.com/envoyproxy/go-control-plane v0.9.1-0.20190920220121-786ed9ae4b40
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.3.2
