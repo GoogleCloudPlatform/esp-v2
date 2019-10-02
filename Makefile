@@ -127,7 +127,7 @@ depend.update: tools.glide
 	@echo "--> generating go proto files"
 	./api/scripts/go_proto_gen.sh
 
-depend.install: tools.glide
+depend.install: tools.glide tools.beautysh
 	@echo "--> generating go proto files"
 	./api/scripts/go_proto_gen.sh
 
@@ -137,9 +137,10 @@ depend.install.endpoints:
 	@npm install ./tests/e2e/testdata/bookstore/ --no-package-lock
 
 #----------------------------------------------------------------------------
-# Target:  go tools
+# Target:  tools
 #----------------------------------------------------------------------------
-.PHONY: tools tools.glide tools.goimports tools.golint tools.govet tools.buildifier
+.PHONY: tools tools.glide tools.goimports tools.golint tools.govet \
+	tools.buildifier tools.beautysh
 
 tools: tools.glide tools.goimports tools.golint tools.govet tools.buildifier
 
@@ -173,6 +174,13 @@ tools.buildifier:
 		go get github.com/bazelbuild/buildtools/buildifier; \
 	fi
 
+tools.beautysh:
+	@command -v beautysh  >/dev/null ; if [ $$? -ne 0 ]; then \
+		echo "--> installing beautysh"; \
+		pip install --user beautysh; \
+	fi
+
+
 .PHONY: clean
 clean:
 	@echo "--> cleaning compiled objects and binaries"
@@ -200,18 +208,25 @@ format: tools.goimports tools.buildifier
 	@goimports -local $(PKG) -w -l $(GOFILES)
 	@echo "--> formatting BUILD files with 'buildifier' tool"
 	@buildifier -r WORKSPACE ./src/ ./api/
+
 	@make spelling.fix
 
-.PHONY: clang-format
+.PHONY: clang-format shell-format
 clang-format:
 	@echo "--> formatting code with 'clang-format-7' tool"
 	@echo $(CPP_PROTO_FILES) | xargs clang-format-7 -i
+
+shell-format: tools.beautysh
+	@echo "--> formatting shell scripts with 'beautysh' tool"
+	@git ls-files "*.sh" | xargs ${HOME}/.local/bin/beautysh -i 2
 
 .PHONY: format.check
 format.check: tools.goimports
 	@echo "--> checking code formatting with 'goimports' tool"
 	@goimports -local $(PKG) -l $(GOFILES) | sed -e "s/^/\?\t/" | tee >(test -z)
 	@make spelling.check
+
+
 
 .PHONY: vet
 vet: tools.govet

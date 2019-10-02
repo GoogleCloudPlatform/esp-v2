@@ -27,20 +27,20 @@ function e2e_options() {
   local OPTIND OPTARG arg
   while getopts :a:b:B:m:g:i:k:l:r:R:s:t:v:V: arg; do
     case ${arg} in
-    a) APIPROXY_SERVICE="${OPTARG}" ;;
-    b) BOOKSTORE_IMAGE="${OPTARG}" ;;
-    B) BUCKET="${OPTARG}" ;;
-    m) APIPROXY_IMAGE="${OPTARG}" ;;
-    g) BACKEND="${OPTARG}" ;;
-    i) UNIQUE_ID="${OPTARG}" ;;
-    k) API_KEY="${OPTARG}" ;;
-    l) DURATION_IN_HOUR="${OPTARG}" ;;
-    R) ROLLOUT_STRATEGY="${OPTARG}" ;;
-    s) SKIP_CLEANUP='true' ;;
-    t) TEST_TYPE="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')" ;;
-    v) VM_IMAGE="${OPTARG}" ;;
-    V) ENDPOINTS_RUNTIME_VERSION="${OPTARG}" ;;
-    *) e2e_usage "Invalid option: -${OPTARG}" ;;
+      a) APIPROXY_SERVICE="${OPTARG}" ;;
+      b) BOOKSTORE_IMAGE="${OPTARG}" ;;
+      B) BUCKET="${OPTARG}" ;;
+      m) APIPROXY_IMAGE="${OPTARG}" ;;
+      g) BACKEND="${OPTARG}" ;;
+      i) UNIQUE_ID="${OPTARG}" ;;
+      k) API_KEY="${OPTARG}" ;;
+      l) DURATION_IN_HOUR="${OPTARG}" ;;
+      R) ROLLOUT_STRATEGY="${OPTARG}" ;;
+      s) SKIP_CLEANUP='true' ;;
+      t) TEST_TYPE="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')" ;;
+      v) VM_IMAGE="${OPTARG}" ;;
+      V) ENDPOINTS_RUNTIME_VERSION="${OPTARG}" ;;
+      *) e2e_usage "Invalid option: -${OPTARG}" ;;
     esac
   done
   if [[ -z ${API_KEY} ]]; then
@@ -196,16 +196,16 @@ function sed_i() {
 function create_service() {
   echo 'Deploying service'
   case "$#" in
-  '1')
-  local swagger_json="${1}"
-  retry -n 3 run ${GCLOUD} endpoints services deploy "${swagger_json}"
-  ;;
-  '2')
-  retry -n 3 run ${GCLOUD} endpoints services deploy ${@:1}
-  ;;
-  *)
-  echo "Invalid arguments ${@} provided for create service"
-  return 1;
-  ;;
+    '1')
+      local swagger_json="${1}"
+      retry -n 3 run ${GCLOUD} endpoints services deploy "${swagger_json}"
+      ;;
+    '2')
+      retry -n 3 run ${GCLOUD} endpoints services deploy ${@:1}
+      ;;
+    *)
+      echo "Invalid arguments ${@} provided for create service"
+      return 1;
+      ;;
   esac
 }

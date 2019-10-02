@@ -22,13 +22,13 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 
 function checkImageExistence() {
-    local image_name=$1
-    local sha=$2
-    if gcloud container images list-tags ${image_name} | grep -q ${sha}; then
-      return 0;
-    else
-      return 1;
-    fi
+  local image_name=$1
+  local sha=$2
+  if gcloud container images list-tags ${image_name} | grep -q ${sha}; then
+    return 0;
+  else
+    return 1;
+  fi
 }
 
 # golang build
@@ -59,4 +59,4 @@ echo '================= Cloud Build Docker =================='
 echo '======================================================='
 
 ${ROOT}/scripts/cloud-build-docker.sh \
-    || error_exit 'Failed to build a generic Docker Image.'
+  || error_exit 'Failed to build a generic Docker Image.'

@@ -39,9 +39,9 @@ function usage() {
 
 while getopts a:s:? arg; do
   case ${arg} in
-    a) AUDIENCE=${OPTARG};;
-    s) SECRET_FILE=${OPTARG};;
-    ?) usage;;
+    a) AUDIENCE=${OPTARG} ;;
+    s) SECRET_FILE=${OPTARG} ;;
+    ?) usage ;;
   esac
 done
 

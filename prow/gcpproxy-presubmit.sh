@@ -20,12 +20,14 @@
 set -eo pipefail
 
 WD=$(dirname "$0")
-WD=$(cd "$WD"; pwd)
+WD=$(cd "$WD";
+pwd)
 ROOT=$(dirname "$WD")
 export PATH=$PATH:$GOPATH/bin
 
 cd "${ROOT}"
-. ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities'; exit 1; }
+. ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities';
+exit 1; }
 
 echo '======================================================='
 echo '===================== Setup Cache ====================='

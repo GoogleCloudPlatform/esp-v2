@@ -38,24 +38,24 @@ PROJECT_ID="cloudesf-testing"
 ARGS="$ARGS \"--service=${APIPROXY_SERVICE}\","
 ARGS="$ARGS \"--rollout_strategy=${ROLLOUT_STRATEGY}\","
 ARGS="$ARGS \"--enable_tracing\", \"--tracing_sample_rate=0.005\""
- case "${BACKEND}" in
-   'bookstore' )
-      YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/bookstore/http-bookstore.yaml.template
-      YAML_FILE=${SCRIPT_PATH}/../testdata/bookstore/http-bookstore.yaml
-      ARGS="$ARGS , \"--backend_protocol=http1\"";;
-   'echo'      )
-      YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/grpc_echo/grpc-echo.yaml.template
-      YAML_FILE=${SCRIPT_PATH}/../testdata/grpc_echo/grpc-echo.yaml
-      ARGS="$ARGS , \"--backend_protocol=grpc\"";;
-   'interop'      )
-      YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/grpc_interop/grpc-interop.yaml.template
-      YAML_FILE=${SCRIPT_PATH}/../testdata/grpc_interop/grpc-interop.yaml
-      ARGS="$ARGS , \"--backend_protocol=grpc\"";;
-     *         )
+case "${BACKEND}" in
+  'bookstore' )
+    YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/bookstore/http-bookstore.yaml.template
+    YAML_FILE=${SCRIPT_PATH}/../testdata/bookstore/http-bookstore.yaml
+    ARGS="$ARGS , \"--backend_protocol=http1\"" ;;
+  'echo'      )
+    YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/grpc_echo/grpc-echo.yaml.template
+    YAML_FILE=${SCRIPT_PATH}/../testdata/grpc_echo/grpc-echo.yaml
+    ARGS="$ARGS , \"--backend_protocol=grpc\"" ;;
+  'interop'      )
+    YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/grpc_interop/grpc-interop.yaml.template
+    YAML_FILE=${SCRIPT_PATH}/../testdata/grpc_interop/grpc-interop.yaml
+    ARGS="$ARGS , \"--backend_protocol=grpc\"" ;;
+  *         )
     echo "Invalid backend ${BACKEND}"
-    return 1;;
+    return 1 ;;
 
- esac
+esac
 
 sed "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g"  ${YAML_TEMPLATE} \
   | sed "s|ARGS|${ARGS}|g" | tee ${YAML_FILE}
@@ -65,23 +65,23 @@ sed "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g"  ${YAML_TEMPLATE} \
 # number in kubernetes config.
 #
 case "${BACKEND}" in
-   'bookstore' )
-      SERVICE_IDL="${SCRIPT_PATH}/../testdata/bookstore/bookstore_swagger_template.json"
-      CREATE_SERVICE_ARGS="${SERVICE_IDL}"
-      ;;
-   'echo'      )
-      SERVICE_YAML="${ROOT}/tests/endpoints/grpc_echo/grpc-test.yaml"
-      SERVICE_DSCP="${ROOT}/tests/endpoints/grpc_echo/proto/api_descriptor.pb"
-      CREATE_SERVICE_ARGS="${SERVICE_YAML} ${SERVICE_DSCP}"
-      ARGS="$ARGS -g";;
-   'interop'      )
-      SERVICE_YAML="${ROOT}/tests/endpoints/grpc_interop/grpc-interop.yaml"
-      SERVICE_DSCP="${ROOT}/tests/endpoints/grpc_interop/proto/api_descriptor.pb"
-      CREATE_SERVICE_ARGS="${SERVICE_YAML} ${SERVICE_DSCP}"
-      ARGS="$ARGS -g";;
-   *          )
+  'bookstore' )
+    SERVICE_IDL="${SCRIPT_PATH}/../testdata/bookstore/bookstore_swagger_template.json"
+    CREATE_SERVICE_ARGS="${SERVICE_IDL}"
+    ;;
+  'echo'      )
+    SERVICE_YAML="${ROOT}/tests/endpoints/grpc_echo/grpc-test.yaml"
+    SERVICE_DSCP="${ROOT}/tests/endpoints/grpc_echo/proto/api_descriptor.pb"
+    CREATE_SERVICE_ARGS="${SERVICE_YAML} ${SERVICE_DSCP}"
+    ARGS="$ARGS -g" ;;
+  'interop'      )
+    SERVICE_YAML="${ROOT}/tests/endpoints/grpc_interop/grpc-interop.yaml"
+    SERVICE_DSCP="${ROOT}/tests/endpoints/grpc_interop/proto/api_descriptor.pb"
+    CREATE_SERVICE_ARGS="${SERVICE_YAML} ${SERVICE_DSCP}"
+    ARGS="$ARGS -g" ;;
+  *          )
     echo "Invalid backend ${BACKEND}"
-    return 1;;
+    return 1 ;;
 esac
 
 

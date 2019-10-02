@@ -43,7 +43,7 @@ BIN_FILENAME="misspell_"${VERSION}"_"${OS}"_64bit.tar.gz"
 # Install tools we need
 if [[ ! -e "${TMP_DIR}/misspell" ]]; then
   if ! wget https://github.com/client9/misspell/releases/download/v"${VERSION}"/"${BIN_FILENAME}" \
-  -O "${TMP_DIR}/${BIN_FILENAME}" --no-verbose --tries=3 -o "${TMP_DIR}/wget.log"; then
+    -O "${TMP_DIR}/${BIN_FILENAME}" --no-verbose --tries=3 -o "${TMP_DIR}/wget.log"; then
     cat "${TMP_DIR}/wget.log"
     exit -1
   fi
@@ -62,8 +62,8 @@ else
 fi
 
 if [[ ! ${ACTUAL_SHA} == ${EXPECT_SHA} ]]; then
-   echo "Expect shasum is ${ACTUAL_SHA}, but actual is shasum ${EXPECT_SHA}"
-   exit 1
+  echo "Expect shasum is ${ACTUAL_SHA}, but actual is shasum ${EXPECT_SHA}"
+  exit 1
 fi
 
 chmod +x "${TMP_DIR}/misspell"
@@ -76,7 +76,7 @@ SPELLING_SKIP_FILES="${ROOTDIR}/tools/spelling/spelling_skip_files.txt"
 SPELLING_WHITELIST_WORDS_FILE="${ROOTDIR}/tools/spelling/spelling_whitelist_words.txt"
 
 WHITELIST_WORDS=$(echo -n $(cat "${SPELLING_WHITELIST_WORDS_FILE}" | \
-                  grep -v "^#"|grep -v "^$") | tr ' ' ',')
+  grep -v "^#"|grep -v "^$") | tr ' ' ',')
 
 SKIP_FILES=$(echo $(cat "${SPELLING_SKIP_FILES}") | sed "s| | -e |g")
 git ls-files | grep -v -e "${SKIP_FILES}" | xargs "${TMP_DIR}/misspell" -i \

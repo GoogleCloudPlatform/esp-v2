@@ -85,50 +85,53 @@ function retry() {
   local COUNT=10
   local SLEEP=5 MAX_SLEEP=60
   local MUL=3 DIV=2 # Exponent base multiplier and divisor
-                    # (Bash doesn't do floats)
+  # (Bash doesn't do floats)
 
   while getopts ":n:s:t:" ARG; do
     case ${ARG} in
-      n) COUNT=${OPTARG};;
-      s) SLEEP=${OPTARG};;
-      t) MAX_SLEEP=${OPTARG};;
-      *) echo "Unrecognized argument: -${OPTARG}";;
+      n) COUNT=${OPTARG} ;;
+      s) SLEEP=${OPTARG} ;;
+      t) MAX_SLEEP=${OPTARG} ;;
+      *) echo "Unrecognized argument: -${OPTARG}" ;;
     esac
   done
 
-  shift $((OPTIND-1))
+  shift $((OPTIND - 1))
 
   # If there is no command, abort early.
-  [[ ${#} -le 0 ]] && { echo "No command specified, aborting."; return 1; }
+  [[ ${#} -le 0 ]] && { echo "No command specified, aborting.";
+  return 1; }
 
-  local N=1 S=${SLEEP}  # S is the current length of sleep.
-  while : ; do
+  local N=1 S=${SLEEP} # S is the current length of sleep.
+  while :; do
     echo "${N}. Executing ${@}"
-    "${@}" && { echo "Command succeeded."; return 0; }
+    "${@}" && { echo "Command succeeded.";
+    return 0; }
 
-    [[ (( COUNT -le 0 || N -lt COUNT )) ]] \
-      || { echo "Command '${@}' failed ${N} times, aborting."; return 1; }
+    [[ ( ( COUNT -le 0 || N -lt COUNT ) ) ]]  \
+      || { echo "Command '${@}' failed ${N} times, aborting.";
+    return 1; }
 
-    if [[ (( S -lt MAX_SLEEP )) ]] ; then
+    if [[ ( ( S -lt MAX_SLEEP ) ) ]]; then
       # Must always count full exponent due to integer rounding.
-      ((S=SLEEP * (MUL ** (N-1)) / (DIV ** (N-1))))
+      ((S = SLEEP * ( MUL ** ( N - 1 ) ) / ( DIV ** ( N - 1 ) )))
     fi
 
-    ((S=(S < MAX_SLEEP) ? S : MAX_SLEEP))
+    ((S = ( S < MAX_SLEEP ) ? S : MAX_SLEEP))
 
     echo "Command failed. Will retry in ${S} seconds."
     sleep ${S}
 
-    ((N++))
+    ((N ++))
   done
 }
 
 # Download api Keys from Cloud storage and source the file.
 function set_api_keys() {
   local api_key_directory="$(mktemp -d)"
-  $GSUTIL cp gs://apiproxy-testing-client-secret-files/api_keys \
-        "${api_key_directory}/api_keys" \
-          || error_exit "Failed to download API key file."
+  $GSUTIL cp gs://apiproxy-testing-client-secret-files/api_keys  \
+    "${api_key_directory}/api_keys"  \
+    || error_exit "Failed to download API key file."
 
   source "${api_key_directory}/api_keys"
 }
@@ -136,7 +139,7 @@ function set_api_keys() {
 # Download test-client keys from Cloud storage
 function get_test_client_key() {
   local key_path=$1
-  [[ -e $key_path ]] || $GSUTIL \
+  [[ -e $key_path ]] || $GSUTIL  \
     cp gs://apiproxy-testing-client-secret-files/e2e-client-service-account.json $key_path
   echo -n $key_path
   return 0
@@ -152,22 +155,26 @@ function create_status_file() {
 
   while getopts :f:s:t:r: ARG; do
     case ${ARG} in
-      f) file_path="${OPTARG}";;
-      s) test_status=${OPTARG};;
-      t) test_id="${OPTARG}";;
-      r) run_id="${OPTARG}";;
-      *) echo "Unrecognized argument: -${OPTARG}";;
+      f) file_path="${OPTARG}" ;;
+      s) test_status=${OPTARG} ;;
+      t) test_id="${OPTARG}" ;;
+      r) run_id="${OPTARG}" ;;
+      *) echo "Unrecognized argument: -${OPTARG}" ;;
     esac
   done
 
-  [[ -n  "${file_path}" ]] || { echo 'File path is not set.'; return 1; }
-  [[ -n  "${test_status}" ]] || { echo 'Status is not set.'; return 1; }
-  [[ -n  "${test_id}" ]] || { echo 'Test id is not set.'; return 1; }
-  [[ -n  "${run_id}" ]] || { echo 'Run id is not set.'; return 1; }
+  [[ -n "${file_path}" ]] || { echo 'File path is not set.';
+  return 1; }
+  [[ -n "${test_status}" ]] || { echo 'Status is not set.';
+  return 1; }
+  [[ -n "${test_id}" ]] || { echo 'Test id is not set.';
+  return 1; }
+  [[ -n "${run_id}" ]] || { echo 'Run id is not set.';
+  return 1; }
 
   mkdir -p "$(dirname "${file_path}")"
 
-  cat > "${file_path}" <<__EOF__
+  cat >"${file_path}" << __EOF__
 {
   "scriptStatus": ${test_status},
   "testId": "${test_id}",
@@ -197,15 +204,15 @@ function detect_memory_leak_check() {
   local run_count=${1}
   local local_json="$(mktemp /tmp/XXXXXX.json)"
 
-  curl "${STATUS_SERVER}/memory" > "${local_json}"
+  curl "${STATUS_SERVER}/memory" >"${local_json}"
 
   python -m json.tool "${local_json}"
 
-  local curr_usage=$(python -c "import json, sys; obj = json.load(open(\"${local_json}\")); \
-      print obj['allocated']")
+  local curr_usage=$(python -c  \
+    "import json, sys;obj = json.load(open(\"${local_json}\"));print obj['allocated']")
   rm "${local_json}"
-  [[ -n "${curr_usage}" ]] || { echo "Could not extract memory usage"; return 1; }
-
+  [[ -n "${curr_usage}" ]] || { echo "Could not extract memory usage";
+  return 1; }
   if [[ ${run_count} -eq 1 ]]; then
     START_MEMORY_USAGE=${curr_usage}
     echo "Start Memory Usage (Bytes): ${START_MEMORY_USAGE}."
@@ -216,10 +223,11 @@ function detect_memory_leak_check() {
 }
 
 function detect_memory_leak_final() {
-  [[ ${INCREASED_MEMORY_USAGE} -gt 0 ]] \
-    || { echo "Only run test once."; return 0; }
+  [[ ${INCREASED_MEMORY_USAGE} -gt 0 ]]  \
+    || { echo "Only run test once.";
+  return 0; }
 
-  local memory_increased=$((INCREASED_MEMORY_USAGE / (1024*1024) ))
+  local memory_increased=$((INCREASED_MEMORY_USAGE / ( 1024 * 1024 )))
   echo "Memory Increased (MB): ${memory_increased} ."
   local threshold=40
   echo "Memory Leak  Threshold (MB): ${threshold}."
@@ -243,9 +251,10 @@ function detect_memory_leak_final() {
 function extract_key_from_test_env_file() {
   local key="${1}"
   local json_path="${2}"
-  cat "${json_path}" \
-    | python -c "import json,sys;obj=json.load(sys.stdin);print obj['${key}']" \
-    || { echo "Could not extract ${key} from ${json_path}"; return 1; }
+  cat "${json_path}"  \
+    | python -c "import json,sys;obj=json.load(sys.stdin);print obj['${key}']"  \
+    || { echo "Could not extract ${key} from ${json_path}";
+  return 1; }
 }
 
 function update_tool() {
@@ -256,8 +265,9 @@ function update_tool() {
 
   [[ -z "${TOOLS_BUCKET}" ]] && return 1
   echo "Uploading ${local_path} to ${remote_path}."
-  ${GSUTIL} cp "${local_path}" "${remote_path}" \
-    || { echo "Failed to upload ${tool_name} to ${TOOLS_BUCKET}"; return 1; }
+  ${GSUTIL} cp "${local_path}" "${remote_path}"  \
+    || { echo "Failed to upload ${tool_name} to ${TOOLS_BUCKET}";
+  return 1; }
   return 0
 }
 
@@ -269,8 +279,9 @@ function get_tool() {
 
   [[ -z "${TOOLS_BUCKET}" ]] && return 1
   echo "Downloading ${remote_path} to ${local_path}."
-  ${GSUTIL} cp "${remote_path}" "${local_path}" \
-    || { echo "Failed to upload ${tool_name} to ${TOOLS_BUCKET}"; return 1; }
+  ${GSUTIL} cp "${remote_path}" "${local_path}"  \
+    || { echo "Failed to upload ${tool_name} to ${TOOLS_BUCKET}";
+  return 1; }
   return 0
 }
 
@@ -287,19 +298,19 @@ function get_proxy_image_name() {
 }
 
 function get_envoy_image_name_with_sha() {
-    # Generic docker image format. https://git-scm.com/docs/git-show.
-    local image_format="$(get_envoy_image_name):git-%H"
-    local image="$(git show -q HEAD --pretty=format:"${image_format}")"
-    echo -n $image
-    return 0
+  # Generic docker image format. https://git-scm.com/docs/git-show.
+  local image_format="$(get_envoy_image_name):git-%H"
+  local image="$(git show -q HEAD --pretty=format:"${image_format}")"
+  echo -n $image
+  return 0
 }
 
 function get_proxy_image_name_with_sha() {
-    # Generic docker image format. https://git-scm.com/docs/git-show.
-    local image_format="$(get_proxy_image_name):git-%H"
-    local image="$(git show -q HEAD --pretty=format:"${image_format}")"
-    echo -n $image
-    return 0
+  # Generic docker image format. https://git-scm.com/docs/git-show.
+  local image_format="$(get_proxy_image_name):git-%H"
+  local image="$(git show -q HEAD --pretty=format:"${image_format}")"
+  echo -n $image
+  return 0
 }
 
 
@@ -307,42 +318,42 @@ function get_proxy_image_name_with_sha() {
 # On non-Prow hosts, the remote cache will not be used
 function try_setup_bazel_remote_cache() {
 
-    local prow_job_id=$1
-    local docker_image_name=$2
-    local root_dir=$3
-    local gcp_project_id="cloudesf-testing"
+  local prow_job_id=$1
+  local docker_image_name=$2
+  local root_dir=$3
+  local gcp_project_id="cloudesf-testing"
 
-    # Determine if this job is running on a non-Prow host. All Prow jobs must have this env var
-    # https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md#job-environment-variables
-    if [[ -z "${prow_job_id}" ]]; then
-        echo "PROW_JOB_ID not set. Script continuing without bazel remote cache on non-Prow host.";
-        return 0;
-    fi
-    echo "Setting up remote bazel cache on Prow host. Prow Job ID: ${prow_job_id}"
+  # Determine if this job is running on a non-Prow host. All Prow jobs must have this env var
+  # https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md#job-environment-variables
+  if [[ -z "${prow_job_id}" ]]; then
+    echo "PROW_JOB_ID not set. Script continuing without bazel remote cache on non-Prow host.";
+    return 0;
+  fi
+  echo "Setting up remote bazel cache on Prow host. Prow Job ID: ${prow_job_id}"
 
-    # Variables must be set to determine cache location
-    if [[ -z "${gcp_project_id}" ]]; then
-        echo "PROJECT_ID not set, cannot determine remote cache location.";
-        exit 2;
-    fi
-    echo "Cache Project ID: ${gcp_project_id}"
-    if [[ -z "${docker_image_name}" ]]; then
-        echo "IMAGE not set, cannot determine cache silo.";
-        exit 2;
-    fi
+  # Variables must be set to determine cache location
+  if [[ -z "${gcp_project_id}" ]]; then
+    echo "PROJECT_ID not set, cannot determine remote cache location.";
+    exit 2;
+  fi
+  echo "Cache Project ID: ${gcp_project_id}"
+  if [[ -z "${docker_image_name}" ]]; then
+    echo "IMAGE not set, cannot determine cache silo.";
+    exit 2;
+  fi
 
-    # Cache silo name is determined by docker image name.
-    # This works because the environment is consistent in any containers of this docker image.
-    # Also, replace special characters that RBE does not accept with a '/'
-    local cache_silo=$(echo "${docker_image_name}" | tr @: /)
-    echo "Original Image Name: ${docker_image_name}"
-    echo "Cache Silo Name: ${cache_silo}"
+  # Cache silo name is determined by docker image name.
+  # This works because the environment is consistent in any containers of this docker image.
+  # Also, replace special characters that RBE does not accept with a '/'
+  local cache_silo=$(echo "${docker_image_name}" | tr @: /)
+  echo "Original Image Name: ${docker_image_name}"
+  echo "Cache Silo Name: ${cache_silo}"
 
-    # Append Prow bazelrc to workspace's bazelrc so that all commands will default to using it
-    cat "${root_dir}/prow/.bazelrc" >> "${root_dir}/.bazelrc"
+  # Append Prow bazelrc to workspace's bazelrc so that all commands will default to using it
+  cat "${root_dir}/prow/.bazelrc" >>"${root_dir}/.bazelrc"
 
-    # Replace templates with real environment variables
-    # Use @ as delimiter because docker image name may have '/'
-    sed -i -e "s@CACHE_SILO_NAME@${cache_silo}@g" ${root_dir}/.bazelrc
-    sed -i -e "s@CACHE_PROJECT_ID@${gcp_project_id}@g" ${root_dir}/.bazelrc
+  # Replace templates with real environment variables
+  # Use @ as delimiter because docker image name may have '/'
+  sed -i -e "s@CACHE_SILO_NAME@${cache_silo}@g" ${root_dir}/.bazelrc
+  sed -i -e "s@CACHE_PROJECT_ID@${gcp_project_id}@g" ${root_dir}/.bazelrc
 }
