@@ -21,7 +21,8 @@ set -eo pipefail
 
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${SCRIPT_PATH}/../../.." && pwd)"
-. ${ROOT}/scripts/all-utilities.sh || { echo "Cannot load Bash utilities" ; exit 1 ; }
+. ${ROOT}/scripts/all-utilities.sh || { echo "Cannot load Bash utilities";
+exit 1; }
 
 API_KEY=''
 SERVICE_NAME=''
@@ -48,8 +49,8 @@ fi
 # Download api Keys with restrictions from Cloud storage.
 TEMP_DIR="$(mktemp -d)"
 API_RESTRICTION_KEYS_FILE="${TEMP_DIR}/apiproxy-e2e-key-restriction.json"
-gsutil cp gs://apiproxy-testing-client-secret-files/restricted_api_keys.json \
-  "${API_RESTRICTION_KEYS_FILE}" \
+gsutil cp gs://apiproxy-testing-client-secret-files/restricted_api_keys.json  \
+  "${API_RESTRICTION_KEYS_FILE}"  \
   || error_exit "Failed to download API key with restrictions file."
 
 END_TIME=$(date +"%s")
@@ -75,40 +76,44 @@ while true; do
   echo "Auth token is: ${JWT_TOKEN}"
 
   echo "Starting bookstore test at $(date)."
-  (set -x; python ${ROOT}/tests/e2e/client/apiproxy_bookstore_test.py \
-      --host=${HOST} \
-      --api_key=${API_KEY} \
-      --auth_token=${JWT_TOKEN} \
-    --allow_unverified_cert=true) \
-    || ((BOOKSTORE_FAILURES++))
+  (set -x;
+    python ${ROOT}/tests/e2e/client/apiproxy_bookstore_test.py  \
+      --host=${HOST}  \
+      --api_key=${API_KEY}  \
+      --auth_token=${JWT_TOKEN}  \
+    --allow_unverified_cert=true)  \
+    || ((BOOKSTORE_FAILURES ++))
 
   echo "Starting bookstore API Key restriction test at $(date)."
-  (set -x; python ${ROOT}/tests/e2e/client/apiproxy_bookstore_key_restriction_test.py \
-      --host=${HOST} \
-      --allow_unverified_cert=true \
-      --key_restriction_tests=${ROOT}/tests/e2e/testdata/bookstore/key_restriction_test.json.template \
-    --key_restriction_keys_file=${API_RESTRICTION_KEYS_FILE}) \
-    || ((BOOKSTORE_FAILURES++))
+  (set -x;
+    python ${ROOT}/tests/e2e/client/apiproxy_bookstore_key_restriction_test.py  \
+      --host=${HOST}  \
+      --allow_unverified_cert=true  \
+      --key_restriction_tests=${ROOT}/tests/e2e/testdata/bookstore/key_restriction_test.json.template  \
+    --key_restriction_keys_file=${API_RESTRICTION_KEYS_FILE})  \
+    || ((BOOKSTORE_FAILURES ++))
 
   POST_FILE="${ROOT}/tests/e2e/testdata/bookstore/35k.json"
   echo "Starting stress test at $(date)."
-  (set -x; python ${ROOT}/tests/e2e/client/apiproxy_client.py \
-      --test=stress \
-      --host=${HOST} \
-      --api_key=${API_KEY} \
-      --auth_token=${JWT_TOKEN} \
-      --post_file=${POST_FILE} \
-    --test_data=${ROOT}/tests/e2e/testdata/bookstore/test_data.json.temp )\
-    || ((STRESS_FAILURES++))
+  (set -x;
+    python ${ROOT}/tests/e2e/client/apiproxy_client.py  \
+      --test=stress  \
+      --host=${HOST}  \
+      --api_key=${API_KEY}  \
+      --auth_token=${JWT_TOKEN}  \
+      --post_file=${POST_FILE}  \
+    --test_data=${ROOT}/tests/e2e/testdata/bookstore/test_data.json.temp)  \
+    || ((STRESS_FAILURES ++))
 
   echo "Starting negative stress test."
-  (set -x; python ${ROOT}/tests/e2e/client/apiproxy_client.py \
-      --test=negative \
-      --test_data=${ROOT}/tests/e2e/testdata/bookstore/negative_test_data.json.temp \
-      --host=${HOST} \
-      --api_key=${API_KEY} \
-      --auth_token=${JWT_TOKEN} \
-    --post_file=${POST_FILE})\
+  (set -x;
+    python ${ROOT}/tests/e2e/client/apiproxy_client.py  \
+      --test=negative  \
+      --test_data=${ROOT}/tests/e2e/testdata/bookstore/negative_test_data.json.temp  \
+      --host=${HOST}  \
+      --api_key=${API_KEY}  \
+      --auth_token=${JWT_TOKEN}  \
+    --post_file=${POST_FILE})  \
 
     #######################
   # End of test suite
@@ -125,7 +130,7 @@ echo "Failures: Stress: ${STRESS_FAILURES}, Bookstore: ${BOOKSTORE_FAILURES}."
 
 RESULT=0
 # We fail the test if all bookstore runs failed.
-[[ ${BOOKSTORE_FAILURES} == ${RUN_COUNT} ]] \
+[[ ${BOOKSTORE_FAILURES} == ${RUN_COUNT} ]]  \
   && RESULT=1
 
 # We fail the test if memory increase is large.
