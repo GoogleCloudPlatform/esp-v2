@@ -26,8 +26,8 @@ DOCKERFILE_PATH="${ROOT}/docker"
 
 while getopts :i: arg; do
   case ${arg} in
-    i) IMAGE="${OPTARG}";;
-    *) error_exit "Unrecognized argument -${OPTARG}";;
+    i) IMAGE="${OPTARG}" ;;
+    *) error_exit "Unrecognized argument -${OPTARG}" ;;
   esac
 done
 

@@ -45,13 +45,13 @@ function build_wrk() {
   echo 'Building wrk'
   pushd "$dir"
   git clean -dffx \
-  && git fetch origin \
-  && git fetch origin --tags \
-  && git reset --hard ${WRK_VERSION} \
-  && make WITH_OPENSSL=/usr \
-  && ${SUDO} cp ./wrk /usr/local/bin/wrk \
-  && ${SUDO} chmod a+rx /usr/local/bin/wrk \
-  || error_exit "wrk build failed."
+    && git fetch origin \
+    && git fetch origin --tags \
+    && git reset --hard ${WRK_VERSION} \
+    && make WITH_OPENSSL=/usr \
+    && ${SUDO} cp ./wrk /usr/local/bin/wrk \
+    && ${SUDO} chmod a+rx /usr/local/bin/wrk \
+    || error_exit "wrk build failed."
 
   update_tool wrk "${WRK_VERSION}" ./wrk
   set_wrk
@@ -68,9 +68,9 @@ function update_wrk() {
     local build_needed=true
     local wrk_tmp="$(mktemp /tmp/XXXXX.wrk.bin)"
     get_tool wrk "${WRK_VERSION}" "${wrk_tmp}" \
-    && ${SUDO} cp "${wrk_tmp}" /usr/local/bin/wrk \
-    && ${SUDO} chmod a+rx /usr/local/bin/wrk \
-    && build_needed=false
+      && ${SUDO} cp "${wrk_tmp}" /usr/local/bin/wrk \
+      && ${SUDO} chmod a+rx /usr/local/bin/wrk \
+      && build_needed=false
     if [[ ${build_needed} == true ]]; then
       clone_wrk "${WRK_DIRECTORY}"
       build_wrk ${WRK_DIRECTORY}

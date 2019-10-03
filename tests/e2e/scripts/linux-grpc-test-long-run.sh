@@ -18,16 +18,16 @@ set -eo pipefail
 
 if [[ "$(uname)" != "Linux" ]]; then
   echo "Run on Linux only."
-#  exit 1
+  #  exit 1
 fi
 
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${SCRIPT_PATH}/../../.." && pwd)"
 . ${ROOT}/scripts/all-utilities.sh ||
-  {
-    echo "Cannot load Bash utilities"
-    exit 1
-  }
+{
+  echo "Cannot load Bash utilities"
+  exit 1
+}
 
 API_KEY=''
 SERVICE_NAME="echo.endpoints.cloudesf-testing.cloud.goog"
@@ -38,11 +38,11 @@ REQUEST_COUNT=10000
 
 while getopts :a:g:h:l:s: arg; do
   case ${arg} in
-  a) API_KEY="${OPTARG}" ;;
-  g) HOST="${OPTARG}" ;;
-  l) DURATION_IN_HOUR="${OPTARG}" ;;
-  s) SERVICE_NAME="${OPTARG}" ;;
-  *) echo "Invalid option: -${OPTARG}" ;;
+    a) API_KEY="${OPTARG}" ;;
+    g) HOST="${OPTARG}" ;;
+    l) DURATION_IN_HOUR="${OPTARG}" ;;
+    s) SERVICE_NAME="${OPTARG}" ;;
+    *) echo "Invalid option: -${OPTARG}" ;;
   esac
 done
 
@@ -89,14 +89,14 @@ function grpc_test_pass_through() {
 
     local AUTH_TOKEN=$("${ROOT}/tests/e2e/scripts/gen-auth-token.sh" -a "${SERVICE_NAME}")
     (set -x; python "${ROOT}/tests/e2e/client/grpc/grpc_stress_input.py" \
-      --server="${HOST}:80" \
-      --allowed_failure_rate=0.3 \
-      --api_key="${API_KEY}" \
-      --auth_token="${AUTH_TOKEN}" \
-      --request_count="${REQUEST_COUNT}" \
-      --concurrent="${CONCURRENT}" \
-      --requests_per_stream="${STREAM_COUNT}" \
-      --random_payload_max_size="${RANDOM_PAYLOAD_SIZE}" \
+        --server="${HOST}:80" \
+        --allowed_failure_rate=0.3 \
+        --api_key="${API_KEY}" \
+        --auth_token="${AUTH_TOKEN}" \
+        --request_count="${REQUEST_COUNT}" \
+        --concurrent="${CONCURRENT}" \
+        --requests_per_stream="${STREAM_COUNT}" \
+        --random_payload_max_size="${RANDOM_PAYLOAD_SIZE}" \
       --random_payload_max_size="${RANDOM_PAYLOAD_SIZE}" >"${tmp_file}")
     # gRPC test client occasionally aborted. Retry up to 5 times.
 
@@ -131,7 +131,7 @@ function grpc_test_transcode() {
       --api_key="${API_KEY}" \
       --auth_token="${AUTH_TOKEN}" \
       --test_data="${ROOT}/tests/e2e/testdata/grpc_echo/grpc_test_data.json" \
-      --root="${ROOT}")
+    --root="${ROOT}")
 }
 
 # Issue a request to allow Endpoints-Runtime to fetch metadata.

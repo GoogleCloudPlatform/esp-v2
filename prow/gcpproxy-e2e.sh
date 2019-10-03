@@ -43,7 +43,7 @@ curl https://glide.sh/get | sh
 
 # dependencies for envoy build
 apt-get update && \
-    apt-get -y install libtool cmake automake ninja-build curl unzip libssl-dev
+  apt-get -y install libtool cmake automake ninja-build curl unzip libssl-dev
 
 pip install python-gflags
 
@@ -73,11 +73,11 @@ function e2eGKE() {
   local OPTIND OPTARG arg
   while getopts :c:g:m:R:t: arg; do
     case ${arg} in
-      c) COUPLING_OPTION="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')";;
-      g) BACKEND="${OPTARG}";;
-      m) APIPROXY_IMAGE="${OPTARG}";;
-      R) ROLLOUT_STRATEGY="${OPTARG}";;
-      t) TEST_TYPE="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')";;
+      c) COUPLING_OPTION="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')" ;;
+      g) BACKEND="${OPTARG}" ;;
+      m) APIPROXY_IMAGE="${OPTARG}" ;;
+      R) ROLLOUT_STRATEGY="${OPTARG}" ;;
+      t) TEST_TYPE="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')" ;;
     esac
   done
 
@@ -85,12 +85,12 @@ function e2eGKE() {
   local UNIQUE_ID=$(getUniqueID "gke-${TEST_TYPE}-${BACKEND}")
 
   ${ROOT}/tests/e2e/scripts/e2e-kube.sh \
-  -a ${APIPROXY_SERVICE} \
-  -t ${TEST_TYPE} \
-  -g ${BACKEND} \
-  -m ${APIPROXY_IMAGE} \
-  -R ${ROLLOUT_STRATEGY} \
-  -i ${UNIQUE_ID}
+    -a ${APIPROXY_SERVICE} \
+    -t ${TEST_TYPE} \
+    -g ${BACKEND} \
+    -m ${APIPROXY_IMAGE} \
+    -R ${ROLLOUT_STRATEGY} \
+    -i ${UNIQUE_ID}
 }
 
 function waitAPIProxyImage() {
@@ -137,15 +137,15 @@ echo '======================================================='
 case ${TEST_CASE} in
   "tight-http-bookstore-managed" )
     e2eGKE -c "tight" -t "http" -g "bookstore" -R "managed" -m $(get_proxy_image_name_with_sha)
-  ;;
+    ;;
   "tight-grpc-echo-managed" )
     e2eGKE -c "tight" -t "grpc" -g "echo" -R "managed" -m $(get_proxy_image_name_with_sha)
-  ;;
+    ;;
   "tight-grpc-interop-managed")
     e2eGKE -c "tight" -t "grpc" -g "interop" -R "managed" -m $(get_proxy_image_name_with_sha)
-  ;;
+    ;;
   * )
     echo "No such test case ${TEST_CASE}"
     exit 1
-  ;;
+    ;;
 esac

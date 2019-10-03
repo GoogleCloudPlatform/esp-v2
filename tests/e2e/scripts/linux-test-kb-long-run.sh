@@ -30,11 +30,11 @@ DURATION_IN_HOUR=0
 
 while getopts :a:h:l:s: arg; do
   case ${arg} in
-    a) API_KEY="${OPTARG}";;
-    h) HOST="${OPTARG}";;
-    l) DURATION_IN_HOUR="${OPTARG}";;
-    s) SERVICE_NAME="${OPTARG}";;
-    *) echo "Invalid option: -${OPTARG}";;
+    a) API_KEY="${OPTARG}" ;;
+    h) HOST="${OPTARG}" ;;
+    l) DURATION_IN_HOUR="${OPTARG}" ;;
+    s) SERVICE_NAME="${OPTARG}" ;;
+    *) echo "Invalid option: -${OPTARG}" ;;
   esac
 done
 
@@ -49,8 +49,8 @@ fi
 TEMP_DIR="$(mktemp -d)"
 API_RESTRICTION_KEYS_FILE="${TEMP_DIR}/apiproxy-e2e-key-restriction.json"
 gsutil cp gs://apiproxy-testing-client-secret-files/restricted_api_keys.json \
-      "${API_RESTRICTION_KEYS_FILE}" \
-        || error_exit "Failed to download API key with restrictions file."
+  "${API_RESTRICTION_KEYS_FILE}" \
+  || error_exit "Failed to download API key with restrictions file."
 
 END_TIME=$(date +"%s")
 END_TIME=$((END_TIME + DURATION_IN_HOUR * 60 * 60))
@@ -79,7 +79,7 @@ while true; do
       --host=${HOST} \
       --api_key=${API_KEY} \
       --auth_token=${JWT_TOKEN} \
-      --allow_unverified_cert=true) \
+    --allow_unverified_cert=true) \
     || ((BOOKSTORE_FAILURES++))
 
   echo "Starting bookstore API Key restriction test at $(date)."
@@ -87,30 +87,30 @@ while true; do
       --host=${HOST} \
       --allow_unverified_cert=true \
       --key_restriction_tests=${ROOT}/tests/e2e/testdata/bookstore/key_restriction_test.json.template \
-      --key_restriction_keys_file=${API_RESTRICTION_KEYS_FILE}) \
+    --key_restriction_keys_file=${API_RESTRICTION_KEYS_FILE}) \
     || ((BOOKSTORE_FAILURES++))
 
   POST_FILE="${ROOT}/tests/e2e/testdata/bookstore/35k.json"
   echo "Starting stress test at $(date)."
   (set -x; python ${ROOT}/tests/e2e/client/apiproxy_client.py \
-    --test=stress \
-    --host=${HOST} \
-    --api_key=${API_KEY} \
-    --auth_token=${JWT_TOKEN} \
-    --post_file=${POST_FILE} \
+      --test=stress \
+      --host=${HOST} \
+      --api_key=${API_KEY} \
+      --auth_token=${JWT_TOKEN} \
+      --post_file=${POST_FILE} \
     --test_data=${ROOT}/tests/e2e/testdata/bookstore/test_data.json.temp )\
     || ((STRESS_FAILURES++))
 
   echo "Starting negative stress test."
   (set -x; python ${ROOT}/tests/e2e/client/apiproxy_client.py \
-    --test=negative \
-    --test_data=${ROOT}/tests/e2e/testdata/bookstore/negative_test_data.json.temp \
-    --host=${HOST} \
-    --api_key=${API_KEY} \
-    --auth_token=${JWT_TOKEN} \
+      --test=negative \
+      --test_data=${ROOT}/tests/e2e/testdata/bookstore/negative_test_data.json.temp \
+      --host=${HOST} \
+      --api_key=${API_KEY} \
+      --auth_token=${JWT_TOKEN} \
     --post_file=${POST_FILE})\
 
-  #######################
+    #######################
   # End of test suite
   #######################
 

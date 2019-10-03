@@ -23,10 +23,10 @@
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${SCRIPT_PATH}/../../.." && pwd)"
 . ${ROOT}/scripts/all-utilities.sh ||
-  {
-    echo "Cannot load Bash utilities"
-    exit 1
-  }
+{
+  echo "Cannot load Bash utilities"
+  exit 1
+}
 
 HOST=''
 DURATION_IN_HOUR=0
@@ -36,9 +36,9 @@ TEST_CASES+='status_code_and_message:10,custom_metadata:10'
 
 while getopts :h:l:t: arg; do
   case ${arg} in
-    h) HOST="${OPTARG}";;
-    l) DURATION_IN_HOUR="${OPTARG}";;
-    *) echo "Invalid option: -${OPTARG}";;
+    h) HOST="${OPTARG}" ;;
+    l) DURATION_IN_HOUR="${OPTARG}" ;;
+    *) echo "Invalid option: -${OPTARG}" ;;
   esac
 done
 
@@ -49,7 +49,7 @@ HOST_IP=${HOST%:*}
 HOST_PORT=${HOST#*:}
 echo "HOST_IP: ${HOST_IP}, HOST_PORT: ${HOST_PORT}"
 retry $ROOT/bin/interop_client --server_port "${HOST_PORT}" \
-          --server_host "${HOST_IP}" \
+  --server_host "${HOST_IP}" \
   || error_exit 'Failed to send one request, the proxy did not start properly.'
 
 DURATION_IN_SEC=$((DURATION_IN_HOUR * 60 * 60))
@@ -98,7 +98,7 @@ echo "Total test count: ${RUN_COUNT}, failed count: ${FAIL_COUNT}."
 # If failure time is more than %5 of total test time, mark failed.
 RESULT=0
 if [[ ${FAIL_COUNT} -gt $((RUN_COUNT / 20)) && ${FAIL_COUNT} -gt 1 ]] ; then
-    RESULT=1
+  RESULT=1
 fi
 
 # We fail the test if memory increase is large.
