@@ -32,8 +32,8 @@ func main() {
 	port := flag.Int("port", 8082, "server port")
 	isHttps := flag.Bool("enable_https", false, "true for HTTPS, false for HTTP")
 	enableRootPathHandler := flag.Bool("enable_root_path_handler", false, "true for adding root path for dynamic routing handler")
-	httpsCertPath := flag.String("https_cert_path", platform.GetFilePath(platform.HttpsCert), "path for HTTPS cert path")
-	httpsKeyPath := flag.String("https_key_path", platform.GetFilePath(platform.HttpsKey), "path for HTTPS key path")
+	httpsCertPath := flag.String("https_cert_path", "", "path for HTTPS cert path")
+	httpsKeyPath := flag.String("https_key_path", "", "path for HTTPS key path")
 	flag.Parse()
 
 	r := mux.NewRouter()
@@ -98,9 +98,9 @@ func main() {
 	fmt.Printf("Echo server is running on port: %d, is_https: %v\n", *port, *isHttps)
 	var err error
 	if *isHttps {
-		err = http.ListenAndServeTLS(fmt.Sprintf(":%d", *port), *httpsCertPath, *httpsKeyPath, nil)
+		err = http.ListenAndServeTLS(fmt.Sprintf("%v:%d", platform.GetLoopbackAddress(), *port), *httpsCertPath, *httpsKeyPath, nil)
 	} else {
-		err = http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
+		err = http.ListenAndServe(fmt.Sprintf("%v:%d", platform.GetLoopbackAddress(), *port), nil)
 	}
 	log.Fatal(err)
 }

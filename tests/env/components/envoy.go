@@ -91,6 +91,6 @@ func (s Envoy) String() string {
 
 func (s Envoy) CheckHealth() error {
 	opts := NewHealthCheckOptions()
-	addr := fmt.Sprintf("http://localhost:%v", s.adminPort)
+	addr := fmt.Sprintf("http://%v:%v", platform.GetLoopbackAddress(), s.adminPort)
 	return HttpHealthCheck(addr, "/ready", opts)
 }

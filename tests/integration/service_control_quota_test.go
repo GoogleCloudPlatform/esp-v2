@@ -110,9 +110,9 @@ func TestServiceControlQuota(t *testing.T) {
 					LogMessage:        "endpoints.examples.bookstore.Bookstore.ListShelves is called",
 					StatusCode:        "0",
 					RequestSize:       430,
-					ResponseSize:      271,
+					ResponseSize:      218,
 					RequestBytes:      430,
-					ResponseBytes:     271,
+					ResponseBytes:     218,
 					ResponseCode:      200,
 					Platform:          util.GCE,
 					Location:          "test-zone",
@@ -313,9 +313,9 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 					LogMessage:        "endpoints.examples.bookstore.Bookstore.ListShelves is called",
 					StatusCode:        "0",
 					RequestSize:       430,
-					ResponseSize:      271,
+					ResponseSize:      218,
 					RequestBytes:      430,
-					ResponseBytes:     271,
+					ResponseBytes:     218,
 					// It always allow the first request, then cache its cost, accumulate all costs for 1 second,
 					// then call remote allocateQuota,  if fail, the next request will be failed with 429.
 					// Here is the first request.

@@ -57,6 +57,6 @@ func (s ConfigManagerServer) String() string {
 
 func (s ConfigManagerServer) CheckHealth() error {
 	opts := NewHealthCheckOptions()
-	addr := fmt.Sprintf("localhost:%v", s.grpcPort)
+	addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.grpcPort)
 	return GrpcConnectionCheck(addr, opts)
 }

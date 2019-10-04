@@ -27,6 +27,7 @@ import (
 	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/genproto/protobuf/api"
 
+	bookserver "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/server"
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -52,7 +53,7 @@ type TestEnv struct {
 	backendService              string
 	mockJwtProviders            []string
 	mockMetadataOverride        map[string]string
-	bookstoreServer             *components.BookstoreGrpcServer
+	bookstoreServer             *bookserver.BookstoreServer
 	grpcInteropServer           *components.GrpcInteropGrpcServer
 	grpcEchoServer              *components.GrpcEchoGrpcServer
 	configMgr                   *components.ConfigManagerServer
@@ -300,14 +301,11 @@ func (e *TestEnv) Setup(confArgs []string) error {
 			return err
 		}
 	case "bookstore":
-		e.bookstoreServer, err = components.NewBookstoreGrpcServer(e.ports.BackendServerPort)
+		e.bookstoreServer, err = bookserver.NewBookstoreServer(e.ports.BackendServerPort)
 		if err != nil {
 			return err
 		}
-		if err := e.bookstoreServer.StartAndWait(); err != nil {
-			return err
-		}
-		e.healthRegistry.RegisterHealthChecker(e.bookstoreServer)
+		e.bookstoreServer.StartServer()
 	case "grpc-interop":
 		e.grpcInteropServer, err = components.NewGrpcInteropGrpcServer(e.ports.BackendServerPort)
 		if err != nil {
@@ -358,10 +356,7 @@ func (e *TestEnv) StopBackendServer() error {
 		e.echoBackend = nil
 	}
 	if e.bookstoreServer != nil {
-		e.healthRegistry.DeregisterHealthChecker(e.bookstoreServer)
-		if err := e.bookstoreServer.StopAndWait(); err != nil {
-			retErr = err
-		}
+		e.bookstoreServer.StopServer()
 		e.bookstoreServer = nil
 	}
 	return retErr
@@ -398,9 +393,8 @@ func (e *TestEnv) TearDown() {
 		}
 	}
 	if e.bookstoreServer != nil {
-		if err := e.bookstoreServer.StopAndWait(); err != nil {
-			glog.Errorf("error stopping Bookstore Server: %v", err)
-		}
+		e.bookstoreServer.StopServer()
+		e.bookstoreServer = nil
 	}
 	if e.grpcInteropServer != nil {
 		if err := e.grpcInteropServer.StopAndWait(); err != nil {

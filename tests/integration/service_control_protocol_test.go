@@ -89,7 +89,7 @@ func TestServiceControlProtocolWithGRPCBackend(t *testing.T) {
 		var resp string
 		var err error
 		if tc.protocol == "grpc-web" {
-			wantTrailer := bookstore.GRPCWebTrailer{"grpc-message": "OK", "grpc-status": "0"}
+			wantTrailer := bookstore.GRPCWebTrailer{"grpc-message": "", "grpc-status": "0"}
 			var trailer bookstore.GRPCWebTrailer
 			resp, trailer, err = bookstore.MakeGRPCWebCall(addr, tc.method, "", headerWithAPIKey)
 			if err != nil {
