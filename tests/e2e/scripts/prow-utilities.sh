@@ -91,37 +91,51 @@ function long_running_test() {
   echo ${host}
   echo ${api_key}
   echo ${apiproxy_service}
-  # TODO(jilinxia): add tests for other backends.
-  if [[ "${BACKEND}" == 'bookstore' ]]; then
-    retry -n 20 check_http_service "${host}:80/shelves" ${http_code}
-    # TODO(jilinxia): add tests
-    status=${?}
-    if [[ ${status} -eq 0 ]]; then
-      echo 'Running long running test.'
-      run_nonfatal "${SCRIPT_PATH}/linux-test-kb-long-run.sh" \
-        -h "${host}" \
-        -l "${duration_in_hour}" \
-        -a "${api_key}" \
-        -s "${apiproxy_service}" 2>&1 | tee "${log_file}"
+  case "${BACKEND}" in
+    'bookstore')
+      retry -n 20 check_http_service "${host}:80/shelves" ${http_code}
+      status=${?}
+      if [[ ${status} -eq 0 ]]; then
+        echo 'Running long running test.'
+        run_nonfatal "${SCRIPT_PATH}/linux-test-kb-long-run.sh"  \
+          -h "${host}"  \
+          -l "${duration_in_hour}"  \
+          -a "${api_key}"  \
+          -s "${apiproxy_service}" 2>&1 | tee "${log_file}"
+        status=${PIPESTATUS[0]}
+      fi
+      ;;
+    'echo')
+      retry -n 20 check_grpc_service "${host}:80"
+      status=${?}
+      if [[ ${status} -eq 0 ]]; then
+        run_nonfatal "${SCRIPT_PATH}"/linux-grpc-test-long-run.sh""  \
+          -g "${host}"  \
+          -l "${duration_in_hour}"  \
+          -a "${api_key}"  \
+          -s "${apiproxy_service}" 2>&1 | tee "${log_file}"
+        status=${PIPESTATUS[0]}
+      fi
+      ;;
+    'interop')
+      run_nonfatal "${SCRIPT_PATH}"/test-grpc-interop.sh  \
+        -h "${host}:80"  \
+        -l "${duration_in_hour}" 2>&1 | tee "${log_file}"
       status=${PIPESTATUS[0]}
-    fi
-  elif [[ "${BACKEND}" == 'echo' ]]; then
-    retry -n 20 check_grpc_service "${host}:80"
-    status=${?}
-    if [[ ${status} -eq 0 ]]; then
-      run_nonfatal "${SCRIPT_PATH}"/linux-grpc-test-long-run.sh"" \
-        -g "${host}" \
-        -l "${duration_in_hour}" \
-        -a "${api_key}" \
-        -s "${apiproxy_service}" 2>&1 | tee "${log_file}"
-      status=${PIPESTATUS[0]}
-    fi
-  elif [[ "${BACKEND}" == 'interop' ]]; then
-    run_nonfatal "${SCRIPT_PATH}"/test-grpc-interop.sh \
-      -h "${host}:80" \
-      -l "${duration_in_hour}" 2>&1 | tee "${log_file}"
-    status=${PIPESTATUS[0]}
-  fi
+      ;;
+    *)
+      echo "Invalid backend ${BACKEND}"
+      return 1 ;;
+  esac
+
+  create_status_file  \
+    -f "${json_file}"  \
+    -s ${status}  \
+    -t "${final_test_id}"  \
+    -r "${run_id}"  \
+    || { echo "Could not create ${json_file}.";
+  return 1; }
+
   return ${status}
 }
 
@@ -143,9 +157,10 @@ function check_http_service() {
     return 1
   fi
 }
+
 function check_grpc_service() {
   local host=${1}
-  cat <<EOF | "${ROOT}/bin/grpc_echo_client"
+  cat << EOF | "${ROOT}/bin/grpc_echo_client"
 server_addr: "${host}"
 plans {
   echo {
@@ -208,4 +223,73 @@ function create_service() {
       return 1;
       ;;
   esac
+}
+
+# Fetch proxy logs from k8s container
+function fetch_proxy_logs() {
+  local namespace=${1}
+  local log_dir=${2}
+  local pod_id=$(kubectl get --no-headers=true pods -l app=app -n ${namespace} -o custom-columns=:metadata.name)
+  kubectl logs ${pod_id} -c apiproxy -n ${namespace} | tee ${LOG_DIR}/error.log
+}
+
+# Upload logs remote directory
+function upload_logs() {
+  local remote_dir="${1}"
+  local log_dir="${2}"
+
+  echo "Uploading content of ${log_dir} to ${remote_dir}"
+  retry -n 3 ${GSUTIL} -h 'Content-Type:text/plain' -m cp -r  \
+    "${log_dir}" "${remote_dir}"  \
+    || echo "Failed to upload ${log_dir}"
+}
+
+function wait_apiproxiy_image() {
+  local PROXY_IMAGE_SHA_NAME=$(get_proxy_image_name_with_sha)
+  local ENVOY_IMAGE_SHA_NAME=$(get_envoy_image_name_with_sha)
+  echo "Checking if the image ${PROXY_IMAGE_SHA_NAME} and the image ${ENVOY_IMAGE_SHA_NAME} exist..."
+
+  # Wait 20mins.
+  local WAIT_IMAGE_TIMEOUT=1200
+  local SLEEP_UNIT=5
+
+  while true; do
+    gcloud docker -- pull "${PROXY_IMAGE_SHA_NAME}"  \
+      && gcloud docker -- pull "${ENVOY_IMAGE_SHA_NAME}"  \
+      && { echo "Found the image ${PROXY_IMAGE_SHA_NAME} and the image ${ENVOY_IMAGE_SHA_NAME} exist";
+    break; }
+
+    if [ ${WAIT_IMAGE_TIMEOUT} -gt 0 ]; then
+      echo "Waiting images with ${WAIT_IMAGE_TIMEOUT}s left"
+      sleep ${SLEEP_UNIT}
+      WAIT_IMAGE_TIMEOUT=$((WAIT_IMAGE_TIMEOUT - SLEEP_UNIT))
+    else
+      return 1;
+    fi
+  done
+  return 0;
+}
+
+function download_client_binaries() {
+  gsutil -m cp "gs://apiproxy-testing-presubmit-binaries/*" ${ROOT}/bin/
+  mv ${ROOT}/bin/api_descriptor.pb ${ROOT}/tests/endpoints/grpc_echo/proto/api_descriptor.pb
+  chmod +x ${ROOT}/bin/*
+}
+
+function get_apiproxy_service() {
+  if [[ "${1}" == "bookstore" ]]; then
+    echo "bookstore.endpoints.cloudesf-testing.cloud.goog"
+  elif [[ "${1}" == "echo" ]]; then
+    echo "echo.endpoints.cloudesf-testing.cloud.goog"
+  elif [[ "${1}" == "interop" ]]; then
+    echo "interop.endpoints.cloudesf-testing.cloud.goog"
+  else
+    echo "Service ${1} is not supported."
+    return 1
+  fi
+}
+
+function install_e2e_dependencies() {
+  curl https://glide.sh/get | sh
+  pip install python-gflags
 }

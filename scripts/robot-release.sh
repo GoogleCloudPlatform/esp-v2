@@ -18,7 +18,8 @@
 set -eo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-. ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities'; exit 1; }
+. ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities';
+exit 1; }
 
 
 function checkImageExistence() {
@@ -48,9 +49,10 @@ make build-envoy
 
 echo "Checking if docker image $(get_envoy_image_name_with_sha) and image $(get_proxy_image_name_with_sha) exists.."
 
-checkImageExistence $(get_envoy_image_name) $(get_sha) \
-  && checkImageExistence $(get_proxy_image_name) $(get_sha) \
-  && { echo "Both image $(get_envoy_image_name_with_sha) and image $(get_proxy_image_name_with_sha) already exists; Skip."; exit 0; }
+checkImageExistence $(get_envoy_image_name) $(get_sha)  \
+  && checkImageExistence $(get_proxy_image_name) $(get_sha)  \
+  && { echo "Both image $(get_envoy_image_name_with_sha) and image $(get_proxy_image_name_with_sha) already exists; Skip.";
+exit 0; }
 
 echo "Docker image $(get_envoy_image_name_with_sha) and image $(get_proxy_image_name_with_sha) don't exist; Start to build."
 
@@ -58,5 +60,5 @@ echo '======================================================='
 echo '================= Cloud Build Docker =================='
 echo '======================================================='
 
-${ROOT}/scripts/cloud-build-docker.sh \
+${ROOT}/scripts/cloud-build-docker.sh  \
   || error_exit 'Failed to build a generic Docker Image.'

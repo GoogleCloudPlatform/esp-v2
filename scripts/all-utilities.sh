@@ -314,6 +314,12 @@ function get_proxy_image_name_with_sha() {
 }
 
 
+function get_unique_id() {
+  local uuid=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 32 | head -n 1)
+  echo "${1}-${uuid}"
+  return 0
+}
+
 # Attempts to setup bazel to use a remote cache
 # On non-Prow hosts, the remote cache will not be used
 function try_setup_bazel_remote_cache() {

@@ -23,10 +23,12 @@ ARGS="\
   \"--backend=127.0.0.1:8081\",\
 "
 
-. ${SCRIPT_PATH}/prow-utilities.sh || { echo "Cannot load Bash utilities" ; exit 1 ; }
+. ${SCRIPT_PATH}/prow-utilities.sh || { echo "Cannot load Bash utilities";
+exit 1; }
 e2e_options "${@}"
 
-. ${SCRIPT_PATH}/linux-install-wrk.sh || { echo "Cannot load Bash utilities" ; exit 1 ; }
+. ${SCRIPT_PATH}/linux-install-wrk.sh || { echo "Cannot load Bash utilities";
+exit 1; }
 echo "Installing tools if necessary"
 update_wrk
 
@@ -39,25 +41,25 @@ ARGS="$ARGS \"--service=${APIPROXY_SERVICE}\","
 ARGS="$ARGS \"--rollout_strategy=${ROLLOUT_STRATEGY}\","
 ARGS="$ARGS \"--enable_tracing\", \"--tracing_sample_rate=0.005\""
 case "${BACKEND}" in
-  'bookstore' )
+  'bookstore')
     YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/bookstore/http-bookstore.yaml.template
     YAML_FILE=${SCRIPT_PATH}/../testdata/bookstore/http-bookstore.yaml
     ARGS="$ARGS , \"--backend_protocol=http1\"" ;;
-  'echo'      )
+  'echo')
     YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/grpc_echo/grpc-echo.yaml.template
     YAML_FILE=${SCRIPT_PATH}/../testdata/grpc_echo/grpc-echo.yaml
     ARGS="$ARGS , \"--backend_protocol=grpc\"" ;;
-  'interop'      )
+  'interop')
     YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/grpc_interop/grpc-interop.yaml.template
     YAML_FILE=${SCRIPT_PATH}/../testdata/grpc_interop/grpc-interop.yaml
     ARGS="$ARGS , \"--backend_protocol=grpc\"" ;;
-  *         )
+  *)
     echo "Invalid backend ${BACKEND}"
     return 1 ;;
 
 esac
 
-sed "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g"  ${YAML_TEMPLATE} \
+sed "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g" ${YAML_TEMPLATE}  \
   | sed "s|ARGS|${ARGS}|g" | tee ${YAML_FILE}
 
 # Push service config to service management servie. Only need to run when there
@@ -65,25 +67,26 @@ sed "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g"  ${YAML_TEMPLATE} \
 # number in kubernetes config.
 #
 case "${BACKEND}" in
-  'bookstore' )
+  'bookstore')
     SERVICE_IDL="${SCRIPT_PATH}/../testdata/bookstore/bookstore_swagger_template.json"
     CREATE_SERVICE_ARGS="${SERVICE_IDL}"
     ;;
-  'echo'      )
+  'echo')
     SERVICE_YAML="${ROOT}/tests/endpoints/grpc_echo/grpc-test.yaml"
     SERVICE_DSCP="${ROOT}/tests/endpoints/grpc_echo/proto/api_descriptor.pb"
     CREATE_SERVICE_ARGS="${SERVICE_YAML} ${SERVICE_DSCP}"
     ARGS="$ARGS -g" ;;
-  'interop'      )
+  'interop')
     SERVICE_YAML="${ROOT}/tests/endpoints/grpc_interop/grpc-interop.yaml"
     SERVICE_DSCP="${ROOT}/tests/endpoints/grpc_interop/proto/api_descriptor.pb"
     CREATE_SERVICE_ARGS="${SERVICE_YAML} ${SERVICE_DSCP}"
     ARGS="$ARGS -g" ;;
-  *          )
+  *)
     echo "Invalid backend ${BACKEND}"
     return 1 ;;
 esac
 
+LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
 
 create_service ${CREATE_SERVICE_ARGS}
 
@@ -94,20 +97,26 @@ run kubectl create -f ${YAML_FILE} --namespace "${NAMESPACE}"
 HOST=$(get_cluster_host "${NAMESPACE}")
 
 # Running Test
-run_nonfatal long_running_test \
-  "${HOST}" \
-  "${DURATION_IN_HOUR}" \
-  "${API_KEY}" \
-  "${APIPROXY_SERVICE}" \
-  "${LOG_DIR}" \
-  "${TEST_ID}" \
+run_nonfatal long_running_test  \
+  "${HOST}"  \
+  "${DURATION_IN_HOUR}"  \
+  "${API_KEY}"  \
+  "${APIPROXY_SERVICE}"  \
+  "${LOG_DIR}"  \
+  "${TEST_ID}"  \
   "${UNIQUE_ID}"
 STATUS=${?}
 
 # Deploy new config and check new rollout on /endpoints_status
-if [[ ("${ROLLOUT_STRATEGY}" == "managed") && ("${BACKEND}" == "bookstore") ]] ; then
+if [[ ( "${ROLLOUT_STRATEGY}" == "managed" ) && ( "${BACKEND}" == "bookstore" ) ]]; then
   # Deploy new service config
   create_service "${SERVICE_IDL}"
+fi
+
+if [[ -n ${REMOTE_LOG_DIR} ]]; then
+  fetch_proxy_logs "${NAMESPACE}" "${LOG_DIR}"
+  upload_logs "${REMOTE_LOG_DIR}" "${LOG_DIR}"
+  rm -rf "${LOG_DIR}"
 fi
 
 exit ${STATUS}
