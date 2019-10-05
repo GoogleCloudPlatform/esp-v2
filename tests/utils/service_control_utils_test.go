@@ -17,8 +17,10 @@ package utils
 import (
 	"testing"
 
+	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
-	sc "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
+
+	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
 const expectedCheck = `
@@ -72,7 +74,7 @@ func TestCreateCheck(t *testing.T) {
 		Referer:                "referer",
 	})
 
-	expected := sc.CheckRequest{}
+	expected := scpb.CheckRequest{}
 	if err := proto.UnmarshalText(expectedCheck, &expected); err != nil {
 		t.Fatalf("proto.UnmarshalText: %v", err)
 	}
@@ -186,7 +188,7 @@ const expectedReport = `
           metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/consumer/request_bytes"
             metric_values: <
-              int64_value: 39
+              int64_value: 200
             >
           >
           metric_value_sets: <
@@ -247,13 +249,13 @@ const expectedReport = `
             metric_values: <
               distribution_value: <
                 count: 1
-                mean: 39
-                minimum: 39
-                maximum: 39
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 1
-                bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
@@ -271,7 +273,7 @@ const expectedReport = `
           metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/consumer/response_bytes"
             metric_values: <
-              int64_value: 208
+              int64_value: 200
             >
           >
           metric_value_sets: <
@@ -279,9 +281,9 @@ const expectedReport = `
             metric_values: <
               distribution_value: <
                 count: 1
-                mean: 208
-                minimum: 208
-                maximum: 208
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
                 bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
@@ -450,7 +452,7 @@ const expectedReport = `
           metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/producer/request_bytes"
             metric_values: <
-              int64_value: 39
+              int64_value: 200
             >
           >
           metric_value_sets: <
@@ -511,13 +513,13 @@ const expectedReport = `
             metric_values: <
               distribution_value: <
                 count: 1
-                mean: 39
-                minimum: 39
-                maximum: 39
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 1
-                bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
@@ -535,7 +537,7 @@ const expectedReport = `
           metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/producer/response_bytes"
             metric_values: <
-              int64_value: 208
+              int64_value: 200
             >
           >
           metric_value_sets: <
@@ -543,9 +545,9 @@ const expectedReport = `
             metric_values: <
               distribution_value: <
                 count: 1
-                mean: 208
-                minimum: 208
-                maximum: 208
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
                 bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
@@ -702,18 +704,6 @@ const expectedReport = `
                 key: "producer_project_id"
                 value: <
                   string_value: "endpoints-test"
-                >
-              >
-              fields: <
-                key: "request_size_in_bytes"
-                value: <
-                  number_value: 39
-                >
-              >
-              fields: <
-                key: "response_size_in_bytes"
-                value: <
-                  number_value: 208
                 >
               >
               fields: <
@@ -893,13 +883,13 @@ const expectedReport = `
             metric_values: <
               distribution_value: <
                 count: 1
-                mean: 39
-                minimum: 39
-                maximum: 39
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 1
-                bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
@@ -919,9 +909,9 @@ const expectedReport = `
             metric_values: <
               distribution_value: <
                 count: 1
-                mean: 208
-                minimum: 208
-                maximum: 208
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
                 bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
@@ -991,7 +981,35 @@ const expectedReport = `
         service_config_id: "SERVICE_CONFIG_ID"
 	`
 
-const expectedReport3 = `
+func TestCreateReport(t *testing.T) {
+	got := CreateReport(&ExpectedReport{
+		ServiceName:       "SERVICE_NAME",
+		ServiceConfigID:   "SERVICE_CONFIG_ID",
+		URL:               "/shelves",
+		ApiMethod:         "ListShelves",
+		ApiKey:            "api-key",
+		ProducerProjectID: "endpoints-test",
+		ConsumerProjectID: "123456",
+		Location:          "us-central1",
+		HttpMethod:        "GET",
+		LogMessage:        "Method: ListShelves",
+		ResponseCode:      503,
+		StatusCode:        "14",
+		ErrorType:         "5xx",
+	})
+
+	want := scpb.ReportRequest{}
+	if err := proto.UnmarshalText(expectedReport, &want); err != nil {
+		t.Fatalf("proto.UnmarshalText: %v", err)
+	}
+	if diff := ProtoDiff(&want, &got); diff != "" {
+		glog.Infof("---Want---\n%v", proto.MarshalTextString(&want))
+		glog.Infof("---Got---\n%v", proto.MarshalTextString(&got))
+		t.Errorf("Report diff (-want, +got):\n%s", diff)
+	}
+}
+
+const expectedReportAgg3 = `
         service_name: "SERVICE_NAME"
         operations: <
           operation_name: "ListShelves"
@@ -1096,7 +1114,7 @@ const expectedReport3 = `
           metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/consumer/request_bytes"
             metric_values: <
-              int64_value: 117
+              int64_value: 600
             >
           >
           metric_value_sets: <
@@ -1157,13 +1175,13 @@ const expectedReport3 = `
             metric_values: <
               distribution_value: <
                 count: 3
-                mean: 39
-                minimum: 39
-                maximum: 39
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 3
-                bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
@@ -1181,7 +1199,7 @@ const expectedReport3 = `
           metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/consumer/response_bytes"
             metric_values: <
-              int64_value: 624
+              int64_value: 600
             >
           >
           metric_value_sets: <
@@ -1189,9 +1207,9 @@ const expectedReport3 = `
             metric_values: <
               distribution_value: <
                 count: 3
-                mean: 208
-                minimum: 208
-                maximum: 208
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
                 bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
@@ -1360,7 +1378,7 @@ const expectedReport3 = `
           metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/producer/request_bytes"
             metric_values: <
-              int64_value: 117
+              int64_value: 600
             >
           >
           metric_value_sets: <
@@ -1421,13 +1439,13 @@ const expectedReport3 = `
             metric_values: <
               distribution_value: <
                 count: 3
-                mean: 39
-                minimum: 39
-                maximum: 39
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 3
-                bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
@@ -1445,7 +1463,7 @@ const expectedReport3 = `
           metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/producer/response_bytes"
             metric_values: <
-              int64_value: 624
+              int64_value: 600
             >
           >
           metric_value_sets: <
@@ -1453,9 +1471,9 @@ const expectedReport3 = `
             metric_values: <
               distribution_value: <
                 count: 3
-                mean: 208
-                minimum: 208
-                maximum: 208
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
                 bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
@@ -1615,18 +1633,6 @@ const expectedReport3 = `
                 >
               >
               fields: <
-                key: "request_size_in_bytes"
-                value: <
-                  number_value: 39
-                >
-              >
-              fields: <
-                key: "response_size_in_bytes"
-                value: <
-                  number_value: 208
-                >
-              >
-              fields: <
                 key: "url"
                 value: <
                   string_value: "/shelves"
@@ -1687,18 +1693,6 @@ const expectedReport3 = `
                 >
               >
               fields: <
-                key: "request_size_in_bytes"
-                value: <
-                  number_value: 39
-                >
-              >
-              fields: <
-                key: "response_size_in_bytes"
-                value: <
-                  number_value: 208
-                >
-              >
-              fields: <
                 key: "url"
                 value: <
                   string_value: "/shelves"
@@ -1756,18 +1750,6 @@ const expectedReport3 = `
                 key: "producer_project_id"
                 value: <
                   string_value: "endpoints-test"
-                >
-              >
-              fields: <
-                key: "request_size_in_bytes"
-                value: <
-                  number_value: 39
-                >
-              >
-              fields: <
-                key: "response_size_in_bytes"
-                value: <
-                  number_value: 208
                 >
               >
               fields: <
@@ -1947,13 +1929,13 @@ const expectedReport3 = `
             metric_values: <
               distribution_value: <
                 count: 3
-                mean: 39
-                minimum: 39
-                maximum: 39
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 3
-                bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
@@ -1973,9 +1955,9 @@ const expectedReport3 = `
             metric_values: <
               distribution_value: <
                 count: 3
-                mean: 208
-                minimum: 208
-                maximum: 208
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
                 bucket_counts: 0
                 bucket_counts: 0
                 bucket_counts: 0
@@ -2045,7 +2027,7 @@ const expectedReport3 = `
         service_config_id: "SERVICE_CONFIG_ID"
 	`
 
-func TestCreateReport(t *testing.T) {
+func TestCreateAggregateReport(t *testing.T) {
 	got := CreateReport(&ExpectedReport{
 		ServiceName:       "SERVICE_NAME",
 		ServiceConfigID:   "SERVICE_CONFIG_ID",
@@ -2057,29 +2039,19 @@ func TestCreateReport(t *testing.T) {
 		Location:          "us-central1",
 		HttpMethod:        "GET",
 		LogMessage:        "Method: ListShelves",
-		RequestSize:       39,
-		ResponseSize:      208,
-		RequestBytes:      39,
-		ResponseBytes:     208,
 		ResponseCode:      503,
 		StatusCode:        "14",
 		ErrorType:         "5xx",
 	})
 
-	want := sc.ReportRequest{}
-	if err := proto.UnmarshalText(expectedReport, &want); err != nil {
-		t.Fatalf("proto.UnmarshalText: %v", err)
-	}
-	if diff := ProtoDiff(&want, &got); diff != "" {
-		t.Errorf("Report diff:\n%s", diff)
-	}
-
 	AggregateReport(&got, 3)
-	want3 := sc.ReportRequest{}
-	if err := proto.UnmarshalText(expectedReport3, &want3); err != nil {
+	want := scpb.ReportRequest{}
+	if err := proto.UnmarshalText(expectedReportAgg3, &want); err != nil {
 		t.Fatalf("proto.UnmarshalText3: %v", err)
 	}
-	if diff := ProtoDiff(&want3, &got); diff != "" {
+	if diff := ProtoDiff(&want, &got); diff != "" {
+		glog.Infof("---Want---\n%v", proto.MarshalTextString(&want))
+		glog.Infof("---Got---\n%v", proto.MarshalTextString(&got))
 		t.Errorf("Aggregated report diff (-want, +got):\n%s", diff)
 	}
 }

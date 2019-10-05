@@ -69,10 +69,6 @@ type ExpectedReport struct {
 	ConsumerStreamRespCnt int64
 	ProducerStreamReqCnt  int64
 	ProducerStreamRespCnt int64
-	RequestSize           int64
-	ResponseSize          int64
-	RequestBytes          int64
-	ResponseBytes         int64
 	ResponseCode          int
 	Referer               string
 	StatusCode            string
@@ -93,37 +89,138 @@ type distOptions struct {
 	Scale   float64
 }
 
+type MetricCreator int
+
 const (
-	MTProducer = 1 + iota
+	MTProducer MetricCreator = 1 + iota
 	MTConsumer
 	MTProducerByConsumer
 	MTProducerUnderGrpcStream
 	MTConsumerUnderGrpcStream
 )
 
-type MetricType int
+type MetricValueType int
+
+const (
+	Int64 MetricValueType = 1 + iota
+	Distribution
+)
+
+type MetricValueInfo struct {
+	MetricCreator   MetricCreator
+	MetricValueType MetricValueType
+	// Whether to use this metric when creating a ExpectedReport
+	ShouldInit bool
+}
 
 var (
 	timeDistOptions = distOptions{29, 2.0, 1e-6}
 	sizeDistOptions = distOptions{8, 10.0, 1}
-	randomMatrics   = map[string]MetricType{
-		"serviceruntime.googleapis.com/api/consumer/total_latencies":                        MTConsumer,
-		"serviceruntime.googleapis.com/api/producer/total_latencies":                        MTProducer,
-		"serviceruntime.googleapis.com/api/producer/by_consumer/total_latencies":            MTProducerByConsumer,
-		"serviceruntime.googleapis.com/api/consumer/backend_latencies":                      MTConsumer,
-		"serviceruntime.googleapis.com/api/producer/backend_latencies":                      MTProducer,
-		"serviceruntime.googleapis.com/api/producer/by_consumer/backend_latencies":          MTProducerByConsumer,
-		"serviceruntime.googleapis.com/api/consumer/request_overhead_latencies":             MTConsumer,
-		"serviceruntime.googleapis.com/api/producer/request_overhead_latencies":             MTProducer,
-		"serviceruntime.googleapis.com/api/producer/by_consumer/request_overhead_latencies": MTProducerByConsumer,
-		"serviceruntime.googleapis.com/api/consumer/streaming_durations":                    MTConsumerUnderGrpcStream,
-		"serviceruntime.googleapis.com/api/producer/streaming_durations":                    MTProducerUnderGrpcStream,
+	randomMetrics   = map[string]MetricValueInfo{
+		"serviceruntime.googleapis.com/api/consumer/total_latencies": {
+			MetricCreator:   MTConsumer,
+			MetricValueType: Distribution,
+			ShouldInit:      true,
+		},
+		"serviceruntime.googleapis.com/api/producer/total_latencies": {
+			MetricCreator:   MTProducer,
+			MetricValueType: Distribution,
+			ShouldInit:      true,
+		},
+		"serviceruntime.googleapis.com/api/producer/by_consumer/total_latencies": {
+			MetricCreator:   MTProducerByConsumer,
+			MetricValueType: Distribution,
+			ShouldInit:      true,
+		},
+		"serviceruntime.googleapis.com/api/consumer/backend_latencies": {
+			MetricCreator:   MTConsumer,
+			MetricValueType: Distribution,
+			ShouldInit:      true,
+		},
+		"serviceruntime.googleapis.com/api/producer/backend_latencies": {
+			MetricCreator:   MTProducer,
+			MetricValueType: Distribution,
+			ShouldInit:      true,
+		},
+		"serviceruntime.googleapis.com/api/producer/by_consumer/backend_latencies": {
+			MetricCreator:   MTProducerByConsumer,
+			MetricValueType: Distribution,
+			ShouldInit:      true,
+		},
+		"serviceruntime.googleapis.com/api/consumer/request_overhead_latencies": {
+			MetricCreator:   MTConsumer,
+			MetricValueType: Distribution,
+			ShouldInit:      true,
+		},
+		"serviceruntime.googleapis.com/api/producer/request_overhead_latencies": {
+			MetricCreator:   MTProducer,
+			MetricValueType: Distribution,
+			ShouldInit:      true,
+		},
+		"serviceruntime.googleapis.com/api/producer/by_consumer/request_overhead_latencies": {
+			MetricCreator:   MTProducerByConsumer,
+			MetricValueType: Distribution,
+			ShouldInit:      true,
+		},
+		"serviceruntime.googleapis.com/api/consumer/streaming_durations": {
+			MetricCreator:   MTConsumerUnderGrpcStream,
+			MetricValueType: Distribution,
+			ShouldInit:      true,
+		},
+		"serviceruntime.googleapis.com/api/producer/streaming_durations": {
+			MetricCreator:   MTProducerUnderGrpcStream,
+			MetricValueType: Distribution,
+			ShouldInit:      true,
+		},
+		"serviceruntime.googleapis.com/api/consumer/request_sizes": {
+			MetricCreator:   MTConsumer,
+			MetricValueType: Distribution,
+		},
+		"serviceruntime.googleapis.com/api/consumer/response_sizes": {
+			MetricCreator:   MTConsumer,
+			MetricValueType: Distribution,
+		},
+		"serviceruntime.googleapis.com/api/consumer/request_bytes": {
+			MetricCreator:   MTConsumer,
+			MetricValueType: Int64,
+		},
+		"serviceruntime.googleapis.com/api/consumer/response_bytes": {
+			MetricCreator:   MTConsumer,
+			MetricValueType: Int64,
+		},
+		"serviceruntime.googleapis.com/api/producer/request_sizes": {
+			MetricCreator:   MTProducer,
+			MetricValueType: Distribution,
+		},
+		"serviceruntime.googleapis.com/api/producer/response_sizes": {
+			MetricCreator:   MTProducer,
+			MetricValueType: Distribution,
+		},
+		"serviceruntime.googleapis.com/api/producer/request_bytes": {
+			MetricCreator:   MTProducer,
+			MetricValueType: Int64,
+		},
+		"serviceruntime.googleapis.com/api/producer/response_bytes": {
+			MetricCreator:   MTProducer,
+			MetricValueType: Int64,
+		},
+		"serviceruntime.googleapis.com/api/producer/by_consumer/request_sizes": {
+			MetricCreator:   MTProducerByConsumer,
+			MetricValueType: Distribution,
+		},
+		"serviceruntime.googleapis.com/api/producer/by_consumer/response_sizes": {
+			MetricCreator:   MTProducerByConsumer,
+			MetricValueType: Distribution,
+		},
 	}
 	randomLogEntries = []string{
 		"timestamp",
 		"request_latency_in_ms",
+		"request_size_in_bytes",
+		"response_size_in_bytes",
 	}
-	fakeLatency = 1000
+	fakeDistVal  = 1000
+	fakeInt64Val = 200
 )
 
 func CreateCheck(er *ExpectedCheck) sc.CheckRequest {
@@ -245,8 +342,6 @@ func createLogEntry(er *ExpectedReport) *sc.LogEntry {
 	if er.Location != "" {
 		pl["location"] = makeStringValue(er.Location)
 	}
-	pl["request_size_in_bytes"] = makeNumberValue(er.RequestSize)
-	pl["response_size_in_bytes"] = makeNumberValue(er.ResponseSize)
 	if er.LogMessage != "" {
 		pl["log_message"] = makeStringValue(er.LogMessage)
 	}
@@ -391,14 +486,14 @@ func createByConsumerOperation(er *ExpectedReport) *sc.Operation {
 	ms := []*sc.MetricValueSet{
 		createInt64MetricSet("serviceruntime.googleapis.com/api/producer/by_consumer/request_count", 1),
 		createDistMetricSet(&sizeDistOptions,
-			"serviceruntime.googleapis.com/api/producer/by_consumer/request_sizes", er.RequestSize),
+			"serviceruntime.googleapis.com/api/producer/by_consumer/request_sizes", int64(fakeDistVal)),
 		createDistMetricSet(&sizeDistOptions,
-			"serviceruntime.googleapis.com/api/producer/by_consumer/response_sizes", er.ResponseSize),
+			"serviceruntime.googleapis.com/api/producer/by_consumer/response_sizes", int64(fakeDistVal)),
 	}
 
-	for name, t := range randomMatrics {
-		if t == MTProducerByConsumer {
-			ms = append(ms, createDistMetricSet(&timeDistOptions, name, int64(fakeLatency)))
+	for name, t := range randomMetrics {
+		if t.ShouldInit && t.MetricCreator == MTProducerByConsumer {
+			ms = append(ms, createDistMetricSet(&timeDistOptions, name, int64(fakeDistVal)))
 		}
 	}
 
@@ -426,9 +521,9 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 	ms := []*sc.MetricValueSet{
 		createInt64MetricSet("serviceruntime.googleapis.com/api/producer/request_count", 1),
 		createDistMetricSet(&sizeDistOptions,
-			"serviceruntime.googleapis.com/api/producer/request_sizes", er.RequestSize),
+			"serviceruntime.googleapis.com/api/producer/request_sizes", int64(fakeDistVal)),
 		createDistMetricSet(&sizeDistOptions,
-			"serviceruntime.googleapis.com/api/producer/response_sizes", er.ResponseSize),
+			"serviceruntime.googleapis.com/api/producer/response_sizes", int64(fakeDistVal)),
 	}
 	if er.ConsumerStreamReqCnt != 0 {
 		ms = append(ms,
@@ -452,36 +547,34 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 			createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/request_count", 1))
 		ms = append(ms,
 			createDistMetricSet(&sizeDistOptions,
-				"serviceruntime.googleapis.com/api/consumer/request_sizes", er.RequestSize))
+				"serviceruntime.googleapis.com/api/consumer/request_sizes", int64(fakeDistVal)))
 		ms = append(ms,
 			createDistMetricSet(&sizeDistOptions,
-				"serviceruntime.googleapis.com/api/consumer/response_sizes", er.ResponseSize))
+				"serviceruntime.googleapis.com/api/consumer/response_sizes", int64(fakeDistVal)))
 	}
-
-	if er.RequestBytes != 0 {
+	ms = append(ms,
+		createInt64MetricSet("serviceruntime.googleapis.com/api/producer/request_bytes", int64(fakeInt64Val)))
+	if sendConsumer {
 		ms = append(ms,
-			createInt64MetricSet("serviceruntime.googleapis.com/api/producer/request_bytes", er.RequestBytes))
-		if sendConsumer {
-			ms = append(ms,
-				createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/request_bytes", er.RequestBytes))
-		}
+			createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/request_bytes", int64(fakeInt64Val)))
 	}
-
-	if er.ResponseBytes != 0 {
+	ms = append(ms,
+		createInt64MetricSet("serviceruntime.googleapis.com/api/producer/response_bytes", int64(fakeInt64Val)))
+	if sendConsumer {
 		ms = append(ms,
-			createInt64MetricSet("serviceruntime.googleapis.com/api/producer/response_bytes", er.ResponseBytes))
-		if sendConsumer {
-			ms = append(ms,
-				createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/response_bytes", er.ResponseBytes))
-		}
+			createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/response_bytes", int64(fakeInt64Val)))
 	}
 
-	for name, t := range randomMatrics {
-		if t == MTProducer || sendConsumer && t == MTConsumer {
-			ms = append(ms, createDistMetricSet(&timeDistOptions, name, int64(fakeLatency)))
+	for name, t := range randomMetrics {
+		if !t.ShouldInit {
+			continue
 		}
-		if t == MTProducerUnderGrpcStream || sendConsumer && t == MTConsumerUnderGrpcStream {
-			ms = append(ms, createDistMetricSet(&timeDistOptions, name, int64(fakeLatency)))
+
+		if t.MetricCreator == MTProducer || sendConsumer && t.MetricCreator == MTConsumer {
+			ms = append(ms, createDistMetricSet(&timeDistOptions, name, int64(fakeDistVal)))
+		}
+		if t.MetricCreator == MTProducerUnderGrpcStream || sendConsumer && t.MetricCreator == MTConsumerUnderGrpcStream {
+			ms = append(ms, createDistMetricSet(&timeDistOptions, name, int64(fakeDistVal)))
 		}
 	}
 
@@ -510,15 +603,21 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 
 // Override the random metrics with a fixed value and aggregate it n times.
 // Remove the random fields in LogEntry
-func stripRandomFields(op *sc.Operation, n int64) {
+func stripRandomFields(op *sc.Operation, n int64) error {
 	// Clear some fields
 	op.OperationId = ""
 	op.StartTime = nil
 	op.EndTime = nil
 
-	for _, m := range op.MetricValueSets {
-		if _, found := randomMatrics[m.MetricName]; found {
-			updateDistMetricSet(m, float64(fakeLatency), n)
+	for i, m := range op.MetricValueSets {
+
+		if info, found := randomMetrics[m.MetricName]; found {
+			switch info.MetricValueType {
+			case Int64:
+				op.MetricValueSets[i] = createInt64MetricSet(m.MetricName, int64(fakeInt64Val)*n)
+			case Distribution:
+				updateDistMetricSet(m, float64(fakeDistVal), n)
+			}
 		}
 	}
 	sort.Sort(metricSetSorter(op.MetricValueSets))
@@ -529,6 +628,8 @@ func stripRandomFields(op *sc.Operation, n int64) {
 			delete(l.GetStructPayload().Fields, s)
 		}
 	}
+
+	return nil
 }
 
 // UnmarshalCheckRequest returns proto CheckRequest given data.
@@ -558,7 +659,9 @@ func VerifyCheck(body []byte, ec *ExpectedCheck) error {
 	if err != nil {
 		return err
 	}
-	stripRandomFields(got.Operation, 1)
+	if err := stripRandomFields(got.Operation, 1); err != nil {
+		return err
+	}
 
 	want := CreateCheck(ec)
 
@@ -621,7 +724,9 @@ func VerifyReport(body []byte, er *ExpectedReport) error {
 		n = 1
 	}
 	for _, op := range got.Operations {
-		stripRandomFields(op, n)
+		if err := stripRandomFields(op, n); err != nil {
+			return err
+		}
 	}
 
 	want := CreateReport(er)
@@ -720,6 +825,8 @@ func AggregateReport(pb *sc.ReportRequest, n int64) {
 }
 
 func CheckScRequest(t *testing.T, scRequests []*comp.ServiceRequest, wantScRequests []interface{}, desc string) {
+	t.Helper()
+
 	for i, wantScRequest := range wantScRequests {
 		scRequest := scRequests[i]
 		reqBody := scRequest.ReqBody
