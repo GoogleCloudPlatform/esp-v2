@@ -30,7 +30,7 @@ import (
 
 const (
 	// Max number of retries for a health check.
-	healthCheckRetries = 3
+	healthCheckRetries = 10
 
 	// Time to wait between each linear retry.
 	healthCheckRetryBackoff = 1 * time.Second

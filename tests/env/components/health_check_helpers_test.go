@@ -73,8 +73,13 @@ func TestGrpcHealthCheck(t *testing.T) {
 			// Extract the address the server is listening on
 			addr := healthServer.Lis.Addr()
 
-			// Do the health check
+			// Setup fixed options so changes to defaults do not change test
 			opts := NewHealthCheckOptions()
+			opts.HealthCheckRetries = 3
+			opts.HealthCheckDeadline = 1 * time.Second
+			opts.HealthCheckRetryBackoff = 1 * time.Second
+
+			// Do the health check
 			err = GrpcHealthCheck(addr.String(), opts)
 
 			// Check for errors
