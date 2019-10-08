@@ -300,6 +300,53 @@ const expectedReport = `
               >
             >
           >
+					metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/consumer/streaming_durations"
+            metric_values: <
+              distribution_value: <
+                count: 1
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 1
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
+                >
+              >
+            >
+          >
           metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/consumer/total_latencies"
             metric_values: <
@@ -513,6 +560,53 @@ const expectedReport = `
                   num_finite_buckets: 8
                   growth_factor: 10
                   scale: 1
+                >
+              >
+            >
+          >
+					metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/streaming_durations"
+            metric_values: <
+              distribution_value: <
+                count: 1
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 1
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
                 >
               >
             >
@@ -1116,6 +1210,53 @@ const expectedReport3 = `
               >
             >
           >
+					metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/consumer/streaming_durations"
+            metric_values: <
+              distribution_value: <
+                count: 3
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 3
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
+                >
+              >
+            >
+          >
           metric_value_sets: <
             metric_name: "serviceruntime.googleapis.com/api/consumer/total_latencies"
             metric_values: <
@@ -1329,6 +1470,53 @@ const expectedReport3 = `
                   num_finite_buckets: 8
                   growth_factor: 10
                   scale: 1
+                >
+              >
+            >
+          >
+					metric_value_sets: <
+            metric_name: "serviceruntime.googleapis.com/api/producer/streaming_durations"
+            metric_values: <
+              distribution_value: <
+                count: 3
+                mean: 1000
+                minimum: 1000
+                maximum: 1000
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 0
+                bucket_counts: 3
+                exponential_buckets: <
+                  num_finite_buckets: 29
+                  growth_factor: 2
+                  scale: 1e-06
                 >
               >
             >
@@ -1892,6 +2080,6 @@ func TestCreateReport(t *testing.T) {
 		t.Fatalf("proto.UnmarshalText3: %v", err)
 	}
 	if diff := ProtoDiff(&want3, &got); diff != "" {
-		t.Errorf("Aggregated report diff:\n%s", diff)
+		t.Errorf("Aggregated report diff (-want, +got):\n%s", diff)
 	}
 }

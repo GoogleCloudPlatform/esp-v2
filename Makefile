@@ -110,11 +110,13 @@ integration-test: build build-envoy build-grpc-interop build-grpc-echo
 	# Default timeout for go test is 10 minutes. Our test suite takes a little longer...
 	# logtostderr will cause all glogs in the test framework to print to the console (not too much bloat)
 	@go test -timeout 20m ./tests/env/... --logtostderr
+	@go test -timeout 20m ./tests/utils/... --logtostderr
 	@go test -p 32 -timeout 20m ./tests/integration_test/... --logtostderr
 
 integration-debug: build build-envoy build-grpc-interop build-grpc-echo
 	@echo "--> running integration tests and showing debug logs"
 	@go test -v -timeout 20m ./tests/env/... --logtostderr
+	@go test -v -timeout 20m ./tests/utils/... --logtostderr
 	# debug-components can be set as "all", "configmanager", or "envoy".
 	@go test -v -timeout 20m ./tests/integration_test/... --debug_components=envoy --logtostderr
 
