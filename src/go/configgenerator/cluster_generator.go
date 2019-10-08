@@ -29,6 +29,7 @@ import (
 )
 
 // MakeClusters provides dynamic cluster settings for Envoy
+// This must be called before MakeListeners.
 func MakeClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, error) {
 	var clusters []*v2pb.Cluster
 	backendCluster, err := makeBackendCluster(serviceInfo)

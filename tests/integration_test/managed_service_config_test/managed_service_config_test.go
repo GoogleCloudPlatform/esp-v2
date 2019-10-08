@@ -87,7 +87,7 @@ func TestManagedServiceConfig(t *testing.T) {
 		// Remove the authentication in service config and wait envoy to update.
 		if idx == 1 {
 			s.OverrideAuthentication(&conf.Authentication{})
-			time.Sleep(time.Second * 2)
+			time.Sleep(time.Second * 5)
 		}
 
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)

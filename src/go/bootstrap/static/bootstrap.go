@@ -41,11 +41,11 @@ func ServiceToBootstrapConfig(serviceConfig *conf.Service, id string, opts optio
 		return nil, fmt.Errorf("fail to initialize ServiceInfo, %s", err)
 	}
 
-	listener, err := gen.MakeListener(serviceInfo)
+	clusters, err := gen.MakeClusters(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
-	clusters, err := gen.MakeClusters(serviceInfo)
+	listener, err := gen.MakeListener(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
