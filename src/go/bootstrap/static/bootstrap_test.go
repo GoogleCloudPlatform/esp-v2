@@ -15,39 +15,62 @@
 package static
 
 import (
-	"encoding/json"
+	"fmt"
+	"strings"
 	"testing"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap/static/testdata"
 	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
 
 	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
+	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
 )
 
 func TestServiceToBootstrapConfig(t *testing.T) {
 	opts := options.DefaultConfigGeneratorOptions()
 	opts.BackendProtocol = "HTTP1"
+
+	// Function under test
 	gotBootstrap, err := ServiceToBootstrapConfig(testdata.FakeBookstoreConfig, testdata.FakeConfigID, opts)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	marshaler := &jsonpb.Marshaler{
-		AnyResolver: ut.Resolver,
-	}
-	gotEnvoyString, err := marshaler.MarshalToString(gotBootstrap)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if gotEnvoyString = normalizeJson(gotEnvoyString); gotEnvoyString != normalizeJson(testdata.ExpectedBookstoreEnvoyConfig) {
-		t.Errorf("ToEnvoyConfig got: %v,\nwanted: %v", gotEnvoyString, testdata.ExpectedBookstoreEnvoyConfig)
+	if err := verifyBootstrapConfig(gotBootstrap, testdata.ExpectedBookstoreEnvoyConfig); err != nil {
+		t.Fatalf("Normal ServiceToBootstrapConfig error: %v", err)
 	}
 }
 
-func normalizeJson(input string) string {
-	var jsonObject map[string]interface{}
-	json.Unmarshal([]byte(input), &jsonObject)
-	outputString, _ := json.Marshal(jsonObject)
-	return string(outputString)
+func verifyBootstrapConfig(got *bootstrappb.Bootstrap, want string) error {
+	unmarshaler := &jsonpb.Unmarshaler{
+		AnyResolver: ut.Resolver,
+	}
+
+	// Convert want string to a proto to compare with got
+	wantReader := strings.NewReader(want)
+	wantBootstrap := &bootstrappb.Bootstrap{}
+	err := unmarshaler.Unmarshal(wantReader, wantBootstrap)
+	if err != nil {
+		return err
+	}
+
+	if !proto.Equal(got, wantBootstrap) {
+		// Marshal both protos back to json-strings to pretty print them
+		marshaler := &jsonpb.Marshaler{
+			AnyResolver: ut.Resolver,
+		}
+		gotString, err := marshaler.MarshalToString(got)
+		if err != nil {
+			return err
+		}
+		wantString, err := marshaler.MarshalToString(wantBootstrap)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("\ngot : %v, \nwant: %v", gotString, wantString)
+	}
+
+	return nil
 }
