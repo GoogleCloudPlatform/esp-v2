@@ -45,7 +45,7 @@ make build
 echo '======================================================='
 echo '===================== Build Envoy ====================='
 echo '======================================================='
-make build-envoy
+make build-envoy-release
 
 echo "Checking if docker image $(get_envoy_image_name_with_sha) and image $(get_proxy_image_name_with_sha) exists.."
 
