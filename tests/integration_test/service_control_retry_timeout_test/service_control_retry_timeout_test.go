@@ -30,16 +30,16 @@ import (
 )
 
 type retryServiceHandler struct {
-	m             *comp.MockServiceCtrl
-	requestCount  int32
-	sleepTimes    int32
-	sleepLengthMs int
+	m            *comp.MockServiceCtrl
+	requestCount int
+	sleepTimes   int
+	sleepLength  time.Duration
 }
 
 func (h *retryServiceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.requestCount += 1
 	if h.requestCount <= h.sleepTimes {
-		time.Sleep(time.Millisecond * time.Duration(h.sleepLengthMs))
+		time.Sleep(h.sleepLength)
 	}
 
 	w.Write([]byte(""))
@@ -66,18 +66,18 @@ func TestServiceControlCheckRetry(t *testing.T) {
 		httpMethod              string
 		token                   string
 		method                  string
-		sleepTimes              int32
-		sleepLengthMs           int
+		sleepTimes              int
+		sleepLength             time.Duration
 		wantResp                string
 		wantError               string
-		wantHandlerRequestCount int32
+		wantHandlerRequestCount int
 	}{
 		{
 			desc:                    "Backend unresponsive, the proxy will retry the check request 3 times and fail",
 			clientProtocol:          "http",
 			httpMethod:              "GET",
 			sleepTimes:              3,
-			sleepLengthMs:           200,
+			sleepLength:             200 * time.Millisecond,
 			method:                  "/v1/shelves?key=api-key-0",
 			token:                   testdata.FakeCloudTokenMultiAudiences,
 			wantHandlerRequestCount: 3,
@@ -88,7 +88,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 			clientProtocol:          "http",
 			httpMethod:              "GET",
 			sleepTimes:              2,
-			sleepLengthMs:           200, // The handler will sleep too long twice, so envoy will retry these requests
+			sleepLength:             200 * time.Millisecond, // The handler will sleep too long twice, so envoy will retry these requests
 			method:                  "/v1/shelves?key=api-key-1",
 			token:                   testdata.FakeCloudTokenMultiAudiences,
 			wantHandlerRequestCount: 3,
@@ -99,7 +99,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 			clientProtocol:          "http",
 			httpMethod:              "GET",
 			sleepTimes:              3,
-			sleepLengthMs:           0, // The handler will not sleep, so envoy's request to the backend should be successful
+			sleepLength:             0 * time.Millisecond, // The handler will not sleep, so envoy's request to the backend should be successful
 			method:                  "/v1/shelves?key=api-key-2",
 			token:                   testdata.FakeCloudTokenMultiAudiences,
 			wantHandlerRequestCount: 1,
@@ -110,7 +110,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 	for _, tc := range tests {
 		handler.requestCount = 0
 		handler.sleepTimes = tc.sleepTimes
-		handler.sleepLengthMs = tc.sleepLengthMs
+		handler.sleepLength = tc.sleepLength
 
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
 		resp, err := bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, nil)
@@ -166,16 +166,16 @@ func TestServiceControlQuotaRetry(t *testing.T) {
 		httpMethod              string
 		method                  string
 		token                   string
-		sleepTimes              int32
-		sleepLengthMs           int
-		wantHandlerRequestCount int32
+		sleepTimes              int
+		sleepLength             time.Duration
+		wantHandlerRequestCount int
 	}{
 		{
 			desc:                    "The timeout length is longer than the sleep time of handler so the proxy did 3 times quota requests",
 			clientProtocol:          "http",
 			httpMethod:              "GET",
 			sleepTimes:              3,
-			sleepLengthMs:           200,
+			sleepLength:             200 * time.Millisecond,
 			method:                  "/v1/shelves?key=api-key-0",
 			token:                   testdata.FakeCloudTokenMultiAudiences,
 			wantHandlerRequestCount: 3,
@@ -185,7 +185,7 @@ func TestServiceControlQuotaRetry(t *testing.T) {
 			clientProtocol:          "http",
 			httpMethod:              "GET",
 			sleepTimes:              3,
-			sleepLengthMs:           0,
+			sleepLength:             0 * time.Millisecond,
 			method:                  "/v1/shelves/200?key=api-key-1",
 			token:                   testdata.FakeCloudTokenMultiAudiences,
 			wantHandlerRequestCount: 1,
@@ -195,7 +195,7 @@ func TestServiceControlQuotaRetry(t *testing.T) {
 	for _, tc := range tests {
 		handler.requestCount = 0
 		handler.sleepTimes = tc.sleepTimes
-		handler.sleepLengthMs = tc.sleepLengthMs
+		handler.sleepLength = tc.sleepLength
 
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
 		bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, nil)
@@ -212,8 +212,16 @@ func TestServiceControlReportRetry(t *testing.T) {
 
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
-	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--service_control_report_retries=2", "--service_control_report_timeout_ms=100"}
+	args := []string{
+		"--service=" + serviceName,
+		"--service_config_id=" + configID,
+		"--backend_protocol=grpc",
+		"--rollout_strategy=fixed",
+		// Number of times our filter will retry the report request
+		"--service_control_report_retries=2",
+		// How long each report request waits before timing out (and possibly being retried)
+		"--service_control_report_timeout_ms=500",
+	}
 	s := env.NewTestEnv(comp.TestServiceControlReportRetry, "bookstore")
 
 	handler := retryServiceHandler{
@@ -230,25 +238,25 @@ func TestServiceControlReportRetry(t *testing.T) {
 		clientProtocol          string
 		httpMethod              string
 		method                  string
-		sleepTimes              int32
-		sleepLengthMs           int
-		wantHandlerRequestCount int32
+		sleepTimes              int
+		sleepLength             time.Duration
+		wantHandlerRequestCount int
 	}{
 		{
-			desc:                    "The timeout length is shorter than the sleep time of handler so the proxy did 3 times report requests",
+			desc:                    "The proxy will retry the report request 3 times and get the response in the last request",
 			clientProtocol:          "http",
 			httpMethod:              "GET",
 			sleepTimes:              3,
-			sleepLengthMs:           200,
+			sleepLength:             750 * time.Millisecond, // The handler will sleep longer than the report timeout for the first two requests
 			method:                  "/v1/shelves?key=api-key-0",
 			wantHandlerRequestCount: 3,
 		},
 		{
-			desc:                    "The timeout length is longer than the sleep time of handler so the proxy did 1 times report requests",
+			desc:                    "The proxy will do a check report once and get a response with no retries",
 			clientProtocol:          "http",
 			httpMethod:              "GET",
 			sleepTimes:              3,
-			sleepLengthMs:           0,
+			sleepLength:             100 * time.Millisecond, // The handler will respond back before the report timeout in the first request
 			method:                  "/v1/shelves/200?key=api-key-1",
 			wantHandlerRequestCount: 1,
 		},
@@ -257,14 +265,14 @@ func TestServiceControlReportRetry(t *testing.T) {
 	for _, tc := range tests {
 		handler.requestCount = 0
 		handler.sleepTimes = tc.sleepTimes
-		handler.sleepLengthMs = tc.sleepLengthMs
+		handler.sleepLength = tc.sleepLength
 
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
 		_, _ = bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, "", nil)
 
-		// Report is unblocked and wait it to be flushed once after 1s.
+		// Report is unblocked and wait it to be flushed for 1 second after call to handler are made.
 		// TODO(taoxuy): add customized aggregation options
-		time.Sleep(time.Millisecond * 2000)
+		time.Sleep(time.Millisecond * 3000)
 		if handler.requestCount != tc.wantHandlerRequestCount {
 			t.Errorf("Test (%s): failed, expected report request count: %v, got: %v", tc.desc, tc.wantHandlerRequestCount, handler.requestCount)
 		}
