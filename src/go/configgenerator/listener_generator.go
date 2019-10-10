@@ -518,11 +518,12 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 				JwtAudience: method.BackendRule.JwtAudience,
 			})
 	}
+
 	backendAuthConfig := &bapb.FilterConfig{
 		Rules: rules,
-		AccessToken: &commonpb.AccessToken{
-			TokenType: &commonpb.AccessToken_RemoteToken{
-				RemoteToken: &commonpb.HttpUri{
+		IdTokenInfo: &bapb.FilterConfig_ImdsToken{
+			ImdsToken: &bapb.ImdsIdTokenInfo{
+				ImdsServerUri: &commonpb.HttpUri{
 					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.MetadataURL, ut.IdentityTokenSuffix),
 					Cluster: ut.MetadataServerClusterName,
 					// TODO(taoxuy): make token_subscriber use this timeout
@@ -531,10 +532,11 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 			},
 		},
 	}
+
 	backendAuthConfigStruct, _ := ut.MessageToStruct(backendAuthConfig)
 	backendAuthFilter := &hcmpb.HttpFilter{
 		Name:       ut.BackendAuth,
-		ConfigType: &hcmpb.HttpFilter_Config{backendAuthConfigStruct},
+		ConfigType: &hcmpb.HttpFilter_Config{Config: backendAuthConfigStruct},
 	}
 	return backendAuthFilter
 }

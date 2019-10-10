@@ -48,7 +48,7 @@ class AudienceContext {
 
  private:
   ThreadLocal::SlotPtr tls_;
-  Utils::TokenSubscriberPtr token_sub_ptr_;
+  Utils::TokenSubscriberPtr imds_token_sub_ptr_;
 };
 
 typedef std::unique_ptr<AudienceContext> AudienceContextPtr;

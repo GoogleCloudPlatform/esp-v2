@@ -156,8 +156,8 @@ func TestBackendAuthFilter(t *testing.T) {
               "operation": "testapi.foo"
             }
           ],
-          "access_token": {
-            "remote_token": {
+          "imds_token": {
+            "imds_server_uri": {
               "cluster": "metadata-cluster",
               "uri": "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity",
               "timeout":"5s"

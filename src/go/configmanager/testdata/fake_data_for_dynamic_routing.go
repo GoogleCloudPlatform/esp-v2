@@ -370,8 +370,8 @@ var (
                       "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search"
                     }
                   ],
-                  "access_token":{
-                    "remote_token":{
+                  "imds_token":{
+                    "imds_server_uri":{
                       "cluster":"metadata-cluster",
                       "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity",
                       "timeout":"5s"

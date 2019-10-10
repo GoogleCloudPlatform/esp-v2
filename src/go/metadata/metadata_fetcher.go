@@ -97,7 +97,7 @@ func (mf *MetadataFetcher) FetchAccessToken() (string, time.Duration, error) {
 		return mf.tokenInfo.accessToken, mf.tokenInfo.tokenTimeout.Sub(now), nil
 	}
 
-	tokenBody, err := mf.getMetadata(mf.createUrl(util.ServiceAccountTokenSuffix))
+	tokenBody, err := mf.getMetadata(mf.createUrl(util.AccessTokenSuffix))
 	if err != nil {
 		return "", 0, err
 	}

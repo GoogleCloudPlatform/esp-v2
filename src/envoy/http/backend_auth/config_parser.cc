@@ -53,14 +53,6 @@ AudienceContext::AudienceContext(
     return std::make_shared<TokenCache>();
   });
 
-  const std::string& token_uri =
-      filter_config.access_token().remote_token().uri();
-  const std::string& token_cluster =
-      filter_config.access_token().remote_token().cluster();
-
-  const std::string real_token_uri =
-      absl::StrCat(token_uri.empty() ? kDefaultIdentityUrl : token_uri,
-                   "?format=standard&audience=", proto_config.jwt_audience());
   TokenSubscriber::TokenUpdateFunc callback = [this](const std::string& token) {
     TokenSharedPtr new_token = std::make_shared<std::string>(token);
     tls_->runOnAllThreads([this, new_token]() {
@@ -68,9 +60,25 @@ AudienceContext::AudienceContext(
     });
   };
 
-  token_sub_ptr_ =
-      std::make_unique<TokenSubscriber>(context, token_cluster, real_token_uri,
-                                        /*json_response=*/false, callback);
+  switch (filter_config.id_token_info_case()) {
+    case FilterConfig::kImdsToken: {
+      const std::string& uri =
+          filter_config.imds_token().imds_server_uri().uri();
+      const std::string& cluster =
+          filter_config.imds_token().imds_server_uri().cluster();
+      const std::string real_uri = absl::StrCat(
+          uri.empty() ? kDefaultIdentityUrl : uri,
+          "?format=standard&audience=", proto_config.jwt_audience());
+
+      imds_token_sub_ptr_ =
+          std::make_unique<TokenSubscriber>(context, cluster, real_uri,
+                                            /*json_response=*/
+                                            false, callback);
+    }
+      return;
+    default:
+      return;
+  }
 }
 
 FilterConfigParser::FilterConfigParser(

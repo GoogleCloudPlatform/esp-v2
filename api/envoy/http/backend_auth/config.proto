@@ -27,10 +27,35 @@ message BackendAuthRule {
   string jwt_audience = 2 [(validate.rules).string.min_bytes = 1];
 }
 
+// When it is configured, the filter will fetch id token from Instance Metadata
+// Server.
+message ImdsIdTokenInfo {
+  // The Instance Metadata Server uri..
+  api.envoy.http.common.HttpUri imds_server_uri = 1;
+}
+
+// When it is configured, the filter will fetch id token from Google Cloud IAM
+// after the access token fetched from Instance Metadata Server.
+message IamIdTokenInfo {
+  // The Google Cloud IAM server uri.
+  api.envoy.http.common.HttpUri iam_uri = 1;
+
+  // Information used to get access token.
+  api.envoy.http.common.AccessToken access_token = 3;
+
+  // The Service Account Email.
+  string service_account_email = 2;
+}
+
 message FilterConfig {
   // A list of backend auth rules.
   repeated BackendAuthRule rules = 1;
 
-  // The access token information.
-  api.envoy.http.common.AccessToken access_token = 2;
+  oneof id_token_info {
+    // Information used to fetch id token from Instance Metadata Server.
+    ImdsIdTokenInfo imds_token = 2;
+
+    // Information used to fetch id token from Google Cloud IAM.
+    IamIdTokenInfo iam_token = 3;
+  }
 }

@@ -1432,7 +1432,7 @@ func runTest(t *testing.T, opts options.ConfigGeneratorOptions, f func(*testEnv)
 	}
 
 	mockMetadataServer := util.InitMockServerFromPathResp(map[string]string{
-		util.ServiceAccountTokenSuffix: fakeToken,
+		util.AccessTokenSuffix: fakeToken,
 	})
 	defer mockMetadataServer.Close()
 
