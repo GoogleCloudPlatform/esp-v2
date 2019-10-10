@@ -38,7 +38,7 @@ GODIRS	= $(shell go list -f '{{.Dir}}' ./... \
 $(BINDIR):
 	@mkdir -p $(BINDIR)
 
-.PHONY: build build-envoy build-grpc-echo build-grpc-interop upload-e2e-client-binaries
+.PHONY: build build-envoy build-envoy-release build-envoy-debug build-grpc-echo build-grpc-interop upload-e2e-client-binaries
 build: format
 	@echo "--> building"
 	@go build ./src/go/...
@@ -48,8 +48,18 @@ build: format
 	@go build -o bin/echo/server ./tests/endpoints/echo/server/app.go
 
 build-envoy:
-	@echo "--> building envoy"
+	@echo "--> building envoy (compilation_mode=fastbuild)"
 	@bazel build //src/envoy:envoy
+	@cp -f bazel-bin/src/envoy/envoy bin/
+
+build-envoy-release:
+	@echo "--> building envoy (compilation_mode=release)"
+	@bazel build --config=release //src/envoy:envoy
+	@cp -f bazel-bin/src/envoy/envoy bin/
+
+build-envoy-debug:
+	@echo "--> building envoy (compilation_mode=debug)"
+	@bazel build --config=debug //src/envoy:envoy
 	@cp -f bazel-bin/src/envoy/envoy bin/
 
 build-grpc-echo:

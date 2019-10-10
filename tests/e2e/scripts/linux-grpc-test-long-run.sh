@@ -157,12 +157,14 @@ detect_memory_leak_init "${HOST}"
 # ${ROOT}/tests/client/esp_client.py needs to run at that folder.
 #pushd ${ROOT}/tests/client > /dev/null
 while true; do
+  RUN_COUNT=$((RUN_COUNT + 1))
   echo "Starting test run ${RUN_COUNT} at $(date)."
   echo "Failures so far: pass-through: ${GRPC_STRESS_FAILURES}, transcode: ${HTTP_STRESS_FAILURES}."
+
   #######################
   # Insert tests here
   #######################
-  RUN_COUNT=$((RUN_COUNT++))
+
   grpc_test_pass_through || ((GRPC_STRESS_FAILURES++))
   grpc_test_transcode || ((HTTP_STRESS_FAILURES++))
 
