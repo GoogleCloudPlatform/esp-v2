@@ -130,20 +130,20 @@ void TokenSubscriber::onSuccess(Envoy::Http::MessagePtr&& response) {
     const auto parse_status = ::google::protobuf::util::JsonStringToMessage(
         response->bodyAsString(), &response_pb, options);
     if (!parse_status.ok()) {
-      ENVOY_LOG(debug, "Parsing response failed: {}", parse_status.ToString());
+      ENVOY_LOG(error, "Parsing response failed: {}", parse_status.ToString());
       return;
     }
     JsonStruct json_struct(response_pb);
 
     if (!json_struct.get_string("access_token", &token).ok()) {
-      ENVOY_LOG(debug,
+      ENVOY_LOG(error,
                 "Parsing response failed. Could not find `access_token`");
       return;
     }
 
     int expires_seconds;
     if (!json_struct.get_int("expires_in", &expires_seconds).ok()) {
-      ENVOY_LOG(debug, "Parsing response failed. Could not find `expires_in`");
+      ENVOY_LOG(error, "Parsing response failed. Could not find `expires_in`");
       return;
     }
     expires_in = std::chrono::seconds(expires_seconds);
@@ -170,7 +170,6 @@ void TokenSubscriber::onFailure(
   active_request_ = nullptr;
   ENVOY_LOG(debug, "GetAccessToken failed with code: {}, {}",
             enumToInt(reason));
-  init_target_.ready();
   refresh_timer_->enableTimer(kFailedRequestTimeout);
 }
 
