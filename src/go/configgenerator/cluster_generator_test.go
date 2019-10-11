@@ -365,3 +365,72 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 
 	}
 }
+
+func TestMakeIamCluster(t *testing.T) {
+	testData := []struct {
+		desc              string
+		backendProtocol   string
+		iamServiceAccount string
+		fakeServiceConfig *conf.Service
+		wantedCluster     *v2pb.Cluster
+		wantedError       string
+	}{
+		{
+			desc:              "Success, generate iam cluster when iam service acount is set",
+			iamServiceAccount: "service-account@google.com",
+			fakeServiceConfig: &conf.Service{
+				Name: testProjectName,
+				Apis: []*api.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+					},
+				},
+			},
+			backendProtocol: "http1",
+			wantedCluster: &v2pb.Cluster{
+				Name:                 ut.IamServerClusterName,
+				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+				ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_STRICT_DNS},
+				LoadAssignment:       ut.CreateLoadAssignment("iamcredentials.googleapis.com", 443),
+				TlsContext: &authpb.UpstreamTlsContext{
+					Sni: "iamcredentials.googleapis.com",
+				},
+			},
+		},
+		{
+			desc: "Success, not generate a iam cluster without iam service acount",
+			fakeServiceConfig: &conf.Service{
+				Name: testProjectName,
+				Apis: []*api.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+					},
+				},
+			},
+			backendProtocol: "http1",
+		},
+	}
+
+	for i, tc := range testData {
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = tc.backendProtocol
+		opts.IamServiceAccount = tc.iamServiceAccount
+
+		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		cluster, err := makeIamCluster(fakeServiceInfo)
+		if err != nil {
+			if tc.wantedError == "" || !strings.Contains(err.Error(), tc.wantedError) {
+				t.Fatal(err)
+
+			}
+		}
+
+		if tc.wantedCluster != nil && !reflect.DeepEqual(cluster, tc.wantedCluster) {
+			t.Errorf("Test Desc(%d): %s, makeBackendRoutingClusters\ngot: %v,\nwant: %v", i, tc.desc, cluster, tc.wantedCluster)
+		}
+	}
+}

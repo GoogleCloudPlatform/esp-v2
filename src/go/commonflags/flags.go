@@ -49,12 +49,14 @@ var (
 	//(worker did not start) somehow. To work around this problem, use IP for
 	//metadata server to fetch access token.
 	MetadataURL = flag.String("metadata_url", "http://169.254.169.254/computeMetadata", "url of metadata server")
+	IamURL      = flag.String("iam_url", "https://iamcredentials.googleapis.com", "url of iam server")
+
+	IamServiceAccount = flag.String("iam_service_account", "", "")
 )
 
 func DefaultCommonOptionsFromFlags() options.CommonOptions {
 	return options.CommonOptions{
-		AdminAddress: *AdminAddress,
-
+		AdminAddress:               *AdminAddress,
 		AdminPort:                  *AdminPort,
 		EnableTracing:              *EnableTracing,
 		HttpRequestTimeout:         *HttpRequestTimeout,
@@ -70,5 +72,7 @@ func DefaultCommonOptionsFromFlags() options.CommonOptions {
 		TracingMaxNumMessageEvents: *TracingMaxNumMessageEvents,
 		TracingMaxNumLinks:         *TracingMaxNumLinks,
 		MetadataURL:                *MetadataURL,
+		IamURL:                     *IamURL,
+		IamServiceAccount:          *IamServiceAccount,
 	}
 }

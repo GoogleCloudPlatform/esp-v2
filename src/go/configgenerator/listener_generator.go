@@ -518,10 +518,27 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 				JwtAudience: method.BackendRule.JwtAudience,
 			})
 	}
-
 	backendAuthConfig := &bapb.FilterConfig{
 		Rules: rules,
-		IdTokenInfo: &bapb.FilterConfig_ImdsToken{
+	}
+	if serviceInfo.Options.IamServiceAccount != "" {
+		backendAuthConfig.IdTokenInfo = &bapb.FilterConfig_IamToken{
+			IamToken: &bapb.IamIdTokenInfo{
+				IamUri: &commonpb.HttpUri{
+					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.IamURL, ut.IamIdentityTokenSuffix(serviceInfo.Options.IamServiceAccount)),
+					Cluster: ut.IamServerClusterName,
+					// TODO(taoxuy): make token_subscriber use this timeout
+					Timeout: &duration.Duration{Seconds: 5},
+				},
+				// Currently only support fetching access token from instance metadata
+				// server, not by service account file.
+				AccessToken:         serviceInfo.AccessToken,
+				ServiceAccountEmail: serviceInfo.Options.IamServiceAccount,
+			},
+		}
+
+	} else {
+		backendAuthConfig.IdTokenInfo = &bapb.FilterConfig_ImdsToken{
 			ImdsToken: &bapb.ImdsIdTokenInfo{
 				ImdsServerUri: &commonpb.HttpUri{
 					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.MetadataURL, ut.IdentityTokenSuffix),
@@ -530,13 +547,12 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 					Timeout: &duration.Duration{Seconds: 5},
 				},
 			},
-		},
+		}
 	}
-
 	backendAuthConfigStruct, _ := ut.MessageToStruct(backendAuthConfig)
 	backendAuthFilter := &hcmpb.HttpFilter{
 		Name:       ut.BackendAuth,
-		ConfigType: &hcmpb.HttpFilter_Config{Config: backendAuthConfigStruct},
+		ConfigType: &hcmpb.HttpFilter_Config{backendAuthConfigStruct},
 	}
 	return backendAuthFilter
 }

@@ -42,6 +42,8 @@ type CommonOptions struct {
 	NonGCP             bool
 	HttpRequestTimeout time.Duration
 	MetadataURL        string
+	IamServiceAccount  string
+	IamURL             string
 }
 
 // DefaultCommonOptions returns CommonOptions with default values.
@@ -65,5 +67,7 @@ func DefaultCommonOptions() CommonOptions {
 		TracingMaxNumMessageEvents: 128,
 		TracingMaxNumLinks:         128,
 		MetadataURL:                "http://169.254.169.254/computeMetadata",
+		IamServiceAccount:          "",
+		IamURL:                     "https://iamcredentials.googleapis.com",
 	}
 }
