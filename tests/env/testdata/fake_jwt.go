@@ -65,7 +65,7 @@ var (
 			Id:               NonexistentProvider,
 			Issuer:           NonexistentIssuer,
 			IsNonexistent:    true,
-			HardcodedJwksUri: "http://metadata.com/pkey",
+			HardcodedJwksUri: "http://localhost:55550/pkey",
 		},
 		{
 			Id:     ServiceControlProvider,
