@@ -19,6 +19,7 @@
 #include "absl/strings/str_cat.h"
 #include "api/envoy/http/backend_auth/config.pb.h"
 #include "envoy/thread_local/thread_local.h"
+#include "src/envoy/utils/iam_token_subscriber.h"
 #include "src/envoy/utils/token_subscriber.h"
 
 namespace Envoy {
@@ -38,7 +39,8 @@ class AudienceContext {
       const ::google::api::envoy::http::backend_auth::BackendAuthRule&
           proto_config,
       Server::Configuration::FactoryContext& context,
-      const ::google::api::envoy::http::backend_auth::FilterConfig& config);
+      const ::google::api::envoy::http::backend_auth::FilterConfig& config,
+      Utils::IamTokenSubscriber::TokenGetFunc access_token_fn);
   TokenSharedPtr token() const {
     if (tls_->getTyped<TokenCache>().token_) {
       return tls_->getTyped<TokenCache>().token_;
@@ -48,12 +50,14 @@ class AudienceContext {
 
  private:
   ThreadLocal::SlotPtr tls_;
+  Utils::IamTokenSubscriberPtr iam_token_sub_ptr_;
   Utils::TokenSubscriberPtr imds_token_sub_ptr_;
 };
 
 typedef std::unique_ptr<AudienceContext> AudienceContextPtr;
 
-class FilterConfigParser {
+class FilterConfigParser
+    : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   FilterConfigParser(
       const ::google::api::envoy::http::backend_auth::FilterConfig& config,
@@ -77,6 +81,10 @@ class FilterConfigParser {
   }
 
  private:
+  //  access_token_ is required for authentication during fetching id_token from
+  //  IAM server.
+  std::string access_token_;
+  Utils::TokenSubscriberPtr access_token_sub_ptr_;
   absl::flat_hash_map<std::string, std::string> operation_map_;
   absl::flat_hash_map<std::string, AudienceContextPtr> audience_map_;
 };

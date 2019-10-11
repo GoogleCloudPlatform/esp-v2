@@ -57,6 +57,27 @@ envoy_cc_library(
 )
 
 envoy_cc_library(
+    name = "iam_token_subscriber_lib",
+    srcs = ["iam_token_subscriber.cc"],
+    hdrs = ["iam_token_subscriber.h"],
+    repository = "@envoy",
+    deps = [
+        ":json_struct_lib",
+        "//api/envoy/http/common:base_proto_cc",
+        "//src/api_proxy/auth:lib",
+        "@envoy//include/envoy/common:time_interface",
+        "@envoy//include/envoy/event:dispatcher_interface",
+        "@envoy//include/envoy/server:filter_config_interface",
+        "@envoy//include/envoy/upstream:cluster_manager_interface",
+        "@envoy//source/common/common:enum_to_int",
+        "@envoy//source/common/http:headers_lib",
+        "@envoy//source/common/http:message_lib",
+        "@envoy//source/common/http:utility_lib",
+        "@envoy//source/common/init:target_lib",
+    ],
+)
+
+envoy_cc_library(
     name = "service_account_token_lib",
     srcs = ["service_account_token.cc"],
     hdrs = ["service_account_token.h"],
@@ -79,6 +100,19 @@ envoy_cc_test(
     repository = "@envoy",
     deps = [
         ":token_subscriber_lib",
+        "@envoy//test/mocks/init:init_mocks",
+        "@envoy//test/mocks/server:server_mocks",
+        "@envoy//test/test_common:utility_lib",
+    ],
+)
+
+envoy_cc_test(
+    name = "iam_token_subscriber_test",
+    size = "small",
+    srcs = ["iam_token_subscriber_test.cc"],
+    repository = "@envoy",
+    deps = [
+        ":iam_token_subscriber_lib",
         "@envoy//test/mocks/init:init_mocks",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/test_common:utility_lib",
