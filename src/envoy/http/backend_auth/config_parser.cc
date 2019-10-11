@@ -26,33 +26,15 @@ using Utils::TokenSubscriber;
 
 // TODO(kyuc): add unit tests for all possible backend rule configs.
 
-namespace {
-
-// TODO(toddbeckman): Figure out if this url should be abstracted to the config.
-
-// Suspected Envoy has listener initialization bug: if a http filter needs to
-// use a cluster with DSN lookup for initialization, e.g. fetching a remote
-// access token, the cluster is not ready so the whole listener is destroyed.
-// ADS will repeatedly send the same listener again until the cluster is ready.
-// Then the listener is marked as ready but the whole Envoy server is not marked
-// as ready (worker did not start) somehow. To work around this problem, use IP
-// for metadata server to fetch access token.
-constexpr char kDefaultIdentityUrl[]{
-    "http://169.254.169.254/computeMetadata/v1/instance/"
-    "service-accounts/default/identity"};
-
-}  // namespace
-
 AudienceContext::AudienceContext(
     const ::google::api::envoy::http::backend_auth::BackendAuthRule&
-        proto_config,
+    proto_config,
     Server::Configuration::FactoryContext& context,
     const FilterConfig& filter_config)
     : tls_(context.threadLocal().allocateSlot()) {
   tls_->set([](Event::Dispatcher&) -> ThreadLocal::ThreadLocalObjectSharedPtr {
     return std::make_shared<TokenCache>();
   });
-
   TokenSubscriber::TokenUpdateFunc callback = [this](const std::string& token) {
     TokenSharedPtr new_token = std::make_shared<std::string>(token);
     tls_->runOnAllThreads([this, new_token]() {
@@ -67,17 +49,16 @@ AudienceContext::AudienceContext(
       const std::string& cluster =
           filter_config.imds_token().imds_server_uri().cluster();
       const std::string real_uri = absl::StrCat(
-          uri.empty() ? kDefaultIdentityUrl : uri,
+          uri,
           "?format=standard&audience=", proto_config.jwt_audience());
 
       imds_token_sub_ptr_ =
           std::make_unique<TokenSubscriber>(context, cluster, real_uri,
-                                            /*json_response=*/
+              /*json_response=*/
                                             false, callback);
     }
       return;
-    default:
-      return;
+    default:return;
   }
 }
 

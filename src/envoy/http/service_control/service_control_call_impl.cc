@@ -39,17 +39,6 @@ constexpr char kServiceControlService[] =
 constexpr char kQuotaControlService[] =
     "/google.api.servicecontrol.v1.QuotaController";
 
-// Suspected Envoy has listener initialization bug: if a http filter needs to
-// use a cluster with DSN lookup for initialization, e.g. fetching a remote
-// access token, the cluster is not ready so the whole listener is destroyed.
-// ADS will repeatedly send the same listener again until the cluster is ready.
-// Then the listener is marked as ready but the whole Envoy server is not marked
-// as ready (worker did not start) somehow. To work around this problem, use IP
-// for metadata server to fetch access token.
-constexpr char kDefaultTokenUrl[]{
-    "http://169.254.169.254/computeMetadata/v1/instance/"
-    "service-accounts/default/token"};
-
 }  // namespace
 
 ServiceControlCallImpl::ServiceControlCallImpl(
@@ -72,8 +61,7 @@ ServiceControlCallImpl::ServiceControlCallImpl(
       const std::string& token_cluster =
           filter_config.access_token().remote_token().cluster();
       token_sub_ptr_ = std::make_unique<TokenSubscriber>(
-          context, token_cluster,
-          token_uri.empty() ? kDefaultTokenUrl : token_uri,
+          context, token_cluster, token_uri,
           /*json_response=*/true, [this](const std::string& token) {
             TokenSharedPtr new_token = std::make_shared<std::string>(token);
             tls_->runOnAllThreads([this, new_token]() {
