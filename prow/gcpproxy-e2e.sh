@@ -49,7 +49,8 @@ function e2eGKE() {
     -B "${BUCKET}"  \
     -m "${APIPROXY_IMAGE}"  \
     -R "${ROLLOUT_STRATEGY}"  \
-    -i "${UNIQUE_ID}"
+    -i "${UNIQUE_ID}"  \
+    -l "${DURATION_IN_HOUR}"
 }
 
 if [ ! -d "$GOPATH/bin" ]; then
