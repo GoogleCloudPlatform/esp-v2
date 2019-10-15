@@ -104,47 +104,54 @@ func TestTranscoderFilter(t *testing.T) {
 }
 
 func TestBackendAuthFilter(t *testing.T) {
-	fakeServiceConfig := &conf.Service{
-		Name: testProjectName,
-		Apis: []*api.Api{
-			{
-				Name: "testapi",
-				Methods: []*api.Method{
+	testdata := []struct {
+		desc                  string
+		iamServiceAccount     string
+		fakeServiceConfig     *conf.Service
+		wantBackendAuthFilter string
+	}{
+		{
+			desc: "Success, generate backend auth filter in general",
+			fakeServiceConfig: &conf.Service{
+				Name: testProjectName,
+				Apis: []*api.Api{
 					{
-						Name: "foo",
+						Name: "testapi",
+						Methods: []*api.Method{
+							{
+								Name: "foo",
+							},
+							{
+								Name: "bar",
+							},
+						},
 					},
-					{
-						Name: "bar",
+				},
+				Backend: &conf.Backend{
+					Rules: []*conf.BackendRule{
+						{
+							Selector: "ignore_me",
+						},
+						{
+							Selector:        "testapi.foo",
+							Address:         "https://testapi.com/foo",
+							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &conf.BackendRule_JwtAudience{
+								JwtAudience: "foo.com",
+							},
+						},
+						{
+							Selector:        "testapi.bar",
+							Address:         "https://testapi.com/foo",
+							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &conf.BackendRule_JwtAudience{
+								JwtAudience: "bar.com",
+							},
+						},
 					},
 				},
 			},
-		},
-		Backend: &conf.Backend{
-			Rules: []*conf.BackendRule{
-				{
-					Selector: "ignore_me",
-				},
-				{
-					Selector:        "testapi.foo",
-					Address:         "https://testapi.com/foo",
-					PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
-					Authentication: &conf.BackendRule_JwtAudience{
-						JwtAudience: "foo.com",
-					},
-				},
-				{
-					Selector:        "testapi.bar",
-					Address:         "https://testapi.com/foo",
-					PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
-					Authentication: &conf.BackendRule_JwtAudience{
-						JwtAudience: "bar.com",
-					},
-				},
-			},
-		},
-	}
-	wantBackendAuthFilter :=
-		`{
+			wantBackendAuthFilter: `{
         "config": {
           "rules": [
             {
@@ -165,23 +172,79 @@ func TestBackendAuthFilter(t *testing.T) {
           }
         },
       "name": "envoy.filters.http.backend_auth"
-    }`
-
-	opts := options.DefaultConfigGeneratorOptions()
-	opts.BackendProtocol = "http2"
-	opts.EnableBackendRouting = true
-	fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
-	if err != nil {
-		t.Fatal(err)
+    }`,
+		},
+		{
+			desc:              "Success, set iamIdToken when iam service account is set",
+			iamServiceAccount: "service-account@google.com",
+			fakeServiceConfig: &conf.Service{
+				Name: testProjectName,
+				Apis: []*api.Api{
+					{
+						Name: "testapi",
+					},
+				},
+				Backend: &conf.Backend{
+					Rules: []*conf.BackendRule{
+						{
+							Selector:        "testapi.bar",
+							Address:         "https://testapi.com/foo",
+							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &conf.BackendRule_JwtAudience{
+								JwtAudience: "bar.com",
+							},
+						},
+					},
+				},
+			},
+			wantBackendAuthFilter: `{
+        "config": {
+          "rules": [
+            {
+              "jwt_audience": "bar.com",
+              "operation": "testapi.bar"
+            }
+          ],
+          "iam_token": {
+            "iam_uri": {
+              "cluster": "iam-cluster",
+              "uri": "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/service-account@google.com:generateIdToken",
+              "timeout":"5s"
+            },
+            "access_token": {
+              "remote_token":{
+               "cluster": "metadata-cluster",
+               "uri": "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token",
+               "timeout":"5s"
+             }
+            },
+            "service_account_email": "service-account@google.com"
+          }
+        },
+      "name": "envoy.filters.http.backend_auth"
+    }`,
+		},
 	}
 
-	marshaler := &jsonpb.Marshaler{}
-	gotFilter, err := marshaler.MarshalToString(makeBackendAuthFilter(fakeServiceInfo))
-	gotFilter = normalizeJson(gotFilter)
-	want := normalizeJson(wantBackendAuthFilter)
+	for _, tc := range testdata {
 
-	if !strings.Contains(gotFilter, want) {
-		t.Errorf("makeBackendAuthFilter failed, got: %s, \n\twant: %s", gotFilter, want)
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = "http2"
+		opts.EnableBackendRouting = true
+		opts.IamServiceAccount = tc.iamServiceAccount
+		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		marshaler := &jsonpb.Marshaler{}
+		gotFilter, err := marshaler.MarshalToString(makeBackendAuthFilter(fakeServiceInfo))
+		gotFilter = normalizeJson(gotFilter)
+		want := normalizeJson(tc.wantBackendAuthFilter)
+
+		if !strings.Contains(gotFilter, want) {
+			t.Errorf("makeBackendAuthFilter failed,\ngot: %s, \nwant: %s", gotFilter, want)
+		}
 	}
 }
 

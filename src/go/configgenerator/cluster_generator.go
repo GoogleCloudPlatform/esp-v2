@@ -48,6 +48,16 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, error) {
 		clusters = append(clusters, metadataCluster)
 	}
 
+	if serviceInfo.Options.IamServiceAccount != "" {
+		iamCluster, err := makeIamCluster(serviceInfo)
+		if err != nil {
+			return nil, err
+		}
+		if iamCluster != nil {
+			clusters = append(clusters, iamCluster)
+		}
+	}
+
 	// Note: makeServiceControlCluster should be called before makeListener
 	// as makeServiceControlFilter is using m.serviceControlURI assigned by
 	// makeServiceControlCluster
@@ -86,6 +96,32 @@ func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
 	connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
 	c := &v2pb.Cluster{
 		Name:           ut.MetadataServerClusterName,
+		LbPolicy:       v2pb.Cluster_ROUND_ROBIN,
+		ConnectTimeout: connectTimeoutProto,
+		ClusterDiscoveryType: &v2pb.Cluster_Type{
+			Type: v2pb.Cluster_STRICT_DNS,
+		},
+		LoadAssignment: ut.CreateLoadAssignment(hostname, port),
+	}
+
+	if scheme == "https" {
+		c.TlsContext = &authpb.UpstreamTlsContext{
+			Sni: hostname,
+		}
+	}
+
+	return c, nil
+}
+
+func makeIamCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
+	scheme, hostname, port, _, err := ut.ParseURI(serviceInfo.Options.IamURL)
+	if err != nil {
+		return nil, err
+	}
+
+	connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
+	c := &v2pb.Cluster{
+		Name:           ut.IamServerClusterName,
 		LbPolicy:       v2pb.Cluster_ROUND_ROBIN,
 		ConnectTimeout: connectTimeoutProto,
 		ClusterDiscoveryType: &v2pb.Cluster_Type{

@@ -81,6 +81,9 @@ const (
 	// The metadata server cluster name.
 	MetadataServerClusterName = "metadata-cluster"
 
+	// The iam server cluster name.
+	IamServerClusterName = "iam-cluster"
+
 	// The service control server cluster name.
 	ServiceControlClusterName = "service-control-cluster"
 

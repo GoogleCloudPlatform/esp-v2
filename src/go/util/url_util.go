@@ -96,3 +96,7 @@ func ResolveJwksUriUsingOpenID(uri string) (string, error) {
 	}
 	return jwksURI, nil
 }
+
+func IamIdentityTokenSuffix(IamServiceAccount string) string {
+	return fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateIdToken", IamServiceAccount)
+}
