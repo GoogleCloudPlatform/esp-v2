@@ -134,6 +134,21 @@ function grpc_test_transcode() {
     --root="${ROOT}")
 }
 
+function grpc_test_transcode_fuzzing() {
+  STATUS_HOST="http://${HOST}:8001"
+
+  # Generating token for each run, that they expire in 1 hour.
+  local AUTH_TOKEN=$("${ROOT}/tests/e2e/scripts/gen-auth-token.sh" -a "${SERVICE_NAME}")
+
+  echo "Starting grpc transcode fuzz test at $(date)."
+  (set -x; python ${ROOT}/tests/e2e/client/apiproxy_transcoding_fuzz_test.py \
+      --address="http://${HOST}:80" \
+      --status_address="${STATUS_HOST}" \
+      --api_key="${API_KEY}" \
+      --auth_token="${AUTH_TOKEN}" \
+    --runs=1)
+}
+
 # Issue a request to allow Endpoints-Runtime to fetch metadata.
 # If sending N requests concurrently, N-1 requests will fail while the
 # first request is fetching the metadata.
@@ -155,25 +170,26 @@ GRPC_STRESS_FAILURES=0
 HTTP_STRESS_FAILURES=0
 detect_memory_leak_init "${HOST}"
 # ${ROOT}/tests/client/esp_client.py needs to run at that folder.
-#pushd ${ROOT}/tests/client > /dev/null
+pushd ${ROOT}/tests/e2e/client > /dev/null
+
 while true; do
   RUN_COUNT=$((RUN_COUNT + 1))
   echo "Starting test run ${RUN_COUNT} at $(date)."
   echo "Failures so far: pass-through: ${GRPC_STRESS_FAILURES}, transcode: ${HTTP_STRESS_FAILURES}."
-
   #######################
   # Insert tests here
   #######################
+  RUN_COUNT=$((RUN_COUNT++))
 
   grpc_test_pass_through || ((GRPC_STRESS_FAILURES++))
   grpc_test_transcode || ((HTTP_STRESS_FAILURES++))
-
-  #TODO(taoxuy):add transcoding fuzz test
+  grpc_test_transcode_fuzzing|| ((HTTP_STRESS_FAILURES++))
   detect_memory_leak_check ${RUN_COUNT}
   # Break if test has run long enough.
   [[ $(date +"%s") -lt ${END_TIME} ]] || break
 done
-#popd > /dev/null
+popd > /dev/null
+
 echo "Finished ${RUN_COUNT} test runs."
 echo "Failures: pass-through: ${GRPC_STRESS_FAILURES}, transcode: ${HTTP_STRESS_FAILURES}."
 # We fail the test if memory increase is large.

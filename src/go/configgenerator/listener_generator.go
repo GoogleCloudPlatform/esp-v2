@@ -493,6 +493,7 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 				},
 				Services:               []string{serviceInfo.ApiName},
 				IgnoredQueryParameters: []string{"api_key", "key", "access_token"},
+				ConvertGrpcStatus:      true,
 			}
 			transcodeConfigStruct, _ := ut.MessageToStruct(transcodeConfig)
 			transcodeFilter := &hcmpb.HttpFilter{

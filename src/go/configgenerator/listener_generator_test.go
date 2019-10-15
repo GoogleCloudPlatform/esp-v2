@@ -67,6 +67,7 @@ func TestTranscoderFilter(t *testing.T) {
 			wantTranscoderFilter: fmt.Sprintf(`
         {
           "config":{
+            "convert_grpc_status":true,
             "ignored_query_parameters": [
                 "api_key",
                 "key",
