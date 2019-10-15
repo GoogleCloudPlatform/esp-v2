@@ -15,6 +15,7 @@
 package components
 
 import (
+	"os"
 	"os/exec"
 	"time"
 
@@ -50,6 +51,12 @@ func (c *Cmd) StopAndWait() error {
 	go func() {
 		done <- c.Wait()
 	}()
+
+	// Send termination
+	err := c.Process.Signal(os.Interrupt)
+	if err != nil {
+		glog.Infof("Error interrupting process %v: %v", c.name, err)
+	}
 
 	select {
 	case <-time.After(stopWaitTime):
