@@ -14,4 +14,4 @@
 
 FROM python:3.6-buster
 
-ADD bin/envoy apiproxy/envoy
+ADD bin/envoy /apiproxy/envoy

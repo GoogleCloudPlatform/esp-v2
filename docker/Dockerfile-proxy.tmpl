@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/cloudesf-testing/envoy-binary:latest
+FROM _ENVOY_IMAGE_SHA_NAME
 
 ENV PATH /bin:$PATH
 
-ADD docker/generic/* apiproxy/
-ADD bin/bootstrap apiproxy/
-ADD bin/configmanager apiproxy/
+ADD docker/generic/* /apiproxy/
+ADD bin/bootstrap /apiproxy/
+ADD bin/configmanager /apiproxy/
 
 # Stackdriver is using grpc call. It needs its roots.pem at /usr/share/grpc
 RUN mkdir -p /usr/share/grpc && cp apiproxy/grpc_roots.pem /usr/share/grpc/
@@ -28,4 +28,4 @@ RUN groupadd -g 999 envoy && useradd -r -u 999 -g envoy envoy
 USER envoy
 
 
-ENTRYPOINT ["python", "apiproxy/start_proxy.py"]
+ENTRYPOINT ["python", "/apiproxy/start_proxy.py"]

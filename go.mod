@@ -10,8 +10,10 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.3.2
 	github.com/gorilla/mux v1.6.3-0.20181030152528-3d80bc801bb0
+	golang.org/x/lint v0.0.0-20190930215403-16217165b5de // indirect
 	golang.org/x/net v0.0.0-20190628185345-da137c7871d7
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
+	golang.org/x/tools v0.0.0-20191015150414-f936694f27bf // indirect
 	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55
 	google.golang.org/grpc v1.24.0
 )

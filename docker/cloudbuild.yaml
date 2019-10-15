@@ -16,11 +16,15 @@
 
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', "-t", "${_ENVOY_IMAGE_SHA_NAME}", "-t",  "${_ENVOY_IMAGE_LATEST_NAME}", "-f", "docker/Dockerfile-envoy", "."]
+    args: ['build', "-t", "${_ENVOY_IMAGE_SHA_NAME}", "-f", "docker/Dockerfile-envoy", "."]
     id: 'build-envoy-image'
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', "-t", "${_PROXY_IMAGE_SHA_NAME}", "-f", "docker/Dockerfile-proxy", "."]
     waitFor: ['build-envoy-image']
     id: "build-proxy-image"
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', "-t", "${_SERVERLESS_IMAGE_SHA_NAME}", "-f", "docker/Dockerfile-serverless", "."]
+    waitFor: ['build-proxy-image']
+    id: "build-serverless-image"
 
-images: ["${_ENVOY_IMAGE_SHA_NAME}",  "${_ENVOY_IMAGE_LATEST_NAME}", "${_PROXY_IMAGE_SHA_NAME}"]
+images: ["${_ENVOY_IMAGE_SHA_NAME}", "${_PROXY_IMAGE_SHA_NAME}", "${_SERVERLESS_IMAGE_SHA_NAME}"]
