@@ -50,11 +50,12 @@ make build-envoy-release
 echo "Checking if docker image $(get_envoy_image_name_with_sha) and image $(get_proxy_image_name_with_sha) exists.."
 
 checkImageExistence $(get_envoy_image_name) $(get_sha)  \
+  && checkImageExistence $(get_gcsrunner_image_name) $(get_sha)  \
   && checkImageExistence $(get_proxy_image_name) $(get_sha)  \
-  && { echo "Both image $(get_envoy_image_name_with_sha) and image $(get_proxy_image_name_with_sha) already exists; Skip.";
+  && { echo "Images $(get_envoy_image_name_with_sha), $(get_gcsrunner_image_name_with_sha), and $(get_proxy_image_name_with_sha) already exists; Skip.";
 exit 0; }
 
-echo "Docker image $(get_envoy_image_name_with_sha) and image $(get_proxy_image_name_with_sha) don't exist; Start to build."
+echo "Images $(get_envoy_image_name_with_sha), $(get_gcsrunner_image_name_with_sha), and $(get_proxy_image_name_with_sha) don't exist; Start to build."
 
 echo '======================================================='
 echo '================= Cloud Build Docker =================='
