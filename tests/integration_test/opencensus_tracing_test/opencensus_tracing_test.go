@@ -27,7 +27,7 @@ import (
 
 	bsclient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/client"
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 type retryServiceHandler struct {
@@ -192,7 +192,7 @@ func TestServiceControlSkipUsageTraces(t *testing.T) {
 	s := env.NewTestEnv(comp.TestServiceControlSkipUsageTraces, "echo")
 	s.SetupFakeTraceServer()
 	s.AppendUsageRules(
-		[]*conf.UsageRule{
+		[]*confpb.UsageRule{
 			{
 				Selector:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
 				SkipServiceControl: true,

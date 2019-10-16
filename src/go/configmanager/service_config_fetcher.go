@@ -29,8 +29,8 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
 
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
-	sm "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
 const (
@@ -66,7 +66,7 @@ func newServiceConfigFetcherClient(insecureSkipVerify bool, timeout time.Duratio
 
 func loadConfigFromRollouts(serviceName, curRolloutID, curConfigID string, mf *metadata.MetadataFetcher) (string, string, error) {
 	var err error
-	var listServiceRolloutsResponse *sm.ListServiceRolloutsResponse
+	var listServiceRolloutsResponse *smpb.ListServiceRolloutsResponse
 	listServiceRolloutsResponse, err = fetchRollouts(serviceName, mf)
 	if err != nil {
 		return "", "", fmt.Errorf("fail to get rollouts, %s", err)
@@ -118,7 +118,7 @@ func accessToken(mf *metadata.MetadataFetcher) (string, time.Duration, error) {
 }
 
 // TODO(jcwang) cleanup here. This function is redundant.
-func fetchRollouts(serviceName string, mf *metadata.MetadataFetcher) (*sm.ListServiceRolloutsResponse, error) {
+func fetchRollouts(serviceName string, mf *metadata.MetadataFetcher) (*smpb.ListServiceRolloutsResponse, error) {
 	token, _, err := accessToken(mf)
 	if err != nil {
 		return nil, fmt.Errorf("fail to get access token: %v", err)
@@ -127,7 +127,7 @@ func fetchRollouts(serviceName string, mf *metadata.MetadataFetcher) (*sm.ListSe
 	return callServiceManagementRollouts(fetchRolloutsURL(serviceName), token)
 }
 
-func fetchConfig(serviceName, configId string, mf *metadata.MetadataFetcher) (*conf.Service, error) {
+func fetchConfig(serviceName, configId string, mf *metadata.MetadataFetcher) (*confpb.Service, error) {
 	token, _, err := accessToken(mf)
 	if err != nil {
 		return nil, fmt.Errorf("fail to get access tokenm: %v", err)
@@ -135,7 +135,7 @@ func fetchConfig(serviceName, configId string, mf *metadata.MetadataFetcher) (*c
 	return callServiceManagement(fetchConfigURL(serviceName, configId), token)
 }
 
-var callServiceManagementRollouts = func(path, token string) (*sm.ListServiceRolloutsResponse, error) {
+var callServiceManagementRollouts = func(path, token string) (*smpb.ListServiceRolloutsResponse, error) {
 	var err error
 	var resp *http.Response
 	if resp, err = callWithAccessToken(path, token); err != nil {
@@ -143,14 +143,14 @@ var callServiceManagementRollouts = func(path, token string) (*sm.ListServiceRol
 	}
 	defer resp.Body.Close()
 	unmarshaler := &jsonpb.Unmarshaler{}
-	var rolloutsResponse sm.ListServiceRolloutsResponse
+	var rolloutsResponse smpb.ListServiceRolloutsResponse
 	if err = unmarshaler.Unmarshal(resp.Body, &rolloutsResponse); err != nil {
 		return nil, fmt.Errorf("fail to unmarshal ListServiceRolloutsResponse: %s", err)
 	}
 	return &rolloutsResponse, nil
 }
 
-var callServiceManagement = func(path, token string) (*conf.Service, error) {
+var callServiceManagement = func(path, token string) (*confpb.Service, error) {
 	var err error
 	var resp *http.Response
 
@@ -162,7 +162,7 @@ var callServiceManagement = func(path, token string) (*conf.Service, error) {
 		AllowUnknownFields: true,
 		AnyResolver:        util.Resolver,
 	}
-	var serviceConfig conf.Service
+	var serviceConfig confpb.Service
 	if err = unmarshaler.Unmarshal(resp.Body, &serviceConfig); err != nil {
 		return nil, fmt.Errorf("fail to unmarshal serviceConfig: %s", err)
 	}

@@ -22,17 +22,17 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
 	"cloudesf.googlesource.com/gcpproxy/src/go/options"
+	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/golang/glog"
 
 	gen "cloudesf.googlesource.com/gcpproxy/src/go/configgenerator"
-	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 )
 
 var (
 	// These flags are used by config manage only.
-	checkNewRolloutInterval = flag.Duration("check_rollout_interval", 60*time.Second, `the interval periodically to call servicemanagment to check the latest rollout.`)
+	checkNewRolloutInterval = flag.Duration("check_rollout_interval", 60*time.Second, `the interval periodically to call servicemanagment to check the latest rolloutil.`)
 	CheckMetadata           = flag.Bool("check_metadata", false, `enable fetching service name, config ID and rollout strategy from service metadata server`)
 	RolloutStrategy         = flag.String("rollout_strategy", "fixed", `service config rollout strategy, must be either "managed" or "fixed"`)
 	ServiceConfigID         = flag.String("service_config_id", "", "initial service config id")
@@ -77,9 +77,9 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 		rolloutStrategy, _ = mf.FetchRolloutStrategy()
 	}
 	if rolloutStrategy == "" {
-		rolloutStrategy = ut.FixedRolloutStrategy
+		rolloutStrategy = util.FixedRolloutStrategy
 	}
-	if !(rolloutStrategy == ut.FixedRolloutStrategy || rolloutStrategy == ut.ManagedRolloutStrategy) {
+	if !(rolloutStrategy == util.FixedRolloutStrategy || rolloutStrategy == util.ManagedRolloutStrategy) {
 		return nil, fmt.Errorf(`failed to set rollout strategy. It must be either "managed" or "fixed"`)
 	}
 
@@ -91,7 +91,7 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 
 	m.cache = cache.NewSnapshotCache(true, m, m)
 
-	if rolloutStrategy == ut.ManagedRolloutStrategy {
+	if rolloutStrategy == util.ManagedRolloutStrategy {
 		// try to fetch rollouts and get newest config, if failed, NewConfigManager exits with failure
 		newRolloutID, newConfigID, err := loadConfigFromRollouts(m.serviceName, m.curRolloutID, m.curConfigID, mf)
 		if err != nil {
@@ -127,7 +127,7 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 	glog.Infof("create new ConfigManager for service (%v) with configuration id (%v), %v rollout strategy",
 		m.serviceName, m.curConfigID, rolloutStrategy)
 
-	if rolloutStrategy == ut.ManagedRolloutStrategy {
+	if rolloutStrategy == util.ManagedRolloutStrategy {
 		go func() {
 			glog.Infof("start checking new rollouts every %v seconds", *checkNewRolloutInterval)
 			m.checkRolloutsTicker = time.NewTicker(*checkNewRolloutInterval)

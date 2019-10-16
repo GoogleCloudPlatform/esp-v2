@@ -26,7 +26,7 @@ import (
 
 	bsClient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/client"
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func TestServiceControlCredentialId(t *testing.T) {
@@ -38,10 +38,10 @@ func TestServiceControlCredentialId(t *testing.T) {
 	}
 	s := env.NewTestEnv(comp.TestServiceControlCredentialId, "bookstore")
 
-	s.OverrideAuthentication(&conf.Authentication{Rules: []*conf.AuthenticationRule{
+	s.OverrideAuthentication(&confpb.Authentication{Rules: []*confpb.AuthenticationRule{
 		{
 			Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-			Requirements: []*conf.AuthRequirement{
+			Requirements: []*confpb.AuthRequirement{
 				{
 					ProviderId: testdata.GoogleJwtProvider,
 				},
@@ -50,7 +50,7 @@ func TestServiceControlCredentialId(t *testing.T) {
 	},
 	})
 
-	s.AppendUsageRules([]*conf.UsageRule{
+	s.AppendUsageRules([]*confpb.UsageRule{
 		{
 			Selector:               "endpoints.examples.bookstore.Bookstore.ListShelves",
 			AllowUnregisteredCalls: true,
@@ -70,8 +70,8 @@ func TestServiceControlCredentialId(t *testing.T) {
 		token                 string
 		requestHeader         map[string]string
 		message               string
-		usageRules            []*conf.UsageRule
-		authenticationRules   []*conf.AuthenticationRule
+		usageRules            []*confpb.UsageRule
+		authenticationRules   []*confpb.AuthenticationRule
 		wantResp              string
 		httpCallError         error
 		wantScRequests        []interface{}

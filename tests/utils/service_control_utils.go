@@ -24,8 +24,8 @@ import (
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
 	structpb "github.com/golang/protobuf/ptypes/struct"
-	sc "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
-	ltype "google.golang.org/genproto/googleapis/logging/type"
+	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
+	ltypepb "google.golang.org/genproto/googleapis/logging/type"
 )
 
 type ExpectedCheck struct {
@@ -46,7 +46,7 @@ type ExpectedQuota struct {
 	ConsumerID      string
 	MethodName      string
 	QuotaMetrics    map[string]int64
-	QuotaMode       sc.QuotaOperation_QuotaMode
+	QuotaMode       scpb.QuotaOperation_QuotaMode
 	ServiceConfigID string
 	ServiceName     string
 }
@@ -223,11 +223,11 @@ var (
 	fakeInt64Val = 200
 )
 
-func CreateCheck(er *ExpectedCheck) sc.CheckRequest {
-	erPb := sc.CheckRequest{
+func CreateCheck(er *ExpectedCheck) scpb.CheckRequest {
+	erPb := scpb.CheckRequest{
 		ServiceName:     er.ServiceName,
 		ServiceConfigId: er.ServiceConfigID,
-		Operation: &sc.Operation{
+		Operation: &scpb.Operation{
 			OperationName: er.OperationName,
 			ConsumerId:    er.ConsumerID,
 			Labels: map[string]string{
@@ -321,7 +321,7 @@ func makeNumberValue(v int64) *structpb.Value {
 	return &structpb.Value{Kind: &structpb.Value_NumberValue{float64(v)}}
 }
 
-func createLogEntry(er *ExpectedReport) *sc.LogEntry {
+func createLogEntry(er *ExpectedReport) *scpb.LogEntry {
 	pl := make(map[string]*structpb.Value)
 
 	pl["api_method"] = makeStringValue(er.ApiMethod)
@@ -365,15 +365,15 @@ func createLogEntry(er *ExpectedReport) *sc.LogEntry {
 	}
 	pl["client_ip"] = makeStringValue("127.0.0.1")
 
-	severity := ltype.LogSeverity_INFO
+	severity := ltypepb.LogSeverity_INFO
 	if er.ResponseCode >= 400 {
-		severity = ltype.LogSeverity_ERROR
+		severity = ltypepb.LogSeverity_ERROR
 	}
 
-	return &sc.LogEntry{
+	return &scpb.LogEntry{
 		Name:     "endpoints_log",
 		Severity: severity,
-		Payload: &sc.LogEntry_StructPayload{
+		Payload: &scpb.LogEntry_StructPayload{
 			&structpb.Struct{
 				Fields: pl,
 			},
@@ -381,18 +381,18 @@ func createLogEntry(er *ExpectedReport) *sc.LogEntry {
 	}
 }
 
-func createInt64MetricSet(name string, value int64) *sc.MetricValueSet {
-	return &sc.MetricValueSet{
+func createInt64MetricSet(name string, value int64) *scpb.MetricValueSet {
+	return &scpb.MetricValueSet{
 		MetricName: name,
-		MetricValues: []*sc.MetricValue{
-			&sc.MetricValue{
-				Value: &sc.MetricValue_Int64Value{value},
+		MetricValues: []*scpb.MetricValue{
+			&scpb.MetricValue{
+				Value: &scpb.MetricValue_Int64Value{value},
 			},
 		},
 	}
 }
 
-func createDistMetricSet(options *distOptions, name string, value int64) *sc.MetricValueSet {
+func createDistMetricSet(options *distOptions, name string, value int64) *scpb.MetricValueSet {
 	buckets := make([]int64, options.Buckets+2)
 	fValue := float64(value)
 	idx := 0
@@ -403,11 +403,11 @@ func createDistMetricSet(options *distOptions, name string, value int64) *sc.Met
 		}
 	}
 	buckets[idx] = 1
-	distValue := sc.Distribution{
+	distValue := scpb.Distribution{
 		Count:        1,
 		BucketCounts: buckets,
-		BucketOption: &sc.Distribution_ExponentialBuckets_{
-			&sc.Distribution_ExponentialBuckets{
+		BucketOption: &scpb.Distribution_ExponentialBuckets_{
+			&scpb.Distribution_ExponentialBuckets{
 				NumFiniteBuckets: options.Buckets,
 				GrowthFactor:     options.Growth,
 				Scale:            options.Scale,
@@ -420,18 +420,18 @@ func createDistMetricSet(options *distOptions, name string, value int64) *sc.Met
 		distValue.Minimum = fValue
 		distValue.Maximum = fValue
 	}
-	return &sc.MetricValueSet{
+	return &scpb.MetricValueSet{
 		MetricName: name,
-		MetricValues: []*sc.MetricValue{
-			&sc.MetricValue{
-				Value: &sc.MetricValue_DistributionValue{&distValue},
+		MetricValues: []*scpb.MetricValue{
+			&scpb.MetricValue{
+				Value: &scpb.MetricValue_DistributionValue{&distValue},
 			},
 		},
 	}
 }
 
 // Update the metric with the value and aggregate it n times.
-func updateDistMetricSet(m *sc.MetricValueSet, fValue float64, n int64) {
+func updateDistMetricSet(m *scpb.MetricValueSet, fValue float64, n int64) {
 	for _, v := range m.MetricValues {
 		d := v.GetDistributionValue()
 		o := d.GetExponentialBuckets()
@@ -457,14 +457,14 @@ func updateDistMetricSet(m *sc.MetricValueSet, fValue float64, n int64) {
 	}
 }
 
-type metricSetSorter []*sc.MetricValueSet
+type metricSetSorter []*scpb.MetricValueSet
 
 func (a metricSetSorter) Len() int           { return len(a) }
 func (a metricSetSorter) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a metricSetSorter) Less(i, j int) bool { return a[i].MetricName < a[j].MetricName }
 
-func createOperation(er *ExpectedReport) *sc.Operation {
-	op := &sc.Operation{
+func createOperation(er *ExpectedReport) *scpb.Operation {
+	op := &scpb.Operation{
 		OperationName: er.ApiMethod,
 	}
 
@@ -475,7 +475,7 @@ func createOperation(er *ExpectedReport) *sc.Operation {
 	return op
 }
 
-func createByConsumerOperation(er *ExpectedReport) *sc.Operation {
+func createByConsumerOperation(er *ExpectedReport) *scpb.Operation {
 	op := createOperation(er)
 
 	// label serviceruntime.googleapis.com/consumer_project is only for by_consumer
@@ -483,7 +483,7 @@ func createByConsumerOperation(er *ExpectedReport) *sc.Operation {
 		op.Labels["serviceruntime.googleapis.com/consumer_project"] = er.ConsumerProjectID
 	}
 
-	ms := []*sc.MetricValueSet{
+	ms := []*scpb.MetricValueSet{
 		createInt64MetricSet("serviceruntime.googleapis.com/api/producer/by_consumer/request_count", 1),
 		createDistMetricSet(&sizeDistOptions,
 			"serviceruntime.googleapis.com/api/producer/by_consumer/request_sizes", int64(fakeDistVal)),
@@ -508,17 +508,17 @@ func createByConsumerOperation(er *ExpectedReport) *sc.Operation {
 }
 
 // CreateReport makes a service_controller.proto ReportRequest out of an ExpectedReport
-func CreateReport(er *ExpectedReport) sc.ReportRequest {
+func CreateReport(er *ExpectedReport) scpb.ReportRequest {
 	sendConsumer := er.ApiKey != ""
 	sendByConsumer := er.ConsumerProjectID != ""
 
 	op := createOperation(er)
 
-	op.LogEntries = []*sc.LogEntry{
+	op.LogEntries = []*scpb.LogEntry{
 		createLogEntry(er),
 	}
 
-	ms := []*sc.MetricValueSet{
+	ms := []*scpb.MetricValueSet{
 		createInt64MetricSet("serviceruntime.googleapis.com/api/producer/request_count", 1),
 		createDistMetricSet(&sizeDistOptions,
 			"serviceruntime.googleapis.com/api/producer/request_sizes", int64(fakeDistVal)),
@@ -590,10 +590,10 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 	sort.Sort(metricSetSorter(ms))
 	op.MetricValueSets = ms
 
-	erPb := sc.ReportRequest{
+	erPb := scpb.ReportRequest{
 		ServiceName:     er.ServiceName,
 		ServiceConfigId: er.ServiceConfigID,
-		Operations:      []*sc.Operation{op},
+		Operations:      []*scpb.Operation{op},
 	}
 	if sendByConsumer {
 		erPb.Operations = append(erPb.Operations, createByConsumerOperation(er))
@@ -603,7 +603,7 @@ func CreateReport(er *ExpectedReport) sc.ReportRequest {
 
 // Override the random metrics with a fixed value and aggregate it n times.
 // Remove the random fields in LogEntry
-func stripRandomFields(op *sc.Operation, n int64) error {
+func stripRandomFields(op *scpb.Operation, n int64) error {
 	// Clear some fields
 	op.OperationId = ""
 	op.StartTime = nil
@@ -633,8 +633,8 @@ func stripRandomFields(op *sc.Operation, n int64) error {
 }
 
 // UnmarshalCheckRequest returns proto CheckRequest given data.
-func UnmarshalCheckRequest(data []byte) (*sc.CheckRequest, error) {
-	rr := &sc.CheckRequest{}
+func UnmarshalCheckRequest(data []byte) (*scpb.CheckRequest, error) {
+	rr := &scpb.CheckRequest{}
 	err := proto.Unmarshal(data, rr)
 	if err != nil {
 		return nil, err
@@ -643,8 +643,8 @@ func UnmarshalCheckRequest(data []byte) (*sc.CheckRequest, error) {
 }
 
 // UnmarshalQuotaRequest returns proto AllocateQuotaRequest given data.
-func UnmarshalQuotaRequest(data []byte) (*sc.AllocateQuotaRequest, error) {
-	rr := &sc.AllocateQuotaRequest{}
+func UnmarshalQuotaRequest(data []byte) (*scpb.AllocateQuotaRequest, error) {
+	rr := &scpb.AllocateQuotaRequest{}
 	err := proto.Unmarshal(data, rr)
 	if err != nil {
 		return nil, err
@@ -673,8 +673,8 @@ func VerifyCheck(body []byte, ec *ExpectedCheck) error {
 }
 
 // UnmarshalReportRequest returns proto ReportRequest given data.
-func UnmarshalReportRequest(data []byte) (*sc.ReportRequest, error) {
-	rr := &sc.ReportRequest{}
+func UnmarshalReportRequest(data []byte) (*scpb.ReportRequest, error) {
+	rr := &scpb.ReportRequest{}
 	err := proto.Unmarshal(data, rr)
 	if err != nil {
 		return nil, err
@@ -751,13 +751,13 @@ func VerifyQuota(body []byte, er *ExpectedQuota) error {
 
 	got.AllocateOperation.OperationId = ""
 
-	quotaMetrics := []*sc.MetricValueSet{}
+	quotaMetrics := []*scpb.MetricValueSet{}
 	for key, val := range er.QuotaMetrics {
-		quotaMetrics = append(quotaMetrics, &sc.MetricValueSet{
+		quotaMetrics = append(quotaMetrics, &scpb.MetricValueSet{
 			MetricName: key,
-			MetricValues: []*sc.MetricValue{
+			MetricValues: []*scpb.MetricValue{
 				{
-					Value: &sc.MetricValue_Int64Value{
+					Value: &scpb.MetricValue_Int64Value{
 						Int64Value: val,
 					},
 				},
@@ -771,9 +771,9 @@ func VerifyQuota(body []byte, er *ExpectedQuota) error {
 		return got.AllocateOperation.QuotaMetrics[i].MetricName < got.AllocateOperation.QuotaMetrics[j].MetricName
 	})
 
-	want := sc.AllocateQuotaRequest{
+	want := scpb.AllocateQuotaRequest{
 		ServiceName: er.ServiceName,
-		AllocateOperation: &sc.QuotaOperation{
+		AllocateOperation: &scpb.QuotaOperation{
 			MethodName:   er.MethodName,
 			ConsumerId:   er.ConsumerID,
 			QuotaMetrics: quotaMetrics,
@@ -794,14 +794,14 @@ func VerifyQuota(body []byte, er *ExpectedQuota) error {
 
 // AggregateReport aggregates N report body into one, as
 // all metric values * N, and its LowEntries appended N times.
-func AggregateReport(pb *sc.ReportRequest, n int64) {
+func AggregateReport(pb *scpb.ReportRequest, n int64) {
 	for _, op := range pb.Operations {
 		for _, m := range op.MetricValueSets {
 			for _, v := range m.MetricValues {
 				switch x := v.Value.(type) {
-				case *sc.MetricValue_Int64Value:
+				case *scpb.MetricValue_Int64Value:
 					x.Int64Value *= n
-				case *sc.MetricValue_DistributionValue:
+				case *scpb.MetricValue_DistributionValue:
 					dist := x.DistributionValue
 					dist.Count *= n
 					bs := make([]int64, len(dist.BucketCounts))
@@ -814,7 +814,7 @@ func AggregateReport(pb *sc.ReportRequest, n int64) {
 			}
 		}
 		if op.LogEntries != nil {
-			logs := []*sc.LogEntry{}
+			logs := []*scpb.LogEntry{}
 			// Duplicate logEntry N times.
 			for i := 0; i < int(n); i++ {
 				logs = append(logs, op.LogEntries[0])

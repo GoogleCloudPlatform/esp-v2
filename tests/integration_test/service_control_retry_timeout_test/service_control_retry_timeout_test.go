@@ -26,7 +26,7 @@ import (
 
 	bsclient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/client"
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 type retryServiceHandler struct {
@@ -133,8 +133,8 @@ func TestServiceControlQuotaRetry(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--service_control_quota_retries=2", "--service_control_quota_timeout_ms=100"}
 	s := env.NewTestEnv(comp.TestServiceControlQuotaRetry, "bookstore")
-	s.OverrideQuota(&conf.Quota{
-		MetricRules: []*conf.MetricRule{
+	s.OverrideQuota(&confpb.Quota{
+		MetricRules: []*confpb.MetricRule{
 			{
 				Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
 				MetricCosts: map[string]int64{

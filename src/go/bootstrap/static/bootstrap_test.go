@@ -21,10 +21,10 @@ import (
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap/static/testdata"
 	"cloudesf.googlesource.com/gcpproxy/src/go/options"
+	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 
-	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
 )
 
@@ -45,7 +45,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 
 func verifyBootstrapConfig(got *bootstrappb.Bootstrap, want string) error {
 	unmarshaler := &jsonpb.Unmarshaler{
-		AnyResolver: ut.Resolver,
+		AnyResolver: util.Resolver,
 	}
 
 	// Convert want string to a proto to compare with got
@@ -59,7 +59,7 @@ func verifyBootstrapConfig(got *bootstrappb.Bootstrap, want string) error {
 	if !proto.Equal(got, wantBootstrap) {
 		// Marshal both protos back to json-strings to pretty print them
 		marshaler := &jsonpb.Marshaler{
-			AnyResolver: ut.Resolver,
+			AnyResolver: util.Resolver,
 		}
 		gotString, err := marshaler.MarshalToString(got)
 		if err != nil {

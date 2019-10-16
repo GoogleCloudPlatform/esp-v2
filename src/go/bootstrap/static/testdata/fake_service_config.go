@@ -15,23 +15,22 @@
 package testdata
 
 import (
-	"google.golang.org/genproto/googleapis/api/annotations"
-	"google.golang.org/genproto/protobuf/api"
-
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	apipb "google.golang.org/genproto/protobuf/api"
 )
 
 var (
 	FakeConfigID = "2019-06-25r0"
 
-	FakeBookstoreConfig = &conf.Service{
+	FakeBookstoreConfig = &confpb.Service{
 		Name:              "bookstore.endpoints.cloudesf-testing.cloud.goog",
 		Title:             "Bookstore gRPC API",
 		ProducerProjectId: "producer project",
-		Apis: []*api.Api{
+		Apis: []*apipb.Api{
 			{
 				Name: "endpoints.examples.bookstore.Bookstore",
-				Methods: []*api.Method{
+				Methods: []*apipb.Method{
 					{
 						Name:            "ListShelves",
 						RequestTypeUrl:  "type.googleapis.com/google.protobuf.Empty",
@@ -40,21 +39,21 @@ var (
 				},
 			},
 		},
-		Http: &annotations.Http{
-			Rules: []*annotations.HttpRule{
+		Http: &annotationspb.Http{
+			Rules: []*annotationspb.HttpRule{
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-					Pattern: &annotations.HttpRule_Get{
+					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/v1/shelves",
 					},
 				},
 			},
 		},
-		Authentication: &conf.Authentication{
-			Rules: []*conf.AuthenticationRule{
+		Authentication: &confpb.Authentication{
+			Rules: []*confpb.AuthenticationRule{
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-					Requirements: []*conf.AuthRequirement{
+					Requirements: []*confpb.AuthRequirement{
 						{
 							ProviderId: "google_service_account",
 							Audiences:  "bookstore_test_client.cloud.goog",
@@ -63,10 +62,10 @@ var (
 				},
 			},
 		},
-		Usage: &conf.Usage{
-			Rules: []*conf.UsageRule{},
+		Usage: &confpb.Usage{
+			Rules: []*confpb.UsageRule{},
 		},
-		Control: &conf.Control{
+		Control: &confpb.Control{
 			Environment: "servicecontrol.googleapis.com",
 		},
 	}

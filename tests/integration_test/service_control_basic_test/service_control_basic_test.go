@@ -24,10 +24,10 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
-	"google.golang.org/genproto/googleapis/api/annotations"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func TestServiceControlBasic(t *testing.T) {
@@ -38,22 +38,22 @@ func TestServiceControlBasic(t *testing.T) {
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlBasic, "echo")
-	s.AppendHttpRules([]*annotations.HttpRule{
+	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",
-			Pattern: &annotations.HttpRule_Get{
+			Pattern: &annotationspb.HttpRule_Get{
 				Get: "/simpleget",
 			},
 		},
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get",
-			Pattern: &annotations.HttpRule_Get{
+			Pattern: &annotationspb.HttpRule_Get{
 				Get: "/echo/nokey/OverrideAsGet",
 			},
 		},
 	})
 	s.AppendUsageRules(
-		[]*conf.UsageRule{
+		[]*confpb.UsageRule{
 			{
 				Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get",
 				AllowUnregisteredCalls: true,

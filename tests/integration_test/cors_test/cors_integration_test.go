@@ -23,9 +23,9 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
-	"google.golang.org/genproto/googleapis/api/annotations"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 )
 
 const (
@@ -463,17 +463,17 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 
 	s := env.NewTestEnv(comp.TestServiceControlRequestWithAllowCors, "echo")
 	s.SetAllowCors()
-	s.AppendHttpRules([]*annotations.HttpRule{
+	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.ListShelves",
-			Pattern: &annotations.HttpRule_Get{
+			Pattern: &annotationspb.HttpRule_Get{
 				Get: "/bookstore/shelves",
 			},
 		},
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CorsShelves",
-			Pattern: &annotations.HttpRule_Custom{
-				Custom: &annotations.CustomHttpPattern{
+			Pattern: &annotationspb.HttpRule_Custom{
+				Custom: &annotationspb.CustomHttpPattern{
 					Kind: "OPTIONS",
 					Path: "/bookstore/shelves",
 				},
@@ -481,7 +481,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 		},
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.GetShelf",
-			Pattern: &annotations.HttpRule_Get{
+			Pattern: &annotationspb.HttpRule_Get{
 				Get: "/bookstore/shelves/{shelf}",
 			},
 		},
@@ -630,17 +630,17 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlRequestWithoutAllowCors, "echo")
-	s.AppendHttpRules([]*annotations.HttpRule{
+	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.ListShelves",
-			Pattern: &annotations.HttpRule_Get{
+			Pattern: &annotationspb.HttpRule_Get{
 				Get: "/bookstore/shelves",
 			},
 		},
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CorsShelves",
-			Pattern: &annotations.HttpRule_Custom{
-				Custom: &annotations.CustomHttpPattern{
+			Pattern: &annotationspb.HttpRule_Custom{
+				Custom: &annotationspb.CustomHttpPattern{
 					Kind: "OPTIONS",
 					Path: "/bookstore/shelves",
 				},
@@ -648,7 +648,7 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 		},
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.GetShelf",
-			Pattern: &annotations.HttpRule_Get{
+			Pattern: &annotationspb.HttpRule_Get{
 				Get: "/bookstore/shelves/{shelf}",
 			},
 		},

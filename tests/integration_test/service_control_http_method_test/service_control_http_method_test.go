@@ -24,9 +24,9 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
-	"google.golang.org/genproto/googleapis/api/annotations"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 )
 
 func TestServiceControlAllHTTPMethods(t *testing.T) {
@@ -37,34 +37,34 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlALlHTTPMethod, "echo")
-	s.AppendHttpRules([]*annotations.HttpRule{
+	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoGET",
-			Pattern: &annotations.HttpRule_Get{
+			Pattern: &annotationspb.HttpRule_Get{
 				Get: "/echoMethod",
 			},
 		},
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoPOST",
-			Pattern: &annotations.HttpRule_Post{
+			Pattern: &annotationspb.HttpRule_Post{
 				Post: "/echoMethod",
 			},
 		},
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoPUT",
-			Pattern: &annotations.HttpRule_Put{
+			Pattern: &annotationspb.HttpRule_Put{
 				Put: "/echoMethod",
 			},
 		},
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoPATCH",
-			Pattern: &annotations.HttpRule_Patch{
+			Pattern: &annotationspb.HttpRule_Patch{
 				Patch: "/echoMethod",
 			},
 		},
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoDELETE",
-			Pattern: &annotations.HttpRule_Delete{
+			Pattern: &annotationspb.HttpRule_Delete{
 				Delete: "/echoMethod",
 			},
 		},

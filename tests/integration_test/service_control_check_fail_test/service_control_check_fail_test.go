@@ -27,7 +27,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	sc "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
+	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
 func TestServiceControlCheckError(t *testing.T) {
@@ -57,7 +57,7 @@ func TestServiceControlCheckError(t *testing.T) {
 		apiKey                   string
 		requestHeader            map[string]string
 		message                  string
-		mockedCheckResponse      *sc.CheckResponse
+		mockedCheckResponse      *scpb.CheckResponse
 		wantRequestsToMetaServer *expectedRequestCount
 		wantRequestsToProvider   *expectedRequestCount
 		wantResp                 string
@@ -69,10 +69,10 @@ func TestServiceControlCheckError(t *testing.T) {
 			url:     fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key-1"),
 			method:  "POST",
 			message: "",
-			mockedCheckResponse: &sc.CheckResponse{
-				CheckErrors: []*sc.CheckError{
-					&sc.CheckError{
-						Code: sc.CheckError_SERVICE_NOT_ACTIVATED,
+			mockedCheckResponse: &scpb.CheckResponse{
+				CheckErrors: []*scpb.CheckError{
+					&scpb.CheckError{
+						Code: scpb.CheckError_SERVICE_NOT_ACTIVATED,
 					},
 				},
 			},
@@ -109,10 +109,10 @@ func TestServiceControlCheckError(t *testing.T) {
 			url:     fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key-2"),
 			method:  "POST",
 			message: "",
-			mockedCheckResponse: &sc.CheckResponse{
-				CheckErrors: []*sc.CheckError{
-					&sc.CheckError{
-						Code: sc.CheckError_API_KEY_INVALID,
+			mockedCheckResponse: &scpb.CheckResponse{
+				CheckErrors: []*scpb.CheckError{
+					&scpb.CheckError{
+						Code: scpb.CheckError_API_KEY_INVALID,
 					},
 				},
 			},
@@ -150,15 +150,15 @@ func TestServiceControlCheckError(t *testing.T) {
 			apiKey: "api-key",
 			method: "GET",
 			token:  testdata.FakeCloudToken,
-			mockedCheckResponse: &sc.CheckResponse{
-				CheckInfo: &sc.CheckResponse_CheckInfo{
-					ConsumerInfo: &sc.CheckResponse_ConsumerInfo{
+			mockedCheckResponse: &scpb.CheckResponse{
+				CheckInfo: &scpb.CheckResponse_CheckInfo{
+					ConsumerInfo: &scpb.CheckResponse_ConsumerInfo{
 						ProjectNumber: 123456,
 					},
 				},
-				CheckErrors: []*sc.CheckError{
-					&sc.CheckError{
-						Code: sc.CheckError_PROJECT_INVALID,
+				CheckErrors: []*scpb.CheckError{
+					&scpb.CheckError{
+						Code: scpb.CheckError_PROJECT_INVALID,
 					},
 				},
 			},

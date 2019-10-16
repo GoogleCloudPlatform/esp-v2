@@ -22,13 +22,13 @@ import (
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	"cloudesf.googlesource.com/gcpproxy/src/go/options"
+	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/golang/protobuf/ptypes"
-	"google.golang.org/genproto/protobuf/api"
 
-	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	apipb "google.golang.org/genproto/protobuf/api"
 )
 
 var (
@@ -41,20 +41,20 @@ var (
 func TestMakeServiceControlCluster(t *testing.T) {
 	testData := []struct {
 		desc              string
-		fakeServiceConfig *conf.Service
+		fakeServiceConfig *confpb.Service
 		wantedCluster     v2pb.Cluster
 		backendProtocol   string
 	}{
 		{
 			desc: "Success for gRPC backend",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
 					},
 				},
-				Control: &conf.Control{
+				Control: &confpb.Control{
 					Environment: testServiceControlEnv,
 				},
 			},
@@ -64,7 +64,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 				ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
 				ClusterDiscoveryType: &v2pb.Cluster_Type{Type: v2pb.Cluster_LOGICAL_DNS},
 				DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
-				LoadAssignment:       ut.CreateLoadAssignment(testServiceControlEnv, 443),
+				LoadAssignment:       util.CreateLoadAssignment(testServiceControlEnv, 443),
 				TlsContext: &authpb.UpstreamTlsContext{
 					Sni: "servicecontrol.googleapis.com",
 				},
@@ -72,14 +72,14 @@ func TestMakeServiceControlCluster(t *testing.T) {
 		},
 		{
 			desc: "Success for HTTP1 backend",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
 					},
 				},
-				Control: &conf.Control{
+				Control: &confpb.Control{
 					Environment: "http://127.0.0.1:8000",
 				},
 			},
@@ -89,7 +89,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 				ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
 				ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
 				DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
-				LoadAssignment:       ut.CreateLoadAssignment("127.0.0.1", 8000),
+				LoadAssignment:       util.CreateLoadAssignment("127.0.0.1", 8000),
 			},
 		},
 	}
@@ -116,7 +116,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 func TestMakeBackendRoutingCluster(t *testing.T) {
 	testData := []struct {
 		desc                   string
-		fakeServiceConfig      *conf.Service
+		fakeServiceConfig      *confpb.Service
 		backendDnsLookupFamily string
 		backendProtocol        string
 		wantedClusters         []*v2pb.Cluster
@@ -124,12 +124,12 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 	}{
 		{
 			desc: "Success for HTTP backend",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: "1.cloudesf_testing_cloud_goog",
-						Methods: []*api.Method{
+						Methods: []*apipb.Method{
 							{
 								Name: "Foo",
 							},
@@ -139,21 +139,21 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 						},
 					},
 				},
-				Backend: &conf.Backend{
-					Rules: []*conf.BackendRule{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
 						{
 							Address:         "https://mybackend.com",
 							Selector:        "1.cloudesf_testing_cloud_goog.Foo",
-							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
-							Authentication: &conf.BackendRule_JwtAudience{
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
 								JwtAudience: "mybackend.com",
 							},
 						},
 						{
 							Address:         "https://mybackend.com",
 							Selector:        "1.cloudesf_testing_cloud_goog.Bar",
-							PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
-							Authentication: &conf.BackendRule_JwtAudience{
+							PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
 								JwtAudience: "mybackend.com",
 							},
 						},
@@ -166,7 +166,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					Name:                 "DynamicRouting_0",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
-					LoadAssignment:       ut.CreateLoadAssignment("mybackend.com", 443),
+					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 443),
 					TlsContext: &authpb.UpstreamTlsContext{
 						Sni: "mybackend.com",
 					},
@@ -176,25 +176,25 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 		{
 			desc:                   "Succeess, providing correct backend_dns_lookup_family flag",
 			backendDnsLookupFamily: "v4only",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: "1.cloudesf_testing_cloud_goog.run.app",
-						Methods: []*api.Method{
+						Methods: []*apipb.Method{
 							{
 								Name: "Foo",
 							},
 						},
 					},
 				},
-				Backend: &conf.Backend{
-					Rules: []*conf.BackendRule{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
 						{
 							Address:         "https://mybackend.run.app",
 							Selector:        "1.cloudesf_testing_cloud_goog.Foo",
-							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
-							Authentication: &conf.BackendRule_JwtAudience{
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
 								JwtAudience: "mybackend.run.app",
 							},
 						},
@@ -208,7 +208,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
 					ClusterDiscoveryType: &v2pb.Cluster_Type{Type: v2pb.Cluster_LOGICAL_DNS},
-					LoadAssignment:       ut.CreateLoadAssignment("mybackend.run.app", 443),
+					LoadAssignment:       util.CreateLoadAssignment("mybackend.run.app", 443),
 					TlsContext: &authpb.UpstreamTlsContext{
 						Sni: "mybackend.run.app",
 					},
@@ -218,25 +218,25 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 		{
 			desc:                   "Failure, providing incorrect backend_dns_lookup_family flag",
 			backendDnsLookupFamily: "v5only",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: "1.cloudesf_testing_cloud_goog.run.app",
-						Methods: []*api.Method{
+						Methods: []*apipb.Method{
 							{
 								Name: "Foo",
 							},
 						},
 					},
 				},
-				Backend: &conf.Backend{
-					Rules: []*conf.BackendRule{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
 						{
 							Address:         "https://mybackend.run.app",
 							Selector:        "1.cloudesf_testing_cloud_goog.Foo",
-							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
-							Authentication: &conf.BackendRule_JwtAudience{
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
 								JwtAudience: "mybackend.run.app",
 							},
 						},
@@ -275,22 +275,22 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 }
 
 func TestMakeJwtProviderClusters(t *testing.T) {
-	_, fakeJwksUriHost, _, _, _ := ut.ParseURI(ut.FakeJwksUri)
+	_, fakeJwksUriHost, _, _, _ := util.ParseURI(util.FakeJwksUri)
 
 	testData := []struct {
 		desc           string
-		fakeProviders  []*conf.AuthProvider
+		fakeProviders  []*confpb.AuthProvider
 		wantedClusters []*v2pb.Cluster
 	}{
 		{
 			desc: "Use https jwksUri and http jwksUri",
-			fakeProviders: []*conf.AuthProvider{
-				&conf.AuthProvider{
+			fakeProviders: []*confpb.AuthProvider{
+				&confpb.AuthProvider{
 					Id:      "auth_provider",
 					Issuer:  "issuer_0",
 					JwksUri: "https://metadata.com/pkey",
 				},
-				&conf.AuthProvider{
+				&confpb.AuthProvider{
 					Id:      "auth_provider",
 					Issuer:  "issuer_1",
 					JwksUri: "http://metadata.com/pkey",
@@ -302,7 +302,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
-					LoadAssignment:       ut.CreateLoadAssignment("metadata.com", 443),
+					LoadAssignment:       util.CreateLoadAssignment("metadata.com", 443),
 					TlsContext: &authpb.UpstreamTlsContext{
 						Sni: "metadata.com",
 					},
@@ -312,14 +312,14 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
-					LoadAssignment:       ut.CreateLoadAssignment("metadata.com", 80),
+					LoadAssignment:       util.CreateLoadAssignment("metadata.com", 80),
 				},
 			},
 		},
 		{
 			desc: "With wrong-format jwksUri, use FakeJwksUri",
-			fakeProviders: []*conf.AuthProvider{
-				&conf.AuthProvider{
+			fakeProviders: []*confpb.AuthProvider{
+				&confpb.AuthProvider{
 					Id:      "auth_provider",
 					Issuer:  "issuer_2",
 					JwksUri: "%",
@@ -330,19 +330,19 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
-					LoadAssignment:       ut.CreateLoadAssignment(fakeJwksUriHost, 80),
+					LoadAssignment:       util.CreateLoadAssignment(fakeJwksUriHost, 80),
 				},
 			},
 		},
 	}
 	for i, tc := range testData {
-		fakeServiceConfig := &conf.Service{
-			Apis: []*api.Api{
+		fakeServiceConfig := &confpb.Service{
+			Apis: []*apipb.Api{
 				{
 					Name: testApiName,
 				},
 			},
-			Authentication: &conf.Authentication{
+			Authentication: &confpb.Authentication{
 				Providers: tc.fakeProviders,
 			},
 		}
@@ -371,16 +371,16 @@ func TestMakeIamCluster(t *testing.T) {
 		desc              string
 		backendProtocol   string
 		iamServiceAccount string
-		fakeServiceConfig *conf.Service
+		fakeServiceConfig *confpb.Service
 		wantedCluster     *v2pb.Cluster
 		wantedError       string
 	}{
 		{
 			desc:              "Success, generate iam cluster when iam service acount is set",
 			iamServiceAccount: "service-account@google.com",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: "1.cloudesf_testing_cloud_goog",
 					},
@@ -388,10 +388,10 @@ func TestMakeIamCluster(t *testing.T) {
 			},
 			backendProtocol: "http1",
 			wantedCluster: &v2pb.Cluster{
-				Name:                 ut.IamServerClusterName,
+				Name:                 util.IamServerClusterName,
 				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 				ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_STRICT_DNS},
-				LoadAssignment:       ut.CreateLoadAssignment("iamcredentials.googleapis.com", 443),
+				LoadAssignment:       util.CreateLoadAssignment("iamcredentials.googleapis.com", 443),
 				TlsContext: &authpb.UpstreamTlsContext{
 					Sni: "iamcredentials.googleapis.com",
 				},
@@ -399,9 +399,9 @@ func TestMakeIamCluster(t *testing.T) {
 		},
 		{
 			desc: "Success, not generate a iam cluster without iam service acount",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: "1.cloudesf_testing_cloud_goog",
 					},

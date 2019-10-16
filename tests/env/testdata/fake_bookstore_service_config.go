@@ -15,20 +15,20 @@
 package testdata
 
 import (
-	"google.golang.org/genproto/googleapis/api/annotations"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
-	"google.golang.org/genproto/protobuf/api"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	apipb "google.golang.org/genproto/protobuf/api"
 )
 
 var (
-	FakeBookstoreConfig = &conf.Service{
+	FakeBookstoreConfig = &confpb.Service{
 		Name:              "bookstore.endpoints.cloudesf-testing.cloud.goog",
 		Title:             "Bookstore gRPC API",
 		ProducerProjectId: "producer project",
-		Apis: []*api.Api{
+		Apis: []*apipb.Api{
 			{
 				Name: "endpoints.examples.bookstore.Bookstore",
-				Methods: []*api.Method{
+				Methods: []*apipb.Method{
 					{
 						Name:            "ListShelves",
 						RequestTypeUrl:  "type.googleapis.com/google.protobuf.Empty",
@@ -72,76 +72,76 @@ var (
 				},
 			},
 		},
-		Http: &annotations.Http{
-			Rules: []*annotations.HttpRule{
+		Http: &annotationspb.Http{
+			Rules: []*annotationspb.HttpRule{
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-					Pattern: &annotations.HttpRule_Get{
+					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/v1/shelves",
 					},
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.CreateShelf",
-					Pattern: &annotations.HttpRule_Post{
+					Pattern: &annotationspb.HttpRule_Post{
 						Post: "/v1/shelves",
 					},
 					Body: "shelf",
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.GetShelf",
-					Pattern: &annotations.HttpRule_Get{
+					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/v1/shelves/{shelf=*}",
 					},
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.DeleteShelf",
-					Pattern: &annotations.HttpRule_Delete{
+					Pattern: &annotationspb.HttpRule_Delete{
 						Delete: "/v1/shelves/{shelf}",
 					},
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.ListBooks",
-					Pattern: &annotations.HttpRule_Get{
+					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/v1/shelves/{shelf}/books",
 					},
 				},
 
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.DeleteBook",
-					Pattern: &annotations.HttpRule_Delete{
+					Pattern: &annotationspb.HttpRule_Delete{
 						Delete: "/v1/shelves/{shelf=*}/books/{book=*}",
 					},
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.CreateBook",
-					Pattern: &annotations.HttpRule_Post{
+					Pattern: &annotationspb.HttpRule_Post{
 						Post: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
 					},
 					Body: "book.title",
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.CreateBook",
-					Pattern: &annotations.HttpRule_Post{
+					Pattern: &annotationspb.HttpRule_Post{
 						Post: "/v1/shelves/{shelf}/books",
 					},
 					Body: "book",
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.GetBook",
-					Pattern: &annotations.HttpRule_Get{
+					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/v1/shelves/{shelf=*}/books/{book}",
 					},
 				},
 			},
 		},
-		Authentication: &conf.Authentication{
-			Rules: []*conf.AuthenticationRule{
+		Authentication: &confpb.Authentication{
+			Rules: []*confpb.AuthenticationRule{
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.GetShelf",
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.CreateShelf",
-					Requirements: []*conf.AuthRequirement{
+					Requirements: []*confpb.AuthRequirement{
 						{
 							ProviderId: GoogleServiceAccountProvider,
 						},
@@ -152,7 +152,7 @@ var (
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.DeleteBook",
-					Requirements: []*conf.AuthRequirement{
+					Requirements: []*confpb.AuthRequirement{
 						{
 							ProviderId: GoogleServiceAccountProvider,
 						},
@@ -160,7 +160,7 @@ var (
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.CreateBook",
-					Requirements: []*conf.AuthRequirement{
+					Requirements: []*confpb.AuthRequirement{
 						{
 							ProviderId: GoogleServiceAccountProvider,
 							Audiences:  "bookstore_test_client.cloud.goog, admin.cloud.goog",
@@ -169,7 +169,7 @@ var (
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-					Requirements: []*conf.AuthRequirement{
+					Requirements: []*confpb.AuthRequirement{
 						{
 							ProviderId: GoogleServiceAccountProvider,
 							Audiences:  "bookstore_test_client.cloud.goog",
@@ -178,7 +178,7 @@ var (
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.DeleteShelf",
-					Requirements: []*conf.AuthRequirement{
+					Requirements: []*confpb.AuthRequirement{
 						{
 							ProviderId: GoogleServiceAccountProvider,
 							Audiences:  "bookstore_test_client.cloud.goog",
@@ -190,8 +190,8 @@ var (
 				},
 			},
 		},
-		Usage: &conf.Usage{
-			Rules: []*conf.UsageRule{},
+		Usage: &confpb.Usage{
+			Rules: []*confpb.UsageRule{},
 		},
 	}
 )

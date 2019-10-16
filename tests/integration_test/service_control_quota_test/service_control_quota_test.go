@@ -29,8 +29,8 @@ import (
 
 	bsClient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/client"
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
-	sc "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
 func TestServiceControlQuota(t *testing.T) {
@@ -41,8 +41,8 @@ func TestServiceControlQuota(t *testing.T) {
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlQuota, "bookstore")
-	s.OverrideQuota(&conf.Quota{
-		MetricRules: []*conf.MetricRule{
+	s.OverrideQuota(&confpb.Quota{
+		MetricRules: []*confpb.MetricRule{
 			{
 				Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
 				MetricCosts: map[string]int64{
@@ -92,7 +92,7 @@ func TestServiceControlQuota(t *testing.T) {
 						"metrics_first":  2,
 						"metrics_second": 1,
 					},
-					QuotaMode:       sc.QuotaOperation_BEST_EFFORT,
+					QuotaMode:       scpb.QuotaOperation_BEST_EFFORT,
 					ServiceConfigID: "test-config-id",
 				},
 				&utils.ExpectedReport{
@@ -160,8 +160,8 @@ func TestServiceControlQuotaUnavailable(t *testing.T) {
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlQuotaUnavailable, "bookstore")
-	s.OverrideQuota(&conf.Quota{
-		MetricRules: []*conf.MetricRule{
+	s.OverrideQuota(&confpb.Quota{
+		MetricRules: []*confpb.MetricRule{
 			{
 				Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
 				MetricCosts: map[string]int64{
@@ -228,8 +228,8 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlQuotaExhausted, "bookstore")
-	s.OverrideQuota(&conf.Quota{
-		MetricRules: []*conf.MetricRule{
+	s.OverrideQuota(&confpb.Quota{
+		MetricRules: []*confpb.MetricRule{
 			{
 				Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
 				MetricCosts: map[string]int64{
@@ -245,10 +245,10 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 	}
 
 	s.ServiceControlServer.SetQuotaResponse(
-		&sc.AllocateQuotaResponse{
-			AllocateErrors: []*sc.QuotaError{
+		&scpb.AllocateQuotaResponse{
+			AllocateErrors: []*scpb.QuotaError{
 				{
-					Code:    sc.QuotaError_RESOURCE_EXHAUSTED,
+					Code:    scpb.QuotaError_RESOURCE_EXHAUSTED,
 					Subject: "Insufficient tokens for quota group and limit 'apiWriteQpsPerProject_LOW' of service 'test.appspot.com', using the limit by ID 'container:123123'.",
 				},
 			},
@@ -291,7 +291,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 						"metrics_first":  2,
 						"metrics_second": 1,
 					},
-					QuotaMode:       sc.QuotaOperation_BEST_EFFORT,
+					QuotaMode:       scpb.QuotaOperation_BEST_EFFORT,
 					ServiceConfigID: "test-config-id",
 				},
 				&utils.ExpectedReport{
@@ -333,7 +333,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 						"metrics_first":  2,
 						"metrics_second": 1,
 					},
-					QuotaMode:       sc.QuotaOperation_NORMAL,
+					QuotaMode:       scpb.QuotaOperation_NORMAL,
 					ServiceConfigID: "test-config-id",
 				},
 				&utils.ExpectedReport{

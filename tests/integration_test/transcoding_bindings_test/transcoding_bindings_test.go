@@ -24,7 +24,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func TestTranscodingBindings(t *testing.T) {
@@ -48,8 +48,8 @@ func TestTranscodingBindings(t *testing.T) {
 	}
 
 	s := env.NewTestEnv(comp.TestTranscodingBindings, "bookstore")
-	s.OverrideAuthentication(&conf.Authentication{
-		Rules: []*conf.AuthenticationRule{},
+	s.OverrideAuthentication(&confpb.Authentication{
+		Rules: []*confpb.AuthenticationRule{},
 	})
 
 	defer s.TearDown()

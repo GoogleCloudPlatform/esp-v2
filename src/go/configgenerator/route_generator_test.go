@@ -21,9 +21,9 @@ import (
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	"cloudesf.googlesource.com/gcpproxy/src/go/options"
-	"github.com/golang/protobuf/ptypes/wrappers"
 
 	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
+	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 )
 
 func TestMakeRouteConfigForCors(t *testing.T) {
@@ -62,7 +62,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 			wantRoute: &routepb.CorsPolicy{
 				AllowOrigin:      []string{"http://example.com"},
 				AllowMethods:     "GET,POST,PUT,OPTIONS",
-				AllowCredentials: &wrappers.BoolValue{Value: false},
+				AllowCredentials: &wrapperspb.BoolValue{Value: false},
 			},
 		},
 		{
@@ -71,7 +71,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 			wantRoute: &routepb.CorsPolicy{
 				AllowOriginRegex: []string{`^https?://.+\\.example\\.com$`},
 				AllowHeaders:     "Origin,Content-Type,Accept",
-				AllowCredentials: &wrappers.BoolValue{Value: false},
+				AllowCredentials: &wrapperspb.BoolValue{Value: false},
 			},
 		},
 		{
@@ -81,7 +81,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 			wantRoute: &routepb.CorsPolicy{
 				AllowOriginRegex: []string{`^https?://.+\\.example\\.com$`},
 				ExposeHeaders:    "Content-Length",
-				AllowCredentials: &wrappers.BoolValue{Value: true},
+				AllowCredentials: &wrapperspb.BoolValue{Value: true},
 			},
 		},
 	}

@@ -15,22 +15,21 @@
 package testdata
 
 import (
-	"google.golang.org/genproto/googleapis/api/annotations"
-	"google.golang.org/genproto/protobuf/api"
-
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
-	ptype "google.golang.org/genproto/protobuf/ptype"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	apipb "google.golang.org/genproto/protobuf/api"
+	ptypepb "google.golang.org/genproto/protobuf/ptype"
 )
 
 var (
-	FakeEchoConfig = &conf.Service{
+	FakeEchoConfig = &confpb.Service{
 		Name:              "echo-api.endpoints.cloudesf-testing.cloud.goog",
 		Title:             "Endpoints Example",
 		ProducerProjectId: "producer-project",
-		Apis: []*api.Api{
+		Apis: []*apipb.Api{
 			{
 				Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-				Methods: []*api.Method{
+				Methods: []*apipb.Method{
 					{
 						Name:            "Auth_info_google_jwt",
 						RequestTypeUrl:  "type.googleapis.com/google.protobuf.Empty",
@@ -55,73 +54,73 @@ var (
 				Version: "1.0.0",
 			},
 		},
-		Http: &annotations.Http{
-			Rules: []*annotations.HttpRule{
+		Http: &annotationspb.Http{
+			Rules: []*annotationspb.HttpRule{
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt",
-					Pattern: &annotations.HttpRule_Get{
+					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/auth/info/googlejwt",
 					},
 				},
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth0",
-					Pattern: &annotations.HttpRule_Get{
+					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/auth/info/auth0",
 					},
 				},
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-					Pattern: &annotations.HttpRule_Post{
+					Pattern: &annotationspb.HttpRule_Post{
 						Post: "/echo",
 					},
 					Body: "message",
 				},
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey",
-					Pattern: &annotations.HttpRule_Post{
+					Pattern: &annotationspb.HttpRule_Post{
 						Post: "/echo/nokey",
 					},
 					Body: "message",
 				},
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
-					Pattern: &annotations.HttpRule_Get{
+					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/simplegetcors",
 					},
 				},
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog._post_anypath",
-					Pattern: &annotations.HttpRule_Post{
+					Pattern: &annotationspb.HttpRule_Post{
 						Post: "/**",
 					},
 				},
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_firebase",
-					Pattern: &annotations.HttpRule_Get{
+					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/auth/info/firebase",
 					},
 				},
 			},
 		},
-		Types: []*ptype.Type{
+		Types: []*ptypepb.Type{
 			{
-				Fields: []*ptype.Field{
-					&ptype.Field{
+				Fields: []*ptypepb.Field{
+					&ptypepb.Field{
 						JsonName: "BOOK",
 						Name:     "b_o_o_k",
 					},
-					&ptype.Field{
+					&ptypepb.Field{
 						JsonName: "SHELF",
 						Name:     "s_h_e_l_f",
 					},
 				},
 			},
 		},
-		Authentication: &conf.Authentication{
-			Rules: []*conf.AuthenticationRule{
+		Authentication: &confpb.Authentication{
+			Rules: []*confpb.AuthenticationRule{
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt",
-					Requirements: []*conf.AuthRequirement{
+					Requirements: []*confpb.AuthRequirement{
 						{
 							ProviderId: GoogleJwtProvider,
 						},
@@ -129,7 +128,7 @@ var (
 				},
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth0",
-					Requirements: []*conf.AuthRequirement{
+					Requirements: []*confpb.AuthRequirement{
 						{
 							ProviderId: GoogleJwtProvider,
 							Audiences:  "admin.cloud.goog",
@@ -147,7 +146,7 @@ var (
 				},
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_firebase",
-					Requirements: []*conf.AuthRequirement{
+					Requirements: []*confpb.AuthRequirement{
 						{
 							ProviderId: GoogleJwtProvider,
 						},
@@ -155,8 +154,8 @@ var (
 				},
 			},
 		},
-		Usage: &conf.Usage{
-			Rules: []*conf.UsageRule{
+		Usage: &confpb.Usage{
+			Rules: []*confpb.UsageRule{
 				{
 					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey",
 					AllowUnregisteredCalls: true,
@@ -167,7 +166,7 @@ var (
 				},
 			},
 		},
-		Endpoints: []*conf.Endpoint{
+		Endpoints: []*confpb.Endpoint{
 			{
 				Name: "echo-api.endpoints.cloudesf-testing.cloud.goog",
 			},

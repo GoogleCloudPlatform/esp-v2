@@ -23,10 +23,10 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
-	"google.golang.org/genproto/googleapis/api/annotations"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func TestServiceControlReportResponseCode(t *testing.T) {
@@ -37,28 +37,28 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 		"--backend_protocol=http1", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestServiceControlReportResponseCode, "echo")
-	s.AppendHttpRules([]*annotations.HttpRule{
+	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetNotModified",
-			Pattern: &annotations.HttpRule_Get{
+			Pattern: &annotationspb.HttpRule_Get{
 				Get: "/simpleget/304",
 			},
 		},
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetUnauthorized",
-			Pattern: &annotations.HttpRule_Get{
+			Pattern: &annotationspb.HttpRule_Get{
 				Get: "/simpleget/401",
 			},
 		},
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetForbidden",
-			Pattern: &annotations.HttpRule_Get{
+			Pattern: &annotationspb.HttpRule_Get{
 				Get: "/simpleget/403",
 			},
 		},
 	})
 	s.AppendUsageRules(
-		[]*conf.UsageRule{
+		[]*confpb.UsageRule{
 			{
 				Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetNotModified",
 				AllowUnregisteredCalls: true,

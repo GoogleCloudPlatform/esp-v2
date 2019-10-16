@@ -22,15 +22,15 @@ import (
 	"strings"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/options"
+	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/ptypes/duration"
-	"google.golang.org/genproto/googleapis/api/annotations"
 
 	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
 	pmpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/path_matcher"
 	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
-	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	durationpb "github.com/golang/protobuf/ptypes/duration"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 // ServiceInfo contains service level information.
@@ -51,11 +51,11 @@ type ServiceInfo struct {
 
 	AllowCors         bool
 	ServiceControlURI string
-	BackendProtocol   ut.BackendProtocol
+	BackendProtocol   util.BackendProtocol
 	GcpAttributes     *scpb.GcpAttributes
 	// Keep a pointer to original service config. Should always process rules
 	// inside ServiceInfo.
-	serviceConfig *conf.Service
+	serviceConfig *confpb.Service
 	AccessToken   *commonpb.AccessToken
 	Options       options.ConfigGeneratorOptions
 }
@@ -67,7 +67,7 @@ type backendRoutingCluster struct {
 }
 
 // NewServiceInfoFromServiceConfig returns an instance of ServiceInfo.
-func NewServiceInfoFromServiceConfig(serviceConfig *conf.Service, id string, opts options.ConfigGeneratorOptions) (*ServiceInfo, error) {
+func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, opts options.ConfigGeneratorOptions) (*ServiceInfo, error) {
 	if serviceConfig == nil {
 		return nil, fmt.Errorf("unexpected empty service config")
 	}
@@ -79,14 +79,14 @@ func NewServiceInfoFromServiceConfig(serviceConfig *conf.Service, id string, opt
 		return nil, fmt.Errorf("not support multi apis yet")
 	}
 
-	var backendProtocol ut.BackendProtocol
+	var backendProtocol util.BackendProtocol
 	switch strings.ToLower(opts.BackendProtocol) {
 	case "http1":
-		backendProtocol = ut.HTTP1
+		backendProtocol = util.HTTP1
 	case "http2":
-		backendProtocol = ut.HTTP2
+		backendProtocol = util.HTTP2
 	case "grpc":
-		backendProtocol = ut.GRPC
+		backendProtocol = util.GRPC
 	default:
 		return nil, fmt.Errorf(`unknown backend protocol, should be one of "grpc", "http1" or "http2"`)
 	}
@@ -124,7 +124,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *conf.Service, id string, opt
 }
 
 // Returns the pointer of the ServiceConfig that this API belongs to.
-func (s *ServiceInfo) ServiceConfig() *conf.Service {
+func (s *ServiceInfo) ServiceConfig() *confpb.Service {
 	return s.serviceConfig
 }
 
@@ -137,10 +137,10 @@ func (s *ServiceInfo) processEmptyJwksUriByOpenID() {
 		// discovery. If error happens during this process, a fake and unaccessible
 		// jwksUri will be filled instead.
 		if jwksUri == "" {
-			jwksUriByOpenID, err := ut.ResolveJwksUriUsingOpenID(provider.GetIssuer())
+			jwksUriByOpenID, err := util.ResolveJwksUriUsingOpenID(provider.GetIssuer())
 			if err != nil {
 				glog.Warning(err.Error())
-				jwksUri = ut.FakeJwksUri
+				jwksUri = util.FakeJwksUri
 			} else {
 				jwksUri = jwksUriByOpenID
 			}
@@ -177,10 +177,10 @@ func (s *ServiceInfo) processAccessToken() {
 	s.AccessToken = &commonpb.AccessToken{
 		TokenType: &commonpb.AccessToken_RemoteToken{
 			RemoteToken: &commonpb.HttpUri{
-				Uri:     fmt.Sprintf("%s%s", s.Options.MetadataURL, ut.AccessTokenSuffix),
-				Cluster: ut.MetadataServerClusterName,
+				Uri:     fmt.Sprintf("%s%s", s.Options.MetadataURL, util.AccessTokenSuffix),
+				Cluster: util.MetadataServerClusterName,
 				// TODO(taoxuy): make token_subscriber use this timeout
-				Timeout: &duration.Duration{Seconds: 5},
+				Timeout: &durationpb.Duration{Seconds: 5},
 			},
 		},
 	}
@@ -215,32 +215,32 @@ func (s *ServiceInfo) processHttpRule() {
 		method := s.getOrCreateMethod(r.GetSelector())
 		var httpRule *commonpb.Pattern
 		switch r.GetPattern().(type) {
-		case *annotations.HttpRule_Get:
+		case *annotationspb.HttpRule_Get:
 			httpRule = &commonpb.Pattern{
 				UriTemplate: r.GetGet(),
-				HttpMethod:  ut.GET,
+				HttpMethod:  util.GET,
 			}
-		case *annotations.HttpRule_Put:
+		case *annotationspb.HttpRule_Put:
 			httpRule = &commonpb.Pattern{
 				UriTemplate: r.GetPut(),
-				HttpMethod:  ut.PUT,
+				HttpMethod:  util.PUT,
 			}
-		case *annotations.HttpRule_Post:
+		case *annotationspb.HttpRule_Post:
 			httpRule = &commonpb.Pattern{
 				UriTemplate: r.GetPost(),
-				HttpMethod:  ut.POST,
+				HttpMethod:  util.POST,
 			}
-		case *annotations.HttpRule_Delete:
+		case *annotationspb.HttpRule_Delete:
 			httpRule = &commonpb.Pattern{
 				UriTemplate: r.GetDelete(),
-				HttpMethod:  ut.DELETE,
+				HttpMethod:  util.DELETE,
 			}
-		case *annotations.HttpRule_Patch:
+		case *annotationspb.HttpRule_Patch:
 			httpRule = &commonpb.Pattern{
 				UriTemplate: r.GetPatch(),
-				HttpMethod:  ut.PATCH,
+				HttpMethod:  util.PATCH,
 			}
-		case *annotations.HttpRule_Custom:
+		case *annotationspb.HttpRule_Custom:
 			httpRule = &commonpb.Pattern{
 				UriTemplate: r.GetCustom().GetPath(),
 				HttpMethod:  r.GetCustom().GetKind(),
@@ -282,7 +282,7 @@ func (s *ServiceInfo) addOptionMethod(index int, path string) {
 		HttpRule: []*commonpb.Pattern{
 			{
 				UriTemplate: path,
-				HttpMethod:  ut.OPTIONS,
+				HttpMethod:  util.OPTIONS,
 			},
 		},
 		IsGeneratedOption: true,
@@ -296,8 +296,8 @@ func (s *ServiceInfo) processBackendRule() error {
 	backendRoutingClustersMap := make(map[string]string)
 
 	for _, r := range s.ServiceConfig().Backend.GetRules() {
-		if r.PathTranslation != conf.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
-			scheme, hostname, port, uri, err := ut.ParseURI(r.Address)
+		if r.PathTranslation != confpb.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
+			scheme, hostname, port, uri, err := util.ParseURI(r.Address)
 			if err != nil {
 				return err
 			}
@@ -345,9 +345,9 @@ func (s *ServiceInfo) processUsageRule() {
 
 func (s *ServiceInfo) processSystemParameters() {
 	for _, rule := range s.ServiceConfig().GetSystemParameters().GetRules() {
-		apiKeyLocationParameters := []*conf.SystemParameter{}
+		apiKeyLocationParameters := []*confpb.SystemParameter{}
 		for _, parameter := range rule.GetParameters() {
-			if parameter.GetName() == ut.APIKeyParameterName {
+			if parameter.GetName() == util.APIKeyParameterName {
 				apiKeyLocationParameters = append(apiKeyLocationParameters, parameter)
 			}
 		}
@@ -355,7 +355,7 @@ func (s *ServiceInfo) processSystemParameters() {
 	}
 }
 
-func extractAPIKeyLocations(method *methodInfo, parameters []*conf.SystemParameter) {
+func extractAPIKeyLocations(method *methodInfo, parameters []*confpb.SystemParameter) {
 	var urlQueryNames, headerNames []*scpb.APIKeyLocation
 	for _, parameter := range parameters {
 		if urlQueryName := parameter.GetUrlQueryParameter(); urlQueryName != "" {

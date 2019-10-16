@@ -23,7 +23,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func TestServiceControlSkipUsage(t *testing.T) {
@@ -35,7 +35,7 @@ func TestServiceControlSkipUsage(t *testing.T) {
 
 	s := env.NewTestEnv(comp.TestServiceControlSkipUsage, "echo")
 	s.AppendUsageRules(
-		[]*conf.UsageRule{
+		[]*confpb.UsageRule{
 			{
 				Selector:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
 				SkipServiceControl: true,

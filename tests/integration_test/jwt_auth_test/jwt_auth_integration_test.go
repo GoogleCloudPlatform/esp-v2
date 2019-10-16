@@ -25,7 +25,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func TestAsymmetricKeys(t *testing.T) {
@@ -38,11 +38,11 @@ func TestAsymmetricKeys(t *testing.T) {
 	if err := s.FakeJwtService.SetupOpenId(); err != nil {
 		t.Fatalf("fail to setup open id servers: %v", err)
 	}
-	s.OverrideAuthentication(&conf.Authentication{
-		Rules: []*conf.AuthenticationRule{
+	s.OverrideAuthentication(&confpb.Authentication{
+		Rules: []*confpb.AuthenticationRule{
 			{
 				Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-				Requirements: []*conf.AuthRequirement{
+				Requirements: []*confpb.AuthRequirement{
 					{
 						ProviderId: testdata.TestAuthProvider,
 						Audiences:  "ok_audience",

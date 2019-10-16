@@ -24,7 +24,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func TestServiceControlAPIKeyDefaultLocation(t *testing.T) {
@@ -110,11 +110,11 @@ func TestServiceControlAPIKeyCustomLocation(t *testing.T) {
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlAPIKeyCustomLocation, "echo")
-	s.OverrideSystemParameters(&conf.SystemParameters{
-		Rules: []*conf.SystemParameterRule{
+	s.OverrideSystemParameters(&confpb.SystemParameters{
+		Rules: []*confpb.SystemParameterRule{
 			{
 				Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-				Parameters: []*conf.SystemParameter{
+				Parameters: []*confpb.SystemParameter{
 					{
 						Name:              "api_key",
 						HttpHeader:        "Header-Name-1",

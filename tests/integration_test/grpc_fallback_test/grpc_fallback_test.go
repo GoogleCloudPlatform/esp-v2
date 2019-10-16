@@ -22,11 +22,11 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/grpc_echo/client"
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
-	"google.golang.org/genproto/googleapis/api/annotations"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
-	"google.golang.org/genproto/protobuf/api"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	apipb "google.golang.org/genproto/protobuf/api"
 )
 
 func TestGRPCFallback(t *testing.T) {
@@ -36,23 +36,23 @@ func TestGRPCFallback(t *testing.T) {
 
 	s := env.NewTestEnv(comp.TestGRPCFallback, "bookstore")
 	s.OverrideBackendService("grpc-echo")
-	s.AppendApiMethods([]*api.Method{
+	s.AppendApiMethods([]*apipb.Method{
 		{
 			Name: "Unspecified",
 		},
 	})
-	s.AppendHttpRules([]*annotations.HttpRule{
+	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{
 			Selector: "endpoints.examples.bookstore.Bookstore.Unspecified",
-			Pattern: &annotations.HttpRule_Custom{
-				Custom: &annotations.CustomHttpPattern{
+			Pattern: &annotationspb.HttpRule_Custom{
+				Custom: &annotationspb.CustomHttpPattern{
 					Path: "/**",
 					Kind: "*",
 				},
 			},
 		},
 	})
-	s.AppendUsageRules([]*conf.UsageRule{
+	s.AppendUsageRules([]*confpb.UsageRule{
 		{
 			Selector:               "endpoints.examples.bookstore.Bookstore.Unspecified",
 			AllowUnregisteredCalls: true,

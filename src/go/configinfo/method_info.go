@@ -17,7 +17,7 @@ package configinfo
 import (
 	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
 	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 // methodInfo contains all information about this method.
@@ -32,11 +32,11 @@ type methodInfo struct {
 	MetricCosts            []*scpb.MetricCost
 }
 
-// bakcendInfo stores information from Backend rule for backend rerouting.
+// backendInfo stores information from Backend rule for backend rerouting.
 type backendInfo struct {
 	ClusterName     string
 	Uri             string
 	Hostname        string
-	TranslationType conf.BackendRule_PathTranslation
+	TranslationType confpb.BackendRule_PathTranslation
 	JwtAudience     string
 }

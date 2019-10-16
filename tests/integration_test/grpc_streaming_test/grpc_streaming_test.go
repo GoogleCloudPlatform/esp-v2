@@ -23,9 +23,9 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
-	"google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
 func TestGRPCStreaming(t *testing.T) {
@@ -106,7 +106,7 @@ results {
 	utils.CheckScRequest(t, scRequests, wantScRequests, "")
 }
 
-func findInMetricSlice(t *testing.T, metrics []*servicecontrol.MetricValueSet, wantMetricName string, expectExist bool) *servicecontrol.MetricValueSet {
+func findInMetricSlice(t *testing.T, metrics []*scpb.MetricValueSet, wantMetricName string, expectExist bool) *scpb.MetricValueSet {
 	for _, metric := range metrics {
 		if metric.MetricName == wantMetricName {
 			if !expectExist {
@@ -121,7 +121,7 @@ func findInMetricSlice(t *testing.T, metrics []*servicecontrol.MetricValueSet, w
 	return nil
 }
 
-func checkLabels(t *testing.T, op *servicecontrol.Operation, wantLabelName, wantLabelValue string) {
+func checkLabels(t *testing.T, op *scpb.Operation, wantLabelName, wantLabelValue string) {
 	if getLabelValue := op.Labels[wantLabelName]; getLabelValue != wantLabelValue {
 		t.Errorf("Wrong %s, expect: %s, get %s", wantLabelName, wantLabelValue, getLabelValue)
 	}

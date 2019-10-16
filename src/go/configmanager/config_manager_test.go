@@ -34,13 +34,13 @@ import (
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/wrappers"
-	"google.golang.org/genproto/googleapis/api/annotations"
 
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
-	sm "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
+	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
 const (
@@ -1477,7 +1477,7 @@ func sortResources(response *cache.Response) []cache.Resource {
 	return sortedResources
 }
 
-func marshalServiceConfigToString(serviceConfig *conf.Service, t *testing.T) string {
+func marshalServiceConfigToString(serviceConfig *confpb.Service, t *testing.T) string {
 	m := &jsonpb.Marshaler{}
 	jsonStr, err := m.MarshalToString(serviceConfig)
 	if err != nil {
@@ -1505,13 +1505,13 @@ func (fn FuncResolver) Resolve(url string) (proto.Message, error) {
 var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 	switch url {
 	case "type.googleapis.com/google.api.servicemanagement.v1.ConfigFile":
-		return new(sm.ConfigFile), nil
+		return new(smpb.ConfigFile), nil
 	case "type.googleapis.com/google.api.HttpRule":
-		return new(annotations.HttpRule), nil
+		return new(annotationspb.HttpRule), nil
 	case "type.googleapis.com/google.protobuf.BoolValue":
-		return new(wrappers.BoolValue), nil
+		return new(wrapperspb.BoolValue), nil
 	case "type.googleapis.com/google.api.Service":
-		return new(conf.Service), nil
+		return new(confpb.Service), nil
 	default:
 		return nil, fmt.Errorf("unexpected protobuf.Any with url: %s", url)
 	}

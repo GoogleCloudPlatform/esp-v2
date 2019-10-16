@@ -28,7 +28,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func TestServiceControlJwtAuthFail(t *testing.T) {
@@ -38,11 +38,11 @@ func TestServiceControlJwtAuthFail(t *testing.T) {
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestServiceControlJwtAuthFail, "bookstore")
-	s.OverrideAuthentication(&conf.Authentication{
-		Rules: []*conf.AuthenticationRule{
+	s.OverrideAuthentication(&confpb.Authentication{
+		Rules: []*confpb.AuthenticationRule{
 			{
 				Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-				Requirements: []*conf.AuthRequirement{
+				Requirements: []*confpb.AuthRequirement{
 					{
 						ProviderId: testdata.TestAuthProvider,
 						Audiences:  "ok_audience",

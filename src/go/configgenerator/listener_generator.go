@@ -19,11 +19,9 @@ import (
 	"strings"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/options"
+	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/any"
-	"github.com/golang/protobuf/ptypes/duration"
-	"github.com/golang/protobuf/ptypes/wrappers"
 
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	bapb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/backend_auth"
@@ -31,7 +29,6 @@ import (
 	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
 	pmpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/path_matcher"
 	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
-	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	listenerpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
@@ -39,9 +36,12 @@ import (
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
+	anypb "github.com/golang/protobuf/ptypes/any"
+	durationpb "github.com/golang/protobuf/ptypes/duration"
 	structpb "github.com/golang/protobuf/ptypes/struct"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
-	sm "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
+	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
 const (
@@ -54,7 +54,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 
 	if serviceInfo.Options.CorsPreset == "basic" || serviceInfo.Options.CorsPreset == "cors_with_regex" {
 		corsFilter := &hcmpb.HttpFilter{
-			Name: ut.CORS,
+			Name: util.CORS,
 		}
 		httpFilters = append(httpFilters, corsFilter)
 		glog.Infof("adding CORS Filter config: %v", corsFilter)
@@ -91,7 +91,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	}
 
 	// Add gRPC Transcoder filter and gRPCWeb filter configs for gRPC backend.
-	if serviceInfo.BackendProtocol == ut.GRPC {
+	if serviceInfo.BackendProtocol == util.GRPC {
 		transcoderFilter := makeTranscoderFilter(serviceInfo)
 		if transcoderFilter != nil {
 			httpFilters = append(httpFilters, transcoderFilter)
@@ -99,7 +99,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		}
 
 		grpcWebFilter := &hcmpb.HttpFilter{
-			Name:       ut.GRPCWeb,
+			Name:       util.GRPCWeb,
 			ConfigType: &hcmpb.HttpFilter_Config{Config: &structpb.Struct{}},
 		}
 		httpFilters = append(httpFilters, grpcWebFilter)
@@ -137,7 +137,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 			RouteConfig: route,
 		},
 
-		UseRemoteAddress:  &wrappers.BoolValue{Value: serviceInfo.Options.EnvoyUseRemoteAddress},
+		UseRemoteAddress:  &wrapperspb.BoolValue{Value: serviceInfo.Options.EnvoyUseRemoteAddress},
 		XffNumTrustedHops: uint32(serviceInfo.Options.EnvoyXffNumTrustedHops),
 	}
 	if serviceInfo.Options.EnableTracing {
@@ -148,7 +148,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	httpConMgr.HttpFilters = httpFilters
 
 	// HTTP filter configuration
-	httpFilterConfig, err := ut.MessageToStruct(httpConMgr)
+	httpFilterConfig, err := util.MessageToStruct(httpConMgr)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 			{
 				Filters: []*listenerpb.Filter{
 					{
-						Name:       ut.HTTPConnectionManager,
+						Name:       util.HTTPConnectionManager,
 						ConfigType: &listenerpb.Filter_Config{httpFilterConfig},
 					},
 				},
@@ -182,12 +182,12 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
 		// Adds PathMatcherRule for gRPC method.
-		if serviceInfo.BackendProtocol == ut.GRPC {
+		if serviceInfo.BackendProtocol == util.GRPC {
 			newGrpcRule := &pmpb.PathMatcherRule{
 				Operation: operation,
 				Pattern: &commonpb.Pattern{
 					UriTemplate: fmt.Sprintf("/%s/%s", serviceInfo.ApiName, method.ShortName),
-					HttpMethod:  ut.POST,
+					HttpMethod:  util.POST,
 				},
 			}
 			rules = append(rules, newGrpcRule)
@@ -200,7 +200,7 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 					Operation: operation,
 					Pattern:   httpRule,
 				}
-				if method.BackendRule.TranslationType == conf.BackendRule_CONSTANT_ADDRESS && hasPathParameter(newHttpRule.Pattern.UriTemplate) {
+				if method.BackendRule.TranslationType == confpb.BackendRule_CONSTANT_ADDRESS && hasPathParameter(newHttpRule.Pattern.UriTemplate) {
 					newHttpRule.ExtractPathParameters = true
 				}
 				rules = append(rules, newHttpRule)
@@ -217,9 +217,9 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		pathMathcherConfig.SegmentNames = serviceInfo.SegmentNames
 	}
 
-	pathMathcherConfigStruct, _ := ut.MessageToStruct(pathMathcherConfig)
+	pathMathcherConfigStruct, _ := util.MessageToStruct(pathMathcherConfig)
 	pathMatcherFilter := &hcmpb.HttpFilter{
-		Name:       ut.PathMatcher,
+		Name:       util.PathMatcher,
 		ConfigType: &hcmpb.HttpFilter_Config{pathMathcherConfigStruct},
 	}
 	return pathMatcherFilter
@@ -246,7 +246,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 							Cluster: provider.GetIssuer(),
 						},
 					},
-					CacheDuration: &duration.Duration{
+					CacheDuration: &durationpb.Duration{
 						Seconds: int64(serviceInfo.Options.JwksCacheDurationInS),
 					},
 				},
@@ -273,7 +273,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		// TODO(taoxuy): add unit test
 		// the JWT Payload will be send to metadata by envoy and it will be used by service control filter
 		// for logging and setting credential_id
-		jp.PayloadInMetadata = ut.JwtPayloadMetadataName
+		jp.PayloadInMetadata = util.JwtPayloadMetadataName
 		providers[provider.GetId()] = jp
 	}
 
@@ -296,15 +296,15 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		},
 	}
 
-	jas, _ := ut.MessageToStruct(jwtAuthentication)
+	jas, _ := util.MessageToStruct(jwtAuthentication)
 	jwtAuthnFilter := &hcmpb.HttpFilter{
-		Name:       ut.JwtAuthn,
+		Name:       util.JwtAuthn,
 		ConfigType: &hcmpb.HttpFilter_Config{jas},
 	}
 	return jwtAuthnFilter
 }
 
-func makeJwtRequirement(requirements []*conf.AuthRequirement) *jwtpb.JwtRequirement {
+func makeJwtRequirement(requirements []*confpb.AuthRequirement) *jwtpb.JwtRequirement {
 	// By default, if there are multi requirements, treat it as RequireAny.
 	requires := &jwtpb.JwtRequirement{
 		RequiresType: &jwtpb.JwtRequirement_RequiresAny{
@@ -346,26 +346,26 @@ func makeJwtRequirement(requirements []*conf.AuthRequirement) *jwtpb.JwtRequirem
 
 func makeServiceControlCallingConfig(opts options.ConfigGeneratorOptions) *scpb.ServiceControlCallingConfig {
 	setting := &scpb.ServiceControlCallingConfig{}
-	setting.NetworkFailOpen = &wrappers.BoolValue{Value: opts.ServiceControlNetworkFailOpen}
+	setting.NetworkFailOpen = &wrapperspb.BoolValue{Value: opts.ServiceControlNetworkFailOpen}
 
 	if opts.ScCheckTimeoutMs > 0 {
-		setting.CheckTimeoutMs = &wrappers.UInt32Value{Value: uint32(opts.ScCheckTimeoutMs)}
+		setting.CheckTimeoutMs = &wrapperspb.UInt32Value{Value: uint32(opts.ScCheckTimeoutMs)}
 	}
 	if opts.ScQuotaTimeoutMs > 0 {
-		setting.QuotaTimeoutMs = &wrappers.UInt32Value{Value: uint32(opts.ScQuotaTimeoutMs)}
+		setting.QuotaTimeoutMs = &wrapperspb.UInt32Value{Value: uint32(opts.ScQuotaTimeoutMs)}
 	}
 	if opts.ScReportTimeoutMs > 0 {
-		setting.ReportTimeoutMs = &wrappers.UInt32Value{Value: uint32(opts.ScReportTimeoutMs)}
+		setting.ReportTimeoutMs = &wrapperspb.UInt32Value{Value: uint32(opts.ScReportTimeoutMs)}
 	}
 
 	if opts.ScCheckRetries > -1 {
-		setting.CheckRetries = &wrappers.UInt32Value{Value: uint32(opts.ScCheckRetries)}
+		setting.CheckRetries = &wrapperspb.UInt32Value{Value: uint32(opts.ScCheckRetries)}
 	}
 	if opts.ScQuotaRetries > -1 {
-		setting.QuotaRetries = &wrappers.UInt32Value{Value: uint32(opts.ScQuotaRetries)}
+		setting.QuotaRetries = &wrapperspb.UInt32Value{Value: uint32(opts.ScQuotaRetries)}
 	}
 	if opts.ScReportRetries > -1 {
-		setting.ReportRetries = &wrappers.UInt32Value{Value: uint32(opts.ScReportRetries)}
+		setting.ReportRetries = &wrapperspb.UInt32Value{Value: uint32(opts.ScReportRetries)}
 	}
 	return setting
 }
@@ -406,7 +406,7 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	if serviceInfo.Options.MinStreamReportIntervalMs != 0 {
 		service.MinStreamReportIntervalMs = serviceInfo.Options.MinStreamReportIntervalMs
 	}
-	service.JwtPayloadMetadataName = ut.JwtPayloadMetadataName
+	service.JwtPayloadMetadataName = util.JwtPayloadMetadataName
 
 	filterConfig := &scpb.FilterConfig{
 		Services:        []*scpb.Service{service},
@@ -414,8 +414,8 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		ScCallingConfig: makeServiceControlCallingConfig(serviceInfo.Options),
 		ServiceControlUri: &commonpb.HttpUri{
 			Uri:     serviceInfo.ServiceControlURI,
-			Cluster: ut.ServiceControlClusterName,
-			Timeout: &duration.Duration{Seconds: 5},
+			Cluster: util.ServiceControlClusterName,
+			Timeout: &durationpb.Duration{Seconds: 5},
 		},
 	}
 
@@ -450,21 +450,21 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		filterConfig.Requirements = append(filterConfig.Requirements, requirement)
 	}
 
-	scs, err := ut.MessageToStruct(filterConfig)
+	scs, err := util.MessageToStruct(filterConfig)
 	if err != nil {
 		glog.Warningf("failed to convert message to struct: %v", err)
 	}
 	filter := &hcmpb.HttpFilter{
-		Name:       ut.ServiceControl,
+		Name:       util.ServiceControl,
 		ConfigType: &hcmpb.HttpFilter_Config{scs},
 	}
 	return filter
 }
 
-func copyServiceConfigForReportMetrics(src *conf.Service) *any.Any {
+func copyServiceConfigForReportMetrics(src *confpb.Service) *anypb.Any {
 	// Logs and metrics fields are needed by the Envoy HTTP filter
 	// to generate proper Metrics for Report calls.
-	copy := &conf.Service{
+	copy := &confpb.Service{
 		Logs:               src.GetLogs(),
 		Metrics:            src.GetMetrics(),
 		MonitoredResources: src.GetMonitoredResources(),
@@ -481,11 +481,11 @@ func copyServiceConfigForReportMetrics(src *conf.Service) *any.Any {
 
 func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	for _, sourceFile := range serviceInfo.ServiceConfig().GetSourceInfo().GetSourceFiles() {
-		configFile := &sm.ConfigFile{}
+		configFile := &smpb.ConfigFile{}
 		ptypes.UnmarshalAny(sourceFile, configFile)
 		glog.Infof("got proto descriptor: %v", string(configFile.GetFileContents()))
 
-		if configFile.GetFileType() == sm.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
+		if configFile.GetFileType() == smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
 			configContent := configFile.GetFileContents()
 			transcodeConfig := &transcoderpb.GrpcJsonTranscoder{
 				DescriptorSet: &transcoderpb.GrpcJsonTranscoder_ProtoDescriptorBin{
@@ -494,9 +494,9 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 				Services:               []string{serviceInfo.ApiName},
 				IgnoredQueryParameters: []string{"api_key", "key", "access_token"},
 			}
-			transcodeConfigStruct, _ := ut.MessageToStruct(transcodeConfig)
+			transcodeConfigStruct, _ := util.MessageToStruct(transcodeConfig)
 			transcodeFilter := &hcmpb.HttpFilter{
-				Name:       ut.GRPCJSONTranscoder,
+				Name:       util.GRPCJSONTranscoder,
 				ConfigType: &hcmpb.HttpFilter_Config{transcodeConfigStruct},
 			}
 			return transcodeFilter
@@ -525,10 +525,10 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		backendAuthConfig.IdTokenInfo = &bapb.FilterConfig_IamToken{
 			IamToken: &bapb.IamIdTokenInfo{
 				IamUri: &commonpb.HttpUri{
-					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.IamURL, ut.IamIdentityTokenSuffix(serviceInfo.Options.IamServiceAccount)),
-					Cluster: ut.IamServerClusterName,
+					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.IamURL, util.IamIdentityTokenSuffix(serviceInfo.Options.IamServiceAccount)),
+					Cluster: util.IamServerClusterName,
 					// TODO(taoxuy): make token_subscriber use this timeout
-					Timeout: &duration.Duration{Seconds: 5},
+					Timeout: &durationpb.Duration{Seconds: 5},
 				},
 				// Currently only support fetching access token from instance metadata
 				// server, not by service account file.
@@ -541,17 +541,17 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		backendAuthConfig.IdTokenInfo = &bapb.FilterConfig_ImdsToken{
 			ImdsToken: &bapb.ImdsIdTokenInfo{
 				ImdsServerUri: &commonpb.HttpUri{
-					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.MetadataURL, ut.IdentityTokenSuffix),
-					Cluster: ut.MetadataServerClusterName,
+					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.MetadataURL, util.IdentityTokenSuffix),
+					Cluster: util.MetadataServerClusterName,
 					// TODO(taoxuy): make token_subscriber use this timeout
-					Timeout: &duration.Duration{Seconds: 5},
+					Timeout: &durationpb.Duration{Seconds: 5},
 				},
 			},
 		}
 	}
-	backendAuthConfigStruct, _ := ut.MessageToStruct(backendAuthConfig)
+	backendAuthConfigStruct, _ := util.MessageToStruct(backendAuthConfig)
 	backendAuthFilter := &hcmpb.HttpFilter{
-		Name:       ut.BackendAuth,
+		Name:       util.BackendAuth,
 		ConfigType: &hcmpb.HttpFilter_Config{backendAuthConfigStruct},
 	}
 	return backendAuthFilter
@@ -561,31 +561,31 @@ func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	rules := []*brpb.BackendRoutingRule{}
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
-		if method.BackendRule.TranslationType != conf.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
+		if method.BackendRule.TranslationType != confpb.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
 			rules = append(rules, &brpb.BackendRoutingRule{
 				Operation:      operation,
-				IsConstAddress: method.BackendRule.TranslationType == conf.BackendRule_CONSTANT_ADDRESS,
+				IsConstAddress: method.BackendRule.TranslationType == confpb.BackendRule_CONSTANT_ADDRESS,
 				PathPrefix:     method.BackendRule.Uri,
 			})
 		}
 	}
 
 	backendRoutingConfig := &brpb.FilterConfig{Rules: rules}
-	backendRoutingConfigStruct, _ := ut.MessageToStruct(backendRoutingConfig)
+	backendRoutingConfigStruct, _ := util.MessageToStruct(backendRoutingConfig)
 	backendRoutingFilter := &hcmpb.HttpFilter{
-		Name:       ut.BackendRouting,
+		Name:       util.BackendRouting,
 		ConfigType: &hcmpb.HttpFilter_Config{backendRoutingConfigStruct},
 	}
 	return backendRoutingFilter
 }
 
 func makeRouterFilter(opts options.ConfigGeneratorOptions) *hcmpb.HttpFilter {
-	router, _ := ut.MessageToStruct(&routerpb.Router{
+	router, _ := util.MessageToStruct(&routerpb.Router{
 		SuppressEnvoyHeaders: opts.SuppressEnvoyHeaders,
 		StartChildSpan:       opts.EnableTracing,
 	})
 	routerFilter := &hcmpb.HttpFilter{
-		Name:       ut.Router,
+		Name:       util.Router,
 		ConfigType: &hcmpb.HttpFilter_Config{Config: router},
 	}
 	return routerFilter

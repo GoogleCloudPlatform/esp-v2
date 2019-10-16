@@ -18,11 +18,11 @@ import (
 	"fmt"
 	"time"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
-	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
@@ -88,20 +88,20 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, error) {
 }
 
 func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
-	scheme, hostname, port, _, err := ut.ParseURI(serviceInfo.Options.MetadataURL)
+	scheme, hostname, port, _, err := util.ParseURI(serviceInfo.Options.MetadataURL)
 	if err != nil {
 		return nil, err
 	}
 
 	connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
 	c := &v2pb.Cluster{
-		Name:           ut.MetadataServerClusterName,
+		Name:           util.MetadataServerClusterName,
 		LbPolicy:       v2pb.Cluster_ROUND_ROBIN,
 		ConnectTimeout: connectTimeoutProto,
 		ClusterDiscoveryType: &v2pb.Cluster_Type{
 			Type: v2pb.Cluster_STRICT_DNS,
 		},
-		LoadAssignment: ut.CreateLoadAssignment(hostname, port),
+		LoadAssignment: util.CreateLoadAssignment(hostname, port),
 	}
 
 	if scheme == "https" {
@@ -114,20 +114,20 @@ func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
 }
 
 func makeIamCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
-	scheme, hostname, port, _, err := ut.ParseURI(serviceInfo.Options.IamURL)
+	scheme, hostname, port, _, err := util.ParseURI(serviceInfo.Options.IamURL)
 	if err != nil {
 		return nil, err
 	}
 
 	connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
 	c := &v2pb.Cluster{
-		Name:           ut.IamServerClusterName,
+		Name:           util.IamServerClusterName,
 		LbPolicy:       v2pb.Cluster_ROUND_ROBIN,
 		ConnectTimeout: connectTimeoutProto,
 		ClusterDiscoveryType: &v2pb.Cluster_Type{
 			Type: v2pb.Cluster_STRICT_DNS,
 		},
-		LoadAssignment: ut.CreateLoadAssignment(hostname, port),
+		LoadAssignment: util.CreateLoadAssignment(hostname, port),
 	}
 
 	if scheme == "https" {
@@ -144,11 +144,11 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, erro
 	authn := serviceInfo.ServiceConfig().GetAuthentication()
 	for _, provider := range authn.GetProviders() {
 		jwksUri := provider.GetJwksUri()
-		scheme, hostname, port, _, err := ut.ParseURI(jwksUri)
+		scheme, hostname, port, _, err := util.ParseURI(jwksUri)
 		if err != nil {
 			glog.Warningf("Fail to parse jwksUri %s with error %v", jwksUri, err)
-			scheme, hostname, port, _, _ = ut.ParseURI(ut.FakeJwksUri)
-			provider.JwksUri = ut.FakeJwksUri
+			scheme, hostname, port, _, _ = util.ParseURI(util.FakeJwksUri)
+			provider.JwksUri = util.FakeJwksUri
 		}
 
 		connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
@@ -159,7 +159,7 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, erro
 			// Note: It may not be V4.
 			DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
 			ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
-			LoadAssignment:       ut.CreateLoadAssignment(hostname, port),
+			LoadAssignment:       util.CreateLoadAssignment(hostname, port),
 		}
 		if scheme == "https" {
 			c.TlsContext = &authpb.UpstreamTlsContext{
@@ -180,10 +180,10 @@ func makeBackendCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
 		LbPolicy:             v2pb.Cluster_ROUND_ROBIN,
 		ConnectTimeout:       connectTimeoutProto,
 		ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_STRICT_DNS},
-		LoadAssignment:       ut.CreateLoadAssignment(serviceInfo.Options.ClusterAddress, uint32(serviceInfo.Options.ClusterPort)),
+		LoadAssignment:       util.CreateLoadAssignment(serviceInfo.Options.ClusterAddress, uint32(serviceInfo.Options.ClusterPort)),
 	}
 	// gRPC and HTTP/2 need this configuration.
-	if serviceInfo.BackendProtocol != ut.HTTP1 {
+	if serviceInfo.BackendProtocol != util.HTTP1 {
 		c.Http2ProtocolOptions = &corepb.Http2ProtocolOptions{}
 	}
 	glog.Infof("Backend cluster configuration for service %s: %v", serviceInfo.Name, c)
@@ -201,7 +201,7 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, erro
 	// * It should not have any path part
 	// * If scheme is missed, https is the default
 
-	scheme, hostname, port, path, err := ut.ParseURI(uri)
+	scheme, hostname, port, path, err := util.ParseURI(uri)
 	if err != nil {
 		return nil, err
 	}
@@ -212,12 +212,12 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, erro
 	connectTimeoutProto := ptypes.DurationProto(5 * time.Second)
 	serviceInfo.ServiceControlURI = scheme + "://" + hostname + "/v1/services/"
 	c := &v2pb.Cluster{
-		Name:                 ut.ServiceControlClusterName,
+		Name:                 util.ServiceControlClusterName,
 		LbPolicy:             v2pb.Cluster_ROUND_ROBIN,
 		ConnectTimeout:       connectTimeoutProto,
 		DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
 		ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
-		LoadAssignment:       ut.CreateLoadAssignment(hostname, port),
+		LoadAssignment:       util.CreateLoadAssignment(hostname, port),
 	}
 
 	if scheme == "https" {
@@ -239,7 +239,7 @@ func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, e
 			LbPolicy:             v2pb.Cluster_ROUND_ROBIN,
 			ConnectTimeout:       connectTimeoutProto,
 			ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
-			LoadAssignment:       ut.CreateLoadAssignment(v.Hostname, v.Port),
+			LoadAssignment:       util.CreateLoadAssignment(v.Hostname, v.Port),
 			TlsContext: &authpb.UpstreamTlsContext{
 				Sni: v.Hostname,
 			},

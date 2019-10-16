@@ -21,26 +21,26 @@ import (
 	"strings"
 	"testing"
 
+	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	"cloudesf.googlesource.com/gcpproxy/src/go/options"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/any"
-	"google.golang.org/genproto/googleapis/api/annotations"
-	"google.golang.org/genproto/protobuf/api"
-	"google.golang.org/genproto/protobuf/ptype"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
-	sm "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
+	anypb "github.com/golang/protobuf/ptypes/any"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
+	apipb "google.golang.org/genproto/protobuf/api"
+	ptypepb "google.golang.org/genproto/protobuf/ptype"
 )
 
 var (
 	fakeProtoDescriptor = base64.StdEncoding.EncodeToString([]byte("rawDescriptor"))
 
-	sourceFile = &sm.ConfigFile{
+	sourceFile = &smpb.ConfigFile{
 		FilePath:     "api_descriptor.pb",
 		FileContents: []byte("rawDescriptor"),
-		FileType:     sm.ConfigFile_FILE_DESCRIPTOR_SET_PROTO,
+		FileType:     smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO,
 	}
 	content, _ = ptypes.MarshalAny(sourceFile)
 )
@@ -48,20 +48,20 @@ var (
 func TestTranscoderFilter(t *testing.T) {
 	testData := []struct {
 		desc                 string
-		fakeServiceConfig    *conf.Service
+		fakeServiceConfig    *confpb.Service
 		wantTranscoderFilter string
 	}{
 		{
 			desc: "Success for gRPC backend with transcoding",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
 					},
 				},
-				SourceInfo: &conf.SourceInfo{
-					SourceFiles: []*any.Any{content},
+				SourceInfo: &confpb.SourceInfo{
+					SourceFiles: []*anypb.Any{content},
 				},
 			},
 			wantTranscoderFilter: fmt.Sprintf(`
@@ -107,17 +107,17 @@ func TestBackendAuthFilter(t *testing.T) {
 	testdata := []struct {
 		desc                  string
 		iamServiceAccount     string
-		fakeServiceConfig     *conf.Service
+		fakeServiceConfig     *confpb.Service
 		wantBackendAuthFilter string
 	}{
 		{
 			desc: "Success, generate backend auth filter in general",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: "testapi",
-						Methods: []*api.Method{
+						Methods: []*apipb.Method{
 							{
 								Name: "foo",
 							},
@@ -127,24 +127,24 @@ func TestBackendAuthFilter(t *testing.T) {
 						},
 					},
 				},
-				Backend: &conf.Backend{
-					Rules: []*conf.BackendRule{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
 						{
 							Selector: "ignore_me",
 						},
 						{
-							Selector:        "testapi.foo",
-							Address:         "https://testapi.com/foo",
-							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
-							Authentication: &conf.BackendRule_JwtAudience{
+							Selector:        "testapipb.foo",
+							Address:         "https://testapipb.com/foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
 								JwtAudience: "foo.com",
 							},
 						},
 						{
-							Selector:        "testapi.bar",
-							Address:         "https://testapi.com/foo",
-							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
-							Authentication: &conf.BackendRule_JwtAudience{
+							Selector:        "testapipb.bar",
+							Address:         "https://testapipb.com/foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
 								JwtAudience: "bar.com",
 							},
 						},
@@ -156,11 +156,11 @@ func TestBackendAuthFilter(t *testing.T) {
           "rules": [
             {
               "jwt_audience": "bar.com",
-              "operation": "testapi.bar"
+              "operation": "testapipb.bar"
             },
             {
               "jwt_audience": "foo.com",
-              "operation": "testapi.foo"
+              "operation": "testapipb.foo"
             }
           ],
           "imds_token": {
@@ -177,20 +177,20 @@ func TestBackendAuthFilter(t *testing.T) {
 		{
 			desc:              "Success, set iamIdToken when iam service account is set",
 			iamServiceAccount: "service-account@google.com",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: "testapi",
 					},
 				},
-				Backend: &conf.Backend{
-					Rules: []*conf.BackendRule{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
 						{
-							Selector:        "testapi.bar",
-							Address:         "https://testapi.com/foo",
-							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
-							Authentication: &conf.BackendRule_JwtAudience{
+							Selector:        "testapipb.bar",
+							Address:         "https://testapipb.com/foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
 								JwtAudience: "bar.com",
 							},
 						},
@@ -202,7 +202,7 @@ func TestBackendAuthFilter(t *testing.T) {
           "rules": [
             {
               "jwt_audience": "bar.com",
-              "operation": "testapi.bar"
+              "operation": "testapipb.bar"
             }
           ],
           "iam_token": {
@@ -251,18 +251,18 @@ func TestBackendAuthFilter(t *testing.T) {
 func TestPathMatcherFilter(t *testing.T) {
 	testData := []struct {
 		desc                  string
-		fakeServiceConfig     *conf.Service
+		fakeServiceConfig     *confpb.Service
 		backendProtocol       string
 		wantPathMatcherFilter string
 	}{
 		{
 			desc: "Path Matcher filter - gRPC backend",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
-						Methods: []*api.Method{
+						Methods: []*apipb.Method{
 							{
 								Name: "ListShelves",
 							},
@@ -300,12 +300,12 @@ func TestPathMatcherFilter(t *testing.T) {
 		},
 		{
 			desc: "Path Matcher filter - HTTP backend",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-						Methods: []*api.Method{
+						Methods: []*apipb.Method{
 							{
 								Name: "Echo_Auth_Jwt",
 							},
@@ -315,17 +315,17 @@ func TestPathMatcherFilter(t *testing.T) {
 						},
 					},
 				},
-				Http: &annotations.Http{
-					Rules: []*annotations.HttpRule{
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
 						{
 							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
-							Pattern: &annotations.HttpRule_Get{
+							Pattern: &annotationspb.HttpRule_Get{
 								Get: "/auth/info/googlejwt",
 							},
 						},
 						{
 							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-							Pattern: &annotations.HttpRule_Post{
+							Pattern: &annotationspb.HttpRule_Post{
 								Post: "/echo",
 							},
 							Body: "message",
@@ -360,12 +360,12 @@ func TestPathMatcherFilter(t *testing.T) {
 		},
 		{
 			desc: "Path Matcher filter - HTTP backend with path parameters",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: "foo.endpoints.bar.cloud.goog",
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: "1.cloudesf_testing_cloud_goog",
-						Methods: []*api.Method{
+						Methods: []*apipb.Method{
 							{
 								Name: "Foo",
 							},
@@ -375,37 +375,37 @@ func TestPathMatcherFilter(t *testing.T) {
 						},
 					},
 				},
-				Backend: &conf.Backend{
-					Rules: []*conf.BackendRule{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
 						{
 							Address:         "https://mybackend.com",
 							Selector:        "1.cloudesf_testing_cloud_goog.Foo",
-							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
-							Authentication: &conf.BackendRule_JwtAudience{
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
 								JwtAudience: "mybackend.com",
 							},
 						},
 						{
 							Address:         "https://mybackend.com",
 							Selector:        "1.cloudesf_testing_cloud_goog.Bar",
-							PathTranslation: conf.BackendRule_APPEND_PATH_TO_ADDRESS,
-							Authentication: &conf.BackendRule_JwtAudience{
+							PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
 								JwtAudience: "mybackend.com",
 							},
 						},
 					},
 				},
-				Http: &annotations.Http{
-					Rules: []*annotations.HttpRule{
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
 						{
 							Selector: "1.cloudesf_testing_cloud_goog.Foo",
-							Pattern: &annotations.HttpRule_Get{
+							Pattern: &annotationspb.HttpRule_Get{
 								Get: "foo/{id}",
 							},
 						},
 						{
 							Selector: "1.cloudesf_testing_cloud_goog.Bar",
-							Pattern: &annotations.HttpRule_Get{
+							Pattern: &annotationspb.HttpRule_Get{
 								Get: "foo",
 							},
 						},
@@ -440,29 +440,29 @@ func TestPathMatcherFilter(t *testing.T) {
 		},
 		{
 			desc: "Path Matcher filter - CORS support",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: "foo.endpoints.bar.cloud.goog",
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: "1.cloudesf_testing_cloud_goog",
-						Methods: []*api.Method{
+						Methods: []*apipb.Method{
 							{
 								Name: "Foo",
 							},
 						},
 					},
 				},
-				Endpoints: []*conf.Endpoint{
+				Endpoints: []*confpb.Endpoint{
 					{
 						Name:      "foo.endpoints.bar.cloud.goog",
 						AllowCors: true,
 					},
 				},
-				Http: &annotations.Http{
-					Rules: []*annotations.HttpRule{
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
 						{
 							Selector: "1.cloudesf_testing_cloud_goog.Foo",
-							Pattern: &annotations.HttpRule_Get{
+							Pattern: &annotationspb.HttpRule_Get{
 								Get: "foo",
 							},
 						},
@@ -496,45 +496,45 @@ func TestPathMatcherFilter(t *testing.T) {
 		},
 		{
 			desc: "Path Matcher filter - Segment Name Mapping for snake-case field",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: "foo.endpoints.bar.cloud.goog",
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: "1.cloudesf_testing_cloud_goog",
-						Methods: []*api.Method{
+						Methods: []*apipb.Method{
 							{
 								Name: "Foo",
 							},
 						},
 					},
 				},
-				Types: []*ptype.Type{
+				Types: []*ptypepb.Type{
 					{
-						Fields: []*ptype.Field{
-							&ptype.Field{
+						Fields: []*ptypepb.Field{
+							&ptypepb.Field{
 								JsonName: "fooBar",
 								Name:     "foo_bar",
 							},
 						},
 					},
 				},
-				Backend: &conf.Backend{
-					Rules: []*conf.BackendRule{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
 						{
 							Address:         "https://mybackend.com",
 							Selector:        "1.cloudesf_testing_cloud_goog.Foo",
-							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
-							Authentication: &conf.BackendRule_JwtAudience{
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
 								JwtAudience: "mybackend.com",
 							},
 						},
 					},
 				},
-				Http: &annotations.Http{
-					Rules: []*annotations.HttpRule{
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
 						{
 							Selector: "1.cloudesf_testing_cloud_goog.Foo",
-							Pattern: &annotations.HttpRule_Get{
+							Pattern: &annotationspb.HttpRule_Get{
 								Get: "foo/{foo_bar}",
 							},
 						},

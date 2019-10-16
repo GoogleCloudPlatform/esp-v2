@@ -24,13 +24,13 @@ import (
 	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 // ServiceToBootstrapConfig outputs envoy bootstrap config from service config.
 // id is the service configuration ID. It is generated when deploying
 // service config to ServiceManagement Server, example: 2017-02-13r0.
-func ServiceToBootstrapConfig(serviceConfig *conf.Service, id string, opts options.ConfigGeneratorOptions) (*bootstrappb.Bootstrap, error) {
+func ServiceToBootstrapConfig(serviceConfig *confpb.Service, id string, opts options.ConfigGeneratorOptions) (*bootstrappb.Bootstrap, error) {
 	bt := &bootstrappb.Bootstrap{
 		Node:  bootstrap.CreateNode(opts.CommonOptions),
 		Admin: bootstrap.CreateAdmin(opts.CommonOptions),

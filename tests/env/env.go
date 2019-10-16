@@ -24,11 +24,11 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env/components"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	"github.com/golang/glog"
-	"google.golang.org/genproto/googleapis/api/annotations"
-	"google.golang.org/genproto/protobuf/api"
 
 	bookserver "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/server"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	apipb "google.golang.org/genproto/protobuf/api"
 )
 
 const (
@@ -59,7 +59,7 @@ type TestEnv struct {
 	dynamicRoutingBackend       *components.EchoHTTPServer
 	echoBackend                 *components.EchoHTTPServer
 	envoy                       *components.Envoy
-	fakeServiceConfig           *conf.Service
+	fakeServiceConfig           *confpb.Service
 	MockMetadataServer          *components.MockMetadataServer
 	mockServiceManagementServer ServiceManagementServer
 	ports                       *components.Ports
@@ -120,34 +120,34 @@ func (e *TestEnv) Ports() *components.Ports {
 }
 
 // OverrideAuthentication overrides Service.Authentication.
-func (e *TestEnv) OverrideAuthentication(authentication *conf.Authentication) {
+func (e *TestEnv) OverrideAuthentication(authentication *confpb.Authentication) {
 	e.fakeServiceConfig.Authentication = authentication
 }
 
 // OverrideSystemParameters overrides Service.SystemParameters.
-func (e *TestEnv) OverrideSystemParameters(systemParameters *conf.SystemParameters) {
+func (e *TestEnv) OverrideSystemParameters(systemParameters *confpb.SystemParameters) {
 	e.fakeServiceConfig.SystemParameters = systemParameters
 }
 
 // OverrideQuota overrides Service.Quota.
-func (e *TestEnv) OverrideQuota(quota *conf.Quota) {
+func (e *TestEnv) OverrideQuota(quota *confpb.Quota) {
 	e.fakeServiceConfig.Quota = quota
 }
 
 // AppendApiMethods appends methods to the service config.
-func (e *TestEnv) AppendApiMethods(methods []*api.Method) {
+func (e *TestEnv) AppendApiMethods(methods []*apipb.Method) {
 	e.fakeServiceConfig.Apis[0].Methods = append(e.fakeServiceConfig.Apis[0].Methods, methods...)
 }
 
 // AppendHttpRules appends Service.Http.Rules.
-func (e *TestEnv) AppendHttpRules(rules []*annotations.HttpRule) {
+func (e *TestEnv) AppendHttpRules(rules []*annotationspb.HttpRule) {
 	e.fakeServiceConfig.Http.Rules = append(e.fakeServiceConfig.Http.Rules, rules...)
 }
 
 // AppendBackendRules appends Service.Backend.Rules.
-func (e *TestEnv) AppendBackendRules(rules []*conf.BackendRule) {
+func (e *TestEnv) AppendBackendRules(rules []*confpb.BackendRule) {
 	if e.fakeServiceConfig.Backend == nil {
-		e.fakeServiceConfig.Backend = &conf.Backend{}
+		e.fakeServiceConfig.Backend = &confpb.Backend{}
 	}
 	e.fakeServiceConfig.Backend.Rules = append(e.fakeServiceConfig.Backend.Rules, rules...)
 }
@@ -158,7 +158,7 @@ func (e *TestEnv) EnableScNetworkFailOpen() {
 }
 
 // AppendUsageRules appends Service.Usage.Rules.
-func (e *TestEnv) AppendUsageRules(rules []*conf.UsageRule) {
+func (e *TestEnv) AppendUsageRules(rules []*confpb.UsageRule) {
 	e.fakeServiceConfig.Usage.Rules = append(e.fakeServiceConfig.Usage.Rules, rules...)
 }
 
@@ -167,9 +167,9 @@ func (e *TestEnv) SetAllowCors() {
 	e.fakeServiceConfig.Endpoints[0].AllowCors = true
 }
 
-func addDynamicRoutingBackendPort(serviceConfig *conf.Service, port uint16) error {
+func addDynamicRoutingBackendPort(serviceConfig *confpb.Service, port uint16) error {
 	for _, v := range serviceConfig.Backend.GetRules() {
-		if v.PathTranslation != conf.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
+		if v.PathTranslation != confpb.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
 			urlPrefix := "https://localhost:"
 			i := strings.Index(v.Address, urlPrefix)
 			if i == -1 {

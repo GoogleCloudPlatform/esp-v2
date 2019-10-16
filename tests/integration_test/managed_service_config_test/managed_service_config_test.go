@@ -25,7 +25,7 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func TestManagedServiceConfig(t *testing.T) {
@@ -36,11 +36,11 @@ func TestManagedServiceConfig(t *testing.T) {
 	s := env.NewTestEnv(comp.TestManagedServiceConfig, "bookstore")
 	s.SetEnvoyDrainTimeInSec(1)
 
-	s.OverrideAuthentication(&conf.Authentication{
-		Rules: []*conf.AuthenticationRule{
+	s.OverrideAuthentication(&confpb.Authentication{
+		Rules: []*confpb.AuthenticationRule{
 			{
 				Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-				Requirements: []*conf.AuthRequirement{
+				Requirements: []*confpb.AuthRequirement{
 					{
 						ProviderId: testdata.TestAuthProvider,
 						Audiences:  "ok_audience",
@@ -86,7 +86,7 @@ func TestManagedServiceConfig(t *testing.T) {
 	for idx, tc := range tests {
 		// Remove the authentication in service config and wait envoy to update.
 		if idx == 1 {
-			s.OverrideAuthentication(&conf.Authentication{})
+			s.OverrideAuthentication(&confpb.Authentication{})
 			time.Sleep(time.Second * 5)
 		}
 

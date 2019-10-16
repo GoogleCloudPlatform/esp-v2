@@ -19,12 +19,12 @@ import (
 	"regexp"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
-	"github.com/golang/protobuf/ptypes/wrappers"
 
 	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 const (
@@ -91,7 +91,7 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*v2pb.RouteConfigurat
 		host.GetCors().AllowMethods = serviceInfo.Options.CorsAllowMethods
 		host.GetCors().AllowHeaders = serviceInfo.Options.CorsAllowHeaders
 		host.GetCors().ExposeHeaders = serviceInfo.Options.CorsExposeHeaders
-		host.GetCors().AllowCredentials = &wrappers.BoolValue{Value: serviceInfo.Options.CorsAllowCredentials}
+		host.GetCors().AllowCredentials = &wrapperspb.BoolValue{Value: serviceInfo.Options.CorsAllowCredentials}
 	}
 
 	virtualHosts = append(virtualHosts, &host)
@@ -106,7 +106,7 @@ func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.R
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
 		var routeMatcher *routepb.RouteMatch
-		if method.BackendRule.TranslationType == conf.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
+		if method.BackendRule.TranslationType == confpb.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
 			continue
 		}
 		for _, httpRule := range method.HttpRule {

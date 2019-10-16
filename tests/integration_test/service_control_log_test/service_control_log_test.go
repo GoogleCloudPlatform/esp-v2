@@ -26,11 +26,11 @@ import (
 	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
 	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
 	"cloudesf.googlesource.com/gcpproxy/tests/utils"
-	"google.golang.org/genproto/googleapis/api/annotations"
 
 	bsClient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/client"
 	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func TestServiceControlLogHeaders(t *testing.T) {
@@ -41,10 +41,10 @@ func TestServiceControlLogHeaders(t *testing.T) {
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers", "--log_request_headers=Fake-Header-Key0,Fake-Header-Key1,Fake-Header-Key2,Non-Existing-Header-Key", "--log_response_headers=Echo-Fake-Header-Key0,Echo-Fake-Header-Key1,Echo-Fake-Header-Key2,Non-Existing-Header-Key"}
 
 	s := env.NewTestEnv(comp.TestServiceControlLogHeaders, "echo")
-	s.AppendHttpRules([]*annotations.HttpRule{
+	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",
-			Pattern: &annotations.HttpRule_Get{
+			Pattern: &annotationspb.HttpRule_Get{
 				Get: "/simpleget",
 			},
 		},
@@ -153,11 +153,11 @@ func TestServiceControlLogJwtPayloads(t *testing.T) {
 	}
 
 	s := env.NewTestEnv(comp.TestServiceControlLogJwtPayloads, "bookstore")
-	s.OverrideAuthentication(&conf.Authentication{
-		Rules: []*conf.AuthenticationRule{
+	s.OverrideAuthentication(&confpb.Authentication{
+		Rules: []*confpb.AuthenticationRule{
 			{
 				Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-				Requirements: []*conf.AuthRequirement{
+				Requirements: []*confpb.AuthRequirement{
 					{
 						ProviderId: testdata.ServiceControlProvider,
 						Audiences:  "ok_audience_1",

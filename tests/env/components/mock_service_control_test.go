@@ -22,7 +22,8 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	sc "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
+
+	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
 func TestMockServiceControl(t *testing.T) {
@@ -31,7 +32,7 @@ func TestMockServiceControl(t *testing.T) {
 
 	url := s.GetURL() + "/v1/services/mmm:check"
 
-	req := &sc.CheckRequest{
+	req := &scpb.CheckRequest{
 		ServiceName: "mmm",
 	}
 	req_body, _ := proto.Marshal(req)
@@ -56,7 +57,7 @@ func TestMockServiceControl(t *testing.T) {
 	if rr[0].ReqType != CHECK_REQUEST {
 		t.Errorf("Wrong type: %v", rr[0].ReqType)
 	}
-	req1 := &sc.CheckRequest{}
+	req1 := &scpb.CheckRequest{}
 	err = proto.Unmarshal(rr[0].ReqBody, req1)
 	if err != nil {
 		t.Errorf("failed to parse body into CheckRequest.")
@@ -76,14 +77,14 @@ func TestMockServiceControl(t *testing.T) {
 func TestMockServiceControlCheckError(t *testing.T) {
 	testdata := []struct {
 		name              string
-		checkResponse     *sc.CheckResponse
-		wantCheckResponse *sc.CheckResponse
+		checkResponse     *scpb.CheckResponse
+		wantCheckResponse *scpb.CheckResponse
 	}{
 		{
 			name: "mmm",
-			wantCheckResponse: &sc.CheckResponse{
-				CheckInfo: &sc.CheckResponse_CheckInfo{
-					ConsumerInfo: &sc.CheckResponse_ConsumerInfo{
+			wantCheckResponse: &scpb.CheckResponse{
+				CheckInfo: &scpb.CheckResponse_CheckInfo{
+					ConsumerInfo: &scpb.CheckResponse_ConsumerInfo{
 						ProjectNumber: 123456,
 					},
 				},
@@ -91,27 +92,27 @@ func TestMockServiceControlCheckError(t *testing.T) {
 		},
 		{
 			name: "mmm",
-			checkResponse: &sc.CheckResponse{
-				CheckInfo: &sc.CheckResponse_CheckInfo{
-					ConsumerInfo: &sc.CheckResponse_ConsumerInfo{
+			checkResponse: &scpb.CheckResponse{
+				CheckInfo: &scpb.CheckResponse_CheckInfo{
+					ConsumerInfo: &scpb.CheckResponse_ConsumerInfo{
 						ProjectNumber: 123456,
 					},
 				},
-				CheckErrors: []*sc.CheckError{
-					&sc.CheckError{
-						Code: sc.CheckError_API_KEY_INVALID,
+				CheckErrors: []*scpb.CheckError{
+					&scpb.CheckError{
+						Code: scpb.CheckError_API_KEY_INVALID,
 					},
 				},
 			},
-			wantCheckResponse: &sc.CheckResponse{
-				CheckInfo: &sc.CheckResponse_CheckInfo{
-					ConsumerInfo: &sc.CheckResponse_ConsumerInfo{
+			wantCheckResponse: &scpb.CheckResponse{
+				CheckInfo: &scpb.CheckResponse_CheckInfo{
+					ConsumerInfo: &scpb.CheckResponse_ConsumerInfo{
 						ProjectNumber: 123456,
 					},
 				},
-				CheckErrors: []*sc.CheckError{
-					&sc.CheckError{
-						Code: sc.CheckError_API_KEY_INVALID,
+				CheckErrors: []*scpb.CheckError{
+					&scpb.CheckError{
+						Code: scpb.CheckError_API_KEY_INVALID,
 					},
 				},
 			},
@@ -126,7 +127,7 @@ func TestMockServiceControlCheckError(t *testing.T) {
 		}
 
 		url := s.GetURL() + "/v1/services/mmm:check"
-		req := &sc.CheckRequest{
+		req := &scpb.CheckRequest{
 			ServiceName: tc.name,
 		}
 		req_body, _ := proto.Marshal(req)
@@ -142,7 +143,7 @@ func TestMockServiceControlCheckError(t *testing.T) {
 			t.Errorf("Failed in reading response: %v", err)
 		}
 
-		parsedResp := &sc.CheckResponse{}
+		parsedResp := &scpb.CheckResponse{}
 		err = proto.Unmarshal(body, parsedResp)
 		if err != nil {
 			t.Errorf("Failed to parse body into CheckResponse.")
@@ -179,7 +180,7 @@ func TestMockServiceControlReportStatus(t *testing.T) {
 		}
 
 		url := s.GetURL() + "/v1/services/mmm:report"
-		req := &sc.CheckRequest{
+		req := &scpb.CheckRequest{
 			ServiceName: tc.name,
 		}
 		req_body, _ := proto.Marshal(req)

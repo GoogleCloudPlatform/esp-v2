@@ -24,15 +24,14 @@ import (
 	"testing"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/options"
+	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/gorilla/mux"
-	"google.golang.org/genproto/googleapis/api/annotations"
-	"google.golang.org/genproto/protobuf/api"
 
 	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
 	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
-	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
-
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	apipb "google.golang.org/genproto/protobuf/api"
 )
 
 var (
@@ -44,19 +43,19 @@ var (
 func TestProcessEndpoints(t *testing.T) {
 	testData := []struct {
 		desc              string
-		fakeServiceConfig *conf.Service
+		fakeServiceConfig *confpb.Service
 		wantedAllowCors   bool
 	}{
 		{
 			desc: "Return true for endpoint name matching service name",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
 					},
 				},
-				Endpoints: []*conf.Endpoint{
+				Endpoints: []*confpb.Endpoint{
 					{
 						Name:      testProjectName,
 						AllowCors: true,
@@ -67,14 +66,14 @@ func TestProcessEndpoints(t *testing.T) {
 		},
 		{
 			desc: "Return false for not setting allow_cors",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
 					},
 				},
-				Endpoints: []*conf.Endpoint{
+				Endpoints: []*confpb.Endpoint{
 					{
 						Name: testProjectName,
 					},
@@ -84,14 +83,14 @@ func TestProcessEndpoints(t *testing.T) {
 		},
 		{
 			desc: "Return false for endpoint name not matching service name",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
 					},
 				},
-				Endpoints: []*conf.Endpoint{
+				Endpoints: []*confpb.Endpoint{
 					{
 						Name:      "echo.endpoints.project123.cloud.goog",
 						AllowCors: true,
@@ -102,9 +101,9 @@ func TestProcessEndpoints(t *testing.T) {
 		},
 		{
 			desc: "Return false for empty endpoint field",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
 					},
@@ -131,28 +130,28 @@ func TestProcessEndpoints(t *testing.T) {
 func TestExtractAPIKeyLocations(t *testing.T) {
 	testData := []struct {
 		desc                   string
-		fakeServiceConfig      *conf.Service
-		wantedSystemParameters map[string][]*conf.SystemParameter
+		fakeServiceConfig      *confpb.Service
+		wantedSystemParameters map[string][]*confpb.SystemParameter
 		wantMethods            map[string]*methodInfo
 	}{
 		{
 			desc: "Succeed, only url query",
-			fakeServiceConfig: &conf.Service{
-				Apis: []*api.Api{
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
 					{
 						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-						Methods: []*api.Method{
+						Methods: []*apipb.Method{
 							{
 								Name: "echo",
 							},
 						},
 					},
 				},
-				SystemParameters: &conf.SystemParameters{
-					Rules: []*conf.SystemParameterRule{
+				SystemParameters: &confpb.SystemParameters{
+					Rules: []*confpb.SystemParameterRule{
 						{
 							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo",
-							Parameters: []*conf.SystemParameter{
+							Parameters: []*confpb.SystemParameter{
 								{
 									Name:       "api_key",
 									HttpHeader: "header_name",
@@ -178,22 +177,22 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 
 		{
 			desc: "Succeed, only header",
-			fakeServiceConfig: &conf.Service{
-				Apis: []*api.Api{
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
 					{
 						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-						Methods: []*api.Method{
+						Methods: []*apipb.Method{
 							{
 								Name: "echo",
 							},
 						},
 					},
 				},
-				SystemParameters: &conf.SystemParameters{
-					Rules: []*conf.SystemParameterRule{
+				SystemParameters: &confpb.SystemParameters{
+					Rules: []*confpb.SystemParameterRule{
 						{
 							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo",
-							Parameters: []*conf.SystemParameter{
+							Parameters: []*confpb.SystemParameter{
 								{
 									Name:              "api_key",
 									UrlQueryParameter: "query_name",
@@ -219,22 +218,22 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 
 		{
 			desc: "Succeed, url query plus header",
-			fakeServiceConfig: &conf.Service{
-				Apis: []*api.Api{
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
 					{
 						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-						Methods: []*api.Method{
+						Methods: []*apipb.Method{
 							{
 								Name: "echo",
 							},
 						},
 					},
 				},
-				SystemParameters: &conf.SystemParameters{
-					Rules: []*conf.SystemParameterRule{
+				SystemParameters: &confpb.SystemParameters{
+					Rules: []*confpb.SystemParameterRule{
 						{
 							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo",
-							Parameters: []*conf.SystemParameter{
+							Parameters: []*confpb.SystemParameter{
 								{
 									Name:              "api_key",
 									HttpHeader:        "header_name_1",
@@ -301,18 +300,18 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 func TestMethods(t *testing.T) {
 	testData := []struct {
 		desc              string
-		fakeServiceConfig *conf.Service
+		fakeServiceConfig *confpb.Service
 		backendProtocol   string
 		wantMethods       map[string]*methodInfo
 	}{
 		{
 			desc: "Succeed for gRPC, no Http rule",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
-						Methods: []*api.Method{
+						Methods: []*apipb.Method{
 							{
 								Name: "ListShelves",
 							},
@@ -335,12 +334,12 @@ func TestMethods(t *testing.T) {
 		},
 		{
 			desc: "Succeed for HTTP",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-						Methods: []*api.Method{
+						Methods: []*apipb.Method{
 							{
 								Name: "Echo",
 							},
@@ -350,17 +349,17 @@ func TestMethods(t *testing.T) {
 						},
 					},
 				},
-				Http: &annotations.Http{
-					Rules: []*annotations.HttpRule{
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
 						{
 							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
-							Pattern: &annotations.HttpRule_Get{
+							Pattern: &annotationspb.HttpRule_Get{
 								Get: "/auth/info/googlejwt",
 							},
 						},
 						{
 							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-							Pattern: &annotations.HttpRule_Post{
+							Pattern: &annotationspb.HttpRule_Post{
 								Post: "/echo",
 							},
 							Body: "message",
@@ -375,7 +374,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*commonpb.Pattern{
 						{
 							UriTemplate: "/echo",
-							HttpMethod:  ut.POST,
+							HttpMethod:  util.POST,
 						},
 					},
 				},
@@ -384,7 +383,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*commonpb.Pattern{
 						{
 							UriTemplate: "/auth/info/googlejwt",
-							HttpMethod:  ut.GET,
+							HttpMethod:  util.GET,
 						},
 					},
 				},
@@ -392,12 +391,12 @@ func TestMethods(t *testing.T) {
 		},
 		{
 			desc: "Succeed for HTTP, with OPTIONS, and AllowCors",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-						Methods: []*api.Method{
+						Methods: []*apipb.Method{
 							{
 								Name: "Echo",
 							},
@@ -413,18 +412,18 @@ func TestMethods(t *testing.T) {
 						},
 					},
 				},
-				Endpoints: []*conf.Endpoint{
+				Endpoints: []*confpb.Endpoint{
 					{
 						Name:      testProjectName,
 						AllowCors: true,
 					},
 				},
-				Http: &annotations.Http{
-					Rules: []*annotations.HttpRule{
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
 						{
 							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoCors",
-							Pattern: &annotations.HttpRule_Custom{
-								Custom: &annotations.CustomHttpPattern{
+							Pattern: &annotationspb.HttpRule_Custom{
+								Custom: &annotationspb.CustomHttpPattern{
 									Kind: "OPTIONS",
 									Path: "/echo",
 								},
@@ -432,20 +431,20 @@ func TestMethods(t *testing.T) {
 						},
 						{
 							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-							Pattern: &annotations.HttpRule_Post{
+							Pattern: &annotationspb.HttpRule_Post{
 								Post: "/echo",
 							},
 							Body: "message",
 						},
 						{
 							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
-							Pattern: &annotations.HttpRule_Get{
+							Pattern: &annotationspb.HttpRule_Get{
 								Get: "/auth/info/googlejwt",
 							},
 						},
 						{
 							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth",
-							Pattern: &annotations.HttpRule_Post{
+							Pattern: &annotationspb.HttpRule_Post{
 								Post: "/auth/info/googlejwt",
 							},
 						},
@@ -459,7 +458,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*commonpb.Pattern{
 						{
 							UriTemplate: "/echo",
-							HttpMethod:  ut.OPTIONS,
+							HttpMethod:  util.OPTIONS,
 						},
 					},
 				},
@@ -468,7 +467,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*commonpb.Pattern{
 						{
 							UriTemplate: "/echo",
-							HttpMethod:  ut.POST,
+							HttpMethod:  util.POST,
 						},
 					},
 				},
@@ -477,7 +476,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*commonpb.Pattern{
 						{
 							UriTemplate: "/auth/info/googlejwt",
-							HttpMethod:  ut.OPTIONS,
+							HttpMethod:  util.OPTIONS,
 						},
 					},
 					IsGeneratedOption: true,
@@ -486,7 +485,7 @@ func TestMethods(t *testing.T) {
 					ShortName: "Echo_Auth_Jwt",
 					HttpRule: []*commonpb.Pattern{{
 						UriTemplate: "/auth/info/googlejwt",
-						HttpMethod:  ut.GET,
+						HttpMethod:  util.GET,
 					},
 					},
 				},
@@ -495,7 +494,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*commonpb.Pattern{
 						{
 							UriTemplate: "/auth/info/googlejwt",
-							HttpMethod:  ut.POST,
+							HttpMethod:  util.POST,
 						},
 					},
 				},
@@ -503,12 +502,12 @@ func TestMethods(t *testing.T) {
 		},
 		{
 			desc: "Succeed for multiple url Pattern",
-			fakeServiceConfig: &conf.Service{
+			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
-				Apis: []*api.Api{
+				Apis: []*apipb.Api{
 					{
 						Name: "endpoints.examples.bookstore.Bookstore",
-						Methods: []*api.Method{
+						Methods: []*apipb.Method{
 							{
 								Name:            "CreateBook",
 								RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.CreateBookRequest",
@@ -517,18 +516,18 @@ func TestMethods(t *testing.T) {
 						},
 					},
 				},
-				Http: &annotations.Http{
-					Rules: []*annotations.HttpRule{
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
 						{
 							Selector: "endpoints.examples.bookstore.Bookstore.CreateBook",
-							Pattern: &annotations.HttpRule_Post{
+							Pattern: &annotationspb.HttpRule_Post{
 								Post: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
 							},
 							Body: "book.title",
 						},
 						{
 							Selector: "endpoints.examples.bookstore.Bookstore.CreateBook",
-							Pattern: &annotations.HttpRule_Post{
+							Pattern: &annotationspb.HttpRule_Post{
 								Post: "/v1/shelves/{shelf}/books",
 							},
 							Body: "book",
@@ -543,11 +542,11 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*commonpb.Pattern{
 						{
 							UriTemplate: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
-							HttpMethod:  ut.POST,
+							HttpMethod:  util.POST,
 						},
 						{
 							UriTemplate: "/v1/shelves/{shelf}/books",
-							HttpMethod:  ut.POST,
+							HttpMethod:  util.POST,
 						},
 					},
 				},
@@ -577,23 +576,23 @@ func TestMethods(t *testing.T) {
 func TestProcessBackendRule(t *testing.T) {
 	testData := []struct {
 		desc              string
-		fakeServiceConfig *conf.Service
+		fakeServiceConfig *confpb.Service
 		wantedAllowCors   bool
 		wantedErr         string
 	}{
 		{
 			desc: "Failed for dynamic routing only supports HTTPS",
-			fakeServiceConfig: &conf.Service{
-				Apis: []*api.Api{
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
 					},
 				},
-				Backend: &conf.Backend{
-					Rules: []*conf.BackendRule{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
 						{
 							Address:         "http://192.168.0.1/api/",
-							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 						},
 					},
 				},
@@ -602,17 +601,17 @@ func TestProcessBackendRule(t *testing.T) {
 		},
 		{
 			desc: "Fail, dynamic routing only supports domain name, got IP address: 192.168.0.1",
-			fakeServiceConfig: &conf.Service{
-				Apis: []*api.Api{
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
 					},
 				},
-				Backend: &conf.Backend{
-					Rules: []*conf.BackendRule{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
 						{
 							Address:         "https://192.168.0.1/api/",
-							PathTranslation: conf.BackendRule_CONSTANT_ADDRESS,
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 						},
 					},
 				},
@@ -635,24 +634,24 @@ func TestProcessBackendRule(t *testing.T) {
 func TestProcessQuota(t *testing.T) {
 	testData := []struct {
 		desc              string
-		fakeServiceConfig *conf.Service
+		fakeServiceConfig *confpb.Service
 		wantMethods       map[string]*methodInfo
 	}{
 		{
 			desc: "Succeed, simple case",
-			fakeServiceConfig: &conf.Service{
-				Apis: []*api.Api{
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
-						Methods: []*api.Method{
+						Methods: []*apipb.Method{
 							{
 								Name: "ListShelves",
 							},
 						},
 					},
 				},
-				Quota: &conf.Quota{
-					MetricRules: []*conf.MetricRule{
+				Quota: &confpb.Quota{
+					MetricRules: []*confpb.MetricRule{
 						{
 							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
 							MetricCosts: map[string]int64{
@@ -681,19 +680,19 @@ func TestProcessQuota(t *testing.T) {
 		},
 		{
 			desc: "Succeed, two metric cost items",
-			fakeServiceConfig: &conf.Service{
-				Apis: []*api.Api{
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
-						Methods: []*api.Method{
+						Methods: []*apipb.Method{
 							{
 								Name: "ListShelves",
 							},
 						},
 					},
 				},
-				Quota: &conf.Quota{
-					MetricRules: []*conf.MetricRule{
+				Quota: &confpb.Quota{
+					MetricRules: []*confpb.MetricRule{
 						{
 							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
 							MetricCosts: map[string]int64{
@@ -750,19 +749,19 @@ func TestProcessEmptyJwksUriByOpenID(t *testing.T) {
 
 	testData := []struct {
 		desc              string
-		fakeServiceConfig *conf.Service
+		fakeServiceConfig *confpb.Service
 		wantedJwksUri     string
 	}{
 		{
 			desc: "Empty jwksUri, use jwksUri acquired by openID",
-			fakeServiceConfig: &conf.Service{
-				Apis: []*api.Api{
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
 					},
 				},
-				Authentication: &conf.Authentication{
-					Providers: []*conf.AuthProvider{
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
 						{
 							Id:     "auth_provider",
 							Issuer: openIDServer.URL,
@@ -774,14 +773,14 @@ func TestProcessEmptyJwksUriByOpenID(t *testing.T) {
 		},
 		{
 			desc: "Empty jwksUri and no jwksUri acquired by openID, use FakeJwksUri",
-			fakeServiceConfig: &conf.Service{
-				Apis: []*api.Api{
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
 					},
 				},
-				Authentication: &conf.Authentication{
-					Providers: []*conf.AuthProvider{
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
 						{
 							Id:     "auth_provider",
 							Issuer: "aaaaa.bbbbbb.ccccc/inaccessible_uri/",
@@ -789,7 +788,7 @@ func TestProcessEmptyJwksUriByOpenID(t *testing.T) {
 					},
 				},
 			},
-			wantedJwksUri: ut.FakeJwksUri,
+			wantedJwksUri: util.FakeJwksUri,
 		},
 	}
 

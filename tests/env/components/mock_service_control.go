@@ -26,7 +26,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
 
-	sc "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
+	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
 type ServiceRequestType int
@@ -88,9 +88,9 @@ func (h *serviceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func SetOKCheckResponse() []byte {
-	req := &sc.CheckResponse{
-		CheckInfo: &sc.CheckResponse_CheckInfo{
-			ConsumerInfo: &sc.CheckResponse_ConsumerInfo{
+	req := &scpb.CheckResponse{
+		CheckInfo: &scpb.CheckResponse_CheckInfo{
+			ConsumerInfo: &scpb.CheckResponse_ConsumerInfo{
 				ProjectNumber: 123456,
 			},
 		},
@@ -204,13 +204,13 @@ func (m *MockServiceCtrl) SetGetRequestsTimeout(timeout time.Duration) {
 }
 
 // SetCheckResponse sets the response for the check of the service control.
-func (m *MockServiceCtrl) SetCheckResponse(checkResponse *sc.CheckResponse) {
+func (m *MockServiceCtrl) SetCheckResponse(checkResponse *scpb.CheckResponse) {
 	req_b, _ := proto.Marshal(checkResponse)
 	m.checkResp.respBody = req_b
 }
 
 // SetCheckResponse sets the response for the check of the service control.
-func (m *MockServiceCtrl) SetQuotaResponse(quotaResponse *sc.AllocateQuotaResponse) {
+func (m *MockServiceCtrl) SetQuotaResponse(quotaResponse *scpb.AllocateQuotaResponse) {
 	fmt.Println(quotaResponse)
 	req_b, _ := proto.Marshal(quotaResponse)
 	m.quotaResp.respBody = req_b

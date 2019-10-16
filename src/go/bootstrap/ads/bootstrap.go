@@ -18,10 +18,10 @@ import (
 	"fmt"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/options"
+	"cloudesf.googlesource.com/gcpproxy/src/go/util"
 	"github.com/golang/protobuf/ptypes"
 
 	bt "cloudesf.googlesource.com/gcpproxy/src/go/bootstrap"
-	ut "cloudesf.googlesource.com/gcpproxy/src/go/util"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
@@ -31,7 +31,7 @@ import (
 func CreateBootstrapConfig(opts options.AdsBootstrapperOptions) (*bootstrappb.Bootstrap, error) {
 
 	// Parse the ADS address
-	_, adsHostname, adsPort, _, err := ut.ParseURI(opts.DiscoveryAddress)
+	_, adsHostname, adsPort, _, err := util.ParseURI(opts.DiscoveryAddress)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse discovery address: %v", err)
 	}
@@ -81,7 +81,7 @@ func CreateBootstrapConfig(opts options.AdsBootstrapperOptions) (*bootstrappb.Bo
 						Type: v2pb.Cluster_STRICT_DNS,
 					},
 					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{},
-					LoadAssignment:       ut.CreateLoadAssignment(adsHostname, adsPort),
+					LoadAssignment:       util.CreateLoadAssignment(adsHostname, adsPort),
 				},
 			},
 		},
