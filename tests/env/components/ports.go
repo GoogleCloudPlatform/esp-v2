@@ -31,7 +31,8 @@ import (
 const (
 	TestAsymmetricKeys uint16 = iota
 	TestAuthJwksCache
-	TestBackendAuth
+	TestBackendAuthWithImdsIdToken
+	TestBackendAuthWithIamIdToken
 	TestDifferentOriginPreflightCors
 	TestDifferentOriginSimpleCors
 	TestDynamicRouting
