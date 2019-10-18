@@ -215,63 +215,6 @@ func TestDynamicRouting(t *testing.T) {
 	}
 }
 
-func TestBackendAuth(t *testing.T) {
-
-	s := NewDynamicRoutingTestEnv(comp.TestBackendAuth)
-	s.OverrideMockMetadata(
-		map[string]string{
-			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",
-			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/append":   "ya29.append",
-		})
-
-	defer s.TearDown()
-	if err := s.Setup(testDynamicRoutingArgs); err != nil {
-		t.Fatalf("fail to setup test env, %v", err)
-	}
-
-	testData := []struct {
-		desc     string
-		method   string
-		path     string
-		message  string
-		wantResp string
-	}{
-		{
-			desc:     "Add Bearer token for CONSTANT_ADDRESS backend that requires JWT token",
-			method:   "GET",
-			path:     "/bearertoken/constant/42",
-			wantResp: `{"Authorization": "Bearer ya29.constant", "RequestURI": "/bearertoken/constant?foo=42"}`,
-		},
-		{
-			desc:     "Add Bearer token for APPEND_PATH_TO_ADDRESS backend that requires JWT token",
-			method:   "GET",
-			path:     "/bearertoken/append?key=api-key",
-			wantResp: `{"Authorization": "Bearer ya29.append", "RequestURI": "/bearertoken/append?key=api-key"}`,
-		},
-		{
-			desc:     "Do not reject backend that doesn't require JWT token",
-			method:   "POST",
-			path:     "/echo?key=api-key",
-			message:  "hello",
-			wantResp: `{"message":"hello"}`,
-		},
-	}
-
-	for _, tc := range testData {
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
-		resp, err := client.DoWithHeaders(url, tc.method, tc.message, nil)
-
-		if err != nil {
-			t.Fatalf("Test Desc(%s): %v", tc.desc, err)
-		}
-
-		gotResp := string(resp)
-		if !utils.JsonEqual(gotResp, tc.wantResp) {
-			t.Errorf("Test Desc(%s): want: %s, got: %s", tc.desc, tc.wantResp, gotResp)
-		}
-	}
-}
-
 func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 
 	s := NewDynamicRoutingTestEnv(comp.TestServiceControlRequestInDynamicRouting)

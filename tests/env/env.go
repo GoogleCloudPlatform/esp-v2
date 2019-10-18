@@ -52,6 +52,7 @@ type TestEnv struct {
 	enableScNetworkFailOpen     bool
 	backendService              string
 	mockMetadataOverride        map[string]string
+	mockIamResps                map[string]string
 	bookstoreServer             *bookserver.BookstoreServer
 	grpcInteropServer           *components.GrpcInteropGrpcServer
 	grpcEchoServer              *components.GrpcEchoGrpcServer
@@ -61,6 +62,8 @@ type TestEnv struct {
 	envoy                       *components.Envoy
 	fakeServiceConfig           *confpb.Service
 	MockMetadataServer          *components.MockMetadataServer
+	MockIamServer               *components.MockIamServer
+	iamServiceAccount           string
 	mockServiceManagementServer ServiceManagementServer
 	ports                       *components.Ports
 	envoyDrainTimeInSec         int
@@ -96,6 +99,15 @@ func (e *TestEnv) SetEnvoyDrainTimeInSec(envoyDrainTimeInSec int) {
 // OverrideMockMetadata overrides mock metadata values given path to response map.
 func (e *TestEnv) OverrideMockMetadata(newMetdaData map[string]string) {
 	e.mockMetadataOverride = newMetdaData
+}
+
+// AppendHttpRules appends Service.Http.Rules.
+func (e *TestEnv) SetIamResps(iamResps map[string]string) {
+	e.mockIamResps = iamResps
+}
+
+func (e *TestEnv) SetIamServiceAccount(serviecAccount string) {
+	e.iamServiceAccount = serviecAccount
 }
 
 // OverrideBackend overrides mock backend.
@@ -242,6 +254,15 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		e.MockMetadataServer = components.NewMockMetadata(e.mockMetadataOverride)
 		confArgs = append(confArgs, "--metadata_url="+e.MockMetadataServer.GetURL())
 		bootstrapperArgs = append(bootstrapperArgs, "--metadata_url="+e.MockMetadataServer.GetURL())
+	}
+
+	if e.mockIamResps != nil {
+		e.MockIamServer = components.NewIamMetadata(e.mockIamResps)
+		confArgs = append(confArgs, "--iam_url="+e.MockIamServer.GetURL())
+	}
+
+	if e.iamServiceAccount != "" {
+		confArgs = append(confArgs, "--iam_service_account="+e.iamServiceAccount)
 	}
 
 	if e.FakeStackdriverServer != nil {
