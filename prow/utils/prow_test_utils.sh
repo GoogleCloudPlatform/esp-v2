@@ -15,3 +15,4 @@
 # limitations under the License.
 
 LONG_RUN_DURATION_IN_HOUR=1
+LONG_RUN_BUCKET="apiproxy-continuous-long-run"
