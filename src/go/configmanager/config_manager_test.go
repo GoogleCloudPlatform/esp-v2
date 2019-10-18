@@ -104,6 +104,7 @@ func TestFetchListeners(t *testing.T) {
                                     "http_filters":[
                                         {
                                             "config":{
+                                                "convert_grpc_status":true,
                                                 "ignored_query_parameters": [
                                                     "api_key",
                                                     "key",
