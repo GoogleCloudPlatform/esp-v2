@@ -18,9 +18,7 @@
 set -eo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
 PROJECT_ID="api_proxy_e2e_test"
-UNIQUE_ID=test
 
 cd "${ROOT}"
 . ${ROOT}/tests/e2e/scripts/prow-utilities.sh || { echo 'Cannot load Bash utilities';
@@ -31,25 +29,25 @@ function e2eGKE() {
   local OPTIND OPTARG arg
   while getopts :c:g:m:R:t: arg; do
     case ${arg} in
-      c) COUPLING_OPTION="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')" ;;
-      g) BACKEND="${OPTARG}" ;;
-      m) APIPROXY_IMAGE="${OPTARG}" ;;
-      R) ROLLOUT_STRATEGY="${OPTARG}" ;;
-      t) TEST_TYPE="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')" ;;
+      c) local coupling_option="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')" ;;
+      g) local backend="${OPTARG}" ;;
+      m) local apiproxy_image="${OPTARG}" ;;
+      R) local rollout_strategy="${OPTARG}" ;;
+      t) local test_type="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')" ;;
     esac
   done
 
-  local APIPROXY_SERVICE=$(get_apiproxy_service ${BACKEND})
-  local UNIQUE_ID=$(get_unique_id "gke-${TEST_TYPE}-${BACKEND}")
+  local apiproxy_service=$(get_apiproxy_service ${backend})
+  local unique_id=$(get_unique_id "gke-${test_type}-${backend}")
 
   ${ROOT}/tests/e2e/scripts/e2e-kube.sh  \
-    -a "${APIPROXY_SERVICE}"  \
-    -t "${TEST_TYPE}"  \
-    -g "${BACKEND}"  \
+    -a "${apiproxy_service}"  \
+    -t "${test_type}"  \
+    -g "${backend}"  \
+    -m "${apiproxy_image}"  \
+    -R "${rollout_strategy}"  \
+    -i "${unique_id}"  \
     -B "${BUCKET}"  \
-    -m "${APIPROXY_IMAGE}"  \
-    -R "${ROLLOUT_STRATEGY}"  \
-    -i "${UNIQUE_ID}"  \
     -l "${DURATION_IN_HOUR}"
 }
 
@@ -76,13 +74,13 @@ echo '======================================================='
 
 case ${TEST_CASE} in
   "tight-http-bookstore-managed")
-    e2eGKE -c "tight" -t "http" -g "bookstore" -R "managed" -m "$(get_proxy_image_name_with_sha)" -B "${Bucket}"
+    e2eGKE -c "tight" -t "http" -g "bookstore" -R "managed" -m "$(get_proxy_image_name_with_sha)"
     ;;
   "tight-grpc-echo-managed")
-    e2eGKE -c "tight" -t "grpc" -g "echo" -R "managed" -m "$(get_proxy_image_name_with_sha)" -B "${Bucket}"
+    e2eGKE -c "tight" -t "grpc" -g "echo" -R "managed" -m "$(get_proxy_image_name_with_sha)"
     ;;
   "tight-grpc-interop-managed")
-    e2eGKE -c "tight" -t "grpc" -g "interop" -R "managed" -m "$(get_proxy_image_name_with_sha)" -B "${Bucket}"
+    e2eGKE -c "tight" -t "grpc" -g "interop" -R "managed" -m "$(get_proxy_image_name_with_sha)"
     ;;
   *)
     echo "No such test case ${TEST_CASE}"

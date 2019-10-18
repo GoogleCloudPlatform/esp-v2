@@ -19,6 +19,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 . ${ROOT}/prow/utils/prow_test_utils.sh
 
 DURATION_IN_HOUR=${LONG_RUN_DURATION_IN_HOUR:-""}
+BUCKET=${LONG_RUN_BUCKET:-""}
 
 TEST_CASE=tight-http-bookstore-managed
-. ${ROOT}/prow//gcpproxy-e2e.sh
+. ${ROOT}/prow/gcpproxy-e2e.sh
