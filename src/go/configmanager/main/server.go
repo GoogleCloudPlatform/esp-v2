@@ -18,6 +18,9 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"cloudesf.googlesource.com/gcpproxy/src/go/configmanager"
 	"cloudesf.googlesource.com/gcpproxy/src/go/configmanager/flags"
@@ -62,6 +65,16 @@ func main() {
 	v2grpc.RegisterRouteDiscoveryServiceServer(grpcServer, server)
 	v2grpc.RegisterListenerDiscoveryServiceServer(grpcServer, server)
 	fmt.Printf("config manager server is running at %s .......\n", lis.Addr())
+
+	// Handle signals gracefully
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		sig := <-signalChan
+		glog.Warningf("Server got signal %v, stopping", sig)
+		grpcServer.Stop()
+	}()
 
 	if err := grpcServer.Serve(lis); err != nil {
 		glog.Exitf("Server fail to serve: %v", err)
