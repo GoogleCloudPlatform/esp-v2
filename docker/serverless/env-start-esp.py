@@ -60,7 +60,7 @@ def main():
     try:
         assert_env_var("ENDPOINTS_SERVICE_NAME")
     except KeyError as error:
-        serve_error_msg(error.message)
+        serve_error_msg(str(error))
     ARGS.append("--service={}".format(os.environ["ENDPOINTS_SERVICE_NAME"]))
 
     if "ENDPOINTS_SERVICE_VERSION" in os.environ:
