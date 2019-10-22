@@ -56,8 +56,6 @@ gsutil cp gs://apiproxy-testing-client-secret-files/restricted_api_keys.json  \
 END_TIME=$(date +"%s")
 END_TIME=$((END_TIME + DURATION_IN_HOUR * 60 * 60))
 RUN_COUNT=0
-STRESS_FAILURES=0
-BOOKSTORE_FAILURES=0
 
 detect_memory_leak_init ${HOST}
 
@@ -81,8 +79,7 @@ while true; do
       --host=${HOST}  \
       --api_key=${API_KEY}  \
       --auth_token=${JWT_TOKEN}  \
-    --allow_unverified_cert=true)  \
-    || ((BOOKSTORE_FAILURES ++))
+    --allow_unverified_cert=true)
 
   echo "Starting bookstore API Key restriction test at $(date)."
   (set -x;
@@ -90,8 +87,7 @@ while true; do
       --host=${HOST}  \
       --allow_unverified_cert=true  \
       --key_restriction_tests=${ROOT}/tests/e2e/testdata/bookstore/key_restriction_test.json.template  \
-    --key_restriction_keys_file=${API_RESTRICTION_KEYS_FILE})  \
-    || ((BOOKSTORE_FAILURES ++))
+    --key_restriction_keys_file=${API_RESTRICTION_KEYS_FILE})
 
   POST_FILE="${ROOT}/tests/e2e/testdata/bookstore/35k.json"
   echo "Starting stress test at $(date)."
@@ -102,8 +98,7 @@ while true; do
       --api_key=${API_KEY}  \
       --auth_token=${JWT_TOKEN}  \
       --post_file=${POST_FILE}  \
-    --test_data=${ROOT}/tests/e2e/testdata/bookstore/test_data.json.temp)  \
-    || ((STRESS_FAILURES ++))
+    --test_data=${ROOT}/tests/e2e/testdata/bookstore/test_data.json.temp)
 
   echo "Starting negative stress test."
   (set -x;
@@ -126,12 +121,6 @@ while true; do
 done
 
 echo "Finished ${RUN_COUNT} test runs."
-echo "Failures: Stress: ${STRESS_FAILURES}, Bookstore: ${BOOKSTORE_FAILURES}."
-
-RESULT=0
-# We fail the test if all bookstore runs failed.
-[[ ${BOOKSTORE_FAILURES} == ${RUN_COUNT} ]]  \
-  && RESULT=1
 
 # We fail the test if memory increase is large.
 detect_memory_leak_final && MEMORY_LEAK=0 || MEMORY_LEAK=1
