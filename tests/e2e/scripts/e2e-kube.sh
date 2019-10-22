@@ -97,6 +97,7 @@ run kubectl create -f ${YAML_FILE} --namespace "${NAMESPACE}"
 HOST=$(get_cluster_host "${NAMESPACE}")
 
 # Running Test
+STATUS=0
 run_nonfatal long_running_test  \
   "${HOST}"  \
   "${DURATION_IN_HOUR}"  \
@@ -104,8 +105,8 @@ run_nonfatal long_running_test  \
   "${APIPROXY_SERVICE}"  \
   "${LOG_DIR}"  \
   "${TEST_ID}"  \
-  "${UNIQUE_ID}"
-STATUS=${?}
+  "${UNIQUE_ID}" \
+  || STATUS=${?}
 
 # Deploy new config and check new rollout on /endpoints_status
 if [[ ( "${ROLLOUT_STRATEGY}" == "managed" ) && ( "${BACKEND}" == "bookstore" ) ]]; then

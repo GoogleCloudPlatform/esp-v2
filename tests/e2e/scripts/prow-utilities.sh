@@ -101,8 +101,8 @@ function long_running_test() {
           -h "${host}"  \
           -l "${duration_in_hour}"  \
           -a "${api_key}"  \
-          -s "${apiproxy_service}" 2>&1 | tee "${log_file}"
-        status=${PIPESTATUS[0]}
+          -s "${apiproxy_service}" 2>&1 | tee "${log_file}" \
+          || status=${?}
       fi
       ;;
     'echo')
@@ -113,15 +113,16 @@ function long_running_test() {
           -g "${host}"  \
           -l "${duration_in_hour}"  \
           -a "${api_key}"  \
-          -s "${apiproxy_service}" 2>&1 | tee "${log_file}"
-        status=${PIPESTATUS[0]}
+          -s "${apiproxy_service}" 2>&1 | tee "${log_file}" \
+          || status=${?}
       fi
       ;;
     'interop')
+      status=0
       run_nonfatal "${SCRIPT_PATH}"/test-grpc-interop.sh  \
         -h "${host}:80"  \
-        -l "${duration_in_hour}" 2>&1 | tee "${log_file}"
-      status=${PIPESTATUS[0]}
+        -l "${duration_in_hour}" 2>&1 | tee "${log_file}" \
+          || status=${?}
       ;;
     *)
       echo "Invalid backend ${BACKEND}"
