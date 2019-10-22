@@ -293,6 +293,10 @@ function get_envoy_image_name() {
   echo -n 'gcr.io/cloudesf-testing/envoy-binary'
 }
 
+function get_gcsrunner_image_name() {
+  echo -n 'gcr.io/cloudesf-testing/gcsrunner'
+}
+
 function get_proxy_image_name() {
   echo -n 'gcr.io/cloudesf-testing/api-proxy'
 }
@@ -304,6 +308,14 @@ function get_serverless_image_name() {
 function get_envoy_image_name_with_sha() {
   # Generic docker image format. https://git-scm.com/docs/git-show.
   local image_format="$(get_envoy_image_name):git-%H"
+  local image="$(git show -q HEAD --pretty=format:"${image_format}")"
+  echo -n $image
+  return 0
+}
+
+function get_gcsrunner_image_name_with_sha() {
+  # Generic docker image format. https://git-scm.com/docs/git-show.
+  local image_format="$(get_gcsrunner_image_name):git-%H"
   local image="$(git show -q HEAD --pretty=format:"${image_format}")"
   echo -n $image
   return 0

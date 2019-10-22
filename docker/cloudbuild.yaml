@@ -19,6 +19,10 @@ steps:
     args: ['build', "-t", "${_ENVOY_IMAGE_SHA_NAME}", "-f", "docker/Dockerfile-envoy", "."]
     id: 'build-envoy-image'
   - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', "-t", "${_GCSRUNNER_IMAGE_SHA_NAME}", "-f", "docker/Dockerfile-gcsrunner", "."]
+    waitFor: ['build-envoy-image']
+    id: "build-gcsrunner-image"
+  - name: 'gcr.io/cloud-builders/docker'
     args: ['build', "-t", "${_PROXY_IMAGE_SHA_NAME}", "-f", "docker/Dockerfile-proxy", "."]
     waitFor: ['build-envoy-image']
     id: "build-proxy-image"
@@ -27,4 +31,4 @@ steps:
     waitFor: ['build-proxy-image']
     id: "build-serverless-image"
 
-images: ["${_ENVOY_IMAGE_SHA_NAME}", "${_PROXY_IMAGE_SHA_NAME}", "${_SERVERLESS_IMAGE_SHA_NAME}"]
+images: ["${_ENVOY_IMAGE_SHA_NAME}", "${_PROXY_IMAGE_SHA_NAME}", "${_SERVERLESS_IMAGE_SHA_NAME}", "${_GCSRUNNER_IMAGE_SHA_NAME}"]
