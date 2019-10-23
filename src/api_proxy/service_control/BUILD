@@ -22,6 +22,19 @@ cc_library(
 )
 
 cc_test(
+    name = "check_response_test",
+    size = "small",
+    srcs = [
+        "check_response_test.cc",
+    ],
+    linkstatic = 1,
+    deps = [
+        ":request_builder_lib",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
     name = "request_builder_test",
     size = "small",
     srcs = [

@@ -1406,9 +1406,27 @@ Status RequestBuilder::ConvertCheckResponse(
       return Status(Code::PERMISSION_DENIED,
                     std::string("API ") + service_name +
                         " has billing disabled. Please enable it.");
+    case CheckError::SECURITY_POLICY_VIOLATED:
+      return Status(Code::PERMISSION_DENIED,
+                    "Request is not allowed as per security policies.");
+    case CheckError::INVALID_CREDENTIAL:
+      return Status(Code::PERMISSION_DENIED,
+                    "The credential in the request can not be verified");
+    case CheckError::LOCATION_POLICY_VIOLATED:
+      return Status(Code::PERMISSION_DENIED,
+                    "Request is not allowed as per location policies.");
+    case CheckError::CONSUMER_INVALID:
+      return Status(Code::PERMISSION_DENIED,
+                    "The consumer from the API key does not represent"
+                    " a valid consumer folder or organization");
+
     case CheckError::NAMESPACE_LOOKUP_UNAVAILABLE:
     case CheckError::SERVICE_STATUS_UNAVAILABLE:
     case CheckError::BILLING_STATUS_UNAVAILABLE:
+    case CheckError::QUOTA_CHECK_UNAVAILABLE:
+    case CheckError::CLOUD_RESOURCE_MANAGER_BACKEND_UNAVAILABLE:
+    case CheckError::SECURITY_POLICY_BACKEND_UNAVAILABLE:
+    case CheckError::LOCATION_POLICY_BACKEND_UNAVAILABLE:
       // Fail open for internal server errors per recommendation
       return Status::OK;
     default:

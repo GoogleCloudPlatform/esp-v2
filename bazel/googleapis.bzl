@@ -73,8 +73,6 @@ cc_proto_library(
         "google/api/control.proto",
         "google/api/documentation.proto",
         "google/api/endpoint.proto",
-        "google/api/experimental/experimental.proto",
-        "google/api/experimental/authorization_config.proto",
         "google/api/label.proto",
         "google/api/launch_stage.proto",
         "google/api/log.proto",
@@ -133,9 +131,9 @@ def googleapis_repositories(bind = True):
         name = "com_github_googleapis_googleapis",
         build_file_content = GOOGLEAPIS_BUILD_FILE,
         patch_cmds = ["find . -type f -name '*BUILD*' | xargs rm"],
-        strip_prefix = "googleapis-275cdfcdc3188a60456f43acd139b8cc037379f4",  # May 14, 2019
-        url = "https://github.com/googleapis/googleapis/archive/275cdfcdc3188a60456f43acd139b8cc037379f4.tar.gz",
-        sha256 = "d07a9bf06bb02b51ff6e913211cedc7511430af550b6a775908c33c8ee218985",
+        strip_prefix = "googleapis-ae7a4cc69cc1e206b16f1b9db803907d7a3d97c8",  # Oct 22, 2019
+        url = "https://github.com/googleapis/googleapis/archive/ae7a4cc69cc1e206b16f1b9db803907d7a3d97c8.tar.gz",
+        sha256 = "f96e11515c302045e8ab6708ba68d7cea8a02e2a96add92033315ff894076980",
     )
 
     if bind:
