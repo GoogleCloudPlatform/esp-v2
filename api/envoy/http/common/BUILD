@@ -1,4 +1,4 @@
-load("@envoy_api//bazel:api_build_system.bzl", "api_proto_library")
+load("@envoy_api//bazel:api_build_system.bzl", "api_cc_py_proto_library")
 load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 
 DEFAULT_VISIBILITY = [
@@ -9,7 +9,7 @@ DEFAULT_VISIBILITY = [
 
 package(default_visibility = DEFAULT_VISIBILITY)
 
-api_proto_library(
+api_cc_py_proto_library(
     name = "base_proto",
     srcs = [
         "base.proto",

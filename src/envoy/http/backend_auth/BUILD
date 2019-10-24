@@ -31,7 +31,7 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         ":config_parser_lib",
-        "//api/envoy/http/backend_auth:config_proto_cc",
+        "//api/envoy/http/backend_auth:config_proto_cc_proto",
         "//src/envoy/utils:filter_state_utils_lib",
     ],
 )
@@ -42,7 +42,7 @@ envoy_cc_library(
     hdrs = ["config_parser.h"],
     repository = "@envoy",
     deps = [
-        "//api/envoy/http/backend_auth:config_proto_cc",
+        "//api/envoy/http/backend_auth:config_proto_cc_proto",
         "//src/envoy/utils:iam_token_subscriber_lib",
         "//src/envoy/utils:token_subscriber_lib",
     ],

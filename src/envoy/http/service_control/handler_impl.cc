@@ -56,7 +56,7 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
   http_method_ = std::string(Utils::getRequestHTTPMethodWithOverride(
       headers.Method()->value().getStringView(), headers));
   path_ = std::string(headers.Path()->value().getStringView());
-  request_header_size_ = headers.byteSize();
+  request_header_size_ = headers.byteSizeInternal();
 
   is_grpc_ = Envoy::Grpc::Common::hasGrpcContentType(headers);
 
@@ -226,7 +226,7 @@ void ServiceControlHandlerImpl::onCheckResponse(
 void ServiceControlHandlerImpl::processResponseHeaders(
     const Http::HeaderMap& response_headers) {
   frontend_protocol_ = getFrontendProtocol(&response_headers, stream_info_);
-  response_header_size_ = response_headers.byteSize();
+  response_header_size_ = response_headers.byteSizeInternal();
 }
 
 void ServiceControlHandlerImpl::callReport(
@@ -280,10 +280,10 @@ void ServiceControlHandlerImpl::callReport(
 
   uint64_t response_header_size = 0;
   if (response_headers) {
-    response_header_size += response_headers->byteSize();
+    response_header_size += response_headers->byteSizeInternal();
   }
   if (response_trailers) {
-    response_header_size += response_trailers->byteSize();
+    response_header_size += response_trailers->byteSizeInternal();
   }
   info.response_size = stream_info_.bytesSent() + response_header_size;
   info.response_bytes = stream_info_.bytesSent() + response_header_size;

@@ -25,7 +25,7 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         ":service_control_callback_func_lib",
-        "//api/envoy/http/service_control:config_proto_cc",
+        "//api/envoy/http/service_control:config_proto_cc_proto",
         "@envoy//include/envoy/tracing:http_tracer_interface",
     ],
 )
@@ -58,7 +58,7 @@ envoy_cc_library(
     hdrs = ["http_call.h"],
     repository = "@envoy",
     deps = [
-        "//api/envoy/http/common:base_proto_cc",
+        "//api/envoy/http/common:base_proto_cc_proto",
         "@envoy//include/envoy/upstream:cluster_manager_interface",
         "@envoy//source/common/common:enum_to_int",
         "@envoy//source/common/http:headers_lib",
@@ -78,8 +78,8 @@ envoy_cc_library(
     deps = [
         ":http_call_lib",
         ":service_control_callback_func_lib",
-        "//api/envoy/http/common:base_proto_cc",
-        "//api/envoy/http/service_control:config_proto_cc",
+        "//api/envoy/http/common:base_proto_cc_proto",
+        "//api/envoy/http/service_control:config_proto_cc_proto",
         "//external:servicecontrol_client",
         "@envoy//include/envoy/event:dispatcher_interface",
         "@envoy//include/envoy/upstream:cluster_manager_interface",

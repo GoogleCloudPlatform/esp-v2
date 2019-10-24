@@ -233,13 +233,13 @@ MATCHER_P4(MatchesReportInfo, expect, request_headers, response_headers,
   if (arg.backend_protocol != Protocol::GRPC) return false;
   if (arg.frontend_protocol != Protocol::GRPC) return false;
 
-  int64_t request_size = request_headers.byteSize();
+  int64_t request_size = request_headers.byteSizeInternal();
   if (arg.request_bytes != request_size || arg.request_size != request_size) {
     return false;
   }
 
   int64_t response_size =
-      response_headers.byteSize() + response_trailers.byteSize();
+      response_headers.byteSizeInternal() + response_trailers.byteSizeInternal();
   if (arg.response_bytes != response_size ||
       arg.response_size != response_size) {
     return false;
@@ -844,8 +844,8 @@ TEST_F(HandlerTest, HandlerCollectDecodeData) {
   expected_report_info.streaming_request_message_counts = 0;
   expected_report_info.streaming_durations = 0;
   expected_report_info.request_bytes =
-      mock_buffer.length() * 3 + headers.byteSize();
-  expected_report_info.response_bytes = response_headers.byteSize();
+      mock_buffer.length() * 3 + headers.byteSizeInternal();
+  expected_report_info.response_bytes = response_headers.byteSizeInternal();
   mock_stream_info_.bytes_received_ = mock_buffer.length() * 3;
   mock_stream_info_.bytes_sent_ = 0;
 
@@ -858,7 +858,7 @@ TEST_F(HandlerTest, HandlerCollectDecodeData) {
   time += std::chrono::milliseconds(200);
   expected_report_info.is_first_report = false;
   expected_report_info.request_bytes =
-      mock_buffer.length() * 4 + headers.byteSize();
+      mock_buffer.length() * 4 + headers.byteSizeInternal();
   mock_stream_info_.bytes_received_ = mock_buffer.length() * 4;
   mock_stream_info_.bytes_sent_ = 0;
 
@@ -928,9 +928,9 @@ TEST_F(HandlerTest, HandlerCollectEncodeData) {
   // the final report.
   expected_report_info.streaming_response_message_counts = 0;
   expected_report_info.streaming_durations = 0;
-  expected_report_info.request_bytes = headers.byteSize();
+  expected_report_info.request_bytes = headers.byteSizeInternal();
   expected_report_info.response_bytes =
-      mock_buffer.length() * 3 + response_headers.byteSize();
+      mock_buffer.length() * 3 + response_headers.byteSizeInternal();
   mock_stream_info_.bytes_received_ = 0;
   mock_stream_info_.bytes_sent_ = mock_buffer.length() * 3;
 
@@ -943,7 +943,7 @@ TEST_F(HandlerTest, HandlerCollectEncodeData) {
   time += std::chrono::milliseconds(200);
   expected_report_info.is_first_report = false;
   expected_report_info.response_bytes =
-      mock_buffer.length() * 4 + response_headers.byteSize();
+      mock_buffer.length() * 4 + response_headers.byteSizeInternal();
   mock_stream_info_.bytes_sent_ = mock_buffer.length() * 4;
 
   EXPECT_CALL(*mock_call_,
@@ -1011,10 +1011,10 @@ TEST_F(HandlerTest, FinalReports) {
 
   // Send 1 mock_buffer and 1 headers.
   expected_report_info.request_bytes =
-      mock_buffer.length() * 1 + headers.byteSize() * 1;
+      mock_buffer.length() * 1 + headers.byteSizeInternal() * 1;
   // Send 2 mock_buffer and 2 response_headers(1 as response_trailers).
   expected_report_info.response_bytes =
-      mock_buffer.length() * 1 + response_headers.byteSize() * 2;
+      mock_buffer.length() * 1 + response_headers.byteSizeInternal() * 2;
 
   // Check the final report.
   mock_stream_info_.bytes_sent_ = mock_buffer.length();
