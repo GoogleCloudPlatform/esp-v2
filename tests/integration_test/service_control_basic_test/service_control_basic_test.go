@@ -204,6 +204,7 @@ func TestServiceControlBasic(t *testing.T) {
 					Version:           utils.APIProxyVersion,
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
+					ApiKey:            "api-key",
 					URL:               "/echo/nokey?key=api-key",
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey",
 					ProducerProjectID: "producer-project",
