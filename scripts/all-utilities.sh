@@ -305,6 +305,14 @@ function get_serverless_image_name() {
   echo -n 'gcr.io/cloudesf-testing/serverless-proxy'
 }
 
+function get_proxy_image_release_name() {
+  echo -n 'gcr.io/apiproxy-release/api-proxy'
+}
+
+function get_serverless_image_release_name() {
+  echo -n 'gcr.io/apiproxy-release/serverless-proxy'
+}
+
 function get_envoy_image_name_with_sha() {
   # Generic docker image format. https://git-scm.com/docs/git-show.
   local image_format="$(get_envoy_image_name):git-%H"
