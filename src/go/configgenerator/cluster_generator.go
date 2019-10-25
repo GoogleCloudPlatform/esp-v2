@@ -121,9 +121,10 @@ func makeIamCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
 
 	connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
 	c := &v2pb.Cluster{
-		Name:           util.IamServerClusterName,
-		LbPolicy:       v2pb.Cluster_ROUND_ROBIN,
-		ConnectTimeout: connectTimeoutProto,
+		Name:            util.IamServerClusterName,
+		LbPolicy:        v2pb.Cluster_ROUND_ROBIN,
+		DnsLookupFamily: v2pb.Cluster_V4_ONLY,
+		ConnectTimeout:  connectTimeoutProto,
 		ClusterDiscoveryType: &v2pb.Cluster_Type{
 			Type: v2pb.Cluster_STRICT_DNS,
 		},

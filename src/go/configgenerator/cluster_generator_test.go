@@ -390,6 +390,7 @@ func TestMakeIamCluster(t *testing.T) {
 			wantedCluster: &v2pb.Cluster{
 				Name:                 util.IamServerClusterName,
 				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+				DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
 				ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_STRICT_DNS},
 				LoadAssignment:       util.CreateLoadAssignment("iamcredentials.googleapis.com", 443),
 				TlsContext: &authpb.UpstreamTlsContext{
