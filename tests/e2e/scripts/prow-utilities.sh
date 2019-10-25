@@ -231,7 +231,9 @@ function fetch_proxy_logs() {
   local namespace=${1}
   local log_dir=${2}
   local pod_id=$(kubectl get --no-headers=true pods -l app=app -n ${namespace} -o custom-columns=:metadata.name)
-  kubectl logs ${pod_id} -c apiproxy -n ${namespace} | tee ${LOG_DIR}/error.log
+  touch ${LOG_DIR}/error.log
+  (kubectl logs -p ${pod_id} -c apiproxy -n ${namespace} | tee -a ${LOG_DIR}/error.log) || echo "No apiproxy container crashed"
+  kubectl logs ${pod_id} -c apiproxy -n ${namespace} | tee -a ${LOG_DIR}/error.log
 }
 
 # Upload logs remote directory
