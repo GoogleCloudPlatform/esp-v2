@@ -50,6 +50,7 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     : cfg_parser_(cfg_parser),
       stream_info_(stream_info),
       uuid_(uuid),
+      aborted_(new bool(false)),
       request_header_size_(0),
       response_header_size_(0),
       last_reported_(now) {
@@ -76,11 +77,6 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     return;
   }
 
-  if (!isCheckRequired()) {
-    ENVOY_LOG(debug, "Service control check is not needed");
-    return;
-  }
-
   if (require_ctx_->config().api_key().locations_size() > 0) {
     extractAPIKey(headers, require_ctx_->config().api_key().locations(),
                   api_key_);
@@ -90,11 +86,7 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
   }
 }
 
-ServiceControlHandlerImpl::~ServiceControlHandlerImpl() {
-  if (aborted_) {
-    *aborted_ = true;
-  }
-}
+ServiceControlHandlerImpl::~ServiceControlHandlerImpl() { *aborted_ = true; }
 
 void ServiceControlHandlerImpl::fillOperationInfo(
     ::google::api_proxy::service_control::OperationInfo& info,
@@ -106,16 +98,17 @@ void ServiceControlHandlerImpl::fillOperationInfo(
   info.request_start_time = now;
   info.client_ip =
       stream_info_.downstreamRemoteAddress()->ip()->addressAsString();
+  info.api_key = api_key_;
 }
 
 void ServiceControlHandlerImpl::prepareReportRequest(
     ::google::api_proxy::service_control::ReportRequestInfo& info) {
   fillOperationInfo(info);
 
-  // Check and Report has different rule to send api-key
-  if (check_response_info_.is_api_key_valid &&
-      check_response_info_.service_is_activated) {
-    info.api_key = api_key_;
+  // Report: not to send api-key if invalid or service is not enabled.
+  if (!check_response_info_.is_api_key_valid ||
+      !check_response_info_.service_is_activated) {
+    info.api_key.clear();
   }
 
   info.url = path_;
@@ -138,9 +131,10 @@ void ServiceControlHandlerImpl::callCheck(Http::HeaderMap& headers,
     callback.onCheckDone(Status(Code::NOT_FOUND, "Method does not exist."));
     return;
   }
+  check_callback_ = &callback;
 
   if (!isCheckRequired()) {
-    callback.onCheckDone(Status::OK);
+    callQuota();
     return;
   }
 
@@ -154,14 +148,9 @@ void ServiceControlHandlerImpl::callCheck(Http::HeaderMap& headers,
     return;
   }
 
-  check_callback_ = &callback;
-
   // Make a check call
   ::google::api_proxy::service_control::CheckRequestInfo info;
   fillOperationInfo(info);
-
-  // Check and Report has different rule to send api-key
-  info.api_key = api_key_;
 
   info.ios_bundle_id =
       std::string(Utils::extractHeader(headers, kIosBundleIdHeader));
@@ -171,7 +160,6 @@ void ServiceControlHandlerImpl::callCheck(Http::HeaderMap& headers,
   info.android_cert_fingerprint =
       std::string(Utils::extractHeader(headers, kAndroidCertHeader));
 
-  aborted_.reset(new bool(false));
   require_ctx_->service_ctx().call().callCheck(
       info, parent_span,
       [this, aborted = aborted_, &headers](

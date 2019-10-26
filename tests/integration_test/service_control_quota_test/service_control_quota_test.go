@@ -87,7 +87,7 @@ func TestServiceControlQuota(t *testing.T) {
 				&utils.ExpectedQuota{
 					ServiceName: "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					MethodName:  "endpoints.examples.bookstore.Bookstore.ListShelves",
-					ConsumerID:  "project:producer project",
+					ConsumerID:  "api_key:api-key",
 					QuotaMetrics: map[string]int64{
 						"metrics_first":  2,
 						"metrics_second": 1,
@@ -286,7 +286,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 				&utils.ExpectedQuota{
 					ServiceName: "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					MethodName:  "endpoints.examples.bookstore.Bookstore.ListShelves",
-					ConsumerID:  "project:producer project",
+					ConsumerID:  "api_key:api-key",
 					QuotaMetrics: map[string]int64{
 						"metrics_first":  2,
 						"metrics_second": 1,
@@ -328,7 +328,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 				&utils.ExpectedQuota{
 					ServiceName: "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					MethodName:  "endpoints.examples.bookstore.Bookstore.ListShelves",
-					ConsumerID:  "project:producer project",
+					ConsumerID:  "api_key:api-key",
 					QuotaMetrics: map[string]int64{
 						"metrics_first":  2,
 						"metrics_second": 1,

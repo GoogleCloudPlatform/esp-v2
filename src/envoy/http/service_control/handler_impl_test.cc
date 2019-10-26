@@ -122,6 +122,19 @@ requirements {
   service_name: "echo"
   api_name: "test_api"
   api_version: "test_version"
+  operation_name: "call_quota_without_check"
+  api_key: {
+    allow_without_api_key: true
+  }
+  metric_costs: {
+    name: "metric_name"
+    cost: 1
+  }
+}
+requirements {
+  service_name: "echo"
+  api_name: "test_api"
+  api_version: "test_version"
   operation_name: "get_cookie_key"
   api_key: {
     allow_without_api_key: false
@@ -195,6 +208,7 @@ MATCHER_P(MatchesQuotaInfo, expect, "") {
 
   if (arg.operation_id != "test-uuid") return false;
   if (arg.operation_name != expect.method_name) return false;
+  if (arg.api_key != expect.api_key) return false;
   if (arg.producer_project_id != "project-id") return false;
   return true;
 }
@@ -238,8 +252,8 @@ MATCHER_P4(MatchesReportInfo, expect, request_headers, response_headers,
     return false;
   }
 
-  int64_t response_size =
-      response_headers.byteSizeInternal() + response_trailers.byteSizeInternal();
+  int64_t response_size = response_headers.byteSizeInternal() +
+                          response_trailers.byteSizeInternal();
   if (arg.response_bytes != response_size ||
       arg.response_size != response_size) {
     return false;
@@ -456,8 +470,40 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
       }));
   QuotaRequestInfo expected_quota_info;
   expected_quota_info.method_name = "get_header_key_quota";
+  expected_quota_info.api_key = "foobar";
   expected_quota_info.metric_cost_vector =
       cfg_parser_->FindRequirement("get_header_key_quota")->metric_costs();
+
+  EXPECT_CALL(*mock_call_, callQuota(MatchesQuotaInfo(expected_quota_info), _))
+      .WillOnce(Invoke([](const QuotaRequestInfo&, QuotaDoneFunc on_done) {
+        on_done(Status::OK);
+      }));
+
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
+  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+
+  EXPECT_CALL(*mock_call_, callReport(_));
+  handler.callReport(&headers, &response_headers, &headers, epoch_);
+}
+
+TEST_F(HandlerTest, HandlerCallQuotaWithoutCheck) {
+  // Test: Quota is required but the Check is not
+  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+                              Utils::kOperation, "call_quota_without_check");
+  Http::TestHeaderMapImpl headers{{":method", "GET"},
+                                  {":path", "/echo?key=foobar"}};
+  Http::TestHeaderMapImpl response_headers{
+      {"content-type", "application/grpc"}};
+  ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
+                                    *cfg_parser_);
+  // Check is not called.
+  EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
+
+  QuotaRequestInfo expected_quota_info;
+  expected_quota_info.method_name = "call_quota_without_check";
+  expected_quota_info.api_key = "foobar";
+  expected_quota_info.metric_cost_vector =
+      cfg_parser_->FindRequirement("call_quota_without_check")->metric_costs();
 
   EXPECT_CALL(*mock_call_, callQuota(MatchesQuotaInfo(expected_quota_info), _))
       .WillOnce(Invoke([](const QuotaRequestInfo&, QuotaDoneFunc on_done) {
@@ -533,6 +579,7 @@ TEST_F(HandlerTest, HandlerFailQuotaSync) {
       }));
   QuotaRequestInfo expected_quota_info;
   expected_quota_info.method_name = "get_header_key_quota";
+  expected_quota_info.api_key = "foobar";
   expected_quota_info.metric_cost_vector =
       cfg_parser_->FindRequirement("get_header_key_quota")->metric_costs();
 
@@ -616,6 +663,7 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
 
   QuotaRequestInfo expected_quota_info;
   expected_quota_info.method_name = "get_header_key_quota";
+  expected_quota_info.api_key = "foobar";
   expected_quota_info.metric_cost_vector =
       cfg_parser_->FindRequirement("get_header_key_quota")->metric_costs();
   // Store the done callback
@@ -710,6 +758,7 @@ TEST_F(HandlerTest, HandlerFailQuotaAsync) {
 
   QuotaRequestInfo expected_quota_info;
   expected_quota_info.method_name = "get_header_key_quota";
+  expected_quota_info.api_key = "foobar";
   expected_quota_info.metric_cost_vector =
       cfg_parser_->FindRequirement("get_header_key_quota")->metric_costs();
   // Store the done callback
