@@ -18,7 +18,7 @@ import (
 	"reflect"
 	"testing"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/options"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
 )
 
 func TestDefaultAdsBootstrapperOptions(t *testing.T) {

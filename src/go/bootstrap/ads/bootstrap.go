@@ -17,11 +17,11 @@ package ads
 import (
 	"fmt"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/options"
-	"cloudesf.googlesource.com/gcpproxy/src/go/util"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
 	"github.com/golang/protobuf/ptypes"
 
-	bt "cloudesf.googlesource.com/gcpproxy/src/go/bootstrap"
+	bt "github.com/GoogleCloudPlatform/api-proxy/src/go/bootstrap"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"

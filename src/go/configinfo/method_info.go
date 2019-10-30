@@ -15,8 +15,8 @@
 package configinfo
 
 import (
-	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
-	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
+	commonpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/common"
+	scpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/service_control"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 

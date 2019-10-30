@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"strings"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
-	"cloudesf.googlesource.com/gcpproxy/src/go/options"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/metadata"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 

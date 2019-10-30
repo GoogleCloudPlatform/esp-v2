@@ -23,7 +23,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	bookstorepb "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/proto"
+	bookstorepb "github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/bookstore_grpc/proto"
 	emptypb "github.com/golang/protobuf/ptypes/empty"
 )
 

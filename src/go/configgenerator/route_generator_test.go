@@ -19,8 +19,8 @@ import (
 	"strings"
 	"testing"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
-	"cloudesf.googlesource.com/gcpproxy/src/go/options"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/configinfo"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
 
 	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"

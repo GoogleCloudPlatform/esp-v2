@@ -20,7 +20,7 @@ import (
 	"log"
 	"os"
 
-	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/echo/client"
 )
 
 var (

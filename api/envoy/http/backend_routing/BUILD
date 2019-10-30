@@ -19,7 +19,7 @@ api_cc_py_proto_library(
 
 go_proto_library(
     name = "config_go_proto",
-    importpath = "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/backend_routing",
+    importpath = "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/backend_routing",
     proto = ":config_proto",
     deps = [
         "@com_envoyproxy_protoc_gen_validate//validate:go_default_library",

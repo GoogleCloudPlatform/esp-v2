@@ -23,11 +23,11 @@ import (
 	"sync"
 	"time"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/options"
-	"cloudesf.googlesource.com/gcpproxy/src/go/util"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
 	"github.com/golang/glog"
 
-	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
+	scpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/service_control"
 )
 
 const (

@@ -16,14 +16,11 @@ package client
 
 import (
 	"fmt"
-	"go/build"
 	"os"
 	"os/exec"
 	"strings"
-)
 
-var (
-	clientBinPath = fmt.Sprintf("%s/src/cloudesf.googlesource.com/gcpproxy/bin", build.Default.GOPATH)
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env/platform"
 )
 
 func RunGRPCEchoTest(testPlans string, serverPort uint16) (string, error) {
@@ -43,7 +40,7 @@ func RunGRPCEchoTest(testPlans string, serverPort uint16) (string, error) {
 		return "", err
 	}
 
-	realCmd := fmt.Sprintf("%s/grpc_echo_client < test_plans.txt", clientBinPath)
+	realCmd := fmt.Sprintf("%s < test_plans.txt", platform.GetFilePath(platform.GrpcEchoClient))
 	cmd := exec.Command("bash", "-c", realCmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil && !strings.Contains(err.Error(), "exit status 1") {

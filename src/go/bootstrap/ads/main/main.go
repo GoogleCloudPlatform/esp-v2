@@ -18,9 +18,9 @@ import (
 	"flag"
 	"io/ioutil"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap"
-	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap/ads"
-	"cloudesf.googlesource.com/gcpproxy/src/go/bootstrap/ads/flags"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/bootstrap"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/bootstrap/ads"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/bootstrap/ads/flags"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
 )

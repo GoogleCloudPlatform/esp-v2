@@ -19,10 +19,10 @@ import (
 	"strings"
 	"testing"
 
-	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
-	"cloudesf.googlesource.com/gcpproxy/tests/env"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/echo/client"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env"
 
-	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	comp "github.com/GoogleCloudPlatform/api-proxy/tests/env/components"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 

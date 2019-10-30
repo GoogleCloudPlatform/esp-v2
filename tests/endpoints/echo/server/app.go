@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env/platform"
 	"github.com/gorilla/mux"
 )
 

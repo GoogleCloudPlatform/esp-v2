@@ -20,7 +20,7 @@ import (
 	"net/http/httptest"
 	"sync"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/util"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
 )
 
 const (

@@ -23,12 +23,12 @@ import (
 	"sort"
 	"testing"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/options"
-	"cloudesf.googlesource.com/gcpproxy/src/go/util"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
 	"github.com/gorilla/mux"
 
-	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
-	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
+	commonpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/common"
+	scpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/service_control"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"

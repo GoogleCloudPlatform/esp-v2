@@ -18,11 +18,11 @@ import (
 	"fmt"
 	"time"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/util"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 
-	sc "cloudesf.googlesource.com/gcpproxy/src/go/configinfo"
+	sc "github.com/GoogleCloudPlatform/api-proxy/src/go/configinfo"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"

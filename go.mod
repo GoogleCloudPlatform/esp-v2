@@ -1,4 +1,4 @@
-module cloudesf.googlesource.com/gcpproxy
+module github.com/GoogleCloudPlatform/api-proxy
 
 go 1.13
 

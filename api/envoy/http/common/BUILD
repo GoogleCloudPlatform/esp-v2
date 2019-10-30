@@ -19,7 +19,7 @@ api_cc_py_proto_library(
 
 go_proto_library(
     name = "base_go_proto",
-    importpath = "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common",
+    importpath = "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/common",
     proto = ":base_proto",
     deps = [
         "@com_envoyproxy_protoc_gen_validate//validate:go_default_library",

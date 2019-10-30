@@ -22,8 +22,8 @@ import (
 	"net/http/httptest"
 	"sync/atomic"
 
-	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
-	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env/platform"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env/testdata"
 	"github.com/golang/glog"
 	"github.com/gorilla/mux"
 

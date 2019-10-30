@@ -20,15 +20,15 @@ import (
 	"strings"
 	"testing"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/util"
-	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
-	"cloudesf.googlesource.com/gcpproxy/tests/env"
-	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
-	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
-	"cloudesf.googlesource.com/gcpproxy/tests/utils"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/echo/client"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env/platform"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env/testdata"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/utils"
 
-	bsClient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/client"
-	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	bsClient "github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/bookstore_grpc/client"
+	comp "github.com/GoogleCloudPlatform/api-proxy/tests/env/components"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )

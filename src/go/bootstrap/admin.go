@@ -15,7 +15,7 @@
 package bootstrap
 
 import (
-	"cloudesf.googlesource.com/gcpproxy/src/go/options"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
 
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
