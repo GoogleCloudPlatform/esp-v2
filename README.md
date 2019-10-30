@@ -1,10 +1,10 @@
 # Google Cloud Platform API Proxy
 
-Google Cloud Platform API Proxy, a.k.a. APIProxy is a proxy which enables API
+Google Cloud Platform API Proxy is a service proxy which enables API
 management capabilities for JSON/REST or gRPC API services. The current
-implementation is based on an Envoy proxy server.
+implementation uses [Envoy](https://www.envoyproxy.io/) as a service proxy.
 
-APIProxy provides:
+API Proxy provides:
 
 *   **Features**: authentication (auth0, gitkit), API key validation, JSON to
     gRPC transcoding, as well as API-level monitoring, tracing and logging. More
@@ -20,35 +20,51 @@ APIProxy provides:
 
 ## Introduction
 
-APIProxy is a general purpose L7 proxy that integrates with Google hosted
-services, to provide policy check and telemetry reporting, for GCP customers,
-Google Cloud products, and Google internal projects. APIProxy can be run on GCP
-and hybrid cloud environment, either as a sidecar, or as an API gateway.
+API Proxy is a general-purpose L7 service proxy that integrates with Google hosted
+services to provide policy checks and telemetry reports. This proxy can be used by
+GCP customers, Google Cloud products, and Google internal projects.
 
-APIProxy includes two components: the ConfigManager as Control plane and Envoy
-as Data plane.
+API Proxy can run on GCP and hybrid cloud environments, either as a sidecar or as an API gateway.
+However, initial development was primarily done on GKE for API services using [Open API
+Specification](https://openapis.org/specification) so our instructions
+and samples are focusing on these platforms. If you make it work on other
+infrastructure and IDLs, please let us know and contribute instructions/code.
 
-ConfigManager configures its Envoy filters dynamically, using [Google API
-Service Configuration](https://github.com/googleapis/googleapis/blob/master/google/api/service.proto) and API producer specified flags.
+API Proxy includes two components:
+
+- ConfigManager: Control plane to configure the Envoy proxy
+- Envoy: Data plane to process API requests/responses
+
+ConfigManager configures the data plane's Envoy filters dynamically, using [Google API
+Service Configuration](https://github.com/googleapis/googleapis/blob/master/google/api/service.proto)
+and flags specified by the API producer.
+
+Envoy (with our custom filters) handles API calls using [Service Infrastructure]
+(https://cloud.google.com/service-infrastructure/docs/overview), Google's foundational
+platform for creating, managing, and consuming APIs and services.
 
 * [Architecture](/doc/architecture.png)
-* [APIProxy Filters](doc/filters.png)
+* [API Proxy Filters](doc/filters.png)
 * [API Producer specified flags](docker/generic/start_proxy.py)
 
-## Released APIProxy docker images
+## API Proxy Releases
 
-TODO(jilinxia)
+API Proxy is released as a docker image. The current stable docker images are:
+
+- [gcr.io/apiproxy-release/apiproxy-serverless:latest](https://gcr.io/apiproxy-release/apiproxy-serverless:latest)
+
+More documentation on releases will be coming soon.
 
 ## Repository Structure
 
-* [api](/api): Envoy Filter Configurations developed in APIProxy
-* [doc](/doc): Documentation
-* [docker](/docker): Scripts for packaging APIProxy in a Docker image.
+* [api](/api): Envoy Filter Configurations developed in API Proxy
+* [doc](/doc): Documentation (more coming soon)
+* [docker](/docker): Scripts for packaging API Proxy in a Docker image for releases
 * [prow](/prow): Prow based test automation scripts
-* [script](/script): Scripts used for build and release APIProxy
-* [src](/src): API Proxy source, including Envoy Filters and Config Manager.
-* [tests](/test): Applications and Client code used for integration test and end-to-end test.
-* [tools](/tools): Assorted tooling.
+* [scripts](/scripts): Scripts used for build and release API Proxy
+* [src](/src): API Proxy source code, including Envoy Filters and Config Manager
+* [tests](/tests): Integration and end-to-end tests for API Proxy
+* [tools](/tools): Assorted tooling
 
 ## Contributing
 
@@ -56,9 +72,12 @@ Your contributions are welcome. Please follow the contributor [guidelines](CONTR
 
 * [Developer Guide](DEVELOPER.md)
 
-## APIProxy Tutorial
+## API Proxy Tutorial
 
-To find out more about building, running, and testing APIProxy, please review:
+To find out more about building, running, and testing API Proxy:
 
-* [Run APIProxy on Kubernetes](/doc/apiproxi-on-k8s.md)
+* [Run API Proxy on Kubernetes](/doc/apiproxy-on-k8s.md)
 
+## Disclaimer
+
+API Proxy is still in Alpha. This is not an officially supported Google product.
