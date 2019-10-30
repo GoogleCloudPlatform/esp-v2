@@ -32,7 +32,7 @@ exit 1; }
 echo '======================================================='
 echo '===================== Setup Cache ====================='
 echo '======================================================='
-try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}"
+try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" ""
 
 if [ ! -d "$GOPATH/bin" ]; then
   mkdir $GOPATH/bin

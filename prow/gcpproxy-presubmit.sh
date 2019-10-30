@@ -32,7 +32,7 @@ exit 1; }
 echo '======================================================='
 echo '===================== Setup Cache ====================='
 echo '======================================================='
-try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}"
+try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "${PRESUBMIT_TEST_CASE}"
 
 echo '======================================================='
 echo '===================== Spelling Check ====================='
@@ -58,11 +58,45 @@ make test
 echo '======================================================'
 echo '===================== Bazel test ====================='
 echo '======================================================'
-make test-envoy
+if [ -z ${PRESUBMIT_TEST_CASE} ];
+then
+  echo "running normal presubmit test"
+else
+  echo "running ${PRESUBMIT_TEST_CASE} presubmit test"
+fi
+
+case "${PRESUBMIT_TEST_CASE}" in
+  "asan")
+    make test-envoy-asan
+    ;;
+  "msan")
+    make test-envoy-msan
+    ;;
+  "tsan")
+    make test-envoy-tsan
+    ;;
+  *)
+    make test-envoy
+    ;;
+esac
 
 echo '======================================================'
 echo '===================== Integration test  =============='
 echo '======================================================'
 make depend.install.endpoints
-make integration-test
+case "${PRESUBMIT_TEST_CASE}" in
+  "asan")
+    make integration-test-asan
+    ;;
+  "msan")
+    make integration-test-tsan
+    ;;
+  "tsan")
+    make integration-test-tsan
+    ;;
+  *)
+    make integration-test
+    ;;
+esac
+
 make clean

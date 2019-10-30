@@ -359,6 +359,7 @@ function try_setup_bazel_remote_cache() {
   local prow_job_id=$1
   local docker_image_name=$2
   local root_dir=$3
+  local presubmit_test_case=$4
   local gcp_project_id="cloudesf-testing"
   local silo_uuid="v3"
 
@@ -381,10 +382,10 @@ function try_setup_bazel_remote_cache() {
     exit 2;
   fi
 
-  # Cache silo name is determined by docker image name and the hardcoded UUID.
+  # Cache silo name is determined by image_name-UUID-[empty|asan|tsan].
   # This works because the environment is consistent in any containers of this docker image.
   # Also, replace special characters that RBE does not accept with a '/'
-  local cache_silo=$(echo "${docker_image_name}-uuid-${silo_uuid}" | tr @: /)
+  local cache_silo=$(echo "${docker_image_name}-uuid-${silo_uuid}-${presubmit_test_case}" | tr @: /)
   echo "Original Image Name: ${docker_image_name}"
   echo "Cache Silo Name: ${cache_silo}"
 

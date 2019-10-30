@@ -85,3 +85,16 @@ To run integration tests, run:
 ```
 make integration-test
 ```
+
+## Run Sanitizer Tests
+
+Our sanitizer unit/integrtaion tests are based on clang-8. Here are cmd to install clang and run the tests.
+```
+wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key| apt-key add - && \
+    echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-8 main" >> /etc/apt/sources.list && \
+    sudo apt-get update && \
+    sudo apt-get install -y llvm-8-dev libclang-8-dev clang-8 xz-utils lld # install clang-8
+
+make test-envoy-asan/tsan
+make integration-test-asan/tsan
+```

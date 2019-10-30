@@ -53,6 +53,16 @@ build-envoy:
 	@bazel build //src/envoy:envoy
 	@cp -f bazel-bin/src/envoy/envoy bin/
 
+build-envoy-asan:
+	@echo "--> building envoy (compilation_mode=fastbuild)"
+	@CC=clang-8 CXX=clang++-8 bazel build --config=clang-asan //src/envoy:envoy
+	@cp -f bazel-bin/src/envoy/envoy bin/
+
+build-envoy-tsan:
+	@echo "--> building envoy (compilation_mode=fastbuild)"
+	@CC=clang-8 CXX=clang++-8 bazel build --config=clang-tsan  //src/envoy:envoy
+	@cp -f bazel-bin/src/envoy/envoy bin/
+
 build-envoy-release:
 	@echo "--> building envoy (compilation_mode=release)"
 	@bazel build --config=release //src/envoy:envoy
@@ -114,9 +124,19 @@ test-envoy: format
 	@echo "--> running envoy's unit tests"
 	@bazel test //src/...
 
+test-envoy-asan: format
+	@echo "--> running envoy's unit tests"
+	@CC=clang-8 CXX=clang++-8 ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-8) bazel test --config=clang-asan  --test_output=errors //src/...
 
-.PHONY: integration-test integration-debug
-integration-test: build build-envoy build-grpc-interop build-grpc-echo
+test-envoy-tsan: format
+	@echo "--> running envoy's unit tests"
+	@CC=clang-8 CXX=clang++-8 ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-8) bazel test --config=clang-tsan  --test_output=errors  //src/...
+
+
+
+
+.PHONY: integration-test-run integration-test integration-test-asan integration-test-tsan integration-debug
+integration-test-run:
 	@echo "--> running integration tests"
 	# Default timeout for go test is 10 minutes. Our test suite takes a little longer...
 	# logtostderr will cause all glogs in the test framework to print to the console (not too much bloat)
@@ -124,12 +144,19 @@ integration-test: build build-envoy build-grpc-interop build-grpc-echo
 	@go test -timeout 20m ./tests/utils/... --logtostderr
 	@go test -p 32 -timeout 20m ./tests/integration_test/... --logtostderr
 
-integration-debug: build build-envoy build-grpc-interop build-grpc-echo
+integration-test: build build-envoy build-grpc-interop build-grpc-echo integration-test-run
+
+integration-debug: build build-envoy build-grpc-interop build-grpc-echo integration-test-run
 	@echo "--> running integration tests and showing debug logs"
 	@go test -v -timeout 20m ./tests/env/... --logtostderr
 	@go test -v -timeout 20m ./tests/utils/... --logtostderr
 	# debug-components can be set as "all", "configmanager", or "envoy".
 	@go test -v -timeout 20m ./tests/integration_test/... --debug_components=envoy --logtostderr
+
+integration-test-asan: build build-envoy-asan build-grpc-interop build-grpc-echo integration-test-run
+
+integration-test-tsan: build build-envoy-tsan build-grpc-interop build-grpc-echo integration-test-run
+
 
 #-----------------------------------------------------------------------------
 # Target: dependencies

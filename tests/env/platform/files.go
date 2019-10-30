@@ -48,7 +48,7 @@ var fileMap = map[RuntimeFile]string{
 	Bootstrapper:            "../../../bin/bootstrap",
 	ConfigManager:           "../../../bin/configmanager",
 	Echo:                    "../../../bin/echo/server",
-	Envoy:                   "../../../bazel-bin/src/envoy/envoy",
+	Envoy:                   "../../../bin/envoy",
 	GrpcEchoClient:          "../../../bin/grpc_echo_client",
 	GrpcEchoServer:          "../../../bin/grpc_echo_server",
 	GrpcInteropClient:       "../../../bin/interop_client",
