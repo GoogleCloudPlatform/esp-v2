@@ -25,6 +25,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "test/mocks/common.h"
+#include "test/mocks/event/mocks.h"
 #include "test/mocks/http/mocks.h"
 #include "test/mocks/server/mocks.h"
 #include "test/mocks/tracing/mocks.h"
@@ -123,6 +124,7 @@ class HttpCallTest : public testing::Test {
   // Underlying http client mocks
   HttpUri http_uri_;
   NiceMock<Upstream::MockClusterManager> cm_;
+  NiceMock<Event::MockDispatcher> dispatcher_;
   NiceMock<Http::MockAsyncClient> http_client_;
 
   // Keep track of all underlying http client callbacks and http requests
@@ -152,9 +154,10 @@ TEST_F(HttpCallTest, TestSingleCallSuccessHttpOk) {
       .Times(0);  // Callback does not occur until response
 
   HttpCall* call = HttpCall::create(
-      cm_, http_uri_, fake_suffix_url_, fake_token_fn_, fake_request_,
-      timeout_ms_, retries_, mock_parent_span_, mock_time_source_,
-      fake_trace_operation_name_, mock_done_fn_.AsStdFunction());
+      cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
+      fake_request_, timeout_ms_, retries_, mock_parent_span_,
+      mock_time_source_, fake_trace_operation_name_,
+      mock_done_fn_.AsStdFunction());
   call->call();
   EXPECT_EQ(1, async_callbacks_.size());
   EXPECT_EQ(1, http_requests_.size());
@@ -173,9 +176,10 @@ TEST_F(HttpCallTest, TestSingleCallSuccessHttpNotFound) {
       .Times(0);  // Callback does not occur until response
 
   HttpCall* call = HttpCall::create(
-      cm_, http_uri_, fake_suffix_url_, fake_token_fn_, fake_request_,
-      timeout_ms_, retries_, mock_parent_span_, mock_time_source_,
-      fake_trace_operation_name_, mock_done_fn_.AsStdFunction());
+      cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
+      fake_request_, timeout_ms_, retries_, mock_parent_span_,
+      mock_time_source_, fake_trace_operation_name_,
+      mock_done_fn_.AsStdFunction());
   call->call();
   EXPECT_EQ(1, async_callbacks_.size());
   EXPECT_EQ(1, http_requests_.size());
@@ -196,9 +200,10 @@ TEST_F(HttpCallTest, TestSingleCallFailure) {
       .Times(0);  // Callback does not occur until response
 
   HttpCall* call = HttpCall::create(
-      cm_, http_uri_, fake_suffix_url_, fake_token_fn_, fake_request_,
-      timeout_ms_, retries_, mock_parent_span_, mock_time_source_,
-      fake_trace_operation_name_, mock_done_fn_.AsStdFunction());
+      cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
+      fake_request_, timeout_ms_, retries_, mock_parent_span_,
+      mock_time_source_, fake_trace_operation_name_,
+      mock_done_fn_.AsStdFunction());
   call->call();
   EXPECT_EQ(1, async_callbacks_.size());
   EXPECT_EQ(1, http_requests_.size());
@@ -222,9 +227,10 @@ TEST_F(HttpCallTest, TestRetryCallSuccess) {
       .Times(0);  // Callback does not occur until response
 
   HttpCall* call = HttpCall::create(
-      cm_, http_uri_, fake_suffix_url_, fake_token_fn_, fake_request_,
-      timeout_ms_, retries_, mock_parent_span_, mock_time_source_,
-      fake_trace_operation_name_, mock_done_fn_.AsStdFunction());
+      cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
+      fake_request_, timeout_ms_, retries_, mock_parent_span_,
+      mock_time_source_, fake_trace_operation_name_,
+      mock_done_fn_.AsStdFunction());
   call->call();
   EXPECT_EQ(1, async_callbacks_.size());
   EXPECT_EQ(1, http_requests_.size());
@@ -258,9 +264,10 @@ TEST_F(HttpCallTest, TestThreeRetriesWithLastSuccess) {
       .Times(0);  // Callback does not occur until response
 
   HttpCall* call = HttpCall::create(
-      cm_, http_uri_, fake_suffix_url_, fake_token_fn_, fake_request_,
-      timeout_ms_, retries_, mock_parent_span_, mock_time_source_,
-      fake_trace_operation_name_, mock_done_fn_.AsStdFunction());
+      cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
+      fake_request_, timeout_ms_, retries_, mock_parent_span_,
+      mock_time_source_, fake_trace_operation_name_,
+      mock_done_fn_.AsStdFunction());
   call->call();
   EXPECT_EQ(1, async_callbacks_.size());
   EXPECT_EQ(1, http_requests_.size());
@@ -294,9 +301,10 @@ TEST_F(HttpCallTest, TestThreeRetriesWithLastFailure) {
       .Times(0);  // Callback does not occur until response
 
   HttpCall* call = HttpCall::create(
-      cm_, http_uri_, fake_suffix_url_, fake_token_fn_, fake_request_,
-      timeout_ms_, retries_, mock_parent_span_, mock_time_source_,
-      fake_trace_operation_name_, mock_done_fn_.AsStdFunction());
+      cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
+      fake_request_, timeout_ms_, retries_, mock_parent_span_,
+      mock_time_source_, fake_trace_operation_name_,
+      mock_done_fn_.AsStdFunction());
   call->call();
   EXPECT_EQ(1, async_callbacks_.size());
 
@@ -328,9 +336,10 @@ TEST_F(HttpCallTest, TestSingleCallCancel) {
       .Times(0);  // Callback does not occur until response
 
   HttpCall* call = HttpCall::create(
-      cm_, http_uri_, fake_suffix_url_, fake_token_fn_, fake_request_,
-      timeout_ms_, retries_, mock_parent_span_, mock_time_source_,
-      fake_trace_operation_name_, mock_done_fn_.AsStdFunction());
+      cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
+      fake_request_, timeout_ms_, retries_, mock_parent_span_,
+      mock_time_source_, fake_trace_operation_name_,
+      mock_done_fn_.AsStdFunction());
   call->call();
   EXPECT_EQ(1, async_callbacks_.size());
   EXPECT_EQ(1, http_requests_.size());

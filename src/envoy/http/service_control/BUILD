@@ -59,6 +59,7 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         "//api/envoy/http/common:base_proto_cc_proto",
+        "@envoy//include/envoy/event:deferred_deletable",
         "@envoy//include/envoy/upstream:cluster_manager_interface",
         "@envoy//source/common/common:enum_to_int",
         "@envoy//source/common/http:headers_lib",
@@ -253,6 +254,7 @@ envoy_cc_test(
         ":http_call_lib",
         ":mocks_lib",
         "@envoy//test/mocks:common_lib",
+        "@envoy//test/mocks/event:event_mocks",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/mocks/stats:stats_mocks",
         "@envoy//test/mocks/tracing:tracing_mocks",

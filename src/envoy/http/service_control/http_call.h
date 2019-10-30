@@ -44,7 +44,7 @@ class HttpCall {
    * @return a HttpCall instance
    */
   static HttpCall* create(
-      Upstream::ClusterManager& cm,
+      Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher,
       const ::google::api::envoy::http::common::HttpUri& uri,
       const std::string& suffix_url,
       std::function<const std::string&()> token_fn,

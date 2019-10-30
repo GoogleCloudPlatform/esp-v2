@@ -184,9 +184,10 @@ ClientCache::ClientCache(
     auto& null_span = Envoy::Tracing::NullSpan::instance();
 
     auto* call = HttpCall::create(
-        cm_, service_control_uri_, config_.service_name() + ":check",
-        sc_token_fn_, request, check_timeout_ms_, check_retries_, null_span,
-        time_source_, "Service Control remote call: Check",
+        cm_, dispatcher_, service_control_uri_,
+        config_.service_name() + ":check", sc_token_fn_, request,
+        check_timeout_ms_, check_retries_, null_span, time_source_,
+        "Service Control remote call: Check",
         [response, on_done](const Status& status, const std::string& body) {
           if (status.ok()) {
             // Handle 200 response
@@ -214,9 +215,10 @@ ClientCache::ClientCache(
     auto& null_span = Envoy::Tracing::NullSpan::instance();
 
     auto* call = HttpCall::create(
-        cm_, service_control_uri_, config_.service_name() + ":allocateQuota",
-        quota_token_fn_, request, quota_timeout_ms_, quota_retries_, null_span,
-        time_source_, "Service Control remote call: Allocate Quota",
+        cm_, dispatcher_, service_control_uri_,
+        config_.service_name() + ":allocateQuota", quota_token_fn_, request,
+        quota_timeout_ms_, quota_retries_, null_span, time_source_,
+        "Service Control remote call: Allocate Quota",
         [response, on_done](const Status& status, const std::string& body) {
           if (status.ok()) {
             // Handle 200 response
@@ -244,9 +246,9 @@ ClientCache::ClientCache(
     auto& null_span = Envoy::Tracing::NullSpan::instance();
 
     auto* call = HttpCall::create(
-        cm_, service_control_uri_, report_suffix_url_, sc_token_fn_, request,
-        report_timeout_ms_, report_retries_, null_span, time_source_,
-        "Service Control remote call: Report",
+        cm_, dispatcher_, service_control_uri_, report_suffix_url_,
+        sc_token_fn_, request, report_timeout_ms_, report_retries_, null_span,
+        time_source_, "Service Control remote call: Report",
         [response, on_done](const Status& status, const std::string& body) {
           if (status.ok()) {
             // Handle 200 response
@@ -285,9 +287,10 @@ void ClientCache::callCheck(
                                               CheckResponse* response,
                                               TransportDoneFunc on_done) {
     auto* call = HttpCall::create(
-        cm_, service_control_uri_, config_.service_name() + ":check",
-        sc_token_fn_, request, check_timeout_ms_, check_retries_, parent_span,
-        time_source_, "Service Control remote call: Check",
+        cm_, dispatcher_, service_control_uri_,
+        config_.service_name() + ":check", sc_token_fn_, request,
+        check_timeout_ms_, check_retries_, parent_span, time_source_,
+        "Service Control remote call: Check",
         [response, on_done](const Status& status, const std::string& body) {
           if (status.ok()) {
             // Handle 200 response

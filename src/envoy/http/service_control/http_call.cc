@@ -19,6 +19,7 @@
 #include "common/http/message_impl.h"
 #include "common/http/utility.h"
 #include "common/tracing/http_tracer_impl.h"
+#include "envoy/event/deferred_deletable.h"
 #include "src/envoy/http/service_control/http_call.h"
 
 using ::google::api::envoy::http::common::HttpUri;
@@ -33,11 +34,12 @@ namespace {
 constexpr absl::string_view KApplicationProto = "application/x-protobuf";
 
 class HttpCallImpl : public HttpCall,
+                     public Event::DeferredDeletable,
                      public Logger::Loggable<Logger::Id::filter>,
                      public Http::AsyncClient::Callbacks {
  public:
-  HttpCallImpl(Upstream::ClusterManager& cm, const HttpUri& uri,
-               const std::string& suffix_url,
+  HttpCallImpl(Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher,
+               const HttpUri& uri, const std::string& suffix_url,
                std::function<const std::string&()> token_fn,
                const Protobuf::Message& body, uint32_t timeout_ms,
                uint32_t retries, Envoy::Tracing::Span& parent_span,
@@ -45,6 +47,7 @@ class HttpCallImpl : public HttpCall,
                const std::string& trace_operation_name,
                HttpCall::DoneFunc on_done)
       : cm_(cm),
+        dispatcher_(dispatcher),
         http_uri_(uri),
         retries_(retries),
         request_count_(0),
@@ -97,7 +100,7 @@ class HttpCallImpl : public HttpCall,
       on_done_(Status(Code::INTERNAL, "Failed to call service control"), body);
     }
     reset();
-    delete this;
+    deferredDelete();
   }
 
   void onFailure(Http::AsyncClient::FailureReason reason) override {
@@ -123,7 +126,7 @@ class HttpCallImpl : public HttpCall,
     on_done_(Status(Code::INTERNAL, "Failed to call service control"),
              std::string());
     reset();
-    delete this;
+    deferredDelete();
   }
 
  private:
@@ -192,7 +195,7 @@ class HttpCallImpl : public HttpCall,
       ENVOY_LOG(debug, "Http call [uri = {}]: canceled", uri_);
       reset();
     }
-    delete this;
+    deferredDelete();
   }
 
   void reset() { request_ = nullptr; }
@@ -218,9 +221,15 @@ class HttpCallImpl : public HttpCall,
     return message;
   }
 
+  void deferredDelete() {
+    dispatcher_.deferredDelete(std::unique_ptr<HttpCallImpl>(this));
+  }
+
  private:
   // The upstream cluster manager
   Upstream::ClusterManager& cm_;
+  // The dispatcher for this thread
+  Event::Dispatcher& dispatcher_;
 
   // The request
   Http::AsyncClient::Request* request_{};
@@ -260,14 +269,14 @@ class HttpCallImpl : public HttpCall,
 }  // namespace
 
 HttpCall* HttpCall::create(
-    Upstream::ClusterManager& cm,
+    Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher,
     const ::google::api::envoy::http::common::HttpUri& uri,
     const std::string& suffix_url, std::function<const std::string&()> token_fn,
     const Protobuf::Message& body, uint32_t timeout_ms, uint32_t retries,
     Envoy::Tracing::Span& parent_span, Envoy::TimeSource& time_source,
     const std::string& trace_operation_name, HttpCall::DoneFunc on_done) {
-  return new HttpCallImpl(cm, uri, suffix_url, token_fn, body, timeout_ms,
-                          retries, parent_span, time_source,
+  return new HttpCallImpl(cm, dispatcher, uri, suffix_url, token_fn, body,
+                          timeout_ms, retries, parent_span, time_source,
                           trace_operation_name, on_done);
 }
 
