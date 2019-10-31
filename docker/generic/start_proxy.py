@@ -32,8 +32,11 @@ BOOTSTRAP_CMD = "apiproxy/bootstrap"
 # mounted from tmpfs.
 DEFAULT_CONFIG_DIR = "/tmp"
 
-# Default HTTP/1.x port
-DEFAULT_PORT = '80'
+# Default Listener HTTP/1.x port
+DEFAULT_LISTENER_HTTP1_PORT = 8080
+
+# Default Backend HTTP/1.x port
+DEFAULT_BACKEND_HTTP1_PORT = 80
 
 # Default backend
 DEFAULT_BACKEND = "127.0.0.1:8082"
@@ -151,6 +154,10 @@ environment variable or by passing "-k" flag to this script.
         Choices: [http1|http2|grpc].
         Default value: http1.''',
         choices=['http1', 'http2', 'grpc'])
+
+    parser.add_argument('--http_port', default=None, type=int, help='''
+       The port to accept HTTP/1.x connections.
+       Default is {port}'''.format(port=DEFAULT_LISTENER_HTTP1_PORT))
 
     parser.add_argument(
         '-R',
@@ -442,7 +449,7 @@ if __name__ == '__main__':
         cluster_port = cluster_args[1]
     elif len(cluster_args) == 1:
         cluster_address = cluster_args[0]
-        cluster_port = DEFAULT_PORT
+        cluster_port = str(DEFAULT_BACKEND_HTTP1_PORT)
     else:
         print("incorrect backend")
         sys.exit(1)
@@ -466,6 +473,9 @@ if __name__ == '__main__':
 
     if args.log_jwt_payloads:
         proxy_conf.extend(["--log_jwt_payloads", args.log_jwt_payloads])
+
+    if args.http_port:
+        proxy_conf.extend(["--listener_port", str(args.http_port)])
 
     if args.service:
         proxy_conf.extend(["--service", args.service])

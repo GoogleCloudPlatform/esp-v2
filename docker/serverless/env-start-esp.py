@@ -54,8 +54,7 @@ def main():
 
     # Uncaught KeyError; if no port, we can't serve a nice error handler. Crash instead.
     assert_env_var("PORT")
-    # TODO(qiwzhang): b/142664239 to use flag --listener_port
-    # ARGS.append("--http_port={}".format(os.environ["PORT"]))
+    ARGS.append("--http_port={}".format(os.environ["PORT"]))
 
     try:
         assert_env_var("ENDPOINTS_SERVICE_NAME")
