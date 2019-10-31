@@ -21,13 +21,13 @@ import (
 	"sort"
 	"strings"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/options"
-	"cloudesf.googlesource.com/gcpproxy/src/go/util"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
 	"github.com/golang/glog"
 
-	commonpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/common"
-	pmpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/path_matcher"
-	scpb "cloudesf.googlesource.com/gcpproxy/src/go/proto/api/envoy/http/service_control"
+	commonpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/common"
+	pmpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/path_matcher"
+	scpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/service_control"
 	durationpb "github.com/golang/protobuf/ptypes/duration"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"

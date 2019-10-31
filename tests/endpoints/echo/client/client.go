@@ -26,7 +26,7 @@ import (
 	"net/http"
 	"time"
 
-	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env/testdata"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jws"
 )

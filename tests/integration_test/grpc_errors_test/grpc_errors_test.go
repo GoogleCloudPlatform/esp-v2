@@ -18,9 +18,9 @@ import (
 	"strings"
 	"testing"
 
-	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/grpc_echo/client"
-	"cloudesf.googlesource.com/gcpproxy/tests/env"
-	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/grpc_echo/client"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env"
+	comp "github.com/GoogleCloudPlatform/api-proxy/tests/env/components"
 )
 
 func TestGRPCErrors(t *testing.T) {

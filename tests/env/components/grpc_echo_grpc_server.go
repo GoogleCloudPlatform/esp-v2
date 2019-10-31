@@ -19,7 +19,7 @@ import (
 	"os"
 	"os/exec"
 
-	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env/platform"
 )
 
 type GrpcEchoGrpcServer struct {
@@ -27,7 +27,7 @@ type GrpcEchoGrpcServer struct {
 }
 
 func NewGrpcEchoGrpcServer(port uint16) (*GrpcEchoGrpcServer, error) {
-	cmd := exec.Command(platform.GetFilePath(platform.GrpcEcho), fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), port))
+	cmd := exec.Command(platform.GetFilePath(platform.GrpcEchoServer), fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), port))
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return &GrpcEchoGrpcServer{

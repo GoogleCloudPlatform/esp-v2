@@ -21,11 +21,11 @@ import (
 	"strings"
 	"time"
 
-	"cloudesf.googlesource.com/gcpproxy/tests/env/components"
-	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env/components"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env/testdata"
 	"github.com/golang/glog"
 
-	bookserver "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/server"
+	bookserver "github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/bookstore_grpc/server"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"

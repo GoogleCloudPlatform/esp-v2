@@ -26,7 +26,8 @@ const (
 	ConfigManager
 	Echo
 	Envoy
-	GrpcEcho
+	GrpcEchoClient
+	GrpcEchoServer
 	GrpcInteropClient
 	GrpcInteropServer
 	GrpcInteropStressClient
@@ -48,7 +49,8 @@ var fileMap = map[RuntimeFile]string{
 	ConfigManager:           "../../../bin/configmanager",
 	Echo:                    "../../../bin/echo/server",
 	Envoy:                   "../../../bazel-bin/src/envoy/envoy",
-	GrpcEcho:                "../../../bin/grpc_echo_server",
+	GrpcEchoClient:          "../../../bin/grpc_echo_client",
+	GrpcEchoServer:          "../../../bin/grpc_echo_server",
 	GrpcInteropClient:       "../../../bin/interop_client",
 	GrpcInteropServer:       "../../../bin/interop_server",
 	GrpcInteropStressClient: "../../../bin/stress_test",

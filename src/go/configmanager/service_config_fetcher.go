@@ -22,10 +22,10 @@ import (
 	"strings"
 	"time"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/commonflags"
-	"cloudesf.googlesource.com/gcpproxy/src/go/configmanager/flags"
-	"cloudesf.googlesource.com/gcpproxy/src/go/metadata"
-	"cloudesf.googlesource.com/gcpproxy/src/go/util"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/commonflags"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/configmanager/flags"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/metadata"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
 

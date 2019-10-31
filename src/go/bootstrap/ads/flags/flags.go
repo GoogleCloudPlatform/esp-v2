@@ -18,8 +18,8 @@ import (
 	"flag"
 	"time"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/commonflags"
-	"cloudesf.googlesource.com/gcpproxy/src/go/options"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/commonflags"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
 )
 
 var (

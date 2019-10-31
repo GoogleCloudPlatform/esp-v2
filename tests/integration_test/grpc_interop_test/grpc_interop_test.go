@@ -21,10 +21,10 @@ import (
 	"syscall"
 	"testing"
 
-	"cloudesf.googlesource.com/gcpproxy/tests/env"
-	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env/platform"
 
-	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	comp "github.com/GoogleCloudPlatform/api-proxy/tests/env/components"
 )
 
 func runAndWait(cmd *exec.Cmd, t *testing.T) {

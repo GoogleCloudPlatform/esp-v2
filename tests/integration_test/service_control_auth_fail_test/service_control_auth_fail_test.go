@@ -21,13 +21,13 @@ import (
 	"testing"
 	"time"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/util"
-	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/client"
-	"cloudesf.googlesource.com/gcpproxy/tests/env"
-	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
-	"cloudesf.googlesource.com/gcpproxy/tests/utils"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/bookstore_grpc/client"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env/testdata"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/utils"
 
-	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	comp "github.com/GoogleCloudPlatform/api-proxy/tests/env/components"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 

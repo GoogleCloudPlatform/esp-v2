@@ -21,10 +21,10 @@ import (
 	"testing"
 	"time"
 
-	"cloudesf.googlesource.com/gcpproxy/tests/env"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env"
 
-	bsclient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/client"
-	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	bsclient "github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/bookstore_grpc/client"
+	comp "github.com/GoogleCloudPlatform/api-proxy/tests/env/components"
 )
 
 func TestServiceControlReportNetworkFail(t *testing.T) {

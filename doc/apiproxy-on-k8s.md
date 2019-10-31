@@ -32,9 +32,9 @@ To configure Endpoints:
 
 Go to directory: gcpproxy/tests/endpoints/bookstore_grpc
 
-Create a self-contained protobuf descriptor file from your service .proto file, or use the existing [one](https://cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/proto/api_descriptor.pb)
+Create a self-contained protobuf descriptor file from your service .proto file, or use the existing [one](https://github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/bookstore_grpc/proto/api_descriptor.pb)
 
-Open the [service configuration file](https://cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/proto/api_config_auth.yaml). This file defines the gRPC API configuration for the Bookstore service.
+Open the [service configuration file](https://github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/bookstore_grpc/proto/api_config_auth.yaml). This file defines the gRPC API configuration for the Bookstore service.
 
 Note the following:
   Replace <YOUR_PROJECT_ID> in your api_config.yaml file with your GCP project ID.

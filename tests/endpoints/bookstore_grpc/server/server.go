@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"net"
 
-	"cloudesf.googlesource.com/gcpproxy/tests/env/platform"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env/platform"
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -27,8 +27,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	bookgrpc "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/proto"
-	bookpb "cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/proto"
+	bookgrpc "github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/bookstore_grpc/proto"
+	bookpb "github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/bookstore_grpc/proto"
 	emptypb "github.com/golang/protobuf/ptypes/empty"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"

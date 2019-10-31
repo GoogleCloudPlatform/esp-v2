@@ -21,12 +21,12 @@ import (
 	"strings"
 	"testing"
 
-	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/bookstore_grpc/client"
-	"cloudesf.googlesource.com/gcpproxy/tests/env"
-	"cloudesf.googlesource.com/gcpproxy/tests/env/testdata"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/bookstore_grpc/client"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env/testdata"
 
-	grpcEchoClient "cloudesf.googlesource.com/gcpproxy/tests/endpoints/grpc_echo/client"
-	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	grpcEchoClient "github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/grpc_echo/client"
+	comp "github.com/GoogleCloudPlatform/api-proxy/tests/env/components"
 )
 
 var successTrailer, abortedTrailer, dataLossTrailer, internalTrailer client.GRPCWebTrailer

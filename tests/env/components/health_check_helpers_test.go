@@ -20,7 +20,7 @@ import (
 
 	"github.com/golang/glog"
 
-	endpoint "cloudesf.googlesource.com/gcpproxy/tests/endpoints/health_check"
+	endpoint "github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/health_check"
 )
 
 func TestGrpcHealthCheck(t *testing.T) {

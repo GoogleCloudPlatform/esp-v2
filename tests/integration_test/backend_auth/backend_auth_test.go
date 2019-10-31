@@ -18,12 +18,12 @@ import (
 	"fmt"
 	"testing"
 
-	"cloudesf.googlesource.com/gcpproxy/src/go/util"
-	"cloudesf.googlesource.com/gcpproxy/tests/endpoints/echo/client"
-	"cloudesf.googlesource.com/gcpproxy/tests/env"
-	"cloudesf.googlesource.com/gcpproxy/tests/utils"
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/echo/client"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/env"
+	"github.com/GoogleCloudPlatform/api-proxy/tests/utils"
 
-	comp "cloudesf.googlesource.com/gcpproxy/tests/env/components"
+	comp "github.com/GoogleCloudPlatform/api-proxy/tests/env/components"
 )
 
 var testBackendAuthArgs = []string{
