@@ -191,7 +191,6 @@ class HttpCallImpl : public HttpCall,
 
     if (request_) {
       request_->cancel();
-      delete request_;
       ENVOY_LOG(debug, "Http call [uri = {}]: canceled", uri_);
       reset();
     }

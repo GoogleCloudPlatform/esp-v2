@@ -90,6 +90,12 @@ class HttpCallTest : public testing::Test {
     fake_request_ = CheckRequest{};
   }
 
+  void TearDown() override {
+    for (auto request : http_requests_) {
+      delete(request);
+    }
+  }
+
   NiceMock<Tracing::MockSpan>* makeMockChildSpan() {
     auto span_name = http_requests_.empty()
                          ? fake_trace_operation_name_
