@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
@@ -91,4 +92,17 @@ func StructToMessage(pbst *structpb.Struct, out proto.Message) error {
 	}
 
 	return jsonpb.Unmarshal(buf, out)
+}
+
+// UnmarshalServiceConfig converts service config in JSON to proto
+func UnmarshalServiceConfig(config io.Reader) (*confpb.Service, error) {
+	unmarshaler := &jsonpb.Unmarshaler{
+		AllowUnknownFields: true,
+		AnyResolver:        Resolver,
+	}
+	var serviceConfig confpb.Service
+	if err := unmarshaler.Unmarshal(config, &serviceConfig); err != nil {
+		return nil, fmt.Errorf("fail to unmarshal serviceConfig: %s", err)
+	}
+	return &serviceConfig, nil
 }

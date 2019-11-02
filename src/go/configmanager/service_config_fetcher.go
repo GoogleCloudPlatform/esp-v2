@@ -15,8 +15,10 @@
 package configmanager
 
 import (
+	"bytes"
 	"crypto/tls"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"net/http"
 	"strings"
@@ -135,6 +137,14 @@ func fetchConfig(serviceName, configId string, mf *metadata.MetadataFetcher) (*c
 	return callServiceManagement(fetchConfigURL(serviceName, configId), token)
 }
 
+func readConfig(configPath string) (*confpb.Service, error) {
+	config, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return nil, err
+	}
+	return util.UnmarshalServiceConfig(bytes.NewReader(config))
+}
+
 var callServiceManagementRollouts = func(path, token string) (*smpb.ListServiceRolloutsResponse, error) {
 	var err error
 	var resp *http.Response
@@ -158,15 +168,7 @@ var callServiceManagement = func(path, token string) (*confpb.Service, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	unmarshaler := &jsonpb.Unmarshaler{
-		AllowUnknownFields: true,
-		AnyResolver:        util.Resolver,
-	}
-	var serviceConfig confpb.Service
-	if err = unmarshaler.Unmarshal(resp.Body, &serviceConfig); err != nil {
-		return nil, fmt.Errorf("fail to unmarshal serviceConfig: %s", err)
-	}
-	return &serviceConfig, nil
+	return util.UnmarshalServiceConfig(resp.Body)
 }
 
 var callWithAccessToken = func(path, token string) (*http.Response, error) {

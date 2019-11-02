@@ -1,0 +1,100 @@
+{
+    "apis": [
+        {
+            "methods": [
+                {
+                    "name": "Echo",
+                    "requestTypeUrl": "type.googleapis.com/EchoRequest",
+                    "responseTypeUrl": "type.googleapis.com/EchoMessage"
+                },
+                {
+                    "name": "dynamic_routing_Hello"
+                },
+                {
+                    "name": "dynamic_routing_Search"
+                },
+                {
+                    "name": "dynamic_routing_GetPetById"
+                },
+                {
+                    "name": "dynamic_routing_AddPet"
+                },
+                {
+                    "name": "dynamic_routing_ListPets"
+                }
+            ],
+            "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+            "version": "1.0.0"
+        }
+    ],
+    "backend": {
+        "rules": [
+            {
+                "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo"
+            },
+            {
+                "address": "https://us-central1-cloud-esf.cloudfunctions.net/hello",
+                "jwtAudience": "https://us-central1-cloud-esf.cloudfunctions.net/hello",
+                "pathTranslation": "APPEND_PATH_TO_ADDRESS",
+                "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello"
+            },
+            {
+                "address": "https://us-west2-cloud-esf.cloudfunctions.net/search",
+                "jwtAudience": "https://us-west2-cloud-esf.cloudfunctions.net/search",
+                "pathTranslation": "CONSTANT_ADDRESS",
+                "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search"
+            },
+            {
+                "address": "https://pets.appspot.com:8008/api",
+                "jwtAudience": "1083071298623-e...t.apps.googleusercontent.com",
+                "pathTranslation": "APPEND_PATH_TO_ADDRESS",
+                "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById"
+            },
+            {
+                "address": "https://pets.appspot.com/api",
+                "jwtAudience": "1083071298623-e...t.apps.googleusercontent.com",
+                "pathTranslation": "APPEND_PATH_TO_ADDRESS",
+                "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet"
+            },
+            {
+                "address": "https://pets.appspot.com/api",
+                "jwtAudience": "1083071298623-e...t.apps.googleusercontent.com",
+                "pathTranslation": "APPEND_PATH_TO_ADDRESS",
+                "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets"
+            }
+        ]
+    },
+    "http": {
+        "rules": [
+            {
+                "body": "message",
+                "post": "/echo",
+                "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo"
+            },
+            {
+                "get": "/hello",
+                "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello"
+            },
+            {
+                "get": "/search",
+                "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search"
+            },
+            {
+                "get": "/pet/{pet_id}",
+                "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById"
+            },
+            {
+                "post": "/pet",
+                "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet"
+            },
+            {
+                "get": "/pets",
+                "selector": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets"
+            }
+        ]
+    },
+    "id": "2017-05-01r0",
+    "name": "echo-api.endpoints.cloudesf-testing.cloud.goog",
+    "producerProjectId": "producer-project",
+    "title": "Endpoints Example"
+}
