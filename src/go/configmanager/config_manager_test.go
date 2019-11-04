@@ -742,7 +742,7 @@ func TestFetchListeners(t *testing.T) {
                                         {
                                             "config":{
                                                 "gcp_attributes":{
-                                                    "platform": "GCE"
+                                                    "platform": "GCE(API Proxy)"
                                                 },
                                                 "requirements": [
                                                   {
@@ -1042,7 +1042,7 @@ func TestFetchListeners(t *testing.T) {
                                 },
                                 {
                                     "config":{
-                                        "gcp_attributes":{"platform":"GCE"},
+                                        "gcp_attributes":{"platform":"GCE(API Proxy)"},
                                         "requirements":[
                                              {
                                                 "api_key":{

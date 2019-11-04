@@ -91,12 +91,15 @@ var (
 	ScCheckRetries  = flag.Int("service_control_check_retries", -1, `Set the retry times for service control Check request. Must be >= 0 and the default is 3 if not set.`)
 	ScQuotaRetries  = flag.Int("service_control_quota_retries", -1, `Set the retry times for service control Quota request. Must be >= 0 and the default is 1 if not set.`)
 	ScReportRetries = flag.Int("service_control_report_retries", -1, `Set the retry times for service control Report request. Must be >= 0 and the default is 5 if not set.`)
+
+	ComputePlatformOverride = flag.String("compute_platform_override", "", "the overridden platform where the proxy is running at")
 )
 
 func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 	return options.ConfigGeneratorOptions{
 		CommonOptions:                 commonflags.DefaultCommonOptionsFromFlags(),
 		BackendProtocol:               *BackendProtocol,
+		ComputePlatformOverride:       *ComputePlatformOverride,
 		CorsAllowCredentials:          *CorsAllowCredentials,
 		CorsAllowHeaders:              *CorsAllowHeaders,
 		CorsAllowMethods:              *CorsAllowMethods,

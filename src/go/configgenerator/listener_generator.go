@@ -422,6 +422,12 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	if serviceInfo.GcpAttributes != nil {
 		filterConfig.GcpAttributes = serviceInfo.GcpAttributes
 	}
+	if serviceInfo.Options.ComputePlatformOverride != "" {
+		if filterConfig.GcpAttributes == nil {
+			filterConfig.GcpAttributes = &scpb.GcpAttributes{}
+		}
+		filterConfig.GcpAttributes.Platform = serviceInfo.Options.ComputePlatformOverride
+	}
 
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]

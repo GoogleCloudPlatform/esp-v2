@@ -25,26 +25,6 @@ namespace google {
 namespace api_proxy {
 namespace service_control {
 
-namespace compute_platform {
-
-enum ComputePlatform { UNKNOWN = 0, GAE_FLEX = 1, GCE = 2, GKE = 3 };
-
-inline const char* ToString(ComputePlatform p) {
-  switch (p) {
-    case GAE_FLEX:
-      return "GAE Flex";
-    case GCE:
-      return "GCE";
-    case GKE:
-      return "GKE";
-    case UNKNOWN:
-    default:
-      return "unknown";
-  }
-}
-
-}  // namespace compute_platform
-
 namespace protocol {
 
 enum Protocol { UNKNOWN = 0, HTTP = 1, HTTPS = 2, GRPC = 3 };
@@ -185,7 +165,7 @@ struct ReportRequestInfo : public OperationInfo {
   std::string method;
 
   // A recognized compute platform (GAE, GCE, GKE).
-  compute_platform::ComputePlatform compute_platform;
+  std::string compute_platform;
 
   // If consumer data should be sent.
   CheckResponseInfo check_response_info;
@@ -226,7 +206,7 @@ struct ReportRequestInfo : public OperationInfo {
         response_size(-1),
         frontend_protocol(protocol::UNKNOWN),
         backend_protocol(protocol::UNKNOWN),
-        compute_platform(compute_platform::UNKNOWN),
+        compute_platform("UNKNOWN(API Proxy)"),
         request_bytes(0),
         response_bytes(0),
         streaming_request_message_counts(0),
