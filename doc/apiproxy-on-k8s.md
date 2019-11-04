@@ -1,7 +1,7 @@
-# Run APIProxy on Kubernetes
+# Run API Proxy on Google GKE
 
-This document describes how to run APIProxy with
-[Google Cloud Endpoints](https://cloud.google.com/endpoints/) integration on a Kubernetes cluster that can run anywhere as long as it has internet access.
+This tutorial describes how to run API Proxy as a sidecar for the Bookstore endpoint,
+on a Google GKE cluster.
 
 ## Prerequisites
 
@@ -16,9 +16,9 @@ This document describes how to run APIProxy with
 
 3. Note the project ID, because you'll need it later.
 
-4. Install [cURL](https://curl.haxx.se/download.html) for testing purposes.
+4. Install [CURL](https://curl.haxx.se/download.html) for testing purposes.
 
-5. [Enable Cloud Endpoints API](https://console.cloud.google.com/apis/api/endpoints.googleapis.com/overview)
+5. Enable [Cloud Endpoints API](https://console.cloud.google.com/apis/api/endpoints.googleapis.com/overview), [Cloud Service Management API](https://pantheon.corp.google.com/apis/api/servicemanagement.googleapis.com/overview), and [Cloud Service Control API](https://pantheon.corp.google.com/apis/api/servicecontrol.googleapis.com/overview)
    for your project in the Google Cloud Endpoints page in the API Manager.
    Ignore any prompt to create credentials.
 
@@ -54,8 +54,8 @@ Note that bookstore.endpoints.YOUR_PROJECT_ID.cloud.goog is the Endpoints servic
 
 ## Deploying the Endpoints configuration
 
-To deploy the Endpoints configuration, you use the gcloud endpoints services deploy command. This command uses Service Management, Google's foundational services platform, used by Endpoints and other services to create and manage APIs and services.
-For more information about the gcloud commands, see gcloud services.
+To deploy the Endpoints configuration, you use the [gcloud endpoints services deploy](https://cloud.google.com/sdk/gcloud/reference/endpoints/services/deploy) command. This command uses [Service Management](https://cloud.google.com/service-infrastructure/docs/manage-config), Google's foundational services platform, used by Endpoints and other services to create and manage APIs and services.
+
 To deploy the Endpoints configuration:
 
 Make sure you are in the directory where the api_descriptor.pb and api_config_auth.yaml files are located.
@@ -88,7 +88,7 @@ In the previous example, [2019-05-13r0] is the service configuration ID and book
 
 If you get an error message, see Troubleshooting Endpoints configuration deployment, see Deploying the Endpoints configuration for additional information.
 
-### Deploying the API backend on GKE
+## Deploying the API backend on GKE
 
 So far you have deployed the service configuration to Service Management, but you have not yet deployed the code that serves the API backend. This section walks you through deploying prebuilt containers for the sample API and APIProxy to Kubernetes.
 

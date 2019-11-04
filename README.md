@@ -76,7 +76,9 @@ Your contributions are welcome. Please follow the contributor [guidelines](CONTR
 
 To find out more about building, running, and testing API Proxy:
 
-* [Run API Proxy on Kubernetes](/doc/apiproxy-on-k8s.md)
+* [Run API Proxy on Google Cloud Run](/doc/apiproxy-on-cloudrun.md)
+
+* [Run API Proxy on Google GKE](/doc/apiproxy-on-k8s.md)
 
 ## Disclaimer
 
