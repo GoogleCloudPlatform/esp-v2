@@ -27,8 +27,10 @@ endpoint, on Google Cloud Run.
 
 ## Deploying Backend service on Cloud Run
 
-First, you need a docker image. We supply an image at
-gcr.io/apiproxy-release/bookstore:1, which is built from this
+For this tutorial, we will deploy a simple HTTP bookstore manager as the backend application.
+We supply the Docker image for the backend at
+[gcr.io/apiproxy-release/bookstore:1](https://gcr.io/apiproxy-release/bookstore:1),
+which is built from this
 [Dockerfile](/tests/e2e/testdata/bookstore/bookstore.Dockerfile).
 
 To deploy Bookstore service on Cloud Run, you can either do it on Pantheon UI,
@@ -47,18 +49,24 @@ gcloud beta run deploy CLOUD_RUN_SERVICE_NAME \
 On successful completion, the command displays a message similar to the
 following:
 
+```
 Service [bookstore] revision [bookstore-00001] has been deployed and is serving
-traffic at https://bookstore-12345-uc.a.run.app
+traffic at https://BACKEND_SERVICE_URL
+```
 
 You can verify its status by sending a request to the service by:
 
 ```
-curl https://bookstore-12345-uc.a.run.app/shelves
+curl https://BACKEND_SERVICE_URL/shelves
 ```
 
 ## Deploying API Proxy
 
-Similarly, you need to deploy API Proxy on Google Cloud Run, by:
+Similarly, you need to deploy API Proxy on Google Cloud Run using a docker image.
+We supply the Docker image for API Proxy at
+[gcr.io/apiproxy-release/apiproxy-serverless:0](https://gcr.io/apiproxy-release/apiproxy-serverless:0).
+Note the `-serverless` suffix in this image, which denotes this is specifically
+for use on Cloud Functions and Cloud Run.
 
 ```
 gcloud beta run deploy API_PROXY_SERVICE_NAME \
@@ -68,12 +76,14 @@ gcloud beta run deploy API_PROXY_SERVICE_NAME \
     --project=YOUR_PROJECT_ID
 ```
 
-Replace API_PROXY_SERVICE_NAME and YOUR_PROJECT_ID accordingly.
+Replace `API_PROXY_SERVICE_NAME` and `YOUR_PROJECT_ID` accordingly.
 
 On successful completion, similar message is displayed:
 
+```
 Service [apiproxy] revision [apiproxy-00001] has been deployed and is serving
-traffic at https://apiproxy-45678-uc.a.run.app
+traffic at https://PROXY_SERVICE_URL
+```
 
 ## Configuring Endpoints
 
@@ -85,18 +95,21 @@ service.
 
 We supply a
 [template](/tests/e2e/testdata/bookstore/bookstore_swagger_template.json) for
-the bookstore service. You need to change the host name to the
-API_PROXY_SERVICE_NAME URL, without prefix "https://". Also, you need to define
-the address of your backend service with `x-google-backend`.
+the bookstore service. You must make the following changes to it:
+
+1) Change the `host` name to the `PROXY_SERVICE_URL`, **without** the protocol identifier.
+2) Add the `x-google-backend` object with the address to `BACKEND_SERVICE_URL`,
+**with** the protocol identifier.
 
 For example:
 
 ```
 ...
 
-"host": "apiproxy-45678-uc.a.run.app",
+"host": "PROXY_SERVICE_URL",
 "x-google-backend": {
-  "address": "https://bookstore-12345-uc.a.run.app" }
+  "address": "https://BACKEND_SERVICE_URL"
+},
 ...
 
 ```
@@ -122,27 +135,47 @@ Management outputs the service configuration ID and the service name, similar to
 the following:
 
 ```
-Service Configuration [2019-05-13r0] uploaded for service [apiproxy-45678-uc.a.run.app]
+Service Configuration [2019-05-13r0] uploaded for service [ENDPOINTS_SERVICE_NAME]
 ```
+
+Note that on Cloud Run, `ENDPOINTS_SERVICE_NAME` is usually the same as `PROXY_SERVICE_URL`
+(minus the protocol identifier).
 
 ## Re-Deploying API Proxy to update the service config
 
-After the service configuration is deployed to service management API, you need to re-deploy the API Proxy so that it can pick up the service configuration that just deployed.
+After the service configuration is deployed to service management API,
+you need to re-deploy the API Proxy.
+We provide the `ENDPOINTS_SERVICE_NAME` on this deploy,
+allowing the API Proxy to read the service configuration that was just deployed.
 
+Note that in the following command, only the second instance of `ENDPOINTS_SERVICE_NAME`
+should be replaced with the actual value. The first instance of `ENDPOINTS_SERVICE_NAME`
+is the name of the environment variable, and should be kept as is.
 
 ```
 gcloud beta run deploy API_PROXY_SERVICE_NAME \
     --image="gcr.io/apiproxy-release/apiproxy-serverless:0" \
-    --set-env-vars=ENDPOINTS_SERVICE_NAME=apiproxy-45678-uc.a.run.app
+    --set-env-vars=ENDPOINTS_SERVICE_NAME=ENDPOINTS_SERVICE_NAME
     --allow-unauthenticated \
     --platform managed \
     --project=YOUR_PROJECT_ID
 ```
 
-## Testing the API
-
-Now you can sent request to the backend servie, through API Proxy:
+For example:
 
 ```
-curl https://apiproxy-45678-uc.a.run.app/shelves
+gcloud beta run deploy api-proxy-test-1 \
+    --image="gcr.io/apiproxy-release/apiproxy-serverless:0" \
+    --set-env-vars=ENDPOINTS_SERVICE_NAME=api-proxy-test-1-lrnm3ejpeq-uc.a.run.app \
+    --allow-unauthenticated \
+    --platform managed
+
+```
+
+## Testing the API
+
+Now you can sent request to the backend service through the API Proxy:
+
+```
+curl https://PROXY_SERVICE_URL/shelves
 ```
