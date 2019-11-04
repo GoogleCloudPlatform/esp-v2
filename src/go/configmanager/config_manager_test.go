@@ -1132,6 +1132,7 @@ func TestFetchListeners(t *testing.T) {
 		flag.Set("service_config_id", testConfigID)
 		flag.Set("rollout_strategy", util.FixedRolloutStrategy)
 		flag.Set("check_rollout_interval", "100ms")
+		flag.Set("service_config_path", "")
 
 		runTest(t, opts, func(env *testEnv) {
 			ctx := context.Background()
@@ -1175,14 +1176,14 @@ func TestFetchListeners(t *testing.T) {
 func TestDynamicBackendRouting(t *testing.T) {
 	testData := []struct {
 		desc              string
-		fakeServiceConfig string
+		serviceConfigPath string
 		backendProtocol   string
 		wantedClusters    []string
 		wantedListener    string
 	}{
 		{
 			desc:              "Success for http1 with dynamic routing",
-			fakeServiceConfig: marshalServiceConfigToString(testdata.FakeConfigForDynamicRouting, t),
+			serviceConfigPath: "testdata/service_config_for_dynamic_routing.json",
 			backendProtocol:   "http1",
 			wantedClusters:    testdata.FakeWantedClustersForDynamicRouting,
 			wantedListener:    testdata.FakeWantedListenerForDynamicRouting,
@@ -1191,78 +1192,72 @@ func TestDynamicBackendRouting(t *testing.T) {
 
 	marshaler := &jsonpb.Marshaler{}
 	for i, tc := range testData {
-		// Overrides fakeConfig for the test case.
-		fakeConfig = tc.fakeServiceConfig
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = tc.backendProtocol
 		opts.EnableBackendRouting = true
 
-		flag.Set("service", testProjectName)
-		flag.Set("service_config_id", testConfigID)
-		flag.Set("rollout_strategy", util.FixedRolloutStrategy)
-		flag.Set("check_rollout_interval", "100ms")
+		flag.Set("service_config_path", tc.serviceConfigPath)
 
-		runTest(t, opts, func(env *testEnv) {
-			ctx := context.Background()
-			// First request, VersionId should be empty.
-			reqForClusters := v2pb.DiscoveryRequest{
-				Node: &corepb.Node{
-					Id: opts.Node,
-				},
-				TypeUrl: cache.ClusterType,
-			}
+		manager, err := NewConfigManager(nil, opts)
+		if err != nil {
+			t.Fatal("fail to initialize ConfigManager: ", err)
+		}
+		ctx := context.Background()
+		// First request, VersionId should be empty.
+		reqForClusters := v2pb.DiscoveryRequest{
+			Node: &corepb.Node{
+				Id: opts.Node,
+			},
+			TypeUrl: cache.ClusterType,
+		}
 
-			respForClusters, err := env.configManager.cache.Fetch(ctx, reqForClusters)
+		respForClusters, err := manager.cache.Fetch(ctx, reqForClusters)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !reflect.DeepEqual(respForClusters.Request, reqForClusters) {
+			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, respForClusters.Request, reqForClusters)
+		}
+
+		sortedClusters := sortResources(respForClusters)
+		for idx, want := range tc.wantedClusters {
+			gotCluster, err := marshaler.MarshalToString(sortedClusters[idx])
 			if err != nil {
 				t.Fatal(err)
 			}
+			gotCluster = normalizeJson(gotCluster, t)
+			if want = normalizeJson(want, t); gotCluster != want {
+				t.Errorf("Test Desc(%d): %s, idx %d snapshot cache fetch got Cluster: %s, want: %s", i, tc.desc, idx, gotCluster, want)
+			}
+		}
 
-			if respForClusters.Version != testConfigID {
-				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, respForClusters.Version, testConfigID)
-			}
-			if !reflect.DeepEqual(respForClusters.Request, reqForClusters) {
-				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, respForClusters.Request, reqForClusters)
-			}
+		reqForListener := v2pb.DiscoveryRequest{
+			Node: &corepb.Node{
+				Id: opts.Node,
+			},
+			TypeUrl: cache.ListenerType,
+		}
 
-			sortedClusters := sortResources(respForClusters)
-			for idx, want := range tc.wantedClusters {
-				gotCluster, err := marshaler.MarshalToString(sortedClusters[idx])
-				if err != nil {
-					t.Fatal(err)
-				}
-				gotCluster = normalizeJson(gotCluster, t)
-				if want = normalizeJson(want, t); gotCluster != want {
-					t.Errorf("Test Desc(%d): %s, idx %d snapshot cache fetch got Cluster: %s, want: %s", i, tc.desc, idx, gotCluster, want)
-				}
-			}
+		respForListener, err := manager.cache.Fetch(ctx, reqForListener)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if respForListener.Version != testConfigID {
+			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, respForListener.Version, testConfigID)
+		}
+		if !reflect.DeepEqual(respForListener.Request, reqForListener) {
+			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, respForListener.Request, reqForListener)
+		}
 
-			reqForListener := v2pb.DiscoveryRequest{
-				Node: &corepb.Node{
-					Id: opts.Node,
-				},
-				TypeUrl: cache.ListenerType,
-			}
-
-			respForListener, err := env.configManager.cache.Fetch(ctx, reqForListener)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if respForListener.Version != testConfigID {
-				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, respForListener.Version, testConfigID)
-			}
-			if !reflect.DeepEqual(respForListener.Request, reqForListener) {
-				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, respForListener.Request, reqForListener)
-			}
-
-			gotListener, err := marshaler.MarshalToString(respForListener.Resources[0])
-			if err != nil {
-				t.Fatal(err)
-			}
-			gotListener = normalizeJson(gotListener, t)
-			if wantListener := normalizeJson(tc.wantedListener, t); gotListener != wantListener {
-				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got Listener: %s,\n\t want: %s", i, tc.desc, gotListener, wantListener)
-			}
-		})
+		gotListener, err := marshaler.MarshalToString(respForListener.Resources[0])
+		if err != nil {
+			t.Fatal(err)
+		}
+		gotListener = normalizeJson(gotListener, t)
+		if wantListener := normalizeJson(tc.wantedListener, t); gotListener != wantListener {
+			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got Listener: %s,\n\t want: %s", i, tc.desc, gotListener, wantListener)
+		}
 	}
 }
 
@@ -1366,6 +1361,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 	flag.Set("service_config_id", testConfigID)
 	flag.Set("rollout_strategy", util.ManagedRolloutStrategy)
 	flag.Set("check_rollout_interval", "100ms")
+	flag.Set("service_config_path", "")
 
 	runTest(t, opts, func(env *testEnv) {
 		var resp *cache.Response
