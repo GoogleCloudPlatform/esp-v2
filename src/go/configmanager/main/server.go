@@ -65,10 +65,7 @@ func main() {
 
 	// Register Envoy discovery services.
 	discoverygrpc.RegisterAggregatedDiscoveryServiceServer(grpcServer, server)
-	v2grpc.RegisterEndpointDiscoveryServiceServer(grpcServer, server)
-	v2grpc.RegisterClusterDiscoveryServiceServer(grpcServer, server)
-	v2grpc.RegisterRouteDiscoveryServiceServer(grpcServer, server)
-	v2grpc.RegisterListenerDiscoveryServiceServer(grpcServer, server)
+
 	fmt.Printf("config manager server is running at %s .......\n", lis.Addr())
 
 	// Handle signals gracefully
