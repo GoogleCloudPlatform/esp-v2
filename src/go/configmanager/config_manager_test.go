@@ -1132,7 +1132,7 @@ func TestFetchListeners(t *testing.T) {
 		flag.Set("service_config_id", testConfigID)
 		flag.Set("rollout_strategy", util.FixedRolloutStrategy)
 		flag.Set("check_rollout_interval", "100ms")
-		flag.Set("service_config_path", "")
+		flag.Set("service_json_path", "")
 
 		runTest(t, opts, func(env *testEnv) {
 			ctx := context.Background()
@@ -1196,7 +1196,7 @@ func TestDynamicBackendRouting(t *testing.T) {
 		opts.BackendProtocol = tc.backendProtocol
 		opts.EnableBackendRouting = true
 
-		flag.Set("service_config_path", tc.serviceConfigPath)
+		flag.Set("service_json_path", tc.serviceConfigPath)
 
 		manager, err := NewConfigManager(nil, opts)
 		if err != nil {
@@ -1361,7 +1361,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 	flag.Set("service_config_id", testConfigID)
 	flag.Set("rollout_strategy", util.ManagedRolloutStrategy)
 	flag.Set("check_rollout_interval", "100ms")
-	flag.Set("service_config_path", "")
+	flag.Set("service_json_path", "")
 
 	runTest(t, opts, func(env *testEnv) {
 		var resp *cache.Response

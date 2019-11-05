@@ -1,0 +1,56 @@
+#!/bin/bash
+# Copyright 2019 Google LLC
+
+# This script will download the service config and build it into
+# serverless docker image to be used for Cloud Run.
+#
+# gcloud SDK has to be installed and configured with:
+#   gcloud config set project ${PROJECT}
+#   gcloud auth login
+#
+# Following gcloud commands can be used to find out service name
+#   gcloud endpoints services list
+#   gcloud endpoints configs list --service=${SERVICE}
+# Use the latest one for the CONFIG_ID
+
+function error_exit() {
+  # ${BASH_SOURCE[1]} is the file name of the caller.
+  echo "${BASH_SOURCE[1]}: line ${BASH_LINENO[0]}: ${1:-Unknown Error.} (exit ${2:-1})" 1>&2
+  exit ${2:-1}
+}
+
+while getopts :c:s:p: arg; do
+  case ${arg} in
+    c) CONFIG_ID="${OPTARG}";;
+    s) SERVICE="${OPTARG}";;
+    p) PROJECT="${OPTARG}";;
+    \?) error_exit "Unrecognized argument -${OPTARG}";;
+  esac
+done
+
+[[ -n "${PROJECT}" ]] || error_exit "Missing required PROJECT"
+[[ -n "${SERVICE}" ]] || error_exit "Missing required SERVICE"
+[[ -n "${CONFIG_ID}" ]] || error_exit "Missing required CONFIG_ID"
+
+(
+set -x
+cd "$(mktemp -d /tmp/docker.XXXX)"
+
+gcloud endpoints configs describe "${CONFIG_ID}" --project="${PROJECT}" \
+  --service="${SERVICE}" --format=json > service.json \
+  || error_exit "Failed to download service config"
+
+
+cat <<"EOF" > Dockerfile
+FROM gcr.io/apiproxy-release/serverless-proxy:0
+
+ENV ENDPOINTS_SERVICE_PATH /etc/nginx/service.json
+COPY service.json ${ENDPOINTS_SERVICE_PATH}
+
+ENTRYPOINT ["/env-start-proxy.py"]
+EOF
+
+NEW_IMAGE="gcr.io/${PROJECT}/serverless-proxy:${CONFIG_ID}"
+gcloud builds submit --tag "${NEW_IMAGE}" . --project="${PROJECT}"
+)
+

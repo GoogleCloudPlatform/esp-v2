@@ -21,7 +21,7 @@ import os
 def assert_env_var(name):
     if name not in os.environ:
         raise KeyError(
-            "Serverless ESP expects {} in environment variables.".format(name)
+            "Serverless ApiProxy expects {} in environment variables.".format(name)
         )
 
 
@@ -55,39 +55,47 @@ def main():
     assert_env_var("PORT")
     ARGS.append("--http_port={}".format(os.environ["PORT"]))
 
-    try:
-        assert_env_var("ENDPOINTS_SERVICE_NAME")
-    except KeyError as error:
-        serve_error_msg(str(error))
-    ARGS.append("--service={}".format(os.environ["ENDPOINTS_SERVICE_NAME"]))
-
-    if "ENDPOINTS_SERVICE_VERSION" in os.environ:
+    if "ENDPOINTS_SERVICE_PATH" in os.environ:
         ARGS.extend(
             [
-                "--rollout_strategy=fixed",
-                "--version={}".format(os.environ["ENDPOINTS_SERVICE_VERSION"]),
+               "--rollout_strategy=fixed",
+               "--service_json_path={}".format(os.environ["ENDPOINTS_SERVICE_PATH"]),
             ]
         )
     else:
-        ARGS.append("--rollout_strategy=managed")
+        try:
+            assert_env_var("ENDPOINTS_SERVICE_NAME")
+        except KeyError as error:
+            serve_error_msg(str(error))
+        ARGS.append("--service={}".format(os.environ["ENDPOINTS_SERVICE_NAME"]))
+
+        if "ENDPOINTS_SERVICE_VERSION" in os.environ:
+            ARGS.extend(
+                [
+                    "--rollout_strategy=fixed",
+                    "--version={}".format(os.environ["ENDPOINTS_SERVICE_VERSION"]),
+                ]
+            )
+        else:
+            ARGS.append("--rollout_strategy=managed")
 
     if "CORS_PRESET" in os.environ:
         ARGS.append("--cors_preset={}".format(os.environ["CORS_PRESET"]))
 
-    if "ESP_ARGS" in os.environ:
-        # By default, ESP_ARGS is comma-separated.
+    if "APIPROXY_ARGS" in os.environ:
+        # By default, APIPROXY_ARGS is comma-separated.
         # But if a comma needs to appear within an arg, there is an alternative
         # syntax: Pick a replacement delimiter, specify it at the beginning of the
         # string between two caret (^) symbols, and use it within the arg string.
         # Example:
         # ^++^--cors_allow_methods="GET,POST,PUT,OPTIONS"++--cors_allow_credentials
-        arg_value = os.environ["ESP_ARGS"]
+        arg_value = os.environ["APIPROXY_ARGS"]
 
         delim = ","
         if arg_value.startswith("^") and "^" in arg_value[1:]:
             delim, arg_value = arg_value[1:].split("^", 1)
         if not delim:
-            serve_error_msg("Malformed ESP_ARGS environment variable.")
+            serve_error_msg("Malformed APIPROXY_ARGS environment variable.")
 
         ARGS.extend(arg_value.split(delim))
 

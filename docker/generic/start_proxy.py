@@ -137,6 +137,16 @@ environment variable or by passing "-k" flag to this script.
         service to fetch the service config ID.  ''')
 
     parser.add_argument(
+        '--service_json_path',
+        default=None,
+        help='''
+        Specify a path for ApiProxy to load the endpoint service config.
+        With this flag, ApiProxy will use "fixed" rollout strategy and following
+        flags will be ignored:
+           --service, --version, and --rollout_strategy.
+        ''')
+
+    parser.add_argument(
         '-a',
         '--backend',
         default=DEFAULT_BACKEND,
@@ -533,6 +543,18 @@ if __name__ == '__main__':
             "--service_config_id",
             args.version,
         ])
+
+    if args.service_json_path:
+        if args.service:
+            print("Flag --service cannot be used together with --service_json_path.")
+            sys.exit(3)
+        if args.version:
+            print("Flag --version cannot be used together with --service_json_path.")
+            sys.exit(3)
+        if args.rollout_strategy != "fixed":
+            print("Flag --rollout_strategy must be fixed with --service_json_path.")
+            sys.exit(3)
+        proxy_conf.extend(["--service_json_path", args.service_json_path])
 
     if args.check_metadata:
         proxy_conf.append("--check_metadata", )

@@ -38,7 +38,7 @@ var (
 	RolloutStrategy         = flag.String("rollout_strategy", "fixed", `service config rollout strategy, must be either "managed" or "fixed"`)
 	ServiceConfigID         = flag.String("service_config_id", "", "initial service config id")
 	ServiceName             = flag.String("service", "", "endpoint service name")
-	ServicePath             = flag.String("service_config_path", "", `file path to the endpoint service config.
+	ServicePath             = flag.String("service_json_path", "", `file path to the endpoint service config.
 					When this flag is used, fixed rollout_strategy will be used,
 					GCP metadata server will not be called to fetch access token, and
 					following flags will be ignored; --service_config_id, --service,
@@ -75,13 +75,13 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 	if *ServicePath != "" {
 		// Following flags will not be used
 		if *ServiceName != "" {
-			glog.Infof("flag --service is ignored when --service_config_path is specified.")
+			glog.Infof("flag --service is ignored when --service_json_path is specified.")
 		}
 		if *ServiceConfigID != "" {
-			glog.Infof("flag --service_config_id is ignored when --service_config_path is specified.")
+			glog.Infof("flag --service_config_id is ignored when --service_json_path is specified.")
 		}
 		if *RolloutStrategy != "fixed" {
-			glog.Infof("flag --rollout_strategy will be fixed when --service_config_path is specified.")
+			glog.Infof("flag --rollout_strategy will be fixed when --service_json_path is specified.")
 		}
 
 		if err := m.readAndApplyServiceConfig(*ServicePath); err != nil {

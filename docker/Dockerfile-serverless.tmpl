@@ -14,6 +14,6 @@
 
 FROM _PROXY_IMAGE_SHA_NAME
 
-ADD docker/serverless/env-start-esp.py /env-start-esp.py
+ADD docker/serverless/env-start-proxy.py /env-start-proxy.py
 
-ENTRYPOINT ["/env-start-esp.py"]
+ENTRYPOINT ["/env-start-proxy.py"]
