@@ -18,18 +18,24 @@
 set -eo pipefail
 
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "${SCRIPT_PATH}/../../.." && pwd)"
+ROOT="$(cd "${SCRIPT_PATH}/../../../.." && pwd)"
 ARGS="\
   \"--backend=127.0.0.1:8081\",\
 "
 
-. ${SCRIPT_PATH}/prow-utilities.sh || { echo "Cannot load Bash utilities";
+. ${ROOT}/tests/e2e/scripts/prow-utilities.sh || { echo "Cannot load Bash utilities";
 exit 1; }
 e2e_options "${@}"
 
-. ${SCRIPT_PATH}/linux-install-wrk.sh || { echo "Cannot load Bash utilities";
+. ${ROOT}/tests/e2e/scripts/gke/utilities.sh || { echo "Cannot load GKE utilities";
 exit 1; }
+e2e_options "${@}"
+
+. ${ROOT}/tests/e2e/scripts/linux-install-wrk.sh || { echo "Cannot load WRK utilities";
+exit 1; }
+
 echo "Installing tools if necessary"
+install_e2e_dependencies
 update_wrk
 
 TEST_ID="gke-${TEST_TYPE}-${BACKEND}"
@@ -42,16 +48,16 @@ ARGS="$ARGS \"--rollout_strategy=${ROLLOUT_STRATEGY}\","
 ARGS="$ARGS \"--enable_tracing\", \"--tracing_sample_rate=0.005\""
 case "${BACKEND}" in
   'bookstore')
-    YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/bookstore/http-bookstore.yaml.template
-    YAML_FILE=${SCRIPT_PATH}/../testdata/bookstore/http-bookstore.yaml
+    YAML_TEMPLATE=${ROOT}/tests/e2e/testdata/bookstore/gke/http-bookstore.yaml.template
+    YAML_FILE=${ROOT}/tests/e2e/testdata/bookstore/gke/http-bookstore.yaml
     ARGS="$ARGS , \"--backend_protocol=http1\"" ;;
   'echo')
-    YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/grpc_echo/grpc-echo.yaml.template
-    YAML_FILE=${SCRIPT_PATH}/../testdata/grpc_echo/grpc-echo.yaml
+    YAML_TEMPLATE=${ROOT}/tests/e2e/testdata/grpc_echo/gke/grpc-echo.yaml.template
+    YAML_FILE=${ROOT}/tests/e2e/testdata/grpc_echo/gke/grpc-echo.yaml
     ARGS="$ARGS , \"--backend_protocol=grpc\"" ;;
   'interop')
-    YAML_TEMPLATE=${SCRIPT_PATH}/../testdata/grpc_interop/grpc-interop.yaml.template
-    YAML_FILE=${SCRIPT_PATH}/../testdata/grpc_interop/grpc-interop.yaml
+    YAML_TEMPLATE=${ROOT}/tests/e2e/testdata/grpc_interop/gke/grpc-interop.yaml.template
+    YAML_FILE=${ROOT}/tests/e2e/testdata/grpc_interop/gke/grpc-interop.yaml
     ARGS="$ARGS , \"--backend_protocol=grpc\"" ;;
   *)
     echo "Invalid backend ${BACKEND}"
@@ -62,13 +68,13 @@ esac
 sed "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g" ${YAML_TEMPLATE}  \
   | sed "s|ARGS|${ARGS}|g" | tee ${YAML_FILE}
 
-# Push service config to service management servie. Only need to run when there
+# Push service config to service management. Only need to run when there
 # is changes in the service config, and also remember to update the version
 # number in kubernetes config.
 #
 case "${BACKEND}" in
   'bookstore')
-    SERVICE_IDL="${SCRIPT_PATH}/../testdata/bookstore/bookstore_swagger_template.json"
+    SERVICE_IDL="${ROOT}/tests/endpoints/bookstore/bookstore_swagger_template.json"
     CREATE_SERVICE_ARGS="${SERVICE_IDL}"
     ;;
   'echo')

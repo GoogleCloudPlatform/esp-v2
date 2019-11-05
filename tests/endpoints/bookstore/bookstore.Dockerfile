@@ -13,8 +13,8 @@
 # limitations under the License.
 
 FROM node:0.12
-COPY tests/e2e/testdata/bookstore/http_bookstore.js /http_bookstore.js
-COPY tests/e2e/testdata/bookstore/bookstore_swagger_template.json /bookstore_swagger_template.json
-COPY tests/e2e/testdata/bookstore/package.json /package.json
+COPY tests/endpoints/bookstore/http_bookstore.js /http_bookstore.js
+COPY tests/endpoints/bookstore/bookstore_swagger_template.json /bookstore_swagger_template.json
+COPY tests/endpoints/bookstore/package.json /package.json
 RUN npm install
 CMD PORT=8081 node http_bookstore.js

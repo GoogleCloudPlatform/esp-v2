@@ -146,7 +146,7 @@ depend.install: tools.glide tools.beautysh
 
 depend.install.endpoints:
 	@echo "--> updating dependencies from package.json"
-	@npm install ./tests/e2e/testdata/bookstore/ --no-package-lock
+	@npm install ./tests/endpoints/bookstore/ --no-package-lock
 
 #----------------------------------------------------------------------------
 # Target:  tools
@@ -263,6 +263,6 @@ docker.push-prow: docker.build-prow
 
 # bookstore image used in e2e test. Only push when there is changes.
 docker.build-bookstore:
-	docker build -f tests/e2e/testdata/bookstore/bookstore.Dockerfile -t gcr.io/cloudesf-testing/app:bookstore .
+	docker build -f tests/endpoints/bookstore/bookstore.Dockerfile -t gcr.io/cloudesf-testing/app:bookstore .
 docker.push-bookstore:
 	gcloud docker -- push gcr.io/cloudesf-testing/app:bookstore

@@ -25,10 +25,11 @@ cd "${ROOT}"
 exit 1; }
 
 
-function e2eGKE() {
+function runE2E() {
   local OPTIND OPTARG arg
-  while getopts :c:g:m:R:t: arg; do
+  while getopts :p:c:g:m:R:t: arg; do
     case ${arg} in
+      p) local platform="${OPTARG}" ;;
       c) local coupling_option="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')" ;;
       g) local backend="${OPTARG}" ;;
       m) local apiproxy_image="${OPTARG}" ;;
@@ -40,7 +41,10 @@ function e2eGKE() {
   local apiproxy_service=$(get_apiproxy_service ${backend})
   local unique_id=$(get_unique_id "gke-${test_type}-${backend}")
 
-  ${ROOT}/tests/e2e/scripts/e2e-kube.sh  \
+  local platform_deploy_script="${ROOT}/tests/e2e/scripts/${platform}/deploy.sh"
+  echo "Deploying on platform ${platform}"
+
+  ${platform_deploy_script}  \
     -a "${apiproxy_service}"  \
     -t "${test_type}"  \
     -g "${backend}"  \
@@ -59,10 +63,9 @@ if [ ! -d "bin" ]; then
 fi
 
 export GO111MODULE=on
-install_e2e_dependencies
 
 # Wait for image build and push.
-wait_apiproxiy_image || { echo "Failed in waiting images;";
+wait_apiproxy_image || { echo "Failed in waiting images;";
 exit 1; }
 
 download_client_binaries || { echo "Failed in downloading client binaries;";
@@ -74,13 +77,16 @@ echo '======================================================='
 
 case ${TEST_CASE} in
   "tight-http-bookstore-managed")
-    e2eGKE -c "tight" -t "http" -g "bookstore" -R "managed" -m "$(get_proxy_image_name_with_sha)"
+    runE2E -p "gke" -c "tight" -t "http" -g "bookstore" -R "managed" -m "$(get_proxy_image_name_with_sha)"
     ;;
   "tight-grpc-echo-managed")
-    e2eGKE -c "tight" -t "grpc" -g "echo" -R "managed" -m "$(get_proxy_image_name_with_sha)"
+    runE2E -p "gke" -c "tight" -t "grpc" -g "echo" -R "managed" -m "$(get_proxy_image_name_with_sha)"
     ;;
   "tight-grpc-interop-managed")
-    e2eGKE -c "tight" -t "grpc" -g "interop" -R "managed" -m "$(get_proxy_image_name_with_sha)"
+    runE2E -p "gke" -c "tight" -t "grpc" -g "interop" -R "managed" -m "$(get_proxy_image_name_with_sha)"
+    ;;
+  "cloud-run-http-bookstore")
+    runE2E -p "cloud-run" -t "http" -g "bookstore" -R "managed" -m "$(get_proxy_image_name_with_sha)"
     ;;
   *)
     echo "No such test case ${TEST_CASE}"

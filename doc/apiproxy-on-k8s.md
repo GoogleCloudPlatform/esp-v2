@@ -104,7 +104,7 @@ The --rollout_strategy=managed option configures APIProxy to use the latest depl
 * Deploy service on kubernetes
 
 ```
-kubectl create -f tests/endpoints/bookstore_grpc/bookstore-k8s.yaml
+kubectl create -f tests/e2e/testdata/bookstore_grpc/bookstore-k8s.yaml
 ```
 
 ## Testing the API

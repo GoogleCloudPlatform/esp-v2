@@ -31,7 +31,7 @@ For this tutorial, we will deploy a simple HTTP bookstore manager as the backend
 We supply the Docker image for the backend at
 [gcr.io/apiproxy-release/bookstore:1](https://gcr.io/apiproxy-release/bookstore:1),
 which is built from this
-[Dockerfile](/tests/e2e/testdata/bookstore/bookstore.Dockerfile).
+[Dockerfile](/tests/endpoints/bookstore/bookstore.Dockerfile).
 
 To deploy Bookstore service on Cloud Run, you can either do it on Pantheon UI,
 (by choosing Cloud Run, then create Service), or you can directly run the
@@ -94,7 +94,7 @@ for each service so that API Proxy has the information it needs to invoke a
 service.
 
 We supply a
-[template](/tests/e2e/testdata/bookstore/bookstore_swagger_template.json) for
+[template](/tests/endpoints/bookstore/bookstore_swagger_template.json) for
 the bookstore service. You must make the following changes to it:
 
 1) Change the `host` name to the `PROXY_SERVICE_URL`, **without** the protocol identifier.

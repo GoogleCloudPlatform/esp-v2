@@ -180,24 +180,6 @@ EOF
   return ${status}
 }
 
-function get_cluster_host() {
-  local COUNT=10
-  local SLEEP=15
-  for i in $(seq 1 ${COUNT}); do
-    local host=$(kubectl get service app -n ${1} | awk '{print $4}' | grep -v EXTERNAL-IP)
-    [ '<pending>' != $host ] && break
-    echo "Waiting for server external ip. Attempt  #$i/${COUNT}... will try again in ${SLEEP} seconds" >&2
-    sleep ${SLEEP}
-  done
-  if [[ '<pending>' == $host ]]; then
-    echo 'Failed to get the GKE cluster host.'
-    return 1
-  else
-    echo "$host"
-    return 0
-  fi
-}
-
 # Convenience method to sed files, works on both linux and mac
 function sed_i() {
   # Incompatible sed parameter parsing.
@@ -226,16 +208,6 @@ function create_service() {
   esac
 }
 
-# Fetch proxy logs from k8s container
-function fetch_proxy_logs() {
-  local namespace=${1}
-  local log_dir=${2}
-  local pod_id=$(kubectl get --no-headers=true pods -l app=app -n ${namespace} -o custom-columns=:metadata.name)
-  touch ${LOG_DIR}/error.log
-  (kubectl logs -p ${pod_id} -c apiproxy -n ${namespace} | tee -a ${LOG_DIR}/error.log) || echo "No apiproxy container crashed"
-  kubectl logs ${pod_id} -c apiproxy -n ${namespace} | tee -a ${LOG_DIR}/error.log
-}
-
 # Upload logs remote directory
 function upload_logs() {
   local remote_dir="${1}"
@@ -247,14 +219,14 @@ function upload_logs() {
     || echo "Failed to upload ${log_dir}"
 }
 
-function wait_apiproxiy_image() {
+function wait_apiproxy_image() {
   local PROXY_IMAGE_SHA_NAME=$(get_proxy_image_name_with_sha)
   local ENVOY_IMAGE_SHA_NAME=$(get_envoy_image_name_with_sha)
   echo "Checking if the image ${PROXY_IMAGE_SHA_NAME} and the image ${ENVOY_IMAGE_SHA_NAME} exist..."
 
-  # Wait 20mins.
-  local WAIT_IMAGE_TIMEOUT=1200
-  local SLEEP_UNIT=5
+  # Wait 60 minutes (in case of cold cache). Generally only takes 15 minutes.
+  local WAIT_IMAGE_TIMEOUT=3600
+  local SLEEP_UNIT=60
 
   while true; do
     gcloud docker -- pull "${PROXY_IMAGE_SHA_NAME}"  \

@@ -65,7 +65,7 @@ error_exit "Could not copy ${BAZEL_TARGET} to ${GRPC_ROOT}"
 
 sed -e "s|TEST_SERVER_BIN|$(basename ${TEST_SERVER_BIN})|g" \
   -e "s|TEST_SERVER_ARGS|${TEST_SERVER_ARGS}|g" \
-  "${GRPC_ROOT}/Dockerfile.temp" >"${GRPC_ROOT}/Dockerfile"
+  "${GRPC_ROOT}/Dockerfile.tmpl" >"${GRPC_ROOT}/Dockerfile"
 
 echo "Building Endpoints Runtime grpc docker image."
 retry -n 3 docker build --no-cache -t "${IMAGE}" \
