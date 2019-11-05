@@ -89,9 +89,9 @@ const (
 
 	// Platforms
 
-	GAEFlex = "GAE_FLEX"
-	GKE     = "GKE"
-	GCE     = "GCE"
+	GAEFlex = "GAE_FLEX(API Proxy)"
+	GKE     = "GKE(API Proxy)"
+	GCE     = "GCE(API Proxy)"
 
 	// System Parameter Name
 	APIKeyParameterName = "api_key"

@@ -28,11 +28,6 @@ using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::api::envoy::http::service_control::Service;
 using ::google::api_proxy::service_control::LatencyInfo;
 using ::google::api_proxy::service_control::ReportRequestInfo;
-using ::google::api_proxy::service_control::compute_platform::ComputePlatform;
-using ::google::api_proxy::service_control::compute_platform::GAE_FLEX;
-using ::google::api_proxy::service_control::compute_platform::GCE;
-using ::google::api_proxy::service_control::compute_platform::GKE;
-using ::google::api_proxy::service_control::compute_platform::UNKNOWN;
 using ::google::api_proxy::service_control::protocol::Protocol;
 using ::google::protobuf::TextFormat;
 
@@ -46,34 +41,35 @@ TEST(ServiceControlUtils, FillGCPInfo) {
   struct TestCase {
     std::string filter_proto;
     std::string expected_zone;
-    ComputePlatform expected_platform;
+    std::string expected_platform;
   };
 
   const TestCase test_cases[] = {
       // Test: No gcp_attributes found
-      {"", "", UNKNOWN},
+      {"", "", "UNKNOWN(API Proxy)"},
 
       // Test: gcp_attributes found but empty
-      {R"(gcp_attributes {})", "", UNKNOWN},
+      {R"(gcp_attributes {})", "", "UNKNOWN(API Proxy)"},
 
       // Test: bad platform provided should default to unknown
-      {R"(gcp_attributes { platform: "bad-platform"})", "", UNKNOWN},
+      {R"(gcp_attributes { platform: "bad-platform"})", "", "bad-platform"},
 
       // Test: GAE_FLEX platform is passed through
-      {R"(gcp_attributes { platform: "GAE_FLEX"})", "", GAE_FLEX},
+      {R"(gcp_attributes { platform: "GAE_FLEX"})", "", "GAE_FLEX"},
 
       // Test: GCE platform is set
-      {R"(gcp_attributes { platform: "GCE"})", "", GCE},
+      {R"(gcp_attributes { platform: "GCE"})", "", "GCE"},
 
       // Test: GKE platform is set
-      {R"(gcp_attributes { platform: "GKE"})", "", GKE},
+      {R"(gcp_attributes { platform: "GKE"})", "", "GKE"},
 
       // Test: Provided zone is set
-      {R"(gcp_attributes { zone: "test-zone"})", "test-zone", UNKNOWN},
+      {R"(gcp_attributes { zone: "test-zone"})", "test-zone",
+       "UNKNOWN(API Proxy)"},
 
       // Test: Provided platform and zone can both be set
       {R"(gcp_attributes { zone: "test-zone" platform: "GKE"})", "test-zone",
-       GKE}};
+       "GKE"}};
 
   for (const auto& test : test_cases) {
     FilterConfig filter_config;

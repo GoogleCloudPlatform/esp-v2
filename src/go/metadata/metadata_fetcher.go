@@ -211,7 +211,5 @@ func (mf *MetadataFetcher) fetchPlatform() string {
 		return util.GKE
 	}
 
-	// TODO(kyuc): what about Cloud Run...?
-
 	return util.GCE
 }

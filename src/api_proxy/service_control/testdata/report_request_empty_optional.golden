@@ -33,7 +33,7 @@ operations {
   }
   labels {
     key: "servicecontrol.googleapis.com/platform"
-    value: "unknown"
+    value: "UNKNOWN(API Proxy)"
   }
   labels {
     key: "servicecontrol.googleapis.com/service_agent"

@@ -48,9 +48,8 @@ def main():
     CMD = "/usr/local/bin/python"
     ARGS = [CMD, "/apiproxy/start_proxy.py", "--enable_backend_routing"]
 
-    # TODO(qiwzhang): b/142663789 to use flag --compute_platform_override
-    # PLATFORM = "Cloud Run"
-    # ARGS = [CMD, "--compute_platform_override='{}'".format(PLATFORM)]
+    PLATFORM = "Cloud Run(API Proxy)"
+    ARGS = [CMD, "--compute_platform_override='{}'".format(PLATFORM)]
 
     # Uncaught KeyError; if no port, we can't serve a nice error handler. Crash instead.
     assert_env_var("PORT")

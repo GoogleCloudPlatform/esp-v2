@@ -78,6 +78,8 @@ type ConfigGeneratorOptions struct {
 	ScCheckRetries  int
 	ScQuotaRetries  int
 	ScReportRetries int
+
+	ComputePlatformOverride string
 }
 
 // DefaultConfigGeneratorOptions returns ConfigGeneratorOptions with default values.

@@ -675,7 +675,7 @@ Status set_api_version(const SupportedLabel& l, const ReportRequestInfo& info,
 // servicecontrol.googleapis.com/platform
 Status set_platform(const SupportedLabel& l, const ReportRequestInfo& info,
                     Map<std::string, std::string>* labels) {
-  (*labels)[l.name] = compute_platform::ToString(info.compute_platform);
+  (*labels)[l.name] = info.compute_platform;
   return Status::OK;
 }
 

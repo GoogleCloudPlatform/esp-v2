@@ -36,6 +36,7 @@ func TestReportGCPAttributes(t *testing.T) {
 	testdata := []struct {
 		desc                 string
 		mockMetadataOverride map[string]string
+		platformOverride     string
 		wantPlatform         string
 		wantLocation         string
 	}{
@@ -45,7 +46,7 @@ func TestReportGCPAttributes(t *testing.T) {
 				util.ZoneSuffix: "projects/4242424242/zones/us-west-1b",
 			},
 			wantLocation: "us-west-1b",
-			wantPlatform: "GCE",
+			wantPlatform: "GCE(API Proxy)",
 		},
 		{
 			desc: "Invalid Zone - without '/'",
@@ -53,7 +54,7 @@ func TestReportGCPAttributes(t *testing.T) {
 				util.ZoneSuffix: "some-invalid-zone",
 			},
 			wantLocation: "",
-			wantPlatform: "GCE",
+			wantPlatform: "GCE(API Proxy)",
 		},
 		{
 			desc: "Invalid Zone - ends with '/'",
@@ -61,7 +62,7 @@ func TestReportGCPAttributes(t *testing.T) {
 				util.ZoneSuffix: "project/123123/",
 			},
 			wantLocation: "",
-			wantPlatform: "GCE",
+			wantPlatform: "GCE(API Proxy)",
 		},
 		{
 			desc: "Platform - GAE FLEX",
@@ -69,7 +70,7 @@ func TestReportGCPAttributes(t *testing.T) {
 				util.GAEServerSoftwareSuffix: "gae",
 			},
 			wantLocation: "test-zone",
-			wantPlatform: "GAE Flex",
+			wantPlatform: "GAE_FLEX(API Proxy)",
 		},
 		{
 			desc: "Platform - GKE",
@@ -77,14 +78,14 @@ func TestReportGCPAttributes(t *testing.T) {
 				util.KubeEnvSuffix: "kube-env",
 			},
 			wantLocation: "test-zone",
-			wantPlatform: "GKE",
+			wantPlatform: "GKE(API Proxy)",
 		},
 		// If it is neither GAE nor GKE it should be GCE.
 		{
 			desc:                 "Platform- GCE",
 			mockMetadataOverride: map[string]string{},
 			wantLocation:         "test-zone",
-			wantPlatform:         "GCE",
+			wantPlatform:         "GCE(API Proxy)",
 		},
 		{
 			desc: "Platform and Zone",
@@ -93,7 +94,14 @@ func TestReportGCPAttributes(t *testing.T) {
 				util.GAEServerSoftwareSuffix: "gae",
 			},
 			wantLocation: "us-west-1b",
-			wantPlatform: "GAE Flex",
+			wantPlatform: "GAE_FLEX(API Proxy)",
+		},
+		{
+			desc:                 "Override Platform",
+			mockMetadataOverride: map[string]string{},
+			platformOverride:     "Cloud Run",
+			wantLocation:         "test-zone",
+			wantPlatform:         "Cloud Run",
 		},
 	}
 
@@ -102,6 +110,9 @@ func TestReportGCPAttributes(t *testing.T) {
 		"--backend_protocol=http1", "--rollout_strategy=fixed"}
 
 	for _, tc := range testdata {
+		if tc.platformOverride != "" {
+			args = append(args, fmt.Sprintf("--compute_platform_override=%v", tc.platformOverride))
+		}
 		func() {
 			s := env.NewTestEnv(comp.TestReportGCPAttributes, "echo")
 			s.OverrideMockMetadata(tc.mockMetadataOverride)
