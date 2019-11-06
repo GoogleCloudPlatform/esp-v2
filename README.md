@@ -64,7 +64,7 @@ More documentation on releases will be coming soon.
 * [scripts](/scripts): Scripts used for build and release API Proxy
 * [src](/src): API Proxy source code, including Envoy Filters and Config Manager
 * [tests](/tests): Integration and end-to-end tests for API Proxy
-* [tools](/tools): Assorted tooling
+* [tools](/third_party/tools): Assorted tooling
 
 ## Contributing
 

@@ -207,12 +207,12 @@ check: format.check vet lint
 .PHONY: spelling.check
 spelling.check:
 	@echo "--> checking spelling"
-	@tools/spelling/check_spelling.sh check
+	@third_party/tools/spelling/check_spelling.sh check
 
 .PHONY: spelling.fix
 spelling.fix:
 	@echo "--> fixing spelling"
-	@tools/spelling/check_spelling.sh fix
+	@third_party/tools/spelling/check_spelling.sh fix
 
 .PHONY: format
 format: tools.goimports tools.buildifier
