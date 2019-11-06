@@ -230,16 +230,10 @@ function wait_apiproxy_image() {
 
   while true; do
 
-    local image_status=`gcloud builds list --format=json \
-      | jq ".[] \
-      | select(.images[] | contains(\""${PROXY_IMAGE_SHA_NAME}"\") ) \
-      | select(.images[] | contains(\""${ENVOY_IMAGE_SHA_NAME}"\") ) \
-      | .status"`
-
-    if [[ "$image_status" = "\"SUCCESS\"" ]]; then
-      echo "Found the image ${PROXY_IMAGE_SHA_NAME} and the image ${ENVOY_IMAGE_SHA_NAME} exist";
-      break;
-    fi
+    gcloud container images describe "${PROXY_IMAGE_SHA_NAME}"  \
+      && gcloud container images describe "${ENVOY_IMAGE_SHA_NAME}"  \
+      && { echo "Found the image ${PROXY_IMAGE_SHA_NAME} and the image ${ENVOY_IMAGE_SHA_NAME} exist";
+    break; }
 
     if [ ${WAIT_IMAGE_TIMEOUT} -gt 0 ]; then
       echo "Waiting images with ${WAIT_IMAGE_TIMEOUT}s left"
