@@ -229,10 +229,17 @@ function wait_apiproxy_image() {
   local SLEEP_UNIT=60
 
   while true; do
-    gcloud docker -- pull "${PROXY_IMAGE_SHA_NAME}"  \
-      && gcloud docker -- pull "${ENVOY_IMAGE_SHA_NAME}"  \
-      && { echo "Found the image ${PROXY_IMAGE_SHA_NAME} and the image ${ENVOY_IMAGE_SHA_NAME} exist";
-    break; }
+
+    local image_status=`gcloud builds list --format=json \
+      | jq ".[] \
+      | select(.images[] | contains(\""${PROXY_IMAGE_SHA_NAME}"\") ) \
+      | select(.images[] | contains(\""${ENVOY_IMAGE_SHA_NAME}"\") ) \
+      | .status"`
+
+    if [[ "$image_status" = "\"SUCCESS\"" ]]; then
+      echo "Found the image ${PROXY_IMAGE_SHA_NAME} and the image ${ENVOY_IMAGE_SHA_NAME} exist";
+      break;
+    fi
 
     if [ ${WAIT_IMAGE_TIMEOUT} -gt 0 ]; then
       echo "Waiting images with ${WAIT_IMAGE_TIMEOUT}s left"
