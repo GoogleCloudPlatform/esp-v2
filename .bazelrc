@@ -6,6 +6,10 @@ build --define=grpc_no_ares=true
 # Required by envoy and grpc-echo
 build --incompatible_disable_deprecated_attr_params=false
 
+# Required to compile a Position Independent Executable
+# Ref: github.com/envoyproxy/envoy#8792
+build --copt=-fPIC
+
 # Show timestamps during compiling
 build --show_timestamps
 

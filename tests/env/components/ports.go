@@ -30,6 +30,7 @@ import (
 // All integration tests should be listed here to get their test ids
 const (
 	TestAsymmetricKeys uint16 = iota
+	TestAsymmetricKeysTraces
 	TestAuthJwksCache
 	TestBackendAuthWithImdsIdToken
 	TestBackendAuthWithIamIdToken

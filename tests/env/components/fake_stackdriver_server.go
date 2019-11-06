@@ -48,6 +48,7 @@ func (s *FakeTraceServer) CreateSpan(ctx context.Context, span *cloudtracepb.Spa
 
 func (s *FakeTraceServer) StopAndWait() {
 	glog.Infof("Stopping Stackdriver trace server")
+	close(s.RcvSpan)
 	s.server.Stop()
 }
 

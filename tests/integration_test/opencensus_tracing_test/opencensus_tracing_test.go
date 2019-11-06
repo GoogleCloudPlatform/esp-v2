@@ -126,6 +126,7 @@ func TestServiceControlCheckTracesWithRetry(t *testing.T) {
 			method:         "/v1/shelves?key=api-key-0",
 			token:          testdata.FakeCloudTokenMultiAudiences,
 			wantSpanNames: []string{
+				"JWT Remote PubKey Fetch", // The first request will result in a JWT call
 				"Service Control remote call: Check",
 				"Service Control remote call: Check - Retry 1",
 				"Service Control remote call: Check - Retry 2",
@@ -235,6 +236,88 @@ func TestServiceControlSkipUsageTraces(t *testing.T) {
 	}
 	for _, tc := range testData {
 		_, _ = client.DoWithHeaders(tc.url, tc.method, tc.message, tc.requestHeader)
+
+		if err := checkWantSpans(s, tc.wantSpanNames); err != nil {
+			t.Errorf("Test (%s) failed: %v", tc.desc, err)
+		}
+	}
+}
+
+func TestFetchingJwksTraces(t *testing.T) {
+
+	configID := "test-config-id"
+	args := []string{
+		"--service_config_id=" + configID,
+		"--enable_tracing=true",
+		"--backend_protocol=grpc",
+		"--rollout_strategy=fixed",
+	}
+
+	s := env.NewTestEnv(comp.TestAsymmetricKeysTraces, "bookstore")
+	if err := s.FakeJwtService.SetupOpenId(); err != nil {
+		t.Fatalf("fail to setup open id servers: %v", err)
+	}
+	s.SetupFakeTraceServer()
+	s.OverrideAuthentication(&confpb.Authentication{
+		Rules: []*confpb.AuthenticationRule{
+			{
+				Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
+				Requirements: []*confpb.AuthRequirement{
+					{
+						ProviderId: testdata.TestAuthProvider,
+						Audiences:  "ok_audience",
+					},
+				},
+			},
+		},
+	})
+	defer s.TearDown()
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	time.Sleep(time.Duration(5 * time.Second))
+	tests := []struct {
+		desc           string
+		clientProtocol string
+		httpMethod     string
+		method         string
+		queryInToken   bool
+		token          string
+		headers        map[string][]string
+		wantSpanNames  []string
+	}{
+		{
+			desc:           "Failed, no JWT passed in.",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves?key=api-key",
+			wantSpanNames: []string{
+				"ingress",
+			},
+		},
+		{
+			desc:           "Succeeded, with right token",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves?key=api-key",
+			token:          testdata.Es256Token,
+			wantSpanNames: []string{
+				"JWT Remote PubKey Fetch",
+				"Service Control remote call: Check",
+				"router endpoints.examples.bookstore.Bookstore egress",
+				"ingress",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		if tc.queryInToken {
+			_, _ = bsclient.MakeTokenInQueryCall(addr, tc.httpMethod, tc.method, tc.token)
+		} else {
+			_, _ = bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, tc.headers)
+		}
 
 		if err := checkWantSpans(s, tc.wantSpanNames); err != nil {
 			t.Errorf("Test (%s) failed: %v", tc.desc, err)
