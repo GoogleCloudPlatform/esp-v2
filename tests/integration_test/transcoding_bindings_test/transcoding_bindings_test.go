@@ -85,26 +85,25 @@ func TestTranscodingBindings(t *testing.T) {
 		// in CreateBookRequest.
 		// HTTP template:
 		// POST /shelves/{shelf}/books/{book.id}/{book.author}
-		// body: book.title
+		// body: book
 		{
 			desc:           "Succeeded, made CreateBookRequest2",
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves/100/books/5/Mark?key=api-key",
-			bodyBytes:      []byte(`"The Adventures of Huckleberry Finn"`),
+			bodyBytes:      []byte(`{"title" : "The Adventures of Huckleberry Finn"}`),
 			wantResp:       `{"id":"5","author":"Mark","title":"The Adventures of Huckleberry Finn"}`,
 		},
 		// Binding shelf=100, book.id=6, book.author="Foo/Bar/Baz" and book.title=<post body>
 		// in CreateBookRequest.
 		// HTTP template:
 		// POST /shelves/{shelf}/books/{book.id}/{book.author}
-		// body: book.title
 		{
 			desc:           "Succeeded, specifically test escaped slash  in the URL path",
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves/100/books/6/Foo%2FBar%2FBaz?key=api-key",
-			bodyBytes:      []byte(`"The Adventures of Huckleberry Finn"`),
+			bodyBytes:      []byte(`{"title" : "The Adventures of Huckleberry Finn"}`),
 			wantResp:       `{"id":"6","author":"Foo/Bar/Baz","title":"The Adventures of Huckleberry Finn"}`,
 		},
 		// Binding shelf=100 and book=100 in DeleteBookRequest
