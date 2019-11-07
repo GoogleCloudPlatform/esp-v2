@@ -79,6 +79,9 @@ def gen_bootstrap_conf(args):
             ["--http_request_timeout",
              str(args.http_request_timeout)])
 
+    if args.enable_debug:
+        os.environ["ENVOY_ARGS"] = "-l debug"
+
     bootstrap_file = DEFAULT_CONFIG_DIR + "/bootstrap.json"
     cmd.append(bootstrap_file)
     # Use environment variable to pass it to start_proxy.sh
@@ -425,6 +428,9 @@ environment variable or by passing "-k" flag to this script.
         help='''
         Define the dns lookup family for all backends. The options are "auto", "v4only" and "v6only". The default is "auto".
         ''')
+    parser.add_argument('--enable_debug', action='store_true', default=False,
+        help='''Enable debug level application logs of Envoy and ConfigManager.
+        ''')
     return parser
 
 
@@ -561,6 +567,9 @@ if __name__ == '__main__':
 
     if args.enable_tracing:
         proxy_conf.append("--enable_tracing", )
+
+    if args.enable_debug:
+        proxy_conf.append("--alsologtostderr", )
 
     if args.enable_backend_routing:
         if args.non_gcp:
