@@ -21,6 +21,7 @@
 #include "envoy/upstream/cluster_manager.h"
 #include "include/service_control_client.h"
 #include "src/api_proxy/service_control/request_info.h"
+#include "src/envoy/http/service_control/http_call.h"
 #include "src/envoy/http/service_control/service_control_callback_func.h"
 
 namespace Envoy {
@@ -56,18 +57,7 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
           filter_config);
 
   const ::google::api::envoy::http::service_control::Service& config_;
-  const ::google::api::envoy::http::common::HttpUri service_control_uri_;
-  Upstream::ClusterManager& cm_;
-  Event::Dispatcher& dispatcher_;
-  std::function<const std::string&()> sc_token_fn_;
-  std::function<const std::string&()> quota_token_fn_;
-
-  // Report transport may be called at destructor. Cache the report_suffix_url
-  // value here so the transport callback function would not need to access
-  // other potential destructed objects.
-  std::string report_suffix_url_;
   bool network_fail_open_;
-  Envoy::TimeSource& time_source_;
 
   // the configurable timeouts
   uint32_t check_timeout_ms_;
@@ -78,6 +68,11 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
   uint32_t check_retries_;
   uint32_t report_retries_;
   uint32_t quota_retries_;
+
+  // the http call factories
+  std::unique_ptr<HttpCallFactory> check_call_factory_;
+  std::unique_ptr<HttpCallFactory> quota_call_factory_;
+  std::unique_ptr<HttpCallFactory> report_call_factory_;
 
   // When service control client is destroyed, it will flush out some batched
   // reports and call report_transport_func to send them. Since

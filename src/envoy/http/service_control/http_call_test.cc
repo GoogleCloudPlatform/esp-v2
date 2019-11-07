@@ -88,11 +88,14 @@ class HttpCallTest : public testing::Test {
     fake_token_fn_ = [this]() -> const std::string& { return fake_token_; };
 
     fake_request_ = CheckRequest{};
+    http_call_factory_ = std::make_unique<HttpCallFactory>(
+        cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
+        timeout_ms_, retries_, mock_time_source_, fake_trace_operation_name_);
   }
 
   void TearDown() override {
     for (auto request : http_requests_) {
-      delete(request);
+      delete (request);
     }
   }
 
@@ -151,6 +154,8 @@ class HttpCallTest : public testing::Test {
   std::string fake_suffix_url_;
   uint32_t timeout_ms_;
   uint32_t retries_;
+
+  std::unique_ptr<HttpCallFactory> http_call_factory_;
 };
 
 TEST_F(HttpCallTest, TestSingleCallSuccessHttpOk) {
@@ -158,12 +163,8 @@ TEST_F(HttpCallTest, TestSingleCallSuccessHttpOk) {
   auto mock_child_span = makeMockChildSpan();
   EXPECT_CALL(mock_done_fn_, Call(_, _))
       .Times(0);  // Callback does not occur until response
-
-  HttpCall* call = HttpCall::create(
-      cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
-      fake_request_, timeout_ms_, retries_, mock_parent_span_,
-      mock_time_source_, fake_trace_operation_name_,
-      mock_done_fn_.AsStdFunction());
+  HttpCall* call = http_call_factory_->createHttpCall(
+      fake_request_, mock_parent_span_, mock_done_fn_.AsStdFunction());
   call->call();
   EXPECT_EQ(1, async_callbacks_.size());
   EXPECT_EQ(1, http_requests_.size());
@@ -181,11 +182,8 @@ TEST_F(HttpCallTest, TestSingleCallSuccessHttpNotFound) {
   EXPECT_CALL(mock_done_fn_, Call(_, _))
       .Times(0);  // Callback does not occur until response
 
-  HttpCall* call = HttpCall::create(
-      cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
-      fake_request_, timeout_ms_, retries_, mock_parent_span_,
-      mock_time_source_, fake_trace_operation_name_,
-      mock_done_fn_.AsStdFunction());
+  HttpCall* call = http_call_factory_->createHttpCall(
+      fake_request_, mock_parent_span_, mock_done_fn_.AsStdFunction());
   call->call();
   EXPECT_EQ(1, async_callbacks_.size());
   EXPECT_EQ(1, http_requests_.size());
@@ -205,11 +203,8 @@ TEST_F(HttpCallTest, TestSingleCallFailure) {
   EXPECT_CALL(mock_done_fn_, Call(_, _))
       .Times(0);  // Callback does not occur until response
 
-  HttpCall* call = HttpCall::create(
-      cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
-      fake_request_, timeout_ms_, retries_, mock_parent_span_,
-      mock_time_source_, fake_trace_operation_name_,
-      mock_done_fn_.AsStdFunction());
+  HttpCall* call = http_call_factory_->createHttpCall(
+      fake_request_, mock_parent_span_, mock_done_fn_.AsStdFunction());
   call->call();
   EXPECT_EQ(1, async_callbacks_.size());
   EXPECT_EQ(1, http_requests_.size());
@@ -226,17 +221,16 @@ TEST_F(HttpCallTest, TestSingleCallFailure) {
 TEST_F(HttpCallTest, TestRetryCallSuccess) {
   // Set request to retry 2 more times
   retries_ = 2;
-
+  http_call_factory_ = std::make_unique<HttpCallFactory>(
+      cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
+      timeout_ms_, retries_, mock_time_source_, fake_trace_operation_name_);
   // Phase 1: Create HttpCall and send the request
   auto mock_child_span_1 = makeMockChildSpan();
   EXPECT_CALL(mock_done_fn_, Call(_, _))
       .Times(0);  // Callback does not occur until response
 
-  HttpCall* call = HttpCall::create(
-      cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
-      fake_request_, timeout_ms_, retries_, mock_parent_span_,
-      mock_time_source_, fake_trace_operation_name_,
-      mock_done_fn_.AsStdFunction());
+  HttpCall* call = http_call_factory_->createHttpCall(
+      fake_request_, mock_parent_span_, mock_done_fn_.AsStdFunction());
   call->call();
   EXPECT_EQ(1, async_callbacks_.size());
   EXPECT_EQ(1, http_requests_.size());
@@ -263,17 +257,18 @@ TEST_F(HttpCallTest, TestRetryCallSuccess) {
 TEST_F(HttpCallTest, TestThreeRetriesWithLastSuccess) {
   // Set request to retry 2 more times
   retries_ = 2;
+  http_call_factory_ = std::make_unique<HttpCallFactory>(
+      cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
+      timeout_ms_, retries_, mock_time_source_, fake_trace_operation_name_);
 
   // Phase 1: Create HttpCall and send the request
   auto mock_child_span_1 = makeMockChildSpan();
   EXPECT_CALL(mock_done_fn_, Call(_, _))
       .Times(0);  // Callback does not occur until response
 
-  HttpCall* call = HttpCall::create(
-      cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
-      fake_request_, timeout_ms_, retries_, mock_parent_span_,
-      mock_time_source_, fake_trace_operation_name_,
-      mock_done_fn_.AsStdFunction());
+  HttpCall* call = http_call_factory_->createHttpCall(
+      fake_request_, mock_parent_span_, mock_done_fn_.AsStdFunction());
+
   call->call();
   EXPECT_EQ(1, async_callbacks_.size());
   EXPECT_EQ(1, http_requests_.size());
@@ -300,17 +295,17 @@ TEST_F(HttpCallTest, TestThreeRetriesWithLastSuccess) {
 TEST_F(HttpCallTest, TestThreeRetriesWithLastFailure) {
   // Set request to retry 2 more times
   retries_ = 2;
+  http_call_factory_ = std::make_unique<HttpCallFactory>(
+      cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
+      timeout_ms_, retries_, mock_time_source_, fake_trace_operation_name_);
 
   // Phase 1: Create HttpCall and send the request
   auto mock_child_span_1 = makeMockChildSpan();
   EXPECT_CALL(mock_done_fn_, Call(_, _))
       .Times(0);  // Callback does not occur until response
 
-  HttpCall* call = HttpCall::create(
-      cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
-      fake_request_, timeout_ms_, retries_, mock_parent_span_,
-      mock_time_source_, fake_trace_operation_name_,
-      mock_done_fn_.AsStdFunction());
+  HttpCall* call = http_call_factory_->createHttpCall(
+      fake_request_, mock_parent_span_, mock_done_fn_.AsStdFunction());
   call->call();
   EXPECT_EQ(1, async_callbacks_.size());
 
@@ -335,26 +330,48 @@ TEST_F(HttpCallTest, TestThreeRetriesWithLastFailure) {
   async_callbacks_[2]->onSuccess(makeResponseWithStatus(504));
 }
 
+TEST_F(HttpCallTest, TestActiveCallCancel) {
+  // Phase 1: Create HttpCall and send the request
+  auto mock_child_span = makeMockChildSpan();
+
+  HttpCall* call = http_call_factory_->createHttpCall(
+      fake_request_, mock_parent_span_, mock_done_fn_.AsStdFunction());
+  call->call();
+
+  EXPECT_CALL(mock_done_fn_, Call(_, _))
+      .Times(1);  // Callback will still be called in cancel.
+
+  EXPECT_EQ(1, async_callbacks_.size());
+  EXPECT_EQ(1, http_requests_.size());
+
+  // Phase 2: Emulate destruct factory
+  EXPECT_CALL(*mock_child_span, finishSpan()).Times(1);
+  EXPECT_CALL(*http_requests_[0], cancel()).Times(1);
+  http_call_factory_.reset();
+}
+
 TEST_F(HttpCallTest, TestSingleCallCancel) {
   // Phase 1: Create HttpCall and send the request
   auto mock_child_span = makeMockChildSpan();
   EXPECT_CALL(mock_done_fn_, Call(_, _))
-      .Times(0);  // Callback does not occur until response
+      .Times(1);  // Callback will still be called in cancel.
 
-  HttpCall* call = HttpCall::create(
-      cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
-      fake_request_, timeout_ms_, retries_, mock_parent_span_,
-      mock_time_source_, fake_trace_operation_name_,
-      mock_done_fn_.AsStdFunction());
+  HttpCall* call = http_call_factory_->createHttpCall(
+      fake_request_, mock_parent_span_, mock_done_fn_.AsStdFunction());
   call->call();
+
   EXPECT_EQ(1, async_callbacks_.size());
   EXPECT_EQ(1, http_requests_.size());
 
   // Phase 2: Emulate cancellation
   EXPECT_CALL(*mock_child_span, finishSpan()).Times(1);
   EXPECT_CALL(*http_requests_[0], cancel()).Times(1);
-
   call->cancel();
+
+  // Phase 3: Check the cancelled calls not cancelled again
+  EXPECT_CALL(*mock_child_span, finishSpan()).Times(0);
+  EXPECT_CALL(*http_requests_[0], cancel()).Times(0);
+  http_call_factory_.reset();
 }
 
 }  // namespace

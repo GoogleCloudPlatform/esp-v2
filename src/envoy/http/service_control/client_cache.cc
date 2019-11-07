@@ -13,9 +13,9 @@
 // limitations under the License.
 
 #include "src/envoy/http/service_control/client_cache.h"
+
 #include "common/tracing/http_tracer_impl.h"
 #include "src/api_proxy/service_control/request_builder.h"
-#include "src/envoy/http/service_control/http_call.h"
 
 using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::protobuf::util::Status;
@@ -164,30 +164,33 @@ ClientCache::ClientCache(
     Envoy::TimeSource& time_source, Event::Dispatcher& dispatcher,
     std::function<const std::string&()> sc_token_fn,
     std::function<const std::string&()> quota_token_fn)
-    : config_(config),
-      service_control_uri_(filter_config.service_control_uri()),
-      cm_(cm),
-      dispatcher_(dispatcher),
-      sc_token_fn_(sc_token_fn),
-      quota_token_fn_(quota_token_fn),
-      report_suffix_url_(config_.service_name() + ":report"),
-      time_source_(time_source) {
+    : config_(config) {
   ServiceControlClientOptions options(getCheckAggregationOptions(),
                                       getQuotaAggregationOptions(),
                                       getReportAggregationOptions());
 
   InitHttpRequestSetting(filter_config);
+  check_call_factory_ = std::make_unique<HttpCallFactory>(
+      cm, dispatcher, filter_config.service_control_uri(),
+      config_.service_name() + ":check", sc_token_fn, check_timeout_ms_,
+      check_retries_, time_source, "Service Control remote call: Check");
+  quota_call_factory_ = std::make_unique<HttpCallFactory>(
+      cm, dispatcher, filter_config.service_control_uri(),
+      config_.service_name() + ":allocateQuota", quota_token_fn,
+      quota_timeout_ms_, quota_retries_, time_source,
+      "Service Control remote call: Allocate Quota");
+  report_call_factory_ = std::make_unique<HttpCallFactory>(
+      cm, dispatcher, filter_config.service_control_uri(),
+      config_.service_name() + ":report", sc_token_fn, report_timeout_ms_,
+      report_retries_, time_source, "Service Control remote call: Report");
+
   options.check_transport = [this](const CheckRequest& request,
                                    CheckResponse* response,
                                    TransportDoneFunc on_done) {
     // Don't support tracing on this transport
     auto& null_span = Envoy::Tracing::NullSpan::instance();
-
-    auto* call = HttpCall::create(
-        cm_, dispatcher_, service_control_uri_,
-        config_.service_name() + ":check", sc_token_fn_, request,
-        check_timeout_ms_, check_retries_, null_span, time_source_,
-        "Service Control remote call: Check",
+    auto* call = check_call_factory_->createHttpCall(
+        request, null_span,
         [response, on_done](const Status& status, const std::string& body) {
           if (status.ok()) {
             // Handle 200 response
@@ -213,12 +216,8 @@ ClientCache::ClientCache(
                                    TransportDoneFunc on_done) {
     // Don't support tracing on this transport
     auto& null_span = Envoy::Tracing::NullSpan::instance();
-
-    auto* call = HttpCall::create(
-        cm_, dispatcher_, service_control_uri_,
-        config_.service_name() + ":allocateQuota", quota_token_fn_, request,
-        quota_timeout_ms_, quota_retries_, null_span, time_source_,
-        "Service Control remote call: Allocate Quota",
+    auto* call = quota_call_factory_->createHttpCall(
+        request, null_span,
         [response, on_done](const Status& status, const std::string& body) {
           if (status.ok()) {
             // Handle 200 response
@@ -244,11 +243,8 @@ ClientCache::ClientCache(
                                     TransportDoneFunc on_done) {
     // Don't support tracing on this transport
     auto& null_span = Envoy::Tracing::NullSpan::instance();
-
-    auto* call = HttpCall::create(
-        cm_, dispatcher_, service_control_uri_, report_suffix_url_,
-        sc_token_fn_, request, report_timeout_ms_, report_retries_, null_span,
-        time_source_, "Service Control remote call: Report",
+    auto* call = report_call_factory_->createHttpCall(
+        request, null_span,
         [response, on_done](const Status& status, const std::string& body) {
           if (status.ok()) {
             // Handle 200 response
@@ -269,11 +265,11 @@ ClientCache::ClientCache(
     call->call();
   };
 
-  options.periodic_timer = [this](int interval_ms,
-                                  std::function<void()> callback)
+  options.periodic_timer = [&dispatcher](int interval_ms,
+                                         std::function<void()> callback)
       -> std::unique_ptr<::google::service_control_client::PeriodicTimer> {
     return std::unique_ptr<::google::service_control_client::PeriodicTimer>(
-        new EnvoyPeriodicTimer(dispatcher_, interval_ms, callback));
+        new EnvoyPeriodicTimer(dispatcher, interval_ms, callback));
   };
 
   client_ = ::google::service_control_client::CreateServiceControlClient(
@@ -286,11 +282,8 @@ void ClientCache::callCheck(
   auto check_transport = [this, &parent_span](const CheckRequest& request,
                                               CheckResponse* response,
                                               TransportDoneFunc on_done) {
-    auto* call = HttpCall::create(
-        cm_, dispatcher_, service_control_uri_,
-        config_.service_name() + ":check", sc_token_fn_, request,
-        check_timeout_ms_, check_retries_, parent_span, time_source_,
-        "Service Control remote call: Check",
+    auto* call = check_call_factory_->createHttpCall(
+        request, parent_span,
         [response, on_done](const Status& status, const std::string& body) {
           if (status.ok()) {
             // Handle 200 response

@@ -44,14 +44,14 @@ class HttpCallImpl : public HttpCall,
                const Protobuf::Message& body, uint32_t timeout_ms,
                uint32_t retries, Envoy::Tracing::Span& parent_span,
                Envoy::TimeSource& time_source,
-               const std::string& trace_operation_name,
-               HttpCall::DoneFunc on_done)
+               const std::string& trace_operation_name)
       : cm_(cm),
         dispatcher_(dispatcher),
         http_uri_(uri),
         retries_(retries),
         request_count_(0),
         timeout_ms_(timeout_ms),
+        cancelled(false),
         token_fn_(token_fn),
         parent_span_(parent_span),
         time_source_(time_source),
@@ -62,11 +62,10 @@ class HttpCallImpl : public HttpCall,
     body.SerializeToString(&str_body_);
 
     ASSERT(!on_done_);
-    on_done_ = on_done;
     ENVOY_LOG(trace, "{}", __func__);
   }
 
-  ~HttpCallImpl() {}
+  void setDoneFunc(HttpCall::DoneFunc on_done) { on_done_ = on_done; }
 
   void call() override { makeOneCall(); }
 
@@ -183,6 +182,11 @@ class HttpCallImpl : public HttpCall,
   }
 
   void cancel() override {
+    if (cancelled) {
+      return;
+    }
+    cancelled = true;
+    ENVOY_LOG(debug, "Http call [uri = {}]: canceled", uri_);
     if (request_span_) {
       request_span_->setTag(Tracing::Tags::get().Error,
                             Tracing::Tags::get().Canceled);
@@ -194,6 +198,7 @@ class HttpCallImpl : public HttpCall,
       ENVOY_LOG(debug, "Http call [uri = {}]: canceled", uri_);
       reset();
     }
+    on_done_(Status(Code::CANCELLED, std::string("Request cancelled")), "");
     deferredDelete();
   }
 
@@ -242,7 +247,7 @@ class HttpCallImpl : public HttpCall,
   // The request uri
   std::string uri_;
   // The host of the request uri
-  const HttpUri& http_uri_;
+  const HttpUri http_uri_;
   // The host of the request uri with buffer owned by uri_
   absl::string_view host_;
   // The path of the request uri with buffer owned by uri_
@@ -254,6 +259,8 @@ class HttpCallImpl : public HttpCall,
   uint32_t request_count_;
   // The timeout
   uint32_t timeout_ms_;
+  // whether this call has been cancelled
+  bool cancelled;
 
   // The function for getting token
   std::function<const std::string&()> token_fn_;
@@ -267,16 +274,50 @@ class HttpCallImpl : public HttpCall,
 
 }  // namespace
 
-HttpCall* HttpCall::create(
+HttpCallFactory::HttpCallFactory(
     Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher,
     const ::google::api::envoy::http::common::HttpUri& uri,
     const std::string& suffix_url, std::function<const std::string&()> token_fn,
-    const Protobuf::Message& body, uint32_t timeout_ms, uint32_t retries,
-    Envoy::Tracing::Span& parent_span, Envoy::TimeSource& time_source,
-    const std::string& trace_operation_name, HttpCall::DoneFunc on_done) {
-  return new HttpCallImpl(cm, dispatcher, uri, suffix_url, token_fn, body,
-                          timeout_ms, retries, parent_span, time_source,
-                          trace_operation_name, on_done);
+    uint32_t timeout_ms, uint32_t retries, Envoy::TimeSource& time_source,
+    const std::string& trace_operation_name)
+    : cm_(cm),
+      dispatcher_(dispatcher),
+      uri_(uri),
+      suffix_url_(suffix_url),
+      token_fn_(token_fn),
+      timeout_ms_(timeout_ms),
+      retries_(retries),
+      destruct_mode_(false),
+      time_source_(time_source),
+      trace_operation_name_(trace_operation_name){};
+
+HttpCall* HttpCallFactory::createHttpCall(const Protobuf::Message& body,
+                                          Envoy::Tracing::Span& parent_span,
+                                          HttpCall::DoneFunc on_done) {
+  ENVOY_LOG(debug, "{} is created", trace_operation_name_);
+  HttpCallImpl* http_call = new HttpCallImpl(
+      cm_, dispatcher_, uri_, suffix_url_, token_fn_, body, timeout_ms_,
+      retries_, parent_span, time_source_, trace_operation_name_);
+  http_call->setDoneFunc([this, on_done, http_call](const Status& status,
+                                                    const std::string& body) {
+    // When the call is finished, it should be removed from active_calls_ .
+    // However, when the factory object is being destructed, all active_calls_
+    // will be cancelled in one time so no need to remove them from
+    // active_calls_ to avoid removing elements during for-loop iteration.
+    if (!destruct_mode_) {
+      active_calls_.erase(http_call);
+    }
+    on_done(status, body);
+  });
+  active_calls_.insert(http_call);
+  return http_call;
+}
+
+HttpCallFactory::~HttpCallFactory() {
+  destruct_mode_ = true;
+  for (auto* httpCall : active_calls_) {
+    httpCall->cancel();
+  }
 }
 
 }  // namespace ServiceControl
