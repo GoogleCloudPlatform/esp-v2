@@ -323,6 +323,12 @@ func (s *ServiceInfo) processBackendRule() error {
 
 			method := s.getOrCreateMethod(r.GetSelector())
 
+			// For CONSTANT_ADDRESS, an empty uri will generate an empty path header.
+			// It is an invalid Http header if path is empty.
+			if uri == "" && r.PathTranslation == confpb.BackendRule_CONSTANT_ADDRESS {
+				uri = "/"
+			}
+
 			method.BackendRule = backendInfo{
 				ClusterName:     clusterName,
 				Uri:             uri,

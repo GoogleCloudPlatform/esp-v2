@@ -80,6 +80,12 @@ func TestDynamicRouting(t *testing.T) {
 			wantResp: `{"RequestURI":"/dynamicrouting/getpetbyid?pet_id=a%20b&number=9%3B8"}`,
 		},
 		{
+			desc:     "Succeed, CONSTANT_ADDRESS path translation with empty path",
+			path:     "/empty_path",
+			method:   "POST",
+			wantResp: `{"RequestURI":"/"}`,
+		},
+		{
 			desc:     "Succeed, CONSTANT_ADDRESS path translation is correct, original URL has query parameters, original query parameters should appear first and query parameters converted from path parameters appear later",
 			path:     "/pet/31/num/565?lang=US&zone=us-west1",
 			method:   "GET",

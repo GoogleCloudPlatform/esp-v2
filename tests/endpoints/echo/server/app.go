@@ -87,7 +87,7 @@ func main() {
 		HandlerFunc(echoMethodHandler)
 
 	if *enableRootPathHandler {
-		r.PathPrefix("/").Methods("GET").
+		r.PathPrefix("/").Methods("GET", "POST").
 			HandlerFunc(dynamicRoutingHandler)
 	}
 

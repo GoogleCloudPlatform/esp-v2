@@ -165,6 +165,12 @@ var (
 						Get: "/bearertoken/append",
 					},
 				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_EmptyPath",
+					Pattern: &annotationspb.HttpRule_Post{
+						Post: "/empty_path",
+					},
+				},
 			},
 		},
 		Types: []*ptypepb.Type{
@@ -228,6 +234,10 @@ var (
 				},
 				{
 					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_BearertokenConstantAddress",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_EmptyPath",
 					AllowUnregisteredCalls: true,
 				},
 			},
@@ -296,6 +306,14 @@ var (
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/dynamicrouting/shelves",
+					},
+				},
+				{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_EmptyPath",
+					Address:         "https://localhost:-1",
+					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+					Authentication: &confpb.BackendRule_JwtAudience{
+						JwtAudience: "https://localhost/dynamicrouting/emptypath",
 					},
 				},
 				{
