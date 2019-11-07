@@ -26,7 +26,7 @@ function usage() {
 
 Usage: ${BASH_SOURCE[0]} [-r <DIRECT_REPO>]
 
-This script will show all release CloudESF image tags
+This script will show all release Api Proxy image tags
 
 END_USAGE
   exit 1
