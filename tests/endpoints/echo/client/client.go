@@ -26,7 +26,7 @@ import (
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jws"
 
-	oauth2_internal "github.com/GoogleCloudPlatform/api-proxy/third_party/golang-internal"
+	tpoauth2 "github.com/GoogleCloudPlatform/api-proxy/third_party/golang_internal"
 )
 
 // DoGet performs a Get request to a specified url
@@ -100,7 +100,7 @@ func DoJWT(host, method, path, apiKey, serviceAccount, token string) ([]byte, er
 		if err != nil {
 			return nil, fmt.Errorf("Could not parse service account JSON: %v", err)
 		}
-		rsaKey, err := oauth2_internal.ParseKey(conf.PrivateKey)
+		rsaKey, err := tpoauth2.ParseKey(conf.PrivateKey)
 		if err != nil {
 			return nil, fmt.Errorf("Could not get RSA key: %v", err)
 		}
