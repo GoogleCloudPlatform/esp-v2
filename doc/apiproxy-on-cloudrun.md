@@ -135,41 +135,44 @@ Management outputs the service configuration ID and the service name, similar to
 the following:
 
 ```
-Service Configuration [2019-05-13r0] uploaded for service [ENDPOINTS_SERVICE_NAME]
+Service Configuration [ENDPOINTS_SERVICE_CONFIG_ID] uploaded for service [ENDPOINTS_SERVICE_NAME]
 ```
 
 Note that on Cloud Run, `ENDPOINTS_SERVICE_NAME` is usually the same as `PROXY_SERVICE_URL`
 (minus the protocol identifier).
 
-## Re-Deploying API Proxy to update the service config
 
-After the service configuration is deployed to service management API,
-you need to re-deploy the API Proxy.
-We provide the `ENDPOINTS_SERVICE_NAME` on this deploy,
-allowing the API Proxy to read the service configuration that was just deployed.
+## Build the service config to the API Proxy docker image
 
-Note that in the following command, only the second instance of `ENDPOINTS_SERVICE_NAME`
-should be replaced with the actual value. The first instance of `ENDPOINTS_SERVICE_NAME`
-is the name of the environment variable, and should be kept as is.
+You will need to build the service config into a new API Proxy image and redeploy that new image to Cloud Run.
+We provide a bash script to automate this process. Ensure you have the gcloud SDK installed and download
+this [script](https://cloudesf.googlesource.com/gcpproxy/+/refs/heads/master/docker/serverless/gcloud_build_image).
+
+Run it with the following commands:
+
+```
+chmod +x gcloud_build_image
+./gcloud_build_image -s ENDPOINTS_SERVICE_NAME -c ENDPOINTS_SERVICE_CONFIG_ID -p YOUR_PROJECT_ID
+```
+
+It will use gcloud command to download the service config, build the
+service config into a new docker image, and upload the new image to your project
+container registry located here:
+
+```
+gcr.io/YOUR_PROJECT_ID/endpoints-runtime-serverless:ENDPOINTS_SERVICE_CONFIG_ID
+```
+
+## Redeploy the API Proxy Cloud Run service with the new image
+
+Replace API_PROXY_SERVICE_NAME with the name of your Cloud Run service.
 
 ```
 gcloud beta run deploy API_PROXY_SERVICE_NAME \
-    --image="gcr.io/apiproxy-release/apiproxy-serverless:0" \
-    --set-env-vars=ENDPOINTS_SERVICE_NAME=ENDPOINTS_SERVICE_NAME
-    --allow-unauthenticated \
-    --platform managed \
-    --project=YOUR_PROJECT_ID
-```
-
-For example:
-
-```
-gcloud beta run deploy api-proxy-test-1 \
-    --image="gcr.io/apiproxy-release/apiproxy-serverless:0" \
-    --set-env-vars=ENDPOINTS_SERVICE_NAME=api-proxy-test-1-lrnm3ejpeq-uc.a.run.app \
-    --allow-unauthenticated \
-    --platform managed
-
+  --image="gcr.io/YOUR_PROJECT_ID/endpoints-runtime-serverless:ENDPOINTS_SERVICE_CONFIG_ID" \
+  --allow-unauthenticated \
+  --platform managed \
+  --project=YOUR_PROJECT_ID
 ```
 
 ## Testing the API
