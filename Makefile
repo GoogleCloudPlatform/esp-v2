@@ -38,7 +38,7 @@ GODIRS	= $(shell go list -f '{{.Dir}}' ./... \
 $(BINDIR):
 	@mkdir -p $(BINDIR)
 
-.PHONY: build build-envoy build-envoy-release build-envoy-debug build-grpc-echo build-grpc-interop upload-e2e-client-binaries
+.PHONY: build build-envoy build-envoy-release build-envoy-debug build-grpc-echo build-grpc-bookstore build-grpc-interop upload-e2e-client-binaries
 build: format
 	@echo "--> building"
 	@go build ./src/go/...
@@ -82,6 +82,10 @@ build-grpc-echo:
 	@cp -f bazel-bin/tests/endpoints/grpc_echo/grpc-test-server bin/grpc_echo_server
 	@cp -f bazel-genfiles/tests/endpoints/grpc_echo/grpc-test.descriptor tests/endpoints/grpc_echo/proto/api_descriptor.pb
 
+build-grpc-bookstore:
+	@echo "--> building bookstore-grpc"
+	@bazel build tests/endpoints/bookstore_grpc:bookstore_descriptor --incompatible_no_support_tools_in_action_inputs=false
+	@cp -f bazel-genfiles/tests/endpoints/bookstore_grpc/bookstore.descriptor tests/endpoints/bookstore_grpc/proto/api_descriptor.pb
 
 build-grpc-interop:
 	@echo "--> building the grpc-interop-test client and server"

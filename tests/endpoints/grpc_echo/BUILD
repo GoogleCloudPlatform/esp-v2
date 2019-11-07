@@ -16,14 +16,6 @@ cc_proto_library(
     ],
 )
 
-go_proto_library(
-    name = "grpc-test_go_proto",
-    proto = ":grpc-test.proto",
-    deps = [
-        "@com_github_googleapis_googleapis//google/api/servicecontrol/v1/service_controller.proto",
-    ],
-)
-
 genrule(
     name = "grpc-test_descriptor",
     srcs = [
