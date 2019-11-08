@@ -83,7 +83,10 @@ build-grpc-echo:
 	@cp -f bazel-genfiles/tests/endpoints/grpc_echo/grpc-test.descriptor tests/endpoints/grpc_echo/proto/api_descriptor.pb
 
 build-grpc-bookstore:
+	# This doesn't work when tests/endpoints/bookstore_grpc/BUILD is defined,
+	# please temporarily delete it and re-add it after the build is done.
 	@echo "--> building bookstore-grpc"
+	@echo "Notice: please make sure to temporarily delete tests/endpoints/bookstore_grpc/BUILD in order to run this command"
 	@bazel build tests/endpoints/bookstore_grpc:bookstore_descriptor --incompatible_no_support_tools_in_action_inputs=false
 	@cp -f bazel-genfiles/tests/endpoints/bookstore_grpc/bookstore.descriptor tests/endpoints/bookstore_grpc/proto/api_descriptor.pb
 
