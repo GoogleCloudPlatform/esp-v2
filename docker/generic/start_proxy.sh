@@ -26,4 +26,10 @@ ENVOY=${ENVOY:-apiproxy/envoy}
 ENVOY_ARGS=${ENVOY_ARGS:-""}
 
 ${CONFIGMANAGER} $@ &
-${ENVOY} -c ${BOOTSTRAP_FILE} --disable-hot-restart --log-format '%L%m%d %T.%e %t envoy] [%t][%n]%v' ${ENVOY_ARGS}
+
+${ENVOY} \
+    -c ${BOOTSTRAP_FILE} \
+    --disable-hot-restart \
+    --log-format '%L%m%d %T.%e %t envoy] [%t][%n]%v' \
+    --log-format-escaped \
+     ${ENVOY_ARGS}
