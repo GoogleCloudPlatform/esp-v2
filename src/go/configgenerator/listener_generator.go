@@ -245,6 +245,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 						HttpUpstreamType: &corepb.HttpUri_Cluster{
 							Cluster: provider.GetIssuer(),
 						},
+						Timeout: &durationpb.Duration{Seconds: 5},
 					},
 					CacheDuration: &durationpb.Duration{
 						Seconds: int64(serviceInfo.Options.JwksCacheDurationInS),
