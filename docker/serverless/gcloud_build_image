@@ -42,7 +42,7 @@ gcloud endpoints configs describe "${CONFIG_ID}" --project="${PROJECT}" \
 
 
 cat <<"EOF" > Dockerfile
-FROM gcr.io/apiproxy-release/serverless-proxy:0
+FROM gcr.io/apiproxy-release/apiproxy-severless:0
 
 ENV ENDPOINTS_SERVICE_PATH /etc/nginx/service.json
 COPY service.json ${ENDPOINTS_SERVICE_PATH}
@@ -50,7 +50,7 @@ COPY service.json ${ENDPOINTS_SERVICE_PATH}
 ENTRYPOINT ["/env-start-proxy.py"]
 EOF
 
-NEW_IMAGE="gcr.io/${PROJECT}/serverless-proxy:${CONFIG_ID}"
+NEW_IMAGE="gcr.io/${PROJECT}/apiproxy-serverless:${CONFIG_ID}"
 gcloud builds submit --tag "${NEW_IMAGE}" . --project="${PROJECT}"
 )
 

@@ -146,7 +146,7 @@ Note that on Cloud Run, `ENDPOINTS_SERVICE_NAME` is usually the same as `PROXY_S
 
 You will need to build the service config into a new API Proxy image and redeploy that new image to Cloud Run.
 We provide a bash script to automate this process. Ensure you have the gcloud SDK installed and download
-this [script](https://cloudesf.googlesource.com/gcpproxy/+/refs/heads/master/docker/serverless/gcloud_build_image).
+this [script](/docker/serverless/gcloud_build_image).
 
 Run it with the following commands:
 
@@ -160,7 +160,7 @@ service config into a new docker image, and upload the new image to your project
 container registry located here:
 
 ```
-gcr.io/YOUR_PROJECT_ID/endpoints-runtime-serverless:ENDPOINTS_SERVICE_CONFIG_ID
+gcr.io/YOUR_PROJECT_ID/apiproxy-serverless:ENDPOINTS_SERVICE_CONFIG_ID
 ```
 
 ## Redeploy the API Proxy Cloud Run service with the new image
@@ -169,7 +169,7 @@ Replace API_PROXY_SERVICE_NAME with the name of your Cloud Run service.
 
 ```
 gcloud beta run deploy API_PROXY_SERVICE_NAME \
-  --image="gcr.io/YOUR_PROJECT_ID/endpoints-runtime-serverless:ENDPOINTS_SERVICE_CONFIG_ID" \
+  --image="gcr.io/YOUR_PROJECT_ID/apiproxy-serverless:ENDPOINTS_SERVICE_CONFIG_ID" \
   --allow-unauthenticated \
   --platform managed \
   --project=YOUR_PROJECT_ID

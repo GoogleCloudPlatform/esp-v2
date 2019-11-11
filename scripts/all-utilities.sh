@@ -298,19 +298,19 @@ function get_gcsrunner_image_name() {
 }
 
 function get_proxy_image_name() {
-  echo -n 'gcr.io/cloudesf-testing/api-proxy'
+  echo -n 'gcr.io/cloudesf-testing/apiproxy'
 }
 
 function get_serverless_image_name() {
-  echo -n 'gcr.io/cloudesf-testing/serverless-proxy'
+  echo -n 'gcr.io/cloudesf-testing/apiproxy-serverless'
 }
 
 function get_proxy_image_release_name() {
-  echo -n 'gcr.io/apiproxy-release/api-proxy'
+  echo -n 'gcr.io/apiproxy-release/apiproxy'
 }
 
 function get_serverless_image_release_name() {
-  echo -n 'gcr.io/apiproxy-release/serverless-proxy'
+  echo -n 'gcr.io/apiproxy-release/apiproxy-serverless'
 }
 
 function get_envoy_image_name_with_sha() {
