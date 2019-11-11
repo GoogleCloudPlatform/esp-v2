@@ -13,17 +13,21 @@
 #   gcloud endpoints configs list --service=${SERVICE}
 # Use the latest one for the CONFIG_ID
 
+# Default to the release image if not specified
+BASE_IMAGE=gcr.io/apiproxy-release/apiproxy-serverless:0
+
 function error_exit() {
   # ${BASH_SOURCE[1]} is the file name of the caller.
   echo "${BASH_SOURCE[1]}: line ${BASH_LINENO[0]}: ${1:-Unknown Error.} (exit ${2:-1})" 1>&2
   exit ${2:-1}
 }
 
-while getopts :c:s:p: arg; do
+while getopts :c:s:p:i: arg; do
   case ${arg} in
     c) CONFIG_ID="${OPTARG}";;
     s) SERVICE="${OPTARG}";;
     p) PROJECT="${OPTARG}";;
+    i) BASE_IMAGE="${OPTARG}";;
     \?) error_exit "Unrecognized argument -${OPTARG}";;
   esac
 done
@@ -31,6 +35,7 @@ done
 [[ -n "${PROJECT}" ]] || error_exit "Missing required PROJECT"
 [[ -n "${SERVICE}" ]] || error_exit "Missing required SERVICE"
 [[ -n "${CONFIG_ID}" ]] || error_exit "Missing required CONFIG_ID"
+echo "Using base image: ${BASE_IMAGE}"
 
 (
 set -x
@@ -41,16 +46,16 @@ gcloud endpoints configs describe "${CONFIG_ID}" --project="${PROJECT}" \
   || error_exit "Failed to download service config"
 
 
-cat <<"EOF" > Dockerfile
-FROM gcr.io/apiproxy-release/apiproxy-severless:0
+cat <<EOF > Dockerfile
+FROM ${BASE_IMAGE}
 
 ENV ENDPOINTS_SERVICE_PATH /etc/nginx/service.json
-COPY service.json ${ENDPOINTS_SERVICE_PATH}
+COPY service.json \${ENDPOINTS_SERVICE_PATH}
 
 ENTRYPOINT ["/env-start-proxy.py"]
 EOF
 
-NEW_IMAGE="gcr.io/${PROJECT}/apiproxy-serverless:${CONFIG_ID}"
+NEW_IMAGE="gcr.io/${PROJECT}/apiproxy-serverless:${SERVICE}-${CONFIG_ID}"
 gcloud builds submit --tag "${NEW_IMAGE}" . --project="${PROJECT}"
 )
 

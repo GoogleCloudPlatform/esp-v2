@@ -31,7 +31,7 @@ For this tutorial, we will deploy a simple HTTP bookstore manager as the backend
 We supply the Docker image for the backend at
 [gcr.io/apiproxy-release/bookstore:1](https://gcr.io/apiproxy-release/bookstore:1),
 which is built from this
-[Dockerfile](/tests/endpoints/bookstore/bookstore.Dockerfile).
+[Dockerfile](../tests/endpoints/bookstore/bookstore.Dockerfile).
 
 To deploy Bookstore service on Cloud Run, you can either do it on Pantheon UI,
 (by choosing Cloud Run, then create Service), or you can directly run the
@@ -40,7 +40,7 @@ as the project ID created above.
 
 ```
 gcloud beta run deploy CLOUD_RUN_SERVICE_NAME \
-    --image="gcr.io/endpoints-release/bookstore:1" \
+    --image="gcr.io/apiproxy-release/bookstore:1" \
     --allow-unauthenticated \
     --platform managed \
     --project=YOUR_PROJECT_ID
@@ -94,7 +94,7 @@ for each service so that API Proxy has the information it needs to invoke a
 service.
 
 We supply a
-[template](/tests/endpoints/bookstore/bookstore_swagger_template.json) for
+[template](../tests/endpoints/bookstore/bookstore_swagger_template.json) for
 the bookstore service. You must make the following changes to it:
 
 1) Change the `host` name to the `PROXY_SERVICE_URL`, **without** the protocol identifier.
@@ -146,7 +146,7 @@ Note that on Cloud Run, `ENDPOINTS_SERVICE_NAME` is usually the same as `PROXY_S
 
 You will need to build the service config into a new API Proxy image and redeploy that new image to Cloud Run.
 We provide a bash script to automate this process. Ensure you have the gcloud SDK installed and download
-this [script](/docker/serverless/gcloud_build_image).
+this [script](../docker/serverless/gcloud_build_image).
 
 Run it with the following commands:
 
@@ -160,7 +160,7 @@ service config into a new docker image, and upload the new image to your project
 container registry located here:
 
 ```
-gcr.io/YOUR_PROJECT_ID/apiproxy-serverless:ENDPOINTS_SERVICE_CONFIG_ID
+gcr.io/YOUR_PROJECT_ID/apiproxy-serverless:ENDPOINTS_SERVICE_NAME-ENDPOINTS_SERVICE_CONFIG_ID
 ```
 
 ## Redeploy the API Proxy Cloud Run service with the new image
@@ -169,7 +169,7 @@ Replace API_PROXY_SERVICE_NAME with the name of your Cloud Run service.
 
 ```
 gcloud beta run deploy API_PROXY_SERVICE_NAME \
-  --image="gcr.io/YOUR_PROJECT_ID/apiproxy-serverless:ENDPOINTS_SERVICE_CONFIG_ID" \
+  --image="gcr.io/YOUR_PROJECT_ID/apiproxy-serverless:ENDPOINTS_SERVICE_NAME-ENDPOINTS_SERVICE_CONFIG_ID" \
   --allow-unauthenticated \
   --platform managed \
   --project=YOUR_PROJECT_ID
