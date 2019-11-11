@@ -46,10 +46,13 @@ def serve_error_msg(error_msg):
 
 def main():
     CMD = "/usr/local/bin/python"
-    ARGS = [CMD, "/apiproxy/start_proxy.py", "--enable_backend_routing"]
-
     PLATFORM = "Cloud Run(API Proxy)"
-    ARGS = [CMD, "--compute_platform_override='{}'".format(PLATFORM)]
+    ARGS = [
+        CMD,
+        "/apiproxy/start_proxy.py",
+        "--enable_backend_routing",
+        "--compute_platform_override='{}'".format(PLATFORM)
+    ]
 
     # Uncaught KeyError; if no port, we can't serve a nice error handler. Crash instead.
     assert_env_var("PORT")

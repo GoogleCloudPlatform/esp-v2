@@ -428,6 +428,12 @@ environment variable or by passing "-k" flag to this script.
         help='''
         Define the dns lookup family for all backends. The options are "auto", "v4only" and "v6only". The default is "auto".
         ''')
+    parser.add_argument(
+        '--compute_platform_override',
+        default=None,
+        help='''
+        The overridden platform where the proxy is running on.
+        ''')
     parser.add_argument('--enable_debug', action='store_true', default=False,
         help='''Enable debug level application logs of Envoy and ConfigManager.
         ''')
@@ -570,6 +576,10 @@ if __name__ == '__main__':
 
     if args.enable_debug:
         proxy_conf.append("--alsologtostderr", )
+
+    if args.compute_platform_override:
+        proxy_conf.extend(
+            ["--compute_platform_override", args.compute_platform_override])
 
     if args.enable_backend_routing:
         if args.non_gcp:
