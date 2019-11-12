@@ -7,7 +7,7 @@ require (
 	github.com/bazelbuild/buildtools v0.0.0-20191024175656-9f3978593d3e // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/census-instrumentation/opencensus-proto v0.2.1
-	github.com/envoyproxy/go-control-plane v0.9.1-0.20190920220121-786ed9ae4b40
+	github.com/envoyproxy/go-control-plane v0.9.1
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.3.2

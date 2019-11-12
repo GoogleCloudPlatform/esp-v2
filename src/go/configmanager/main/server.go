@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net"
@@ -41,6 +42,10 @@ func main() {
 	flag.Parse()
 	opts := flags.EnvoyConfigOptionsFromFlags()
 
+	// Create context that allows cancellation.
+	// Allows shutting down downstream servers gracefully.
+	ctx, cancel := context.WithCancel(context.Background())
+
 	var mf *metadata.MetadataFetcher
 	if !opts.NonGCP {
 		glog.Info("running on GCP, initializing metadata fetcher")
@@ -51,7 +56,7 @@ func main() {
 	if err != nil {
 		glog.Exitf("fail to initialize config manager: %v", err)
 	}
-	server := xds.NewServer(m.Cache(), nil)
+	server := xds.NewServer(ctx, m.Cache(), nil)
 	grpcServer := grpc.NewServer()
 	lis, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", *DiscoveryPort))
 	if err != nil {
@@ -73,6 +78,7 @@ func main() {
 	go func() {
 		sig := <-signalChan
 		glog.Warningf("Server got signal %v, stopping", sig)
+		cancel()
 		grpcServer.Stop()
 	}()
 
