@@ -220,9 +220,14 @@ function upload_logs() {
 }
 
 function wait_apiproxy_image() {
-  local PROXY_IMAGE_SHA_NAME=$(get_proxy_image_name_with_sha)
   local ENVOY_IMAGE_SHA_NAME=$(get_envoy_image_name_with_sha)
-  echo "Checking if the image ${PROXY_IMAGE_SHA_NAME} and the image ${ENVOY_IMAGE_SHA_NAME} exist..."
+  local PROXY_IMAGE_SHA_NAME=$(get_proxy_image_name_with_sha)
+  local SERVERLESS_IMAGE_SHA_NAME=$(get_serverless_image_name_with_sha)
+
+  printf "Waiting for the following images:\n  %s\n  %s\n  %s\n" \
+    "${ENVOY_IMAGE_SHA_NAME}" \
+    "${PROXY_IMAGE_SHA_NAME}" \
+    "${SERVERLESS_IMAGE_SHA_NAME}"
 
   # Wait 60 minutes (in case of cold cache). Generally only takes 15 minutes.
   local WAIT_IMAGE_TIMEOUT=3600
@@ -230,9 +235,10 @@ function wait_apiproxy_image() {
 
   while true; do
 
-    gcloud container images describe "${PROXY_IMAGE_SHA_NAME}"  \
-      && gcloud container images describe "${ENVOY_IMAGE_SHA_NAME}"  \
-      && { echo "Found the image ${PROXY_IMAGE_SHA_NAME} and the image ${ENVOY_IMAGE_SHA_NAME} exist";
+    gcloud container images describe "${ENVOY_IMAGE_SHA_NAME}"  \
+      && gcloud container images describe "${PROXY_IMAGE_SHA_NAME}"  \
+      && gcloud container images describe "${SERVERLESS_IMAGE_SHA_NAME}"  \
+      && { echo "Found the images";
     break; }
 
     if [ ${WAIT_IMAGE_TIMEOUT} -gt 0 ]; then

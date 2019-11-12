@@ -86,7 +86,7 @@ case ${TEST_CASE} in
     runE2E -p "gke" -c "tight" -t "grpc" -g "interop" -R "managed" -m "$(get_proxy_image_name_with_sha)"
     ;;
   "cloud-run-http-bookstore")
-    runE2E -p "cloud-run" -t "http" -g "bookstore" -R "managed" -m "$(get_proxy_image_name_with_sha)"
+    runE2E -p "cloud-run" -t "http" -g "bookstore" -R "managed" -m "$(get_serverless_image_name_with_sha)"
     ;;
   *)
     echo "No such test case ${TEST_CASE}"

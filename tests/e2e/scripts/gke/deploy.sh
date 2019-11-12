@@ -25,14 +25,12 @@ ARGS="\
 
 . ${ROOT}/tests/e2e/scripts/prow-utilities.sh || { echo "Cannot load Bash utilities";
 exit 1; }
-e2e_options "${@}"
-
 . ${ROOT}/tests/e2e/scripts/gke/utilities.sh || { echo "Cannot load GKE utilities";
 exit 1; }
-e2e_options "${@}"
-
 . ${ROOT}/tests/e2e/scripts/linux-install-wrk.sh || { echo "Cannot load WRK utilities";
 exit 1; }
+
+e2e_options "${@}"
 
 echo "Installing tools if necessary"
 install_e2e_dependencies

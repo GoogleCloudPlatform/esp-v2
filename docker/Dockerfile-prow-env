@@ -27,7 +27,7 @@ RUN apt-get update && \
     apt-get -y install \
     wget make cmake python python-pip pkg-config coreutils \
     zlib1g-dev curl libtool automake zip time rsync ninja-build \
-    git bash-completion clang-format-7
+    git bash-completion clang-format-7 jq
 
 # install nodejs, which is needed for integration tests
 RUN sh -c 'curl -sL https://deb.nodesource.com/setup_11.x | bash -'
@@ -59,3 +59,6 @@ RUN mkdir -p /usr/local/gcloud \
   && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
   && /usr/local/gcloud/google-cloud-sdk/install.sh
 ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin
+
+# For Cloud Run
+RUN gcloud components install beta --quiet
