@@ -17,7 +17,7 @@
 set -o errexit
 set -o nounset
 
-echo "Starting Proxy......"
+echo "Starting Proxy with args: $@"
 CONFIGMANAGER=${CONFIGMANAGER:-apiproxy/configmanager}
 ENVOY=${ENVOY:-apiproxy/envoy}
 
@@ -25,7 +25,7 @@ ENVOY=${ENVOY:-apiproxy/envoy}
 # docker run -e 'ENVOY_ARGS="-l debug"' ...
 ENVOY_ARGS=${ENVOY_ARGS:-""}
 
-${CONFIGMANAGER} $@ &
+${CONFIGMANAGER} "$@" &
 
 ${ENVOY} \
     -c ${BOOTSTRAP_FILE} \

@@ -51,7 +51,7 @@ def main():
         CMD,
         "/apiproxy/start_proxy.py",
         "--enable_backend_routing",
-        "--compute_platform_override='{}'".format(PLATFORM)
+        "--compute_platform_override={}".format(PLATFORM)
     ]
 
     # Uncaught KeyError; if no port, we can't serve a nice error handler. Crash instead.

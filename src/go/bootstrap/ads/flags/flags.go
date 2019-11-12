@@ -20,6 +20,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/commonflags"
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
+	"github.com/golang/glog"
 )
 
 var (
@@ -28,9 +29,12 @@ var (
 )
 
 func DefaultBootstrapperOptionsFromFlags() options.AdsBootstrapperOptions {
-	return options.AdsBootstrapperOptions{
+	opts := options.AdsBootstrapperOptions{
 		CommonOptions:     commonflags.DefaultCommonOptionsFromFlags(),
 		AdsConnectTimeout: *AdsConnectTimeout,
 		DiscoveryAddress:  *DiscoveryAddress,
 	}
+
+	glog.Infof("ADS Bootstrapper options: %+v", opts)
+	return opts
 }

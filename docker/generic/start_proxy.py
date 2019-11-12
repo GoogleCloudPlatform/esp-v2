@@ -60,7 +60,7 @@ GOOGLE_CREDS_KEY = "GOOGLE_APPLICATION_CREDENTIALS"
 
 
 def gen_bootstrap_conf(args):
-    cmd = [BOOTSTRAP_CMD]
+    cmd = [BOOTSTRAP_CMD, "--logtostderr"]
 
     if args.enable_tracing:
         cmd.append("--enable_tracing", )
@@ -479,8 +479,8 @@ if __name__ == '__main__':
     if args.rollout_strategy is None or not args.rollout_strategy.strip():
         args.rollout_strategy = DEFAULT_ROLLOUT_STRATEGY
     proxy_conf = [
-        "-v", "--backend_protocol", backend_protocol, "--cluster_address",
-        cluster_address, "--cluster_port", cluster_port,
+        "-v", "--logtostderr", "--backend_protocol", backend_protocol,
+        "--cluster_address", cluster_address, "--cluster_port", cluster_port,
         "--service_management_url", args.management, "--rollout_strategy",
         args.rollout_strategy, "--envoy_xff_num_trusted_hops",
         args.envoy_xff_num_trusted_hops, "--jwks_cache_duration_in_s",
@@ -574,12 +574,11 @@ if __name__ == '__main__':
     if args.enable_tracing:
         proxy_conf.append("--enable_tracing", )
 
-    if args.enable_debug:
-        proxy_conf.append("--alsologtostderr", )
-
     if args.compute_platform_override:
-        proxy_conf.extend(
-            ["--compute_platform_override", args.compute_platform_override])
+        proxy_conf.extend([
+            "--compute_platform_override",
+            args.compute_platform_override,
+        ])
 
     if args.enable_backend_routing:
         if args.non_gcp:
@@ -590,7 +589,7 @@ if __name__ == '__main__':
         proxy_conf.append("--enable_backend_routing")
     if args.backend_dns_lookup_family not in {"auto", "v4only", "v6only"}:
         print(
-            "Invalid DnsLookupFamily: %s; Only auto, v4only or v6only are valid.".formt(
+            "Invalid DnsLookupFamily: %s; Only auto, v4only or v6only are valid.".format(
                 args.backend_dns_lookup_family)
         )
         sys.exit(3)

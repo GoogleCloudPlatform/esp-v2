@@ -31,10 +31,12 @@ class TestStartProxy(unittest.TestCase):
     def test_gen_bootstrap(self):
         testcases = [
             (["--http_request_timeout=1m"],
-             ['apiproxy/bootstrap', '--http_request_timeout', '1m',
-              '/tmp/bootstrap.json']),
+             ['apiproxy/bootstrap', '--logtostderr', '--http_request_timeout',
+              '1m', '/tmp/bootstrap.json']),
 
-            (["--enable_tracing"], ['apiproxy/bootstrap', '--enable_tracing',
+            (["--enable_tracing"], ['apiproxy/bootstrap',
+                                    '--logtostderr',
+                                    '--enable_tracing',
                                     '--tracing_sample_rate', '0.001',
                                     "--http_request_timeout", "5s",
                                     '/tmp/bootstrap.json']),
@@ -43,7 +45,10 @@ class TestStartProxy(unittest.TestCase):
               "--tracing_sample_rate=1",
               "--tracing_incoming_context=fake-incoming-context",
               "--tracing_outgoing_context=fake-outgoing-context"],
-             ['apiproxy/bootstrap', '--enable_tracing', '--tracing_project_id',
+             ['apiproxy/bootstrap',
+              '--logtostderr',
+              '--enable_tracing',
+              '--tracing_project_id',
               "123",
               '--tracing_sample_rate', '1', "--tracing_incoming_context",
               "fake-incoming-context", "--tracing_outgoing_context",

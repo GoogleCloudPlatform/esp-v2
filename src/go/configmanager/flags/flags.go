@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/commonflags"
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
+	"github.com/golang/glog"
 )
 
 var (
@@ -96,7 +97,7 @@ var (
 )
 
 func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
-	return options.ConfigGeneratorOptions{
+	opts := options.ConfigGeneratorOptions{
 		CommonOptions:                 commonflags.DefaultCommonOptionsFromFlags(),
 		BackendProtocol:               *BackendProtocol,
 		ComputePlatformOverride:       *ComputePlatformOverride,
@@ -134,4 +135,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		ScQuotaRetries:                *ScQuotaRetries,
 		ScReportRetries:               *ScReportRetries,
 	}
+
+	glog.Infof("Config Generator options: %+v", opts)
+	return opts
 }

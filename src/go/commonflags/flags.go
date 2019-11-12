@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
+	"github.com/golang/glog"
 )
 
 var (
@@ -55,7 +56,7 @@ var (
 )
 
 func DefaultCommonOptionsFromFlags() options.CommonOptions {
-	return options.CommonOptions{
+	opts := options.CommonOptions{
 		AdminAddress:               *AdminAddress,
 		AdminPort:                  *AdminPort,
 		EnableTracing:              *EnableTracing,
@@ -75,4 +76,7 @@ func DefaultCommonOptionsFromFlags() options.CommonOptions {
 		IamURL:                     *IamURL,
 		IamServiceAccount:          *IamServiceAccount,
 	}
+
+	glog.Infof("Common options: %+v", opts)
+	return opts
 }
