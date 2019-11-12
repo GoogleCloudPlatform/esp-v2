@@ -49,12 +49,6 @@ GRPC_PREFIX = "grpc://"
 HTTP_PREFIX = "http://"
 HTTPS_PREFIX = "https://"
 
-# Management service
-MANAGEMENT_ADDRESS = "https://servicemanagement.googleapis.com"
-
-# Metadata service
-METADATA_ADDRESS = "http://169.254.169.254"
-
 # Google default application credentials environment variable
 GOOGLE_CREDS_KEY = "GOOGLE_APPLICATION_CREDENTIALS"
 
@@ -74,10 +68,10 @@ def gen_bootstrap_conf(args):
         if args.tracing_outgoing_context:
             cmd.extend(
                 ["--tracing_outgoing_context", args.tracing_outgoing_context])
-    if args.http_request_timeout:
+    if args.http_request_timeout_s:
         cmd.extend(
-            ["--http_request_timeout",
-             str(args.http_request_timeout)])
+            ["--http_request_timeout_s",
+             str(args.http_request_timeout_s)])
 
     if args.enable_debug:
         os.environ["ENVOY_ARGS"] = "-l debug"
@@ -184,12 +178,8 @@ environment variable or by passing "-k" flag to this script.
     parser.add_argument(
         '-g',
         '--management',
-        default=MANAGEMENT_ADDRESS,
+        default=None,
         help=argparse.SUPPRESS)
-
-    # Customize metadata service url prefix.
-    parser.add_argument(
-        '-m', '--metadata', default=METADATA_ADDRESS, help=argparse.SUPPRESS)
 
     # CORS presets
     parser.add_argument(
@@ -283,9 +273,9 @@ environment variable or by passing "-k" flag to this script.
 
     parser.add_argument(
         '--envoy_xff_num_trusted_hops',
-        default="2",
+        default=None,
         help='''Envoy HttpConnectionManager configuration, please refer to envoy
-        documentation for detailed information.''')
+        documentation for detailed information. The default value is 2.''')
 
     parser.add_argument(
         '--log_request_headers',
@@ -325,55 +315,55 @@ environment variable or by passing "-k" flag to this script.
         ''')
     parser.add_argument(
         '--jwks_cache_duration_in_s',
-        default='300',
+        default=None,
         help='''
         Specify JWT public key cache duration in seconds. The default is 5 minutes.'''
     )
     parser.add_argument(
-        '--http_request_timeout',
-        default='5s',
+        '--http_request_timeout_s',
+        default=None, type=int,
         help='''
-        Set the timeout in second for all the requests made by config manager.
+        Set the timeout in second(eg. 10) for all the requests made by ConfigManager.
         Must be > 0 and the default is 5 seconds if not set.
         ''')
     parser.add_argument(
         '--service_control_check_timeout_ms',
-        default=0,
+        default=None,
         help='''
         Set the timeout in millisecond for service control Check request.
-        Must be > 0 and the default is 1000 if not set.
+        Must be > 0 and the default is 1000 if not set. Default
         ''')
     parser.add_argument(
         '--service_control_quota_timeout_ms',
-        default=0,
+        default=None,
         help='''
         Set the timeout in millisecond for service control Quota request.
         Must be > 0 and the default is 1000 if not set.
         ''')
     parser.add_argument(
         '--service_control_report_timeout_ms',
-        default=0,
+        default=None,
         help='''
         Set the timeout in millisecond for service control Report request.
         Must be > 0 and the default is 2000 if not set.
         ''')
     parser.add_argument(
         '--service_control_check_retries',
-        default=-1,
+        default=None,
         help='''
         Set the retry times for service control Check request.
         Must be >= 0 and the default is 3 if not set.
         ''')
     parser.add_argument(
         '--service_control_quota_retries',
-        default=-1,
+        default=None,
         help='''
         Set the retry times for service control Quota request.
         Must be >= 0 and the default is 1 if not set.
         ''')
     parser.add_argument(
         '--service_control_report_retries',
-        default=-1,
+        default=None,
         help='''
         Set the retry times for service control Report request.
         Must be >= 0 and the default is 5 if not set.
@@ -424,7 +414,7 @@ environment variable or by passing "-k" flag to this script.
         '''.format(creds_key=GOOGLE_CREDS_KEY))
     parser.add_argument(
         '--backend_dns_lookup_family',
-        default="auto",
+        default=None,
         help='''
         Define the dns lookup family for all backends. The options are "auto", "v4only" and "v6only". The default is "auto".
         ''')
@@ -439,11 +429,7 @@ environment variable or by passing "-k" flag to this script.
         ''')
     return parser
 
-
-if __name__ == '__main__':
-    parser = make_argparser()
-    args = parser.parse_args()
-    logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
+def gen_proxy_config(args):
 
     if args.backend_protocol is None:
         if args.backend.startswith(GRPC_PREFIX):
@@ -481,11 +467,17 @@ if __name__ == '__main__':
     proxy_conf = [
         "-v", "--logtostderr", "--backend_protocol", backend_protocol,
         "--cluster_address", cluster_address, "--cluster_port", cluster_port,
-        "--service_management_url", args.management, "--rollout_strategy",
-        args.rollout_strategy, "--envoy_xff_num_trusted_hops",
-        args.envoy_xff_num_trusted_hops, "--jwks_cache_duration_in_s",
-        args.jwks_cache_duration_in_s
+        "--rollout_strategy", args.rollout_strategy,
     ]
+
+    if args.envoy_xff_num_trusted_hops:
+         proxy_conf.extend(["--envoy_xff_num_trusted_hops", args.envoy_xff_num_trusted_hops])
+
+    if args.jwks_cache_duration_in_s:
+         proxy_conf.extend(["--jwks_cache_duration_in_s", args.jwks_cache_duration_in_s])
+
+    if args.management:
+        proxy_conf.extend(["--service_management_url", args.management])
 
     if args.log_request_headers:
         proxy_conf.extend(["--log_request_headers", args.log_request_headers])
@@ -502,45 +494,43 @@ if __name__ == '__main__':
     if args.service:
         proxy_conf.extend(["--service", args.service])
 
-    if args.http_request_timeout:
-        proxy_conf.extend(
-            ["--http_request_timeout",
-             str(args.http_request_timeout)])
+    if args.http_request_timeout_s:
+        proxy_conf.extend( ["--http_request_timeout_s", str(args.http_request_timeout_s)])
 
-    if args.service_control_check_retries > 0:
+    if args.service_control_check_retries:
         proxy_conf.extend([
             "--service_control_check_retries",
-            str(args.service_control_check_retries)
+            args.service_control_check_retries
         ])
 
-    if args.service_control_quota_retries > 0:
+    if args.service_control_quota_retries:
         proxy_conf.extend([
             "--service_control_quota_retries",
-            str(args.service_control_quota_retries)
+            args.service_control_quota_retries
         ])
 
-    if args.service_control_report_retries > 0:
+    if args.service_control_report_retries:
         proxy_conf.extend([
             "--service_control_report_retries",
-            str(args.service_control_report_retries)
+            args.service_control_report_retries
         ])
 
-    if args.service_control_check_timeout_ms > -1:
+    if args.service_control_check_timeout_ms:
         proxy_conf.extend([
             "--service_control_check_timeout_ms",
-            str(args.service_control_check_timeout_ms)
+            args.service_control_check_timeout_ms
         ])
 
-    if args.service_control_quota_timeout_ms > -1:
+    if args.service_control_quota_timeout_ms:
         proxy_conf.extend([
             "--service_control_quota_timeout_ms",
-            str(args.service_control_quota_timeout_ms)
+            args.service_control_quota_timeout_ms
         ])
 
-    if args.service_control_report_timeout_ms > -1:
+    if args.service_control_report_timeout_ms:
         proxy_conf.extend([
             "--service_control_report_timeout_ms",
-            str(args.service_control_report_timeout_ms)
+            args.service_control_report_timeout_ms
         ])
 
     #  NOTE: It is true by default in configmangager's flags.
@@ -587,15 +577,16 @@ if __name__ == '__main__':
             )
             sys.exit(3)
         proxy_conf.append("--enable_backend_routing")
-    if args.backend_dns_lookup_family not in {"auto", "v4only", "v6only"}:
-        print(
-            "Invalid DnsLookupFamily: %s; Only auto, v4only or v6only are valid.".format(
-                args.backend_dns_lookup_family)
-        )
-        sys.exit(3)
-    else:
-        proxy_conf.extend(
-            ["--backend_dns_lookup_family", args.backend_dns_lookup_family])
+    if args.backend_dns_lookup_family:
+        if args.backend_dns_lookup_family not in {"auto", "v4only", "v6only"}:
+            print(
+                "Invalid DnsLookupFamily: %s; Only auto, v4only or v6only are valid.".format(
+                    args.backend_dns_lookup_family)
+            )
+            sys.exit(3)
+        else:
+            proxy_conf.extend(
+                ["--backend_dns_lookup_family", args.backend_dns_lookup_family])
 
     if args.envoy_use_remote_address:
         proxy_conf.append("--envoy_use_remote_address")
@@ -618,7 +609,6 @@ if __name__ == '__main__':
         if args.cors_allow_credentials:
             proxy_conf.append("--cors_allow_credentials")
 
-    subprocess.call(gen_bootstrap_conf(args))
     # Set credentials file from the environment variable
     if args.service_account_key is None and GOOGLE_CREDS_KEY in os.environ:
         args.service_account_key = os.environ[GOOGLE_CREDS_KEY]
@@ -634,4 +624,11 @@ if __name__ == '__main__':
     if args.non_gcp:
         proxy_conf.append("--non_gcp")
     print(proxy_conf)
-    start_proxy(proxy_conf)
+    return proxy_conf
+
+if __name__ == '__main__':
+    parser = make_argparser()
+    args = parser.parse_args()
+    logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
+    subprocess.call(gen_bootstrap_conf(args))
+    start_proxy(gen_proxy_config(args))

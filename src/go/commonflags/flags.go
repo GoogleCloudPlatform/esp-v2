@@ -29,7 +29,7 @@ var (
 	AdminAddress               = flag.String("admin_address", "0.0.0.0", "Address that envoy should serve the admin page on. Supports both ipv4 and ipv6 addresses.")
 	AdminPort                  = flag.Int("admin_port", 8001, "Port that envoy should serve the admin page on")
 	EnableTracing              = flag.Bool("enable_tracing", false, `enable stackdriver tracing`)
-	HttpRequestTimeout         = flag.Duration("http_request_timeout", 5*time.Second, `Set the timeout in second for all requests. Must be > 0 and the default is 5 seconds if not set.`)
+	HttpRequestTimeoutS        = flag.Int("http_request_timeout_s", 5, `Set the timeout in second for all requests. Must be > 0 and the default is 5 seconds if not set.`)
 	Node                       = flag.String("node", "api_proxy", "envoy node id")
 	NonGCP                     = flag.Bool("non_gcp", false, `By default, the proxy tries to talk to GCP metadata server to get VM location in the first few requests. Setting this flag to true to skip this step`)
 	TracingProjectId           = flag.String("tracing_project_id", "", "The Google project id required for Stack driver tracing. If not set, will automatically use fetch it from GCP Metadata server")
@@ -60,7 +60,7 @@ func DefaultCommonOptionsFromFlags() options.CommonOptions {
 		AdminAddress:               *AdminAddress,
 		AdminPort:                  *AdminPort,
 		EnableTracing:              *EnableTracing,
-		HttpRequestTimeout:         *HttpRequestTimeout,
+		HttpRequestTimeout:         time.Duration(*HttpRequestTimeoutS) * time.Second,
 		Node:                       *Node,
 		NonGCP:                     *NonGCP,
 		TracingProjectId:           *TracingProjectId,

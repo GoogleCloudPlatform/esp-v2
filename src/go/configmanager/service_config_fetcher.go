@@ -54,7 +54,7 @@ var (
 	}
 
 	// TODO(b/140269465): Move this to options instead of flags
-	serviceConfigFetcherClient = newServiceConfigFetcherClient(true, *commonflags.HttpRequestTimeout)
+	serviceConfigFetcherClient = newServiceConfigFetcherClient(true, time.Duration(*commonflags.HttpRequestTimeoutS)*time.Second)
 )
 
 func newServiceConfigFetcherClient(insecureSkipVerify bool, timeout time.Duration) *http.Client {

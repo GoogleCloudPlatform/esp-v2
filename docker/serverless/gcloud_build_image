@@ -52,7 +52,7 @@ FROM ${BASE_IMAGE}
 ENV ENDPOINTS_SERVICE_PATH /etc/endpoints/service.json
 COPY service.json \${ENDPOINTS_SERVICE_PATH}
 
-ENTRYPOINT ["/env-start-proxy.py"]
+ENTRYPOINT ["/env_start_proxy.py"]
 EOF
 
 NEW_IMAGE="gcr.io/${PROJECT}/apiproxy-serverless:${SERVICE}-${CONFIG_ID}"
