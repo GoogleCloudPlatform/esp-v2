@@ -73,7 +73,6 @@ func loadConfigFromRollouts(serviceName, curRolloutID, curConfigID string, mf *m
 	if err != nil {
 		return "", "", fmt.Errorf("fail to get rollouts, %s", err)
 	}
-	glog.Infof("get rollouts %v", listServiceRolloutsResponse)
 
 	if len(listServiceRolloutsResponse.Rollouts) == 0 {
 		return "", "", fmt.Errorf("no active rollouts")
@@ -83,6 +82,7 @@ func loadConfigFromRollouts(serviceName, curRolloutID, curConfigID string, mf *m
 		return curRolloutID, curConfigID, nil
 	}
 	glog.Infof("found new rollout id %v for service %v", newRolloutID, serviceName)
+	glog.Infof("new rollout: %v", listServiceRolloutsResponse.Rollouts[0])
 
 	trafficPercentStrategy := listServiceRolloutsResponse.Rollouts[0].GetTrafficPercentStrategy()
 	trafficPercentMap := trafficPercentStrategy.GetPercentages()
