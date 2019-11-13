@@ -12,22 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcc:8
+FROM debian:buster
 LABEL maintainer="jilinxia@google.com"
 
 # add env we can debug with the image name:tag
 ARG IMAGE_ARG
 ENV IMAGE=${IMAGE_ARG}
 
-# clang is used for formatting, TSAN, and ASAN tests
-RUN sh -c 'curl http://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -'
-RUN sh -c 'echo "deb http://apt.llvm.org/stretch/ llvm-toolchain-stretch-7 main" > /etc/apt/sources.list.d/llvm.list'
 
 RUN apt-get update && \
     apt-get -y install \
     wget make cmake python python-pip pkg-config coreutils \
     zlib1g-dev curl libtool automake zip time rsync ninja-build \
     git bash-completion clang-format-7 jq
+
+# clang is used for formatting
+RUN sh -c 'curl http://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -'
+RUN sh -c 'echo "deb http://apt.llvm.org/stretch/ llvm-toolchain-stretch-7 main" > /etc/apt/sources.list.d/llvm.list'
+
 
 # install nodejs, which is needed for integration tests
 RUN sh -c 'curl -sL https://deb.nodesource.com/setup_11.x | bash -'
@@ -42,6 +44,16 @@ RUN INSTALLER="bazel-0.28.1-installer-linux-x86_64.sh"; \
 # install Bazelisk
 RUN wget -O /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v0.0.8/bazelisk-linux-amd64 && \
     chmod +x /usr/local/bin/bazel
+
+# install clang-8
+RUN wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key| apt-key add - && \
+    echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-8 main" >> /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get install -y llvm-8-dev libclang-8-dev clang-8 xz-utils lld
+
+ENV CC clang-8
+ENV CXX clang++-8
+
 
 # install golang and setup Go standard envs
 ENV GOPATH /go

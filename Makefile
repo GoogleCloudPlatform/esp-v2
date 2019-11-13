@@ -65,7 +65,7 @@ build-envoy-tsan:
 
 build-envoy-release:
 	@echo "--> building envoy (compilation_mode=release)"
-	@bazel build --config=release //src/envoy:envoy
+	@CC=gcc CXX=g++ bazel build --config=release //src/envoy:envoy
 	@cp -f bazel-bin/src/envoy/envoy bin/
 
 build-envoy-debug:
