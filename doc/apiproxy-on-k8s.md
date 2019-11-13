@@ -18,7 +18,9 @@ on a Google GKE cluster.
 
 4. Install [CURL](https://curl.haxx.se/download.html) for testing purposes.
 
-5. Enable [Cloud Endpoints API](https://console.cloud.google.com/apis/api/endpoints.googleapis.com/overview), [Cloud Service Management API](https://pantheon.corp.google.com/apis/api/servicemanagement.googleapis.com/overview), and [Cloud Service Control API](https://pantheon.corp.google.com/apis/api/servicecontrol.googleapis.com/overview)
+5. Enable [Cloud Endpoints API](https://console.cloud.google.com/apis/api/endpoints.googleapis.com/overview), 
+   [Cloud Service Management API](https://console.cloud.google.com/apis/api/servicemanagement.googleapis.com/overview), 
+   and [Cloud Service Control API](https://console.cloud.google.com/apis/api/servicecontrol.googleapis.com/overview)
    for your project in the Google Cloud Endpoints page in the API Manager.
    Ignore any prompt to create credentials.
 

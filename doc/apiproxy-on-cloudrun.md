@@ -17,9 +17,9 @@ endpoint, on Google Cloud Run.
 
 5.  Enable
     [Cloud Endpoints API](https://console.cloud.google.com/apis/api/endpoints.googleapis.com/overview),
-    [Cloud Service Management API](https://pantheon.corp.google.com/apis/api/servicemanagement.googleapis.com/overview),
+    [Cloud Service Management API](https://console.cloud.google.com/apis/api/servicemanagement.googleapis.com/overview),
     and
-    [Cloud Service Control API](https://pantheon.corp.google.com/apis/api/servicecontrol.googleapis.com/overview)
+    [Cloud Service Control API](https://console.cloud.google.com/apis/api/servicecontrol.googleapis.com/overview)
     for your project in the Google Cloud Endpoints page in the API Manager.
     Ignore any prompt to create credentials.
 
