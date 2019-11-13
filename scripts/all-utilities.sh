@@ -207,35 +207,39 @@ function detect_memory_leak_check() {
   curl "${STATUS_SERVER}/memory" >"${local_json}"
 
   python -m json.tool "${local_json}"
-
   local curr_usage=$(python -c  \
     "import json, sys;obj = json.load(open(\"${local_json}\"));print obj['allocated']")
   rm "${local_json}"
   [[ -n "${curr_usage}" ]] || { echo "Could not extract memory usage";
   return 1; }
+
   if [[ ${run_count} -eq 1 ]]; then
     START_MEMORY_USAGE=${curr_usage}
     echo "Start Memory Usage (Bytes): ${START_MEMORY_USAGE}."
-  else
-    INCREASED_MEMORY_USAGE=$((curr_usage - START_MEMORY_USAGE))
-    echo "Memory Increased in Test ${run_count} (Bytes): ${INCREASED_MEMORY_USAGE}"
+    return 0;
+  fi
+  local threshold=40
+  echo "Memory Leak  Threshold(MB): ${threshold}."
+  INCREASED_MEMORY_USAGE=$((curr_usage - START_MEMORY_USAGE))
+  local memory_increased=$((INCREASED_MEMORY_USAGE / ( 1024 * 1024 )))
+  echo "Memory Increased in Test ${run_count}(MB): ${memory_increased} ."
+
+  if [[ ${memory_increased} -gt ${threshold} ]]; then
+    MEMLEAK_COUNT=$((MEMLEAK_COUNT+1))
+    echo "************ Memory leak occurs *************"
   fi
 }
 
 function detect_memory_leak_final() {
-  [[ ${INCREASED_MEMORY_USAGE} -gt 0 ]]  \
+  local run_count=${1}
+  [[ ${run_count} -gt 1 ]]  \
     || { echo "Only run test once.";
   return 0; }
 
-  local memory_increased=$((INCREASED_MEMORY_USAGE / ( 1024 * 1024 )))
-  echo "Memory Increased (MB): ${memory_increased} ."
-  local threshold=40
-  echo "Memory Leak  Threshold (MB): ${threshold}."
-  if [[ ${memory_increased} -gt ${threshold} ]]; then
-    echo "************ Memory leak is detected. *************"
+  # The memleak is regarded as found When memory leak case occurred more than 1/4 total rounds.
+  if [[ ${MEMLEAK_COUNT} -gt $((${run_count}/4)) ]]; then
+    echo "************ Memory leak is found!!! *************"
     return 1
-  else
-    return 0
   fi
 }
 

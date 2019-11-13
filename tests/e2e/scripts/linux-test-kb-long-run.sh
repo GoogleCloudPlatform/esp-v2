@@ -123,6 +123,6 @@ done
 echo "Finished ${RUN_COUNT} test runs."
 
 # We fail the test if memory increase is large.
-detect_memory_leak_final && MEMORY_LEAK=0 || MEMORY_LEAK=1
+detect_memory_leak_final ${RUN_COUNT} && MEMORY_LEAK=0 || MEMORY_LEAK=1
 
 exit $((${RESULT} + ${MEMORY_LEAK}))

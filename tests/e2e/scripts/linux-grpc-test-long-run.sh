@@ -193,7 +193,7 @@ popd > /dev/null
 echo "Finished ${RUN_COUNT} test runs."
 echo "Failures: pass-through: ${GRPC_STRESS_FAILURES}, transcode: ${HTTP_STRESS_FAILURES}."
 # We fail the test if memory increase is large.
-detect_memory_leak_final && MEMORY_LEAK=0 || MEMORY_LEAK=1
+detect_memory_leak_final ${RUN_COUNT} && MEMORY_LEAK=0 || MEMORY_LEAK=1
 # Only mark test as failed if any pass-through tests failed.
 # This is to be consistent with other http stress tests.
 # All failure will be analyzed by release-engineers.

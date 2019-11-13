@@ -102,7 +102,7 @@ if [[ ${FAIL_COUNT} -gt $((RUN_COUNT / 20)) && ${FAIL_COUNT} -gt 1 ]] ; then
 fi
 
 # We fail the test if memory increase is large.
-detect_memory_leak_final && MEMORY_LEAK=0 || MEMORY_LEAK=1
+detect_memory_leak_final ${RUN_COUNT} && MEMORY_LEAK=0 || MEMORY_LEAK=1
 
 unset GRPC_GO_LOG_SEVERITY_LEVEL
 exit $((${RESULT} + ${MEMORY_LEAK}))
