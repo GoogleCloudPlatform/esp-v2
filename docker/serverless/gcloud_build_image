@@ -49,7 +49,7 @@ gcloud endpoints configs describe "${CONFIG_ID}" --project="${PROJECT}" \
 cat <<EOF > Dockerfile
 FROM ${BASE_IMAGE}
 
-ENV ENDPOINTS_SERVICE_PATH /etc/nginx/service.json
+ENV ENDPOINTS_SERVICE_PATH /etc/endpoints/service.json
 COPY service.json \${ENDPOINTS_SERVICE_PATH}
 
 ENTRYPOINT ["/env-start-proxy.py"]
