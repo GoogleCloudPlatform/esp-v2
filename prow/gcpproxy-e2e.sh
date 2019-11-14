@@ -74,7 +74,6 @@ exit 1; }
 echo '======================================================='
 echo '=====================   e2e test  ====================='
 echo '======================================================='
-
 case ${TEST_CASE} in
   "tight-http-bookstore-managed")
     runE2E -p "gke" -c "tight" -t "http" -g "bookstore" -R "managed" -m "$(get_proxy_image_name_with_sha)"

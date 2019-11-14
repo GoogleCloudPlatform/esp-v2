@@ -56,7 +56,7 @@ DURATION_IN_SEC=$((DURATION_IN_HOUR * 60 * 60))
 [[ ${DURATION_IN_SEC} -gt 120 ]] || DURATION_IN_SEC=120
 
 echo "Starts interop stress test at $(date)."
-echo "Test during is: $((DURATION_IN_SEC / 60)) minutes."
+echo "Test duration is: $((DURATION_IN_SEC / 60)) minutes."
 echo "Test cases are: ${TEST_CASES}"
 
 # Start a background test client job.
@@ -69,7 +69,9 @@ TEST_JOB=$!
 trap "kill ${TEST_JOB}" EXIT
 
 START_TIME=$(date +"%s")
-END_TIME=$((START_TIME + DURATION_IN_SEC))
+FINAL_END_TIME=$((START_TIME + DURATION_IN_SEC))
+ONE_ROUND_DURATION_IN_SEC=600
+THIS_ROUND_END_TIME=$((START_TIME+ONE_ROUND_DURATION_IN_SEC))
 
 RUN_COUNT=0
 FAIL_COUNT=0
@@ -79,7 +81,6 @@ detect_memory_leak_init "${HOST_IP}"
 
 while true; do
   CURR_TIME=$(date +"%s")
-  RUN_COUNT=$((RUN_COUNT++))
   sleep 10
   METRIC_RESULT=$("$ROOT/bin/metrics_client" \
     --total_only --metrics_server_address=localhost:8081 2>&1 | tail -1)
@@ -89,8 +90,14 @@ while true; do
   # Count non zero QPS as success.
   [[ ${QPS} -gt 100 ]] || FAIL_COUNt=$((FAIL_COUNT++))
 
+  if [[ $(date +"%s") -ge ${THIS_ROUND_END_TIME} ]] ; then
+    RUN_COUNT=$((RUN_COUNT+1))
+    detect_memory_leak_check ${RUN_COUNT}
+    THIS_ROUND_END_TIME=$((THIS_ROUND_END_TIME+ONE_ROUND_DURATION_IN_SEC))
+  fi
+
   # Break if test has run long enough.
-  [[ $(date +"%s") -lt ${END_TIME} ]] || break
+  [[ $(date +"%s") -lt ${FINAL_END_TIME} ]] || break
 done
 
 echo "Total test count: ${RUN_COUNT}, failed count: ${FAIL_COUNT}."
