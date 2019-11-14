@@ -122,7 +122,7 @@ function long_running_test() {
       run_nonfatal "${SCRIPT_PATH}"/test-grpc-interop.sh  \
         -h "${host}:80"  \
         -l "${duration_in_hour}" 2>&1 | tee "${log_file}" \
-          || status=${?}
+        || status=${?}
       ;;
     *)
       echo "Invalid backend ${BACKEND}"
