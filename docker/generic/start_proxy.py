@@ -90,13 +90,13 @@ def start_proxy(proxy_conf):
     except OSError as err:
         logging.error("Failed to launch Api Proxy")
         logging.error(err.strerror)
-        sys.exit(3)
+        sys.exit(1)
 
 
 class ArgumentParser(argparse.ArgumentParser):
     def error(self, message):
         self.print_help(sys.stderr)
-        self.exit(4, '%s: error: %s\n' % (self.prog, message))
+        self.exit(1, '%s: error: %s\n' % (self.prog, message))
 
 
 # Notes: These flags should get aligned with that of ESP at
@@ -169,7 +169,7 @@ environment variable or by passing "-k" flag to this script.
     parser.add_argument(
         '-R',
         '--rollout_strategy',
-        default=None,
+        default=DEFAULT_ROLLOUT_STRATEGY,
         help='''The service config rollout strategy, [fixed|managed],
         Default value: {strategy}'''.format(strategy=DEFAULT_ROLLOUT_STRATEGY),
         choices=['fixed', 'managed'])
@@ -429,7 +429,38 @@ environment variable or by passing "-k" flag to this script.
         ''')
     return parser
 
+# Check whether there are conflict flags. If so, return the error string. Otherwise returns None.
+# This function also changes some default flag value.
+def enforce_conflict_args(args):
+    if args.rollout_strategy:
+        if args.rollout_strategy not in {"fixed", "managed"}:
+          return "Flag --R or  --rollout_strategy must be 'fixed' or 'managed'."
+        if args.rollout_strategy != DEFAULT_ROLLOUT_STRATEGY:
+          if args.version:
+            return "Flag --version cannot be used together with -R or --rollout_strategy."
+          if args.service_json_path:
+            return "Flag --rollout_strategy must be fixed with --service_json_path."
+
+    if args.service_json_path:
+        if args.service:
+            return "Flag --service cannot be used together with --service_json_path."
+        if args.version:
+            return "Flag --version cannot be used together with --service_json_path."
+
+    if args.non_gcp:
+        if args.service_account_key is None and GOOGLE_CREDS_KEY not in os.environ:
+            return "If --non_gcp is specified, --service_account_key has to be specified, or GOOGLE_APPLICATION_CREDENTIALS has to set in os.environ."
+
+    if args.backend_dns_lookup_family and args.backend_dns_lookup_family not in {"auto", "v4only", "v6only"}:
+        return "Flag --backend_dns_lookup_family must be 'auto', 'v4only' or 'v6only'."
+
+    return None
+
 def gen_proxy_config(args):
+    check_conflict_result = enforce_conflict_args(args)
+    if check_conflict_result:
+        logging.error(check_conflict_result)
+        sys.exit(1)
 
     if args.backend_protocol is None:
         if args.backend.startswith(GRPC_PREFIX):
@@ -462,8 +493,6 @@ def gen_proxy_config(args):
         print("incorrect backend")
         sys.exit(1)
 
-    if args.rollout_strategy is None or not args.rollout_strategy.strip():
-        args.rollout_strategy = DEFAULT_ROLLOUT_STRATEGY
     proxy_conf = [
         "-v", "--logtostderr", "--backend_protocol", backend_protocol,
         "--cluster_address", cluster_address, "--cluster_port", cluster_port,
@@ -538,24 +567,9 @@ def gen_proxy_config(args):
         proxy_conf.extend(["--service_control_network_fail_open=false"])
 
     if args.version:
-        if args.rollout_strategy != DEFAULT_ROLLOUT_STRATEGY:
-            print("when version is set, rollout strategy should be fixed mode.")
-            sys.exit(1)
-        proxy_conf.extend([
-            "--service_config_id",
-            args.version,
-        ])
+        proxy_conf.extend(["--service_config_id", args.version])
 
     if args.service_json_path:
-        if args.service:
-            print("Flag --service cannot be used together with --service_json_path.")
-            sys.exit(3)
-        if args.version:
-            print("Flag --version cannot be used together with --service_json_path.")
-            sys.exit(3)
-        if args.rollout_strategy != "fixed":
-            print("Flag --rollout_strategy must be fixed with --service_json_path.")
-            sys.exit(3)
         proxy_conf.extend(["--service_json_path", args.service_json_path])
 
     if args.check_metadata:
@@ -566,27 +580,14 @@ def gen_proxy_config(args):
 
     if args.compute_platform_override:
         proxy_conf.extend([
-            "--compute_platform_override",
-            args.compute_platform_override,
-        ])
+            "--compute_platform_override", args.compute_platform_override])
 
     if args.enable_backend_routing:
-        if args.non_gcp:
-            print(
-                "Flag --enable_backend_routing cannot be used together with --non_gcp."
-            )
-            sys.exit(3)
         proxy_conf.append("--enable_backend_routing")
+
     if args.backend_dns_lookup_family:
-        if args.backend_dns_lookup_family not in {"auto", "v4only", "v6only"}:
-            print(
-                "Invalid DnsLookupFamily: %s; Only auto, v4only or v6only are valid.".format(
-                    args.backend_dns_lookup_family)
-            )
-            sys.exit(3)
-        else:
-            proxy_conf.extend(
-                ["--backend_dns_lookup_family", args.backend_dns_lookup_family])
+        proxy_conf.extend(
+            ["--backend_dns_lookup_family", args.backend_dns_lookup_family])
 
     if args.envoy_use_remote_address:
         proxy_conf.append("--envoy_use_remote_address")
@@ -612,12 +613,6 @@ def gen_proxy_config(args):
     # Set credentials file from the environment variable
     if args.service_account_key is None and GOOGLE_CREDS_KEY in os.environ:
         args.service_account_key = os.environ[GOOGLE_CREDS_KEY]
-
-    if args.non_gcp and args.service_account_key is None:
-        print(
-            "If --non_gcp is specified, --service_account_key has to be specified."
-        )
-        sys.exit(3)
 
     if args.service_account_key:
         proxy_conf.extend(["--service_account_key", args.service_account_key])

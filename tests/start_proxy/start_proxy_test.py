@@ -130,5 +130,28 @@ class TestStartProxy(unittest.TestCase):
             gotArgs = gen_proxy_config(self.parser.parse_args(flags))
             self.assertEqual(gotArgs, wantedArgs)
 
+    def test_gen_proxy_config_error(self):
+        testcases = [
+            ['--unknown_flag'],
+            ['--rollout_strategy=mangaed'],
+            ['--rollout_strategy=managed','--v=2019-11-09r0'],
+            ['--service=test_bookstore.gloud.run',
+             '--service_json_path=/tmp/service.json'],
+            ['--version=2019-11-09r0',
+             '--service_json_path=/tmp/service.json'],
+            ['--rollout_strategy=managed',
+             '--service_json_path=/tmp/service.json'],
+            ['--backend=/echo:80:8080',],
+            ['--enable_backend_routing', '--non_gcp'],
+            ['--backend_dns_lookup_family=v4'],
+            ['--non_gcp']
+        ]
+
+        for flags in testcases:
+          with self.assertRaises(SystemExit) as cm:
+            gotArgs = gen_proxy_config(self.parser.parse_args(flags))
+          print(cm.exception)
+          self.assertEqual(cm.exception.code, 1)
+
 if __name__ == '__main__':
     unittest.main()
