@@ -1181,7 +1181,7 @@ func TestFetchListeners(t *testing.T) {
 		fakeConfig = tc.fakeServiceConfig
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = tc.backendProtocol
-		opts.EnableTracing = tc.enableTracing
+		opts.DisableTracing = !tc.enableTracing
 
 		flag.Set("service", testProjectName)
 		flag.Set("service_config_id", testConfigID)
@@ -1250,6 +1250,7 @@ func TestDynamicBackendRouting(t *testing.T) {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = tc.backendProtocol
 		opts.EnableBackendRouting = true
+		opts.DisableTracing = true
 
 		flag.Set("service_json_path", tc.serviceConfigPath)
 

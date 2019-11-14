@@ -28,7 +28,7 @@ var (
 	// When adding or changing default values, update options.DefaultCommonOptions.
 	AdminAddress               = flag.String("admin_address", "0.0.0.0", "Address that envoy should serve the admin page on. Supports both ipv4 and ipv6 addresses.")
 	AdminPort                  = flag.Int("admin_port", 8001, "Port that envoy should serve the admin page on")
-	EnableTracing              = flag.Bool("enable_tracing", false, `enable stackdriver tracing`)
+	DisableTracing             = flag.Bool("disable_tracing", false, `Disable stackdriver tracing`)
 	HttpRequestTimeoutS        = flag.Int("http_request_timeout_s", 5, `Set the timeout in second for all requests. Must be > 0 and the default is 5 seconds if not set.`)
 	Node                       = flag.String("node", "api_proxy", "envoy node id")
 	NonGCP                     = flag.Bool("non_gcp", false, `By default, the proxy tries to talk to GCP metadata server to get VM location in the first few requests. Setting this flag to true to skip this step`)
@@ -59,7 +59,7 @@ func DefaultCommonOptionsFromFlags() options.CommonOptions {
 	opts := options.CommonOptions{
 		AdminAddress:               *AdminAddress,
 		AdminPort:                  *AdminPort,
-		EnableTracing:              *EnableTracing,
+		DisableTracing:             *DisableTracing,
 		HttpRequestTimeout:         time.Duration(*HttpRequestTimeoutS) * time.Second,
 		Node:                       *Node,
 		NonGCP:                     *NonGCP,

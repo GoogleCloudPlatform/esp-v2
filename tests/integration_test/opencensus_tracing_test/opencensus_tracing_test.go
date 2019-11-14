@@ -94,7 +94,6 @@ func TestServiceControlCheckTracesWithRetry(t *testing.T) {
 		"--rollout_strategy=fixed",
 		"--service_control_check_retries=2",
 		"--service_control_check_timeout_ms=100",
-		"--enable_tracing=true",
 	}
 	s := env.NewTestEnv(comp.TestServiceControlCheckTracesWithRetry, "bookstore")
 	s.SetupFakeTraceServer()
@@ -187,7 +186,6 @@ func TestServiceControlSkipUsageTraces(t *testing.T) {
 		"--backend_protocol=http1",
 		"--rollout_strategy=fixed",
 		"--suppress_envoy_headers",
-		"--enable_tracing=true",
 	}
 
 	s := env.NewTestEnv(comp.TestServiceControlSkipUsageTraces, "echo")
@@ -248,7 +246,6 @@ func TestFetchingJwksTraces(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{
 		"--service_config_id=" + configID,
-		"--enable_tracing=true",
 		"--backend_protocol=grpc",
 		"--rollout_strategy=fixed",
 	}

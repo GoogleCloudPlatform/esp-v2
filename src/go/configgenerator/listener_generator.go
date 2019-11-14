@@ -140,7 +140,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		UseRemoteAddress:  &wrapperspb.BoolValue{Value: serviceInfo.Options.EnvoyUseRemoteAddress},
 		XffNumTrustedHops: uint32(serviceInfo.Options.EnvoyXffNumTrustedHops),
 	}
-	if serviceInfo.Options.EnableTracing {
+	if !serviceInfo.Options.DisableTracing {
 		httpConMgr.Tracing = &hcmpb.HttpConnectionManager_Tracing{}
 	}
 
@@ -590,7 +590,7 @@ func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 func makeRouterFilter(opts options.ConfigGeneratorOptions) *hcmpb.HttpFilter {
 	router, _ := util.MessageToStruct(&routerpb.Router{
 		SuppressEnvoyHeaders: opts.SuppressEnvoyHeaders,
-		StartChildSpan:       opts.EnableTracing,
+		StartChildSpan:       !opts.DisableTracing,
 	})
 	routerFilter := &hcmpb.HttpFilter{
 		Name:       util.Router,

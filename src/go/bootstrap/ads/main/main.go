@@ -39,7 +39,7 @@ func main() {
 		glog.Exitf("failed to create bootstrap config, error: %v", err)
 	}
 
-	if opts.EnableTracing {
+	if !opts.DisableTracing {
 		if bt.Tracing, err = bootstrap.CreateTracing(opts.CommonOptions); err != nil {
 			glog.Exitf("failed to create tracing config, error: %v", err)
 		}

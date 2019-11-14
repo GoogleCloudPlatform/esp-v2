@@ -129,8 +129,7 @@ function setup() {
       -i "${APIPROXY_IMAGE}"
 
   # 10) Redeploy API Proxy to update the service config
-  proxy_args="$proxy_args--enable_tracing,"
-  proxy_args="$proxy_args--tracing_sample_rate=0.005"
+  proxy_args="$proxy_args--tracing_sample_rate=1"
 
   echo "Redeploying API Proxy ${PROXY_SERVICE_NAME} on Cloud Run"
   gcloud beta run deploy "${PROXY_SERVICE_NAME}" \

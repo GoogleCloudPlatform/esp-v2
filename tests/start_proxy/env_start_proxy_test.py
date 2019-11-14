@@ -30,7 +30,7 @@ class TestStartProxy(unittest.TestCase):
         testcases = [
           { "port": "8080",
             "service": "test_bookstore.goog.cloud",
-            "args": "--http_request_timeout_s=1, --enable_tracing ",
+            "args": "--http_request_timeout_s=1, --disable_tracing ",
             "wantArgs": [
               '/apiproxy/start_proxy.py',
               '/apiproxy/start_proxy.py',
@@ -40,7 +40,7 @@ class TestStartProxy(unittest.TestCase):
               '--service=test_bookstore.goog.cloud',
               '--rollout_strategy=managed',
               '--http_request_timeout_s=1',
-              ' --enable_tracing '
+              ' --disable_tracing '
             ]
           },
           { "port": "8082",
@@ -62,7 +62,7 @@ class TestStartProxy(unittest.TestCase):
           },
           { "port": "8080",
             "servicePath": "/tmp/service_config.json",
-            "args": "--enable_tracing",
+            "args": "--disable_tracing",
             "wantArgs": [
               '/apiproxy/start_proxy.py',
               '/apiproxy/start_proxy.py',
@@ -71,7 +71,7 @@ class TestStartProxy(unittest.TestCase):
               '--http_port=8080',
               '--rollout_strategy=fixed',
               '--service_json_path=/tmp/service_config.json',
-              '--enable_tracing'
+              '--disable_tracing'
             ]
           }
         ]

@@ -56,8 +56,9 @@ GOOGLE_CREDS_KEY = "GOOGLE_APPLICATION_CREDENTIALS"
 def gen_bootstrap_conf(args):
     cmd = [BOOTSTRAP_CMD, "--logtostderr"]
 
-    if args.enable_tracing:
-        cmd.append("--enable_tracing", )
+    if args.disable_tracing:
+        cmd.append("--disable_tracing")
+    else:
         if args.tracing_project_id:
             cmd.extend(["--tracing_project_id", args.tracing_project_id])
         if args.tracing_sample_rate:
@@ -68,6 +69,7 @@ def gen_bootstrap_conf(args):
         if args.tracing_outgoing_context:
             cmd.extend(
                 ["--tracing_outgoing_context", args.tracing_outgoing_context])
+
     if args.http_request_timeout_s:
         cmd.extend(
             ["--http_request_timeout_s",
@@ -369,11 +371,14 @@ environment variable or by passing "-k" flag to this script.
         Must be >= 0 and the default is 5 if not set.
         ''')
     parser.add_argument(
-        '--enable_tracing',
+        '--disable_tracing',
         action='store_true',
         default=False,
-        help=
-        '''Enable Stackdriver tracing. The flag tracing_project_id must be specified. Default is off'''
+        help='''
+        Disable Stackdriver tracing. By default, tracing is enabled with 1 out
+        of 1000 requests being sampled. This sampling rate can be changed with
+        the --tracing_sample_rate flag.
+        '''
     )
     parser.add_argument(
         '--tracing_project_id',
@@ -575,8 +580,8 @@ def gen_proxy_config(args):
     if args.check_metadata:
         proxy_conf.append("--check_metadata", )
 
-    if args.enable_tracing:
-        proxy_conf.append("--enable_tracing", )
+    if args.disable_tracing:
+        proxy_conf.append("--disable_tracing", )
 
     if args.compute_platform_override:
         proxy_conf.extend([
