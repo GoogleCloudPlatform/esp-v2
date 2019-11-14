@@ -33,7 +33,7 @@ const (
 	healthCheckRetries = 10
 
 	// Time to wait between each linear retry.
-	healthCheckRetryBackoff = 1 * time.Second
+	healthCheckRetryBackoff = 3 * time.Second
 
 	// Timeout for a request, in case server does not respond.
 	healthCheckDeadline = time.Duration(1 * time.Second)
