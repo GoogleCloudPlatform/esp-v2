@@ -44,11 +44,10 @@ def serve_error_msg(error_msg):
     server.serve_forever()
 
 
-def main():
-    CMD = "/usr/local/bin/python"
+def gen_args(cmd):
     PLATFORM = "Cloud Run(API Proxy)"
     ARGS = [
-        CMD,
+        cmd,
         "/apiproxy/start_proxy.py",
         "--enable_backend_routing",
         "--compute_platform_override={}".format(PLATFORM)
@@ -82,9 +81,6 @@ def main():
         else:
             ARGS.append("--rollout_strategy=managed")
 
-    if "CORS_PRESET" in os.environ:
-        ARGS.append("--cors_preset={}".format(os.environ["CORS_PRESET"]))
-
     if "APIPROXY_ARGS" in os.environ:
         # By default, APIPROXY_ARGS is comma-separated.
         # But if a comma needs to appear within an arg, there is an alternative
@@ -101,9 +97,9 @@ def main():
             serve_error_msg("Malformed APIPROXY_ARGS environment variable.")
 
         ARGS.extend(arg_value.split(delim))
-
-    os.execv(CMD, ARGS)
-
+    return ARGS
 
 if __name__ == "__main__":
-    main()
+    cmd = "/usr/local/bin/python"
+    args = gen_args(cmd)
+    os.execv(cmd, args)

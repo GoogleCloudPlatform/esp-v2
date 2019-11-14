@@ -20,7 +20,7 @@ import os, inspect
 currentdir = os.path.dirname(
     os.path.abspath(inspect.getfile(inspect.currentframe())))
 sys.path.append(currentdir + "/../../docker/generic")
-from start_proxy import gen_bootstrap_conf, make_argparser
+from start_proxy import gen_bootstrap_conf, make_argparser, gen_proxy_config
 
 
 class TestStartProxy(unittest.TestCase):
@@ -30,15 +30,14 @@ class TestStartProxy(unittest.TestCase):
 
     def test_gen_bootstrap(self):
         testcases = [
-            (["--http_request_timeout=1m"],
-             ['apiproxy/bootstrap', '--logtostderr', '--http_request_timeout',
-              '1m', '/tmp/bootstrap.json']),
+            (["--http_request_timeout_s=1"],
+             ['apiproxy/bootstrap', '--logtostderr', '--http_request_timeout_s',
+              '1', '/tmp/bootstrap.json']),
 
             (["--enable_tracing"], ['apiproxy/bootstrap',
                                     '--logtostderr',
                                     '--enable_tracing',
                                     '--tracing_sample_rate', '0.001',
-                                    "--http_request_timeout", "5s",
                                     '/tmp/bootstrap.json']),
 
             (["--enable_tracing", "--tracing_project_id=123",
@@ -52,14 +51,84 @@ class TestStartProxy(unittest.TestCase):
               "123",
               '--tracing_sample_rate', '1', "--tracing_incoming_context",
               "fake-incoming-context", "--tracing_outgoing_context",
-              "fake-outgoing-context", "--http_request_timeout", "5s",
-              '/tmp/bootstrap.json'])
+              "fake-outgoing-context", '/tmp/bootstrap.json'])
         ]
 
         for flags, wantedArgs in testcases:
             gotArgs = gen_bootstrap_conf(self.parser.parse_args(flags))
             self.assertEqual(gotArgs, wantedArgs)
 
+    def test_gen_proxy_config(self):
+        testcases = [
+            # grpc backend with fixed version.
+            (['--service=test_bookstore.gloud.run', '--version=2019-11-09r0',
+              '--backend=grpc://127.0.0.1:8000', '--http_request_timeout_s=10',
+              '--log_jwt_payloads=aud,exp'],
+             ['-v', '--logtostderr','--backend_protocol', 'grpc',
+              '--cluster_address', '127.0.0.1', '--cluster_port', '8000',
+              '--rollout_strategy', 'fixed', '--log_jwt_payloads', 'aud,exp',
+              '--service', 'test_bookstore.gloud.run',
+              '--http_request_timeout_s', '10',
+              '--service_config_id', '2019-11-09r0'
+              ]),
+            # backend with DNS address, no version.
+            (['--service=echo.gloud.run', '--backend=echo:8080',
+              '--log_request_headers=x-google-x',
+              '--service_control_check_timeout_ms=100',
+              '--backend_dns_lookup_family=v4only'],
+             ['-v', '--logtostderr','--backend_protocol', 'http1',
+              '--cluster_address', 'echo', '--cluster_port', '8080',
+              '--rollout_strategy', 'fixed',
+              '--log_request_headers', 'x-google-x',
+              '--service', 'echo.gloud.run',
+              '--service_control_check_timeout_ms', '100',
+              '--backend_dns_lookup_family', 'v4only'
+              ]),
+            # backend protocol override, with default backend.
+            (['--backend_protocol=grpc', '--rollout_strategy=managed',
+              '--http_port=8079', '--service_control_quota_retries=3',
+              '--service_control_report_timeout_ms=300',
+              '--service_control_network_fail_open', '--check_metadata'],
+              ['-v', '--logtostderr','--backend_protocol', 'grpc',
+              '--cluster_address', '127.0.0.1', '--cluster_port', '8082',
+              '--rollout_strategy', 'managed',
+              '--listener_port', '8079',
+              '--service_control_quota_retries', '3',
+              '--service_control_report_timeout_ms', '300',
+              '--check_metadata'
+              ]),
+            # Cors
+            (['--service=test_bookstore.gloud.run',
+              '--backend=https://127.0.0.1', '--cors_preset=basic',
+              '--cors_allow_headers=X-Requested-With', '--non_gcp',
+              '--service_account_key', '/tmp/service_accout_key'],
+             ['-v', '--logtostderr','--backend_protocol', 'http2',
+              '--cluster_address', '127.0.0.1', '--cluster_port', '443',
+              '--rollout_strategy', 'fixed',
+              '--service', 'test_bookstore.gloud.run',
+              '--cors_preset', 'basic',
+              '--cors_allow_origin', '*', '--cors_allow_origin_regex', '',
+              '--cors_allow_methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+              '--cors_allow_headers', 'X-Requested-With',
+              '--cors_expose_headers', 'Content-Length,Content-Range',
+              '--service_account_key', '/tmp/service_accout_key', '--non_gcp'
+              ]),
+            # backend routing
+            (['--backend=https://127.0.0.1:8000', '--enable_backend_routing',
+              '--service_json_path=/tmp/service.json',
+              '--compute_platform_override', 'Cloud Run(API PROXY)'],
+             ['-v', '--logtostderr','--backend_protocol', 'http2',
+              '--cluster_address', '127.0.0.1', '--cluster_port', '8000',
+              '--rollout_strategy', 'fixed',
+              '--service_json_path', '/tmp/service.json',
+              '--compute_platform_override', 'Cloud Run(API PROXY)',
+              '--enable_backend_routing'
+              ]),
+        ]
+
+        for flags, wantedArgs in testcases:
+            gotArgs = gen_proxy_config(self.parser.parse_args(flags))
+            self.assertEqual(gotArgs, wantedArgs)
 
 if __name__ == '__main__':
     unittest.main()
