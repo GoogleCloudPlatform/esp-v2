@@ -195,9 +195,6 @@ function detect_memory_leak_init() {
   # host format has to be: proto://host:port.
   STATUS_SERVER="http://${host}:8001"
   echo "STATUS_SERVER: ${STATUS_SERVER}"
-
-  START_MEMORY_USAGE=0
-  INCREASED_MEMORY_USAGE=0
 }
 
 function detect_memory_leak_check() {
@@ -214,19 +211,20 @@ function detect_memory_leak_check() {
   return 1; }
 
   if [[ ${run_count} -eq 1 ]]; then
-    START_MEMORY_USAGE=${curr_usage}
-    echo "Start Memory Usage (Bytes): ${START_MEMORY_USAGE}."
+    LAST_MEMORY_USAGE=${curr_usage}
+    echo "Start Memory Usage (Bytes): ${curr_usage}."
     return 0;
   fi
-  local threshold=40
-  echo "Memory Leak  Threshold(MB): ${threshold}."
-  INCREASED_MEMORY_USAGE=$((curr_usage - START_MEMORY_USAGE))
-  local memory_increased=$((INCREASED_MEMORY_USAGE / ( 1024 * 1024 )))
-  echo "Memory Increased in Test ${run_count}(MB): ${memory_increased} ."
+  local delta=$((curr_usage - LAST_MEMORY_USAGE))
+  LAST_MEMORY_USAGE=${curr_usage}
+  echo "Memory increased at test run ${run_count}: ${delta}."
 
-  if [[ ${memory_increased} -gt ${threshold} ]]; then
+  # Each run of test sends about 100K requests.
+  # It is 1MB leak if there is a 10 bytes leak per request
+  local threshold=$((2^20))
+  if [[ ${delta} -gt ${threshold} ]]; then
     MEMLEAK_COUNT=$((MEMLEAK_COUNT+1))
-    echo "************ Memory leak occurs *************"
+    echo "************ Memory usage increased (>${threshold} Bytes) *************"
   fi
 }
 
@@ -236,8 +234,8 @@ function detect_memory_leak_final() {
     || { echo "Only run test once.";
   return 0; }
 
-  # The memleak is regarded as found When memory leak case occurred more than 1/4 total rounds.
-  if [[ ${MEMLEAK_COUNT} -gt $((${run_count}/4)) ]]; then
+  # It is a leak if 70% of rounds has increased memory usage.
+  if [[ ${MEMLEAK_COUNT} -gt $((run_count * 7 / 10)) ]]; then
     echo "************ Memory leak is found!!! *************"
     return 1
   fi
