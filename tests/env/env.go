@@ -274,6 +274,12 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	confArgs = append(confArgs, fmt.Sprintf("--discovery_port=%v", e.ports.DiscoveryPort))
 	confArgs = append(confArgs, fmt.Sprintf("--service=%v", e.fakeServiceConfig.Name))
 
+	// Enable tracing if the stackdriver server was setup for this test
+	shouldEnableTrace := e.FakeStackdriverServer != nil
+	if !shouldEnableTrace {
+		confArgs = append(confArgs, "--disable_tracing")
+	}
+
 	// Starts XDS.
 	var err error
 	debugConfigMgr := *debugComponents == "all" || *debugComponents == "configmanager"
@@ -297,9 +303,6 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	if e.envoyDrainTimeInSec != 0 {
 		envoyArgs = append(envoyArgs, "--drain-time-s", strconv.Itoa(e.envoyDrainTimeInSec))
 	}
-
-	// Enable tracing if the stackdriver server was setup for this test
-	shouldEnableTrace := e.FakeStackdriverServer != nil
 
 	e.envoy, err = components.NewEnvoy(envoyArgs, bootstrapperArgs, envoyConfPath, shouldEnableTrace, e.ports, e.testId)
 	if err != nil {

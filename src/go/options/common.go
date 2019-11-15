@@ -27,7 +27,7 @@ type CommonOptions struct {
 	Node         string
 
 	// Flags for tracing
-	EnableTracing              bool
+	DisableTracing             bool
 	TracingProjectId           string
 	TracingStackdriverAddress  string
 	TracingSamplingRate        float64
@@ -53,7 +53,7 @@ func DefaultCommonOptions() CommonOptions {
 	return CommonOptions{
 		AdminAddress:               "0.0.0.0",
 		AdminPort:                  8001,
-		EnableTracing:              false,
+		DisableTracing:             false,
 		HttpRequestTimeout:         5 * time.Second,
 		Node:                       "api_proxy",
 		NonGCP:                     false,
