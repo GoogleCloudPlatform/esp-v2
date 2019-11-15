@@ -154,7 +154,7 @@ integration-test-run:
 
 integration-test: build build-envoy build-grpc-interop build-grpc-echo integration-test-run
 
-integration-debug: build build-envoy build-grpc-interop build-grpc-echo integration-test-run
+integration-debug: build build-envoy build-grpc-interop build-grpc-echo
 	@echo "--> running integration tests and showing debug logs"
 	@go test -v -timeout 20m ./tests/env/... --logtostderr
 	@go test -v -timeout 20m ./tests/utils/... --logtostderr

@@ -287,7 +287,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	if err != nil {
 		return err
 	}
-	if err = e.configMgr.Start(); err != nil {
+	if err = e.configMgr.StartAndWait(); err != nil {
 		return err
 	}
 	e.healthRegistry.RegisterHealthChecker(e.configMgr)
