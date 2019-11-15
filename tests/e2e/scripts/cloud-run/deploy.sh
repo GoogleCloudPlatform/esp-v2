@@ -15,7 +15,7 @@
 # limitations under the License.
 
 # Fail on any error.
-set -eo pipefail
+set -e
 
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${SCRIPT_PATH}/../../../.." && pwd)"
@@ -34,6 +34,8 @@ update_wrk
 
 PROJECT_ID="cloudesf-testing"
 TEST_ID="cloud-run-${BACKEND}"
+PROXY_RUNTIME_SERVICE_ACCOUNT="e2e-cloud-run-proxy-runtime@${PROJECT_ID}.iam.gserviceaccount.com"
+BACKEND_RUNTIME_SERVICE_ACCOUNT="e2e-cloud-run-backend-runtime@${PROJECT_ID}.iam.gserviceaccount.com"
 LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
 
 # Determine names of all resources
@@ -56,11 +58,12 @@ function setup() {
   gcloud config set run/region us-central1
   gcloud config set core/project "${PROJECT_ID}"
 
-  # 1) Deploy backend service
+  # 1) Deploy backend service (authenticated)
   echo "Deploying backend ${BOOKSTORE_SERVICE_NAME} on Cloud Run"
   gcloud beta run deploy "${BOOKSTORE_SERVICE_NAME}" \
       --image="gcr.io/apiproxy-release/bookstore:1" \
-      --allow-unauthenticated \
+      --no-allow-unauthenticated \
+      --service-account "${BACKEND_RUNTIME_SERVICE_ACCOUNT}" \
       --platform managed \
       --quiet
 
@@ -70,8 +73,15 @@ function setup() {
       --format="value(status.address.url.basename())" \
       --quiet)
 
-  # 3) Verify the backend is up
-  bookstore_health_code=$(curl --write-out %{http_code} --silent --output /dev/null "https://${bookstore_host}"/shelves)
+  # 3) Verify the backend is up using the identity of the current machine/user
+  # Be careful not to expose the auth token in the logs
+  set +x
+  bookstore_health_code=$(curl \
+      --write-out %{http_code} \
+      --silent \
+      --output /dev/null \
+      -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
+      "https://${bookstore_host}"/shelves)
 
   if [[ "$bookstore_health_code" -ne 200 ]] ; then
     echo "Backend status is $bookstore_health_code, failing test"
@@ -85,6 +95,7 @@ function setup() {
   gcloud beta run deploy "${PROXY_SERVICE_NAME}" \
       --image="${APIPROXY_IMAGE}" \
       --allow-unauthenticated \
+      --service-account "${PROXY_RUNTIME_SERVICE_ACCOUNT}" \
       --platform managed \
       --quiet
 
@@ -137,6 +148,7 @@ function setup() {
       --image="gcr.io/${PROJECT_ID}/apiproxy-serverless:${ENDPOINTS_SERVICE_NAME}-${endpoints_service_config_id}" \
       --set-env-vars=APIPROXY_ARGS="${proxy_args}" \
       --allow-unauthenticated \
+      --service-account "${PROXY_RUNTIME_SERVICE_ACCOUNT}" \
       --platform managed \
       --quiet
 
