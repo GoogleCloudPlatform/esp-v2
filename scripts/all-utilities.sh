@@ -221,7 +221,7 @@ function detect_memory_leak_check() {
 
   # Each run of test sends about 100K requests.
   # It is 1MB leak if there is a 10 bytes leak per request
-  local threshold=$((2^20))
+  local threshold=$((2**20))
   if [[ ${delta} -gt ${threshold} ]]; then
     MEMLEAK_COUNT=$((MEMLEAK_COUNT+1))
     echo "************ Memory usage increased (>${threshold} Bytes) *************"
