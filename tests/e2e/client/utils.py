@@ -129,9 +129,9 @@ class ApiProxyClientTest(object):
         print '%s: %s' % (red('FAILED'), msg if msg else '')
         self._failed_tests += 1
 
-    def assertEqual(self, a, b):
-        msg = 'assertEqual(%s, %s)' % (str(a), str(b))
-        if a == b:
+    def assertEqual(self, got, want):
+        msg = 'assertEqual(got=%s, want=%s)' % (str(got), str(want))
+        if got == want:
             print '%s: %s' % (green('OK'), msg)
             self._passed_tests += 1
         else:
