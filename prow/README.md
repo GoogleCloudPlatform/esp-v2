@@ -40,8 +40,13 @@ The following tests can be run locally with minor changes.
 You will need the `Cloud Run Admin` role for your user to run this script.
 **Note this is not part of the default `Editor` role.**
 
-Depending on how you installed `gcloud`, you may have to install the
-beta components for Cloud Run. You only need to do this once:
+You need install `jq` by
+```shell script
+sudo apt-get install jq
+```
+
+You may also have to install the
+`gcloud beta` components for Cloud Run. You only need to do this once:
 
 ```shell script
 gcloud components install beta --quiet
