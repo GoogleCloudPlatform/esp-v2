@@ -15,16 +15,17 @@
 # limitations under the License.
 
 import argparse
-import httplib
 import utils
-import json
-import ssl
 import sys
 from utils import ApiProxyClientTest
 
+
 class C:
     pass
+
+
 FLAGS = C
+
 
 class ApiProxyBookstoreTest(ApiProxyClientTest):
     """End to end integration test of bookstore application with deployed
@@ -38,11 +39,11 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
 
     def __init__(self):
         ApiProxyClientTest.__init__(self, FLAGS.host,
-                               FLAGS.allow_unverified_cert,
-                               FLAGS.verbose)
+                                    FLAGS.allow_unverified_cert,
+                                    FLAGS.verbose)
 
     def _send_request(self, path, api_key=None,
-                      auth=None, data=None, method=None):
+        auth=None, data=None, method=None):
         """High level sending request test.
         Do Negative tests if endpoints is enabled.
         If auth is required, send it without, verify 401 response.
@@ -63,9 +64,10 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
                 self.assertEqual(r.status_code, 401)
                 self.assertEqual(
                     r.text,
-                    ('UNAUTHENTICATED:Method doesn\'t allow unregistered callers (callers without '
-                     'established identity). Please use API Key or other form of '
-                     'API consumer identity to call this API.'))
+                    (
+                        'UNAUTHENTICATED:Method doesn\'t allow unregistered callers (callers without '
+                        'established identity). Please use API Key or other form of '
+                        'API consumer identity to call this API.'))
                 print 'Completed Negative test.'
             return self._call_http(path, api_key, auth, data, method)
         else:
@@ -78,13 +80,15 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
         self.assertEqual(response.status_code, 200)
         json_ret = response.json()
         for shelf in json_ret.get('shelves', []):
+            print 'Delete shelf', shelf
             self.delete_shelf(shelf['name'])
 
     def create_shelf(self, shelf):
         print 'Create shelf: %s' % str(shelf)
         # create shelves: auth.
         response = self._send_request(
-            '/shelves', api_key=FLAGS.api_key, auth=FLAGS.auth_token, data=shelf)
+            '/shelves', api_key=FLAGS.api_key, auth=FLAGS.auth_token,
+            data=shelf)
         self.assertEqual(response.status_code, 200)
         # shelf name generated in server, not the same as required.
         json_ret = response.json()
@@ -108,6 +112,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
 
     def verify_list_shelves(self, shelves):
         # list shelves: no api_key, no auth
+        print 'List shelves.'
         response = self._send_request('/shelves')
         self.assertEqual(response.status_code, 200)
 
@@ -126,7 +131,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
         return json_ret
 
     def verify_book(self, book):
-        print 'Remove book: /%s' % book['name']
+        print 'Get book: /%s' % book['name']
         # Get book: api_key, auth
         r = self._send_request(
             '/' + book['name'], api_key=FLAGS.api_key, auth=FLAGS.auth_token)
@@ -148,57 +153,35 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
         self.assertEqual(response.json().get('books', []), books)
 
     def run_all_tests(self):
-        self.clear()
-        self.verify_list_shelves([])
-
         shelf1 = {
-            'name': 'shelves/100',
-            'theme': 'Text books'
-        }
-        shelf1 = self.create_shelf(shelf1)
-
-        self.verify_list_shelves([shelf1])
-        shelf2 = {
-            'name': 'shelves/200',
+            'name': 'shelves/1',
             'theme': 'Fiction'
         }
-        shelf2 = self.create_shelf(shelf2)
-        self.verify_list_shelves([shelf1, shelf2])
+        shelf2 = {
+            'name': 'shelves/2',
+            'theme': 'Fantasy'
+        }
+        book13 = {
+            'name': 'shelves/1/books/3',
+            'author': 'Neal Stephenson',
+            'title': 'REAMDE'
+        }
+        book24 = {
+            'name': 'shelves/2/books/4',
+            'author': 'George R.R. Martin',
+            'title': 'A Game of Thrones'
+        }
 
         self.verify_shelf(shelf1)
         self.verify_shelf(shelf2)
+        self.verify_list_shelves([shelf1, shelf2])
 
-        book11 = {
-            'name': 'books/1000',
-            'author': 'Graham Doggett',
-            'title': 'Maths for Chemist'
-        }
-        book11 = self.create_book(shelf1['name'], book11)
-        self.verify_list_books(shelf1['name'], [book11])
+        self.verify_list_books(shelf1['name'], [book13])
+        self.verify_list_books(shelf2['name'], [book24])
 
-        book12 = {
-            'name': 'books/2000',
-            'author': 'George C. Comstock',
-            'title': 'A Text-Book of Astronomy'
-        }
-        book12 = self.create_book(shelf1['name'], book12)
-        self.verify_list_books(shelf1['name'], [book11, book12])
+        self.verify_book(book13)
+        self.verify_book(book24)
 
-        self.verify_book(book11)
-        self.verify_book(book12)
-
-        # shelf2 is empty
-        self.verify_list_books(shelf2['name'], [])
-
-        self.delete_book(book12['name'])
-        self.verify_list_books(shelf1['name'], [book11])
-
-        self.delete_book(book11['name'])
-        self.verify_list_books(shelf1['name'], [])
-
-        self.delete_shelf(shelf2['name'])
-        self.delete_shelf(shelf1['name'])
-        self.verify_list_shelves([])
         if self._failed_tests:
             sys.exit(utils.red('%d tests passed, %d tests failed.' % (
                 self._passed_tests, self._failed_tests)))
@@ -213,9 +196,11 @@ if __name__ == '__main__':
     parser.add_argument('--host', help='Deployed application host name.')
     parser.add_argument('--auth_token', help='Auth token.')
     parser.add_argument('--endpoints', type=bool,
-            default=True, help='Is endpoints enabled on the backend?')
+                        default=True,
+                        help='Is endpoints enabled on the backend?')
     parser.add_argument('--allow_unverified_cert', type=bool,
-            default=False, help='used for testing self-signed ssl cert.')
+                        default=False,
+                        help='used for testing self-signed ssl cert.')
     flags = parser.parse_args(namespace=FLAGS)
 
     apiproxy_test = ApiProxyBookstoreTest()

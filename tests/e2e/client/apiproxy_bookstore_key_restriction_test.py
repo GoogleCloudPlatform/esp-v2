@@ -74,6 +74,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
             # run test cases
             for type, testcases in data.iteritems():
                 for testcase in testcases:
+                    print testcase['description']
                     response = self._call_http(
                         testcase['path'],
                         api_key=testcase['api_key'],
