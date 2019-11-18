@@ -15,25 +15,28 @@
 package components
 
 import (
+	"bytes"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 
-	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
-	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	sm "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
 // MockServiceMrg mocks the Service Management server.
+// All requests must be ProtoOverHttp.
 type MockServiceMrg struct {
-	s                        *httptest.Server
-	serviceName              string
-	serviceConfig            *conf.Service
-	rolloutID                int
-	configsHandler           http.Handler
-	rolloutsHandler          http.Handler
-	lastServiceConfigJsonStr string
+	s                 *httptest.Server
+	serviceName       string
+	serviceConfig     *confpb.Service
+	rolloutID         int
+	configsHandler    http.Handler
+	rolloutsHandler   http.Handler
+	lastServiceConfig []byte
 }
 
 type configsHandler struct {
@@ -41,10 +44,9 @@ type configsHandler struct {
 }
 
 func (h *configsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	marshaller := &jsonpb.Marshaler{}
-	serviceConfigJsonStr, _ := marshaller.MarshalToString(h.m.serviceConfig)
-	h.m.lastServiceConfigJsonStr = serviceConfigJsonStr
-	w.Write([]byte(serviceConfigJsonStr))
+	serviceConfigByte, _ := proto.Marshal(h.m.serviceConfig)
+	h.m.lastServiceConfig = serviceConfigByte
+	w.Write(serviceConfigByte)
 }
 
 type rolloutsHandler struct {
@@ -52,9 +54,8 @@ type rolloutsHandler struct {
 }
 
 func (h *rolloutsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	marshaller := &jsonpb.Marshaler{}
-	serviceConfigJsonStr, _ := marshaller.MarshalToString(h.m.serviceConfig)
-	if serviceConfigJsonStr != h.m.lastServiceConfigJsonStr {
+	serviceConfigByte, _ := proto.Marshal(h.m.serviceConfig)
+	if !bytes.Equal(serviceConfigByte, h.m.lastServiceConfig) {
 		h.m.rolloutID += 1
 	}
 	serviceConfigRollout := &sm.ListServiceRolloutsResponse{
@@ -71,12 +72,12 @@ func (h *rolloutsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			},
 		},
 	}
-	serviceConfigRolloutJsonStr, _ := marshaller.MarshalToString(serviceConfigRollout)
-	w.Write([]byte(serviceConfigRolloutJsonStr))
+	serviceConfigRolloutBytes, _ := proto.Marshal(serviceConfigRollout)
+	w.Write(serviceConfigRolloutBytes)
 }
 
 // NewMockServiceMrg creates a new HTTP server.
-func NewMockServiceMrg(serviceName string, serviceConfig *conf.Service) *MockServiceMrg {
+func NewMockServiceMrg(serviceName string, serviceConfig *confpb.Service) *MockServiceMrg {
 	m := &MockServiceMrg{
 		serviceName:   serviceName,
 		serviceConfig: serviceConfig,
@@ -99,7 +100,6 @@ func (m *MockServiceMrg) Start() (URL string) {
 
 // ServeHTTP responds to requests with static service config message.
 func (m *MockServiceMrg) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	marshaller := &jsonpb.Marshaler{}
-	serviceConfigJsonStr, _ := marshaller.MarshalToString(m.serviceConfig)
-	w.Write([]byte(serviceConfigJsonStr))
+	serviceConfigByte, _ := proto.Marshal(m.serviceConfig)
+	w.Write(serviceConfigByte)
 }
