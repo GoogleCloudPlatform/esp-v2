@@ -32,10 +32,12 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/storage"
@@ -64,6 +66,11 @@ var (
 func main() {
 	flag.Parse()
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	bucketName := os.Getenv("BUCKET")
 	if bucketName == "" {
 		glog.Fatal("Must specify the BUCKET environment variable.")
@@ -77,27 +84,27 @@ func main() {
 	signalChan = make(chan os.Signal, 1)
 	signal.Notify(signalChan)
 
-	if err := fetchConfigFromGCS(bucketName, configFileName); err != nil {
+	if err := fetchConfigFromGCS(bucketName, configFileName, port); err != nil {
 		glog.Fatalf("Failed to fetch config: %v", err)
 	}
 
 	startEnvoyAndWait()
 }
 
-func fetchConfigFromGCS(bucketName, configFileName string) error {
-	r, err := getGCSReader(bucketName, configFileName)
+func fetchConfigFromGCS(bucketName, configFileName, port string) error {
+	b, err := getGCSReader(bucketName, configFileName)
 	if err != nil {
 		return fmt.Errorf("failed to get reader for object: %v", err)
 	}
 
-	if err := writeFile(r); err != nil {
+	if err := writeFile(b, port); err != nil {
 		return fmt.Errorf("failed to write data to file: %v", err)
 	}
 
 	return nil
 }
 
-func getGCSReader(bucketName, configFileName string) (io.Reader, error) {
+func getGCSReader(bucketName, configFileName string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), fetchGCSObjectTimeout)
 	defer cancel()
 
@@ -141,18 +148,20 @@ func getGCSReader(bucketName, configFileName string) (io.Reader, error) {
 		return nil, retryErr
 	}
 
-	return reader, nil
+	return ioutil.ReadAll(reader)
 }
 
-func writeFile(rc io.Reader) error {
+func writeFile(b []byte, port string) error {
 	file, err := os.Create(envoyConfigPath)
 	defer file.Close()
 	if err != nil {
 		return fmt.Errorf("failed to create file: %v", err)
 	}
 
-	if _, err := io.Copy(file, rc); err != nil {
-		return fmt.Errorf("failed to write bytes to file: %v", err)
+	updated := strings.Replace(string(b), "REPLACE_PORT_NUMBER", port, 1)
+
+	if _, err := file.WriteString(updated); err != nil {
+		return fmt.Errorf("failed to write to file: %v", err)
 	}
 
 	return nil
@@ -161,8 +170,11 @@ func writeFile(rc io.Reader) error {
 func startEnvoyAndWait() {
 	cmd := exec.Command(
 		*envoyBinaryPath,
+		"--disable-hot-restart",
 		"--config-path", envoyConfigPath,
-		"--log-level", *envoyLogLevel)
+		"--log-level", *envoyLogLevel,
+		"--log-format", "%L%m%d %T.%e %t envoy] [%t][%n]%v",
+		"--log-format-escaped")
 	cmd.Env = []string{
 		"TMPDIR=/tmp",
 	}
