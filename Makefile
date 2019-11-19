@@ -150,7 +150,7 @@ integration-test-run:
 	# logtostderr will cause all glogs in the test framework to print to the console (not too much bloat)
 	@go test -timeout 20m ./tests/env/... --logtostderr
 	@go test -timeout 20m ./tests/utils/... --logtostderr
-	@go test -p 32 -timeout 20m ./tests/integration_test/... --logtostderr
+	@go test -timeout 20m ./tests/integration_test/... --logtostderr
 
 integration-test: build build-envoy build-grpc-interop build-grpc-echo integration-test-run
 
