@@ -17,19 +17,21 @@
 set -o errexit
 set -o nounset
 
-echo "Starting Proxy with args: $@"
+echo "Starting Proxy..."
 CONFIGMANAGER=${CONFIGMANAGER:-apiproxy/configmanager}
 ENVOY=${ENVOY:-apiproxy/envoy}
 
-# Optional args for Envoy. Example, to set the logging level:
+# Optional args for Envoy. Example, to set the logging level on GKE:
 # docker run -e 'ENVOY_ARGS="-l debug"' ...
 ENVOY_ARGS=${ENVOY_ARGS:-""}
+ENVOY_ARGS_ARR=($ENVOY_ARGS)
+ENVOY_ARGS_ARR+=("-c ${BOOTSTRAP_FILE}")
+ENVOY_ARGS_ARR+=("--disable-hot-restart")
+ENVOY_ARGS_ARR+=("--log-format %L%m%d %T.%e %t envoy] [%t][%n]%v")
+ENVOY_ARGS_ARR+=("--log-format-escaped")
 
+echo "Starting Config Manager with args: $*"
 ${CONFIGMANAGER} "$@" &
 
-${ENVOY} \
-    -c ${BOOTSTRAP_FILE} \
-    --disable-hot-restart \
-    --log-format '%L%m%d %T.%e %t envoy] [%t][%n]%v' \
-    --log-format-escaped \
-     ${ENVOY_ARGS}
+echo "Starting Envoy with args: ${ENVOY_ARGS_ARR[*]}"
+${ENVOY} "${ENVOY_ARGS_ARR[@]}"
