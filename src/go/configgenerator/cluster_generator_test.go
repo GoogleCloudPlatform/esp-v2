@@ -15,7 +15,6 @@
 package configgenerator
 
 import (
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -23,7 +22,9 @@ import (
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/google/go-cmp/cmp"
 
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
@@ -107,7 +108,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if !reflect.DeepEqual(cluster, &tc.wantedCluster) {
+		if !proto.Equal(cluster, &tc.wantedCluster) {
 			t.Errorf("Test Desc(%d): %s, makeServiceControlCluster\ngot Clusters: %v,\nwant: %v", i, tc.desc, cluster, tc.wantedCluster)
 		}
 	}
@@ -268,7 +269,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 			}
 		}
 
-		if tc.wantedClusters != nil && !reflect.DeepEqual(clusters, tc.wantedClusters) {
+		if tc.wantedClusters != nil && !cmp.Equal(clusters, tc.wantedClusters, cmp.Comparer(proto.Equal)) {
 			t.Errorf("Test Desc(%d): %s, makeBackendRoutingClusters got: %v, want: %v", i, tc.desc, clusters, tc.wantedClusters)
 		}
 	}
@@ -359,7 +360,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if !reflect.DeepEqual(clusters, tc.wantedClusters) {
+		if !cmp.Equal(clusters, tc.wantedClusters, cmp.Comparer(proto.Equal)) {
 			t.Errorf("Test Desc(%d): %s, makeJwtProviderClusters\ngot: %v,\nwant: %v", i, tc.desc, clusters, tc.wantedClusters)
 		}
 
@@ -430,7 +431,7 @@ func TestMakeIamCluster(t *testing.T) {
 			}
 		}
 
-		if tc.wantedCluster != nil && !reflect.DeepEqual(cluster, tc.wantedCluster) {
+		if tc.wantedCluster != nil && !proto.Equal(cluster, tc.wantedCluster) {
 			t.Errorf("Test Desc(%d): %s, makeBackendRoutingClusters\ngot: %v,\nwant: %v", i, tc.desc, cluster, tc.wantedCluster)
 		}
 	}

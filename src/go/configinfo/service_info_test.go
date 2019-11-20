@@ -19,12 +19,13 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"sort"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
+	"github.com/golang/protobuf/proto"
+	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/mux"
 
 	commonpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/common"
@@ -290,7 +291,7 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 		}
 		for key, gotMethod := range serviceInfo.Methods {
 			wantMethod := tc.wantMethods[key]
-			if eq := reflect.DeepEqual(gotMethod, wantMethod); !eq {
+			if eq := cmp.Equal(gotMethod, wantMethod, cmp.Comparer(proto.Equal)); !eq {
 				t.Errorf("Test Desc(%d): %s, \ngot: %v,\nwanted: %v", i, tc.desc, gotMethod, wantMethod)
 			}
 		}
@@ -566,7 +567,7 @@ func TestMethods(t *testing.T) {
 		}
 		for key, gotMethod := range serviceInfo.Methods {
 			wantMethod := tc.wantMethods[key]
-			if eq := reflect.DeepEqual(gotMethod, wantMethod); !eq {
+			if eq := cmp.Equal(gotMethod, wantMethod, cmp.Comparer(proto.Equal)); !eq {
 				t.Errorf("Test Desc(%d): %s, got Method: %v, want: %v", i, tc.desc, gotMethod, wantMethod)
 			}
 		}
@@ -731,7 +732,7 @@ func TestProcessQuota(t *testing.T) {
 			wantMethod := tc.wantMethods[key]
 
 			sort.Slice(gotMethod.MetricCosts, func(i, j int) bool { return gotMethod.MetricCosts[i].Name < gotMethod.MetricCosts[j].Name })
-			if eq := reflect.DeepEqual(gotMethod, wantMethod); !eq {
+			if eq := cmp.Equal(gotMethod, wantMethod, cmp.Comparer(proto.Equal)); !eq {
 				t.Errorf("Test Desc(%d): %s,\ngot Method: %v,\nwant Method: %v", i, tc.desc, gotMethod, wantMethod)
 			}
 		}

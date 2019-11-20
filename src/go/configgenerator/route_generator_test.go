@@ -15,12 +15,12 @@
 package configgenerator
 
 import (
-	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
+	"github.com/golang/protobuf/proto"
 
 	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
@@ -114,7 +114,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 			t.Errorf("Test (%s): got expected number of virtual host", tc.desc)
 		}
 		gotCors := gotHost[0].GetCors()
-		if !reflect.DeepEqual(gotCors, tc.wantRoute) {
+		if !proto.Equal(gotCors, tc.wantRoute) {
 			t.Errorf("Test (%s): makeRouteConfig failed, got Cors: %s, want: %s", tc.desc, gotCors, tc.wantRoute)
 		}
 	}

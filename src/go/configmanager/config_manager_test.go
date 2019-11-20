@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"sort"
 	"testing"
 	"time"
@@ -1213,7 +1212,7 @@ func TestFetchListeners(t *testing.T) {
 			if resp.Version != testConfigID {
 				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, resp.Version, testConfigID)
 			}
-			if !reflect.DeepEqual(resp.Request, req) {
+			if !proto.Equal(&resp.Request, &req) {
 				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, resp.Request, req)
 			}
 
@@ -1272,7 +1271,7 @@ func TestDynamicBackendRouting(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if !reflect.DeepEqual(respForClusters.Request, reqForClusters) {
+		if !proto.Equal(&respForClusters.Request, &reqForClusters) {
 			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, respForClusters.Request, reqForClusters)
 		}
 
@@ -1302,7 +1301,7 @@ func TestDynamicBackendRouting(t *testing.T) {
 		if respForListener.Version != testConfigID {
 			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, respForListener.Version, testConfigID)
 		}
-		if !reflect.DeepEqual(respForListener.Request, reqForListener) {
+		if !proto.Equal(&respForListener.Request, &reqForListener) {
 			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, respForListener.Request, reqForListener)
 		}
 
@@ -1440,7 +1439,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		if env.configManager.curRolloutID != oldRolloutID {
 			t.Errorf("Test Desc: %s, config manager rollout id: %v, want: %v", testCase.desc, env.configManager.curRolloutID, oldRolloutID)
 		}
-		if !reflect.DeepEqual(resp.Request, req) {
+		if !proto.Equal(&resp.Request, &req) {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got request: %v, want: %v", testCase.desc, resp.Request, req)
 		}
 
@@ -1459,7 +1458,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		if env.configManager.curRolloutID != newRolloutID {
 			t.Errorf("Test Desc: %s, config manager rollout id: %v, want: %v", testCase.desc, env.configManager.curRolloutID, newRolloutID)
 		}
-		if !reflect.DeepEqual(resp.Request, req) {
+		if !proto.Equal(&resp.Request, &req) {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got request: %v, want: %v", testCase.desc, resp.Request, req)
 		}
 	})

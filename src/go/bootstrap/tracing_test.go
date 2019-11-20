@@ -23,6 +23,7 @@ import (
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/metadata"
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 
 	opencensuspb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
@@ -287,7 +288,7 @@ func TestNonGCPTracingConfig(t *testing.T) {
 			if err := ptypes.UnmarshalAny(got.Http.GetTypedConfig(), gotCfg); err != nil {
 				t.Errorf("Test (%s): failed, failed to unmarshall any", tc.desc)
 			}
-			if !reflect.DeepEqual(gotCfg, tc.wantResult) {
+			if !proto.Equal(gotCfg, tc.wantResult) {
 				t.Errorf("Test (%s): failed, got : %v, want: %v", tc.desc, gotCfg, tc.wantResult)
 			}
 		}
@@ -347,7 +348,7 @@ func TestGCPTracingConfig(t *testing.T) {
 				if err := ptypes.UnmarshalAny(got.Http.GetTypedConfig(), gotCfg); err != nil {
 					t.Errorf("Test (%s): failed, failed to unmarshall any", tc.desc)
 				}
-				if !reflect.DeepEqual(gotCfg, tc.wantResult) {
+				if !proto.Equal(gotCfg, tc.wantResult) {
 					t.Errorf("Test (%s): failed, got : %v, want: %v", tc.desc, gotCfg, tc.wantResult)
 				}
 			}
