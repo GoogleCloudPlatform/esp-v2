@@ -17,8 +17,8 @@ FROM _ENVOY_IMAGE_SHA_NAME
 ENV PATH /bin:$PATH
 
 ADD docker/generic/* /apiproxy/
-ADD bin/bootstrap /apiproxy/
-ADD bin/configmanager /apiproxy/
+ADD bin/bootstrap /bin/
+ADD bin/configmanager /bin/
 
 # create envoy user and group
 RUN groupadd -g 999 envoy && useradd -r -u 999 -g envoy envoy
