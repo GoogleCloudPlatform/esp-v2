@@ -35,7 +35,7 @@ func NewConfigManagerServer(debugMode bool, ports *Ports, args []string) (*Confi
 	args = append(args, "--backend_dns_lookup_family", platform.GetDnsFamily())
 
 	if debugMode {
-		args = append(args, "--logtostderr", "--v=2")
+		args = append(args, "--logtostderr", "--v=1")
 	}
 
 	glog.Infof("config manager args: %v", args)

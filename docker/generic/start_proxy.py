@@ -430,7 +430,7 @@ environment variable or by passing "-k" flag to this script.
         The overridden platform where the proxy is running on.
         ''')
     parser.add_argument('--enable_debug', action='store_true', default=False,
-        help='''Enable debug level application logs of Envoy and ConfigManager.
+        help='''Enable debug level application logs for Envoy and enable ConfigManager to log service config.
         ''')
     return parser
 
@@ -499,10 +499,15 @@ def gen_proxy_config(args):
         sys.exit(1)
 
     proxy_conf = [
-        "-v", "--logtostderr", "--backend_protocol", backend_protocol,
+       "-v", "--logtostderr", "--backend_protocol", backend_protocol,
         "--cluster_address", cluster_address, "--cluster_port", cluster_port,
         "--rollout_strategy", args.rollout_strategy,
     ]
+
+    if args.enable_debug:
+        proxy_conf.extend(["--v", "1"])
+    else:
+        proxy_conf.extend(["--v", "0"])
 
     if args.envoy_xff_num_trusted_hops:
          proxy_conf.extend(["--envoy_xff_num_trusted_hops", args.envoy_xff_num_trusted_hops])

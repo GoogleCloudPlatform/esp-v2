@@ -57,7 +57,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 			Name: util.CORS,
 		}
 		httpFilters = append(httpFilters, corsFilter)
-		glog.Infof("adding CORS Filter config: %v", corsFilter)
+		glog.V(1).Infof("adding CORS Filter config: %v", corsFilter)
 	}
 
 	// Add Path Matcher filter. The following filters rely on the dynamic
@@ -69,7 +69,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	pathMathcherFilter := makePathMatcherFilter(serviceInfo)
 	if pathMathcherFilter != nil {
 		httpFilters = append(httpFilters, pathMathcherFilter)
-		glog.Infof("adding Path Matcher Filter config: %v", pathMathcherFilter)
+		glog.V(1).Infof("adding Path Matcher Filter config: %v", pathMathcherFilter)
 	}
 
 	// Add JWT Authn filter if needed.
@@ -77,7 +77,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		jwtAuthnFilter := makeJwtAuthnFilter(serviceInfo)
 		if jwtAuthnFilter != nil {
 			httpFilters = append(httpFilters, jwtAuthnFilter)
-			glog.Infof("adding JWT Authn Filter config: %v", jwtAuthnFilter)
+			glog.V(1).Infof("adding JWT Authn Filter config: %v", jwtAuthnFilter)
 		}
 	}
 
@@ -86,7 +86,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		serviceControlFilter := makeServiceControlFilter(serviceInfo)
 		if serviceControlFilter != nil {
 			httpFilters = append(httpFilters, serviceControlFilter)
-			glog.Infof("adding Service Control Filter config: %v", serviceControlFilter)
+			glog.V(1).Infof("adding Service Control Filter config: %v", serviceControlFilter)
 		}
 	}
 
@@ -95,7 +95,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		transcoderFilter := makeTranscoderFilter(serviceInfo)
 		if transcoderFilter != nil {
 			httpFilters = append(httpFilters, transcoderFilter)
-			glog.Infof("adding Transcoder Filter config...")
+			glog.V(1).Infof("adding Transcoder Filter config...")
 		}
 
 		grpcWebFilter := &hcmpb.HttpFilter{
@@ -112,10 +112,10 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		}
 		backendAuthFilter := makeBackendAuthFilter(serviceInfo)
 		httpFilters = append(httpFilters, backendAuthFilter)
-		glog.Infof("adding Backend Auth Filter config: %v", backendAuthFilter)
+		glog.V(1).Infof("adding Backend Auth Filter config: %v", backendAuthFilter)
 		backendRoutingFilter := makeBackendRoutingFilter(serviceInfo)
 		httpFilters = append(httpFilters, backendRoutingFilter)
-		glog.Infof("adding Backend Routing Filter config: %v", backendRoutingFilter)
+		glog.V(1).Infof("adding Backend Routing Filter config: %v", backendRoutingFilter)
 	}
 
 	// Add Envoy Router filter so requests are routed upstream.
@@ -144,7 +144,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		httpConMgr.Tracing = &hcmpb.HttpConnectionManager_Tracing{}
 	}
 
-	glog.Infof("adding Http Connection Manager config: %v", httpConMgr)
+	glog.V(1).Infof("adding Http Connection Manager config: %v", httpConMgr)
 	httpConMgr.HttpFilters = httpFilters
 
 	// HTTP filter configuration
@@ -490,7 +490,6 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	for _, sourceFile := range serviceInfo.ServiceConfig().GetSourceInfo().GetSourceFiles() {
 		configFile := &smpb.ConfigFile{}
 		ptypes.UnmarshalAny(sourceFile, configFile)
-		glog.Infof("got proto descriptor: %v", string(configFile.GetFileContents()))
 
 		if configFile.GetFileType() == smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
 			configContent := configFile.GetFileContents()
