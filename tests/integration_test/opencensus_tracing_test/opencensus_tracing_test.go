@@ -251,9 +251,7 @@ func TestFetchingJwksTraces(t *testing.T) {
 	}
 
 	s := env.NewTestEnv(comp.TestAsymmetricKeysTraces, "bookstore")
-	if err := s.FakeJwtService.SetupOpenId(); err != nil {
-		t.Fatalf("fail to setup open id servers: %v", err)
-	}
+
 	s.SetupFakeTraceServer()
 	s.OverrideAuthentication(&confpb.Authentication{
 		Rules: []*confpb.AuthenticationRule{
