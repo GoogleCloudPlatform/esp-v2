@@ -104,7 +104,9 @@ func (fjs *FakeJwtService) SetupJwt(requestedProviders map[string]bool, ports *P
 	return nil
 }
 
-// Setup OpenId providers.
+// This method setup OpenId providers. It can only be called sequentially or in one
+// goroutine during parallel execution because the OpenId providers use hard-coded
+// ports and parallel run will cause the competition for ports.
 func (fjs *FakeJwtService) SetupOpenId() error {
 	// Test Jwks and Jwt Tokens are generated following
 	// https://github.com/istio/istio/tree/master/security/tools/jwt/samples.
