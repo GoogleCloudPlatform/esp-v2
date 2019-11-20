@@ -30,7 +30,7 @@ extra features specifically for APIs on Google Cloud Platform.
 
 ## Prerequisites:
 
-Since Config Manager utilize the open source go-control-plane, all
+Since Config Manager utilizes the open source go-control-plane, all
 [requirements](https://github.com/envoyproxy/go-control-plane#requirements) for
 go-control-plane need to be satisfied.
 
@@ -39,7 +39,7 @@ go-control-plane need to be satisfied.
 To start the Config Manager, run:
 
 ```shell
-go run server/server.go \
+go run src/go/configmanager/main/server.go \
   --logtostderr -v 2 \
   --service [YOUR_SERVICE_NAME] \
   --service_config_id [YOUR_CONFIG_ID] \
@@ -48,7 +48,7 @@ go run server/server.go \
 
 if you want to enable glog, add "-log_dir=./log -v=2".
 
-You should see "config manager server is running ......" if starting
+You should see "config manager server is running at ......" if starting
 successfully.
 
 ## Quick Test
@@ -57,71 +57,7 @@ We have a simple gRPC test client to fetch Listener Discovery Service(LDS)
 response from this Config Manager, just run:
 
 ```shell
-go run tests/clients/lds_grpc_client.go
+go run tests/clients/lds_grpc_client.go --logtostderr
 ```
 
 You can see and check the response.
-
-## Starting a Backend Server for Testing
-### gRPC Bookstore Server
-```shell
-# Install Node.js if you haven't
-# https://github.com/nodesource/distributions/blob/master/README.md#debinstall
-
-# Install the dependencies if you haven't
-npm install express
-npm install grpc
-npm install @grpc/proto-loader
-
-# Run gRPC server
-node tests/endpoints/bookstore_grpc/grpc_server.js
-```
-
-### HTTP Echo Server
-```shell
-go run tests/endpoints/echo/server/app.go
-```
-
-
-## Manual Integration with API Proxy
-
-Start Config Manager and a backend first as instructed above, then build and start
-Envoy with the dynamic startup configuration:
-
-```shell
-bazel build //src/envoy:envoy &&
-bazel-bin/src/envoy -l info -c scripts/envoy_bootstrap_v2_startup.yaml
-```
-
-## Run API Proxy in Docker
-
-* On the VM instance, create your own container network called apiproxy_net.
-
-```shell
-docker network create --driver bridge apiproxy_net
-```
-
-* Build and run Bookstore backend server
-
-```shell
-docker build -f tests/endpoints/bookstore_grpc/Dockerfile -t bookstore .
-
-docker run --detach --name=bookstore --net=apiproxy_net bookstore
-```
-
-* Build and run API Proxy
-
-```shell
-docker build -f docker/Dockerfile-proxy -t apiproxy .
-
-docker run --detach --name=apiproxy  --publish=80:8080 --net=apiproxy_net \
-apiproxy --service=[YOUR_SERVICE_NAME] --service_config_id=[YOUR_CONFIG_ID] \
---backend=grpc://bookstore:8082
-```
-
-* Make gRPC calls
-
-```shell
-go run tests/endpoints/bookstore_grpc/client_main.go --addr=127.0.0.1:80 \
---method=ListShelves --client_protocol=grpc
-```

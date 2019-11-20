@@ -21,12 +21,11 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
 
-	v2grpc "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	discoverygrpc "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v2"
 )
 
 var (
@@ -44,34 +43,35 @@ func main() {
 		glog.Exitf("failed to connect to server: %v", err)
 	}
 
-	client := v2grpc.NewListenerDiscoveryServiceClient(conn)
+	client := discoverygrpc.NewAggregatedDiscoveryServiceClient(conn)
 	ctx := context.Background()
+	stream, err := client.StreamAggregatedResources(ctx)
+	if err != nil {
+		glog.Exitf("StreamAggregatedResources: %v", err)
+	}
 
 	req := &v2pb.DiscoveryRequest{
+		TypeUrl: "type.googleapis.com/envoy.api.v2.Listener",
 		Node: &corepb.Node{
 			Id: "api_proxy",
 		},
 	}
-	resp := &v2pb.DiscoveryResponse{}
-	if resp, err = client.FetchListeners(ctx, req); err != nil {
-		glog.Exitf("discovery: %v", err)
+	if err := stream.Send(req); err != nil {
+		glog.Exitf("SendMsg: %v", err)
 	}
 
-	fmt.Println("Version Info: ", resp.GetVersionInfo())
-	fmt.Println("Type Url: ", resp.GetTypeUrl())
-
-	for _, r := range resp.GetResources() {
-		listener := &v2pb.Listener{}
-		if err := proto.Unmarshal(r.GetValue(), listener); err != nil {
-			glog.Exitf("Unmarshal got error: %v", err)
-		}
-		marshaler := &jsonpb.Marshaler{}
-		var jsonStr string
-		if jsonStr, err = marshaler.MarshalToString(listener); err != nil {
-			glog.Exitf("fail to unmarshal listener: %v", err)
-		}
-		glog.Infof(jsonStr)
+	resp, err := stream.Recv()
+	if err != nil {
+		glog.Exitf("Failed to call Config Manager, got error:\n%s", resp)
 	}
+
+
+	marshaler := &jsonpb.Marshaler{}
+	var jsonStr string
+	if jsonStr, err = marshaler.MarshalToString(resp); err != nil {
+		glog.Exitf("fail to unmarshal listener: %v", err)
+	}
+	glog.Infof("Received response from Config Manager:\n%s", jsonStr)
 	// All fine.
 	return
 }

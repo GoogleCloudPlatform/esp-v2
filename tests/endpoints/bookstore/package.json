@@ -18,7 +18,7 @@
     "express": "^4.12.3",
     "swagger-tools": "0.8.*"
   },
-  "engines" : {
-    "node" : ">=4.1.2"
+  "engines": {
+    "node": ">=4.1.2"
   }
 }

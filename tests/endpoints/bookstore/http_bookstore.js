@@ -13,6 +13,11 @@
 // limitations under the License.
 
 // A Google Cloud Endpoints example implementation of a simple bookstore API.
+//
+// Used by e2e tests, only needs to build and push image when there is changes,
+// by running:
+//      make docker.build-bookstore
+//      make docker.push-bookstore
 
 'use strict';
 
