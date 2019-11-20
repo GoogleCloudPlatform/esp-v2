@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -51,8 +52,8 @@ const (
 )
 
 var (
-	fakeConfig          = ``
-	fakeRollout         = ``
+	fakeConfig          []byte
+	fakeRollout         []byte
 	fakeProtoDescriptor = base64.StdEncoding.EncodeToString([]byte("rawDescriptor"))
 )
 
@@ -1126,7 +1127,6 @@ func TestFetchListeners(t *testing.T) {
                                                             "timeout":"5s",
                                                             "uri":"https://servicecontrol.googleapis.com/v1/services/"
                                                         },
-        
                                                 "access_token":{
                                                   "remote_token":{
                                                     "cluster":"metadata-cluster",
@@ -1177,7 +1177,11 @@ func TestFetchListeners(t *testing.T) {
 
 	for i, tc := range testData {
 		// Overrides fakeConfig for the test case.
-		fakeConfig = tc.fakeServiceConfig
+		var err error
+		if fakeConfig, err = genFakeConfig(tc.fakeServiceConfig); err != nil {
+			t.Fatalf("genFakeConfig failed: %v", err)
+		}
+
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = tc.backendProtocol
 		opts.DisableTracing = !tc.enableTracing
@@ -1407,8 +1411,14 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 	}
 
 	// Overrides fakeConfig with fakeOldServiceConfig for the test case.
-	fakeConfig = testCase.fakeOldServiceConfig
-	fakeRollout = testCase.fakeOldServiceRollout
+	var err error
+	if fakeConfig, err = genFakeConfig(testCase.fakeOldServiceConfig); err != nil {
+		t.Fatalf("genFakeConfig failed: %v", err)
+	}
+
+	if fakeRollout, err = genFakeRollout(testCase.fakeOldServiceRollout); err != nil {
+		t.Fatalf("genFakeRollout failed: %v", err)
+	}
 
 	opts := options.DefaultConfigGeneratorOptions()
 	opts.BackendProtocol = testCase.backendProtocol
@@ -1443,8 +1453,13 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got request: %v, want: %v", testCase.desc, resp.Request, req)
 		}
 
-		fakeConfig = testCase.fakeNewServiceConfig
-		fakeRollout = testCase.fakeNewServiceRollout
+		if fakeConfig, err = genFakeConfig(testCase.fakeNewServiceConfig); err != nil {
+			t.Fatalf("genFakeConfig failed: %v", err)
+		}
+		if fakeRollout, err = genFakeRollout(testCase.fakeNewServiceRollout); err != nil {
+			t.Fatalf("genFakeRollout failed: %v", err)
+		}
+
 		time.Sleep(time.Duration(*checkNewRolloutInterval + time.Second))
 
 		resp, err = env.configManager.cache.Fetch(ctx, req)
@@ -1502,7 +1517,7 @@ func runTest(t *testing.T, opts options.ConfigGeneratorOptions, f func(*testEnv)
 
 func initMockConfigServer(t *testing.T) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := w.Write([]byte(normalizeJson(fakeConfig, t)))
+		_, err := w.Write(fakeConfig)
 		if err != nil {
 			t.Fatal("fail to write config: ", err)
 		}
@@ -1512,7 +1527,7 @@ func initMockConfigServer(t *testing.T) *httptest.Server {
 func initMockRolloutServer(t *testing.T) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, err := w.Write([]byte(normalizeJson(fakeRollout, t)))
+		_, err := w.Write(fakeRollout)
 		if err != nil {
 			t.Fatal("fail to write rollout config: ", err)
 		}
@@ -1529,15 +1544,6 @@ func sortResources(response *cache.Response) []cache.Resource {
 	return sortedResources
 }
 
-func marshalServiceConfigToString(serviceConfig *confpb.Service, t *testing.T) string {
-	m := &jsonpb.Marshaler{}
-	jsonStr, err := m.MarshalToString(serviceConfig)
-	if err != nil {
-		t.Fatal("fail to convert service config to string: ", err)
-	}
-	return jsonStr
-}
-
 func normalizeJson(input string, t *testing.T) string {
 	var jsonObject map[string]interface{}
 	err := json.Unmarshal([]byte(input), &jsonObject)
@@ -1546,6 +1552,35 @@ func normalizeJson(input string, t *testing.T) string {
 	}
 	outputString, _ := json.Marshal(jsonObject)
 	return string(outputString)
+}
+
+func genFakeConfig(input string) ([]byte, error) {
+	unmarshaler := &jsonpb.Unmarshaler{
+		AnyResolver: Resolver,
+	}
+	service := new(confpb.Service)
+	if err := unmarshaler.Unmarshal(strings.NewReader(input), service); err != nil {
+		return nil, err
+	}
+	protoBytesArray, err := proto.Marshal(service)
+	if err != nil {
+		return nil, err
+	}
+	return protoBytesArray, nil
+}
+
+func genFakeRollout(input string) ([]byte, error) {
+	unmarshaler := &jsonpb.Unmarshaler{}
+	rollout := new(smpb.ListServiceRolloutsResponse)
+	if err := unmarshaler.Unmarshal(strings.NewReader(input), rollout); err != nil {
+		return nil, err
+	}
+
+	protoBytesArray, err := proto.Marshal(rollout)
+	if err != nil {
+		return nil, err
+	}
+	return protoBytesArray, nil
 }
 
 type FuncResolver func(url string) (proto.Message, error)

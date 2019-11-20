@@ -29,7 +29,7 @@ import (
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/metadata"
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
 
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
@@ -132,7 +132,7 @@ func fetchRollouts(serviceName string, mf *metadata.MetadataFetcher) (*smpb.List
 func fetchConfig(serviceName, configId string, mf *metadata.MetadataFetcher) (*confpb.Service, error) {
 	token, _, err := accessToken(mf)
 	if err != nil {
-		return nil, fmt.Errorf("fail to get access tokenm: %v", err)
+		return nil, fmt.Errorf("fail to get access token: %v", err)
 	}
 	return callServiceManagement(fetchConfigURL(serviceName, configId), token)
 }
@@ -151,13 +151,17 @@ var callServiceManagementRollouts = func(path, token string) (*smpb.ListServiceR
 	if resp, err = callWithAccessToken(path, token); err != nil {
 		return nil, err
 	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("fail to read response body: %s", err)
+	}
 	defer resp.Body.Close()
-	unmarshaler := &jsonpb.Unmarshaler{}
-	var rolloutsResponse smpb.ListServiceRolloutsResponse
-	if err = unmarshaler.Unmarshal(resp.Body, &rolloutsResponse); err != nil {
+	rolloutsResponse := new(smpb.ListServiceRolloutsResponse)
+	if err := proto.Unmarshal(body, rolloutsResponse); err != nil {
 		return nil, fmt.Errorf("fail to unmarshal ListServiceRolloutsResponse: %s", err)
 	}
-	return &rolloutsResponse, nil
+	return rolloutsResponse, nil
 }
 
 var callServiceManagement = func(path, token string) (*confpb.Service, error) {
@@ -167,13 +171,23 @@ var callServiceManagement = func(path, token string) (*confpb.Service, error) {
 	if resp, err = callWithAccessToken(path, token); err != nil {
 		return nil, err
 	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("fail to read response body: %s", err)
+	}
 	defer resp.Body.Close()
-	return util.UnmarshalServiceConfig(resp.Body)
+
+	service := new(confpb.Service)
+	if err := proto.Unmarshal(body, service); err != nil {
+		return nil, fmt.Errorf("fail to unmarshal Service: %v", err)
+	}
+	return service, nil
 }
 
 var callWithAccessToken = func(path, token string) (*http.Response, error) {
 	req, _ := http.NewRequest("GET", path, nil)
 	req.Header.Add("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/x-protobuf")
 	resp, err := serviceConfigFetcherClient.Do(req)
 	if err != nil {
 		return nil, err

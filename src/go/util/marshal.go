@@ -45,6 +45,22 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(annotationspb.HttpRule), nil
 	case "type.googleapis.com/google.protobuf.BoolValue":
 		return new(wrapperspb.BoolValue), nil
+	case "type.googleapis.com/google.protobuf.StringValue":
+		return new(wrapperspb.StringValue), nil
+	case "type.googleapis.com/google.protobuf.BytesValue":
+		return new(wrapperspb.BytesValue), nil
+	case "type.googleapis.com/google.protobuf.DoubleValue":
+		return new(wrapperspb.DoubleValue), nil
+	case "type.googleapis.com/google.protobuf.FloatValue":
+		return new(wrapperspb.FloatValue), nil
+	case "type.googleapis.com/google.protobuf.Int64Value":
+		return new(wrapperspb.Int64Value), nil
+	case "type.googleapis.com/google.protobuf.UInt64Value":
+		return new(wrapperspb.UInt64Value), nil
+	case "type.googleapis.com/google.protobuf.Int32Value":
+		return new(wrapperspb.Int32Value), nil
+	case "type.googleapis.com/google.protobuf.UInt32Value":
+		return new(wrapperspb.UInt32Value), nil
 	case "type.googleapis.com/google.api.Service":
 		return new(confpb.Service), nil
 	default:
