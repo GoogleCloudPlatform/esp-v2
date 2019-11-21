@@ -28,7 +28,7 @@ class ServiceControlCall {
  public:
   virtual ~ServiceControlCall() = default;
 
-  virtual void callCheck(
+  virtual CancelFunc callCheck(
       const ::google::api_proxy::service_control::CheckRequestInfo&
           request_info,
       Envoy::Tracing::Span& parent_span, CheckDoneFunc on_done) PURE;

@@ -29,6 +29,10 @@ using CheckDoneFunc = std::function<void(
 // The function to be called when allocateQuota call is completed.
 using QuotaDoneFunc =
     std::function<void(const ::google::protobuf::util::Status& status)>;
+
+// The function to cancel a on-going request.
+using CancelFunc = std::function<void()>;
+
 }  // namespace ServiceControl
 }  // namespace HttpFilters
 }  // namespace Extensions

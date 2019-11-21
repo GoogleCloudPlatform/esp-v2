@@ -50,7 +50,6 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     : cfg_parser_(cfg_parser),
       stream_info_(stream_info),
       uuid_(uuid),
-      aborted_(new bool(false)),
       request_header_size_(0),
       response_header_size_(0),
       last_reported_(now) {
@@ -86,7 +85,14 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
   }
 }
 
-ServiceControlHandlerImpl::~ServiceControlHandlerImpl() { *aborted_ = true; }
+ServiceControlHandlerImpl::~ServiceControlHandlerImpl() {}
+
+void ServiceControlHandlerImpl::onDestroy() {
+  if (cancel_fn_) {
+    cancel_fn_();
+    cancel_fn_ = nullptr;
+  }
+}
 
 void ServiceControlHandlerImpl::fillOperationInfo(
     ::google::api_proxy::service_control::OperationInfo& info,
@@ -160,11 +166,11 @@ void ServiceControlHandlerImpl::callCheck(Http::HeaderMap& headers,
   info.android_cert_fingerprint =
       std::string(Utils::extractHeader(headers, kAndroidCertHeader));
 
-  require_ctx_->service_ctx().call().callCheck(
+  cancel_fn_ = require_ctx_->service_ctx().call().callCheck(
       info, parent_span,
-      [this, aborted = aborted_, &headers](
-          const Status& status, const CheckResponseInfo& response_info) {
-        if (*aborted) return;
+      [this, &headers](const Status& status,
+                       const CheckResponseInfo& response_info) {
+        cancel_fn_ = nullptr;
         onCheckResponse(headers, status, response_info);
       });
 }
@@ -182,9 +188,12 @@ void ServiceControlHandlerImpl::callQuota() {
   info.method_name = require_ctx_->config().operation_name();
   info.metric_cost_vector = require_ctx_->metric_costs();
 
+  // TODO: if quota cache is disabled, need to use in-flight
+  // transport, need to save its cancel function.
+  // For now, quota cache is always enabled, in-flight transport
+  // is not called.
   require_ctx_->service_ctx().call().callQuota(
-      info, [this, aborted = aborted_](const Status& status) {
-        if (*aborted) return;
+      info, [this](const Status& status) {
         check_status_ = status;
         check_callback_->onCheckDone(status);
       });

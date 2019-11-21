@@ -80,6 +80,16 @@ TEST_F(FilterTest, DecodeHeadersSyncOKStatus) {
       }));
   EXPECT_EQ(Http::FilterHeadersStatus::Continue,
             filter_->decodeHeaders(headers_, true));
+
+  // Verify handler->onDestroy is called when filter::onDestroy() is called
+  EXPECT_CALL(*mock_handler, onDestroy()).Times(1);
+  filter_->onDestroy();
+}
+
+TEST_F(FilterTest, OnDestoryWithoutHandler) {
+  // Test: calling filter::onDestroy() without handler
+  EXPECT_CALL(mock_handler_factory_, createHandler_(_, _)).Times(0);
+  filter_->onDestroy();
 }
 
 TEST_F(FilterTest, DecodeHeadersSyncBadStatus) {

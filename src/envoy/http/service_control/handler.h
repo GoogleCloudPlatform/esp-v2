@@ -64,6 +64,9 @@ class ServiceControlHandler {
   // intermediate reports.
   virtual void processResponseHeaders(
       const Http::HeaderMap& response_headers) PURE;
+
+  // The request is about to be destroyed need to cancel all async requests.
+  virtual void onDestroy() PURE;
 };
 typedef std::unique_ptr<ServiceControlHandler> ServiceControlHandlerPtr;
 

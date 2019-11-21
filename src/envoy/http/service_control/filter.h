@@ -38,7 +38,7 @@ class ServiceControlFilter : public Http::StreamFilter,
                        const ServiceControlHandlerFactory& factory)
       : stats_(stats), factory_(factory) {}
 
-  void onDestroy() override {}
+  void onDestroy() override;
 
   // Http::StreamDecoderFilter
   Http::FilterHeadersStatus decodeHeaders(Http::HeaderMap& headers,

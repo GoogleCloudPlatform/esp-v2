@@ -64,8 +64,9 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
                          std::chrono::system_clock::time_point now =
                              std::chrono::system_clock::now()) override;
 
-  virtual void processResponseHeaders(
-      const Http::HeaderMap& response_headers) override;
+  void processResponseHeaders(const Http::HeaderMap& response_headers) override;
+
+  void onDestroy() override;
 
  private:
   void callQuota();
@@ -119,9 +120,7 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   ::google::api_proxy::service_control::CheckResponseInfo check_response_info_;
   ::google::protobuf::util::Status check_status_;
 
-  // This flag is used to mark if the request is aborted before the check
-  // callback is returned.
-  std::shared_ptr<bool> aborted_;
+  CancelFunc cancel_fn_;
   uint64_t request_header_size_;
   uint64_t response_header_size_;
 

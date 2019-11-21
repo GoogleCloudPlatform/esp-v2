@@ -276,12 +276,14 @@ ClientCache::ClientCache(
       config_.service_name(), config_.service_config_id(), options);
 }
 
-void ClientCache::callCheck(
+CancelFunc ClientCache::callCheck(
     const CheckRequest& request, Envoy::Tracing::Span& parent_span,
     std::function<void(const Status&, const CheckResponseInfo&)> on_done) {
-  auto check_transport = [this, &parent_span](const CheckRequest& request,
-                                              CheckResponse* response,
-                                              TransportDoneFunc on_done) {
+  CancelFunc cancel_fn;
+  auto check_transport = [this, &parent_span, &cancel_fn](
+                             const CheckRequest& request,
+                             CheckResponse* response,
+                             TransportDoneFunc on_done) {
     auto* call = check_call_factory_->createHttpCall(
         request, parent_span,
         [response, on_done](const Status& status, const std::string& body) {
@@ -302,6 +304,7 @@ void ClientCache::callCheck(
           on_done(status);
         });
     call->call();
+    cancel_fn = [call]() { call->cancel(); };
   };
 
   auto* response = new CheckResponse;
@@ -323,6 +326,7 @@ void ClientCache::callCheck(
                    delete response;
                  },
                  check_transport);
+  return cancel_fn;
 }
 
 void ClientCache::callQuota(
