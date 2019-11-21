@@ -46,7 +46,7 @@ while getopts a:s:? arg; do
 done
 
 # By default, use jwk key. Can be switched to x509 or symmetric key.
-SECRET_FILE="${SECRET_FILE:-$(get_test_client_key ${ROOT}/tests/e2e/client/test-client-secret-jwk.json)}"
+SECRET_FILE="${SECRET_FILE:-$(get_test_client_key e2e-client-service-account.json ${ROOT}/tests/e2e/client/test-client-secret-jwk.json)}"
 
 go run ${ROOT}/tests/e2e/client/jwt_client.go \
   --service-account-file=${SECRET_FILE} \

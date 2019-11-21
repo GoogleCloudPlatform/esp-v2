@@ -74,12 +74,16 @@ function run() {
 # Run and upload logs
 function long_running_test() {
   local host="${1}"
-  local duration_in_hour=${2}
-  local api_key="${3}"
-  local apiproxy_service="${4}"
-  local log_dir="${5}"
-  local test_id="${6}"
-  local run_id="${7}"
+  local scheme="${2}"
+  local port="${3}"
+  local duration_in_hour=${4}
+  local api_key="${5}"
+  local apiproxy_service="${6}"
+  local log_dir="${7}"
+  local test_id="${8}"
+  local run_id="${9}"
+  local platform="${10}"
+
   local test_type=''
   [[ ${duration_in_hour} -gt 0 ]] && test_type='long-run-test_'
   local final_test_id="${test_type}${test_id}"
@@ -88,25 +92,29 @@ function long_running_test() {
   local status
   local http_code=200
   echo "Running ${BACKEND} long running test on ${host}"
-  echo ${host}
+  echo "API Proxy listening at ${scheme}://${host}:${port}"
   echo ${api_key}
   echo ${apiproxy_service}
   case "${BACKEND}" in
     'bookstore')
-      retry -n 20 check_http_service "${host}:80/shelves" ${http_code}
+      retry -n 20 check_http_service "${scheme}://${host}:${port}/shelves" ${http_code}
       status=${?}
       if [[ ${status} -eq 0 ]]; then
         echo 'Running long running test.'
         run_nonfatal "${SCRIPT_PATH}/linux-test-kb-long-run.sh"  \
+          -m "${scheme}" \
           -h "${host}"  \
+          -p "${port}"  \
           -l "${duration_in_hour}"  \
           -a "${api_key}"  \
-          -s "${apiproxy_service}" 2>&1 | tee "${log_file}" \
+          -s "${apiproxy_service}" \
+          -t "${platform}" \
+          2>&1 | tee "${log_file}" \
           || status=${?}
       fi
       ;;
     'echo')
-      retry -n 20 check_grpc_service "${host}:80"
+      retry -n 20 check_grpc_service "${host}:${port}"
       status=${?}
       if [[ ${status} -eq 0 ]]; then
         run_nonfatal "${SCRIPT_PATH}"/linux-grpc-test-long-run.sh""  \
@@ -120,7 +128,7 @@ function long_running_test() {
     'interop')
       status=0
       run_nonfatal "${SCRIPT_PATH}"/test-grpc-interop.sh  \
-        -h "${host}:80"  \
+        -h "${host}:${port}"  \
         -l "${duration_in_hour}" 2>&1 | tee "${log_file}" \
         || status=${?}
       ;;
@@ -272,6 +280,5 @@ function get_apiproxy_service() {
 }
 
 function install_e2e_dependencies() {
-  curl https://glide.sh/get | sh
   pip install python-gflags
 }

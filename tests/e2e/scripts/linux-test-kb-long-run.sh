@@ -26,15 +26,21 @@ exit 1; }
 
 API_KEY=''
 SERVICE_NAME=''
+SCHEME=''
 HOST=''
+PORT=''
 DURATION_IN_HOUR=0
+PLATFORM=''
 
-while getopts :a:h:l:s: arg; do
+while getopts :a:h:m:p:l:s:t: arg; do
   case ${arg} in
     a) API_KEY="${OPTARG}" ;;
+    m) SCHEME="${OPTARG}" ;;
     h) HOST="${OPTARG}" ;;
+    p) PORT="${OPTARG}" ;;
     l) DURATION_IN_HOUR="${OPTARG}" ;;
     s) SERVICE_NAME="${OPTARG}" ;;
+    t) PLATFORM="${OPTARG}" ;;
     *) echo "Invalid option: -${OPTARG}" ;;
   esac
 done
@@ -57,7 +63,9 @@ END_TIME=$(date +"%s")
 END_TIME=$((END_TIME + DURATION_IN_HOUR * 60 * 60))
 RUN_COUNT=0
 
-detect_memory_leak_init ${HOST}
+if [ "$PLATFORM" = "gke" ]; then
+  detect_memory_leak_init ${HOST}
+fi
 
 while true; do
   RUN_COUNT=$((RUN_COUNT + 1))
@@ -76,45 +84,51 @@ while true; do
   echo "Starting bookstore test at $(date)."
   (set -x;
     python ${ROOT}/tests/e2e/client/apiproxy_bookstore_test.py  \
-      --host=${HOST}  \
+      --host="${SCHEME}://${HOST}:${PORT}"  \
       --api_key=${API_KEY}  \
       --auth_token=${JWT_TOKEN}  \
     --allow_unverified_cert=true)
 
-  echo "Starting bookstore API Key restriction test at $(date)."
-  (set -x;
-    python ${ROOT}/tests/e2e/client/apiproxy_bookstore_key_restriction_test.py  \
-      --host=${HOST}  \
-      --allow_unverified_cert=true  \
-      --key_restriction_tests=${ROOT}/tests/e2e/testdata/bookstore/key_restriction_test.json.template  \
-    --key_restriction_keys_file=${API_RESTRICTION_KEYS_FILE})
+  if [ "$PLATFORM" = "gke" ]; then
+    echo "Starting bookstore API Key restriction test at $(date)."
+    (set -x;
+      python ${ROOT}/tests/e2e/client/apiproxy_bookstore_key_restriction_test.py  \
+        --host="${SCHEME}://${HOST}:${PORT}"   \
+        --allow_unverified_cert=true  \
+        --key_restriction_tests=${ROOT}/tests/e2e/testdata/bookstore/key_restriction_test.json.template  \
+        --key_restriction_keys_file=${API_RESTRICTION_KEYS_FILE})
+  fi
 
   POST_FILE="${ROOT}/tests/e2e/testdata/bookstore/35k.json"
   echo "Starting stress test at $(date)."
   (set -x;
     python ${ROOT}/tests/e2e/client/apiproxy_client.py  \
       --test=stress  \
-      --host=${HOST}  \
+      --host="${SCHEME}://${HOST}:${PORT}" \
       --api_key=${API_KEY}  \
       --auth_token=${JWT_TOKEN}  \
       --post_file=${POST_FILE}  \
-    --test_data=${ROOT}/tests/e2e/testdata/bookstore/test_data.json.temp)
+      --test_data=${ROOT}/tests/e2e/testdata/bookstore/test_data.json.temp
+  )
 
   echo "Starting negative stress test."
   (set -x;
     python ${ROOT}/tests/e2e/client/apiproxy_client.py  \
       --test=negative  \
       --test_data=${ROOT}/tests/e2e/testdata/bookstore/negative_test_data.json.temp  \
-      --host=${HOST}  \
+      --host="${SCHEME}://${HOST}:${PORT}"  \
       --api_key=${API_KEY}  \
       --auth_token=${JWT_TOKEN}  \
-    --post_file=${POST_FILE})  \
+      --post_file=${POST_FILE}
+  )
 
-    #######################
+  #######################
   # End of test suite
   #######################
 
+if [ "$PLATFORM" = "gke" ]; then
   detect_memory_leak_check ${RUN_COUNT}
+fi
 
   # Break if test has run long enough.
   [[ $(date +"%s") -lt ${END_TIME} ]] || break
@@ -123,6 +137,8 @@ done
 echo "Finished ${RUN_COUNT} test runs."
 
 # We fail the test if memory increase is large.
-detect_memory_leak_final ${RUN_COUNT} && MEMORY_LEAK=0 || MEMORY_LEAK=1
+if [ "$PLATFORM" = "gke" ]; then
+  detect_memory_leak_final ${RUN_COUNT} && MEMORY_LEAK=0 || MEMORY_LEAK=1
+fi
 
-exit $((${RESULT} + ${MEMORY_LEAK}))
+exit $((${RESULT}))

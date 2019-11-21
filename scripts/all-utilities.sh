@@ -138,10 +138,11 @@ function set_api_keys() {
 
 # Download test-client keys from Cloud storage
 function get_test_client_key() {
-  local key_path=$1
+  local remote_file_name=$1
+  local key_path=$2
   [[ -e $key_path ]] || $GSUTIL  \
-    cp gs://apiproxy-testing-client-secret-files/e2e-client-service-account.json $key_path
-  echo -n $key_path
+    cp "gs://apiproxy-testing-client-secret-files/$remote_file_name" "$key_path"
+  echo -n "$key_path"
   return 0
 }
 

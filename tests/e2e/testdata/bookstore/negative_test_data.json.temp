@@ -2,33 +2,33 @@
  "test_run": [
   {
     "comment": "Failed at APIPROXY: api key is required.",
-    "url": "http://${HOST}:80/echo",
+    "url": "${HOST}/echo",
     "expected_status": "401"
   },
   {
     "comment": "Failed at APIPROXY: wrong api key is passed.",
-    "url": "http://${HOST}:80/echo?key=wrong-api-key",
+    "url": "${HOST}/echo?key=wrong-api-key",
     "expected_status": "400"
   },
   {
     "comment": "Failed at APIPROXY: unknown method.",
-    "url": "http://${HOST}:80/unknown_method",
+    "url": "${HOST}/unknown_method",
     "expected_status": "404"
   },
   {
     "comment": "Failed at APIPROXY: auth is required.",
-    "url": "http://${HOST}:80/echo/auth?key=${API_KEY}",
+    "url": "${HOST}/echo/auth?key=${API_KEY}",
     "expected_status": "401"
   },
   {
     "comment": "Failed at APIPROXY: wrong JWT token.",
-    "url": "http://${HOST}:80/echo/auth?key=${API_KEY}",
+    "url": "${HOST}/echo/auth?key=${API_KEY}",
     "headers": [ "Authorization: Bearer wrong-jwt-token" ],
     "expected_status": "401"
   },
   {
     "comment": "Failed at backend: post body invalid.",
-    "url": "http://${HOST}:80/shelves?key=${API_KEY}",
+    "url": "${HOST}/shelves?key=${API_KEY}",
     "headers": [ "Authorization: Bearer ${JWT_TOKEN}" ],
     "post_file": "/dev/null",
     "expected_status": "400"

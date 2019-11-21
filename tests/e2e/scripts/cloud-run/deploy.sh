@@ -15,7 +15,7 @@
 # limitations under the License.
 
 # Fail on any error.
-set -e
+set -eo pipefail
 
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${SCRIPT_PATH}/../../../.." && pwd)"
@@ -30,12 +30,14 @@ exit 1; }
 e2e_options "${@}"
 
 echo "Installing tools if necessary"
+install_e2e_dependencies
 update_wrk
 
 PROJECT_ID="cloudesf-testing"
 TEST_ID="cloud-run-${BACKEND}"
 PROXY_RUNTIME_SERVICE_ACCOUNT="e2e-cloud-run-proxy-runtime@${PROJECT_ID}.iam.gserviceaccount.com"
 BACKEND_RUNTIME_SERVICE_ACCOUNT="e2e-cloud-run-backend-runtime@${PROJECT_ID}.iam.gserviceaccount.com"
+JOB_KEY_PATH="${ROOT}/tests/e2e/client/gob-prow-jobs-secret.json"
 LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
 
 # Determine names of all resources
@@ -44,8 +46,12 @@ BOOKSTORE_SERVICE_NAME=$(get_cloud_run_service_name_with_sha "${BACKEND}")
 BOOKSTORE_SERVICE_NAME="${BOOKSTORE_SERVICE_NAME}-${UNIQUE_ID}"
 PROXY_SERVICE_NAME=$(get_cloud_run_service_name_with_sha "api-proxy")
 PROXY_SERVICE_NAME="${PROXY_SERVICE_NAME}-${UNIQUE_ID}"
+ENDPOINTS_SERVICE_TITLE=$(get_cloud_run_service_name_with_sha "${BACKEND}-service")
+ENDPOINTS_SERVICE_TITLE="${ENDPOINTS_SERVICE_TITLE}-${UNIQUE_ID}"
 ENDPOINTS_SERVICE_NAME=""
 PROXY_HOST=""
+
+STATUS=0
 
 function setup() {
   echo "Setup env"
@@ -56,11 +62,19 @@ function setup() {
 
   # Cloud Run is only supported in a few regions currently
   gcloud config set run/region us-central1
+
+  # Ensure all resources and quota is against our test project, not the CI system
   gcloud config set core/project "${PROJECT_ID}"
+  gcloud config set billing/quota_project "${PROJECT_ID}"
+
+  # Get the service account for the prow job due to b/144867112
+  # TODO(b/144445217): We should let prow handle this instead of manually doing so
+  get_test_client_key "gob-prow-jobs-service-account.json" "${JOB_KEY_PATH}"
+  gcloud auth activate-service-account --key-file="${JOB_KEY_PATH}"
 
   # 1) Deploy backend service (authenticated)
   echo "Deploying backend ${BOOKSTORE_SERVICE_NAME} on Cloud Run"
-  gcloud beta run deploy "${BOOKSTORE_SERVICE_NAME}" \
+  gcloud run deploy "${BOOKSTORE_SERVICE_NAME}" \
       --image="gcr.io/apiproxy-release/bookstore:1" \
       --no-allow-unauthenticated \
       --service-account "${BACKEND_RUNTIME_SERVICE_ACCOUNT}" \
@@ -68,14 +82,12 @@ function setup() {
       --quiet
 
   # 2) Get url of backend service
-  bookstore_host=$(gcloud beta run services describe "${BOOKSTORE_SERVICE_NAME}" \
+  bookstore_host=$(gcloud run services describe "${BOOKSTORE_SERVICE_NAME}" \
       --platform=managed \
       --format="value(status.address.url.basename())" \
       --quiet)
 
   # 3) Verify the backend is up using the identity of the current machine/user
-  # Be careful not to expose the auth token in the logs
-  set +x
   bookstore_health_code=$(curl \
       --write-out %{http_code} \
       --silent \
@@ -92,7 +104,7 @@ function setup() {
   # 4) Deploy initial API Proxy service
   echo "Deploying API Proxy ${BOOKSTORE_SERVICE_NAME} on Cloud Run"
 
-  gcloud beta run deploy "${PROXY_SERVICE_NAME}" \
+  gcloud run deploy "${PROXY_SERVICE_NAME}" \
       --image="${APIPROXY_IMAGE}" \
       --allow-unauthenticated \
       --service-account "${PROXY_RUNTIME_SERVICE_ACCOUNT}" \
@@ -100,7 +112,7 @@ function setup() {
       --quiet
 
   # 5) Get url of API Proxy service
-  PROXY_HOST=$(gcloud beta run services describe "${PROXY_SERVICE_NAME}" \
+  PROXY_HOST=$(gcloud run services describe "${PROXY_SERVICE_NAME}" \
       --platform=managed \
       --format="value(status.address.url.basename())" \
       --quiet)
@@ -109,17 +121,21 @@ function setup() {
   local service_idl_tmpl="${ROOT}/tests/endpoints/bookstore/bookstore_swagger_template.json"
   local service_idl="${ROOT}/tests/endpoints/bookstore/bookstore_swagger.json"
 
-  # Change the `host` to point to the proxy host
-  # Add in the `x-google-backend` to point to the backend URL
+  # Change the `host` to point to the proxy host (required by validation in service management)
+  # Change the `title` to identify this test (for readability in cloud console)
+  # Change the jwt audience to point to the proxy host (required for calling authenticated endpoints)
+  # Add in the `x-google-backend` to point to the backend URL (required for backend routing)
   cat "${service_idl_tmpl}" \
       | jq ".host = \"${PROXY_HOST}\" \
+      | .info.title = \"${ENDPOINTS_SERVICE_TITLE}\" \
+      | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${PROXY_HOST}\" \
       | . + { \"x-google-backend\": { \"address\": \"https://${bookstore_host}\" } } " \
       > "${service_idl}"
 
   # 7) Deploy the service config
   create_service "${service_idl}"
 
-  # 8) Get the service name and config id
+  # 8) Get the service name and config id to enable it
   # Assumes that the names of the endpoinds service and cloud run host match
   ENDPOINTS_SERVICE_NAME="${PROXY_HOST}"
   endpoints_service_config_id=$(gcloud endpoints configs list \
@@ -128,6 +144,9 @@ function setup() {
       --limit=1 \
       --format=json \
       | jq -r '.[].id')
+
+  # Then enable the service
+  gcloud services enable "${ENDPOINTS_SERVICE_NAME}"
 
   # 9) Build the service config into a new image
   echo "Building serverless image"
@@ -140,10 +159,10 @@ function setup() {
       -i "${APIPROXY_IMAGE}"
 
   # 10) Redeploy API Proxy to update the service config
-  proxy_args="$proxy_args--tracing_sample_rate=1"
+  proxy_args="--tracing_sample_rate=0.0001"
 
   echo "Redeploying API Proxy ${PROXY_SERVICE_NAME} on Cloud Run"
-  gcloud beta run deploy "${PROXY_SERVICE_NAME}" \
+  gcloud run deploy "${PROXY_SERVICE_NAME}" \
       --image="gcr.io/${PROJECT_ID}/apiproxy-serverless:${ENDPOINTS_SERVICE_NAME}-${endpoints_service_config_id}" \
       --set-env-vars=APIPROXY_ARGS="${proxy_args}" \
       --allow-unauthenticated \
@@ -154,7 +173,7 @@ function setup() {
   # Ping the proxy to startup, sleep to finish setup
   curl --silent --output /dev/null "https://${PROXY_HOST}"/shelves
   sleep 5s
-  echo "Setup complete successfully"
+  echo "Setup complete"
 }
 
 function test() {
@@ -170,31 +189,38 @@ function test() {
   fi
   echo "Proxy is healthy"
 
+  # Wait a few minutes for service to be enabled and the permissions to propagate
+  echo "Waiting for the endpoints service to be enabled"
+  sleep 10m
 
-# TODO(b/144317037): Run our pre-existing tests
-#  run_nonfatal long_running_test  \
-#    "${PROXY_HOST}"  \
-#    "https" \
-#    "443" \
-#    "${DURATION_IN_HOUR}"  \
-#    "${API_KEY}"  \
-#    "${PROXY_HOST}"  \
-#    "${LOG_DIR}"  \
-#    "${TEST_ID}"  \
-#    "${UNIQUE_ID}"
-  echo "Testing complete successfully"
+  run_nonfatal long_running_test  \
+      "${PROXY_HOST}"  \
+      "https" \
+      "443" \
+      "${DURATION_IN_HOUR}"  \
+      ""  \
+      "${ENDPOINTS_SERVICE_NAME}"  \
+      "${LOG_DIR}"  \
+      "${TEST_ID}"  \
+      "${UNIQUE_ID}" \
+      "cloud-run" \
+      || STATUS=${?}
+  echo "Testing complete with status ${STATUS}"
 }
 
 function tearDown() {
+  echo "Waiting for Stackdriver Logging to collect logs"
+  sleep 1m
+
   echo "Teardown env"
 
   # Delete the API Proxy Cloud Run service
-  gcloud beta run services delete "${PROXY_SERVICE_NAME}" \
+  gcloud run services delete "${PROXY_SERVICE_NAME}" \
       --platform managed \
       --quiet || true
 
   # Delete the backend Cloud Run service
-  gcloud beta run services delete "${BOOKSTORE_SERVICE_NAME}" \
+  gcloud run services delete "${BOOKSTORE_SERVICE_NAME}" \
       --platform managed \
       --quiet || true
 
@@ -205,13 +231,15 @@ function tearDown() {
   echo "Teardown complete successfully"
 }
 
-STATUS=0
-setup || STATUS=${?}
+run_nonfatal setup || STATUS=${?}
 
 if [[ "$STATUS" == 0 ]] ; then
-  test || STATUS=${?}
+  run_nonfatal test || STATUS=${?}
 fi
 
+# Ignore pipe errors on cleanup
+set +o pipefail
 tearDown || true
+set -o pipefail
 
 exit ${STATUS}
