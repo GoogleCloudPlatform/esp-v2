@@ -17,6 +17,7 @@ package components
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"time"
@@ -186,4 +187,21 @@ func HttpHealthCheck(addr string, endpoint string, opts *HealthCheckOptions) err
 	}
 
 	return nil
+}
+
+func HttpConnectionCheck(host string, port string, opts *HealthCheckOptions) error {
+
+	err := withRetry(opts.HealthCheckRetries, opts.HealthCheckRetryBackoff, func() error {
+
+		conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), opts.HealthCheckDeadline)
+
+		if err != nil || conn == nil {
+			return fmt.Errorf("health check response was not healthy: %v", err)
+		}
+
+		defer conn.Close()
+		return nil
+	})
+
+	return err
 }

@@ -27,7 +27,7 @@ import (
 // Envoy stores data for Envoy process
 type Envoy struct {
 	*Cmd
-	adminPort uint16
+	listenerPort uint16
 }
 
 // createEnvoyConf create envoy config.
@@ -82,16 +82,15 @@ func NewEnvoy(args []string, bootstrapArgs []string, confPath string, shouldEnab
 			name: "Envoy",
 			Cmd:  cmd,
 		},
-		adminPort: ports.AdminPort,
+		listenerPort: ports.ListenerPort,
 	}, nil
 }
 
 func (s Envoy) String() string {
-	return "Envoy Proxy Admin HTTP Endpoint"
+	return "Envoy Proxy Listener HTTP Endpoint"
 }
 
 func (s Envoy) CheckHealth() error {
 	opts := NewHealthCheckOptions()
-	addr := fmt.Sprintf("http://%v:%v", platform.GetLoopbackAddress(), s.adminPort)
-	return HttpHealthCheck(addr, "/ready", opts)
+	return HttpConnectionCheck(platform.GetLoopbackAddress(), fmt.Sprintf("%v", s.listenerPort), opts)
 }

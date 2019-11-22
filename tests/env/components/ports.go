@@ -168,8 +168,13 @@ func IsPortUsed(port uint16) bool {
 
 	// Check if anything is listening on this port
 	serverPort := fmt.Sprintf("localhost:%v", port)
-	_, err := net.DialTimeout("tcp", serverPort, 100*time.Millisecond)
-	return err == nil
+	conn, _ := net.DialTimeout("tcp", serverPort, 100*time.Millisecond)
+
+	if conn != nil {
+		 _ = conn.Close()
+		return true
+	}
+	return false
 }
 
 // NewPorts allocate all ports based on test id.
