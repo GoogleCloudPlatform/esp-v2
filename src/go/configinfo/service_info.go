@@ -309,7 +309,7 @@ func (s *ServiceInfo) processBackendRule() error {
 			}
 			address := fmt.Sprintf("%v:%v", hostname, port)
 			if _, exist := backendRoutingClustersMap[address]; !exist {
-				backendSelector := fmt.Sprintf("DynamicRouting_%v", len(s.BackendRoutingClusters))
+				backendSelector := address
 				s.BackendRoutingClusters = append(s.BackendRoutingClusters,
 					&backendRoutingCluster{
 						ClusterName: backendSelector,

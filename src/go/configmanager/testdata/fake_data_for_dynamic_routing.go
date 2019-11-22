@@ -15,6 +15,7 @@
 package testdata
 
 var (
+	// These resources must be ordered in alphabetic order by name
 	FakeWantedClustersForDynamicRouting = []string{
 		`
 {
@@ -43,20 +44,45 @@ var (
 }`,
 		`
 {
-  "name": "DynamicRouting_0",
+  "name": "metadata-cluster",
+  "type": "STRICT_DNS",
+  "connectTimeout": "20s",
+  "loadAssignment":{
+    "clusterName":"169.254.169.254",
+    "endpoints":[
+      {
+        "lbEndpoints":[
+          {
+            "endpoint":{
+              "address":{
+	              "socketAddress":{
+	                "address":"169.254.169.254",
+	                "portValue":80
+	              }
+	            }
+	          }
+          }
+        ]
+      }
+    ]
+  }
+}`,
+		`
+{
+  "name": "pets.appspot.com:443",
   "type": "LOGICAL_DNS",
   "connectTimeout": "20s",
-  "loadAssignment": {
-    "clusterName": "us-central1-cloud-esf.cloudfunctions.net",
-    "endpoints": [
+  "loadAssignment":{
+    "clusterName":"pets.appspot.com",
+    "endpoints":[
       {
-        "lbEndpoints": [
+        "lbEndpoints":[
           {
-            "endpoint": {
-              "address": {
-	              "socketAddress": {
-	                "address": "us-central1-cloud-esf.cloudfunctions.net",
-	                "portValue": 443
+            "endpoint":{
+              "address":{
+	              "socketAddress":{
+	                "address":"pets.appspot.com",
+	                "portValue":443
 	              }
 	            }
 	          }
@@ -66,35 +92,11 @@ var (
     ]
   },
   "tlsContext": {
-    "sni": "us-central1-cloud-esf.cloudfunctions.net"
-  }
-}`,
-		`
-{
-  "name": "DynamicRouting_1",
-  "type": "LOGICAL_DNS",
-  "connectTimeout": "20s",
-  "loadAssignment": {
-    "clusterName": "us-west2-cloud-esf.cloudfunctions.net",
-    "endpoints": [{
-       "lbEndpoints": [{
-         "endpoint": {
-          "address": {
-	    "socketAddress": {
-	      "address": "us-west2-cloud-esf.cloudfunctions.net",
-	      "portValue": 443
-	    }
-	  }
-	}
-      }]
-   }]
-  },
-  "tlsContext": {
-    "sni": "us-west2-cloud-esf.cloudfunctions.net"
+    "sni": "pets.appspot.com"
   }
 }`, `
 {
-  "name": "DynamicRouting_2",
+  "name": "pets.appspot.com:8008",
   "type": "LOGICAL_DNS",
   "connectTimeout": "20s",
   "loadAssignment":{
@@ -122,20 +124,20 @@ var (
 }`,
 		`
 {
-  "name": "DynamicRouting_3",
+  "name": "us-central1-cloud-esf.cloudfunctions.net:443",
   "type": "LOGICAL_DNS",
   "connectTimeout": "20s",
-  "loadAssignment":{
-    "clusterName":"pets.appspot.com",
-    "endpoints":[
+  "loadAssignment": {
+    "clusterName": "us-central1-cloud-esf.cloudfunctions.net",
+    "endpoints": [
       {
-        "lbEndpoints":[
+        "lbEndpoints": [
           {
-            "endpoint":{
-              "address":{
-	              "socketAddress":{
-	                "address":"pets.appspot.com",
-	                "portValue":443
+            "endpoint": {
+              "address": {
+	              "socketAddress": {
+	                "address": "us-central1-cloud-esf.cloudfunctions.net",
+	                "portValue": 443
 	              }
 	            }
 	          }
@@ -145,9 +147,34 @@ var (
     ]
   },
   "tlsContext": {
-    "sni": "pets.appspot.com"
+    "sni": "us-central1-cloud-esf.cloudfunctions.net"
   }
-}`}
+}`,
+		`
+{
+  "name": "us-west2-cloud-esf.cloudfunctions.net:443",
+  "type": "LOGICAL_DNS",
+  "connectTimeout": "20s",
+  "loadAssignment": {
+    "clusterName": "us-west2-cloud-esf.cloudfunctions.net",
+    "endpoints": [{
+       "lbEndpoints": [{
+         "endpoint": {
+          "address": {
+	    "socketAddress": {
+	      "address": "us-west2-cloud-esf.cloudfunctions.net",
+	      "portValue": 443
+	    }
+	  }
+	}
+      }]
+   }]
+  },
+  "tlsContext": {
+    "sni": "us-west2-cloud-esf.cloudfunctions.net"
+  }
+}`,
+	}
 
 	FakeWantedListenerForDynamicRouting = `
 {
@@ -299,7 +326,7 @@ var (
                         "path": "/pet"
                       },
                       "route": {
-                        "cluster": "DynamicRouting_3",
+                        "cluster": "pets.appspot.com:443",
                         "host_rewrite": "pets.appspot.com"
                       }
                     },
@@ -314,7 +341,7 @@ var (
                         "regex": "/pet/[^\\/]+$"
                       },
                       "route": {
-                        "cluster": "DynamicRouting_2",
+                        "cluster": "pets.appspot.com:8008",
                         "host_rewrite": "pets.appspot.com"
                       }
                     },
@@ -329,7 +356,7 @@ var (
                         "path": "/hello"
                       },
                       "route": {
-                        "cluster": "DynamicRouting_0",
+                        "cluster": "us-central1-cloud-esf.cloudfunctions.net:443",
                         "host_rewrite": "us-central1-cloud-esf.cloudfunctions.net"
                       }
                     },
@@ -344,7 +371,7 @@ var (
                         "path": "/pets"
                       },
                       "route": {
-                        "cluster": "DynamicRouting_3",
+                        "cluster": "pets.appspot.com:443",
                         "host_rewrite": "pets.appspot.com"
                       }
                     },
@@ -359,7 +386,7 @@ var (
                         "path": "/search"
                       },
                       "route": {
-                        "cluster": "DynamicRouting_1",
+                        "cluster": "us-west2-cloud-esf.cloudfunctions.net:443",
                         "host_rewrite": "us-west2-cloud-esf.cloudfunctions.net"
                       }
                     },

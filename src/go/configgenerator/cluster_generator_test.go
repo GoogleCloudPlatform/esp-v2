@@ -164,7 +164,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 			backendProtocol: "http1",
 			wantedClusters: []*v2pb.Cluster{
 				{
-					Name:                 "DynamicRouting_0",
+					Name:                 "mybackend.com:443",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 443),
@@ -205,7 +205,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 			backendProtocol: "http1",
 			wantedClusters: []*v2pb.Cluster{
 				{
-					Name:                 "DynamicRouting_0",
+					Name:                 "mybackend.run.app:443",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
 					ClusterDiscoveryType: &v2pb.Cluster_Type{Type: v2pb.Cluster_LOGICAL_DNS},
