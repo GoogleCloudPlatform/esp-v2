@@ -34,6 +34,13 @@ typedef ConstSingleton<RcDetailsValues> RcDetails;
 
 }  // namespace
 
+void ServiceControlFilter::onDestroy() {
+  ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
+  if (handler_) {
+    handler_->onDestroy();
+  }
+}
+
 Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
     Http::HeaderMap& headers, bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);

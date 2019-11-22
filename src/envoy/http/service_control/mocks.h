@@ -45,6 +45,8 @@ class MockServiceControlHandler : public ServiceControlHandler {
 
   MOCK_METHOD1(processResponseHeaders,
                void(const Http::HeaderMap& response_headers));
+
+  MOCK_METHOD0(onDestroy, void());
 };
 
 class MockServiceControlHandlerFactory : public ServiceControlHandlerFactory {
@@ -65,7 +67,7 @@ class MockServiceControlCall : public ServiceControlCall {
  public:
   MOCK_METHOD3(
       callCheck,
-      void(
+      CancelFunc(
           const ::google::api_proxy::service_control::CheckRequestInfo& request,
           Envoy::Tracing::Span& parent_span, CheckDoneFunc on_done));
 

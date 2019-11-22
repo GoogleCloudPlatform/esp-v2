@@ -117,13 +117,13 @@ ServiceControlCallImpl::ServiceControlCallImpl(
   }
 }  // namespace ServiceControl
 
-void ServiceControlCallImpl::callCheck(
+CancelFunc ServiceControlCallImpl::callCheck(
     const ::google::api_proxy::service_control::CheckRequestInfo& request_info,
     Envoy::Tracing::Span& parent_span, CheckDoneFunc on_done) {
   ::google::api::servicecontrol::v1::CheckRequest request;
   (void)request_builder_->FillCheckRequest(request_info, &request);
   ENVOY_LOG(debug, "Sending check : {}", request.DebugString());
-  getTLCache().client_cache().callCheck(request, parent_span, on_done);
+  return getTLCache().client_cache().callCheck(request, parent_span, on_done);
 }
 
 void ServiceControlCallImpl::callQuota(

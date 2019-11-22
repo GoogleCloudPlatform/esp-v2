@@ -41,8 +41,9 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
       std::function<const std::string&()> sc_token_fn,
       std::function<const std::string&()> quota_token_fn);
 
-  void callCheck(const ::google::api::servicecontrol::v1::CheckRequest& request,
-                 Envoy::Tracing::Span& parent_span, CheckDoneFunc on_done);
+  CancelFunc callCheck(
+      const ::google::api::servicecontrol::v1::CheckRequest& request,
+      Envoy::Tracing::Span& parent_span, CheckDoneFunc on_done);
 
   void callQuota(
       const ::google::api::servicecontrol::v1::AllocateQuotaRequest& request,
