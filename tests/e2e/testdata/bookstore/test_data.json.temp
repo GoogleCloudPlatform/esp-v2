@@ -2,16 +2,16 @@
  "test_run": [
   {
     "labels": { "http_method": "GET",  "auth": "None", "api_key": "yes" },
-    "url": "http://${HOST}:80/echo?key=${API_KEY}"
+    "url": "${HOST}/echo?key=${API_KEY}"
   },
   {
     "labels": { "http_method": "GET",  "auth": "JWT", "api_key": "yes" },
-    "url": "http://${HOST}:80/echo/auth?key=${API_KEY}",
+    "url": "${HOST}/echo/auth?key=${API_KEY}",
     "headers": [ "Authorization: Bearer ${JWT_TOKEN}" ]
   },
   {
     "labels": { "http_method": "POST",  "auth": "None", "api_key": "yes" },
-    "url": "http://${HOST}:80/echo?key=${API_KEY}",
+    "url": "${HOST}/echo?key=${API_KEY}",
     "post_file": "${POST_FILE}"
   }
  ]

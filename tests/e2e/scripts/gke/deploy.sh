@@ -104,12 +104,15 @@ HOST=$(get_cluster_host "${NAMESPACE}")
 STATUS=0
 run_nonfatal long_running_test  \
   "${HOST}"  \
+  "http" \
+  "80" \
   "${DURATION_IN_HOUR}"  \
   "${API_KEY}"  \
   "${APIPROXY_SERVICE}"  \
   "${LOG_DIR}"  \
   "${TEST_ID}"  \
   "${UNIQUE_ID}" \
+  "gke" \
   || STATUS=${?}
 
 # Deploy new config and check new rollout on /endpoints_status
