@@ -602,6 +602,7 @@ def gen_proxy_config(args):
     if args.envoy_use_remote_address:
         proxy_conf.append("--envoy_use_remote_address")
 
+
     if args.cors_preset:
         proxy_conf.extend([
             "--cors_preset",
