@@ -304,6 +304,7 @@ func TestMethods(t *testing.T) {
 		fakeServiceConfig *confpb.Service
 		backendProtocol   string
 		wantMethods       map[string]*methodInfo
+		wantError         string
 	}{
 		{
 			desc: "Succeed for gRPC, no Http rule",
@@ -389,6 +390,28 @@ func TestMethods(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			desc: "Fail for HTTP",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo",
+							},
+							{
+								Name: "Echo_Auth_Jwt",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{},
+			},
+			backendProtocol: "http2",
+			wantError:       fmt.Sprintf("no HttpRules generated for the Http service %v", testProjectName),
 		},
 		{
 			desc: "Succeed for HTTP, with OPTIONS, and AllowCors",
@@ -559,6 +582,12 @@ func TestMethods(t *testing.T) {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = tc.backendProtocol
 		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+		if tc.wantError != "" {
+			if err == nil || err.Error() != tc.wantError {
+				t.Errorf("Test Desc(%d): %s, got Errors : %v, want: %v", i, tc.desc, err, tc.wantError)
+			}
+			continue
+		}
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -795,7 +824,7 @@ func TestProcessEmptyJwksUriByOpenID(t *testing.T) {
 
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendProtocol = "http1"
+		opts.BackendProtocol = "grpc"
 		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Errorf("Test Desc(%d): %s, process jwksUri got %v", i, tc.desc, err)

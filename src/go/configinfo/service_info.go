@@ -104,7 +104,9 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	serviceInfo.processEndpoints()
 	serviceInfo.processApis()
 	serviceInfo.processQuota()
-	serviceInfo.processHttpRule()
+	if err := serviceInfo.processHttpRule(); err != nil {
+		return nil, err
+	}
 	serviceInfo.processUsageRule()
 	serviceInfo.processSystemParameters()
 	serviceInfo.processAccessToken()
@@ -207,7 +209,11 @@ func (s *ServiceInfo) processEndpoints() {
 	}
 }
 
-func (s *ServiceInfo) processHttpRule() {
+func (s *ServiceInfo) processHttpRule() error {
+	if s.BackendProtocol != util.GRPC && len(s.ServiceConfig().GetHttp().GetRules()) == 0 {
+		return fmt.Errorf("no HttpRules generated for the Http service %v", s.Name)
+	}
+
 	// An temporary map to record generated OPTION methods, to avoid duplication.
 	httpPathWithOptionsSet := make(map[string]bool)
 
@@ -270,6 +276,8 @@ func (s *ServiceInfo) processHttpRule() {
 			}
 		}
 	}
+
+	return nil
 }
 
 func (s *ServiceInfo) addOptionMethod(index int, path string) {

@@ -28,6 +28,7 @@ import (
 
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
 )
@@ -78,6 +79,16 @@ func TestMakeServiceControlCluster(t *testing.T) {
 				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/v1/shelves",
+							},
+						},
 					},
 				},
 				Control: &confpb.Control{
@@ -140,6 +151,16 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 						},
 					},
 				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/v1/shelves",
+							},
+						},
+					},
+				},
 				Backend: &confpb.Backend{
 					Rules: []*confpb.BackendRule{
 						{
@@ -189,6 +210,16 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 						},
 					},
 				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/v1/shelves",
+							},
+						},
+					},
+				},
 				Backend: &confpb.Backend{
 					Rules: []*confpb.BackendRule{
 						{
@@ -227,6 +258,16 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 						Methods: []*apipb.Method{
 							{
 								Name: "Foo",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/v1/shelves",
 							},
 						},
 					},
@@ -279,9 +320,10 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 	_, fakeJwksUriHost, _, _, _ := util.ParseURI(util.FakeJwksUri)
 
 	testData := []struct {
-		desc           string
-		fakeProviders  []*confpb.AuthProvider
-		wantedClusters []*v2pb.Cluster
+		desc            string
+		fakeProviders   []*confpb.AuthProvider
+		backendProtocol string
+		wantedClusters  []*v2pb.Cluster
 	}{
 		{
 			desc: "Use https jwksUri and http jwksUri",
@@ -349,7 +391,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 		}
 
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendProtocol = "http2"
+		opts.BackendProtocol = "grpc"
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
@@ -387,7 +429,7 @@ func TestMakeIamCluster(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "http1",
+			backendProtocol: "grpc",
 			wantedCluster: &v2pb.Cluster{
 				Name:                 util.IamServerClusterName,
 				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
@@ -409,7 +451,7 @@ func TestMakeIamCluster(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "http1",
+			backendProtocol: "grpc",
 		},
 	}
 
