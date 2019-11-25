@@ -16,30 +16,21 @@ import argparse
 import logging
 import os
 import re
-import signal
 import subprocess
 import sys
 import threading
-import time
+
+# Location of start proxy script
+PROXY_STARTER = "apiproxy/start_proxy.sh"
 
 # The command to generate Envoy bootstrap config
-BOOTSTRAP_CMD = "bin/bootstrap"
-
-# Location of Config Manager and Envoy binary
-CONFIGMANAGER_BIN = "bin/configmanager"
-ENVOY_BIN = "bin/envoy"
-
-# Health check period in secs, for Config Manager and Envoy.
-HEALTH_CHECK_PERIOD = 60
+BOOTSTRAP_CMD = "apiproxy/bootstrap"
 
 # bootstrap config file will write here.
 # By default, envoy writes some logs to /tmp too
 # If root file system is read-only, this folder should be
 # mounted from tmpfs.
 DEFAULT_CONFIG_DIR = "/tmp"
-
-# bootstrap config file name.
-BOOTSTRAP_CONFIG = "/bootstrap.json"
 
 # Default Listener HTTP/1.x port
 DEFAULT_LISTENER_HTTP1_PORT = 8080
@@ -87,7 +78,7 @@ def gen_bootstrap_conf(args):
     if args.enable_debug:
         os.environ["ENVOY_ARGS"] = "-l debug"
 
-    bootstrap_file = DEFAULT_CONFIG_DIR + BOOTSTRAP_CONFIG
+    bootstrap_file = DEFAULT_CONFIG_DIR + "/bootstrap.json"
     cmd.append(bootstrap_file)
     # Use environment variable to pass it to start_proxy.sh
     os.environ["BOOTSTRAP_FILE"] = bootstrap_file
@@ -508,7 +499,7 @@ def gen_proxy_config(args):
         sys.exit(1)
 
     proxy_conf = [
-        CONFIGMANAGER_BIN, "--logtostderr", "--backend_protocol", backend_protocol,
+       "-v", "--logtostderr", "--backend_protocol", backend_protocol,
         "--cluster_address", cluster_address, "--cluster_port", cluster_port,
         "--rollout_strategy", args.rollout_strategy,
     ]
@@ -638,57 +629,12 @@ def gen_proxy_config(args):
         proxy_conf.extend(["--service_account_key", args.service_account_key])
     if args.non_gcp:
         proxy_conf.append("--non_gcp")
+    print(proxy_conf)
     return proxy_conf
-
-def output_reader(proc):
-    for line in iter(proc.stdout.readline, b''):
-        sys.stdout.write(line.decode())
-
-def start_config_manager(proxy_conf):
-    print("Starting Config Manager with args: {}".format(proxy_conf))
-    proc = subprocess.Popen(proxy_conf,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
-    out_thread = threading.Thread(target=output_reader, args=(proc,))
-    out_thread.start()
-    return proc
-
-def start_envoy(args):
-    subprocess.call(gen_bootstrap_conf(args))
-    cmd = [ENVOY_BIN, "-c", DEFAULT_CONFIG_DIR + BOOTSTRAP_CONFIG,
-           "--disable-hot-restart",
-           "--log-format %L%m%d %T.%e %t envoy] [%t][%n]%v",
-           "--log-format-escaped"]
-
-    print("Starting Envoy with args: {}".format(cmd))
-    proc = subprocess.Popen(cmd,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
-    out_thread = threading.Thread(target=output_reader, args=(proc,))
-    out_thread.start()
-    return proc
-
 
 if __name__ == '__main__':
     parser = make_argparser()
     args = parser.parse_args()
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
-
-    cm_proc = start_config_manager(gen_proxy_config(args))
-    envoy_proc = start_envoy(args)
-
-    while True:
-        time.sleep(HEALTH_CHECK_PERIOD)
-        if not cm_proc or cm_proc.poll():
-            logging.fatal("Config Manager is down, kill all.")
-            if envoy_proc and envoy_proc.poll() is not None:
-                os.kill(envoy_proc.pid, signal.SIGKILL)
-            time.sleep(2)
-            os.kill(os.getpid(), signal.SIGTERM)
-        if not envoy_proc or envoy_proc.poll():
-            logging.fatal("Envoy is down, kill all.")
-            if cm_proc and cm_proc.poll() is not None:
-                os.kill(cm_proc.pid, signal.SIGKILL)
-            time.sleep(2)
-            os.kill(os.getpid(), signal.SIGTERM)
-
+    subprocess.call(gen_bootstrap_conf(args))
+    start_proxy(gen_proxy_config(args))
