@@ -230,7 +230,7 @@ func TestBackendAuthFilter(t *testing.T) {
 	for _, tc := range testdata {
 
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendProtocol = "http2"
+		opts.BackendProtocol = "grpc"
 		opts.EnableBackendRouting = true
 		opts.IamServiceAccount = tc.iamServiceAccount
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)

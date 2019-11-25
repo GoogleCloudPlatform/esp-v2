@@ -66,16 +66,22 @@ func TestFetchListeners(t *testing.T) {
 		wantedListeners   string
 	}{
 		{
-			desc:            "Success for gRPC backend with transcoding",
-			backendProtocol: "gRPC",
+			desc:            "Success for grpc backend with transcoding",
+			backendProtocol: "grpc",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"%s",
                 "apis":[
                     {
                         "name":"%s",
                         "version":"v1",
-                        "syntax":"SYNTAX_PROTO3"
+                        "syntax":"SYNTAX_PROTO3",
+                    "methods": [
+                          {
+                             "name": "CreateShelf"
+                          }
+                        ]
                     }
+
                 ],
                 "sourceInfo":{
                     "sourceFiles":[
@@ -101,6 +107,21 @@ func TestFetchListeners(t *testing.T) {
                             {
                                 "config":{
                                     "http_filters":[
+{
+                                          "config": {
+                                            "rules": [
+                                              {
+                                                "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
+                                                "pattern":{
+                                                    "http_method":"POST",
+                                                    "uri_template":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                                }
+                                              }
+                                            ]
+                                          },
+                                          "name": "envoy.filters.http.path_matcher"
+                                        },
+
                                         {
                                             "config":{
                                                 "convert_grpc_status":true,
@@ -159,12 +180,17 @@ func TestFetchListeners(t *testing.T) {
 				fakeProtoDescriptor, testEndpointName, testEndpointName),
 		},
 		{
-			desc:            "Success for gRPC backend, with Jwt filter, with audiences, no Http Rules",
+			desc:            "Success for grpc backend, with Jwt filter, with audiences, no Http Rules",
 			backendProtocol: "grpc",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "apis":[
                     {
-                        "name":"%s"
+                        "name":"%s",
+                        "methods": [
+                           {
+                                "name": "CreateShelf"
+                           }
+                        ]
                     }
                 ],
                 "authentication": {
@@ -205,6 +231,20 @@ func TestFetchListeners(t *testing.T) {
                             {
                                 "config":{
                                     "http_filters":[
+                                        {
+                                            "config": {
+                                                "rules": [
+                                                    {
+                                                        "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
+                                                        "pattern":{
+                                                            "http_method":"POST",
+                                                            "uri_template":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                                        }
+                                                    }
+                                                ]
+                                            },
+                                            "name": "envoy.filters.http.path_matcher"
+                                        },
                                         {
                                             "config": {
                                                 "filter_state_rules": {
@@ -1389,7 +1429,12 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
                 },
                 "apis":[
                     {
-                        "name":"%s"
+                        "name":"%s",
+                        "methods":[
+                            {
+                                "name": "Simplegetcors"
+                            }
+                        ]
                     }
                 ],
                 "id": "%s"
@@ -1402,7 +1447,12 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
                 },
                 "apis":[
                     {
-                        "name":"%s"
+                        "name":"%s",
+                        "methods":[
+                            {
+                                "name": "Simplegetcors"
+                            }
+                        ]
                     }
                 ],
                 "id": "%s"
@@ -1507,6 +1557,7 @@ func runTest(t *testing.T, opts options.ConfigGeneratorOptions, f func(*testEnv)
 
 	manager, err := NewConfigManager(metadataFetcher, opts)
 	if err != nil {
+
 		t.Fatal("fail to initialize ConfigManager: ", err)
 	}
 	env := &testEnv{

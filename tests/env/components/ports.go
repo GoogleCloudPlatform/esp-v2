@@ -171,7 +171,7 @@ func IsPortUsed(port uint16) bool {
 	conn, _ := net.DialTimeout("tcp", serverPort, 100*time.Millisecond)
 
 	if conn != nil {
-		 _ = conn.Close()
+		_ = conn.Close()
 		return true
 	}
 	return false
