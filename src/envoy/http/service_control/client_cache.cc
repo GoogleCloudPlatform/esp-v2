@@ -200,11 +200,8 @@ ClientCache::ClientCache(
               return;
             }
           } else {
-            response->ParseFromString(body);
-            ENVOY_LOG(
-                error,
-                "Failed to call check, error: {}, str body: {}, pb body: {}",
-                status.ToString(), body, response->DebugString());
+            ENVOY_LOG(error, "Failed to call check, error: {}, str body: {}",
+                      status.ToString(), body);
           }
           on_done(status);
         });
@@ -227,11 +224,10 @@ ClientCache::ClientCache(
               return;
             }
           } else {
-            response->ParseFromString(body);
             ENVOY_LOG(error,
                       "Failed to call allocateQuota, error: {}, str "
                       "body: {}, pb body: {}",
-                      status.ToString(), body, response->DebugString());
+                      status.ToString(), body);
           }
           on_done(status);
         });
@@ -254,11 +250,8 @@ ClientCache::ClientCache(
               return;
             }
           } else {
-            response->ParseFromString(body);
-            ENVOY_LOG(
-                error,
-                "Failed to call report, error: {}, str body: {}, pb body: {}",
-                status.ToString(), body, response->DebugString());
+            ENVOY_LOG(error, "Failed to call report, error: {}, str body: {}",
+                      status.ToString(), body);
           }
           on_done(status);
         });
@@ -295,11 +288,8 @@ CancelFunc ClientCache::callCheck(
               return;
             }
           } else {
-            response->ParseFromString(body);
-            ENVOY_LOG(
-                error,
-                "Failed to call check, error: {}, str body: {}, pb body: {}",
-                status.ToString(), body, response->DebugString());
+            ENVOY_LOG(error, "Failed to call check, error: {}, str body: {}",
+                      status.ToString(), body);
           }
           on_done(status);
         });
