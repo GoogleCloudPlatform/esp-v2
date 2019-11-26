@@ -452,9 +452,16 @@ def enforce_conflict_args(args):
         if args.version:
             return "Flag --version cannot be used together with --service_json_path."
 
+    # set non_gcp to True if service account key is provided.
+    if args.service_account_key:
+        args.non_gcp = True
+
     if args.non_gcp:
         if args.service_account_key is None and GOOGLE_CREDS_KEY not in os.environ:
             return "If --non_gcp is specified, --service_account_key has to be specified, or GOOGLE_APPLICATION_CREDENTIALS has to set in os.environ."
+        if not args.tracing_project_id:
+            # for non gcp case, disable tracing if tracing project id is not provided.
+            args.disable_tracing = True
 
     if args.backend_dns_lookup_family and args.backend_dns_lookup_family not in {"auto", "v4only", "v6only"}:
         return "Flag --backend_dns_lookup_family must be 'auto', 'v4only' or 'v6only'."

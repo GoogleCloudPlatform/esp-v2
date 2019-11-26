@@ -65,7 +65,6 @@ func main() {
 		glog.Exitf("Failed to call Config Manager, got error:\n%s", resp)
 	}
 
-
 	marshaler := &jsonpb.Marshaler{}
 	var jsonStr string
 	if jsonStr, err = marshaler.MarshalToString(resp); err != nil {
