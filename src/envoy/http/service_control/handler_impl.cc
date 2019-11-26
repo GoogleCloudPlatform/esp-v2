@@ -67,12 +67,19 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
   // have already rejected the request.
   if (operation.empty()) {
     ENVOY_LOG(debug, "No operation found");
+    // Extract api-key to be used for Report for non-matched requests.
+    extractAPIKey(headers, cfg_parser_.default_api_keys().locations(),
+                  api_key_);
     return;
   }
 
   require_ctx_ = cfg_parser_.FindRequirement(operation);
   if (!require_ctx_) {
     ENVOY_LOG(debug, "No requirement matched!");
+    // Extract api-key to be used for Report for an operation without
+    // requirement.
+    extractAPIKey(headers, cfg_parser_.default_api_keys().locations(),
+                  api_key_);
     return;
   }
 
@@ -236,7 +243,11 @@ void ServiceControlHandlerImpl::callReport(
     const Http::HeaderMap* response_headers,
     const Http::HeaderMap* response_trailers,
     std::chrono::system_clock::time_point now) {
-  if (!isConfigured() || !isReportRequired()) {
+  if (require_ctx_ == nullptr) {
+    require_ctx_ = cfg_parser_.non_match_rqm_ctx();
+  }
+
+  if (!isReportRequired()) {
     return;
   }
 

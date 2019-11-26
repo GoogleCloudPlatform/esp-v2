@@ -707,14 +707,6 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 				},
 			},
 		},
-		{
-			desc:                  "Succeed, request without API key, response should fail, service control does not send report request since path matcher filter has already reject the request",
-			url:                   fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/bookstore/shelves/1"),
-			respHeaderMap:         map[string]string{},
-			checkServiceControl:   true,
-			wantScRequests:        []interface{}{},
-			wantGetScRequestError: fmt.Errorf("Timeout got 0, expected: 1"),
-		},
 	}
 	for _, tc := range testData {
 		respHeader, err := client.DoCorsPreflightRequest(tc.url, corsOrigin, corsRequestMethod, corsRequestHeader, referer)

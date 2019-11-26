@@ -74,6 +74,7 @@ const (
 	TestServiceControlLogJwtPayloads
 	TestServiceControlNetworkFailFlagClosed
 	TestServiceControlNetworkFailFlagOpen
+	TestServiceControlFailedRequestReport
 	TestServiceControlProtocolWithGRPCBackend
 	TestServiceControlProtocolWithHTTPBackend
 	TestServiceControlQuota

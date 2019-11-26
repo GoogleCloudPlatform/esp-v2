@@ -114,11 +114,18 @@ class FilterConfigParser {
     return default_api_keys_;
   }
 
+  const RequirementContext* non_match_rqm_ctx() const {
+    return non_match_rqm_ctx_.get();
+  }
+
  private:
   // The proto config.
   const ::google::api::envoy::http::service_control::FilterConfig config_;
   // Operation name to RequirementContext map.
   absl::flat_hash_map<std::string, RequirementContextPtr> requirements_map_;
+  // The requirement for non matched requests for sending their reports.
+  ::google::api::envoy::http::service_control::Requirement non_match_rqm_cfg_;
+  RequirementContextPtr non_match_rqm_ctx_;
   // Service name to ServiceContext map.
   absl::flat_hash_map<std::string, ServiceContextPtr> service_map_;
   // The default locations to extract api-key.

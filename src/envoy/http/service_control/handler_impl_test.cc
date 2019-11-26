@@ -171,6 +171,12 @@ class HandlerTest : public ::testing::Test {
     mock_span_ = std::make_unique<Envoy::Tracing::MockSpan>();
   }
 
+  void initExpectedReportInfo(ReportRequestInfo& expected_report_info) {
+    expected_report_info.api_name = "test_api";
+    expected_report_info.api_version = "test_version";
+    expected_report_info.url = "/echo";
+  }
+
   testing::NiceMock<MockCheckDoneCallback> mock_check_done_callback_;
   testing::NiceMock<MockStreamInfo> mock_stream_info_;
   testing::NiceMock<MockServiceControlCallFactory> mock_call_factory_;
@@ -227,9 +233,9 @@ MATCHER_P(MatchesQuotaInfo, expect, "") {
     return false;                                                     \
   if (arg.is_first_report != expect.is_first_report) return false;    \
   if (arg.is_final_report != expect.is_final_report) return false;    \
-  if (arg.url != "/echo") return false;                               \
-  if (arg.api_name != "test_api") return false;                       \
-  if (arg.api_version != "test_version") return false;                \
+  if (arg.url != expect.url) return false;                            \
+  if (arg.api_name != expect.api_name) return false;                  \
+  if (arg.api_version != expect.api_version) return false;            \
   if (arg.streaming_durations != expect.streaming_durations) {        \
     return false;                                                     \
   }                                                                   \
@@ -263,6 +269,14 @@ MATCHER_P4(MatchesReportInfo, expect, request_headers, response_headers,
   return true;
 }
 
+MATCHER_P(MatchesSimpleReportInfo, expect, "") {
+  std::string operation_name =
+      (expect.operation_name.empty() ? "get_header_key"
+                                     : expect.operation_name);
+  MATCH_DEFAULT_REPORT_INFO(arg, expect, operation_name)
+  return true;
+}
+
 MATCHER_P(MatchesDataReportInfo, expect, "") {
   std::string operation_name =
       (expect.operation_name.empty() ? "get_header_key"
@@ -278,8 +292,8 @@ MATCHER_P(MatchesDataReportInfo, expect, "") {
 }
 
 TEST_F(HandlerTest, HandlerNoOperationFound) {
-  // Test: If no operation is found, check should 404 and report should do
-  // nothing
+  // Test: If no operation is found, check should 404 and report should be
+  // called.
 
   // Note: The operation is set in mock_stream_info_.filter_state_. This test
   // should not set that value.
@@ -292,8 +306,17 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
-  EXPECT_CALL(*mock_call_, callReport(_)).Times(0);
-  handler.callReport(&headers, &headers, &headers);
+  ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
+  expected_report_info.api_name = "";
+  expected_report_info.api_version = "";
+  expected_report_info.status =
+      Status::OK;
+  expected_report_info.operation_name = "<Unknown Operation Name>";
+
+  EXPECT_CALL(*mock_call_,
+              callReport(MatchesSimpleReportInfo(expected_report_info)));
+  handler.callReport(&headers, &headers, &headers, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerNoRequirementMatched) {
@@ -309,8 +332,16 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
-  EXPECT_CALL(*mock_call_, callReport(_)).Times(0);
-  handler.callReport(&headers, &headers, &headers);
+  ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
+  expected_report_info.api_name = "";
+  expected_report_info.api_version = "";
+  expected_report_info.status =
+      Status::OK;
+  expected_report_info.operation_name = "<Unknown Operation Name>";
+  EXPECT_CALL(*mock_call_,
+              callReport(MatchesSimpleReportInfo(expected_report_info)));
+  handler.callReport(&headers, &headers, &headers, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerCheckNotNeeded) {
@@ -330,6 +361,7 @@ TEST_F(HandlerTest, HandlerCheckNotNeeded) {
 
   // no api key is set on this info
   ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
   expected_report_info.status = Status::OK;
   expected_report_info.operation_name = "get_no_key";
   EXPECT_CALL(*mock_call_,
@@ -361,6 +393,7 @@ TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
 
   // no api key is set on this info
   ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
   expected_report_info.status = bad_status;
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
@@ -406,6 +439,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithApiKeyRestrictionFields) {
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
   expected_report_info.api_key = "foobar";
   expected_report_info.status = Status::OK;
   EXPECT_CALL(*mock_call_,
@@ -443,6 +477,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
   expected_report_info.api_key = "foobar";
   expected_report_info.status = Status::OK;
   EXPECT_CALL(*mock_call_,
@@ -554,6 +589,7 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
 
   // no api key is set on this info
   ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
   expected_report_info.status = bad_status;
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
@@ -639,6 +675,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckAsync) {
   stored_on_done(Status::OK, response_info);
 
   ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
   expected_report_info.api_key = "foobar";
   expected_report_info.status = Status::OK;
   EXPECT_CALL(*mock_call_,
@@ -689,6 +726,7 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
   stored_on_done(Status::OK);
 
   ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
   expected_report_info.operation_name = "get_header_key_quota";
   expected_report_info.api_key = "foobar";
   expected_report_info.status = Status::OK;
@@ -738,6 +776,7 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
 
   // no api key is set on this info
   ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
   expected_report_info.status = bad_status;
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
@@ -789,6 +828,7 @@ TEST_F(HandlerTest, HandlerFailQuotaAsync) {
   stored_on_done(bad_status);
 
   ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
   expected_report_info.operation_name = "get_header_key_quota";
   expected_report_info.api_key = "foobar";
   expected_report_info.status = bad_status;
@@ -890,6 +930,7 @@ TEST_F(HandlerTest, HandlerReportWithoutCheck) {
                                     *cfg_parser_);
 
   ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
   expected_report_info.api_key = "foobar";
   // The default value of status if a check is not made is OK
   expected_report_info.status = Status::OK;
@@ -949,6 +990,7 @@ TEST_F(HandlerTest, HandlerCollectDecodeData) {
   // Test: Next call is sent because enough time has passed
   time += std::chrono::milliseconds(200);
   ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
   expected_report_info.api_key = "foobar";
   expected_report_info.is_first_report = true;
   expected_report_info.is_final_report = false;
@@ -1035,6 +1077,7 @@ TEST_F(HandlerTest, HandlerCollectEncodeData) {
   // Now the start_time of streaming_info_ has been set.
   start_time = time;
   ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
   expected_report_info.api_key = "foobar";
   expected_report_info.is_first_report = true;
   expected_report_info.is_final_report = false;
@@ -1115,6 +1158,7 @@ TEST_F(HandlerTest, FinalReports) {
       std::chrono::duration_cast<std::chrono::microseconds>(time - start_time)
           .count();
   ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
   expected_report_info.api_key = "foobar";
 
   expected_report_info.is_first_report = true;

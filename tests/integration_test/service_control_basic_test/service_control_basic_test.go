@@ -297,14 +297,6 @@ func TestServiceControlBasic(t *testing.T) {
 				},
 			},
 		},
-		{
-			desc:                  "fail for not allowing unconfigured GET method, service control does not send report request since path matcher filter has already reject the request",
-			url:                   fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/unconfiguredRequest/get"),
-			method:                "GET",
-			httpCallError:         fmt.Errorf("http response status is not 200 OK: 404 Not Found"),
-			wantScRequests:        []interface{}{},
-			wantGetScRequestError: fmt.Errorf("Timeout got 0, expected: 1"),
-		},
 	}
 	for _, tc := range testData {
 		resp, err := client.DoWithHeaders(tc.url, tc.method, tc.message, tc.requestHeader)

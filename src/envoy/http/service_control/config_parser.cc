@@ -22,14 +22,25 @@ namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
+namespace {
+
+// The operation name for not matched requests.
+const char kUnrecognizedOperation[] = "<Unknown Operation Name>";
+}  // namespace
 
 FilterConfigParser::FilterConfigParser(const FilterConfig& config,
                                        ServiceControlCallFactory& factory)
     : config_(config) {
+  ServiceContext* first_srv_ctx = nullptr;
   for (const auto& service : config_.services()) {
-    service_map_.emplace(
-        service.service_name(),
-        ServiceContextPtr(new ServiceContext(service, config_, factory)));
+    ServiceContext* srv_ctx = new ServiceContext(service, config_, factory);
+    if (first_srv_ctx == nullptr) {
+      first_srv_ctx = srv_ctx;
+    }
+    service_map_.emplace(service.service_name(), ServiceContextPtr(srv_ctx));
+  }
+  if (first_srv_ctx == nullptr) {
+    throw ProtoValidationException("Empty services", config_);
   }
 
   if (service_map_.size() < static_cast<size_t>(config_.services_size())) {
@@ -50,6 +61,12 @@ FilterConfigParser::FilterConfigParser(const FilterConfig& config,
       static_cast<size_t>(config_.requirements_size())) {
     throw ProtoValidationException("Duplicated operation names", config_);
   }
+
+  // Construct a requirement for non matched requests
+  non_match_rqm_cfg_.set_service_name(first_srv_ctx->config().service_name());
+  non_match_rqm_cfg_.set_operation_name(kUnrecognizedOperation);
+  non_match_rqm_ctx_.reset(
+      new RequirementContext(non_match_rqm_cfg_, *first_srv_ctx));
 
   // The default places to extract api-key
   default_api_keys_.add_locations()->set_query("key");

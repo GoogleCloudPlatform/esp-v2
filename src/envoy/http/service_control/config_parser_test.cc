@@ -32,9 +32,9 @@ using ::google::protobuf::TextFormat;
 TEST(ConfigParserTest, EmptyConfig) {
   FilterConfig config;
   testing::NiceMock<MockServiceControlCallFactory> mock_factory;
-  FilterConfigParser parser(config, mock_factory);
 
-  EXPECT_FALSE(parser.FindRequirement("foo"));
+  EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config, mock_factory),
+                          ProtoValidationException, "Empty services");
 }
 
 TEST(ConfigParserTest, ValidConfig) {
@@ -114,6 +114,9 @@ requirements {
 TEST(ConfigParserTest, InvalidServiceInRequirement) {
   FilterConfig config;
   const char kFilterInvalidService[] = R"(
+services {
+  service_name: "echo"
+}
 requirements {
   service_name: "non-existing-service"
   operation_name: "Check"
