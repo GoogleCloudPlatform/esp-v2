@@ -155,6 +155,7 @@ class HttpCallImpl : public HttpCall,
       on_done_(Status(Code::INTERNAL,
                       "Missing access token for service control call"),
                "");
+      deferredDelete();
       return;
     }
 

@@ -833,24 +833,46 @@ TEST_F(HandlerTest, HandlerCancelFuncCalledOnDestroy) {
                               Utils::kOperation, "get_header_key");
   Http::TestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
-  CheckDoneFunc stored_on_done;
-  CheckResponseInfo response_info;
   MockFunction<void()> mock_cancel;
   CancelFunc cancel_fn = mock_cancel.AsStdFunction();
 
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_);
   EXPECT_CALL(*mock_call_, callCheck(_, _, _))
-      .WillOnce(Invoke([&stored_on_done, cancel_fn](const CheckRequestInfo&,
-                                                    Envoy::Tracing::Span&,
-                                                    CheckDoneFunc on_done) {
-        stored_on_done = on_done;
-        return cancel_fn;
-      }));
+      .WillOnce(
+          Invoke([cancel_fn](const CheckRequestInfo&, Envoy::Tracing::Span&,
+                             CheckDoneFunc) { return cancel_fn; }));
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   // onDestroy() will call cancel function if on_done is not called.
   EXPECT_CALL(mock_cancel, Call()).Times(1);
+  handler.onDestroy();
+}
+
+TEST_F(HandlerTest, HandlerCancelFuncNotCalledOnDestroyForSyncOnDone) {
+  // Test: Cancel function will not be called if on_done is called synchronously
+  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+                              Utils::kOperation, "get_header_key");
+  Http::TestHeaderMapImpl headers{
+      {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
+  MockFunction<void()> mock_cancel;
+  CancelFunc cancel_fn = mock_cancel.AsStdFunction();
+
+  ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
+                                    *cfg_parser_);
+  EXPECT_CALL(*mock_call_, callCheck(_, _, _))
+      .WillOnce(
+          Invoke([cancel_fn](const CheckRequestInfo&, Envoy::Tracing::Span&,
+                             CheckDoneFunc on_done) {
+            CheckResponseInfo response_info;
+            on_done(Status::OK, response_info);
+            return cancel_fn;
+          }));
+  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+
+  // onDestroy() will not call cancel function if on_done is called
+  // synchronously.
+  EXPECT_CALL(mock_cancel, Call()).Times(0);
   handler.onDestroy();
 }
 

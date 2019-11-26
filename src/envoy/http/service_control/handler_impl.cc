@@ -166,13 +166,18 @@ void ServiceControlHandlerImpl::callCheck(Http::HeaderMap& headers,
   info.android_cert_fingerprint =
       std::string(Utils::extractHeader(headers, kAndroidCertHeader));
 
+  on_check_done_called_ = false;
   cancel_fn_ = require_ctx_->service_ctx().call().callCheck(
       info, parent_span,
       [this, &headers](const Status& status,
                        const CheckResponseInfo& response_info) {
         cancel_fn_ = nullptr;
+        on_check_done_called_ = true;
         onCheckResponse(headers, status, response_info);
       });
+  if (on_check_done_called_) {
+    cancel_fn_ = nullptr;
+  }
 }
 
 // TODO(taoxuy): add unit test
