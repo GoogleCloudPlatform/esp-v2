@@ -31,6 +31,7 @@ import (
 	scpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/service_control"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+
 	listenerpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
 	jwtpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
@@ -38,7 +39,6 @@ import (
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	anypb "github.com/golang/protobuf/ptypes/any"
 	durationpb "github.com/golang/protobuf/ptypes/duration"
-	structpb "github.com/golang/protobuf/ptypes/struct"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
@@ -99,8 +99,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		}
 
 		grpcWebFilter := &hcmpb.HttpFilter{
-			Name:       util.GRPCWeb,
-			ConfigType: &hcmpb.HttpFilter_Config{Config: &structpb.Struct{}},
+			Name: util.GRPCWeb,
 		}
 		httpFilters = append(httpFilters, grpcWebFilter)
 	}
@@ -148,7 +147,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	httpConMgr.HttpFilters = httpFilters
 
 	// HTTP filter configuration
-	httpFilterConfig, err := util.MessageToStruct(httpConMgr)
+	httpFilterConfig, err := ptypes.MarshalAny(httpConMgr)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +168,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 				Filters: []*listenerpb.Filter{
 					{
 						Name:       util.HTTPConnectionManager,
-						ConfigType: &listenerpb.Filter_Config{httpFilterConfig},
+						ConfigType: &listenerpb.Filter_TypedConfig{TypedConfig: httpFilterConfig},
 					},
 				},
 			},
@@ -217,10 +216,10 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		pathMathcherConfig.SegmentNames = serviceInfo.SegmentNames
 	}
 
-	pathMathcherConfigStruct, _ := util.MessageToStruct(pathMathcherConfig)
+	pathMathcherConfigStruct, _ := ptypes.MarshalAny(pathMathcherConfig)
 	pathMatcherFilter := &hcmpb.HttpFilter{
 		Name:       util.PathMatcher,
-		ConfigType: &hcmpb.HttpFilter_Config{pathMathcherConfigStruct},
+		ConfigType: &hcmpb.HttpFilter_TypedConfig{pathMathcherConfigStruct},
 	}
 	return pathMatcherFilter
 }
@@ -297,10 +296,10 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		},
 	}
 
-	jas, _ := util.MessageToStruct(jwtAuthentication)
+	jas, _ := ptypes.MarshalAny(jwtAuthentication)
 	jwtAuthnFilter := &hcmpb.HttpFilter{
 		Name:       util.JwtAuthn,
-		ConfigType: &hcmpb.HttpFilter_Config{jas},
+		ConfigType: &hcmpb.HttpFilter_TypedConfig{jas},
 	}
 	return jwtAuthnFilter
 }
@@ -457,13 +456,13 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		filterConfig.Requirements = append(filterConfig.Requirements, requirement)
 	}
 
-	scs, err := util.MessageToStruct(filterConfig)
+	scs, err := ptypes.MarshalAny(filterConfig)
 	if err != nil {
 		glog.Warningf("failed to convert message to struct: %v", err)
 	}
 	filter := &hcmpb.HttpFilter{
 		Name:       util.ServiceControl,
-		ConfigType: &hcmpb.HttpFilter_Config{scs},
+		ConfigType: &hcmpb.HttpFilter_TypedConfig{scs},
 	}
 	return filter
 }
@@ -501,10 +500,10 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 				IgnoredQueryParameters: []string{"api_key", "key", "access_token"},
 				ConvertGrpcStatus:      true,
 			}
-			transcodeConfigStruct, _ := util.MessageToStruct(transcodeConfig)
+			transcodeConfigStruct, _ := ptypes.MarshalAny(transcodeConfig)
 			transcodeFilter := &hcmpb.HttpFilter{
 				Name:       util.GRPCJSONTranscoder,
-				ConfigType: &hcmpb.HttpFilter_Config{transcodeConfigStruct},
+				ConfigType: &hcmpb.HttpFilter_TypedConfig{transcodeConfigStruct},
 			}
 			return transcodeFilter
 		}
@@ -556,10 +555,10 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 			},
 		}
 	}
-	backendAuthConfigStruct, _ := util.MessageToStruct(backendAuthConfig)
+	backendAuthConfigStruct, _ := ptypes.MarshalAny(backendAuthConfig)
 	backendAuthFilter := &hcmpb.HttpFilter{
 		Name:       util.BackendAuth,
-		ConfigType: &hcmpb.HttpFilter_Config{backendAuthConfigStruct},
+		ConfigType: &hcmpb.HttpFilter_TypedConfig{backendAuthConfigStruct},
 	}
 	return backendAuthFilter
 }
@@ -578,22 +577,23 @@ func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	}
 
 	backendRoutingConfig := &brpb.FilterConfig{Rules: rules}
-	backendRoutingConfigStruct, _ := util.MessageToStruct(backendRoutingConfig)
+	backendRoutingConfigStruct, _ := ptypes.MarshalAny(backendRoutingConfig)
 	backendRoutingFilter := &hcmpb.HttpFilter{
 		Name:       util.BackendRouting,
-		ConfigType: &hcmpb.HttpFilter_Config{backendRoutingConfigStruct},
+		ConfigType: &hcmpb.HttpFilter_TypedConfig{backendRoutingConfigStruct},
 	}
 	return backendRoutingFilter
 }
 
 func makeRouterFilter(opts options.ConfigGeneratorOptions) *hcmpb.HttpFilter {
-	router, _ := util.MessageToStruct(&routerpb.Router{
+	router, _ := ptypes.MarshalAny(&routerpb.Router{
 		SuppressEnvoyHeaders: opts.SuppressEnvoyHeaders,
 		StartChildSpan:       !opts.DisableTracing,
 	})
+
 	routerFilter := &hcmpb.HttpFilter{
 		Name:       util.Router,
-		ConfigType: &hcmpb.HttpFilter_Config{Config: router},
+		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: router},
 	}
 	return routerFilter
 }

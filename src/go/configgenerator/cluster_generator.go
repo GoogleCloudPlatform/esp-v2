@@ -24,7 +24,6 @@ import (
 
 	sc "github.com/GoogleCloudPlatform/api-proxy/src/go/configinfo"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 )
 
@@ -105,9 +104,12 @@ func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
 	}
 
 	if scheme == "https" {
-		c.TlsContext = &authpb.UpstreamTlsContext{
-			Sni: hostname,
+		transportSocket, err := util.CreateTransportSocket(hostname)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
+				c.Name, err)
 		}
+		c.TransportSocket = transportSocket
 	}
 
 	return c, nil
@@ -132,9 +134,12 @@ func makeIamCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
 	}
 
 	if scheme == "https" {
-		c.TlsContext = &authpb.UpstreamTlsContext{
-			Sni: hostname,
+		transportSocket, err := util.CreateTransportSocket(hostname)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
+				c.Name, err)
 		}
+		c.TransportSocket = transportSocket
 	}
 
 	return c, nil
@@ -163,9 +168,12 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, erro
 			LoadAssignment:       util.CreateLoadAssignment(hostname, port),
 		}
 		if scheme == "https" {
-			c.TlsContext = &authpb.UpstreamTlsContext{
-				Sni: hostname,
+			transportSocket, err := util.CreateTransportSocket(hostname)
+			if err != nil {
+				return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
+					c.Name, err)
 			}
+			c.TransportSocket = transportSocket
 		}
 		providerClusters = append(providerClusters, c)
 
@@ -222,9 +230,12 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, erro
 	}
 
 	if scheme == "https" {
-		c.TlsContext = &authpb.UpstreamTlsContext{
-			Sni: hostname,
+		transportSocket, err := util.CreateTransportSocket(hostname)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
+				c.Name, err)
 		}
+		c.TransportSocket = transportSocket
 	}
 	glog.Infof("adding cluster Configuration for uri: %s: %v", uri, c)
 	return c, nil
@@ -235,16 +246,21 @@ func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, e
 
 	connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
 	for _, v := range serviceInfo.BackendRoutingClusters {
+		transportSocket, err := util.CreateTransportSocket(v.Hostname)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
+				v.ClusterName, err)
+		}
+
 		c := &v2pb.Cluster{
 			Name:                 v.ClusterName,
 			LbPolicy:             v2pb.Cluster_ROUND_ROBIN,
 			ConnectTimeout:       connectTimeoutProto,
 			ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
 			LoadAssignment:       util.CreateLoadAssignment(v.Hostname, v.Port),
-			TlsContext: &authpb.UpstreamTlsContext{
-				Sni: v.Hostname,
-			},
+			TransportSocket:      transportSocket,
 		}
+
 		switch serviceInfo.Options.BackendDnsLookupFamily {
 		case "auto":
 			c.DnsLookupFamily = v2pb.Cluster_AUTO

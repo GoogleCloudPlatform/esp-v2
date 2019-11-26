@@ -73,17 +73,8 @@ var (
 	ExpectedBookstoreEnvoyConfig = `
 {
    "node":{
-      "cluster":"api_proxy_cluster",
-      "id":"api_proxy"
-   },
-   "admin":{
-      "accessLogPath":"/dev/null",
-      "address":{
-         "socketAddress":{
-            "address":"0.0.0.0",
-            "portValue":8001
-         }
-      }
+      "id":"api_proxy",
+      "cluster":"api_proxy_cluster"
    },
    "staticResources":{
       "listeners":[
@@ -99,73 +90,17 @@ var (
                   "filters":[
                      {
                         "name":"envoy.http_connection_manager",
-                        "config":{
-                           "http_filters":[
-                              {
-                                 "config":{
-                                    "rules":[
-                                       {
-                                          "operation":"endpoints.examples.bookstore.Bookstore.ListShelves",
-                                          "pattern":{
-                                             "http_method":"GET",
-                                             "uri_template":"/v1/shelves"
-                                          }
-                                       }
-                                    ]
-                                 },
-                                 "name":"envoy.filters.http.path_matcher"
-                              },
-                              {
-                                 "config":{
-                                    "access_token":{
-                                       "remote_token":{
-                                          "cluster":"metadata-cluster",
-                                          "timeout":"5s",
-                                          "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
-                                       }
-                                    },
-                                    "requirements":[
-                                       {
-                                          "operation_name":"endpoints.examples.bookstore.Bookstore.ListShelves",
-                                          "service_name":"bookstore.endpoints.cloudesf-testing.cloud.goog"
-                                       }
-                                    ],
-                                    "sc_calling_config":{
-                                       "network_fail_open":true
-                                    },
-                                    "service_control_uri":{
-                                       "cluster":"service-control-cluster",
-                                       "timeout":"5s",
-                                       "uri":"https://servicecontrol.googleapis.com/v1/services/"
-                                    },
-                                    "services":[
-                                       {
-                                          "backend_protocol":"http1",
-                                          "jwt_payload_metadata_name":"jwt_payloads",
-                                          "producer_project_id":"producer project",
-                                          "service_config":{
-                                             "@type":"type.googleapis.com/google.api.Service"
-                                          },
-                                          "service_config_id":"2019-06-25r0",
-                                          "service_name":"bookstore.endpoints.cloudesf-testing.cloud.goog"
-                                       }
-                                    ]
-                                 },
-                                 "name":"envoy.filters.http.service_control"
-                              },
-                              {
-                                 "config":{},
-                                 "name":"envoy.router"
-                              }
-                           ],
-                           "route_config":{
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                           "statPrefix":"ingress_http",
+                           "routeConfig":{
                               "name":"local_route",
-                              "virtual_hosts":[
+                              "virtualHosts":[
                                  {
+                                    "name":"backend",
                                     "domains":[
                                        "*"
                                     ],
-                                    "name":"backend",
                                     "routes":[
                                        {
                                           "match":{
@@ -179,9 +114,70 @@ var (
                                  }
                               ]
                            },
-                           "stat_prefix":"ingress_http",
-                           "use_remote_address":false,
-                           "xff_num_trusted_hops":2
+                           "httpFilters":[
+                              {
+                                 "name":"envoy.filters.http.path_matcher",
+                                 "typedConfig":{
+                                    "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                                    "rules":[
+                                       {
+                                          "pattern":{
+                                             "uriTemplate":"/v1/shelves",
+                                             "httpMethod":"GET"
+                                          },
+                                          "operation":"endpoints.examples.bookstore.Bookstore.ListShelves"
+                                       }
+                                    ]
+                                 }
+                              },
+                              {
+                                 "name":"envoy.filters.http.service_control",
+                                 "typedConfig":{
+                                    "@type":"type.googleapis.com/google.api.envoy.http.service_control.FilterConfig",
+                                    "services":[
+                                       {
+                                          "serviceName":"bookstore.endpoints.cloudesf-testing.cloud.goog",
+                                          "serviceConfigId":"2019-06-25r0",
+                                          "producerProjectId":"producer project",
+                                          "serviceConfig":{
+                                             "@type":"type.googleapis.com/google.api.Service"
+                                          },
+                                          "backendProtocol":"http1",
+                                          "jwtPayloadMetadataName":"jwt_payloads"
+                                       }
+                                    ],
+                                    "requirements":[
+                                       {
+                                          "serviceName":"bookstore.endpoints.cloudesf-testing.cloud.goog",
+                                          "operationName":"endpoints.examples.bookstore.Bookstore.ListShelves"
+                                       }
+                                    ],
+                                    "accessToken":{
+                                       "remoteToken":{
+                                          "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token",
+                                          "cluster":"metadata-cluster",
+                                          "timeout":"5s"
+                                       }
+                                    },
+                                    "scCallingConfig":{
+                                       "networkFailOpen":true
+                                    },
+                                    "serviceControlUri":{
+                                       "uri":"https://servicecontrol.googleapis.com/v1/services/",
+                                       "cluster":"service-control-cluster",
+                                       "timeout":"5s"
+                                    }
+                                 }
+                              },
+                              {
+                                 "name":"envoy.router",
+                                 "typedConfig":{
+                                    "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router"
+                                 }
+                              }
+                           ],
+                           "useRemoteAddress":false,
+                           "xffNumTrustedHops":2
                         }
                      }
                   ]
@@ -261,12 +257,25 @@ var (
                   }
                ]
             },
-            "tlsContext":{
-               "sni":"servicecontrol.googleapis.com"
-            },
-            "dnsLookupFamily":"V4_ONLY"
+            "dnsLookupFamily":"V4_ONLY",
+            "transportSocket":{
+               "name":"tls",
+               "typedConfig":{
+                  "@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
+                  "sni":"servicecontrol.googleapis.com"
+               }
+            }
          }
       ]
+   },
+   "admin":{
+      "accessLogPath":"/dev/null",
+      "address":{
+         "socketAddress":{
+            "address":"0.0.0.0",
+            "portValue":8001
+         }
+      }
    }
 }
 	`

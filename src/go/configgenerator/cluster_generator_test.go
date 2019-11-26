@@ -27,7 +27,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
@@ -39,6 +39,11 @@ var (
 	testServiceControlEnv = "servicecontrol.googleapis.com"
 	testConfigID          = "2019-03-02r0"
 )
+
+func createTransportSocket(hostname string) *corepb.TransportSocket {
+	transportSocket, _ := util.CreateTransportSocket(hostname)
+	return transportSocket
+}
 
 func TestMakeServiceControlCluster(t *testing.T) {
 	testData := []struct {
@@ -67,9 +72,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 				ClusterDiscoveryType: &v2pb.Cluster_Type{Type: v2pb.Cluster_LOGICAL_DNS},
 				DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
 				LoadAssignment:       util.CreateLoadAssignment(testServiceControlEnv, 443),
-				TlsContext: &authpb.UpstreamTlsContext{
-					Sni: "servicecontrol.googleapis.com",
-				},
+				TransportSocket:      createTransportSocket("servicecontrol.googleapis.com"),
 			},
 		},
 		{
@@ -131,6 +134,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 		fakeServiceConfig      *confpb.Service
 		backendDnsLookupFamily string
 		backendProtocol        string
+		tlsContextSni          string
 		wantedClusters         []*v2pb.Cluster
 		wantedError            string
 	}{
@@ -189,9 +193,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 443),
-					TlsContext: &authpb.UpstreamTlsContext{
-						Sni: "mybackend.com",
-					},
+					TransportSocket:      createTransportSocket("mybackend.com"),
 				},
 			},
 		},
@@ -241,9 +243,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
 					ClusterDiscoveryType: &v2pb.Cluster_Type{Type: v2pb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.run.app", 443),
-					TlsContext: &authpb.UpstreamTlsContext{
-						Sni: "mybackend.run.app",
-					},
+					TransportSocket:      createTransportSocket("mybackend.run.app"),
 				},
 			},
 		},
@@ -346,9 +346,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
 					LoadAssignment:       util.CreateLoadAssignment("metadata.com", 443),
-					TlsContext: &authpb.UpstreamTlsContext{
-						Sni: "metadata.com",
-					},
+					TransportSocket:      createTransportSocket("metadata.com"),
 				},
 				{
 					Name:                 "issuer_1",
@@ -436,9 +434,7 @@ func TestMakeIamCluster(t *testing.T) {
 				DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
 				ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_STRICT_DNS},
 				LoadAssignment:       util.CreateLoadAssignment("iamcredentials.googleapis.com", 443),
-				TlsContext: &authpb.UpstreamTlsContext{
-					Sni: "iamcredentials.googleapis.com",
-				},
+				TransportSocket:      createTransportSocket("iamcredentials.googleapis.com"),
 			},
 		},
 		{
