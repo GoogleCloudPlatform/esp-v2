@@ -57,6 +57,7 @@ class TokenSubscriber
   void onSuccess(Envoy::Http::MessagePtr&& response) override;
   void onFailure(Envoy::Http::AsyncClient::FailureReason reason) override;
 
+  void processResponse(Envoy::Http::MessagePtr&& response);
   void refresh();
 
   Upstream::ClusterManager& cm_;

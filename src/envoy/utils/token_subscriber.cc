@@ -99,11 +99,14 @@ void TokenSubscriber::refresh() {
 }
 
 void TokenSubscriber::onSuccess(Envoy::Http::MessagePtr&& response) {
-  init_target_.ready();
-
   ENVOY_LOG(debug, "GetAccessToken got response: {}", response->bodyAsString());
   active_request_ = nullptr;
 
+  processResponse(std::move(response));
+  init_target_.ready();
+}
+
+void TokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
   const uint64_t status_code =
       Envoy::Http::Utility::getResponseStatus(response->headers());
 
