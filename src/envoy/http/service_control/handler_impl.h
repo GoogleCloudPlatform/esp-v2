@@ -121,6 +121,7 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   ::google::protobuf::util::Status check_status_;
 
   CancelFunc cancel_fn_;
+  bool on_check_done_called_;
   uint64_t request_header_size_;
   uint64_t response_header_size_;
 

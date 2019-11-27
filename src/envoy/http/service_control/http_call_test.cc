@@ -218,6 +218,22 @@ TEST_F(HttpCallTest, TestSingleCallFailure) {
   async_callbacks_[0]->onFailure(Http::AsyncClient::FailureReason::Reset);
 }
 
+TEST_F(HttpCallTest, TestEmptyTokenCallFailure) {
+  // If take_token is empty, on_done is called within call()
+  EXPECT_CALL(mock_done_fn_,
+              Call(Status(Code::INTERNAL,
+                          "Missing access token for service control call"),
+                   _))
+      .Times(1);
+
+  fake_token_.clear();
+  HttpCall* call = http_call_factory_->createHttpCall(
+      fake_request_, mock_parent_span_, mock_done_fn_.AsStdFunction());
+  call->call();
+  EXPECT_EQ(0, async_callbacks_.size());
+  EXPECT_EQ(0, http_requests_.size());
+}
+
 TEST_F(HttpCallTest, TestRetryCallSuccess) {
   // Set request to retry 2 more times
   retries_ = 2;
