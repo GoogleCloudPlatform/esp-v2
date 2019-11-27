@@ -1,5 +1,5 @@
-# API Proxy
+# ESP V2
 
-This directory contains the business logic for API Proxy. It will be called by
+This directory contains the business logic for ESP V2. It will be called by
 the respective HTTP Filters, but logic specific to Envoy logic should be abstracted prior
 to using the code in this directory.

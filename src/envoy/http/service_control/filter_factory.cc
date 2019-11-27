@@ -28,7 +28,7 @@ namespace ServiceControl {
 const std::string FilterName = "envoy.filters.http.service_control";
 
 /**
- * Config registration for API Proxy service control filter.
+ * Config registration for ESP V2 service control filter.
  */
 class FilterFactory
     : public Common::FactoryBase<

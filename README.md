@@ -1,10 +1,10 @@
-# Google Cloud Platform API Proxy
+# Google Cloud Platform ESP V2
 
-Google Cloud Platform API Proxy is a service proxy which enables API
+Google Cloud Platform ESP V2 is a service proxy which enables API
 management capabilities for JSON/REST or gRPC API services. The current
 implementation uses [Envoy](https://www.envoyproxy.io/) as a service proxy.
 
-API Proxy provides:
+ESP V2 provides:
 
 *   **Features**: authentication (auth0, gitkit), API key validation, JSON to
     gRPC transcoding, as well as API-level monitoring, tracing and logging. More
@@ -20,17 +20,17 @@ API Proxy provides:
 
 ## Introduction
 
-API Proxy is a general-purpose L7 service proxy that integrates with Google hosted
+ESP V2 is a general-purpose L7 service proxy that integrates with Google hosted
 services to provide policy checks and telemetry reports. This proxy can be used by
 GCP customers, Google Cloud products, and Google internal projects.
 
-API Proxy can run on GCP and hybrid cloud environments, either as a sidecar or as an API gateway.
+ESP V2 can run on GCP and hybrid cloud environments, either as a sidecar or as an API gateway.
 However, initial development was primarily done on GKE for API services using [Open API
 Specification](https://openapis.org/specification) so our instructions
 and samples are focusing on these platforms. If you make it work on other
 infrastructure and IDLs, please let us know and contribute instructions/code.
 
-API Proxy includes two components:
+ESP V2 includes two components:
 
 - ConfigManager: Control plane to configure the Envoy proxy
 - Envoy: Data plane to process API requests/responses
@@ -44,12 +44,12 @@ Envoy (with our custom filters) handles API calls using [Service Infrastructure]
 platform for creating, managing, and consuming APIs and services.
 
 * [Architecture](/doc/architecture.png)
-* [API Proxy Filters](doc/filters.png)
+* [ESP V2 Filters](doc/filters.png)
 * [API Producer specified flags](docker/generic/start_proxy.py)
 
-## API Proxy Releases
+## ESP V2 Releases
 
-API Proxy is released as a docker image. The current stable docker images are:
+ESP V2 is released as a docker image. The current stable docker images are:
 
 - [gcr.io/apiproxy-release/apiproxy-serverless:latest](https://gcr.io/apiproxy-release/apiproxy-serverless:latest)
 
@@ -57,13 +57,13 @@ More documentation on releases will be coming soon.
 
 ## Repository Structure
 
-* [api](/api): Envoy Filter Configurations developed in API Proxy
+* [api](/api): Envoy Filter Configurations developed in ESP V2
 * [doc](/doc): Documentation (more coming soon)
-* [docker](/docker): Scripts for packaging API Proxy in a Docker image for releases
+* [docker](/docker): Scripts for packaging ESP V2 in a Docker image for releases
 * [prow](/prow): Prow based test automation scripts
-* [scripts](/scripts): Scripts used for build and release API Proxy
-* [src](/src): API Proxy source code, including Envoy Filters and Config Manager
-* [tests](/tests): Integration and end-to-end tests for API Proxy
+* [scripts](/scripts): Scripts used for build and release ESP V2
+* [src](/src): ESP V2 source code, including Envoy Filters and Config Manager
+* [tests](/tests): Integration and end-to-end tests for ESP V2
 * [tools](/third_party/tools): Assorted tooling
 
 ## Contributing
@@ -72,14 +72,14 @@ Your contributions are welcome. Please follow the contributor [guidelines](CONTR
 
 * [Developer Guide](DEVELOPER.md)
 
-## API Proxy Tutorial
+## ESP V2 Tutorial
 
-To find out more about building, running, and testing API Proxy:
+To find out more about building, running, and testing ESP V2:
 
-* [Run API Proxy on Google Cloud Run](/doc/apiproxy-on-cloudrun.md)
+* [Run ESP V2 on Google Cloud Run](/doc/apiproxy-on-cloudrun.md)
 
-* [Run API Proxy on Google GKE](/doc/apiproxy-on-k8s.md)
+* [Run ESP V2 on Google GKE](/doc/apiproxy-on-k8s.md)
 
 ## Disclaimer
 
-API Proxy is still in Alpha. This is not an officially supported Google product.
+ESP V2 is still in Alpha. This is not an officially supported Google product.

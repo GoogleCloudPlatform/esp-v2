@@ -39,7 +39,7 @@ struct FilterStats {
   ALL_BACKEND_AUTH_FILTER_STATS(GENERATE_COUNTER_STRUCT)
 };
 
-// The Envoy filter config for API Proxy backend auth filter.
+// The Envoy filter config for ESP V2 backend auth filter.
 class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
  public:
   FilterConfig(const ::google::api::envoy::http::backend_auth::FilterConfig&

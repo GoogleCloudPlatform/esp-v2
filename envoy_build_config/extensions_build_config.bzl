@@ -1,4 +1,4 @@
-# API Proxy extension configuration override.
+# ESP V2 extension configuration override.
 #
 # We do not need all the extensions, so we disable the ones we do not need. This
 # reduces binary size, compile time, and attack vectors.

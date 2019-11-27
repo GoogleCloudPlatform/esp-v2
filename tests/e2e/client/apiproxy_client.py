@@ -34,7 +34,7 @@ FLAGS = flags.FLAGS
 # Each test cases contains five fields:
 #   Runner: test execution module
 #   n: number of requests
-#   c: number of connections to API PROXY
+#   c: number of connections to ESP V2
 #   t: number of threads
 #   d: test duration in seconds
 TEST_SUITES = {

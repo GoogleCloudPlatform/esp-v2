@@ -108,7 +108,7 @@ def query_param_fuzzer():
 
 
 class ApiProxyTranscodingFuzzTest(object):
-  """ Api Proxy Transcoding Fuzz tests """
+  """ ESP V2 Transcoding Fuzz tests """
 
   def __init__(self):
     self._conn = utils.http_connection(FLAGS.address, True)
@@ -122,7 +122,7 @@ class ApiProxyTranscodingFuzzTest(object):
     status = utils.Response(self._status_conn.getresponse())
     if status.status_code != 200:
       sys.exit(utils.red(
-          'Api Proxy crash'))
+          'ESP V2 crash'))
     return status.text.strip()
 
   def _check_for_crash(self):
@@ -130,7 +130,7 @@ class ApiProxyTranscodingFuzzTest(object):
     if status != "LIVE":
       print(status)
       sys.exit(utils.red(
-          'Api Proxy crash'))
+          'ESP V2 crash'))
       return
     print utils.green('No crashes detected.')
 
@@ -178,13 +178,13 @@ class ApiProxyTranscodingFuzzTest(object):
       max_list_nest_level):
     fuzzer = JsonFuzzer(max_object_nest_level, max_list_nest_level)
     # For requests not dict-type json payload(like, number, string or list),
-    # api proxy will return 500
+    # ESP V2 will return 500
     fuzzer.run(
         lambda json: self._request(url, None, json, [200, 400, 500], True))
 
   def _run_query_param_fuzzer(self, url_path):
     fuzzer = query_param_fuzzer()
-    # For requests not matched with trancoding rules, api proxy will return 503
+    # For requests not matched with trancoding rules, ESP V2 will return 503
     fuzzer.run(
         lambda query_params: self._request(url_path, query_params, "{}",
                                            [200, 503], True))

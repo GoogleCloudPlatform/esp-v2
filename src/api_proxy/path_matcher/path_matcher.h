@@ -188,7 +188,7 @@ Method PathMatcher<Method>::Lookup(
   const std::vector<std::string> parts =
       ExtractRequestParts(path, custom_verbs_);
 
-  // If service_name has not been registered to API Proxy and
+  // If service_name has not been registered to ESP V2 and
   // strict_service_matching_ is set to false, tries to lookup the method in all
   // registered services.
   if (root_ptr_ == nullptr) {
@@ -228,7 +228,7 @@ Method PathMatcher<Method>::Lookup(
   const std::vector<std::string> parts =
       ExtractRequestParts(path, custom_verbs_);
 
-  // If service_name has not been registered to API Proxy and
+  // If service_name has not been registered to ESP V2 and
   // strict_service_matching_ is set to false, tries to lookup the method in all
   // registered services.
   if (root_ptr_ == nullptr) {

@@ -90,7 +90,7 @@ def start_proxy(proxy_conf):
     try:
         os.execv(PROXY_STARTER, proxy_conf)
     except OSError as err:
-        logging.error("Failed to launch Api Proxy")
+        logging.error("Failed to launch ESP V2")
         logging.error(err.strerror)
         sys.exit(1)
 
@@ -107,14 +107,14 @@ def make_argparser():
     parser = ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description='''
-API Proxy start-up script. This script starts ConfigManager and Envoy.
+ESP V2 start-up script. This script starts ConfigManager and Envoy.
 
 The service name and config ID are optional. If not supplied, the ConfigManager
 fetches the service name and the config ID from the metadata service as
 attributes "service_name" and "service_config_id".
 
-Api Proxy relies on the metadata service to fetch access tokens for Google
-services. If you deploy API Proxy outside of Google Cloud environment, you need
+ESP V2 relies on the metadata service to fetch access tokens for Google
+services. If you deploy ESP V2 outside of Google Cloud environment, you need
 to provide a service account credentials file by setting "creds_key"
 environment variable or by passing "-k" flag to this script.
             ''')
@@ -124,7 +124,7 @@ environment variable or by passing "-k" flag to this script.
         '--service',
         default="",
         help=''' Set the name of the Endpoints service.  If omitted and -c not
-        specified, API proxy contacts the metadata service to fetch the service
+        specified, ESP V2 contacts the metadata service to fetch the service
         name.  ''')
 
     parser.add_argument(
@@ -132,7 +132,7 @@ environment variable or by passing "-k" flag to this script.
         '--version',
         default="",
         help=''' Set the service config ID of the Endpoints service.
-        If omitted and -c not specified, API proxy contacts the metadata
+        If omitted and -c not specified, ESP V2 contacts the metadata
         service to fetch the service config ID.  ''')
 
     parser.add_argument(
@@ -149,7 +149,7 @@ environment variable or by passing "-k" flag to this script.
         '-a',
         '--backend',
         default=DEFAULT_BACKEND,
-        help=''' Change the application server address to which API Proxy
+        help=''' Change the application server address to which ESP V2
         proxies requests. Default value: {backend}. For HTTPS backends,
         please use "https://" prefix, e.g. https://127.0.0.1:8082.
         For HTTP/1.x backends, prefix "http://" is optional.

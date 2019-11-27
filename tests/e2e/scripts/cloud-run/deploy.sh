@@ -101,8 +101,8 @@ function setup() {
   fi
   echo "Backend deployed successfully"
 
-  # 4) Deploy initial API Proxy service
-  echo "Deploying API Proxy ${BOOKSTORE_SERVICE_NAME} on Cloud Run"
+  # 4) Deploy initial ESP V2 service
+  echo "Deploying ESP V2 ${BOOKSTORE_SERVICE_NAME} on Cloud Run"
 
   gcloud run deploy "${PROXY_SERVICE_NAME}" \
       --image="${APIPROXY_IMAGE}" \
@@ -111,7 +111,7 @@ function setup() {
       --platform managed \
       --quiet
 
-  # 5) Get url of API Proxy service
+  # 5) Get url of ESP V2 service
   PROXY_HOST=$(gcloud run services describe "${PROXY_SERVICE_NAME}" \
       --platform=managed \
       --format="value(status.address.url.basename())" \
@@ -158,10 +158,10 @@ function setup() {
       -p "${PROJECT_ID}" \
       -i "${APIPROXY_IMAGE}"
 
-  # 10) Redeploy API Proxy to update the service config
+  # 10) Redeploy ESP V2 to update the service config
   proxy_args="--tracing_sample_rate=0.00001"
 
-  echo "Redeploying API Proxy ${PROXY_SERVICE_NAME} on Cloud Run"
+  echo "Redeploying ESP V2 ${PROXY_SERVICE_NAME} on Cloud Run"
   gcloud run deploy "${PROXY_SERVICE_NAME}" \
       --image="gcr.io/${PROJECT_ID}/apiproxy-serverless:${ENDPOINTS_SERVICE_NAME}-${endpoints_service_config_id}" \
       --set-env-vars=ESPV2_ARGS="${proxy_args}" \
@@ -214,7 +214,7 @@ function tearDown() {
 
   echo "Teardown env"
 
-  # Delete the API Proxy Cloud Run service
+  # Delete the ESP V2 Cloud Run service
   gcloud run services delete "${PROXY_SERVICE_NAME}" \
       --platform managed \
       --quiet || true

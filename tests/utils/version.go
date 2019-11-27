@@ -14,6 +14,6 @@
 
 package utils
 
-// The API proxy version under test. This should match the version in
+// The ESP V2 version under test. This should match the version in
 // src/api_proxy/utils/version.
 const APIProxyVersion = "0.0.1"

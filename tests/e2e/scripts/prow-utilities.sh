@@ -92,7 +92,7 @@ function long_running_test() {
   local status
   local http_code=200
   echo "Running ${BACKEND} long running test on ${host}"
-  echo "API Proxy listening at ${scheme}://${host}:${port}"
+  echo "ESP V2 listening at ${scheme}://${host}:${port}"
   echo ${api_key}
   echo ${apiproxy_service}
   case "${BACKEND}" in

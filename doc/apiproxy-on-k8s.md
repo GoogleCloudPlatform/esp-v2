@@ -1,6 +1,6 @@
-# Run API Proxy on Google GKE
+# Run ESP V2 on Google GKE
 
-This tutorial describes how to run API Proxy as a sidecar for the Bookstore endpoint,
+This tutorial describes how to run ESP V2 as a sidecar for the Bookstore endpoint,
 on a Google GKE cluster.
 
 ## Prerequisites
