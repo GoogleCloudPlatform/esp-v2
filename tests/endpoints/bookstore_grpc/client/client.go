@@ -34,8 +34,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	bookstoregrpc "github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/bookstore_grpc/proto"
-	bookstorepb "github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/bookstore_grpc/proto"
+	bookstoregrpc "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto"
+	bookstorepb "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto"
 	emptypb "github.com/golang/protobuf/ptypes/empty"
 )
 

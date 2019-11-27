@@ -19,9 +19,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/configinfo"
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/google/go-cmp/cmp"

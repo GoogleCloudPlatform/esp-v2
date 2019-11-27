@@ -22,11 +22,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/GoogleCloudPlatform/api-proxy/tests/env/testdata"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jws"
 
-	tpoauth2 "github.com/GoogleCloudPlatform/api-proxy/third_party/golang_internal"
+	tpoauth2 "github.com/GoogleCloudPlatform/esp-v2/third_party/golang_internal"
 )
 
 // DoGet performs a Get request to a specified url

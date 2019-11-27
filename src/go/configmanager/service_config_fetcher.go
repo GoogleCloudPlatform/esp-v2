@@ -24,10 +24,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/commonflags"
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/configmanager/flags"
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/metadata"
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/commonflags"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configmanager/flags"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 

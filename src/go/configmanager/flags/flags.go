@@ -20,8 +20,8 @@ import (
 	"flag"
 	"time"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/commonflags"
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/commonflags"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/golang/glog"
 )
 

@@ -17,7 +17,7 @@ package bootstrap
 import (
 	"fmt"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 )

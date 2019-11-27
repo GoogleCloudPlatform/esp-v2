@@ -19,9 +19,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/bootstrap/static/testdata"
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/bootstrap/static/testdata"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 

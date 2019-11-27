@@ -19,7 +19,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/GoogleCloudPlatform/api-proxy/tests/env/platform"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 )
 
 type GrpcInteropGrpcServer struct {

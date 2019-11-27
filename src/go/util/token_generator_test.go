@@ -18,7 +18,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/util/testdata"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/testdata"
 )
 
 func TestGenerateAccessToken(t *testing.T) {

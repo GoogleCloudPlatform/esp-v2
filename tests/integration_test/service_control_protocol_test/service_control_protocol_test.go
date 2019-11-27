@@ -21,12 +21,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/api-proxy/tests/env"
-	"github.com/GoogleCloudPlatform/api-proxy/tests/utils"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
-	bookstore "github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/bookstore_grpc/client"
-	echoclient "github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/echo/client"
-	comp "github.com/GoogleCloudPlatform/api-proxy/tests/env/components"
+	bookstore "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
+	echoclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
+	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 func TestServiceControlProtocolWithGRPCBackend(t *testing.T) {

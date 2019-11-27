@@ -23,9 +23,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/configmanager"
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/configmanager/flags"
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/metadata"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configmanager"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configmanager/flags"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
 

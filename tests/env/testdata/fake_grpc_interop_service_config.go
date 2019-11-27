@@ -17,7 +17,7 @@ package testdata
 import (
 	"strings"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
 

@@ -21,14 +21,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
-	"github.com/GoogleCloudPlatform/api-proxy/tests/env"
-	"github.com/GoogleCloudPlatform/api-proxy/tests/env/platform"
-	"github.com/GoogleCloudPlatform/api-proxy/tests/env/testdata"
-	"github.com/GoogleCloudPlatform/api-proxy/tests/utils"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
-	bsClient "github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/bookstore_grpc/client"
-	comp "github.com/GoogleCloudPlatform/api-proxy/tests/env/components"
+	bsClient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
+	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )

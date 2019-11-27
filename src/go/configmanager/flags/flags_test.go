@@ -18,7 +18,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 )
 
 func TestDefaultEnvoyConfigOptions(t *testing.T) {
