@@ -46,7 +46,7 @@ func TestReportGCPAttributes(t *testing.T) {
 				util.ZoneSuffix: "projects/4242424242/zones/us-west-1b",
 			},
 			wantLocation: "us-west-1b",
-			wantPlatform: "GCE(API Proxy)",
+			wantPlatform: "GCE(ESP V2)",
 		},
 		{
 			desc: "Invalid Zone - without '/'",
@@ -54,7 +54,7 @@ func TestReportGCPAttributes(t *testing.T) {
 				util.ZoneSuffix: "some-invalid-zone",
 			},
 			wantLocation: "",
-			wantPlatform: "GCE(API Proxy)",
+			wantPlatform: "GCE(ESP V2)",
 		},
 		{
 			desc: "Invalid Zone - ends with '/'",
@@ -62,7 +62,7 @@ func TestReportGCPAttributes(t *testing.T) {
 				util.ZoneSuffix: "project/123123/",
 			},
 			wantLocation: "",
-			wantPlatform: "GCE(API Proxy)",
+			wantPlatform: "GCE(ESP V2)",
 		},
 		{
 			desc: "Platform - GAE FLEX",
@@ -70,7 +70,7 @@ func TestReportGCPAttributes(t *testing.T) {
 				util.GAEServerSoftwareSuffix: "gae",
 			},
 			wantLocation: "test-zone",
-			wantPlatform: "GAE_FLEX(API Proxy)",
+			wantPlatform: "GAE_FLEX(ESP V2)",
 		},
 		{
 			desc: "Platform - GKE",
@@ -78,14 +78,14 @@ func TestReportGCPAttributes(t *testing.T) {
 				util.KubeEnvSuffix: "kube-env",
 			},
 			wantLocation: "test-zone",
-			wantPlatform: "GKE(API Proxy)",
+			wantPlatform: "GKE(ESP V2)",
 		},
 		// If it is neither GAE nor GKE it should be GCE.
 		{
 			desc:                 "Platform- GCE",
 			mockMetadataOverride: map[string]string{},
 			wantLocation:         "test-zone",
-			wantPlatform:         "GCE(API Proxy)",
+			wantPlatform:         "GCE(ESP V2)",
 		},
 		{
 			desc: "Platform and Zone",
@@ -94,7 +94,7 @@ func TestReportGCPAttributes(t *testing.T) {
 				util.GAEServerSoftwareSuffix: "gae",
 			},
 			wantLocation: "us-west-1b",
-			wantPlatform: "GAE_FLEX(API Proxy)",
+			wantPlatform: "GAE_FLEX(ESP V2)",
 		},
 		{
 			desc:                 "Override Platform",

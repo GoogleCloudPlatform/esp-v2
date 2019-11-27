@@ -46,10 +46,10 @@ TEST(ServiceControlUtils, FillGCPInfo) {
 
   const TestCase test_cases[] = {
       // Test: No gcp_attributes found
-      {"", "", "UNKNOWN(API Proxy)"},
+      {"", "", "UNKNOWN(ESP V2)"},
 
       // Test: gcp_attributes found but empty
-      {R"(gcp_attributes {})", "", "UNKNOWN(API Proxy)"},
+      {R"(gcp_attributes {})", "", "UNKNOWN(ESP V2)"},
 
       // Test: bad platform provided should default to unknown
       {R"(gcp_attributes { platform: "bad-platform"})", "", "bad-platform"},
@@ -65,7 +65,7 @@ TEST(ServiceControlUtils, FillGCPInfo) {
 
       // Test: Provided zone is set
       {R"(gcp_attributes { zone: "test-zone"})", "test-zone",
-       "UNKNOWN(API Proxy)"},
+       "UNKNOWN(ESP V2)"},
 
       // Test: Provided platform and zone can both be set
       {R"(gcp_attributes { zone: "test-zone" platform: "GKE"})", "test-zone",

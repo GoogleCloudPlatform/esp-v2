@@ -45,7 +45,7 @@ def serve_error_msg(error_msg):
 
 
 def gen_args(cmd):
-    PLATFORM = "Cloud Run(API Proxy)"
+    PLATFORM = "Cloud Run(ESP V2)"
     ARGS = [
         cmd,
         "/apiproxy/start_proxy.py",
