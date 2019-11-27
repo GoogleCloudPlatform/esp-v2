@@ -69,348 +69,374 @@ var (
 }`,
 		`
 {
-  "name": "pets.appspot.com:443",
-  "type": "LOGICAL_DNS",
-  "connectTimeout": "20s",
-  "loadAssignment":{
-    "clusterName":"pets.appspot.com",
-    "endpoints":[
-      {
-        "lbEndpoints":[
-          {
-            "endpoint":{
-              "address":{
-	              "socketAddress":{
-	                "address":"pets.appspot.com",
-	                "portValue":443
-	              }
-	            }
-	          }
-          }
-        ]
+   "connectTimeout":"20s",
+   "loadAssignment":{
+      "clusterName":"pets.appspot.com",
+      "endpoints":[
+         {
+            "lbEndpoints":[
+               {
+                  "endpoint":{
+                     "address":{
+                        "socketAddress":{
+                           "address":"pets.appspot.com",
+                           "portValue":443
+                        }
+                     }
+                  }
+               }
+            ]
+         }
+      ]
+   },
+   "name":"pets.appspot.com:443",
+   "transportSocket":{
+      "name":"tls",
+      "typedConfig":{
+         "@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
+         "sni":"pets.appspot.com"
       }
-    ]
-  },
-  "tlsContext": {
-    "sni": "pets.appspot.com"
-  }
+   },
+   "type":"LOGICAL_DNS"
 }`, `
 {
-  "name": "pets.appspot.com:8008",
-  "type": "LOGICAL_DNS",
-  "connectTimeout": "20s",
-  "loadAssignment":{
-    "clusterName":"pets.appspot.com",
-    "endpoints":[
-      {
-        "lbEndpoints":[
-          {
-            "endpoint":{
-              "address":{
-	              "socketAddress":{
-	                "address":"pets.appspot.com",
-	                "portValue":8008
-	              }
-	            }
-	          }
-          }
-        ]
+   "connectTimeout":"20s",
+   "loadAssignment":{
+      "clusterName":"pets.appspot.com",
+      "endpoints":[
+         {
+            "lbEndpoints":[
+               {
+                  "endpoint":{
+                     "address":{
+                        "socketAddress":{
+                           "address":"pets.appspot.com",
+                           "portValue":8008
+                        }
+                     }
+                  }
+               }
+            ]
+         }
+      ]
+   },
+   "name":"pets.appspot.com:8008",
+   "transportSocket":{
+      "name":"tls",
+      "typedConfig":{
+         "@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
+         "sni":"pets.appspot.com"
       }
-    ]
-  },
-  "tlsContext": {
-    "sni": "pets.appspot.com"
-  }
+   },
+   "type":"LOGICAL_DNS"
 }`,
 		`
 {
-  "name": "us-central1-cloud-esf.cloudfunctions.net:443",
-  "type": "LOGICAL_DNS",
-  "connectTimeout": "20s",
-  "loadAssignment": {
-    "clusterName": "us-central1-cloud-esf.cloudfunctions.net",
-    "endpoints": [
-      {
-        "lbEndpoints": [
-          {
-            "endpoint": {
-              "address": {
-	              "socketAddress": {
-	                "address": "us-central1-cloud-esf.cloudfunctions.net",
-	                "portValue": 443
-	              }
-	            }
-	          }
-          }
-        ]
+   "connectTimeout":"20s",
+   "loadAssignment":{
+      "clusterName":"us-central1-cloud-esf.cloudfunctions.net",
+      "endpoints":[
+         {
+            "lbEndpoints":[
+               {
+                  "endpoint":{
+                     "address":{
+                        "socketAddress":{
+                           "address":"us-central1-cloud-esf.cloudfunctions.net",
+                           "portValue":443
+                        }
+                     }
+                  }
+               }
+            ]
+         }
+      ]
+   },
+   "name":"us-central1-cloud-esf.cloudfunctions.net:443",
+   "transportSocket":{
+      "name":"tls",
+      "typedConfig":{
+         "@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
+         "sni":"us-central1-cloud-esf.cloudfunctions.net"
       }
-    ]
-  },
-  "tlsContext": {
-    "sni": "us-central1-cloud-esf.cloudfunctions.net"
-  }
+   },
+   "type":"LOGICAL_DNS"
 }`,
 		`
 {
-  "name": "us-west2-cloud-esf.cloudfunctions.net:443",
-  "type": "LOGICAL_DNS",
-  "connectTimeout": "20s",
-  "loadAssignment": {
-    "clusterName": "us-west2-cloud-esf.cloudfunctions.net",
-    "endpoints": [{
-       "lbEndpoints": [{
-         "endpoint": {
-          "address": {
-	    "socketAddress": {
-	      "address": "us-west2-cloud-esf.cloudfunctions.net",
-	      "portValue": 443
-	    }
-	  }
-	}
-      }]
-   }]
-  },
-  "tlsContext": {
-    "sni": "us-west2-cloud-esf.cloudfunctions.net"
-  }
+   "connectTimeout":"20s",
+   "loadAssignment":{
+      "clusterName":"us-west2-cloud-esf.cloudfunctions.net",
+      "endpoints":[
+         {
+            "lbEndpoints":[
+               {
+                  "endpoint":{
+                     "address":{
+                        "socketAddress":{
+                           "address":"us-west2-cloud-esf.cloudfunctions.net",
+                           "portValue":443
+                        }
+                     }
+                  }
+               }
+            ]
+         }
+      ]
+   },
+   "name":"us-west2-cloud-esf.cloudfunctions.net:443",
+   "transportSocket":{
+      "name":"tls",
+      "typedConfig":{
+         "@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
+         "sni":"us-west2-cloud-esf.cloudfunctions.net"
+      }
+   },
+   "type":"LOGICAL_DNS"
 }`,
 	}
 
 	FakeWantedListenerForDynamicRouting = `
 {
-  "address": {
-    "socketAddress": {
-      "address": "0.0.0.0",
-      "portValue": 8080
-    }
-  },
-  "filterChains": [
-    {
-      "filters": [
-        {
-          "config": {
-            "http_filters": [
-              {
-                "config": {
-                  "rules": [
-                    {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-                      "pattern": {
-                        "http_method": "POST",
-                        "uri_template": "/echo"
-                      }
-                    },
-                    {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet",
-                      "pattern": {
-                        "http_method": "POST",
-                        "uri_template": "/pet"
-                      }
-                    },
-                    {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
-                      "pattern": {
-                        "http_method": "GET",
-                        "uri_template": "/pet/{pet_id}"
-                      }
-                    },
-                    {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello",
-                      "pattern": {
-                        "http_method": "GET",
-                        "uri_template": "/hello"
-                      }
-                    },
-                    {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets",
-                      "pattern": {
-                        "http_method": "GET",
-                        "uri_template": "/pets"
-                      }
-                    },
-                    {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search",
-                      "pattern": {
-                        "http_method": "GET",
-                        "uri_template": "/search"
-                      }
-                    }
-                  ]
-                },
-                "name": "envoy.filters.http.path_matcher"
-              },
-              {
-                "config": {
-                  "rules": [
+   "address":{
+      "socketAddress":{
+         "address":"0.0.0.0",
+         "portValue":8080
+      }
+   },
+   "filterChains":[
+      {
+         "filters":[
+            {
+               "name":"envoy.http_connection_manager",
+               "typedConfig":{
+                  "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "httpFilters":[
                      {
-                      "jwt_audience": "1083071298623-e...t.apps.googleusercontent.com",
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet"
-                    },
-                    {
-                      "jwt_audience": "1083071298623-e...t.apps.googleusercontent.com",
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById"
-                    },
-                    {
-                      "jwt_audience": "https://us-central1-cloud-esf.cloudfunctions.net/hello",
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello"
-                    },
-                    {
-                      "jwt_audience": "1083071298623-e...t.apps.googleusercontent.com",
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets"
-                    },
-                    {
-                      "jwt_audience": "https://us-west2-cloud-esf.cloudfunctions.net/search",
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search"
-                    }
+                        "name":"envoy.filters.http.path_matcher",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                           "rules":[
+                              {
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+                                 "pattern":{
+                                    "httpMethod":"POST",
+                                    "uriTemplate":"/echo"
+                                 }
+                              },
+                              {
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet",
+                                 "pattern":{
+                                    "httpMethod":"POST",
+                                    "uriTemplate":"/pet"
+                                 }
+                              },
+                              {
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
+                                 "pattern":{
+                                    "httpMethod":"GET",
+                                    "uriTemplate":"/pet/{pet_id}"
+                                 }
+                              },
+                              {
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello",
+                                 "pattern":{
+                                    "httpMethod":"GET",
+                                    "uriTemplate":"/hello"
+                                 }
+                              },
+                              {
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets",
+                                 "pattern":{
+                                    "httpMethod":"GET",
+                                    "uriTemplate":"/pets"
+                                 }
+                              },
+                              {
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search",
+                                 "pattern":{
+                                    "httpMethod":"GET",
+                                    "uriTemplate":"/search"
+                                 }
+                              }
+                           ]
+                        }
+                     },
+                     {
+                        "name":"envoy.filters.http.backend_auth",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/google.api.envoy.http.backend_auth.FilterConfig",
+                           "imdsToken":{
+                              "imdsServerUri":{
+                                 "cluster":"metadata-cluster",
+                                 "timeout":"5s",
+                                 "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
+                              }
+                           },
+                           "rules":[
+                              {
+                                 "jwtAudience":"1083071298623-e...t.apps.googleusercontent.com",
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet"
+                              },
+                              {
+                                 "jwtAudience":"1083071298623-e...t.apps.googleusercontent.com",
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById"
+                              },
+                              {
+                                 "jwtAudience":"https://us-central1-cloud-esf.cloudfunctions.net/hello",
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello"
+                              },
+                              {
+                                 "jwtAudience":"1083071298623-e...t.apps.googleusercontent.com",
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets"
+                              },
+                              {
+                                 "jwtAudience":"https://us-west2-cloud-esf.cloudfunctions.net/search",
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search"
+                              }
+                           ]
+                        }
+                     },
+                     {
+                        "name":"envoy.filters.http.backend_routing",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/google.api.envoy.http.backend_routing.FilterConfig",
+                           "rules":[
+                              {
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet",
+                                 "pathPrefix":"/api"
+                              },
+                              {
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
+                                 "pathPrefix":"/api"
+                              },
+                              {
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello",
+                                 "pathPrefix":"/hello"
+                              },
+                              {
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets",
+                                 "pathPrefix":"/api"
+                              },
+                              {
+                                 "isConstAddress":true,
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search",
+                                 "pathPrefix":"/search"
+                              }
+                           ]
+                        }
+                     },
+                     {
+                        "name":"envoy.router",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router"
+                        }
+                     }
                   ],
-                  "imds_token":{
-                    "imds_server_uri":{
-                      "cluster":"metadata-cluster",
-                      "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity",
-                      "timeout":"5s"
-                    }
-                  }
-                },
-                "name": "envoy.filters.http.backend_auth"
-              },
-              {
-                "config": {
-                  "rules": [
-                    {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet",
-                      "path_prefix": "/api"
-                    },
-                    {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
-                      "path_prefix": "/api"
-                    },
-                    {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello",
-                      "path_prefix": "/hello"
-                    },
-                    {
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets",
-                      "path_prefix": "/api"
-                    },
-                    {
-                      "is_const_address": true,
-                      "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search",
-                      "path_prefix": "/search"
-                    }
-                  ]
-                },
-                "name": "envoy.filters.http.backend_routing"
-              },
-              {
-                "config": {},
-                "name": "envoy.router"
-              }
-            ],
-            "route_config": {
-              "name": "local_route",
-              "virtual_hosts": [
-                {
-                  "domains": [
-                    "*"
-                  ],
-                  "name": "backend",
-                  "routes": [
-                    {
-                      "match": {
-                        "headers": [
-                          {
-                            "exact_match": "POST",
-                            "name": ":method"
-                          }
-                        ],
-                        "path": "/pet"
-                      },
-                      "route": {
-                        "cluster": "pets.appspot.com:443",
-                        "host_rewrite": "pets.appspot.com"
-                      }
-                    },
-                    {
-                      "match": {
-                        "headers": [
-                          {
-                            "exact_match": "GET",
-                            "name": ":method"
-                          }
-                        ],
-                        "regex": "/pet/[^\\/]+$"
-                      },
-                      "route": {
-                        "cluster": "pets.appspot.com:8008",
-                        "host_rewrite": "pets.appspot.com"
-                      }
-                    },
-                    {
-                      "match": {
-                        "headers": [
-                          {
-                            "exact_match": "GET",
-                            "name": ":method"
-                          }
-                        ],
-                        "path": "/hello"
-                      },
-                      "route": {
-                        "cluster": "us-central1-cloud-esf.cloudfunctions.net:443",
-                        "host_rewrite": "us-central1-cloud-esf.cloudfunctions.net"
-                      }
-                    },
-                    {
-                      "match": {
-                        "headers": [
-                          {
-                            "exact_match": "GET",
-                            "name": ":method"
-                          }
-                        ],
-                        "path": "/pets"
-                      },
-                      "route": {
-                        "cluster": "pets.appspot.com:443",
-                        "host_rewrite": "pets.appspot.com"
-                      }
-                    },
-                    {
-                      "match": {
-                        "headers": [
-                          {
-                            "exact_match": "GET",
-                            "name": ":method"
-                          }
-                        ],
-                        "path": "/search"
-                      },
-                      "route": {
-                        "cluster": "us-west2-cloud-esf.cloudfunctions.net:443",
-                        "host_rewrite": "us-west2-cloud-esf.cloudfunctions.net"
-                      }
-                    },
-                    {
-                      "match": {
-                        "prefix": "/"
-                      },
-                      "route": {
-                        "cluster": "1.echo_api_endpoints_cloudesf_testing_cloud_goog"
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            "stat_prefix":"ingress_http",
-            "use_remote_address":false,
-            "xff_num_trusted_hops":2
-          },
-          "name": "envoy.http_connection_manager"
-        }
-      ]
-    }
-  ]
+                  "routeConfig":{
+                     "name":"local_route",
+                     "virtualHosts":[
+                        {
+                           "domains":[
+                              "*"
+                           ],
+                           "name":"backend",
+                           "routes":[
+                              {
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"POST",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/pet"
+                                 },
+                                 "route":{
+                                    "cluster":"pets.appspot.com:443",
+                                    "hostRewrite":"pets.appspot.com"
+                                 }
+                              },
+                              {
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"GET",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "regex":"/pet/[^\\/]+$"
+                                 },
+                                 "route":{
+                                    "cluster":"pets.appspot.com:8008",
+                                    "hostRewrite":"pets.appspot.com"
+                                 }
+                              },
+                              {
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"GET",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/hello"
+                                 },
+                                 "route":{
+                                    "cluster":"us-central1-cloud-esf.cloudfunctions.net:443",
+                                    "hostRewrite":"us-central1-cloud-esf.cloudfunctions.net"
+                                 }
+                              },
+                              {
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"GET",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/pets"
+                                 },
+                                 "route":{
+                                    "cluster":"pets.appspot.com:443",
+                                    "hostRewrite":"pets.appspot.com"
+                                 }
+                              },
+                              {
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"GET",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/search"
+                                 },
+                                 "route":{
+                                    "cluster":"us-west2-cloud-esf.cloudfunctions.net:443",
+                                    "hostRewrite":"us-west2-cloud-esf.cloudfunctions.net"
+                                 }
+                              },
+                              {
+                                 "match":{
+                                    "prefix":"/"
+                                 },
+                                 "route":{
+                                    "cluster":"1.echo_api_endpoints_cloudesf_testing_cloud_goog"
+                                 }
+                              }
+                           ]
+                        }
+                     ]
+                  },
+                  "statPrefix":"ingress_http",
+                  "useRemoteAddress":false,
+                  "xffNumTrustedHops":2
+               }
+            }
+         ]
+      }
+   ]
 }
 `
 )

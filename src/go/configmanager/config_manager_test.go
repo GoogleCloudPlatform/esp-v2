@@ -34,8 +34,15 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 
+	pmpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/path_matcher"
+	scpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/service_control"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	jwtauthnpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
+	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
+	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
+	hcmpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -94,89 +101,94 @@ func TestFetchListeners(t *testing.T) {
                     ]
                 }
             }`, testProjectName, testEndpointName, fakeProtoDescriptor),
-			wantedListeners: fmt.Sprintf(`{
-                "address":{
-                    "socketAddress":{
-                        "address":"0.0.0.0",
-                        "portValue":8080
-                    }
-                },
-                "filterChains":[
-                    {
-                        "filters":[
-                            {
-                                "config":{
-                                    "http_filters":[
+			wantedListeners: fmt.Sprintf(`
 {
-                                          "config": {
-                                            "rules": [
-                                              {
-                                                "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
-                                                "pattern":{
-                                                    "http_method":"POST",
-                                                    "uri_template":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
-                                                }
-                                              }
-                                            ]
-                                          },
-                                          "name": "envoy.filters.http.path_matcher"
-                                        },
-
-                                        {
-                                            "config":{
-                                                "convert_grpc_status":true,
-                                                "ignored_query_parameters": [
-                                                    "api_key",
-                                                    "key",
-                                                    "access_token"
-                                                ],
-                                                "proto_descriptor_bin":"%s",
-                                                "services":[
-                                                    "%s"
-                                                ]
-                                            },
-                                            "name":"envoy.grpc_json_transcoder"
-                                        },
-                                        {
-                                            "config":{},
-                                            "name":"envoy.grpc_web"
-                                        },
-                                        {
-                                            "config":{},
-                                            "name":"envoy.router"
-                                        }
-                                    ],
-                                    "route_config":{
-                                        "name":"local_route",
-                                        "virtual_hosts":[
-                                            {
-                                                "domains":[
-                                                    "*"
-                                                ],
-                                                "name":"backend",
-                                                "routes":[
-                                                    {
-                                                        "match":{
-                                                            "prefix":"/"
-                                                        },
-                                                        "route":{
-                                                            "cluster": "%s"
-                                                        }
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    },
-                                    "stat_prefix":"ingress_http",
-                                    "use_remote_address":false,
-                                    "xff_num_trusted_hops":2
-                                },
-                                "name":"envoy.http_connection_manager"
-                            }
-                        ]
-                    }
-                ]
-            }`,
+   "address":{
+      "socketAddress":{
+         "address":"0.0.0.0",
+         "portValue":8080
+      }
+   },
+   "filterChains":[
+      {
+         "filters":[
+            {
+               "name":"envoy.http_connection_manager",
+               "typedConfig":{
+                  "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "httpFilters":[
+                     {
+                        "name":"envoy.filters.http.path_matcher",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                           "rules":[
+                              {
+                                 "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
+                                 "pattern":{
+                                    "httpMethod":"POST",
+                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                 }
+                              }
+                           ]
+                        }
+                     },
+                     {
+                        "name":"envoy.grpc_json_transcoder",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.http.transcoder.v2.GrpcJsonTranscoder",
+                           "convertGrpcStatus":true,
+                           "ignoredQueryParameters":[
+                              "api_key",
+                              "key",
+                              "access_token"
+                           ],
+                           "protoDescriptorBin":"%s",
+                           "services":[
+                              "%s"
+                           ]
+                        }
+                     },
+                     {
+                        "name":"envoy.grpc_web"
+                     },
+                     {
+                        "name":"envoy.router",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router"
+                        }
+                     }
+                  ],
+                  "routeConfig":{
+                     "name":"local_route",
+                     "virtualHosts":[
+                        {
+                           "domains":[
+                              "*"
+                           ],
+                           "name":"backend",
+                           "routes":[
+                              {
+                                 "match":{
+                                    "prefix":"/"
+                                 },
+                                 "route":{
+                                    "cluster":"%s"
+                                 }
+                              }
+                           ]
+                        }
+                     ]
+                  },
+                  "statPrefix":"ingress_http",
+                  "useRemoteAddress":false,
+                  "xffNumTrustedHops":2
+               }
+            }
+         ]
+      }
+   ]
+}
+`,
 				fakeProtoDescriptor, testEndpointName, testEndpointName),
 		},
 		{
@@ -218,111 +230,129 @@ func TestFetchListeners(t *testing.T) {
                     ]
                 }
             }`, testEndpointName),
-			wantedListeners: fmt.Sprintf(`{
-                "address":{
-                    "socketAddress":{
-                        "address":"0.0.0.0",
-                        "portValue":8080
-                    }
-                },
-                "filterChains":[
-                    {
-                        "filters":[
-                            {
-                                "config":{
-                                    "http_filters":[
-                                        {
-                                            "config": {
-                                                "rules": [
-                                                    {
-                                                        "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
-                                                        "pattern":{
-                                                            "http_method":"POST",
-                                                            "uri_template":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
-                                                        }
-                                                    }
-                                                ]
-                                            },
-                                            "name": "envoy.filters.http.path_matcher"
-                                        },
-                                        {
-                                            "config": {
-                                                "filter_state_rules": {
-                                                  "name": "envoy.filters.http.path_matcher.operation",
-                                                  "requires": {
-                                                    "endpoints.examples.bookstore.Bookstore.CreateShelf": {
-                                                      "provider_and_audiences": {
-                                                        "audiences": [
-                                                          "test_audience1"
-                                                        ],
-                                                        "provider_name": "firebase"
-                                                      }
-                                                    }
-                                                  }
-                                                },
-                                                "providers": {
-                                                    "firebase": {
-                                                        "audiences":["test_audience1", "test_audience2"],
-                                                        "from_headers":[{"name":"Authorization","value_prefix":"Bearer "},{"name":"X-Goog-Iap-Jwt-Assertion"}],
-                                                        "from_params":["access_token"],
-                                                        "issuer":"https://test_issuer.google.com/",
-                                                        "remote_jwks":{
-                                                            "cache_duration":"300s",
-                                                            "http_uri":{
-                                                                "cluster":"https://test_issuer.google.com/",
-                                                                "timeout":"5s",
-                                                                "uri":"$JWKSURI"
-                                                          }
-                                                        },
-                                                        "forward_payload_header": "X-Endpoint-API-UserInfo",
-                                                        "payload_in_metadata":"jwt_payloads"
-                                                    }
-                                                }
-                                            },
-                                            "name":"envoy.filters.http.jwt_authn"
-                                        },
-                                        {
-                                            "config":{
-                                            },
-                                            "name":"envoy.grpc_web"
-                                        },
-                                        {
-                                            "config":{
-                                            },
-                                            "name":"envoy.router"
-                                         }
-                                    ],
-                                    "route_config":{
-                                        "name":"local_route",
-                                        "virtual_hosts":[
-                                            {
-                                                "domains":[
-                                                    "*"
-                                                ],
-                                                "name":"backend",
-                                                    "routes":[
-                                                        {
-                                                            "match":{
-                                                                "prefix":"/"
-                                                            },
-                                                            "route":{
-                                                                "cluster": "%s"
-                                                            }
-                                                        }
-                                                    ]
-                                                }
-                                            ]
-                                        },
-                                    "stat_prefix":"ingress_http",
-                                    "use_remote_address":false,
-                                    "xff_num_trusted_hops":2
+
+			wantedListeners: fmt.Sprintf(`
+{
+   "address":{
+      "socketAddress":{
+         "address":"0.0.0.0",
+         "portValue":8080
+      }
+   },
+   "filterChains":[
+      {
+         "filters":[
+            {
+               "name":"envoy.http_connection_manager",
+               "typedConfig":{
+                  "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "httpFilters":[
+                     {
+                        "name":"envoy.filters.http.path_matcher",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                           "rules":[
+                              {
+                                 "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
+                                 "pattern":{
+                                    "httpMethod":"POST",
+                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                 }
+                              }
+                           ]
+                        }
+                     },
+                     {
+                        "name":"envoy.filters.http.jwt_authn",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication",
+                           "filterStateRules":{
+                              "name":"envoy.filters.http.path_matcher.operation",
+                              "requires":{
+                                 "endpoints.examples.bookstore.Bookstore.CreateShelf":{
+                                    "providerAndAudiences":{
+                                       "audiences":[
+                                          "test_audience1"
+                                       ],
+                                       "providerName":"firebase"
+                                    }
+                                 }
+                              }
+                           },
+                           "providers":{
+                              "firebase":{
+                                 "audiences":[
+                                    "test_audience1",
+                                    "test_audience2"
+                                 ],
+                                 "forwardPayloadHeader":"X-Endpoint-API-UserInfo",
+                                 "fromHeaders":[
+                                    {
+                                       "name":"Authorization",
+                                       "valuePrefix":"Bearer "
+                                    },
+                                    {
+                                       "name":"X-Goog-Iap-Jwt-Assertion"
+                                    }
+                                 ],
+                                 "fromParams":[
+                                    "access_token"
+                                 ],
+                                 "issuer":"https://test_issuer.google.com/",
+                                 "payloadInMetadata":"jwt_payloads",
+                                 "remoteJwks":{
+                                    "cacheDuration":"300s",
+                                    "httpUri":{
+                                       "cluster":"https://test_issuer.google.com/",
+                                       "timeout":"5s",
+                                       "uri":"$JWKSURI"
+                                    }
+                                 }
+                              }
+                           }
+                        }
+                     },
+                     {
+                        "name":"envoy.grpc_web"
+                     },
+                     {
+                        "name":"envoy.router",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router"
+                        }
+                     }
+                  ],
+                  "routeConfig":{
+                     "name":"local_route",
+                     "virtualHosts":[
+                        {
+                           "domains":[
+                              "*"
+                           ],
+                           "name":"backend",
+                           "routes":[
+                              {
+                                 "match":{
+                                    "prefix":"/"
                                  },
-                                "name":"envoy.http_connection_manager"
-                            }
-                        ]
-                    }
-                ]
-            }`, testEndpointName),
+                                 "route":{
+                                    "cluster":"%s"
+                                 }
+                              }
+                           ]
+                        }
+                     ]
+                  },
+                  "statPrefix":"ingress_http",
+                  "useRemoteAddress":false,
+                  "xffNumTrustedHops":2
+               }
+            }
+         ]
+      }
+   ]
+}
+              `, testEndpointName),
 		},
 		{
 			desc:            "Success for gRPC backend, with Jwt filter, without audiences",
@@ -382,128 +412,140 @@ func TestFetchListeners(t *testing.T) {
                 }
             }`, testEndpointName),
 			wantedListeners: fmt.Sprintf(`{
-                "address":{
-                    "socketAddress":{
-                        "address":"0.0.0.0",
-                        "portValue":8080
-                    }
-                },
-                "filterChains":[
-                    {
-                        "filters":[
-                            {
-                                "config":{
-                                    "http_filters":[
-                                        {
-                                          "config": {
-                                            "rules": [
-                                              {
-                                                "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
-                                                "pattern":{
-                                                    "http_method":"POST",
-                                                    "uri_template":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
-                                                }
-                                              },
-                                              {
-                                                "operation": "endpoints.examples.bookstore.Bookstore.CreateShelf",
-                                                "pattern": {
-                                                  "http_method": "POST",
-                                                  "uri_template": "/v1/shelves/{shelf}"
-                                                }
-                                              },
-                                              {
-                                                 "operation":"endpoints.examples.bookstore.Bookstore.ListShelves",
-                                                 "pattern": {
-                                                    "http_method":"POST",
-                                                    "uri_template":"/endpoints.examples.bookstore.Bookstore/ListShelves"
-                                                }
-                                              },
-                                              {
-                                                "operation": "endpoints.examples.bookstore.Bookstore.ListShelves",
-                                                "pattern": {
-                                                  "http_method": "GET",
-                                                  "uri_template": "/v1/shelves"
-                                                }
-                                              }
-                                            ]
-                                          },
-                                          "name": "envoy.filters.http.path_matcher"
-                                        },
-                                        {
-                                            "config": {
-                                                "filter_state_rules": {
-                                                  "name": "envoy.filters.http.path_matcher.operation",
-                                                  "requires": {
-                                                    "endpoints.examples.bookstore.Bookstore.CreateShelf": {
-                                                      "provider_name": "firebase"
-                                                    },
-                                                    "endpoints.examples.bookstore.Bookstore.ListShelves": {
-                                                      "provider_name": "firebase"
-                                                    }
-                                                  }
-                                                },
-                                                "providers": {
-                                                    "firebase": {
-                                                        "issuer":"https://test_issuer.google.com/",
-                                                        "from_headers":[{"name":"Authorization","value_prefix":"Bearer "},{"name":"X-Goog-Iap-Jwt-Assertion"}],
-                                                        "from_params":["access_token"],
-                                                        "remote_jwks":{
-                                                            "cache_duration":"300s",
-                                                            "http_uri":{
-                                                                "cluster":"https://test_issuer.google.com/",
-                                                                "timeout": "5s",
-                                                                "uri":"$JWKSURI"
-                                                          }
-                                                        },
-                                                        "forward_payload_header": "X-Endpoint-API-UserInfo",
-                                                        "payload_in_metadata":"jwt_payloads"
-                                                    }
-                                                }
-                                            },
-                                            "name":"envoy.filters.http.jwt_authn"
-                                        },
-                                        {
-                                            "config":{
-                                            },
-                                            "name":"envoy.grpc_web"
-                                        },
-                                        {
-                                            "config":{
-                                            },
-                                            "name":"envoy.router"
-                                        }
-                                    ],
-                                    "route_config":{
-                                        "name":"local_route",
-                                        "virtual_hosts":[
-                                            {
-                                                "domains":[
-                                                    "*"
-                                                ],
-                                                "name":"backend",
-                                                    "routes":[
-                                                        {
-                                                            "match":{
-                                                                "prefix":"/"
-                                                            },
-                                                            "route":{
-                                                                "cluster": "%s"
-                                                            }
-                                                        }
-                                                    ]
-                                                }
-                                            ]
-                                        },
-                                    "stat_prefix":"ingress_http",
-                                    "use_remote_address":false,
-                                    "xff_num_trusted_hops":2
-                                },
-                                "name":"envoy.http_connection_manager"
-                            }
-                        ]
-                    }
-                ]
-            }`, testEndpointName),
+   "address":{
+      "socketAddress":{
+         "address":"0.0.0.0",
+         "portValue":8080
+      }
+   },
+   "filterChains":[
+      {
+         "filters":[
+            {
+               "name":"envoy.http_connection_manager",
+               "typedConfig":{
+                  "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "httpFilters":[
+                     {
+                        "name":"envoy.filters.http.path_matcher",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                           "rules":[
+                              {
+                                 "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
+                                 "pattern":{
+                                    "httpMethod":"POST",
+                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                 }
+                              },
+                              {
+                                 "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
+                                 "pattern":{
+                                    "httpMethod":"POST",
+                                    "uriTemplate":"/v1/shelves/{shelf}"
+                                 }
+                              },
+                              {
+                                 "operation":"endpoints.examples.bookstore.Bookstore.ListShelves",
+                                 "pattern":{
+                                    "httpMethod":"POST",
+                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/ListShelves"
+                                 }
+                              },
+                              {
+                                 "operation":"endpoints.examples.bookstore.Bookstore.ListShelves",
+                                 "pattern":{
+                                    "httpMethod":"GET",
+                                    "uriTemplate":"/v1/shelves"
+                                 }
+                              }
+                           ]
+                        }
+                     },
+                     {
+                        "name":"envoy.filters.http.jwt_authn",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication",
+                           "filterStateRules":{
+                              "name":"envoy.filters.http.path_matcher.operation",
+                              "requires":{
+                                 "endpoints.examples.bookstore.Bookstore.CreateShelf":{
+                                    "providerName":"firebase"
+                                 },
+                                 "endpoints.examples.bookstore.Bookstore.ListShelves":{
+                                    "providerName":"firebase"
+                                 }
+                              }
+                           },
+                           "providers":{
+                              "firebase":{
+                                 "forwardPayloadHeader":"X-Endpoint-API-UserInfo",
+                                 "fromHeaders":[
+                                    {
+                                       "name":"Authorization",
+                                       "valuePrefix":"Bearer "
+                                    },
+                                    {
+                                       "name":"X-Goog-Iap-Jwt-Assertion"
+                                    }
+                                 ],
+                                 "fromParams":[
+                                    "access_token"
+                                 ],
+                                 "issuer":"https://test_issuer.google.com/",
+                                 "payloadInMetadata":"jwt_payloads",
+                                 "remoteJwks":{
+                                    "cacheDuration":"300s",
+                                    "httpUri":{
+                                       "cluster":"https://test_issuer.google.com/",
+                                       "timeout":"5s",
+                                       "uri":"$JWKSURI"
+                                    }
+                                 }
+                              }
+                           }
+                        }
+                     },
+                     {
+                        "name":"envoy.grpc_web"
+                     },
+                     {
+                        "name":"envoy.router",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router"
+                        }
+                     }
+                  ],
+                  "routeConfig":{
+                     "name":"local_route",
+                     "virtualHosts":[
+                        {
+                           "domains":[
+                              "*"
+                           ],
+                           "name":"backend",
+                           "routes":[
+                              {
+                                 "match":{
+                                    "prefix":"/"
+                                 },
+                                 "route":{
+                                    "cluster":"%s"
+                                 }
+                              }
+                           ]
+                        }
+                     ]
+                  },
+                  "statPrefix":"ingress_http",
+                  "useRemoteAddress":false,
+                  "xffNumTrustedHops":2
+               }
+            }
+         ]
+      }
+   ]
+}`, testEndpointName),
 		},
 		{
 			desc:            "Success for gRPC backend, with Jwt filter, with multi requirements, matching with regex",
@@ -566,149 +608,171 @@ func TestFetchListeners(t *testing.T) {
                 }
             }`, testEndpointName),
 			wantedListeners: fmt.Sprintf(`{
-                "address":{
-                    "socketAddress":{
-                        "address":"0.0.0.0",
-                        "portValue":8080
-                    }
-                },
-                "filterChains":[
-                    {
-                        "filters":[
-                            {
-                                "config":{
-                                    "http_filters":[
-                                        {
-                                          "config": {
-                                            "rules": [
-                                              {
-                                                "operation":"endpoints.examples.bookstore.Bookstore.DeleteBook",
-                                                "pattern":{
-                                                    "http_method":"POST",
-                                                    "uri_template":"/endpoints.examples.bookstore.Bookstore/DeleteBook"
-                                                }
-                                              },
-                                              {
-                                                "operation": "endpoints.examples.bookstore.Bookstore.DeleteBook",
-                                                "pattern": {
-                                                  "http_method": "DELETE",
-                                                  "uri_template": "/v1/shelves/{shelf}/books/{book}"
-                                                }
-                                              },
-                                              {
-                                                "operation":"endpoints.examples.bookstore.Bookstore.GetBook",
-                                                "pattern":{
-                                                    "http_method":"POST",
-                                                    "uri_template":"/endpoints.examples.bookstore.Bookstore/GetBook"
-                                                }
-                                              },
-                                              {
-                                                "operation": "endpoints.examples.bookstore.Bookstore.GetBook",
-                                                "pattern": {
-                                                  "http_method": "GET",
-                                                  "uri_template": "/v1/shelves/{shelf}/books/{book}"
-                                                }
-                                              }
-                                            ]
+   "address":{
+      "socketAddress":{
+         "address":"0.0.0.0",
+         "portValue":8080
+      }
+   },
+   "filterChains":[
+      {
+         "filters":[
+            {
+               "name":"envoy.http_connection_manager",
+               "typedConfig":{
+                  "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "httpFilters":[
+                     {
+                        "name":"envoy.filters.http.path_matcher",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                           "rules":[
+                              {
+                                 "operation":"endpoints.examples.bookstore.Bookstore.DeleteBook",
+                                 "pattern":{
+                                    "httpMethod":"POST",
+                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/DeleteBook"
+                                 }
+                              },
+                              {
+                                 "operation":"endpoints.examples.bookstore.Bookstore.DeleteBook",
+                                 "pattern":{
+                                    "httpMethod":"DELETE",
+                                    "uriTemplate":"/v1/shelves/{shelf}/books/{book}"
+                                 }
+                              },
+                              {
+                                 "operation":"endpoints.examples.bookstore.Bookstore.GetBook",
+                                 "pattern":{
+                                    "httpMethod":"POST",
+                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/GetBook"
+                                 }
+                              },
+                              {
+                                 "operation":"endpoints.examples.bookstore.Bookstore.GetBook",
+                                 "pattern":{
+                                    "httpMethod":"GET",
+                                    "uriTemplate":"/v1/shelves/{shelf}/books/{book}"
+                                 }
+                              }
+                           ]
+                        }
+                     },
+                     {
+                        "name":"envoy.filters.http.jwt_authn",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication",
+                           "filterStateRules":{
+                              "name":"envoy.filters.http.path_matcher.operation",
+                              "requires":{
+                                 "endpoints.examples.bookstore.Bookstore.GetBook":{
+                                    "requiresAny":{
+                                       "requirements":[
+                                          {
+                                             "providerName":"firebase1"
                                           },
-                                          "name": "envoy.filters.http.path_matcher"
-                                        },
-                                        {
-                                            "config": {
-                                                "filter_state_rules": {
-                                                  "name": "envoy.filters.http.path_matcher.operation",
-                                                  "requires": {
-                                                    "endpoints.examples.bookstore.Bookstore.GetBook": {
-                                                      "requires_any": {
-                                                        "requirements": [
-                                                          {
-                                                            "provider_name": "firebase1"
-                                                          },
-                                                          {
-                                                            "provider_name": "firebase2"
-                                                          }
-                                                        ]
-                                                      }
-                                                    }
-                                                  }
-                                                },
-                                                "providers": {
-                                                    "firebase1": {
-                                                        "issuer":"https://test_issuer.google.com/",
-                                                        "from_headers":[{"name":"Authorization","value_prefix":"Bearer "},{"name":"X-Goog-Iap-Jwt-Assertion"}],
-                                                        "from_params":["access_token"],
-                                                        "remote_jwks":{
-                                                            "cache_duration":"300s",
-                                                            "http_uri":{
-                                                                "cluster":"https://test_issuer.google.com/",
-                                                                "timeout":"5s",
-                                                                "uri":"$JWKSURI"
-                                                          }
-                                                        },
-                                                        "forward_payload_header": "X-Endpoint-API-UserInfo",
-                                                        "payload_in_metadata":"jwt_payloads"
-                                                    },
-                                                    "firebase2": {
-                                                        "issuer":"https://test_issuer.google.com/",
-                                                        "from_headers":[{"name":"Authorization","value_prefix":"Bearer "},{"name":"X-Goog-Iap-Jwt-Assertion"}],
-                                                        "from_params":["access_token"],
-                                                        "remote_jwks":{
-                                                            "cache_duration":"300s",
-                                                            "http_uri":{
-                                                                "cluster":"https://test_issuer.google.com/",
-                                                                "timeout":"5s",
-                                                                "uri":"$JWKSURI"
-                                                          }
-                                                        },
-                                                        "forward_payload_header": "X-Endpoint-API-UserInfo",
-                                                        "payload_in_metadata":"jwt_payloads"
-                                                    }
-                                                }
-                                            },
-                                            "name":"envoy.filters.http.jwt_authn"
-                                        },
-                                        {
-                                            "config":{
-                                            },
-                                            "name":"envoy.grpc_web"
-                                        },
-                                        {
-                                            "config":{
-                                            },
-                                            "name":"envoy.router"
-                                        }
-                                    ],
-                                    "route_config":{
-                                        "name":"local_route",
-                                        "virtual_hosts":[
-                                            {
-                                                "domains":[
-                                                    "*"
-                                                ],
-                                                "name":"backend",
-                                                    "routes":[
-                                                        {
-                                                            "match":{
-                                                                "prefix":"/"
-                                                            },
-                                                            "route":{
-                                                                "cluster": "%s"
-                                                            }
-                                                        }
-                                                    ]
-                                                }
-                                            ]
-                                        },
-                                    "stat_prefix":"ingress_http",
-                                    "use_remote_address":false,
-                                    "xff_num_trusted_hops":2
-                                },
-                                "name":"envoy.http_connection_manager"
-                            }
-                        ]
-                    }
-                ]
-            }`, testEndpointName),
+                                          {
+                                             "providerName":"firebase2"
+                                          }
+                                       ]
+                                    }
+                                 }
+                              }
+                           },
+                           "providers":{
+                              "firebase1":{
+                                 "forwardPayloadHeader":"X-Endpoint-API-UserInfo",
+                                 "fromHeaders":[
+                                    {
+                                       "name":"Authorization",
+                                       "valuePrefix":"Bearer "
+                                    },
+                                    {
+                                       "name":"X-Goog-Iap-Jwt-Assertion"
+                                    }
+                                 ],
+                                 "fromParams":[
+                                    "access_token"
+                                 ],
+                                 "issuer":"https://test_issuer.google.com/",
+                                 "payloadInMetadata":"jwt_payloads",
+                                 "remoteJwks":{
+                                    "cacheDuration":"300s",
+                                    "httpUri":{
+                                       "cluster":"https://test_issuer.google.com/",
+                                       "timeout":"5s",
+                                       "uri":"$JWKSURI"
+                                    }
+                                 }
+                              },
+                              "firebase2":{
+                                 "forwardPayloadHeader":"X-Endpoint-API-UserInfo",
+                                 "fromHeaders":[
+                                    {
+                                       "name":"Authorization",
+                                       "valuePrefix":"Bearer "
+                                    },
+                                    {
+                                       "name":"X-Goog-Iap-Jwt-Assertion"
+                                    }
+                                 ],
+                                 "fromParams":[
+                                    "access_token"
+                                 ],
+                                 "issuer":"https://test_issuer.google.com/",
+                                 "payloadInMetadata":"jwt_payloads",
+                                 "remoteJwks":{
+                                    "cacheDuration":"300s",
+                                    "httpUri":{
+                                       "cluster":"https://test_issuer.google.com/",
+                                       "timeout":"5s",
+                                       "uri":"$JWKSURI"
+                                    }
+                                 }
+                              }
+                           }
+                        }
+                     },
+                     {
+                        "name":"envoy.grpc_web"
+                     },
+                     {
+                        "name":"envoy.router",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router"
+                        }
+                     }
+                  ],
+                  "routeConfig":{
+                     "name":"local_route",
+                     "virtualHosts":[
+                        {
+                           "domains":[
+                              "*"
+                           ],
+                           "name":"backend",
+                           "routes":[
+                              {
+                                 "match":{
+                                    "prefix":"/"
+                                 },
+                                 "route":{
+                                    "cluster":"%s"
+                                 }
+                              }
+                           ]
+                        }
+                     ]
+                  },
+                  "statPrefix":"ingress_http",
+                  "useRemoteAddress":false,
+                  "xffNumTrustedHops":2
+               }
+            }
+         ]
+      }
+   ]
+}`, testEndpointName),
 		},
 		{
 			desc:            "Success for gRPC backend with Service Control",
@@ -766,140 +830,157 @@ func TestFetchListeners(t *testing.T) {
                 }
             }`, testProjectName, testProjectID, testEndpointName),
 			wantedListeners: fmt.Sprintf(`{
-                "address":{
-                    "socketAddress":{
-                        "address":"0.0.0.0",
-                        "portValue":8080
-                    }
-                },
-                "filterChains":[
-                    {
-                        "filters":[
-                            {
-                                "config":{
-                                    "http_filters":[
-                                        {
-                                          "config": {
-                                            "rules": [
-                                              {
-                                                "operation": "endpoints.examples.bookstore.Bookstore.CreateShelf",
-                                                "pattern": {
-                                                  "http_method": "POST",
-                                                  "uri_template": "/endpoints.examples.bookstore.Bookstore/CreateShelf"
-                                                }
-                                              },
-                                              {
-                                                "operation": "endpoints.examples.bookstore.Bookstore.CreateShelf",
-                                                "pattern": {
-                                                  "http_method": "POST",
-                                                  "uri_template": "/v1/shelves"
-                                                }
-                                              },
-                                              {
-                                                "operation": "endpoints.examples.bookstore.Bookstore.ListShelves",
-                                                "pattern": {
-                                                  "http_method": "POST",
-                                                  "uri_template": "/endpoints.examples.bookstore.Bookstore/ListShelves"
-                                                }
-                                              },
-                                              {
-                                                "operation": "endpoints.examples.bookstore.Bookstore.ListShelves",
-                                                "pattern": {
-                                                  "http_method": "GET",
-                                                  "uri_template": "/v1/shelves"
-                                                }
-                                              }
-                                            ]
-                                          },
-                                          "name": "envoy.filters.http.path_matcher"
-                                        },
-                                        {
-                                            "config":{
-                                                "gcp_attributes":{
-                                                    "platform": "GCE(API Proxy)"
-                                                },
-                                                "requirements": [
-                                                  {
-                                                    "operation_name": "endpoints.examples.bookstore.Bookstore.CreateShelf",
-                                                    "service_name": "bookstore.endpoints.project123.cloud.goog"
-                                                  },
-                                                  {
-                                                    "operation_name": "endpoints.examples.bookstore.Bookstore.ListShelves",
-                                                    "service_name": "bookstore.endpoints.project123.cloud.goog"
-                                                  }
-                                                ],
-                                                "services":[
-                                                    {
-                                                        "backend_protocol": "grpc",
-                                                        "jwt_payload_metadata_name": "jwt_payloads",
-                                                        "service_name":"%s",
-                                                        "service_config_id":"%s",
-                                                        "producer_project_id":"%s",
-                                                        "service_config":{
-                                                           "@type":"type.googleapis.com/google.api.Service",
-                                                           "logging":{"producer_destinations":[{"logs":["endpoints_log"],"monitored_resource":"api"}]},
-                                                           "logs":[{"name":"endpoints_log"}]
-                                                         }
-                                                    }
-                                                ],
-                                                "service_control_uri":{
-                                                            "cluster":"service-control-cluster",
-                                                            "timeout":"5s",
-                                                            "uri":"https://servicecontrol.googleapis.com/v1/services/"
-                                                },
-                                                "sc_calling_config":{"network_fail_open":true},
-                                                "access_token":{
-                                                  "remote_token":{
-                                                    "cluster":"metadata-cluster",
-                                                    "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token",
-                                                    "timeout":"5s"
-                                                  }
-                                                }
-                                            },
-                                            "name":"envoy.filters.http.service_control"
-                                        },
-                                        {
-                                            "config":{
-                                            },
-                                            "name":"envoy.grpc_web"
-                                        },
-                                        {
-                                            "config":{
-                                            },
-                                            "name":"envoy.router"
-                                        }
-                                    ],
-                                    "route_config":{
-                                        "name":"local_route",
-                                        "virtual_hosts":[
-                                            {
-                                                "domains":[
-                                                    "*"
-                                                ],
-                                                "name":"backend",
-                                                "routes":[
-                                                    {
-                                                        "match":{
-                                                            "prefix":"/"
-                                                        },
-                                                        "route":{
-                                                            "cluster":"endpoints.examples.bookstore.Bookstore"
-                                                        }
-                                                    }
-                                                ]
-                                            }
-                                        ]
+   "address":{
+      "socketAddress":{
+         "address":"0.0.0.0",
+         "portValue":8080
+      }
+   },
+   "filterChains":[
+      {
+         "filters":[
+            {
+               "name":"envoy.http_connection_manager",
+               "typedConfig":{
+                  "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "httpFilters":[
+                     {
+                        "name":"envoy.filters.http.path_matcher",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                           "rules":[
+                              {
+                                 "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
+                                 "pattern":{
+                                    "httpMethod":"POST",
+                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                 }
+                              },
+                              {
+                                 "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
+                                 "pattern":{
+                                    "httpMethod":"POST",
+                                    "uriTemplate":"/v1/shelves"
+                                 }
+                              },
+                              {
+                                 "operation":"endpoints.examples.bookstore.Bookstore.ListShelves",
+                                 "pattern":{
+                                    "httpMethod":"POST",
+                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/ListShelves"
+                                 }
+                              },
+                              {
+                                 "operation":"endpoints.examples.bookstore.Bookstore.ListShelves",
+                                 "pattern":{
+                                    "httpMethod":"GET",
+                                    "uriTemplate":"/v1/shelves"
+                                 }
+                              }
+                           ]
+                        }
+                     },
+                     {
+                        "name":"envoy.filters.http.service_control",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/google.api.envoy.http.service_control.FilterConfig",
+                           "accessToken":{
+                              "remoteToken":{
+                                 "cluster":"metadata-cluster",
+                                 "timeout":"5s",
+                                 "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
+                              }
+                           },
+                           "gcpAttributes":{
+                              "platform":"GCE(API Proxy)"
+                           },
+                           "requirements":[
+                              {
+                                 "operationName":"endpoints.examples.bookstore.Bookstore.CreateShelf",
+                                 "serviceName":"bookstore.endpoints.project123.cloud.goog"
+                              },
+                              {
+                                 "operationName":"endpoints.examples.bookstore.Bookstore.ListShelves",
+                                 "serviceName":"bookstore.endpoints.project123.cloud.goog"
+                              }
+                           ],
+                           "scCallingConfig":{
+                              "networkFailOpen":true
+                           },
+                           "serviceControlUri":{
+                              "cluster":"service-control-cluster",
+                              "timeout":"5s",
+                              "uri":"https://servicecontrol.googleapis.com/v1/services/"
+                           },
+                           "services":[
+                              {
+                                 "backendProtocol":"grpc",
+                                 "jwtPayloadMetadataName":"jwt_payloads",
+                                 "producerProjectId":"%v",
+                                 "serviceConfig":{
+                                    "@type":"type.googleapis.com/google.api.Service",
+                                    "logging":{
+                                       "producerDestinations":[
+                                          {
+                                             "logs":[
+                                                "endpoints_log"
+                                             ],
+                                             "monitoredResource":"api"
+                                          }
+                                       ]
                                     },
-                                    "stat_prefix":"ingress_http",
-                                    "use_remote_address":false,
-                                    "xff_num_trusted_hops":2
-                                },
-                                "name":"envoy.http_connection_manager"
-                            }
-                        ]
-                    }
-                ]
-            }`, testProjectName, testConfigID, testProjectID),
+                                    "logs":[
+                                       {
+                                          "name":"endpoints_log"
+                                       }
+                                    ]
+                                 },
+                                 "serviceConfigId":"%v",
+                                 "serviceName":"%v"
+                              }
+                           ]
+                        }
+                     },
+                     {
+                        "name":"envoy.grpc_web"
+                     },
+                     {
+                        "name":"envoy.router",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router"
+                        }
+                     }
+                  ],
+                  "routeConfig":{
+                     "name":"local_route",
+                     "virtualHosts":[
+                        {
+                           "domains":[
+                              "*"
+                           ],
+                           "name":"backend",
+                           "routes":[
+                              {
+                                 "match":{
+                                    "prefix":"/"
+                                 },
+                                 "route":{
+                                    "cluster":"endpoints.examples.bookstore.Bookstore"
+                                 }
+                              }
+                           ]
+                        }
+                     ]
+                  },
+                  "statPrefix":"ingress_http",
+                  "useRemoteAddress":false,
+                  "xffNumTrustedHops":2
+               }
+            }
+         ]
+      }
+   ]
+}`, testProjectID, testConfigID, testProjectName),
 		},
 		{
 			desc:            "Success for HTTP1 backend, with Jwt filter, with audiences",
@@ -957,112 +1038,129 @@ func TestFetchListeners(t *testing.T) {
                 }
             }`,
 			wantedListeners: fmt.Sprintf(`{
-                "address":{
-                    "socketAddress":{
-                        "address":"0.0.0.0",
-                        "portValue":8080
-                    }
-                },
-                "filterChains":[
-                    {
-                        "filters":[
-                            {
-                                "config":{
-                                    "http_filters":[
-                                        {
-                                          "config": {
-                                            "rules": [
-                                              {
-                                                "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-                                                "pattern": {
-                                                  "http_method": "POST",
-                                                  "uri_template": "/echo"
-                                                }
-                                              },
-                                              {
-                                                "operation": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
-                                                "pattern": {
-                                                  "http_method": "GET",
-                                                  "uri_template": "/auth/info/googlejwt"
-                                                }
-                                              }
-                                            ]
-                                          },
-                                          "name": "envoy.filters.http.path_matcher"
-                                        },
-                                        {
-                                            "config": {
-                                                "filter_state_rules": {
-                                                  "name": "envoy.filters.http.path_matcher.operation",
-                                                  "requires": {
-                                                    "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt": {
-                                                      "provider_and_audiences": {
-                                                        "audiences": [
-                                                          "test_audience1"
-                                                        ],
-                                                        "provider_name": "firebase"
-                                                      }
-                                                    }
-                                                  }
-                                                },
-                                                "providers": {
-                                                    "firebase": {
-                                                        "audiences":["test_audience1", "test_audience2"],
-                                                        "from_headers":[{"name":"Authorization","value_prefix":"Bearer "},{"name":"X-Goog-Iap-Jwt-Assertion"}],
-                                                        "from_params":["access_token"],
-                                                        "issuer":"https://test_issuer.google.com/",
-                                                        "remote_jwks":{
-                                                            "cache_duration":"300s",
-                                                            "http_uri":{
-                                                                "cluster":"https://test_issuer.google.com/",
-                                                                "timeout":"5s",
-                                                                "uri":"$JWKSURI"
-                                                          }
-                                                        },
-                                                        "forward_payload_header": "X-Endpoint-API-UserInfo",
-                                                        "payload_in_metadata":"jwt_payloads"
-                                                    }
-                                                }
-                                            },
-                                            "name":"envoy.filters.http.jwt_authn"
-                                        },
-                                        {
-                                            "config":{
-                                            },
-                                            "name":"envoy.router"
-                                         }
-                                    ],
-                                    "route_config":{
-                                        "name":"local_route",
-                                        "virtual_hosts":[
-                                            {
-                                                "domains":[
-                                                    "*"
-                                                ],
-                                                "name":"backend",
-                                                    "routes":[
-                                                        {
-                                                            "match":{
-                                                                "prefix":"/"
-                                                            },
-                                                            "route":{
-                                                                "cluster": "1.echo_api_endpoints_cloudesf_testing_cloud_goog"
-                                                            }
-                                                        }
-                                                    ]
-                                                }
-                                            ]
-                                        },
-                                    "stat_prefix":"ingress_http",
-                                    "use_remote_address":false,
-                                    "xff_num_trusted_hops":2
-                                },
-                                "name":"envoy.http_connection_manager"
-                            }
-                        ]
-                    }
-                ]
-            }`),
+   "address":{
+      "socketAddress":{
+         "address":"0.0.0.0",
+         "portValue":8080
+      }
+   },
+   "filterChains":[
+      {
+         "filters":[
+            {
+               "name":"envoy.http_connection_manager",
+               "typedConfig":{
+                  "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "httpFilters":[
+                     {
+                        "name":"envoy.filters.http.path_matcher",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                           "rules":[
+                              {
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+                                 "pattern":{
+                                    "httpMethod":"POST",
+                                    "uriTemplate":"/echo"
+                                 }
+                              },
+                              {
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
+                                 "pattern":{
+                                    "httpMethod":"GET",
+                                    "uriTemplate":"/auth/info/googlejwt"
+                                 }
+                              }
+                           ]
+                        }
+                     },
+                     {
+                        "name":"envoy.filters.http.jwt_authn",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication",
+                           "filterStateRules":{
+                              "name":"envoy.filters.http.path_matcher.operation",
+                              "requires":{
+                                 "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt":{
+                                    "providerAndAudiences":{
+                                       "audiences":[
+                                          "test_audience1"
+                                       ],
+                                       "providerName":"firebase"
+                                    }
+                                 }
+                              }
+                           },
+                           "providers":{
+                              "firebase":{
+                                 "audiences":[
+                                    "test_audience1",
+                                    "test_audience2"
+                                 ],
+                                 "forwardPayloadHeader":"X-Endpoint-API-UserInfo",
+                                 "fromHeaders":[
+                                    {
+                                       "name":"Authorization",
+                                       "valuePrefix":"Bearer "
+                                    },
+                                    {
+                                       "name":"X-Goog-Iap-Jwt-Assertion"
+                                    }
+                                 ],
+                                 "fromParams":[
+                                    "access_token"
+                                 ],
+                                 "issuer":"https://test_issuer.google.com/",
+                                 "payloadInMetadata":"jwt_payloads",
+                                 "remoteJwks":{
+                                    "cacheDuration":"300s",
+                                    "httpUri":{
+                                       "cluster":"https://test_issuer.google.com/",
+                                       "timeout":"5s",
+                                       "uri":"$JWKSURI"
+                                    }
+                                 }
+                              }
+                           }
+                        }
+                     },
+                     {
+                        "name":"envoy.router",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router"
+                        }
+                     }
+                  ],
+                  "routeConfig":{
+                     "name":"local_route",
+                     "virtualHosts":[
+                        {
+                           "domains":[
+                              "*"
+                           ],
+                           "name":"backend",
+                           "routes":[
+                              {
+                                 "match":{
+                                    "prefix":"/"
+                                 },
+                                 "route":{
+                                    "cluster":"1.echo_api_endpoints_cloudesf_testing_cloud_goog"
+                                 }
+                              }
+                           ]
+                        }
+                     ]
+                  },
+                  "statPrefix":"ingress_http",
+                  "useRemoteAddress":false,
+                  "xffNumTrustedHops":2
+               }
+            }
+         ]
+      }
+   ]
+}`),
 		},
 		{
 			desc:            "Success for backend that allow CORS, with tracing enabled",
@@ -1100,118 +1198,132 @@ func TestFetchListeners(t *testing.T) {
                 ]
             }`, testProjectName, testProjectID, testProjectName),
 			wantedListeners: `{
-                "address":{
-                    "socketAddress":{
-                        "address":"0.0.0.0",
-                        "portValue":8080
-                    }
-                },
-                "filterChains":[
-                    {
-                        "filters":[
-                            {
-                                "config": {
-                                    "http_filters":[
-                                        {
-                                            "config":{
-                                                "rules":[
-                                                    {
-                                                        "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_0",
-                                                        "pattern":{
-                                                            "http_method":"OPTIONS",
-                                                            "uri_template":"/simplegetcors"
-                                                        }
-                                                    },
-                                                    {
-                                                        "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
-                                                        "pattern":{
-                                                            "http_method":"GET",
-                                                            "uri_template":"/simplegetcors"
-                                                        }
-                                                    }
-                                                ]
-                                            },
-                                            "name":"envoy.filters.http.path_matcher"
-                                        },
-                                        {
-                                            "config":{
-                                                "gcp_attributes":{"platform":"GCE(API Proxy)"},
-                                                "requirements":[
-                                                     {
-                                                        "api_key":{
-                                                            "allow_without_api_key":true
-                                                        },
-                                                        "operation_name":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_0",
-                                                        "service_name":"bookstore.endpoints.project123.cloud.goog"
-                                                    },
-                                                    {
-                                                        "operation_name":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
-                                                        "service_name":"bookstore.endpoints.project123.cloud.goog"
-                                                    }
-                                                ],
-                                                "services":[
-                                                    {
-                                                        "backend_protocol":"http1",
-                                                        "jwt_payload_metadata_name": "jwt_payloads",
-                                                        "producer_project_id":"project123",
-                                                        "service_config":{
-                                                            "@type":"type.googleapis.com/google.api.Service"
-                                                        },
-                                                        "service_config_id":"2017-05-01r0",
-                                                        "service_name":"bookstore.endpoints.project123.cloud.goog"
-                                                    }
-                                                ],
-                                                "sc_calling_config":{"network_fail_open":true},
-                                                "service_control_uri": {
-                                                            "cluster":"service-control-cluster",
-                                                            "timeout":"5s",
-                                                            "uri":"https://servicecontrol.googleapis.com/v1/services/"
-                                                        },
-                                                "access_token":{
-                                                  "remote_token":{
-                                                    "cluster":"metadata-cluster",
-                                                    "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token",
-                                                    "timeout":"5s"
-                                                  }
-                                                }
-                                            },
-                                            "name":"envoy.filters.http.service_control"
-                                        },
-                                        {
-                                            "config":{
-                                              "start_child_span":true
-                                            },
-                                            "name":"envoy.router"
-                                        }
-                                    ],
-                                    "route_config":{
-                                        "name":"local_route",
-                                        "virtual_hosts":[
-                                            {
-                                                "domains":["*"],
-                                                "name":"backend",
-                                                "routes":[
-                                                    {
-                                                        "match":{"prefix":"/"},
-                                                        "route":{
-                                                            "cluster":"1.echo_api_endpoints_cloudesf_testing_cloud_goog"
-                                                        }
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    },
-                                    "stat_prefix":"ingress_http",
-                                    "use_remote_address":false,
-                                    "tracing":{},
-                                    "xff_num_trusted_hops":2
-                                },
-                                "name":"envoy.http_connection_manager"
-                            }
-                        ]
-                    }
-                ]
-            }`,
+   "address":{
+      "socketAddress":{
+         "address":"0.0.0.0",
+         "portValue":8080
+      }
+   },
+   "filterChains":[
+      {
+         "filters":[
+            {
+               "name":"envoy.http_connection_manager",
+               "typedConfig":{
+                  "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "httpFilters":[
+                     {
+                        "name":"envoy.filters.http.path_matcher",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                           "rules":[
+                              {
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_0",
+                                 "pattern":{
+                                    "httpMethod":"OPTIONS",
+                                    "uriTemplate":"/simplegetcors"
+                                 }
+                              },
+                              {
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
+                                 "pattern":{
+                                    "httpMethod":"GET",
+                                    "uriTemplate":"/simplegetcors"
+                                 }
+                              }
+                           ]
+                        }
+                     },
+                     {
+                        "name":"envoy.filters.http.service_control",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/google.api.envoy.http.service_control.FilterConfig",
+                           "accessToken":{
+                              "remoteToken":{
+                                 "cluster":"metadata-cluster",
+                                 "timeout":"5s",
+                                 "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
+                              }
+                           },
+                           "gcpAttributes":{
+                              "platform":"GCE(API Proxy)"
+                           },
+                           "requirements":[
+                              {
+                                 "apiKey":{
+                                    "allowWithoutApiKey":true
+                                 },
+                                 "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_0",
+                                 "serviceName":"bookstore.endpoints.project123.cloud.goog"
+                              },
+                              {
+                                 "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
+                                 "serviceName":"bookstore.endpoints.project123.cloud.goog"
+                              }
+                           ],
+                           "scCallingConfig":{
+                              "networkFailOpen":true
+                           },
+                           "serviceControlUri":{
+                              "cluster":"service-control-cluster",
+                              "timeout":"5s",
+                              "uri":"https://servicecontrol.googleapis.com/v1/services/"
+                           },
+                           "services":[
+                              {
+                                 "backendProtocol":"http1",
+                                 "jwtPayloadMetadataName":"jwt_payloads",
+                                 "producerProjectId":"project123",
+                                 "serviceConfig":{
+                                    "@type":"type.googleapis.com/google.api.Service"
+                                 },
+                                 "serviceConfigId":"2017-05-01r0",
+                                 "serviceName":"bookstore.endpoints.project123.cloud.goog"
+                              }
+                           ]
+                        }
+                     },
+                     {
+                        "name":"envoy.router",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
+                           "startChildSpan":true
+                        }
+                     }
+                  ],
+                  "routeConfig":{
+                     "name":"local_route",
+                     "virtualHosts":[
+                        {
+                           "domains":[
+                              "*"
+                           ],
+                           "name":"backend",
+                           "routes":[
+                              {
+                                 "match":{
+                                    "prefix":"/"
+                                 },
+                                 "route":{
+                                    "cluster":"1.echo_api_endpoints_cloudesf_testing_cloud_goog"
+                                 }
+                              }
+                           ]
+                        }
+                     ]
+                  },
+                  "statPrefix":"ingress_http",
+                  "tracing":{
+
+                  },
+                  "useRemoteAddress":false,
+                  "xffNumTrustedHops":2
+               }
+            }
+         ]
+      }
+   ]
+}`,
 		},
 	}
 
@@ -1650,6 +1762,20 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(wrapperspb.BoolValue), nil
 	case "type.googleapis.com/google.api.Service":
 		return new(confpb.Service), nil
+	case "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager":
+		return new(hcmpb.HttpConnectionManager), nil
+	case "type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig":
+		return new(pmpb.FilterConfig), nil
+	case "type.googleapis.com/google.api.envoy.http.service_control.FilterConfig":
+		return new(scpb.FilterConfig), nil
+	case "type.googleapis.com/envoy.config.filter.http.router.v2.Router":
+		return new(routerpb.Router), nil
+	case "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext":
+		return new(authpb.UpstreamTlsContext), nil
+	case "type.googleapis.com/envoy.config.filter.http.transcoder.v2.GrpcJsonTranscoder":
+		return new(transcoderpb.GrpcJsonTranscoder), nil
+	case "type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication":
+		return new(jwtauthnpb.JwtAuthentication), nil
 	default:
 		return nil, fmt.Errorf("unexpected protobuf.Any with url: %s", url)
 	}
