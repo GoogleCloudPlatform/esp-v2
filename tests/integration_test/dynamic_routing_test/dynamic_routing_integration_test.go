@@ -48,6 +48,7 @@ func TestDynamicRouting(t *testing.T) {
 	s := NewDynamicRoutingTestEnv(comp.TestDynamicRouting)
 
 	defer s.TearDown()
+
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -221,11 +222,64 @@ func TestDynamicRouting(t *testing.T) {
 	}
 }
 
-func TestServiceControlRequestForDynamicRouting(t *testing.T) {
+func TestDynamicRoutingWithAllowCors(t *testing.T) {
+	corsRequestMethod := "PATCH"
+	corsRequestHeader := "X-PINGOTHER"
+	corsOrigin := "http://cloud.google.com"
 
-	s := NewDynamicRoutingTestEnv(comp.TestServiceControlRequestInDynamicRouting)
+	respHeaderMap := make(map[string]string)
+	respHeaderMap["Access-Control-Allow-Origin"] = "*"
+	respHeaderMap["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+	respHeaderMap["Access-Control-Allow-Headers"] = "Authorization"
+	respHeaderMap["Access-Control-Expose-Headers"] = "Cache-Control,Content-Type,Authorization, X-PINGOTHER"
+	respHeaderMap["Access-Control-Allow-Credentials"] = "true"
+
+	s := NewDynamicRoutingTestEnv(comp.TestDynamicRoutingWithAllowCors)
+	s.SetAllowCors()
 
 	defer s.TearDown()
+
+	if err := s.Setup(testDynamicRoutingArgs); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	testData := []struct {
+		desc string
+		url  string
+	}{
+		{
+			// when allowCors, passes preflight CORS request to backend.
+			desc: "Succeed, response has CORS headers",
+			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/simplegetcors"),
+		},
+		{
+			// when allowCors, passes preflight CORS request without valid jwt token to backend,
+			// even the origin method requires authentication.
+			desc: "Succeed without jwt token, response has CORS headers",
+			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/auth/info/firebase"),
+		},
+	}
+
+	for _, tc := range testData {
+		respHeader, err := client.DoCorsPreflightRequest(tc.url, corsOrigin, corsRequestMethod, corsRequestHeader, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		for key, value := range respHeaderMap {
+			if respHeader.Get(key) != value {
+				t.Errorf("%s expected: %s, got: %s", key, value, respHeader.Get(key))
+			}
+		}
+	}
+}
+
+func TestServiceControlRequestForDynamicRouting(t *testing.T) {
+
+	s := NewDynamicRoutingTestEnv(comp.TestServiceControlRequestForDynamicRouting)
+
+	defer s.TearDown()
+
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

@@ -97,6 +97,54 @@ func TestBackendAuthWithImdsIdToken(t *testing.T) {
 	}
 }
 
+func TestBackendAuthWithImdsIdTokenWhileAllowCors(t *testing.T) {
+	corsRequestMethod := "PATCH"
+	corsRequestHeader := "X-PINGOTHER"
+	corsOrigin := "http://cloud.google.com"
+
+	s := NewBackendAuthTestEnv(comp.TestBackendAuthWithImdsIdTokenWhileAllowCors)
+	s.OverrideMockMetadata(
+		map[string]string{
+			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",
+			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/append":   "ya29.append",
+		})
+	s.SetAllowCors()
+
+	defer s.TearDown()
+	if err := s.Setup(testBackendAuthArgs); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	testData := []struct {
+		desc       string
+		path       string
+		message    string
+		wantHeader string
+	}{
+		{
+			desc:       "Add Bearer token for CONSTANT_ADDRESS backend that requires JWT token",
+			path:       "/bearertoken/constant/42",
+			wantHeader: `X-Token: Bearer ya29.constant`,
+		},
+		{
+			desc:       "Add Bearer token for APPEND_PATH_TO_ADDRESS backend that requires JWT token",
+			path:       "/bearertoken/append?key=api-key",
+			wantHeader: `X-Token: Bearer ya29.append`,
+		},
+	}
+
+	for _, tc := range testData {
+		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		respHeader, err := client.DoCorsPreflightRequest(url, corsOrigin, corsRequestMethod, corsRequestHeader, "")
+		if err != nil {
+			t.Fatalf("Test Desc(%s): %v", tc.desc, err)
+		}
+		if gotHeader := respHeader.Get("Access-Control-Expose-Headers"); gotHeader != tc.wantHeader {
+			t.Errorf("Test Desc(%s) expected: %s, got: %s", tc.desc, tc.wantHeader, gotHeader)
+		}
+	}
+}
+
 func TestBackendAuthWithIamIdToken(t *testing.T) {
 	s := NewBackendAuthTestEnv(comp.TestBackendAuthWithIamIdToken)
 	serviceAccount := "fakeServiceAccount@google.com"

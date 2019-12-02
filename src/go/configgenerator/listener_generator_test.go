@@ -99,8 +99,275 @@ func TestTranscoderFilter(t *testing.T) {
 		// Normalize both path matcher filter and gotListeners.
 		gotFilter = normalizeJson(gotFilter)
 		want := normalizeJson(tc.wantTranscoderFilter)
-		if !strings.Contains(gotFilter, want) {
+		if gotFilter != want {
 			t.Errorf("Test Desc(%d): %s, makeTranscoderFilter failed, got: %s, want: %s", i, tc.desc, gotFilter, want)
+		}
+	}
+}
+
+func TestBackendRoutingFilter(t *testing.T) {
+	testdata := []struct {
+		desc                     string
+		protocol                 string
+		fakeServiceConfig        *confpb.Service
+		wantBackendRoutingFilter string
+	}{
+		{
+			desc:     "Success, generate backend routing filter for gRPC",
+			protocol: "grpc",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "endpoints.examples.bookstore.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name: "CreateShelf",
+							},
+							{
+								Name: "ListShelves",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/v1/shelves",
+							},
+						},
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.CreateShelf",
+							Pattern: &annotationspb.HttpRule_Post{
+								Post: "/v1/shelves",
+							},
+							Body: "shelf",
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector:        "endpoints.examples.bookstore.Bookstore.CreateShelf",
+							Address:         "https://testapipb.com/foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+						},
+						{
+							Selector:        "endpoints.examples.bookstore.Bookstore.ListShelves",
+							Address:         "https://testapipb.com/foo",
+							PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "bar.com",
+							},
+						},
+					},
+				},
+			},
+			wantBackendRoutingFilter: `{
+        "name": "envoy.filters.http.backend_routing",
+        "typedConfig": {
+          "@type":"type.googleapis.com/google.api.envoy.http.backend_routing.FilterConfig",
+          "rules": [
+            {
+              "isConstAddress": true,
+              "operation": "endpoints.examples.bookstore.Bookstore.CreateShelf",
+              "pathPrefix": "/foo"
+            },
+            {
+              "operation":  "endpoints.examples.bookstore.Bookstore.ListShelves",
+              "pathPrefix": "/foo"
+            }
+          ]
+        }
+      }`,
+		},
+		{
+			desc:     "Success, generate backend routing filter for http2",
+			protocol: "http2",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "testapi",
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+							{
+								Name: "bar",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "testapi.foo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "foo",
+							},
+						},
+						{
+							Selector: "testapi.bar",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "bar",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector: "ignore_me",
+						},
+						{
+							Selector:        "testapi.foo",
+							Address:         "https://testapipb.com/foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "foo.com",
+							},
+						},
+						{
+							Selector:        "testapi.bar",
+							Address:         "https://testapipb.com/foo",
+							PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "bar.com",
+							},
+						},
+					},
+				},
+			},
+			wantBackendRoutingFilter: `{
+        "name": "envoy.filters.http.backend_routing",
+        "typedConfig": {
+          "@type":"type.googleapis.com/google.api.envoy.http.backend_routing.FilterConfig",
+          "rules": [
+            {
+              "operation": "testapi.bar",
+              "pathPrefix": "/foo"
+            },
+            {
+              "isConstAddress": true,
+              "operation":"testapi.foo",
+              "pathPrefix": "/foo"
+            }
+          ]
+        }
+      }`,
+		},
+		{
+			desc:     "Success, generate backend routing filter with allow Cors",
+			protocol: "http1",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Endpoints: []*confpb.Endpoint{
+					{
+						Name:      testProjectName,
+						AllowCors: true,
+					},
+				},
+				Apis: []*apipb.Api{
+					{
+						Name: "testapi",
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+							{
+								Name: "bar",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "testapi.foo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "foo",
+							},
+						},
+						{
+							Selector: "testapi.bar",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "bar",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector: "ignore_me",
+						},
+						{
+							Selector:        "testapi.foo",
+							Address:         "https://testapipb.com/foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "foo.com",
+							},
+						},
+						{
+							Selector:        "testapi.bar",
+							Address:         "https://testapipb.com/bar",
+							PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "bar.com",
+							},
+						},
+					},
+				},
+			},
+			wantBackendRoutingFilter: `{
+        "name": "envoy.filters.http.backend_routing",
+        "typedConfig": {
+          "@type":"type.googleapis.com/google.api.envoy.http.backend_routing.FilterConfig",
+          "rules": [
+            {
+              "isConstAddress": true,
+              "operation":"testapi.CORS_0",
+              "pathPrefix": "/foo"
+            },
+            {
+              "operation":"testapi.CORS_1",
+              "pathPrefix": "/bar"
+            },
+            {
+              "operation": "testapi.bar",
+              "pathPrefix": "/bar"
+            },
+            {
+              "isConstAddress": true,
+              "operation":"testapi.foo",
+              "pathPrefix": "/foo"
+            }
+          ]
+        }
+      }`,
+		},
+	}
+
+	for _, tc := range testdata {
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = tc.protocol
+		opts.EnableBackendRouting = true
+		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		marshaler := &jsonpb.Marshaler{}
+		gotFilter, err := marshaler.MarshalToString(makeBackendRoutingFilter(fakeServiceInfo))
+		gotFilter = normalizeJson(gotFilter)
+		want := normalizeJson(tc.wantBackendRoutingFilter)
+
+		if !strings.Contains(gotFilter, want) {
+			t.Errorf("makeBackendAuthFilter failed,\ngot: %s, \nwant: %s", gotFilter, want)
 		}
 	}
 }
@@ -178,6 +445,101 @@ func TestBackendAuthFilter(t *testing.T) {
    }
 }
 `,
+		},
+		{
+			desc: "Success, generate backend auth filter with allow Cors",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Endpoints: []*confpb.Endpoint{
+					{
+						Name:      testProjectName,
+						AllowCors: true,
+					},
+				},
+				Apis: []*apipb.Api{
+					{
+						Name: "testapi",
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+							{
+								Name: "bar",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "testapi.foo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "foo",
+							},
+						},
+						{
+							Selector: "testapi.bar",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "bar",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector: "ignore_me",
+						},
+						{
+							Selector:        "testapi.foo",
+							Address:         "https://testapipb.com/foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "foo.com",
+							},
+						},
+						{
+							Selector:        "testapi.bar",
+							Address:         "https://testapipb.com/bar",
+							PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "bar.com",
+							},
+						},
+					},
+				},
+			},
+			wantBackendAuthFilter: `{
+        "name":"envoy.filters.http.backend_auth",
+        "typedConfig":{
+          "@type":"type.googleapis.com/google.api.envoy.http.backend_auth.FilterConfig",
+          "imdsToken":{
+            "imdsServerUri":{
+              "cluster":"metadata-cluster",
+              "timeout":"5s",
+              "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
+            }
+          },
+          "rules":[
+            {
+            	"jwtAudience": "foo.com",
+            	"operation":"testapi.CORS_0"
+            },
+            {
+            	"jwtAudience": "bar.com",
+            	"operation": "testapi.CORS_1"
+            },
+            {
+              "jwtAudience": "bar.com",
+              "operation": "testapi.bar"
+            },
+            {
+              "jwtAudience": "foo.com",
+              "operation": "testapi.foo"
+            }
+          ]
+        }
+      }`,
 		},
 		{
 			desc:              "Success, set iamIdToken when iam service account is set",

@@ -74,6 +74,12 @@ var (
 					{
 						Name: "dynamic_routing_BearertokenAppendAddress",
 					},
+					{
+						Name: "dynamic_routing_Simplegetcors",
+					},
+					{
+						Name: "dynamic_routing_Auth_info_firebase",
+					},
 				},
 				Version: "1.0.0",
 			},
@@ -171,6 +177,18 @@ var (
 						Post: "/empty_path",
 					},
 				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Simplegetcors",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/simplegetcors",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Auth_info_firebase",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/auth/info/firebase",
+					},
+				},
 			},
 		},
 		Types: []*ptypepb.Type{
@@ -191,6 +209,14 @@ var (
 			Rules: []*confpb.AuthenticationRule{
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Auth_info_firebase",
+					Requirements: []*confpb.AuthRequirement{
+						{
+							ProviderId: GoogleJwtProvider,
+						},
+					},
 				},
 			},
 		},
@@ -362,6 +388,22 @@ var (
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/bearertoken/append",
+					},
+				},
+				{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Simplegetcors",
+					Address:         "https://localhost:-1",
+					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+					Authentication: &confpb.BackendRule_JwtAudience{
+						JwtAudience: "https://localhost/simplegetcors",
+					},
+				},
+				{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Auth_info_firebase",
+					Address:         "https://localhost:-1",
+					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+					Authentication: &confpb.BackendRule_JwtAudience{
+						JwtAudience: "https://localhost/auth/info/firebase",
 					},
 				},
 			},

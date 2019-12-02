@@ -149,6 +149,8 @@ func TestSimpleCorsWithRegexPreset(t *testing.T) {
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
 	s := env.NewTestEnv(comp.TestSimpleCorsWithRegexPreset, "echo")
+	// EnableDynamicRoutingBackend shouldn't impact simple Cors.
+	s.EnableDynamicRoutingBackend()
 	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

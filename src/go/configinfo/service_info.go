@@ -104,15 +104,15 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	serviceInfo.processEndpoints()
 	serviceInfo.processApis()
 	serviceInfo.processQuota()
+	if err := serviceInfo.processBackendRule(); err != nil {
+		return nil, err
+	}
 	if err := serviceInfo.processHttpRule(); err != nil {
 		return nil, err
 	}
 	serviceInfo.processUsageRule()
 	serviceInfo.processSystemParameters()
 	serviceInfo.processAccessToken()
-	if err := serviceInfo.processBackendRule(); err != nil {
-		return nil, err
-	}
 	serviceInfo.processTypes()
 	serviceInfo.processEmptyJwksUriByOpenID()
 
@@ -267,7 +267,7 @@ func (s *ServiceInfo) processHttpRule() error {
 			for _, httpRule := range method.HttpRule {
 				if httpRule.HttpMethod != "OPTIONS" {
 					if _, exist := httpPathWithOptionsSet[httpRule.UriTemplate]; !exist {
-						s.addOptionMethod(index, httpRule.UriTemplate)
+						s.addOptionMethod(index, httpRule.UriTemplate, method.BackendInfo)
 						httpPathWithOptionsSet[httpRule.UriTemplate] = true
 						index++
 					}
@@ -280,12 +280,13 @@ func (s *ServiceInfo) processHttpRule() error {
 	return nil
 }
 
-func (s *ServiceInfo) addOptionMethod(index int, path string) {
+func (s *ServiceInfo) addOptionMethod(index int, path string, backendInfo *backendInfo) {
 	// All options have their operation as the following format: CORS_suffix.
 	// Appends suffix to make sure it is not used by any http rules.
 	corsOperationBase := "CORS"
 	corsOperation := fmt.Sprintf("%s_%d", corsOperationBase, index)
-	s.Methods[fmt.Sprintf("%s.%s", s.ApiName, corsOperation)] = &methodInfo{
+	gen_operation := fmt.Sprintf("%s.%s", s.ApiName, corsOperation)
+	s.Methods[gen_operation] = &methodInfo{
 		ShortName: corsOperation,
 		HttpRule: []*commonpb.Pattern{
 			{
@@ -294,6 +295,7 @@ func (s *ServiceInfo) addOptionMethod(index int, path string) {
 			},
 		},
 		IsGeneratedOption: true,
+		BackendInfo:       backendInfo,
 	}
 }
 
@@ -337,7 +339,7 @@ func (s *ServiceInfo) processBackendRule() error {
 				uri = "/"
 			}
 
-			method.BackendRule = backendInfo{
+			method.BackendInfo = &backendInfo{
 				ClusterName:     clusterName,
 				Uri:             uri,
 				Hostname:        hostname,
