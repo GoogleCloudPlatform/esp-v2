@@ -23,6 +23,13 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 
+	bapb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/backend_auth"
+	drpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/backend_routing"
+	pmpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/path_matcher"
+	scpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/service_control"
+	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
+	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
+	hcmpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
@@ -63,6 +70,20 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(wrapperspb.UInt32Value), nil
 	case "type.googleapis.com/google.api.Service":
 		return new(confpb.Service), nil
+	case "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager":
+		return new(hcmpb.HttpConnectionManager), nil
+	case "type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig":
+		return new(pmpb.FilterConfig), nil
+	case "type.googleapis.com/google.api.envoy.http.service_control.FilterConfig":
+		return new(scpb.FilterConfig), nil
+	case "type.googleapis.com/google.api.envoy.http.backend_auth.FilterConfig":
+		return new(bapb.FilterConfig), nil
+	case "type.googleapis.com/google.api.envoy.http.backend_routing.FilterConfig":
+		return new(drpb.FilterConfig), nil
+	case "type.googleapis.com/envoy.config.filter.http.router.v2.Router":
+		return new(routerpb.Router), nil
+	case "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext":
+		return new(authpb.UpstreamTlsContext), nil
 	default:
 		return nil, fmt.Errorf("unexpected protobuf.Any with url: %s", url)
 	}
@@ -94,6 +115,20 @@ func MessageToStruct(msg proto.Message) (*structpb.Struct, error) {
 	}
 
 	return pbs, nil
+}
+
+// StructToMessage decodes a protobuf Message from a Struct.
+func StructToMessage(pbst *structpb.Struct, out proto.Message) error {
+	if pbst == nil {
+		return errors.New("nil struct")
+	}
+
+	buf := &bytes.Buffer{}
+	if err := (&jsonpb.Marshaler{OrigName: true}).Marshal(buf, pbst); err != nil {
+		return err
+	}
+
+	return jsonpb.Unmarshal(buf, out)
 }
 
 // UnmarshalServiceConfig converts service config in JSON to proto

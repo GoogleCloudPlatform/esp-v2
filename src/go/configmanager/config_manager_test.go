@@ -30,13 +30,21 @@ import (
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/metadata"
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
-	"github.com/GoogleCloudPlatform/api-proxy/tests/utils"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 
+	pmpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/path_matcher"
+	scpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/service_control"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	jwtauthnpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
+	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
+	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
+	hcmpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
+	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
@@ -1350,7 +1358,7 @@ func TestFetchListeners(t *testing.T) {
 				t.Fatal(err)
 			}
 			marshaler := &jsonpb.Marshaler{
-				AnyResolver: utils.TestBoostrapResolver,
+				AnyResolver: Resolver,
 			}
 			gotListeners, err := marshaler.MarshalToString(resp.Resources[0])
 			if err != nil {
@@ -1711,7 +1719,7 @@ func normalizeJson(input string, t *testing.T) string {
 
 func genFakeConfig(input string) ([]byte, error) {
 	unmarshaler := &jsonpb.Unmarshaler{
-		AnyResolver: util.Resolver,
+		AnyResolver: Resolver,
 	}
 	service := new(confpb.Service)
 	if err := unmarshaler.Unmarshal(strings.NewReader(input), service); err != nil {
@@ -1737,3 +1745,38 @@ func genFakeRollout(input string) ([]byte, error) {
 	}
 	return protoBytesArray, nil
 }
+
+type FuncResolver func(url string) (proto.Message, error)
+
+func (fn FuncResolver) Resolve(url string) (proto.Message, error) {
+	return fn(url)
+}
+
+var Resolver = FuncResolver(func(url string) (proto.Message, error) {
+	switch url {
+	case "type.googleapis.com/google.api.servicemanagement.v1.ConfigFile":
+		return new(smpb.ConfigFile), nil
+	case "type.googleapis.com/google.api.HttpRule":
+		return new(annotationspb.HttpRule), nil
+	case "type.googleapis.com/google.protobuf.BoolValue":
+		return new(wrapperspb.BoolValue), nil
+	case "type.googleapis.com/google.api.Service":
+		return new(confpb.Service), nil
+	case "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager":
+		return new(hcmpb.HttpConnectionManager), nil
+	case "type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig":
+		return new(pmpb.FilterConfig), nil
+	case "type.googleapis.com/google.api.envoy.http.service_control.FilterConfig":
+		return new(scpb.FilterConfig), nil
+	case "type.googleapis.com/envoy.config.filter.http.router.v2.Router":
+		return new(routerpb.Router), nil
+	case "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext":
+		return new(authpb.UpstreamTlsContext), nil
+	case "type.googleapis.com/envoy.config.filter.http.transcoder.v2.GrpcJsonTranscoder":
+		return new(transcoderpb.GrpcJsonTranscoder), nil
+	case "type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication":
+		return new(jwtauthnpb.JwtAuthentication), nil
+	default:
+		return nil, fmt.Errorf("unexpected protobuf.Any with url: %s", url)
+	}
+})
