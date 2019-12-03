@@ -15,12 +15,15 @@
 package util
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"io"
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 
+	structpb "github.com/golang/protobuf/ptypes/struct"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -64,6 +67,34 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return nil, fmt.Errorf("unexpected protobuf.Any with url: %s", url)
 	}
 })
+
+// MessageToStruct encodes a protobuf Message into a Struct. Hilariously, it
+// uses JSON as the intermediary
+// author:glen@turbinelabs.io
+func MessageToStruct(msg proto.Message) (*structpb.Struct, error) {
+	if msg == nil {
+		return nil, errors.New("nil message")
+	}
+
+	m := &jsonpb.Marshaler{
+		OrigName:    true,
+		AnyResolver: Resolver,
+	}
+	buf := &bytes.Buffer{}
+	if err := m.Marshal(buf, msg); err != nil {
+		return nil, err
+	}
+
+	pbs := &structpb.Struct{}
+	u := &jsonpb.Unmarshaler{
+		AnyResolver: Resolver,
+	}
+	if err := u.Unmarshal(buf, pbs); err != nil {
+		return nil, err
+	}
+
+	return pbs, nil
+}
 
 // UnmarshalServiceConfig converts service config in JSON to proto
 func UnmarshalServiceConfig(config io.Reader) (*confpb.Service, error) {
