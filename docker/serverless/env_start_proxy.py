@@ -81,20 +81,20 @@ def gen_args(cmd):
         else:
             ARGS.append("--rollout_strategy=managed")
 
-    if "APIPROXY_ARGS" in os.environ:
-        # By default, APIPROXY_ARGS is comma-separated.
+    if "ESPV2_ARGS" in os.environ:
+        # By default, ESPV2_ARGS is comma-separated.
         # But if a comma needs to appear within an arg, there is an alternative
         # syntax: Pick a replacement delimiter, specify it at the beginning of the
         # string between two caret (^) symbols, and use it within the arg string.
         # Example:
         # ^++^--cors_allow_methods="GET,POST,PUT,OPTIONS"++--cors_allow_credentials
-        arg_value = os.environ["APIPROXY_ARGS"]
+        arg_value = os.environ["ESPV2_ARGS"]
 
         delim = ","
         if arg_value.startswith("^") and "^" in arg_value[1:]:
             delim, arg_value = arg_value[1:].split("^", 1)
         if not delim:
-            serve_error_msg("Malformed APIPROXY_ARGS environment variable.")
+            serve_error_msg("Malformed ESPV2_ARGS environment variable.")
 
         ARGS.extend(arg_value.split(delim))
     return ARGS
