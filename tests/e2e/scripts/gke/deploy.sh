@@ -43,7 +43,7 @@ PROJECT_ID="cloudesf-testing"
 # Parses parameters into config file.
 ARGS="$ARGS \"--service=${APIPROXY_SERVICE}\","
 ARGS="$ARGS \"--rollout_strategy=${ROLLOUT_STRATEGY}\","
-ARGS="$ARGS \"--tracing_sample_rate=0.005\""
+ARGS="$ARGS \"--tracing_sample_rate=0.00001\""
 case "${BACKEND}" in
   'bookstore')
     YAML_TEMPLATE=${ROOT}/tests/e2e/testdata/bookstore/gke/http-bookstore.yaml.template
