@@ -5,6 +5,7 @@ BACKEND_AUTH_VISIBILITY = [
     "//api/envoy/http/backend_auth:__subpackages__",
     "//src/envoy/http/backend_auth:__subpackages__",
     "//src/go:__subpackages__",
+    "//tests/utils:__subpackages__",
 ]
 
 package(default_visibility = BACKEND_AUTH_VISIBILITY)

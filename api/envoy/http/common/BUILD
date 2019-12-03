@@ -5,6 +5,7 @@ DEFAULT_VISIBILITY = [
     "//api/envoy/http:__subpackages__",
     "//src/envoy/http:__subpackages__",
     "//src/go:__subpackages__",
+    "//tests/utils:__subpackages__",
 ]
 
 package(default_visibility = DEFAULT_VISIBILITY)
