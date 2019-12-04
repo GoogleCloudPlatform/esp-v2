@@ -27,8 +27,9 @@ exit 1; }
 
 function runE2E() {
   local OPTIND OPTARG arg
-  while getopts :p:c:g:m:R:t: arg; do
+  while getopts :f:p:c:g:m:R:t: arg; do
     case ${arg} in
+      f) local backend_platform="${OPTARG}" ;;
       p) local platform="${OPTARG}" ;;
       c) local coupling_option="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')" ;;
       g) local backend="${OPTARG}" ;;
@@ -52,7 +53,8 @@ function runE2E() {
     -R "${rollout_strategy}"  \
     -i "${unique_id}"  \
     -B "${BUCKET}"  \
-    -l "${DURATION_IN_HOUR}"
+    -l "${DURATION_IN_HOUR}" \
+    -f "${backend_platform}"
 }
 
 if [ ! -d "$GOPATH/bin" ]; then
@@ -85,7 +87,10 @@ case ${TEST_CASE} in
     runE2E -p "gke" -c "tight" -t "grpc" -g "interop" -R "managed" -m "$(get_proxy_image_name_with_sha)"
     ;;
   "cloud-run-http-bookstore")
-    runE2E -p "cloud-run" -t "http" -g "bookstore" -R "managed" -m "$(get_serverless_image_name_with_sha)"
+    runE2E -p "cloud-run" -f "cloud-run" -t "http" -g "bookstore" -R "managed" -m "$(get_serverless_image_name_with_sha)"
+    ;;
+  "cloud-run-cloud-function-http-bookstore")
+    runE2E -p "cloud-run" -f "cloud-function" -t "http" -g "bookstore" -R "managed" -m "$(get_serverless_image_name_with_sha)"
     ;;
   *)
     echo "No such test case ${TEST_CASE}"

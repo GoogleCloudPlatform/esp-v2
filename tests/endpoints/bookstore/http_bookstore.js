@@ -383,7 +383,9 @@ function loadSwagger(port) {
 // Otherwise, if `bookstore.js` is executed as a main program, start
 // the server and listen on a port.
 if (module.parent) {
-  module.exports = bookstore;
+  var port = process.env.PORT || '8080';
+  var swagger = loadSwagger(port);
+  module.exports.app = bookstore({ log: false, swagger: swagger });
 } else {
   var port = process.env.PORT || '8080';
   var swagger = loadSwagger(port);

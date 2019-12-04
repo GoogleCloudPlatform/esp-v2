@@ -35,8 +35,8 @@ update_wrk
 
 PROJECT_ID="cloudesf-testing"
 TEST_ID="cloud-run-${BACKEND}"
-PROXY_RUNTIME_SERVICE_ACCOUNT="e2e-cloud-run-proxy-runtime@${PROJECT_ID}.iam.gserviceaccount.com"
-BACKEND_RUNTIME_SERVICE_ACCOUNT="e2e-cloud-run-backend-runtime@${PROJECT_ID}.iam.gserviceaccount.com"
+PROXY_RUNTIME_SERVICE_ACCOUNT="e2e-cloud-run-proxy-rt@${PROJECT_ID}.iam.gserviceaccount.com"
+BACKEND_RUNTIME_SERVICE_ACCOUNT="e2e-${BACKEND_PLATFORM}-backend-rt@${PROJECT_ID}.iam.gserviceaccount.com"
 JOB_KEY_PATH="${ROOT}/tests/e2e/client/gob-prow-jobs-secret.json"
 LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
 
@@ -50,12 +50,45 @@ ENDPOINTS_SERVICE_TITLE=$(get_cloud_run_service_name_with_sha "${BACKEND}-servic
 ENDPOINTS_SERVICE_TITLE="${ENDPOINTS_SERVICE_TITLE}-${UNIQUE_ID}"
 ENDPOINTS_SERVICE_NAME=""
 PROXY_HOST=""
+BOOKSTORE_HOST=""
 
 STATUS=0
 
+function deployEndpoints() {
+  case ${BACKEND_PLATFORM} in
+    "cloud-run")
+      gcloud run deploy "${BOOKSTORE_SERVICE_NAME}" \
+        --image="gcr.io/apiproxy-release/bookstore:1" \
+        --no-allow-unauthenticated \
+        --service-account "${BACKEND_RUNTIME_SERVICE_ACCOUNT}" \
+        --platform managed \
+        --quiet
+
+      BOOKSTORE_HOST=$(gcloud run services describe "${BOOKSTORE_SERVICE_NAME}"  --platform=managed --quiet --format="value(status.address.url)")
+      ;;
+    "cloud-function")
+
+      cd ${ROOT}/tests/endpoints/bookstore
+      gcloud functions deploy ${BOOKSTORE_SERVICE_NAME}  --runtime nodejs8 \
+        --trigger-http --service-account "${BACKEND_RUNTIME_SERVICE_ACCOUNT}" \
+        --quiet --entry-point app
+      cd ${ROOT}
+
+      gcloud functions remove-iam-policy-binding ${BOOKSTORE_SERVICE_NAME} \
+      --member=allUsers --role=roles/cloudfunctions.invoker --quiet || true
+
+      BOOKSTORE_HOST=$(gcloud functions describe ${BOOKSTORE_SERVICE_NAME}  --format="value(httpsTrigger.url)" --quiet)
+      ;;
+    *)
+      echo "No such backend platform ${BACKEND_PLATFORM}"
+      exit 1
+      ;;
+  esac
+}
+
+
 function setup() {
   echo "Setup env"
-  local bookstore_host=""
   local bookstore_health_code=0
   local proxy_args=""
   local endpoints_service_config_id=""
@@ -72,28 +105,17 @@ function setup() {
   get_test_client_key "gob-prow-jobs-service-account.json" "${JOB_KEY_PATH}"
   gcloud auth activate-service-account --key-file="${JOB_KEY_PATH}"
 
-  # 1) Deploy backend service (authenticated)
-  echo "Deploying backend ${BOOKSTORE_SERVICE_NAME} on Cloud Run"
-  gcloud run deploy "${BOOKSTORE_SERVICE_NAME}" \
-      --image="gcr.io/apiproxy-release/bookstore:1" \
-      --no-allow-unauthenticated \
-      --service-account "${BACKEND_RUNTIME_SERVICE_ACCOUNT}" \
-      --platform managed \
-      --quiet
+  # Deploy backend service (authenticated) and set BOOKSTORE_HOST
+  echo "Deploying backend ${BOOKSTORE_SERVICE_NAME} on ${BACKEND_PLATFORM}"
+  deployEndpoints
 
-  # 2) Get url of backend service
-  bookstore_host=$(gcloud run services describe "${BOOKSTORE_SERVICE_NAME}" \
-      --platform=managed \
-      --format="value(status.address.url.basename())" \
-      --quiet)
-
-  # 3) Verify the backend is up using the identity of the current machine/user
+  # Verify the backend is up using the identity of the current machine/user
   bookstore_health_code=$(curl \
       --write-out %{http_code} \
       --silent \
       --output /dev/null \
       -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
-      "https://${bookstore_host}"/shelves)
+    "${BOOKSTORE_HOST}"/shelves)
 
   if [[ "$bookstore_health_code" -ne 200 ]] ; then
     echo "Backend status is $bookstore_health_code, failing test"
@@ -101,23 +123,23 @@ function setup() {
   fi
   echo "Backend deployed successfully"
 
-  # 4) Deploy initial ESP V2 service
+  # Deploy initial ESP V2 service
   echo "Deploying ESP V2 ${BOOKSTORE_SERVICE_NAME} on Cloud Run"
 
   gcloud run deploy "${PROXY_SERVICE_NAME}" \
-      --image="${APIPROXY_IMAGE}" \
-      --allow-unauthenticated \
-      --service-account "${PROXY_RUNTIME_SERVICE_ACCOUNT}" \
-      --platform managed \
-      --quiet
+    --image="${APIPROXY_IMAGE}" \
+    --allow-unauthenticated \
+    --service-account "${PROXY_RUNTIME_SERVICE_ACCOUNT}" \
+    --platform managed \
+    --quiet
 
-  # 5) Get url of ESP V2 service
+  # Get url of ESP V2 service
   PROXY_HOST=$(gcloud run services describe "${PROXY_SERVICE_NAME}" \
       --platform=managed \
       --format="value(status.address.url.basename())" \
-      --quiet)
+    --quiet)
 
-  # 6) Modify the service config for Cloud Run
+  # Modify the service config for Cloud Run
   local service_idl_tmpl="${ROOT}/tests/endpoints/bookstore/bookstore_swagger_template.json"
   local service_idl="${ROOT}/tests/endpoints/bookstore/bookstore_swagger.json"
 
@@ -126,16 +148,16 @@ function setup() {
   # Change the jwt audience to point to the proxy host (required for calling authenticated endpoints)
   # Add in the `x-google-backend` to point to the backend URL (required for backend routing)
   cat "${service_idl_tmpl}" \
-      | jq ".host = \"${PROXY_HOST}\" \
+    | jq ".host = \"${PROXY_HOST}\" \
       | .info.title = \"${ENDPOINTS_SERVICE_TITLE}\" \
       | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${PROXY_HOST}\" \
-      | . + { \"x-google-backend\": { \"address\": \"https://${bookstore_host}\" } } " \
-      > "${service_idl}"
+    | . + { \"x-google-backend\": { \"address\": \"${BOOKSTORE_HOST}\" } } " \
+    > "${service_idl}"
 
-  # 7) Deploy the service config
+  # Deploy the service config
   create_service "${service_idl}"
 
-  # 8) Get the service name and config id to enable it
+  # Get the service name and config id to enable it
   # Assumes that the names of the endpoinds service and cloud run host match
   ENDPOINTS_SERVICE_NAME="${PROXY_HOST}"
   endpoints_service_config_id=$(gcloud endpoints configs list \
@@ -143,32 +165,32 @@ function setup() {
       --quiet \
       --limit=1 \
       --format=json \
-      | jq -r '.[].id')
+    | jq -r '.[].id')
 
   # Then enable the service
   gcloud services enable "${ENDPOINTS_SERVICE_NAME}"
 
-  # 9) Build the service config into a new image
+  # Build the service config into a new image
   echo "Building serverless image"
   local build_image_script="${ROOT}/docker/serverless/gcloud_build_image"
   chmod +x "${build_image_script}"
   $build_image_script \
-      -s "${ENDPOINTS_SERVICE_NAME}" \
-      -c "${endpoints_service_config_id}" \
-      -p "${PROJECT_ID}" \
-      -i "${APIPROXY_IMAGE}"
+    -s "${ENDPOINTS_SERVICE_NAME}" \
+    -c "${endpoints_service_config_id}" \
+    -p "${PROJECT_ID}" \
+    -i "${APIPROXY_IMAGE}"
 
-  # 10) Redeploy ESP V2 to update the service config
+  # Redeploy ESP V2 to update the service config
   proxy_args="--tracing_sample_rate=0.00001"
 
   echo "Redeploying ESP V2 ${PROXY_SERVICE_NAME} on Cloud Run"
   gcloud run deploy "${PROXY_SERVICE_NAME}" \
-      --image="gcr.io/${PROJECT_ID}/apiproxy-serverless:${ENDPOINTS_SERVICE_NAME}-${endpoints_service_config_id}" \
-      --set-env-vars=ESPV2_ARGS="${proxy_args}" \
-      --allow-unauthenticated \
-      --service-account "${PROXY_RUNTIME_SERVICE_ACCOUNT}" \
-      --platform managed \
-      --quiet
+    --image="gcr.io/${PROJECT_ID}/apiproxy-serverless:${ENDPOINTS_SERVICE_NAME}-${endpoints_service_config_id}" \
+    --set-env-vars=ESPV2_ARGS="${proxy_args}" \
+    --allow-unauthenticated \
+    --service-account "${PROXY_RUNTIME_SERVICE_ACCOUNT}" \
+    --platform managed \
+    --quiet
 
   # Ping the proxy to startup, sleep to finish setup
   curl --silent --output /dev/null "https://${PROXY_HOST}"/shelves
@@ -194,17 +216,17 @@ function test() {
   sleep 10m
 
   run_nonfatal long_running_test  \
-      "${PROXY_HOST}"  \
-      "https" \
-      "443" \
-      "${DURATION_IN_HOUR}"  \
-      ""  \
-      "${ENDPOINTS_SERVICE_NAME}"  \
-      "${LOG_DIR}"  \
-      "${TEST_ID}"  \
-      "${UNIQUE_ID}" \
-      "cloud-run" \
-      || STATUS=${?}
+    "${PROXY_HOST}"  \
+    "https" \
+    "443" \
+    "${DURATION_IN_HOUR}"  \
+    ""  \
+    "${ENDPOINTS_SERVICE_NAME}"  \
+    "${LOG_DIR}"  \
+    "${TEST_ID}"  \
+    "${UNIQUE_ID}" \
+    "cloud-run" \
+    || STATUS=${?}
   echo "Testing complete with status ${STATUS}"
 }
 
@@ -216,24 +238,36 @@ function tearDown() {
 
   # Delete the ESP V2 Cloud Run service
   gcloud run services delete "${PROXY_SERVICE_NAME}" \
-      --platform managed \
-      --quiet || true
+    --platform managed \
+    --quiet || true
 
-  # Delete the backend Cloud Run service
-  gcloud run services delete "${BOOKSTORE_SERVICE_NAME}" \
-      --platform managed \
-      --quiet || true
+  case ${BACKEND_PLATFORM} in
+    "cloud-run")
+      # Delete the backend Cloud Run service
+      gcloud run services delete "${BOOKSTORE_SERVICE_NAME}" \
+        --platform managed \
+        --quiet || true
+      ;;
+    "cloud-function")
+      gcloud functions delete "${BOOKSTORE_SERVICE_NAME}" --quiet || true
+      ;;
+    *)
+      echo "No such backend platform ${BACKEND_PLATFORM}"
+      exit 1
+      ;;
+  esac
+
 
   # Delete the endpoints service config
   gcloud endpoints services delete "${ENDPOINTS_SERVICE_NAME}" \
-      --quiet || true
+    --quiet || true
 
   echo "Teardown complete successfully"
 }
 
 run_nonfatal setup || STATUS=${?}
 
-if [[ "$STATUS" == 0 ]] ; then
+if [[ ${STATUS} == 0 ]] ; then
   run_nonfatal test || STATUS=${?}
 fi
 
