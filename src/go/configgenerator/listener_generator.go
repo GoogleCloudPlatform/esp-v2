@@ -31,7 +31,6 @@ import (
 	scpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/service_control"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-
 	listenerpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
 	jwtpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
@@ -119,7 +118,6 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 
 	// Add Envoy Router filter so requests are routed upstream.
 	// Router filter should be the last.
-
 	routerFilter := makeRouterFilter(serviceInfo.Options)
 	httpFilters = append(httpFilters, routerFilter)
 
@@ -199,7 +197,7 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 					Operation: operation,
 					Pattern:   httpRule,
 				}
-				if method.BackendRule.TranslationType == confpb.BackendRule_CONSTANT_ADDRESS && hasPathParameter(newHttpRule.Pattern.UriTemplate) {
+				if method.BackendInfo != nil && method.BackendInfo.TranslationType == confpb.BackendRule_CONSTANT_ADDRESS && hasPathParameter(newHttpRule.Pattern.UriTemplate) {
 					newHttpRule.ExtractPathParameters = true
 				}
 				rules = append(rules, newHttpRule)
@@ -515,13 +513,13 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	rules := []*bapb.BackendAuthRule{}
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
-		if method.BackendRule.JwtAudience == "" {
+		if method.BackendInfo == nil || method.BackendInfo.JwtAudience == "" {
 			continue
 		}
 		rules = append(rules,
 			&bapb.BackendAuthRule{
 				Operation:   operation,
-				JwtAudience: method.BackendRule.JwtAudience,
+				JwtAudience: method.BackendInfo.JwtAudience,
 			})
 	}
 	backendAuthConfig := &bapb.FilterConfig{
@@ -567,12 +565,15 @@ func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	rules := []*brpb.BackendRoutingRule{}
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
-		if method.BackendRule.TranslationType != confpb.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
-			rules = append(rules, &brpb.BackendRoutingRule{
+		if method.BackendInfo != nil && method.BackendInfo.TranslationType != confpb.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
+			newRule := &brpb.BackendRoutingRule{
 				Operation:      operation,
-				IsConstAddress: method.BackendRule.TranslationType == confpb.BackendRule_CONSTANT_ADDRESS,
-				PathPrefix:     method.BackendRule.Uri,
-			})
+				IsConstAddress: method.BackendInfo.TranslationType == confpb.BackendRule_CONSTANT_ADDRESS,
+			}
+			if method.BackendInfo != nil {
+				newRule.PathPrefix = method.BackendInfo.Uri
+			}
+			rules = append(rules, newRule)
 		}
 	}
 

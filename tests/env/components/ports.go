@@ -33,10 +33,12 @@ const (
 	TestAsymmetricKeysTraces
 	TestAuthJwksCache
 	TestBackendAuthWithImdsIdToken
+	TestBackendAuthWithImdsIdTokenWhileAllowCors
 	TestBackendAuthWithIamIdToken
 	TestDifferentOriginPreflightCors
 	TestDifferentOriginSimpleCors
 	TestDynamicRouting
+	TestDynamicRoutingWithAllowCors
 	TestGRPC
 	TestGrpcBackendPreflightCors
 	TestGrpcBackendSimpleCors
@@ -84,7 +86,7 @@ const (
 	TestServiceControlReportNetworkFail
 	TestServiceControlReportResponseCode
 	TestServiceControlReportRetry
-	TestServiceControlRequestInDynamicRouting
+	TestServiceControlRequestForDynamicRouting
 	TestServiceControlRequestWithAllowCors
 	TestServiceControlRequestWithoutAllowCors
 	TestServiceControlSkipUsage

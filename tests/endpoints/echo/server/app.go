@@ -70,7 +70,7 @@ func main() {
 		Handler(corsHandler(authInfoHandler))
 	r.Path("/auth/info/auth0").Methods("GET").
 		HandlerFunc(authInfoHandler)
-	r.PathPrefix("/bearertoken/").Methods("GET").
+	r.PathPrefix("/bearertoken/").Methods("GET", "OPTIONS").
 		HandlerFunc(bearerTokenHandler)
 	r.PathPrefix("/dynamicrouting").Methods("GET", "POST").
 		HandlerFunc(dynamicRoutingHandler)
@@ -208,6 +208,9 @@ func authInfoHandler(w http.ResponseWriter, r *http.Request) {
 // bearerTokenHandler reads "Authorization" header and request URI.
 func bearerTokenHandler(w http.ResponseWriter, r *http.Request) {
 	bearerToken := r.Header.Get("Authorization")
+	if r.Method == "OPTIONS" {
+		w.Header().Set("Access-Control-Expose-Headers", fmt.Sprintf("X-Token: %s", bearerToken))
+	}
 	reqURI := r.URL.RequestURI()
 	resp := fmt.Sprintf(`{"Authorization": "%s", "RequestURI": "%s"}`, bearerToken, reqURI)
 	w.Write([]byte(resp))

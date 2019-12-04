@@ -106,7 +106,7 @@ func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.R
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
 		var routeMatcher *routepb.RouteMatch
-		if method.BackendRule.TranslationType == confpb.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
+		if method.BackendInfo == nil || method.BackendInfo.TranslationType == confpb.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
 			continue
 		}
 		for _, httpRule := range method.HttpRule {
@@ -119,10 +119,10 @@ func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.R
 				Action: &routepb.Route_Route{
 					Route: &routepb.RouteAction{
 						ClusterSpecifier: &routepb.RouteAction_Cluster{
-							Cluster: method.BackendRule.ClusterName,
+							Cluster: method.BackendInfo.ClusterName,
 						},
 						HostRewriteSpecifier: &routepb.RouteAction_HostRewrite{
-							HostRewrite: method.BackendRule.Hostname,
+							HostRewrite: method.BackendInfo.Hostname,
 						},
 					},
 				},

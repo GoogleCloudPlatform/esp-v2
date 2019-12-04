@@ -24,7 +24,7 @@ import (
 type methodInfo struct {
 	ShortName              string
 	HttpRule               []*commonpb.Pattern
-	BackendRule            backendInfo
+	BackendInfo            *backendInfo
 	AllowUnregisteredCalls bool
 	IsGeneratedOption      bool
 	SkipServiceControl     bool
