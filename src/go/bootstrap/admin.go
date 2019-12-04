@@ -23,6 +23,11 @@ import (
 
 // CreateAdmin outputs Admin struct for bootstrap config
 func CreateAdmin(opts options.CommonOptions) *bootstrappb.Admin {
+
+	if !opts.EnableAdmin {
+		return &bootstrappb.Admin{}
+	}
+
 	return &bootstrappb.Admin{
 		AccessLogPath: "/dev/null",
 		Address: &corepb.Address{

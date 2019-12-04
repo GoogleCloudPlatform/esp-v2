@@ -32,6 +32,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 	opts := options.DefaultConfigGeneratorOptions()
 	opts.BackendProtocol = "HTTP1"
 	opts.DisableTracing = true
+	opts.EnableAdmin = true
 
 	// Function under test
 	gotBootstrap, err := ServiceToBootstrapConfig(testdata.FakeBookstoreConfig, testdata.FakeConfigID, opts)
