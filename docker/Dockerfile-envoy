@@ -18,4 +18,4 @@ FROM python:3.6-buster
 ADD third_party/mozilla-root-certificate-store/grpc_roots.pem apiproxy/
 RUN mkdir -p /usr/share/grpc && cp apiproxy/grpc_roots.pem /usr/share/grpc/
 
-ADD bin/envoy /apiproxy/envoy
+ADD bin/envoy /bin/envoy
