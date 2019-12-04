@@ -115,7 +115,7 @@ mkdir -p "${LOGS}/${SHA}"
 
 echo "Downloading prow logs to '${LOGS}' directory."
 ${GSUTIL} -m -q cp -r "gs://apiproxy-continuous-long-run/${SHA}/logs/*" "${LOGS}/${SHA}/" 2>&1  \
- || error_exit "Failed to download logs from endpoints-jenkins.appspot.com."
+ || error_exit "Failed to download logs from gs://apiproxy-continuous-long-run/${SHA}/logs/*"
 
 python "${ROOT}/scripts/release/validate_release.py"  \
  --commit_sha "${SHA}"  \

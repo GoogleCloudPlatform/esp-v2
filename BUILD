@@ -1,2 +1,5 @@
-# An empty BUILD file to build go_proto under api
-
+filegroup(
+    name = "version",
+    srcs = ["VERSION"],
+    visibility = ["//:__subpackages__"],
+)

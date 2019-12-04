@@ -19,6 +19,7 @@ set -eo pipefail
 
 TOOLS_BUCKET="apiproxy_tools"
 PLATFORM="GCE"
+APIPROXY_RELEASE_PROJECT="endpoints-release"
 
 # Setting SUDO if not running as root.
 if [[ $UID -ne 0 ]]; then
@@ -309,11 +310,11 @@ function get_serverless_image_name() {
 }
 
 function get_proxy_image_release_name() {
-  echo -n 'gcr.io/apiproxy-release/apiproxy'
+  echo -n 'gcr.io/endpoints-release/endpoints-runtime'
 }
 
 function get_serverless_image_release_name() {
-  echo -n 'gcr.io/apiproxy-release/apiproxy-serverless'
+  echo -n 'gcr.io/endpoints-release/endpoints-runtime-serverless'
 }
 
 function get_envoy_image_name_with_sha() {

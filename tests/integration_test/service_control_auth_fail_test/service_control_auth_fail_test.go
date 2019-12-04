@@ -78,7 +78,7 @@ func TestServiceControlJwtAuthFail(t *testing.T) {
 			wantError:      "401 Unauthorized, Jwt is missing",
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/v1/shelves?key=api-key",

@@ -1,5 +1,0 @@
-# ESP V2 version (last line of this file).
-#
-# Version changes should also be applied in
-# tests/utils/version.go or tests will fail.
-0.0.1

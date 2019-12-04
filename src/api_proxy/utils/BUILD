@@ -8,12 +8,12 @@ sh_binary(
 genrule(
     name = "version_header_gen",
     srcs = [
-        ":version",
+        "//:version",
     ],
     outs = [
         "version_macro.h",
     ],
-    cmd = "$(location :version_macro_template) $(location :version) > $@",
+    cmd = "$(location :version_macro_template) $(location //:version) > $@",
     tools = [
         ":version_macro_template",
     ],

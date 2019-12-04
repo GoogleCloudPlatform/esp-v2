@@ -779,7 +779,7 @@ func VerifyQuota(body []byte, er *ExpectedQuota) error {
 			QuotaMetrics: quotaMetrics,
 			QuotaMode:    er.QuotaMode,
 			Labels: map[string]string{
-				"servicecontrol.googleapis.com/service_agent": "ESPv2/0.0.1",
+				"servicecontrol.googleapis.com/service_agent": fmt.Sprintf("ESPv2/%s", ESPv2Version()),
 				"servicecontrol.googleapis.com/user_agent":    "ESPv2",
 				"servicecontrol.googleapis.com/caller_ip":     "127.0.0.1",
 			},

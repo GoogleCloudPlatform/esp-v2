@@ -29,7 +29,7 @@ endpoint, on Google Cloud Run.
 
 For this tutorial, we will deploy a simple HTTP bookstore manager as the backend application.
 We supply the Docker image for the backend at
-[gcr.io/apiproxy-release/bookstore:1](https://gcr.io/apiproxy-release/bookstore:1),
+[gcr.io/endpoints-release/bookstore:1](https://gcr.io/endpoints-release/bookstore:1),
 which is built from this
 [Dockerfile](../tests/endpoints/bookstore/bookstore.Dockerfile).
 
@@ -40,7 +40,7 @@ as the project ID created above.
 
 ```
 gcloud beta run deploy CLOUD_RUN_SERVICE_NAME \
-    --image="gcr.io/apiproxy-release/bookstore:1" \
+    --image="gcr.io/endpoints-release/bookstore:1" \
     --allow-unauthenticated \
     --platform managed \
     --project=YOUR_PROJECT_ID
@@ -64,13 +64,13 @@ curl https://BACKEND_SERVICE_URL/shelves
 
 Similarly, you need to deploy ESPv2 on Google Cloud Run using a docker image.
 We supply the Docker image for ESPv2 at
-[gcr.io/apiproxy-release/apiproxy-serverless:0](https://gcr.io/apiproxy-release/apiproxy-serverless:0).
+[gcr.io/endpoints-release/endpoints-runtime-serverless:2](https://gcr.io/endpoints-release/endpoints-runtime-serverless:2).
 Note the `-serverless` suffix in this image, which denotes this is specifically
 for use on Cloud Functions and Cloud Run.
 
 ```
 gcloud beta run deploy ESPv2_SERVICE_NAME \
-    --image="gcr.io/apiproxy-release/apiproxy-serverless:0" \
+    --image="gcr.io/endpoints-release/endpoints-runtime-serverless:2" \
     --allow-unauthenticated \
     --platform managed \
     --project=YOUR_PROJECT_ID

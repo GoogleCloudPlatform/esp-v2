@@ -45,10 +45,11 @@ MINOR_BASE_VERSION=${VERSION%.*}
 MAJOR_BASE_VERSION=${MINOR_BASE_VERSION%.*}
 
 function tag_stable_image() {
-  local imagae=$1
+  local image=$1
 
   gcloud container images add-tag "${image}:${VERSION}" \
-    "${image}:${MINOR_BASE_VERSION}" "${image}:${MAJOR_BASE_VERSION}" --project ${APIPROXY_RELEASE_PROJECT}
+    "${image}:${MINOR_BASE_VERSION}" "${image}:${MAJOR_BASE_VERSION}" \
+    --project ${APIPROXY_RELEASE_PROJECT} --quiet
 }
 
 tag_stable_image $(get_proxy_image_release_name)

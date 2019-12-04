@@ -59,7 +59,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			httpCallError: fmt.Errorf("404 Not Found, Path does not match any requirement URI template"),
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/noexistoperation?key=api-key",
@@ -85,7 +85,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			httpCallError: fmt.Errorf("404 Not Found, Path does not match any requirement URI template"),
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/noexistoperation",
@@ -110,7 +110,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			httpCallError: fmt.Errorf("http response status is not 200 OK: 401 Unauthorized, Jwt is missing"),
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/v1/shelves?key=api-key",
@@ -137,7 +137,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			httpCallError: fmt.Errorf("401 Unauthorized, UNAUTHENTICATED:Method doesn't allow unregistered callers (callers without established identity)"),
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/v1/shelves/0/books/0",

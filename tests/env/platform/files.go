@@ -41,6 +41,7 @@ const (
 	HttpsCert
 	HttpsKey
 	LogMetrics
+	Version
 )
 
 var fileMap = map[RuntimeFile]string{
@@ -60,6 +61,7 @@ var fileMap = map[RuntimeFile]string{
 	HttpsCert:               "../../env/testdata/localhost.crt",
 	HttpsKey:                "../../env/testdata/localhost.key",
 	LogMetrics:              "../../env/testdata/logs_metrics.pb.txt",
+	Version: "../../../VERSION",
 }
 
 // Get the runtime file path for the specified file.

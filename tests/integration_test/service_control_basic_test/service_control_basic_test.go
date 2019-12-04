@@ -84,7 +84,7 @@ func TestServiceControlBasic(t *testing.T) {
 			wantResp: "simple get message",
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.ESPv2Version,
+					Version:         utils.ESPv2Version(),
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
@@ -92,7 +92,7 @@ func TestServiceControlBasic(t *testing.T) {
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/simpleget?key=api-key",
@@ -118,7 +118,7 @@ func TestServiceControlBasic(t *testing.T) {
 			wantResp: `{"message":"hello"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.ESPv2Version,
+					Version:         utils.ESPv2Version(),
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
@@ -126,7 +126,7 @@ func TestServiceControlBasic(t *testing.T) {
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/echo?key=api-key",
@@ -152,7 +152,7 @@ func TestServiceControlBasic(t *testing.T) {
 			httpCallError: fmt.Errorf("http response status is not 200 OK: 401 Unauthorized"),
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/echo",
@@ -177,7 +177,7 @@ func TestServiceControlBasic(t *testing.T) {
 			wantResp: `{"message":"hello"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/echo/nokey",
@@ -201,7 +201,7 @@ func TestServiceControlBasic(t *testing.T) {
 			wantResp: `{"message":"hello"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					ApiKey:            "api-key",
@@ -229,7 +229,7 @@ func TestServiceControlBasic(t *testing.T) {
 			wantResp: `{"message":"hi"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/echo/nokey",
@@ -257,7 +257,7 @@ func TestServiceControlBasic(t *testing.T) {
 			wantResp: `{"message":"hello hello"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/echo/nokey/OverrideAsGet",
@@ -281,7 +281,7 @@ func TestServiceControlBasic(t *testing.T) {
 			wantResp: `{"message":"hello"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/anypath/x/y/z",

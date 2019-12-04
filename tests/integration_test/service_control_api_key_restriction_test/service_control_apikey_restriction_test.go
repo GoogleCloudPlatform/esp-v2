@@ -59,7 +59,7 @@ func TestServiceControlAPIKeyRestriction(t *testing.T) {
 			message:  "hello",
 			wantResp: `{"message":"hello"}`,
 			wantScRequest: &utils.ExpectedCheck{
-				Version:                utils.ESPv2Version,
+				Version:                utils.ESPv2Version(),
 				ServiceName:            "echo-api.endpoints.cloudesf-testing.cloud.goog",
 				ServiceConfigID:        "test-config-id",
 				ConsumerID:             "api_key:api-key",
@@ -79,7 +79,7 @@ func TestServiceControlAPIKeyRestriction(t *testing.T) {
 			forwardedIp: "192.16.31.84, 172.17.131.252, 172.17.131.251",
 			wantResp:    `{"message":"hello"}`,
 			wantScRequest: &utils.ExpectedCheck{
-				Version:         utils.ESPv2Version,
+				Version:         utils.ESPv2Version(),
 				ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 				ServiceConfigID: "test-config-id",
 				ConsumerID:      "api_key:api-key",
@@ -95,7 +95,7 @@ func TestServiceControlAPIKeyRestriction(t *testing.T) {
 			forwardedIp: "172.17.131.252, 192.16.31.84, 172.17.131.251",
 			wantResp:    `{"message":"hello"}`,
 			wantScRequest: &utils.ExpectedCheck{
-				Version:         utils.ESPv2Version,
+				Version:         utils.ESPv2Version(),
 				ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 				ServiceConfigID: "test-config-id",
 				ConsumerID:      "api_key:api-key",
@@ -111,7 +111,7 @@ func TestServiceControlAPIKeyRestriction(t *testing.T) {
 			forwardedIp: "192.16.31.84",
 			wantResp:    `{"message":"hello"}`,
 			wantScRequest: &utils.ExpectedCheck{
-				Version:         utils.ESPv2Version,
+				Version:         utils.ESPv2Version(),
 				ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 				ServiceConfigID: "test-config-id",
 				ConsumerID:      "api_key:api-key",
@@ -155,7 +155,7 @@ func TestServiceControlAPIKeyIpRestriction(t *testing.T) {
 			forwardedIp: "192.16.31.84",
 			wantResp:    `{"message":"hello"}`,
 			wantScRequest: &utils.ExpectedCheck{
-				Version:         utils.ESPv2Version,
+				Version:         utils.ESPv2Version(),
 				ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 				ServiceConfigID: "test-config-id",
 				ConsumerID:      "api_key:api-key",

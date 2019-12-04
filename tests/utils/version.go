@@ -14,6 +14,24 @@
 
 package utils
 
-// The ESPv2 version under test. This should match the version in
-// src/api_proxy/utils/version.
-const ESPv2Version = "0.0.1"
+import (
+	"io/ioutil"
+	"strings"
+
+	"github.com/golang/glog"
+		"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
+
+)
+
+var versionVal = ""
+
+func ESPv2Version() string {
+	if versionVal == "" {
+		file, err := ioutil.ReadFile(platform.GetFilePath(platform.Version))
+		if err != nil {
+			glog.Errorf("Failed to generate version by VERSION under the root path: %v", err)
+		}
+		versionVal = strings.TrimSpace(string(file))
+	}
+	return versionVal
+}
