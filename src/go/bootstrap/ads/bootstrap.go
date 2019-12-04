@@ -17,8 +17,10 @@ package ads
 import (
 	"fmt"
 
+	"github.com/GoogleCloudPlatform/api-proxy/src/go/bootstrap"
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
 
 	bt "github.com/GoogleCloudPlatform/api-proxy/src/go/bootstrap"
@@ -28,18 +30,18 @@ import (
 )
 
 // CreateBootstrapConfig outputs envoy bootstrap config for xDS.
-func CreateBootstrapConfig(opts options.AdsBootstrapperOptions) (*bootstrappb.Bootstrap, error) {
+func CreateBootstrapConfig(opts options.AdsBootstrapperOptions) (string, error) {
 
 	// Parse the ADS address
 	_, adsHostname, adsPort, _, err := util.ParseURI(opts.DiscoveryAddress)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse discovery address: %v", err)
+		return "", fmt.Errorf("failed to parse discovery address: %v", err)
 	}
 
 	// Parse ADS connect timeout
 	connectTimeoutProto := ptypes.DurationProto(opts.AdsConnectTimeout)
 
-	return &bootstrappb.Bootstrap{
+	bt := &bootstrappb.Bootstrap{
 		// Node info
 		Node: bt.CreateNode(opts.CommonOptions),
 
@@ -85,5 +87,21 @@ func CreateBootstrapConfig(opts options.AdsBootstrapperOptions) (*bootstrappb.Bo
 				},
 			},
 		},
-	}, nil
+	}
+
+	if !opts.DisableTracing {
+		if bt.Tracing, err = bootstrap.CreateTracing(opts.CommonOptions); err != nil {
+			return "", fmt.Errorf("failed to create tracing config, error: %v", err)
+		}
+	}
+
+	marshaler := &jsonpb.Marshaler{
+		Indent: "  ",
+	}
+
+	var jsonStr string
+	if jsonStr, err = marshaler.MarshalToString(bt); err != nil {
+		return "", fmt.Errorf("failed to MarshalToString, error: %v", err)
+	}
+	return jsonStr, nil
 }

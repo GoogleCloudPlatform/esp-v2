@@ -333,7 +333,7 @@ func TestGCPTracingConfig(t *testing.T) {
 			got, err := CreateTracing(opts)
 
 			if err != nil {
-				t.Errorf("Test (%s): failed, got err: %v, want no err", tc.desc, err)
+				t.Fatalf("Test (%s): failed, got err: %v, want no err", tc.desc, err)
 			}
 
 			if tc.wantResult != nil {

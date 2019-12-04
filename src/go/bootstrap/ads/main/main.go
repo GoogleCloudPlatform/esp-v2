@@ -18,11 +18,9 @@ import (
 	"flag"
 	"io/ioutil"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/bootstrap"
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/bootstrap/ads"
 	"github.com/GoogleCloudPlatform/api-proxy/src/go/bootstrap/ads/flags"
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/jsonpb"
 )
 
 func main() {
@@ -34,22 +32,12 @@ func main() {
 	}
 
 	opts := flags.DefaultBootstrapperOptionsFromFlags()
-	bt, err := ads.CreateBootstrapConfig(opts)
+	bootstrapStr, err := ads.CreateBootstrapConfig(opts)
 	if err != nil {
 		glog.Exitf("failed to create bootstrap config, error: %v", err)
 	}
 
-	if !opts.DisableTracing {
-		if bt.Tracing, err = bootstrap.CreateTracing(opts.CommonOptions); err != nil {
-			glog.Exitf("failed to create tracing config, error: %v", err)
-		}
-	}
-
-	marshaler := &jsonpb.Marshaler{
-		Indent: "  ",
-	}
-	jsonStr, _ := marshaler.MarshalToString(bt)
-	err = ioutil.WriteFile(outPath, []byte(jsonStr), 0644)
+	err = ioutil.WriteFile(outPath, []byte(bootstrapStr), 0644)
 	if err != nil {
 		glog.Exitf("failed to write config to %v, error: %v", outPath, err)
 	}
