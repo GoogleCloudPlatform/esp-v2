@@ -136,14 +136,14 @@ class TestStartProxy(unittest.TestCase):
             # backend routing
             (['--backend=https://127.0.0.1:8000', '--enable_backend_routing',
               '--service_json_path=/tmp/service.json',
-              '--compute_platform_override', 'Cloud Run(ESP V2)',
+              '--compute_platform_override', 'Cloud Run(ESPv2)',
               '--disable_tracing'],
              ['bin/configmanager',  '--logtostderr','--backend_protocol', 'http2',
               '--cluster_address', '127.0.0.1', '--cluster_port', '8000',
               '--rollout_strategy', 'fixed', '--v', '0',
               '--service_json_path', '/tmp/service.json',
               '--disable_tracing',
-              '--compute_platform_override', 'Cloud Run(ESP V2)',
+              '--compute_platform_override', 'Cloud Run(ESPv2)',
               '--enable_backend_routing'
               ]),
             # grpc backend with fixed version and tracing

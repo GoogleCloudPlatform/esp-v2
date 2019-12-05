@@ -206,7 +206,7 @@ struct ReportRequestInfo : public OperationInfo {
         response_size(-1),
         frontend_protocol(protocol::UNKNOWN),
         backend_protocol(protocol::UNKNOWN),
-        compute_platform("UNKNOWN(ESP V2)"),
+        compute_platform("UNKNOWN(ESPv2)"),
         request_bytes(0),
         response_bytes(0),
         streaming_request_message_counts(0),
