@@ -231,8 +231,8 @@ func CreateCheck(er *ExpectedCheck) scpb.CheckRequest {
 			OperationName: er.OperationName,
 			ConsumerId:    er.ConsumerID,
 			Labels: map[string]string{
-				"servicecontrol.googleapis.com/user_agent":    "APIPROXY",
-				"servicecontrol.googleapis.com/service_agent": "APIPROXY/" + er.Version,
+				"servicecontrol.googleapis.com/user_agent":    "ESPv2",
+				"servicecontrol.googleapis.com/service_agent": "ESPv2/" + er.Version,
 			},
 		},
 	}
@@ -268,8 +268,8 @@ func responseCodes(code int) (response, class string) {
 func createReportLabels(er *ExpectedReport) map[string]string {
 	response, class := responseCodes(er.ResponseCode)
 	labels := map[string]string{
-		"servicecontrol.googleapis.com/service_agent": "APIPROXY/" + er.Version,
-		"servicecontrol.googleapis.com/user_agent":    "APIPROXY",
+		"servicecontrol.googleapis.com/service_agent": "ESPv2/" + er.Version,
+		"servicecontrol.googleapis.com/user_agent":    "ESPv2",
 		"serviceruntime.googleapis.com/api_method":    er.ApiMethod,
 		"/response_code":       response,
 		"/response_code_class": class,
@@ -779,8 +779,8 @@ func VerifyQuota(body []byte, er *ExpectedQuota) error {
 			QuotaMetrics: quotaMetrics,
 			QuotaMode:    er.QuotaMode,
 			Labels: map[string]string{
-				"servicecontrol.googleapis.com/service_agent": "APIPROXY/0.0.1",
-				"servicecontrol.googleapis.com/user_agent":    "APIPROXY",
+				"servicecontrol.googleapis.com/service_agent": "ESPv2/0.0.1",
+				"servicecontrol.googleapis.com/user_agent":    "ESPv2",
 				"servicecontrol.googleapis.com/caller_ip":     "127.0.0.1",
 			},
 		},

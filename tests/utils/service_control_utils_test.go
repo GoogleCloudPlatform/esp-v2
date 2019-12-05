@@ -51,11 +51,11 @@ operation: <
   >
   labels: <
     key: "servicecontrol.googleapis.com/service_agent"
-    value: "APIPROXY/0.3.4"
+    value: "ESPv2/0.3.4"
   >
   labels: <
     key: "servicecontrol.googleapis.com/user_agent"
-    value: "APIPROXY"
+    value: "ESPv2"
   >
  >
 `
@@ -122,11 +122,11 @@ const expectedReport = `
           >
           labels: <
             key: "servicecontrol.googleapis.com/service_agent"
-            value: "APIPROXY/"
+            value: "ESPv2/"
           >
           labels: <
             key: "servicecontrol.googleapis.com/user_agent"
-            value: "APIPROXY"
+            value: "ESPv2"
           >
           labels: <
             key: "serviceruntime.googleapis.com/api_method"
@@ -758,11 +758,11 @@ const expectedReport = `
           >
           labels: <
             key: "servicecontrol.googleapis.com/service_agent"
-            value: "APIPROXY/"
+            value: "ESPv2/"
           >
           labels: <
             key: "servicecontrol.googleapis.com/user_agent"
-            value: "APIPROXY"
+            value: "ESPv2"
           >
           labels: <
             key: "serviceruntime.googleapis.com/api_method"
@@ -1048,11 +1048,11 @@ const expectedReportAgg3 = `
           >
           labels: <
             key: "servicecontrol.googleapis.com/service_agent"
-            value: "APIPROXY/"
+            value: "ESPv2/"
           >
           labels: <
             key: "servicecontrol.googleapis.com/user_agent"
-            value: "APIPROXY"
+            value: "ESPv2"
           >
           labels: <
             key: "serviceruntime.googleapis.com/api_method"
@@ -1804,11 +1804,11 @@ const expectedReportAgg3 = `
           >
           labels: <
             key: "servicecontrol.googleapis.com/service_agent"
-            value: "APIPROXY/"
+            value: "ESPv2/"
           >
           labels: <
             key: "servicecontrol.googleapis.com/user_agent"
-            value: "APIPROXY"
+            value: "ESPv2"
           >
           labels: <
             key: "serviceruntime.googleapis.com/api_method"

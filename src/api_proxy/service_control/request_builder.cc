@@ -527,11 +527,11 @@ constexpr char kServiceControlConsumerProject[] =
 
 // User agent label value
 // The value for kUserAgent should be configured at service control server.
-// Now it is configured as "APIPROXY".
-constexpr char kUserAgent[] = "APIPROXY";
+// Now it is configured as "ESPv2".
+constexpr char kUserAgent[] = "ESPv2";
 
 // Service agent label value
-constexpr char kServiceAgentPrefix[] = "APIPROXY/";
+constexpr char kServiceAgentPrefix[] = "ESPv2/";
 
 const std::string get_service_agent() {
   return kServiceAgentPrefix + utils::Version::instance().get();

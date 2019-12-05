@@ -5,7 +5,7 @@ allocate_operation {
   consumer_id: "api_key:api_key_x"
   labels {
     key: "servicecontrol.googleapis.com/android_cert_fingerprint"
-    value: "AIzaSyB4Gz8nyaSaWo63IPUcy5d_L8dpKtOTSD0"
+    value: "fake_API_KEY"
   }
   labels {
     key: "servicecontrol.googleapis.com/android_package_name"
@@ -25,11 +25,11 @@ allocate_operation {
   }
   labels {
     key: "servicecontrol.googleapis.com/service_agent"
-    value: "APIPROXY/{{service_agent_version}}"
+    value: "ESPv2/{{service_agent_version}}"
   }
   labels {
     key: "servicecontrol.googleapis.com/user_agent"
-    value: "APIPROXY"
+    value: "ESPv2"
   }
   quota_metrics {
     metric_name: "metric_first"
