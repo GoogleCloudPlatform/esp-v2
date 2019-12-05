@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 )
 
 func TestServiceConfigFetcherTimeout(t *testing.T) {

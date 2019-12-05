@@ -17,11 +17,11 @@ package static
 import (
 	"fmt"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/bootstrap"
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/bootstrap"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 
-	gen "github.com/GoogleCloudPlatform/api-proxy/src/go/configgenerator"
-	sc "github.com/GoogleCloudPlatform/api-proxy/src/go/configinfo"
+	gen "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator"
+	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"

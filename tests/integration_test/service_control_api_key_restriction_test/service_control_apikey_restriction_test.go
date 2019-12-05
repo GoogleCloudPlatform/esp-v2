@@ -19,12 +19,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/echo/client"
-	"github.com/GoogleCloudPlatform/api-proxy/tests/env"
-	"github.com/GoogleCloudPlatform/api-proxy/tests/env/platform"
-	"github.com/GoogleCloudPlatform/api-proxy/tests/utils"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
-	comp "github.com/GoogleCloudPlatform/api-proxy/tests/env/components"
+	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 type testDataStruct struct {

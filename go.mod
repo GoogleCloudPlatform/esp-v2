@@ -1,4 +1,4 @@
-module github.com/GoogleCloudPlatform/api-proxy
+module github.com/GoogleCloudPlatform/esp-v2
 
 go 1.13
 

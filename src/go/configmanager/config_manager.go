@@ -19,14 +19,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/configinfo"
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/metadata"
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/golang/glog"
 
-	gen "github.com/GoogleCloudPlatform/api-proxy/src/go/configgenerator"
+	gen "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )

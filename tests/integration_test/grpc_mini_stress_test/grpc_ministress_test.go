@@ -18,9 +18,9 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/grpc_echo/client"
-	"github.com/GoogleCloudPlatform/api-proxy/tests/env"
-	comp "github.com/GoogleCloudPlatform/api-proxy/tests/env/components"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/grpc_echo/client"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 func TestGRPCMinistress(t *testing.T) {

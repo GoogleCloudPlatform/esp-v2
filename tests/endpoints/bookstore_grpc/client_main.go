@@ -23,7 +23,7 @@ import (
 
 	"golang.org/x/oauth2/google"
 
-	"github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/bookstore_grpc/client"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 )
 
 var (

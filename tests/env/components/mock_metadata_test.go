@@ -21,7 +21,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 )
 
 func doRequest(action, url string) (int, string, error) {

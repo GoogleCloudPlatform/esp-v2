@@ -22,7 +22,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	comp "github.com/GoogleCloudPlatform/api-proxy/tests/env/components"
+	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 	ltypepb "google.golang.org/genproto/googleapis/logging/type"

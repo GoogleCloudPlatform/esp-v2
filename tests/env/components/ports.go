@@ -19,7 +19,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/GoogleCloudPlatform/api-proxy/tests/env/testdata"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/golang/glog"
 )
 

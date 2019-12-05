@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/configinfo"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 
-	commonpb "github.com/GoogleCloudPlatform/api-proxy/src/go/proto/api/envoy/http/common"
+	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/common"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"

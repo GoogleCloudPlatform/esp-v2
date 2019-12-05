@@ -17,7 +17,7 @@ package metadata
 import (
 	"time"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 )
 
 // Creates a mock metadata fetcher and returns the mock instance

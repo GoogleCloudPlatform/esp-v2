@@ -20,11 +20,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GoogleCloudPlatform/api-proxy/tests/endpoints/echo/client"
-	"github.com/GoogleCloudPlatform/api-proxy/tests/env"
-	"github.com/GoogleCloudPlatform/api-proxy/tests/env/testdata"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 
-	comp "github.com/GoogleCloudPlatform/api-proxy/tests/env/components"
+	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 const (

@@ -18,8 +18,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/configinfo"
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/golang/protobuf/proto"
 
 	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"

@@ -17,13 +17,13 @@ package ads
 import (
 	"fmt"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/bootstrap"
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/options"
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/bootstrap"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
 
-	bt "github.com/GoogleCloudPlatform/api-proxy/src/go/bootstrap"
+	bt "github.com/GoogleCloudPlatform/esp-v2/src/go/bootstrap"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"

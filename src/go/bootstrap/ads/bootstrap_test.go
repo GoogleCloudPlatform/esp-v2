@@ -19,7 +19,7 @@ import (
 	"flag"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/bootstrap/ads/flags"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/bootstrap/ads/flags"
 )
 
 func TestCreateBootstrapConfig(t *testing.T) {

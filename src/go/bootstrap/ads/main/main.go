@@ -18,8 +18,8 @@ import (
 	"flag"
 	"io/ioutil"
 
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/bootstrap/ads"
-	"github.com/GoogleCloudPlatform/api-proxy/src/go/bootstrap/ads/flags"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/bootstrap/ads"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/bootstrap/ads/flags"
 	"github.com/golang/glog"
 )
 
