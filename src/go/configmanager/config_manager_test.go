@@ -892,7 +892,7 @@ func TestFetchListeners(t *testing.T) {
                               }
                            },
                            "gcpAttributes":{
-                              "platform":"GCE(ESP V2)"
+                              "platform":"GCE(ESPv2)"
                            },
                            "requirements":[
                               {
@@ -1246,7 +1246,7 @@ func TestFetchListeners(t *testing.T) {
                               }
                            },
                            "gcpAttributes":{
-                              "platform":"GCE(ESP V2)"
+                              "platform":"GCE(ESPv2)"
                            },
                            "requirements":[
                               {

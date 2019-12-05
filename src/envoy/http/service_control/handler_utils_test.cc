@@ -46,10 +46,10 @@ TEST(ServiceControlUtils, FillGCPInfo) {
 
   const TestCase test_cases[] = {
       // Test: No gcp_attributes found
-      {"", "", "UNKNOWN(ESP V2)"},
+      {"", "", "UNKNOWN(ESPv2)"},
 
       // Test: gcp_attributes found but empty
-      {R"(gcp_attributes {})", "", "UNKNOWN(ESP V2)"},
+      {R"(gcp_attributes {})", "", "UNKNOWN(ESPv2)"},
 
       // Test: bad platform provided should default to unknown
       {R"(gcp_attributes { platform: "bad-platform"})", "", "bad-platform"},
@@ -64,8 +64,7 @@ TEST(ServiceControlUtils, FillGCPInfo) {
       {R"(gcp_attributes { platform: "GKE"})", "", "GKE"},
 
       // Test: Provided zone is set
-      {R"(gcp_attributes { zone: "test-zone"})", "test-zone",
-       "UNKNOWN(ESP V2)"},
+      {R"(gcp_attributes { zone: "test-zone"})", "test-zone", "UNKNOWN(ESPv2)"},
 
       // Test: Provided platform and zone can both be set
       {R"(gcp_attributes { zone: "test-zone" platform: "GKE"})", "test-zone",
