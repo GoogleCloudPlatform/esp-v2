@@ -25,15 +25,16 @@
 //
 // without needing `gsutil` in the image.
 //
-// Additionally, an optional `PORT` variable (default is 8080) may be used to specify
-// where to point Envoy's listeners. Use of this feature also requires the Envoy config
-// to have the listener set to `REPLACE_PORT_NUMBER`.
+// Additionally, an optional `PORT` variable may be provided to override
+// where Envoy listens to traffic. This will be used only if the original config
+// specifies the port `8080`.
 package main
 
 import (
 	"flag"
 	"os"
 	"os/signal"
+	"strconv"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/gcsrunner"
@@ -45,10 +46,11 @@ const (
 	fetchGCSObjectInitialInterval = 10 * time.Second
 	fetchGCSObjectTimeout         = 5 * time.Minute
 	terminateEnvoyTimeout         = time.Minute
+	replaceListenerPort           = 8080
 )
 
 var (
-	envoyBinaryPath = flag.String("envoy_bin_path", "apiproxy/envoy", "Location of the Envoy binary.")
+	envoyBinaryPath = flag.String("envoy_bin_path", "bin/envoy", "Location of the Envoy binary.")
 	envoyLogLevel   = flag.String("envoy_log_level", "info",
 		"Envoy logging level. Default is `info`. Options are: [trace][debug][info][warning][error][critical][off]")
 )
@@ -59,6 +61,10 @@ func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
+	}
+	portNum, err := strconv.ParseUint(port, 10, 32)
+	if err != nil {
+		glog.Fatal("PORT variable must be a valid port number.")
 	}
 
 	bucketName := os.Getenv("BUCKET")
@@ -87,7 +93,8 @@ func main() {
 	if err := gcsrunner.FetchConfigFromGCS(gcsrunner.FetchConfigOptions{
 		BucketName:                    bucketName,
 		ConfigFileName:                configFileName,
-		Port:                          port,
+		WantPort:                      uint32(portNum),
+		ReplacePort:                   replaceListenerPort,
 		FetchGCSObjectInitialInterval: fetchGCSObjectInitialInterval,
 		FetchGCSObjectTimeout:         fetchGCSObjectTimeout,
 		WriteFilePath:                 envoyConfigPath,

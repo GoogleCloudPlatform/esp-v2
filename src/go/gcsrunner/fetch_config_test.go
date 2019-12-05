@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"google.golang.org/api/option"
 
 	google_oauth "golang.org/x/oauth2/google"
@@ -36,7 +37,8 @@ var (
 	opts = FetchConfigOptions{
 		BucketName:                    "bucket",
 		ConfigFileName:                "file",
-		Port:                          "1234",
+		WantPort:                      1234,
+		ReplacePort:                   5678,
 		WriteFilePath:                 "path/file",
 		FetchGCSObjectInitialInterval: fetchInitialInterval,
 		FetchGCSObjectTimeout:         fetchTimeout,
@@ -66,17 +68,16 @@ func (m *mockObjectReader) readObject(ctx context.Context, _ getObjectRequest) (
 type mockFile struct {
 	closeCalled bool
 	writeErr    error
-	gotString   string
+	gotBytes    []byte
 }
 
 func (m *mockFile) Close() error {
 	m.closeCalled = true
 	return nil
 }
-
-func (m *mockFile) WriteString(s string) (int, error) {
-	m.gotString = s
-	return len(s), m.writeErr
+func (m *mockFile) Write(b []byte) (int, error) {
+	m.gotBytes = b
+	return len(b), m.writeErr
 }
 
 func TestReadBytes(t *testing.T) {
@@ -187,16 +188,9 @@ func TestWriteFile(t *testing.T) {
 			},
 		},
 		{
-			name:          "success, no port replacement",
+			name:          "success",
 			input:         []byte(`{"some-key":"some-value"}`),
 			wantOutput:    `{"some-key":"some-value"}`,
-			createWant:    opts.WriteFilePath,
-			createReturns: &mockFile{},
-		},
-		{
-			name:          "success, with port replacement",
-			input:         []byte(`{"some-key":REPLACE_PORT_NUMBER}`),
-			wantOutput:    `{"some-key":1234}`,
 			createWant:    opts.WriteFilePath,
 			createReturns: &mockFile{},
 		},
@@ -216,8 +210,85 @@ func TestWriteFile(t *testing.T) {
 			t.Errorf("Created file was not closed")
 		}
 		if !tc.wantErr {
-			if tc.createReturns.gotString != tc.wantOutput {
-				t.Errorf("WriteString() called with %s, want %s", tc.createReturns.gotString, tc.wantOutput)
+			if diff := cmp.Diff(string(tc.createReturns.gotBytes), tc.wantOutput); diff != "" {
+				t.Errorf("WriteString() unexpected output (-got,+want): %s", diff)
+			}
+		}
+	}
+}
+
+func TestReplaceListenerPort(t *testing.T) {
+	envoyOn1234 := []byte(`{"static_resources":{"listeners":[{"address":{"socket_address":{"port_value":1234}}}]}}`)
+	envoyOn5678 := []byte(`{"static_resources":{"listeners":[{"address":{"socket_address":{"port_value":5678}}}]}}`)
+	twoListeners := []byte(`{"static_resources":{"listeners":[
+		{"address":{"socket_address":{"port_value":1234}}},
+		{"address":{"socket_address":{"port_value":2468}}}]}}`)
+
+	testCases := []struct {
+		input      []byte
+		opts       FetchConfigOptions
+		wantError  bool
+		wantOutput []byte
+	}{
+		{},
+		{
+			input: []byte("not valid json"),
+			opts: FetchConfigOptions{
+				ReplacePort: 1234,
+				WantPort:    5678,
+			},
+			wantError: true,
+		},
+		{
+			opts: FetchConfigOptions{
+				ReplacePort: 1234,
+				WantPort:    5678,
+			},
+			input:     twoListeners,
+			wantError: true,
+		},
+		{
+			opts: FetchConfigOptions{
+				ReplacePort: 9999,
+				WantPort:    5678,
+			},
+			input:     envoyOn1234,
+			wantError: true,
+		},
+		{
+			opts: FetchConfigOptions{
+				ReplacePort: 1234,
+			},
+			input:      envoyOn1234,
+			wantOutput: envoyOn1234,
+		},
+		{
+			opts: FetchConfigOptions{
+				ReplacePort: 1234,
+				WantPort:    1234,
+			},
+			input:      envoyOn1234,
+			wantOutput: envoyOn1234,
+		},
+		{
+			opts: FetchConfigOptions{
+				ReplacePort: 1234,
+				WantPort:    5678,
+			},
+			input:      envoyOn1234,
+			wantOutput: envoyOn5678,
+		},
+	}
+
+	for _, tc := range testCases {
+		gotOutput, err := replaceListenerPort(tc.input, tc.opts)
+		if (err != nil) != tc.wantError {
+			t.Fatalf("replaceListenerPort(%s, %v) returned error %v, want err!=nil to be %v", string(tc.input), tc.opts, err, tc.wantError)
+		}
+
+		if err != nil {
+			if diff := cmp.Diff(string(tc.wantOutput), string(gotOutput)); diff != "" {
+				t.Errorf("replaceListenerPort(%s, %v) returned unexpected output (-want,+got): %s", string(tc.input), tc.opts, diff)
 			}
 		}
 	}
