@@ -36,8 +36,8 @@ func TestCreateBootstrapConfig(t *testing.T) {
 			},
 			wantConfig: `{
 			  "node": {
-          "id": "api_proxy",
-          "cluster": "api_proxy_cluster"
+          "id": "ESPv2",
+          "cluster": "ESPv2_cluster"
         },
         "staticResources": {
           "clusters": [

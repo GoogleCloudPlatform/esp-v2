@@ -57,7 +57,7 @@ func TestServiceControlCache(t *testing.T) {
 
 	wantScRequests := []interface{}{
 		&utils.ExpectedCheck{
-			Version:         utils.APIProxyVersion,
+			Version:         utils.ESPv2Version,
 			ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 			ServiceConfigID: "test-config-id",
 			ConsumerID:      "api_key:api-key",
@@ -66,7 +66,7 @@ func TestServiceControlCache(t *testing.T) {
 		},
 		&utils.ExpectedReport{
 			Aggregate:         int64(num),
-			Version:           utils.APIProxyVersion,
+			Version:           utils.ESPv2Version,
 			ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 			ServiceConfigID:   "test-config-id",
 			URL:               "/echo?key=api-key",

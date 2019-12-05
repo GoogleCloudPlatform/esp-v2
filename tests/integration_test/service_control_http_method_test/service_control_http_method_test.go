@@ -93,7 +93,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 			wantResp: `{"RequestMethod": "GET"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.APIProxyVersion,
+					Version:         utils.ESPv2Version,
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
@@ -101,7 +101,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
-					Version:           utils.APIProxyVersion,
+					Version:           utils.ESPv2Version,
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/echoMethod?key=api-key",
@@ -127,7 +127,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 			wantResp: `{"RequestMethod": "POST"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.APIProxyVersion,
+					Version:         utils.ESPv2Version,
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
@@ -135,7 +135,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
-					Version:           utils.APIProxyVersion,
+					Version:           utils.ESPv2Version,
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/echoMethod?key=api-key",
@@ -161,7 +161,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 			wantResp: `{"RequestMethod": "PUT"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.APIProxyVersion,
+					Version:         utils.ESPv2Version,
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
@@ -169,7 +169,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
-					Version:           utils.APIProxyVersion,
+					Version:           utils.ESPv2Version,
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/echoMethod?key=api-key",
@@ -195,7 +195,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 			wantResp: `{"RequestMethod": "PATCH"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.APIProxyVersion,
+					Version:         utils.ESPv2Version,
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
@@ -203,7 +203,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
-					Version:           utils.APIProxyVersion,
+					Version:           utils.ESPv2Version,
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/echoMethod?key=api-key",
@@ -228,7 +228,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 			wantResp: `{"RequestMethod": "DELETE"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.APIProxyVersion,
+					Version:         utils.ESPv2Version,
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
@@ -236,7 +236,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
-					Version:           utils.APIProxyVersion,
+					Version:           utils.ESPv2Version,
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/echoMethod?key=api-key",

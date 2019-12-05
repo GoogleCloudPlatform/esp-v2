@@ -81,7 +81,7 @@ func TestServiceControlLogHeaders(t *testing.T) {
 			},
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.APIProxyVersion,
+					Version:         utils.ESPv2Version,
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key-2",
@@ -89,7 +89,7 @@ func TestServiceControlLogHeaders(t *testing.T) {
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
-					Version:     utils.APIProxyVersion,
+					Version:     utils.ESPv2Version,
 					ServiceName: "echo-api.endpoints.cloudesf-testing.cloud.goog", ServiceConfigID: "test-config-id",
 					URL:               "/echo?key=api-key-2",
 					ApiKey:            "api-key-2",
@@ -194,7 +194,7 @@ func TestServiceControlLogJwtPayloads(t *testing.T) {
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.APIProxyVersion,
+					Version:         utils.ESPv2Version,
 					ServiceName:     "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
@@ -202,7 +202,7 @@ func TestServiceControlLogJwtPayloads(t *testing.T) {
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
-					Version:           utils.APIProxyVersion,
+					Version:           utils.ESPv2Version,
 					ServiceName:       "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/v1/shelves?key=api-key",

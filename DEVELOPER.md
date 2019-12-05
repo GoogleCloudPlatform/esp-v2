@@ -48,7 +48,7 @@ export GOBIN=$GOPATH/bin
 
 To download the source code, clone the APIProxy repository:
 
-* git clone  "https://github.com/GoogleCloudPlatform/api-proxy"
+* git clone  "https://github.com/GoogleCloudPlatform/esp-v2"
 
 The following folder is required:
 

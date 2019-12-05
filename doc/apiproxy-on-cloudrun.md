@@ -69,14 +69,14 @@ Note the `-serverless` suffix in this image, which denotes this is specifically
 for use on Cloud Functions and Cloud Run.
 
 ```
-gcloud beta run deploy API_PROXY_SERVICE_NAME \
+gcloud beta run deploy ESPv2_SERVICE_NAME \
     --image="gcr.io/apiproxy-release/apiproxy-serverless:0" \
     --allow-unauthenticated \
     --platform managed \
     --project=YOUR_PROJECT_ID
 ```
 
-Replace `API_PROXY_SERVICE_NAME` and `YOUR_PROJECT_ID` accordingly.
+Replace `ESPv2_SERVICE_NAME` and `YOUR_PROJECT_ID` accordingly.
 
 On successful completion, similar message is displayed:
 
@@ -165,10 +165,10 @@ gcr.io/YOUR_PROJECT_ID/apiproxy-serverless:ENDPOINTS_SERVICE_NAME-ENDPOINTS_SERV
 
 ## Redeploy the ESP V2 Cloud Run service with the new image
 
-Replace API_PROXY_SERVICE_NAME with the name of your Cloud Run service.
+Replace ESPv2_SERVICE_NAME with the name of your Cloud Run service.
 
 ```
-gcloud beta run deploy API_PROXY_SERVICE_NAME \
+gcloud beta run deploy ESPv2_SERVICE_NAME \
   --image="gcr.io/YOUR_PROJECT_ID/apiproxy-serverless:ENDPOINTS_SERVICE_NAME-ENDPOINTS_SERVICE_CONFIG_ID" \
   --allow-unauthenticated \
   --platform managed \

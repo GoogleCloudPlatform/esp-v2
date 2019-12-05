@@ -86,7 +86,7 @@ func TestServiceControlCredentialId(t *testing.T) {
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           utils.APIProxyVersion,
+					Version:           utils.ESPv2Version,
 					ServiceName:       "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/v1/shelves",
@@ -113,7 +113,7 @@ func TestServiceControlCredentialId(t *testing.T) {
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           utils.APIProxyVersion,
+					Version:           utils.ESPv2Version,
 					ServiceName:       "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/v1/shelves",

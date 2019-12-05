@@ -86,7 +86,7 @@ class TestStartProxy(unittest.TestCase):
             if testcase.get("servicePath"):
               os.environ["ENDPOINTS_SERVICE_PATH"] = testcase.get("servicePath")
 
-            os.environ["ESPV2_ARGS"] = testcase.get("args")
+            os.environ["ESPv2_ARGS"] = testcase.get("args")
             gotArgs = gen_args("/apiproxy/start_proxy.py")
             print(gotArgs)
             self.assertEqual(gotArgs, testcase["wantArgs"])

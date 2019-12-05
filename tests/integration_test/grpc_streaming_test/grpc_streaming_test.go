@@ -69,7 +69,7 @@ results {
 
 	wantScRequests := []interface{}{
 		&utils.ExpectedCheck{
-			Version:         utils.APIProxyVersion,
+			Version:         utils.ESPv2Version,
 			ServiceName:     "grpc-echo.endpoints.cloudesf-testing.cloud.goog",
 			ServiceConfigID: "test-config-id",
 			ConsumerID:      "api_key:this-is-an-api-key",
@@ -77,7 +77,7 @@ results {
 			CallerIp:        platform.GetLoopbackAddress(),
 		},
 		&utils.ExpectedReport{
-			Version:               utils.APIProxyVersion,
+			Version:               utils.ESPv2Version,
 			ServiceName:           "grpc-echo.endpoints.cloudesf-testing.cloud.goog",
 			ServiceConfigID:       "test-config-id",
 			URL:                   "/test.grpc.Test/EchoStream",

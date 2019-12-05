@@ -298,7 +298,7 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 			wantResp: `{"message":"hello"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.APIProxyVersion,
+					Version:         utils.ESPv2Version,
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
@@ -306,7 +306,7 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
-					Version:           utils.APIProxyVersion,
+					Version:           utils.ESPv2Version,
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/echo?key=api-key",
@@ -331,7 +331,7 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 			wantResp: `{"RequestURI":"/dynamicrouting/sc/searchpet?key=api-key&timezone=EST"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.APIProxyVersion,
+					Version:         utils.ESPv2Version,
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
@@ -339,7 +339,7 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
-					Version:           utils.APIProxyVersion,
+					Version:           utils.ESPv2Version,
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/sc/searchpet?key=api-key&timezone=EST",
@@ -364,7 +364,7 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 			wantResp: `{"RequestURI":"/dynamicrouting?key=api-key&lang=en&pet_id=0325&number=2019"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.APIProxyVersion,
+					Version:         utils.ESPv2Version,
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
@@ -372,7 +372,7 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
-					Version:           utils.APIProxyVersion,
+					Version:           utils.ESPv2Version,
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/sc/pet/0325/num/2019?key=api-key&lang=en",

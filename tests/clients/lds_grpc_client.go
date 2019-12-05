@@ -53,7 +53,7 @@ func main() {
 	req := &v2pb.DiscoveryRequest{
 		TypeUrl: "type.googleapis.com/envoy.api.v2.Listener",
 		Node: &corepb.Node{
-			Id: "api_proxy",
+			Id: "ESPv2",
 		},
 	}
 	if err := stream.Send(req); err != nil {

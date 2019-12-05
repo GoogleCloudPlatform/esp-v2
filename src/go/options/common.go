@@ -57,7 +57,7 @@ func DefaultCommonOptions() CommonOptions {
 		DisableTracing:             false,
 		EnableAdmin:                false,
 		HttpRequestTimeout:         5 * time.Second,
-		Node:                       "api_proxy",
+		Node:                       "ESPv2",
 		NonGCP:                     false,
 		TracingProjectId:           "",
 		TracingStackdriverAddress:  "",
