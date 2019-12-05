@@ -24,6 +24,7 @@ type CommonOptions struct {
 	// Flags for envoy
 	AdminAddress string
 	AdminPort    int
+	EnableAdmin  bool
 	Node         string
 
 	// Flags for tracing
@@ -54,6 +55,7 @@ func DefaultCommonOptions() CommonOptions {
 		AdminAddress:               "0.0.0.0",
 		AdminPort:                  8001,
 		DisableTracing:             false,
+		EnableAdmin:                false,
 		HttpRequestTimeout:         5 * time.Second,
 		Node:                       "api_proxy",
 		NonGCP:                     false,

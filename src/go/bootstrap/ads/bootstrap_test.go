@@ -108,21 +108,14 @@ func TestCreateBootstrapConfig(t *testing.T) {
             }
           }
         },
-        "admin": {
-          "accessLogPath": "/dev/null",
-          "address": {
-            "socketAddress": {
-              "address": "0.0.0.0",
-              "portValue": 8001
-            }
-          }
-        }
+        "admin": {}
       }`,
 		},
 		{
 			desc: "bootstrap with options",
 			args: map[string]string{
 				"disable_tracing": "true",
+				"enable_admin":    "true",
 				"node":            "test-node",
 			},
 			wantConfig: `{

@@ -86,6 +86,10 @@ def gen_bootstrap_conf(args):
 
     if args.enable_debug:
         os.environ["ENVOY_ARGS"] = "-l debug"
+        cmd.append("--enable_admin")
+
+    if args.enable_admin and not args.enable_debug:
+        cmd.append("--enable_admin")
 
     bootstrap_file = DEFAULT_CONFIG_DIR + BOOTSTRAP_CONFIG
     cmd.append(bootstrap_file)
@@ -438,8 +442,17 @@ environment variable or by passing "-k" flag to this script.
         help='''
         The overridden platform where the proxy is running on.
         ''')
+    parser.add_argument('--enable_admin', action='store_true', default=False,
+                        help='''
+        Enables envoy's admin interface on port 8001.
+        Not recommended for production use-cases, as the admin port is unauthenticated.
+        ''')
     parser.add_argument('--enable_debug', action='store_true', default=False,
-        help='''Enable debug level application logs for Envoy and enable ConfigManager to log service config.
+        help='''
+        Enables a variety of debug features in both Config Manager and Envoy, such as:
+        - Debug level per-request application logs in Envoy
+        - Debug level service configuration logs in Config Manager
+        - Admin interface in Envoy
         ''')
     return parser
 
