@@ -310,8 +310,7 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
   initExpectedReportInfo(expected_report_info);
   expected_report_info.api_name = "";
   expected_report_info.api_version = "";
-  expected_report_info.status =
-      Status::OK;
+  expected_report_info.status = Status::OK;
   expected_report_info.operation_name = "<Unknown Operation Name>";
 
   EXPECT_CALL(*mock_call_,
@@ -336,8 +335,7 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
   initExpectedReportInfo(expected_report_info);
   expected_report_info.api_name = "";
   expected_report_info.api_version = "";
-  expected_report_info.status =
-      Status::OK;
+  expected_report_info.status = Status::OK;
   expected_report_info.operation_name = "<Unknown Operation Name>";
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
