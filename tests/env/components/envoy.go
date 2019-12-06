@@ -43,7 +43,7 @@ func createEnvoyConf(configPath string, bootstrapArgs []string, shouldEnableTrac
 		bootstrapArgs = append(bootstrapArgs, "--disable_tracing")
 	}
 
-	bootstrapArgs = append(bootstrapArgs, fmt.Sprintf("--discovery_address=http://%v:%v", platform.GetLoopbackAddress(), ports.DiscoveryPort))
+	bootstrapArgs = append(bootstrapArgs, fmt.Sprintf("--discovery_port=%v", ports.DiscoveryPort))
 	bootstrapArgs = append(bootstrapArgs, fmt.Sprintf("--admin_port=%v", ports.AdminPort))
 	bootstrapArgs = append(bootstrapArgs, "--admin_address", platform.GetAnyAddress())
 	bootstrapArgs = append(bootstrapArgs, configPath)
