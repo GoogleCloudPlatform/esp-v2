@@ -133,15 +133,12 @@ test-envoy: format
 	@bazel test //src/...
 
 test-envoy-asan: format
-	@echo "--> running envoy's unit tests"
+	@echo "--> running envoy's unit tests (asan)"
 	@CC=clang-8 CXX=clang++-8 ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-8) bazel test --config=clang-asan  --test_output=errors //src/...
 
 test-envoy-tsan: format
-	@echo "--> running envoy's unit tests"
+	@echo "--> running envoy's unit tests (tsan)"
 	@CC=clang-8 CXX=clang++-8 ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-8) bazel test --config=clang-tsan  --test_output=errors  //src/...
-
-
-
 
 .PHONY: integration-test-run integration-test integration-test-asan integration-test-tsan integration-debug
 integration-test-run:

@@ -1,0 +1,11 @@
+{
+  "_id": "5deaa957dcf04ab41d63b88b",
+  "index": 4,
+  "guid": "33ec2402-8c85-49f6-80ad-8b587e713809",
+  "isActive": true,
+  "balance": "$2,370.56",
+  "picture": "http://placehold.it/32x32",
+  "age": 30,
+  "key-1": 120,
+  "key-2": "hello world"
+}

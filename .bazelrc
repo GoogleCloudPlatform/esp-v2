@@ -5,6 +5,7 @@ build --define=grpc_no_ares=true
 
 # Required by envoy and grpc-echo
 build --incompatible_disable_deprecated_attr_params=false
+query --incompatible_disable_deprecated_attr_params=false
 
 # Required to compile a Position Independent Executable
 # Ref: github.com/envoyproxy/envoy#8792
@@ -72,3 +73,11 @@ build:clang-tsan --define ENVOY_CONFIG_TSAN=1
 build:clang-tsan --copt -fsanitize=thread
 build:clang-tsan --linkopt -fsanitize=thread
 build:clang-tsan --copt -DEVENT__DISABLE_DEBUG_MODE
+
+# Fuzz builds
+build:asan-fuzzer --config=clang-asan
+build:asan-fuzzer --define=FUZZING_ENGINE=libfuzzer
+build:asan-fuzzer --copt=-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+build:asan-fuzzer --copt=-fsanitize=fuzzer-no-link
+# Remove UBSAN halt_on_error to avoid crashing on protobuf errors.
+build:asan-fuzzer --test_env=UBSAN_OPTIONS=print_stacktrace=1

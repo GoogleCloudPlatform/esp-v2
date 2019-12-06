@@ -1,0 +1,45 @@
+{
+  "_id": "5deaa957dcf04ab41d63b88b",
+  "index": 4,
+  "guid": "33ec2402-8c85-49f6-80ad-8b587e713809",
+  "isActive": true,
+  "balance": "$2,370.56",
+  "picture": "http://placehold.it/32x32",
+  "age": 30,
+  "eyeColor": "blue",
+  "name": "Myrna Peters",
+  "gender": "female",
+  "company": "CUIZINE",
+  "email": "myrnapeters@cuizine.com",
+  "phone": "+1 (929) 433-2689",
+  "address": "266 Metrotech Courtr, Gwynn, Texas, 2031",
+  "about": "Nostrud ut proident ullamco ullamco. Qui excepteur quis exercitation Lorem ullamco anim aute ullamco ullamco ut. Occaecat duis amet ullamco nostrud esse reprehenderit fugiat adipisicing nulla est et fugiat. Quis cupidatat deserunt esse dolor ea irure aute deserunt fugiat enim nulla.\r\n",
+  "registered": "2014-09-25T04:16:25 +07:00",
+  "latitude": -66.274972,
+  "longitude": 35.362915,
+  "tags": [
+    "cupidatat",
+    "eiusmod",
+    "tempor",
+    "fugiat",
+    "consequat",
+    "laboris",
+    "excepteur"
+  ],
+  "friends": [
+    {
+      "id": 0,
+      "name": "Harrell Mullen"
+    },
+    {
+      "id": 1,
+      "name": "Holt Hamilton"
+    },
+    {
+      "id": 2,
+      "name": "Dunn Richard"
+    }
+  ],
+  "greeting": "Hello, Myrna Peters! You have 8 unread messages.",
+  "favoriteFruit": "banana"
+}

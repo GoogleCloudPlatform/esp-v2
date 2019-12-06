@@ -1,5 +1,6 @@
 load(
     "@envoy//bazel:envoy_build_system.bzl",
+    "envoy_cc_fuzz_test",
     "envoy_cc_library",
     "envoy_cc_test",
 )
@@ -32,6 +33,16 @@ envoy_cc_test(
     deps = [
         ":json_struct_lib",
         "@envoy//test/test_common:utility_lib",
+    ],
+)
+
+envoy_cc_fuzz_test(
+    name = "json_struct_fuzz_test",
+    srcs = ["json_struct_fuzz_test.cc"],
+    corpus = "//tests/fuzz/corpus:json_struct_corpus",
+    repository = "@envoy",
+    deps = [
+        ":json_struct_lib",
     ],
 )
 
