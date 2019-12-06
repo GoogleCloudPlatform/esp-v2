@@ -2,9 +2,9 @@
   "name": "bookstore",
   "version": "0.0.1",
   "description": "A Google Cloud Endpoints example implementation of a simple bookstore API.",
-  "main": "bookstore.js",
+  "main": "http_bookstore.js",
   "scripts": {
-    "start": "node bookstore.js",
+    "start": "node http_bookstore.js",
     "test": "npm install && cd ./test && npm test"
   },
   "repository": {
