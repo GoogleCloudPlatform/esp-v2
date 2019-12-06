@@ -86,7 +86,7 @@ case ${TEST_CASE} in
   "tight-grpc-interop-managed")
     runE2E -p "gke" -c "tight" -t "grpc" -g "interop" -R "managed" -m "$(get_proxy_image_name_with_sha)"
     ;;
-  "cloud-run-http-bookstore")
+  "cloud-run-cloud-run-http-bookstore")
     runE2E -p "cloud-run" -f "cloud-run" -t "http" -g "bookstore" -R "managed" -m "$(get_serverless_image_name_with_sha)"
     ;;
   "cloud-run-cloud-function-http-bookstore")
