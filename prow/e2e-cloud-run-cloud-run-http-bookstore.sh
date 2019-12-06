@@ -21,5 +21,5 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DURATION_IN_HOUR=${LONG_RUN_DURATION_IN_HOUR:-""}
 BUCKET=${LONG_RUN_BUCKET:-""}
 
-TEST_CASE=cloud-run-http-bookstore
+TEST_CASE=cloud-run-cloud-run-http-bookstore
 . ${ROOT}/prow/gcpproxy-e2e.sh
