@@ -28,6 +28,7 @@ var (
 	// When adding or changing default values, update options.DefaultCommonOptions.
 	AdminAddress               = flag.String("admin_address", "0.0.0.0", "Address that envoy should serve the admin page on. Supports both ipv4 and ipv6 addresses.")
 	AdminPort                  = flag.Int("admin_port", 8001, "Port that envoy should serve the admin page on")
+	DiscoveryPort              = flag.Int("discovery_port", 8790, "Port that envoy should use to contact ADS. Defaults to config manager's port.")
 	DisableTracing             = flag.Bool("disable_tracing", false, `Disable stackdriver tracing`)
 	EnableAdmin                = flag.Bool("enable_admin", false, "Enables envoy's admin interface. Not recommended for production use-cases, as the admin port is unauthenticated.")
 	HttpRequestTimeoutS        = flag.Int("http_request_timeout_s", 5, `Set the timeout in second for all requests. Must be > 0 and the default is 5 seconds if not set.`)
@@ -61,6 +62,7 @@ func DefaultCommonOptionsFromFlags() options.CommonOptions {
 		AdminAddress:               *AdminAddress,
 		AdminPort:                  *AdminPort,
 		DisableTracing:             *DisableTracing,
+		DiscoveryPort:              *DiscoveryPort,
 		EnableAdmin:                *EnableAdmin,
 		HttpRequestTimeout:         time.Duration(*HttpRequestTimeoutS) * time.Second,
 		Node:                       *Node,

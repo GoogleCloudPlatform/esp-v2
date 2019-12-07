@@ -16,6 +16,7 @@ package flags
 
 import (
 	"flag"
+	"fmt"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/commonflags"
@@ -25,14 +26,14 @@ import (
 
 var (
 	AdsConnectTimeout = flag.Duration("ads_connect_timeout", 10*time.Second, "ads connect timeout in seconds")
-	DiscoveryAddress  = flag.String("discovery_address", "127.0.0.1:8790", "Address that envoy should use to contact ADS. Defaults to config manager's address, but can be a remote address.")
 )
 
 func DefaultBootstrapperOptionsFromFlags() options.AdsBootstrapperOptions {
+	common_option := commonflags.DefaultCommonOptionsFromFlags()
 	opts := options.AdsBootstrapperOptions{
-		CommonOptions:     commonflags.DefaultCommonOptionsFromFlags(),
+		CommonOptions:     common_option,
 		AdsConnectTimeout: *AdsConnectTimeout,
-		DiscoveryAddress:  *DiscoveryAddress,
+		DiscoveryAddress:  fmt.Sprintf("127.0.0.1:%d", common_option.DiscoveryPort),
 	}
 
 	glog.Infof("ADS Bootstrapper options: %+v", opts)

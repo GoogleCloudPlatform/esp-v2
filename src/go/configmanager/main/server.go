@@ -33,10 +33,6 @@ import (
 	xds "github.com/envoyproxy/go-control-plane/pkg/server"
 )
 
-var (
-	DiscoveryPort = flag.Int("discovery_port", 8790, "Port that configmanager should serve ADS")
-)
-
 func main() {
 	flag.Parse()
 	opts := flags.EnvoyConfigOptionsFromFlags()
@@ -57,7 +53,7 @@ func main() {
 	}
 	server := xds.NewServer(ctx, m.Cache(), nil)
 	grpcServer := grpc.NewServer()
-	lis, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", *DiscoveryPort))
+	lis, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", opts.DiscoveryPort))
 	if err != nil {
 		glog.Exitf("Server failed to listen: %v", err)
 	}

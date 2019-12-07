@@ -22,10 +22,11 @@ import (
 // By defining all the common options in one struct, we prevent duplicate flag initialization and reduce repeated code.
 type CommonOptions struct {
 	// Flags for envoy
-	AdminAddress string
-	AdminPort    int
-	EnableAdmin  bool
-	Node         string
+	AdminAddress  string
+	AdminPort     int
+	DiscoveryPort int
+	EnableAdmin   bool
+	Node          string
 
 	// Flags for tracing
 	DisableTracing             bool
@@ -55,6 +56,7 @@ func DefaultCommonOptions() CommonOptions {
 		AdminAddress:               "0.0.0.0",
 		AdminPort:                  8001,
 		DisableTracing:             false,
+		DiscoveryPort:              8790,
 		EnableAdmin:                false,
 		HttpRequestTimeout:         5 * time.Second,
 		Node:                       "ESPv2",
