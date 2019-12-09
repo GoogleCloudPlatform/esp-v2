@@ -1,13 +1,13 @@
-# Config Manager: the Control Plane for ESP V2
+# Config Manager: the Control Plane for ESPv2
 
-The best way to configure Envoy inside ESP V2 is through Dynamic
+The best way to configure Envoy inside ESPv2 is through Dynamic
 configuration.
 
-This Config Manager is acting as the control plane for ESP V2, it utilizes
+This Config Manager is acting as the control plane for ESPv2, it utilizes
 the [go-control-plane](https://github.com/envoyproxy/go-control-plane), with
 extra features specifically for APIs on Google Cloud Platform.
 
-*   **ESP V2 Startup Configuration**: When starting Config Manager, it
+*   **ESPv2 Startup Configuration**: When starting Config Manager, it
     fetches the latest
     [googleapis API service config](https://github.com/googleapis/api-common-protos/blob/master/google/api/service.proto)
     from
@@ -25,7 +25,7 @@ extra features specifically for APIs on Google Cloud Platform.
     seconds, to see whether there is new rollout or not. If yes, it will
     fetches the new deployed service config and updates envoy configurations,
     automatically and silently.
-    (Note: currently ESP V2 doesn't support
+    (Note: currently ESPv2 doesn't support
     [Traffic Percentage Strategy](https://github.com/googleapis/googleapis/blob/master/google/api/servicemanagement/v1/resources.proto#L227))
 
 ## Prerequisites:
