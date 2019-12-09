@@ -28,66 +28,19 @@ namespace HttpFilters {
 namespace BackendAuth {
 // Use shared_ptr to do atomic token update.
 typedef std::shared_ptr<std::string> TokenSharedPtr;
-class TokenCache : public ThreadLocal::ThreadLocalObject {
+
+class FilterConfigParser {
  public:
-  TokenSharedPtr token_;
+  virtual ~FilterConfigParser() = default;
+
+  virtual absl::string_view getAudienceContext(
+      absl::string_view operation) const PURE;
+
+  virtual const TokenSharedPtr getJwtToken(
+      absl::string_view audience) const PURE;
 };
 
-class AudienceContext {
- public:
-  AudienceContext(
-      const ::google::api::envoy::http::backend_auth::BackendAuthRule&
-          proto_config,
-      Server::Configuration::FactoryContext& context,
-      const ::google::api::envoy::http::backend_auth::FilterConfig& config,
-      Utils::IamTokenSubscriber::TokenGetFunc access_token_fn);
-  TokenSharedPtr token() const {
-    if (tls_->getTyped<TokenCache>().token_) {
-      return tls_->getTyped<TokenCache>().token_;
-    }
-    return nullptr;
-  }
-
- private:
-  ThreadLocal::SlotPtr tls_;
-  Utils::IamTokenSubscriberPtr iam_token_sub_ptr_;
-  Utils::TokenSubscriberPtr imds_token_sub_ptr_;
-};
-
-typedef std::unique_ptr<AudienceContext> AudienceContextPtr;
-
-class FilterConfigParser
-    : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
- public:
-  FilterConfigParser(
-      const ::google::api::envoy::http::backend_auth::FilterConfig& config,
-      Server::Configuration::FactoryContext& context);
-
-  absl::string_view getAudienceContext(absl::string_view operation) const {
-    static const std::string empty = "";
-    auto operation_it = operation_map_.find(operation);
-    if (operation_it == operation_map_.end()) {
-      return empty;
-    }
-    return operation_it->second;
-  }
-
-  const TokenSharedPtr getJwtToken(absl::string_view audience) const {
-    auto audience_it = audience_map_.find(audience);
-    if (audience_it == audience_map_.end()) {
-      return nullptr;
-    }
-    return audience_it->second->token();
-  }
-
- private:
-  //  access_token_ is required for authentication during fetching id_token from
-  //  IAM server.
-  std::string access_token_;
-  Utils::TokenSubscriberPtr access_token_sub_ptr_;
-  absl::flat_hash_map<std::string, std::string> operation_map_;
-  absl::flat_hash_map<std::string, AudienceContextPtr> audience_map_;
-};
+typedef std::unique_ptr<FilterConfigParser> FilterConfigParserPtr;
 
 }  // namespace BackendAuth
 }  // namespace HttpFilters

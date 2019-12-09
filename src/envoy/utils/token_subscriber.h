@@ -69,6 +69,7 @@ class TokenSubscriber
   Envoy::Http::AsyncClient::Request* active_request_{};
 
   Envoy::Event::TimerPtr refresh_timer_;
+  // init_target_.ready() need be called at the end of request callbacks.
   Envoy::Init::TargetImpl init_target_;
 };
 typedef std::unique_ptr<TokenSubscriber> TokenSubscriberPtr;

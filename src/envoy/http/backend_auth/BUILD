@@ -27,6 +27,7 @@ envoy_cc_library(
     hdrs = [
         "filter.h",
         "filter_config.h",
+        "filter_config_impl.h",
     ],
     repository = "@envoy",
     deps = [
@@ -38,8 +39,11 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "config_parser_lib",
-    srcs = ["config_parser.cc"],
-    hdrs = ["config_parser.h"],
+    srcs = ["config_parser_impl.cc"],
+    hdrs = [
+        "config_parser.h",
+        "config_parser_impl.h",
+    ],
     repository = "@envoy",
     deps = [
         "//api/envoy/http/backend_auth:config_proto_cc_proto",

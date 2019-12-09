@@ -225,7 +225,8 @@ TEST_F(BackendRoutingFilterWithQueryParamsTest, ConstantAddress) {
   ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 }
 
-TEST_F(BackendRoutingFilterWithQueryParamsTest, ConstantAddressWithPathMatcherQueryParams) {
+TEST_F(BackendRoutingFilterWithQueryParamsTest,
+       ConstantAddressWithPathMatcherQueryParams) {
   Http::TestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/books/1?view=summary&filter=deleted"}};
   Utils::setStringFilterState(

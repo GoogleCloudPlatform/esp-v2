@@ -109,11 +109,14 @@ void IamTokenSubscriber::refresh() {
 }
 
 void IamTokenSubscriber::onSuccess(Envoy::Http::MessagePtr&& response) {
-  init_target_.ready();
-  ENVOY_LOG(debug, "getIdentityToken got response: {}",
-            response->bodyAsString());
+  ENVOY_LOG(debug, "GetAccessToken got response: {}", response->bodyAsString());
   active_request_ = nullptr;
 
+  processResponse(std::move(response));
+  init_target_.ready();
+}
+
+void IamTokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
   const uint64_t status_code =
       Envoy::Http::Utility::getResponseStatus(response->headers());
   if (status_code != enumToInt(Envoy::Http::Code::OK)) {
@@ -153,12 +156,12 @@ void IamTokenSubscriber::onSuccess(Envoy::Http::MessagePtr&& response) {
 
 void IamTokenSubscriber::onFailure(
     Envoy::Http::AsyncClient::FailureReason reason) {
-  init_target_.ready();
   active_request_ = nullptr;
   ENVOY_LOG(error, "getIdentityToken failed with code: {}, {}",
             enumToInt(reason));
 
   resetTimer(kFailedRequestTimeout);
+  init_target_.ready();
 }
 
 void IamTokenSubscriber::resetTimer(const std::chrono::milliseconds& ms) {
