@@ -75,12 +75,12 @@ Your contributions are welcome. Please follow the contributor [guidelines](CONTR
 
 To find out more about building, running, and testing ESPv2:
 
-* [Run ESPv2 on Google Cloud Run](/doc/apiproxy-on-cloudrun.md)
+* [Run ESPv2 on Google Cloud Run](/doc/esp-v2-on-cloudrun.md)
 
-* [Run ESPv2 on Google GKE](/doc/apiproxy-on-k8s.md)
+* [Run ESPv2 on Google GKE](/doc/esp-v2-on-k8s.md)
 
 ## Disclaimer
 
-ESPv2 is still in Alpha. This is not an officially supported Google product.
+ESPv2 is in Beta currently.
 
 Please make sure to join [google-cloud-endpoints](https://groups.google.com/forum/#!forum/google-cloud-endpoints) Google group, to get emails about all announcements on ESPv2.

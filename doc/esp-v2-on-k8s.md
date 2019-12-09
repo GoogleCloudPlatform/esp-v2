@@ -92,16 +92,16 @@ If you get an error message, see Troubleshooting Endpoints configuration deploym
 
 ## Deploying the API backend on GKE
 
-So far you have deployed the service configuration to Service Management, but you have not yet deployed the code that serves the API backend. This section walks you through deploying prebuilt containers for the sample API and APIProxy to Kubernetes.
+So far you have deployed the service configuration to Service Management, but you have not yet deployed the code that serves the API backend. This section walks you through deploying prebuilt containers for the sample API and ESPv2 to Kubernetes.
 
 * Create a GKE cluster and connect to it
 
 Check and modify the Kubernetes configuration: bookstore-k8s.yaml
-Check the apiproxy image name and args.
+Check the ESPv2 image name and args.
 
 * Update the args, change the service name to YOUR_PROJECT_ID.
 
-The --rollout_strategy=managed option configures APIProxy to use the latest deployed service configuration. When you specify this option, within a minute after you deploy a new service configuration, APIProxy detects the change and automatically begins using it. We recommend that you specify this option instead of a specific configuration ID for APIProxy to use.
+The --rollout_strategy=managed option configures ESPv2 to use the latest deployed service configuration. When you specify this option, within a minute after you deploy a new service configuration, ESPv2 detects the change and automatically begins using it. We recommend that you specify this option instead of a specific configuration ID for ESPv2 to use.
 
 * Deploy service on kubernetes
 
@@ -179,7 +179,7 @@ curl --header "x-api-key: $API_KEY " http://$HOST/v1/shelves?access_token=$JWT_T
 
 ## Monitoring the API
 
-APIProxy is integrated with multi Google Services for API management and monitoring, including Service Management, Stackdriver Logging, and Stackdriver trace.  So, you can monitor your API on Pantheon UI by: Service Stats, including QPS, ErrorRate, Latency,  Request/Response Size etc.
+ESPv2 is integrated with multi Google Services for API management and monitoring, including Service Management, Stackdriver Logging, and Stackdriver trace.  So, you can monitor your API on Pantheon UI by: Service Stats, including QPS, ErrorRate, Latency,  Request/Response Size etc.
 
 ## Cleaning up
 
