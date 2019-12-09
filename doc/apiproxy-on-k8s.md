@@ -1,6 +1,6 @@
-# Run ESP V2 on Google GKE
+# Run ESPv2 on Google GKE
 
-This tutorial describes how to run ESP V2 as a sidecar for the Bookstore endpoint,
+This tutorial describes how to run ESPv2 as a sidecar for the Bookstore endpoint,
 on a Google GKE cluster.
 
 ## Prerequisites
@@ -18,8 +18,8 @@ on a Google GKE cluster.
 
 4. Install [CURL](https://curl.haxx.se/download.html) for testing purposes.
 
-5. Enable [Cloud Endpoints API](https://console.cloud.google.com/apis/api/endpoints.googleapis.com/overview), 
-   [Cloud Service Management API](https://console.cloud.google.com/apis/api/servicemanagement.googleapis.com/overview), 
+5. Enable [Cloud Endpoints API](https://console.cloud.google.com/apis/api/endpoints.googleapis.com/overview),
+   [Cloud Service Management API](https://console.cloud.google.com/apis/api/servicemanagement.googleapis.com/overview),
    and [Cloud Service Control API](https://console.cloud.google.com/apis/api/servicecontrol.googleapis.com/overview)
    for your project in the Google Cloud Endpoints page in the API Manager.
    Ignore any prompt to create credentials.

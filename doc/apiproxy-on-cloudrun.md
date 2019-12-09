@@ -1,6 +1,6 @@
-# Run ESP V2 on Google Cloud Run
+# Run ESPv2 on Google Cloud Run
 
-This tutorial describes how to run ESP V2 as a gateway for the Bookstore
+This tutorial describes how to run ESPv2 as a gateway for the Bookstore
 endpoint, on Google Cloud Run.
 
 ## Before you begin
@@ -60,10 +60,10 @@ You can verify its status by sending a request to the service by:
 curl https://BACKEND_SERVICE_URL/shelves
 ```
 
-## Deploying ESP V2
+## Deploying ESPv2
 
-Similarly, you need to deploy ESP V2 on Google Cloud Run using a docker image.
-We supply the Docker image for ESP V2 at
+Similarly, you need to deploy ESPv2 on Google Cloud Run using a docker image.
+We supply the Docker image for ESPv2 at
 [gcr.io/apiproxy-release/apiproxy-serverless:0](https://gcr.io/apiproxy-release/apiproxy-serverless:0).
 Note the `-serverless` suffix in this image, which denotes this is specifically
 for use on Cloud Functions and Cloud Run.
@@ -90,7 +90,7 @@ traffic at https://PROXY_SERVICE_URL
 You must have an OpenAPI document based on OpenAPI Specification v2.0 that
 describes the surface of your backend service and any authentication
 requirements. You also need to add a Google-specific field that contains the URL
-for each service so that ESP V2 has the information it needs to invoke a
+for each service so that ESPv2 has the information it needs to invoke a
 service.
 
 We supply a
@@ -142,9 +142,9 @@ Note that on Cloud Run, `ENDPOINTS_SERVICE_NAME` is usually the same as `PROXY_S
 (minus the protocol identifier).
 
 
-## Build the service config to the ESP V2 docker image
+## Build the service config to the ESPv2 docker image
 
-You will need to build the service config into a new ESP V2 image and redeploy that new image to Cloud Run.
+You will need to build the service config into a new ESPv2 image and redeploy that new image to Cloud Run.
 We provide a bash script to automate this process. Ensure you have the gcloud SDK installed and download
 this [script](../docker/serverless/gcloud_build_image).
 
@@ -163,7 +163,7 @@ container registry located here:
 gcr.io/YOUR_PROJECT_ID/apiproxy-serverless:ENDPOINTS_SERVICE_NAME-ENDPOINTS_SERVICE_CONFIG_ID
 ```
 
-## Redeploy the ESP V2 Cloud Run service with the new image
+## Redeploy the ESPv2 Cloud Run service with the new image
 
 Replace ESPv2_SERVICE_NAME with the name of your Cloud Run service.
 
@@ -177,7 +177,7 @@ gcloud beta run deploy ESPv2_SERVICE_NAME \
 
 ## Testing the API
 
-Now you can sent request to the backend service through the ESP V2:
+Now you can sent request to the backend service through the ESPv2:
 
 ```
 curl https://PROXY_SERVICE_URL/shelves
