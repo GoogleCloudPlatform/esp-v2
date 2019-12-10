@@ -14,8 +14,7 @@
 
 #include <memory>
 
-#include "src/envoy/http/backend_auth/config_parser.h"
-
+#include "src/envoy/http/backend_auth/config_parser_impl.h"
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
@@ -76,7 +75,7 @@ AudienceContext::AudienceContext(
   }
 }
 
-FilterConfigParser::FilterConfigParser(
+FilterConfigParserImpl::FilterConfigParserImpl(
     const FilterConfig& config,
     Server::Configuration::FactoryContext& context) {
   // Subscribe access token for fetching id token from iam when IdTokenFromIam
@@ -115,7 +114,6 @@ FilterConfigParser::FilterConfigParser(
     }
   }
 }
-
 }  // namespace BackendAuth
 }  // namespace HttpFilters
 }  // namespace Extensions

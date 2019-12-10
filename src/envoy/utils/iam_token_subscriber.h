@@ -49,6 +49,7 @@ class IamTokenSubscriber
   void onFailure(Envoy::Http::AsyncClient::FailureReason reason) override;
 
   void refresh();
+  void processResponse(Envoy::Http::MessagePtr&& response);
   void resetTimer(const std::chrono::milliseconds& ms);
 
   Upstream::ClusterManager& cm_;
@@ -60,6 +61,7 @@ class IamTokenSubscriber
   Envoy::Http::AsyncClient::Request* active_request_{};
 
   Envoy::Event::TimerPtr refresh_timer_;
+  // init_target_.ready() need be called at the end of request callbacks.
   Envoy::Init::TargetImpl init_target_;
 };
 typedef std::unique_ptr<IamTokenSubscriber> IamTokenSubscriberPtr;

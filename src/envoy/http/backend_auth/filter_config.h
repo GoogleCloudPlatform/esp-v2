@@ -39,34 +39,14 @@ struct FilterStats {
   ALL_BACKEND_AUTH_FILTER_STATS(GENERATE_COUNTER_STRUCT)
 };
 
-// The Envoy filter config for ESP V2 backend auth filter.
-class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
+
+class FilterConfig {
  public:
-  FilterConfig(const ::google::api::envoy::http::backend_auth::FilterConfig&
-                   proto_config,
-               const std::string& stats_prefix,
-               Server::Configuration::FactoryContext& context)
-      : proto_config_(proto_config),
-        stats_(generateStats(stats_prefix, context.scope())),
-        config_parser_(proto_config_, context) {}
+  virtual ~FilterConfig() = default;
 
-  const ::google::api::envoy::http::backend_auth::FilterConfig& config() const {
-    return proto_config_;
-  }
+  virtual FilterStats& stats() PURE;
 
-  FilterStats& stats() { return stats_; }
-  const FilterConfigParser& cfg_parser() const { return config_parser_; }
-
- private:
-  FilterStats generateStats(const std::string& prefix, Stats::Scope& scope) {
-    const std::string final_prefix = prefix + "backend_auth.";
-    return {ALL_BACKEND_AUTH_FILTER_STATS(
-        POOL_COUNTER_PREFIX(scope, final_prefix))};
-  }
-
-  ::google::api::envoy::http::backend_auth::FilterConfig proto_config_;
-  FilterStats stats_;
-  FilterConfigParser config_parser_;
+  virtual const FilterConfigParser& cfg_parser() const PURE;
 };
 
 typedef std::shared_ptr<FilterConfig> FilterConfigSharedPtr;
