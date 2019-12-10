@@ -225,8 +225,7 @@ ClientCache::ClientCache(
             }
           } else {
             ENVOY_LOG(error,
-                      "Failed to call allocateQuota, error: {}, str "
-                      "body: {}, pb body: {}",
+                      "Failed to call allocateQuota, error: {}, str body: {}",
                       status.ToString(), body);
           }
           on_done(status);
