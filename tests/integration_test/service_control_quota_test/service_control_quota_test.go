@@ -110,6 +110,8 @@ func TestServiceControlQuota(t *testing.T) {
 					LogMessage:        "endpoints.examples.bookstore.Bookstore.ListShelves is called",
 					StatusCode:        "0",
 					ResponseCode:      200,
+					RequestMsgCounts:  1,
+					ResponseMsgCounts: 1,
 					Platform:          util.GCE,
 					Location:          "test-zone",
 				},
@@ -311,9 +313,11 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 					// It always allow the first request, then cache its cost, accumulate all costs for 1 second,
 					// then call remote allocateQuota,  if fail, the next request will be failed with 429.
 					// Here is the first request.
-					ResponseCode: 200,
-					Platform:     util.GCE,
-					Location:     "test-zone",
+					ResponseCode:      200,
+					RequestMsgCounts:  1,
+					ResponseMsgCounts: 1,
+					Platform:          util.GCE,
+					Location:          "test-zone",
 				},
 			},
 		},

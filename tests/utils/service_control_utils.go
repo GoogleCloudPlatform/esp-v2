@@ -52,35 +52,33 @@ type ExpectedQuota struct {
 }
 
 type ExpectedReport struct {
-	Aggregate             int64
-	Version               string
-	ServiceName           string
-	ServiceConfigID       string
-	ApiVersion            string
-	ApiMethod             string
-	ApiKey                string
-	ProducerProjectID     string
-	ConsumerProjectID     string
-	URL                   string
-	Location              string
-	HttpMethod            string
-	LogMessage            string
-	ConsumerStreamReqCnt  int64
-	ConsumerStreamRespCnt int64
-	ProducerStreamReqCnt  int64
-	ProducerStreamRespCnt int64
-	ResponseCode          int
-	Referer               string
-	StatusCode            string
-	ErrorCause            string
-	ErrorType             string
-	FrontendProtocol      string
-	BackendProtocol       string
-	Platform              string
-	JwtAuth               string
-	RequestHeaders        string
-	ResponseHeaders       string
-	JwtPayloads           string
+	Aggregate         int64
+	Version           string
+	ServiceName       string
+	ServiceConfigID   string
+	ApiVersion        string
+	ApiMethod         string
+	ApiKey            string
+	ProducerProjectID string
+	ConsumerProjectID string
+	URL               string
+	Location          string
+	HttpMethod        string
+	LogMessage        string
+	RequestMsgCounts  int64
+	ResponseMsgCounts int64
+	ResponseCode      int
+	Referer           string
+	StatusCode        string
+	ErrorCause        string
+	ErrorType         string
+	FrontendProtocol  string
+	BackendProtocol   string
+	Platform          string
+	JwtAuth           string
+	RequestHeaders    string
+	ResponseHeaders   string
+	JwtPayloads       string
 }
 
 type distOptions struct {
@@ -525,21 +523,14 @@ func CreateReport(er *ExpectedReport) scpb.ReportRequest {
 		createDistMetricSet(&sizeDistOptions,
 			"serviceruntime.googleapis.com/api/producer/response_sizes", int64(fakeDistVal)),
 	}
-	if er.ConsumerStreamReqCnt != 0 {
+
+	if er.RequestMsgCounts != 0 {
 		ms = append(ms,
-			createDistMetricSet(&sizeDistOptions, "serviceruntime.googleapis.com/api/consumer/streaming_request_message_counts", er.ConsumerStreamReqCnt))
+			createDistMetricSet(&sizeDistOptions, "serviceruntime.googleapis.com/api/producer/streaming_request_message_counts", er.RequestMsgCounts))
 	}
-	if er.ConsumerStreamRespCnt != 0 {
+	if er.ResponseMsgCounts != 0 {
 		ms = append(ms,
-			createDistMetricSet(&sizeDistOptions, "serviceruntime.googleapis.com/api/consumer/streaming_response_message_counts", er.ConsumerStreamRespCnt))
-	}
-	if er.ProducerStreamReqCnt != 0 {
-		ms = append(ms,
-			createDistMetricSet(&sizeDistOptions, "serviceruntime.googleapis.com/api/producer/streaming_request_message_counts", er.ProducerStreamReqCnt))
-	}
-	if er.ProducerStreamRespCnt != 0 {
-		ms = append(ms,
-			createDistMetricSet(&sizeDistOptions, "serviceruntime.googleapis.com/api/producer/streaming_response_message_counts", er.ProducerStreamRespCnt))
+			createDistMetricSet(&sizeDistOptions, "serviceruntime.googleapis.com/api/producer/streaming_response_message_counts", er.ResponseMsgCounts))
 	}
 
 	if sendConsumer {
@@ -551,6 +542,15 @@ func CreateReport(er *ExpectedReport) scpb.ReportRequest {
 		ms = append(ms,
 			createDistMetricSet(&sizeDistOptions,
 				"serviceruntime.googleapis.com/api/consumer/response_sizes", int64(fakeDistVal)))
+
+		if er.RequestMsgCounts != 0 {
+			ms = append(ms,
+				createDistMetricSet(&sizeDistOptions, "serviceruntime.googleapis.com/api/consumer/streaming_request_message_counts", er.RequestMsgCounts))
+		}
+		if er.ResponseMsgCounts != 0 {
+			ms = append(ms,
+				createDistMetricSet(&sizeDistOptions, "serviceruntime.googleapis.com/api/consumer/streaming_response_message_counts", er.ResponseMsgCounts))
+		}
 	}
 	ms = append(ms,
 		createInt64MetricSet("serviceruntime.googleapis.com/api/producer/request_bytes", int64(fakeInt64Val)))

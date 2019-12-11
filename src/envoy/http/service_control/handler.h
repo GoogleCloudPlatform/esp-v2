@@ -45,20 +45,12 @@ class ServiceControlHandler {
   virtual void callReport(const Http::HeaderMap* request_headers,
                           const Http::HeaderMap* response_headers,
                           const Http::HeaderMap* response_trailers,
-                          std::chrono::system_clock::time_point now =
-                              std::chrono::system_clock::now()) PURE;
+                          std::chrono::system_clock::time_point now) PURE;
 
-  // Collect decode data, if the stream report interval has passed,
+  // If the stream report interval has passed,
   // make an intermediate report call for long-lived gRPC streaming.
-  virtual void collectDecodeData(Buffer::Instance& request_data,
-                                 std::chrono::system_clock::time_point now =
-                                     std::chrono::system_clock::now()) PURE;
-
-  // Collect encode data, if the stream report interval has passed,
-  // make an intermediate report call for long-lived gRPC streaming.
-  virtual void collectEncodeData(Buffer::Instance& response_data,
-                                 std::chrono::system_clock::time_point now =
-                                     std::chrono::system_clock::now()) PURE;
+  virtual void tryIntermediateReport(
+      std::chrono::system_clock::time_point now) PURE;
 
   // Process the response header to get the information needed for sending
   // intermediate reports.

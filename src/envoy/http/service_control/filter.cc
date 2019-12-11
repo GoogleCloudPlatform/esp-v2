@@ -99,7 +99,7 @@ Http::FilterDataStatus ServiceControlFilter::decodeData(Buffer::Instance& data,
                                                         bool end_stream) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (!end_stream && data.length() > 0) {
-    handler_->collectDecodeData(data);
+    handler_->tryIntermediateReport(std::chrono::system_clock::now());
   }
 
   if (state_ == Calling) {
@@ -133,7 +133,7 @@ Http::FilterDataStatus ServiceControlFilter::encodeData(Buffer::Instance& data,
                                                         bool end_stream) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (!end_stream && data.length() > 0) {
-    handler_->collectEncodeData(data);
+    handler_->tryIntermediateReport(std::chrono::system_clock::now());
   }
   return Http::FilterDataStatus::Continue;
 }
@@ -148,7 +148,8 @@ void ServiceControlFilter::log(const Http::HeaderMap* request_headers,
     handler_ = factory_.createHandler(*request_headers, stream_info);
   }
 
-  handler_->callReport(request_headers, response_headers, response_trailers);
+  handler_->callReport(request_headers, response_headers, response_trailers,
+                       std::chrono::system_clock::now());
 }
 
 }  // namespace ServiceControl

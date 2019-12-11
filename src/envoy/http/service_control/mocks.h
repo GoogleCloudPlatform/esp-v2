@@ -35,13 +35,8 @@ class MockServiceControlHandler : public ServiceControlHandler {
                                 const Http::HeaderMap* response_trailers,
                                 std::chrono::system_clock::time_point now));
 
-  MOCK_METHOD2(collectDecodeData,
-               void(Buffer::Instance& request_data,
-                    std::chrono::system_clock::time_point now));
-
-  MOCK_METHOD2(collectEncodeData,
-               void(Buffer::Instance& response_data,
-                    std::chrono::system_clock::time_point now));
+  MOCK_METHOD1(tryIntermediateReport,
+               void(std::chrono::system_clock::time_point now));
 
   MOCK_METHOD1(processResponseHeaders,
                void(const Http::HeaderMap& response_headers));

@@ -32,6 +32,7 @@ import (
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	listenerpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
+	gspb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/grpc_stats/v2alpha"
 	jwtpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
@@ -101,6 +102,11 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 			Name: util.GRPCWeb,
 		}
 		httpFilters = append(httpFilters, grpcWebFilter)
+
+		// GrpcStats filter is used to count gRPC frames.
+		// The data is stored in filterState and used by ServiceControl
+		// filter in the final report call.
+		httpFilters = append(httpFilters, makeGrpcStatsFilter())
 	}
 
 	// Add Backend Auth filter and Backend Routing if needed.
@@ -220,6 +226,18 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{pathMathcherConfigStruct},
 	}
 	return pathMatcherFilter
+}
+
+func makeGrpcStatsFilter() *hcmpb.HttpFilter {
+	cfg := &gspb.FilterConfig{
+		EmitFilterState: true,
+	}
+	cfg_any, _ := ptypes.MarshalAny(cfg)
+
+	return &hcmpb.HttpFilter{
+		Name:       util.GrpcStatsFilterName,
+		ConfigType: &hcmpb.HttpFilter_TypedConfig{cfg_any},
+	}
 }
 
 func hasPathParameter(httpPattern string) bool {
