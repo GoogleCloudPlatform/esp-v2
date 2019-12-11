@@ -24,9 +24,12 @@ import (
 
 func TestServiceConfigFetcherTimeout(t *testing.T) {
 	timeout := 1 * time.Second
-	serviceConfigFetcherClient = newServiceConfigFetcherClient(true, timeout)
+	var err error
+	if serviceConfigFetcherClient, err = newServiceConfigFetcherClient(timeout); err != nil {
+		t.Fatalf("newServiceConfigFetcherClient failed: %v", err)
+	}
 	server := util.InitMockServer(`{}`)
-	_, err := callWithAccessToken(server.GetURL(), "this-is-token")
+	_, err = callWithAccessToken(server.GetURL(), "this-is-token")
 	if err != nil {
 		t.Errorf("TestServiceConfigFetcherTimeout: the service config fetcher should get the config but get the error %v", err)
 	}

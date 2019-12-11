@@ -43,6 +43,10 @@ const (
 	BackendAuth = "envoy.filters.http.backend_auth"
 	// BackendRouting filter.
 	BackendRouting = "envoy.filters.http.backend_routing"
+	// TLSTransportSocket is Envoy TLS Transport Socket name.
+	TLSTransportSocket = "envoy.transport_sockets.tls"
+	// DefaultRootCAPaths is the default certs path.
+	DefaultRootCAPaths = "/etc/ssl/certs/ca-certificates.crt"
 
 	// JwtPayloadMetadataName is the field name passed into metadata
 	JwtPayloadMetadataName = "jwt_payloads"

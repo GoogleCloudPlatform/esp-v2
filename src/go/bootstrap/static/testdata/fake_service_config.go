@@ -259,11 +259,18 @@ var (
             },
             "dnsLookupFamily":"V4_ONLY",
             "transportSocket":{
-               "name":"tls",
+               "name":"envoy.transport_sockets.tls",
                "typedConfig":{
                   "@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
-                  "sni":"servicecontrol.googleapis.com"
-               }
+                  "sni":"servicecontrol.googleapis.com",
+                  "commonTlsContext": {
+                     "validationContext": {
+                        "trustedCa": {
+                           "filename": "/etc/ssl/certs/ca-certificates.crt"
+                        }
+                     }
+                  }
+	       }
             }
          }
       ]

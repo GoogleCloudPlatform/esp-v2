@@ -104,7 +104,7 @@ func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
 	}
 
 	if scheme == "https" {
-		transportSocket, err := util.CreateTransportSocket(hostname)
+		transportSocket, err := util.CreateTransportSocket(hostname, serviceInfo.Options.RootCertsPath)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
 				c.Name, err)
@@ -134,7 +134,7 @@ func makeIamCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
 	}
 
 	if scheme == "https" {
-		transportSocket, err := util.CreateTransportSocket(hostname)
+		transportSocket, err := util.CreateTransportSocket(hostname, serviceInfo.Options.RootCertsPath)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
 				c.Name, err)
@@ -168,7 +168,7 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, erro
 			LoadAssignment:       util.CreateLoadAssignment(hostname, port),
 		}
 		if scheme == "https" {
-			transportSocket, err := util.CreateTransportSocket(hostname)
+			transportSocket, err := util.CreateTransportSocket(hostname, serviceInfo.Options.RootCertsPath)
 			if err != nil {
 				return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
 					c.Name, err)
@@ -230,7 +230,7 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, erro
 	}
 
 	if scheme == "https" {
-		transportSocket, err := util.CreateTransportSocket(hostname)
+		transportSocket, err := util.CreateTransportSocket(hostname, serviceInfo.Options.RootCertsPath)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
 				c.Name, err)
@@ -246,7 +246,7 @@ func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, e
 
 	connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
 	for _, v := range serviceInfo.BackendRoutingClusters {
-		transportSocket, err := util.CreateTransportSocket(v.Hostname)
+		transportSocket, err := util.CreateTransportSocket(v.Hostname, serviceInfo.Options.RootCertsPath)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
 				v.ClusterName, err)
