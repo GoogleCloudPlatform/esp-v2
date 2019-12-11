@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "src/envoy/utils/iam_token_subscriber.h"
-#include "src/envoy/utils/json_struct.h"
 
 #include "common/http/message_impl.h"
 #include "common/tracing/http_tracer_impl.h"

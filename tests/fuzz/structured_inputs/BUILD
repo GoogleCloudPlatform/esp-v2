@@ -14,3 +14,11 @@ envoy_proto_library(
     srcs = ["json_struct.proto"],
     deps = [],
 )
+
+envoy_proto_library(
+    name = "iam_token_subscriber_proto",
+    srcs = ["iam_token_subscriber.proto"],
+    deps = [
+        "@envoy//test/fuzz:common_proto",
+    ],
+)

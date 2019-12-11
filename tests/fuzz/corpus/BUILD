@@ -11,3 +11,11 @@ filegroup(
         "json_struct/**",
     ]),
 )
+
+filegroup(
+    name = "iam_token_subscriber_corpus",
+    testonly = 1,
+    srcs = glob([
+        "iam_token_subscriber/**",
+    ]),
+)

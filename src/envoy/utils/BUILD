@@ -138,6 +138,21 @@ envoy_cc_test(
     ],
 )
 
+envoy_cc_fuzz_test(
+    name = "iam_token_subscriber_fuzz_test",
+    srcs = ["iam_token_subscriber_fuzz_test.cc"],
+    corpus = "//tests/fuzz/corpus:iam_token_subscriber_corpus",
+    repository = "@envoy",
+    deps = [
+        ":iam_token_subscriber_lib",
+        "//tests/fuzz/structured_inputs:iam_token_subscriber_proto_cc_proto",
+        "@envoy//test/fuzz:utility_lib",
+        "@envoy//test/mocks/init:init_mocks",
+        "@envoy//test/mocks/server:server_mocks",
+        "@envoy//test/test_common:utility_lib",
+    ],
+)
+
 envoy_cc_test(
     name = "iam_token_subscriber_test",
     size = "small",
