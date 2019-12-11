@@ -76,6 +76,10 @@ build:clang-tsan --copt -DEVENT__DISABLE_DEBUG_MODE
 
 # Fuzz builds
 build:asan-fuzzer --config=clang-asan
+build:asan-fuzzer -c opt
+build:asan-fuzzer --action_env=CC=clang-8
+build:asan-fuzzer --action_env=CXX=clang++-8
+build:asan-fuzzer --nocache_test_results
 build:asan-fuzzer --define=FUZZING_ENGINE=libfuzzer
 build:asan-fuzzer --copt=-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
 build:asan-fuzzer --copt=-fsanitize=fuzzer-no-link

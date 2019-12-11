@@ -1,0 +1,23 @@
+pb_struct {
+  fields {
+    key: "key-1"
+    value {
+      number_value: 10
+    }
+  }
+  fields {
+    key: "key-2"
+    value {
+      string_value: "value-2"
+    }
+  }
+  fields {
+    key: "key-3"
+    value {
+      bool_value: false
+    }
+  }
+}
+keys_to_check: "key-1"
+keys_to_check: "key-2"
+keys_to_check: "key-3"

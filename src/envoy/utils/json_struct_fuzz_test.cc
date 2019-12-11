@@ -13,36 +13,37 @@
 // limitations under the License.
 
 #include "test/fuzz/fuzz_runner.h"
+#include "test/fuzz/utility.h"
 
-#include "common/common/base64.h"
 #include "json_struct.h"
+#include "tests/fuzz/structured_inputs/json_struct.pb.validate.h"
 
 namespace Envoy {
+namespace Extensions {
+namespace Utils {
 namespace Fuzz {
 
-DEFINE_FUZZER(const uint8_t* buf, size_t len) {
-  std::string input(reinterpret_cast<const char*>(buf), len);
+DEFINE_PROTO_FUZZER(const tests::fuzz::protos::JsonStructInput& input) {
+  ENVOY_LOG_MISC(trace, "{}", input.DebugString());
 
-  ::google::protobuf::util::JsonParseOptions options;
-  ::google::protobuf::Struct response_pb;
-  const auto parse_status = ::google::protobuf::util::JsonStringToMessage(
-      input, &response_pb, options);
+  try {
+    TestUtility::validate(input);
 
-  if (!parse_status.ok()) {
-    return;
+    JsonStruct json_struct(input.pb_struct());
+
+    for (const auto& key_to_check : input.keys_to_check()) {
+      std::string str_value;
+      (void)json_struct.get_string(key_to_check, &str_value);
+
+      int int_value;
+      (void)json_struct.get_int(key_to_check, &int_value);
+    }
+  } catch (const ProtoValidationException& e) {
+    ENVOY_LOG_MISC(debug, "Controlled proto validation failure: {}", e.what());
   }
-  Envoy::Extensions::Utils::JsonStruct json_struct(response_pb);
-  auto* str_value = new std::string();
-  auto* int_value = new std::string();
-
-  (void)json_struct.get_string("key-1", str_value);
-  (void)json_struct.get_string("key-2", str_value);
-  (void)json_struct.get_string("key-1", int_value);
-  (void)json_struct.get_string("key-2", int_value);
-
-  delete str_value;
-  delete int_value;
 }
 
 }  // namespace Fuzz
+}  // namespace Utils
+}  // namespace Extensions
 }  // namespace Envoy

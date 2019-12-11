@@ -43,6 +43,8 @@ envoy_cc_fuzz_test(
     repository = "@envoy",
     deps = [
         ":json_struct_lib",
+        "//tests/fuzz/structured_inputs:json_struct_proto_cc_proto",
+        "@envoy//test/fuzz:utility_lib",
     ],
 )
 

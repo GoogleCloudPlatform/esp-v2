@@ -1,0 +1,9 @@
+pb_struct {
+  fields {
+    key: "key-1"
+    value {
+      string_value: "value-1"
+    }
+  }
+}
+keys_to_check: "key-1"

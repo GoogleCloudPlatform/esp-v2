@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package tests.fuzz.protos;
+
+import "google/protobuf/struct.proto";
+import "validate/validate.proto";
+
+message JsonStructInput {
+  google.protobuf.Struct pb_struct = 1 [(validate.rules).message.required = true];
+
+  repeated string keys_to_check = 2 [(validate.rules).repeated.min_items = 1];
+}
