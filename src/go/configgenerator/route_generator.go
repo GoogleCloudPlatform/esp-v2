@@ -57,7 +57,8 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*v2pb.RouteConfigurat
 		Action: &routepb.Route_Route{
 			Route: &routepb.RouteAction{
 				ClusterSpecifier: &routepb.RouteAction_Cluster{
-					Cluster: serviceInfo.ApiName},
+					Cluster: serviceInfo.ApiName,
+				},
 			},
 		},
 	})

@@ -217,7 +217,12 @@ func (m *ConfigManager) applyServiceConfig(serviceConfig *confpb.Service) error 
 	}
 
 	if m.metadataFetcher != nil {
-		m.serviceInfo.GcpAttributes = m.metadataFetcher.FetchGCPAttributes()
+		attrs, err := m.metadataFetcher.FetchGCPAttributes()
+		if err != nil {
+			m.Infof("metadata server was not reached, skipping GCP Attributes")
+		} else {
+			m.serviceInfo.GcpAttributes = attrs
+		}
 	}
 
 	snapshot, err := m.makeSnapshot()
