@@ -18,9 +18,8 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/golang/glog"
-		"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
-
 )
 
 var versionVal = ""

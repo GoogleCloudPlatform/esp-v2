@@ -14,8 +14,8 @@
 
 #include "test/fuzz/fuzz_runner.h"
 
-#include "json_struct.h"
 #include "common/common/base64.h"
+#include "json_struct.h"
 
 namespace Envoy {
 namespace Fuzz {
@@ -44,5 +44,5 @@ DEFINE_FUZZER(const uint8_t* buf, size_t len) {
   delete int_value;
 }
 
-} // namespace Fuzz
-} // namespace Envoy
+}  // namespace Fuzz
+}  // namespace Envoy

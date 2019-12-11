@@ -12,35 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #pragma once
-#include <list>
-#include <unordered_map>
-
-#include "absl/container/flat_hash_map.h"
-#include "absl/strings/str_cat.h"
-#include "api/envoy/http/backend_auth/config.pb.h"
-#include "envoy/thread_local/thread_local.h"
-#include "src/envoy/utils/iam_token_subscriber.h"
-#include "src/envoy/utils/token_subscriber.h"
+#include "gmock/gmock.h"
+#include "src/envoy/http/backend_auth/config_parser.h"
+#include "src/envoy/http/backend_auth/filter_config.h"
 
 namespace Envoy {
 namespace Extensions {
 namespace HttpFilters {
 namespace BackendAuth {
-// Use shared_ptr to do atomic token update.
-typedef std::shared_ptr<std::string> TokenSharedPtr;
-
-class FilterConfigParser {
+class MockFilterConfigParser : public FilterConfigParser {
  public:
-  virtual ~FilterConfigParser() = default;
+  MOCK_METHOD(absl::string_view, getAudience, (absl::string_view operation),
+              (const));
 
-  virtual absl::string_view getAudience(absl::string_view operation) const PURE;
-
-  virtual const TokenSharedPtr getJwtToken(
-      absl::string_view audience) const PURE;
+  MOCK_METHOD(const TokenSharedPtr, getJwtToken, (absl::string_view audience),
+              (const));
 };
 
-typedef std::unique_ptr<FilterConfigParser> FilterConfigParserPtr;
+class MockFilterConfig : public FilterConfig {
+ public:
+  MOCK_METHOD(const FilterConfigParser&, cfg_parser, (), (const));
 
+  MOCK_METHOD(FilterStats&, stats, (), ());
+};
 }  // namespace BackendAuth
 }  // namespace HttpFilters
 }  // namespace Extensions

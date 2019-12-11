@@ -32,11 +32,11 @@ class FilterConfigImpl : public FilterConfig,
   FilterConfigImpl(const ::google::api::envoy::http::backend_auth::FilterConfig&
                        proto_config,
                    const std::string& stats_prefix,
-                   Server::Configuration::FactoryContext& context,
-                   const ConfigParserCreateFunc& config_parser_create_func)
+                   Server::Configuration::FactoryContext& context)
       : proto_config_(proto_config),
         stats_(generateStats(stats_prefix, context.scope())),
-        config_parser_(config_parser_create_func(proto_config_, context)) {}
+        config_parser_(
+            std::make_unique<FilterConfigParserImpl>(proto_config_, context)) {}
 
   const ::google::api::envoy::http::backend_auth::FilterConfig& config() const {
     return proto_config_;

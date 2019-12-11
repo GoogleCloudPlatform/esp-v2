@@ -42,14 +42,8 @@ class FilterFactory
           proto_config,
       const std::string& stats_prefix,
       Server::Configuration::FactoryContext& context) override {
-    auto filter_config = std::make_shared<FilterConfigImpl>(
-        proto_config, stats_prefix, context,
-        [](const ::google::api::envoy::http::backend_auth::FilterConfig&
-               proto_config,
-           Server::Configuration::FactoryContext& context) {
-          return std::make_unique<FilterConfigParserImpl>(proto_config,
-                                                          context);
-        });
+    auto filter_config =
+        std::make_shared<FilterConfigImpl>(proto_config, stats_prefix, context);
     return
         [filter_config](Http::FilterChainFactoryCallbacks& callbacks) -> void {
           auto filter = std::make_shared<Filter>(filter_config);

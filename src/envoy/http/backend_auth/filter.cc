@@ -54,8 +54,7 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
   }
 
   ENVOY_LOG(debug, "Found operation: {}", operation);
-  absl::string_view audience =
-      config_->cfg_parser().getAudienceContext(operation);
+  absl::string_view audience = config_->cfg_parser().getAudience(operation);
   if (audience.empty()) {
     // JWT Token is not required for this operation.
     return FilterHeadersStatus::Continue;

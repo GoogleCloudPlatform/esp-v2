@@ -64,8 +64,7 @@ class FilterConfigParserImpl
       const ::google::api::envoy::http::backend_auth::FilterConfig& config,
       Server::Configuration::FactoryContext& context);
 
-  absl::string_view getAudienceContext(
-      absl::string_view operation) const override {
+  absl::string_view getAudience(absl::string_view operation) const override {
     static const std::string empty = "";
     auto operation_it = operation_map_.find(operation);
     if (operation_it == operation_map_.end()) {

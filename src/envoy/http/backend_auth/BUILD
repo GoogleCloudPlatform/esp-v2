@@ -1,6 +1,7 @@
 load(
     "@envoy//bazel:envoy_build_system.bzl",
     "envoy_cc_library",
+    "envoy_cc_test",
 )
 
 package(
@@ -49,5 +50,43 @@ envoy_cc_library(
         "//api/envoy/http/backend_auth:config_proto_cc_proto",
         "//src/envoy/utils:iam_token_subscriber_lib",
         "//src/envoy/utils:token_subscriber_lib",
+    ],
+)
+
+envoy_cc_library(
+    name = "filter_config_interface",
+    hdrs = ["filter_config.h"],
+    repository = "@envoy",
+)
+
+envoy_cc_library(
+    name = "config_parser_interface",
+    hdrs = ["config_parser.h"],
+    repository = "@envoy",
+)
+
+envoy_cc_library(
+    name = "mocks_lib",
+    hdrs = ["mocks.h"],
+    repository = "@envoy",
+    deps = [
+        ":config_parser_interface",
+        ":filter_config_interface",
+    ],
+)
+
+envoy_cc_test(
+    name = "filter_test",
+    size = "small",
+    srcs = [
+        "filter_test.cc",
+    ],
+    repository = "@envoy",
+    deps = [
+        ":filter_lib",
+        ":mocks_lib",
+        "@envoy//test/mocks/http:http_mocks",
+        "@envoy//test/mocks/server:server_mocks",
+        "@envoy//test/test_common:utility_lib",
     ],
 )
