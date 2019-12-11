@@ -93,7 +93,7 @@ results {
 		desc: "succeed GET, no Jwt required, service control sends check request and report request for GET request",
 		wantScRequests: []interface{}{
 			&utils.ExpectedReport{
-				Version:               utils.ESPv2Version,
+				Version:               utils.ESPv2Version(),
 				ServiceName:           "bookstore.endpoints.cloudesf-testing.cloud.goog",
 				ServiceConfigID:       "test-config-id",
 				URL:                   "/test.grpc.Test/Echo",

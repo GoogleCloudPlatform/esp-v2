@@ -513,7 +513,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 			checkServiceControl: true,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.ESPv2Version,
+					Version:         utils.ESPv2Version(),
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
@@ -522,7 +522,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 					Referer:         referer,
 				},
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/bookstore/shelves?key=api-key",
@@ -554,7 +554,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 			checkServiceControl: true,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/bookstore/shelves/1",
@@ -681,7 +681,7 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 			checkServiceControl: true,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.ESPv2Version,
+					Version:         utils.ESPv2Version(),
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
@@ -690,7 +690,7 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 					Referer:         referer,
 				},
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/bookstore/shelves?key=api-key",

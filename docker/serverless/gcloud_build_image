@@ -14,7 +14,7 @@
 # Use the latest one for the CONFIG_ID
 
 # Default to the release image if not specified
-BASE_IMAGE=gcr.io/apiproxy-release/apiproxy-serverless:0
+BASE_IMAGE=gcr.io/endpoints-release/endpoints-runtime-serverless:2
 
 function error_exit() {
   # ${BASH_SOURCE[1]} is the file name of the caller.

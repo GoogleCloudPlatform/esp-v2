@@ -39,7 +39,7 @@ spec:
     spec:
       containers:
       - name: apiproxy
-        image: gcr.io/apiproxy-release/apiproxy:0
+        image: gcr.io/endpoints-release/endpoints-runtime:2
         args: [  "--backend=grpc://127.0.0.1:8000", "--service=grpc-bookstore.endpoints.<YOUR_PROJECT_ID>.cloud.goog", "--rollout_strategy=managed", "--log_jwt_payloads=aud,iss", "--log_request_headers=referer"]
         ports:
           - containerPort: 8080

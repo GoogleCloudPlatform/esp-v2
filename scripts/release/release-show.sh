@@ -17,7 +17,6 @@
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 . ${ROOT}/scripts/all-utilities.sh || { echo "Cannot load Bash utilities"; exit 1; }
 
-APIPROXY_RELEASE_PROJECT=apiproxy-release
 DIRECT_REPO=''
 
 function usage() {

@@ -77,7 +77,7 @@ func TestServiceControlQuota(t *testing.T) {
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.ESPv2Version,
+					Version:         utils.ESPv2Version(),
 					ServiceName:     "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
@@ -96,7 +96,7 @@ func TestServiceControlQuota(t *testing.T) {
 					ServiceConfigID: "test-config-id",
 				},
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/v1/shelves?key=api-key",
@@ -275,7 +275,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.ESPv2Version,
+					Version:         utils.ESPv2Version(),
 					ServiceName:     "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
@@ -295,7 +295,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 					ServiceConfigID: "test-config-id",
 				},
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/v1/shelves?key=api-key",
@@ -337,7 +337,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 					ServiceConfigID: "test-config-id",
 				},
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/v1/shelves?key=api-key",

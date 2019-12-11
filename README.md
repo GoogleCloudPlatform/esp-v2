@@ -52,7 +52,7 @@ ESPv2 is released as a docker image.
 
 Currently we only support ESPv2 on Cloud Run:
 
-- [gcr.io/apiproxy-release/apiproxy-serverless:latest](https://gcr.io/apiproxy-release/apiproxy-serverless:latest)
+- [gcr.io/endpoints-release/endpoints-runtime:2](https://gcr.io/endpoints-release/endpoints-runtime:2)
 
 ## Repository Structure
 

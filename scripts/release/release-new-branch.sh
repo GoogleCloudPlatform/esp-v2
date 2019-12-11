@@ -74,6 +74,9 @@ git push origin ${SHA}:refs/heads/${RELEASE_BRANCH} \
 MASTER_BRANCH="${VERSION}-master"
 git checkout -b "${MASTER_BRANCH}" origin/master
 echo "${NEXT_VERSION}" > ${ROOT}/VERSION
+sed - i "s/[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+/${NEXT_VERSION}/g" ${ROOT}/api_proxy/utils/version
+sed - i "s/[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+/${NEXT_VERSION}/g" ${ROOT}/tests/utils/version.go
+
 git add ${ROOT}/VERSION
 git commit -m "Update version number to ${NEXT_VERSION}."
 git push --set-upstream origin "${MASTER_BRANCH}":refs/for/master

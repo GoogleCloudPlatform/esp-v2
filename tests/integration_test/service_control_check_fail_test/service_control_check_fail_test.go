@@ -79,7 +79,7 @@ func TestServiceControlCheckError(t *testing.T) {
 			wantError: "403 Forbidden, PERMISSION_DENIED:API echo-api.endpoints.cloudesf-testing.cloud.goog is not enabled for the project",
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.ESPv2Version,
+					Version:         utils.ESPv2Version(),
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key-1",
@@ -87,7 +87,7 @@ func TestServiceControlCheckError(t *testing.T) {
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/echo?key=api-key-1",
@@ -119,7 +119,7 @@ func TestServiceControlCheckError(t *testing.T) {
 			wantError: "400 Bad Request, INVALID_ARGUMENT:API key not valid. Please pass a valid API key",
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.ESPv2Version,
+					Version:         utils.ESPv2Version(),
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key-2",
@@ -127,7 +127,7 @@ func TestServiceControlCheckError(t *testing.T) {
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/echo?key=api-key-2",
@@ -168,7 +168,7 @@ func TestServiceControlCheckError(t *testing.T) {
 			wantError:                "400 Bad Request, INVALID_ARGUMENT:Client project not valid. Please pass a valid project",
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
-					Version:         utils.ESPv2Version,
+					Version:         utils.ESPv2Version(),
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
@@ -176,7 +176,7 @@ func TestServiceControlCheckError(t *testing.T) {
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
-					Version:     utils.ESPv2Version,
+					Version:     utils.ESPv2Version(),
 					ServiceName: "echo-api.endpoints.cloudesf-testing.cloud.goog", ServiceConfigID: "test-config-id",
 					URL:               "/auth/info/googlejwt?key=api-key",
 					ApiKey:            "api-key",

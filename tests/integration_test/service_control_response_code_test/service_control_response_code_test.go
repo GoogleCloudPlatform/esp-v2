@@ -91,7 +91,7 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 			httpCallError: fmt.Errorf("http response status is not 200 OK: 304 Not Modified"),
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/simpleget/304",
@@ -113,7 +113,7 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 			httpCallError: fmt.Errorf("http response status is not 200 OK: 403 Forbidden"),
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/simpleget/403",
@@ -136,7 +136,7 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 			httpCallError: fmt.Errorf("http response status is not 200 OK: 401 Unauthorized"),
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version,
+					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/simpleget/401",

@@ -58,7 +58,7 @@ function deployEndpoints() {
   case ${BACKEND_PLATFORM} in
     "cloud-run")
       gcloud run deploy "${BOOKSTORE_SERVICE_NAME}" \
-        --image="gcr.io/apiproxy-release/bookstore:1" \
+        --image="gcr.io/endpoints-release/bookstore:1" \
         --no-allow-unauthenticated \
         --service-account "${BACKEND_RUNTIME_SERVICE_ACCOUNT}" \
         --platform managed \
