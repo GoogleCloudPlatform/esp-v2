@@ -22,6 +22,7 @@
 #include "src/envoy/http/backend_auth/config_parser.h"
 #include "src/envoy/utils/iam_token_subscriber.h"
 #include "src/envoy/utils/token_subscriber.h"
+#include "src/envoy/utils/token_subscriber_factory_impl.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -40,6 +41,7 @@ class AudienceContext {
           proto_config,
       Server::Configuration::FactoryContext& context,
       const ::google::api::envoy::http::backend_auth::FilterConfig& config,
+      const Utils::TokenSubscriberFactory& token_subscriber_factory,
       Utils::IamTokenSubscriber::TokenGetFunc access_token_fn);
   TokenSharedPtr token() const {
     if (tls_->getTyped<TokenCache>().token_) {
@@ -62,7 +64,8 @@ class FilterConfigParserImpl
  public:
   FilterConfigParserImpl(
       const ::google::api::envoy::http::backend_auth::FilterConfig& config,
-      Server::Configuration::FactoryContext& context);
+      Server::Configuration::FactoryContext& context,
+      const Utils::TokenSubscriberFactory& token_subscriber_factory);
 
   absl::string_view getAudience(absl::string_view operation) const override {
     static const std::string empty = "";

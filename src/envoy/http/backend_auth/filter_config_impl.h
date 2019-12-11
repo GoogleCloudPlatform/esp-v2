@@ -35,8 +35,9 @@ class FilterConfigImpl : public FilterConfig,
                    Server::Configuration::FactoryContext& context)
       : proto_config_(proto_config),
         stats_(generateStats(stats_prefix, context.scope())),
-        config_parser_(
-            std::make_unique<FilterConfigParserImpl>(proto_config_, context)) {}
+        token_subscriber_factory_(context),
+        config_parser_(std::make_unique<FilterConfigParserImpl>(
+            proto_config_, context, token_subscriber_factory_)) {}
 
   const ::google::api::envoy::http::backend_auth::FilterConfig& config() const {
     return proto_config_;
@@ -56,6 +57,7 @@ class FilterConfigImpl : public FilterConfig,
 
   ::google::api::envoy::http::backend_auth::FilterConfig proto_config_;
   FilterStats stats_;
+  const Utils::TokenSubscriberFactoryImpl token_subscriber_factory_;
   FilterConfigParserPtr config_parser_;
 };
 

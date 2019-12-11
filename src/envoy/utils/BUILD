@@ -91,6 +91,25 @@ envoy_cc_library(
 )
 
 envoy_cc_library(
+    name = "token_subscriber_factory_interface",
+    hdrs = ["token_subscriber_factory.h"],
+    repository = "@envoy",
+    deps = [
+        ":iam_token_subscriber_lib",
+        ":token_subscriber_lib",
+    ],
+)
+
+envoy_cc_library(
+    name = "token_subscriber_factory_lib",
+    hdrs = ["token_subscriber_factory_impl.h"],
+    repository = "@envoy",
+    deps = [
+        ":token_subscriber_factory_interface",
+    ],
+)
+
+envoy_cc_library(
     name = "service_account_token_lib",
     srcs = ["service_account_token.cc"],
     hdrs = ["service_account_token.h"],

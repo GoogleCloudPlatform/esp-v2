@@ -49,6 +49,7 @@ envoy_cc_library(
     deps = [
         "//api/envoy/http/backend_auth:config_proto_cc_proto",
         "//src/envoy/utils:iam_token_subscriber_lib",
+        "//src/envoy/utils:token_subscriber_factory_lib",
         "//src/envoy/utils:token_subscriber_lib",
     ],
 )

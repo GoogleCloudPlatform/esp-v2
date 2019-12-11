@@ -32,6 +32,7 @@ AudienceContext::AudienceContext(
         proto_config,
     Server::Configuration::FactoryContext& context,
     const FilterConfig& filter_config,
+    const Utils::TokenSubscriberFactory& token_subscriber_factory,
     IamTokenSubscriber::TokenGetFunc access_token_fn)
     : tls_(context.threadLocal().allocateSlot()) {
   tls_->set([](Event::Dispatcher&) -> ThreadLocal::ThreadLocalObjectSharedPtr {
@@ -52,8 +53,9 @@ AudienceContext::AudienceContext(
           filter_config.iam_token().iam_uri().cluster();
       const std::string real_uri =
           absl::StrCat(uri, "?audience=", proto_config.jwt_audience());
-      iam_token_sub_ptr_ = std::make_unique<IamTokenSubscriber>(
-          context, access_token_fn, cluster, real_uri, callback);
+
+      iam_token_sub_ptr_ = token_subscriber_factory.createIamTokenSubscriber(
+          access_token_fn, cluster, real_uri, callback);
     }
       return;
     case FilterConfig::kImdsToken: {
@@ -65,9 +67,9 @@ AudienceContext::AudienceContext(
           uri, "?format=standard&audience=", proto_config.jwt_audience());
 
       imds_token_sub_ptr_ =
-          std::make_unique<TokenSubscriber>(context, cluster, real_uri,
-                                            /*json_response=*/
-                                            false, callback);
+          token_subscriber_factory.createTokenSubscriber(cluster, real_uri,
+                                                         /*json_response=*/
+                                                         false, callback);
     }
       return;
     default:
@@ -76,8 +78,8 @@ AudienceContext::AudienceContext(
 }
 
 FilterConfigParserImpl::FilterConfigParserImpl(
-    const FilterConfig& config,
-    Server::Configuration::FactoryContext& context) {
+    const FilterConfig& config, Server::Configuration::FactoryContext& context,
+    const Utils::TokenSubscriberFactory& token_subscriber_factory) {
   // Subscribe access token for fetching id token from iam when IdTokenFromIam
   // is set.
   if (config.id_token_info_case() == FilterConfig::kIamToken) {
@@ -88,8 +90,8 @@ FilterConfigParserImpl::FilterConfigParserImpl(
             config.iam_token().access_token().remote_token().cluster();
         const std::string& uri =
             config.iam_token().access_token().remote_token().uri();
-        access_token_sub_ptr_ = std::make_unique<TokenSubscriber>(
-            context, cluster, uri,
+        access_token_sub_ptr_ = token_subscriber_factory.createTokenSubscriber(
+            cluster, uri,
             /*json_response=*/
             true, [this](const std::string& access_token) {
               access_token_ = access_token;
@@ -108,9 +110,9 @@ FilterConfigParserImpl::FilterConfigParserImpl(
     operation_map_[rule.operation()] = rule.jwt_audience();
     auto it = audience_map_.find(rule.jwt_audience());
     if (it == audience_map_.end()) {
-      audience_map_[rule.jwt_audience()] =
-          AudienceContextPtr(new AudienceContext(
-              rule, context, config, [this]() { return access_token_; }));
+      audience_map_[rule.jwt_audience()] = AudienceContextPtr(
+          new AudienceContext(rule, context, config, token_subscriber_factory,
+                              [this]() { return access_token_; }));
     }
   }
 }
