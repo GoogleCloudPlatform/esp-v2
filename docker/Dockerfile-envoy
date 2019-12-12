@@ -14,8 +14,8 @@
 
 FROM python:3.6-buster
 
-# Stackdriver is using grpc call. It needs its roots.pem at /usr/share/grpc
-ADD third_party/mozilla-root-certificate-store/grpc_roots.pem apiproxy/
-RUN mkdir -p /usr/share/grpc && cp apiproxy/grpc_roots.pem /usr/share/grpc/
+# Set the default root CA for gRpc.
+# opensensus lib is using gRpc to call Stackdriver
+ENV GRPC_DEFAULT_SSL_ROOTS_FILE_PATH /etc/ssl/certs/ca-certificates.crt
 
 ADD bin/envoy /bin/envoy
