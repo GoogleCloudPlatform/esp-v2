@@ -142,7 +142,7 @@ void IamTokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
   }
 
   JsonStruct json_struct(response_pb);
-  if (!json_struct.get_string("token", &token).ok()) {
+  if (!json_struct.getString("token", &token).ok()) {
     ENVOY_LOG(error, "Parsing response failed. Could not find `token`");
     return;
   }

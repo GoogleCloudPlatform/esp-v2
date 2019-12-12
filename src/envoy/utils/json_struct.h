@@ -23,14 +23,18 @@ namespace Envoy {
 namespace Extensions {
 namespace Utils {
 
+// A class to use protobuf Struct to parse simple JSON
+// * Use JsonStringToMessage to convert a JSON to Struct
+// * Use this class to read top level string or integer value.
 class JsonStruct {
  public:
   JsonStruct(const google::protobuf::Struct& pb_struct) : struct_(pb_struct) {}
 
-  ::google::protobuf::util::Status get_string(const std::string& key,
-                                              std::string* value);
+  ::google::protobuf::util::Status getString(const std::string& key,
+                                             std::string* value);
 
-  ::google::protobuf::util::Status get_int(const std::string& key, int* value);
+  ::google::protobuf::util::Status getInteger(const std::string& key,
+                                              int* value);
 
  private:
   const ::google::protobuf::Struct& struct_;

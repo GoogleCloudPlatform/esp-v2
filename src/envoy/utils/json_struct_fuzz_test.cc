@@ -33,10 +33,10 @@ DEFINE_PROTO_FUZZER(const tests::fuzz::protos::JsonStructInput& input) {
 
     for (const auto& key_to_check : input.keys_to_check()) {
       std::string str_value;
-      (void)json_struct.get_string(key_to_check, &str_value);
+      (void)json_struct.getString(key_to_check, &str_value);
 
       int int_value;
-      (void)json_struct.get_int(key_to_check, &int_value);
+      (void)json_struct.getInteger(key_to_check, &int_value);
     }
   } catch (const ProtoValidationException& e) {
     ENVOY_LOG_MISC(debug, "Controlled proto validation failure: {}", e.what());
