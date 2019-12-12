@@ -91,10 +91,17 @@ var (
    },
    "name":"pets.appspot.com:443",
    "transportSocket":{
-      "name":"tls",
+      "name":"envoy.transport_sockets.tls",
       "typedConfig":{
          "@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
-         "sni":"pets.appspot.com"
+         "sni":"pets.appspot.com",
+         "commonTlsContext": {
+            "validationContext": {
+               "trustedCa": {
+                  "filename": "/etc/ssl/certs/ca-certificates.crt"
+               }
+            }
+         }
       }
    },
    "type":"LOGICAL_DNS"
@@ -122,10 +129,17 @@ var (
    },
    "name":"pets.appspot.com:8008",
    "transportSocket":{
-      "name":"tls",
+      "name":"envoy.transport_sockets.tls",
       "typedConfig":{
          "@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
-         "sni":"pets.appspot.com"
+         "sni":"pets.appspot.com",
+         "commonTlsContext": {
+            "validationContext": {
+               "trustedCa": {
+                  "filename": "/etc/ssl/certs/ca-certificates.crt"
+               }
+            }
+         }
       }
    },
    "type":"LOGICAL_DNS"
@@ -154,10 +168,17 @@ var (
    },
    "name":"us-central1-cloud-esf.cloudfunctions.net:443",
    "transportSocket":{
-      "name":"tls",
+      "name":"envoy.transport_sockets.tls",
       "typedConfig":{
          "@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
-         "sni":"us-central1-cloud-esf.cloudfunctions.net"
+         "sni":"us-central1-cloud-esf.cloudfunctions.net",
+         "commonTlsContext": {
+            "validationContext": {
+               "trustedCa": {
+                  "filename": "/etc/ssl/certs/ca-certificates.crt"
+               }
+            }
+         }
       }
    },
    "type":"LOGICAL_DNS"
@@ -186,10 +207,17 @@ var (
    },
    "name":"us-west2-cloud-esf.cloudfunctions.net:443",
    "transportSocket":{
-      "name":"tls",
+      "name":"envoy.transport_sockets.tls",
       "typedConfig":{
          "@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
-         "sni":"us-west2-cloud-esf.cloudfunctions.net"
+         "sni":"us-west2-cloud-esf.cloudfunctions.net",
+         "commonTlsContext": {
+            "validationContext": {
+               "trustedCa": {
+                  "filename": "/etc/ssl/certs/ca-certificates.crt"
+               }
+            }
+         }
       }
    },
    "type":"LOGICAL_DNS"

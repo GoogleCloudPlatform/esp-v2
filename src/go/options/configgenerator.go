@@ -16,6 +16,8 @@ package options
 
 import (
 	"time"
+
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 )
 
 // ConfigGeneratorOptions describes the possible overrides for the service config to envoy config translation.
@@ -48,6 +50,7 @@ type ConfigGeneratorOptions struct {
 	ServiceManagementURL string
 	ClusterPort          int
 	ListenerPort         int
+	RootCertsPath        string
 
 	// Flags for non_gcp deployment.
 	ServiceAccountKey string
@@ -107,6 +110,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		JwksCacheDurationInS:          300,
 		ListenerAddress:               "0.0.0.0",
 		ListenerPort:                  8080,
+		RootCertsPath:                 util.DefaultRootCAPaths,
 		LogJwtPayloads:                "",
 		LogRequestHeaders:             "",
 		LogResponseHeaders:            "",

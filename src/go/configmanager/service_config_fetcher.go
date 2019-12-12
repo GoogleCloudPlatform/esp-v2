@@ -17,6 +17,7 @@ package configmanager
 import (
 	"bytes"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -24,7 +25,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/commonflags"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configmanager/flags"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -52,18 +52,23 @@ var (
 		path = strings.Replace(path, "$serviceName", serviceName, 1)
 		return path
 	}
-
-	// TODO(b/140269465): Move this to options instead of flags
-	serviceConfigFetcherClient = newServiceConfigFetcherClient(true, time.Duration(*commonflags.HttpRequestTimeoutS)*time.Second)
 )
 
-func newServiceConfigFetcherClient(insecureSkipVerify bool, timeout time.Duration) *http.Client {
+func newServiceConfigFetcherClient(timeout time.Duration) (*http.Client, error) {
+	caCert, err := ioutil.ReadFile(*flags.RootCertsPath)
+	if err != nil {
+		return nil, err
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
 	return &http.Client{
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureSkipVerify},
+			TLSClientConfig: &tls.Config{
+				RootCAs: caCertPool,
+			},
 		},
 		Timeout: timeout,
-	}
+	}, nil
 }
 
 func loadConfigFromRollouts(serviceName, curRolloutID, curConfigID string, mf *metadata.MetadataFetcher) (string, string, error) {

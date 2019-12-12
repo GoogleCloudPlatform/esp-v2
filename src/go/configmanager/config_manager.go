@@ -17,8 +17,10 @@ package configmanager
 import (
 	"flag"
 	"fmt"
+	"net/http"
 	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/commonflags"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
@@ -43,6 +45,9 @@ var (
 					GCP metadata server will not be called to fetch access token, and
 					following flags will be ignored; --service_config_id, --service,
 					--rollout_strategy`)
+
+	// secured HTTP client calling service management service.
+	serviceConfigFetcherClient *http.Client
 )
 
 // ConfigManager handles service configuration fetching and updating.
@@ -63,8 +68,6 @@ type ConfigManager struct {
 // NewConfigManager creates new instance of ConfigManager.
 // mf is set to nil on non-gcp deployments
 func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGeneratorOptions) (*ConfigManager, error) {
-	var err error
-
 	m := &ConfigManager{
 		metadataFetcher:    mf,
 		envoyConfigOptions: opts,
@@ -94,6 +97,7 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 
 	m.serviceName = *ServiceName
 	checkMetadata := *CheckMetadata
+	var err error
 
 	if m.serviceName == "" && checkMetadata && mf != nil {
 		m.serviceName, err = mf.FetchServiceName()
@@ -115,6 +119,11 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 	}
 	if !(rolloutStrategy == util.FixedRolloutStrategy || rolloutStrategy == util.ManagedRolloutStrategy) {
 		return nil, fmt.Errorf(`failed to set rollout strategy. It must be either "managed" or "fixed"`)
+	}
+
+	// Create secured http client with rootCertsPath.
+	if serviceConfigFetcherClient, err = newServiceConfigFetcherClient(time.Duration(*commonflags.HttpRequestTimeoutS) * time.Second); err != nil {
+		return nil, fmt.Errorf(`failed to create https client to call ServiceManagement service`)
 	}
 
 	if rolloutStrategy == util.ManagedRolloutStrategy {

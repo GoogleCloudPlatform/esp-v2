@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/commonflags"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
 )
 
@@ -55,6 +56,8 @@ var (
 
 	ClusterPort  = flag.Int("cluster_port", 8082, "cluster port")
 	ListenerPort = flag.Int("listener_port", 8080, "listener port")
+
+	RootCertsPath = flag.String("root_certs_path", util.DefaultRootCAPaths, "Path to the root certificates to make TSL connection.")
 
 	// Flags for non_gcp deployment.
 	ServiceAccountKey = flag.String("service_account_key", "", `Use the service account key JSON file to access the service control and the
@@ -116,6 +119,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		ServiceManagementURL:          *ServiceManagementURL,
 		ClusterPort:                   *ClusterPort,
 		ListenerPort:                  *ListenerPort,
+		RootCertsPath:                 *RootCertsPath,
 		ServiceAccountKey:             *ServiceAccountKey,
 		SkipJwtAuthnFilter:            *SkipJwtAuthnFilter,
 		SkipServiceControlFilter:      *SkipServiceControlFilter,

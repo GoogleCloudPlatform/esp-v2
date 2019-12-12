@@ -15,19 +15,34 @@
 package util
 
 import (
+	"github.com/golang/protobuf/ptypes"
+
 	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	"github.com/golang/protobuf/ptypes"
 )
 
-// CreateLoadAssignment creates a ClusterLoadAssignment
-func CreateTransportSocket(hostname string) (*corepb.TransportSocket, error) {
-	tlsContext, err := ptypes.MarshalAny(&authpb.UpstreamTlsContext{Sni: hostname})
+// CreateTransportSocket creates a TransportSocket
+func CreateTransportSocket(hostname, rootCertsPath string) (*corepb.TransportSocket, error) {
+	tlsContext, err := ptypes.MarshalAny(&authpb.UpstreamTlsContext{
+		Sni: hostname,
+		CommonTlsContext: &authpb.CommonTlsContext{
+			ValidationContextType: &authpb.CommonTlsContext_ValidationContext{
+				ValidationContext: &authpb.CertificateValidationContext{
+					TrustedCa: &corepb.DataSource{
+						Specifier: &corepb.DataSource_Filename{
+							Filename: rootCertsPath,
+						},
+					},
+				},
+			},
+		},
+	},
+	)
 	if err != nil {
 		return nil, err
 	}
 	return &corepb.TransportSocket{
-		Name: "tls",
+		Name: TLSTransportSocket,
 		ConfigType: &corepb.TransportSocket_TypedConfig{
 			TypedConfig: tlsContext,
 		},
