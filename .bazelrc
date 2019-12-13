@@ -45,7 +45,7 @@ build:clang --linkopt=-fuse-ld=lld
 
 # Compilation modes
 build:clang-release --config=clang
-build:clang-release --config=relase
+build:clang-release --config=release
 
 # Basic ASAN/UBSAN that works for gcc
 build:asan --config=sanitizer
