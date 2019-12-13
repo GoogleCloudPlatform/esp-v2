@@ -33,7 +33,6 @@ func NewConfigManagerServer(debugMode bool, ports *Ports, args []string) (*Confi
 	args = append(args, "--cluster_address", platform.GetLoopbackHost())
 	args = append(args, "--listener_address", platform.GetAnyAddress())
 	args = append(args, "--backend_dns_lookup_family", platform.GetDnsFamily())
-	args = append(args, "--root_certs_path", platform.GetFilePath(platform.HttpsCert))
 
 	if debugMode {
 		args = append(args, "--logtostderr", "--v=1")

@@ -38,6 +38,7 @@ const (
 	TestDifferentOriginPreflightCors
 	TestDifferentOriginSimpleCors
 	TestDynamicRouting
+	TestDynamicBackendRoutingTLS
 	TestDynamicRoutingWithAllowCors
 	TestGRPC
 	TestGrpcBackendPreflightCors
@@ -91,6 +92,7 @@ const (
 	TestServiceControlRequestWithoutAllowCors
 	TestServiceControlSkipUsage
 	TestServiceControlSkipUsageTraces
+	TestServiceManagementWithTLS
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
 	TestTranscodingBindings

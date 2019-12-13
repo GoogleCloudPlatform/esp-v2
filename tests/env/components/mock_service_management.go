@@ -16,6 +16,7 @@ package components
 
 import (
 	"bytes"
+	"crypto/tls"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -37,6 +38,7 @@ type MockServiceMrg struct {
 	configsHandler    http.Handler
 	rolloutsHandler   http.Handler
 	lastServiceConfig []byte
+	serverCerts       *tls.Certificate
 }
 
 type configsHandler struct {
@@ -87,6 +89,10 @@ func NewMockServiceMrg(serviceName string, serviceConfig *confpb.Service) *MockS
 	return m
 }
 
+func (m *MockServiceMrg) SetCert(serverCerts *tls.Certificate) {
+	m.serverCerts = serverCerts
+}
+
 // Start launches a mock ServiceManagement server.
 func (m *MockServiceMrg) Start() (URL string) {
 	r := mux.NewRouter()
@@ -94,7 +100,17 @@ func (m *MockServiceMrg) Start() (URL string) {
 	rolloutsPath := "/v1/services/" + m.serviceName + "/rollouts"
 	r.Path(configPath).Methods("GET").Handler(m.configsHandler)
 	r.Path(rolloutsPath).Methods("GET").Handler(m.rolloutsHandler).Queries("filter", "{filter}")
-	m.s = httptest.NewServer(r)
+	m.s = httptest.NewUnstartedServer(r)
+
+	if m.serverCerts != nil {
+		m.s.TLS = &tls.Config{
+			Certificates: []tls.Certificate{*m.serverCerts},
+			NextProtos:   []string{"h2"},
+		}
+		m.s.StartTLS()
+	} else {
+		m.s.Start()
+	}
 	return m.s.URL
 }
 

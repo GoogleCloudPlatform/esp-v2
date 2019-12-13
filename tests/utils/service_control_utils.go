@@ -873,3 +873,28 @@ func CheckAPIKey(t *testing.T, scCheck *comp.ServiceRequest, wantApiKey string, 
 		t.Errorf("Test (%s): failed, expected apiKey: %s, got %s", desc, wantApiKey, gotApiKey)
 	}
 }
+
+func VerifyServiceControlResp(desc string, wantScRequests []interface{}, scRequests []*comp.ServiceRequest) error {
+	for i, wantScRequest := range wantScRequests {
+		reqBody := scRequests[i].ReqBody
+		switch wantScRequest.(type) {
+		case *ExpectedCheck:
+			if scRequests[i].ReqType != comp.CHECK_REQUEST {
+				return fmt.Errorf("Test Desc(%s): service control request %v: should be Check", desc, i)
+			}
+			if err := VerifyCheck(reqBody, wantScRequest.(*ExpectedCheck)); err != nil {
+				return err
+			}
+		case *ExpectedReport:
+			if scRequests[i].ReqType != comp.REPORT_REQUEST {
+				return fmt.Errorf("Test Desc(%s): service control request %v: should be Report", desc, i)
+			}
+			if err := VerifyReport(reqBody, wantScRequest.(*ExpectedReport)); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("Test Desc(%s): unknown service control response type", desc)
+		}
+	}
+	return nil
+}

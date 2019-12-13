@@ -38,8 +38,9 @@ const (
 	FakeBookstoreConfig
 
 	// Other files
-	HttpsCert
-	HttpsKey
+	ServerCert
+	ServerKey
+	ProxyCert
 	LogMetrics
 	Version
 )
@@ -58,8 +59,9 @@ var fileMap = map[RuntimeFile]string{
 	FakeGRPCEchoConfig:      "../../endpoints/grpc_echo/proto/api_descriptor.pb",
 	FakeGRPCInteropConfig:   "../../endpoints/grpc_interop/proto/api_descriptor.pb",
 	FakeBookstoreConfig:     "../../endpoints/bookstore_grpc/proto/api_descriptor.pb",
-	HttpsCert:               "../../env/testdata/localhost.crt",
-	HttpsKey:                "../../env/testdata/localhost.key",
+	ServerCert:              "../../env/testdata/server.crt",
+	ServerKey:               "../../env/testdata/server.key",
+	ProxyCert:               "../../env/testdata/proxy.crt",
 	LogMetrics:              "../../env/testdata/logs_metrics.pb.txt",
 	Version:                 "../../../VERSION",
 }

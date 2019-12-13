@@ -4,12 +4,13 @@ package()
 # openssl req -newkey rsa:2048 \
 #  -new -nodes -x509 \
 #  -days 3650 \
-#  -out localhost.crt \
-#  -keyout localhost.key \
+#  -out server.crt \
+#  -keyout server.key \
 #  -subj "/C=US/ST=California/L=Mountain View/O=Your Organization/OU=Your Unit/CN=localhost"
 
 exports_files([
-    "localhost.crt",
-    "localhost.key",
+    "server.crt",
+    "server.key",
+    "proxy.crt",
     "logs_metrics.pb.txt",
 ])
