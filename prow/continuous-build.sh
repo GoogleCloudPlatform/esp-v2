@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-LONG_RUN_DURATION_IN_HOUR=3
-LONG_RUN_BUCKET="apiproxy-continuous-long-run"
-export USE_RELEASE_BINARY=1
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+. ${ROOT}/prow/utils/prow_test_utils.sh
+
+. ${ROOT}/prow/gcpproxy-build.sh

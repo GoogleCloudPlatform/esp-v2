@@ -43,6 +43,10 @@ build:sanitizer --test_tag_filters=-no_san
 build:clang --action_env=BAZEL_COMPILER=clang
 build:clang --linkopt=-fuse-ld=lld
 
+# Compilation modes
+build:clang-release --config=clang
+build:clang-release --config=relase
+
 # Basic ASAN/UBSAN that works for gcc
 build:asan --config=sanitizer
 build:asan --config=debug

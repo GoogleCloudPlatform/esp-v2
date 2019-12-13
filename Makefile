@@ -38,7 +38,7 @@ GODIRS	= $(shell go list -f '{{.Dir}}' ./... \
 $(BINDIR):
 	@mkdir -p $(BINDIR)
 
-.PHONY: build build-envoy build-envoy-release build-envoy-debug build-grpc-echo build-grpc-bookstore build-grpc-interop upload-e2e-client-binaries
+.PHONY: build build-envoy build-envoy-gcc build-envoy-release build-envoy-debug build-grpc-echo build-grpc-bookstore build-grpc-interop upload-e2e-client-binaries
 build: format
 	@echo "--> building"
 	@go build ./src/go/...
@@ -48,10 +48,7 @@ build: format
 	@go build -o bin/gcsrunner ./src/go/gcsrunner/main/runner.go
 	@go build -o bin/echo/server ./tests/endpoints/echo/server/app.go
 
-build-envoy:
-	@echo "--> building envoy (compilation_mode=fastbuild)"
-	@bazel build //src/envoy:envoy
-	@cp -f bazel-bin/src/envoy/envoy bin/
+
 
 build-envoy-asan:
 	@echo "--> building envoy (compilation_mode=fastbuild)"
@@ -63,10 +60,17 @@ build-envoy-tsan:
 	@CC=clang-8 CXX=clang++-8 bazel build --config=clang-tsan  //src/envoy:envoy
 	@cp -f bazel-bin/src/envoy/envoy bin/
 
-build-envoy-release:
-	@echo "--> building envoy (compilation_mode=release)"
+build-envoy-gcc:
+	@echo "--> building envoy (compilation_mode=fastbuild)"
 	@CC=gcc CXX=g++ bazel build --config=release //src/envoy:envoy
 	@cp -f bazel-bin/src/envoy/envoy bin/
+
+build-envoy-release:
+	@echo "--> building envoy (compilation_mode=release)"
+	@CC=clang-8 CXX=clang++-8 bazel build --config=clang-release //src/envoy:envoy
+	@cp -f bazel-bin/src/envoy/envoy bin/
+
+build-envoy:build-envoy-release
 
 build-envoy-debug:
 	@echo "--> building envoy (compilation_mode=debug)"
@@ -149,9 +153,9 @@ integration-test-run:
 	@go test -timeout 20m ./tests/utils/... --logtostderr
 	@go test -timeout 20m ./tests/integration_test/... --logtostderr
 
-integration-test: build build-envoy build-grpc-interop build-grpc-echo integration-test-run
+integration-test: build  build-envoy-gcc build-grpc-interop build-grpc-echo integration-test-run
 
-integration-debug: build build-envoy build-grpc-interop build-grpc-echo
+integration-debug: build build-envoy-gcc build-grpc-interop build-grpc-echo
 	@echo "--> running integration tests and showing debug logs"
 	@go test -v -timeout 20m ./tests/env/... --logtostderr
 	@go test -v -timeout 20m ./tests/utils/... --logtostderr

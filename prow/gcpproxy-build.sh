@@ -29,10 +29,13 @@ cd "${ROOT}"
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
 
-echo '======================================================='
-echo '===================== Setup Cache ====================='
-echo '======================================================='
-try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" ""
+if [ ! ${USE_RELEASE_BINARY} ]; then
+  echo '======================================================='
+  echo '===================== Setup Cache ====================='
+  echo '======================================================='
+  try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" ""
+fi
+
 
 if [ ! -d "$GOPATH/bin" ]; then
   mkdir $GOPATH/bin

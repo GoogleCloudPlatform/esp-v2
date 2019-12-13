@@ -317,35 +317,39 @@ function get_serverless_image_release_name() {
   echo -n 'gcr.io/endpoints-release/endpoints-runtime-serverless'
 }
 
+
+function get_tag_name() {
+  local tag_format="%H"
+  if [ ${USE_RELEASE_BINARY} ]; then
+    tag_format="rel-${tag_format}"
+  else
+    tag_format="dev-${tag_format}"
+  fi
+  tag_name="$(git show -q HEAD --pretty=format:"${tag_format}")"
+  echo -n ${tag_name}
+}
+
 function get_envoy_image_name_with_sha() {
   # Generic docker image format. https://git-scm.com/docs/git-show.
-  local image_format="$(get_envoy_image_name):git-%H"
-  local image="$(git show -q HEAD --pretty=format:"${image_format}")"
-  echo -n $image
+  echo -n "$(get_envoy_image_name):$(get_tag_name)"
   return 0
 }
 
 function get_gcsrunner_image_name_with_sha() {
   # Generic docker image format. https://git-scm.com/docs/git-show.
-  local image_format="$(get_gcsrunner_image_name):git-%H"
-  local image="$(git show -q HEAD --pretty=format:"${image_format}")"
-  echo -n $image
+  echo -n "$(get_gcsrunner_image_name):$(get_tag_name)"
   return 0
 }
 
 function get_proxy_image_name_with_sha() {
   # Generic docker image format. https://git-scm.com/docs/git-show.
-  local image_format="$(get_proxy_image_name):git-%H"
-  local image="$(git show -q HEAD --pretty=format:"${image_format}")"
-  echo -n $image
+  echo -n  "$(get_proxy_image_name):$(get_tag_name)"
   return 0
 }
 
 function get_serverless_image_name_with_sha() {
   # Generic docker image format. https://git-scm.com/docs/git-show.
-  local image_format="$(get_serverless_image_name):git-%H"
-  local image="$(git show -q HEAD --pretty=format:"${image_format}")"
-  echo -n $image
+  echo -n  "$(get_serverless_image_name):$(get_tag_name)"
   return 0
 }
 
