@@ -28,13 +28,15 @@ type EchoHTTPServer struct {
 }
 
 func NewEchoHTTPServer(port uint16, enableHttps bool, enableRootPathHandler bool) (*EchoHTTPServer, error) {
-	portFlag := fmt.Sprintf("--port=%v", port)
-	enableHttpsFlag := fmt.Sprintf("--enable_https=%v", enableHttps)
-	enableRootPathHandlerFlag := fmt.Sprintf("--enable_root_path_handler=%v", enableRootPathHandler)
-	httpsCertPathFlag := fmt.Sprintf("--https_cert_path=%v", platform.GetFilePath(platform.HttpsCert))
-	httpsKeyPathFlag := fmt.Sprintf("--https_key_path=%v", platform.GetFilePath(platform.HttpsKey))
+	serverArgs := []string{
+		fmt.Sprintf("--port=%v", port),
+		fmt.Sprintf("--enable_https=%v", enableHttps),
+		fmt.Sprintf("--enable_root_path_handler=%v", enableRootPathHandler),
+		fmt.Sprintf("--https_cert_path=%v", platform.GetFilePath(platform.ServerCert)),
+		fmt.Sprintf("--https_key_path=%v", platform.GetFilePath(platform.ServerKey)),
+	}
 
-	cmd := exec.Command(platform.GetFilePath(platform.Echo), portFlag, enableHttpsFlag, enableRootPathHandlerFlag, httpsCertPathFlag, httpsKeyPathFlag)
+	cmd := exec.Command(platform.GetFilePath(platform.Echo), serverArgs...)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return &EchoHTTPServer{

@@ -49,6 +49,10 @@ func TestDynamicRouting(t *testing.T) {
 
 	defer s.TearDown()
 
+	// For dynamic routing to a HTTPs backend, proxy must use same cert as the server cert.
+	testDynamicRoutingArgs = append(testDynamicRoutingArgs,
+		fmt.Sprintf("--root_certs_path=%s", platform.GetFilePath(platform.ServerCert)))
+
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -239,6 +243,10 @@ func TestDynamicRoutingWithAllowCors(t *testing.T) {
 
 	defer s.TearDown()
 
+	// For dynamic routing to a HTTPs backend, proxy must use same cert as the server cert.
+	testDynamicRoutingArgs = append(testDynamicRoutingArgs,
+		fmt.Sprintf("--root_certs_path=%s", platform.GetFilePath(platform.ServerCert)))
+
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -279,6 +287,10 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 	s := NewDynamicRoutingTestEnv(comp.TestServiceControlRequestForDynamicRouting)
 
 	defer s.TearDown()
+
+	// For dynamic routing to a HTTPs backend, proxy must use same cert as the server cert.
+	testDynamicRoutingArgs = append(testDynamicRoutingArgs,
+		fmt.Sprintf("--root_certs_path=%s", platform.GetFilePath(platform.ServerCert)))
 
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -412,26 +424,85 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 			t.Fatalf("Test Desc(%s): GetRequests returns error: %v", tc.desc, err)
 		}
 
-		for i, wantScRequest := range tc.wantScRequests {
-			reqBody := scRequests[i].ReqBody
-			switch wantScRequest.(type) {
-			case *utils.ExpectedCheck:
-				if scRequests[i].ReqType != comp.CHECK_REQUEST {
-					t.Errorf("Test Desc(%s): service control request %v: should be Check", tc.desc, i)
-				}
-				if err := utils.VerifyCheck(reqBody, wantScRequest.(*utils.ExpectedCheck)); err != nil {
-					t.Error(err)
-				}
-			case *utils.ExpectedReport:
-				if scRequests[i].ReqType != comp.REPORT_REQUEST {
-					t.Errorf("Test Desc(%s): service control request %v: should be Report", tc.desc, i)
-				}
-				if err := utils.VerifyReport(reqBody, wantScRequest.(*utils.ExpectedReport)); err != nil {
-					t.Error(err)
-				}
-			default:
-				t.Fatalf("Test Desc(%s): unknown service control response type", tc.desc)
-			}
+		if err := utils.VerifyServiceControlResp(tc.desc, tc.wantScRequests, scRequests); err != nil {
+			t.Error(err)
+		}
+	}
+}
+
+func TestDynamicBackendRoutingTLS(t *testing.T) {
+
+	s := NewDynamicRoutingTestEnv(comp.TestDynamicBackendRoutingTLS)
+
+	defer s.TearDown()
+
+	// For dynamic routing to a HTTPs backend,
+	// request should fail if proxy uses different cert as the server cert.
+	testDynamicRoutingArgs = append(testDynamicRoutingArgs,
+		fmt.Sprintf("--root_certs_path=%s", platform.GetFilePath(platform.ProxyCert)))
+
+	if err := s.Setup(testDynamicRoutingArgs); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	testData := []struct {
+		desc           string
+		path           string
+		message        string
+		wantError      string
+		wantScRequests []interface{}
+	}{
+		{
+			desc:      "Succeed, APPEND_PATH_TO_ADDRESS path translation is correct, service control check request and report request are correct",
+			path:      "/sc/searchpet?key=api-key&timezone=EST",
+			message:   "hello",
+			wantError: "503 Service Unavailable",
+			wantScRequests: []interface{}{
+				&utils.ExpectedCheck{
+					Version:         utils.ESPv2Version(),
+					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					ConsumerID:      "api_key:api-key",
+					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchPetWithServiceControlVerification",
+					CallerIp:        platform.GetLoopbackAddress(),
+				},
+				&utils.ExpectedReport{
+					Version:           utils.ESPv2Version(),
+					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:   "test-config-id",
+					URL:               "/sc/searchpet?key=api-key&timezone=EST",
+					ApiKey:            "api-key",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchPetWithServiceControlVerification",
+					ProducerProjectID: "producer-project",
+					ConsumerProjectID: "123456",
+					FrontendProtocol:  "http",
+					HttpMethod:        "POST",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchPetWithServiceControlVerification is called",
+					StatusCode:        "0",
+					ErrorType:         "5xx",
+					ResponseCode:      503,
+					Platform:          util.GCE,
+					Location:          "test-zone",
+				},
+			},
+		},
+	}
+	for _, tc := range testData {
+		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		// var gotResp []byte
+		var err error
+		_, err = client.DoPost(url, tc.message)
+
+		if err == nil || !strings.Contains(err.Error(), tc.wantError) {
+			t.Errorf("Test (%s): failed, want error: %v, got error: %v", tc.desc, tc.wantError, err)
+		}
+
+		scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
+		if err != nil {
+			t.Fatalf("Test Desc(%s): GetRequests returns error: %v", tc.desc, err)
+		}
+		if err := utils.VerifyServiceControlResp(tc.desc, tc.wantScRequests, scRequests); err != nil {
+			t.Error(err)
 		}
 	}
 }

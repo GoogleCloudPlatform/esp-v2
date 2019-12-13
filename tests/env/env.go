@@ -40,11 +40,6 @@ var (
 	debugComponents = flag.String("debug_components", "", `display debug logs for components, can be "all", "envoy", "configmanager"`)
 )
 
-// A ServiceManagementServer is a HTTP server hosting mock service configs.
-type ServiceManagementServer interface {
-	Start() (URL string)
-}
-
 type TestEnv struct {
 	testId                      uint16
 	enableDynamicRoutingBackend bool
@@ -64,7 +59,7 @@ type TestEnv struct {
 	MockMetadataServer          *components.MockMetadataServer
 	MockIamServer               *components.MockIamServer
 	iamServiceAccount           string
-	mockServiceManagementServer ServiceManagementServer
+	MockServiceManagementServer *components.MockServiceMrg
 	ports                       *components.Ports
 	envoyDrainTimeInSec         int
 	ServiceControlServer        *components.MockServiceCtrl
@@ -81,7 +76,7 @@ func NewTestEnv(testId uint16, backendService string) *TestEnv {
 	return &TestEnv{
 		testId:                      testId,
 		mockMetadata:                true,
-		mockServiceManagementServer: components.NewMockServiceMrg(fakeServiceConfig.GetName(), fakeServiceConfig),
+		MockServiceManagementServer: components.NewMockServiceMrg(fakeServiceConfig.GetName(), fakeServiceConfig),
 		backendService:              backendService,
 		ports:                       components.NewPorts(testId),
 		fakeServiceConfig:           fakeServiceConfig,
@@ -113,12 +108,6 @@ func (e *TestEnv) SetIamServiceAccount(serviecAccount string) {
 // OverrideBackend overrides mock backend.
 func (e *TestEnv) OverrideBackendService(newBackendService string) {
 	e.backendService = newBackendService
-}
-
-// OverrideMockServiceManagementServer replaces mock Service Management implementation by a custom server.
-// Set s nil to turn off service management.
-func (e *TestEnv) OverrideMockServiceManagementServer(s ServiceManagementServer) {
-	e.mockServiceManagementServer = s
 }
 
 // EnableDynamicRoutingBackend enables dynamic routing backend server.
@@ -210,7 +199,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	var bootstrapperArgs []string
 	mockJwtProviders := make(map[string]bool)
 
-	if e.mockServiceManagementServer != nil {
+	if e.MockServiceManagementServer != nil {
 		if err := addDynamicRoutingBackendPort(e.fakeServiceConfig, e.ports.DynamicRoutingBackendPort); err != nil {
 			return err
 		}
@@ -243,7 +232,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 			return err
 		}
 
-		confArgs = append(confArgs, "--service_management_url="+e.mockServiceManagementServer.Start())
+		confArgs = append(confArgs, "--service_management_url="+e.MockServiceManagementServer.Start())
 	}
 
 	if !e.enableScNetworkFailOpen {
