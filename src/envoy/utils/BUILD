@@ -101,6 +101,15 @@ envoy_cc_library(
 )
 
 envoy_cc_library(
+    name = "mocks_lib",
+    hdrs = ["mocks.h"],
+    repository = "@envoy",
+    deps = [
+        ":token_subscriber_factory_interface",
+    ],
+)
+
+envoy_cc_library(
     name = "token_subscriber_factory_lib",
     hdrs = ["token_subscriber_factory_impl.h"],
     repository = "@envoy",
