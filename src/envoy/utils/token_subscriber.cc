@@ -138,14 +138,14 @@ void TokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
     }
     JsonStruct json_struct(response_pb);
 
-    if (!json_struct.get_string("access_token", &token).ok()) {
+    if (!json_struct.getString("access_token", &token).ok()) {
       ENVOY_LOG(error,
                 "Parsing response failed. Could not find `access_token`");
       return;
     }
 
     int expires_seconds;
-    if (!json_struct.get_int("expires_in", &expires_seconds).ok()) {
+    if (!json_struct.getInteger("expires_in", &expires_seconds).ok()) {
       ENVOY_LOG(error, "Parsing response failed. Could not find `expires_in`");
       return;
     }

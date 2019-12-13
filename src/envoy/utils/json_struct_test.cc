@@ -42,22 +42,22 @@ TEST(JsonStructTest, GetString) {
 
   // Test: Getting a string works
   std::string good_string;
-  EXPECT_OK(json_struct.get_string("good_string", &good_string));
+  EXPECT_OK(json_struct.getString("good_string", &good_string));
   EXPECT_EQ(good_string, "good");
 
   // Test: Getting empty string works
   std::string empty_string;
-  EXPECT_OK(json_struct.get_string("empty_string", &empty_string));
+  EXPECT_OK(json_struct.getString("empty_string", &empty_string));
   EXPECT_TRUE(empty_string.empty());
 
   // Test: Getting a string that is not a string type fails
   std::string bad_string;
-  EXPECT_EQ(json_struct.get_string("bad_string", &bad_string).code(),
+  EXPECT_EQ(json_struct.getString("bad_string", &bad_string).code(),
             Code::INVALID_ARGUMENT);
 
   // Test: Getting a missing string fails
   std::string missing_string;
-  EXPECT_EQ(json_struct.get_string("missing_string", &missing_string).code(),
+  EXPECT_EQ(json_struct.getString("missing_string", &missing_string).code(),
             Code::NOT_FOUND);
 }
 
@@ -79,22 +79,22 @@ TEST(JsonStructTest, GetInt) {
 
   // Test: Getting an integer works
   int good_int;
-  EXPECT_OK(json_struct.get_int("good_int", &good_int));
+  EXPECT_OK(json_struct.getInteger("good_int", &good_int));
   EXPECT_EQ(good_int, 377);
 
   // Test: Getting an integer that is actually a float passes
   int float_to_int;
-  EXPECT_OK(json_struct.get_int("float_number", &float_to_int));
+  EXPECT_OK(json_struct.getInteger("float_number", &float_to_int));
   EXPECT_EQ(float_to_int, 1);
 
   // Test: Getting an integer that is not a number type fails
   int bad_int;
-  EXPECT_EQ(json_struct.get_int("bad_int", &bad_int).code(),
+  EXPECT_EQ(json_struct.getInteger("bad_int", &bad_int).code(),
             Code::INVALID_ARGUMENT);
 
   // Test: Getting a missing integer fails
   int missing_int;
-  EXPECT_EQ(json_struct.get_int("missing_int", &missing_int).code(),
+  EXPECT_EQ(json_struct.getInteger("missing_int", &missing_int).code(),
             Code::NOT_FOUND);
 }
 

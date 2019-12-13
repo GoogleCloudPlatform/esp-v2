@@ -22,7 +22,7 @@ namespace Envoy {
 namespace Extensions {
 namespace Utils {
 
-Status JsonStruct::get_string(const std::string& key, std::string* value) {
+Status JsonStruct::getString(const std::string& key, std::string* value) {
   const auto& fields = struct_.fields();
   const auto it = fields.find(key);
   if (it == fields.end()) {
@@ -39,7 +39,7 @@ Status JsonStruct::get_string(const std::string& key, std::string* value) {
   return Status::OK;
 }
 
-Status JsonStruct::get_int(const std::string& key, int* value) {
+Status JsonStruct::getInteger(const std::string& key, int* value) {
   const auto& fields = struct_.fields();
   const auto it = fields.find(key);
   if (it == fields.end()) {
