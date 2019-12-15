@@ -43,6 +43,7 @@ var (
 type TestEnv struct {
 	testId                      uint16
 	enableDynamicRoutingBackend bool
+	useWrongBackendCert         bool
 	mockMetadata                bool
 	enableScNetworkFailOpen     bool
 	backendService              string
@@ -111,8 +112,11 @@ func (e *TestEnv) OverrideBackendService(newBackendService string) {
 }
 
 // EnableDynamicRoutingBackend enables dynamic routing backend server.
-func (e *TestEnv) EnableDynamicRoutingBackend() {
+// By default, it uses same cert as Envoy for HTTPS calls. When useWrongBackendCert
+// is set to true, purposely fail HTTPS calls for testing.
+func (e *TestEnv) EnableDynamicRoutingBackend(useWrongBackendCert bool) {
 	e.enableDynamicRoutingBackend = true
+	e.useWrongBackendCert = useWrongBackendCert
 }
 
 // Ports returns test environment ports.
@@ -306,7 +310,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 
 	switch e.backendService {
 	case "echo", "echoForDynamicRouting":
-		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.BackendServerPort, false, false)
+		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.BackendServerPort /*enableHttps=*/, false /*enableRootPathHandler=*/, false /*useAuthorizedBackendCert*/, false)
 		if err != nil {
 			return err
 		}
@@ -340,7 +344,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	}
 
 	if e.enableDynamicRoutingBackend {
-		e.dynamicRoutingBackend, err = components.NewEchoHTTPServer(e.ports.DynamicRoutingBackendPort, true, true)
+		e.dynamicRoutingBackend, err = components.NewEchoHTTPServer(e.ports.DynamicRoutingBackendPort /*enableHttps=*/, true /*enableRootPathHandler=*/, true, e.useWrongBackendCert)
 		if err != nil {
 			return err
 		}

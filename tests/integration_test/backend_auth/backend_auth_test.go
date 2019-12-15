@@ -21,7 +21,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
-	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
@@ -34,13 +33,11 @@ var testBackendAuthArgs = []string{
 	"--enable_backend_routing",
 	"--backend_dns_lookup_family=v4only",
 	"--suppress_envoy_headers",
-	// For dynamic routing to a HTTPs backend, proxy must use same cert as the server cert.
-	fmt.Sprintf("--root_certs_path=%s", platform.GetFilePath(platform.ServerCert)),
 }
 
 func NewBackendAuthTestEnv(port uint16) *env.TestEnv {
 	s := env.NewTestEnv(port, "echoForDynamicRouting")
-	s.EnableDynamicRoutingBackend()
+	s.EnableDynamicRoutingBackend( /*useWrongBackendCert=*/ false)
 	return s
 }
 

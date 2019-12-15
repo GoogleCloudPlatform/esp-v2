@@ -27,13 +27,22 @@ type EchoHTTPServer struct {
 	*Cmd
 }
 
-func NewEchoHTTPServer(port uint16, enableHttps bool, enableRootPathHandler bool) (*EchoHTTPServer, error) {
+func NewEchoHTTPServer(port uint16, enableHttps bool, enableRootPathHandler, useWrongCert bool) (*EchoHTTPServer, error) {
 	serverArgs := []string{
 		fmt.Sprintf("--port=%v", port),
 		fmt.Sprintf("--enable_https=%v", enableHttps),
 		fmt.Sprintf("--enable_root_path_handler=%v", enableRootPathHandler),
-		fmt.Sprintf("--https_cert_path=%v", platform.GetFilePath(platform.ServerCert)),
-		fmt.Sprintf("--https_key_path=%v", platform.GetFilePath(platform.ServerKey)),
+	}
+
+	// If Backend server uses different cert as Proxy, the HTTPS call fails.
+	if useWrongCert {
+		serverArgs = append(serverArgs,
+			fmt.Sprintf("--https_cert_path=%v", platform.GetFilePath(platform.ServerCert)),
+			fmt.Sprintf("--https_key_path=%v", platform.GetFilePath(platform.ServerKey)))
+	} else {
+		serverArgs = append(serverArgs,
+			fmt.Sprintf("--https_cert_path=%v", platform.GetFilePath(platform.ProxyCert)),
+			fmt.Sprintf("--https_key_path=%v", platform.GetFilePath(platform.ProxyKey)))
 	}
 
 	cmd := exec.Command(platform.GetFilePath(platform.Echo), serverArgs...)

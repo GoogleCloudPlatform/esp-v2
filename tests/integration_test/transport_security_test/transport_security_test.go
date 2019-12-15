@@ -37,49 +37,53 @@ func TestServiceManagementWithTLS(t *testing.T) {
 	testData := []struct {
 		desc         string
 		certPath     string
+		keyPath      string
+		port         uint16
 		wantResp     string
 		wantSetupErr string
 	}{
 		{
-			desc:     "call ServiceManagement HTTPS server succeed with same cert",
-			certPath: platform.GetFilePath(platform.ServerCert),
+			desc:     "Succeed, ServiceManagement HTTPS server uses same cert as proxy",
+			certPath: platform.GetFilePath(platform.ProxyCert),
+			keyPath:  platform.GetFilePath(platform.ProxyKey),
+			port:     comp.TestServiceManagementWithValidCert,
 			wantResp: `{"message":"hello"}`,
 		},
 		{
-			desc:         "call ServiceManagement HTTPS server failed with different cert",
-			certPath:     platform.GetFilePath(platform.ProxyCert),
+			desc:         "Fail, ServiceManagement HTTPS server uses different cert as proxy",
+			certPath:     platform.GetFilePath(platform.ServerCert),
+			keyPath:      platform.GetFilePath(platform.ServerKey),
+			port:         comp.TestServiceManagementWithInvalidCert,
 			wantSetupErr: "connection refused",
 		},
 	}
 
 	for _, tc := range testData {
-		s := env.NewTestEnv(comp.TestServiceManagementWithTLS, "echo")
-		defer s.TearDown()
-		serverCerts, err := comp.GenerateCert()
-		if err != nil {
-			t.Fatalf("fial to generate cert: %v", err)
-		}
-
-		s.MockServiceManagementServer.SetCert(serverCerts)
-		defer s.TearDown()
-
-		args = append(args, fmt.Sprintf("--root_certs_path=%s", tc.certPath))
-		err = s.Setup(args)
-
-		if tc.wantSetupErr != "" {
-			if err == nil || !strings.Contains(err.Error(), tc.wantSetupErr) {
-				t.Errorf("Test (%s): failed, want error: %v, got error: %v", tc.desc, tc.wantSetupErr, err)
+		func() {
+			s := env.NewTestEnv(tc.port, "echo")
+			defer s.TearDown()
+			serverCerts, err := comp.GenerateCert(tc.certPath, tc.keyPath)
+			if err != nil {
+				t.Fatalf("fial to generate cert: %v", err)
 			}
-			continue
-		}
 
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo?key=api-key")
-		resp, err := client.DoPost(url, "hello")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !strings.Contains(string(resp), tc.wantResp) {
-			t.Errorf("expected: %s, got: %s", tc.wantResp, string(resp))
-		}
+			s.MockServiceManagementServer.SetCert(serverCerts)
+			err = s.Setup(args)
+
+			if tc.wantSetupErr != "" {
+				if err == nil || !strings.Contains(err.Error(), tc.wantSetupErr) {
+					t.Errorf("Test (%s): failed, want error: %v, got error: %v", tc.desc, tc.wantSetupErr, err)
+				}
+			} else {
+				url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo?key=api-key")
+				resp, err := client.DoPost(url, "hello")
+				if err != nil {
+					t.Fatal(err)
+				}
+				if !strings.Contains(string(resp), tc.wantResp) {
+					t.Errorf("expected: %s, got: %s", tc.wantResp, string(resp))
+				}
+			}
+		}()
 	}
 }

@@ -39,19 +39,13 @@ var testDynamicRoutingArgs = []string{
 
 func NewDynamicRoutingTestEnv(port uint16) *env.TestEnv {
 	s := env.NewTestEnv(port, "echoForDynamicRouting")
-	s.EnableDynamicRoutingBackend()
+	s.EnableDynamicRoutingBackend( /*useWrongBackendCert=*/ false)
 	return s
 }
 
 func TestDynamicRouting(t *testing.T) {
-
 	s := NewDynamicRoutingTestEnv(comp.TestDynamicRouting)
-
 	defer s.TearDown()
-
-	// For dynamic routing to a HTTPs backend, proxy must use same cert as the server cert.
-	testDynamicRoutingArgs = append(testDynamicRoutingArgs,
-		fmt.Sprintf("--root_certs_path=%s", platform.GetFilePath(platform.ServerCert)))
 
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -243,10 +237,6 @@ func TestDynamicRoutingWithAllowCors(t *testing.T) {
 
 	defer s.TearDown()
 
-	// For dynamic routing to a HTTPs backend, proxy must use same cert as the server cert.
-	testDynamicRoutingArgs = append(testDynamicRoutingArgs,
-		fmt.Sprintf("--root_certs_path=%s", platform.GetFilePath(platform.ServerCert)))
-
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -283,14 +273,8 @@ func TestDynamicRoutingWithAllowCors(t *testing.T) {
 }
 
 func TestServiceControlRequestForDynamicRouting(t *testing.T) {
-
 	s := NewDynamicRoutingTestEnv(comp.TestServiceControlRequestForDynamicRouting)
-
 	defer s.TearDown()
-
-	// For dynamic routing to a HTTPs backend, proxy must use same cert as the server cert.
-	testDynamicRoutingArgs = append(testDynamicRoutingArgs,
-		fmt.Sprintf("--root_certs_path=%s", platform.GetFilePath(platform.ServerCert)))
 
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -432,14 +416,9 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 
 func TestDynamicBackendRoutingTLS(t *testing.T) {
 
-	s := NewDynamicRoutingTestEnv(comp.TestDynamicBackendRoutingTLS)
-
+	s := env.NewTestEnv(comp.TestDynamicBackendRoutingTLS, "echoForDynamicRouting")
+	s.EnableDynamicRoutingBackend( /*useWrongBackendCert=*/ true)
 	defer s.TearDown()
-
-	// For dynamic routing to a HTTPs backend,
-	// request should fail if proxy uses different cert as the server cert.
-	testDynamicRoutingArgs = append(testDynamicRoutingArgs,
-		fmt.Sprintf("--root_certs_path=%s", platform.GetFilePath(platform.ProxyCert)))
 
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

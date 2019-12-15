@@ -26,8 +26,6 @@ import (
 	"math/big"
 	"net"
 	"time"
-
-	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 )
 
 var (
@@ -38,12 +36,12 @@ var (
 )
 
 // GenerateCert generates a certificate from the root cert and key pair.
-func GenerateCert() (*tls.Certificate, error) {
-	rootCert, err := ioutil.ReadFile(platform.GetFilePath(platform.ServerCert))
+func GenerateCert(certPath, keyPath string) (*tls.Certificate, error) {
+	rootCert, err := ioutil.ReadFile(certPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read cert file: %v", err)
 	}
-	key, err := ioutil.ReadFile(platform.GetFilePath(platform.ServerKey))
+	key, err := ioutil.ReadFile(keyPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read key file: %v", err)
 	}

@@ -150,7 +150,7 @@ func TestSimpleCorsWithRegexPreset(t *testing.T) {
 
 	s := env.NewTestEnv(comp.TestSimpleCorsWithRegexPreset, "echo")
 	// EnableDynamicRoutingBackend shouldn't impact simple Cors.
-	s.EnableDynamicRoutingBackend()
+	s.EnableDynamicRoutingBackend(true)
 	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

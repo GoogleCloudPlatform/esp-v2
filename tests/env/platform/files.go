@@ -41,6 +41,7 @@ const (
 	ServerCert
 	ServerKey
 	ProxyCert
+	ProxyKey
 	LogMetrics
 	Version
 )
@@ -62,6 +63,7 @@ var fileMap = map[RuntimeFile]string{
 	ServerCert:              "../../env/testdata/server.crt",
 	ServerKey:               "../../env/testdata/server.key",
 	ProxyCert:               "../../env/testdata/proxy.crt",
+	ProxyKey:                "../../env/testdata/proxy.key",
 	LogMetrics:              "../../env/testdata/logs_metrics.pb.txt",
 	Version:                 "../../../VERSION",
 }

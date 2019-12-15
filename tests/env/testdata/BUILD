@@ -12,5 +12,6 @@ exports_files([
     "server.crt",
     "server.key",
     "proxy.crt",
+    "proxy.key",
     "logs_metrics.pb.txt",
 ])
