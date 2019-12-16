@@ -7,7 +7,7 @@ build --define=grpc_no_ares=true
 build --incompatible_disable_deprecated_attr_params=false
 query --incompatible_disable_deprecated_attr_params=false
 
-# Required to compile a Position Independent Executable
+# Compile a Position Independent Executable
 # Ref: github.com/envoyproxy/envoy#8792
 build --copt=-fPIC
 
@@ -42,6 +42,14 @@ build:sanitizer --test_tag_filters=-no_san
 # Common flags for Clang
 build:clang --action_env=BAZEL_COMPILER=clang
 build:clang --linkopt=-fuse-ld=lld
+
+# Compile with the Scudo allocator
+# https://llvm.org/docs/ScudoHardenedAllocator.html
+build:clang --copt -fsanitize=scudo
+
+# Compile with automatic variable initialization
+# https://reviews.llvm.org/rL349442
+build:clang --copt -ftrivial-auto-var-init=pattern
 
 # Compilation modes
 build:clang-release --config=clang
