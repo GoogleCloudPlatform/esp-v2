@@ -1,0 +1,34 @@
+iam_service_cluster: "test-cluster-1"
+iam_service_uri: "test-uri-2"
+access_token: "test-access-token-3"
+async_client_response {
+  headers {
+    headers {
+      key: "headers-key-1"
+      value: "headers-value-1"
+    }
+    headers {
+      key: "headers-key-2"
+      value: "headers-value-2"
+    }
+    headers {
+      key: "headers-key-3"
+      value: "headers-value-3"
+    }
+    headers {
+      key: ":status"
+      value: "200"
+    }
+  }
+  data: "{ \"token\": \"string\" }"
+  trailers {
+    headers {
+      key: "trailers-key-1"
+      value: "trailers-value-1"
+    }
+    headers {
+      key: "trailers-key-2"
+      value: "trailers-value-2"
+    }
+  }
+}

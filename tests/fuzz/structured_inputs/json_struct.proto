@@ -6,7 +6,10 @@ import "google/protobuf/struct.proto";
 import "validate/validate.proto";
 
 message JsonStructInput {
+
+  // Input to the constructor of JsonStruct
   google.protobuf.Struct pb_struct = 1 [(validate.rules).message.required = true];
 
+  // JSON keys that need to be checked in the resulting struct
   repeated string keys_to_check = 2 [(validate.rules).repeated.min_items = 1];
 }
