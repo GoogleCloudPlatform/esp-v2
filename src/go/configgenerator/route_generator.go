@@ -19,6 +19,7 @@ import (
 	"regexp"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
+	"github.com/golang/glog"
 
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/common"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
@@ -127,6 +128,7 @@ func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.R
 					},
 				},
 			}
+			glog.Infof("Add Dynamic Routing configuration: %v", r)
 			backendRoutes = append(backendRoutes, &r)
 		}
 	}

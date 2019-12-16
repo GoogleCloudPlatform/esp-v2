@@ -15,64 +15,103 @@
 package static
 
 import (
-	"fmt"
-	"strings"
+	"bytes"
+	"flag"
+	"io/ioutil"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/bootstrap/static/testdata"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configmanager/flags"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+)
+
+var (
+	FakeConfigID = "2019-12-16r0"
 )
 
 func TestServiceToBootstrapConfig(t *testing.T) {
-	opts := options.DefaultConfigGeneratorOptions()
-	opts.BackendProtocol = "HTTP1"
-	opts.DisableTracing = true
-	opts.EnableAdmin = true
-
-	// Function under test
-	gotBootstrap, err := ServiceToBootstrapConfig(testdata.FakeBookstoreConfig, testdata.FakeConfigID, opts)
-	if err != nil {
-		t.Fatal(err)
+	testData := []struct {
+		desc              string
+		flags             map[string]string
+		serviceConfigPath string
+		envoyConfigPath   string
+		want              *bootstrappb.Admin
+	}{
+		{
+			desc: "envoy config with service control, no tracing",
+			flags: map[string]string{
+				"backend_protocol": "http1",
+				"disable_tracing":  "true",
+			},
+			serviceConfigPath: platform.GetFilePath(platform.ScServiceConfig),
+			envoyConfigPath:   platform.GetFilePath(platform.ScEnvoyConfig),
+		},
 	}
 
-	if err := verifyBootstrapConfig(gotBootstrap, testdata.ExpectedBookstoreEnvoyConfig); err != nil {
-		t.Fatalf("Normal ServiceToBootstrapConfig error: %v", err)
+	for _, tc := range testData {
+		for key, value := range tc.flags {
+			flag.Set(key, value)
+		}
+
+		configBytes, err := ioutil.ReadFile(tc.serviceConfigPath)
+		if err != nil {
+			t.Fatalf("ReadFile failed, got %v", err)
+		}
+		unmarshaler := &jsonpb.Unmarshaler{
+			AnyResolver:        util.Resolver,
+			AllowUnknownFields: true,
+		}
+
+		var s confpb.Service
+		if err := unmarshaler.Unmarshal(bytes.NewBuffer(configBytes), &s); err != nil {
+			t.Fatalf("Unmarshal() returned error %v, want nil", err)
+		}
+
+		opts := flags.EnvoyConfigOptionsFromFlags()
+
+		// Function under test
+		gotBootstrap, err := ServiceToBootstrapConfig(&s, FakeConfigID, opts)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		envoyConfig, err := ioutil.ReadFile(tc.envoyConfigPath)
+		if err != nil {
+			t.Fatalf("ReadFile failed, got %v", err)
+		}
+
+		var expectedBootstrap bootstrappb.Bootstrap
+		if err := unmarshaler.Unmarshal(bytes.NewBuffer(envoyConfig), &expectedBootstrap); err != nil {
+			t.Fatalf("Unmarshal() returned error %v, want nil", err)
+		}
+
+		if !proto.Equal(gotBootstrap, &expectedBootstrap) {
+			gotString, err := bootstrapToJson(gotBootstrap)
+			if err != nil {
+				t.Fatal(err)
+			}
+			wantString, err := bootstrapToJson(&expectedBootstrap)
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Errorf("\ngot : %v, \nwant: %v", gotString, wantString)
+		}
 	}
 }
 
-func verifyBootstrapConfig(got *bootstrappb.Bootstrap, want string) error {
-	unmarshaler := &jsonpb.Unmarshaler{
+func bootstrapToJson(protoMsg *bootstrappb.Bootstrap) (string, error) {
+	// Marshal both protos back to json-strings to pretty print them
+	marshaler := &jsonpb.Marshaler{
 		AnyResolver: util.Resolver,
 	}
-
-	// Convert want string to a proto to compare with got
-	wantReader := strings.NewReader(want)
-	wantBootstrap := &bootstrappb.Bootstrap{}
-	err := unmarshaler.Unmarshal(wantReader, wantBootstrap)
+	gotString, err := marshaler.MarshalToString(protoMsg)
 	if err != nil {
-		return err
+		return "", err
 	}
-
-	if !proto.Equal(got, wantBootstrap) {
-		// Marshal both protos back to json-strings to pretty print them
-		marshaler := &jsonpb.Marshaler{
-			AnyResolver: util.Resolver,
-		}
-		gotString, err := marshaler.MarshalToString(got)
-		if err != nil {
-			return err
-		}
-		wantString, err := marshaler.MarshalToString(wantBootstrap)
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("\ngot : %v, \nwant: %v", gotString, wantString)
-	}
-
-	return nil
+	return gotString, nil
 }

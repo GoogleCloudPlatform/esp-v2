@@ -44,6 +44,10 @@ const (
 	ProxyKey
 	LogMetrics
 	Version
+
+	// Configurations
+	ScServiceConfig
+	ScEnvoyConfig
 )
 
 var fileMap = map[RuntimeFile]string{
@@ -66,6 +70,8 @@ var fileMap = map[RuntimeFile]string{
 	ProxyKey:                "../../env/testdata/proxy.key",
 	LogMetrics:              "../../env/testdata/logs_metrics.pb.txt",
 	Version:                 "../../../VERSION",
+	ScServiceConfig:         "../../../../examples/service_control/service_config_generated.json",
+	ScEnvoyConfig:           "../../../../examples/service_control/envoy_config.json",
 }
 
 // Get the runtime file path for the specified file.
