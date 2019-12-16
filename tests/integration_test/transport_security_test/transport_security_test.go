@@ -54,7 +54,7 @@ func TestServiceManagementWithTLS(t *testing.T) {
 			certPath:     platform.GetFilePath(platform.ServerCert),
 			keyPath:      platform.GetFilePath(platform.ServerKey),
 			port:         comp.TestServiceManagementWithInvalidCert,
-			wantSetupErr: "connection refused",
+			wantSetupErr: "health check response was not healthy",
 		},
 	}
 
