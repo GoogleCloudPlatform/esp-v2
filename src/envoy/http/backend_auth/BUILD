@@ -54,6 +54,24 @@ envoy_cc_library(
     ],
 )
 
+envoy_cc_test(
+    name = "config_parser_impl_test",
+    size = "small",
+    srcs = [
+        "config_parser_impl_test.cc",
+    ],
+    repository = "@envoy",
+    deps = [
+        ":filter_lib",
+        "config_parser_lib",
+        ":mocks_lib",
+        "//src/envoy/utils:mocks_lib",
+        "@envoy//test/mocks/http:http_mocks",
+        "@envoy//test/mocks/server:server_mocks",
+        "@envoy//test/test_common:utility_lib",
+    ],
+)
+
 envoy_cc_library(
     name = "filter_config_interface",
     hdrs = ["filter_config.h"],
