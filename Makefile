@@ -144,8 +144,16 @@ test-envoy-tsan: format
 	@echo "--> running envoy's unit tests (tsan)"
 	@CC=clang-8 CXX=clang++-8 ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-8) bazel test --config=clang-tsan  --test_output=errors  //src/...
 
-.PHONY: integration-test-run integration-test integration-test-asan integration-test-tsan integration-debug
-integration-test-run:
+.PHONY: integration-test-run-sequential integration-test-run-parallel integration-test integration-test-asan integration-test-tsan integration-debug
+integration-test-run-sequential:
+	@echo "--> running integration tests"
+	# Default timeout for go test is 10 minutes. Our test suite takes a little longer...
+	# logtostderr will cause all glogs in the test framework to print to the console (not too much bloat)
+	@go test -timeout 20m ./tests/env/... --logtostderr
+	@go test -timeout 20m ./tests/utils/... --logtostderr
+	@go test -timeout 20m -p 1 ./tests/integration_test/... --logtostderr
+
+integration-test-run-parallel:
 	@echo "--> running integration tests"
 	# Default timeout for go test is 10 minutes. Our test suite takes a little longer...
 	# logtostderr will cause all glogs in the test framework to print to the console (not too much bloat)
@@ -153,7 +161,7 @@ integration-test-run:
 	@go test -timeout 20m ./tests/utils/... --logtostderr
 	@go test -timeout 20m ./tests/integration_test/... --logtostderr
 
-integration-test: build  build-envoy-gcc build-grpc-interop build-grpc-echo integration-test-run
+integration-test: build  build-envoy-gcc build-grpc-interop build-grpc-echo integration-test-run-sequential
 
 integration-debug: build build-envoy-gcc build-grpc-interop build-grpc-echo
 	@echo "--> running integration tests and showing debug logs"
@@ -162,9 +170,9 @@ integration-debug: build build-envoy-gcc build-grpc-interop build-grpc-echo
 	# debug-components can be set as "all", "configmanager", or "envoy".
 	@go test -v -timeout 20m ./tests/integration_test/... --debug_components=envoy --logtostderr
 
-integration-test-asan: build build-envoy-asan build-grpc-interop build-grpc-echo integration-test-run
+integration-test-asan: build build-envoy-asan build-grpc-interop build-grpc-echo integration-test-run-sequential
 
-integration-test-tsan: build build-envoy-tsan build-grpc-interop build-grpc-echo integration-test-run
+integration-test-tsan: build build-envoy-tsan build-grpc-interop build-grpc-echo integration-test-run-sequential
 
 
 #-----------------------------------------------------------------------------
