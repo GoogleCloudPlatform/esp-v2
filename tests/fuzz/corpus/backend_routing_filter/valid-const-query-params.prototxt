@@ -1,0 +1,16 @@
+config {
+  rules {
+    operation: "test-const-operation-query-params"
+    is_const_address: true
+    path_prefix: "/constPath"
+  }
+}
+binding_query_params: "param1=1&param2=2"
+user_request {
+  headers {
+    headers {
+      key: ":path"
+      value: "/originalRequestPath?paramA=A&paramB=B"
+    }
+  }
+}

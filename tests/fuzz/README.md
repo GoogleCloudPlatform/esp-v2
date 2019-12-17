@@ -34,10 +34,10 @@ Only the corpus data will be used for each fuzz test.
 Therefore, the corpus should contain at least a few files that are known to cause bugs.
 This serves as regression tests.
 
-You can run these regression tests locally using blaze. For instance:
+You can run these regression tests locally using bazel. For instance:
 
 ```.shell script
-blaze test -c opt --test_output=all //src/envoy/utils:json_struct_fuzz_test
+bazel test -c opt --test_output=all //src/envoy/utils:json_struct_fuzz_test
 ```
 
 #### Mutation and Generation Tests
@@ -49,12 +49,12 @@ LibFuzzer is a coverage-guided, evolutionary fuzzing engine.
 Therefore, the corpus should contain a few inputs that LibFuzzer can modify.
 When a bug is discovered via continuous fuzzing, the input data should be added to the corresponding test's corpus to serve as a regression test in presubmits.
 
-You can run the fuzz test with the fuzz engine locally using blaze.
+You can run the fuzz test with the fuzz engine locally using bazel.
 Note the `_with_libfuzzer` suffix on the target under test.
 For instance:
 
 ```.shell script
-blaze test --config=asan-fuzzer \
+bazel test --config=asan-fuzzer \
            --test_arg="${ROOT}/tests/fuzz/corpus/json_struct" \
            --test_arg="-max_total_time=15" \
            --test_output=streamed \
@@ -64,10 +64,10 @@ blaze test --config=asan-fuzzer \
 To understand the output of the fuzzer, see [this documentation](https://llvm.org/docs/LibFuzzer.html#output).
 
 The fuzzer will not write newly generated corpus entries to your working directory.
-To run the fuzzer and generate new corpus entries, use `blaze run` instead:
+To run the fuzzer and generate new corpus entries, use `bazel run` instead:
 
 ```.shell script
-blaze run --config=asan-fuzzer \
+bazel run --config=asan-fuzzer \
           --test_output=streamed \
           //src/envoy/utils:json_struct_fuzz_test_with_libfuzzer \
           ${ROOT}/tests/fuzz/corpus/json_struct \

@@ -22,3 +22,12 @@ envoy_proto_library(
         "@envoy//test/fuzz:common_proto",
     ],
 )
+
+envoy_proto_library(
+    name = "backend_routing_filter_proto",
+    srcs = ["backend_routing_filter.proto"],
+    deps = [
+        "//api/envoy/http/backend_routing:config_proto",
+        "@envoy//test/fuzz:common_proto",
+    ],
+)

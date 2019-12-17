@@ -19,3 +19,11 @@ filegroup(
         "iam_token_subscriber/**",
     ]),
 )
+
+filegroup(
+    name = "backend_routing_filter_corpus",
+    testonly = 1,
+    srcs = glob([
+        "backend_routing_filter/**",
+    ]),
+)
