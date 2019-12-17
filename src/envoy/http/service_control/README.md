@@ -1,91 +1,13 @@
 # Service Control Filter
 
-Also known as the Service Control filter.
+[Google Service Infrastructure](https://cloud.google.com/service-infrastructure/docs/overview)
+is Google's foundational platform for creating, managing, and consuming APIs and services.
 
-This filter checks whether an operation is allowed.
+This filter uses [Google Service Control's REST API](https://cloud.google.com/service-infrastructure/docs/service-control/reference/rest/)
+to check authentication, rate-limit calls, report metrics, and create logs for API requests.
 
-It also reports logs and metrics about the request and operation.
+## Prerequisites
 
-More information is available at the [ServiceController documentation](https://cloud.google.com/service-infrastructure/docs/service-control/reference/rpc/google.api.servicecontrol.v1#google.api.servicecontrol.v1.ServiceController).
+This filter will not function unless the following filters appear earlier in the filter chain:
 
-## Instructions to run service control filter
-
-### Start the backend http server
-
-With HTTP Backend:
-
-```bash
-$ node tests/endpoints/http/http_server.js
-```
-
-With GRPC Backend
-
-```bash
-$ node tests/endpoints/bookstore_grpc/grpc_server.js
-```
-
-### Start up envoy
-
-Update the service_name to yours in `src/envoy/http/service_control/testdata/envoy.yaml`
-
-```bash
-$ sed 's/REPLACE_SERVICE_NAME/{YOUR_SERVICE_NAME}' src/envoy/http/service_control/testdata/envoy.yaml
-```
-
-To test the CheckRequest code path, update `allow_with_api_key: false`.
-
-Start up Envoy:
-
-```bash
-$ bazel run //src/envoy:envoy -- -c $PWD/src/envoy/http/service_control/testdata/envoy.yaml -l debug
-```
-
-`envoy.yaml` defines the Envoy's listener port is `9090` and then Envoy routes the request
-to the backend at port `8080`
-
-### Send requests
-
-First set your API Key:
-
-```bash
-# Get your api-key.
-$ KEY=YOUR-API-KEY
-```
-
-#### With HTTP Backend
-
-```bash
-# GET request with API key in the query
-$ curl http://127.0.0.1:9090/test?key=$KEY -v
-
-# GET request with API key in the headers
-$ curl http://127.0.0.1:9090/test --header "x-api-key:$KEY" -v
-
-# GET request that does not match any pattern, this should return path not
-# matched error
-$ curl http://127.0.0.1:9090/tea?key=$KEY -v
-
-# POST request with API key in the query
-$ curl -X POST http://127.0.0.1:9090/test?key=$KEY -v
-
-# POST request with API key in the headers
-$ curl -X POST http://127.0.0.1:9090/test --header "x-api-key:$KEY" -v
-
-# POST request that does not match any pattern, this should return path not
-# matched error
-$ curl -X POST http://127.0.0.1:9090/tea?key=$KEY -v
-```
-
-#### With GRPC Backend:
-
-Send GRPC request:
-
-```bash
-go run tests/endpoints/bookstore_grpc/client_main.go -addr 127.0.0.1:9090 -method=DeleteShelf -client_protocol=grpc -apikey=$KEY
-```
-
-Send HTTP request:
-
-```bash
-go run tests/endpoints/bookstore_grpc/client_main.go -addr 127.0.0.1:9090 -method=DeleteShelf -client_protocol=http -apikey=$KEY
-```
+- [Path Matcher](../path_matcher/README.md)
