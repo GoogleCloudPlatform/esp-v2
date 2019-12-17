@@ -102,19 +102,6 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
   return FilterHeadersStatus::Continue;
 }
 
-FilterDataStatus Filter::decodeData(Buffer::Instance&, bool) {
-  return FilterDataStatus::Continue;
-}
-
-FilterTrailersStatus Filter::decodeTrailers(HeaderMap&) {
-  return FilterTrailersStatus::Continue;
-}
-
-void Filter::setDecoderFilterCallbacks(
-    Http::StreamDecoderFilterCallbacks& callbacks) {
-  decoder_callbacks_ = &callbacks;
-}
-
 }  // namespace BackendRouting
 }  // namespace HttpFilters
 }  // namespace Extensions

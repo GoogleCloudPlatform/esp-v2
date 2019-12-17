@@ -19,6 +19,7 @@
 #include "common/common/logger.h"
 #include "envoy/http/filter.h"
 #include "envoy/http/header_map.h"
+#include "extensions/filters/http/common/pass_through_filter.h"
 #include "src/envoy/http/backend_auth/filter_config.h"
 
 namespace Envoy {
@@ -26,23 +27,15 @@ namespace Extensions {
 namespace HttpFilters {
 namespace BackendAuth {
 
-class Filter : public Http::StreamDecoderFilter,
+class Filter : public Http::PassThroughDecoderFilter,
                public Logger::Loggable<Logger::Id::filter> {
  public:
   Filter(FilterConfigSharedPtr config) : config_(config) {}
-  ~Filter() override = default;
-
-  // Http::StreamFilterBase
-  void onDestroy() override{};
 
   // Http::StreamDecoderFilter
   Http::FilterHeadersStatus decodeHeaders(Http::HeaderMap&, bool) override;
-  Http::FilterDataStatus decodeData(Buffer::Instance&, bool) override;
-  Http::FilterTrailersStatus decodeTrailers(Http::HeaderMap&) override;
-  void setDecoderFilterCallbacks(Http::StreamDecoderFilterCallbacks&) override;
 
  private:
-  Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
   const FilterConfigSharedPtr config_;
 };
 

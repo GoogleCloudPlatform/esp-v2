@@ -18,6 +18,7 @@
 #include "envoy/access_log/access_log.h"
 #include "envoy/http/filter.h"
 #include "envoy/http/header_map.h"
+#include "extensions/filters/http/common/pass_through_filter.h"
 #include "src/envoy/http/service_control/filter_stats.h"
 #include "src/envoy/http/service_control/handler.h"
 
@@ -29,7 +30,7 @@ namespace HttpFilters {
 namespace ServiceControl {
 
 // The Envoy filter for ESP V2 service control client.
-class ServiceControlFilter : public Http::StreamFilter,
+class ServiceControlFilter : public Http::PassThroughFilter,
                              public AccessLog::Instance,
                              public ServiceControlHandler::CheckDoneCallback,
                              public Logger::Loggable<Logger::Id::filter> {
@@ -46,20 +47,12 @@ class ServiceControlFilter : public Http::StreamFilter,
   Http::FilterDataStatus decodeData(Buffer::Instance& data,
                                     bool end_stream) override;
   Http::FilterTrailersStatus decodeTrailers(Http::HeaderMap&) override;
-  void setDecoderFilterCallbacks(
-      Http::StreamDecoderFilterCallbacks& callbacks) override;
 
   // Http::StreamEncoderFilter
-  Http::FilterHeadersStatus encode100ContinueHeaders(
-      Http::HeaderMap& headers) override;
   Http::FilterHeadersStatus encodeHeaders(Http::HeaderMap& headers,
                                           bool) override;
   Http::FilterDataStatus encodeData(Buffer::Instance& data,
                                     bool end_stream) override;
-  Http::FilterTrailersStatus encodeTrailers(Http::HeaderMap&) override;
-  Http::FilterMetadataStatus encodeMetadata(Http::MetadataMap&) override;
-  void setEncoderFilterCallbacks(
-      Http::StreamEncoderFilterCallbacks& callbacks) override;
 
   // Called when the request is completed.
   void log(const Http::HeaderMap* request_headers,
@@ -73,9 +66,6 @@ class ServiceControlFilter : public Http::StreamFilter,
  private:
   void rejectRequest(Http::Code code, absl::string_view error_msg);
 
-  // The callback funcion.
-  Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
-  Http::StreamEncoderFilterCallbacks* encoder_callbacks_;
   ServiceControlFilterStats& stats_;
   const ServiceControlHandlerFactory& factory_;
 

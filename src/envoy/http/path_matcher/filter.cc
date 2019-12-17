@@ -43,8 +43,6 @@ typedef ConstSingleton<RcDetailsValues> RcDetails;
 
 }  // namespace
 
-void Filter::onDestroy() {}
-
 Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
                                                 bool) {
   std::string method(Utils::getRequestHTTPMethodWithOverride(
@@ -75,19 +73,6 @@ Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
 
   config_->stats().allowed_.inc();
   return Http::FilterHeadersStatus::Continue;
-}
-
-Http::FilterDataStatus Filter::decodeData(Buffer::Instance&, bool) {
-  return Http::FilterDataStatus::Continue;
-}
-
-Http::FilterTrailersStatus Filter::decodeTrailers(Http::HeaderMap&) {
-  return Http::FilterTrailersStatus::Continue;
-}
-
-void Filter::setDecoderFilterCallbacks(
-    Http::StreamDecoderFilterCallbacks& callbacks) {
-  decoder_callbacks_ = &callbacks;
 }
 
 void Filter::rejectRequest(Http::Code code, absl::string_view error_msg) {

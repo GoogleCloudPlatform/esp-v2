@@ -38,6 +38,7 @@ envoy_cc_library(
         "//src/envoy/utils:http_header_utils_lib",
         "@envoy//source/common/protobuf:utility_lib",
         "@envoy//source/exe:envoy_common_lib",
+        "@envoy//source/extensions/filters/http/common:pass_through_filter_lib",
     ],
 )
 

@@ -117,16 +117,6 @@ Http::FilterTrailersStatus ServiceControlFilter::decodeTrailers(
   return Http::FilterTrailersStatus::Continue;
 }
 
-void ServiceControlFilter::setDecoderFilterCallbacks(
-    Http::StreamDecoderFilterCallbacks& callbacks) {
-  decoder_callbacks_ = &callbacks;
-}
-
-Http::FilterHeadersStatus ServiceControlFilter::encode100ContinueHeaders(
-    Http::HeaderMap&) {
-  return Http::FilterHeadersStatus::Continue;
-}
-
 Http::FilterHeadersStatus ServiceControlFilter::encodeHeaders(
     Http::HeaderMap& headers, bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {} before", __func__);
@@ -146,21 +136,6 @@ Http::FilterDataStatus ServiceControlFilter::encodeData(Buffer::Instance& data,
     handler_->collectEncodeData(data);
   }
   return Http::FilterDataStatus::Continue;
-}
-
-Http::FilterTrailersStatus ServiceControlFilter::encodeTrailers(
-    Http::HeaderMap&) {
-  return Http::FilterTrailersStatus::Continue;
-}
-
-Http::FilterMetadataStatus ServiceControlFilter::encodeMetadata(
-    Http::MetadataMap&) {
-  return Http::FilterMetadataStatus::Continue;
-}
-
-void ServiceControlFilter::setEncoderFilterCallbacks(
-    Http::StreamEncoderFilterCallbacks& callbacks) {
-  encoder_callbacks_ = &callbacks;
 }
 
 void ServiceControlFilter::log(const Http::HeaderMap* request_headers,

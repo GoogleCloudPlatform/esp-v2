@@ -17,6 +17,7 @@
 #include "common/common/logger.h"
 #include "envoy/http/filter.h"
 #include "envoy/http/header_map.h"
+#include "extensions/filters/http/common/pass_through_filter.h"
 #include "src/envoy/http/path_matcher/filter_config.h"
 
 #include <string>
@@ -26,23 +27,16 @@ namespace Extensions {
 namespace HttpFilters {
 namespace PathMatcher {
 
-class Filter : public Http::StreamDecoderFilter,
+class Filter : public Http::PassThroughDecoderFilter,
                public Logger::Loggable<Logger::Id::filter> {
  public:
   Filter(FilterConfigSharedPtr config) : config_(config) {}
-  ~Filter() override = default;
-
-  void onDestroy() override;
 
   Http::FilterHeadersStatus decodeHeaders(Http::HeaderMap&, bool) override;
-  Http::FilterDataStatus decodeData(Buffer::Instance&, bool) override;
-  Http::FilterTrailersStatus decodeTrailers(Http::HeaderMap&) override;
-  void setDecoderFilterCallbacks(Http::StreamDecoderFilterCallbacks&) override;
 
  private:
   void rejectRequest(Http::Code code, absl::string_view error_msg);
 
-  Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
   const FilterConfigSharedPtr config_;
 };
 

@@ -35,6 +35,7 @@ envoy_cc_library(
         ":config_parser_lib",
         "//api/envoy/http/backend_auth:config_proto_cc_proto",
         "//src/envoy/utils:filter_state_utils_lib",
+        "@envoy//source/extensions/filters/http/common:pass_through_filter_lib",
     ],
 )
 
