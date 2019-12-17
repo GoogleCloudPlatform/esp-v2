@@ -48,6 +48,8 @@ const (
 	// Configurations
 	ScServiceConfig
 	ScEnvoyConfig
+	DrServiceConfig
+	DrEnvoyConfig
 )
 
 var fileMap = map[RuntimeFile]string{
@@ -72,6 +74,8 @@ var fileMap = map[RuntimeFile]string{
 	Version:                 "../../../VERSION",
 	ScServiceConfig:         "../../../../examples/service_control/service_config_generated.json",
 	ScEnvoyConfig:           "../../../../examples/service_control/envoy_config.json",
+	DrServiceConfig:         "../../../../examples/dynamic_routing/service_config_generated.json",
+	DrEnvoyConfig:           "../../../../examples/dynamic_routing/envoy_config.json",
 }
 
 // Get the runtime file path for the specified file.

@@ -1,0 +1,89 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "A simple Google Cloud Endpoints Bookstore API example.",
+    "title": "Bookstore",
+    "version": "1.0.0"
+  },
+  "host": "esp-bookstore-f6x3rlu5aa-uc.a.run.app",
+  "basePath": "/",
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/shelves": {
+      "get": {
+        "x-google-backend": {
+          "address": "https://http-bookstore-abc123456-uc.a.run.app/shelves",
+          "jwt_audience": "ESPv2",
+          "path_translation": "APPEND_PATH_TO_ADDRESS"
+        },
+        "description": "Returns all shelves in the bookstore.",
+        "operationId": "listShelves",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of shelves in the bookstore.",
+            "schema": {
+              "$ref": "#/definitions/listShelvesResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "x-google-backend": {
+          "address": "https://http-bookstore-edf123456-uc.a.run.app/shelves",
+          "path_translation": "CONSTANT_ADDRESS"
+        },
+        "description": "Creates a new shelf in the bookstore.",
+        "operationId": "createShelf",
+        "parameters": [
+          {
+            "description": "A shelf resource to create.",
+            "in": "body",
+            "name": "shelf",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/shelf"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "A newly created shelf resource.",
+            "schema": {
+              "$ref": "#/definitions/shelf"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "shelf": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "theme": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "theme"
+      ]
+    }
+  }
+}
