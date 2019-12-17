@@ -1,12 +1,14 @@
 # Path Matcher Filter
 
 This filter matches the request path to an operation (selector) and stores it
-in filter state. This filter state is used by the following other filters:
+in the shared filter state. The results of this match are used the following filters:
 
-* Service Control
-* Backend Auth
-* Dynamic Router
+- [Backend Auth](../backend_auth/README.md)
+- [Backend Routing](../backend_routing/README.md)
+- [Service Control](../service_control/README.md)
 
-If a match is not found, it rejects the request.
+This filter also extracts variable bindings, transforms them into query parameters,
+and stores them in the shared filter state. The result of the transformation is
+used by the following filters:
 
-This filter is required by Config Manager.
+- [Backend Routing](../backend_routing/README.md)

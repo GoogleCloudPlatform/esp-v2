@@ -1,7 +1,7 @@
 # Google Cloud Platform ESPv2
 
-Google Cloud Platform ESPv2 is a service proxy which enables API
-management capabilities for JSON/REST or gRPC API services. The current
+Google Cloud Platform ESPv2 is a service proxy which enables API management capabilities
+for JSON/REST or gRPC API services using Google Service Infrastructure. The current
 implementation uses [Envoy](https://www.envoyproxy.io/) as a service proxy.
 
 ESPv2 provides:
@@ -21,48 +21,55 @@ ESPv2 provides:
 
 ESPv2 is a general-purpose L7 service proxy that integrates with Google hosted
 services to provide policy checks and telemetry reports. This proxy can be used by
-GCP customers, Google Cloud products, and Google internal projects.
-
-ESPv2 can run on GCP and hybrid cloud environments, either as a sidecar or as an API gateway.
-However, initial development was primarily done on GKE for API services using [Open API
-Specification](https://openapis.org/specification) so our instructions
-and samples are focusing on these platforms. If you make it work on other
-infrastructure and IDLs, please let us know and contribute instructions/code.
+GCP customers, Google Cloud products, and Google internal projects. It can run on
+GCP and hybrid cloud environments, either as a sidecar or as an API gateway.
 
 ESPv2 includes two components:
 
-- ConfigManager: Control plane to configure the Envoy proxy
+- Config Manager: Control plane to configure the Envoy proxy
 - Envoy: Data plane to process API requests/responses
 
-ConfigManager configures the data plane's Envoy filters dynamically, using [Google API
+Config Manager configures the data plane's Envoy filters dynamically, using [Google API
 Service Configuration](https://github.com/googleapis/googleapis/blob/master/google/api/service.proto)
 and flags specified by the API producer.
 
-Envoy (with our custom filters) handles API calls using [Service Infrastructure]
-(https://cloud.google.com/service-infrastructure/docs/overview), Google's foundational
-platform for creating, managing, and consuming APIs and services.
+Envoy (with our custom filters) handles API calls using [Service Infrastructure](https://cloud.google.com/service-infrastructure/docs/overview),
+Google's foundational platform for creating, managing, and consuming APIs and services.
 
 * [Architecture](/doc/architecture.png)
+
 * [ESPv2 Filters](doc/filters.png)
+
 * [API Producer specified flags](docker/generic/start_proxy.py)
 
 ## ESPv2 Releases
 
 ESPv2 is released as a docker image.
 
-Currently we only support ESPv2 on Cloud Run:
+Currently we only support running ESPv2 on Cloud Run:
 
-- [gcr.io/endpoints-release/endpoints-runtime:2](https://gcr.io/endpoints-release/endpoints-runtime:2)
+- [gcr.io/endpoints-release/endpoints-runtime-serverless:2](https://gcr.io/endpoints-release/endpoints-runtime-serverless:2)
+
+Support for running ESPv2 on GKE is planned.
 
 ## Repository Structure
 
 * [api](/api): Envoy Filter Configurations developed in ESPv2
+
 * [doc](/doc): Documentation
+
 * [docker](/docker): Scripts for packaging ESPv2 in a Docker image for releases
+
+* [examples](/examples): Examples to configure ESPv2
+
 * [prow](/prow): Prow based test automation scripts
+
 * [scripts](/scripts): Scripts used for build and release ESPv2
+
 * [src](/src): ESPv2 source code, including Envoy Filters and Config Manager
+
 * [tests](/tests): Integration and end-to-end tests for ESPv2
+
 * [tools](/third_party/tools): Assorted tooling
 
 ## Contributing
@@ -73,15 +80,13 @@ Your contributions are welcome. Please follow the contributor [guidelines](CONTR
 
 ## ESPv2 Tutorial
 
-To find out more about building, running, and testing ESPv2:
+To find out more about building, running, and testing ESPv2 for Google Cloud Endpoints:
 
-* [Run ESPv2 on Google Cloud Run](/doc/esp-v2-on-cloudrun.md)
+* [Cloud Endpoints for Google Cloud Run](https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-run)
 
-* [Run ESPv2 on Google GKE](/doc/esp-v2-on-k8s.md)
+* [Cloud Endpoints for Google Cloud Functions](https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-functions)
 
-## Examples
-
-How to configure ESPv2?  See [examples](/examples/README.md)
+* [ESPv2 Beta Startup Options](https://cloud.google.com/endpoints/docs/openapi/specify-esp-v2-startup-options)
 
 ## Disclaimer
 
