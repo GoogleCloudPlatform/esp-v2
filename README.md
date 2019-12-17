@@ -6,7 +6,7 @@ implementation uses [Envoy](https://www.envoyproxy.io/) as a service proxy.
 
 ESPv2 provides:
 
-*   **Features**: authentication (auth0), API key validation, JSON to
+*   **Powerful Features**: authentication (auth0), API key validation, JSON to
     Protobuf transcoding, user quota rate limiting, as well as API-level monitoring, tracing and logging.
 
 *   **Easy Adoption**: the API service can be implemented in any coding language
@@ -21,8 +21,7 @@ ESPv2 provides:
 
 ESPv2 is a general-purpose L7 service proxy that integrates with Google hosted
 services to provide policy checks and telemetry reports. This proxy can be used by
-GCP customers, Google Cloud products, and Google internal projects. It can run on
-GCP and hybrid cloud environments, either as a sidecar or as an API gateway.
+GCP customers and Google Cloud products. It can run on GCP and hybrid cloud environments, either as sidecar or as API gateway.
 
 ESPv2 includes two components:
 
@@ -36,9 +35,11 @@ and flags specified by the API producer.
 Envoy (with our custom filters) handles API calls using [Service Infrastructure](https://cloud.google.com/service-infrastructure/docs/overview),
 Google's foundational platform for creating, managing, and consuming APIs and services.
 
-* [Architecture](/doc/architecture.png)
+* Architecture
+![Architecture](doc/architecture.png)
 
-* [ESPv2 Filters](doc/filters.png)
+* ESPv2 Filters
+![ESPv2 Filters](doc/filters.png)
 
 * [API Producer specified flags](docker/generic/start_proxy.py)
 
@@ -54,23 +55,23 @@ Support for running ESPv2 on GKE is planned.
 
 ## Repository Structure
 
-* [api](/api): Envoy Filter Configurations developed in ESPv2
+* [api](api): Envoy Filter Configurations developed in ESPv2
 
-* [doc](/doc): Documentation
+* [doc](doc): Documentation
 
-* [docker](/docker): Scripts for packaging ESPv2 in a Docker image for releases
+* [docker](docker): Scripts for packaging ESPv2 in a Docker image for releases
 
-* [examples](/examples): Examples to configure ESPv2
+* [examples](examples): Examples to configure ESPv2
 
-* [prow](/prow): Prow based test automation scripts
+* [prow](prow): Prow based test automation scripts
 
-* [scripts](/scripts): Scripts used for build and release ESPv2
+* [scripts](scripts): Scripts used for build and release ESPv2
 
-* [src](/src): ESPv2 source code, including Envoy Filters and Config Manager
+* [src](src): ESPv2 source code, including Envoy Filters and Config Manager
 
-* [tests](/tests): Integration and end-to-end tests for ESPv2
+* [tests](tests): Integration and end-to-end tests for ESPv2
 
-* [tools](/third_party/tools): Assorted tooling
+* [tools](third_party/tools): Assorted tooling
 
 ## Contributing
 
