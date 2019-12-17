@@ -1,7 +1,7 @@
-# Developer documentation
+# Developer Documentation
 
-APIProxy is based on Envoy Proxy in C++ and Config Manager in Golang. Envoy is
-built using Bazel, and Config Manager is built using Make.
+ESPv2 is based on Envoy Proxy and Config Manager. Envoy written in C++ is
+built using bazel with clang(gcc also works but is unrecommended), and Config Manager written in go is built using go build.
 
 ## Installing Bazelisk as Bazel
 
@@ -17,10 +17,18 @@ sudo chmod +x /usr/local/bin/bazel
 
 To get started building Envoy locally, following the instructions from [Envoy](https://github.com/envoyproxy/envoy/blob/master/bazel/README.md#quick-start-bazel-build-for-developers).
 
-## Install clang-format-7
+## Install Clang-8
 
 ```
-# NOTE: replace stretch with relevant version if your GCE VM is not Debian stretch
+wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key| apt-key add - && \
+    echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-8 main" >> /etc/apt/sources.list && \
+    sudo apt-get update && \
+    sudo apt-get install -y llvm-8-dev libclang-8-dev clang-8 xz-utils lld # install clang-8
+```
+
+## Install Clang-format-7
+
+```
 $ sudo apt-get install -y software-properties-common
 $ sudo add-apt-repository "deb http://apt.llvm.org/stretch/ llvm-toolchain-stretch-7 main"
 $ wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
@@ -44,7 +52,7 @@ export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 export GOBIN=$GOPATH/bin
 ```
 
-## Download source code
+## Download Source Code
 
 To download the source code, clone the APIProxy repository:
 
@@ -88,13 +96,7 @@ make integration-test
 
 ## Run Sanitizer Tests
 
-Our sanitizer unit/integrtaion tests are based on clang-8. Here are cmd to install clang and run the tests.
 ```
-wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key| apt-key add - && \
-    echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-8 main" >> /etc/apt/sources.list && \
-    sudo apt-get update && \
-    sudo apt-get install -y llvm-8-dev libclang-8-dev clang-8 xz-utils lld # install clang-8
-
 make test-envoy-asan/tsan
 make integration-test-asan/tsan
 ```
