@@ -21,7 +21,7 @@ extra features specifically for APIs on Google Cloud Platform.
     the version id with maximum traffic percentage in it. Then, Config Manager
     fetches the corresponding service config and dynamically configures envoy proxy.
 
-    What is more, Config Manager checks with Google Service Management every 60
+    Besides, Config Manager checks with Google Service Management every 60
     seconds, to see whether there is new rollout or not. If yes, it will
     fetches the new deployed service config and updates envoy configurations,
     automatically and silently.
@@ -36,7 +36,8 @@ go-control-plane need to be satisfied.
 
 ## Usage:
 
-To start the Config Manager, run:
+To start the Config Manager on GCE instance, run(make sure your service
+is deployed):
 
 ```shell
 go run src/go/configmanager/main/server.go \
@@ -53,7 +54,7 @@ successfully.
 
 ## Quick Test
 
-We have a simple gRPC test client to fetch Listener Discovery Service(LDS)
+After starting the Config Manager, we have a simple gRPC test client running locally to fetch Listener Discovery Service(LDS)
 response from this Config Manager, just run:
 
 ```shell
