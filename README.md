@@ -79,6 +79,10 @@ To find out more about building, running, and testing ESPv2:
 
 * [Run ESPv2 on Google GKE](/doc/esp-v2-on-k8s.md)
 
+## Examples
+
+How to configure ESPv2?  See [examples](/examples/README.md)
+
 ## Disclaimer
 
 ESPv2 is in Beta currently.

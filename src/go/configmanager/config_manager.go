@@ -123,7 +123,7 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 
 	// Create secured http client with rootCertsPath.
 	if serviceConfigFetcherClient, err = newServiceConfigFetcherClient(time.Duration(*commonflags.HttpRequestTimeoutS) * time.Second); err != nil {
-		return nil, fmt.Errorf(`failed to create https client to call ServiceManagement service`)
+		return nil, fmt.Errorf(`failed to create https client to call ServiceManagement service, got error: %v`, err)
 	}
 
 	if rolloutStrategy == util.ManagedRolloutStrategy {
