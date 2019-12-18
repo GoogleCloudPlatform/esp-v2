@@ -36,8 +36,8 @@ TEST(FilterConfigTest, EmptyConfig) {
   ::testing::NiceMock<Server::Configuration::MockFactoryContext> mock_factory;
   FilterConfig cfg(config_pb, "", mock_factory);
 
-  EXPECT_TRUE(cfg.FindOperation("GET", "/foo") == nullptr);
-  EXPECT_TRUE(cfg.snake_to_json().empty());
+  EXPECT_TRUE(cfg.findOperation("GET", "/foo") == nullptr);
+  EXPECT_TRUE(cfg.getSnakeToJsonMap().empty());
 }
 
 TEST(FilterConfigTest, BasicConfig) {
@@ -64,19 +64,18 @@ rules {
   FilterConfig cfg(config_pb, "", mock_factory);
 
   EXPECT_EQ("1.cloudesf_testing_cloud_goog.Bar",
-            *cfg.FindOperation("GET", "/bar"));
+            *cfg.findOperation("GET", "/bar"));
   EXPECT_EQ("1.cloudesf_testing_cloud_goog.Foo",
-            *cfg.FindOperation("GET", "/foo/xyz"));
+            *cfg.findOperation("GET", "/foo/xyz"));
 
-  EXPECT_EQ(nullptr, cfg.FindOperation("POST", "/bar"));
-  EXPECT_EQ(nullptr, cfg.FindOperation("POST", "/foo/xyz"));
+  EXPECT_EQ(nullptr, cfg.findOperation("POST", "/bar"));
+  EXPECT_EQ(nullptr, cfg.findOperation("POST", "/foo/xyz"));
 
   EXPECT_FALSE(
-      cfg.NeedPathParametersExtraction("1.cloudesf_testing_cloud_goog.Bar"));
-  EXPECT_TRUE(
-      cfg.NeedPathParametersExtraction("1.cloudesf_testing_cloud_goog.Foo"));
+      cfg.needParameterExtraction("1.cloudesf_testing_cloud_goog.Bar"));
+  EXPECT_TRUE(cfg.needParameterExtraction("1.cloudesf_testing_cloud_goog.Foo"));
 
-  EXPECT_TRUE(cfg.snake_to_json().empty());
+  EXPECT_TRUE(cfg.getSnakeToJsonMap().empty());
 }
 
 TEST(FilterConfigTest, VariableBinding) {
@@ -97,7 +96,7 @@ rules {
 
   VariableBindings bindings;
   EXPECT_EQ("1.cloudesf_testing_cloud_goog.Foo",
-            *cfg.FindOperation("GET", "/foo/xyz", &bindings));
+            *cfg.findOperation("GET", "/foo/xyz", &bindings));
   EXPECT_EQ(VariableBindings({
                 VariableBinding{FieldPath{"id"}, "xyz"},
             }),
@@ -105,7 +104,7 @@ rules {
 
   // With query parameters
   EXPECT_EQ("1.cloudesf_testing_cloud_goog.Foo",
-            *cfg.FindOperation("GET", "/foo/xyz?zone=east", &bindings));
+            *cfg.findOperation("GET", "/foo/xyz?zone=east", &bindings));
   EXPECT_EQ(VariableBindings({
                 VariableBinding{FieldPath{"id"}, "xyz"},
             }),
@@ -130,7 +129,7 @@ segment_names {
 
   absl::flat_hash_map<std::string, std::string> expected = {
       {"foo_bar", "fooBar"}, {"x_y_z", "xYZ"}};
-  EXPECT_EQ(cfg.snake_to_json(), expected);
+  EXPECT_EQ(cfg.getSnakeToJsonMap(), expected);
 }
 
 TEST(FilterConfigTest, DuplicatedPatterns) {
