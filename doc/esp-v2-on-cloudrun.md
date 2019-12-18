@@ -66,7 +66,7 @@ Similarly, you need to deploy ESPv2 on Google Cloud Run using a docker image.
 We supply the Docker image for ESPv2 at
 [gcr.io/endpoints-release/endpoints-runtime-serverless:2](https://gcr.io/endpoints-release/endpoints-runtime-serverless:2).
 Note the `-serverless` suffix in this image, which denotes this is specifically
-for use on Cloud Functions and Cloud Run.
+for use on Cloud Run.
 
 ```
 gcloud beta run deploy ESPv2_SERVICE_NAME \
@@ -116,12 +116,9 @@ For example:
 
 ## Deploying the Endpoints configuration
 
-To deploy the Endpoints configuration, you use the
-[gcloud endpoints services deploy](https://cloud.google.com/sdk/gcloud/reference/endpoints/services/deploy)
-command. This command uses
-[Service Management](https://cloud.google.com/service-infrastructure/docs/manage-config),
-Google's foundational services platform, used by Endpoints and other services to
-create and manage APIs and services.
+To deploy the Endpoints configuration, use the
+[gcloud endpoints services deploy](https://cloud.google.com/sdk/gcloud/reference/endpoints/services/deploy) command. This command pushes the configuration to
+[Google Service Management](https://cloud.google.com/service-infrastructure/docs/manage-config), Google's foundational services platform used by Endpoints and other services for creating and managing APIs and services.
 
 To deploy the Endpoints configuration:
 
@@ -144,14 +141,14 @@ Note that on Cloud Run, `ENDPOINTS_SERVICE_NAME` is usually the same as `PROXY_S
 
 ## Build the service config to the ESPv2 docker image
 
-You will need to build the service config into a new ESPv2 image and redeploy that new image to Cloud Run.
+You need to build the service config into a new ESPv2 image and redeploy that new image to Cloud Run.
 We provide a bash script to automate this process. Ensure you have the gcloud SDK installed and download
 this [script](../docker/serverless/gcloud_build_image).
 
 Run it with the following commands:
 
 ```
-chmod +x gcloud_build_image
+chmod +x gcloud_build_image &&
 ./gcloud_build_image -s ENDPOINTS_SERVICE_NAME -c ENDPOINTS_SERVICE_CONFIG_ID -p YOUR_PROJECT_ID
 ```
 
@@ -177,7 +174,7 @@ gcloud beta run deploy ESPv2_SERVICE_NAME \
 
 ## Testing the API
 
-Now you can sent request to the backend service through the ESPv2:
+Now you can sent request to the backend service through the ESPv2 proxy:
 
 ```
 curl https://PROXY_SERVICE_URL/shelves
