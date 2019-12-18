@@ -50,35 +50,14 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
   FilterConfig(const ::google::api::envoy::http::path_matcher::FilterConfig&
                    proto_config,
                const std::string& stats_prefix,
-               Server::Configuration::FactoryContext& context)
-      : proto_config_(proto_config),
-        stats_(generateStats(stats_prefix, context.scope())) {
-    ::google::api_proxy::path_matcher::PathMatcherBuilder<const std::string*>
-        pmb;
-    for (const auto& rule : proto_config_.rules()) {
-      if (!pmb.Register(rule.pattern().http_method(),
-                        rule.pattern().uri_template(),
-                        /*body_field_path=*/"", &rule.operation())) {
-        throw ProtoValidationException("Duplicated pattern", rule.pattern());
-      }
-      if (rule.extract_path_parameters()) {
-        path_params_operations_.insert(rule.operation());
-      }
-    }
-    path_matcher_ = pmb.Build();
+               Server::Configuration::FactoryContext& context);
 
-    for (const auto& segment_name : proto_config_.segment_names()) {
-      snake_to_json_.emplace(segment_name.snake_name(),
-                             segment_name.json_name());
-    }
-  }
-
-  const std::string* FindOperation(const std::string& http_method,
+  const std::string* findOperation(const std::string& http_method,
                                    const std::string& path) const {
     return path_matcher_->Lookup(http_method, path);
   }
 
-  const std::string* FindOperation(
+  const std::string* findOperation(
       const std::string& http_method, const std::string& path,
       std::vector<google::api_proxy::path_matcher::VariableBinding>*
           variable_bindings) const {
@@ -88,16 +67,16 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
   // Returns whether an operation needs path parameter extraction.
   // NOTE: path parameter extraction is only needed when backend rule path
   // translation is CONSTANT_ADDRESS.
-  bool NeedPathParametersExtraction(const std::string& operation) {
+  bool needParameterExtraction(const std::string& operation) const {
     auto operation_it = path_params_operations_.find(operation);
     return operation_it != path_params_operations_.end();
   }
 
   FilterStats& stats() { return stats_; }
 
-  // Returns the mapping between snake-case segment name to JSON name.
-  const absl::flat_hash_map<std::string, std::string>& snake_to_json() {
-    return snake_to_json_;
+  // Returns the mapp from snake-case segment name to JSON name.
+  const absl::flat_hash_map<std::string, std::string>& getSnakeToJsonMap() {
+    return snake_to_json_map_;
   }
 
  private:
@@ -112,7 +91,7 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
       path_matcher_;
   // Mapping between snake-case segment name to JSON name as specified in
   // `Service.types` (e.g. "foo_bar" -> "fooBar").
-  absl::flat_hash_map<std::string, std::string> snake_to_json_;
+  absl::flat_hash_map<std::string, std::string> snake_to_json_map_;
   absl::flat_hash_set<std::string> path_params_operations_;
   FilterStats stats_;
 };

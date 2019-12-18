@@ -27,18 +27,28 @@ envoy_cc_library(
     ],
     hdrs = [
         "filter.h",
-        "filter_config.h",
     ],
     repository = "@envoy",
     deps = [
-        "//api/envoy/http/path_matcher:config_proto_cc_proto",
-        "//src/api_proxy/path_matcher:path_matcher_lib",
-        "//src/api_proxy/path_matcher:variable_binding_utils_lib",
+        ":filter_config_lib",
         "//src/envoy/utils:filter_state_utils_lib",
         "//src/envoy/utils:http_header_utils_lib",
         "@envoy//source/common/protobuf:utility_lib",
         "@envoy//source/exe:envoy_common_lib",
         "@envoy//source/extensions/filters/http/common:pass_through_filter_lib",
+    ],
+)
+
+envoy_cc_library(
+    name = "filter_config_lib",
+    srcs = ["filter_config.cc"],
+    hdrs = ["filter_config.h"],
+    repository = "@envoy",
+    deps = [
+        "//api/envoy/http/path_matcher:config_proto_cc_proto",
+        "//src/api_proxy/path_matcher:path_matcher_lib",
+        "//src/api_proxy/path_matcher:variable_binding_utils_lib",
+        "@envoy//source/exe:envoy_common_lib",
     ],
 )
 
@@ -50,7 +60,7 @@ envoy_cc_test(
     ],
     repository = "@envoy",
     deps = [
-        ":filter_lib",
+        ":filter_config_lib",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/test_common:utility_lib",
     ],

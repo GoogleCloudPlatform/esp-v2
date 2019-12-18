@@ -16,12 +16,8 @@
 
 #include "src/envoy/http/path_matcher/filter.h"
 
-#include "common/common/logger.h"
 #include "common/http/utility.h"
-#include "common/protobuf/utility.h"
-#include "envoy/server/filter_config.h"
 #include "src/api_proxy/path_matcher/variable_binding_utils.h"
-#include "src/envoy/http/path_matcher/filter_config.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
 
@@ -48,7 +44,7 @@ Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
   std::string method(Utils::getRequestHTTPMethodWithOverride(
       headers.Method()->value().getStringView(), headers));
   std::string path(headers.Path()->value().getStringView());
-  const std::string* operation = config_->FindOperation(method, path);
+  const std::string* operation = config_->findOperation(method, path);
   if (operation == nullptr) {
     rejectRequest(Http::Code(404),
                   "Path does not match any requirement URI template.");
@@ -60,12 +56,12 @@ Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
       decoder_callbacks_->streamInfo().filterState();
   Utils::setStringFilterState(filter_state, Utils::kOperation, *operation);
 
-  if (config_->NeedPathParametersExtraction(*operation)) {
+  if (config_->needParameterExtraction(*operation)) {
     std::vector<VariableBinding> variable_bindings;
-    operation = config_->FindOperation(method, path, &variable_bindings);
+    operation = config_->findOperation(method, path, &variable_bindings);
     if (!variable_bindings.empty()) {
       const std::string query_params = VariableBindingsToQueryParameters(
-          variable_bindings, config_->snake_to_json());
+          variable_bindings, config_->getSnakeToJsonMap());
       Utils::setStringFilterState(filter_state, Utils::kQueryParams,
                                   query_params);
     }
