@@ -37,10 +37,6 @@ class Filter : public Http::PassThroughDecoderFilter,
 
  private:
   const FilterConfigSharedPtr config_;
-  absl::flat_hash_map<
-      std::string,
-      ::google::api::envoy::http::backend_routing::BackendRoutingRule>
-      backend_routing_map_;
 };
 
 }  // namespace BackendRouting

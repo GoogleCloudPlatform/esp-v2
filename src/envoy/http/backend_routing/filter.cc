@@ -25,23 +25,12 @@ namespace Extensions {
 namespace HttpFilters {
 namespace BackendRouting {
 
-using ::Envoy::StreamInfo::FilterState;
-using ::google::api::envoy::http::backend_routing::BackendRoutingRule;
-using Http::FilterDataStatus;
 using Http::FilterHeadersStatus;
-using Http::FilterTrailersStatus;
-using Http::HeaderMap;
-using Http::LowerCaseString;
 
-Filter::Filter(FilterConfigSharedPtr config) : config_(config) {
-  for (const auto& rule : config_->config().rules()) {
-    backend_routing_map_[rule.operation()] = rule;
-  }
-}
+Filter::Filter(FilterConfigSharedPtr config) : config_(config) {}
 
-FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
-  const FilterState& filter_state =
-      decoder_callbacks_->streamInfo().filterState();
+FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers, bool) {
+  const auto& filter_state = decoder_callbacks_->streamInfo().filterState();
   absl::string_view operation =
       Utils::getStringFilterState(filter_state, Utils::kOperation);
   // NOTE: this shouldn't happen in practice because Path Matcher filter would
@@ -52,17 +41,16 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
   }
 
   ENVOY_LOG(debug, "Found operation: {}", operation);
-  auto it = backend_routing_map_.find(operation);
-  if (it == backend_routing_map_.end()) {
+  const auto* rule = config_->findRule(operation);
+  if (rule == nullptr) {
     ENVOY_LOG(debug, "No backend routing rule found for operation {}",
               operation);
     return FilterHeadersStatus::Continue;
   }
-  const BackendRoutingRule& rule = it->second;
   std::string newPath;
   ENVOY_LOG(debug, "backend routing for operation {}, old path: {}", operation,
             headers.Path()->value().getStringView());
-  if (rule.is_const_address()) {  // CONSTANT_ADDRESS
+  if (rule->is_const_address()) {  // CONSTANT_ADDRESS
     absl::string_view queryParamFromPathParam =
         Utils::getStringFilterState(filter_state, Utils::kQueryParams);
     const auto originalPath =
@@ -72,12 +60,12 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
       // has query parameters in original url
       const std::string& originalQueryParam =
           originalPath.substr(originalQueryParamPos);
-      newPath = absl::StrCat(rule.path_prefix(), originalQueryParam);
+      newPath = absl::StrCat(rule->path_prefix(), originalQueryParam);
       if (!queryParamFromPathParam.empty()) {
         absl::StrAppend(&newPath, "&", queryParamFromPathParam);
       }
     } else {
-      newPath = rule.path_prefix();
+      newPath = rule->path_prefix();
       if (!queryParamFromPathParam.empty()) {
         absl::StrAppend(&newPath, "?", queryParamFromPathParam);
       }
@@ -87,7 +75,7 @@ FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
               "constant address backend routing for operation {}, new path: {}",
               operation, newPath);
   } else {  // APPEND_PATH_TO_ADDRESS
-    newPath = absl::StrCat(rule.path_prefix(),
+    newPath = absl::StrCat(rule->path_prefix(),
                            headers.Path()->value().getStringView());
     config_->stats().append_path_to_address_request_.inc();
     ENVOY_LOG(

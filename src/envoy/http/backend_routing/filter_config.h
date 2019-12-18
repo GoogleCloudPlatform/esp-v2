@@ -48,10 +48,19 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
                const std::string& stats_prefix,
                Server::Configuration::FactoryContext& context)
       : proto_config_(proto_config),
-        stats_(generateStats(stats_prefix, context.scope())) {}
+        stats_(generateStats(stats_prefix, context.scope())) {
+    for (const auto& rule : proto_config_.rules()) {
+      backend_routing_map_[rule.operation()] = &rule;
+    }
+  }
 
-  const ::google::api::envoy::http::backend_routing::FilterConfig& config() const {
-    return proto_config_;
+  const ::google::api::envoy::http::backend_routing::BackendRoutingRule* findRule(
+	  absl::string_view operation) const {
+    const auto it = backend_routing_map_.find(operation);
+    if (it == backend_routing_map_.end()) {
+      return nullptr;
+    }
+    return it->second;
   }
 
   FilterStats& stats() { return stats_; }
@@ -63,8 +72,15 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
         POOL_COUNTER_PREFIX(scope, final_prefix))};
   }
 
+  // The config proto
   ::google::api::envoy::http::backend_routing::FilterConfig proto_config_;
+  // The stats
   FilterStats stats_;
+  // The map from operation to rule.
+  absl::flat_hash_map<
+      std::string,
+      const ::google::api::envoy::http::backend_routing::BackendRoutingRule*>
+      backend_routing_map_;
 };
 
 typedef std::shared_ptr<FilterConfig> FilterConfigSharedPtr;
