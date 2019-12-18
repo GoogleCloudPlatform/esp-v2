@@ -117,6 +117,21 @@ TEST_F(BackendRoutingFilterTest, UnknownOperationName) {
   ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 }
 
+TEST_F(BackendRoutingFilterTest, NoPathHeader) {
+  Http::TestHeaderMapImpl headers{{":method", "GET"}};
+  Utils::setStringFilterState(
+      mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
+      "const-operation");
+
+  // Call function under test
+  Envoy::Http::FilterHeadersStatus status =
+      filter_->decodeHeaders(headers, false);
+
+  // Expect the filter to be a NOOP
+  ASSERT_EQ(headers.Path(), nullptr);
+  ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+}
+
 TEST_F(BackendRoutingFilterTest, ConstantAddress) {
   Http::TestHeaderMapImpl headers{{":method", "GET"}, {":path", "/books/1"}};
   Utils::setStringFilterState(

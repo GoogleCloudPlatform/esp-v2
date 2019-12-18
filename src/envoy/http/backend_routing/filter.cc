@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// TODO(jcwang): Add tests
 #include "src/envoy/http/backend_routing/filter.h"
 
 #include <string>
@@ -47,14 +46,21 @@ FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers, bool) {
               operation);
     return FilterHeadersStatus::Continue;
   }
+
+  if (headers.Path() == nullptr) {
+    ENVOY_LOG(debug, "No path header in request");
+    return FilterHeadersStatus::Continue;
+  }
+  const absl::string_view original_path =
+      headers.Path()->value().getStringView();
+  ENVOY_LOG(debug, "backend routing for operation {}, original path: {}",
+            operation, original_path);
   std::string newPath;
-  ENVOY_LOG(debug, "backend routing for operation {}, old path: {}", operation,
-            headers.Path()->value().getStringView());
+
   if (rule->is_const_address()) {  // CONSTANT_ADDRESS
     absl::string_view queryParamFromPathParam =
         Utils::getStringFilterState(filter_state, Utils::kQueryParams);
-    const auto originalPath =
-        std::string(headers.Path()->value().getStringView());
+    const auto originalPath = std::string(original_path);
     std::size_t originalQueryParamPos = originalPath.find('?');
     if (originalQueryParamPos != std::string::npos) {
       // has query parameters in original url
@@ -75,8 +81,7 @@ FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers, bool) {
               "constant address backend routing for operation {}, new path: {}",
               operation, newPath);
   } else {  // APPEND_PATH_TO_ADDRESS
-    newPath = absl::StrCat(rule->path_prefix(),
-                           headers.Path()->value().getStringView());
+    newPath = absl::StrCat(rule->path_prefix(), original_path);
     config_->stats().append_path_to_address_request_.inc();
     ENVOY_LOG(
         debug,

@@ -1,0 +1,15 @@
+config {
+  rules {
+    operation: "test-append-operation"
+    is_const_address: false
+    path_prefix: "/appendPath"
+  }
+}
+user_request {
+  headers {
+    headers {
+      key: ":path"
+      value: "/originalRequestPath"
+    }
+  }
+}

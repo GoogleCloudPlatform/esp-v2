@@ -6,6 +6,7 @@ BACKEND_ROUTING_VISIBILITY = [
     "//src/envoy/http/backend_routing:__subpackages__",
     "//src/go:__subpackages__",
     "//tests/utils:__subpackages__",
+    "//tests/fuzz/structured_inputs:__subpackages__",
 ]
 
 package(default_visibility = BACKEND_ROUTING_VISIBILITY)

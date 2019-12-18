@@ -1,0 +1,15 @@
+config {
+  rules {
+    operation: "test-const-operation"
+    is_const_address: true
+    path_prefix: "/constPath"
+  }
+}
+user_request {
+  headers {
+    headers {
+      key: ":path"
+      value: "/originalRequestPath"
+    }
+  }
+}
