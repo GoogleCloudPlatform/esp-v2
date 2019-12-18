@@ -161,10 +161,10 @@ func (mf *MetadataFetcher) FetchIdentityJWTToken(audience string) (string, time.
 	return token, expires, nil
 }
 
-func (mf *MetadataFetcher) FetchGCPAttributes() *scpb.GcpAttributes {
+func (mf *MetadataFetcher) FetchGCPAttributes() (*scpb.GcpAttributes, error) {
 	// Checking if metadata server is reachable.
 	if _, err := mf.fetchMetadata(""); err != nil {
-		return nil
+		return nil, err
 	}
 
 	attrs := &scpb.GcpAttributes{}
@@ -177,7 +177,7 @@ func (mf *MetadataFetcher) FetchGCPAttributes() *scpb.GcpAttributes {
 	}
 
 	attrs.Platform = mf.fetchPlatform()
-	return attrs
+	return attrs, nil
 }
 
 func (mf *MetadataFetcher) FetchProjectId() (string, error) {

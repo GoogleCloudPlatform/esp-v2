@@ -284,7 +284,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 		},
 	}
 
-	errorTmpl := "Test: %s\n  Expected: %s\n  Actual: %s"
+	errorTmpl := "Test: %s\n  Expected: %v\n  Actual: %v"
 	for _, tc := range testData {
 		ts := util.InitMockServerFromPathResp(tc.mockedResp)
 		defer ts.Close()
@@ -296,7 +296,11 @@ func TestFetchGCPAttributes(t *testing.T) {
 
 		mf := NewMockMetadataFetcher(mockBaseUrl, time.Now())
 
-		attrs := mf.FetchGCPAttributes()
+		attrs, err := mf.FetchGCPAttributes()
+		if err != nil && tc.expectedGCPAttributes != nil {
+			t.Errorf(errorTmpl, tc.desc, nil, err)
+			continue
+		}
 		if tc.expectedGCPAttributes == nil && attrs == nil {
 			continue
 		}

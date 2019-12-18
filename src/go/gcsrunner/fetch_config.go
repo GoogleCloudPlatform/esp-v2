@@ -17,7 +17,6 @@
 package gcsrunner
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -26,14 +25,10 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/cenkalti/backoff"
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/jsonpb"
 	"google.golang.org/api/option"
 
-	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
 	google_oauth "golang.org/x/oauth2/google"
 )
 
@@ -46,6 +41,7 @@ type FetchConfigOptions struct {
 	WriteFilePath                 string
 	FetchGCSObjectInitialInterval time.Duration
 	FetchGCSObjectTimeout         time.Duration
+	MetadataURL                   string
 }
 
 var findDefaultCredentials = google_oauth.FindDefaultCredentials
@@ -78,9 +74,12 @@ type file interface {
 	io.Closer
 }
 
-var osCreate = func(p string) (file, error) { return os.Create(p) }
+var (
+	osCreate = func(p string) (file, error) { return os.Create(p) }
+)
 
-// FetchConfigFromGCS handles both fetching the config from GCS and writing it to file.
+// FetchConfigFromGCS handles fetching a config from GCS, applying any transformation,
+// and writing it to file.
 //
 // Fetching the GCS object is retried either until success or until
 // `opts.fetchGCSObjectTimeout` has passed.
@@ -91,9 +90,9 @@ func FetchConfigFromGCS(opts FetchConfigOptions) error {
 	if err != nil {
 		return fmt.Errorf("failed to get reader for object: %v", err)
 	}
-	updated, err := replaceListenerPort(b, opts)
+	updated, err := transformConfigBytes(b, opts)
 	if err != nil {
-		return fmt.Errorf("failed to replace listener port: %v", err)
+		return fmt.Errorf("failed to apply transformations: %v", err)
 	}
 	if err := writeFile(updated, opts); err != nil {
 		return fmt.Errorf("failed to write data to file: %v", err)
@@ -158,47 +157,4 @@ func writeFile(b []byte, opts FetchConfigOptions) error {
 	}
 
 	return nil
-}
-
-func replaceListenerPort(config []byte, opts FetchConfigOptions) ([]byte, error) {
-	if opts.WantPort == 0 || opts.WantPort == opts.ReplacePort {
-		return config, nil
-	}
-
-	bootstrap := &bootstrappb.Bootstrap{}
-	u := &jsonpb.Unmarshaler{
-		AnyResolver: util.Resolver,
-	}
-	if err := u.Unmarshal(bytes.NewBuffer(config), bootstrap); err != nil {
-		return nil, err
-	}
-
-	replaced := false
-	listeners := bootstrap.GetStaticResources().GetListeners()
-	if len(listeners) != 1 {
-		return nil, fmt.Errorf("expected exactly 1 listener, got: %d", len(listeners))
-	}
-
-	if addr := listeners[0].GetAddress().GetSocketAddress(); addr != nil {
-		portSpecifier := addr.GetPortSpecifier()
-		if portValue, ok := portSpecifier.(*corepb.SocketAddress_PortValue); ok {
-			if portValue.PortValue == opts.ReplacePort {
-				portValue.PortValue = opts.WantPort
-				replaced = true
-			}
-		}
-	}
-	if !replaced {
-		return nil, fmt.Errorf("expected a listener with port value %d but got none: %v", opts.ReplacePort, bootstrap)
-	}
-
-	m := &jsonpb.Marshaler{
-		OrigName:    true,
-		AnyResolver: util.Resolver,
-	}
-	buf := &bytes.Buffer{}
-	if err := m.Marshal(buf, bootstrap); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
 }
