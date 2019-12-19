@@ -39,6 +39,7 @@ import (
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	grpcstatspb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/grpc_stats/v2alpha"
 	jwtauthnpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
@@ -150,6 +151,13 @@ func TestFetchListeners(t *testing.T) {
                      },
                      {
                         "name":"envoy.grpc_web"
+                     },
+                     {
+                        "name":"envoy.filters.http.grpc_stats",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.http.grpc_stats.v2alpha.FilterConfig",
+                           "emitFilterState":true
+                        }
                      },
                      {
                         "name":"envoy.router",
@@ -314,6 +322,13 @@ func TestFetchListeners(t *testing.T) {
                      },
                      {
                         "name":"envoy.grpc_web"
+                     },
+                     {
+                        "name":"envoy.filters.http.grpc_stats",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.http.grpc_stats.v2alpha.FilterConfig",
+                           "emitFilterState":true
+                        }
                      },
                      {
                         "name":"envoy.router",
@@ -508,6 +523,13 @@ func TestFetchListeners(t *testing.T) {
                      },
                      {
                         "name":"envoy.grpc_web"
+                     },
+                     {
+                        "name":"envoy.filters.http.grpc_stats",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.http.grpc_stats.v2alpha.FilterConfig",
+                           "emitFilterState":true
+                        }
                      },
                      {
                         "name":"envoy.router",
@@ -737,6 +759,13 @@ func TestFetchListeners(t *testing.T) {
                         "name":"envoy.grpc_web"
                      },
                      {
+                        "name":"envoy.filters.http.grpc_stats",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.http.grpc_stats.v2alpha.FilterConfig",
+                           "emitFilterState":true
+                        }
+                     },
+                     {
                         "name":"envoy.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router"
@@ -943,6 +972,13 @@ func TestFetchListeners(t *testing.T) {
                      },
                      {
                         "name":"envoy.grpc_web"
+                     },
+                     {
+                        "name":"envoy.filters.http.grpc_stats",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.filter.http.grpc_stats.v2alpha.FilterConfig",
+                           "emitFilterState":true
+                        }
                      },
                      {
                         "name":"envoy.router",
@@ -1776,6 +1812,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(transcoderpb.GrpcJsonTranscoder), nil
 	case "type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication":
 		return new(jwtauthnpb.JwtAuthentication), nil
+	case "type.googleapis.com/envoy.config.filter.http.grpc_stats.v2alpha.FilterConfig":
+		return new(grpcstatspb.FilterConfig), nil
 	default:
 		return nil, fmt.Errorf("unexpected protobuf.Any with url: %s", url)
 	}

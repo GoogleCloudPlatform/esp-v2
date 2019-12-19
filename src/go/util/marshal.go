@@ -28,6 +28,7 @@ import (
 	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/path_matcher"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/service_control"
 	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
+	gspb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/grpc_stats/v2alpha"
 	jwtpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
@@ -71,6 +72,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(wrapperspb.UInt32Value), nil
 	case "type.googleapis.com/google.api.Service":
 		return new(confpb.Service), nil
+	case "type.googleapis.com/envoy.config.filter.http.grpc_stats.v2alpha.FilterConfig":
+		return new(gspb.FilterConfig), nil
 	case "type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication":
 		return new(jwtpb.JwtAuthentication), nil
 	case "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager":

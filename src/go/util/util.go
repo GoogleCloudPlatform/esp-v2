@@ -43,6 +43,8 @@ const (
 	BackendAuth = "envoy.filters.http.backend_auth"
 	// BackendRouting filter.
 	BackendRouting = "envoy.filters.http.backend_routing"
+	// GrpcStats filter name
+	GrpcStatsFilterName = "envoy.filters.http.grpc_stats"
 	// TLSTransportSocket is Envoy TLS Transport Socket name.
 	TLSTransportSocket = "envoy.transport_sockets.tls"
 	// DefaultRootCAPaths is the default certs path.

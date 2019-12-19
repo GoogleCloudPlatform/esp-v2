@@ -258,7 +258,7 @@ TEST_F(FilterTest, DecodeDataSendStreamReport) {
 
   mock_buffer_.add("filler");
 
-  EXPECT_CALL(*mock_handler, collectDecodeData(_, _));
+  EXPECT_CALL(*mock_handler, tryIntermediateReport(_));
   filter_->decodeData(mock_buffer_, /*end_stream=*/false);
 }
 
@@ -277,7 +277,7 @@ TEST_F(FilterTest, EncodeDataSendStreamReport) {
 
   mock_buffer_.add("filler");
 
-  EXPECT_CALL(*mock_handler, collectEncodeData(_, _));
+  EXPECT_CALL(*mock_handler, tryIntermediateReport(_));
   filter_->encodeData(mock_buffer_, /*end_stream=*/false);
 }
 

@@ -225,29 +225,3 @@ envoy_cc_library(
         "@envoy//source/exe:envoy_common_lib",
     ],
 )
-
-envoy_cc_library(
-    name = "message_counter_lib",
-    srcs = ["message_counter.cc"],
-    hdrs = ["message_counter.h"],
-    repository = "@envoy",
-    deps = [
-        "@envoy//source/common/buffer:buffer_lib",
-        "@envoy//source/exe:envoy_common_lib",
-    ],
-)
-
-envoy_cc_test(
-    name = "message_counter_test",
-    size = "small",
-    srcs = [
-        "message_counter_test.cc",
-    ],
-    repository = "@envoy",
-    deps = [
-        ":message_counter_lib",
-        "@envoy//source/common/buffer:buffer_lib",
-        "@envoy//test/common/buffer:utility_lib",
-        "@envoy//test/test_common:utility_lib",
-    ],
-)

@@ -28,7 +28,6 @@
 #include "src/api_proxy/service_control/request_info.h"
 #include "src/envoy/http/service_control/config_parser.h"
 #include "src/envoy/http/service_control/handler.h"
-#include "src/envoy/utils/message_counter.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -53,16 +52,10 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   void callReport(const Http::HeaderMap* request_headers,
                   const Http::HeaderMap* response_headers,
                   const Http::HeaderMap* response_trailers,
-                  std::chrono::system_clock::time_point now =
-                      std::chrono::system_clock::now()) override;
+                  std::chrono::system_clock::time_point now) override;
 
-  void collectDecodeData(Buffer::Instance& request_data,
-                         std::chrono::system_clock::time_point now =
-                             std::chrono::system_clock::now()) override;
-
-  void collectEncodeData(Buffer::Instance& response_data,
-                         std::chrono::system_clock::time_point now =
-                             std::chrono::system_clock::now()) override;
+  void tryIntermediateReport(
+      std::chrono::system_clock::time_point now) override;
 
   void processResponseHeaders(const Http::HeaderMap& response_headers) override;
 
@@ -72,12 +65,9 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   void callQuota();
 
   void fillOperationInfo(
-      ::google::api_proxy::service_control::OperationInfo& info,
-      std::chrono::system_clock::time_point now =
-          std::chrono::system_clock::now());
+      ::google::api_proxy::service_control::OperationInfo& info);
   void prepareReportRequest(
       ::google::api_proxy::service_control::ReportRequestInfo& info);
-  void tryIntermediateReport(std::chrono::system_clock::time_point now);
 
   bool isConfigured() const { return require_ctx_ != nullptr; }
 
@@ -128,11 +118,10 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   // The frontend protocol only for intermediate reports.
   ::google::api_proxy::service_control::protocol::Protocol frontend_protocol_;
 
-  // Intermediate data for reporting on streaming.
+  // If true, it is a grpc and need to send multiple reports.
   bool is_grpc_;
-  Utils::GrpcMessageCounter grpc_request_counter_;
-  Utils::GrpcMessageCounter grpc_response_counter_;
-  ::google::api_proxy::service_control::StreamingRequestInfo streaming_info_;
+  // If true, this is the first report.
+  bool is_first_report_;
   // Interval timer for sending intermediate reports.
   std::chrono::system_clock::time_point last_reported_;
 };

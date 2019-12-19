@@ -63,8 +63,8 @@ envoy_cc_test(
     ],
     repository = "@envoy",
     deps = [
+        ":config_parser_lib",
         ":filter_lib",
-        "config_parser_lib",
         ":mocks_lib",
         "//src/envoy/utils:mocks_lib",
         "@envoy//test/mocks/http:http_mocks",

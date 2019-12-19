@@ -216,21 +216,6 @@ struct ReportRequestInfo : public OperationInfo {
         is_final_report(true) {}
 };
 
-// Intermediate streaming information for an active request.
-struct StreamingRequestInfo {
-  // Number of request messages for a stream.
-  int64_t request_message_count;
-  // Number of response messages for a stream.
-  int64_t response_message_count;
-  // Flag to indicate the first report.
-  bool is_first_report;
-
-  StreamingRequestInfo()
-      : request_message_count(0),
-        response_message_count(0),
-        is_first_report(true) {}
-};
-
 }  // namespace service_control
 }  // namespace api_proxy
 }  // namespace google

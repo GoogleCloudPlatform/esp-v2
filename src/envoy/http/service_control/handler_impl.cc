@@ -16,6 +16,7 @@
 
 #include "absl/strings/match.h"
 #include "common/http/utility.h"
+#include "extensions/filters/http/grpc_stats/grpc_stats_filter.h"
 #include "src/envoy/http/service_control/handler_impl.h"
 #include "src/envoy/http/service_control/handler_utils.h"
 #include "src/envoy/utils/filter_state_utils.h"
@@ -52,6 +53,7 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
       uuid_(uuid),
       request_header_size_(0),
       response_header_size_(0),
+      is_first_report_(true),
       last_reported_(now) {
   http_method_ = std::string(Utils::getRequestHTTPMethodWithOverride(
       headers.Method()->value().getStringView(), headers));
@@ -102,13 +104,12 @@ void ServiceControlHandlerImpl::onDestroy() {
 }
 
 void ServiceControlHandlerImpl::fillOperationInfo(
-    ::google::api_proxy::service_control::OperationInfo& info,
-    std::chrono::system_clock::time_point now) {
+    ::google::api_proxy::service_control::OperationInfo& info) {
   info.operation_id = uuid_;
   info.operation_name = require_ctx_->config().operation_name();
   info.producer_project_id =
       require_ctx_->service_ctx().config().producer_project_id();
-  info.request_start_time = now;
+  info.request_start_time = std::chrono::system_clock::now();
   info.client_ip =
       stream_info_.downstreamRemoteAddress()->ip()->addressAsString();
   info.api_key = api_key_;
@@ -301,47 +302,31 @@ void ServiceControlHandlerImpl::callReport(
   info.response_size = stream_info_.bytesSent() + response_header_size;
   info.response_bytes = stream_info_.bytesSent() + response_header_size;
 
-  info.streaming_request_message_counts = streaming_info_.request_message_count;
-  info.streaming_response_message_counts =
-      streaming_info_.response_message_count;
+  if (stream_info_.filterState().hasData<GrpcStats::GrpcStatsObject>(
+          HttpFilterNames::get().GrpcStats)) {
+    const auto& stat_obj =
+        stream_info_.filterState().getDataReadOnly<GrpcStats::GrpcStatsObject>(
+            HttpFilterNames::get().GrpcStats);
+    info.streaming_request_message_counts = stat_obj.request_message_count;
+    info.streaming_response_message_counts = stat_obj.response_message_count;
+  }
 
   info.streaming_durations =
       std::chrono::duration_cast<std::chrono::microseconds>(
           now - stream_info_.startTime())
           .count();
 
-  info.is_first_report = streaming_info_.is_first_report;
+  info.is_first_report = is_first_report_;
 
   require_ctx_->service_ctx().call().callReport(info);
 }
 
-void ServiceControlHandlerImpl::collectDecodeData(
-    Buffer::Instance& request_data, std::chrono::system_clock::time_point now) {
-  if (!is_grpc_) {
-    return;
-  }
-
-  Envoy::Utils::IncrementMessageCounter(request_data, &grpc_request_counter_);
-  streaming_info_.request_message_count = grpc_request_counter_.count;
-
-  tryIntermediateReport(now);
-}
-
-void ServiceControlHandlerImpl::collectEncodeData(
-    Buffer::Instance& response_data,
-    std::chrono::system_clock::time_point now) {
-  if (!is_grpc_) {
-    return;
-  }
-
-  Envoy::Utils::IncrementMessageCounter(response_data, &grpc_response_counter_);
-  streaming_info_.response_message_count = grpc_response_counter_.count;
-
-  tryIntermediateReport(now);
-}
-
 void ServiceControlHandlerImpl::tryIntermediateReport(
     std::chrono::system_clock::time_point now) {
+  if (!is_grpc_) {
+    return;
+  }
+
   // Avoid reporting more frequently than the configured interval.
   if (std::chrono::duration_cast<std::chrono::milliseconds>(now -
                                                             last_reported_)
@@ -357,11 +342,11 @@ void ServiceControlHandlerImpl::tryIntermediateReport(
   info.response_bytes = stream_info_.bytesSent() + response_header_size_;
 
   info.frontend_protocol = frontend_protocol_;
-  info.is_first_report = streaming_info_.is_first_report;
+  info.is_first_report = is_first_report_;
   info.is_final_report = false;
   require_ctx_->service_ctx().call().callReport(info);
   last_reported_ = now;
-  streaming_info_.is_first_report = false;
+  is_first_report_ = false;
 }
 
 }  // namespace ServiceControl
