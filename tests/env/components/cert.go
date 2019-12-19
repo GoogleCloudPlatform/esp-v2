@@ -80,6 +80,8 @@ func GenerateCert(certPath, keyPath string) (*tls.Certificate, error) {
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().Add(defaultDuration),
 		IPAddresses:           addrs,
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
 	}
 

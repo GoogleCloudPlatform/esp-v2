@@ -15,6 +15,7 @@
 package components
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -54,6 +55,7 @@ type serviceResponse struct {
 type MockServiceCtrl struct {
 	s                  *httptest.Server
 	ch                 chan *ServiceRequest
+	serverCerts        *tls.Certificate
 	url                string
 	count              *int32
 	serviceName        string
@@ -138,6 +140,11 @@ func NewMockServiceCtrl(serviceName string) *MockServiceCtrl {
 	return m
 }
 
+// SetCert sets the server cert for ServiceControl server, so it acts as a HTTPS server
+func (m *MockServiceCtrl) SetCert(serverCerts *tls.Certificate) {
+	m.serverCerts = serverCerts
+}
+
 func (m *MockServiceCtrl) Setup() {
 	r := mux.NewRouter()
 	checkPath := "/v1/services/" + m.serviceName + ":check"
@@ -149,7 +156,17 @@ func (m *MockServiceCtrl) Setup() {
 	r.Path(reportPath).Methods("POST").Handler(m.reportHandler)
 
 	glog.Infof("Start mock service control server for service: %s\n", m.serviceName)
-	m.s = httptest.NewServer(r)
+	m.s = httptest.NewUnstartedServer(r)
+
+	if m.serverCerts != nil {
+		m.s.TLS = &tls.Config{
+			Certificates: []tls.Certificate{*m.serverCerts},
+			// NextProtos:   []string{"h2"},
+		}
+		m.s.StartTLS()
+	} else {
+		m.s.Start()
+	}
 }
 
 // OverrideCheckHandler overrides the service control check handler before setup.

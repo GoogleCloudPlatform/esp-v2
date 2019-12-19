@@ -94,6 +94,8 @@ const (
 	TestServiceControlSkipUsageTraces
 	TestServiceManagementWithValidCert
 	TestServiceManagementWithInvalidCert
+	TestServiceControlTLSWithValidCert
+	TestServiceControlTLSWithInvalidCert
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
 	TestTranscodingBindings

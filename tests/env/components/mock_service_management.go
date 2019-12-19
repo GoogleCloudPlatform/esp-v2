@@ -89,6 +89,7 @@ func NewMockServiceMrg(serviceName string, serviceConfig *confpb.Service) *MockS
 	return m
 }
 
+// SetCert sets the server cert for ServiceMrg server, so it acts as a HTTPS server
 func (m *MockServiceMrg) SetCert(serverCerts *tls.Certificate) {
 	m.serverCerts = serverCerts
 }

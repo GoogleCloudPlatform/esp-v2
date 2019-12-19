@@ -22,7 +22,9 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 
+	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
@@ -83,6 +85,66 @@ func TestServiceManagementWithTLS(t *testing.T) {
 				if !strings.Contains(string(resp), tc.wantResp) {
 					t.Errorf("expected: %s, got: %s", tc.wantResp, string(resp))
 				}
+			}
+		}()
+	}
+}
+
+func TestServiceControlWithTLS(t *testing.T) {
+	args := []string{
+		"--service=bookstore-service",
+		"--service_config_id=test-config-id",
+		"--backend_protocol=grpc",
+		"--rollout_strategy=fixed",
+	}
+
+	tests := []struct {
+		desc      string
+		certPath  string
+		keyPath   string
+		port      uint16
+		token     string
+		wantResp  string
+		wantError string
+	}{
+		{
+			desc:     "Succeed, ServiceControl HTTPS server uses same cert as proxy",
+			token:    testdata.FakeCloudTokenMultiAudiences,
+			certPath: platform.GetFilePath(platform.ProxyCert),
+			keyPath:  platform.GetFilePath(platform.ProxyKey),
+			wantResp: `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
+		},
+		{
+			desc:      "Failed to call ServiceControl HTTPS server, with different Cert as proxy",
+			token:     testdata.FakeCloudTokenMultiAudiences,
+			port:      comp.TestServiceControlTLSWithValidCert,
+			certPath:  platform.GetFilePath(platform.ServerCert),
+			keyPath:   platform.GetFilePath(platform.ServerKey),
+			wantError: "500 Internal Server Error, INTERNAL:Failed to call service control",
+		},
+	}
+
+	for _, tc := range tests {
+		func() {
+			s := env.NewTestEnv(tc.port, "bookstore")
+			defer s.TearDown()
+			serverCerts, err := comp.GenerateCert(tc.certPath, tc.keyPath)
+			if err != nil {
+				t.Fatalf("fail to create cert, %v", err)
+			}
+			s.ServiceControlServer.SetCert(serverCerts)
+
+			if err := s.Setup(args); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			s.ServiceControlServer.ResetRequestCount()
+			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			resp, err := bsclient.MakeCall("http", addr, "GET", "/v1/shelves?key=api-key", tc.token, nil)
+			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
+				t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
+			} else if !strings.Contains(resp, tc.wantResp) {
+				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
 			}
 		}()
 	}
