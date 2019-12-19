@@ -1,5 +1,6 @@
 package(
     default_visibility = [
+        "//src/api_proxy:__subpackages__",
         "//src/envoy:__subpackages__",
     ],
 )
@@ -25,5 +26,13 @@ filegroup(
     testonly = 1,
     srcs = glob([
         "backend_routing_filter/**",
+    ]),
+)
+
+filegroup(
+    name = "http_template_corpus",
+    testonly = 1,
+    srcs = glob([
+        "http_template/**",
     ]),
 )

@@ -1,0 +1,6 @@
+paths: "/*:verb"
+paths: "/**:verb"
+paths: "/{a}:verb"
+paths: "/a/b/*:verb"
+paths: "/a/b/**:verb"
+paths: "/a/b/{a}:verb"
