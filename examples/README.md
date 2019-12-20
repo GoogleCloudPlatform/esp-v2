@@ -17,9 +17,12 @@ gcloud endpoints configs describe "${CONFIG_ID}" --project="${PROJECT}" \
 
 ## [Service Control](service_control)
 
-Including configurations of Authorization by API Key, and Limiting by Quota.
+Configurations of Authorization by API Key, and Limiting by Quota.
 
 ## [Dynamic Routing](dynamic_routing)
 
-Including configurations of Dynamic Routing, where ESPv2 acts as an API Gateway.
+Configurations of Dynamic Routing, where ESPv2 acts as an API Gateway.
 
+## [Auth](auth)
+
+Configurations of JWT Authn filter.

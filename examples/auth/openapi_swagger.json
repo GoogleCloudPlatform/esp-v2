@@ -1,0 +1,119 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "A simple Google Cloud Endpoints Bookstore API example.",
+    "title": "Bookstore",
+    "version": "1.0.0"
+  },
+  "host": "bookstore.endpoints.apiproxy-231719.cloud.goog",
+  "basePath": "/",
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/shelves": {
+      "get": {
+        "description": "Returns all shelves in the bookstore.",
+        "operationId": "listShelves",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of shelves in the bookstore.",
+            "schema": {
+              "$ref": "#/definitions/listShelvesResponse"
+            }
+          }
+        },
+        "security": [
+          {
+            "firebase": []
+          }
+        ]
+      },
+      "post": {
+        "description": "Creates a new shelf in the bookstore.",
+        "operationId": "createShelf",
+        "parameters": [
+          {
+            "description": "A shelf resource to create.",
+            "in": "body",
+            "name": "shelf",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/shelf"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "A newly created shelf resource.",
+            "schema": {
+              "$ref": "#/definitions/shelf"
+            }
+          }
+        },
+        "security": [
+          {
+            "auth0_jwk": []
+          }
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "listShelvesResponse": {
+      "properties": {
+        "shelves": {
+          "items": {
+            "$ref": "#/definitions/shelf"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "shelf": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "theme": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "theme"
+      ]
+    }
+  },
+  "securityDefinitions": {
+    "auth0_jwk": {
+      "authorizationUrl": "",
+      "flow": "implicit",
+      "type": "oauth2",
+      "x-google-issuer": "123456789-compute@developer.gserviceaccount.com",
+      "x-google-jwks_uri": "https://www.googleapis.com/service_accounts/v1/jwk/123456789-compute@developer.gserviceaccount.com",
+      "x-google-audiences": "bookstore.endpoints.cloudesf-testing.cloud.goog"
+    },
+    "firebase": {
+      "authorizationUrl": "",
+      "flow": "implicit",
+      "type": "oauth2",
+      "x-google-issuer": "https://securetoken.google.com/apiproxy-231719",
+      "x-google-jwks_uri": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
+      "x-google-audiences": "apiproxy-231719"
+    }
+  }
+}
