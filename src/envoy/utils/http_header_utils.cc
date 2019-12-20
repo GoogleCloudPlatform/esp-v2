@@ -23,13 +23,17 @@ namespace {
 const Http::LowerCaseString kHttpMethodOverrideHeader{"x-http-method-override"};
 }  // namespace
 
-absl::string_view extractHeader(const Envoy::Http::HeaderMap& headers,
-                                const Envoy::Http::LowerCaseString& header) {
-  const auto* entry = headers.get(header);
+absl::string_view readHeaderEntry(const Envoy::Http::HeaderEntry* entry) {
   if (entry) {
     return entry->value().getStringView();
   }
   return "";
+}
+
+absl::string_view extractHeader(const Envoy::Http::HeaderMap& headers,
+                                const Envoy::Http::LowerCaseString& header) {
+  const auto* entry = headers.get(header);
+  return readHeaderEntry(entry);
 }
 
 absl::string_view getRequestHTTPMethodWithOverride(

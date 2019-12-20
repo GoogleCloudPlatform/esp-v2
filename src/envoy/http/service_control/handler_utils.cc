@@ -53,6 +53,9 @@ bool extractAPIKeyFromQuery(const Http::HeaderMap& headers,
                             Http::Utility::QueryParams& parsed_params,
                             std::string& api_key) {
   if (!were_params_parsed) {
+    if (headers.Path() == nullptr) {
+      return false;
+    }
     parsed_params = Http::Utility::parseQueryString(
         headers.Path()->value().getStringView());
     were_params_parsed = true;

@@ -176,6 +176,7 @@ class HandlerTest : public ::testing::Test {
     expected_report_info.api_name = "test_api";
     expected_report_info.api_version = "test_version";
     expected_report_info.url = "/echo";
+    expected_report_info.method = "GET";
   }
 
   testing::NiceMock<MockCheckDoneCallback> mock_check_done_callback_;
@@ -243,7 +244,7 @@ MATCHER_P(MatchesQuotaInfo, expect, "") {
   if (arg.streaming_response_message_counts !=                        \
       expect.streaming_response_message_counts)                       \
     return false;                                                     \
-  if (arg.method != "GET") return false;
+  if (arg.method != expect.method) return false;
 
 MATCHER_P4(MatchesReportInfo, expect, request_headers, response_headers,
            response_trailers, "") {
@@ -313,6 +314,35 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
   expected_report_info.api_version = "";
   expected_report_info.status = Status::OK;
   expected_report_info.operation_name = "<Unknown Operation Name>";
+
+  EXPECT_CALL(*mock_call_,
+              callReport(MatchesSimpleReportInfo(expected_report_info)));
+  handler.callReport(&headers, &headers, &headers, epoch_);
+}
+
+TEST_F(HandlerTest, HandlerMissingHeaders) {
+  // Test: If the request is missing :method and :path headers,
+  // report should still be created without crashes.
+
+  // Note: This test builds off of `HandlerNoOperationFound` to keep mocks
+  // simple
+  Http::TestHeaderMapImpl headers{};
+  ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
+                                    *cfg_parser_);
+
+  EXPECT_CALL(mock_check_done_callback_,
+              onCheckDone(Status(Code::NOT_FOUND, "Method does not exist.")));
+  EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
+  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+
+  ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
+  expected_report_info.api_name = "";
+  expected_report_info.api_version = "";
+  expected_report_info.status = Status::OK;
+  expected_report_info.operation_name = "<Unknown Operation Name>";
+  expected_report_info.url = "";
+  expected_report_info.method = "";
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
