@@ -23,7 +23,10 @@ namespace Envoy {
 namespace Extensions {
 namespace Utils {
 
-// Returns HTTP header value if the header is found, otherwise empty string
+// Returns HTTP header value if the entry is set, otherwise empty string.
+absl::string_view readHeaderEntry(const Envoy::Http::HeaderEntry* entry);
+
+// Returns HTTP header value if the header is found, otherwise empty string.
 absl::string_view extractHeader(const Envoy::Http::HeaderMap& headers,
                                 const Envoy::Http::LowerCaseString& header);
 

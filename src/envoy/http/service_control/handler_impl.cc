@@ -53,14 +53,17 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
       uuid_(uuid),
       request_header_size_(0),
       response_header_size_(0),
+      is_grpc_(false),
       is_first_report_(true),
       last_reported_(now) {
-  http_method_ = std::string(Utils::getRequestHTTPMethodWithOverride(
-      headers.Method()->value().getStringView(), headers));
-  path_ = std::string(headers.Path()->value().getStringView());
-  request_header_size_ = headers.byteSizeInternal();
-
   is_grpc_ = Envoy::Grpc::Common::hasGrpcContentType(headers);
+
+  absl::string_view original_http_method =
+      Utils::readHeaderEntry(headers.Method());
+  http_method_ = std::string(
+      Utils::getRequestHTTPMethodWithOverride(original_http_method, headers));
+  path_ = std::string(Utils::readHeaderEntry(headers.Path()));
+  request_header_size_ = headers.byteSizeInternal();
 
   const absl::string_view operation = Utils::getStringFilterState(
       stream_info_.filterState(), Utils::kOperation);
