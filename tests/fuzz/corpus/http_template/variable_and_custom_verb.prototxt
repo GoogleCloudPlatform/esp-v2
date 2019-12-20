@@ -1,0 +1,7 @@
+paths: "/{x}:verb"
+paths: "/{x.y.z}:verb"
+paths: "/{x.y.z=*/*}:verb"
+paths: "/{x=**}:myverb"
+paths: "/{x.y.z=**}:myverb"
+paths: "/{x.y.z=a/**/b}:custom"
+paths: "/{x.y.z=a/**/b}/c/d:custom"

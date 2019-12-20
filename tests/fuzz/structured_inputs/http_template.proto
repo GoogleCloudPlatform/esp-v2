@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package tests.fuzz.protos;
+
+
+message HttpTemplateInput {
+  repeated string paths = 1;
+}

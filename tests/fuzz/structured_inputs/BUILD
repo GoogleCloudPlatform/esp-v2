@@ -5,6 +5,7 @@ load(
 
 package(
     default_visibility = [
+        "//src/api_proxy:__subpackages__",
         "//src/envoy:__subpackages__",
     ],
 )
@@ -28,6 +29,14 @@ envoy_proto_library(
     srcs = ["backend_routing_filter.proto"],
     deps = [
         "//api/envoy/http/backend_routing:config_proto",
+        "@envoy//test/fuzz:common_proto",
+    ],
+)
+
+envoy_proto_library(
+    name = "http_template_proto",
+    srcs = ["http_template.proto"],
+    deps = [
         "@envoy//test/fuzz:common_proto",
     ],
 )
