@@ -64,7 +64,7 @@
                               "prefix": "/"
                             },
                             "route": {
-                              "cluster": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app"
+                              "cluster": "esp-bookstore-f6x3rlu5aa-uc.a.run.app_local"
                             }
                           }
                         ]
@@ -178,7 +178,7 @@
     ],
     "clusters": [
       {
-        "name": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app",
+        "name": "esp-bookstore-f6x3rlu5aa-uc.a.run.app_local",
         "type": "STRICT_DNS",
         "connectTimeout": "20s",
         "loadAssignment": {

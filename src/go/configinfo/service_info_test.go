@@ -165,6 +165,7 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &methodInfo{
 					ShortName: "echo",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					APIKeyLocations: []*scpb.APIKeyLocation{
 						{
 							Key: &scpb.APIKeyLocation_Header{
@@ -175,7 +176,6 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 				},
 			},
 		},
-
 		{
 			desc: "Succeed, only header",
 			fakeServiceConfig: &confpb.Service{
@@ -206,6 +206,7 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &methodInfo{
 					ShortName: "echo",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					APIKeyLocations: []*scpb.APIKeyLocation{
 						{
 							Key: &scpb.APIKeyLocation_Query{
@@ -216,7 +217,6 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 				},
 			},
 		},
-
 		{
 			desc: "Succeed, url query plus header",
 			fakeServiceConfig: &confpb.Service{
@@ -253,6 +253,119 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &methodInfo{
 					ShortName: "echo",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					APIKeyLocations: []*scpb.APIKeyLocation{
+						{
+							Key: &scpb.APIKeyLocation_Query{
+								Query: "query_name_1",
+							},
+						},
+						{
+							Key: &scpb.APIKeyLocation_Query{
+								Query: "query_name_2",
+							},
+						},
+						{
+							Key: &scpb.APIKeyLocation_Header{
+								Header: "header_name_1",
+							},
+						},
+						{
+							Key: &scpb.APIKeyLocation_Header{
+								Header: "header_name_2",
+							},
+						},
+					},
+				},
+			},
+		},
+
+		{
+			desc: "Succeed, url query plus header for multiple apis",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+						},
+					},
+					{
+						Name: "2.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "bar",
+							},
+						},
+					},
+				},
+				SystemParameters: &confpb.SystemParameters{
+					Rules: []*confpb.SystemParameterRule{
+						{
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.foo",
+							Parameters: []*confpb.SystemParameter{
+								{
+									Name:              "api_key",
+									HttpHeader:        "header_name_1",
+									UrlQueryParameter: "query_name_1",
+								},
+								{
+									Name:              "api_key",
+									HttpHeader:        "header_name_2",
+									UrlQueryParameter: "query_name_2",
+								},
+							},
+						},
+						{
+							Selector: "2.echo_api_endpoints_cloudesf_testing_cloud_goog.bar",
+							Parameters: []*confpb.SystemParameter{
+								{
+									Name:              "api_key",
+									HttpHeader:        "header_name_1",
+									UrlQueryParameter: "query_name_1",
+								},
+								{
+									Name:              "api_key",
+									HttpHeader:        "header_name_2",
+									UrlQueryParameter: "query_name_2",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantMethods: map[string]*methodInfo{
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.foo": &methodInfo{
+					ShortName: "foo",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					APIKeyLocations: []*scpb.APIKeyLocation{
+						{
+							Key: &scpb.APIKeyLocation_Query{
+								Query: "query_name_1",
+							},
+						},
+						{
+							Key: &scpb.APIKeyLocation_Query{
+								Query: "query_name_2",
+							},
+						},
+						{
+							Key: &scpb.APIKeyLocation_Header{
+								Header: "header_name_1",
+							},
+						},
+						{
+							Key: &scpb.APIKeyLocation_Header{
+								Header: "header_name_2",
+							},
+						},
+					},
+				},
+				"2.echo_api_endpoints_cloudesf_testing_cloud_goog.bar": &methodInfo{
+					ShortName: "bar",
+					ApiName:   "2.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					APIKeyLocations: []*scpb.APIKeyLocation{
 						{
 							Key: &scpb.APIKeyLocation_Query{
@@ -328,9 +441,11 @@ func TestMethods(t *testing.T) {
 			wantMethods: map[string]*methodInfo{
 				fmt.Sprintf("%s.%s", testApiName, "ListShelves"): &methodInfo{
 					ShortName: "ListShelves",
+					ApiName:   "endpoints.examples.bookstore.Bookstore",
 				},
 				fmt.Sprintf("%s.%s", testApiName, "CreateShelf"): &methodInfo{
 					ShortName: "CreateShelf",
+					ApiName:   "endpoints.examples.bookstore.Bookstore",
 				},
 			},
 		},
@@ -373,6 +488,7 @@ func TestMethods(t *testing.T) {
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo": &methodInfo{
 					ShortName: "Echo",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*commonpb.Pattern{
 						{
 							UriTemplate: "/echo",
@@ -382,6 +498,110 @@ func TestMethods(t *testing.T) {
 				},
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt": &methodInfo{
 					ShortName: "Echo_Auth_Jwt",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/auth/info/googlejwt",
+							HttpMethod:  util.GET,
+						},
+					},
+				},
+			},
+		},
+		{
+			desc: "Succeed for HTTP with multiple apis",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo",
+							},
+							{
+								Name: "Echo_Auth_Jwt",
+							},
+						},
+					},
+					{
+						Name: "2.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo",
+							},
+							{
+								Name: "Echo_Auth_Jwt",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/auth/info/googlejwt",
+							},
+						},
+						{
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+							Pattern: &annotationspb.HttpRule_Post{
+								Post: "/echo",
+							},
+							Body: "message",
+						},
+						{
+							Selector: "2.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/auth/info/googlejwt",
+							},
+						},
+						{
+							Selector: "2.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+							Pattern: &annotationspb.HttpRule_Post{
+								Post: "/echo",
+							},
+							Body: "message",
+						},
+					},
+				},
+			},
+			backendProtocol: "http2",
+			wantMethods: map[string]*methodInfo{
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo": &methodInfo{
+					ShortName: "Echo",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/echo",
+							HttpMethod:  util.POST,
+						},
+					},
+				},
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt": &methodInfo{
+					ShortName: "Echo_Auth_Jwt",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/auth/info/googlejwt",
+							HttpMethod:  util.GET,
+						},
+					},
+				},
+				"2.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo": &methodInfo{
+					ShortName: "Echo",
+					ApiName:   "2.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/echo",
+							HttpMethod:  util.POST,
+						},
+					},
+				},
+				"2.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt": &methodInfo{
+					ShortName: "Echo_Auth_Jwt",
+					ApiName:   "2.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*commonpb.Pattern{
 						{
 							UriTemplate: "/auth/info/googlejwt",
@@ -479,6 +699,7 @@ func TestMethods(t *testing.T) {
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoCors": &methodInfo{
 					ShortName: "EchoCors",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*commonpb.Pattern{
 						{
 							UriTemplate: "/echo",
@@ -488,6 +709,7 @@ func TestMethods(t *testing.T) {
 				},
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo": &methodInfo{
 					ShortName: "Echo",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*commonpb.Pattern{
 						{
 							UriTemplate: "/echo",
@@ -497,6 +719,7 @@ func TestMethods(t *testing.T) {
 				},
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_0": &methodInfo{
 					ShortName: "CORS_0",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*commonpb.Pattern{
 						{
 							UriTemplate: "/auth/info/googlejwt",
@@ -507,6 +730,7 @@ func TestMethods(t *testing.T) {
 				},
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt": &methodInfo{
 					ShortName: "Echo_Auth_Jwt",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*commonpb.Pattern{{
 						UriTemplate: "/auth/info/googlejwt",
 						HttpMethod:  util.GET,
@@ -515,6 +739,7 @@ func TestMethods(t *testing.T) {
 				},
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth": &methodInfo{
 					ShortName: "Echo_Auth",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*commonpb.Pattern{
 						{
 							UriTemplate: "/auth/info/googlejwt",
@@ -563,6 +788,7 @@ func TestMethods(t *testing.T) {
 			wantMethods: map[string]*methodInfo{
 				"endpoints.examples.bookstore.Bookstore.CreateBook": &methodInfo{
 					ShortName: "CreateBook",
+					ApiName:   "endpoints.examples.bookstore.Bookstore",
 					HttpRule: []*commonpb.Pattern{
 						{
 							UriTemplate: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
@@ -695,6 +921,7 @@ func TestProcessQuota(t *testing.T) {
 			wantMethods: map[string]*methodInfo{
 				fmt.Sprintf("%s.%s", testApiName, "ListShelves"): &methodInfo{
 					ShortName: "ListShelves",
+					ApiName:   testApiName,
 					MetricCosts: []*scpb.MetricCost{
 						{
 							Name: "metric_a",
@@ -736,6 +963,7 @@ func TestProcessQuota(t *testing.T) {
 			wantMethods: map[string]*methodInfo{
 				fmt.Sprintf("%s.%s", testApiName, "ListShelves"): &methodInfo{
 					ShortName: "ListShelves",
+					ApiName:   testApiName,
 					MetricCosts: []*scpb.MetricCost{
 						{
 							Name: "metric_a",

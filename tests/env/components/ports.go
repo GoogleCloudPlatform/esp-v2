@@ -56,6 +56,7 @@ const (
 	TestHttp1Basic
 	TestHttp1JWT
 	TestManagedServiceConfig
+	TestMultiGrpcServices
 	TestPreflightCorsWithBasicPreset
 	TestPreflightRequestWithAllowCors
 	TestReportGCPAttributes

@@ -71,6 +71,16 @@ var (
 					},
 				},
 			},
+			{
+				Name: "endpoints.examples.bookstore.v2.Bookstore",
+				Methods: []*apipb.Method{
+					{
+						Name:            "GetShelf",
+						RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.v2.GetShelf",
+						ResponseTypeUrl: "type.googleapis.com/endpoints.examples.bookstore.v2.Shelf",
+					},
+				},
+			},
 		},
 		Http: &annotationspb.Http{
 			Rules: []*annotationspb.HttpRule{
@@ -78,6 +88,12 @@ var (
 					Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
 					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/v1/shelves",
+					},
+				},
+				{
+					Selector: "endpoints.examples.bookstore.v2.Bookstore.GetShelf",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/v2/shelves/{shelf=*}",
 					},
 				},
 				{

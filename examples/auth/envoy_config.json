@@ -34,7 +34,7 @@
                               "prefix": "/"
                             },
                             "route": {
-                              "cluster": "1.bookstore_endpoints_apiproxy_231719_cloud_goog"
+                              "cluster": "bookstore.endpoints.apiproxy-231719.cloud.goog_local"
                             }
                           }
                         ]
@@ -167,7 +167,7 @@
     ],
     "clusters": [
       {
-        "name": "1.bookstore_endpoints_apiproxy_231719_cloud_goog",
+        "name": "bookstore.endpoints.apiproxy-231719.cloud.goog_local",
         "type": "STRICT_DNS",
         "connectTimeout": "20s",
         "loadAssignment": {

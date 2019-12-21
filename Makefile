@@ -91,8 +91,13 @@ build-grpc-bookstore:
 	# please temporarily delete it and re-add it after the build is done.
 	@echo "--> building bookstore-grpc"
 	@echo "Notice: please make sure to temporarily delete tests/endpoints/bookstore_grpc/BUILD in order to run this command"
-	@bazel build tests/endpoints/bookstore_grpc:bookstore_descriptor --incompatible_no_support_tools_in_action_inputs=false
-	@cp -f bazel-genfiles/tests/endpoints/bookstore_grpc/bookstore.descriptor tests/endpoints/bookstore_grpc/proto/api_descriptor.pb
+	@bazel build tests/endpoints/bookstore_grpc/proto:bookstore_descriptor --incompatible_no_support_tools_in_action_inputs=false
+	@cp -f bazel-genfiles/tests/endpoints/bookstore_grpc/proto/bookstore.descriptor tests/endpoints/bookstore_grpc/proto/api_descriptor.pb
+	@protoc -I tests/endpoints/bookstore_grpc/proto/v1 -I bazel-gcpproxy/external/com_google_protobuf -I bazel-gcpproxy/external/com_github_googleapis_googleapis \
+	  -I tests/endpoints/bookstore_grpc/proto/ tests/endpoints/bookstore_grpc/proto/v1/bookstore.proto --go_out=plugins=grpc:tests/endpoints/bookstore_grpc/proto/v1/
+	@protoc -I tests/endpoints/bookstore_grpc/proto/v2 -I bazel-gcpproxy/external/com_google_protobuf -I bazel-gcpproxy/external/com_github_googleapis_googleapis \
+	  -I tests/endpoints/bookstore_grpc/proto/ tests/endpoints/bookstore_grpc/proto/v2/bookstore_v2.proto --go_out=plugins=grpc:tests/endpoints/bookstore_grpc/proto/v2/
+
 
 build-grpc-interop:
 	@echo "--> building the grpc-interop-test client and server"

@@ -197,7 +197,7 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 			newGrpcRule := &pmpb.PathMatcherRule{
 				Operation: operation,
 				Pattern: &commonpb.Pattern{
-					UriTemplate: fmt.Sprintf("/%s/%s", serviceInfo.ApiName, method.ShortName),
+					UriTemplate: fmt.Sprintf("/%s/%s", method.ApiName, method.ShortName),
 					HttpMethod:  util.POST,
 				},
 			}
@@ -520,10 +520,10 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 				DescriptorSet: &transcoderpb.GrpcJsonTranscoder_ProtoDescriptorBin{
 					ProtoDescriptorBin: configContent,
 				},
-				Services:               []string{serviceInfo.ApiName},
 				IgnoredQueryParameters: []string{"api_key", "key", "access_token"},
 				ConvertGrpcStatus:      true,
 			}
+			transcodeConfig.Services = append(transcodeConfig.Services, serviceInfo.ApiNames...)
 			transcodeConfigStruct, _ := ptypes.MarshalAny(transcodeConfig)
 			transcodeFilter := &hcmpb.HttpFilter{
 				Name:       util.GRPCJSONTranscoder,

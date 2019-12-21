@@ -233,7 +233,7 @@ func (m *ConfigManager) applyServiceConfig(serviceConfig *confpb.Service) error 
 }
 
 func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
-	m.Infof("making configuration for api: %v", m.serviceInfo.ApiName)
+	m.Infof("making configuration for api: %v", m.serviceInfo.Name)
 
 	var clusterResources, endpoints, runtimes, routes []cache.Resource
 	clusters, err := gen.MakeClusters(m.serviceInfo)

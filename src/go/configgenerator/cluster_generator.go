@@ -185,7 +185,7 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, erro
 func makeBackendCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
 	connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
 	c := &v2pb.Cluster{
-		Name:                 serviceInfo.ApiName,
+		Name:                 serviceInfo.BackendClusterName(),
 		LbPolicy:             v2pb.Cluster_ROUND_ROBIN,
 		ConnectTimeout:       connectTimeoutProto,
 		ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_STRICT_DNS},

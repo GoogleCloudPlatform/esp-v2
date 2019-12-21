@@ -27,34 +27,47 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	bookgrpc "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto"
-	bookpb "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto"
-	emptypb "github.com/golang/protobuf/ptypes/empty"
+	bsgrpcv1 "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto/v1"
+	bspbv1 "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto/v1"
+	bsgrpcv2 "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto/v2"
+	bspbv2 "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto/v2"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 )
 
 type database struct {
 	// All shelves, order matters
-	shelves []*bookpb.Shelf
+	shelves []*bspbv1.Shelf
 	// All books, order matters
-	books []*bookpb.Book
+	books []*bspbv1.Book
 	// A map of bookId to the shelfId it resides in
 	bookLocation map[int64]int64
 }
 
-// BookstoreServer represents the gRPC Bookstore health-checkable server.
-// The address the server is listening on can be extracted from this struct.
-type BookstoreServer struct {
-	bookgrpc.BookstoreServer
-	lis        net.Listener
+// BookstoreServerV1Impl represents the gRPC Bookstore health-checkable server.
+type BookstoreServerV1Impl struct {
+	bsV1Server bsgrpcv1.BookstoreServer
 	grpcServer *grpc.Server
 	db         *database
 }
 
+// BookstoreServerV2Impl represents the gRPC Bookstore health-checkable server.
+type BookstoreServerV2Impl struct {
+	bsV2Server bsgrpcv2.BookstoreServer
+	grpcServer *grpc.Server
+}
+
+// BookstoreServer represents two different version gRPC Bookstore servers
+// sharing same listener.
+type BookstoreServer struct {
+	bs1 *BookstoreServerV1Impl
+	bs2 *BookstoreServerV2Impl
+	lis net.Listener
+}
+
 func createDB() *database {
 	return &database{
-		shelves: []*bookpb.Shelf{
+		shelves: []*bspbv1.Shelf{
 			{
 				Id:    100,
 				Theme: "Kids",
@@ -64,7 +77,7 @@ func createDB() *database {
 				Theme: "Classic",
 			},
 		},
-		books: []*bookpb.Book{
+		books: []*bspbv1.Book{
 			{
 				Id:    1001,
 				Title: "Alphabet",
@@ -99,18 +112,24 @@ func NewBookstoreServer(port uint16) (*BookstoreServer, error) {
 		return nil, fmt.Errorf("GRPC Bookstore server failed to listen: %v", err)
 	}
 
-	bss := &BookstoreServer{
-		lis:        lis,
-		grpcServer: grpcServer,
-		db:         createDB(),
+	endpoint := &BookstoreServer{
+		bs1: &BookstoreServerV1Impl{
+			grpcServer: grpcServer,
+			db:         createDB(),
+		},
+		bs2: &BookstoreServerV2Impl{
+			grpcServer: grpcServer,
+		},
+		lis: lis,
 	}
 
 	// Register gRPC health services and bookstore
 	healthgrpc.RegisterHealthServer(grpcServer, healthServer)
-	bookgrpc.RegisterBookstoreServer(grpcServer, bss)
+	bsgrpcv1.RegisterBookstoreServer(grpcServer, endpoint.bs1)
+	bsgrpcv2.RegisterBookstoreServer(grpcServer, endpoint.bs2)
 
 	// Return server
-	return bss, nil
+	return endpoint, nil
 }
 
 func (s *BookstoreServer) StartServer() {
@@ -118,7 +137,10 @@ func (s *BookstoreServer) StartServer() {
 	// Start server
 	go func() {
 		glog.Infof("GRPC Bookstore server is running at %s .......\n", s.lis.Addr())
-		if err := s.grpcServer.Serve(s.lis); err != nil {
+		if err := s.bs1.grpcServer.Serve(s.lis); err != nil {
+			glog.Errorf("GRPC Bookstore server fail to serve: %v", err)
+		}
+		if err := s.bs2.grpcServer.Serve(s.lis); err != nil {
 			glog.Errorf("GRPC Bookstore server fail to serve: %v", err)
 		}
 	}()
@@ -126,7 +148,8 @@ func (s *BookstoreServer) StartServer() {
 }
 
 func (s *BookstoreServer) StopServer() {
-	s.grpcServer.Stop()
+	s.bs1.grpcServer.Stop()
+	s.bs2.grpcServer.Stop()
 }
 
 func testDecorator(ctx context.Context) error {
@@ -158,17 +181,32 @@ func testDecorator(ctx context.Context) error {
 	}
 }
 
-func (s *BookstoreServer) ListShelves(ctx context.Context, req *emptypb.Empty) (*bookpb.ListShelvesResponse, error) {
+func (s *BookstoreServerV2Impl) GetShelf(ctx context.Context, req *bspbv2.GetShelfRequest) (*bspbv2.Shelf, error) {
 	if err := testDecorator(ctx); err != nil {
 		return nil, err
 	}
 
-	return &bookpb.ListShelvesResponse{
+	if req.Shelf == 100 {
+		return &bspbv2.Shelf{
+			Id:    100,
+			Theme: "Kids",
+		}, nil
+	}
+
+	return nil, status.New(codes.NotFound, "Cannot find requested shelf").Err()
+}
+
+func (s *BookstoreServerV1Impl) ListShelves(ctx context.Context, req *bspbv1.Empty) (*bspbv1.ListShelvesResponse, error) {
+	if err := testDecorator(ctx); err != nil {
+		return nil, err
+	}
+
+	return &bspbv1.ListShelvesResponse{
 		Shelves: s.db.shelves,
 	}, nil
 }
 
-func (s *BookstoreServer) CreateShelf(ctx context.Context, req *bookpb.CreateShelfRequest) (*bookpb.Shelf, error) {
+func (s *BookstoreServerV1Impl) CreateShelf(ctx context.Context, req *bspbv1.CreateShelfRequest) (*bspbv1.Shelf, error) {
 	if err := testDecorator(ctx); err != nil {
 		return nil, err
 	}
@@ -176,7 +214,7 @@ func (s *BookstoreServer) CreateShelf(ctx context.Context, req *bookpb.CreateShe
 	return req.Shelf, nil
 }
 
-func (s *BookstoreServer) GetShelf(ctx context.Context, req *bookpb.GetShelfRequest) (*bookpb.Shelf, error) {
+func (s *BookstoreServerV1Impl) GetShelf(ctx context.Context, req *bspbv1.GetShelfRequest) (*bspbv1.Shelf, error) {
 	if err := testDecorator(ctx); err != nil {
 		return nil, err
 	}
@@ -190,32 +228,32 @@ func (s *BookstoreServer) GetShelf(ctx context.Context, req *bookpb.GetShelfRequ
 	return nil, status.New(codes.NotFound, "Cannot find requested shelf").Err()
 }
 
-func (s *BookstoreServer) DeleteShelf(ctx context.Context, req *bookpb.DeleteShelfRequest) (*emptypb.Empty, error) {
+func (s *BookstoreServerV1Impl) DeleteShelf(ctx context.Context, req *bspbv1.DeleteShelfRequest) (*bspbv1.Empty, error) {
 	if err := testDecorator(ctx); err != nil {
 		return nil, err
 	}
 
-	return &emptypb.Empty{}, nil
+	return &bspbv1.Empty{}, nil
 }
 
-func (s *BookstoreServer) ListBooks(ctx context.Context, req *bookpb.ListBooksRequest) (*bookpb.ListBooksResponse, error) {
+func (s *BookstoreServerV1Impl) ListBooks(ctx context.Context, req *bspbv1.ListBooksRequest) (*bspbv1.ListBooksResponse, error) {
 	if err := testDecorator(ctx); err != nil {
 		return nil, err
 	}
 
-	books := make([]*bookpb.Book, 0)
+	books := make([]*bspbv1.Book, 0)
 	for _, book := range s.db.books {
 		if s.db.bookLocation[book.Id] == req.Shelf {
 			books = append(books, book)
 		}
 	}
 
-	return &bookpb.ListBooksResponse{
+	return &bspbv1.ListBooksResponse{
 		Books: books,
 	}, nil
 }
 
-func (s *BookstoreServer) CreateBook(ctx context.Context, req *bookpb.CreateBookRequest) (*bookpb.Book, error) {
+func (s *BookstoreServerV1Impl) CreateBook(ctx context.Context, req *bspbv1.CreateBookRequest) (*bspbv1.Book, error) {
 	if err := testDecorator(ctx); err != nil {
 		return nil, err
 	}
@@ -226,7 +264,7 @@ func (s *BookstoreServer) CreateBook(ctx context.Context, req *bookpb.CreateBook
 	return req.Book, nil
 }
 
-func (s *BookstoreServer) GetBook(ctx context.Context, req *bookpb.GetBookRequest) (*bookpb.Book, error) {
+func (s *BookstoreServerV1Impl) GetBook(ctx context.Context, req *bspbv1.GetBookRequest) (*bspbv1.Book, error) {
 	if err := testDecorator(ctx); err != nil {
 		return nil, err
 	}
@@ -240,7 +278,7 @@ func (s *BookstoreServer) GetBook(ctx context.Context, req *bookpb.GetBookReques
 	return nil, status.New(codes.NotFound, "Cannot find requested book on shelf").Err()
 }
 
-func (s *BookstoreServer) DeleteBook(ctx context.Context, req *bookpb.DeleteBookRequest) (*emptypb.Empty, error) {
+func (s *BookstoreServerV1Impl) DeleteBook(ctx context.Context, req *bspbv1.DeleteBookRequest) (*bspbv1.Empty, error) {
 	if err := testDecorator(ctx); err != nil {
 		return nil, err
 	}
@@ -249,10 +287,10 @@ func (s *BookstoreServer) DeleteBook(ctx context.Context, req *bookpb.DeleteBook
 		if book.Id == req.Book && s.db.bookLocation[book.Id] == req.Shelf {
 			s.db.books = s.db.books[:i+copy(s.db.books[i:], s.db.books[i+1:])]
 			delete(s.db.bookLocation, book.Id)
-			return &emptypb.Empty{}, nil
+			return &bspbv1.Empty{}, nil
 		}
 	}
 
 	// FIXME: this should return an error, but tests assume it will be OK
-	return &emptypb.Empty{}, nil
+	return &bspbv1.Empty{}, nil
 }

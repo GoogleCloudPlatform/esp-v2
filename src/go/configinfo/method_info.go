@@ -23,6 +23,7 @@ import (
 // methodInfo contains all information about this method.
 type methodInfo struct {
 	ShortName              string
+	ApiName                string
 	HttpRule               []*commonpb.Pattern
 	BackendInfo            *backendInfo
 	AllowUnregisteredCalls bool

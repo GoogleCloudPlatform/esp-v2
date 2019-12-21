@@ -60,9 +60,10 @@ const (
 )
 
 var (
-	fakeConfig          []byte
-	fakeRollout         []byte
-	fakeProtoDescriptor = base64.StdEncoding.EncodeToString([]byte("rawDescriptor"))
+	fakeConfig             []byte
+	fakeRollout            []byte
+	fakeProtoDescriptor    = base64.StdEncoding.EncodeToString([]byte("rawDescriptor"))
+	testBackendClusterName = fmt.Sprintf("%s_local", testProjectName)
 )
 
 func TestFetchListeners(t *testing.T) {
@@ -89,8 +90,8 @@ func TestFetchListeners(t *testing.T) {
                           }
                         ]
                     }
-
                 ],
+                "endpoints": [{"name": "%s"}],
                 "sourceInfo":{
                     "sourceFiles":[
                         {
@@ -101,7 +102,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                     ]
                 }
-            }`, testProjectName, testEndpointName, fakeProtoDescriptor),
+            }`, testProjectName, testEndpointName, testEndpointName, fakeProtoDescriptor),
 			wantedListeners: fmt.Sprintf(`
 {
    "address":{
@@ -197,12 +198,13 @@ func TestFetchListeners(t *testing.T) {
    ]
 }
 `,
-				fakeProtoDescriptor, testEndpointName, testEndpointName),
+				fakeProtoDescriptor, testEndpointName, testBackendClusterName),
 		},
 		{
 			desc:            "Success for grpc backend, with Jwt filter, with audiences, no Http Rules",
 			backendProtocol: "grpc",
 			fakeServiceConfig: fmt.Sprintf(`{
+                "name":"bookstore.endpoints.project123.cloud.goog",
                 "apis":[
                     {
                         "name":"%s",
@@ -213,6 +215,7 @@ func TestFetchListeners(t *testing.T) {
                         ]
                     }
                 ],
+                "endpoints": [{"name": "%s"}],
                 "authentication": {
                     "providers": [
                         {
@@ -237,7 +240,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                     ]
                 }
-            }`, testEndpointName),
+            }`, testEndpointName, testEndpointName),
 
 			wantedListeners: fmt.Sprintf(`
 {
@@ -367,12 +370,13 @@ func TestFetchListeners(t *testing.T) {
       }
    ]
 }
-              `, testEndpointName),
+              `, testBackendClusterName),
 		},
 		{
 			desc:            "Success for gRPC backend, with Jwt filter, without audiences",
 			backendProtocol: "gRPC",
 			fakeServiceConfig: fmt.Sprintf(`{
+                "name":"bookstore.endpoints.project123.cloud.goog",
                 "apis":[
                     {
                         "name":"%s",
@@ -386,6 +390,7 @@ func TestFetchListeners(t *testing.T) {
                         ]
                     }
                 ],
+                "endpoints": [{"name": "%s"}],
                 "http": {
                     "rules": [
                         {
@@ -425,7 +430,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                     ]
                 }
-            }`, testEndpointName),
+            }`, testEndpointName, testEndpointName),
 			wantedListeners: fmt.Sprintf(`{
    "address":{
       "socketAddress":{
@@ -567,12 +572,13 @@ func TestFetchListeners(t *testing.T) {
          ]
       }
    ]
-}`, testEndpointName),
+}`, testBackendClusterName),
 		},
 		{
 			desc:            "Success for gRPC backend, with Jwt filter, with multi requirements, matching with regex",
 			backendProtocol: "gRPC",
 			fakeServiceConfig: fmt.Sprintf(`{
+                "name":"bookstore.endpoints.project123.cloud.goog",
                 "apis":[
                     {
                         "name":"%s",
@@ -601,6 +607,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                     ]
                 },
+                "endpoints": [{"name": "%s"}],
                 "authentication": {
                     "providers": [
                         {
@@ -628,7 +635,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                     ]
                 }
-            }`, testEndpointName),
+            }`, testEndpointName, testEndpointName),
 			wantedListeners: fmt.Sprintf(`{
    "address":{
       "socketAddress":{
@@ -801,13 +808,14 @@ func TestFetchListeners(t *testing.T) {
          ]
       }
    ]
-}`, testEndpointName),
+}`, testBackendClusterName),
 		},
 		{
 			desc:            "Success for gRPC backend with Service Control",
 			backendProtocol: "gRPC",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"%s",
+                "endpoints" : [{"name": "%s"}],
                 "producer_project_id":"%s",
                 "control" : {
                     "environment": "servicecontrol.googleapis.com"
@@ -857,7 +865,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                     ]
                 }
-            }`, testProjectName, testProjectID, testEndpointName),
+            }`, testProjectName, testEndpointName, testProjectID, testEndpointName),
 			wantedListeners: fmt.Sprintf(`{
    "address":{
       "socketAddress":{
@@ -1001,7 +1009,7 @@ func TestFetchListeners(t *testing.T) {
                                     "prefix":"/"
                                  },
                                  "route":{
-                                    "cluster":"endpoints.examples.bookstore.Bookstore"
+                                    "cluster":"%s"
                                  }
                               }
                            ]
@@ -1016,12 +1024,13 @@ func TestFetchListeners(t *testing.T) {
          ]
       }
    ]
-}`, testProjectID, testConfigID, testProjectName),
+}`, testProjectID, testConfigID, testProjectName, testBackendClusterName),
 		},
 		{
 			desc:            "Success for HTTP1 backend, with Jwt filter, with audiences",
 			backendProtocol: "http1",
-			fakeServiceConfig: `{
+			fakeServiceConfig: fmt.Sprintf(`{
+                "name":"bookstore.endpoints.project123.cloud.goog",
                 "apis":[
                     {
                         "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
@@ -1035,6 +1044,7 @@ func TestFetchListeners(t *testing.T) {
                         ]
                     }
                 ],
+                "endpoints": [{"name": "%s"}],
                 "http": {
                     "rules": [
                         {
@@ -1072,7 +1082,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                     ]
                 }
-            }`,
+            }`, testEndpointName),
 			wantedListeners: fmt.Sprintf(`{
    "address":{
       "socketAddress":{
@@ -1181,7 +1191,7 @@ func TestFetchListeners(t *testing.T) {
                                     "prefix":"/"
                                  },
                                  "route":{
-                                    "cluster":"1.echo_api_endpoints_cloudesf_testing_cloud_goog"
+                                    "cluster":"%s"
                                  }
                               }
                            ]
@@ -1196,7 +1206,7 @@ func TestFetchListeners(t *testing.T) {
          ]
       }
    ]
-}`),
+}`, testBackendClusterName),
 		},
 		{
 			desc:            "Success for backend that allow CORS, with tracing enabled",
@@ -1341,7 +1351,7 @@ func TestFetchListeners(t *testing.T) {
                                     "prefix":"/"
                                  },
                                  "route":{
-                                    "cluster":"1.echo_api_endpoints_cloudesf_testing_cloud_goog"
+                                    "cluster":"bookstore.endpoints.project123.cloud.goog_local"
                                  }
                               }
                            ]

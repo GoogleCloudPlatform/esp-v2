@@ -19,7 +19,7 @@ var (
 	FakeWantedClustersForDynamicRouting = []string{
 		`
 {
-  "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+  "name": "echo-api.endpoints.cloudesf-testing.cloud.goog_local",
   "type": "STRICT_DNS",
   "connectTimeout": "20s",
   "loadAssignment": {
@@ -450,7 +450,7 @@ var (
                                     "prefix":"/"
                                  },
                                  "route":{
-                                    "cluster":"1.echo_api_endpoints_cloudesf_testing_cloud_goog"
+                                    "cluster":"echo-api.endpoints.cloudesf-testing.cloud.goog_local"
                                  }
                               }
                            ]

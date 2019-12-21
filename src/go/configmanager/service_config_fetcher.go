@@ -172,7 +172,6 @@ var callServiceManagementRollouts = func(path, token string) (*smpb.ListServiceR
 var callServiceManagement = func(path, token string) (*confpb.Service, error) {
 	var err error
 	var resp *http.Response
-
 	if resp, err = callWithAccessToken(path, token); err != nil {
 		return nil, err
 	}

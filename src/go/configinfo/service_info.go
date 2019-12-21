@@ -36,9 +36,10 @@ import (
 // ServiceInfo contains service level information.
 type ServiceInfo struct {
 	Name     string
-	ApiName  string
 	ConfigID string
 
+	// An array to store all the api names
+	ApiNames []string
 	// A sorted array to store all the method name for this service.
 	// Should always iterate this array to avoid test fail due to order issue.
 	Operations []string
@@ -74,10 +75,6 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	if len(serviceConfig.GetApis()) == 0 {
 		return nil, fmt.Errorf("service config must have one api at least")
 	}
-	// TODO(jilinxia): supports multi apis.
-	if len(serviceConfig.GetApis()) > 1 {
-		return nil, fmt.Errorf("not support multi apis yet")
-	}
 
 	var backendProtocol util.BackendProtocol
 	switch strings.ToLower(opts.BackendProtocol) {
@@ -93,11 +90,14 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 
 	serviceInfo := &ServiceInfo{
 		Name:            serviceConfig.GetName(),
-		ApiName:         serviceConfig.GetApis()[0].GetName(),
 		ConfigID:        id,
 		serviceConfig:   serviceConfig,
 		BackendProtocol: backendProtocol,
 		Options:         opts,
+	}
+
+	for _, apiName := range serviceConfig.GetApis() {
+		serviceInfo.ApiNames = append(serviceInfo.ApiNames, apiName.Name)
 	}
 
 	// Order matters.
@@ -110,8 +110,12 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	if err := serviceInfo.processHttpRule(); err != nil {
 		return nil, err
 	}
-	serviceInfo.processUsageRule()
-	serviceInfo.processSystemParameters()
+	if err := serviceInfo.processUsageRule(); err != nil {
+		return nil, err
+	}
+	if err := serviceInfo.processSystemParameters(); err != nil {
+		return nil, err
+	}
 	serviceInfo.processAccessToken()
 	serviceInfo.processTypes()
 	serviceInfo.processEmptyJwksUriByOpenID()
@@ -158,6 +162,7 @@ func (s *ServiceInfo) processApis() {
 		s.Methods[fmt.Sprintf("%s.%s", api.GetName(), method.GetName())] =
 			&methodInfo{
 				ShortName: method.GetName(),
+				ApiName:   api.GetName(),
 			}
 	}
 }
@@ -218,7 +223,10 @@ func (s *ServiceInfo) processHttpRule() error {
 	httpPathWithOptionsSet := make(map[string]bool)
 
 	for _, r := range s.ServiceConfig().GetHttp().GetRules() {
-		method := s.getOrCreateMethod(r.GetSelector())
+		method, err := s.getOrCreateMethod(r.GetSelector())
+		if err != nil {
+			return err
+		}
 		var httpRule *commonpb.Pattern
 		switch r.GetPattern().(type) {
 		case *annotationspb.HttpRule_Get:
@@ -267,7 +275,7 @@ func (s *ServiceInfo) processHttpRule() error {
 			for _, httpRule := range method.HttpRule {
 				if httpRule.HttpMethod != "OPTIONS" {
 					if _, exist := httpPathWithOptionsSet[httpRule.UriTemplate]; !exist {
-						s.addOptionMethod(index, httpRule.UriTemplate, method.BackendInfo)
+						s.addOptionMethod(method.ApiName, index, httpRule.UriTemplate, method.BackendInfo)
 						httpPathWithOptionsSet[httpRule.UriTemplate] = true
 						index++
 					}
@@ -280,14 +288,15 @@ func (s *ServiceInfo) processHttpRule() error {
 	return nil
 }
 
-func (s *ServiceInfo) addOptionMethod(index int, path string, backendInfo *backendInfo) {
+func (s *ServiceInfo) addOptionMethod(apiName string, index int, path string, backendInfo *backendInfo) {
 	// All options have their operation as the following format: CORS_suffix.
 	// Appends suffix to make sure it is not used by any http rules.
 	corsOperationBase := "CORS"
 	corsOperation := fmt.Sprintf("%s_%d", corsOperationBase, index)
-	gen_operation := fmt.Sprintf("%s.%s", s.ApiName, corsOperation)
+	gen_operation := fmt.Sprintf("%s.%s", apiName, corsOperation)
 	s.Methods[gen_operation] = &methodInfo{
 		ShortName: corsOperation,
+		ApiName:   apiName,
 		HttpRule: []*commonpb.Pattern{
 			{
 				UriTemplate: path,
@@ -331,7 +340,10 @@ func (s *ServiceInfo) processBackendRule() error {
 
 			clusterName := backendRoutingClustersMap[address]
 
-			method := s.getOrCreateMethod(r.GetSelector())
+			method, err := s.getOrCreateMethod(r.GetSelector())
+			if err != nil {
+				return err
+			}
 
 			// For CONSTANT_ADDRESS, an empty uri will generate an empty path header.
 			// It is an invalid Http header if path is empty.
@@ -351,15 +363,19 @@ func (s *ServiceInfo) processBackendRule() error {
 	return nil
 }
 
-func (s *ServiceInfo) processUsageRule() {
+func (s *ServiceInfo) processUsageRule() error {
 	for _, r := range s.ServiceConfig().GetUsage().GetRules() {
-		method := s.getOrCreateMethod(r.GetSelector())
+		method, err := s.getOrCreateMethod(r.GetSelector())
+		if err != nil {
+			return err
+		}
 		method.AllowUnregisteredCalls = r.GetAllowUnregisteredCalls()
 		method.SkipServiceControl = r.GetSkipServiceControl()
 	}
+	return nil
 }
 
-func (s *ServiceInfo) processSystemParameters() {
+func (s *ServiceInfo) processSystemParameters() error {
 	for _, rule := range s.ServiceConfig().GetSystemParameters().GetRules() {
 		apiKeyLocationParameters := []*confpb.SystemParameter{}
 		for _, parameter := range rule.GetParameters() {
@@ -367,8 +383,13 @@ func (s *ServiceInfo) processSystemParameters() {
 				apiKeyLocationParameters = append(apiKeyLocationParameters, parameter)
 			}
 		}
-		extractAPIKeyLocations(s.getOrCreateMethod(rule.GetSelector()), apiKeyLocationParameters)
+		method, err := s.getOrCreateMethod(rule.GetSelector())
+		if err != nil {
+			return err
+		}
+		extractAPIKeyLocations(method, apiKeyLocationParameters)
 	}
+	return nil
 }
 
 func extractAPIKeyLocations(method *methodInfo, parameters []*confpb.SystemParameter) {
@@ -410,12 +431,21 @@ func (s *ServiceInfo) processTypes() {
 // get the methodInfo by full name, and create a new one if not exists.
 // Ideally, all selector name in service config rules should exist in the api
 // methods.
-func (s *ServiceInfo) getOrCreateMethod(name string) *methodInfo {
+func (s *ServiceInfo) getOrCreateMethod(name string) (*methodInfo, error) {
 	if s.Methods[name] == nil {
 		names := strings.Split(name, ".")
+		if len(names) <= 1 {
+			return nil, fmt.Errorf("method %s should be in the format of apiName.methodShortName", name)
+		}
+		shortName := names[len(names)-1]
 		s.Methods[name] = &methodInfo{
-			ShortName: names[len(names)-1],
+			ShortName: shortName,
+			ApiName:   name[:len(name)-len(shortName)-1],
 		}
 	}
-	return s.Methods[name]
+	return s.Methods[name], nil
+}
+
+func (s *ServiceInfo) BackendClusterName() string {
+	return fmt.Sprintf("%s_local", s.Name)
 }
