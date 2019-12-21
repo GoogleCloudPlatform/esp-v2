@@ -169,38 +169,6 @@ void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
   }
 }
 
-void ExtractBindingsFromQueryParameters(
-    const std::string& query_params, const std::set<std::string>& system_params,
-    std::vector<VariableBinding>* bindings, bool keep_binding_escaped) {
-  // The bindings in URL the query parameters have the following form:
-  //      <field_path1>=value1&<field_path2>=value2&...&<field_pathN>=valueN
-  // Query parameters may also contain system parameters such as `api_key`.
-  // We'll need to ignore these. Example:
-  //      book.id=123&book.author=Neal%20Stephenson&api_key=AIzaSyAz7fhBkC35D2M
-  std::vector<std::string> params = absl::StrSplit(query_params, '&');
-  for (const auto& param : params) {
-    size_t pos = param.find('=');
-    if (pos != 0 && pos != std::string::npos) {
-      auto name = param.substr(0, pos);
-      // Make sure the query parameter is not a system parameter (e.g.
-      // `api_key`) before adding the binding.
-      if (system_params.find(name) == std::end(system_params)) {
-        // The name of the parameter is a field path, which is a dot-delimited
-        // sequence of field names that identify the (potentially deep) field
-        // in the request, e.g. `book.author.name`.
-        VariableBinding binding;
-        binding.field_path = absl::StrSplit(name, '.');
-        if (keep_binding_escaped) {
-          binding.value = param.substr(pos + 1);
-        } else {
-          binding.value = UrlUnescapeString(param.substr(pos + 1), true);
-        }
-        bindings->emplace_back(std::move(binding));
-      }
-    }
-  }
-}
-
 std::vector<std::string> ExtractRequestParts(
     std::string path, const std::set<std::string>& custom_verbs) {
   // Remove query parameters.

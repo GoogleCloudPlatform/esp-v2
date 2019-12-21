@@ -73,12 +73,6 @@ class PathMatcher {
   Method Lookup(const std::string& http_method, const std::string& path,
                 std::vector<VariableBinding>* variable_bindings) const;
 
-  // TODO(kyuc): consider removing this method.
-  Method Lookup(const std::string& http_method, const std::string& path,
-                const std::string& query_params,
-                std::vector<VariableBinding>* variable_bindings,
-                std::string* body_field_path) const;
-
   Method Lookup(const std::string& http_method, const std::string& path) const;
 
  private:
@@ -150,10 +144,6 @@ void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
                              std::vector<VariableBinding>* bindings,
                              bool keep_binding_escaped);
 
-void ExtractBindingsFromQueryParameters(
-    const std::string& query_params, const std::set<std::string>& system_params,
-    std::vector<VariableBinding>* bindings, bool keep_binding_escaped);
-
 // Converts a request path into a format that can be used to perform a request
 // lookup in the PathMatcher trie. This utility method sanitizes the request
 // path and then splits the path into slash separated parts. Returns an empty
@@ -207,52 +197,6 @@ Method PathMatcher<Method>::Lookup(
     variable_bindings->clear();
     ExtractBindingsFromPath(method_data->variables, parts, variable_bindings,
                             /*keep_binding_escaped=*/true);
-  }
-  return method_data->method;
-}
-
-// Lookup is a wrapper method for the recursive node Lookup. First, the wrapper
-// splits the request path into slash-separated path parts. Next, the method
-// checks that the |http_method| is supported. If not, then it returns an empty
-// WrapperGraph::SharedPtr. Next, this method invokes the node's Lookup on
-// the extracted |parts|. Finally, it fills the mapping from variables to their
-// values parsed from the path.
-// TODO: cache results by adding get/put methods here (if profiling reveals
-// benefit)
-template <class Method>
-Method PathMatcher<Method>::Lookup(
-    const std::string& http_method, const std::string& path,
-    const std::string& query_params,
-    std::vector<VariableBinding>* variable_bindings,
-    std::string* body_field_path) const {
-  const std::vector<std::string> parts =
-      ExtractRequestParts(path, custom_verbs_);
-
-  // If service_name has not been registered to ESP V2 and
-  // strict_service_matching_ is set to false, tries to lookup the method in all
-  // registered services.
-  if (root_ptr_ == nullptr) {
-    return nullptr;
-  }
-
-  PathMatcherLookupResult lookup_result =
-      LookupInPathMatcherNode(*root_ptr_, parts, http_method);
-  // Return nullptr if nothing is found.
-  // Not need to check duplication. Only first item is stored for duplicated
-  if (lookup_result.data == nullptr) {
-    return nullptr;
-  }
-  MethodData* method_data = reinterpret_cast<MethodData*>(lookup_result.data);
-  if (variable_bindings != nullptr) {
-    variable_bindings->clear();
-    ExtractBindingsFromPath(method_data->variables, parts, variable_bindings,
-                            /*keep_binding_escaped=*/false);
-    ExtractBindingsFromQueryParameters(
-        query_params, method_data->method->system_query_parameter_names(),
-        variable_bindings, /*keep_binding_escaped=*/false);
-  }
-  if (body_field_path != nullptr) {
-    *body_field_path = method_data->body_field_path;
   }
   return method_data->method;
 }
