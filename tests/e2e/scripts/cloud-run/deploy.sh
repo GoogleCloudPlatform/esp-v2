@@ -185,7 +185,7 @@ function setup() {
 
   echo "Redeploying ESP V2 ${PROXY_SERVICE_NAME} on Cloud Run"
   gcloud run deploy "${PROXY_SERVICE_NAME}" \
-    --image="gcr.io/${PROJECT_ID}/apiproxy-serverless:${ENDPOINTS_SERVICE_NAME}-${endpoints_service_config_id}" \
+    --image="gcr.io/${PROJECT_ID}/endpoints-runtime-serverless:${ENDPOINTS_SERVICE_NAME}-${endpoints_service_config_id}" \
     --set-env-vars=ESPv2_ARGS="${proxy_args}" \
     --allow-unauthenticated \
     --service-account "${PROXY_RUNTIME_SERVICE_ACCOUNT}" \
