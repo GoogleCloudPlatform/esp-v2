@@ -20,6 +20,7 @@
 #include <fstream>
 #include <string>
 
+#include "absl/strings/str_cat.h"
 #include "google/protobuf/struct.pb.h"
 #include "google/protobuf/text_format.h"
 
@@ -37,13 +38,14 @@ namespace {
 
 const char kFakeVersion[] = "TEST.0.0";
 
-// Must reference testdata with absolute path
-const char* kTestBase = std::getenv("TEST_SRCDIR");
-const char kTestData[] = "/gcpproxy/src/api_proxy/service_control/testdata/";
+const absl::string_view kRunfilesDir = std::getenv("TEST_SRCDIR");
+const absl::string_view kWorkingDir = std::getenv("TEST_WORKSPACE");
+constexpr absl::string_view kDataDir = "src/api_proxy/service_control/testdata";
 
 std::string ReadTestBaseline(const std::string& input_file_name) {
-  std::string file_name =
-      std::string(kTestBase) + std::string(kTestData) + input_file_name;
+  // Must reference testdata with an absolute path.
+  std::string file_name = absl::StrCat(kRunfilesDir, "/", kWorkingDir, "/",
+                                       kDataDir, "/", input_file_name);
 
   std::string contents;
   std::ifstream input_file;
