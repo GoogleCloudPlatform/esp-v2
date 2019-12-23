@@ -3,6 +3,8 @@
 ESPv2 is based on Envoy Proxy and Config Manager. Envoy written in C++ is
 built using bazel with clang(gcc also works but is unrecommended), and Config Manager written in go is built using go build.
 
+See the [architecture overview](doc/architecture.md) before getting started.
+
 ## Installing Bazelisk as Bazel
 
 It is recommended to use [Bazelisk](https://github.com/bazelbuild/bazelisk) installed as `bazel`, to avoid Bazel compatibility issues.

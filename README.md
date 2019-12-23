@@ -1,63 +1,121 @@
 # Google Cloud Platform ESPv2
 
-Google Cloud Platform ESPv2 is a service proxy which enables API management capabilities
-for JSON/REST or gRPC API services using Google Service Infrastructure. The current
-implementation uses [Envoy](https://www.envoyproxy.io/) as a service proxy.
+Google Cloud Platform ESPv2 is a general-purpose L7 service proxy that enables API management
+capabilities for JSON/REST or gRPC API services. ESPv2 integrates with Google Service
+Infrastructure to provide policy checks and telemetry reports.
 
-ESPv2 provides:
+ESPv2 is the next iteration of [ESP](https://github.com/cloudendpoints/esp/).
+The current implementation of ESPv2 uses [Envoy](https://www.envoyproxy.io/) as a service proxy.
 
-*   **Powerful Features**: authentication (auth0), API key validation, JSON to
-    Protobuf transcoding, user quota rate limiting, as well as API-level monitoring, tracing and logging.
+## Table of Contents
 
-*   **Easy Adoption**: the API service can be implemented in any coding language
-    using any IDLs.
-
-*   **Platform flexibility**: support the deployment on any cloud or on-premise
-    environment.
-
-*   **Superb performance and scalability**: low latency and high throughput
+* [Introduction](#introduction)
+* [Features](#features)
+* [Getting Started](#getting-started)
+* [ESPv2 Releases](#espv2-releases)
+* [ESPv2 vs ESP](#espv2-vs-esp)
+* [Repository Structure](#repository-structure)
+* [Contributing and Support](#contributing-and-support)
+* [License](#license)
+* [Disclaimer](#disclaimer)
 
 ## Introduction
 
-ESPv2 is a general-purpose L7 service proxy that integrates with Google hosted
-services to provide policy checks and telemetry reports. This proxy can be used by
-GCP customers and Google Cloud products. It can run on GCP and hybrid cloud environments, either as sidecar or as API gateway.
+Google Cloud Endpoints and ESPv2 provide:
+
+* **Easy Adoption**: The API service can be implemented in any coding language using any IDLs.
+
+* **Multiple Deployment Modes**: Deploy ESPv2 as an API Gateway.
+Support for ESPv2 as a sidecar is planned.
+
+* **Platform Flexibility**: Support the deployment on any cloud or hybrid environment.
+
+* **Superb Performance and Scalability**: ESPv2 has low latency and high throughput.
 
 ESPv2 includes two components:
 
-- Config Manager: Control plane to configure the Envoy proxy
-- Envoy: Data plane to process API requests/responses
+* Config Manager: Control plane to configure the Envoy proxy
+* Envoy: Data plane to process API requests/responses
 
-Config Manager configures the data plane's Envoy filters dynamically, using [Google API
-Service Configuration](https://github.com/googleapis/googleapis/blob/master/google/api/service.proto)
+Config Manager configures the data plane's Envoy filters dynamically via the
+[Google Service Management API](https://cloud.google.com/service-infrastructure/docs/service-management/reference/rest/)
 and flags specified by the API producer.
 
 Envoy (with our custom filters) handles API calls using [Service Infrastructure](https://cloud.google.com/service-infrastructure/docs/overview),
 Google's foundational platform for creating, managing, and consuming APIs and services.
 
-* Architecture
-![Architecture](doc/architecture.png)
+![Architecture](doc/images/architecture.png)
 
-* ESPv2 Filters
-![ESPv2 Filters](doc/filters.png)
+## Features
 
-* [API Producer specified flags](docker/generic/start_proxy.py)
+ESPv2 provides powerful enterprise-ready features, such as:
+
+* [Multiple Authentication Methods](https://cloud.google.com/endpoints/docs/openapi/authentication-method):
+Authenticate applications using API Keys. Authenticate users using any authentication platform that conforms
+to JSON Web Token [RFC 7519](https://tools.ietf.org/html/rfc7519). This includes Firebase Authentication,
+Auth0, Okta, Google ID tokens, and Google Service Accounts.
+
+* [Quotas and Rate Limiting](https://cloud.google.com/endpoints/docs/openapi/quotas-overview):
+Control the rate at which applications can call your APIs.
+
+* [gRPC Transcoding](https://cloud.google.com/endpoints/docs/grpc/transcoding):
+Allow clients to use HTTP/JSON to call backends that only support gRPC. ESPv2 will map HTTP/JSON requests
+(and their parameters) to gRPC methods (and their parameters and return types).
+
+* [API Telemetry](https://cloud.google.com/endpoints/docs/grpc/monitoring-your-api):
+Monitor API metrics such as error rates, response latencies, request size, etc. on Google Cloud Platform.
+ESPv2 also writes access logs for each request, providing insight into HTTP headers and response codes.
+
+* [Application Observability](https://cloud.google.com/endpoints/docs/grpc/tracing):
+Understand and debug problems with your API or ESPv2 by viewing traces and application logs.
+
+## Getting Started
+
+The official Google Cloud Endpoints documentation contains tutorials and detailed documentation
+on deploying ESPv2 and managing API traffic.
+
+Quickstart tutorials for deploying ESPv2:
+
+* [Cloud Endpoints for Google Cloud Run](https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-run)
+
+* [Cloud Endpoints for Google Cloud Functions](https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-functions)
+
+Configuring ESPv2:
+
+* [ESPv2 Beta Startup Options](https://cloud.google.com/endpoints/docs/openapi/specify-esp-v2-startup-options)
+
+Understanding ESPv2:
+
+* [Architecture](doc/architecture.md)
+
+* [Use Cases](doc/use-cases.md)
 
 ## ESPv2 Releases
 
 ESPv2 is released as a docker image.
+Currently, the only supported deployment platform is Cloud Run:
 
-Currently we only support running ESPv2 on Cloud Run:
+* [gcr.io/endpoints-release/endpoints-runtime-serverless:2](https://gcr.io/endpoints-release/endpoints-runtime-serverless:2)
 
-- [gcr.io/endpoints-release/endpoints-runtime-serverless:2](https://gcr.io/endpoints-release/endpoints-runtime-serverless:2)
+ESPv2 can be deployed to GKE, but is not supported yet.
+This is a planned feature.
 
-Support for running ESPv2 on GKE is planned.
+## ESPv2 vs ESP
+
+ESPv2 is the next iteration of [ESP](https://github.com/cloudendpoints/esp/).
+Instead of an nginx-based data plane, ESPv2 uses [Envoy](https://www.envoyproxy.io/).
+See the [architecture overview](doc/architecture.md) for more info on ESPv2.
+
+ESPv2 is designed to be *mostly backwards-compatible* with ESP (with the exception of a few startup flags).
+API producers do not need to modify the Endpoints Service Configuration to use ESPv2.
+
+For serverless API gateway deployments, it is recommended to use ESPv2 instead of ESP.
 
 ## Repository Structure
 
 * [api](api): Envoy Filter Configurations developed in ESPv2
 
-* [doc](doc): Documentation
+* [doc](doc): Extended documentation (tutorials, architecture, use cases, etc.)
 
 * [docker](docker): Scripts for packaging ESPv2 in a Docker image for releases
 
@@ -73,24 +131,26 @@ Support for running ESPv2 on GKE is planned.
 
 * [tools](third_party/tools): Assorted tooling
 
-## Contributing
+## Contributing and Support
 
-Your contributions are welcome. Please follow the contributor [guidelines](CONTRIBUTING.md).
+Please join the [google-cloud-endpoints](https://groups.google.com/forum/#!forum/google-cloud-endpoints)
+Google group for announcements on ESPv2.
 
-* [Developer Guide](DEVELOPER.md)
+If you need support from the ESPv2 engineering team:
 
-## ESPv2 Tutorial
+* For issues using ESPv2 with Google Cloud Endpoints, post in the Google Group.
+* For feature requests and bug reports specific to the ESPv2 codebase, file a Github Issue.
 
-To find out more about building, running, and testing ESPv2 for Google Cloud Endpoints:
+Your contributions are welcome:
 
-* [Cloud Endpoints for Google Cloud Run](https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-run)
+* Please follow the [contributor guidelines](CONTRIBUTING.md).
+* Refer to the [developer guide](DEVELOPER.md) for details on building and testing ESPv2.
 
-* [Cloud Endpoints for Google Cloud Functions](https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-functions)
+## License
 
-* [ESPv2 Beta Startup Options](https://cloud.google.com/endpoints/docs/openapi/specify-esp-v2-startup-options)
+[Apache v2](LICENSE) - Google LLC
 
 ## Disclaimer
 
-ESPv2 is in Beta currently.
-
-Please make sure to join [google-cloud-endpoints](https://groups.google.com/forum/#!forum/google-cloud-endpoints) Google group, to get emails about all announcements on ESPv2.
+ESPv2 is currently in Beta for the API Gateway deployment mode.
+ESPv2 does not officially support the sidecar deployment mode (yet).
