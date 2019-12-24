@@ -16,32 +16,70 @@
 
 from __future__ import print_function
 import os
+import logging
 
 
-def assert_env_var(name):
+MISSING_SERVICE_CONFIG_ERROR = '''
+ Did you forget to build the Endpoints service configuration
+ into the ESPv2 image? Please refer to the official serverless
+ quickstart tutorials (below) for more information.
+ 
+ https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-run#configure_esp
+ https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-functions#configure_esp
+ 
+ If you are following along with these tutorials but have not
+ reached the step above yet, this error is expected. Feel free
+ to temporarily disregard this error message.
+ 
+ If you wish to skip this step, please specify the name of the
+ service in the ENDPOINTS_SERVICE_NAME environment variable.
+ Note this deployment mode is **not** officially supported.
+ It is recommended that you follow the tutorials linked above.
+'''
+MALFORMED_ESPv2_ARGS_ERROR = '''
+ Malformed ESPv2_ARGS environment variable.
+ 
+ Please refer to the official ESPv2 Beta startup reference
+ (below) for information on how to format ESPv2_ARGS.
+ 
+ https://cloud.google.com/endpoints/docs/openapi/specify-esp-v2-startup-options#setting-configuration-flags
+'''
+
+
+def assert_env_var(name, help_msg=""):
     if name not in os.environ:
-        raise KeyError(
-            "Serverless ApiProxy expects {} in environment variables.".format(name)
+        raise AssertionError(
+            "Serverless ESPv2 expects {} in environment variables.\n{}"
+            .format(name, help_msg)
         )
 
 
-def make_error_app(error_msg):
+def make_error_app(msg):
     # error_msg must be a utf-8 or ascii bytestring
     def error_app(environ, start_response):
         start_response("503 Service Unavailable", [("Content-Type", "text/plain")])
-        return [error_msg, "\n"]
+        return [msg.encode("utf-8")]
 
     return error_app
 
 
-def serve_error_msg(error_msg):
-    print("Serving error handler with '{}'.".format(error_msg))
+def serve_msg(msg):
     import wsgiref.simple_server
 
-    app = make_error_app(error_msg)
+    app = make_error_app(msg)
     port = int(os.environ["PORT"])
     server = wsgiref.simple_server.make_server("", port, app)
     server.serve_forever()
+
+
+def serve_error_msg(msg):
+    logging.error(msg)
+    serve_msg(msg)
+
+
+def serve_warning_msg(msg):
+    logging.warning(msg)
+    serve_msg(msg)
 
 
 def gen_args(cmd):
@@ -53,7 +91,8 @@ def gen_args(cmd):
         "--compute_platform_override={}".format(PLATFORM)
     ]
 
-    # Uncaught KeyError; if no port, we can't serve a nice error handler. Crash instead.
+    # Uncaught AssertionError;
+    # if no port, we can't serve a nice error handler. Crash instead.
     assert_env_var("PORT")
     ARGS.append("--http_port={}".format(os.environ["PORT"]))
 
@@ -66,9 +105,12 @@ def gen_args(cmd):
         )
     else:
         try:
-            assert_env_var("ENDPOINTS_SERVICE_NAME")
-        except KeyError as error:
-            serve_error_msg(str(error))
+            assert_env_var(
+                "ENDPOINTS_SERVICE_NAME",
+                MISSING_SERVICE_CONFIG_ERROR
+            )
+        except AssertionError as error:
+            serve_warning_msg(str(error))
         ARGS.append("--service={}".format(os.environ["ENDPOINTS_SERVICE_NAME"]))
 
         if "ENDPOINTS_SERVICE_VERSION" in os.environ:
@@ -94,12 +136,15 @@ def gen_args(cmd):
         if arg_value.startswith("^") and "^" in arg_value[1:]:
             delim, arg_value = arg_value[1:].split("^", 1)
         if not delim:
-            serve_error_msg("Malformed ESPv2_ARGS environment variable.")
+            serve_error_msg(MALFORMED_ESPv2_ARGS_ERROR)
 
         ARGS.extend(arg_value.split(delim))
     return ARGS
 
+
 if __name__ == "__main__":
+    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+
     cmd = "/usr/local/bin/python"
     args = gen_args(cmd)
     os.execv(cmd, args)

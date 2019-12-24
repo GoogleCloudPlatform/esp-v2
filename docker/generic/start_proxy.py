@@ -689,9 +689,10 @@ def start_envoy(args):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+
     parser = make_argparser()
     args = parser.parse_args()
-    logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
     cm_proc = start_config_manager(gen_proxy_config(args))
     envoy_proc = start_envoy(args)
