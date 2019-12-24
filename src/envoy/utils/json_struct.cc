@@ -52,7 +52,16 @@ Status JsonStruct::getInteger(const std::string& key, int* value) {
                   "Field is not a number");
   }
 
-  *value = static_cast<uint32_t>(it->second.number_value());
+  // Handle overflows and nan
+  const double number_value = it->second.number_value();
+  if (number_value < INT_MIN || number_value > INT_MAX ||
+      std::isnan(number_value)) {
+    return Status(::google::protobuf::util::error::INVALID_ARGUMENT,
+                  "Field overflows an integer");
+  }
+
+  // Warning: Truncates value!
+  *value = static_cast<int>(number_value);
   return Status::OK;
 }
 

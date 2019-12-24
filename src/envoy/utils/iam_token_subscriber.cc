@@ -117,10 +117,17 @@ void IamTokenSubscriber::onSuccess(Envoy::Http::MessagePtr&& response) {
 }
 
 void IamTokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
-  const uint64_t status_code =
-      Envoy::Http::Utility::getResponseStatus(response->headers());
-  if (status_code != enumToInt(Envoy::Http::Code::OK)) {
-    ENVOY_LOG(error, "getIdentityToken failed: {}", status_code);
+  try {
+    const uint64_t status_code =
+        Envoy::Http::Utility::getResponseStatus(response->headers());
+    if (status_code != enumToInt(Envoy::Http::Code::OK)) {
+      ENVOY_LOG(error, "getIdentityToken is not 200 OK, got: {}", status_code);
+      return;
+    }
+  } catch (const EnvoyException& e) {
+    // This occurs if the status header is missing.
+    // Catch the exception to prevent unwinding and skipping cleanup.
+    ENVOY_LOG(error, "getIdentityToken failed: {}", e.what());
     return;
   }
   ENVOY_LOG(debug, "getIdentityToken success");
@@ -134,16 +141,19 @@ void IamTokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
   std::string token;
   ::google::protobuf::util::JsonParseOptions options;
   ::google::protobuf::Struct response_pb;
-  const auto parse_status = ::google::protobuf::util::JsonStringToMessage(
-      response->bodyAsString(), &response_pb, options);
+  ::google::protobuf::util::Status parse_status =
+      ::google::protobuf::util::JsonStringToMessage(response->bodyAsString(),
+                                                    &response_pb, options);
   if (!parse_status.ok()) {
     ENVOY_LOG(error, "Parsing response failed: {}", parse_status.ToString());
     return;
   }
 
   JsonStruct json_struct(response_pb);
-  if (!json_struct.getString("token", &token).ok()) {
-    ENVOY_LOG(error, "Parsing response failed. Could not find `token`");
+  parse_status = json_struct.getString("token", &token);
+  if (!parse_status.ok()) {
+    ENVOY_LOG(error, "Parsing response failed for field `token`: {}",
+              parse_status.ToString());
     return;
   }
 
@@ -157,8 +167,7 @@ void IamTokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
 void IamTokenSubscriber::onFailure(
     Envoy::Http::AsyncClient::FailureReason reason) {
   active_request_ = nullptr;
-  ENVOY_LOG(error, "getIdentityToken failed with code: {}, {}",
-            enumToInt(reason));
+  ENVOY_LOG(error, "getIdentityToken failed with code: {}", enumToInt(reason));
 
   resetTimer(kFailedRequestTimeout);
   init_target_.ready();

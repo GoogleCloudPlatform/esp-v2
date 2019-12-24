@@ -95,7 +95,7 @@ TEST_F(TokenSubscriberTest, CallOnTokenUpdateOnSuccess) {
 
   std::string str_body(R"({
     "access_token":"TOKEN",
-    "expires_in":3597523200
+    "expires_in":3598797
   })");
   response->body().reset(
       new Buffer::OwnedImpl(str_body.data(), str_body.size()));

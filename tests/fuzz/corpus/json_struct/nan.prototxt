@@ -1,0 +1,9 @@
+pb_struct {
+  fields {
+    key: ""
+    value {
+      number_value: nan
+    }
+  }
+}
+keys_to_check: ""
