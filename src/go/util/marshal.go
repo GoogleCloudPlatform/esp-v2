@@ -149,3 +149,8 @@ func UnmarshalServiceConfig(config io.Reader) (*confpb.Service, error) {
 	}
 	return &serviceConfig, nil
 }
+
+func ProtoToJson(msg proto.Message) (string, error) {
+	marshaler := &jsonpb.Marshaler{}
+	return marshaler.MarshalToString(msg)
+}

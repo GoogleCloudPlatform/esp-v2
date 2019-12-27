@@ -20,7 +20,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/bootstrap"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
 
 	bt "github.com/GoogleCloudPlatform/esp-v2/src/go/bootstrap"
@@ -95,12 +94,8 @@ func CreateBootstrapConfig(opts options.AdsBootstrapperOptions) (string, error) 
 		}
 	}
 
-	marshaler := &jsonpb.Marshaler{
-		Indent: "  ",
-	}
-
-	var jsonStr string
-	if jsonStr, err = marshaler.MarshalToString(bt); err != nil {
+	jsonStr, err := util.ProtoToJson(bt)
+	if err != nil {
 		return "", fmt.Errorf("failed to MarshalToString, error: %v", err)
 	}
 	return jsonStr, nil
