@@ -94,8 +94,6 @@ DEFINE_PROTO_FUZZER(const tests::fuzz::protos::IamTokenSubscriberInput& input) {
 
   } catch (const ProtoValidationException& e) {
     ENVOY_LOG_MISC(debug, "Controlled proto validation failure: {}", e.what());
-  } catch (const EnvoyException& e) {
-    ENVOY_LOG_MISC(debug, "Controlled exception: {}", e.what());
   }
 }
 

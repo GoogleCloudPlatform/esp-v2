@@ -130,23 +130,27 @@ void TokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
     */
     ::google::protobuf::util::JsonParseOptions options;
     ::google::protobuf::Struct response_pb;
-    const auto parse_status = ::google::protobuf::util::JsonStringToMessage(
-        response->bodyAsString(), &response_pb, options);
+    ::google::protobuf::util::Status parse_status =
+        ::google::protobuf::util::JsonStringToMessage(response->bodyAsString(),
+                                                      &response_pb, options);
     if (!parse_status.ok()) {
       ENVOY_LOG(error, "Parsing response failed: {}", parse_status.ToString());
       return;
     }
     JsonStruct json_struct(response_pb);
 
-    if (!json_struct.getString("access_token", &token).ok()) {
-      ENVOY_LOG(error,
-                "Parsing response failed. Could not find `access_token`");
+    parse_status = json_struct.getString("access_token", &token);
+    if (!parse_status.ok()) {
+      ENVOY_LOG(error, "Parsing response failed for field `access_token`: {}",
+                parse_status.ToString());
       return;
     }
 
     int expires_seconds;
-    if (!json_struct.getInteger("expires_in", &expires_seconds).ok()) {
-      ENVOY_LOG(error, "Parsing response failed. Could not find `expires_in`");
+    parse_status = json_struct.getInteger("expires_in", &expires_seconds);
+    if (!parse_status.ok()) {
+      ENVOY_LOG(error, "Parsing response failed for field `expires_in`: {}",
+                parse_status.ToString());
       return;
     }
     expires_in = std::chrono::seconds(expires_seconds);
