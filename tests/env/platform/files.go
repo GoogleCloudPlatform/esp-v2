@@ -46,6 +46,8 @@ const (
 	Version
 
 	// Configurations
+	AuthServiceConfig
+	AuthEnvoyConfig
 	ScServiceConfig
 	ScEnvoyConfig
 	DrServiceConfig
@@ -72,6 +74,8 @@ var fileMap = map[RuntimeFile]string{
 	ProxyKey:                "../../env/testdata/proxy.key",
 	LogMetrics:              "../../env/testdata/logs_metrics.pb.txt",
 	Version:                 "../../../VERSION",
+	AuthServiceConfig:       "../../../../examples/auth/service_config_generated.json",
+	AuthEnvoyConfig:         "../../../../examples/auth/envoy_config.json",
 	ScServiceConfig:         "../../../../examples/service_control/service_config_generated.json",
 	ScEnvoyConfig:           "../../../../examples/service_control/envoy_config.json",
 	DrServiceConfig:         "../../../../examples/dynamic_routing/service_config_generated.json",

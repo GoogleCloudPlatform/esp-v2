@@ -16,6 +16,7 @@ package static
 
 import (
 	"bytes"
+	"encoding/json"
 	"flag"
 	"io/ioutil"
 	"testing"
@@ -24,7 +25,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -52,11 +52,22 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 			envoyConfigPath:   platform.GetFilePath(platform.ScEnvoyConfig),
 		},
 		{
+			desc: "envoy config for auth",
+			flags: map[string]string{
+				"backend_protocol":            "http2",
+				"disable_tracing":             "true",
+				"skip_service_control_filter": "true",
+			},
+			serviceConfigPath: platform.GetFilePath(platform.AuthServiceConfig),
+			envoyConfigPath:   platform.GetFilePath(platform.AuthEnvoyConfig),
+		},
+		{
 			desc: "envoy config with dynamic routing",
 			flags: map[string]string{
-				"backend_protocol":       "http2",
-				"disable_tracing":        "true",
-				"enable_backend_routing": "true",
+				"backend_protocol":            "http2",
+				"disable_tracing":             "true",
+				"skip_service_control_filter": "true",
+				"enable_backend_routing":      "true",
 			},
 			serviceConfigPath: platform.GetFilePath(platform.DrServiceConfig),
 			envoyConfigPath:   platform.GetFilePath(platform.DrEnvoyConfig),
@@ -100,15 +111,15 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 			t.Fatalf("Unmarshal() returned error %v, want nil", err)
 		}
 
-		if !proto.Equal(gotBootstrap, &expectedBootstrap) {
-			gotString, err := bootstrapToJson(gotBootstrap)
-			if err != nil {
-				t.Fatal(err)
-			}
-			wantString, err := bootstrapToJson(&expectedBootstrap)
-			if err != nil {
-				t.Fatal(err)
-			}
+		gotString, err := bootstrapToJson(gotBootstrap)
+		if err != nil {
+			t.Fatal(err)
+		}
+		wantString, err := bootstrapToJson(&expectedBootstrap)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if gotString != wantString {
 			t.Errorf("\ngot : %v, \nwant: %v", gotString, wantString)
 		}
 	}
@@ -123,5 +134,11 @@ func bootstrapToJson(protoMsg *bootstrappb.Bootstrap) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return gotString, nil
+	var jsonObject map[string]interface{}
+	err = json.Unmarshal([]byte(gotString), &jsonObject)
+	if err != nil {
+		return "", err
+	}
+	outputString, err := json.Marshal(jsonObject)
+	return string(outputString), err
 }
