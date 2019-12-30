@@ -20,7 +20,7 @@ import os, inspect
 currentdir = os.path.dirname(
     os.path.abspath(inspect.getfile(inspect.currentframe())))
 sys.path.append(currentdir + "/../../docker/generic")
-from start_proxy import gen_bootstrap_conf, make_argparser, gen_proxy_config
+from start_proxy import gen_bootstrap_conf, make_argparser, gen_proxy_config, gen_envoy_args
 
 
 class TestStartProxy(unittest.TestCase):
@@ -185,6 +185,31 @@ class TestStartProxy(unittest.TestCase):
             gotArgs = gen_proxy_config(self.parser.parse_args(flags))
           print(cm.exception)
           self.assertEqual(cm.exception.code, 1)
+
+    def test_gen_envoy_args(self):
+      testcases = [
+          # Default
+          (
+              [],
+              ["bin/envoy", "-c", "/tmp/bootstrap.json",
+               "--disable-hot-restart",
+               "--log-format %L%m%d %T.%e %t envoy] [%t][%n]%v",
+               "--log-format-escaped"]
+          ),
+          # Debug mode enabled
+          (
+              ["--enable_debug"],
+              ["bin/envoy", "-c", "/tmp/bootstrap.json",
+               "--disable-hot-restart",
+               "--log-format %L%m%d %T.%e %t envoy] [%t][%n]%v",
+               "--log-format-escaped",
+               "-l debug"]
+          )
+      ]
+
+      for flags, wantedArgs in testcases:
+        gotArgs = gen_envoy_args(self.parser.parse_args(flags))
+        self.assertEqual(gotArgs, wantedArgs)
 
 if __name__ == '__main__':
     unittest.main()
