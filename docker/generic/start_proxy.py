@@ -85,7 +85,6 @@ def gen_bootstrap_conf(args):
              str(args.http_request_timeout_s)])
 
     if args.enable_debug:
-        os.environ["ENVOY_ARGS"] = "-l debug"
         cmd.append("--enable_admin")
 
     if args.enable_admin and not args.enable_debug:
@@ -93,8 +92,6 @@ def gen_bootstrap_conf(args):
 
     bootstrap_file = DEFAULT_CONFIG_DIR + BOOTSTRAP_CONFIG
     cmd.append(bootstrap_file)
-    # Use environment variable to pass it to start_proxy.sh
-    os.environ["BOOTSTRAP_FILE"] = bootstrap_file
     print(cmd)
     return cmd
 
@@ -659,6 +656,17 @@ def gen_proxy_config(args):
         proxy_conf.append("--non_gcp")
     return proxy_conf
 
+def gen_envoy_args(args):
+    cmd = [ENVOY_BIN, "-c", DEFAULT_CONFIG_DIR + BOOTSTRAP_CONFIG,
+           "--disable-hot-restart",
+           "--log-format %L%m%d %T.%e %t envoy] [%t][%n]%v",
+           "--log-format-escaped"]
+
+    if args.enable_debug:
+        cmd.append("-l debug")
+
+    return cmd
+
 def output_reader(proc):
     for line in iter(proc.stdout.readline, b''):
         sys.stdout.write(line.decode())
@@ -674,12 +682,10 @@ def start_config_manager(proxy_conf):
 
 def start_envoy(args):
     subprocess.call(gen_bootstrap_conf(args))
-    cmd = [ENVOY_BIN, "-c", DEFAULT_CONFIG_DIR + BOOTSTRAP_CONFIG,
-           "--disable-hot-restart",
-           "--log-format %L%m%d %T.%e %t envoy] [%t][%n]%v",
-           "--log-format-escaped"]
 
+    cmd = gen_envoy_args(args)
     print("Starting Envoy with args: {}".format(cmd))
+
     proc = subprocess.Popen(cmd,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT)
