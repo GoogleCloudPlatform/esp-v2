@@ -100,3 +100,11 @@ func ResolveJwksUriUsingOpenID(uri string) (string, error) {
 func IamIdentityTokenSuffix(IamServiceAccount string) string {
 	return fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateIdToken", IamServiceAccount)
 }
+
+func ExtraAddressFromURI(jwksUri string) (string, error) {
+	_, hostname, port, _, err := ParseURI(jwksUri)
+	if err != nil {
+		return "", fmt.Errorf("Fail to parse uri %s with error %v", jwksUri, err)
+	}
+	return fmt.Sprintf("%s:%v", hostname, port), nil
+}

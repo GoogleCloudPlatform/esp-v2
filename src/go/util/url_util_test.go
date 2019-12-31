@@ -178,3 +178,33 @@ func TestResolveJwksUriUsingOpenID(t *testing.T) {
 	}
 
 }
+
+func TestExtraAddressFromURI(t *testing.T) {
+	testData := []struct {
+		desc          string
+		uri           string
+		wantedAddress string
+		wantedError   string
+	}{
+		{
+			desc:          "Succeeded to parse uri",
+			uri:           "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
+			wantedAddress: "www.googleapis.com:443",
+		},
+		{
+			desc:        "Failed with wrong-format uri",
+			uri:         "%",
+			wantedError: "Fail to parse uri % with error parse https://%: invalid URL escape \"%\"",
+		},
+	}
+
+	for i, tc := range testData {
+		generatedClusterName, err := ExtraAddressFromURI(tc.uri)
+		if generatedClusterName != tc.wantedAddress {
+			t.Errorf("Test Desc(%d): %s, ExtraAddressFromURI got: %v, want: %v", i, tc.desc, generatedClusterName, tc.wantedAddress)
+		}
+		if err != nil && err.Error() != tc.wantedError {
+			t.Errorf("Test Desc(%d): %s, ExtraAddressFromURI got: %v, want: %v", i, tc.desc, err.Error(), tc.wantedError)
+		}
+	}
+}

@@ -148,18 +148,29 @@ func makeIamCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
 func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, error) {
 	var providerClusters []*v2pb.Cluster
 	authn := serviceInfo.ServiceConfig().GetAuthentication()
+	generatedClusters := map[string]bool{}
+
 	for _, provider := range authn.GetProviders() {
 		jwksUri := provider.GetJwksUri()
-		scheme, hostname, port, _, err := util.ParseURI(jwksUri)
+		clusterName, err := util.ExtraAddressFromURI(jwksUri)
 		if err != nil {
-			glog.Warningf("Fail to parse jwksUri %s with error %v", jwksUri, err)
-			scheme, hostname, port, _, _ = util.ParseURI(util.FakeJwksUri)
-			provider.JwksUri = util.FakeJwksUri
+			return nil, err
+		}
+		if ok, _ := generatedClusters[clusterName]; ok {
+			continue
+		}
+		generatedClusters[clusterName] = true
+
+		scheme, hostname, port, _, err := util.ParseURI(jwksUri)
+
+		if err != nil {
+			return nil, fmt.Errorf("Fail to parse jwksUri %s with error %v", jwksUri, err)
 		}
 
 		connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
+
 		c := &v2pb.Cluster{
-			Name:           provider.GetIssuer(),
+			Name:           clusterName,
 			LbPolicy:       v2pb.Cluster_ROUND_ROBIN,
 			ConnectTimeout: connectTimeoutProto,
 			// Note: It may not be V4.
@@ -175,6 +186,7 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, erro
 			}
 			c.TransportSocket = transportSocket
 		}
+
 		providerClusters = append(providerClusters, c)
 
 		glog.Infof("Add provider cluster configuration for %v: %v", provider.JwksUri, c)

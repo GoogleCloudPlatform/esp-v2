@@ -314,7 +314,7 @@ func TestFetchListeners(t *testing.T) {
                                  "remoteJwks":{
                                     "cacheDuration":"300s",
                                     "httpUri":{
-                                       "cluster":"https://test_issuer.google.com/",
+                                       "cluster":"$JWKSURI:443",
                                        "timeout":"5s",
                                        "uri":"$JWKSURI"
                                     }
@@ -517,7 +517,7 @@ func TestFetchListeners(t *testing.T) {
                                  "remoteJwks":{
                                     "cacheDuration":"300s",
                                     "httpUri":{
-                                       "cluster":"https://test_issuer.google.com/",
+                                       "cluster":"$JWKSURI:443",
                                        "timeout":"5s",
                                        "uri":"$JWKSURI"
                                     }
@@ -728,7 +728,7 @@ func TestFetchListeners(t *testing.T) {
                                  "remoteJwks":{
                                     "cacheDuration":"300s",
                                     "httpUri":{
-                                       "cluster":"https://test_issuer.google.com/",
+                                       "cluster":"$JWKSURI:443",
                                        "timeout":"5s",
                                        "uri":"$JWKSURI"
                                     }
@@ -753,7 +753,7 @@ func TestFetchListeners(t *testing.T) {
                                  "remoteJwks":{
                                     "cacheDuration":"300s",
                                     "httpUri":{
-                                       "cluster":"https://test_issuer.google.com/",
+                                       "cluster":"$JWKSURI:443",
                                        "timeout":"5s",
                                        "uri":"$JWKSURI"
                                     }
@@ -1161,7 +1161,7 @@ func TestFetchListeners(t *testing.T) {
                                  "remoteJwks":{
                                     "cacheDuration":"300s",
                                     "httpUri":{
-                                       "cluster":"https://test_issuer.google.com/",
+                                       "cluster":"$JWKSURI:443",
                                        "timeout":"5s",
                                        "uri":"$JWKSURI"
                                     }
