@@ -33,13 +33,15 @@ function usage() {
   echo "options:"
   echo "  -s <secret file>"
   echo "  -a <audience>"
+  echo "  -c <service account email>"
   echo "  -g <path to auth_token_gen file>"
   exit 2
 }
 
-while getopts a:s:? arg; do
+while getopts a:c:s:? arg; do
   case ${arg} in
     a) AUDIENCE=${OPTARG} ;;
+    c) SERVICE_ACCOUNT=${OPTARG} ;;
     s) SECRET_FILE=${OPTARG} ;;
     ?) usage ;;
   esac

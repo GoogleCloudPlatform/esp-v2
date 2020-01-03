@@ -134,7 +134,7 @@ We can test with different scenario by running the following scripts:
   Download GoogleServiceAccount from your cloud project to generate JWT token, gen-auth-token is an example script to generate jwt token, please update accordingly
 
   ```
-  JWT_TOKEN=`./tests/e2e/scripts/gen-auth-token.sh -a cloudesf-test-client -s YourSecretFile`
+  JWT_TOKEN=`./tests/e2e/scripts/gen-auth-token.sh -a cloudesf-test-client -c service-account-email -s YourSecretFile`
 
   go run tests/endpoints/bookstore_grpc/client_main.go --addr=$HOST:80 --method=ListShelves --client_protocol=grpc --token=$JWT_TOKEN
   ```
@@ -150,7 +150,7 @@ We can test with different scenario by running the following scripts:
 **4. Invalid audience**
 
   ```
-  JWT_TOKEN_INVALID_AUD=`./tests/e2e/scripts/gen-auth-token.sh -a unauthorized-client  -s YourSecretFile`
+  JWT_TOKEN_INVALID_AUD=`./tests/e2e/scripts/gen-auth-token.sh -a unauthorized-client -c service-account-email -s YourSecretFile`
 
   go run tests/endpoints/bookstore_grpc/client_main.go --addr=$HOST:80 --method=ListShelves --client_protocol=grpc --token=$JWT_TOKEN_INVALID_AUD --apikey=$API_KEY
   ```
