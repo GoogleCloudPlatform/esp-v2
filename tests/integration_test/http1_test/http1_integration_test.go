@@ -36,7 +36,8 @@ func TestHttp1Basic(t *testing.T) {
 	configID := "test-config-id"
 
 	args := []string{"--service_config_id=" + configID,
-		"--skip_service_control_filter=true", "--backend_protocol=http1", "--rollout_strategy=fixed"}
+		"--skip_service_control_filter=true", "--backend_protocol=http1", "--rollout_strategy=fixed",
+		"--healthz=/"}
 
 	s := env.NewTestEnv(comp.TestHttp1Basic, "echo")
 	defer s.TearDown()
@@ -45,23 +46,47 @@ func TestHttp1Basic(t *testing.T) {
 	}
 
 	testData := []struct {
-		desc     string
-		wantResp string
+		desc        string
+		path        string
+		method      string
+		wantResp    string
+		wantedError string
 	}{
 		{
 			desc:     "succeed, no Jwt required",
+			path:     "/echo",
+			method:   "POST",
 			wantResp: `{"message":"hello"}`,
+		},
+		{
+			desc:   "health check succeed",
+			path:   "/",
+			method: "GET",
+		},
+		{
+			desc:        "health check fail",
+			path:        "/healthz",
+			method:      "GET",
+			wantedError: "404 Not Found",
 		},
 	}
 	for _, tc := range testData {
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo")
-		resp, err := client.DoPost(url, echo)
-		if err != nil {
-			t.Fatal(err)
+		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		var resp []byte
+		var err error
+		if tc.method == "GET" {
+			resp, err = client.DoGet(url)
+		} else if tc.method == "POST" {
+			resp, err = client.DoPost(url, echo)
+		} else {
+			t.Fatal(fmt.Errorf("unexpected method"))
 		}
-
-		if !strings.Contains(string(resp), tc.wantResp) {
-			t.Errorf("expected: %s, got: %s", tc.wantResp, string(resp))
+		if tc.wantedError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantedError)) {
+			t.Errorf("Test (%s): failed, expected err: %s, got: %s", tc.desc, tc.wantedError, err)
+		} else {
+			if !strings.Contains(string(resp), tc.wantResp) {
+				t.Errorf("expected: %s, got: %s", tc.wantResp, string(resp))
+			}
 		}
 	}
 }

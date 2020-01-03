@@ -47,6 +47,7 @@ type ConfigGeneratorOptions struct {
 	// Network related configurations.
 	ClusterAddress       string
 	ListenerAddress      string
+	Healthz              string
 	ServiceManagementURL string
 	ClusterPort          int
 	ListenerPort         int

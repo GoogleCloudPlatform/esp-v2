@@ -67,23 +67,24 @@ class TestStartProxy(unittest.TestCase):
             # grpc backend with fixed version.
             (['--service=test_bookstore.gloud.run', '--version=2019-11-09r0',
               '--backend=grpc://127.0.0.1:8000', '--http_request_timeout_s=10',
-              '--log_jwt_payloads=aud,exp', '--disable_tracing'],
+              '--log_jwt_payloads=aud,exp', '--disable_tracing', '--healthz=/'],
              ['bin/configmanager', '--logtostderr','--backend_protocol', 'grpc',
               '--cluster_address', '127.0.0.1', '--cluster_port', '8000',
-              '--rollout_strategy', 'fixed',  '--v', '0', '--log_jwt_payloads', 'aud,exp',
+              '--rollout_strategy', 'fixed',  '--healthz', '/',
+              '--v', '0', '--log_jwt_payloads', 'aud,exp',
               '--service', 'test_bookstore.gloud.run',
               '--http_request_timeout_s', '10',
               '--service_config_id', '2019-11-09r0',
-              '--disable_tracing'
+              '--disable_tracing',
               ]),
             # backend with DNS address, no version.
             (['--service=echo.gloud.run', '--backend=echo:8080',
               '--log_request_headers=x-google-x',
-              '--service_control_check_timeout_ms=100',
+              '--service_control_check_timeout_ms=100', '-z=hc',
               '--backend_dns_lookup_family=v4only', '--disable_tracing'],
              ['bin/configmanager', '--logtostderr','--backend_protocol', 'http1',
               '--cluster_address', 'echo', '--cluster_port', '8080',
-              '--rollout_strategy', 'fixed', '--v', '0',
+              '--rollout_strategy', 'fixed', '--healthz', 'hc', '--v', '0',
               '--log_request_headers', 'x-google-x',
               '--service', 'echo.gloud.run',
               '--service_control_check_timeout_ms', '100',
@@ -91,7 +92,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_dns_lookup_family', 'v4only'
               ]),
             # backend protocol override, with default backend.
-            (['--backend_protocol=grpc', '--rollout_strategy=managed',
+            (['--backend_protocol=grpc', '-R=managed',
               '--http_port=8079', '--service_control_quota_retries=3',
               '--service_control_report_timeout_ms=300',
               '--service_control_network_fail_open', '--check_metadata',

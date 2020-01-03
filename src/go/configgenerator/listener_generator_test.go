@@ -362,7 +362,16 @@ func TestBackendRoutingFilter(t *testing.T) {
 		}
 
 		marshaler := &jsonpb.Marshaler{}
-		gotFilter, err := marshaler.MarshalToString(makeBackendRoutingFilter(fakeServiceInfo))
+		filter, err := makeBackendRoutingFilter(fakeServiceInfo)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		gotFilter, err := marshaler.MarshalToString(filter)
+		if err != nil {
+			t.Fatal(err)
+		}
+
 		gotFilter = normalizeJson(gotFilter)
 		want := normalizeJson(tc.wantBackendRoutingFilter)
 
@@ -958,6 +967,117 @@ func TestPathMatcherFilter(t *testing.T) {
 		want := normalizeJson(tc.wantPathMatcherFilter)
 		if !strings.Contains(gotFilter, want) {
 			t.Errorf("Test Desc(%d): %s, makePathMatcherFilter failed, got: %s, want: %s", i, tc.desc, gotFilter, want)
+		}
+	}
+}
+
+func TestHealthCheckFilter(t *testing.T) {
+	testdata := []struct {
+		desc                  string
+		protocol              string
+		healthz               string
+		fakeServiceConfig     *confpb.Service
+		wantHealthCheckFilter string
+	}{
+		{
+			desc:     "Success, generate health check filter for gRPC",
+			protocol: "grpc",
+			healthz:  "healthz",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "endpoints.examples.bookstore.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name: "CreateShelf",
+							},
+						},
+					},
+				},
+			},
+			wantHealthCheckFilter: `{
+        "name": "envoy.health_check",
+        "typedConfig": {
+          "@type":"type.googleapis.com/envoy.config.filter.http.health_check.v2.HealthCheck",
+          "passThroughMode":false,
+          "headers": [
+            {
+              "exactMatch": "/healthz",
+              "name":":path"
+            }
+          ]
+        }
+      }`,
+		},
+		{
+			desc:     "Success, generate health check filter for http",
+			protocol: "http2",
+			healthz:  "/",
+			fakeServiceConfig: &confpb.Service{
+				Name: "foo.endpoints.bar.cloud.goog",
+				Apis: []*apipb.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "1.cloudesf_testing_cloud_goog.Foo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "foo/{id}",
+							},
+						},
+					},
+				},
+			},
+			wantHealthCheckFilter: `{
+        "name": "envoy.health_check",
+        "typedConfig": {
+          "@type":"type.googleapis.com/envoy.config.filter.http.health_check.v2.HealthCheck",
+          "passThroughMode":false,
+          "headers": [
+            {
+              "exactMatch": "/",
+              "name":":path"
+            }
+          ]
+        }
+      }`,
+		},
+	}
+
+	for _, tc := range testdata {
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = tc.protocol
+		opts.Healthz = tc.healthz
+		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		marshaler := &jsonpb.Marshaler{}
+		filter, err := makeHealthCheckFilter(fakeServiceInfo)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		gotFilter, err := marshaler.MarshalToString(filter)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		gotFilter = normalizeJson(gotFilter)
+		want := normalizeJson(tc.wantHealthCheckFilter)
+
+		if !strings.Contains(gotFilter, want) {
+			t.Errorf("makeHealthCheckFilter failed,\ngot: %s, \nwant: %s", gotFilter, want)
 		}
 	}
 }
