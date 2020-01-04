@@ -41,7 +41,7 @@ func init() {
 func TestGRPC(t *testing.T) {
 
 	configID := "test-config-id"
-	args := []string{"--service_config_id=" + configID, "--backend_protocol=grpc", "--rollout_strategy=fixed"}
+	args := []string{"--service_config_id=" + configID, "--backend_protocol=grpc", "--rollout_strategy=fixed", "--healthz=healthz"}
 
 	s := env.NewTestEnv(comp.TestGRPC, "bookstore")
 	defer s.TearDown()
@@ -57,6 +57,28 @@ func TestGRPC(t *testing.T) {
 		wantResp       string
 		wantError      string
 	}{
+		{
+			desc:           "Http1 client health check succeed",
+			clientProtocol: "http",
+			method:         "/healthz",
+		},
+		{
+			desc:           "Http1 client health check fail with wrong path",
+			clientProtocol: "http",
+			method:         "/healthcheck",
+			wantError:      "404 Not Found",
+		},
+		{
+			desc:           "Http2 client health check succeed",
+			clientProtocol: "http2",
+			method:         "/healthz",
+		},
+		{
+			desc:           "Http2 client health check fail with wrong path",
+			clientProtocol: "http2",
+			method:         "/healthcheck",
+			wantError:      "404 Not Found",
+		},
 		{
 			desc:           "gRPC client calling gRPC backend",
 			clientProtocol: "grpc",

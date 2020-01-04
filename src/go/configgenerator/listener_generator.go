@@ -32,7 +32,9 @@ import (
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	listenerpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
+	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 	gspb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/grpc_stats/v2alpha"
+	hcpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/health_check/v2"
 	jwtpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
@@ -51,6 +53,16 @@ const (
 // MakeListener provides a dynamic listener for Envoy
 func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	httpFilters := []*hcmpb.HttpFilter{}
+
+	if serviceInfo.Options.Healthz != "" {
+		hcFilter, err := makeHealthCheckFilter(serviceInfo)
+		if err != nil {
+			return nil, err
+		}
+		httpFilters = append(httpFilters, hcFilter)
+		jsonStr, _ := util.ProtoToJson(hcFilter)
+		glog.V(1).Infof("adding Healthz filter config: %v", jsonStr)
+	}
 
 	if serviceInfo.Options.CorsPreset == "basic" || serviceInfo.Options.CorsPreset == "cors_with_regex" {
 		corsFilter := &hcmpb.HttpFilter{
@@ -123,7 +135,11 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		httpFilters = append(httpFilters, backendAuthFilter)
 		jsonStr, _ := util.ProtoToJson(backendAuthFilter)
 		glog.Infof("adding Backend Auth Filter config: %v", jsonStr)
-		backendRoutingFilter := makeBackendRoutingFilter(serviceInfo)
+		backendRoutingFilter, err := makeBackendRoutingFilter(serviceInfo)
+		if err != nil {
+			return nil, err
+		}
+
 		httpFilters = append(httpFilters, backendRoutingFilter)
 		jsonStr, _ = util.ProtoToJson(backendRoutingFilter)
 		glog.Infof("adding Backend Routing Filter config: %v", jsonStr)
@@ -587,7 +603,7 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	return backendAuthFilter
 }
 
-func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
+func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
 	rules := []*brpb.BackendRoutingRule{}
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
@@ -603,14 +619,44 @@ func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		}
 	}
 
-	backendRoutingConfig := &brpb.FilterConfig{Rules: rules}
-	backendRoutingConfigStruct, _ := ptypes.MarshalAny(backendRoutingConfig)
-	backendRoutingFilter := &hcmpb.HttpFilter{
+	backendRoutingConfigStruct, err := ptypes.MarshalAny(&brpb.FilterConfig{Rules: rules})
+	if err != nil {
+		return nil, err
+	}
+	return &hcmpb.HttpFilter{
 		Name:       util.BackendRouting,
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{backendRoutingConfigStruct},
+	}, nil
+}
+
+func makeHealthCheckFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
+	var path string
+	if strings.HasPrefix(serviceInfo.Options.Healthz, "/") {
+		path = serviceInfo.Options.Healthz
+	} else {
+		path = fmt.Sprintf("/%s", serviceInfo.Options.Healthz)
 	}
 
-	return backendRoutingFilter
+	hcFilterConfig := &hcpb.HealthCheck{
+		PassThroughMode: &wrapperspb.BoolValue{Value: false},
+
+		Headers: []*routepb.HeaderMatcher{
+			{
+				Name: ":path",
+				HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
+					ExactMatch: path,
+				},
+			},
+		},
+	}
+	hcFilterConfigStruc, err := ptypes.MarshalAny(hcFilterConfig)
+	if err != nil {
+		return nil, err
+	}
+	return &hcmpb.HttpFilter{
+		Name:       util.HealthCheck,
+		ConfigType: &hcmpb.HttpFilter_TypedConfig{hcFilterConfigStruc},
+	}, nil
 }
 
 func makeRouterFilter(opts options.ConfigGeneratorOptions) *hcmpb.HttpFilter {

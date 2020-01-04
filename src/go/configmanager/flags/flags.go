@@ -56,6 +56,7 @@ var (
 
 	ClusterPort  = flag.Int("cluster_port", 8082, "cluster port")
 	ListenerPort = flag.Int("listener_port", 8080, "listener port")
+	Healthz      = flag.String("healthz", "", "path for health check of ESPv2 proxy itself")
 
 	RootCertsPath = flag.String("root_certs_path", util.DefaultRootCAPaths, "Path to the root certificates to make TSL connection.")
 
@@ -119,6 +120,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		ServiceManagementURL:          *ServiceManagementURL,
 		ClusterPort:                   *ClusterPort,
 		ListenerPort:                  *ListenerPort,
+		Healthz:                       *Healthz,
 		RootCertsPath:                 *RootCertsPath,
 		ServiceAccountKey:             *ServiceAccountKey,
 		SkipJwtAuthnFilter:            *SkipJwtAuthnFilter,

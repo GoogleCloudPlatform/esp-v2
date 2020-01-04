@@ -178,6 +178,12 @@ environment variable or by passing "-k" flag to this script.
        The port to accept HTTP/1.x connections.
        Default is {port}'''.format(port=DEFAULT_LISTENER_HTTP1_PORT))
 
+    parser.add_argument('-z', '--healthz', default=None, help='''Define a
+    health checking endpoint on the same ports as the application backend. For
+    example, "-z healthz" makes ESPv2 return code 200 for location "/healthz",
+    instead of forwarding the request to the backend. Please don't use
+    any paths conflicting with your normal requests. Default: not used.''')
+
     parser.add_argument(
         '-R',
         '--rollout_strategy',
@@ -458,12 +464,12 @@ environment variable or by passing "-k" flag to this script.
 def enforce_conflict_args(args):
     if args.rollout_strategy:
         if args.rollout_strategy not in {"fixed", "managed"}:
-          return "Flag --R or  --rollout_strategy must be 'fixed' or 'managed'."
+          return "Flag -R or  --rollout_strategy must be 'fixed' or 'managed'."
         if args.rollout_strategy != DEFAULT_ROLLOUT_STRATEGY:
           if args.version:
             return "Flag --version cannot be used together with -R or --rollout_strategy."
           if args.service_json_path:
-            return "Flag --rollout_strategy must be fixed with --service_json_path."
+            return "Flag -R or --rollout_strategy must be fixed with --service_json_path."
 
     if args.service_json_path:
         if args.service:
@@ -529,6 +535,9 @@ def gen_proxy_config(args):
         "--cluster_address", cluster_address, "--cluster_port", cluster_port,
         "--rollout_strategy", args.rollout_strategy,
     ]
+
+    if args.healthz:
+      proxy_conf.extend(["--healthz", args.healthz])
 
     if args.enable_debug:
         proxy_conf.extend(["--v", "1"])
