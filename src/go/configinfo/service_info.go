@@ -285,6 +285,24 @@ func (s *ServiceInfo) processHttpRule() error {
 		}
 	}
 
+	// Add HttpRule for HealthCheck method
+	if s.Options.Healthz != "" {
+		hcMethod, err := s.getOrCreateMethod("ESPv2.HealthCheck")
+		if err != nil {
+			return err
+		}
+		if !strings.HasPrefix(s.Options.Healthz, "/") {
+			s.Options.Healthz = fmt.Sprintf("/%s", s.Options.Healthz)
+		}
+
+		hcMethod.HttpRule = append(hcMethod.HttpRule, &commonpb.Pattern{
+			UriTemplate: s.Options.Healthz,
+			HttpMethod:  util.GET,
+		})
+		hcMethod.SkipServiceControl = true
+		hcMethod.IsGenerated = true
+	}
+
 	return nil
 }
 
@@ -303,8 +321,8 @@ func (s *ServiceInfo) addOptionMethod(apiName string, index int, path string, ba
 				HttpMethod:  util.OPTIONS,
 			},
 		},
-		IsGeneratedOption: true,
-		BackendInfo:       backendInfo,
+		IsGenerated: true,
+		BackendInfo: backendInfo,
 	}
 }
 

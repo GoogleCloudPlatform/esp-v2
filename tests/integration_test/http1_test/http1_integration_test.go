@@ -36,48 +36,53 @@ func TestHttp1Basic(t *testing.T) {
 	configID := "test-config-id"
 
 	args := []string{"--service_config_id=" + configID,
-		"--skip_service_control_filter=true", "--backend_protocol=http1", "--rollout_strategy=fixed",
-		"--healthz=/"}
+		"--backend_protocol=http1", "--rollout_strategy=fixed", "--healthz=/healthz"}
 
 	s := env.NewTestEnv(comp.TestHttp1Basic, "echo")
 	defer s.TearDown()
+
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 
 	testData := []struct {
-		desc        string
-		path        string
-		method      string
-		wantResp    string
-		wantedError string
+		desc               string
+		path               string
+		method             string
+		wantResp           string
+		wantedError        string
+		wantScRequestCount int
 	}{
 		{
-			desc:     "succeed, no Jwt required",
-			path:     "/echo",
-			method:   "POST",
-			wantResp: `{"message":"hello"}`,
+			desc:               "succeed, no Jwt required",
+			path:               "/echo",
+			method:             "POST",
+			wantResp:           `{"message":"hello"}`,
+			wantScRequestCount: 2,
 		},
 		{
-			desc:   "health check succeed",
-			path:   "/",
-			method: "GET",
+			desc:               "health check succeed",
+			path:               "/healthz",
+			method:             "GET",
+			wantScRequestCount: 0,
 		},
 		{
-			desc:        "health check fail",
-			path:        "/healthz",
-			method:      "GET",
-			wantedError: "404 Not Found",
+			desc:               "health check fail",
+			path:               "/healthcheck",
+			method:             "GET",
+			wantedError:        "404 Not Found",
+			wantScRequestCount: 1,
 		},
 	}
 	for _, tc := range testData {
+		s.ServiceControlServer.ResetRequestCount()
 		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
 		var resp []byte
 		var err error
 		if tc.method == "GET" {
 			resp, err = client.DoGet(url)
 		} else if tc.method == "POST" {
-			resp, err = client.DoPost(url, echo)
+			resp, err = client.DoPost(fmt.Sprintf("%s?key=api-key", url), echo)
 		} else {
 			t.Fatal(fmt.Errorf("unexpected method"))
 		}
@@ -85,8 +90,12 @@ func TestHttp1Basic(t *testing.T) {
 			t.Errorf("Test (%s): failed, expected err: %s, got: %s", tc.desc, tc.wantedError, err)
 		} else {
 			if !strings.Contains(string(resp), tc.wantResp) {
-				t.Errorf("expected: %s, got: %s", tc.wantResp, string(resp))
+				t.Errorf("Test (%s): expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
 			}
+		}
+		// Health Check should not check/report to ServiceControl.
+		if err = s.ServiceControlServer.VerifyRequestCount(tc.wantScRequestCount); err != nil {
+			t.Errorf("Test (%s): verify request count failed, got: %v", tc.desc, err)
 		}
 	}
 }

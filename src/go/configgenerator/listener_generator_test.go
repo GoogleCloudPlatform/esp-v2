@@ -632,10 +632,11 @@ func TestPathMatcherFilter(t *testing.T) {
 		desc                  string
 		fakeServiceConfig     *confpb.Service
 		backendProtocol       string
+		healthz               string
 		wantPathMatcherFilter string
 	}{
 		{
-			desc: "Path Matcher filter - gRPC backend",
+			desc: "Path Matcher filter with Healthz - gRPC backend",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -653,6 +654,7 @@ func TestPathMatcherFilter(t *testing.T) {
 				},
 			},
 			backendProtocol: "GRPC",
+			healthz:         "healthz",
 			wantPathMatcherFilter: `
 {
    "name":"envoy.filters.http.path_matcher",
@@ -660,6 +662,13 @@ func TestPathMatcherFilter(t *testing.T) {
       "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
       "rules":[
          {
+            "operation":"ESPv2.HealthCheck",
+            "pattern":{
+               "httpMethod":"GET",
+               "uriTemplate":"/healthz"
+            }
+         },
+	 {
             "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
             "pattern":{
                "httpMethod":"POST",
@@ -679,7 +688,7 @@ func TestPathMatcherFilter(t *testing.T) {
 			      `,
 		},
 		{
-			desc: "Path Matcher filter - HTTP backend",
+			desc: "Path Matcher filter with Healthz - HTTP backend",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -714,6 +723,7 @@ func TestPathMatcherFilter(t *testing.T) {
 				},
 			},
 			backendProtocol: "HTTP1",
+			healthz:         "/",
 			wantPathMatcherFilter: `
 			        {
    "name":"envoy.filters.http.path_matcher",
@@ -732,6 +742,13 @@ func TestPathMatcherFilter(t *testing.T) {
             "pattern":{
                "httpMethod":"GET",
                "uriTemplate":"/auth/info/googlejwt"
+            }
+         },
+         {
+            "operation":"ESPv2.HealthCheck",
+            "pattern":{
+               "httpMethod":"GET",
+               "uriTemplate":"/"
             }
          }
       ]
@@ -954,6 +971,7 @@ func TestPathMatcherFilter(t *testing.T) {
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = tc.backendProtocol
+		opts.Healthz = tc.healthz
 		opts.EnableBackendRouting = true
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {

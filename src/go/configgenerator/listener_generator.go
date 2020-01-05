@@ -54,16 +54,6 @@ const (
 func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	httpFilters := []*hcmpb.HttpFilter{}
 
-	if serviceInfo.Options.Healthz != "" {
-		hcFilter, err := makeHealthCheckFilter(serviceInfo)
-		if err != nil {
-			return nil, err
-		}
-		httpFilters = append(httpFilters, hcFilter)
-		jsonStr, _ := util.ProtoToJson(hcFilter)
-		glog.V(1).Infof("adding Healthz filter config: %v", jsonStr)
-	}
-
 	if serviceInfo.Options.CorsPreset == "basic" || serviceInfo.Options.CorsPreset == "cors_with_regex" {
 		corsFilter := &hcmpb.HttpFilter{
 			Name: util.CORS,
@@ -84,6 +74,18 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		httpFilters = append(httpFilters, pathMathcherFilter)
 		jsonStr, _ := util.ProtoToJson(pathMathcherFilter)
 		glog.Infof("adding Path Matcher Filter config: %v", jsonStr)
+	}
+
+	// Add Health Check filter if needed. It must behind Path Matcher filter, since Service Control
+	// filter needs to get the corresponding rule for health check calls, in order to skip Report
+	if serviceInfo.Options.Healthz != "" {
+		hcFilter, err := makeHealthCheckFilter(serviceInfo)
+		if err != nil {
+			return nil, err
+		}
+		httpFilters = append(httpFilters, hcFilter)
+		jsonStr, _ := util.ProtoToJson(hcFilter)
+		glog.V(1).Infof("adding Healthz filter config: %v", jsonStr)
 	}
 
 	// Add JWT Authn filter if needed.
@@ -209,7 +211,7 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
 		// Adds PathMatcherRule for gRPC method.
-		if serviceInfo.BackendProtocol == util.GRPC {
+		if serviceInfo.BackendProtocol == util.GRPC && !method.IsGenerated {
 			newGrpcRule := &pmpb.PathMatcherRule{
 				Operation: operation,
 				Pattern: &commonpb.Pattern{
@@ -480,7 +482,7 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 
 		// For these OPTIONS methods, auth should be disabled and AllowWithoutApiKey
 		// should be true for each CORS.
-		if method.IsGeneratedOption || method.AllowUnregisteredCalls {
+		if method.IsGenerated || method.AllowUnregisteredCalls {
 			requirement.ApiKey = &scpb.APIKeyRequirement{
 				AllowWithoutApiKey: true,
 			}
@@ -630,13 +632,6 @@ func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, e
 }
 
 func makeHealthCheckFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
-	var path string
-	if strings.HasPrefix(serviceInfo.Options.Healthz, "/") {
-		path = serviceInfo.Options.Healthz
-	} else {
-		path = fmt.Sprintf("/%s", serviceInfo.Options.Healthz)
-	}
-
 	hcFilterConfig := &hcpb.HealthCheck{
 		PassThroughMode: &wrapperspb.BoolValue{Value: false},
 
@@ -644,7 +639,7 @@ func makeHealthCheckFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, erro
 			{
 				Name: ":path",
 				HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
-					ExactMatch: path,
+					ExactMatch: serviceInfo.Options.Healthz,
 				},
 			},
 		},

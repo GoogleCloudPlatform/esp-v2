@@ -416,11 +416,12 @@ func TestMethods(t *testing.T) {
 		desc              string
 		fakeServiceConfig *confpb.Service
 		backendProtocol   string
+		healthz           string
 		wantMethods       map[string]*methodInfo
 		wantError         string
 	}{
 		{
-			desc: "Succeed for gRPC, no Http rule",
+			desc: "Succeed for gRPC, no Http rule, with Healthz",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -438,6 +439,7 @@ func TestMethods(t *testing.T) {
 				},
 			},
 			backendProtocol: "gRPC",
+			healthz:         "/",
 			wantMethods: map[string]*methodInfo{
 				fmt.Sprintf("%s.%s", testApiName, "ListShelves"): &methodInfo{
 					ShortName: "ListShelves",
@@ -447,10 +449,22 @@ func TestMethods(t *testing.T) {
 					ShortName: "CreateShelf",
 					ApiName:   "endpoints.examples.bookstore.Bookstore",
 				},
+				"ESPv2.HealthCheck": &methodInfo{
+					ShortName:          "HealthCheck",
+					ApiName:            "ESPv2",
+					SkipServiceControl: true,
+					IsGenerated:        true,
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/",
+							HttpMethod:  util.GET,
+						},
+					},
+				},
 			},
 		},
 		{
-			desc: "Succeed for HTTP",
+			desc: "Succeed for HTTP, with Healthz",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -485,6 +499,7 @@ func TestMethods(t *testing.T) {
 				},
 			},
 			backendProtocol: "http2",
+			healthz:         "/",
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo": &methodInfo{
 					ShortName: "Echo",
@@ -502,6 +517,18 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*commonpb.Pattern{
 						{
 							UriTemplate: "/auth/info/googlejwt",
+							HttpMethod:  util.GET,
+						},
+					},
+				},
+				"ESPv2.HealthCheck": &methodInfo{
+					ShortName:          "HealthCheck",
+					ApiName:            "ESPv2",
+					SkipServiceControl: true,
+					IsGenerated:        true,
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/",
 							HttpMethod:  util.GET,
 						},
 					},
@@ -634,7 +661,7 @@ func TestMethods(t *testing.T) {
 			wantError:       fmt.Sprintf("no HttpRules generated for the Http service %v", testProjectName),
 		},
 		{
-			desc: "Succeed for HTTP, with OPTIONS, and AllowCors",
+			desc: "Succeed for HTTP, with OPTIONS, and AllowCors, with Healthz",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -696,6 +723,7 @@ func TestMethods(t *testing.T) {
 				},
 			},
 			backendProtocol: "http1",
+			healthz:         "/healthz",
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoCors": &methodInfo{
 					ShortName: "EchoCors",
@@ -726,7 +754,7 @@ func TestMethods(t *testing.T) {
 							HttpMethod:  util.OPTIONS,
 						},
 					},
-					IsGeneratedOption: true,
+					IsGenerated: true,
 				},
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt": &methodInfo{
 					ShortName: "Echo_Auth_Jwt",
@@ -744,6 +772,18 @@ func TestMethods(t *testing.T) {
 						{
 							UriTemplate: "/auth/info/googlejwt",
 							HttpMethod:  util.POST,
+						},
+					},
+				},
+				"ESPv2.HealthCheck": &methodInfo{
+					ShortName:          "HealthCheck",
+					ApiName:            "ESPv2",
+					SkipServiceControl: true,
+					IsGenerated:        true,
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/healthz",
+							HttpMethod:  util.GET,
 						},
 					},
 				},
@@ -807,6 +847,7 @@ func TestMethods(t *testing.T) {
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = tc.backendProtocol
+		opts.Healthz = tc.healthz
 		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if tc.wantError != "" {
 			if err == nil || err.Error() != tc.wantError {
