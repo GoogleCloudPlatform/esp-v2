@@ -1,0 +1,64 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "Example of the Path Matcher filter using a simple Bookstore API.",
+    "title": "Example - Path Matcher - Bookstore",
+    "version": "1.0.0"
+  },
+  "host": "path-matcher.endpoints.apiproxy-231719.cloud.goog",
+  "basePath": "/",
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/shelves/{shelf}": {
+      "get": {
+        "description": "Get a single shelf resource with the given name.",
+        "operationId": "getShelf",
+        "parameters": [
+          {
+            "description": "Name of the shelf to get.",
+            "format": "int64",
+            "in": "path",
+            "name": "shelf",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "A shelf resource.",
+            "schema": {
+              "$ref": "#/definitions/shelf"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "shelf": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "theme": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "theme"
+      ]
+    }
+  }
+}

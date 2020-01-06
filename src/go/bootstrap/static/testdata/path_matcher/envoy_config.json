@@ -1,0 +1,168 @@
+{
+  "admin": {},
+  "node": {
+    "cluster": "ESPv2_cluster",
+    "id": "ESPv2"
+  },
+  "staticResources": {
+    "clusters": [
+      {
+        "connectTimeout": "20s",
+        "http2ProtocolOptions": {},
+        "loadAssignment": {
+          "clusterName": "127.0.0.1",
+          "endpoints": [
+            {
+              "lbEndpoints": [
+                {
+                  "endpoint": {
+                    "address": {
+                      "socketAddress": {
+                        "address": "127.0.0.1",
+                        "portValue": 8082
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "name": "path-matcher.endpoints.apiproxy-231719.cloud.goog_local",
+        "type": "STRICT_DNS"
+      },
+      {
+        "connectTimeout": "20s",
+        "loadAssignment": {
+          "clusterName": "169.254.169.254",
+          "endpoints": [
+            {
+              "lbEndpoints": [
+                {
+                  "endpoint": {
+                    "address": {
+                      "socketAddress": {
+                        "address": "169.254.169.254",
+                        "portValue": 80
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "name": "metadata-cluster",
+        "type": "STRICT_DNS"
+      },
+      {
+        "connectTimeout": "5s",
+        "dnsLookupFamily": "V4_ONLY",
+        "loadAssignment": {
+          "clusterName": "servicecontrol.googleapis.com",
+          "endpoints": [
+            {
+              "lbEndpoints": [
+                {
+                  "endpoint": {
+                    "address": {
+                      "socketAddress": {
+                        "address": "servicecontrol.googleapis.com",
+                        "portValue": 443
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "name": "service-control-cluster",
+        "transportSocket": {
+          "name": "envoy.transport_sockets.tls",
+          "typedConfig": {
+            "@type": "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
+            "commonTlsContext": {
+              "validationContext": {
+                "trustedCa": {
+                  "filename": "/etc/ssl/certs/ca-certificates.crt"
+                }
+              }
+            },
+            "sni": "servicecontrol.googleapis.com"
+          }
+        },
+        "type": "LOGICAL_DNS"
+      }
+    ],
+    "listeners": [
+      {
+        "address": {
+          "socketAddress": {
+            "address": "0.0.0.0",
+            "portValue": 8080
+          }
+        },
+        "filterChains": [
+          {
+            "filters": [
+              {
+                "name": "envoy.http_connection_manager",
+                "typedConfig": {
+                  "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "httpFilters": [
+                    {
+                      "name": "envoy.filters.http.path_matcher",
+                      "typedConfig": {
+                        "@type": "type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                        "rules": [
+                          {
+                            "operation": "1.path_matcher_endpoints_apiproxy_231719_cloud_goog.GetShelf",
+                            "pattern": {
+                              "httpMethod": "GET",
+                              "uriTemplate": "/shelves/{shelf}"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "envoy.router",
+                      "typedConfig": {
+                        "@type": "type.googleapis.com/envoy.config.filter.http.router.v2.Router"
+                      }
+                    }
+                  ],
+                  "routeConfig": {
+                    "name": "local_route",
+                    "virtualHosts": [
+                      {
+                        "domains": [
+                          "*"
+                        ],
+                        "name": "backend",
+                        "routes": [
+                          {
+                            "match": {
+                              "prefix": "/"
+                            },
+                            "route": {
+                              "cluster": "path-matcher.endpoints.apiproxy-231719.cloud.goog_local"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "statPrefix": "ingress_http",
+                  "useRemoteAddress": false,
+                  "xffNumTrustedHops": 2
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

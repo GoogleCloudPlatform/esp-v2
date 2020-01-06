@@ -20,15 +20,15 @@ import "api/envoy/http/common/base.proto";
 import "validate/validate.proto";
 
 message PathMatcherRule {
-  // The pattern as defined in
-  // https://github.com/googleapis/googleapis/blob/master/google/api/http.proto
-  // to match a HTTP request.
+
+  // The pattern used to match a HTTP request.
   api.envoy.http.common.Pattern pattern = 1;
 
-  // Operation name.
+  // Operation name (selector) used as a unique ID for the operation.
   string operation = 2 [(validate.rules).string.min_bytes = 1];
 
-  // Whether the pattern path parameter extraction.
+  // If true, the path parameters in the `pattern` must be extracted.
+  // Ref: https://cloud.google.com/endpoints/docs/openapi/openapi-extensions#understanding_path_translation
   bool extract_path_parameters = 3;
 }
 

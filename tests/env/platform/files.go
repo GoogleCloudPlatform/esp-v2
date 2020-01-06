@@ -52,6 +52,8 @@ const (
 	ScEnvoyConfig
 	DrServiceConfig
 	DrEnvoyConfig
+	PmServiceConfig
+	PmEnvoyConfig
 )
 
 var fileMap = map[RuntimeFile]string{
@@ -80,6 +82,8 @@ var fileMap = map[RuntimeFile]string{
 	ScEnvoyConfig:           "../../../../examples/service_control/envoy_config.json",
 	DrServiceConfig:         "../../../../examples/dynamic_routing/service_config_generated.json",
 	DrEnvoyConfig:           "../../../../examples/dynamic_routing/envoy_config.json",
+	PmServiceConfig:         "../../../../src/go/bootstrap/static/testdata/path_matcher/service_config_generated.json",
+	PmEnvoyConfig:           "../../../../src/go/bootstrap/static/testdata/path_matcher/envoy_config.json",
 }
 
 // Get the runtime file path for the specified file.

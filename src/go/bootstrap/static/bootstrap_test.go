@@ -72,6 +72,17 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 			serviceConfigPath: platform.GetFilePath(platform.DrServiceConfig),
 			envoyConfigPath:   platform.GetFilePath(platform.DrEnvoyConfig),
 		},
+		{
+			desc: "envoy config for path matcher",
+			flags: map[string]string{
+				"backend_protocol":            "http2",
+				"disable_tracing":             "true",
+				"skip_service_control_filter": "true",
+				"enable_backend_routing":      "false",
+			},
+			serviceConfigPath: platform.GetFilePath(platform.PmServiceConfig),
+			envoyConfigPath:   platform.GetFilePath(platform.PmEnvoyConfig),
+		},
 	}
 
 	for testIdx, tc := range testData {
