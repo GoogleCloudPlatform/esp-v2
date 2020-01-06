@@ -293,7 +293,6 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = tc.backendProtocol
-		opts.EnableBackendRouting = true
 		if tc.backendDnsLookupFamily != "" {
 			opts.BackendDnsLookupFamily = tc.backendDnsLookupFamily
 		}

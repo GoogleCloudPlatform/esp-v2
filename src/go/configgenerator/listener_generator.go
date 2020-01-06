@@ -129,7 +129,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	}
 
 	// Add Backend Auth filter and Backend Routing if needed.
-	if serviceInfo.Options.EnableBackendRouting {
+	if serviceInfo.RequiresBackendRouting {
 		if serviceInfo.Options.ServiceAccountKey != "" {
 			return nil, fmt.Errorf("ServiceAccountKey is set(proxy runs on Non-GCP) while backendRouting is not allowed on Non-GCP")
 		}
@@ -554,7 +554,7 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 }
 
 func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
-	rules := []*bapb.BackendAuthRule{}
+	var rules []*bapb.BackendAuthRule
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
 		if method.BackendInfo == nil || method.BackendInfo.JwtAudience == "" {

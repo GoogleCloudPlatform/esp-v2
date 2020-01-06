@@ -1450,7 +1450,6 @@ func TestDynamicBackendRouting(t *testing.T) {
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = tc.backendProtocol
-		opts.EnableBackendRouting = true
 		opts.DisableTracing = true
 
 		flag.Set("service_json_path", tc.serviceConfigPath)

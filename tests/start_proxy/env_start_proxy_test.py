@@ -34,7 +34,6 @@ class TestStartProxy(unittest.TestCase):
             "wantArgs": [
               '/apiproxy/start_proxy.py',
               '/apiproxy/start_proxy.py',
-              '--enable_backend_routing',
               "--compute_platform_override=Cloud Run(ESPv2)",
               '--http_port=8080',
               '--service=test_bookstore.goog.cloud',
@@ -50,7 +49,6 @@ class TestStartProxy(unittest.TestCase):
             "wantArgs": [
               '/apiproxy/start_proxy.py',
               '/apiproxy/start_proxy.py',
-              '--enable_backend_routing',
               "--compute_platform_override=Cloud Run(ESPv2)",
               '--http_port=8082',
               '--service=test_bookstore.goog.cloud',
@@ -66,7 +64,6 @@ class TestStartProxy(unittest.TestCase):
             "wantArgs": [
               '/apiproxy/start_proxy.py',
               '/apiproxy/start_proxy.py',
-              '--enable_backend_routing',
               "--compute_platform_override=Cloud Run(ESPv2)",
               '--http_port=8080',
               '--rollout_strategy=fixed',

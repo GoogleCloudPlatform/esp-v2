@@ -279,8 +279,14 @@ environment variable or by passing "-k" flag to this script.
         '--enable_backend_routing',
         action='store_true',
         default=False,
-        help='''Enable apiproxy to route requests according to the
-        "x-google-backend" or "backend" configurationn''')
+        help='''
+        ===
+        DEPRECATED: This flag will automatically be enabled if needed, so it
+        does NOT need to be set manually.
+        ===
+        Enable apiproxy to route requests according to the
+        "x-google-backend" or "backend" configuration
+        ''')
 
     parser.add_argument(
         '--envoy_use_remote_address',
@@ -626,9 +632,6 @@ def gen_proxy_config(args):
     if args.compute_platform_override:
         proxy_conf.extend([
             "--compute_platform_override", args.compute_platform_override])
-
-    if args.enable_backend_routing:
-        proxy_conf.append("--enable_backend_routing")
 
     if args.backend_dns_lookup_family:
         proxy_conf.extend(

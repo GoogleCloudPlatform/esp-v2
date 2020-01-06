@@ -355,7 +355,6 @@ func TestBackendRoutingFilter(t *testing.T) {
 	for _, tc := range testdata {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = tc.protocol
-		opts.EnableBackendRouting = true
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
@@ -609,7 +608,6 @@ func TestBackendAuthFilter(t *testing.T) {
 
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = "grpc"
-		opts.EnableBackendRouting = true
 		opts.IamServiceAccount = tc.iamServiceAccount
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
@@ -972,7 +970,6 @@ func TestPathMatcherFilter(t *testing.T) {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = tc.backendProtocol
 		opts.Healthz = tc.healthz
-		opts.EnableBackendRouting = true
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)

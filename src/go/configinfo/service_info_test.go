@@ -920,7 +920,6 @@ func TestProcessBackendRule(t *testing.T) {
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = "grpc"
-		opts.EnableBackendRouting = true
 		_, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if (err == nil && tc.wantedErr != "") || (err != nil && tc.wantedErr == "") {
 			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, err, tc.wantedErr)
@@ -1023,7 +1022,6 @@ func TestProcessQuota(t *testing.T) {
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = "grpc"
-		opts.EnableBackendRouting = true
 		serviceInfo, _ := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 
 		for key, gotMethod := range serviceInfo.Methods {

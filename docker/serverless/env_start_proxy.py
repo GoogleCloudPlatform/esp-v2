@@ -87,7 +87,6 @@ def gen_args(cmd):
     ARGS = [
         cmd,
         "/apiproxy/start_proxy.py",
-        "--enable_backend_routing",
         "--compute_platform_override={}".format(PLATFORM)
     ]
 
