@@ -88,6 +88,8 @@ func TestHttp1Basic(t *testing.T) {
 		}
 		if tc.wantedError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantedError)) {
 			t.Errorf("Test (%s): failed, expected err: %s, got: %s", tc.desc, tc.wantedError, err)
+		} else if tc.wantedError == "" && err != nil {
+			t.Errorf("Test (%s): got unexpected error: %s", tc.desc, resp)
 		} else {
 			if !strings.Contains(string(resp), tc.wantResp) {
 				t.Errorf("Test (%s): expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
