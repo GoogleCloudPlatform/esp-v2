@@ -30,7 +30,7 @@ cd "${ROOT}"
 gcloud config list account --format "value(core.account)"
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
-cat ${ROOT}/.bazelrc
+
 
 if [ ! ${USE_RELEASE_BINARY} ]; then
   echo '======================================================='
@@ -38,7 +38,7 @@ if [ ! ${USE_RELEASE_BINARY} ]; then
   echo '======================================================='
   try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" ""
 fi
-
+cat ${ROOT}/.bazelrc
 
 if [ ! -d "$GOPATH/bin" ]; then
   mkdir $GOPATH/bin
