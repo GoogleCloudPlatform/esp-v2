@@ -40,7 +40,7 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*v2pb.RouteConfigurat
 		Domains: []string{"*"},
 	}
 
-	if serviceInfo.Options.EnableBackendRouting {
+	if serviceInfo.RequiresBackendRouting {
 		brRoute, err := makeDynamicRoutingConfig(serviceInfo)
 		if err != nil {
 			return nil, err

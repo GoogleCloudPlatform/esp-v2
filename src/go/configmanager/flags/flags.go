@@ -43,7 +43,6 @@ var (
 	CorsPreset           = flag.String("cors_preset", "", `enable CORS support, must be either "basic" or "cors_with_regex"`)
 
 	// Backend routing configurations.
-	EnableBackendRouting   = flag.Bool("enable_backend_routing", false, `enable apiproxy to route requests according to the "x-google-backend" or "backend" configuration`)
 	BackendDnsLookupFamily = flag.String("backend_dns_lookup_family", "auto", `Define the dns lookup family for all backends. The options are "auto", "v4only" and "v6only". The default is "auto".`)
 
 	// Envoy specific configurations.
@@ -112,7 +111,6 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		CorsAllowOriginRegex:          *CorsAllowOriginRegex,
 		CorsExposeHeaders:             *CorsExposeHeaders,
 		CorsPreset:                    *CorsPreset,
-		EnableBackendRouting:          *EnableBackendRouting,
 		BackendDnsLookupFamily:        *BackendDnsLookupFamily,
 		ClusterConnectTimeout:         *ClusterConnectTimeout,
 		ClusterAddress:                *ClusterAddress,

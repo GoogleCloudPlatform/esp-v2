@@ -134,7 +134,7 @@ class TestStartProxy(unittest.TestCase):
               '--cors_expose_headers', 'Content-Length,Content-Range',
               '--service_account_key', '/tmp/service_accout_key', '--non_gcp',
               ]),
-            # backend routing
+            # backend routing (with deprecated flag)
             (['--backend=https://127.0.0.1:8000', '--enable_backend_routing',
               '--service_json_path=/tmp/service.json',
               '--compute_platform_override', 'Cloud Run(ESPv2)',
@@ -144,8 +144,7 @@ class TestStartProxy(unittest.TestCase):
               '--rollout_strategy', 'fixed', '--v', '0',
               '--service_json_path', '/tmp/service.json',
               '--disable_tracing',
-              '--compute_platform_override', 'Cloud Run(ESPv2)',
-              '--enable_backend_routing'
+              '--compute_platform_override', 'Cloud Run(ESPv2)'
               ]),
             # grpc backend with fixed version and tracing
             (['--service=test_bookstore.gloud.run', '--version=2019-11-09r0',
@@ -176,7 +175,6 @@ class TestStartProxy(unittest.TestCase):
             ['--rollout_strategy=managed',
              '--service_json_path=/tmp/service.json'],
             ['--backend=/echo:80:8080',],
-            ['--enable_backend_routing', '--non_gcp'],
             ['--backend_dns_lookup_family=v4'],
             ['--non_gcp']
         ]

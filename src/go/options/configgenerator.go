@@ -38,7 +38,6 @@ type ConfigGeneratorOptions struct {
 	CorsPreset           string
 
 	// Backend routing configurations.
-	EnableBackendRouting   bool
 	BackendDnsLookupFamily string
 
 	// Envoy specific configurations.
@@ -105,7 +104,6 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		CorsAllowOriginRegex:          "",
 		CorsExposeHeaders:             "",
 		CorsPreset:                    "",
-		EnableBackendRouting:          false,
 		EnvoyUseRemoteAddress:         false,
 		EnvoyXffNumTrustedHops:        2,
 		JwksCacheDurationInS:          300,

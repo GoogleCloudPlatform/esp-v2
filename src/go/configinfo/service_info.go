@@ -45,6 +45,8 @@ type ServiceInfo struct {
 	Operations []string
 	// Stores all methods info for this service, using selector as key.
 	Methods map[string]*methodInfo
+	// Stores whether backend routing configurations should be enabled for this service.
+	RequiresBackendRouting bool
 	// Stores information about backend clusters for re-routing.
 	BackendRoutingClusters []*backendRoutingCluster
 	// Stores url segment names, mapping snake name to Json name.
@@ -327,13 +329,13 @@ func (s *ServiceInfo) addOptionMethod(apiName string, index int, path string, ba
 }
 
 func (s *ServiceInfo) processBackendRule() error {
-	if !s.Options.EnableBackendRouting {
-		return nil
-	}
 	backendRoutingClustersMap := make(map[string]string)
 
 	for _, r := range s.ServiceConfig().Backend.GetRules() {
 		if r.PathTranslation != confpb.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
+			// If any backend rule has path translation, the entire service requires backend routing.
+			s.RequiresBackendRouting = true
+
 			scheme, hostname, port, uri, err := util.ParseURI(r.Address)
 			if err != nil {
 				return err

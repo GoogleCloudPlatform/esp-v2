@@ -32,7 +32,6 @@ var testDynamicRoutingArgs = []string{
 	"--service_config_id=test-config-id",
 	"--backend_protocol=http1",
 	"--rollout_strategy=fixed",
-	"--enable_backend_routing",
 	"--backend_dns_lookup_family=v4only",
 	"--suppress_envoy_headers",
 }
