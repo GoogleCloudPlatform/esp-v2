@@ -317,13 +317,12 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 }
 
 func TestMakeJwtProviderClusters(t *testing.T) {
-	_, fakeJwksUriHost, _, _, _ := util.ParseURI(util.FakeJwksUri)
-
 	testData := []struct {
 		desc            string
 		fakeProviders   []*confpb.AuthProvider
 		backendProtocol string
 		wantedClusters  []*v2pb.Cluster
+		wantedError     string
 	}{
 		{
 			desc: "Use https jwksUri and http jwksUri",
@@ -341,7 +340,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 			},
 			wantedClusters: []*v2pb.Cluster{
 				{
-					Name:                 "issuer_0",
+					Name:                 "metadata.com:443",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
@@ -349,7 +348,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					TransportSocket:      createTransportSocket("metadata.com"),
 				},
 				{
-					Name:                 "issuer_1",
+					Name:                 "metadata.com:80",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
@@ -358,20 +357,37 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 			},
 		},
 		{
-			desc: "With wrong-format jwksUri, use FakeJwksUri",
+			desc: "Failed with wrong-format jwksUri",
 			fakeProviders: []*confpb.AuthProvider{
 				&confpb.AuthProvider{
 					Id:      "auth_provider",
 					Issuer:  "issuer_2",
 					JwksUri: "%",
 				}},
+			wantedError: "Fail to parse uri % with error parse https://%: invalid URL escape \"%\"",
+		},
+		{
+			desc: "Deduplicate Auth Provider With Same Host",
+			fakeProviders: []*confpb.AuthProvider{
+				&confpb.AuthProvider{
+					Id:      "auth_provider",
+					Issuer:  "issuer_0",
+					JwksUri: "https://metadata.com/pkey",
+				},
+				&confpb.AuthProvider{
+					Id:      "auth_provider",
+					Issuer:  "issuer_1",
+					JwksUri: "https://metadata.com/pkey",
+				},
+			},
 			wantedClusters: []*v2pb.Cluster{
 				{
-					Name:                 "issuer_2",
+					Name:                 "metadata.com:443",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
-					LoadAssignment:       util.CreateLoadAssignment(fakeJwksUriHost, 80),
+					LoadAssignment:       util.CreateLoadAssignment("metadata.com", 443),
+					TransportSocket:      createTransportSocket("metadata.com"),
 				},
 			},
 		},
@@ -396,8 +412,8 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 		}
 
 		clusters, err := makeJwtProviderClusters(fakeServiceInfo)
-		if err != nil {
-			t.Fatal(err)
+		if err != nil && err.Error() != tc.wantedError {
+			t.Fatalf("Test Desc(%d): %s, got error:%v, wanted error:%v", i, tc.desc, err, tc.wantedError)
 		}
 
 		if !cmp.Equal(clusters, tc.wantedClusters, cmp.Comparer(proto.Equal)) {

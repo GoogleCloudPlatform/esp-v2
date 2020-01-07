@@ -77,7 +77,7 @@
                             "remoteJwks": {
                               "httpUri": {
                                 "uri": "https://www.googleapis.com/service_accounts/v1/jwk/123456789-compute@developer.gserviceaccount.com",
-                                "cluster": "123456789-compute@developer.gserviceaccount.com",
+                                "cluster":"www.googleapis.com:443",
                                 "timeout": "5s"
                               },
                               "cacheDuration": "300s"
@@ -105,7 +105,7 @@
                             "remoteJwks": {
                               "httpUri": {
                                 "uri": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
-                                "cluster": "https://securetoken.google.com/apiproxy-231719",
+                                "cluster": "www.googleapis.com:443",
                                 "timeout": "5s"
                               },
                               "cacheDuration": "300s"
@@ -255,46 +255,7 @@
         }
       },
       {
-        "name": "123456789-compute@developer.gserviceaccount.com",
-        "type": "LOGICAL_DNS",
-        "connectTimeout": "20s",
-        "loadAssignment": {
-          "clusterName": "www.googleapis.com",
-          "endpoints": [
-            {
-              "lbEndpoints": [
-                {
-                  "endpoint": {
-                    "address": {
-                      "socketAddress": {
-                        "address": "www.googleapis.com",
-                        "portValue": 443
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        "dnsLookupFamily": "V4_ONLY",
-        "transportSocket": {
-          "name": "envoy.transport_sockets.tls",
-          "typedConfig": {
-            "@type": "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
-            "commonTlsContext": {
-              "validationContext": {
-                "trustedCa": {
-                  "filename": "/etc/ssl/certs/ca-certificates.crt"
-                }
-              }
-            },
-            "sni": "www.googleapis.com"
-          }
-        }
-      },
-      {
-        "name": "https://securetoken.google.com/apiproxy-231719",
+        "name": "www.googleapis.com:443",
         "type": "LOGICAL_DNS",
         "connectTimeout": "20s",
         "loadAssignment": {

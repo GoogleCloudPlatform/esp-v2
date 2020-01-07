@@ -74,7 +74,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testData {
+	for testIdx, tc := range testData {
 		for key, value := range tc.flags {
 			flag.Set(key, value)
 		}
@@ -120,7 +120,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 			t.Fatal(err)
 		}
 		if gotString != wantString {
-			t.Errorf("\ngot : %v, \nwant: %v", gotString, wantString)
+			t.Errorf("test(%d): %s\ngot : %v, \nwant: %v", testIdx, tc.desc, gotString, wantString)
 		}
 	}
 }

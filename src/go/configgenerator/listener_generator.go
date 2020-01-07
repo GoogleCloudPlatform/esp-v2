@@ -277,6 +277,10 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	}
 	providers := make(map[string]*jwtpb.JwtProvider)
 	for _, provider := range auth.GetProviders() {
+		clusterName, err := util.ExtraAddressFromURI(provider.GetJwksUri())
+		if err != nil {
+			return nil
+		}
 		jp := &jwtpb.JwtProvider{
 			Issuer: provider.GetIssuer(),
 			JwksSourceSpecifier: &jwtpb.JwtProvider_RemoteJwks{
@@ -284,7 +288,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 					HttpUri: &corepb.HttpUri{
 						Uri: provider.GetJwksUri(),
 						HttpUpstreamType: &corepb.HttpUri_Cluster{
-							Cluster: provider.GetIssuer(),
+							Cluster: clusterName,
 						},
 						Timeout: &durationpb.Duration{Seconds: 5},
 					},

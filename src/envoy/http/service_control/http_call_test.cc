@@ -62,7 +62,7 @@ class HttpCallTest : public testing::Test {
 
   void SetUp() override {
     http_uri_.set_cluster("test_cluster");
-    http_uri_.set_uri("http:://test_host/test_path");
+    http_uri_.set_uri("http://test_host/test_path");
 
     ON_CALL(cm_, httpAsyncClientForCluster("test_cluster"))
         .WillByDefault(ReturnRef(http_client_));
