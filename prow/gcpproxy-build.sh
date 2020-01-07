@@ -18,7 +18,7 @@
 
 # Fail on any error.
 set -eo pipefail
-gcloud config list account --format "value(core.account)"
+
 
 WD=$(dirname "$0")
 WD=$(cd "$WD";
@@ -27,8 +27,10 @@ ROOT=$(dirname "$WD")
 export PATH=$PATH:$GOPATH/bin
 
 cd "${ROOT}"
+gcloud config list account --format "value(core.account)"
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
+cat ${ROOT}/.bazelrc
 
 if [ ! ${USE_RELEASE_BINARY} ]; then
   echo '======================================================='
