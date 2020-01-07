@@ -18,6 +18,7 @@
 
 # Fail on any error.
 set -eo pipefail
+gcloud config list account --format "value(core.account)"
 
 WD=$(dirname "$0")
 WD=$(cd "$WD";
