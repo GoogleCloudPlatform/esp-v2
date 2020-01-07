@@ -97,12 +97,12 @@ function push_docker_image() {
 }
 
 push_docker_image \
-  "$(get_proxy_image_name_with_sha) \
+  "$(get_proxy_image_name_with_sha)" \
   "$(get_proxy_image_release_name):${VERSION}" \
   || error_exit "Docker image push failed."
 
 push_docker_image \
-  "$(get_serverless_image_name_sha)" \
+  "$(get_serverless_image_name_with_sha)" \
   "$(get_serverless_image_release_name):${VERSION}" \
   || error_exit "Docker image push failed."
 
