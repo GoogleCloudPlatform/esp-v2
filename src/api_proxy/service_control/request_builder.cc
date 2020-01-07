@@ -44,11 +44,6 @@ namespace google {
 namespace api_proxy {
 namespace service_control {
 
-constexpr char kConsumerQuotaUsedCount[] =
-    "serviceruntime.googleapis.com/api/consumer/quota_used_count";
-
-constexpr char kQuotaName[] = "/quota_name";
-
 struct SupportedMetric {
   const char* name;
   ::google::api::MetricDescriptor_MetricKind metric_kind;
@@ -928,7 +923,6 @@ constexpr char kLogFieldNameApiKey[] = "api_key";
 constexpr char kLogFieldNameApiMethod[] = "api_method";
 constexpr char kLogFieldNameApiName[] = "api_name";
 constexpr char kLogFieldNameApiVersion[] = "api_version";
-constexpr char kLogFieldNameErrorCause[] = "error_cause";
 constexpr char kLogFieldNameHttpMethod[] = "http_method";
 constexpr char kLogFieldNameHttpResponseCode[] = "http_response_code";
 constexpr char kLogFieldNameJwtPayloads[] = "jwt_payloads";

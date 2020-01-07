@@ -131,6 +131,10 @@ func TestGRPC(t *testing.T) {
 			t.Errorf("Test (%s): failed, expected: %s, got: %v", tc.desc, tc.wantError, err)
 		}
 
+		if tc.wantError == "" && err != nil {
+			t.Errorf("Test (%s): got unexpected error: %s", tc.desc, resp)
+		}
+
 		if !strings.Contains(resp, tc.wantResp) {
 			t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
 		}
