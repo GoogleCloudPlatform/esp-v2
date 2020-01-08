@@ -197,7 +197,7 @@ func (e *TestEnv) SetupFakeTraceServer() {
 	e.FakeStackdriverServer = components.NewFakeStackdriver()
 }
 
-// Setup setups Envoy, ConfigManager, and Backend server for test.
+// Setup setups Envoy, Config Manager, and Backend server for test.
 func (e *TestEnv) Setup(confArgs []string) error {
 	var envoyArgs []string
 	var bootstrapperArgs []string

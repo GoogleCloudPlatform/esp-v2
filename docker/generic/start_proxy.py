@@ -100,7 +100,7 @@ def start_proxy(proxy_conf):
     try:
         os.execv(PROXY_STARTER, proxy_conf)
     except OSError as err:
-        logging.error("Failed to launch ESP V2")
+        logging.error("Failed to launch ESPv2")
         logging.error(err.strerror)
         sys.exit(1)
 
@@ -117,14 +117,14 @@ def make_argparser():
     parser = ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description='''
-ESP V2 start-up script. This script starts ConfigManager and Envoy.
+ESPv2 start-up script. This script starts Config Manager and Envoy.
 
-The service name and config ID are optional. If not supplied, the ConfigManager
+The service name and config ID are optional. If not supplied, the Config Manager
 fetches the service name and the config ID from the metadata service as
 attributes "service_name" and "service_config_id".
 
-ESP V2 relies on the metadata service to fetch access tokens for Google
-services. If you deploy ESP V2 outside of Google Cloud environment, you need
+ESPv2 relies on the metadata service to fetch access tokens for Google
+services. If you deploy ESPv2 outside of Google Cloud environment, you need
 to provide a service account credentials file by setting "creds_key"
 environment variable or by passing "-k" flag to this script.
             ''')
@@ -134,7 +134,7 @@ environment variable or by passing "-k" flag to this script.
         '--service',
         default="",
         help=''' Set the name of the Endpoints service.  If omitted and -c not
-        specified, ESP V2 contacts the metadata service to fetch the service
+        specified, ESPv2 contacts the metadata service to fetch the service
         name.  ''')
 
     parser.add_argument(
@@ -142,15 +142,15 @@ environment variable or by passing "-k" flag to this script.
         '--version',
         default="",
         help=''' Set the service config ID of the Endpoints service.
-        If omitted and -c not specified, ESP V2 contacts the metadata
+        If omitted and -c not specified, ESPv2 contacts the metadata
         service to fetch the service config ID.  ''')
 
     parser.add_argument(
         '--service_json_path',
         default=None,
         help='''
-        Specify a path for ApiProxy to load the endpoint service config.
-        With this flag, ApiProxy will use "fixed" rollout strategy and following
+        Specify a path for ESPv2 to load the endpoint service config.
+        With this flag, ESPv2 will use "fixed" rollout strategy and following
         flags will be ignored:
            --service, --version, and --rollout_strategy.
         ''')
@@ -159,7 +159,7 @@ environment variable or by passing "-k" flag to this script.
         '-a',
         '--backend',
         default=DEFAULT_BACKEND,
-        help=''' Change the application server address to which ESP V2
+        help=''' Change the application server address to which ESPv2
         proxies requests. Default value: {backend}. For HTTPS backends,
         please use "https://" prefix, e.g. https://127.0.0.1:8082.
         For HTTP/1.x backends, prefix "http://" is optional.
@@ -284,7 +284,7 @@ environment variable or by passing "-k" flag to this script.
         DEPRECATED: This flag will automatically be enabled if needed, so it
         does NOT need to be set manually.
         ===
-        Enable apiproxy to route requests according to the
+        Enable ESPv2 to route requests according to the
         "x-google-backend" or "backend" configuration
         ''')
 
@@ -347,7 +347,7 @@ environment variable or by passing "-k" flag to this script.
         '--http_request_timeout_s',
         default=None, type=int,
         help='''
-        Set the timeout in second(eg. 10) for all the requests made by ConfigManager.
+        Set the timeout in second(eg. 10) for all the requests made by Config Manager.
         Must be > 0 and the default is 5 seconds if not set.
         ''')
     parser.add_argument(

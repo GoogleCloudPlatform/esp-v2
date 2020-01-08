@@ -25,7 +25,7 @@ function usage() {
 
 Usage: ${BASH_SOURCE[0]} [-r <DIRECT_REPO>]
 
-This script will show all release ESP V2 image tags
+This script will show all release ESPv2 image tags
 
 END_USAGE
   exit 1

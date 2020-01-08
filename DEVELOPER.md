@@ -68,15 +68,15 @@ The following folder is required:
        -  gcpproxy
 ```
 
-## Build Envoy and ConfigManager
+## Build Envoy and Config Manager
 
-In order to build ConfigManager, need to install its dependent libraries:
+In order to build Config Manager, need to install its dependent libraries:
 
 ```
 make depend.install
 ```
 
-To build ConfigManager, run:
+To build Config Manager, run:
 
 ```
 make build

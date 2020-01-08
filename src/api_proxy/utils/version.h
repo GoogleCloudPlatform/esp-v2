@@ -18,7 +18,7 @@ namespace google {
 namespace api_proxy {
 namespace utils {
 
-// Provides a singleton for getting the ESP V2 version.
+// Provides a singleton for getting the ESPv2 version.
 class Version final {
  public:
   // Gets the singleton instance.

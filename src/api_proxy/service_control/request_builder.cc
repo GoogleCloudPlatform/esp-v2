@@ -111,7 +111,7 @@ Status AddDistributionMetric(const DistributionHelperOptions& options,
   return Status::OK;
 }
 
-// Metrics supported by ESP V2.
+// Metrics supported by ESPv2.
 
 Status set_int64_metric_to_constant_1(const SupportedMetric& m,
                                       const ReportRequestInfo& info,

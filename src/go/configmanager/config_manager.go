@@ -50,7 +50,7 @@ var (
 	serviceConfigFetcherClient *http.Client
 )
 
-// ConfigManager handles service configuration fetching and updating.
+// Config Manager handles service configuration fetching and updating.
 // TODO(jilinxia): handles multi service name.
 type ConfigManager struct {
 	serviceName        string
@@ -65,7 +65,7 @@ type ConfigManager struct {
 	metadataFetcher *metadata.MetadataFetcher
 }
 
-// NewConfigManager creates new instance of ConfigManager.
+// NewConfigManager creates new instance of Config Manager.
 // mf is set to nil on non-gcp deployments
 func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGeneratorOptions) (*ConfigManager, error) {
 	m := &ConfigManager{
@@ -91,7 +91,7 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 			return nil, err
 		}
 
-		glog.Infof("create new ConfigManager from static service config json file at %v", *ServicePath)
+		glog.Infof("create new Config Manager from static service config json file at %v", *ServicePath)
 		return m, nil
 	}
 
@@ -159,7 +159,7 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 			return nil, err
 		}
 	}
-	glog.Infof("create new ConfigManager for service (%v) with configuration id (%v), %v rollout strategy",
+	glog.Infof("create new Config Manager for service (%v) with configuration id (%v), %v rollout strategy",
 		m.serviceName, m.curConfigID, rolloutStrategy)
 
 	if rolloutStrategy == util.ManagedRolloutStrategy {

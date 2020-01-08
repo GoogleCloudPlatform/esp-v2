@@ -24,7 +24,7 @@ function usage() {
 
 Usage: ${BASH_SOURCE[0]} -r <DIRECT_REPO>
 
-This script will release stable ESP V2 docker image with format of:
+This script will release stable ESPv2 docker image with format of:
   $(get_proxy_image_release_name):\${MINOR_BASE_VERSION}
   $(get_proxy_image_release_name):\${MAJOR_BASE_VERSION}
   $(get_serverless_image_release_name):\${MINOR_BASE_VERSION}

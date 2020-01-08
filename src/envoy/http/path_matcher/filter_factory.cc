@@ -28,7 +28,7 @@ namespace PathMatcher {
 constexpr char kPathMatcherFilterName[] = "envoy.filters.http.path_matcher";
 
 /**
- * Config registration for ESP V2 path matcher filter.
+ * Config registration for ESPv2 path matcher filter.
  */
 class FilterFactory
     : public Common::FactoryBase<
