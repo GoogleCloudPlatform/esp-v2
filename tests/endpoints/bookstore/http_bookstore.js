@@ -69,18 +69,24 @@ function bookstore(options) {
     res.status(200).json(req.body);
   }
 
+  function echoToken(req, res) {
+    echoCount += 1;
+    console.log('Received token: ', req.header("Authorization"));
+    res.status(200).json(req.header("Authorization"));
+  }
+
   app.all('/echo', echo);
   app.get('/echo/auth', echo);
   app.post('/echo/auth', echo);
+  app.get('/echo_token/disable_auth', echoToken);
+  app.get('/echo_token/default_enable_auth', echoToken);
 
   // Show number of echo requests
   setInterval(function() {
-    if (echoCount > 0) {
       var date = new Date();
       var timestamp = date.getHours() + ":" + date.getMinutes() + ":" +
         date.getSeconds() + ":" + date.getMilliseconds();
       console.log(timestamp + ' Echo requests received: ', echoCount);
-    }
   }, 1000);
 
   // Install tracing middleware.
@@ -378,18 +384,17 @@ function loadSwagger(port) {
   }
   return swagger;
 }
-
 // If this file is imported as a module, export the `bookstore` function.
 // Otherwise, if `bookstore.js` is executed as a main program, start
 // the server and listen on a port.
 if (module.parent) {
   var port = process.env.PORT || '8080';
   var swagger = loadSwagger(port);
-  module.exports.app = bookstore({ log: false, swagger: swagger });
+  module.exports.app = bookstore({ log: true, swagger: swagger });
 } else {
   var port = process.env.PORT || '8080';
   var swagger = loadSwagger(port);
-  var server = bookstore({ log: false, swagger: swagger }).listen(port, '0.0.0.0',
+  var server = bookstore({ log: true, swagger: swagger }).listen(port, '0.0.0.0',
       function() {
         var host = server.address().address;
         var port = server.address().port;

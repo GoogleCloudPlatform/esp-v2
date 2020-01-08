@@ -58,7 +58,7 @@ function deployEndpoints() {
   case ${BACKEND_PLATFORM} in
     "cloud-run")
       gcloud run deploy "${BOOKSTORE_SERVICE_NAME}" \
-        --image="gcr.io/endpoints-release/bookstore:1" \
+        --image="gcr.io/cloudesf-testing/app:bookstore" \
         --no-allow-unauthenticated \
         --service-account "${BACKEND_RUNTIME_SERVICE_ACCOUNT}" \
         --platform managed \
@@ -151,7 +151,8 @@ function setup() {
     | jq ".host = \"${PROXY_HOST}\" \
       | .info.title = \"${ENDPOINTS_SERVICE_TITLE}\" \
       | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${PROXY_HOST}\" \
-    | . + { \"x-google-backend\": { \"address\": \"${BOOKSTORE_HOST}\" } } " \
+      | . + { \"x-google-backend\": { \"address\": \"${BOOKSTORE_HOST}\" } }  \
+      | .paths.\"/echo_token/disable_auth\".get  +=  { \"x-google-backend\": { \"address\": \"${BOOKSTORE_HOST}\/echo_token\/disable_auth\", \"disable_auth\": true} } "\
     > "${service_idl}"
 
   # Deploy the service config
@@ -198,6 +199,17 @@ function setup() {
   echo "Setup complete"
 }
 
+function test_disable_auth() {
+  local fake_token="FAKE-TOKEN"
+  local echoed_overrided_token=$(curl "https://${PROXY_HOST}/echo_token/default_enable_auth" -H "Authorization:${fake_token}")
+  local echoed_unoverrided_token=$(curl "https://${PROXY_HOST}/echo_token/disable_auth" -H "Authorization:${fake_token}")
+
+  if [ "${echoed_unoverrided_token}" != "\"${fake_token}\"" ] ||  [ "${echoed_overrided_token}" == "\"${fake_token}\"" ]; then
+    echo "disable_auth field of X-Google-Backend in Openapi does not work"
+    return 1
+  fi
+}
+
 function test() {
   echo "Testing"
   local proxy_health_code=0
@@ -227,6 +239,21 @@ function test() {
     "${UNIQUE_ID}" \
     "cloud-run" \
     || STATUS=${?}
+
+  if [[ ${BACKEND_PLATFORM} = "cloud-run" ]]; then
+    # Inorder to test disable_auth, iam of backend should be disabled so the
+      # hardcoded token can be echoed back.
+      gcloud run services add-iam-policy-binding "${BOOKSTORE_SERVICE_NAME}"\
+        --member="allUsers" \
+        --role="roles/run.invoker" \
+        --platform=managed
+
+      # wait allow-unauthenticated to be set for the whole backend instance
+      sleep 2m
+
+      run_nonfatal test_disable_auth
+  fi
+
   echo "Testing complete with status ${STATUS}"
 }
 

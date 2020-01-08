@@ -115,6 +115,38 @@
         ]
       }
     },
+    "/echo_token/disable_auth": {
+      "get": {
+        "description": "Echo token in Authorization Header under backend auth disabled",
+        "operationId": "echoTokenDisableAuth",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "get message response"
+          }
+        },
+        "security": [
+        ]
+    }
+    },
+    "/echo_token/default_enable_auth": {
+      "get": {
+        "description": "Echo token in Authorization Header under backend auth enabled",
+        "operationId": "echoTokenEnableAuth",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "get message response"
+          }
+        },
+        "security": [
+        ]
+      }
+    },
     "/shelves": {
       "get": {
         "description": "Returns all shelves in the bookstore.",

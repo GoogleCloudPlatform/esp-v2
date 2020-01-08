@@ -17,4 +17,4 @@ COPY tests/endpoints/bookstore/http_bookstore.js /http_bookstore.js
 COPY tests/endpoints/bookstore/bookstore_swagger_template.json /bookstore_swagger_template.json
 COPY tests/endpoints/bookstore/package.json /package.json
 RUN npm install
-CMD PORT=8081 node http_bookstore.js
+CMD echo "PORT is defined with ${PORT}" && PORT=$PORT node http_bookstore.js

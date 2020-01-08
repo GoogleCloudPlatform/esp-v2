@@ -52,3 +52,6 @@ spec:
         image: gcr.io/cloudesf-testing/app:bookstore
         ports:
           - containerPort: 8081
+        env:
+         - name: PORT
+           value: "8081"
