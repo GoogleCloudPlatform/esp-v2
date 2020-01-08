@@ -34,7 +34,7 @@ function checkImageExistence() {
 
 # golang build
 echo '======================================================='
-echo '================= Build ConfigManager ================='
+echo '================= Build Config Manager ================='
 echo '======================================================='
 
 make tools

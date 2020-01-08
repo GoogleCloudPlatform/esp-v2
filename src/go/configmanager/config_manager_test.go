@@ -1456,7 +1456,7 @@ func TestDynamicBackendRouting(t *testing.T) {
 
 		manager, err := NewConfigManager(nil, opts)
 		if err != nil {
-			t.Fatal("fail to initialize ConfigManager: ", err)
+			t.Fatal("fail to initialize Config Manager: ", err)
 		}
 		ctx := context.Background()
 		// First request, VersionId should be empty.
@@ -1715,7 +1715,7 @@ func runTest(t *testing.T, opts options.ConfigGeneratorOptions, f func(*testEnv)
 	manager, err := NewConfigManager(metadataFetcher, opts)
 	if err != nil {
 
-		t.Fatal("fail to initialize ConfigManager: ", err)
+		t.Fatal("fail to initialize Config Manager: ", err)
 	}
 	env := &testEnv{
 		configManager: manager,

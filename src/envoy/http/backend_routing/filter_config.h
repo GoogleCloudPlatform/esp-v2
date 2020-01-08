@@ -40,7 +40,7 @@ struct FilterStats {
   ALL_BACKEND_ROUTING_FILTER_STATS(GENERATE_COUNTER_STRUCT)
 };
 
-// The Envoy filter config for ESP V2 backend routing filter.
+// The Envoy filter config for ESPv2 backend routing filter.
 class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
  public:
   FilterConfig(const ::google::api::envoy::http::backend_routing::FilterConfig&

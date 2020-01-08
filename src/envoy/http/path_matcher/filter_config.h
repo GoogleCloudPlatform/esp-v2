@@ -44,7 +44,7 @@ struct FilterStats {
   ALL_BACKEND_AUTH_FILTER_STATS(GENERATE_COUNTER_STRUCT)
 };
 
-// The Envoy filter config for ESP V2 path matcher filter.
+// The Envoy filter config for ESPv2 path matcher filter.
 class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
  public:
   FilterConfig(const ::google::api::envoy::http::path_matcher::FilterConfig&

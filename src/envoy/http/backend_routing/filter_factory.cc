@@ -27,7 +27,7 @@ namespace BackendRouting {
 const std::string FilterName = "envoy.filters.http.backend_routing";
 
 /**
- * Config registration for ESP V2 backend routing filter.
+ * Config registration for ESPv2 backend routing filter.
  */
 class FilterFactory
     : public Common::FactoryBase<

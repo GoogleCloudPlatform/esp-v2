@@ -29,7 +29,7 @@ namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 
-// The Envoy filter for ESP V2 service control client.
+// The Envoy filter for ESPv2 service control client.
 class ServiceControlFilter : public Http::PassThroughFilter,
                              public AccessLog::Instance,
                              public ServiceControlHandler::CheckDoneCallback,

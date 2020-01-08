@@ -28,7 +28,7 @@ namespace Extensions {
 namespace HttpFilters {
 namespace ServiceControl {
 
-// The Envoy filter config for ESP V2 service control client.
+// The Envoy filter config for ESPv2 service control client.
 class ServiceControlFilterConfig : public Logger::Loggable<Logger::Id::filter>,
                                    public ServiceControlFilterStatBase {
  public:
