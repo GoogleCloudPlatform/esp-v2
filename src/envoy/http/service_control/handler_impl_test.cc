@@ -256,13 +256,13 @@ MATCHER_P4(MatchesReportInfo, expect, request_headers, response_headers,
   if (arg.backend_protocol != Protocol::GRPC) return false;
   if (arg.frontend_protocol != Protocol::GRPC) return false;
 
-  int64_t request_size = request_headers.byteSizeInternal();
+  int64_t request_size = request_headers.byteSize();
   if (arg.request_bytes != request_size || arg.request_size != request_size) {
     return false;
   }
 
-  int64_t response_size = response_headers.byteSizeInternal() +
-                          response_trailers.byteSizeInternal();
+  int64_t response_size = response_headers.byteSize() +
+                          response_trailers.byteSize();
   if (arg.response_bytes != response_size ||
       arg.response_size != response_size) {
     return false;
@@ -1025,10 +1025,10 @@ TEST_F(HandlerTest, TryIntermediateReport) {
   mock_stream_info_.bytes_sent_ = 456;
   // request_bytes = mock_stream_info.bytes_received_ + headers.
   expected_report_info.request_bytes =
-      mock_stream_info_.bytes_received_ + headers.byteSizeInternal();
+      mock_stream_info_.bytes_received_ + headers.byteSize();
   // response_bytes = mock_stream_info_.bytes_sent_ + response headers
   expected_report_info.response_bytes =
-      mock_stream_info_.bytes_sent_ + response_headers.byteSizeInternal();
+      mock_stream_info_.bytes_sent_ + response_headers.byteSize();
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesDataReportInfo(expected_report_info)))
@@ -1042,9 +1042,9 @@ TEST_F(HandlerTest, TryIntermediateReport) {
   mock_stream_info_.bytes_received_ = 789;
   mock_stream_info_.bytes_sent_ = 1456;
   expected_report_info.request_bytes =
-      mock_stream_info_.bytes_received_ + headers.byteSizeInternal();
+      mock_stream_info_.bytes_received_ + headers.byteSize();
   expected_report_info.response_bytes =
-      mock_stream_info_.bytes_sent_ + response_headers.byteSizeInternal();
+      mock_stream_info_.bytes_sent_ + response_headers.byteSize();
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesDataReportInfo(expected_report_info)))
@@ -1117,11 +1117,11 @@ TEST_F(HandlerTest, FinalReports) {
   mock_stream_info_.bytes_sent_ = 456;
   // request_bytes = mock_stream_info.bytes_received_ + 1 headers.
   expected_report_info.request_bytes =
-      mock_stream_info_.bytes_received_ + headers.byteSizeInternal() * 1;
+      mock_stream_info_.bytes_received_ + headers.byteSize() * 1;
   // response_bytes = mock_stream_info_.bytes_sent_
   //  + 2 * response_headers(1 as response_trailers).
   expected_report_info.response_bytes =
-      mock_stream_info_.bytes_sent_ + response_headers.byteSizeInternal() * 2;
+      mock_stream_info_.bytes_sent_ + response_headers.byteSize() * 2;
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesDataReportInfo(expected_report_info)))

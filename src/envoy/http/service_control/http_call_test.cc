@@ -119,7 +119,7 @@ class HttpCallTest : public testing::Test {
   static Http::MessagePtr makeResponseWithStatus(const uint64_t status_code) {
     // Headers with status code
     Http::HeaderMapPtr header_map = std::make_unique<Http::HeaderMapImpl>();
-    header_map->insertStatus().value(status_code);
+    header_map->setStatus(status_code);
 
     // Message with no body
     return std::make_unique<Http::ResponseMessageImpl>(std::move(header_map));
