@@ -215,7 +215,7 @@ Protocol getBackendProtocol(const Service& service) {
 }
 
 // TODO(taoxuy): Add Unit Test
-void fillJwtPayloads(const envoy::api::v2::core::Metadata& metadata,
+void fillJwtPayloads(const envoy::config::core::v3alpha::Metadata& metadata,
                      const std::string& jwt_payload_metadata_name,
                      const ::google::protobuf::RepeatedPtrField<::std::string>&
                          jwt_payload_paths,
@@ -232,7 +232,7 @@ void fillJwtPayloads(const envoy::api::v2::core::Metadata& metadata,
   }
 }
 
-void fillJwtPayload(const envoy::api::v2::core::Metadata& metadata,
+void fillJwtPayload(const envoy::config::core::v3alpha::Metadata& metadata,
                     const std::string& jwt_payload_metadata_name,
                     const std::string& jwt_payload_path,
                     std::string& info_iss_or_aud) {

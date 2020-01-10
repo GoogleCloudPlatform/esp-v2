@@ -98,7 +98,7 @@ func (fjs *FakeJwtService) SetupJwt(requestedProviders map[string]bool, ports *P
 
 		// Save provider
 		fjs.ProviderMap[config.Id] = provider
-		glog.Infof("Setup JWT provider %v with JwksUri %v", config.Id, provider.AuthProvider.JwksUri)
+		glog.Infof("Setup JWT provider %v -> %+v", config.Id, provider.AuthProvider)
 	}
 
 	return nil
@@ -178,7 +178,7 @@ func (fjs *FakeJwtService) ResetReqCnt(provider string) {
 }
 
 // newMockJwtProvider creates a new Jwt provider.
-func newMockJwtProvider(addr, jwks string) (*MockJwtProvider, error) {
+func newMockJwtProvider(addr, respKeys string) (*MockJwtProvider, error) {
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, fmt.Errorf("fail to create MockJwtProvider %v", err)
@@ -188,7 +188,8 @@ func newMockJwtProvider(addr, jwks string) (*MockJwtProvider, error) {
 	}
 	mockJwtProvider.s = httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		atomic.AddInt32(mockJwtProvider.cnt, 1)
-		w.Write([]byte(jwks))
+		glog.Infof("Provider at addr %v responding with: %v", addr, respKeys)
+		w.Write([]byte(respKeys))
 	}))
 	mockJwtProvider.s.Listener.Close()
 	mockJwtProvider.s.Listener = l
