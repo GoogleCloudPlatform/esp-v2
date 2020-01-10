@@ -52,7 +52,7 @@ fi
 export GO111MODULE=on
 make tools
 make depend.install
-make test
+#make test
 
 # c++ test
 echo '======================================================'
