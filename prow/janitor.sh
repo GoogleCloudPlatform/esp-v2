@@ -16,7 +16,7 @@ echo "Cleaning up resources before ${LIMIT_DATE}"
 ### Cloud Run ###
 CLOUD_RUN_SERVICES=$(gcloud run services list \
   --platform=managed \
-  --filter="metadata.name ~ ^e2e-test- \
+  --filter="metadata.name ~ ^cloudesf-testing-e2e-test- \
             AND metadata.creationTimestamp < ${LIMIT_DATE}" \
   --format="value(metadata.name)")
 
@@ -32,7 +32,7 @@ echo "Done cleaning up Cloud Run services"
 
 ### Cloud Functions ###
 GOOGLE_FUNCTIONS=$(gcloud functions list \
-  --filter="name ~ e2e-test- \
+  --filter="name ~ cloudesf-testing-e2e-test- \
             AND updateTime < ${LIMIT_DATE}" \
   --format="value(name)")
 
@@ -47,7 +47,7 @@ echo "Done cleaning up Cloud Functions"
 
 ### Endpoints Services ###
 ENDPOINTS_SERVICES=$(gcloud endpoints services list \
-  --filter="serviceName ~ e2e-test-" \
+  --filter="serviceName ~ cloudesf-testing-e2e-test-" \
   --format="value(serviceName)")
 
 # Note: This variable should NOT be in quotation marks,

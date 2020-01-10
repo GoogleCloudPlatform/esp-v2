@@ -22,7 +22,7 @@ set -eo pipefail
 function get_cloud_run_service_name_with_sha() {
   local service_type=$1
 
-  local service_format="e2e-test-%h-${service_type}"
+  local service_format="cloudesf-testing-e2e-test-%h-${service_type}"
   local service_name="$(git show -q HEAD --pretty=format:"${service_format}")"
 
   echo -n "${service_name}"
