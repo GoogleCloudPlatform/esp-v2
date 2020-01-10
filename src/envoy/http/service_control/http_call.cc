@@ -207,22 +207,19 @@ class HttpCallImpl : public HttpCall,
 
   Http::MessagePtr prepareHeaders(const std::string& token) {
     Http::MessagePtr message(new Http::RequestMessageImpl());
-    message->headers().insertPath().value(path_.data(), path_.size());
-    message->headers().insertHost().value(host_.data(), host_.size());
+    message->headers().setPath(path_);
+    message->headers().setHost(host_);
 
-    message->headers().insertMethod().value().setReference(
-        Http::Headers::get().MethodValues.Post);
+    message->headers().setReferenceMethod(Http::Headers::get().MethodValues.Post);
 
     message->body() =
         std::make_unique<Buffer::OwnedImpl>(str_body_.data(), str_body_.size());
-    message->headers().insertContentLength().value(message->body()->length());
+    message->headers().setContentLength(message->body()->length());
 
     // assume token is not empty
     std::string token_value = "Bearer " + token;
-    message->headers().insertAuthorization().value(token_value.data(),
-                                                   token_value.size());
-    message->headers().insertContentType().value(KApplicationProto.data(),
-                                                 KApplicationProto.size());
+    message->headers().setAuthorization(token_value);
+    message->headers().setContentType(KApplicationProto);
     return message;
   }
 

@@ -25,7 +25,8 @@ namespace Utils {
 namespace {
 
 TEST(FilterStateUtilsTest, SetAndGetStringValueFromFilterState) {
-  Envoy::StreamInfo::FilterStateImpl filter_state;
+  Envoy::StreamInfo::FilterStateImpl filter_state(
+      Envoy::StreamInfo::FilterState::LifeSpan::FilterChain);
 
   setStringFilterState(filter_state, "data_name_foo", "foo");
   setStringFilterState(filter_state, "data_name_bar", "bar");
@@ -35,7 +36,8 @@ TEST(FilterStateUtilsTest, SetAndGetStringValueFromFilterState) {
 }
 
 TEST(FilterStateUtilsTest, ReturnEmptyStringViewForNonExistingDataName) {
-  Envoy::StreamInfo::FilterStateImpl filter_state;
+  Envoy::StreamInfo::FilterStateImpl filter_state(
+      Envoy::StreamInfo::FilterState::LifeSpan::FilterChain);
   EXPECT_EQ(getStringFilterState(filter_state, "non_existing_data_name"), "");
 }
 

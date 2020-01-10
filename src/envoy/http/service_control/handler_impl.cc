@@ -63,7 +63,7 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
   http_method_ = std::string(
       Utils::getRequestHTTPMethodWithOverride(original_http_method, headers));
   path_ = std::string(Utils::readHeaderEntry(headers.Path()));
-  request_header_size_ = headers.byteSizeInternal();
+  request_header_size_ = headers.byteSize();
 
   const absl::string_view operation = Utils::getStringFilterState(
       stream_info_.filterState(), Utils::kOperation);
@@ -239,7 +239,7 @@ void ServiceControlHandlerImpl::onCheckResponse(
 void ServiceControlHandlerImpl::processResponseHeaders(
     const Http::HeaderMap& response_headers) {
   frontend_protocol_ = getFrontendProtocol(&response_headers, stream_info_);
-  response_header_size_ = response_headers.byteSizeInternal();
+  response_header_size_ = response_headers.byteSize();
 }
 
 void ServiceControlHandlerImpl::callReport(
@@ -297,10 +297,10 @@ void ServiceControlHandlerImpl::callReport(
 
   uint64_t response_header_size = 0;
   if (response_headers) {
-    response_header_size += response_headers->byteSizeInternal();
+    response_header_size += response_headers->byteSize();
   }
   if (response_trailers) {
-    response_header_size += response_trailers->byteSizeInternal();
+    response_header_size += response_trailers->byteSize();
   }
   info.response_size = stream_info_.bytesSent() + response_header_size;
   info.response_bytes = stream_info_.bytesSent() + response_header_size;

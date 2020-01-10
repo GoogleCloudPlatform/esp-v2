@@ -93,6 +93,9 @@ envoy_cc_library(
     srcs = ["service_control_call_impl.cc"],
     hdrs = ["service_control_call_impl.h"],
     repository = "@envoy",
+    tags = [
+        "no-cache",
+    ],
     deps = [
         ":client_cache_lib",
         ":service_control_call_interface",
