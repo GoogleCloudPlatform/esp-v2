@@ -72,6 +72,11 @@ var (
 			Issuer: Es256Issuer,
 			Keys:   ServiceControlJwtPayloadPubKeys,
 		},
+		{
+			Id:     X509Provider,
+			Issuer: FakeIssuer,
+			Keys:   x509PubKeys,
+		},
 	}
 )
 
@@ -89,6 +94,7 @@ const (
 	InvalidProvider              string = "invalid_jwks_provider"
 	NonexistentProvider          string = "nonexist_jwks_provider"
 	ServiceControlProvider       string = "service_control_jwt_payload_auth"
+	X509Provider                 string = "x509_jwt_provider"
 )
 
 // Issuers
@@ -100,6 +106,7 @@ const (
 	Rs256Issuer           string = "rs256-issuer"
 	InvalidIssuer         string = "invalid_jwks_provider"
 	NonexistentIssuer     string = "nonexist_jwks_provider"
+	FakeIssuer            string = "fake.issuer"
 )
 
 // Keys and tokens
@@ -133,6 +140,11 @@ const (
 			"kid": "2b"
 		}
 		]
+	}`
+
+	// Copied from: https://github.com/google/jwt_verify_lib/pull/33/files
+	x509PubKeys = `{
+  "82cfd797903063a0b78ce1cbf5e2fe036a6de242": "-----BEGIN CERTIFICATE-----\nMIIC+jCCAeKgAwIBAgIIEN2Xgd3Y1CMwDQYJKoZIhvcNAQEFBQAwIDEeMBwGA1UE\nAxMVMTA2OTQ3MDEyMjYwNDg4NzM2MTU3MB4XDTE5MDIyNzE3NTA1N1oXDTI5MDIy\nNDE3NTA1N1owIDEeMBwGA1UEAxMVMTA2OTQ3MDEyMjYwNDg4NzM2MTU3MIIBIjAN\nBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA00bLFfPv/jeyVU6xuStcwHdSBa+m\nlOX/9oWFwMsQucENe+QYKJmkAqdATz3BKJ354iknMy556Y8cBHbZa9X6gxi2BIPW\nzkuKTruDJrQrg6cgR6RHZ9WNoxGLRtyhq8PimV8DVtMSLYVy3p/gMwEtuQY4jiXS\nhhvCZxuJZIJnabNqTU5AGWfduQgDcLRd25cShKxDNOtfcBWQ+ZQWt5qkZGz5XFQ/\nt1+bND+hA3dC3bwLc9yFrgU+Z+XEDQErq4OG9MVezw6h6Imn6gkrdSyG1k9BjPsf\n4senqDXgtK2Iz9MuGIWcG62wV2a7qJYjnGBJfI4QKQBEdsYbuUel2wB0wQIDAQAB\nozgwNjAMBgNVHRMBAf8EAjAAMA4GA1UdDwEB/wQEAwIHgDAWBgNVHSUBAf8EDDAK\nBggrBgEFBQcDAjANBgkqhkiG9w0BAQUFAAOCAQEArrvMP0yrPQlCC/QB0iPxb4TY\nPPiDTuY4fPytUQgvSdQ4rMPSNZafe7tIS+0KDhZtblepaS5whVobVh9lS2bK+rDH\nRsM/H9XRGpyh2rJ6NYUbiyEMQ4jfNh99A02Nsz4Gaed3IE8Hml2pWLcCbp2VGDEN\nr6qrBVVWsaT736/kwVNp14S6FNhVIx1pZeKJrtOsJD+Y4f21WKlWdKdu4QVlxJoE\n9LtFur56aLhDA64D5GPjQnatRyShcWXvgEvUk5YUuBkjTDL1HSNTeqTdG6j8OEZo\nBuyfyPz4yV6BjnJWl2fk8v+9sB1B6m5LoR7ETHlWwh+elmaejFQCJN1+ED8k0w==\n-----END CERTIFICATE-----\n"
 	}`
 
 	// Generated with payloads:
@@ -346,4 +358,17 @@ const (
 		"rLcncoKX5MX8kOnEZjO0US1nfbPHQnpjKdgq_42uusJVCYau__zMMoEhLlCYxTKrdmWQ_j" +
 		"LW0v8IOSbixa74w9TwlCr0TKzsd-8e4Jr4gksDNxtzJWPwKAuvvd6J9q5CZXQ-WmszDNCK" +
 		"vYbOQA"
+
+	// Copied from: https://github.com/google/jwt_verify_lib/pull/33/files
+	//  python generate-jwt.py --iss="fake.issuer" "fake.audience" sa_file
+	// Modified script to set long expiration time
+	X509Token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjgyY2ZkNzk3OTAz" +
+		"MDYzYTBiNzhjZTFjYmY1ZTJmZTAzNmE2ZGUyNDIifQ.eyJpc3MiOiJmYWtlLmlzc3VlciI" +
+		"sImlhdCI6MTU3ODY4NTY4MSwiYXVkIjoiZmFrZS5hdWRpZW5jZSIsImV4cCI6MzE1MzYwM" +
+		"DAwMCwic3ViIjoiZmFrZS5pc3N1ZXIifQ.fMsL-HA3pWK77kl0GdAPqw56wwRYTF9T6WLC" +
+		"tvmEQ4KATA0uLAFyVGISrouNTfntHgFT8ObajDiLKZpBpbMQzqSRxEJomW5lR7UzZ8-V6z" +
+		"ne5t7ZwkYUjzAdpTnuFNUhdYzkOKeuH_UIYw-XSFUJD8UJC3w1eBarGu32k_LyXQ3zt08F" +
+		"41G8sbg5JVarjYAnYCQbSnqtKxQVhuQ_Lrwf3mcrnSqeRAPummfK1RB6lp2l9SW3A9IqX_" +
+		"NZGEelQRvYU8fo8x5rlCK_UI9oIAlEiMStLQ7AntkXwE6yX_yw4pqlh7NtEiphcBDkXect" +
+		"qm8FGi5udDWS7dvUXf01VokK9g"
 )

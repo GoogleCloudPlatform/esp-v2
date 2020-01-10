@@ -71,6 +71,10 @@ func TestAsymmetricKeys(t *testing.T) {
 						ProviderId: testdata.OpenIdNonexistentProvider,
 						Audiences:  "ok_audience",
 					},
+					{
+						ProviderId: testdata.X509Provider,
+						Audiences:  "fake.audience",
+					},
 				},
 			},
 		},
@@ -179,6 +183,15 @@ func TestAsymmetricKeys(t *testing.T) {
 			// detailed error(issuer is not configured).
 			wantError: "401 Unauthorized",
 		},
+		{
+			// Regression test for b/146942680
+			desc:           "Succeeded for x509 public keys",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves?key=api-key",
+			token:          testdata.X509Token,
+			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
+		},
 	}
 
 	for _, tc := range tests {
@@ -193,6 +206,8 @@ func TestAsymmetricKeys(t *testing.T) {
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
+		} else if tc.wantError == "" && err != nil {
+			t.Errorf("Test (%s): failed, expected no error, got error: %s", tc.desc, err)
 		} else {
 			if !strings.Contains(resp, tc.wantResp) {
 				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
