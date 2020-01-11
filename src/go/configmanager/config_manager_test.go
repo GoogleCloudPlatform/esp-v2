@@ -1264,7 +1264,7 @@ func TestFetchListeners(t *testing.T) {
                            "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
                            "rules":[
                               {
-                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_0",
+                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_simplegetcors",
                                  "pattern":{
                                     "httpMethod":"OPTIONS",
                                     "uriTemplate":"/simplegetcors"
@@ -1299,7 +1299,7 @@ func TestFetchListeners(t *testing.T) {
                                  "apiKey":{
                                     "allowWithoutApiKey":true
                                  },
-                                 "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_0",
+                                 "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_simplegetcors",
                                  "serviceName":"bookstore.endpoints.project123.cloud.goog"
                               },
                               {

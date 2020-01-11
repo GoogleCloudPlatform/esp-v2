@@ -745,8 +745,8 @@ func TestMethods(t *testing.T) {
 						},
 					},
 				},
-				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_0": &methodInfo{
-					ShortName: "CORS_0",
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_auth_info_googlejwt": &methodInfo{
+					ShortName: "CORS_auth_info_googlejwt",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*commonpb.Pattern{
 						{

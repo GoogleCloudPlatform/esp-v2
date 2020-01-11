@@ -329,13 +329,13 @@ func TestBackendRoutingFilter(t *testing.T) {
           "@type":"type.googleapis.com/google.api.envoy.http.backend_routing.FilterConfig",
           "rules": [
             {
-              "isConstAddress": true,
-              "operation":"testapi.CORS_0",
-              "pathPrefix": "/foo"
+              "operation":"testapi.CORS_bar",
+              "pathPrefix": "/bar"
             },
             {
-              "operation":"testapi.CORS_1",
-              "pathPrefix": "/bar"
+              "isConstAddress": true,
+              "operation":"testapi.CORS_foo",
+              "pathPrefix": "/foo"
             },
             {
               "operation": "testapi.bar",
@@ -530,12 +530,12 @@ func TestBackendAuthFilter(t *testing.T) {
           },
           "rules":[
             {
-            	"jwtAudience": "foo.com",
-            	"operation":"testapi.CORS_0"
+            	"jwtAudience": "bar.com",
+            	"operation": "testapi.CORS_bar"
             },
             {
-            	"jwtAudience": "bar.com",
-            	"operation": "testapi.CORS_1"
+            	"jwtAudience": "foo.com",
+            	"operation":"testapi.CORS_foo"
             },
             {
               "jwtAudience": "bar.com",
@@ -874,7 +874,7 @@ func TestPathMatcherFilter(t *testing.T) {
       "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
       "rules":[
          {
-            "operation":"1.cloudesf_testing_cloud_goog.CORS_0",
+            "operation":"1.cloudesf_testing_cloud_goog.CORS_foo",
             "pattern":{
                "httpMethod":"OPTIONS",
                "uriTemplate":"foo"
