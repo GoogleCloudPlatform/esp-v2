@@ -44,8 +44,34 @@ type CommonOptions struct {
 	NonGCP             bool
 	HttpRequestTimeout time.Duration
 	MetadataURL        string
-	IamServiceAccount  string
 	IamURL             string
+	// Configures the identity used when making requests to Service Control.
+	ServiceControlCredentials IAMCredentialsOptions
+	// Configures the identity used when making requests to backends.
+	BackendAuthCredentials IAMCredentialsOptions
+	// TODO: Soon to be deprecated. Use IAMCredentialsOptions instead.
+	IamServiceAccount string
+}
+
+// IamTokenKind specifies which type of token to generate using the IAM Credentials API.
+type IamTokenKind int
+
+const (
+	// AccessToken indicates the access token should be generated.
+	AccessToken IamTokenKind = iota
+	// IDToken indicates the OpenID Connect ID token should be generated.
+	IDToken
+)
+
+// IAMCredentialsOptions configures Envoy to authenticate requests using the given service account
+// instead of the identity of the machine.
+type IAMCredentialsOptions struct {
+	// The Service Account to fetch the token for. If left empty, IAM Credentials API will not be used to sign tokens.
+	ServiceAccountEmail string
+	TokenKind           IamTokenKind
+	// Optionally impersonate the ServiceAccountEmail using this chain of delegates. See:
+	// https://cloud.google.com/iam/docs/reference/credentials/rest/v1/projects.serviceAccounts/generateIdToken
+	Delegates []string
 }
 
 // DefaultCommonOptions returns CommonOptions with default values.
@@ -71,7 +97,9 @@ func DefaultCommonOptions() CommonOptions {
 		TracingMaxNumMessageEvents: 128,
 		TracingMaxNumLinks:         128,
 		MetadataURL:                "http://169.254.169.254/computeMetadata",
-		IamServiceAccount:          "",
 		IamURL:                     "https://iamcredentials.googleapis.com",
+		ServiceControlCredentials:  IAMCredentialsOptions{},
+		BackendAuthCredentials:     IAMCredentialsOptions{},
+		IamServiceAccount:          "",
 	}
 }
