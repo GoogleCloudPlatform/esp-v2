@@ -35,7 +35,7 @@ func TestAsymmetricKeys(t *testing.T) {
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestAsymmetricKeys, "bookstore")
-	if err := s.FakeJwtService.SetupOpenId(); err != nil {
+	if err := s.FakeJwtService.SetupValidOpenId(); err != nil {
 		t.Fatalf("fail to setup open id servers: %v", err)
 	}
 	s.OverrideAuthentication(&confpb.Authentication{
@@ -61,14 +61,6 @@ func TestAsymmetricKeys(t *testing.T) {
 					},
 					{
 						ProviderId: testdata.OpenIdProvider,
-						Audiences:  "ok_audience",
-					},
-					{
-						ProviderId: testdata.OpenIdInvalidProvider,
-						Audiences:  "ok_audience",
-					},
-					{
-						ProviderId: testdata.OpenIdNonexistentProvider,
 						Audiences:  "ok_audience",
 					},
 					{
@@ -212,6 +204,61 @@ func TestAsymmetricKeys(t *testing.T) {
 			if !strings.Contains(resp, tc.wantResp) {
 				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
 			}
+		}
+	}
+}
+
+// Tests that config translation will fail when the OpenID Connect Discovery protocol is not followed.
+func TestInvalidOpenIDConnectDiscovery(t *testing.T) {
+
+	configID := "test-config-id"
+	args := []string{"--service_config_id=" + configID,
+		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
+
+	s := env.NewTestEnv(comp.TestInvalidOpenIDConnectDiscovery, "bookstore")
+	if err := s.FakeJwtService.SetupInvalidOpenId(); err != nil {
+		t.Fatalf("fail to setup open id servers: %v", err)
+	}
+
+	tests := []struct {
+		desc        string
+		providerId  string
+		expectedErr string
+	}{
+		{
+			desc:        "Fail with provider with invalid response",
+			providerId:  testdata.OpenIdInvalidProvider,
+			expectedErr: "health check response was not healthy",
+		},
+		{
+			desc:        "Fail with provider that does not exist",
+			providerId:  testdata.OpenIdNonexistentProvider,
+			expectedErr: "health check response was not healthy",
+		},
+	}
+
+	for _, tc := range tests {
+		s.OverrideAuthentication(&confpb.Authentication{
+			Rules: []*confpb.AuthenticationRule{
+				{
+					Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
+					Requirements: []*confpb.AuthRequirement{
+						{
+							ProviderId: tc.providerId,
+							Audiences:  "ok_audience",
+						},
+					},
+				},
+			},
+		})
+
+		err := s.Setup(args)
+		s.TearDown()
+
+		if err == nil {
+			t.Errorf("Test (%s): failed, expected error, got no err", tc.desc)
+		} else if !strings.Contains(err.Error(), tc.expectedErr) {
+			t.Errorf("Test (%s): failed, expected err: %v, got err: %v", tc.desc, tc.expectedErr, err)
 		}
 	}
 }

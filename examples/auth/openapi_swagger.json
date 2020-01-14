@@ -1,11 +1,11 @@
 {
   "swagger": "2.0",
   "info": {
-    "description": "A simple Google Cloud Endpoints Bookstore API example.",
-    "title": "Bookstore",
+    "description": "Example of the JWT Authn filter using a simple Bookstore API.",
+    "title": "Example - Auth - Bookstore",
     "version": "1.0.0"
   },
-  "host": "bookstore.endpoints.apiproxy-231719.cloud.goog",
+  "host": "auth.endpoints.apiproxy-231719.cloud.goog",
   "basePath": "/",
   "consumes": [
     "application/json"
@@ -35,6 +35,9 @@
         "security": [
           {
             "firebase": []
+          },
+          {
+            "google_id_token": []
           }
         ]
       },
@@ -114,6 +117,12 @@
       "x-google-issuer": "https://securetoken.google.com/apiproxy-231719",
       "x-google-jwks_uri": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
       "x-google-audiences": "apiproxy-231719"
+    },
+    "google_id_token": {
+      "authorizationUrl": "",
+      "flow": "implicit",
+      "type": "oauth2",
+      "x-google-issuer": "https://accounts.google.com"
     }
   }
 }

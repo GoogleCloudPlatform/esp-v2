@@ -1,4 +1,5 @@
 {
+  "admin": {},
   "node": {
     "id": "ESPv2",
     "cluster": "ESPv2_cluster"
@@ -19,28 +20,6 @@
                 "name": "envoy.http_connection_manager",
                 "typedConfig": {
                   "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
-                  "statPrefix": "ingress_http",
-                  "routeConfig": {
-                    "name": "local_route",
-                    "virtualHosts": [
-                      {
-                        "name": "backend",
-                        "domains": [
-                          "*"
-                        ],
-                        "routes": [
-                          {
-                            "match": {
-                              "prefix": "/"
-                            },
-                            "route": {
-                              "cluster": "bookstore.endpoints.apiproxy-231719.cloud.goog_local"
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  },
                   "httpFilters": [
                     {
                       "name": "envoy.filters.http.path_matcher",
@@ -48,18 +27,18 @@
                         "@type": "type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
                         "rules": [
                           {
+                            "operation": "1.auth_endpoints_apiproxy_231719_cloud_goog.CreateShelf",
                             "pattern": {
-                              "uriTemplate": "/shelves",
-                              "httpMethod": "POST"
-                            },
-                            "operation": "1.bookstore_endpoints_apiproxy_231719_cloud_goog.CreateShelf"
+                              "httpMethod": "POST",
+                              "uriTemplate": "/shelves"
+                            }
                           },
                           {
+                            "operation": "1.auth_endpoints_apiproxy_231719_cloud_goog.ListShelves",
                             "pattern": {
-                              "uriTemplate": "/shelves",
-                              "httpMethod": "GET"
-                            },
-                            "operation": "1.bookstore_endpoints_apiproxy_231719_cloud_goog.ListShelves"
+                              "httpMethod": "GET",
+                              "uriTemplate": "/shelves"
+                            }
                           }
                         ]
                       }
@@ -68,81 +47,115 @@
                       "name": "envoy.filters.http.jwt_authn",
                       "typedConfig": {
                         "@type": "type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication",
-                        "providers": {
-                          "auth0_jwk": {
-                            "issuer": "123456789-compute@developer.gserviceaccount.com",
-                            "audiences": [
-                              "bookstore.endpoints.cloudesf-testing.cloud.goog"
-                            ],
-                            "remoteJwks": {
-                              "httpUri": {
-                                "uri": "https://www.googleapis.com/service_accounts/v1/jwk/123456789-compute@developer.gserviceaccount.com",
-                                "cluster":"www.googleapis.com:443",
-                                "timeout": "5s"
-                              },
-                              "cacheDuration": "300s"
-                            },
-                            "fromHeaders": [
-                              {
-                                "name": "Authorization",
-                                "valuePrefix": "Bearer "
-                              },
-                              {
-                                "name": "X-Goog-Iap-Jwt-Assertion"
-                              }
-                            ],
-                            "fromParams": [
-                              "access_token"
-                            ],
-                            "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
-                            "payloadInMetadata": "jwt_payloads"
-                          },
-                          "firebase": {
-                            "issuer": "https://securetoken.google.com/apiproxy-231719",
-                            "audiences": [
-                              "apiproxy-231719"
-                            ],
-                            "remoteJwks": {
-                              "httpUri": {
-                                "uri": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
-                                "cluster": "www.googleapis.com:443",
-                                "timeout": "5s"
-                              },
-                              "cacheDuration": "300s"
-                            },
-                            "fromHeaders": [
-                              {
-                                "name": "Authorization",
-                                "valuePrefix": "Bearer "
-                              },
-                              {
-                                "name": "X-Goog-Iap-Jwt-Assertion"
-                              }
-                            ],
-                            "fromParams": [
-                              "access_token"
-                            ],
-                            "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
-                            "payloadInMetadata": "jwt_payloads"
-                          }
-                        },
                         "filterStateRules": {
                           "name": "envoy.filters.http.path_matcher.operation",
                           "requires": {
-                            "1.bookstore_endpoints_apiproxy_231719_cloud_goog.CreateShelf": {
+                            "1.auth_endpoints_apiproxy_231719_cloud_goog.CreateShelf": {
                               "providerAndAudiences": {
-                                "providerName": "auth0_jwk",
                                 "audiences": [
                                   "bookstore.endpoints.cloudesf-testing.cloud.goog"
-                                ]
+                                ],
+                                "providerName": "auth0_jwk"
                               }
                             },
-                            "1.bookstore_endpoints_apiproxy_231719_cloud_goog.ListShelves": {
-                              "providerAndAudiences": {
-                                "providerName": "firebase",
-                                "audiences": [
-                                  "apiproxy-231719"
+                            "1.auth_endpoints_apiproxy_231719_cloud_goog.ListShelves": {
+                              "requiresAny": {
+                                "requirements": [
+                                  {
+                                    "providerAndAudiences": {
+                                      "audiences": [
+                                        "apiproxy-231719"
+                                      ],
+                                      "providerName": "firebase"
+                                    }
+                                  },
+                                  {
+                                    "providerName": "google_id_token"
+                                  }
                                 ]
+                              }
+                            }
+                          }
+                        },
+                        "providers": {
+                          "auth0_jwk": {
+                            "audiences": [
+                              "bookstore.endpoints.cloudesf-testing.cloud.goog"
+                            ],
+                            "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
+                            "fromHeaders": [
+                              {
+                                "name": "Authorization",
+                                "valuePrefix": "Bearer "
+                              },
+                              {
+                                "name": "X-Goog-Iap-Jwt-Assertion"
+                              }
+                            ],
+                            "fromParams": [
+                              "access_token"
+                            ],
+                            "issuer": "123456789-compute@developer.gserviceaccount.com",
+                            "payloadInMetadata": "jwt_payloads",
+                            "remoteJwks": {
+                              "cacheDuration": "300s",
+                              "httpUri": {
+                                "cluster": "www.googleapis.com:443",
+                                "timeout": "5s",
+                                "uri": "https://www.googleapis.com/service_accounts/v1/jwk/123456789-compute@developer.gserviceaccount.com"
+                              }
+                            }
+                          },
+                          "firebase": {
+                            "audiences": [
+                              "apiproxy-231719"
+                            ],
+                            "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
+                            "fromHeaders": [
+                              {
+                                "name": "Authorization",
+                                "valuePrefix": "Bearer "
+                              },
+                              {
+                                "name": "X-Goog-Iap-Jwt-Assertion"
+                              }
+                            ],
+                            "fromParams": [
+                              "access_token"
+                            ],
+                            "issuer": "https://securetoken.google.com/apiproxy-231719",
+                            "payloadInMetadata": "jwt_payloads",
+                            "remoteJwks": {
+                              "cacheDuration": "300s",
+                              "httpUri": {
+                                "cluster": "www.googleapis.com:443",
+                                "timeout": "5s",
+                                "uri": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
+                              }
+                            }
+                          },
+                          "google_id_token": {
+                            "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
+                            "fromHeaders": [
+                              {
+                                "name": "Authorization",
+                                "valuePrefix": "Bearer "
+                              },
+                              {
+                                "name": "X-Goog-Iap-Jwt-Assertion"
+                              }
+                            ],
+                            "fromParams": [
+                              "access_token"
+                            ],
+                            "issuer": "https://accounts.google.com",
+                            "payloadInMetadata": "jwt_payloads",
+                            "remoteJwks": {
+                              "cacheDuration": "300s",
+                              "httpUri": {
+                                "cluster": "www.googleapis.com:443",
+                                "timeout": "5s",
+                                "uri": "https://www.googleapis.com/oauth2/v3/certs"
                               }
                             }
                           }
@@ -156,6 +169,28 @@
                       }
                     }
                   ],
+                  "routeConfig": {
+                    "name": "local_route",
+                    "virtualHosts": [
+                      {
+                        "domains": [
+                          "*"
+                        ],
+                        "name": "backend",
+                        "routes": [
+                          {
+                            "match": {
+                              "prefix": "/"
+                            },
+                            "route": {
+                              "cluster": "auth.endpoints.apiproxy-231719.cloud.goog_local"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "statPrefix": "ingress_http",
                   "useRemoteAddress": false,
                   "xffNumTrustedHops": 2
                 }
@@ -167,9 +202,8 @@
     ],
     "clusters": [
       {
-        "name": "bookstore.endpoints.apiproxy-231719.cloud.goog_local",
-        "type": "STRICT_DNS",
         "connectTimeout": "20s",
+        "http2ProtocolOptions": {},
         "loadAssignment": {
           "clusterName": "127.0.0.1",
           "endpoints": [
@@ -189,11 +223,10 @@
             }
           ]
         },
-        "http2ProtocolOptions": {}
+        "name": "auth.endpoints.apiproxy-231719.cloud.goog_local",
+        "type": "STRICT_DNS"
       },
       {
-        "name": "metadata-cluster",
-        "type": "STRICT_DNS",
         "connectTimeout": "20s",
         "loadAssignment": {
           "clusterName": "169.254.169.254",
@@ -213,12 +246,13 @@
               ]
             }
           ]
-        }
+        },
+        "name": "metadata-cluster",
+        "type": "STRICT_DNS"
       },
       {
-        "name": "service-control-cluster",
-        "type": "LOGICAL_DNS",
         "connectTimeout": "5s",
+        "dnsLookupFamily": "V4_ONLY",
         "loadAssignment": {
           "clusterName": "servicecontrol.googleapis.com",
           "endpoints": [
@@ -238,7 +272,7 @@
             }
           ]
         },
-        "dnsLookupFamily": "V4_ONLY",
+        "name": "service-control-cluster",
         "transportSocket": {
           "name": "envoy.transport_sockets.tls",
           "typedConfig": {
@@ -252,12 +286,12 @@
             },
             "sni": "servicecontrol.googleapis.com"
           }
-        }
+        },
+        "type": "LOGICAL_DNS"
       },
       {
-        "name": "www.googleapis.com:443",
-        "type": "LOGICAL_DNS",
         "connectTimeout": "20s",
+        "dnsLookupFamily": "V4_ONLY",
         "loadAssignment": {
           "clusterName": "www.googleapis.com",
           "endpoints": [
@@ -277,7 +311,7 @@
             }
           ]
         },
-        "dnsLookupFamily": "V4_ONLY",
+        "name": "www.googleapis.com:443",
         "transportSocket": {
           "name": "envoy.transport_sockets.tls",
           "typedConfig": {
@@ -291,9 +325,9 @@
             },
             "sni": "www.googleapis.com"
           }
-        }
+        },
+        "type": "LOGICAL_DNS"
       }
     ]
-  },
-  "admin": {}
+  }
 }

@@ -52,8 +52,6 @@ const (
 
 	// JwtPayloadMetadataName is the field name passed into metadata
 	JwtPayloadMetadataName = "jwt_payloads"
-	// FakeJwksUri used when jwksUri is unavailable
-	FakeJwksUri = "http://aaaaaaaaaaaaa.bbbbbbbbbbbbb.cccccccccccc/inaccessible_pkey"
 
 	// Supported Http Methods.
 
@@ -78,11 +76,13 @@ const (
 	RolloutStrategySuffix   = "/v1/instance/attributes/endpoints-rollout-strategy"
 	ServiceNameSuffix       = "/v1/instance/attributes/endpoints-service-name"
 
-	AccessTokenSuffix           = "/v1/instance/service-accounts/default/token"
-	IdentityTokenSuffix         = "/v1/instance/service-accounts/default/identity"
-	ProjectIDSuffix             = "/v1/project/project-id"
-	ZoneSuffix                  = "/v1/instance/zone"
-	OpenIDDiscoveryCfgURLSuffix = "/.well-known/openid-configuration/"
+	AccessTokenSuffix   = "/v1/instance/service-accounts/default/token"
+	IdentityTokenSuffix = "/v1/instance/service-accounts/default/identity"
+	ProjectIDSuffix     = "/v1/project/project-id"
+	ZoneSuffix          = "/v1/instance/zone"
+
+	// b/147591854: This string must NOT have a trailing slash
+	OpenIDDiscoveryCfgURLSuffix = "/.well-known/openid-configuration"
 
 	// The metadata server cluster name.
 	MetadataServerClusterName = "metadata-cluster"

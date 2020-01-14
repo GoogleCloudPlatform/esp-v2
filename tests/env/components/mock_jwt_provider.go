@@ -22,6 +22,7 @@ import (
 	"net/http/httptest"
 	"sync/atomic"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/golang/glog"
@@ -107,7 +108,7 @@ func (fjs *FakeJwtService) SetupJwt(requestedProviders map[string]bool, ports *P
 // This method setup OpenId providers. It can only be called sequentially or in one
 // goroutine during parallel execution because the OpenId providers use hard-coded
 // ports and parallel run will cause the competition for ports.
-func (fjs *FakeJwtService) SetupOpenId() error {
+func (fjs *FakeJwtService) SetupValidOpenId() error {
 	// Test Jwks and Jwt Tokens are generated following
 	// https://github.com/istio/istio/tree/master/security/tools/jwt/samples.
 	openID, err := newMockJwtProvider(openIdServerAddr, testdata.ServiceControlJwtPayloadPubKeys)
@@ -132,12 +133,17 @@ func (fjs *FakeJwtService) SetupOpenId() error {
 	fjs.ProviderMap[provider.AuthProvider.Id] = provider
 	glog.Infof("Setup OpenID JWT provider server %v with Issuer %v", provider.AuthProvider.Id, provider.AuthProvider.Issuer)
 
+	return nil
+}
+
+// Setup invalid providers that do not follow the OpenID Connect Discovery protocol.
+func (fjs *FakeJwtService) SetupInvalidOpenId() error {
 	// OpenIdInvalidProvider
-	jwksUriEntry, err = json.Marshal(map[string]string{"issuer": openID.GetURL()})
+	jwksUriEntry, err := json.Marshal(map[string]string{"invalid_response_key": "invalid_response_value"})
 	if err != nil {
 		return err
 	}
-	provider, err = newOpenIDServer(openIDInvalidProviderAddr, string(jwksUriEntry))
+	provider, err := newOpenIDServer(openIDInvalidProviderAddr, string(jwksUriEntry))
 	if err != nil {
 		return fmt.Errorf("fail to init provider %s, %v", "openID_invalid_provier", err)
 	}
@@ -223,7 +229,7 @@ func newOpenIDServer(addr, jwksUriEntry string) (*MockJwtProvider, error) {
 		return nil, fmt.Errorf("fail to create OpenIDServer %v", err)
 	}
 	r := mux.NewRouter()
-	r.Path("/.well-known/openid-configuration/").Methods("GET").Handler(
+	r.Path(util.OpenIDDiscoveryCfgURLSuffix).Methods("GET").Handler(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(jwksUriEntry))
 		}))

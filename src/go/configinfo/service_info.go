@@ -120,7 +120,10 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	}
 	serviceInfo.processAccessToken()
 	serviceInfo.processTypes()
-	serviceInfo.processEmptyJwksUriByOpenID()
+
+	if err := serviceInfo.processEmptyJwksUriByOpenID(); err != nil {
+		return nil, err
+	}
 
 	// Sort Methods according to name.
 	for operation := range serviceInfo.Methods {
@@ -136,25 +139,26 @@ func (s *ServiceInfo) ServiceConfig() *confpb.Service {
 	return s.serviceConfig
 }
 
-func (s *ServiceInfo) processEmptyJwksUriByOpenID() {
+func (s *ServiceInfo) processEmptyJwksUriByOpenID() error {
 	authn := s.serviceConfig.GetAuthentication()
 	for _, provider := range authn.GetProviders() {
 		jwksUri := provider.GetJwksUri()
 
-		// Note: When jwksUri is empty, proxy will try to find jwksUri by openID
-		// discovery. If error happens during this process, a fake and unaccessible
-		// jwksUri will be filled instead.
+		// Note: When jwksUri is empty, proxy will try to find jwksUri using the
+		// OpenID Connect Discovery protocol.
 		if jwksUri == "" {
+			glog.Infof("jwks_uri is empty, using OpenID Connect Discovery protocol")
 			jwksUriByOpenID, err := util.ResolveJwksUriUsingOpenID(provider.GetIssuer())
 			if err != nil {
-				glog.Warning(err.Error())
-				jwksUri = util.FakeJwksUri
+				return fmt.Errorf("failed OpenID Connect Discovery protocol: %v", err)
 			} else {
 				jwksUri = jwksUriByOpenID
 			}
 			provider.JwksUri = jwksUri
 		}
 	}
+
+	return nil
 }
 
 func (s *ServiceInfo) processApis() {

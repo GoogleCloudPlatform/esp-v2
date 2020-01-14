@@ -135,7 +135,7 @@ func TestParseURI(t *testing.T) {
 func TestResolveJwksUriUsingOpenID(t *testing.T) {
 	r := mux.NewRouter()
 	jwksUriEntry, _ := json.Marshal(map[string]string{"jwks_uri": "this-is-jwksUri"})
-	r.Path("/.well-known/openid-configuration/").Methods("GET").Handler(
+	r.Path(OpenIDDiscoveryCfgURLSuffix).Methods("GET").Handler(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Write(jwksUriEntry)
 		}))
@@ -164,7 +164,7 @@ func TestResolveJwksUriUsingOpenID(t *testing.T) {
 		{
 			desc:    "Fail, with non-exist server referred by issuer using openID",
 			issuer:  "http://aaaaaaa.bbbbbbbbbbbbb.cccccccccc",
-			wantErr: "Failed to fetch jwks_uri from http://aaaaaaa.bbbbbbbbbbbbb.cccccccccc/.well-known/openid-configuration/",
+			wantErr: "Failed to fetch jwks_uri from http://aaaaaaa.bbbbbbbbbbbbb.cccccccccc/.well-known/openid-configuration",
 		},
 	}
 	for i, tc := range testData {

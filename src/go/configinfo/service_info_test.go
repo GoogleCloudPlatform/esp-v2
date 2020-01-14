@@ -1038,7 +1038,7 @@ func TestProcessQuota(t *testing.T) {
 func TestProcessEmptyJwksUriByOpenID(t *testing.T) {
 	r := mux.NewRouter()
 	jwksUriEntry, _ := json.Marshal(map[string]string{"jwks_uri": "this-is-jwksUri"})
-	r.Path("/.well-known/openid-configuration/").Methods("GET").Handler(
+	r.Path(util.OpenIDDiscoveryCfgURLSuffix).Methods("GET").Handler(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Write(jwksUriEntry)
 		}))
@@ -1048,6 +1048,7 @@ func TestProcessEmptyJwksUriByOpenID(t *testing.T) {
 		desc              string
 		fakeServiceConfig *confpb.Service
 		wantedJwksUri     string
+		wantErr           bool
 	}{
 		{
 			desc: "Empty jwksUri, use jwksUri acquired by openID",
@@ -1069,7 +1070,7 @@ func TestProcessEmptyJwksUriByOpenID(t *testing.T) {
 			wantedJwksUri: "this-is-jwksUri",
 		},
 		{
-			desc: "Empty jwksUri and no jwksUri acquired by openID, use FakeJwksUri",
+			desc: "Empty jwksUri and Open ID Connect Discovery failed",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
@@ -1085,7 +1086,7 @@ func TestProcessEmptyJwksUriByOpenID(t *testing.T) {
 					},
 				},
 			},
-			wantedJwksUri: util.FakeJwksUri,
+			wantErr: true,
 		},
 	}
 
@@ -1093,10 +1094,14 @@ func TestProcessEmptyJwksUriByOpenID(t *testing.T) {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = "grpc"
 		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
-		if err != nil {
-			t.Errorf("Test Desc(%d): %s, process jwksUri got %v", i, tc.desc, err)
-		}
-		if jwksUri := serviceInfo.serviceConfig.Authentication.Providers[0].JwksUri; jwksUri != tc.wantedJwksUri {
+
+		if tc.wantErr {
+			if err == nil {
+				t.Errorf("Test Desc(%d): %s, process jwksUri got: no err, but expected err", i, tc.desc)
+			}
+		} else if err != nil {
+			t.Errorf("Test Desc(%d): %s, process jwksUri got: %v, but expected no err", i, tc.desc, err)
+		} else if jwksUri := serviceInfo.serviceConfig.Authentication.Providers[0].JwksUri; jwksUri != tc.wantedJwksUri {
 			t.Errorf("Test Desc(%d): %s, process jwksUri got: %v, want: %v", i, tc.desc, jwksUri, tc.wantedJwksUri)
 		}
 	}

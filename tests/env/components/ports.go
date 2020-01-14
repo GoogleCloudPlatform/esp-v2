@@ -55,6 +55,7 @@ const (
 	TestGRPCWeb
 	TestHttp1Basic
 	TestHttp1JWT
+	TestInvalidOpenIDConnectDiscovery
 	TestManagedServiceConfig
 	TestMultiGrpcServices
 	TestPreflightCorsWithBasicPreset
