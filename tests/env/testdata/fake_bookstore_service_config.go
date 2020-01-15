@@ -131,16 +131,17 @@ var (
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.CreateBook",
 					Pattern: &annotationspb.HttpRule_Post{
-						Post: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
-					},
-					Body: "book.title",
-				},
-				{
-					Selector: "endpoints.examples.bookstore.Bookstore.CreateBook",
-					Pattern: &annotationspb.HttpRule_Post{
 						Post: "/v1/shelves/{shelf}/books",
 					},
 					Body: "book",
+					AdditionalBindings: []*annotationspb.HttpRule{
+						{
+							Pattern: &annotationspb.HttpRule_Post{
+								Post: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
+							},
+							Body: "book.title",
+						},
+					},
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.GetBook",
