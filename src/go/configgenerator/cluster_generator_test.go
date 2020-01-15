@@ -41,7 +41,7 @@ var (
 )
 
 func createTransportSocket(hostname string) *corepb.TransportSocket {
-	transportSocket, _ := util.CreateTransportSocket(hostname, util.DefaultRootCAPaths)
+	transportSocket, _ := util.CreateTransportSocket(hostname, util.DefaultRootCAPaths, nil)
 	return transportSocket
 }
 

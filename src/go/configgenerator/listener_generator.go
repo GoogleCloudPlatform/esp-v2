@@ -134,17 +134,22 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 			return nil, fmt.Errorf("ServiceAccountKey is set(proxy runs on Non-GCP) while backendRouting is not allowed on Non-GCP")
 		}
 		backendAuthFilter := makeBackendAuthFilter(serviceInfo)
-		httpFilters = append(httpFilters, backendAuthFilter)
-		jsonStr, _ := util.ProtoToJson(backendAuthFilter)
-		glog.Infof("adding Backend Auth Filter config: %v", jsonStr)
+		if backendAuthFilter != nil {
+			httpFilters = append(httpFilters, backendAuthFilter)
+			jsonStr, _ := util.ProtoToJson(backendAuthFilter)
+			glog.Infof("adding Backend Auth Filter config: %v", jsonStr)
+		}
+
 		backendRoutingFilter, err := makeBackendRoutingFilter(serviceInfo)
 		if err != nil {
 			return nil, err
 		}
 
-		httpFilters = append(httpFilters, backendRoutingFilter)
-		jsonStr, _ = util.ProtoToJson(backendRoutingFilter)
-		glog.Infof("adding Backend Routing Filter config: %v", jsonStr)
+		if backendRoutingFilter != nil {
+			httpFilters = append(httpFilters, backendRoutingFilter)
+			jsonStr, _ := util.ProtoToJson(backendRoutingFilter)
+			glog.Infof("adding Backend Routing Filter config: %v", jsonStr)
+		}
 	}
 
 	// Add Envoy Router filter so requests are routed upstream.
@@ -210,18 +215,6 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	rules := []*pmpb.PathMatcherRule{}
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
-		// Adds PathMatcherRule for gRPC method.
-		if serviceInfo.BackendProtocol == util.GRPC && !method.IsGenerated {
-			newGrpcRule := &pmpb.PathMatcherRule{
-				Operation: operation,
-				Pattern: &commonpb.Pattern{
-					UriTemplate: fmt.Sprintf("/%s/%s", method.ApiName, method.ShortName),
-					HttpMethod:  util.POST,
-				},
-			}
-			rules = append(rules, newGrpcRule)
-		}
-
 		// Adds PathMatcherRule for HTTP method, whose HttpRule is not empty.
 		for _, httpRule := range method.HttpRule {
 			if httpRule.UriTemplate != "" && httpRule.HttpMethod != "" {
@@ -584,6 +577,11 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 				JwtAudience: method.BackendInfo.JwtAudience,
 			})
 	}
+	// If none of BackendRules need auth, rules will be empty, not need to add the filter.
+	if len(rules) == 0 {
+		return nil
+	}
+
 	backendAuthConfig := &bapb.FilterConfig{
 		Rules: rules,
 	}
@@ -635,6 +633,11 @@ func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, e
 			}
 			rules = append(rules, newRule)
 		}
+	}
+	// If none of BackendRules need path translation, rules will be empty, not need to add the filter.
+	// For example, grpc backend rules don't need to do path translation.
+	if len(rules) == 0 {
+		return nil, nil
 	}
 
 	backendRoutingConfigStruct, err := ptypes.MarshalAny(&brpb.FilterConfig{Rules: rules})

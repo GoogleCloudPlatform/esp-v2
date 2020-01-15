@@ -22,20 +22,25 @@ import (
 )
 
 // CreateTransportSocket creates a TransportSocket
-func CreateTransportSocket(hostname, rootCertsPath string) (*corepb.TransportSocket, error) {
-	tlsContext, err := ptypes.MarshalAny(&authpb.UpstreamTlsContext{
-		Sni: hostname,
-		CommonTlsContext: &authpb.CommonTlsContext{
-			ValidationContextType: &authpb.CommonTlsContext_ValidationContext{
-				ValidationContext: &authpb.CertificateValidationContext{
-					TrustedCa: &corepb.DataSource{
-						Specifier: &corepb.DataSource_Filename{
-							Filename: rootCertsPath,
-						},
+func CreateTransportSocket(hostname, rootCertsPath string, alpn_protocols []string) (*corepb.TransportSocket, error) {
+	common_tls := &authpb.CommonTlsContext{
+		ValidationContextType: &authpb.CommonTlsContext_ValidationContext{
+			ValidationContext: &authpb.CertificateValidationContext{
+				TrustedCa: &corepb.DataSource{
+					Specifier: &corepb.DataSource_Filename{
+						Filename: rootCertsPath,
 					},
 				},
 			},
 		},
+	}
+	if len(alpn_protocols) > 0 {
+		common_tls.AlpnProtocols = alpn_protocols
+	}
+
+	tlsContext, err := ptypes.MarshalAny(&authpb.UpstreamTlsContext{
+		Sni:              hostname,
+		CommonTlsContext: common_tls,
 	},
 	)
 	if err != nil {

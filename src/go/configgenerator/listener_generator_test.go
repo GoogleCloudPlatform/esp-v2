@@ -352,7 +352,7 @@ func TestBackendRoutingFilter(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testdata {
+	for i, tc := range testdata {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = tc.protocol
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
@@ -375,7 +375,7 @@ func TestBackendRoutingFilter(t *testing.T) {
 		want := normalizeJson(tc.wantBackendRoutingFilter)
 
 		if !strings.Contains(gotFilter, want) {
-			t.Errorf("makeBackendAuthFilter failed,\ngot: %s, \nwant: %s", gotFilter, want)
+			t.Errorf("Test Desc(%d): %s, makeBackendAuthFilter failed,\ngot: %s, \nwant: %s", i, tc.desc, gotFilter, want)
 		}
 	}
 }
@@ -478,13 +478,13 @@ func TestBackendAuthFilter(t *testing.T) {
 				Http: &annotationspb.Http{
 					Rules: []*annotationspb.HttpRule{
 						{
-							Selector: "testapi.foo",
+							Selector: "get_testapi.foo",
 							Pattern: &annotationspb.HttpRule_Get{
 								Get: "foo",
 							},
 						},
 						{
-							Selector: "testapi.bar",
+							Selector: "get_testapi.bar",
 							Pattern: &annotationspb.HttpRule_Get{
 								Get: "bar",
 							},
@@ -497,7 +497,7 @@ func TestBackendAuthFilter(t *testing.T) {
 							Selector: "ignore_me",
 						},
 						{
-							Selector:        "testapi.foo",
+							Selector:        "get_testapi.foo",
 							Address:         "https://testapipb.com/foo",
 							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 							Authentication: &confpb.BackendRule_JwtAudience{
@@ -505,7 +505,7 @@ func TestBackendAuthFilter(t *testing.T) {
 							},
 						},
 						{
-							Selector:        "testapi.bar",
+							Selector:        "get_testapi.bar",
 							Address:         "https://testapipb.com/bar",
 							PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 							Authentication: &confpb.BackendRule_JwtAudience{
@@ -527,19 +527,19 @@ func TestBackendAuthFilter(t *testing.T) {
           "rules":[
             {
             	"jwtAudience": "bar.com",
-            	"operation": "testapi.CORS_bar"
+            	"operation": "get_testapi.CORS_bar"
             },
             {
             	"jwtAudience": "foo.com",
-            	"operation":"testapi.CORS_foo"
+            	"operation":"get_testapi.CORS_foo"
             },
             {
               "jwtAudience": "bar.com",
-              "operation": "testapi.bar"
+              "operation": "get_testapi.bar"
             },
             {
               "jwtAudience": "foo.com",
-              "operation": "testapi.foo"
+              "operation": "get_testapi.foo"
             }
           ]
         }
@@ -600,7 +600,7 @@ func TestBackendAuthFilter(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testdata {
+	for i, tc := range testdata {
 
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = "grpc"
@@ -616,7 +616,7 @@ func TestBackendAuthFilter(t *testing.T) {
 		want := normalizeJson(tc.wantBackendAuthFilter)
 
 		if !strings.Contains(gotFilter, want) {
-			t.Errorf("makeBackendAuthFilter failed,\ngot: %s, \nwant: %s", gotFilter, want)
+			t.Errorf("Test Desc(%d): %s, makeBackendAuthFilter failed,\ngot: %s, \nwant: %s", i, tc.desc, gotFilter, want)
 		}
 	}
 }
@@ -1064,7 +1064,7 @@ func TestHealthCheckFilter(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testdata {
+	for i, tc := range testdata {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = tc.protocol
 		opts.Healthz = tc.healthz
@@ -1088,7 +1088,7 @@ func TestHealthCheckFilter(t *testing.T) {
 		want := normalizeJson(tc.wantHealthCheckFilter)
 
 		if !strings.Contains(gotFilter, want) {
-			t.Errorf("makeHealthCheckFilter failed,\ngot: %s, \nwant: %s", gotFilter, want)
+			t.Errorf("Test Desc(%d): %s, makeHealthCheckFilter failed,\ngot: %s, \nwant: %s", i, tc.desc, gotFilter, want)
 		}
 	}
 }

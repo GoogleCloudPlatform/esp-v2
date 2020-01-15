@@ -17,11 +17,11 @@ package static
 import (
 	"bytes"
 	"encoding/json"
-	"flag"
 	"io/ioutil"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configmanager/flags"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/golang/protobuf/jsonpb"
@@ -37,59 +37,62 @@ var (
 func TestServiceToBootstrapConfig(t *testing.T) {
 	testData := []struct {
 		desc              string
-		flags             map[string]string
+		opt_mod           func(opt *options.ConfigGeneratorOptions)
 		serviceConfigPath string
 		envoyConfigPath   string
 		want              *bootstrappb.Admin
 	}{
 		{
 			desc: "envoy config with service control, no tracing",
-			flags: map[string]string{
-				"backend_protocol": "http1",
-				"disable_tracing":  "true",
+			opt_mod: func(opt *options.ConfigGeneratorOptions) {
+				opt.BackendProtocol = "http1"
+				opt.DisableTracing = true
 			},
 			serviceConfigPath: platform.GetFilePath(platform.ScServiceConfig),
 			envoyConfigPath:   platform.GetFilePath(platform.ScEnvoyConfig),
 		},
 		{
 			desc: "envoy config for auth",
-			flags: map[string]string{
-				"backend_protocol":            "http2",
-				"disable_tracing":             "true",
-				"skip_service_control_filter": "true",
+			opt_mod: func(opt *options.ConfigGeneratorOptions) {
+				opt.BackendProtocol = "http2"
+				opt.DisableTracing = true
+				opt.SkipServiceControlFilter = true
 			},
 			serviceConfigPath: platform.GetFilePath(platform.AuthServiceConfig),
 			envoyConfigPath:   platform.GetFilePath(platform.AuthEnvoyConfig),
 		},
 		{
 			desc: "envoy config with dynamic routing",
-			flags: map[string]string{
-				"backend_protocol":            "http2",
-				"disable_tracing":             "true",
-				"skip_service_control_filter": "true",
-				"enable_backend_routing":      "true",
+			opt_mod: func(opt *options.ConfigGeneratorOptions) {
+				opt.BackendProtocol = "http2"
+				opt.DisableTracing = true
+				opt.SkipServiceControlFilter = true
 			},
 			serviceConfigPath: platform.GetFilePath(platform.DrServiceConfig),
 			envoyConfigPath:   platform.GetFilePath(platform.DrEnvoyConfig),
 		},
 		{
 			desc: "envoy config for path matcher",
-			flags: map[string]string{
-				"backend_protocol":            "http2",
-				"disable_tracing":             "true",
-				"skip_service_control_filter": "true",
-				"enable_backend_routing":      "false",
+			opt_mod: func(opt *options.ConfigGeneratorOptions) {
+				opt.BackendProtocol = "http2"
+				opt.DisableTracing = true
+				opt.SkipServiceControlFilter = true
 			},
 			serviceConfigPath: platform.GetFilePath(platform.PmServiceConfig),
 			envoyConfigPath:   platform.GetFilePath(platform.PmEnvoyConfig),
 		},
+		{
+			desc: "grpc dynamic routing",
+			opt_mod: func(opt *options.ConfigGeneratorOptions) {
+				opt.BackendProtocol = "grpc"
+				opt.DisableTracing = true
+			},
+			serviceConfigPath: platform.GetFilePath(platform.GrpcEchoServiceConfig),
+			envoyConfigPath:   platform.GetFilePath(platform.GrpcEchoEnvoyConfig),
+		},
 	}
 
 	for testIdx, tc := range testData {
-		for key, value := range tc.flags {
-			flag.Set(key, value)
-		}
-
 		configBytes, err := ioutil.ReadFile(tc.serviceConfigPath)
 		if err != nil {
 			t.Fatalf("ReadFile failed, got %v", err)
@@ -105,6 +108,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 		}
 
 		opts := flags.EnvoyConfigOptionsFromFlags()
+		tc.opt_mod(&opts)
 
 		// Function under test
 		gotBootstrap, err := ServiceToBootstrapConfig(&s, FakeConfigID, opts)

@@ -115,16 +115,16 @@ func TestParseURI(t *testing.T) {
 	for i, tc := range testData {
 		scheme, hostname, port, uri, err := ParseURI(tc.url)
 		if scheme != tc.wantedScheme {
-			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, scheme, tc.wantedScheme)
+			t.Errorf("Test Desc(%d): %s, extract backend address scheme, got: %v, want: %v", i, tc.desc, scheme, tc.wantedScheme)
 		}
 		if hostname != tc.wantedHostname {
-			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, hostname, tc.wantedHostname)
+			t.Errorf("Test Desc(%d): %s, extract backend address hostname got: %v, want: %v", i, tc.desc, hostname, tc.wantedHostname)
 		}
 		if port != tc.wantedPort {
-			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, port, tc.wantedPort)
+			t.Errorf("Test Desc(%d): %s, extract backend address port got: %v, want: %v", i, tc.desc, port, tc.wantedPort)
 		}
 		if uri != tc.wantURI {
-			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, uri, tc.wantURI)
+			t.Errorf("Test Desc(%d): %s, extract backend address uri got: %v, want: %v", i, tc.desc, uri, tc.wantURI)
 		}
 		if (err == nil && tc.wantErr != "") || (err != nil && err.Error() != tc.wantErr) {
 			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, err, tc.wantErr)

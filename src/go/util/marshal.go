@@ -31,6 +31,7 @@ import (
 	gspb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/grpc_stats/v2alpha"
 	jwtpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
+	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
@@ -74,6 +75,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(confpb.Service), nil
 	case "type.googleapis.com/envoy.config.filter.http.grpc_stats.v2alpha.FilterConfig":
 		return new(gspb.FilterConfig), nil
+	case "type.googleapis.com/envoy.config.filter.http.transcoder.v2.GrpcJsonTranscoder":
+		return new(transcoderpb.GrpcJsonTranscoder), nil
 	case "type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication":
 		return new(jwtpb.JwtAuthentication), nil
 	case "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager":

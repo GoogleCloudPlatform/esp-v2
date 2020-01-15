@@ -166,6 +166,12 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &methodInfo{
 					ShortName: "echo",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/1.echo_api_endpoints_cloudesf_testing_cloud_goog/echo",
+							HttpMethod:  util.POST,
+						},
+					},
 					APIKeyLocations: []*scpb.APIKeyLocation{
 						{
 							Key: &scpb.APIKeyLocation_Header{
@@ -207,6 +213,12 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &methodInfo{
 					ShortName: "echo",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/1.echo_api_endpoints_cloudesf_testing_cloud_goog/echo",
+							HttpMethod:  util.POST,
+						},
+					},
 					APIKeyLocations: []*scpb.APIKeyLocation{
 						{
 							Key: &scpb.APIKeyLocation_Query{
@@ -254,6 +266,12 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &methodInfo{
 					ShortName: "echo",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/1.echo_api_endpoints_cloudesf_testing_cloud_goog/echo",
+							HttpMethod:  util.POST,
+						},
+					},
 					APIKeyLocations: []*scpb.APIKeyLocation{
 						{
 							Key: &scpb.APIKeyLocation_Query{
@@ -340,6 +358,12 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.foo": &methodInfo{
 					ShortName: "foo",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/1.echo_api_endpoints_cloudesf_testing_cloud_goog/foo",
+							HttpMethod:  util.POST,
+						},
+					},
 					APIKeyLocations: []*scpb.APIKeyLocation{
 						{
 							Key: &scpb.APIKeyLocation_Query{
@@ -366,6 +390,12 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 				"2.echo_api_endpoints_cloudesf_testing_cloud_goog.bar": &methodInfo{
 					ShortName: "bar",
 					ApiName:   "2.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/2.echo_api_endpoints_cloudesf_testing_cloud_goog/bar",
+							HttpMethod:  util.POST,
+						},
+					},
 					APIKeyLocations: []*scpb.APIKeyLocation{
 						{
 							Key: &scpb.APIKeyLocation_Query{
@@ -443,11 +473,23 @@ func TestMethods(t *testing.T) {
 			wantMethods: map[string]*methodInfo{
 				fmt.Sprintf("%s.%s", testApiName, "ListShelves"): &methodInfo{
 					ShortName: "ListShelves",
-					ApiName:   "endpoints.examples.bookstore.Bookstore",
+					ApiName:   testApiName,
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: fmt.Sprintf("/%s/%s", testApiName, "ListShelves"),
+							HttpMethod:  util.POST,
+						},
+					},
 				},
 				fmt.Sprintf("%s.%s", testApiName, "CreateShelf"): &methodInfo{
 					ShortName: "CreateShelf",
-					ApiName:   "endpoints.examples.bookstore.Bookstore",
+					ApiName:   testApiName,
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: fmt.Sprintf("/%s/%s", testApiName, "CreateShelf"),
+							HttpMethod:  util.POST,
+						},
+					},
 				},
 				"ESPv2.HealthCheck": &methodInfo{
 					ShortName:          "HealthCheck",
@@ -658,7 +700,7 @@ func TestMethods(t *testing.T) {
 				Http: &annotationspb.Http{},
 			},
 			backendProtocol: "http2",
-			wantError:       fmt.Sprintf("no HttpRules generated for the Http service %v", testProjectName),
+			wantError:       fmt.Sprintf("no HttpRules specified for the Http service %v", testProjectName),
 		},
 		{
 			desc: "Succeed for HTTP, with OPTIONS, and AllowCors, with Healthz",
@@ -831,6 +873,10 @@ func TestMethods(t *testing.T) {
 					ApiName:   "endpoints.examples.bookstore.Bookstore",
 					HttpRule: []*commonpb.Pattern{
 						{
+							UriTemplate: "/endpoints.examples.bookstore.Bookstore/CreateBook",
+							HttpMethod:  util.POST,
+						},
+						{
 							UriTemplate: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
 							HttpMethod:  util.POST,
 						},
@@ -891,6 +937,10 @@ func TestMethods(t *testing.T) {
 					ApiName:   "endpoints.examples.bookstore.Bookstore",
 					HttpRule: []*commonpb.Pattern{
 						{
+							UriTemplate: "/endpoints.examples.bookstore.Bookstore/CreateBook",
+							HttpMethod:  util.POST,
+						},
+						{
 							UriTemplate: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
 							HttpMethod:  util.POST,
 						},
@@ -936,30 +986,11 @@ func TestMethods(t *testing.T) {
 
 func TestProcessBackendRule(t *testing.T) {
 	testData := []struct {
-		desc              string
-		fakeServiceConfig *confpb.Service
-		wantedAllowCors   bool
-		wantedErr         string
+		desc                  string
+		fakeServiceConfig     *confpb.Service
+		wantedErr             string
+		wantedBackendProtocol util.BackendProtocol
 	}{
-		{
-			desc: "Failed for dynamic routing only supports HTTPS",
-			fakeServiceConfig: &confpb.Service{
-				Apis: []*apipb.Api{
-					{
-						Name: testApiName,
-					},
-				},
-				Backend: &confpb.Backend{
-					Rules: []*confpb.BackendRule{
-						{
-							Address:         "http://192.168.0.1/api/",
-							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
-						},
-					},
-				},
-			},
-			wantedErr: "Failed for dynamic routing only supports HTTPS",
-		},
 		{
 			desc: "Fail, dynamic routing only supports domain name, got IP address: 192.168.0.1",
 			fakeServiceConfig: &confpb.Service{
@@ -971,22 +1002,131 @@ func TestProcessBackendRule(t *testing.T) {
 				Backend: &confpb.Backend{
 					Rules: []*confpb.BackendRule{
 						{
-							Address:         "https://192.168.0.1/api/",
-							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Address: "https://192.168.0.1/api/",
 						},
 					},
 				},
 			},
 			wantedErr: "dynamic routing only supports domain name, got IP address: 192.168.0.1",
 		},
+		{
+			desc: "Fail, dynamic routing only supports http/https/grpc scheme",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address: "file://abc.com/api/",
+						},
+					},
+				},
+			},
+			wantedErr: "dynamic routing only supports https/http/grpc scheme, found: file",
+		},
+		{
+			desc: "Failed for dynamic routing could not mix grpc with other scheme",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "http://abc.com/api/",
+							Selector: "abc.com.api",
+						},
+						{
+							Address:  "grpc://cnn.com/api/",
+							Selector: "cnn.com.api",
+						},
+					},
+				},
+			},
+			wantedErr: "dynamic routing could not mix grpc with http/https scheme, found: http, grpc",
+		},
+		{
+			desc: "Mixed scheme https and http are allowed, but BackendProtocol is not changed",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "http://abc.com/api/",
+							Selector: "abc.com.api",
+						},
+						{
+							Address:  "https://cnn.com/api/",
+							Selector: "cnn.com.api",
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "abc.com.cpi",
+							Pattern: &annotationspb.HttpRule_Post{
+								Post: "/api/abc/**",
+							},
+						},
+						{
+							Selector: "cnn.com.api",
+							Pattern: &annotationspb.HttpRule_Post{
+								Post: "/api/cnn/**",
+							},
+						},
+					},
+				},
+			},
+			wantedErr:             "",
+			wantedBackendProtocol: util.HTTP1,
+		},
+		{
+			desc: "A good one, verify backend protocol is modified",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+						},
+					},
+				},
+			},
+			wantedErr:             "",
+			wantedBackendProtocol: util.GRPC,
+		},
 	}
 
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendProtocol = "grpc"
-		_, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
-		if (err == nil && tc.wantedErr != "") || (err != nil && tc.wantedErr == "") {
-			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, err, tc.wantedErr)
+		opts.BackendProtocol = "http1"
+		s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+		if tc.wantedErr != "" {
+			if err == nil || err.Error() != tc.wantedErr {
+				t.Errorf("Test Desc(%d): %s, processBackendRule error not expected, got: %v, want: %v", i, tc.desc, err, tc.wantedErr)
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Test Desc(%d): %s, processBackendRule error not expected, got: %v", i, tc.desc, err)
+			}
+			if tc.wantedBackendProtocol != s.BackendProtocol {
+				t.Errorf("Test Desc(%d): %s, processBackendRule, BackendProtocol not expected, got: %v, want: %v", i, tc.desc, s.BackendProtocol, tc.wantedBackendProtocol)
+			}
 		}
 	}
 }
@@ -1026,6 +1166,12 @@ func TestProcessQuota(t *testing.T) {
 				fmt.Sprintf("%s.%s", testApiName, "ListShelves"): &methodInfo{
 					ShortName: "ListShelves",
 					ApiName:   testApiName,
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: fmt.Sprintf("/%s/%s", testApiName, "ListShelves"),
+							HttpMethod:  util.POST,
+						},
+					},
 					MetricCosts: []*scpb.MetricCost{
 						{
 							Name: "metric_a",
@@ -1068,6 +1214,12 @@ func TestProcessQuota(t *testing.T) {
 				fmt.Sprintf("%s.%s", testApiName, "ListShelves"): &methodInfo{
 					ShortName: "ListShelves",
 					ApiName:   testApiName,
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: fmt.Sprintf("/%s/%s", testApiName, "ListShelves"),
+							HttpMethod:  util.POST,
+						},
+					},
 					MetricCosts: []*scpb.MetricCost{
 						{
 							Name: "metric_a",

@@ -286,7 +286,8 @@
           "name": "envoy.transport_sockets.tls",
           "typedConfig": {
             "@type": "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
-            "commonTlsContext": {
+              "commonTlsContext": {
+              "alpnProtocols": ["h2"],
               "validationContext": {
                 "trustedCa": {
                   "filename": "/etc/ssl/certs/ca-certificates.crt"
@@ -295,7 +296,8 @@
             },
             "sni": "http-bookstore-abc123456-uc.a.run.app"
           }
-        }
+        },
+        "http2ProtocolOptions": {}
       },
       {
         "name": "http-bookstore-edf123456-uc.a.run.app:443",
@@ -325,6 +327,7 @@
           "typedConfig": {
             "@type": "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
             "commonTlsContext": {
+              "alpnProtocols": ["h2"],
               "validationContext": {
                 "trustedCa": {
                   "filename": "/etc/ssl/certs/ca-certificates.crt"
@@ -333,7 +336,8 @@
             },
             "sni": "http-bookstore-edf123456-uc.a.run.app"
           }
-        }
+        },
+        "http2ProtocolOptions": {}
       }
     ]
   },

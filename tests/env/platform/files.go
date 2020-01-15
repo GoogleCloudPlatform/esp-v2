@@ -54,6 +54,8 @@ const (
 	DrEnvoyConfig
 	PmServiceConfig
 	PmEnvoyConfig
+	GrpcEchoServiceConfig
+	GrpcEchoEnvoyConfig
 )
 
 var fileMap = map[RuntimeFile]string{
@@ -84,6 +86,8 @@ var fileMap = map[RuntimeFile]string{
 	DrEnvoyConfig:           "../../../../examples/dynamic_routing/envoy_config.json",
 	PmServiceConfig:         "../../../../src/go/bootstrap/static/testdata/path_matcher/service_config_generated.json",
 	PmEnvoyConfig:           "../../../../src/go/bootstrap/static/testdata/path_matcher/envoy_config.json",
+	GrpcEchoServiceConfig:   "../../../../examples/grpc_dynamic_routing/service_config_generated.json",
+	GrpcEchoEnvoyConfig:     "../../../../examples/grpc_dynamic_routing/envoy_config.json",
 }
 
 // Get the runtime file path for the specified file.

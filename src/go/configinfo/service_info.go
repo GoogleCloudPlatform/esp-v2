@@ -98,6 +98,11 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 		Options:         opts,
 	}
 
+	// check BackendRule to decide BackendProtocol and RequiresBackendRouting
+	if err := serviceInfo.checkBackendRuleForProtocol(); err != nil {
+		return nil, err
+	}
+
 	// Order matters.
 	serviceInfo.processEndpoints()
 	serviceInfo.processApis()
@@ -163,11 +168,17 @@ func (s *ServiceInfo) processApis() {
 		s.ApiNames = append(s.ApiNames, api.Name)
 
 		for _, method := range api.GetMethods() {
-			s.Methods[fmt.Sprintf("%s.%s", api.GetName(), method.GetName())] =
-				&methodInfo{
-					ShortName: method.GetName(),
-					ApiName:   api.GetName(),
-				}
+			mi := &methodInfo{
+				ShortName: method.GetName(),
+				ApiName:   api.GetName(),
+			}
+			if s.BackendProtocol == util.GRPC {
+				mi.HttpRule = append(mi.HttpRule, &commonpb.Pattern{
+					UriTemplate: fmt.Sprintf("/%s/%s", api.GetName(), method.GetName()),
+					HttpMethod:  util.POST,
+				})
+			}
+			s.Methods[fmt.Sprintf("%s.%s", api.GetName(), method.GetName())] = mi
 		}
 	}
 }
@@ -264,7 +275,7 @@ func addHttpRule(method *methodInfo, r *annotationspb.HttpRule, httpPathWithOpti
 
 func (s *ServiceInfo) processHttpRule() error {
 	if s.BackendProtocol != util.GRPC && len(s.ServiceConfig().GetHttp().GetRules()) == 0 {
-		return fmt.Errorf("no HttpRules generated for the Http service %v", s.Name)
+		return fmt.Errorf("no HttpRules specified for the Http service %v", s.Name)
 	}
 
 	// An temporary map to record generated OPTION methods, to avoid duplication.
@@ -358,25 +369,52 @@ func (s *ServiceInfo) addOptionMethod(apiName string, path string, backendInfo *
 	}
 }
 
-func (s *ServiceInfo) processBackendRule() error {
-	backendRoutingClustersMap := make(map[string]string)
-
+// check BackendRule to decide BackendProtocol and RequiresBackendRouting
+func (s *ServiceInfo) checkBackendRuleForProtocol() error {
+	var firstScheme string
 	for _, r := range s.ServiceConfig().Backend.GetRules() {
-		if r.PathTranslation != confpb.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
-			// If any backend rule has path translation, the entire service requires backend routing.
+		if r.Address != "" {
+			// If any backend rule has non empty address, the entire service requires backend routing.
 			s.RequiresBackendRouting = true
 
-			scheme, hostname, port, uri, err := util.ParseURI(r.Address)
+			scheme, hostname, _, _, err := util.ParseURI(r.Address)
 			if err != nil {
 				return err
-			}
-			if scheme != "https" {
-				return fmt.Errorf("dynamic routing only supports HTTPS")
 			}
 			if net.ParseIP(hostname) != nil {
 				return fmt.Errorf("dynamic routing only supports domain name, got IP address: %v", hostname)
 			}
+			if scheme != "https" && scheme != "grpc" && scheme != "http" {
+				return fmt.Errorf("dynamic routing only supports https/http/grpc scheme, found: %v", scheme)
+			}
+			// Make sure all backends not to mix grpc with http/https scheme
+			// https and http can use the same filter chain so they can be mixed
+			if firstScheme == "" {
+				firstScheme = scheme
+			} else if (firstScheme == "grpc") != (scheme == "grpc") {
+				return fmt.Errorf("dynamic routing could not mix grpc with http/https scheme, found: %v, %v", firstScheme, scheme)
+			}
+		}
+	}
+	if firstScheme == "grpc" {
+		s.BackendProtocol = util.GRPC
+	}
+	return nil
+}
+
+func (s *ServiceInfo) processBackendRule() error {
+	backendRoutingClustersMap := make(map[string]string)
+
+	for _, r := range s.ServiceConfig().Backend.GetRules() {
+		if r.Address != "" {
+			_, hostname, port, uri, err := util.ParseURI(r.Address)
 			address := fmt.Sprintf("%v:%v", hostname, port)
+
+			// TODO(taoxuy): In order to support mixing http and https,
+			// needs to pass scheme to backendRouteCluster so that
+			// makeBackendRoutingClusters knows if TLS is needed.
+			// Now TLS is always generated.
+
 			if _, exist := backendRoutingClustersMap[address]; !exist {
 				backendSelector := address
 				s.BackendRoutingClusters = append(s.BackendRoutingClusters,

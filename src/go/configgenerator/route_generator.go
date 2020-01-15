@@ -26,7 +26,6 @@ import (
 	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
-	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 const (
@@ -126,7 +125,7 @@ func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.R
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
 		var routeMatcher *routepb.RouteMatch
-		if method.BackendInfo == nil || method.BackendInfo.TranslationType == confpb.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
+		if method.BackendInfo == nil {
 			continue
 		}
 		for _, httpRule := range method.HttpRule {
