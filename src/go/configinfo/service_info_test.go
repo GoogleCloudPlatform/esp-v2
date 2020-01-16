@@ -41,7 +41,6 @@ var (
 	testConfigID    = "2019-03-02r0"
 )
 
-
 func TestProcessEndpoints(t *testing.T) {
 	testData := []struct {
 		desc              string
@@ -1168,6 +1167,113 @@ func TestProcessEmptyJwksUriByOpenID(t *testing.T) {
 			t.Errorf("Test Desc(%d): %s, process jwksUri got: %v, but expected no err", i, tc.desc, err)
 		} else if jwksUri := serviceInfo.serviceConfig.Authentication.Providers[0].JwksUri; jwksUri != tc.wantedJwksUri {
 			t.Errorf("Test Desc(%d): %s, process jwksUri got: %v, want: %v", i, tc.desc, jwksUri, tc.wantedJwksUri)
+		}
+	}
+}
+
+func TestProcessApis(t *testing.T) {
+	testData := []struct {
+		desc              string
+		fakeServiceConfig *confpb.Service
+		wantMethods       map[string]*methodInfo
+		wantApiNames      []string
+	}{
+		{
+			desc: "Succeed, process multiple apis",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "api-1",
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+							{
+								Name: "bar",
+							},
+						},
+					},
+					{
+						Name: "api-2",
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+							{
+								Name: "bar",
+							},
+						},
+					},
+					{
+						Name:    "api-3",
+						Methods: []*apipb.Method{},
+					},
+					{
+						Name: "api-4",
+						Methods: []*apipb.Method{
+							{
+								Name: "bar",
+							},
+							{
+								Name: "baz",
+							},
+						},
+					},
+				},
+			},
+			wantMethods: map[string]*methodInfo{
+				"api-1.foo": &methodInfo{
+					ShortName: "foo",
+					ApiName:   "api-1",
+				},
+				"api-1.bar": &methodInfo{
+					ShortName: "bar",
+					ApiName:   "api-1",
+				},
+				"api-2.foo": &methodInfo{
+					ShortName: "foo",
+					ApiName:   "api-2",
+				},
+				"api-2.bar": &methodInfo{
+					ShortName: "bar",
+					ApiName:   "api-2",
+				},
+				"api-4.bar": &methodInfo{
+					ShortName: "bar",
+					ApiName:   "api-4",
+				},
+				"api-4.baz": &methodInfo{
+					ShortName: "baz",
+					ApiName:   "api-4",
+				},
+			},
+			wantApiNames: []string{
+				"api-1",
+				"api-2",
+				"api-3",
+				"api-4",
+			},
+		},
+	}
+
+	for i, tc := range testData {
+
+		serviceInfo := &ServiceInfo{
+			serviceConfig: tc.fakeServiceConfig,
+		}
+		serviceInfo.processApis()
+
+		for key, gotMethod := range serviceInfo.Methods {
+			wantMethod := tc.wantMethods[key]
+			if eq := cmp.Equal(gotMethod, wantMethod, cmp.Comparer(proto.Equal)); !eq {
+				t.Errorf("Test Desc(%d): %s,\ngot Method: %v,\nwant Method: %v", i, tc.desc, gotMethod, wantMethod)
+			}
+		}
+		for idx, gotApiName := range serviceInfo.ApiNames {
+			wantApiName := tc.wantApiNames[idx]
+			if gotApiName != wantApiName {
+				t.Errorf("Test Desc(%d): %s,\ngot ApiName: %v,\nwant Apiname: %v", i, tc.desc, gotApiName, wantApiName)
+			}
 		}
 	}
 }
