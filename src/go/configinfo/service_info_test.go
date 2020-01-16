@@ -41,6 +41,7 @@ var (
 	testConfigID    = "2019-03-02r0"
 )
 
+
 func TestProcessEndpoints(t *testing.T) {
 	testData := []struct {
 		desc              string
@@ -836,6 +837,70 @@ func TestMethods(t *testing.T) {
 						},
 						{
 							UriTemplate: "/v1/shelves/{shelf}/books",
+							HttpMethod:  util.POST,
+						},
+					},
+				},
+			},
+		},
+		{
+			desc: "Succeed for additional binding",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "endpoints.examples.bookstore.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name:            "CreateBook",
+								RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.CreateBookRequest",
+								ResponseTypeUrl: "type.googleapis.com/endpoints.examples.bookstore.Book",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.CreateBook",
+							Pattern: &annotationspb.HttpRule_Post{
+								Post: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
+							},
+							Body: "book.title",
+							AdditionalBindings: []*annotationspb.HttpRule{
+								{
+									Pattern: &annotationspb.HttpRule_Post{
+										Post: "/v1/shelves/{shelf}/books/foo",
+									},
+									Body: "book",
+								},
+								{
+									Pattern: &annotationspb.HttpRule_Post{
+										Post: "/v1/shelves/{shelf}/books/bar",
+									},
+									Body: "book",
+								},
+							},
+						},
+					},
+				},
+			},
+			backendProtocol: "grpc",
+			wantMethods: map[string]*methodInfo{
+				"endpoints.examples.bookstore.Bookstore.CreateBook": &methodInfo{
+					ShortName: "CreateBook",
+					ApiName:   "endpoints.examples.bookstore.Bookstore",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
+							HttpMethod:  util.POST,
+						},
+						{
+							UriTemplate: "/v1/shelves/{shelf}/books/foo",
+							HttpMethod:  util.POST,
+						},
+						{
+							UriTemplate: "/v1/shelves/{shelf}/books/bar",
 							HttpMethod:  util.POST,
 						},
 					},

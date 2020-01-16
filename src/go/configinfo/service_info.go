@@ -220,6 +220,49 @@ func (s *ServiceInfo) processEndpoints() {
 	}
 }
 
+func addHttpRule(method *methodInfo, r *annotationspb.HttpRule, httpPathWithOptionsSet map[string]bool) error {
+
+	var httpRule *commonpb.Pattern
+	switch r.GetPattern().(type) {
+	case *annotationspb.HttpRule_Get:
+		httpRule = &commonpb.Pattern{
+			UriTemplate: r.GetGet(),
+			HttpMethod:  util.GET,
+		}
+	case *annotationspb.HttpRule_Put:
+		httpRule = &commonpb.Pattern{
+			UriTemplate: r.GetPut(),
+			HttpMethod:  util.PUT,
+		}
+	case *annotationspb.HttpRule_Post:
+		httpRule = &commonpb.Pattern{
+			UriTemplate: r.GetPost(),
+			HttpMethod:  util.POST,
+		}
+	case *annotationspb.HttpRule_Delete:
+		httpRule = &commonpb.Pattern{
+			UriTemplate: r.GetDelete(),
+			HttpMethod:  util.DELETE,
+		}
+	case *annotationspb.HttpRule_Patch:
+		httpRule = &commonpb.Pattern{
+			UriTemplate: r.GetPatch(),
+			HttpMethod:  util.PATCH,
+		}
+	case *annotationspb.HttpRule_Custom:
+		httpRule = &commonpb.Pattern{
+			UriTemplate: r.GetCustom().GetPath(),
+			HttpMethod:  r.GetCustom().GetKind(),
+		}
+		httpPathWithOptionsSet[r.GetCustom().GetPath()] = true
+	default:
+		return fmt.Errorf("unsupported http method %T", r.GetPattern())
+	}
+	method.HttpRule = append(method.HttpRule, httpRule)
+
+	return nil
+}
+
 func (s *ServiceInfo) processHttpRule() error {
 	if s.BackendProtocol != util.GRPC && len(s.ServiceConfig().GetHttp().GetRules()) == 0 {
 		return fmt.Errorf("no HttpRules generated for the Http service %v", s.Name)
@@ -228,48 +271,24 @@ func (s *ServiceInfo) processHttpRule() error {
 	// An temporary map to record generated OPTION methods, to avoid duplication.
 	httpPathWithOptionsSet := make(map[string]bool)
 
-	for _, r := range s.ServiceConfig().GetHttp().GetRules() {
-		method, err := s.getOrCreateMethod(r.GetSelector())
+	for _, rule := range s.ServiceConfig().GetHttp().GetRules() {
+		method, err := s.getOrCreateMethod(rule.GetSelector())
 		if err != nil {
 			return err
 		}
-		var httpRule *commonpb.Pattern
-		switch r.GetPattern().(type) {
-		case *annotationspb.HttpRule_Get:
-			httpRule = &commonpb.Pattern{
-				UriTemplate: r.GetGet(),
-				HttpMethod:  util.GET,
-			}
-		case *annotationspb.HttpRule_Put:
-			httpRule = &commonpb.Pattern{
-				UriTemplate: r.GetPut(),
-				HttpMethod:  util.PUT,
-			}
-		case *annotationspb.HttpRule_Post:
-			httpRule = &commonpb.Pattern{
-				UriTemplate: r.GetPost(),
-				HttpMethod:  util.POST,
-			}
-		case *annotationspb.HttpRule_Delete:
-			httpRule = &commonpb.Pattern{
-				UriTemplate: r.GetDelete(),
-				HttpMethod:  util.DELETE,
-			}
-		case *annotationspb.HttpRule_Patch:
-			httpRule = &commonpb.Pattern{
-				UriTemplate: r.GetPatch(),
-				HttpMethod:  util.PATCH,
-			}
-		case *annotationspb.HttpRule_Custom:
-			httpRule = &commonpb.Pattern{
-				UriTemplate: r.GetCustom().GetPath(),
-				HttpMethod:  r.GetCustom().GetKind(),
-			}
-			httpPathWithOptionsSet[r.GetCustom().GetPath()] = true
-		default:
-			glog.Warning("unsupported http method")
+		if err := addHttpRule(method, rule, httpPathWithOptionsSet); err != nil {
+			return err
 		}
-		method.HttpRule = append(method.HttpRule, httpRule)
+
+		// additional_bindings cannot be nested inside themselves according to
+		// https://aip.dev/127. Service Management will enforce this restriction
+		// when interpret the httprules from the descriptor. Therefore, no need to
+		// check for nested additional_bindings.
+		for _, additionalRule := range rule.AdditionalBindings {
+			if err := addHttpRule(method, additionalRule, httpPathWithOptionsSet); err != nil {
+				return err
+			}
+		}
 	}
 
 	// In order to support CORS. HTTP method OPTIONS needs to be added to all
