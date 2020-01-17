@@ -9,6 +9,9 @@
 # Fail on any error.
 set -eo pipefail
 
+# Set the project id
+gcloud config set project cloudesf-testing
+
 # Resources older than 1 day should be cleaned up
 LIMIT_DATE=$(date -d "1 day ago" +%F)
 echo "Cleaning up resources before ${LIMIT_DATE}"
@@ -78,4 +81,4 @@ for service in $ENDPOINTS_SERVICES ; do
   fi
 
 done
-echo "Done cleaning up Cloud Functions"
+echo "Done cleaning up Endpoints Services"

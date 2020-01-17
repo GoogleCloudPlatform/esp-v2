@@ -294,15 +294,13 @@ func (s *ServiceInfo) processHttpRule() error {
 	// In order to support CORS. HTTP method OPTIONS needs to be added to all
 	// urls except the ones already with options.
 	if s.AllowCors {
-		index := 0
 		for _, r := range s.ServiceConfig().GetHttp().GetRules() {
 			method := s.Methods[r.GetSelector()]
 			for _, httpRule := range method.HttpRule {
 				if httpRule.HttpMethod != "OPTIONS" {
 					if _, exist := httpPathWithOptionsSet[httpRule.UriTemplate]; !exist {
-						s.addOptionMethod(method.ApiName, index, httpRule.UriTemplate, method.BackendInfo)
+						s.addOptionMethod(method.ApiName, httpRule.UriTemplate, method.BackendInfo)
 						httpPathWithOptionsSet[httpRule.UriTemplate] = true
-						index++
 					}
 
 				}
@@ -331,13 +329,23 @@ func (s *ServiceInfo) processHttpRule() error {
 	return nil
 }
 
-func (s *ServiceInfo) addOptionMethod(apiName string, index int, path string, backendInfo *backendInfo) {
-	// All options have their operation as the following format: CORS_suffix.
-	// Appends suffix to make sure it is not used by any http rules.
+func (s *ServiceInfo) addOptionMethod(apiName string, path string, backendInfo *backendInfo) {
+	// All options have their operation as the following format: CORS_${suffix}.
+	// Appends ${suffix} to make sure it is not used by any http rules.
+	//
+	// b/145622434 changes ${suffix} to contain a url-safe path by replacing
+	// OpenAPI-specific characters from the UriTemplate. Spec here:
+	// https://swagger.io/docs/specification/paths-and-operations/
+	// This will ensure other services can correctly parse/display the operation name.
 	corsOperationBase := "CORS"
-	corsOperation := fmt.Sprintf("%s_%d", corsOperationBase, index)
-	gen_operation := fmt.Sprintf("%s.%s", apiName, corsOperation)
-	s.Methods[gen_operation] = &methodInfo{
+	formattedPath := strings.TrimPrefix(path, "/")
+	formattedPath = strings.ReplaceAll(formattedPath, "/", "_")
+	formattedPath = strings.ReplaceAll(formattedPath, "{", "")
+	formattedPath = strings.ReplaceAll(formattedPath, "}", "")
+	corsOperation := fmt.Sprintf("%s_%s", corsOperationBase, formattedPath)
+	genOperation := fmt.Sprintf("%s.%s", apiName, corsOperation)
+
+	s.Methods[genOperation] = &methodInfo{
 		ShortName: corsOperation,
 		ApiName:   apiName,
 		HttpRule: []*commonpb.Pattern{
