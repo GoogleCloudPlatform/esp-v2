@@ -126,10 +126,6 @@
                         "@type": "type.googleapis.com/google.api.envoy.http.backend_auth.FilterConfig",
                         "rules": [
                           {
-                            "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.CreateShelf",
-                            "jwtAudience": "https://http-bookstore-edf123456-uc.a.run.app/shelves"
-                          },
-                          {
                             "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.ListShelves",
                             "jwtAudience": "ESPv2"
                           }

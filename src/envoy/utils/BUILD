@@ -56,7 +56,6 @@ envoy_cc_library(
     deps = [
         ":json_struct_lib",
         "//api/envoy/http/common:base_proto_cc_proto",
-        "//src/api_proxy/auth:lib",
         "@envoy//include/envoy/common:time_interface",
         "@envoy//include/envoy/event:dispatcher_interface",
         "@envoy//include/envoy/server:filter_config_interface",
@@ -77,7 +76,6 @@ envoy_cc_library(
     deps = [
         ":json_struct_lib",
         "//api/envoy/http/common:base_proto_cc_proto",
-        "//src/api_proxy/auth:lib",
         "@envoy//include/envoy/common:time_interface",
         "@envoy//include/envoy/event:dispatcher_interface",
         "@envoy//include/envoy/server:filter_config_interface",

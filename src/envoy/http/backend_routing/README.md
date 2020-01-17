@@ -16,3 +16,8 @@ This filter will not function unless the following filters appear earlier in the
 This filter is designed to strongly integrate with the following filters:
 
 - [Backend Auth](../backend_auth/README.md)
+
+## Configuration
+
+View the [backend routing configuration proto](../../../../api/envoy/http/backend_routing/config.proto)
+for inline documentation.

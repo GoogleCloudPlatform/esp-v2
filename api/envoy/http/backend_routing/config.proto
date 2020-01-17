@@ -19,23 +19,23 @@ package google.api.envoy.http.backend_routing;
 import "validate/validate.proto";
 
 message BackendRoutingRule {
-  // Operation name, also known as selector
+  // Operation name, also known as selector.
   string operation = 1 [(validate.rules).string.min_bytes = 1];
 
-  // TODO(jcwang): currently having problem when importing googleapis proto file
-  // Bazel shows "no such attribute 'protos' in 'go_proto_library' rule" of
-  // googleapis build file (google/api/BUILD.bazel)
-  // so using a bool here instead of PathTranslation to unblock development
-  // true if CONSTANT_ADDRESS, otherwise is APPEND_PATH_TO_ADDRESS
+  // True if CONSTANT_ADDRESS, otherwise is APPEND_PATH_TO_ADDRESS.
+  // https://cloud.google.com/endpoints/docs/openapi/openapi-extensions#understanding_path_translation
   bool is_const_address = 2;
-  // destination backend path prefix
-  // e.g. for backend address: https://example.cloudfunctions.net/getUser
-  // path prefix is /getUser(/foo)
+
+  // Prefix used when re-writing the path for the backend.
+  // Example for CONSTANT_ADDRESS:
+  //     https://us-central1-my-project-id.cloudfunctions.net/helloGET
+  // Example for APPEND_PATH_TO_ADDRESS:
+  //     https://my-project-id.appspot.com
   string path_prefix = 3;
 }
 
 message FilterConfig {
   // A list of backend routing rules for those selectors which needs path
-  // translation
+  // translation.
   repeated BackendRoutingRule rules = 1;
 }

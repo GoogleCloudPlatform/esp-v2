@@ -20,17 +20,20 @@ import "api/envoy/http/common/base.proto";
 import "validate/validate.proto";
 
 message BackendAuthRule {
-  // Operation name.
+  // Operation name, also known as selector.
   string operation = 1 [(validate.rules).string.min_bytes = 1];
 
-  // JWT token sent to the backend.
+  // Audience used to create the JWT token sent to the backend.
+  // If empty, then no JWT token will be created.
+  // https://cloud.google.com/endpoints/docs/openapi/openapi-extensions#jwt_audience_disable_auth
   string jwt_audience = 2 [(validate.rules).string.min_bytes = 1];
 }
 
 // When it is configured, the filter will fetch id token from Instance Metadata
 // Server.
+// https://cloud.google.com/compute/docs/instances/verifying-instance-identity
 message ImdsIdTokenInfo {
-  // The Instance Metadata Server uri..
+  // The Instance Metadata Server uri.
   api.envoy.http.common.HttpUri imds_server_uri = 1;
 }
 
