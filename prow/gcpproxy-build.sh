@@ -28,7 +28,7 @@ ROOT=$(dirname "$WD")
 export PATH=$PATH:$GOPATH/bin
 
 cd "${ROOT}"
-gcloud config list account --format "value(core.account)"
+
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
 
