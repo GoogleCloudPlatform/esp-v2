@@ -164,7 +164,7 @@ ClientCache::ClientCache(
     Envoy::TimeSource& time_source, Event::Dispatcher& dispatcher,
     std::function<const std::string&()> sc_token_fn,
     std::function<const std::string&()> quota_token_fn)
-    : config_(config) {
+    : config_(config), time_source_(time_source) {
   ServiceControlClientOptions options(getCheckAggregationOptions(),
                                       getQuotaAggregationOptions(),
                                       getReportAggregationOptions());
@@ -295,6 +295,9 @@ CancelFunc ClientCache::callCheck(
     call->call();
     cancel_fn = [call]() { call->cancel(); };
   };
+
+  parent_span.log(time_source_.systemTime(),
+                  "Service Control cache query: Check");
 
   auto* response = new CheckResponse;
   client_->Check(request, response,

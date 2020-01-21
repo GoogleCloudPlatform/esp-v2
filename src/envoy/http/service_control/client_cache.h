@@ -81,6 +81,9 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
   // as the last one to make sure it is destroyed first.
   std::unique_ptr<::google::service_control_client::ServiceControlClient>
       client_;
+
+  // Used to retrieve the current time for tracing.
+  Envoy::TimeSource& time_source_;
 };
 
 }  // namespace ServiceControl
