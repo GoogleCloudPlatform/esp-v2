@@ -18,6 +18,8 @@
 
 # Fail on any error.
 set -eo pipefail
+gcloud components update
+gcloud version
 gcloud auth configure-docker
 gcloud auth list
 
