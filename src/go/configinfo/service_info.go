@@ -98,10 +98,6 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 		Options:         opts,
 	}
 
-	for _, apiName := range serviceConfig.GetApis() {
-		serviceInfo.ApiNames = append(serviceInfo.ApiNames, apiName.Name)
-	}
-
 	// Order matters.
 	serviceInfo.processEndpoints()
 	serviceInfo.processApis()
@@ -163,13 +159,16 @@ func (s *ServiceInfo) processEmptyJwksUriByOpenID() error {
 
 func (s *ServiceInfo) processApis() {
 	s.Methods = make(map[string]*methodInfo)
-	api := s.serviceConfig.GetApis()[0]
-	for _, method := range api.GetMethods() {
-		s.Methods[fmt.Sprintf("%s.%s", api.GetName(), method.GetName())] =
-			&methodInfo{
-				ShortName: method.GetName(),
-				ApiName:   api.GetName(),
-			}
+	for _, api := range s.serviceConfig.GetApis() {
+		s.ApiNames = append(s.ApiNames, api.Name)
+
+		for _, method := range api.GetMethods() {
+			s.Methods[fmt.Sprintf("%s.%s", api.GetName(), method.GetName())] =
+				&methodInfo{
+					ShortName: method.GetName(),
+					ApiName:   api.GetName(),
+				}
+		}
 	}
 }
 
