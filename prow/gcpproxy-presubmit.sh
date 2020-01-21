@@ -18,6 +18,7 @@
 
 # Fail on any error.
 set -eo pipefail
+gcloud auth configure-docker
 
 WD=$(dirname "$0")
 WD=$(cd "$WD";
@@ -33,7 +34,7 @@ echo '======================================================='
 echo '===================== Setup Cache ====================='
 echo '======================================================='
 try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "${PRESUBMIT_TEST_CASE}"
-gcloud auth configure-docker
+
 
 echo '======================================================='
 echo '===================== Spelling Check ====================='
