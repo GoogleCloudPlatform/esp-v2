@@ -65,10 +65,8 @@ rules {
 TEST_F(ConfigParserImplTest, GetIdTokenByImds) {
   const char filter_config[] = R"(
 imds_token {
-  imds_server_uri {
-      uri: "this-is-uri"
-      cluster: "this-is-cluster"
-  }
+  uri: "this-is-uri"
+  cluster: "this-is-cluster"
 }
 rules {
   operation: "operation-foo"

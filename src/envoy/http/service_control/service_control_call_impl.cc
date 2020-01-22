@@ -54,12 +54,12 @@ ServiceControlCallImpl::ServiceControlCallImpl(
                                               time_source, dispatcher);
   });
 
-  switch (filter_config.access_token().token_type_case()) {
-    case AccessToken::kRemoteToken: {
+  switch (filter_config.access_token_case()) {
+    case FilterConfig::kImdsToken: {
       const std::string& token_uri =
-          filter_config.access_token().remote_token().uri();
+          filter_config.imds_token().uri();
       const std::string& token_cluster =
-          filter_config.access_token().remote_token().cluster();
+          filter_config.imds_token().cluster();
       token_sub_ptr_ = std::make_unique<TokenSubscriber>(
           context, token_cluster, token_uri,
           /*json_response=*/true, [this](const std::string& token) {
@@ -70,12 +70,12 @@ ServiceControlCallImpl::ServiceControlCallImpl(
             });
           });
     } break;
-    case AccessToken::kServiceAccountSecret: {
+    case FilterConfig::kServiceAccountSecret: {
       const std::string service_control_auidence =
           filter_config.service_control_uri().uri() + kServiceControlService;
       sc_token_gen_ptr_ = std::make_unique<ServiceAccountToken>(
           context,
-          filter_config.access_token().service_account_secret().inline_string(),
+          filter_config.service_account_secret().inline_string(),
           service_control_auidence, [this](const std::string& token) {
             TokenSharedPtr new_token = std::make_shared<std::string>(token);
             tls_->runOnAllThreads([this, new_token]() {
@@ -87,7 +87,7 @@ ServiceControlCallImpl::ServiceControlCallImpl(
           filter_config.service_control_uri().uri() + kQuotaControlService;
       quota_token_gen_ptr_ = std::make_unique<ServiceAccountToken>(
           context,
-          filter_config.access_token().service_account_secret().inline_string(),
+          filter_config.service_account_secret().inline_string(),
           quota_audience, [this](const std::string& token) {
             TokenSharedPtr new_token = std::make_shared<std::string>(token);
             tls_->runOnAllThreads([this, new_token]() {

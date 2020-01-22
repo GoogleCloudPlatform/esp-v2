@@ -104,12 +104,22 @@ message FilterConfig {
   // GCP-related attributes.
   GcpAttributes gcp_attributes = 3;
 
-  // The access token information.
-  api.envoy.http.common.AccessToken access_token = 4;
+  oneof access_token {
+    // The Instance Metadata Server uri used to fetch access token from Instance
+    // Metadata Server.
+    api.envoy.http.common.HttpUri imds_token = 4;
+
+    // The local path or inline content of the service account json file used to
+    // generate access token.
+    api.envoy.http.common.DataSource service_account_secret = 5;
+
+    // Information used to fetch access token from Google Cloud IAM.
+    api.envoy.http.common.IamTokenInfo iam_token = 6;
+  }
 
   // The service control call configuration.
-  ServiceControlCallingConfig sc_calling_config = 5;
+  ServiceControlCallingConfig sc_calling_config = 7;
 
   // The Http uri to call service control
-  api.envoy.http.common.HttpUri service_control_uri = 6;
+  api.envoy.http.common.HttpUri service_control_uri = 8;
 }

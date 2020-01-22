@@ -921,12 +921,10 @@ func TestFetchListeners(t *testing.T) {
                         "name":"envoy.filters.http.service_control",
                         "typedConfig":{
                            "@type":"type.googleapis.com/google.api.envoy.http.service_control.FilterConfig",
-                           "accessToken":{
-                              "remoteToken":{
-                                 "cluster":"metadata-cluster",
-                                 "timeout":"5s",
-                                 "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
-                              }
+                           "imdsToken":{
+                              "cluster":"metadata-cluster",
+                              "timeout":"5s",
+                              "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
                            },
                            "gcpAttributes":{
                               "platform":"GCE(ESPv2)"
@@ -1284,12 +1282,10 @@ func TestFetchListeners(t *testing.T) {
                         "name":"envoy.filters.http.service_control",
                         "typedConfig":{
                            "@type":"type.googleapis.com/google.api.envoy.http.service_control.FilterConfig",
-                           "accessToken":{
-                              "remoteToken":{
-                                 "cluster":"metadata-cluster",
-                                 "timeout":"5s",
-                                 "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
-                              }
+                           "imdsToken":{
+                              "cluster":"metadata-cluster",
+                              "timeout":"5s",
+                              "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
                            },
                            "gcpAttributes":{
                               "platform":"GCE(ESPv2)"

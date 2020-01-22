@@ -649,12 +649,10 @@
                             ]
                           }
                         ],
-                        "accessToken": {
-                          "remoteToken": {
-                            "uri": "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token",
-                            "cluster": "metadata-cluster",
-                            "timeout": "5s"
-                          }
+                        "imdsToken": {
+                          "uri": "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token",
+                          "cluster": "metadata-cluster",
+                          "timeout": "5s"
                         },
                         "scCallingConfig": {
                           "networkFailOpen": true
