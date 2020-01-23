@@ -83,3 +83,17 @@ message AccessToken {
     DataSource service_account_secret = 2;
   }
 }
+
+message IamTokenInfo {
+  // The Google Cloud IAM server uri.
+  api.envoy.http.common.HttpUri iam_uri = 1;
+
+  // Information used to get access token.
+  api.envoy.http.common.AccessToken access_token = 2;
+
+  // The Service Account Email.
+  string service_account_email = 3;
+
+  // The sequence of service accounts in a delegation chain.
+  repeated string delegates = 4;
+}

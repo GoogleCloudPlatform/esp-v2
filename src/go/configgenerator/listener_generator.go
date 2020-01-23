@@ -456,13 +456,27 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 
 	filterConfig := &scpb.FilterConfig{
 		Services:        []*scpb.Service{service},
-		AccessToken:     serviceInfo.AccessToken,
 		ScCallingConfig: makeServiceControlCallingConfig(serviceInfo.Options),
 		ServiceControlUri: &commonpb.HttpUri{
 			Uri:     serviceInfo.ServiceControlURI,
 			Cluster: util.ServiceControlClusterName,
 			Timeout: &durationpb.Duration{Seconds: 5},
 		},
+	}
+
+	switch serviceInfo.AccessToken.TokenType.(type) {
+	case *commonpb.AccessToken_RemoteToken:
+		filterConfig.AccessToken = &scpb.FilterConfig_ImdsToken{
+			ImdsToken: serviceInfo.AccessToken.GetRemoteToken(),
+		}
+		break
+	case *commonpb.AccessToken_ServiceAccountSecret:
+		filterConfig.AccessToken = &scpb.FilterConfig_ServiceAccountSecret{
+			ServiceAccountSecret: serviceInfo.AccessToken.GetServiceAccountSecret(),
+		}
+		break
+	default:
+		break
 	}
 
 	if serviceInfo.GcpAttributes != nil {
@@ -575,7 +589,7 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	}
 	if serviceInfo.Options.IamServiceAccount != "" {
 		backendAuthConfig.IdTokenInfo = &bapb.FilterConfig_IamToken{
-			IamToken: &bapb.IamIdTokenInfo{
+			IamToken: &commonpb.IamTokenInfo{
 				IamUri: &commonpb.HttpUri{
 					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.IamURL, util.IamIdentityTokenSuffix(serviceInfo.Options.IamServiceAccount)),
 					Cluster: util.IamServerClusterName,
@@ -591,13 +605,11 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 
 	} else {
 		backendAuthConfig.IdTokenInfo = &bapb.FilterConfig_ImdsToken{
-			ImdsToken: &bapb.ImdsIdTokenInfo{
-				ImdsServerUri: &commonpb.HttpUri{
-					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.MetadataURL, util.IdentityTokenSuffix),
-					Cluster: util.MetadataServerClusterName,
-					// TODO(taoxuy): make token_subscriber use this timeout
-					Timeout: &durationpb.Duration{Seconds: 5},
-				},
+			ImdsToken: &commonpb.HttpUri{
+				Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.MetadataURL, util.IdentityTokenSuffix),
+				Cluster: util.MetadataServerClusterName,
+				// TODO(taoxuy): make token_subscriber use this timeout
+				Timeout: &durationpb.Duration{Seconds: 5},
 			},
 		}
 	}

@@ -60,9 +60,9 @@ AudienceContext::AudienceContext(
       return;
     case FilterConfig::kImdsToken: {
       const std::string& uri =
-          filter_config.imds_token().imds_server_uri().uri();
+          filter_config.imds_token().uri();
       const std::string& cluster =
-          filter_config.imds_token().imds_server_uri().cluster();
+          filter_config.imds_token().cluster();
       const std::string real_uri = absl::StrCat(
           uri, "?format=standard&audience=", proto_config.jwt_audience());
 
