@@ -393,7 +393,10 @@ var (
                                           "name":":method"
                                        }
                                     ],
-                                    "regex":"/pet/[^\\/]+$"
+                                    "safeRegex":{
+                                      "googleRe2":{},
+                                      "regex":"/pet/[^\\/]+$"
+                                    }
                                  },
                                  "route":{
                                     "cluster":"pets.appspot.com:8008",

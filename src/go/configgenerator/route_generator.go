@@ -24,6 +24,7 @@ import (
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/common"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
+	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
@@ -70,7 +71,13 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*v2pb.RouteConfigurat
 			return nil, fmt.Errorf("cors_allow_origin cannot be empty when cors_preset=basic")
 		}
 		host.Cors = &routepb.CorsPolicy{
-			AllowOrigin: []string{org},
+			AllowOriginStringMatch: []*matcher.StringMatcher{
+				{
+					MatchPattern: &matcher.StringMatcher_Exact{
+						Exact: org,
+					},
+				},
+			},
 		}
 	case "cors_with_regex":
 		orgReg := serviceInfo.Options.CorsAllowOriginRegex
@@ -78,7 +85,18 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*v2pb.RouteConfigurat
 			return nil, fmt.Errorf("cors_allow_origin_regex cannot be empty when cors_preset=cors_with_regex")
 		}
 		host.Cors = &routepb.CorsPolicy{
-			AllowOriginRegex: []string{orgReg},
+			AllowOriginStringMatch: []*matcher.StringMatcher{
+				{
+					MatchPattern: &matcher.StringMatcher_SafeRegex{
+						SafeRegex: &matcher.RegexMatcher{
+							EngineType: &matcher.RegexMatcher_GoogleRe2{
+								GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
+							},
+							Regex: orgReg,
+						},
+					},
+				},
+			},
 		}
 	case "":
 		if serviceInfo.Options.CorsAllowMethods != "" || serviceInfo.Options.CorsAllowHeaders != "" ||
@@ -143,12 +161,17 @@ func makeHttpRouteMatcher(httpRule *commonpb.Pattern) *routepb.RouteMatch {
 	var routeMatcher routepb.RouteMatch
 	re := regexp.MustCompile(`{[^{}]+}`)
 
-	// Replacing query parameters inside "{}" by regex "[^\/]+", which means
+	// Replace path templates inside "{}" by regex "[^\/]+", which means
 	// any character except `/`, also adds `$` to match to the end of the string.
 	if re.MatchString(httpRule.UriTemplate) {
 		routeMatcher = routepb.RouteMatch{
-			PathSpecifier: &routepb.RouteMatch_Regex{
-				Regex: re.ReplaceAllString(httpRule.UriTemplate, `[^\/]+`) + `$`,
+			PathSpecifier: &routepb.RouteMatch_SafeRegex{
+				SafeRegex: &matcher.RegexMatcher{
+					EngineType: &matcher.RegexMatcher_GoogleRe2{
+						GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
+					},
+					Regex: re.ReplaceAllString(httpRule.UriTemplate, `[^\/]+`) + `$`,
+				},
 			},
 		}
 	} else {

@@ -23,6 +23,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
+	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 )
 
@@ -60,7 +61,13 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 			desc:   "Correct configured basic Cors, with allow methods",
 			params: []string{"basic", "http://example.com", "", "GET,POST,PUT,OPTIONS", "", ""},
 			wantRoute: &routepb.CorsPolicy{
-				AllowOrigin:      []string{"http://example.com"},
+				AllowOriginStringMatch: []*matcher.StringMatcher{
+					{
+						MatchPattern: &matcher.StringMatcher_Exact{
+							Exact: "http://example.com",
+						},
+					},
+				},
 				AllowMethods:     "GET,POST,PUT,OPTIONS",
 				AllowCredentials: &wrapperspb.BoolValue{Value: false},
 			},
@@ -69,7 +76,18 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 			desc:   "Correct configured regex Cors, with allow headers",
 			params: []string{"cors_with_regex", "", `^https?://.+\\.example\\.com$`, "", "Origin,Content-Type,Accept", ""},
 			wantRoute: &routepb.CorsPolicy{
-				AllowOriginRegex: []string{`^https?://.+\\.example\\.com$`},
+				AllowOriginStringMatch: []*matcher.StringMatcher{
+					{
+						MatchPattern: &matcher.StringMatcher_SafeRegex{
+							SafeRegex: &matcher.RegexMatcher{
+								EngineType: &matcher.RegexMatcher_GoogleRe2{
+									GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
+								},
+								Regex: `^https?://.+\\.example\\.com$`,
+							},
+						},
+					},
+				},
 				AllowHeaders:     "Origin,Content-Type,Accept",
 				AllowCredentials: &wrapperspb.BoolValue{Value: false},
 			},
@@ -79,7 +97,18 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 			params:           []string{"cors_with_regex", "", `^https?://.+\\.example\\.com$`, "", "", "Content-Length"},
 			allowCredentials: true,
 			wantRoute: &routepb.CorsPolicy{
-				AllowOriginRegex: []string{`^https?://.+\\.example\\.com$`},
+				AllowOriginStringMatch: []*matcher.StringMatcher{
+					{
+						MatchPattern: &matcher.StringMatcher_SafeRegex{
+							SafeRegex: &matcher.RegexMatcher{
+								EngineType: &matcher.RegexMatcher_GoogleRe2{
+									GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
+								},
+								Regex: `^https?://.+\\.example\\.com$`,
+							},
+						},
+					},
+				},
 				ExposeHeaders:    "Content-Length",
 				AllowCredentials: &wrapperspb.BoolValue{Value: true},
 			},
