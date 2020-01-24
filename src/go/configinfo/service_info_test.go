@@ -41,7 +41,6 @@ var (
 	testConfigID    = "2019-03-02r0"
 )
 
-
 func TestProcessEndpoints(t *testing.T) {
 	testData := []struct {
 		desc              string

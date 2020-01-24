@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
+	"github.com/golang/glog"
 	"github.com/gorilla/mux"
 )
 
@@ -86,6 +87,9 @@ func main() {
 	r.PathPrefix("/echoMethod").Methods("PATCH").
 		HandlerFunc(echoMethodHandler)
 
+	r.PathPrefix("/sleep").Methods("GET").
+		HandlerFunc(sleepHandler)
+
 	if *enableRootPathHandler {
 		r.PathPrefix("/").Methods("GET", "POST").
 			HandlerFunc(dynamicRoutingHandler)
@@ -103,6 +107,25 @@ func main() {
 		err = http.ListenAndServe(fmt.Sprintf("%v:%d", platform.GetLoopbackAddress(), *port), nil)
 	}
 	log.Fatal(err)
+}
+
+// sleepHandler sleeps for the given duration, then responds with 200 OK
+// Add the duration to sleep as a query param: ?duration=10s
+func sleepHandler(w http.ResponseWriter, r *http.Request) {
+	queryParams := r.URL.Query()
+	sleepDurationStr := queryParams.Get("duration")
+
+	sleepDuration, err := time.ParseDuration(sleepDurationStr)
+	if err != nil {
+		errorf(w, http.StatusBadRequest, "Invalid duration: ", err)
+		return
+	}
+
+	glog.Infof("Echo backend sleeping now: %v", sleepDurationStr)
+	time.Sleep(sleepDuration)
+	glog.Info("Echo backend done sleeping")
+
+	w.Write([]byte(fmt.Sprintf("Sleep done: %v", sleepDurationStr)))
 }
 
 // echoMethodHandler reads a method from the header, and writes it back out.
@@ -141,6 +164,12 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 
 // dynamicEoutingHandler reads URL from request header, and writes it back out.
 func dynamicRoutingHandler(w http.ResponseWriter, r *http.Request) {
+	// Handle sleeps
+	if r.URL.Path == "/sleep" {
+		sleepHandler(w, r)
+		return
+	}
+
 	resp := fmt.Sprintf(`{"RequestURI": "%s"}`, r.URL.RequestURI())
 	w.Write([]byte(resp))
 }

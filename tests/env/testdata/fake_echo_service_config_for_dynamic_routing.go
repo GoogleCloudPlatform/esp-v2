@@ -80,6 +80,9 @@ var (
 					{
 						Name: "dynamic_routing_Auth_info_firebase",
 					},
+					{
+						Name: "dynamic_routing_SleepDuration",
+					},
 				},
 				Version: "1.0.0",
 			},
@@ -189,6 +192,12 @@ var (
 						Get: "/auth/info/firebase",
 					},
 				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SleepDuration",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/sleep",
+					},
+				},
 			},
 		},
 		Types: []*ptypepb.Type{
@@ -264,6 +273,10 @@ var (
 				},
 				{
 					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_EmptyPath",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SleepDuration",
 					AllowUnregisteredCalls: true,
 				},
 			},
@@ -404,6 +417,14 @@ var (
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/auth/info/firebase",
+					},
+				},
+				{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SleepDuration",
+					Address:         "https://localhost:-1",
+					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+					Authentication: &confpb.BackendRule_JwtAudience{
+						JwtAudience: "https://localhost/sleep",
 					},
 				},
 			},

@@ -175,7 +175,7 @@ environment variable or by passing "-k" flag to this script.
         choices=['http1', 'http2', 'grpc'])
 
     parser.add_argument('--http_port', default=None, type=int, help='''
-       The port to accept HTTP/1.x connections.
+       The port to accept HTTP/1.x, HTTP/2, and gRPC connections.
        Default is {port}'''.format(port=DEFAULT_LISTENER_HTTP1_PORT))
 
     parser.add_argument('-z', '--healthz', default=None, help='''Define a

@@ -29,6 +29,7 @@ type EchoHTTPServer struct {
 
 func NewEchoHTTPServer(port uint16, enableHttps bool, enableRootPathHandler, useWrongCert bool) (*EchoHTTPServer, error) {
 	serverArgs := []string{
+		fmt.Sprint("--alsologtostderr"),
 		fmt.Sprintf("--port=%v", port),
 		fmt.Sprintf("--enable_https=%v", enableHttps),
 		fmt.Sprintf("--enable_root_path_handler=%v", enableRootPathHandler),
