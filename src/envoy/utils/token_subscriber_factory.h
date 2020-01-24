@@ -34,6 +34,9 @@ class TokenSubscriberFactory {
       IamTokenSubscriber::TokenGetFunc access_token_fn,
       const std::string& iam_service_cluster,
       const std::string& iam_service_uri,
+      IamTokenSubscriber::TokenType token_type,
+      const ::google::protobuf::RepeatedPtrField<std::string>& delegates,
+      const ::google::protobuf::RepeatedPtrField<std::string>& scopes,
       IamTokenSubscriber::TokenUpdateFunc callback) const PURE;
 };
 

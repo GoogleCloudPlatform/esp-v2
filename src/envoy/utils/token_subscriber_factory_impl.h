@@ -37,10 +37,13 @@ class TokenSubscriberFactoryImpl : public TokenSubscriberFactory {
       IamTokenSubscriber::TokenGetFunc access_token_fn,
       const std::string& iam_service_cluster,
       const std::string& iam_service_uri,
+      IamTokenSubscriber::TokenType token_type,
+      const ::google::protobuf::RepeatedPtrField<std::string>& delegates,
+      const ::google::protobuf::RepeatedPtrField<std::string>& scopes,
       IamTokenSubscriber::TokenUpdateFunc callback) const override {
-    return std::make_unique<IamTokenSubscriber>(context_, access_token_fn,
-                                                iam_service_cluster,
-                                                iam_service_uri, callback);
+    return std::make_unique<IamTokenSubscriber>(
+        context_, access_token_fn, iam_service_cluster, iam_service_uri,
+        token_type, delegates, scopes, callback);
   }
 
  private:

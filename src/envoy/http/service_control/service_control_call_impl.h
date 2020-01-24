@@ -23,8 +23,10 @@
 #include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/http/service_control/client_cache.h"
 #include "src/envoy/http/service_control/service_control_call.h"
+#include "src/envoy/utils/iam_token_subscriber.h"
 #include "src/envoy/utils/service_account_token.h"
 #include "src/envoy/utils/token_subscriber.h"
+#include "src/envoy/utils/token_subscriber_factory_impl.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -33,6 +35,10 @@ namespace ServiceControl {
 
 // Use shared_ptr to do atomic token update.
 typedef std::shared_ptr<std::string> TokenSharedPtr;
+
+// The scope for Service Control API
+constexpr char kServiceControlScope[] =
+    "https://www.googleapis.com/auth/servicecontrol";
 
 class ThreadLocalCache : public ThreadLocal::ThreadLocalObject {
  public:
@@ -67,7 +73,6 @@ class ThreadLocalCache : public ThreadLocal::ThreadLocalObject {
   ClientCache& client_cache() { return client_cache_; }
 
  private:
-  TokenSharedPtr token_;
   TokenSharedPtr sc_token_;
   TokenSharedPtr quota_token_;
   ClientCache client_cache_;
@@ -100,14 +105,31 @@ class ServiceControlCallImpl : public ServiceControlCall,
     return tls_->getTyped<ThreadLocalCache>();
   }
 
+  void createImdsTokenSub();
+  void createTokenGen();
+  void createIamTokenSub();
+
   const ::google::api::envoy::http::service_control::Service& config_;
+  Server::Configuration::FactoryContext& context_;
   const ::google::api::envoy::http::service_control::FilterConfig&
       filter_config_;
   std::unique_ptr<::google::api_proxy::service_control::RequestBuilder>
       request_builder_;
-  Utils::TokenSubscriberPtr token_sub_ptr_;
-  Utils::ServiceAccountTokenPtr sc_token_gen_ptr_;
-  Utils::ServiceAccountTokenPtr quota_token_gen_ptr_;
+
+  const Utils::TokenSubscriberFactoryImpl token_subscriber_factory_;
+
+  // Token subscriber used to fetch access token from imds for service control
+  Utils::TokenSubscriberPtr imds_token_sub_;
+
+  // Access Token for iam server
+  std::string access_token_for_iam_;
+  // Token subscriber used to fetch access token from imds for accessing iam
+  Utils::TokenSubscriberPtr access_token_sub_;
+  // Token subscriber used to fetch access token from iam for service control
+  Utils::IamTokenSubscriberPtr iam_token_sub_;
+
+  Utils::ServiceAccountTokenPtr sc_token_gen_;
+  Utils::ServiceAccountTokenPtr quota_token_gen_;
   ThreadLocal::SlotPtr tls_;
 };  // namespace ServiceControl
 

@@ -153,28 +153,34 @@ rules {
             return nullptr;
           }));
 
-  EXPECT_CALL(
-      mock_token_subscriber_factory_,
-      createIamTokenSubscriber(_, "this-is-iam-cluster",
-                               "this-is-iam-uri?audience=audience-foo", _))
+  EXPECT_CALL(mock_token_subscriber_factory_,
+              createIamTokenSubscriber(_, "this-is-iam-cluster",
+                                       "this-is-iam-uri?audience=audience-foo",
+                                       _, _, _, _))
       .WillOnce(
           Invoke([&id_token_foo](
                      Utils::IamTokenSubscriber::TokenGetFunc access_token_fn,
                      const std::string&, const std::string&,
+                     Utils::IamTokenSubscriber::TokenType,
+                     const ::google::protobuf::RepeatedPtrField<std::string>&,
+                     const ::google::protobuf::RepeatedPtrField<std::string>&,
                      Utils::IamTokenSubscriber::TokenUpdateFunc callback)
                      -> Utils::IamTokenSubscriberPtr {
             EXPECT_EQ(access_token_fn(), "access_token");
             callback(id_token_foo);
             return nullptr;
           }));
-  EXPECT_CALL(
-      mock_token_subscriber_factory_,
-      createIamTokenSubscriber(_, "this-is-iam-cluster",
-                               "this-is-iam-uri?audience=audience-bar", _))
+  EXPECT_CALL(mock_token_subscriber_factory_,
+              createIamTokenSubscriber(_, "this-is-iam-cluster",
+                                       "this-is-iam-uri?audience=audience-bar",
+                                       _, _, _, _))
       .WillOnce(
           Invoke([&id_token_bar](
                      Utils::IamTokenSubscriber::TokenGetFunc access_token_fn,
                      const std::string&, const std::string&,
+                     Utils::IamTokenSubscriber::TokenType,
+                     const ::google::protobuf::RepeatedPtrField<std::string>&,
+                     const ::google::protobuf::RepeatedPtrField<std::string>&,
                      Utils::IamTokenSubscriber::TokenUpdateFunc callback)
                      -> Utils::IamTokenSubscriberPtr {
             EXPECT_EQ(access_token_fn(), "access_token");

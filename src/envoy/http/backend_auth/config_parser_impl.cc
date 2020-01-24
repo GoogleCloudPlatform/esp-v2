@@ -53,16 +53,17 @@ AudienceContext::AudienceContext(
           filter_config.iam_token().iam_uri().cluster();
       const std::string real_uri =
           absl::StrCat(uri, "?audience=", proto_config.jwt_audience());
-
+      const ::google::protobuf::RepeatedPtrField<std::string>& delegates =
+          filter_config.iam_token().delegates();
       iam_token_sub_ptr_ = token_subscriber_factory.createIamTokenSubscriber(
-          access_token_fn, cluster, real_uri, callback);
+          access_token_fn, cluster, real_uri, IamTokenSubscriber::IdentityToken,
+          delegates, ::google::protobuf::RepeatedPtrField<std::string>(),
+          callback);
     }
       return;
     case FilterConfig::kImdsToken: {
-      const std::string& uri =
-          filter_config.imds_token().uri();
-      const std::string& cluster =
-          filter_config.imds_token().cluster();
+      const std::string& uri = filter_config.imds_token().uri();
+      const std::string& cluster = filter_config.imds_token().cluster();
       const std::string real_uri = absl::StrCat(
           uri, "?format=standard&audience=", proto_config.jwt_audience());
 

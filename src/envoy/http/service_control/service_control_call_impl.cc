@@ -41,11 +41,91 @@ constexpr char kQuotaControlService[] =
 
 }  // namespace
 
+void ServiceControlCallImpl::createImdsTokenSub() {
+  const std::string& token_cluster = filter_config_.imds_token().cluster();
+  const std::string& token_uri = filter_config_.imds_token().uri();
+  imds_token_sub_ = token_subscriber_factory_.createTokenSubscriber(
+      token_cluster, token_uri,
+      /*json_response=*/true, [this](const std::string& token) {
+        TokenSharedPtr new_token = std::make_shared<std::string>(token);
+        tls_->runOnAllThreads([this, new_token]() {
+          tls_->getTyped<ThreadLocalCache>().set_sc_token(new_token);
+          tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
+        });
+      });
+}
+
+void ServiceControlCallImpl::createTokenGen() {
+  const std::string service_control_auidence =
+      filter_config_.service_control_uri().uri() + kServiceControlService;
+  sc_token_gen_ = std::make_unique<ServiceAccountToken>(
+      context_, filter_config_.service_account_secret().inline_string(),
+      service_control_auidence, [this](const std::string& token) {
+        TokenSharedPtr new_token = std::make_shared<std::string>(token);
+        tls_->runOnAllThreads([this, new_token]() {
+          tls_->getTyped<ThreadLocalCache>().set_sc_token(new_token);
+        });
+      });
+
+  const std::string quota_audience =
+      filter_config_.service_control_uri().uri() + kQuotaControlService;
+  quota_token_gen_ = std::make_unique<ServiceAccountToken>(
+      context_, filter_config_.service_account_secret().inline_string(),
+      quota_audience, [this](const std::string& token) {
+        TokenSharedPtr new_token = std::make_shared<std::string>(token);
+        tls_->runOnAllThreads([this, new_token]() {
+          tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
+        });
+      });
+}
+
+void ServiceControlCallImpl::createIamTokenSub() {
+  switch (filter_config_.iam_token().access_token().token_type_case()) {
+    case AccessToken::kRemoteToken: {
+      const std::string& cluster =
+          filter_config_.iam_token().access_token().remote_token().cluster();
+      const std::string& uri =
+          filter_config_.iam_token().access_token().remote_token().uri();
+      access_token_sub_ = token_subscriber_factory_.createTokenSubscriber(
+          cluster, uri,
+          /*json_response=*/
+          true, [this](const std::string& access_token) {
+            access_token_for_iam_ = access_token;
+          });
+      break;
+    }
+    default: {
+      throw EnvoyException(
+          "Not support getting access token for iam server by "
+          "service account file");
+      break;
+    }
+  }
+  const std::string& token_cluster =
+      filter_config_.iam_token().iam_uri().cluster();
+  const std::string& token_uri = filter_config_.iam_token().iam_uri().uri();
+  ::google::protobuf::RepeatedPtrField<std::string> scopes;
+  scopes.Add(kServiceControlScope);
+  iam_token_sub_ = token_subscriber_factory_.createIamTokenSubscriber(
+      [this]() { return access_token_for_iam_; }, token_cluster, token_uri,
+      Utils::IamTokenSubscriber::AccessToken,
+      filter_config_.iam_token().delegates(), scopes,
+      [this](const std::string& token) {
+        TokenSharedPtr new_token = std::make_shared<std::string>(token);
+        tls_->runOnAllThreads([this, new_token]() {
+          tls_->getTyped<ThreadLocalCache>().set_sc_token(new_token);
+          tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
+        });
+      });
+}
+
 ServiceControlCallImpl::ServiceControlCallImpl(
     const Service& config, const FilterConfig& filter_config,
     Server::Configuration::FactoryContext& context)
     : config_(config),
+      context_(context),
       filter_config_(filter_config),
+      token_subscriber_factory_(context),
       tls_(context.threadLocal().allocateSlot()) {
   tls_->set([this, &cm = context.clusterManager(),
              &time_source = context.timeSource()](Event::Dispatcher& dispatcher)
@@ -56,44 +136,13 @@ ServiceControlCallImpl::ServiceControlCallImpl(
 
   switch (filter_config.access_token_case()) {
     case FilterConfig::kImdsToken: {
-      const std::string& token_uri =
-          filter_config.imds_token().uri();
-      const std::string& token_cluster =
-          filter_config.imds_token().cluster();
-      token_sub_ptr_ = std::make_unique<TokenSubscriber>(
-          context, token_cluster, token_uri,
-          /*json_response=*/true, [this](const std::string& token) {
-            TokenSharedPtr new_token = std::make_shared<std::string>(token);
-            tls_->runOnAllThreads([this, new_token]() {
-              tls_->getTyped<ThreadLocalCache>().set_sc_token(new_token);
-              tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
-            });
-          });
+      createImdsTokenSub();
     } break;
     case FilterConfig::kServiceAccountSecret: {
-      const std::string service_control_auidence =
-          filter_config.service_control_uri().uri() + kServiceControlService;
-      sc_token_gen_ptr_ = std::make_unique<ServiceAccountToken>(
-          context,
-          filter_config.service_account_secret().inline_string(),
-          service_control_auidence, [this](const std::string& token) {
-            TokenSharedPtr new_token = std::make_shared<std::string>(token);
-            tls_->runOnAllThreads([this, new_token]() {
-              tls_->getTyped<ThreadLocalCache>().set_sc_token(new_token);
-            });
-          });
-
-      const std::string quota_audience =
-          filter_config.service_control_uri().uri() + kQuotaControlService;
-      quota_token_gen_ptr_ = std::make_unique<ServiceAccountToken>(
-          context,
-          filter_config.service_account_secret().inline_string(),
-          quota_audience, [this](const std::string& token) {
-            TokenSharedPtr new_token = std::make_shared<std::string>(token);
-            tls_->runOnAllThreads([this, new_token]() {
-              tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
-            });
-          });
+      createTokenGen();
+    } break;
+    case FilterConfig::kIamToken: {
+      createIamTokenSub();
     } break;
     default:
       ENVOY_LOG(error, "No access token set!");

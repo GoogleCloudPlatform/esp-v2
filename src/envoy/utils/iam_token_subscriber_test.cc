@@ -52,9 +52,11 @@ class IamTokenSubscriberTest : public testing::Test {
         .WillOnce(Invoke([&init_target_handle](const Init::Target& target) {
           init_target_handle = target.createHandle("test");
         }));
+
     iam_token_sub_.reset(new IamTokenSubscriber(
         context_, access_token_fn_.AsStdFunction(), "token_cluster",
-        "http://iam/uri_suffix", id_token_callback_.AsStdFunction()));
+        "http://iam/uri_suffix", IamTokenSubscriber::IdentityToken, delegates_,
+        {}, id_token_callback_.AsStdFunction()));
 
     raw_mock_client_ =
         std::make_unique<NiceMock<Envoy::Http::MockAsyncClient>>();
@@ -85,6 +87,7 @@ class IamTokenSubscriberTest : public testing::Test {
   NiceMock<Init::ExpectableWatcherImpl> init_watcher_;
   NiceMock<MockFactoryContext> context_;
   MockFunction<std::string()> access_token_fn_;
+  const ::google::protobuf::RepeatedPtrField<std::string> delegates_;
   MockFunction<int(std::string)> id_token_callback_;
   Envoy::Http::AsyncClient::Callbacks* client_callback_{};
   std::unique_ptr<NiceMock<Envoy::Http::MockAsyncClient>> raw_mock_client_;

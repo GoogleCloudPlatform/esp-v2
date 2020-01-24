@@ -27,12 +27,16 @@ class MockTokenSubscriberFactory : public TokenSubscriberFactory {
                TokenSubscriber::TokenUpdateFunc callback),
               (const));
 
-  MOCK_METHOD(IamTokenSubscriberPtr, createIamTokenSubscriber,
-              (IamTokenSubscriber::TokenGetFunc access_token_fn,
-               const std::string& iam_service_cluster,
-               const std::string& iam_service_uri,
-               IamTokenSubscriber::TokenUpdateFunc callback),
-              (const));
+  MOCK_METHOD(
+      IamTokenSubscriberPtr, createIamTokenSubscriber,
+      (IamTokenSubscriber::TokenGetFunc access_token_fn,
+       const std::string& iam_service_cluster,
+       const std::string& iam_service_uri,
+       IamTokenSubscriber::TokenType token_type,
+       const ::google::protobuf::RepeatedPtrField<std::string>& delegates,
+       const ::google::protobuf::RepeatedPtrField<std::string>& scopes,
+       IamTokenSubscriber::TokenUpdateFunc callback),
+      (const));
 };
 
 }  // namespace Utils

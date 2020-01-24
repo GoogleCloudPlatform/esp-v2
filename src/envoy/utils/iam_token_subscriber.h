@@ -23,6 +23,7 @@
 #include "envoy/http/message.h"
 #include "envoy/server/filter_config.h"
 #include "envoy/upstream/cluster_manager.h"
+#include "src/envoy/utils/json_struct.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -36,11 +37,16 @@ class IamTokenSubscriber
  public:
   using TokenUpdateFunc = std::function<void(const std::string& token)>;
   using TokenGetFunc = std::function<std::string()>;
-  IamTokenSubscriber(Envoy::Server::Configuration::FactoryContext& context,
-                     TokenGetFunc access_token_fn,
-                     const std::string& iam_service_cluster,
-                     const std::string& iam_service_uri,
-                     TokenUpdateFunc callback);
+
+  enum TokenType { AccessToken, IdentityToken };
+
+  IamTokenSubscriber(
+      Envoy::Server::Configuration::FactoryContext& context,
+      TokenGetFunc access_token_fn, const std::string& iam_service_cluster,
+      const std::string& iam_service_uri, TokenType token_type,
+      const ::google::protobuf::RepeatedPtrField<std::string>& delegates,
+      const ::google::protobuf::RepeatedPtrField<std::string>& scopes,
+      TokenUpdateFunc callback);
   virtual ~IamTokenSubscriber();
 
  private:
@@ -50,12 +56,19 @@ class IamTokenSubscriber
 
   void refresh();
   void processResponse(Envoy::Http::MessagePtr&& response);
+  void processAccessTokenResp(JsonStruct& json_struct);
+  void processIdentityTokenResp(JsonStruct& json_struct);
   void resetTimer(const std::chrono::milliseconds& ms);
 
   Upstream::ClusterManager& cm_;
   TokenGetFunc access_token_fn_;
   const std::string& iam_service_cluster_;
   const std::string iam_service_uri_;
+
+  TokenType token_type_;
+  const std::string request_name_;
+  const ::google::protobuf::RepeatedPtrField<std::string>& delegates_;
+  const ::google::protobuf::RepeatedPtrField<std::string> scopes_;
 
   TokenUpdateFunc callback_;
   Envoy::Http::AsyncClient::Request* active_request_{};

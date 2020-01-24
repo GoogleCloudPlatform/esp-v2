@@ -261,8 +261,8 @@ MATCHER_P4(MatchesReportInfo, expect, request_headers, response_headers,
     return false;
   }
 
-  int64_t response_size = response_headers.byteSize() +
-                          response_trailers.byteSize();
+  int64_t response_size =
+      response_headers.byteSize() + response_trailers.byteSize();
   if (arg.response_bytes != response_size ||
       arg.response_size != response_size) {
     return false;

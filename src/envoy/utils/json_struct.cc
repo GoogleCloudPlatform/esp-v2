@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "json_struct.h"
+#include "google/protobuf/util/time_util.h"
 
 using ::google::protobuf::Value;
 using ::google::protobuf::util::Status;
@@ -63,6 +64,19 @@ Status JsonStruct::getInteger(const std::string& key, int* value) {
   // Warning: Truncates value!
   *value = static_cast<int>(number_value);
   return Status::OK;
+}
+
+Status JsonStruct::getTimestamp(const std::string& key,
+                                ::google::protobuf::Timestamp* value) {
+  std::string strValue;
+  ::google::protobuf::util::Status parse_status = getString(key, &strValue);
+  if (parse_status != Status::OK) {
+    return parse_status;
+  }
+  return ::google::protobuf::util::TimeUtil::FromString(strValue, value)
+             ? Status::OK
+             : Status(::google::protobuf::util::error::INVALID_ARGUMENT,
+                      "Field is not a Timestamp");
 }
 
 }  // namespace Utils
