@@ -11,6 +11,7 @@ set -eo pipefail
 
 # Set the project id
 gcloud config set project cloudesf-testing
+gcloud config set run/region us-central1
 
 # Resources older than 1 day should be cleaned up
 LIMIT_DATE=$(date -d "1 day ago" +%F)
