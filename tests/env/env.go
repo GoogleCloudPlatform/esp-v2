@@ -41,32 +41,35 @@ var (
 )
 
 type TestEnv struct {
-	testId                      uint16
-	enableDynamicRoutingBackend bool
-	useWrongBackendCert         bool
-	mockMetadata                bool
-	enableScNetworkFailOpen     bool
-	backendService              string
-	mockMetadataOverride        map[string]string
-	mockIamResps                map[string]string
-	bookstoreServer             *bookserver.BookstoreServer
-	grpcInteropServer           *components.GrpcInteropGrpcServer
-	grpcEchoServer              *components.GrpcEchoGrpcServer
-	configMgr                   *components.ConfigManagerServer
-	dynamicRoutingBackend       *components.EchoHTTPServer
-	echoBackend                 *components.EchoHTTPServer
-	envoy                       *components.Envoy
-	fakeServiceConfig           *confpb.Service
-	MockMetadataServer          *components.MockMetadataServer
-	MockIamServer               *components.MockIamServer
-	iamServiceAccount           string
-	MockServiceManagementServer *components.MockServiceMrg
-	ports                       *components.Ports
-	envoyDrainTimeInSec         int
-	ServiceControlServer        *components.MockServiceCtrl
-	FakeStackdriverServer       *components.FakeTraceServer
-	healthRegistry              *components.HealthRegistry
-	FakeJwtService              *components.FakeJwtService
+	testId                          uint16
+	enableDynamicRoutingBackend     bool
+	useWrongBackendCert             bool
+	mockMetadata                    bool
+	enableScNetworkFailOpen         bool
+	backendService                  string
+	mockMetadataOverride            map[string]string
+	mockIamResps                    map[string]string
+	bookstoreServer                 *bookserver.BookstoreServer
+	grpcInteropServer               *components.GrpcInteropGrpcServer
+	grpcEchoServer                  *components.GrpcEchoGrpcServer
+	configMgr                       *components.ConfigManagerServer
+	dynamicRoutingBackend           *components.EchoHTTPServer
+	echoBackend                     *components.EchoHTTPServer
+	envoy                           *components.Envoy
+	fakeServiceConfig               *confpb.Service
+	MockMetadataServer              *components.MockMetadataServer
+	MockIamServer                   *components.MockIamServer
+	backendAuthIamServiceAccount    string
+	backendAuthIamDelegates         string
+	serviceControlIamServiceAccount string
+	serviceControlIamDelegates      string
+	MockServiceManagementServer     *components.MockServiceMrg
+	ports                           *components.Ports
+	envoyDrainTimeInSec             int
+	ServiceControlServer            *components.MockServiceCtrl
+	FakeStackdriverServer           *components.FakeTraceServer
+	healthRegistry                  *components.HealthRegistry
+	FakeJwtService                  *components.FakeJwtService
 }
 
 func NewTestEnv(testId uint16, backendService string) *TestEnv {
@@ -102,8 +105,20 @@ func (e *TestEnv) SetIamResps(iamResps map[string]string) {
 	e.mockIamResps = iamResps
 }
 
-func (e *TestEnv) SetIamServiceAccount(serviecAccount string) {
-	e.iamServiceAccount = serviecAccount
+func (e *TestEnv) SetBackendAuthIamServiceAccount(serviecAccount string) {
+	e.backendAuthIamServiceAccount = serviecAccount
+}
+
+func (e *TestEnv) SetBackendAuthIamDelegates(delegates string) {
+	e.backendAuthIamDelegates = delegates
+}
+
+func (e *TestEnv) SetServiceControlIamServiceAccount(serviecAccount string) {
+	e.serviceControlIamServiceAccount = serviecAccount
+}
+
+func (e *TestEnv) SetServiceControlIamDelegates(delegates string) {
+	e.serviceControlIamDelegates = delegates
 }
 
 // OverrideBackend overrides mock backend.
@@ -254,8 +269,20 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		confArgs = append(confArgs, "--iam_url="+e.MockIamServer.GetURL())
 	}
 
-	if e.iamServiceAccount != "" {
-		confArgs = append(confArgs, "--iam_service_account="+e.iamServiceAccount)
+	if e.backendAuthIamServiceAccount != "" {
+		confArgs = append(confArgs, "--backend_auth_iam_service_account="+e.backendAuthIamServiceAccount)
+	}
+
+	if e.backendAuthIamDelegates != "" {
+		confArgs = append(confArgs, "--backend_auth_iam_delegates="+e.backendAuthIamDelegates)
+	}
+
+	if e.serviceControlIamServiceAccount != "" {
+		confArgs = append(confArgs, "--service_control_iam_service_account="+e.serviceControlIamServiceAccount)
+	}
+
+	if e.serviceControlIamDelegates != "" {
+		confArgs = append(confArgs, "--service_control_iam_delegates="+e.serviceControlIamDelegates)
 	}
 
 	if e.FakeStackdriverServer != nil {

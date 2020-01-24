@@ -41,8 +41,9 @@ const (
 const defaultTimeout = 2500 * time.Millisecond
 
 type ServiceRequest struct {
-	ReqType ServiceRequestType
-	ReqBody []byte
+	ReqType   ServiceRequestType
+	ReqHeader http.Header
+	ReqBody   []byte
 }
 
 type serviceResponse struct {
@@ -75,9 +76,9 @@ type serviceHandler struct {
 
 func (h *serviceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	glog.Infof("Mock service control handler: %v", h.resp.reqType)
-
 	req := &ServiceRequest{
-		ReqType: h.resp.reqType,
+		ReqType:   h.resp.reqType,
+		ReqHeader: r.Header,
 	}
 	atomic.AddInt32(h.m.count, 1)
 	req.ReqBody, _ = ioutil.ReadAll(r.Body)

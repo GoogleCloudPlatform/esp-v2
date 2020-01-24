@@ -16,18 +16,20 @@ package components
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
 	"sync"
+	"time"
 )
 
 // MockIamServer mocks the Metadata server.
 type MockIamServer struct {
-	s        *httptest.Server
-	ch       chan string
-	reqCache map[string]int
-	mtx      sync.RWMutex
+	s          *httptest.Server
+	reqBodyCh  chan string
+	reqTokenCh chan string
+	mtx        sync.RWMutex
 }
 
 // NewMockMetadata creates a new HTTP server.
@@ -38,16 +40,12 @@ func NewIamMetadata(pathResp map[string]string) *MockIamServer {
 	}
 
 	m := &MockIamServer{
-		ch:       make(chan string, 100),
-		reqCache: make(map[string]int),
+		reqTokenCh: make(chan string, 100),
+		reqBodyCh:  make(chan string, 100),
 	}
 	m.s = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		reqURI := r.URL.RequestURI()
-		m.mtx.Lock()
-		reqCnt, _ := m.reqCache[reqURI]
-		m.reqCache[reqURI] = reqCnt + 1
-		m.mtx.Unlock()
+
 		if r.URL.Path == "" || r.URL.Path == "/" {
 			w.WriteHeader(http.StatusOK)
 			return
@@ -58,25 +56,25 @@ func NewIamMetadata(pathResp map[string]string) *MockIamServer {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
-
-		m.ch <- accessToken
+		m.reqTokenCh <- accessToken
+		if r.Body != nil {
+			bodyBytes, _ := ioutil.ReadAll(r.Body)
+			m.reqBodyCh <- string(bodyBytes)
+		}
 
 		// Check if path + query exists in the response map.
 		pathWithQuery := r.URL.Path + "?" + r.URL.RawQuery
 
 		if resp, ok := mockPathResp[pathWithQuery]; ok {
-			//fmt.Printf("In mock metadatasever: found pathWithQuery %v", pathWithQuery)
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(resp))
 			return
 		}
-
 		if resp, ok := mockPathResp[r.URL.Path]; ok {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(resp))
 			return
 		}
-
 		w.WriteHeader(http.StatusNotFound)
 	}))
 	fmt.Println("started iam server at " + m.GetURL())
@@ -86,4 +84,22 @@ func NewIamMetadata(pathResp map[string]string) *MockIamServer {
 // GetURL returns the URL of the MockIamServer.
 func (m *MockIamServer) GetURL() string {
 	return m.s.URL
+}
+
+func (m *MockIamServer) GetRequestToken() (string, error) {
+	select {
+	case d := <-m.reqTokenCh:
+		return d, nil
+	case <-time.After(2500 * time.Millisecond):
+		return "", fmt.Errorf("Timeout")
+	}
+}
+
+func (m *MockIamServer) GetRequestBody() (string, error) {
+	select {
+	case d := <-m.reqBodyCh:
+		return d, nil
+	case <-time.After(2500 * time.Millisecond):
+		return "", fmt.Errorf("Timeout")
+	}
 }

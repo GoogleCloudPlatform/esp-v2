@@ -30,6 +30,11 @@ const Envoy::Http::LowerCaseString kAuthorizationKey("Authorization");
 // Body field for the sequence of service accounts in a delegation chain.
 constexpr char kDelegatesField[]("delegates");
 
+// The prefix for delegates body field. They must have the following format:
+// projects/-/serviceAccounts/{ACCOUNT_EMAIL_OR_UNIQUEID}, by
+// https://cloud.google.com/iam/docs/reference/credentials/rest/v1/projects.serviceAccounts/generateIdToken.
+constexpr char kDelegatePrefix[]("projects/-/serviceAccounts/");
+
 // Body field to identify the scopes to be included in the OAuth 2.0 access
 // token
 constexpr char kScopesField[]("scope");
@@ -49,10 +54,11 @@ const std::chrono::seconds kSubscriberDefaultTokenExpiry(3599);
 
 void insertStrListToProto(
     Envoy::ProtobufWkt::Value& body, const std::string& key,
-    const ::google::protobuf::RepeatedPtrField<std::string>& val_list) {
+    const ::google::protobuf::RepeatedPtrField<std::string>& val_list,
+    const absl::string_view& val_prefix) {
   Envoy::ProtobufWkt::Value vals;
   for (const auto& val : val_list) {
-    vals.mutable_list_value()->add_values()->set_string_value(val);
+    vals.mutable_list_value()->add_values()->set_string_value(absl::StrCat(val_prefix, val));
   }
   (*body.mutable_struct_value()->mutable_fields())[key].Swap(&vals);
 }
@@ -74,11 +80,11 @@ Envoy::Http::MessagePtr prepareMessage(
 
   Envoy::ProtobufWkt::Value body;
   if (!delegates.empty()) {
-    insertStrListToProto(body, kDelegatesField, delegates);
+    insertStrListToProto(body, kDelegatesField, delegates, kDelegatePrefix);
   }
 
   if (!scopes.empty()) {
-    insertStrListToProto(body, kScopesField, scopes);
+    insertStrListToProto(body, kScopesField, scopes, "");
   }
 
   if (!delegates.empty() || !scopes.empty()) {

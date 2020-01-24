@@ -47,14 +47,12 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, error) {
 		clusters = append(clusters, metadataCluster)
 	}
 
-	if serviceInfo.Options.IamServiceAccount != "" {
-		iamCluster, err := makeIamCluster(serviceInfo)
-		if err != nil {
-			return nil, err
-		}
-		if iamCluster != nil {
-			clusters = append(clusters, iamCluster)
-		}
+	iamCluster, err := makeIamCluster(serviceInfo)
+	if err != nil {
+		return nil, err
+	}
+	if iamCluster != nil {
+		clusters = append(clusters, iamCluster)
 	}
 
 	// Note: makeServiceControlCluster should be called before makeListener
@@ -116,6 +114,9 @@ func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
 }
 
 func makeIamCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
+	if serviceInfo.Options.ServiceControlCredentials == nil && serviceInfo.Options.BackendAuthCredentials == nil {
+		return nil, nil
+	}
 	scheme, hostname, port, _, err := util.ParseURI(serviceInfo.Options.IamURL)
 	if err != nil {
 		return nil, err

@@ -35,6 +35,7 @@ const (
 	TestBackendAuthWithImdsIdToken
 	TestBackendAuthWithImdsIdTokenWhileAllowCors
 	TestBackendAuthWithIamIdToken
+	TestBackendAuthUsingIamIdTokenWithDelegates
 	TestDifferentOriginPreflightCors
 	TestDifferentOriginSimpleCors
 	TestDynamicRouting
@@ -67,6 +68,7 @@ const (
 	TestServiceControlAPIKeyIpRestriction
 	TestServiceControlAPIKeyRestriction
 	TestServiceControlBasic
+	TestServiceControlAccessToken
 	TestServiceControlCache
 	TestServiceControlCheckError
 	TestServiceControlCheckRetry
@@ -97,7 +99,6 @@ const (
 	TestServiceManagementWithValidCert
 	TestServiceManagementWithInvalidCert
 	TestServiceControlTLSWithValidCert
-	TestServiceControlTLSWithInvalidCert
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
 	TestTranscodingBindings

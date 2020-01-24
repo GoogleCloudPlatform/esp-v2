@@ -46,11 +46,9 @@ type CommonOptions struct {
 	MetadataURL        string
 	IamURL             string
 	// Configures the identity used when making requests to Service Control.
-	ServiceControlCredentials IAMCredentialsOptions
+	ServiceControlCredentials *IAMCredentialsOptions
 	// Configures the identity used when making requests to backends.
-	BackendAuthCredentials IAMCredentialsOptions
-	// TODO: Soon to be deprecated. Use IAMCredentialsOptions instead.
-	IamServiceAccount string
+	BackendAuthCredentials *IAMCredentialsOptions
 }
 
 // IamTokenKind specifies which type of token to generate using the IAM Credentials API.
@@ -98,8 +96,7 @@ func DefaultCommonOptions() CommonOptions {
 		TracingMaxNumLinks:         128,
 		MetadataURL:                "http://169.254.169.254/computeMetadata",
 		IamURL:                     "https://iamcredentials.googleapis.com",
-		ServiceControlCredentials:  IAMCredentialsOptions{},
-		BackendAuthCredentials:     IAMCredentialsOptions{},
-		IamServiceAccount:          "",
+		ServiceControlCredentials:  nil,
+		BackendAuthCredentials:     nil,
 	}
 }

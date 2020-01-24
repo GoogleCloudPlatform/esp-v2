@@ -16,6 +16,7 @@ package commonflags
 
 import (
 	"flag"
+	"strings"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
@@ -54,7 +55,11 @@ var (
 	MetadataURL = flag.String("metadata_url", "http://169.254.169.254/computeMetadata", "url of metadata server")
 	IamURL      = flag.String("iam_url", "https://iamcredentials.googleapis.com", "url of iam server")
 
-	IamServiceAccount = flag.String("iam_service_account", "", "")
+	ServiceControlIamServiceAccount = flag.String("service_control_iam_service_account", "", "The service account used to fetch access token for the Service Control from Google Cloud IAM")
+	ServiceControlIamDelegates      = flag.String("service_control_iam_delegates", "", "The sequence of service accounts in a delegation chain used to fetch access token for the Service Control from Google Cloud IAM. The multiple delegates should be separated by \",\" and the flag only applies when ServiceControlIamServiceAccount is not empty.")
+
+	BackendAuthIamServiceAccount = flag.String("backend_auth_iam_service_account", "", "The service account used to fetch identity token for the Backend Auth from Google Cloud IAM")
+	BackendAuthIamDelegates      = flag.String("backend_auth_iam_delegates", "", "The sequence of service accounts in a delegation chain used to fetch identity token for the Backend Auth from Google Cloud IAM. The multiple delegates should be separated by \",\" and the flag only applies when BackendAuthIamServiceAccount is not empty.")
 )
 
 func DefaultCommonOptionsFromFlags() options.CommonOptions {
@@ -78,7 +83,25 @@ func DefaultCommonOptionsFromFlags() options.CommonOptions {
 		TracingMaxNumLinks:         *TracingMaxNumLinks,
 		MetadataURL:                *MetadataURL,
 		IamURL:                     *IamURL,
-		IamServiceAccount:          *IamServiceAccount,
+	}
+	if *BackendAuthIamServiceAccount != "" {
+		opts.BackendAuthCredentials = &options.IAMCredentialsOptions{
+			ServiceAccountEmail: *BackendAuthIamServiceAccount,
+			TokenKind:           options.IDToken,
+		}
+		if *BackendAuthIamDelegates != "" {
+			opts.BackendAuthCredentials.Delegates = strings.Split(*BackendAuthIamDelegates, ",")
+		}
+	}
+
+	if *ServiceControlIamServiceAccount != "" {
+		opts.ServiceControlCredentials = &options.IAMCredentialsOptions{
+			ServiceAccountEmail: *ServiceControlIamServiceAccount,
+			TokenKind:           options.AccessToken,
+		}
+		if *ServiceControlIamDelegates != "" {
+			opts.ServiceControlCredentials.Delegates = strings.Split(*ServiceControlIamDelegates, ",")
+		}
 	}
 
 	glog.Infof("Common options: %+v", opts)
