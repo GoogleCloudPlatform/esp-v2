@@ -58,14 +58,6 @@
                               "cluster": "http-bookstore-abc123456-uc.a.run.app:443",
                               "hostRewrite": "http-bookstore-abc123456-uc.a.run.app"
                             }
-                          },
-                          {
-                            "match": {
-                              "prefix": "/"
-                            },
-                            "route": {
-                              "cluster": "esp-bookstore-f6x3rlu5aa-uc.a.run.app_local"
-                            }
                           }
                         ]
                       }

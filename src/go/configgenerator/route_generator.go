@@ -19,6 +19,7 @@ import (
 	"regexp"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
 
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/common"
@@ -40,28 +41,34 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*v2pb.RouteConfigurat
 		Domains: []string{"*"},
 	}
 
-	if serviceInfo.RequiresBackendRouting {
-		brRoute, err := makeDynamicRoutingConfig(serviceInfo)
-		if err != nil {
-			return nil, err
-		}
-		host.Routes = brRoute
+	// Per-selector routes for dynamic routing.
+	brRoutes, err := makeDynamicRoutingConfig(serviceInfo)
+	if err != nil {
+		return nil, err
 	}
+	host.Routes = brRoutes
 
-	host.Routes = append(host.Routes, &routepb.Route{
-		Match: &routepb.RouteMatch{
-			PathSpecifier: &routepb.RouteMatch_Prefix{
-				Prefix: "/",
-			},
-		},
-		Action: &routepb.Route_Route{
-			Route: &routepb.RouteAction{
-				ClusterSpecifier: &routepb.RouteAction_Cluster{
-					Cluster: serviceInfo.BackendClusterName(),
+	if len(host.Routes) == 0 {
+		// Catch-all route if dynamic routing is not enabled.
+		catchAllRt := &routepb.Route{
+			Match: &routepb.RouteMatch{
+				PathSpecifier: &routepb.RouteMatch_Prefix{
+					Prefix: "/",
 				},
 			},
-		},
-	})
+			Action: &routepb.Route_Route{
+				Route: &routepb.RouteAction{
+					ClusterSpecifier: &routepb.RouteAction_Cluster{
+						Cluster: serviceInfo.BackendClusterName(),
+					},
+				},
+			},
+		}
+		host.Routes = append(host.Routes, catchAllRt)
+
+		jsonStr, _ := util.ProtoToJson(catchAllRt)
+		glog.Infof("adding catch-all routing configuration: %v", jsonStr)
+	}
 
 	switch serviceInfo.Options.CorsPreset {
 	case "basic":
@@ -146,8 +153,10 @@ func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.R
 					},
 				},
 			}
-			glog.Infof("Add Dynamic Routing configuration: %v", r)
 			backendRoutes = append(backendRoutes, &r)
+
+			jsonStr, _ := util.ProtoToJson(&r)
+			glog.Infof("adding Dynamic Routing configuration: %v", jsonStr)
 		}
 	}
 	return backendRoutes, nil

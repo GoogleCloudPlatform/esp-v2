@@ -45,8 +45,6 @@ type ServiceInfo struct {
 	Operations []string
 	// Stores all methods info for this service, using selector as key.
 	Methods map[string]*methodInfo
-	// Stores whether backend routing configurations should be enabled for this service.
-	RequiresBackendRouting bool
 	// Stores information about backend clusters for re-routing.
 	BackendRoutingClusters []*backendRoutingCluster
 	// Stores url segment names, mapping snake name to Json name.
@@ -98,7 +96,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 		Options:         opts,
 	}
 
-	// check BackendRule to decide BackendProtocol and RequiresBackendRouting
+	// check BackendRule to decide BackendProtocol
 	if err := serviceInfo.checkBackendRuleForProtocol(); err != nil {
 		return nil, err
 	}
@@ -369,14 +367,11 @@ func (s *ServiceInfo) addOptionMethod(apiName string, path string, backendInfo *
 	}
 }
 
-// check BackendRule to decide BackendProtocol and RequiresBackendRouting
+// check BackendRule to decide BackendProtocol
 func (s *ServiceInfo) checkBackendRuleForProtocol() error {
 	var firstScheme string
 	for _, r := range s.ServiceConfig().Backend.GetRules() {
 		if r.Address != "" {
-			// If any backend rule has non empty address, the entire service requires backend routing.
-			s.RequiresBackendRouting = true
-
 			scheme, hostname, _, _, err := util.ParseURI(r.Address)
 			if err != nil {
 				return err

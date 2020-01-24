@@ -445,14 +445,6 @@ var (
                                     "cluster":"us-west2-cloud-esf.cloudfunctions.net:443",
                                     "hostRewrite":"us-west2-cloud-esf.cloudfunctions.net"
                                  }
-                              },
-                              {
-                                 "match":{
-                                    "prefix":"/"
-                                 },
-                                 "route":{
-                                    "cluster":"echo-api.endpoints.cloudesf-testing.cloud.goog_local"
-                                 }
                               }
                            ]
                         }

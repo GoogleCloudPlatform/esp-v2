@@ -289,7 +289,10 @@ var (
 		Backend: &confpb.Backend{
 			Rules: []*confpb.BackendRule{
 				{
-					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+					Address:         "https://localhost:-1/echo",
+					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+					// No authentication on this rule, essentially the same as `disable_auth`
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
