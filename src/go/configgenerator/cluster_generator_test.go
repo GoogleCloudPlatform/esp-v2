@@ -363,7 +363,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					Issuer:  "issuer_2",
 					JwksUri: "%",
 				}},
-			wantedError: "Fail to parse uri % with error parse https://%: invalid URL escape \"%\"",
+			wantedError: "Fail to parse uri %",
 		},
 		{
 			desc: "Deduplicate Auth Provider With Same Host",
@@ -411,7 +411,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 		}
 
 		clusters, err := makeJwtProviderClusters(fakeServiceInfo)
-		if err != nil && err.Error() != tc.wantedError {
+		if err != nil && !strings.Contains(err.Error(), tc.wantedError) {
 			t.Fatalf("Test Desc(%d): %s, got error:%v, wanted error:%v", i, tc.desc, err, tc.wantedError)
 		}
 

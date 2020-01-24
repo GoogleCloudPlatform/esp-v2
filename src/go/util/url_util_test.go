@@ -194,7 +194,7 @@ func TestExtraAddressFromURI(t *testing.T) {
 		{
 			desc:        "Failed with wrong-format uri",
 			uri:         "%",
-			wantedError: "Fail to parse uri % with error parse https://%: invalid URL escape \"%\"",
+			wantedError: "Fail to parse uri %",
 		},
 	}
 
@@ -203,7 +203,7 @@ func TestExtraAddressFromURI(t *testing.T) {
 		if generatedClusterName != tc.wantedAddress {
 			t.Errorf("Test Desc(%d): %s, ExtraAddressFromURI got: %v, want: %v", i, tc.desc, generatedClusterName, tc.wantedAddress)
 		}
-		if err != nil && err.Error() != tc.wantedError {
+		if err != nil && !strings.Contains(err.Error(), tc.wantedError) {
 			t.Errorf("Test Desc(%d): %s, ExtraAddressFromURI got: %v, want: %v", i, tc.desc, err.Error(), tc.wantedError)
 		}
 	}
