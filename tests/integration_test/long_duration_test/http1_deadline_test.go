@@ -26,6 +26,13 @@ import (
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
+type ConfiguredDeadline int
+
+const (
+	Short ConfiguredDeadline = iota
+	Default
+)
+
 func elapsed(what string) func() {
 	start := time.Now()
 	return func() {
@@ -33,8 +40,8 @@ func elapsed(what string) func() {
 	}
 }
 
-// Tests the global api request timeout for a HTTP/1.x backend (no streaming).
-func TestLongDurationForDynamicRouting(t *testing.T) {
+// Tests the deadlines configured in backend rules for a HTTP/1.x backend (no streaming).
+func TestDeadlinesForDynamicRouting(t *testing.T) {
 	args := []string{
 		"--service_config_id=test-config-id",
 		"--backend_protocol=http1",
@@ -43,7 +50,7 @@ func TestLongDurationForDynamicRouting(t *testing.T) {
 		"--suppress_envoy_headers",
 	}
 
-	s := env.NewTestEnv(comp.TestLongDurationForDynamicRouting, "echoForDynamicRouting")
+	s := env.NewTestEnv(comp.TestDeadlinesForDynamicRouting, "echoForDynamicRouting")
 	s.EnableDynamicRoutingBackend(false)
 
 	defer s.TearDown()
@@ -52,21 +59,36 @@ func TestLongDurationForDynamicRouting(t *testing.T) {
 	}
 
 	testData := []struct {
-		desc        string
-		reqDuration time.Duration
-		wantErr     bool
+		desc           string
+		reqDuration    time.Duration
+		deadlineToTest ConfiguredDeadline
+		wantErr        bool
 	}{
 		// Please be cautious about adding too many time-based tests here.
 		// This can slow down our CI system if we sleep for too long.
 		{
-			desc:        "Success after 10s due to envoy default timeout being 15s",
-			reqDuration: time.Second * 10,
-			wantErr:     false,
+			desc:           "Success after 10s due to ESPv2 default timeout being 15s",
+			reqDuration:    time.Second * 10,
+			deadlineToTest: Default,
+			wantErr:        false,
 		},
 		{
-			desc:        "Fail before 20s due to envoy default timeout being 15s",
-			reqDuration: time.Second * 20,
-			wantErr:     true,
+			desc:           "Fail before 20s due to ESPv2 default timeout being 15s",
+			reqDuration:    time.Second * 20,
+			deadlineToTest: Default,
+			wantErr:        true,
+		},
+		{
+			desc:           "Success after 2s due to user-configured deadline being 5s",
+			reqDuration:    time.Second * 2,
+			deadlineToTest: Short,
+			wantErr:        false,
+		},
+		{
+			desc:           "Fail before 8s due to user-configured deadline being 5s",
+			reqDuration:    time.Second * 8,
+			deadlineToTest: Short,
+			wantErr:        true,
 		},
 	}
 
@@ -77,7 +99,16 @@ func TestLongDurationForDynamicRouting(t *testing.T) {
 		func() {
 			defer elapsed(fmt.Sprintf("Test (%s):", tc.desc))()
 
-			path := fmt.Sprintf("/sleep?duration=%v", tc.reqDuration.String())
+			// Decide which path to call based on which configured deadline to test against.
+			var basePath string
+			switch tc.deadlineToTest {
+			case Default:
+				basePath = "/sleepDefault"
+			case Short:
+				basePath = "/sleepShort"
+			}
+
+			path := fmt.Sprintf("%v?duration=%v", basePath, tc.reqDuration.String())
 			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, path)
 
 			_, err := client.DoWithHeaders(url, "GET", "", nil)

@@ -17,10 +17,12 @@ package configgenerator
 import (
 	"fmt"
 	"regexp"
+	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/ptypes"
 
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/common"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
@@ -61,6 +63,10 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*v2pb.RouteConfigurat
 					ClusterSpecifier: &routepb.RouteAction_Cluster{
 						Cluster: serviceInfo.BackendClusterName(),
 					},
+					// Use the default deadline for the catch-all route.
+					// If a customer needs to override this, dynamic routing must be used.
+					// This is the intended design of the feature (b/147813008).
+					Timeout: ptypes.DurationProto(util.DefaultResponseDeadline),
 				},
 			},
 		}
@@ -135,6 +141,17 @@ func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.R
 		if method.BackendInfo == nil {
 			continue
 		}
+
+		// Response timeouts are not compatible with streaming methods (documented in Envoy).
+		// If this method is non-unary gRPC, explicitly set 0s to disable the timeout.
+		// This even applies for routes with gRPC-JSON transcoding where only the upstream is streaming.
+		var respTimeout time.Duration
+		if method.IsStreaming {
+			respTimeout = 0 * time.Second
+		} else {
+			respTimeout = method.BackendInfo.Deadline
+		}
+
 		for _, httpRule := range method.HttpRule {
 			if routeMatcher = makeHttpRouteMatcher(httpRule); routeMatcher == nil {
 				return nil, fmt.Errorf("error making HTTP route matcher for selector: %v", operation)
@@ -150,6 +167,7 @@ func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.R
 						HostRewriteSpecifier: &routepb.RouteAction_HostRewrite{
 							HostRewrite: method.BackendInfo.Hostname,
 						},
+						Timeout: ptypes.DurationProto(respTimeout),
 					},
 				},
 			}

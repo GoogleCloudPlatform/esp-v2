@@ -21,6 +21,7 @@ import (
 	"net/http/httptest"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -984,7 +985,7 @@ func TestMethods(t *testing.T) {
 	}
 }
 
-func TestProcessBackendRule(t *testing.T) {
+func TestProcessBackendRuleForProtocol(t *testing.T) {
 	testData := []struct {
 		desc                  string
 		fakeServiceConfig     *confpb.Service
@@ -1123,9 +1124,112 @@ func TestProcessBackendRule(t *testing.T) {
 		} else {
 			if err != nil {
 				t.Errorf("Test Desc(%d): %s, processBackendRule error not expected, got: %v", i, tc.desc, err)
+				return
 			}
 			if tc.wantedBackendProtocol != s.BackendProtocol {
-				t.Errorf("Test Desc(%d): %s, processBackendRule, BackendProtocol not expected, got: %v, want: %v", i, tc.desc, s.BackendProtocol, tc.wantedBackendProtocol)
+				t.Errorf("Test Desc(%d): %s, TestProcessBackendRuleForProtocol, BackendProtocol not expected, got: %v, want: %v", i, tc.desc, s.BackendProtocol, tc.wantedBackendProtocol)
+			}
+		}
+	}
+}
+
+func TestProcessBackendRuleForDeadline(t *testing.T) {
+	testData := []struct {
+		desc              string
+		fakeServiceConfig *confpb.Service
+		// Map of selector to the expected deadline for the corresponding route.
+		wantedMethodDeadlines map[string]time.Duration
+	}{
+		{
+			desc: "Mixed deadlines across multiple backend rules",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+						},
+						{
+							Address:  "grpc://cnn.com/api/",
+							Selector: "cnn.com.api",
+							Deadline: 20,
+						},
+					},
+				},
+			},
+			wantedMethodDeadlines: map[string]time.Duration{
+				"abc.com.api": 10*time.Second + 500*time.Millisecond,
+				"cnn.com.api": 20 * time.Second,
+			},
+		},
+		{
+			desc: "Deadline with high precision is rounded to milliseconds",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: 30.0009, // 30s 0.9ms
+						},
+					},
+				},
+			},
+			wantedMethodDeadlines: map[string]time.Duration{
+				"abc.com.api": 30*time.Second + 1*time.Millisecond,
+			},
+		},
+		{
+			desc: "Deadline that is non-positive is overridden to default",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: -10.5,
+						},
+					},
+				},
+			},
+			wantedMethodDeadlines: map[string]time.Duration{
+				"abc.com.api": util.DefaultResponseDeadline,
+			},
+		},
+	}
+
+	for i, tc := range testData {
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = "grpc"
+		s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+
+		if err != nil {
+			t.Errorf("Test Desc(%d): %s, TestProcessBackendRuleForDeadline error not expected, got: %v", i, tc.desc, err)
+			return
+		}
+
+		for _, rule := range tc.fakeServiceConfig.Backend.Rules {
+			gotDeadline := s.Methods[rule.Selector].BackendInfo.Deadline
+			wantDeadline := tc.wantedMethodDeadlines[rule.Selector]
+
+			if wantDeadline != gotDeadline {
+				t.Errorf("Test Desc(%d): %s, TestProcessBackendRuleForDeadline, Deadline not expected, got: %v, want: %v", i, tc.desc, gotDeadline, wantDeadline)
 			}
 		}
 	}
@@ -1412,6 +1516,98 @@ func TestProcessApis(t *testing.T) {
 
 		serviceInfo := &ServiceInfo{
 			serviceConfig: tc.fakeServiceConfig,
+		}
+		serviceInfo.processApis()
+
+		for key, gotMethod := range serviceInfo.Methods {
+			wantMethod := tc.wantMethods[key]
+			if eq := cmp.Equal(gotMethod, wantMethod, cmp.Comparer(proto.Equal)); !eq {
+				t.Errorf("Test Desc(%d): %s,\ngot Method: %v,\nwant Method: %v", i, tc.desc, gotMethod, wantMethod)
+			}
+		}
+		for idx, gotApiName := range serviceInfo.ApiNames {
+			wantApiName := tc.wantApiNames[idx]
+			if gotApiName != wantApiName {
+				t.Errorf("Test Desc(%d): %s,\ngot ApiName: %v,\nwant Apiname: %v", i, tc.desc, gotApiName, wantApiName)
+			}
+		}
+	}
+}
+
+func TestProcessApisForGrpc(t *testing.T) {
+	testData := []struct {
+		desc              string
+		fakeServiceConfig *confpb.Service
+		wantMethods       map[string]*methodInfo
+		wantApiNames      []string
+	}{
+		{
+			desc: "Process API with unary and streaming gRPC methods",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "api-streaming-test",
+						Methods: []*apipb.Method{
+							{
+								Name: "unary",
+							},
+							{
+								Name:             "streaming_request",
+								RequestStreaming: true,
+							},
+							{
+								Name:              "streaming_response",
+								ResponseStreaming: true,
+							},
+						},
+					},
+				},
+			},
+			wantMethods: map[string]*methodInfo{
+				"api-streaming-test.unary": {
+					ShortName: "unary",
+					ApiName:   "api-streaming-test",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/api-streaming-test/unary",
+							HttpMethod:  util.POST,
+						},
+					},
+				},
+				"api-streaming-test.streaming_request": {
+					ShortName:   "streaming_request",
+					ApiName:     "api-streaming-test",
+					IsStreaming: true,
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/api-streaming-test/streaming_request",
+							HttpMethod:  util.POST,
+						},
+					},
+				},
+				"api-streaming-test.streaming_response": {
+					ShortName:   "streaming_response",
+					ApiName:     "api-streaming-test",
+					IsStreaming: true,
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/api-streaming-test/streaming_response",
+							HttpMethod:  util.POST,
+						},
+					},
+				},
+			},
+			wantApiNames: []string{
+				"api-streaming-test",
+			},
+		},
+	}
+
+	for i, tc := range testData {
+
+		serviceInfo := &ServiceInfo{
+			serviceConfig:   tc.fakeServiceConfig,
+			BackendProtocol: util.GRPC,
 		}
 		serviceInfo.processApis()
 

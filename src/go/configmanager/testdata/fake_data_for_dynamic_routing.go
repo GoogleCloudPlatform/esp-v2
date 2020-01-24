@@ -380,7 +380,8 @@ var (
                                  },
                                  "route":{
                                     "cluster":"pets.appspot.com:443",
-                                    "hostRewrite":"pets.appspot.com"
+                                    "hostRewrite":"pets.appspot.com",
+                                    "timeout":"15s"
                                  }
                               },
                               {
@@ -398,7 +399,8 @@ var (
                                  },
                                  "route":{
                                     "cluster":"pets.appspot.com:8008",
-                                    "hostRewrite":"pets.appspot.com"
+                                    "hostRewrite":"pets.appspot.com",
+                                    "timeout":"15s"
                                  }
                               },
                               {
@@ -413,7 +415,8 @@ var (
                                  },
                                  "route":{
                                     "cluster":"us-central1-cloud-esf.cloudfunctions.net:443",
-                                    "hostRewrite":"us-central1-cloud-esf.cloudfunctions.net"
+                                    "hostRewrite":"us-central1-cloud-esf.cloudfunctions.net",
+                                    "timeout":"15s"
                                  }
                               },
                               {
@@ -428,7 +431,8 @@ var (
                                  },
                                  "route":{
                                     "cluster":"pets.appspot.com:443",
-                                    "hostRewrite":"pets.appspot.com"
+                                    "hostRewrite":"pets.appspot.com",
+                                    "timeout":"15s"
                                  }
                               },
                               {
@@ -443,7 +447,8 @@ var (
                                  },
                                  "route":{
                                     "cluster":"us-west2-cloud-esf.cloudfunctions.net:443",
-                                    "hostRewrite":"us-west2-cloud-esf.cloudfunctions.net"
+                                    "hostRewrite":"us-west2-cloud-esf.cloudfunctions.net",
+                                    "timeout":"15s"
                                  }
                               }
                            ]

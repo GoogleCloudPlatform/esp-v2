@@ -15,6 +15,8 @@
 package configinfo
 
 import (
+	"time"
+
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/common"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/service_control"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -32,6 +34,8 @@ type methodInfo struct {
 	SkipServiceControl bool
 	APIKeyLocations    []*scpb.APIKeyLocation
 	MetricCosts        []*scpb.MetricCost
+	// All non-unary gRPC methods are considered streaming.
+	IsStreaming bool
 }
 
 // backendInfo stores information from Backend rule for backend rerouting.
@@ -41,4 +45,6 @@ type backendInfo struct {
 	Hostname        string
 	TranslationType confpb.BackendRule_PathTranslation
 	JwtAudience     string
+	// Response timeout for the backend.
+	Deadline time.Duration
 }

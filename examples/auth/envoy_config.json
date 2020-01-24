@@ -183,7 +183,8 @@
                               "prefix": "/"
                             },
                             "route": {
-                              "cluster": "auth.endpoints.apiproxy-231719.cloud.goog_local"
+                              "cluster": "auth.endpoints.apiproxy-231719.cloud.goog_local",
+                              "timeout": "15s"
                             }
                           }
                         ]

@@ -36,11 +36,11 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		params           []string
 		allowCredentials bool
 		wantedError      string
-		wantRoute        *routepb.CorsPolicy
+		wantCorsPolicy   *routepb.CorsPolicy
 	}{
 		{
-			desc:      "No Cors",
-			wantRoute: nil,
+			desc:           "No Cors",
+			wantCorsPolicy: nil,
 		},
 		{
 			desc:        "Incorrect configured basic Cors",
@@ -60,7 +60,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		{
 			desc:   "Correct configured basic Cors, with allow methods",
 			params: []string{"basic", "http://example.com", "", "GET,POST,PUT,OPTIONS", "", ""},
-			wantRoute: &routepb.CorsPolicy{
+			wantCorsPolicy: &routepb.CorsPolicy{
 				AllowOriginStringMatch: []*matcher.StringMatcher{
 					{
 						MatchPattern: &matcher.StringMatcher_Exact{
@@ -75,7 +75,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		{
 			desc:   "Correct configured regex Cors, with allow headers",
 			params: []string{"cors_with_regex", "", `^https?://.+\\.example\\.com$`, "", "Origin,Content-Type,Accept", ""},
-			wantRoute: &routepb.CorsPolicy{
+			wantCorsPolicy: &routepb.CorsPolicy{
 				AllowOriginStringMatch: []*matcher.StringMatcher{
 					{
 						MatchPattern: &matcher.StringMatcher_SafeRegex{
@@ -96,7 +96,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 			desc:             "Correct configured regex Cors, with expose headers",
 			params:           []string{"cors_with_regex", "", `^https?://.+\\.example\\.com$`, "", "", "Content-Length"},
 			allowCredentials: true,
-			wantRoute: &routepb.CorsPolicy{
+			wantCorsPolicy: &routepb.CorsPolicy{
 				AllowOriginStringMatch: []*matcher.StringMatcher{
 					{
 						MatchPattern: &matcher.StringMatcher_SafeRegex{
@@ -140,11 +140,11 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 
 		gotHost := gotRoute.GetVirtualHosts()
 		if len(gotHost) != 1 {
-			t.Errorf("Test (%s): got expected number of virtual host", tc.desc)
+			t.Errorf("Test (%v): got expected number of virtual host", tc.desc)
 		}
 		gotCors := gotHost[0].GetCors()
-		if !proto.Equal(gotCors, tc.wantRoute) {
-			t.Errorf("Test (%s): makeRouteConfig failed, got Cors: %s, want: %s", tc.desc, gotCors, tc.wantRoute)
+		if !proto.Equal(gotCors, tc.wantCorsPolicy) {
+			t.Errorf("Test (%v): makeRouteConfig failed, got Cors: %v, want: %v", tc.desc, gotCors, tc.wantCorsPolicy)
 		}
 	}
 }

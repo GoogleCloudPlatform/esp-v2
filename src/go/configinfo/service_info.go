@@ -17,9 +17,11 @@ package configinfo
 import (
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -175,6 +177,11 @@ func (s *ServiceInfo) processApis() {
 					UriTemplate: fmt.Sprintf("/%s/%s", api.GetName(), method.GetName()),
 					HttpMethod:  util.POST,
 				})
+
+				// Keep track of non-unary gRPC methods.
+				if method.RequestStreaming || method.ResponseStreaming {
+					mi.IsStreaming = true
+				}
 			}
 			s.Methods[fmt.Sprintf("%s.%s", api.GetName(), method.GetName())] = mi
 		}
@@ -434,12 +441,29 @@ func (s *ServiceInfo) processBackendRule() error {
 				uri = "/"
 			}
 
+			var deadline time.Duration
+			if r.Deadline == 0 {
+				// If no deadline specified by the user, explicitly use default.
+				deadline = util.DefaultResponseDeadline
+			} else if r.Deadline < 0 {
+				glog.Warningf("Negative deadline of %v specified for method %v. "+
+					"Using default deadline %v instead.", r.Deadline, address, util.DefaultResponseDeadline)
+				deadline = util.DefaultResponseDeadline
+			} else {
+				// The backend deadline from the BackendRule is a float64 that represents seconds.
+				// But float64 has a large precision, so we must explicitly lower the precision.
+				// For the purposes of a network proxy, round the deadline to the nearest millisecond.
+				deadlineMs := int64(math.Round(r.Deadline * 1000))
+				deadline = time.Duration(deadlineMs) * time.Millisecond
+			}
+
 			method.BackendInfo = &backendInfo{
 				ClusterName:     clusterName,
 				Uri:             uri,
 				Hostname:        hostname,
 				TranslationType: r.PathTranslation,
 				JwtAudience:     r.GetJwtAudience(),
+				Deadline:        deadline,
 			}
 		}
 	}

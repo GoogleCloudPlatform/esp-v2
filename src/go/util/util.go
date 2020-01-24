@@ -14,6 +14,8 @@
 
 package util
 
+import "time"
+
 const (
 	// HTTP filter names.
 
@@ -101,6 +103,9 @@ const (
 
 	// System Parameter Name
 	APIKeyParameterName = "api_key"
+
+	// Default response deadline used if user does not specify one in the BackendRule.
+	DefaultResponseDeadline = 15 * time.Second
 )
 
 type BackendProtocol int32

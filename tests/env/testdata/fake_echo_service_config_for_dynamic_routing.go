@@ -81,7 +81,12 @@ var (
 						Name: "dynamic_routing_Auth_info_firebase",
 					},
 					{
-						Name: "dynamic_routing_SleepDuration",
+						// Uses the default response timeout.
+						Name: "dynamic_routing_SleepDurationDefault",
+					},
+					{
+						// "User" specified a shorter response timeout.
+						Name: "dynamic_routing_SleepDurationShort",
 					},
 				},
 				Version: "1.0.0",
@@ -193,9 +198,15 @@ var (
 					},
 				},
 				{
-					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SleepDuration",
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SleepDurationDefault",
 					Pattern: &annotationspb.HttpRule_Get{
-						Get: "/sleep",
+						Get: "/sleepDefault",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SleepDurationShort",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/sleepShort",
 					},
 				},
 			},
@@ -276,7 +287,11 @@ var (
 					AllowUnregisteredCalls: true,
 				},
 				{
-					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SleepDuration",
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SleepDurationDefault",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SleepDurationShort",
 					AllowUnregisteredCalls: true,
 				},
 			},
@@ -423,12 +438,21 @@ var (
 					},
 				},
 				{
-					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SleepDuration",
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SleepDurationDefault",
 					Address:         "https://localhost:-1",
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: "https://localhost/sleep",
+						JwtAudience: "https://localhost/sleepDefault",
 					},
+				},
+				{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SleepDurationShort",
+					Address:         "https://localhost:-1",
+					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+					Authentication: &confpb.BackendRule_JwtAudience{
+						JwtAudience: "https://localhost/sleepShort",
+					},
+					Deadline: 5.0,
 				},
 			},
 		},

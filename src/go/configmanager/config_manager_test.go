@@ -181,7 +181,8 @@ func TestFetchListeners(t *testing.T) {
                                     "prefix":"/"
                                  },
                                  "route":{
-                                    "cluster":"%s"
+                                    "cluster":"%s",
+                                    "timeout":"15s"
                                  }
                               }
                            ]
@@ -354,7 +355,8 @@ func TestFetchListeners(t *testing.T) {
                                     "prefix":"/"
                                  },
                                  "route":{
-                                    "cluster":"%s"
+                                    "cluster":"%s",
+                                    "timeout":"15s"
                                  }
                               }
                            ]
@@ -557,7 +559,8 @@ func TestFetchListeners(t *testing.T) {
                                     "prefix":"/"
                                  },
                                  "route":{
-                                    "cluster":"%s"
+                                    "cluster":"%s",
+                                    "timeout":"15s"
                                  }
                               }
                            ]
@@ -793,7 +796,8 @@ func TestFetchListeners(t *testing.T) {
                                     "prefix":"/"
                                  },
                                  "route":{
-                                    "cluster":"%s"
+                                    "cluster":"%s",
+                                    "timeout":"15s"
                                  }
                               }
                            ]
@@ -1007,7 +1011,8 @@ func TestFetchListeners(t *testing.T) {
                                     "prefix":"/"
                                  },
                                  "route":{
-                                    "cluster":"%s"
+                                    "cluster":"%s",
+                                    "timeout":"15s"
                                  }
                               }
                            ]
@@ -1189,7 +1194,8 @@ func TestFetchListeners(t *testing.T) {
                                     "prefix":"/"
                                  },
                                  "route":{
-                                    "cluster":"%s"
+                                    "cluster":"%s",
+                                    "timeout":"15s"
                                  }
                               }
                            ]
@@ -1347,7 +1353,8 @@ func TestFetchListeners(t *testing.T) {
                                     "prefix":"/"
                                  },
                                  "route":{
-                                    "cluster":"bookstore.endpoints.project123.cloud.goog_local"
+                                    "cluster":"bookstore.endpoints.project123.cloud.goog_local",
+                                    "timeout":"15s"
                                  }
                               }
                            ]
@@ -1508,7 +1515,7 @@ func TestDynamicBackendRouting(t *testing.T) {
 		}
 		gotListener = normalizeJson(gotListener, t)
 		if wantListener := normalizeJson(tc.wantedListener, t); gotListener != wantListener {
-			t.Errorf("Test Desc(%d): %s, snapshot cache fetch Listener,\n\tgot : %s,\n\twant: %s", i, tc.desc, gotListener, wantListener)
+			t.Errorf("Test Desc(%d): %s, snapshot cache fetch Listener,\n\t got : %s,\n\t want: %s", i, tc.desc, gotListener, wantListener)
 		}
 	}
 }

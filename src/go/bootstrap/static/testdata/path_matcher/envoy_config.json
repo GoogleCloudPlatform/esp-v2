@@ -147,7 +147,8 @@
                               "prefix": "/"
                             },
                             "route": {
-                              "cluster": "path-matcher.endpoints.apiproxy-231719.cloud.goog_local"
+                              "cluster": "path-matcher.endpoints.apiproxy-231719.cloud.goog_local",
+                              "timeout": "15s"
                             }
                           }
                         ]

@@ -34,7 +34,8 @@
                               "prefix": "/"
                             },
                             "route": {
-                              "cluster": "bookstore.endpoints.apiproxy-231719.cloud.goog_local"
+                              "cluster": "bookstore.endpoints.apiproxy-231719.cloud.goog_local",
+                              "timeout": "15s"
                             }
                           }
                         ]

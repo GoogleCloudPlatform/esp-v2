@@ -56,7 +56,7 @@ const (
 	TestHttp1Basic
 	TestHttp1JWT
 	TestInvalidOpenIDConnectDiscovery
-	TestLongDurationForDynamicRouting
+	TestDeadlinesForDynamicRouting
 	TestManagedServiceConfig
 	TestMultiGrpcServices
 	TestPreflightCorsWithBasicPreset

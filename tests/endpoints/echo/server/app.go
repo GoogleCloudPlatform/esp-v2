@@ -165,7 +165,7 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 // dynamicEoutingHandler reads URL from request header, and writes it back out.
 func dynamicRoutingHandler(w http.ResponseWriter, r *http.Request) {
 	// Handle sleeps
-	if r.URL.Path == "/sleep" {
+	if strings.Contains(r.URL.Path, "/sleep") {
 		sleepHandler(w, r)
 		return
 	}
