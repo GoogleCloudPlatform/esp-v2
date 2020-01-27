@@ -1216,14 +1216,6 @@
                                                             "cluster": "grpc-echo-oxouww7xzq-uc.a.run.app:443",
                                                             "hostRewrite": "grpc-echo-oxouww7xzq-uc.a.run.app"
                                                         }
-                                                    },
-                                                    {
-                                                        "match": {
-                                                            "prefix": "/"
-                                                        },
-                                                        "route": {
-                                                            "cluster": "esp-grpc-echo-oxouww7xzq-uc.a.run.app_local"
-                                                        }
                                                     }
                                                 ]
                                             }

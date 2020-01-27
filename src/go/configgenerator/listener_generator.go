@@ -129,27 +129,22 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	}
 
 	// Add Backend Auth filter and Backend Routing if needed.
-	if serviceInfo.RequiresBackendRouting {
-		if serviceInfo.Options.ServiceAccountKey != "" {
-			return nil, fmt.Errorf("ServiceAccountKey is set(proxy runs on Non-GCP) while backendRouting is not allowed on Non-GCP")
-		}
-		backendAuthFilter := makeBackendAuthFilter(serviceInfo)
-		if backendAuthFilter != nil {
-			httpFilters = append(httpFilters, backendAuthFilter)
-			jsonStr, _ := util.ProtoToJson(backendAuthFilter)
-			glog.Infof("adding Backend Auth Filter config: %v", jsonStr)
-		}
+	backendAuthFilter := makeBackendAuthFilter(serviceInfo)
+	if backendAuthFilter != nil {
+		httpFilters = append(httpFilters, backendAuthFilter)
+		jsonStr, _ := util.ProtoToJson(backendAuthFilter)
+		glog.Infof("adding Backend Auth Filter config: %v", jsonStr)
+	}
 
-		backendRoutingFilter, err := makeBackendRoutingFilter(serviceInfo)
-		if err != nil {
-			return nil, err
-		}
+	backendRoutingFilter, err := makeBackendRoutingFilter(serviceInfo)
+	if err != nil {
+		return nil, err
+	}
 
-		if backendRoutingFilter != nil {
-			httpFilters = append(httpFilters, backendRoutingFilter)
-			jsonStr, _ := util.ProtoToJson(backendRoutingFilter)
-			glog.Infof("adding Backend Routing Filter config: %v", jsonStr)
-		}
+	if backendRoutingFilter != nil {
+		httpFilters = append(httpFilters, backendRoutingFilter)
+		jsonStr, _ := util.ProtoToJson(backendRoutingFilter)
+		glog.Infof("adding Backend Routing Filter config: %v", jsonStr)
 	}
 
 	// Add Envoy Router filter so requests are routed upstream.

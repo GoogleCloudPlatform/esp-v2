@@ -1508,7 +1508,7 @@ func TestDynamicBackendRouting(t *testing.T) {
 		}
 		gotListener = normalizeJson(gotListener, t)
 		if wantListener := normalizeJson(tc.wantedListener, t); gotListener != wantListener {
-			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got Listener: %s,\n\t want: %s", i, tc.desc, gotListener, wantListener)
+			t.Errorf("Test Desc(%d): %s, snapshot cache fetch Listener,\n\tgot : %s,\n\twant: %s", i, tc.desc, gotListener, wantListener)
 		}
 	}
 }
