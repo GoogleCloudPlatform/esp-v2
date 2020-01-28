@@ -1,3 +1,10 @@
+# Release 2.3.0 28-01-2020
+
+- Use IAM with delegation in backend auth and service control
+- Support deadlines in BackendRule
+- Support grpc http2 for dynamic routing
+- Add trace events when checking service control cache
+
 # Release 2.2.0 22-01-2020
 
 - Fix bug in support for multiple services (APIs) in one service config
