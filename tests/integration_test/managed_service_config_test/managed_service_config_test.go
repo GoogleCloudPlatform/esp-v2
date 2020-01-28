@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
@@ -33,7 +34,7 @@ func TestManagedServiceConfig(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=managed", "--check_rollout_interval=1s"}
-	s := env.NewTestEnv(comp.TestManagedServiceConfig, "bookstore")
+	s := env.NewTestEnv(comp.TestManagedServiceConfig, platform.GrpcBookstoreSidecar)
 	s.SetEnvoyDrainTimeInSec(1)
 
 	s.OverrideAuthentication(&confpb.Authentication{

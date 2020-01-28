@@ -21,6 +21,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
@@ -46,7 +47,7 @@ func TestTranscodingServiceUnavailableError(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestTranscodingServiceUnavailableError, "bookstore")
+	s := env.NewTestEnv(comp.TestTranscodingServiceUnavailableError, platform.GrpcBookstoreSidecar)
 
 	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
@@ -83,7 +84,7 @@ func TestTranscodingErrors(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestTranscodingErrors, "bookstore")
+	s := env.NewTestEnv(comp.TestTranscodingErrors, platform.GrpcBookstoreSidecar)
 	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

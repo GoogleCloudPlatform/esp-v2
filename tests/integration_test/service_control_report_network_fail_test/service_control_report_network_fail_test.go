@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 
 	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
@@ -33,7 +34,7 @@ func TestServiceControlReportNetworkFail(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--service_control_report_retries=0"}
 
-	s := env.NewTestEnv(comp.TestServiceControlReportNetworkFail, "bookstore")
+	s := env.NewTestEnv(comp.TestServiceControlReportNetworkFail, platform.GrpcBookstoreSidecar)
 	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

@@ -21,6 +21,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
@@ -33,7 +34,7 @@ func TestServiceControlAPIKeyDefaultLocation(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlAPIKeyDefaultLocation, "echo")
+	s := env.NewTestEnv(comp.TestServiceControlAPIKeyDefaultLocation, platform.EchoSidecar)
 	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -109,7 +110,7 @@ func TestServiceControlAPIKeyCustomLocation(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlAPIKeyCustomLocation, "echo")
+	s := env.NewTestEnv(comp.TestServiceControlAPIKeyCustomLocation, platform.EchoSidecar)
 	s.OverrideSystemParameters(&confpb.SystemParameters{
 		Rules: []*confpb.SystemParameterRule{
 			{

@@ -20,6 +20,8 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
+
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
@@ -29,7 +31,7 @@ func TestServiceControlAccessToken(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlAccessToken, "echo")
+	s := env.NewTestEnv(comp.TestServiceControlAccessToken, platform.EchoSidecar)
 	serviceAccount := "ServiceAccount@google.com"
 	s.SetServiceControlIamServiceAccount(serviceAccount)
 	s.SetServiceControlIamDelegates("delegate_foo,delegate_bar,delegate_baz")

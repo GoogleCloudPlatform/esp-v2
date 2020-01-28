@@ -21,11 +21,12 @@ import (
 	"testing"
 	"time"
 
-	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 
-	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
+	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 func TestServiceControlCheckNetworkFail(t *testing.T) {
@@ -68,7 +69,7 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 		func() {
 			args := []string{"--service_config_id=" + configID,
 				"--backend_protocol=grpc", "--rollout_strategy=fixed"}
-			s := env.NewTestEnv(tc.allocatedPort, "bookstore")
+			s := env.NewTestEnv(tc.allocatedPort, platform.GrpcBookstoreSidecar)
 			s.ServiceControlServer.SetURL(tc.serviceControlURL)
 
 			defer s.TearDown()
@@ -105,7 +106,7 @@ func TestServiceControlCheckTimeout(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestServiceControlCheckTimeout, "bookstore")
+	s := env.NewTestEnv(comp.TestServiceControlCheckTimeout, platform.GrpcBookstoreSidecar)
 	s.ServiceControlServer.SetURL("http://wrong_service_control_server_name")
 	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
@@ -193,7 +194,7 @@ func TestServiceControlNetworkFailFlag(t *testing.T) {
 
 	for _, tc := range tests {
 		func() {
-			s := env.NewTestEnv(tc.port, "bookstore")
+			s := env.NewTestEnv(tc.port, platform.GrpcBookstoreSidecar)
 			s.ServiceControlServer.OverrideCheckHandler(&localServiceHandler{
 				m: s.ServiceControlServer,
 			})

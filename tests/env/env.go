@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/golang/glog"
 
@@ -42,18 +43,16 @@ var (
 
 type TestEnv struct {
 	testId                          uint16
-	enableDynamicRoutingBackend     bool
+	backend                         platform.Backend
 	useWrongBackendCert             bool
 	mockMetadata                    bool
 	enableScNetworkFailOpen         bool
-	backendService                  string
 	mockMetadataOverride            map[string]string
 	mockIamResps                    map[string]string
 	bookstoreServer                 *bookserver.BookstoreServer
 	grpcInteropServer               *components.GrpcInteropGrpcServer
 	grpcEchoServer                  *components.GrpcEchoGrpcServer
 	configMgr                       *components.ConfigManagerServer
-	dynamicRoutingBackend           *components.EchoHTTPServer
 	echoBackend                     *components.EchoHTTPServer
 	envoy                           *components.Envoy
 	fakeServiceConfig               *confpb.Service
@@ -72,16 +71,16 @@ type TestEnv struct {
 	FakeJwtService                  *components.FakeJwtService
 }
 
-func NewTestEnv(testId uint16, backendService string) *TestEnv {
+func NewTestEnv(testId uint16, backend platform.Backend) *TestEnv {
 	glog.Infof("Running test function #%v", testId)
 
-	fakeServiceConfig := testdata.SetupServiceConfig(backendService)
+	fakeServiceConfig := testdata.SetupServiceConfig(backend)
 
 	return &TestEnv{
 		testId:                      testId,
+		backend:                     backend,
 		mockMetadata:                true,
 		MockServiceManagementServer: components.NewMockServiceMrg(fakeServiceConfig.GetName(), fakeServiceConfig),
-		backendService:              backendService,
 		ports:                       components.NewPorts(testId),
 		fakeServiceConfig:           fakeServiceConfig,
 		ServiceControlServer:        components.NewMockServiceCtrl(fakeServiceConfig.GetName()),
@@ -121,16 +120,17 @@ func (e *TestEnv) SetServiceControlIamDelegates(delegates string) {
 	e.serviceControlIamDelegates = delegates
 }
 
-// OverrideBackend overrides mock backend.
-func (e *TestEnv) OverrideBackendService(newBackendService string) {
-	e.backendService = newBackendService
+// OverrideBackend overrides the mock backend only.
+// Warning: This will result in using the service config for the original backend,
+// even though the new backend is spun up.
+func (e *TestEnv) OverrideBackendService(backend platform.Backend) {
+	e.backend = backend
 }
 
-// EnableDynamicRoutingBackend enables dynamic routing backend server.
+// For use when dynamic routing is enabled.
 // By default, it uses same cert as Envoy for HTTPS calls. When useWrongBackendCert
 // is set to true, purposely fail HTTPS calls for testing.
-func (e *TestEnv) EnableDynamicRoutingBackend(useWrongBackendCert bool) {
-	e.enableDynamicRoutingBackend = true
+func (e *TestEnv) UseWrongBackendCertForDR(useWrongBackendCert bool) {
 	e.useWrongBackendCert = useWrongBackendCert
 }
 
@@ -335,8 +335,8 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		return err
 	}
 
-	switch e.backendService {
-	case "echo", "echoForDynamicRouting":
+	switch e.backend {
+	case platform.EchoSidecar:
 		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.BackendServerPort /*enableHttps=*/, false /*enableRootPathHandler=*/, false /*useAuthorizedBackendCert*/, false)
 		if err != nil {
 			return err
@@ -344,13 +344,21 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		if err := e.echoBackend.StartAndWait(); err != nil {
 			return err
 		}
-	case "bookstore":
+	case platform.EchoRemote:
+		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.DynamicRoutingBackendPort /*enableHttps=*/, true /*enableRootPathHandler=*/, true, e.useWrongBackendCert)
+		if err != nil {
+			return err
+		}
+		if err := e.echoBackend.StartAndWait(); err != nil {
+			return err
+		}
+	case platform.GrpcBookstoreSidecar:
 		e.bookstoreServer, err = bookserver.NewBookstoreServer(e.ports.BackendServerPort)
 		if err != nil {
 			return err
 		}
 		e.bookstoreServer.StartServer()
-	case "grpc-interop":
+	case platform.GrpcInteropSidecar:
 		e.grpcInteropServer, err = components.NewGrpcInteropGrpcServer(e.ports.BackendServerPort)
 		if err != nil {
 			return err
@@ -358,7 +366,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		if err := e.grpcInteropServer.StartAndWait(); err != nil {
 			return err
 		}
-	case "grpc-echo":
+	case platform.GrpcEchoSidecar:
 		e.grpcEchoServer, err = components.NewGrpcEchoGrpcServer(e.ports.BackendServerPort)
 		if err != nil {
 			return err
@@ -368,16 +376,6 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		}
 	default:
 		return fmt.Errorf("please specify the correct backend service name")
-	}
-
-	if e.enableDynamicRoutingBackend {
-		e.dynamicRoutingBackend, err = components.NewEchoHTTPServer(e.ports.DynamicRoutingBackendPort /*enableHttps=*/, true /*enableRootPathHandler=*/, true, e.useWrongBackendCert)
-		if err != nil {
-			return err
-		}
-		if err := e.dynamicRoutingBackend.StartAndWait(); err != nil {
-			return err
-		}
 	}
 
 	time.Sleep(setupWaitTime)
@@ -448,11 +446,6 @@ func (e *TestEnv) TearDown() {
 	if e.grpcEchoServer != nil {
 		if err := e.grpcEchoServer.StopAndWait(); err != nil {
 			glog.Errorf("error stopping GrpcEcho Server: %v", err)
-		}
-	}
-	if e.dynamicRoutingBackend != nil {
-		if err := e.dynamicRoutingBackend.StopAndWait(); err != nil {
-			glog.Errorf("error stopping Dynamic Routing Echo Server: %v", err)
 		}
 	}
 

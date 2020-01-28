@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -47,7 +48,7 @@ func TestTranscodingBindings(t *testing.T) {
 		wantGRPCWebTrailer client.GRPCWebTrailer
 	}
 
-	s := env.NewTestEnv(comp.TestTranscodingBindings, "bookstore")
+	s := env.NewTestEnv(comp.TestTranscodingBindings, platform.GrpcBookstoreSidecar)
 	s.OverrideAuthentication(&confpb.Authentication{
 		Rules: []*confpb.AuthenticationRule{},
 	})

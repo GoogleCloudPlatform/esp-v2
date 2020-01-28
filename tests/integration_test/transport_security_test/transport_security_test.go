@@ -62,7 +62,7 @@ func TestServiceManagementWithTLS(t *testing.T) {
 
 	for _, tc := range testData {
 		func() {
-			s := env.NewTestEnv(tc.port, "echo")
+			s := env.NewTestEnv(tc.port, platform.EchoSidecar)
 			defer s.TearDown()
 			serverCerts, err := comp.GenerateCert(tc.certPath, tc.keyPath)
 			if err != nil {
@@ -126,7 +126,7 @@ func TestServiceControlWithTLS(t *testing.T) {
 
 	for _, tc := range tests {
 		func() {
-			s := env.NewTestEnv(tc.port, "bookstore")
+			s := env.NewTestEnv(tc.port, platform.GrpcBookstoreSidecar)
 			defer s.TearDown()
 			serverCerts, err := comp.GenerateCert(tc.certPath, tc.keyPath)
 			if err != nil {

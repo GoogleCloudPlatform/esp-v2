@@ -21,6 +21,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/grpc_echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
@@ -34,8 +35,13 @@ func TestGRPCFallback(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestGRPCFallback, "bookstore")
-	s.OverrideBackendService("grpc-echo")
+	// Setup the service config for gRPC Bookstore.
+	s := env.NewTestEnv(comp.TestGRPCFallback, platform.GrpcBookstoreSidecar)
+
+	// But then spin up the gRPC Echo backend.
+	s.OverrideBackendService(platform.GrpcEchoSidecar)
+
+	// And modify the gRPC Bookstore service config to add a fallback path.
 	s.AppendApiMethods([]*apipb.Method{
 		{
 			Name: "Unspecified",

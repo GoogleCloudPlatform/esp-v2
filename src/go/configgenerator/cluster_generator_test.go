@@ -491,7 +491,7 @@ func TestMakeIamCluster(t *testing.T) {
 				},
 			},
 			backendProtocol: "grpc",
-			wantedCluster: nil,
+			wantedCluster:   nil,
 		},
 	}
 

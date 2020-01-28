@@ -21,6 +21,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
@@ -114,7 +115,7 @@ func TestReportGCPAttributes(t *testing.T) {
 			args = append(args, fmt.Sprintf("--compute_platform_override=%v", tc.platformOverride))
 		}
 		func() {
-			s := env.NewTestEnv(comp.TestReportGCPAttributes, "echo")
+			s := env.NewTestEnv(comp.TestReportGCPAttributes, platform.EchoSidecar)
 			s.OverrideMockMetadata(tc.mockMetadataOverride)
 
 			defer s.TearDown()

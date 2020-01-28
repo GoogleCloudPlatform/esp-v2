@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
@@ -34,7 +35,7 @@ func TestAsymmetricKeys(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestAsymmetricKeys, "bookstore")
+	s := env.NewTestEnv(comp.TestAsymmetricKeys, platform.GrpcBookstoreSidecar)
 	if err := s.FakeJwtService.SetupValidOpenId(); err != nil {
 		t.Fatalf("fail to setup open id servers: %v", err)
 	}
@@ -215,7 +216,7 @@ func TestInvalidOpenIDConnectDiscovery(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestInvalidOpenIDConnectDiscovery, "bookstore")
+	s := env.NewTestEnv(comp.TestInvalidOpenIDConnectDiscovery, platform.GrpcBookstoreSidecar)
 	if err := s.FakeJwtService.SetupInvalidOpenId(); err != nil {
 		t.Fatalf("fail to setup open id servers: %v", err)
 	}

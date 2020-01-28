@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
@@ -70,7 +71,7 @@ func TestAuthJwksCache(t *testing.T) {
 			args := []string{"--service_config_id=" + configId,
 				"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-			s := env.NewTestEnv(comp.TestAuthJwksCache, "echo")
+			s := env.NewTestEnv(comp.TestAuthJwksCache, platform.EchoSidecar)
 			if tc.jwksCacheDurationInS != 0 {
 				args = append(args, fmt.Sprintf("--jwks_cache_duration_in_s=%v", tc.jwksCacheDurationInS))
 			}

@@ -23,16 +23,17 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
+
+	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 func TestMultiGrpcServices(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID, "--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestMultiGrpcServices, "bookstore")
+	s := env.NewTestEnv(comp.TestMultiGrpcServices, platform.GrpcBookstoreSidecar)
 	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

@@ -37,8 +37,7 @@ var testDynamicRoutingArgs = []string{
 }
 
 func NewDynamicRoutingTestEnv(port uint16) *env.TestEnv {
-	s := env.NewTestEnv(port, "echoForDynamicRouting")
-	s.EnableDynamicRoutingBackend( /*useWrongBackendCert=*/ false)
+	s := env.NewTestEnv(port, platform.EchoRemote)
 	return s
 }
 
@@ -415,8 +414,8 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 
 func TestDynamicBackendRoutingTLS(t *testing.T) {
 
-	s := env.NewTestEnv(comp.TestDynamicBackendRoutingTLS, "echoForDynamicRouting")
-	s.EnableDynamicRoutingBackend( /*useWrongBackendCert=*/ true)
+	s := env.NewTestEnv(comp.TestDynamicBackendRoutingTLS, platform.EchoRemote)
+	s.UseWrongBackendCertForDR(true)
 	defer s.TearDown()
 
 	if err := s.Setup(testDynamicRoutingArgs); err != nil {

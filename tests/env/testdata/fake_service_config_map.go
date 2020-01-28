@@ -29,12 +29,12 @@ import (
 )
 
 var (
-	configMap = map[string]*scpb.Service{
-		"echo":                  FakeEchoConfig,
-		"echoForDynamicRouting": FakeEchoConfigForDynamicRouting,
-		"bookstore":             FakeBookstoreConfig,
-		"grpc-interop":          FakeGRPCInteropConfig,
-		"grpc-echo":             FakeGRPCEchoConfig,
+	configMap = map[platform.Backend]*scpb.Service{
+		platform.EchoSidecar:          FakeEchoConfig,
+		platform.EchoRemote:           FakeEchoConfigForDynamicRouting,
+		platform.GrpcBookstoreSidecar: FakeBookstoreConfig,
+		platform.GrpcInteropSidecar:   FakeGRPCInteropConfig,
+		platform.GrpcEchoSidecar:      FakeGRPCEchoConfig,
 	}
 )
 
@@ -58,25 +58,33 @@ func generateSourceInfo(addr string) (*scpb.SourceInfo, error) {
 	}, nil
 }
 
-func SetupServiceConfig(backendService string) *scpb.Service {
+func SetupServiceConfig(info platform.Backend) *scpb.Service {
 
 	var err error
-	serviceConfig := proto.Clone(configMap[backendService]).(*scpb.Service)
+	foundConfig, ok := configMap[info]
+	if !ok {
+		glog.Errorf("Could not find service config for backend: %+v", info)
+		return nil
+	}
 
-	switch backendService {
-	case "bookstore":
+	// Clone to prevent modifying the original in-memory service config.
+	serviceConfig := proto.Clone(foundConfig).(*scpb.Service)
+
+	// Setup the proto descriptor for gRPC backends.
+	switch info {
+	case platform.GrpcBookstoreSidecar:
 		serviceConfig.SourceInfo, err = generateSourceInfo(platform.GetFilePath(platform.FakeBookstoreConfig))
 		break
-	case "grpc-interop":
+	case platform.GrpcInteropSidecar:
 		serviceConfig.SourceInfo, err = generateSourceInfo(platform.GetFilePath(platform.FakeGRPCInteropConfig))
 		break
-	case "grpc-echo":
+	case platform.GrpcEchoSidecar:
 		serviceConfig.SourceInfo, err = generateSourceInfo(platform.GetFilePath(platform.FakeGRPCEchoConfig))
 		break
 	}
 
 	if err != nil {
-		glog.Errorf("fail to setup service config for %v, got err: %v", backendService, err)
+		glog.Errorf("fail to setup service config for %+v, got err: %v", info, err)
 		return nil
 	}
 

@@ -33,7 +33,7 @@ func TestGRPCStreaming(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestGRPCStreaming, "grpc-echo")
+	s := env.NewTestEnv(comp.TestGRPCStreaming, platform.GrpcEchoSidecar)
 	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -143,7 +143,7 @@ func TestGRPCLongStreaming(t *testing.T) {
 		"serviceruntime.googleapis.com/api/producer/streaming_response_message_counts",
 		"serviceruntime.googleapis.com/api/consumer/streaming_response_message_counts",
 	}
-	s := env.NewTestEnv(comp.TestGRPCLongStreaming, "grpc-echo")
+	s := env.NewTestEnv(comp.TestGRPCLongStreaming, platform.GrpcEchoSidecar)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

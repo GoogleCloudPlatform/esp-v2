@@ -46,7 +46,7 @@ func TestServiceControlAPIKeyRestriction(t *testing.T) {
 		"--rollout_strategy=fixed",
 	}
 
-	s := env.NewTestEnv(comp.TestServiceControlAPIKeyRestriction, "echo")
+	s := env.NewTestEnv(comp.TestServiceControlAPIKeyRestriction, platform.EchoSidecar)
 	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("failed to setup test env, %v", err)
@@ -140,7 +140,7 @@ func TestServiceControlAPIKeyIpRestriction(t *testing.T) {
 		"--envoy_xff_num_trusted_hops=1",
 	}
 
-	s := env.NewTestEnv(comp.TestServiceControlAPIKeyIpRestriction, "echo")
+	s := env.NewTestEnv(comp.TestServiceControlAPIKeyIpRestriction, platform.EchoSidecar)
 
 	defer s.TearDown()
 	if err := s.Setup(args); err != nil {

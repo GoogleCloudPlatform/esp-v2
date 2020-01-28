@@ -23,6 +23,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 
 	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
@@ -95,7 +96,7 @@ func TestServiceControlCheckTracesWithRetry(t *testing.T) {
 		"--service_control_check_retries=2",
 		"--service_control_check_timeout_ms=100",
 	}
-	s := env.NewTestEnv(comp.TestServiceControlCheckTracesWithRetry, "bookstore")
+	s := env.NewTestEnv(comp.TestServiceControlCheckTracesWithRetry, platform.GrpcBookstoreSidecar)
 	s.SetupFakeTraceServer()
 	handler := retryServiceHandler{
 		m: s.ServiceControlServer,
@@ -188,7 +189,7 @@ func TestServiceControlSkipUsageTraces(t *testing.T) {
 		"--suppress_envoy_headers",
 	}
 
-	s := env.NewTestEnv(comp.TestServiceControlSkipUsageTraces, "echo")
+	s := env.NewTestEnv(comp.TestServiceControlSkipUsageTraces, platform.EchoSidecar)
 	s.SetupFakeTraceServer()
 	s.AppendUsageRules(
 		[]*confpb.UsageRule{
@@ -250,7 +251,7 @@ func TestFetchingJwksTraces(t *testing.T) {
 		"--rollout_strategy=fixed",
 	}
 
-	s := env.NewTestEnv(comp.TestAsymmetricKeysTraces, "bookstore")
+	s := env.NewTestEnv(comp.TestAsymmetricKeysTraces, platform.GrpcBookstoreSidecar)
 
 	s.SetupFakeTraceServer()
 	s.OverrideAuthentication(&confpb.Authentication{

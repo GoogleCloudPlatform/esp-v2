@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 
 	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
@@ -50,7 +51,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--service_control_check_retries=2", "--service_control_check_timeout_ms=100"}
-	s := env.NewTestEnv(comp.TestServiceControlCheckRetry, "bookstore")
+	s := env.NewTestEnv(comp.TestServiceControlCheckRetry, platform.GrpcBookstoreSidecar)
 	handler := retryServiceHandler{
 		m: s.ServiceControlServer,
 	}
@@ -132,7 +133,7 @@ func TestServiceControlQuotaRetry(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--service_control_quota_retries=2", "--service_control_quota_timeout_ms=100"}
-	s := env.NewTestEnv(comp.TestServiceControlQuotaRetry, "bookstore")
+	s := env.NewTestEnv(comp.TestServiceControlQuotaRetry, platform.GrpcBookstoreSidecar)
 	s.OverrideQuota(&confpb.Quota{
 		MetricRules: []*confpb.MetricRule{
 			{
@@ -222,7 +223,7 @@ func TestServiceControlReportRetry(t *testing.T) {
 		// How long each report request waits before timing out (and possibly being retried)
 		"--service_control_report_timeout_ms=500",
 	}
-	s := env.NewTestEnv(comp.TestServiceControlReportRetry, "bookstore")
+	s := env.NewTestEnv(comp.TestServiceControlReportRetry, platform.GrpcBookstoreSidecar)
 
 	handler := retryServiceHandler{
 		m: s.ServiceControlServer,

@@ -21,6 +21,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
@@ -35,8 +36,7 @@ var testBackendAuthArgs = []string{
 }
 
 func NewBackendAuthTestEnv(port uint16) *env.TestEnv {
-	s := env.NewTestEnv(port, "echoForDynamicRouting")
-	s.EnableDynamicRoutingBackend( /*useWrongBackendCert=*/ false)
+	s := env.NewTestEnv(port, platform.EchoRemote)
 	return s
 }
 

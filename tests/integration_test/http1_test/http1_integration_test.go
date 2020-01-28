@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
@@ -38,7 +39,7 @@ func TestHttp1Basic(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--healthz=/healthz"}
 
-	s := env.NewTestEnv(comp.TestHttp1Basic, "echo")
+	s := env.NewTestEnv(comp.TestHttp1Basic, platform.EchoSidecar)
 	defer s.TearDown()
 
 	if err := s.Setup(args); err != nil {
@@ -110,7 +111,7 @@ func TestHttp1JWT(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--skip_service_control_filter=true", "--backend_protocol=http1", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestHttp1JWT, "echo")
+	s := env.NewTestEnv(comp.TestHttp1JWT, platform.EchoSidecar)
 	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

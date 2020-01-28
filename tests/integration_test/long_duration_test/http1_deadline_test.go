@@ -19,9 +19,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/glog"
+
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
-	"github.com/golang/glog"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
@@ -50,8 +52,7 @@ func TestDeadlinesForDynamicRouting(t *testing.T) {
 		"--suppress_envoy_headers",
 	}
 
-	s := env.NewTestEnv(comp.TestDeadlinesForDynamicRouting, "echoForDynamicRouting")
-	s.EnableDynamicRoutingBackend(false)
+	s := env.NewTestEnv(comp.TestDeadlinesForDynamicRouting, platform.EchoRemote)
 
 	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
