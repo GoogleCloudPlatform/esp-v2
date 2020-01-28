@@ -278,7 +278,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 						HttpUpstreamType: &corepb.HttpUri_Cluster{
 							Cluster: clusterName,
 						},
-						Timeout: &durationpb.Duration{Seconds: 5},
+						Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),
 					},
 					CacheDuration: &durationpb.Duration{
 						Seconds: int64(serviceInfo.Options.JwksCacheDurationInS),
@@ -448,23 +448,40 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		ServiceControlUri: &commonpb.HttpUri{
 			Uri:     serviceInfo.ServiceControlURI,
 			Cluster: util.ServiceControlClusterName,
-			Timeout: &durationpb.Duration{Seconds: 5},
+			Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),
 		},
 	}
 
-	switch serviceInfo.AccessToken.TokenType.(type) {
-	case *commonpb.AccessToken_RemoteToken:
-		filterConfig.AccessToken = &scpb.FilterConfig_ImdsToken{
-			ImdsToken: serviceInfo.AccessToken.GetRemoteToken(),
+	if serviceInfo.Options.ServiceControlCredentials != nil {
+		// Use access token fetched from Google Cloud IAM Server to talk to Service Controller
+		filterConfig.AccessToken = &scpb.FilterConfig_IamToken{
+			IamToken: &commonpb.IamTokenInfo{
+				IamUri: &commonpb.HttpUri{
+					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.IamURL, util.IamAccessTokenSuffix(serviceInfo.Options.ServiceControlCredentials.ServiceAccountEmail)),
+					Cluster: util.IamServerClusterName,
+					Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),
+				},
+				ServiceAccountEmail: serviceInfo.Options.ServiceControlCredentials.ServiceAccountEmail,
+				Delegates:           serviceInfo.Options.ServiceControlCredentials.Delegates,
+				AccessToken:         serviceInfo.AccessToken,
+			},
 		}
-		break
-	case *commonpb.AccessToken_ServiceAccountSecret:
-		filterConfig.AccessToken = &scpb.FilterConfig_ServiceAccountSecret{
-			ServiceAccountSecret: serviceInfo.AccessToken.GetServiceAccountSecret(),
+	} else {
+		// Use access token from fetched the Instance Metadata Server to talk to Service Controller
+		switch serviceInfo.AccessToken.TokenType.(type) {
+		case *commonpb.AccessToken_RemoteToken:
+			filterConfig.AccessToken = &scpb.FilterConfig_ImdsToken{
+				ImdsToken: serviceInfo.AccessToken.GetRemoteToken(),
+			}
+			break
+		case *commonpb.AccessToken_ServiceAccountSecret:
+			filterConfig.AccessToken = &scpb.FilterConfig_ServiceAccountSecret{
+				ServiceAccountSecret: serviceInfo.AccessToken.GetServiceAccountSecret(),
+			}
+			break
+		default:
+			break
 		}
-		break
-	default:
-		break
 	}
 
 	if serviceInfo.GcpAttributes != nil {
@@ -580,29 +597,26 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	backendAuthConfig := &bapb.FilterConfig{
 		Rules: rules,
 	}
-	if serviceInfo.Options.IamServiceAccount != "" {
+	if serviceInfo.Options.BackendAuthCredentials != nil {
 		backendAuthConfig.IdTokenInfo = &bapb.FilterConfig_IamToken{
 			IamToken: &commonpb.IamTokenInfo{
 				IamUri: &commonpb.HttpUri{
-					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.IamURL, util.IamIdentityTokenSuffix(serviceInfo.Options.IamServiceAccount)),
+					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.IamURL, util.IamIdentityTokenSuffix(serviceInfo.Options.BackendAuthCredentials.ServiceAccountEmail)),
 					Cluster: util.IamServerClusterName,
-					// TODO(taoxuy): make token_subscriber use this timeout
-					Timeout: &durationpb.Duration{Seconds: 5},
+					Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),
 				},
 				// Currently only support fetching access token from instance metadata
 				// server, not by service account file.
 				AccessToken:         serviceInfo.AccessToken,
-				ServiceAccountEmail: serviceInfo.Options.IamServiceAccount,
-			},
-		}
-
+				ServiceAccountEmail: serviceInfo.Options.BackendAuthCredentials.ServiceAccountEmail,
+				Delegates:           serviceInfo.Options.BackendAuthCredentials.Delegates,
+			}}
 	} else {
 		backendAuthConfig.IdTokenInfo = &bapb.FilterConfig_ImdsToken{
 			ImdsToken: &commonpb.HttpUri{
 				Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.MetadataURL, util.IdentityTokenSuffix),
 				Cluster: util.MetadataServerClusterName,
-				// TODO(taoxuy): make token_subscriber use this timeout
-				Timeout: &durationpb.Duration{Seconds: 5},
+				Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),
 			},
 		}
 	}

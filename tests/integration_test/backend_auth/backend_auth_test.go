@@ -148,7 +148,7 @@ func TestBackendAuthWithIamIdToken(t *testing.T) {
 	s := NewBackendAuthTestEnv(comp.TestBackendAuthWithIamIdToken)
 	serviceAccount := "fakeServiceAccount@google.com"
 
-	s.SetIamServiceAccount(serviceAccount)
+	s.SetBackendAuthIamServiceAccount(serviceAccount)
 	s.SetIamResps(
 		map[string]string{
 			fmt.Sprintf("%s?audience=https://localhost/bearertoken/constant", util.IamIdentityTokenSuffix(serviceAccount)): `{"token":  "id-token-for-constant"}`,
@@ -199,6 +199,63 @@ func TestBackendAuthWithIamIdToken(t *testing.T) {
 		gotResp := string(resp)
 		if !utils.JsonEqual(gotResp, tc.wantResp) {
 			t.Errorf("Test Desc(%s): want: %s, got: %s", tc.desc, tc.wantResp, gotResp)
+		}
+	}
+}
+
+func TestBackendAuthUsingIamIdTokenWithDelegates(t *testing.T) {
+	s := NewBackendAuthTestEnv(comp.TestBackendAuthUsingIamIdTokenWithDelegates)
+	serviceAccount := "fakeServiceAccount@google.com"
+
+	s.SetBackendAuthIamServiceAccount(serviceAccount)
+	s.SetBackendAuthIamDelegates("delegate_foo,delegate_bar,delegate_baz")
+
+	s.SetIamResps(
+		map[string]string{
+			fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateIdToken?audience=https://localhost/bearertoken/constant", serviceAccount): `{"token":  "id-token-for-constant"}`,
+		})
+
+	defer s.TearDown()
+	if err := s.Setup(testBackendAuthArgs); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	testData := []struct {
+		desc            string
+		method          string
+		path            string
+		message         string
+		wantReqBody     string
+		wantIamReqToken string
+		wantIamReqBody  string
+		wantResp        string
+	}{
+		{
+			desc:            "Use delegates when fetching identity token from IAM server",
+			method:          "GET",
+			path:            "/bearertoken/constant/42",
+			wantIamReqToken: "Bearer ya29.new",
+			wantIamReqBody:  `{"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar","projects/-/serviceAccounts/delegate_baz"]}`,
+		},
+	}
+
+	for _, tc := range testData {
+		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		_, err := client.DoWithHeaders(url, tc.method, tc.message, nil)
+		if err != nil {
+			t.Fatalf("Test Desc(%s): %v", tc.desc, err)
+		}
+
+		if iamReqToken, err := s.MockIamServer.GetRequestToken(); err != nil {
+			t.Errorf("Test Desc(%s): failed to get request header", tc.desc)
+		} else if tc.wantIamReqToken != iamReqToken {
+			t.Errorf("Test Desc(%s), different iam request token, wanted: %s, got: %s", tc.desc, tc.wantIamReqToken, iamReqToken)
+		}
+
+		if iamReqBody, err := s.MockIamServer.GetRequestBody(); err != nil {
+			t.Errorf("Test Desc(%s): failed to get request body", tc.desc)
+		} else if tc.wantIamReqBody != "" && tc.wantIamReqBody != iamReqBody {
+			t.Errorf("Test Desc(%s), different iam request body, want: %s, got: %s", tc.desc, tc.wantIamReqBody, iamReqBody)
 		}
 	}
 }

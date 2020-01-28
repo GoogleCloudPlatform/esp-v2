@@ -385,6 +385,7 @@ func TestBackendAuthFilter(t *testing.T) {
 		desc                  string
 		iamServiceAccount     string
 		fakeServiceConfig     *confpb.Service
+		delegates             []string
 		wantBackendAuthFilter string
 	}{
 		{
@@ -548,6 +549,7 @@ func TestBackendAuthFilter(t *testing.T) {
 		{
 			desc:              "Success, set iamIdToken when iam service account is set",
 			iamServiceAccount: "service-account@google.com",
+			delegates:         []string{"delegate_foo", "delegate_bar", "delegate_baz"},
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -586,6 +588,7 @@ func TestBackendAuthFilter(t *testing.T) {
             "timeout":"5s",
             "uri":"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/service-account@google.com:generateIdToken"
          },
+         "delegates":["delegate_foo","delegate_bar","delegate_baz"],
          "serviceAccountEmail":"service-account@google.com"
       },
       "rules":[
@@ -601,10 +604,16 @@ func TestBackendAuthFilter(t *testing.T) {
 	}
 
 	for i, tc := range testdata {
-
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = "grpc"
-		opts.IamServiceAccount = tc.iamServiceAccount
+		if tc.iamServiceAccount != "" {
+			opts.BackendAuthCredentials = &options.IAMCredentialsOptions{
+				ServiceAccountEmail: tc.iamServiceAccount,
+				TokenKind:           options.IDToken,
+				Delegates:           tc.delegates,
+			}
+		}
+
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)

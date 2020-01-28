@@ -424,16 +424,20 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 
 func TestMakeIamCluster(t *testing.T) {
 	testData := []struct {
-		desc              string
-		backendProtocol   string
-		iamServiceAccount string
-		fakeServiceConfig *confpb.Service
-		wantedCluster     *v2pb.Cluster
-		wantedError       string
+		desc                        string
+		backendProtocol             string
+		backendAuthIamCredential    *options.IAMCredentialsOptions
+		serviceControlIamCredential *options.IAMCredentialsOptions
+		fakeServiceConfig           *confpb.Service
+		wantedCluster               *v2pb.Cluster
+		wantedError                 string
 	}{
 		{
-			desc:              "Success, generate iam cluster when iam service acount is set",
-			iamServiceAccount: "service-account@google.com",
+			desc: "Success, generate iam cluster when backendAuthIamCredential is set",
+			backendAuthIamCredential: &options.IAMCredentialsOptions{
+				ServiceAccountEmail: "service-account@google.com",
+				Delegates:           nil,
+			},
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -453,7 +457,11 @@ func TestMakeIamCluster(t *testing.T) {
 			},
 		},
 		{
-			desc: "Success, not generate a iam cluster without iam service acount",
+			desc: "Success, generate iam cluster when serviceControlIamCredential is set",
+			serviceControlIamCredential: &options.IAMCredentialsOptions{
+				ServiceAccountEmail: "service-account@google.com",
+				Delegates:           nil,
+			},
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -463,13 +471,35 @@ func TestMakeIamCluster(t *testing.T) {
 				},
 			},
 			backendProtocol: "grpc",
+			wantedCluster: &v2pb.Cluster{
+				Name:                 util.IamServerClusterName,
+				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+				DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
+				ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_STRICT_DNS},
+				LoadAssignment:       util.CreateLoadAssignment("iamcredentials.googleapis.com", 443),
+				TransportSocket:      createTransportSocket("iamcredentials.googleapis.com"),
+			},
+		},
+		{
+			desc: "Success, not generate a iam cluster without any iam service credential",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+					},
+				},
+			},
+			backendProtocol: "grpc",
+			wantedCluster: nil,
 		},
 	}
 
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendProtocol = tc.backendProtocol
-		opts.IamServiceAccount = tc.iamServiceAccount
+		opts.BackendAuthCredentials = tc.backendAuthIamCredential
+		opts.ServiceControlCredentials = tc.serviceControlIamCredential
 
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
@@ -484,7 +514,7 @@ func TestMakeIamCluster(t *testing.T) {
 			}
 		}
 
-		if tc.wantedCluster != nil && !proto.Equal(cluster, tc.wantedCluster) {
+		if !proto.Equal(cluster, tc.wantedCluster) {
 			t.Errorf("Test Desc(%d): %s, makeBackendRoutingClusters\ngot: %v,\nwant: %v", i, tc.desc, cluster, tc.wantedCluster)
 		}
 	}

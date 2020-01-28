@@ -101,6 +101,10 @@ func IamIdentityTokenSuffix(IamServiceAccount string) string {
 	return fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateIdToken", IamServiceAccount)
 }
 
+func IamAccessTokenSuffix(IamServiceAccount string) string {
+	return fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateAccessToken", IamServiceAccount)
+}
+
 func ExtraAddressFromURI(jwksUri string) (string, error) {
 	_, hostname, port, _, err := ParseURI(jwksUri)
 	if err != nil {
