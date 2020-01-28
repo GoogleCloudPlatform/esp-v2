@@ -87,9 +87,11 @@ DEFINE_PROTO_FUZZER(const tests::fuzz::protos::IamTokenSubscriberInput& input) {
         [](const std::string&) {};
 
     // Class under test
-    IamTokenSubscriber subscriber(context, access_token_fn,
-                                  input.iam_service_cluster(),
-                                  input.iam_service_uri(), id_token_callback);
+    ::google::protobuf::RepeatedPtrField<std::string> delegates;
+    IamTokenSubscriber subscriber(
+        context, access_token_fn, input.iam_service_cluster(),
+        input.iam_service_uri(), Utils::IamTokenSubscriber::IdentityToken,
+        delegates, {}, id_token_callback);
     onReadyCallback();
 
   } catch (const ProtoValidationException& e) {

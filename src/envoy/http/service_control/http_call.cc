@@ -210,7 +210,8 @@ class HttpCallImpl : public HttpCall,
     message->headers().setPath(path_);
     message->headers().setHost(host_);
 
-    message->headers().setReferenceMethod(Http::Headers::get().MethodValues.Post);
+    message->headers().setReferenceMethod(
+        Http::Headers::get().MethodValues.Post);
 
     message->body() =
         std::make_unique<Buffer::OwnedImpl>(str_body_.data(), str_body_.size());

@@ -17,6 +17,7 @@
 #include "common/common/logger.h"
 #include "common/grpc/status.h"
 #include "google/protobuf/struct.pb.h"
+#include "google/protobuf/timestamp.pb.h"
 #include "google/protobuf/util/json_util.h"
 
 namespace Envoy {
@@ -35,6 +36,9 @@ class JsonStruct {
 
   ::google::protobuf::util::Status getInteger(const std::string& key,
                                               int* value);
+
+  ::google::protobuf::util::Status getTimestamp(
+      const std::string& key, ::google::protobuf::Timestamp* value);
 
  private:
   const ::google::protobuf::Struct& struct_;
