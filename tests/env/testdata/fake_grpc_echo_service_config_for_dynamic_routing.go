@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//      http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,7 @@
 package testdata
 
 var (
-	grpcEchoServiceConfigJsonStr = `{
+	grpcEchoForDynamicRoutingServiceConfigJsonStr = `{
   "producer_project_id": "producer-project",
   "name": "grpc-echo.endpoints.cloudesf-testing.cloud.goog",
   "title": "GRPC Echo Test",
@@ -918,6 +918,31 @@ var (
     "environment": "servicecontrol.googleapis.com"
   },
   "systemParameters": {
+  },
+	"backend": {
+    "rules": [
+      {
+        "selector": "test.grpc.Test.Echo",
+        "address": "grpc://localhost:-1/",
+        "jwtAudience": "jwt-aud",
+        "deadline": 10.0
+      },
+      {
+        "selector": "test.grpc.Test.EchoStream",
+        "address": "grpc://localhost:-1/",
+        "jwtAudience": "jwt-aud"
+      },
+      {
+        "selector": "test.grpc.Test.Cork",
+        "address": "grpc://localhost:-1/",
+        "jwtAudience": "jwt-aud"
+      },
+      {
+        "selector": "test.grpc.Test.EchoReport",
+        "address": "grpc://localhost:-1/",
+        "jwtAudience": "jwt-aud"
+      }
+    ]
   }
 }`
 )

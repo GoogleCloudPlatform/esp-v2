@@ -16,6 +16,7 @@ package long_duration_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -63,33 +64,31 @@ func TestDeadlinesForDynamicRouting(t *testing.T) {
 		desc           string
 		reqDuration    time.Duration
 		deadlineToTest ConfiguredDeadline
-		wantErr        bool
+		wantErr        string
 	}{
 		// Please be cautious about adding too many time-based tests here.
 		// This can slow down our CI system if we sleep for too long.
 		{
-			desc:           "Success after 10s due to ESPv2 default timeout being 15s",
+			desc:           "Success after 10s due to ESPv2 default response timeout being 15s",
 			reqDuration:    time.Second * 10,
 			deadlineToTest: Default,
-			wantErr:        false,
 		},
 		{
-			desc:           "Fail before 20s due to ESPv2 default timeout being 15s",
+			desc:           "Fail before 20s due to ESPv2 default response timeout being 15s",
 			reqDuration:    time.Second * 20,
 			deadlineToTest: Default,
-			wantErr:        true,
+			wantErr:        "504 Gateway Timeout, upstream request timeout",
 		},
 		{
 			desc:           "Success after 2s due to user-configured deadline being 5s",
 			reqDuration:    time.Second * 2,
 			deadlineToTest: Short,
-			wantErr:        false,
 		},
 		{
 			desc:           "Fail before 8s due to user-configured deadline being 5s",
 			reqDuration:    time.Second * 8,
 			deadlineToTest: Short,
-			wantErr:        true,
+			wantErr:        "504 Gateway Timeout, upstream request timeout",
 		},
 	}
 
@@ -114,15 +113,81 @@ func TestDeadlinesForDynamicRouting(t *testing.T) {
 
 			_, err := client.DoWithHeaders(url, "GET", "", nil)
 
-			if !tc.wantErr && err != nil {
-				t.Errorf("Test (%s): failed, expected no err, got err: %v", tc.desc, err)
-				return
+			if tc.wantErr == "" && err != nil {
+				t.Errorf("Test (%s): failed, expected no err, got err (%v)", tc.desc, err)
 			}
 
-			if tc.wantErr && err == nil {
-				t.Errorf("Test (%s): failed, got no err, expected err", tc.desc)
-				return
+			if tc.wantErr != "" && err == nil {
+				t.Errorf("Test (%s): failed, got no err, expected err (%v)", tc.desc, tc.wantErr)
 			}
+
+			if err != nil && !strings.Contains(err.Error(), tc.wantErr) {
+				t.Errorf("Test (%s): failed, got err (%v), expected err (%v)", tc.desc, err, tc.wantErr)
+			}
+
+		}()
+	}
+}
+
+// Tests the default deadline in the catch-all HTTP/1.x backend (no streaming).
+func TestDeadlinesForCatchAllBackend(t *testing.T) {
+	args := []string{
+		"--service_config_id=test-config-id",
+		"--backend_protocol=http1",
+		"--rollout_strategy=fixed",
+		"--backend_dns_lookup_family=v4only",
+		"--suppress_envoy_headers",
+	}
+
+	s := env.NewTestEnv(comp.TestDeadlinesForCatchAllBackend, platform.EchoSidecar)
+
+	defer s.TearDown()
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	testData := []struct {
+		desc        string
+		reqDuration time.Duration
+		wantErr     string
+	}{
+		// Please be cautious about adding too many time-based tests here.
+		// This can slow down our CI system if we sleep for too long.
+		{
+			desc:        "Success after 10s due to ESPv2 default response timeout being 15s",
+			reqDuration: time.Second * 10,
+		},
+		{
+			desc:        "Fail before 20s due to ESPv2 default response timeout being 15s",
+			reqDuration: time.Second * 20,
+			wantErr:     "504 Gateway Timeout, upstream request timeout",
+		},
+	}
+
+	for _, tc := range testData {
+
+		// Place in closure to allow efficient measuring of elapsed time.
+		// Elapsed time is not checked in the test, it's just for debugging.
+		func() {
+			defer elapsed(fmt.Sprintf("Test (%s):", tc.desc))()
+
+			path := fmt.Sprintf("/sleep?duration=%v", tc.reqDuration.String())
+			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, path)
+
+			_, err := client.DoWithHeaders(url, "GET", "", nil)
+
+			if tc.wantErr == "" && err != nil {
+				t.Errorf("Test (%s): failed, expected no err, got err (%v)", tc.desc, err)
+			}
+
+			if tc.wantErr != "" && err == nil {
+				t.Errorf("Test (%s): failed, got no err, expected err (%v)", tc.desc, tc.wantErr)
+			}
+
+			if err != nil && !strings.Contains(err.Error(), tc.wantErr) {
+				t.Errorf("Test (%s): failed, got err (%v), expected err (%v)", tc.desc, err, tc.wantErr)
+			}
+
 		}()
 	}
 }
