@@ -29,7 +29,7 @@
                     ]
                 },
                 "name": "esp-grpc-echo-oxouww7xzq-uc.a.run.app_local",
-                "type": "STRICT_DNS"
+                "type": "LOGICAL_DNS"
             },
             {
                 "connectTimeout": "20s",
@@ -208,21 +208,14 @@
                                                         "operation": "test.grpc.Test.Echo",
                                                         "pattern": {
                                                             "httpMethod": "POST",
-                                                            "uriTemplate": "/test.grpc.Test/Echo"
+                                                            "uriTemplate": "/echo"
                                                         }
                                                     },
                                                     {
                                                         "operation": "test.grpc.Test.Echo",
                                                         "pattern": {
                                                             "httpMethod": "POST",
-                                                            "uriTemplate": "/echo"
-                                                        }
-                                                    },
-                                                    {
-                                                        "operation": "test.grpc.Test.EchoReport",
-                                                        "pattern": {
-                                                            "httpMethod": "POST",
-                                                            "uriTemplate": "/test.grpc.Test/EchoReport"
+                                                            "uriTemplate": "/test.grpc.Test/Echo"
                                                         }
                                                     },
                                                     {
@@ -233,10 +226,10 @@
                                                         }
                                                     },
                                                     {
-                                                        "operation": "test.grpc.Test.EchoStream",
+                                                        "operation": "test.grpc.Test.EchoReport",
                                                         "pattern": {
                                                             "httpMethod": "POST",
-                                                            "uriTemplate": "/test.grpc.Test/EchoStream"
+                                                            "uriTemplate": "/test.grpc.Test/EchoReport"
                                                         }
                                                     },
                                                     {
@@ -244,6 +237,13 @@
                                                         "pattern": {
                                                             "httpMethod": "POST",
                                                             "uriTemplate": "/echostream"
+                                                        }
+                                                    },
+                                                    {
+                                                        "operation": "test.grpc.Test.EchoStream",
+                                                        "pattern": {
+                                                            "httpMethod": "POST",
+                                                            "uriTemplate": "/test.grpc.Test/EchoStream"
                                                         }
                                                     }
                                                 ],
@@ -1136,22 +1136,6 @@
                                                                     "name": ":method"
                                                                 }
                                                             ],
-                                                            "path": "/test.grpc.Test/Echo"
-                                                        },
-                                                        "route": {
-                                                            "cluster": "grpc-echo-oxouww7xzq-uc.a.run.app:443",
-                                                            "hostRewrite": "grpc-echo-oxouww7xzq-uc.a.run.app",
-                                                            "timeout": "300s"
-                                                        }
-                                                    },
-                                                    {
-                                                        "match": {
-                                                            "headers": [
-                                                                {
-                                                                    "exactMatch": "POST",
-                                                                    "name": ":method"
-                                                                }
-                                                            ],
                                                             "path": "/echo"
                                                         },
                                                         "route": {
@@ -1168,7 +1152,7 @@
                                                                     "name": ":method"
                                                                 }
                                                             ],
-                                                            "path": "/test.grpc.Test/EchoReport"
+                                                            "path": "/test.grpc.Test/Echo"
                                                         },
                                                         "route": {
                                                             "cluster": "grpc-echo-oxouww7xzq-uc.a.run.app:443",
@@ -1200,7 +1184,23 @@
                                                                     "name": ":method"
                                                                 }
                                                             ],
-                                                            "path": "/test.grpc.Test/EchoStream"
+                                                            "path": "/test.grpc.Test/EchoReport"
+                                                        },
+                                                        "route": {
+                                                            "cluster": "grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                                                            "hostRewrite": "grpc-echo-oxouww7xzq-uc.a.run.app",
+                                                            "timeout": "300s"
+                                                        }
+                                                    },
+                                                    {
+                                                        "match": {
+                                                            "headers": [
+                                                                {
+                                                                    "exactMatch": "POST",
+                                                                    "name": ":method"
+                                                                }
+                                                            ],
+                                                            "path": "/echostream"
                                                         },
                                                         "route": {
                                                             "cluster": "grpc-echo-oxouww7xzq-uc.a.run.app:443",
@@ -1216,7 +1216,7 @@
                                                                     "name": ":method"
                                                                 }
                                                             ],
-                                                            "path": "/echostream"
+                                                            "path": "/test.grpc.Test/EchoStream"
                                                         },
                                                         "route": {
                                                             "cluster": "grpc-echo-oxouww7xzq-uc.a.run.app:443",

@@ -45,6 +45,11 @@ func createTransportSocket(hostname string) *corepb.TransportSocket {
 	return transportSocket
 }
 
+func createH2TransportSocket(hostname string) *corepb.TransportSocket {
+	transportSocket, _ := util.CreateTransportSocket(hostname, util.DefaultRootCAPaths, []string{"h2"})
+	return transportSocket
+}
+
 func TestMakeServiceControlCluster(t *testing.T) {
 	testData := []struct {
 		desc              string
@@ -203,7 +208,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 				Name: testProjectName,
 				Apis: []*apipb.Api{
 					{
-						Name: "http://1.cloudesf_testing_cloud_goog",
+						Name: "1.cloudesf_testing_cloud_goog",
 						Methods: []*apipb.Method{
 							{
 								Name: "Foo",
@@ -241,6 +246,284 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 80),
+				},
+			},
+		},
+		{
+			desc: "Success for mixed http, https, http1, http1s, http2, http2s backends",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+							{
+								Name: "Bar",
+							},
+						},
+					},
+					{
+						Name: "2.cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+							{
+								Name: "Bar",
+							},
+						},
+					},
+					{
+						Name: "3.cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+							{
+								Name: "Bar",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/v1/shelves",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "http://mybackend_http.com",
+							Selector: "1.cloudesf_testing_cloud_goog.Foo",
+						},
+						{
+							Address:  "https://mybackend_https.com",
+							Selector: "1.cloudesf_testing_cloud_goog.Bar",
+						},
+						{
+							Address:  "http1://mybackend_http1.com",
+							Selector: "2.cloudesf_testing_cloud_goog.Foo",
+						},
+						{
+							Address:  "http1s://mybackend_http1s.com",
+							Selector: "2.cloudesf_testing_cloud_goog.Bar",
+						},
+						{
+							Address:  "http2://mybackend_http2.com",
+							Selector: "3.cloudesf_testing_cloud_goog.Foo",
+						},
+						{
+							Address:  "http2s://mybackend_http2s.com",
+							Selector: "3.cloudesf_testing_cloud_goog.Bar",
+						},
+					},
+				},
+			},
+			backendProtocol: "http1",
+			wantedClusters: []*v2pb.Cluster{
+				{
+					Name:                 "mybackend_http.com:80",
+					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					LoadAssignment:       util.CreateLoadAssignment("mybackend_http.com", 80),
+				},
+				{
+					Name:                 "mybackend_https.com:443",
+					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					LoadAssignment:       util.CreateLoadAssignment("mybackend_https.com", 443),
+					TransportSocket:      createTransportSocket("mybackend_https.com"),
+				},
+				{
+					Name:                 "mybackend_http1.com:80",
+					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					LoadAssignment:       util.CreateLoadAssignment("mybackend_http1.com", 80),
+				},
+				{
+					Name:                 "mybackend_http1s.com:443",
+					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					LoadAssignment:       util.CreateLoadAssignment("mybackend_http1s.com", 443),
+					TransportSocket:      createTransportSocket("mybackend_http1s.com"),
+				},
+				{
+					Name:                 "mybackend_http2.com:80",
+					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					LoadAssignment:       util.CreateLoadAssignment("mybackend_http2.com", 80),
+					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{},
+				},
+				{
+					Name:                 "mybackend_http2s.com:443",
+					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					LoadAssignment:       util.CreateLoadAssignment("mybackend_http2s.com", 443),
+					TransportSocket:      createH2TransportSocket("mybackend_http2s.com"),
+					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{},
+				},
+			},
+		},
+		{
+			desc: "Success for grpcs backend",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+							{
+								Name: "Bar",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/v1/shelves",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpcs://mybackend.com",
+							Selector: "1.cloudesf_testing_cloud_goog.Foo",
+						},
+						{
+							Address:  "grpcs://mybackend.com",
+							Selector: "1.cloudesf_testing_cloud_goog.Bar",
+						},
+					},
+				},
+			},
+			backendProtocol: "http1",
+			wantedClusters: []*v2pb.Cluster{
+				{
+					Name:                 "mybackend.com:443",
+					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 443),
+					TransportSocket:      createH2TransportSocket("mybackend.com"),
+					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{},
+				},
+			},
+		},
+		{
+			desc: "Success for grpc backend",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/v1/shelves",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://mybackend.com",
+							Selector: "1.cloudesf_testing_cloud_goog.Foo",
+						},
+					},
+				},
+			},
+			backendProtocol: "http1",
+			wantedClusters: []*v2pb.Cluster{
+				{
+					Name:                 "mybackend.com:80",
+					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 80),
+					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{},
+				},
+			},
+		},
+		{
+			desc: "Success for mixed grpc and grpcs backends",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+							{
+								Name: "Bar",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/v1/shelves",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://mybackend_http.com",
+							Selector: "1.cloudesf_testing_cloud_goog.Foo",
+						},
+						{
+							Address:  "grpcs://mybackend_https.com",
+							Selector: "1.cloudesf_testing_cloud_goog.Bar",
+						},
+					},
+				},
+			},
+			backendProtocol: "http1",
+			wantedClusters: []*v2pb.Cluster{
+				{
+					Name:                 "mybackend_http.com:80",
+					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					LoadAssignment:       util.CreateLoadAssignment("mybackend_http.com", 80),
+					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{},
+				},
+				{
+					Name:                 "mybackend_https.com:443",
+					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					LoadAssignment:       util.CreateLoadAssignment("mybackend_https.com", 443),
+					TransportSocket:      createH2TransportSocket("mybackend_https.com"),
+					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{},
 				},
 			},
 		},

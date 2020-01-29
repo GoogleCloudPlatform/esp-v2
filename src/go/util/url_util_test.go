@@ -95,6 +95,70 @@ func TestParseURI(t *testing.T) {
 			wantURI:        "/path",
 		},
 		{
+			desc:           "successful for http1",
+			url:            "http1://abc.example.org",
+			wantedScheme:   "http1",
+			wantedHostname: "abc.example.org",
+			wantedPort:     80,
+			wantURI:        "",
+		},
+		{
+			desc:           "successful for http1s",
+			url:            "http1s://abc.example.org",
+			wantedScheme:   "http1s",
+			wantedHostname: "abc.example.org",
+			wantedPort:     443,
+			wantURI:        "",
+		},
+		{
+			desc:           "successful for http2",
+			url:            "http2://abc.example.org",
+			wantedScheme:   "http2",
+			wantedHostname: "abc.example.org",
+			wantedPort:     80,
+			wantURI:        "",
+		},
+		{
+			desc:           "successful for http2s",
+			url:            "http2s://abc.example.org",
+			wantedScheme:   "http2s",
+			wantedHostname: "abc.example.org",
+			wantedPort:     443,
+			wantURI:        "",
+		},
+		{
+			desc:           "successful for grpc",
+			url:            "grpc://abc.example.org",
+			wantedScheme:   "grpc",
+			wantedHostname: "abc.example.org",
+			wantedPort:     80,
+			wantURI:        "",
+		},
+		{
+			desc:           "successful for grpcs",
+			url:            "grpcs://abc.example.org",
+			wantedScheme:   "grpcs",
+			wantedHostname: "abc.example.org",
+			wantedPort:     443,
+			wantURI:        "",
+		},
+		{
+			desc:           "default port depends on last char",
+			url:            "r://abc.example.org",
+			wantedScheme:   "r",
+			wantedHostname: "abc.example.org",
+			wantedPort:     80,
+			wantURI:        "",
+		},
+		{
+			desc:           "default port depends on last char",
+			url:            "s://abc.example.org",
+			wantedScheme:   "s",
+			wantedHostname: "abc.example.org",
+			wantedPort:     443,
+			wantURI:        "",
+		},
+		{
 			desc:           "successful for https url with port and path in the same time",
 			url:            "https://abc.example.org:8000/path",
 			wantedScheme:   "https",
@@ -128,6 +192,114 @@ func TestParseURI(t *testing.T) {
 		}
 		if (err == nil && tc.wantErr != "") || (err != nil && err.Error() != tc.wantErr) {
 			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, err, tc.wantErr)
+		}
+	}
+}
+
+func TestParseBackendProtocol(t *testing.T) {
+	testData := []struct {
+		desc        string
+		proto       string
+		wantedProto BackendProtocol
+		wantedTLS   bool
+		wantErr     string
+	}{
+		{
+			desc:        "Good scheme: http",
+			proto:       "http",
+			wantedProto: HTTP1,
+			wantedTLS:   false,
+			wantErr:     "",
+		},
+		{
+			desc:        "Good scheme: https",
+			proto:       "https",
+			wantedProto: HTTP1,
+			wantedTLS:   true,
+			wantErr:     "",
+		},
+		{
+			desc:        "Good scheme: http1",
+			proto:       "http1",
+			wantedProto: HTTP1,
+			wantedTLS:   false,
+			wantErr:     "",
+		},
+		{
+			desc:        "Good scheme: http1s",
+			proto:       "http1s",
+			wantedProto: HTTP1,
+			wantedTLS:   true,
+			wantErr:     "",
+		},
+		{
+			desc:        "Good scheme: http2",
+			proto:       "http2",
+			wantedProto: HTTP2,
+			wantedTLS:   false,
+			wantErr:     "",
+		},
+		{
+			desc:        "Good scheme: http2s",
+			proto:       "http2s",
+			wantedProto: HTTP2,
+			wantedTLS:   true,
+			wantErr:     "",
+		},
+		{
+			desc:        "Good scheme: grpc",
+			proto:       "grpc",
+			wantedProto: GRPC,
+			wantedTLS:   false,
+			wantErr:     "",
+		},
+		{
+			desc:        "Good scheme: grpcs",
+			proto:       "grpcs",
+			wantedProto: GRPC,
+			wantedTLS:   true,
+			wantErr:     "",
+		},
+		{
+			desc:        "Good scheme: Upper case GRPC",
+			proto:       "GRPC",
+			wantedProto: GRPC,
+			wantedTLS:   false,
+			wantErr:     "",
+		},
+		{
+			desc:        "Good scheme: upper case GRPCS",
+			proto:       "GRPCS",
+			wantedProto: GRPC,
+			wantedTLS:   true,
+			wantErr:     "",
+		},
+		{
+			desc:        "Wrong scheme: rrr",
+			proto:       "rrr",
+			wantedProto: HTTP1,
+			wantedTLS:   false,
+			wantErr:     `unknown backend protocol [rrr], should be one of "grpc", "http", "http1" or "http2"`,
+		},
+		{
+			desc:        "Wrong scheme: empty",
+			proto:       "",
+			wantedProto: HTTP1,
+			wantedTLS:   false,
+			wantErr:     `unknown backend protocol [], should be one of "grpc", "http", "http1" or "http2"`,
+		},
+	}
+
+	for i, tc := range testData {
+		proto, tls, err := ParseBackendProtocol(tc.proto)
+		if proto != tc.wantedProto {
+			t.Errorf("Test Desc(%d): %s, proto is wrong, got: %v, want: %v", i, tc.desc, proto, tc.wantedProto)
+		}
+		if tls != tc.wantedTLS {
+			t.Errorf("Test Desc(%d): %s, TLS is wrong, got: %v, want: %v", i, tc.desc, tls, tc.wantedTLS)
+		}
+		if (err == nil && tc.wantErr != "") || (err != nil && err.Error() != tc.wantErr) {
+			t.Errorf("Test Desc(%d): %s, error is wrong, got: %v, want: %v", i, tc.desc, err, tc.wantErr)
 		}
 	}
 }

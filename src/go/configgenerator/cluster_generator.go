@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
@@ -31,7 +32,7 @@ import (
 // This must be called before MakeListeners.
 func MakeClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, error) {
 	var clusters []*v2pb.Cluster
-	backendCluster, err := makeBackendCluster(serviceInfo)
+	backendCluster, err := makeCatchAllBackendCluster(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -195,18 +196,50 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, erro
 	return providerClusters, nil
 }
 
-func makeBackendCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
-	connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
+func makeBackendCluster(opt *options.ConfigGeneratorOptions, brc *sc.BackendRoutingCluster) (*v2pb.Cluster, error) {
 	c := &v2pb.Cluster{
-		Name:                 serviceInfo.BackendClusterName(),
+		Name:                 brc.ClusterName,
 		LbPolicy:             v2pb.Cluster_ROUND_ROBIN,
-		ConnectTimeout:       connectTimeoutProto,
-		ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_STRICT_DNS},
-		LoadAssignment:       util.CreateLoadAssignment(serviceInfo.Options.ClusterAddress, uint32(serviceInfo.Options.ClusterPort)),
+		ConnectTimeout:       ptypes.DurationProto(opt.ClusterConnectTimeout),
+		ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+		LoadAssignment:       util.CreateLoadAssignment(brc.Hostname, brc.Port),
 	}
-	// gRPC and HTTP/2 need this configuration.
-	if serviceInfo.BackendProtocol != util.HTTP1 {
+	isHttp2 := brc.Protocol != util.HTTP1
+
+	if brc.UseTLS {
+		var alpnProtocols []string
+		if isHttp2 {
+			alpnProtocols = []string{"h2"}
+		}
+		transportSocket, err := util.CreateTransportSocket(brc.Hostname, opt.RootCertsPath, alpnProtocols)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
+				brc.ClusterName, err)
+		}
+		c.TransportSocket = transportSocket
+	}
+
+	if isHttp2 {
 		c.Http2ProtocolOptions = &corepb.Http2ProtocolOptions{}
+	}
+
+	switch opt.BackendDnsLookupFamily {
+	case "auto":
+		c.DnsLookupFamily = v2pb.Cluster_AUTO
+	case "v4only":
+		c.DnsLookupFamily = v2pb.Cluster_V4_ONLY
+	case "v6only":
+		c.DnsLookupFamily = v2pb.Cluster_V6_ONLY
+	default:
+		return nil, fmt.Errorf("Invalid DnsLookupFamily: %s; Only auto, v4only or v6only are valid.", opt.BackendDnsLookupFamily)
+	}
+	return c, nil
+}
+
+func makeCatchAllBackendCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
+	c, err := makeBackendCluster(&serviceInfo.Options, serviceInfo.CatchAllBackend)
+	if err != nil {
+		return nil, err
 	}
 	glog.Infof("Backend cluster configuration for service %s: %v", serviceInfo.Name, c)
 	return c, nil
@@ -257,45 +290,10 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, erro
 func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, error) {
 	var brClusters []*v2pb.Cluster
 
-	connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
 	for _, v := range serviceInfo.BackendRoutingClusters {
-		isHttp2 := serviceInfo.BackendProtocol != util.HTTP1
-
-		c := &v2pb.Cluster{
-			Name:                 v.ClusterName,
-			LbPolicy:             v2pb.Cluster_ROUND_ROBIN,
-			ConnectTimeout:       connectTimeoutProto,
-			ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
-			LoadAssignment:       util.CreateLoadAssignment(v.Hostname, v.Port),
-		}
-
-		//TODO(qiwzhang): support non-TLS Http2(currently it assumes http2 use TLS).
-		if v.TLSRequired {
-			var alpnProtocols []string
-			if isHttp2 {
-				alpnProtocols = []string{"h2"}
-			}
-			transportSocket, err := util.CreateTransportSocket(v.Hostname, serviceInfo.Options.RootCertsPath, alpnProtocols)
-			if err != nil {
-				return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
-					v.ClusterName, err)
-			}
-			c.TransportSocket = transportSocket
-		}
-
-		if isHttp2 {
-			c.Http2ProtocolOptions = &corepb.Http2ProtocolOptions{}
-		}
-
-		switch serviceInfo.Options.BackendDnsLookupFamily {
-		case "auto":
-			c.DnsLookupFamily = v2pb.Cluster_AUTO
-		case "v4only":
-			c.DnsLookupFamily = v2pb.Cluster_V4_ONLY
-		case "v6only":
-			c.DnsLookupFamily = v2pb.Cluster_V6_ONLY
-		default:
-			return nil, fmt.Errorf("Invalid DnsLookupFamily: %s; Only auto, v4only or v6only are valid.", serviceInfo.Options.BackendDnsLookupFamily)
+		c, err := makeBackendCluster(&serviceInfo.Options, v)
+		if err != nil {
+			return nil, err
 		}
 
 		brClusters = append(brClusters, c)

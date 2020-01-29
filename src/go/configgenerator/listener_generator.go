@@ -109,7 +109,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	}
 
 	// Add gRPC Transcoder filter and gRPCWeb filter configs for gRPC backend.
-	if serviceInfo.BackendProtocol == util.GRPC {
+	if serviceInfo.BackendIsGrpc {
 		transcoderFilter := makeTranscoderFilter(serviceInfo)
 		if transcoderFilter != nil {
 			httpFilters = append(httpFilters, transcoderFilter)

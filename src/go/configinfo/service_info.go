@@ -48,13 +48,14 @@ type ServiceInfo struct {
 	// Stores all methods info for this service, using selector as key.
 	Methods map[string]*methodInfo
 	// Stores information about backend clusters for re-routing.
-	BackendRoutingClusters []*backendRoutingCluster
+	BackendRoutingClusters []*BackendRoutingCluster
 	// Stores url segment names, mapping snake name to Json name.
 	SegmentNames []*pmpb.SegmentName
 
 	AllowCors         bool
+	BackendIsGrpc     bool
 	ServiceControlURI string
-	BackendProtocol   util.BackendProtocol
+	CatchAllBackend   *BackendRoutingCluster
 	GcpAttributes     *scpb.GcpAttributes
 	// Keep a pointer to original service config. Should always process rules
 	// inside ServiceInfo.
@@ -63,11 +64,12 @@ type ServiceInfo struct {
 	Options       options.ConfigGeneratorOptions
 }
 
-type backendRoutingCluster struct {
+type BackendRoutingCluster struct {
 	ClusterName string
-	TLSRequired bool
 	Hostname    string
 	Port        uint32
+	UseTLS      bool
+	Protocol    util.BackendProtocol
 }
 
 // NewServiceInfoFromServiceConfig returns an instance of ServiceInfo.
@@ -79,32 +81,27 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 		return nil, fmt.Errorf("service config must have one api at least")
 	}
 
-	var backendProtocol util.BackendProtocol
-	switch strings.ToLower(opts.BackendProtocol) {
-	case "http1":
-		backendProtocol = util.HTTP1
-	case "http2":
-		backendProtocol = util.HTTP2
-	case "grpc":
-		backendProtocol = util.GRPC
-	default:
-		return nil, fmt.Errorf(`unknown backend protocol, should be one of "grpc", "http1" or "http2"`)
-	}
-
 	serviceInfo := &ServiceInfo{
-		Name:            serviceConfig.GetName(),
-		ConfigID:        id,
-		serviceConfig:   serviceConfig,
-		BackendProtocol: backendProtocol,
-		Options:         opts,
+		Name:          serviceConfig.GetName(),
+		ConfigID:      id,
+		serviceConfig: serviceConfig,
+		Options:       opts,
+		Methods:       make(map[string]*methodInfo),
 	}
 
-	// check BackendRule to decide BackendProtocol
-	if err := serviceInfo.checkBackendRuleForProtocol(); err != nil {
+	// Calling order is required due to following variable usage
+	// * AllowCors:
+	//    set by: processEndpoints
+	//    used by: processHttpRule
+	// * BackendInfo map to MethodInfo
+	//    set by processApi
+	//    used by processBackendRule
+	// * BackendIsGrpc:
+	//     set by processBackendRule, buildCatchAllBackend
+	//     used by addGrpcHttpRules
+	if err := serviceInfo.buildCatchAllBackend(); err != nil {
 		return nil, err
 	}
-
-	// Order matters.
 	serviceInfo.processEndpoints()
 	serviceInfo.processApis()
 	serviceInfo.processQuota()
@@ -122,6 +119,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	}
 	serviceInfo.processAccessToken()
 	serviceInfo.processTypes()
+	serviceInfo.addGrpcHttpRules()
 
 	if err := serviceInfo.processEmptyJwksUriByOpenID(); err != nil {
 		return nil, err
@@ -134,6 +132,25 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	sort.Strings(serviceInfo.Operations)
 
 	return serviceInfo, nil
+}
+
+func (s *ServiceInfo) buildCatchAllBackend() error {
+	protocol, tls, err := util.ParseBackendProtocol(s.Options.BackendProtocol)
+	if err != nil {
+		return err
+	}
+	if protocol == util.GRPC {
+		s.BackendIsGrpc = true
+	}
+
+	s.CatchAllBackend = &BackendRoutingCluster{
+		UseTLS:      tls,
+		Protocol:    protocol,
+		ClusterName: s.BackendClusterName(),
+		Hostname:    s.Options.ClusterAddress,
+		Port:        uint32(s.Options.ClusterPort),
+	}
+	return nil
 }
 
 // Returns the pointer of the ServiceConfig that this API belongs to.
@@ -164,27 +181,34 @@ func (s *ServiceInfo) processEmptyJwksUriByOpenID() error {
 }
 
 func (s *ServiceInfo) processApis() {
-	s.Methods = make(map[string]*methodInfo)
 	for _, api := range s.serviceConfig.GetApis() {
 		s.ApiNames = append(s.ApiNames, api.Name)
 
 		for _, method := range api.GetMethods() {
-			mi := &methodInfo{
-				ShortName: method.GetName(),
-				ApiName:   api.GetName(),
+			selector := fmt.Sprintf("%s.%s", api.GetName(), method.GetName())
+			mi, _ := s.getOrCreateMethod(selector)
+			// Keep track of non-unary gRPC methods.
+			if method.RequestStreaming || method.ResponseStreaming {
+				mi.IsStreaming = true
 			}
-			if s.BackendProtocol == util.GRPC {
-				mi.HttpRule = append(mi.HttpRule, &commonpb.Pattern{
-					UriTemplate: fmt.Sprintf("/%s/%s", api.GetName(), method.GetName()),
-					HttpMethod:  util.POST,
-				})
+		}
+	}
+}
 
-				// Keep track of non-unary gRPC methods.
-				if method.RequestStreaming || method.ResponseStreaming {
-					mi.IsStreaming = true
-				}
-			}
-			s.Methods[fmt.Sprintf("%s.%s", api.GetName(), method.GetName())] = mi
+func (s *ServiceInfo) addGrpcHttpRules() {
+	// If there is not grpc backend, not to add grpc HttpRules
+	if !s.BackendIsGrpc {
+		return
+	}
+
+	for _, api := range s.serviceConfig.GetApis() {
+		for _, method := range api.GetMethods() {
+			selector := fmt.Sprintf("%s.%s", api.GetName(), method.GetName())
+			mi, _ := s.getOrCreateMethod(selector)
+			mi.HttpRule = append(mi.HttpRule, &commonpb.Pattern{
+				UriTemplate: fmt.Sprintf("/%s/%s", api.GetName(), method.GetName()),
+				HttpMethod:  util.POST,
+			})
 		}
 	}
 }
@@ -280,10 +304,6 @@ func addHttpRule(method *methodInfo, r *annotationspb.HttpRule, httpPathWithOpti
 }
 
 func (s *ServiceInfo) processHttpRule() error {
-	if s.BackendProtocol != util.GRPC && len(s.ServiceConfig().GetHttp().GetRules()) == 0 {
-		return fmt.Errorf("no HttpRules specified for the Http service %v", s.Name)
-	}
-
 	// An temporary map to record generated OPTION methods, to avoid duplication.
 	httpPathWithOptionsSet := make(map[string]bool)
 
@@ -375,56 +395,35 @@ func (s *ServiceInfo) addOptionMethod(apiName string, path string, backendInfo *
 	}
 }
 
-// check BackendRule to decide BackendProtocol
-func (s *ServiceInfo) checkBackendRuleForProtocol() error {
-	var firstScheme string
-	for _, r := range s.ServiceConfig().Backend.GetRules() {
-		if r.Address != "" {
-			scheme, hostname, _, _, err := util.ParseURI(r.Address)
-			if err != nil {
-				return err
-			}
-			if net.ParseIP(hostname) != nil {
-				return fmt.Errorf("dynamic routing only supports domain name, got IP address: %v", hostname)
-			}
-			if scheme != "https" && scheme != "grpc" && scheme != "http" {
-				return fmt.Errorf("dynamic routing only supports https/http/grpc scheme, found: %v", scheme)
-			}
-			// Make sure all backends not to mix grpc with http/https scheme
-			// https and http can use the same filter chain so they can be mixed
-			if firstScheme == "" {
-				firstScheme = scheme
-			} else if (firstScheme == "grpc") != (scheme == "grpc") {
-				return fmt.Errorf("dynamic routing could not mix grpc with http/https scheme, found: %v, %v", firstScheme, scheme)
-			}
-		}
-	}
-	if firstScheme == "grpc" {
-		s.BackendProtocol = util.GRPC
-	}
-	return nil
-}
-
 func (s *ServiceInfo) processBackendRule() error {
 	backendRoutingClustersMap := make(map[string]string)
 
 	for _, r := range s.ServiceConfig().Backend.GetRules() {
 		if r.Address != "" {
 			scheme, hostname, port, uri, err := util.ParseURI(r.Address)
+			if err != nil {
+				return err
+			}
+			if net.ParseIP(hostname) != nil {
+				return fmt.Errorf("dynamic routing only supports domain name, got IP address: %v", hostname)
+			}
 			address := fmt.Sprintf("%v:%v", hostname, port)
 
-			// TODO(taoxuy): In order to support mixing http and https,
-			// needs to pass scheme to backendRouteCluster so that
-			// makeBackendRoutingClusters knows if TLS is needed.
-			// Now TLS is always generated.
-
 			if _, exist := backendRoutingClustersMap[address]; !exist {
+				protocol, tls, err := util.ParseBackendProtocol(scheme)
+				if err != nil {
+					return err
+				}
+				if protocol == util.GRPC {
+					s.BackendIsGrpc = true
+				}
+
 				backendSelector := address
 				s.BackendRoutingClusters = append(s.BackendRoutingClusters,
-					&backendRoutingCluster{
+					&BackendRoutingCluster{
 						ClusterName: backendSelector,
-						//TODO(qiwzhang): support non-TLS Http2(currently it assumes http2 use TLS by default).
-						TLSRequired: scheme != "http",
+						UseTLS:      tls,
+						Protocol:    protocol,
 						Hostname:    hostname,
 						Port:        port,
 					})

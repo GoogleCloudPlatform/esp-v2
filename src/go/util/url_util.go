@@ -44,7 +44,7 @@ func ParseURI(uri string) (string, string, uint32, string, error) {
 	_, port, _ := net.SplitHostPort(u.Host)
 	if port == "" {
 		port = "443"
-		if u.Scheme == "http" {
+		if !strings.HasSuffix(u.Scheme, "s") {
 			port = "80"
 		}
 	}
@@ -54,6 +54,29 @@ func ParseURI(uri string) (string, string, uint32, string, error) {
 		return "", "", 0, "", err
 	}
 	return scheme, u.Hostname(), uint32(portVal), strings.TrimSuffix(u.RequestURI(), "/"), nil
+}
+
+// ParseBackendPreotocol parses a protocol string into BackendProtocl and UseTLS bool
+func ParseBackendProtocol(protocol string) (BackendProtocol, bool, error) {
+	protocol = strings.ToLower(protocol)
+	var tls bool
+	if strings.HasSuffix(protocol, "s") {
+		tls = true
+		protocol = strings.TrimSuffix(protocol, "s")
+	}
+
+	switch protocol {
+	case "http":
+		return HTTP1, tls, nil
+	case "http1":
+		return HTTP1, tls, nil
+	case "http2":
+		return HTTP2, tls, nil
+	case "grpc":
+		return GRPC, tls, nil
+	default:
+		return HTTP1, tls, fmt.Errorf(`unknown backend protocol [%v], should be one of "grpc", "http", "http1" or "http2"`, protocol)
+	}
 }
 
 // Note: the path of openID discovery may be https
