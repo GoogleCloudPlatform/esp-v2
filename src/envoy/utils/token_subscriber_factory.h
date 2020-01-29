@@ -15,6 +15,7 @@
 #pragma once
 
 #include "src/envoy/utils/iam_token_subscriber.h"
+#include "src/envoy/utils/service_account_token.h"
 #include "src/envoy/utils/token_subscriber.h"
 
 namespace Envoy {
@@ -38,6 +39,10 @@ class TokenSubscriberFactory {
       const ::google::protobuf::RepeatedPtrField<std::string>& delegates,
       const ::google::protobuf::RepeatedPtrField<std::string>& scopes,
       IamTokenSubscriber::TokenUpdateFunc callback) const PURE;
+
+  virtual ServiceAccountTokenPtr createServiceAccountTokenPtr(
+      const std::string& service_account_key, const std::string& audience,
+      ServiceAccountToken::TokenUpdateFunc callback) const PURE;
 };
 
 }  // namespace Utils

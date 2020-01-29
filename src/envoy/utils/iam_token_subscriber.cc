@@ -58,7 +58,8 @@ void insertStrListToProto(
     const absl::string_view& val_prefix) {
   Envoy::ProtobufWkt::Value vals;
   for (const auto& val : val_list) {
-    vals.mutable_list_value()->add_values()->set_string_value(absl::StrCat(val_prefix, val));
+    vals.mutable_list_value()->add_values()->set_string_value(
+        absl::StrCat(val_prefix, val));
   }
   (*body.mutable_struct_value()->mutable_fields())[key].Swap(&vals);
 }
