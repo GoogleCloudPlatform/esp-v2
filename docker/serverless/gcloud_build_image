@@ -37,14 +37,15 @@ done
 [[ -n "${CONFIG_ID}" ]] || error_exit "Missing required CONFIG_ID"
 echo "Using base image: ${BASE_IMAGE}"
 
-(
-set -x
 cd "$(mktemp -d /tmp/docker.XXXX)"
 
-gcloud endpoints configs describe "${CONFIG_ID}" --project="${PROJECT}" \
-  --service="${SERVICE}" --format=json > service.json \
+# Be careful about exposing the access token.
+curl --fail -o "service.json" -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  "https://servicemanagement.googleapis.com/v1/services/${SERVICE}/configs/${CONFIG_ID}?view=FULL" \
   || error_exit "Failed to download service config"
 
+(
+set -x
 
 cat <<EOF > Dockerfile
 FROM ${BASE_IMAGE}
