@@ -29,6 +29,9 @@ namespace Envoy {
 namespace Extensions {
 namespace Utils {
 
+// Required header when fetching from the iam server
+extern const Envoy::Http::LowerCaseString kAuthorizationKey;
+
 // `IamTokenSubscriber` class fetches id token from IAM server, and it depends
 // on access_token_.
 class IamTokenSubscriber

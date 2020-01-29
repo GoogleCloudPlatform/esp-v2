@@ -39,12 +39,7 @@ using ::testing::ReturnRef;
 
 class IamTokenSubscriberTest : public testing::Test {
  protected:
-  void SetUp() override {
-    EXPECT_CALL(access_token_fn_, Call())
-        .Times(1)
-        .WillRepeatedly(Return("access-token"));
-    setUp();
-  }
+  void SetUp() override {}
 
   void setUp() {
     Init::TargetHandlePtr init_target_handle;
@@ -56,7 +51,7 @@ class IamTokenSubscriberTest : public testing::Test {
     iam_token_sub_.reset(new IamTokenSubscriber(
         context_, access_token_fn_.AsStdFunction(), "token_cluster",
         "http://iam/uri_suffix", IamTokenSubscriber::IdentityToken, delegates_,
-        {}, id_token_callback_.AsStdFunction()));
+        scopes_, id_token_callback_.AsStdFunction()));
 
     raw_mock_client_ =
         std::make_unique<NiceMock<Envoy::Http::MockAsyncClient>>();
@@ -64,10 +59,11 @@ class IamTokenSubscriberTest : public testing::Test {
         .WillRepeatedly(ReturnRef(*raw_mock_client_));
     EXPECT_CALL(*raw_mock_client_, send_(_, _, _))
         .WillRepeatedly(
-            Invoke([this](const Envoy::Http::MessagePtr&,
+            Invoke([this](Envoy::Http::MessagePtr& message,
                           Envoy::Http::AsyncClient::Callbacks& callback,
                           const Envoy::Http::AsyncClient::RequestOptions&) {
               call_count_++;
+              message_.swap(message);
               client_callback_ = &callback;
               return nullptr;
             }));
@@ -81,14 +77,40 @@ class IamTokenSubscriberTest : public testing::Test {
     init_target_handle->initialize(init_watcher_);
   }
 
+  void checkRequestHeaders() {
+    EXPECT_EQ(message_->headers()
+                  .get(Envoy::Http::Headers::get().Method)
+                  ->value()
+                  .getStringView(),
+              "POST");
+    EXPECT_EQ(message_->headers()
+                  .get(Envoy::Http::Headers::get().Host)
+                  ->value()
+                  .getStringView(),
+              "iam");
+    EXPECT_EQ(message_->headers()
+                  .get(Envoy::Http::Headers::get().Path)
+                  ->value()
+                  .getStringView(),
+              "/uri_suffix");
+    EXPECT_EQ(
+        message_->headers().get(kAuthorizationKey)->value().getStringView(),
+        "Bearer access-token");
+  }
+
+  void checkRequestBody(const std::string& body_str) {
+    EXPECT_EQ(message_->bodyAsString(), body_str);
+  }
+
   bool init_ready_ = false;
   int call_count_ = 0;
-
+  ::google::protobuf::RepeatedPtrField<std::string> scopes_;
+  ::google::protobuf::RepeatedPtrField<std::string> delegates_;
   NiceMock<Init::ExpectableWatcherImpl> init_watcher_;
   NiceMock<MockFactoryContext> context_;
   MockFunction<std::string()> access_token_fn_;
-  const ::google::protobuf::RepeatedPtrField<std::string> delegates_;
   MockFunction<int(std::string)> id_token_callback_;
+  Envoy::Http::MessagePtr message_;
   Envoy::Http::AsyncClient::Callbacks* client_callback_{};
   std::unique_ptr<NiceMock<Envoy::Http::MockAsyncClient>> raw_mock_client_;
   IamTokenSubscriberPtr iam_token_sub_;
@@ -98,28 +120,19 @@ TEST_F(IamTokenSubscriberTest, EmptyAccessToken) {
   EXPECT_CALL(access_token_fn_, Call()).WillRepeatedly(Return(""));
   setUp();
 
-  // Not called on failure.
+  // the client_callback_ it not called.
   EXPECT_CALL(id_token_callback_, Call(_)).Times(0);
-  EXPECT_EQ(call_count_, 1);
-  EXPECT_EQ(init_ready_, false);
-
-  EXPECT_CALL(access_token_fn_, Call()).WillRepeatedly(Return("access-token"));
-
-  EXPECT_CALL(*raw_mock_client_, send_(_, _, _))
-      .Times(0)
-      .WillOnce(Invoke([this](const Envoy::Http::MessagePtr&,
-                              Envoy::Http::AsyncClient::Callbacks& callback,
-                              const Envoy::Http::AsyncClient::RequestOptions&) {
-        call_count_++;
-        client_callback_ = &callback;
-        return nullptr;
-      }));
-
+  EXPECT_EQ(call_count_, 0);
   EXPECT_EQ(init_ready_, false);
 }
 
 TEST_F(IamTokenSubscriberTest, CallOnTokenUpdateOnSuccess) {
+  EXPECT_CALL(access_token_fn_, Call())
+      .Times(1)
+      .WillRepeatedly(Return("access-token"));
   EXPECT_CALL(id_token_callback_, Call(std::string("id-token")));
+
+  setUp();
   EXPECT_EQ(call_count_, 1);
 
   Envoy::Http::HeaderMapImplPtr headers{new Envoy::Http::TestHeaderMapImpl{
@@ -137,16 +150,73 @@ TEST_F(IamTokenSubscriberTest, CallOnTokenUpdateOnSuccess) {
 
   client_callback_->onSuccess(std::move(response));
   EXPECT_EQ(init_ready_, true);
+  checkRequestHeaders();
 }
 
 TEST_F(IamTokenSubscriberTest, DoNotCallOnTokenUpdateOnFailure) {
-  // Not called on failure.
+  EXPECT_CALL(access_token_fn_, Call())
+      .Times(1)
+      .WillRepeatedly(Return("access-token"));
+  // the client_callback_ it not called.
   EXPECT_CALL(id_token_callback_, Call(_)).Times(0);
+  setUp();
   EXPECT_EQ(call_count_, 1);
 
   // Send a bad token
   client_callback_->onFailure(Envoy::Http::AsyncClient::FailureReason::Reset);
   EXPECT_EQ(init_ready_, true);
+  checkRequestHeaders();
+}
+
+TEST_F(IamTokenSubscriberTest, SetDelegatesAndScopes) {
+  scopes_.Add("scope_foo");
+  scopes_.Add("scope_bar");
+
+  delegates_.Add("delegate_foo");
+  delegates_.Add("delegate_bar");
+  EXPECT_CALL(access_token_fn_, Call())
+      .Times(1)
+      .WillRepeatedly(Return("access-token"));
+  // the client_callback_ it not called.
+  EXPECT_CALL(id_token_callback_, Call(_)).Times(0);
+  setUp();
+  EXPECT_EQ(call_count_, 1);
+
+  checkRequestHeaders();
+  checkRequestBody(
+      R"({"scope":["scope_foo","scope_bar"],"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar"]})");
+}
+
+TEST_F(IamTokenSubscriberTest, OnlySetDelegates) {
+  delegates_.Add("delegate_foo");
+  delegates_.Add("delegate_bar");
+  EXPECT_CALL(access_token_fn_, Call())
+      .Times(1)
+      .WillRepeatedly(Return("access-token"));
+  // the client_callback_ it not called.
+  EXPECT_CALL(id_token_callback_, Call(_)).Times(0);
+  setUp();
+  EXPECT_EQ(call_count_, 1);
+
+  checkRequestHeaders();
+  checkRequestBody(
+      R"({"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar"]})");
+}
+
+TEST_F(IamTokenSubscriberTest, OnlySetScopes) {
+  scopes_.Add("scope_foo");
+  scopes_.Add("scope_bar");
+
+  EXPECT_CALL(access_token_fn_, Call())
+      .Times(1)
+      .WillRepeatedly(Return("access-token"));
+  // the client_callback_ it not called.
+  EXPECT_CALL(id_token_callback_, Call(_)).Times(0);
+  setUp();
+  EXPECT_EQ(call_count_, 1);
+
+  checkRequestHeaders();
+  checkRequestBody(R"({"scope":["scope_foo","scope_bar"]})");
 }
 
 }  // namespace
