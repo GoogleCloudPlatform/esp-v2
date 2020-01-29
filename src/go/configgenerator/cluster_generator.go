@@ -261,23 +261,26 @@ func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, e
 	for _, v := range serviceInfo.BackendRoutingClusters {
 		isHttp2 := serviceInfo.BackendProtocol != util.HTTP1
 
-		var alpnProtocols []string
-		if isHttp2 {
-			alpnProtocols = []string{"h2"}
-		}
-		transportSocket, err := util.CreateTransportSocket(v.Hostname, serviceInfo.Options.RootCertsPath, alpnProtocols)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
-				v.ClusterName, err)
-		}
-
 		c := &v2pb.Cluster{
 			Name:                 v.ClusterName,
 			LbPolicy:             v2pb.Cluster_ROUND_ROBIN,
 			ConnectTimeout:       connectTimeoutProto,
 			ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
 			LoadAssignment:       util.CreateLoadAssignment(v.Hostname, v.Port),
-			TransportSocket:      transportSocket,
+		}
+
+		//TODO(qiwzhang): support non-TLS Http2(currently it assumes http2 use TLS).
+		if v.TLSRequired {
+			var alpnProtocols []string
+			if isHttp2 {
+				alpnProtocols = []string{"h2"}
+			}
+			transportSocket, err := util.CreateTransportSocket(v.Hostname, serviceInfo.Options.RootCertsPath, alpnProtocols)
+			if err != nil {
+				return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
+					v.ClusterName, err)
+			}
+			c.TransportSocket = transportSocket
 		}
 
 		if isHttp2 {

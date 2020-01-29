@@ -65,6 +65,7 @@ type ServiceInfo struct {
 
 type backendRoutingCluster struct {
 	ClusterName string
+	TLSRequired bool
 	Hostname    string
 	Port        uint32
 }
@@ -409,7 +410,7 @@ func (s *ServiceInfo) processBackendRule() error {
 
 	for _, r := range s.ServiceConfig().Backend.GetRules() {
 		if r.Address != "" {
-			_, hostname, port, uri, err := util.ParseURI(r.Address)
+			scheme, hostname, port, uri, err := util.ParseURI(r.Address)
 			address := fmt.Sprintf("%v:%v", hostname, port)
 
 			// TODO(taoxuy): In order to support mixing http and https,
@@ -422,6 +423,8 @@ func (s *ServiceInfo) processBackendRule() error {
 				s.BackendRoutingClusters = append(s.BackendRoutingClusters,
 					&backendRoutingCluster{
 						ClusterName: backendSelector,
+						//TODO(qiwzhang): support non-TLS Http2(currently it assumes http2 use TLS by default).
+						TLSRequired: scheme != "http",
 						Hostname:    hostname,
 						Port:        port,
 					})

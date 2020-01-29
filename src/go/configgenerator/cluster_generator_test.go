@@ -139,7 +139,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 		wantedError            string
 	}{
 		{
-			desc: "Success for HTTP backend",
+			desc: "Success for HTTPS backend",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -194,6 +194,53 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 443),
 					TransportSocket:      createTransportSocket("mybackend.com"),
+				},
+			},
+		},
+		{
+			desc: "Success for HTTP backend",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "http://1.cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/v1/shelves",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:         "http://mybackend.com",
+							Selector:        "1.cloudesf_testing_cloud_goog.Foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "mybackend.com",
+							},
+						},
+					},
+				},
+			},
+			backendProtocol: "http1",
+			wantedClusters: []*v2pb.Cluster{
+				{
+					Name:                 "mybackend.com:80",
+					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 80),
 				},
 			},
 		},
