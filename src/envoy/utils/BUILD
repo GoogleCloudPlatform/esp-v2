@@ -94,6 +94,7 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         ":iam_token_subscriber_lib",
+        ":service_account_token_lib",
         ":token_subscriber_lib",
     ],
 )

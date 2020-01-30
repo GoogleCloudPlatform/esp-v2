@@ -46,6 +46,13 @@ class TokenSubscriberFactoryImpl : public TokenSubscriberFactory {
         token_type, delegates, scopes, callback);
   }
 
+  ServiceAccountTokenPtr createServiceAccountTokenPtr(
+      const std::string& service_account_key, const std::string& audience,
+      ServiceAccountToken::TokenUpdateFunc callback) const override {
+    return std::make_unique<ServiceAccountToken>(context_,service_account_key, audience,
+                                                 callback);
+  };
+
  private:
   Envoy::Server::Configuration::FactoryContext& context_;
 };

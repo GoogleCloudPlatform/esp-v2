@@ -58,8 +58,8 @@ void ServiceControlCallImpl::createImdsTokenSub() {
 void ServiceControlCallImpl::createTokenGen() {
   const std::string service_control_auidence =
       filter_config_.service_control_uri().uri() + kServiceControlService;
-  sc_token_gen_ = std::make_unique<ServiceAccountToken>(
-      context_, filter_config_.service_account_secret().inline_string(),
+  sc_token_gen_ = token_subscriber_factory_.createServiceAccountTokenPtr(
+      filter_config_.service_account_secret().inline_string(),
       service_control_auidence, [this](const std::string& token) {
         TokenSharedPtr new_token = std::make_shared<std::string>(token);
         tls_->runOnAllThreads([this, new_token]() {
@@ -69,9 +69,9 @@ void ServiceControlCallImpl::createTokenGen() {
 
   const std::string quota_audience =
       filter_config_.service_control_uri().uri() + kQuotaControlService;
-  quota_token_gen_ = std::make_unique<ServiceAccountToken>(
-      context_, filter_config_.service_account_secret().inline_string(),
-      quota_audience, [this](const std::string& token) {
+  quota_token_gen_ = token_subscriber_factory_.createServiceAccountTokenPtr(
+      filter_config_.service_account_secret().inline_string(), quota_audience,
+      [this](const std::string& token) {
         TokenSharedPtr new_token = std::make_shared<std::string>(token);
         tls_->runOnAllThreads([this, new_token]() {
           tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
@@ -123,7 +123,6 @@ ServiceControlCallImpl::ServiceControlCallImpl(
     const Service& config, const FilterConfig& filter_config,
     Server::Configuration::FactoryContext& context)
     : config_(config),
-      context_(context),
       filter_config_(filter_config),
       token_subscriber_factory_(context),
       tls_(context.threadLocal().allocateSlot()) {

@@ -110,7 +110,6 @@ class ServiceControlCallImpl : public ServiceControlCall,
   void createIamTokenSub();
 
   const ::google::api::envoy::http::service_control::Service& config_;
-  Server::Configuration::FactoryContext& context_;
   const ::google::api::envoy::http::service_control::FilterConfig&
       filter_config_;
   std::unique_ptr<::google::api_proxy::service_control::RequestBuilder>
