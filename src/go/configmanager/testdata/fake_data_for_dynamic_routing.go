@@ -393,7 +393,9 @@ var (
                                        }
                                     ],
                                     "safeRegex":{
-                                      "googleRe2":{},
+                                      "googleRe2":{
+                                        "maxProgramSize":1000
+                                      },
                                       "regex":"/pet/[^\\/]+$"
                                     }
                                  },

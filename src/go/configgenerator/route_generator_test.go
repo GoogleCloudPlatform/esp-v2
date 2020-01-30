@@ -20,6 +20,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/proto"
 
 	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
@@ -81,7 +82,11 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 						MatchPattern: &matcher.StringMatcher_SafeRegex{
 							SafeRegex: &matcher.RegexMatcher{
 								EngineType: &matcher.RegexMatcher_GoogleRe2{
-									GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
+									GoogleRe2: &matcher.RegexMatcher_GoogleRE2{
+										MaxProgramSize: &wrapperspb.UInt32Value{
+											Value: util.GoogleRE2MaxProgramSize,
+										},
+									},
 								},
 								Regex: `^https?://.+\\.example\\.com$`,
 							},
@@ -102,7 +107,11 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 						MatchPattern: &matcher.StringMatcher_SafeRegex{
 							SafeRegex: &matcher.RegexMatcher{
 								EngineType: &matcher.RegexMatcher_GoogleRe2{
-									GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
+									GoogleRe2: &matcher.RegexMatcher_GoogleRE2{
+										MaxProgramSize: &wrapperspb.UInt32Value{
+											Value: util.GoogleRE2MaxProgramSize,
+										},
+									},
 								},
 								Regex: `^https?://.+\\.example\\.com$`,
 							},

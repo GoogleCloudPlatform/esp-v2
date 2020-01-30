@@ -88,6 +88,9 @@ var (
 						// "User" specified a shorter response timeout.
 						Name: "dynamic_routing_SleepDurationShort",
 					},
+					{
+						Name: "dynamic_routing_Re2ProgramSize",
+					},
 				},
 				Version: "1.0.0",
 			},
@@ -207,6 +210,17 @@ var (
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SleepDurationShort",
 					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/sleepShort",
+					},
+				},
+				{
+					// Regression endpoint for b/148606900.
+					// Envoy config validation will fail if the UriTemplate with path parameters is "too long" for regex parsing.
+					// Before the program size limit was increased, this would cause Envoy to never be healthy across multiple tests.
+					// Specifically, health checks would fail for all tests that relied on this entire backend.
+					// After increasing the initial limit, this URL should pass config validation.
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Re2ProgramSize",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/test/{path}/template/test/{path}/template/test/{path}/template/test/{path}/template/test/{path}/template",
 					},
 				},
 			},
@@ -453,6 +467,14 @@ var (
 						JwtAudience: "https://localhost/sleepShort",
 					},
 					Deadline: 5.0,
+				},
+				{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Re2ProgramSize",
+					Address:         "https://localhost:-1",
+					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+					Authentication: &confpb.BackendRule_JwtAudience{
+						JwtAudience: "https://localhost/non-existant-url",
+					},
 				},
 			},
 		},

@@ -102,7 +102,11 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*v2pb.RouteConfigurat
 					MatchPattern: &matcher.StringMatcher_SafeRegex{
 						SafeRegex: &matcher.RegexMatcher{
 							EngineType: &matcher.RegexMatcher_GoogleRe2{
-								GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
+								GoogleRe2: &matcher.RegexMatcher_GoogleRE2{
+									MaxProgramSize: &wrapperspb.UInt32Value{
+										Value: util.GoogleRE2MaxProgramSize,
+									},
+								},
 							},
 							Regex: orgReg,
 						},
@@ -194,7 +198,11 @@ func makeHttpRouteMatcher(httpRule *commonpb.Pattern) *routepb.RouteMatch {
 			PathSpecifier: &routepb.RouteMatch_SafeRegex{
 				SafeRegex: &matcher.RegexMatcher{
 					EngineType: &matcher.RegexMatcher_GoogleRe2{
-						GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
+						GoogleRe2: &matcher.RegexMatcher_GoogleRE2{
+							MaxProgramSize: &wrapperspb.UInt32Value{
+								Value: util.GoogleRE2MaxProgramSize,
+							},
+						},
 					},
 					Regex: re.ReplaceAllString(httpRule.UriTemplate, `[^\/]+`) + `$`,
 				},
