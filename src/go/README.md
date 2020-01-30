@@ -28,37 +28,11 @@ extra features specifically for APIs on Google Cloud Platform.
     (Note: currently ESPv2 doesn't support
     [Traffic Percentage Strategy](https://github.com/googleapis/googleapis/blob/master/google/api/servicemanagement/v1/resources.proto#L227))
 
-## Prerequisites:
+## Prerequisites
 
-Since Config Manager utilizes the open source go-control-plane, all
-[requirements](https://github.com/envoyproxy/go-control-plane#requirements) for
-go-control-plane need to be satisfied.
+Config Manager uses the [go.mod](../../go.mod) file to define all dependencies.
 
-## Usage:
+## Running
 
-To start the Config Manager on GCE instance, run(make sure your service
-is deployed):
-
-```shell
-go run src/go/configmanager/main/server.go \
-  --logtostderr -v 2 \
-  --service [YOUR_SERVICE_NAME] \
-  --service_config_id [YOUR_CONFIG_ID] \
-  --backend_protocol {grpc | http1 | http2}
-```
-
-if you want to enable glog, add "-log_dir=./log -v=2".
-
-You should see "config manager server is running at ......" if starting
-successfully.
-
-## Quick Test
-
-After starting the Config Manager, we have a simple gRPC test client running locally to fetch Listener Discovery Service(LDS)
-response from this Config Manager, just run:
-
-```shell
-go run tests/clients/lds_grpc_client.go --logtostderr
-```
-
-You can see and check the response.
+Config Manager depends on other local and remote services in order to run.
+It is recommended you run Config Manager from our docker image or integration tests instead.

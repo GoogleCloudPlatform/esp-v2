@@ -162,16 +162,16 @@ func DoCorsSimpleRequest(url, httpMethod, origin, msg string) (http.Header, erro
 		}
 		req, err = http.NewRequest("POST", url, &buf)
 	} else {
-		return nil, fmt.Errorf("DoCorsSimpleRequest only supports GET, HEAD and POST", err)
+		return nil, fmt.Errorf("DoCorsSimpleRequest only supports GET, HEAD and POST: %v", err)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("NewRequest got error: ", err)
+		return nil, fmt.Errorf("NewRequest got error: %v", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Origin", origin)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("http got error: ", err)
+		return nil, fmt.Errorf("http got error: %v", err)
 	}
 	defer resp.Body.Close()
 	return resp.Header, nil
@@ -180,7 +180,7 @@ func DoCorsSimpleRequest(url, httpMethod, origin, msg string) (http.Header, erro
 func DoCorsPreflightRequest(url, origin, requestMethod, requestHeader, referer string) (http.Header, error) {
 	req, err := http.NewRequest("OPTIONS", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("NewRequest got error: ", err)
+		return nil, fmt.Errorf("NewRequest got error: %v", err)
 	}
 	req.Header.Set("Origin", origin)
 	req.Header.Set("Access-Control-Request-Method", requestMethod)
@@ -192,7 +192,7 @@ func DoCorsPreflightRequest(url, origin, requestMethod, requestHeader, referer s
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("http got error: ", err)
+		return nil, fmt.Errorf("http got error: %v", err)
 	}
 	defer resp.Body.Close()
 	return resp.Header, nil

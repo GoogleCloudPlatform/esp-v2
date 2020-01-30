@@ -117,7 +117,7 @@ func sleepHandler(w http.ResponseWriter, r *http.Request) {
 
 	sleepDuration, err := time.ParseDuration(sleepDurationStr)
 	if err != nil {
-		errorf(w, http.StatusBadRequest, "Invalid duration: ", err)
+		errorf(w, http.StatusBadRequest, "Invalid duration: %v", err)
 		return
 	}
 
