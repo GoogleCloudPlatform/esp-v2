@@ -457,21 +457,14 @@ func TestFetchListeners(t *testing.T) {
                                  "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
                                  "pattern":{
                                     "httpMethod":"POST",
-                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                    "uriTemplate":"/v1/shelves/{shelf}"
                                  }
                               },
                               {
                                  "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
                                  "pattern":{
                                     "httpMethod":"POST",
-                                    "uriTemplate":"/v1/shelves/{shelf}"
-                                 }
-                              },
-                              {
-                                 "operation":"endpoints.examples.bookstore.Bookstore.ListShelves",
-                                 "pattern":{
-                                    "httpMethod":"POST",
-                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/ListShelves"
+                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
                                  }
                               },
                               {
@@ -479,6 +472,13 @@ func TestFetchListeners(t *testing.T) {
                                  "pattern":{
                                     "httpMethod":"GET",
                                     "uriTemplate":"/v1/shelves"
+                                 }
+                              },
+                              {
+                                 "operation":"endpoints.examples.bookstore.Bookstore.ListShelves",
+                                 "pattern":{
+                                    "httpMethod":"POST",
+                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/ListShelves"
                                  }
                               }
                            ]
@@ -662,14 +662,21 @@ func TestFetchListeners(t *testing.T) {
                               {
                                  "operation":"endpoints.examples.bookstore.Bookstore.DeleteBook",
                                  "pattern":{
-                                    "httpMethod":"POST",
-                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/DeleteBook"
+                                    "httpMethod":"DELETE",
+                                    "uriTemplate":"/v1/shelves/{shelf}/books/{book}"
                                  }
                               },
                               {
                                  "operation":"endpoints.examples.bookstore.Bookstore.DeleteBook",
                                  "pattern":{
-                                    "httpMethod":"DELETE",
+                                    "httpMethod":"POST",
+                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/DeleteBook"
+                                 }
+                              },
+                              {
+                                 "operation":"endpoints.examples.bookstore.Bookstore.GetBook",
+                                 "pattern":{
+                                    "httpMethod":"GET",
                                     "uriTemplate":"/v1/shelves/{shelf}/books/{book}"
                                  }
                               },
@@ -678,13 +685,6 @@ func TestFetchListeners(t *testing.T) {
                                  "pattern":{
                                     "httpMethod":"POST",
                                     "uriTemplate":"/endpoints.examples.bookstore.Bookstore/GetBook"
-                                 }
-                              },
-                              {
-                                 "operation":"endpoints.examples.bookstore.Bookstore.GetBook",
-                                 "pattern":{
-                                    "httpMethod":"GET",
-                                    "uriTemplate":"/v1/shelves/{shelf}/books/{book}"
                                  }
                               }
                            ]
@@ -894,13 +894,20 @@ func TestFetchListeners(t *testing.T) {
                                  "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
                                  "pattern":{
                                     "httpMethod":"POST",
-                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                    "uriTemplate":"/v1/shelves"
                                  }
                               },
                               {
                                  "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
                                  "pattern":{
                                     "httpMethod":"POST",
+                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                 }
+                              },
+                              {
+                                 "operation":"endpoints.examples.bookstore.Bookstore.ListShelves",
+                                 "pattern":{
+                                    "httpMethod":"GET",
                                     "uriTemplate":"/v1/shelves"
                                  }
                               },
@@ -909,13 +916,6 @@ func TestFetchListeners(t *testing.T) {
                                  "pattern":{
                                     "httpMethod":"POST",
                                     "uriTemplate":"/endpoints.examples.bookstore.Bookstore/ListShelves"
-                                 }
-                              },
-                              {
-                                 "operation":"endpoints.examples.bookstore.Bookstore.ListShelves",
-                                 "pattern":{
-                                    "httpMethod":"GET",
-                                    "uriTemplate":"/v1/shelves"
                                  }
                               }
                            ]

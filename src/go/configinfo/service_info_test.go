@@ -682,28 +682,6 @@ func TestMethods(t *testing.T) {
 			},
 		},
 		{
-			desc: "Fail for HTTP",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
-				Apis: []*apipb.Api{
-					{
-						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-						Methods: []*apipb.Method{
-							{
-								Name: "Echo",
-							},
-							{
-								Name: "Echo_Auth_Jwt",
-							},
-						},
-					},
-				},
-				Http: &annotationspb.Http{},
-			},
-			backendProtocol: "http2",
-			wantError:       fmt.Sprintf("no HttpRules specified for the Http service %v", testProjectName),
-		},
-		{
 			desc: "Succeed for HTTP, with OPTIONS, and AllowCors, with Healthz",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
@@ -802,10 +780,11 @@ func TestMethods(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt": &methodInfo{
 					ShortName: "Echo_Auth_Jwt",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{{
-						UriTemplate: "/auth/info/googlejwt",
-						HttpMethod:  util.GET,
-					},
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/auth/info/googlejwt",
+							HttpMethod:  util.GET,
+						},
 					},
 				},
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth": &methodInfo{
@@ -874,15 +853,15 @@ func TestMethods(t *testing.T) {
 					ApiName:   "endpoints.examples.bookstore.Bookstore",
 					HttpRule: []*commonpb.Pattern{
 						{
-							UriTemplate: "/endpoints.examples.bookstore.Bookstore/CreateBook",
-							HttpMethod:  util.POST,
-						},
-						{
 							UriTemplate: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
 							HttpMethod:  util.POST,
 						},
 						{
 							UriTemplate: "/v1/shelves/{shelf}/books",
+							HttpMethod:  util.POST,
+						},
+						{
+							UriTemplate: "/endpoints.examples.bookstore.Bookstore/CreateBook",
 							HttpMethod:  util.POST,
 						},
 					},
@@ -938,10 +917,6 @@ func TestMethods(t *testing.T) {
 					ApiName:   "endpoints.examples.bookstore.Bookstore",
 					HttpRule: []*commonpb.Pattern{
 						{
-							UriTemplate: "/endpoints.examples.bookstore.Bookstore/CreateBook",
-							HttpMethod:  util.POST,
-						},
-						{
 							UriTemplate: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
 							HttpMethod:  util.POST,
 						},
@@ -951,6 +926,10 @@ func TestMethods(t *testing.T) {
 						},
 						{
 							UriTemplate: "/v1/shelves/{shelf}/books/bar",
+							HttpMethod:  util.POST,
+						},
+						{
+							UriTemplate: "/endpoints.examples.bookstore.Bookstore/CreateBook",
 							HttpMethod:  util.POST,
 						},
 					},
@@ -974,160 +953,12 @@ func TestMethods(t *testing.T) {
 			t.Fatal(err)
 		}
 		if len(serviceInfo.Methods) != len(tc.wantMethods) {
-			t.Errorf("Test Desc(%d): %s, got Methods: %v, want: %v", i, tc.desc, serviceInfo.Methods, tc.wantMethods)
+			t.Errorf("Test Desc(%d): %s, diff in number of Methods, got: %v, want: %v", i, tc.desc, len(serviceInfo.Methods), len(tc.wantMethods))
 		}
 		for key, gotMethod := range serviceInfo.Methods {
 			wantMethod := tc.wantMethods[key]
 			if eq := cmp.Equal(gotMethod, wantMethod, cmp.Comparer(proto.Equal)); !eq {
 				t.Errorf("Test Desc(%d): %s, got Method: %v, want: %v", i, tc.desc, gotMethod, wantMethod)
-			}
-		}
-	}
-}
-
-func TestProcessBackendRuleForProtocol(t *testing.T) {
-	testData := []struct {
-		desc                  string
-		fakeServiceConfig     *confpb.Service
-		wantedErr             string
-		wantedBackendProtocol util.BackendProtocol
-	}{
-		{
-			desc: "Fail, dynamic routing only supports domain name, got IP address: 192.168.0.1",
-			fakeServiceConfig: &confpb.Service{
-				Apis: []*apipb.Api{
-					{
-						Name: testApiName,
-					},
-				},
-				Backend: &confpb.Backend{
-					Rules: []*confpb.BackendRule{
-						{
-							Address: "https://192.168.0.1/api/",
-						},
-					},
-				},
-			},
-			wantedErr: "dynamic routing only supports domain name, got IP address: 192.168.0.1",
-		},
-		{
-			desc: "Fail, dynamic routing only supports http/https/grpc scheme",
-			fakeServiceConfig: &confpb.Service{
-				Apis: []*apipb.Api{
-					{
-						Name: testApiName,
-					},
-				},
-				Backend: &confpb.Backend{
-					Rules: []*confpb.BackendRule{
-						{
-							Address: "file://abc.com/api/",
-						},
-					},
-				},
-			},
-			wantedErr: "dynamic routing only supports https/http/grpc scheme, found: file",
-		},
-		{
-			desc: "Failed for dynamic routing could not mix grpc with other scheme",
-			fakeServiceConfig: &confpb.Service{
-				Apis: []*apipb.Api{
-					{
-						Name: testApiName,
-					},
-				},
-				Backend: &confpb.Backend{
-					Rules: []*confpb.BackendRule{
-						{
-							Address:  "http://abc.com/api/",
-							Selector: "abc.com.api",
-						},
-						{
-							Address:  "grpc://cnn.com/api/",
-							Selector: "cnn.com.api",
-						},
-					},
-				},
-			},
-			wantedErr: "dynamic routing could not mix grpc with http/https scheme, found: http, grpc",
-		},
-		{
-			desc: "Mixed scheme https and http are allowed, but BackendProtocol is not changed",
-			fakeServiceConfig: &confpb.Service{
-				Apis: []*apipb.Api{
-					{
-						Name: testApiName,
-					},
-				},
-				Backend: &confpb.Backend{
-					Rules: []*confpb.BackendRule{
-						{
-							Address:  "http://abc.com/api/",
-							Selector: "abc.com.api",
-						},
-						{
-							Address:  "https://cnn.com/api/",
-							Selector: "cnn.com.api",
-						},
-					},
-				},
-				Http: &annotationspb.Http{
-					Rules: []*annotationspb.HttpRule{
-						{
-							Selector: "abc.com.cpi",
-							Pattern: &annotationspb.HttpRule_Post{
-								Post: "/api/abc/**",
-							},
-						},
-						{
-							Selector: "cnn.com.api",
-							Pattern: &annotationspb.HttpRule_Post{
-								Post: "/api/cnn/**",
-							},
-						},
-					},
-				},
-			},
-			wantedErr:             "",
-			wantedBackendProtocol: util.HTTP1,
-		},
-		{
-			desc: "A good one, verify backend protocol is modified",
-			fakeServiceConfig: &confpb.Service{
-				Apis: []*apipb.Api{
-					{
-						Name: testApiName,
-					},
-				},
-				Backend: &confpb.Backend{
-					Rules: []*confpb.BackendRule{
-						{
-							Address:  "grpc://abc.com/api/",
-							Selector: "abc.com.api",
-						},
-					},
-				},
-			},
-			wantedErr:             "",
-			wantedBackendProtocol: util.GRPC,
-		},
-	}
-
-	for i, tc := range testData {
-		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendProtocol = "http1"
-		s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
-		if tc.wantedErr != "" {
-			if err == nil || err.Error() != tc.wantedErr {
-				t.Errorf("Test Desc(%d): %s, processBackendRule error not expected, got: %v, want: %v", i, tc.desc, err, tc.wantedErr)
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test Desc(%d): %s, processBackendRule error not expected, got: %v", i, tc.desc, err)
-				return
-			}
-			if tc.wantedBackendProtocol != s.BackendProtocol {
-				t.Errorf("Test Desc(%d): %s, TestProcessBackendRuleForProtocol, BackendProtocol not expected, got: %v, want: %v", i, tc.desc, s.BackendProtocol, tc.wantedBackendProtocol)
 			}
 		}
 	}
@@ -1516,6 +1347,7 @@ func TestProcessApis(t *testing.T) {
 
 		serviceInfo := &ServiceInfo{
 			serviceConfig: tc.fakeServiceConfig,
+			Methods:       make(map[string]*methodInfo),
 		}
 		serviceInfo.processApis()
 
@@ -1606,10 +1438,12 @@ func TestProcessApisForGrpc(t *testing.T) {
 	for i, tc := range testData {
 
 		serviceInfo := &ServiceInfo{
-			serviceConfig:   tc.fakeServiceConfig,
-			BackendProtocol: util.GRPC,
+			serviceConfig: tc.fakeServiceConfig,
+			BackendIsGrpc: true,
+			Methods:       make(map[string]*methodInfo),
 		}
 		serviceInfo.processApis()
+		serviceInfo.addGrpcHttpRules()
 
 		for key, gotMethod := range serviceInfo.Methods {
 			wantMethod := tc.wantMethods[key]

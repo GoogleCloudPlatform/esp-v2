@@ -34,6 +34,6 @@ usage:
 backend:
   rules:
     - selector: "*"
-      address: "grpc://grpc-echo-oxouww7xzq-uc.a.run.app"
+      address: "grpcs://grpc-echo-oxouww7xzq-uc.a.run.app"
       jwt_audience: "grpc-echo-oxouww7xzq-uc.a.run.app"
       deadline: 300

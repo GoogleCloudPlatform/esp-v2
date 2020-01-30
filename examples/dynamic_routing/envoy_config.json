@@ -29,7 +29,7 @@
                     ]
                 },
                 "name": "esp-bookstore-f6x3rlu5aa-uc.a.run.app_local",
-                "type": "STRICT_DNS"
+                "type": "LOGICAL_DNS"
             },
             {
                 "connectTimeout": "20s",
@@ -96,7 +96,6 @@
             },
             {
                 "connectTimeout": "20s",
-                "http2ProtocolOptions": {},
                 "loadAssignment": {
                     "clusterName": "http-bookstore-abc123456-uc.a.run.app",
                     "endpoints": [
@@ -122,9 +121,6 @@
                     "typedConfig": {
                         "@type": "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
                         "commonTlsContext": {
-                            "alpnProtocols": [
-                                "h2"
-                            ],
                             "validationContext": {
                                 "trustedCa": {
                                     "filename": "/etc/ssl/certs/ca-certificates.crt"
@@ -138,7 +134,6 @@
             },
             {
                 "connectTimeout": "20s",
-                "http2ProtocolOptions": {},
                 "loadAssignment": {
                     "clusterName": "http-bookstore-edf123456-uc.a.run.app",
                     "endpoints": [
@@ -164,9 +159,6 @@
                     "typedConfig": {
                         "@type": "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
                         "commonTlsContext": {
-                            "alpnProtocols": [
-                                "h2"
-                            ],
                             "validationContext": {
                                 "trustedCa": {
                                     "filename": "/etc/ssl/certs/ca-certificates.crt"

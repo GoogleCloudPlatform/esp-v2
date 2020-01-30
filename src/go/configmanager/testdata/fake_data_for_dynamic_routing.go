@@ -20,7 +20,7 @@ var (
 		`
 {
   "name": "echo-api.endpoints.cloudesf-testing.cloud.goog_local",
-  "type": "STRICT_DNS",
+  "type": "LOGICAL_DNS",
   "connectTimeout": "20s",
   "loadAssignment": {
     "clusterName": "127.0.0.1",
