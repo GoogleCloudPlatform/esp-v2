@@ -5,16 +5,6 @@ exports_files([
     "api_descriptor.pb",
 ])
 
-cc_proto_library(
-    name = "bookstore_proto",
-    srcs = ["bookstore.proto"],
-    default_runtime = "//external:protobuf",
-    protoc = "//external:protoc",
-    deps = [
-        "//external:servicecontrol",
-    ],
-)
-
 genrule(
     name = "bookstore_descriptor",
     srcs = [
