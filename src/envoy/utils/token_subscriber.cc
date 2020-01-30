@@ -25,10 +25,6 @@ namespace Extensions {
 namespace Utils {
 namespace {
 
-// Required header when fetching from the metadata server
-const Envoy::Http::LowerCaseString kMetadataFlavorKey("Metadata-Flavor");
-constexpr char kMetadataFlavor[]{"Google"};
-
 // request timeout
 const std::chrono::milliseconds kRequestTimeoutMs(5000);
 
@@ -55,6 +51,10 @@ Envoy::Http::MessagePtr prepareHeaders(const std::string& token_url) {
 }
 
 }  // namespace
+
+// Required header when fetching from the metadata server
+const Envoy::Http::LowerCaseString kMetadataFlavorKey("Metadata-Flavor");
+constexpr char kMetadataFlavor[]{"Google"};
 
 TokenSubscriber::TokenSubscriber(
     Envoy::Server::Configuration::FactoryContext& context,

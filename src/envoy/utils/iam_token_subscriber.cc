@@ -24,9 +24,6 @@ namespace Extensions {
 namespace Utils {
 namespace {
 
-// Required header when fetching from the iam server
-const Envoy::Http::LowerCaseString kAuthorizationKey("Authorization");
-
 // Body field for the sequence of service accounts in a delegation chain.
 constexpr char kDelegatesField[]("delegates");
 
@@ -58,7 +55,8 @@ void insertStrListToProto(
     const absl::string_view& val_prefix) {
   Envoy::ProtobufWkt::Value vals;
   for (const auto& val : val_list) {
-    vals.mutable_list_value()->add_values()->set_string_value(absl::StrCat(val_prefix, val));
+    vals.mutable_list_value()->add_values()->set_string_value(
+        absl::StrCat(val_prefix, val));
   }
   (*body.mutable_struct_value()->mutable_fields())[key].Swap(&vals);
 }
@@ -97,6 +95,10 @@ Envoy::Http::MessagePtr prepareMessage(
 }
 
 }  // namespace
+
+
+// Required header when fetching from the iam server
+const Envoy::Http::LowerCaseString kAuthorizationKey("Authorization");
 
 IamTokenSubscriber::IamTokenSubscriber(
     Envoy::Server::Configuration::FactoryContext& context,

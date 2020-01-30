@@ -28,6 +28,10 @@ namespace Envoy {
 namespace Extensions {
 namespace Utils {
 
+// Required header when fetching from the metadata server
+extern const Envoy::Http::LowerCaseString kMetadataFlavorKey;
+extern const char kMetadataFlavor[];
+
 // `TokenSubscriber` class fetches a token at the config time in the main
 // thread. It also registers a timer to fetch a new token before expiration.
 //

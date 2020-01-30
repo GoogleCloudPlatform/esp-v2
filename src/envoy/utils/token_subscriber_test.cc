@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "src/envoy/utils/token_subscriber.h"
-#include "src/envoy/utils/json_struct.h"
 
 #include "common/http/message_impl.h"
 #include "common/tracing/http_tracer_impl.h"
@@ -56,10 +55,11 @@ class TokenSubscriberTest : public testing::Test {
         .WillRepeatedly(ReturnRef(*raw_mock_client_));
     EXPECT_CALL(*raw_mock_client_, send_(_, _, _))
         .WillRepeatedly(
-            Invoke([this](const Envoy::Http::MessagePtr&,
+            Invoke([this](Envoy::Http::MessagePtr& message,
                           Envoy::Http::AsyncClient::Callbacks& callback,
                           const Envoy::Http::AsyncClient::RequestOptions&) {
               call_count_++;
+              message_.swap(message);
               client_callback_ = &callback;
               return nullptr;
             }));
@@ -71,10 +71,32 @@ class TokenSubscriberTest : public testing::Test {
     init_target_handle->initialize(init_watcher_);
   }
 
+  void checkRequestHeaders() {
+    EXPECT_EQ(message_->headers()
+                  .get(Envoy::Http::Headers::get().Method)
+                  ->value()
+                  .getStringView(),
+              "GET");
+    EXPECT_EQ(message_->headers()
+                  .get(Envoy::Http::Headers::get().Host)
+                  ->value()
+                  .getStringView(),
+              "fake_token_server");
+    EXPECT_EQ(message_->headers()
+                  .get(Envoy::Http::Headers::get().Path)
+                  ->value()
+                  .getStringView(),
+              "/uri_suffix");
+    EXPECT_EQ(
+        message_->headers().get(kMetadataFlavorKey)->value().getStringView(),
+        kMetadataFlavor);
+  }
+
   int call_count_ = 0;
 
   NiceMock<Init::ExpectableWatcherImpl> init_watcher_;
   NiceMock<MockFactoryContext> context_;
+  Envoy::Http::MessagePtr message_;
   MockFunction<int(std::string)> token_callback_;
   Envoy::Http::AsyncClient::Callbacks* client_callback_{};
   std::unique_ptr<NiceMock<Envoy::Http::MockAsyncClient>> raw_mock_client_;
@@ -101,6 +123,7 @@ TEST_F(TokenSubscriberTest, CallOnTokenUpdateOnSuccess) {
       new Buffer::OwnedImpl(str_body.data(), str_body.size()));
 
   client_callback_->onSuccess(std::move(response));
+  checkRequestHeaders();
 }
 
 TEST_F(TokenSubscriberTest, DoNotCallOnTokenUpdateOnFailure) {
@@ -110,6 +133,7 @@ TEST_F(TokenSubscriberTest, DoNotCallOnTokenUpdateOnFailure) {
 
   // Send a bad token
   client_callback_->onFailure(Envoy::Http::AsyncClient::FailureReason::Reset);
+  checkRequestHeaders();
 }
 
 TEST_F(TokenSubscriberTest, RefreshOnceTokenExpires) {
@@ -146,6 +170,7 @@ TEST_F(TokenSubscriberTest, RefreshOnceTokenExpires) {
   response2->body().reset(
       new Buffer::OwnedImpl(str_body2.data(), str_body2.size()));
   client_callback_->onSuccess(std::move(response2));
+  checkRequestHeaders();
 }
 
 }  // namespace
