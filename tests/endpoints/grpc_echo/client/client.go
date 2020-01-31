@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
+	"github.com/golang/glog"
 )
 
 func RunGRPCEchoTest(testPlans string, serverPort uint16) (string, error) {
@@ -43,8 +43,7 @@ func RunGRPCEchoTest(testPlans string, serverPort uint16) (string, error) {
 	realCmd := fmt.Sprintf("%s < test_plans.txt", platform.GetFilePath(platform.GrpcEchoClient))
 	cmd := exec.Command("bash", "-c", realCmd)
 	out, err := cmd.CombinedOutput()
-	if err != nil && !strings.Contains(err.Error(), "exit status 1") {
-		return "", err
-	}
-	return string(out), nil
+
+	glog.Infof("gRPC Echo output: %v", string(out))
+	return string(out), err
 }

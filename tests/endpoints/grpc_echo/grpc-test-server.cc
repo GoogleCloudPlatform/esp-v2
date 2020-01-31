@@ -19,6 +19,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <unistd.h>
 
 #include "tests/endpoints/grpc_echo/proto/grpc-test.grpc.pb.h"
 
@@ -97,6 +98,10 @@ class EchoCall final : public CorkableCall {
       received_metadata[std::string(it.first.data(), it.first.length())] =
           std::string(it.second.data(), it.second.length());
     }
+
+    // Sleep if requested.
+    sleep(request_.response_delay());
+
     for (const auto &it : request_.return_initial_metadata()) {
       context_.AddInitialMetadata(it.first, it.second);
     }
@@ -173,6 +178,9 @@ class EchoStreamCall final : public CorkableCall {
   }
 
   void StartWrite() {
+    // Sleep if requested.
+    sleep(request_.response_delay());
+
     response_.set_text(request_.text());
     response_.set_elapsed_micros(
         std::chrono::duration_cast<std::chrono::microseconds>(

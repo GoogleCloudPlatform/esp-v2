@@ -187,22 +187,16 @@ func (e *TestEnv) SetAllowCors() {
 	e.fakeServiceConfig.Endpoints[0].AllowCors = true
 }
 
+// In the service config for each backend, the backend port is represented with a "-1".
+// Example: Address: "https://localhost:-1/"
+// During env setup, replace the -1 with the actual dynamic routing port for the test.
 func addDynamicRoutingBackendPort(serviceConfig *confpb.Service, port uint16) error {
-	for _, v := range serviceConfig.Backend.GetRules() {
-		if v.PathTranslation != confpb.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
-			urlPrefix := "https://localhost:"
-			i := strings.Index(v.Address, urlPrefix)
-			if i == -1 {
-				return fmt.Errorf("failed to find port number")
-			}
-			portAndPathStr := v.Address[i+len(urlPrefix):]
-			pathIndex := strings.Index(portAndPathStr, "/")
-			if pathIndex == -1 {
-				v.Address = fmt.Sprintf("https://localhost:%v", port)
-			} else {
-				v.Address = fmt.Sprintf("https://localhost:%v%v", port, portAndPathStr[pathIndex:])
-			}
+	for _, rule := range serviceConfig.Backend.GetRules() {
+		if !strings.Contains(rule.Address, "-1") {
+			return fmt.Errorf("backend rule address (%v) is not properly formatted", rule.Address)
 		}
+
+		rule.Address = strings.ReplaceAll(rule.Address, "-1", strconv.Itoa(int(port)))
 	}
 	return nil
 }
@@ -374,8 +368,16 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		if err := e.grpcEchoServer.StartAndWait(); err != nil {
 			return err
 		}
+	case platform.GrpcEchoRemote:
+		e.grpcEchoServer, err = components.NewGrpcEchoGrpcServer(e.ports.DynamicRoutingBackendPort)
+		if err != nil {
+			return err
+		}
+		if err := e.grpcEchoServer.StartAndWait(); err != nil {
+			return err
+		}
 	default:
-		return fmt.Errorf("please specify the correct backend service name")
+		return fmt.Errorf("backend (%v) is not supported", e.backend)
 	}
 
 	time.Sleep(setupWaitTime)

@@ -101,8 +101,8 @@ results {
     details: "A long error message.  Like, really ridiculously detailed, the kind of thing you might expect if someone put a Java stack with nested thrown exceptions into an error message, which does actually happen so it is important to make sure long messages are passed through correctly by the grpc_pass implementation within nginx.  Any string longer than 128 bytes should suffice to give us confidence that the HTTP/2 header length encoding implementation at least tries to do the right thing; this one should do just fine."
   }
 }`
-	if err != nil {
-		t.Errorf("TestGRPCErrors: error during tests: %v", err)
+	if err == nil {
+		t.Errorf("TestGRPCErrors: got no err, want err: %v", err)
 	}
 	if !strings.Contains(result, wantResult) {
 		t.Errorf("TestGRPCErrors: the results are different,\nreceived:\n%s,\nwanted:\n%s", result, wantResult)

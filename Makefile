@@ -80,8 +80,8 @@ build-envoy-debug:
 build-grpc-echo:
 	@echo "--> building grpc-echo"
 	@bazel build --cxxopt='-std=c++14' tests/endpoints/grpc_echo:grpc-test-client --incompatible_no_support_tools_in_action_inputs=false
-	@bazel build //tests/endpoints/grpc_echo:grpc-test-server --incompatible_no_support_tools_in_action_inputs=false
-	@bazel build tests/endpoints/grpc_echo:grpc-test_descriptor --incompatible_no_support_tools_in_action_inputs=false
+	@bazel build --cxxopt='-std=c++14' //tests/endpoints/grpc_echo:grpc-test-server --incompatible_no_support_tools_in_action_inputs=false
+	@bazel build --cxxopt='-std=c++14' tests/endpoints/grpc_echo:grpc-test_descriptor --incompatible_no_support_tools_in_action_inputs=false
 	@cp -f bazel-bin/tests/endpoints/grpc_echo/grpc-test-client bin/grpc_echo_client
 	@cp -f bazel-bin/tests/endpoints/grpc_echo/grpc-test-server bin/grpc_echo_server
 	@cp -f bazel-bin/tests/endpoints/grpc_echo/grpc-test.descriptor tests/endpoints/grpc_echo/proto/api_descriptor.pb

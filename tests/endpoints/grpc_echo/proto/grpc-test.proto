@@ -75,6 +75,10 @@ message EchoRequest {
   // The payload size is specified by the value of this field.
   int32 space_payload_size = 6;
 
+  // The number of seconds to block the request before sending back a response.
+  // For streaming calls, this will apply to every response.
+  int32 response_delay = 7;
+
   // The metadata that server should return
   map<string, bytes> return_initial_metadata = 4;
   map<string, bytes> return_trailing_metadata = 5;
