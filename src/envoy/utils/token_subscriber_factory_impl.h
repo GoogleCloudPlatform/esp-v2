@@ -49,8 +49,8 @@ class TokenSubscriberFactoryImpl : public TokenSubscriberFactory {
   ServiceAccountTokenPtr createServiceAccountTokenPtr(
       const std::string& service_account_key, const std::string& audience,
       ServiceAccountToken::TokenUpdateFunc callback) const override {
-    return std::make_unique<ServiceAccountToken>(context_,service_account_key, audience,
-                                                 callback);
+    return std::make_unique<ServiceAccountToken>(context_, service_account_key,
+                                                 audience, callback);
   };
 
  private:

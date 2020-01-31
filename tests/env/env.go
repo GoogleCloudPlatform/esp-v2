@@ -47,6 +47,7 @@ type TestEnv struct {
 	useWrongBackendCert             bool
 	mockMetadata                    bool
 	enableScNetworkFailOpen         bool
+	enableEchoServerRootPathHandler bool
 	mockMetadataOverride            map[string]string
 	mockIamResps                    map[string]string
 	bookstoreServer                 *bookserver.BookstoreServer
@@ -185,6 +186,10 @@ func (e *TestEnv) AppendUsageRules(rules []*confpb.UsageRule) {
 // SetAllowCors Sets AllowCors in API endpoint to true.
 func (e *TestEnv) SetAllowCors() {
 	e.fakeServiceConfig.Endpoints[0].AllowCors = true
+}
+
+func (e *TestEnv) EnableEchoServerRootPathHandler () {
+	e.enableEchoServerRootPathHandler = true
 }
 
 // In the service config for each backend, the backend port is represented with a "-1".
@@ -331,7 +336,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 
 	switch e.backend {
 	case platform.EchoSidecar:
-		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.BackendServerPort /*enableHttps=*/, false /*enableRootPathHandler=*/, false /*useAuthorizedBackendCert*/, false)
+		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.BackendServerPort /*enableHttps=*/, false /*enableRootPathHandler=*/, e.enableEchoServerRootPathHandler /*useAuthorizedBackendCert*/, false)
 		if err != nil {
 			return err
 		}

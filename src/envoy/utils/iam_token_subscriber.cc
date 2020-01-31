@@ -96,7 +96,6 @@ Envoy::Http::MessagePtr prepareMessage(
 
 }  // namespace
 
-
 // Required header when fetching from the iam server
 const Envoy::Http::LowerCaseString kAuthorizationKey("Authorization");
 

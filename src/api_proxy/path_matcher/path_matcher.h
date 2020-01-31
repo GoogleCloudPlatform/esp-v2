@@ -247,9 +247,7 @@ bool PathMatcherBuilder<Method>::Register(std::string http_method,
     return false;
   }
   PathMatcherNode::PathInfo path_info = TransformHttpTemplate(*ht);
-  if (path_info.path_info().size() == 0) {
-    return false;
-  }
+
   // Create & initialize a MethodData struct. Then insert its pointer
   // into the path matcher trie.
   auto method_data = std::unique_ptr<MethodData>(new MethodData());

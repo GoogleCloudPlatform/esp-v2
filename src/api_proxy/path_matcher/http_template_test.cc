@@ -78,10 +78,18 @@ TEST(HttpTemplate, ParseTest2) {
   ASSERT_EQ(Variables({}), ht->Variables());
 }
 
-TEST(HttpTemplate, ParseTest3) {
+TEST(HttpTemplate, ParseTest3a) {
   auto ht = HttpTemplate::Parse("/**");
   ASSERT_NE(nullptr, ht);
   ASSERT_EQ(Segments({"**"}), ht->segments());
+  ASSERT_EQ("", ht->verb());
+  ASSERT_EQ(Variables(), ht->Variables());
+}
+
+TEST(HttpTemplate, ParseTest3b) {
+  auto ht = HttpTemplate::Parse("/*");
+  ASSERT_NE(nullptr, ht);
+  ASSERT_EQ(Segments({"*"}), ht->segments());
   ASSERT_EQ("", ht->verb());
   ASSERT_EQ(Variables(), ht->Variables());
 }
@@ -424,9 +432,16 @@ TEST(HttpTemplate, VariableAndCustomVerbTests) {
             ht->Variables());
 }
 
+TEST(HttpTemplate, RootPATH) {
+  auto ht = HttpTemplate::Parse("/");
+  ASSERT_NE(nullptr, ht);
+  ASSERT_EQ(Segments({}), ht->segments());
+  ASSERT_EQ("", ht->verb());
+  ASSERT_EQ(Variables(), ht->Variables());
+}
+
 TEST(HttpTemplate, ErrorTests) {
   ASSERT_EQ(nullptr, HttpTemplate::Parse(""));
-  ASSERT_EQ(nullptr, HttpTemplate::Parse("/"));
   ASSERT_EQ(nullptr, HttpTemplate::Parse("//"));
   ASSERT_EQ(nullptr, HttpTemplate::Parse("/{}"));
   ASSERT_EQ(nullptr, HttpTemplate::Parse("/a/"));

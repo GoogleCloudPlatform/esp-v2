@@ -121,7 +121,6 @@ var (
 						Get: "/v1/shelves/{shelf}/books",
 					},
 				},
-
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.DeleteBook",
 					Pattern: &annotationspb.HttpRule_Delete{

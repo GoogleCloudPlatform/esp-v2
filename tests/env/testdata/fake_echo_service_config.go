@@ -76,6 +76,12 @@ var (
 					Body: "message",
 				},
 				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Root",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/",
+					},
+				},
+				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey",
 					Pattern: &annotationspb.HttpRule_Post{
 						Post: "/echo/nokey",
@@ -164,6 +170,10 @@ var (
 			Rules: []*confpb.UsageRule{
 				{
 					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Root",
 					AllowUnregisteredCalls: true,
 				},
 				{

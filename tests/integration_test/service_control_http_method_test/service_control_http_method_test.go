@@ -36,7 +36,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlALlHTTPMethod, platform.EchoSidecar)
+	s := env.NewTestEnv(comp.TestServiceControlAllHTTPMethod, platform.EchoSidecar)
 	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoGET",

@@ -31,7 +31,7 @@ namespace {
 //   - what are the constraints on LITERAL and IDENT?
 //   - what is the character set for the grammar?
 //
-// Template = "/" Segments [ Verb ] ;
+// Template = "/" | "/" Segments [ Verb ] ;
 // Segments = Segment { "/" Segment } ;
 // Segment  = "*" | "**" | LITERAL | Variable ;
 // Variable = "{" FieldPath [ "=" Segments ] "}" ;
@@ -366,6 +366,10 @@ constexpr char HttpTemplate::kWildCardPathPartKey[] = "*";
 constexpr char HttpTemplate::kWildCardPathKey[] = "**";
 
 std::unique_ptr<HttpTemplate> HttpTemplate::Parse(const std::string& ht) {
+  if (ht == "/") {
+    return std::unique_ptr<HttpTemplate>(new HttpTemplate({}, {}, {}));
+  }
+
   Parser p(ht);
   if (!p.Parse() || !p.ValidateParts()) {
     return nullptr;

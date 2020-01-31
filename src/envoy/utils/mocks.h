@@ -38,11 +38,11 @@ class MockTokenSubscriberFactory : public TokenSubscriberFactory {
        IamTokenSubscriber::TokenUpdateFunc callback),
       (const));
 
-   MOCK_METHOD(
-      ServiceAccountTokenPtr,createServiceAccountTokenPtr,
-      (const std::string& service_account_key, const std::string& audience,
-      ServiceAccountToken::TokenUpdateFunc callback),
-      (const));
+  MOCK_METHOD(ServiceAccountTokenPtr, createServiceAccountTokenPtr,
+              (const std::string& service_account_key,
+               const std::string& audience,
+               ServiceAccountToken::TokenUpdateFunc callback),
+              (const));
 };
 
 }  // namespace Utils

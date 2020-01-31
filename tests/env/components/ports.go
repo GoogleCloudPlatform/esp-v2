@@ -66,7 +66,8 @@ const (
 	TestPreflightCorsWithBasicPreset
 	TestPreflightRequestWithAllowCors
 	TestReportGCPAttributes
-	TestServiceControlALlHTTPMethod
+	TestServiceControlAllHTTPMethod
+	TestServiceControlAllHTTPPath
 	TestServiceControlAPIKeyCustomLocation
 	TestServiceControlAPIKeyDefaultLocation
 	TestServiceControlAPIKeyIpRestriction

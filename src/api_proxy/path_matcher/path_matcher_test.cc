@@ -119,6 +119,7 @@ TEST_F(PathMatcherTest, WildCardMatches) {
   MethodInfo* c_d__ = AddGetPath("/c/*/d/**");
   MethodInfo* c_de = AddGetPath("/c/*/d/e");
   MethodInfo* cfde = AddGetPath("/c/f/d/e");
+  MethodInfo* root = AddGetPath("/");
   Build();
 
   EXPECT_NE(nullptr, a__);
@@ -130,6 +131,7 @@ TEST_F(PathMatcherTest, WildCardMatches) {
   EXPECT_EQ(Lookup("GET", "/a/b"), a__);
   EXPECT_EQ(Lookup("GET", "/a/b/c"), a__);
   EXPECT_EQ(Lookup("GET", "/b/c"), b_);
+  EXPECT_EQ(Lookup("GET", "/"), root);
 
   EXPECT_EQ(Lookup("GET", "b/c/d"), nullptr);
   EXPECT_EQ(Lookup("GET", "/c/u/d/v"), c_d__);
@@ -146,6 +148,7 @@ TEST_F(PathMatcherTest, WildCardMatches) {
 TEST_F(PathMatcherTest, WildCardMethodMatches) {
   MethodInfo* a__ = AddPath("*", "/a/**");
   MethodInfo* b_ = AddPath("*", "/b/*");
+  MethodInfo* root = AddPath("*", "/");
   Build();
 
   EXPECT_NE(nullptr, a__);
@@ -156,6 +159,7 @@ TEST_F(PathMatcherTest, WildCardMethodMatches) {
     EXPECT_EQ(Lookup(method, "/a/b"), a__);
     EXPECT_EQ(Lookup(method, "/a/b/c"), a__);
     EXPECT_EQ(Lookup(method, "/b/c"), b_);
+    EXPECT_EQ(Lookup(method, "/"), root);
   }
 }
 
