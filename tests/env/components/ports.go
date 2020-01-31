@@ -41,6 +41,7 @@ const (
 	TestDynamicRouting
 	TestDynamicBackendRoutingTLS
 	TestDynamicRoutingWithAllowCors
+	TestDynamicRoutingCorsByEnvoy
 	TestGRPC
 	TestGrpcBackendPreflightCors
 	TestGrpcBackendSimpleCors

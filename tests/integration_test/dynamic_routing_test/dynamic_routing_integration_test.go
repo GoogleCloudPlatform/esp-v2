@@ -270,6 +270,67 @@ func TestDynamicRoutingWithAllowCors(t *testing.T) {
 	}
 }
 
+func TestDynamicRoutingCorsByEnvoy(t *testing.T) {
+	corsRequestMethod := "PATCH"
+	corsRequestHeader := "X-PINGOTHER"
+	corsAllowOriginValue := "http://cloud.google.com"
+	corsAllowMethodsValue := "GET, PATCH, DELETE, OPTIONS"
+	corsAllowHeadersValue := "DNT,User-Agent,Cache-Control,Content-Type,Authorization, X-PINGOTHER"
+	corsExposeHeadersValue := "Content-Length,Content-Range"
+
+	respHeaderMap := make(map[string]string)
+	respHeaderMap["Access-Control-Allow-Origin"] = corsAllowOriginValue
+	respHeaderMap["Access-Control-Allow-Methods"] = corsAllowMethodsValue
+	respHeaderMap["Access-Control-Allow-Headers"] = corsAllowHeadersValue
+	respHeaderMap["Access-Control-Expose-Headers"] = corsExposeHeadersValue
+	respHeaderMap["Access-Control-Allow-Credentials"] = "true"
+
+	testDynamicRoutingArgs = append(testDynamicRoutingArgs, []string{
+		"--cors_preset=basic",
+		"--cors_allow_origin=" + corsAllowOriginValue,
+		"--cors_allow_methods=" + corsAllowMethodsValue,
+		"--cors_allow_headers=" + corsAllowHeadersValue,
+		"--cors_expose_headers=" + corsExposeHeadersValue,
+		"--cors_allow_credentials"}...)
+
+	s := NewDynamicRoutingTestEnv(comp.TestDynamicRoutingCorsByEnvoy)
+	defer s.TearDown()
+
+	if err := s.Setup(testDynamicRoutingArgs); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	testData := []struct {
+		desc string
+		url  string
+	}{
+		{
+			// preflight CORS request handled by envoy CORS filter
+			desc: "Succeed, response has CORS headers",
+			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/simplegetcors"),
+		},
+		{
+			// preflight CORS request handled by envoy CORS filter
+			// it is before jwt_authn filter even the origin method requires authentication.
+			desc: "Succeed without jwt token, response has CORS headers",
+			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/auth/info/firebase"),
+		},
+	}
+
+	for _, tc := range testData {
+		respHeader, err := client.DoCorsPreflightRequest(tc.url, corsAllowOriginValue, corsRequestMethod, corsRequestHeader, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		for key, value := range respHeaderMap {
+			if respHeader.Get(key) != value {
+				t.Errorf("%s expected: %s, got: %s", key, value, respHeader.Get(key))
+			}
+		}
+	}
+}
+
 func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 	s := NewDynamicRoutingTestEnv(comp.TestServiceControlRequestForDynamicRouting)
 	defer s.TearDown()

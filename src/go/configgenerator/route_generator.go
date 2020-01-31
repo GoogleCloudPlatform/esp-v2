@@ -128,6 +128,35 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*v2pb.RouteConfigurat
 		host.GetCors().AllowHeaders = serviceInfo.Options.CorsAllowHeaders
 		host.GetCors().ExposeHeaders = serviceInfo.Options.CorsExposeHeaders
 		host.GetCors().AllowCredentials = &wrapperspb.BoolValue{Value: serviceInfo.Options.CorsAllowCredentials}
+
+		// In order apply Envoy cors policy, need to have a route rule
+		// to route OPTIONS request to this host
+		corsRoute := &routepb.Route{
+			Match: &routepb.RouteMatch{
+				PathSpecifier: &routepb.RouteMatch_Prefix{
+					Prefix: "/",
+				},
+				Headers: []*routepb.HeaderMatcher{{
+					Name: ":method",
+					HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
+						ExactMatch: "OPTIONS",
+					},
+				}},
+			},
+			// Envoy requires to have a Route action in order to create a route
+			// for cors filter to work.
+			Action: &routepb.Route_Route{
+				Route: &routepb.RouteAction{
+					ClusterSpecifier: &routepb.RouteAction_Cluster{
+						Cluster: serviceInfo.BackendClusterName(),
+					},
+				},
+			},
+		}
+		host.Routes = append(host.Routes, corsRoute)
+
+		jsonStr, _ := util.ProtoToJson(corsRoute)
+		glog.Infof("adding cors route configuration: %v", jsonStr)
 	}
 
 	virtualHosts = append(virtualHosts, &host)
