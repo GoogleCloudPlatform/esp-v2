@@ -78,13 +78,16 @@ class ThreadLocalCache : public ThreadLocal::ThreadLocalObject {
   ClientCache client_cache_;
 };
 
+typedef std::shared_ptr<
+    ::google::api::envoy::http::service_control::FilterConfig>
+    FilterConfigProtoSharedPtr;
+
 class ServiceControlCallImpl : public ServiceControlCall,
                                public Logger::Loggable<Logger::Id::filter> {
  public:
   ServiceControlCallImpl(
+      FilterConfigProtoSharedPtr proto_config,
       const ::google::api::envoy::http::service_control::Service& config,
-      const ::google::api::envoy::http::service_control::FilterConfig&
-          filter_config,
       Server::Configuration::FactoryContext& context);
 
   CancelFunc callCheck(
@@ -109,7 +112,6 @@ class ServiceControlCallImpl : public ServiceControlCall,
   void createTokenGen();
   void createIamTokenSub();
 
-  const ::google::api::envoy::http::service_control::Service& config_;
   const ::google::api::envoy::http::service_control::FilterConfig&
       filter_config_;
   std::unique_ptr<::google::api_proxy::service_control::RequestBuilder>
@@ -135,18 +137,19 @@ class ServiceControlCallImpl : public ServiceControlCall,
 class ServiceControlCallFactoryImpl : public ServiceControlCallFactory {
  public:
   explicit ServiceControlCallFactoryImpl(
+      FilterConfigProtoSharedPtr proto_config,
       Server::Configuration::FactoryContext& context)
-      : context_(context) {}
+      : proto_config_(proto_config), context_(context) {}
 
   ServiceControlCallPtr create(
-      const ::google::api::envoy::http::service_control::Service& config,
-      const ::google::api::envoy::http::service_control::FilterConfig&
-          filter_config) override {
-    return std::make_unique<ServiceControlCallImpl>(config, filter_config,
+      const ::google::api::envoy::http::service_control::Service& config)
+      override {
+    return std::make_unique<ServiceControlCallImpl>(proto_config_, config,
                                                     context_);
   }
 
  private:
+  FilterConfigProtoSharedPtr proto_config_;
   Server::Configuration::FactoryContext& context_;
 };
 

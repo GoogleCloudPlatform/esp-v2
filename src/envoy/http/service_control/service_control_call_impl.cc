@@ -120,20 +120,21 @@ void ServiceControlCallImpl::createIamTokenSub() {
 }
 
 ServiceControlCallImpl::ServiceControlCallImpl(
-    const Service& config, const FilterConfig& filter_config,
+    FilterConfigProtoSharedPtr proto_config, const Service& config,
     Server::Configuration::FactoryContext& context)
-    : config_(config),
-      filter_config_(filter_config),
+    : filter_config_(*proto_config),
       token_subscriber_factory_(context),
       tls_(context.threadLocal().allocateSlot()) {
-  tls_->set([this, &cm = context.clusterManager(),
+  // Pass shared_ptr of proto_config to the function capture so that
+  // it will not be released when the function is called.
+  tls_->set([proto_config, &config, &cm = context.clusterManager(),
              &time_source = context.timeSource()](Event::Dispatcher& dispatcher)
                 -> ThreadLocal::ThreadLocalObjectSharedPtr {
-    return std::make_shared<ThreadLocalCache>(config_, filter_config_, cm,
+    return std::make_shared<ThreadLocalCache>(config, *proto_config, cm,
                                               time_source, dispatcher);
   });
 
-  switch (filter_config.access_token_case()) {
+  switch (filter_config_.access_token_case()) {
     case FilterConfig::kImdsToken: {
       createImdsTokenSub();
     } break;

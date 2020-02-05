@@ -163,11 +163,10 @@ class HandlerTest : public ::testing::Test {
     cfg_parser_ = nullptr;
     mock_call_ = new testing::NiceMock<MockServiceControlCall>();
 
-    FilterConfig proto_config;
-    ASSERT_TRUE(TextFormat::ParseFromString(filter_config, &proto_config));
-    EXPECT_CALL(mock_call_factory_, create_(_, _)).WillOnce(Return(mock_call_));
+    ASSERT_TRUE(TextFormat::ParseFromString(filter_config, &proto_config_));
+    EXPECT_CALL(mock_call_factory_, create_(_)).WillOnce(Return(mock_call_));
     cfg_parser_ =
-        std::make_unique<FilterConfigParser>(proto_config, mock_call_factory_);
+        std::make_unique<FilterConfigParser>(proto_config_, mock_call_factory_);
 
     mock_span_ = std::make_unique<Envoy::Tracing::MockSpan>();
   }
@@ -185,6 +184,7 @@ class HandlerTest : public ::testing::Test {
 
   // This pointer is managed by cfg_parser
   testing::NiceMock<MockServiceControlCall>* mock_call_;
+  FilterConfig proto_config_;
   std::unique_ptr<FilterConfigParser> cfg_parser_;
 
   std::chrono::time_point<std::chrono::system_clock> epoch_{};

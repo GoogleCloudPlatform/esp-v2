@@ -38,8 +38,12 @@ class ServiceControlFilterConfig : public Logger::Loggable<Logger::Id::filter>,
       const std::string& stats_prefix,
       Server::Configuration::FactoryContext& context)
       : ServiceControlFilterStatBase(stats_prefix, context.scope()),
-        call_factory_(context),
-        config_parser_(proto_config, call_factory_),
+        proto_config_(
+            std::make_shared<
+                ::google::api::envoy::http::service_control::FilterConfig>(
+                proto_config)),
+        call_factory_(proto_config_, context),
+        config_parser_(*proto_config_, call_factory_),
         handler_factory_(context.random(), config_parser_) {}
 
   const ServiceControlHandlerFactory& handler_factory() const {
@@ -47,6 +51,7 @@ class ServiceControlFilterConfig : public Logger::Loggable<Logger::Id::filter>,
   }
 
  private:
+  FilterConfigProtoSharedPtr proto_config_;
   ServiceControlCallFactoryImpl call_factory_;
   FilterConfigParser config_parser_;
   ServiceControlHandlerFactoryImpl handler_factory_;

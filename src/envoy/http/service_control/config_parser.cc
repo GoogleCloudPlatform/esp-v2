@@ -33,7 +33,7 @@ FilterConfigParser::FilterConfigParser(const FilterConfig& config,
     : config_(config) {
   ServiceContext* first_srv_ctx = nullptr;
   for (const auto& service : config_.services()) {
-    ServiceContext* srv_ctx = new ServiceContext(service, config_, factory);
+    ServiceContext* srv_ctx = new ServiceContext(service, factory);
     if (first_srv_ctx == nullptr) {
       first_srv_ctx = srv_ctx;
     }

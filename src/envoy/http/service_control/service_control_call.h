@@ -50,9 +50,7 @@ class ServiceControlCallFactory {
   virtual ~ServiceControlCallFactory() = default;
 
   virtual ServiceControlCallPtr create(
-      const ::google::api::envoy::http::service_control::Service& config,
-      const ::google::api::envoy::http::service_control::FilterConfig&
-          filter_config) PURE;
+      const ::google::api::envoy::http::service_control::Service& config) PURE;
 };
 
 }  // namespace ServiceControl

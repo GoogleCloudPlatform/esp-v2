@@ -33,11 +33,8 @@ class ServiceContext {
  public:
   ServiceContext(
       const ::google::api::envoy::http::service_control::Service& config,
-      const ::google::api::envoy::http::service_control::FilterConfig&
-          filter_config,
       ServiceControlCallFactory& factory)
-      : config_(config),
-        service_control_call_(factory.create(config_, filter_config)) {
+      : config_(config), service_control_call_(factory.create(config_)) {
     min_stream_report_interval_ms_ = config_.min_stream_report_interval_ms();
     if (!min_stream_report_interval_ms_) {
       min_stream_report_interval_ms_ = kDefaultMinStreamReportIntervalMs;
@@ -120,7 +117,7 @@ class FilterConfigParser {
 
  private:
   // The proto config.
-  const ::google::api::envoy::http::service_control::FilterConfig config_;
+  const ::google::api::envoy::http::service_control::FilterConfig& config_;
   // Operation name to RequirementContext map.
   absl::flat_hash_map<std::string, RequirementContextPtr> requirements_map_;
   // The requirement for non matched requests for sending their reports.
