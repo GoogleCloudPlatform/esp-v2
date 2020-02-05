@@ -119,11 +119,12 @@ class Response(object):
 
 
 class ApiProxyClientTest(object):
-    def __init__(self, host, allow_unverified_cert, verbose=False):
+    def __init__(self, host, host_header, allow_unverified_cert, verbose=False):
         self._failed_tests = 0
         self._passed_tests = 0
         self._verbose = verbose
         self.conn = http_connection(host, allow_unverified_cert)
+        self.host_header = host_header
 
     def fail(self, msg):
         print '%s: %s' % (red('FAILED'), msg if msg else '')
@@ -162,6 +163,9 @@ class ApiProxyClientTest(object):
         headers = {'Content-Type': 'application/json'}
         if auth:
             headers['Authorization'] = 'Bearer ' + auth
+        if self.host_header:
+            headers["Host"] = self.host_header
+
         body = json.dumps(data) if data else None
         for key, value in userHeaders.iteritems():
             headers[key] = value

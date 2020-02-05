@@ -28,3 +28,12 @@ function get_cloud_run_service_name_with_sha() {
   echo -n "${service_name}"
   return 0
 }
+
+function get_anthos_cluster_name_with_sha() {
+
+  local service_format="e2e-cloud-run-%h"
+  local service_name="$(git show -q HEAD --pretty=format:"${service_format}")"
+
+  echo -n "${service_name}"
+  return 0
+}

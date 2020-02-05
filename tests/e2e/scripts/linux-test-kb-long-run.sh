@@ -18,7 +18,6 @@
 set -eo pipefail
 
 # This script runs a long-running test against it.
-
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${SCRIPT_PATH}/../../.." && pwd)"
 . ${ROOT}/scripts/all-utilities.sh || { echo "Cannot load Bash utilities";
@@ -28,11 +27,12 @@ API_KEY=''
 SERVICE_NAME=''
 SCHEME=''
 HOST=''
+HOST_HEADER=''
 PORT=''
 DURATION_IN_HOUR=0
 PLATFORM=''
 
-while getopts :a:h:m:p:l:s:t: arg; do
+while getopts :a:h:m:p:l:s:t:r: arg; do
   case ${arg} in
     a) API_KEY="${OPTARG}" ;;
     m) SCHEME="${OPTARG}" ;;
@@ -41,6 +41,7 @@ while getopts :a:h:m:p:l:s:t: arg; do
     l) DURATION_IN_HOUR="${OPTARG}" ;;
     s) SERVICE_NAME="${OPTARG}" ;;
     t) PLATFORM="${OPTARG}" ;;
+    r) HOST_HEADER="${OPTARG}" ;;
     *) echo "Invalid option: -${OPTARG}" ;;
   esac
 done
@@ -79,6 +80,7 @@ while true; do
 
   # Generating token for each run, that they expire in 1 hour.
   JWT_TOKEN=`${ROOT}/tests/e2e/scripts/gen-auth-token.sh -a ${SERVICE_NAME}`
+
   echo "Auth token is: ${JWT_TOKEN}"
 
   echo "Starting bookstore test at $(date)."
@@ -87,7 +89,8 @@ while true; do
       --host="${SCHEME}://${HOST}:${PORT}"  \
       --api_key=${API_KEY}  \
       --auth_token=${JWT_TOKEN}  \
-    --allow_unverified_cert=true)
+      --allow_unverified_cert=true \
+    --host_header="${HOST_HEADER}")
 
   if [ "$PLATFORM" = "gke" ]; then
     echo "Starting bookstore API Key restriction test at $(date)."
@@ -96,39 +99,40 @@ while true; do
         --host="${SCHEME}://${HOST}:${PORT}"   \
         --allow_unverified_cert=true  \
         --key_restriction_tests=${ROOT}/tests/e2e/testdata/bookstore/key_restriction_test.json.template  \
-        --key_restriction_keys_file=${API_RESTRICTION_KEYS_FILE})
+      --key_restriction_keys_file=${API_RESTRICTION_KEYS_FILE})
   fi
 
-  POST_FILE="${ROOT}/tests/e2e/testdata/bookstore/35k.json"
-  echo "Starting stress test at $(date)."
-  (set -x;
-    python ${ROOT}/tests/e2e/client/apiproxy_client.py  \
-      --test=stress  \
-      --host="${SCHEME}://${HOST}:${PORT}" \
-      --api_key=${API_KEY}  \
-      --auth_token=${JWT_TOKEN}  \
-      --post_file=${POST_FILE}  \
-      --test_data=${ROOT}/tests/e2e/testdata/bookstore/test_data.json.temp
-  )
+  #TODO(taoxuy): b/148950591 enable stress test for cloud run on anthos
+  if [[ -z ${HOST_HEADER} ]]; then
+    POST_FILE="${ROOT}/tests/e2e/testdata/bookstore/35k.json"
+    echo "Starting stress test at $(date)."
+    (set -x;
+      python ${ROOT}/tests/e2e/client/apiproxy_client.py  \
+        --test=stress  \
+        --host="${SCHEME}://${HOST}:${PORT}" \
+        --api_key=${API_KEY}  \
+        --auth_token=${JWT_TOKEN}  \
+        --post_file=${POST_FILE}  \
+      --test_data=${ROOT}/tests/e2e/testdata/bookstore/test_data.json.temp)
 
-  echo "Starting negative stress test."
-  (set -x;
-    python ${ROOT}/tests/e2e/client/apiproxy_client.py  \
-      --test=negative  \
-      --test_data=${ROOT}/tests/e2e/testdata/bookstore/negative_test_data.json.temp  \
-      --host="${SCHEME}://${HOST}:${PORT}"  \
-      --api_key=${API_KEY}  \
-      --auth_token=${JWT_TOKEN}  \
-      --post_file=${POST_FILE}
-  )
+    echo "Starting negative stress test."
+    (set -x;
+      python ${ROOT}/tests/e2e/client/apiproxy_client.py  \
+        --test=negative  \
+        --test_data=${ROOT}/tests/e2e/testdata/bookstore/negative_test_data.json.temp  \
+        --host="${SCHEME}://${HOST}:${PORT}"  \
+        --api_key=${API_KEY}  \
+        --auth_token=${JWT_TOKEN}  \
+      --post_file=${POST_FILE})
+  fi
 
   #######################
   # End of test suite
   #######################
 
-if [ "$PLATFORM" = "gke" ]; then
-  detect_memory_leak_check ${RUN_COUNT}
-fi
+  if [ "$PLATFORM" = "gke" ]; then
+    detect_memory_leak_check ${RUN_COUNT}
+  fi
 
   # Break if test has run long enough.
   [[ $(date +"%s") -lt ${END_TIME} ]] || break

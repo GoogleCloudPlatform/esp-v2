@@ -114,6 +114,7 @@ run_nonfatal long_running_test  \
   "${TEST_ID}"  \
   "${UNIQUE_ID}" \
   "gke" \
+  "" \
   || STATUS=${?}
 
 # Deploy new config and check new rollout on /endpoints_status

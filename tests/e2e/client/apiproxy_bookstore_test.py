@@ -38,7 +38,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
     """
 
     def __init__(self):
-        ApiProxyClientTest.__init__(self, FLAGS.host,
+        ApiProxyClientTest.__init__(self, FLAGS.host, FLAGS.host_header,
                                     FLAGS.allow_unverified_cert,
                                     FLAGS.verbose)
 
@@ -194,6 +194,7 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', type=bool, help='Turn on/off verbosity.')
     parser.add_argument('--api_key', help='Project api_key to access service.')
     parser.add_argument('--host', help='Deployed application host name.')
+    parser.add_argument('--host_header', help='Deployed application host name.')
     parser.add_argument('--auth_token', help='Auth token.')
     parser.add_argument('--endpoints', type=bool,
                         default=True,
