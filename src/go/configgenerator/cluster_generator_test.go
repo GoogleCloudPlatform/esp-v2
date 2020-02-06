@@ -103,7 +103,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 					Environment: "http://127.0.0.1:8000",
 				},
 			},
-			backendProtocol: "http1",
+			backendProtocol: "http",
 			wantedCluster: v2pb.Cluster{
 				Name:                 "service-control-cluster",
 				ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
@@ -191,7 +191,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "http1",
+			backendProtocol: "http",
 			wantedClusters: []*v2pb.Cluster{
 				{
 					Name:                 "mybackend.com:443",
@@ -239,7 +239,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "http1",
+			backendProtocol: "http",
 			wantedClusters: []*v2pb.Cluster{
 				{
 					Name:                 "mybackend.com:80",
@@ -250,34 +250,12 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 			},
 		},
 		{
-			desc: "Success for mixed http, https, http1, http1s, http2, http2s backends",
+			desc: "Success for mixed http, https backends",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
 					{
 						Name: "1.cloudesf_testing_cloud_goog",
-						Methods: []*apipb.Method{
-							{
-								Name: "Foo",
-							},
-							{
-								Name: "Bar",
-							},
-						},
-					},
-					{
-						Name: "2.cloudesf_testing_cloud_goog",
-						Methods: []*apipb.Method{
-							{
-								Name: "Foo",
-							},
-							{
-								Name: "Bar",
-							},
-						},
-					},
-					{
-						Name: "3.cloudesf_testing_cloud_goog",
 						Methods: []*apipb.Method{
 							{
 								Name: "Foo",
@@ -308,26 +286,10 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 							Address:  "https://mybackend_https.com",
 							Selector: "1.cloudesf_testing_cloud_goog.Bar",
 						},
-						{
-							Address:  "http1://mybackend_http1.com",
-							Selector: "2.cloudesf_testing_cloud_goog.Foo",
-						},
-						{
-							Address:  "http1s://mybackend_http1s.com",
-							Selector: "2.cloudesf_testing_cloud_goog.Bar",
-						},
-						{
-							Address:  "http2://mybackend_http2.com",
-							Selector: "3.cloudesf_testing_cloud_goog.Foo",
-						},
-						{
-							Address:  "http2s://mybackend_http2s.com",
-							Selector: "3.cloudesf_testing_cloud_goog.Bar",
-						},
 					},
 				},
 			},
-			backendProtocol: "http1",
+			backendProtocol: "http",
 			wantedClusters: []*v2pb.Cluster{
 				{
 					Name:                 "mybackend_http.com:80",
@@ -341,34 +303,6 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend_https.com", 443),
 					TransportSocket:      createTransportSocket("mybackend_https.com"),
-				},
-				{
-					Name:                 "mybackend_http1.com:80",
-					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
-					LoadAssignment:       util.CreateLoadAssignment("mybackend_http1.com", 80),
-				},
-				{
-					Name:                 "mybackend_http1s.com:443",
-					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
-					LoadAssignment:       util.CreateLoadAssignment("mybackend_http1s.com", 443),
-					TransportSocket:      createTransportSocket("mybackend_http1s.com"),
-				},
-				{
-					Name:                 "mybackend_http2.com:80",
-					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
-					LoadAssignment:       util.CreateLoadAssignment("mybackend_http2.com", 80),
-					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{},
-				},
-				{
-					Name:                 "mybackend_http2s.com:443",
-					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
-					LoadAssignment:       util.CreateLoadAssignment("mybackend_http2s.com", 443),
-					TransportSocket:      createH2TransportSocket("mybackend_http2s.com"),
-					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{},
 				},
 			},
 		},
@@ -412,7 +346,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "http1",
+			backendProtocol: "http",
 			wantedClusters: []*v2pb.Cluster{
 				{
 					Name:                 "mybackend.com:443",
@@ -457,7 +391,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "http1",
+			backendProtocol: "http",
 			wantedClusters: []*v2pb.Cluster{
 				{
 					Name:                 "mybackend.com:80",
@@ -508,7 +442,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "http1",
+			backendProtocol: "http",
 			wantedClusters: []*v2pb.Cluster{
 				{
 					Name:                 "mybackend_http.com:80",
@@ -565,7 +499,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "http1",
+			backendProtocol: "http",
 			wantedClusters: []*v2pb.Cluster{
 				{
 					Name:                 "mybackend.run.app:443",
@@ -615,7 +549,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "http1",
+			backendProtocol: "http",
 			wantedError:     "Invalid DnsLookupFamily: v5only;",
 		},
 	}

@@ -117,8 +117,14 @@ type BackendProtocol int32
 
 // Backend protocol.
 const (
-	Unknown BackendProtocol = iota
-	HTTP1
-	HTTP2
+	HTTP BackendProtocol = iota
 	GRPC
+)
+
+type HttpProtocol int32
+
+// Http protocol.
+const (
+	HTTP1 HttpProtocol = iota
+	HTTP2
 )

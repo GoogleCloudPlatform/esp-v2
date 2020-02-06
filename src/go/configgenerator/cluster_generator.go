@@ -204,7 +204,7 @@ func makeBackendCluster(opt *options.ConfigGeneratorOptions, brc *sc.BackendRout
 		ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
 		LoadAssignment:       util.CreateLoadAssignment(brc.Hostname, brc.Port),
 	}
-	isHttp2 := brc.Protocol != util.HTTP1
+	isHttp2 := brc.HttpProtocol == util.HTTP2 || brc.Protocol == util.GRPC
 
 	if brc.UseTLS {
 		var alpnProtocols []string

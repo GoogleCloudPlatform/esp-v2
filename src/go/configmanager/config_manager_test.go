@@ -1030,8 +1030,8 @@ func TestFetchListeners(t *testing.T) {
 }`, testProjectID, testConfigID, testProjectName, testBackendClusterName),
 		},
 		{
-			desc:            "Success for HTTP1 backend, with Jwt filter, with audiences",
-			backendProtocol: "http1",
+			desc:            "Success for HTTP backend, with Jwt filter, with audiences",
+			backendProtocol: "http",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"bookstore.endpoints.project123.cloud.goog",
                 "apis":[
@@ -1215,7 +1215,7 @@ func TestFetchListeners(t *testing.T) {
 		{
 			desc:            "Success for backend that allow CORS, with tracing enabled",
 			enableTracing:   true,
-			backendProtocol: "http1",
+			backendProtocol: "http",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"%s",
                 "producer_project_id":"%s",
@@ -1441,9 +1441,9 @@ func TestDynamicBackendRouting(t *testing.T) {
 		wantedListener    string
 	}{
 		{
-			desc:              "Success for http1 with dynamic routing",
+			desc:              "Success for http with dynamic routing",
 			serviceConfigPath: "testdata/service_config_for_dynamic_routing.json",
-			backendProtocol:   "http1",
+			backendProtocol:   "http",
 			wantedClusters:    testdata.FakeWantedClustersForDynamicRouting,
 			wantedListener:    testdata.FakeWantedListenerForDynamicRouting,
 		},

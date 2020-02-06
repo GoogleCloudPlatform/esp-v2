@@ -170,9 +170,9 @@ environment variable or by passing "-k" flag to this script.
         '--backend_protocol',
         default=None,
         help='''Backend Protocol. Overrides the protocol in --backend.
-        Choices: [http1|http2|grpc].
-        Default value: http1.''',
-        choices=['http1', 'http2', 'grpc'])
+        Choices: [http|https|grpc|grpcs].
+        Default value: http.''',
+        choices=['http', 'https', 'grpc', 'grpcs'])
 
     parser.add_argument('--http_port', default=None, type=int, help='''
        The port to accept HTTP/1.x, HTTP/2, and gRPC connections.
@@ -510,16 +510,16 @@ def gen_proxy_config(args):
             backend_protocol = "grpc"
             backends = args.backend[len(GRPC_PREFIX):]
         elif args.backend.startswith(HTTP_PREFIX):
-            backend_protocol = "http1"
+            backend_protocol = "http"
             backends = args.backend[len(HTTP_PREFIX):]
         elif args.backend.startswith(HTTPS_PREFIX):
-            backend_protocol = "http2"
+            backend_protocol = "https"
             backend = args.backend[len(HTTPS_PREFIX):]
             if not re.search(r':[0-9]+$', backend):
                 backend = backend + ':443'
             backends = backend
         else:
-            backend_protocol = "http1"
+            backend_protocol = "http"
             backends = args.backend
     else:
         backend_protocol = args.backend_protocol

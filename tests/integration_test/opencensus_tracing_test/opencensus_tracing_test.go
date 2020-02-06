@@ -184,7 +184,7 @@ func TestServiceControlSkipUsageTraces(t *testing.T) {
 
 	args := []string{
 		"--service_config_id=" + configId,
-		"--backend_protocol=http1",
+		"--backend_protocol=http",
 		"--rollout_strategy=fixed",
 		"--suppress_envoy_headers",
 	}

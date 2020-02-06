@@ -541,7 +541,7 @@ func TestMethods(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "http2",
+			backendProtocol: "http",
 			healthz:         "/",
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo": &methodInfo{
@@ -637,7 +637,7 @@ func TestMethods(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "http2",
+			backendProtocol: "http",
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo": &methodInfo{
 					ShortName: "Echo",
@@ -743,7 +743,7 @@ func TestMethods(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "http1",
+			backendProtocol: "http",
 			healthz:         "/healthz",
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoCors": &methodInfo{

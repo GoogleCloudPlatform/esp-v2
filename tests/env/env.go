@@ -188,7 +188,7 @@ func (e *TestEnv) SetAllowCors() {
 	e.fakeServiceConfig.Endpoints[0].AllowCors = true
 }
 
-func (e *TestEnv) EnableEchoServerRootPathHandler () {
+func (e *TestEnv) EnableEchoServerRootPathHandler() {
 	e.enableEchoServerRootPathHandler = true
 }
 

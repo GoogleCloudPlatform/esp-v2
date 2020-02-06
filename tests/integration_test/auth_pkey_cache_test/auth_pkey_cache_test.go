@@ -69,7 +69,7 @@ func TestAuthJwksCache(t *testing.T) {
 	for _, tc := range testData {
 		func() {
 			args := []string{"--service_config_id=" + configId,
-				"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
+				"--backend_protocol=http", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 			s := env.NewTestEnv(comp.TestAuthJwksCache, platform.EchoSidecar)
 			if tc.jwksCacheDurationInS != 0 {

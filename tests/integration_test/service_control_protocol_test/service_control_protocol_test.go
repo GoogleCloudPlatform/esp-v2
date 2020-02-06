@@ -149,7 +149,7 @@ func TestServiceControlProtocolWithHTTPBackend(t *testing.T) {
 	args := []string{
 		"--service=" + serviceName,
 		"--service_config_id=" + configID,
-		"--backend_protocol=http1",
+		"--backend_protocol=http",
 		"--rollout_strategy=fixed",
 	}
 

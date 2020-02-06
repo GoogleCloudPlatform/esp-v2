@@ -38,7 +38,7 @@ func TestServiceControlLogHeaders(t *testing.T) {
 	configId := "test-config-id"
 
 	args := []string{"--service_config_id=" + configId,
-		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers", "--log_request_headers=Fake-Header-Key0,Fake-Header-Key1,Fake-Header-Key2,Non-Existing-Header-Key", "--log_response_headers=Echo-Fake-Header-Key0,Echo-Fake-Header-Key1,Echo-Fake-Header-Key2,Non-Existing-Header-Key"}
+		"--backend_protocol=http", "--rollout_strategy=fixed", "--suppress_envoy_headers", "--log_request_headers=Fake-Header-Key0,Fake-Header-Key1,Fake-Header-Key2,Non-Existing-Header-Key", "--log_response_headers=Echo-Fake-Header-Key0,Echo-Fake-Header-Key1,Echo-Fake-Header-Key2,Non-Existing-Header-Key"}
 
 	s := env.NewTestEnv(comp.TestServiceControlLogHeaders, platform.EchoSidecar)
 	s.AppendHttpRules([]*annotationspb.HttpRule{

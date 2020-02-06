@@ -40,7 +40,7 @@ func TestSimpleCorsWithBasicPreset(t *testing.T) {
 	corsExposeHeadersValue := "Content-Length,Content-Range"
 
 	args := []string{"--service_config_id=" + configId,
-		"--backend_protocol=http1", "--rollout_strategy=fixed", "--cors_preset=basic",
+		"--backend_protocol=http", "--rollout_strategy=fixed", "--cors_preset=basic",
 		"--cors_allow_origin=" + corsAllowOriginValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
@@ -103,7 +103,7 @@ func TestDifferentOriginSimpleCors(t *testing.T) {
 	corsExposeHeadersValue := "Content-Length,Content-Range"
 
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
-		"--backend_protocol=http1", "--rollout_strategy=fixed", "--cors_preset=basic",
+		"--backend_protocol=http", "--rollout_strategy=fixed", "--cors_preset=basic",
 		"--cors_allow_origin=" + corsAllowOriginValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
@@ -143,7 +143,7 @@ func TestSimpleCorsWithRegexPreset(t *testing.T) {
 	corsAllowOriginValue := "http://gcpproxy.cloud.google.com"
 	corsExposeHeadersValue := "Content-Length,Content-Range"
 
-	args := []string{"--service=" + serviceName, "--service_config_id=" + configId, "--backend_protocol=http1",
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configId, "--backend_protocol=http",
 		"--rollout_strategy=fixed", "--cors_preset=cors_with_regex",
 		"--cors_allow_origin_regex=" + corsAllowOriginRegex,
 		"--cors_expose_headers=" + corsExposeHeadersValue}
@@ -193,7 +193,7 @@ func TestPreflightCorsWithBasicPreset(t *testing.T) {
 	corsAllowCredentialsValue := "true"
 
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
-		"--backend_protocol=http1", "--rollout_strategy=fixed", "--cors_preset=basic",
+		"--backend_protocol=http", "--rollout_strategy=fixed", "--cors_preset=basic",
 		"--cors_allow_origin=" + corsAllowOriginValue, "--cors_allow_methods=" + corsAllowMethodsValue,
 		"--cors_allow_headers=" + corsAllowHeadersValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
@@ -246,7 +246,7 @@ func TestDifferentOriginPreflightCors(t *testing.T) {
 	corsExposeHeadersValue := "Content-Length,Content-Range"
 
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
-		"--backend_protocol=http1", "--rollout_strategy=fixed", "--cors_preset=basic",
+		"--backend_protocol=http", "--rollout_strategy=fixed", "--cors_preset=basic",
 		"--cors_allow_origin=" + corsAllowOriginValue, "--cors_allow_methods=" + corsAllowMethodsValue,
 		"--cors_allow_headers=" + corsAllowHeadersValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
@@ -392,7 +392,7 @@ func TestPreflightRequestWithAllowCors(t *testing.T) {
 	corsAllowCredentialsValue := "true"
 
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
-		"--backend_protocol=http1", "--rollout_strategy=fixed"}
+		"--backend_protocol=http", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestPreflightRequestWithAllowCors, platform.EchoSidecar)
 	s.SetAllowCors()
@@ -461,7 +461,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 	corsAllowCredentialsValue := "true"
 
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
-		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
+		"--backend_protocol=http", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlRequestWithAllowCors, platform.EchoSidecar)
 	s.SetAllowCors()
@@ -629,7 +629,7 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 	corsAllowCredentialsValue := "true"
 
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
-		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
+		"--backend_protocol=http", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlRequestWithoutAllowCors, platform.EchoSidecar)
 	s.AppendHttpRules([]*annotationspb.HttpRule{

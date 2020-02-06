@@ -36,7 +36,7 @@ func TestServiceControlCheckError(t *testing.T) {
 	provider := testdata.GoogleJwtProvider
 
 	args := []string{"--service_config_id=" + configId,
-		"--backend_protocol=http1", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
+		"--backend_protocol=http", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlCheckError, platform.EchoSidecar)
 	defer s.TearDown()

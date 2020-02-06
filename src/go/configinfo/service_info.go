@@ -65,11 +65,12 @@ type ServiceInfo struct {
 }
 
 type BackendRoutingCluster struct {
-	ClusterName string
-	Hostname    string
-	Port        uint32
-	UseTLS      bool
-	Protocol    util.BackendProtocol
+	ClusterName  string
+	Hostname     string
+	Port         uint32
+	UseTLS       bool
+	Protocol     util.BackendProtocol
+	HttpProtocol util.HttpProtocol
 }
 
 // NewServiceInfoFromServiceConfig returns an instance of ServiceInfo.
@@ -144,11 +145,12 @@ func (s *ServiceInfo) buildCatchAllBackend() error {
 	}
 
 	s.CatchAllBackend = &BackendRoutingCluster{
-		UseTLS:      tls,
-		Protocol:    protocol,
-		ClusterName: s.BackendClusterName(),
-		Hostname:    s.Options.ClusterAddress,
-		Port:        uint32(s.Options.ClusterPort),
+		UseTLS:       tls,
+		Protocol:     protocol,
+		HttpProtocol: util.HTTP1, // TODO: default to HTTP1 for now
+		ClusterName:  s.BackendClusterName(),
+		Hostname:     s.Options.ClusterAddress,
+		Port:         uint32(s.Options.ClusterPort),
 	}
 	return nil
 }
@@ -421,11 +423,12 @@ func (s *ServiceInfo) processBackendRule() error {
 				backendSelector := address
 				s.BackendRoutingClusters = append(s.BackendRoutingClusters,
 					&BackendRoutingCluster{
-						ClusterName: backendSelector,
-						UseTLS:      tls,
-						Protocol:    protocol,
-						Hostname:    hostname,
-						Port:        port,
+						ClusterName:  backendSelector,
+						UseTLS:       tls,
+						Protocol:     protocol,
+						HttpProtocol: util.HTTP1, // TODO: default to HTTP1 for now
+						Hostname:     hostname,
+						Port:         port,
 					})
 				backendRoutingClustersMap[address] = backendSelector
 			}

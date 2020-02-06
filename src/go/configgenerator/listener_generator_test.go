@@ -184,8 +184,8 @@ func TestBackendRoutingFilter(t *testing.T) {
       }`,
 		},
 		{
-			desc:     "Success, generate backend routing filter for http2",
-			protocol: "http2",
+			desc:     "Success, generate backend routing filter for http",
+			protocol: "http",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -261,7 +261,7 @@ func TestBackendRoutingFilter(t *testing.T) {
 		},
 		{
 			desc:     "Success, generate backend routing filter with allow Cors",
-			protocol: "http1",
+			protocol: "http",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Endpoints: []*confpb.Endpoint{
@@ -725,7 +725,7 @@ func TestPathMatcherFilter(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "HTTP1",
+			backendProtocol: "HTTP",
 			healthz:         "/",
 			wantPathMatcherFilter: `
 			        {
@@ -813,7 +813,7 @@ func TestPathMatcherFilter(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "HTTP1",
+			backendProtocol: "HTTP",
 			wantPathMatcherFilter: `
 			        {
    "name":"envoy.filters.http.path_matcher",
@@ -871,7 +871,7 @@ func TestPathMatcherFilter(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "HTTP1",
+			backendProtocol: "HTTP",
 			wantPathMatcherFilter: `
 			        {
    "name":"envoy.filters.http.path_matcher",
@@ -944,7 +944,7 @@ func TestPathMatcherFilter(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "http1",
+			backendProtocol: "http",
 			wantPathMatcherFilter: `
 			        {
    "name":"envoy.filters.http.path_matcher",
@@ -1032,7 +1032,7 @@ func TestHealthCheckFilter(t *testing.T) {
 		},
 		{
 			desc:     "Success, generate health check filter for http",
-			protocol: "http2",
+			protocol: "http",
 			healthz:  "/",
 			fakeServiceConfig: &confpb.Service{
 				Name: "foo.endpoints.bar.cloud.goog",

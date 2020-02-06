@@ -31,7 +31,7 @@ var (
 	// When adding or changing default values, update options.DefaultConfigGeneratorOptions.
 
 	// Service Management related configurations. Must be set.
-	BackendProtocol = flag.String("backend_protocol", "", `must set as one of "grpc", "http1", "http2"`)
+	BackendProtocol = flag.String("backend_protocol", "", `must set as one of "http", "https", "grpc" or "grpcs"`)
 
 	// Cors related configurations.
 	CorsAllowCredentials = flag.Bool("cors_allow_credentials", false, "whether include the Access-Control-Allow-Credentials header with the value true in responses or not")

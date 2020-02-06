@@ -67,15 +67,11 @@ func ParseBackendProtocol(protocol string) (BackendProtocol, bool, error) {
 
 	switch protocol {
 	case "http":
-		return HTTP1, tls, nil
-	case "http1":
-		return HTTP1, tls, nil
-	case "http2":
-		return HTTP2, tls, nil
+		return HTTP, tls, nil
 	case "grpc":
 		return GRPC, tls, nil
 	default:
-		return HTTP1, tls, fmt.Errorf(`unknown backend protocol [%v], should be one of "grpc", "http", "http1" or "http2"`, protocol)
+		return HTTP, tls, fmt.Errorf(`unknown backend protocol [%v], should be one of "http" or "grpc"`, protocol)
 	}
 }
 

@@ -409,7 +409,12 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		return nil
 	}
 
-	lowercaseProtocol := strings.ToLower(serviceInfo.Options.BackendProtocol)
+	// Only used for Report: either http or grpc
+	// TODO(qiwzhang): clean up to use http. Now use http1 since cc code is expecting
+	lowercaseProtocol := "http1"
+	if serviceInfo.BackendIsGrpc {
+		lowercaseProtocol = "grpc"
+	}
 	serviceName := serviceInfo.ServiceConfig().GetName()
 	service := &scpb.Service{
 		ServiceName:       serviceName,

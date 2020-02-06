@@ -204,7 +204,6 @@
     "clusters": [
       {
         "connectTimeout": "20s",
-        "http2ProtocolOptions": {},
         "loadAssignment": {
           "clusterName": "127.0.0.1",
           "endpoints": [

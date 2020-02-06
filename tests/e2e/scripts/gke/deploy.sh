@@ -49,7 +49,7 @@ case "${BACKEND}" in
   'bookstore')
     YAML_TEMPLATE=${ROOT}/tests/e2e/testdata/bookstore/gke/http-bookstore.yaml.template
     YAML_FILE=${ROOT}/tests/e2e/testdata/bookstore/gke/http-bookstore.yaml
-    ARGS="$ARGS , \"--backend_protocol=http1\"" ;;
+    ARGS="$ARGS , \"--backend_protocol=http\"" ;;
   'echo')
     YAML_TEMPLATE=${ROOT}/tests/e2e/testdata/grpc_echo/gke/grpc-echo.yaml.template
     YAML_FILE=${ROOT}/tests/e2e/testdata/grpc_echo/gke/grpc-echo.yaml
