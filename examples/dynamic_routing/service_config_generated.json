@@ -25,13 +25,15 @@
     "rules": [
       {
         "address": "https://http-bookstore-abc123456-uc.a.run.app/shelves",
+        "deadline": 5.0,
         "jwtAudience": "ESPv2",
         "pathTranslation": "APPEND_PATH_TO_ADDRESS",
         "selector": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.ListShelves"
       },
       {
         "address": "https://http-bookstore-edf123456-uc.a.run.app/shelves",
-        "jwtAudience": "",
+        "deadline": 30.0,
+        "disableAuth": true,
         "pathTranslation": "CONSTANT_ADDRESS",
         "selector": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.CreateShelf"
       }

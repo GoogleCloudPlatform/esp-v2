@@ -22,7 +22,8 @@
         "x-google-backend": {
           "address": "https://http-bookstore-abc123456-uc.a.run.app/shelves",
           "jwt_audience": "ESPv2",
-          "path_translation": "APPEND_PATH_TO_ADDRESS"
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "deadline": 5.0
         },
         "description": "Returns all shelves in the bookstore.",
         "operationId": "listShelves",
@@ -42,7 +43,8 @@
         "x-google-backend": {
           "address": "https://http-bookstore-edf123456-uc.a.run.app/shelves",
           "path_translation": "CONSTANT_ADDRESS",
-          "disable_auth": true
+          "disable_auth": true,
+          "deadline": 30.0
         },
         "description": "Creates a new shelf in the bookstore.",
         "operationId": "createShelf",
