@@ -33,7 +33,7 @@ exit 1; }
 echo '======================================================='
 echo '===================== Setup Cache ====================='
 echo '======================================================='
-try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "${PRESUBMIT_TEST_CASE}"
+#try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "${PRESUBMIT_TEST_CASE}"
 
 
 echo '======================================================='
