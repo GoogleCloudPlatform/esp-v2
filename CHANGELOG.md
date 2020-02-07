@@ -1,8 +1,12 @@
-# Release 2.3.0 28-01-2020
+# Release 2.4.0 06-02-2020
 
+- Fix a crash on race condition during config change.
+- Fix CORS bug by adding a CORS route for Envoy cors filter
+- Support root path / in service config.
+- Increase max program size limit for regex matching in Envoy
+- Support http, https, grpc and grpcs scheme in BackendRule address
 - Use IAM with delegation in backend auth and service control
 - Support deadlines in BackendRule
-- Support grpc http2 for dynamic routing
 - Add trace events when checking service control cache
 
 # Release 2.2.0 22-01-2020
