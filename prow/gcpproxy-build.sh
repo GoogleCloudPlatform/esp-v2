@@ -19,8 +19,6 @@
 # Fail on any error.
 set -eo pipefail
 set -x
-gcloud auth configure-docker
-gcloud config list account
 
 
 WD=$(dirname "$0")
