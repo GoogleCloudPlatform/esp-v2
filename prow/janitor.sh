@@ -17,11 +17,23 @@ gcloud config set run/region us-central1
 LIMIT_DATE=$(date -d "1 day ago" +%F)
 echo "Cleaning up resources before ${LIMIT_DATE}"
 
+### GKE Cluster ###
+GKE_SERVICES=$(gcloud container clusters list --format="value(NAME)" \
+  --filter="name ~ e2e-cloud-run AND creationTime  < ${LIMIT_DATE}" )
+
+for service in ${GKE_SERVICES};
+do
+  echo "Deleting GKEservice: ${service}"
+  gcloud container clusters delete ${service} \
+    --zone=us-central1-a \
+    --quiet
+done
+
 ### Cloud Run ###
 CLOUD_RUN_SERVICES=$(gcloud run services list \
-  --platform=managed \
-  --filter="metadata.name ~ ^cloudesf-testing-e2e-test- \
-            AND metadata.creationTimestamp < ${LIMIT_DATE}" \
+    --platform=managed \
+    --filter="metadata.name ~ ^cloudesf-testing-e2e-test- \
+    AND metadata.creationTimestamp < ${LIMIT_DATE}" \
   --format="value(metadata.name)")
 
 # Note: This variable should NOT be in quotation marks,
@@ -36,8 +48,8 @@ echo "Done cleaning up Cloud Run services"
 
 ### Cloud Functions ###
 GOOGLE_FUNCTIONS=$(gcloud functions list \
-  --filter="name ~ cloudesf-testing-e2e-test- \
-            AND updateTime < ${LIMIT_DATE}" \
+    --filter="name ~ cloudesf-testing-e2e-test- \
+    AND updateTime < ${LIMIT_DATE}" \
   --format="value(name)")
 
 # Note: This variable should NOT be in quotation marks,
@@ -51,7 +63,7 @@ echo "Done cleaning up Cloud Functions"
 
 ### Endpoints Services ###
 ENDPOINTS_SERVICES=$(gcloud endpoints services list \
-  --filter="serviceName ~ cloudesf-testing-e2e-test-" \
+    --filter="serviceName ~ cloudesf-testing-e2e-test-" \
   --format="value(serviceName)")
 
 # Note: This variable should NOT be in quotation marks,
@@ -61,8 +73,8 @@ for service in $ENDPOINTS_SERVICES ; do
 
   # The endpoints API does not expose creation date, so infer it from the config id.
   CONFIG_ID=$(gcloud endpoints configs list \
-    --service="${service}" \
-    --limit=1 \
+      --service="${service}" \
+      --limit=1 \
     --format="value(id)")
 
   if [ -z "${CONFIG_ID}" ]
@@ -75,10 +87,10 @@ for service in $ENDPOINTS_SERVICES ; do
   echo "Found date: ${CONFIG_DATE}"
   if [[ "${CONFIG_DATE}" < "${LIMIT_DATE}" ]] ;
   then
-      echo "Cleaning up service"
-      gcloud endpoints services delete ${service} \
-        --quiet \
-        --async
+    echo "Cleaning up service"
+    gcloud endpoints services delete ${service} \
+      --quiet \
+      --async
   fi
 
 done

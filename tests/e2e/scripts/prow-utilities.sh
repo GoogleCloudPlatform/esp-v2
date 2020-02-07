@@ -25,7 +25,7 @@ set -eo pipefail
 # End to End tests common options
 function e2e_options() {
   local OPTIND OPTARG arg
-  while getopts :a:b:B:m:g:i:k:l:r:R:s:t:v:V:f: arg; do
+  while getopts :a:b:B:m:g:i:k:l:r:p:R:s:t:v:V:f: arg; do
     case ${arg} in
       a) APIPROXY_SERVICE="${OPTARG}" ;;
       b) BOOKSTORE_IMAGE="${OPTARG}" ;;
@@ -36,6 +36,7 @@ function e2e_options() {
       k) API_KEY="${OPTARG}" ;;
       f) BACKEND_PLATFORM="${OPTARG}" ;;
       l) DURATION_IN_HOUR="${OPTARG}" ;;
+      p) PROXY_PLATFORM="${OPTARG}" ;;
       R) ROLLOUT_STRATEGY="${OPTARG}" ;;
       s) SKIP_CLEANUP='true' ;;
       t) TEST_TYPE="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')" ;;
@@ -74,7 +75,7 @@ function run() {
 
 # Run and upload logs
 function long_running_test() {
-  local host="${1}"
+  local address="${1}"
   local scheme="${2}"
   local port="${3}"
   local duration_in_hour=${4}
@@ -84,6 +85,7 @@ function long_running_test() {
   local test_id="${8}"
   local run_id="${9}"
   local platform="${10}"
+  local host_header="${11}"
 
   local test_type=''
   [[ ${duration_in_hour} -gt 0 ]] && test_type='long-run-test_'
@@ -92,34 +94,35 @@ function long_running_test() {
   local json_file="${log_dir}/${final_test_id}.json"
   local status
   local http_code=200
-  echo "Running ${BACKEND} long running test on ${host}"
-  echo "ESPv2 listening at ${scheme}://${host}:${port}"
+  echo "Running ${BACKEND} long running test on ${address}"
+  echo "ESPv2 listening at ${scheme}://${address}:${port}"
   echo ${api_key}
   echo ${apiproxy_service}
   case "${BACKEND}" in
     'bookstore')
-      retry -n 20 check_http_service "${scheme}://${host}:${port}/shelves" ${http_code}
+      retry -n 20 check_http_service "${scheme}://${address}:${port}/shelves" ${http_code} "${host_header}"
       status=${?}
       if [[ ${status} -eq 0 ]]; then
         echo 'Running long running test.'
         run_nonfatal "${SCRIPT_PATH}/linux-test-kb-long-run.sh"  \
           -m "${scheme}" \
-          -h "${host}"  \
+          -h "${address}"  \
           -p "${port}"  \
           -l "${duration_in_hour}"  \
           -a "${api_key}"  \
           -s "${apiproxy_service}" \
           -t "${platform}" \
+          -r "${host_header}"   \
           2>&1 | tee "${log_file}" \
           || status=${?}
       fi
       ;;
     'echo')
-      retry -n 20 check_grpc_service "${host}:${port}"
+      retry -n 20 check_grpc_service "${address}:${port}"
       status=${?}
       if [[ ${status} -eq 0 ]]; then
         run_nonfatal "${SCRIPT_PATH}"/linux-grpc-test-long-run.sh""  \
-          -g "${host}"  \
+          -g "${address}"  \
           -l "${duration_in_hour}"  \
           -a "${api_key}"  \
           -s "${apiproxy_service}" 2>&1 | tee "${log_file}" \
@@ -129,7 +132,7 @@ function long_running_test() {
     'interop')
       status=0
       run_nonfatal "${SCRIPT_PATH}"/test-grpc-interop.sh  \
-        -h "${host}:${port}"  \
+        -h "${address}:${port}"  \
         -l "${duration_in_hour}" 2>&1 | tee "${log_file}" \
         || status=${?}
       ;;
@@ -154,8 +157,14 @@ function check_http_service() {
   local host=${1}
   echo $host
   local http_code="${2}"
+  local host_header="${3}"
   local errors="$(mktemp /tmp/curl.XXXXX)"
-  local http_response="$(curl -k -m 20 --write-out %{http_code} --silent --output ${errors} ${host})"
+  if [[ -n ${host_header} ]];
+  then
+   local http_response="$(curl -k -m 20 --write-out %{http_code} --silent --output ${errors} ${host} -H "HOST:${host_header}")"
+  else
+    local http_response="$(curl -k -m 20 --write-out %{http_code} --silent --output ${errors} ${host})"
+  fi
   echo "Pinging host: ${host}, response: ${http_response}"
   if [[ "${http_response}" == "${http_code}" ]]; then
     echo "Service is available at: ${host}"

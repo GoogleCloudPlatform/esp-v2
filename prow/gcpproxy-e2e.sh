@@ -24,7 +24,6 @@ cd "${ROOT}"
 . ${ROOT}/tests/e2e/scripts/prow-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
 
-
 function runE2E() {
   local OPTIND OPTARG arg
   while getopts :f:p:c:g:m:R:t: arg; do
@@ -41,13 +40,19 @@ function runE2E() {
 
   local apiproxy_service=$(get_apiproxy_service ${backend})
   local unique_id=$(get_unique_id "gke-${test_type}-${backend}")
+  if [ "${platform}" == "anthos-cloud-run" ]
+  then
+    local platform_deploy_script="${ROOT}/tests/e2e/scripts/cloud-run/deploy.sh"
+  else
+    local platform_deploy_script="${ROOT}/tests/e2e/scripts/${platform}/deploy.sh"
+  fi
 
-  local platform_deploy_script="${ROOT}/tests/e2e/scripts/${platform}/deploy.sh"
   echo "Deploying on platform ${platform}"
 
   ${platform_deploy_script}  \
     -a "${apiproxy_service}"  \
     -t "${test_type}"  \
+    -p "${platform}" \
     -g "${backend}"  \
     -m "${apiproxy_image}"  \
     -R "${rollout_strategy}"  \
@@ -91,6 +96,9 @@ case ${TEST_CASE} in
     ;;
   "cloud-run-cloud-function-http-bookstore")
     runE2E -p "cloud-run" -f "cloud-function" -t "http" -g "bookstore" -R "managed" -m "$(get_serverless_image_name_with_sha)"
+    ;;
+  "anthos-cloud-run-anthos-cloud-run-http-bookstore")
+    runE2E -p "anthos-cloud-run" -f "anthos-cloud-run" -t "http" -g "bookstore" -R "managed" -m "$(get_serverless_image_name_with_sha)"
     ;;
   *)
     echo "No such test case ${TEST_CASE}"
