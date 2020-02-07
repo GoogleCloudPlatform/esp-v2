@@ -16,7 +16,6 @@
 
 # Fail on any error.
 set -eo pipefail
-gcloud auth configure-docker
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECT_ID="api_proxy_e2e_test"
