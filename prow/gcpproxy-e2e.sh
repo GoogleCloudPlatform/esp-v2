@@ -23,7 +23,7 @@ PROJECT_ID="api_proxy_e2e_test"
 cd "${ROOT}"
 . ${ROOT}/tests/e2e/scripts/prow-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
-gcloud components update
+gcloud config set project cloudesf-testing
 
 function runE2E() {
   local OPTIND OPTARG arg
