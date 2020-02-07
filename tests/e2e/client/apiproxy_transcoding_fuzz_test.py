@@ -94,7 +94,7 @@ class JsonFuzzer(Fuzzer):
 def url_path_fuzzer():
   """ URL Path fuzzer that uses static templates """
   URLPATH_TEMPLATES = ['/FUZZ', '/FUZZ/FUZZ', '/FUZZ/FUZZ/FUZZ']
-  URLPATH_TOKEN_LIST = ['', '/', '@$%^& ', '%20%25', 'echo', 'echostream']
+  URLPATH_TOKEN_LIST = ['', '/', '@$%^&', '%20%25', 'echo', 'echostream']
   return Fuzzer(URLPATH_TEMPLATES, URLPATH_TOKEN_LIST)
 
 
