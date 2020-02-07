@@ -62,8 +62,6 @@ done
 [[ -x "${GSUTIL}" ]] \
   || usage "Cannot find gsutil (${GSUTIL}), provide it via '-u' flag."
 
-which rapture > /dev/null 2>&1 \
-  || error_exit "rapture client not installed on this machine."
 
 set -x
 
