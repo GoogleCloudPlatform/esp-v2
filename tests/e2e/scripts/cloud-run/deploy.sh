@@ -26,7 +26,7 @@ exit 1; }
 exit 1; }
 . ${ROOT}/tests/e2e/scripts/linux-install-wrk.sh || { echo "Cannot load WRK utilities";
 exit 1; }
-gcloud auth activate-service-account github-prow-jobs@cloudesf-testing.iam.gserviceaccount.com --key-file=${GOOGLE_APPLICATION_CREDENTIAL}
+
 e2e_options "${@}"
 
 echo "Installing tools if necessary"
