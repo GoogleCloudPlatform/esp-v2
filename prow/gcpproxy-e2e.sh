@@ -73,7 +73,7 @@ exit 1; }
 if [[ ${TEST_CASE} == "cloud-run-cloud-run-http-bookstore" ||${TEST_CASE} == "cloud-run-cloud-function-http-bookstore" ]];
 then
 
-  gcloud auth activate-service-account github-prow-jobs@cloudesf-testing.iam.gserviceaccount.com --key-file=${GOOGLE_APPLICATION_CREDENTIAL}
+  gcloud auth activate-service-account github-prow-jobs@cloudesf-testing.iam.gserviceaccount.com --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
 fi
 download_client_binaries || { echo "Failed in downloading client binaries;";
 exit 1; }
