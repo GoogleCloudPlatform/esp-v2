@@ -67,7 +67,7 @@ else
   echo "running ${PRESUBMIT_TEST_CASE} presubmit test"
 fi
 
-bazel clean --explunge
+bazel clean
 cp "${ROOT}/.bazelrc_backup" "${ROOT}/.bazelrc"
 echo '======================================================='
 echo '===================== Setup Cache ====================='
