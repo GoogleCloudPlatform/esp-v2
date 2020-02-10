@@ -20,7 +20,6 @@ SHELL 	:= /bin/bash
 BINDIR	:= bin
 PKG 	:= cloudesf.googleresource.com/gcpproxy
 
-
 IMG="gcr.io/cloudesf-testing/gcpproxy-prow"
 TAG := $(shell date +v%Y%m%d)-$(shell git describe --tags --always)
 K8S := master

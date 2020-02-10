@@ -18,7 +18,6 @@
 
 # Fail on any error.
 set -eo pipefail
-gcloud auth configure-docker
 
 WD=$(dirname "$0")
 WD=$(cd "$WD";
@@ -54,7 +53,7 @@ fi
 export GO111MODULE=on
 make tools
 make depend.install
-#make test
+make test
 
 # c++ test
 echo '======================================================'
