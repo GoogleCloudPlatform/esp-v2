@@ -29,10 +29,11 @@ cd "${ROOT}"
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
 
+cp "${ROOT}/.bazelrc" "${ROOT}/.bazelrc_backup"
 echo '======================================================='
 echo '===================== Setup Cache ====================='
 echo '======================================================='
-try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "${PRESUBMIT_TEST_CASE}"
+try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "${PRESUBMIT_TEST_CASE}-unit"
 
 
 echo '======================================================='
@@ -66,6 +67,12 @@ else
   echo "running ${PRESUBMIT_TEST_CASE} presubmit test"
 fi
 
+cp "${ROOT}/.bazelrc_backup" "${ROOT}/.bazelrc"
+echo '======================================================='
+echo '===================== Setup Cache ====================='
+echo '======================================================='
+try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "${PRESUBMIT_TEST_CASE}-integration"
+
 case "${PRESUBMIT_TEST_CASE}" in
   "asan")
     make test-envoy-asan
@@ -80,7 +87,7 @@ case "${PRESUBMIT_TEST_CASE}" in
     make test-envoy
     ;;
 esac
-bazel clean --expunge
+
 echo '======================================================'
 echo '===================== Integration test  =============='
 echo '======================================================'
