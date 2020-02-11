@@ -67,12 +67,6 @@ else
   echo "running ${PRESUBMIT_TEST_CASE} presubmit test"
 fi
 
-bazel clean --expunge
-cp "${ROOT}/.bazelrc_backup" "${ROOT}/.bazelrc"
-echo '======================================================='
-echo '===================== Setup Cache ====================='
-echo '======================================================='
-try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "${PRESUBMIT_TEST_CASE}-integration--test"
 
 case "${PRESUBMIT_TEST_CASE}" in
   "asan")
@@ -88,6 +82,13 @@ case "${PRESUBMIT_TEST_CASE}" in
     make test-envoy
     ;;
 esac
+
+bazel clean --expunge
+cp "${ROOT}/.bazelrc_backup" "${ROOT}/.bazelrc"
+echo '======================================================='
+echo '===================== Setup Cache ====================='
+echo '======================================================='
+try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "${PRESUBMIT_TEST_CASE}-integration--test"
 
 echo '======================================================'
 echo '===================== Integration test  =============='
