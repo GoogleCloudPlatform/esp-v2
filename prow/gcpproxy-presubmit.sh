@@ -29,11 +29,6 @@ cd "${ROOT}"
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
 
-cp "${ROOT}/.bazelrc" "${ROOT}/.bazelrc_backup"
-echo '======================================================='
-echo '===================== Setup Cache ====================='
-echo '======================================================='
-try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "${PRESUBMIT_TEST_CASE}-unit--test"
 
 
 echo '======================================================='
@@ -84,7 +79,6 @@ case "${PRESUBMIT_TEST_CASE}" in
 esac
 
 bazel clean --expunge
-cp "${ROOT}/.bazelrc_backup" "${ROOT}/.bazelrc"
 echo '======================================================='
 echo '===================== Setup Cache ====================='
 echo '======================================================='
