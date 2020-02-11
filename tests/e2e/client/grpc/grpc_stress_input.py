@@ -45,6 +45,8 @@ flags.DEFINE_float('allowed_failure_rate', 0.001, 'Allowed failure rate.')
 flags.DEFINE_integer('requests_per_stream', 100,
                      'The number of requests for each stream')
 
+flags.DEFINE_boolean('use_ssl', False, 'If true, use SSL to connect.')
+
 # kNoApiKeyError = ('Method doesn\'t allow unregistered callers (callers without'
 #                   ' established identity). Please use API Key or other form of'
 #                   ' API consumer identity to call this API.')
@@ -74,7 +76,10 @@ def SubtestEcho():
   return {
       'weight': 1,
       'echo': {
-          'request': GetRequest()
+          'request': GetRequest(),
+          'call_config': {
+              'use_ssl': FLAGS.use_ssl,
+          }
       }
   }
 
@@ -88,6 +93,7 @@ def SubtestEchoStream():
           'call_config': {
               'api_key': FLAGS.api_key,
               'auth_token': FLAGS.auth_token,
+              'use_ssl': FLAGS.use_ssl,
           },
       }
   }
@@ -104,6 +110,9 @@ def SubtestEchoStreamAuthFail():
               'code': 16,
               'details': "Jwt is missing",
           },
+          'call_config': {
+              'use_ssl': FLAGS.use_ssl,
+          }
       }
   }
 
@@ -117,6 +126,7 @@ def SubtestEchoStreamNoApiKey():
           # Even auth check passed, it still requires api-key
           'call_config': {
               'auth_token': FLAGS.auth_token,
+              'use_ssl': FLAGS.use_ssl,
           },
           'expected_status': {
               'code': 16,

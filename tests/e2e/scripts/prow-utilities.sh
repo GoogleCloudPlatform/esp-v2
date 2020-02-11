@@ -118,13 +118,24 @@ function long_running_test() {
       fi
       ;;
     'echo')
-      retry -n 20 check_grpc_service "${address}:${port}"
+
+
+      # Determine if we need SSL or not
+      local use_ssl='false'
+      if [ "${scheme}" == "https" ]; then
+        use_ssl='true'
+      fi
+
+      retry -n 20 check_grpc_service "${address}:${port}" "${use_ssl}"
       status=${?}
       if [[ ${status} -eq 0 ]]; then
         run_nonfatal "${SCRIPT_PATH}"/linux-grpc-test-long-run.sh""  \
-          -g "${address}"  \
+          -m "${scheme}" \
+          -h "${address}"  \
+          -p "${port}"  \
           -l "${duration_in_hour}"  \
           -a "${api_key}"  \
+          -t "${platform}" \
           -s "${apiproxy_service}" 2>&1 | tee "${log_file}" \
           || status=${?}
       fi
@@ -179,12 +190,16 @@ function check_http_service() {
 
 function check_grpc_service() {
   local host=${1}
+  local use_ssl=${2}
   cat << EOF | "${ROOT}/bin/grpc_echo_client"
 server_addr: "${host}"
 plans {
   echo {
     request {
       text: "Hello, world!"
+    }
+    call_config {
+      use_ssl: ${use_ssl}
     }
   }
 }

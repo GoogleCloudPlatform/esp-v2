@@ -31,17 +31,24 @@ ROOT="$(cd "${SCRIPT_PATH}/../../.." && pwd)"
 
 API_KEY=''
 SERVICE_NAME="echo.endpoints.cloudesf-testing.cloud.goog"
+SCHEME=''
 HOST=''
+PORT=''
+PLATFORM=''
 DURATION_IN_HOUR=0
 
 REQUEST_COUNT=10000
+USE_SSL=false
 
-while getopts :a:g:h:l:s: arg; do
+while getopts :a:m:h:p:l:s:t: arg; do
   case ${arg} in
     a) API_KEY="${OPTARG}" ;;
-    g) HOST="${OPTARG}" ;;
+    m) SCHEME="${OPTARG}" ;;
+    h) HOST="${OPTARG}" ;;
+    p) PORT="${OPTARG}" ;;
     l) DURATION_IN_HOUR="${OPTARG}" ;;
     s) SERVICE_NAME="${OPTARG}" ;;
+    t) PLATFORM="${OPTARG}" ;;
     *) echo "Invalid option: -${OPTARG}" ;;
   esac
 done
@@ -81,15 +88,21 @@ function generate_run_config() {
 function grpc_test_pass_through() {
   echo "Starting grpc pass through stress test at $(date)."
 
+  # Determine if we need SSL or not
+  if [ "${SCHEME}" == "https" ]; then
+    USE_SSL='true'
+  fi
+
   local tmp_file="$(mktemp)"
   local failures=0
   for run in $(seq 1 ${ALL_CONFIG_TYPES}); do
     generate_run_config $((run - 1))
-    # Generating token for each run, that they expire in 1 hour.
 
+    # Generating token for each run, that they expire in 1 hour.
     local AUTH_TOKEN=$("${ROOT}/tests/e2e/scripts/gen-auth-token.sh" -a "${SERVICE_NAME}")
+
     (set -x; python "${ROOT}/tests/e2e/client/grpc/grpc_stress_input.py" \
-        --server="${HOST}:80" \
+        --server="${HOST}:${PORT}" \
         --allowed_failure_rate=0.3 \
         --api_key="${API_KEY}" \
         --auth_token="${AUTH_TOKEN}" \
@@ -97,6 +110,7 @@ function grpc_test_pass_through() {
         --concurrent="${CONCURRENT}" \
         --requests_per_stream="${STREAM_COUNT}" \
         --random_payload_max_size="${RANDOM_PAYLOAD_SIZE}" \
+        --use_ssl="${USE_SSL}" \
       --random_payload_max_size="${RANDOM_PAYLOAD_SIZE}" >"${tmp_file}")
     # gRPC test client occasionally aborted. Retry up to 5 times.
 
@@ -127,7 +141,7 @@ function grpc_test_transcode() {
 
   (set -x; python ${ROOT}/tests/e2e/client/apiproxy_client.py \
       --test=stress \
-      --host="http://${HOST}:80" \
+      --host="${SCHEME}://${HOST}:${PORT}" \
       --api_key="${API_KEY}" \
       --auth_token="${AUTH_TOKEN}" \
       --test_data="${ROOT}/tests/e2e/testdata/grpc_echo/grpc_test_data.json" \
@@ -142,33 +156,23 @@ function grpc_test_transcode_fuzzing() {
 
   echo "Starting grpc transcode fuzz test at $(date)."
   (set -x; python ${ROOT}/tests/e2e/client/apiproxy_transcoding_fuzz_test.py \
-      --address="http://${HOST}:80" \
+      --address="${SCHEME}://${HOST}:${PORT}" \
       --status_address="${STATUS_HOST}" \
       --api_key="${API_KEY}" \
       --auth_token="${AUTH_TOKEN}" \
     --runs=1)
 }
 
-# Issue a request to allow Endpoints-Runtime to fetch metadata.
-# If sending N requests concurrently, N-1 requests will fail while the
-# first request is fetching the metadata.
-
-cat <<EOF | "${ROOT}/bin/grpc_echo_client"
-server_addr: "${HOST}:80"
-plans {
-  echo {
-    request {
-      text: "Hello, world!"
-    }
-  }
-}
-EOF
 END_TIME=$(date +"%s")
 END_TIME=$((END_TIME + DURATION_IN_HOUR * 60 * 60))
 RUN_COUNT=0
 GRPC_STRESS_FAILURES=0
 HTTP_STRESS_FAILURES=0
-detect_memory_leak_init "${HOST}"
+
+if [ "$PLATFORM" = "gke" ]; then
+  detect_memory_leak_init ${HOST}
+fi
+
 # ${ROOT}/tests/client/esp_client.py needs to run at that folder.
 pushd ${ROOT}/tests/e2e/client > /dev/null
 
@@ -181,10 +185,18 @@ while true; do
   #######################
   RUN_COUNT=$((RUN_COUNT++))
 
-  grpc_test_pass_through || ((GRPC_STRESS_FAILURES++))
+  if [ "$PLATFORM" = "gke" ]; then
+    # TODO(b/149256854): Enable for Cloud Run when parallel grpc is fixed.
+    grpc_test_pass_through || ((GRPC_STRESS_FAILURES++))
+  fi
+
   grpc_test_transcode || ((HTTP_STRESS_FAILURES++))
-  grpc_test_transcode_fuzzing|| ((HTTP_STRESS_FAILURES++))
-  detect_memory_leak_check ${RUN_COUNT}
+
+  if [ "$PLATFORM" = "gke" ]; then
+    grpc_test_transcode_fuzzing|| ((HTTP_STRESS_FAILURES++))
+    detect_memory_leak_check ${RUN_COUNT}
+  fi
+
   # Break if test has run long enough.
   [[ $(date +"%s") -lt ${END_TIME} ]] || break
 done
@@ -192,8 +204,12 @@ popd > /dev/null
 
 echo "Finished ${RUN_COUNT} test runs."
 echo "Failures: pass-through: ${GRPC_STRESS_FAILURES}, transcode: ${HTTP_STRESS_FAILURES}."
-# We fail the test if memory increase is large.
-detect_memory_leak_final ${RUN_COUNT} && MEMORY_LEAK=0 || MEMORY_LEAK=1
+
+MEMORY_LEAK=0
+if [ "$PLATFORM" = "gke" ]; then
+  # We fail the test if memory increase is large.
+  detect_memory_leak_final ${RUN_COUNT} && MEMORY_LEAK=0 || MEMORY_LEAK=1
+fi
 # Only mark test as failed if any pass-through tests failed.
 # This is to be consistent with other http stress tests.
 # All failure will be analyzed by release-engineers.

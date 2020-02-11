@@ -94,6 +94,9 @@ case ${TEST_CASE} in
   "cloud-run-cloud-run-http-bookstore")
     runE2E -p "cloud-run" -f "cloud-run" -t "http" -g "bookstore" -R "managed" -m "$(get_serverless_image_name_with_sha)"
     ;;
+  "cloud-run-cloud-run-grpc-echo")
+    runE2E -p "cloud-run" -f "cloud-run" -t "grpc" -g "echo" -R "managed" -m "$(get_serverless_image_name_with_sha)"
+    ;;
   "cloud-run-cloud-function-http-bookstore")
     runE2E -p "cloud-run" -f "cloud-function" -t "http" -g "bookstore" -R "managed" -m "$(get_serverless_image_name_with_sha)"
     ;;
