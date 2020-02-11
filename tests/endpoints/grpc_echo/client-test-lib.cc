@@ -57,24 +57,23 @@ using ::google::protobuf::util::error::Code;
 const char kTypeUrlPrefix[] = "type.googleapis.com";
 const char kRpcStatusTypeUrl[] = "type.googleapis.com/google.rpc.Status";
 
-
 namespace test {
 namespace grpc {
 namespace {
 // Creation function used by static lazy init.
-TypeResolver* CreateTypeResolver() {
+TypeResolver *CreateTypeResolver() {
   return ::google::protobuf::util::NewTypeResolverForDescriptorPool(
       kTypeUrlPrefix, ::google::protobuf::DescriptorPool::generated_pool());
 }
 
-TypeResolver* GetTypeResolver() {
-  static TypeResolver* resolver = CreateTypeResolver();
+TypeResolver *GetTypeResolver() {
+  static TypeResolver *resolver = CreateTypeResolver();
   return resolver;
 }
 
-std::string GetTypeUrl(const Message& message) {
+std::string GetTypeUrl(const Message &message) {
   return std::string(kTypeUrlPrefix) + "/" +
-      message.GetDescriptor()->full_name();
+         message.GetDescriptor()->full_name();
 }
 
 ::google::protobuf::util::Status FromProto(
@@ -84,7 +83,7 @@ std::string GetTypeUrl(const Message& message) {
   }
   return proto_status;
 }
-}
+}  // namespace
 
 ::google::protobuf::util::Status JsonToProto(const std::string &json,
                                              Message *message) {
@@ -105,9 +104,9 @@ std::string GetTypeUrl(const Message& message) {
       "Unable to parse bytes generated from JsonToBinaryString as proto.");
 }
 
-::google::protobuf::util::Status ProtoToJson(const Message& message,
-                   ::google::protobuf::io::ZeroCopyOutputStream* json,
-                   int options) {
+::google::protobuf::util::Status ProtoToJson(
+    const Message &message, ::google::protobuf::io::ZeroCopyOutputStream *json,
+    int options) {
   ::google::protobuf::util::JsonPrintOptions json_options;
   if (options & JsonOptions::PRETTY_PRINT) {
     json_options.add_whitespace = true;
@@ -125,7 +124,6 @@ std::string GetTypeUrl(const Message& message) {
           json_options);
   return FromProto(status);
 }
-
 
 namespace {
 
@@ -153,6 +151,20 @@ std::shared_ptr<ChannelCredentials> GetCreds(const EchoTest &desc) {
 template <>
 std::shared_ptr<ChannelCredentials> GetCreds(const EchoStreamTest &desc) {
   return GetCreds(desc.call_config());
+}
+
+template <>
+std::shared_ptr<ChannelCredentials> GetCreds(const ParallelTest &desc) {
+  const auto &subtest = desc.subtests(0);
+  switch (subtest.plan_case()) {
+    case ParallelSubtest::kEcho:
+      return GetCreds(subtest.echo().call_config());
+    case ParallelSubtest::kEchoStream:
+      return GetCreds(subtest.echo_stream().call_config());
+    default:
+      break;
+  }
+  return InsecureChannelCredentials();
 }
 
 template <class T>
