@@ -1078,19 +1078,19 @@
                                                 },
                                                 "rules": [
                                                     {
-                                                        "jwtAudience": "grpc-echo-oxouww7xzq-uc.a.run.app",
+                                                        "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app",
                                                         "operation": "test.grpc.Test.Cork"
                                                     },
                                                     {
-                                                        "jwtAudience": "grpc-echo-oxouww7xzq-uc.a.run.app",
+                                                        "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app",
                                                         "operation": "test.grpc.Test.Echo"
                                                     },
                                                     {
-                                                        "jwtAudience": "grpc-echo-oxouww7xzq-uc.a.run.app",
+                                                        "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app",
                                                         "operation": "test.grpc.Test.EchoReport"
                                                     },
                                                     {
-                                                        "jwtAudience": "grpc-echo-oxouww7xzq-uc.a.run.app",
+                                                        "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app",
                                                         "operation": "test.grpc.Test.EchoStream"
                                                     }
                                                 ]

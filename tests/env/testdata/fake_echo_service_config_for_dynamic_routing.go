@@ -177,11 +177,30 @@ var (
 					},
 				},
 				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AuthenticationNotSet",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/authenticationnotset/constant/{foo}",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_DisableAuthSetToFalse",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/disableauthsettofalse/constant/{foo}",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_DisableAuthSetToTrue",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/disableauthsettotrue/constant/{foo}",
+					},
+				},
+				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_BearertokenAppendAddress",
 					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/bearertoken/append",
 					},
 				},
+
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_EmptyPath",
 					Pattern: &annotationspb.HttpRule_Post{
@@ -294,6 +313,18 @@ var (
 				},
 				{
 					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_BearertokenConstantAddress",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AuthenticationNotSet",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_DisableAuthSetToTrue",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_DisableAuthSetToFalse",
 					AllowUnregisteredCalls: true,
 				},
 				{
@@ -434,6 +465,23 @@ var (
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/bearertoken/append",
 					},
+				},
+				{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AuthenticationNotSet",
+					Address:         "https://localhost:-1/bearertoken/constant",
+					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+				},
+				{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_DisableAuthSetToTrue",
+					Address:         "https://localhost:-1/bearertoken/constant",
+					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+					Authentication:  &confpb.BackendRule_DisableAuth{DisableAuth: true},
+				},
+				{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_DisableAuthSetToFalse",
+					Address:         "https://localhost:-1/bearertoken/constant",
+					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+					Authentication:  &confpb.BackendRule_DisableAuth{DisableAuth: false},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Simplegetcors",

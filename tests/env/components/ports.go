@@ -32,6 +32,7 @@ const (
 	TestAsymmetricKeys uint16 = iota
 	TestAsymmetricKeysTraces
 	TestAuthJwksCache
+	TestBackendAuthDisableAuth
 	TestBackendAuthWithImdsIdToken
 	TestBackendAuthWithImdsIdTokenWhileAllowCors
 	TestBackendAuthWithIamIdToken
