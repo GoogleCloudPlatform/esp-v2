@@ -41,8 +41,8 @@ DEFAULT_CONFIG_DIR = "/tmp"
 # bootstrap config file name.
 BOOTSTRAP_CONFIG = "/bootstrap.json"
 
-# Default Listener HTTP/1.x port
-DEFAULT_LISTENER_HTTP1_PORT = 8080
+# Default Listener port
+DEFAULT_LISTENER_PORT = 8080
 
 # Default Backend HTTP/1.x port
 DEFAULT_BACKEND_HTTP1_PORT = 80
@@ -174,9 +174,20 @@ environment variable or by passing "-k" flag to this script.
         Default value: http.''',
         choices=['http', 'https', 'grpc', 'grpcs'])
 
+    parser.add_argument('--listener_port', default=None, type=int, help='''
+       The port to accept downstream connections.
+       It supports HTTP/1.x, HTTP/2, and gRPC connections.
+       Default is {port}'''.format(port=DEFAULT_LISTENER_PORT))
+
     parser.add_argument('--http_port', default=None, type=int, help='''
-       The port to accept HTTP/1.x, HTTP/2, and gRPC connections.
-       Default is {port}'''.format(port=DEFAULT_LISTENER_HTTP1_PORT))
+       This flag is exactly same as --listener_port. It is added for
+       backward compatible for ESPv1 and will be deprecated.
+       Please use the flag --listener_port.''')
+
+    parser.add_argument('--http2_port', default=None, type=int, help='''
+       This flag is exactly same as --listener_port. It is added for
+       backward compatible for ESPv1 and will be deprecated.
+       Please use the flag --listener_port.''')
 
     parser.add_argument('-z', '--healthz', default=None, help='''Define a
     health checking endpoint on the same ports as the application backend. For
@@ -497,6 +508,16 @@ def enforce_conflict_args(args):
     if args.backend_dns_lookup_family and args.backend_dns_lookup_family not in {"auto", "v4only", "v6only"}:
         return "Flag --backend_dns_lookup_family must be 'auto', 'v4only' or 'v6only'."
 
+    port_flags = []
+    if args.http_port:
+        port_flags.append("--http_port")
+    if args.http2_port:
+        port_flags.append("--http2_port")
+    if args.listener_port:
+        port_flags.append("--listener_port")
+    if len(port_flags) > 1:
+        return "Multiple port flags {} are not allowed, please just use --listener_port flag".format(",".join(port_flags))
+
     return None
 
 def gen_proxy_config(args):
@@ -570,6 +591,10 @@ def gen_proxy_config(args):
 
     if args.http_port:
         proxy_conf.extend(["--listener_port", str(args.http_port)])
+    if args.http2_port:
+        proxy_conf.extend(["--listener_port", str(args.http2_port)])
+    if args.listener_port:
+        proxy_conf.extend(["--listener_port", str(args.listener_port)])
 
     if args.service:
         proxy_conf.extend(["--service", args.service])
@@ -624,10 +649,10 @@ def gen_proxy_config(args):
         proxy_conf.extend(["--service_json_path", args.service_json_path])
 
     if args.check_metadata:
-        proxy_conf.append("--check_metadata", )
+        proxy_conf.append("--check_metadata")
 
     if args.disable_tracing:
-        proxy_conf.append("--disable_tracing", )
+        proxy_conf.append("--disable_tracing")
 
     if args.compute_platform_override:
         proxy_conf.extend([

@@ -106,6 +106,36 @@ class TestStartProxy(unittest.TestCase):
               '--check_metadata',
               '--disable_tracing'
               ]),
+            # http2_port specified.
+            (['--backend_protocol=grpc', '-R=managed',
+              '--http2_port=8079', '--service_control_quota_retries=3',
+              '--service_control_report_timeout_ms=300',
+              '--service_control_network_fail_open', '--check_metadata',
+              '--disable_tracing'],
+             ['bin/configmanager', '--logtostderr','--backend_protocol', 'grpc',
+              '--cluster_address', '127.0.0.1', '--cluster_port', '8082',
+              '--rollout_strategy', 'managed', '--v', '0',
+              '--listener_port', '8079',
+              '--service_control_quota_retries', '3',
+              '--service_control_report_timeout_ms', '300',
+              '--check_metadata',
+              '--disable_tracing'
+              ]),
+            # listener_port specified.
+            (['--backend_protocol=grpc', '-R=managed',
+              '--listener_port=8079', '--service_control_quota_retries=3',
+              '--service_control_report_timeout_ms=300',
+              '--service_control_network_fail_open', '--check_metadata',
+              '--disable_tracing'],
+             ['bin/configmanager', '--logtostderr','--backend_protocol', 'grpc',
+              '--cluster_address', '127.0.0.1', '--cluster_port', '8082',
+              '--rollout_strategy', 'managed', '--v', '0',
+              '--listener_port', '8079',
+              '--service_control_quota_retries', '3',
+              '--service_control_report_timeout_ms', '300',
+              '--check_metadata',
+              '--disable_tracing'
+              ]),
             # with service account key
             (['--service=test_bookstore.gloud.run',
               '--backend=http://127.0.0.1',
@@ -176,7 +206,9 @@ class TestStartProxy(unittest.TestCase):
              '--service_json_path=/tmp/service.json'],
             ['--backend=/echo:80:8080',],
             ['--backend_dns_lookup_family=v4'],
-            ['--non_gcp']
+            ['--non_gcp'],
+            ['--http_port=80', '--http2_port=80'],
+            ['--http_port=80', '--listener_port=80']
         ]
 
         for flags in testcases:
