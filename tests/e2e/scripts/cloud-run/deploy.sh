@@ -41,15 +41,15 @@ LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
 
 # Determine names of all resources
 UNIQUE_ID=$(get_unique_id | cut -c 1-6)
-BOOKSTORE_SERVICE_NAME=$(get_cloud_run_service_name_with_sha "${BACKEND}")
-BOOKSTORE_SERVICE_NAME="${BOOKSTORE_SERVICE_NAME}-${UNIQUE_ID}"
+BACKEND_SERVICE_NAME=$(get_cloud_run_service_name_with_sha "${BACKEND}")
+BACKEND_SERVICE_NAME="${BACKEND_SERVICE_NAME}-${UNIQUE_ID}"
 PROXY_SERVICE_NAME=$(get_cloud_run_service_name_with_sha "api-proxy")
 PROXY_SERVICE_NAME="${PROXY_SERVICE_NAME}-${UNIQUE_ID}"
 ENDPOINTS_SERVICE_TITLE=$(get_cloud_run_service_name_with_sha "${BACKEND}-service")
 ENDPOINTS_SERVICE_TITLE="${ENDPOINTS_SERVICE_TITLE}-${UNIQUE_ID}"
 ENDPOINTS_SERVICE_NAME=""
 PROXY_HOST=""
-BOOKSTORE_HOST=""
+BACKEND_HOST=""
 # Cloud Run is only supported in a few regions currently
 CLUSTER_ZONE="us-central1-a"
 CLOUD_RUN_REGION="us-central1"
@@ -62,34 +62,55 @@ fi
 function deployBackend() {
   case ${BACKEND_PLATFORM} in
     "cloud-run")
-      gcloud run deploy "${BOOKSTORE_SERVICE_NAME}" \
-        --image="gcr.io/cloudesf-testing/app:bookstore" \
+
+      local backend_image=""
+      local backend_port=8080
+
+      # Determine the backend image.
+      case ${BACKEND} in
+        "bookstore")
+          backend_image="gcr.io/cloudesf-testing/app:bookstore"
+          backend_port=8080
+        ;;
+        "echo")
+          backend_image="gcr.io/cloudesf-testing/grpc-echo-server:latest"
+          backend_port=8081
+        ;;
+        *)
+          echo "No such backend image for backend ${BACKEND}"
+          exit 1
+        ;;
+      esac
+
+      gcloud run deploy "${BACKEND_SERVICE_NAME}" \
+        --image="${backend_image}" \
+        --port="${backend_port}" \
         --no-allow-unauthenticated \
         --service-account "${BACKEND_RUNTIME_SERVICE_ACCOUNT}" \
         --platform managed \
         --quiet
 
-      BOOKSTORE_HOST=$(gcloud run services describe "${BOOKSTORE_SERVICE_NAME}"  --platform=managed --quiet --format="value(status.address.url)")
+      BACKEND_HOST=$(gcloud run services describe "${BACKEND_SERVICE_NAME}"  --platform=managed --quiet --format="value(status.address.url)")
       ;;
     "anthos-cloud-run")
-      gcloud run deploy "${BOOKSTORE_SERVICE_NAME}" \
+      gcloud run deploy "${BACKEND_SERVICE_NAME}" \
         --image="gcr.io/cloudesf-testing/app:bookstore" \
         --platform=gke \
         --quiet
 
-      BOOKSTORE_HOST=$(gcloud run services describe "${BOOKSTORE_SERVICE_NAME}"   --platform=gke --quiet --format="value(status.address.url)")
+      BACKEND_HOST=$(gcloud run services describe "${BACKEND_SERVICE_NAME}"   --platform=gke --quiet --format="value(status.address.url)")
       ;;
     "cloud-function")
       cd ${ROOT}/tests/endpoints/bookstore
-      gcloud functions deploy ${BOOKSTORE_SERVICE_NAME}  --runtime nodejs8 \
+      gcloud functions deploy ${BACKEND_SERVICE_NAME}  --runtime nodejs8 \
         --trigger-http --service-account "${BACKEND_RUNTIME_SERVICE_ACCOUNT}" \
         --quiet --entry-point app
       cd ${ROOT}
 
-      gcloud functions remove-iam-policy-binding ${BOOKSTORE_SERVICE_NAME} \
+      gcloud functions remove-iam-policy-binding ${BACKEND_SERVICE_NAME} \
         --member=allUsers --role=roles/cloudfunctions.invoker --quiet || true
 
-      BOOKSTORE_HOST=$(gcloud functions describe ${BOOKSTORE_SERVICE_NAME}  --format="value(httpsTrigger.url)" --quiet)
+      BACKEND_HOST=$(gcloud functions describe ${BACKEND_SERVICE_NAME}  --format="value(httpsTrigger.url)" --quiet)
       ;;
     *)
       echo "No such backend platform ${BACKEND_PLATFORM}"
@@ -159,18 +180,19 @@ function setup() {
 
 
 
-  # Deploy backend service (authenticated) and set BOOKSTORE_HOST
-  echo "Deploying backend ${BOOKSTORE_SERVICE_NAME} on ${BACKEND_PLATFORM}"
+  # Deploy backend service (authenticated) and set BACKEND_HOST
+  echo "Deploying backend ${BACKEND_SERVICE_NAME} on ${BACKEND_PLATFORM}"
   deployBackend
 
-  #  # TODO(b/147918990): Re-enable when fixed
+  #  # TODO(b/147918990): Re-enable when gcloud can use workload identity to fetch id token.
+  #  # Only enable for http backends.
   #  # Verify the backend is up using the identity of the current machine/user
   #  bookstore_health_code=$(curl \
     #      --write-out %{http_code} \
     #      --silent \
     #      --output /dev/null \
     #      -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
-    #    "${BOOKSTORE_HOST}"/shelves)
+    #    "${BACKEND_HOST}"/shelves)
   #
   #  if [[ "$bookstore_health_code" -ne 200 ]] ; then
   #    echo "Backend status is $bookstore_health_code, failing test"
@@ -179,7 +201,7 @@ function setup() {
   #  echo "Backend deployed successfully"
 
   # Deploy initial ESPv2 service
-  echo "Deploying ESPv2 ${BOOKSTORE_SERVICE_NAME} on ${PROXY_PLATFORM}"
+  echo "Deploying ESPv2 ${BACKEND_SERVICE_NAME} on ${PROXY_PLATFORM}"
   deployProxy "${APIPROXY_IMAGE}" ""
 
 
@@ -200,25 +222,45 @@ function setup() {
     local scheme="https"
   fi
 
-  # Modify the service config for Cloud Run
-  local service_idl_tmpl="${ROOT}/tests/endpoints/bookstore/bookstore_swagger_template.json"
-  local service_idl="${ROOT}/tests/endpoints/bookstore/bookstore_swagger.json"
+  case "${BACKEND}" in
+  'bookstore')
+    local service_idl_tmpl="${ROOT}/tests/endpoints/bookstore/bookstore_swagger_template.json"
+    local service_idl="${ROOT}/tests/endpoints/bookstore/bookstore_swagger.json"
+    local create_service_args=${service_idl}
 
-  # Change the `host` to point to the proxy host (required by validation in service management)
-  # Change the `title` to identify this test (for readability in cloud console)
-  # Change the jwt audience to point to the proxy host (required for calling authenticated endpoints)
-  # Add in the `x-google-backend` to point to the backend URL (required for backend routing)
-  cat "${service_idl_tmpl}" \
-    | jq ".host = \"${ENDPOINTS_SERVICE_NAME}\" \
-      | .schemes = [\"${scheme}\"] \
-      | .info.title = \"${ENDPOINTS_SERVICE_TITLE}\" \
-      | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${PROXY_HOST}\" \
-      | . + { \"x-google-backend\": { \"address\": \"${BOOKSTORE_HOST}\" } }  \
-    | .paths.\"/echo_token/disable_auth\".get  +=  { \"x-google-backend\": { \"address\": \"${BOOKSTORE_HOST}\/echo_token\/disable_auth\", \"disable_auth\": true} } "\
-    > "${service_idl}"
+    # Change the `host` to point to the proxy host (required by validation in service management).
+    # Change the `title` to identify this test (for readability in cloud console).
+    # Change the jwt audience to point to the proxy host (required for calling authenticated endpoints).
+    # Add in the `x-google-backend` to point to the backend URL (required for backend routing).
+    # Modify one path with `disable_auth`.
+    cat "${service_idl_tmpl}" \
+      | jq ".host = \"${ENDPOINTS_SERVICE_NAME}\" \
+        | .schemes = [\"${scheme}\"] \
+        | .info.title = \"${ENDPOINTS_SERVICE_TITLE}\" \
+        | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${PROXY_HOST}\" \
+        | . + { \"x-google-backend\": { \"address\": \"${BACKEND_HOST}\" } }  \
+      | .paths.\"/echo_token/disable_auth\".get  +=  { \"x-google-backend\": { \"address\": \"${BACKEND_HOST}\/echo_token\/disable_auth\", \"disable_auth\": true} } "\
+      > "${service_idl}"
+    ;;
+  'echo')
+    local service_idl_tmpl="${ROOT}/tests/endpoints/grpc_echo/grpc-test-dynamic-routing.tmpl.yaml"
+    local service_idl="${ROOT}/tests/endpoints/grpc_echo/grpc-test-dynamic-routing.yaml"
+    local service_descriptor="${ROOT}/tests/endpoints/grpc_echo/proto/api_descriptor.pb"
+    local create_service_args="${service_idl} ${service_descriptor}"
+
+    # Replace values for dynamic routing.
+    sed -e "s/ENDPOINTS_SERVICE_NAME/${ENDPOINTS_SERVICE_NAME}/g" \
+      -e "s/ENDPOINTS_SERVICE_TITLE/${ENDPOINTS_SERVICE_TITLE}/g" \
+      -e "s/BACKEND_ADDRESS/${BACKEND_HOST#https://}/g" \
+      "${service_idl_tmpl}" > "${service_idl}"
+    ;;
+  *)
+    echo "Invalid backend ${BACKEND} for creating endpoints service"
+    return 1 ;;
+  esac
 
   # Deploy the service config
-  create_service "${service_idl}"
+  create_service ${create_service_args}
 
   # Get the service name and config id to enable it
   # Assumes that the names of the endpoinds service and cloud run host match
@@ -264,8 +306,9 @@ function test() {
   echo "Testing"
 
   # Wait a few minutes for service to be enabled and the permissions to propagate
-  #  echo "Waiting for the endpoints service to be enabled"
-  #  sleep 10m
+  echo "Waiting for the endpoints service to be enabled"
+  sleep 3m
+
   if [[ ${PROXY_PLATFORM} == "anthos-cloud-run" ]];
   then
     local scheme="http"
@@ -311,7 +354,7 @@ function tearDown() {
   case ${BACKEND_PLATFORM} in
     "cloud-run")
       # Delete the backend Cloud Run service
-      gcloud run services delete "${BOOKSTORE_SERVICE_NAME}" \
+      gcloud run services delete "${BACKEND_SERVICE_NAME}" \
         --platform=managed \
         --quiet || true
       gcloud run services delete "${PROXY_SERVICE_NAME}" \
@@ -324,7 +367,7 @@ function tearDown() {
       ;;
 
     "cloud-function")
-      gcloud functions delete "${BOOKSTORE_SERVICE_NAME}" --quiet || true
+      gcloud functions delete "${BACKEND_SERVICE_NAME}" --quiet || true
       ;;
     *)
       echo "No such backend platform ${BACKEND_PLATFORM}"
