@@ -185,10 +185,7 @@ while true; do
   #######################
   RUN_COUNT=$((RUN_COUNT++))
 
-  if [ "$PLATFORM" = "gke" ]; then
-    # TODO(b/149256854): Enable for Cloud Run when parallel grpc is fixed.
-    grpc_test_pass_through || ((GRPC_STRESS_FAILURES++))
-  fi
+  grpc_test_pass_through || ((GRPC_STRESS_FAILURES++))
 
   grpc_test_transcode || ((HTTP_STRESS_FAILURES++))
 

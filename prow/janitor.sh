@@ -23,7 +23,7 @@ GKE_SERVICES=$(gcloud container clusters list --format="value(NAME)" \
 
 for service in ${GKE_SERVICES};
 do
-  echo "Deleting GKEservice: ${service}"
+  echo "Deleting GKE service: ${service}"
   gcloud container clusters delete ${service} \
     --zone=us-central1-a \
     --quiet
@@ -79,7 +79,11 @@ for service in $ENDPOINTS_SERVICES ; do
 
   if [ -z "${CONFIG_ID}" ]
   then
-    echo "Cannot determine config id, skipping cleanup for this service"
+    echo "Cannot determine config id, this is probably a failed rollout"
+    echo "Cleaning up service"
+    gcloud endpoints services delete ${service} \
+      --quiet \
+      --async
     continue
   fi
 
