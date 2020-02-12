@@ -467,8 +467,20 @@ func (s *ServiceInfo) processBackendRule() error {
 				Uri:             uri,
 				Hostname:        hostname,
 				TranslationType: r.PathTranslation,
-				JwtAudience:     r.GetJwtAudience(),
 				Deadline:        deadline,
+			}
+
+			//TODO(taoxuy): b/149334660 Check if the scopes for IAM include the path prefix
+			switch r.GetAuthentication().(type) {
+			case *confpb.BackendRule_JwtAudience:
+				method.BackendInfo.JwtAudience = r.GetJwtAudience()
+			case *confpb.BackendRule_DisableAuth:
+				if r.GetDisableAuth() {
+					break
+				}
+				method.BackendInfo.JwtAudience = getJwtAudienceFromBackendAddr(scheme, hostname)
+			default:
+				method.BackendInfo.JwtAudience = getJwtAudienceFromBackendAddr(scheme, hostname)
 			}
 		}
 	}
@@ -560,4 +572,13 @@ func (s *ServiceInfo) getOrCreateMethod(name string) (*methodInfo, error) {
 
 func (s *ServiceInfo) BackendClusterName() string {
 	return fmt.Sprintf("%s_local", s.Name)
+}
+
+// If the backend address's scheme is grpc/grpcs, it should be changed it http or https.
+func getJwtAudienceFromBackendAddr(scheme, hostname string) string {
+	_, tls, _ := util.ParseBackendProtocol(scheme)
+	if tls {
+		return fmt.Sprintf("https://%s", hostname)
+	}
+	return fmt.Sprintf("http://%s", hostname)
 }

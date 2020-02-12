@@ -100,6 +100,10 @@ func (e *TestEnv) OverrideMockMetadata(newMetdaData map[string]string) {
 	e.mockMetadataOverride = newMetdaData
 }
 
+func (e *TestEnv) GetDynamicRoutingBackendPort() uint16 {
+	return e.ports.DynamicRoutingBackendPort
+}
+
 // AppendHttpRules appends Service.Http.Rules.
 func (e *TestEnv) SetIamResps(iamResps map[string]string) {
 	e.mockIamResps = iamResps

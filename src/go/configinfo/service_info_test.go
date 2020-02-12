@@ -1066,6 +1066,204 @@ func TestProcessBackendRuleForDeadline(t *testing.T) {
 	}
 }
 
+func TestProcessBackendRuleForJwtAudience(t *testing.T) {
+	testData := []struct {
+		desc              string
+		fakeServiceConfig *confpb.Service
+
+		wantedJwtAudience map[string]string
+	}{
+
+		{
+			desc: "DisableAuth is set to true",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+
+						{
+							Address:        "grpc://abc.com/api",
+							Selector:       "abc.com.api",
+							Deadline:       10.5,
+							Authentication: &confpb.BackendRule_DisableAuth{DisableAuth: true},
+						},
+					},
+				},
+			},
+			wantedJwtAudience: map[string]string{
+				"abc.com.api": "",
+			},
+		},
+		{
+			desc: "DisableAuth is set to false",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+
+						{
+							Address:        "grpc://abc.com/api",
+							Selector:       "abc.com.api",
+							Deadline:       10.5,
+							Authentication: &confpb.BackendRule_DisableAuth{DisableAuth: false},
+						},
+					},
+				},
+			},
+			wantedJwtAudience: map[string]string{
+				"abc.com.api": "http://abc.com",
+			},
+		},
+		{
+			desc: "Authentication field is empty and grpc scheme is changed to http",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+
+						{
+							Address:  "grpc://abc.com/api",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			wantedJwtAudience: map[string]string{
+				"abc.com.api": "http://abc.com",
+			},
+		},
+		{
+			desc: "Authentication field is empty and grpcs scheme is changed to https",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+
+						{
+							Address:  "grpcs://abc.com/api",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			wantedJwtAudience: map[string]string{
+				"abc.com.api": "https://abc.com",
+			},
+		},
+		{
+			desc: "JwtAudience is set",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:        "grpc://abc.com/api",
+							Selector:       "abc.com.api",
+							Deadline:       10.5,
+							Authentication: &confpb.BackendRule_JwtAudience{JwtAudience: "audience-foo"},
+						},
+					},
+				},
+			},
+			wantedJwtAudience: map[string]string{
+				"abc.com.api": "audience-foo",
+			},
+		},
+		{
+			desc: "Mix all Authentication cases",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:        "grpc://abc.com/api",
+							Selector:       "abc.com.api",
+							Deadline:       10.5,
+							Authentication: &confpb.BackendRule_JwtAudience{JwtAudience: "audience-foo"},
+						},
+						{
+							Address:        "grpc://def.com/api",
+							Selector:       "def.com.api",
+							Deadline:       10.5,
+							Authentication: &confpb.BackendRule_JwtAudience{JwtAudience: "audience-bar"},
+						},
+						{
+							Address:        "grpc://ghi.com/api",
+							Selector:       "ghi.com.api",
+							Deadline:       10.5,
+							Authentication: &confpb.BackendRule_DisableAuth{DisableAuth: false},
+						},
+						{
+							Address:        "grpc://jkl.com/api",
+							Selector:       "jkl.com.api",
+							Deadline:       10.5,
+							Authentication: &confpb.BackendRule_DisableAuth{DisableAuth: true},
+						},
+						{
+							Address:  "grpcs://mno.com/api",
+							Selector: "mno.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			wantedJwtAudience: map[string]string{
+				"abc.com.api": "audience-foo",
+				"def.com.api": "audience-bar",
+				"ghi.com.api": "http://ghi.com",
+				"jkl.com.api": "",
+				"mno.com.api": "https://mno.com",
+			},
+		},
+	}
+
+	for i, tc := range testData {
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendProtocol = "grpc"
+		s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+
+		if err != nil {
+			t.Errorf("Test Desc(%d): %s, error not expected, got: %v", i, tc.desc, err)
+			return
+		}
+
+		for _, rule := range tc.fakeServiceConfig.Backend.Rules {
+			gotJwtAudience := s.Methods[rule.Selector].BackendInfo.JwtAudience
+			wantedJwtAudience := tc.wantedJwtAudience[rule.Selector]
+
+			if wantedJwtAudience != gotJwtAudience {
+				t.Errorf("Test Desc(%d): %s, JwtAudience not expected, got: %v, want: %v", i, tc.desc, gotJwtAudience, wantedJwtAudience)
+			}
+		}
+	}
+}
+
 func TestProcessQuota(t *testing.T) {
 	testData := []struct {
 		desc              string
