@@ -24,3 +24,30 @@ def bazel_rules_python_repositories(load_repo = True):
             commit = "8b5d0683a7d878b28fffe464779c8a53659fc645",
             remote = "https://github.com/bazelbuild/rules_python.git",
         )
+
+def paths(files):
+    return [f.path for f in files]
+
+def _impl(ctx):
+    descriptors = []
+    for pl in ctx.attr.proto_libraries:
+        descriptors += list(pl.proto.transitive_descriptor_sets)
+    ctx.actions.run_shell(
+        inputs = descriptors,
+        outputs = [ctx.outputs.out],
+        command = "cat %s > %s" % (
+            " ".join(paths(descriptors)),
+            ctx.outputs.out.path,
+        ),
+    )
+
+gen_proto_descriptors = rule(
+    implementation = _impl,
+    attrs = {
+        "proto_libraries": attr.label_list(
+            allow_files = False,
+            mandatory = True,
+        ),
+        "out": attr.output(mandatory = True),
+    },
+)
