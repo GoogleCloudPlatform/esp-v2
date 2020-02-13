@@ -29,7 +29,10 @@ cd "${ROOT}"
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
 
-
+echo '======================================================='
+echo '===================== Setup Cache ====================='
+echo '======================================================='
+try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "${PRESUBMIT_TEST_CASE}"
 
 echo '======================================================='
 echo '===================== Spelling Check ====================='
@@ -49,7 +52,7 @@ fi
 export GO111MODULE=on
 make tools
 make depend.install
-#make test
+make test
 
 # c++ test
 echo '======================================================'
@@ -61,7 +64,6 @@ then
 else
   echo "running ${PRESUBMIT_TEST_CASE} presubmit test"
 fi
-
 
 case "${PRESUBMIT_TEST_CASE}" in
   "asan")
@@ -77,12 +79,6 @@ case "${PRESUBMIT_TEST_CASE}" in
     make test-envoy
     ;;
 esac
-
-bazel clean --expunge
-echo '======================================================='
-echo '===================== Setup Cache ====================='
-echo '======================================================='
-try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "${PRESUBMIT_TEST_CASE}-integration--test"
 
 echo '======================================================'
 echo '===================== Integration test  =============='
