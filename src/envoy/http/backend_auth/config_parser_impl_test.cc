@@ -56,7 +56,8 @@ rules {
 }
 )";
 
-  EXPECT_CALL(mock_token_subscriber_factory_, createTokenSubscriber).Times(0);
+  EXPECT_CALL(mock_token_subscriber_factory_, createImdsTokenSubscriber)
+      .Times(0);
   EXPECT_CALL(mock_token_subscriber_factory_, createIamTokenSubscriber)
       .Times(0);
   setUp(filter_config);
@@ -83,25 +84,25 @@ rules {
 
   EXPECT_CALL(
       mock_token_subscriber_factory_,
-      createTokenSubscriber("this-is-cluster",
-                            "this-is-uri?format=standard&audience=audience-foo",
-                            false, _))
+      createImdsTokenSubscriber(
+          "this-is-cluster",
+          "this-is-uri?format=standard&audience=audience-foo", false, _))
       .WillOnce(Invoke(
           [&token_foo](const std::string&, const std::string&, const bool,
-                       Utils::TokenSubscriber::TokenUpdateFunc callback)
-              -> Utils::TokenSubscriberPtr {
+                       Utils::ImdsTokenSubscriber::TokenUpdateFunc callback)
+              -> Utils::ImdsTokenSubscriberPtr {
             callback(token_foo);
             return nullptr;
           }));
   EXPECT_CALL(
       mock_token_subscriber_factory_,
-      createTokenSubscriber("this-is-cluster",
-                            "this-is-uri?format=standard&audience=audience-bar",
-                            false, _))
+      createImdsTokenSubscriber(
+          "this-is-cluster",
+          "this-is-uri?format=standard&audience=audience-bar", false, _))
       .WillOnce(Invoke(
           [&token_bar](const std::string&, const std::string&, const bool,
-                       Utils::TokenSubscriber::TokenUpdateFunc callback)
-              -> Utils::TokenSubscriberPtr {
+                       Utils::ImdsTokenSubscriber::TokenUpdateFunc callback)
+              -> Utils::ImdsTokenSubscriberPtr {
             callback(token_bar);
             return nullptr;
           }));
@@ -143,12 +144,12 @@ rules {
   const std::string id_token_bar("id-token-bar");
 
   EXPECT_CALL(mock_token_subscriber_factory_,
-              createTokenSubscriber("this-is-imds-cluster", "this-is-imds-uri",
-                                    true, _))
+              createImdsTokenSubscriber("this-is-imds-cluster",
+                                        "this-is-imds-uri", true, _))
       .WillOnce(Invoke(
           [&access_token](const std::string&, const std::string&, const bool,
-                          Utils::TokenSubscriber::TokenUpdateFunc callback)
-              -> Utils::TokenSubscriberPtr {
+                          Utils::ImdsTokenSubscriber::TokenUpdateFunc callback)
+              -> Utils::ImdsTokenSubscriberPtr {
             callback(access_token);
             return nullptr;
           }));

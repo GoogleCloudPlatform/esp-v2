@@ -25,12 +25,12 @@ class TokenSubscriberFactoryImpl : public TokenSubscriberFactory {
   TokenSubscriberFactoryImpl(Server::Configuration::FactoryContext& context)
       : context_(context) {}
 
-  TokenSubscriberPtr createTokenSubscriber(
+  ImdsTokenSubscriberPtr createImdsTokenSubscriber(
       const std::string& token_cluster, const std::string& token_url,
       const bool json_response,
-      TokenSubscriber::TokenUpdateFunc callback) const override {
-    return std::make_unique<TokenSubscriber>(context_, token_cluster, token_url,
-                                             json_response, callback);
+      ImdsTokenSubscriber::TokenUpdateFunc callback) const override {
+    return std::make_unique<ImdsTokenSubscriber>(
+        context_, token_cluster, token_url, json_response, callback);
   }
 
   IamTokenSubscriberPtr createIamTokenSubscriber(
@@ -46,11 +46,11 @@ class TokenSubscriberFactoryImpl : public TokenSubscriberFactory {
         token_type, delegates, scopes, callback);
   }
 
-  ServiceAccountTokenPtr createServiceAccountTokenPtr(
+  ServiceAccountTokenPtr createServiceAccountTokenGenerator(
       const std::string& service_account_key, const std::string& audience,
-      ServiceAccountToken::TokenUpdateFunc callback) const override {
-    return std::make_unique<ServiceAccountToken>(context_, service_account_key,
-                                                 audience, callback);
+      ServiceAccountTokenGenerator::TokenUpdateFunc callback) const override {
+    return std::make_unique<ServiceAccountTokenGenerator>(
+        context_, service_account_key, audience, callback);
   };
 
  private:

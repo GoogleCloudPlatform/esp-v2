@@ -23,7 +23,7 @@ namespace BackendAuth {
 using ::google::api::envoy::http::backend_auth::FilterConfig;
 using ::google::api::envoy::http::common::AccessToken;
 using Utils::IamTokenSubscriber;
-using Utils::TokenSubscriber;
+using Utils::ImdsTokenSubscriber;
 
 // TODO(kyuc): add unit tests for all possible backend rule configs.
 
@@ -39,12 +39,13 @@ AudienceContext::AudienceContext(
     return std::make_shared<TokenCache>();
   });
 
-  TokenSubscriber::TokenUpdateFunc callback = [this](const std::string& token) {
-    TokenSharedPtr new_token = std::make_shared<std::string>(token);
-    tls_->runOnAllThreads([this, new_token]() {
-      tls_->getTyped<TokenCache>().token_ = new_token;
-    });
-  };
+  ImdsTokenSubscriber::TokenUpdateFunc callback =
+      [this](const std::string& token) {
+        TokenSharedPtr new_token = std::make_shared<std::string>(token);
+        tls_->runOnAllThreads([this, new_token]() {
+          tls_->getTyped<TokenCache>().token_ = new_token;
+        });
+      };
 
   switch (filter_config.id_token_info_case()) {
     case FilterConfig::kIamToken: {
@@ -68,9 +69,9 @@ AudienceContext::AudienceContext(
           uri, "?format=standard&audience=", proto_config.jwt_audience());
 
       imds_token_sub_ptr_ =
-          token_subscriber_factory.createTokenSubscriber(cluster, real_uri,
-                                                         /*json_response=*/
-                                                         false, callback);
+          token_subscriber_factory.createImdsTokenSubscriber(cluster, real_uri,
+                                                             /*json_response=*/
+                                                             false, callback);
     }
       return;
     default:
@@ -91,12 +92,13 @@ FilterConfigParserImpl::FilterConfigParserImpl(
             config.iam_token().access_token().remote_token().cluster();
         const std::string& uri =
             config.iam_token().access_token().remote_token().uri();
-        access_token_sub_ptr_ = token_subscriber_factory.createTokenSubscriber(
-            cluster, uri,
-            /*json_response=*/
-            true, [this](const std::string& access_token) {
-              access_token_ = access_token;
-            });
+        access_token_sub_ptr_ =
+            token_subscriber_factory.createImdsTokenSubscriber(
+                cluster, uri,
+                /*json_response=*/
+                true, [this](const std::string& access_token) {
+                  access_token_ = access_token;
+                });
         break;
       }
       default: {

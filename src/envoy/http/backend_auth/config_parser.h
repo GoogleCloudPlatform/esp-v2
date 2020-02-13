@@ -20,7 +20,7 @@
 #include "api/envoy/http/backend_auth/config.pb.h"
 #include "envoy/thread_local/thread_local.h"
 #include "src/envoy/utils/iam_token_subscriber.h"
-#include "src/envoy/utils/token_subscriber.h"
+#include "src/envoy/utils/imds_token_subscriber.h"
 
 namespace Envoy {
 namespace Extensions {

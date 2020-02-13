@@ -26,13 +26,14 @@ namespace Utils {
 
 // The class generates an access_token with 1 hour expiration from a service
 // account json for an audience and re-generating it before it is expired.
-class ServiceAccountToken
+class ServiceAccountTokenGenerator
     : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   using TokenUpdateFunc = std::function<void(const std::string& token)>;
-  ServiceAccountToken(Envoy::Server::Configuration::FactoryContext& context,
-                      const std::string& service_account_key,
-                      const std::string& audience, TokenUpdateFunc callback);
+  ServiceAccountTokenGenerator(
+      Envoy::Server::Configuration::FactoryContext& context,
+      const std::string& service_account_key, const std::string& audience,
+      TokenUpdateFunc callback);
 
  private:
   void refresh();
@@ -43,7 +44,7 @@ class ServiceAccountToken
   TokenUpdateFunc callback_;
   Envoy::Event::TimerPtr refresh_timer_;
 };
-typedef std::unique_ptr<ServiceAccountToken> ServiceAccountTokenPtr;
+typedef std::unique_ptr<ServiceAccountTokenGenerator> ServiceAccountTokenPtr;
 
 }  // namespace Utils
 }  // namespace Extensions

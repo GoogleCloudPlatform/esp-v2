@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/envoy/utils/token_subscriber.h"
+#include "src/envoy/utils/imds_token_subscriber.h"
 #include "absl/strings/str_cat.h"
 #include "common/common/enum_to_int.h"
 #include "common/http/headers.h"
@@ -56,7 +56,7 @@ Envoy::Http::MessagePtr prepareHeaders(const std::string& token_url) {
 const Envoy::Http::LowerCaseString kMetadataFlavorKey("Metadata-Flavor");
 constexpr char kMetadataFlavor[]{"Google"};
 
-TokenSubscriber::TokenSubscriber(
+ImdsTokenSubscriber::ImdsTokenSubscriber(
     Envoy::Server::Configuration::FactoryContext& context,
     const std::string& token_cluster, const std::string& token_url,
     const bool json_response, TokenUpdateFunc callback)
@@ -66,20 +66,20 @@ TokenSubscriber::TokenSubscriber(
       json_response_(json_response),
       callback_(callback),
       active_request_(nullptr),
-      init_target_("TokenSubscriber", [this] { refresh(); }) {
+      init_target_("ImdsTokenSubscriber", [this] { refresh(); }) {
   refresh_timer_ =
       context.dispatcher().createTimer([this]() -> void { refresh(); });
 
   context.initManager().add(init_target_);
 }
 
-TokenSubscriber::~TokenSubscriber() {
+ImdsTokenSubscriber::~ImdsTokenSubscriber() {
   if (active_request_) {
     active_request_->cancel();
   }
 }
 
-void TokenSubscriber::refresh() {
+void ImdsTokenSubscriber::refresh() {
   if (active_request_) {
     active_request_->cancel();
   }
@@ -98,7 +98,7 @@ void TokenSubscriber::refresh() {
                         .send(std::move(message), *this, options);
 }
 
-void TokenSubscriber::onSuccess(Envoy::Http::MessagePtr&& response) {
+void ImdsTokenSubscriber::onSuccess(Envoy::Http::MessagePtr&& response) {
   ENVOY_LOG(debug, "GetAccessToken got response: {}", response->bodyAsString());
   active_request_ = nullptr;
 
@@ -106,7 +106,7 @@ void TokenSubscriber::onSuccess(Envoy::Http::MessagePtr&& response) {
   init_target_.ready();
 }
 
-void TokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
+void ImdsTokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
   const uint64_t status_code =
       Envoy::Http::Utility::getResponseStatus(response->headers());
 
@@ -171,7 +171,7 @@ void TokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
   callback_(token);
 }
 
-void TokenSubscriber::onFailure(
+void ImdsTokenSubscriber::onFailure(
     Envoy::Http::AsyncClient::FailureReason reason) {
   init_target_.ready();
   active_request_ = nullptr;

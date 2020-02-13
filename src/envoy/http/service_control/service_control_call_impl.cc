@@ -17,8 +17,8 @@
 #include "src/api_proxy/service_control/logs_metrics_loader.h"
 #include "src/envoy/http/service_control/service_control_call_impl.h"
 
-using Envoy::Extensions::Utils::ServiceAccountToken;
-using Envoy::Extensions::Utils::TokenSubscriber;
+using Envoy::Extensions::Utils::ImdsTokenSubscriber;
+using Envoy::Extensions::Utils::ServiceAccountTokenGenerator;
 using ::google::api::envoy::http::common::AccessToken;
 using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::api::envoy::http::service_control::Service;
@@ -44,7 +44,7 @@ constexpr char kQuotaControlService[] =
 void ServiceControlCallImpl::createImdsTokenSub() {
   const std::string& token_cluster = filter_config_.imds_token().cluster();
   const std::string& token_uri = filter_config_.imds_token().uri();
-  imds_token_sub_ = token_subscriber_factory_.createTokenSubscriber(
+  imds_token_sub_ = token_subscriber_factory_.createImdsTokenSubscriber(
       token_cluster, token_uri,
       /*json_response=*/true, [this](const std::string& token) {
         TokenSharedPtr new_token = std::make_shared<std::string>(token);
@@ -58,7 +58,7 @@ void ServiceControlCallImpl::createImdsTokenSub() {
 void ServiceControlCallImpl::createTokenGen() {
   const std::string service_control_auidence =
       filter_config_.service_control_uri().uri() + kServiceControlService;
-  sc_token_gen_ = token_subscriber_factory_.createServiceAccountTokenPtr(
+  sc_token_gen_ = token_subscriber_factory_.createServiceAccountTokenGenerator(
       filter_config_.service_account_secret().inline_string(),
       service_control_auidence, [this](const std::string& token) {
         TokenSharedPtr new_token = std::make_shared<std::string>(token);
@@ -69,14 +69,15 @@ void ServiceControlCallImpl::createTokenGen() {
 
   const std::string quota_audience =
       filter_config_.service_control_uri().uri() + kQuotaControlService;
-  quota_token_gen_ = token_subscriber_factory_.createServiceAccountTokenPtr(
-      filter_config_.service_account_secret().inline_string(), quota_audience,
-      [this](const std::string& token) {
-        TokenSharedPtr new_token = std::make_shared<std::string>(token);
-        tls_->runOnAllThreads([this, new_token]() {
-          tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
-        });
-      });
+  quota_token_gen_ =
+      token_subscriber_factory_.createServiceAccountTokenGenerator(
+          filter_config_.service_account_secret().inline_string(),
+          quota_audience, [this](const std::string& token) {
+            TokenSharedPtr new_token = std::make_shared<std::string>(token);
+            tls_->runOnAllThreads([this, new_token]() {
+              tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
+            });
+          });
 }
 
 void ServiceControlCallImpl::createIamTokenSub() {
@@ -86,7 +87,7 @@ void ServiceControlCallImpl::createIamTokenSub() {
           filter_config_.iam_token().access_token().remote_token().cluster();
       const std::string& uri =
           filter_config_.iam_token().access_token().remote_token().uri();
-      access_token_sub_ = token_subscriber_factory_.createTokenSubscriber(
+      access_token_sub_ = token_subscriber_factory_.createImdsTokenSubscriber(
           cluster, uri,
           /*json_response=*/
           true, [this](const std::string& access_token) {
@@ -98,7 +99,6 @@ void ServiceControlCallImpl::createIamTokenSub() {
       throw EnvoyException(
           "Not support getting access token for iam server by "
           "service account file");
-      break;
     }
   }
   const std::string& token_cluster =

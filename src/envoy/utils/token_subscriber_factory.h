@@ -15,8 +15,8 @@
 #pragma once
 
 #include "src/envoy/utils/iam_token_subscriber.h"
-#include "src/envoy/utils/service_account_token.h"
-#include "src/envoy/utils/token_subscriber.h"
+#include "src/envoy/utils/imds_token_subscriber.h"
+#include "src/envoy/utils/sa_token_generator.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -26,10 +26,10 @@ class TokenSubscriberFactory {
  public:
   virtual ~TokenSubscriberFactory() = default;
 
-  virtual TokenSubscriberPtr createTokenSubscriber(
+  virtual ImdsTokenSubscriberPtr createImdsTokenSubscriber(
       const std::string& token_cluster, const std::string& token_url,
       const bool json_response,
-      TokenSubscriber::TokenUpdateFunc callback) const PURE;
+      ImdsTokenSubscriber::TokenUpdateFunc callback) const PURE;
 
   virtual IamTokenSubscriberPtr createIamTokenSubscriber(
       IamTokenSubscriber::TokenGetFunc access_token_fn,
@@ -40,9 +40,9 @@ class TokenSubscriberFactory {
       const ::google::protobuf::RepeatedPtrField<std::string>& scopes,
       IamTokenSubscriber::TokenUpdateFunc callback) const PURE;
 
-  virtual ServiceAccountTokenPtr createServiceAccountTokenPtr(
+  virtual ServiceAccountTokenPtr createServiceAccountTokenGenerator(
       const std::string& service_account_key, const std::string& audience,
-      ServiceAccountToken::TokenUpdateFunc callback) const PURE;
+      ServiceAccountTokenGenerator::TokenUpdateFunc callback) const PURE;
 };
 
 }  // namespace Utils

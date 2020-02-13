@@ -21,10 +21,10 @@ namespace Utils {
 
 class MockTokenSubscriberFactory : public TokenSubscriberFactory {
  public:
-  MOCK_METHOD(TokenSubscriberPtr, createTokenSubscriber,
+  MOCK_METHOD(ImdsTokenSubscriberPtr, createImdsTokenSubscriber,
               (const std::string& token_cluster, const std::string& token_url,
                const bool json_response,
-               TokenSubscriber::TokenUpdateFunc callback),
+               ImdsTokenSubscriber::TokenUpdateFunc callback),
               (const));
 
   MOCK_METHOD(
@@ -38,10 +38,10 @@ class MockTokenSubscriberFactory : public TokenSubscriberFactory {
        IamTokenSubscriber::TokenUpdateFunc callback),
       (const));
 
-  MOCK_METHOD(ServiceAccountTokenPtr, createServiceAccountTokenPtr,
+  MOCK_METHOD(ServiceAccountTokenPtr, createServiceAccountTokenGenerator,
               (const std::string& service_account_key,
                const std::string& audience,
-               ServiceAccountToken::TokenUpdateFunc callback),
+               ServiceAccountTokenGenerator::TokenUpdateFunc callback),
               (const));
 };
 

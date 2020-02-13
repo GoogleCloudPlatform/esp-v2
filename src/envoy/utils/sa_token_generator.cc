@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/envoy/utils/service_account_token.h"
+#include "src/envoy/utils/sa_token_generator.h"
 #include "src/api_proxy/auth/auth_token.h"
 
 namespace Envoy {
@@ -24,7 +24,7 @@ const std::chrono::seconds kRefresherDefaultTokenExpiry(3600 - 5);
 
 }  // namespace
 
-ServiceAccountToken::ServiceAccountToken(
+ServiceAccountTokenGenerator::ServiceAccountTokenGenerator(
     Envoy::Server::Configuration::FactoryContext& context,
     const std::string& service_account_key, const std::string& audience,
     TokenUpdateFunc callback)
@@ -38,7 +38,7 @@ ServiceAccountToken::ServiceAccountToken(
   context.dispatcher().post([this]() -> void { refresh(); });
 }
 
-void ServiceAccountToken::refresh() {
+void ServiceAccountTokenGenerator::refresh() {
   char* token = ::google::api_proxy::auth::get_auth_token(
       service_account_key_.c_str(), audience_.c_str());
   callback_(token);

@@ -49,9 +49,9 @@ envoy_cc_fuzz_test(
 )
 
 envoy_cc_library(
-    name = "token_subscriber_lib",
-    srcs = ["token_subscriber.cc"],
-    hdrs = ["token_subscriber.h"],
+    name = "imds_token_subscriber_lib",
+    srcs = ["imds_token_subscriber.cc"],
+    hdrs = ["imds_token_subscriber.h"],
     repository = "@envoy",
     deps = [
         ":json_struct_lib",
@@ -94,8 +94,8 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         ":iam_token_subscriber_lib",
-        ":service_account_token_lib",
-        ":token_subscriber_lib",
+        ":imds_token_subscriber_lib",
+        ":sa_token_generator_lib",
     ],
 )
 
@@ -118,9 +118,9 @@ envoy_cc_library(
 )
 
 envoy_cc_library(
-    name = "service_account_token_lib",
-    srcs = ["service_account_token.cc"],
-    hdrs = ["service_account_token.h"],
+    name = "sa_token_generator_lib",
+    srcs = ["sa_token_generator.cc"],
+    hdrs = ["sa_token_generator.h"],
     repository = "@envoy",
     deps = [
         ":json_struct_lib",
@@ -136,10 +136,10 @@ envoy_cc_library(
 envoy_cc_test(
     name = "token_subscriber_test",
     size = "small",
-    srcs = ["token_subscriber_test.cc"],
+    srcs = ["imds_token_subscriber_test.cc"],
     repository = "@envoy",
     deps = [
-        ":token_subscriber_lib",
+        ":imds_token_subscriber_lib",
         "@envoy//test/mocks/init:init_mocks",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/test_common:utility_lib",
@@ -177,10 +177,10 @@ envoy_cc_test(
 envoy_cc_test(
     name = "service_account_token_test",
     size = "small",
-    srcs = ["service_account_token_test.cc"],
+    srcs = ["sa_token_generator_test.cc"],
     repository = "@envoy",
     deps = [
-        ":service_account_token_lib",
+        ":sa_token_generator_lib",
         "@envoy//source/common/tracing:http_tracer_lib",
         "@envoy//test/mocks/init:init_mocks",
         "@envoy//test/mocks/server:server_mocks",

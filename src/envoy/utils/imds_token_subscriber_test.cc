@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/envoy/utils/token_subscriber.h"
+#include "src/envoy/utils/imds_token_subscriber.h"
 
 #include "common/http/message_impl.h"
 #include "common/tracing/http_tracer_impl.h"
@@ -36,7 +36,7 @@ using ::testing::Invoke;
 using ::testing::MockFunction;
 using ::testing::ReturnRef;
 
-class TokenSubscriberTest : public testing::Test {
+class ImdsTokenSubscriberTest : public testing::Test {
  protected:
   void SetUp() override {
     Init::TargetHandlePtr init_target_handle;
@@ -45,7 +45,7 @@ class TokenSubscriberTest : public testing::Test {
           init_target_handle = target.createHandle("test");
         }));
 
-    token_sub_.reset(new TokenSubscriber(
+    token_sub_.reset(new ImdsTokenSubscriber(
         context_, "fake_token_cluster", "http://fake_token_server/uri_suffix",
         true, token_callback_.AsStdFunction()));
 
@@ -64,7 +64,7 @@ class TokenSubscriberTest : public testing::Test {
               return nullptr;
             }));
 
-    // TokenSubscriber must call `ready` to signal Init::Manager once it
+    // ImdsTokenSubscriber must call `ready` to signal Init::Manager once it
     // finishes initializing.
     EXPECT_CALL(init_watcher_, ready());
     // Init::Manager should initialize its targets.
@@ -100,10 +100,10 @@ class TokenSubscriberTest : public testing::Test {
   MockFunction<int(std::string)> token_callback_;
   Envoy::Http::AsyncClient::Callbacks* client_callback_{};
   std::unique_ptr<NiceMock<Envoy::Http::MockAsyncClient>> raw_mock_client_;
-  TokenSubscriberPtr token_sub_;
+  ImdsTokenSubscriberPtr token_sub_;
 };
 
-TEST_F(TokenSubscriberTest, CallOnTokenUpdateOnSuccess) {
+TEST_F(ImdsTokenSubscriberTest, CallOnTokenUpdateOnSuccess) {
   EXPECT_CALL(token_callback_, Call(std::string("TOKEN")));
   EXPECT_EQ(call_count_, 1);
 
@@ -126,7 +126,7 @@ TEST_F(TokenSubscriberTest, CallOnTokenUpdateOnSuccess) {
   checkRequestHeaders();
 }
 
-TEST_F(TokenSubscriberTest, DoNotCallOnTokenUpdateOnFailure) {
+TEST_F(ImdsTokenSubscriberTest, DoNotCallOnTokenUpdateOnFailure) {
   // Not called on failure.
   EXPECT_CALL(token_callback_, Call(_)).Times(0);
   EXPECT_EQ(call_count_, 1);
@@ -136,7 +136,7 @@ TEST_F(TokenSubscriberTest, DoNotCallOnTokenUpdateOnFailure) {
   checkRequestHeaders();
 }
 
-TEST_F(TokenSubscriberTest, RefreshOnceTokenExpires) {
+TEST_F(ImdsTokenSubscriberTest, RefreshOnceTokenExpires) {
   // Send a good token `TOKEN1`
   EXPECT_EQ(call_count_, 1);
   EXPECT_CALL(token_callback_, Call(std::string("TOKEN1")));

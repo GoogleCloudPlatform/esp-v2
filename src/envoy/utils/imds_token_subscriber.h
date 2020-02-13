@@ -32,8 +32,9 @@ namespace Utils {
 extern const Envoy::Http::LowerCaseString kMetadataFlavorKey;
 extern const char kMetadataFlavor[];
 
-// `TokenSubscriber` class fetches a token at the config time in the main
-// thread. It also registers a timer to fetch a new token before expiration.
+// `ImdsTokenSubscriber` class fetches a token at the config time in the main
+// thread. It fetches it from the instance metadata server.
+// It also registers a timer to fetch a new token before expiration.
 //
 // It uses `Init::Manager` object. This is how `Init::Manager` works:
 //
@@ -44,17 +45,17 @@ extern const char kMetadataFlavor[];
 // * `Init::Manager` initializes registered `Init::Target`s at the main thread.
 //   Each target starts to make its remote call and signals `ready` to manager
 //   when it is initialized.
-class TokenSubscriber
+class ImdsTokenSubscriber
     : public Envoy::Http::AsyncClient::Callbacks,
       public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   using TokenUpdateFunc = std::function<void(const std::string& token)>;
   // TODO(kyuc): Maybe add a name that gets passed to Init::TargetImpl.
-  TokenSubscriber(Envoy::Server::Configuration::FactoryContext& context,
-                  const std::string& token_cluster,
-                  const std::string& token_url, const bool json_response,
-                  TokenUpdateFunc callback);
-  virtual ~TokenSubscriber();
+  ImdsTokenSubscriber(Envoy::Server::Configuration::FactoryContext& context,
+                      const std::string& token_cluster,
+                      const std::string& token_url, const bool json_response,
+                      TokenUpdateFunc callback);
+  virtual ~ImdsTokenSubscriber();
 
  private:
   // Envoy::Http::AsyncClient::Callbacks
@@ -76,7 +77,7 @@ class TokenSubscriber
   // init_target_.ready() need be called at the end of request callbacks.
   Envoy::Init::TargetImpl init_target_;
 };
-typedef std::unique_ptr<TokenSubscriber> TokenSubscriberPtr;
+typedef std::unique_ptr<ImdsTokenSubscriber> ImdsTokenSubscriberPtr;
 
 }  // namespace Utils
 }  // namespace Extensions
