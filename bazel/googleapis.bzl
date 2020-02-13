@@ -127,47 +127,58 @@ cc_proto_library(
 """
 
 def googleapis_repositories(bind = True):
+    #    http_archive(
+    #        name = "com_github_googleapis_googleapis",
+    #        build_file_content = GOOGLEAPIS_BUILD_FILE,
+    #        patch_cmds = ["find . -type f -name '*BUILD*' | xargs rm"],
+    #        strip_prefix = "googleapis-ae7a4cc69cc1e206b16f1b9db803907d7a3d97c8",  # Oct 22, 2019
+    #        url = "https://github.com/googleapis/googleapis/archive/ae7a4cc69cc1e206b16f1b9db803907d7a3d97c8.tar.gz",
+    #        sha256 = "f96e11515c302045e8ab6708ba68d7cea8a02e2a96add92033315ff894076980",
+    #    )
+
     http_archive(
         name = "com_github_googleapis_googleapis",
-        build_file_content = GOOGLEAPIS_BUILD_FILE,
-        patch_cmds = ["find . -type f -name '*BUILD*' | xargs rm"],
-        strip_prefix = "googleapis-ae7a4cc69cc1e206b16f1b9db803907d7a3d97c8",  # Oct 22, 2019
-        url = "https://github.com/googleapis/googleapis/archive/ae7a4cc69cc1e206b16f1b9db803907d7a3d97c8.tar.gz",
-        sha256 = "f96e11515c302045e8ab6708ba68d7cea8a02e2a96add92033315ff894076980",
+        #        build_file_content = GOOGLEAPIS_BUILD_FILE,
+        #        patch_cmds = ["find . -type f -name '*BUILD*' | xargs rm"],
+        strip_prefix = "googleapis-602153361a1f309e1c1b7aba4ad69948aae1015c",  # Oct 22, 2019
+        url = "https://github.com/googleapis/googleapis/archive/602153361a1f309e1c1b7aba4ad69948aae1015c.tar.gz",
+        #        sha256 = "f96e11515c302045e8ab6708ba68d7cea8a02e2a96add92033315ff894076980",
     )
 
     if bind:
-        native.bind(
-            name = "rpc_status_proto",
-            actual = "@com_github_googleapis_googleapis//:rpc_status_proto",
-        )
-
-        native.bind(
-            name = "rpc_status_proto_genproto",
-            actual = "@com_github_googleapis_googleapis//:rpc_status_proto_genproto",
-        )
-
+        #        native.bind(
+        #            name = "rpc_status_proto",
+        #            actual = "@com_github_googleapis_googleapis//:rpc_status_proto",
+        #        )
+        #
+        #        native.bind(
+        #            name = "rpc_status_proto_genproto",
+        #            actual = "@com_github_googleapis_googleapis//:rpc_status_proto_genproto",
+        #        )
+        #
         native.bind(
             name = "servicecontrol",
-            actual = "@com_github_googleapis_googleapis//:servicecontrol",
+            actual = "@com_github_googleapis_googleapis//google/api/servicecontrol/v1:servicecontrol_cc_proto",
         )
 
-        native.bind(
-            name = "servicecontrol_genproto",
-            actual = "@com_github_googleapis_googleapis//:servicecontrol_genproto",
-        )
-
+        #
+        #        native.bind(
+        #            name = "servicecontrol_genproto",
+        #            actual = "@com_github_googleapis_googleapis//:servicecontrol_genproto",
+        #        )
+        #
         native.bind(
             name = "service_config",
-            actual = "@com_github_googleapis_googleapis//:service_config",
+            actual = "@com_github_googleapis_googleapis//google/api:service_cc_proto",
         )
 
-        native.bind(
-            name = "cloud_trace",
-            actual = "@com_github_googleapis_googleapis//:cloud_trace",
-        )
-
-        native.bind(
-            name = "http_api_protos",
-            actual = "@com_github_googleapis_googleapis//:http_api_protos",
-        )
+#
+#        native.bind(
+#            name = "cloud_trace",
+#            actual = "@com_github_googleapis_googleapis//:cloud_trace",
+#        )
+#
+#        native.bind(
+#            name = "http_api_protos",
+#            actual = "@com_github_googleapis_googleapis//:http_api_protos",
+#        )
