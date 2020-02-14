@@ -38,6 +38,7 @@ PROXY_RUNTIME_SERVICE_ACCOUNT="e2e-cloud-run-proxy-rt@${PROJECT_ID}.iam.gservice
 BACKEND_RUNTIME_SERVICE_ACCOUNT="e2e-${BACKEND_PLATFORM}-backend-rt@${PROJECT_ID}.iam.gserviceaccount.com"
 JOB_KEY_PATH="${ROOT}/tests/e2e/client/gob-prow-jobs-secret.json"
 LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
+CLUSTER_VERSION="1.14.10-gke.22"
 
 # Determine names of all resources
 UNIQUE_ID=$(get_unique_id | cut -c 1-6)
@@ -166,7 +167,7 @@ function setup() {
     gcloud beta container clusters create ${CLUSTER_NAME} \
       --addons=HorizontalPodAutoscaling,HttpLoadBalancing,CloudRun \
       --machine-type=n1-standard-4 \
-      --cluster-version=1.13.11-gke.14 \
+      --cluster-version=${CLUSTER_VERSION}\
       --enable-stackdriver-kubernetes \
       --service-account=${PROXY_RUNTIME_SERVICE_ACCOUNT} \
       --zone=${CLUSTER_ZONE} \
