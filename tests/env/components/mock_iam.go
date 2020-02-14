@@ -20,7 +20,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"regexp"
-	"sync"
 	"time"
 )
 
@@ -29,22 +28,30 @@ type MockIamServer struct {
 	s          *httptest.Server
 	reqBodyCh  chan string
 	reqTokenCh chan string
-	mtx        sync.RWMutex
+
+	// ID Token Subscribers make a call for each audience at the same time.
+	// Debounce multiple requests with this.
+	retryHandler *RetryHandler
 }
 
 // NewMockMetadata creates a new HTTP server.
-func NewIamMetadata(pathResp map[string]string) *MockIamServer {
+func NewIamMetadata(pathResp map[string]string, wantNumFails int) *MockIamServer {
 	mockPathResp := make(map[string]string)
 	for k, v := range pathResp {
 		mockPathResp[k] = v
 	}
 
 	m := &MockIamServer{
-		reqTokenCh: make(chan string, 100),
-		reqBodyCh:  make(chan string, 100),
+		reqTokenCh:   make(chan string, 100),
+		reqBodyCh:    make(chan string, 100),
+		retryHandler: NewRetryHandler(wantNumFails),
 	}
 	m.s = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+
+		if m.retryHandler.handleRetry(w) {
+			return
+		}
 
 		if r.URL.Path == "" || r.URL.Path == "/" {
 			w.WriteHeader(http.StatusOK)

@@ -46,10 +46,14 @@ type MockMetadataServer struct {
 	s        *httptest.Server
 	reqCache map[string]int
 	mtx      sync.RWMutex
+
+	// ID Token Subscribers make a call for each audience at the same time.
+	// Debounce multiple requests with this.
+	retryHandler *RetryHandler
 }
 
 // NewMockMetadata creates a new HTTP server.
-func NewMockMetadata(pathResp map[string]string) *MockMetadataServer {
+func NewMockMetadata(pathResp map[string]string, wantNumFails int) *MockMetadataServer {
 	mockPathResp := make(map[string]string)
 	for k, v := range defaultResp {
 		mockPathResp[k] = v
@@ -60,10 +64,16 @@ func NewMockMetadata(pathResp map[string]string) *MockMetadataServer {
 	}
 
 	m := &MockMetadataServer{
-		reqCache: make(map[string]int),
+		reqCache:     make(map[string]int),
+		retryHandler: NewRetryHandler(wantNumFails),
 	}
 	m.s = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+
+		if m.retryHandler.handleRetryExceptFirst(w) {
+			return
+		}
+
 		reqURI := r.URL.RequestURI()
 		m.mtx.Lock()
 		reqCnt, _ := m.reqCache[reqURI]

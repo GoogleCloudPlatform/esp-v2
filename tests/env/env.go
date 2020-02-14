@@ -49,7 +49,9 @@ type TestEnv struct {
 	enableScNetworkFailOpen         bool
 	enableEchoServerRootPathHandler bool
 	mockMetadataOverride            map[string]string
+	mockMetadataFailures            int
 	mockIamResps                    map[string]string
+	mockIamFailures                 int
 	bookstoreServer                 *bookserver.BookstoreServer
 	grpcInteropServer               *components.GrpcInteropGrpcServer
 	grpcEchoServer                  *components.GrpcEchoGrpcServer
@@ -96,17 +98,19 @@ func (e *TestEnv) SetEnvoyDrainTimeInSec(envoyDrainTimeInSec int) {
 }
 
 // OverrideMockMetadata overrides mock metadata values given path to response map.
-func (e *TestEnv) OverrideMockMetadata(newMetdaData map[string]string) {
-	e.mockMetadataOverride = newMetdaData
+func (e *TestEnv) OverrideMockMetadata(newImdsData map[string]string, imdsFailures int) {
+	e.mockMetadataOverride = newImdsData
+	e.mockMetadataFailures = imdsFailures
 }
 
 func (e *TestEnv) GetDynamicRoutingBackendPort() uint16 {
 	return e.ports.DynamicRoutingBackendPort
 }
 
-// AppendHttpRules appends Service.Http.Rules.
-func (e *TestEnv) SetIamResps(iamResps map[string]string) {
+// Dictates the responses and the number of failures mock IAM will respond with.
+func (e *TestEnv) SetIamResps(iamResps map[string]string, iamFailures int) {
 	e.mockIamResps = iamResps
+	e.mockIamFailures = iamFailures
 }
 
 func (e *TestEnv) SetBackendAuthIamServiceAccount(serviecAccount string) {
@@ -262,13 +266,13 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	}
 
 	if e.mockMetadata {
-		e.MockMetadataServer = components.NewMockMetadata(e.mockMetadataOverride)
+		e.MockMetadataServer = components.NewMockMetadata(e.mockMetadataOverride, e.mockMetadataFailures)
 		confArgs = append(confArgs, "--metadata_url="+e.MockMetadataServer.GetURL())
 		bootstrapperArgs = append(bootstrapperArgs, "--metadata_url="+e.MockMetadataServer.GetURL())
 	}
 
 	if e.mockIamResps != nil {
-		e.MockIamServer = components.NewIamMetadata(e.mockIamResps)
+		e.MockIamServer = components.NewIamMetadata(e.mockIamResps, e.mockIamFailures)
 		confArgs = append(confArgs, "--iam_url="+e.MockIamServer.GetURL())
 	}
 

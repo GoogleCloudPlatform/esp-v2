@@ -44,7 +44,7 @@ func doRequest(action, url string) (int, string, error) {
 }
 
 func TestMockMetadata(t *testing.T) {
-	s := NewMockMetadata(map[string]string{"/foo_key": "foo_val", "/foo?bar": "foo_bar_val"})
+	s := NewMockMetadata(map[string]string{"/foo_key": "foo_val", "/foo?bar": "foo_bar_val"}, 0)
 
 	testdata := []struct {
 		desc         string

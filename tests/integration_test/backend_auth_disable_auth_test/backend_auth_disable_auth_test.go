@@ -46,8 +46,8 @@ func TestBackendAuthDisableAuth(t *testing.T) {
 	s.OverrideMockMetadata(
 		map[string]string{
 			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.JwtAudienceSet",
-			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost" : "ya29.DefaultAuth",
-		})
+			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost":                      "ya29.DefaultAuth",
+		}, 0)
 
 	defer s.TearDown()
 	if err := s.Setup(testBackendAuthArgs); err != nil {

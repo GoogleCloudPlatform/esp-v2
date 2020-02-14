@@ -116,7 +116,7 @@ func TestReportGCPAttributes(t *testing.T) {
 		}
 		func() {
 			s := env.NewTestEnv(comp.TestReportGCPAttributes, platform.EchoSidecar)
-			s.OverrideMockMetadata(tc.mockMetadataOverride)
+			s.OverrideMockMetadata(tc.mockMetadataOverride, 0)
 
 			defer s.TearDown()
 			if err := s.Setup(args); err != nil {

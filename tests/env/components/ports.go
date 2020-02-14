@@ -34,8 +34,10 @@ const (
 	TestAuthJwksCache
 	TestBackendAuthDisableAuth
 	TestBackendAuthWithImdsIdToken
+	TestBackendAuthWithImdsIdTokenRetries
 	TestBackendAuthWithImdsIdTokenWhileAllowCors
 	TestBackendAuthWithIamIdToken
+	TestBackendAuthWithIamIdTokenRetries
 	TestBackendAuthUsingIamIdTokenWithDelegates
 	TestDifferentOriginPreflightCors
 	TestDifferentOriginSimpleCors

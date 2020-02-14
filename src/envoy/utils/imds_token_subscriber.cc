@@ -28,8 +28,8 @@ namespace {
 // request timeout
 const std::chrono::milliseconds kRequestTimeoutMs(5000);
 
-// Delay after a failed fetch
-const std::chrono::seconds kFailedRequestTimeout(60);
+// Delay after a failed fetch.
+const std::chrono::seconds kFailedRequestTimeout(2);
 
 // If no expiration is provided in the response, refresh in this time.
 const std::chrono::seconds kSubscriberDefaultTokenExpiry(3599);
@@ -113,7 +113,8 @@ void ImdsTokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
   if (status_code == enumToInt(Envoy::Http::Code::OK)) {
     ENVOY_LOG(debug, "GetAccessToken success");
   } else {
-    ENVOY_LOG(debug, "GetAccessToken failed: {}", status_code);
+    ENVOY_LOG(error, "GetAccessToken {} failed: {}", token_url_, status_code);
+    refresh_timer_->enableTimer(kFailedRequestTimeout);
     return;
   }
 
@@ -135,6 +136,7 @@ void ImdsTokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
                                                       &response_pb, options);
     if (!parse_status.ok()) {
       ENVOY_LOG(error, "Parsing response failed: {}", parse_status.ToString());
+      refresh_timer_->enableTimer(kFailedRequestTimeout);
       return;
     }
     JsonStruct json_struct(response_pb);
@@ -143,6 +145,7 @@ void ImdsTokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
     if (!parse_status.ok()) {
       ENVOY_LOG(error, "Parsing response failed for field `access_token`: {}",
                 parse_status.ToString());
+      refresh_timer_->enableTimer(kFailedRequestTimeout);
       return;
     }
 
@@ -151,6 +154,7 @@ void ImdsTokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
     if (!parse_status.ok()) {
       ENVOY_LOG(error, "Parsing response failed for field `expires_in`: {}",
                 parse_status.ToString());
+      refresh_timer_->enableTimer(kFailedRequestTimeout);
       return;
     }
     expires_in = std::chrono::seconds(expires_seconds);
@@ -175,7 +179,7 @@ void ImdsTokenSubscriber::onFailure(
     Envoy::Http::AsyncClient::FailureReason reason) {
   init_target_.ready();
   active_request_ = nullptr;
-  ENVOY_LOG(debug, "GetAccessToken failed with code: {}, {}",
+  ENVOY_LOG(error, "GetAccessToken failed with code: {}, {}",
             enumToInt(reason));
   refresh_timer_->enableTimer(kFailedRequestTimeout);
 }

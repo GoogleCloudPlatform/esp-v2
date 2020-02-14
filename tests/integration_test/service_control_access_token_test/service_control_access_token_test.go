@@ -39,7 +39,7 @@ func TestServiceControlAccessToken(t *testing.T) {
 	s.SetIamResps(
 		map[string]string{
 			fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateAccessToken", serviceAccount): `{"accessToken":  "access-token-from-iam", "expireTime": "2022-10-02T15:01:23.045123456Z"}`,
-		})
+		}, 0)
 
 	defer s.TearDown()
 	if err := s.Setup(args); err != nil {

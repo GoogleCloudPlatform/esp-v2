@@ -36,13 +36,14 @@ constexpr char kDelegatePrefix[]("projects/-/serviceAccounts/");
 // token
 constexpr char kScopesField[]("scope");
 
-// request timeout
+// Request timeout.
 const std::chrono::milliseconds kRequestTimeoutMs(5000);
 
-// Delay after a failed fetch
-const std::chrono::seconds kFailedRequestTimeout(60);
+// Delay after a failed fetch.
+const std::chrono::seconds kFailedRequestTimeout(2);
 
-const std::chrono::milliseconds kAccessTokenWaitPeriod(10);
+// Delay to poll for access token again (from IMDS).
+const std::chrono::milliseconds kAccessTokenWaitPeriod(1);
 
 const std::chrono::seconds kTokenExpiryMargin(5);
 
@@ -182,6 +183,7 @@ void IamTokenSubscriber::processAccessTokenResp(JsonStruct& json_struct) {
   if (!parse_status.ok()) {
     ENVOY_LOG(error, "Parsing response failed for field `accessToken`: {}",
               parse_status.ToString());
+    resetTimer(kFailedRequestTimeout);
     return;
   }
 
@@ -217,6 +219,7 @@ void IamTokenSubscriber::processIdentityTokenResp(JsonStruct& json_struct) {
   if (!parse_status.ok()) {
     ENVOY_LOG(error, "Parsing response failed for field `token`: {}",
               parse_status.ToString());
+    resetTimer(kFailedRequestTimeout);
     return;
   }
 
@@ -232,13 +235,16 @@ void IamTokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
     const uint64_t status_code =
         Envoy::Http::Utility::getResponseStatus(response->headers());
     if (status_code != enumToInt(Envoy::Http::Code::OK)) {
-      ENVOY_LOG(error, "{} is not 200 OK, got: {}", request_name_, status_code);
+      ENVOY_LOG(error, "{} for {} is not 200 OK, got: {}", request_name_,
+                iam_service_uri_, status_code);
+      resetTimer(kFailedRequestTimeout);
       return;
     }
   } catch (const EnvoyException& e) {
     // This occurs if the status header is missing.
     // Catch the exception to prevent unwinding and skipping cleanup.
     ENVOY_LOG(error, "{} failed: {}", request_name_, e.what());
+    resetTimer(kFailedRequestTimeout);
     return;
   }
   ENVOY_LOG(debug, "{} success", request_name_);
@@ -250,6 +256,7 @@ void IamTokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
                                                     &response_pb, options);
   if (!parse_status.ok()) {
     ENVOY_LOG(error, "Parsing response failed: {}", parse_status.ToString());
+    resetTimer(kFailedRequestTimeout);
     return;
   }
 

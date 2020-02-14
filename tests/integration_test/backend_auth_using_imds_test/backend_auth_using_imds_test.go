@@ -16,7 +16,9 @@ package backend_auth_using_imds_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
@@ -46,7 +48,7 @@ func TestBackendAuthWithImdsIdToken(t *testing.T) {
 		map[string]string{
 			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",
 			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/append":   "ya29.append",
-		})
+		}, 0)
 
 	defer s.TearDown()
 	if err := s.Setup(testBackendAuthArgs); err != nil {
@@ -96,6 +98,69 @@ func TestBackendAuthWithImdsIdToken(t *testing.T) {
 	}
 }
 
+func TestBackendAuthWithImdsIdTokenRetries(t *testing.T) {
+	s := NewBackendAuthTestEnv(comp.TestBackendAuthWithImdsIdTokenRetries)
+
+	testData := []struct {
+		desc           string
+		method         string
+		path           string
+		wantNumFails   int
+		wantInitialErr string
+		wantFinalResp  string
+	}{
+		{
+			desc:           "Add Bearer token for CONSTANT_ADDRESS backend that requires JWT token",
+			method:         "GET",
+			path:           "/bearertoken/constant/42",
+			wantNumFails:   5,
+			wantInitialErr: `500 Internal Server Error, missing tokens`,
+			wantFinalResp:  `{"Authorization": "Bearer ya29.constant", "RequestURI": "/bearertoken/constant?foo=42"}`,
+		},
+	}
+
+	for _, tc := range testData {
+
+		// Place in closure to allow deferring in loop.
+		func() {
+			s.OverrideMockMetadata(
+				map[string]string{
+					util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",
+				}, tc.wantNumFails)
+
+			defer s.TearDown()
+			if err := s.Setup(testBackendAuthArgs); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+
+			// The first call should fail since IMDS is responding with failures.
+			_, err := client.DoWithHeaders(url, tc.method, "", nil)
+			if err == nil {
+				t.Fatalf("Test Desc(%s): expected failure while IAM is unhealthy", tc.desc)
+			}
+			if !strings.Contains(err.Error(), tc.wantInitialErr) {
+				t.Fatalf("Test Desc(%s): expected failure (%v), got failure (%v)", tc.desc, tc.wantInitialErr, err)
+			}
+
+			// Sleep enough time for IMDS to become healthy. This depends on the retry timer in TokenSubscriber.
+			time.Sleep(time.Duration(2*tc.wantNumFails) * time.Second)
+
+			// The second request should work.
+			resp, err := client.DoWithHeaders(url, tc.method, "", nil)
+			if err != nil {
+				t.Fatalf("Test Desc(%s): %v", tc.desc, err)
+			}
+
+			gotResp := string(resp)
+			if !utils.JsonEqual(gotResp, tc.wantFinalResp) {
+				t.Errorf("Test Desc(%s): want: %s, got: %s", tc.desc, tc.wantFinalResp, gotResp)
+			}
+		}()
+	}
+}
+
 func TestBackendAuthWithImdsIdTokenWhileAllowCors(t *testing.T) {
 	corsRequestMethod := "PATCH"
 	corsRequestHeader := "X-PINGOTHER"
@@ -106,7 +171,7 @@ func TestBackendAuthWithImdsIdTokenWhileAllowCors(t *testing.T) {
 		map[string]string{
 			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",
 			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/append":   "ya29.append",
-		})
+		}, 0)
 	s.SetAllowCors()
 
 	defer s.TearDown()

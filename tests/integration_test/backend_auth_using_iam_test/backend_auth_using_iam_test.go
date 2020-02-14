@@ -16,7 +16,9 @@ package backend_auth_using_iam_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
@@ -49,7 +51,7 @@ func TestBackendAuthWithIamIdToken(t *testing.T) {
 		map[string]string{
 			fmt.Sprintf("%s?audience=https://localhost/bearertoken/constant", util.IamIdentityTokenSuffix(serviceAccount)): `{"token":  "id-token-for-constant"}`,
 			fmt.Sprintf("%s?audience=https://localhost/bearertoken/append", util.IamIdentityTokenSuffix(serviceAccount)):   `{"token":  "id-token-for-append"}`,
-		})
+		}, 0)
 
 	defer s.TearDown()
 	if err := s.Setup(testBackendAuthArgs); err != nil {
@@ -92,6 +94,71 @@ func TestBackendAuthWithIamIdToken(t *testing.T) {
 	}
 }
 
+func TestBackendAuthWithIamIdTokenRetries(t *testing.T) {
+	s := NewBackendAuthTestEnv(comp.TestBackendAuthWithIamIdTokenRetries)
+	serviceAccount := "fakeServiceAccount@google.com"
+	s.SetBackendAuthIamServiceAccount(serviceAccount)
+
+	testData := []struct {
+		desc           string
+		method         string
+		path           string
+		wantNumFails   int
+		wantInitialErr string
+		wantFinalResp  string
+	}{
+		{
+			desc:           "Add Bearer token for CONSTANT_ADDRESS backend that requires JWT token",
+			method:         "GET",
+			path:           "/bearertoken/constant/42",
+			wantNumFails:   5,
+			wantInitialErr: `500 Internal Server Error, missing tokens`,
+			wantFinalResp:  `{"Authorization": "Bearer id-token-for-constant", "RequestURI": "/bearertoken/constant?foo=42"}`,
+		},
+	}
+
+	for _, tc := range testData {
+
+		// Place in closure to allow deferring in loop.
+		func() {
+			s.SetIamResps(
+				map[string]string{
+					fmt.Sprintf("%s?audience=https://localhost/bearertoken/constant", util.IamIdentityTokenSuffix(serviceAccount)): `{"token":  "id-token-for-constant"}`,
+				}, tc.wantNumFails)
+
+			defer s.TearDown()
+			if err := s.Setup(testBackendAuthArgs); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+
+			// The first call should fail since IAM is responding with failures.
+			_, err := client.DoWithHeaders(url, tc.method, "", nil)
+			if err == nil {
+				t.Fatalf("Test Desc(%s): expected failure while IAM is unhealthy", tc.desc)
+			}
+			if !strings.Contains(err.Error(), tc.wantInitialErr) {
+				t.Fatalf("Test Desc(%s): expected failure (%v), got failure (%v)", tc.desc, tc.wantInitialErr, err)
+			}
+
+			// Sleep enough time for IAM to become healthy. This depends on the retry timer in TokenSubscriber.
+			time.Sleep(time.Duration(2*tc.wantNumFails) * time.Second)
+
+			// The second request should work.
+			resp, err := client.DoWithHeaders(url, tc.method, "", nil)
+			if err != nil {
+				t.Fatalf("Test Desc(%s): %v", tc.desc, err)
+			}
+
+			gotResp := string(resp)
+			if !utils.JsonEqual(gotResp, tc.wantFinalResp) {
+				t.Errorf("Test Desc(%s): want: %s, got: %s", tc.desc, tc.wantFinalResp, gotResp)
+			}
+		}()
+	}
+}
+
 func TestBackendAuthUsingIamIdTokenWithDelegates(t *testing.T) {
 	s := NewBackendAuthTestEnv(comp.TestBackendAuthUsingIamIdTokenWithDelegates)
 	serviceAccount := "fakeServiceAccount@google.com"
@@ -102,7 +169,7 @@ func TestBackendAuthUsingIamIdTokenWithDelegates(t *testing.T) {
 	s.SetIamResps(
 		map[string]string{
 			fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateIdToken?audience=https://localhost/bearertoken/constant", serviceAccount): `{"token":  "id-token-for-constant"}`,
-		})
+		}, 0)
 
 	defer s.TearDown()
 	if err := s.Setup(testBackendAuthArgs); err != nil {
