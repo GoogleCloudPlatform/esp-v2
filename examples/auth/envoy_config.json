@@ -135,6 +135,9 @@
                             }
                           },
                           "google_id_token": {
+                            "audiences": [
+                              "https://auth.endpoints.apiproxy-231719.cloud.goog"
+                            ],
                             "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
                             "fromHeaders": [
                               {

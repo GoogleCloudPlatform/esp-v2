@@ -501,6 +501,9 @@ func TestFetchListeners(t *testing.T) {
                            },
                            "providers":{
                               "firebase":{
+                                 "audiences": [
+                                     "https://bookstore.endpoints.project123.cloud.goog"
+                                 ],
                                  "forwardPayloadHeader":"X-Endpoint-API-UserInfo",
                                  "fromHeaders":[
                                     {
@@ -713,6 +716,9 @@ func TestFetchListeners(t *testing.T) {
                            },
                            "providers":{
                               "firebase1":{
+                                 "audiences": [
+                                     "https://bookstore.endpoints.project123.cloud.goog"
+                                 ],
                                  "forwardPayloadHeader":"X-Endpoint-API-UserInfo",
                                  "fromHeaders":[
                                     {
@@ -738,6 +744,9 @@ func TestFetchListeners(t *testing.T) {
                                  }
                               },
                               "firebase2":{
+                                 "audiences": [
+                                     "https://bookstore.endpoints.project123.cloud.goog"
+                                 ],
                                  "forwardPayloadHeader":"X-Endpoint-API-UserInfo",
                                  "fromHeaders":[
                                     {

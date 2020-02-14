@@ -146,10 +146,10 @@ func TestServiceControlCheckError(t *testing.T) {
 		},
 		{
 			desc:   "Failed, the request passed auth but failed in check with PROJECT_INVALID",
-			path:   "/auth/info/googlejwt",
+			path:   "/auth/info/auth0",
 			apiKey: "api-key",
 			method: "GET",
-			token:  testdata.FakeCloudToken,
+			token:  testdata.FakeCloudTokenMultiAudiences,
 			mockedCheckResponse: &scpb.CheckResponse{
 				CheckInfo: &scpb.CheckResponse_CheckInfo{
 					ConsumerInfo: &scpb.CheckResponse_ConsumerInfo{
@@ -172,20 +172,20 @@ func TestServiceControlCheckError(t *testing.T) {
 					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					ConsumerID:      "api_key:api-key",
-					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt",
+					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth0",
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
 					Version:     utils.ESPv2Version(),
 					ServiceName: "echo-api.endpoints.cloudesf-testing.cloud.goog", ServiceConfigID: "test-config-id",
-					URL:               "/auth/info/googlejwt?key=api-key",
+					URL:               "/auth/info/auth0?key=api-key",
 					ApiKey:            "api-key",
-					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth0",
 					ProducerProjectID: "producer-project",
 					ConsumerProjectID: "123456",
 					FrontendProtocol:  "http",
 					HttpMethod:        "GET",
-					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth_info_google_jwt is called",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth0 is called",
 					ErrorType:         "4xx",
 					StatusCode:        "3",
 					ResponseCode:      400,

@@ -48,22 +48,22 @@ func TestAuthJwksCache(t *testing.T) {
 	}{
 		{
 			desc:                   "Success, the default jwks cache duration is 300s so only 1 request to the jwks provider will be made",
-			path:                   "/auth/info/googlejwt",
+			path:                   "/auth/info/auth0",
 			apiKey:                 "api-key",
 			method:                 "GET",
-			token:                  testdata.FakeCloudToken,
+			token:                  testdata.FakeCloudTokenMultiAudiences,
 			wantRequestsToProvider: &expectedRequestCount{provider, 1},
-			wantResp:               `{"exp":4698318356,"iat":1544718356,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
+			wantResp:               `{"aud":["admin.cloud.goog","bookstore_test_client.cloud.goog"],"exp":4698318999,"iat":1544718999,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
 		},
 		{
 			desc:                   "Success, the customized jwks cache duration is 1s so 10 request to the jwks provider will be made",
-			path:                   "/auth/info/googlejwt",
+			path:                   "/auth/info/auth0",
 			apiKey:                 "api-key",
 			method:                 "GET",
 			jwksCacheDurationInS:   1,
-			token:                  testdata.FakeCloudToken,
+			token:                  testdata.FakeCloudTokenMultiAudiences,
 			wantRequestsToProvider: &expectedRequestCount{provider, 5},
-			wantResp:               `{"exp":4698318356,"iat":1544718356,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
+			wantResp:               `{"aud":["admin.cloud.goog","bookstore_test_client.cloud.goog"],"exp":4698318999,"iat":1544718999,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
 		},
 	}
 	for _, tc := range testData {

@@ -197,7 +197,8 @@ const (
 		"S7ZqRTljqZB6HUjG7TL_QMZuQ7S44bLGePgx8AeMlEqBzFizG7cJKvGJjsSTiuxvESBnPN" +
 		"pjm4bNFLgLXULoRsoXgU3i1DKQ0r12uztARJpq79diXf-ln7tV-TCwOXlubbb2hiP6-A"
 
-	// All the JWT and JWKS data are generated following
+	// All the JWT and JWKS data are generated via the repo below.
+	// The second entry corresponds to the private key in the following directory.
 	// https://github.com/istio/istio/tree/master/security/tools/jwt/samples
 	FakeCloudJwks = `{
 		"keys":[
@@ -206,7 +207,13 @@ const (
 			"kid":"j5noYIxnGRW4OBiuxmt6kl-zeQgxcVwfKslNiNZ7J5I",
 			"kty":"RSA",
 			"n":"nmFbmjsJxUw-JngfaKcFe_47ZR0Nn2FyBxftXID2bhVIfRGZTs0b0C6-IbiAJ7EGGsxMMyxqeA_kQfJi1UQ11SGXANav5y2Lk0EFla7bZCDDFo46jeQh4Ed9I7uNUUmVByz2jsVsiIEHy45wh2U_O_K_KYe_BQ0-JRi_Sh71HUOt9Kw15vbwddWSkDTbLKGm3os1Qo_t0GTT84ow2XIz_8C2zU-1eXlkFSUhudfNf6Encvu0bqJI4hVuOuYocwCNnFtuV1VqJxoNrbrEKPCx6F3Fv82cw_vKh2dGsXeuP8wclbCJHalgIYyYIE0NLFZheHZmCjtQ4zk1VAFikUQ9Fw"
-		}
+		},
+		{ 
+            "e":"AQAB",
+            "kid":"DHFbpoIUqrY8t2zpA2qXfCmr5VO5ZEr4RzHU_-envvQ",
+            "kty":"RSA",
+            "n":"xAE7eB6qugXyCAG3yhh7pkDkT65pHymX-P7KfIupjf59vsdo91bSP9C8H07pSAGQO1MV_xFj9VswgsCg4R6otmg5PV2He95lZdHtOcU5DXIg_pbhLdKXbi66GlVeK6ABZOUW3WYtnNHD-91gVuoeJT_DwtGGcp4ignkgXfkiEm4sw-4sfb4qdt5oLbyVpmW6x9cfa7vs2WTfURiCrBoUqgBo_-4WTiULmmHSGZHOjzwa8WtrtOQGsAFjIbno85jp6MnGGGZPYZbDAa_b3y5u-YpW7ypZrvD8BgtKVjgtQgZhLAGezMt0ua3DRrWnKqTZ0BJ_EyxOGuHJrLsn00fnMQ"
+        }
 		]
 	}`
 
@@ -264,7 +271,14 @@ const (
 		"1t3GfDzzjGRJl65OiW-2rKSmSLt8k2mKtZ2ihwF7LF0FetyZzaMhDvQRkuGpaWhF" +
 		"HB7Ty8qmsHaRXY4-RKhq1TcBO25qHcYxNXzF_fDFxA0zjdCtzuBdrtraDWA"
 
+	// python3 gen-jwt.py key.pem -jwks=./jwks.json --expire=3153600000
+	// --iss="api-proxy-testing@cloud.goog"
+	// --aud https://bookstore.endpoints.cloudesf-testing.cloud.goog > demo.jwt
+	FakeCloudGrpcBookstoreDefaultToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lVcXJZOHQyenBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2Jvb2tzdG9yZS5lbmRwb2ludHMuY2xvdWRlc2YtdGVzdGluZy5jbG91ZC5nb29nIiwiZXhwIjo0NzM1MzI0NTY2LCJpYXQiOjE1ODE3MjQ1NjYsImlzcyI6ImFwaS1wcm94eS10ZXN0aW5nQGNsb3VkLmdvb2ciLCJzdWIiOiJhcGktcHJveHktdGVzdGluZ0BjbG91ZC5nb29nIn0.LwJXfeXwTg9X2HEdQ5lEkSORq_6ZU2Xl8H4r-TmNwi89oBXxZZ2DKxmquA7bJdHVhhQcPCK9KWo5UA0BpFn3k1u890wMVhptl_u-qp_IsIGXQvEDSf7ZM4AmWXwrEo5yNNVPgIo7ipyTBrEW7cwkRyRlf2cDtnvM_Y4X7CcR1nOB515SaGaGPeMyCTvsy6q5du72d2G8lCaXWFp3w1fx7CxLlj5rR5tEiUswur3cECFnlqQSr68yHqpEHIwAyWBrT1-UmwwNBRhE4Ajzhf9vvFd3iLT7hJ-fzdJTZFWtcSlA8fFmqeWrIZdxRe9kPQ1CK5nYI4MVfuflO4QEU8t_Ag"
+
 	// JWT and JWKS generated with issuer "jwt-client.endpoints.sample.google.com"
+	// The second entry corresponds to the private key in the following directory.
+	// https://github.com/istio/istio/tree/master/security/tools/jwt/samples
 	FakeEndpointsJwks = `{
 		"keys":[
 		{
@@ -272,10 +286,18 @@ const (
 			"kid":"cgS5aK5-j1u5cqKgcgaGlNem14L9gKWCuUOpNrk5X4M",
 			"kty":"RSA",
 			"n":"w5PWEX5dQ-kjBkx4ZhzXeXqC7PkhduwZ8hHOkVANIKiNLt1sUr17G1hFe8uJka-T1jBWWi7VqidluXcNAuCtbQQ_m1nZhCOjmA803rAQJJQYPxIYXXVYQ-yAAubG5RA_ImVQaXAmoRC5vvU2BnxMYbvPtGoLLOrpTY123d4m-z094Qh4MMUG0KZr52IFjCzTJR8fGetvYZZfrrEwQn5EXcb3WJYx_kdjMRnPeUUIZdxUJOmAAxE5qADxCB12p00S9T-D9WhqiET8S9MjgXzstoWmFLeDDVakgc14t23uK910NDoYRv6XXq9GyhGa0_PqUD3UCUJC4Sz48Onv6-SyCw"
-		}
+		},
+		{ 
+            "e":"AQAB",
+            "kid":"DHFbpoIUqrY8t2zpA2qXfCmr5VO5ZEr4RzHU_-envvQ",
+            "kty":"RSA",
+            "n":"xAE7eB6qugXyCAG3yhh7pkDkT65pHymX-P7KfIupjf59vsdo91bSP9C8H07pSAGQO1MV_xFj9VswgsCg4R6otmg5PV2He95lZdHtOcU5DXIg_pbhLdKXbi66GlVeK6ABZOUW3WYtnNHD-91gVuoeJT_DwtGGcp4ignkgXfkiEm4sw-4sfb4qdt5oLbyVpmW6x9cfa7vs2WTfURiCrBoUqgBo_-4WTiULmmHSGZHOjzwa8WtrtOQGsAFjIbno85jp6MnGGGZPYZbDAa_b3y5u-YpW7ypZrvD8BgtKVjgtQgZhLAGezMt0ua3DRrWnKqTZ0BJ_EyxOGuHJrLsn00fnMQ"
+        }
 		]
 	}`
 
+	// No audiences in this valid token.
+	// --iss=jwt-client.endpoints.sample.google.com
 	FakeEndpointsToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImNnUzVhSzUtajF1NWNxS2d" +
 		"jZ2FHbE5lbTE0TDlnS1dDdVVPcE5yazVYNE0iLCJ0eXAiOiJKV1QifQ.eyJleHAiOjQ2O" +
 		"TgzMTk3NTIsImlhdCI6MTU0NDcxOTc1MiwiaXNzIjoiand0LWNsaWVudC5lbmRwb2ludH" +
@@ -286,6 +308,11 @@ const (
 		"hFVkL0n0Pro9C-RtiHcTn6v2nnWMiF6sbyTaxJljpt_PI5AXw2g-nPqeR9pNL-Y0w02Zs" +
 		"7CD1Fb6i0jMPeRoCBIQsLCLGTw2yL0hTRRtbFxTjZ2b9Ogvw_r3k8dxR4vaObkvc8pWJW" +
 		"i7zQ9iUJoZVrYKzZtOw"
+
+	// python3 gen-jwt.py key.pem -jwks=./jwks.json --expire=3153600000
+	// --iss="jwt-client.endpoints.sample.google.com"
+	// --aud https://bookstore.endpoints.cloudesf-testing.cloud.goog > demo.jwt
+	FakeEndpointsGrpcBookstoreDefaultToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lVcXJZOHQyenBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2Jvb2tzdG9yZS5lbmRwb2ludHMuY2xvdWRlc2YtdGVzdGluZy5jbG91ZC5nb29nIiwiZXhwIjo0NzM1MzI3NDk1LCJpYXQiOjE1ODE3Mjc0OTUsImlzcyI6Imp3dC1jbGllbnQuZW5kcG9pbnRzLnNhbXBsZS5nb29nbGUuY29tIiwic3ViIjoiand0LWNsaWVudC5lbmRwb2ludHMuc2FtcGxlLmdvb2dsZS5jb20ifQ.Ex9QwvLMXWmAQSwPX-qcwJe6G11smOON66b-h3ILdDtHpFPc1VtIDOZxi5yI6gaG7XlYMNdGiI8xEOgC99LsYYrQH9765V_qy9cnBtf8b-U5zJKHmL1KHhzUyV3M9ZSVV6VYzh67WxsPDyaNLj4OSSKfmXe268kYW6fUQzEQ9vmwb06Zt8P9jIWYrnZLNTw2h2iFLAVyzsCFPPzCXpeTKl1YVVJaqBs8bBBRk-DMmew__QZZ9C_DJuWUsl1zWqb5REzU4ZKfxysIfGmXDr8A_FmdS-LwOdbi9qnR25BzrvNc-TIyODPIcbqFC9v1DToJJ9NhDhBgBIRh-tEdU56IEA"
 
 	// Bad Token
 	FakeBadToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lVcXJZOHQyenBBMnFYZk" +

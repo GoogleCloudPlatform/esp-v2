@@ -299,11 +299,19 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 			},
 			ForwardPayloadHeader: "X-Endpoint-API-UserInfo",
 		}
+
 		if len(provider.GetAudiences()) != 0 {
 			for _, a := range strings.Split(provider.GetAudiences(), ",") {
 				jp.Audiences = append(jp.Audiences, strings.TrimSpace(a))
 			}
+		} else {
+			// No providers specified by user.
+			// For backwards-compatibility with ESPv1, auto-generate audiences.
+			// See b/147834348 for more information on this default behavior.
+			defaultAudience := fmt.Sprintf("https://%v", serviceInfo.Name)
+			jp.Audiences = append(jp.Audiences, defaultAudience)
 		}
+
 		// TODO(taoxuy): add unit test
 		// the JWT Payload will be send to metadata by envoy and it will be used by service control filter
 		// for logging and setting credential_id
@@ -355,6 +363,8 @@ func makeJwtRequirement(requirements []*confpb.AuthRequirement) *jwtpb.JwtRequir
 				},
 			}
 		} else {
+			// Note: Audiences in requirements is deprecated.
+			// But if it's specified, we should override the audiences for the provider.
 			var audiences []string
 			for _, a := range strings.Split(r.GetAudiences(), ",") {
 				audiences = append(audiences, strings.TrimSpace(a))

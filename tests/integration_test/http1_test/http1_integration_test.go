@@ -130,9 +130,9 @@ func TestHttp1JWT(t *testing.T) {
 		{
 			desc:       "Succeed, with valid JWT token",
 			httpMethod: "GET",
-			httpPath:   "/auth/info/googlejwt",
-			token:      testdata.FakeCloudToken,
-			wantResp:   `{"exp":4698318356,"iat":1544718356,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
+			httpPath:   "/auth/info/auth0",
+			token:      testdata.FakeCloudTokenMultiAudiences,
+			wantResp:   `{"aud":["admin.cloud.goog","bookstore_test_client.cloud.goog"],"exp":4698318999,"iat":1544718999,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
 		},
 		{
 			desc:        "Fail, with valid JWT token",

@@ -45,6 +45,7 @@ func TestServiceControlCredentialId(t *testing.T) {
 			Requirements: []*confpb.AuthRequirement{
 				{
 					ProviderId: testdata.GoogleJwtProvider,
+					Audiences:  "bookstore_test_client.cloud.goog",
 				},
 			},
 		},
@@ -78,37 +79,10 @@ func TestServiceControlCredentialId(t *testing.T) {
 		wantScRequests        []interface{}
 		wantGetScRequestError error
 	}{
+		// Note: Tokens without audiences are no longer accepted by ESPv2.
+		// Therefore, only test is for token with issuer and audience.
 		{
-			desc:           "success; When api_key is unavailable, the label credential_id is iss and the check request is skipped",
-			clientProtocol: "http",
-			method:         "/v1/shelves",
-			httpMethod:     "GET",
-			token:          testdata.FakeCloudToken,
-			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
-			wantScRequests: []interface{}{
-				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version(),
-					ServiceName:       "bookstore.endpoints.cloudesf-testing.cloud.goog",
-					ServiceConfigID:   "test-config-id",
-					URL:               "/v1/shelves",
-					JwtAuth:           "issuer=YXBpLXByb3h5LXRlc3RpbmdAY2xvdWQuZ29vZw",
-					ApiMethod:         "endpoints.examples.bookstore.Bookstore.ListShelves",
-					ProducerProjectID: "producer project",
-					FrontendProtocol:  "http",
-					BackendProtocol:   "grpc",
-					HttpMethod:        "GET",
-					LogMessage:        "endpoints.examples.bookstore.Bookstore.ListShelves is called",
-					StatusCode:        "0",
-					ResponseCode:      200,
-					RequestMsgCounts:  1,
-					ResponseMsgCounts: 1,
-					Platform:          util.GCE,
-					Location:          "test-zone",
-				},
-			},
-		},
-		{
-			desc:           "success; When api_key is unavailable, the label credential_id is iss plus aud and the check request is skipped",
+			desc:           "success; When api_key is unavailable, the label credential_id has issuer AND audience, and the check request is skipped",
 			clientProtocol: "http",
 			method:         "/v1/shelves",
 			httpMethod:     "GET",

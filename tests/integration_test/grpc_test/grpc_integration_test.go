@@ -293,14 +293,14 @@ func TestGRPCJwt(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves?key=api-key&&shelf.id=123&shelf.theme=kids",
-			token:          testdata.FakeCloudToken,
+			token:          testdata.FakeCloudGrpcBookstoreDefaultToken,
 			wantResp:       `{"id":"123","theme":"kids"}`,
 		},
 		{
 			desc:               "Succeed for gRPC client, with valid JWT token",
 			clientProtocol:     "grpc",
 			method:             "CreateShelf",
-			token:              testdata.FakeCloudToken,
+			token:              testdata.FakeCloudGrpcBookstoreDefaultToken,
 			header:             http.Header{"x-api-key": []string{"api-key"}},
 			wantResp:           `{"id":"14785","theme":"New Shelf"}`,
 			wantGRPCWebTrailer: successTrailer,
@@ -311,7 +311,7 @@ func TestGRPCJwt(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves?key=api-key&&shelf.id=345&shelf.theme=HurryUp",
-			token:          testdata.FakeCloudToken,
+			token:          testdata.FakeCloudGrpcBookstoreDefaultToken,
 			wantResp:       `{"id":"345","theme":"HurryUp"}`,
 		},
 		{
@@ -326,7 +326,7 @@ func TestGRPCJwt(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "DELETE",
 			method:         "/v1/shelves/125/books/001?key=api-key",
-			token:          testdata.FakeCloudToken,
+			token:          testdata.FakeCloudGrpcBookstoreDefaultToken,
 			wantResp:       "{}",
 		},
 		{
@@ -410,7 +410,7 @@ func TestGRPCJwt(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "DELETE",
 			method:         "/v1/shelves/120?key=api-key",
-			token:          testdata.FakeEndpointsToken,
+			token:          testdata.FakeEndpointsGrpcBookstoreDefaultToken,
 			wantResp:       "{}",
 		},
 		{
@@ -429,6 +429,31 @@ func TestGRPCJwt(t *testing.T) {
 			method:         "/v1/shelves/120?key=api-key",
 			token:          testdata.FakeCloudToken,
 			wantError:      "401 Unauthorized, Jwt issuer is not configured",
+		},
+		// Test the default audience when one isn't specified.
+		{
+			desc:           "Fail for HTTP client calling endpoint with default audience due to no audience in token",
+			clientProtocol: "http",
+			httpMethod:     "POST",
+			method:         "/v1/shelves",
+			token:          testdata.FakeCloudToken,
+			wantError:      "403 Forbidden, Audiences in Jwt are not allowed",
+		},
+		{
+			desc:           "Fail for HTTP client calling endpoint with default audience due to token audience mismatch",
+			clientProtocol: "http",
+			httpMethod:     "POST",
+			method:         "/v1/shelves",
+			token:          testdata.FakeCloudTokenSingleAudience2,
+			wantError:      "403 Forbidden, Audiences in Jwt are not allowed",
+		},
+		{
+			desc:           "Success for HTTP client calling endpoint with default audience",
+			clientProtocol: "http",
+			httpMethod:     "POST",
+			method:         "/v1/shelves?key=api-key&&shelf.id=456&shelf.theme=science",
+			token:          testdata.FakeCloudGrpcBookstoreDefaultToken,
+			wantResp:       `{"id":"456","theme":"science"}`,
 		},
 	}
 

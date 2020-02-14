@@ -445,6 +445,9 @@
                                                 },
                                                 "providers": {
                                                     "test_jwk": {
+                                                        "audiences": [
+                                                            "https://esp-grpc-echo-oxouww7xzq-uc.a.run.app"
+                                                        ],
                                                         "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
                                                         "fromHeaders": [
                                                             {
