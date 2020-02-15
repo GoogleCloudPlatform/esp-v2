@@ -79,12 +79,12 @@ build-envoy-debug:
 
 build-grpc-echo:
 	@echo "--> building grpc-echo"
-	@CC=clang-8 CXX=clang++-8 bazel build --cxxopt='-std=c++14' tests/endpoints/grpc_echo:grpc-test-client --incompatible_no_support_tools_in_action_inputs=false
-	@CC=clang-8 CXX=clang++-8 bazel build //tests/endpoints/grpc_echo:grpc-test-server --incompatible_no_support_tools_in_action_inputs=false
-	@CC=clang-8 CXX=clang++-8 bazel build tests/endpoints/grpc_echo:grpc-test_descriptor --incompatible_no_support_tools_in_action_inputs=false
+	@azel build --cxxopt='-std=c++14' tests/endpoints/grpc_echo:grpc-test-client --incompatible_no_support_tools_in_action_inputs=false
+	@bazel build //tests/endpoints/grpc_echo:grpc-test-server --incompatible_no_support_tools_in_action_inputs=false
+	@bazel build tests/endpoints/grpc_echo:grpc-test_descriptor --incompatible_no_support_tools_in_action_inputs=false
 	@cp -f bazel-bin/tests/endpoints/grpc_echo/grpc-test-client bin/grpc_echo_client
 	@cp -f bazel-bin/tests/endpoints/grpc_echo/grpc-test-server bin/grpc_echo_server
-	@cp -f bazel-genfiles/tests/endpoints/grpc_echo/grpc-test.descriptor tests/endpoints/grpc_echo/proto/api_descriptor.pb
+	@cp -f bazel-bin/tests/endpoints/grpc_echo/grpc-test.descriptor tests/endpoints/grpc_echo/proto/api_descriptor.pb
 
 build-grpc-bookstore:
 	# This doesn't work when tests/endpoints/bookstore_grpc/BUILD is defined,
