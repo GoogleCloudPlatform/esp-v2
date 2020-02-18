@@ -14,7 +14,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//external:abseil_strings",
-        "//external:service_config",
+        "@com_github_googleapis_googleapis//google/api:service_cc_proto",
         "//external:servicecontrol_client",
         "//src/api_proxy/utils",
         "@envoy//source/common/common:base64_lib",
@@ -55,7 +55,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":request_builder_lib",
-        "//external:service_config",
+        "@com_github_googleapis_googleapis//google/api:service_cc_proto",
         "@com_google_googletest//:gtest_prod",
     ],
 )
