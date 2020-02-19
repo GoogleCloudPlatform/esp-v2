@@ -25,7 +25,6 @@ cd "${ROOT}"
 exit 1; }
 
 gcloud config set project cloudesf-testing
-gcloud components update
 
 function runE2E() {
   local OPTIND OPTARG arg
