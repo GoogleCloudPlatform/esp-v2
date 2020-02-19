@@ -52,7 +52,10 @@ fi
 export GO111MODULE=on
 make tools
 make depend.install
-make test
+
+# GOOGLE_APPLICATION_CREDENTIALS will be set in our test environment but this env
+# var if set will be used by start_proxy.py will as service_json_path.
+ (unset GOOGLE_APPLICATION_CREDENTIALS; make test)
 
 # c++ test
 echo '======================================================'
