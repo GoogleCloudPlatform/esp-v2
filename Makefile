@@ -98,7 +98,6 @@ build-grpc-bookstore:
 	@protoc -I tests/endpoints/bookstore_grpc/proto/v2 -I bazel-gcpproxy/external/com_google_protobuf -I bazel-gcpproxy/external/com_github_googleapis_googleapis \
 	  -I tests/endpoints/bookstore_grpc/proto/ tests/endpoints/bookstore_grpc/proto/v2/bookstore_v2.proto --go_out=plugins=grpc:tests/endpoints/bookstore_grpc/proto/v2/
 
-
 build-grpc-interop:
 	@echo "--> building the grpc-interop-test client and server"
 	@bazel build @com_github_grpc_grpc//test/cpp/interop:interop_client
