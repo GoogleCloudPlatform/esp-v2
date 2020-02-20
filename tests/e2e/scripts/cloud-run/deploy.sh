@@ -158,10 +158,6 @@ function setup() {
   gcloud auth activate-service-account --key-file="${JOB_KEY_PATH}"
 
 
-  # Ensure all resources and quota is against our test project, not the CI system
-  gcloud config set core/project "${PROJECT_ID}"
-  gcloud config set billing/quota_project "${PROJECT_ID}"
-
   if [[ -n ${CLUSTER_NAME} ]] ;
   then
     gcloud beta container clusters create ${CLUSTER_NAME} \
