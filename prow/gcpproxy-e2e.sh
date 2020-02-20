@@ -19,6 +19,7 @@ set -eo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECT_ID="api_proxy_e2e_test"
+gcloud config set project cloudesf-testing
 
 cd "${ROOT}"
 . ${ROOT}/tests/e2e/scripts/prow-utilities.sh || { echo 'Cannot load Bash utilities';
