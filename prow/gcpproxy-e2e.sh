@@ -24,8 +24,6 @@ cd "${ROOT}"
 . ${ROOT}/tests/e2e/scripts/prow-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
 
-gcloud config set project cloudesf-testing
-
 function runE2E() {
   local OPTIND OPTARG arg
   while getopts :f:p:c:g:m:R:t: arg; do
