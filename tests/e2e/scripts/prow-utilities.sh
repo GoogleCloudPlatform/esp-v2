@@ -257,7 +257,6 @@ function wait_apiproxy_image() {
   local PROXY_IMAGE_SHA_NAME=$(get_proxy_image_name_with_sha)
   local SERVERLESS_IMAGE_SHA_NAME=$(get_serverless_image_name_with_sha)
 
-  gcloud config set project cloudesf-testing
 
   printf "Waiting for the following images:\n  %s\n  %s\n  %s\n" \
     "${ENVOY_IMAGE_SHA_NAME}" \
