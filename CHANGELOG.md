@@ -1,3 +1,10 @@
+# Release 2.5.0 19-02-2020
+
+- Auto-generate JWT Audience if no audiences are set in service config
+- Retry after failed token fetch
+- Handle `disable_auth` in endpoint service config
+- Add `listener_port` and `http2_port` flags
+
 # Release 2.4.0 06-02-2020
 
 - Fix a crash on race condition during config change.
