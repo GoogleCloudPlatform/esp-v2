@@ -2,8 +2,8 @@
 
 - Auto-generate JWT Audience if no audiences are set in service config
 - Retry after failed token fetch
-- handle disable_auth in oneplatform service config
-- Add listener_port and http2_port flags
+- Handle `disable_auth` in endpoint service config
+- Add `listener_port` and `http2_port` flags
 
 # Release 2.4.0 06-02-2020
 
