@@ -20,6 +20,7 @@ set -eo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECT_ID="api_proxy_e2e_test"
 
+(set -x; gcloud version)
 gcloud config set core/project cloudesf-testing
 
 cd "${ROOT}"

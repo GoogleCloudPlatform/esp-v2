@@ -24,7 +24,7 @@ WD=$(cd "$WD";
 pwd)
 ROOT=$(dirname "$WD")
 export PATH=$PATH:$GOPATH/bin
-
+(set -x; gcloud version)
 gcloud config set core/project cloudesf-testing
 
 cd "${ROOT}"
