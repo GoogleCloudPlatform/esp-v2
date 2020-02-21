@@ -26,6 +26,7 @@ MISSING_SERVICE_CONFIG_ERROR = '''
  
  https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-run#configure_esp
  https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-functions#configure_esp
+ https://cloud.google.com/endpoints/docs/grpc/get-started-cloud-run#endpoints_configure
  
  If you are following along with these tutorials but have not
  reached the step above yet, this error is expected. Feel free

@@ -76,9 +76,11 @@ on deploying ESPv2 and managing API traffic.
 
 Quickstart tutorials for deploying ESPv2:
 
-* [Cloud Endpoints for Google Cloud Run](https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-run)
+* [Cloud Endpoints for OpenAPI on Google Cloud Run](https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-run)
 
-* [Cloud Endpoints for Google Cloud Functions](https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-functions)
+* [Cloud Endpoints for OpenAPI on Google Cloud Functions](https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-functions)
+
+* [Cloud Endpoints for gRPC on Google Cloud Run](https://cloud.google.com/endpoints/docs/grpc/get-started-cloud-run)
 
 Configuring ESPv2:
 
@@ -108,6 +110,8 @@ See the [architecture overview](doc/architecture.md) for more info on ESPv2.
 
 ESPv2 is designed to be *mostly backwards-compatible* with ESP (with the exception of a few startup flags).
 API producers do not need to modify the Endpoints Service Configuration to use ESPv2.
+Please refer to the [migration guide](https://cloud.google.com/endpoints/docs/grpc/migrate-to-esp-v2)
+for more details on the incompatible changes.
 
 For serverless API gateway deployments, it is recommended to use ESPv2 instead of ESP.
 
