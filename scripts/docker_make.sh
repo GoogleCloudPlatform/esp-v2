@@ -27,7 +27,7 @@
 
 # The latest Prow docker image used for prow build/tests
 # It is built from docker/Dockerfile-prow-env
-IMAGE=gcr.io/cloudesf-testing/gcpproxy-prow:v20200207-v2.4.0-9-g17334b8-master
+IMAGE=gcr.io/cloudesf-testing/gcpproxy-prow:latest
 
 docker run --rm -ti -v "${PWD}":/source "${IMAGE}" \
   /bin/bash -lc "cd source && make $*"
