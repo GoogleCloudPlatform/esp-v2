@@ -183,7 +183,7 @@ function setup() {
 
   #  # Only enable for http backends with external IP.
   #  # Verify the backend is up using the identity of the current machine/user
-  if [[ "${PROXY_PLATFORM}" == "cloud-run"  && "${BACKEND}" == "echo" ]]; then
+  if [[ "${PROXY_PLATFORM}" == "cloud-run"  && "${BACKEND}" == "bookstore" ]]; then
     bookstore_health_code=$(curl \
         --write-out %{http_code} \
         --silent \
