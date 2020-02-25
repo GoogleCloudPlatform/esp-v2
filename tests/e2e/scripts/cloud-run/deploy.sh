@@ -72,15 +72,15 @@ function deployBackend() {
         "bookstore")
           backend_image="gcr.io/cloudesf-testing/app:bookstore"
           backend_port=8080
-          ;;
+        ;;
         "echo")
           backend_image="gcr.io/cloudesf-testing/grpc-echo-server:latest"
           backend_port=8081
-          ;;
+        ;;
         *)
           echo "No such backend image for backend ${BACKEND}"
           exit 1
-          ;;
+        ;;
       esac
 
       gcloud run deploy "${BACKEND_SERVICE_NAME}" \
@@ -220,40 +220,40 @@ function setup() {
   fi
 
   case "${BACKEND}" in
-    'bookstore')
-      local service_idl_tmpl="${ROOT}/tests/endpoints/bookstore/bookstore_swagger_template.json"
-      local service_idl="${ROOT}/tests/endpoints/bookstore/bookstore_swagger.json"
-      local create_service_args=${service_idl}
+  'bookstore')
+    local service_idl_tmpl="${ROOT}/tests/endpoints/bookstore/bookstore_swagger_template.json"
+    local service_idl="${ROOT}/tests/endpoints/bookstore/bookstore_swagger.json"
+    local create_service_args=${service_idl}
 
-      # Change the `host` to point to the proxy host (required by validation in service management).
-      # Change the `title` to identify this test (for readability in cloud console).
-      # Change the jwt audience to point to the proxy host (required for calling authenticated endpoints).
-      # Add in the `x-google-backend` to point to the backend URL (required for backend routing).
-      # Modify one path with `disable_auth`.
-      cat "${service_idl_tmpl}" \
-        | jq ".host = \"${ENDPOINTS_SERVICE_NAME}\" \
+    # Change the `host` to point to the proxy host (required by validation in service management).
+    # Change the `title` to identify this test (for readability in cloud console).
+    # Change the jwt audience to point to the proxy host (required for calling authenticated endpoints).
+    # Add in the `x-google-backend` to point to the backend URL (required for backend routing).
+    # Modify one path with `disable_auth`.
+    cat "${service_idl_tmpl}" \
+      | jq ".host = \"${ENDPOINTS_SERVICE_NAME}\" \
         | .schemes = [\"${scheme}\"] \
         | .info.title = \"${ENDPOINTS_SERVICE_TITLE}\" \
         | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${PROXY_HOST}\" \
         | . + { \"x-google-backend\": { \"address\": \"${BACKEND_HOST}\" } }  \
-        | .paths.\"/echo_token/disable_auth\".get  +=  { \"x-google-backend\": { \"address\": \"${BACKEND_HOST}\/echo_token\/disable_auth\", \"disable_auth\": true} } "\
-        > "${service_idl}"
-      ;;
-    'echo')
-      local service_idl_tmpl="${ROOT}/tests/endpoints/grpc_echo/grpc-test-dynamic-routing.tmpl.yaml"
-      local service_idl="${ROOT}/tests/endpoints/grpc_echo/grpc-test-dynamic-routing.yaml"
-      local service_descriptor="${ROOT}/tests/endpoints/grpc_echo/proto/api_descriptor.pb"
-      local create_service_args="${service_idl} ${service_descriptor}"
+      | .paths.\"/echo_token/disable_auth\".get  +=  { \"x-google-backend\": { \"address\": \"${BACKEND_HOST}\/echo_token\/disable_auth\", \"disable_auth\": true} } "\
+      > "${service_idl}"
+    ;;
+  'echo')
+    local service_idl_tmpl="${ROOT}/tests/endpoints/grpc_echo/grpc-test-dynamic-routing.tmpl.yaml"
+    local service_idl="${ROOT}/tests/endpoints/grpc_echo/grpc-test-dynamic-routing.yaml"
+    local service_descriptor="${ROOT}/tests/endpoints/grpc_echo/proto/api_descriptor.pb"
+    local create_service_args="${service_idl} ${service_descriptor}"
 
-      # Replace values for dynamic routing.
-      sed -e "s/ENDPOINTS_SERVICE_NAME/${ENDPOINTS_SERVICE_NAME}/g" \
-        -e "s/ENDPOINTS_SERVICE_TITLE/${ENDPOINTS_SERVICE_TITLE}/g" \
-        -e "s/BACKEND_ADDRESS/${BACKEND_HOST#https://}/g" \
-        "${service_idl_tmpl}" > "${service_idl}"
-      ;;
-    *)
-      echo "Invalid backend ${BACKEND} for creating endpoints service"
-      return 1 ;;
+    # Replace values for dynamic routing.
+    sed -e "s/ENDPOINTS_SERVICE_NAME/${ENDPOINTS_SERVICE_NAME}/g" \
+      -e "s/ENDPOINTS_SERVICE_TITLE/${ENDPOINTS_SERVICE_TITLE}/g" \
+      -e "s/BACKEND_ADDRESS/${BACKEND_HOST#https://}/g" \
+      "${service_idl_tmpl}" > "${service_idl}"
+    ;;
+  *)
+    echo "Invalid backend ${BACKEND} for creating endpoints service"
+    return 1 ;;
   esac
 
   # Deploy the service config
