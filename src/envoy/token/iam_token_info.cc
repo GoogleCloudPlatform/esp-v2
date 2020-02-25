@@ -50,7 +50,7 @@ IamTokenInfo::IamTokenInfo(
 Envoy::Http::MessagePtr IamTokenInfo::prepareRequest(
     absl::string_view token_url) const {
   const std::string access_token = access_token_fn_();
-  // Wait the access token to be set.
+  // Wait for the access token to be set.
   if (access_token.empty()) {
     // This codes depends on access_token. This periodical pulling is not ideal.
     // But when both imds_token_subscriber and iam_token_subscriber register to

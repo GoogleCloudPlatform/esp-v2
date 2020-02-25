@@ -22,8 +22,8 @@ namespace Envoy {
 namespace Extensions {
 namespace Token {
 
-// `ImdsTokenInfo` is a bridge `TokenInfo` for parsing
-// identity and access tokens from the Instance Metadata Server.
+// `IamTokenInfo` is a bridge `TokenInfo` for parsing
+// identity and access tokens from the IAM server.
 class IamTokenInfo : public TokenInfo {
  public:
   IamTokenInfo(
