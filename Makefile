@@ -18,7 +18,6 @@
 
 SHELL 	:= /bin/bash
 BINDIR	:= bin
-PKG 	:= cloudesf.googleresource.com/gcpproxy
 
 IMG="gcr.io/cloudesf-testing/gcpproxy-prow"
 TAG := $(shell date +v%Y%m%d)-$(shell git describe --tags --always)
@@ -269,7 +268,7 @@ spelling.fix:
 .PHONY: format
 format: tools.goimports tools.buildifier
 	@echo "--> formatting code with 'goimports' tool"
-	@goimports -local $(PKG) -w -l $(GOFILES)
+	@goimports -w -l $(GOFILES)
 	@echo "--> formatting BUILD files with 'buildifier' tool"
 	@buildifier -r WORKSPACE ./src/ ./api/
 
@@ -287,7 +286,7 @@ shell-format: tools.beautysh
 .PHONY: format.check
 format.check: tools.goimports
 	@echo "--> checking code formatting with 'goimports' tool"
-	@goimports -local $(PKG) -l $(GOFILES) | sed -e "s/^/\?\t/" | tee >(test -z)
+	@goimports -l $(GOFILES) | sed -e "s/^/\?\t/" | tee >(test -z)
 	@make spelling.check
 
 
