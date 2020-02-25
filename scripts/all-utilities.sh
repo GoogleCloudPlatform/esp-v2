@@ -320,11 +320,6 @@ function get_serverless_image_release_name() {
 
 function get_tag_name() {
   local tag_format="%H"
-  if [ ${USE_RELEASE_BINARY} ]; then
-    tag_format="rel-${tag_format}"
-  else
-    tag_format="dev-${tag_format}"
-  fi
   tag_name="$(git show -q HEAD --pretty=format:"${tag_format}")"
   echo -n ${tag_name}
 }
