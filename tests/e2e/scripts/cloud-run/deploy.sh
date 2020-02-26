@@ -166,6 +166,7 @@ function setup() {
       --cluster-version=${CLUSTER_VERSION}\
       --enable-stackdriver-kubernetes \
       --service-account=${PROXY_RUNTIME_SERVICE_ACCOUNT} \
+      --network=default \
       --zone=${CLUSTER_ZONE} \
       --scopes cloud-platform
     sleep 1m
