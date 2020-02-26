@@ -87,7 +87,7 @@ func TestTranscoderFilter(t *testing.T) {
 
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendProtocol = "gRPC"
+		opts.BackendUri = "grpc://127.0.0.0:80"
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
@@ -108,13 +108,13 @@ func TestTranscoderFilter(t *testing.T) {
 func TestBackendRoutingFilter(t *testing.T) {
 	testdata := []struct {
 		desc                     string
-		protocol                 string
+		backendUri               string
 		fakeServiceConfig        *confpb.Service
 		wantBackendRoutingFilter string
 	}{
 		{
-			desc:     "Success, generate backend routing filter for gRPC",
-			protocol: "grpc",
+			desc:       "Success, generate backend routing filter for gRPC",
+			backendUri: "grpc://127.0.0.1:80",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -184,8 +184,8 @@ func TestBackendRoutingFilter(t *testing.T) {
       }`,
 		},
 		{
-			desc:     "Success, generate backend routing filter for http",
-			protocol: "http",
+			desc:       "Success, generate backend routing filter for http2",
+			backendUri: "http://127.0.0.1:80",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -260,8 +260,8 @@ func TestBackendRoutingFilter(t *testing.T) {
       }`,
 		},
 		{
-			desc:     "Success, generate backend routing filter with allow Cors",
-			protocol: "http",
+			desc:       "Success, generate backend routing filter with allow Cors",
+			backendUri: "http://127.0.0.1:80",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Endpoints: []*confpb.Endpoint{
@@ -354,7 +354,7 @@ func TestBackendRoutingFilter(t *testing.T) {
 
 	for i, tc := range testdata {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendProtocol = tc.protocol
+		opts.BackendUri = tc.backendUri
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
@@ -605,7 +605,7 @@ func TestBackendAuthFilter(t *testing.T) {
 
 	for i, tc := range testdata {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendProtocol = "grpc"
+		opts.BackendUri = "grpc://127.0.0.1:80"
 		if tc.iamServiceAccount != "" {
 			opts.BackendAuthCredentials = &options.IAMCredentialsOptions{
 				ServiceAccountEmail: tc.iamServiceAccount,
@@ -634,7 +634,7 @@ func TestPathMatcherFilter(t *testing.T) {
 	testData := []struct {
 		desc                  string
 		fakeServiceConfig     *confpb.Service
-		backendProtocol       string
+		backendUri            string
 		healthz               string
 		wantPathMatcherFilter string
 	}{
@@ -656,8 +656,8 @@ func TestPathMatcherFilter(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "GRPC",
-			healthz:         "healthz",
+			backendUri: "grpc://127.0.0.1:80",
+			healthz:    "healthz",
 			wantPathMatcherFilter: `
 {
    "name":"envoy.filters.http.path_matcher",
@@ -725,8 +725,8 @@ func TestPathMatcherFilter(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "HTTP",
-			healthz:         "/",
+			backendUri: "http://127.0.0.1:80",
+			healthz:    "/",
 			wantPathMatcherFilter: `
 			        {
    "name":"envoy.filters.http.path_matcher",
@@ -813,7 +813,7 @@ func TestPathMatcherFilter(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "HTTP",
+			backendUri: "http://127.0.0.1:80",
 			wantPathMatcherFilter: `
 			        {
    "name":"envoy.filters.http.path_matcher",
@@ -871,7 +871,7 @@ func TestPathMatcherFilter(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "HTTP",
+			backendUri: "http://127.0.0.1:80",
 			wantPathMatcherFilter: `
 			        {
    "name":"envoy.filters.http.path_matcher",
@@ -944,7 +944,7 @@ func TestPathMatcherFilter(t *testing.T) {
 					},
 				},
 			},
-			backendProtocol: "http",
+			backendUri: "http://127.0.0.1:80",
 			wantPathMatcherFilter: `
 			        {
    "name":"envoy.filters.http.path_matcher",
@@ -973,7 +973,7 @@ func TestPathMatcherFilter(t *testing.T) {
 
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendProtocol = tc.backendProtocol
+		opts.BackendUri = tc.backendUri
 		opts.Healthz = tc.healthz
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
@@ -994,15 +994,15 @@ func TestPathMatcherFilter(t *testing.T) {
 func TestHealthCheckFilter(t *testing.T) {
 	testdata := []struct {
 		desc                  string
-		protocol              string
+		backendUri            string
 		healthz               string
 		fakeServiceConfig     *confpb.Service
 		wantHealthCheckFilter string
 	}{
 		{
-			desc:     "Success, generate health check filter for gRPC",
-			protocol: "grpc",
-			healthz:  "healthz",
+			desc:       "Success, generate health check filter for gRPC",
+			backendUri: "grpc://127.0.0.1:80",
+			healthz:    "healthz",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -1031,9 +1031,9 @@ func TestHealthCheckFilter(t *testing.T) {
       }`,
 		},
 		{
-			desc:     "Success, generate health check filter for http",
-			protocol: "http",
-			healthz:  "/",
+			desc:       "Success, generate health check filter for http",
+			backendUri: "http://127.0.0.1:80",
+			healthz:    "/",
 			fakeServiceConfig: &confpb.Service{
 				Name: "foo.endpoints.bar.cloud.goog",
 				Apis: []*apipb.Api{
@@ -1075,7 +1075,7 @@ func TestHealthCheckFilter(t *testing.T) {
 
 	for i, tc := range testdata {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendProtocol = tc.protocol
+		opts.BackendUri = tc.backendUri
 		opts.Healthz = tc.healthz
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {

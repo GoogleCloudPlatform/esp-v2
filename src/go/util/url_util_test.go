@@ -164,11 +164,11 @@ func TestParseURI(t *testing.T) {
 	}
 }
 
-func TestParseBackendProtocol(t *testing.T) {
+func TestParseBackendScheme(t *testing.T) {
 	testData := []struct {
 		desc        string
 		proto       string
-		wantedProto BackendProtocol
+		wantedProto Protocol
 		wantedTLS   bool
 		wantErr     string
 	}{
@@ -233,19 +233,19 @@ func TestParseBackendProtocol(t *testing.T) {
 			proto:       "rrr",
 			wantedProto: HTTP,
 			wantedTLS:   false,
-			wantErr:     `unknown backend protocol [rrr], should be one of "http" or "grpc"`,
+			wantErr:     `unknown backend protocol [rrr], should be one of "http(s)" or "grpc(s)"`,
 		},
 		{
 			desc:        "Wrong scheme: empty",
 			proto:       "",
 			wantedProto: HTTP,
 			wantedTLS:   false,
-			wantErr:     `unknown backend protocol [], should be one of "http" or "grpc"`,
+			wantErr:     `unknown backend protocol [], should be one of "http(s)" or "grpc(s)"`,
 		},
 	}
 
 	for i, tc := range testData {
-		proto, tls, err := ParseBackendProtocol(tc.proto)
+		proto, tls, err := ParseScheme(tc.proto)
 		if proto != tc.wantedProto {
 			t.Errorf("Test Desc(%d): %s, proto is wrong, got: %v, want: %v", i, tc.desc, proto, tc.wantedProto)
 		}

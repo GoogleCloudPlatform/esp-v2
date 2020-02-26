@@ -44,19 +44,11 @@ BOOTSTRAP_CONFIG = "/bootstrap.json"
 # Default Listener port
 DEFAULT_LISTENER_PORT = 8080
 
-# Default Backend HTTP/1.x port
-DEFAULT_BACKEND_HTTP1_PORT = 80
-
 # Default backend
-DEFAULT_BACKEND = "127.0.0.1:8082"
+DEFAULT_BACKEND = "http://127.0.0.1:8082"
 
 # Default rollout_strategy
 DEFAULT_ROLLOUT_STRATEGY = "fixed"
-
-# Protocol prefixes
-GRPC_PREFIX = "grpc://"
-HTTP_PREFIX = "http://"
-HTTPS_PREFIX = "https://"
 
 # Google default application credentials environment variable
 GOOGLE_CREDS_KEY = "GOOGLE_APPLICATION_CREDENTIALS"
@@ -94,15 +86,6 @@ def gen_bootstrap_conf(args):
     cmd.append(bootstrap_file)
     print(cmd)
     return cmd
-
-
-def start_proxy(proxy_conf):
-    try:
-        os.execv(PROXY_STARTER, proxy_conf)
-    except OSError as err:
-        logging.error("Failed to launch ESPv2")
-        logging.error(err.strerror)
-        sys.exit(1)
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -159,20 +142,38 @@ environment variable or by passing "-k" flag to this script.
         '-a',
         '--backend',
         default=DEFAULT_BACKEND,
-        help=''' Change the application server address to which ESPv2
-        proxies requests. Default value: {backend}. For HTTPS backends,
-        please use "https://" prefix, e.g. https://127.0.0.1:8082.
-        For HTTP/1.x backends, prefix "http://" is optional.
-        For GRPC backends, please use "grpc://" prefix,
-        e.g. grpc://127.0.0.1:8082.'''.format(backend=DEFAULT_BACKEND))
-
-    parser.add_argument(
-        '--backend_protocol',
-        default=None,
-        help='''Backend Protocol. Overrides the protocol in --backend.
-        Choices: [http|https|grpc|grpcs].
-        Default value: http.''',
-        choices=['http', 'https', 'grpc', 'grpcs'])
+        help='''
+        Change the application server URI to which ESPv2
+        proxies requests. Default value: {backend}.
+        
+        Please use the following schemes as a prefix to specify the protocol
+        your backend uses. This must be formatted as a full URI, with
+        scheme, address/hostname, and port.
+        
+            SCHEME        PROTOCOL    SECURITY      EXAMPLE
+            
+            http://       HTTP/1.x    None          http://127.0.0.1:80
+            https://      HTTP/1.x    TLS           https://127.0.0.1:443
+            grpc://       gRPC        None          grpc://127.0.0.1:80
+            grpcs://      gRPC        TLS           grpcs://127.0.0.1:443
+        
+        If the scheme is not specified in the URI, ESPv2 automatically uses https://.
+        
+        If the port is not specified in the URI, ESPv2 automatically uses:
+        - 80 for schemes without TLS
+        - 443 for schemes with TLS
+        
+        If your backend supports HTTP/2, it is recommended
+        to use the corresponding scheme for efficiency.
+        
+        If your backend requires TLS, you must use a secure scheme.
+        
+        If you need to use a remote backend, we recommend specifying the URI
+        in the service configuration instead of this flag. The following references
+        are available on the public Google Cloud Endpoints documentation:
+        - The OpenAPI `x-google-backend` extension
+        - The gRPC service configuration reference
+        '''.format(backend=DEFAULT_BACKEND))
 
     parser.add_argument('--listener_port', default=None, type=int, help='''
        The port to accept downstream connections.
@@ -285,19 +286,6 @@ environment variable or by passing "-k" flag to this script.
         action='store_true',
         help='''Enable fetching service name, service config ID and rollout
         strategy from the metadata service.''')
-
-    parser.add_argument(
-        '--enable_backend_routing',
-        action='store_true',
-        default=False,
-        help='''
-        ===
-        DEPRECATED: This flag will automatically be enabled if needed, so it
-        does NOT need to be set manually.
-        ===
-        Enable ESPv2 to route requests according to the
-        "x-google-backend" or "backend" configuration
-        ''')
 
     parser.add_argument(
         '--envoy_use_remote_address',
@@ -474,10 +462,40 @@ environment variable or by passing "-k" flag to this script.
         - Debug level service configuration logs in Config Manager
         - Admin interface in Envoy
         ''')
+
+    # Start Deprecated Flags Section
+
+    parser.add_argument(
+        '--enable_backend_routing',
+        action='store_true',
+        default=False,
+        help='''
+        ===
+        DEPRECATED: This flag will automatically be enabled if needed, so it
+        does NOT need to be set manually.
+        ===
+        Enable ESPv2 to route requests according to the
+        "x-google-backend" or "backend" configuration
+        ''')
+    parser.add_argument(
+        '--backend_protocol',
+        default=None,
+        help='''
+        ===
+        DEPRECATED: This flag will automatically be set based on the scheme 
+        specified in the --backend flag. Overrides are no longer needed.
+        ===
+        Backend Protocol. Overrides the protocol in --backend.
+        Choices: [http1|http2|grpc].
+        Default value: http1.''',
+        choices=['http1', 'http2', 'grpc'])
+
+    # End Deprecated Flags Section
+
     return parser
 
-# Check whether there are conflict flags. If so, return the error string. Otherwise returns None.
-# This function also changes some default flag value.
+# Check whether there are conflict flags. If so, return the error string.
+# Otherwise returns None. This function also changes some default flag value.
 def enforce_conflict_args(args):
     if args.rollout_strategy:
         if args.rollout_strategy not in {"fixed", "managed"}:
@@ -526,40 +544,10 @@ def gen_proxy_config(args):
         logging.error(check_conflict_result)
         sys.exit(1)
 
-    if args.backend_protocol is None:
-        if args.backend.startswith(GRPC_PREFIX):
-            backend_protocol = "grpc"
-            backends = args.backend[len(GRPC_PREFIX):]
-        elif args.backend.startswith(HTTP_PREFIX):
-            backend_protocol = "http"
-            backends = args.backend[len(HTTP_PREFIX):]
-        elif args.backend.startswith(HTTPS_PREFIX):
-            backend_protocol = "https"
-            backend = args.backend[len(HTTPS_PREFIX):]
-            if not re.search(r':[0-9]+$', backend):
-                backend = backend + ':443'
-            backends = backend
-        else:
-            backend_protocol = "http"
-            backends = args.backend
-    else:
-        backend_protocol = args.backend_protocol
-        backends = args.backend
-
-    cluster_args = backends.split(':')
-    if len(cluster_args) == 2:
-        cluster_address = cluster_args[0]
-        cluster_port = cluster_args[1]
-    elif len(cluster_args) == 1:
-        cluster_address = cluster_args[0]
-        cluster_port = str(DEFAULT_BACKEND_HTTP1_PORT)
-    else:
-        print("incorrect backend")
-        sys.exit(1)
-
     proxy_conf = [
-        CONFIGMANAGER_BIN, "--logtostderr", "--backend_protocol", backend_protocol,
-        "--cluster_address", cluster_address, "--cluster_port", cluster_port,
+        CONFIGMANAGER_BIN,
+        "--logtostderr",
+        "--backend", args.backend,
         "--rollout_strategy", args.rollout_strategy,
     ]
 
@@ -649,10 +637,10 @@ def gen_proxy_config(args):
         proxy_conf.extend(["--service_json_path", args.service_json_path])
 
     if args.check_metadata:
-        proxy_conf.append("--check_metadata")
+        proxy_conf.append("--check_metadata", )
 
     if args.disable_tracing:
-        proxy_conf.append("--disable_tracing")
+        proxy_conf.append("--disable_tracing", )
 
     if args.compute_platform_override:
         proxy_conf.extend([

@@ -70,13 +70,13 @@ func TestFetchListeners(t *testing.T) {
 	testData := []struct {
 		desc              string
 		enableTracing     bool
-		backendProtocol   string
+		backendUri        string
 		fakeServiceConfig string
 		wantedListeners   string
 	}{
 		{
-			desc:            "Success for grpc backend with transcoding",
-			backendProtocol: "grpc",
+			desc:       "Success for grpc backend with transcoding",
+			backendUri: "grpc://127.0.0.1:80",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"%s",
                 "apis":[
@@ -202,8 +202,8 @@ func TestFetchListeners(t *testing.T) {
 				fakeProtoDescriptor, testEndpointName, testBackendClusterName),
 		},
 		{
-			desc:            "Success for grpc backend, with Jwt filter, with audiences, no Http Rules",
-			backendProtocol: "grpc",
+			desc:       "Success for grpc backend, with Jwt filter, with audiences, no Http Rules",
+			backendUri: "grpc://127.0.0.1:80",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"bookstore.endpoints.project123.cloud.goog",
                 "apis":[
@@ -375,8 +375,8 @@ func TestFetchListeners(t *testing.T) {
               `, testBackendClusterName),
 		},
 		{
-			desc:            "Success for gRPC backend, with Jwt filter, without audiences",
-			backendProtocol: "gRPC",
+			desc:       "Success for gRPC backend, with Jwt filter, without audiences",
+			backendUri: "grpc://127.0.0.1:80",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"bookstore.endpoints.project123.cloud.goog",
                 "apis":[
@@ -581,8 +581,8 @@ func TestFetchListeners(t *testing.T) {
 }`, testBackendClusterName),
 		},
 		{
-			desc:            "Success for gRPC backend, with Jwt filter, with multi requirements, matching with regex",
-			backendProtocol: "gRPC",
+			desc:       "Success for gRPC backend, with Jwt filter, with multi requirements, matching with regex",
+			backendUri: "grpc://127.0.0.1:80",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"bookstore.endpoints.project123.cloud.goog",
                 "apis":[
@@ -824,8 +824,8 @@ func TestFetchListeners(t *testing.T) {
 }`, testBackendClusterName),
 		},
 		{
-			desc:            "Success for gRPC backend with Service Control",
-			backendProtocol: "gRPC",
+			desc:       "Success for gRPC backend with Service Control",
+			backendUri: "grpc://127.0.0.1:80",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"%s",
                 "endpoints" : [{"name": "%s"}],
@@ -1039,8 +1039,8 @@ func TestFetchListeners(t *testing.T) {
 }`, testProjectID, testConfigID, testProjectName, testBackendClusterName),
 		},
 		{
-			desc:            "Success for HTTP backend, with Jwt filter, with audiences",
-			backendProtocol: "http",
+			desc:       "Success for HTTP1 backend, with Jwt filter, with audiences",
+			backendUri: "http://127.0.0.1:80",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"bookstore.endpoints.project123.cloud.goog",
                 "apis":[
@@ -1222,9 +1222,9 @@ func TestFetchListeners(t *testing.T) {
 }`, testBackendClusterName),
 		},
 		{
-			desc:            "Success for backend that allow CORS, with tracing enabled",
-			enableTracing:   true,
-			backendProtocol: "http",
+			desc:          "Success for backend that allow CORS, with tracing enabled",
+			enableTracing: true,
+			backendUri:    "http://127.0.0.1:80",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"%s",
                 "producer_project_id":"%s",
@@ -1393,7 +1393,7 @@ func TestFetchListeners(t *testing.T) {
 		}
 
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendProtocol = tc.backendProtocol
+		opts.BackendUri = tc.backendUri
 		opts.DisableTracing = !tc.enableTracing
 
 		flag.Set("service", testProjectName)
@@ -1445,14 +1445,14 @@ func TestDynamicBackendRouting(t *testing.T) {
 	testData := []struct {
 		desc              string
 		serviceConfigPath string
-		backendProtocol   string
+		backendUri        string
 		wantedClusters    []string
 		wantedListener    string
 	}{
 		{
-			desc:              "Success for http with dynamic routing",
+			desc:              "Success for http1 with dynamic routing",
 			serviceConfigPath: "testdata/service_config_for_dynamic_routing.json",
-			backendProtocol:   "http",
+			backendUri:        "http://127.0.0.1:8082",
 			wantedClusters:    testdata.FakeWantedClustersForDynamicRouting,
 			wantedListener:    testdata.FakeWantedListenerForDynamicRouting,
 		},
@@ -1461,7 +1461,7 @@ func TestDynamicBackendRouting(t *testing.T) {
 	marshaler := &jsonpb.Marshaler{}
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendProtocol = tc.backendProtocol
+		opts.BackendUri = tc.backendUri
 		opts.DisableTracing = true
 
 		flag.Set("service_json_path", tc.serviceConfigPath)
@@ -1481,22 +1481,32 @@ func TestDynamicBackendRouting(t *testing.T) {
 
 		respForClusters, err := manager.cache.Fetch(ctx, reqForClusters)
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
+			continue
 		}
 
 		if !proto.Equal(&respForClusters.Request, &reqForClusters) {
 			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, respForClusters.Request, reqForClusters)
+			continue
 		}
 
 		sortedClusters := sortResources(respForClusters)
+
+		if len(sortedClusters) != len(tc.wantedClusters) {
+			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got clusters: %v, want: %v", i, tc.desc, sortedClusters, tc.wantedClusters)
+			continue
+		}
+
 		for idx, want := range tc.wantedClusters {
 			gotCluster, err := marshaler.MarshalToString(sortedClusters[idx])
 			if err != nil {
-				t.Fatal(err)
+				t.Error(err)
+				continue
 			}
 			gotCluster = normalizeJson(gotCluster, t)
 			if want = normalizeJson(want, t); gotCluster != want {
 				t.Errorf("Test Desc(%d): %s, idx %d snapshot cache fetch got Cluster: %s, want: %s", i, tc.desc, idx, gotCluster, want)
+				continue
 			}
 		}
 
@@ -1509,22 +1519,27 @@ func TestDynamicBackendRouting(t *testing.T) {
 
 		respForListener, err := manager.cache.Fetch(ctx, reqForListener)
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
+			continue
 		}
 		if respForListener.Version != testConfigID {
 			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, respForListener.Version, testConfigID)
+			continue
 		}
 		if !proto.Equal(&respForListener.Request, &reqForListener) {
 			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, respForListener.Request, reqForListener)
+			continue
 		}
 
 		gotListener, err := marshaler.MarshalToString(respForListener.Resources[0])
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
+			continue
 		}
 		gotListener = normalizeJson(gotListener, t)
 		if wantListener := normalizeJson(tc.wantedListener, t); gotListener != wantListener {
 			t.Errorf("Test Desc(%d): %s, snapshot cache fetch Listener,\n\t got : %s,\n\t want: %s", i, tc.desc, gotListener, wantListener)
+			continue
 		}
 	}
 }
@@ -1541,7 +1556,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		fakeNewServiceRollout string
 		fakeOldServiceConfig  string
 		fakeNewServiceConfig  string
-		backendProtocol       string
+		backendUri            string
 	}{
 		desc: "Success for service config auto update",
 		fakeOldServiceRollout: fmt.Sprintf(`{
@@ -1626,7 +1641,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
                 ],
                 "id": "%s"
             }`, testProjectName, testEndpointName, newConfigID),
-		backendProtocol: "grpc",
+		backendUri: "grpc://127.0.0.1:80",
 	}
 
 	// Overrides fakeConfig with fakeOldServiceConfig for the test case.
@@ -1640,7 +1655,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 	}
 
 	opts := options.DefaultConfigGeneratorOptions()
-	opts.BackendProtocol = testCase.backendProtocol
+	opts.BackendUri = testCase.backendUri
 
 	flag.Set("service_config_id", testConfigID)
 	flag.Set("rollout_strategy", util.ManagedRolloutStrategy)

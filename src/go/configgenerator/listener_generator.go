@@ -109,7 +109,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	}
 
 	// Add gRPC Transcoder filter and gRPCWeb filter configs for gRPC backend.
-	if serviceInfo.BackendIsGrpc {
+	if serviceInfo.AnyBackendIsGrpc {
 		transcoderFilter := makeTranscoderFilter(serviceInfo)
 		if transcoderFilter != nil {
 			httpFilters = append(httpFilters, transcoderFilter)
@@ -419,19 +419,22 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		return nil
 	}
 
-	// Only used for Report: either http or grpc
-	// TODO(qiwzhang): clean up to use http. Now use http1 since cc code is expecting
-	lowercaseProtocol := "http1"
-	if serviceInfo.BackendIsGrpc {
-		lowercaseProtocol = "grpc"
+	// TODO(b/148638212): Clean up this hacky way of specifying the protocol for Service Control report.
+	// This is safe (for now) as our Service Control filter only differentiates between gRPC or non-gRPC.
+	var protocol string
+	if serviceInfo.AnyBackendIsGrpc {
+		protocol = "grpc"
+	} else {
+		protocol = "http1"
 	}
+
 	serviceName := serviceInfo.ServiceConfig().GetName()
 	service := &scpb.Service{
 		ServiceName:       serviceName,
 		ServiceConfigId:   serviceInfo.ConfigID,
 		ProducerProjectId: serviceInfo.ServiceConfig().GetProducerProjectId(),
 		ServiceConfig:     copyServiceConfigForReportMetrics(serviceInfo.ServiceConfig()),
-		BackendProtocol:   lowercaseProtocol,
+		BackendProtocol:   protocol,
 	}
 
 	if serviceInfo.Options.LogRequestHeaders != "" {

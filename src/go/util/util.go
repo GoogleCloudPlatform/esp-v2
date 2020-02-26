@@ -113,11 +113,11 @@ const (
 	GoogleRE2MaxProgramSize = 1000
 )
 
-type BackendProtocol int32
+type Protocol int32
 
 // Backend protocol.
 const (
-	HTTP BackendProtocol = iota
+	HTTP Protocol = iota
 	GRPC
 )
 
