@@ -164,7 +164,7 @@ func TestParseURI(t *testing.T) {
 	}
 }
 
-func TestParseBackendScheme(t *testing.T) {
+func TestParseScheme(t *testing.T) {
 	testData := []struct {
 		desc        string
 		proto       string

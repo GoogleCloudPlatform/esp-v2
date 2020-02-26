@@ -637,10 +637,10 @@ def gen_proxy_config(args):
         proxy_conf.extend(["--service_json_path", args.service_json_path])
 
     if args.check_metadata:
-        proxy_conf.append("--check_metadata", )
+        proxy_conf.append("--check_metadata")
 
     if args.disable_tracing:
-        proxy_conf.append("--disable_tracing", )
+        proxy_conf.append("--disable_tracing")
 
     if args.compute_platform_override:
         proxy_conf.extend([

@@ -425,6 +425,7 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	if serviceInfo.AnyBackendIsGrpc {
 		protocol = "grpc"
 	} else {
+		// TODO(b/148638212): Must be http1 (not http) for current filter implementation.
 		protocol = "http1"
 	}
 

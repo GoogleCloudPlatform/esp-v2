@@ -184,7 +184,7 @@ func TestBackendRoutingFilter(t *testing.T) {
       }`,
 		},
 		{
-			desc:       "Success, generate backend routing filter for http2",
+			desc:       "Success, generate backend routing filter for http",
 			backendUri: "http://127.0.0.1:80",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,

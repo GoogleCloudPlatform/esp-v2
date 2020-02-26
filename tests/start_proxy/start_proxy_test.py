@@ -199,7 +199,9 @@ class TestStartProxy(unittest.TestCase):
             ['--rollout_strategy=managed',
              '--service_json_path=/tmp/service.json'],
             ['--backend_dns_lookup_family=v4'],
-            ['--non_gcp']
+            ['--non_gcp'],
+            ['--http_port=80', '--http2_port=80'],
+            ['--http_port=80', '--listener_port=80']
         ]
 
         for flags in testcases:

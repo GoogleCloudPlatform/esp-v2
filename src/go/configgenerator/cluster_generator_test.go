@@ -81,7 +81,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 			},
 		},
 		{
-			desc: "Success for HTTP1 backend",
+			desc: "Success for http backend",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -250,7 +250,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 			},
 		},
 		{
-			desc: "Success for mixed http, https, http1, http1s, http2, http2s backends",
+			desc: "Success for mixed http, https backends",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
