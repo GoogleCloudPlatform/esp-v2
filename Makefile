@@ -187,11 +187,11 @@ integration-test-tsan: build build-envoy-tsan build-grpc-interop build-grpc-echo
 #-----------------------------------------------------------------------------
 .PHONY: depend.update depend.install
 
-depend.update: tools.glide
+depend.update:
 	@echo "--> generating go proto files"
 	./api/scripts/go_proto_gen.sh
 
-depend.install: tools.glide tools.beautysh
+depend.install: tools.beautysh
 	@echo "--> generating go proto files"
 	./api/scripts/go_proto_gen.sh
 
@@ -202,10 +202,10 @@ depend.install.endpoints:
 #----------------------------------------------------------------------------
 # Target:  tools
 #----------------------------------------------------------------------------
-.PHONY: tools tools.glide tools.goimports tools.golint tools.govet \
+.PHONY: tools tools.goimports tools.golint tools.govet \
 	tools.buildifier tools.beautysh
 
-tools: tools.glide tools.goimports tools.golint tools.govet tools.buildifier
+tools: tools.goimports tools.golint tools.govet tools.buildifier
 
 tools.goimports:
 	@command -v goimports >/dev/null ; if [ $$? -ne 0 ]; then \
@@ -223,12 +223,6 @@ tools.golint:
 	@command -v golint >/dev/null ; if [ $$? -ne 0 ]; then \
 		echo "--> installing golint"; \
 		go get -u golang.org/x/lint/golint; \
-	fi
-
-tools.glide:
-	@command -v glide >/dev/null ; if [ $$? -ne 0 ]; then \
-		echo "--> installing glide"; \
-		curl https://glide.sh/get | sh; \
 	fi
 
 tools.buildifier:
