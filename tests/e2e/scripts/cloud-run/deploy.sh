@@ -181,21 +181,21 @@ function setup() {
   echo "Deploying backend ${BACKEND_SERVICE_NAME} on ${BACKEND_PLATFORM}"
   deployBackend
 
-  #  # TODO(b/147918990): Re-enable when gcloud can use workload identity to fetch id token.
-  #  # Only enable for http backends.
+  #  # Only enable for http backends with external IP.
   #  # Verify the backend is up using the identity of the current machine/user
-  #  bookstore_health_code=$(curl \
-    #      --write-out %{http_code} \
-    #      --silent \
-    #      --output /dev/null \
-    #      -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
-    #    "${BACKEND_HOST}"/shelves)
-  #
-  #  if [[ "$bookstore_health_code" -ne 200 ]] ; then
-  #    echo "Backend status is $bookstore_health_code, failing test"
-  #    return 1
-  #  fi
-  #  echo "Backend deployed successfully"
+  if [[ "${PROXY_PLATFORM}" == "cloud-run"  && "${BACKEND}" == "bookstore" ]]; then
+    bookstore_health_code=$(curl \
+        --write-out %{http_code} \
+        --silent \
+        --output /dev/null \
+        -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
+      "${BACKEND_HOST}"/shelves)
+
+    if [[ "$bookstore_health_code" -ne 200 ]] ; then
+      echo "Backend status is $bookstore_health_code, failing test"
+      return 1
+    fi
+  fi
 
   # Deploy initial ESPv2 service
   echo "Deploying ESPv2 ${BACKEND_SERVICE_NAME} on ${PROXY_PLATFORM}"
