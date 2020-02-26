@@ -8,17 +8,17 @@ exports_files([
 genrule(
     name = "bookstore_descriptor",
     srcs = [
-        "@com_github_googleapis_googleapis//:google/rpc/status.proto",
-        "@com_github_googleapis_googleapis//:google/api/annotations.proto",
-        "@com_github_googleapis_googleapis//:google/api/http.proto",
+        "@com_github_googleapis_googleapis//google/rpc:status.proto",
+        "@com_github_googleapis_googleapis//google/api:annotations.proto",
+        "@com_github_googleapis_googleapis//google/api:http.proto",
         "@com_google_protobuf//:well_known_protos",
         "//tests/endpoints/bookstore_grpc/proto/v1:bookstore.proto",
         "//tests/endpoints/bookstore_grpc/proto/v2:bookstore_v2.proto",
     ],
     outs = ["bookstore.descriptor"],
     cmd = """$(location //external:protoc) $(location //tests/endpoints/bookstore_grpc/proto/v1:bookstore.proto) \
-        $(location //tests/endpoints/bookstore_grpc/proto/v2:bookstore_v2.proto) \
-        -I$$(dirname $(location @com_github_googleapis_googleapis//:google/rpc/status.proto))/../.. \
+         $(location //tests/endpoints/bookstore_grpc/proto/v2:bookstore_v2.proto) \
+        -I$$(dirname $(location @com_github_googleapis_googleapis//google/rpc:status.proto))/../.. \
         -Iexternal/com_google_protobuf/src \
         -I$$(dirname $(location //tests/endpoints/bookstore_grpc/proto/v1:bookstore.proto)) \
         -I$$(dirname $(location //tests/endpoints/bookstore_grpc/proto/v2:bookstore_v2.proto)) \
