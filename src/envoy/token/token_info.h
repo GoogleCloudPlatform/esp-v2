@@ -22,12 +22,6 @@ namespace Envoy {
 namespace Extensions {
 namespace Token {
 
-// For APIs that have no expiration time, use this.
-constexpr std::chrono::seconds kDefaultTokenExpiry(3599);
-
-typedef std::function<void(absl::string_view)> UpdateTokenCallback;
-typedef std::function<std::string()> GetTokenFunc;
-
 struct TokenResult {
   std::string token;
   std::chrono::seconds expiry_duration;

@@ -29,6 +29,9 @@ using Utils::JsonStruct;
 const Envoy::Http::LowerCaseString kMetadataFlavorKey("Metadata-Flavor");
 constexpr char kMetadataFlavor[]{"Google"};
 
+// Default token expiry time for ID tokens.
+constexpr std::chrono::seconds kDefaultTokenExpiry(3599);
+
 ImdsTokenInfo::ImdsTokenInfo() {}
 
 Envoy::Http::MessagePtr ImdsTokenInfo::prepareRequest(

@@ -39,6 +39,9 @@ constexpr char kScopesField[]("scope");
 // Required header when fetching from the IAM server.
 const Envoy::Http::LowerCaseString kAuthorizationKey("Authorization");
 
+// Default token expiry time for ID tokens.
+constexpr std::chrono::seconds kDefaultTokenExpiry(3599);
+
 IamTokenInfo::IamTokenInfo(
     const ::google::protobuf::RepeatedPtrField<std::string>& delegates,
     const ::google::protobuf::RepeatedPtrField<std::string>& scopes,

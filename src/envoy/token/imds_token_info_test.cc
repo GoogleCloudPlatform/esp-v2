@@ -22,6 +22,10 @@ namespace Extensions {
 namespace Token {
 namespace Test {
 
+// Default token expiry time for ID tokens.
+// Should match the value in `imds_token_info.cc`.
+constexpr std::chrono::seconds kDefaultTokenExpiry(3599);
+
 class ImdsTokenInfoTest : public testing::Test {
  protected:
   void SetUp() override { info_ = std::make_unique<ImdsTokenInfo>(); }

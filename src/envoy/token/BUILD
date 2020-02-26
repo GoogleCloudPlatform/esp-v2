@@ -73,6 +73,8 @@ envoy_cc_library(
     hdrs = ["token_subscriber_factory.h"],
     repository = "@envoy",
     deps = [
+        ":iam_token_info_lib",
+        ":imds_token_info_lib",
         ":sa_token_generator_lib",
         ":token_subscriber_lib",
     ],

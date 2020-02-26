@@ -22,6 +22,8 @@ namespace Envoy {
 namespace Extensions {
 namespace Token {
 
+typedef std::function<std::string()> GetTokenFunc;
+
 // `IamTokenInfo` is a bridge `TokenInfo` for parsing
 // identity and access tokens from the IAM server.
 class IamTokenInfo : public TokenInfo {

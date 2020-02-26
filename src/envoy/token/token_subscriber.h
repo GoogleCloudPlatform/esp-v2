@@ -29,6 +29,8 @@ namespace Token {
 
 enum TokenType { AccessToken, IdentityToken };
 
+typedef std::function<void(absl::string_view)> UpdateTokenCallback;
+
 // `TokenSubscriber` class contains platform logic to initiate token refreshes
 // and callback to the clients.
 //
