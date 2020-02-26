@@ -123,7 +123,7 @@ function deployBackend() {
 function deployProxy() {
   local image_name="${1}"
   local env_vars="${2}"
-  local args=" --image=${image_name} --quiet"
+  local args=" --image=${image_name} --service-account=${PROXY_RUNTIME_SERVICE_ACCOUNT} --quiet"
   if [[ -n ${env_vars} ]];
   then
     args+=" --set-env-vars=ESPv2_ARGS=${proxy_args}"
