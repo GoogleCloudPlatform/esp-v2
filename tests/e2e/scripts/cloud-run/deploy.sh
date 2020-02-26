@@ -131,7 +131,7 @@ function deployProxy() {
 
   case ${PROXY_PLATFORM} in
     "cloud-run")
-      args+=" --allow-unauthenticated --platform=managed"
+      args+=" --allow-unauthenticated --service-account=${PROXY_RUNTIME_SERVICE_ACCOUNT} --platform=managed"
       ;;
     "anthos-cloud-run")
       args+=" --platform=gke"
