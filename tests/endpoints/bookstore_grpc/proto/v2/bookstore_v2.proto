@@ -32,6 +32,13 @@ service Bookstore {
       get: "/v2/shelves/{shelf}"
     };
   }
+  // Returns a list of all shelves in the bookstore.
+  // Specifically not using google.api.http option
+  // to test grpc_transcoding auto_binding feature.
+  // HTTP client can call this method with:
+  // POST /endpoints.examples.bookstore.v2.Bookstore/GetShelfAutoBind
+  rpc GetShelfAutoBind(GetShelfRequest) returns (Shelf) {
+  }
 }
 
 // A shelf resource.
