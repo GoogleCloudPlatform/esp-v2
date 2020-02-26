@@ -138,6 +138,8 @@ environment variable or by passing "-k" flag to this script.
            --service, --version, and --rollout_strategy.
         ''')
 
+    # TODO(b/149050012): Update this help text when `--backend_http_protocol`
+    #  is introduced.
     parser.add_argument(
         '-a',
         '--backend',
@@ -151,20 +153,16 @@ environment variable or by passing "-k" flag to this script.
         scheme, address/hostname, and port.
         
             SCHEME        PROTOCOL    SECURITY      EXAMPLE
-            
-            http://       HTTP/1.x    None          http://127.0.0.1:80
-            https://      HTTP/1.x    TLS           https://127.0.0.1:443
+            http://       HTTP        None          http://127.0.0.1:80
+            https://      HTTP        TLS           https://127.0.0.1:443
             grpc://       gRPC        None          grpc://127.0.0.1:80
             grpcs://      gRPC        TLS           grpcs://127.0.0.1:443
         
-        If the scheme is not specified in the URI, ESPv2 automatically uses https://.
+        If the scheme is not specified in the URI, ESPv2 automatically uses https.
         
         If the port is not specified in the URI, ESPv2 automatically uses:
         - 80 for schemes without TLS
         - 443 for schemes with TLS
-        
-        If your backend supports HTTP/2, it is recommended
-        to use the corresponding scheme for efficiency.
         
         If your backend requires TLS, you must use a secure scheme.
         
