@@ -123,7 +123,7 @@ function deployBackend() {
 function deployProxy() {
   local image_name="${1}"
   local env_vars="${2}"
-  local args=" --image=${image_name} --service-account=${PROXY_RUNTIME_SERVICE_ACCOUNT} --quiet"
+  local args=" --image=${image_name} --quiet"
   if [[ -n ${env_vars} ]];
   then
     args+=" --set-env-vars=ESPv2_ARGS=${proxy_args}"
@@ -131,7 +131,7 @@ function deployProxy() {
 
   case ${PROXY_PLATFORM} in
     "cloud-run")
-      args+=" --allow-unauthenticated --platform=managed"
+      args+=" --allow-unauthenticated --service-account=${PROXY_RUNTIME_SERVICE_ACCOUNT} --platform=managed"
       ;;
     "anthos-cloud-run")
       args+=" --platform=gke"
