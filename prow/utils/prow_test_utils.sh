@@ -16,4 +16,3 @@
 
 LONG_RUN_DURATION_IN_HOUR=3
 LONG_RUN_BUCKET="apiproxy-continuous-long-run"
-export USE_RELEASE_BINARY=1

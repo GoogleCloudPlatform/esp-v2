@@ -25,8 +25,6 @@
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 . ${ROOT}/scripts/all-utilities.sh || { echo "Cannot load Bash utilities"; exit 1; }
 
-# get_[proxy|serverless]_image_name_with_sha will use this environment variable
-USE_RELEASE_BINARY=1
 
 function usage() {
   [[ -n "${1}" ]] && echo "${1}"

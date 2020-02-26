@@ -46,11 +46,7 @@ echo '======================================================='
 echo '===================== Build Envoy ====================='
 echo '======================================================='
 
-if [ ${USE_RELEASE_BINARY} ]; then
-  make build-envoy-release
-else
-  make build-envoy-gcc
-fi
+make build-envoy
 
 echo "Checking if docker image $(get_envoy_image_name_with_sha) and image $(get_proxy_image_name_with_sha) exists.."
 
