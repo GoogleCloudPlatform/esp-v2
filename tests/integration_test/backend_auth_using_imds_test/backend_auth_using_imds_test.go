@@ -31,7 +31,7 @@ import (
 
 var testBackendAuthArgs = []string{
 	"--service_config_id=test-config-id",
-	"--backend_protocol=http",
+
 	"--rollout_strategy=fixed",
 	"--backend_dns_lookup_family=v4only",
 	"--suppress_envoy_headers",

@@ -32,7 +32,7 @@ import (
 func TestServiceControlFailedRequestReport(t *testing.T) {
 	configId := "test-config-id"
 	args := []string{"--service_config_id=" + configId,
-		"--backend_protocol=http", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
+		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 	s := env.NewTestEnv(comp.TestServiceControlFailedRequestReport, platform.GrpcBookstoreSidecar)
 	defer s.TearDown()
 
@@ -75,6 +75,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					ErrorType:         "4xx",
 					Platform:          util.GCE,
 					Location:          "test-zone",
+					BackendProtocol:   "grpc",
 				},
 			},
 		},
@@ -100,6 +101,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					ErrorType:         "4xx",
 					Platform:          util.GCE,
 					Location:          "test-zone",
+					BackendProtocol:   "grpc",
 				},
 			},
 		},
@@ -126,6 +128,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					ErrorType:         "4xx",
 					Platform:          util.GCE,
 					Location:          "test-zone",
+					BackendProtocol:   "grpc",
 				},
 			},
 		},
@@ -152,6 +155,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					ErrorType:         "4xx",
 					Platform:          util.GCE,
 					Location:          "test-zone",
+					BackendProtocol:   "grpc",
 				},
 			},
 		},

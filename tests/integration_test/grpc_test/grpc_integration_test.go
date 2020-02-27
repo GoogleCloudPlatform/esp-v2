@@ -42,7 +42,7 @@ func init() {
 func TestGRPC(t *testing.T) {
 
 	configID := "test-config-id"
-	args := []string{"--service_config_id=" + configID, "--backend_protocol=grpc", "--rollout_strategy=fixed", "--healthz=healthz"}
+	args := []string{"--service_config_id=" + configID, "--rollout_strategy=fixed", "--healthz=healthz"}
 
 	s := env.NewTestEnv(comp.TestGRPC, platform.GrpcBookstoreSidecar)
 	defer s.TearDown()
@@ -147,7 +147,7 @@ func TestGRPCWeb(t *testing.T) {
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
+		"--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPCWeb, platform.GrpcBookstoreSidecar)
 	defer s.TearDown()
@@ -230,7 +230,7 @@ func TestGRPCJwt(t *testing.T) {
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
+		"--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPCJwt, platform.GrpcBookstoreSidecar)
 	defer s.TearDown()
@@ -493,7 +493,7 @@ func TestGRPCJwt(t *testing.T) {
 func TestGRPCMetadata(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
+		"--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPCMetadata, platform.GrpcEchoSidecar)
 	defer s.TearDown()

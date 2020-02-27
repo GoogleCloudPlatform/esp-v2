@@ -35,7 +35,7 @@ func TestServiceControlCredentialId(t *testing.T) {
 	configId := "test-config-id"
 
 	args := []string{"--service_config_id=" + configId,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--suppress_envoy_headers",
+		"--rollout_strategy=fixed", "--suppress_envoy_headers",
 	}
 	s := env.NewTestEnv(comp.TestServiceControlCredentialId, platform.GrpcBookstoreSidecar)
 

@@ -68,7 +68,7 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 	for _, tc := range testdata {
 		func() {
 			args := []string{"--service_config_id=" + configID,
-				"--backend_protocol=grpc", "--rollout_strategy=fixed"}
+				"--rollout_strategy=fixed"}
 			s := env.NewTestEnv(tc.allocatedPort, platform.GrpcBookstoreSidecar)
 			s.ServiceControlServer.SetURL(tc.serviceControlURL)
 
@@ -104,7 +104,7 @@ func TestServiceControlCheckTimeout(t *testing.T) {
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
+		"--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestServiceControlCheckTimeout, platform.GrpcBookstoreSidecar)
 	s.ServiceControlServer.SetURL("http://wrong_service_control_server_name")
@@ -156,7 +156,7 @@ func TestServiceControlNetworkFailFlag(t *testing.T) {
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
+		"--rollout_strategy=fixed"}
 
 	tests := []struct {
 		desc            string

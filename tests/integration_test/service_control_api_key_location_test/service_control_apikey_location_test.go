@@ -32,7 +32,7 @@ func TestServiceControlAPIKeyDefaultLocation(t *testing.T) {
 
 	configId := "test-config-id"
 	args := []string{"--service_config_id=" + configId,
-		"--backend_protocol=http", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
+		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlAPIKeyDefaultLocation, platform.EchoSidecar)
 	defer s.TearDown()
@@ -108,7 +108,7 @@ func TestServiceControlAPIKeyCustomLocation(t *testing.T) {
 	serviceName := "test-echo"
 	configId := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
-		"--backend_protocol=http", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
+		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlAPIKeyCustomLocation, platform.EchoSidecar)
 	s.OverrideSystemParameters(&confpb.SystemParameters{

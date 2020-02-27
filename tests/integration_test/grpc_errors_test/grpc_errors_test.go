@@ -29,7 +29,7 @@ func TestGRPCErrors(t *testing.T) {
 	serviceName := "grpc-echo-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
+		"--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPCErrors, platform.GrpcEchoSidecar)
 	defer s.TearDown()

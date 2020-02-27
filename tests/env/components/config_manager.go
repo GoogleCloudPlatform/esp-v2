@@ -28,9 +28,22 @@ type ConfigManagerServer struct {
 	grpcPort uint16
 }
 
-func NewConfigManagerServer(debugMode bool, ports *Ports, args []string) (*ConfigManagerServer, error) {
+func NewConfigManagerServer(debugMode bool, ports *Ports, backend platform.Backend, args []string) (*ConfigManagerServer, error) {
 
-	args = append(args, "--cluster_address", platform.GetLoopbackHost())
+	// Form the backend address.
+	var backendProtocol string
+	switch backend {
+	case platform.GrpcBookstoreSidecar, platform.GrpcEchoSidecar, platform.GrpcInteropSidecar, platform.GrpcEchoRemote:
+		backendProtocol = "grpc"
+	case platform.EchoSidecar, platform.EchoRemote:
+		backendProtocol = "http"
+	default:
+		return nil, fmt.Errorf("backend (%v) is not supported", backend)
+	}
+	backendAddress := fmt.Sprintf("%v://%v:%v", backendProtocol, platform.GetLoopbackHost(), ports.BackendServerPort)
+
+	// Set config manager flags.
+	args = append(args, "--backend_address", backendAddress)
 	args = append(args, "--listener_address", platform.GetAnyAddress())
 	args = append(args, "--backend_dns_lookup_family", platform.GetDnsFamily())
 	args = append(args, "--root_certs_path", platform.GetFilePath(platform.ProxyCert))

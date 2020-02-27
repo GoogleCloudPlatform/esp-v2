@@ -36,7 +36,7 @@ func TestServiceControlProtocolWithGRPCBackend(t *testing.T) {
 
 	args := []string{
 		"--service_config_id=" + configID,
-		"--backend_protocol=grpc",
+
 		"--rollout_strategy=fixed",
 	}
 
@@ -149,7 +149,7 @@ func TestServiceControlProtocolWithHTTPBackend(t *testing.T) {
 	args := []string{
 		"--service=" + serviceName,
 		"--service_config_id=" + configID,
-		"--backend_protocol=http",
+
 		"--rollout_strategy=fixed",
 	}
 

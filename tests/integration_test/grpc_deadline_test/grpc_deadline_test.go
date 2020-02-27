@@ -39,7 +39,7 @@ func elapsed(what string) func() {
 func TestDeadlinesForGrpcDynamicRouting(t *testing.T) {
 	args := []string{
 		"--service_config_id=test-config-id",
-		"--backend_protocol=grpc",
+
 		"--rollout_strategy=fixed",
 		"--backend_dns_lookup_family=v4only",
 		"--suppress_envoy_headers",
@@ -139,7 +139,7 @@ plans {
 func TestDeadlinesForGrpcCatchAllBackend(t *testing.T) {
 	args := []string{
 		"--service_config_id=test-config-id",
-		"--backend_protocol=grpc",
+
 		"--rollout_strategy=fixed",
 		"--backend_dns_lookup_family=v4only",
 		"--suppress_envoy_headers",

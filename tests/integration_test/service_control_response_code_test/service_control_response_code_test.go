@@ -35,7 +35,7 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 	configId := "test-config-id"
 
 	args := []string{"--service_config_id=" + configId,
-		"--backend_protocol=http", "--rollout_strategy=fixed"}
+		"--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestServiceControlReportResponseCode, platform.EchoSidecar)
 	s.AppendHttpRules([]*annotationspb.HttpRule{

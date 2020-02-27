@@ -32,7 +32,7 @@ func TestTranscodingBindings(t *testing.T) {
 
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
+		"--rollout_strategy=fixed"}
 
 	type testType struct {
 		desc               string

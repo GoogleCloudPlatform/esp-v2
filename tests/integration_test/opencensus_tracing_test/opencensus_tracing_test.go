@@ -91,7 +91,7 @@ func TestServiceControlCheckTracesWithRetry(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{
 		"--service_config_id=" + configID,
-		"--backend_protocol=grpc",
+
 		"--rollout_strategy=fixed",
 		"--service_control_check_retries=2",
 		"--service_control_check_timeout_ms=100",
@@ -184,7 +184,7 @@ func TestServiceControlSkipUsageTraces(t *testing.T) {
 
 	args := []string{
 		"--service_config_id=" + configId,
-		"--backend_protocol=http",
+
 		"--rollout_strategy=fixed",
 		"--suppress_envoy_headers",
 	}
@@ -247,7 +247,7 @@ func TestFetchingJwksTraces(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{
 		"--service_config_id=" + configID,
-		"--backend_protocol=grpc",
+
 		"--rollout_strategy=fixed",
 	}
 

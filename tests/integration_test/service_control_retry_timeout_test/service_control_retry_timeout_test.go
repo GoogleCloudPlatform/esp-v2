@@ -50,7 +50,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--service_control_check_retries=2", "--service_control_check_timeout_ms=100"}
+		"--rollout_strategy=fixed", "--service_control_check_retries=2", "--service_control_check_timeout_ms=100"}
 	s := env.NewTestEnv(comp.TestServiceControlCheckRetry, platform.GrpcBookstoreSidecar)
 	handler := retryServiceHandler{
 		m: s.ServiceControlServer,
@@ -132,7 +132,7 @@ func TestServiceControlQuotaRetry(t *testing.T) {
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--service_control_quota_retries=2", "--service_control_quota_timeout_ms=100"}
+		"--rollout_strategy=fixed", "--service_control_quota_retries=2", "--service_control_quota_timeout_ms=100"}
 	s := env.NewTestEnv(comp.TestServiceControlQuotaRetry, platform.GrpcBookstoreSidecar)
 	s.OverrideQuota(&confpb.Quota{
 		MetricRules: []*confpb.MetricRule{
@@ -216,7 +216,7 @@ func TestServiceControlReportRetry(t *testing.T) {
 	args := []string{
 		"--service=" + serviceName,
 		"--service_config_id=" + configID,
-		"--backend_protocol=grpc",
+
 		"--rollout_strategy=fixed",
 		// Number of times our filter will retry the report request
 		"--service_control_report_retries=2",
