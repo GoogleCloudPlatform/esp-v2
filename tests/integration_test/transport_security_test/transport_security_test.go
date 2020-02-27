@@ -191,24 +191,38 @@ func TestHttpsClients(t *testing.T) {
 			url:       "http://localhost:%v/simpleget?key=api-key",
 			wantError: fmt.Errorf("301 Moved Permanently"),
 		},
-		/*
-			{
-				desc:         "Succcess for HTTP1 client with TLS ",
-				httpsVersion: 1,
-				url:          "https://localhost:20443/simpleget?key=api-key",
-				certPath:     platform.GetFilePath(platform.ServerCert),
-				keyPath:      platform.GetFilePath(platform.ServerKey),
-				wantResp:     `simple get message`,
-			},
-			{
-				desc:         "Succcess for HTTP2 client with TLS ",
-				httpsVersion: 2,
-				url:          "https://localhost:20443/simpleget?key=api-key",
-				certPath:     platform.GetFilePath(platform.ServerCert),
-				keyPath:      platform.GetFilePath(platform.ServerKey),
-				wantResp:     `simple get message`,
-			},
-		*/
+		{
+			desc:         "Succcess for HTTP1 client with TLS",
+			httpsVersion: 1,
+			url:          "https://localhost:20443/simpleget?key=api-key",
+			certPath:     platform.GetFilePath(platform.ServerCert),
+			keyPath:      platform.GetFilePath(platform.ServerKey),
+			wantResp:     `simple get message`,
+		},
+		{
+			desc:         "Succcess for HTTP2 client with TLS",
+			httpsVersion: 2,
+			url:          "https://localhost:20443/simpleget?key=api-key",
+			certPath:     platform.GetFilePath(platform.ServerCert),
+			keyPath:      platform.GetFilePath(platform.ServerKey),
+			wantResp:     `simple get message`,
+		},
+		{
+			desc:         "Fail for HTTP1 client, with incorrect key and cert",
+			httpsVersion: 1,
+			url:          "https://localhost:20443/simpleget?key=api-key",
+			certPath:     platform.GetFilePath(platform.ProxyCert),
+			keyPath:      platform.GetFilePath(platform.ProxyKey),
+			wantError:    fmt.Errorf("x509: certificate signed by unknown authority"),
+		},
+		{
+			desc:         "Fail for HTTP2 client, with incorrect key and cert",
+			httpsVersion: 2,
+			url:          "https://localhost:20443/simpleget?key=api-key",
+			certPath:     platform.GetFilePath(platform.ProxyCert),
+			keyPath:      platform.GetFilePath(platform.ProxyKey),
+			wantError:    fmt.Errorf("x509: certificate signed by unknown authority"),
+		},
 	}
 
 	for _, tc := range testData {

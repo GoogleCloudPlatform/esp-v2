@@ -53,25 +53,17 @@ const (
 // MakeListeners provides dynamic listeners for Envoy
 func MakeListeners(serviceInfo *sc.ServiceInfo) ([]*v2pb.Listener, error) {
 	var listeners []*v2pb.Listener
-
-	port := serviceInfo.Options.ListenerPort
-	isSsl := false
-	if serviceInfo.Options.SslPort != 0 {
-		port = serviceInfo.Options.SslPort
-		isSsl = true
-	}
-
-	listener, err := makeListener(serviceInfo, port, isSsl)
+	listener, err := makeListener(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
 	listeners = append(listeners, listener)
 
-	redirect_listener, err := makeRedirectListener(serviceInfo)
-	if err != nil {
-		return nil, err
-	}
 	if serviceInfo.Options.SslPort != 0 {
+		redirect_listener, err := makeRedirectListener(serviceInfo)
+		if err != nil {
+			return nil, err
+		}
 		listeners = append(listeners, redirect_listener)
 	}
 
@@ -106,6 +98,7 @@ func makeRedirectListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	}
 
 	return &v2pb.Listener{
+		Name: "http_listener",
 		Address: &corepb.Address{
 			Address: &corepb.Address_SocketAddress{
 				SocketAddress: &corepb.SocketAddress{
@@ -130,7 +123,7 @@ func makeRedirectListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 }
 
 // MakeListener provides a dynamic listener for Envoy
-func makeListener(serviceInfo *sc.ServiceInfo, port int, isSsl bool) (*v2pb.Listener, error) {
+func makeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	httpFilters := []*hcmpb.HttpFilter{}
 
 	if serviceInfo.Options.CorsPreset == "basic" || serviceInfo.Options.CorsPreset == "cors_with_regex" {
@@ -269,7 +262,12 @@ func makeListener(serviceInfo *sc.ServiceInfo, port int, isSsl bool) (*v2pb.List
 			},
 		},
 	}
-	if isSsl {
+
+	port := serviceInfo.Options.ListenerPort
+	listenerName := "http_listener"
+	if serviceInfo.Options.SslPort != 0 {
+		listenerName = "https_listener"
+		port = serviceInfo.Options.SslPort
 		transportSocket, err := util.CreateDownstreamTransportSocket(
 			serviceInfo.Options.EnvoyCertPath, serviceInfo.Options.EnvoyKeyPath)
 		if err != nil {
@@ -279,6 +277,7 @@ func makeListener(serviceInfo *sc.ServiceInfo, port int, isSsl bool) (*v2pb.List
 	}
 
 	return &v2pb.Listener{
+		Name: listenerName,
 		Address: &corepb.Address{
 			Address: &corepb.Address_SocketAddress{
 				SocketAddress: &corepb.SocketAddress{

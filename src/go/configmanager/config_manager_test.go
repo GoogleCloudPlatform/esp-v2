@@ -110,7 +110,8 @@ func TestFetchListeners(t *testing.T) {
          "address":"0.0.0.0",
          "portValue":8080
       }
-   },
+	 },
+	 "name": "http_listener",
    "filterChains":[
       {
          "filters":[
@@ -252,6 +253,7 @@ func TestFetchListeners(t *testing.T) {
          "portValue":8080
       }
    },
+	 "name": "http_listener",
    "filterChains":[
       {
          "filters":[
@@ -440,7 +442,8 @@ func TestFetchListeners(t *testing.T) {
          "address":"0.0.0.0",
          "portValue":8080
       }
-   },
+	 },
+	 "name": "http_listener",
    "filterChains":[
       {
          "filters":[
@@ -649,7 +652,8 @@ func TestFetchListeners(t *testing.T) {
          "address":"0.0.0.0",
          "portValue":8080
       }
-   },
+	 },
+	 "name": "http_listener",
    "filterChains":[
       {
          "filters":[
@@ -886,7 +890,8 @@ func TestFetchListeners(t *testing.T) {
          "address":"0.0.0.0",
          "portValue":8080
       }
-   },
+	 },
+	 "name": "http_listener",
    "filterChains":[
       {
          "filters":[
@@ -1103,6 +1108,7 @@ func TestFetchListeners(t *testing.T) {
          "portValue":8080
       }
    },
+	 "name": "http_listener",
    "filterChains":[
       {
          "filters":[
@@ -1263,7 +1269,8 @@ func TestFetchListeners(t *testing.T) {
          "address":"0.0.0.0",
          "portValue":8080
       }
-   },
+	 },
+	 "name": "http_listener",
    "filterChains":[
       {
          "filters":[
