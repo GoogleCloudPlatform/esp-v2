@@ -46,7 +46,7 @@ var (
 	ClusterConnectTimeout = flag.Duration("cluster_connect_timeout", 20*time.Second, "cluster connect timeout in seconds")
 
 	// Network related configurations.
-	BackendUri           = flag.String("backend", "http://127.0.0.1:8082", `The application server URI to which ESPv2 proxies requests.`)
+	BackendAddress       = flag.String("backend_address", "http://127.0.0.1:8082", `The application server URI to which ESPv2 proxies requests.`)
 	ListenerAddress      = flag.String("listener_address", "0.0.0.0", "listener socket ip address")
 	ServiceManagementURL = flag.String("service_management_url", "https://servicemanagement.googleapis.com", "url of service management server")
 
@@ -98,7 +98,7 @@ var (
 func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 	opts := options.ConfigGeneratorOptions{
 		CommonOptions:                 commonflags.DefaultCommonOptionsFromFlags(),
-		BackendUri:                    *BackendUri,
+		BackendAddress:                *BackendAddress,
 		ComputePlatformOverride:       *ComputePlatformOverride,
 		CorsAllowCredentials:          *CorsAllowCredentials,
 		CorsAllowHeaders:              *CorsAllowHeaders,

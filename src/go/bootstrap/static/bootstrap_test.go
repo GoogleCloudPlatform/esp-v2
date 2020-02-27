@@ -45,7 +45,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 		{
 			desc: "envoy config with service control, no tracing",
 			opt_mod: func(opt *options.ConfigGeneratorOptions) {
-				opt.BackendUri = "http://127.0.0.1:8082"
+				opt.BackendAddress = "http://127.0.0.1:8082"
 				opt.DisableTracing = true
 			},
 			serviceConfigPath: platform.GetFilePath(platform.ScServiceConfig),
@@ -54,7 +54,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 		{
 			desc: "envoy config for auth",
 			opt_mod: func(opt *options.ConfigGeneratorOptions) {
-				opt.BackendUri = "http://127.0.0.1:8082"
+				opt.BackendAddress = "http://127.0.0.1:8082"
 				opt.DisableTracing = true
 				opt.SkipServiceControlFilter = true
 			},
@@ -64,7 +64,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 		{
 			desc: "envoy config with dynamic routing",
 			opt_mod: func(opt *options.ConfigGeneratorOptions) {
-				opt.BackendUri = "http://127.0.0.1:8082"
+				opt.BackendAddress = "http://127.0.0.1:8082"
 				opt.DisableTracing = true
 				opt.SkipServiceControlFilter = true
 			},
@@ -74,7 +74,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 		{
 			desc: "envoy config for path matcher",
 			opt_mod: func(opt *options.ConfigGeneratorOptions) {
-				opt.BackendUri = "http://127.0.0.1:8082"
+				opt.BackendAddress = "http://127.0.0.1:8082"
 				opt.DisableTracing = true
 				opt.SkipServiceControlFilter = true
 			},
@@ -84,7 +84,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 		{
 			desc: "grpc dynamic routing",
 			opt_mod: func(opt *options.ConfigGeneratorOptions) {
-				opt.BackendUri = "grpc://127.0.0.1:8082"
+				opt.BackendAddress = "grpc://127.0.0.1:8082"
 				opt.DisableTracing = true
 			},
 			serviceConfigPath: platform.GetFilePath(platform.GrpcEchoServiceConfig),

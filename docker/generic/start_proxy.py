@@ -145,12 +145,12 @@ environment variable or by passing "-k" flag to this script.
         '--backend',
         default=DEFAULT_BACKEND,
         help='''
-        Change the application server URI to which ESPv2
-        proxies requests. Default value: {backend}.
+        Specific the backend application server address.
+        Default value: {backend}.
         
         Please use the following schemes as a prefix to specify the protocol
-        your backend uses. This must be formatted as a full URI, with
-        scheme, address/hostname, and port.
+        your backend uses. This must be formatted as a full address, with
+        scheme, hostname, and port.
         
             SCHEME        PROTOCOL    SECURITY      EXAMPLE
             http://       HTTP        None          http://127.0.0.1:80
@@ -545,7 +545,7 @@ def gen_proxy_config(args):
     proxy_conf = [
         CONFIGMANAGER_BIN,
         "--logtostderr",
-        "--backend", args.backend,
+        "--backend_address", args.backend,
         "--rollout_strategy", args.rollout_strategy,
     ]
 

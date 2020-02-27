@@ -55,7 +55,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 		desc              string
 		fakeServiceConfig *confpb.Service
 		wantedCluster     v2pb.Cluster
-		backendUri        string
+		BackendAddress    string
 	}{
 		{
 			desc: "Success for gRPC backend",
@@ -70,7 +70,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 					Environment: testServiceControlEnv,
 				},
 			},
-			backendUri: "grpc://127.0.0.1:80",
+			BackendAddress: "grpc://127.0.0.1:80",
 			wantedCluster: v2pb.Cluster{
 				Name:                 "service-control-cluster",
 				ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
@@ -103,7 +103,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 					Environment: "http://127.0.0.1:8000",
 				},
 			},
-			backendUri: "http://127.0.0.1:80",
+			BackendAddress: "http://127.0.0.1:80",
 			wantedCluster: v2pb.Cluster{
 				Name:                 "service-control-cluster",
 				ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
@@ -116,7 +116,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendUri = tc.backendUri
+		opts.BackendAddress = tc.BackendAddress
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
@@ -138,7 +138,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 		desc                   string
 		fakeServiceConfig      *confpb.Service
 		backendDnsLookupFamily string
-		backendUri             string
+		BackendAddress         string
 		tlsContextSni          string
 		wantedClusters         []*v2pb.Cluster
 		wantedError            string
@@ -191,7 +191,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					},
 				},
 			},
-			backendUri: "http://127.0.0.1:80",
+			BackendAddress: "http://127.0.0.1:80",
 			wantedClusters: []*v2pb.Cluster{
 				{
 					Name:                 "mybackend.com:443",
@@ -239,7 +239,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					},
 				},
 			},
-			backendUri: "http://127.0.0.1:80",
+			BackendAddress: "http://127.0.0.1:80",
 			wantedClusters: []*v2pb.Cluster{
 				{
 					Name:                 "mybackend.com:80",
@@ -289,7 +289,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					},
 				},
 			},
-			backendUri: "http://127.0.0.1:80",
+			BackendAddress: "http://127.0.0.1:80",
 			wantedClusters: []*v2pb.Cluster{
 				{
 					Name:                 "mybackend_http.com:80",
@@ -346,7 +346,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					},
 				},
 			},
-			backendUri: "http://127.0.0.1:80",
+			BackendAddress: "http://127.0.0.1:80",
 			wantedClusters: []*v2pb.Cluster{
 				{
 					Name:                 "mybackend.com:443",
@@ -391,7 +391,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					},
 				},
 			},
-			backendUri: "http://127.0.0.1:80",
+			BackendAddress: "http://127.0.0.1:80",
 			wantedClusters: []*v2pb.Cluster{
 				{
 					Name:                 "mybackend.com:80",
@@ -442,7 +442,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					},
 				},
 			},
-			backendUri: "http://127.0.0.1:80",
+			BackendAddress: "http://127.0.0.1:80",
 			wantedClusters: []*v2pb.Cluster{
 				{
 					Name:                 "mybackend_http.com:80",
@@ -499,7 +499,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					},
 				},
 			},
-			backendUri: "http://127.0.0.1:80",
+			BackendAddress: "http://127.0.0.1:80",
 			wantedClusters: []*v2pb.Cluster{
 				{
 					Name:                 "mybackend.run.app:443",
@@ -549,14 +549,14 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 					},
 				},
 			},
-			backendUri:  "http://127.0.0.1:80",
-			wantedError: "Invalid DnsLookupFamily: v5only;",
+			BackendAddress: "http://127.0.0.1:80",
+			wantedError:    "Invalid DnsLookupFamily: v5only;",
 		},
 	}
 
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendUri = tc.backendUri
+		opts.BackendAddress = tc.BackendAddress
 		if tc.backendDnsLookupFamily != "" {
 			opts.BackendDnsLookupFamily = tc.backendDnsLookupFamily
 		}
@@ -668,7 +668,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 		}
 
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendUri = "grpc://127.0.0.1:80"
+		opts.BackendAddress = "grpc://127.0.0.1:80"
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
@@ -689,7 +689,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 func TestMakeIamCluster(t *testing.T) {
 	testData := []struct {
 		desc                        string
-		backendUri                  string
+		BackendAddress              string
 		backendAuthIamCredential    *options.IAMCredentialsOptions
 		serviceControlIamCredential *options.IAMCredentialsOptions
 		fakeServiceConfig           *confpb.Service
@@ -710,7 +710,7 @@ func TestMakeIamCluster(t *testing.T) {
 					},
 				},
 			},
-			backendUri: "grpc://127.0.0.1:80",
+			BackendAddress: "grpc://127.0.0.1:80",
 			wantedCluster: &v2pb.Cluster{
 				Name:                 util.IamServerClusterName,
 				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
@@ -734,7 +734,7 @@ func TestMakeIamCluster(t *testing.T) {
 					},
 				},
 			},
-			backendUri: "grpc://127.0.0.1:80",
+			BackendAddress: "grpc://127.0.0.1:80",
 			wantedCluster: &v2pb.Cluster{
 				Name:                 util.IamServerClusterName,
 				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
@@ -754,14 +754,14 @@ func TestMakeIamCluster(t *testing.T) {
 					},
 				},
 			},
-			backendUri:    "grpc://127.0.0.1:80",
-			wantedCluster: nil,
+			BackendAddress: "grpc://127.0.0.1:80",
+			wantedCluster:  nil,
 		},
 	}
 
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendUri = tc.backendUri
+		opts.BackendAddress = tc.BackendAddress
 		opts.BackendAuthCredentials = tc.backendAuthIamCredential
 		opts.ServiceControlCredentials = tc.serviceControlIamCredential
 

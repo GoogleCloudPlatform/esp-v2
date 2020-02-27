@@ -41,7 +41,7 @@ type ConfigGeneratorOptions struct {
 	ClusterConnectTimeout time.Duration
 
 	// Full URI to the backend: scheme, address/hostname, port
-	BackendUri string
+	BackendAddress string
 
 	// Network related configurations.
 	ListenerAddress      string
@@ -91,7 +91,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 	return ConfigGeneratorOptions{
 		CommonOptions:                 DefaultCommonOptions(),
 		BackendDnsLookupFamily:        "auto",
-		BackendUri:                    "http://127.0.0.1:8082",
+		BackendAddress:                "http://127.0.0.1:8082",
 		ClusterConnectTimeout:         20 * time.Second,
 		CorsAllowCredentials:          false,
 		CorsAllowHeaders:              "",

@@ -424,7 +424,7 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 	}
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendUri = "grpc://127.0.0.1:80"
+		opts.BackendAddress = "grpc://127.0.0.1:80"
 		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
@@ -445,7 +445,7 @@ func TestMethods(t *testing.T) {
 	testData := []struct {
 		desc              string
 		fakeServiceConfig *confpb.Service
-		backendUri        string
+		BackendAddress    string
 		healthz           string
 		wantMethods       map[string]*methodInfo
 		wantError         string
@@ -468,8 +468,8 @@ func TestMethods(t *testing.T) {
 					},
 				},
 			},
-			backendUri: "grpc://127.0.0.1:80",
-			healthz:    "/",
+			BackendAddress: "grpc://127.0.0.1:80",
+			healthz:        "/",
 			wantMethods: map[string]*methodInfo{
 				fmt.Sprintf("%s.%s", testApiName, "ListShelves"): &methodInfo{
 					ShortName: "ListShelves",
@@ -540,8 +540,8 @@ func TestMethods(t *testing.T) {
 					},
 				},
 			},
-			backendUri: "http://127.0.0.1:80",
-			healthz:    "/",
+			BackendAddress: "http://127.0.0.1:80",
+			healthz:        "/",
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo": &methodInfo{
 					ShortName: "Echo",
@@ -636,7 +636,7 @@ func TestMethods(t *testing.T) {
 					},
 				},
 			},
-			backendUri: "http://127.0.0.1:80",
+			BackendAddress: "http://127.0.0.1:80",
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo": &methodInfo{
 					ShortName: "Echo",
@@ -742,8 +742,8 @@ func TestMethods(t *testing.T) {
 					},
 				},
 			},
-			backendUri: "http://127.0.0.1:80",
-			healthz:    "/healthz",
+			BackendAddress: "http://127.0.0.1:80",
+			healthz:        "/healthz",
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoCors": &methodInfo{
 					ShortName: "EchoCors",
@@ -845,7 +845,7 @@ func TestMethods(t *testing.T) {
 					},
 				},
 			},
-			backendUri: "grpc://127.0.0.1:80",
+			BackendAddress: "grpc://127.0.0.1:80",
 			wantMethods: map[string]*methodInfo{
 				"endpoints.examples.bookstore.Bookstore.CreateBook": &methodInfo{
 					ShortName: "CreateBook",
@@ -909,7 +909,7 @@ func TestMethods(t *testing.T) {
 					},
 				},
 			},
-			backendUri: "grpc://127.0.0.1:80",
+			BackendAddress: "grpc://127.0.0.1:80",
 			wantMethods: map[string]*methodInfo{
 				"endpoints.examples.bookstore.Bookstore.CreateBook": &methodInfo{
 					ShortName: "CreateBook",
@@ -939,7 +939,7 @@ func TestMethods(t *testing.T) {
 
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendUri = tc.backendUri
+		opts.BackendAddress = tc.BackendAddress
 		opts.Healthz = tc.healthz
 		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if tc.wantError != "" {
@@ -1369,7 +1369,7 @@ func TestProcessQuota(t *testing.T) {
 
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendUri = "grpc://127.0.0.1:80"
+		opts.BackendAddress = "grpc://127.0.0.1:80"
 		serviceInfo, _ := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 
 		for key, gotMethod := range serviceInfo.Methods {

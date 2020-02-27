@@ -138,7 +138,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 
 func (s *ServiceInfo) buildCatchAllBackend() error {
 
-	scheme, hostname, port, _, err := util.ParseURI(s.Options.BackendUri)
+	scheme, hostname, port, _, err := util.ParseURI(s.Options.BackendAddress)
 	if err != nil {
 		return fmt.Errorf("error parsing backend uri: %v", err)
 	}
