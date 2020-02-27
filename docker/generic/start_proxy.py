@@ -138,27 +138,16 @@ environment variable or by passing "-k" flag to this script.
            --service, --version, and --rollout_strategy.
         ''')
 
-    # TODO(b/149050012): Update this help text when `--backend_http_protocol`
-    #  is introduced.
     parser.add_argument(
         '-a',
         '--backend',
         default=DEFAULT_BACKEND,
         help='''
-        Specify the backend application server address.
-        Default value: {backend}.
+        Specify the local backend application server address
+        when using ESPv2 as a sidecar.
         
-        Please use the following schemes as a prefix to specify the protocol
-        your backend uses. This should be formatted as a full address, with
-        scheme, hostname, and port.
-        
-        Valid schemes are: http, https, grpc, grpcs
-        
-        If you need to use a remote backend, we recommend specifying the URI
-        in the service configuration instead of this flag. The following references
-        are available on the public Google Cloud Endpoints documentation:
-        - The OpenAPI `x-google-backend` extension
-        - The gRPC service configuration reference
+        Default value is {backend}. Follow the same format when setting 
+        manually. Valid schemes are `http`, `https`, `grpc`, and `grpcs`.
         '''.format(backend=DEFAULT_BACKEND))
 
     parser.add_argument('--listener_port', default=None, type=int, help='''
