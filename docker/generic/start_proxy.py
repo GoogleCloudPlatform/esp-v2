@@ -168,7 +168,7 @@ environment variable or by passing "-k" flag to this script.
     parser.add_argument('-S', '--ssl_port', default=None, type=int, help='''
     Expose a port for HTTPS requests.  Accepts both HTTP/1.x and HTTP/2
     secure connections. Requires the certificate and key files
-    /etc/endpoints/ssl/envoy.crt and /etc/endpoints/ssl/envoy.key''')
+    /etc/endpoints/ssl/server.crt and /etc/endpoints/ssl/server.key''')
 
     parser.add_argument('-z', '--healthz', default=None, help='''Define a
     health checking endpoint on the same ports as the application backend. For

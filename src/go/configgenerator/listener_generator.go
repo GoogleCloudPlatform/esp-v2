@@ -87,9 +87,9 @@ func makeRedirectListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		},
 	}
 
+	httpConMgr.HttpFilters = httpFilters
 	jsonStr, _ := util.ProtoToJson(httpConMgr)
 	glog.Infof("adding Http Connection Manager config: %v", jsonStr)
-	httpConMgr.HttpFilters = httpFilters
 
 	// HTTP filter configuration
 	httpFilterConfig, err := ptypes.MarshalAny(httpConMgr)
