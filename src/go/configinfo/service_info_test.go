@@ -1634,9 +1634,9 @@ func TestProcessApisForGrpc(t *testing.T) {
 	for i, tc := range testData {
 
 		serviceInfo := &ServiceInfo{
-			serviceConfig:    tc.fakeServiceConfig,
-			AnyBackendIsGrpc: true,
-			Methods:          make(map[string]*methodInfo),
+			serviceConfig:       tc.fakeServiceConfig,
+			GrpcSupportRequired: true,
+			Methods:             make(map[string]*methodInfo),
 		}
 		serviceInfo.processApis()
 		serviceInfo.addGrpcHttpRules()

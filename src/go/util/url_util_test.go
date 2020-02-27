@@ -164,39 +164,39 @@ func TestParseURI(t *testing.T) {
 	}
 }
 
-func TestParseScheme(t *testing.T) {
+func TestParseBackendProtocol(t *testing.T) {
 	testData := []struct {
 		desc        string
 		proto       string
-		wantedProto Protocol
+		wantedProto BackendProtocol
 		wantedTLS   bool
 		wantErr     string
 	}{
 		{
 			desc:        "Good scheme: http",
 			proto:       "http",
-			wantedProto: HTTP,
+			wantedProto: HTTP1,
 			wantedTLS:   false,
 			wantErr:     "",
 		},
 		{
 			desc:        "Good scheme: https",
 			proto:       "https",
-			wantedProto: HTTP,
+			wantedProto: HTTP1,
 			wantedTLS:   true,
 			wantErr:     "",
 		},
 		{
 			desc:        "Good scheme: HTTP",
 			proto:       "HTTP",
-			wantedProto: HTTP,
+			wantedProto: HTTP1,
 			wantedTLS:   false,
 			wantErr:     "",
 		},
 		{
 			desc:        "Good scheme: HTTPS",
 			proto:       "HTTPS",
-			wantedProto: HTTP,
+			wantedProto: HTTP1,
 			wantedTLS:   true,
 			wantErr:     "",
 		},
@@ -231,21 +231,21 @@ func TestParseScheme(t *testing.T) {
 		{
 			desc:        "Wrong scheme: rrr",
 			proto:       "rrr",
-			wantedProto: HTTP,
+			wantedProto: HTTP1,
 			wantedTLS:   false,
-			wantErr:     `unknown backend protocol [rrr], should be one of "http(s)" or "grpc(s)"`,
+			wantErr:     `unknown backend scheme [rrr], should be one of "http(s)" or "grpc(s)"`,
 		},
 		{
 			desc:        "Wrong scheme: empty",
 			proto:       "",
-			wantedProto: HTTP,
+			wantedProto: HTTP1,
 			wantedTLS:   false,
-			wantErr:     `unknown backend protocol [], should be one of "http(s)" or "grpc(s)"`,
+			wantErr:     `unknown backend scheme [], should be one of "http(s)" or "grpc(s)"`,
 		},
 	}
 
 	for i, tc := range testData {
-		proto, tls, err := ParseScheme(tc.proto)
+		proto, tls, err := ParseBackendProtocol(tc.proto)
 		if proto != tc.wantedProto {
 			t.Errorf("Test Desc(%d): %s, proto is wrong, got: %v, want: %v", i, tc.desc, proto, tc.wantedProto)
 		}

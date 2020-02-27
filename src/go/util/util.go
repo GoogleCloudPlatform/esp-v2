@@ -113,18 +113,11 @@ const (
 	GoogleRE2MaxProgramSize = 1000
 )
 
-type Protocol int32
+type BackendProtocol int32
 
 // Backend protocol.
+// TODO(b/149050012): add in HTTP2
 const (
-	HTTP Protocol = iota
+	HTTP1 BackendProtocol = iota
 	GRPC
-)
-
-type HttpProtocol int32
-
-// Http protocol.
-const (
-	HTTP1 HttpProtocol = iota
-	HTTP2
 )

@@ -56,22 +56,22 @@ func ParseURI(uri string) (string, string, uint32, string, error) {
 	return u.Scheme, u.Hostname(), uint32(portVal), strings.TrimSuffix(u.RequestURI(), "/"), nil
 }
 
-// ParseScheme parses a scheme string into Protocol and UseTLS bool.
-func ParseScheme(protocol string) (Protocol, bool, error) {
-	protocol = strings.ToLower(protocol)
+// ParseBackendProtocol parses a scheme string into BackendProtocol and UseTLS bool.
+func ParseBackendProtocol(scheme string) (BackendProtocol, bool, error) {
+	scheme = strings.ToLower(scheme)
 	var tls bool
-	if strings.HasSuffix(protocol, "s") {
+	if strings.HasSuffix(scheme, "s") {
 		tls = true
-		protocol = strings.TrimSuffix(protocol, "s")
+		scheme = strings.TrimSuffix(scheme, "s")
 	}
 
-	switch protocol {
+	switch scheme {
 	case "http":
-		return HTTP, tls, nil
+		return HTTP1, tls, nil
 	case "grpc":
 		return GRPC, tls, nil
 	default:
-		return HTTP, tls, fmt.Errorf(`unknown backend protocol [%v], should be one of "http(s)" or "grpc(s)"`, protocol)
+		return HTTP1, tls, fmt.Errorf(`unknown backend scheme [%v], should be one of "http(s)" or "grpc(s)"`, scheme)
 	}
 }
 

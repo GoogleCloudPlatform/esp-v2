@@ -109,7 +109,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	}
 
 	// Add gRPC Transcoder filter and gRPCWeb filter configs for gRPC backend.
-	if serviceInfo.AnyBackendIsGrpc {
+	if serviceInfo.GrpcSupportRequired {
 		transcoderFilter := makeTranscoderFilter(serviceInfo)
 		if transcoderFilter != nil {
 			httpFilters = append(httpFilters, transcoderFilter)
@@ -422,7 +422,7 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	// TODO(b/148638212): Clean up this hacky way of specifying the protocol for Service Control report.
 	// This is safe (for now) as our Service Control filter only differentiates between gRPC or non-gRPC.
 	var protocol string
-	if serviceInfo.AnyBackendIsGrpc {
+	if serviceInfo.GrpcSupportRequired {
 		protocol = "grpc"
 	} else {
 		// TODO(b/148638212): Must be http1 (not http) for current filter implementation.

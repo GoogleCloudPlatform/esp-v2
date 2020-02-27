@@ -149,22 +149,10 @@ environment variable or by passing "-k" flag to this script.
         Default value: {backend}.
         
         Please use the following schemes as a prefix to specify the protocol
-        your backend uses. This must be formatted as a full address, with
+        your backend uses. This should be formatted as a full address, with
         scheme, hostname, and port.
         
-            SCHEME        PROTOCOL    SECURITY      EXAMPLE
-            http://       HTTP        None          http://127.0.0.1:80
-            https://      HTTP        TLS           https://127.0.0.1:443
-            grpc://       gRPC        None          grpc://127.0.0.1:80
-            grpcs://      gRPC        TLS           grpcs://127.0.0.1:443
-        
-        If the scheme is not specified in the URI, ESPv2 automatically uses https.
-        
-        If the port is not specified in the URI, ESPv2 automatically uses:
-        - 80 for schemes without TLS
-        - 443 for schemes with TLS
-        
-        If your backend requires TLS, you must use a secure scheme.
+        Valid schemes are: http, https, grpc, grpcs
         
         If you need to use a remote backend, we recommend specifying the URI
         in the service configuration instead of this flag. The following references
