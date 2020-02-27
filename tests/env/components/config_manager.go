@@ -28,25 +28,38 @@ type ConfigManagerServer struct {
 	grpcPort uint16
 }
 
+// Form the backend address.
+func formBackendAddress(ports *Ports, backend platform.Backend) (string, error) {
+
+	backendAddress := fmt.Sprintf("%v:%v", platform.GetLoopbackHost(), ports.BackendServerPort)
+
+	switch backend {
+	case platform.GrpcEchoRemote, platform.EchoRemote:
+		// Dynamic routing backends shouldn't have this flag set.
+		return "", nil
+	case platform.GrpcBookstoreSidecar, platform.GrpcEchoSidecar, platform.GrpcInteropSidecar:
+		return fmt.Sprintf("grpc://%v", backendAddress), nil
+	case platform.EchoSidecar:
+		return fmt.Sprintf("http://%v", backendAddress), nil
+	default:
+		return "", fmt.Errorf("backend (%v) is not supported", backend)
+	}
+}
+
 func NewConfigManagerServer(debugMode bool, ports *Ports, backend platform.Backend, args []string) (*ConfigManagerServer, error) {
 
-	// Form the backend address.
-	var backendProtocol string
-	switch backend {
-	case platform.GrpcBookstoreSidecar, platform.GrpcEchoSidecar, platform.GrpcInteropSidecar, platform.GrpcEchoRemote:
-		backendProtocol = "grpc"
-	case platform.EchoSidecar, platform.EchoRemote:
-		backendProtocol = "http"
-	default:
-		return nil, fmt.Errorf("backend (%v) is not supported", backend)
-	}
-	backendAddress := fmt.Sprintf("%v://%v:%v", backendProtocol, platform.GetLoopbackHost(), ports.BackendServerPort)
-
 	// Set config manager flags.
-	args = append(args, "--backend_address", backendAddress)
 	args = append(args, "--listener_address", platform.GetAnyAddress())
 	args = append(args, "--backend_dns_lookup_family", platform.GetDnsFamily())
 	args = append(args, "--root_certs_path", platform.GetFilePath(platform.ProxyCert))
+
+	// Set backend flag (for sidecar)
+	backendAddress, err := formBackendAddress(ports, backend)
+	if err != nil {
+		return nil, fmt.Errorf("unable to start config manager: %v", err)
+	} else if backendAddress != "" {
+		args = append(args, "--backend_address", backendAddress)
+	}
 
 	if debugMode {
 		args = append(args, "--logtostderr", "--v=1")
