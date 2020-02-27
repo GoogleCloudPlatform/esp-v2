@@ -138,6 +138,7 @@ func TestFetchListeners(t *testing.T) {
                         "name":"envoy.grpc_json_transcoder",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.config.filter.http.transcoder.v2.GrpcJsonTranscoder",
+                           "autoMapping":true,
                            "convertGrpcStatus":true,
                            "ignoredQueryParameters":[
                               "api_key",

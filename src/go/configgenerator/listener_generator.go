@@ -577,6 +577,7 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 					ProtoDescriptorBin: configContent,
 				},
 				IgnoredQueryParameters: []string{"api_key", "key", "access_token"},
+				AutoMapping:            true,
 				ConvertGrpcStatus:      true,
 			}
 			transcodeConfig.Services = append(transcodeConfig.Services, serviceInfo.ApiNames...)

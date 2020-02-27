@@ -34,6 +34,7 @@ name: grpc-bookstore.endpoints.<YOUR_PROJECT_ID>.cloud.goog
 title: Bookstore gRPC API
 apis:
 - name: endpoints.examples.bookstore.Bookstore
+- name: endpoints.examples.bookstore.v2.Bookstore
 
 #
 # API usage restrictions.

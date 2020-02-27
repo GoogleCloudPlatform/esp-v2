@@ -1,10 +1,10 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -638,11 +638,11 @@ var fileDescriptor_6f82f486e563a88c = []byte{
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
-var _ grpc.ClientConn
+var _ grpc.ClientConnInterface
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
+const _ = grpc.SupportPackageIsVersion6
 
 // BookstoreClient is the client API for Bookstore service.
 //
@@ -667,10 +667,10 @@ type BookstoreClient interface {
 }
 
 type bookstoreClient struct {
-	cc *grpc.ClientConn
+	cc grpc.ClientConnInterface
 }
 
-func NewBookstoreClient(cc *grpc.ClientConn) BookstoreClient {
+func NewBookstoreClient(cc grpc.ClientConnInterface) BookstoreClient {
 	return &bookstoreClient{cc}
 }
 
