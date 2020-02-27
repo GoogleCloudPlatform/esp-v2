@@ -33,7 +33,7 @@ func TestManagedServiceConfig(t *testing.T) {
 
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=managed", "--check_rollout_interval=1s"}
+		"--rollout_strategy=managed", "--check_rollout_interval=1s"}
 	s := env.NewTestEnv(comp.TestManagedServiceConfig, platform.GrpcBookstoreSidecar)
 	s.SetEnvoyDrainTimeInSec(1)
 

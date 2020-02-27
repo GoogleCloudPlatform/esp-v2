@@ -45,7 +45,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 		{
 			desc: "envoy config with service control, no tracing",
 			opt_mod: func(opt *options.ConfigGeneratorOptions) {
-				opt.BackendProtocol = "http"
+				opt.BackendAddress = "http://127.0.0.1:8082"
 				opt.DisableTracing = true
 			},
 			serviceConfigPath: platform.GetFilePath(platform.ScServiceConfig),
@@ -54,7 +54,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 		{
 			desc: "envoy config for auth",
 			opt_mod: func(opt *options.ConfigGeneratorOptions) {
-				opt.BackendProtocol = "http"
+				opt.BackendAddress = "http://127.0.0.1:8082"
 				opt.DisableTracing = true
 				opt.SkipServiceControlFilter = true
 			},
@@ -64,7 +64,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 		{
 			desc: "envoy config with dynamic routing",
 			opt_mod: func(opt *options.ConfigGeneratorOptions) {
-				opt.BackendProtocol = "http"
+				opt.BackendAddress = "http://127.0.0.1:8082"
 				opt.DisableTracing = true
 				opt.SkipServiceControlFilter = true
 			},
@@ -74,7 +74,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 		{
 			desc: "envoy config for path matcher",
 			opt_mod: func(opt *options.ConfigGeneratorOptions) {
-				opt.BackendProtocol = "http"
+				opt.BackendAddress = "http://127.0.0.1:8082"
 				opt.DisableTracing = true
 				opt.SkipServiceControlFilter = true
 			},
@@ -84,7 +84,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 		{
 			desc: "grpc dynamic routing",
 			opt_mod: func(opt *options.ConfigGeneratorOptions) {
-				opt.BackendProtocol = "grpc"
+				opt.BackendAddress = "grpc://127.0.0.1:8082"
 				opt.DisableTracing = true
 			},
 			serviceConfigPath: platform.GetFilePath(platform.GrpcEchoServiceConfig),
@@ -95,7 +95,8 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 	for testIdx, tc := range testData {
 		configBytes, err := ioutil.ReadFile(tc.serviceConfigPath)
 		if err != nil {
-			t.Fatalf("ReadFile failed, got %v", err)
+			t.Errorf("ReadFile failed, got %v", err)
+			continue
 		}
 		unmarshaler := &jsonpb.Unmarshaler{
 			AnyResolver:        util.Resolver,
@@ -104,7 +105,8 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 
 		var s confpb.Service
 		if err := unmarshaler.Unmarshal(bytes.NewBuffer(configBytes), &s); err != nil {
-			t.Fatalf("Unmarshal() returned error %v, want nil", err)
+			t.Errorf("Unmarshal() returned error %v, want nil", err)
+			continue
 		}
 
 		opts := flags.EnvoyConfigOptionsFromFlags()
@@ -113,29 +115,35 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 		// Function under test
 		gotBootstrap, err := ServiceToBootstrapConfig(&s, FakeConfigID, opts)
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
+			continue
 		}
 
 		envoyConfig, err := ioutil.ReadFile(tc.envoyConfigPath)
 		if err != nil {
-			t.Fatalf("ReadFile failed, got %v", err)
+			t.Errorf("ReadFile failed, got %v", err)
+			continue
 		}
 
 		var expectedBootstrap bootstrappb.Bootstrap
 		if err := unmarshaler.Unmarshal(bytes.NewBuffer(envoyConfig), &expectedBootstrap); err != nil {
-			t.Fatalf("Unmarshal() returned error %v, want nil", err)
+			t.Errorf("Unmarshal() returned error %v, want nil", err)
+			continue
 		}
 
 		gotString, err := bootstrapToJson(gotBootstrap)
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
+			continue
 		}
 		wantString, err := bootstrapToJson(&expectedBootstrap)
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
+			continue
 		}
 		if gotString != wantString {
 			t.Errorf("test(%d): %s\ngot : %v, \nwant: %v", testIdx, tc.desc, gotString, wantString)
+			continue
 		}
 	}
 }

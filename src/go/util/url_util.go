@@ -27,13 +27,12 @@ import (
 
 // ParseURI parses uri into scheme, hostname, port, path with err(if exist).
 // If uri has no scheme, it will be regarded as https.
+// If uri has no port, it will use 80 for non-TLS and 443 for TLS.
 func ParseURI(uri string) (string, string, uint32, string, error) {
 	arr := strings.Split(uri, "://")
-	scheme := "https"
 	if len(arr) == 1 {
-		uri = fmt.Sprintf("%s://%s", scheme, uri)
-	} else {
-		scheme = arr[0]
+		// Set the default scheme.
+		uri = fmt.Sprintf("https://%s", uri)
 	}
 
 	u, err := url.Parse(uri)
@@ -43,6 +42,7 @@ func ParseURI(uri string) (string, string, uint32, string, error) {
 
 	_, port, _ := net.SplitHostPort(u.Host)
 	if port == "" {
+		// Determine the default port.
 		port = "443"
 		if !strings.HasSuffix(u.Scheme, "s") {
 			port = "80"
@@ -53,25 +53,25 @@ func ParseURI(uri string) (string, string, uint32, string, error) {
 	if err != nil {
 		return "", "", 0, "", err
 	}
-	return scheme, u.Hostname(), uint32(portVal), strings.TrimSuffix(u.RequestURI(), "/"), nil
+	return u.Scheme, u.Hostname(), uint32(portVal), strings.TrimSuffix(u.RequestURI(), "/"), nil
 }
 
-// ParseBackendPreotocol parses a protocol string into BackendProtocl and UseTLS bool
-func ParseBackendProtocol(protocol string) (BackendProtocol, bool, error) {
-	protocol = strings.ToLower(protocol)
+// ParseBackendProtocol parses a scheme string into BackendProtocol and UseTLS bool.
+func ParseBackendProtocol(scheme string) (BackendProtocol, bool, error) {
+	scheme = strings.ToLower(scheme)
 	var tls bool
-	if strings.HasSuffix(protocol, "s") {
+	if strings.HasSuffix(scheme, "s") {
 		tls = true
-		protocol = strings.TrimSuffix(protocol, "s")
+		scheme = strings.TrimSuffix(scheme, "s")
 	}
 
-	switch protocol {
+	switch scheme {
 	case "http":
-		return HTTP, tls, nil
+		return HTTP1, tls, nil
 	case "grpc":
 		return GRPC, tls, nil
 	default:
-		return HTTP, tls, fmt.Errorf(`unknown backend protocol [%v], should be one of "http" or "grpc"`, protocol)
+		return HTTP1, tls, fmt.Errorf(`unknown backend scheme [%v], should be one of "http(s)" or "grpc(s)"`, scheme)
 	}
 }
 

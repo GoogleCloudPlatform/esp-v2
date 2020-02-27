@@ -31,7 +31,7 @@ import (
 func TestGRPCStreaming(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
+		"--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPCStreaming, platform.GrpcEchoSidecar)
 	defer s.TearDown()
@@ -128,7 +128,7 @@ func checkLabels(t *testing.T, op *scpb.Operation, wantLabelName, wantLabelValue
 func TestGRPCLongStreaming(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--min_stream_report_interval_ms=500"}
+		"--rollout_strategy=fixed", "--min_stream_report_interval_ms=500"}
 	streamingBytesMetrics := []string{
 		"serviceruntime.googleapis.com/api/producer/request_bytes",
 		"serviceruntime.googleapis.com/api/consumer/request_bytes",

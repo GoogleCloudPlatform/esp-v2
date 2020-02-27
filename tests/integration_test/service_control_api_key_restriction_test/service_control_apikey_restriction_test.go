@@ -42,7 +42,7 @@ func TestServiceControlAPIKeyRestriction(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{
 		"--service_config_id=" + configID,
-		"--backend_protocol=http",
+
 		"--rollout_strategy=fixed",
 	}
 
@@ -134,7 +134,7 @@ func TestServiceControlAPIKeyIpRestriction(t *testing.T) {
 	args := []string{
 		"--service=" + serviceName,
 		"--service_config_id=" + configID,
-		"--backend_protocol=http",
+
 		"--rollout_strategy=fixed",
 		"--envoy_use_remote_address",
 		"--envoy_xff_num_trusted_hops=1",

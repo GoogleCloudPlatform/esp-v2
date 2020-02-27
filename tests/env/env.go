@@ -296,7 +296,6 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		e.FakeStackdriverServer.StartStackdriverServer(e.ports.FakeStackdriverPort)
 	}
 
-	confArgs = append(confArgs, fmt.Sprintf("--cluster_port=%v", e.ports.BackendServerPort))
 	confArgs = append(confArgs, fmt.Sprintf("--listener_port=%v", e.ports.ListenerPort))
 	confArgs = append(confArgs, fmt.Sprintf("--discovery_port=%v", e.ports.DiscoveryPort))
 	confArgs = append(confArgs, fmt.Sprintf("--service=%v", e.fakeServiceConfig.Name))
@@ -310,7 +309,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	// Starts XDS.
 	var err error
 	debugConfigMgr := *debugComponents == "all" || *debugComponents == "configmanager"
-	e.configMgr, err = components.NewConfigManagerServer(debugConfigMgr, e.ports, confArgs)
+	e.configMgr, err = components.NewConfigManagerServer(debugConfigMgr, e.ports, e.backend, confArgs)
 	if err != nil {
 		return err
 	}

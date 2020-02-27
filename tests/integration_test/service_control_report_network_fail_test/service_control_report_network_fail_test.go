@@ -32,7 +32,7 @@ func TestServiceControlReportNetworkFail(t *testing.T) {
 
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed", "--service_control_report_retries=0"}
+		"--rollout_strategy=fixed", "--service_control_report_retries=0"}
 
 	s := env.NewTestEnv(comp.TestServiceControlReportNetworkFail, platform.GrpcBookstoreSidecar)
 	defer s.TearDown()

@@ -175,28 +175,28 @@ func TestParseBackendProtocol(t *testing.T) {
 		{
 			desc:        "Good scheme: http",
 			proto:       "http",
-			wantedProto: HTTP,
+			wantedProto: HTTP1,
 			wantedTLS:   false,
 			wantErr:     "",
 		},
 		{
 			desc:        "Good scheme: https",
 			proto:       "https",
-			wantedProto: HTTP,
+			wantedProto: HTTP1,
 			wantedTLS:   true,
 			wantErr:     "",
 		},
 		{
 			desc:        "Good scheme: HTTP",
 			proto:       "HTTP",
-			wantedProto: HTTP,
+			wantedProto: HTTP1,
 			wantedTLS:   false,
 			wantErr:     "",
 		},
 		{
 			desc:        "Good scheme: HTTPS",
 			proto:       "HTTPS",
-			wantedProto: HTTP,
+			wantedProto: HTTP1,
 			wantedTLS:   true,
 			wantErr:     "",
 		},
@@ -231,16 +231,16 @@ func TestParseBackendProtocol(t *testing.T) {
 		{
 			desc:        "Wrong scheme: rrr",
 			proto:       "rrr",
-			wantedProto: HTTP,
+			wantedProto: HTTP1,
 			wantedTLS:   false,
-			wantErr:     `unknown backend protocol [rrr], should be one of "http" or "grpc"`,
+			wantErr:     `unknown backend scheme [rrr], should be one of "http(s)" or "grpc(s)"`,
 		},
 		{
 			desc:        "Wrong scheme: empty",
 			proto:       "",
-			wantedProto: HTTP,
+			wantedProto: HTTP1,
 			wantedTLS:   false,
-			wantErr:     `unknown backend protocol [], should be one of "http" or "grpc"`,
+			wantErr:     `unknown backend scheme [], should be one of "http(s)" or "grpc(s)"`,
 		},
 	}
 

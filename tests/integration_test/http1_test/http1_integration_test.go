@@ -37,7 +37,7 @@ func TestHttp1Basic(t *testing.T) {
 	configID := "test-config-id"
 
 	args := []string{"--service_config_id=" + configID,
-		"--backend_protocol=http", "--rollout_strategy=fixed", "--healthz=/healthz"}
+		"--rollout_strategy=fixed", "--healthz=/healthz"}
 
 	s := env.NewTestEnv(comp.TestHttp1Basic, platform.EchoSidecar)
 	defer s.TearDown()
@@ -109,7 +109,7 @@ func TestHttp1JWT(t *testing.T) {
 	configID := "test-config-id"
 
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
-		"--skip_service_control_filter=true", "--backend_protocol=http", "--rollout_strategy=fixed"}
+		"--skip_service_control_filter=true", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestHttp1JWT, platform.EchoSidecar)
 	defer s.TearDown()

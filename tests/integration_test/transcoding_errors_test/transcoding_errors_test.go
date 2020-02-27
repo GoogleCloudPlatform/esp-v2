@@ -45,7 +45,7 @@ func TestTranscodingServiceUnavailableError(t *testing.T) {
 
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
+		"--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestTranscodingServiceUnavailableError, platform.GrpcBookstoreSidecar)
 
@@ -82,7 +82,7 @@ func TestTranscodingErrors(t *testing.T) {
 	serviceName := "bookstore-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
+		"--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestTranscodingErrors, platform.GrpcBookstoreSidecar)
 	defer s.TearDown()

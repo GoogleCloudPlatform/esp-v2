@@ -33,7 +33,7 @@ func TestServiceControlCache(t *testing.T) {
 	configId := "test-config-id"
 
 	args := []string{"--service_config_id=" + configId,
-		"--backend_protocol=http", "--rollout_strategy=fixed", "--suppress_envoy_headers"}
+		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlCache, platform.EchoSidecar)
 	defer s.TearDown()

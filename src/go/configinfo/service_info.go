@@ -47,30 +47,30 @@ type ServiceInfo struct {
 	Operations []string
 	// Stores all methods info for this service, using selector as key.
 	Methods map[string]*methodInfo
-	// Stores information about backend clusters for re-routing.
-	BackendRoutingClusters []*BackendRoutingCluster
 	// Stores url segment names, mapping snake name to Json name.
 	SegmentNames []*pmpb.SegmentName
 
 	AllowCors         bool
-	BackendIsGrpc     bool
 	ServiceControlURI string
-	CatchAllBackend   *BackendRoutingCluster
 	GcpAttributes     *scpb.GcpAttributes
 	// Keep a pointer to original service config. Should always process rules
 	// inside ServiceInfo.
 	serviceConfig *confpb.Service
 	AccessToken   *commonpb.AccessToken
 	Options       options.ConfigGeneratorOptions
+
+	// Stores information about all backend clusters.
+	GrpcSupportRequired    bool
+	CatchAllBackend        *BackendRoutingCluster
+	BackendRoutingClusters []*BackendRoutingCluster
 }
 
 type BackendRoutingCluster struct {
-	ClusterName  string
-	Hostname     string
-	Port         uint32
-	UseTLS       bool
-	Protocol     util.BackendProtocol
-	HttpProtocol util.HttpProtocol
+	ClusterName string
+	Hostname    string
+	Port        uint32
+	UseTLS      bool
+	Protocol    util.BackendProtocol
 }
 
 // NewServiceInfoFromServiceConfig returns an instance of ServiceInfo.
@@ -97,7 +97,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	// * BackendInfo map to MethodInfo
 	//    set by processApi
 	//    used by processBackendRule
-	// * BackendIsGrpc:
+	// * GrpcSupportRequired:
 	//     set by processBackendRule, buildCatchAllBackend
 	//     used by addGrpcHttpRules
 	if err := serviceInfo.buildCatchAllBackend(); err != nil {
@@ -136,21 +136,26 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 }
 
 func (s *ServiceInfo) buildCatchAllBackend() error {
-	protocol, tls, err := util.ParseBackendProtocol(s.Options.BackendProtocol)
+
+	scheme, hostname, port, _, err := util.ParseURI(s.Options.BackendAddress)
+	if err != nil {
+		return fmt.Errorf("error parsing backend uri: %v", err)
+	}
+
+	protocol, tls, err := util.ParseBackendProtocol(scheme)
 	if err != nil {
 		return err
 	}
 	if protocol == util.GRPC {
-		s.BackendIsGrpc = true
+		s.GrpcSupportRequired = true
 	}
 
 	s.CatchAllBackend = &BackendRoutingCluster{
-		UseTLS:       tls,
-		Protocol:     protocol,
-		HttpProtocol: util.HTTP1, // TODO: default to HTTP1 for now
-		ClusterName:  s.BackendClusterName(),
-		Hostname:     s.Options.ClusterAddress,
-		Port:         uint32(s.Options.ClusterPort),
+		UseTLS:      tls,
+		Protocol:    protocol,
+		ClusterName: s.BackendClusterName(),
+		Hostname:    hostname,
+		Port:        port,
 	}
 	return nil
 }
@@ -199,7 +204,7 @@ func (s *ServiceInfo) processApis() {
 
 func (s *ServiceInfo) addGrpcHttpRules() {
 	// If there is not grpc backend, not to add grpc HttpRules
-	if !s.BackendIsGrpc {
+	if !s.GrpcSupportRequired {
 		return
 	}
 
@@ -417,18 +422,17 @@ func (s *ServiceInfo) processBackendRule() error {
 					return err
 				}
 				if protocol == util.GRPC {
-					s.BackendIsGrpc = true
+					s.GrpcSupportRequired = true
 				}
 
 				backendSelector := address
 				s.BackendRoutingClusters = append(s.BackendRoutingClusters,
 					&BackendRoutingCluster{
-						ClusterName:  backendSelector,
-						UseTLS:       tls,
-						Protocol:     protocol,
-						HttpProtocol: util.HTTP1, // TODO: default to HTTP1 for now
-						Hostname:     hostname,
-						Port:         port,
+						ClusterName: backendSelector,
+						UseTLS:      tls,
+						Protocol:    protocol,
+						Hostname:    hostname,
+						Port:        port,
 					})
 				backendRoutingClustersMap[address] = backendSelector
 			}

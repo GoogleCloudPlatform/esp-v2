@@ -48,7 +48,7 @@ func TestGRPCInterops(t *testing.T) {
 	serviceName := "grpc-interop-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
+		"--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPCInterops, platform.GrpcInteropSidecar)
 	clientPath := platform.GetFilePath(platform.GrpcInteropClient)
@@ -92,7 +92,7 @@ func TestGRPCInteropMiniStress(t *testing.T) {
 	serviceName := "grpc-interop-service"
 	configID := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
+		"--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPCInteropMiniStress, platform.GrpcInteropSidecar)
 	clientPath := platform.GetFilePath(platform.GrpcInteropStressClient)

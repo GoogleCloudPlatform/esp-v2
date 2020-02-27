@@ -25,9 +25,6 @@ import (
 type ConfigGeneratorOptions struct {
 	CommonOptions
 
-	// Service Management related configurations. Must be set.
-	BackendProtocol string
-
 	// Cors related configurations.
 	CorsAllowCredentials bool
 	CorsAllowHeaders     string
@@ -43,12 +40,13 @@ type ConfigGeneratorOptions struct {
 	// Envoy specific configurations.
 	ClusterConnectTimeout time.Duration
 
+	// Full URI to the backend: scheme, address/hostname, port
+	BackendAddress string
+
 	// Network related configurations.
-	ClusterAddress       string
 	ListenerAddress      string
 	Healthz              string
 	ServiceManagementURL string
-	ClusterPort          int
 	ListenerPort         int
 	RootCertsPath        string
 
@@ -93,10 +91,8 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 	return ConfigGeneratorOptions{
 		CommonOptions:                 DefaultCommonOptions(),
 		BackendDnsLookupFamily:        "auto",
-		BackendProtocol:               "", // Required flag with no default
-		ClusterAddress:                "127.0.0.1",
+		BackendAddress:                "http://127.0.0.1:8082",
 		ClusterConnectTimeout:         20 * time.Second,
-		ClusterPort:                   8082,
 		CorsAllowCredentials:          false,
 		CorsAllowHeaders:              "",
 		CorsAllowMethods:              "",

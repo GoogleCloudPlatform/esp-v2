@@ -33,7 +33,7 @@ import (
 func TestGRPCFallback(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
-		"--backend_protocol=grpc", "--rollout_strategy=fixed"}
+		"--rollout_strategy=fixed"}
 
 	// Setup the service config for gRPC Bookstore.
 	s := env.NewTestEnv(comp.TestGRPCFallback, platform.GrpcBookstoreSidecar)

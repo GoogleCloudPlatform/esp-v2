@@ -19,9 +19,7 @@ set -eo pipefail
 
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${SCRIPT_PATH}/../../../.." && pwd)"
-ARGS="\
-  \"--backend=127.0.0.1:8081\",\
-"
+ARGS=""
 
 . ${ROOT}/tests/e2e/scripts/prow-utilities.sh || { echo "Cannot load Bash utilities";
 exit 1; }
@@ -49,15 +47,15 @@ case "${BACKEND}" in
   'bookstore')
     YAML_TEMPLATE=${ROOT}/tests/e2e/testdata/bookstore/gke/http-bookstore.yaml.template
     YAML_FILE=${ROOT}/tests/e2e/testdata/bookstore/gke/http-bookstore.yaml
-    ARGS="$ARGS , \"--backend_protocol=http\"" ;;
+    ARGS="$ARGS , \"--backend=http://127.0.0.1:8081\"" ;;
   'echo')
     YAML_TEMPLATE=${ROOT}/tests/e2e/testdata/grpc_echo/gke/grpc-echo.yaml.template
     YAML_FILE=${ROOT}/tests/e2e/testdata/grpc_echo/gke/grpc-echo.yaml
-    ARGS="$ARGS , \"--backend_protocol=grpc\"" ;;
+    ARGS="$ARGS , \"--backend=grpc://127.0.0.1:8081\"" ;;
   'interop')
     YAML_TEMPLATE=${ROOT}/tests/e2e/testdata/grpc_interop/gke/grpc-interop.yaml.template
     YAML_FILE=${ROOT}/tests/e2e/testdata/grpc_interop/gke/grpc-interop.yaml
-    ARGS="$ARGS , \"--backend_protocol=grpc\"" ;;
+    ARGS="$ARGS , \"--backend=grpc://127.0.0.1:8081\"" ;;
   *)
     echo "Invalid backend ${BACKEND}"
     return 1 ;;

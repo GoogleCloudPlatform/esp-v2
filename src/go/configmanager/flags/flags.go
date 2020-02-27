@@ -30,9 +30,6 @@ var (
 	// These flags are kept in sync with options.ConfigGeneratorOptions.
 	// When adding or changing default values, update options.DefaultConfigGeneratorOptions.
 
-	// Service Management related configurations. Must be set.
-	BackendProtocol = flag.String("backend_protocol", "", `must set as one of "http", "https", "grpc" or "grpcs"`)
-
 	// Cors related configurations.
 	CorsAllowCredentials = flag.Bool("cors_allow_credentials", false, "whether include the Access-Control-Allow-Credentials header with the value true in responses or not")
 	CorsAllowHeaders     = flag.String("cors_allow_headers", "", "set Access-Control-Allow-Headers to the specified HTTP headers")
@@ -49,11 +46,10 @@ var (
 	ClusterConnectTimeout = flag.Duration("cluster_connect_timeout", 20*time.Second, "cluster connect timeout in seconds")
 
 	// Network related configurations.
-	ClusterAddress       = flag.String("cluster_address", "127.0.0.1", "cluster socket ip address")
+	BackendAddress       = flag.String("backend_address", "http://127.0.0.1:8082", `The application server URI to which ESPv2 proxies requests.`)
 	ListenerAddress      = flag.String("listener_address", "0.0.0.0", "listener socket ip address")
 	ServiceManagementURL = flag.String("service_management_url", "https://servicemanagement.googleapis.com", "url of service management server")
 
-	ClusterPort  = flag.Int("cluster_port", 8082, "cluster port")
 	ListenerPort = flag.Int("listener_port", 8080, "listener port")
 	Healthz      = flag.String("healthz", "", "path for health check of ESPv2 proxy itself")
 
@@ -102,7 +98,7 @@ var (
 func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 	opts := options.ConfigGeneratorOptions{
 		CommonOptions:                 commonflags.DefaultCommonOptionsFromFlags(),
-		BackendProtocol:               *BackendProtocol,
+		BackendAddress:                *BackendAddress,
 		ComputePlatformOverride:       *ComputePlatformOverride,
 		CorsAllowCredentials:          *CorsAllowCredentials,
 		CorsAllowHeaders:              *CorsAllowHeaders,
@@ -113,10 +109,8 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		CorsPreset:                    *CorsPreset,
 		BackendDnsLookupFamily:        *BackendDnsLookupFamily,
 		ClusterConnectTimeout:         *ClusterConnectTimeout,
-		ClusterAddress:                *ClusterAddress,
 		ListenerAddress:               *ListenerAddress,
 		ServiceManagementURL:          *ServiceManagementURL,
-		ClusterPort:                   *ClusterPort,
 		ListenerPort:                  *ListenerPort,
 		Healthz:                       *Healthz,
 		RootCertsPath:                 *RootCertsPath,

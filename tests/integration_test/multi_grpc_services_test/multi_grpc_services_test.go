@@ -31,7 +31,7 @@ import (
 
 func TestMultiGrpcServices(t *testing.T) {
 	configID := "test-config-id"
-	args := []string{"--service_config_id=" + configID, "--backend_protocol=grpc", "--rollout_strategy=fixed"}
+	args := []string{"--service_config_id=" + configID, "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestMultiGrpcServices, platform.GrpcBookstoreSidecar)
 	defer s.TearDown()

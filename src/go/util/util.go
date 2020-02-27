@@ -116,15 +116,8 @@ const (
 type BackendProtocol int32
 
 // Backend protocol.
+// TODO(nareddyt): add in HTTP2
 const (
-	HTTP BackendProtocol = iota
+	HTTP1 BackendProtocol = iota
 	GRPC
-)
-
-type HttpProtocol int32
-
-// Http protocol.
-const (
-	HTTP1 HttpProtocol = iota
-	HTTP2
 )
