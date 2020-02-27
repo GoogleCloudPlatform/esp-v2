@@ -145,7 +145,7 @@ environment variable or by passing "-k" flag to this script.
         '--backend',
         default=DEFAULT_BACKEND,
         help='''
-        Specific the backend application server address.
+        Specify the backend application server address.
         Default value: {backend}.
         
         Please use the following schemes as a prefix to specify the protocol
