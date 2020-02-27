@@ -45,6 +45,7 @@ func TestMultiGrpcServices(t *testing.T) {
 		service        string
 		method         string
 		header         http.Header
+		body           string
 		wantResp       string
 		wantError      string
 		wantScRequests []interface{}
@@ -195,6 +196,44 @@ func TestMultiGrpcServices(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc:           "Http client calling bookstore/v2 with auto binding",
+			clientProtocol: "http",
+			service:        "BookstoreV2",
+			method:         "/endpoints.examples.bookstore.v2.Bookstore/GetShelfAutoBind?key=api-key-2",
+			body:           `{"shelf":"200"}`,
+			wantResp:       `{"id":"200","theme":"Classic"}`,
+			wantScRequests: []interface{}{
+				&utils.ExpectedCheck{
+					Version:         utils.ESPv2Version(),
+					ServiceName:     "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					ConsumerID:      "api_key:api-key-2",
+					OperationName:   "endpoints.examples.bookstore.v2.Bookstore.GetShelfAutoBind",
+					CallerIp:        platform.GetLoopbackAddress(),
+				},
+				&utils.ExpectedReport{
+					Version:           utils.ESPv2Version(),
+					ServiceName:       "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:   "test-config-id",
+					URL:               "/endpoints.examples.bookstore.v2.Bookstore/GetShelfAutoBind?key=api-key-2",
+					ApiKey:            "api-key-2",
+					ApiMethod:         "endpoints.examples.bookstore.v2.Bookstore.GetShelfAutoBind",
+					ProducerProjectID: "producer project",
+					ConsumerProjectID: "123456",
+					FrontendProtocol:  "http",
+					BackendProtocol:   "grpc",
+					HttpMethod:        "POST",
+					LogMessage:        "endpoints.examples.bookstore.v2.Bookstore.GetShelfAutoBind is called",
+					StatusCode:        "0",
+					ResponseCode:      200,
+					RequestMsgCounts:  1,
+					ResponseMsgCounts: 1,
+					Platform:          util.GCE,
+					Location:          "test-zone",
+				},
+			},
+		},
 	}
 	for _, tc := range tests {
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
@@ -202,6 +241,8 @@ func TestMultiGrpcServices(t *testing.T) {
 		var err error
 		if tc.service == "BookstoreV2" && tc.clientProtocol == "grpc" {
 			resp, err = client.MakeBookstoreV2GrpcCall(addr, tc.method, tc.header)
+		} else if tc.body != "" {
+			resp, err = client.MakeHttpCallWithBody(addr, "POST", tc.method, "", []byte(tc.body))
 		} else {
 			resp, err = client.MakeCall(tc.clientProtocol, addr, "GET", tc.method, "", tc.header)
 		}

@@ -79,6 +79,11 @@ var (
 						RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.v2.GetShelf",
 						ResponseTypeUrl: "type.googleapis.com/endpoints.examples.bookstore.v2.Shelf",
 					},
+					{
+						Name:            "GetShelfAutoBind",
+						RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.v2.GetShelf",
+						ResponseTypeUrl: "type.googleapis.com/endpoints.examples.bookstore.v2.Shelf",
+					},
 				},
 			},
 		},

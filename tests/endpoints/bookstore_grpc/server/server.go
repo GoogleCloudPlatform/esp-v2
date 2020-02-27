@@ -27,9 +27,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	bsgrpcv1 "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto/v1"
 	bspbv1 "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto/v1"
-	bsgrpcv2 "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto/v2"
 	bspbv2 "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto/v2"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
@@ -46,14 +44,14 @@ type database struct {
 
 // BookstoreServerV1Impl represents the gRPC Bookstore health-checkable server.
 type BookstoreServerV1Impl struct {
-	bsV1Server bsgrpcv1.BookstoreServer
+	bsV1Server bspbv1.BookstoreServer
 	grpcServer *grpc.Server
 	db         *database
 }
 
 // BookstoreServerV2Impl represents the gRPC Bookstore health-checkable server.
 type BookstoreServerV2Impl struct {
-	bsV2Server bsgrpcv2.BookstoreServer
+	bsV2Server bspbv2.BookstoreServer
 	grpcServer *grpc.Server
 }
 
@@ -125,8 +123,8 @@ func NewBookstoreServer(port uint16) (*BookstoreServer, error) {
 
 	// Register gRPC health services and bookstore
 	healthgrpc.RegisterHealthServer(grpcServer, healthServer)
-	bsgrpcv1.RegisterBookstoreServer(grpcServer, endpoint.bs1)
-	bsgrpcv2.RegisterBookstoreServer(grpcServer, endpoint.bs2)
+	bspbv1.RegisterBookstoreServer(grpcServer, endpoint.bs1)
+	bspbv2.RegisterBookstoreServer(grpcServer, endpoint.bs2)
 
 	// Return server
 	return endpoint, nil
@@ -190,6 +188,21 @@ func (s *BookstoreServerV2Impl) GetShelf(ctx context.Context, req *bspbv2.GetShe
 		return &bspbv2.Shelf{
 			Id:    100,
 			Theme: "Kids",
+		}, nil
+	}
+
+	return nil, status.New(codes.NotFound, "Cannot find requested shelf").Err()
+}
+
+func (s *BookstoreServerV2Impl) GetShelfAutoBind(ctx context.Context, req *bspbv2.GetShelfRequest) (*bspbv2.Shelf, error) {
+	if err := testDecorator(ctx); err != nil {
+		return nil, err
+	}
+
+	if req.Shelf == 200 {
+		return &bspbv2.Shelf{
+			Id:    200,
+			Theme: "Classic",
 		}, nil
 	}
 
