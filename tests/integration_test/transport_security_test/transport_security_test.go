@@ -26,6 +26,7 @@ import (
 
 	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 )
 
 func TestServiceManagementWithTLS(t *testing.T) {
@@ -145,6 +146,91 @@ func TestServiceControlWithTLS(t *testing.T) {
 				t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
 			} else if !strings.Contains(resp, tc.wantResp) {
 				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
+			}
+		}()
+	}
+}
+
+func TestHttpsClients(t *testing.T) {
+	args := []string{
+		"--service_config_id=test-config-id",
+		"--backend_protocol=http",
+		"--ssl_port=20443",
+		"--rollout_strategy=fixed",
+		"--envoy_cert_path=../../env/testdata/server.crt",
+		"--envoy_key_path=../../env/testdata/server.key",
+	}
+
+	s := env.NewTestEnv(comp.TestHttpsClients, platform.EchoSidecar)
+	defer s.TearDown()
+	s.AppendHttpRules([]*annotationspb.HttpRule{
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",
+			Pattern: &annotationspb.HttpRule_Get{
+				Get: "/simpleget",
+			},
+		},
+	})
+
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	testData := []struct {
+		desc         string
+		httpsVersion int
+		certPath     string
+		keyPath      string
+		url          string
+		port         uint16
+		wantResp     string
+		wantError    error
+	}{
+		{
+			desc:      "Fail for HTTP1 client without TLS ",
+			url:       "http://localhost:%v/simpleget?key=api-key",
+			wantError: fmt.Errorf("301 Moved Permanently"),
+		},
+		/*
+			{
+				desc:         "Succcess for HTTP1 client with TLS ",
+				httpsVersion: 1,
+				url:          "https://localhost:20443/simpleget?key=api-key",
+				certPath:     platform.GetFilePath(platform.ServerCert),
+				keyPath:      platform.GetFilePath(platform.ServerKey),
+				wantResp:     `simple get message`,
+			},
+			{
+				desc:         "Succcess for HTTP2 client with TLS ",
+				httpsVersion: 2,
+				url:          "https://localhost:20443/simpleget?key=api-key",
+				certPath:     platform.GetFilePath(platform.ServerCert),
+				keyPath:      platform.GetFilePath(platform.ServerKey),
+				wantResp:     `simple get message`,
+			},
+		*/
+	}
+
+	for _, tc := range testData {
+		func() {
+			var resp []byte
+			var err error
+
+			// Set HTTP request
+			if tc.httpsVersion == 0 {
+				resp, err = client.DoGet(fmt.Sprintf(tc.url, s.Ports().ListenerPort))
+			} else {
+				resp, err = client.DoHttpsGet(tc.url, tc.httpsVersion, tc.certPath, tc.keyPath)
+			}
+			if tc.wantError == nil {
+				if err != nil {
+					t.Fatal(err)
+				}
+				if !strings.Contains(string(resp), tc.wantResp) {
+					t.Errorf("Test desc (%v) expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
+				}
+			} else if !strings.Contains(err.Error(), tc.wantError.Error()) {
+				t.Errorf("Test (%s): failed\nexpected: %v\ngot: %v", tc.desc, tc.wantError, err)
 			}
 		}()
 	}

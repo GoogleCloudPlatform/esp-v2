@@ -50,8 +50,87 @@ const (
 	statPrefix = "ingress_http"
 )
 
+// MakeListeners provides dynamic listeners for Envoy
+func MakeListeners(serviceInfo *sc.ServiceInfo) ([]*v2pb.Listener, error) {
+	var listeners []*v2pb.Listener
+
+	port := serviceInfo.Options.ListenerPort
+	isSsl := false
+	if serviceInfo.Options.SslPort != 0 {
+		port = serviceInfo.Options.SslPort
+		isSsl = true
+	}
+
+	listener, err := makeListener(serviceInfo, port, isSsl)
+	if err != nil {
+		return nil, err
+	}
+	listeners = append(listeners, listener)
+
+	redirect_listener, err := makeRedirectListener(serviceInfo)
+	if err != nil {
+		return nil, err
+	}
+	if serviceInfo.Options.SslPort != 0 {
+		listeners = append(listeners, redirect_listener)
+	}
+
+	return listeners, nil
+}
+
+func makeRedirectListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
+	httpFilters := []*hcmpb.HttpFilter{}
+	routerFilter := makeRouterFilter(serviceInfo.Options)
+	httpFilters = append(httpFilters, routerFilter)
+	route, err := MakeRedirectRouteConfig(serviceInfo)
+	if err != nil {
+		return nil, fmt.Errorf("MakeRedirectRouteConfig got err: %s", err)
+	}
+
+	httpConMgr := &hcmpb.HttpConnectionManager{
+		CodecType:  hcmpb.HttpConnectionManager_AUTO,
+		StatPrefix: statPrefix,
+		RouteSpecifier: &hcmpb.HttpConnectionManager_RouteConfig{
+			RouteConfig: route,
+		},
+	}
+
+	jsonStr, _ := util.ProtoToJson(httpConMgr)
+	glog.Infof("adding Http Connection Manager config: %v", jsonStr)
+	httpConMgr.HttpFilters = httpFilters
+
+	// HTTP filter configuration
+	httpFilterConfig, err := ptypes.MarshalAny(httpConMgr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v2pb.Listener{
+		Address: &corepb.Address{
+			Address: &corepb.Address_SocketAddress{
+				SocketAddress: &corepb.SocketAddress{
+					Address: serviceInfo.Options.ListenerAddress,
+					PortSpecifier: &corepb.SocketAddress_PortValue{
+						PortValue: uint32(serviceInfo.Options.ListenerPort),
+					},
+				},
+			},
+		},
+		FilterChains: []*listenerpb.FilterChain{
+			{
+				Filters: []*listenerpb.Filter{
+					{
+						Name:       util.HTTPConnectionManager,
+						ConfigType: &listenerpb.Filter_TypedConfig{TypedConfig: httpFilterConfig},
+					},
+				},
+			},
+		},
+	}, nil
+}
+
 // MakeListener provides a dynamic listener for Envoy
-func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
+func makeListener(serviceInfo *sc.ServiceInfo, port int, isSsl bool) (*v2pb.Listener, error) {
 	httpFilters := []*hcmpb.HttpFilter{}
 
 	if serviceInfo.Options.CorsPreset == "basic" || serviceInfo.Options.CorsPreset == "cors_with_regex" {
@@ -182,27 +261,35 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		return nil, err
 	}
 
+	filterChain := &listenerpb.FilterChain{
+		Filters: []*listenerpb.Filter{
+			{
+				Name:       util.HTTPConnectionManager,
+				ConfigType: &listenerpb.Filter_TypedConfig{TypedConfig: httpFilterConfig},
+			},
+		},
+	}
+	if isSsl {
+		transportSocket, err := util.CreateDownstreamTransportSocket(
+			serviceInfo.Options.EnvoyCertPath, serviceInfo.Options.EnvoyKeyPath)
+		if err != nil {
+			return nil, err
+		}
+		filterChain.TransportSocket = transportSocket
+	}
+
 	return &v2pb.Listener{
 		Address: &corepb.Address{
 			Address: &corepb.Address_SocketAddress{
 				SocketAddress: &corepb.SocketAddress{
 					Address: serviceInfo.Options.ListenerAddress,
 					PortSpecifier: &corepb.SocketAddress_PortValue{
-						PortValue: uint32(serviceInfo.Options.ListenerPort),
+						PortValue: uint32(port),
 					},
 				},
 			},
 		},
-		FilterChains: []*listenerpb.FilterChain{
-			{
-				Filters: []*listenerpb.Filter{
-					{
-						Name:       util.HTTPConnectionManager,
-						ConfigType: &listenerpb.Filter_TypedConfig{TypedConfig: httpFilterConfig},
-					},
-				},
-			},
-		},
+		FilterChains: []*listenerpb.FilterChain{filterChain},
 	}, nil
 }
 

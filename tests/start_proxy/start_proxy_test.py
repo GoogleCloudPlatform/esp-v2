@@ -134,6 +134,15 @@ class TestStartProxy(unittest.TestCase):
               '--check_metadata',
               '--disable_tracing'
               ]),
+            # ssl_port specified
+            (['--backend_protocol=http', '-R=managed',
+              '--listener_port=8080',  '--disable_tracing', '--ssl_port=8443'],
+             ['bin/configmanager', '--logtostderr', '--backend_protocol', 'http',
+              '--cluster_address', '127.0.0.1', '--cluster_port', '8082',
+              '--rollout_strategy','managed', '--v', '0',
+              '--listener_port', '8080', '--ssl_port', '8443',
+              '--disable_tracing'
+              ]),
             # with service account key
             (['--service=test_bookstore.gloud.run',
               '--backend=http://127.0.0.1',
@@ -201,7 +210,8 @@ class TestStartProxy(unittest.TestCase):
             ['--backend_dns_lookup_family=v4'],
             ['--non_gcp'],
             ['--http_port=80', '--http2_port=80'],
-            ['--http_port=80', '--listener_port=80']
+            ['--http_port=80', '--listener_port=80'],
+            ['--ssl_port=8080', '--listener_port=8080']
         ]
 
         for flags in testcases:

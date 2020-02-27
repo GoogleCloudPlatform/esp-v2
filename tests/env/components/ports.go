@@ -58,6 +58,7 @@ const (
 	TestGRPCStreaming
 	TestGRPCLongStreaming
 	TestGRPCWeb
+	TestHttpsClients
 	TestHttp1Basic
 	TestHttp1JWT
 	TestInvalidOpenIDConnectDiscovery
@@ -128,13 +129,16 @@ var (
 	// Maximum number of ports used by jwt fake servers.
 	jwtPortNum = uint16(len(testdata.ProviderConfigs))
 
-	// Ports allocated to Jwt open-id servers
 	preAllocatedPorts = map[uint16]bool{
+		// Ports allocated to Jwt open-id servers
 		32024: true,
 		32025: true,
 		32026: true,
 		32027: true,
 		55550: true,
+
+		// Ports allocated to listener for HTTPS traffic
+		20443: true,
 	}
 )
 

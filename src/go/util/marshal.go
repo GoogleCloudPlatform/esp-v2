@@ -93,6 +93,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(routerpb.Router), nil
 	case "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext":
 		return new(authpb.UpstreamTlsContext), nil
+	case "type.googleapis.com/envoy.api.v2.auth.DownstreamTlsContext":
+		return new(authpb.DownstreamTlsContext), nil
 	default:
 		return nil, fmt.Errorf("unexpected protobuf.Any with url: %s", url)
 	}

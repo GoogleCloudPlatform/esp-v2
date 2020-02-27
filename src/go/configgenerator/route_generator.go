@@ -32,8 +32,10 @@ import (
 )
 
 const (
-	routeName       = "local_route"
-	virtualHostName = "backend"
+	routeName               = "local_route"
+	redirectRouteName       = "redirect_route"
+	virtualHostName         = "backend"
+	redirectVirtualHostName = "redirect_backend"
 )
 
 func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*v2pb.RouteConfiguration, error) {
@@ -163,6 +165,37 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*v2pb.RouteConfigurat
 	return &v2pb.RouteConfiguration{
 		Name:         routeName,
 		VirtualHosts: virtualHosts,
+	}, nil
+}
+
+func MakeRedirectRouteConfig(serviceInfo *configinfo.ServiceInfo) (*v2pb.RouteConfiguration, error) {
+	host := &routepb.VirtualHost{
+		Name:    redirectVirtualHostName,
+		Domains: []string{"*"},
+		Routes: []*routepb.Route{
+			{
+				Match: &routepb.RouteMatch{
+					PathSpecifier: &routepb.RouteMatch_Prefix{
+						Prefix: "/",
+					},
+				},
+				Action: &routepb.Route_Redirect{
+					Redirect: &routepb.RedirectAction{
+						PathRewriteSpecifier: &routepb.RedirectAction_PathRedirect{
+							PathRedirect: "/",
+						},
+						SchemeRewriteSpecifier: &routepb.RedirectAction_HttpsRedirect{
+							HttpsRedirect: true,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	return &v2pb.RouteConfiguration{
+		Name:         redirectRouteName,
+		VirtualHosts: []*routepb.VirtualHost{host},
 	}, nil
 }
 

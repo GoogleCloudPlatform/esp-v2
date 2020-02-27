@@ -52,6 +52,11 @@ const (
 	// DefaultRootCAPaths is the default certs path.
 	DefaultRootCAPaths = "/etc/ssl/certs/ca-certificates.crt"
 
+	// EnvoyCertPath is the certs path for Envoy, required to accept HTTPS traffic
+	EnvoyCertPath = "/etc/envoy/ssl/envoy.crt"
+	// EnvoyKeyPath is the certs path for Envoy, required to accept HTTPS traffic
+	EnvoyKeyPath = "/etc/envoy/ssl/envoy.key"
+
 	// JwtPayloadMetadataName is the field name passed into metadata
 	JwtPayloadMetadataName = "jwt_payloads"
 

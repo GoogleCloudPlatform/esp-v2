@@ -1103,6 +1103,192 @@ func TestHealthCheckFilter(t *testing.T) {
 	}
 }
 
+func TestMakeListeners(t *testing.T) {
+	testdata := []struct {
+		desc              string
+		protocol          string
+		sslPort           int
+		fakeServiceConfig *confpb.Service
+		wantListeners     []string
+	}{
+		{
+			desc:     "Success, generate redirect listener when ssl_port is configured",
+			protocol: "http",
+			sslPort:  8443,
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "endpoints.examples.bookstore.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name: "CreateShelf",
+							},
+						},
+					},
+				},
+			},
+			wantListeners: []string{
+				`{
+					"address":{
+						"socketAddress":{
+							"address":"0.0.0.0",
+							"portValue":8443
+							}
+					},
+					"filterChains":[
+						{
+							"filters":[
+								{
+									"name":"envoy.http_connection_manager",
+									"typedConfig":{
+										"@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+									  "httpFilters":[
+											{
+												"name":"envoy.router",
+												"typedConfig":{
+													"@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
+													"startChildSpan":true
+												}
+											}
+										],
+										"routeConfig":{
+											"name":"local_route",
+											"virtualHosts":[
+												{
+													"domains":["*"],
+													"name":"backend",
+													"routes":[
+														{
+															"match":{
+																"prefix":"/"
+															},
+															"route":{
+																"cluster":"bookstore.endpoints.project123.cloud.goog_local",
+																"timeout":"15s"
+															}
+														}
+													]
+												}
+											]
+										},
+										"statPrefix":"ingress_http",
+										"tracing":{},
+										"useRemoteAddress":false,
+										"xffNumTrustedHops":2
+									}
+								}
+							],
+							"transportSocket":{
+								"name":"envoy.transport_sockets.tls",
+								"typedConfig":{
+									"@type":"type.googleapis.com/envoy.api.v2.auth.DownstreamTlsContext",
+									"commonTlsContext":{
+										"alpnProtocols": ["h2", "http/1.1"],
+										"tlsCertificates":[
+											{
+												"certificateChain":{
+													"filename":"/etc/envoy/ssl/envoy.crt"
+											  },
+					 						  "privateKey":{
+												  "filename":"/etc/envoy/ssl/envoy.key"
+											  }
+										  }
+									  ]
+								  }
+							  }
+						  }
+					  }
+					]
+				}`,
+				`{
+					"address": {
+						"socketAddress": {
+							"address": "0.0.0.0",
+							"portValue": 8080
+						}
+					},
+					"filterChains": [
+						{
+							"filters": [
+								{
+									"name": "envoy.http_connection_manager",
+									"typedConfig": {
+										"@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+										"httpFilters": [
+											{
+												"name": "envoy.router",
+												"typedConfig": {
+													"@type": "type.googleapis.com/envoy.config.filter.http.router.v2.Router",
+													"startChildSpan": true
+												}
+											}
+										],
+										"routeConfig": {
+											"name": "redirect_route",
+											"virtualHosts": [
+												{
+													"domains": [
+														"*"
+													],
+													"name": "redirect_backend",
+													"routes": [
+														{
+															"match": {
+																"prefix": "/"
+															},
+															"redirect": {
+																"PathRedirect": "/",
+																"HttpsRedirect": true
+															}
+														}
+													]
+												}
+											]
+										},
+										"statPrefix": "ingress_http"
+									}
+								}
+							]
+						}
+					]
+				}`,
+			},
+		},
+	}
+
+	for i, tc := range testdata {
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.SslPort = tc.sslPort
+		opts.BackendProtocol = tc.protocol
+		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		listeners, err := MakeListeners(fakeServiceInfo)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(listeners) != len(tc.wantListeners) {
+			t.Errorf("Test Desc(%d): %s, MakeListeners failed,\ngot: %d, \nwant: %d", i, tc.desc, len(listeners), len(tc.wantListeners))
+		}
+
+		marshaler := &jsonpb.Marshaler{}
+		for j, wantListener := range tc.wantListeners {
+			gotListener, err := marshaler.MarshalToString(listeners[j])
+			if err != nil {
+				t.Fatal(err)
+			}
+			gotListener = normalizeJson(gotListener)
+			want := normalizeJson(wantListener)
+			if !strings.EqualFold(gotListener, want) {
+				t.Errorf("Test Desc(%d): %s, MakeListeners failed for %d,\ngot: %s, \nwant: %s", i, tc.desc, j, gotListener, want)
+			}
+		}
+	}
+}
+
 func normalizeJson(input string) string {
 	var jsonObject map[string]interface{}
 	json.Unmarshal([]byte(input), &jsonObject)

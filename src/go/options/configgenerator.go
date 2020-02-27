@@ -48,7 +48,10 @@ type ConfigGeneratorOptions struct {
 	Healthz              string
 	ServiceManagementURL string
 	ListenerPort         int
+	SslPort              int
 	RootCertsPath        string
+	EnvoyCertPath        string
+	EnvoyKeyPath         string
 
 	// Flags for non_gcp deployment.
 	ServiceAccountKey string
@@ -106,6 +109,8 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		ListenerAddress:               "0.0.0.0",
 		ListenerPort:                  8080,
 		RootCertsPath:                 util.DefaultRootCAPaths,
+		EnvoyCertPath:                 util.EnvoyCertPath,
+		EnvoyKeyPath:                  util.EnvoyKeyPath,
 		LogJwtPayloads:                "",
 		LogRequestHeaders:             "",
 		LogResponseHeaders:            "",

@@ -165,6 +165,11 @@ environment variable or by passing "-k" flag to this script.
        backward compatible for ESPv1 and will be deprecated.
        Please use the flag --listener_port.''')
 
+    parser.add_argument('-S', '--ssl_port', default=None, type=int, help='''
+    Expose a port for HTTPS requests.  Accepts both HTTP/1.x and HTTP/2
+    secure connections. Requires the certificate and key files
+    /etc/endpoints/ssl/envoy.crt and /etc/endpoints/ssl/envoy.key''')
+
     parser.add_argument('-z', '--healthz', default=None, help='''Define a
     health checking endpoint on the same ports as the application backend. For
     example, "-z healthz" makes ESPv2 return code 200 for location "/healthz",
@@ -511,6 +516,8 @@ def enforce_conflict_args(args):
     if len(port_flags) > 1:
         return "Multiple port flags {} are not allowed, please just use --listener_port flag".format(",".join(port_flags))
 
+    if args.ssl_port and args.ssl_port == args.listener_port:
+        return "Flag --ssl_port should not be same as --listener_port."
     return None
 
 def gen_proxy_config(args):
@@ -558,6 +565,8 @@ def gen_proxy_config(args):
         proxy_conf.extend(["--listener_port", str(args.http2_port)])
     if args.listener_port:
         proxy_conf.extend(["--listener_port", str(args.listener_port)])
+    if args.ssl_port:
+        proxy_conf.extend(["--ssl_port", str(args.ssl_port)])
 
     if args.service:
         proxy_conf.extend(["--service", args.service])

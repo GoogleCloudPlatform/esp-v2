@@ -16,6 +16,8 @@ package client
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -23,6 +25,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
+	"golang.org/x/net/http2"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jws"
 
@@ -72,7 +75,12 @@ func DoWithHeaders(url, method, message string, headers map[string]string) ([]by
 		}
 	}
 
-	resp, err := http.DefaultClient.Do(request)
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}}
+
+	resp, err := client.Do(request)
 	if err != nil {
 		return nil, fmt.Errorf("http %s error: %v", method, err)
 	}
@@ -196,4 +204,45 @@ func DoCorsPreflightRequest(url, origin, requestMethod, requestHeader, referer s
 	}
 	defer resp.Body.Close()
 	return resp.Header, nil
+}
+
+// DoHttpsGet performs a HTTPS Get request to a specified url
+func DoHttpsGet(url string, httpVersion int, certPath, keyPath string) ([]byte, error) {
+	client := &http.Client{}
+	caCert, err := ioutil.ReadFile(certPath)
+	if err != nil {
+		return nil, err
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+	// Create TLS configuration with the certificate of the server
+	tlsConfig := &tls.Config{
+		RootCAs: caCertPool,
+	}
+
+	// Use the proper transport in the client
+	switch httpVersion {
+	case 1:
+		client.Transport = &http.Transport{
+			TLSClientConfig: tlsConfig,
+		}
+	case 2:
+		client.Transport = &http2.Transport{
+			TLSClientConfig: tlsConfig,
+		}
+	}
+
+	resp, err := client.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, string(body))
+	}
+	return body, err
 }

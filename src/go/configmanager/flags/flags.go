@@ -51,6 +51,7 @@ var (
 	ServiceManagementURL = flag.String("service_management_url", "https://servicemanagement.googleapis.com", "url of service management server")
 
 	ListenerPort = flag.Int("listener_port", 8080, "listener port")
+	SslPort      = flag.Int("ssl_port", 0, "listener port for HTTPS traffic")
 	Healthz      = flag.String("healthz", "", "path for health check of ESPv2 proxy itself")
 
 	RootCertsPath = flag.String("root_certs_path", util.DefaultRootCAPaths, "Path to the root certificates to make TSL connection.")
@@ -59,10 +60,6 @@ var (
 	ServiceAccountKey = flag.String("service_account_key", "", `Use the service account key JSON file to access the service control and the
 	service management.  You can also set {creds_key} environment variable to the location of the service account credentials JSON file. If the option is
   omitted, the proxy contacts the metadata service to fetch an access token`)
-
-	// Flags for testing purpose.
-	SkipJwtAuthnFilter       = flag.Bool("skip_jwt_authn_filter", false, "skip jwt authn filter, for test purpose")
-	SkipServiceControlFilter = flag.Bool("skip_service_control_filter", false, "skip service control filter, for test purpose")
 
 	// Envoy configurations.
 	EnvoyUseRemoteAddress  = flag.Bool("envoy_use_remote_address", false, "Envoy HttpConnectionManager configuration, please refer to envoy documentation for detailed information.")
@@ -93,6 +90,12 @@ var (
 	ScReportRetries = flag.Int("service_control_report_retries", -1, `Set the retry times for service control Report request. Must be >= 0 and the default is 5 if not set.`)
 
 	ComputePlatformOverride = flag.String("compute_platform_override", "", "the overridden platform where the proxy is running at")
+
+	// Flags for testing purpose.
+	SkipJwtAuthnFilter       = flag.Bool("skip_jwt_authn_filter", false, "skip jwt authn filter, for test purpose")
+	SkipServiceControlFilter = flag.Bool("skip_service_control_filter", false, "skip service control filter, for test purpose")
+	EnvoyCertPath            = flag.String("envoy_cert_path", "/etc/envoy/ssl/envoy.crt", "envoy cert path, to serve HTTPS traffic")
+	EnvoyKeyPath             = flag.String("envoy_key_path", "/etc/envoy/ssl/envoy.key", "envoy key path, to serve HTTPS traffic")
 )
 
 func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
@@ -112,8 +115,11 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		ListenerAddress:               *ListenerAddress,
 		ServiceManagementURL:          *ServiceManagementURL,
 		ListenerPort:                  *ListenerPort,
+		SslPort:                       *SslPort,
 		Healthz:                       *Healthz,
 		RootCertsPath:                 *RootCertsPath,
+		EnvoyCertPath:                 *EnvoyCertPath,
+		EnvoyKeyPath:                  *EnvoyKeyPath,
 		ServiceAccountKey:             *ServiceAccountKey,
 		SkipJwtAuthnFilter:            *SkipJwtAuthnFilter,
 		SkipServiceControlFilter:      *SkipServiceControlFilter,

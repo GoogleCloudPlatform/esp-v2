@@ -22,7 +22,6 @@ import (
 
 	gen "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator"
 	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
-	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
@@ -45,7 +44,7 @@ func ServiceToBootstrapConfig(serviceConfig *confpb.Service, id string, opts opt
 	if err != nil {
 		return nil, err
 	}
-	listener, err := gen.MakeListener(serviceInfo)
+	listeners, err := gen.MakeListeners(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -57,10 +56,8 @@ func ServiceToBootstrapConfig(serviceConfig *confpb.Service, id string, opts opt
 	}
 
 	bt.StaticResources = &bootstrappb.Bootstrap_StaticResources{
-		Listeners: []*v2pb.Listener{
-			listener,
-		},
-		Clusters: clusters,
+		Listeners: listeners,
+		Clusters:  clusters,
 	}
 	return bt, nil
 }
