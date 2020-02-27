@@ -116,7 +116,7 @@ const (
 type BackendProtocol int32
 
 // Backend protocol.
-// TODO(b/149050012): add in HTTP2
+// TODO(nareddyt): add in HTTP2
 const (
 	HTTP1 BackendProtocol = iota
 	GRPC

@@ -205,7 +205,7 @@ func makeBackendCluster(opt *options.ConfigGeneratorOptions, brc *sc.BackendRout
 		LoadAssignment:       util.CreateLoadAssignment(brc.Hostname, brc.Port),
 	}
 
-	// TODO(b/149050012): Support HTTP2
+	// TODO(nareddyt): Support HTTP2
 	isHttp2 := brc.Protocol == util.GRPC
 
 	if brc.UseTLS {
