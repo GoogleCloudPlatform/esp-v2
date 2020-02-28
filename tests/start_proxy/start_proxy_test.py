@@ -104,6 +104,15 @@ class TestStartProxy(unittest.TestCase):
               '--check_metadata',
               '--disable_tracing'
               ]),
+            # serverSslPath specified
+            (['-R=managed','--listener_port=8080',  '--disable_tracing',
+              '--server_ssl_path=/etc/endpoint/ssl'],
+             ['bin/configmanager', '--logtostderr',
+              '--backend_address', 'http://127.0.0.1:8082',
+              '--rollout_strategy', 'managed', '--v', '0',
+              '--listener_port', '8080', '--server_ssl_path',
+              '/etc/endpoint/ssl', '--disable_tracing'
+              ]),
             # http2_port specified.
             (['-R=managed',
               '--http2_port=8079', '--service_control_quota_retries=3',
@@ -132,16 +141,6 @@ class TestStartProxy(unittest.TestCase):
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
               '--check_metadata',
-              '--disable_tracing'
-              ]),
-            # serverSslPath specified
-            (['--backend_protocol=http', '-R=managed',
-              '--listener_port=8080',  '--disable_tracing',
-              '--server_ssl_path=/etc/endpoint/ssl'],
-             ['bin/configmanager', '--logtostderr', '--backend_protocol', 'http',
-              '--cluster_address', '127.0.0.1', '--cluster_port', '8082',
-              '--rollout_strategy','managed', '--v', '0',
-              '--listener_port', '8080', '--server_ssl_path', '/etc/endpoint/ssl',
               '--disable_tracing'
               ]),
             # with service account key
@@ -211,8 +210,8 @@ class TestStartProxy(unittest.TestCase):
             ['--backend_dns_lookup_family=v4'],
             ['--non_gcp'],
             ['--http_port=80', '--http2_port=80'],
-            ['--http_port=80', '--listener_port=80'],
-            ]
+            ['--http_port=80', '--listener_port=80']
+        ]
 
         for flags in testcases:
           with self.assertRaises(SystemExit) as cm:

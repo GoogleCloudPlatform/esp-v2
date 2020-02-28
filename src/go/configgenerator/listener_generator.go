@@ -59,7 +59,7 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) ([]*v2pb.Listener, error) {
 	return []*v2pb.Listener{listener}, nil
 }
 
-// MakeListener provides a dynamic listener for Envoy
+// makeListener provides a dynamic listener for Envoy
 func makeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	httpFilters := []*hcmpb.HttpFilter{}
 

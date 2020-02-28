@@ -1209,7 +1209,6 @@ func TestMakeListeners(t *testing.T) {
 	for i, tc := range testdata {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.ServerSslPath = tc.serverSslPath
-		opts.BackendProtocol = tc.protocol
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
