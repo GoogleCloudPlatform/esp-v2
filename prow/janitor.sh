@@ -26,6 +26,7 @@ do
   echo "Deleting GKE service: ${service}"
   gcloud container clusters delete ${service} \
     --zone=us-central1-a \
+    --async \
     --quiet
 done
 
