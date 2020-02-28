@@ -32,7 +32,6 @@ import (
 func TestServiceManagementWithTLS(t *testing.T) {
 	args := []string{
 		"--service_config_id=test-config-id",
-
 		"--rollout_strategy=fixed",
 		"--suppress_envoy_headers",
 	}
@@ -95,7 +94,6 @@ func TestServiceControlWithTLS(t *testing.T) {
 	args := []string{
 		"--service=bookstore-service",
 		"--service_config_id=test-config-id",
-
 		"--rollout_strategy=fixed",
 	}
 
@@ -154,7 +152,6 @@ func TestServiceControlWithTLS(t *testing.T) {
 func TestHttpsClients(t *testing.T) {
 	args := []string{
 		"--service_config_id=test-config-id",
-		"--backend_protocol=http",
 		"--rollout_strategy=fixed",
 		"--server_ssl_path=../../env/testdata/",
 	}
