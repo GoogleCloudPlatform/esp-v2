@@ -49,9 +49,7 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         "//api/envoy/http/backend_auth:config_proto_cc_proto",
-        "//src/envoy/utils:iam_token_subscriber_lib",
-        "//src/envoy/utils:imds_token_subscriber_lib",
-        "//src/envoy/utils:token_subscriber_factory_lib",
+        "//src/envoy/token:token_subscriber_factory_lib",
     ],
 )
 
@@ -66,7 +64,7 @@ envoy_cc_test(
         ":config_parser_lib",
         ":filter_lib",
         ":mocks_lib",
-        "//src/envoy/utils:mocks_lib",
+        "//src/envoy/token:mocks_lib",
         "@envoy//test/mocks/http:http_mocks",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/test_common:utility_lib",

@@ -15,7 +15,7 @@
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
-#include "src/envoy/utils/mocks.h"
+#include "src/envoy/token/mocks.h"
 #include "test/mocks/server/mocks.h"
 
 using ::testing::_;
@@ -37,7 +37,7 @@ class ConfigParserImplTest : public ::testing::Test {
   google::api::envoy::http::backend_auth::FilterConfig proto_config_;
   testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
       mock_factory_context_;
-  testing::NiceMock<Utils::MockTokenSubscriberFactory>
+  testing::NiceMock<Token::Test::MockTokenSubscriberFactory>
       mock_token_subscriber_factory_;
 
   std::unique_ptr<FilterConfigParser> config_parser_;
@@ -82,30 +82,28 @@ rules {
 
   const std::string token_bar("token-bar");
 
-  EXPECT_CALL(
-      mock_token_subscriber_factory_,
-      createImdsTokenSubscriber(
-          "this-is-cluster",
-          "this-is-uri?format=standard&audience=audience-foo", false, _))
-      .WillOnce(Invoke(
-          [&token_foo](const std::string&, const std::string&, const bool,
-                       Utils::ImdsTokenSubscriber::TokenUpdateFunc callback)
-              -> Utils::ImdsTokenSubscriberPtr {
-            callback(token_foo);
-            return nullptr;
-          }));
-  EXPECT_CALL(
-      mock_token_subscriber_factory_,
-      createImdsTokenSubscriber(
-          "this-is-cluster",
-          "this-is-uri?format=standard&audience=audience-bar", false, _))
-      .WillOnce(Invoke(
-          [&token_bar](const std::string&, const std::string&, const bool,
-                       Utils::ImdsTokenSubscriber::TokenUpdateFunc callback)
-              -> Utils::ImdsTokenSubscriberPtr {
-            callback(token_bar);
-            return nullptr;
-          }));
+  EXPECT_CALL(mock_token_subscriber_factory_,
+              createImdsTokenSubscriber(
+                  Token::TokenType::IdentityToken, "this-is-cluster",
+                  "this-is-uri?format=standard&audience=audience-foo", _))
+      .WillOnce(Invoke([&token_foo](const Token::TokenType&, const std::string&,
+                                    const std::string&,
+                                    Token::UpdateTokenCallback callback)
+                           -> Token::TokenSubscriberPtr {
+        callback(token_foo);
+        return nullptr;
+      }));
+  EXPECT_CALL(mock_token_subscriber_factory_,
+              createImdsTokenSubscriber(
+                  Token::TokenType::IdentityToken, "this-is-cluster",
+                  "this-is-uri?format=standard&audience=audience-bar", _))
+      .WillOnce(Invoke([&token_bar](const Token::TokenType&, const std::string&,
+                                    const std::string&,
+                                    Token::UpdateTokenCallback callback)
+                           -> Token::TokenSubscriberPtr {
+        callback(token_bar);
+        return nullptr;
+      }));
 
   setUp(filter_config);
 
@@ -143,16 +141,17 @@ rules {
   const std::string id_token_foo("id-token-foo");
   const std::string id_token_bar("id-token-bar");
 
-  EXPECT_CALL(mock_token_subscriber_factory_,
-              createImdsTokenSubscriber("this-is-imds-cluster",
-                                        "this-is-imds-uri", true, _))
-      .WillOnce(Invoke(
-          [&access_token](const std::string&, const std::string&, const bool,
-                          Utils::ImdsTokenSubscriber::TokenUpdateFunc callback)
-              -> Utils::ImdsTokenSubscriberPtr {
-            callback(access_token);
-            return nullptr;
-          }));
+  EXPECT_CALL(
+      mock_token_subscriber_factory_,
+      createImdsTokenSubscriber(Token::TokenType::AccessToken,
+                                "this-is-imds-cluster", "this-is-imds-uri", _))
+      .WillOnce(Invoke([&access_token](const Token::TokenType&,
+                                       const std::string&, const std::string&,
+                                       Token::UpdateTokenCallback callback)
+                           -> Token::TokenSubscriberPtr {
+        callback(access_token);
+        return nullptr;
+      }));
 
   EXPECT_CALL(mock_token_subscriber_factory_,
               createIamTokenSubscriber(_, "this-is-iam-cluster",
@@ -160,13 +159,12 @@ rules {
                                        _, _, _, _))
       .WillOnce(
           Invoke([&id_token_foo](
-                     Utils::IamTokenSubscriber::TokenGetFunc access_token_fn,
-                     const std::string&, const std::string&,
-                     Utils::IamTokenSubscriber::TokenType,
+                     Token::TokenType, const std::string&, const std::string&,
+                     Token::UpdateTokenCallback callback,
                      const ::google::protobuf::RepeatedPtrField<std::string>&,
                      const ::google::protobuf::RepeatedPtrField<std::string>&,
-                     Utils::IamTokenSubscriber::TokenUpdateFunc callback)
-                     -> Utils::IamTokenSubscriberPtr {
+                     Token::GetTokenFunc access_token_fn)
+                     -> Token::TokenSubscriberPtr {
             EXPECT_EQ(access_token_fn(), "access_token");
             callback(id_token_foo);
             return nullptr;
@@ -177,13 +175,12 @@ rules {
                                        _, _, _, _))
       .WillOnce(
           Invoke([&id_token_bar](
-                     Utils::IamTokenSubscriber::TokenGetFunc access_token_fn,
-                     const std::string&, const std::string&,
-                     Utils::IamTokenSubscriber::TokenType,
+                     Token::TokenType, const std::string&, const std::string&,
+                     Token::UpdateTokenCallback callback,
                      const ::google::protobuf::RepeatedPtrField<std::string>&,
                      const ::google::protobuf::RepeatedPtrField<std::string>&,
-                     Utils::IamTokenSubscriber::TokenUpdateFunc callback)
-                     -> Utils::IamTokenSubscriberPtr {
+                     Token::GetTokenFunc access_token_fn)
+                     -> Token::TokenSubscriberPtr {
             EXPECT_EQ(access_token_fn(), "access_token");
             callback(id_token_bar);
             return nullptr;

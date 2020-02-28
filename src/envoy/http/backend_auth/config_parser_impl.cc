@@ -22,8 +22,10 @@ namespace BackendAuth {
 
 using ::google::api::envoy::http::backend_auth::FilterConfig;
 using ::google::api::envoy::http::common::AccessToken;
-using Utils::IamTokenSubscriber;
-using Utils::ImdsTokenSubscriber;
+using Token::GetTokenFunc;
+using Token::TokenSubscriber;
+using Token::TokenType;
+using Token::UpdateTokenCallback;
 
 // TODO(kyuc): add unit tests for all possible backend rule configs.
 
@@ -32,20 +34,19 @@ AudienceContext::AudienceContext(
         proto_config,
     Server::Configuration::FactoryContext& context,
     const FilterConfig& filter_config,
-    const Utils::TokenSubscriberFactory& token_subscriber_factory,
-    IamTokenSubscriber::TokenGetFunc access_token_fn)
+    const Token::TokenSubscriberFactory& token_subscriber_factory,
+    GetTokenFunc access_token_fn)
     : tls_(context.threadLocal().allocateSlot()) {
   tls_->set([](Event::Dispatcher&) -> ThreadLocal::ThreadLocalObjectSharedPtr {
     return std::make_shared<TokenCache>();
   });
 
-  ImdsTokenSubscriber::TokenUpdateFunc callback =
-      [this](const std::string& token) {
-        TokenSharedPtr new_token = std::make_shared<std::string>(token);
-        tls_->runOnAllThreads([this, new_token]() {
-          tls_->getTyped<TokenCache>().token_ = new_token;
-        });
-      };
+  UpdateTokenCallback callback = [this](absl::string_view token) {
+    TokenSharedPtr new_token = std::make_shared<std::string>(token);
+    tls_->runOnAllThreads([this, new_token]() {
+      tls_->getTyped<TokenCache>().token_ = new_token;
+    });
+  };
 
   switch (filter_config.id_token_info_case()) {
     case FilterConfig::kIamToken: {
@@ -57,9 +58,8 @@ AudienceContext::AudienceContext(
       const ::google::protobuf::RepeatedPtrField<std::string>& delegates =
           filter_config.iam_token().delegates();
       iam_token_sub_ptr_ = token_subscriber_factory.createIamTokenSubscriber(
-          access_token_fn, cluster, real_uri, IamTokenSubscriber::IdentityToken,
-          delegates, ::google::protobuf::RepeatedPtrField<std::string>(),
-          callback);
+          TokenType::IdentityToken, cluster, real_uri, callback, delegates,
+          ::google::protobuf::RepeatedPtrField<std::string>(), access_token_fn);
     }
       return;
     case FilterConfig::kImdsToken: {
@@ -68,10 +68,8 @@ AudienceContext::AudienceContext(
       const std::string real_uri = absl::StrCat(
           uri, "?format=standard&audience=", proto_config.jwt_audience());
 
-      imds_token_sub_ptr_ =
-          token_subscriber_factory.createImdsTokenSubscriber(cluster, real_uri,
-                                                             /*json_response=*/
-                                                             false, callback);
+      imds_token_sub_ptr_ = token_subscriber_factory.createImdsTokenSubscriber(
+          TokenType::IdentityToken, cluster, real_uri, callback);
     }
       return;
     default:
@@ -81,7 +79,7 @@ AudienceContext::AudienceContext(
 
 FilterConfigParserImpl::FilterConfigParserImpl(
     const FilterConfig& config, Server::Configuration::FactoryContext& context,
-    const Utils::TokenSubscriberFactory& token_subscriber_factory) {
+    const Token::TokenSubscriberFactory& token_subscriber_factory) {
   // Subscribe access token for fetching id token from iam when IdTokenFromIam
   // is set.
   if (config.id_token_info_case() == FilterConfig::kIamToken) {
@@ -94,10 +92,9 @@ FilterConfigParserImpl::FilterConfigParserImpl(
             config.iam_token().access_token().remote_token().uri();
         access_token_sub_ptr_ =
             token_subscriber_factory.createImdsTokenSubscriber(
-                cluster, uri,
-                /*json_response=*/
-                true, [this](const std::string& access_token) {
-                  access_token_ = access_token;
+                TokenType::AccessToken, cluster, uri,
+                [this](absl::string_view access_token) {
+                  access_token_ = std::string(access_token);
                 });
         break;
       }

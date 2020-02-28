@@ -17,8 +17,9 @@
 #include "src/api_proxy/service_control/logs_metrics_loader.h"
 #include "src/envoy/http/service_control/service_control_call_impl.h"
 
-using Envoy::Extensions::Utils::ImdsTokenSubscriber;
-using Envoy::Extensions::Utils::ServiceAccountTokenGenerator;
+using Envoy::Extensions::Token::ServiceAccountTokenGenerator;
+using Envoy::Extensions::Token::TokenSubscriber;
+using Envoy::Extensions::Token::TokenType;
 using ::google::api::envoy::http::common::AccessToken;
 using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::api::envoy::http::service_control::Service;
@@ -45,8 +46,8 @@ void ServiceControlCallImpl::createImdsTokenSub() {
   const std::string& token_cluster = filter_config_.imds_token().cluster();
   const std::string& token_uri = filter_config_.imds_token().uri();
   imds_token_sub_ = token_subscriber_factory_.createImdsTokenSubscriber(
-      token_cluster, token_uri,
-      /*json_response=*/true, [this](const std::string& token) {
+      TokenType::AccessToken, token_cluster, token_uri,
+      [this](absl::string_view token) {
         TokenSharedPtr new_token = std::make_shared<std::string>(token);
         tls_->runOnAllThreads([this, new_token]() {
           tls_->getTyped<ThreadLocalCache>().set_sc_token(new_token);
@@ -88,10 +89,9 @@ void ServiceControlCallImpl::createIamTokenSub() {
       const std::string& uri =
           filter_config_.iam_token().access_token().remote_token().uri();
       access_token_sub_ = token_subscriber_factory_.createImdsTokenSubscriber(
-          cluster, uri,
-          /*json_response=*/
-          true, [this](const std::string& access_token) {
-            access_token_for_iam_ = access_token;
+          TokenType::AccessToken, cluster, uri,
+          [this](absl::string_view access_token) {
+            access_token_for_iam_ = std::string(access_token);
           });
       break;
     }
@@ -107,16 +107,16 @@ void ServiceControlCallImpl::createIamTokenSub() {
   ::google::protobuf::RepeatedPtrField<std::string> scopes;
   scopes.Add(kServiceControlScope);
   iam_token_sub_ = token_subscriber_factory_.createIamTokenSubscriber(
-      [this]() { return access_token_for_iam_; }, token_cluster, token_uri,
-      Utils::IamTokenSubscriber::AccessToken,
-      filter_config_.iam_token().delegates(), scopes,
-      [this](const std::string& token) {
+      TokenType::AccessToken, token_cluster, token_uri,
+      [this](absl::string_view token) {
         TokenSharedPtr new_token = std::make_shared<std::string>(token);
         tls_->runOnAllThreads([this, new_token]() {
           tls_->getTyped<ThreadLocalCache>().set_sc_token(new_token);
           tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
         });
-      });
+      },
+      filter_config_.iam_token().delegates(), scopes,
+      [this]() { return access_token_for_iam_; });
 }
 
 ServiceControlCallImpl::ServiceControlCallImpl(
