@@ -20,9 +20,7 @@
 #include "api/envoy/http/backend_auth/config.pb.h"
 #include "envoy/thread_local/thread_local.h"
 #include "src/envoy/http/backend_auth/config_parser.h"
-#include "src/envoy/utils/iam_token_subscriber.h"
-#include "src/envoy/utils/imds_token_subscriber.h"
-#include "src/envoy/utils/token_subscriber_factory_impl.h"
+#include "src/envoy/token/token_subscriber_factory_impl.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -41,8 +39,8 @@ class AudienceContext {
           proto_config,
       Server::Configuration::FactoryContext& context,
       const ::google::api::envoy::http::backend_auth::FilterConfig& config,
-      const Utils::TokenSubscriberFactory& token_subscriber_factory,
-      Utils::IamTokenSubscriber::TokenGetFunc access_token_fn);
+      const Token::TokenSubscriberFactory& token_subscriber_factory,
+      Token::GetTokenFunc access_token_fn);
   TokenSharedPtr token() const {
     if (tls_->getTyped<TokenCache>().token_) {
       return tls_->getTyped<TokenCache>().token_;
@@ -52,8 +50,8 @@ class AudienceContext {
 
  private:
   ThreadLocal::SlotPtr tls_;
-  Utils::IamTokenSubscriberPtr iam_token_sub_ptr_;
-  Utils::ImdsTokenSubscriberPtr imds_token_sub_ptr_;
+  Token::TokenSubscriberPtr iam_token_sub_ptr_;
+  Token::TokenSubscriberPtr imds_token_sub_ptr_;
 };
 
 typedef std::unique_ptr<AudienceContext> AudienceContextPtr;
@@ -65,7 +63,7 @@ class FilterConfigParserImpl
   FilterConfigParserImpl(
       const ::google::api::envoy::http::backend_auth::FilterConfig& config,
       Server::Configuration::FactoryContext& context,
-      const Utils::TokenSubscriberFactory& token_subscriber_factory);
+      const Token::TokenSubscriberFactory& token_subscriber_factory);
 
   absl::string_view getAudience(absl::string_view operation) const override {
     static const std::string empty = "";
@@ -88,7 +86,7 @@ class FilterConfigParserImpl
   //  access_token_ is required for authentication during fetching id_token from
   //  IAM server.
   std::string access_token_;
-  Utils::ImdsTokenSubscriberPtr access_token_sub_ptr_;
+  Token::TokenSubscriberPtr access_token_sub_ptr_;
   absl::flat_hash_map<std::string, std::string> operation_map_;
   absl::flat_hash_map<std::string, AudienceContextPtr> audience_map_;
 };

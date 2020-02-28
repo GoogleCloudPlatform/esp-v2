@@ -57,7 +57,7 @@ class FilterConfigImpl : public FilterConfig,
 
   ::google::api::envoy::http::backend_auth::FilterConfig proto_config_;
   FilterStats stats_;
-  const Utils::TokenSubscriberFactoryImpl token_subscriber_factory_;
+  const Token::TokenSubscriberFactoryImpl token_subscriber_factory_;
   FilterConfigParserPtr config_parser_;
 };
 

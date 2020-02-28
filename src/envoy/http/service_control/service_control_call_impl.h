@@ -23,10 +23,7 @@
 #include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/http/service_control/client_cache.h"
 #include "src/envoy/http/service_control/service_control_call.h"
-#include "src/envoy/utils/iam_token_subscriber.h"
-#include "src/envoy/utils/imds_token_subscriber.h"
-#include "src/envoy/utils/sa_token_generator.h"
-#include "src/envoy/utils/token_subscriber_factory_impl.h"
+#include "src/envoy/token/token_subscriber_factory_impl.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -117,20 +114,20 @@ class ServiceControlCallImpl : public ServiceControlCall,
   std::unique_ptr<::google::api_proxy::service_control::RequestBuilder>
       request_builder_;
 
-  const Utils::TokenSubscriberFactoryImpl token_subscriber_factory_;
+  const Token::TokenSubscriberFactoryImpl token_subscriber_factory_;
 
   // Token subscriber used to fetch access token from imds for service control
-  Utils::ImdsTokenSubscriberPtr imds_token_sub_;
+  Token::TokenSubscriberPtr imds_token_sub_;
 
   // Access Token for iam server
   std::string access_token_for_iam_;
   // Token subscriber used to fetch access token from imds for accessing iam
-  Utils::ImdsTokenSubscriberPtr access_token_sub_;
+  Token::TokenSubscriberPtr access_token_sub_;
   // Token subscriber used to fetch access token from iam for service control
-  Utils::IamTokenSubscriberPtr iam_token_sub_;
+  Token::TokenSubscriberPtr iam_token_sub_;
 
-  Utils::ServiceAccountTokenPtr sc_token_gen_;
-  Utils::ServiceAccountTokenPtr quota_token_gen_;
+  Token::ServiceAccountTokenPtr sc_token_gen_;
+  Token::ServiceAccountTokenPtr quota_token_gen_;
   ThreadLocal::SlotPtr tls_;
 };  // namespace ServiceControl
 
