@@ -14,10 +14,10 @@
 
 #pragma once
 
+#include "src/envoy/token/iam_token_info.h"
+#include "src/envoy/token/imds_token_info.h"
 #include "src/envoy/token/sa_token_generator.h"
 #include "src/envoy/token/token_subscriber.h"
-#include "src/envoy/token/imds_token_info.h"
-#include "src/envoy/token/iam_token_info.h"
 
 namespace Envoy {
 namespace Extensions {
