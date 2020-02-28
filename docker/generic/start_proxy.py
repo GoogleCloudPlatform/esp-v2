@@ -168,7 +168,7 @@ environment variable or by passing "-k" flag to this script.
     parser.add_argument('--server_ssl_path', default=None, help='''
     Proxy Server SSL path. When configured, ESPv2 only accepts HTTP/1.x and
     HTTP/2 secure connections on listener_port. Requires the certificate and
-    key files server.crt and server.key within this path.''')
+    key files "server.crt" and "server.key" within this path.''')
 
     parser.add_argument('-z', '--healthz', default=None, help='''Define a
     health checking endpoint on the same ports as the application backend. For

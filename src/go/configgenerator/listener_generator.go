@@ -52,13 +52,11 @@ const (
 
 // MakeListeners provides dynamic listeners for Envoy
 func MakeListeners(serviceInfo *sc.ServiceInfo) ([]*v2pb.Listener, error) {
-	var listeners []*v2pb.Listener
 	listener, err := makeListener(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
-	listeners = append(listeners, listener)
-	return listeners, nil
+	return []*v2pb.Listener{listener}, nil
 }
 
 // MakeListener provides a dynamic listener for Envoy

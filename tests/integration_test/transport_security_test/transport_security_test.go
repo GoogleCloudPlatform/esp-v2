@@ -218,7 +218,7 @@ func TestHttpsClients(t *testing.T) {
 			var resp []byte
 			var err error
 
-			url := fmt.Sprintf("https://localhost:%v/simpleget?key=api-key",s.Ports().ListenerPort)
+			url := fmt.Sprintf("https://localhost:%v/simpleget?key=api-key", s.Ports().ListenerPort)
 			resp, err = client.DoHttpsGet(url, tc.httpsVersion, tc.certPath, tc.keyPath)
 			if tc.wantError == nil {
 				if err != nil {
