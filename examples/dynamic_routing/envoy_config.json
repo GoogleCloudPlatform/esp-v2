@@ -95,6 +95,7 @@
             },
             {
                 "connectTimeout": "20s",
+                "http2ProtocolOptions":{},
                 "loadAssignment": {
                     "clusterName": "http-bookstore-abc123456-uc.a.run.app",
                     "endpoints": [
@@ -120,6 +121,7 @@
                     "typedConfig": {
                         "@type": "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
                         "commonTlsContext": {
+                            "alpnProtocols":["h2"],
                             "validationContext": {
                                 "trustedCa": {
                                     "filename": "/etc/ssl/certs/ca-certificates.crt"

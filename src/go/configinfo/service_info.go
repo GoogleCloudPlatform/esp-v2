@@ -142,7 +142,8 @@ func (s *ServiceInfo) buildCatchAllBackend() error {
 		return fmt.Errorf("error parsing backend uri: %v", err)
 	}
 
-	protocol, tls, err := util.ParseBackendProtocol(scheme)
+	// For local backend, user cannot configure http protocol explicitly.
+	protocol, tls, err := util.ParseBackendProtocol(scheme, "")
 	if err != nil {
 		return err
 	}
@@ -417,7 +418,7 @@ func (s *ServiceInfo) processBackendRule() error {
 			address := fmt.Sprintf("%v:%v", hostname, port)
 
 			if _, exist := backendRoutingClustersMap[address]; !exist {
-				protocol, tls, err := util.ParseBackendProtocol(scheme)
+				protocol, tls, err := util.ParseBackendProtocol(scheme, r.Protocol)
 				if err != nil {
 					return err
 				}
@@ -580,7 +581,7 @@ func (s *ServiceInfo) BackendClusterName() string {
 
 // If the backend address's scheme is grpc/grpcs, it should be changed it http or https.
 func getJwtAudienceFromBackendAddr(scheme, hostname string) string {
-	_, tls, _ := util.ParseBackendProtocol(scheme)
+	_, tls, _ := util.ParseBackendProtocol(scheme, "")
 	if tls {
 		return fmt.Sprintf("https://%s", hostname)
 	}
