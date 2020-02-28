@@ -156,7 +156,7 @@ func TestHttpsClients(t *testing.T) {
 		"--service_config_id=test-config-id",
 		"--backend_protocol=http",
 		"--rollout_strategy=fixed",
-		"--server_ssl_path=../../env/testdata",
+		"--server_ssl_path=../../env/testdata/",
 	}
 
 	s := env.NewTestEnv(comp.TestHttpsClients, platform.EchoSidecar)
@@ -178,7 +178,6 @@ func TestHttpsClients(t *testing.T) {
 		desc         string
 		httpsVersion int
 		certPath     string
-		keyPath      string
 		port         uint16
 		wantResp     string
 		wantError    error
@@ -187,28 +186,24 @@ func TestHttpsClients(t *testing.T) {
 			desc:         "Succcess for HTTP1 client with TLS",
 			httpsVersion: 1,
 			certPath:     platform.GetFilePath(platform.ServerCert),
-			keyPath:      platform.GetFilePath(platform.ServerKey),
 			wantResp:     `simple get message`,
 		},
 		{
 			desc:         "Succcess for HTTP2 client with TLS",
 			httpsVersion: 2,
 			certPath:     platform.GetFilePath(platform.ServerCert),
-			keyPath:      platform.GetFilePath(platform.ServerKey),
 			wantResp:     `simple get message`,
 		},
 		{
 			desc:         "Fail for HTTP1 client, with incorrect key and cert",
 			httpsVersion: 1,
 			certPath:     platform.GetFilePath(platform.ProxyCert),
-			keyPath:      platform.GetFilePath(platform.ProxyKey),
 			wantError:    fmt.Errorf("x509: certificate signed by unknown authority"),
 		},
 		{
 			desc:         "Fail for HTTP2 client, with incorrect key and cert",
 			httpsVersion: 2,
 			certPath:     platform.GetFilePath(platform.ProxyCert),
-			keyPath:      platform.GetFilePath(platform.ProxyKey),
 			wantError:    fmt.Errorf("x509: certificate signed by unknown authority"),
 		},
 	}
@@ -219,7 +214,7 @@ func TestHttpsClients(t *testing.T) {
 			var err error
 
 			url := fmt.Sprintf("https://localhost:%v/simpleget?key=api-key", s.Ports().ListenerPort)
-			resp, err = client.DoHttpsGet(url, tc.httpsVersion, tc.certPath, tc.keyPath)
+			resp, err = client.DoHttpsGet(url, tc.httpsVersion, tc.certPath)
 			if tc.wantError == nil {
 				if err != nil {
 					t.Fatal(err)

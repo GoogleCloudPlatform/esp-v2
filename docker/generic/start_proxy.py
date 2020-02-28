@@ -515,8 +515,6 @@ def enforce_conflict_args(args):
         port_flags.append("--listener_port")
     if len(port_flags) > 1:
         return "Multiple port flags {} are not allowed, please just use --listener_port flag".format(",".join(port_flags))
-    if args.server_ssl_path and args.server_ssl_path[-1] == "/":
-        return "Don't include the tailing '/' in Flag --server_ssl_path."
 
     return None
 

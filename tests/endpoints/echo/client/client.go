@@ -207,7 +207,7 @@ func DoCorsPreflightRequest(url, origin, requestMethod, requestHeader, referer s
 }
 
 // DoHttpsGet performs a HTTPS Get request to a specified url
-func DoHttpsGet(url string, httpVersion int, certPath, keyPath string) ([]byte, error) {
+func DoHttpsGet(url string, httpVersion int, certPath string) ([]byte, error) {
 	client := &http.Client{}
 	caCert, err := ioutil.ReadFile(certPath)
 	if err != nil {

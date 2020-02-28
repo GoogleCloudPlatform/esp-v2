@@ -212,8 +212,6 @@ class TestStartProxy(unittest.TestCase):
             ['--non_gcp'],
             ['--http_port=80', '--http2_port=80'],
             ['--http_port=80', '--listener_port=80'],
-            ['--backend_protocol=http', '-R=managed',
-              '--server_ssl_path=/etc/endpoint/ssl/'],
             ]
 
         for flags in testcases:
