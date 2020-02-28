@@ -51,9 +51,9 @@ var (
 	ServiceManagementURL = flag.String("service_management_url", "https://servicemanagement.googleapis.com", "url of service management server")
 
 	ListenerPort = flag.Int("listener_port", 8080, "listener port")
-	SslPort      = flag.Int("ssl_port", 0, "listener port for HTTPS traffic")
 	Healthz      = flag.String("healthz", "", "path for health check of ESPv2 proxy itself")
 
+	ServerSslPath = flag.String("server_ssl_path", "", "Path to the certificate and key that ESPv2 uses to act as a HTTPS server")
 	RootCertsPath = flag.String("root_certs_path", util.DefaultRootCAPaths, "Path to the root certificates to make TSL connection.")
 
 	// Flags for non_gcp deployment.
@@ -94,8 +94,6 @@ var (
 	// Flags for testing purpose.
 	SkipJwtAuthnFilter       = flag.Bool("skip_jwt_authn_filter", false, "skip jwt authn filter, for test purpose")
 	SkipServiceControlFilter = flag.Bool("skip_service_control_filter", false, "skip service control filter, for test purpose")
-	EnvoyCertPath            = flag.String("envoy_cert_path", "/etc/envoy/ssl/envoy.crt", "envoy cert path, to serve HTTPS traffic")
-	EnvoyKeyPath             = flag.String("envoy_key_path", "/etc/envoy/ssl/envoy.key", "envoy key path, to serve HTTPS traffic")
 )
 
 func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
@@ -115,11 +113,9 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		ListenerAddress:               *ListenerAddress,
 		ServiceManagementURL:          *ServiceManagementURL,
 		ListenerPort:                  *ListenerPort,
-		SslPort:                       *SslPort,
 		Healthz:                       *Healthz,
 		RootCertsPath:                 *RootCertsPath,
-		EnvoyCertPath:                 *EnvoyCertPath,
-		EnvoyKeyPath:                  *EnvoyKeyPath,
+		ServerSslPath:                 *ServerSslPath,
 		ServiceAccountKey:             *ServiceAccountKey,
 		SkipJwtAuthnFilter:            *SkipJwtAuthnFilter,
 		SkipServiceControlFilter:      *SkipServiceControlFilter,

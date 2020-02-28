@@ -136,9 +136,6 @@ var (
 		32026: true,
 		32027: true,
 		55550: true,
-
-		// Ports allocated to listener for HTTPS traffic
-		20443: true,
 	}
 )
 

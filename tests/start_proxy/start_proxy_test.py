@@ -134,13 +134,14 @@ class TestStartProxy(unittest.TestCase):
               '--check_metadata',
               '--disable_tracing'
               ]),
-            # ssl_port specified
+            # serverSslPath specified
             (['--backend_protocol=http', '-R=managed',
-              '--listener_port=8080',  '--disable_tracing', '--ssl_port=8443'],
+              '--listener_port=8080',  '--disable_tracing',
+              '--server_ssl_path=/etc/endpoint/ssl'],
              ['bin/configmanager', '--logtostderr', '--backend_protocol', 'http',
               '--cluster_address', '127.0.0.1', '--cluster_port', '8082',
               '--rollout_strategy','managed', '--v', '0',
-              '--listener_port', '8080', '--ssl_port', '8443',
+              '--listener_port', '8080', '--server_ssl_path', '/etc/endpoint/ssl',
               '--disable_tracing'
               ]),
             # with service account key
@@ -211,8 +212,9 @@ class TestStartProxy(unittest.TestCase):
             ['--non_gcp'],
             ['--http_port=80', '--http2_port=80'],
             ['--http_port=80', '--listener_port=80'],
-            ['--ssl_port=8080', '--listener_port=8080']
-        ]
+            ['--backend_protocol=http', '-R=managed',
+              '--server_ssl_path=/etc/endpoint/ssl/'],
+            ]
 
         for flags in testcases:
           with self.assertRaises(SystemExit) as cm:

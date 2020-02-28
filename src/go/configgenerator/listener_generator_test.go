@@ -1107,14 +1107,14 @@ func TestMakeListeners(t *testing.T) {
 	testdata := []struct {
 		desc              string
 		protocol          string
-		sslPort           int
+		serverSslPath     string
 		fakeServiceConfig *confpb.Service
 		wantListeners     []string
 	}{
 		{
-			desc:     "Success, generate redirect listener when ssl_port is configured",
-			protocol: "http",
-			sslPort:  8443,
+			desc:          "Success, generate redirect listener when ssl_port is configured",
+			protocol:      "http",
+			serverSslPath: "/etc/endpoints/ssl",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -1134,7 +1134,7 @@ func TestMakeListeners(t *testing.T) {
 					"address":{
 						"socketAddress":{
 							"address":"0.0.0.0",
-							"portValue":8443
+							"portValue":8080
 							}
 					},
 					"filterChains":[
@@ -1189,10 +1189,10 @@ func TestMakeListeners(t *testing.T) {
 										"tlsCertificates":[
 											{
 												"certificateChain":{
-													"filename":"/etc/envoy/ssl/envoy.crt"
+													"filename":"/etc/endpoints/ssl/server.crt"
 											  },
 					 						  "privateKey":{
-												  "filename":"/etc/envoy/ssl/envoy.key"
+												  "filename":"/etc/endpoints/ssl/server.key"
 											  }
 										  }
 									  ]
@@ -1202,66 +1202,13 @@ func TestMakeListeners(t *testing.T) {
 					  }
 					]
 				}`,
-				`{
-					"name": "http_listener",
-					"address": {
-						"socketAddress": {
-							"address": "0.0.0.0",
-							"portValue": 8080
-						}
-					},
-					"filterChains": [
-						{
-							"filters": [
-								{
-									"name": "envoy.http_connection_manager",
-									"typedConfig": {
-										"@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
-										"httpFilters": [
-											{
-												"name": "envoy.router",
-												"typedConfig": {
-													"@type": "type.googleapis.com/envoy.config.filter.http.router.v2.Router",
-													"startChildSpan": true
-												}
-											}
-										],
-										"routeConfig": {
-											"name": "redirect_route",
-											"virtualHosts": [
-												{
-													"domains": [
-														"*"
-													],
-													"name": "redirect_backend",
-													"routes": [
-														{
-															"match": {
-																"prefix": "/"
-															},
-															"redirect": {
-																"PathRedirect": "/",
-																"HttpsRedirect": true
-															}
-														}
-													]
-												}
-											]
-										},
-										"statPrefix": "ingress_http"
-									}
-								}
-							]
-						}
-					]
-				}`,
 			},
 		},
 	}
 
 	for i, tc := range testdata {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.SslPort = tc.sslPort
+		opts.ServerSslPath = tc.serverSslPath
 		opts.BackendProtocol = tc.protocol
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {

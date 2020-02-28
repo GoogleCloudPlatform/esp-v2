@@ -58,68 +58,7 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) ([]*v2pb.Listener, error) {
 		return nil, err
 	}
 	listeners = append(listeners, listener)
-
-	if serviceInfo.Options.SslPort != 0 {
-		redirect_listener, err := makeRedirectListener(serviceInfo)
-		if err != nil {
-			return nil, err
-		}
-		listeners = append(listeners, redirect_listener)
-	}
-
 	return listeners, nil
-}
-
-func makeRedirectListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
-	httpFilters := []*hcmpb.HttpFilter{}
-	routerFilter := makeRouterFilter(serviceInfo.Options)
-	httpFilters = append(httpFilters, routerFilter)
-	route, err := MakeRedirectRouteConfig(serviceInfo)
-	if err != nil {
-		return nil, fmt.Errorf("MakeRedirectRouteConfig got err: %s", err)
-	}
-
-	httpConMgr := &hcmpb.HttpConnectionManager{
-		CodecType:  hcmpb.HttpConnectionManager_AUTO,
-		StatPrefix: statPrefix,
-		RouteSpecifier: &hcmpb.HttpConnectionManager_RouteConfig{
-			RouteConfig: route,
-		},
-	}
-
-	httpConMgr.HttpFilters = httpFilters
-	jsonStr, _ := util.ProtoToJson(httpConMgr)
-	glog.Infof("adding Http Connection Manager config: %v", jsonStr)
-
-	// HTTP filter configuration
-	httpFilterConfig, err := ptypes.MarshalAny(httpConMgr)
-	if err != nil {
-		return nil, err
-	}
-
-	return &v2pb.Listener{
-		Name: "http_listener",
-		Address: &corepb.Address{
-			Address: &corepb.Address_SocketAddress{
-				SocketAddress: &corepb.SocketAddress{
-					Address: serviceInfo.Options.ListenerAddress,
-					PortSpecifier: &corepb.SocketAddress_PortValue{
-						PortValue: uint32(serviceInfo.Options.ListenerPort),
-					},
-				},
-			},
-		},
-		FilterChains: []*listenerpb.FilterChain{
-			{
-				Filters: []*listenerpb.Filter{
-					{
-						Name:       util.HTTPConnectionManager,
-						ConfigType: &listenerpb.Filter_TypedConfig{TypedConfig: httpFilterConfig},
-					},
-				},
-			},
-		},
-	}, nil
 }
 
 // MakeListener provides a dynamic listener for Envoy
@@ -263,13 +202,11 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		},
 	}
 
-	port := serviceInfo.Options.ListenerPort
 	listenerName := "http_listener"
-	if serviceInfo.Options.SslPort != 0 {
+	if serviceInfo.Options.ServerSslPath != "" {
 		listenerName = "https_listener"
-		port = serviceInfo.Options.SslPort
 		transportSocket, err := util.CreateDownstreamTransportSocket(
-			serviceInfo.Options.EnvoyCertPath, serviceInfo.Options.EnvoyKeyPath)
+			serviceInfo.Options.ServerSslPath)
 		if err != nil {
 			return nil, err
 		}
@@ -283,7 +220,7 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 				SocketAddress: &corepb.SocketAddress{
 					Address: serviceInfo.Options.ListenerAddress,
 					PortSpecifier: &corepb.SocketAddress_PortValue{
-						PortValue: uint32(port),
+						PortValue: uint32(serviceInfo.Options.ListenerPort),
 					},
 				},
 			},

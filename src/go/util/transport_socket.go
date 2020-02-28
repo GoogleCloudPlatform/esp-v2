@@ -15,6 +15,8 @@
 package util
 
 import (
+	"fmt"
+
 	"github.com/golang/protobuf/ptypes"
 
 	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
@@ -55,18 +57,18 @@ func CreateUpstreamTransportSocket(hostname, rootCertsPath string, alpn_protocol
 }
 
 // CreateDownstreamTransportSocket creates a TransportSocket for Downstream
-func CreateDownstreamTransportSocket(certsPath, keyPath string) (*corepb.TransportSocket, error) {
+func CreateDownstreamTransportSocket(sslPath string) (*corepb.TransportSocket, error) {
 	common_tls := &authpb.CommonTlsContext{
 		TlsCertificates: []*authpb.TlsCertificate{
 			{
 				CertificateChain: &corepb.DataSource{
 					Specifier: &corepb.DataSource_Filename{
-						Filename: certsPath,
+						Filename: fmt.Sprintf("%s/server.crt", sslPath),
 					},
 				},
 				PrivateKey: &corepb.DataSource{
 					Specifier: &corepb.DataSource_Filename{
-						Filename: keyPath,
+						Filename: fmt.Sprintf("%s/server.key", sslPath),
 					},
 				},
 			},
