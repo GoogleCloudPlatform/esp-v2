@@ -99,6 +99,9 @@ func TestBackendAuthWithIamIdTokenRetries(t *testing.T) {
 	serviceAccount := "fakeServiceAccount@google.com"
 	s.SetBackendAuthIamServiceAccount(serviceAccount)
 
+	// Health checks prevent envoy from starting up due to bad responses from IAM for tokens.
+	s.SkipHealthChecks()
+
 	testData := []struct {
 		desc           string
 		method         string
@@ -112,7 +115,7 @@ func TestBackendAuthWithIamIdTokenRetries(t *testing.T) {
 			method:         "GET",
 			path:           "/bearertoken/constant/42",
 			wantNumFails:   5,
-			wantInitialErr: `500 Internal Server Error, missing tokens`,
+			wantInitialErr: `connect: connection refused`,
 			wantFinalResp:  `{"Authorization": "Bearer id-token-for-constant", "RequestURI": "/bearertoken/constant?foo=42"}`,
 		},
 	}
@@ -143,7 +146,7 @@ func TestBackendAuthWithIamIdTokenRetries(t *testing.T) {
 			}
 
 			// Sleep enough time for IAM to become healthy. This depends on the retry timer in TokenSubscriber.
-			time.Sleep(time.Duration(2*tc.wantNumFails) * time.Second)
+			time.Sleep(time.Duration(3*tc.wantNumFails) * time.Second)
 
 			// The second request should work.
 			resp, err := client.DoWithHeaders(url, tc.method, "", nil)
@@ -153,7 +156,7 @@ func TestBackendAuthWithIamIdTokenRetries(t *testing.T) {
 
 			gotResp := string(resp)
 			if !utils.JsonEqual(gotResp, tc.wantFinalResp) {
-				t.Errorf("Test Desc(%s): want: %s, got: %s", tc.desc, tc.wantFinalResp, gotResp)
+				t.Errorf("Test Desc(%s): final resp want: %s, got: %s", tc.desc, tc.wantFinalResp, gotResp)
 			}
 		}()
 	}
