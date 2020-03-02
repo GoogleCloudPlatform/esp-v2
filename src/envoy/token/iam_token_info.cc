@@ -32,6 +32,7 @@ constexpr char kDelegatesField[]("delegates");
 // https://cloud.google.com/iam/docs/reference/credentials/rest/v1/projects.serviceAccounts/generateIdToken.
 constexpr char kDelegatePrefix[]("projects/-/serviceAccounts/");
 
+//  Include the service account email in the token.
 constexpr char kIncludeEmail[]("includeEmail");
 
 // Body field to identify the scopes to be included in the OAuth 2.0 access
@@ -85,7 +86,6 @@ Envoy::Http::MessagePtr IamTokenInfo::prepareRequest(
   }
 
 
-  //  Include the service account email in the token.
   Envoy::ProtobufWkt::Value val;
   vals.set_bool_value(true);
   (*body.mutable_struct_value()->mutable_fields())[kIncludeEmail].Swap(&val);
