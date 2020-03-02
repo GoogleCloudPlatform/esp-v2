@@ -26,12 +26,12 @@ import (
 
 	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 )
 
 func TestServiceManagementWithTLS(t *testing.T) {
 	args := []string{
 		"--service_config_id=test-config-id",
-
 		"--rollout_strategy=fixed",
 		"--suppress_envoy_headers",
 	}
@@ -94,7 +94,6 @@ func TestServiceControlWithTLS(t *testing.T) {
 	args := []string{
 		"--service=bookstore-service",
 		"--service_config_id=test-config-id",
-
 		"--rollout_strategy=fixed",
 	}
 
@@ -147,5 +146,80 @@ func TestServiceControlWithTLS(t *testing.T) {
 				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
 			}
 		}()
+	}
+}
+
+func TestHttpsClients(t *testing.T) {
+	args := []string{
+		"--service_config_id=test-config-id",
+		"--rollout_strategy=fixed",
+		"--ssl_server_path=../../env/testdata/",
+	}
+
+	s := env.NewTestEnv(comp.TestHttpsClients, platform.EchoSidecar)
+	defer s.TearDown()
+	s.AppendHttpRules([]*annotationspb.HttpRule{
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",
+			Pattern: &annotationspb.HttpRule_Get{
+				Get: "/simpleget",
+			},
+		},
+	})
+
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	testData := []struct {
+		desc         string
+		httpsVersion int
+		certPath     string
+		port         uint16
+		wantResp     string
+		wantError    error
+	}{
+		{
+			desc:         "Succcess for HTTP1 client with TLS",
+			httpsVersion: 1,
+			certPath:     platform.GetFilePath(platform.ServerCert),
+			wantResp:     `simple get message`,
+		},
+		{
+			desc:         "Succcess for HTTP2 client with TLS",
+			httpsVersion: 2,
+			certPath:     platform.GetFilePath(platform.ServerCert),
+			wantResp:     `simple get message`,
+		},
+		{
+			desc:         "Fail for HTTP1 client, with incorrect key and cert",
+			httpsVersion: 1,
+			certPath:     platform.GetFilePath(platform.ProxyCert),
+			wantError:    fmt.Errorf("x509: certificate signed by unknown authority"),
+		},
+		{
+			desc:         "Fail for HTTP2 client, with incorrect key and cert",
+			httpsVersion: 2,
+			certPath:     platform.GetFilePath(platform.ProxyCert),
+			wantError:    fmt.Errorf("x509: certificate signed by unknown authority"),
+		},
+	}
+
+	for _, tc := range testData {
+		var resp []byte
+		var err error
+
+		url := fmt.Sprintf("https://localhost:%v/simpleget?key=api-key", s.Ports().ListenerPort)
+		resp, err = client.DoHttpsGet(url, tc.httpsVersion, tc.certPath)
+		if tc.wantError == nil {
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(string(resp), tc.wantResp) {
+				t.Errorf("Test desc (%v) expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
+			}
+		} else if !strings.Contains(err.Error(), tc.wantError.Error()) {
+			t.Errorf("Test (%s): failed\nexpected: %v\ngot: %v", tc.desc, tc.wantError, err)
+		}
 	}
 }

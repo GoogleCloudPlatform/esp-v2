@@ -53,16 +53,13 @@ var (
 	ListenerPort = flag.Int("listener_port", 8080, "listener port")
 	Healthz      = flag.String("healthz", "", "path for health check of ESPv2 proxy itself")
 
+	SslServerPath = flag.String("ssl_server_path", "", "Path to the certificate and key that ESPv2 uses to act as a HTTPS server")
 	RootCertsPath = flag.String("root_certs_path", util.DefaultRootCAPaths, "Path to the root certificates to make TSL connection.")
 
 	// Flags for non_gcp deployment.
 	ServiceAccountKey = flag.String("service_account_key", "", `Use the service account key JSON file to access the service control and the
 	service management.  You can also set {creds_key} environment variable to the location of the service account credentials JSON file. If the option is
   omitted, the proxy contacts the metadata service to fetch an access token`)
-
-	// Flags for testing purpose.
-	SkipJwtAuthnFilter       = flag.Bool("skip_jwt_authn_filter", false, "skip jwt authn filter, for test purpose")
-	SkipServiceControlFilter = flag.Bool("skip_service_control_filter", false, "skip service control filter, for test purpose")
 
 	// Envoy configurations.
 	EnvoyUseRemoteAddress  = flag.Bool("envoy_use_remote_address", false, "Envoy HttpConnectionManager configuration, please refer to envoy documentation for detailed information.")
@@ -93,6 +90,10 @@ var (
 	ScReportRetries = flag.Int("service_control_report_retries", -1, `Set the retry times for service control Report request. Must be >= 0 and the default is 5 if not set.`)
 
 	ComputePlatformOverride = flag.String("compute_platform_override", "", "the overridden platform where the proxy is running at")
+
+	// Flags for testing purpose.
+	SkipJwtAuthnFilter       = flag.Bool("skip_jwt_authn_filter", false, "skip jwt authn filter, for test purpose")
+	SkipServiceControlFilter = flag.Bool("skip_service_control_filter", false, "skip service control filter, for test purpose")
 )
 
 func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
@@ -114,6 +115,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		ListenerPort:                  *ListenerPort,
 		Healthz:                       *Healthz,
 		RootCertsPath:                 *RootCertsPath,
+		SslServerPath:                 *SslServerPath,
 		ServiceAccountKey:             *ServiceAccountKey,
 		SkipJwtAuthnFilter:            *SkipJwtAuthnFilter,
 		SkipServiceControlFilter:      *SkipServiceControlFilter,

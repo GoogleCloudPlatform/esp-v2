@@ -104,6 +104,15 @@ class TestStartProxy(unittest.TestCase):
               '--check_metadata',
               '--disable_tracing'
               ]),
+            # serverSslPath specified
+            (['-R=managed','--listener_port=8080',  '--disable_tracing',
+              '--ssl_server_path=/etc/endpoint/ssl'],
+             ['bin/configmanager', '--logtostderr',
+              '--backend_address', 'http://127.0.0.1:8082',
+              '--rollout_strategy', 'managed', '--v', '0',
+              '--listener_port', '8080', '--ssl_server_path',
+              '/etc/endpoint/ssl', '--disable_tracing'
+              ]),
             # http2_port specified.
             (['-R=managed',
               '--http2_port=8079', '--service_control_quota_retries=3',

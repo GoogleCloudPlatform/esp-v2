@@ -50,8 +50,17 @@ const (
 	statPrefix = "ingress_http"
 )
 
-// MakeListener provides a dynamic listener for Envoy
-func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
+// MakeListeners provides dynamic listeners for Envoy
+func MakeListeners(serviceInfo *sc.ServiceInfo) ([]*v2pb.Listener, error) {
+	listener, err := makeListener(serviceInfo)
+	if err != nil {
+		return nil, err
+	}
+	return []*v2pb.Listener{listener}, nil
+}
+
+// makeListener provides a dynamic listener for Envoy
+func makeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	httpFilters := []*hcmpb.HttpFilter{}
 
 	if serviceInfo.Options.CorsPreset == "basic" || serviceInfo.Options.CorsPreset == "cors_with_regex" {
@@ -182,7 +191,28 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		return nil, err
 	}
 
+	filterChain := &listenerpb.FilterChain{
+		Filters: []*listenerpb.Filter{
+			{
+				Name:       util.HTTPConnectionManager,
+				ConfigType: &listenerpb.Filter_TypedConfig{TypedConfig: httpFilterConfig},
+			},
+		},
+	}
+
+	listenerName := "http_listener"
+	if serviceInfo.Options.SslServerPath != "" {
+		listenerName = "https_listener"
+		transportSocket, err := util.CreateDownstreamTransportSocket(
+			serviceInfo.Options.SslServerPath)
+		if err != nil {
+			return nil, err
+		}
+		filterChain.TransportSocket = transportSocket
+	}
+
 	return &v2pb.Listener{
+		Name: listenerName,
 		Address: &corepb.Address{
 			Address: &corepb.Address_SocketAddress{
 				SocketAddress: &corepb.SocketAddress{
@@ -193,16 +223,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 				},
 			},
 		},
-		FilterChains: []*listenerpb.FilterChain{
-			{
-				Filters: []*listenerpb.Filter{
-					{
-						Name:       util.HTTPConnectionManager,
-						ConfigType: &listenerpb.Filter_TypedConfig{TypedConfig: httpFilterConfig},
-					},
-				},
-			},
-		},
+		FilterChains: []*listenerpb.FilterChain{filterChain},
 	}, nil
 }
 

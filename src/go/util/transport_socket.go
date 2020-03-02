@@ -15,14 +15,21 @@
 package util
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/golang/protobuf/ptypes"
 
 	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 )
 
-// CreateTransportSocket creates a TransportSocket
-func CreateTransportSocket(hostname, rootCertsPath string, alpn_protocols []string) (*corepb.TransportSocket, error) {
+const (
+	defaultServerSslFilename = "server"
+)
+
+// CreateUpstreamTransportSocket creates a TransportSocket for Upstream
+func CreateUpstreamTransportSocket(hostname, rootCertsPath string, alpn_protocols []string) (*corepb.TransportSocket, error) {
 	common_tls := &authpb.CommonTlsContext{
 		ValidationContextType: &authpb.CommonTlsContext_ValidationContext{
 			ValidationContext: &authpb.CertificateValidationContext{
@@ -40,6 +47,44 @@ func CreateTransportSocket(hostname, rootCertsPath string, alpn_protocols []stri
 
 	tlsContext, err := ptypes.MarshalAny(&authpb.UpstreamTlsContext{
 		Sni:              hostname,
+		CommonTlsContext: common_tls,
+	},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &corepb.TransportSocket{
+		Name: TLSTransportSocket,
+		ConfigType: &corepb.TransportSocket_TypedConfig{
+			TypedConfig: tlsContext,
+		},
+	}, nil
+}
+
+// CreateDownstreamTransportSocket creates a TransportSocket for Downstream
+func CreateDownstreamTransportSocket(sslPath string) (*corepb.TransportSocket, error) {
+	if !strings.HasSuffix(sslPath, "/") {
+		sslPath = fmt.Sprintf("%s/", sslPath)
+	}
+	common_tls := &authpb.CommonTlsContext{
+		TlsCertificates: []*authpb.TlsCertificate{
+			{
+				CertificateChain: &corepb.DataSource{
+					Specifier: &corepb.DataSource_Filename{
+						Filename: fmt.Sprintf("%s%s.crt", sslPath, defaultServerSslFilename),
+					},
+				},
+				PrivateKey: &corepb.DataSource{
+					Specifier: &corepb.DataSource_Filename{
+						Filename: fmt.Sprintf("%s%s.key", sslPath, defaultServerSslFilename),
+					},
+				},
+			},
+		},
+	}
+	common_tls.AlpnProtocols = []string{"h2", "http/1.1"}
+
+	tlsContext, err := ptypes.MarshalAny(&authpb.DownstreamTlsContext{
 		CommonTlsContext: common_tls,
 	},
 	)
