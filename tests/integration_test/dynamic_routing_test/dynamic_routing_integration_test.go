@@ -474,27 +474,53 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 }
 
 func TestDynamicBackendRoutingTLS(t *testing.T) {
-
-	s := env.NewTestEnv(comp.TestDynamicBackendRoutingTLS, platform.EchoRemote)
-	s.UseWrongBackendCertForDR(true)
-	defer s.TearDown()
-
-	if err := s.Setup(testDynamicRoutingArgs); err != nil {
-		t.Fatalf("fail to setup test env, %v", err)
-	}
-
 	testData := []struct {
 		desc           string
 		path           string
+		useWrongCert   bool
 		message        string
 		wantError      string
 		wantScRequests []interface{}
 	}{
 		{
-			desc:      "Succeed, APPEND_PATH_TO_ADDRESS path translation is correct, service control check request and report request are correct",
-			path:      "/sc/searchpet?key=api-key&timezone=EST",
-			message:   "hello",
-			wantError: "503 Service Unavailable",
+			desc:         "Success for correct cert ",
+			path:         "/sc/searchpet?key=api-key&timezone=EST",
+			useWrongCert: false,
+			message:      "hello",
+			wantScRequests: []interface{}{
+				&utils.ExpectedCheck{
+					Version:         utils.ESPv2Version(),
+					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					ConsumerID:      "api_key:api-key",
+					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchPetWithServiceControlVerification",
+					CallerIp:        platform.GetLoopbackAddress(),
+				},
+				&utils.ExpectedReport{
+					Version:           utils.ESPv2Version(),
+					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:   "test-config-id",
+					URL:               "/sc/searchpet?key=api-key&timezone=EST",
+					ApiKey:            "api-key",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchPetWithServiceControlVerification",
+					ProducerProjectID: "producer-project",
+					ConsumerProjectID: "123456",
+					FrontendProtocol:  "http",
+					HttpMethod:        "POST",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchPetWithServiceControlVerification is called",
+					StatusCode:        "0",
+					ResponseCode:      200,
+					Platform:          util.GCE,
+					Location:          "test-zone",
+				},
+			},
+		},
+		{
+			desc:         "Fail for incorrect cert ",
+			path:         "/sc/searchpet?key=api-key&timezone=EST",
+			useWrongCert: true,
+			message:      "hello",
+			wantError:    "503 Service Unavailable",
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
 					Version:         utils.ESPv2Version(),
@@ -525,22 +551,38 @@ func TestDynamicBackendRoutingTLS(t *testing.T) {
 			},
 		},
 	}
+
 	for _, tc := range testData {
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
-		// var gotResp []byte
-		var err error
-		_, err = client.DoPost(url, tc.message)
+		func() {
+			s := env.NewTestEnv(comp.TestDynamicBackendRoutingTLS, platform.EchoRemote)
+			s.UseWrongBackendCertForDR(tc.useWrongCert)
+			defer s.TearDown()
 
-		if err == nil || !strings.Contains(err.Error(), tc.wantError) {
-			t.Errorf("Test (%s): failed, want error: %v, got error: %v", tc.desc, tc.wantError, err)
-		}
+			if err := s.Setup(testDynamicRoutingArgs); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
 
-		scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
-		if err != nil {
-			t.Fatalf("Test Desc(%s): GetRequests returns error: %v", tc.desc, err)
-		}
-		if err := utils.VerifyServiceControlResp(tc.desc, tc.wantScRequests, scRequests); err != nil {
-			t.Error(err)
-		}
+			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+			var err error
+			_, err = client.DoPost(url, tc.message)
+
+			if tc.wantError == "" {
+				if err != nil {
+					t.Fatalf("Test (%s): failed, %v", tc.desc, err)
+				}
+			} else {
+				if err == nil || !strings.Contains(err.Error(), tc.wantError) {
+					t.Errorf("Test (%s): failed, want error: %v, got error: %v", tc.desc, tc.wantError, err)
+				}
+			}
+
+			scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
+			if err != nil {
+				t.Fatalf("Test Desc(%s): GetRequests returns error: %v", tc.desc, err)
+			}
+			if err := utils.VerifyServiceControlResp(tc.desc, tc.wantScRequests, scRequests); err != nil {
+				t.Error(err)
+			}
+		}()
 	}
 }
