@@ -61,7 +61,7 @@ TEST_F(IamTokenInfoTest, SimpleSuccess) {
 
   // Assert success.
   EXPECT_NE(got_msg, nullptr);
-  EXPECT_EQ(got_msg->bodyAsString(), R"()");
+  EXPECT_EQ(got_msg->bodyAsString(), R"({"includeEmail":true})");
   EXPECT_EQ(got_msg->headers()
                 .get(Envoy::Http::Headers::get().Method)
                 ->value()
@@ -102,7 +102,7 @@ TEST_F(IamTokenInfoTest, SetDelegatesAndScopes) {
   EXPECT_NE(got_msg, nullptr);
   EXPECT_EQ(
       got_msg->bodyAsString(),
-      R"({"scope":["scope_foo","scope_bar"],"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar"]})");
+      R"({"includeEmail":true,"scope":["scope_foo","scope_bar"],"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar"]})");
 }
 
 TEST_F(IamTokenInfoTest, OnlySetDelegates) {
@@ -121,7 +121,7 @@ TEST_F(IamTokenInfoTest, OnlySetDelegates) {
   EXPECT_NE(got_msg, nullptr);
   EXPECT_EQ(
       got_msg->bodyAsString(),
-      R"({"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar"]})");
+      R"({"includeEmail":true,"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar"]})");
 }
 
 TEST_F(IamTokenInfoTest, OnlySetScopes) {
@@ -138,7 +138,7 @@ TEST_F(IamTokenInfoTest, OnlySetScopes) {
 
   // Assert success.
   EXPECT_NE(got_msg, nullptr);
-  EXPECT_EQ(got_msg->bodyAsString(), R"({"scope":["scope_foo","scope_bar"]})");
+  EXPECT_EQ(got_msg->bodyAsString(), R"({"includeEmail":true,"scope":["scope_foo","scope_bar"]})");
 }
 
 class IamParseTokenTest : public IamTokenInfoTest {

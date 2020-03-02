@@ -87,7 +87,7 @@ Envoy::Http::MessagePtr IamTokenInfo::prepareRequest(
 
 
   Envoy::ProtobufWkt::Value val;
-  vals.set_bool_value(true);
+  val.set_bool_value(true);
   (*body.mutable_struct_value()->mutable_fields())[kIncludeEmail].Swap(&val);
 
   std::string bodyStr =
