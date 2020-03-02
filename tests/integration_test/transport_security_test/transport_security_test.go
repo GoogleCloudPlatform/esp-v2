@@ -206,22 +206,20 @@ func TestHttpsClients(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		func() {
-			var resp []byte
-			var err error
+		var resp []byte
+		var err error
 
-			url := fmt.Sprintf("https://localhost:%v/simpleget?key=api-key", s.Ports().ListenerPort)
-			resp, err = client.DoHttpsGet(url, tc.httpsVersion, tc.certPath)
-			if tc.wantError == nil {
-				if err != nil {
-					t.Fatal(err)
-				}
-				if !strings.Contains(string(resp), tc.wantResp) {
-					t.Errorf("Test desc (%v) expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
-				}
-			} else if !strings.Contains(err.Error(), tc.wantError.Error()) {
-				t.Errorf("Test (%s): failed\nexpected: %v\ngot: %v", tc.desc, tc.wantError, err)
+		url := fmt.Sprintf("https://localhost:%v/simpleget?key=api-key", s.Ports().ListenerPort)
+		resp, err = client.DoHttpsGet(url, tc.httpsVersion, tc.certPath)
+		if tc.wantError == nil {
+			if err != nil {
+				t.Fatal(err)
 			}
-		}()
+			if !strings.Contains(string(resp), tc.wantResp) {
+				t.Errorf("Test desc (%v) expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
+			}
+		} else if !strings.Contains(err.Error(), tc.wantError.Error()) {
+			t.Errorf("Test (%s): failed\nexpected: %v\ngot: %v", tc.desc, tc.wantError, err)
+		}
 	}
 }
