@@ -56,10 +56,13 @@ func ParseURI(uri string) (string, string, uint32, string, error) {
 	return u.Scheme, u.Hostname(), uint32(portVal), strings.TrimSuffix(u.RequestURI(), "/"), nil
 }
 
-// ParseBackendProtocol parses a scheme string into BackendProtocol and UseTLS bool.
-func ParseBackendProtocol(scheme string) (BackendProtocol, bool, error) {
+// ParseBackendProtocol parses a scheme string and http protocol string into BackendProtocol and UseTLS bool.
+func ParseBackendProtocol(scheme string, httpProtocol string) (BackendProtocol, bool, error) {
 	scheme = strings.ToLower(scheme)
-	var tls bool
+	httpProtocol = strings.ToLower(httpProtocol)
+
+	// Default tls to false, even if scheme is invalid.
+	tls := false
 	if strings.HasSuffix(scheme, "s") {
 		tls = true
 		scheme = strings.TrimSuffix(scheme, "s")
@@ -67,11 +70,19 @@ func ParseBackendProtocol(scheme string) (BackendProtocol, bool, error) {
 
 	switch scheme {
 	case "http":
-		return HTTP1, tls, nil
+		// Default the http protocol to http/1.1.
+		switch httpProtocol {
+		case "", "http/1.1":
+			return HTTP1, tls, nil
+		case "h2":
+			return HTTP2, tls, nil
+		default:
+			return UNKNOWN, tls, fmt.Errorf(`unknown backend http protocol [%v], should be one of "http/1.1", "h2", or not set`, httpProtocol)
+		}
 	case "grpc":
 		return GRPC, tls, nil
 	default:
-		return HTTP1, tls, fmt.Errorf(`unknown backend scheme [%v], should be one of "http(s)" or "grpc(s)"`, scheme)
+		return UNKNOWN, tls, fmt.Errorf(`unknown backend scheme [%v], should be one of "http(s)" or "grpc(s)"`, scheme)
 	}
 }
 

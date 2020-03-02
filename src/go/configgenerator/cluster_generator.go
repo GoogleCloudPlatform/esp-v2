@@ -177,7 +177,7 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, erro
 			ConnectTimeout: connectTimeoutProto,
 			// Note: It may not be V4.
 			DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
-			ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+			ClusterDiscoveryType: &v2pb.Cluster_Type{Type: v2pb.Cluster_LOGICAL_DNS},
 			LoadAssignment:       util.CreateLoadAssignment(hostname, port),
 		}
 		if scheme == "https" {
@@ -201,12 +201,11 @@ func makeBackendCluster(opt *options.ConfigGeneratorOptions, brc *sc.BackendRout
 		Name:                 brc.ClusterName,
 		LbPolicy:             v2pb.Cluster_ROUND_ROBIN,
 		ConnectTimeout:       ptypes.DurationProto(opt.ClusterConnectTimeout),
-		ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+		ClusterDiscoveryType: &v2pb.Cluster_Type{Type: v2pb.Cluster_LOGICAL_DNS},
 		LoadAssignment:       util.CreateLoadAssignment(brc.Hostname, brc.Port),
 	}
 
-	// TODO(nareddyt): Support HTTP2
-	isHttp2 := brc.Protocol == util.GRPC
+	isHttp2 := brc.Protocol == util.GRPC || brc.Protocol == util.HTTP2
 
 	if brc.UseTLS {
 		var alpnProtocols []string

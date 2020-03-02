@@ -166,88 +166,155 @@ func TestParseURI(t *testing.T) {
 
 func TestParseBackendProtocol(t *testing.T) {
 	testData := []struct {
-		desc        string
-		proto       string
-		wantedProto BackendProtocol
-		wantedTLS   bool
-		wantErr     string
+		desc           string
+		scheme         string
+		httpProtocol   string
+		wantedProtocol BackendProtocol
+		wantedTLS      bool
+		wantErr        string
 	}{
 		{
-			desc:        "Good scheme: http",
-			proto:       "http",
-			wantedProto: HTTP1,
-			wantedTLS:   false,
-			wantErr:     "",
+			desc:           "Good scheme: http",
+			scheme:         "http",
+			httpProtocol:   "http/1.1",
+			wantedProtocol: HTTP1,
+			wantedTLS:      false,
+			wantErr:        "",
 		},
 		{
-			desc:        "Good scheme: https",
-			proto:       "https",
-			wantedProto: HTTP1,
-			wantedTLS:   true,
-			wantErr:     "",
+			desc:           "Good scheme and HTTP/2: http",
+			scheme:         "http",
+			httpProtocol:   "h2",
+			wantedProtocol: HTTP2,
+			wantedTLS:      false,
+			wantErr:        "",
 		},
 		{
-			desc:        "Good scheme: HTTP",
-			proto:       "HTTP",
-			wantedProto: HTTP1,
-			wantedTLS:   false,
-			wantErr:     "",
+			desc:           "Good scheme and default http protocol: http",
+			scheme:         "http",
+			httpProtocol:   "",
+			wantedProtocol: HTTP1,
+			wantedTLS:      false,
+			wantErr:        "",
 		},
 		{
-			desc:        "Good scheme: HTTPS",
-			proto:       "HTTPS",
-			wantedProto: HTTP1,
-			wantedTLS:   true,
-			wantErr:     "",
+			desc:           "Good scheme: https",
+			scheme:         "https",
+			httpProtocol:   "http/1.1",
+			wantedProtocol: HTTP1,
+			wantedTLS:      true,
+			wantErr:        "",
 		},
 		{
-			desc:        "Good scheme: grpc",
-			proto:       "grpc",
-			wantedProto: GRPC,
-			wantedTLS:   false,
-			wantErr:     "",
+			desc:           "Good scheme and HTTP/2: https",
+			scheme:         "https",
+			httpProtocol:   "h2",
+			wantedProtocol: HTTP2,
+			wantedTLS:      true,
+			wantErr:        "",
 		},
 		{
-			desc:        "Good scheme: grpcs",
-			proto:       "grpcs",
-			wantedProto: GRPC,
-			wantedTLS:   true,
-			wantErr:     "",
+			desc:           "Good scheme and default http protocol: https",
+			scheme:         "https",
+			httpProtocol:   "",
+			wantedProtocol: HTTP1,
+			wantedTLS:      true,
+			wantErr:        "",
 		},
 		{
-			desc:        "Good scheme: Upper case GRPC",
-			proto:       "GRPC",
-			wantedProto: GRPC,
-			wantedTLS:   false,
-			wantErr:     "",
+			desc:           "Good scheme: HTTP",
+			scheme:         "HTTP",
+			httpProtocol:   "http/1.1",
+			wantedProtocol: HTTP1,
+			wantedTLS:      false,
+			wantErr:        "",
 		},
 		{
-			desc:        "Good scheme: upper case GRPCS",
-			proto:       "GRPCS",
-			wantedProto: GRPC,
-			wantedTLS:   true,
-			wantErr:     "",
+			desc:           "Good scheme: HTTPS",
+			scheme:         "HTTPS",
+			httpProtocol:   "http/1.1",
+			wantedProtocol: HTTP1,
+			wantedTLS:      true,
+			wantErr:        "",
 		},
 		{
-			desc:        "Wrong scheme: rrr",
-			proto:       "rrr",
-			wantedProto: HTTP1,
-			wantedTLS:   false,
-			wantErr:     `unknown backend scheme [rrr], should be one of "http(s)" or "grpc(s)"`,
+			desc:           "Good scheme: grpc",
+			scheme:         "grpc",
+			httpProtocol:   "http/1.1",
+			wantedProtocol: GRPC,
+			wantedTLS:      false,
+			wantErr:        "",
 		},
 		{
-			desc:        "Wrong scheme: empty",
-			proto:       "",
-			wantedProto: HTTP1,
-			wantedTLS:   false,
-			wantErr:     `unknown backend scheme [], should be one of "http(s)" or "grpc(s)"`,
+			desc:           "Good scheme: grpcs",
+			scheme:         "grpcs",
+			httpProtocol:   "http/1.1",
+			wantedProtocol: GRPC,
+			wantedTLS:      true,
+			wantErr:        "",
+		},
+		{
+			desc:           "Good scheme: Upper case GRPC",
+			scheme:         "GRPC",
+			httpProtocol:   "http/1.1",
+			wantedProtocol: GRPC,
+			wantedTLS:      false,
+			wantErr:        "",
+		},
+		{
+			desc:           "Good scheme and http protocol ignored: grpc",
+			scheme:         "grpc",
+			httpProtocol:   "h2",
+			wantedProtocol: GRPC,
+			wantedTLS:      false,
+			wantErr:        "",
+		},
+		{
+			desc:           "Good scheme: upper case GRPCS",
+			scheme:         "GRPCS",
+			httpProtocol:   "http/1.1",
+			wantedProtocol: GRPC,
+			wantedTLS:      true,
+			wantErr:        "",
+		},
+		{
+			desc:           "Wrong scheme: rrr",
+			scheme:         "rrr",
+			httpProtocol:   "http/1.1",
+			wantedProtocol: UNKNOWN,
+			wantedTLS:      false,
+			wantErr:        `unknown backend scheme [rrr], should be one of "http(s)" or "grpc(s)"`,
+		},
+		{
+			desc:           "Wrong scheme: empty",
+			scheme:         "",
+			httpProtocol:   "http/1.1",
+			wantedProtocol: UNKNOWN,
+			wantedTLS:      false,
+			wantErr:        `unknown backend scheme [], should be one of "http(s)" or "grpc(s)"`,
+		},
+		{
+			desc:           "Wrong scheme rrrs but still TLS",
+			scheme:         "rrrs",
+			httpProtocol:   "http/1.1",
+			wantedProtocol: UNKNOWN,
+			wantedTLS:      true,
+			wantErr:        `unknown backend scheme [rrr], should be one of "http(s)" or "grpc(s)"`,
+		},
+		{
+			desc:           "Wrong http protocol: vvv",
+			scheme:         "https",
+			httpProtocol:   "vvv",
+			wantedProtocol: UNKNOWN,
+			wantedTLS:      true,
+			wantErr:        `unknown backend http protocol [vvv], should be one of "http/1.1", "h2", or not set`,
 		},
 	}
 
 	for i, tc := range testData {
-		proto, tls, err := ParseBackendProtocol(tc.proto)
-		if proto != tc.wantedProto {
-			t.Errorf("Test Desc(%d): %s, proto is wrong, got: %v, want: %v", i, tc.desc, proto, tc.wantedProto)
+		proto, tls, err := ParseBackendProtocol(tc.scheme, tc.httpProtocol)
+		if proto != tc.wantedProtocol {
+			t.Errorf("Test Desc(%d): %s, scheme is wrong, got: %v, want: %v", i, tc.desc, proto, tc.wantedProtocol)
 		}
 		if tls != tc.wantedTLS {
 			t.Errorf("Test Desc(%d): %s, TLS is wrong, got: %v, want: %v", i, tc.desc, tls, tc.wantedTLS)
