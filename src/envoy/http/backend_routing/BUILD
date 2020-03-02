@@ -57,7 +57,7 @@ envoy_cc_test(
 )
 
 envoy_cc_fuzz_test(
-    name = "filter_fuzz_test",
+    name = "backend_routing_filter_fuzz_test",
     srcs = ["filter_fuzz_test.cc"],
     corpus = "//tests/fuzz/corpus:backend_routing_filter_corpus",
     repository = "@envoy",
