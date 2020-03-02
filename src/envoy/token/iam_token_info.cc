@@ -32,6 +32,8 @@ constexpr char kDelegatesField[]("delegates");
 // https://cloud.google.com/iam/docs/reference/credentials/rest/v1/projects.serviceAccounts/generateIdToken.
 constexpr char kDelegatePrefix[]("projects/-/serviceAccounts/");
 
+constexpr char kIncludeEmail[]("includeEmail");
+
 // Body field to identify the scopes to be included in the OAuth 2.0 access
 // token
 constexpr char kScopesField[]("scope");
@@ -82,12 +84,17 @@ Envoy::Http::MessagePtr IamTokenInfo::prepareRequest(
     insertStrListToProto(body, kScopesField, scopes_, "");
   }
 
-  if (!delegates_.empty() || !scopes_.empty()) {
-    std::string bodyStr =
-        MessageUtil::getJsonStringFromMessage(body, false, false);
-    message->body() =
-        std::make_unique<Buffer::OwnedImpl>(bodyStr.data(), bodyStr.size());
-  }
+
+  //  Include the service account email in the token.
+  Envoy::ProtobufWkt::Value val;
+  vals.set_bool_value(true);
+  (*body.mutable_struct_value()->mutable_fields())[kIncludeEmail].Swap(&val);
+
+  std::string bodyStr =
+      MessageUtil::getJsonStringFromMessage(body, false, false);
+  message->body() =
+      std::make_unique<Buffer::OwnedImpl>(bodyStr.data(), bodyStr.size());
+
   return message;
 }
 

@@ -191,7 +191,7 @@ func TestBackendAuthUsingIamIdTokenWithDelegates(t *testing.T) {
 			method:          "GET",
 			path:            "/bearertoken/constant/42",
 			wantIamReqToken: "Bearer ya29.new",
-			wantIamReqBody:  `{"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar","projects/-/serviceAccounts/delegate_baz"]}`,
+			wantIamReqBody:  `{"includeEmail":true,"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar","projects/-/serviceAccounts/delegate_baz"]}`,
 		},
 	}
 
