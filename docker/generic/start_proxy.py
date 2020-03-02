@@ -145,8 +145,8 @@ environment variable or by passing "-k" flag to this script.
         help='''
         Specify the local backend application server address
         when using ESPv2 as a sidecar.
-        
-        Default value is {backend}. Follow the same format when setting 
+
+        Default value is {backend}. Follow the same format when setting
         manually. Valid schemes are `http`, `https`, `grpc`, and `grpcs`.
         '''.format(backend=DEFAULT_BACKEND))
 
@@ -165,7 +165,7 @@ environment variable or by passing "-k" flag to this script.
        backward compatible for ESPv1 and will be deprecated.
        Please use the flag --listener_port.''')
 
-    parser.add_argument('--server_ssl_path', default=None, help='''
+    parser.add_argument('--ssl_server_path', default=None, help='''
     Proxy Server SSL path. When configured, ESPv2 only accepts HTTP/1.x and
     HTTP/2 secure connections on listener_port. Requires the certificate and
     key files "server.crt" and "server.key" within this path.''')
@@ -462,7 +462,7 @@ environment variable or by passing "-k" flag to this script.
         default=None,
         help='''
         ===
-        DEPRECATED: This flag will automatically be set based on the scheme 
+        DEPRECATED: This flag will automatically be set based on the scheme
         specified in the --backend flag. Overrides are no longer needed.
         ===
         Backend Protocol. Overrides the protocol in --backend.
@@ -563,8 +563,8 @@ def gen_proxy_config(args):
         proxy_conf.extend(["--listener_port", str(args.http2_port)])
     if args.listener_port:
         proxy_conf.extend(["--listener_port", str(args.listener_port)])
-    if args.server_ssl_path:
-        proxy_conf.extend(["--server_ssl_path", str(args.server_ssl_path)])
+    if args.ssl_server_path:
+        proxy_conf.extend(["--ssl_server_path", str(args.ssl_server_path)])
 
     if args.service:
         proxy_conf.extend(["--service", args.service])

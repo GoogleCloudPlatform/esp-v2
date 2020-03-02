@@ -106,11 +106,11 @@ class TestStartProxy(unittest.TestCase):
               ]),
             # serverSslPath specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
-              '--server_ssl_path=/etc/endpoint/ssl'],
+              '--ssl_server_path=/etc/endpoint/ssl'],
              ['bin/configmanager', '--logtostderr',
               '--backend_address', 'http://127.0.0.1:8082',
               '--rollout_strategy', 'managed', '--v', '0',
-              '--listener_port', '8080', '--server_ssl_path',
+              '--listener_port', '8080', '--ssl_server_path',
               '/etc/endpoint/ssl', '--disable_tracing'
               ]),
             # http2_port specified.

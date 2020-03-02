@@ -53,7 +53,7 @@ var (
 	ListenerPort = flag.Int("listener_port", 8080, "listener port")
 	Healthz      = flag.String("healthz", "", "path for health check of ESPv2 proxy itself")
 
-	ServerSslPath = flag.String("server_ssl_path", "", "Path to the certificate and key that ESPv2 uses to act as a HTTPS server")
+	SslServerPath = flag.String("ssl_server_path", "", "Path to the certificate and key that ESPv2 uses to act as a HTTPS server")
 	RootCertsPath = flag.String("root_certs_path", util.DefaultRootCAPaths, "Path to the root certificates to make TSL connection.")
 
 	// Flags for non_gcp deployment.
@@ -115,7 +115,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		ListenerPort:                  *ListenerPort,
 		Healthz:                       *Healthz,
 		RootCertsPath:                 *RootCertsPath,
-		ServerSslPath:                 *ServerSslPath,
+		SslServerPath:                 *SslServerPath,
 		ServiceAccountKey:             *ServiceAccountKey,
 		SkipJwtAuthnFilter:            *SkipJwtAuthnFilter,
 		SkipServiceControlFilter:      *SkipServiceControlFilter,

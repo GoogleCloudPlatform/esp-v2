@@ -201,10 +201,10 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	}
 
 	listenerName := "http_listener"
-	if serviceInfo.Options.ServerSslPath != "" {
+	if serviceInfo.Options.SslServerPath != "" {
 		listenerName = "https_listener"
 		transportSocket, err := util.CreateDownstreamTransportSocket(
-			serviceInfo.Options.ServerSslPath)
+			serviceInfo.Options.SslServerPath)
 		if err != nil {
 			return nil, err
 		}

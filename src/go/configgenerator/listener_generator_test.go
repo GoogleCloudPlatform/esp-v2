@@ -1106,15 +1106,13 @@ func TestHealthCheckFilter(t *testing.T) {
 func TestMakeListeners(t *testing.T) {
 	testdata := []struct {
 		desc              string
-		protocol          string
-		serverSslPath     string
+		sslServerPath     string
 		fakeServiceConfig *confpb.Service
 		wantListeners     []string
 	}{
 		{
 			desc:          "Success, generate redirect listener when ssl_port is configured",
-			protocol:      "http",
-			serverSslPath: "/etc/endpoints/ssl",
+			sslServerPath: "/etc/endpoints/ssl",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -1208,7 +1206,7 @@ func TestMakeListeners(t *testing.T) {
 
 	for i, tc := range testdata {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.ServerSslPath = tc.serverSslPath
+		opts.SslServerPath = tc.sslServerPath
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
@@ -1220,6 +1218,7 @@ func TestMakeListeners(t *testing.T) {
 		}
 		if len(listeners) != len(tc.wantListeners) {
 			t.Errorf("Test Desc(%d): %s, MakeListeners failed,\ngot: %d, \nwant: %d", i, tc.desc, len(listeners), len(tc.wantListeners))
+			continue
 		}
 
 		marshaler := &jsonpb.Marshaler{}
