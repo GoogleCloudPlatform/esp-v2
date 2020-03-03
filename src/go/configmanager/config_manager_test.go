@@ -1437,7 +1437,7 @@ func TestFetchListeners(t *testing.T) {
 				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, resp.Request, req)
 			}
 
-			if !util.JsonEqual(&tc.wantedListeners, &gotListeners) {
+			if err := util.JsonEqual(tc.wantedListeners, gotListeners); err != nil {
 				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got unexpected Listeners", i, tc.desc)
 				t.Errorf("Actual: %s", gotListeners)
 				t.Errorf("Expected: %s", tc.wantedListeners)
@@ -1508,8 +1508,8 @@ func TestDynamicBackendRouting(t *testing.T) {
 				t.Error(err)
 				continue
 			}
-			if !util.JsonEqual(&want, &gotCluster) {
-				t.Errorf("Test Desc(%d): %s, idx %d snapshot cache fetch got Cluster: %s, want: %s", i, tc.desc, idx, gotCluster, want)
+			if err := util.JsonEqual(want, gotCluster); err != nil {
+				t.Errorf("Test Desc(%d): %s, idx %d snapshot cache fetch got Cluster: \n%v", i, tc.desc, idx, err)
 				continue
 			}
 		}
@@ -1540,8 +1540,8 @@ func TestDynamicBackendRouting(t *testing.T) {
 			t.Error(err)
 			continue
 		}
-		if !util.JsonEqual(&tc.wantedListener, &gotListener) {
-			t.Errorf("Test Desc(%d): %s, snapshot cache fetch Listener,\n\t got : %s,\n\t want: %s", i, tc.desc, gotListener, tc.wantedListener)
+		if err := util.JsonEqual(tc.wantedListener, gotListener); err != nil {
+			t.Errorf("Test Desc(%d): %s, snapshot cache fetch Listener,\n\t %v", i, tc.desc, err)
 		}
 	}
 }

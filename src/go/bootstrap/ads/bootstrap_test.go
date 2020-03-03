@@ -195,8 +195,8 @@ func TestCreateBootstrapConfig(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to create bootstrap config, error: %v", err)
 		}
-		if !util.JsonEqual(&tc.wantConfig, &bootstrapStr) {
-			t.Errorf("Test (%s): failed, expected config:\n %s, got:\n %s", tc.desc, tc.wantConfig, bootstrapStr)
+		if err := util.JsonEqual(tc.wantConfig, bootstrapStr); err != nil {
+			t.Errorf("Test (%s) failed:\n %v", tc.desc, err)
 		}
 	}
 }

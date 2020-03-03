@@ -99,8 +99,8 @@ func TestTranscoderFilter(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if !util.JsonEqual(&tc.wantTranscoderFilter, &gotFilter) {
-			t.Errorf("Test Desc(%d): %s, makeTranscoderFilter failed, got: %s, want: %s", i, tc.desc, gotFilter, tc.wantTranscoderFilter)
+		if err := util.JsonEqual(tc.wantTranscoderFilter, gotFilter); err != nil {
+			t.Errorf("Test Desc(%d): %s, makeTranscoderFilter failed, \n %v", i, tc.desc, err)
 		}
 	}
 }
@@ -370,8 +370,8 @@ func TestBackendRoutingFilter(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !util.JsonEqual(&tc.wantBackendRoutingFilter, &gotFilter) {
-			t.Errorf("Test Desc(%d): %s, makeBackendAuthFilter failed,\ngot: %s, \nwant: %s", i, tc.desc, gotFilter, tc.wantBackendRoutingFilter)
+		if err := util.JsonEqual(tc.wantBackendRoutingFilter, gotFilter); err != nil {
+			t.Errorf("Test Desc(%d): %s, makeBackendAuthFilter failed,\n %v", i, tc.desc, err)
 		}
 	}
 }
@@ -620,8 +620,8 @@ func TestBackendAuthFilter(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !util.JsonEqual(&tc.wantBackendAuthFilter, &gotFilter) {
-			t.Errorf("Test Desc(%d): %s, makeBackendAuthFilter failed,\ngot: %s, \nwant: %s", i, tc.desc, gotFilter, tc.wantBackendAuthFilter)
+		if err := util.JsonEqual(tc.wantBackendAuthFilter, gotFilter); err != nil {
+			t.Errorf("Test Desc(%d): %s, makeBackendAuthFilter failed,\n %v", i, tc.desc, err)
 		}
 	}
 }
@@ -980,8 +980,8 @@ func TestPathMatcherFilter(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !util.JsonEqual(&tc.wantPathMatcherFilter, &gotFilter) {
-			t.Errorf("Test Desc(%d): %s, makePathMatcherFilter failed, got: %s, want: %s", i, tc.desc, gotFilter, tc.wantPathMatcherFilter)
+		if err := util.JsonEqual(tc.wantPathMatcherFilter, gotFilter); err != nil {
+			t.Errorf("Test Desc(%d): %s, makePathMatcherFilter failed, \n %v", i, tc.desc, err)
 		}
 	}
 }
@@ -1088,8 +1088,8 @@ func TestHealthCheckFilter(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if !util.JsonEqual(&tc.wantHealthCheckFilter, &gotFilter) {
-			t.Errorf("Test Desc(%d): %s, makeHealthCheckFilter failed,\ngot: %s, \nwant: %s", i, tc.desc, gotFilter, tc.wantHealthCheckFilter)
+		if err := util.JsonEqual(tc.wantHealthCheckFilter, gotFilter); err != nil {
+			t.Errorf("Test Desc(%d): %s, makeHealthCheckFilter failed,\n%v", i, tc.desc, err)
 		}
 	}
 }
@@ -1219,8 +1219,8 @@ func TestMakeListeners(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if !util.JsonEqual(&wantListener, &gotListener) {
-				t.Errorf("Test Desc(%d): %s, MakeListeners failed for %d,\ngot: %s, \nwant: %s", i, tc.desc, j, gotListener, wantListener)
+			if err := util.JsonEqual(wantListener, gotListener); err != nil {
+				t.Errorf("Test Desc(%d): %s, MakeListeners failed for listener(%d), \n %v ", i, tc.desc, j, err)
 			}
 		}
 	}
