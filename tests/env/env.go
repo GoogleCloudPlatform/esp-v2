@@ -279,7 +279,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		bootstrapperArgs = append(bootstrapperArgs, "--metadata_url="+e.MockMetadataServer.GetURL())
 	}
 
-	if e.mockIamResps != nil {
+	if e.mockIamResps != nil || e.mockIamFailures != 0 {
 		e.MockIamServer = components.NewIamMetadata(e.mockIamResps, e.mockIamFailures)
 		confArgs = append(confArgs, "--iam_url="+e.MockIamServer.GetURL())
 	}
