@@ -15,11 +15,11 @@
 package ads
 
 import (
-	"encoding/json"
 	"flag"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/bootstrap/ads/flags"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 )
 
 func TestCreateBootstrapConfig(t *testing.T) {
@@ -195,16 +195,8 @@ func TestCreateBootstrapConfig(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to create bootstrap config, error: %v", err)
 		}
-		got := normalizeJson(bootstrapStr)
-		if want := normalizeJson(tc.wantConfig); got != want {
-			t.Errorf("Test (%s): failed, expected config:\n %s, got:\n %s", tc.desc, want, got)
+		if !util.JsonEqual(&tc.wantConfig, &bootstrapStr) {
+			t.Errorf("Test (%s): failed, expected config:\n %s, got:\n %s", tc.desc, tc.wantConfig, bootstrapStr)
 		}
 	}
-}
-
-func normalizeJson(input string) string {
-	var jsonObject map[string]interface{}
-	json.Unmarshal([]byte(input), &jsonObject)
-	outputString, _ := json.Marshal(jsonObject)
-	return string(outputString)
 }

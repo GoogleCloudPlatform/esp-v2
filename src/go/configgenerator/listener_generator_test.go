@@ -16,13 +16,12 @@ package configgenerator
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
 
@@ -96,12 +95,12 @@ func TestTranscoderFilter(t *testing.T) {
 
 		marshaler := &jsonpb.Marshaler{}
 		gotFilter, err := marshaler.MarshalToString(makeTranscoderFilter(fakeServiceInfo))
+		if err != nil {
+			t.Fatal(err)
+		}
 
-		// Normalize both path matcher filter and gotListeners.
-		gotFilter = normalizeJson(gotFilter)
-		want := normalizeJson(tc.wantTranscoderFilter)
-		if gotFilter != want {
-			t.Errorf("Test Desc(%d): %s, makeTranscoderFilter failed, got: %s, want: %s", i, tc.desc, gotFilter, want)
+		if !util.JsonEqual(&tc.wantTranscoderFilter, &gotFilter) {
+			t.Errorf("Test Desc(%d): %s, makeTranscoderFilter failed, got: %s, want: %s", i, tc.desc, gotFilter, tc.wantTranscoderFilter)
 		}
 	}
 }
@@ -371,12 +370,8 @@ func TestBackendRoutingFilter(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		gotFilter = normalizeJson(gotFilter)
-		want := normalizeJson(tc.wantBackendRoutingFilter)
-
-		if !strings.Contains(gotFilter, want) {
-			t.Errorf("Test Desc(%d): %s, makeBackendAuthFilter failed,\ngot: %s, \nwant: %s", i, tc.desc, gotFilter, want)
+		if !util.JsonEqual(&tc.wantBackendRoutingFilter, &gotFilter) {
+			t.Errorf("Test Desc(%d): %s, makeBackendAuthFilter failed,\ngot: %s, \nwant: %s", i, tc.desc, gotFilter, tc.wantBackendRoutingFilter)
 		}
 	}
 }
@@ -622,11 +617,11 @@ func TestBackendAuthFilter(t *testing.T) {
 
 		marshaler := &jsonpb.Marshaler{}
 		gotFilter, err := marshaler.MarshalToString(makeBackendAuthFilter(fakeServiceInfo))
-		gotFilter = normalizeJson(gotFilter)
-		want := normalizeJson(tc.wantBackendAuthFilter)
-
-		if !strings.Contains(gotFilter, want) {
-			t.Errorf("Test Desc(%d): %s, makeBackendAuthFilter failed,\ngot: %s, \nwant: %s", i, tc.desc, gotFilter, want)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !util.JsonEqual(&tc.wantBackendAuthFilter, &gotFilter) {
+			t.Errorf("Test Desc(%d): %s, makeBackendAuthFilter failed,\ngot: %s, \nwant: %s", i, tc.desc, gotFilter, tc.wantBackendAuthFilter)
 		}
 	}
 }
@@ -982,12 +977,11 @@ func TestPathMatcherFilter(t *testing.T) {
 		}
 		marshaler := &jsonpb.Marshaler{}
 		gotFilter, err := marshaler.MarshalToString(makePathMatcherFilter(fakeServiceInfo))
-
-		// Normalize both path matcher filter and gotListeners.
-		gotFilter = normalizeJson(gotFilter)
-		want := normalizeJson(tc.wantPathMatcherFilter)
-		if !strings.Contains(gotFilter, want) {
-			t.Errorf("Test Desc(%d): %s, makePathMatcherFilter failed, got: %s, want: %s", i, tc.desc, gotFilter, want)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !util.JsonEqual(&tc.wantPathMatcherFilter, &gotFilter) {
+			t.Errorf("Test Desc(%d): %s, makePathMatcherFilter failed, got: %s, want: %s", i, tc.desc, gotFilter, tc.wantPathMatcherFilter)
 		}
 	}
 }
@@ -1094,11 +1088,8 @@ func TestHealthCheckFilter(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		gotFilter = normalizeJson(gotFilter)
-		want := normalizeJson(tc.wantHealthCheckFilter)
-
-		if !strings.Contains(gotFilter, want) {
-			t.Errorf("Test Desc(%d): %s, makeHealthCheckFilter failed,\ngot: %s, \nwant: %s", i, tc.desc, gotFilter, want)
+		if !util.JsonEqual(&tc.wantHealthCheckFilter, &gotFilter) {
+			t.Errorf("Test Desc(%d): %s, makeHealthCheckFilter failed,\ngot: %s, \nwant: %s", i, tc.desc, gotFilter, tc.wantHealthCheckFilter)
 		}
 	}
 }
@@ -1227,18 +1218,10 @@ func TestMakeListeners(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			gotListener = normalizeJson(gotListener)
-			want := normalizeJson(wantListener)
-			if !strings.EqualFold(gotListener, want) {
-				t.Errorf("Test Desc(%d): %s, MakeListeners failed for %d,\ngot: %s, \nwant: %s", i, tc.desc, j, gotListener, want)
+
+			if !util.JsonEqual(&wantListener, &gotListener) {
+				t.Errorf("Test Desc(%d): %s, MakeListeners failed for %d,\ngot: %s, \nwant: %s", i, tc.desc, j, gotListener, wantListener)
 			}
 		}
 	}
-}
-
-func normalizeJson(input string) string {
-	var jsonObject map[string]interface{}
-	json.Unmarshal([]byte(input), &jsonObject)
-	outputString, _ := json.Marshal(jsonObject)
-	return string(outputString)
 }
