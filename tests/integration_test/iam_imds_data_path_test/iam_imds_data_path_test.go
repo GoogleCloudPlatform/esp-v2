@@ -120,7 +120,7 @@ func TestIamImdsDataPath(t *testing.T) {
 				}
 
 				gotResp := string(resp)
-				if err := !util.JsonEqual(tc.wantResp, gotResp); err != nil {
+				if err := util.JsonEqual(tc.wantResp, gotResp); err != nil {
 					t.Errorf("Test Desc(%s) failed, \n %v", tc.desc, err)
 				}
 			}
