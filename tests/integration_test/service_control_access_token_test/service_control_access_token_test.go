@@ -61,7 +61,7 @@ func TestServiceControlAccessToken(t *testing.T) {
 			method:                   "POST",
 			message:                  "this-is-messgae",
 			wantIamReqToken:          "Bearer ya29.new",
-			wantIamReqBody:           `{"scope":["https://www.googleapis.com/auth/servicecontrol"],"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar","projects/-/serviceAccounts/delegate_baz"]}`,
+			wantIamReqBody:           `{"includeEmail":true,"scope":["https://www.googleapis.com/auth/servicecontrol"],"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar","projects/-/serviceAccounts/delegate_baz"]}`,
 			wantScRequestAccessToken: "Bearer access-token-from-iam",
 		},
 	}
