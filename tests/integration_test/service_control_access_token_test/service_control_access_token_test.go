@@ -74,7 +74,7 @@ func TestServiceControlAccessToken(t *testing.T) {
 		// The check call and the report call will be sent.
 		scRequests, err1 := s.ServiceControlServer.GetRequests(2)
 		if err1 != nil {
-			t.Fatalf("Test (%s): failed, GetRequests ocks.returns error: %v", tc.desc, err1)
+			t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err1)
 		}
 
 		for _, scRequest := range scRequests {
