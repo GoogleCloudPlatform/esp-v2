@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package tests.fuzz.protos;
+
+import "validate/validate.proto";
+
+message IamTokenInfoInput {
+
+  // Arguments for constructor.
+  repeated string delegates = 1;
+  repeated string scopes = 2;
+  bool include_email = 3;
+
+  // Arguments for starting the request.
+  string access_token = 4;
+  string token_url = 5;
+
+  // Arguments for parsing the tokens.
+  string resp_body = 6;
+}

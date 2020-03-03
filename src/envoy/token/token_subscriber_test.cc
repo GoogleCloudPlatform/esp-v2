@@ -51,10 +51,9 @@ class TokenSubscriberTest : public testing::Test {
 
   void setUp(const TokenType& token_type) {
     EXPECT_CALL(context_.init_manager_, add(_))
-        .WillOnce(
-            Invoke([this](const Envoy::Init::Target& target) {
-              init_target_handle_ = target.createHandle("test");
-            }));
+        .WillOnce(Invoke([this](const Envoy::Init::Target& target) {
+          init_target_handle_ = target.createHandle("test");
+        }));
 
     // Setup mock http async client.
     EXPECT_CALL(context_.cluster_manager_.async_client_, send_(_, _, _))

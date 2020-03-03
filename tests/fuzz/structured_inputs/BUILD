@@ -17,11 +17,13 @@ envoy_proto_library(
 )
 
 envoy_proto_library(
-    name = "iam_token_subscriber_proto",
-    srcs = ["iam_token_subscriber.proto"],
-    deps = [
-        "@envoy//test/fuzz:common_proto",
-    ],
+    name = "iam_token_info_proto",
+    srcs = ["iam_token_info.proto"],
+)
+
+envoy_proto_library(
+    name = "imds_token_info_proto",
+    srcs = ["imds_token_info.proto"],
 )
 
 envoy_proto_library(

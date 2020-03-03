@@ -1,0 +1,6 @@
+delegates: "test-delegate-1"
+delegates: "test-delegate-2"
+include_email: true
+access_token: "access-token"
+token_url: "token_url"
+resp_body: "{ \"token\": \"fake-identity-token\" }"

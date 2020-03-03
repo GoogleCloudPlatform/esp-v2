@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package tests.fuzz.protos;
+
+import "validate/validate.proto";
+
+message ImdsTokenInfoInput {
+  // Arguments for starting the request.
+  string token_url = 1;
+
+  // Arguments for parsing the tokens.
+  string resp_body = 2;
+}
