@@ -46,8 +46,9 @@ class TokenSubscriberFactoryImpl : public TokenSubscriberFactory {
       const ::google::protobuf::RepeatedPtrField<std::string>& delegates,
       const ::google::protobuf::RepeatedPtrField<std::string>& scopes,
       GetTokenFunc access_token_fn) const override {
-    TokenInfoPtr info =
-        std::make_unique<IamTokenInfo>(delegates, scopes, access_token_fn);
+    TokenInfoPtr info = std::make_unique<IamTokenInfo>(
+        delegates, scopes, token_type == IdentityToken ? true : false,
+        access_token_fn);
     TokenSubscriberPtr subscriber =
         std::make_unique<TokenSubscriber>(context_, token_type, token_cluster,
                                           token_url, callback, std::move(info));

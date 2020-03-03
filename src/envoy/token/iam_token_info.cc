@@ -32,6 +32,9 @@ constexpr char kDelegatesField[]("delegates");
 // https://cloud.google.com/iam/docs/reference/credentials/rest/v1/projects.serviceAccounts/generateIdToken.
 constexpr char kDelegatePrefix[]("projects/-/serviceAccounts/");
 
+//  Include the service account email in the token.
+constexpr char kIncludeEmail[]("includeEmail");
+
 // Body field to identify the scopes to be included in the OAuth 2.0 access
 // token
 constexpr char kScopesField[]("scope");
@@ -45,9 +48,10 @@ constexpr std::chrono::seconds kDefaultTokenExpiry(3599);
 IamTokenInfo::IamTokenInfo(
     const ::google::protobuf::RepeatedPtrField<std::string>& delegates,
     const ::google::protobuf::RepeatedPtrField<std::string>& scopes,
-    const GetTokenFunc access_token_fn)
+    const bool include_email, const GetTokenFunc access_token_fn)
     : delegates_(delegates),
       scopes_(scopes),
+      include_email_(include_email),
       access_token_fn_(access_token_fn) {}
 
 Envoy::Http::MessagePtr IamTokenInfo::prepareRequest(
@@ -82,7 +86,13 @@ Envoy::Http::MessagePtr IamTokenInfo::prepareRequest(
     insertStrListToProto(body, kScopesField, scopes_, "");
   }
 
-  if (!delegates_.empty() || !scopes_.empty()) {
+  if (include_email_) {
+    Envoy::ProtobufWkt::Value val;
+    val.set_bool_value(true);
+    (*body.mutable_struct_value()->mutable_fields())[kIncludeEmail].Swap(&val);
+  }
+
+  if (!delegates_.empty() || !scopes_.empty() || include_email_) {
     std::string bodyStr =
         MessageUtil::getJsonStringFromMessage(body, false, false);
     message->body() =

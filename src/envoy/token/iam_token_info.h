@@ -31,7 +31,7 @@ class IamTokenInfo : public TokenInfo {
   IamTokenInfo(
       const ::google::protobuf::RepeatedPtrField<std::string>& delegates,
       const ::google::protobuf::RepeatedPtrField<std::string>& scopes,
-      const GetTokenFunc access_token_fn);
+      const bool include_email, const GetTokenFunc access_token_fn);
 
   Envoy::Http::MessagePtr prepareRequest(
       absl::string_view token_url) const override;
@@ -48,6 +48,7 @@ class IamTokenInfo : public TokenInfo {
 
   const ::google::protobuf::RepeatedPtrField<std::string>& delegates_;
   const ::google::protobuf::RepeatedPtrField<std::string> scopes_;
+  const bool include_email_;
   const GetTokenFunc access_token_fn_;
 };
 
