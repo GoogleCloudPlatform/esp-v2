@@ -70,7 +70,10 @@ class TokenSubscriberTest : public testing::Test {
 
     // Setup mock refresh timer.
     EXPECT_CALL(context_.dispatcher_, createTimer_(_))
-        .WillOnce(Invoke([this](Envoy::Event::TimerCb) { return mock_timer_; }))
+        .WillOnce(Invoke([this](Envoy::Event::TimerCb cb) {
+          timer_cb_ = cb;
+          return mock_timer_;
+        }))
         .RetiresOnSaturation();
 
     // Create token subscriber under test.
@@ -104,6 +107,7 @@ class TokenSubscriberTest : public testing::Test {
   // Mocks for init.
   Envoy::Init::TargetHandlePtr init_target_handle_;
   Envoy::Event::MockTimer* mock_timer_;
+  Envoy::Event::TimerCb timer_cb_;
   NiceMock<Envoy::Init::ExpectableWatcherImpl> init_watcher_;
   bool init_ready_ = false;
 
@@ -366,8 +370,8 @@ TEST_F(TokenSubscriberTest, RetryMissingPreconditionThenSuccess) {
   ASSERT_EQ(call_count_, 0);
   ASSERT_FALSE(init_ready_);
 
-  // Part 2: Retry, will result in a success.
-  init_target_handle_->initialize(init_watcher_);
+  // Part 2: Retry the callback for the timer, will result in a success.
+  timer_cb_();
 
   // Setup fake response.
   Envoy::Http::HeaderMapImplPtr resp_headers{new Envoy::Http::TestHeaderMapImpl{
