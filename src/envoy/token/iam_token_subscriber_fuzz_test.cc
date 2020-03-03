@@ -90,8 +90,8 @@ DEFINE_PROTO_FUZZER(const tests::fuzz::protos::IamTokenSubscriberInput& input) {
     // Class under test
     ::google::protobuf::RepeatedPtrField<std::string> delegates;
     ::google::protobuf::RepeatedPtrField<std::string> scopes;
-    TokenInfoPtr info =
-        std::make_unique<IamTokenInfo>(delegates, scopes, access_token_fn);
+    TokenInfoPtr info = std::make_unique<IamTokenInfo>(delegates, scopes, true,
+                                                       access_token_fn);
     TokenSubscriber subscriber(context, TokenType::IdentityToken,
                                "token_cluster", "http://iam/uri_suffix",
                                id_token_callback, std::move(info));

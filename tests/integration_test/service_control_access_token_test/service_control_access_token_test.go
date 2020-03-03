@@ -61,7 +61,7 @@ func TestServiceControlAccessToken(t *testing.T) {
 			method:                   "POST",
 			message:                  "this-is-messgae",
 			wantIamReqToken:          "Bearer ya29.new",
-			wantIamReqBody:           `{"includeEmail":true,"scope":["https://www.googleapis.com/auth/servicecontrol"],"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar","projects/-/serviceAccounts/delegate_baz"]}`,
+			wantIamReqBody:           `{"scope":["https://www.googleapis.com/auth/servicecontrol"],"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar","projects/-/serviceAccounts/delegate_baz"]}`,
 			wantScRequestAccessToken: "Bearer access-token-from-iam",
 		},
 	}
@@ -74,7 +74,7 @@ func TestServiceControlAccessToken(t *testing.T) {
 		// The check call and the report call will be sent.
 		scRequests, err1 := s.ServiceControlServer.GetRequests(2)
 		if err1 != nil {
-			t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err1)
+			t.Fatalf("Test (%s): failed, GetRequests ocks.returns error: %v", tc.desc, err1)
 		}
 
 		for _, scRequest := range scRequests {

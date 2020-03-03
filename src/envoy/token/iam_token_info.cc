@@ -48,9 +48,10 @@ constexpr std::chrono::seconds kDefaultTokenExpiry(3599);
 IamTokenInfo::IamTokenInfo(
     const ::google::protobuf::RepeatedPtrField<std::string>& delegates,
     const ::google::protobuf::RepeatedPtrField<std::string>& scopes,
-    const GetTokenFunc access_token_fn)
+    const bool include_email, const GetTokenFunc access_token_fn)
     : delegates_(delegates),
       scopes_(scopes),
+      include_email_(include_email),
       access_token_fn_(access_token_fn) {}
 
 Envoy::Http::MessagePtr IamTokenInfo::prepareRequest(
@@ -85,15 +86,18 @@ Envoy::Http::MessagePtr IamTokenInfo::prepareRequest(
     insertStrListToProto(body, kScopesField, scopes_, "");
   }
 
-  Envoy::ProtobufWkt::Value val;
-  val.set_bool_value(true);
-  (*body.mutable_struct_value()->mutable_fields())[kIncludeEmail].Swap(&val);
+  if (include_email_) {
+    Envoy::ProtobufWkt::Value val;
+    val.set_bool_value(true);
+    (*body.mutable_struct_value()->mutable_fields())[kIncludeEmail].Swap(&val);
+  }
 
-  std::string bodyStr =
-      MessageUtil::getJsonStringFromMessage(body, false, false);
-  message->body() =
-      std::make_unique<Buffer::OwnedImpl>(bodyStr.data(), bodyStr.size());
-
+  if (!delegates_.empty() || !scopes_.empty() || include_email_) {
+    std::string bodyStr =
+        MessageUtil::getJsonStringFromMessage(body, false, false);
+    message->body() =
+        std::make_unique<Buffer::OwnedImpl>(bodyStr.data(), bodyStr.size());
+  }
   return message;
 }
 
