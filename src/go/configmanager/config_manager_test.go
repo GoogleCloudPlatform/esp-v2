@@ -1438,9 +1438,7 @@ func TestFetchListeners(t *testing.T) {
 			}
 
 			if err := util.JsonEqual(tc.wantedListeners, gotListeners); err != nil {
-				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got unexpected Listeners", i, tc.desc)
-				t.Errorf("Actual: %s", gotListeners)
-				t.Errorf("Expected: %s", tc.wantedListeners)
+				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got unexpected Listeners, \n %v", i, tc.desc, err)
 			}
 		})
 	}

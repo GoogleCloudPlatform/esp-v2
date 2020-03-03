@@ -78,8 +78,13 @@ func InitMockServerFromPathResp(pathResp map[string]string) *httptest.Server {
 // JsonEqual compares two JSON strings after normalizing them.
 // Should be used for test only.
 func JsonEqual(want, got string) error {
-	got = normalizeJson(got)
-	want = normalizeJson(want)
+	var err error
+	if got, err = normalizeJson(got); err != nil {
+		return err
+	}
+	if want, err = normalizeJson(want); err != nil {
+		return err
+	}
 	if !strings.EqualFold(want, got) {
 		return fmt.Errorf("got: %s \n want: %s", got, want)
 	}
@@ -87,9 +92,9 @@ func JsonEqual(want, got string) error {
 }
 
 // normalizeJson returns normalized JSON string.
-func normalizeJson(input string) string {
+func normalizeJson(input string) (string, error) {
 	var jsonObject map[string]interface{}
 	json.Unmarshal([]byte(input), &jsonObject)
-	outputString, _ := json.Marshal(jsonObject)
-	return string(outputString)
+	outputString, err := json.Marshal(jsonObject)
+	return string(outputString), err
 }
