@@ -50,10 +50,9 @@ class TokenSubscriberTest : public testing::Test {
   }
 
   void setUp(const TokenType& token_type) {
-    Envoy::Init::TargetHandlePtr init_target_handle_;
     EXPECT_CALL(context_.init_manager_, add(_))
         .WillOnce(
-            Invoke([&init_target_handle_](const Envoy::Init::Target& target) {
+            Invoke([this](const Envoy::Init::Target& target) {
               init_target_handle_ = target.createHandle("test");
             }));
 
@@ -71,14 +70,17 @@ class TokenSubscriberTest : public testing::Test {
 
     // Setup mock refresh timer.
     EXPECT_CALL(context_.dispatcher_, createTimer_(_))
-        .WillOnce(Invoke([this](Envoy::Event::TimerCb) { return mock_timer_; }))
+        .WillOnce(Invoke([this](Envoy::Event::TimerCb cb) {
+          timer_cb_ = cb;
+          return mock_timer_;
+        }))
         .RetiresOnSaturation();
 
     // Create token subscriber under test.
-    iam_token_sub_ = std::make_unique<TokenSubscriber>(
+    token_sub_ = std::make_unique<TokenSubscriber>(
         context_, token_type, "token_cluster", token_url_,
         token_callback_.AsStdFunction(), std::move(info_));
-    iam_token_sub_->init();
+    token_sub_->init();
 
     // TokenSubscriber must call `ready` to signal Init::Manager once it
     // finishes initializing.
@@ -103,13 +105,15 @@ class TokenSubscriberTest : public testing::Test {
   int call_count_ = 0;
 
   // Mocks for init.
+  Envoy::Init::TargetHandlePtr init_target_handle_;
   Envoy::Event::MockTimer* mock_timer_;
+  Envoy::Event::TimerCb timer_cb_;
   NiceMock<Envoy::Init::ExpectableWatcherImpl> init_watcher_;
   bool init_ready_ = false;
 
   // Our classes.
   MockTokenInfoPtr info_;
-  TokenSubscriberPtr iam_token_sub_;
+  TokenSubscriberPtr token_sub_;
 };
 
 TEST_F(TokenSubscriberTest, HandleMissingPreconditions) {
@@ -127,7 +131,7 @@ TEST_F(TokenSubscriberTest, HandleMissingPreconditions) {
 
   // Assert subscriber did not succeed.
   ASSERT_EQ(call_count_, 0);
-  ASSERT_TRUE(init_ready_);
+  ASSERT_FALSE(init_ready_);
 }
 
 TEST_F(TokenSubscriberTest, VerifyRemoteRequest) {
@@ -186,7 +190,7 @@ TEST_F(TokenSubscriberTest, ProcessNon200Response) {
 
   // Assert subscriber did not succeed.
   ASSERT_EQ(call_count_, 1);
-  ASSERT_TRUE(init_ready_);
+  ASSERT_FALSE(init_ready_);
 }
 
 TEST_F(TokenSubscriberTest, ProcessMissingStatusResponse) {
@@ -217,7 +221,7 @@ TEST_F(TokenSubscriberTest, ProcessMissingStatusResponse) {
 
   // Assert subscriber did not succeed.
   ASSERT_EQ(call_count_, 1);
-  ASSERT_TRUE(init_ready_);
+  ASSERT_FALSE(init_ready_);
 }
 
 TEST_F(TokenSubscriberTest, BadParseIdentityToken) {
@@ -252,7 +256,7 @@ TEST_F(TokenSubscriberTest, BadParseIdentityToken) {
 
   // Assert subscriber did not succeed.
   ASSERT_EQ(call_count_, 1);
-  ASSERT_TRUE(init_ready_);
+  ASSERT_FALSE(init_ready_);
 }
 
 TEST_F(TokenSubscriberTest, BadParseAccessToken) {
@@ -287,7 +291,7 @@ TEST_F(TokenSubscriberTest, BadParseAccessToken) {
 
   // Assert subscriber did not succeed.
   ASSERT_EQ(call_count_, 1);
-  ASSERT_TRUE(init_ready_);
+  ASSERT_FALSE(init_ready_);
 }
 
 TEST_F(TokenSubscriberTest, Success) {
@@ -316,6 +320,58 @@ TEST_F(TokenSubscriberTest, Success) {
 
   // Start class under test.
   setUp(TokenType::AccessToken);
+
+  // Setup fake response.
+  Envoy::Http::HeaderMapImplPtr resp_headers{new Envoy::Http::TestHeaderMapImpl{
+      {":status", "200"},
+  }};
+  Envoy::Http::MessagePtr response(
+      new Envoy::Http::RequestMessageImpl(std::move(resp_headers)));
+
+  // Start the response.
+  client_callback_->onSuccess(std::move(response));
+
+  // Assert subscriber did succeed.
+  ASSERT_EQ(call_count_, 1);
+  ASSERT_TRUE(init_ready_);
+}
+
+TEST_F(TokenSubscriberTest, RetryMissingPreconditionThenSuccess) {
+  // Part 1: Failed due to missing precondition
+
+  // Setup mocks for info. Fail on the first time, then work later.
+  Envoy::Http::HeaderMapImplPtr req_headers{
+      new Envoy::Http::TestHeaderMapImpl{}};
+  EXPECT_CALL(*info_, prepareRequest(_))
+      .WillOnce(Return(ByMove(nullptr)))
+      .WillRepeatedly(
+          Return(ByMove(std::make_unique<Envoy::Http::RequestMessageImpl>(
+              std::move(req_headers)))));
+
+  // Setup fake parse status.
+  EXPECT_CALL(*info_, parseAccessToken(_, _))
+      .WillOnce(Invoke([](absl::string_view, TokenResult* ret) {
+        ret->token = "fake-token";
+        ret->expiry_duration = std::chrono::seconds(30);
+        return true;
+      }));
+
+  // Expect subscriber does not succeed at first, but then does.
+  EXPECT_CALL(*mock_timer_, enableTimer(kFailedExpect, nullptr)).Times(1);
+  EXPECT_CALL(*mock_timer_,
+              enableTimer(std::chrono::milliseconds(25 * 1000), nullptr))
+      .Times(1);
+  EXPECT_CALL(token_callback_, Call("fake-token")).Times(1);
+
+  // Start class under test.
+  setUp(TokenType::AccessToken);
+
+  // Assert subscriber did not succeed.
+  ASSERT_EQ(call_count_, 0);
+  ASSERT_FALSE(init_ready_);
+
+  // Part 2: Retry the callback for the timer, will result in a success.
+  timer_cb_();
 
   // Setup fake response.
   Envoy::Http::HeaderMapImplPtr resp_headers{new Envoy::Http::TestHeaderMapImpl{

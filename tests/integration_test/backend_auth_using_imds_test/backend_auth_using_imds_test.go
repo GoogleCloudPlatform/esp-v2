@@ -100,6 +100,8 @@ func TestBackendAuthWithImdsIdToken(t *testing.T) {
 
 func TestBackendAuthWithImdsIdTokenRetries(t *testing.T) {
 	s := NewBackendAuthTestEnv(comp.TestBackendAuthWithImdsIdTokenRetries)
+	// Health checks prevent envoy from starting up due to bad responses from IMDS for tokens.
+	s.SkipHealthChecks()
 
 	testData := []struct {
 		desc           string
@@ -114,7 +116,7 @@ func TestBackendAuthWithImdsIdTokenRetries(t *testing.T) {
 			method:         "GET",
 			path:           "/bearertoken/constant/42",
 			wantNumFails:   5,
-			wantInitialErr: `500 Internal Server Error, missing tokens`,
+			wantInitialErr: `connect: connection refused`,
 			wantFinalResp:  `{"Authorization": "Bearer ya29.constant", "RequestURI": "/bearertoken/constant?foo=42"}`,
 		},
 	}

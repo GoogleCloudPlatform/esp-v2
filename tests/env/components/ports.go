@@ -39,6 +39,7 @@ const (
 	TestBackendAuthWithIamIdToken
 	TestBackendAuthWithIamIdTokenRetries
 	TestBackendAuthUsingIamIdTokenWithDelegates
+	TestIamImdsDataPath
 	TestDifferentOriginPreflightCors
 	TestDifferentOriginSimpleCors
 	TestDynamicRouting

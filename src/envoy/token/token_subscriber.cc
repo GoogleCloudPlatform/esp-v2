@@ -67,9 +67,6 @@ TokenSubscriber::~TokenSubscriber() {
 void TokenSubscriber::handleFailResponse() {
   active_request_ = nullptr;
   refresh_timer_->enableTimer(kFailedRequestRetryTime);
-
-  // TODO(b/149491061): Remove so Envoy is only ready on success
-  init_target_->ready();
 }
 
 void TokenSubscriber::handleSuccessResponse(

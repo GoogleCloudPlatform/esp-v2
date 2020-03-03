@@ -58,12 +58,12 @@ func NewIamMetadata(pathResp map[string]string, wantNumFails int) *MockIamServer
 			return
 		}
 
-		accessToken := r.Header.Get("Authorization")
-		if matched, _ := regexp.Match(`^Bearer .`, []byte(accessToken)); !matched {
+		authHeader := r.Header.Get("Authorization")
+		if matched, _ := regexp.Match(`^Bearer .`, []byte(authHeader)); !matched {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
-		m.reqTokenCh <- accessToken
+		m.reqTokenCh <- authHeader
 		if r.Body != nil {
 			bodyBytes, _ := ioutil.ReadAll(r.Body)
 			m.reqBodyCh <- string(bodyBytes)
@@ -82,7 +82,10 @@ func NewIamMetadata(pathResp map[string]string, wantNumFails int) *MockIamServer
 			w.Write([]byte(resp))
 			return
 		}
-		w.WriteHeader(http.StatusNotFound)
+
+		// To allow envoy to start-up when fetching all id tokens, default to some OK response.
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"token":  "default-test-id-token"}`))
 	}))
 	fmt.Println("started iam server at " + m.GetURL())
 	return m

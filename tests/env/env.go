@@ -72,6 +72,7 @@ type TestEnv struct {
 	FakeStackdriverServer           *components.FakeTraceServer
 	healthRegistry                  *components.HealthRegistry
 	FakeJwtService                  *components.FakeJwtService
+	skipHealthChecks                bool
 }
 
 func NewTestEnv(testId uint16, backend platform.Backend) *TestEnv {
@@ -200,6 +201,13 @@ func (e *TestEnv) EnableEchoServerRootPathHandler() {
 	e.enableEchoServerRootPathHandler = true
 }
 
+// Limit usage of this, as it causes flakes in CI.
+// Only intended to be used to test if Envoy starts up correctly.
+// Ideally, the test using this should have it's own retry loop.
+func (e *TestEnv) SkipHealthChecks() {
+	e.skipHealthChecks = true
+}
+
 // In the service config for each backend, the backend port is represented with a "-1".
 // Example: Address: "https://localhost:-1/"
 // During env setup, replace the -1 with the actual dynamic routing port for the test.
@@ -271,7 +279,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		bootstrapperArgs = append(bootstrapperArgs, "--metadata_url="+e.MockMetadataServer.GetURL())
 	}
 
-	if e.mockIamResps != nil {
+	if e.mockIamResps != nil || e.mockIamFailures != 0 {
 		e.MockIamServer = components.NewIamMetadata(e.mockIamResps, e.mockIamFailures)
 		confArgs = append(confArgs, "--iam_url="+e.MockIamServer.GetURL())
 	}
@@ -395,8 +403,10 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	time.Sleep(setupWaitTime)
 
 	// Run health checks
-	if err := e.healthRegistry.RunAllHealthChecks(); err != nil {
-		return err
+	if !e.skipHealthChecks {
+		if err := e.healthRegistry.RunAllHealthChecks(); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -423,8 +433,10 @@ func (e *TestEnv) TearDown() {
 	glog.Infof("start tearing down...")
 
 	// Run all health checks. If they fail, our test causes a server to become unhealthy...
-	if err := e.healthRegistry.RunAllHealthChecks(); err != nil {
-		glog.Errorf("health check failure during teardown: %v", err)
+	if !e.skipHealthChecks {
+		if err := e.healthRegistry.RunAllHealthChecks(); err != nil {
+			glog.Errorf("health check failure during teardown: %v", err)
+		}
 	}
 
 	if e.FakeJwtService != nil {
