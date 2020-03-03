@@ -24,14 +24,12 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
-	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 var testBackendAuthArgs = []string{
 	"--service_config_id=test-config-id",
-
 	"--rollout_strategy=fixed",
 	"--backend_dns_lookup_family=v4only",
 	"--suppress_envoy_headers",
@@ -88,8 +86,8 @@ func TestBackendAuthWithIamIdToken(t *testing.T) {
 		}
 
 		gotResp := string(resp)
-		if !utils.JsonEqual(gotResp, tc.wantResp) {
-			t.Errorf("Test Desc(%s): want: %s, got: %s", tc.desc, tc.wantResp, gotResp)
+		if err := util.JsonEqual(tc.wantResp, gotResp); err != nil {
+			t.Errorf("Test Desc(%s) fails: \n %s", tc.desc, err)
 		}
 	}
 }
@@ -155,8 +153,8 @@ func TestBackendAuthWithIamIdTokenRetries(t *testing.T) {
 			}
 
 			gotResp := string(resp)
-			if !utils.JsonEqual(gotResp, tc.wantFinalResp) {
-				t.Errorf("Test Desc(%s): final resp want: %s, got: %s", tc.desc, tc.wantFinalResp, gotResp)
+			if err := util.JsonEqual(tc.wantFinalResp, gotResp); err != nil {
+				t.Errorf("Test Desc(%s) fails: \n %s", tc.desc, err)
 			}
 		}()
 	}
