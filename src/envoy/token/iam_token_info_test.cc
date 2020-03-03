@@ -17,6 +17,7 @@
 #include "absl/strings/str_cat.h"
 #include "common/http/message_impl.h"
 #include "gtest/gtest.h"
+#include "test/test_common/utility.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -100,9 +101,9 @@ TEST_F(IamTokenInfoTest, SetDelegatesAndScopes) {
 
   // Assert success.
   EXPECT_NE(got_msg, nullptr);
-  EXPECT_EQ(
+  EXPECT_TRUE(TestUtility::jsonStringEqual(
       got_msg->bodyAsString(),
-      R"({"includeEmail":true,"scope":["scope_foo","scope_bar"],"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar"]})");
+      R"({"includeEmail":true,"scope":["scope_foo","scope_bar"],"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar"]})"));
 }
 
 TEST_F(IamTokenInfoTest, OnlySetDelegates) {
@@ -119,9 +120,9 @@ TEST_F(IamTokenInfoTest, OnlySetDelegates) {
 
   // Assert success.
   EXPECT_NE(got_msg, nullptr);
-  EXPECT_EQ(
+  EXPECT_TRUE(TestUtility::jsonStringEqual(
       got_msg->bodyAsString(),
-      R"({"includeEmail":true,"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar"]})");
+      R"({"includeEmail":true,"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar"]})"));
 }
 
 TEST_F(IamTokenInfoTest, OnlySetScopes) {
@@ -138,7 +139,9 @@ TEST_F(IamTokenInfoTest, OnlySetScopes) {
 
   // Assert success.
   EXPECT_NE(got_msg, nullptr);
-  EXPECT_EQ(got_msg->bodyAsString(), R"({"includeEmail":true,"scope":["scope_foo","scope_bar"]})");
+  EXPECT_TRUE(TestUtility::jsonStringEqual(
+      got_msg->bodyAsString(),
+      R"({"includeEmail":true,"scope":["scope_foo","scope_bar"]})"));
 }
 
 class IamParseTokenTest : public IamTokenInfoTest {

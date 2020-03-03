@@ -85,7 +85,6 @@ Envoy::Http::MessagePtr IamTokenInfo::prepareRequest(
     insertStrListToProto(body, kScopesField, scopes_, "");
   }
 
-
   Envoy::ProtobufWkt::Value val;
   val.set_bool_value(true);
   (*body.mutable_struct_value()->mutable_fields())[kIncludeEmail].Swap(&val);

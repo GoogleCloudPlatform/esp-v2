@@ -151,6 +151,7 @@ envoy_cc_test(
     repository = "@envoy",
     deps = [
         ":iam_token_info_lib",
+        "@envoy//test/test_common:utility_lib",
     ],
 )
 
