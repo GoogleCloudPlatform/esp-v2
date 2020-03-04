@@ -49,6 +49,7 @@ type ConfigGeneratorOptions struct {
 	ServiceManagementURL string
 	ListenerPort         int
 	SslServerPath        string
+	SslBackendPath       string
 	RootCertsPath        string
 
 	// Flags for non_gcp deployment.

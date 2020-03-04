@@ -25,17 +25,17 @@ import (
 )
 
 const (
-	defaultServerSslFilename = "server"
+	defaultServerSslFilename  = "server"
+	defaultBackendSslFilename = "backend"
 )
 
 // CreateUpstreamTransportSocket creates a TransportSocket for Upstream
-func CreateUpstreamTransportSocket(hostname, rootCertsPath string, alpnProtocols []string) (*corepb.TransportSocket, error) {
+func CreateUpstreamTransportSocket(hostname, rootCertsPath, sslBackendPath string, alpnProtocols []string) (*corepb.TransportSocket, error) {
 	if rootCertsPath == "" {
 		return nil, fmt.Errorf("root certs path cannot be empty.")
 	}
 
-	// TODO: add mTLS for UpstreamTransportSocket
-	common_tls, err := createCommonTlsContext(rootCertsPath, "", "")
+	common_tls, err := createCommonTlsContext(rootCertsPath, sslBackendPath, defaultBackendSslFilename)
 	if err != nil {
 		return nil, err
 	}
@@ -60,12 +60,18 @@ func CreateUpstreamTransportSocket(hostname, rootCertsPath string, alpnProtocols
 }
 
 // CreateDownstreamTransportSocket creates a TransportSocket for Downstream
-func CreateDownstreamTransportSocket(sslPath string) (*corepb.TransportSocket, error) {
-	if sslPath == "" {
+func CreateDownstreamTransportSocket(sslServerPath string) (*corepb.TransportSocket, error) {
+	if sslServerPath == "" {
 		return nil, fmt.Errorf("SSL path cannot be empty.")
 	}
 
-	common_tls, err := createCommonTlsContext("", sslPath, defaultServerSslFilename)
+	sslFileName := defaultServerSslFilename
+	// Backward compatible for ESPv1
+	if strings.Contains(sslServerPath, "/etc/nginx/ssl") {
+		sslFileName = "nginx"
+	}
+
+	common_tls, err := createCommonTlsContext("", sslServerPath, sslFileName)
 	if err != nil {
 		return nil, err
 	}
@@ -91,10 +97,6 @@ func createCommonTlsContext(rootCertsPath, sslPath, sslFileName string) (*authpb
 	if sslPath != "" && sslFileName != "" {
 		if !strings.HasSuffix(sslPath, "/") {
 			sslPath = fmt.Sprintf("%s/", sslPath)
-		}
-		// Backward compatible for ESPv1
-		if strings.Contains(sslPath, "/etc/nginx/ssl") {
-			sslFileName = "nginx"
 		}
 
 		common_tls.TlsCertificates = []*authpb.TlsCertificate{

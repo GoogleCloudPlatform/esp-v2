@@ -160,6 +160,11 @@ environment variable or by passing "-k" flag to this script.
     HTTP/2 secure connections on listener_port. Requires the certificate and
     key files "server.crt" and "server.key" within this path.''')
 
+    parser.add_argument('--ssl_backend_path', default=None, help='''
+    Backend SSL path. When configured, ESPv2 enables TLS mutual
+    authentication for HTTPS backends. Requires the certificate and
+    key files "backend.crt" and "backend.key" within this path.''')
+
     parser.add_argument('-z', '--healthz', default=None, help='''Define a
     health checking endpoint on the same ports as the application backend. For
     example, "-z healthz" makes ESPv2 return code 200 for location "/healthz",
@@ -477,6 +482,13 @@ environment variable or by passing "-k" flag to this script.
        Requires the certificate and key files /etc/nginx/ssl/nginx.crt and
        /etc/nginx/ssl/nginx.key''')
 
+    parser.add_argument('-t', '--tls_mutual_auth', action='store_true', help='''
+    This flag added for backward compatible for ESPv1 and will be deprecated.
+    Please use the flag --ssl_backend_path instead.
+    Enable TLS mutual authentication for HTTPS backends.
+    Default value: Not enabled. Please provide the certificate and key files
+    /etc/nginx/ssl/backend.crt and /etc/nginx/ssl/backend.key.''')
+
     # End Deprecated Flags Section
 
     return parser
@@ -515,6 +527,8 @@ def enforce_conflict_args(args):
 
     if args.ssl_port and args.ssl_server_path:
         return "Flag --ssl_port is going to be deprecated, please use --ssl_server_path only."
+    if args.tls_mutual_auth and args.ssl_backend_path:
+        return "Flag --tls_mutual_auth is going to be deprecated, please use --ssl_server_path only."
 
     port_flags = []
     if args.http_port:
@@ -578,6 +592,10 @@ def gen_proxy_config(args):
     if args.ssl_port:
         proxy_conf.extend(["--ssl_server_path", "/etc/nginx/ssl"])
         proxy_conf.extend(["--listener_port", str(args.ssl_port)])
+    if args.ssl_backend_path:
+        proxy_conf.extend(["--ssl_backend_path", str(args.ssl_backend_path)])
+    if args.tls_mutual_auth:
+        proxy_conf.extend(["--ssl_backend_path", "/etc/nginx/ssl"])
 
     if args.service:
         proxy_conf.extend(["--service", args.service])
