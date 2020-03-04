@@ -52,7 +52,7 @@ segment_names {
   snake_name: "foo_bar"
 })";
 
-class FilterTest : public ::testing::Test {
+class PathMatcherFilterTest : public ::testing::Test {
  protected:
   void SetUp() override {
     ::google::api::envoy::http::path_matcher::FilterConfig config_pb;
@@ -70,7 +70,7 @@ class FilterTest : public ::testing::Test {
   testing::NiceMock<MockStreamDecoderFilterCallbacks> mock_cb_;
 };
 
-TEST_F(FilterTest, DecodeHeadersWithOperation) {
+TEST_F(PathMatcherFilterTest, DecodeHeadersWithOperation) {
   // Test: a request matches a operation
   Http::TestHeaderMapImpl headers{{":method", "GET"}, {":path", "/bar"}};
   EXPECT_EQ(Http::FilterHeadersStatus::Continue,
@@ -96,7 +96,7 @@ TEST_F(FilterTest, DecodeHeadersWithOperation) {
             filter_->decodeTrailers(headers));
 }
 
-TEST_F(FilterTest, DecodeHeadersWithMethodOveride) {
+TEST_F(PathMatcherFilterTest, DecodeHeadersWithMethodOveride) {
   // Test: a request with a method override matches a operation
   Http::TestHeaderMapImpl headers{{":method", "POST"},
                                   {":path", "/bar"},
@@ -116,7 +116,7 @@ TEST_F(FilterTest, DecodeHeadersWithMethodOveride) {
                     ->value());
 }
 
-TEST_F(FilterTest, DecodeHeadersExtractParameters) {
+TEST_F(PathMatcherFilterTest, DecodeHeadersExtractParameters) {
   // Test: a request needs to extract parameters
   Http::TestHeaderMapImpl headers{{":method", "GET"}, {":path", "/foo/123"}};
   EXPECT_EQ(Http::FilterHeadersStatus::Continue,
@@ -137,7 +137,7 @@ TEST_F(FilterTest, DecodeHeadersExtractParameters) {
                     ->value());
 }
 
-TEST_F(FilterTest, DecodeHeadersNoMatch) {
+TEST_F(PathMatcherFilterTest, DecodeHeadersNoMatch) {
   // Test: a request no match
   Http::TestHeaderMapImpl headers{{":method", "POST"}, {":path", "/bar"}};
 

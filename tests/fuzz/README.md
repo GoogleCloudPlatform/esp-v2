@@ -76,3 +76,7 @@ bazel run --config=asan-fuzzer \
 
 Don't let it run for too long, as a lot of entries will be generated.
 Please do not commit generated entries to git.
+
+### Viewing Fuzz Coverage
+
+The [third_party/tools/coverage/](../../third_party/tools/coverage) directory has tools for viewing fuzz corpus coverage.
