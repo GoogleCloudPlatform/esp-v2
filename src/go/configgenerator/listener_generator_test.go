@@ -189,6 +189,69 @@ func TestJwtAuthnFilter(t *testing.T) {
 		wantJwtAuthnFilter string
 	}{
 		{
+			desc: "Success. Generate jwt authn filter with default jwt locations",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				SourceInfo: &confpb.SourceInfo{
+					SourceFiles: []*anypb.Any{content},
+				},
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
+						{
+							Id:      "auth_provider",
+							Issuer:  "issuer-0",
+							JwksUri: "https://fake-jwks.com",
+						},
+					},
+				},
+			},
+			wantJwtAuthnFilter: `{
+    "name": "envoy.filters.http.jwt_authn",
+    "typedConfig": {
+        "@type": "type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication",
+        "filterStateRules": {
+            "name": "envoy.filters.http.path_matcher.operation"
+        },
+        "providers": {
+            "auth_provider": {
+                "audiences": [
+                    "https://bookstore.endpoints.project123.cloud.goog"
+                ],
+                "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
+                "fromHeaders": [
+                    {
+                        "name": "Authorization",
+                        "valuePrefix": "Bearer "
+                    },
+                    {
+                        "name": "X-Goog-Iap-Jwt-Assertion"
+                    }
+                ],
+                "fromParams": [
+                    "access_token"
+                ],
+                "issuer": "issuer-0",
+                "payloadInMetadata": "jwt_payloads",
+                "remoteJwks": {
+                    "cacheDuration": "300s",
+                    "httpUri": {
+                        "cluster": "fake-jwks.com:443",
+                        "timeout": "5s",
+                        "uri": "https://fake-jwks.com"
+                    }
+                }
+            }
+        }
+    }
+}
+`,
+		},
+		{
 			desc: "Success. Generate jwt authn filter with custom jwt locations",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
