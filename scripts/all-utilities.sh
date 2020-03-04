@@ -59,8 +59,8 @@ function error_exit() {
 #   $1 - the source image.
 #   $2 - the target image.
 function docker_tag() {
-  ${GCLOUD} docker -- pull "${1}" || error_exit "Cannot pull image: ${1}"
-  ${GCLOUD} docker -- pull "${2}" && error_exit "Trying to override an existing image: ${2}"
+  ${GCLOUD} docker -- pull "${1}" 2>/dev/null || error_exit "Cannot pull image: ${1}"
+  ${GCLOUD} docker -- pull "${2}" 2>/dev/null && error_exit "Trying to override an existing image: ${2}"
   docker tag "${1}" "${2}" || error_exit "Failed to tag ${1} with ${2}"
 }
 
