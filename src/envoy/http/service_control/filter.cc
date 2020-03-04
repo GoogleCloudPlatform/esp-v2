@@ -42,7 +42,7 @@ void ServiceControlFilter::onDestroy() {
 }
 
 Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
-    Http::HeaderMap& headers, bool) {
+    Http::RequestHeaderMap& headers, bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
 
   Envoy::Tracing::Span& parent_span = decoder_callbacks_->activeSpan();
@@ -109,7 +109,7 @@ Http::FilterDataStatus ServiceControlFilter::decodeData(Buffer::Instance& data,
 }
 
 Http::FilterTrailersStatus ServiceControlFilter::decodeTrailers(
-    Http::HeaderMap&) {
+    Http::RequestTrailerMap&) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (state_ == Calling) {
     return Http::FilterTrailersStatus::StopIteration;
@@ -118,7 +118,7 @@ Http::FilterTrailersStatus ServiceControlFilter::decodeTrailers(
 }
 
 Http::FilterHeadersStatus ServiceControlFilter::encodeHeaders(
-    Http::HeaderMap& headers, bool) {
+    Http::ResponseHeaderMap& headers, bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {} before", __func__);
 
   // For the cases the decodeHeaders not called, like the request get failed in
@@ -138,10 +138,11 @@ Http::FilterDataStatus ServiceControlFilter::encodeData(Buffer::Instance& data,
   return Http::FilterDataStatus::Continue;
 }
 
-void ServiceControlFilter::log(const Http::HeaderMap* request_headers,
-                               const Http::HeaderMap* response_headers,
-                               const Http::HeaderMap* response_trailers,
-                               const StreamInfo::StreamInfo& stream_info) {
+void ServiceControlFilter::log(
+    const Http::RequestHeaderMap* request_headers,
+    const Http::ResponseHeaderMap* response_headers,
+    const Http::ResponseTrailerMap* response_trailers,
+    const StreamInfo::StreamInfo& stream_info) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (!handler_) {
     if (!request_headers) return;

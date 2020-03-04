@@ -34,18 +34,19 @@ constexpr std::chrono::seconds kDefaultTokenExpiry(3599);
 
 ImdsTokenInfo::ImdsTokenInfo() {}
 
-Envoy::Http::MessagePtr ImdsTokenInfo::prepareRequest(
+Envoy::Http::RequestMessagePtr ImdsTokenInfo::prepareRequest(
     absl::string_view token_url) const {
   absl::string_view host, path;
   Http::Utility::extractHostPathFromUri(token_url, host, path);
 
-  Envoy::Http::HeaderMapImplPtr headers{new Envoy::Http::HeaderMapImpl{
-      {Envoy::Http::Headers::get().Method, "GET"},
-      {Envoy::Http::Headers::get().Host, std::string(host)},
-      {Envoy::Http::Headers::get().Path, std::string(path)},
-      {kMetadataFlavorKey, kMetadataFlavor}}};
+  auto headers =
+      Envoy::Http::createHeaderMap<Envoy::Http::RequestHeaderMapImpl>(
+          {{Envoy::Http::Headers::get().Method, "GET"},
+           {Envoy::Http::Headers::get().Host, std::string(host)},
+           {Envoy::Http::Headers::get().Path, std::string(path)},
+           {kMetadataFlavorKey, kMetadataFlavor}});
 
-  Envoy::Http::MessagePtr message(
+  Envoy::Http::RequestMessagePtr message(
       new Envoy::Http::RequestMessageImpl(std::move(headers)));
 
   return message;

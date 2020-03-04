@@ -67,7 +67,7 @@ class HttpCallTest : public testing::Test {
     ON_CALL(cm_, httpAsyncClientForCluster("test_cluster"))
         .WillByDefault(ReturnRef(http_client_));
     ON_CALL(http_client_, send_(_, _, _))
-        .WillByDefault(Invoke([this](Http::MessagePtr& message_ptr,
+        .WillByDefault(Invoke([this](Http::RequestMessagePtr& message_ptr,
                                      Http::AsyncClient::Callbacks& callbacks,
                                      const Http::AsyncClient::RequestOptions)
                                   -> Http::AsyncClient::Request* {
@@ -116,9 +116,11 @@ class HttpCallTest : public testing::Test {
     return mock_child_span_ptr;
   }
 
-  static Http::MessagePtr makeResponseWithStatus(const uint64_t status_code) {
+  static Http::ResponseMessagePtr makeResponseWithStatus(
+      const uint64_t status_code) {
     // Headers with status code
-    Http::HeaderMapPtr header_map = std::make_unique<Http::HeaderMapImpl>();
+    Http::ResponseHeaderMapPtr header_map =
+        std::make_unique<Http::ResponseHeaderMapImpl>();
     header_map->setStatus(status_code);
 
     // Message with no body

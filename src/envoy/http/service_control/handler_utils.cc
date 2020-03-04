@@ -215,7 +215,7 @@ Protocol getBackendProtocol(const Service& service) {
 }
 
 // TODO(taoxuy): Add Unit Test
-void fillJwtPayloads(const envoy::config::core::v3alpha::Metadata& metadata,
+void fillJwtPayloads(const envoy::config::core::v3::Metadata& metadata,
                      const std::string& jwt_payload_metadata_name,
                      const ::google::protobuf::RepeatedPtrField<::std::string>&
                          jwt_payload_paths,
@@ -225,21 +225,21 @@ void fillJwtPayloads(const envoy::config::core::v3alpha::Metadata& metadata,
         absl::StrSplit(jwt_payload_path, kJwtPayLoadsDelimeter);
     steps.insert(steps.begin(), jwt_payload_metadata_name);
     const ProtobufWkt::Value& value = Config::Metadata::metadataValue(
-        metadata, HttpFilters::HttpFilterNames::get().JwtAuthn, steps);
+        &metadata, HttpFilters::HttpFilterNames::get().JwtAuthn, steps);
     if (&value != &ProtobufWkt::Value::default_instance()) {
       extractJwtPayload(value, jwt_payload_path, info_jwt_payloads);
     }
   }
 }
 
-void fillJwtPayload(const envoy::config::core::v3alpha::Metadata& metadata,
+void fillJwtPayload(const envoy::config::core::v3::Metadata& metadata,
                     const std::string& jwt_payload_metadata_name,
                     const std::string& jwt_payload_path,
                     std::string& info_iss_or_aud) {
   std::vector<std::string> steps = {jwt_payload_metadata_name,
                                     jwt_payload_path};
   const ProtobufWkt::Value& value = Config::Metadata::metadataValue(
-      metadata, HttpFilters::HttpFilterNames::get().JwtAuthn, steps);
+      &metadata, HttpFilters::HttpFilterNames::get().JwtAuthn, steps);
   if (&value != &ProtobufWkt::Value::default_instance()) {
     absl::StrAppend(&info_iss_or_aud, value.string_value());
   }

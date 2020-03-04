@@ -95,7 +95,8 @@ void TokenSubscriber::refresh() {
 
   ENVOY_LOG(debug, "{}: Sending TokenSubscriber request", debug_name_);
 
-  Envoy::Http::MessagePtr message = token_info_->prepareRequest(token_url_);
+  Envoy::Http::RequestMessagePtr message =
+      token_info_->prepareRequest(token_url_);
   if (message == nullptr) {
     // Preconditions in TokenInfo are not met, not an error.
     ENVOY_LOG(warn, "{}: preconditions not met, retrying later", debug_name_);
@@ -115,7 +116,8 @@ void TokenSubscriber::refresh() {
                         .send(std::move(message), *this, options);
 }
 
-void TokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
+void TokenSubscriber::processResponse(
+    Envoy::Http::ResponseMessagePtr&& response) {
   try {
     const uint64_t status_code =
         Envoy::Http::Utility::getResponseStatus(response->headers());
@@ -160,7 +162,7 @@ void TokenSubscriber::processResponse(Envoy::Http::MessagePtr&& response) {
   handleSuccessResponse(result.token, result.expiry_duration);
 }
 
-void TokenSubscriber::onSuccess(Envoy::Http::MessagePtr&& response) {
+void TokenSubscriber::onSuccess(Envoy::Http::ResponseMessagePtr&& response) {
   ENVOY_LOG(debug, "{}: got response: {}", debug_name_,
             response->bodyAsString());
   processResponse(std::move(response));

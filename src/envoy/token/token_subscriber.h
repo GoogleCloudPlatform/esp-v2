@@ -52,11 +52,11 @@ class TokenSubscriber
   void handleFailResponse();
   void handleSuccessResponse(absl::string_view token,
                              const std::chrono::seconds& expires_in);
-  void processResponse(Envoy::Http::MessagePtr&& response);
+  void processResponse(Envoy::Http::ResponseMessagePtr&& response);
   void refresh();
 
   // Envoy::Http::AsyncClient::Callbacks implemented by this class.
-  void onSuccess(Envoy::Http::MessagePtr&& response) override;
+  void onSuccess(Envoy::Http::ResponseMessagePtr&& response) override;
   void onFailure(Envoy::Http::AsyncClient::FailureReason reason) override;
 
   Envoy::Server::Configuration::FactoryContext& context_;

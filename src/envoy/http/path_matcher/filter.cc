@@ -39,7 +39,7 @@ typedef ConstSingleton<RcDetailsValues> RcDetails;
 
 }  // namespace
 
-Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
+Http::FilterHeadersStatus Filter::decodeHeaders(Http::RequestHeaderMap& headers,
                                                 bool) {
   std::string method(Utils::getRequestHTTPMethodWithOverride(
       headers.Method()->value().getStringView(), headers));
@@ -53,7 +53,7 @@ Http::FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers,
 
   ENVOY_LOG(debug, "matched operation: {}", *operation);
   StreamInfo::FilterState& filter_state =
-      decoder_callbacks_->streamInfo().filterState();
+      *decoder_callbacks_->streamInfo().filterState();
   Utils::setStringFilterState(filter_state, Utils::kOperation, *operation);
 
   if (config_->needParameterExtraction(*operation)) {

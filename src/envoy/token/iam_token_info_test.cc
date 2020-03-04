@@ -44,7 +44,7 @@ TEST_F(IamTokenInfoTest, FailPreconditions) {
       std::make_unique<IamTokenInfo>(delegates, scopes, false, access_token_fn);
 
   // Call function under test.
-  Envoy::Http::MessagePtr got_msg = info_->prepareRequest("iam-url");
+  Envoy::Http::RequestMessagePtr got_msg = info_->prepareRequest("iam-url");
 
   // Assert preconditions failed.
   EXPECT_EQ(got_msg, nullptr);
@@ -59,7 +59,7 @@ TEST_F(IamTokenInfoTest, SimpleSuccess) {
       std::make_unique<IamTokenInfo>(delegates, scopes, false, access_token_fn);
 
   // Call function under test.
-  Envoy::Http::MessagePtr got_msg =
+  Envoy::Http::RequestMessagePtr got_msg =
       info_->prepareRequest("https://iam-url.com/path1");
 
   // Assert success.
@@ -100,7 +100,7 @@ TEST_F(IamTokenInfoTest, SetDelegatesAndScopes) {
       std::make_unique<IamTokenInfo>(delegates, scopes, false, access_token_fn);
 
   // Call function under test.
-  Envoy::Http::MessagePtr got_msg = info_->prepareRequest("iam-url");
+  Envoy::Http::RequestMessagePtr got_msg = info_->prepareRequest("iam-url");
 
   // Assert success.
   EXPECT_NE(got_msg, nullptr);
@@ -120,7 +120,7 @@ TEST_F(IamTokenInfoTest, OnlySetDelegates) {
       std::make_unique<IamTokenInfo>(delegates, scopes, false, access_token_fn);
 
   // Call function under test.
-  Envoy::Http::MessagePtr got_msg = info_->prepareRequest("iam-url");
+  Envoy::Http::RequestMessagePtr got_msg = info_->prepareRequest("iam-url");
 
   // Assert success.
   EXPECT_NE(got_msg, nullptr);
@@ -140,7 +140,7 @@ TEST_F(IamTokenInfoTest, OnlySetScopes) {
       std::make_unique<IamTokenInfo>(delegates, scopes, false, access_token_fn);
 
   // Call function under test.
-  Envoy::Http::MessagePtr got_msg = info_->prepareRequest("iam-url");
+  Envoy::Http::RequestMessagePtr got_msg = info_->prepareRequest("iam-url");
 
   // Assert success.
   EXPECT_NE(got_msg, nullptr);
@@ -232,7 +232,7 @@ TEST_F(IamParseTokenTest, SetIncludeEmail) {
       std::make_unique<IamTokenInfo>(delegates, scopes, true, access_token_fn);
 
   // Call function under test.
-  Envoy::Http::MessagePtr got_msg = info_->prepareRequest("iam-url");
+  Envoy::Http::RequestMessagePtr got_msg = info_->prepareRequest("iam-url");
 
   // Assert success.
   EXPECT_NE(got_msg, nullptr);

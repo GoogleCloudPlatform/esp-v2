@@ -33,7 +33,7 @@ class IamTokenInfo : public TokenInfo {
       const ::google::protobuf::RepeatedPtrField<std::string>& scopes,
       const bool include_email, const GetTokenFunc access_token_fn);
 
-  Envoy::Http::MessagePtr prepareRequest(
+  Envoy::Http::RequestMessagePtr prepareRequest(
       absl::string_view token_url) const override;
   bool parseAccessToken(absl::string_view response,
                         TokenResult* ret) const override;

@@ -70,7 +70,7 @@ class HttpCallImpl : public HttpCall,
   void call() override { makeOneCall(); }
 
   // HTTP async receive methods
-  void onSuccess(Http::MessagePtr&& response) override {
+  void onSuccess(Http::ResponseMessagePtr&& response) override {
     ENVOY_LOG(trace, "{}", __func__);
     const uint64_t status_code =
         Http::Utility::getResponseStatus(response->headers());
@@ -174,7 +174,7 @@ class HttpCallImpl : public HttpCall,
     request_span_->setTag(Tracing::Tags::get().HttpUrl, uri_);
     request_span_->setTag(Tracing::Tags::get().HttpMethod, "POST");
 
-    Http::MessagePtr message = prepareHeaders(token);
+    Http::RequestMessagePtr message = prepareHeaders(token);
     ENVOY_LOG(debug, "http call from [uri = {}]: start", uri_);
     request_ = cm_.httpAsyncClientForCluster(http_uri_.cluster())
                    .send(std::move(message), *this,
@@ -205,8 +205,8 @@ class HttpCallImpl : public HttpCall,
 
   void reset() { request_ = nullptr; }
 
-  Http::MessagePtr prepareHeaders(const std::string& token) {
-    Http::MessagePtr message(new Http::RequestMessageImpl());
+  Http::RequestMessagePtr prepareHeaders(const std::string& token) {
+    Http::RequestMessagePtr message(new Http::RequestMessageImpl());
     message->headers().setPath(path_);
     message->headers().setHost(host_);
 
