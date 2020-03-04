@@ -14,10 +14,18 @@ filegroup(
 )
 
 filegroup(
-    name = "iam_token_subscriber_corpus",
+    name = "iam_token_info_corpus",
     testonly = 1,
     srcs = glob([
-        "iam_token_subscriber/**",
+        "iam_token_info/**",
+    ]),
+)
+
+filegroup(
+    name = "imds_token_info_corpus",
+    testonly = 1,
+    srcs = glob([
+        "imds_token_info/**",
     ]),
 )
 

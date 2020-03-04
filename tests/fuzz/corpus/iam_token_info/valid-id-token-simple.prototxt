@@ -1,0 +1,4 @@
+include_email: false
+access_token: "access-token"
+token_url: "token_url"
+resp_body: "{ \"token\": \"fake-identity-token\" }"
