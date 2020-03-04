@@ -76,8 +76,8 @@ const (
 	TestServiceControlAccessToken
 	TestServiceControlAllHTTPMethod
 	TestServiceControlAllHTTPPath
-	TestServiceControlAPIKeyCustomLocationUnderGrpcTranscoding
-	TestServiceControlAPIKeyDefaultLocationUnderGrpcTranscoding
+	TestServiceControlAPIKeyCustomLocation
+	TestServiceControlAPIKeyDefaultLocation
 	TestServiceControlAPIKeyIpRestriction
 	TestServiceControlAPIKeyRestriction
 	TestServiceControlBasic

@@ -28,12 +28,12 @@ import (
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-func TestServiceControlAPIKeyDefaultLocationUnderGrpcTranscoding(t *testing.T) {
+func TestServiceControlAPIKeyDefaultLocation(t *testing.T) {
 	configId := "test-config-id"
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlAPIKeyDefaultLocationUnderGrpcTranscoding, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(comp.TestServiceControlAPIKeyDefaultLocation, platform.GrpcBookstoreSidecar)
 	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -99,13 +99,13 @@ func TestServiceControlAPIKeyDefaultLocationUnderGrpcTranscoding(t *testing.T) {
 	}
 }
 
-func TestServiceControlAPIKeyCustomLocationUnderGrpcTranscoding(t *testing.T) {
+func TestServiceControlAPIKeyCustomLocation(t *testing.T) {
 	serviceName := "test-echo"
 	configId := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlAPIKeyCustomLocationUnderGrpcTranscoding, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(comp.TestServiceControlAPIKeyCustomLocation, platform.GrpcBookstoreSidecar)
 	s.OverrideSystemParameters(&confpb.SystemParameters{
 		Rules: []*confpb.SystemParameterRule{
 			{
