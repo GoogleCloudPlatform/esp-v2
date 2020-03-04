@@ -41,9 +41,9 @@ namespace {
 
 const Status kBadStatus(Code::UNAUTHENTICATED, "test");
 
-class FilterTest : public ::testing::Test {
+class ServiceControlFilterTest : public ::testing::Test {
  protected:
-  FilterTest() : stats_base_("", mock_stats_scope_) {}
+  ServiceControlFilterTest() : stats_base_("", mock_stats_scope_) {}
 
   void SetUp() override {
     filter_ = std::make_unique<ServiceControlFilter>(stats_base_.stats(),
@@ -66,7 +66,7 @@ class FilterTest : public ::testing::Test {
   std::unique_ptr<Envoy::Tracing::MockSpan> mock_span_;
 };
 
-TEST_F(FilterTest, DecodeHeadersSyncOKStatus) {
+TEST_F(ServiceControlFilterTest, DecodeHeadersSyncOKStatus) {
   // Test: If onCall is called with OK status, return Continue
   auto* mock_handler = new testing::NiceMock<MockServiceControlHandler>();
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
@@ -86,13 +86,13 @@ TEST_F(FilterTest, DecodeHeadersSyncOKStatus) {
   filter_->onDestroy();
 }
 
-TEST_F(FilterTest, OnDestoryWithoutHandler) {
+TEST_F(ServiceControlFilterTest, OnDestoryWithoutHandler) {
   // Test: calling filter::onDestroy() without handler
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _)).Times(0);
   filter_->onDestroy();
 }
 
-TEST_F(FilterTest, DecodeHeadersSyncBadStatus) {
+TEST_F(ServiceControlFilterTest, DecodeHeadersSyncBadStatus) {
   // Test: If onCall is called with a bad status, reject and return stop
   auto* mock_handler = new testing::NiceMock<MockServiceControlHandler>();
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
@@ -114,7 +114,7 @@ TEST_F(FilterTest, DecodeHeadersSyncBadStatus) {
             filter_->decodeHeaders(headers_, true));
 }
 
-TEST_F(FilterTest, DecodeHeadersAsyncGoodStatus) {
+TEST_F(ServiceControlFilterTest, DecodeHeadersAsyncGoodStatus) {
   // Test: While Filter is Calling/stopped, onCheckDone calls
   // continueDecoding
   auto* mock_handler = new testing::NiceMock<MockServiceControlHandler>();
@@ -139,7 +139,7 @@ TEST_F(FilterTest, DecodeHeadersAsyncGoodStatus) {
   stored_check_done_callback->onCheckDone(Status::OK);
 }
 
-TEST_F(FilterTest, DecodeHeadersAsyncBadStatus) {
+TEST_F(ServiceControlFilterTest, DecodeHeadersAsyncBadStatus) {
   // Test: When status is not ok, the request is rejected and
   // continueDecoding is not called
   EXPECT_CALL(mock_decoder_callbacks_, continueDecoding()).Times(0);
@@ -171,7 +171,7 @@ TEST_F(FilterTest, DecodeHeadersAsyncBadStatus) {
   stored_check_done_callback->onCheckDone(kBadStatus);
 }
 
-TEST_F(FilterTest, LogWithoutHandlerOrHeaders) {
+TEST_F(ServiceControlFilterTest, LogWithoutHandlerOrHeaders) {
   // Test: If no handler and no headers, a handler is not created
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _)).Times(0);
 
@@ -180,7 +180,7 @@ TEST_F(FilterTest, LogWithoutHandlerOrHeaders) {
                mock_decoder_callbacks_.stream_info_);
 }
 
-TEST_F(FilterTest, LogWithoutHandler) {
+TEST_F(ServiceControlFilterTest, LogWithoutHandler) {
   // Test: When a Filter has no Handler yet, another is created for log()
   auto* mock_handler = new testing::NiceMock<MockServiceControlHandler>();
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
@@ -190,7 +190,7 @@ TEST_F(FilterTest, LogWithoutHandler) {
                mock_decoder_callbacks_.stream_info_);
 }
 
-TEST_F(FilterTest, LogWithHandler) {
+TEST_F(ServiceControlFilterTest, LogWithHandler) {
   // Test: When a Filter has a Handler from decodeHeaders,
   // that one is used for log() and another is not created
   auto* mock_handler = new testing::NiceMock<MockServiceControlHandler>();
@@ -204,7 +204,7 @@ TEST_F(FilterTest, LogWithHandler) {
                mock_decoder_callbacks_.stream_info_);
 }
 
-TEST_F(FilterTest, DecodeHelpersWhileStopped) {
+TEST_F(ServiceControlFilterTest, DecodeHelpersWhileStopped) {
   // This puts the Filter into a stopped state
   auto* mock_handler = new testing::NiceMock<MockServiceControlHandler>();
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
@@ -221,7 +221,7 @@ TEST_F(FilterTest, DecodeHelpersWhileStopped) {
             filter_->decodeTrailers(headers_));
 }
 
-TEST_F(FilterTest, DecodeHelpersWhileContinuing) {
+TEST_F(ServiceControlFilterTest, DecodeHelpersWhileContinuing) {
   // This puts the Filter into a continue state
   auto* mock_handler = new testing::NiceMock<MockServiceControlHandler>();
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
@@ -243,7 +243,7 @@ TEST_F(FilterTest, DecodeHelpersWhileContinuing) {
             filter_->decodeTrailers(headers_));
 }
 
-TEST_F(FilterTest, DecodeDataSendStreamReport) {
+TEST_F(ServiceControlFilterTest, DecodeDataSendStreamReport) {
   // This puts the Filter into a continue state
   auto* mock_handler = new testing::NiceMock<MockServiceControlHandler>();
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
@@ -262,7 +262,7 @@ TEST_F(FilterTest, DecodeDataSendStreamReport) {
   filter_->decodeData(mock_buffer_, /*end_stream=*/false);
 }
 
-TEST_F(FilterTest, EncodeDataSendStreamReport) {
+TEST_F(ServiceControlFilterTest, EncodeDataSendStreamReport) {
   // This puts the Filter into a continue state
   auto* mock_handler = new testing::NiceMock<MockServiceControlHandler>();
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
