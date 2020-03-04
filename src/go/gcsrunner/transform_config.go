@@ -39,6 +39,10 @@ var (
 )
 
 func addGCPAttributes(cfg *scpb.FilterConfig, opts FetchConfigOptions) error {
+	var overridePlatform string
+	if oldAttrs := cfg.GetGcpAttributes(); oldAttrs != nil {
+		overridePlatform = oldAttrs.GetPlatform()
+	}
 	co := options.DefaultCommonOptions()
 	co.MetadataURL = opts.MetadataURL
 	mf := metadata.NewMetadataFetcher(co)
@@ -46,8 +50,8 @@ func addGCPAttributes(cfg *scpb.FilterConfig, opts FetchConfigOptions) error {
 	if err != nil {
 		return err
 	}
-	if opts.OverridePlatform != "" {
-		attrs.Platform = opts.OverridePlatform
+	if overridePlatform != "" {
+		attrs.Platform = overridePlatform
 	}
 	cfg.GcpAttributes = attrs
 	return nil

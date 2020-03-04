@@ -29,12 +29,13 @@ import (
 func TestAddGCPAttributes(t *testing.T) {
 	tests := []struct {
 		name             string
-		opts             FetchConfigOptions
+		in               *scpb.FilterConfig
 		metadataResponds map[string]string
 		want             *scpb.FilterConfig
 	}{
 		{
 			name: "success with default platform",
+			in:   &scpb.FilterConfig{},
 			metadataResponds: map[string]string{
 				util.ProjectIDSuffix: "project",
 				util.ZoneSuffix:      "projectzs/project/zone",
@@ -49,8 +50,10 @@ func TestAddGCPAttributes(t *testing.T) {
 		},
 		{
 			name: "success with platform override",
-			opts: FetchConfigOptions{
-				OverridePlatform: "override",
+			in: &scpb.FilterConfig{
+				GcpAttributes: &scpb.GcpAttributes{
+					Platform: "override",
+				},
 			},
 			metadataResponds: map[string]string{
 				util.ProjectIDSuffix: "project",
@@ -70,13 +73,13 @@ func TestAddGCPAttributes(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ts := util.InitMockServerFromPathResp(tc.metadataResponds)
 			defer ts.Close()
-			tc.opts.MetadataURL = ts.URL
-
-			got := &scpb.FilterConfig{}
-			if err := addGCPAttributes(got, tc.opts); err != nil {
-				t.Fatalf("addGCPAttributes(%v,%v) returned error %v", got, tc.opts, err)
+			opts := FetchConfigOptions{
+				MetadataURL: ts.URL,
 			}
-			if diff := cmp.Diff(tc.want, got, cmp.Comparer(proto.Equal)); diff != "" {
+			if err := addGCPAttributes(tc.in, opts); err != nil {
+				t.Fatalf("addGCPAttributes(%v,%v) returned error %v", tc.in, opts, err)
+			}
+			if diff := cmp.Diff(tc.want, tc.in, cmp.Comparer(proto.Equal)); diff != "" {
 				t.Errorf("addGCPAttributes returned unexpected result: (-want/+got): %s", diff)
 			}
 		})

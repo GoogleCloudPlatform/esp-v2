@@ -54,7 +54,6 @@ var (
 	envoyBinaryPath = flag.String("envoy_bin_path", "bin/envoy", "Location of the Envoy binary.")
 	envoyLogLevel   = flag.String("envoy_log_level", "info",
 		"Envoy logging level. Default is `info`. Options are: [trace][debug][info][warning][error][critical][off]")
-	overridePlatform = flag.String("override_platform", "", "If specified, configures `platform` field in Service Control reports.")
 )
 
 func main() {
@@ -94,11 +93,6 @@ func main() {
 		metadataURL = options.DefaultCommonOptions().MetadataURL
 	}
 
-	platform := os.Getenv("OVERRIDE_PLATFORM")
-	if platform == "" {
-		platform = *overridePlatform
-	}
-
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan)
 
@@ -111,7 +105,6 @@ func main() {
 		FetchGCSObjectTimeout:         fetchGCSObjectTimeout,
 		WriteFilePath:                 envoyConfigPath,
 		MetadataURL:                   metadataURL,
-		OverridePlatform:              platform,
 	}); err != nil {
 		glog.Fatalf("Failed to fetch config: %v", err)
 	}
