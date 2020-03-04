@@ -111,6 +111,16 @@ const (
 	// b/148606900: It is safe to set this to a fairly high value.
 	// This won't impact resource usage for customers who have short UriTemplates.
 	GoogleRE2MaxProgramSize = 1000
+
+	// Default jwt locations
+	DefaultJwtHeaderNameAuthorization          = "Authorization"
+	DefaultJwtHeaderValuePrefixBearer          = "Bearer "
+	DefaultJwtHeaderNameXGoogleIapJwtAssertion = "X-Goog-Iap-Jwt-Assertion"
+	DefaultJwtQueryParamAccessToken            = "access_token"
+
+	// Default api key locations
+	DefaultApiKeyQueryParamKey    = "key"
+	DefaultApiKeyQueryParamApiKey = "api_key"
 )
 
 type BackendProtocol int32

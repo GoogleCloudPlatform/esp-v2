@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"sort"
 	"testing"
 	"time"
@@ -128,12 +129,13 @@ func TestProcessEndpoints(t *testing.T) {
 	}
 }
 
-func TestExtractAPIKeyLocations(t *testing.T) {
+func TestProcessSystemParameters(t *testing.T) {
 	testData := []struct {
-		desc                   string
-		fakeServiceConfig      *confpb.Service
-		wantedSystemParameters map[string][]*confpb.SystemParameter
-		wantMethods            map[string]*methodInfo
+		desc                    string
+		fakeServiceConfig       *confpb.Service
+		wantedSystemParameters  map[string][]*confpb.SystemParameter
+		wantedApiKeyQueryParams map[string]bool
+		wantMethods             map[string]*methodInfo
 	}{
 		{
 			desc: "Succeed, only url query",
@@ -161,6 +163,10 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 						},
 					},
 				},
+			},
+			wantedApiKeyQueryParams: map[string]bool{
+				"key":     true,
+				"api_key": true,
 			},
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &methodInfo{
@@ -208,6 +214,11 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 						},
 					},
 				},
+			},
+			wantedApiKeyQueryParams: map[string]bool{
+				"key":        true,
+				"api_key":    true,
+				"query_name": true,
 			},
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &methodInfo{
@@ -261,6 +272,12 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 						},
 					},
 				},
+			},
+			wantedApiKeyQueryParams: map[string]bool{
+				"key":          true,
+				"api_key":      true,
+				"query_name_1": true,
+				"query_name_2": true,
 			},
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &methodInfo{
@@ -354,6 +371,12 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 					},
 				},
 			},
+			wantedApiKeyQueryParams: map[string]bool{
+				"key":          true,
+				"api_key":      true,
+				"query_name_1": true,
+				"query_name_2": true,
+			},
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.foo": &methodInfo{
 					ShortName: "foo",
@@ -432,12 +455,104 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 		if len(serviceInfo.Methods) != len(tc.wantMethods) {
 			t.Errorf("Test Desc(%d): %s, got: %v, wanted: %v", i, tc.desc, serviceInfo.Methods, tc.wantMethods)
 		}
+		if !reflect.DeepEqual(serviceInfo.ApiKeyQueryParams, tc.wantedApiKeyQueryParams) {
+			t.Errorf("Test Desc(%d): %s, gotApiKeyQueryParams: %v, wantedApiKeyQueryParams: %v", i, tc.desc, serviceInfo.ApiKeyQueryParams, tc.wantedApiKeyQueryParams)
+		}
+
 		for key, gotMethod := range serviceInfo.Methods {
 			wantMethod := tc.wantMethods[key]
 			if eq := cmp.Equal(gotMethod, wantMethod, cmp.Comparer(proto.Equal)); !eq {
 				t.Errorf("Test Desc(%d): %s, \ngot: %v,\nwanted: %v", i, tc.desc, gotMethod, wantMethod)
 			}
 		}
+	}
+}
+
+func TestProcessJwtInQueryParams(t *testing.T) {
+	testData := []struct {
+		desc                 string
+		fakeServiceConfig    *confpb.Service
+		wantedJwtQueryParams map[string]bool
+	}{
+		{
+			desc: "Success. Default jwt locations",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "echo",
+							},
+						},
+					},
+				},
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
+						{
+							Id:     "auth_provider",
+							Issuer: "issuer-0",
+						},
+					},
+				},
+			},
+			wantedJwtQueryParams: map[string]bool{
+				"access_token": true,
+			},
+		},
+		{
+			desc: "Success. Custom jwt locations",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "echo",
+							},
+						},
+					},
+				},
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
+						{
+							Id:     "auth_provider",
+							Issuer: "issuer-0",
+							JwtLocations: []*confpb.JwtLocation{
+								{
+									In: &confpb.JwtLocation_Header{
+										Header: "jwt_query_header",
+									},
+									ValuePrefix: "jwt_query_header_prefix",
+								},
+								{
+									In: &confpb.JwtLocation_Query{
+										Query: "jwt_query_param",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			wantedJwtQueryParams: map[string]bool{
+				"access_token":    true,
+				"jwt_query_param": true,
+			},
+		},
+	}
+	for i, tc := range testData {
+		serviceInfo := &ServiceInfo{
+			serviceConfig:     tc.fakeServiceConfig,
+			Methods:           make(map[string]*methodInfo),
+			JwtQueryParams:    make(map[string]bool),
+			ApiKeyQueryParams: make(map[string]bool),
+		}
+		serviceInfo.processJwtInQueryParams()
+		if !reflect.DeepEqual(serviceInfo.JwtQueryParams, tc.wantedJwtQueryParams) {
+			t.Errorf("Test Desc(%d): %s, gotApiKeyQueryParams: %v, wantedApiKeyQueryParams: %v", i, tc.desc, serviceInfo.JwtQueryParams, tc.wantedJwtQueryParams)
+		}
+
 	}
 }
 

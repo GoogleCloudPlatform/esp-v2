@@ -16,6 +16,7 @@ package configgenerator
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
@@ -279,6 +280,44 @@ func hasPathParameter(httpPattern string) bool {
 	return strings.ContainsRune(httpPattern, '{')
 }
 
+func defaultJwtLocations() ([]*jwtpb.JwtHeader, []string) {
+	return []*jwtpb.JwtHeader{
+			{
+				Name:        util.DefaultJwtHeaderNameAuthorization,
+				ValuePrefix: util.DefaultJwtHeaderValuePrefixBearer,
+			},
+			{
+				Name: util.DefaultJwtHeaderNameXGoogleIapJwtAssertion,
+			},
+		}, []string{
+			util.DefaultJwtQueryParamAccessToken,
+		}
+}
+
+func processJwtLocations(provider *confpb.AuthProvider) ([]*jwtpb.JwtHeader, []string) {
+	if len(provider.JwtLocations) == 0 {
+		return defaultJwtLocations()
+	}
+
+	jwtHeaders := []*jwtpb.JwtHeader{}
+	jwtParams := []string{}
+
+	for _, jwtLocation := range provider.JwtLocations {
+		switch x := jwtLocation.In.(type) {
+		case *confpb.JwtLocation_Header:
+			jwtHeaders = append(jwtHeaders, &jwtpb.JwtHeader{
+				Name:        jwtLocation.GetHeader(),
+				ValuePrefix: jwtLocation.GetValuePrefix(),
+			})
+		case *confpb.JwtLocation_Query:
+			jwtParams = append(jwtParams, jwtLocation.GetQuery())
+		default:
+			fmt.Errorf("provider.JwtLocations as unexpected type %T", x)
+		}
+	}
+	return jwtHeaders, jwtParams
+}
+
 func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	auth := serviceInfo.ServiceConfig().GetAuthentication()
 	if len(auth.GetProviders()) == 0 {
@@ -290,6 +329,9 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		if err != nil {
 			return nil
 		}
+
+		fromHeaders, fromParams := processJwtLocations(provider)
+
 		jp := &jwtpb.JwtProvider{
 			Issuer: provider.GetIssuer(),
 			JwksSourceSpecifier: &jwtpb.JwtProvider_RemoteJwks{
@@ -306,18 +348,8 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 					},
 				},
 			},
-			FromHeaders: []*jwtpb.JwtHeader{
-				{
-					Name:        "Authorization",
-					ValuePrefix: "Bearer ",
-				},
-				{
-					Name: "X-Goog-Iap-Jwt-Assertion",
-				},
-			},
-			FromParams: []string{
-				"access_token",
-			},
+			FromHeaders:          fromHeaders,
+			FromParams:           fromParams,
 			ForwardPayloadHeader: "X-Endpoint-API-UserInfo",
 		}
 
@@ -575,14 +607,14 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 func copyServiceConfigForReportMetrics(src *confpb.Service) *anypb.Any {
 	// Logs and metrics fields are needed by the Envoy HTTP filter
 	// to generate proper Metrics for Report calls.
-	copy := &confpb.Service{
+	serviceConfigCopy := &confpb.Service{
 		Logs:               src.GetLogs(),
 		Metrics:            src.GetMetrics(),
 		MonitoredResources: src.GetMonitoredResources(),
 		Monitoring:         src.GetMonitoring(),
 		Logging:            src.GetLogging(),
 	}
-	a, err := ptypes.MarshalAny(copy)
+	a, err := ptypes.MarshalAny(serviceConfigCopy)
 	if err != nil {
 		glog.Warningf("failed to copy certain service config, error: %v", err)
 		return nil
@@ -601,11 +633,21 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 				DescriptorSet: &transcoderpb.GrpcJsonTranscoder_ProtoDescriptorBin{
 					ProtoDescriptorBin: configContent,
 				},
-				IgnoredQueryParameters: []string{"api_key", "key", "access_token"},
-				AutoMapping:            true,
-				ConvertGrpcStatus:      true,
+				AutoMapping:       true,
+				ConvertGrpcStatus: true,
 			}
+			for apiKeyQueryParam := range serviceInfo.ApiKeyQueryParams {
+				transcodeConfig.IgnoredQueryParameters = append(transcodeConfig.IgnoredQueryParameters, apiKeyQueryParam)
+			}
+
+			for jwtQueryParam := range serviceInfo.JwtQueryParams {
+				transcodeConfig.IgnoredQueryParameters = append(transcodeConfig.IgnoredQueryParameters, jwtQueryParam)
+			}
+
+			sort.Sort(sort.StringSlice(transcodeConfig.IgnoredQueryParameters))
+
 			transcodeConfig.Services = append(transcodeConfig.Services, serviceInfo.ApiNames...)
+
 			transcodeConfigStruct, _ := ptypes.MarshalAny(transcodeConfig)
 			transcodeFilter := &hcmpb.HttpFilter{
 				Name:       util.GRPCJSONTranscoder,

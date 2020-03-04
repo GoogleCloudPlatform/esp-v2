@@ -49,6 +49,10 @@ type ServiceInfo struct {
 	Methods map[string]*methodInfo
 	// Stores url segment names, mapping snake name to Json name.
 	SegmentNames []*pmpb.SegmentName
+	// Stores the api key locations in query parameters.
+	ApiKeyQueryParams map[string]bool
+	// Stores the jwt locations in query parameters.
+	JwtQueryParams map[string]bool
 
 	AllowCors         bool
 	ServiceControlURI string
@@ -83,11 +87,13 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	}
 
 	serviceInfo := &ServiceInfo{
-		Name:          serviceConfig.GetName(),
-		ConfigID:      id,
-		serviceConfig: serviceConfig,
-		Options:       opts,
-		Methods:       make(map[string]*methodInfo),
+		Name:              serviceConfig.GetName(),
+		ConfigID:          id,
+		serviceConfig:     serviceConfig,
+		Options:           opts,
+		Methods:           make(map[string]*methodInfo),
+		JwtQueryParams:    make(map[string]bool),
+		ApiKeyQueryParams: make(map[string]bool),
 	}
 
 	// Calling order is required due to following variable usage
@@ -121,6 +127,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	serviceInfo.processAccessToken()
 	serviceInfo.processTypes()
 	serviceInfo.addGrpcHttpRules()
+	serviceInfo.processJwtInQueryParams()
 
 	if err := serviceInfo.processEmptyJwksUriByOpenID(); err != nil {
 		return nil, err
@@ -184,7 +191,6 @@ func (s *ServiceInfo) processEmptyJwksUriByOpenID() error {
 			provider.JwksUri = jwksUri
 		}
 	}
-
 	return nil
 }
 
@@ -504,6 +510,22 @@ func (s *ServiceInfo) processUsageRule() error {
 	return nil
 }
 
+func (s *ServiceInfo) processJwtInQueryParams() {
+	authn := s.serviceConfig.GetAuthentication()
+	for _, provider := range authn.GetProviders() {
+		for _, jwtLocation := range provider.JwtLocations {
+			switch jwtLocation.In.(type) {
+			case *confpb.JwtLocation_Query:
+				s.JwtQueryParams[jwtLocation.GetQuery()] = true
+			default:
+				continue
+			}
+		}
+	}
+
+	s.JwtQueryParams[util.DefaultJwtQueryParamAccessToken] = true
+}
+
 func (s *ServiceInfo) processSystemParameters() error {
 	for _, rule := range s.ServiceConfig().GetSystemParameters().GetRules() {
 		apiKeyLocationParameters := []*confpb.SystemParameter{}
@@ -516,12 +538,16 @@ func (s *ServiceInfo) processSystemParameters() error {
 		if err != nil {
 			return err
 		}
-		extractAPIKeyLocations(method, apiKeyLocationParameters)
+		s.extractAPIKeyLocations(method, apiKeyLocationParameters)
 	}
+
+	s.ApiKeyQueryParams[util.DefaultApiKeyQueryParamKey] = true
+	s.ApiKeyQueryParams[util.DefaultApiKeyQueryParamApiKey] = true
+
 	return nil
 }
 
-func extractAPIKeyLocations(method *methodInfo, parameters []*confpb.SystemParameter) {
+func (s *ServiceInfo) extractAPIKeyLocations(method *methodInfo, parameters []*confpb.SystemParameter) {
 	var urlQueryNames, headerNames []*scpb.APIKeyLocation
 	for _, parameter := range parameters {
 		if urlQueryName := parameter.GetUrlQueryParameter(); urlQueryName != "" {
@@ -530,6 +556,7 @@ func extractAPIKeyLocations(method *methodInfo, parameters []*confpb.SystemParam
 					Query: urlQueryName,
 				},
 			})
+			s.ApiKeyQueryParams[urlQueryName] = true
 		}
 		if headerName := parameter.GetHttpHeader(); headerName != "" {
 			headerNames = append(headerNames, &scpb.APIKeyLocation{
