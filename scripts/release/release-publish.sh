@@ -66,7 +66,7 @@ set -x
 VERSION="$(command cat ${ROOT}/VERSION)" \
   || error_exit "Cannot find release version (${ROOT}/VERSION)"
 CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-if RELEASE_BRANCH_SHA="$(git rev-parse origin/${CURRENT_BRANCH})"; then
+if RELEASE_BRANCH_SHA="$(git rev-parse upstream/${CURRENT_BRANCH})"; then
   if [[ "${SHA}" != "${RELEASE_BRANCH_SHA}" ]]; then
     printf "\e[31m
 WARNING: Release branch commit (${RELEASE_BRANCH_SHA}) doesn't match ${SHA}.

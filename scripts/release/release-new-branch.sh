@@ -63,21 +63,21 @@ echo "New release branch: ${RELEASE_BRANCH}."
 [[ -z $(git diff --name-only) ]] \
   || error_exit "Current branch is not clean."
 
-git fetch origin \
-  || error_exit "Could not fetch origin."
+git fetch upstream \
+  || error_exit "Could not fetch upstream."
 git branch ${RELEASE_BRANCH} ${SHA} \
   || error_exit "Could not create a local release branch."
-git push origin ${SHA}:refs/heads/${RELEASE_BRANCH} \
+git push upstream ${SHA}:refs/heads/${RELEASE_BRANCH} \
   || error_exit "Failed to create a remote release branch."
 
 # Update the version number and push for review.
 MASTER_BRANCH="${VERSION}-master"
-git checkout -b "${MASTER_BRANCH}" origin/master
+git checkout -b "${MASTER_BRANCH}" upstream/master
 echo "${NEXT_VERSION}" > ${ROOT}/VERSION
 
 git add ${ROOT}/VERSION
 git commit -m "Update version number to ${NEXT_VERSION}."
-git push --set-upstream origin "${MASTER_BRANCH}":refs/for/master
+git push --set-upstream origin "${MASTER_BRANCH}"
 
 git checkout ${RELEASE_BRANCH}
 
