@@ -1,12 +1,12 @@
 # Release 2.6.0 04-03-2020
-- b/149491061: Signal ready only when all tokens are successfully retried (#37)
-- b/150628278: include SA email in fetched iam id token (#40)
+
+- Signal ready only when all tokens are successfully retried (#37)
+- include SA email in fetched iam id token (#40)
 - add TLS support for downstream (#32)
-- b/149050012: Support HTTP protocols (#36)
-- b/149050012: Remove backend protocol flag (#31)
+- Support HTTP protocols (#36)
+- Remove backend protocol flag (#31)
 - Support auto binding for grpc transcoding (#33)
 - Update docs and error message with latest links (#11)
-
 
 # Release 2.5.0 19-02-2020
 
