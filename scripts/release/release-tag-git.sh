@@ -67,7 +67,7 @@ VERSION_TAG="v${VERSION}"
 set -x
 
 git tag --annotate --force --file=- ${VERSION_TAG} ${TAG_SHA} <<EOF
-ApiProxy Release ${VERSION}
+ESPv2 Release ${VERSION}
 
 The release build was produced at ${BUILD_SHA}.
 The Docker image released is:
@@ -91,7 +91,7 @@ fi
 
 # Push the tag to the server.
 set -x
-git push origin ${VERSION_TAG}
+git push upstream ${VERSION_TAG}
 { set +x; } 2>/dev/null
 
 printf '\e[31m
