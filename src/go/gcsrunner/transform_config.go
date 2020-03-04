@@ -46,6 +46,9 @@ func addGCPAttributes(cfg *scpb.FilterConfig, opts FetchConfigOptions) error {
 	if err != nil {
 		return err
 	}
+	if opts.OverridePlatform != "" {
+		attrs.Platform = opts.OverridePlatform
+	}
 	cfg.GcpAttributes = attrs
 	return nil
 }

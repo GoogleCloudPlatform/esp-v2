@@ -27,31 +27,59 @@ import (
 )
 
 func TestAddGCPAttributes(t *testing.T) {
-	mockedResp := map[string]string{
-		util.ProjectIDSuffix: "project",
-		util.ZoneSuffix:      "projectzs/project/zone",
-	}
-	cfg := &scpb.FilterConfig{}
-	wantCfg := &scpb.FilterConfig{
-		GcpAttributes: &scpb.GcpAttributes{
-			ProjectId: "project",
-			Zone:      "zone",
-			Platform:  util.GCE,
+	tests := []struct {
+		name             string
+		opts             FetchConfigOptions
+		metadataResponds map[string]string
+		want             *scpb.FilterConfig
+	}{
+		{
+			name: "success with default platform",
+			metadataResponds: map[string]string{
+				util.ProjectIDSuffix: "project",
+				util.ZoneSuffix:      "projectzs/project/zone",
+			},
+			want: &scpb.FilterConfig{
+				GcpAttributes: &scpb.GcpAttributes{
+					ProjectId: "project",
+					Zone:      "zone",
+					Platform:  util.GCE,
+				},
+			},
+		},
+		{
+			name: "success with platform override",
+			opts: FetchConfigOptions{
+				OverridePlatform: "override",
+			},
+			metadataResponds: map[string]string{
+				util.ProjectIDSuffix: "project",
+				util.ZoneSuffix:      "projectzs/project/zone",
+			},
+			want: &scpb.FilterConfig{
+				GcpAttributes: &scpb.GcpAttributes{
+					ProjectId: "project",
+					Zone:      "zone",
+					Platform:  "override",
+				},
+			},
 		},
 	}
 
-	ts := util.InitMockServerFromPathResp(mockedResp)
-	defer ts.Close()
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ts := util.InitMockServerFromPathResp(tc.metadataResponds)
+			defer ts.Close()
+			tc.opts.MetadataURL = ts.URL
 
-	opts := FetchConfigOptions{
-		MetadataURL: ts.URL,
-	}
-	if err := addGCPAttributes(cfg, opts); err != nil {
-		t.Fatalf("addGCPAttributes(%v,%v) returned error %v", cfg, opts, err)
-	}
-
-	if diff := cmp.Diff(wantCfg, cfg, cmp.Comparer(proto.Equal)); diff != "" {
-		t.Errorf("addGCPAttributes returned unexpected result: (-want/+got): %s", diff)
+			got := &scpb.FilterConfig{}
+			if err := addGCPAttributes(got, tc.opts); err != nil {
+				t.Fatalf("addGCPAttributes(%v,%v) returned error %v", got, tc.opts, err)
+			}
+			if diff := cmp.Diff(tc.want, got, cmp.Comparer(proto.Equal)); diff != "" {
+				t.Errorf("addGCPAttributes returned unexpected result: (-want/+got): %s", diff)
+			}
+		})
 	}
 }
 

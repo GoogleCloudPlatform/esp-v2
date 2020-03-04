@@ -42,6 +42,7 @@ type FetchConfigOptions struct {
 	FetchGCSObjectInitialInterval time.Duration
 	FetchGCSObjectTimeout         time.Duration
 	MetadataURL                   string
+	OverridePlatform              string
 }
 
 var findDefaultCredentials = google_oauth.FindDefaultCredentials
