@@ -16,7 +16,6 @@ package configmanager
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"net/http"
@@ -1438,12 +1437,8 @@ func TestFetchListeners(t *testing.T) {
 				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, resp.Request, req)
 			}
 
-			// Normalize both wantedListeners and gotListeners.
-			gotListeners = normalizeJson(gotListeners, t)
-			if want := normalizeJson(tc.wantedListeners, t); gotListeners != want {
-				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got unexpected Listeners", i, tc.desc)
-				t.Errorf("Actual: %s", gotListeners)
-				t.Errorf("Expected: %s", want)
+			if err := util.JsonEqual(tc.wantedListeners, gotListeners); err != nil {
+				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got unexpected Listeners, \n %v", i, tc.desc, err)
 			}
 		})
 	}
@@ -1511,9 +1506,8 @@ func TestDynamicBackendRouting(t *testing.T) {
 				t.Error(err)
 				continue
 			}
-			gotCluster = normalizeJson(gotCluster, t)
-			if want = normalizeJson(want, t); gotCluster != want {
-				t.Errorf("Test Desc(%d): %s, idx %d snapshot cache fetch got Cluster: %s, want: %s", i, tc.desc, idx, gotCluster, want)
+			if err := util.JsonEqual(want, gotCluster); err != nil {
+				t.Errorf("Test Desc(%d): %s, idx %d snapshot cache fetch got Cluster: \n%v", i, tc.desc, idx, err)
 				continue
 			}
 		}
@@ -1544,10 +1538,8 @@ func TestDynamicBackendRouting(t *testing.T) {
 			t.Error(err)
 			continue
 		}
-		gotListener = normalizeJson(gotListener, t)
-		if wantListener := normalizeJson(tc.wantedListener, t); gotListener != wantListener {
-			t.Errorf("Test Desc(%d): %s, snapshot cache fetch Listener,\n\t got : %s,\n\t want: %s", i, tc.desc, gotListener, wantListener)
-			continue
+		if err := util.JsonEqual(tc.wantedListener, gotListener); err != nil {
+			t.Errorf("Test Desc(%d): %s, snapshot cache fetch Listener,\n\t %v", i, tc.desc, err)
 		}
 	}
 }
@@ -1785,16 +1777,6 @@ func sortResources(response *cache.Response) []cache.Resource {
 		return cache.GetResourceName(sortedResources[i]) < cache.GetResourceName(sortedResources[j])
 	})
 	return sortedResources
-}
-
-func normalizeJson(input string, t *testing.T) string {
-	var jsonObject map[string]interface{}
-	err := json.Unmarshal([]byte(input), &jsonObject)
-	if err != nil {
-		t.Fatal("fail to normalize json: ", err)
-	}
-	outputString, _ := json.Marshal(jsonObject)
-	return string(outputString)
 }
 
 func genFakeConfig(input string) ([]byte, error) {

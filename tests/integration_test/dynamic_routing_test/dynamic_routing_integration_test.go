@@ -212,8 +212,8 @@ func TestDynamicRouting(t *testing.T) {
 			continue
 		}
 		gotRespStr := string(gotResp)
-		if !utils.JsonEqual(gotRespStr, tc.wantResp) {
-			t.Errorf("response want: %s, got: %s", tc.wantResp, gotRespStr)
+		if err := util.JsonEqual(tc.wantResp, gotRespStr); err != nil {
+			t.Errorf("Test(%s) fails: \n %s", tc.desc, err)
 		}
 	}
 }
@@ -458,8 +458,8 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 
 		gotRespStr := string(gotResp)
 
-		if !utils.JsonEqual(gotRespStr, tc.wantResp) {
-			t.Errorf("Test Desc(%s): response want: %s, got: %s", tc.desc, tc.wantResp, gotRespStr)
+		if err := util.JsonEqual(tc.wantResp, gotRespStr); err != nil {
+			t.Errorf("Test Desc(%s) fails: \n %s", tc.desc, err)
 		}
 
 		scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))

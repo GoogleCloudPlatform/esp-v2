@@ -15,8 +15,11 @@
 package util
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"time"
 )
 
@@ -70,4 +73,28 @@ func InitMockServerFromPathResp(pathResp map[string]string) *httptest.Server {
 
 		w.WriteHeader(http.StatusNotFound)
 	}))
+}
+
+// JsonEqual compares two JSON strings after normalizing them.
+// Should be used for test only.
+func JsonEqual(want, got string) error {
+	var err error
+	if got, err = normalizeJson(got); err != nil {
+		return err
+	}
+	if want, err = normalizeJson(want); err != nil {
+		return err
+	}
+	if !strings.EqualFold(want, got) {
+		return fmt.Errorf("got: %s \n want: %s", got, want)
+	}
+	return nil
+}
+
+// normalizeJson returns normalized JSON string.
+func normalizeJson(input string) (string, error) {
+	var jsonObject map[string]interface{}
+	json.Unmarshal([]byte(input), &jsonObject)
+	outputString, err := json.Marshal(jsonObject)
+	return string(outputString), err
 }
