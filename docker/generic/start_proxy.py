@@ -155,16 +155,6 @@ environment variable or by passing "-k" flag to this script.
        It supports HTTP/1.x, HTTP/2, and gRPC connections.
        Default is {port}'''.format(port=DEFAULT_LISTENER_PORT))
 
-    parser.add_argument('--http_port', default=None, type=int, help='''
-       This flag is exactly same as --listener_port. It is added for
-       backward compatible for ESPv1 and will be deprecated.
-       Please use the flag --listener_port.''')
-
-    parser.add_argument('--http2_port', default=None, type=int, help='''
-       This flag is exactly same as --listener_port. It is added for
-       backward compatible for ESPv1 and will be deprecated.
-       Please use the flag --listener_port.''')
-
     parser.add_argument('--ssl_server_path', default=None, help='''
     Proxy Server SSL path. When configured, ESPv2 only accepts HTTP/1.x and
     HTTP/2 secure connections on listener_port. Requires the certificate and
@@ -470,6 +460,23 @@ environment variable or by passing "-k" flag to this script.
         Default value: http1.''',
         choices=['http1', 'http2', 'grpc'])
 
+    parser.add_argument('--http_port', default=None, type=int, help='''
+       This flag is exactly same as --listener_port. It is added for
+       backward compatible for ESPv1 and will be deprecated.
+       Please use the flag --listener_port.''')
+
+    parser.add_argument('--http2_port', default=None, type=int, help='''
+       This flag is exactly same as --listener_port. It is added for
+       backward compatible for ESPv1 and will be deprecated.
+       Please use the flag --listener_port.''')
+
+    parser.add_argument('--ssl_port', default=None, type=int, help='''
+       This flag added for backward compatible for ESPv1 and will be deprecated.
+       Please use the flag --ssl_server_path instead. When configured, ESPv2
+       accepts HTTP/1.x and HTTP/2 secure connections on this port,
+       Requires the certificate and key files /etc/nginx/ssl/nginx.crt and
+       /etc/nginx/ssl/nginx.key''')
+
     # End Deprecated Flags Section
 
     return parser
@@ -505,6 +512,9 @@ def enforce_conflict_args(args):
 
     if args.backend_dns_lookup_family and args.backend_dns_lookup_family not in {"auto", "v4only", "v6only"}:
         return "Flag --backend_dns_lookup_family must be 'auto', 'v4only' or 'v6only'."
+
+    if args.ssl_port and args.ssl_server_path:
+        return "Flag --ssl_port is going to be deprecated, please use --ssl_server_path only."
 
     port_flags = []
     if args.http_port:
@@ -565,6 +575,9 @@ def gen_proxy_config(args):
         proxy_conf.extend(["--listener_port", str(args.listener_port)])
     if args.ssl_server_path:
         proxy_conf.extend(["--ssl_server_path", str(args.ssl_server_path)])
+    if args.ssl_port:
+        proxy_conf.extend(["--ssl_server_path", "/etc/nginx/ssl"])
+        proxy_conf.extend(["--listener_port", str(args.ssl_port)])
 
     if args.service:
         proxy_conf.extend(["--service", args.service])
