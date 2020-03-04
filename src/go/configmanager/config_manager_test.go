@@ -141,7 +141,6 @@ func TestFetchListeners(t *testing.T) {
                            "autoMapping":true,
                            "convertGrpcStatus":true,
                            "ignoredQueryParameters":[
-                              "access_token",
                               "api_key",
                               "key"
                            ],

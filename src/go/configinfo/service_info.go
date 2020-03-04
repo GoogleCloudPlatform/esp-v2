@@ -49,10 +49,10 @@ type ServiceInfo struct {
 	Methods map[string]*methodInfo
 	// Stores url segment names, mapping snake name to Json name.
 	SegmentNames []*pmpb.SegmentName
-	// Stores the api key locations in query parameters.
-	ApiKeyQueryParams map[string]bool
-	// Stores the jwt locations in query parameters.
-	JwtQueryParams map[string]bool
+	// Stores all the used api key locations in query parameters for json-grpc transcoder.
+	TranscoderIgnoredApiKeyQueryParams map[string]bool
+	// Stores all the used jwt locations in query parameters for json-grpc transcoder.
+	TranscoderIgnoredJwtQueryParams map[string]bool
 
 	AllowCors         bool
 	ServiceControlURI string
@@ -87,13 +87,13 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	}
 
 	serviceInfo := &ServiceInfo{
-		Name:              serviceConfig.GetName(),
-		ConfigID:          id,
-		serviceConfig:     serviceConfig,
-		Options:           opts,
-		Methods:           make(map[string]*methodInfo),
-		JwtQueryParams:    make(map[string]bool),
-		ApiKeyQueryParams: make(map[string]bool),
+		Name:                               serviceConfig.GetName(),
+		ConfigID:                           id,
+		serviceConfig:                      serviceConfig,
+		Options:                            opts,
+		Methods:                            make(map[string]*methodInfo),
+		TranscoderIgnoredJwtQueryParams:    make(map[string]bool),
+		TranscoderIgnoredApiKeyQueryParams: make(map[string]bool),
 	}
 
 	// Calling order is required due to following variable usage
@@ -106,6 +106,9 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	// * GrpcSupportRequired:
 	//     set by processBackendRule, buildCatchAllBackend
 	//     used by addGrpcHttpRules
+	// * Methods:
+	//		 set by processApis, processHttpRule, addGrpcHttpRules, processUsageRule
+	//     used by processApiKeyLocations
 	if err := serviceInfo.buildCatchAllBackend(); err != nil {
 		return nil, err
 	}
@@ -121,13 +124,16 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	if err := serviceInfo.processUsageRule(); err != nil {
 		return nil, err
 	}
-	if err := serviceInfo.processSystemParameters(); err != nil {
-		return nil, err
-	}
+
 	serviceInfo.processAccessToken()
 	serviceInfo.processTypes()
 	serviceInfo.addGrpcHttpRules()
-	serviceInfo.processJwtInQueryParams()
+	if err := serviceInfo.processJwtLocations(); err != nil {
+		return nil, err
+	}
+	if err := serviceInfo.processApiKeyLocations(); err != nil {
+		return nil, err
+	}
 
 	if err := serviceInfo.processEmptyJwksUriByOpenID(); err != nil {
 		return nil, err
@@ -510,39 +516,60 @@ func (s *ServiceInfo) processUsageRule() error {
 	return nil
 }
 
-func (s *ServiceInfo) processJwtInQueryParams() {
+func (s *ServiceInfo) processJwtLocations() error {
 	authn := s.serviceConfig.GetAuthentication()
 	for _, provider := range authn.GetProviders() {
+		// no custom JwtLocation so use default ones and set the one in query
+		// parameter for transcoder to ignore.
+		if len(provider.JwtLocations) == 0 {
+			s.TranscoderIgnoredJwtQueryParams[util.DefaultJwtQueryParamAccessToken] = true
+			continue
+		}
+
 		for _, jwtLocation := range provider.JwtLocations {
 			switch jwtLocation.In.(type) {
 			case *confpb.JwtLocation_Query:
-				s.JwtQueryParams[jwtLocation.GetQuery()] = true
+				if jwtLocation.ValuePrefix != "" {
+					return fmt.Errorf("JwtLocation_Query should be set without valuePrefix, get JwtLocation %v", jwtLocation)
+				}
+				// set the custom JwtLocation in query parameter for transcoder to ignore.
+				s.TranscoderIgnoredJwtQueryParams[jwtLocation.GetQuery()] = true
 			default:
 				continue
 			}
 		}
 	}
-
-	s.JwtQueryParams[util.DefaultJwtQueryParamAccessToken] = true
+	return nil
 }
 
-func (s *ServiceInfo) processSystemParameters() error {
+func (s *ServiceInfo) processApiKeyLocations() error {
 	for _, rule := range s.ServiceConfig().GetSystemParameters().GetRules() {
 		apiKeyLocationParameters := []*confpb.SystemParameter{}
+
 		for _, parameter := range rule.GetParameters() {
 			if parameter.GetName() == util.APIKeyParameterName {
 				apiKeyLocationParameters = append(apiKeyLocationParameters, parameter)
 			}
 		}
+
 		method, err := s.getOrCreateMethod(rule.GetSelector())
 		if err != nil {
 			return err
 		}
+
 		s.extractAPIKeyLocations(method, apiKeyLocationParameters)
 	}
 
-	s.ApiKeyQueryParams[util.DefaultApiKeyQueryParamKey] = true
-	s.ApiKeyQueryParams[util.DefaultApiKeyQueryParamApiKey] = true
+	for _, method := range s.Methods {
+		// If any of method is not set with custom APIKeyLocations, use the default
+		// one and set the custom APIKeyLocations in query parameter for transcoder
+		// to ignore.
+		if len(method.APIKeyLocations) == 0 {
+			s.TranscoderIgnoredApiKeyQueryParams[util.DefaultApiKeyQueryParamKey] = true
+			s.TranscoderIgnoredApiKeyQueryParams[util.DefaultApiKeyQueryParamApiKey] = true
+		}
+
+	}
 
 	return nil
 }
@@ -556,7 +583,8 @@ func (s *ServiceInfo) extractAPIKeyLocations(method *methodInfo, parameters []*c
 					Query: urlQueryName,
 				},
 			})
-			s.ApiKeyQueryParams[urlQueryName] = true
+			// set the custom APIKeyLocation in query parameter for transcoder to ignore.\
+			s.TranscoderIgnoredApiKeyQueryParams[urlQueryName] = true
 		}
 		if headerName := parameter.GetHttpHeader(); headerName != "" {
 			headerNames = append(headerNames, &scpb.APIKeyLocation{

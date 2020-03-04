@@ -51,16 +51,30 @@ func TestTranscoderFilter(t *testing.T) {
 		wantTranscoderFilter string
 	}{
 		{
-			desc: "Success for gRPC backend with transcoding",
+			desc: "Success. Generate transcoder filter with default apiKey locations and default jwt locations",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+						},
 					},
 				},
 				SourceInfo: &confpb.SourceInfo{
 					SourceFiles: []*anypb.Any{content},
+				},
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
+						{
+							Id:      "auth_provider",
+							Issuer:  "issuer-0",
+							JwksUri: "https://fake-jwks.com",
+						},
+					},
 				},
 			},
 			wantTranscoderFilter: fmt.Sprintf(`
@@ -145,10 +159,7 @@ func TestTranscoderFilter(t *testing.T) {
       "autoMapping":true,
       "convertGrpcStatus":true,
       "ignoredQueryParameters":[
-         "access_token",
-         "api_key",
          "jwt_query_param",
-         "key",
          "query_name_1",
          "query_name_2"
       ],

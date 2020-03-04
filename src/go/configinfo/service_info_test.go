@@ -131,14 +131,14 @@ func TestProcessEndpoints(t *testing.T) {
 
 func TestProcessSystemParameters(t *testing.T) {
 	testData := []struct {
-		desc                    string
-		fakeServiceConfig       *confpb.Service
-		wantedSystemParameters  map[string][]*confpb.SystemParameter
-		wantedApiKeyQueryParams map[string]bool
-		wantMethods             map[string]*methodInfo
+		desc                                     string
+		fakeServiceConfig                        *confpb.Service
+		wantedSystemParameters                   map[string][]*confpb.SystemParameter
+		wantedTranscoderIgnoredApiKeyQueryParams map[string]bool
+		wantMethods                              map[string]*methodInfo
 	}{
 		{
-			desc: "Succeed, only url query",
+			desc: "Succeed, only header",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
@@ -164,10 +164,7 @@ func TestProcessSystemParameters(t *testing.T) {
 					},
 				},
 			},
-			wantedApiKeyQueryParams: map[string]bool{
-				"key":     true,
-				"api_key": true,
-			},
+			wantedTranscoderIgnoredApiKeyQueryParams: map[string]bool{},
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &methodInfo{
 					ShortName: "echo",
@@ -189,7 +186,7 @@ func TestProcessSystemParameters(t *testing.T) {
 			},
 		},
 		{
-			desc: "Succeed, only header",
+			desc: "Succeed, only url query",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
@@ -215,9 +212,7 @@ func TestProcessSystemParameters(t *testing.T) {
 					},
 				},
 			},
-			wantedApiKeyQueryParams: map[string]bool{
-				"key":        true,
-				"api_key":    true,
+			wantedTranscoderIgnoredApiKeyQueryParams: map[string]bool{
 				"query_name": true,
 			},
 			wantMethods: map[string]*methodInfo{
@@ -273,9 +268,7 @@ func TestProcessSystemParameters(t *testing.T) {
 					},
 				},
 			},
-			wantedApiKeyQueryParams: map[string]bool{
-				"key":          true,
-				"api_key":      true,
+			wantedTranscoderIgnoredApiKeyQueryParams: map[string]bool{
 				"query_name_1": true,
 				"query_name_2": true,
 			},
@@ -316,7 +309,7 @@ func TestProcessSystemParameters(t *testing.T) {
 		},
 
 		{
-			desc: "Succeed, url query plus header for multiple apis",
+			desc: "Succeed, url query plus header for multiple apis with one using default APIKeyLocation",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
@@ -332,6 +325,14 @@ func TestProcessSystemParameters(t *testing.T) {
 						Methods: []*apipb.Method{
 							{
 								Name: "bar",
+							},
+						},
+					},
+					{
+						Name: "3.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "baz",
 							},
 						},
 					},
@@ -371,14 +372,14 @@ func TestProcessSystemParameters(t *testing.T) {
 					},
 				},
 			},
-			wantedApiKeyQueryParams: map[string]bool{
-				"key":          true,
+			wantedTranscoderIgnoredApiKeyQueryParams: map[string]bool{
 				"api_key":      true,
+				"key":          true,
 				"query_name_1": true,
 				"query_name_2": true,
 			},
 			wantMethods: map[string]*methodInfo{
-				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.foo": &methodInfo{
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.foo": {
 					ShortName: "foo",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*commonpb.Pattern{
@@ -410,7 +411,8 @@ func TestProcessSystemParameters(t *testing.T) {
 						},
 					},
 				},
-				"2.echo_api_endpoints_cloudesf_testing_cloud_goog.bar": &methodInfo{
+
+				"2.echo_api_endpoints_cloudesf_testing_cloud_goog.bar": {
 					ShortName: "bar",
 					ApiName:   "2.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*commonpb.Pattern{
@@ -442,6 +444,16 @@ func TestProcessSystemParameters(t *testing.T) {
 						},
 					},
 				},
+				"3.echo_api_endpoints_cloudesf_testing_cloud_goog.baz": {
+					ShortName: "baz",
+					ApiName:   "3.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/3.echo_api_endpoints_cloudesf_testing_cloud_goog/baz",
+							HttpMethod:  util.POST,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -455,8 +467,8 @@ func TestProcessSystemParameters(t *testing.T) {
 		if len(serviceInfo.Methods) != len(tc.wantMethods) {
 			t.Errorf("Test Desc(%d): %s, got: %v, wanted: %v", i, tc.desc, serviceInfo.Methods, tc.wantMethods)
 		}
-		if !reflect.DeepEqual(serviceInfo.ApiKeyQueryParams, tc.wantedApiKeyQueryParams) {
-			t.Errorf("Test Desc(%d): %s, gotApiKeyQueryParams: %v, wantedApiKeyQueryParams: %v", i, tc.desc, serviceInfo.ApiKeyQueryParams, tc.wantedApiKeyQueryParams)
+		if !reflect.DeepEqual(serviceInfo.TranscoderIgnoredApiKeyQueryParams, tc.wantedTranscoderIgnoredApiKeyQueryParams) {
+			t.Errorf("Test Desc(%d): %s, gotTranscoderIgnoredApiKeyQueryParams: %v, wantedTranscoderIgnoredApiKeyQueryParams: %v", i, tc.desc, serviceInfo.TranscoderIgnoredApiKeyQueryParams, tc.wantedTranscoderIgnoredApiKeyQueryParams)
 		}
 
 		for key, gotMethod := range serviceInfo.Methods {
@@ -470,9 +482,9 @@ func TestProcessSystemParameters(t *testing.T) {
 
 func TestProcessJwtInQueryParams(t *testing.T) {
 	testData := []struct {
-		desc                 string
-		fakeServiceConfig    *confpb.Service
-		wantedJwtQueryParams map[string]bool
+		desc                                  string
+		fakeServiceConfig                     *confpb.Service
+		wantedTranscoderIgnoredJwtQueryParams map[string]bool
 	}{
 		{
 			desc: "Success. Default jwt locations",
@@ -496,7 +508,7 @@ func TestProcessJwtInQueryParams(t *testing.T) {
 					},
 				},
 			},
-			wantedJwtQueryParams: map[string]bool{
+			wantedTranscoderIgnoredJwtQueryParams: map[string]bool{
 				"access_token": true,
 			},
 		},
@@ -535,22 +547,21 @@ func TestProcessJwtInQueryParams(t *testing.T) {
 					},
 				},
 			},
-			wantedJwtQueryParams: map[string]bool{
-				"access_token":    true,
+			wantedTranscoderIgnoredJwtQueryParams: map[string]bool{
 				"jwt_query_param": true,
 			},
 		},
 	}
 	for i, tc := range testData {
 		serviceInfo := &ServiceInfo{
-			serviceConfig:     tc.fakeServiceConfig,
-			Methods:           make(map[string]*methodInfo),
-			JwtQueryParams:    make(map[string]bool),
-			ApiKeyQueryParams: make(map[string]bool),
+			serviceConfig:                      tc.fakeServiceConfig,
+			Methods:                            make(map[string]*methodInfo),
+			TranscoderIgnoredJwtQueryParams:    make(map[string]bool),
+			TranscoderIgnoredApiKeyQueryParams: make(map[string]bool),
 		}
-		serviceInfo.processJwtInQueryParams()
-		if !reflect.DeepEqual(serviceInfo.JwtQueryParams, tc.wantedJwtQueryParams) {
-			t.Errorf("Test Desc(%d): %s, gotApiKeyQueryParams: %v, wantedApiKeyQueryParams: %v", i, tc.desc, serviceInfo.JwtQueryParams, tc.wantedJwtQueryParams)
+		serviceInfo.processJwtLocations()
+		if !reflect.DeepEqual(serviceInfo.TranscoderIgnoredJwtQueryParams, tc.wantedTranscoderIgnoredJwtQueryParams) {
+			t.Errorf("Test Desc(%d): %s, gotTranscoderIgnoredApiKeyQueryParams: %v, wantedTranscoderIgnoredApiKeyQueryParams: %v", i, tc.desc, serviceInfo.TranscoderIgnoredJwtQueryParams, tc.wantedTranscoderIgnoredJwtQueryParams)
 		}
 
 	}
