@@ -29,20 +29,18 @@ const (
 )
 
 // CreateUpstreamTransportSocket creates a TransportSocket for Upstream
-func CreateUpstreamTransportSocket(hostname, rootCertsPath string, alpn_protocols []string) (*corepb.TransportSocket, error) {
-	common_tls := &authpb.CommonTlsContext{
-		ValidationContextType: &authpb.CommonTlsContext_ValidationContext{
-			ValidationContext: &authpb.CertificateValidationContext{
-				TrustedCa: &corepb.DataSource{
-					Specifier: &corepb.DataSource_Filename{
-						Filename: rootCertsPath,
-					},
-				},
-			},
-		},
+func CreateUpstreamTransportSocket(hostname, rootCertsPath string, alpnProtocols []string) (*corepb.TransportSocket, error) {
+	if rootCertsPath == "" {
+		return nil, fmt.Errorf("root certs path cannot be empty.")
 	}
-	if len(alpn_protocols) > 0 {
-		common_tls.AlpnProtocols = alpn_protocols
+
+	// TODO: add mTLS for UpstreamTransportSocket
+	common_tls, err := createCommonTlsContext(rootCertsPath, "", "")
+	if err != nil {
+		return nil, err
+	}
+	if len(alpnProtocols) > 0 {
+		common_tls.AlpnProtocols = alpnProtocols
 	}
 
 	tlsContext, err := ptypes.MarshalAny(&authpb.UpstreamTlsContext{
@@ -63,27 +61,15 @@ func CreateUpstreamTransportSocket(hostname, rootCertsPath string, alpn_protocol
 
 // CreateDownstreamTransportSocket creates a TransportSocket for Downstream
 func CreateDownstreamTransportSocket(sslPath string) (*corepb.TransportSocket, error) {
-	if !strings.HasSuffix(sslPath, "/") {
-		sslPath = fmt.Sprintf("%s/", sslPath)
+	if sslPath == "" {
+		return nil, fmt.Errorf("SSL path cannot be empty.")
 	}
-	common_tls := &authpb.CommonTlsContext{
-		TlsCertificates: []*authpb.TlsCertificate{
-			{
-				CertificateChain: &corepb.DataSource{
-					Specifier: &corepb.DataSource_Filename{
-						Filename: fmt.Sprintf("%s%s.crt", sslPath, defaultServerSslFilename),
-					},
-				},
-				PrivateKey: &corepb.DataSource{
-					Specifier: &corepb.DataSource_Filename{
-						Filename: fmt.Sprintf("%s%s.key", sslPath, defaultServerSslFilename),
-					},
-				},
-			},
-		},
+
+	common_tls, err := createCommonTlsContext("", sslPath, defaultServerSslFilename)
+	if err != nil {
+		return nil, err
 	}
 	common_tls.AlpnProtocols = []string{"h2", "http/1.1"}
-
 	tlsContext, err := ptypes.MarshalAny(&authpb.DownstreamTlsContext{
 		CommonTlsContext: common_tls,
 	},
@@ -97,4 +83,48 @@ func CreateDownstreamTransportSocket(sslPath string) (*corepb.TransportSocket, e
 			TypedConfig: tlsContext,
 		},
 	}, nil
+}
+
+func createCommonTlsContext(rootCertsPath, sslPath, sslFileName string) (*authpb.CommonTlsContext, error) {
+	common_tls := &authpb.CommonTlsContext{}
+	// Add TLS certificate
+	if sslPath != "" && sslFileName != "" {
+		if !strings.HasSuffix(sslPath, "/") {
+			sslPath = fmt.Sprintf("%s/", sslPath)
+		}
+		// Backward compatible for ESPv1
+		if strings.Contains(sslPath, "/etc/nginx/ssl") {
+			sslFileName = "nginx"
+		}
+
+		common_tls.TlsCertificates = []*authpb.TlsCertificate{
+			{
+				CertificateChain: &corepb.DataSource{
+					Specifier: &corepb.DataSource_Filename{
+						Filename: fmt.Sprintf("%s%s.crt", sslPath, sslFileName),
+					},
+				},
+				PrivateKey: &corepb.DataSource{
+					Specifier: &corepb.DataSource_Filename{
+						Filename: fmt.Sprintf("%s%s.key", sslPath, sslFileName),
+					},
+				},
+			},
+		}
+	}
+
+	// Add Validation Context
+	if rootCertsPath != "" {
+		common_tls.ValidationContextType = &authpb.CommonTlsContext_ValidationContext{
+			ValidationContext: &authpb.CertificateValidationContext{
+				TrustedCa: &corepb.DataSource{
+					Specifier: &corepb.DataSource_Filename{
+						Filename: rootCertsPath,
+					},
+				},
+			},
+		}
+	}
+
+	return common_tls, nil
 }

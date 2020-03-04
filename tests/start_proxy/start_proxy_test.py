@@ -113,6 +113,14 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8080', '--ssl_server_path',
               '/etc/endpoint/ssl', '--disable_tracing'
               ]),
+            # legacy ssl_port specified
+            (['-R=managed','--ssl_port=443'],
+             ['bin/configmanager', '--logtostderr',
+              '--backend_address', 'http://127.0.0.1:8082',
+              '--rollout_strategy', 'managed', '--v', '0',
+              '--ssl_server_path', '/etc/nginx/ssl',
+              '--listener_port', '443',
+              ]),
             # http2_port specified.
             (['-R=managed',
               '--http2_port=8079', '--service_control_quota_retries=3',
@@ -210,7 +218,8 @@ class TestStartProxy(unittest.TestCase):
             ['--backend_dns_lookup_family=v4'],
             ['--non_gcp'],
             ['--http_port=80', '--http2_port=80'],
-            ['--http_port=80', '--listener_port=80']
+            ['--http_port=80', '--listener_port=80'],
+            ['--ssl_server_path=/etc/endpoint/ssl', '--ssl_port=443'],
         ]
 
         for flags in testcases:
