@@ -18,11 +18,11 @@ package google.api.envoy.http.service_control;
 
 import "validate/validate.proto";
 
-// APIKeyLocation defines the location to extract api key.
+// ApiKeyLocation defines the location to extract api key.
 //
 // See https://swagger.io/docs/specification/authentication/api-keys
 // for a general overview of API keys as defined by OpenAPI.
-message APIKeyLocation {
+message ApiKeyLocation {
   oneof key {
     // API Key is sent as a query parameter. `query` represents the
     // query string parameter name.
@@ -58,13 +58,13 @@ message APIKeyLocation {
   }
 }
 
-message APIKeyRequirement {
+message ApiKeyRequirement {
   // The locations to extract the api_key. Only one api key is needed,
   // if multiple locations are specified, the first api key is used.
   // If the field is empty, default locations will be used.
   // The default locations are: query parameters "key", "api_key", and header
   // "x-api-key"
-  repeated APIKeyLocation locations = 1;
+  repeated ApiKeyLocation locations = 1;
 
   // If true, to allow a request without api key and service control Check is
   // not called.
@@ -87,7 +87,7 @@ message Requirement {
   string operation_name = 2 [(validate.rules).string.min_bytes = 1];
 
   // API key related requirements.
-  APIKeyRequirement api_key = 3;
+  ApiKeyRequirement api_key = 3;
 
   // Custom labels.
   repeated string custom_labels = 4;

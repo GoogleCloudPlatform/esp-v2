@@ -102,7 +102,7 @@ const (
 	GCE     = "GCE(ESPv2)"
 
 	// System Parameter Name
-	APIKeyParameterName = "api_key"
+	ApiKeyParameterName = "api_key"
 
 	// Default response deadline used if user does not specify one in the BackendRule.
 	DefaultResponseDeadline = 15 * time.Second

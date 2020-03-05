@@ -578,16 +578,16 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		// For these OPTIONS methods, auth should be disabled and AllowWithoutApiKey
 		// should be true for each CORS.
 		if method.IsGenerated || method.AllowUnregisteredCalls {
-			requirement.ApiKey = &scpb.APIKeyRequirement{
+			requirement.ApiKey = &scpb.ApiKeyRequirement{
 				AllowWithoutApiKey: true,
 			}
 		}
 
-		if method.APIKeyLocations != nil {
+		if method.ApiKeyLocations != nil {
 			if requirement.ApiKey == nil {
-				requirement.ApiKey = &scpb.APIKeyRequirement{}
+				requirement.ApiKey = &scpb.ApiKeyRequirement{}
 			}
-			requirement.ApiKey.Locations = method.APIKeyLocations
+			requirement.ApiKey.Locations = method.ApiKeyLocations
 		}
 
 		filterConfig.Requirements = append(filterConfig.Requirements, requirement)

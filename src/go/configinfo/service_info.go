@@ -547,7 +547,7 @@ func (s *ServiceInfo) processApiKeyLocations() error {
 		apiKeyLocationParameters := []*confpb.SystemParameter{}
 
 		for _, parameter := range rule.GetParameters() {
-			if parameter.GetName() == util.APIKeyParameterName {
+			if parameter.GetName() == util.ApiKeyParameterName {
 				apiKeyLocationParameters = append(apiKeyLocationParameters, parameter)
 			}
 		}
@@ -557,14 +557,14 @@ func (s *ServiceInfo) processApiKeyLocations() error {
 			return err
 		}
 
-		s.extractAPIKeyLocations(method, apiKeyLocationParameters)
+		s.extractApiKeyLocations(method, apiKeyLocationParameters)
 	}
 
 	for _, method := range s.Methods {
-		// If any of method is not set with custom APIKeyLocations, use the default
-		// one and set the custom APIKeyLocations in query parameter for transcoder
+		// If any of method is not set with custom ApiKeyLocations, use the default
+		// one and set the custom ApiKeyLocations in query parameter for transcoder
 		// to ignore.
-		if len(method.APIKeyLocations) == 0 {
+		if len(method.ApiKeyLocations) == 0 {
 			s.TranscoderIgnoredApiKeyQueryParams[util.DefaultApiKeyQueryParamKey] = true
 			s.TranscoderIgnoredApiKeyQueryParams[util.DefaultApiKeyQueryParamApiKey] = true
 		}
@@ -574,28 +574,28 @@ func (s *ServiceInfo) processApiKeyLocations() error {
 	return nil
 }
 
-func (s *ServiceInfo) extractAPIKeyLocations(method *methodInfo, parameters []*confpb.SystemParameter) {
-	var urlQueryNames, headerNames []*scpb.APIKeyLocation
+func (s *ServiceInfo) extractApiKeyLocations(method *methodInfo, parameters []*confpb.SystemParameter) {
+	var urlQueryNames, headerNames []*scpb.ApiKeyLocation
 	for _, parameter := range parameters {
 		if urlQueryName := parameter.GetUrlQueryParameter(); urlQueryName != "" {
-			urlQueryNames = append(urlQueryNames, &scpb.APIKeyLocation{
-				Key: &scpb.APIKeyLocation_Query{
+			urlQueryNames = append(urlQueryNames, &scpb.ApiKeyLocation{
+				Key: &scpb.ApiKeyLocation_Query{
 					Query: urlQueryName,
 				},
 			})
-			// set the custom APIKeyLocation in query parameter for transcoder to ignore.\
+			// set the custom ApiKeyLocation in query parameter for transcoder to ignore.\
 			s.TranscoderIgnoredApiKeyQueryParams[urlQueryName] = true
 		}
 		if headerName := parameter.GetHttpHeader(); headerName != "" {
-			headerNames = append(headerNames, &scpb.APIKeyLocation{
-				Key: &scpb.APIKeyLocation_Header{
+			headerNames = append(headerNames, &scpb.ApiKeyLocation{
+				Key: &scpb.ApiKeyLocation_Header{
 					Header: headerName,
 				},
 			})
 		}
 	}
-	method.APIKeyLocations = append(method.APIKeyLocations, urlQueryNames...)
-	method.APIKeyLocations = append(method.APIKeyLocations, headerNames...)
+	method.ApiKeyLocations = append(method.ApiKeyLocations, urlQueryNames...)
+	method.ApiKeyLocations = append(method.ApiKeyLocations, headerNames...)
 }
 
 func (s *ServiceInfo) processTypes() {

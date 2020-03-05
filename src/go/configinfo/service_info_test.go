@@ -129,7 +129,7 @@ func TestProcessEndpoints(t *testing.T) {
 	}
 }
 
-func TestProcessSystemParameters(t *testing.T) {
+func TestProcessApiKeyLocations(t *testing.T) {
 	testData := []struct {
 		desc                                     string
 		fakeServiceConfig                        *confpb.Service
@@ -175,9 +175,9 @@ func TestProcessSystemParameters(t *testing.T) {
 							HttpMethod:  util.POST,
 						},
 					},
-					APIKeyLocations: []*scpb.APIKeyLocation{
+					ApiKeyLocations: []*scpb.ApiKeyLocation{
 						{
-							Key: &scpb.APIKeyLocation_Header{
+							Key: &scpb.ApiKeyLocation_Header{
 								Header: "header_name",
 							},
 						},
@@ -225,9 +225,9 @@ func TestProcessSystemParameters(t *testing.T) {
 							HttpMethod:  util.POST,
 						},
 					},
-					APIKeyLocations: []*scpb.APIKeyLocation{
+					ApiKeyLocations: []*scpb.ApiKeyLocation{
 						{
-							Key: &scpb.APIKeyLocation_Query{
+							Key: &scpb.ApiKeyLocation_Query{
 								Query: "query_name",
 							},
 						},
@@ -282,24 +282,24 @@ func TestProcessSystemParameters(t *testing.T) {
 							HttpMethod:  util.POST,
 						},
 					},
-					APIKeyLocations: []*scpb.APIKeyLocation{
+					ApiKeyLocations: []*scpb.ApiKeyLocation{
 						{
-							Key: &scpb.APIKeyLocation_Query{
+							Key: &scpb.ApiKeyLocation_Query{
 								Query: "query_name_1",
 							},
 						},
 						{
-							Key: &scpb.APIKeyLocation_Query{
+							Key: &scpb.ApiKeyLocation_Query{
 								Query: "query_name_2",
 							},
 						},
 						{
-							Key: &scpb.APIKeyLocation_Header{
+							Key: &scpb.ApiKeyLocation_Header{
 								Header: "header_name_1",
 							},
 						},
 						{
-							Key: &scpb.APIKeyLocation_Header{
+							Key: &scpb.ApiKeyLocation_Header{
 								Header: "header_name_2",
 							},
 						},
@@ -309,7 +309,7 @@ func TestProcessSystemParameters(t *testing.T) {
 		},
 
 		{
-			desc: "Succeed, url query plus header for multiple apis with one using default APIKeyLocation",
+			desc: "Succeed, url query plus header for multiple apis with one using default ApiKeyLocation",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
@@ -388,24 +388,24 @@ func TestProcessSystemParameters(t *testing.T) {
 							HttpMethod:  util.POST,
 						},
 					},
-					APIKeyLocations: []*scpb.APIKeyLocation{
+					ApiKeyLocations: []*scpb.ApiKeyLocation{
 						{
-							Key: &scpb.APIKeyLocation_Query{
+							Key: &scpb.ApiKeyLocation_Query{
 								Query: "query_name_1",
 							},
 						},
 						{
-							Key: &scpb.APIKeyLocation_Query{
+							Key: &scpb.ApiKeyLocation_Query{
 								Query: "query_name_2",
 							},
 						},
 						{
-							Key: &scpb.APIKeyLocation_Header{
+							Key: &scpb.ApiKeyLocation_Header{
 								Header: "header_name_1",
 							},
 						},
 						{
-							Key: &scpb.APIKeyLocation_Header{
+							Key: &scpb.ApiKeyLocation_Header{
 								Header: "header_name_2",
 							},
 						},
@@ -421,24 +421,24 @@ func TestProcessSystemParameters(t *testing.T) {
 							HttpMethod:  util.POST,
 						},
 					},
-					APIKeyLocations: []*scpb.APIKeyLocation{
+					ApiKeyLocations: []*scpb.ApiKeyLocation{
 						{
-							Key: &scpb.APIKeyLocation_Query{
+							Key: &scpb.ApiKeyLocation_Query{
 								Query: "query_name_1",
 							},
 						},
 						{
-							Key: &scpb.APIKeyLocation_Query{
+							Key: &scpb.ApiKeyLocation_Query{
 								Query: "query_name_2",
 							},
 						},
 						{
-							Key: &scpb.APIKeyLocation_Header{
+							Key: &scpb.ApiKeyLocation_Header{
 								Header: "header_name_1",
 							},
 						},
 						{
-							Key: &scpb.APIKeyLocation_Header{
+							Key: &scpb.ApiKeyLocation_Header{
 								Header: "header_name_2",
 							},
 						},
@@ -480,7 +480,7 @@ func TestProcessSystemParameters(t *testing.T) {
 	}
 }
 
-func TestProcessJwtInQueryParams(t *testing.T) {
+func TestProcessJwtLocations(t *testing.T) {
 	testData := []struct {
 		desc                                  string
 		fakeServiceConfig                     *confpb.Service
