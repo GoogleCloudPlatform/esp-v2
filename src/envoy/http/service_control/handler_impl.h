@@ -67,9 +67,11 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   void callQuota();
 
   void fillOperationInfo(
-      ::google::api_proxy::service_control::OperationInfo& info);
+      ::google::api_proxy::service_control::OperationInfo& info,
+      std::chrono::system_clock::time_point now);
   void prepareReportRequest(
-      ::google::api_proxy::service_control::ReportRequestInfo& info);
+      ::google::api_proxy::service_control::ReportRequestInfo& info,
+      std::chrono::system_clock::time_point now);
 
   bool isConfigured() const { return require_ctx_ != nullptr; }
 

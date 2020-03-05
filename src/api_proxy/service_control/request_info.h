@@ -82,9 +82,9 @@ struct OperationInfo {
   // Origin header. If both of them not present, it's empty.
   std::string referer;
 
-  // The start time of the call. Used to set operation.start_time for both Check
+  // The current time used for operation.start_time for both Check
   // and Report.
-  std::chrono::system_clock::time_point request_start_time;
+  std::chrono::system_clock::time_point current_time;
 
   // The client IP address.
   std::string client_ip;

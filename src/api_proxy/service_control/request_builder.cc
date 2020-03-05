@@ -1159,8 +1159,7 @@ Status RequestBuilder::FillAllocateQuotaRequest(
 }
 
 Status RequestBuilder::FillCheckRequest(
-    const CheckRequestInfo& info, CheckRequest* request,
-    std::chrono::system_clock::time_point now) const {
+    const CheckRequestInfo& info, CheckRequest* request) const {
   Status status = VerifyRequiredCheckFields(info);
   if (!status.ok()) {
     return status;
@@ -1168,7 +1167,7 @@ Status RequestBuilder::FillCheckRequest(
   request->set_service_name(service_name_);
   request->set_service_config_id(service_config_id_);
 
-  Timestamp current_time = CreateTimestamp(now);
+  Timestamp current_time = CreateTimestamp(info.current_time);
   Operation* op = request->mutable_operation();
   SetOperationCommonFields(info, current_time, op);
 
@@ -1197,8 +1196,7 @@ Status RequestBuilder::FillCheckRequest(
 }
 
 Status RequestBuilder::FillReportRequest(
-    const ReportRequestInfo& info, ReportRequest* request,
-    std::chrono::system_clock::time_point now) const {
+    const ReportRequestInfo& info, ReportRequest* request) const {
   Status status = VerifyRequiredReportFields(info);
   if (!status.ok()) {
     return status;
@@ -1206,7 +1204,7 @@ Status RequestBuilder::FillReportRequest(
   request->set_service_name(service_name_);
   request->set_service_config_id(service_config_id_);
 
-  Timestamp current_time = CreateTimestamp(now);
+  Timestamp current_time = CreateTimestamp(info.current_time);
   Operation* op = request->add_operations();
   SetOperationCommonFields(info, current_time, op);
 

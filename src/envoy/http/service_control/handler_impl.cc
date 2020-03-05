@@ -108,20 +108,22 @@ void ServiceControlHandlerImpl::onDestroy() {
 }
 
 void ServiceControlHandlerImpl::fillOperationInfo(
-    ::google::api_proxy::service_control::OperationInfo& info) {
+    ::google::api_proxy::service_control::OperationInfo& info,
+    std::chrono::system_clock::time_point now) {
   info.operation_id = uuid_;
   info.operation_name = require_ctx_->config().operation_name();
   info.producer_project_id =
       require_ctx_->service_ctx().config().producer_project_id();
-  info.request_start_time = std::chrono::system_clock::now();
+  info.current_time = now;
   info.client_ip =
       stream_info_.downstreamRemoteAddress()->ip()->addressAsString();
   info.api_key = api_key_;
 }
 
 void ServiceControlHandlerImpl::prepareReportRequest(
-    ::google::api_proxy::service_control::ReportRequestInfo& info) {
-  fillOperationInfo(info);
+    ::google::api_proxy::service_control::ReportRequestInfo& info,
+    std::chrono::system_clock::time_point now) {
+  fillOperationInfo(info, now);
 
   // Report: not to send api-key if invalid or service is not enabled.
   if (!check_response_info_.is_api_key_valid ||
@@ -168,7 +170,7 @@ void ServiceControlHandlerImpl::callCheck(Http::RequestHeaderMap& headers,
 
   // Make a check call
   ::google::api_proxy::service_control::CheckRequestInfo info;
-  fillOperationInfo(info);
+  fillOperationInfo(info, std::chrono::system_clock::now());
 
   info.ios_bundle_id =
       std::string(Utils::extractHeader(headers, kIosBundleIdHeader));
@@ -200,7 +202,7 @@ void ServiceControlHandlerImpl::callQuota() {
   }
 
   ::google::api_proxy::service_control::QuotaRequestInfo info;
-  fillOperationInfo(info);
+  fillOperationInfo(info, std::chrono::system_clock::now());
 
   info.method_name = require_ctx_->config().operation_name();
   info.metric_cost_vector = require_ctx_->metric_costs();
@@ -257,7 +259,7 @@ void ServiceControlHandlerImpl::callReport(
   }
 
   ::google::api_proxy::service_control::ReportRequestInfo info;
-  prepareReportRequest(info);
+  prepareReportRequest(info, now);
   fillLoggedHeader(request_headers,
                    require_ctx_->service_ctx().config().log_request_headers(),
                    info.request_headers);
@@ -340,7 +342,7 @@ void ServiceControlHandlerImpl::tryIntermediateReport(
   }
 
   ::google::api_proxy::service_control::ReportRequestInfo info;
-  prepareReportRequest(info);
+  prepareReportRequest(info, now);
 
   info.request_bytes = stream_info_.bytesReceived() + request_header_size_;
   info.response_bytes = stream_info_.bytesSent() + response_header_size_;
