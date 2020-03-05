@@ -44,3 +44,11 @@ filegroup(
         "http_template/**",
     ]),
 )
+
+filegroup(
+    name = "auth_token_corpus",
+    testonly = 1,
+    srcs = glob([
+        "auth_token/**",
+    ]),
+)

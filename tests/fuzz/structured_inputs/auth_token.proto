@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package tests.fuzz.protos;
+
+
+message AuthTokenInput {
+  string secret = 1;
+  string audience = 2;
+}
