@@ -15,10 +15,13 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
@@ -29,12 +32,16 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var (
+	port                  = flag.Int("port", 8082, "server port")
+	isHttps               = flag.Bool("enable_https", false, "true for HTTPS, false for HTTP")
+	mtlsCertFile          = flag.String("mtls_cert_file", "", "Enable Mutual authentication with the cert chain file")
+	enableRootPathHandler = flag.Bool("enable_root_path_handler", false, "true for adding root path for dynamic routing handler")
+	httpsCertPath         = flag.String("https_cert_path", "", "path for HTTPS cert path")
+	httpsKeyPath          = flag.String("https_key_path", "", "path for HTTPS key path")
+)
+
 func main() {
-	port := flag.Int("port", 8082, "server port")
-	isHttps := flag.Bool("enable_https", false, "true for HTTPS, false for HTTP")
-	enableRootPathHandler := flag.Bool("enable_root_path_handler", false, "true for adding root path for dynamic routing handler")
-	httpsCertPath := flag.String("https_cert_path", "", "path for HTTPS cert path")
-	httpsKeyPath := flag.String("https_key_path", "", "path for HTTPS key path")
 	flag.Parse()
 
 	r := mux.NewRouter()
@@ -100,11 +107,17 @@ func main() {
 		log.Fatalf("port (%v) should be integer between 1024-65535", *port)
 	}
 	fmt.Printf("Echo server is running on port: %d, is_https: %v\n", *port, *isHttps)
-	var err error
+
+	server, err := createServer()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
 	if *isHttps {
-		err = http.ListenAndServeTLS(fmt.Sprintf("%v:%d", platform.GetLoopbackAddress(), *port), *httpsCertPath, *httpsKeyPath, nil)
+		err = server.ListenAndServeTLS(*httpsCertPath, *httpsKeyPath)
 	} else {
-		err = http.ListenAndServe(fmt.Sprintf("%v:%d", platform.GetLoopbackAddress(), *port), nil)
+		err = server.ListenAndServe()
 	}
 	log.Fatal(err)
 }
@@ -262,4 +275,39 @@ func errorf(w http.ResponseWriter, code int, format string, a ...interface{}) {
 	}
 
 	http.Error(w, string(b), code)
+}
+
+func createServer() (*http.Server, error) {
+	var server *http.Server
+	addr := fmt.Sprintf("%v:%d", platform.GetLoopbackAddress(), *port)
+
+	if *mtlsCertFile == "" {
+		server = &http.Server{Addr: addr}
+		return server, nil
+	}
+
+	if !*isHttps {
+		return nil, fmt.Errorf("server must be HTTPS server when mTLS is required")
+	}
+	clientCACert, err := ioutil.ReadFile(*mtlsCertFile)
+	if err != nil {
+		return nil, err
+	}
+
+	clientCertPool := x509.NewCertPool()
+	clientCertPool.AppendCertsFromPEM(clientCACert)
+
+	tlsConfig := &tls.Config{
+		ClientAuth:               tls.RequireAndVerifyClientCert,
+		ClientCAs:                clientCertPool,
+		PreferServerCipherSuites: true,
+		MinVersion:               tls.VersionTLS12,
+	}
+
+	tlsConfig.BuildNameToCertificate()
+
+	return &http.Server{
+		Addr:      addr,
+		TLSConfig: tlsConfig,
+	}, nil
 }

@@ -25,7 +25,7 @@ func TestCreateUpstreamTransportSocket(t *testing.T) {
 		hostName            string
 		desc                string
 		rootCertsPath       string
-		sslPath             string
+		sslBackendPath      string
 		alpnProtocols       []string
 		wantTransportSocket string
 	}{
@@ -33,7 +33,6 @@ func TestCreateUpstreamTransportSocket(t *testing.T) {
 			desc:          "Upstream Transport Socket for TLS",
 			hostName:      "https://echo-http-12345-uc.a.run.app",
 			rootCertsPath: "/etc/ssl/certs/ca-certificates.crt",
-			sslPath:       "/etc/ssl/endpoints/",
 			alpnProtocols: []string{"h2"},
 			wantTransportSocket: `{
 				"name":"envoy.transport_sockets.tls",
@@ -51,10 +50,70 @@ func TestCreateUpstreamTransportSocket(t *testing.T) {
 				}
 			}`,
 		},
+		{
+			desc:           "Upstream Transport Socket for mTLS",
+			hostName:       "https://echo-http-12345-uc.a.run.app",
+			rootCertsPath:  "/etc/ssl/certs/ca-certificates.crt",
+			sslBackendPath: "/etc/endpoint/ssl/",
+			alpnProtocols:  []string{"h2"},
+			wantTransportSocket: `{
+				"name":"envoy.transport_sockets.tls",
+				"typedConfig":{
+					"@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
+					"commonTlsContext":{
+						"alpnProtocols":["h2"],
+						"tlsCertificates":[
+							{
+								"certificateChain":{
+									"filename":"/etc/endpoint/ssl/client.crt"
+								},
+								"privateKey":{
+									"filename":"/etc/endpoint/ssl/client.key"
+								}
+							}
+						],
+						"validationContext":{
+							"trustedCa":{
+								"filename":"/etc/ssl/certs/ca-certificates.crt"
+								}
+							}
+						},
+						"sni":"https://echo-http-12345-uc.a.run.app"}}`,
+		},
+		{
+			desc:           "Upstream Transport Socket for mTLS, for legacy ESPv1",
+			hostName:       "https://echo-http-12345-uc.a.run.app",
+			rootCertsPath:  "/etc/ssl/certs/ca-certificates.crt",
+			sslBackendPath: "/etc/nginx/ssl",
+			alpnProtocols:  []string{"h2"},
+			wantTransportSocket: `{
+				"name":"envoy.transport_sockets.tls",
+				"typedConfig":{
+					"@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
+					"commonTlsContext":{
+						"alpnProtocols":["h2"],
+						"tlsCertificates":[
+							{
+								"certificateChain":{
+									"filename":"/etc/nginx/ssl/backend.crt"
+								},
+								"privateKey":{
+									"filename":"/etc/nginx/ssl/backend.key"
+								}
+							}
+						],
+						"validationContext":{
+							"trustedCa":{
+								"filename":"/etc/ssl/certs/ca-certificates.crt"
+								}
+							}
+						},
+						"sni":"https://echo-http-12345-uc.a.run.app"}}`,
+		},
 	}
 
 	for i, tc := range testData {
-		gotTransportSocket, err := CreateUpstreamTransportSocket(tc.hostName, tc.rootCertsPath, tc.alpnProtocols)
+		gotTransportSocket, err := CreateUpstreamTransportSocket(tc.hostName, tc.rootCertsPath, tc.sslBackendPath, tc.alpnProtocols)
 		if err != nil {
 			t.Fatal(err)
 		}

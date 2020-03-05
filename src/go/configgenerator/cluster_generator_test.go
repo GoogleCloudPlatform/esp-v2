@@ -41,12 +41,12 @@ var (
 )
 
 func createTransportSocket(hostname string) *corepb.TransportSocket {
-	transportSocket, _ := util.CreateUpstreamTransportSocket(hostname, util.DefaultRootCAPaths, nil)
+	transportSocket, _ := util.CreateUpstreamTransportSocket(hostname, util.DefaultRootCAPaths, "", nil)
 	return transportSocket
 }
 
 func createH2TransportSocket(hostname string) *corepb.TransportSocket {
-	transportSocket, _ := util.CreateUpstreamTransportSocket(hostname, util.DefaultRootCAPaths, []string{"h2"})
+	transportSocket, _ := util.CreateUpstreamTransportSocket(hostname, util.DefaultRootCAPaths, "", []string{"h2"})
 	return transportSocket
 }
 

@@ -27,7 +27,7 @@ type EchoHTTPServer struct {
 	*Cmd
 }
 
-func NewEchoHTTPServer(port uint16, enableHttps bool, enableRootPathHandler, useWrongCert bool) (*EchoHTTPServer, error) {
+func NewEchoHTTPServer(port uint16, enableHttps bool, enableRootPathHandler, useWrongCert bool, mtlsCertFile string) (*EchoHTTPServer, error) {
 	serverArgs := []string{
 		fmt.Sprint("--alsologtostderr"),
 		fmt.Sprintf("--port=%v", port),
@@ -44,6 +44,10 @@ func NewEchoHTTPServer(port uint16, enableHttps bool, enableRootPathHandler, use
 		serverArgs = append(serverArgs,
 			fmt.Sprintf("--https_cert_path=%v", platform.GetFilePath(platform.ProxyCert)),
 			fmt.Sprintf("--https_key_path=%v", platform.GetFilePath(platform.ProxyKey)))
+	}
+	if mtlsCertFile != "" {
+		serverArgs = append(serverArgs,
+			fmt.Sprintf("--mtls_cert_file=%v", mtlsCertFile))
 	}
 
 	cmd := exec.Command(platform.GetFilePath(platform.Echo), serverArgs...)

@@ -153,7 +153,7 @@ func TestHttpsClients(t *testing.T) {
 	args := []string{
 		"--service_config_id=test-config-id",
 		"--rollout_strategy=fixed",
-		"--ssl_server_path=../../env/testdata/",
+		"--ssl_server_cert_path=../../env/testdata/",
 	}
 
 	s := env.NewTestEnv(comp.TestHttpsClients, platform.EchoSidecar)

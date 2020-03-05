@@ -1347,13 +1347,13 @@ func TestHealthCheckFilter(t *testing.T) {
 func TestMakeListeners(t *testing.T) {
 	testdata := []struct {
 		desc              string
-		sslServerPath     string
+		sslServerCertPath string
 		fakeServiceConfig *confpb.Service
 		wantListeners     []string
 	}{
 		{
-			desc:          "Success, generate redirect listener when ssl_port is configured",
-			sslServerPath: "/etc/endpoints/ssl",
+			desc:              "Success, generate redirect listener when ssl_port is configured",
+			sslServerCertPath: "/etc/endpoints/ssl",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -1447,7 +1447,7 @@ func TestMakeListeners(t *testing.T) {
 
 	for i, tc := range testdata {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.SslServerPath = tc.sslServerPath
+		opts.SslServerCertPath = tc.sslServerCertPath
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)

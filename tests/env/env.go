@@ -42,9 +42,11 @@ var (
 )
 
 type TestEnv struct {
-	testId                          uint16
-	backend                         platform.Backend
-	useWrongBackendCert             bool
+	testId              uint16
+	backend             platform.Backend
+	useWrongBackendCert bool
+	// used to enable mutual authentication for HTTPS backend
+	backendMTLSCertFile             string
 	mockMetadata                    bool
 	enableScNetworkFailOpen         bool
 	enableEchoServerRootPathHandler bool
@@ -142,6 +144,11 @@ func (e *TestEnv) OverrideBackendService(backend platform.Backend) {
 // is set to true, purposely fail HTTPS calls for testing.
 func (e *TestEnv) UseWrongBackendCertForDR(useWrongBackendCert bool) {
 	e.useWrongBackendCert = useWrongBackendCert
+}
+
+// SetBackendMTLSCert sets the backend cert file to enable mutual authentication.
+func (e *TestEnv) SetBackendMTLSCert(fileName string) {
+	e.backendMTLSCertFile = fileName
 }
 
 // Ports returns test environment ports.
@@ -351,7 +358,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 
 	switch e.backend {
 	case platform.EchoSidecar:
-		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.BackendServerPort /*enableHttps=*/, false /*enableRootPathHandler=*/, e.enableEchoServerRootPathHandler /*useAuthorizedBackendCert*/, false)
+		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.BackendServerPort /*enableHttps=*/, false /*enableRootPathHandler=*/, e.enableEchoServerRootPathHandler /*useAuthorizedBackendCert*/, false, e.backendMTLSCertFile)
 		if err != nil {
 			return err
 		}
@@ -359,7 +366,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 			return err
 		}
 	case platform.EchoRemote:
-		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.DynamicRoutingBackendPort /*enableHttps=*/, true /*enableRootPathHandler=*/, true, e.useWrongBackendCert)
+		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.DynamicRoutingBackendPort /*enableHttps=*/, true /*enableRootPathHandler=*/, true, e.useWrongBackendCert, e.backendMTLSCertFile)
 		if err != nil {
 			return err
 		}
