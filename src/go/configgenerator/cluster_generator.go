@@ -212,7 +212,7 @@ func makeBackendCluster(opt *options.ConfigGeneratorOptions, brc *sc.BackendRout
 		if isHttp2 {
 			alpnProtocols = []string{"h2"}
 		}
-		transportSocket, err := util.CreateUpstreamTransportSocket(brc.Hostname, opt.RootCertsPath, opt.SslBackendPath, alpnProtocols)
+		transportSocket, err := util.CreateUpstreamTransportSocket(brc.Hostname, opt.RootCertsPath, opt.SslClientCertPath, alpnProtocols)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
 				brc.ClusterName, err)

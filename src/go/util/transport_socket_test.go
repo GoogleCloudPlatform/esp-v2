@@ -65,10 +65,10 @@ func TestCreateUpstreamTransportSocket(t *testing.T) {
 						"tlsCertificates":[
 							{
 								"certificateChain":{
-									"filename":"/etc/endpoint/ssl/backend.crt"
+									"filename":"/etc/endpoint/ssl/client.crt"
 								},
 								"privateKey":{
-									"filename":"/etc/endpoint/ssl/backend.key"
+									"filename":"/etc/endpoint/ssl/client.key"
 								}
 							}
 						],

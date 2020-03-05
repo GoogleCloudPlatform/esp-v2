@@ -25,17 +25,23 @@ import (
 )
 
 const (
-	defaultServerSslFilename  = "server"
-	defaultBackendSslFilename = "backend"
+	defaultServerSslFilename = "server"
+	defaultClientSslFilename = "client"
 )
 
 // CreateUpstreamTransportSocket creates a TransportSocket for Upstream
-func CreateUpstreamTransportSocket(hostname, rootCertsPath, sslBackendPath string, alpnProtocols []string) (*corepb.TransportSocket, error) {
+func CreateUpstreamTransportSocket(hostname, rootCertsPath, sslClientPath string, alpnProtocols []string) (*corepb.TransportSocket, error) {
 	if rootCertsPath == "" {
 		return nil, fmt.Errorf("root certs path cannot be empty.")
 	}
 
-	common_tls, err := createCommonTlsContext(rootCertsPath, sslBackendPath, defaultBackendSslFilename)
+	sslFileName := defaultClientSslFilename
+	// Backward compatible for ESPv1
+	if strings.Contains(sslClientPath, "/etc/nginx/ssl") {
+		sslFileName = "backend"
+	}
+
+	common_tls, err := createCommonTlsContext(rootCertsPath, sslClientPath, sslFileName)
 	if err != nil {
 		return nil, err
 	}

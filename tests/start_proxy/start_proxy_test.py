@@ -104,13 +104,13 @@ class TestStartProxy(unittest.TestCase):
               '--check_metadata',
               '--disable_tracing'
               ]),
-            # ssl_server_path specified
+            # ssl_server_cert_path specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
-              '--ssl_server_path=/etc/endpoint/ssl'],
+              '--ssl_server_cert_path=/etc/endpoint/ssl'],
              ['bin/configmanager', '--logtostderr',
               '--backend_address', 'http://127.0.0.1:8082',
               '--rollout_strategy', 'managed', '--v', '0',
-              '--listener_port', '8080', '--ssl_server_path',
+              '--listener_port', '8080', '--ssl_server_cert_path',
               '/etc/endpoint/ssl', '--disable_tracing'
               ]),
             # legacy ssl_port specified
@@ -118,16 +118,16 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager', '--logtostderr',
               '--backend_address', 'http://127.0.0.1:8082',
               '--rollout_strategy', 'managed', '--v', '0',
-              '--ssl_server_path', '/etc/nginx/ssl',
+              '--ssl_server_cert_path', '/etc/nginx/ssl',
               '--listener_port', '443',
               ]),
             # ssl_backend_path specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
-              '--ssl_backend_path=/etc/endpoint/ssl'],
+              '--ssl_client_cert_path=/etc/endpoint/ssl'],
              ['bin/configmanager', '--logtostderr',
               '--backend_address', 'http://127.0.0.1:8082',
               '--rollout_strategy', 'managed', '--v', '0',
-              '--listener_port', '8080', '--ssl_backend_path',
+              '--listener_port', '8080', '--ssl_client_cert_path',
               '/etc/endpoint/ssl', '--disable_tracing'
               ]),
             # legacy tls_mutual_auth specified
@@ -136,7 +136,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager', '--logtostderr',
               '--backend_address', 'http://127.0.0.1:8082',
               '--rollout_strategy', 'managed', '--v', '0',
-              '--listener_port', '8080', '--ssl_backend_path',
+              '--listener_port', '8080', '--ssl_client_cert_path',
               '/etc/nginx/ssl', '--disable_tracing'
               ]),
             # http2_port specified.
@@ -237,8 +237,8 @@ class TestStartProxy(unittest.TestCase):
             ['--non_gcp'],
             ['--http_port=80', '--http2_port=80'],
             ['--http_port=80', '--listener_port=80'],
-            ['--ssl_server_path=/etc/endpoint/ssl', '--ssl_port=443'],
-            ['--ssl_backend_path=/etc/endpoint/ssl', '--tls_mutual_auth'],
+            ['--ssl_server_cert_path=/etc/endpoint/ssl', '--ssl_port=443'],
+            ['--ssl_client_cert_path=/etc/endpoint/ssl', '--tls_mutual_auth'],
         ]
 
         for flags in testcases:

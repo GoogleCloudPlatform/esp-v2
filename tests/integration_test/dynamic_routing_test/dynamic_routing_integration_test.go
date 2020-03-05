@@ -592,7 +592,7 @@ func TestDynamicBackendRoutingMutualTLS(t *testing.T) {
 		"--rollout_strategy=fixed",
 		"--backend_dns_lookup_family=v4only",
 		"--suppress_envoy_headers",
-		"--ssl_backend_path=../../env/testdata/",
+		"--ssl_client_cert_path=../../env/testdata/",
 	}
 
 	testData := []struct {

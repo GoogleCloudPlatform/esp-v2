@@ -53,9 +53,9 @@ var (
 	ListenerPort = flag.Int("listener_port", 8080, "listener port")
 	Healthz      = flag.String("healthz", "", "path for health check of ESPv2 proxy itself")
 
-	SslServerPath  = flag.String("ssl_server_path", "", "Path to the certificate and key that ESPv2 uses to act as a HTTPS server")
-	SslBackendPath = flag.String("ssl_backend_path", "", "Path to the certificate and key that ESPv2 uses to enable TLS mutual authentication for HTTPS backend")
-	RootCertsPath  = flag.String("root_certs_path", util.DefaultRootCAPaths, "Path to the root certificates to make TSL connection.")
+	SslServerCertPath = flag.String("ssl_server_cert_path", "", "Path to the certificate and key that ESPv2 uses to act as a HTTPS server")
+	SslClientCertPath = flag.String("ssl_client_cert_path", "", "Path to the certificate and key that ESPv2 uses to enable TLS mutual authentication for HTTPS backend")
+	RootCertsPath     = flag.String("root_certs_path", util.DefaultRootCAPaths, "Path to the root certificates to make TLS connection.")
 
 	// Flags for non_gcp deployment.
 	ServiceAccountKey = flag.String("service_account_key", "", `Use the service account key JSON file to access the service control and the
@@ -116,8 +116,8 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		ListenerPort:                  *ListenerPort,
 		Healthz:                       *Healthz,
 		RootCertsPath:                 *RootCertsPath,
-		SslServerPath:                 *SslServerPath,
-		SslBackendPath:                *SslBackendPath,
+		SslServerCertPath:             *SslServerCertPath,
+		SslClientCertPath:             *SslClientCertPath,
 		ServiceAccountKey:             *ServiceAccountKey,
 		SkipJwtAuthnFilter:            *SkipJwtAuthnFilter,
 		SkipServiceControlFilter:      *SkipServiceControlFilter,
