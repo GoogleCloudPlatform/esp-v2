@@ -68,7 +68,7 @@ func DoWithHeaders(url, method, message string, headers map[string]string) ([]by
 		return nil, fmt.Errorf("create request error: %v", err)
 	}
 
-	if method != "GET" {
+	if message != "" {
 		request.Header.Set("Content-Type", "application/json")
 	}
 

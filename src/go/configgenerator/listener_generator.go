@@ -636,12 +636,16 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 				AutoMapping:       true,
 				ConvertGrpcStatus: true,
 			}
-			for apiKeyQueryParam := range serviceInfo.TranscoderIgnoredApiKeyQueryParams {
-				transcodeConfig.IgnoredQueryParameters = append(transcodeConfig.IgnoredQueryParameters, apiKeyQueryParam)
+			for apiKeyQueryParam, used := range serviceInfo.TranscoderIgnoredApiKeyQueryParams {
+				if used {
+					transcodeConfig.IgnoredQueryParameters = append(transcodeConfig.IgnoredQueryParameters, apiKeyQueryParam)
+				}
 			}
 
-			for jwtQueryParam := range serviceInfo.TranscoderIgnoredJwtQueryParams {
-				transcodeConfig.IgnoredQueryParameters = append(transcodeConfig.IgnoredQueryParameters, jwtQueryParam)
+			for jwtQueryParam, used := range serviceInfo.TranscoderIgnoredJwtQueryParams {
+				if used {
+					transcodeConfig.IgnoredQueryParameters = append(transcodeConfig.IgnoredQueryParameters, jwtQueryParam)
+				}
 			}
 
 			sort.Sort(sort.StringSlice(transcodeConfig.IgnoredQueryParameters))
