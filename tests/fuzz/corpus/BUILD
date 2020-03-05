@@ -52,3 +52,11 @@ filegroup(
         "auth_token/**",
     ]),
 )
+
+filegroup(
+    name = "service_control_filter_corpus",
+    testonly = 1,
+    srcs = glob([
+        "service_control_filter/**",
+    ]),
+)

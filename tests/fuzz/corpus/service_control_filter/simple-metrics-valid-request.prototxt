@@ -1,0 +1,139 @@
+config {
+  services {
+    service_name: "echo-api.endpoints.cloudesf-testing.cloud.goog"
+    service_config_id: "test-config-id"
+    producer_project_id: "producer-project"
+    service_config {
+      [type.googleapis.com/google.api.Service] {
+        logs {
+          name: "endpoints_log"
+        }
+        metrics {
+          name: "serviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer"
+          labels {
+            key: "/consumer_id"
+          }
+          metric_kind: DELTA
+          value_type: DISTRIBUTION
+        }
+        monitored_resources {
+          type: "api"
+          labels {
+            key: "cloud.googleapis.com/location"
+          }
+        }
+        logging {
+          producer_destinations {
+            logs: "endpoints_log"
+            monitored_resource: "api"
+          }
+        }
+        monitoring {
+          producer_destinations {
+            monitored_resource: "api"
+            metrics: "serviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer"
+          }
+          consumer_destinations {
+            monitored_resource: "api"
+          }
+        }
+      }
+    }
+    backend_protocol: "http1"
+    jwt_payload_metadata_name: "jwt_payloads"
+  }
+  requirements {
+    service_name: "echo-api.endpoints.cloudesf-testing.cloud.goog"
+    operation_name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo"
+    metric_costs {
+      name: "metrics_first"
+      cost: 2
+    }
+  }
+  gcp_attributes {
+    project_id: "test-project-id"
+    zone: "test-zone"
+    platform: "GCE-ESPv2"
+  }
+  imds_token {
+    uri: "http://127.0.0.1:42761/v1/instance/service-accounts/default/token"
+    cluster: "metadata-cluster"
+    timeout {
+      seconds: 5
+    }
+  }
+  sc_calling_config {
+    network_fail_open {
+    }
+  }
+  service_control_uri {
+    uri: "http://127.0.0.1/v1/services/"
+    cluster: "service-control-cluster"
+    timeout {
+      seconds: 5
+    }
+  }
+}
+downstream_request {
+  headers {
+    headers {
+      key: ":path"
+      value: "/echo?key=test-api-key"
+    }
+    headers {
+      key: ":method"
+      value: "GET"
+    }
+  }
+  data: "Some data to test the metrics such as request_sizes."
+}
+upstream_response {
+  headers {
+    headers {
+      key: ":status"
+      value: "200"
+    }
+  }
+  data: "Some data to test the metrics such as response_sizes."
+}
+stream_info {
+  response_code {
+    value: 200
+  }
+}
+sidestream_response {
+  headers {
+    headers {
+      key: ":status"
+      value: "200"
+    }
+  }
+  data: "{ \"access_token\": \"fuzz-access-token\", \"expires_in\": 60000 }"
+}
+sidestream_response {
+  headers {
+    headers {
+      key: ":status"
+      value: "200"
+    }
+  }
+  data: "2\006\022\004\b\300\304\a"
+}
+sidestream_response {
+  headers {
+    headers {
+      key: ":status"
+      value: "200"
+    }
+  }
+  data: ""
+}
+sidestream_response {
+  headers {
+    headers {
+      key: ":status"
+      value: "200"
+    }
+  }
+  data: ""
+}
