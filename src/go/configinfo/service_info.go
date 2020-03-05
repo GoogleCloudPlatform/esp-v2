@@ -530,7 +530,7 @@ func (s *ServiceInfo) processJwtLocations() error {
 			switch jwtLocation.In.(type) {
 			case *confpb.JwtLocation_Query:
 				if jwtLocation.ValuePrefix != "" {
-					return fmt.Errorf("JwtLocation_Query should be set without valuePrefix, get JwtLocation %v", jwtLocation)
+					return fmt.Errorf("JwtLocation_Query should be set without valuePrefix, get JwtLocation {%v}", jwtLocation)
 				}
 				// set the custom JwtLocation in query parameter for transcoder to ignore.
 				s.TranscoderIgnoredJwtQueryParams[jwtLocation.GetQuery()] = true

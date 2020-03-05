@@ -485,6 +485,7 @@ func TestProcessJwtLocations(t *testing.T) {
 		desc                                  string
 		fakeServiceConfig                     *confpb.Service
 		wantedTranscoderIgnoredJwtQueryParams map[string]bool
+		wantedError                           string
 	}{
 		{
 			desc: "Success. Default jwt locations",
@@ -511,6 +512,38 @@ func TestProcessJwtLocations(t *testing.T) {
 			wantedTranscoderIgnoredJwtQueryParams: map[string]bool{
 				"access_token": true,
 			},
+		},
+		{
+			desc: "Failure. Wrong jwt locations setting Query with valuePrefix in the same time",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "echo",
+							},
+						},
+					},
+				},
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
+						{
+							Id:     "auth_provider",
+							Issuer: "issuer-0",
+							JwtLocations: []*confpb.JwtLocation{
+								{
+									In: &confpb.JwtLocation_Query{
+										Query: "jwt_query_param",
+									},
+									ValuePrefix: "jwt_query_header_prefix",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantedError: `JwtLocation_Query should be set without valuePrefix, get JwtLocation {query:"jwt_query_param" value_prefix:"jwt_query_header_prefix" }`,
 		},
 		{
 			desc: "Success. Custom jwt locations",
@@ -559,11 +592,21 @@ func TestProcessJwtLocations(t *testing.T) {
 			TranscoderIgnoredJwtQueryParams:    make(map[string]bool),
 			TranscoderIgnoredApiKeyQueryParams: make(map[string]bool),
 		}
-		serviceInfo.processJwtLocations()
-		if !reflect.DeepEqual(serviceInfo.TranscoderIgnoredJwtQueryParams, tc.wantedTranscoderIgnoredJwtQueryParams) {
+		err := serviceInfo.processJwtLocations()
+		if err != nil {
+			if err.Error() != tc.wantedError {
+				// Error doesn't match with wantedError.
+				t.Errorf("Test Desc(%d): %s, gotError: %v, wantedError: %v", i, tc.desc, err.Error(), tc.wantedError)
+			}
+
+		} else if tc.wantedError != "" {
+			// Error is empty while wantedError is not.
+			t.Errorf("Test Desc(%d): %s, gotError: %v, wantedError: %v", i, tc.desc, err.Error(), tc.wantedError)
+
+		} else if !reflect.DeepEqual(serviceInfo.TranscoderIgnoredJwtQueryParams, tc.wantedTranscoderIgnoredJwtQueryParams) {
+			// Generated TranscoderIgnoreApiKeyQueryParams is not expected.
 			t.Errorf("Test Desc(%d): %s, gotTranscoderIgnoredApiKeyQueryParams: %v, wantedTranscoderIgnoredApiKeyQueryParams: %v", i, tc.desc, serviceInfo.TranscoderIgnoredJwtQueryParams, tc.wantedTranscoderIgnoredJwtQueryParams)
 		}
-
 	}
 }
 
