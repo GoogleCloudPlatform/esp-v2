@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"sort"
 	"testing"
 	"time"
@@ -128,15 +129,16 @@ func TestProcessEndpoints(t *testing.T) {
 	}
 }
 
-func TestExtractAPIKeyLocations(t *testing.T) {
+func TestProcessApiKeyLocations(t *testing.T) {
 	testData := []struct {
-		desc                   string
-		fakeServiceConfig      *confpb.Service
-		wantedSystemParameters map[string][]*confpb.SystemParameter
-		wantMethods            map[string]*methodInfo
+		desc                                     string
+		fakeServiceConfig                        *confpb.Service
+		wantedSystemParameters                   map[string][]*confpb.SystemParameter
+		wantedTranscoderIgnoredApiKeyQueryParams map[string]bool
+		wantMethods                              map[string]*methodInfo
 	}{
 		{
-			desc: "Succeed, only url query",
+			desc: "Succeed, only header",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
@@ -162,6 +164,7 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 					},
 				},
 			},
+			wantedTranscoderIgnoredApiKeyQueryParams: map[string]bool{},
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &methodInfo{
 					ShortName: "echo",
@@ -172,9 +175,9 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 							HttpMethod:  util.POST,
 						},
 					},
-					APIKeyLocations: []*scpb.APIKeyLocation{
+					ApiKeyLocations: []*scpb.ApiKeyLocation{
 						{
-							Key: &scpb.APIKeyLocation_Header{
+							Key: &scpb.ApiKeyLocation_Header{
 								Header: "header_name",
 							},
 						},
@@ -183,7 +186,7 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 			},
 		},
 		{
-			desc: "Succeed, only header",
+			desc: "Succeed, only url query",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
@@ -209,6 +212,9 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 					},
 				},
 			},
+			wantedTranscoderIgnoredApiKeyQueryParams: map[string]bool{
+				"query_name": true,
+			},
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &methodInfo{
 					ShortName: "echo",
@@ -219,9 +225,9 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 							HttpMethod:  util.POST,
 						},
 					},
-					APIKeyLocations: []*scpb.APIKeyLocation{
+					ApiKeyLocations: []*scpb.ApiKeyLocation{
 						{
-							Key: &scpb.APIKeyLocation_Query{
+							Key: &scpb.ApiKeyLocation_Query{
 								Query: "query_name",
 							},
 						},
@@ -262,6 +268,10 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 					},
 				},
 			},
+			wantedTranscoderIgnoredApiKeyQueryParams: map[string]bool{
+				"query_name_1": true,
+				"query_name_2": true,
+			},
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &methodInfo{
 					ShortName: "echo",
@@ -272,24 +282,24 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 							HttpMethod:  util.POST,
 						},
 					},
-					APIKeyLocations: []*scpb.APIKeyLocation{
+					ApiKeyLocations: []*scpb.ApiKeyLocation{
 						{
-							Key: &scpb.APIKeyLocation_Query{
+							Key: &scpb.ApiKeyLocation_Query{
 								Query: "query_name_1",
 							},
 						},
 						{
-							Key: &scpb.APIKeyLocation_Query{
+							Key: &scpb.ApiKeyLocation_Query{
 								Query: "query_name_2",
 							},
 						},
 						{
-							Key: &scpb.APIKeyLocation_Header{
+							Key: &scpb.ApiKeyLocation_Header{
 								Header: "header_name_1",
 							},
 						},
 						{
-							Key: &scpb.APIKeyLocation_Header{
+							Key: &scpb.ApiKeyLocation_Header{
 								Header: "header_name_2",
 							},
 						},
@@ -299,7 +309,7 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 		},
 
 		{
-			desc: "Succeed, url query plus header for multiple apis",
+			desc: "Succeed, url query plus header for multiple apis with one using default ApiKeyLocation",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
@@ -315,6 +325,14 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 						Methods: []*apipb.Method{
 							{
 								Name: "bar",
+							},
+						},
+					},
+					{
+						Name: "3.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "baz",
 							},
 						},
 					},
@@ -354,8 +372,14 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 					},
 				},
 			},
+			wantedTranscoderIgnoredApiKeyQueryParams: map[string]bool{
+				"api_key":      true,
+				"key":          true,
+				"query_name_1": true,
+				"query_name_2": true,
+			},
 			wantMethods: map[string]*methodInfo{
-				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.foo": &methodInfo{
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.foo": {
 					ShortName: "foo",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*commonpb.Pattern{
@@ -364,30 +388,31 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 							HttpMethod:  util.POST,
 						},
 					},
-					APIKeyLocations: []*scpb.APIKeyLocation{
+					ApiKeyLocations: []*scpb.ApiKeyLocation{
 						{
-							Key: &scpb.APIKeyLocation_Query{
+							Key: &scpb.ApiKeyLocation_Query{
 								Query: "query_name_1",
 							},
 						},
 						{
-							Key: &scpb.APIKeyLocation_Query{
+							Key: &scpb.ApiKeyLocation_Query{
 								Query: "query_name_2",
 							},
 						},
 						{
-							Key: &scpb.APIKeyLocation_Header{
+							Key: &scpb.ApiKeyLocation_Header{
 								Header: "header_name_1",
 							},
 						},
 						{
-							Key: &scpb.APIKeyLocation_Header{
+							Key: &scpb.ApiKeyLocation_Header{
 								Header: "header_name_2",
 							},
 						},
 					},
 				},
-				"2.echo_api_endpoints_cloudesf_testing_cloud_goog.bar": &methodInfo{
+
+				"2.echo_api_endpoints_cloudesf_testing_cloud_goog.bar": {
 					ShortName: "bar",
 					ApiName:   "2.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*commonpb.Pattern{
@@ -396,26 +421,36 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 							HttpMethod:  util.POST,
 						},
 					},
-					APIKeyLocations: []*scpb.APIKeyLocation{
+					ApiKeyLocations: []*scpb.ApiKeyLocation{
 						{
-							Key: &scpb.APIKeyLocation_Query{
+							Key: &scpb.ApiKeyLocation_Query{
 								Query: "query_name_1",
 							},
 						},
 						{
-							Key: &scpb.APIKeyLocation_Query{
+							Key: &scpb.ApiKeyLocation_Query{
 								Query: "query_name_2",
 							},
 						},
 						{
-							Key: &scpb.APIKeyLocation_Header{
+							Key: &scpb.ApiKeyLocation_Header{
 								Header: "header_name_1",
 							},
 						},
 						{
-							Key: &scpb.APIKeyLocation_Header{
+							Key: &scpb.ApiKeyLocation_Header{
 								Header: "header_name_2",
 							},
+						},
+					},
+				},
+				"3.echo_api_endpoints_cloudesf_testing_cloud_goog.baz": {
+					ShortName: "baz",
+					ApiName:   "3.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/3.echo_api_endpoints_cloudesf_testing_cloud_goog/baz",
+							HttpMethod:  util.POST,
 						},
 					},
 				},
@@ -432,11 +467,145 @@ func TestExtractAPIKeyLocations(t *testing.T) {
 		if len(serviceInfo.Methods) != len(tc.wantMethods) {
 			t.Errorf("Test Desc(%d): %s, got: %v, wanted: %v", i, tc.desc, serviceInfo.Methods, tc.wantMethods)
 		}
+		if !reflect.DeepEqual(serviceInfo.TranscoderIgnoredApiKeyQueryParams, tc.wantedTranscoderIgnoredApiKeyQueryParams) {
+			t.Errorf("Test Desc(%d): %s, gotTranscoderIgnoredApiKeyQueryParams: %v, wantedTranscoderIgnoredApiKeyQueryParams: %v", i, tc.desc, serviceInfo.TranscoderIgnoredApiKeyQueryParams, tc.wantedTranscoderIgnoredApiKeyQueryParams)
+		}
+
 		for key, gotMethod := range serviceInfo.Methods {
 			wantMethod := tc.wantMethods[key]
 			if eq := cmp.Equal(gotMethod, wantMethod, cmp.Comparer(proto.Equal)); !eq {
 				t.Errorf("Test Desc(%d): %s, \ngot: %v,\nwanted: %v", i, tc.desc, gotMethod, wantMethod)
 			}
+		}
+	}
+}
+
+func TestProcessJwtLocations(t *testing.T) {
+	testData := []struct {
+		desc                                  string
+		fakeServiceConfig                     *confpb.Service
+		wantedTranscoderIgnoredJwtQueryParams map[string]bool
+		wantedError                           string
+	}{
+		{
+			desc: "Success. Default jwt locations",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "echo",
+							},
+						},
+					},
+				},
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
+						{
+							Id:     "auth_provider",
+							Issuer: "issuer-0",
+						},
+					},
+				},
+			},
+			wantedTranscoderIgnoredJwtQueryParams: map[string]bool{
+				"access_token": true,
+			},
+		},
+		{
+			desc: "Failure. Wrong jwt locations setting Query with valuePrefix in the same time",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "echo",
+							},
+						},
+					},
+				},
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
+						{
+							Id:     "auth_provider",
+							Issuer: "issuer-0",
+							JwtLocations: []*confpb.JwtLocation{
+								{
+									In: &confpb.JwtLocation_Query{
+										Query: "jwt_query_param",
+									},
+									ValuePrefix: "jwt_query_header_prefix",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantedError: `JwtLocation_Query should be set without valuePrefix, get JwtLocation {query:"jwt_query_param" value_prefix:"jwt_query_header_prefix" }`,
+		},
+		{
+			desc: "Success. Custom jwt locations",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "echo",
+							},
+						},
+					},
+				},
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
+						{
+							Id:     "auth_provider",
+							Issuer: "issuer-0",
+							JwtLocations: []*confpb.JwtLocation{
+								{
+									In: &confpb.JwtLocation_Header{
+										Header: "jwt_query_header",
+									},
+									ValuePrefix: "jwt_query_header_prefix",
+								},
+								{
+									In: &confpb.JwtLocation_Query{
+										Query: "jwt_query_param",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			wantedTranscoderIgnoredJwtQueryParams: map[string]bool{
+				"jwt_query_param": true,
+			},
+		},
+	}
+	for i, tc := range testData {
+		serviceInfo := &ServiceInfo{
+			serviceConfig:                      tc.fakeServiceConfig,
+			Methods:                            make(map[string]*methodInfo),
+			TranscoderIgnoredJwtQueryParams:    make(map[string]bool),
+			TranscoderIgnoredApiKeyQueryParams: make(map[string]bool),
+		}
+		err := serviceInfo.processJwtLocations()
+		if err != nil {
+			if err.Error() != tc.wantedError {
+				// Error doesn't match with wantedError.
+				t.Errorf("Test Desc(%d): %s, gotError: %v, wantedError: %v", i, tc.desc, err.Error(), tc.wantedError)
+			}
+
+		} else if tc.wantedError != "" {
+			// Error is empty while wantedError is not.
+			t.Errorf("Test Desc(%d): %s, gotError: %v, wantedError: %v", i, tc.desc, err.Error(), tc.wantedError)
+
+		} else if !reflect.DeepEqual(serviceInfo.TranscoderIgnoredJwtQueryParams, tc.wantedTranscoderIgnoredJwtQueryParams) {
+			// Generated TranscoderIgnoreApiKeyQueryParams is not expected.
+			t.Errorf("Test Desc(%d): %s, gotTranscoderIgnoredApiKeyQueryParams: %v, wantedTranscoderIgnoredApiKeyQueryParams: %v", i, tc.desc, serviceInfo.TranscoderIgnoredJwtQueryParams, tc.wantedTranscoderIgnoredJwtQueryParams)
 		}
 	}
 }

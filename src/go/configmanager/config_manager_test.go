@@ -142,8 +142,7 @@ func TestFetchListeners(t *testing.T) {
                            "convertGrpcStatus":true,
                            "ignoredQueryParameters":[
                               "api_key",
-                              "key",
-                              "access_token"
+                              "key"
                            ],
                            "protoDescriptorBin":"%s",
                            "services":[

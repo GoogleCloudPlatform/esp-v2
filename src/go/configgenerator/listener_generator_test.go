@@ -51,16 +51,30 @@ func TestTranscoderFilter(t *testing.T) {
 		wantTranscoderFilter string
 	}{
 		{
-			desc: "Success for gRPC backend with transcoding",
+			desc: "Success. Generate transcoder filter with default apiKey locations and default jwt locations",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+						},
 					},
 				},
 				SourceInfo: &confpb.SourceInfo{
 					SourceFiles: []*anypb.Any{content},
+				},
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
+						{
+							Id:      "auth_provider",
+							Issuer:  "issuer-0",
+							JwksUri: "https://fake-jwks.com",
+						},
+					},
 				},
 			},
 			wantTranscoderFilter: fmt.Sprintf(`
@@ -71,9 +85,83 @@ func TestTranscoderFilter(t *testing.T) {
       "autoMapping":true,
       "convertGrpcStatus":true,
       "ignoredQueryParameters":[
+         "access_token",
          "api_key",
-         "key",
-         "access_token"
+         "key"
+      ],
+      "protoDescriptorBin":"%s",
+      "services":[
+         "%s"
+      ]
+   }
+}
+      `, fakeProtoDescriptor, testApiName),
+		},
+		{
+			desc: "Success. Generate transcoder filter with custom apiKey locations and custom jwt locations",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				SourceInfo: &confpb.SourceInfo{
+					SourceFiles: []*anypb.Any{content},
+				},
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
+						{
+							Id:      "auth_provider",
+							Issuer:  "issuer-0",
+							JwksUri: "https://fake-jwks.com",
+							JwtLocations: []*confpb.JwtLocation{
+								{
+									In: &confpb.JwtLocation_Header{
+										Header: "jwt_query_header",
+									},
+									ValuePrefix: "jwt_query_header_prefix",
+								},
+								{
+									In: &confpb.JwtLocation_Query{
+										Query: "jwt_query_param",
+									},
+								},
+							},
+						},
+					},
+				},
+				SystemParameters: &confpb.SystemParameters{
+					Rules: []*confpb.SystemParameterRule{
+						{
+							Selector: testApiName,
+							Parameters: []*confpb.SystemParameter{
+								{
+									Name:              "api_key",
+									HttpHeader:        "header_name_1",
+									UrlQueryParameter: "query_name_1",
+								},
+								{
+									Name:              "api_key",
+									HttpHeader:        "header_name_2",
+									UrlQueryParameter: "query_name_2",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantTranscoderFilter: fmt.Sprintf(`
+{
+   "name":"envoy.grpc_json_transcoder",
+   "typedConfig":{
+      "@type":"type.googleapis.com/envoy.config.filter.http.transcoder.v2.GrpcJsonTranscoder",
+      "autoMapping":true,
+      "convertGrpcStatus":true,
+      "ignoredQueryParameters":[
+         "jwt_query_param",
+         "query_name_1",
+         "query_name_2"
       ],
       "protoDescriptorBin":"%s",
       "services":[
@@ -101,6 +189,169 @@ func TestTranscoderFilter(t *testing.T) {
 
 		if err := util.JsonEqual(tc.wantTranscoderFilter, gotFilter); err != nil {
 			t.Errorf("Test Desc(%d): %s, makeTranscoderFilter failed, \n %v", i, tc.desc, err)
+		}
+	}
+}
+
+func TestJwtAuthnFilter(t *testing.T) {
+	testData := []struct {
+		desc               string
+		fakeServiceConfig  *confpb.Service
+		wantJwtAuthnFilter string
+	}{
+		{
+			desc: "Success. Generate jwt authn filter with default jwt locations",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				SourceInfo: &confpb.SourceInfo{
+					SourceFiles: []*anypb.Any{content},
+				},
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
+						{
+							Id:      "auth_provider",
+							Issuer:  "issuer-0",
+							JwksUri: "https://fake-jwks.com",
+						},
+					},
+				},
+			},
+			wantJwtAuthnFilter: `{
+    "name": "envoy.filters.http.jwt_authn",
+    "typedConfig": {
+        "@type": "type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication",
+        "filterStateRules": {
+            "name": "envoy.filters.http.path_matcher.operation"
+        },
+        "providers": {
+            "auth_provider": {
+                "audiences": [
+                    "https://bookstore.endpoints.project123.cloud.goog"
+                ],
+                "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
+                "fromHeaders": [
+                    {
+                        "name": "Authorization",
+                        "valuePrefix": "Bearer "
+                    },
+                    {
+                        "name": "X-Goog-Iap-Jwt-Assertion"
+                    }
+                ],
+                "fromParams": [
+                    "access_token"
+                ],
+                "issuer": "issuer-0",
+                "payloadInMetadata": "jwt_payloads",
+                "remoteJwks": {
+                    "cacheDuration": "300s",
+                    "httpUri": {
+                        "cluster": "fake-jwks.com:443",
+                        "timeout": "5s",
+                        "uri": "https://fake-jwks.com"
+                    }
+                }
+            }
+        }
+    }
+}
+`,
+		},
+		{
+			desc: "Success. Generate jwt authn filter with custom jwt locations",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				SourceInfo: &confpb.SourceInfo{
+					SourceFiles: []*anypb.Any{content},
+				},
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
+						{
+							Id:      "auth_provider",
+							Issuer:  "issuer-0",
+							JwksUri: "https://fake-jwks.com",
+							JwtLocations: []*confpb.JwtLocation{
+								{
+									In: &confpb.JwtLocation_Header{
+										Header: "jwt_query_header",
+									},
+									ValuePrefix: "jwt_query_header_prefix",
+								},
+								{
+									In: &confpb.JwtLocation_Query{
+										Query: "jwt_query_param",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			wantJwtAuthnFilter: `{
+    "name": "envoy.filters.http.jwt_authn",
+    "typedConfig": {
+        "@type": "type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication",
+        "filterStateRules": {
+            "name": "envoy.filters.http.path_matcher.operation"
+        },
+        "providers": {
+            "auth_provider": {
+                "audiences": [
+                    "https://bookstore.endpoints.project123.cloud.goog"
+                ],
+                "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
+                "fromHeaders": [
+                    {
+                        "name": "jwt_query_header",
+                        "valuePrefix": "jwt_query_header_prefix"
+                    }
+                ],
+                "fromParams": [
+                    "jwt_query_param"
+                ],
+                "issuer": "issuer-0",
+                "payloadInMetadata": "jwt_payloads",
+                "remoteJwks": {
+                    "cacheDuration": "300s",
+                    "httpUri": {
+                        "cluster": "fake-jwks.com:443",
+                        "timeout": "5s",
+                        "uri": "https://fake-jwks.com"
+                    }
+                }
+            }
+        }
+    }
+}`,
+		},
+	}
+
+	for i, tc := range testData {
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendAddress = "grpc://127.0.0.0:80"
+		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		marshaler := &jsonpb.Marshaler{}
+		gotFilter, err := marshaler.MarshalToString(makeJwtAuthnFilter(fakeServiceInfo))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := util.JsonEqual(tc.wantJwtAuthnFilter, gotFilter); err != nil {
+			t.Errorf("Test Desc(%d): %s, makeTranscoderFilter failed, got: %s, want: %s", i, tc.desc, gotFilter, tc.wantJwtAuthnFilter)
 		}
 	}
 }
@@ -627,7 +878,7 @@ func TestBackendAuthFilter(t *testing.T) {
 }
 
 func TestPathMatcherFilter(t *testing.T) {
-	testData := []struct {
+	var testData = []struct {
 		desc                  string
 		fakeServiceConfig     *confpb.Service
 		BackendAddress        string
@@ -910,7 +1161,7 @@ func TestPathMatcherFilter(t *testing.T) {
 				Types: []*ptypepb.Type{
 					{
 						Fields: []*ptypepb.Field{
-							&ptypepb.Field{
+							{
 								JsonName: "fooBar",
 								Name:     "foo_bar",
 							},
@@ -966,7 +1217,6 @@ func TestPathMatcherFilter(t *testing.T) {
 }`,
 		},
 	}
-
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendAddress = tc.BackendAddress

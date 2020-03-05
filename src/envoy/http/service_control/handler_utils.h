@@ -33,7 +33,7 @@ namespace ServiceControl {
 bool extractAPIKey(
     const Http::HeaderMap& headers,
     const ::google::protobuf::RepeatedPtrField<
-        ::google::api::envoy::http::service_control::APIKeyLocation>& locations,
+        ::google::api::envoy::http::service_control::ApiKeyLocation>& locations,
     std::string& api_key);
 
 // Adds information from the `FilterConfig`'s gcp_attributes to the given info.

@@ -23,7 +23,7 @@
 #include "test/mocks/server/mocks.h"
 #include "test/test_common/utility.h"
 
-using ::google::api::envoy::http::service_control::APIKeyRequirement;
+using ::google::api::envoy::http::service_control::ApiKeyRequirement;
 using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::api::envoy::http::service_control::Service;
 using ::google::api_proxy::service_control::LatencyInfo;
@@ -264,7 +264,7 @@ TEST(ServiceControlUtils, ExtractApiKey) {
       }};
 
   for (const auto& test : test_cases) {
-    APIKeyRequirement requirement;
+    ApiKeyRequirement requirement;
     ASSERT_TRUE(
         TextFormat::ParseFromString(test.requirement_proto, &requirement));
 

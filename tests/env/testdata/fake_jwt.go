@@ -14,6 +14,10 @@
 
 package testdata
 
+import (
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+)
+
 type ProviderConfig struct {
 	Id               string
 	Issuer           string
@@ -21,6 +25,7 @@ type ProviderConfig struct {
 	IsInvalid        bool   // If invalid, then a server that always returns 503 is started up
 	IsNonexistent    bool   // If non-existent, then a server is not started up
 	HardcodedJwksUri string // This needs to be set for non-existent, since the URL cannot be derived
+	JwtLocations     []*confpb.JwtLocation
 }
 
 var (
@@ -77,6 +82,31 @@ var (
 			Issuer: FakeIssuer,
 			Keys:   x509PubKeys,
 		},
+		{
+			Id:     CustomJwtLocationProvider,
+			Issuer: Rs256Issuer,
+			Keys:   PubKeys,
+			JwtLocations: []*confpb.JwtLocation{
+				{
+					In: &confpb.JwtLocation_Header{
+						Header: "jwt-header-foo",
+					},
+					ValuePrefix: "jwt-prefix-foo",
+				},
+				{
+					In: &confpb.JwtLocation_Header{
+						Header: "jwt-header-bar",
+					},
+					ValuePrefix: "jwt-prefix-bar",
+				},
+				{
+					In: &confpb.JwtLocation_Query{Query: "jwt-param-foo"},
+				},
+				{
+					In: &confpb.JwtLocation_Query{Query: "jwt-param-bar"},
+				},
+			},
+		},
 	}
 )
 
@@ -95,6 +125,7 @@ const (
 	NonexistentProvider          string = "nonexist_jwks_provider"
 	ServiceControlProvider       string = "service_control_jwt_payload_auth"
 	X509Provider                 string = "x509_jwt_provider"
+	CustomJwtLocationProvider    string = "custom_jwt_location_provider"
 )
 
 // Issuers

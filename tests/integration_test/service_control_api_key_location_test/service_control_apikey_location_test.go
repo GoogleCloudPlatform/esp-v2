@@ -29,12 +29,11 @@ import (
 )
 
 func TestServiceControlAPIKeyDefaultLocation(t *testing.T) {
-
 	configId := "test-config-id"
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlAPIKeyDefaultLocation, platform.EchoSidecar)
+	s := env.NewTestEnv(comp.TestServiceControlAPIKeyDefaultLocation, platform.GrpcBookstoreSidecar)
 	defer s.TearDown()
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -53,33 +52,30 @@ func TestServiceControlAPIKeyDefaultLocation(t *testing.T) {
 	}{
 		{
 			desc:       "succeed, use the default apiKey location(key in query)",
-			url:        fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key"),
-			method:     "POST",
-			message:    "hello",
-			wantResp:   `{"message":"hello"}`,
+			url:        fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/v1/shelves/100", "?key=api-key"),
+			method:     "GET",
+			wantResp:   `{"id":"100","theme":"Kids"}`,
 			wantApiKey: "api-key",
 		},
 		{
 			desc:       "succeed, use the default apiKey location(api_key in query)",
-			url:        fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?api_key=api-key-1"),
-			method:     "POST",
-			message:    "hello",
-			wantResp:   `{"message":"hello"}`,
+			url:        fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/v1/shelves/100", "?api_key=api-key-1"),
+			method:     "GET",
+			wantResp:   `{"id":"100","theme":"Kids"}`,
 			wantApiKey: "api-key-1",
 		},
 		{
 			desc:       "succeed, use two apiKey locations in the same time(api_key and key in query)",
-			url:        fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?api_key=api-key-2&key=key-2"),
-			method:     "POST",
-			message:    "hello",
-			wantResp:   `{"message":"hello"}`,
+			url:        fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/v1/shelves/100", "?api_key=api-key-2&key=key-2"),
+			method:     "GET",
+			wantResp:   `{"id":"100","theme":"Kids"}`,
 			wantApiKey: "key-2",
 		},
 		{
-			desc:    "succeed, use the default apiKey location(X-API-KEY in header)",
-			url:     fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo"),
-			method:  "POST",
-			message: "hello",
+			desc:     "succeed, use the default apiKey location(X-API-KEY in header)",
+			url:      fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/v1/shelves/100"),
+			method:   "GET",
+			wantResp: `{"id":"100","theme":"Kids"}`,
 			requestHeader: map[string]string{
 				"X-API-KEY": "key-3",
 			},
@@ -104,17 +100,16 @@ func TestServiceControlAPIKeyDefaultLocation(t *testing.T) {
 }
 
 func TestServiceControlAPIKeyCustomLocation(t *testing.T) {
-
 	serviceName := "test-echo"
 	configId := "test-config-id"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlAPIKeyCustomLocation, platform.EchoSidecar)
+	s := env.NewTestEnv(comp.TestServiceControlAPIKeyCustomLocation, platform.GrpcBookstoreSidecar)
 	s.OverrideSystemParameters(&confpb.SystemParameters{
 		Rules: []*confpb.SystemParameterRule{
 			{
-				Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+				Selector: "endpoints.examples.bookstore.Bookstore.GetShelf",
 				Parameters: []*confpb.SystemParameter{
 					{
 						Name:              "api_key",
@@ -146,76 +141,63 @@ func TestServiceControlAPIKeyCustomLocation(t *testing.T) {
 	}{
 		{
 			desc:       "Succeed, single apikey passed by url query",
-			url:        fmt.Sprintf("http://localhost:%v%v?query_name_1=key-1", s.Ports().ListenerPort, "/echo"),
-			method:     "POST",
-			message:    "hello",
-			wantResp:   `{"message":"hello"}`,
+			url:        fmt.Sprintf("http://localhost:%v%v?query_name_1=key-1", s.Ports().ListenerPort, "/v1/shelves/100"),
+			method:     "GET",
+			wantResp:   `{"id":"100","theme":"Kids"}`,
 			wantApiKey: "key-1",
 		},
-		{
-			desc:       "succeed, single apikey passed by url query",
-			url:        fmt.Sprintf("http://localhost:%v%v?query_name_2=api-key-1", s.Ports().ListenerPort, "/echo"),
-			method:     "POST",
-			message:    "hello",
-			wantResp:   `{"message":"hello"}`,
-			wantApiKey: "api-key-1",
-		},
+
 		// In the SystemParameters, query_name_1 is defined before query_name_2 so query_name_1=key-31 is applied first.
 		{
 			desc:       "succeed, two apikeys are passed by url query",
-			url:        fmt.Sprintf("http://localhost:%v%v?query_name_1=key-31&query_name_2=key-32", s.Ports().ListenerPort, "/echo"),
-			method:     "POST",
-			message:    "hello",
-			wantResp:   `{"message":"hello"}`,
+			url:        fmt.Sprintf("http://localhost:%v%v?query_name_1=key-31&query_name_2=key-32", s.Ports().ListenerPort, "/v1/shelves/100"),
+			method:     "GET",
+			wantResp:   `{"id":"100","theme":"Kids"}`,
 			wantApiKey: "key-31",
 		},
 		{
-			desc:    "succeed, single apikey passed by headers",
-			url:     fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo"),
-			method:  "POST",
-			message: "hello",
+			desc:   "succeed, single apikey passed by headers",
+			url:    fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/v1/shelves/100"),
+			method: "GET",
 			requestHeader: map[string]string{
 				"HEADER-NAME-1": "key-4",
 			},
-			wantResp:   `{"message":"hello"}`,
+			wantResp:   `{"id":"100","theme":"Kids"}`,
 			wantApiKey: "key-4",
 		},
 		{
-			desc:    "succeed, single apike passed by headers",
-			url:     fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo"),
-			method:  "POST",
-			message: "hello",
+			desc:   "succeed, single apikey passed by headers",
+			url:    fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/v1/shelves/100"),
+			method: "GET",
 			requestHeader: map[string]string{
 				"HEADER-NAME-2": "key-5",
 			},
-			wantResp:   `{"message":"hello"}`,
+			wantResp:   `{"id":"100","theme":"Kids"}`,
 			wantApiKey: "key-5",
 		},
 		// In the SystemParameters, HEADER-NAME-1 is defined before HEADER-NAME-2 so HEADER-NAME-1=key-61 is applied first.
 		{
-			desc:    "succeed, two apikeys are passed by headers",
-			url:     fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo"),
-			method:  "POST",
-			message: "hello",
+			desc:   "succeed, two apikeys are passed by headers",
+			url:    fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/v1/shelves/100"),
+			method: "GET",
 			requestHeader: map[string]string{
 				"HEADER-NAME-1": "key-61",
 				"HEADER-NAME-2": "key-62",
 			},
-			wantResp:   `{"message":"hello"}`,
+			wantResp:   `{"id":"100","theme":"Kids"}`,
 			wantApiKey: "key-61",
 		},
 		// The proxy will look into all the custom-defined apikey locations in the url query and then those in the header.
 		// The query_name_1 is the first location for the url query so it will be applied.
 		{
-			desc:    "succeed, four apikeys are passed by both url query and headers",
-			url:     fmt.Sprintf("http://localhost:%v%v?query_name_2=api-key-72&query_name_1=key-71", s.Ports().ListenerPort, "/echo"),
-			method:  "POST",
-			message: "hello",
+			desc:   "succeed, four apikeys are passed by both url query and headers",
+			url:    fmt.Sprintf("http://localhost:%v%v?query_name_2=api-key-72&query_name_1=key-71", s.Ports().ListenerPort, "/v1/shelves/100"),
+			method: "GET",
 			requestHeader: map[string]string{
 				"HEADER-NAME-1": "key-73",
 				"HEADER-NAME-2": "key-74",
 			},
-			wantResp:   `{"message":"hello"}`,
+			wantResp:   `{"id":"100","theme":"Kids"}`,
 			wantApiKey: "key-71",
 		},
 	}

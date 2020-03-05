@@ -26,7 +26,7 @@
 #include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/http/service_control/handler_utils.h"
 
-using ::google::api::envoy::http::service_control::APIKeyLocation;
+using ::google::api::envoy::http::service_control::ApiKeyLocation;
 using ::google::api::envoy::http::service_control::Service;
 using ::google::api_proxy::service_control::LatencyInfo;
 using ::google::api_proxy::service_control::protocol::Protocol;
@@ -248,7 +248,7 @@ void fillJwtPayload(const envoy::config::core::v3::Metadata& metadata,
 bool extractAPIKey(
     const Http::HeaderMap& headers,
     const ::google::protobuf::RepeatedPtrField<
-        ::google::api::envoy::http::service_control::APIKeyLocation>& locations,
+        ::google::api::envoy::http::service_control::ApiKeyLocation>& locations,
     std::string& api_key) {
   // If checking multiple headers, cache the parameters so they are only parsed
   // once
@@ -257,20 +257,20 @@ bool extractAPIKey(
 
   for (const auto& location : locations) {
     switch (location.key_case()) {
-      case APIKeyLocation::kQuery:
+      case ApiKeyLocation::kQuery:
         if (extractAPIKeyFromQuery(headers, location.query(),
                                    were_params_parsed, parsed_params, api_key))
           return true;
         break;
-      case APIKeyLocation::kHeader:
+      case ApiKeyLocation::kHeader:
         if (extractAPIKeyFromHeader(headers, location.header(), api_key))
           return true;
         break;
-      case APIKeyLocation::kCookie:
+      case ApiKeyLocation::kCookie:
         if (extractAPIKeyFromCookie(headers, location.cookie(), api_key))
           return true;
         break;
-      case APIKeyLocation::KEY_NOT_SET:
+      case ApiKeyLocation::KEY_NOT_SET:
         break;
     }
   }

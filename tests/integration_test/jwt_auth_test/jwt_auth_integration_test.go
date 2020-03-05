@@ -107,32 +107,6 @@ func TestAsymmetricKeys(t *testing.T) {
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
 		{
-			desc:           "Succeeded, wth jwt token passed in \"Authorization: Bearer\" header",
-			clientProtocol: "http",
-			httpMethod:     "GET",
-			method:         "/v1/shelves?key=api-key",
-			token:          testdata.Rs256Token,
-			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
-		},
-		{
-			desc:           "Succeeded, wth jwt token passed in \"x-goog-iap-jwt-assertion\" header",
-			clientProtocol: "http",
-			httpMethod:     "GET",
-			method:         "/v1/shelves?key=api-key",
-			headers: map[string][]string{
-				"x-goog-iap-jwt-assertion": []string{testdata.Rs256Token},
-			},
-			wantResp: `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
-		},
-		{
-			desc:           "Succeeded, with jwt token passed in query",
-			clientProtocol: "http",
-			httpMethod:     "GET",
-			method:         "/v1/shelves?key=api-key&access_token=" + testdata.Rs256Token,
-			queryInToken:   true,
-			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
-		},
-		{
 			desc:           "Failed, provider providing wrong-format jwks",
 			clientProtocol: "http",
 			httpMethod:     "GET",

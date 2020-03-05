@@ -68,11 +68,12 @@ func DoWithHeaders(url, method, message string, headers map[string]string) ([]by
 		return nil, fmt.Errorf("create request error: %v", err)
 	}
 
-	if method == "POST" || method == "PATCH" || method == "PUT" {
+	if message != "" {
 		request.Header.Set("Content-Type", "application/json")
-		for k, v := range headers {
-			request.Header.Set(k, v)
-		}
+	}
+
+	for k, v := range headers {
+		request.Header.Set(k, v)
 	}
 
 	client := &http.Client{
