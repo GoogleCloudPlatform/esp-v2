@@ -33,7 +33,7 @@ class TokenInfo : public Envoy::Logger::Loggable<Envoy::Logger::Id::init> {
  public:
   virtual ~TokenInfo() = default;
 
-  virtual Envoy::Http::MessagePtr prepareRequest(
+  virtual Envoy::Http::RequestMessagePtr prepareRequest(
       absl::string_view token_url) const PURE;
   virtual bool parseAccessToken(absl::string_view response,
                                 TokenResult* ret) const PURE;

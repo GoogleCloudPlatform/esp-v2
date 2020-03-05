@@ -49,7 +49,7 @@ class MockTokenSubscriberFactory : public TokenSubscriberFactory {
 
 class MockTokenInfo : public TokenInfo {
  public:
-  MOCK_METHOD(Envoy::Http::MessagePtr, prepareRequest,
+  MOCK_METHOD(Envoy::Http::RequestMessagePtr, prepareRequest,
               (absl::string_view token_url), (const));
 
   MOCK_METHOD(bool, parseAccessToken,

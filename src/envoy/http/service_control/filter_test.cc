@@ -60,7 +60,10 @@ class ServiceControlFilterTest : public ::testing::Test {
   testing::NiceMock<MockBuffer> mock_buffer_;
   testing::NiceMock<Stats::MockStore> mock_stats_scope_;
   ServiceControlFilterStatBase stats_base_;
-  Http::TestHeaderMapImpl headers_;
+  Http::TestRequestHeaderMapImpl req_headers_;
+  Http::TestRequestTrailerMapImpl req_trailer_;
+  Http::TestResponseHeaderMapImpl resp_headers_;
+  Http::TestResponseTrailerMapImpl resp_trailer_;
 
   // Tracing mocks
   std::unique_ptr<Envoy::Tracing::MockSpan> mock_span_;
@@ -74,12 +77,12 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersSyncOKStatus) {
 
   // Call onCheckDone synchronously
   EXPECT_CALL(*mock_handler, callCheck(_, _, _))
-      .WillOnce(Invoke([](Http::HeaderMap&, Envoy::Tracing::Span&,
+      .WillOnce(Invoke([](Http::RequestHeaderMap&, Envoy::Tracing::Span&,
                           ServiceControlHandler::CheckDoneCallback& callback) {
         callback.onCheckDone(Status::OK);
       }));
   EXPECT_EQ(Http::FilterHeadersStatus::Continue,
-            filter_->decodeHeaders(headers_, true));
+            filter_->decodeHeaders(req_headers_, true));
 
   // Verify handler->onDestroy is called when filter::onDestroy() is called
   EXPECT_CALL(*mock_handler, onDestroy()).Times(1);
@@ -100,7 +103,7 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersSyncBadStatus) {
 
   // Call onCheckDone synchronously
   EXPECT_CALL(*mock_handler, callCheck(_, _, _))
-      .WillOnce(Invoke([](Http::HeaderMap&, Envoy::Tracing::Span&,
+      .WillOnce(Invoke([](Http::RequestHeaderMap&, Envoy::Tracing::Span&,
                           ServiceControlHandler::CheckDoneCallback& callback) {
         callback.onCheckDone(kBadStatus);
       }));
@@ -111,7 +114,7 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersSyncBadStatus) {
       setResponseFlag(StreamInfo::ResponseFlag::UnauthorizedExternalService));
 
   EXPECT_EQ(Http::FilterHeadersStatus::StopIteration,
-            filter_->decodeHeaders(headers_, true));
+            filter_->decodeHeaders(req_headers_, true));
 }
 
 TEST_F(ServiceControlFilterTest, DecodeHeadersAsyncGoodStatus) {
@@ -128,12 +131,12 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersAsyncGoodStatus) {
       // This invocation works around SaveArg storing the value to
       // the pointer in a way that does not work with the interface
       .WillOnce(Invoke([&stored_check_done_callback](
-                           Http::HeaderMap&, Envoy::Tracing::Span&,
+                           Http::RequestHeaderMap&, Envoy::Tracing::Span&,
                            ServiceControlHandler::CheckDoneCallback& callback) {
         stored_check_done_callback = &callback;
       }));
   EXPECT_EQ(Http::FilterHeadersStatus::StopIteration,
-            filter_->decodeHeaders(headers_, true));
+            filter_->decodeHeaders(req_headers_, true));
 
   EXPECT_CALL(mock_decoder_callbacks_, continueDecoding());
   stored_check_done_callback->onCheckDone(Status::OK);
@@ -156,12 +159,12 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersAsyncBadStatus) {
           // This invocation works around SaveArg storing the value to
           // the pointer in a way that does not work with the interface
           Invoke([&stored_check_done_callback](
-                     Http::HeaderMap&, Envoy::Tracing::Span&,
+                     Http::RequestHeaderMap&, Envoy::Tracing::Span&,
                      ServiceControlHandler::CheckDoneCallback& callback) {
             stored_check_done_callback = &callback;
           }));
   EXPECT_EQ(Http::FilterHeadersStatus::StopIteration,
-            filter_->decodeHeaders(headers_, true));
+            filter_->decodeHeaders(req_headers_, true));
 
   // Filter should reject this request
   // TODO(toddbeckman) Figure out how to EXPECT_CALL sendLocalReply directly
@@ -176,7 +179,7 @@ TEST_F(ServiceControlFilterTest, LogWithoutHandlerOrHeaders) {
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _)).Times(0);
 
   // Filter has no handler. If it tries to callReport, it will seg fault
-  filter_->log(nullptr, &headers_, &headers_,
+  filter_->log(nullptr, &resp_headers_, &resp_trailer_,
                mock_decoder_callbacks_.stream_info_);
 }
 
@@ -186,7 +189,7 @@ TEST_F(ServiceControlFilterTest, LogWithoutHandler) {
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
       .WillOnce(Return(mock_handler));
   EXPECT_CALL(*mock_handler, callReport(_, _, _, _));
-  filter_->log(&headers_, &headers_, &headers_,
+  filter_->log(&req_headers_, &resp_headers_, &resp_trailer_,
                mock_decoder_callbacks_.stream_info_);
 }
 
@@ -196,11 +199,11 @@ TEST_F(ServiceControlFilterTest, LogWithHandler) {
   auto* mock_handler = new testing::NiceMock<MockServiceControlHandler>();
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
       .WillOnce(Return(mock_handler));
-  filter_->decodeHeaders(headers_, true);
+  filter_->decodeHeaders(req_headers_, true);
 
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _)).Times(0);
   EXPECT_CALL(*mock_handler, callReport(_, _, _, _));
-  filter_->log(&headers_, &headers_, &headers_,
+  filter_->log(&req_headers_, &resp_headers_, &resp_trailer_,
                mock_decoder_callbacks_.stream_info_);
 }
 
@@ -210,7 +213,7 @@ TEST_F(ServiceControlFilterTest, DecodeHelpersWhileStopped) {
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
       .WillOnce(Return(mock_handler));
   EXPECT_EQ(Http::FilterHeadersStatus::StopIteration,
-            filter_->decodeHeaders(headers_, true));
+            filter_->decodeHeaders(req_headers_, true));
 
   // Test: While Filter is Calling/stopped, decodeData returns Stop
   EXPECT_EQ(Http::FilterDataStatus::StopIterationAndWatermark,
@@ -218,7 +221,7 @@ TEST_F(ServiceControlFilterTest, DecodeHelpersWhileStopped) {
 
   // Test: While Filter is Calling/stopped, decodeTrailers returns Stop
   EXPECT_EQ(Http::FilterTrailersStatus::StopIteration,
-            filter_->decodeTrailers(headers_));
+            filter_->decodeTrailers(req_trailer_));
 }
 
 TEST_F(ServiceControlFilterTest, DecodeHelpersWhileContinuing) {
@@ -227,12 +230,12 @@ TEST_F(ServiceControlFilterTest, DecodeHelpersWhileContinuing) {
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
       .WillOnce(Return(mock_handler));
   EXPECT_CALL(*mock_handler, callCheck(_, _, _))
-      .WillOnce(Invoke([](Http::HeaderMap&, Envoy::Tracing::Span&,
+      .WillOnce(Invoke([](Http::RequestHeaderMap&, Envoy::Tracing::Span&,
                           ServiceControlHandler::CheckDoneCallback& callback) {
         callback.onCheckDone(Status::OK);
       }));
   EXPECT_EQ(Http::FilterHeadersStatus::Continue,
-            filter_->decodeHeaders(headers_, true));
+            filter_->decodeHeaders(req_headers_, true));
 
   // Test: When Filter is Complete, decodeData returns Continue
   EXPECT_EQ(Http::FilterDataStatus::Continue,
@@ -240,7 +243,7 @@ TEST_F(ServiceControlFilterTest, DecodeHelpersWhileContinuing) {
 
   // Test: When Filter is Complete, decodeTrailers returns Continue
   EXPECT_EQ(Http::FilterTrailersStatus::Continue,
-            filter_->decodeTrailers(headers_));
+            filter_->decodeTrailers(req_trailer_));
 }
 
 TEST_F(ServiceControlFilterTest, DecodeDataSendStreamReport) {
@@ -249,12 +252,12 @@ TEST_F(ServiceControlFilterTest, DecodeDataSendStreamReport) {
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
       .WillOnce(Return(mock_handler));
   EXPECT_CALL(*mock_handler, callCheck(_, _, _))
-      .WillOnce(Invoke([](Http::HeaderMap&, Envoy::Tracing::Span&,
+      .WillOnce(Invoke([](Http::RequestHeaderMap&, Envoy::Tracing::Span&,
                           ServiceControlHandler::CheckDoneCallback& callback) {
         callback.onCheckDone(Status::OK);
       }));
   EXPECT_EQ(Http::FilterHeadersStatus::Continue,
-            filter_->decodeHeaders(headers_, /*end_stream=*/true));
+            filter_->decodeHeaders(req_headers_, /*end_stream=*/true));
 
   mock_buffer_.add("filler");
 
@@ -268,12 +271,12 @@ TEST_F(ServiceControlFilterTest, EncodeDataSendStreamReport) {
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
       .WillOnce(Return(mock_handler));
   EXPECT_CALL(*mock_handler, callCheck(_, _, _))
-      .WillOnce(Invoke([](Http::HeaderMap&, Envoy::Tracing::Span&,
+      .WillOnce(Invoke([](Http::RequestHeaderMap&, Envoy::Tracing::Span&,
                           ServiceControlHandler::CheckDoneCallback& callback) {
         callback.onCheckDone(Status::OK);
       }));
   EXPECT_EQ(Http::FilterHeadersStatus::Continue,
-            filter_->decodeHeaders(headers_, /*end_stream=*/true));
+            filter_->decodeHeaders(req_headers_, /*end_stream=*/true));
 
   mock_buffer_.add("filler");
 

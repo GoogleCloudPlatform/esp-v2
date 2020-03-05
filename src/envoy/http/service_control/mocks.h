@@ -26,20 +26,21 @@ namespace ServiceControl {
 
 class MockServiceControlHandler : public ServiceControlHandler {
  public:
-  MOCK_METHOD3(callCheck,
-               void(Http::HeaderMap& headers, Envoy::Tracing::Span& parent_span,
-                    CheckDoneCallback& callback));
+  MOCK_METHOD3(callCheck, void(Http::RequestHeaderMap& headers,
+                               Envoy::Tracing::Span& parent_span,
+                               CheckDoneCallback& callback));
 
-  MOCK_METHOD4(callReport, void(const Http::HeaderMap* request_headers,
-                                const Http::HeaderMap* response_headers,
-                                const Http::HeaderMap* response_trailers,
-                                std::chrono::system_clock::time_point now));
+  MOCK_METHOD4(callReport,
+               void(const Http::RequestHeaderMap* request_headers,
+                    const Http::ResponseHeaderMap* response_headers,
+                    const Http::ResponseTrailerMap* response_trailers,
+                    std::chrono::system_clock::time_point now));
 
   MOCK_METHOD1(tryIntermediateReport,
                void(std::chrono::system_clock::time_point now));
 
   MOCK_METHOD1(processResponseHeaders,
-               void(const Http::HeaderMap& response_headers));
+               void(const Http::ResponseHeaderMap& response_headers));
 
   MOCK_METHOD0(onDestroy, void());
 };
@@ -47,14 +48,14 @@ class MockServiceControlHandler : public ServiceControlHandler {
 class MockServiceControlHandlerFactory : public ServiceControlHandlerFactory {
  public:
   ServiceControlHandlerPtr createHandler(
-      const Http::HeaderMap& headers,
+      const Http::RequestHeaderMap& headers,
       const StreamInfo::StreamInfo& stream_info) const override {
     return ServiceControlHandlerPtr{createHandler_(headers, stream_info)};
   }
 
   MOCK_CONST_METHOD2(
       createHandler_,
-      ServiceControlHandler*(const Http::HeaderMap& headers,
+      ServiceControlHandler*(const Http::RequestHeaderMap& headers,
                              const StreamInfo::StreamInfo& stream_info));
 };
 

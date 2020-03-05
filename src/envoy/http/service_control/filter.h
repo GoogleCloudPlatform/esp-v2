@@ -42,22 +42,22 @@ class ServiceControlFilter : public Http::PassThroughFilter,
   void onDestroy() override;
 
   // Http::StreamDecoderFilter
-  Http::FilterHeadersStatus decodeHeaders(Http::HeaderMap& headers,
+  Http::FilterHeadersStatus decodeHeaders(Http::RequestHeaderMap& headers,
                                           bool) override;
   Http::FilterDataStatus decodeData(Buffer::Instance& data,
                                     bool end_stream) override;
-  Http::FilterTrailersStatus decodeTrailers(Http::HeaderMap&) override;
+  Http::FilterTrailersStatus decodeTrailers(Http::RequestTrailerMap&) override;
 
   // Http::StreamEncoderFilter
-  Http::FilterHeadersStatus encodeHeaders(Http::HeaderMap& headers,
+  Http::FilterHeadersStatus encodeHeaders(Http::ResponseHeaderMap& headers,
                                           bool) override;
   Http::FilterDataStatus encodeData(Buffer::Instance& data,
                                     bool end_stream) override;
 
   // Called when the request is completed.
-  void log(const Http::HeaderMap* request_headers,
-           const Http::HeaderMap* response_headers,
-           const Http::HeaderMap* response_trailers,
+  void log(const Http::RequestHeaderMap* request_headers,
+           const Http::ResponseHeaderMap* response_headers,
+           const Http::ResponseTrailerMap* response_trailers,
            const StreamInfo::StreamInfo& stream_info) override;
 
   // For Handler::CheckDoneCallback, called when callCheck() is done

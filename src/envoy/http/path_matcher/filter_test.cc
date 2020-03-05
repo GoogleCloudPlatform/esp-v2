@@ -72,14 +72,14 @@ class PathMatcherFilterTest : public ::testing::Test {
 
 TEST_F(PathMatcherFilterTest, DecodeHeadersWithOperation) {
   // Test: a request matches a operation
-  Http::TestHeaderMapImpl headers{{":method", "GET"}, {":path", "/bar"}};
+  Http::TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/bar"}};
   EXPECT_EQ(Http::FilterHeadersStatus::Continue,
             filter_->decodeHeaders(headers, false));
 
-  EXPECT_EQ(Utils::getStringFilterState(mock_cb_.stream_info_.filter_state_,
+  EXPECT_EQ(Utils::getStringFilterState(*mock_cb_.stream_info_.filter_state_,
                                         Utils::kOperation),
             "1.cloudesf_testing_cloud_goog.Bar");
-  EXPECT_EQ(Utils::getStringFilterState(mock_cb_.stream_info_.filter_state_,
+  EXPECT_EQ(Utils::getStringFilterState(*mock_cb_.stream_info_.filter_state_,
                                         Utils::kQueryParams),
             "");
 
@@ -92,19 +92,21 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersWithOperation) {
 
   Buffer::OwnedImpl data("");
   EXPECT_EQ(Http::FilterDataStatus::Continue, filter_->decodeData(data, false));
+
+  Http::TestRequestTrailerMapImpl trailers;
   EXPECT_EQ(Http::FilterTrailersStatus::Continue,
-            filter_->decodeTrailers(headers));
+            filter_->decodeTrailers(trailers));
 }
 
 TEST_F(PathMatcherFilterTest, DecodeHeadersWithMethodOveride) {
   // Test: a request with a method override matches a operation
-  Http::TestHeaderMapImpl headers{{":method", "POST"},
-                                  {":path", "/bar"},
-                                  {"x-http-method-override", "GET"}};
+  Http::TestRequestHeaderMapImpl headers{{":method", "POST"},
+                                         {":path", "/bar"},
+                                         {"x-http-method-override", "GET"}};
   EXPECT_EQ(Http::FilterHeadersStatus::Continue,
             filter_->decodeHeaders(headers, true));
 
-  EXPECT_EQ(Utils::getStringFilterState(mock_cb_.stream_info_.filter_state_,
+  EXPECT_EQ(Utils::getStringFilterState(*mock_cb_.stream_info_.filter_state_,
                                         Utils::kOperation),
             "1.cloudesf_testing_cloud_goog.Bar");
 
@@ -118,14 +120,15 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersWithMethodOveride) {
 
 TEST_F(PathMatcherFilterTest, DecodeHeadersExtractParameters) {
   // Test: a request needs to extract parameters
-  Http::TestHeaderMapImpl headers{{":method", "GET"}, {":path", "/foo/123"}};
+  Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                         {":path", "/foo/123"}};
   EXPECT_EQ(Http::FilterHeadersStatus::Continue,
             filter_->decodeHeaders(headers, true));
 
-  EXPECT_EQ(Utils::getStringFilterState(mock_cb_.stream_info_.filter_state_,
+  EXPECT_EQ(Utils::getStringFilterState(*mock_cb_.stream_info_.filter_state_,
                                         Utils::kOperation),
             "1.cloudesf_testing_cloud_goog.Foo");
-  EXPECT_EQ(Utils::getStringFilterState(mock_cb_.stream_info_.filter_state_,
+  EXPECT_EQ(Utils::getStringFilterState(*mock_cb_.stream_info_.filter_state_,
                                         Utils::kQueryParams),
             "fooBar=123");
 
@@ -139,7 +142,8 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersExtractParameters) {
 
 TEST_F(PathMatcherFilterTest, DecodeHeadersNoMatch) {
   // Test: a request no match
-  Http::TestHeaderMapImpl headers{{":method", "POST"}, {":path", "/bar"}};
+  Http::TestRequestHeaderMapImpl headers{{":method", "POST"},
+                                         {":path", "/bar"}};
 
   // Filter should reject this request
   EXPECT_CALL(
@@ -149,7 +153,7 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersNoMatch) {
   EXPECT_EQ(Http::FilterHeadersStatus::StopIteration,
             filter_->decodeHeaders(headers, true));
 
-  EXPECT_EQ(Utils::getStringFilterState(mock_cb_.stream_info_.filter_state_,
+  EXPECT_EQ(Utils::getStringFilterState(*mock_cb_.stream_info_.filter_state_,
                                         Utils::kOperation),
             "");
 

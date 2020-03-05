@@ -33,7 +33,8 @@ class Filter : public Http::PassThroughDecoderFilter,
   Filter(FilterConfigSharedPtr config) : config_(config) {}
 
   // Http::StreamDecoderFilter
-  Http::FilterHeadersStatus decodeHeaders(Http::HeaderMap&, bool) override;
+  Http::FilterHeadersStatus decodeHeaders(Http::RequestHeaderMap&,
+                                          bool) override;
 
  private:
   const FilterConfigSharedPtr config_;

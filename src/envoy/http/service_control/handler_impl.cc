@@ -45,8 +45,9 @@ constexpr char JwtPayloadIssuerPath[] = "iss";
 constexpr char JwtPayloadAuidencePath[] = "aud";
 
 ServiceControlHandlerImpl::ServiceControlHandlerImpl(
-    const Http::HeaderMap& headers, const StreamInfo::StreamInfo& stream_info,
-    const std::string& uuid, const FilterConfigParser& cfg_parser,
+    const Http::RequestHeaderMap& headers,
+    const StreamInfo::StreamInfo& stream_info, const std::string& uuid,
+    const FilterConfigParser& cfg_parser,
     std::chrono::system_clock::time_point now)
     : cfg_parser_(cfg_parser),
       stream_info_(stream_info),
@@ -141,7 +142,7 @@ void ServiceControlHandlerImpl::prepareReportRequest(
   fillGCPInfo(cfg_parser_.config(), info);
 }
 
-void ServiceControlHandlerImpl::callCheck(Http::HeaderMap& headers,
+void ServiceControlHandlerImpl::callCheck(Http::RequestHeaderMap& headers,
                                           Envoy::Tracing::Span& parent_span,
                                           CheckDoneCallback& callback) {
   if (!isConfigured()) {
@@ -216,7 +217,7 @@ void ServiceControlHandlerImpl::callQuota() {
 }
 
 void ServiceControlHandlerImpl::onCheckResponse(
-    Http::HeaderMap& headers, const Status& status,
+    Http::RequestHeaderMap& headers, const Status& status,
     const CheckResponseInfo& response_info) {
   check_response_info_ = response_info;
 
@@ -237,15 +238,15 @@ void ServiceControlHandlerImpl::onCheckResponse(
 }
 
 void ServiceControlHandlerImpl::processResponseHeaders(
-    const Http::HeaderMap& response_headers) {
+    const Http::ResponseHeaderMap& response_headers) {
   frontend_protocol_ = getFrontendProtocol(&response_headers, stream_info_);
   response_header_size_ = response_headers.byteSize();
 }
 
 void ServiceControlHandlerImpl::callReport(
-    const Http::HeaderMap* request_headers,
-    const Http::HeaderMap* response_headers,
-    const Http::HeaderMap* response_trailers,
+    const Http::RequestHeaderMap* request_headers,
+    const Http::ResponseHeaderMap* response_headers,
+    const Http::ResponseTrailerMap* response_trailers,
     std::chrono::system_clock::time_point now) {
   if (require_ctx_ == nullptr) {
     require_ctx_ = cfg_parser_.non_match_rqm_ctx();

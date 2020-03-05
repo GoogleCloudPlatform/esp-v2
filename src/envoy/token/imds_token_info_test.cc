@@ -35,7 +35,7 @@ class ImdsTokenInfoTest : public testing::Test {
 
 TEST_F(ImdsTokenInfoTest, SimpleSuccess) {
   // Call function under test.
-  Envoy::Http::MessagePtr got_msg =
+  Envoy::Http::RequestMessagePtr got_msg =
       info_->prepareRequest("https://imds-url.com/path2");
 
   // Assert success.

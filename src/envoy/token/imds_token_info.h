@@ -26,7 +26,7 @@ class ImdsTokenInfo : public TokenInfo {
  public:
   ImdsTokenInfo();
 
-  Envoy::Http::MessagePtr prepareRequest(
+  Envoy::Http::RequestMessagePtr prepareRequest(
       absl::string_view token_url) const override;
   bool parseAccessToken(absl::string_view response,
                         TokenResult* ret) const override;

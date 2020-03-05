@@ -54,7 +54,7 @@ IamTokenInfo::IamTokenInfo(
       include_email_(include_email),
       access_token_fn_(access_token_fn) {}
 
-Envoy::Http::MessagePtr IamTokenInfo::prepareRequest(
+Envoy::Http::RequestMessagePtr IamTokenInfo::prepareRequest(
     absl::string_view token_url) const {
   const std::string access_token = access_token_fn_();
   // Wait for the access token to be set.
@@ -68,13 +68,14 @@ Envoy::Http::MessagePtr IamTokenInfo::prepareRequest(
 
   absl::string_view host, path;
   Http::Utility::extractHostPathFromUri(token_url, host, path);
-  Envoy::Http::HeaderMapImplPtr headers{new Envoy::Http::HeaderMapImpl{
-      {Envoy::Http::Headers::get().Method, "POST"},
-      {Envoy::Http::Headers::get().Host, std::string(host)},
-      {Envoy::Http::Headers::get().Path, std::string(path)},
-      {kAuthorizationKey, "Bearer " + access_token}}};
+  auto headers =
+      Envoy::Http::createHeaderMap<Envoy::Http::RequestHeaderMapImpl>(
+          {{Envoy::Http::Headers::get().Method, "POST"},
+           {Envoy::Http::Headers::get().Host, std::string(host)},
+           {Envoy::Http::Headers::get().Path, std::string(path)},
+           {kAuthorizationKey, "Bearer " + access_token}});
 
-  Envoy::Http::MessagePtr message(
+  Envoy::Http::RequestMessagePtr message(
       new Envoy::Http::RequestMessageImpl(std::move(headers)));
 
   Envoy::ProtobufWkt::Value body;

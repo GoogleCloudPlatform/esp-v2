@@ -37,14 +37,14 @@ class ServiceControlHandler {
 
   // Make an async check call.
   // The headers could be modified by adding some.
-  virtual void callCheck(Http::HeaderMap& headers,
+  virtual void callCheck(Http::RequestHeaderMap& headers,
                          Envoy::Tracing::Span& parent_span,
                          CheckDoneCallback& callback) PURE;
 
   // Make a report call.
-  virtual void callReport(const Http::HeaderMap* request_headers,
-                          const Http::HeaderMap* response_headers,
-                          const Http::HeaderMap* response_trailers,
+  virtual void callReport(const Http::RequestHeaderMap* request_headers,
+                          const Http::ResponseHeaderMap* response_headers,
+                          const Http::ResponseTrailerMap* response_trailers,
                           std::chrono::system_clock::time_point now) PURE;
 
   // If the stream report interval has passed,
@@ -55,7 +55,7 @@ class ServiceControlHandler {
   // Process the response header to get the information needed for sending
   // intermediate reports.
   virtual void processResponseHeaders(
-      const Http::HeaderMap& response_headers) PURE;
+      const Http::ResponseHeaderMap& response_headers) PURE;
 
   // The request is about to be destroyed need to cancel all async requests.
   virtual void onDestroy() PURE;
@@ -67,7 +67,7 @@ class ServiceControlHandlerFactory {
   virtual ~ServiceControlHandlerFactory() = default;
 
   virtual ServiceControlHandlerPtr createHandler(
-      const Http::HeaderMap& headers,
+      const Http::RequestHeaderMap& headers,
       const StreamInfo::StreamInfo& stream_info) const PURE;
 };
 

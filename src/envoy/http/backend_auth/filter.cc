@@ -30,7 +30,7 @@ namespace BackendAuth {
 using Http::FilterDataStatus;
 using Http::FilterHeadersStatus;
 using Http::FilterTrailersStatus;
-using Http::HeaderMap;
+using Http::RequestHeaderMap;
 
 namespace {
 constexpr char kBearer[] = "Bearer ";
@@ -43,9 +43,9 @@ typedef ConstSingleton<RcDetailsValues> RcDetails;
 
 }  // namespace
 
-FilterHeadersStatus Filter::decodeHeaders(HeaderMap& headers, bool) {
+FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   absl::string_view operation = Utils::getStringFilterState(
-      decoder_callbacks_->streamInfo().filterState(), Utils::kOperation);
+      *decoder_callbacks_->streamInfo().filterState(), Utils::kOperation);
   // NOTE: this shouldn't happen in practice because Path Matcher filter would
   // have already rejected the request.
   if (operation.empty()) {
