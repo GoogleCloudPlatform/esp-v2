@@ -53,9 +53,7 @@ class RequestBuilder final {
   // These buffers may be freed after the FillCheckRequest call.
   ::google::protobuf::util::Status FillCheckRequest(
       const CheckRequestInfo& info,
-      ::google::api::servicecontrol::v1::CheckRequest* request,
-      std::chrono::system_clock::time_point now =
-          std::chrono::system_clock::now()) const;
+      ::google::api::servicecontrol::v1::CheckRequest* request) const;
 
   ::google::protobuf::util::Status FillAllocateQuotaRequest(
       const QuotaRequestInfo& info,
@@ -66,9 +64,7 @@ class RequestBuilder final {
   // These buffers may be freed after the FillReportRequest call.
   ::google::protobuf::util::Status FillReportRequest(
       const ReportRequestInfo& info,
-      ::google::api::servicecontrol::v1::ReportRequest* request,
-      std::chrono::system_clock::time_point now =
-          std::chrono::system_clock::now()) const;
+      ::google::api::servicecontrol::v1::ReportRequest* request) const;
 
   // Append a new consumer project Operations to the ReportRequest, if customer
   // project id from the CheckResponse is not empty
