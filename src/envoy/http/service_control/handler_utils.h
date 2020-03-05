@@ -33,7 +33,7 @@ namespace ServiceControl {
 bool extractAPIKey(
     const Http::HeaderMap& headers,
     const ::google::protobuf::RepeatedPtrField<
-        ::google::api::envoy::http::service_control::APIKeyLocation>& locations,
+        ::google::api::envoy::http::service_control::ApiKeyLocation>& locations,
     std::string& api_key);
 
 // Adds information from the `FilterConfig`'s gcp_attributes to the given info.
@@ -55,13 +55,13 @@ void fillLatency(const StreamInfo::StreamInfo& stream_info,
                  ::google::api_proxy::service_control::LatencyInfo& latency);
 
 // Fills the jwt payload of the info provided
-void fillJwtPayloads(const envoy::config::core::v3alpha::Metadata& metadata,
+void fillJwtPayloads(const envoy::config::core::v3::Metadata& metadata,
                      const std::string& jwt_payload_metadata_name,
                      const ::google::protobuf::RepeatedPtrField<::std::string>&
                          jwt_payload_paths,
                      std::string& info_jwt_payloads);
 
-void fillJwtPayload(const envoy::config::core::v3alpha::Metadata& metadata,
+void fillJwtPayload(const envoy::config::core::v3::Metadata& metadata,
                     const std::string& jwt_payload_metadata_name,
                     const std::string& jwt_payload_path,
                     std::string& info_iss_or_aud);

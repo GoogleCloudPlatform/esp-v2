@@ -4,3 +4,7 @@ bin/
 *.pyc
 node_modules/
 src/go/proto/
+
+# C++ coverage
+generated/
+third_party/tools/coverage/BUILD

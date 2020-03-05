@@ -42,3 +42,11 @@ envoy_proto_library(
         "@envoy//test/fuzz:common_proto",
     ],
 )
+
+envoy_proto_library(
+    name = "auth_token_proto",
+    srcs = ["auth_token.proto"],
+    deps = [
+        "@envoy//test/fuzz:common_proto",
+    ],
+)

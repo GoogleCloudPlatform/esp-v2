@@ -28,8 +28,9 @@ using Http::FilterHeadersStatus;
 
 Filter::Filter(FilterConfigSharedPtr config) : config_(config) {}
 
-FilterHeadersStatus Filter::decodeHeaders(Http::HeaderMap& headers, bool) {
-  const auto& filter_state = decoder_callbacks_->streamInfo().filterState();
+FilterHeadersStatus Filter::decodeHeaders(Http::RequestHeaderMap& headers,
+                                          bool) {
+  const auto& filter_state = *decoder_callbacks_->streamInfo().filterState();
   absl::string_view operation =
       Utils::getStringFilterState(filter_state, Utils::kOperation);
   // NOTE: this shouldn't happen in practice because Path Matcher filter would

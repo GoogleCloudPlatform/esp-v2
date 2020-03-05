@@ -33,20 +33,23 @@ const (
 	TestAsymmetricKeysTraces
 	TestAuthJwksCache
 	TestBackendAuthDisableAuth
+	TestBackendAuthUsingIamIdTokenWithDelegates
+	TestBackendAuthWithIamIdToken
+	TestBackendAuthWithIamIdTokenRetries
 	TestBackendAuthWithImdsIdToken
 	TestBackendAuthWithImdsIdTokenRetries
 	TestBackendAuthWithImdsIdTokenWhileAllowCors
-	TestBackendAuthWithIamIdToken
-	TestBackendAuthWithIamIdTokenRetries
-	TestBackendAuthUsingIamIdTokenWithDelegates
-	TestIamImdsDataPath
+	TestDeadlinesForCatchAllBackend
+	TestDeadlinesForDynamicRouting
+	TestDeadlinesForGrpcCatchAllBackend
+	TestDeadlinesForGrpcDynamicRouting
 	TestDifferentOriginPreflightCors
 	TestDifferentOriginSimpleCors
-	TestDynamicRouting
 	TestDynamicBackendRoutingTLS
 	TestDynamicBackendRoutingMutualTLS
-	TestDynamicRoutingWithAllowCors
+	TestDynamicRouting
 	TestDynamicRoutingCorsByEnvoy
+	TestDynamicRoutingWithAllowCors
 	TestGRPC
 	TestGrpcBackendPreflightCors
 	TestGrpcBackendSimpleCors
@@ -55,24 +58,23 @@ const (
 	TestGRPCInteropMiniStress
 	TestGRPCInterops
 	TestGRPCJwt
+	TestGRPCLongStreaming
 	TestGRPCMetadata
 	TestGRPCMinistress
 	TestGRPCStreaming
-	TestGRPCLongStreaming
 	TestGRPCWeb
-	TestHttpsClients
 	TestHttp1Basic
 	TestHttp1JWT
+	TestHttpsClients
+	TestIamImdsDataPath
 	TestInvalidOpenIDConnectDiscovery
-	TestDeadlinesForCatchAllBackend
-	TestDeadlinesForDynamicRouting
-	TestDeadlinesForGrpcCatchAllBackend
-	TestDeadlinesForGrpcDynamicRouting
+	TestJwtLocations
 	TestManagedServiceConfig
 	TestMultiGrpcServices
 	TestPreflightCorsWithBasicPreset
 	TestPreflightRequestWithAllowCors
 	TestReportGCPAttributes
+	TestServiceControlAccessToken
 	TestServiceControlAllHTTPMethod
 	TestServiceControlAllHTTPPath
 	TestServiceControlAPIKeyCustomLocation
@@ -80,7 +82,6 @@ const (
 	TestServiceControlAPIKeyIpRestriction
 	TestServiceControlAPIKeyRestriction
 	TestServiceControlBasic
-	TestServiceControlAccessToken
 	TestServiceControlCache
 	TestServiceControlCheckError
 	TestServiceControlCheckRetry
@@ -88,12 +89,12 @@ const (
 	TestServiceControlCheckTracesWithRetry
 	TestServiceControlCheckWrongServerName
 	TestServiceControlCredentialId
+	TestServiceControlFailedRequestReport
 	TestServiceControlJwtAuthFail
 	TestServiceControlLogHeaders
 	TestServiceControlLogJwtPayloads
 	TestServiceControlNetworkFailFlagClosed
 	TestServiceControlNetworkFailFlagOpen
-	TestServiceControlFailedRequestReport
 	TestServiceControlProtocolWithGRPCBackend
 	TestServiceControlProtocolWithHTTPBackend
 	TestServiceControlQuota
@@ -108,9 +109,9 @@ const (
 	TestServiceControlRequestWithoutAllowCors
 	TestServiceControlSkipUsage
 	TestServiceControlSkipUsageTraces
-	TestServiceManagementWithValidCert
-	TestServiceManagementWithInvalidCert
 	TestServiceControlTLSWithValidCert
+	TestServiceManagementWithInvalidCert
+	TestServiceManagementWithValidCert
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
 	TestTranscodingBindings

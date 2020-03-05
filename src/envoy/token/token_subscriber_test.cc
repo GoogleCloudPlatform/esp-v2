@@ -58,7 +58,7 @@ class TokenSubscriberTest : public testing::Test {
     // Setup mock http async client.
     EXPECT_CALL(context_.cluster_manager_.async_client_, send_(_, _, _))
         .WillRepeatedly(
-            Invoke([this](Envoy::Http::MessagePtr& message,
+            Invoke([this](Envoy::Http::RequestMessagePtr& message,
                           Envoy::Http::AsyncClient::Callbacks& callback,
                           const Envoy::Http::AsyncClient::RequestOptions&) {
               call_count_++;
@@ -100,7 +100,7 @@ class TokenSubscriberTest : public testing::Test {
 
   // Mocks for remote request.
   Envoy::Http::AsyncClient::Callbacks* client_callback_;
-  Envoy::Http::MessagePtr message_;
+  Envoy::Http::RequestMessagePtr message_;
   int call_count_ = 0;
 
   // Mocks for init.
@@ -135,8 +135,9 @@ TEST_F(TokenSubscriberTest, HandleMissingPreconditions) {
 
 TEST_F(TokenSubscriberTest, VerifyRemoteRequest) {
   // Setup fake remote request.
-  Envoy::Http::HeaderMapImplPtr headers{new Envoy::Http::TestHeaderMapImpl{
-      {":method", "POST"}, {":authority", "TestValue"}}};
+  Envoy::Http::RequestHeaderMapPtr headers(
+      new Envoy::Http::TestRequestHeaderMapImpl(
+          {{":method", "POST"}, {":authority", "TestValue"}}));
   EXPECT_CALL(*info_, prepareRequest(token_url_))
       .Times(1)
       .WillRepeatedly(
@@ -162,8 +163,8 @@ TEST_F(TokenSubscriberTest, VerifyRemoteRequest) {
 
 TEST_F(TokenSubscriberTest, ProcessNon200Response) {
   // Setup fake remote request.
-  Envoy::Http::HeaderMapImplPtr req_headers{
-      new Envoy::Http::TestHeaderMapImpl{}};
+  Envoy::Http::RequestHeaderMapPtr req_headers(
+      new Envoy::Http::TestRequestHeaderMapImpl());
   EXPECT_CALL(*info_, prepareRequest(token_url_))
       .Times(1)
       .WillRepeatedly(
@@ -178,11 +179,12 @@ TEST_F(TokenSubscriberTest, ProcessNon200Response) {
   setUp(TokenType::IdentityToken);
 
   // Setup fake response.
-  Envoy::Http::HeaderMapImplPtr resp_headers{new Envoy::Http::TestHeaderMapImpl{
-      {":status", "504"},
-  }};
-  Envoy::Http::MessagePtr response(
-      new Envoy::Http::RequestMessageImpl(std::move(resp_headers)));
+  Envoy::Http::ResponseHeaderMapPtr resp_headers(
+      new Envoy::Http::TestResponseHeaderMapImpl({
+          {":status", "504"},
+      }));
+  Envoy::Http::ResponseMessagePtr response(
+      new Envoy::Http::ResponseMessageImpl(std::move(resp_headers)));
 
   // Start the response.
   client_callback_->onSuccess(std::move(response));
@@ -194,8 +196,8 @@ TEST_F(TokenSubscriberTest, ProcessNon200Response) {
 
 TEST_F(TokenSubscriberTest, ProcessMissingStatusResponse) {
   // Setup fake remote request.
-  Envoy::Http::HeaderMapImplPtr req_headers{
-      new Envoy::Http::TestHeaderMapImpl{}};
+  Envoy::Http::RequestHeaderMapPtr req_headers(
+      new Envoy::Http::TestRequestHeaderMapImpl());
   EXPECT_CALL(*info_, prepareRequest(token_url_))
       .Times(1)
       .WillRepeatedly(
@@ -210,10 +212,10 @@ TEST_F(TokenSubscriberTest, ProcessMissingStatusResponse) {
   setUp(TokenType::IdentityToken);
 
   // Setup fake response.
-  Envoy::Http::HeaderMapImplPtr resp_headers{
-      new Envoy::Http::TestHeaderMapImpl{}};
-  Envoy::Http::MessagePtr response(
-      new Envoy::Http::RequestMessageImpl(std::move(resp_headers)));
+  Envoy::Http::ResponseHeaderMapPtr resp_headers(
+      new Envoy::Http::TestResponseHeaderMapImpl());
+  Envoy::Http::ResponseMessagePtr response(
+      new Envoy::Http::ResponseMessageImpl(std::move(resp_headers)));
 
   // Start the response.
   client_callback_->onSuccess(std::move(response));
@@ -225,8 +227,8 @@ TEST_F(TokenSubscriberTest, ProcessMissingStatusResponse) {
 
 TEST_F(TokenSubscriberTest, BadParseIdentityToken) {
   // Setup fake remote request.
-  Envoy::Http::HeaderMapImplPtr req_headers{
-      new Envoy::Http::TestHeaderMapImpl{}};
+  Envoy::Http::RequestHeaderMapPtr req_headers(
+      new Envoy::Http::TestRequestHeaderMapImpl());
   EXPECT_CALL(*info_, prepareRequest(token_url_))
       .Times(1)
       .WillRepeatedly(
@@ -244,11 +246,12 @@ TEST_F(TokenSubscriberTest, BadParseIdentityToken) {
   setUp(TokenType::IdentityToken);
 
   // Setup fake response.
-  Envoy::Http::HeaderMapImplPtr resp_headers{new Envoy::Http::TestHeaderMapImpl{
-      {":status", "200"},
-  }};
-  Envoy::Http::MessagePtr response(
-      new Envoy::Http::RequestMessageImpl(std::move(resp_headers)));
+  Envoy::Http::ResponseHeaderMapPtr resp_headers(
+      new Envoy::Http::TestResponseHeaderMapImpl({
+          {":status", "200"},
+      }));
+  Envoy::Http::ResponseMessagePtr response(
+      new Envoy::Http::ResponseMessageImpl(std::move(resp_headers)));
 
   // Start the response.
   client_callback_->onSuccess(std::move(response));
@@ -260,8 +263,8 @@ TEST_F(TokenSubscriberTest, BadParseIdentityToken) {
 
 TEST_F(TokenSubscriberTest, BadParseAccessToken) {
   // Setup fake remote request.
-  Envoy::Http::HeaderMapImplPtr req_headers{
-      new Envoy::Http::TestHeaderMapImpl{}};
+  Envoy::Http::RequestHeaderMapPtr req_headers(
+      new Envoy::Http::TestRequestHeaderMapImpl());
   EXPECT_CALL(*info_, prepareRequest(token_url_))
       .Times(1)
       .WillRepeatedly(
@@ -279,11 +282,12 @@ TEST_F(TokenSubscriberTest, BadParseAccessToken) {
   setUp(TokenType::AccessToken);
 
   // Setup fake response.
-  Envoy::Http::HeaderMapImplPtr resp_headers{new Envoy::Http::TestHeaderMapImpl{
-      {":status", "200"},
-  }};
-  Envoy::Http::MessagePtr response(
-      new Envoy::Http::RequestMessageImpl(std::move(resp_headers)));
+  Envoy::Http::ResponseHeaderMapPtr resp_headers(
+      new Envoy::Http::TestResponseHeaderMapImpl({
+          {":status", "200"},
+      }));
+  Envoy::Http::ResponseMessagePtr response(
+      new Envoy::Http::ResponseMessageImpl(std::move(resp_headers)));
 
   // Start the response.
   client_callback_->onSuccess(std::move(response));
@@ -295,8 +299,8 @@ TEST_F(TokenSubscriberTest, BadParseAccessToken) {
 
 TEST_F(TokenSubscriberTest, Success) {
   // Setup fake remote request.
-  Envoy::Http::HeaderMapImplPtr req_headers{
-      new Envoy::Http::TestHeaderMapImpl{}};
+  Envoy::Http::RequestHeaderMapPtr req_headers(
+      new Envoy::Http::TestRequestHeaderMapImpl());
   EXPECT_CALL(*info_, prepareRequest(token_url_))
       .Times(1)
       .WillRepeatedly(
@@ -321,11 +325,12 @@ TEST_F(TokenSubscriberTest, Success) {
   setUp(TokenType::AccessToken);
 
   // Setup fake response.
-  Envoy::Http::HeaderMapImplPtr resp_headers{new Envoy::Http::TestHeaderMapImpl{
-      {":status", "200"},
-  }};
-  Envoy::Http::MessagePtr response(
-      new Envoy::Http::RequestMessageImpl(std::move(resp_headers)));
+  Envoy::Http::ResponseHeaderMapPtr resp_headers(
+      new Envoy::Http::TestResponseHeaderMapImpl({
+          {":status", "200"},
+      }));
+  Envoy::Http::ResponseMessagePtr response(
+      new Envoy::Http::ResponseMessageImpl(std::move(resp_headers)));
 
   // Start the response.
   client_callback_->onSuccess(std::move(response));
@@ -339,8 +344,8 @@ TEST_F(TokenSubscriberTest, RetryMissingPreconditionThenSuccess) {
   // Part 1: Failed due to missing precondition
 
   // Setup mocks for info. Fail on the first time, then work later.
-  Envoy::Http::HeaderMapImplPtr req_headers{
-      new Envoy::Http::TestHeaderMapImpl{}};
+  Envoy::Http::RequestHeaderMapPtr req_headers(
+      new Envoy::Http::TestRequestHeaderMapImpl());
   EXPECT_CALL(*info_, prepareRequest(_))
       .WillOnce(Return(ByMove(nullptr)))
       .WillRepeatedly(
@@ -373,11 +378,12 @@ TEST_F(TokenSubscriberTest, RetryMissingPreconditionThenSuccess) {
   timer_cb_();
 
   // Setup fake response.
-  Envoy::Http::HeaderMapImplPtr resp_headers{new Envoy::Http::TestHeaderMapImpl{
-      {":status", "200"},
-  }};
-  Envoy::Http::MessagePtr response(
-      new Envoy::Http::RequestMessageImpl(std::move(resp_headers)));
+  Envoy::Http::ResponseHeaderMapPtr resp_headers(
+      new Envoy::Http::TestResponseHeaderMapImpl({
+          {":status", "200"},
+      }));
+  Envoy::Http::ResponseMessagePtr response(
+      new Envoy::Http::ResponseMessageImpl(std::move(resp_headers)));
 
   // Start the response.
   client_callback_->onSuccess(std::move(response));

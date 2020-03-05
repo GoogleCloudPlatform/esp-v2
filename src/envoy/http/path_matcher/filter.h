@@ -29,7 +29,8 @@ class Filter : public Http::PassThroughDecoderFilter,
  public:
   Filter(FilterConfigSharedPtr config) : config_(config) {}
 
-  Http::FilterHeadersStatus decodeHeaders(Http::HeaderMap&, bool) override;
+  Http::FilterHeadersStatus decodeHeaders(Http::RequestHeaderMap&,
+                                          bool) override;
 
  private:
   void rejectRequest(Http::Code code, absl::string_view error_msg);

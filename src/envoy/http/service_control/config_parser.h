@@ -106,7 +106,7 @@ class FilterConfigParser {
     return requirement_it->second.get();
   }
 
-  const ::google::api::envoy::http::service_control::APIKeyRequirement&
+  const ::google::api::envoy::http::service_control::ApiKeyRequirement&
   default_api_keys() const {
     return default_api_keys_;
   }
@@ -126,7 +126,7 @@ class FilterConfigParser {
   // Service name to ServiceContext map.
   absl::flat_hash_map<std::string, ServiceContextPtr> service_map_;
   // The default locations to extract api-key.
-  ::google::api::envoy::http::service_control::APIKeyRequirement
+  ::google::api::envoy::http::service_control::ApiKeyRequirement
       default_api_keys_;
 };
 

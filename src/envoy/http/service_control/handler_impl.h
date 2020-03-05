@@ -38,7 +38,7 @@ namespace ServiceControl {
 class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
                                   public ServiceControlHandler {
  public:
-  ServiceControlHandlerImpl(const Http::HeaderMap& headers,
+  ServiceControlHandlerImpl(const Http::RequestHeaderMap& headers,
                             const StreamInfo::StreamInfo& stream_info,
                             const std::string& uuid,
                             const FilterConfigParser& cfg_parser,
@@ -46,18 +46,20 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
                                 std::chrono::system_clock::now());
   ~ServiceControlHandlerImpl() override;
 
-  void callCheck(Http::HeaderMap& headers, Envoy::Tracing::Span& parent_span,
+  void callCheck(Http::RequestHeaderMap& headers,
+                 Envoy::Tracing::Span& parent_span,
                  CheckDoneCallback& callback) override;
 
-  void callReport(const Http::HeaderMap* request_headers,
-                  const Http::HeaderMap* response_headers,
-                  const Http::HeaderMap* response_trailers,
+  void callReport(const Http::RequestHeaderMap* request_headers,
+                  const Http::ResponseHeaderMap* response_headers,
+                  const Http::ResponseTrailerMap* response_trailers,
                   std::chrono::system_clock::time_point now) override;
 
   void tryIntermediateReport(
       std::chrono::system_clock::time_point now) override;
 
-  void processResponseHeaders(const Http::HeaderMap& response_headers) override;
+  void processResponseHeaders(
+      const Http::ResponseHeaderMap& response_headers) override;
 
   void onDestroy() override;
 
@@ -88,7 +90,8 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   bool hasApiKey() const { return !api_key_.empty(); }
 
   void onCheckResponse(
-      Http::HeaderMap& headers, const ::google::protobuf::util::Status& status,
+      Http::RequestHeaderMap& headers,
+      const ::google::protobuf::util::Status& status,
       const ::google::api_proxy::service_control::CheckResponseInfo&
           response_info);
 
@@ -133,7 +136,7 @@ class ServiceControlHandlerFactoryImpl : public ServiceControlHandlerFactory {
       : random_(random), cfg_parser_(cfg_parser) {}
 
   ServiceControlHandlerPtr createHandler(
-      const Http::HeaderMap& headers,
+      const Http::RequestHeaderMap& headers,
       const StreamInfo::StreamInfo& stream_info) const override {
     return std::make_unique<ServiceControlHandlerImpl>(
         headers, stream_info, random_.uuid(), cfg_parser_);

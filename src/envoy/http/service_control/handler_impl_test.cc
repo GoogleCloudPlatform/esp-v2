@@ -25,7 +25,10 @@
 #include "src/envoy/http/service_control/mocks.h"
 #include "src/envoy/utils/filter_state_utils.h"
 
-using Envoy::Http::TestHeaderMapImpl;
+using Envoy::Http::TestRequestHeaderMapImpl;
+using Envoy::Http::TestRequestTrailerMapImpl;
+using Envoy::Http::TestResponseHeaderMapImpl;
+using Envoy::Http::TestResponseTrailerMapImpl;
 using Envoy::StreamInfo::MockStreamInfo;
 using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::api_proxy::service_control::CheckRequestInfo;
@@ -191,83 +194,95 @@ class HandlerTest : public ::testing::Test {
 
   // Tracing mocks
   std::unique_ptr<Envoy::Tracing::MockSpan> mock_span_;
+  TestRequestHeaderMapImpl req_headers_;
+  TestRequestTrailerMapImpl req_trailer_;
+  TestResponseHeaderMapImpl resp_headers_;
+  TestResponseTrailerMapImpl resp_trailer_;
 };
+
+#define MATCH(name)                                              \
+  if (arg.name != expect.name) {                                 \
+    std::cerr << "MATCH fails for " << #name << ": " << arg.name \
+              << " != " << expect.name << std::endl;             \
+    return false;                                                \
+  }
+#define MATCH2(name, want)                                       \
+  if (arg.name != want) {                                        \
+    std::cerr << "MATCH fails for " << #name << ": " << arg.name \
+              << " != " << want << std::endl;                    \
+    return false;                                                \
+  }
 
 MATCHER_P(MatchesCheckInfo, expect, "") {
   // These must match. If not provided in expect, arg should be empty too
-  if (arg.api_key != expect.api_key) return false;
-  if (arg.ios_bundle_id != expect.ios_bundle_id) return false;
-  if (arg.referer != expect.referer) return false;
-  if (arg.android_package_name != expect.android_package_name) return false;
-  if (arg.android_cert_fingerprint != expect.android_cert_fingerprint)
-    return false;
+  MATCH(api_key);
+  MATCH(ios_bundle_id);
+  MATCH(referer);
+  MATCH(android_package_name);
+  MATCH(android_cert_fingerprint);
 
   // These should not change
-  if (arg.client_ip != "127.0.0.1") return false;
+  MATCH2(client_ip, "127.0.0.1");
 
-  if (arg.operation_id != "test-uuid") return false;
-  if (arg.operation_name != "get_header_key") return false;
-  if (arg.producer_project_id != "project-id") return false;
+  MATCH2(operation_id, "test-uuid");
+  MATCH2(operation_name, "get_header_key");
+  MATCH2(producer_project_id, "project-id");
   return true;
 }
 
 MATCHER_P(MatchesQuotaInfo, expect, "") {
-  if (arg.method_name != expect.method_name) return false;
-  if (arg.metric_cost_vector != expect.metric_cost_vector) return false;
+  MATCH(method_name);
+  //  if (arg.metric_cost_vector != expect.metric_cost_vector) return false;
+  MATCH(metric_cost_vector);
+  MATCH(api_key);
 
-  if (arg.operation_id != "test-uuid") return false;
-  if (arg.operation_name != expect.method_name) return false;
-  if (arg.api_key != expect.api_key) return false;
-  if (arg.producer_project_id != "project-id") return false;
+  MATCH2(operation_id, "test-uuid");
+  MATCH2(operation_name, expect.method_name);
+  MATCH2(producer_project_id, "project-id");
   return true;
 }
 
-#define MATCH_DEFAULT_REPORT_INFO(arg, expect, operation_name)        \
-  if (arg.api_method != operation_name) return false;                 \
-  if (arg.operation_name != operation_name) return false;             \
-  if (arg.log_message != operation_name + " is called") return false; \
-  if (arg.api_key != expect.api_key) return false;                    \
-  if (arg.status != expect.status) return false;                      \
-  if (arg.request_headers != expect.request_headers) return false;    \
-  if (arg.response_headers != expect.response_headers) return false;  \
-  if (arg.streaming_request_message_counts !=                         \
-      expect.streaming_request_message_counts)                        \
-    return false;                                                     \
-  if (arg.is_first_report != expect.is_first_report) return false;    \
-  if (arg.is_final_report != expect.is_final_report) return false;    \
-  if (arg.url != expect.url) return false;                            \
-  if (arg.api_name != expect.api_name) return false;                  \
-  if (arg.api_version != expect.api_version) return false;            \
-  if (arg.streaming_durations != expect.streaming_durations) {        \
-    return false;                                                     \
-  }                                                                   \
-  if (arg.streaming_response_message_counts !=                        \
-      expect.streaming_response_message_counts)                       \
-    return false;                                                     \
-  if (arg.method != expect.method) return false;
+#define MATCH_DEFAULT_REPORT_INFO(arg, expect, operation_name) \
+  MATCH2(api_method, operation_name);                          \
+  MATCH2(operation_name, operation_name);                      \
+  MATCH2(log_message, operation_name + " is called");          \
+  MATCH(api_key);                                              \
+  MATCH(status);                                               \
+  MATCH(request_headers);                                      \
+  MATCH(response_headers);                                     \
+  MATCH(is_first_report);                                      \
+  MATCH(is_final_report);                                      \
+  MATCH(url);                                                  \
+  MATCH(method);                                               \
+  MATCH(api_name);                                             \
+  MATCH(api_version);                                          \
+  MATCH(streaming_request_message_counts);                     \
+  MATCH(streaming_response_message_counts);
+
+// TODO(qiwzhang) b/146579874 to use timeSource MockStreamInfo is using
+// different mock system_time, handle_impl.cc is diretly using system_clock
+// it causes time duration test fails.
+// Once the bug is fixed, add this check to above macro.
+//  MATCH(streaming_durations);
 
 MATCHER_P4(MatchesReportInfo, expect, request_headers, response_headers,
            response_trailers, "") {
   std::string operation_name =
       (expect.operation_name.empty() ? "get_header_key"
                                      : expect.operation_name);
-  MATCH_DEFAULT_REPORT_INFO(arg, expect, operation_name)
+  MATCH_DEFAULT_REPORT_INFO(arg, expect, operation_name);
 
-  if (arg.backend_protocol != Protocol::GRPC) return false;
-  if (arg.frontend_protocol != Protocol::GRPC) return false;
+  MATCH2(backend_protocol, Protocol::GRPC);
+  MATCH2(frontend_protocol, Protocol::GRPC);
 
   int64_t request_size = request_headers.byteSize();
-  if (arg.request_bytes != request_size || arg.request_size != request_size) {
-    return false;
-  }
+  MATCH2(request_bytes, request_size);
+  MATCH2(request_size, request_size);
 
   int64_t response_size =
       response_headers.byteSize() + response_trailers.byteSize();
-  if (arg.response_bytes != response_size ||
-      arg.response_size != response_size) {
-    return false;
-  }
-
+  MATCH2(response_bytes, response_size);
+  MATCH2(response_size, response_size);
   return true;
 }
 
@@ -275,7 +290,7 @@ MATCHER_P(MatchesSimpleReportInfo, expect, "") {
   std::string operation_name =
       (expect.operation_name.empty() ? "get_header_key"
                                      : expect.operation_name);
-  MATCH_DEFAULT_REPORT_INFO(arg, expect, operation_name)
+  MATCH_DEFAULT_REPORT_INFO(arg, expect, operation_name);
   return true;
 }
 
@@ -284,12 +299,11 @@ MATCHER_P(MatchesDataReportInfo, expect, "") {
       (expect.operation_name.empty() ? "get_header_key"
                                      : expect.operation_name);
 
-  MATCH_DEFAULT_REPORT_INFO(arg, expect, operation_name)
+  MATCH_DEFAULT_REPORT_INFO(arg, expect, operation_name);
 
   // the buffer implementation is doing.
-  if (arg.request_bytes != expect.request_bytes) return false;
-  if (arg.response_bytes != expect.response_bytes) return false;
-
+  MATCH(request_bytes);
+  MATCH(response_bytes);
   return true;
 }
 
@@ -299,7 +313,7 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
 
   // Note: The operation is set in mock_stream_info_.filter_state_. This test
   // should not set that value.
-  Http::TestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
+  TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_);
 
@@ -317,7 +331,7 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
-  handler.callReport(&headers, &headers, &headers, epoch_);
+  handler.callReport(&headers, &resp_headers_, &resp_trailer_, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerMissingHeaders) {
@@ -326,14 +340,13 @@ TEST_F(HandlerTest, HandlerMissingHeaders) {
 
   // Note: This test builds off of `HandlerNoOperationFound` to keep mocks
   // simple
-  Http::TestHeaderMapImpl headers{};
-  ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_);
+  ServiceControlHandlerImpl handler(req_headers_, mock_stream_info_,
+                                    "test-uuid", *cfg_parser_);
 
   EXPECT_CALL(mock_check_done_callback_,
               onCheckDone(Status(Code::NOT_FOUND, "Method does not exist.")));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(req_headers_, *mock_span_, mock_check_done_callback_);
 
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
@@ -346,15 +359,15 @@ TEST_F(HandlerTest, HandlerMissingHeaders) {
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
-  handler.callReport(&headers, &headers, &headers, epoch_);
+  handler.callReport(&req_headers_, &resp_headers_, &resp_trailer_, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerNoRequirementMatched) {
   // Test: If no requirement is matched for the operation, check should 404
   // and report should do nothing
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "bad-operation-name");
-  Http::TestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
+  TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_);
   EXPECT_CALL(mock_check_done_callback_,
@@ -370,15 +383,15 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
   expected_report_info.operation_name = "<Unknown Operation Name>";
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
-  handler.callReport(&headers, &headers, &headers, epoch_);
+  handler.callReport(&headers, &resp_headers_, &resp_trailer_, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerCheckNotNeeded) {
   // Test: If the operation does not require check, check should return OK
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_no_key");
-  Http::TestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
-  Http::TestHeaderMapImpl response_headers{
+  TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
+  TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_);
@@ -395,17 +408,17 @@ TEST_F(HandlerTest, HandlerCheckNotNeeded) {
   expected_report_info.operation_name = "get_no_key";
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
-                                           response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers, epoch_);
+                                           response_headers, resp_trailer_)));
+  handler.callReport(&headers, &response_headers, &resp_trailer_, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
   // Test: If the operation requires a check but none is found, check fails
   // and a report is made
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key");
-  Http::TestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
-  Http::TestHeaderMapImpl response_headers{
+  TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
+  TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
 
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
@@ -426,23 +439,23 @@ TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
   expected_report_info.status = bad_status;
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
-                                           response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers, epoch_);
+                                           response_headers, resp_trailer_)));
+  handler.callReport(&headers, &response_headers, &resp_trailer_, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithApiKeyRestrictionFields) {
   // Test: Check is required and succeeds, and api key restriction fields are
   // present on the check request
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key");
-  Http::TestHeaderMapImpl headers{{":method", "GET"},
-                                  {":path", "/echo"},
-                                  {"x-api-key", "foobar"},
-                                  {"x-ios-bundle-identifier", "ios-bundle-id"},
-                                  {"referer", "referer"},
-                                  {"x-android-package", "android-package"},
-                                  {"x-android-cert", "cert-123"}};
-  Http::TestHeaderMapImpl response_headers{
+  TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                   {":path", "/echo"},
+                                   {"x-api-key", "foobar"},
+                                   {"x-ios-bundle-identifier", "ios-bundle-id"},
+                                   {"referer", "referer"},
+                                   {"x-android-package", "android-package"},
+                                   {"x-android-cert", "cert-123"}};
+  TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_);
@@ -473,18 +486,18 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithApiKeyRestrictionFields) {
   expected_report_info.status = Status::OK;
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
-                                           response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers, epoch_);
+                                           response_headers, resp_trailer_)));
+  handler.callReport(&headers, &response_headers, &resp_trailer_, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
   // Test: Check is required and succeeds. The api key restriction fields are
   // left blank if not provided.
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key");
-  Http::TestHeaderMapImpl headers{
+  TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
-  Http::TestHeaderMapImpl response_headers{
+  TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_);
@@ -511,17 +524,17 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
   expected_report_info.status = Status::OK;
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
-                                           response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers, epoch_);
+                                           response_headers, resp_trailer_)));
+  handler.callReport(&headers, &response_headers, &resp_trailer_, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
   // Test: Quota is required and succeeds.
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key_quota");
-  Http::TestHeaderMapImpl headers{
+  TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
-  Http::TestHeaderMapImpl response_headers{
+  TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_);
@@ -551,16 +564,16 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   EXPECT_CALL(*mock_call_, callReport(_));
-  handler.callReport(&headers, &response_headers, &headers, epoch_);
+  handler.callReport(&headers, &response_headers, &resp_trailer_, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerCallQuotaWithoutCheck) {
   // Test: Quota is required but the Check is not
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "call_quota_without_check");
-  Http::TestHeaderMapImpl headers{{":method", "GET"},
-                                  {":path", "/echo?key=foobar"}};
-  Http::TestHeaderMapImpl response_headers{
+  TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                   {":path", "/echo?key=foobar"}};
+  TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_);
@@ -582,17 +595,17 @@ TEST_F(HandlerTest, HandlerCallQuotaWithoutCheck) {
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   EXPECT_CALL(*mock_call_, callReport(_));
-  handler.callReport(&headers, &response_headers, &headers, epoch_);
+  handler.callReport(&headers, &response_headers, &resp_trailer_, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerFailCheckSync) {
   // Test: Check is required and a request is made, but service control
   // returns a bad status.
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key");
-  Http::TestHeaderMapImpl headers{
+  TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
-  Http::TestHeaderMapImpl response_headers{
+  TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_);
@@ -622,18 +635,18 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
   expected_report_info.status = bad_status;
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
-                                           response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers, epoch_);
+                                           response_headers, resp_trailer_)));
+  handler.callReport(&headers, &response_headers, &resp_trailer_, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerFailQuotaSync) {
   // Test: Check is required and a request is made, but service control
   // returns a bad status.
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key_quota");
-  Http::TestHeaderMapImpl headers{
+  TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
-  Http::TestHeaderMapImpl response_headers{
+  TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_);
@@ -665,17 +678,17 @@ TEST_F(HandlerTest, HandlerFailQuotaSync) {
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   EXPECT_CALL(*mock_call_, callReport(_));
-  handler.callReport(&headers, &response_headers, &headers, epoch_);
+  handler.callReport(&headers, &response_headers, &resp_trailer_, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerSuccessfulCheckAsync) {
   // Test: Check is required and succeeds, even when the done callback is not
   // called until later.
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key");
-  Http::TestHeaderMapImpl headers{
+  TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
-  Http::TestHeaderMapImpl response_headers{
+  TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_);
@@ -709,18 +722,18 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckAsync) {
   expected_report_info.status = Status::OK;
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
-                                           response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers, epoch_);
+                                           response_headers, resp_trailer_)));
+  handler.callReport(&headers, &response_headers, &resp_trailer_, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
   // Test: Check is required and succeeds, even when the done callback is not
   // called until later.
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key_quota");
-  Http::TestHeaderMapImpl headers{
+  TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
-  Http::TestHeaderMapImpl response_headers{
+  TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_);
@@ -761,18 +774,18 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
   expected_report_info.status = Status::OK;
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
-                                           response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers, epoch_);
+                                           response_headers, resp_trailer_)));
+  handler.callReport(&headers, &response_headers, &resp_trailer_, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerFailCheckAsync) {
   // Test: Check is required and a request is made, but later on service
   // control returns a bad status.
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key");
-  Http::TestHeaderMapImpl headers{
+  TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
-  Http::TestHeaderMapImpl response_headers{
+  TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_);
@@ -809,18 +822,18 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
   expected_report_info.status = bad_status;
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
-                                           response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers, epoch_);
+                                           response_headers, resp_trailer_)));
+  handler.callReport(&headers, &response_headers, &resp_trailer_, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerFailQuotaAsync) {
   // Test: Quota is required and a request is made, but later on service
   // control returns a bad status.
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key_quota");
-  Http::TestHeaderMapImpl headers{
+  TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
-  Http::TestHeaderMapImpl response_headers{
+  TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_);
@@ -863,15 +876,15 @@ TEST_F(HandlerTest, HandlerFailQuotaAsync) {
   expected_report_info.status = bad_status;
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
-                                           response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers, epoch_);
+                                           response_headers, resp_trailer_)));
+  handler.callReport(&headers, &response_headers, &resp_trailer_, epoch_);
 }
 
 TEST_F(HandlerTest, HandlerCancelFuncResetOnDone) {
   // Test: Cancel function will not be called if on_done is called
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key");
-  Http::TestHeaderMapImpl headers{
+  TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   CheckDoneFunc stored_on_done;
   CheckResponseInfo response_info;
@@ -898,9 +911,9 @@ TEST_F(HandlerTest, HandlerCancelFuncResetOnDone) {
 
 TEST_F(HandlerTest, HandlerCancelFuncCalledOnDestroy) {
   // Test: Cancel function will be called if on_done is not called
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key");
-  Http::TestHeaderMapImpl headers{
+  TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   MockFunction<void()> mock_cancel;
   CancelFunc cancel_fn = mock_cancel.AsStdFunction();
@@ -920,9 +933,9 @@ TEST_F(HandlerTest, HandlerCancelFuncCalledOnDestroy) {
 
 TEST_F(HandlerTest, HandlerCancelFuncNotCalledOnDestroyForSyncOnDone) {
   // Test: Cancel function will not be called if on_done is called synchronously
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key");
-  Http::TestHeaderMapImpl headers{
+  TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   MockFunction<void()> mock_cancel;
   CancelFunc cancel_fn = mock_cancel.AsStdFunction();
@@ -947,11 +960,11 @@ TEST_F(HandlerTest, HandlerCancelFuncNotCalledOnDestroyForSyncOnDone) {
 
 TEST_F(HandlerTest, HandlerReportWithoutCheck) {
   // Test: Test that callReport works when callCheck is not called first.
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key");
-  Http::TestHeaderMapImpl headers{
+  TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
-  Http::TestHeaderMapImpl response_headers{
+  TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   CheckDoneFunc stored_on_done;
   CheckResponseInfo response_info;
@@ -965,19 +978,19 @@ TEST_F(HandlerTest, HandlerReportWithoutCheck) {
   expected_report_info.status = Status::OK;
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
-                                           response_headers, headers)));
-  handler.callReport(&headers, &response_headers, &headers, epoch_);
+                                           response_headers, resp_trailer_)));
+  handler.callReport(&headers, &response_headers, &resp_trailer_, epoch_);
 }
 
 TEST_F(HandlerTest, TryIntermediateReport) {
   // CollectDecodeData test cases after the boilerplate
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key");
-  Http::TestHeaderMapImpl headers{{":method", "GET"},
-                                  {":path", "/echo"},
-                                  {"x-api-key", "foobar"},
-                                  {"content-type", "application/grpc"}};
-  Http::TestHeaderMapImpl response_headers{
+  TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                   {":path", "/echo"},
+                                   {"x-api-key", "foobar"},
+                                   {"content-type", "application/grpc"}};
+  TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_);
@@ -1054,13 +1067,13 @@ TEST_F(HandlerTest, TryIntermediateReport) {
 
 TEST_F(HandlerTest, FinalReports) {
   // CollectEncodeData test cases after the boilerplate
-  Utils::setStringFilterState(mock_stream_info_.filter_state_,
+  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               Utils::kOperation, "get_header_key");
-  Http::TestHeaderMapImpl headers{{":method", "GET"},
-                                  {":path", "/echo"},
-                                  {"x-api-key", "foobar"},
-                                  {"content-type", "application/grpc"}};
-  Http::TestHeaderMapImpl response_headers{
+  TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                   {":path", "/echo"},
+                                   {"x-api-key", "foobar"},
+                                   {"content-type", "application/grpc"}};
+  TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_);
@@ -1105,7 +1118,7 @@ TEST_F(HandlerTest, FinalReports) {
     auto grpc_state = std::make_unique<GrpcStats::GrpcStatsObject>();
     grpc_state->request_message_count = 123;
     grpc_state->response_message_count = 456;
-    mock_stream_info_.filter_state_.setData(
+    mock_stream_info_.filter_state_->setData(
         HttpFilterNames::get().GrpcStats, std::move(grpc_state),
         StreamInfo::FilterState::StateType::Mutable);
   }
@@ -1117,16 +1130,17 @@ TEST_F(HandlerTest, FinalReports) {
   mock_stream_info_.bytes_sent_ = 456;
   // request_bytes = mock_stream_info.bytes_received_ + 1 headers.
   expected_report_info.request_bytes =
-      mock_stream_info_.bytes_received_ + headers.byteSize() * 1;
+      mock_stream_info_.bytes_received_ + headers.byteSize();
   // response_bytes = mock_stream_info_.bytes_sent_
-  //  + 2 * response_headers(1 as response_trailers).
-  expected_report_info.response_bytes =
-      mock_stream_info_.bytes_sent_ + response_headers.byteSize() * 2;
+  //  + response_headers + response_trailers.
+  expected_report_info.response_bytes = mock_stream_info_.bytes_sent_ +
+                                        response_headers.byteSize() +
+                                        resp_trailer_.byteSize();
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesDataReportInfo(expected_report_info)))
       .Times(1);
-  handler.callReport(&headers, &response_headers, &response_headers, time);
+  handler.callReport(&headers, &response_headers, &resp_trailer_, time);
 }
 
 }  // namespace

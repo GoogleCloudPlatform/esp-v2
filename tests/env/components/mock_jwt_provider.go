@@ -90,6 +90,10 @@ func (fjs *FakeJwtService) SetupJwt(requestedProviders map[string]bool, ports *P
 			Issuer: config.Issuer,
 		}
 
+		if config.JwtLocations != nil {
+			provider.AuthProvider.JwtLocations = append(provider.AuthProvider.JwtLocations, config.JwtLocations...)
+		}
+
 		// Set auth uri
 		if config.IsNonexistent {
 			provider.AuthProvider.JwksUri = config.HardcodedJwksUri

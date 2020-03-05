@@ -50,7 +50,8 @@ class BackendAuthFilterTest : public ::testing::Test {
 };
 
 TEST_F(BackendAuthFilterTest, NoOperationName) {
-  Http::TestHeaderMapImpl headers{{":method", "GET"}, {":path", "/books/1"}};
+  Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                         {":path", "/books/1"}};
 
   EXPECT_CALL(*mock_filter_config_, cfg_parser).Times(0);
 
@@ -61,9 +62,10 @@ TEST_F(BackendAuthFilterTest, NoOperationName) {
 }
 
 TEST_F(BackendAuthFilterTest, NotHaveAudience) {
-  Http::TestHeaderMapImpl headers{{":method", "GET"}, {":path", "/books/1"}};
+  Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                         {":path", "/books/1"}};
   Utils::setStringFilterState(
-      mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
+      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
       "operation-without-audience");
 
   EXPECT_CALL(*mock_filter_config_, cfg_parser)
@@ -81,9 +83,10 @@ TEST_F(BackendAuthFilterTest, NotHaveAudience) {
 }
 
 TEST_F(BackendAuthFilterTest, HasAudienceButGetsEmptyToken) {
-  Http::TestHeaderMapImpl headers{{":method", "GET"}, {":path", "/books/1"}};
+  Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                         {":path", "/books/1"}};
   Utils::setStringFilterState(
-      mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
+      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
       "operation-with-audience");
 
   EXPECT_CALL(*mock_filter_config_, cfg_parser)
@@ -105,9 +108,10 @@ TEST_F(BackendAuthFilterTest, HasAudienceButGetsEmptyToken) {
 }
 
 TEST_F(BackendAuthFilterTest, SucceedAppendToken) {
-  Http::TestHeaderMapImpl headers{{":method", "GET"}, {":path", "/books/1"}};
+  Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                         {":path", "/books/1"}};
   Utils::setStringFilterState(
-      mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
+      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
       "operation-with-audience");
   testing::NiceMock<Stats::MockStore> scope;
   const std::string prefix = "";

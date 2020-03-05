@@ -37,12 +37,12 @@ DEFINE_PROTO_FUZZER(
 
     // Set the operation name using the first backend routing rule.
     Utils::setStringFilterState(
-        mock_decoder_callbacks.stream_info_.filter_state_, Utils::kOperation,
+        *mock_decoder_callbacks.stream_info_.filter_state_, Utils::kOperation,
         input.config().rules(0).operation());
 
     // Set the variable binding query params.
     Utils::setStringFilterState(
-        mock_decoder_callbacks.stream_info_.filter_state_, Utils::kQueryParams,
+        *mock_decoder_callbacks.stream_info_.filter_state_, Utils::kQueryParams,
         input.binding_query_params());
 
     // Create the filter.
@@ -52,7 +52,9 @@ DEFINE_PROTO_FUZZER(
     filter.setDecoderFilterCallbacks(mock_decoder_callbacks);
 
     // Generate the user request.
-    auto headers = Envoy::Fuzz::fromHeaders(input.user_request().headers());
+    auto headers =
+        Envoy::Fuzz::fromHeaders<Envoy::Http::TestRequestHeaderMapImpl>(
+            input.user_request().headers());
 
     // Functions under test.
     filter.decodeHeaders(headers, false);
