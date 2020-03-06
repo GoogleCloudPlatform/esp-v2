@@ -23,5 +23,6 @@ message ServiceControlFilterInput {
   // FIXME(nareddyt): The async client response. For now, just use a auto-incrementing index.
   // There should be 4 for the following order: IMDS access token, SC Check, SC Quota, SC Report
   // Due to possibility of retries and intermediate reports, multiply the space by 3.
-  repeated test.fuzz.HttpData sidestream_response = 5 [(validate.rules).repeated = {min_items: 0, max_items: 12}];
+  // Need at least 1 to allow re-use of the response.
+  repeated test.fuzz.HttpData sidestream_response = 5 [(validate.rules).repeated = {min_items: 1, max_items: 12}];
 }
