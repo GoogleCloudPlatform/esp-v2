@@ -6,6 +6,7 @@ SERVICE_CONTROL_VISIBILITY = [
     "//src/envoy/http/service_control:__subpackages__",
     "//src/go:__subpackages__",
     "//tests/utils:__subpackages__",
+    "//tests/fuzz/structured_inputs:__subpackages__",
 ]
 
 package(default_visibility = SERVICE_CONTROL_VISIBILITY)

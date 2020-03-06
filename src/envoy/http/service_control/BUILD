@@ -1,5 +1,6 @@
 load(
     "@envoy//bazel:envoy_build_system.bzl",
+    "envoy_cc_fuzz_test",
     "envoy_cc_library",
     "envoy_cc_test",
 )
@@ -258,6 +259,23 @@ envoy_cc_test(
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/mocks/stats:stats_mocks",
         "@envoy//test/mocks/tracing:tracing_mocks",
+        "@envoy//test/test_common:utility_lib",
+    ],
+)
+
+envoy_cc_fuzz_test(
+    name = "service_control_filter_fuzz_test",
+    srcs = ["filter_fuzz_test.cc"],
+    corpus = "//tests/fuzz/corpus:service_control_filter_corpus",
+    repository = "@envoy",
+    deps = [
+        ":filter_config_lib",
+        ":filter_lib",
+        "//src/envoy/utils:filter_state_utils_lib",
+        "//tests/fuzz/structured_inputs:service_control_filter_proto_cc_proto",
+        "@envoy//test/fuzz:utility_lib",
+        "@envoy//test/mocks/init:init_mocks",
+        "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/test_common:utility_lib",
     ],
 )
