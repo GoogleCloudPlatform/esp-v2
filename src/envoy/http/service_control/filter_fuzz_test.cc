@@ -62,6 +62,7 @@ void doTest(ServiceControlFilter& filter, TestStreamInfo& stream_info,
   }
 
   // Encode headers.
+  end_stream = false;
   auto upstream_headers =
       Envoy::Fuzz::fromHeaders<Envoy::Http::TestResponseHeaderMapImpl>(
           input.upstream_response().headers());
@@ -72,7 +73,6 @@ void doTest(ServiceControlFilter& filter, TestStreamInfo& stream_info,
   filter.encodeHeaders(upstream_headers, end_stream);
 
   // Encode body (if needed).
-  end_stream = false;
   for (int i = 0; i < input.upstream_response().data().size(); i++) {
     if (i == input.upstream_response().data().size() - 1 &&
         !input.upstream_response().has_trailers()) {
