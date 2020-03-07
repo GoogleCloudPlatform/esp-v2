@@ -42,7 +42,7 @@ func TestTranscodingPrintOptions(t *testing.T) {
 	}
 	tests := []testType{
 		{
-			desc:           "Success. Default transcoding setting.",
+			desc:           "Success. Default setting used to be compared with other test cases.",
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves/100/books?key=api-key",
