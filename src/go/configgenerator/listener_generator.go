@@ -635,6 +635,11 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 				},
 				AutoMapping:       true,
 				ConvertGrpcStatus: true,
+				PrintOptions: &transcoderpb.GrpcJsonTranscoder_PrintOptions{
+					AlwaysPrintPrimitiveFields: serviceInfo.Options.TranscodingAlwaysPrintPrimitiveFields,
+					AlwaysPrintEnumsAsInts:     serviceInfo.Options.TranscodingAlwaysPrintEnumsAsInts,
+					PreserveProtoFieldNames:    serviceInfo.Options.TranscoderPreserveProtoFieldNames,
+				},
 			}
 			for apiKeyQueryParam, used := range serviceInfo.TranscoderIgnoredApiKeyQueryParams {
 				if used {

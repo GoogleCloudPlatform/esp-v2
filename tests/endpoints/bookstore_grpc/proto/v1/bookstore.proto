@@ -121,6 +121,18 @@ message Book {
   string author = 2;
   // A book title.
   string title = 3;
+
+  // All the book types.
+  enum TYPE {
+    CLASSIC = 0;
+    COMIC = 1;
+    HORROR = 2;
+    OTHER = 3;
+  }
+  // The book type.
+  TYPE type = 4;
+
+  int32 priceInUsd=5 [json_name="price_in_usd"];
 }
 
 // Response to ListShelves call.

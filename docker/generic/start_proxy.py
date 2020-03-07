@@ -489,6 +489,24 @@ environment variable or by passing "-k" flag to this script.
     Default value: Not enabled. Please provide the certificate and key files
     /etc/nginx/ssl/backend.crt and /etc/nginx/ssl/backend.key.''')
 
+    # always_print_primitive_fields.
+    parser.add_argument('--transcoding_always_print_primitive_fields',
+                        action='store_true',
+                        help=argparse.SUPPRESS)
+
+    # always_print_enums_as_ints'.
+    parser.add_argument('--transcoding_always_print_enums_as_ints',
+                        action='store_true',
+                        help=argparse.SUPPRESS)
+
+    # preserve the proto field names
+    parser.add_argument('--transcoding_preserve_proto_field_names',
+                        action='store_true',
+                        help=argparse.SUPPRESS)
+
+
+
+
     # End Deprecated Flags Section
 
     return parser
@@ -654,6 +672,15 @@ def gen_proxy_config(args):
 
     if args.disable_tracing:
         proxy_conf.append("--disable_tracing")
+
+    if args.transcoding_always_print_primitive_fields:
+        proxy_conf.append("--transcoding_always_print_primitive_fields")
+
+    if args.transcoding_always_print_enums_as_ints:
+        proxy_conf.append("--transcoding_always_print_enums_as_ints")
+
+    if args.transcoding_preserve_proto_field_names:
+        proxy_conf.append("--transcoding_preserve_proto_field_names")
 
     if args.compute_platform_override:
         proxy_conf.extend([

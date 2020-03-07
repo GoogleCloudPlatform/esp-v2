@@ -115,6 +115,7 @@ const (
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
 	TestTranscodingBindings
+	TestTranscodingPrintOptions
 	TestTranscodingErrors
 	TestTranscodingServiceUnavailableError
 	// The number of total tests. has to be the last one.

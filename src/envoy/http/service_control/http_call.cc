@@ -72,40 +72,32 @@ class HttpCallImpl : public HttpCall,
   // HTTP async receive methods
   void onSuccess(Http::ResponseMessagePtr&& response) override {
     ENVOY_LOG(trace, "{}", __func__);
+    const uint64_t status_code =
+        Http::Utility::getResponseStatus(response->headers());
+
+    request_span_->setTag(Tracing::Tags::get().HttpStatusCode,
+                          std::to_string(status_code));
+    request_span_->finishSpan();
 
     std::string body;
-    try {
-      const uint64_t status_code =
-          Http::Utility::getResponseStatus(response->headers());
-
-      request_span_->setTag(Tracing::Tags::get().HttpStatusCode,
-                            std::to_string(status_code));
-      request_span_->finishSpan();
-
-      if (response->body()) {
-        const auto len = response->body()->length();
-        body = std::string(static_cast<char*>(response->body()->linearize(len)),
-                           len);
+    if (response->body()) {
+      const auto len = response->body()->length();
+      body = std::string(static_cast<char*>(response->body()->linearize(len)),
+                         len);
+    }
+    if (status_code == enumToInt(Http::Code::OK)) {
+      ENVOY_LOG(debug, "http call [uri = {}]: success with body {}", uri_,
+                body);
+      on_done_(Status::OK, body);
+    } else {
+      if (attemptRetry(status_code)) {
+        return;
       }
-      if (status_code == enumToInt(Http::Code::OK)) {
-        ENVOY_LOG(debug, "http call [uri = {}]: success with body {}", uri_,
-                  body);
-        on_done_(Status::OK, body);
-      } else {
-        if (attemptRetry(status_code)) {
-          return;
-        }
 
-        ENVOY_LOG(debug, "http call response status code: {}, body: {}",
-                  status_code, body);
-        on_done_(Status(Code::INTERNAL, "Failed to call service control"),
-                 body);
-      }
-    } catch (const EnvoyException& e) {
-      ENVOY_LOG(debug, "http call invalid status");
+      ENVOY_LOG(debug, "http call response status code: {}, body: {}",
+                status_code, body);
       on_done_(Status(Code::INTERNAL, "Failed to call service control"), body);
     }
-
     reset();
     deferredDelete();
   }

@@ -89,6 +89,7 @@ func TestTranscoderFilter(t *testing.T) {
          "api_key",
          "key"
       ],
+      "printOptions":{},
       "protoDescriptorBin":"%s",
       "services":[
          "%s"
@@ -163,6 +164,7 @@ func TestTranscoderFilter(t *testing.T) {
          "query_name_1",
          "query_name_2"
       ],
+      "printOptions":{},
       "protoDescriptorBin":"%s",
       "services":[
          "%s"

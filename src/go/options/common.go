@@ -49,6 +49,10 @@ type CommonOptions struct {
 	ServiceControlCredentials *IAMCredentialsOptions
 	// Configures the identity used when making requests to backends.
 	BackendAuthCredentials *IAMCredentialsOptions
+
+	TranscodingAlwaysPrintPrimitiveFields bool
+	TranscodingAlwaysPrintEnumsAsInts     bool
+	TranscoderPreserveProtoFieldNames     bool
 }
 
 // IamTokenKind specifies which type of token to generate using the IAM Credentials API.
@@ -77,26 +81,28 @@ type IAMCredentialsOptions struct {
 // The default values are expected to match the default values from the flags.
 func DefaultCommonOptions() CommonOptions {
 	return CommonOptions{
-		AdminAddress:               "0.0.0.0",
-		AdminPort:                  8001,
-		DisableTracing:             false,
-		DiscoveryPort:              8790,
-		EnableAdmin:                false,
-		HttpRequestTimeout:         5 * time.Second,
-		Node:                       "ESPv2",
-		NonGCP:                     false,
-		TracingProjectId:           "",
-		TracingStackdriverAddress:  "",
-		TracingSamplingRate:        0.001,
-		TracingIncomingContext:     "",
-		TracingOutgoingContext:     "",
-		TracingMaxNumAttributes:    32,
-		TracingMaxNumAnnotations:   32,
-		TracingMaxNumMessageEvents: 128,
-		TracingMaxNumLinks:         128,
-		MetadataURL:                "http://169.254.169.254/computeMetadata",
-		IamURL:                     "https://iamcredentials.googleapis.com",
-		ServiceControlCredentials:  nil,
-		BackendAuthCredentials:     nil,
+		AdminAddress:                          "0.0.0.0",
+		AdminPort:                             8001,
+		DisableTracing:                        false,
+		DiscoveryPort:                         8790,
+		EnableAdmin:                           false,
+		HttpRequestTimeout:                    5 * time.Second,
+		Node:                                  "ESPv2",
+		NonGCP:                                false,
+		TracingProjectId:                      "",
+		TracingStackdriverAddress:             "",
+		TracingSamplingRate:                   0.001,
+		TracingIncomingContext:                "",
+		TracingOutgoingContext:                "",
+		TracingMaxNumAttributes:               32,
+		TracingMaxNumAnnotations:              32,
+		TracingMaxNumMessageEvents:            128,
+		TracingMaxNumLinks:                    128,
+		MetadataURL:                           "http://169.254.169.254/computeMetadata",
+		IamURL:                                "https://iamcredentials.googleapis.com",
+		ServiceControlCredentials:             nil,
+		BackendAuthCredentials:                nil,
+		TranscodingAlwaysPrintPrimitiveFields: false,
+		TranscodingAlwaysPrintEnumsAsInts:     false,
 	}
 }

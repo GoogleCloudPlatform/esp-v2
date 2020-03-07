@@ -144,6 +144,7 @@ func TestFetchListeners(t *testing.T) {
                               "api_key",
                               "key"
                            ],
+                           "printOptions":{},
                            "protoDescriptorBin":"%s",
                            "services":[
                               "%s"

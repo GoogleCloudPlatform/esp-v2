@@ -86,9 +86,9 @@ build-grpc-bookstore:
 	@echo "Notice: please make sure to temporarily delete tests/endpoints/bookstore_grpc/BUILD in order to run this command"
 	@bazel build tests/endpoints/bookstore_grpc/proto:bookstore_descriptor --incompatible_no_support_tools_in_action_inputs=false
 	@cp -f bazel-bin/tests/endpoints/bookstore_grpc/proto/bookstore.descriptor tests/endpoints/bookstore_grpc/proto/api_descriptor.pb
-	@bazel-bin/external/com_google_protobuf/protoc -I tests/endpoints/bookstore_grpc/proto/v1 -I bazel-esp-v2/external/com_google_protobuf/src -I bazel-esp-v2/external/com_github_googleapis_googleapis \
+	@protoc -I tests/endpoints/bookstore_grpc/proto/v1 -I bazel-esp-v2/external/com_google_protobuf/src -I bazel-esp-v2/external/com_github_googleapis_googleapis \
 	  -I tests/endpoints/bookstore_grpc/proto/ tests/endpoints/bookstore_grpc/proto/v1/bookstore.proto --go_out=plugins=grpc:tests/endpoints/bookstore_grpc/proto/v1/
-	@bazel-bin/external/com_google_protobuf/protoc -I tests/endpoints/bookstore_grpc/proto/v2 -I bazel-esp-v2/external/com_google_protobuf/src -I bazel-esp-v2/external/com_github_googleapis_googleapis \
+	@protoc -I tests/endpoints/bookstore_grpc/proto/v2 -I bazel-esp-v2/external/com_google_protobuf/src -I bazel-esp-v2/external/com_github_googleapis_googleapis \
 	  -I tests/endpoints/bookstore_grpc/proto/ tests/endpoints/bookstore_grpc/proto/v2/bookstore_v2.proto --go_out=plugins=grpc:tests/endpoints/bookstore_grpc/proto/v2/
 
 

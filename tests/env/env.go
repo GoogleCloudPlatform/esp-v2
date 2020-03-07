@@ -239,7 +239,6 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	var envoyArgs []string
 	var bootstrapperArgs []string
 	mockJwtProviders := make(map[string]bool)
-
 	if e.MockServiceManagementServer != nil {
 		if err := addDynamicRoutingBackendPort(e.fakeServiceConfig, e.ports.DynamicRoutingBackendPort); err != nil {
 			return err

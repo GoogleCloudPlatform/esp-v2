@@ -10,8 +10,7 @@ namespace auth {
 namespace fuzz {
 
 DEFINE_PROTO_FUZZER(const tests::fuzz::protos::AuthTokenInput& input) {
-  char* token =
-      get_auth_token(input.secret().c_str(), input.audience().c_str());
+  char* token = get_auth_token(input.secret().c_str(), input.audience().c_str());
   if (token != nullptr) {
     grpc_free(token);
   }
