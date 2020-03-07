@@ -40,6 +40,9 @@ echo '======================================================='
 echo '======================================================='
 echo '=================== Upload Coverage ==================='
 echo '======================================================='
+
+# Note that JOB_TYPE is set by Prow.
+# https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md#job-environment-variables
 PUBLIC_DIRECTORY=""
 case "${JOB_TYPE}" in
   "presubmit")
@@ -47,7 +50,7 @@ case "${JOB_TYPE}" in
     # IMPORTANT: Default to a some directory to prevent messy copy on unset var.
     PUBLIC_DIRECTORY="${PROW_JOB_ID:-tmp}"
     ;;
-  "continuous")
+  "periodic")
     # Overwrite global directory with latest coverage.
     PUBLIC_DIRECTORY="latest"
     ;;
