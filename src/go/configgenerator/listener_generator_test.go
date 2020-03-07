@@ -46,9 +46,12 @@ var (
 
 func TestTranscoderFilter(t *testing.T) {
 	testData := []struct {
-		desc                 string
-		fakeServiceConfig    *confpb.Service
-		wantTranscoderFilter string
+		desc                                  string
+		fakeServiceConfig                     *confpb.Service
+		transcodingAlwaysPrintPrimitiveFields bool
+		transcodingAlwaysPrintEnumsAsInts     bool
+		transcoderPreserveProtoFieldNames     bool
+		wantTranscoderFilter                  string
 	}{
 		{
 			desc: "Success. Generate transcoder filter with default apiKey locations and default jwt locations",
@@ -173,11 +176,59 @@ func TestTranscoderFilter(t *testing.T) {
 }
       `, fakeProtoDescriptor, testApiName),
 		},
+		{
+			desc: "Success. Generate transcoder filter with print options",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+						},
+					},
+				},
+				SourceInfo: &confpb.SourceInfo{
+					SourceFiles: []*anypb.Any{content},
+				},
+			},
+			transcodingAlwaysPrintPrimitiveFields: true,
+			transcodingAlwaysPrintEnumsAsInts:     true,
+			transcoderPreserveProtoFieldNames:     true,
+			wantTranscoderFilter: fmt.Sprintf(`
+{
+   "name":"envoy.grpc_json_transcoder",
+   "typedConfig":{
+      "@type":"type.googleapis.com/envoy.config.filter.http.transcoder.v2.GrpcJsonTranscoder",
+      "autoMapping":true,
+      "convertGrpcStatus":true,
+      "ignoredQueryParameters":[
+         "api_key",
+         "key"
+      ],
+      "printOptions":{
+         "alwaysPrintEnumsAsInts":true,
+         "alwaysPrintPrimitiveFields":true,
+         "preserveProtoFieldNames":true
+      },
+      "protoDescriptorBin":"%s",
+      "services":[
+         "%s"
+      ]
+   }
+}
+      `, fakeProtoDescriptor, testApiName),
+		},
 	}
 
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendAddress = "grpc://127.0.0.0:80"
+		opts.TranscodingAlwaysPrintPrimitiveFields = tc.transcodingAlwaysPrintPrimitiveFields
+		opts.TranscoderPreserveProtoFieldNames = tc.transcoderPreserveProtoFieldNames
+		opts.TranscodingAlwaysPrintEnumsAsInts = tc.transcodingAlwaysPrintEnumsAsInts
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
