@@ -12,7 +12,7 @@ set -e
 [ -z "${BUILDIFIER_BIN}" ] && BUILDIFIER_BIN=buildifier
 
 # Path to the generated BUILD file for the coverage target.
-[ -z "${BUILD_PATH}" ] && BUILD_PATH="$(dirname "$0")"/BUILD
+[ -z "${BUILD_PATH}" ] && BUILD_PATH=$(pwd)/third_party/tools/coverage/BUILD
 
 # Extra repository information to include when generating coverage targets. This is useful for
 # consuming projects. E.g., "@envoy".
@@ -62,8 +62,7 @@ EOF
   done
   cat << EOF
     ],
-    # no-remote due to https://github.com/bazelbuild/bazel/issues/4685
-    tags = ["manual", "no-remote"],
+    tags = ["manual"],
     coverage = False,
     # Due to the nature of coverage_tests, the shard of coverage_tests are very uneven, some of
     # shard can take 100s and some takes only 10s, so we use the maximum sharding to here to let

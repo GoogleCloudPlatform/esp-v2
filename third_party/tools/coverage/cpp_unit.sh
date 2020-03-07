@@ -20,12 +20,11 @@ else
 fi
 
 # Make sure //third_party/tools/coverage:coverage_tests is up-to-date.
-SCRIPT_DIR="$(realpath "$(dirname "$0")")"
-"${SCRIPT_DIR}"/gen_build.sh ${COVERAGE_TARGETS}
+. $(pwd)/third_party/tools/coverage/gen_build.sh ${COVERAGE_TARGETS}
 
 TARGET=//third_party/tools/coverage:coverage_tests
 TARGET_PATH=${TARGET:2}
 TARGET_PATH=${TARGET_PATH//://}
 echo ${TARGET_PATH}
 
-. "${SCRIPT_DIR}"/gen_coverage.sh
+. $(pwd)/third_party/tools/coverage/gen_coverage.sh
