@@ -6,16 +6,6 @@ import "test/fuzz/common.proto";
 import "api/envoy/http/backend_routing/config.proto";
 import "validate/validate.proto";
 
-// Representation of an entire HTTP request.
-message HttpData {
-  test.fuzz.Headers headers = 1;
-
-  string data = 2;
-
-  test.fuzz.Headers trailers = 3;
-
-  test.fuzz.Headers metadata = 4;
-}
 message BackendRoutingFilterInput {
 
   // The fuzzed filter config for this test.
@@ -25,5 +15,5 @@ message BackendRoutingFilterInput {
   string binding_query_params = 2;
 
   // The user's HTTP request to the filter.
-  HttpData user_request = 3 [(validate.rules).message.required = true];
+  test.fuzz.HttpData user_request = 3 [(validate.rules).message.required = true];
 }
