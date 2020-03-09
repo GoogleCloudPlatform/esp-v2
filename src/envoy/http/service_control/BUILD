@@ -240,6 +240,7 @@ envoy_cc_test(
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/mocks/stats:stats_mocks",
         "@envoy//test/mocks/tracing:tracing_mocks",
+        "@envoy//test/test_common:simulated_time_system_lib",
         "@envoy//test/test_common:utility_lib",
     ],
 )

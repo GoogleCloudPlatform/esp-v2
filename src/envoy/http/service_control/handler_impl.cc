@@ -47,16 +47,16 @@ constexpr char JwtPayloadAuidencePath[] = "aud";
 ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     const Http::RequestHeaderMap& headers,
     const StreamInfo::StreamInfo& stream_info, const std::string& uuid,
-    const FilterConfigParser& cfg_parser,
-    std::chrono::system_clock::time_point now)
+    const FilterConfigParser& cfg_parser, Envoy::TimeSource& time_source)
     : cfg_parser_(cfg_parser),
       stream_info_(stream_info),
+      time_source_(time_source),
       uuid_(uuid),
       request_header_size_(0),
       response_header_size_(0),
       is_grpc_(false),
       is_first_report_(true),
-      last_reported_(now) {
+      last_reported_(time_source_.systemTime()) {
   is_grpc_ = Envoy::Grpc::Common::hasGrpcContentType(headers);
 
   absl::string_view original_http_method =
@@ -108,22 +108,20 @@ void ServiceControlHandlerImpl::onDestroy() {
 }
 
 void ServiceControlHandlerImpl::fillOperationInfo(
-    ::google::api_proxy::service_control::OperationInfo& info,
-    std::chrono::system_clock::time_point now) {
+    ::google::api_proxy::service_control::OperationInfo& info) {
   info.operation_id = uuid_;
   info.operation_name = require_ctx_->config().operation_name();
   info.producer_project_id =
       require_ctx_->service_ctx().config().producer_project_id();
-  info.current_time = now;
+  info.current_time = time_source_.systemTime();
   info.client_ip =
       stream_info_.downstreamRemoteAddress()->ip()->addressAsString();
   info.api_key = api_key_;
 }
 
 void ServiceControlHandlerImpl::prepareReportRequest(
-    ::google::api_proxy::service_control::ReportRequestInfo& info,
-    std::chrono::system_clock::time_point now) {
-  fillOperationInfo(info, now);
+    ::google::api_proxy::service_control::ReportRequestInfo& info) {
+  fillOperationInfo(info);
 
   // Report: not to send api-key if invalid or service is not enabled.
   if (!check_response_info_.is_api_key_valid ||
@@ -170,7 +168,7 @@ void ServiceControlHandlerImpl::callCheck(Http::RequestHeaderMap& headers,
 
   // Make a check call
   ::google::api_proxy::service_control::CheckRequestInfo info;
-  fillOperationInfo(info, std::chrono::system_clock::now());
+  fillOperationInfo(info);
 
   info.ios_bundle_id =
       std::string(Utils::extractHeader(headers, kIosBundleIdHeader));
@@ -202,7 +200,7 @@ void ServiceControlHandlerImpl::callQuota() {
   }
 
   ::google::api_proxy::service_control::QuotaRequestInfo info;
-  fillOperationInfo(info, std::chrono::system_clock::now());
+  fillOperationInfo(info);
 
   info.method_name = require_ctx_->config().operation_name();
   info.metric_cost_vector = require_ctx_->metric_costs();
@@ -248,8 +246,7 @@ void ServiceControlHandlerImpl::processResponseHeaders(
 void ServiceControlHandlerImpl::callReport(
     const Http::RequestHeaderMap* request_headers,
     const Http::ResponseHeaderMap* response_headers,
-    const Http::ResponseTrailerMap* response_trailers,
-    std::chrono::system_clock::time_point now) {
+    const Http::ResponseTrailerMap* response_trailers) {
   if (require_ctx_ == nullptr) {
     require_ctx_ = cfg_parser_.non_match_rqm_ctx();
   }
@@ -259,7 +256,7 @@ void ServiceControlHandlerImpl::callReport(
   }
 
   ::google::api_proxy::service_control::ReportRequestInfo info;
-  prepareReportRequest(info, now);
+  prepareReportRequest(info);
   fillLoggedHeader(request_headers,
                    require_ctx_->service_ctx().config().log_request_headers(),
                    info.request_headers);
@@ -319,7 +316,7 @@ void ServiceControlHandlerImpl::callReport(
 
   info.streaming_durations =
       std::chrono::duration_cast<std::chrono::microseconds>(
-          now - stream_info_.startTime())
+          time_source_.systemTime() - stream_info_.startTime())
           .count();
 
   info.is_first_report = is_first_report_;
@@ -327,22 +324,21 @@ void ServiceControlHandlerImpl::callReport(
   require_ctx_->service_ctx().call().callReport(info);
 }
 
-void ServiceControlHandlerImpl::tryIntermediateReport(
-    std::chrono::system_clock::time_point now) {
+void ServiceControlHandlerImpl::tryIntermediateReport() {
   if (!is_grpc_) {
     return;
   }
 
   // Avoid reporting more frequently than the configured interval.
-  if (std::chrono::duration_cast<std::chrono::milliseconds>(now -
-                                                            last_reported_)
+  if (std::chrono::duration_cast<std::chrono::milliseconds>(
+          time_source_.systemTime() - last_reported_)
           .count() <
       require_ctx_->service_ctx().get_min_stream_report_interval_ms()) {
     return;
   }
 
   ::google::api_proxy::service_control::ReportRequestInfo info;
-  prepareReportRequest(info, now);
+  prepareReportRequest(info);
 
   info.request_bytes = stream_info_.bytesReceived() + request_header_size_;
   info.response_bytes = stream_info_.bytesSent() + response_header_size_;
@@ -351,7 +347,7 @@ void ServiceControlHandlerImpl::tryIntermediateReport(
   info.is_first_report = is_first_report_;
   info.is_final_report = false;
   require_ctx_->service_ctx().call().callReport(info);
-  last_reported_ = now;
+  last_reported_ = time_source_.systemTime();
   is_first_report_ = false;
 }
 

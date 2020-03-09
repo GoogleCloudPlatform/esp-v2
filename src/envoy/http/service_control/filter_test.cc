@@ -188,7 +188,7 @@ TEST_F(ServiceControlFilterTest, LogWithoutHandler) {
   auto* mock_handler = new testing::NiceMock<MockServiceControlHandler>();
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _))
       .WillOnce(Return(mock_handler));
-  EXPECT_CALL(*mock_handler, callReport(_, _, _, _));
+  EXPECT_CALL(*mock_handler, callReport(_, _, _));
   filter_->log(&req_headers_, &resp_headers_, &resp_trailer_,
                mock_decoder_callbacks_.stream_info_);
 }
@@ -202,7 +202,7 @@ TEST_F(ServiceControlFilterTest, LogWithHandler) {
   filter_->decodeHeaders(req_headers_, true);
 
   EXPECT_CALL(mock_handler_factory_, createHandler_(_, _)).Times(0);
-  EXPECT_CALL(*mock_handler, callReport(_, _, _, _));
+  EXPECT_CALL(*mock_handler, callReport(_, _, _));
   filter_->log(&req_headers_, &resp_headers_, &resp_trailer_,
                mock_decoder_callbacks_.stream_info_);
 }
@@ -261,7 +261,7 @@ TEST_F(ServiceControlFilterTest, DecodeDataSendStreamReport) {
 
   mock_buffer_.add("filler");
 
-  EXPECT_CALL(*mock_handler, tryIntermediateReport(_));
+  EXPECT_CALL(*mock_handler, tryIntermediateReport());
   filter_->decodeData(mock_buffer_, /*end_stream=*/false);
 }
 
@@ -280,7 +280,7 @@ TEST_F(ServiceControlFilterTest, EncodeDataSendStreamReport) {
 
   mock_buffer_.add("filler");
 
-  EXPECT_CALL(*mock_handler, tryIntermediateReport(_));
+  EXPECT_CALL(*mock_handler, tryIntermediateReport());
   filter_->encodeData(mock_buffer_, /*end_stream=*/false);
 }
 

@@ -30,14 +30,12 @@ class MockServiceControlHandler : public ServiceControlHandler {
                                Envoy::Tracing::Span& parent_span,
                                CheckDoneCallback& callback));
 
-  MOCK_METHOD4(callReport,
+  MOCK_METHOD3(callReport,
                void(const Http::RequestHeaderMap* request_headers,
                     const Http::ResponseHeaderMap* response_headers,
-                    const Http::ResponseTrailerMap* response_trailers,
-                    std::chrono::system_clock::time_point now));
+                    const Http::ResponseTrailerMap* response_trailers));
 
-  MOCK_METHOD1(tryIntermediateReport,
-               void(std::chrono::system_clock::time_point now));
+  MOCK_METHOD0(tryIntermediateReport, void());
 
   MOCK_METHOD1(processResponseHeaders,
                void(const Http::ResponseHeaderMap& response_headers));

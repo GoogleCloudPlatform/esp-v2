@@ -44,7 +44,8 @@ class ServiceControlFilterConfig : public Logger::Loggable<Logger::Id::filter>,
                 proto_config)),
         call_factory_(proto_config_, context),
         config_parser_(*proto_config_, call_factory_),
-        handler_factory_(context.random(), config_parser_) {}
+        handler_factory_(context.random(), config_parser_,
+                         context.timeSource()) {}
 
   const ServiceControlHandlerFactory& handler_factory() const {
     return handler_factory_;
