@@ -21,6 +21,7 @@
 #include "common/grpc/codec.h"
 #include "common/grpc/common.h"
 #include "envoy/buffer/buffer.h"
+#include "envoy/common/time.h"
 #include "envoy/http/header_map.h"
 #include "envoy/http/query_params.h"
 #include "envoy/runtime/runtime.h"
@@ -42,8 +43,7 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
                             const StreamInfo::StreamInfo& stream_info,
                             const std::string& uuid,
                             const FilterConfigParser& cfg_parser,
-                            std::chrono::system_clock::time_point now =
-                                std::chrono::system_clock::now());
+                            Envoy::TimeSource& timeSource);
   ~ServiceControlHandlerImpl() override;
 
   void callCheck(Http::RequestHeaderMap& headers,
@@ -52,11 +52,9 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
 
   void callReport(const Http::RequestHeaderMap* request_headers,
                   const Http::ResponseHeaderMap* response_headers,
-                  const Http::ResponseTrailerMap* response_trailers,
-                  std::chrono::system_clock::time_point now) override;
+                  const Http::ResponseTrailerMap* response_trailers) override;
 
-  void tryIntermediateReport(
-      std::chrono::system_clock::time_point now) override;
+  void tryIntermediateReport() override;
 
   void processResponseHeaders(
       const Http::ResponseHeaderMap& response_headers) override;
@@ -67,11 +65,9 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   void callQuota();
 
   void fillOperationInfo(
-      ::google::api_proxy::service_control::OperationInfo& info,
-      std::chrono::system_clock::time_point now);
+      ::google::api_proxy::service_control::OperationInfo& info);
   void prepareReportRequest(
-      ::google::api_proxy::service_control::ReportRequestInfo& info,
-      std::chrono::system_clock::time_point now);
+      ::google::api_proxy::service_control::ReportRequestInfo& info);
 
   bool isConfigured() const { return require_ctx_ != nullptr; }
 
@@ -103,6 +99,9 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   // The metadata for the request
   const StreamInfo::StreamInfo& stream_info_;
 
+  // timeSource
+  Envoy::TimeSource& time_source_;
+
   // The matched requirement
   const RequirementContext* require_ctx_{};
 
@@ -128,20 +127,21 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   // If true, this is the first report.
   bool is_first_report_;
   // Interval timer for sending intermediate reports.
-  std::chrono::system_clock::time_point last_reported_;
+  Envoy::SystemTime last_reported_;
 };
 
 class ServiceControlHandlerFactoryImpl : public ServiceControlHandlerFactory {
  public:
   ServiceControlHandlerFactoryImpl(Runtime::RandomGenerator& random,
-                                   const FilterConfigParser& cfg_parser)
-      : random_(random), cfg_parser_(cfg_parser) {}
+                                   const FilterConfigParser& cfg_parser,
+                                   Envoy::TimeSource& time_source)
+      : random_(random), cfg_parser_(cfg_parser), time_source_(time_source) {}
 
   ServiceControlHandlerPtr createHandler(
       const Http::RequestHeaderMap& headers,
       const StreamInfo::StreamInfo& stream_info) const override {
     return std::make_unique<ServiceControlHandlerImpl>(
-        headers, stream_info, random_.uuid(), cfg_parser_);
+        headers, stream_info, random_.uuid(), cfg_parser_, time_source_);
   }
 
  private:
@@ -149,6 +149,8 @@ class ServiceControlHandlerFactoryImpl : public ServiceControlHandlerFactory {
   Runtime::RandomGenerator& random_;
   // The filter config parser.
   const FilterConfigParser& cfg_parser_;
+  // The timeSource
+  Envoy::TimeSource& time_source_;
 };
 
 }  // namespace ServiceControl

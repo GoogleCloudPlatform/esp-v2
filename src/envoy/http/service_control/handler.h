@@ -42,15 +42,14 @@ class ServiceControlHandler {
                          CheckDoneCallback& callback) PURE;
 
   // Make a report call.
-  virtual void callReport(const Http::RequestHeaderMap* request_headers,
-                          const Http::ResponseHeaderMap* response_headers,
-                          const Http::ResponseTrailerMap* response_trailers,
-                          std::chrono::system_clock::time_point now) PURE;
+  virtual void callReport(
+      const Http::RequestHeaderMap* request_headers,
+      const Http::ResponseHeaderMap* response_headers,
+      const Http::ResponseTrailerMap* response_trailers) PURE;
 
   // If the stream report interval has passed,
   // make an intermediate report call for long-lived gRPC streaming.
-  virtual void tryIntermediateReport(
-      std::chrono::system_clock::time_point now) PURE;
+  virtual void tryIntermediateReport() PURE;
 
   // Process the response header to get the information needed for sending
   // intermediate reports.
