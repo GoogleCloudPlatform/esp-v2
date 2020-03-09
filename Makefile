@@ -80,15 +80,14 @@ build-grpc-echo:
 	@cp -f bazel-bin/tests/endpoints/grpc_echo/grpc-test.descriptor tests/endpoints/grpc_echo/proto/api_descriptor.pb
 
 build-grpc-bookstore:
-	# This doesn't work when tests/endpoints/bookstore_grpc/BUILD is defined,
-	# please temporarily delete it and re-add it after the build is done.
 	@echo "--> building bookstore-grpc"
 	@echo "Notice: please make sure to temporarily delete tests/endpoints/bookstore_grpc/BUILD in order to run this command"
 	@bazel build tests/endpoints/bookstore_grpc/proto:bookstore_descriptor --incompatible_no_support_tools_in_action_inputs=false
 	@cp -f bazel-bin/tests/endpoints/bookstore_grpc/proto/bookstore.descriptor tests/endpoints/bookstore_grpc/proto/api_descriptor.pb
-	@protoc -I tests/endpoints/bookstore_grpc/proto/v1 -I bazel-esp-v2/external/com_google_protobuf/src -I bazel-esp-v2/external/com_github_googleapis_googleapis \
+	@bazel build @com_google_protobuf//:protoc
+	@bazel-bin/external/com_google_protobuf/protoc -I tests/endpoints/bookstore_grpc/proto/v1 -I bazel-esp-v2/external/com_google_protobuf/src -I bazel-esp-v2/external/com_github_googleapis_googleapis \
 	  -I tests/endpoints/bookstore_grpc/proto/ tests/endpoints/bookstore_grpc/proto/v1/bookstore.proto --go_out=plugins=grpc:tests/endpoints/bookstore_grpc/proto/v1/
-	@protoc -I tests/endpoints/bookstore_grpc/proto/v2 -I bazel-esp-v2/external/com_google_protobuf/src -I bazel-esp-v2/external/com_github_googleapis_googleapis \
+	@bazel-bin/external/com_google_protobuf/protoc -I tests/endpoints/bookstore_grpc/proto/v2 -I bazel-esp-v2/external/com_google_protobuf/src -I bazel-esp-v2/external/com_github_googleapis_googleapis \
 	  -I tests/endpoints/bookstore_grpc/proto/ tests/endpoints/bookstore_grpc/proto/v2/bookstore_v2.proto --go_out=plugins=grpc:tests/endpoints/bookstore_grpc/proto/v2/
 
 

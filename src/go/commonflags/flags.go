@@ -60,36 +60,29 @@ var (
 
 	BackendAuthIamServiceAccount = flag.String("backend_auth_iam_service_account", "", "The service account used to fetch identity token for the Backend Auth from Google Cloud IAM")
 	BackendAuthIamDelegates      = flag.String("backend_auth_iam_delegates", "", "The sequence of service accounts in a delegation chain used to fetch identity token for the Backend Auth from Google Cloud IAM. The multiple delegates should be separated by \",\" and the flag only applies when BackendAuthIamServiceAccount is not empty.")
-
-	TranscodingAlwaysPrintPrimitiveFields = flag.Bool("transcoding_always_print_primitive_fields", false, "Whether to always print primitive fields for grpc-json transcoding")
-	TranscodingAlwaysPrintEnumsAsInts     = flag.Bool("transcoding_always_print_enums_as_ints", false, "Whether to always print enums as ints for grpc-json transcoding")
-	TranscoderPreserveProtoFieldNames     = flag.Bool("transcoding_preserve_proto_field_names", false, "Whether to preserve proto field names for grpc-json transcoding")
 )
 
 func DefaultCommonOptionsFromFlags() options.CommonOptions {
 	opts := options.CommonOptions{
-		AdminAddress:                          *AdminAddress,
-		AdminPort:                             *AdminPort,
-		DisableTracing:                        *DisableTracing,
-		DiscoveryPort:                         *DiscoveryPort,
-		EnableAdmin:                           *EnableAdmin,
-		HttpRequestTimeout:                    time.Duration(*HttpRequestTimeoutS) * time.Second,
-		Node:                                  *Node,
-		NonGCP:                                *NonGCP,
-		TracingProjectId:                      *TracingProjectId,
-		TracingStackdriverAddress:             *TracingStackdriverAddress,
-		TracingSamplingRate:                   *TracingSamplingRate,
-		TracingIncomingContext:                *TracingIncomingContext,
-		TracingOutgoingContext:                *TracingOutgoingContext,
-		TracingMaxNumAttributes:               *TracingMaxNumAttributes,
-		TracingMaxNumAnnotations:              *TracingMaxNumAnnotations,
-		TracingMaxNumMessageEvents:            *TracingMaxNumMessageEvents,
-		TracingMaxNumLinks:                    *TracingMaxNumLinks,
-		MetadataURL:                           *MetadataURL,
-		IamURL:                                *IamURL,
-		TranscodingAlwaysPrintPrimitiveFields: *TranscodingAlwaysPrintPrimitiveFields,
-		TranscodingAlwaysPrintEnumsAsInts:     *TranscodingAlwaysPrintEnumsAsInts,
-		TranscoderPreserveProtoFieldNames:     *TranscoderPreserveProtoFieldNames,
+		AdminAddress:               *AdminAddress,
+		AdminPort:                  *AdminPort,
+		DisableTracing:             *DisableTracing,
+		DiscoveryPort:              *DiscoveryPort,
+		EnableAdmin:                *EnableAdmin,
+		HttpRequestTimeout:         time.Duration(*HttpRequestTimeoutS) * time.Second,
+		Node:                       *Node,
+		NonGCP:                     *NonGCP,
+		TracingProjectId:           *TracingProjectId,
+		TracingStackdriverAddress:  *TracingStackdriverAddress,
+		TracingSamplingRate:        *TracingSamplingRate,
+		TracingIncomingContext:     *TracingIncomingContext,
+		TracingOutgoingContext:     *TracingOutgoingContext,
+		TracingMaxNumAttributes:    *TracingMaxNumAttributes,
+		TracingMaxNumAnnotations:   *TracingMaxNumAnnotations,
+		TracingMaxNumMessageEvents: *TracingMaxNumMessageEvents,
+		TracingMaxNumLinks:         *TracingMaxNumLinks,
+		MetadataURL:                *MetadataURL,
+		IamURL:                     *IamURL,
 	}
 	if *BackendAuthIamServiceAccount != "" {
 		opts.BackendAuthCredentials = &options.IAMCredentialsOptions{

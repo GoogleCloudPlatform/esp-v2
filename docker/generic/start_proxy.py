@@ -489,20 +489,27 @@ environment variable or by passing "-k" flag to this script.
     Default value: Not enabled. Please provide the certificate and key files
     /etc/nginx/ssl/backend.crt and /etc/nginx/ssl/backend.key.''')
 
-    # always_print_primitive_fields.
-    parser.add_argument('--transcoding_always_print_primitive_fields',
-                        action='store_true',
-                        help=argparse.SUPPRESS)
+    parser.add_argument(
+        '--transcoding_always_print_primitive_fields',
+        action='store_true', help='''Whether to always print primitive fields
+        for grpc-json transcoding. By default primitive fields with default
+        values will be omitted in JSON output. For example, an int32 field set
+        to 0 will be omitted. Setting this flag to true will override the
+        default behavior and print primitive fields regardless of their values.
+        Defaults to false
+        ''')
 
-    # always_print_enums_as_ints'.
-    parser.add_argument('--transcoding_always_print_enums_as_ints',
-                        action='store_true',
-                        help=argparse.SUPPRESS)
+    parser.add_argument(
+        '--transcoding_always_print_enums_as_ints', action='store_true',
+        help='''Whether to always print enums as ints for grpc-json transcoding.
+        By default they are rendered as strings. Defaults to false.''')
 
-    # preserve the proto field names
-    parser.add_argument('--transcoding_preserve_proto_field_names',
-                        action='store_true',
-                        help=argparse.SUPPRESS)
+    parser.add_argument(
+        '--transcoding_preserve_proto_field_names', action='store_true',
+        help='''Whether to preserve proto field names for grpc-json transcoding.
+        By default protobuf will generate JSON field names using the json_name
+        option, or lower camel case, in that order. Setting this flag will
+        preserve the original field names. Defaults to false''')
 
 
 
