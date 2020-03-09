@@ -489,6 +489,31 @@ environment variable or by passing "-k" flag to this script.
     Default value: Not enabled. Please provide the certificate and key files
     /etc/nginx/ssl/backend.crt and /etc/nginx/ssl/backend.key.''')
 
+    parser.add_argument(
+        '--transcoding_always_print_primitive_fields',
+        action='store_true', help='''Whether to always print primitive fields
+        for grpc-json transcoding. By default primitive fields with default
+        values will be omitted in JSON output. For example, an int32 field set
+        to 0 will be omitted. Setting this flag to true will override the
+        default behavior and print primitive fields regardless of their values.
+        Defaults to false
+        ''')
+
+    parser.add_argument(
+        '--transcoding_always_print_enums_as_ints', action='store_true',
+        help='''Whether to always print enums as ints for grpc-json transcoding.
+        By default they are rendered as strings. Defaults to false.''')
+
+    parser.add_argument(
+        '--transcoding_preserve_proto_field_names', action='store_true',
+        help='''Whether to preserve proto field names for grpc-json transcoding.
+        By default protobuf will generate JSON field names using the json_name
+        option, or lower camel case, in that order. Setting this flag will
+        preserve the original field names. Defaults to false''')
+
+
+
+
     # End Deprecated Flags Section
 
     return parser
@@ -654,6 +679,15 @@ def gen_proxy_config(args):
 
     if args.disable_tracing:
         proxy_conf.append("--disable_tracing")
+
+    if args.transcoding_always_print_primitive_fields:
+        proxy_conf.append("--transcoding_always_print_primitive_fields")
+
+    if args.transcoding_always_print_enums_as_ints:
+        proxy_conf.append("--transcoding_always_print_enums_as_ints")
+
+    if args.transcoding_preserve_proto_field_names:
+        proxy_conf.append("--transcoding_preserve_proto_field_names")
 
     if args.compute_platform_override:
         proxy_conf.extend([

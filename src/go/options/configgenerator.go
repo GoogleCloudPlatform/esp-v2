@@ -83,6 +83,10 @@ type ConfigGeneratorOptions struct {
 	ScReportRetries int
 
 	ComputePlatformOverride string
+
+	TranscodingAlwaysPrintPrimitiveFields bool
+	TranscodingAlwaysPrintEnumsAsInts     bool
+	TranscoderPreserveProtoFieldNames     bool
 }
 
 // DefaultConfigGeneratorOptions returns ConfigGeneratorOptions with default values.
@@ -91,37 +95,40 @@ type ConfigGeneratorOptions struct {
 func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 
 	return ConfigGeneratorOptions{
-		CommonOptions:                 DefaultCommonOptions(),
-		BackendDnsLookupFamily:        "auto",
-		BackendAddress:                "http://127.0.0.1:8082",
-		ClusterConnectTimeout:         20 * time.Second,
-		CorsAllowCredentials:          false,
-		CorsAllowHeaders:              "",
-		CorsAllowMethods:              "",
-		CorsAllowOrigin:               "",
-		CorsAllowOriginRegex:          "",
-		CorsExposeHeaders:             "",
-		CorsPreset:                    "",
-		EnvoyUseRemoteAddress:         false,
-		EnvoyXffNumTrustedHops:        2,
-		JwksCacheDurationInS:          300,
-		ListenerAddress:               "0.0.0.0",
-		ListenerPort:                  8080,
-		RootCertsPath:                 util.DefaultRootCAPaths,
-		LogJwtPayloads:                "",
-		LogRequestHeaders:             "",
-		LogResponseHeaders:            "",
-		ServiceAccountKey:             "",
-		ServiceControlNetworkFailOpen: true,
-		ServiceManagementURL:          "https://servicemanagement.googleapis.com",
-		ScCheckRetries:                -1,
-		ScCheckTimeoutMs:              0,
-		ScQuotaRetries:                -1,
-		ScQuotaTimeoutMs:              0,
-		ScReportRetries:               -1,
-		ScReportTimeoutMs:             0,
-		SkipJwtAuthnFilter:            false,
-		SkipServiceControlFilter:      false,
-		SuppressEnvoyHeaders:          false,
+		CommonOptions:                         DefaultCommonOptions(),
+		BackendDnsLookupFamily:                "auto",
+		BackendAddress:                        "http://127.0.0.1:8082",
+		ClusterConnectTimeout:                 20 * time.Second,
+		CorsAllowCredentials:                  false,
+		CorsAllowHeaders:                      "",
+		CorsAllowMethods:                      "",
+		CorsAllowOrigin:                       "",
+		CorsAllowOriginRegex:                  "",
+		CorsExposeHeaders:                     "",
+		CorsPreset:                            "",
+		EnvoyUseRemoteAddress:                 false,
+		EnvoyXffNumTrustedHops:                2,
+		JwksCacheDurationInS:                  300,
+		ListenerAddress:                       "0.0.0.0",
+		ListenerPort:                          8080,
+		RootCertsPath:                         util.DefaultRootCAPaths,
+		LogJwtPayloads:                        "",
+		LogRequestHeaders:                     "",
+		LogResponseHeaders:                    "",
+		ServiceAccountKey:                     "",
+		ServiceControlNetworkFailOpen:         true,
+		ServiceManagementURL:                  "https://servicemanagement.googleapis.com",
+		ScCheckRetries:                        -1,
+		ScCheckTimeoutMs:                      0,
+		ScQuotaRetries:                        -1,
+		ScQuotaTimeoutMs:                      0,
+		ScReportRetries:                       -1,
+		ScReportTimeoutMs:                     0,
+		SkipJwtAuthnFilter:                    false,
+		SkipServiceControlFilter:              false,
+		SuppressEnvoyHeaders:                  false,
+		TranscodingAlwaysPrintPrimitiveFields: false,
+		TranscodingAlwaysPrintEnumsAsInts:     false,
+		TranscoderPreserveProtoFieldNames:     false,
 	}
 }

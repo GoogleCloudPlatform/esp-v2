@@ -216,6 +216,20 @@ class TestStartProxy(unittest.TestCase):
               '--http_request_timeout_s', '10',
               '--service_config_id', '2019-11-09r0',
               ]),
+            # json-grpc transcoder json print options
+            (['--service=test_bookstore.gloud.run',
+              '--backend=grpc://127.0.0.1:8000',
+              '--transcoding_always_print_primitive_fields',
+              '--transcoding_preserve_proto_field_names',
+              '--transcoding_always_print_enums_as_ints'
+              ],
+             ['bin/configmanager', '--logtostderr','--backend_address', 'grpc://127.0.0.1:8000',
+              '--rollout_strategy', 'fixed', '--v', '0',
+              '--service', 'test_bookstore.gloud.run',
+              '--transcoding_always_print_primitive_fields',
+              '--transcoding_always_print_enums_as_ints',
+              '--transcoding_preserve_proto_field_names',
+              ]),
         ]
 
         for flags, wantedArgs in testcases:
