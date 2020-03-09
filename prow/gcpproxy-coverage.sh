@@ -46,12 +46,11 @@ echo '======================================================='
 PUBLIC_DIRECTORY=""
 case "${JOB_TYPE}" in
   "presubmit")
-    # Store in directory with job id.
-    # IMPORTANT: Default to a some directory to prevent messy copy on unset var.
-    PUBLIC_DIRECTORY="${PROW_JOB_ID:-tmp}"
+    # Store in directory with the SHA for each presubmit run.
+    PUBLIC_DIRECTORY=$(get_tag_name)
     ;;
   "periodic")
-    # Overwrite global directory with latest coverage.
+    # Overwrite global directory with latest coverage for all continuous runs.
     PUBLIC_DIRECTORY="latest"
     ;;
   *)
