@@ -164,6 +164,35 @@ func TestCreateDownstreamTransportSocket(t *testing.T) {
 			} `,
 		},
 		{
+			desc:               "Downstream Transport Socket for TLS, with version requirements",
+			sslPath:            "/etc/ssl/endpoints/",
+			sslMinimumProtocol: "TLSv1.1",
+			sslMaximumProtocol: "TLSv1.3",
+			wantTransportSocket: `{
+				"name":"envoy.transport_sockets.tls",
+				"typedConfig":{
+					"@type":"type.googleapis.com/envoy.api.v2.auth.DownstreamTlsContext",
+					"commonTlsContext":{
+						"alpnProtocols":["h2","http/1.1"],
+						"tlsCertificates":[
+							{
+								"certificateChain":{
+									"filename":"/etc/ssl/endpoints/server.crt"
+								},
+								"privateKey":{
+									"filename":"/etc/ssl/endpoints/server.key"
+								}
+							}
+						],
+						"tlsParams":{
+							"tlsMaximumProtocolVersion":"TLSv1_3",
+							"tlsMinimumProtocolVersion":"TLSv1_1"
+						}
+					}
+				}
+			} `,
+		},
+		{
 			desc:               "Downstream Transport Socket for TLS, for legacy ESPv1",
 			sslPath:            "/etc/nginx/ssl",
 			sslMaximumProtocol: "TLSv1.3",
