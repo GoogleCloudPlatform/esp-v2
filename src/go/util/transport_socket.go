@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 
 	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
@@ -144,19 +143,14 @@ func createCommonTlsContext(rootCertsPath, sslPath, sslFileName, sslMinimumProto
 		}
 	}
 
-	glog.Infof("createCommonTlsContext =================: %v", sslMinimumProtocol)
-
 	if sslMinimumProtocol != "" || sslMaximumProtocol != "" {
 		common_tls.TlsParams = &authpb.TlsParameters{}
 		if minVersion, ok := tlsProtocolVersionMap[sslMinimumProtocol]; ok {
-			glog.Infof("createCommonTlsContext =================: %v", minVersion)
 			common_tls.TlsParams.TlsMinimumProtocolVersion = minVersion
 		}
 		if maxVersion, ok := tlsProtocolVersionMap[sslMaximumProtocol]; ok {
-			glog.Infof("createCommonTlsContext =================: %v", maxVersion)
 			common_tls.TlsParams.TlsMaximumProtocolVersion = maxVersion
 		}
 	}
-	glog.Infof("common_tls =================: %v", common_tls)
 	return common_tls, nil
 }

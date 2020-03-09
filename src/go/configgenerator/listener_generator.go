@@ -202,7 +202,6 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	}
 
 	listenerName := "http_listener"
-	glog.Infof("adding Transport Socket =================: %v", serviceInfo.Options.SslMinimumProtocol)
 
 	if serviceInfo.Options.SslServerCertPath != "" {
 		listenerName = "https_listener"
@@ -214,7 +213,6 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		if err != nil {
 			return nil, err
 		}
-		glog.Infof("adding Transport Socket =================: %v", transportSocket)
 		filterChain.TransportSocket = transportSocket
 	}
 
