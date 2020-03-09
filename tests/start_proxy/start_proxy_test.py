@@ -139,6 +139,33 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8080', '--ssl_client_cert_path',
               '/etc/nginx/ssl', '--disable_tracing'
               ]),
+            # ssl_minimum_protocol and ssl_maximum_protocol specified
+            (['-R=managed','--listener_port=8080',  '--disable_tracing',
+              '--ssl_minimum_protocol=TLSv1.1',
+              '--ssl_maximum_protocol=TLSv1.3'],
+             ['bin/configmanager', '--logtostderr',
+              '--backend_address', 'http://127.0.0.1:8082',
+              '--rollout_strategy', 'managed', '--v', '0',
+              '--listener_port', '8080', '--ssl_minimum_protocol',
+              'TLSv1.1','--ssl_maximum_protocol','TLSv1.3', '--disable_tracing'
+              ]),
+            # legacy --ssl_protocols specified
+            (['-R=managed','--listener_port=8080',  '--disable_tracing',
+              '--ssl_protocols=TLSv1.3', '--ssl_protocols=TLSv1.2'],
+             ['bin/configmanager', '--logtostderr',
+              '--backend_address', 'http://127.0.0.1:8082',
+              '--rollout_strategy', 'managed', '--v', '0',
+              '--listener_port', '8080', '--ssl_minimum_protocol',
+              'TLSv1.2','--ssl_maximum_protocol','TLSv1.3', '--disable_tracing'
+              ]),
+            (['-R=managed','--listener_port=8080',  '--disable_tracing',
+              '--ssl_protocols=TLSv1.2'],
+             ['bin/configmanager', '--logtostderr',
+              '--backend_address', 'http://127.0.0.1:8082',
+              '--rollout_strategy', 'managed', '--v', '0',
+              '--listener_port', '8080', '--ssl_minimum_protocol',
+              'TLSv1.2','--ssl_maximum_protocol','TLSv1.2', '--disable_tracing'
+              ]),
             # http2_port specified.
             (['-R=managed',
               '--http2_port=8079', '--service_control_quota_retries=3',
@@ -253,7 +280,9 @@ class TestStartProxy(unittest.TestCase):
             ['--http_port=80', '--listener_port=80'],
             ['--ssl_server_cert_path=/etc/endpoint/ssl', '--ssl_port=443'],
             ['--ssl_client_cert_path=/etc/endpoint/ssl', '--tls_mutual_auth'],
-        ]
+            ['--ssl_protocols=TLSv1.3',  '--ssl_minimum_protocol=TLSv1.1'],
+            ['--ssl_minimum_protocol=TLSv11'],
+          ]
 
         for flags in testcases:
           with self.assertRaises(SystemExit) as cm:
