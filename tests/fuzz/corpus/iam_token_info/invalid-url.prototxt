@@ -1,0 +1,4 @@
+include_email: false
+access_token: "access-token"
+token_url: "https://invalid-url.com/ \n test"
+resp_body: "{ \"accessToken\": \"fake-access-token\", \"expireTime\": \"2020-02-20T23:15:34-08:00\" }"

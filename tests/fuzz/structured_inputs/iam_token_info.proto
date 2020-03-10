@@ -13,7 +13,7 @@ message IamTokenInfoInput {
 
   // Arguments for starting the request.
   string access_token = 4;
-  string token_url = 5;
+  string token_url = 5 [(validate.rules).string = {min_bytes: 1 well_known_regex: HTTP_HEADER_VALUE}];
 
   // Arguments for parsing the tokens.
   string resp_body = 6;

@@ -38,7 +38,7 @@ DEFINE_PROTO_FUZZER(const tests::fuzz::protos::IamTokenInfoInput& input) {
 
     // Call functions under test.
     TokenResult ret;
-    (void)token_info.prepareRequest(input.token_url());
+    (void)token_info.prepareRequest(Envoy::Fuzz::replaceInvalidHostCharacters(input.token_url()));
     (void)token_info.parseAccessToken(input.resp_body(), &ret);
     (void)token_info.parseIdentityToken(input.resp_body(), &ret);
 
