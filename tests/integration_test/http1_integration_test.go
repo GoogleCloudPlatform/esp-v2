@@ -1,0 +1,183 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package integration_test
+
+import (
+	"fmt"
+	"strings"
+	"testing"
+
+	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
+
+	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
+)
+
+const (
+	echo = "hello"
+)
+
+func TestHttp1Basic(t *testing.T) {
+	t.Parallel()
+
+	configID := "test-config-id"
+
+	args := []string{"--service_config_id=" + configID,
+		"--rollout_strategy=fixed", "--healthz=/healthz"}
+
+	s := env.NewTestEnv(comp.TestHttp1Basic, platform.EchoSidecar)
+	defer s.TearDown()
+
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	testData := []struct {
+		desc               string
+		path               string
+		method             string
+		wantResp           string
+		wantedError        string
+		wantScRequestCount int
+	}{
+		{
+			desc:               "succeed, no Jwt required",
+			path:               "/echo",
+			method:             "POST",
+			wantResp:           `{"message":"hello"}`,
+			wantScRequestCount: 2,
+		},
+		{
+			desc:               "health check succeed",
+			path:               "/healthz",
+			method:             "GET",
+			wantScRequestCount: 0,
+		},
+		{
+			desc:               "health check fail",
+			path:               "/healthcheck",
+			method:             "GET",
+			wantedError:        "404 Not Found",
+			wantScRequestCount: 1,
+		},
+	}
+	for _, tc := range testData {
+		s.ServiceControlServer.ResetRequestCount()
+		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		var resp []byte
+		var err error
+		if tc.method == "GET" {
+			resp, err = client.DoGet(url)
+		} else if tc.method == "POST" {
+			resp, err = client.DoPost(fmt.Sprintf("%s?key=api-key", url), echo)
+		} else {
+			t.Fatal(fmt.Errorf("unexpected method"))
+		}
+		if tc.wantedError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantedError)) {
+			t.Errorf("Test (%s): failed, expected err: %s, got: %s", tc.desc, tc.wantedError, err)
+		} else if tc.wantedError == "" && err != nil {
+			t.Errorf("Test (%s): got unexpected error: %s", tc.desc, resp)
+		} else {
+			if !strings.Contains(string(resp), tc.wantResp) {
+				t.Errorf("Test (%s): expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
+			}
+		}
+		// Health Check should not check/report to ServiceControl.
+		if err = s.ServiceControlServer.VerifyRequestCount(tc.wantScRequestCount); err != nil {
+			t.Errorf("Test (%s): verify request count failed, got: %v", tc.desc, err)
+		}
+	}
+}
+
+func TestHttp1JWT(t *testing.T) {
+	t.Parallel()
+
+	serviceName := "test-echo"
+	configID := "test-config-id"
+
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
+		"--skip_service_control_filter=true", "--rollout_strategy=fixed"}
+
+	s := env.NewTestEnv(comp.TestHttp1JWT, platform.EchoSidecar)
+	defer s.TearDown()
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	testData := []struct {
+		desc        string
+		httpMethod  string
+		httpPath    string
+		token       string
+		wantResp    string
+		wantedError string
+	}{
+		{
+			desc:       "Succeed, with valid JWT token",
+			httpMethod: "GET",
+			httpPath:   "/auth/info/auth0",
+			token:      testdata.FakeCloudTokenMultiAudiences,
+			wantResp:   `{"aud":["admin.cloud.goog","bookstore_test_client.cloud.goog"],"exp":4698318999,"iat":1544718999,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
+		},
+		{
+			desc:        "Fail, with valid JWT token",
+			httpMethod:  "GET",
+			httpPath:    "/auth/info/googlejwt",
+			token:       testdata.FakeBadToken,
+			wantedError: "401 Unauthorized",
+		},
+		{
+			desc:        "Fail, without valid JWT token",
+			httpMethod:  "GET",
+			httpPath:    "/auth/info/googlejwt",
+			wantedError: "401 Unauthorized",
+		},
+		{
+			desc:       "Succeed, with valid JWT token, with allowed audience",
+			httpMethod: "GET",
+			httpPath:   "/auth/info/auth0",
+			token:      testdata.FakeCloudTokenSingleAudience2,
+			wantResp:   `{"aud":"admin.cloud.goog","exp":4698318995,"iat":1544718995,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
+		},
+		{
+			desc:        "Fail, with valid JWT token, without allowed audience",
+			httpMethod:  "GET",
+			httpPath:    "/auth/info/auth0",
+			token:       testdata.FakeCloudToken,
+			wantedError: "403 Forbidden",
+		},
+		{
+			desc:        "Fail, with valid JWT token, with incorrect audience",
+			httpMethod:  "GET",
+			httpPath:    "/auth/info/auth0",
+			token:       testdata.FakeCloudTokenSingleAudience1,
+			wantedError: "403 Forbidden",
+		},
+	}
+	for _, tc := range testData {
+		host := fmt.Sprintf("http://localhost:%v", s.Ports().ListenerPort)
+		resp, err := client.DoJWT(host, tc.httpMethod, tc.httpPath, "", "", tc.token)
+
+		if tc.wantedError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantedError)) {
+			t.Errorf("Test (%s): failed, expected err: %s, got: %s", tc.desc, tc.wantedError, err)
+		} else {
+			if !strings.Contains(string(resp), tc.wantResp) {
+				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
+			}
+		}
+	}
+}

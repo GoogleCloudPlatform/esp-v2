@@ -16,6 +16,7 @@ package client
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 
@@ -25,12 +26,12 @@ import (
 
 func RunGRPCEchoTest(testPlans string, serverPort uint16) (string, error) {
 	testPlans = fmt.Sprintf("server_addr:\"127.0.0.1:%v\"\n%s", serverPort, testPlans)
-	f, err := os.Create("test_plans.txt")
+	f, err := ioutil.TempFile("", "test_plans.*.txt")
 	if err != nil {
-		return "", err
+		return "cannot create temporary file", err
 	}
 	_, err = f.WriteString(testPlans)
-	defer os.Remove("test_plans.txt")
+	defer os.Remove(f.Name())
 	if err != nil {
 		f.Close()
 		return "", err
@@ -40,7 +41,7 @@ func RunGRPCEchoTest(testPlans string, serverPort uint16) (string, error) {
 		return "", err
 	}
 
-	realCmd := fmt.Sprintf("%s < test_plans.txt", platform.GetFilePath(platform.GrpcEchoClient))
+	realCmd := fmt.Sprintf("%s < %s", platform.GetFilePath(platform.GrpcEchoClient), f.Name())
 	cmd := exec.Command("bash", "-c", realCmd)
 	out, err := cmd.CombinedOutput()
 
