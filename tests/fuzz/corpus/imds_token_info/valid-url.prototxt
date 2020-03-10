@@ -1,0 +1,2 @@
+token_url: "http://127.0.0.1:42761/v1/instance/service-accounts/default/token"
+resp_body: "{ \"access_token\": \"fake-access-token\", \"expires_in\": 383929 }"
