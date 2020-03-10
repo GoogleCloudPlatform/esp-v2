@@ -488,8 +488,3 @@ func (e *TestEnv) TearDown() {
 
 	glog.Infof("finish tearing down...")
 }
-
-func NewBackendAuthTestEnv(port uint16) *TestEnv {
-	s := NewTestEnv(port, platform.EchoRemote)
-	return s
-}

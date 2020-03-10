@@ -19,8 +19,8 @@ import (
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
-
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
@@ -30,7 +30,7 @@ import (
 func TestBackendAuthDisableAuth(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewBackendAuthTestEnv(comp.TestBackendAuthDisableAuth)
+	s := env.NewTestEnv(comp.TestBackendAuthDisableAuth, platform.EchoRemote)
 	s.OverrideMockMetadata(
 		map[string]string{
 			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.JwtAudienceSet",

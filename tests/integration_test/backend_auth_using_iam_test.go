@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
@@ -31,7 +32,7 @@ import (
 func TestBackendAuthWithIamIdToken(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewBackendAuthTestEnv(comp.TestBackendAuthWithIamIdToken)
+	s := env.NewTestEnv(comp.TestBackendAuthWithIamIdToken, platform.EchoRemote)
 	serviceAccount := "fakeServiceAccount@google.com"
 
 	s.SetBackendAuthIamServiceAccount(serviceAccount)
@@ -84,7 +85,7 @@ func TestBackendAuthWithIamIdToken(t *testing.T) {
 
 func TestBackendAuthWithIamIdTokenRetries(t *testing.T) {
 	t.Parallel()
-	s := env.NewBackendAuthTestEnv(comp.TestBackendAuthWithIamIdTokenRetries)
+	s := env.NewTestEnv(comp.TestBackendAuthWithIamIdTokenRetries, platform.EchoRemote)
 	serviceAccount := "fakeServiceAccount@google.com"
 	s.SetBackendAuthIamServiceAccount(serviceAccount)
 
@@ -154,7 +155,7 @@ func TestBackendAuthWithIamIdTokenRetries(t *testing.T) {
 func TestBackendAuthUsingIamIdTokenWithDelegates(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewBackendAuthTestEnv(comp.TestBackendAuthUsingIamIdTokenWithDelegates)
+	s := env.NewTestEnv(comp.TestBackendAuthUsingIamIdTokenWithDelegates, platform.EchoRemote)
 	serviceAccount := "fakeServiceAccount@google.com"
 
 	s.SetBackendAuthIamServiceAccount(serviceAccount)
