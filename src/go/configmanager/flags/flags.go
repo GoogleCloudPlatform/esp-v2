@@ -53,9 +53,11 @@ var (
 	ListenerPort = flag.Int("listener_port", 8080, "listener port")
 	Healthz      = flag.String("healthz", "", "path for health check of ESPv2 proxy itself")
 
-	SslServerCertPath = flag.String("ssl_server_cert_path", "", "Path to the certificate and key that ESPv2 uses to act as a HTTPS server")
-	SslClientCertPath = flag.String("ssl_client_cert_path", "", "Path to the certificate and key that ESPv2 uses to enable TLS mutual authentication for HTTPS backend")
-	RootCertsPath     = flag.String("root_certs_path", util.DefaultRootCAPaths, "Path to the root certificates to make TLS connection.")
+	SslServerCertPath  = flag.String("ssl_server_cert_path", "", "Path to the certificate and key that ESPv2 uses to act as a HTTPS server")
+	SslClientCertPath  = flag.String("ssl_client_cert_path", "", "Path to the certificate and key that ESPv2 uses to enable TLS mutual authentication for HTTPS backend")
+	SslMinimumProtocol = flag.String("ssl_minimum_protocol", "", "Minimum TLS protocol version for Downstream connections.")
+	SslMaximumProtocol = flag.String("ssl_maximum_protocol", "", "Maximum TLS protocol version for Downstream connections.")
+	RootCertsPath      = flag.String("root_certs_path", util.DefaultRootCAPaths, "Path to the root certificates to make TLS connection.")
 
 	// Flags for non_gcp deployment.
 	ServiceAccountKey = flag.String("service_account_key", "", `Use the service account key JSON file to access the service control and the
@@ -122,6 +124,8 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		RootCertsPath:                         *RootCertsPath,
 		SslServerCertPath:                     *SslServerCertPath,
 		SslClientCertPath:                     *SslClientCertPath,
+		SslMinimumProtocol:                    *SslMinimumProtocol,
+		SslMaximumProtocol:                    *SslMaximumProtocol,
 		ServiceAccountKey:                     *ServiceAccountKey,
 		SkipJwtAuthnFilter:                    *SkipJwtAuthnFilter,
 		SkipServiceControlFilter:              *SkipServiceControlFilter,

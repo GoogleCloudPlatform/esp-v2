@@ -29,6 +29,15 @@ const (
 	defaultClientSslFilename = "client"
 )
 
+var (
+	tlsProtocolVersionMap = map[string]authpb.TlsParameters_TlsProtocol{
+		"TLSv1.0": authpb.TlsParameters_TLSv1_0,
+		"TLSv1.1": authpb.TlsParameters_TLSv1_1,
+		"TLSv1.2": authpb.TlsParameters_TLSv1_2,
+		"TLSv1.3": authpb.TlsParameters_TLSv1_3,
+	}
+)
+
 // CreateUpstreamTransportSocket creates a TransportSocket for Upstream
 func CreateUpstreamTransportSocket(hostname, rootCertsPath, sslClientPath string, alpnProtocols []string) (*corepb.TransportSocket, error) {
 	if rootCertsPath == "" {
@@ -41,7 +50,7 @@ func CreateUpstreamTransportSocket(hostname, rootCertsPath, sslClientPath string
 		sslFileName = "backend"
 	}
 
-	common_tls, err := createCommonTlsContext(rootCertsPath, sslClientPath, sslFileName)
+	common_tls, err := createCommonTlsContext(rootCertsPath, sslClientPath, sslFileName, "", "")
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +75,7 @@ func CreateUpstreamTransportSocket(hostname, rootCertsPath, sslClientPath string
 }
 
 // CreateDownstreamTransportSocket creates a TransportSocket for Downstream
-func CreateDownstreamTransportSocket(sslServerPath string) (*corepb.TransportSocket, error) {
+func CreateDownstreamTransportSocket(sslServerPath, sslMinimumProtocol, sslMaximumProtocol string) (*corepb.TransportSocket, error) {
 	if sslServerPath == "" {
 		return nil, fmt.Errorf("SSL path cannot be empty.")
 	}
@@ -77,7 +86,7 @@ func CreateDownstreamTransportSocket(sslServerPath string) (*corepb.TransportSoc
 		sslFileName = "nginx"
 	}
 
-	common_tls, err := createCommonTlsContext("", sslServerPath, sslFileName)
+	common_tls, err := createCommonTlsContext("", sslServerPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +106,7 @@ func CreateDownstreamTransportSocket(sslServerPath string) (*corepb.TransportSoc
 	}, nil
 }
 
-func createCommonTlsContext(rootCertsPath, sslPath, sslFileName string) (*authpb.CommonTlsContext, error) {
+func createCommonTlsContext(rootCertsPath, sslPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol string) (*authpb.CommonTlsContext, error) {
 	common_tls := &authpb.CommonTlsContext{}
 	// Add TLS certificate
 	if sslPath != "" && sslFileName != "" {
@@ -134,5 +143,14 @@ func createCommonTlsContext(rootCertsPath, sslPath, sslFileName string) (*authpb
 		}
 	}
 
+	if sslMinimumProtocol != "" || sslMaximumProtocol != "" {
+		common_tls.TlsParams = &authpb.TlsParameters{}
+		if minVersion, ok := tlsProtocolVersionMap[sslMinimumProtocol]; ok {
+			common_tls.TlsParams.TlsMinimumProtocolVersion = minVersion
+		}
+		if maxVersion, ok := tlsProtocolVersionMap[sslMaximumProtocol]; ok {
+			common_tls.TlsParams.TlsMaximumProtocolVersion = maxVersion
+		}
+	}
 	return common_tls, nil
 }

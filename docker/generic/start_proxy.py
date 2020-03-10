@@ -151,25 +151,36 @@ environment variable or by passing "-k" flag to this script.
         '''.format(backend=DEFAULT_BACKEND))
 
     parser.add_argument('--listener_port', default=None, type=int, help='''
-       The port to accept downstream connections.
-       It supports HTTP/1.x, HTTP/2, and gRPC connections.
-       Default is {port}'''.format(port=DEFAULT_LISTENER_PORT))
+        The port to accept downstream connections.
+        It supports HTTP/1.x, HTTP/2, and gRPC connections.
+        Default is {port}'''.format(port=DEFAULT_LISTENER_PORT))
 
     parser.add_argument('--ssl_server_cert_path', default=None, help='''
-    Proxy's server cert path. When configured, ESPv2 only accepts HTTP/1.x and
-    HTTP/2 secure connections on listener_port. Requires the certificate and
-    key files "server.crt" and "server.key" within this path.''')
+        Proxy's server cert path. When configured, ESPv2 only accepts HTTP/1.x and
+        HTTP/2 secure connections on listener_port. Requires the certificate and
+        key files "server.crt" and "server.key" within this path.''')
 
     parser.add_argument('--ssl_client_cert_path', default=None, help='''
-    Proxy's client cert path. When configured, ESPv2 enables TLS mutual
-    authentication for HTTPS backends. Requires the certificate and
-    key files "client.crt" and "client.key" within this path.''')
+        Proxy's client cert path. When configured, ESPv2 enables TLS mutual
+        authentication for HTTPS backends. Requires the certificate and
+        key files "client.crt" and "client.key" within this path.''')
+
+    parser.add_argument('--ssl_minimum_protocol', default=None,
+        help=''' Minimum TLS protocol version for client side connection.
+        Please refer to https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/auth/cert.proto#common-tls-configuration.
+        Valid values are `TLSv1.0`, `TLSv1.1`, `TLSv1.2`, and `TLSv1.3`.''')
+
+    parser.add_argument('--ssl_maximum_protocol', default=None,
+        help=''' Maximum TLS protocol version for client side connection.
+        Please refer to https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/auth/cert.proto#common-tls-configuration.
+        Valid values are `TLSv1.0`, `TLSv1.1`, `TLSv1.2`, and `TLSv1.3`.''')
 
     parser.add_argument('-z', '--healthz', default=None, help='''Define a
-    health checking endpoint on the same ports as the application backend. For
-    example, "-z healthz" makes ESPv2 return code 200 for location "/healthz",
-    instead of forwarding the request to the backend. Please don't use
-    any paths conflicting with your normal requests. Default: not used.''')
+        health checking endpoint on the same ports as the application backend.
+        For example, "-z healthz" makes ESPv2 return code 200 for location
+        "/healthz", instead of forwarding the request to the backend. Please
+        don't use any paths conflicting with your normal requests.
+        Default: not used.''')
 
     parser.add_argument(
         '-R',
@@ -466,28 +477,39 @@ environment variable or by passing "-k" flag to this script.
         choices=['http1', 'http2', 'grpc'])
 
     parser.add_argument('--http_port', default=None, type=int, help='''
-       This flag is exactly same as --listener_port. It is added for
-       backward compatible for ESPv1 and will be deprecated.
-       Please use the flag --listener_port.''')
+        This flag is exactly same as --listener_port. It is added for
+        backward compatible for ESPv1 and will be deprecated.
+        Please use the flag --listener_port.''')
 
     parser.add_argument('--http2_port', default=None, type=int, help='''
-       This flag is exactly same as --listener_port. It is added for
-       backward compatible for ESPv1 and will be deprecated.
-       Please use the flag --listener_port.''')
+        This flag is exactly same as --listener_port. It is added for
+        backward compatible for ESPv1 and will be deprecated.
+        Please use the flag --listener_port.''')
 
     parser.add_argument('--ssl_port', default=None, type=int, help='''
-       This flag added for backward compatible for ESPv1 and will be deprecated.
-       Please use the flag --ssl_server_cert_path instead. When configured, ESPv2
-       accepts HTTP/1.x and HTTP/2 secure connections on this port,
-       Requires the certificate and key files /etc/nginx/ssl/nginx.crt and
-       /etc/nginx/ssl/nginx.key''')
+        This flag added for backward compatible for ESPv1 and will be deprecated.
+        Please use the flag --ssl_server_cert_path instead. When configured, ESPv2
+        accepts HTTP/1.x and HTTP/2 secure connections on this port,
+        Requires the certificate and key files /etc/nginx/ssl/nginx.crt and
+        /etc/nginx/ssl/nginx.key''')
 
     parser.add_argument('-t', '--tls_mutual_auth', action='store_true', help='''
-    This flag added for backward compatible for ESPv1 and will be deprecated.
-    Please use the flag --ssl_client_cert_path instead.
-    Enable TLS mutual authentication for HTTPS backends.
-    Default value: Not enabled. Please provide the certificate and key files
-    /etc/nginx/ssl/backend.crt and /etc/nginx/ssl/backend.key.''')
+        This flag added for backward compatible for ESPv1 and will be deprecated.
+        Please use the flag --ssl_client_cert_path instead.
+        Enable TLS mutual authentication for HTTPS backends.
+        Default value: Not enabled. Please provide the certificate and key files
+        /etc/nginx/ssl/backend.crt and /etc/nginx/ssl/backend.key.''')
+
+    parser.add_argument('--ssl_protocols',
+        default=None, action='append', help='''
+        This flag added for backward compatible for ESPv1 and will be deprecated.
+        Please use the flag --ssl_minimum_protocol and  --ssl_maximum_protocol
+        instead.
+        Enable the specified SSL protocols. Please refer to
+        https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols.
+        The "ssl_protocols" argument can be repeated multiple times to specify multiple
+        SSL protocols (e.g., --ssl_protocols=TLSv1.1 --ssl_protocols=TLSv1.2).
+        ''')
 
     parser.add_argument(
         '--transcoding_always_print_primitive_fields',
@@ -565,6 +587,13 @@ def enforce_conflict_args(args):
     if len(port_flags) > 1:
         return "Multiple port flags {} are not allowed, please just use --listener_port flag".format(",".join(port_flags))
 
+    if args.ssl_minimum_protocol and args.ssl_minimum_protocol not in {"TLSv1.0", "TLSv1.1", "TLSv1.2", "TLSv1.3"}:
+        return "Flag --ssl_minimum_protocol must be 'TLSv1.0', 'TLSv1.1', 'TLSv1.2', and 'TLSv1.3'."
+    if args.ssl_maximum_protocol and args.ssl_maximum_protocol not in {"TLSv1.0", "TLSv1.1", "TLSv1.2", "TLSv1.3"}:
+        return "Flag --ssl_maximum_protocol must be 'TLSv1.0', 'TLSv1.1', 'TLSv1.2', and 'TLSv1.3'."
+    if args.ssl_protocols and (args.ssl_minimum_protocol or args.ssl_maximum_protocol):
+        return "Flag --ssl_protocols is going to be deprecated, please use --ssl_minimum_protocol and --ssl_maximum_protocol."
+
     return None
 
 def gen_proxy_config(args):
@@ -621,6 +650,15 @@ def gen_proxy_config(args):
         proxy_conf.extend(["--ssl_client_cert_path", str(args.ssl_client_cert_path)])
     if args.tls_mutual_auth:
         proxy_conf.extend(["--ssl_client_cert_path", "/etc/nginx/ssl"])
+
+    if args.ssl_minimum_protocol:
+        proxy_conf.extend(["--ssl_minimum_protocol", args.ssl_minimum_protocol])
+    if args.ssl_maximum_protocol:
+        proxy_conf.extend(["--ssl_maximum_protocol", args.ssl_maximum_protocol])
+    if args.ssl_protocols:
+        args.ssl_protocols.sort()
+        proxy_conf.extend(["--ssl_minimum_protocol", args.ssl_protocols[0]])
+        proxy_conf.extend(["--ssl_maximum_protocol", args.ssl_protocols[-1]])
 
     if args.service:
         proxy_conf.extend(["--service", args.service])

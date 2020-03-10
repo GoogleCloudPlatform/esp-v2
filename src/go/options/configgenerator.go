@@ -50,6 +50,8 @@ type ConfigGeneratorOptions struct {
 	ListenerPort         int
 	SslServerCertPath    string
 	SslClientCertPath    string
+	SslMinimumProtocol   string
+	SslMaximumProtocol   string
 	RootCertsPath        string
 
 	// Flags for non_gcp deployment.
