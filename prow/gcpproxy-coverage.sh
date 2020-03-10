@@ -17,13 +17,11 @@
 # Presubmit script triggered by Prow.
 
 # Fail on any error.
-set -eox pipefail
+set -eo pipefail
 
 gcloud config set core/project cloudesf-testing
-gcloud auth list
-echo $CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE
-echo $GOOGLE_APPLICATION_CREDENTIALS
-gcloud auth activate-service-account --key-file=/etc/cloudesf-testing-github-prow-service-account/service-account.json
+gcloud auth activate-service-account \
+  --key-file=/etc/cloudesf-testing-github-prow-service-account/service-account.json
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT}"
