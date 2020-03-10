@@ -22,17 +22,18 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 )
 
-// Echo stores data for Echo HTTP/1 backend process.
+// Echo stores data for Echo HTTP backend process.
 type EchoHTTPServer struct {
 	*Cmd
 }
 
-func NewEchoHTTPServer(port uint16, enableHttps bool, enableRootPathHandler, useWrongCert bool, mtlsCertFile string) (*EchoHTTPServer, error) {
+func NewEchoHTTPServer(port uint16, enableHttps bool, enableRootPathHandler, useWrongCert bool, mtlsCertFile string, disableHttp2 bool) (*EchoHTTPServer, error) {
 	serverArgs := []string{
 		fmt.Sprint("--alsologtostderr"),
 		fmt.Sprintf("--port=%v", port),
 		fmt.Sprintf("--enable_https=%v", enableHttps),
 		fmt.Sprintf("--enable_root_path_handler=%v", enableRootPathHandler),
+		fmt.Sprintf("--disable_http2=%v", disableHttp2),
 	}
 
 	// If Backend server uses different cert as Proxy, the HTTPS call fails.
@@ -51,6 +52,7 @@ func NewEchoHTTPServer(port uint16, enableHttps bool, enableRootPathHandler, use
 	}
 
 	cmd := exec.Command(platform.GetFilePath(platform.Echo), serverArgs...)
+
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return &EchoHTTPServer{

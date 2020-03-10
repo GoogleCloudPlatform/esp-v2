@@ -39,6 +39,7 @@ const (
 	TestBackendAuthWithImdsIdToken
 	TestBackendAuthWithImdsIdTokenRetries
 	TestBackendAuthWithImdsIdTokenWhileAllowCors
+	TestBackendHttpProtocol
 	TestDeadlinesForCatchAllBackend
 	TestDeadlinesForDynamicRouting
 	TestDeadlinesForGrpcCatchAllBackend
