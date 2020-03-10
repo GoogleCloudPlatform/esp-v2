@@ -26,68 +26,59 @@ namespace ServiceControl {
 
 class MockServiceControlHandler : public ServiceControlHandler {
  public:
-  MOCK_METHOD3(callCheck, void(Http::RequestHeaderMap& headers,
-                               Envoy::Tracing::Span& parent_span,
-                               CheckDoneCallback& callback));
+  MOCK_METHOD(void, callCheck,
+              (Http::RequestHeaderMap & headers,
+               Envoy::Tracing::Span& parent_span, CheckDoneCallback& callback),
+              (override));
 
-  MOCK_METHOD3(callReport,
-               void(const Http::RequestHeaderMap* request_headers,
-                    const Http::ResponseHeaderMap* response_headers,
-                    const Http::ResponseTrailerMap* response_trailers));
+  MOCK_METHOD(void, callReport,
+              (const Http::RequestHeaderMap* request_headers,
+               const Http::ResponseHeaderMap* response_headers,
+               const Http::ResponseTrailerMap* response_trailers),
+              (override));
 
-  MOCK_METHOD0(tryIntermediateReport, void());
+  MOCK_METHOD(void, tryIntermediateReport, (), (override));
 
-  MOCK_METHOD1(processResponseHeaders,
-               void(const Http::ResponseHeaderMap& response_headers));
+  MOCK_METHOD(void, processResponseHeaders,
+              (const Http::ResponseHeaderMap& response_headers), (override));
 
-  MOCK_METHOD0(onDestroy, void());
+  MOCK_METHOD(void, onDestroy, (), (override));
 };
 
 class MockServiceControlHandlerFactory : public ServiceControlHandlerFactory {
  public:
-  ServiceControlHandlerPtr createHandler(
-      const Http::RequestHeaderMap& headers,
-      const StreamInfo::StreamInfo& stream_info) const override {
-    return ServiceControlHandlerPtr{createHandler_(headers, stream_info)};
-  }
-
-  MOCK_CONST_METHOD2(
-      createHandler_,
-      ServiceControlHandler*(const Http::RequestHeaderMap& headers,
-                             const StreamInfo::StreamInfo& stream_info));
+  MOCK_METHOD(ServiceControlHandlerPtr, createHandler,
+              (const Http::RequestHeaderMap& headers,
+               const StreamInfo::StreamInfo& stream_info),
+              (const, override));
 };
 
 class MockServiceControlCall : public ServiceControlCall {
  public:
-  MOCK_METHOD3(
-      callCheck,
-      CancelFunc(
-          const ::google::api_proxy::service_control::CheckRequestInfo& request,
-          Envoy::Tracing::Span& parent_span, CheckDoneFunc on_done));
+  MOCK_METHOD(
+      CancelFunc, callCheck,
+      (const ::google::api_proxy::service_control::CheckRequestInfo& request,
+       Envoy::Tracing::Span& parent_span, CheckDoneFunc on_done),
+      (override));
 
-  MOCK_METHOD2(
-      callQuota,
-      void(const ::google::api_proxy::service_control::QuotaRequestInfo& info,
-           QuotaDoneFunc on_done));
+  MOCK_METHOD(
+      void, callQuota,
+      (const ::google::api_proxy::service_control::QuotaRequestInfo& info,
+       QuotaDoneFunc on_done),
+      (override));
 
-  MOCK_METHOD1(
-      callReport,
-      void(const ::google::api_proxy::service_control::ReportRequestInfo&
-               request));
+  MOCK_METHOD(
+      void, callReport,
+      (const ::google::api_proxy::service_control::ReportRequestInfo& request),
+      (override));
 };
 
 class MockServiceControlCallFactory : public ServiceControlCallFactory {
  public:
-  ServiceControlCallPtr create(
-      const ::google::api::envoy::http::service_control::Service& config)
-      override {
-    return ServiceControlCallPtr{create_(config)};
-  }
-
-  MOCK_CONST_METHOD1(
-      create_,
-      ServiceControlCall*(
-          const ::google::api::envoy::http::service_control::Service& config));
+  MOCK_METHOD(
+      ServiceControlCallPtr, create,
+      (const ::google::api::envoy::http::service_control::Service& config),
+      (override));
 };
 
 class MockCheckDoneCallback : public ServiceControlHandler::CheckDoneCallback {
@@ -95,7 +86,8 @@ class MockCheckDoneCallback : public ServiceControlHandler::CheckDoneCallback {
   MockCheckDoneCallback() {}
   ~MockCheckDoneCallback() {}
 
-  MOCK_METHOD1(onCheckDone, void(const ::google::protobuf::util::Status&));
+  MOCK_METHOD(void, onCheckDone, (const ::google::protobuf::util::Status&),
+              (override));
 };
 
 }  // namespace ServiceControl

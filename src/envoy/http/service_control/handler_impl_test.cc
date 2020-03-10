@@ -41,6 +41,7 @@ using ::google::protobuf::TextFormat;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 using ::testing::_;
+using ::testing::ByMove;
 using ::testing::MockFunction;
 using ::testing::Return;
 
@@ -168,7 +169,8 @@ class HandlerTest : public ::testing::Test {
     mock_call_ = new testing::NiceMock<MockServiceControlCall>();
 
     ASSERT_TRUE(TextFormat::ParseFromString(filter_config, &proto_config_));
-    EXPECT_CALL(mock_call_factory_, create_(_)).WillOnce(Return(mock_call_));
+    EXPECT_CALL(mock_call_factory_, create(_))
+        .WillOnce(Return(ByMove(ServiceControlCallPtr(mock_call_))));
     cfg_parser_ =
         std::make_unique<FilterConfigParser>(proto_config_, mock_call_factory_);
 
