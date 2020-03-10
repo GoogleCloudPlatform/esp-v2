@@ -17,9 +17,10 @@
 # Presubmit script triggered by Prow.
 
 # Fail on any error.
-set -eo pipefail
+set -eox pipefail
 
 gcloud config set core/project cloudesf-testing
+gcloud auth list
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT}"
