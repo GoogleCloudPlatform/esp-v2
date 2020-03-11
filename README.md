@@ -7,6 +7,9 @@ Infrastructure to provide policy checks and telemetry reports.
 ESPv2 is the next iteration of [ESP](https://github.com/cloudendpoints/esp/).
 The current implementation of ESPv2 uses [Envoy](https://www.envoyproxy.io/) as a service proxy.
 
+[![C++ Unit Test Coverage Report](https://img.shields.io/badge/Test%20Coverage-C%2B%2B%20Unit-blue)](https://storage.googleapis.com/esp-v2-coverage/latest/third_party/tools/coverage/coverage_tests/index.html)
+[![OSS Fuzz Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/esp-v2.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:esp-v2)
+
 ## Table of Contents
 
 * [Introduction](#introduction)
