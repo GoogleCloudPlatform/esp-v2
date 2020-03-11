@@ -23,17 +23,11 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
-
-var testBackendProtocolArgs = []string{
-	"--service_config_id=test-config-id",
-	"--rollout_strategy=fixed",
-	"--backend_dns_lookup_family=v4only",
-	"--suppress_envoy_headers",
-}
 
 func TestBackendHttpProtocol(t *testing.T) {
 
@@ -70,6 +64,7 @@ func TestBackendHttpProtocol(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
+		// Place in closure to allow deferring in loop.
 		func() {
 
 			httpProtocol := "http/1.1"
@@ -91,12 +86,12 @@ func TestBackendHttpProtocol(t *testing.T) {
 
 			// Explicitly setup which protocol the echo backend operates under.
 			if !tc.backendIsHttp2 {
-				s.DisableHttp2ForBackend()
+				s.DisableHttp2ForHttpsBackend()
 			}
 
 			// Setup test env.
 			defer s.TearDown()
-			if err := s.Setup(testBackendProtocolArgs); err != nil {
+			if err := s.Setup(utils.CommonArgs()); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 

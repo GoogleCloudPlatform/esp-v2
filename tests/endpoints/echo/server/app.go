@@ -285,7 +285,7 @@ func createServer() (*http.Server, error) {
 	}
 
 	// Disable HTTP/2 support if needed by setting an empty handler.
-	if *disableHttp2 {
+	if *isHttps && *disableHttp2 {
 		server.TLSNextProto = map[string]func(*http.Server, *tls.Conn, http.Handler){}
 	}
 
