@@ -300,12 +300,6 @@ operations {
         }
       }
       fields {
-        key: "error_cause"
-        value {
-          string_value: ""
-        }
-      }
-      fields {
         key: "http_response_code"
         value {
           number_value: 401
