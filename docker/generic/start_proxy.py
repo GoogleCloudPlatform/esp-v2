@@ -166,14 +166,16 @@ environment variable or by passing "-k" flag to this script.
         key files "client.crt" and "client.key" within this path.''')
 
     parser.add_argument('--ssl_minimum_protocol', default=None,
+        choices=['TLSv1.0', 'TLSv1.1', 'TLSv1.2', 'TLSv1.3'],
         help=''' Minimum TLS protocol version for client side connection.
         Please refer to https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/auth/cert.proto#common-tls-configuration.
-        Valid values are `TLSv1.0`, `TLSv1.1`, `TLSv1.2`, and `TLSv1.3`.''')
+        ''')
 
     parser.add_argument('--ssl_maximum_protocol', default=None,
+        choices=['TLSv1.0', 'TLSv1.1', 'TLSv1.2', 'TLSv1.3'],
         help=''' Maximum TLS protocol version for client side connection.
         Please refer to https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/auth/cert.proto#common-tls-configuration.
-        Valid values are `TLSv1.0`, `TLSv1.1`, `TLSv1.2`, and `TLSv1.3`.''')
+        ''')
 
     parser.add_argument('-z', '--healthz', default=None, help='''Define a
         health checking endpoint on the same ports as the application backend.
@@ -427,6 +429,7 @@ environment variable or by passing "-k" flag to this script.
     parser.add_argument(
         '--backend_dns_lookup_family',
         default=None,
+        choices=['auto', 'v4only', 'v6only'],
         help='''
         Define the dns lookup family for all backends. The options are "auto", "v4only" and "v6only". The default is "auto".
         ''')
@@ -544,8 +547,6 @@ environment variable or by passing "-k" flag to this script.
 # Otherwise returns None. This function also changes some default flag value.
 def enforce_conflict_args(args):
     if args.rollout_strategy:
-        if args.rollout_strategy not in {"fixed", "managed"}:
-          return "Flag -R or  --rollout_strategy must be 'fixed' or 'managed'."
         if args.rollout_strategy != DEFAULT_ROLLOUT_STRATEGY:
           if args.version:
             return "Flag --version cannot be used together with -R or --rollout_strategy."
@@ -569,9 +570,6 @@ def enforce_conflict_args(args):
             # for non gcp case, disable tracing if tracing project id is not provided.
             args.disable_tracing = True
 
-    if args.backend_dns_lookup_family and args.backend_dns_lookup_family not in {"auto", "v4only", "v6only"}:
-        return "Flag --backend_dns_lookup_family must be 'auto', 'v4only' or 'v6only'."
-
     if args.ssl_port and args.ssl_server_cert_path:
         return "Flag --ssl_port is going to be deprecated, please use --ssl_server_cert_path only."
     if args.tls_mutual_auth and args.ssl_client_cert_path:
@@ -587,10 +585,6 @@ def enforce_conflict_args(args):
     if len(port_flags) > 1:
         return "Multiple port flags {} are not allowed, please just use --listener_port flag".format(",".join(port_flags))
 
-    if args.ssl_minimum_protocol and args.ssl_minimum_protocol not in {"TLSv1.0", "TLSv1.1", "TLSv1.2", "TLSv1.3"}:
-        return "Flag --ssl_minimum_protocol must be 'TLSv1.0', 'TLSv1.1', 'TLSv1.2', and 'TLSv1.3'."
-    if args.ssl_maximum_protocol and args.ssl_maximum_protocol not in {"TLSv1.0", "TLSv1.1", "TLSv1.2", "TLSv1.3"}:
-        return "Flag --ssl_maximum_protocol must be 'TLSv1.0', 'TLSv1.1', 'TLSv1.2', and 'TLSv1.3'."
     if args.ssl_protocols and (args.ssl_minimum_protocol or args.ssl_maximum_protocol):
         return "Flag --ssl_protocols is going to be deprecated, please use --ssl_minimum_protocol and --ssl_maximum_protocol."
 
