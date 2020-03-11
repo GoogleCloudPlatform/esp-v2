@@ -2105,7 +2105,7 @@ func TestCreateAggregateReport(t *testing.T) {
 		URL:               "/shelves",
 		ApiMethod:         "ListShelves",
 		ApiKey:            "api-key",
-		ApiName: "API-NAME",
+		ApiName:           "API-NAME",
 		ProducerProjectID: "endpoints-test",
 		ConsumerProjectID: "123456",
 		Location:          "us-central1",
