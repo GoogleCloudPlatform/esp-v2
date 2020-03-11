@@ -24,7 +24,7 @@ import (
 // CreateAdmin outputs Admin struct for bootstrap config
 func CreateAdmin(opts options.CommonOptions) *bootstrappb.Admin {
 
-	if !opts.EnableAdmin {
+	if opts.AdminPort == 0 {
 		return &bootstrappb.Admin{}
 	}
 

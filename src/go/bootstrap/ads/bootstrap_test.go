@@ -32,6 +32,7 @@ func TestCreateBootstrapConfig(t *testing.T) {
 		{
 			desc: "bootstrap with default options",
 			args: map[string]string{
+				"admin_port":         "0",
 				"tracing_project_id": "test_project",
 			},
 			wantConfig: `{
@@ -115,7 +116,7 @@ func TestCreateBootstrapConfig(t *testing.T) {
 			desc: "bootstrap with options",
 			args: map[string]string{
 				"disable_tracing": "true",
-				"enable_admin":    "true",
+				"admin_port":      "8001",
 				"node":            "test-node",
 			},
 			wantConfig: `{

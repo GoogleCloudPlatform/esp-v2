@@ -25,7 +25,6 @@ type CommonOptions struct {
 	AdminAddress  string
 	AdminPort     int
 	DiscoveryPort int
-	EnableAdmin   bool
 	Node          string
 
 	// Flags for tracing
