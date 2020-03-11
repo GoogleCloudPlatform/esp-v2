@@ -103,19 +103,16 @@ func TestBackendHttpProtocol(t *testing.T) {
 			if tc.httpCallError != nil {
 				// Expect an error.
 				if err == nil {
-					t.Fatalf("Test(%s) expected error: %v, got: none", tc.desc, tc.httpCallError)
-				}
-				if !strings.Contains(err.Error(), tc.httpCallError.Error()) {
-					t.Fatalf("Test(%s) expected error: %v, got: %v", tc.desc, tc.httpCallError, err)
+					t.Errorf("Test(%s) expected error: %v, got: none", tc.desc, tc.httpCallError)
+				} else if !strings.Contains(err.Error(), tc.httpCallError.Error()) {
+					t.Errorf("Test(%s) expected error: %v, got: %v", tc.desc, tc.httpCallError, err)
 				}
 			} else {
 				// Expect success.
 				if err != nil {
-					t.Fatalf("Test(%s) expected success, got err: %v", tc.desc, err)
-				}
-				gotRespStr := string(gotResp)
-				if err := util.JsonEqual(tc.wantResp, gotRespStr); err != nil {
-					t.Fatalf("Test(%s) expected success: \n %s", tc.desc, err)
+					t.Errorf("Test(%s) expected success, got err: %v", tc.desc, err)
+				} else if err := util.JsonEqual(tc.wantResp, string(gotResp)); err != nil {
+					t.Errorf("Test(%s) expected success: \n %s", tc.desc, err)
 				}
 			}
 
