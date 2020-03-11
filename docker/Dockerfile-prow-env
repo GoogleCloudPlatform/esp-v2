@@ -24,7 +24,7 @@ RUN apt-get update && \
     apt-get -y install \
     wget make cmake python python-pip pkg-config coreutils \
     zlib1g-dev curl libtool automake zip time rsync ninja-build \
-    git bash-completion clang-format-7 jq
+    git bash-completion clang-format-7 jq default-jdk
 
 # clang is used for formatting
 RUN sh -c 'curl http://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -'
@@ -64,6 +64,9 @@ ENV GO_TARBALL "go1.13.linux-amd64.tar.gz"
 RUN wget -q "https://storage.googleapis.com/golang/${GO_TARBALL}" && \
     tar xzf "${GO_TARBALL}" -C /usr/local && \
     rm "${GO_TARBALL}"
+
+# Install buildifier
+RUN go get github.com/bazelbuild/buildtools/buildifier
 
 # install gcloud package
 RUN curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
