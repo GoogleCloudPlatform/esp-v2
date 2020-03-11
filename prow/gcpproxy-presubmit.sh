@@ -26,7 +26,6 @@ ROOT=$(dirname "$WD")
 export PATH=$PATH:$GOPATH/bin
 
 gcloud config set core/project cloudesf-testing
-gcloud auth list
 
 cd "${ROOT}"
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities';
