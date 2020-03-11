@@ -35,6 +35,7 @@ import (
 var (
 	port                  = flag.Int("port", 8082, "server port")
 	isHttps               = flag.Bool("enable_https", false, "true for HTTPS, false for HTTP")
+	disableHttp2          = flag.Bool("disable_http2", false, "Set to true to disable http/2 handler. By default, accepts http/1 and http/2 connections.")
 	mtlsCertFile          = flag.String("mtls_cert_file", "", "Enable Mutual authentication with the cert chain file")
 	enableRootPathHandler = flag.Bool("enable_root_path_handler", false, "true for adding root path for dynamic routing handler")
 	httpsCertPath         = flag.String("https_cert_path", "", "path for HTTPS cert path")
@@ -278,14 +279,21 @@ func errorf(w http.ResponseWriter, code int, format string, a ...interface{}) {
 }
 
 func createServer() (*http.Server, error) {
-	var server *http.Server
 	addr := fmt.Sprintf("%v:%d", platform.GetLoopbackAddress(), *port)
+	server := &http.Server{
+		Addr: addr,
+	}
+
+	// Disable HTTP/2 support if needed by setting an empty handler.
+	if *isHttps && *disableHttp2 {
+		server.TLSNextProto = map[string]func(*http.Server, *tls.Conn, http.Handler){}
+	}
 
 	if *mtlsCertFile == "" {
-		server = &http.Server{Addr: addr}
 		return server, nil
 	}
 
+	// Setup mTLS.
 	if !*isHttps {
 		return nil, fmt.Errorf("server must be HTTPS server when mTLS is required")
 	}
@@ -306,8 +314,6 @@ func createServer() (*http.Server, error) {
 
 	tlsConfig.BuildNameToCertificate()
 
-	return &http.Server{
-		Addr:      addr,
-		TLSConfig: tlsConfig,
-	}, nil
+	server.TLSConfig = tlsConfig
+	return server, nil
 }

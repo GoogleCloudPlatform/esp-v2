@@ -42,9 +42,8 @@ var (
 )
 
 type TestEnv struct {
-	testId              uint16
-	backend             platform.Backend
-	useWrongBackendCert bool
+	testId  uint16
+	backend platform.Backend
 	// used to enable mutual authentication for HTTPS backend
 	backendMTLSCertFile             string
 	mockMetadata                    bool
@@ -75,6 +74,10 @@ type TestEnv struct {
 	healthRegistry                  *components.HealthRegistry
 	FakeJwtService                  *components.FakeJwtService
 	skipHealthChecks                bool
+
+	// Only implemented for the RemoteEcho backend.
+	useWrongBackendCert         bool
+	disableHttp2ForHttpsBackend bool
 }
 
 func NewTestEnv(testId uint16, backend platform.Backend) *TestEnv {
@@ -189,6 +192,12 @@ func (e *TestEnv) AppendBackendRules(rules []*confpb.BackendRule) {
 	e.fakeServiceConfig.Backend.Rules = append(e.fakeServiceConfig.Backend.Rules, rules...)
 }
 
+// RemoveAllBackendRules removes all Service.Backend.Rules.
+// This is useful for testing
+func (e *TestEnv) RemoveAllBackendRules() {
+	e.fakeServiceConfig.Backend = &confpb.Backend{}
+}
+
 // EnableScNetworkFailOpen sets enableScNetworkFailOpen to be true.
 func (e *TestEnv) EnableScNetworkFailOpen() {
 	e.enableScNetworkFailOpen = true
@@ -232,6 +241,10 @@ func addDynamicRoutingBackendPort(serviceConfig *confpb.Service, port uint16) er
 func (e *TestEnv) SetupFakeTraceServer() {
 	// Start fake stackdriver server
 	e.FakeStackdriverServer = components.NewFakeStackdriver()
+}
+
+func (e *TestEnv) DisableHttp2ForHttpsBackend() {
+	e.disableHttp2ForHttpsBackend = true
 }
 
 // Setup setups Envoy, Config Manager, and Backend server for test.
@@ -357,7 +370,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 
 	switch e.backend {
 	case platform.EchoSidecar:
-		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.BackendServerPort /*enableHttps=*/, false /*enableRootPathHandler=*/, e.enableEchoServerRootPathHandler /*useAuthorizedBackendCert*/, false, e.backendMTLSCertFile)
+		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.BackendServerPort /*enableHttps=*/, false /*enableRootPathHandler=*/, e.enableEchoServerRootPathHandler /*useAuthorizedBackendCert*/, false, e.backendMTLSCertFile, e.disableHttp2ForHttpsBackend)
 		if err != nil {
 			return err
 		}
@@ -365,7 +378,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 			return err
 		}
 	case platform.EchoRemote:
-		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.DynamicRoutingBackendPort /*enableHttps=*/, true /*enableRootPathHandler=*/, true, e.useWrongBackendCert, e.backendMTLSCertFile)
+		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.DynamicRoutingBackendPort /*enableHttps=*/, true /*enableRootPathHandler=*/, true, e.useWrongBackendCert, e.backendMTLSCertFile, e.disableHttp2ForHttpsBackend)
 		if err != nil {
 			return err
 		}
