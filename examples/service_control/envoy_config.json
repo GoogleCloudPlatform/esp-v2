@@ -634,10 +634,14 @@
                         ],
                         "requirements": [
                           {
+                            "apiName": "1.bookstore_endpoints_apiproxy_231719_cloud_goog",
+                            "apiVersion": "1.0.0",
                             "serviceName": "bookstore.endpoints.apiproxy-231719.cloud.goog",
                             "operationName": "1.bookstore_endpoints_apiproxy_231719_cloud_goog.CreateShelf"
                           },
                           {
+                            "apiName": "1.bookstore_endpoints_apiproxy_231719_cloud_goog",
+                            "apiVersion": "1.0.0",
                             "serviceName": "bookstore.endpoints.apiproxy-231719.cloud.goog",
                             "operationName": "1.bookstore_endpoints_apiproxy_231719_cloud_goog.ListShelves",
                             "apiKey": {

@@ -949,10 +949,14 @@ func TestFetchListeners(t *testing.T) {
                            },
                            "requirements":[
                               {
+                                 "apiName":"endpoints.examples.bookstore.Bookstore",
+                                 "apiVersion":"v1",
                                  "operationName":"endpoints.examples.bookstore.Bookstore.CreateShelf",
                                  "serviceName":"bookstore.endpoints.project123.cloud.goog"
                               },
                               {
+                                 "apiName":"endpoints.examples.bookstore.Bookstore",
+                                 "apiVersion":"v1",
                                  "operationName":"endpoints.examples.bookstore.Bookstore.ListShelves",
                                  "serviceName":"bookstore.endpoints.project123.cloud.goog"
                               }
@@ -1317,10 +1321,12 @@ func TestFetchListeners(t *testing.T) {
                                  "apiKey":{
                                     "allowWithoutApiKey":true
                                  },
+                                 "apiName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
                                  "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_simplegetcors",
                                  "serviceName":"bookstore.endpoints.project123.cloud.goog"
                               },
                               {
+                                 "apiName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
                                  "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
                                  "serviceName":"bookstore.endpoints.project123.cloud.goog"
                               }

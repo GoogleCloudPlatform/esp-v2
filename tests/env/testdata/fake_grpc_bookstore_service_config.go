@@ -70,6 +70,7 @@ var (
 						ResponseTypeUrl: "type.googleapis.com/google.protobuf.Empty",
 					},
 				},
+				Version: "1.0.0",
 			},
 			{
 				Name: "endpoints.examples.bookstore.v2.Bookstore",
@@ -85,6 +86,7 @@ var (
 						ResponseTypeUrl: "type.googleapis.com/endpoints.examples.bookstore.v2.Shelf",
 					},
 				},
+				Version: "1.0.0",
 			},
 		},
 		Http: &annotationspb.Http{

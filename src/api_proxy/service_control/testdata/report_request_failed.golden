@@ -300,6 +300,12 @@ operations {
         }
       }
       fields {
+        key: "error_cause"
+        value {
+          string_value: ""
+        }
+      }
+      fields {
         key: "http_response_code"
         value {
           number_value: 401
@@ -345,6 +351,18 @@ operations {
         key: "response_size_in_bytes"
         value {
           number_value: 1048576
+        }
+      }
+      fields {
+        key: "service_agent"
+        value {
+          string_value: "ESPv2/TEST.0.0"
+        }
+      }
+      fields {
+        key: "service_config_id"
+        value {
+          string_value: "2016-09-19r0"
         }
       }
       fields {

@@ -26,6 +26,7 @@ import (
 type methodInfo struct {
 	ShortName              string
 	ApiName                string
+	ApiVersion             string
 	HttpRule               []*commonpb.Pattern
 	BackendInfo            *backendInfo
 	AllowUnregisteredCalls bool

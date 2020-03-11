@@ -923,7 +923,9 @@ constexpr char kLogFieldNameApiKey[] = "api_key";
 constexpr char kLogFieldNameApiMethod[] = "api_method";
 constexpr char kLogFieldNameApiName[] = "api_name";
 constexpr char kLogFieldNameApiVersion[] = "api_version";
+constexpr char kLogFieldNameClientIp[] = "client_ip";
 constexpr char kLogFieldNameHttpMethod[] = "http_method";
+const char kLogFieldNameErrorCause[] = "error_cause";
 constexpr char kLogFieldNameHttpResponseCode[] = "http_response_code";
 constexpr char kLogFieldNameJwtPayloads[] = "jwt_payloads";
 constexpr char kLogFieldNameLocation[] = "location";
@@ -935,9 +937,11 @@ constexpr char kLogFieldNameRequestLatency[] = "request_latency_in_ms";
 constexpr char kLogFieldNameRequestSize[] = "request_size_in_bytes";
 constexpr char kLogFieldNameResponseHeaders[] = "response_headers";
 constexpr char kLogFieldNameResponseSize[] = "response_size_in_bytes";
+const char kLogFieldNameServiceAgent[] = "service_agent";
+const char kLogFieldNameConfigId[] = "service_config_id";
 constexpr char kLogFieldNameTimestamp[] = "timestamp";
 constexpr char kLogFieldNameUrl[] = "url";
-constexpr char kLogFieldNameClientIp[] = "client_ip";
+
 
 // Convert time point to proto Timestamp
 Timestamp CreateTimestamp(std::chrono::system_clock::time_point tp) {
@@ -981,6 +985,7 @@ void SetOperationCommonFields(const OperationInfo& info,
 }
 
 void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
+                  const std::string& config_id,
                   const Timestamp& current_time, LogEntry* log_entry) {
   log_entry->set_name(name);
   *log_entry->mutable_timestamp() = current_time;
@@ -992,6 +997,9 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
   (*fields)[kLogFieldNameTimestamp].set_number_value(
       (double)current_time.seconds() +
       (double)current_time.nanos() / (double)1000000000.0);
+    (*fields)[kLogFieldNameConfigId].set_string_value(config_id);
+      (*fields)[kLogFieldNameServiceAgent].set_string_value(
+      kServiceAgentPrefix + utils::Version::instance().get());
   if (!info.producer_project_id.empty()) {
     (*fields)[kLogFieldNameProducerProjectId].set_string_value(
         info.producer_project_id);
@@ -1048,6 +1056,10 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
   }
   if (!info.jwt_payloads.empty()) {
     (*fields)[kLogFieldNameJwtPayloads].set_string_value(info.jwt_payloads);
+  }
+  if (info.response_code >= 400 &&  info.status.error_message().length() > 0) {
+    (*fields)[kLogFieldNameErrorCause].set_string_value(
+       info.status.error_message().as_string());
   }
 }
 
@@ -1249,7 +1261,7 @@ Status RequestBuilder::FillReportRequest(
   // Fill log entries.
   if (info.is_final_report) {
     for (auto it = logs_.begin(), end = logs_.end(); it != end; it++) {
-      FillLogEntry(info, *it, current_time, op->add_log_entries());
+      FillLogEntry(info, *it, service_config_id_, current_time, op->add_log_entries());
     }
   }
 

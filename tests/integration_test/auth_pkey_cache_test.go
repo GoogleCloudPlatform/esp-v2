@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
@@ -31,7 +32,6 @@ import (
 func TestAuthJwksCache(t *testing.T) {
 	t.Parallel()
 
-	configId := "test-config-id"
 	provider := testdata.GoogleJwtProvider
 	type expectedRequestCount struct {
 		key string
@@ -69,8 +69,7 @@ func TestAuthJwksCache(t *testing.T) {
 	}
 	for _, tc := range testData {
 		func() {
-			args := []string{"--service_config_id=" + configId,
-				"--rollout_strategy=fixed", "--suppress_envoy_headers"}
+			args := utils.CommonArgs()
 
 			s := env.NewTestEnv(comp.TestAuthJwksCache, platform.EchoSidecar)
 			if tc.jwksCacheDurationInS != 0 {

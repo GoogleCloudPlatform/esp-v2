@@ -487,6 +487,8 @@
                                                 },
                                                 "requirements": [
                                                     {
+                                                        "apiName": "test.grpc.Test",
+                                                        "apiVersion": "v1",
                                                         "operationName": "test.grpc.Test.Cork",
                                                         "serviceName": "esp-grpc-echo-oxouww7xzq-uc.a.run.app"
                                                     },
@@ -494,14 +496,20 @@
                                                         "apiKey": {
                                                             "allowWithoutApiKey": true
                                                         },
+                                                        "apiName": "test.grpc.Test",
+                                                        "apiVersion": "v1",
                                                         "operationName": "test.grpc.Test.Echo",
                                                         "serviceName": "esp-grpc-echo-oxouww7xzq-uc.a.run.app"
                                                     },
                                                     {
+                                                        "apiName": "test.grpc.Test",
+                                                        "apiVersion": "v1",
                                                         "operationName": "test.grpc.Test.EchoReport",
                                                         "serviceName": "esp-grpc-echo-oxouww7xzq-uc.a.run.app"
                                                     },
                                                     {
+                                                        "apiName": "test.grpc.Test",
+                                                        "apiVersion": "v1",
                                                         "operationName": "test.grpc.Test.EchoStream",
                                                         "serviceName": "esp-grpc-echo-oxouww7xzq-uc.a.run.app"
                                                     }

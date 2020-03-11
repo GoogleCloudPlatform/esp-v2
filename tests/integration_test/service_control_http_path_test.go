@@ -62,6 +62,7 @@ func TestServiceControlAllHTTPPath(t *testing.T) {
 			wantResp: `{"RequestURI": "/"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
+					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
