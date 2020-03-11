@@ -21,7 +21,7 @@ set -eo pipefail
 
 gcloud config set core/project cloudesf-testing
 gcloud auth activate-service-account \
-  --key-file=/etc/cloudesf-testing-github-prow-service-account/service-account.json
+  --key-file="${GOOGLE_APPLICATION_CREDENTIALS}"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT}"
