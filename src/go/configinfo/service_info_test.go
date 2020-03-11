@@ -1235,6 +1235,96 @@ func TestProcessBackendRuleForDeadline(t *testing.T) {
 	}
 }
 
+func TestProcessBackendRuleForProtocol(t *testing.T) {
+	testData := []struct {
+		desc              string
+		fakeServiceConfig *confpb.Service
+		// Map of cluster name to the expected backend protocol for the backend routing cluster.
+		wantedClusterProtocols map[string]util.BackendProtocol
+	}{
+		{
+			desc: "Mixed protocols across multiple backend rules",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "https://abc.com/api/",
+							Selector: "abc.com.api",
+							Protocol: "http/1.1",
+						},
+						{
+							Address:  "https://cnn.com/api/",
+							Selector: "cnn.com.api",
+							Protocol: "h2",
+						},
+					},
+				},
+			},
+			wantedClusterProtocols: map[string]util.BackendProtocol{
+				"abc.com:443": util.HTTP1,
+				"cnn.com:443": util.HTTP2,
+			},
+		},
+		{
+			// This case is not supported in practice, but we shouldn't break ordering if a user does it.
+			desc: "When multiple backend rules with the same address have different protocols, only first one is used",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "https://abc.com/api/",
+							Selector: "api.test.1",
+							Protocol: "http/1.1",
+						},
+						{
+							Address:  "https://abc.com/api/",
+							Selector: "api.test.2",
+							Protocol: "h2",
+						},
+					},
+				},
+			},
+			wantedClusterProtocols: map[string]util.BackendProtocol{
+				"abc.com:443": util.HTTP1,
+			},
+		},
+	}
+
+	for _, tc := range testData {
+		opts := options.DefaultConfigGeneratorOptions()
+		s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+
+		if err != nil {
+			t.Errorf("Test Desc(%s): error not expected, got: %v", tc.desc, err)
+			return
+		}
+
+		for _, gotBackendRoutingCluster := range s.BackendRoutingClusters {
+			gotProtocol := gotBackendRoutingCluster.Protocol
+			wantProtocol, ok := tc.wantedClusterProtocols[gotBackendRoutingCluster.ClusterName]
+
+			if !ok {
+				t.Errorf("Test Desc(%s): Unknown backend routing cluster generated: %+v", tc.desc, gotBackendRoutingCluster)
+				continue
+			}
+
+			if wantProtocol != gotProtocol {
+				t.Errorf("Test Desc(%s): Protocol not expected, got: %v, want: %v", tc.desc, gotProtocol, wantProtocol)
+			}
+		}
+	}
+}
+
 func TestProcessBackendRuleForJwtAudience(t *testing.T) {
 	testData := []struct {
 		desc              string
