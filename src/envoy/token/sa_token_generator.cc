@@ -28,21 +28,31 @@ ServiceAccountTokenGenerator::ServiceAccountTokenGenerator(
     Envoy::Server::Configuration::FactoryContext& context,
     const std::string& service_account_key, const std::string& audience,
     TokenUpdateFunc callback)
-    : service_account_key_(service_account_key),
+    : context_(context),
+      service_account_key_(service_account_key),
       audience_(audience),
-      callback_(callback) {
+      callback_(callback) {}
+
+void ServiceAccountTokenGenerator::init() {
   refresh_timer_ =
-      context.dispatcher().createTimer([this]() -> void { refresh(); });
+      context_.dispatcher().createTimer([this]() -> void { refresh(); });
   // call this in a delayed fashion so that the callback is ready to accept new
   // token.
-  context.dispatcher().post([this]() -> void { refresh(); });
+  context_.dispatcher().post([this]() -> void { refresh(); });
 }
 
 void ServiceAccountTokenGenerator::refresh() {
   char* token = ::google::api_proxy::auth::get_auth_token(
       service_account_key_.c_str(), audience_.c_str());
-  callback_(token);
+
+  if (token == nullptr) {
+    // No point of retrying with the timer, it will be the same result.
+    ENVOY_LOG(error, "Unable to generate token from service account key");
+    return;
+  }
+
   ENVOY_LOG(debug, "Generated token: {}", token);
+  callback_(token);
   ::google::api_proxy::auth::grpc_free(token);
 
   // Update the token every 1 hour.

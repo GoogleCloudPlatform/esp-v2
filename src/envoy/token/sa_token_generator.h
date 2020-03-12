@@ -35,9 +35,12 @@ class ServiceAccountTokenGenerator
       const std::string& service_account_key, const std::string& audience,
       TokenUpdateFunc callback);
 
+  void init();
+
  private:
   void refresh();
 
+  Envoy::Server::Configuration::FactoryContext& context_;
   const std::string& service_account_key_;
   const std::string audience_;
 
