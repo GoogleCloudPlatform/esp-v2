@@ -69,10 +69,14 @@ message Service {
   string backend_protocol = 5;
 
   // The array of request headers demanded to be logged
-  repeated string log_request_headers = 6 [(validate.rules).repeated.items.string.well_known_regex = HTTP_HEADER_NAME];
+  repeated string log_request_headers = 6
+      [(validate.rules).repeated .items.string.well_known_regex =
+           HTTP_HEADER_NAME];
 
   // The array of response headers demanded to be logged
-  repeated string log_response_headers = 7 [(validate.rules).repeated.items.string.well_known_regex = HTTP_HEADER_NAME];
+  repeated string log_response_headers = 7
+      [(validate.rules).repeated .items.string.well_known_regex =
+           HTTP_HEADER_NAME];
 
   // Minimum amount of time (milliseconds) between sending intermediate
   // reports on a stream.
