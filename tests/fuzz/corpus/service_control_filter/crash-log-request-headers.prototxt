@@ -1,0 +1,23 @@
+config {
+  services {
+    service_name: "echo-api.endpoints.cloudesf-testing.cloud.goog"
+    service_config_id: "test-config-id"
+    producer_project_id: "producer-project"
+    backend_protocol: "http1"
+    log_request_headers: "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+    jwt_payload_metadata_name: "jwt_payloads"
+  }
+  requirements {
+    service_name: "echo-api.endpoints.cloudesf-testing.cloud.goog"
+    operation_name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo"
+  }
+}
+downstream_request {
+}
+upstream_response {
+}
+stream_info {
+  start_time: 1560281088
+}
+sidestream_response {
+}
