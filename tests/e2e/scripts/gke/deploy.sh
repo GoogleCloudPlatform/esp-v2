@@ -42,7 +42,7 @@ PROJECT_ID="cloudesf-testing"
 ARGS="$ARGS \"--service=${APIPROXY_SERVICE}\","
 ARGS="$ARGS \"--rollout_strategy=${ROLLOUT_STRATEGY}\","
 ARGS="$ARGS \"--tracing_sample_rate=0.00001\","
-ARGS="$ARGS \"--enable_admin\""
+ARGS="$ARGS \"--admin_port=8001\""
 case "${BACKEND}" in
   'bookstore')
     YAML_TEMPLATE=${ROOT}/tests/e2e/testdata/bookstore/gke/http-bookstore.yaml.template
