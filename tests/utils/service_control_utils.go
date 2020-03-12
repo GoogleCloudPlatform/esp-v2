@@ -58,6 +58,7 @@ type ExpectedReport struct {
 	ServiceConfigID   string
 	ApiVersion        string
 	ApiMethod         string
+	ApiName           string
 	ApiKey            string
 	ProducerProjectID string
 	ConsumerProjectID string
@@ -323,6 +324,7 @@ func createLogEntry(er *ExpectedReport) *scpb.LogEntry {
 	pl := make(map[string]*structpb.Value)
 
 	pl["api_method"] = makeStringValue(er.ApiMethod)
+
 	pl["http_response_code"] = makeNumberValue(int64(er.ResponseCode))
 
 	if er.ApiVersion != "" {
@@ -333,6 +335,9 @@ func createLogEntry(er *ExpectedReport) *scpb.LogEntry {
 	}
 	if er.ApiKey != "" {
 		pl["api_key"] = makeStringValue(er.ApiKey)
+	}
+	if er.ApiName != "" {
+		pl["api_name"] = makeStringValue(er.ApiName)
 	}
 	if er.Referer != "" {
 		pl["referer"] = makeStringValue(er.Referer)
@@ -361,6 +366,13 @@ func createLogEntry(er *ExpectedReport) *scpb.LogEntry {
 	if er.JwtPayloads != "" {
 		pl["jwt_payloads"] = makeStringValue(er.JwtPayloads)
 	}
+	if er.Version != "" {
+		pl["service_agent"] = makeStringValue(fmt.Sprintf("ESPv2/%s", er.Version))
+	}
+	if er.ErrorCause != "" {
+		pl["error_cause"] = makeStringValue(er.ErrorCause)
+	}
+	pl["service_config_id"] = makeStringValue("test-config-id")
 	pl["client_ip"] = makeStringValue("127.0.0.1")
 
 	severity := ltypepb.LogSeverity_INFO

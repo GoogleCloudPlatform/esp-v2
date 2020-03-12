@@ -73,6 +73,8 @@ func TestServiceControlCache(t *testing.T) {
 			URL:               "/echo?key=api-key",
 			ApiKey:            "api-key",
 			ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+			ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+			ApiVersion:        "1.0.0",
 			ProducerProjectID: "producer-project",
 			ConsumerProjectID: "123456",
 			FrontendProtocol:  "http",

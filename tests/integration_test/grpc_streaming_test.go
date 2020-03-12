@@ -85,6 +85,8 @@ results {
 			URL:               "/test.grpc.Test/EchoStream",
 			ApiKey:            "this-is-an-api-key",
 			ApiMethod:         "test.grpc.Test.EchoStream",
+			ApiName:           "test.grpc.Test",
+			ApiVersion:        "v1",
 			ProducerProjectID: "producer-project",
 			ConsumerProjectID: "123456",
 			FrontendProtocol:  "grpc",

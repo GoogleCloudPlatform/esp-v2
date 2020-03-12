@@ -106,6 +106,8 @@ results {
 				ServiceConfigID:   "test-config-id",
 				URL:               "/test.grpc.Test/Echo",
 				ApiMethod:         "endpoints.examples.bookstore.Bookstore.Unspecified",
+				ApiName:           "endpoints.examples.bookstore.Bookstore",
+				ApiVersion:        "1.0.0",
 				ProducerProjectID: "producer project",
 				FrontendProtocol:  "grpc",
 				HttpMethod:        "POST",

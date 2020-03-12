@@ -211,6 +211,7 @@ func (s *ServiceInfo) processApis() {
 			if method.RequestStreaming || method.ResponseStreaming {
 				mi.IsStreaming = true
 			}
+			mi.ApiVersion = api.Version
 		}
 	}
 }

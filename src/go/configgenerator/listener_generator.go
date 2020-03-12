@@ -575,6 +575,8 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		requirement := &scpb.Requirement{
 			ServiceName:        serviceName,
 			OperationName:      operation,
+			ApiName:            method.ApiName,
+			ApiVersion:         method.ApiVersion,
 			SkipServiceControl: method.SkipServiceControl,
 			MetricCosts:        method.MetricCosts,
 		}

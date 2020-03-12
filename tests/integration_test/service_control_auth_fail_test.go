@@ -87,6 +87,8 @@ func TestServiceControlJwtAuthFail(t *testing.T) {
 					ApiMethod:         "endpoints.examples.bookstore.Bookstore.ListShelves",
 					ProducerProjectID: "producer project",
 					ApiKey:            "api-key",
+					ApiVersion:        "1.0.0",
+					ApiName:           "endpoints.examples.bookstore.Bookstore",
 					FrontendProtocol:  "http",
 					BackendProtocol:   "grpc",
 					HttpMethod:        "GET",

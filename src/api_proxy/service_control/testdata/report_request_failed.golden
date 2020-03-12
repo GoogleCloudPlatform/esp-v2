@@ -348,6 +348,18 @@ operations {
         }
       }
       fields {
+        key: "service_agent"
+        value {
+          string_value: "ESPv2/TEST.0.0"
+        }
+      }
+      fields {
+        key: "service_config_id"
+        value {
+          string_value: "2016-09-19r0"
+        }
+      }
+      fields {
         key: "timestamp"
         value {
           number_value: 100000.0001

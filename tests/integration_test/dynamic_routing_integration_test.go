@@ -366,6 +366,8 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 					URL:               "/echo?key=api-key",
 					ApiKey:            "api-key",
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+					ApiVersion:        "1.0.0",
+					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					ProducerProjectID: "producer-project",
 					ConsumerProjectID: "123456",
 					FrontendProtocol:  "http",
@@ -399,6 +401,8 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 					URL:               "/sc/searchpet?key=api-key&timezone=EST",
 					ApiKey:            "api-key",
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchPetWithServiceControlVerification",
+					ApiVersion:        "1.0.0",
+					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					ProducerProjectID: "producer-project",
 					ConsumerProjectID: "123456",
 					FrontendProtocol:  "http",
@@ -432,6 +436,8 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 					URL:               "/sc/pet/0325/num/2019?key=api-key&lang=en",
 					ApiKey:            "api-key",
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetByIdWithServiceControlVerification",
+					ApiVersion:        "1.0.0",
+					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					ProducerProjectID: "producer-project",
 					ConsumerProjectID: "123456",
 					FrontendProtocol:  "http",
@@ -504,6 +510,8 @@ func TestDynamicBackendRoutingTLS(t *testing.T) {
 					URL:               "/sc/searchpet?key=api-key&timezone=EST",
 					ApiKey:            "api-key",
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchPetWithServiceControlVerification",
+					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					ApiVersion:        "1.0.0",
 					ProducerProjectID: "producer-project",
 					ConsumerProjectID: "123456",
 					FrontendProtocol:  "http",
@@ -538,6 +546,8 @@ func TestDynamicBackendRoutingTLS(t *testing.T) {
 					URL:               "/sc/searchpet?key=api-key&timezone=EST",
 					ApiKey:            "api-key",
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchPetWithServiceControlVerification",
+					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					ApiVersion:        "1.0.0",
 					ProducerProjectID: "producer-project",
 					ConsumerProjectID: "123456",
 					FrontendProtocol:  "http",
@@ -623,6 +633,8 @@ func TestDynamicBackendRoutingMutualTLS(t *testing.T) {
 					URL:               "/sc/searchpet?key=api-key&timezone=EST",
 					ApiKey:            "api-key",
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchPetWithServiceControlVerification",
+					ApiVersion:        "1.0.0",
+					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					ProducerProjectID: "producer-project",
 					ConsumerProjectID: "123456",
 					FrontendProtocol:  "http",
@@ -657,6 +669,8 @@ func TestDynamicBackendRoutingMutualTLS(t *testing.T) {
 					URL:               "/sc/searchpet?key=api-key&timezone=EST",
 					ApiKey:            "api-key",
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchPetWithServiceControlVerification",
+					ApiVersion:        "1.0.0",
+					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					ProducerProjectID: "producer-project",
 					ConsumerProjectID: "123456",
 					FrontendProtocol:  "http",
@@ -701,7 +715,7 @@ func TestDynamicBackendRoutingMutualTLS(t *testing.T) {
 				t.Fatalf("Test Desc(%s): GetRequests returns error: %v", tc.desc, err)
 			}
 			if err := utils.VerifyServiceControlResp(tc.desc, tc.wantScRequests, scRequests); err != nil {
-				t.Error(err)
+				t.Errorf("Test Desc(%s): %v", tc.desc, err)
 			}
 		}()
 	}
