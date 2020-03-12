@@ -48,7 +48,7 @@ inline int64_t convertNsToMs(std::chrono::nanoseconds ns) {
   return std::chrono::duration_cast<std::chrono::milliseconds>(ns).count();
 }
 
-bool extractAPIKeyFromQuery(const Http::HeaderMap& headers,
+bool extractAPIKeyFromQuery(const Http::RequestHeaderMap& headers,
                             const std::string& query, bool& were_params_parsed,
                             Http::Utility::QueryParams& parsed_params,
                             std::string& api_key) {
@@ -69,7 +69,7 @@ bool extractAPIKeyFromQuery(const Http::HeaderMap& headers,
   return false;
 }
 
-bool extractAPIKeyFromHeader(const Http::HeaderMap& headers,
+bool extractAPIKeyFromHeader(const Http::RequestHeaderMap& headers,
                              const std::string& header, std::string& api_key) {
   // TODO(qiwzhang): optimize this by using LowerCaseString at init.
   auto* entry = headers.get(Http::LowerCaseString(header));
@@ -80,7 +80,7 @@ bool extractAPIKeyFromHeader(const Http::HeaderMap& headers,
   return false;
 }
 
-bool extractAPIKeyFromCookie(const Http::HeaderMap& headers,
+bool extractAPIKeyFromCookie(const Http::RequestHeaderMap& headers,
                              const std::string& cookie, std::string& api_key) {
   std::string parsed_api_key = Http::Utility::parseCookieValue(headers, cookie);
   if (!parsed_api_key.empty()) {
@@ -246,7 +246,7 @@ void fillJwtPayload(const envoy::config::core::v3::Metadata& metadata,
 }
 
 bool extractAPIKey(
-    const Http::HeaderMap& headers,
+    const Http::RequestHeaderMap& headers,
     const ::google::protobuf::RepeatedPtrField<
         ::google::api::envoy::http::service_control::ApiKeyLocation>& locations,
     std::string& api_key) {
