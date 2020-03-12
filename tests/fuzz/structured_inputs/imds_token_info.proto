@@ -6,7 +6,7 @@ import "validate/validate.proto";
 
 message ImdsTokenInfoInput {
   // Arguments for starting the request.
-  string token_url = 1 [(validate.rules).string = {min_bytes: 1 well_known_regex: HTTP_HEADER_VALUE}];
+  string token_url = 1 [(validate.rules).string = {min_bytes: 1, well_known_regex: HTTP_HEADER_VALUE, strict: false}];
 
   // Arguments for parsing the tokens.
   string resp_body = 2;
