@@ -57,7 +57,7 @@ GOOGLE_CREDS_KEY = "GOOGLE_APPLICATION_CREDENTIALS"
 def gen_bootstrap_conf(args):
     cmd = [BOOTSTRAP_CMD, "--logtostderr"]
 
-    cmd.extend(["--admin_port", args.status_port])
+    cmd.extend(["--admin_port", str(args.status_port)])
     if args.disable_tracing:
         cmd.append("--disable_tracing")
     else:
