@@ -88,7 +88,7 @@ TEST(ServiceControlUtils, FillLoggedHeader) {
   EXPECT_TRUE(output.empty());
 
   struct TestCase {
-    Http::TestHeaderMapImpl headers;
+    Http::TestRequestHeaderMapImpl headers;
     std::string service_proto;
     std::string expected_output;
   };
@@ -153,7 +153,7 @@ TEST(ServiceControlUtils, FillLoggedHeader) {
   std::string service_proto = R"(log_request_headers: "log-this")";
   ASSERT_TRUE(TextFormat::ParseFromString(service_proto, &service));
 
-  Http::TestHeaderMapImpl headers{{"log-this", "foo"}, {"log-this", "bar"}};
+  Http::TestRequestHeaderMapImpl headers{{"log-this", "foo"}, {"log-this", "bar"}};
   fillLoggedHeader(&headers, service.log_request_headers(), output);
   EXPECT_TRUE(output == "log-this=foo;" || output == "log-this=bar;");
 }
@@ -161,7 +161,7 @@ TEST(ServiceControlUtils, FillLoggedHeader) {
 TEST(ServiceControlUtils, ExtractApiKey) {
   struct TestCase {
     std::string requirement_proto;
-    Http::TestHeaderMapImpl headers;
+    Http::TestRequestHeaderMapImpl headers;
     std::string expected_api_key;
   };
 
@@ -399,7 +399,7 @@ TEST(ServiceControlUtils, GetBackendProtocol) {
 }
 
 TEST(ServiceControlUtils, GetFrontendProtocol) {
-  Http::TestHeaderMapImpl headers;
+  Http::TestRequestHeaderMapImpl headers;
   testing::NiceMock<StreamInfo::MockStreamInfo> mock_stream_info;
 
   // Test: header is nullptr and stream_info has no protocol

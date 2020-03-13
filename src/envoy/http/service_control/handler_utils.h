@@ -31,7 +31,7 @@ namespace ServiceControl {
 //
 // Returns whether an `api_key` was found.
 bool extractAPIKey(
-    const Http::HeaderMap& headers,
+    const Http::RequestHeaderMap& headers,
     const ::google::protobuf::RepeatedPtrField<
         ::google::api::envoy::http::service_control::ApiKeyLocation>& locations,
     std::string& api_key);
