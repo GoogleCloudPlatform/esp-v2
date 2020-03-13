@@ -177,14 +177,15 @@ DEFINE_PROTO_FUZZER(
         return &request;
       }));
 
-  // Fuzz the stream info.
-  TestStreamInfo stream_info = Envoy::Fuzz::fromStreamInfo(input.stream_info());
-  EXPECT_CALL(mock_decoder_callbacks, streamInfo())
-      .WillRepeatedly(ReturnRef(stream_info));
-  EXPECT_CALL(mock_encoder_callbacks, streamInfo())
-      .WillRepeatedly(ReturnRef(stream_info));
-
   try {
+    // Fuzz the stream info.
+    TestStreamInfo stream_info =
+        Envoy::Fuzz::fromStreamInfo(input.stream_info());
+    EXPECT_CALL(mock_decoder_callbacks, streamInfo())
+        .WillRepeatedly(ReturnRef(stream_info));
+    EXPECT_CALL(mock_encoder_callbacks, streamInfo())
+        .WillRepeatedly(ReturnRef(stream_info));
+
     // Create filter config.
     ServiceControlFilterConfig filter_config(input.config(), "fuzz-test-stats",
                                              context);
