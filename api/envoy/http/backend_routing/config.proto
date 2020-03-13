@@ -31,7 +31,10 @@ message BackendRoutingRule {
   //     https://us-central1-my-project-id.cloudfunctions.net/helloGET
   // Example for APPEND_PATH_TO_ADDRESS:
   //     https://my-project-id.appspot.com
-  string path_prefix = 3;
+  string path_prefix = 3 [(validate.rules).string = {
+    well_known_regex: HTTP_HEADER_VALUE,
+    strict: false
+  }];
 }
 
 message FilterConfig {

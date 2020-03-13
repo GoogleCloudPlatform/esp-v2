@@ -47,7 +47,11 @@ message Pattern {
 
 message HttpUri {
   // The uri string including the domain and path.
-  string uri = 1 [(validate.rules).string.min_bytes = 1];
+  string uri = 1 [(validate.rules).string = {
+    min_bytes: 1,
+    well_known_regex: HTTP_HEADER_VALUE,
+    strict: false
+  }];
 
   // The Envoy cluster name required for Envoy to make a remote call.
   string cluster = 2 [(validate.rules).string.min_bytes = 1];
