@@ -61,7 +61,16 @@ TEST_F(ServiceAccountTokenTest, MakeCallbackOnRefresh) {
   sc_token_ = std::make_unique<ServiceAccountTokenGenerator>(
       context_, kTestServiceAccountKey, "audience",
       token_callback_.AsStdFunction());
+  sc_token_->init();
 }
+
+TEST_F(ServiceAccountTokenTest, BadTokenDoesNotCallback) {
+  EXPECT_CALL(token_callback_, Call(_)).Times(0);
+  sc_token_ = std::make_unique<ServiceAccountTokenGenerator>(
+      context_, "invalid-token", "audience", token_callback_.AsStdFunction());
+  sc_token_->init();
+}
+
 }  // namespace
 }  // namespace Token
 }  // namespace Extensions
