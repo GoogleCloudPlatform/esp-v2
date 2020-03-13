@@ -126,7 +126,7 @@ struct QuotaRequestInfo : public OperationInfo {
 // Information to fill Report request protobuf.
 struct ReportRequestInfo : public OperationInfo {
   // The HTTP response code.
-  int response_code;
+  unsigned int response_code;
 
   // The response status.
   ::google::protobuf::util::Status status;
