@@ -209,7 +209,7 @@ DEFINE_PROTO_FUZZER(
     }
 
     // Run data against the filter.
-    doTest(filter, stream_info, input);
+    ASSERT_NO_THROW(doTest(filter, stream_info, input));
 
   } catch (const EnvoyException& e) {
     ENVOY_LOG_MISC(debug, "Controlled envoy exception: {}", e.what());
