@@ -57,6 +57,7 @@ GOOGLE_CREDS_KEY = "GOOGLE_APPLICATION_CREDENTIALS"
 def gen_bootstrap_conf(args):
     cmd = [BOOTSTRAP_CMD, "--logtostderr"]
 
+    cmd.extend(["--admin_port", str(args.status_port)])
     if args.disable_tracing:
         cmd.append("--disable_tracing")
     else:
@@ -76,11 +77,6 @@ def gen_bootstrap_conf(args):
             ["--http_request_timeout_s",
              str(args.http_request_timeout_s)])
 
-    if args.enable_debug:
-        cmd.append("--enable_admin")
-
-    if args.enable_admin and not args.enable_debug:
-        cmd.append("--enable_admin")
 
     bootstrap_file = DEFAULT_CONFIG_DIR + BOOTSTRAP_CONFIG
     cmd.append(bootstrap_file)
@@ -154,6 +150,11 @@ environment variable or by passing "-k" flag to this script.
         The port to accept downstream connections.
         It supports HTTP/1.x, HTTP/2, and gRPC connections.
         Default is {port}'''.format(port=DEFAULT_LISTENER_PORT))
+
+    parser.add_argument('-N', '--status_port', '--admin_port', default=0,
+        type=int, help=''' Enable ESPv2 Envoy admin on this port. Please refer
+        to https://www.envoyproxy.io/docs/envoy/latest/operations/admin.
+        By default the admin port is disabled.''')
 
     parser.add_argument('--ssl_server_cert_path', default=None, help='''
         Proxy's server cert path. When configured, ESPv2 only accepts HTTP/1.x and
@@ -438,11 +439,6 @@ environment variable or by passing "-k" flag to this script.
         default=None,
         help='''
         The overridden platform where the proxy is running on.
-        ''')
-    parser.add_argument('--enable_admin', action='store_true', default=False,
-                        help='''
-        Enables envoy's admin interface on port 8001.
-        Not recommended for production use-cases, as the admin port is unauthenticated.
         ''')
     parser.add_argument('--enable_debug', action='store_true', default=False,
         help='''

@@ -26,18 +26,18 @@ import (
 
 func TestCreateAdmin(t *testing.T) {
 	testData := []struct {
-		desc        string
-		enableAdmin bool
-		want        *bootstrappb.Admin
+		desc      string
+		adminPort int
+		want      *bootstrappb.Admin
 	}{
 		{
-			desc:        "Admin interface is disabled",
-			enableAdmin: false,
-			want:        &bootstrappb.Admin{},
+			desc:      "Admin interface is disabled",
+			adminPort: 0,
+			want:      &bootstrappb.Admin{},
 		},
 		{
-			desc:        "Admin interface is enabled, created with default values",
-			enableAdmin: true,
+			desc:      "Admin interface is enabled, created with default values",
+			adminPort: 8081,
 			want: &bootstrappb.Admin{
 				AccessLogPath: "/dev/null",
 				Address: &corepb.Address{
@@ -45,7 +45,7 @@ func TestCreateAdmin(t *testing.T) {
 						SocketAddress: &corepb.SocketAddress{
 							Address: "0.0.0.0",
 							PortSpecifier: &corepb.SocketAddress_PortValue{
-								PortValue: 8001,
+								PortValue: 8081,
 							},
 						},
 					},
@@ -57,7 +57,7 @@ func TestCreateAdmin(t *testing.T) {
 	for _, tc := range testData {
 
 		opts := options.DefaultCommonOptions()
-		opts.EnableAdmin = tc.enableAdmin
+		opts.AdminPort = tc.adminPort
 
 		got := CreateAdmin(opts)
 
