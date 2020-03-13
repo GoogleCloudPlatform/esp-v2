@@ -32,7 +32,6 @@ message BackendRoutingRule {
   // Example for APPEND_PATH_TO_ADDRESS:
   //     https://my-project-id.appspot.com
   string path_prefix = 3 [(validate.rules).string = {
-    min_bytes: 1,
     well_known_regex: HTTP_HEADER_VALUE,
     strict: false
   }];
