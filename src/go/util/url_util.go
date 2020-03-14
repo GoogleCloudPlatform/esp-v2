@@ -142,3 +142,22 @@ func ExtraAddressFromURI(jwksUri string) (string, error) {
 	}
 	return fmt.Sprintf("%s:%v", hostname, port), nil
 }
+
+const (
+	fetchConfigSuffix   = "/v1/services/$serviceName/configs/$configId?view=FULL"
+	fetchRolloutsSuffix = "/v1/services/$serviceName/rollouts?filter=status=SUCCESS"
+)
+
+var (
+	FetchConfigURL = func(serviceManagementUrl, serviceName, configId string) string {
+		path := serviceManagementUrl + fetchConfigSuffix
+		path = strings.Replace(path, "$serviceName", serviceName, 1)
+		path = strings.Replace(path, "$configId", configId, 1)
+		return path
+	}
+	FetchRolloutsURL = func(serviceManagementUrl, serviceName string) string {
+		path := serviceManagementUrl + fetchRolloutsSuffix
+		path = strings.Replace(path, "$serviceName", serviceName, 1)
+		return path
+	}
+)
