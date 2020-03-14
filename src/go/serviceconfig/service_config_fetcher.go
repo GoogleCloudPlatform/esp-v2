@@ -34,10 +34,9 @@ import (
 )
 
 type ServiceConfigFetcher struct {
-	curConfigId  string
-	curRolloutId string
-	serviceName  string
-
+	curConfigId         string
+	curRolloutId        string
+	serviceName         string
 	checkRolloutsTicker *time.Ticker
 	client              http.Client
 	mf                  *metadata.MetadataFetcher
