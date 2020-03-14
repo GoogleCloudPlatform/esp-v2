@@ -34,12 +34,12 @@ import (
 )
 
 type ServiceConfigFetcher struct {
-	client http.Client
+	curConfigId  string
+	curRolloutId string
+	serviceName  string
 
 	checkRolloutsTicker *time.Ticker
-	serviceName         string
-	curRolloutId        string
-	curConfigId         string
+	client              http.Client
 	mf                  *metadata.MetadataFetcher
 }
 
@@ -178,20 +178,23 @@ func (scf *ServiceConfigFetcher) callWithAccessToken(path, token string) (*http.
 	return resp, nil
 }
 
-func (scf *ServiceConfigFetcher) FetchConfigOnce(configId string) (*confpb.Service, error) {
+// Fetch the service config by given configId. If configId is empty, try to
+// fetch the latest service config,.
+func (scf *ServiceConfigFetcher) FetchConfig(configId string) (*confpb.Service, error) {
 	if configId != "" {
+		scf.curConfigId = configId
 		token, _, err := scf.accessToken()
 		if err != nil {
 			return nil, fmt.Errorf("fail to get access token: %v", err)
 		}
 		return scf.callServiceManagement(util.FetchConfigURL(*flags.ServiceManagementURL, scf.serviceName, configId), token)
 	}
+
 	glog.Infof("check new rollouts for service %v", scf.serviceName)
 	newRolloutId, newConfigId, err := scf.loadConfigFromRollouts(scf.serviceName, scf.curRolloutId, scf.curConfigId)
 	if err != nil {
 		glog.Errorf("error occurred when checking new rollouts, %v", err)
 	}
-
 	if scf.curRolloutId != newRolloutId && scf.curConfigId != newConfigId {
 		scf.curRolloutId = newRolloutId
 		scf.curConfigId = newConfigId
@@ -208,14 +211,17 @@ func (scf *ServiceConfigFetcher) SetFetchConfigTimer(interval *time.Duration, ca
 	go func() {
 		glog.Infof("start checking new rollouts every %v seconds", *interval)
 		scf.checkRolloutsTicker = time.NewTicker(*interval)
+
 		for range scf.checkRolloutsTicker.C {
 			glog.Infof("check new rollouts for service %v", scf.serviceName)
-			// only log error and keep checking when fetching rollouts and getting newest config fail
-			serviceConfig, err := scf.FetchConfigOnce("")
+
+			serviceConfig, err := scf.FetchConfig("")
 			if err != nil {
 				glog.Errorf("error occurred when checking new rollouts, %v", err)
 				continue
+
 			}
+
 			if serviceConfig != nil {
 				callback(serviceConfig)
 			}
@@ -229,9 +235,4 @@ func (scf *ServiceConfigFetcher) CurConfigId() string {
 
 func (scf *ServiceConfigFetcher) CurRolloutId() string {
 	return scf.curRolloutId
-}
-
-func (scf *ServiceConfigFetcher) SetCurConfigId(curConfigId string) string {
-	scf.curConfigId = curConfigId
-	return scf.curConfigId
 }

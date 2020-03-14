@@ -129,7 +129,8 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 	var serviceConfig *confpb.Service
 	if rolloutStrategy == util.ManagedRolloutStrategy {
 		// try to fetch rollouts and get newest config, if failed, NewConfigManager exits with failure
-		serviceConfig, err = m.serviceConfigFetcher.FetchConfigOnce("")
+		serviceConfig, err = m.serviceConfigFetcher.FetchConfig("")
+
 	} else {
 		// rollout strategy is fixed mode
 		configID := *ServiceConfigID
@@ -145,14 +146,16 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 				return nil, fmt.Errorf("service config id is not specified, required on a non-gcp deployment")
 			}
 		}
-		m.serviceConfigFetcher.SetCurConfigId(configID)
-		serviceConfig, err = m.serviceConfigFetcher.FetchConfigOnce(configID)
+		serviceConfig, err = m.serviceConfigFetcher.FetchConfig(configID)
 	}
 	if err != nil {
 		return nil, err
+
 	}
+
 	if err = m.applyServiceConfig(serviceConfig); err != nil {
 		return nil, err
+
 	}
 
 	glog.Infof("create new Config Manager for service (%v) with configuration id (%v), %v rollout strategy",
