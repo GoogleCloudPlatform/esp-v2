@@ -245,10 +245,6 @@ func (m *ConfigManager) curConfigId() string {
 	return m.serviceConfigFetcher.CurConfigId()
 }
 
-func (m *ConfigManager) curRolloutId() string {
-	return m.serviceConfigFetcher.CurRolloutId()
-}
-
 func (m *ConfigManager) ID(node *corepb.Node) string {
 	return node.GetId()
 }

@@ -19,7 +19,6 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
-	"math"
 	"net/http"
 	"time"
 
@@ -35,10 +34,10 @@ import (
 
 type ServiceConfigFetcher struct {
 	curConfigId         string
-	curRolloutId        string
 	serviceName         string
 	checkRolloutsTicker *time.Ticker
 	client              http.Client
+	configIdFetcher     *ConfigIdFetcher
 	mf                  *metadata.MetadataFetcher
 }
 
@@ -49,7 +48,7 @@ func NewServiceConfigFetcher(serviceName string, timeout time.Duration, mf *meta
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
-	return &ServiceConfigFetcher{
+	scf := &ServiceConfigFetcher{
 		client: http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
@@ -60,49 +59,9 @@ func NewServiceConfigFetcher(serviceName string, timeout time.Duration, mf *meta
 		},
 		serviceName: serviceName,
 		mf:          mf,
-	}, nil
-}
-
-func (scf *ServiceConfigFetcher) loadConfigFromRollouts(serviceName, curRolloutId, curConfigId string) (string, string, error) {
-	var err error
-	var listServiceRolloutsResponse *smpb.ListServiceRolloutsResponse
-	listServiceRolloutsResponse, err = scf.fetchRollouts()
-	if err != nil {
-		return "", "", fmt.Errorf("fail to get rollouts, %s", err)
 	}
-
-	if len(listServiceRolloutsResponse.Rollouts) == 0 {
-		return "", "", fmt.Errorf("no active rollouts")
-	}
-	newRolloutId := listServiceRolloutsResponse.Rollouts[0].RolloutId
-	if newRolloutId == curRolloutId {
-		return curRolloutId, curConfigId, nil
-	}
-	glog.Infof("found new rollout Id %v for service %v", newRolloutId, serviceName)
-	glog.Infof("new rollout: %v", listServiceRolloutsResponse.Rollouts[0])
-	trafficPercentStrategy := listServiceRolloutsResponse.Rollouts[0].GetTrafficPercentStrategy()
-	trafficPercentMap := trafficPercentStrategy.GetPercentages()
-	if len(trafficPercentMap) == 0 {
-		return "", "", fmt.Errorf("no active rollouts")
-	}
-	var newConfigId string
-	currentMaxPercent := 0.0
-	// take config Id with max traffic percent as new config Id
-	for k, v := range trafficPercentMap {
-		if v > currentMaxPercent {
-			newConfigId = k
-			currentMaxPercent = v
-		}
-	}
-	if newConfigId == curConfigId {
-		glog.Infof("no new configuration to load for service %v, current configuration Id %v", serviceName, curConfigId)
-		return newRolloutId, curConfigId, nil
-	}
-	if !(math.Abs(100.0-currentMaxPercent) < 1e-9) {
-		glog.Warningf("though traffic percentage of configuration %v is %v%%, set it to 100%%", newConfigId, currentMaxPercent)
-	}
-	glog.Infof("found new configuration Id %v for service %v", curConfigId, serviceName)
-	return newRolloutId, newConfigId, nil
+	scf.configIdFetcher, err = NewConfigIdFetcher(serviceName, &scf.client, func() (string, time.Duration, error) { return scf.accessToken() })
+	return scf, nil
 }
 
 func (scf *ServiceConfigFetcher) accessToken() (string, time.Duration, error) {
@@ -190,12 +149,11 @@ func (scf *ServiceConfigFetcher) FetchConfig(configId string) (*confpb.Service, 
 	}
 
 	glog.Infof("check new rollouts for service %v", scf.serviceName)
-	newRolloutId, newConfigId, err := scf.loadConfigFromRollouts(scf.serviceName, scf.curRolloutId, scf.curConfigId)
+	newConfigId, err := scf.configIdFetcher.latestConfigId()
 	if err != nil {
 		glog.Errorf("error occurred when checking new rollouts, %v", err)
 	}
-	if scf.curRolloutId != newRolloutId && scf.curConfigId != newConfigId {
-		scf.curRolloutId = newRolloutId
+	if scf.curConfigId != newConfigId {
 		scf.curConfigId = newConfigId
 		token, _, err := scf.accessToken()
 		if err != nil {
@@ -230,8 +188,4 @@ func (scf *ServiceConfigFetcher) SetFetchConfigTimer(interval *time.Duration, ca
 
 func (scf *ServiceConfigFetcher) CurConfigId() string {
 	return scf.curConfigId
-}
-
-func (scf *ServiceConfigFetcher) CurRolloutId() string {
-	return scf.curRolloutId
 }

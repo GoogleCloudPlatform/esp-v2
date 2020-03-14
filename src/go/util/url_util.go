@@ -160,4 +160,8 @@ var (
 		path = strings.Replace(path, "$serviceName", serviceName, 1)
 		return path
 	}
+
+	FetchConfigIdURL = func(serviceName string) string {
+		return fmt.Sprintf("https://servicecontrol.googleapis.com/v1/services/%s:report", serviceName)
+	}
 )
