@@ -51,10 +51,10 @@ var (
 // Config Manager handles service configuration fetching and updating.
 // TODO(jilinxia): handles multi service name.
 type ConfigManager struct {
-	serviceName               string
-	serviceInfo               *configinfo.ServiceInfo
-	envoyConfigOptions        options.ConfigGeneratorOptions
-	configIdServiceConfigFile string
+	serviceName                   string
+	serviceInfo                   *configinfo.ServiceInfo
+	envoyConfigOptions            options.ConfigGeneratorOptions
+	configIdFromServiceConfigFile string
 
 	cache               cache.SnapshotCache
 	checkRolloutsTicker *time.Ticker
@@ -178,7 +178,7 @@ func (m *ConfigManager) readAndApplyServiceConfig(servicePath string) error {
 	}
 
 	m.serviceName = serviceConfig.GetName()
-	m.configIdServiceConfigFile = serviceConfig.GetId()
+	m.configIdFromServiceConfigFile = serviceConfig.GetId()
 
 	return m.applyServiceConfig(serviceConfig)
 }
@@ -233,8 +233,8 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 }
 
 func (m *ConfigManager) curConfigId() string {
-	if m.configIdServiceConfigFile != "" {
-		return m.configIdServiceConfigFile
+	if m.configIdFromServiceConfigFile != "" {
+		return m.configIdFromServiceConfigFile
 	}
 	return m.serviceConfigFetcher.CurConfigId()
 }
