@@ -1686,8 +1686,8 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		if resp.Version != oldConfigID {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got version: %v, want: %v", testCase.desc, resp.Version, oldConfigID)
 		}
-		if env.configManager.curRolloutID != oldRolloutID {
-			t.Errorf("Test Desc: %s, config manager rollout id: %v, want: %v", testCase.desc, env.configManager.curRolloutID, oldRolloutID)
+		if env.configManager.curRolloutId() != oldRolloutID {
+			t.Errorf("Test Desc: %s, config manager rollout id: %v, want: %v", testCase.desc, env.configManager.curRolloutId(), oldRolloutID)
 		}
 		if !proto.Equal(&resp.Request, &req) {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got request: %v, want: %v", testCase.desc, resp.Request, req)
@@ -1710,8 +1710,8 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		if resp.Version != newConfigID {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got version: %v, want: %v", testCase.desc, resp.Version, newConfigID)
 		}
-		if env.configManager.curRolloutID != newRolloutID {
-			t.Errorf("Test Desc: %s, config manager rollout id: %v, want: %v", testCase.desc, env.configManager.curRolloutID, newRolloutID)
+		if env.configManager.curRolloutId() != newRolloutID {
+			t.Errorf("Test Desc: %s, config manager rollout id: %v, want: %v", testCase.desc, env.configManager.curRolloutId(), newRolloutID)
 		}
 		if !proto.Equal(&resp.Request, &req) {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got request: %v, want: %v", testCase.desc, resp.Request, req)
@@ -1728,13 +1728,13 @@ type testEnv struct {
 func runTest(t *testing.T, opts options.ConfigGeneratorOptions, f func(*testEnv)) {
 	mockConfig := initMockConfigServer(t)
 	defer mockConfig.Close()
-	fetchConfigURL = func(serviceName, configID string) string {
+	util.FetchConfigURL = func(serviceManagementUrl, serviceName, configId string) string {
 		return mockConfig.URL
 	}
 
 	mockRollout := initMockRolloutServer(t)
 	defer mockRollout.Close()
-	fetchRolloutsURL = func(serviceName string) string {
+	util.FetchRolloutsURL = func(serviceManagementUrl, serviceName string) string {
 		return mockRollout.URL
 	}
 

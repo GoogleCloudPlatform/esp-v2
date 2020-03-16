@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package configmanager
+package serviceconfig
 
 import (
+	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -24,18 +25,23 @@ import (
 
 func TestServiceConfigFetcherTimeout(t *testing.T) {
 	timeout := 1 * time.Second
-	var err error
-	if serviceConfigFetcherClient, err = newServiceConfigFetcherClient(timeout); err != nil {
-		t.Fatalf("newServiceConfigFetcherClient failed: %v", err)
+
+	serviceConfigFetcher := ServiceConfigFetcher{
+		client: http.Client{
+			Timeout: timeout,
+		},
 	}
+
 	server := util.InitMockServer(`{}`)
-	_, err = callWithAccessToken(server.GetURL(), "this-is-token")
+	_, err := serviceConfigFetcher.callWithAccessToken(server.GetURL(), "this-is-token")
 	if err != nil {
 		t.Errorf("TestServiceConfigFetcherTimeout: the service config fetcher should get the config but get the error %v", err)
+
 	}
 	server.SetSleepTime(2 * timeout)
-	_, err = callWithAccessToken(server.GetURL(), "this-is-token")
+	_, err = serviceConfigFetcher.callWithAccessToken(server.GetURL(), "this-is-token")
 	if err == nil || !strings.Contains(err.Error(), "Client.Timeout exceeded while awaiting headers") {
 		t.Errorf("TestServiceConfigFetcherTimeout: the service config fetcher get the config but should get timeout error")
+
 	}
 }
