@@ -58,6 +58,7 @@ var (
 	SslMinimumProtocol = flag.String("ssl_minimum_protocol", "", "Minimum TLS protocol version for Downstream connections.")
 	SslMaximumProtocol = flag.String("ssl_maximum_protocol", "", "Maximum TLS protocol version for Downstream connections.")
 	RootCertsPath      = flag.String("root_certs_path", util.DefaultRootCAPaths, "Path to the root certificates to make TLS connection.")
+	EnableHSTS         = flag.Bool("enable_strict_transport_security", false, "Enable HSTS (HTTP Strict Transport Security).")
 
 	// Flags for non_gcp deployment.
 	ServiceAccountKey = flag.String("service_account_key", "", `Use the service account key JSON file to access the service control and the
@@ -126,6 +127,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		SslClientCertPath:                     *SslClientCertPath,
 		SslMinimumProtocol:                    *SslMinimumProtocol,
 		SslMaximumProtocol:                    *SslMaximumProtocol,
+		EnableHSTS:                            *EnableHSTS,
 		ServiceAccountKey:                     *ServiceAccountKey,
 		SkipJwtAuthnFilter:                    *SkipJwtAuthnFilter,
 		SkipServiceControlFilter:              *SkipServiceControlFilter,

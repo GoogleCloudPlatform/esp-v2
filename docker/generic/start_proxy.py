@@ -177,6 +177,11 @@ environment variable or by passing "-k" flag to this script.
         help=''' Maximum TLS protocol version for client side connection.
         Please refer to https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/auth/cert.proto#common-tls-configuration.
         ''')
+    
+    parser.add_argument('--enable_strict_transport_security', action='store_true',
+        help='''Enable HSTS (HTTP Strict Transport Security). "Strict-Transport-Security" response header
+        with value "max-age=31536000; includeSubdomains;" is added for all responses from local backend.
+        Not valid for remote backends.''')
 
     parser.add_argument('-z', '--healthz', default=None, help='''Define a
         health checking endpoint on the same ports as the application backend.
@@ -649,6 +654,9 @@ def gen_proxy_config(args):
         args.ssl_protocols.sort()
         proxy_conf.extend(["--ssl_minimum_protocol", args.ssl_protocols[0]])
         proxy_conf.extend(["--ssl_maximum_protocol", args.ssl_protocols[-1]])
+
+    if args.enable_strict_transport_security:
+            proxy_conf.append("--enable_strict_transport_security")
 
     if args.service:
         proxy_conf.extend(["--service", args.service])

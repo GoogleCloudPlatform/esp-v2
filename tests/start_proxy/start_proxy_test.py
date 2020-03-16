@@ -91,14 +91,14 @@ class TestStartProxy(unittest.TestCase):
               '--backend_dns_lookup_family', 'v4only'
               ]),
             # Default backend
-            (['-R=managed',
+            (['-R=managed','--enable_strict_transport_security',
               '--http_port=8079', '--service_control_quota_retries=3',
               '--service_control_report_timeout_ms=300',
               '--service_control_network_fail_open', '--check_metadata',
               '--disable_tracing'],
              ['bin/configmanager', '--logtostderr','--backend_address', 'http://127.0.0.1:8082',
               '--rollout_strategy', 'managed', '--v', '0',
-              '--listener_port', '8079',
+              '--listener_port', '8079', '--enable_strict_transport_security',
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
               '--check_metadata',

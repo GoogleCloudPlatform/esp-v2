@@ -121,6 +121,10 @@ const (
 	// Default api key locations
 	DefaultApiKeyQueryParamKey    = "key"
 	DefaultApiKeyQueryParamApiKey = "api_key"
+
+	// Strict Transport Security header key and value
+	HSTSHeaderKey   = "Strict-Transport-Security"
+	HSTSHeaderValue = "max-age=31536000; includeSubdomains"
 )
 
 type BackendProtocol int32

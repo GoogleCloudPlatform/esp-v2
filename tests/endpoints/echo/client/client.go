@@ -208,11 +208,11 @@ func DoCorsPreflightRequest(url, origin, requestMethod, requestHeader, referer s
 }
 
 // DoHttpsGet performs a HTTPS Get request to a specified url
-func DoHttpsGet(url string, httpVersion int, certPath string) ([]byte, error) {
+func DoHttpsGet(url string, httpVersion int, certPath string) (http.Header, []byte, error) {
 	client := &http.Client{}
 	caCert, err := ioutil.ReadFile(certPath)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
@@ -235,15 +235,15 @@ func DoHttpsGet(url string, httpVersion int, certPath string) ([]byte, error) {
 
 	resp, err := client.Get(url)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, string(body))
+		return nil, nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, string(body))
 	}
-	return body, err
+	return resp.Header, body, err
 }
