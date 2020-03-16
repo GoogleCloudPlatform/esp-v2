@@ -129,7 +129,7 @@ func (scf *ServiceConfigFetcher) fetchConfig(configId string) (*confpb.Service, 
 			if err != nil {
 				return nil, fmt.Errorf("fail to get access token: %v", err)
 			}
-			return scf.callServiceManagement(util.FetchConfigURL(scf.opts.ServiceManagementURL, scf.serviceName, scf.curConfigId()), token)
+			return scf.callServiceManagement(util.FetchConfigURL(scf.opts.ServiceManagementURL, scf.serviceName, newConfigId), token)
 		}
 		return nil, nil
 	}

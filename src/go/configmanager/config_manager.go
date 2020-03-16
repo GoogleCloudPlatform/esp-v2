@@ -54,7 +54,6 @@ type ConfigManager struct {
 	serviceName                   string
 	serviceInfo                   *configinfo.ServiceInfo
 	envoyConfigOptions            options.ConfigGeneratorOptions
-	configIdFromServiceConfigFile string
 	curServiceConfig              *confpb.Service
 
 	cache               cache.SnapshotCache
