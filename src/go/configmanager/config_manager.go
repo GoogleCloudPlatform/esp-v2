@@ -55,6 +55,7 @@ type ConfigManager struct {
 	serviceInfo                   *configinfo.ServiceInfo
 	envoyConfigOptions            options.ConfigGeneratorOptions
 	configIdFromServiceConfigFile string
+	curServiceConfig              *confpb.Service
 
 	cache               cache.SnapshotCache
 	checkRolloutsTicker *time.Ticker
@@ -178,14 +179,13 @@ func (m *ConfigManager) readAndApplyServiceConfig(servicePath string) error {
 	}
 
 	m.serviceName = serviceConfig.GetName()
-	m.configIdFromServiceConfigFile = serviceConfig.GetId()
-
 	return m.applyServiceConfig(serviceConfig)
 }
 
 func (m *ConfigManager) applyServiceConfig(serviceConfig *confpb.Service) error {
 	var err error
-	m.serviceInfo, err = configinfo.NewServiceInfoFromServiceConfig(serviceConfig, m.curConfigId(), m.envoyConfigOptions)
+	m.curServiceConfig = serviceConfig
+	m.serviceInfo, err = configinfo.NewServiceInfoFromServiceConfig(serviceConfig, serviceConfig.Id, m.envoyConfigOptions)
 	if err != nil {
 		return fmt.Errorf("fail to initialize ServiceInfo, %s", err)
 	}
@@ -233,13 +233,16 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 }
 
 func (m *ConfigManager) curConfigId() string {
-	if m.configIdFromServiceConfigFile != "" {
-		return m.configIdFromServiceConfigFile
+	if m.curServiceConfig == nil {
+		return ""
 	}
-	return m.serviceConfigFetcher.CurConfigId()
+	return m.curServiceConfig.Id
 }
 
 func (m *ConfigManager) curRolloutId() string {
+	if m.serviceConfigFetcher == nil {
+		return ""
+	}
 	return m.serviceConfigFetcher.CurRolloutId()
 }
 

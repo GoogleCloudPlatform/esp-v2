@@ -78,6 +78,7 @@ func TestFetchListeners(t *testing.T) {
 			BackendAddress: "grpc://127.0.0.1:80",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"%s",
+                "id": "2017-05-01r0",
                 "apis":[
                     {
                         "name":"%s",
@@ -207,6 +208,7 @@ func TestFetchListeners(t *testing.T) {
 			BackendAddress: "grpc://127.0.0.1:80",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"bookstore.endpoints.project123.cloud.goog",
+                "id": "2017-05-01r0",
                 "apis":[
                     {
                         "name":"%s",
@@ -381,6 +383,7 @@ func TestFetchListeners(t *testing.T) {
 			BackendAddress: "grpc://127.0.0.1:80",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"bookstore.endpoints.project123.cloud.goog",
+                "id": "2017-05-01r0",
                 "apis":[
                     {
                         "name":"%s",
@@ -588,6 +591,7 @@ func TestFetchListeners(t *testing.T) {
 			BackendAddress: "grpc://127.0.0.1:80",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"bookstore.endpoints.project123.cloud.goog",
+                "id": "2017-05-01r0",
                 "apis":[
                     {
                         "name":"%s",
@@ -832,6 +836,7 @@ func TestFetchListeners(t *testing.T) {
 			BackendAddress: "grpc://127.0.0.1:80",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"%s",
+                "id": "2017-05-01r0",
                 "endpoints" : [{"name": "%s"}],
                 "producer_project_id":"%s",
                 "control" : {
@@ -1052,6 +1057,7 @@ func TestFetchListeners(t *testing.T) {
 			BackendAddress: "http://127.0.0.1:80",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"bookstore.endpoints.project123.cloud.goog",
+                "id": "2017-05-01r0",
                 "apis":[
                     {
                         "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
@@ -1237,6 +1243,7 @@ func TestFetchListeners(t *testing.T) {
 			BackendAddress: "http://127.0.0.1:80",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"%s",
+                "id": "2017-05-01r0",
                 "producer_project_id":"%s",
                 "control" : {
                     "environment": "servicecontrol.googleapis.com"

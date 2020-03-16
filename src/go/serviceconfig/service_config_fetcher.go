@@ -34,8 +34,6 @@ import (
 )
 
 type ServiceConfigFetcher struct {
-	curConfigId         string
-	curRolloutId        string
 	serviceName         string
 	checkRolloutsTicker *time.Ticker
 	client              http.Client
@@ -43,6 +41,7 @@ type ServiceConfigFetcher struct {
 	opts                options.ConfigGeneratorOptions
 
 	curServiceConfig    *confpb.Service
+	curRolloutId        string
 	curFetchConfigError error
 }
 
@@ -96,12 +95,15 @@ func (scf *ServiceConfigFetcher) SetFetchConfigTimer(interval *time.Duration, ca
 	}()
 }
 
-func (scf *ServiceConfigFetcher) CurConfigId() string {
-	return scf.curConfigId
-}
-
 func (scf *ServiceConfigFetcher) CurRolloutId() string {
 	return scf.curRolloutId
+}
+
+func (scf *ServiceConfigFetcher) curConfigId() string {
+	if scf.curServiceConfig == nil {
+		return ""
+	}
+	return scf.curServiceConfig.Id
 }
 
 // Fetch the service config by given configId. If configId is empty, try to
@@ -109,7 +111,6 @@ func (scf *ServiceConfigFetcher) CurRolloutId() string {
 func (scf *ServiceConfigFetcher) fetchConfig(configId string) (*confpb.Service, error) {
 	_fetchConfig := func(configId string) (*confpb.Service, error) {
 		if configId != "" {
-			scf.curConfigId = configId
 			token, _, err := scf.accessToken()
 			if err != nil {
 				return nil, fmt.Errorf("fail to get access token: %v", err)
@@ -118,18 +119,17 @@ func (scf *ServiceConfigFetcher) fetchConfig(configId string) (*confpb.Service, 
 		}
 
 		glog.Infof("check new rollouts for service %v", scf.serviceName)
-		newRolloutId, newConfigId, err := scf.loadConfigFromRollouts(scf.serviceName, scf.curRolloutId, scf.curConfigId)
+		newRolloutId, newConfigId, err := scf.loadConfigFromRollouts(scf.serviceName, scf.curRolloutId, scf.curConfigId())
 		if err != nil {
 			glog.Errorf("error occurred when checking new rollouts, %v", err)
 		}
-		if scf.curRolloutId != newRolloutId && scf.curConfigId != newConfigId {
+		if scf.curRolloutId != newRolloutId && scf.curConfigId() != newConfigId {
 			scf.curRolloutId = newRolloutId
-			scf.curConfigId = newConfigId
 			token, _, err := scf.accessToken()
 			if err != nil {
 				return nil, fmt.Errorf("fail to get access token: %v", err)
 			}
-			return scf.callServiceManagement(util.FetchConfigURL(scf.opts.ServiceManagementURL, scf.serviceName, scf.curConfigId), token)
+			return scf.callServiceManagement(util.FetchConfigURL(scf.opts.ServiceManagementURL, scf.serviceName, scf.curConfigId()), token)
 		}
 		return nil, nil
 	}
