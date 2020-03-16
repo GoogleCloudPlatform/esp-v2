@@ -201,7 +201,7 @@ func TestHttpsClients(t *testing.T) {
 		var err error
 
 		url := fmt.Sprintf("https://localhost:%v/simpleget?key=api-key", s.Ports().ListenerPort)
-		resp, err = client.DoHttpsGet(url, tc.httpsVersion, tc.certPath)
+		_, resp, err = client.DoHttpsGet(url, tc.httpsVersion, tc.certPath)
 		if tc.wantError == nil {
 			if err != nil {
 				t.Fatal(err)
@@ -211,6 +211,65 @@ func TestHttpsClients(t *testing.T) {
 			}
 		} else if !strings.Contains(err.Error(), tc.wantError.Error()) {
 			t.Errorf("Test (%s): failed\nexpected: %v\ngot: %v", tc.desc, tc.wantError, err)
+		}
+	}
+}
+
+func TestHSTS(t *testing.T) {
+	t.Parallel()
+	args := utils.CommonArgs()
+	args = append(args, "--ssl_server_cert_path=../env/testdata/")
+	args = append(args, "--enable_strict_transport_security")
+
+	s := env.NewTestEnv(comp.TestHttpsClients, platform.EchoSidecar)
+	defer s.TearDown()
+	s.AppendHttpRules([]*annotationspb.HttpRule{
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",
+			Pattern: &annotationspb.HttpRule_Get{
+				Get: "/simpleget",
+			},
+		},
+	})
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	testData := []struct {
+		desc           string
+		httpsVersion   int
+		certPath       string
+		wantHSTSHeader string
+		wantResp       string
+	}{
+		{
+			desc:           "Succcess for HTTP1 client with HSTS",
+			httpsVersion:   1,
+			certPath:       platform.GetFilePath(platform.ServerCert),
+			wantHSTSHeader: "max-age=31536000; includeSubdomains",
+		},
+		{
+			desc:           "Succcess for HTTP2 client with HSTS",
+			httpsVersion:   2,
+			certPath:       platform.GetFilePath(platform.ServerCert),
+			wantHSTSHeader: "max-age=31536000; includeSubdomains",
+		},
+	}
+
+	for _, tc := range testData {
+		url := fmt.Sprintf("https://localhost:%v/simpleget?key=api-key", s.Ports().ListenerPort)
+		respHeader, respBody, err := client.DoHttpsGet(url, tc.httpsVersion, tc.certPath)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !strings.Contains(string(respBody), tc.wantResp) {
+			t.Errorf("Test desc (%v) expected: %s, got: %s", tc.desc, tc.wantResp, string(respBody))
+		}
+
+		if gotHeader := respHeader.Get("Strict-Transport-Security"); gotHeader != tc.wantHSTSHeader {
+			t.Errorf("Test desc (%v) expected: %s, got: %s", tc.desc, tc.wantHSTSHeader, gotHeader)
 		}
 	}
 }

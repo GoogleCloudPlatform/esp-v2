@@ -52,6 +52,7 @@ type ConfigGeneratorOptions struct {
 	SslClientCertPath    string
 	SslMinimumProtocol   string
 	SslMaximumProtocol   string
+	EnableHSTS           bool
 	RootCertsPath        string
 
 	// Flags for non_gcp deployment.

@@ -21,12 +21,83 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 
 	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 )
+
+func TestMakeRouteConfig(t *testing.T) {
+	testData := []struct {
+		desc                          string
+		enableStrictTransportSecurity bool
+		wantedError                   string
+		wantRouteConfig               string
+	}{
+		{
+			desc:                          "Enable Strict Transport Security",
+			enableStrictTransportSecurity: true,
+			wantRouteConfig: `{
+                             "name": "local_route",
+                             "virtualHosts": [
+                                 {
+                                     "domains": [
+                                         "*"
+                                     ],
+                                     "name": "backend",
+                                     "routes": [
+                                         {
+                                             "match": {
+                                                 "prefix": "/"
+                                             },
+                                             "responseHeadersToAdd": [
+                                                 {
+                                                     "header": {
+                                                         "key": "Strict-Transport-Security",
+                                                         "value": "max-age=31536000; includeSubdomains"
+                                                     }
+                                                 }
+                                             ],
+                                             "route": {
+                                                 "cluster": "test-api_local",
+                                                 "timeout": "15s"
+                                             }
+                                         }
+                                     ]
+                                 }
+                             ]
+                       }`,
+		},
+	}
+
+	for i, tc := range testData {
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.EnableHSTS = tc.enableStrictTransportSecurity
+
+		gotRoute, err := MakeRouteConfig(&configinfo.ServiceInfo{
+			Name:    "test-api",
+			Options: opts,
+		})
+		if tc.wantedError != "" {
+			if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
+				t.Errorf("Test (%s): expected err: %v, got: %v", tc.desc, tc.wantedError, err)
+			}
+			continue
+		}
+
+		marshaler := &jsonpb.Marshaler{}
+		gotConfig, err := marshaler.MarshalToString(gotRoute)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := util.JsonEqual(tc.wantRouteConfig, gotConfig); err != nil {
+			t.Errorf("Test Desc(%d): %s, MakeRouteConfig failed, \n %v", i, tc.desc, err)
+		}
+	}
+}
 
 func TestMakeRouteConfigForCors(t *testing.T) {
 	testData := []struct {

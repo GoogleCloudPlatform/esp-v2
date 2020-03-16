@@ -26,6 +26,7 @@ import (
 
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/common"
 	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
@@ -70,6 +71,17 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*v2pb.RouteConfigurat
 				},
 			},
 		}
+		if serviceInfo.Options.EnableHSTS {
+			catchAllRt.ResponseHeadersToAdd = []*corepb.HeaderValueOption{
+				{
+					Header: &corepb.HeaderValue{
+						Key:   util.HSTSHeaderKey,
+						Value: util.HSTSHeaderValue,
+					},
+				},
+			}
+		}
+
 		host.Routes = append(host.Routes, catchAllRt)
 
 		jsonStr, _ := util.ProtoToJson(catchAllRt)
