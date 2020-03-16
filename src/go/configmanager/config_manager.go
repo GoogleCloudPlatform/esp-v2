@@ -39,7 +39,7 @@ var (
 	checkNewRolloutInterval = flag.Duration("check_rollout_interval", 60*time.Second, `the interval periodically to call servicemanagment to check the latest rolloutil.`)
 	CheckMetadata           = flag.Bool("check_metadata", false, `enable fetching service name, config ID and rollout strategy from service metadata server`)
 	RolloutStrategy         = flag.String("rollout_strategy", "fixed", `service config rollout strategy, must be either "managed" or "fixed"`)
-	ServiceConfigID         = flag.String("service_config_id", "", "initial service config id")
+	ServiceConfigId         = flag.String("service_config_id", "", "initial service config id")
 	ServiceName             = flag.String("service", "", "endpoint service name")
 	ServicePath             = flag.String("service_json_path", "", `file path to the endpoint service config.
 					When this flag is used, fixed rollout_strategy will be used,
@@ -51,10 +51,10 @@ var (
 // Config Manager handles service configuration fetching and updating.
 // TODO(jilinxia): handles multi service name.
 type ConfigManager struct {
-	serviceName                   string
-	serviceInfo                   *configinfo.ServiceInfo
-	envoyConfigOptions            options.ConfigGeneratorOptions
-	curServiceConfig              *confpb.Service
+	serviceName        string
+	serviceInfo        *configinfo.ServiceInfo
+	envoyConfigOptions options.ConfigGeneratorOptions
+	curServiceConfig   *confpb.Service
 
 	cache               cache.SnapshotCache
 	checkRolloutsTicker *time.Ticker
@@ -78,7 +78,7 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 		if *ServiceName != "" {
 			glog.Infof("flag --service is ignored when --service_json_path is specified.")
 		}
-		if *ServiceConfigID != "" {
+		if *ServiceConfigId != "" {
 			glog.Infof("flag --service_config_id is ignored when --service_json_path is specified.")
 		}
 		if *RolloutStrategy != "fixed" {
@@ -119,14 +119,10 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 		return nil, fmt.Errorf(`failed to set rollout strategy. It must be either "managed" or "fixed"`)
 	}
 
-	if rolloutStrategy == util.ManagedRolloutStrategy {
-		if m.serviceConfigFetcher, err = sc.NewServiceConfigFetcher(mf, opts, m.serviceName, ""); err != nil {
-			return nil, fmt.Errorf(`failed to create https client to call ServiceManagement service, got error: %v`, err)
-
-		}
-	} else {
+	configId := ""
+	if rolloutStrategy == util.FixedRolloutStrategy {
 		// rollout strategy is fixed mode
-		configId := *ServiceConfigID
+		configId = *ServiceConfigId
 		if configId == "" {
 			if checkMetadata && mf != nil {
 				configId, err = mf.FetchConfigId()
@@ -140,13 +136,13 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 			}
 		}
 
-		if m.serviceConfigFetcher, err = sc.NewServiceConfigFetcher(mf, opts, m.serviceName, configId); err != nil {
-			return nil, fmt.Errorf(`failed to create https client to call ServiceManagement service, got error: %v`, err)
-
-		}
 	}
 
-	if serviceConfig, err := m.serviceConfigFetcher.CurServiceConfig(); err != nil {
+	if m.serviceConfigFetcher, err = sc.NewServiceConfigFetcher(mf, opts, m.serviceName); err != nil {
+		return nil, fmt.Errorf(`failed to create https client to call ServiceManagement service, got error: %v`, err)
+	}
+
+	if serviceConfig, err := m.serviceConfigFetcher.FetchConfig(configId); err != nil {
 		return nil, err
 	} else if err = m.applyServiceConfig(serviceConfig); err != nil {
 		return nil, err

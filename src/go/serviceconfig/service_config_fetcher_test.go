@@ -15,25 +15,26 @@
 package serviceconfig
 
 import (
-	"net/http"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 )
 
 func TestServiceConfigFetcherTimeout(t *testing.T) {
+	opts := options.DefaultConfigGeneratorOptions()
 	timeout := 1 * time.Second
+	opts.HttpRequestTimeout = timeout
 
-	serviceConfigFetcher := ServiceConfigFetcher{
-		client: http.Client{
-			Timeout: timeout,
-		},
+	serviceConfigFetcher, err := NewServiceConfigFetcher(nil, opts, "service-name")
+	if err != nil {
+		t.Fatalf("newServiceConfigFetcherClient failed: %v", err)
 	}
 
 	server := util.InitMockServer(`{}`)
-	_, err := serviceConfigFetcher.callWithAccessToken(server.GetURL(), "this-is-token")
+	_, err = serviceConfigFetcher.callWithAccessToken(server.GetURL(), "this-is-token")
 	if err != nil {
 		t.Errorf("TestServiceConfigFetcherTimeout: the service config fetcher should get the config but get the error %v", err)
 

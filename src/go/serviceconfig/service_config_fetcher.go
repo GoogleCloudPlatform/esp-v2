@@ -45,7 +45,7 @@ type ServiceConfigFetcher struct {
 	curFetchConfigError error
 }
 
-func NewServiceConfigFetcher(mf *metadata.MetadataFetcher, opts options.ConfigGeneratorOptions, serviceName, configId string) (*ServiceConfigFetcher, error) {
+func NewServiceConfigFetcher(mf *metadata.MetadataFetcher, opts options.ConfigGeneratorOptions, serviceName string) (*ServiceConfigFetcher, error) {
 	caCert, err := ioutil.ReadFile(opts.RootCertsPath)
 	if err != nil {
 		return nil, err
@@ -65,7 +65,6 @@ func NewServiceConfigFetcher(mf *metadata.MetadataFetcher, opts options.ConfigGe
 		mf:          mf,
 		opts:        opts,
 	}
-	_, _ = scf.fetchConfig(configId)
 	return scf, nil
 }
 
@@ -81,7 +80,7 @@ func (scf *ServiceConfigFetcher) SetFetchConfigTimer(interval *time.Duration, ca
 		for range scf.checkRolloutsTicker.C {
 			glog.Infof("check new rollouts for service %v", scf.serviceName)
 
-			serviceConfig, err := scf.fetchConfig("")
+			serviceConfig, err := scf.FetchConfig("")
 			if err != nil {
 				glog.Errorf("error occurred when checking new rollouts, %v", err)
 				continue
@@ -108,7 +107,7 @@ func (scf *ServiceConfigFetcher) curConfigId() string {
 
 // Fetch the service config by given configId. If configId is empty, try to
 // fetch the latest service config,.
-func (scf *ServiceConfigFetcher) fetchConfig(configId string) (*confpb.Service, error) {
+func (scf *ServiceConfigFetcher) FetchConfig(configId string) (*confpb.Service, error) {
 	_fetchConfig := func(configId string) (*confpb.Service, error) {
 		if configId != "" {
 			token, _, err := scf.accessToken()
