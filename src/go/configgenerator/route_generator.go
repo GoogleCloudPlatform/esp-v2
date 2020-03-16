@@ -216,6 +216,16 @@ func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.R
 					},
 				},
 			}
+			if serviceInfo.Options.EnableHSTS {
+				r.ResponseHeadersToAdd = []*corepb.HeaderValueOption{
+					{
+						Header: &corepb.HeaderValue{
+							Key:   util.HSTSHeaderKey,
+							Value: util.HSTSHeaderValue,
+						},
+					},
+				}
+			}
 			backendRoutes = append(backendRoutes, &r)
 
 			jsonStr, _ := util.ProtoToJson(&r)

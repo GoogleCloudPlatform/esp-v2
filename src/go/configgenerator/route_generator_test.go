@@ -27,18 +27,30 @@ import (
 	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	apipb "google.golang.org/genproto/protobuf/api"
 )
 
 func TestMakeRouteConfig(t *testing.T) {
 	testData := []struct {
 		desc                          string
 		enableStrictTransportSecurity bool
+		fakeServiceConfig             *confpb.Service
 		wantedError                   string
 		wantRouteConfig               string
 	}{
 		{
 			desc:                          "Enable Strict Transport Security",
 			enableStrictTransportSecurity: true,
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+			},
 			wantRouteConfig: `{
                              "name": "local_route",
                              "virtualHosts": [
@@ -61,7 +73,78 @@ func TestMakeRouteConfig(t *testing.T) {
                                                  }
                                              ],
                                              "route": {
-                                                 "cluster": "test-api_local",
+                                                 "cluster": "bookstore.endpoints.project123.cloud.goog_local",
+                                                 "timeout": "15s"
+                                             }
+                                         }
+                                     ]
+                                 }
+                             ]
+                       }`,
+		},
+		{
+			desc:                          "Enable Strict Transport Security for remote backend",
+			enableStrictTransportSecurity: true,
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector:        "endpoints.examples.bookstore.Bookstore.Foo",
+							Address:         "https://testapipb.com/foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "bar.com",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.Foo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "foo",
+							},
+						},
+					},
+				},
+			},
+			wantRouteConfig: `{
+                             "name": "local_route",
+                             "virtualHosts": [
+                                 {
+                                     "domains": [
+                                         "*"
+                                     ],
+                                     "name": "backend",
+                                     "routes": [
+                                         {
+                                             "match": {
+                                                 "headers": [
+                                                     {
+                                                         "exactMatch": "GET",
+                                                         "name": ":method"
+                                                     }
+                                                 ],
+                                                 "path": "foo"
+                                             },
+                                             "responseHeadersToAdd": [
+                                                 {
+                                                     "header": {
+                                                         "key": "Strict-Transport-Security",
+                                                         "value": "max-age=31536000; includeSubdomains"
+                                                     }
+                                                 }
+                                             ],
+                                             "route": {
+                                                 "cluster": "testapipb.com:443",
+                                                 "hostRewrite": "testapipb.com",
                                                  "timeout": "15s"
                                              }
                                          }
@@ -75,11 +158,12 @@ func TestMakeRouteConfig(t *testing.T) {
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.EnableHSTS = tc.enableStrictTransportSecurity
+		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-		gotRoute, err := MakeRouteConfig(&configinfo.ServiceInfo{
-			Name:    "test-api",
-			Options: opts,
-		})
+		gotRoute, err := MakeRouteConfig(fakeServiceInfo)
 		if tc.wantedError != "" {
 			if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
 				t.Errorf("Test (%s): expected err: %v, got: %v", tc.desc, tc.wantedError, err)

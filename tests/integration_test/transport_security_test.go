@@ -247,12 +247,14 @@ func TestHSTS(t *testing.T) {
 			httpsVersion:   1,
 			certPath:       platform.GetFilePath(platform.ServerCert),
 			wantHSTSHeader: "max-age=31536000; includeSubdomains",
+			wantResp:       `simple get message`,
 		},
 		{
 			desc:           "Succcess for HTTP2 client with HSTS",
 			httpsVersion:   2,
 			certPath:       platform.GetFilePath(platform.ServerCert),
 			wantHSTSHeader: "max-age=31536000; includeSubdomains",
+			wantResp:       `simple get message`,
 		},
 	}
 
