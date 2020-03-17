@@ -89,6 +89,7 @@ func TestManagedServiceConfig(t *testing.T) {
 		// Remove the authentication in service config and wait envoy to update.
 		if idx == 1 {
 			s.OverrideAuthentication(&confpb.Authentication{})
+			s.OverrideServiceConfigId("new-service-config-id")
 			time.Sleep(time.Second * 5)
 		}
 

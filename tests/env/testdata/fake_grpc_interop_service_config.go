@@ -19,6 +19,7 @@ var (
   {"name": "endpoints-grpc-interop.cloudendpointsapis.com",
   "title": "gRPC Testing API",
   "producerProjectId": "endpoints-grpc-interop",
+  "id": "test-config-id",
   "apis": [{
     "name": "grpc.testing.TestService",
     "methods": [{

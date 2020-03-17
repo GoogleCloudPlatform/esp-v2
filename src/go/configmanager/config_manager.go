@@ -15,12 +15,12 @@
 package configmanager
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
-	"net/http"
+	"io/ioutil"
 	"time"
 
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/commonflags"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
@@ -29,6 +29,7 @@ import (
 	"github.com/golang/glog"
 
 	gen "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator"
+	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/serviceconfig"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
@@ -38,16 +39,13 @@ var (
 	checkNewRolloutInterval = flag.Duration("check_rollout_interval", 60*time.Second, `the interval periodically to call servicemanagment to check the latest rolloutil.`)
 	CheckMetadata           = flag.Bool("check_metadata", false, `enable fetching service name, config ID and rollout strategy from service metadata server`)
 	RolloutStrategy         = flag.String("rollout_strategy", "fixed", `service config rollout strategy, must be either "managed" or "fixed"`)
-	ServiceConfigID         = flag.String("service_config_id", "", "initial service config id")
+	ServiceConfigId         = flag.String("service_config_id", "", "initial service config id")
 	ServiceName             = flag.String("service", "", "endpoint service name")
 	ServicePath             = flag.String("service_json_path", "", `file path to the endpoint service config.
 					When this flag is used, fixed rollout_strategy will be used,
 					GCP metadata server will not be called to fetch access token, and
 					following flags will be ignored; --service_config_id, --service,
 					--rollout_strategy`)
-
-	// secured HTTP client calling service management service.
-	serviceConfigFetcherClient *http.Client
 )
 
 // Config Manager handles service configuration fetching and updating.
@@ -56,13 +54,13 @@ type ConfigManager struct {
 	serviceName        string
 	serviceInfo        *configinfo.ServiceInfo
 	envoyConfigOptions options.ConfigGeneratorOptions
-	curRolloutID       string
-	curConfigID        string
+	curServiceConfig   *confpb.Service
 
 	cache               cache.SnapshotCache
 	checkRolloutsTicker *time.Ticker
 
-	metadataFetcher *metadata.MetadataFetcher
+	metadataFetcher      *metadata.MetadataFetcher
+	serviceConfigFetcher *sc.ServiceConfigFetcher
 }
 
 // NewConfigManager creates new instance of Config Manager.
@@ -80,7 +78,7 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 		if *ServiceName != "" {
 			glog.Infof("flag --service is ignored when --service_json_path is specified.")
 		}
-		if *ServiceConfigID != "" {
+		if *ServiceConfigId != "" {
 			glog.Infof("flag --service_config_id is ignored when --service_json_path is specified.")
 		}
 		if *RolloutStrategy != "fixed" {
@@ -121,31 +119,14 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 		return nil, fmt.Errorf(`failed to set rollout strategy. It must be either "managed" or "fixed"`)
 	}
 
-	// Create secured http client with rootCertsPath.
-	if serviceConfigFetcherClient, err = newServiceConfigFetcherClient(time.Duration(*commonflags.HttpRequestTimeoutS) * time.Second); err != nil {
-		return nil, fmt.Errorf(`failed to create https client to call ServiceManagement service, got error: %v`, err)
-	}
-
-	if rolloutStrategy == util.ManagedRolloutStrategy {
-		// try to fetch rollouts and get newest config, if failed, NewConfigManager exits with failure
-		newRolloutID, newConfigID, err := loadConfigFromRollouts(m.serviceName, m.curRolloutID, m.curConfigID, mf)
-		if err != nil {
-			return nil, err
-		}
-		if m.curRolloutID != newRolloutID && m.curConfigID != newConfigID {
-			m.curRolloutID = newRolloutID
-			m.curConfigID = newConfigID
-			if err := m.updateSnapshot(); err != nil {
-				return nil, err
-			}
-		}
-	} else {
+	configId := ""
+	if rolloutStrategy == util.FixedRolloutStrategy {
 		// rollout strategy is fixed mode
-		configID := *ServiceConfigID
-		if configID == "" {
+		configId = *ServiceConfigId
+		if configId == "" {
 			if checkMetadata && mf != nil {
-				configID, err = mf.FetchConfigId()
-				if configID == "" || err != nil {
+				configId, err = mf.FetchConfigId()
+				if configId == "" || err != nil {
 					return nil, fmt.Errorf("failed to read metadata with key endpoints-service-version from metadata server")
 				}
 			} else if !checkMetadata {
@@ -154,64 +135,52 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 				return nil, fmt.Errorf("service config id is not specified, required on a non-gcp deployment")
 			}
 		}
-		m.curConfigID = configID
-		if err := m.updateSnapshot(); err != nil {
-			return nil, err
-		}
+
 	}
+
+	if m.serviceConfigFetcher, err = sc.NewServiceConfigFetcher(mf, opts, m.serviceName); err != nil {
+		return nil, fmt.Errorf(`failed to create https client to call ServiceManagement service, got error: %v`, err)
+	}
+
+	if serviceConfig, err := m.serviceConfigFetcher.FetchConfig(configId); err != nil {
+		return nil, err
+	} else if err = m.applyServiceConfig(serviceConfig); err != nil {
+		return nil, err
+	}
+
 	glog.Infof("create new Config Manager for service (%v) with configuration id (%v), %v rollout strategy",
-		m.serviceName, m.curConfigID, rolloutStrategy)
+		m.serviceName, m.curConfigId(), rolloutStrategy)
 
 	if rolloutStrategy == util.ManagedRolloutStrategy {
-		go func() {
-			glog.Infof("start checking new rollouts every %v seconds", *checkNewRolloutInterval)
-			m.checkRolloutsTicker = time.NewTicker(*checkNewRolloutInterval)
-			for range m.checkRolloutsTicker.C {
-				m.Infof("check new rollouts for service %v", m.serviceName)
-				// only log error and keep checking when fetching rollouts and getting newest config fail
-				newRolloutID, newConfigID, err := loadConfigFromRollouts(m.serviceName, m.curRolloutID, m.curConfigID, mf)
-				if err != nil {
-					glog.Errorf("error occurred when checking new rollouts, %v", err)
-				}
-				if m.curRolloutID != newRolloutID && m.curConfigID != newConfigID {
-					m.curRolloutID = newRolloutID
-					m.curConfigID = newConfigID
-					if err := m.updateSnapshot(); err != nil {
-						glog.Errorf("error occurred when checking new rollouts, %v", err)
-					}
-				}
+		m.serviceConfigFetcher.SetFetchConfigTimer(checkNewRolloutInterval, func(serviceConfig *confpb.Service) {
+			err := m.applyServiceConfig(serviceConfig)
+			if err != nil {
+				glog.Errorf("error occurred when checking new rollouts, %v", err)
 			}
-		}()
+		})
 	}
 	return m, nil
 }
 
-// updateSnapshot should be called when starting up the server.
-// It calls ServiceManager Server to fetch the service configuration in order
-// to dynamically configure Envoy.
-func (m *ConfigManager) updateSnapshot() error {
-	serviceConfig, err := fetchConfig(m.serviceName, m.curConfigID, m.metadataFetcher)
-	if err != nil {
-		return fmt.Errorf("fail to fetch service config, %s", err)
-	}
-
-	return m.applyServiceConfig(serviceConfig)
-}
-
 func (m *ConfigManager) readAndApplyServiceConfig(servicePath string) error {
-	serviceConfig, err := readConfig(servicePath)
+	config, err := ioutil.ReadFile(servicePath)
 	if err != nil {
 		return fmt.Errorf("fail to read service config file: %s, error: %s", servicePath, err)
 	}
-	m.serviceName = serviceConfig.GetName()
-	m.curConfigID = serviceConfig.GetId()
 
+	serviceConfig, err := util.UnmarshalServiceConfig(bytes.NewReader(config))
+	if err != nil {
+		return fmt.Errorf("fail to unmarshal service config: %v, error: %s", config, err)
+	}
+
+	m.serviceName = serviceConfig.GetName()
 	return m.applyServiceConfig(serviceConfig)
 }
 
 func (m *ConfigManager) applyServiceConfig(serviceConfig *confpb.Service) error {
 	var err error
-	m.serviceInfo, err = configinfo.NewServiceInfoFromServiceConfig(serviceConfig, m.curConfigID, m.envoyConfigOptions)
+	m.curServiceConfig = serviceConfig
+	m.serviceInfo, err = configinfo.NewServiceInfoFromServiceConfig(serviceConfig, serviceConfig.Id, m.envoyConfigOptions)
 	if err != nil {
 		return fmt.Errorf("fail to initialize ServiceInfo, %s", err)
 	}
@@ -253,9 +222,23 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 		listenerResources = append(listenerResources, lis)
 	}
 
-	snapshot := cache.NewSnapshot(m.curConfigID, endpoints, clusterResources, routes, listenerResources, runtimes)
+	snapshot := cache.NewSnapshot(m.curConfigId(), endpoints, clusterResources, routes, listenerResources, runtimes)
 	m.Infof("Envoy Dynamic Configuration is cached for service: %v", m.serviceName)
 	return &snapshot, nil
+}
+
+func (m *ConfigManager) curConfigId() string {
+	if m.curServiceConfig == nil {
+		return ""
+	}
+	return m.curServiceConfig.Id
+}
+
+func (m *ConfigManager) curRolloutId() string {
+	if m.serviceConfigFetcher == nil {
+		return ""
+	}
+	return m.serviceConfigFetcher.CurRolloutId()
 }
 
 func (m *ConfigManager) ID(node *corepb.Node) string {
