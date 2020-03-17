@@ -19,7 +19,7 @@ import os, inspect
 
 currentdir = os.path.dirname(
     os.path.abspath(inspect.getfile(inspect.currentframe())))
-sys.path.append(currentdir + "/../../docker/generic")
+sys.path.insert(0, currentdir + "/../../docker/generic")
 from start_proxy import gen_bootstrap_conf, make_argparser, gen_proxy_config, gen_envoy_args
 
 
@@ -52,10 +52,18 @@ class TestStartProxy(unittest.TestCase):
              ['bin/bootstrap',
               '--logtostderr', '--admin_port', '8001',
               '--tracing_project_id',
-              '123',
-              '--tracing_sample_rate', '1', '--tracing_incoming_context',
+              '123', '--tracing_incoming_context',
               'fake-incoming-context', '--tracing_outgoing_context',
-              'fake-outgoing-context', '/tmp/bootstrap.json'])
+              'fake-outgoing-context',
+              '--tracing_sample_rate', '1',
+              '/tmp/bootstrap.json']),
+            # --disable_cloud_trace_auto_sampling overrides --tracing_sample_rate
+            (['--disable_cloud_trace_auto_sampling',
+              '--tracing_sample_rate=0.5'],
+             ['bin/bootstrap',
+              '--logtostderr', '--admin_port', '0',
+              '--tracing_sample_rate', '0',
+              '/tmp/bootstrap.json']),
         ]
 
         for flags, wantedArgs in testcases:
