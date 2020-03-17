@@ -23,6 +23,7 @@ import (
 var (
 	FakeBookstoreConfig = &confpb.Service{
 		Name:              "bookstore.endpoints.cloudesf-testing.cloud.goog",
+		Id:                "service-config-id",
 		Title:             "Bookstore gRPC API",
 		ProducerProjectId: "producer project",
 		Apis: []*apipb.Api{

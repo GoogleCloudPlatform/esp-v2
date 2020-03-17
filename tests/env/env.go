@@ -164,6 +164,11 @@ func (e *TestEnv) OverrideAuthentication(authentication *confpb.Authentication) 
 	e.fakeServiceConfig.Authentication = authentication
 }
 
+// OverrideAuthentication overrides Service.Authentication.
+func (e *TestEnv) OverrideServiceConfigId(newServiceConfigId string) {
+	e.fakeServiceConfig.Id = newServiceConfigId
+}
+
 // OverrideSystemParameters overrides Service.SystemParameters.
 func (e *TestEnv) OverrideSystemParameters(systemParameters *confpb.SystemParameters) {
 	e.fakeServiceConfig.SystemParameters = systemParameters
