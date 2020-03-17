@@ -40,9 +40,8 @@ type ServiceConfigFetcher struct {
 	mf                  *metadata.MetadataFetcher
 	opts                options.ConfigGeneratorOptions
 
-	curServiceConfig    *confpb.Service
-	curRolloutId        string
-	curFetchConfigError error
+	curServiceConfig *confpb.Service
+	curRolloutId     string
 }
 
 func NewServiceConfigFetcher(mf *metadata.MetadataFetcher, opts options.ConfigGeneratorOptions, serviceName string) (*ServiceConfigFetcher, error) {
@@ -66,43 +65,6 @@ func NewServiceConfigFetcher(mf *metadata.MetadataFetcher, opts options.ConfigGe
 		opts:        opts,
 	}
 	return scf, nil
-}
-
-func (scf *ServiceConfigFetcher) CurServiceConfig() (*confpb.Service, error) {
-	return scf.curServiceConfig, scf.curFetchConfigError
-}
-
-func (scf *ServiceConfigFetcher) SetFetchConfigTimer(interval *time.Duration, callback func(serviceConfig *confpb.Service)) {
-	go func() {
-		glog.Infof("start checking new rollouts every %v seconds", *interval)
-		scf.checkRolloutsTicker = time.NewTicker(*interval)
-
-		for range scf.checkRolloutsTicker.C {
-			glog.Infof("check new rollouts for service %v", scf.serviceName)
-
-			serviceConfig, err := scf.FetchConfig("")
-			if err != nil {
-				glog.Errorf("error occurred when checking new rollouts, %v", err)
-				continue
-
-			}
-
-			if serviceConfig != nil {
-				callback(serviceConfig)
-			}
-		}
-	}()
-}
-
-func (scf *ServiceConfigFetcher) CurRolloutId() string {
-	return scf.curRolloutId
-}
-
-func (scf *ServiceConfigFetcher) curConfigId() string {
-	if scf.curServiceConfig == nil {
-		return ""
-	}
-	return scf.curServiceConfig.Id
 }
 
 // Fetch the service config by given configId. If configId is empty, try to
@@ -132,8 +94,47 @@ func (scf *ServiceConfigFetcher) FetchConfig(configId string) (*confpb.Service, 
 		}
 		return nil, nil
 	}
-	scf.curServiceConfig, scf.curFetchConfigError = _fetchConfig(configId)
-	return scf.curServiceConfig, scf.curFetchConfigError
+	serviceConfig, err := _fetchConfig(configId)
+	if err == nil {
+		scf.curServiceConfig = serviceConfig
+
+	}
+
+	return serviceConfig, err
+}
+
+func (scf *ServiceConfigFetcher) SetFetchConfigTimer(interval *time.Duration, callback func(serviceConfig *confpb.Service)) {
+	go func() {
+		glog.Infof("start checking new rollouts every %v seconds", *interval)
+		scf.checkRolloutsTicker = time.NewTicker(*interval)
+
+		for range scf.checkRolloutsTicker.C {
+			glog.Infof("check new rollouts for service %v", scf.serviceName)
+
+			serviceConfig, err := scf.FetchConfig("")
+			if err != nil {
+				glog.Errorf("error occurred when checking new rollouts, %v", err)
+				continue
+
+			}
+
+			if serviceConfig != nil {
+				callback(serviceConfig)
+			}
+		}
+	}()
+}
+
+// TODO(taoxuy): remove this after relying on service control for configId
+func (scf *ServiceConfigFetcher) CurRolloutId() string {
+	return scf.curRolloutId
+}
+
+func (scf *ServiceConfigFetcher) curConfigId() string {
+	if scf.curServiceConfig == nil {
+		return ""
+	}
+	return scf.curServiceConfig.Id
 }
 
 func (scf *ServiceConfigFetcher) loadConfigFromRollouts(serviceName, curRolloutId, curConfigId string) (string, string, error) {
@@ -198,6 +199,7 @@ func (scf *ServiceConfigFetcher) fetchRollouts() (*smpb.ListServiceRolloutsRespo
 	return scf.callServiceManagementRollouts(util.FetchRolloutsURL(scf.opts.ServiceManagementURL, scf.serviceName), token)
 }
 
+// TODO(taoxuy): replace this with callServiceControl for configId
 func (scf *ServiceConfigFetcher) callServiceManagementRollouts(path, token string) (*smpb.ListServiceRolloutsResponse, error) {
 	var err error
 	var resp *http.Response
