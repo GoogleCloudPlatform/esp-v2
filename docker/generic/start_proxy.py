@@ -538,7 +538,7 @@ environment variable or by passing "-k" flag to this script.
         preserve the original field names. Defaults to false''')
 
     parser.add_argument(
-        '--transcoding_ignore_query_parameters', action='store_true',
+        '--transcoding_ignore_query_parameters', action=None,
         help='''
          A list of query parameters(separated by comma) to be ignored for
          transcoding method mapping in grpc-json transcoding. By default, the
@@ -547,7 +547,7 @@ environment variable or by passing "-k" flag to this script.
          ''')
 
     parser.add_argument(
-        '--transcoding_ignore_unknown_query_parameters', action=None,
+        '--transcoding_ignore_unknown_query_parameters', action='store_true',
         help='''
         Whether to ignore query parameters that cannot be mapped to a
         corresponding protobuf field in grpc-json transcoding. Use this if you
@@ -604,6 +604,11 @@ def enforce_conflict_args(args):
 
     if args.ssl_protocols and (args.ssl_minimum_protocol or args.ssl_maximum_protocol):
         return "Flag --ssl_protocols is going to be deprecated, please use --ssl_minimum_protocol and --ssl_maximum_protocol."
+
+    if args.transcoding_ignore_query_parameters \
+        and args.transcoding_ignore_unknown_query_parameters:
+        return "Flag --transcoding_ignore_query_parameters cannot be used" \
+               " together with --transcoding_ignore_unknown_query_parameters."
 
     return None
 
@@ -741,8 +746,11 @@ def gen_proxy_config(args):
     if args.transcoding_preserve_proto_field_names:
         proxy_conf.append("--transcoding_preserve_proto_field_names")
 
+
+
     if args.transcoding_ignore_query_parameters:
-        proxy_conf.extend(["--transcoding_ignore_query_parameters", args.transcoding_ignore_query_parameters])
+        proxy_conf.extend(["--transcoding_ignore_query_parameters",
+                           args.transcoding_ignore_query_parameters])
 
     if args.transcoding_ignore_unknown_query_parameters:
         proxy_conf.append("--transcoding_ignore_unknown_query_parameters")
