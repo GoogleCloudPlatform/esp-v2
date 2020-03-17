@@ -60,8 +60,7 @@ message ApiKeyLocation {
     //     Cookie: API-KEY=abcdef12345
     //
     string cookie = 3 [(validate.rules).string = {
-      well_known_regex: HTTP_HEADER_VALUE,
-      strict: false
+      well_known_regex: HTTP_HEADER_VALUE
     }];
   }
 }
