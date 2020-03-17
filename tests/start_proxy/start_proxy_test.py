@@ -257,6 +257,25 @@ class TestStartProxy(unittest.TestCase):
               '--transcoding_always_print_enums_as_ints',
               '--transcoding_preserve_proto_field_names',
               ]),
+            # json-grpc transcoder ignore unknown parameters
+            (['--service=test_bookstore.gloud.run',
+              '--backend=grpc://127.0.0.1:8000',
+              '--transcoding_ignore_query_parameters=foo,bar'
+              ],
+             ['bin/configmanager', '--logtostderr','--backend_address', 'grpc://127.0.0.1:8000',
+              '--rollout_strategy', 'fixed', '--v', '0',
+              '--service', 'test_bookstore.gloud.run',
+              '--transcoding_ignore_query_parameters', 'foo,bar'
+              ]),
+            (['--service=test_bookstore.gloud.run',
+              '--backend=grpc://127.0.0.1:8000',
+              '--transcoding_ignore_unknown_query_parameters'
+              ],
+             ['bin/configmanager', '--logtostderr','--backend_address', 'grpc://127.0.0.1:8000',
+              '--rollout_strategy', 'fixed', '--v', '0',
+              '--service', 'test_bookstore.gloud.run',
+              '--transcoding_ignore_unknown_query_parameters'
+              ]),
         ]
 
         for flags, wantedArgs in testcases:
@@ -282,6 +301,8 @@ class TestStartProxy(unittest.TestCase):
             ['--ssl_client_cert_path=/etc/endpoint/ssl', '--tls_mutual_auth'],
             ['--ssl_protocols=TLSv1.3',  '--ssl_minimum_protocol=TLSv1.1'],
             ['--ssl_minimum_protocol=TLSv11'],
+            ['--transcoding_ignore_query_parameters=foo,bar',
+             '--transcoding_ignore_unknown_query_parameters']
           ]
 
         for flags in testcases:

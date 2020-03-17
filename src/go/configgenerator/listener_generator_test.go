@@ -46,12 +46,14 @@ var (
 
 func TestTranscoderFilter(t *testing.T) {
 	testData := []struct {
-		desc                                  string
-		fakeServiceConfig                     *confpb.Service
-		transcodingAlwaysPrintPrimitiveFields bool
-		transcodingAlwaysPrintEnumsAsInts     bool
-		transcoderPreserveProtoFieldNames     bool
-		wantTranscoderFilter                  string
+		desc                                    string
+		fakeServiceConfig                       *confpb.Service
+		transcodingAlwaysPrintPrimitiveFields   bool
+		transcodingAlwaysPrintEnumsAsInts       bool
+		transcodingPreserveProtoFieldNames      bool
+		transcodingIgnoreQueryParameters        string
+		transcodingIgnoreUnknownQueryParameters bool
+		wantTranscoderFilter                    string
 	}{
 		{
 			desc: "Success. Generate transcoder filter with default apiKey locations and default jwt locations",
@@ -194,9 +196,11 @@ func TestTranscoderFilter(t *testing.T) {
 					SourceFiles: []*anypb.Any{content},
 				},
 			},
-			transcodingAlwaysPrintPrimitiveFields: true,
-			transcodingAlwaysPrintEnumsAsInts:     true,
-			transcoderPreserveProtoFieldNames:     true,
+			transcodingAlwaysPrintPrimitiveFields:   true,
+			transcodingAlwaysPrintEnumsAsInts:       true,
+			transcodingPreserveProtoFieldNames:      true,
+			transcodingIgnoreQueryParameters:        "parameter_foo,parameter_bar",
+			transcodingIgnoreUnknownQueryParameters: true,
 			wantTranscoderFilter: fmt.Sprintf(`
 {
    "name":"envoy.grpc_json_transcoder",
@@ -204,9 +208,12 @@ func TestTranscoderFilter(t *testing.T) {
       "@type":"type.googleapis.com/envoy.config.filter.http.transcoder.v2.GrpcJsonTranscoder",
       "autoMapping":true,
       "convertGrpcStatus":true,
+      "ignoreUnknownQueryParameters":true,
       "ignoredQueryParameters":[
          "api_key",
-         "key"
+         "key",
+         "parameter_bar",
+         "parameter_foo"
       ],
       "printOptions":{
          "alwaysPrintEnumsAsInts":true,
@@ -227,8 +234,10 @@ func TestTranscoderFilter(t *testing.T) {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendAddress = "grpc://127.0.0.0:80"
 		opts.TranscodingAlwaysPrintPrimitiveFields = tc.transcodingAlwaysPrintPrimitiveFields
-		opts.TranscoderPreserveProtoFieldNames = tc.transcoderPreserveProtoFieldNames
+		opts.TranscodingPreserveProtoFieldNames = tc.transcodingPreserveProtoFieldNames
 		opts.TranscodingAlwaysPrintEnumsAsInts = tc.transcodingAlwaysPrintEnumsAsInts
+		opts.TranscodingIgnoreQueryParameters = tc.transcodingIgnoreQueryParameters
+		opts.TranscodingIgnoreUnknownQueryParameters = tc.transcodingIgnoreUnknownQueryParameters
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)

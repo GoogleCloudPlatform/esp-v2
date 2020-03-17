@@ -634,32 +634,28 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		ptypes.UnmarshalAny(sourceFile, configFile)
 
 		if configFile.GetFileType() == smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
+			ignoredQueryParameterList := []string{}
+			for IgnoredQueryParameter, _ := range serviceInfo.AllTranscodingIgnoredQueryParams {
+				ignoredQueryParameterList = append(ignoredQueryParameterList, IgnoredQueryParameter)
+
+			}
+			sort.Sort(sort.StringSlice(ignoredQueryParameterList))
+
 			configContent := configFile.GetFileContents()
 			transcodeConfig := &transcoderpb.GrpcJsonTranscoder{
 				DescriptorSet: &transcoderpb.GrpcJsonTranscoder_ProtoDescriptorBin{
 					ProtoDescriptorBin: configContent,
 				},
-				AutoMapping:       true,
-				ConvertGrpcStatus: true,
+				AutoMapping:                  true,
+				ConvertGrpcStatus:            true,
+				IgnoredQueryParameters:       ignoredQueryParameterList,
+				IgnoreUnknownQueryParameters: serviceInfo.Options.TranscodingIgnoreUnknownQueryParameters,
 				PrintOptions: &transcoderpb.GrpcJsonTranscoder_PrintOptions{
 					AlwaysPrintPrimitiveFields: serviceInfo.Options.TranscodingAlwaysPrintPrimitiveFields,
 					AlwaysPrintEnumsAsInts:     serviceInfo.Options.TranscodingAlwaysPrintEnumsAsInts,
-					PreserveProtoFieldNames:    serviceInfo.Options.TranscoderPreserveProtoFieldNames,
+					PreserveProtoFieldNames:    serviceInfo.Options.TranscodingPreserveProtoFieldNames,
 				},
 			}
-			for apiKeyQueryParam, used := range serviceInfo.TranscoderIgnoredApiKeyQueryParams {
-				if used {
-					transcodeConfig.IgnoredQueryParameters = append(transcodeConfig.IgnoredQueryParameters, apiKeyQueryParam)
-				}
-			}
-
-			for jwtQueryParam, used := range serviceInfo.TranscoderIgnoredJwtQueryParams {
-				if used {
-					transcodeConfig.IgnoredQueryParameters = append(transcodeConfig.IgnoredQueryParameters, jwtQueryParam)
-				}
-			}
-
-			sort.Sort(sort.StringSlice(transcodeConfig.IgnoredQueryParameters))
 
 			transcodeConfig.Services = append(transcodeConfig.Services, serviceInfo.ApiNames...)
 

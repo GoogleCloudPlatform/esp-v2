@@ -49,10 +49,8 @@ type ServiceInfo struct {
 	Methods map[string]*methodInfo
 	// Stores url segment names, mapping snake name to Json name.
 	SegmentNames []*pmpb.SegmentName
-	// Stores all the used api key locations in query parameters for json-grpc transcoder.
-	TranscoderIgnoredApiKeyQueryParams map[string]bool
-	// Stores all the used jwt locations in query parameters for json-grpc transcoder.
-	TranscoderIgnoredJwtQueryParams map[string]bool
+	// Stores all the query parameters to be ignored for json-grpc transcoder.
+	AllTranscodingIgnoredQueryParams map[string]bool
 
 	AllowCors         bool
 	ServiceControlURI string
@@ -87,13 +85,12 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	}
 
 	serviceInfo := &ServiceInfo{
-		Name:                               serviceConfig.GetName(),
-		ConfigID:                           id,
-		serviceConfig:                      serviceConfig,
-		Options:                            opts,
-		Methods:                            make(map[string]*methodInfo),
-		TranscoderIgnoredJwtQueryParams:    make(map[string]bool),
-		TranscoderIgnoredApiKeyQueryParams: make(map[string]bool),
+		Name:                             serviceConfig.GetName(),
+		ConfigID:                         id,
+		serviceConfig:                    serviceConfig,
+		Options:                          opts,
+		Methods:                          make(map[string]*methodInfo),
+		AllTranscodingIgnoredQueryParams: make(map[string]bool),
 	}
 
 	// Calling order is required due to following variable usage
@@ -128,7 +125,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	serviceInfo.processAccessToken()
 	serviceInfo.processTypes()
 	serviceInfo.addGrpcHttpRules()
-	if err := serviceInfo.processJwtLocations(); err != nil {
+	if err := serviceInfo.processTranscodingIgnoredQueryParams(); err != nil {
 		return nil, err
 	}
 	if err := serviceInfo.processApiKeyLocations(); err != nil {
@@ -517,13 +514,14 @@ func (s *ServiceInfo) processUsageRule() error {
 	return nil
 }
 
-func (s *ServiceInfo) processJwtLocations() error {
+func (s *ServiceInfo) processTranscodingIgnoredQueryParams() error {
+	// Process ignored query params from jwt locations
 	authn := s.serviceConfig.GetAuthentication()
 	for _, provider := range authn.GetProviders() {
 		// no custom JwtLocation so use default ones and set the one in query
 		// parameter for transcoder to ignore.
 		if len(provider.JwtLocations) == 0 {
-			s.TranscoderIgnoredJwtQueryParams[util.DefaultJwtQueryParamAccessToken] = true
+			s.AllTranscodingIgnoredQueryParams[util.DefaultJwtQueryParamAccessToken] = true
 			continue
 		}
 
@@ -534,12 +532,22 @@ func (s *ServiceInfo) processJwtLocations() error {
 					return fmt.Errorf("JwtLocation_Query should be set without valuePrefix, get JwtLocation {%v}", jwtLocation)
 				}
 				// set the custom JwtLocation in query parameter for transcoder to ignore.
-				s.TranscoderIgnoredJwtQueryParams[jwtLocation.GetQuery()] = true
+				s.AllTranscodingIgnoredQueryParams[jwtLocation.GetQuery()] = true
 			default:
 				continue
 			}
 		}
 	}
+
+	// Process ignored query params from flag transcoding_ignore_query_params
+	if s.Options.TranscodingIgnoreQueryParameters != "" {
+		IgnoredQueryParametersFlag := strings.Split(s.Options.TranscodingIgnoreQueryParameters, ",")
+		for _, IgnoredQueryParameter := range IgnoredQueryParametersFlag {
+			s.AllTranscodingIgnoredQueryParams[IgnoredQueryParameter] = true
+
+		}
+	}
+
 	return nil
 }
 
@@ -566,8 +574,8 @@ func (s *ServiceInfo) processApiKeyLocations() error {
 		// one and set the custom ApiKeyLocations in query parameter for transcoder
 		// to ignore.
 		if len(method.ApiKeyLocations) == 0 {
-			s.TranscoderIgnoredApiKeyQueryParams[util.DefaultApiKeyQueryParamKey] = true
-			s.TranscoderIgnoredApiKeyQueryParams[util.DefaultApiKeyQueryParamApiKey] = true
+			s.AllTranscodingIgnoredQueryParams[util.DefaultApiKeyQueryParamKey] = true
+			s.AllTranscodingIgnoredQueryParams[util.DefaultApiKeyQueryParamApiKey] = true
 		}
 
 	}
@@ -585,7 +593,7 @@ func (s *ServiceInfo) extractApiKeyLocations(method *methodInfo, parameters []*c
 				},
 			})
 			// set the custom ApiKeyLocation in query parameter for transcoder to ignore.\
-			s.TranscoderIgnoredApiKeyQueryParams[urlQueryName] = true
+			s.AllTranscodingIgnoredQueryParams[urlQueryName] = true
 		}
 		if headerName := parameter.GetHttpHeader(); headerName != "" {
 			headerNames = append(headerNames, &scpb.ApiKeyLocation{

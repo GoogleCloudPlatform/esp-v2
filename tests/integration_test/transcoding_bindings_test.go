@@ -155,7 +155,7 @@ func TestTranscodingPrintOptions(t *testing.T) {
 		wantResp                              string
 		transcodingAlwaysPrintPrimitiveFields bool
 		transcodingAlwaysPrintEnumsAsInts     bool
-		transcoderPreserveProtoFieldNames     bool
+		transcodingPreserveProtoFieldNames    bool
 	}
 	tests := []testType{
 		{
@@ -185,13 +185,13 @@ func TestTranscodingPrintOptions(t *testing.T) {
 			wantResp:                          `{"id":"4","type":1}`,
 		},
 		{
-			desc:                              "Success. Set transcoding_preserve_proto_field_names to true",
-			clientProtocol:                    "http",
-			httpMethod:                        "POST",
-			method:                            "/v1/shelves/100/books?key=api-key",
-			bodyBytes:                         []byte(`{"id": 4, "price_in_usd": 100}`),
-			transcoderPreserveProtoFieldNames: true,
-			wantResp:                          `{"id":"4","priceInUsd":100}`,
+			desc:                               "Success. Set transcoding_preserve_proto_field_names to true",
+			clientProtocol:                     "http",
+			httpMethod:                         "POST",
+			method:                             "/v1/shelves/100/books?key=api-key",
+			bodyBytes:                          []byte(`{"id": 4, "price_in_usd": 100}`),
+			transcodingPreserveProtoFieldNames: true,
+			wantResp:                           `{"id":"4","priceInUsd":100}`,
 		},
 	}
 	for _, tc := range tests {
@@ -207,7 +207,7 @@ func TestTranscodingPrintOptions(t *testing.T) {
 				args = append(args, "--transcoding_always_print_enums_as_ints=true")
 			}
 
-			if tc.transcoderPreserveProtoFieldNames {
+			if tc.transcodingPreserveProtoFieldNames {
 				args = append(args, "--transcoding_preserve_proto_field_names=true")
 			}
 
@@ -229,6 +229,101 @@ func TestTranscodingPrintOptions(t *testing.T) {
 				if !strings.Contains(resp, tc.wantResp) {
 					t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
 				}
+			}
+		}()
+	}
+}
+
+func TestTranscodingIgnoreParameters(t *testing.T) {
+	t.Parallel()
+
+	configID := "test-config-id"
+	type testType struct {
+		desc                                    string
+		clientProtocol                          string
+		httpMethod                              string
+		method                                  string
+		bodyBytes                               []byte
+		wantResp                                string
+		wantError                               string
+		transcodingIgnoreUnknownQueryParameters bool
+		transcodingIgnoreQueryParameters        string
+	}
+
+	tests := []testType{
+		{
+			desc:           "Success. Default setting used to be compared with other test cases.",
+			clientProtocol: "http",
+			httpMethod:     "POST",
+			method:         "/v1/shelves/100/books?key=api-key&unknown_parameter=val",
+			bodyBytes:      []byte(`{"id": 4, "type": 1, "author":"Mark", "price_in_usd": 100}`),
+			wantError:      "503 Service Unavailable",
+		},
+		{
+			desc:                                    "Success. Set transcodingIgnoreUnknownQueryParameters to true.",
+			clientProtocol:                          "http",
+			httpMethod:                              "POST",
+			method:                                  "/v1/shelves/100/books?key=api-key&unknown_parameter_foo=val&unknown_parameter_bar=val",
+			bodyBytes:                               []byte(`{"id": 4, "type": 1, "author":"Mark", "price_in_usd": 100}`),
+			transcodingIgnoreUnknownQueryParameters: true,
+			wantResp:                                `{"id":"4","author":"Mark","type":"COMIC","price_in_usd":100}`,
+		},
+		{
+			desc:                             "Fail. Set transcodingIgnoreQueryParameters with insufficient ignore parameters.",
+			clientProtocol:                   "http",
+			httpMethod:                       "POST",
+			method:                           "/v1/shelves/100/books?key=api-key&unknown_parameter_foo=val&unknown_parameter_bar=val",
+			bodyBytes:                        []byte(`{"id": 4, "type": 1, "author":"Mark", "price_in_usd": 100}`),
+			transcodingIgnoreQueryParameters: "unknown_parameter_foo",
+			wantError:                        "503 Service Unavailable",
+		},
+		{
+			desc:                             "Success. Set right transcodingIgnoreQueryParameters.",
+			clientProtocol:                   "http",
+			httpMethod:                       "POST",
+			method:                           "/v1/shelves/100/books?key=api-key&unknown_parameter_foo=val&unknown_parameter_bar=val",
+			bodyBytes:                        []byte(`{"id": 4, "type": 1, "author":"Mark", "price_in_usd": 100}`),
+			transcodingIgnoreQueryParameters: "unknown_parameter_foo,unknown_parameter_bar",
+			wantResp:                         `{"id":"4","author":"Mark","type":"COMIC","price_in_usd":100}`,
+		},
+	}
+	for _, tc := range tests {
+		func() {
+			args := []string{"--service_config_id=" + configID,
+				"--rollout_strategy=fixed"}
+			if tc.transcodingIgnoreUnknownQueryParameters {
+				args = append(args, "--transcoding_ignore_unknown_query_parameters=true")
+			}
+			if tc.transcodingIgnoreQueryParameters != "" {
+				args = append(args, "--transcoding_ignore_query_parameters="+tc.transcodingIgnoreQueryParameters)
+			}
+
+			s := env.NewTestEnv(comp.TestTranscodingIgnoreQueryParameters, platform.GrpcBookstoreSidecar)
+			s.OverrideAuthentication(&confpb.Authentication{
+				Rules: []*confpb.AuthenticationRule{},
+			})
+
+			defer s.TearDown()
+			if err := s.Setup(args); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			resp, err := client.MakeHttpCallWithBody(addr, tc.httpMethod, tc.method, "", tc.bodyBytes)
+			if err == nil {
+				if !strings.Contains(resp, tc.wantResp) {
+					t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
+				}
+				return
+			}
+
+			if tc.wantError == "" {
+				t.Errorf("Test (%s): failed with  err %v", tc.desc, err)
+				return
+			}
+
+			if !strings.Contains(err.Error(), tc.wantError) {
+				t.Errorf("Test (%s): failed with unexpected error, want: %v, get: %s", tc.desc, err, tc.wantError)
 			}
 		}()
 	}
