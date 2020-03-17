@@ -47,8 +47,7 @@ message ApiKeyLocation {
     //     X-API-Key: abcdef12345
     //
     string header = 2 [(validate.rules).string = {
-      well_known_regex: HTTP_HEADER_VALUE,
-      strict: false
+      well_known_regex: HTTP_HEADER_NAME
     }];
 
     // API key is sent in a
