@@ -24,7 +24,7 @@ import (
 var (
 	FakeEchoConfig = &confpb.Service{
 		Name:              "echo-api.endpoints.cloudesf-testing.cloud.goog",
-		Id:                "service-config-id",
+		Id:                "test-config-id",
 		Title:             "Endpoints Example",
 		ProducerProjectId: "producer-project",
 		Apis: []*apipb.Api{

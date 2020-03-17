@@ -24,7 +24,7 @@ import (
 var (
 	FakeEchoConfigForDynamicRouting = &confpb.Service{
 		Name:              "echo-api.endpoints.cloudesf-testing.cloud.goog",
-		Id:                "service-config-id",
+		Id:                "test-config-id",
 		Title:             "Endpoints Example for Dynamic Routing",
 		ProducerProjectId: "producer-project",
 		Apis: []*apipb.Api{
