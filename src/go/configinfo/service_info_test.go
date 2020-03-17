@@ -131,11 +131,11 @@ func TestProcessEndpoints(t *testing.T) {
 
 func TestProcessApiKeyLocations(t *testing.T) {
 	testData := []struct {
-		desc                                     string
-		fakeServiceConfig                        *confpb.Service
-		wantedSystemParameters                   map[string][]*confpb.SystemParameter
-		wantedTranscoderIgnoredApiKeyQueryParams map[string]bool
-		wantMethods                              map[string]*methodInfo
+		desc                                   string
+		fakeServiceConfig                      *confpb.Service
+		wantedSystemParameters                 map[string][]*confpb.SystemParameter
+		wantedAllTranscodingIgnoredQueryParams map[string]bool
+		wantMethods                            map[string]*methodInfo
 	}{
 		{
 			desc: "Succeed, only header",
@@ -164,7 +164,7 @@ func TestProcessApiKeyLocations(t *testing.T) {
 					},
 				},
 			},
-			wantedTranscoderIgnoredApiKeyQueryParams: map[string]bool{},
+			wantedAllTranscodingIgnoredQueryParams: map[string]bool{},
 			wantMethods: map[string]*methodInfo{
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &methodInfo{
 					ShortName: "echo",
@@ -212,7 +212,7 @@ func TestProcessApiKeyLocations(t *testing.T) {
 					},
 				},
 			},
-			wantedTranscoderIgnoredApiKeyQueryParams: map[string]bool{
+			wantedAllTranscodingIgnoredQueryParams: map[string]bool{
 				"query_name": true,
 			},
 			wantMethods: map[string]*methodInfo{
@@ -268,7 +268,7 @@ func TestProcessApiKeyLocations(t *testing.T) {
 					},
 				},
 			},
-			wantedTranscoderIgnoredApiKeyQueryParams: map[string]bool{
+			wantedAllTranscodingIgnoredQueryParams: map[string]bool{
 				"query_name_1": true,
 				"query_name_2": true,
 			},
@@ -372,7 +372,7 @@ func TestProcessApiKeyLocations(t *testing.T) {
 					},
 				},
 			},
-			wantedTranscoderIgnoredApiKeyQueryParams: map[string]bool{
+			wantedAllTranscodingIgnoredQueryParams: map[string]bool{
 				"api_key":      true,
 				"key":          true,
 				"query_name_1": true,
@@ -467,8 +467,8 @@ func TestProcessApiKeyLocations(t *testing.T) {
 		if len(serviceInfo.Methods) != len(tc.wantMethods) {
 			t.Errorf("Test Desc(%d): %s, got: %v, wanted: %v", i, tc.desc, serviceInfo.Methods, tc.wantMethods)
 		}
-		if !reflect.DeepEqual(serviceInfo.TranscoderIgnoredApiKeyQueryParams, tc.wantedTranscoderIgnoredApiKeyQueryParams) {
-			t.Errorf("Test Desc(%d): %s, gotTranscoderIgnoredApiKeyQueryParams: %v, wantedTranscoderIgnoredApiKeyQueryParams: %v", i, tc.desc, serviceInfo.TranscoderIgnoredApiKeyQueryParams, tc.wantedTranscoderIgnoredApiKeyQueryParams)
+		if !reflect.DeepEqual(serviceInfo.AllTranscodingIgnoredQueryParams, tc.wantedAllTranscodingIgnoredQueryParams) {
+			t.Errorf("Test Desc(%d): %s, gotAllTranscodingIgnoredQueryParams: %v, wantedAllTranscodingIgnoredQueryParams: %v", i, tc.desc, serviceInfo.AllTranscodingIgnoredQueryParams, tc.wantedAllTranscodingIgnoredQueryParams)
 		}
 
 		for key, gotMethod := range serviceInfo.Methods {
@@ -480,15 +480,16 @@ func TestProcessApiKeyLocations(t *testing.T) {
 	}
 }
 
-func TestProcessJwtLocations(t *testing.T) {
+func TestProcessTranscodingIgnoredQueryParams(t *testing.T) {
 	testData := []struct {
-		desc                                  string
-		fakeServiceConfig                     *confpb.Service
-		wantedTranscoderIgnoredJwtQueryParams map[string]bool
-		wantedError                           string
+		desc                                   string
+		fakeServiceConfig                      *confpb.Service
+		transcodingIgnoredQueryParamsFlag      string
+		wantedAllTranscodingIgnoredQueryParams map[string]bool
+		wantedError                            string
 	}{
 		{
-			desc: "Success. Default jwt locations",
+			desc: "Success. Default jwt locations with transcoding_ignore_query_params flag",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
@@ -509,8 +510,11 @@ func TestProcessJwtLocations(t *testing.T) {
 					},
 				},
 			},
-			wantedTranscoderIgnoredJwtQueryParams: map[string]bool{
+			transcodingIgnoredQueryParamsFlag: "foo,bar",
+			wantedAllTranscodingIgnoredQueryParams: map[string]bool{
 				"access_token": true,
+				"foo":          true,
+				"bar":          true,
 			},
 		},
 		{
@@ -546,7 +550,7 @@ func TestProcessJwtLocations(t *testing.T) {
 			wantedError: `JwtLocation_Query should be set without valuePrefix, get JwtLocation {query:"jwt_query_param" value_prefix:"jwt_query_header_prefix" }`,
 		},
 		{
-			desc: "Success. Custom jwt locations",
+			desc: "Success. Custom jwt locations with transcoding_ignore_query_params flag",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
@@ -580,19 +584,26 @@ func TestProcessJwtLocations(t *testing.T) {
 					},
 				},
 			},
-			wantedTranscoderIgnoredJwtQueryParams: map[string]bool{
+			transcodingIgnoredQueryParamsFlag: "foo,bar",
+			wantedAllTranscodingIgnoredQueryParams: map[string]bool{
 				"jwt_query_param": true,
+				"foo":             true,
+				"bar":             true,
 			},
 		},
 	}
 	for i, tc := range testData {
+
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.TranscodingIgnoreQueryParameters = tc.transcodingIgnoredQueryParamsFlag
 		serviceInfo := &ServiceInfo{
-			serviceConfig:                      tc.fakeServiceConfig,
-			Methods:                            make(map[string]*methodInfo),
-			TranscoderIgnoredJwtQueryParams:    make(map[string]bool),
-			TranscoderIgnoredApiKeyQueryParams: make(map[string]bool),
+			serviceConfig:                    tc.fakeServiceConfig,
+			Methods:                          make(map[string]*methodInfo),
+			AllTranscodingIgnoredQueryParams: make(map[string]bool),
+			Options:                          opts,
 		}
-		err := serviceInfo.processJwtLocations()
+
+		err := serviceInfo.processTranscodingIgnoredQueryParams()
 		if err != nil {
 			if err.Error() != tc.wantedError {
 				// Error doesn't match with wantedError.
@@ -603,9 +614,9 @@ func TestProcessJwtLocations(t *testing.T) {
 			// Error is empty while wantedError is not.
 			t.Errorf("Test Desc(%d): %s, gotError: %v, wantedError: %v", i, tc.desc, err.Error(), tc.wantedError)
 
-		} else if !reflect.DeepEqual(serviceInfo.TranscoderIgnoredJwtQueryParams, tc.wantedTranscoderIgnoredJwtQueryParams) {
+		} else if !reflect.DeepEqual(serviceInfo.AllTranscodingIgnoredQueryParams, tc.wantedAllTranscodingIgnoredQueryParams) {
 			// Generated TranscoderIgnoreApiKeyQueryParams is not expected.
-			t.Errorf("Test Desc(%d): %s, gotTranscoderIgnoredApiKeyQueryParams: %v, wantedTranscoderIgnoredApiKeyQueryParams: %v", i, tc.desc, serviceInfo.TranscoderIgnoredJwtQueryParams, tc.wantedTranscoderIgnoredJwtQueryParams)
+			t.Errorf("Test Desc(%d): %s, gotAllTranscodingIgnoredQueryParams: %v, wantedAllTranscodingIgnoredQueryParams: %v", i, tc.desc, serviceInfo.AllTranscodingIgnoredQueryParams, tc.wantedAllTranscodingIgnoredQueryParams)
 		}
 	}
 }

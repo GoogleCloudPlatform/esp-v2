@@ -634,6 +634,13 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		ptypes.UnmarshalAny(sourceFile, configFile)
 
 		if configFile.GetFileType() == smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
+			ignoredQueryParameterList := []string{}
+			for IgnoredQueryParameter, _ := range serviceInfo.AllTranscodingIgnoredQueryParams {
+				ignoredQueryParameterList = append(ignoredQueryParameterList, IgnoredQueryParameter)
+
+			}
+			sort.Sort(sort.StringSlice(ignoredQueryParameterList))
+
 			configContent := configFile.GetFileContents()
 			transcodeConfig := &transcoderpb.GrpcJsonTranscoder{
 				DescriptorSet: &transcoderpb.GrpcJsonTranscoder_ProtoDescriptorBin{
@@ -641,7 +648,7 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 				},
 				AutoMapping:                  true,
 				ConvertGrpcStatus:            true,
-				IgnoredQueryParameters:       transcodingIgnoreQueryParameters(serviceInfo),
+				IgnoredQueryParameters:       ignoredQueryParameterList,
 				IgnoreUnknownQueryParameters: serviceInfo.Options.TranscodingIgnoreUnknownQueryParameters,
 				PrintOptions: &transcoderpb.GrpcJsonTranscoder_PrintOptions{
 					AlwaysPrintPrimitiveFields: serviceInfo.Options.TranscodingAlwaysPrintPrimitiveFields,
@@ -787,39 +794,4 @@ func makeRouterFilter(opts options.ConfigGeneratorOptions) *hcmpb.HttpFilter {
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: router},
 	}
 	return routerFilter
-}
-
-func transcodingIgnoreQueryParameters(serviceInfo *sc.ServiceInfo) []string {
-	ignoreQueryParameters := make(map[string]bool)
-
-	for apiKeyQueryParam, used := range serviceInfo.TranscoderIgnoredApiKeyQueryParams {
-		if used {
-			ignoreQueryParameters[apiKeyQueryParam] = true
-
-		}
-	}
-
-	for jwtQueryParam, used := range serviceInfo.TranscoderIgnoredJwtQueryParams {
-		if used {
-			ignoreQueryParameters[jwtQueryParam] = true
-
-		}
-	}
-
-	if serviceInfo.Options.TranscodingIgnoreQueryParameters != "" {
-		ignoreQueryParametersFlag := strings.Split(serviceInfo.Options.TranscodingIgnoreQueryParameters, ",")
-		for _, ignoreQueryParameter := range ignoreQueryParametersFlag {
-			ignoreQueryParameters[ignoreQueryParameter] = true
-
-		}
-	}
-
-	ignoreQueryParametersList := []string{}
-	for ignoreQueryParameter, _ := range ignoreQueryParameters {
-		ignoreQueryParametersList = append(ignoreQueryParametersList, ignoreQueryParameter)
-
-	}
-
-	sort.Sort(sort.StringSlice(ignoreQueryParametersList))
-	return ignoreQueryParametersList
 }
