@@ -87,9 +87,11 @@ type ConfigGeneratorOptions struct {
 
 	ComputePlatformOverride string
 
-	TranscodingAlwaysPrintPrimitiveFields bool
-	TranscodingAlwaysPrintEnumsAsInts     bool
-	TranscoderPreserveProtoFieldNames     bool
+	TranscodingAlwaysPrintPrimitiveFields   bool
+	TranscodingAlwaysPrintEnumsAsInts       bool
+	TranscodingPreserveProtoFieldNames      bool
+	TranscodingIgnoreQueryParameters        string
+	TranscodingIgnoreUnknownQueryParameters bool
 }
 
 // DefaultConfigGeneratorOptions returns ConfigGeneratorOptions with default values.

@@ -639,27 +639,16 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 				DescriptorSet: &transcoderpb.GrpcJsonTranscoder_ProtoDescriptorBin{
 					ProtoDescriptorBin: configContent,
 				},
-				AutoMapping:       true,
-				ConvertGrpcStatus: true,
+				AutoMapping:                  true,
+				ConvertGrpcStatus:            true,
+				IgnoredQueryParameters:       transcodingIgnoreQueryParameters(serviceInfo),
+				IgnoreUnknownQueryParameters: serviceInfo.Options.TranscodingIgnoreUnknownQueryParameters,
 				PrintOptions: &transcoderpb.GrpcJsonTranscoder_PrintOptions{
 					AlwaysPrintPrimitiveFields: serviceInfo.Options.TranscodingAlwaysPrintPrimitiveFields,
 					AlwaysPrintEnumsAsInts:     serviceInfo.Options.TranscodingAlwaysPrintEnumsAsInts,
-					PreserveProtoFieldNames:    serviceInfo.Options.TranscoderPreserveProtoFieldNames,
+					PreserveProtoFieldNames:    serviceInfo.Options.TranscodingPreserveProtoFieldNames,
 				},
 			}
-			for apiKeyQueryParam, used := range serviceInfo.TranscoderIgnoredApiKeyQueryParams {
-				if used {
-					transcodeConfig.IgnoredQueryParameters = append(transcodeConfig.IgnoredQueryParameters, apiKeyQueryParam)
-				}
-			}
-
-			for jwtQueryParam, used := range serviceInfo.TranscoderIgnoredJwtQueryParams {
-				if used {
-					transcodeConfig.IgnoredQueryParameters = append(transcodeConfig.IgnoredQueryParameters, jwtQueryParam)
-				}
-			}
-
-			sort.Sort(sort.StringSlice(transcodeConfig.IgnoredQueryParameters))
 
 			transcodeConfig.Services = append(transcodeConfig.Services, serviceInfo.ApiNames...)
 
@@ -798,4 +787,39 @@ func makeRouterFilter(opts options.ConfigGeneratorOptions) *hcmpb.HttpFilter {
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: router},
 	}
 	return routerFilter
+}
+
+func transcodingIgnoreQueryParameters(serviceInfo *sc.ServiceInfo) []string {
+	ignoreQueryParameters := make(map[string]bool)
+
+	for apiKeyQueryParam, used := range serviceInfo.TranscoderIgnoredApiKeyQueryParams {
+		if used {
+			ignoreQueryParameters[apiKeyQueryParam] = true
+
+		}
+	}
+
+	for jwtQueryParam, used := range serviceInfo.TranscoderIgnoredJwtQueryParams {
+		if used {
+			ignoreQueryParameters[jwtQueryParam] = true
+
+		}
+	}
+
+	if serviceInfo.Options.TranscodingIgnoreQueryParameters != "" {
+		ignoreQueryParametersFlag := strings.Split(serviceInfo.Options.TranscodingIgnoreQueryParameters, ",")
+		for _, ignoreQueryParameter := range ignoreQueryParametersFlag {
+			ignoreQueryParameters[ignoreQueryParameter] = true
+
+		}
+	}
+
+	ignoreQueryParametersList := []string{}
+	for ignoreQueryParameter, _ := range ignoreQueryParameters {
+		ignoreQueryParametersList = append(ignoreQueryParametersList, ignoreQueryParameter)
+
+	}
+
+	sort.Sort(sort.StringSlice(ignoreQueryParametersList))
+	return ignoreQueryParametersList
 }

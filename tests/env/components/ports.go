@@ -116,6 +116,7 @@ const (
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
 	TestTranscodingBindings
+	TestTranscodingIgnoreQueryParameters
 	TestTranscodingPrintOptions
 	TestTranscodingErrors
 	TestTranscodingServiceUnavailableError
