@@ -63,14 +63,17 @@ def gen_bootstrap_conf(args):
     else:
         if args.tracing_project_id:
             cmd.extend(["--tracing_project_id", args.tracing_project_id])
-        if args.tracing_sample_rate:
-            cmd.extend(["--tracing_sample_rate", str(args.tracing_sample_rate)])
         if args.tracing_incoming_context:
             cmd.extend(
                 ["--tracing_incoming_context", args.tracing_incoming_context])
         if args.tracing_outgoing_context:
             cmd.extend(
                 ["--tracing_outgoing_context", args.tracing_outgoing_context])
+
+        if args.disable_cloud_trace_auto_sampling:
+            cmd.extend(["--tracing_sample_rate", "0"])
+        elif args.tracing_sample_rate:
+            cmd.extend(["--tracing_sample_rate", str(args.tracing_sample_rate)])
 
     if args.http_request_timeout_s:
         cmd.extend(
@@ -402,7 +405,18 @@ environment variable or by passing "-k" flag to this script.
     parser.add_argument(
         '--tracing_sample_rate',
         default=0.001,
-        help="tracing sampling rate from 0.0 to 1.0")
+        help='''
+        Tracing sampling rate from 0.0 to 1.0.
+        By default, 1 out of 1000 requests are sampled.
+        Cloud trace can still be enabled from request HTTP headers with
+        trace context regardless this flag value.
+        '''
+    )
+    parser.add_argument(
+        '--disable_cloud_trace_auto_sampling',
+        action='store_true',
+        default=False,
+        help="An alias to override --tracing_sample_rate to 0")
     parser.add_argument(
         '--tracing_incoming_context',
         default="",
