@@ -1,0 +1,157 @@
+config {
+  services {
+    service_name: "echo-api.endpoints.cloudesf-testing.cloud.goog"
+    service_config_id: "test-config-id"
+    producer_project_id: "produczr-project"
+    service_config {
+      type_url: "type.googleapis.com/google.api.Service"
+      value: "\n\005http1\022V\360\232\246\221\361\272\256\243\361\277\212\200\362\231\273\253\361\272\231\224\363\256\216\224\361\211\213\200\361\237\235\240\360\262\216\267\363\244\206\273\363\262\224\253\361\210\242\255\362\243\204\214\362\221\253\251\363\207\266\273\360\252\241\254\363\247\237\245\361\211\200\235\361\213\216\226\361\225\270\276\362\203\273\255\304\244\252\001\004\n\002\000\000\272\0013\n\rendpoints_log\022\"\n\035cloud.googleapis.com/location\032\001\002\302\001^\nHserviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer\022\016\n\014/consumer_id\030\002 \005\312\001Q\n\003api\"J\nHserviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer\322\001\222\001BG\nE\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177BG\nE\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\332\001{\ny\n\rendpoints_log\032hannnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn\001\000\000\000nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnpi\342\001S\n@\n>\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\n\005\n\003api\022\010\n\003api\022\001!"
+    }
+    backend_protocol: "http1"
+    min_stream_report_interval_ms: 491505319936
+    jwt_payload_metadata_name: "jwt_payloads"
+  }
+  requirements {
+    service_name: "echo-api.endpoints.cloudesf-testing.cloud.goog"
+    operation_name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo"
+    api_key {
+      locations {
+        header: "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+      }
+    }
+    metric_costs {
+      name: "metrics_first"
+      cost: 29
+    }
+    metric_costs {
+      cost: -72057594037927936
+    }
+  }
+  gcp_attributes {
+    project_id: "test-project-id"
+    zone: "test-zone"
+    platform: "GCE-ESPv2"
+  }
+  imds_token {
+    uri: "http://127.0.0.1:42761/v1/instance/service-accounts/default/token"
+    cluster: "metadata-cluster"
+    timeout {
+      seconds: 5
+    }
+  }
+  sc_calling_config {
+    check_retries {
+      value: 200
+    }
+    report_retries {
+      value: 200
+    }
+  }
+  service_control_uri {
+    uri: "http://127.0.0.1:42761/v1/instance/service-accounts/default/token"
+    cluster: "metadata-cluster"
+    timeout {
+      seconds: 5
+    }
+  }
+}
+downstream_request {
+  headers {
+    headers {
+      key: ":path"
+      value: "/echo?key=test-api-key"
+    }
+    headers {
+      key: ":method"
+      value: "GET"
+    }
+  }
+  data: "echo-api.endpoints.cloudesf-testing.cloud.goog"
+}
+upstream_response {
+  headers {
+    headers {
+      key: ":status"
+      value: "200"
+    }
+  }
+  data: "Some data to test the metrics such as response_sizes."
+}
+stream_info {
+  dynamic_metadata {
+    filter_metadata {
+      key: ""
+      value {
+        fields {
+          key: "D."
+          value {
+          }
+        }
+      }
+    }
+  }
+  response_code {
+    value: 200
+  }
+}
+sidestream_response {
+  headers {
+    headers {
+      key: "200"
+      value: "200"
+    }
+  }
+  data: "200"
+  data: "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+}
+sidestream_response {
+  headers {
+    headers {
+      key: ":status"
+      value: "504"
+    }
+  }
+}
+sidestream_response {
+  headers {
+    headers {
+      key: ":status"
+      value: "504"
+    }
+  }
+}
+sidestream_response {
+  headers {
+    headers {
+      key: ":status"
+      value: "200"
+    }
+  }
+  data: "\000\000\000\000\000\000\000\000"
+  data: "2\006\022config {\n  services {\n    service_name: \"echo-api.endpoints.cloudesf-testing.cloud.goog\"\n    service_config_id: \"test-config-id\"\n    producer_project_id: \"producer-project\"\n    service_config {\n      type_url: \"type.googleapis.com/google.api.Service\"\n      value: \"\\272\\001\\017\\n\\rendpoints_log\\302\\001^\\nHserviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer\\022\\016\\n\\014/consumer_id\\030\\002 \\005\\312\\001)\\n\\003api\\\"\\\"\\n\\035cloud.googleapis.com/location\\032\\001\\002\\322\\001IBG\\nE\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\17\004\0107\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\332\\001\\007\\n\\005\\032\\003api\\342\\001\\235\\001\\n@\\n>\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\nO\\n\\003api\\022Hserviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer\\022\\010\\n\\003api\\022\\001!\"\n    }\n    backend_protocol: \"http1\"\n    jwt_payload_metadata_name: \"jwt_payloads\"\n  }\n  requirements {\n    service_name: \"echo-api.endpoints.cloudesf-testing.cloud.goog\"\n    operation_name: \"1.echo_api_endpoints_cloudesf_tentsig_cloud_goog.Echo\"\n    metric_costs {\n      name: \"metrics_first\"\n      cost: 2\n    }\n  }\n  imds_token {\n    uri: \"http://127.0.0.1:42761/v1/instance/service-accounts/default/token\"\n    cluster: \"metadata-cluster\"\n    timeout {\n      seconds: 5\n    }\n  }\n  sc_calling_config {\n    network_fail_open {\n    }\n    report_retries {\n      value: 200\n    }\n  }\n  service_control_uri {\n    uri: \"http://127.0.0.1/v1/services/\"\n    cluster: \"service-control-cluster\"\n    timeout {\n      seconds: 5\n    }\n  }\n}\ndownstream_request {\n  headers {\n    headers {\n      key: \":path\"\n      value: \"/echo?key=test-api-key\"\n    }\n    headers {\n      key: \":method\"\n      value: \"GET\"\n    }\n  }\n  data: \"Some data to test the metrics such as request_sizes.\"\n}\nupstream_response {\n  headers {\n    headers {\n      key: \":status\"\n      value: \"200\"\n    }\n  }\n  data: \"Some data to test the metrics such as response_sizes.\"\n}\nstream_info {\n  dynamic_metadata {\n  }\n  response_code {\n    value: 200\n  }\n}\nsidestream_response {\n  headers {\n    headers {\n      key: \":status\"\n      value: \"200\"\n    }\n  }\n  data: \"{ \\\"access_token\\\": \\\"fuzz-access-token\\\", \\\"expires_in\\\": 60000 }\"\n}\nsidestream_response {\n  headers {\n    headers {\n      key: \":status\"\n      value: \"504\"\n    }\n  }\n  data: \"number_value\"\n}\nsidestream_response {\n  headers {\n    headers {\n      key: \":status\"\n      value: \"504\"\n    }\n  }\n}\nsidestream_response {\n  headers {\n    headers {\n      key: \"\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\"\n    }\n  }\n  data: \"2\\006\\022\\004\\010\\300\\304\\007\"\n}\nsidestream_response {\n  headers {\n    headers {\n      key: \":status\"\n      value: \"504\"\n    }\n  }\n}\nsidestream_response {\n  headers {\n    headers {\n      key: \":status\"\n      value: \"200\"\n    }\n  }\n  data: \"test-@config-id\"\n}\nsidestream_response {\nD  headers {\n    hea\007ders {\n      key: \":status\"\n      value: \"200\"\n    }\n  }\n  data: \"\"\n}\n"
+}
+sidestream_response {
+  headers {
+    headers {
+      key: "!"
+      value: "504"
+    }
+  }
+}
+sidestream_response {
+  headers {
+    headers {
+      key: ":status"
+      value: "200"
+    }
+  }
+}
+sidestream_response {
+  headers {
+    headers {
+      key: ":status"
+      value: "200"
+    }
+  }
+  data: ""
+}

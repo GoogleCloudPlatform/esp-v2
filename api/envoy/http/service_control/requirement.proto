@@ -32,7 +32,10 @@ message ApiKeyLocation {
     //
     //     GET /something?api_key=abcdef12345
     //
-    string query = 1;
+    string query = 1 [(validate.rules).string = {
+      well_known_regex: HTTP_HEADER_VALUE,
+      strict: false
+    }];
 
     // API key is sent in a request header. `header` represents the
     // header name.
@@ -43,7 +46,9 @@ message ApiKeyLocation {
     //     GET /something HTTP/1.1
     //     X-API-Key: abcdef12345
     //
-    string header = 2;
+    string header = 2 [(validate.rules).string = {
+      well_known_regex: HTTP_HEADER_NAME
+    }];
 
     // API key is sent in a
     // [cookie](https://swagger.io/docs/specification/authentication/cookie-authentication),
@@ -54,7 +59,9 @@ message ApiKeyLocation {
     //     GET /something HTTP/1.1
     //     Cookie: API-KEY=abcdef12345
     //
-    string cookie = 3;
+    string cookie = 3 [(validate.rules).string = {
+      well_known_regex: HTTP_HEADER_VALUE
+    }];
   }
 }
 
