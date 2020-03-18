@@ -356,7 +356,8 @@ var (
                      {
                         "name":"envoy.router",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router"
+                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
+                           "suppressEnvoyHeaders": true
                         }
                      }
                   ],

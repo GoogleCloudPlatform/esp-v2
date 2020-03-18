@@ -69,6 +69,7 @@ func TestFetchListeners(t *testing.T) {
 	testData := []struct {
 		desc              string
 		enableTracing     bool
+		enableDebug       bool
 		BackendAddress    string
 		fakeServiceConfig string
 		wantedListeners   string
@@ -165,7 +166,8 @@ func TestFetchListeners(t *testing.T) {
                      {
                         "name":"envoy.router",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router"
+                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
+                       		 "suppressEnvoyHeaders": true
                         }
                      }
                   ],
@@ -341,7 +343,8 @@ func TestFetchListeners(t *testing.T) {
                      {
                         "name":"envoy.router",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router"
+                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
+                       		 "suppressEnvoyHeaders": true
                         }
                      }
                   ],
@@ -550,7 +553,8 @@ func TestFetchListeners(t *testing.T) {
                      {
                         "name":"envoy.router",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router"
+                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
+                       		 "suppressEnvoyHeaders": true
                         }
                      }
                   ],
@@ -795,7 +799,8 @@ func TestFetchListeners(t *testing.T) {
                      {
                         "name":"envoy.router",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router"
+                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
+                       		 "suppressEnvoyHeaders": true
                         }
                      }
                   ],
@@ -1016,7 +1021,8 @@ func TestFetchListeners(t *testing.T) {
                      {
                         "name":"envoy.router",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router"
+                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
+                       		 "suppressEnvoyHeaders": true
                         }
                      }
                   ],
@@ -1201,7 +1207,8 @@ func TestFetchListeners(t *testing.T) {
                      {
                         "name":"envoy.router",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router"
+                           "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
+                       		 "suppressEnvoyHeaders": true
                         }
                      }
                   ],
@@ -1238,8 +1245,9 @@ func TestFetchListeners(t *testing.T) {
 }`, testBackendClusterName),
 		},
 		{
-			desc:           "Success for backend that allow CORS, with tracing enabled",
+			desc:           "Success for backend that allow CORS, with tracing and debug enabled",
 			enableTracing:  true,
+			enableDebug:    true,
 			BackendAddress: "http://127.0.0.1:80",
 			fakeServiceConfig: fmt.Sprintf(`{
                 "name":"%s",
@@ -1415,6 +1423,7 @@ func TestFetchListeners(t *testing.T) {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendAddress = tc.BackendAddress
 		opts.DisableTracing = !tc.enableTracing
+		opts.SuppressEnvoyHeaders = !tc.enableDebug
 
 		flag.Set("service", testProjectName)
 		flag.Set("service_config_id", testConfigID)

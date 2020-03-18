@@ -77,7 +77,7 @@ var (
 	foo,bar,endpoint log will have response_headers: foo=foo_value;bar=bar_value if values are available.`)
 	MinStreamReportIntervalMs = flag.Uint64("min_stream_report_interval_ms", 0, `Minimum amount of time (milliseconds) between sending intermediate reports on a stream and the default is 10000 if not set.`)
 
-	SuppressEnvoyHeaders = flag.Bool("suppress_envoy_headers", false, `Do not add any additional x-envoy- headers to requests or responses. This only affects the router filter
+	SuppressEnvoyHeaders = flag.Bool("suppress_envoy_headers", true, `Do not add any additional x-envoy- headers to requests or responses. This only affects the router filter
 	generated *x-envoy-* headers, other Envoy filters and the HTTP connection manager may continue to set x-envoy- headers.`)
 
 	ServiceControlNetworkFailOpen = flag.Bool("service_control_network_fail_open", true, ` In case of network failures when connecting to Google service control,

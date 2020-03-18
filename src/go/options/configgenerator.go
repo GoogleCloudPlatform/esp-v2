@@ -109,6 +109,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		ListenerAddress:               "0.0.0.0",
 		ListenerPort:                  8080,
 		RootCertsPath:                 util.DefaultRootCAPaths,
+		SuppressEnvoyHeaders:          true,
 		ServiceControlNetworkFailOpen: true,
 		ServiceManagementURL:          "https://servicemanagement.googleapis.com",
 		ScCheckRetries:                -1,
