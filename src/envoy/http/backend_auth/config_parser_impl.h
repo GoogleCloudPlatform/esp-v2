@@ -18,6 +18,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"
 #include "api/envoy/http/backend_auth/config.pb.h"
+#include "common/common/empty_string.h"
 #include "envoy/thread_local/thread_local.h"
 #include "src/envoy/http/backend_auth/config_parser.h"
 #include "src/envoy/token/token_subscriber_factory_impl.h"
@@ -66,10 +67,9 @@ class FilterConfigParserImpl
       const Token::TokenSubscriberFactory& token_subscriber_factory);
 
   absl::string_view getAudience(absl::string_view operation) const override {
-    static const std::string empty = "";
     auto operation_it = operation_map_.find(operation);
     if (operation_it == operation_map_.end()) {
-      return empty;
+      return EMPTY_STRING;
     }
     return operation_it->second;
   }

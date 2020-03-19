@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "src/envoy/http/path_matcher/filter.h"
+#include "common/common/empty_string.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "test/mocks/server/mocks.h"
 #include "test/test_common/utility.h"
@@ -57,8 +58,8 @@ class PathMatcherFilterTest : public ::testing::Test {
   void SetUp() override {
     ::google::api::envoy::http::path_matcher::FilterConfig config_pb;
     ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfig, &config_pb));
-    config_ =
-        std::make_shared<FilterConfig>(config_pb, "", mock_factory_context_);
+    config_ = std::make_shared<FilterConfig>(config_pb, EMPTY_STRING,
+                                             mock_factory_context_);
 
     filter_ = std::make_unique<Filter>(config_);
     filter_->setDecoderFilterCallbacks(mock_cb_);
@@ -81,7 +82,7 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersWithOperation) {
             "1.cloudesf_testing_cloud_goog.Bar");
   EXPECT_EQ(Utils::getStringFilterState(*mock_cb_.stream_info_.filter_state_,
                                         Utils::kQueryParams),
-            "");
+            EMPTY_STRING);
 
   EXPECT_EQ(1L, TestUtility::findCounter(mock_factory_context_.scope_,
                                          "path_matcher.allowed")
@@ -90,7 +91,7 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersWithOperation) {
                                          "path_matcher.denied")
                     ->value());
 
-  Buffer::OwnedImpl data("");
+  Buffer::OwnedImpl data(EMPTY_STRING);
   EXPECT_EQ(Http::FilterDataStatus::Continue, filter_->decodeData(data, false));
 
   Http::TestRequestTrailerMapImpl trailers;
@@ -155,7 +156,7 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersNoMatch) {
 
   EXPECT_EQ(Utils::getStringFilterState(*mock_cb_.stream_info_.filter_state_,
                                         Utils::kOperation),
-            "");
+            EMPTY_STRING);
 
   EXPECT_EQ(0L, TestUtility::findCounter(mock_factory_context_.scope_,
                                          "path_matcher.allowed")

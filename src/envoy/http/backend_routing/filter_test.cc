@@ -12,16 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "src/envoy/http/backend_routing/filter.h"
+
+#include "common/common/empty_string.h"
 #include "envoy/http/header_map.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
+#include "src/envoy/utils/filter_state_utils.h"
 #include "test/mocks/http/mocks.h"
 #include "test/mocks/server/mocks.h"
 #include "test/test_common/utility.h"
-
-#include "src/envoy/http/backend_routing/filter.h"
-#include "src/envoy/utils/filter_state_utils.h"
 
 using ::testing::_;
 using ::testing::Invoke;
@@ -165,7 +166,7 @@ TEST_F(BackendRoutingFilterTest, ConstantAddressWithBadPrefix) {
   // URL here. This is problematic in practice, since it doesn't have a '/'.
   // Config manager will ensure that this configuration is never passed to
   // Envoy.
-  ASSERT_EQ(headers.Path()->value().getStringView(), "");
+  ASSERT_EQ(headers.Path()->value().getStringView(), EMPTY_STRING);
   ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 }
 

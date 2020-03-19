@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "common/common/empty_string.h"
 #include "envoy/http/header_map.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
@@ -44,7 +45,7 @@ const Status kBadStatus(Code::UNAUTHENTICATED, "test");
 
 class ServiceControlFilterTest : public ::testing::Test {
  protected:
-  ServiceControlFilterTest() : stats_base_("", mock_stats_scope_) {}
+  ServiceControlFilterTest() : stats_base_(EMPTY_STRING, mock_stats_scope_) {}
 
   void SetUp() override {
     filter_ = std::make_unique<ServiceControlFilter>(stats_base_.stats(),

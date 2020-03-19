@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "src/envoy/http/path_matcher/filter_config.h"
+#include "common/common/empty_string.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -29,7 +30,7 @@ FilterConfig::FilterConfig(
   for (const auto& rule : proto_config_.rules()) {
     if (!pmb.Register(rule.pattern().http_method(),
                       rule.pattern().uri_template(),
-                      /*body_field_path=*/"", &rule.operation())) {
+                      /*body_field_path=*/EMPTY_STRING, &rule.operation())) {
       throw ProtoValidationException("Duplicated pattern", rule.pattern());
     }
     if (rule.extract_path_parameters()) {

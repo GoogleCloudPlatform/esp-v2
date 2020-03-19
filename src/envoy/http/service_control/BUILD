@@ -62,6 +62,7 @@ envoy_cc_library(
         "//api/envoy/http/common:base_proto_cc_proto",
         "@envoy//include/envoy/event:deferred_deletable",
         "@envoy//include/envoy/upstream:cluster_manager_interface",
+        "@envoy//source/common/common:empty_string",
         "@envoy//source/common/common:enum_to_int",
         "@envoy//source/common/http:headers_lib",
         "@envoy//source/common/http:message_lib",
@@ -218,6 +219,7 @@ envoy_cc_test(
     deps = [
         ":filter_lib",
         ":mocks_lib",
+        "@envoy//source/common/common:empty_string",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/mocks/stats:stats_mocks",
         "@envoy//test/mocks/tracing:tracing_mocks",
@@ -237,6 +239,7 @@ envoy_cc_test(
         ":config_parser_lib",
         ":handler_impl_lib",
         ":mocks_lib",
+        "@envoy//source/common/common:empty_string",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/mocks/stats:stats_mocks",
         "@envoy//test/mocks/tracing:tracing_mocks",

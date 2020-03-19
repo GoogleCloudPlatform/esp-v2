@@ -15,6 +15,7 @@
 #include "src/envoy/token/iam_token_info.h"
 
 #include "absl/strings/str_cat.h"
+#include "common/common/empty_string.h"
 #include "common/http/message_impl.h"
 #include "gtest/gtest.h"
 #include "test/test_common/utility.h"
@@ -39,7 +40,7 @@ TEST_F(IamTokenInfoTest, FailPreconditions) {
   // Create info that fails preconditions.
   ::google::protobuf::RepeatedPtrField<std::string> delegates;
   ::google::protobuf::RepeatedPtrField<std::string> scopes;
-  Token::GetTokenFunc access_token_fn = []() { return ""; };
+  Token::GetTokenFunc access_token_fn = []() { return EMPTY_STRING; };
   info_ =
       std::make_unique<IamTokenInfo>(delegates, scopes, false, access_token_fn);
 

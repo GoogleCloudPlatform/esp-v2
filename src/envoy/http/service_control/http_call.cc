@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "src/envoy/http/service_control/http_call.h"
+
 #include <memory>
 
+#include "common/common/empty_string.h"
 #include "common/common/enum_to_int.h"
 #include "common/http/headers.h"
 #include "common/http/message_impl.h"
 #include "common/http/utility.h"
 #include "common/tracing/http_tracer_impl.h"
 #include "envoy/event/deferred_deletable.h"
-#include "src/envoy/http/service_control/http_call.h"
 
 using ::google::api::envoy::http::common::HttpUri;
 using ::google::protobuf::util::Status;
@@ -162,7 +164,7 @@ class HttpCallImpl : public HttpCall,
     if (token.empty()) {
       on_done_(Status(Code::INTERNAL,
                       "Missing access token for service control call"),
-               "");
+               EMPTY_STRING);
       deferredDelete();
       return;
     }
@@ -207,7 +209,8 @@ class HttpCallImpl : public HttpCall,
       ENVOY_LOG(debug, "Http call [uri = {}]: canceled", uri_);
       reset();
     }
-    on_done_(Status(Code::CANCELLED, std::string("Request cancelled")), "");
+    on_done_(Status(Code::CANCELLED, std::string("Request cancelled")),
+             EMPTY_STRING);
     deferredDelete();
   }
 

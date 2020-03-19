@@ -81,6 +81,9 @@ envoy_cc_library(
     name = "config_parser_interface",
     hdrs = ["config_parser.h"],
     repository = "@envoy",
+    deps = [
+        "@envoy//source/common/common:empty_string",
+    ],
 )
 
 envoy_cc_library(
@@ -103,6 +106,7 @@ envoy_cc_test(
     deps = [
         ":filter_lib",
         ":mocks_lib",
+        "@envoy//source/common/common:empty_string",
         "@envoy//test/mocks/http:http_mocks",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/test_common:utility_lib",

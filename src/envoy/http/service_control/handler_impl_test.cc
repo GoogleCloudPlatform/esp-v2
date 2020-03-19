@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "common/common/empty_string.h"
 #include "envoy/http/header_map.h"
 #include "extensions/filters/http/grpc_stats/grpc_stats_filter.h"
 #include "gmock/gmock.h"
@@ -215,7 +216,7 @@ class HandlerTest : public ::testing::Test {
     return false;                                                \
   }
 
-MATCHER_P(MatchesCheckInfo, expect, "") {
+MATCHER_P(MatchesCheckInfo, expect, EMPTY_STRING) {
   // These must match. If not provided in expect, arg should be empty too
   MATCH(api_key);
   MATCH(ios_bundle_id);
@@ -232,7 +233,7 @@ MATCHER_P(MatchesCheckInfo, expect, "") {
   return true;
 }
 
-MATCHER_P(MatchesQuotaInfo, expect, "") {
+MATCHER_P(MatchesQuotaInfo, expect, EMPTY_STRING) {
   MATCH(method_name);
   //  if (arg.metric_cost_vector != expect.metric_cost_vector) return false;
   MATCH(metric_cost_vector);
@@ -263,7 +264,7 @@ MATCHER_P(MatchesQuotaInfo, expect, "") {
   MATCH(streaming_durations);
 
 MATCHER_P4(MatchesReportInfo, expect, request_headers, response_headers,
-           response_trailers, "") {
+           response_trailers, EMPTY_STRING) {
   std::string operation_name =
       (expect.operation_name.empty() ? "get_header_key"
                                      : expect.operation_name);
@@ -283,7 +284,7 @@ MATCHER_P4(MatchesReportInfo, expect, request_headers, response_headers,
   return true;
 }
 
-MATCHER_P(MatchesSimpleReportInfo, expect, "") {
+MATCHER_P(MatchesSimpleReportInfo, expect, EMPTY_STRING) {
   std::string operation_name =
       (expect.operation_name.empty() ? "get_header_key"
                                      : expect.operation_name);
@@ -291,7 +292,7 @@ MATCHER_P(MatchesSimpleReportInfo, expect, "") {
   return true;
 }
 
-MATCHER_P(MatchesDataReportInfo, expect, "") {
+MATCHER_P(MatchesDataReportInfo, expect, EMPTY_STRING) {
   std::string operation_name =
       (expect.operation_name.empty() ? "get_header_key"
                                      : expect.operation_name);
@@ -321,8 +322,8 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
 
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
-  expected_report_info.api_name = "";
-  expected_report_info.api_version = "";
+  expected_report_info.api_name = EMPTY_STRING;
+  expected_report_info.api_version = EMPTY_STRING;
   expected_report_info.status = Status::OK;
   expected_report_info.operation_name = "<Unknown Operation Name>";
 
@@ -347,12 +348,12 @@ TEST_F(HandlerTest, HandlerMissingHeaders) {
 
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
-  expected_report_info.api_name = "";
-  expected_report_info.api_version = "";
+  expected_report_info.api_name = EMPTY_STRING;
+  expected_report_info.api_version = EMPTY_STRING;
   expected_report_info.status = Status::OK;
   expected_report_info.operation_name = "<Unknown Operation Name>";
-  expected_report_info.url = "";
-  expected_report_info.method = "";
+  expected_report_info.url = EMPTY_STRING;
+  expected_report_info.method = EMPTY_STRING;
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
@@ -374,8 +375,8 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
 
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
-  expected_report_info.api_name = "";
-  expected_report_info.api_version = "";
+  expected_report_info.api_name = EMPTY_STRING;
+  expected_report_info.api_version = EMPTY_STRING;
   expected_report_info.status = Status::OK;
   expected_report_info.operation_name = "<Unknown Operation Name>";
   EXPECT_CALL(*mock_call_,

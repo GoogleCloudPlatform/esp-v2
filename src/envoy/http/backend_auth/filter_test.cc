@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "src/envoy/http/backend_auth/filter.h"
+
+#include "common/common/empty_string.h"
 #include "envoy/http/header_map.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
@@ -22,6 +24,7 @@
 #include "test/mocks/http/mocks.h"
 #include "test/mocks/server/mocks.h"
 #include "test/test_common/utility.h"
+
 using ::testing::_;
 namespace Envoy {
 namespace Extensions {
@@ -114,7 +117,7 @@ TEST_F(BackendAuthFilterTest, SucceedAppendToken) {
       *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
       "operation-with-audience");
   testing::NiceMock<Stats::MockStore> scope;
-  const std::string prefix = "";
+  const std::string prefix = EMPTY_STRING;
   FilterStats filter_stats{
       ALL_BACKEND_AUTH_FILTER_STATS(POOL_COUNTER_PREFIX(scope, prefix))};
 

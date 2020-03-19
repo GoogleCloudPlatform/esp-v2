@@ -14,6 +14,7 @@
 
 #include "src/envoy/utils/filter_state_utils.h"
 
+#include "common/common/empty_string.h"
 #include "common/router/string_accessor_impl.h"
 
 namespace Envoy {
@@ -23,10 +24,6 @@ namespace Utils {
 using ::Envoy::Router::StringAccessor;
 using ::Envoy::Router::StringAccessorImpl;
 using ::Envoy::StreamInfo::FilterState;
-
-namespace {
-constexpr char kEmpty[] = "";
-}  // namespace
 
 void setStringFilterState(FilterState& filter_state,
                           absl::string_view data_name,
@@ -41,7 +38,7 @@ absl::string_view getStringFilterState(
     const Envoy::StreamInfo::FilterState& filter_state,
     absl::string_view data_name) {
   if (!filter_state.hasData<StringAccessor>(data_name)) {
-    return kEmpty;
+    return EMPTY_STRING;
   }
 
   return filter_state.getDataReadOnly<StringAccessor>(data_name).asString();
