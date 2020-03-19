@@ -30,14 +30,17 @@ import (
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
+type GetAccessTokenFunc func() (string, time.Duration, error)
+type GetNewConfigIdFunc func() (string, error)
+
 type ServiceConfigFetcher struct {
 	serviceName         string
 	checkRolloutsTicker *time.Ticker
 	client              http.Client
 	opts                *options.ConfigGeneratorOptions
 
-	accessToken func() (string, time.Duration, error)
-	newConfigId func() (string, error)
+	accessToken GetAccessTokenFunc
+	newConfigId GetNewConfigIdFunc
 
 	curServiceConfig *confpb.Service
 }
@@ -50,7 +53,7 @@ func NewServiceConfigFetcher(opts *options.ConfigGeneratorOptions,
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
-	scf := &ServiceConfigFetcher{
+	s := &ServiceConfigFetcher{
 		client: http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
@@ -63,78 +66,81 @@ func NewServiceConfigFetcher(opts *options.ConfigGeneratorOptions,
 		opts:        opts,
 	}
 
-	configIdFetcher := NewConfigIdFetcher(serviceName, opts.ServiceControlURL,
-		scf.client, func() (string, time.Duration, error) { return scf.accessToken() })
-	scf.newConfigId = func() (string, error) {
+	configIdFetcher := NewServiceConfigIdFetcher(serviceName, opts.ServiceControlURL,
+		s.client, func() (string, time.Duration, error) { return s.accessToken() })
+	s.newConfigId = func() (string, error) {
 		return configIdFetcher.fetchNewConfigId()
 	}
 
-	scf.accessToken = func() (string, time.Duration, error) {
-		if accessTokenFromImds == nil && scf.opts.ServiceAccountKey == "" {
+	s.accessToken = func() (string, time.Duration, error) {
+		// when --non_gcp  is set, instance metadata server(imds) is not defined so
+		// accessToken is unavailable from imds and serviceAccountKey must be set to
+		// generate accessToken.
+		if accessTokenFromImds == nil && s.opts.ServiceAccountKey == "" {
 			return "", 0, fmt.Errorf("If --non_gcp is specified, --service_account_key has to be specified.")
 		}
-		if scf.opts.ServiceAccountKey != "" {
-			return util.GenerateAccessTokenFromFile(scf.opts.ServiceAccountKey)
+		if s.opts.ServiceAccountKey != "" {
+			return util.GenerateAccessTokenFromFile(s.opts.ServiceAccountKey)
 		}
 		return accessTokenFromImds()
 	}
 
-	return scf, nil
+	return s, nil
 }
 
 // Fetch the service config by given configId. If configId is empty, try to
 // fetch the latest service config.
-func (scf *ServiceConfigFetcher) FetchConfig(configId string) (*confpb.Service, error) {
+func (s *ServiceConfigFetcher) FetchConfig(configId string) (*confpb.Service, error) {
 	_fetchConfig := func(configId string) (*confpb.Service, error) {
 
 		if configId != "" {
-			if configId == scf.curConfigId() {
+			if configId == s.curConfigId() {
 				return nil, nil
 			}
 
-			token, _, err := scf.accessToken()
+			token, _, err := s.accessToken()
 			if err != nil {
 				return nil, fmt.Errorf("fail to get access token: %v", err)
 			}
 
-			return scf.callServiceManagement(util.FetchConfigURL(scf.opts.ServiceManagementURL, scf.serviceName, configId), token)
+			return s.callServiceManagement(util.FetchConfigURL(s.opts.ServiceManagementURL, s.serviceName, configId), token)
 		}
 
-		glog.Infof("check new config id for service %v", scf.serviceName)
-		newConfigId, err := scf.newConfigId()
+		glog.Infof("check new config id for service %v", s.serviceName)
+		newConfigId, err := s.newConfigId()
 		if err != nil {
 			return nil, fmt.Errorf("error occurred when checking new service config id: %v", err)
 		}
 
-		if newConfigId != scf.curConfigId() {
-			token, _, err := scf.accessToken()
+		if newConfigId != s.curConfigId() {
+			token, _, err := s.accessToken()
 			if err != nil {
 				return nil, fmt.Errorf("fail to get access token: %v", err)
 			}
 
-			return scf.callServiceManagement(util.FetchConfigURL(scf.opts.ServiceManagementURL, scf.serviceName, newConfigId), token)
+			return s.callServiceManagement(util.FetchConfigURL(s.opts.ServiceManagementURL, s.serviceName, newConfigId), token)
 		}
 
 		return nil, nil
 	}
 	serviceConfig, err := _fetchConfig(configId)
 	if err == nil {
-		scf.curServiceConfig = serviceConfig
+		s.curServiceConfig = serviceConfig
 
 	}
 
 	return serviceConfig, err
 }
 
-func (scf *ServiceConfigFetcher) SetFetchConfigTimer(interval time.Duration, callback func(serviceConfig *confpb.Service)) {
+func (s *ServiceConfigFetcher) SetFetchConfigTimer(interval time.Duration, callback func(serviceConfig *confpb.Service)) {
 	go func() {
 		glog.Infof("start checking new rollouts every %v seconds", interval)
-		scf.checkRolloutsTicker = time.NewTicker(interval)
+		s.checkRolloutsTicker = time.NewTicker(interval)
 
-		for range scf.checkRolloutsTicker.C {
-			glog.Infof("check new rollouts for service %v", scf.serviceName)
+		for range s.checkRolloutsTicker.C {
+			glog.Infof("check new rollouts for service %v", s.serviceName)
 
-			serviceConfig, err := scf.FetchConfig("")
+			serviceConfig, err := s.FetchConfig("")
 			if err != nil {
 				glog.Errorf("error occurred when checking new rollouts, %v", err)
 				continue
@@ -148,15 +154,15 @@ func (scf *ServiceConfigFetcher) SetFetchConfigTimer(interval time.Duration, cal
 	}()
 }
 
-func (scf *ServiceConfigFetcher) curConfigId() string {
-	if scf.curServiceConfig == nil {
+func (s *ServiceConfigFetcher) curConfigId() string {
+	if s.curServiceConfig == nil {
 		return ""
 	}
-	return scf.curServiceConfig.Id
+	return s.curServiceConfig.Id
 }
 
-func (scf *ServiceConfigFetcher) callServiceManagement(path, token string) (*confpb.Service, error) {
-	respBytes, err := util.CallWithAccessToken(scf.client, util.GET, path, token)
+func (s *ServiceConfigFetcher) callServiceManagement(path, token string) (*confpb.Service, error) {
+	respBytes, err := util.CallWithAccessToken(s.client, util.GET, path, token)
 	if err != nil {
 		return nil, err
 	}

@@ -25,7 +25,6 @@ import (
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-
 func getServiceConfig(urlPrefix string, configId string) (*conf.Service, error) {
 	url := urlPrefix + "/configs/" + configId
 	resp, err := http.Get(url)
@@ -49,7 +48,6 @@ func TestMockServiceManagement(t *testing.T) {
 
 	s := NewMockServiceMrg(serviceConfig.Name, serviceConfig)
 	urlPrefix := s.Start() + "/v1/services/" + serviceConfig.Name
-
 
 	gotServiceConfig, err := getServiceConfig(urlPrefix, serviceConfig.Id)
 	if err != nil {

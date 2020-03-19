@@ -137,8 +137,13 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 
 	}
 
+	var accessTokenFromImds sc.GetAccessTokenFunc
+	if mf != nil {
+		accessTokenFromImds = func() (string, time.Duration, error) { return mf.FetchAccessToken() }
+	}
+
 	if m.serviceConfigFetcher, err = sc.NewServiceConfigFetcher(&opts,
-		m.serviceName, func() (string, time.Duration, error) { return mf.FetchAccessToken() }); err != nil {
+		m.serviceName, accessTokenFromImds); err != nil {
 		return nil, fmt.Errorf(`failed to create https client to call ServiceManagement service, got error: %v`, err)
 	}
 
