@@ -65,7 +65,7 @@ func NewServiceConfigFetcher(opts *options.ConfigGeneratorOptions,
 	}
 
 	configIdFetcher := NewServiceConfigIdFetcher(serviceName, opts.ServiceControlURL,
-		s.client, func() (string, time.Duration, error) { return s.accessToken() })
+		s.client, accessToken)
 	s.newConfigId = func() (string, error) {
 		return configIdFetcher.fetchNewConfigId()
 	}

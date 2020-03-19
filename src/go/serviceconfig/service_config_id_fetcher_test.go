@@ -44,8 +44,9 @@ func genFakeReport(serviceConfigId string) ([]byte, error) {
 func TestServiceConfigIdFetcherNewConfigId(t *testing.T) {
 	serviceConfigId := "service-config-id"
 	serviceControlServer := initServiceControlForTestNewConfigId(t, &serviceConfigId)
+	accessToken := func() (string, time.Duration, error) { return "token", time.Duration(60), nil }
 
-	cif := NewServiceConfigIdFetcher("service-name", "service-control-url", http.Client{}, func() (string, time.Duration, error) { return "token", time.Duration(60), nil })
+	cif := NewServiceConfigIdFetcher("service-name", "service-control-url", http.Client{}, accessToken)
 
 	util.FetchConfigIdURL = func(serviceControlUrl, serviceName string) string {
 		return serviceControlServer.URL

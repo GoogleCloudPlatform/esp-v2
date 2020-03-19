@@ -55,8 +55,9 @@ func TestServiceConfigFetcherFetchConfig(t *testing.T) {
 	serviceManagementServer := initServiceManagementForTestServbiceConfigFetcherFetchConfig(t, serviceConfig, serviceName)
 	opts := options.DefaultConfigGeneratorOptions()
 	opts.ServiceManagementURL = serviceManagementServer.URL
+	accessToken := func() (string, time.Duration, error) { return "access-token", time.Duration(60), nil }
 
-	scf, err := NewServiceConfigFetcher(&opts, serviceName, func() (string, time.Duration, error) { return "access-token", time.Duration(60), nil })
+	scf, err := NewServiceConfigFetcher(&opts, serviceName, accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,6 +104,7 @@ func TestServiceConfigFetcherFetchConfig(t *testing.T) {
 	serviceConfigId = "test-config-id-2"
 	serviceConfig.Id = serviceConfigId
 	scf.newConfigId = func() (string, error) { return "", fmt.Errorf("newConfigIdError") }
+
 	_test("", nil, "error occurred when checking new service config id: newConfigIdError")
 
 	// Error caused by failing to get access token.
@@ -110,6 +112,7 @@ func TestServiceConfigFetcherFetchConfig(t *testing.T) {
 	serviceConfig.Id = serviceConfigId
 	scf.newConfigId = func() (string, error) { return serviceConfigId, nil }
 	scf.accessToken = func() (string, time.Duration, error) { return "", time.Duration(0), fmt.Errorf("accessTokenError") }
+
 	_test("", nil, "fail to get access token: accessTokenError")
 }
 
@@ -125,7 +128,8 @@ func TestServiceConfigFetcher_SetFetchConfigTimer(t *testing.T) {
 	opts := options.DefaultConfigGeneratorOptions()
 	opts.ServiceManagementURL = serviceManagementServer.URL
 
-	scf, err := NewServiceConfigFetcher(&opts, serviceName, func() (string, time.Duration, error) { return "access-token", time.Duration(60), nil })
+	accessToken := func() (string, time.Duration, error) { return "access-token", time.Duration(60), nil }
+	scf, err := NewServiceConfigFetcher(&opts, serviceName, accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
