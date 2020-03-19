@@ -284,6 +284,18 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--transcoding_ignore_unknown_query_parameters'
               ]),
+            # --enable_debug
+            (['--service=test_bookstore.gloud.run',
+              '--backend=grpc://127.0.0.1:8000',
+              '--enable_debug',
+              ],
+             ['bin/configmanager', '--logtostderr',
+              '--backend_address', 'grpc://127.0.0.1:8000',
+              '--rollout_strategy', 'fixed',
+              '--v', '1',
+              '--service', 'test_bookstore.gloud.run',
+              '--suppress_envoy_headers=false'
+              ]),
         ]
 
         for flags, wantedArgs in testcases:

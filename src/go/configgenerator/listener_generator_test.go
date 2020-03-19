@@ -1450,7 +1450,8 @@ func TestMakeListeners(t *testing.T) {
 												"name":"envoy.router",
 												"typedConfig":{
 													"@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
-													"startChildSpan":true
+													"startChildSpan":true,
+													"suppressEnvoyHeaders":true
 												}
 											}
 										],

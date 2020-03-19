@@ -464,7 +464,7 @@ environment variable or by passing "-k" flag to this script.
         Enables a variety of debug features in both Config Manager and Envoy, such as:
         - Debug level per-request application logs in Envoy
         - Debug level service configuration logs in Config Manager
-        - Admin interface in Envoy
+        - Debug HTTP response headers
         ''')
 
     # Start Deprecated Flags Section
@@ -806,6 +806,10 @@ def gen_proxy_config(args):
         proxy_conf.extend(["--service_account_key", args.service_account_key])
     if args.non_gcp:
         proxy_conf.append("--non_gcp")
+
+    if args.enable_debug:
+        proxy_conf.append("--suppress_envoy_headers=false")
+
     return proxy_conf
 
 def gen_envoy_args(args):
