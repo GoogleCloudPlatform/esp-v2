@@ -401,3 +401,22 @@ func TestExtraAddressFromURI(t *testing.T) {
 		}
 	}
 }
+
+func TestFetchConfigRelatedUrl(t *testing.T) {
+	sm := "https://servicemanagement.googleapis.com"
+	sn := "service-name"
+	ci := "config-id"
+
+	wantFetchConfigUrl := "https://servicemanagement.googleapis.com/v1/services/service-name/configs/config-id?view=FULL"
+	if getFetchConfigUrl := FetchConfigURL(sm, sn, ci); getFetchConfigUrl != wantFetchConfigUrl {
+		t.Errorf("wantFetchConfigUrl: %v, getFetchConfigUrl: %v", wantFetchConfigUrl, getFetchConfigUrl)
+	}
+
+	sc := "https://servicecontrol.googleapis.com"
+
+	wantFetchConfigIdUrl := "https://servicecontrol.googleapis.com/v1/services/service-name:report"
+	if getFetchConfigIdUrl := FetchConfigIdURL(sc, sn); getFetchConfigIdUrl != wantFetchConfigIdUrl {
+		t.Errorf("wantFetchConfigUrl: %v, getFetchConfigUrl: %v", wantFetchConfigIdUrl, getFetchConfigIdUrl)
+	}
+
+}

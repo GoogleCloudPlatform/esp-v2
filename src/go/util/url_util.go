@@ -144,8 +144,7 @@ func ExtraAddressFromURI(jwksUri string) (string, error) {
 }
 
 const (
-	fetchConfigSuffix   = "/v1/services/$serviceName/configs/$configId?view=FULL"
-	fetchRolloutsSuffix = "/v1/services/$serviceName/rollouts?filter=status=SUCCESS"
+	fetchConfigSuffix = "/v1/services/$serviceName/configs/$configId?view=FULL"
 )
 
 var (
@@ -155,9 +154,8 @@ var (
 		path = strings.Replace(path, "$configId", configId, 1)
 		return path
 	}
-	FetchRolloutsURL = func(serviceManagementUrl, serviceName string) string {
-		path := serviceManagementUrl + fetchRolloutsSuffix
-		path = strings.Replace(path, "$serviceName", serviceName, 1)
-		return path
+
+	FetchConfigIdURL = func(serviceControlUrl, serviceName string) string {
+		return fmt.Sprintf("%v/v1/services/%s:report", serviceControlUrl, serviceName)
 	}
 )

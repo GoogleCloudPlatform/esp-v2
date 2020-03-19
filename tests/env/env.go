@@ -169,6 +169,13 @@ func (e *TestEnv) OverrideServiceConfigId(newServiceConfigId string) {
 	e.fakeServiceConfig.Id = newServiceConfigId
 }
 
+func (e *TestEnv) ServiceConfigId() string {
+	if e.fakeServiceConfig == nil {
+		return ""
+	}
+	return e.fakeServiceConfig.Id
+}
+
 // OverrideSystemParameters overrides Service.SystemParameters.
 func (e *TestEnv) OverrideSystemParameters(systemParameters *confpb.SystemParameters) {
 	e.fakeServiceConfig.SystemParameters = systemParameters
@@ -275,7 +282,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 			return err
 		}
 
-		for providerId, _ := range mockJwtProviders {
+		for providerId := range mockJwtProviders {
 			provider, ok := e.FakeJwtService.ProviderMap[providerId]
 			if !ok {
 				return fmt.Errorf("not supported jwt provider id: %v", providerId)
@@ -286,6 +293,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 
 		e.ServiceControlServer.Setup()
 		testdata.SetFakeControlEnvironment(e.fakeServiceConfig, e.ServiceControlServer.GetURL())
+		confArgs = append(confArgs, "--service_control_url="+e.ServiceControlServer.GetURL())
 		if err := testdata.AppendLogMetrics(e.fakeServiceConfig); err != nil {
 			return err
 		}

@@ -32,9 +32,7 @@ import (
 func TestManagedServiceConfig(t *testing.T) {
 	t.Parallel()
 
-	configID := "test-config-id"
-	args := []string{"--service_config_id=" + configID,
-		"--rollout_strategy=managed", "--check_rollout_interval=1s"}
+	args := []string{"--rollout_strategy=managed", "--check_rollout_interval=1s"}
 	s := env.NewTestEnv(comp.TestManagedServiceConfig, platform.GrpcBookstoreSidecar)
 	s.SetEnvoyDrainTimeInSec(1)
 

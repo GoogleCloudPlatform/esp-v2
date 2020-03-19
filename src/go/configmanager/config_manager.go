@@ -52,15 +52,14 @@ var (
 // TODO(jilinxia): handles multi service name.
 type ConfigManager struct {
 	serviceName        string
-	serviceInfo        *configinfo.ServiceInfo
 	envoyConfigOptions options.ConfigGeneratorOptions
-	curServiceConfig   *confpb.Service
-
-	cache               cache.SnapshotCache
-	checkRolloutsTicker *time.Ticker
+	serviceInfo        *configinfo.ServiceInfo
+	cache              cache.SnapshotCache
 
 	metadataFetcher      *metadata.MetadataFetcher
 	serviceConfigFetcher *sc.ServiceConfigFetcher
+
+	curServiceConfig *confpb.Service
 }
 
 // NewConfigManager creates new instance of Config Manager.
@@ -138,7 +137,8 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 
 	}
 
-	if m.serviceConfigFetcher, err = sc.NewServiceConfigFetcher(mf, opts, m.serviceName); err != nil {
+	if m.serviceConfigFetcher, err = sc.NewServiceConfigFetcher(&opts,
+		m.serviceName, func() (string, time.Duration, error) { return mf.FetchAccessToken() }); err != nil {
 		return nil, fmt.Errorf(`failed to create https client to call ServiceManagement service, got error: %v`, err)
 	}
 
@@ -152,7 +152,7 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 		m.serviceName, m.curConfigId(), rolloutStrategy)
 
 	if rolloutStrategy == util.ManagedRolloutStrategy {
-		m.serviceConfigFetcher.SetFetchConfigTimer(checkNewRolloutInterval, func(serviceConfig *confpb.Service) {
+		m.serviceConfigFetcher.SetFetchConfigTimer(*checkNewRolloutInterval, func(serviceConfig *confpb.Service) {
 			err := m.applyServiceConfig(serviceConfig)
 			if err != nil {
 				glog.Errorf("error occurred when checking new rollouts, %v", err)
@@ -178,6 +178,10 @@ func (m *ConfigManager) readAndApplyServiceConfig(servicePath string) error {
 }
 
 func (m *ConfigManager) applyServiceConfig(serviceConfig *confpb.Service) error {
+	if serviceConfig == nil {
+		return fmt.Errorf("applid service config is empty")
+	}
+
 	var err error
 	m.curServiceConfig = serviceConfig
 	m.serviceInfo, err = configinfo.NewServiceInfoFromServiceConfig(serviceConfig, serviceConfig.Id, m.envoyConfigOptions)
@@ -232,13 +236,6 @@ func (m *ConfigManager) curConfigId() string {
 		return ""
 	}
 	return m.curServiceConfig.Id
-}
-
-func (m *ConfigManager) curRolloutId() string {
-	if m.serviceConfigFetcher == nil {
-		return ""
-	}
-	return m.serviceConfigFetcher.CurRolloutId()
 }
 
 func (m *ConfigManager) ID(node *corepb.Node) string {

@@ -46,6 +46,7 @@ import (
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	googleapisc "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
@@ -54,13 +55,12 @@ const (
 	testEndpointName = "endpoints.examples.bookstore.Bookstore"
 	testConfigID     = "2017-05-01r0"
 	testProjectID    = "project123"
-	fakeJwks         = "FAKEJWKS"
 	fakeToken        = `{"access_token": "ya29.new", "expires_in":3599, "token_type":"Bearer"}`
 )
 
 var (
 	fakeConfig             []byte
-	fakeRollout            []byte
+	fakeScReport           []byte
 	fakeProtoDescriptor    = base64.StdEncoding.EncodeToString([]byte("rawDescriptor"))
 	testBackendClusterName = fmt.Sprintf("%s_local", testProjectName)
 )
@@ -1416,11 +1416,11 @@ func TestFetchListeners(t *testing.T) {
 		opts.BackendAddress = tc.BackendAddress
 		opts.DisableTracing = !tc.enableTracing
 
-		flag.Set("service", testProjectName)
-		flag.Set("service_config_id", testConfigID)
-		flag.Set("rollout_strategy", util.FixedRolloutStrategy)
-		flag.Set("check_rollout_interval", "100ms")
-		flag.Set("service_json_path", "")
+		_ = flag.Set("service", testProjectName)
+		_ = flag.Set("service_config_id", testConfigID)
+		_ = flag.Set("rollout_strategy", util.FixedRolloutStrategy)
+		_ = flag.Set("check_rollout_interval", "100ms")
+		_ = flag.Set("service_json_path", "")
 
 		runTest(t, opts, func(env *testEnv) {
 			ctx := context.Background()
@@ -1480,7 +1480,7 @@ func TestDynamicBackendRouting(t *testing.T) {
 		opts.BackendAddress = tc.BackendAddress
 		opts.DisableTracing = true
 
-		flag.Set("service_json_path", tc.serviceConfigPath)
+		_ = flag.Set("service_json_path", tc.serviceConfigPath)
 
 		manager, err := NewConfigManager(nil, opts)
 		if err != nil {
@@ -1564,60 +1564,22 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 	newConfigID = "2018-12-05r1"
 	newRolloutID = newConfigID
 	testCase := struct {
-		desc                  string
-		fakeOldServiceRollout string
-		fakeNewServiceRollout string
-		fakeOldServiceConfig  string
-		fakeNewServiceConfig  string
-		BackendAddress        string
+		desc                 string
+		fakeOldScReport      string
+		fakeNewScReport      string
+		fakeOldServiceConfig string
+		fakeNewServiceConfig string
+		BackendAddress       string
 	}{
 		desc: "Success for service config auto update",
-		fakeOldServiceRollout: fmt.Sprintf(`{
-            "rollouts": [
-                {
-                  "rolloutId": "%s",
-                  "createTime": "2018-12-05T19:07:18.438Z",
-                  "createdBy": "mocktest@google.com",
-                  "status": "SUCCESS",
-                  "trafficPercentStrategy": {
-                    "percentages": {
-                      "%s": 100
-                    }
-                  },
-                  "serviceName": "%s"
-                }
-              ]
-            }`, oldRolloutID, oldConfigID, testProjectName),
-		fakeNewServiceRollout: fmt.Sprintf(`{
-            "rollouts": [
-                {
-                  "rolloutId": "%s",
-                  "createTime": "2018-12-05T19:07:18.438Z",
-                  "createdBy": "mocktest@google.com",
-                  "status": "SUCCESS",
-                  "trafficPercentStrategy": {
-                    "percentages": {
-                      "%s": 40,
-                      "%s": 60
-                    }
-                  },
-                  "serviceName": "%s"
-                },
-                {
-                  "rolloutId": "%s",
-                  "createTime": "2018-12-05T19:07:18.438Z",
-                  "createdBy": "mocktest@google.com",
-                  "status": "SUCCESS",
-                  "trafficPercentStrategy": {
-                    "percentages": {
-                      "%s": 100
-                    }
-                  },
-                  "serviceName": "%s"
-                }
-              ]
-            }`, newRolloutID, oldConfigID, newConfigID, testProjectName,
-			oldRolloutID, oldConfigID, testProjectName),
+		fakeOldScReport: fmt.Sprintf(`{
+                "serviceConfigId": "%s",
+                "serviceRolloutId": "%s"
+            }`, oldRolloutID, oldConfigID),
+		fakeNewScReport: fmt.Sprintf(`{
+                "serviceConfigId": "%s",
+                "serviceRolloutId": "%s"
+            }`, newRolloutID, newConfigID),
 		fakeOldServiceConfig: fmt.Sprintf(`{
                 "name": "%s",
                 "title": "Endpoints Example",
@@ -1663,17 +1625,17 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		t.Fatalf("genFakeConfig failed: %v", err)
 	}
 
-	if fakeRollout, err = genFakeRollout(testCase.fakeOldServiceRollout); err != nil {
-		t.Fatalf("genFakeRollout failed: %v", err)
+	if fakeScReport, err = genFakeScReport(testCase.fakeOldScReport); err != nil {
+		t.Fatalf("genFakeScReport failed: %v", err)
 	}
 
 	opts := options.DefaultConfigGeneratorOptions()
 	opts.BackendAddress = testCase.BackendAddress
 
-	flag.Set("service_config_id", testConfigID)
-	flag.Set("rollout_strategy", util.ManagedRolloutStrategy)
-	flag.Set("check_rollout_interval", "100ms")
-	flag.Set("service_json_path", "")
+	_ = flag.Set("service_config_id", testConfigID)
+	_ = flag.Set("rollout_strategy", util.ManagedRolloutStrategy)
+	_ = flag.Set("check_rollout_interval", "100ms")
+	_ = flag.Set("service_json_path", "")
 
 	runTest(t, opts, func(env *testEnv) {
 		var resp *cache.Response
@@ -1693,9 +1655,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		if resp.Version != oldConfigID {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got version: %v, want: %v", testCase.desc, resp.Version, oldConfigID)
 		}
-		if env.configManager.curRolloutId() != oldRolloutID {
-			t.Errorf("Test Desc: %s, config manager rollout id: %v, want: %v", testCase.desc, env.configManager.curRolloutId(), oldRolloutID)
-		}
+
 		if !proto.Equal(&resp.Request, &req) {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got request: %v, want: %v", testCase.desc, resp.Request, req)
 		}
@@ -1703,8 +1663,8 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		if fakeConfig, err = genFakeConfig(testCase.fakeNewServiceConfig); err != nil {
 			t.Fatalf("genFakeConfig failed: %v", err)
 		}
-		if fakeRollout, err = genFakeRollout(testCase.fakeNewServiceRollout); err != nil {
-			t.Fatalf("genFakeRollout failed: %v", err)
+		if fakeScReport, err = genFakeScReport(testCase.fakeNewScReport); err != nil {
+			t.Fatalf("genFakeScReport failed: %v", err)
 		}
 
 		time.Sleep(time.Duration(*checkNewRolloutInterval + time.Second))
@@ -1717,9 +1677,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		if resp.Version != newConfigID {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got version: %v, want: %v", testCase.desc, resp.Version, newConfigID)
 		}
-		if env.configManager.curRolloutId() != newRolloutID {
-			t.Errorf("Test Desc: %s, config manager rollout id: %v, want: %v", testCase.desc, env.configManager.curRolloutId(), newRolloutID)
-		}
+
 		if !proto.Equal(&resp.Request, &req) {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got request: %v, want: %v", testCase.desc, resp.Request, req)
 		}
@@ -1739,10 +1697,10 @@ func runTest(t *testing.T, opts options.ConfigGeneratorOptions, f func(*testEnv)
 		return mockConfig.URL
 	}
 
-	mockRollout := initMockRolloutServer(t)
-	defer mockRollout.Close()
-	util.FetchRolloutsURL = func(serviceManagementUrl, serviceName string) string {
-		return mockRollout.URL
+	mockServiceControl := initMockServiceControlServer(t)
+	defer mockServiceControl.Close()
+	util.FetchConfigIdURL = func(serviceControlUrl, serviceName string) string {
+		return mockServiceControl.URL
 	}
 
 	mockMetadataServer := util.InitMockServerFromPathResp(map[string]string{
@@ -1754,7 +1712,6 @@ func runTest(t *testing.T, opts options.ConfigGeneratorOptions, f func(*testEnv)
 
 	manager, err := NewConfigManager(metadataFetcher, opts)
 	if err != nil {
-
 		t.Fatal("fail to initialize Config Manager: ", err)
 	}
 	env := &testEnv{
@@ -1772,12 +1729,12 @@ func initMockConfigServer(t *testing.T) *httptest.Server {
 	}))
 }
 
-func initMockRolloutServer(t *testing.T) *httptest.Server {
+func initMockServiceControlServer(t *testing.T) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, err := w.Write(fakeRollout)
+		_, err := w.Write(fakeScReport)
 		if err != nil {
-			t.Fatal("fail to write rollout config: ", err)
+			t.Fatal("fail to write service control report: ", err)
 		}
 	}))
 }
@@ -1807,14 +1764,14 @@ func genFakeConfig(input string) ([]byte, error) {
 	return protoBytesArray, nil
 }
 
-func genFakeRollout(input string) ([]byte, error) {
+func genFakeScReport(input string) ([]byte, error) {
 	unmarshaler := &jsonpb.Unmarshaler{}
-	rollout := new(smpb.ListServiceRolloutsResponse)
-	if err := unmarshaler.Unmarshal(strings.NewReader(input), rollout); err != nil {
+	report := new(googleapisc.ReportResponse)
+	if err := unmarshaler.Unmarshal(strings.NewReader(input), report); err != nil {
 		return nil, err
 	}
 
-	protoBytesArray, err := proto.Marshal(rollout)
+	protoBytesArray, err := proto.Marshal(report)
 	if err != nil {
 		return nil, err
 	}

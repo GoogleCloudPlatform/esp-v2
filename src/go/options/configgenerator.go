@@ -47,6 +47,7 @@ type ConfigGeneratorOptions struct {
 	ListenerAddress      string
 	Healthz              string
 	ServiceManagementURL string
+	ServiceControlURL    string
 	ListenerPort         int
 	SslServerCertPath    string
 	SslClientCertPath    string
@@ -111,6 +112,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		RootCertsPath:                 util.DefaultRootCAPaths,
 		ServiceControlNetworkFailOpen: true,
 		ServiceManagementURL:          "https://servicemanagement.googleapis.com",
+		ServiceControlURL:             "https://servicecontrol.googleapis.com",
 		ScCheckRetries:                -1,
 		ScQuotaRetries:                -1,
 		ScReportRetries:               -1,
