@@ -58,6 +58,7 @@ envoy_cc_library(
     ],
     repository = "@envoy",
     deps = [
+        "@envoy//source/common/common:empty_string",
         "@envoy//source/common/router:string_accessor_lib",
         "@envoy//source/exe:envoy_common_lib",
     ],
@@ -70,6 +71,7 @@ envoy_cc_test(
     repository = "@envoy",
     deps = [
         ":filter_state_utils_lib",
+        "@envoy//source/common/common:empty_string",
         "@envoy//source/common/stream_info:filter_state_lib",
         "@envoy//test/test_common:utility_lib",
     ],
@@ -81,6 +83,7 @@ envoy_cc_library(
     hdrs = ["http_header_utils.h"],
     repository = "@envoy",
     deps = [
+        "@envoy//source/common/common:empty_string",
         "@envoy//source/exe:envoy_common_lib",
     ],
 )

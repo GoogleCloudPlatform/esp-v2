@@ -13,7 +13,9 @@
 // limitations under the License.
 
 #include "src/envoy/token/iam_token_info.h"
+
 #include "absl/strings/str_cat.h"
+#include "common/common/empty_string.h"
 #include "common/http/headers.h"
 #include "common/http/message_impl.h"
 #include "src/envoy/utils/json_struct.h"
@@ -84,7 +86,7 @@ Envoy::Http::RequestMessagePtr IamTokenInfo::prepareRequest(
   }
 
   if (!scopes_.empty()) {
-    insertStrListToProto(body, kScopesField, scopes_, "");
+    insertStrListToProto(body, kScopesField, scopes_, EMPTY_STRING);
   }
 
   if (include_email_) {

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "src/envoy/http/path_matcher/filter_config.h"
+#include "common/common/empty_string.h"
 #include "test/mocks/server/mocks.h"
 #include "test/test_common/utility.h"
 
@@ -34,7 +35,7 @@ typedef std::vector<std::string> FieldPath;
 TEST(FilterConfigTest, EmptyConfig) {
   ::google::api::envoy::http::path_matcher::FilterConfig config_pb;
   ::testing::NiceMock<Server::Configuration::MockFactoryContext> mock_factory;
-  FilterConfig cfg(config_pb, "", mock_factory);
+  FilterConfig cfg(config_pb, EMPTY_STRING, mock_factory);
 
   EXPECT_TRUE(cfg.findOperation("GET", "/foo") == nullptr);
   EXPECT_TRUE(cfg.getSnakeToJsonMap().empty());
@@ -61,7 +62,7 @@ rules {
   ::google::api::envoy::http::path_matcher::FilterConfig config_pb;
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigBasic, &config_pb));
   ::testing::NiceMock<Server::Configuration::MockFactoryContext> mock_factory;
-  FilterConfig cfg(config_pb, "", mock_factory);
+  FilterConfig cfg(config_pb, EMPTY_STRING, mock_factory);
 
   EXPECT_EQ("1.cloudesf_testing_cloud_goog.Bar",
             *cfg.findOperation("GET", "/bar"));
@@ -92,7 +93,7 @@ rules {
   ::google::api::envoy::http::path_matcher::FilterConfig config_pb;
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigBasic, &config_pb));
   ::testing::NiceMock<Server::Configuration::MockFactoryContext> mock_factory;
-  FilterConfig cfg(config_pb, "", mock_factory);
+  FilterConfig cfg(config_pb, EMPTY_STRING, mock_factory);
 
   VariableBindings bindings;
   EXPECT_EQ("1.cloudesf_testing_cloud_goog.Foo",
@@ -125,7 +126,7 @@ segment_names {
   ::google::api::envoy::http::path_matcher::FilterConfig config_pb;
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfig, &config_pb));
   ::testing::NiceMock<Server::Configuration::MockFactoryContext> mock_factory;
-  FilterConfig cfg(config_pb, "", mock_factory);
+  FilterConfig cfg(config_pb, EMPTY_STRING, mock_factory);
 
   absl::flat_hash_map<std::string, std::string> expected = {
       {"foo_bar", "fooBar"}, {"x_y_z", "xYZ"}};
@@ -153,8 +154,9 @@ rules {
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfig, &config_pb));
   ::testing::NiceMock<Server::Configuration::MockFactoryContext> mock_factory;
 
-  EXPECT_THROW_WITH_REGEX(FilterConfig cfg(config_pb, "", mock_factory),
-                          ProtoValidationException, "Duplicated pattern");
+  EXPECT_THROW_WITH_REGEX(
+      FilterConfig cfg(config_pb, EMPTY_STRING, mock_factory),
+      ProtoValidationException, "Duplicated pattern");
 }
 
 }  // namespace

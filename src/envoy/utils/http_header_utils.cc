@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "src/envoy/utils/http_header_utils.h"
+#include "common/common/empty_string.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -27,7 +28,7 @@ absl::string_view readHeaderEntry(const Envoy::Http::HeaderEntry* entry) {
   if (entry) {
     return entry->value().getStringView();
   }
-  return "";
+  return EMPTY_STRING;
 }
 
 absl::string_view extractHeader(const Envoy::Http::HeaderMap& headers,

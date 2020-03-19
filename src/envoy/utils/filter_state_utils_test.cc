@@ -14,6 +14,7 @@
 
 #include "src/envoy/utils/filter_state_utils.h"
 
+#include "common/common/empty_string.h"
 #include "common/stream_info/filter_state_impl.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -38,7 +39,8 @@ TEST(FilterStateUtilsTest, SetAndGetStringValueFromFilterState) {
 TEST(FilterStateUtilsTest, ReturnEmptyStringViewForNonExistingDataName) {
   Envoy::StreamInfo::FilterStateImpl filter_state(
       Envoy::StreamInfo::FilterState::LifeSpan::FilterChain);
-  EXPECT_EQ(getStringFilterState(filter_state, "non_existing_data_name"), "");
+  EXPECT_EQ(getStringFilterState(filter_state, "non_existing_data_name"),
+            EMPTY_STRING);
 }
 
 }  // namespace

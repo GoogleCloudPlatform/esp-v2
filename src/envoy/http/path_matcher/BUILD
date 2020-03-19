@@ -48,6 +48,7 @@ envoy_cc_library(
         "//api/envoy/http/path_matcher:config_proto_cc_proto",
         "//src/api_proxy/path_matcher:path_matcher_lib",
         "//src/api_proxy/path_matcher:variable_binding_utils_lib",
+        "@envoy//source/common/common:empty_string",
         "@envoy//source/exe:envoy_common_lib",
     ],
 )
@@ -61,6 +62,7 @@ envoy_cc_test(
     repository = "@envoy",
     deps = [
         ":filter_config_lib",
+        "@envoy//source/common/common:empty_string",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/test_common:utility_lib",
     ],
@@ -75,6 +77,7 @@ envoy_cc_test(
     repository = "@envoy",
     deps = [
         ":filter_lib",
+        "@envoy//source/common/common:empty_string",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/test_common:utility_lib",
     ],

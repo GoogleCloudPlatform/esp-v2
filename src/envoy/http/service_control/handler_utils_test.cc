@@ -14,7 +14,9 @@
 // limitations under the License.
 
 #include "src/envoy/http/service_control/handler_utils.h"
+
 #include "api/envoy/http/service_control/config.pb.h"
+#include "common/common/empty_string.h"
 #include "envoy/http/header_map.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
@@ -46,22 +48,23 @@ TEST(ServiceControlUtils, FillGCPInfo) {
 
   const TestCase test_cases[] = {
       // Test: No gcp_attributes found
-      {"", "", "UNKNOWN(ESPv2)"},
+      {EMPTY_STRING, EMPTY_STRING, "UNKNOWN(ESPv2)"},
 
       // Test: gcp_attributes found but empty
-      {R"(gcp_attributes {})", "", "UNKNOWN(ESPv2)"},
+      {R"(gcp_attributes {})", EMPTY_STRING, "UNKNOWN(ESPv2)"},
 
       // Test: bad platform provided should default to unknown
-      {R"(gcp_attributes { platform: "bad-platform"})", "", "bad-platform"},
+      {R"(gcp_attributes { platform: "bad-platform"})", EMPTY_STRING,
+       "bad-platform"},
 
       // Test: GAE_FLEX platform is passed through
-      {R"(gcp_attributes { platform: "GAE_FLEX"})", "", "GAE_FLEX"},
+      {R"(gcp_attributes { platform: "GAE_FLEX"})", EMPTY_STRING, "GAE_FLEX"},
 
       // Test: GCE platform is set
-      {R"(gcp_attributes { platform: "GCE"})", "", "GCE"},
+      {R"(gcp_attributes { platform: "GCE"})", EMPTY_STRING, "GCE"},
 
       // Test: GKE platform is set
-      {R"(gcp_attributes { platform: "GKE"})", "", "GKE"},
+      {R"(gcp_attributes { platform: "GKE"})", EMPTY_STRING, "GKE"},
 
       // Test: Provided zone is set
       {R"(gcp_attributes { zone: "test-zone"})", "test-zone", "UNKNOWN(ESPv2)"},
@@ -104,7 +107,7 @@ TEST(ServiceControlUtils, FillLoggedHeader) {
       {
           {{"ignore-this", "foo"}},
           R"(log_request_headers: "log-this")",
-          "",
+          EMPTY_STRING,
       },
 
       // Test: Search for one header when there are others
@@ -168,13 +171,13 @@ TEST(ServiceControlUtils, ExtractApiKey) {
 
   const TestCase test_cases[] = {
       // Test: No locations provided does nothing
-      {"", {}, ""},
+      {EMPTY_STRING, {}, EMPTY_STRING},
 
       // Test: cookie location expected but not provided
       {
           R"(locations: { cookie: "apikey" } )",
           {},
-          "",
+          EMPTY_STRING,
       },
 
       // Test: find apikey in cookie location
@@ -197,7 +200,7 @@ TEST(ServiceControlUtils, ExtractApiKey) {
       {
           R"(locations: { header: "apikey" } )",
           {},
-          "",
+          EMPTY_STRING,
       },
 
       // Test: find apikey in header location
@@ -220,7 +223,7 @@ TEST(ServiceControlUtils, ExtractApiKey) {
       {
           R"(locations: { query: "apikey" } )",
           {{":path", "/echo"}},
-          "",
+          EMPTY_STRING,
       },
 
       // Test: find apikey in query location
@@ -245,7 +248,7 @@ TEST(ServiceControlUtils, ExtractApiKey) {
             locations: { header: "apikey" }
             locations: { query: "apikey" } )",
           {{"cookie", "apikey=foobar"}, {":path", "/echo"}},
-          ""},
+          EMPTY_STRING},
 
       // Test: apikey is in header but header location is not expected
       {
@@ -253,7 +256,7 @@ TEST(ServiceControlUtils, ExtractApiKey) {
             locations: { cookie: "apikey" }
             locations: { query: "apikey" } )",
           {{"apikey", "foobar"}, {":path", "/echo"}},
-          ""},
+          EMPTY_STRING},
 
       // Test: apikey is in query but query location is not expected
       {
@@ -261,7 +264,7 @@ TEST(ServiceControlUtils, ExtractApiKey) {
             locations: { cookie: "apikey" }
             locations: { header: "apikey" } )",
           {{":path", "/echo?apikey=foobar"}},
-          "",
+          EMPTY_STRING,
       }};
 
   for (const auto& test : test_cases) {

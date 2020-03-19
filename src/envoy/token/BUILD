@@ -20,6 +20,7 @@ envoy_cc_library(
         ":token_info_lib",
         "//external:protobuf",
         "//src/envoy/utils:json_struct_lib",
+        "@envoy//source/common/common:empty_string",
         "@envoy//source/common/http:headers_lib",
         "@envoy//source/common/http:message_lib",
         "@envoy//source/common/http:utility_lib",
@@ -161,6 +162,7 @@ envoy_cc_test(
     repository = "@envoy",
     deps = [
         ":iam_token_info_lib",
+        "@envoy//source/common/common:empty_string",
         "@envoy//test/test_common:utility_lib",
     ],
 )
