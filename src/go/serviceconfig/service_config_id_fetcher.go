@@ -32,7 +32,7 @@ type ServiceConfigIdFetcher struct {
 }
 
 func NewServiceConfigIdFetcher(serviceName, serviceControlUrl string, client http.Client,
-	accessToken GetAccessTokenFunc) *ServiceConfigIdFetcher {
+	accessToken util.GetAccessTokenFunc) *ServiceConfigIdFetcher {
 	return &ServiceConfigIdFetcher{
 		serviceName:       serviceName,
 		serviceControlUrl: serviceControlUrl,

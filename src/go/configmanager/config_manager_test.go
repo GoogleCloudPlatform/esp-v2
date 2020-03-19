@@ -46,7 +46,7 @@ import (
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
-	googleapiscpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
+	servicecontrolpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
@@ -1766,7 +1766,7 @@ func genFakeConfig(input string) ([]byte, error) {
 
 func genFakeScReport(input string) ([]byte, error) {
 	unmarshaler := &jsonpb.Unmarshaler{}
-	report := new(googleapiscpb.ReportResponse)
+	report := new(servicecontrolpb.ReportResponse)
 	if err := unmarshaler.Unmarshal(strings.NewReader(input), report); err != nil {
 		return nil, err
 	}

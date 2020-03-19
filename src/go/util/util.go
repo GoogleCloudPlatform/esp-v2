@@ -129,6 +129,9 @@ const (
 
 type BackendProtocol int32
 
+type GetAccessTokenFunc func() (string, time.Duration, error)
+type GetNewConfigIdFunc func() (string, error)
+
 // Backend protocol.
 const (
 	UNKNOWN BackendProtocol = iota

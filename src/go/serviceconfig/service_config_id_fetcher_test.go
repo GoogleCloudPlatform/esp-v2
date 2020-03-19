@@ -22,7 +22,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/proto"
-	googleapisc "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
+	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
 func initServiceControlForTestNewConfigId(t *testing.T, serviceConfigId *string) *httptest.Server {
@@ -36,7 +36,7 @@ func initServiceControlForTestNewConfigId(t *testing.T, serviceConfigId *string)
 }
 
 func genFakeReport(serviceConfigId string) ([]byte, error) {
-	reportResp := new(googleapisc.ReportResponse)
+	reportResp := new(scpb.ReportResponse)
 	reportResp.ServiceConfigId = serviceConfigId
 	return proto.Marshal(reportResp)
 }

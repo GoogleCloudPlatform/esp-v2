@@ -137,13 +137,21 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 
 	}
 
-	var accessTokenFromImds sc.GetAccessTokenFunc
-	if mf != nil {
-		accessTokenFromImds = func() (string, time.Duration, error) { return mf.FetchAccessToken() }
+	accessToken := func() (string, time.Duration, error) {
+		// when --non_gcp  is set, instance metadata server(imds) is not defined so
+		// accessToken is unavailable from imds and --service_account_key must be
+		// set to generate accessToken.
+		if mf == nil && opts.ServiceAccountKey == "" {
+			return "", 0, fmt.Errorf("If --non_gcp is specified, --service_account_key has to be specified.")
+		}
+		if opts.ServiceAccountKey != "" {
+			return util.GenerateAccessTokenFromFile(opts.ServiceAccountKey)
+		}
+		return mf.FetchAccessToken()
 	}
 
 	if m.serviceConfigFetcher, err = sc.NewServiceConfigFetcher(&opts,
-		m.serviceName, accessTokenFromImds); err != nil {
+		m.serviceName, accessToken); err != nil {
 		return nil, fmt.Errorf(`failed to create https client to call ServiceManagement service, got error: %v`, err)
 	}
 

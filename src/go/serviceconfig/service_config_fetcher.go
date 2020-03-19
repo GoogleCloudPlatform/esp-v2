@@ -30,23 +30,20 @@ import (
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-type GetAccessTokenFunc func() (string, time.Duration, error)
-type GetNewConfigIdFunc func() (string, error)
-
 type ServiceConfigFetcher struct {
 	serviceName         string
 	checkRolloutsTicker *time.Ticker
 	client              http.Client
 	opts                *options.ConfigGeneratorOptions
 
-	accessToken GetAccessTokenFunc
-	newConfigId GetNewConfigIdFunc
+	accessToken util.GetAccessTokenFunc
+	newConfigId util.GetNewConfigIdFunc
 
 	curServiceConfig *confpb.Service
 }
 
 func NewServiceConfigFetcher(opts *options.ConfigGeneratorOptions,
-	serviceName string, accessTokenFromImds func() (string, time.Duration, error)) (*ServiceConfigFetcher, error) {
+	serviceName string, accessToken util.GetAccessTokenFunc) (*ServiceConfigFetcher, error) {
 	caCert, err := ioutil.ReadFile(opts.RootCertsPath)
 	if err != nil {
 		return nil, err
@@ -64,25 +61,13 @@ func NewServiceConfigFetcher(opts *options.ConfigGeneratorOptions,
 		},
 		serviceName: serviceName,
 		opts:        opts,
+		accessToken: accessToken,
 	}
 
 	configIdFetcher := NewServiceConfigIdFetcher(serviceName, opts.ServiceControlURL,
 		s.client, func() (string, time.Duration, error) { return s.accessToken() })
 	s.newConfigId = func() (string, error) {
 		return configIdFetcher.fetchNewConfigId()
-	}
-
-	s.accessToken = func() (string, time.Duration, error) {
-		// when --non_gcp  is set, instance metadata server(imds) is not defined so
-		// accessToken is unavailable from imds and serviceAccountKey must be set to
-		// generate accessToken.
-		if accessTokenFromImds == nil && s.opts.ServiceAccountKey == "" {
-			return "", 0, fmt.Errorf("If --non_gcp is specified, --service_account_key has to be specified.")
-		}
-		if s.opts.ServiceAccountKey != "" {
-			return util.GenerateAccessTokenFromFile(s.opts.ServiceAccountKey)
-		}
-		return accessTokenFromImds()
 	}
 
 	return s, nil
