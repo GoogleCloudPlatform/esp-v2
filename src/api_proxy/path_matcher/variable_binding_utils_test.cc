@@ -35,6 +35,14 @@ TEST(VariableBindingsToQueryParameters, WithoutSnakeToJsonNameConversion) {
   EXPECT_EQ(VariableBindingsToQueryParameters(
                 /*variable_bindings=*/
                 {
+                    {{"foo_bar"}, "42"},
+                },
+                /*snake_to_json=*/
+                {}),
+            "foo_bar=42");
+  EXPECT_EQ(VariableBindingsToQueryParameters(
+                /*variable_bindings=*/
+                {
                     {{"id"}, "42"},
                     {{"foo", "bar", "baz"}, "value"},
                     {{"x", "y"}, "abc"},

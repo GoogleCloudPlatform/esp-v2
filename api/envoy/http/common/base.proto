@@ -37,12 +37,16 @@ message Pattern {
   //     /dictionary/{term:1}/{term}
   //     /search{?q*,lang}
   //
-  string uri_template = 1;
+  string uri_template = 1 [(validate.rules).string = {
+    well_known_regex: HTTP_HEADER_VALUE,
+    strict: false
+  }];
 
   // HTTP request method to match against as defined by
   // [rfc7231](https://tools.ietf.org/html/rfc7231#page-21). For
   // example: GET, HEAD, POST, PUT, DELETE.
-  string http_method = 2;
+  string http_method = 2
+      [(validate.rules).string.well_known_regex = HTTP_HEADER_NAME];
 }
 
 message HttpUri {
