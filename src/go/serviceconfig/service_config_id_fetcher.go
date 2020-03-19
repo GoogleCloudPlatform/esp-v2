@@ -9,7 +9,7 @@
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
+// See the License for the specic language governing permissions and
 // limitations under the License.
 
 package serviceconfig
@@ -24,16 +24,16 @@ import (
 	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
-type ConfigIdFetcher struct {
+type ServiceConfigIdFetcher struct {
 	serviceName       string
 	serviceControlUrl string
 	client            http.Client
 	accessToken       func() (string, time.Duration, error)
 }
 
-func NewConfigIdFetcher(serviceName, serviceControlUrl string, client http.Client,
-	accessToken func() (string, time.Duration, error)) *ConfigIdFetcher {
-	return &ConfigIdFetcher{
+func NewServiceConfigIdFetcher(serviceName, serviceControlUrl string, client http.Client,
+	accessToken GetAccessTokenFunc) *ServiceConfigIdFetcher {
+	return &ServiceConfigIdFetcher{
 		serviceName:       serviceName,
 		serviceControlUrl: serviceControlUrl,
 		client:            client,
@@ -42,13 +42,13 @@ func NewConfigIdFetcher(serviceName, serviceControlUrl string, client http.Clien
 
 }
 
-func (cif *ConfigIdFetcher) fetchNewConfigId() (string, error) {
-	token, _, err := cif.accessToken()
+func (c *ServiceConfigIdFetcher) fetchNewConfigId() (string, error) {
+	token, _, err := c.accessToken()
 	if err != nil {
 		return "", fmt.Errorf("fail to get access token: %v", err)
 	}
 
-	reportResponse, err := cif.callServiceControl(util.FetchConfigIdURL(cif.serviceControlUrl, cif.serviceName), token)
+	reportResponse, err := c.callServiceControl(util.FetchConfigIdURL(c.serviceControlUrl, c.serviceName), token)
 	if err != nil {
 		return "", err
 	}
@@ -56,15 +56,15 @@ func (cif *ConfigIdFetcher) fetchNewConfigId() (string, error) {
 	return reportResponse.ServiceConfigId, nil
 }
 
-func (cif *ConfigIdFetcher) callServiceControl(path, token string) (*scpb.ReportResponse, error) {
-	respBytes, err := util.CallWithAccessToken(cif.client, util.POST, path, token)
+func (c *ServiceConfigIdFetcher) callServiceControl(path, token string) (*scpb.ReportResponse, error) {
+	respBytes, err := util.CallWithAccessToken(c.client, util.POST, path, token)
 	if err != nil {
 		return nil, err
 	}
 
 	reportResponse := new(scpb.ReportResponse)
 	if err := proto.Unmarshal(respBytes, reportResponse); err != nil {
-		return nil, fmt.Errorf("fail to unmarshal ListServiceRolloutsResponse: %s", err)
+		return nil, fmt.Errorf("fail to unmarshal ReportResponse: %s", err)
 	}
 
 	return reportResponse, nil
