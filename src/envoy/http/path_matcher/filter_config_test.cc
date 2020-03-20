@@ -83,7 +83,6 @@ TEST(FilterConfigTest, VariableBinding) {
   const char kFilterConfigBasic[] = R"(
 rules {
   operation: "1.cloudesf_testing_cloud_goog.Foo"
-  extract_path_parameters: true
   pattern {
     http_method: "GET"
     uri_template: "/foo/{id}"
@@ -157,6 +156,49 @@ rules {
   EXPECT_THROW_WITH_REGEX(
       FilterConfig cfg(config_pb, EMPTY_STRING, mock_factory),
       ProtoValidationException, "Duplicated pattern");
+}
+
+TEST(FilterConfigTest, InvalidPattern) {
+  const char kFilterConfig[] = R"(
+rules {
+  operation: "1.cloudesf_testing_cloud_goog.Bar"
+  pattern {
+    http_method: "GET"
+    uri_template: "/bar/{id{x}}"
+  }
+})";
+
+  ::google::api::envoy::http::path_matcher::FilterConfig config_pb;
+  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfig, &config_pb));
+  ::testing::NiceMock<Server::Configuration::MockFactoryContext> mock_factory;
+
+  EXPECT_THROW_WITH_REGEX(
+      FilterConfig cfg(config_pb, EMPTY_STRING, mock_factory),
+      ProtoValidationException, "invalid pattern");
+}
+
+TEST(FilterConfigTest, NonStandardHttpMethod) {
+  const char kFilterConfigBasic[] = R"(
+rules {
+  operation: "1.cloudesf_testing_cloud_goog.Bar"
+  pattern {
+    http_method: "NonStandardMethod"
+    uri_template: "/bar"
+  }
+})";
+
+  ::google::api::envoy::http::path_matcher::FilterConfig config_pb;
+  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigBasic, &config_pb));
+  ::testing::NiceMock<Server::Configuration::MockFactoryContext> mock_factory;
+  FilterConfig cfg(config_pb, EMPTY_STRING, mock_factory);
+
+  EXPECT_EQ("1.cloudesf_testing_cloud_goog.Bar",
+            *cfg.findOperation("NonStandardMethod", "/bar"));
+
+  EXPECT_EQ(nullptr, cfg.findOperation("GET", "/bar"));
+  EXPECT_EQ(nullptr, cfg.findOperation("POST", "/bar"));
+
+  EXPECT_TRUE(cfg.getSnakeToJsonMap().empty());
 }
 
 }  // namespace

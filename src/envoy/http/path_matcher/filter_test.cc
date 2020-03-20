@@ -99,7 +99,7 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersWithOperation) {
             filter_->decodeTrailers(trailers));
 }
 
-TEST_F(PathMatcherFilterTest, DecodeHeadersWithMethodOveride) {
+TEST_F(PathMatcherFilterTest, DecodeHeadersWithMethodOverride) {
   // Test: a request with a method override matches a operation
   Http::TestRequestHeaderMapImpl headers{{":method", "POST"},
                                          {":path", "/bar"},

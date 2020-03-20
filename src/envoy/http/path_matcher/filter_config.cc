@@ -31,7 +31,8 @@ FilterConfig::FilterConfig(
     if (!pmb.Register(rule.pattern().http_method(),
                       rule.pattern().uri_template(),
                       /*body_field_path=*/EMPTY_STRING, &rule.operation())) {
-      throw ProtoValidationException("Duplicated pattern", rule.pattern());
+      throw ProtoValidationException("Duplicated pattern or invalid pattern",
+                                     rule.pattern());
     }
     if (rule.extract_path_parameters()) {
       path_params_operations_.insert(rule.operation());
