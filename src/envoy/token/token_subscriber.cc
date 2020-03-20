@@ -15,10 +15,10 @@
 #include "src/envoy/token/token_subscriber.h"
 #include "absl/strings/str_cat.h"
 #include "common/common/enum_to_int.h"
-#include "common/http/headers.h"
 #include "common/http/message_impl.h"
 #include "common/http/utility.h"
 #include "envoy/http/async_client.h"
+#include "envoy/http/header_map.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -155,6 +155,17 @@ void TokenSubscriber::processResponse(
 
   // Determine status.
   if (!success) {
+    handleFailResponse();
+    return;
+  }
+
+  // Token will be used as a HTTP_HEADER_VALUE in the future. Ensure it is
+  // sanitized. Otherwise, special characters will cause a runtime failure
+  // in other components.
+  if (!Http::validHeaderString(result.token)) {
+    ENVOY_LOG(error,
+              "{}: failed because invalid characters were detected in token {}",
+              result.token);
     handleFailResponse();
     return;
   }

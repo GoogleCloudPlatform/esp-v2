@@ -297,6 +297,47 @@ TEST_F(TokenSubscriberTest, BadParseAccessToken) {
   ASSERT_FALSE(init_ready_);
 }
 
+TEST_F(TokenSubscriberTest, TokenSantizationCheckFails) {
+  // Setup fake remote request.
+  Envoy::Http::RequestHeaderMapPtr req_headers(
+      new Envoy::Http::TestRequestHeaderMapImpl());
+  EXPECT_CALL(*info_, prepareRequest(token_url_))
+      .Times(1)
+      .WillRepeatedly(
+          Return(ByMove(std::make_unique<Envoy::Http::RequestMessageImpl>(
+              std::move(req_headers)))));
+
+  // Setup fake parse status.
+  EXPECT_CALL(*info_, parseAccessToken(_, _))
+      .WillOnce(Invoke([](absl::string_view, TokenResult* ret) {
+        ret->token = "fake-token-with-bad\n-characters";
+        ret->expiry_duration = std::chrono::seconds(30);
+        return true;
+      }));
+
+  // Expect subscriber does not succeed.
+  EXPECT_CALL(*mock_timer_, enableTimer(kFailedExpect, nullptr)).Times(1);
+  EXPECT_CALL(token_callback_, Call(_)).Times(0);
+
+  // Start class under test.
+  setUp(TokenType::AccessToken);
+
+  // Setup fake response.
+  Envoy::Http::ResponseHeaderMapPtr resp_headers(
+      new Envoy::Http::TestResponseHeaderMapImpl({
+          {":status", "200"},
+      }));
+  Envoy::Http::ResponseMessagePtr response(
+      new Envoy::Http::ResponseMessageImpl(std::move(resp_headers)));
+
+  // Start the response.
+  client_callback_->onSuccess(std::move(response));
+
+  // Assert subscriber did not succeed.
+  ASSERT_EQ(call_count_, 1);
+  ASSERT_FALSE(init_ready_);
+}
+
 TEST_F(TokenSubscriberTest, Success) {
   // Setup fake remote request.
   Envoy::Http::RequestHeaderMapPtr req_headers(
