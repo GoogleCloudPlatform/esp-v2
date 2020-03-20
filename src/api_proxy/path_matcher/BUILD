@@ -1,15 +1,17 @@
+load(
+    "@envoy//bazel:envoy_build_system.bzl",
+    "envoy_basic_cc_library",
+    "envoy_cc_fuzz_test",
+    "envoy_cc_test",
+)
+
 package(
     default_visibility = [
         "//src/envoy:__subpackages__",
     ],
 )
 
-load(
-    "@envoy//bazel:envoy_build_system.bzl",
-    "envoy_cc_fuzz_test",
-)
-
-cc_library(
+envoy_basic_cc_library(
     name = "path_matcher_lib",
     srcs = [
         "http_template.cc",
@@ -26,37 +28,27 @@ cc_library(
     ],
 )
 
-cc_test(
+envoy_cc_test(
     name = "http_template_test",
     size = "small",
     srcs = ["http_template_test.cc"],
-    linkopts = [
-        "-lm",
-        "-lpthread",
-    ],
-    linkstatic = 1,
+    repository = "@envoy",
     deps = [
         ":path_matcher_lib",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
-cc_test(
+envoy_cc_test(
     name = "path_matcher_test",
     size = "small",
     srcs = ["path_matcher_test.cc"],
-    linkopts = [
-        "-lm",
-        "-lpthread",
-    ],
-    linkstatic = 1,
+    repository = "@envoy",
     deps = [
         ":path_matcher_lib",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
-cc_library(
+envoy_basic_cc_library(
     name = "variable_binding_utils_lib",
     srcs = [
         "variable_binding_utils.cc",
@@ -71,20 +63,15 @@ cc_library(
     ],
 )
 
-cc_test(
+envoy_cc_test(
     name = "variable_binding_utils_test",
     size = "small",
     srcs = [
         "variable_binding_utils_test.cc",
     ],
-    linkopts = [
-        "-lm",
-        "-lpthread",
-    ],
-    linkstatic = 1,
+    repository = "@envoy",
     deps = [
         ":variable_binding_utils_lib",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 

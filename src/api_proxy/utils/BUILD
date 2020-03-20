@@ -1,3 +1,9 @@
+load(
+    "@envoy//bazel:envoy_build_system.bzl",
+    "envoy_basic_cc_library",
+    "envoy_cc_test",
+)
+
 sh_binary(
     name = "version_macro_template",
     srcs = [
@@ -19,7 +25,7 @@ genrule(
     ],
 )
 
-cc_library(
+envoy_basic_cc_library(
     name = "utils",
     srcs = [
         "version.cc",
@@ -31,17 +37,14 @@ cc_library(
     visibility = ["//:__subpackages__"],
 )
 
-cc_test(
+envoy_cc_test(
     name = "version_test",
     size = "small",
     srcs = [
         "version_test.cc",
     ],
-    linkopts = [
-        "-lpthread",
-    ],
+    repository = "@envoy",
     deps = [
         ":utils",
-        "@com_google_googletest//:gtest_main",
     ],
 )
