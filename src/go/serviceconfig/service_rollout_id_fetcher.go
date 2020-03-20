@@ -15,10 +15,9 @@
 package serviceconfig
 
 import (
+	"fmt"
 	"net/http"
 	"time"
-
-	"fmt"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
