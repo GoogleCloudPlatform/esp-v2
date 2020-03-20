@@ -45,8 +45,9 @@ func getServiceConfig(urlPrefix string, configId string) (*conf.Service, error) 
 
 func TestMockServiceManagement(t *testing.T) {
 	serviceConfig := &conf.Service{Name: "foo", Id: "999"}
+	rolloutId := "test-rollout-ud"
 
-	s := NewMockServiceMrg(serviceConfig.Name, serviceConfig)
+	s := NewMockServiceMrg(serviceConfig.Name, rolloutId, serviceConfig)
 	urlPrefix := s.Start() + "/v1/services/" + serviceConfig.Name
 
 	gotServiceConfig, err := getServiceConfig(urlPrefix, serviceConfig.Id)

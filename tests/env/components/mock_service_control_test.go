@@ -27,7 +27,7 @@ import (
 )
 
 func TestMockServiceControl(t *testing.T) {
-	s := NewMockServiceCtrl("mmm")
+	s := NewMockServiceCtrl("mmm" , "test-rollout-id")
 	s.Setup()
 
 	url := s.GetURL() + "/v1/services/mmm:check"
@@ -120,7 +120,7 @@ func TestMockServiceControlCheckError(t *testing.T) {
 	}
 
 	for _, tc := range testdata {
-		s := NewMockServiceCtrl(tc.name)
+		s := NewMockServiceCtrl(tc.name, "test-rollout-id")
 		s.Setup()
 		if tc.checkResponse != nil {
 			s.SetCheckResponse(tc.checkResponse)
@@ -173,7 +173,7 @@ func TestMockServiceControlReportStatus(t *testing.T) {
 	}
 
 	for _, tc := range testdata {
-		s := NewMockServiceCtrl(tc.name)
+		s := NewMockServiceCtrl(tc.name, "test-rollout-id")
 		s.Setup()
 		if tc.reportStatusCode != 0 {
 			s.SetReportResponseStatus(tc.reportStatusCode)
