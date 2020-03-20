@@ -12,7 +12,10 @@ message BackendRoutingFilterInput {
   google.api.envoy.http.backend_routing.FilterConfig config = 1 [(validate.rules).message.required = true];
 
   // The query params extracted by the path matcher filter for variable bindings in the backend rule.
-  string binding_query_params = 2;
+  string binding_query_params = 2 [(validate.rules).string = {
+    well_known_regex: HTTP_HEADER_VALUE,
+    strict: false
+  }];
 
   // The user's HTTP request to the filter.
   test.fuzz.HttpData user_request = 3 [(validate.rules).message.required = true];
