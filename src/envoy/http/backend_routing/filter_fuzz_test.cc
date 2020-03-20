@@ -15,6 +15,17 @@ namespace Extensions {
 namespace HttpFilters {
 namespace BackendRouting {
 
+void doTest(Filter& filter,
+            const tests::fuzz::protos::BackendRoutingFilterInput& input) {
+  // Generate the user request.
+  auto headers =
+      Envoy::Fuzz::fromHeaders<Envoy::Http::TestRequestHeaderMapImpl>(
+          input.user_request().headers());
+
+  // Functions under test.
+  filter.decodeHeaders(headers, false);
+}
+
 DEFINE_PROTO_FUZZER(
     const tests::fuzz::protos::BackendRoutingFilterInput& input) {
   ENVOY_LOG_MISC(trace, "{}", input.DebugString());
@@ -46,19 +57,19 @@ DEFINE_PROTO_FUZZER(
       *mock_decoder_callbacks.stream_info_.filter_state_, Utils::kQueryParams,
       input.binding_query_params());
 
-  // Create the filter.
-  FilterConfigSharedPtr config = std::make_shared<FilterConfig>(
-      input.config(), "fuzz-test-stats", mock_factory_context);
-  Filter filter(config);
-  filter.setDecoderFilterCallbacks(mock_decoder_callbacks);
+  try {
+    // Create the filter.
+    FilterConfigSharedPtr config = std::make_shared<FilterConfig>(
+        input.config(), "fuzz-test-stats", mock_factory_context);
+    Filter filter(config);
+    filter.setDecoderFilterCallbacks(mock_decoder_callbacks);
 
-  // Generate the user request.
-  auto headers =
-      Envoy::Fuzz::fromHeaders<Envoy::Http::TestRequestHeaderMapImpl>(
-          input.user_request().headers());
+    // Run data against the filter.
+    ASSERT_NO_THROW(doTest(filter, input));
 
-  // Functions under test.
-  filter.decodeHeaders(headers, false);
+  } catch (const EnvoyException& e) {
+    ENVOY_LOG_MISC(debug, "Controlled envoy exception: {}", e.what());
+  }
 }
 
 }  // namespace BackendRouting
