@@ -21,8 +21,8 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
-
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	sm "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
 // MockServiceMrg mocks the Service Management server.
@@ -31,7 +31,7 @@ type MockServiceMrg struct {
 	s                 *httptest.Server
 	serviceName       string
 	serviceConfig     *confpb.Service
-	rolloutID         int
+	rolloutId         string
 	configsHandler    http.Handler
 	rolloutsHandler   http.Handler
 	lastServiceConfig []byte
@@ -48,13 +48,40 @@ func (h *configsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(serviceConfigByte)
 }
 
+type rolloutsHandler struct {
+	m *MockServiceMrg
+}
+
+func (h *rolloutsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s := "/v1/services/" + h.m.serviceName + "/rollouts/" + h.m.rolloutId
+	if r.URL.Path != s {
+		w.WriteHeader(http.StatusNotFound)
+	}
+
+	rollout := &sm.Rollout{
+		RolloutId: h.m.rolloutId,
+		Strategy: &sm.Rollout_TrafficPercentStrategy_{
+			TrafficPercentStrategy: &sm.Rollout_TrafficPercentStrategy{
+				Percentages: map[string]float64{
+					h.m.serviceConfig.Id: 1.0,
+				},
+			},
+		},
+	}
+
+	serviceConfigRolloutBytes, _ := proto.Marshal(rollout)
+	_, _ = w.Write(serviceConfigRolloutBytes)
+}
+
 // NewMockServiceMrg creates a new HTTP server.
-func NewMockServiceMrg(serviceName string, serviceConfig *confpb.Service) *MockServiceMrg {
+func NewMockServiceMrg(serviceName, rolloutId string, serviceConfig *confpb.Service) *MockServiceMrg {
 	m := &MockServiceMrg{
 		serviceName:   serviceName,
 		serviceConfig: serviceConfig,
+		rolloutId:     rolloutId,
 	}
 	m.configsHandler = &configsHandler{m: m}
+	m.rolloutsHandler = &rolloutsHandler{m: m}
 	return m
 }
 
@@ -66,8 +93,10 @@ func (m *MockServiceMrg) SetCert(serverCerts *tls.Certificate) {
 // Start launches a mock ServiceManagement server.
 func (m *MockServiceMrg) Start() (URL string) {
 	r := mux.NewRouter()
-	configPath := "/v1/services/" + m.serviceName + "/configs/{configID}"
+	configPath := "/v1/services/" + m.serviceName + "/configs/{configId}"
+	rolloutsPath := "/v1/services/" + m.serviceName + "/rollouts/{rolloutId}"
 	r.Path(configPath).Methods("GET").Handler(m.configsHandler)
+	r.Path(rolloutsPath).Methods("GET").Handler(m.rolloutsHandler)
 	m.s = httptest.NewUnstartedServer(r)
 
 	if m.serverCerts != nil {
@@ -86,4 +115,8 @@ func (m *MockServiceMrg) Start() (URL string) {
 func (m *MockServiceMrg) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	serviceConfigByte, _ := proto.Marshal(m.serviceConfig)
 	_, _ = w.Write(serviceConfigByte)
+}
+
+func (m *MockServiceMrg) SetRolloutId(newRolloutId string) {
+	m.rolloutId = newRolloutId
 }

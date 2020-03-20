@@ -99,16 +99,16 @@ func setOKCheckResponse() []byte {
 	return req_b
 }
 
-func setReportResponse(serviceConfigId string) []byte {
+func setReportResponse(serviceRolloutId string) []byte {
 	req := &scpb.ReportResponse{
-		ServiceConfigId: serviceConfigId,
+		ServiceRolloutId: serviceRolloutId,
 	}
 	req_b, _ := proto.Marshal(req)
 	return req_b
 }
 
 // NewMockServiceCtrl creates a new HTTP server.
-func NewMockServiceCtrl(serviceName string) *MockServiceCtrl {
+func NewMockServiceCtrl(serviceName, rolloutId string) *MockServiceCtrl {
 	m := &MockServiceCtrl{
 		ch:                 make(chan *ServiceRequest, 100),
 		count:              new(int32),
@@ -136,7 +136,7 @@ func NewMockServiceCtrl(serviceName string) *MockServiceCtrl {
 		m: m,
 		resp: &serviceResponse{
 			reqType:  REPORT_REQUEST,
-			respBody: setReportResponse("test-config-id"),
+			respBody: setReportResponse(rolloutId),
 		},
 	}
 
@@ -241,8 +241,8 @@ func (m *MockServiceCtrl) SetReportResponseStatus(statusCode int) {
 }
 
 // SetReportResponseStatus sets the status of the report response of the service control.
-func (m *MockServiceCtrl) SetServiceConfigIdInReport(serviceConfigId string) {
-	(m.reportHandler).(*serviceHandler).resp.respBody = setReportResponse(serviceConfigId)
+func (m *MockServiceCtrl) SetRolloutIdConfigIdInReport(newRolloutId string) {
+	(m.reportHandler).(*serviceHandler).resp.respBody = setReportResponse(newRolloutId)
 }
 
 // GetRequests returns a slice of requests received.

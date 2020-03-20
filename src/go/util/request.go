@@ -18,9 +18,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/golang/protobuf/proto"
 )
 
-func CallWithAccessToken(client http.Client, method, path, token string) ([]byte, error) {
+func callWithAccessToken(client http.Client, path, method, token string) ([]byte, error) {
 	req, _ := http.NewRequest(method, path, nil)
 	req.Header.Add("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/x-protobuf")
@@ -31,7 +33,7 @@ func CallWithAccessToken(client http.Client, method, path, token string) ([]byte
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("http call to %s returns not 200 OK: %v", path, resp.Status)
+		return nil, fmt.Errorf("http call to %s %s returns not 200 OK: %v", method, path, resp.Status)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -40,4 +42,23 @@ func CallWithAccessToken(client http.Client, method, path, token string) ([]byte
 	}
 
 	return body, nil
+}
+
+func CallGooglelapis(client http.Client, path, method string, getTokenFunc GetAccessTokenFunc, output proto.Message) error {
+	token, _, err := getTokenFunc()
+	if err != nil {
+		return fmt.Errorf("fail to get access token: %v", err)
+	}
+
+	respBytes, err := callWithAccessToken(client, path, method, token)
+	if err != nil {
+		return err
+	}
+
+	err = UnmarshalBytesToPbMessage(respBytes, output)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

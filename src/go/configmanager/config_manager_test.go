@@ -61,6 +61,7 @@ const (
 var (
 	fakeConfig             []byte
 	fakeScReport           []byte
+	fakeRollout            []byte
 	fakeProtoDescriptor    = base64.StdEncoding.EncodeToString([]byte("rawDescriptor"))
 	testBackendClusterName = fmt.Sprintf("%s_local", testProjectName)
 )
@@ -1564,12 +1565,14 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 	newConfigID = "2018-12-05r1"
 	newRolloutID = newConfigID
 	testCase := struct {
-		desc                 string
-		fakeOldScReport      string
-		fakeNewScReport      string
-		fakeOldServiceConfig string
-		fakeNewServiceConfig string
-		BackendAddress       string
+		desc                  string
+		fakeOldScReport       string
+		fakeNewScReport       string
+		fakeOldServiceRollout string
+		fakeNewServiceRollout string
+		fakeOldServiceConfig  string
+		fakeNewServiceConfig  string
+		BackendAddress        string
 	}{
 		desc: "Success for service config auto update",
 		fakeOldScReport: fmt.Sprintf(`{
@@ -1580,6 +1583,33 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
                 "serviceConfigId": "%s",
                 "serviceRolloutId": "%s"
             }`, newRolloutID, newConfigID),
+		fakeOldServiceRollout: fmt.Sprintf(`
+                {
+                  "rolloutId": "%s",
+                  "createTime": "2018-12-05T19:07:18.438Z",
+                  "createdBy": "mocktest@google.com",
+                  "status": "SUCCESS",
+                  "trafficPercentStrategy": {
+                    "percentages": {
+                      "%s": 100
+                    }
+                  },
+                  "serviceName": "%s"
+                }`, oldRolloutID, oldConfigID, testProjectName),
+		fakeNewServiceRollout: fmt.Sprintf(`
+                {
+                  "rolloutId": "%s",
+                  "createTime": "2018-12-05T19:07:18.438Z",
+                  "createdBy": "mocktest@google.com",
+                  "status": "SUCCESS",
+                  "trafficPercentStrategy": {
+                    "percentages": {
+                      "%s": 40,
+                      "%s": 60
+                    }
+                  },
+                  "serviceName": "%s"
+                }`, newRolloutID, oldConfigID, newConfigID, testProjectName),
 		fakeOldServiceConfig: fmt.Sprintf(`{
                 "name": "%s",
                 "title": "Endpoints Example",
@@ -1621,17 +1651,22 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 
 	// Overrides fakeConfig with fakeOldServiceConfig for the test case.
 	var err error
-	if fakeConfig, err = genFakeConfig(testCase.fakeOldServiceConfig); err != nil {
-		t.Fatalf("genFakeConfig failed: %v", err)
-	}
-
 	if fakeScReport, err = genFakeScReport(testCase.fakeOldScReport); err != nil {
 		t.Fatalf("genFakeScReport failed: %v", err)
+	}
+
+	if fakeRollout, err = genFakeRollout(testCase.fakeOldServiceRollout); err != nil {
+		t.Fatalf("genFakeRollout failed: %v", err)
+	}
+
+	if fakeConfig, err = genFakeConfig(testCase.fakeOldServiceConfig); err != nil {
+		t.Fatalf("genFakeConfig failed: %v", err)
 	}
 
 	opts := options.DefaultConfigGeneratorOptions()
 	opts.BackendAddress = testCase.BackendAddress
 
+	_ = flag.Set("service", testProjectName)
 	_ = flag.Set("service_config_id", testConfigID)
 	_ = flag.Set("rollout_strategy", util.ManagedRolloutStrategy)
 	_ = flag.Set("check_rollout_interval", "100ms")
@@ -1655,16 +1690,18 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		if resp.Version != oldConfigID {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got version: %v, want: %v", testCase.desc, resp.Version, oldConfigID)
 		}
-
 		if !proto.Equal(&resp.Request, &req) {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got request: %v, want: %v", testCase.desc, resp.Request, req)
 		}
 
-		if fakeConfig, err = genFakeConfig(testCase.fakeNewServiceConfig); err != nil {
-			t.Fatalf("genFakeConfig failed: %v", err)
-		}
 		if fakeScReport, err = genFakeScReport(testCase.fakeNewScReport); err != nil {
 			t.Fatalf("genFakeScReport failed: %v", err)
+		}
+		if fakeRollout, err = genFakeRollout(testCase.fakeNewServiceRollout); err != nil {
+			t.Fatalf("genFakeRollout failed: %v", err)
+		}
+		if fakeConfig, err = genFakeConfig(testCase.fakeNewServiceConfig); err != nil {
+			t.Fatalf("genFakeConfig failed: %v", err)
 		}
 
 		time.Sleep(time.Duration(*checkNewRolloutInterval + time.Second))
@@ -1691,16 +1728,23 @@ type testEnv struct {
 }
 
 func runTest(t *testing.T, opts options.ConfigGeneratorOptions, f func(*testEnv)) {
+
+	mockServiceControl := initMockScReportServer(t)
+	defer mockServiceControl.Close()
+	util.FetchRolloutIdURL = func(serviceControlUrl, serviceName string) string {
+		return mockServiceControl.URL
+	}
+
+	mockRollout := initMockRolloutServer(t)
+	defer mockRollout.Close()
+	util.FetchRolloutURL = func(serviceManagementUrl, serviceName, rolloutId string) string {
+		return mockRollout.URL
+	}
+
 	mockConfig := initMockConfigServer(t)
 	defer mockConfig.Close()
 	util.FetchConfigURL = func(serviceManagementUrl, serviceName, configId string) string {
 		return mockConfig.URL
-	}
-
-	mockServiceControl := initMockServiceControlServer(t)
-	defer mockServiceControl.Close()
-	util.FetchConfigIdURL = func(serviceControlUrl, serviceName string) string {
-		return mockServiceControl.URL
 	}
 
 	mockMetadataServer := util.InitMockServerFromPathResp(map[string]string{
@@ -1729,7 +1773,17 @@ func initMockConfigServer(t *testing.T) *httptest.Server {
 	}))
 }
 
-func initMockServiceControlServer(t *testing.T) *httptest.Server {
+func initMockRolloutServer(t *testing.T) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, err := w.Write(fakeRollout)
+		if err != nil {
+			t.Fatal("fail to write rollout config: ", err)
+		}
+	}))
+}
+
+func initMockScReportServer(t *testing.T) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, err := w.Write(fakeScReport)
@@ -1766,12 +1820,26 @@ func genFakeConfig(input string) ([]byte, error) {
 
 func genFakeScReport(input string) ([]byte, error) {
 	unmarshaler := &jsonpb.Unmarshaler{}
-	report := new(servicecontrolpb.ReportResponse)
-	if err := unmarshaler.Unmarshal(strings.NewReader(input), report); err != nil {
+	scReport := new(servicecontrolpb.ReportResponse)
+	if err := unmarshaler.Unmarshal(strings.NewReader(input), scReport); err != nil {
 		return nil, err
 	}
 
-	protoBytesArray, err := proto.Marshal(report)
+	protoBytesArray, err := proto.Marshal(scReport)
+	if err != nil {
+		return nil, err
+	}
+	return protoBytesArray, nil
+}
+
+func genFakeRollout(input string) ([]byte, error) {
+	unmarshaler := &jsonpb.Unmarshaler{}
+	rollout := new(smpb.Rollout)
+	if err := unmarshaler.Unmarshal(strings.NewReader(input), rollout); err != nil {
+		return nil, err
+	}
+
+	protoBytesArray, err := proto.Marshal(rollout)
 	if err != nil {
 		return nil, err
 	}

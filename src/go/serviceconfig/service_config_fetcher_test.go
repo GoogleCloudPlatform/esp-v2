@@ -25,34 +25,65 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
-func initServiceManagementForTestServbiceConfigFetcherFetchConfig(t *testing.T, serviceConfig *confpb.Service, serviceName string) *httptest.Server {
+func initServiceManagementForTestServiceConfigFetcherFetchConfig(t *testing.T,
+	serviceRollout *smpb.Rollout, serviceConfig *confpb.Service, serviceName string) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if wantPath := fmt.Sprintf("/v1/services/%s/configs/%s", serviceName, serviceConfig.Id); r.URL.Path != wantPath {
-			t.Fatalf("want path: %s, get path: %s", wantPath, r.URL.Path)
+		switch r.URL.Path {
+		case fmt.Sprintf("/v1/services/%s/rollouts/%s", serviceName, serviceRollout.RolloutId):
+			resp, err := proto.Marshal(serviceRollout)
+			if err != nil {
+				t.Fatalf("fail to generate rollout response: %v", err)
+			}
+			_, _ = w.Write(resp)
+		case fmt.Sprintf("/v1/services/%s/configs/%s", serviceName, serviceConfig.Id):
+			resp, err := proto.Marshal(serviceConfig)
+			if err != nil {
+				t.Fatalf("fail to generate config response: %v", err)
+			}
+			_, _ = w.Write(resp)
+		default:
+			w.WriteHeader(http.StatusNotFound)
 		}
-		resp, err := genFakeServiceConfig(serviceConfig)
-		if err != nil {
-			t.Fatalf("fail to generate servicecontrol report response: %v", err)
-		}
-		_, _ = w.Write(resp)
+
 	}))
 }
 
-func genFakeServiceConfig(serviceConfig *confpb.Service) ([]byte, error) {
-	return proto.Marshal(serviceConfig)
-}
-
-func TestServiceConfigFetcherFetchConfig(t *testing.T) {
-	serviceConfigId := "test-config-id"
-	serviceName := "service-name"
+func genRolloutAndConfig(serviceRolloutId, serviceConfigId string) (*smpb.Rollout, *confpb.Service) {
+	serviceRollout := &smpb.Rollout{
+		RolloutId: serviceRolloutId,
+		Strategy: &smpb.Rollout_TrafficPercentStrategy_{
+			TrafficPercentStrategy: &smpb.Rollout_TrafficPercentStrategy{
+				Percentages: map[string]float64{
+					serviceConfigId: 100,
+				},
+			},
+		},
+	}
 	serviceConfig := &confpb.Service{
 		Name: "foo",
 		Id:   serviceConfigId,
 	}
+	return serviceRollout, serviceConfig
+}
 
-	serviceManagementServer := initServiceManagementForTestServbiceConfigFetcherFetchConfig(t, serviceConfig, serviceName)
+func updateRolloutAndConfig(serviceRollout *smpb.Rollout, serviceConfig *confpb.Service, serviceRolloutId, serviceConfigId string) {
+	serviceConfig.Id = serviceConfigId
+	serviceRollout.RolloutId = serviceRolloutId
+	serviceRollout.GetTrafficPercentStrategy().Percentages = map[string]float64{
+		serviceConfigId: 100,
+	}
+}
+
+func TestServiceConfigFetcherFetchConfig(t *testing.T) {
+	serviceName := "service-name"
+	serviceRolloutId := "test-rollout-id"
+	serviceConfigId := "test-config-id"
+	serviceRollout, serviceConfig := genRolloutAndConfig(serviceRolloutId, serviceConfigId)
+
+	serviceManagementServer := initServiceManagementForTestServiceConfigFetcherFetchConfig(t, serviceRollout, serviceConfig, serviceName)
 	opts := options.DefaultConfigGeneratorOptions()
 	opts.ServiceManagementURL = serviceManagementServer.URL
 	accessToken := func() (string, time.Duration, error) { return "access-token", time.Duration(60), nil }
@@ -62,13 +93,13 @@ func TestServiceConfigFetcherFetchConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	scf.newConfigId = func() (string, error) { return serviceConfigId, nil }
+	scf.newRolloutId = func() (string, error) { return serviceRolloutId, nil }
 
 	_test := func(configId string, wantServiceConfig *confpb.Service, wantError string) {
 		getConfig, err := scf.FetchConfig(configId)
 		if err != nil {
 			if wantError == "" {
-				t.Fatalf("fail to fetch config %v", err)
+				t.Fatalf("fail to fetch config: %v", err)
 			}
 
 			if err.Error() != wantError {
@@ -89,42 +120,62 @@ func TestServiceConfigFetcherFetchConfig(t *testing.T) {
 		}
 	}
 
-	// No config id specified.
+	// Test managed mode.
 	_test("", serviceConfig, "")
 
-	// Config id specified.
+	// Test fixed mode.
 	serviceConfigId = "test-config-id-1"
-	serviceConfig.Id = serviceConfigId
+	updateRolloutAndConfig(serviceRollout, serviceConfig, serviceRolloutId, serviceConfigId)
 	_test(serviceConfigId, serviceConfig, "")
 
-	// No service config really fetched when service config id is same.
+	// When the service config id specified is same, no service config really fetched w
 	_test(serviceConfigId, nil, "")
 
-	// Error caused by failing to get new config id.
+	// Error caused by failing to get new rollout id.
+	serviceRolloutId = "test-rollout-id-2"
 	serviceConfigId = "test-config-id-2"
-	serviceConfig.Id = serviceConfigId
-	scf.newConfigId = func() (string, error) { return "", fmt.Errorf("newConfigIdError") }
+	updateRolloutAndConfig(serviceRollout, serviceConfig, serviceRolloutId, serviceConfigId)
+	scf.newRolloutId = func() (string, error) { return "", fmt.Errorf("newRolloutIdError") }
+	_test("", nil, "error occurred when checking new service rollout id: newRolloutIdError")
 
-	_test("", nil, "error occurred when checking new service config id: newConfigIdError")
+	// Error caused by problematic rollout.
+	serviceRolloutId = "test-rollout-id-3"
+	updateRolloutAndConfig(serviceRollout, serviceConfig, serviceRolloutId, serviceConfigId)
+	serviceRollout.GetTrafficPercentStrategy().Percentages = nil
+	scf.newRolloutId = func() (string, error) { return serviceRolloutId, nil }
+	_test("", nil, `problematic rollout rollout_id:"test-rollout-id-3" traffic_percent_strategy:<> `)
+
+	// Not fetch if rollout id from servicecontrol report doesn't change.
+	serviceRolloutId = "test-rollout-id-3"
+	serviceConfigId = "test-config-id-31"
+	updateRolloutAndConfig(serviceRollout, serviceConfig, serviceRolloutId, serviceConfigId)
+	_test("", nil, "")
+
+	// Use the highest traffic config id.
+	serviceRolloutId = "test-rollout-id-4"
+	serviceConfigId = "test-config-id-41"
+	updateRolloutAndConfig(serviceRollout, serviceConfig, serviceRolloutId, serviceConfigId)
+	serviceRollout.GetTrafficPercentStrategy().Percentages = map[string]float64{
+		"test-config-id-41": 60,
+		"test-config-id-42": 40,
+	}
+	_test("", serviceConfig, "")
 
 	// Error caused by failing to get access token.
-	serviceConfigId = "test-config-id-3"
-	serviceConfig.Id = serviceConfigId
-	scf.newConfigId = func() (string, error) { return serviceConfigId, nil }
+	serviceRolloutId = "test-rollout-id-5"
+	serviceConfigId = "test-config-id-5"
+	updateRolloutAndConfig(serviceRollout, serviceConfig, serviceRolloutId, serviceConfigId)
 	scf.accessToken = func() (string, time.Duration, error) { return "", time.Duration(0), fmt.Errorf("accessTokenError") }
-
 	_test("", nil, "fail to get access token: accessTokenError")
 }
 
-func TestServiceConfigFetcher_SetFetchConfigTimer(t *testing.T) {
-	serviceConfigId := "test-config-id"
+func TestServiceConfigFetcherSetFetchConfigTimer(t *testing.T) {
 	serviceName := "service-name"
-	serviceConfig := &confpb.Service{
-		Name: "foo",
-		Id:   serviceConfigId,
-	}
+	serviceRolloutId := "test-rollout-id"
+	serviceConfigId := "test-config-id"
+	serviceRollout, serviceConfig := genRolloutAndConfig(serviceRolloutId, serviceConfigId)
 
-	serviceManagementServer := initServiceManagementForTestServbiceConfigFetcherFetchConfig(t, serviceConfig, serviceName)
+	serviceManagementServer := initServiceManagementForTestServiceConfigFetcherFetchConfig(t, serviceRollout, serviceConfig, serviceName)
 	opts := options.DefaultConfigGeneratorOptions()
 	opts.ServiceManagementURL = serviceManagementServer.URL
 
@@ -134,7 +185,7 @@ func TestServiceConfigFetcher_SetFetchConfigTimer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	scf.newConfigId = func() (string, error) { return serviceConfigId, nil }
+	scf.newRolloutId = func() (string, error) { return serviceRolloutId, nil }
 	cnt := 0
 	scf.SetFetchConfigTimer(time.Millisecond*100, func(getService *confpb.Service) {
 		cnt += 1
@@ -143,8 +194,9 @@ func TestServiceConfigFetcher_SetFetchConfigTimer(t *testing.T) {
 		}
 
 		// Update service config so fetchConfig will do real fetching.
+		serviceRolloutId = fmt.Sprintf("test-rollout-id-%v", cnt)
 		serviceConfigId = fmt.Sprintf("test-config-id-%v", cnt)
-		serviceConfig.Id = serviceConfigId
+		updateRolloutAndConfig(serviceRollout, serviceConfig, serviceRolloutId, serviceConfigId)
 	})
 	wantCnt := 10
 	time.Sleep(time.Millisecond * time.Duration(100*wantCnt))

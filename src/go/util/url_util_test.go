@@ -330,12 +330,12 @@ func TestResolveJwksUriUsingOpenID(t *testing.T) {
 	jwksUriEntry, _ := json.Marshal(map[string]string{"jwks_uri": "this-is-jwksUri"})
 	r.Path(OpenIDDiscoveryCfgURLSuffix).Methods("GET").Handler(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Write(jwksUriEntry)
+			_, _ = w.Write(jwksUriEntry)
 		}))
 	openIDServer := httptest.NewServer(r)
 
 	invalidOpenIDServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("{}"))
+		_, _ = w.Write([]byte("{}"))
 	}))
 
 	testData := []struct {
@@ -405,18 +405,23 @@ func TestExtraAddressFromURI(t *testing.T) {
 func TestFetchConfigRelatedUrl(t *testing.T) {
 	sm := "https://servicemanagement.googleapis.com"
 	sn := "service-name"
+	sc := "https://servicecontrol.googleapis.com"
 	ci := "config-id"
+	ri := "rollout-id"
+
+	wantFetchRolloutIdUrl := "https://servicecontrol.googleapis.com/v1/services/service-name:report"
+	if getFetchRolloutIdUrl := FetchRolloutIdURL(sc, sn); getFetchRolloutIdUrl != wantFetchRolloutIdUrl {
+		t.Errorf("wantFetchRolloutIdUrl: %v, getFetchRolloutIdUrl: %v", wantFetchRolloutIdUrl, getFetchRolloutIdUrl)
+	}
+
+	wantFetchRolloutUrl := "https://servicecontrol.googleapis.com/v1/services/service-name/rollouts/rollout-id"
+	if getFetchRolloutUrl := FetchRolloutURL(sc, sn, ri); getFetchRolloutUrl != wantFetchRolloutUrl {
+		t.Errorf("wantFetchRolloutUrl: %v, getFetchRolloutUrl: %v", wantFetchRolloutUrl, getFetchRolloutUrl)
+	}
 
 	wantFetchConfigUrl := "https://servicemanagement.googleapis.com/v1/services/service-name/configs/config-id?view=FULL"
 	if getFetchConfigUrl := FetchConfigURL(sm, sn, ci); getFetchConfigUrl != wantFetchConfigUrl {
 		t.Errorf("wantFetchConfigUrl: %v, getFetchConfigUrl: %v", wantFetchConfigUrl, getFetchConfigUrl)
-	}
-
-	sc := "https://servicecontrol.googleapis.com"
-
-	wantFetchConfigIdUrl := "https://servicecontrol.googleapis.com/v1/services/service-name:report"
-	if getFetchConfigIdUrl := FetchConfigIdURL(sc, sn); getFetchConfigIdUrl != wantFetchConfigIdUrl {
-		t.Errorf("wantFetchConfigUrl: %v, getFetchConfigUrl: %v", wantFetchConfigIdUrl, getFetchConfigIdUrl)
 	}
 
 }

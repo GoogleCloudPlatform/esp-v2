@@ -25,9 +25,9 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/proto"
 
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
 type ServiceConfigFetcher struct {
@@ -36,10 +36,11 @@ type ServiceConfigFetcher struct {
 	client              http.Client
 	opts                *options.ConfigGeneratorOptions
 
-	accessToken util.GetAccessTokenFunc
-	newConfigId util.GetNewConfigIdFunc
+	accessToken  util.GetAccessTokenFunc
+	newRolloutId util.GetNewRolloutIdFunc
 
 	curServiceConfig *confpb.Service
+	curRolloutId     string
 }
 
 func NewServiceConfigFetcher(opts *options.ConfigGeneratorOptions,
@@ -64,54 +65,73 @@ func NewServiceConfigFetcher(opts *options.ConfigGeneratorOptions,
 		accessToken: accessToken,
 	}
 
-	configIdFetcher := NewServiceConfigIdFetcher(serviceName, opts.ServiceControlURL,
+	rolloutIdFetcher := NewServiceRolloutIdFetcher(serviceName, opts.ServiceControlURL,
 		s.client, accessToken)
-	s.newConfigId = func() (string, error) {
-		return configIdFetcher.fetchNewConfigId()
+	s.newRolloutId = func() (string, error) {
+		return rolloutIdFetcher.fetchNewRolloutId()
 	}
 
 	return s, nil
 }
 
 // Fetch the service config by given configId. If configId is empty, try to
-// fetch the latest service config.
+// fetch the latest rollout and among all its config traffic percentages, pickup
+// the config id with highest traffic percentage and fetch the service config.
 func (s *ServiceConfigFetcher) FetchConfig(configId string) (*confpb.Service, error) {
-	_fetchConfig := func(configId string) (*confpb.Service, error) {
-
+	_fetchConfig := func(rolloutId string) (string, *confpb.Service, error) {
 		if configId != "" {
 			if configId == s.curConfigId() {
-				return nil, nil
+				return "", nil, nil
 			}
 
-			token, _, err := s.accessToken()
-			if err != nil {
-				return nil, fmt.Errorf("fail to get access token: %v", err)
+			serviceConfig := new(confpb.Service)
+			fetchConfigUrl := util.FetchConfigURL(s.opts.ServiceManagementURL, s.serviceName, configId)
+			if err := util.CallGooglelapis(s.client, fetchConfigUrl, util.GET, s.accessToken, serviceConfig); err != nil {
+				return "", nil, err
 			}
 
-			return s.callServiceManagement(util.FetchConfigURL(s.opts.ServiceManagementURL, s.serviceName, configId), token)
+			return "", serviceConfig, nil
 		}
 
 		glog.Infof("check new config id for service %v", s.serviceName)
-		newConfigId, err := s.newConfigId()
+		newRolloutId, err := s.newRolloutId()
 		if err != nil {
-			return nil, fmt.Errorf("error occurred when checking new service config id: %v", err)
+			return "", nil, fmt.Errorf("error occurred when checking new service rollout id: %v", err)
 		}
 
-		if newConfigId != s.curConfigId() {
-			token, _, err := s.accessToken()
-			if err != nil {
-				return nil, fmt.Errorf("fail to get access token: %v", err)
-			}
-
-			return s.callServiceManagement(util.FetchConfigURL(s.opts.ServiceManagementURL, s.serviceName, newConfigId), token)
+		if newRolloutId == s.curRolloutId {
+			return "", nil, nil
 		}
 
-		return nil, nil
+		rollout := new(smpb.Rollout)
+		fetchRolloutUrl := util.FetchRolloutURL(s.opts.ServiceManagementURL, s.serviceName, newRolloutId)
+		if err = util.CallGooglelapis(s.client, fetchRolloutUrl, util.GET, s.accessToken, rollout); err != nil {
+			return "", nil, err
+		}
+
+		newConfigId, err := highestTrafficConfigIdInRollout(rollout)
+		if err != nil {
+			return "", nil, err
+		}
+
+		if newConfigId == s.curConfigId() {
+			return newRolloutId, nil, nil
+		}
+
+		serviceConfig := new(confpb.Service)
+		fetchConfigUrl := util.FetchConfigURL(s.opts.ServiceManagementURL, s.serviceName, newConfigId)
+		if err := util.CallGooglelapis(s.client, fetchConfigUrl, util.GET, s.accessToken, serviceConfig); err != nil {
+			return "", nil, err
+		}
+
+		return newRolloutId, serviceConfig, err
 	}
-	serviceConfig, err := _fetchConfig(configId)
-	if err == nil {
-		s.curServiceConfig = serviceConfig
 
+	rolloutId, serviceConfig, err := _fetchConfig(configId)
+
+	if err == nil && serviceConfig != nil {
+		s.curRolloutId = rolloutId
+		s.curServiceConfig = serviceConfig
 	}
 
 	return serviceConfig, err
@@ -146,15 +166,20 @@ func (s *ServiceConfigFetcher) curConfigId() string {
 	return s.curServiceConfig.Id
 }
 
-func (s *ServiceConfigFetcher) callServiceManagement(path, token string) (*confpb.Service, error) {
-	respBytes, err := util.CallWithAccessToken(s.client, util.GET, path, token)
-	if err != nil {
-		return nil, err
+func highestTrafficConfigIdInRollout(rollout *smpb.Rollout) (string, error) {
+	if rollout == nil || rollout.GetTrafficPercentStrategy() == nil ||
+		len(rollout.GetTrafficPercentStrategy().Percentages) == 0 {
+		return "", fmt.Errorf("problematic rollout %v", rollout)
 	}
 
-	service := new(confpb.Service)
-	if err := proto.Unmarshal(respBytes, service); err != nil {
-		return nil, fmt.Errorf("fail to unmarshal Service: %v", err)
+	highestPercent := 0.
+	highTrafficConfigId := ""
+	for configId, percent := range rollout.GetTrafficPercentStrategy().Percentages {
+		if percent > highestPercent {
+			highestPercent = percent
+			highTrafficConfigId = configId
+		}
 	}
-	return service, nil
+
+	return highTrafficConfigId, nil
 }

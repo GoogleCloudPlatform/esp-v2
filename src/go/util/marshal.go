@@ -15,8 +15,6 @@
 package util
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
 	"io"
 
@@ -33,10 +31,10 @@ import (
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
-	structpb "github.com/golang/protobuf/ptypes/struct"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	servicecontrolpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
@@ -100,46 +98,26 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 	}
 })
 
-// MessageToStruct encodes a protobuf Message into a Struct. Hilariously, it
-// uses JSON as the intermediary
-// author:glen@turbinelabs.io
-func MessageToStruct(msg proto.Message) (*structpb.Struct, error) {
-	if msg == nil {
-		return nil, errors.New("nil message")
+// UnmarshalBytesToPbMessage converts bytes to corresponding pb message.
+var UnmarshalBytesToPbMessage = func(input []byte, output proto.Message) error {
+	switch t := output.(type) {
+	case *confpb.Service:
+		if err := proto.Unmarshal(input, output.(*confpb.Service)); err != nil {
+			return fmt.Errorf("fail to unmarshal %T: %v", t, err)
+		}
+	case *smpb.Rollout:
+		if err := proto.Unmarshal(input, output.(*smpb.Rollout)); err != nil {
+			return fmt.Errorf("fail to unmarshal %T: %v", t, err)
+		}
+	case *servicecontrolpb.ReportResponse:
+		if err := proto.Unmarshal(input, output.(*servicecontrolpb.ReportResponse)); err != nil {
+			return fmt.Errorf("fail to unmarshal %T: %v", t, err)
+		}
+		return nil
+	default:
+		return fmt.Errorf("not support unmarshalling %T", t)
 	}
-
-	m := &jsonpb.Marshaler{
-		OrigName:    true,
-		AnyResolver: Resolver,
-	}
-	buf := &bytes.Buffer{}
-	if err := m.Marshal(buf, msg); err != nil {
-		return nil, err
-	}
-
-	pbs := &structpb.Struct{}
-	u := &jsonpb.Unmarshaler{
-		AnyResolver: Resolver,
-	}
-	if err := u.Unmarshal(buf, pbs); err != nil {
-		return nil, err
-	}
-
-	return pbs, nil
-}
-
-// StructToMessage decodes a protobuf Message from a Struct.
-func StructToMessage(pbst *structpb.Struct, out proto.Message) error {
-	if pbst == nil {
-		return errors.New("nil struct")
-	}
-
-	buf := &bytes.Buffer{}
-	if err := (&jsonpb.Marshaler{OrigName: true}).Marshal(buf, pbst); err != nil {
-		return err
-	}
-
-	return jsonpb.Unmarshal(buf, out)
+	return nil
 }
 
 // UnmarshalServiceConfig converts service config in JSON to proto
