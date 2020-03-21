@@ -174,37 +174,24 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 		}
 	}
 
-	serviceConfig, err := m.serviceConfigFetcher.FetchConfig(configId)
-	if err != nil {
-		return nil, err
-	}
-
-	err = m.applyServiceConfig(serviceConfig)
-	if err != nil {
-		return nil, err
+	if err = m.fetchAndApplyServiceConfig(configId); err != nil {
+		return nil, fmt.Errorf("fail to fetch and apply the startup service config, %v", err)
 	}
 
 	if rolloutStrategy == util.ManagedRolloutStrategy {
-		m.RolloutIdDetector.SetDetectRolloutIdChangeTimer(*checkNewRolloutInterval, func(newRolloutId string) {
-			configId, err := m.serviceConfigFetcher.GetConfigIdByFetchRollout(newRolloutId)
-
+		m.RolloutIdDetector.SetDetectRolloutIdChangeTimer(*checkNewRolloutInterval, func(latestRolloutId string) {
+			latestConfigId, err := m.serviceConfigFetcher.GetConfigIdByFetchRollout(latestRolloutId)
 			if err != nil {
 				glog.Errorf("error occurred when getting configId by fetching rollout, %v", err)
 				return
 			}
 
-			serviceConfig, err := m.serviceConfigFetcher.FetchConfig(configId)
-			if err != nil {
-				glog.Errorf("error occurred when fetching new service config, %v", err)
-				return
-			}
-			if serviceConfig == nil {
+			if latestConfigId == m.curConfigId() {
 				return
 			}
 
-			err = m.applyServiceConfig(serviceConfig)
-			if err != nil {
-				glog.Errorf("error occurred when applying new service config, %v", err)
+			if err = m.fetchAndApplyServiceConfig(latestConfigId); err != nil {
+				glog.Errorf("error occurred when fetching and applying new service config, %v", err)
 			}
 		})
 	}
@@ -212,6 +199,15 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 	glog.Infof("create new Config Manager for service (%v) with configuration id (%v), %v rollout strategy",
 		m.serviceName, m.curConfigId(), rolloutStrategy)
 	return m, nil
+}
+
+func (m *ConfigManager) fetchAndApplyServiceConfig(configId string) error {
+	serviceConfig, err := m.serviceConfigFetcher.FetchConfig(configId)
+	if err != nil {
+		return err
+	}
+
+	return m.applyServiceConfig(serviceConfig)
 }
 
 func (m *ConfigManager) readAndApplyServiceConfig(servicePath string) error {

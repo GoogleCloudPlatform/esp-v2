@@ -28,7 +28,6 @@ type ServiceConfigFetcher struct {
 	serviceName          string
 	client               *http.Client
 	accessToken          util.GetAccessTokenFunc
-	curServiceConfig     *confpb.Service
 }
 
 func NewServiceConfigFetcher(client *http.Client, serviceManagementUrl,
@@ -44,10 +43,6 @@ func NewServiceConfigFetcher(client *http.Client, serviceManagementUrl,
 // Fetch the service config by given configId.
 func (s *ServiceConfigFetcher) FetchConfig(configId string) (*confpb.Service, error) {
 	_fetchConfig := func(configId string) (*confpb.Service, error) {
-		if configId == s.curConfigId() {
-			return nil, nil
-		}
-
 		serviceConfig := new(confpb.Service)
 		fetchConfigUrl := util.FetchConfigURL(s.serviceManagementUrl, s.serviceName, configId)
 		if err := util.CallGooglelapis(s.client, fetchConfigUrl, util.GET, s.accessToken, serviceConfig); err != nil {
@@ -60,10 +55,6 @@ func (s *ServiceConfigFetcher) FetchConfig(configId string) (*confpb.Service, er
 	serviceConfig, err := _fetchConfig(configId)
 	if err != nil {
 		return nil, err
-	}
-
-	if serviceConfig != nil {
-		s.curServiceConfig = serviceConfig
 	}
 
 	return serviceConfig, nil
@@ -79,13 +70,6 @@ func (s *ServiceConfigFetcher) GetConfigIdByFetchRollout(rolloutId string) (stri
 	}
 
 	return highestTrafficConfigIdInRollout(rollout)
-}
-
-func (s *ServiceConfigFetcher) curConfigId() string {
-	if s.curServiceConfig == nil {
-		return ""
-	}
-	return s.curServiceConfig.Id
 }
 
 func highestTrafficConfigIdInRollout(rollout *smpb.Rollout) (string, error) {

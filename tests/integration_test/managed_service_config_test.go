@@ -88,7 +88,7 @@ func TestManagedServiceConfig(t *testing.T) {
 		if idx == 1 {
 			s.OverrideAuthentication(&confpb.Authentication{})
 			s.OverrideRolloutIdAndConfigId("new-service-rollout-id", "new-service-config-id")
-			time.Sleep(time.Second * 3)
+			time.Sleep(time.Second * 1)
 		}
 
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
