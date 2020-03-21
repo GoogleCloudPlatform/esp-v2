@@ -141,6 +141,9 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 		return nil, fmt.Errorf("fail to init httpsClient: %v", err)
 	}
 
+	m.serviceConfigFetcher = sc.NewServiceConfigFetcher(client, opts.ServiceManagementURL,
+		m.serviceName, accessToken)
+
 	configId := ""
 	if rolloutStrategy == util.FixedRolloutStrategy {
 		configId = *ServiceConfigId
@@ -170,9 +173,6 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 			return nil, err
 		}
 	}
-
-	m.serviceConfigFetcher = sc.NewServiceConfigFetcher(client, opts.ServiceManagementURL,
-		m.serviceName, accessToken)
 
 	serviceConfig, err := m.serviceConfigFetcher.FetchConfig(configId)
 	if err != nil {
