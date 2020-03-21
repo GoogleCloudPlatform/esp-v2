@@ -48,10 +48,10 @@ func TestUnmarshalBytesToPbMessage(t *testing.T) {
 	getResp = &confpb.Service{}
 	_test()
 
-	wantResp = &smpb.Rollout{
-		RolloutId: "test-id",
+	wantResp = &smpb.ListServiceRolloutsResponse{
+		NextPageToken: "next-page-token",
 	}
-	getResp = &smpb.Rollout{}
+	getResp = &smpb.ListServiceRolloutsResponse{}
 	_test()
 
 	wantResp = &scpb.ReportResponse{

@@ -59,9 +59,9 @@ type ConfigManager struct {
 	serviceInfo        *configinfo.ServiceInfo
 	cache              cache.SnapshotCache
 
-	metadataFetcher      *metadata.MetadataFetcher
-	serviceConfigFetcher *sc.ServiceConfigFetcher
-	RolloutIdDetector    *sc.RolloutIdDetector
+	metadataFetcher         *metadata.MetadataFetcher
+	serviceConfigFetcher    *sc.ServiceConfigFetcher
+	rolloutIdChangeDetector *sc.RolloutIdChangeDetector
 
 	curServiceConfig *confpb.Service
 }
@@ -162,13 +162,7 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 			}
 		}
 	} else if rolloutStrategy == util.ManagedRolloutStrategy {
-		m.RolloutIdDetector = sc.NewRolloutIdDetector(client, opts.ServiceControlURL, m.serviceName, accessToken)
-		latestRolloutId, err := m.RolloutIdDetector.FetchLatestRolloutId()
-		if err != nil {
-			return nil, err
-		}
-
-		configId, err = m.serviceConfigFetcher.GetConfigIdByFetchRollout(latestRolloutId)
+		configId, err = m.serviceConfigFetcher.LoadConfigIdFromRollouts()
 		if err != nil {
 			return nil, err
 		}
@@ -179,14 +173,11 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 	}
 
 	if rolloutStrategy == util.ManagedRolloutStrategy {
-		m.RolloutIdDetector.SetDetectRolloutIdChangeTimer(*checkNewRolloutInterval, func(latestRolloutId string) {
-			latestConfigId, err := m.serviceConfigFetcher.GetConfigIdByFetchRollout(latestRolloutId)
+		m.rolloutIdChangeDetector = sc.NewRolloutIdChangeDetector(client, opts.ServiceControlURL, m.serviceName, accessToken)
+		m.rolloutIdChangeDetector.SetDetectRolloutIdChangeTimer(*checkNewRolloutInterval, func() {
+			latestConfigId, err := m.serviceConfigFetcher.LoadConfigIdFromRollouts()
 			if err != nil {
 				glog.Errorf("error occurred when getting configId by fetching rollout, %v", err)
-				return
-			}
-
-			if latestConfigId == m.curConfigId() {
 				return
 			}
 
@@ -201,8 +192,13 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 	return m, nil
 }
 
-func (m *ConfigManager) fetchAndApplyServiceConfig(configId string) error {
-	serviceConfig, err := m.serviceConfigFetcher.FetchConfig(configId)
+func (m *ConfigManager) fetchAndApplyServiceConfig(latestConfigId string) error {
+	if latestConfigId == m.curConfigId() {
+		glog.Infof("no new configuration to load for service %v, current configuration Id %v", m.serviceName, m.curConfigId())
+		return nil
+	}
+
+	serviceConfig, err := m.serviceConfigFetcher.FetchConfig(latestConfigId)
 	if err != nil {
 		return err
 	}

@@ -24,7 +24,7 @@ import (
 	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
-type RolloutIdDetector struct {
+type RolloutIdChangeDetector struct {
 	serviceName           string
 	serviceControlUrl     string
 	client                *http.Client
@@ -33,9 +33,9 @@ type RolloutIdDetector struct {
 	detectRolloutIdTicker *time.Ticker
 }
 
-func NewRolloutIdDetector(client *http.Client, serviceControlUrl, serviceName string,
-	accessToken util.GetAccessTokenFunc) *RolloutIdDetector {
-	return &RolloutIdDetector{
+func NewRolloutIdChangeDetector(client *http.Client, serviceControlUrl, serviceName string,
+	accessToken util.GetAccessTokenFunc) *RolloutIdChangeDetector {
+	return &RolloutIdChangeDetector{
 		client:            client,
 		serviceName:       serviceName,
 		serviceControlUrl: serviceControlUrl,
@@ -44,7 +44,7 @@ func NewRolloutIdDetector(client *http.Client, serviceControlUrl, serviceName st
 
 }
 
-func (c *RolloutIdDetector) FetchLatestRolloutId() (string, error) {
+func (c *RolloutIdChangeDetector) fetchLatestRolloutId() (string, error) {
 	reportResponse := new(scpb.ReportResponse)
 	fetchRolloutIdUrl := util.FetchRolloutIdURL(c.serviceControlUrl, c.serviceName)
 	if err := util.CallGooglelapis(c.client, fetchRolloutIdUrl, util.POST, c.accessToken, reportResponse); err != nil {
@@ -54,13 +54,13 @@ func (c *RolloutIdDetector) FetchLatestRolloutId() (string, error) {
 	return reportResponse.ServiceRolloutId, nil
 }
 
-func (c *RolloutIdDetector) SetDetectRolloutIdChangeTimer(interval time.Duration, callback func(latestRolloutId string)) {
+func (c *RolloutIdChangeDetector) SetDetectRolloutIdChangeTimer(interval time.Duration, callback func()) {
 	go func() {
 		glog.Infof("start detect latest rollout id every %v", interval)
 		c.detectRolloutIdTicker = time.NewTicker(interval)
 
 		for range c.detectRolloutIdTicker.C {
-			latestRolloutId, err := c.FetchLatestRolloutId()
+			latestRolloutId, err := c.fetchLatestRolloutId()
 			if err != nil {
 				glog.Errorf("error occurred when checking new rollout id, %v", err)
 				continue
@@ -71,7 +71,7 @@ func (c *RolloutIdDetector) SetDetectRolloutIdChangeTimer(interval time.Duration
 			}
 
 			c.curRolloutId = latestRolloutId
-			callback(c.curRolloutId)
+			callback()
 		}
 	}()
 }

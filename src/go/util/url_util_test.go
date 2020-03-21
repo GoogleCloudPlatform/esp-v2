@@ -407,16 +407,15 @@ func TestFetchConfigRelatedUrl(t *testing.T) {
 	sn := "service-name"
 	sc := "https://servicecontrol.googleapis.com"
 	ci := "config-id"
-	ri := "rollout-id"
 
 	wantFetchRolloutIdUrl := "https://servicecontrol.googleapis.com/v1/services/service-name:report"
 	if getFetchRolloutIdUrl := FetchRolloutIdURL(sc, sn); getFetchRolloutIdUrl != wantFetchRolloutIdUrl {
 		t.Errorf("wantFetchRolloutIdUrl: %v, getFetchRolloutIdUrl: %v", wantFetchRolloutIdUrl, getFetchRolloutIdUrl)
 	}
 
-	wantFetchRolloutUrl := "https://servicecontrol.googleapis.com/v1/services/service-name/rollouts/rollout-id"
-	if getFetchRolloutUrl := FetchRolloutURL(sc, sn, ri); getFetchRolloutUrl != wantFetchRolloutUrl {
-		t.Errorf("wantFetchRolloutUrl: %v, getFetchRolloutUrl: %v", wantFetchRolloutUrl, getFetchRolloutUrl)
+	wantFetchRolloutsUrl := "https://servicemanagement.googleapis.com/v1/services/service-name/rollouts?filter=status=SUCCESS"
+	if getFetchRolloutsUrl := FetchRolloutsURL(sm, sn); getFetchRolloutsUrl != wantFetchRolloutsUrl {
+		t.Errorf("wantFetchRolloutUrl: %v, getFetchRolloutUrl: %v", wantFetchRolloutsUrl, getFetchRolloutsUrl)
 	}
 
 	wantFetchConfigUrl := "https://servicemanagement.googleapis.com/v1/services/service-name/configs/config-id?view=FULL"

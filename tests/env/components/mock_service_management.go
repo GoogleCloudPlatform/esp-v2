@@ -53,24 +53,27 @@ type rolloutsHandler struct {
 }
 
 func (h *rolloutsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s := "/v1/services/" + h.m.serviceName + "/rollouts/" + h.m.rolloutId
+	s := "/v1/services/" + h.m.serviceName + "/rollouts"
 	if r.URL.Path != s {
 		w.WriteHeader(http.StatusNotFound)
 	}
 
-	rollout := &sm.Rollout{
-		RolloutId: h.m.rolloutId,
-		Strategy: &sm.Rollout_TrafficPercentStrategy_{
-			TrafficPercentStrategy: &sm.Rollout_TrafficPercentStrategy{
-				Percentages: map[string]float64{
-					h.m.serviceConfig.Id: 1.0,
+	serviceConfigRollouts := &sm.ListServiceRolloutsResponse{
+		Rollouts: []*sm.Rollout{
+			{
+				RolloutId: h.m.rolloutId,
+				Strategy: &sm.Rollout_TrafficPercentStrategy_{
+					TrafficPercentStrategy: &sm.Rollout_TrafficPercentStrategy{
+						Percentages: map[string]float64{
+							h.m.rolloutId: 1.0,
+						},
+					},
 				},
 			},
 		},
 	}
-
-	serviceConfigRolloutBytes, _ := proto.Marshal(rollout)
-	_, _ = w.Write(serviceConfigRolloutBytes)
+	serviceConfigRolloutsBytes, _ := proto.Marshal(serviceConfigRollouts)
+	_, _ = w.Write(serviceConfigRolloutsBytes)
 }
 
 // NewMockServiceMrg creates a new HTTP server.
@@ -93,10 +96,10 @@ func (m *MockServiceMrg) SetCert(serverCerts *tls.Certificate) {
 // Start launches a mock ServiceManagement server.
 func (m *MockServiceMrg) Start() (URL string) {
 	r := mux.NewRouter()
-	configPath := "/v1/services/" + m.serviceName + "/configs/{configId}"
-	rolloutsPath := "/v1/services/" + m.serviceName + "/rollouts/{rolloutId}"
+	configPath := "/v1/services/" + m.serviceName + "/configs/{configID}"
+	rolloutsPath := "/v1/services/" + m.serviceName + "/rollouts"
 	r.Path(configPath).Methods("GET").Handler(m.configsHandler)
-	r.Path(rolloutsPath).Methods("GET").Handler(m.rolloutsHandler)
+	r.Path(rolloutsPath).Methods("GET").Handler(m.rolloutsHandler).Queries("filter", "{filter}")
 	m.s = httptest.NewUnstartedServer(r)
 
 	if m.serverCerts != nil {

@@ -16,9 +16,11 @@ package serviceconfig
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/golang/glog"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
@@ -42,50 +44,45 @@ func NewServiceConfigFetcher(client *http.Client, serviceManagementUrl,
 
 // Fetch the service config by given configId.
 func (s *ServiceConfigFetcher) FetchConfig(configId string) (*confpb.Service, error) {
-	_fetchConfig := func(configId string) (*confpb.Service, error) {
-		serviceConfig := new(confpb.Service)
-		fetchConfigUrl := util.FetchConfigURL(s.serviceManagementUrl, s.serviceName, configId)
-		if err := util.CallGooglelapis(s.client, fetchConfigUrl, util.GET, s.accessToken, serviceConfig); err != nil {
-			return nil, err
-		}
-
-		return serviceConfig, nil
-	}
-
-	serviceConfig, err := _fetchConfig(configId)
-	if err != nil {
+	serviceConfig := new(confpb.Service)
+	fetchConfigUrl := util.FetchConfigURL(s.serviceManagementUrl, s.serviceName, configId)
+	if err := util.CallGooglelapis(s.client, fetchConfigUrl, util.GET, s.accessToken, serviceConfig); err != nil {
 		return nil, err
 	}
 
 	return serviceConfig, nil
 }
 
-// Fetch the rollout and among its all service configs, pick up the one with
-// highest traffic percentage.
-func (s *ServiceConfigFetcher) GetConfigIdByFetchRollout(rolloutId string) (string, error) {
-	rollout := new(smpb.Rollout)
-	fetchRolloutUrl := util.FetchRolloutURL(s.serviceManagementUrl, s.serviceName, rolloutId)
-	if err := util.CallGooglelapis(s.client, fetchRolloutUrl, util.GET, s.accessToken, rollout); err != nil {
+// Fetch all the rollouts and use the latest success rollout. Among its all
+// service configs, pick up the one with highest traffic percentage.
+func (s *ServiceConfigFetcher) LoadConfigIdFromRollouts() (string, error) {
+	rollouts := new(smpb.ListServiceRolloutsResponse)
+	fetchRolloutUrl := util.FetchRolloutsURL(s.serviceManagementUrl, s.serviceName)
+	if err := util.CallGooglelapis(s.client, fetchRolloutUrl, util.GET, s.accessToken, rollouts); err != nil {
 		return "", err
 	}
 
-	return highestTrafficConfigIdInRollout(rollout)
+	return highestTrafficConfigIdInLatestRollout(rollouts)
 }
 
-func highestTrafficConfigIdInRollout(rollout *smpb.Rollout) (string, error) {
-	if rollout == nil || rollout.GetTrafficPercentStrategy() == nil ||
-		len(rollout.GetTrafficPercentStrategy().Percentages) == 0 {
-		return "", fmt.Errorf("problematic rollout %v", rollout)
+func highestTrafficConfigIdInLatestRollout(rollouts *smpb.ListServiceRolloutsResponse) (string, error) {
+	if rollouts == nil || len(rollouts.GetRollouts()) == 0 {
+		return "", fmt.Errorf("problematic rollouts: %v", rollouts)
 	}
+
+	latestRollout := rollouts.GetRollouts()[0]
 
 	highestPercent := 0.
 	highTrafficConfigId := ""
-	for configId, percent := range rollout.GetTrafficPercentStrategy().Percentages {
+	for configId, percent := range latestRollout.GetTrafficPercentStrategy().Percentages {
 		if percent > highestPercent {
 			highestPercent = percent
 			highTrafficConfigId = configId
 		}
 	}
 
+	if !(math.Abs(100.0-highestPercent) < 1e-9) {
+		glog.Warningf("though traffic percentage of configuration %v is %v%%, set it to 100%%", highTrafficConfigId, highestPercent)
+	}
 	return highTrafficConfigId, nil
 }

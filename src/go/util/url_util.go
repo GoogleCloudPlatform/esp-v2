@@ -149,9 +149,9 @@ var (
 			serviceControlUrl, serviceName)
 	}
 
-	FetchRolloutURL = func(serviceManagementUrl, serviceName, rolloutId string) string {
-		return fmt.Sprintf("%s/v1/services/%s/rollouts/%s",
-			serviceManagementUrl, serviceName, rolloutId)
+	FetchRolloutsURL = func(serviceManagementUrl, serviceName string) string {
+		return fmt.Sprintf("%s/v1/services/%s/rollouts?filter=status=SUCCESS",
+			serviceManagementUrl, serviceName)
 	}
 
 	FetchConfigURL = func(serviceManagementUrl, serviceName, configId string) string {

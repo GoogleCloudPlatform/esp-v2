@@ -61,7 +61,7 @@ const (
 var (
 	fakeConfig             []byte
 	fakeScReport           []byte
-	fakeRollout            []byte
+	fakeRollouts           []byte
 	fakeProtoDescriptor    = base64.StdEncoding.EncodeToString([]byte("rawDescriptor"))
 	testBackendClusterName = fmt.Sprintf("%s_local", testProjectName)
 )
@@ -1583,7 +1583,8 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
                 "serviceConfigId": "%s",
                 "serviceRolloutId": "%s"
             }`, newRolloutID, newConfigID),
-		fakeOldServiceRollout: fmt.Sprintf(`
+		fakeOldServiceRollout: fmt.Sprintf(`{
+            "rollouts": [
                 {
                   "rolloutId": "%s",
                   "createTime": "2018-12-05T19:07:18.438Z",
@@ -1595,8 +1596,11 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
                     }
                   },
                   "serviceName": "%s"
-                }`, oldRolloutID, oldConfigID, testProjectName),
-		fakeNewServiceRollout: fmt.Sprintf(`
+                }
+              ]
+            }`, oldRolloutID, oldConfigID, testProjectName),
+		fakeNewServiceRollout: fmt.Sprintf(`{
+            "rollouts": [
                 {
                   "rolloutId": "%s",
                   "createTime": "2018-12-05T19:07:18.438Z",
@@ -1609,7 +1613,22 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
                     }
                   },
                   "serviceName": "%s"
-                }`, newRolloutID, oldConfigID, newConfigID, testProjectName),
+                },
+                {
+                  "rolloutId": "%s",
+                  "createTime": "2018-12-05T19:07:18.438Z",
+                  "createdBy": "mocktest@google.com",
+                  "status": "SUCCESS",
+                  "trafficPercentStrategy": {
+                    "percentages": {
+                      "%s": 100
+                    }
+                  },
+                  "serviceName": "%s"
+                }
+              ]
+            }`, newRolloutID, oldConfigID, newConfigID, testProjectName,
+			oldRolloutID, oldConfigID, testProjectName),
 		fakeOldServiceConfig: fmt.Sprintf(`{
                 "name": "%s",
                 "title": "Endpoints Example",
@@ -1655,8 +1674,8 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		t.Fatalf("genFakeScReport failed: %v", err)
 	}
 
-	if fakeRollout, err = genFakeRollout(testCase.fakeOldServiceRollout); err != nil {
-		t.Fatalf("genFakeRollout failed: %v", err)
+	if fakeRollouts, err = genFakeRollouts(testCase.fakeOldServiceRollout); err != nil {
+		t.Fatalf("genFakeRollouts failed: %v", err)
 	}
 
 	if fakeConfig, err = genFakeConfig(testCase.fakeOldServiceConfig); err != nil {
@@ -1697,8 +1716,8 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		if fakeScReport, err = genFakeScReport(testCase.fakeNewScReport); err != nil {
 			t.Fatalf("genFakeScReport failed: %v", err)
 		}
-		if fakeRollout, err = genFakeRollout(testCase.fakeNewServiceRollout); err != nil {
-			t.Fatalf("genFakeRollout failed: %v", err)
+		if fakeRollouts, err = genFakeRollouts(testCase.fakeNewServiceRollout); err != nil {
+			t.Fatalf("genFakeRollouts failed: %v", err)
 		}
 		if fakeConfig, err = genFakeConfig(testCase.fakeNewServiceConfig); err != nil {
 			t.Fatalf("genFakeConfig failed: %v", err)
@@ -1737,7 +1756,7 @@ func runTest(t *testing.T, opts options.ConfigGeneratorOptions, f func(*testEnv)
 
 	mockRollout := initMockRolloutServer(t)
 	defer mockRollout.Close()
-	util.FetchRolloutURL = func(serviceManagementUrl, serviceName, rolloutId string) string {
+	util.FetchRolloutsURL = func(serviceManagementUrl, serviceName string) string {
 		return mockRollout.URL
 	}
 
@@ -1776,7 +1795,7 @@ func initMockConfigServer(t *testing.T) *httptest.Server {
 func initMockRolloutServer(t *testing.T) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, err := w.Write(fakeRollout)
+		_, err := w.Write(fakeRollouts)
 		if err != nil {
 			t.Fatal("fail to write rollout config: ", err)
 		}
@@ -1832,14 +1851,14 @@ func genFakeScReport(input string) ([]byte, error) {
 	return protoBytesArray, nil
 }
 
-func genFakeRollout(input string) ([]byte, error) {
+func genFakeRollouts(input string) ([]byte, error) {
 	unmarshaler := &jsonpb.Unmarshaler{}
-	rollout := new(smpb.Rollout)
-	if err := unmarshaler.Unmarshal(strings.NewReader(input), rollout); err != nil {
+	rollouts := new(smpb.ListServiceRolloutsResponse)
+	if err := unmarshaler.Unmarshal(strings.NewReader(input), rollouts); err != nil {
 		return nil, err
 	}
 
-	protoBytesArray, err := proto.Marshal(rollout)
+	protoBytesArray, err := proto.Marshal(rollouts)
 	if err != nil {
 		return nil, err
 	}

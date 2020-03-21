@@ -105,8 +105,8 @@ var UnmarshalBytesToPbMessage = func(input []byte, output proto.Message) error {
 		if err := proto.Unmarshal(input, output.(*confpb.Service)); err != nil {
 			return fmt.Errorf("fail to unmarshal %T: %v", t, err)
 		}
-	case *smpb.Rollout:
-		if err := proto.Unmarshal(input, output.(*smpb.Rollout)); err != nil {
+	case *smpb.ListServiceRolloutsResponse:
+		if err := proto.Unmarshal(input, output.(*smpb.ListServiceRolloutsResponse)); err != nil {
 			return fmt.Errorf("fail to unmarshal %T: %v", t, err)
 		}
 	case *servicecontrolpb.ReportResponse:
