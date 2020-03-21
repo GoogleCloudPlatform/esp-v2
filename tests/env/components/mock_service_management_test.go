@@ -23,10 +23,30 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
-func getServiceConfig(urlPrefix string, configId string) (*conf.Service, error) {
-	url := urlPrefix + "/configs/" + configId
+func getRolloutID(urlPrefix string) (string, error) {
+	url := urlPrefix + "/rollouts?filter=status=SUCCESS"
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", fmt.Errorf("Failed in request: %v", err)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("Failed in read response: %v", err)
+	}
+	rolloutsResponse := new(smpb.ListServiceRolloutsResponse)
+	if err := proto.Unmarshal(body, rolloutsResponse); err != nil {
+		return "", fmt.Errorf("fail to unmarshal ListServiceRolloutsResponse: %s", err)
+	}
+
+	rolloutID := rolloutsResponse.Rollouts[0].RolloutId
+	return rolloutID, nil
+}
+
+func getServiceConfig(urlPrefix string, rolloutID string) (*conf.Service, error) {
+	url := urlPrefix + "/configs/" + rolloutID
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("Failed in request: %v", err)
@@ -45,17 +65,33 @@ func getServiceConfig(urlPrefix string, configId string) (*conf.Service, error) 
 
 func TestMockServiceManagement(t *testing.T) {
 	serviceConfig := &conf.Service{Name: "foo", Id: "999"}
-	rolloutId := "test-rollout-ud"
+	rolloutId := serviceConfig.Id
 
 	s := NewMockServiceMrg(serviceConfig.Name, rolloutId, serviceConfig)
 	urlPrefix := s.Start() + "/v1/services/" + serviceConfig.Name
-
-	gotServiceConfig, err := getServiceConfig(urlPrefix, serviceConfig.Id)
+	rolloutId, err := getRolloutID(urlPrefix)
 	if err != nil {
-		t.Fatal(err)
+		t.Errorf("TestMockServiceManagement: %v", err)
 	}
+
+	gotServiceConfig, err := getServiceConfig(urlPrefix, rolloutId)
 	if !proto.Equal(gotServiceConfig, serviceConfig) {
 		t.Errorf("The got service config is different than what we what,\ngot: %v,\nwanted: %v", gotServiceConfig, serviceConfig)
 	}
+	newRollID, err := getRolloutID(urlPrefix)
+	if newRollID != "999" {
+		t.Errorf("TestMockServiceManagement: the rolloutID should be unchanged, got: %v, wanted: %v", newRollID, "999")
+	}
 
+	serviceConfig.Id = "1000"
+	s.SetRolloutId(serviceConfig.Id)
+	latestRolloutID, err := getRolloutID(urlPrefix)
+	if latestRolloutID != "1000" {
+		t.Errorf("TestMockServiceManagement: the rolloutID should have been updated, got: %v, wanted: %v", latestRolloutID, "1000")
+	}
+
+	gotServiceConfig, err = getServiceConfig(urlPrefix, latestRolloutID)
+	if !proto.Equal(gotServiceConfig, serviceConfig) {
+		t.Errorf("The got service config is different than what we what,\ngot: %v,\nwanted: %v", gotServiceConfig, serviceConfig)
+	}
 }
