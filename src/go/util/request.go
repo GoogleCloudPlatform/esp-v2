@@ -22,7 +22,7 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-func callWithAccessToken(client http.Client, path, method, token string) ([]byte, error) {
+func callWithAccessToken(client *http.Client, path, method, token string) ([]byte, error) {
 	req, _ := http.NewRequest(method, path, nil)
 	req.Header.Add("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/x-protobuf")
@@ -44,7 +44,7 @@ func callWithAccessToken(client http.Client, path, method, token string) ([]byte
 	return body, nil
 }
 
-func CallGooglelapis(client http.Client, path, method string, getTokenFunc GetAccessTokenFunc, output proto.Message) error {
+func CallGooglelapis(client *http.Client, path, method string, getTokenFunc GetAccessTokenFunc, output proto.Message) error {
 	token, _, err := getTokenFunc()
 	if err != nil {
 		return fmt.Errorf("fail to get access token: %v", err)

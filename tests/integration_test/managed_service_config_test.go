@@ -32,7 +32,7 @@ import (
 func TestManagedServiceConfig(t *testing.T) {
 	t.Parallel()
 
-	args := []string{"--rollout_strategy=managed", "--check_rollout_interval=1s"}
+	args := []string{"--rollout_strategy=managed", "--check_rollout_interval=500ms"}
 	s := env.NewTestEnv(comp.TestManagedServiceConfig, platform.GrpcBookstoreSidecar)
 	s.SetEnvoyDrainTimeInSec(1)
 
@@ -88,7 +88,7 @@ func TestManagedServiceConfig(t *testing.T) {
 		if idx == 1 {
 			s.OverrideAuthentication(&confpb.Authentication{})
 			s.OverrideRolloutIdAndConfigId("new-service-rollout-id", "new-service-config-id")
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 3)
 		}
 
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)

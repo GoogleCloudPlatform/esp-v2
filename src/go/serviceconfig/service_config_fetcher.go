@@ -15,148 +15,70 @@
 package serviceconfig
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"time"
 
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
-	"github.com/golang/glog"
-
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
 type ServiceConfigFetcher struct {
-	serviceName         string
-	checkRolloutsTicker *time.Ticker
-	client              http.Client
-	opts                *options.ConfigGeneratorOptions
-
-	accessToken  util.GetAccessTokenFunc
-	newRolloutId util.GetNewRolloutIdFunc
-
-	curServiceConfig *confpb.Service
-	curRolloutId     string
+	serviceManagementUrl string
+	serviceName          string
+	client               *http.Client
+	accessToken          util.GetAccessTokenFunc
+	curServiceConfig     *confpb.Service
 }
 
-func NewServiceConfigFetcher(opts *options.ConfigGeneratorOptions,
-	serviceName string, accessToken util.GetAccessTokenFunc) (*ServiceConfigFetcher, error) {
-	caCert, err := ioutil.ReadFile(opts.RootCertsPath)
-	if err != nil {
-		return nil, err
+func NewServiceConfigFetcher(client *http.Client, serviceManagementUrl,
+	serviceName string, accessToken util.GetAccessTokenFunc) *ServiceConfigFetcher {
+	return &ServiceConfigFetcher{
+		client:               client,
+		serviceName:          serviceName,
+		serviceManagementUrl: serviceManagementUrl,
+		accessToken:          accessToken,
 	}
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-	s := &ServiceConfigFetcher{
-		client: http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					RootCAs: caCertPool,
-				},
-			},
-			Timeout: opts.HttpRequestTimeout,
-		},
-		serviceName: serviceName,
-		opts:        opts,
-		accessToken: accessToken,
-	}
-
-	rolloutIdFetcher := NewServiceRolloutIdFetcher(serviceName, opts.ServiceControlURL,
-		s.client, accessToken)
-	s.newRolloutId = func() (string, error) {
-		return rolloutIdFetcher.fetchNewRolloutId()
-	}
-
-	return s, nil
 }
 
-// Fetch the service config by given configId. If configId is empty, try to
-// fetch the latest rollout and among all its config traffic percentages, pickup
-// the config id with highest traffic percentage and fetch the service config.
+// Fetch the service config by given configId.
 func (s *ServiceConfigFetcher) FetchConfig(configId string) (*confpb.Service, error) {
-	_fetchConfig := func(rolloutId string) (string, *confpb.Service, error) {
-		if configId != "" {
-			if configId == s.curConfigId() {
-				return "", nil, nil
-			}
-
-			serviceConfig := new(confpb.Service)
-			fetchConfigUrl := util.FetchConfigURL(s.opts.ServiceManagementURL, s.serviceName, configId)
-			if err := util.CallGooglelapis(s.client, fetchConfigUrl, util.GET, s.accessToken, serviceConfig); err != nil {
-				return "", nil, err
-			}
-
-			return "", serviceConfig, nil
-		}
-
-		glog.Infof("check new config id for service %v", s.serviceName)
-		newRolloutId, err := s.newRolloutId()
-		if err != nil {
-			return "", nil, fmt.Errorf("error occurred when checking new service rollout id: %v", err)
-		}
-
-		if newRolloutId == s.curRolloutId {
-			return "", nil, nil
-		}
-
-		rollout := new(smpb.Rollout)
-		fetchRolloutUrl := util.FetchRolloutURL(s.opts.ServiceManagementURL, s.serviceName, newRolloutId)
-		if err = util.CallGooglelapis(s.client, fetchRolloutUrl, util.GET, s.accessToken, rollout); err != nil {
-			return "", nil, err
-		}
-
-		newConfigId, err := highestTrafficConfigIdInRollout(rollout)
-		if err != nil {
-			return "", nil, err
-		}
-
-		if newConfigId == s.curConfigId() {
-			return newRolloutId, nil, nil
+	_fetchConfig := func(configId string) (*confpb.Service, error) {
+		if configId == s.curConfigId() {
+			return nil, nil
 		}
 
 		serviceConfig := new(confpb.Service)
-		fetchConfigUrl := util.FetchConfigURL(s.opts.ServiceManagementURL, s.serviceName, newConfigId)
+		fetchConfigUrl := util.FetchConfigURL(s.serviceManagementUrl, s.serviceName, configId)
 		if err := util.CallGooglelapis(s.client, fetchConfigUrl, util.GET, s.accessToken, serviceConfig); err != nil {
-			return "", nil, err
+			return nil, err
 		}
 
-		return newRolloutId, serviceConfig, err
+		return serviceConfig, nil
 	}
 
-	rolloutId, serviceConfig, err := _fetchConfig(configId)
+	serviceConfig, err := _fetchConfig(configId)
+	if err != nil {
+		return nil, err
+	}
 
-	if err == nil && serviceConfig != nil {
-		s.curRolloutId = rolloutId
+	if serviceConfig != nil {
 		s.curServiceConfig = serviceConfig
 	}
 
-	return serviceConfig, err
+	return serviceConfig, nil
 }
 
-func (s *ServiceConfigFetcher) SetFetchConfigTimer(interval time.Duration, callback func(serviceConfig *confpb.Service)) {
-	go func() {
-		glog.Infof("start checking new rollouts every %v seconds", interval)
-		s.checkRolloutsTicker = time.NewTicker(interval)
+// Fetch the rollout and among its all service configs, pick up the one with
+// highest traffic percentage.
+func (s *ServiceConfigFetcher) GetConfigIdByFetchRollout(rolloutId string) (string, error) {
+	rollout := new(smpb.Rollout)
+	fetchRolloutUrl := util.FetchRolloutURL(s.serviceManagementUrl, s.serviceName, rolloutId)
+	if err := util.CallGooglelapis(s.client, fetchRolloutUrl, util.GET, s.accessToken, rollout); err != nil {
+		return "", err
+	}
 
-		for range s.checkRolloutsTicker.C {
-			glog.Infof("check new rollouts for service %v", s.serviceName)
-
-			serviceConfig, err := s.FetchConfig("")
-			if err != nil {
-				glog.Errorf("error occurred when checking new rollouts, %v", err)
-				continue
-
-			}
-
-			if serviceConfig != nil {
-				callback(serviceConfig)
-			}
-		}
-	}()
+	return highestTrafficConfigIdInRollout(rollout)
 }
 
 func (s *ServiceConfigFetcher) curConfigId() string {

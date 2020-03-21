@@ -16,9 +16,12 @@ package configmanager
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
@@ -58,6 +61,7 @@ type ConfigManager struct {
 
 	metadataFetcher      *metadata.MetadataFetcher
 	serviceConfigFetcher *sc.ServiceConfigFetcher
+	RolloutIdDetector    *sc.RolloutIdDetector
 
 	curServiceConfig *confpb.Service
 }
@@ -118,60 +122,95 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 		return nil, fmt.Errorf(`failed to set rollout strategy. It must be either "managed" or "fixed"`)
 	}
 
-	configId := ""
-	if rolloutStrategy == util.FixedRolloutStrategy {
-		// rollout strategy is fixed mode
-		configId = *ServiceConfigId
-		if configId == "" {
-			if checkMetadata && mf != nil {
-				configId, err = mf.FetchConfigId()
-				if configId == "" || err != nil {
-					return nil, fmt.Errorf("failed to read metadata with key endpoints-service-version from metadata server")
-				}
-			} else if !checkMetadata {
-				return nil, fmt.Errorf("service config id is not specified, required because metadata fetching is disabled")
-			} else if mf == nil {
-				return nil, fmt.Errorf("service config id is not specified, required on a non-gcp deployment")
-			}
-		}
-
+	// when --non_gcp  is set, instance metadata server(imds) is not defined so
+	// accessToken is unavailable from imds and --service_account_key must be
+	// set to generate accessToken.
+	if mf == nil && opts.ServiceAccountKey == "" {
+		return nil, fmt.Errorf("If --non_gcp is specified, --service_account_key has to be specified.")
 	}
 
 	accessToken := func() (string, time.Duration, error) {
-		// when --non_gcp  is set, instance metadata server(imds) is not defined so
-		// accessToken is unavailable from imds and --service_account_key must be
-		// set to generate accessToken.
-		if mf == nil && opts.ServiceAccountKey == "" {
-			return "", 0, fmt.Errorf("If --non_gcp is specified, --service_account_key has to be specified.")
-		}
 		if opts.ServiceAccountKey != "" {
 			return util.GenerateAccessTokenFromFile(opts.ServiceAccountKey)
 		}
 		return mf.FetchAccessToken()
 	}
 
-	if m.serviceConfigFetcher, err = sc.NewServiceConfigFetcher(&opts,
-		m.serviceName, accessToken); err != nil {
-		return nil, fmt.Errorf(`failed to create https client to call ServiceManagement service, got error: %v`, err)
+	client, err := httpsClient(opts)
+	if err != nil {
+		return nil, fmt.Errorf("fail to init httpsClient: %v", err)
 	}
 
-	if serviceConfig, err := m.serviceConfigFetcher.FetchConfig(configId); err != nil {
+	configId := ""
+	if rolloutStrategy == util.FixedRolloutStrategy {
+		configId = *ServiceConfigId
+		if configId == "" {
+			if mf == nil {
+				return nil, fmt.Errorf("service config id is not specified, required on a non-gcp deployment")
+			}
+
+			if !checkMetadata {
+				return nil, fmt.Errorf("service config id is not specified, required because metadata fetching is disabled")
+			}
+
+			configId, err = mf.FetchConfigId()
+			if configId == "" || err != nil {
+				return nil, fmt.Errorf("failed to read metadata with key endpoints-service-version from metadata server")
+			}
+		}
+	} else if rolloutStrategy == util.ManagedRolloutStrategy {
+		m.RolloutIdDetector = sc.NewRolloutIdDetector(client, opts.ServiceControlURL, m.serviceName, accessToken)
+		latestRolloutId, err := m.RolloutIdDetector.FetchLatestRolloutId()
+		if err != nil {
+			return nil, err
+		}
+
+		configId, err = m.serviceConfigFetcher.GetConfigIdByFetchRollout(latestRolloutId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	m.serviceConfigFetcher = sc.NewServiceConfigFetcher(client, opts.ServiceManagementURL,
+		m.serviceName, accessToken)
+
+	serviceConfig, err := m.serviceConfigFetcher.FetchConfig(configId)
+	if err != nil {
 		return nil, err
-	} else if err = m.applyServiceConfig(serviceConfig); err != nil {
+	}
+
+	err = m.applyServiceConfig(serviceConfig)
+	if err != nil {
 		return nil, err
+	}
+
+	if rolloutStrategy == util.ManagedRolloutStrategy {
+		m.RolloutIdDetector.SetDetectRolloutIdChangeTimer(*checkNewRolloutInterval, func(newRolloutId string) {
+			configId, err := m.serviceConfigFetcher.GetConfigIdByFetchRollout(newRolloutId)
+
+			if err != nil {
+				glog.Errorf("error occurred when getting configId by fetching rollout, %v", err)
+				return
+			}
+
+			serviceConfig, err := m.serviceConfigFetcher.FetchConfig(configId)
+			if err != nil {
+				glog.Errorf("error occurred when fetching new service config, %v", err)
+				return
+			}
+			if serviceConfig == nil {
+				return
+			}
+
+			err = m.applyServiceConfig(serviceConfig)
+			if err != nil {
+				glog.Errorf("error occurred when applying new service config, %v", err)
+			}
+		})
 	}
 
 	glog.Infof("create new Config Manager for service (%v) with configuration id (%v), %v rollout strategy",
 		m.serviceName, m.curConfigId(), rolloutStrategy)
-
-	if rolloutStrategy == util.ManagedRolloutStrategy {
-		m.serviceConfigFetcher.SetFetchConfigTimer(*checkNewRolloutInterval, func(serviceConfig *confpb.Service) {
-			err := m.applyServiceConfig(serviceConfig)
-			if err != nil {
-				glog.Errorf("error occurred when checking new rollouts, %v", err)
-			}
-		})
-	}
 	return m, nil
 }
 
@@ -265,3 +304,20 @@ func (m *ConfigManager) Errorf(format string, args ...interface{}) { glog.Errorf
 
 // Cache returns snapshot cache.
 func (m *ConfigManager) Cache() cache.Cache { return m.cache }
+
+func httpsClient(opts options.ConfigGeneratorOptions) (*http.Client, error) {
+	caCert, err := ioutil.ReadFile(opts.RootCertsPath)
+	if err != nil {
+		return nil, err
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+	return &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: caCertPool,
+			},
+		},
+		Timeout: opts.HttpRequestTimeout,
+	}, nil
+}

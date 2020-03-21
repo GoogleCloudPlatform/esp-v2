@@ -27,7 +27,7 @@ import (
 )
 
 func TestMockServiceControl(t *testing.T) {
-	s := NewMockServiceCtrl("mmm" , "test-rollout-id")
+	s := NewMockServiceCtrl("mmm", "test-rollout-id")
 	s.Setup()
 
 	url := s.GetURL() + "/v1/services/mmm:check"
@@ -99,7 +99,7 @@ func TestMockServiceControlCheckError(t *testing.T) {
 					},
 				},
 				CheckErrors: []*scpb.CheckError{
-					&scpb.CheckError{
+					{
 						Code: scpb.CheckError_API_KEY_INVALID,
 					},
 				},
@@ -111,7 +111,7 @@ func TestMockServiceControlCheckError(t *testing.T) {
 					},
 				},
 				CheckErrors: []*scpb.CheckError{
-					&scpb.CheckError{
+					{
 						Code: scpb.CheckError_API_KEY_INVALID,
 					},
 				},
