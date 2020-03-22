@@ -114,7 +114,7 @@ Status AddDistributionMetric(const DistributionHelperOptions& options,
 // Metrics supported by ESPv2.
 
 Status set_int64_metric_to_constant_1(const SupportedMetric& m,
-                                      const ReportRequestInfo& info,
+                                      const ReportRequestInfo&,
                                       Operation* operation) {
   AddInt64Metric(m.name, 1l, operation);
   return Status::OK;
@@ -675,14 +675,14 @@ Status set_platform(const SupportedLabel& l, const ReportRequestInfo& info,
 }
 
 // servicecontrol.googleapis.com/service_agent
-Status set_service_agent(const SupportedLabel& l, const ReportRequestInfo& info,
+Status set_service_agent(const SupportedLabel& l, const ReportRequestInfo&,
                          Map<std::string, std::string>* labels) {
   (*labels)[l.name] = get_service_agent();
   return Status::OK;
 }
 
 // serviceruntime.googleapis.com/user_agent
-Status set_user_agent(const SupportedLabel& l, const ReportRequestInfo& info,
+Status set_user_agent(const SupportedLabel& l, const ReportRequestInfo&,
                       Map<std::string, std::string>* labels) {
   (*labels)[l.name] = kUserAgent;
   return Status::OK;
@@ -963,9 +963,7 @@ Status VerifyRequiredCheckFields(const OperationInfo& info) {
   return Status::OK;
 }
 
-Status VerifyRequiredReportFields(const OperationInfo& info) {
-  return Status::OK;
-}
+Status VerifyRequiredReportFields(const OperationInfo&) { return Status::OK; }
 
 void SetOperationCommonFields(const OperationInfo& info,
                               const Timestamp& current_time, Operation* op) {
@@ -994,8 +992,8 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
 
   auto* fields = log_entry->mutable_struct_payload()->mutable_fields();
   (*fields)[kLogFieldNameTimestamp].set_number_value(
-      (double)current_time.seconds() +
-      (double)current_time.nanos() / (double)1000000000.0);
+      static_cast<double>(current_time.seconds()) +
+      static_cast<double>(current_time.nanos()) / 1000000000.0);
   (*fields)[kLogFieldNameConfigId].set_string_value(config_id);
   (*fields)[kLogFieldNameServiceAgent].set_string_value(
       kServiceAgentPrefix + utils::Version::instance().get());
@@ -1315,7 +1313,7 @@ Status RequestBuilder::AppendByConsumerOperations(
 
 Status RequestBuilder::ConvertAllocateQuotaResponse(
     const ::google::api::servicecontrol::v1::AllocateQuotaResponse& response,
-    const std::string& service_name) {
+    const std::string&) {
   // response.operation_id()
   if (response.allocate_errors().empty()) {
     return Status::OK;

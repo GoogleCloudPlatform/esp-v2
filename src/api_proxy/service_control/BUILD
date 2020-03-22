@@ -1,10 +1,16 @@
+load(
+    "@envoy//bazel:envoy_build_system.bzl",
+    "envoy_basic_cc_library",
+    "envoy_cc_test",
+)
+
 package(
     default_visibility = [
         "//src/api_proxy/service_control:__subpackages__",
     ],
 )
 
-cc_library(
+envoy_basic_cc_library(
     name = "request_builder_lib",
     srcs = ["request_builder.cc"],
     hdrs = [
@@ -21,34 +27,32 @@ cc_library(
     ],
 )
 
-cc_test(
+envoy_cc_test(
     name = "check_response_test",
     size = "small",
     srcs = [
         "check_response_test.cc",
     ],
-    linkstatic = 1,
+    repository = "@envoy",
     deps = [
         ":request_builder_lib",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
-cc_test(
+envoy_cc_test(
     name = "request_builder_test",
     size = "small",
     srcs = [
         "request_builder_test.cc",
     ],
     data = glob(["testdata/*.golden"]),
-    linkstatic = 1,
+    repository = "@envoy",
     deps = [
         ":request_builder_lib",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
-cc_library(
+envoy_basic_cc_library(
     name = "logs_metrics_loader_lib",
     srcs = ["logs_metrics_loader.cc"],
     hdrs = ["logs_metrics_loader.h"],
@@ -60,15 +64,14 @@ cc_library(
     ],
 )
 
-cc_test(
+envoy_cc_test(
     name = "logs_metrics_loader_test",
     size = "small",
     srcs = [
         "logs_metrics_loader_test.cc",
     ],
-    linkstatic = 1,
+    repository = "@envoy",
     deps = [
         ":logs_metrics_loader_lib",
-        "@com_google_googletest//:gtest_main",
     ],
 )
