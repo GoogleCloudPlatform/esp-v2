@@ -32,13 +32,14 @@ constexpr char kPathMatcherFilterName[] = "envoy.filters.http.path_matcher";
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::espv2::api::envoy::http::path_matcher::FilterConfig> {
+          ::google::api::envoy::http::path_matcher::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(kPathMatcherFilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::espv2::api::envoy::http::path_matcher::FilterConfig& proto_config,
+      const ::google::api::envoy::http::path_matcher::FilterConfig&
+          proto_config,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context) override {
     auto filter_config =

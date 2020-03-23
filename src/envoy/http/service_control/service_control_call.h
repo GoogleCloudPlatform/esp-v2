@@ -48,7 +48,7 @@ class ServiceControlCallFactory {
   virtual ~ServiceControlCallFactory() = default;
 
   virtual ServiceControlCallPtr create(
-      const ::espv2::api::envoy::http::service_control::Service& config) PURE;
+      const ::google::api::envoy::http::service_control::Service& config) PURE;
 };
 
 }  // namespace service_control

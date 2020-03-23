@@ -47,10 +47,10 @@ struct FilterStats {
 // The Envoy filter config for ESPv2 path matcher filter.
 class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
-  FilterConfig(
-      const ::espv2::api::envoy::http::path_matcher::FilterConfig& proto_config,
-      const std::string& stats_prefix,
-      Envoy::Server::Configuration::FactoryContext& context);
+  FilterConfig(const ::google::api::envoy::http::path_matcher::FilterConfig&
+                   proto_config,
+               const std::string& stats_prefix,
+               Envoy::Server::Configuration::FactoryContext& context);
 
   const std::string* findOperation(const std::string& http_method,
                                    const std::string& path) const {
@@ -87,7 +87,7 @@ class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
         POOL_COUNTER_PREFIX(scope, final_prefix))};
   }
 
-  ::espv2::api::envoy::http::path_matcher::FilterConfig proto_config_;
+  ::google::api::envoy::http::path_matcher::FilterConfig proto_config_;
   ::espv2::api_proxy::path_matcher::PathMatcherPtr<const std::string*>
       path_matcher_;
   // Mapping between snake-case segment name to JSON name as specified in

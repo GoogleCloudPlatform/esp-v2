@@ -32,14 +32,14 @@ namespace service_control {
 // The class to cache check and batch report.
 class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
-  ClientCache(const ::espv2::api::envoy::http::service_control::Service& config,
-              const ::espv2::api::envoy::http::service_control::FilterConfig&
-                  filter_config,
-              Envoy::Upstream::ClusterManager& cm,
-              Envoy::TimeSource& time_source,
-              Envoy::Event::Dispatcher& dispatcher,
-              std::function<const std::string&()> sc_token_fn,
-              std::function<const std::string&()> quota_token_fn);
+  ClientCache(
+      const ::google::api::envoy::http::service_control::Service& config,
+      const ::google::api::envoy::http::service_control::FilterConfig&
+          filter_config,
+      Envoy::Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
+      Envoy::Event::Dispatcher& dispatcher,
+      std::function<const std::string&()> sc_token_fn,
+      std::function<const std::string&()> quota_token_fn);
 
   CancelFunc callCheck(
       const ::google::api::servicecontrol::v1::CheckRequest& request,
@@ -54,10 +54,10 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
 
  private:
   void InitHttpRequestSetting(
-      const ::espv2::api::envoy::http::service_control::FilterConfig&
+      const ::google::api::envoy::http::service_control::FilterConfig&
           filter_config);
 
-  const ::espv2::api::envoy::http::service_control::Service& config_;
+  const ::google::api::envoy::http::service_control::Service& config_;
   bool network_fail_open_;
 
   // the configurable timeouts

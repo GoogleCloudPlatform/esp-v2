@@ -26,7 +26,7 @@ namespace http_filters {
 namespace service_control {
 namespace {
 
-using ::espv2::api::envoy::http::service_control::FilterConfig;
+using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::protobuf::TextFormat;
 
 TEST(ConfigParserTest, EmptyConfig) {

@@ -17,7 +17,7 @@
 #include "common/tracing/http_tracer_impl.h"
 #include "src/api_proxy/service_control/request_builder.h"
 
-using ::espv2::api::envoy::http::service_control::FilterConfig;
+using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
@@ -159,7 +159,7 @@ void ClientCache::InitHttpRequestSetting(const FilterConfig& filter_config) {
 }
 
 ClientCache::ClientCache(
-    const ::espv2::api::envoy::http::service_control::Service& config,
+    const ::google::api::envoy::http::service_control::Service& config,
     const FilterConfig& filter_config, Envoy::Upstream::ClusterManager& cm,
     Envoy::TimeSource& time_source, Envoy::Event::Dispatcher& dispatcher,
     std::function<const std::string&()> sc_token_fn,

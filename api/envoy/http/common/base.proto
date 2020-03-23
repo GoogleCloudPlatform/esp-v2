@@ -14,7 +14,7 @@
 
 syntax = "proto3";
 
-package espv2.api.envoy.http.common;
+package google.api.envoy.http.common;
 
 import "google/protobuf/duration.proto";
 import "validate/validate.proto";

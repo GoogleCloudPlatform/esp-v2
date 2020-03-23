@@ -31,13 +31,13 @@ const std::string FilterName = "envoy.filters.http.backend_routing";
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::espv2::api::envoy::http::backend_routing::FilterConfig> {
+          ::google::api::envoy::http::backend_routing::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(FilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::espv2::api::envoy::http::backend_routing::FilterConfig&
+      const ::google::api::envoy::http::backend_routing::FilterConfig&
           proto_config,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context) override {

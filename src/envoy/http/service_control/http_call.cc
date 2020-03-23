@@ -24,7 +24,7 @@
 #include "common/tracing/http_tracer_impl.h"
 #include "envoy/event/deferred_deletable.h"
 
-using ::espv2::api::envoy::http::common::HttpUri;
+using ::google::api::envoy::http::common::HttpUri;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 namespace espv2 {
@@ -288,7 +288,7 @@ class HttpCallImpl : public HttpCall,
 
 HttpCallFactory::HttpCallFactory(
     Envoy::Upstream::ClusterManager& cm, Envoy::Event::Dispatcher& dispatcher,
-    const ::espv2::api::envoy::http::common::HttpUri& uri,
+    const ::google::api::envoy::http::common::HttpUri& uri,
     const std::string& suffix_url, std::function<const std::string&()> token_fn,
     uint32_t timeout_ms, uint32_t retries, Envoy::TimeSource& time_source,
     const std::string& trace_operation_name)

@@ -14,7 +14,7 @@
 
 syntax = "proto3";
 
-package espv2.api.envoy.http.service_control;
+package google.api.envoy.http.service_control;
 
 import "api/envoy/http/service_control/requirement.proto";
 import "google/protobuf/any.proto";

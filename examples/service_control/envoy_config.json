@@ -47,7 +47,7 @@
                     {
                       "name": "envoy.filters.http.path_matcher",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
+                        "@type": "type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
                         "rules": [
                           {
                             "pattern": {
@@ -95,7 +95,7 @@
                     {
                       "name": "envoy.filters.http.service_control",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig",
+                        "@type": "type.googleapis.com/google.api.envoy.http.service_control.FilterConfig",
                         "services": [
                           {
                             "serviceName": "bookstore.endpoints.apiproxy-231719.cloud.goog",

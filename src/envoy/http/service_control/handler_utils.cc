@@ -26,10 +26,10 @@
 #include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/http/service_control/handler_utils.h"
 
-using ::espv2::api::envoy::http::service_control::ApiKeyLocation;
-using ::espv2::api::envoy::http::service_control::Service;
 using ::espv2::api_proxy::service_control::LatencyInfo;
 using ::espv2::api_proxy::service_control::protocol::Protocol;
+using ::google::api::envoy::http::service_control::ApiKeyLocation;
+using ::google::api::envoy::http::service_control::Service;
 
 namespace espv2 {
 namespace envoy {
@@ -126,9 +126,10 @@ bool isGrpcRequest(absl::string_view content_type) {
 
 }  // namespace
 
-void fillGCPInfo(const ::espv2::api::envoy::http::service_control::FilterConfig&
-                     filter_config,
-                 ::espv2::api_proxy::service_control::ReportRequestInfo& info) {
+void fillGCPInfo(
+    const ::google::api::envoy::http::service_control::FilterConfig&
+        filter_config,
+    ::espv2::api_proxy::service_control::ReportRequestInfo& info) {
   if (!filter_config.has_gcp_attributes()) {
     return;
   }
@@ -254,7 +255,7 @@ void fillJwtPayload(const ::envoy::config::core::v3::Metadata& metadata,
 bool extractAPIKey(
     const Envoy::Http::RequestHeaderMap& headers,
     const ::google::protobuf::RepeatedPtrField<
-        ::espv2::api::envoy::http::service_control::ApiKeyLocation>& locations,
+        ::google::api::envoy::http::service_control::ApiKeyLocation>& locations,
     std::string& api_key) {
   // If checking multiple headers, cache the parameters so they are only parsed
   // once

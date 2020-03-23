@@ -40,8 +40,8 @@ constexpr char kServiceControlScope[] =
 class ThreadLocalCache : public Envoy::ThreadLocal::ThreadLocalObject {
  public:
   ThreadLocalCache(
-      const ::espv2::api::envoy::http::service_control::Service& config,
-      const ::espv2::api::envoy::http::service_control::FilterConfig&
+      const ::google::api::envoy::http::service_control::Service& config,
+      const ::google::api::envoy::http::service_control::FilterConfig&
           filter_config,
       Envoy::Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
       Envoy::Event::Dispatcher& dispatcher)
@@ -76,7 +76,7 @@ class ThreadLocalCache : public Envoy::ThreadLocal::ThreadLocalObject {
 };
 
 typedef std::shared_ptr<
-    ::espv2::api::envoy::http::service_control::FilterConfig>
+    ::google::api::envoy::http::service_control::FilterConfig>
     FilterConfigProtoSharedPtr;
 
 class ServiceControlCallImpl
@@ -85,7 +85,7 @@ class ServiceControlCallImpl
  public:
   ServiceControlCallImpl(
       FilterConfigProtoSharedPtr proto_config,
-      const ::espv2::api::envoy::http::service_control::Service& config,
+      const ::google::api::envoy::http::service_control::Service& config,
       Envoy::Server::Configuration::FactoryContext& context);
 
   CancelFunc callCheck(
@@ -109,7 +109,7 @@ class ServiceControlCallImpl
   void createTokenGen();
   void createIamTokenSub();
 
-  const ::espv2::api::envoy::http::service_control::FilterConfig&
+  const ::google::api::envoy::http::service_control::FilterConfig&
       filter_config_;
   std::unique_ptr<::espv2::api_proxy::service_control::RequestBuilder>
       request_builder_;
@@ -139,7 +139,7 @@ class ServiceControlCallFactoryImpl : public ServiceControlCallFactory {
       : proto_config_(proto_config), context_(context) {}
 
   ServiceControlCallPtr create(
-      const ::espv2::api::envoy::http::service_control::Service& config)
+      const ::google::api::envoy::http::service_control::Service& config)
       override {
     return std::make_unique<ServiceControlCallImpl>(proto_config_, config,
                                                     context_);

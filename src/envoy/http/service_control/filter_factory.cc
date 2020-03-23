@@ -32,13 +32,13 @@ const std::string FilterName = "envoy.filters.http.service_control";
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::espv2::api::envoy::http::service_control::FilterConfig> {
+          ::google::api::envoy::http::service_control::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(FilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::espv2::api::envoy::http::service_control::FilterConfig&
+      const ::google::api::envoy::http::service_control::FilterConfig&
           proto_config,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context) override {
