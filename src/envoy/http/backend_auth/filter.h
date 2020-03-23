@@ -22,25 +22,25 @@
 #include "extensions/filters/http/common/pass_through_filter.h"
 #include "src/envoy/http/backend_auth/filter_config.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace BackendAuth {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace backend_auth {
 
-class Filter : public Http::PassThroughDecoderFilter,
-               public Logger::Loggable<Logger::Id::filter> {
+class Filter : public Envoy::Http::PassThroughDecoderFilter,
+               public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   Filter(FilterConfigSharedPtr config) : config_(config) {}
 
-  // Http::StreamDecoderFilter
-  Http::FilterHeadersStatus decodeHeaders(Http::RequestHeaderMap&,
-                                          bool) override;
+  // Envoy::Http::StreamDecoderFilter
+  Envoy::Http::FilterHeadersStatus decodeHeaders(Envoy::Http::RequestHeaderMap&,
+                                                 bool) override;
 
  private:
   const FilterConfigSharedPtr config_;
 };
 
-}  // namespace BackendAuth
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace backend_auth
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

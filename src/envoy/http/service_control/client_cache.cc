@@ -17,17 +17,17 @@
 #include "common/tracing/http_tracer_impl.h"
 #include "src/api_proxy/service_control/request_builder.h"
 
-using ::google::api::envoy::http::service_control::FilterConfig;
+using ::espv2::api::envoy::http::service_control::FilterConfig;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
+using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::google::api::servicecontrol::v1::AllocateQuotaRequest;
 using ::google::api::servicecontrol::v1::AllocateQuotaResponse;
 using ::google::api::servicecontrol::v1::CheckRequest;
 using ::google::api::servicecontrol::v1::CheckResponse;
 using ::google::api::servicecontrol::v1::ReportRequest;
 using ::google::api::servicecontrol::v1::ReportResponse;
-using ::google::api_proxy::service_control::CheckResponseInfo;
 
 using ::google::service_control_client::CheckAggregationOptions;
 using ::google::service_control_client::QuotaAggregationOptions;
@@ -35,10 +35,10 @@ using ::google::service_control_client::ReportAggregationOptions;
 using ::google::service_control_client::ServiceControlClientOptions;
 using ::google::service_control_client::TransportDoneFunc;
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 namespace {
 
 // Default config for check aggregator
@@ -98,7 +98,7 @@ ReportAggregationOptions getReportAggregationOptions() {
 class EnvoyPeriodicTimer
     : public ::google::service_control_client::PeriodicTimer {
  public:
-  EnvoyPeriodicTimer(Event::Dispatcher& dispatcher, int interval_ms,
+  EnvoyPeriodicTimer(Envoy::Event::Dispatcher& dispatcher, int interval_ms,
                      std::function<void()> callback)
       : interval_ms_(interval_ms),
         callback_(callback),
@@ -117,7 +117,7 @@ class EnvoyPeriodicTimer
  private:
   int interval_ms_;
   std::function<void()> callback_;
-  Event::TimerPtr timer_;
+  Envoy::Event::TimerPtr timer_;
 };
 
 }  // namespace
@@ -159,9 +159,9 @@ void ClientCache::InitHttpRequestSetting(const FilterConfig& filter_config) {
 }
 
 ClientCache::ClientCache(
-    const ::google::api::envoy::http::service_control::Service& config,
-    const FilterConfig& filter_config, Upstream::ClusterManager& cm,
-    Envoy::TimeSource& time_source, Event::Dispatcher& dispatcher,
+    const ::espv2::api::envoy::http::service_control::Service& config,
+    const FilterConfig& filter_config, Envoy::Upstream::ClusterManager& cm,
+    Envoy::TimeSource& time_source, Envoy::Event::Dispatcher& dispatcher,
     std::function<const std::string&()> sc_token_fn,
     std::function<const std::string&()> quota_token_fn)
     : config_(config), time_source_(time_source) {
@@ -304,7 +304,7 @@ CancelFunc ClientCache::callCheck(
                  [this, response, on_done](const Status& status) {
                    CheckResponseInfo response_info;
                    if (status.ok()) {
-                     Status converted_status = ::google::api_proxy::
+                     Status converted_status = ::espv2::api_proxy::
                          service_control::RequestBuilder::ConvertCheckResponse(
                              *response, config_.service_name(), &response_info);
                      on_done(converted_status, response_info);
@@ -329,7 +329,7 @@ void ClientCache::callQuota(
   client_->Quota(
       request, response, [this, response, on_done](const Status& status) {
         if (status.ok()) {
-          on_done(::google::api_proxy::service_control::RequestBuilder::
+          on_done(::espv2::api_proxy::service_control::RequestBuilder::
                       ConvertAllocateQuotaResponse(*response,
                                                    config_.service_name()));
         } else {
@@ -347,7 +347,7 @@ void ClientCache::callReport(const ReportRequest& request) {
                   [response](const Status&) { delete response; });
 }
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

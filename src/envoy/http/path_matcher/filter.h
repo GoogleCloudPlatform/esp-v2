@@ -19,26 +19,26 @@
 
 #include <string>
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace PathMatcher {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace path_matcher {
 
-class Filter : public Http::PassThroughDecoderFilter,
-               public Logger::Loggable<Logger::Id::filter> {
+class Filter : public Envoy::Http::PassThroughDecoderFilter,
+               public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   Filter(FilterConfigSharedPtr config) : config_(config) {}
 
-  Http::FilterHeadersStatus decodeHeaders(Http::RequestHeaderMap&,
-                                          bool) override;
+  Envoy::Http::FilterHeadersStatus decodeHeaders(Envoy::Http::RequestHeaderMap&,
+                                                 bool) override;
 
  private:
-  void rejectRequest(Http::Code code, absl::string_view error_msg);
+  void rejectRequest(Envoy::Http::Code code, absl::string_view error_msg);
 
   const FilterConfigSharedPtr config_;
 };
 
-}  // namespace PathMatcher
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace path_matcher
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

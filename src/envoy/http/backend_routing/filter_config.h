@@ -18,10 +18,10 @@
 #include "common/common/logger.h"
 #include "envoy/server/filter_config.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace BackendRouting {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace backend_routing {
 
 /**
  * All stats for the backend routing filter. @see stats_macros.h
@@ -41,12 +41,12 @@ struct FilterStats {
 };
 
 // The Envoy filter config for ESPv2 backend routing filter.
-class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
+class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
-  FilterConfig(const ::google::api::envoy::http::backend_routing::FilterConfig&
+  FilterConfig(const ::espv2::api::envoy::http::backend_routing::FilterConfig&
                    proto_config,
                const std::string& stats_prefix,
-               Server::Configuration::FactoryContext& context)
+               Envoy::Server::Configuration::FactoryContext& context)
       : proto_config_(proto_config),
         stats_(generateStats(stats_prefix, context.scope())) {
     for (const auto& rule : proto_config_.rules()) {
@@ -54,7 +54,7 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
     }
   }
 
-  const ::google::api::envoy::http::backend_routing::BackendRoutingRule* findRule(
+  const ::espv2::api::envoy::http::backend_routing::BackendRoutingRule* findRule(
 	  absl::string_view operation) const {
     const auto it = backend_routing_map_.find(operation);
     if (it == backend_routing_map_.end()) {
@@ -66,20 +66,20 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
   FilterStats& stats() { return stats_; }
 
  private:
-  FilterStats generateStats(const std::string& prefix, Stats::Scope& scope) {
+  FilterStats generateStats(const std::string& prefix, Envoy::Stats::Scope& scope) {
     const std::string final_prefix = prefix + "backend_routing.";
     return {ALL_BACKEND_ROUTING_FILTER_STATS(
         POOL_COUNTER_PREFIX(scope, final_prefix))};
   }
 
   // The config proto
-  ::google::api::envoy::http::backend_routing::FilterConfig proto_config_;
+  ::espv2::api::envoy::http::backend_routing::FilterConfig proto_config_;
   // The stats
   FilterStats stats_;
   // The map from operation to rule.
   absl::flat_hash_map<
       std::string,
-      const ::google::api::envoy::http::backend_routing::BackendRoutingRule*>
+      const ::espv2::api::envoy::http::backend_routing::BackendRoutingRule*>
       backend_routing_map_;
 };
 

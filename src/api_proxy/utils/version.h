@@ -14,7 +14,7 @@
 #pragma once
 #include <string>
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace utils {
 
@@ -39,4 +39,4 @@ class Version final {
 
 }  // namespace utils
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

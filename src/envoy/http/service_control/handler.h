@@ -20,10 +20,10 @@
 #include "envoy/stream_info/stream_info.h"
 #include "src/api_proxy/service_control/request_info.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 
 class ServiceControlHandler {
  public:
@@ -37,15 +37,15 @@ class ServiceControlHandler {
 
   // Make an async check call.
   // The headers could be modified by adding some.
-  virtual void callCheck(Http::RequestHeaderMap& headers,
+  virtual void callCheck(Envoy::Http::RequestHeaderMap& headers,
                          Envoy::Tracing::Span& parent_span,
                          CheckDoneCallback& callback) PURE;
 
   // Make a report call.
   virtual void callReport(
-      const Http::RequestHeaderMap* request_headers,
-      const Http::ResponseHeaderMap* response_headers,
-      const Http::ResponseTrailerMap* response_trailers) PURE;
+      const Envoy::Http::RequestHeaderMap* request_headers,
+      const Envoy::Http::ResponseHeaderMap* response_headers,
+      const Envoy::Http::ResponseTrailerMap* response_trailers) PURE;
 
   // If the stream report interval has passed,
   // make an intermediate report call for long-lived gRPC streaming.
@@ -54,7 +54,7 @@ class ServiceControlHandler {
   // Process the response header to get the information needed for sending
   // intermediate reports.
   virtual void processResponseHeaders(
-      const Http::ResponseHeaderMap& response_headers) PURE;
+      const Envoy::Http::ResponseHeaderMap& response_headers) PURE;
 
   // The request is about to be destroyed need to cancel all async requests.
   virtual void onDestroy() PURE;
@@ -66,11 +66,11 @@ class ServiceControlHandlerFactory {
   virtual ~ServiceControlHandlerFactory() = default;
 
   virtual ServiceControlHandlerPtr createHandler(
-      const Http::RequestHeaderMap& headers,
-      const StreamInfo::StreamInfo& stream_info) const PURE;
+      const Envoy::Http::RequestHeaderMap& headers,
+      const Envoy::StreamInfo::StreamInfo& stream_info) const PURE;
 };
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

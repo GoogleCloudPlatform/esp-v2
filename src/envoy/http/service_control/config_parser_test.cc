@@ -20,13 +20,13 @@
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 namespace {
 
-using ::google::api::envoy::http::service_control::FilterConfig;
+using ::espv2::api::envoy::http::service_control::FilterConfig;
 using ::google::protobuf::TextFormat;
 
 TEST(ConfigParserTest, EmptyConfig) {
@@ -34,7 +34,7 @@ TEST(ConfigParserTest, EmptyConfig) {
   testing::NiceMock<MockServiceControlCallFactory> mock_factory;
 
   EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config, mock_factory),
-                          ProtoValidationException, "Empty services");
+                          Envoy::ProtoValidationException, "Empty services");
 }
 
 TEST(ConfigParserTest, ValidConfig) {
@@ -86,7 +86,8 @@ services {
       TextFormat::ParseFromString(kConfigWithDupliacedService, &config));
   testing::NiceMock<MockServiceControlCallFactory> mock_factory;
   EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config, mock_factory),
-                          ProtoValidationException, "Duplicated service names");
+                          Envoy::ProtoValidationException,
+                          "Duplicated service names");
 }
 
 TEST(ConfigParserTest, DuplicatedOperationNames) {
@@ -107,7 +108,7 @@ requirements {
       TextFormat::ParseFromString(kConfigWithDupliacedService, &config));
   testing::NiceMock<MockServiceControlCallFactory> mock_factory;
   EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config, mock_factory),
-                          ProtoValidationException,
+                          Envoy::ProtoValidationException,
                           "Duplicated operation names");
 }
 
@@ -124,11 +125,12 @@ requirements {
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterInvalidService, &config));
   testing::NiceMock<MockServiceControlCallFactory> mock_factory;
   EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config, mock_factory),
-                          ProtoValidationException, "Invalid service name");
+                          Envoy::ProtoValidationException,
+                          "Invalid service name");
 }
 
 }  // namespace
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

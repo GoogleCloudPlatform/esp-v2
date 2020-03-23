@@ -19,27 +19,25 @@
 #include "envoy/tracing/http_tracer.h"
 #include "src/envoy/http/service_control/service_control_callback_func.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 
 class ServiceControlCall {
  public:
   virtual ~ServiceControlCall() = default;
 
   virtual CancelFunc callCheck(
-      const ::google::api_proxy::service_control::CheckRequestInfo&
-          request_info,
+      const ::espv2::api_proxy::service_control::CheckRequestInfo& request_info,
       Envoy::Tracing::Span& parent_span, CheckDoneFunc on_done) PURE;
 
   virtual void callQuota(
-      const ::google::api_proxy::service_control::QuotaRequestInfo&
-          request_info,
+      const ::espv2::api_proxy::service_control::QuotaRequestInfo& request_info,
       QuotaDoneFunc on_done) PURE;
 
   virtual void callReport(
-      const ::google::api_proxy::service_control::ReportRequestInfo&
+      const ::espv2::api_proxy::service_control::ReportRequestInfo&
           request_info) PURE;
 };
 
@@ -50,10 +48,10 @@ class ServiceControlCallFactory {
   virtual ~ServiceControlCallFactory() = default;
 
   virtual ServiceControlCallPtr create(
-      const ::google::api::envoy::http::service_control::Service& config) PURE;
+      const ::espv2::api::envoy::http::service_control::Service& config) PURE;
 };
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

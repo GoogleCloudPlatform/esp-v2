@@ -17,21 +17,25 @@
 #include <stdexcept>
 #include <string>
 
-namespace filter_api = ::google::api::envoy::http::service_control;
+namespace filter_api = ::espv2::api::envoy::http::service_control;
 namespace sc_api = ::google::api::servicecontrol::v1;
 using ::Envoy::Server::Configuration::MockFactoryContext;
 using ::testing::MockFunction;
 using ::testing::Return;
 using ::testing::ReturnRef;
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
-namespace Fuzz {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
+namespace fuzz {
 
-void doTest(ServiceControlFilter& filter, TestStreamInfo& stream_info,
-            const tests::fuzz::protos::ServiceControlFilterInput& input) {
+// Needed for logger macro expansion.
+namespace Logger = Envoy::Logger;
+
+void doTest(
+    ServiceControlFilter& filter, Envoy::TestStreamInfo& stream_info,
+    const espv2::tests::fuzz::protos::ServiceControlFilterInput& input) {
   // Decode headers.
   bool end_stream = false;
   auto downstream_headers =
@@ -49,7 +53,7 @@ void doTest(ServiceControlFilter& filter, TestStreamInfo& stream_info,
         !input.downstream_request().has_trailers()) {
       end_stream = true;
     }
-    Buffer::OwnedImpl buffer(input.downstream_request().data().Get(i));
+    Envoy::Buffer::OwnedImpl buffer(input.downstream_request().data().Get(i));
     filter.decodeData(buffer, end_stream);
   }
 
@@ -78,7 +82,7 @@ void doTest(ServiceControlFilter& filter, TestStreamInfo& stream_info,
         !input.upstream_response().has_trailers()) {
       end_stream = true;
     }
-    Buffer::OwnedImpl buffer(input.upstream_response().data().Get(i));
+    Envoy::Buffer::OwnedImpl buffer(input.upstream_response().data().Get(i));
     filter.encodeData(buffer, end_stream);
   }
 
@@ -96,25 +100,26 @@ void doTest(ServiceControlFilter& filter, TestStreamInfo& stream_info,
 }
 
 DEFINE_PROTO_FUZZER(
-    const tests::fuzz::protos::ServiceControlFilterInput& input) {
+    const espv2::tests::fuzz::protos::ServiceControlFilterInput& input) {
   ENVOY_LOG_MISC(trace, "{}", input.DebugString());
 
   try {
-    TestUtility::validate(input);
+    Envoy::TestUtility::validate(input);
 
     // Validate nested protos with stricter requirements for the fuzz test.
     // We need at least 1 requirement in the config to match a selector.
     if (input.config().requirements_size() < 1) {
-      throw ProtoValidationException("Need at least 1 requirement", input);
+      throw Envoy::ProtoValidationException("Need at least 1 requirement",
+                                            input);
     }
-  } catch (const ProtoValidationException& e) {
+  } catch (const Envoy::ProtoValidationException& e) {
     ENVOY_LOG_MISC(debug, "Controlled proto validation failure: {}", e.what());
     return;
   }
 
   // Setup mocks.
   NiceMock<MockFactoryContext> context;
-  NiceMock<Http::MockAsyncClientRequest> request(
+  NiceMock<Envoy::Http::MockAsyncClientRequest> request(
       &context.cluster_manager_.async_client_);
   NiceMock<Envoy::Http::MockStreamDecoderFilterCallbacks>
       mock_decoder_callbacks;
@@ -132,7 +137,7 @@ DEFINE_PROTO_FUZZER(
           Invoke([&onReadyCallback](const Envoy::Event::TimerCb& cb) {
             ENVOY_LOG_MISC(trace, "Mocking dispatcher createTimer");
             onReadyCallback = cb;
-            return new NiceMock<Event::MockTimer>();
+            return new NiceMock<Envoy::Event::MockTimer>();
           }));
 
   // Mock the http async client.
@@ -166,10 +171,10 @@ DEFINE_PROTO_FUZZER(
         if (response_data.data_size() > 0) {
           // FIXME(nareddyt): For now, just grab 1 data item from the
           // proto.
-          msg->body() =
-              std::make_unique<Buffer::OwnedImpl>(response_data.data().Get(0));
+          msg->body() = std::make_unique<Envoy::Buffer::OwnedImpl>(
+              response_data.data().Get(0));
         } else {
-          msg->body() = std::make_unique<Buffer::OwnedImpl>();
+          msg->body() = std::make_unique<Envoy::Buffer::OwnedImpl>();
         }
 
         // Callback.
@@ -179,7 +184,7 @@ DEFINE_PROTO_FUZZER(
 
   try {
     // Fuzz the stream info.
-    TestStreamInfo stream_info =
+    Envoy::TestStreamInfo stream_info =
         Envoy::Fuzz::fromStreamInfo(input.stream_info());
     EXPECT_CALL(mock_decoder_callbacks, streamInfo())
         .WillRepeatedly(ReturnRef(stream_info));
@@ -193,8 +198,8 @@ DEFINE_PROTO_FUZZER(
     // Set the operation name to match an endpoint that requires API keys
     // and has configured metric costs.
     // This ensures both CHECK and QUOTA are called.
-    Utils::setStringFilterState(
-        *stream_info.filter_state_, Utils::kOperation,
+    utils::setStringFilterState(
+        *stream_info.filter_state_, utils::kOperation,
         input.config().requirements(0).operation_name());
 
     // Create filter.
@@ -211,13 +216,13 @@ DEFINE_PROTO_FUZZER(
     // Run data against the filter.
     ASSERT_NO_THROW(doTest(filter, stream_info, input));
 
-  } catch (const EnvoyException& e) {
+  } catch (const Envoy::EnvoyException& e) {
     ENVOY_LOG_MISC(debug, "Controlled envoy exception: {}", e.what());
   }
 }
 
-}  // namespace Fuzz
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace fuzz
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

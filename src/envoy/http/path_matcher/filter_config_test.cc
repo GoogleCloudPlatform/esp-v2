@@ -21,21 +21,22 @@
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace PathMatcher {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace path_matcher {
 namespace {
 
-using ::google::api_proxy::path_matcher::VariableBinding;
+using ::espv2::api_proxy::path_matcher::VariableBinding;
 using ::google::protobuf::TextFormat;
 typedef std::vector<VariableBinding> VariableBindings;
 typedef std::vector<std::string> FieldPath;
 
 TEST(FilterConfigTest, EmptyConfig) {
-  ::google::api::envoy::http::path_matcher::FilterConfig config_pb;
-  ::testing::NiceMock<Server::Configuration::MockFactoryContext> mock_factory;
-  FilterConfig cfg(config_pb, EMPTY_STRING, mock_factory);
+  ::espv2::api::envoy::http::path_matcher::FilterConfig config_pb;
+  ::testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
+      mock_factory;
+  FilterConfig cfg(config_pb, Envoy::EMPTY_STRING, mock_factory);
 
   EXPECT_TRUE(cfg.findOperation("GET", "/foo") == nullptr);
   EXPECT_TRUE(cfg.getSnakeToJsonMap().empty());
@@ -59,10 +60,11 @@ rules {
   }
 })";
 
-  ::google::api::envoy::http::path_matcher::FilterConfig config_pb;
+  ::espv2::api::envoy::http::path_matcher::FilterConfig config_pb;
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigBasic, &config_pb));
-  ::testing::NiceMock<Server::Configuration::MockFactoryContext> mock_factory;
-  FilterConfig cfg(config_pb, EMPTY_STRING, mock_factory);
+  ::testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
+      mock_factory;
+  FilterConfig cfg(config_pb, Envoy::EMPTY_STRING, mock_factory);
 
   EXPECT_EQ("1.cloudesf_testing_cloud_goog.Bar",
             *cfg.findOperation("GET", "/bar"));
@@ -89,10 +91,11 @@ rules {
   }
 })";
 
-  ::google::api::envoy::http::path_matcher::FilterConfig config_pb;
+  ::espv2::api::envoy::http::path_matcher::FilterConfig config_pb;
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigBasic, &config_pb));
-  ::testing::NiceMock<Server::Configuration::MockFactoryContext> mock_factory;
-  FilterConfig cfg(config_pb, EMPTY_STRING, mock_factory);
+  ::testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
+      mock_factory;
+  FilterConfig cfg(config_pb, Envoy::EMPTY_STRING, mock_factory);
 
   VariableBindings bindings;
   EXPECT_EQ("1.cloudesf_testing_cloud_goog.Foo",
@@ -122,10 +125,11 @@ segment_names {
   snake_name: "x_y_z"
 })";
 
-  ::google::api::envoy::http::path_matcher::FilterConfig config_pb;
+  ::espv2::api::envoy::http::path_matcher::FilterConfig config_pb;
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfig, &config_pb));
-  ::testing::NiceMock<Server::Configuration::MockFactoryContext> mock_factory;
-  FilterConfig cfg(config_pb, EMPTY_STRING, mock_factory);
+  ::testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
+      mock_factory;
+  FilterConfig cfg(config_pb, Envoy::EMPTY_STRING, mock_factory);
 
   absl::flat_hash_map<std::string, std::string> expected = {
       {"foo_bar", "fooBar"}, {"x_y_z", "xYZ"}};
@@ -149,13 +153,14 @@ rules {
   }
 })";
 
-  ::google::api::envoy::http::path_matcher::FilterConfig config_pb;
+  ::espv2::api::envoy::http::path_matcher::FilterConfig config_pb;
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfig, &config_pb));
-  ::testing::NiceMock<Server::Configuration::MockFactoryContext> mock_factory;
+  ::testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
+      mock_factory;
 
   EXPECT_THROW_WITH_REGEX(
-      FilterConfig cfg(config_pb, EMPTY_STRING, mock_factory),
-      ProtoValidationException, "Duplicated pattern");
+      FilterConfig cfg(config_pb, Envoy::EMPTY_STRING, mock_factory),
+      Envoy::ProtoValidationException, "Duplicated pattern");
 }
 
 TEST(FilterConfigTest, InvalidPattern) {
@@ -168,13 +173,14 @@ rules {
   }
 })";
 
-  ::google::api::envoy::http::path_matcher::FilterConfig config_pb;
+  ::espv2::api::envoy::http::path_matcher::FilterConfig config_pb;
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfig, &config_pb));
-  ::testing::NiceMock<Server::Configuration::MockFactoryContext> mock_factory;
+  ::testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
+      mock_factory;
 
   EXPECT_THROW_WITH_REGEX(
-      FilterConfig cfg(config_pb, EMPTY_STRING, mock_factory),
-      ProtoValidationException, "invalid pattern");
+      FilterConfig cfg(config_pb, Envoy::EMPTY_STRING, mock_factory),
+      Envoy::ProtoValidationException, "invalid pattern");
 }
 
 TEST(FilterConfigTest, NonStandardHttpMethod) {
@@ -187,10 +193,11 @@ rules {
   }
 })";
 
-  ::google::api::envoy::http::path_matcher::FilterConfig config_pb;
+  ::espv2::api::envoy::http::path_matcher::FilterConfig config_pb;
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigBasic, &config_pb));
-  ::testing::NiceMock<Server::Configuration::MockFactoryContext> mock_factory;
-  FilterConfig cfg(config_pb, EMPTY_STRING, mock_factory);
+  ::testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
+      mock_factory;
+  FilterConfig cfg(config_pb, Envoy::EMPTY_STRING, mock_factory);
 
   EXPECT_EQ("1.cloudesf_testing_cloud_goog.Bar",
             *cfg.findOperation("NonStandardMethod", "/bar"));
@@ -202,7 +209,7 @@ rules {
 }
 
 }  // namespace
-}  // namespace PathMatcher
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace path_matcher
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

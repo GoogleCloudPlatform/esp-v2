@@ -30,7 +30,7 @@ namespace gasv1 = ::google::api::servicecontrol::v1;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace service_control {
 
@@ -411,4 +411,4 @@ TEST_F(RequestBuilderTest, CredentailIdIssuerAudienceTest) {
 
 }  // namespace service_control
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

@@ -16,7 +16,7 @@
 
 #include "absl/strings/str_split.h"
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace path_matcher {
 
@@ -221,4 +221,4 @@ PathMatcherNode::PathInfo TransformHttpTemplate(const HttpTemplate& ht) {
 
 }  // namespace path_matcher
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

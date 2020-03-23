@@ -20,10 +20,10 @@
 #include "envoy/registry/registry.h"
 #include "extensions/filters/http/common/factory_base.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 
 const std::string FilterName = "envoy.filters.http.service_control";
 
@@ -31,37 +31,38 @@ const std::string FilterName = "envoy.filters.http.service_control";
  * Config registration for ESPv2 service control filter.
  */
 class FilterFactory
-    : public Common::FactoryBase<
-          ::google::api::envoy::http::service_control::FilterConfig> {
+    : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
+          ::espv2::api::envoy::http::service_control::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(FilterName) {}
 
  private:
-  Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::google::api::envoy::http::service_control::FilterConfig&
+  Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
+      const ::espv2::api::envoy::http::service_control::FilterConfig&
           proto_config,
       const std::string& stats_prefix,
-      Server::Configuration::FactoryContext& context) override {
+      Envoy::Server::Configuration::FactoryContext& context) override {
     auto filter_config = std::make_shared<ServiceControlFilterConfig>(
         proto_config, stats_prefix, context);
-    return
-        [filter_config](Http::FilterChainFactoryCallbacks& callbacks) -> void {
-          auto filter = std::make_shared<ServiceControlFilter>(
-              filter_config->stats(), filter_config->handler_factory());
-          callbacks.addStreamFilter(Http::StreamFilterSharedPtr(filter));
-          callbacks.addAccessLogHandler(AccessLog::InstanceSharedPtr(filter));
-        };
+    return [filter_config](
+               Envoy::Http::FilterChainFactoryCallbacks& callbacks) -> void {
+      auto filter = std::make_shared<ServiceControlFilter>(
+          filter_config->stats(), filter_config->handler_factory());
+      callbacks.addStreamFilter(Envoy::Http::StreamFilterSharedPtr(filter));
+      callbacks.addAccessLogHandler(
+          Envoy::AccessLog::InstanceSharedPtr(filter));
+    };
   }
 };
 
 /**
  * Static registration for the rate limit filter. @see RegisterFactory.
  */
-static Registry::RegisterFactory<
-    FilterFactory, Server::Configuration::NamedHttpFilterConfigFactory>
+static Envoy::Registry::RegisterFactory<
+    FilterFactory, Envoy::Server::Configuration::NamedHttpFilterConfigFactory>
     register_;
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

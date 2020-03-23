@@ -25,10 +25,10 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Token {
-namespace Test {
+namespace espv2 {
+namespace envoy {
+namespace token {
+namespace test {
 
 using ::Envoy::Server::Configuration::MockFactoryContext;
 
@@ -434,7 +434,7 @@ TEST_F(TokenSubscriberTest, RetryMissingPreconditionThenSuccess) {
   ASSERT_TRUE(init_ready_);
 }
 
-}  // namespace Test
-}  // namespace Token
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace test
+}  // namespace token
+}  // namespace envoy
+}  // namespace espv2

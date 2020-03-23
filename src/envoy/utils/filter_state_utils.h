@@ -17,9 +17,9 @@
 
 #include "envoy/stream_info/filter_state.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Utils {
+namespace espv2 {
+namespace envoy {
+namespace utils {
 
 // Data names in `FilterState` set by Path Matcher filter:
 constexpr char kOperation[] = "envoy.filters.http.path_matcher.operation";
@@ -35,6 +35,6 @@ absl::string_view getStringFilterState(
     const Envoy::StreamInfo::FilterState& filter_state,
     absl::string_view data_name);
 
-}  // namespace Utils
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace utils
+}  // namespace envoy
+}  // namespace espv2

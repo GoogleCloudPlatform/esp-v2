@@ -15,29 +15,30 @@
 #include <memory>
 
 #include "src/envoy/http/backend_auth/config_parser_impl.h"
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace BackendAuth {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace backend_auth {
 
-using ::google::api::envoy::http::backend_auth::FilterConfig;
-using ::google::api::envoy::http::common::AccessToken;
-using Token::GetTokenFunc;
-using Token::TokenSubscriber;
-using Token::TokenType;
-using Token::UpdateTokenCallback;
+using ::espv2::api::envoy::http::backend_auth::FilterConfig;
+using ::espv2::api::envoy::http::common::AccessToken;
+using token::GetTokenFunc;
+using token::TokenSubscriber;
+using token::TokenType;
+using token::UpdateTokenCallback;
 
 // TODO(kyuc): add unit tests for all possible backend rule configs.
 
 AudienceContext::AudienceContext(
-    const ::google::api::envoy::http::backend_auth::BackendAuthRule&
+    const ::espv2::api::envoy::http::backend_auth::BackendAuthRule&
         proto_config,
-    Server::Configuration::FactoryContext& context,
+    Envoy::Server::Configuration::FactoryContext& context,
     const FilterConfig& filter_config,
-    const Token::TokenSubscriberFactory& token_subscriber_factory,
+    const token::TokenSubscriberFactory& token_subscriber_factory,
     GetTokenFunc access_token_fn)
     : tls_(context.threadLocal().allocateSlot()) {
-  tls_->set([](Event::Dispatcher&) -> ThreadLocal::ThreadLocalObjectSharedPtr {
+  tls_->set([](Envoy::Event::Dispatcher&)
+                -> Envoy::ThreadLocal::ThreadLocalObjectSharedPtr {
     return std::make_shared<TokenCache>();
   });
 
@@ -78,8 +79,9 @@ AudienceContext::AudienceContext(
 }
 
 FilterConfigParserImpl::FilterConfigParserImpl(
-    const FilterConfig& config, Server::Configuration::FactoryContext& context,
-    const Token::TokenSubscriberFactory& token_subscriber_factory) {
+    const FilterConfig& config,
+    Envoy::Server::Configuration::FactoryContext& context,
+    const token::TokenSubscriberFactory& token_subscriber_factory) {
   // Subscribe access token for fetching id token from iam when IdTokenFromIam
   // is set.
   if (config.id_token_info_case() == FilterConfig::kIamToken) {
@@ -116,7 +118,7 @@ FilterConfigParserImpl::FilterConfigParserImpl(
     }
   }
 }
-}  // namespace BackendAuth
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace backend_auth
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

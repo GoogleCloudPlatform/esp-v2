@@ -19,7 +19,7 @@
 
 #include <string.h>
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace auth {
 namespace {
@@ -148,4 +148,4 @@ TEST(JsonUtil, GetPrimitiveFieldValue) {
 }  // namespace
 }  // namespace auth
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

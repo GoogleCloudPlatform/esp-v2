@@ -20,10 +20,10 @@
 #include "gtest/gtest.h"
 #include "test/test_common/utility.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Token {
-namespace Test {
+namespace espv2 {
+namespace envoy {
+namespace token {
+namespace test {
 
 // Default token expiry time for ID tokens.
 // Should match the value in `iam_token_info.cc`
@@ -40,7 +40,7 @@ TEST_F(IamTokenInfoTest, FailPreconditions) {
   // Create info that fails preconditions.
   ::google::protobuf::RepeatedPtrField<std::string> delegates;
   ::google::protobuf::RepeatedPtrField<std::string> scopes;
-  Token::GetTokenFunc access_token_fn = []() { return EMPTY_STRING; };
+  token::GetTokenFunc access_token_fn = []() { return Envoy::EMPTY_STRING; };
   info_ =
       std::make_unique<IamTokenInfo>(delegates, scopes, false, access_token_fn);
 
@@ -55,7 +55,7 @@ TEST_F(IamTokenInfoTest, SimpleSuccess) {
   // Create info that fails preconditions.
   ::google::protobuf::RepeatedPtrField<std::string> delegates;
   ::google::protobuf::RepeatedPtrField<std::string> scopes;
-  Token::GetTokenFunc access_token_fn = []() { return "valid-access-token"; };
+  token::GetTokenFunc access_token_fn = []() { return "valid-access-token"; };
   info_ =
       std::make_unique<IamTokenInfo>(delegates, scopes, false, access_token_fn);
 
@@ -96,7 +96,7 @@ TEST_F(IamTokenInfoTest, SetDelegatesAndScopes) {
   ::google::protobuf::RepeatedPtrField<std::string> scopes;
   scopes.Add("scope_foo");
   scopes.Add("scope_bar");
-  Token::GetTokenFunc access_token_fn = []() { return "valid-access-token"; };
+  token::GetTokenFunc access_token_fn = []() { return "valid-access-token"; };
   info_ =
       std::make_unique<IamTokenInfo>(delegates, scopes, false, access_token_fn);
 
@@ -105,7 +105,7 @@ TEST_F(IamTokenInfoTest, SetDelegatesAndScopes) {
 
   // Assert success.
   EXPECT_NE(got_msg, nullptr);
-  EXPECT_TRUE(TestUtility::jsonStringEqual(
+  EXPECT_TRUE(Envoy::TestUtility::jsonStringEqual(
       got_msg->bodyAsString(),
       R"({"scope":["scope_foo","scope_bar"],"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar"]})"));
 }
@@ -116,7 +116,7 @@ TEST_F(IamTokenInfoTest, OnlySetDelegates) {
   delegates.Add("delegate_foo");
   delegates.Add("delegate_bar");
   ::google::protobuf::RepeatedPtrField<std::string> scopes;
-  Token::GetTokenFunc access_token_fn = []() { return "valid-access-token"; };
+  token::GetTokenFunc access_token_fn = []() { return "valid-access-token"; };
   info_ =
       std::make_unique<IamTokenInfo>(delegates, scopes, false, access_token_fn);
 
@@ -125,7 +125,7 @@ TEST_F(IamTokenInfoTest, OnlySetDelegates) {
 
   // Assert success.
   EXPECT_NE(got_msg, nullptr);
-  EXPECT_TRUE(TestUtility::jsonStringEqual(
+  EXPECT_TRUE(Envoy::TestUtility::jsonStringEqual(
       got_msg->bodyAsString(),
       R"({"delegates":["projects/-/serviceAccounts/delegate_foo","projects/-/serviceAccounts/delegate_bar"]})"));
 }
@@ -136,7 +136,7 @@ TEST_F(IamTokenInfoTest, OnlySetScopes) {
   ::google::protobuf::RepeatedPtrField<std::string> scopes;
   scopes.Add("scope_foo");
   scopes.Add("scope_bar");
-  Token::GetTokenFunc access_token_fn = []() { return "valid-access-token"; };
+  token::GetTokenFunc access_token_fn = []() { return "valid-access-token"; };
   info_ =
       std::make_unique<IamTokenInfo>(delegates, scopes, false, access_token_fn);
 
@@ -145,7 +145,7 @@ TEST_F(IamTokenInfoTest, OnlySetScopes) {
 
   // Assert success.
   EXPECT_NE(got_msg, nullptr);
-  EXPECT_TRUE(TestUtility::jsonStringEqual(
+  EXPECT_TRUE(Envoy::TestUtility::jsonStringEqual(
       got_msg->bodyAsString(), R"({"scope":["scope_foo","scope_bar"]})"));
 }
 
@@ -155,7 +155,7 @@ class IamParseTokenTest : public IamTokenInfoTest {
     // None of these fields matter for parsing the token.
     ::google::protobuf::RepeatedPtrField<std::string> delegates;
     ::google::protobuf::RepeatedPtrField<std::string> scopes;
-    Token::GetTokenFunc access_token_fn = []() { return "fake-access-token"; };
+    token::GetTokenFunc access_token_fn = []() { return "fake-access-token"; };
     info_ = std::make_unique<IamTokenInfo>(delegates, scopes, false,
                                            access_token_fn);
   }
@@ -228,7 +228,7 @@ TEST_F(IamParseTokenTest, SetIncludeEmail) {
   ::google::protobuf::RepeatedPtrField<std::string> scopes;
   scopes.Add("scope_foo");
   scopes.Add("scope_bar");
-  Token::GetTokenFunc access_token_fn = []() { return "valid-access-token"; };
+  token::GetTokenFunc access_token_fn = []() { return "valid-access-token"; };
   info_ =
       std::make_unique<IamTokenInfo>(delegates, scopes, true, access_token_fn);
 
@@ -237,12 +237,12 @@ TEST_F(IamParseTokenTest, SetIncludeEmail) {
 
   // Assert success.
   EXPECT_NE(got_msg, nullptr);
-  EXPECT_TRUE(TestUtility::jsonStringEqual(
+  EXPECT_TRUE(Envoy::TestUtility::jsonStringEqual(
       got_msg->bodyAsString(),
       R"({"includeEmail":true,"scope":["scope_foo","scope_bar"]})"));
 }
 
-}  // namespace Test
-}  // namespace Token
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace test
+}  // namespace token
+}  // namespace envoy
+}  // namespace espv2

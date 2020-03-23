@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace path_matcher {
 
@@ -66,4 +66,4 @@ class HttpTemplate {
 
 }  // namespace path_matcher
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

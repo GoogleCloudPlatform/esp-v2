@@ -25,7 +25,7 @@
 
 #include "src/api_proxy/service_control/request_info.h"
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace service_control {
 
@@ -101,4 +101,4 @@ class RequestBuilder final {
 
 }  // namespace service_control
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

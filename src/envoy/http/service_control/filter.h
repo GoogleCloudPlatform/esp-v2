@@ -24,16 +24,17 @@
 
 #include <string>
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 
 // The Envoy filter for ESPv2 service control client.
-class ServiceControlFilter : public Http::PassThroughFilter,
-                             public AccessLog::Instance,
-                             public ServiceControlHandler::CheckDoneCallback,
-                             public Logger::Loggable<Logger::Id::filter> {
+class ServiceControlFilter
+    : public Envoy::Http::PassThroughFilter,
+      public Envoy::AccessLog::Instance,
+      public ServiceControlHandler::CheckDoneCallback,
+      public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   ServiceControlFilter(ServiceControlFilterStats& stats,
                        const ServiceControlHandlerFactory& factory)
@@ -41,30 +42,31 @@ class ServiceControlFilter : public Http::PassThroughFilter,
 
   void onDestroy() override;
 
-  // Http::StreamDecoderFilter
-  Http::FilterHeadersStatus decodeHeaders(Http::RequestHeaderMap& headers,
-                                          bool) override;
-  Http::FilterDataStatus decodeData(Buffer::Instance& data,
-                                    bool end_stream) override;
-  Http::FilterTrailersStatus decodeTrailers(Http::RequestTrailerMap&) override;
+  // Envoy::Http::StreamDecoderFilter
+  Envoy::Http::FilterHeadersStatus decodeHeaders(
+      Envoy::Http::RequestHeaderMap& headers, bool) override;
+  Envoy::Http::FilterDataStatus decodeData(Envoy::Buffer::Instance& data,
+                                           bool end_stream) override;
+  Envoy::Http::FilterTrailersStatus decodeTrailers(
+      Envoy::Http::RequestTrailerMap&) override;
 
-  // Http::StreamEncoderFilter
-  Http::FilterHeadersStatus encodeHeaders(Http::ResponseHeaderMap& headers,
-                                          bool) override;
-  Http::FilterDataStatus encodeData(Buffer::Instance& data,
-                                    bool end_stream) override;
+  // Envoy::Http::StreamEncoderFilter
+  Envoy::Http::FilterHeadersStatus encodeHeaders(
+      Envoy::Http::ResponseHeaderMap& headers, bool) override;
+  Envoy::Http::FilterDataStatus encodeData(Envoy::Buffer::Instance& data,
+                                           bool end_stream) override;
 
   // Called when the request is completed.
-  void log(const Http::RequestHeaderMap* request_headers,
-           const Http::ResponseHeaderMap* response_headers,
-           const Http::ResponseTrailerMap* response_trailers,
-           const StreamInfo::StreamInfo& stream_info) override;
+  void log(const Envoy::Http::RequestHeaderMap* request_headers,
+           const Envoy::Http::ResponseHeaderMap* response_headers,
+           const Envoy::Http::ResponseTrailerMap* response_trailers,
+           const Envoy::StreamInfo::StreamInfo& stream_info) override;
 
   // For Handler::CheckDoneCallback, called when callCheck() is done
   void onCheckDone(const ::google::protobuf::util::Status& status) override;
 
  private:
-  void rejectRequest(Http::Code code, absl::string_view error_msg);
+  void rejectRequest(Envoy::Http::Code code, absl::string_view error_msg);
 
   ServiceControlFilterStats& stats_;
   const ServiceControlHandlerFactory& factory_;
@@ -79,7 +81,7 @@ class ServiceControlFilter : public Http::PassThroughFilter,
   bool stopped_ = false;
 };
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

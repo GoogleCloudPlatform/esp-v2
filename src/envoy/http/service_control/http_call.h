@@ -20,10 +20,10 @@
 #include "envoy/upstream/cluster_manager.h"
 #include "google/protobuf/stubs/status.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 
 class HttpCall {
  public:
@@ -40,17 +40,19 @@ class HttpCall {
   virtual void call() PURE;
 };
 
-class HttpCallFactory : public Logger::Loggable<Logger::Id::filter> {
+class HttpCallFactory
+    : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
-  HttpCallFactory(Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher,
-                  const ::google::api::envoy::http::common::HttpUri& uri,
+  HttpCallFactory(Envoy::Upstream::ClusterManager& cm,
+                  Envoy::Event::Dispatcher& dispatcher,
+                  const ::espv2::api::envoy::http::common::HttpUri& uri,
                   const std::string& suffix_url,
                   std::function<const std::string&()> token_fn,
                   uint32_t timeout_ms, uint32_t retries,
                   Envoy::TimeSource& time_source,
                   const std::string& trace_operation_name);
 
-  HttpCall* createHttpCall(const Protobuf::Message& body,
+  HttpCall* createHttpCall(const Envoy::Protobuf::Message& body,
                            Envoy::Tracing::Span& parent_span,
                            HttpCall::DoneFunc on_done);
 
@@ -61,11 +63,11 @@ class HttpCallFactory : public Logger::Loggable<Logger::Id::filter> {
   absl::flat_hash_set<HttpCall*> active_calls_;
 
   // envoy upstream
-  Upstream::ClusterManager& cm_;
-  Event::Dispatcher& dispatcher_;
+  Envoy::Upstream::ClusterManager& cm_;
+  Envoy::Event::Dispatcher& dispatcher_;
 
   // call uri address
-  const ::google::api::envoy::http::common::HttpUri uri_;
+  const ::espv2::api::envoy::http::common::HttpUri uri_;
   const std::string suffix_url_;
 
   // token getter
@@ -83,7 +85,7 @@ class HttpCallFactory : public Logger::Loggable<Logger::Id::filter> {
   const std::string trace_operation_name_;
 };
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

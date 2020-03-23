@@ -4,11 +4,12 @@
 
 #include "tests/fuzz/structured_inputs/http_template.pb.validate.h"
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace path_matcher {
 namespace fuzz {
-DEFINE_PROTO_FUZZER(const tests::fuzz::protos::HttpTemplateInput& input) {
+DEFINE_PROTO_FUZZER(
+    const espv2::tests::fuzz::protos::HttpTemplateInput& input) {
   for (const auto& path : input.paths()) {
     HttpTemplate::Parse(path);
   }
@@ -17,4 +18,4 @@ DEFINE_PROTO_FUZZER(const tests::fuzz::protos::HttpTemplateInput& input) {
 }  // namespace fuzz
 }  // namespace path_matcher
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

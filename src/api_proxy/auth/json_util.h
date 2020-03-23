@@ -19,7 +19,7 @@
 // include it.
 #include "src/api_proxy/auth/grpc_internals.h"
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace auth {
 
@@ -46,4 +46,4 @@ void FillChild(grpc_json* child, grpc_json* brother, grpc_json* parent,
 
 }  // namespace auth
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

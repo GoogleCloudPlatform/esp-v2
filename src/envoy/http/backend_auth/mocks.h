@@ -16,10 +16,10 @@
 #include "src/envoy/http/backend_auth/config_parser.h"
 #include "src/envoy/http/backend_auth/filter_config.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace BackendAuth {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace backend_auth {
 class MockFilterConfigParser : public FilterConfigParser {
  public:
   MOCK_METHOD(absl::string_view, getAudience, (absl::string_view operation),
@@ -35,7 +35,7 @@ class MockFilterConfig : public FilterConfig {
 
   MOCK_METHOD(FilterStats&, stats, (), ());
 };
-}  // namespace BackendAuth
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace backend_auth
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

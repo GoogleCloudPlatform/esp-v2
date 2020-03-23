@@ -14,7 +14,7 @@
 
 syntax = "proto3";
 
-package google.api.envoy.http.backend_auth;
+package espv2.api.envoy.http.backend_auth;
 
 import "api/envoy/http/common/base.proto";
 import "validate/validate.proto";

@@ -23,9 +23,9 @@
 #include "envoy/upstream/cluster_manager.h"
 #include "src/envoy/token/token_info.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Token {
+namespace espv2 {
+namespace envoy {
+namespace token {
 
 enum TokenType { AccessToken, IdentityToken };
 
@@ -87,6 +87,6 @@ class TokenSubscriber
 
 typedef std::unique_ptr<TokenSubscriber> TokenSubscriberPtr;
 
-}  // namespace Token
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace token
+}  // namespace envoy
+}  // namespace espv2

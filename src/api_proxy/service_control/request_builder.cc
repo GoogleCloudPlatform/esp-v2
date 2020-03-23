@@ -40,7 +40,7 @@ using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 using ::google::service_control_client::DistributionHelper;
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace service_control {
 
@@ -1465,4 +1465,4 @@ bool RequestBuilder::IsLabelSupported(
 
 }  // namespace service_control
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

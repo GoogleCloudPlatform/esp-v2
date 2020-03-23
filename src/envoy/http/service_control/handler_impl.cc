@@ -22,31 +22,33 @@
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
 
-using ::google::api_proxy::service_control::CheckResponseInfo;
-using ::google::api_proxy::service_control::OperationInfo;
+using ::espv2::api_proxy::service_control::CheckResponseInfo;
+using ::espv2::api_proxy::service_control::OperationInfo;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 
 // The HTTP header to send consumer project to backend.
-const Http::LowerCaseString kConsumerProjectId("x-endpoint-api-project-id");
+const Envoy::Http::LowerCaseString kConsumerProjectId(
+    "x-endpoint-api-project-id");
 
 // CheckRequest headers
-const Http::LowerCaseString kIosBundleIdHeader{"x-ios-bundle-identifier"};
-const Http::LowerCaseString kAndroidPackageHeader{"x-android-package"};
-const Http::LowerCaseString kAndroidCertHeader{"x-android-cert"};
-const Http::LowerCaseString kRefererHeader{"referer"};
+const Envoy::Http::LowerCaseString kIosBundleIdHeader{
+    "x-ios-bundle-identifier"};
+const Envoy::Http::LowerCaseString kAndroidPackageHeader{"x-android-package"};
+const Envoy::Http::LowerCaseString kAndroidCertHeader{"x-android-cert"};
+const Envoy::Http::LowerCaseString kRefererHeader{"referer"};
 
 constexpr char JwtPayloadIssuerPath[] = "iss";
 constexpr char JwtPayloadAuidencePath[] = "aud";
 
 ServiceControlHandlerImpl::ServiceControlHandlerImpl(
-    const Http::RequestHeaderMap& headers,
-    const StreamInfo::StreamInfo& stream_info, const std::string& uuid,
+    const Envoy::Http::RequestHeaderMap& headers,
+    const Envoy::StreamInfo::StreamInfo& stream_info, const std::string& uuid,
     const FilterConfigParser& cfg_parser, Envoy::TimeSource& time_source)
     : cfg_parser_(cfg_parser),
       stream_info_(stream_info),
@@ -60,14 +62,14 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
   is_grpc_ = Envoy::Grpc::Common::hasGrpcContentType(headers);
 
   absl::string_view original_http_method =
-      Utils::readHeaderEntry(headers.Method());
+      utils::readHeaderEntry(headers.Method());
   http_method_ = std::string(
-      Utils::getRequestHTTPMethodWithOverride(original_http_method, headers));
-  path_ = std::string(Utils::readHeaderEntry(headers.Path()));
+      utils::getRequestHTTPMethodWithOverride(original_http_method, headers));
+  path_ = std::string(utils::readHeaderEntry(headers.Path()));
   request_header_size_ = headers.byteSize();
 
-  const absl::string_view operation = Utils::getStringFilterState(
-      stream_info_.filterState(), Utils::kOperation);
+  const absl::string_view operation = utils::getStringFilterState(
+      stream_info_.filterState(), utils::kOperation);
 
   // NOTE: this shouldn't happen in practice because Path Matcher filter would
   // have already rejected the request.
@@ -108,7 +110,7 @@ void ServiceControlHandlerImpl::onDestroy() {
 }
 
 void ServiceControlHandlerImpl::fillOperationInfo(
-    ::google::api_proxy::service_control::OperationInfo& info) {
+    ::espv2::api_proxy::service_control::OperationInfo& info) {
   info.operation_id = uuid_;
   info.operation_name = require_ctx_->config().operation_name();
   info.producer_project_id =
@@ -125,7 +127,7 @@ void ServiceControlHandlerImpl::fillOperationInfo(
 }
 
 void ServiceControlHandlerImpl::prepareReportRequest(
-    ::google::api_proxy::service_control::ReportRequestInfo& info) {
+    ::espv2::api_proxy::service_control::ReportRequestInfo& info) {
   fillOperationInfo(info);
 
   // Report: not to send api-key if invalid or service is not enabled.
@@ -147,9 +149,9 @@ void ServiceControlHandlerImpl::prepareReportRequest(
   fillGCPInfo(cfg_parser_.config(), info);
 }
 
-void ServiceControlHandlerImpl::callCheck(Http::RequestHeaderMap& headers,
-                                          Envoy::Tracing::Span& parent_span,
-                                          CheckDoneCallback& callback) {
+void ServiceControlHandlerImpl::callCheck(
+    Envoy::Http::RequestHeaderMap& headers, Envoy::Tracing::Span& parent_span,
+    CheckDoneCallback& callback) {
   if (!isConfigured()) {
     callback.onCheckDone(Status(Code::NOT_FOUND, "Method does not exist."));
     return;
@@ -172,16 +174,16 @@ void ServiceControlHandlerImpl::callCheck(Http::RequestHeaderMap& headers,
   }
 
   // Make a check call
-  ::google::api_proxy::service_control::CheckRequestInfo info;
+  ::espv2::api_proxy::service_control::CheckRequestInfo info;
   fillOperationInfo(info);
 
   info.ios_bundle_id =
-      std::string(Utils::extractHeader(headers, kIosBundleIdHeader));
-  info.referer = std::string(Utils::extractHeader(headers, kRefererHeader));
+      std::string(utils::extractHeader(headers, kIosBundleIdHeader));
+  info.referer = std::string(utils::extractHeader(headers, kRefererHeader));
   info.android_package_name =
-      std::string(Utils::extractHeader(headers, kAndroidPackageHeader));
+      std::string(utils::extractHeader(headers, kAndroidPackageHeader));
   info.android_cert_fingerprint =
-      std::string(Utils::extractHeader(headers, kAndroidCertHeader));
+      std::string(utils::extractHeader(headers, kAndroidCertHeader));
 
   on_check_done_called_ = false;
   cancel_fn_ = require_ctx_->service_ctx().call().callCheck(
@@ -204,7 +206,7 @@ void ServiceControlHandlerImpl::callQuota() {
     return;
   }
 
-  ::google::api_proxy::service_control::QuotaRequestInfo info;
+  ::espv2::api_proxy::service_control::QuotaRequestInfo info;
   fillOperationInfo(info);
 
   info.method_name = require_ctx_->config().operation_name();
@@ -222,7 +224,7 @@ void ServiceControlHandlerImpl::callQuota() {
 }
 
 void ServiceControlHandlerImpl::onCheckResponse(
-    Http::RequestHeaderMap& headers, const Status& status,
+    Envoy::Http::RequestHeaderMap& headers, const Status& status,
     const CheckResponseInfo& response_info) {
   check_response_info_ = response_info;
 
@@ -243,15 +245,15 @@ void ServiceControlHandlerImpl::onCheckResponse(
 }
 
 void ServiceControlHandlerImpl::processResponseHeaders(
-    const Http::ResponseHeaderMap& response_headers) {
+    const Envoy::Http::ResponseHeaderMap& response_headers) {
   frontend_protocol_ = getFrontendProtocol(&response_headers, stream_info_);
   response_header_size_ = response_headers.byteSize();
 }
 
 void ServiceControlHandlerImpl::callReport(
-    const Http::RequestHeaderMap* request_headers,
-    const Http::ResponseHeaderMap* response_headers,
-    const Http::ResponseTrailerMap* response_trailers) {
+    const Envoy::Http::RequestHeaderMap* request_headers,
+    const Envoy::Http::ResponseHeaderMap* response_headers,
+    const Envoy::Http::ResponseTrailerMap* response_trailers) {
   if (require_ctx_ == nullptr) {
     require_ctx_ = cfg_parser_.non_match_rqm_ctx();
   }
@@ -260,7 +262,7 @@ void ServiceControlHandlerImpl::callReport(
     return;
   }
 
-  ::google::api_proxy::service_control::ReportRequestInfo info;
+  ::espv2::api_proxy::service_control::ReportRequestInfo info;
   prepareReportRequest(info);
   fillLoggedHeader(request_headers,
                    require_ctx_->service_ctx().config().log_request_headers(),
@@ -290,7 +292,7 @@ void ServiceControlHandlerImpl::callReport(
 
   if (request_headers) {
     info.referer =
-        std::string(Utils::extractHeader(*request_headers, kRefererHeader));
+        std::string(utils::extractHeader(*request_headers, kRefererHeader));
   }
 
   fillLatency(stream_info_, info.latency);
@@ -310,11 +312,16 @@ void ServiceControlHandlerImpl::callReport(
   info.response_size = stream_info_.bytesSent() + response_header_size;
   info.response_bytes = stream_info_.bytesSent() + response_header_size;
 
-  if (stream_info_.filterState().hasData<GrpcStats::GrpcStatsObject>(
-          HttpFilterNames::get().GrpcStats)) {
+  if (stream_info_.filterState()
+          .hasData<Envoy::Extensions::HttpFilters::GrpcStats::GrpcStatsObject>(
+              Envoy::Extensions::HttpFilters::HttpFilterNames::get()
+                  .GrpcStats)) {
     const auto& stat_obj =
-        stream_info_.filterState().getDataReadOnly<GrpcStats::GrpcStatsObject>(
-            HttpFilterNames::get().GrpcStats);
+        stream_info_.filterState()
+            .getDataReadOnly<
+                Envoy::Extensions::HttpFilters::GrpcStats::GrpcStatsObject>(
+                Envoy::Extensions::HttpFilters::HttpFilterNames::get()
+                    .GrpcStats);
     info.streaming_request_message_counts = stat_obj.request_message_count;
     info.streaming_response_message_counts = stat_obj.response_message_count;
   }
@@ -342,7 +349,7 @@ void ServiceControlHandlerImpl::tryIntermediateReport() {
     return;
   }
 
-  ::google::api_proxy::service_control::ReportRequestInfo info;
+  ::espv2::api_proxy::service_control::ReportRequestInfo info;
   prepareReportRequest(info);
 
   info.request_bytes = stream_info_.bytesReceived() + request_header_size_;
@@ -356,7 +363,7 @@ void ServiceControlHandlerImpl::tryIntermediateReport() {
   is_first_report_ = false;
 }
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

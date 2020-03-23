@@ -20,9 +20,9 @@
 #include "gtest/gtest.h"
 #include "test/test_common/utility.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Utils {
+namespace espv2 {
+namespace envoy {
+namespace utils {
 namespace {
 
 TEST(FilterStateUtilsTest, SetAndGetStringValueFromFilterState) {
@@ -40,10 +40,10 @@ TEST(FilterStateUtilsTest, ReturnEmptyStringViewForNonExistingDataName) {
   Envoy::StreamInfo::FilterStateImpl filter_state(
       Envoy::StreamInfo::FilterState::LifeSpan::FilterChain);
   EXPECT_EQ(getStringFilterState(filter_state, "non_existing_data_name"),
-            EMPTY_STRING);
+            Envoy::EMPTY_STRING);
 }
 
 }  // namespace
-}  // namespace Utils
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace utils
+}  // namespace envoy
+}  // namespace espv2

@@ -20,9 +20,9 @@
 #include "google/protobuf/timestamp.pb.h"
 #include "google/protobuf/util/json_util.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Utils {
+namespace espv2 {
+namespace envoy {
+namespace utils {
 
 // A class to use protobuf Struct to parse simple JSON
 // * Use JsonStringToMessage to convert a JSON to Struct
@@ -44,6 +44,6 @@ class JsonStruct {
   const ::google::protobuf::Struct& struct_;
 };
 
-}  // namespace Utils
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace utils
+}  // namespace envoy
+}  // namespace espv2

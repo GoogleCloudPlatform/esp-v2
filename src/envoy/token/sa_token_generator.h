@@ -20,9 +20,9 @@
 #include "envoy/server/filter_config.h"
 #include "envoy/upstream/cluster_manager.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Token {
+namespace espv2 {
+namespace envoy {
+namespace token {
 
 // The class generates an access_token with 1 hour expiration from a service
 // account json for an audience and re-generating it before it is expired.
@@ -49,6 +49,6 @@ class ServiceAccountTokenGenerator
 };
 typedef std::unique_ptr<ServiceAccountTokenGenerator> ServiceAccountTokenPtr;
 
-}  // namespace Token
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace token
+}  // namespace envoy
+}  // namespace espv2

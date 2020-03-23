@@ -19,9 +19,9 @@ using ::google::protobuf::Value;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
-namespace Envoy {
-namespace Extensions {
-namespace Utils {
+namespace espv2 {
+namespace envoy {
+namespace utils {
 
 Status JsonStruct::getString(const std::string& key, std::string* value) {
   const auto& fields = struct_.fields();
@@ -79,6 +79,6 @@ Status JsonStruct::getTimestamp(const std::string& key,
                       "Field is not a Timestamp");
 }
 
-}  // namespace Utils
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace utils
+}  // namespace envoy
+}  // namespace espv2

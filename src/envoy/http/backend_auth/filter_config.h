@@ -18,10 +18,10 @@
 #include "common/common/logger.h"
 #include "src/envoy/http/backend_auth/config_parser.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace BackendAuth {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace backend_auth {
 
 /**
  * All stats for the backend auth filter. @see stats_macros.h
@@ -51,7 +51,7 @@ class FilterConfig {
 
 typedef std::shared_ptr<FilterConfig> FilterConfigSharedPtr;
 
-}  // namespace BackendAuth
+}  // namespace backend_auth
 }  // namespace HttpFilters
 }  // namespace Extensions
 }  // namespace Envoy

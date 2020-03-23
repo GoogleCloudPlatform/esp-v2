@@ -23,25 +23,25 @@
 #include "src/envoy/http/service_control/handler_impl.h"
 #include "src/envoy/http/service_control/service_control_call_impl.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 
 // The Envoy filter config for ESPv2 service control client.
-class ServiceControlFilterConfig : public Logger::Loggable<Logger::Id::filter>,
-                                   public ServiceControlFilterStatBase {
+class ServiceControlFilterConfig
+    : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter>,
+      public ServiceControlFilterStatBase {
  public:
   ServiceControlFilterConfig(
-      const ::google::api::envoy::http::service_control::FilterConfig&
+      const ::espv2::api::envoy::http::service_control::FilterConfig&
           proto_config,
       const std::string& stats_prefix,
-      Server::Configuration::FactoryContext& context)
+      Envoy::Server::Configuration::FactoryContext& context)
       : ServiceControlFilterStatBase(stats_prefix, context.scope()),
-        proto_config_(
-            std::make_shared<
-                ::google::api::envoy::http::service_control::FilterConfig>(
-                proto_config)),
+        proto_config_(std::make_shared<
+                      ::espv2::api::envoy::http::service_control::FilterConfig>(
+            proto_config)),
         call_factory_(proto_config_, context),
         config_parser_(*proto_config_, call_factory_),
         handler_factory_(context.random(), config_parser_,
@@ -60,7 +60,7 @@ class ServiceControlFilterConfig : public Logger::Loggable<Logger::Id::filter>,
 
 typedef std::shared_ptr<ServiceControlFilterConfig> FilterConfigSharedPtr;
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

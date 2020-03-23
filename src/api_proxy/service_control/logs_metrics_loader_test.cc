@@ -20,7 +20,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace service_control {
 
@@ -553,4 +553,4 @@ TEST(LogsMetricsLoader, LoadLogsMetrics) {
 
 }  // namespace service_control
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

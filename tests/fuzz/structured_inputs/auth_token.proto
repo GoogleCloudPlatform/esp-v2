@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package tests.fuzz.protos;
+package espv2.tests.fuzz.protos;
 
 
 message AuthTokenInput {

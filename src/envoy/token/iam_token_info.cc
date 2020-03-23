@@ -20,11 +20,11 @@
 #include "common/http/message_impl.h"
 #include "src/envoy/utils/json_struct.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Token {
+namespace espv2 {
+namespace envoy {
+namespace token {
 
-using Utils::JsonStruct;
+using utils::JsonStruct;
 
 // Body field for the sequence of service accounts in a delegation chain.
 constexpr char kDelegatesField[]("delegates");
@@ -69,7 +69,7 @@ Envoy::Http::RequestMessagePtr IamTokenInfo::prepareRequest(
   }
 
   absl::string_view host, path;
-  Http::Utility::extractHostPathFromUri(token_url, host, path);
+  Envoy::Http::Utility::extractHostPathFromUri(token_url, host, path);
   auto headers =
       Envoy::Http::createHeaderMap<Envoy::Http::RequestHeaderMapImpl>(
           {{Envoy::Http::Headers::get().Method, "POST"},
@@ -86,7 +86,7 @@ Envoy::Http::RequestMessagePtr IamTokenInfo::prepareRequest(
   }
 
   if (!scopes_.empty()) {
-    insertStrListToProto(body, kScopesField, scopes_, EMPTY_STRING);
+    insertStrListToProto(body, kScopesField, scopes_, Envoy::EMPTY_STRING);
   }
 
   if (include_email_) {
@@ -97,9 +97,9 @@ Envoy::Http::RequestMessagePtr IamTokenInfo::prepareRequest(
 
   if (!delegates_.empty() || !scopes_.empty() || include_email_) {
     std::string bodyStr =
-        MessageUtil::getJsonStringFromMessage(body, false, false);
-    message->body() =
-        std::make_unique<Buffer::OwnedImpl>(bodyStr.data(), bodyStr.size());
+        Envoy::MessageUtil::getJsonStringFromMessage(body, false, false);
+    message->body() = std::make_unique<Envoy::Buffer::OwnedImpl>(
+        bodyStr.data(), bodyStr.size());
   }
   return message;
 }
@@ -192,6 +192,6 @@ void IamTokenInfo::insertStrListToProto(
   (*body.mutable_struct_value()->mutable_fields())[key].Swap(&vals);
 }
 
-}  // namespace Token
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace token
+}  // namespace envoy
+}  // namespace espv2

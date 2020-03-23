@@ -19,9 +19,9 @@
 
 using ::google::protobuf::util::error::Code;
 
-namespace Envoy {
-namespace Extensions {
-namespace Utils {
+namespace espv2 {
+namespace envoy {
+namespace utils {
 namespace {
 
 TEST(JsonStructTest, GetString) {
@@ -99,6 +99,6 @@ TEST(JsonStructTest, GetInt) {
 }
 
 }  // namespace
-}  // namespace Utils
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace utils
+}  // namespace envoy
+}  // namespace espv2

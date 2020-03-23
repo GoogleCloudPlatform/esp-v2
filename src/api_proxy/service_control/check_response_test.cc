@@ -21,7 +21,7 @@ using ::google::api::servicecontrol::v1::CheckError;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace service_control {
 
@@ -166,4 +166,4 @@ TEST(CheckResponseTest, UnavailableCheckErrorStatus) {
 
 }  // namespace service_control
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

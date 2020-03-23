@@ -21,10 +21,10 @@
 #include "envoy/thread_local/thread_local.h"
 #include "src/envoy/token/token_subscriber_factory.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace BackendAuth {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace backend_auth {
 // Use shared_ptr to do atomic token update.
 typedef std::shared_ptr<std::string> TokenSharedPtr;
 
@@ -40,7 +40,7 @@ class FilterConfigParser {
 
 typedef std::unique_ptr<FilterConfigParser> FilterConfigParserPtr;
 
-}  // namespace BackendAuth
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace backend_auth
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

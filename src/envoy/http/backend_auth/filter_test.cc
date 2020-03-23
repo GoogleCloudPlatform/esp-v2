@@ -26,10 +26,10 @@
 #include "test/test_common/utility.h"
 
 using ::testing::_;
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace BackendAuth {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace backend_auth {
 
 /**
  * Base class for testing the Backend Auth filter. Makes a simple request
@@ -53,8 +53,8 @@ class BackendAuthFilterTest : public ::testing::Test {
 };
 
 TEST_F(BackendAuthFilterTest, NoOperationName) {
-  Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
-                                         {":path", "/books/1"}};
+  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                                {":path", "/books/1"}};
 
   EXPECT_CALL(*mock_filter_config_, cfg_parser).Times(0);
 
@@ -65,10 +65,10 @@ TEST_F(BackendAuthFilterTest, NoOperationName) {
 }
 
 TEST_F(BackendAuthFilterTest, NotHaveAudience) {
-  Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
-                                         {":path", "/books/1"}};
-  Utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
+  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                                {":path", "/books/1"}};
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
       "operation-without-audience");
 
   EXPECT_CALL(*mock_filter_config_, cfg_parser)
@@ -86,10 +86,10 @@ TEST_F(BackendAuthFilterTest, NotHaveAudience) {
 }
 
 TEST_F(BackendAuthFilterTest, HasAudienceButGetsEmptyToken) {
-  Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
-                                         {":path", "/books/1"}};
-  Utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
+  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                                {":path", "/books/1"}};
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
       "operation-with-audience");
 
   EXPECT_CALL(*mock_filter_config_, cfg_parser)
@@ -102,7 +102,8 @@ TEST_F(BackendAuthFilterTest, HasAudienceButGetsEmptyToken) {
       .WillRepeatedly(testing::Return(nullptr));
   EXPECT_CALL(
       mock_decoder_callbacks_.stream_info_,
-      setResponseFlag(StreamInfo::ResponseFlag::UnauthorizedExternalService));
+      setResponseFlag(
+          Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
 
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
@@ -111,13 +112,13 @@ TEST_F(BackendAuthFilterTest, HasAudienceButGetsEmptyToken) {
 }
 
 TEST_F(BackendAuthFilterTest, SucceedAppendToken) {
-  Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
-                                         {":path", "/books/1"}};
-  Utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
+  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                                {":path", "/books/1"}};
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
       "operation-with-audience");
-  testing::NiceMock<Stats::MockStore> scope;
-  const std::string prefix = EMPTY_STRING;
+  testing::NiceMock<Envoy::Stats::MockStore> scope;
+  const std::string prefix = Envoy::EMPTY_STRING;
   FilterStats filter_stats{
       ALL_BACKEND_AUTH_FILTER_STATS(POOL_COUNTER_PREFIX(scope, prefix))};
 
@@ -137,13 +138,14 @@ TEST_F(BackendAuthFilterTest, SucceedAppendToken) {
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
 
-  EXPECT_EQ(
-      headers.get(Http::Headers::get().Authorization)->value().getStringView(),
-      "Bearer this-is-token");
+  EXPECT_EQ(headers.get(Envoy::Http::Headers::get().Authorization)
+                ->value()
+                .getStringView(),
+            "Bearer this-is-token");
   EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 }
 
-}  // namespace BackendAuth
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace backend_auth
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

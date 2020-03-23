@@ -19,11 +19,11 @@
 #include "common/http/utility.h"
 #include "src/envoy/utils/json_struct.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Token {
+namespace espv2 {
+namespace envoy {
+namespace token {
 
-using Utils::JsonStruct;
+using utils::JsonStruct;
 
 // Required header when fetching from IMDS.
 const Envoy::Http::LowerCaseString kMetadataFlavorKey("Metadata-Flavor");
@@ -37,7 +37,7 @@ ImdsTokenInfo::ImdsTokenInfo() {}
 Envoy::Http::RequestMessagePtr ImdsTokenInfo::prepareRequest(
     absl::string_view token_url) const {
   absl::string_view host, path;
-  Http::Utility::extractHostPathFromUri(token_url, host, path);
+  Envoy::Http::Utility::extractHostPathFromUri(token_url, host, path);
 
   auto headers =
       Envoy::Http::createHeaderMap<Envoy::Http::RequestHeaderMapImpl>(
@@ -103,6 +103,6 @@ bool ImdsTokenInfo::parseIdentityToken(absl::string_view response,
   return true;
 }
 
-}  // namespace Token
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace token
+}  // namespace envoy
+}  // namespace espv2

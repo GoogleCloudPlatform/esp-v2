@@ -41,8 +41,8 @@ const (
 	JwtAuthn = "envoy.filters.http.jwt_authn"
 	// PathMatcher filter.
 	PathMatcher = "envoy.filters.http.path_matcher"
-	// BackendAuth filter.
-	BackendAuth = "envoy.filters.http.backend_auth"
+	// backend_auth filter.
+	backend_auth = "envoy.filters.http.backend_auth"
 	// BackendRouting filter.
 	BackendRouting = "envoy.filters.http.backend_routing"
 	// GrpcStats filter name

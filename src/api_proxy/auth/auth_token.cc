@@ -34,7 +34,7 @@ extern "C" {
 
 using std::string;
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace auth {
 
@@ -199,4 +199,4 @@ string DotConcat(const string &str1, const string &str2) {
 
 }  // namespace auth
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

@@ -30,34 +30,36 @@
 #include "src/envoy/http/service_control/config_parser.h"
 #include "src/envoy/http/service_control/handler.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 
 // The request handler to call Check and Report
-class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
-                                  public ServiceControlHandler {
+class ServiceControlHandlerImpl
+    : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter>,
+      public ServiceControlHandler {
  public:
-  ServiceControlHandlerImpl(const Http::RequestHeaderMap& headers,
-                            const StreamInfo::StreamInfo& stream_info,
+  ServiceControlHandlerImpl(const Envoy::Http::RequestHeaderMap& headers,
+                            const Envoy::StreamInfo::StreamInfo& stream_info,
                             const std::string& uuid,
                             const FilterConfigParser& cfg_parser,
                             Envoy::TimeSource& timeSource);
   ~ServiceControlHandlerImpl() override;
 
-  void callCheck(Http::RequestHeaderMap& headers,
+  void callCheck(Envoy::Http::RequestHeaderMap& headers,
                  Envoy::Tracing::Span& parent_span,
                  CheckDoneCallback& callback) override;
 
-  void callReport(const Http::RequestHeaderMap* request_headers,
-                  const Http::ResponseHeaderMap* response_headers,
-                  const Http::ResponseTrailerMap* response_trailers) override;
+  void callReport(
+      const Envoy::Http::RequestHeaderMap* request_headers,
+      const Envoy::Http::ResponseHeaderMap* response_headers,
+      const Envoy::Http::ResponseTrailerMap* response_trailers) override;
 
   void tryIntermediateReport() override;
 
   void processResponseHeaders(
-      const Http::ResponseHeaderMap& response_headers) override;
+      const Envoy::Http::ResponseHeaderMap& response_headers) override;
 
   void onDestroy() override;
 
@@ -65,9 +67,9 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   void callQuota();
 
   void fillOperationInfo(
-      ::google::api_proxy::service_control::OperationInfo& info);
+      ::espv2::api_proxy::service_control::OperationInfo& info);
   void prepareReportRequest(
-      ::google::api_proxy::service_control::ReportRequestInfo& info);
+      ::espv2::api_proxy::service_control::ReportRequestInfo& info);
 
   bool isConfigured() const { return require_ctx_ != nullptr; }
 
@@ -88,16 +90,16 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   bool hasApiKey() const { return !api_key_.empty(); }
 
   void onCheckResponse(
-      Http::RequestHeaderMap& headers,
+      Envoy::Http::RequestHeaderMap& headers,
       const ::google::protobuf::util::Status& status,
-      const ::google::api_proxy::service_control::CheckResponseInfo&
+      const ::espv2::api_proxy::service_control::CheckResponseInfo&
           response_info);
 
   // The filter config parser.
   const FilterConfigParser& cfg_parser_;
 
   // The metadata for the request
-  const StreamInfo::StreamInfo& stream_info_;
+  const Envoy::StreamInfo::StreamInfo& stream_info_;
 
   // timeSource
   Envoy::TimeSource& time_source_;
@@ -111,7 +113,7 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   std::string api_key_;
 
   CheckDoneCallback* check_callback_{};
-  ::google::api_proxy::service_control::CheckResponseInfo check_response_info_;
+  ::espv2::api_proxy::service_control::CheckResponseInfo check_response_info_;
   ::google::protobuf::util::Status check_status_;
 
   CancelFunc cancel_fn_;
@@ -120,7 +122,7 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
   uint64_t response_header_size_;
 
   // The frontend protocol only for intermediate reports.
-  ::google::api_proxy::service_control::protocol::Protocol frontend_protocol_;
+  ::espv2::api_proxy::service_control::protocol::Protocol frontend_protocol_;
 
   // If true, it is a grpc and need to send multiple reports.
   bool is_grpc_;
@@ -132,28 +134,28 @@ class ServiceControlHandlerImpl : public Logger::Loggable<Logger::Id::filter>,
 
 class ServiceControlHandlerFactoryImpl : public ServiceControlHandlerFactory {
  public:
-  ServiceControlHandlerFactoryImpl(Runtime::RandomGenerator& random,
+  ServiceControlHandlerFactoryImpl(Envoy::Runtime::RandomGenerator& random,
                                    const FilterConfigParser& cfg_parser,
                                    Envoy::TimeSource& time_source)
       : random_(random), cfg_parser_(cfg_parser), time_source_(time_source) {}
 
   ServiceControlHandlerPtr createHandler(
-      const Http::RequestHeaderMap& headers,
-      const StreamInfo::StreamInfo& stream_info) const override {
+      const Envoy::Http::RequestHeaderMap& headers,
+      const Envoy::StreamInfo::StreamInfo& stream_info) const override {
     return std::make_unique<ServiceControlHandlerImpl>(
         headers, stream_info, random_.uuid(), cfg_parser_, time_source_);
   }
 
  private:
   // Random object.
-  Runtime::RandomGenerator& random_;
+  Envoy::Runtime::RandomGenerator& random_;
   // The filter config parser.
   const FilterConfigParser& cfg_parser_;
   // The timeSource
   Envoy::TimeSource& time_source_;
 };
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

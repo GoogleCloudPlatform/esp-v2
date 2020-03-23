@@ -21,10 +21,10 @@
 using ::testing::_;
 using ::testing::Invoke;
 using ::testing::Return;
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace BackendAuth {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace backend_auth {
 
 class ConfigParserImplTest : public ::testing::Test {
  protected:
@@ -34,10 +34,10 @@ class ConfigParserImplTest : public ::testing::Test {
     config_parser_ = std::make_unique<FilterConfigParserImpl>(
         proto_config_, mock_factory_context_, mock_token_subscriber_factory_);
   }
-  google::api::envoy::http::backend_auth::FilterConfig proto_config_;
+  espv2::api::envoy::http::backend_auth::FilterConfig proto_config_;
   testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
       mock_factory_context_;
-  testing::NiceMock<Token::Test::MockTokenSubscriberFactory>
+  testing::NiceMock<token::test::MockTokenSubscriberFactory>
       mock_token_subscriber_factory_;
 
   std::unique_ptr<FilterConfigParser> config_parser_;
@@ -84,23 +84,23 @@ rules {
 
   EXPECT_CALL(mock_token_subscriber_factory_,
               createImdsTokenSubscriber(
-                  Token::TokenType::IdentityToken, "this-is-cluster",
+                  token::TokenType::IdentityToken, "this-is-cluster",
                   "this-is-uri?format=standard&audience=audience-foo", _))
-      .WillOnce(Invoke([&token_foo](const Token::TokenType&, const std::string&,
+      .WillOnce(Invoke([&token_foo](const token::TokenType&, const std::string&,
                                     const std::string&,
-                                    Token::UpdateTokenCallback callback)
-                           -> Token::TokenSubscriberPtr {
+                                    token::UpdateTokenCallback callback)
+                           -> token::TokenSubscriberPtr {
         callback(token_foo);
         return nullptr;
       }));
   EXPECT_CALL(mock_token_subscriber_factory_,
               createImdsTokenSubscriber(
-                  Token::TokenType::IdentityToken, "this-is-cluster",
+                  token::TokenType::IdentityToken, "this-is-cluster",
                   "this-is-uri?format=standard&audience=audience-bar", _))
-      .WillOnce(Invoke([&token_bar](const Token::TokenType&, const std::string&,
+      .WillOnce(Invoke([&token_bar](const token::TokenType&, const std::string&,
                                     const std::string&,
-                                    Token::UpdateTokenCallback callback)
-                           -> Token::TokenSubscriberPtr {
+                                    token::UpdateTokenCallback callback)
+                           -> token::TokenSubscriberPtr {
         callback(token_bar);
         return nullptr;
       }));
@@ -143,12 +143,12 @@ rules {
 
   EXPECT_CALL(
       mock_token_subscriber_factory_,
-      createImdsTokenSubscriber(Token::TokenType::AccessToken,
+      createImdsTokenSubscriber(token::TokenType::AccessToken,
                                 "this-is-imds-cluster", "this-is-imds-uri", _))
-      .WillOnce(Invoke([&access_token](const Token::TokenType&,
+      .WillOnce(Invoke([&access_token](const token::TokenType&,
                                        const std::string&, const std::string&,
-                                       Token::UpdateTokenCallback callback)
-                           -> Token::TokenSubscriberPtr {
+                                       token::UpdateTokenCallback callback)
+                           -> token::TokenSubscriberPtr {
         callback(access_token);
         return nullptr;
       }));
@@ -159,12 +159,12 @@ rules {
                                        _, _, _, _))
       .WillOnce(
           Invoke([&id_token_foo](
-                     Token::TokenType, const std::string&, const std::string&,
-                     Token::UpdateTokenCallback callback,
+                     token::TokenType, const std::string&, const std::string&,
+                     token::UpdateTokenCallback callback,
                      const ::google::protobuf::RepeatedPtrField<std::string>&,
                      const ::google::protobuf::RepeatedPtrField<std::string>&,
-                     Token::GetTokenFunc access_token_fn)
-                     -> Token::TokenSubscriberPtr {
+                     token::GetTokenFunc access_token_fn)
+                     -> token::TokenSubscriberPtr {
             EXPECT_EQ(access_token_fn(), "access_token");
             callback(id_token_foo);
             return nullptr;
@@ -175,12 +175,12 @@ rules {
                                        _, _, _, _))
       .WillOnce(
           Invoke([&id_token_bar](
-                     Token::TokenType, const std::string&, const std::string&,
-                     Token::UpdateTokenCallback callback,
+                     token::TokenType, const std::string&, const std::string&,
+                     token::UpdateTokenCallback callback,
                      const ::google::protobuf::RepeatedPtrField<std::string>&,
                      const ::google::protobuf::RepeatedPtrField<std::string>&,
-                     Token::GetTokenFunc access_token_fn)
-                     -> Token::TokenSubscriberPtr {
+                     token::GetTokenFunc access_token_fn)
+                     -> token::TokenSubscriberPtr {
             EXPECT_EQ(access_token_fn(), "access_token");
             callback(id_token_bar);
             return nullptr;
@@ -195,7 +195,7 @@ rules {
   EXPECT_EQ(*config_parser_->getJwtToken("audience-bar"), "id-token-bar");
 }
 
-}  // namespace BackendAuth
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace backend_auth
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

@@ -20,7 +20,7 @@
 #include "google/protobuf/stubs/status.h"
 #include "gtest/gtest_prod.h"
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace service_control {
 
@@ -97,4 +97,4 @@ class LogsMetricsLoader final {
 
 }  // namespace service_control
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

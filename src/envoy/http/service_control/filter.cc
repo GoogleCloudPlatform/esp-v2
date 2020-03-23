@@ -19,10 +19,10 @@
 #include "src/envoy/http/service_control/filter.h"
 #include "src/envoy/http/service_control/handler.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 namespace {
 
 struct RcDetailsValues {
@@ -30,7 +30,7 @@ struct RcDetailsValues {
   const std::string RejectedByServiceControlCheck =
       "rejected_by_service_control_check";
 };
-typedef ConstSingleton<RcDetailsValues> RcDetails;
+typedef Envoy::ConstSingleton<RcDetailsValues> RcDetails;
 
 }  // namespace
 
@@ -41,8 +41,8 @@ void ServiceControlFilter::onDestroy() {
   }
 }
 
-Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
-    Http::RequestHeaderMap& headers, bool) {
+Envoy::Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
+    Envoy::Http::RequestHeaderMap& headers, bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
 
   Envoy::Tracing::Span& parent_span = decoder_callbacks_->activeSpan();
@@ -56,13 +56,13 @@ Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
 
   // If success happens synchronously, continue now.
   if (state_ == Complete) {
-    return Http::FilterHeadersStatus::Continue;
+    return Envoy::Http::FilterHeadersStatus::Continue;
   }
 
   // Stop for now. If an async request is made, it will continue in onCheckDone.
   ENVOY_LOG(debug, "Called ServiceControl filter : Stop");
   stopped_ = true;
-  return Http::FilterHeadersStatus::StopIteration;
+  return Envoy::Http::FilterHeadersStatus::StopIteration;
 }
 
 void ServiceControlFilter::onCheckDone(
@@ -70,9 +70,9 @@ void ServiceControlFilter::onCheckDone(
   if (!status.ok()) {
     // protobuf::util::Status.error_code is the same as Envoy GrpcStatus
     // This cast is safe.
-    auto http_code = Grpc::Utility::grpcToHttpStatus(
-        static_cast<Grpc::Status::GrpcStatus>(status.error_code()));
-    rejectRequest(static_cast<Http::Code>(http_code), status.ToString());
+    auto http_code = Envoy::Grpc::Utility::grpcToHttpStatus(
+        static_cast<Envoy::Grpc::Status::GrpcStatus>(status.error_code()));
+    rejectRequest(static_cast<Envoy::Http::Code>(http_code), status.ToString());
     return;
   }
 
@@ -83,7 +83,7 @@ void ServiceControlFilter::onCheckDone(
   }
 }
 
-void ServiceControlFilter::rejectRequest(Http::Code code,
+void ServiceControlFilter::rejectRequest(Envoy::Http::Code code,
                                          absl::string_view error_msg) {
   stats_.denied_.inc();
   state_ = Responded;
@@ -92,33 +92,33 @@ void ServiceControlFilter::rejectRequest(Http::Code code,
       code, error_msg, nullptr, absl::nullopt,
       RcDetails::get().RejectedByServiceControlCheck);
   decoder_callbacks_->streamInfo().setResponseFlag(
-      StreamInfo::ResponseFlag::UnauthorizedExternalService);
+      Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService);
 }
 
-Http::FilterDataStatus ServiceControlFilter::decodeData(Buffer::Instance& data,
-                                                        bool end_stream) {
+Envoy::Http::FilterDataStatus ServiceControlFilter::decodeData(
+    Envoy::Buffer::Instance& data, bool end_stream) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (!end_stream && data.length() > 0) {
     handler_->tryIntermediateReport();
   }
 
   if (state_ == Calling) {
-    return Http::FilterDataStatus::StopIterationAndWatermark;
+    return Envoy::Http::FilterDataStatus::StopIterationAndWatermark;
   }
-  return Http::FilterDataStatus::Continue;
+  return Envoy::Http::FilterDataStatus::Continue;
 }
 
-Http::FilterTrailersStatus ServiceControlFilter::decodeTrailers(
-    Http::RequestTrailerMap&) {
+Envoy::Http::FilterTrailersStatus ServiceControlFilter::decodeTrailers(
+    Envoy::Http::RequestTrailerMap&) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (state_ == Calling) {
-    return Http::FilterTrailersStatus::StopIteration;
+    return Envoy::Http::FilterTrailersStatus::StopIteration;
   }
-  return Http::FilterTrailersStatus::Continue;
+  return Envoy::Http::FilterTrailersStatus::Continue;
 }
 
-Http::FilterHeadersStatus ServiceControlFilter::encodeHeaders(
-    Http::ResponseHeaderMap& headers, bool) {
+Envoy::Http::FilterHeadersStatus ServiceControlFilter::encodeHeaders(
+    Envoy::Http::ResponseHeaderMap& headers, bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {} before", __func__);
 
   // For the cases the decodeHeaders not called, like the request get failed in
@@ -126,23 +126,23 @@ Http::FilterHeadersStatus ServiceControlFilter::encodeHeaders(
   if (handler_ != nullptr) {
     handler_->processResponseHeaders(headers);
   }
-  return Http::FilterHeadersStatus::Continue;
+  return Envoy::Http::FilterHeadersStatus::Continue;
 }
 
-Http::FilterDataStatus ServiceControlFilter::encodeData(Buffer::Instance& data,
-                                                        bool end_stream) {
+Envoy::Http::FilterDataStatus ServiceControlFilter::encodeData(
+    Envoy::Buffer::Instance& data, bool end_stream) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (!end_stream && data.length() > 0) {
     handler_->tryIntermediateReport();
   }
-  return Http::FilterDataStatus::Continue;
+  return Envoy::Http::FilterDataStatus::Continue;
 }
 
 void ServiceControlFilter::log(
-    const Http::RequestHeaderMap* request_headers,
-    const Http::ResponseHeaderMap* response_headers,
-    const Http::ResponseTrailerMap* response_trailers,
-    const StreamInfo::StreamInfo& stream_info) {
+    const Envoy::Http::RequestHeaderMap* request_headers,
+    const Envoy::Http::ResponseHeaderMap* response_headers,
+    const Envoy::Http::ResponseTrailerMap* response_trailers,
+    const Envoy::StreamInfo::StreamInfo& stream_info) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (!handler_) {
     if (!request_headers) return;
@@ -152,7 +152,7 @@ void ServiceControlFilter::log(
   handler_->callReport(request_headers, response_headers, response_trailers);
 }
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

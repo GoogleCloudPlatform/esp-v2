@@ -16,7 +16,7 @@
 
 #include <stddef.h>
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace auth {
 
@@ -29,4 +29,4 @@ void grpc_free(char* token);
 
 }  // namespace auth
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

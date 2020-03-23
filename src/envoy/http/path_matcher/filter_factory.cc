@@ -20,10 +20,10 @@
 #include "envoy/registry/registry.h"
 #include "extensions/filters/http/common/factory_base.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace PathMatcher {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace path_matcher {
 
 constexpr char kPathMatcherFilterName[] = "envoy.filters.http.path_matcher";
 
@@ -31,35 +31,34 @@ constexpr char kPathMatcherFilterName[] = "envoy.filters.http.path_matcher";
  * Config registration for ESPv2 path matcher filter.
  */
 class FilterFactory
-    : public Common::FactoryBase<
-          ::google::api::envoy::http::path_matcher::FilterConfig> {
+    : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
+          ::espv2::api::envoy::http::path_matcher::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(kPathMatcherFilterName) {}
 
  private:
-  Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::google::api::envoy::http::path_matcher::FilterConfig&
-          proto_config,
+  Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
+      const ::espv2::api::envoy::http::path_matcher::FilterConfig& proto_config,
       const std::string& stats_prefix,
-      Server::Configuration::FactoryContext& context) override {
+      Envoy::Server::Configuration::FactoryContext& context) override {
     auto filter_config =
         std::make_shared<FilterConfig>(proto_config, stats_prefix, context);
-    return
-        [filter_config](Http::FilterChainFactoryCallbacks& callbacks) -> void {
-          auto filter = std::make_shared<Filter>(filter_config);
-          callbacks.addStreamDecoderFilter(
-              Http::StreamDecoderFilterSharedPtr(filter));
-        };
+    return [filter_config](
+               Envoy::Http::FilterChainFactoryCallbacks& callbacks) -> void {
+      auto filter = std::make_shared<Filter>(filter_config);
+      callbacks.addStreamDecoderFilter(
+          Envoy::Http::StreamDecoderFilterSharedPtr(filter));
+    };
   }
 };
 /**
  * Static registration for the rate limit filter. @see RegisterFactory.
  */
-static Registry::RegisterFactory<
-    FilterFactory, Server::Configuration::NamedHttpFilterConfigFactory>
+static Envoy::Registry::RegisterFactory<
+    FilterFactory, Envoy::Server::Configuration::NamedHttpFilterConfigFactory>
     register_;
 
-}  // namespace PathMatcher
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace path_matcher
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2
