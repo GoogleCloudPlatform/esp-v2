@@ -59,10 +59,10 @@ func TestServiceControlCredential(t *testing.T) {
 		},
 		{
 			desc:                         "BackendAuthCredentials is created using BackendAuthIamServiceAccount and BackendAuthIamDelegates",
-			BackendAuthIamServiceAccount: "backend_auth@iam.com",
+			BackendAuthIamServiceAccount: "BackendAuth@iam.com",
 			BackendAuthIamDelegates:      "delegate_foo,delegate_bar",
 			wantedBackendAuthCredentials: &options.IAMCredentialsOptions{
-				ServiceAccountEmail: "backend_auth@iam.com",
+				ServiceAccountEmail: "BackendAuth@iam.com",
 				Delegates:           []string{"delegate_foo", "delegate_bar"},
 			},
 		},

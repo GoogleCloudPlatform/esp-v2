@@ -196,7 +196,7 @@
                                         {
                                             "name": "envoy.filters.http.path_matcher",
                                             "typedConfig": {
-                                                "@type": "type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                                                "@type": "type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
                                                 "rules": [
                                                     {
                                                         "operation": "test.grpc.Test.Cork",
@@ -479,7 +479,7 @@
                                         {
                                             "name": "envoy.filters.http.service_control",
                                             "typedConfig": {
-                                                "@type": "type.googleapis.com/google.api.envoy.http.service_control.FilterConfig",
+                                                "@type": "type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig",
                                                 "imdsToken": {
                                                     "cluster": "metadata-cluster",
                                                     "timeout": "5s",
@@ -1084,7 +1084,7 @@
                                         {
                                             "name": "envoy.filters.http.backend_auth",
                                             "typedConfig": {
-                                                "@type": "type.googleapis.com/google.api.envoy.http.backend_auth.FilterConfig",
+                                                "@type": "type.googleapis.com/espv2.api.envoy.http.backend_auth.FilterConfig",
                                                 "imdsToken": {
                                                     "cluster": "metadata-cluster",
                                                     "timeout": "5s",

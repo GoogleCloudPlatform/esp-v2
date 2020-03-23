@@ -723,7 +723,7 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	}
 	backendAuthConfigStruct, _ := ptypes.MarshalAny(backendAuthConfig)
 	backendAuthFilter := &hcmpb.HttpFilter{
-		Name:       util.backend_auth,
+		Name:       util.BackendAuth,
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{backendAuthConfigStruct},
 	}
 	return backendAuthFilter

@@ -245,7 +245,7 @@ var validConfigInput = []byte(`{
                     {
                       "name": "envoy.filters.http.service_control",
                       "typed_config": {
-												"@type": "type.googleapis.com/google.api.envoy.http.service_control.FilterConfig"
+												"@type": "type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig"
                       }
                     }
                   ]
