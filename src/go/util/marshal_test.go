@@ -33,12 +33,12 @@ func TestUnmarshalBytesToPbMessage(t *testing.T) {
 		err := UnmarshalBytesToPbMessage(bytes, getResp)
 		if err != nil {
 			if err.Error() != wantError {
-				t.Fatalf("fail in UnmarshalBytesToPbMessage, want error: %s, get error: %v", wantError, err)
+				t.Errorf("fail in UnmarshalBytesToPbMessage on %T, want error: %s, get error: %v", wantResp, wantError, err)
 			}
 			return
 		}
 		if !proto.Equal(getResp, wantResp) {
-			t.Errorf("fail in UnmarshalBytesToPbMessage, want: %v, ge: %v", wantResp, getResp)
+			t.Errorf("fail in UnmarshalBytesToPbMessage on %T, want: %v, ge: %v", wantResp, wantResp, getResp)
 		}
 	}
 
