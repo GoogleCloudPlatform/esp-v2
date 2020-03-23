@@ -110,7 +110,7 @@ func TestCallGoogleapis(t *testing.T) {
 			UnmarshalBytesToPbMessage = tc.unmarshalFunc
 		}
 
-		err := CallGooglelapis(&http.Client{}, s.URL, tc.method, tc.token, nil)
+		err := CallGoogleapis(&http.Client{}, s.URL, tc.method, tc.token, nil)
 
 		if err != nil {
 			if tc.wantError == "" {

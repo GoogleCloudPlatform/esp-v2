@@ -57,7 +57,8 @@ func TestFetchLatestRolloutId(t *testing.T) {
 	}
 
 	// Fail due to calling googleapis.
-	util.CallGooglelapis = func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, output proto.Message) error {
+	callGoogleapis := util.CallGoogleapis
+	util.CallGoogleapis = func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, output proto.Message) error {
 		return fmt.Errorf("error-from-CallGoogleapis")
 	}
 	_, err := cif.fetchLatestRolloutId()
@@ -65,6 +66,7 @@ func TestFetchLatestRolloutId(t *testing.T) {
 	if err == nil || err.Error() != wantError {
 		t.Errorf("fail in fetchLatestRolloutId, want error %v, get error %s", err, wantError)
 	}
+	util.CallGoogleapis = callGoogleapis
 }
 
 func TestRolloutIdChangeFetcherSetDetectRolloutIdChangeTimer(t *testing.T) {
@@ -76,7 +78,7 @@ func TestRolloutIdChangeFetcherSetDetectRolloutIdChangeTimer(t *testing.T) {
 	cnt := 0
 	wantCnt := 3
 	wantRolloutId := fmt.Sprintf("test-rollout-id-%v", wantCnt)
-	cif.SetDetectRolloutIdChangeTimer(time.Millisecond*50, func() {
+	cif.SetDetectRolloutIdChangeTimer(time.Millisecond*100, func() {
 		cnt += 1
 		// Update rolloutId so the callback will be called.
 		// It will be updated only three times.
@@ -85,9 +87,9 @@ func TestRolloutIdChangeFetcherSetDetectRolloutIdChangeTimer(t *testing.T) {
 		}
 	})
 
-	time.Sleep(time.Millisecond * 300)
+	time.Sleep(time.Millisecond * 500)
 	if cnt != wantCnt {
-		t.Fatalf("want callback called by 1 times, get %v times", cnt)
+		t.Fatalf("want callback called by %v times, get %v times", wantCnt, cnt)
 	}
 
 	if cif.curRolloutId != wantRolloutId {

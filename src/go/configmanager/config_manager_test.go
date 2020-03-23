@@ -1730,7 +1730,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if resp.Version != newConfigID {
+		if resp.Version != newConfigID || env.configManager.curConfigId() != newConfigID {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got version: %v, want: %v", testCase.desc, resp.Version, newConfigID)
 		}
 

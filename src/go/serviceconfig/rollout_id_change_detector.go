@@ -47,7 +47,7 @@ func NewRolloutIdChangeDetector(client *http.Client, serviceControlUrl, serviceN
 func (c *RolloutIdChangeDetector) fetchLatestRolloutId() (string, error) {
 	reportResponse := new(scpb.ReportResponse)
 	fetchRolloutIdUrl := util.FetchRolloutIdURL(c.serviceControlUrl, c.serviceName)
-	if err := util.CallGooglelapis(c.client, fetchRolloutIdUrl, util.POST, c.accessToken, reportResponse); err != nil {
+	if err := util.CallGoogleapis(c.client, fetchRolloutIdUrl, util.POST, c.accessToken, reportResponse); err != nil {
 		return "", fmt.Errorf("fail to fetch new rollout id, %v", err)
 	}
 

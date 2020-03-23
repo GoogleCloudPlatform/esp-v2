@@ -44,7 +44,7 @@ func callWithAccessToken(client *http.Client, path, method, token string) ([]byt
 	return body, nil
 }
 
-var CallGooglelapis = func(client *http.Client, path, method string, getTokenFunc GetAccessTokenFunc, output proto.Message) error {
+var CallGoogleapis = func(client *http.Client, path, method string, getTokenFunc GetAccessTokenFunc, output proto.Message) error {
 	token, _, err := getTokenFunc()
 	if err != nil {
 		return fmt.Errorf("fail to get access token: %v", err)

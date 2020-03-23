@@ -46,7 +46,7 @@ func NewServiceConfigFetcher(client *http.Client, serviceManagementUrl,
 func (s *ServiceConfigFetcher) FetchConfig(configId string) (*confpb.Service, error) {
 	serviceConfig := new(confpb.Service)
 	fetchConfigUrl := util.FetchConfigURL(s.serviceManagementUrl, s.serviceName, configId)
-	if err := util.CallGooglelapis(s.client, fetchConfigUrl, util.GET, s.accessToken, serviceConfig); err != nil {
+	if err := util.CallGoogleapis(s.client, fetchConfigUrl, util.GET, s.accessToken, serviceConfig); err != nil {
 		return nil, err
 	}
 
@@ -58,7 +58,7 @@ func (s *ServiceConfigFetcher) FetchConfig(configId string) (*confpb.Service, er
 func (s *ServiceConfigFetcher) LoadConfigIdFromRollouts() (string, error) {
 	rollouts := new(smpb.ListServiceRolloutsResponse)
 	fetchRolloutUrl := util.FetchRolloutsURL(s.serviceManagementUrl, s.serviceName)
-	if err := util.CallGooglelapis(s.client, fetchRolloutUrl, util.GET, s.accessToken, rollouts); err != nil {
+	if err := util.CallGoogleapis(s.client, fetchRolloutUrl, util.GET, s.accessToken, rollouts); err != nil {
 		return "", err
 	}
 

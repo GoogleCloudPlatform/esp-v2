@@ -114,10 +114,12 @@ func TestServiceConfigFetcherFetchConfig(t *testing.T) {
 	_test(serviceConfigId, serviceConfig, "")
 
 	// Test failure due to calling googleapis.
-	util.CallGooglelapis = func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, output proto.Message) error {
+	callGoogleapis := util.CallGoogleapis
+	util.CallGoogleapis = func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, output proto.Message) error {
 		return fmt.Errorf("error-from-CallGoogleapis")
 	}
 	_test(serviceConfigId, nil, "error-from-CallGoogleapis")
+	util.CallGoogleapis = callGoogleapis
 }
 
 func TestServiceConfigFetcherLoadConfigIdFromRollouts(t *testing.T) {
@@ -160,8 +162,10 @@ func TestServiceConfigFetcherLoadConfigIdFromRollouts(t *testing.T) {
 	_test("", "problematic rollouts: ")
 
 	// Test failure due to calling googleapis.
-	util.CallGooglelapis = func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, output proto.Message) error {
+	callGoogleapis := util.CallGoogleapis
+	util.CallGoogleapis = func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, output proto.Message) error {
 		return fmt.Errorf("error-from-CallGoogleapis")
 	}
 	_test("", "error-from-CallGoogleapis")
+	util.CallGoogleapis = callGoogleapis
 }
