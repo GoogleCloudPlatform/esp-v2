@@ -15,6 +15,8 @@
 package util
 
 import (
+	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -22,14 +24,23 @@ import (
 )
 
 func TestGenerateAccessToken(t *testing.T) {
+	tmpFile, err := ioutil.TempFile(os.TempDir(), "TestGenerateAccessToken-")
+	if err != nil {
+		t.Fatal("Cannot create temporary file", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
 	fakeToken := `{"access_token": "ya29.new", "expires_in":3599, "token_type":"Bearer"}`
 	mockTokenServer := InitMockServer(fakeToken)
 	defer mockTokenServer.Close()
 
 	fakeKey := strings.Replace(testdata.FakeServiceAccountKeyData, "FAKE-TOKEN-URI", mockTokenServer.GetURL(), 1)
 	fakeKeyData := []byte(fakeKey)
+	if err = ioutil.WriteFile(tmpFile.Name(), fakeKeyData, 0644); err != nil {
+		t.Fatal("Cannot write fakeKeyData to file", err)
+	}
 
-	token, duration, err := generateAccessToken(fakeKeyData)
+	token, duration, err := GenerateAccessTokenFromFile(tmpFile.Name())
 	if token != "ya29.new" || duration.Seconds() < 3598 || err != nil {
 		t.Errorf("Test : Fail to make access token, got token: %s, duration: %v, err: %v", token, duration, err)
 	}
@@ -38,7 +49,7 @@ func TestGenerateAccessToken(t *testing.T) {
 	mockTokenServer.SetResp(latestFakeToken)
 
 	// The token is cached so the old token gets returned.
-	token, duration, err = generateAccessToken(fakeKeyData)
+	token, duration, err = GenerateAccessTokenFromFile(tmpFile.Name())
 	if token != "ya29.new" || err != nil {
 		t.Errorf("Test : Fail to make access token, got token: %s, duration: %v, err: %v", token, duration, err)
 	}

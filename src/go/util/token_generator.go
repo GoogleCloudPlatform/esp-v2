@@ -60,10 +60,6 @@ func activeAccessToken() (string, time.Duration) {
 }
 
 func generateAccessToken(keyData []byte) (string, time.Duration, error) {
-	if token, duration := activeAccessToken(); token != "" {
-		return token, duration, nil
-	}
-
 	creds, err := google.CredentialsFromJSON(oauth2.NoContext, keyData, _GOOGLE_API_SCOPE...)
 	if err != nil {
 		return "", 0, err
