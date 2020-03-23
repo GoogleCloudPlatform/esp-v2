@@ -16,7 +16,6 @@ package serviceconfig
 
 import (
 	"fmt"
-	"math"
 	"net/http"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -81,7 +80,7 @@ func highestTrafficConfigIdInLatestRollout(rollouts *smpb.ListServiceRolloutsRes
 		}
 	}
 
-	if !(math.Abs(100.0-highestPercent) < 1e-9) {
+	if highestPercent < 100.0 {
 		glog.Warningf("though traffic percentage of configuration %v is %v%%, set it to 100%%", highTrafficConfigId, highestPercent)
 	}
 	return highTrafficConfigId, nil
