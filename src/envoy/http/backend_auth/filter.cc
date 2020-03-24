@@ -42,7 +42,7 @@ struct RcDetailsValues {
 typedef Envoy::ConstSingleton<RcDetailsValues> RcDetails;
 
 // The Http header to copy the original Authorization before it is overwritten.
-const Http::LowerCaseString kXForwardedAuthorization{
+const Envoy::Http::LowerCaseString kXForwardedAuthorization{
     "x-forwarded-authorization"};
 
 }  // namespace
