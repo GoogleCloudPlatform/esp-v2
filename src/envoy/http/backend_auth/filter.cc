@@ -41,6 +41,10 @@ struct RcDetailsValues {
 };
 typedef Envoy::ConstSingleton<RcDetailsValues> RcDetails;
 
+// The Http header to copy the original Authorization before it is overwritten.
+const Http::LowerCaseString kXForwardedAuthorization{
+    "x-forwarded-authorization"};
+
 }  // namespace
 
 FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
@@ -72,9 +76,11 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
     return FilterHeadersStatus::StopIteration;
   }
 
-  const auto& authorization = Envoy::Http::Headers::get().Authorization;
-  headers.remove(authorization);
-  headers.addCopy(authorization, kBearer + *jwt_token);
+  if (headers.Authorization()) {
+    headers.addCopy(kXForwardedAuthorization,
+                    headers.Authorization()->value().getStringView());
+  }
+  headers.setAuthorization(kBearer + *jwt_token);
   config_->stats().token_added_.inc();
   return FilterHeadersStatus::Continue;
 }

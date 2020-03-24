@@ -31,6 +31,9 @@ namespace envoy {
 namespace http_filters {
 namespace backend_auth {
 
+const Http::LowerCaseString kXForwardedAuthorization{
+    "x-forwarded-authorization"};
+
 /**
  * Base class for testing the Backend Auth filter. Makes a simple request
  * with no query parameters in the request URL.
@@ -138,10 +141,47 @@ TEST_F(BackendAuthFilterTest, SucceedAppendToken) {
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
 
-  EXPECT_EQ(headers.get(Envoy::Http::Headers::get().Authorization)
-                ->value()
-                .getStringView(),
-            "Bearer this-is-token");
+  EXPECT_EQ(
+      headers.get(Http::Headers::get().Authorization)->value().getStringView(),
+      "Bearer this-is-token");
+  EXPECT_EQ(headers.get(kXForwardedAuthorization), nullptr);
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+}
+
+TEST_F(BackendAuthFilterTest, SucceedTokenCopied) {
+  Http::TestRequestHeaderMapImpl headers{
+      {":method", "GET"},
+      {":path", "/books/1"},
+      {"authorization", "Bearer origin-token"}};
+  Utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
+      "operation-with-audience");
+  testing::NiceMock<Stats::MockStore> scope;
+  const std::string prefix = EMPTY_STRING;
+  FilterStats filter_stats{
+      ALL_BACKEND_AUTH_FILTER_STATS(POOL_COUNTER_PREFIX(scope, prefix))};
+
+  EXPECT_CALL(*mock_filter_config_, cfg_parser)
+      .WillRepeatedly(testing::ReturnRef(*mock_filter_config_parser_));
+  EXPECT_CALL(*mock_filter_config_, stats)
+      .WillRepeatedly(testing::ReturnRef(filter_stats));
+
+  EXPECT_CALL(*mock_filter_config_parser_, getAudience)
+      .Times(1)
+      .WillRepeatedly(testing::Return("this-is-audience"));
+  EXPECT_CALL(*mock_filter_config_parser_, getJwtToken)
+      .Times(1)
+      .WillRepeatedly(
+          testing::Return(std::make_shared<std::string>("new-id-token")));
+
+  Envoy::Http::FilterHeadersStatus status =
+      filter_->decodeHeaders(headers, false);
+
+  EXPECT_EQ(
+      headers.get(Http::Headers::get().Authorization)->value().getStringView(),
+      "Bearer new-id-token");
+  EXPECT_EQ(headers.get(kXForwardedAuthorization)->value().getStringView(),
+            "Bearer origin-token");
   EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 }
 
