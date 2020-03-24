@@ -16,9 +16,9 @@
 
 #include "src/envoy/token/token_info.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Token {
+namespace espv2 {
+namespace envoy {
+namespace token {
 
 // `ImdsTokenInfo` is a bridge `TokenInfo` for parsing
 // identity and access tokens from the Instance Metadata Server.
@@ -34,6 +34,6 @@ class ImdsTokenInfo : public TokenInfo {
                           TokenResult* ret) const override;
 };
 
-}  // namespace Token
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace token
+}  // namespace envoy
+}  // namespace espv2

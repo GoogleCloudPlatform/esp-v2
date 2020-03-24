@@ -10,13 +10,18 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace BackendRouting {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace backend_routing {
+namespace fuzz {
 
-void doTest(Filter& filter,
-            const tests::fuzz::protos::BackendRoutingFilterInput& input) {
+// Needed for logger macro expansion.
+namespace Logger = Envoy::Logger;
+
+void doTest(
+    Filter& filter,
+    const espv2::tests::fuzz::protos::BackendRoutingFilterInput& input) {
   // Generate the user request.
   auto headers =
       Envoy::Fuzz::fromHeaders<Envoy::Http::TestRequestHeaderMapImpl>(
@@ -27,16 +32,17 @@ void doTest(Filter& filter,
 }
 
 DEFINE_PROTO_FUZZER(
-    const tests::fuzz::protos::BackendRoutingFilterInput& input) {
+    const espv2::tests::fuzz::protos::BackendRoutingFilterInput& input) {
   ENVOY_LOG_MISC(trace, "{}", input.DebugString());
 
   try {
-    TestUtility::validate(input);
+    Envoy::TestUtility::validate(input);
 
     if (input.config().rules_size() < 1) {
-      throw ProtoValidationException("At least 1 backend rule needed", input);
+      throw Envoy::ProtoValidationException("At least 1 backend rule needed",
+                                            input);
     }
-  } catch (const ProtoValidationException& e) {
+  } catch (const Envoy::ProtoValidationException& e) {
     ENVOY_LOG_MISC(debug, "Controlled proto validation failure: {}", e.what());
     return;
   }
@@ -48,13 +54,13 @@ DEFINE_PROTO_FUZZER(
       mock_factory_context;
 
   // Set the operation name using the first backend routing rule.
-  Utils::setStringFilterState(
-      *mock_decoder_callbacks.stream_info_.filter_state_, Utils::kOperation,
+  utils::setStringFilterState(
+      *mock_decoder_callbacks.stream_info_.filter_state_, utils::kOperation,
       input.config().rules(0).operation());
 
   // Set the variable binding query params.
-  Utils::setStringFilterState(
-      *mock_decoder_callbacks.stream_info_.filter_state_, Utils::kQueryParams,
+  utils::setStringFilterState(
+      *mock_decoder_callbacks.stream_info_.filter_state_, utils::kQueryParams,
       input.binding_query_params());
 
   try {
@@ -67,12 +73,13 @@ DEFINE_PROTO_FUZZER(
     // Run data against the filter.
     ASSERT_NO_THROW(doTest(filter, input));
 
-  } catch (const EnvoyException& e) {
+  } catch (const Envoy::EnvoyException& e) {
     ENVOY_LOG_MISC(debug, "Controlled envoy exception: {}", e.what());
   }
 }
 
-}  // namespace BackendRouting
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace fuzz
+}  // namespace backend_routing
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

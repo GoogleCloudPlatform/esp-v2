@@ -21,7 +21,7 @@
 #include <memory>
 #include <string>
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace service_control {
 
@@ -218,4 +218,4 @@ struct ReportRequestInfo : public OperationInfo {
 
 }  // namespace service_control
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

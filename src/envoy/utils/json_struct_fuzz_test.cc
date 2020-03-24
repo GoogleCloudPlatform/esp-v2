@@ -18,16 +18,19 @@
 #include "json_struct.h"
 #include "tests/fuzz/structured_inputs/json_struct.pb.validate.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Utils {
-namespace Fuzz {
+namespace espv2 {
+namespace envoy {
+namespace utils {
+namespace fuzz {
 
-DEFINE_PROTO_FUZZER(const tests::fuzz::protos::JsonStructInput& input) {
+// Needed for logger macro expansion.
+namespace Logger = Envoy::Logger;
+
+DEFINE_PROTO_FUZZER(const espv2::tests::fuzz::protos::JsonStructInput& input) {
   ENVOY_LOG_MISC(trace, "{}", input.DebugString());
 
   try {
-    TestUtility::validate(input);
+    Envoy::TestUtility::validate(input);
 
     JsonStruct json_struct(input.pb_struct());
 
@@ -38,12 +41,12 @@ DEFINE_PROTO_FUZZER(const tests::fuzz::protos::JsonStructInput& input) {
       int int_value;
       (void)json_struct.getInteger(key_to_check, &int_value);
     }
-  } catch (const ProtoValidationException& e) {
+  } catch (const Envoy::ProtoValidationException& e) {
     ENVOY_LOG_MISC(debug, "Controlled proto validation failure: {}", e.what());
   }
 }
 
-}  // namespace Fuzz
-}  // namespace Utils
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace fuzz
+}  // namespace utils
+}  // namespace envoy
+}  // namespace espv2

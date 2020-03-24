@@ -19,13 +19,14 @@
 #include "src/envoy/token/token_subscriber.h"
 #include "src/envoy/token/token_subscriber_factory.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Token {
+namespace espv2 {
+namespace envoy {
+namespace token {
 
 class TokenSubscriberFactoryImpl : public TokenSubscriberFactory {
  public:
-  TokenSubscriberFactoryImpl(Server::Configuration::FactoryContext& context)
+  TokenSubscriberFactoryImpl(
+      Envoy::Server::Configuration::FactoryContext& context)
       : context_(context) {}
 
   TokenSubscriberPtr createImdsTokenSubscriber(
@@ -70,6 +71,6 @@ class TokenSubscriberFactoryImpl : public TokenSubscriberFactory {
   Envoy::Server::Configuration::FactoryContext& context_;
 };
 
-}  // namespace Token
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace token
+}  // namespace envoy
+}  // namespace espv2

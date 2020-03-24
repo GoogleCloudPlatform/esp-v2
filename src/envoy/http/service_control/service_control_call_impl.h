@@ -25,10 +25,10 @@
 #include "src/envoy/http/service_control/service_control_call.h"
 #include "src/envoy/token/token_subscriber_factory_impl.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 
 // Use shared_ptr to do atomic token update.
 typedef std::shared_ptr<std::string> TokenSharedPtr;
@@ -37,14 +37,14 @@ typedef std::shared_ptr<std::string> TokenSharedPtr;
 constexpr char kServiceControlScope[] =
     "https://www.googleapis.com/auth/servicecontrol";
 
-class ThreadLocalCache : public ThreadLocal::ThreadLocalObject {
+class ThreadLocalCache : public Envoy::ThreadLocal::ThreadLocalObject {
  public:
   ThreadLocalCache(
       const ::google::api::envoy::http::service_control::Service& config,
       const ::google::api::envoy::http::service_control::FilterConfig&
           filter_config,
-      Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
-      Event::Dispatcher& dispatcher)
+      Envoy::Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
+      Envoy::Event::Dispatcher& dispatcher)
       : client_cache_(
             config, filter_config, cm, time_source, dispatcher,
             [this]() -> const std::string& { return sc_token(); },
@@ -79,24 +79,24 @@ typedef std::shared_ptr<
     ::google::api::envoy::http::service_control::FilterConfig>
     FilterConfigProtoSharedPtr;
 
-class ServiceControlCallImpl : public ServiceControlCall,
-                               public Logger::Loggable<Logger::Id::filter> {
+class ServiceControlCallImpl
+    : public ServiceControlCall,
+      public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   ServiceControlCallImpl(
       FilterConfigProtoSharedPtr proto_config,
       const ::google::api::envoy::http::service_control::Service& config,
-      Server::Configuration::FactoryContext& context);
+      Envoy::Server::Configuration::FactoryContext& context);
 
   CancelFunc callCheck(
-      const ::google::api_proxy::service_control::CheckRequestInfo&
-          request_info,
+      const ::espv2::api_proxy::service_control::CheckRequestInfo& request_info,
       Envoy::Tracing::Span& parent_span, CheckDoneFunc on_done) override;
 
-  void callQuota(const ::google::api_proxy::service_control::QuotaRequestInfo&
-                     request_info,
-                 QuotaDoneFunc on_done) override;
+  void callQuota(
+      const ::espv2::api_proxy::service_control::QuotaRequestInfo& request_info,
+      QuotaDoneFunc on_done) override;
 
-  void callReport(const ::google::api_proxy::service_control::ReportRequestInfo&
+  void callReport(const ::espv2::api_proxy::service_control::ReportRequestInfo&
                       request_info) override;
 
  private:
@@ -111,31 +111,31 @@ class ServiceControlCallImpl : public ServiceControlCall,
 
   const ::google::api::envoy::http::service_control::FilterConfig&
       filter_config_;
-  std::unique_ptr<::google::api_proxy::service_control::RequestBuilder>
+  std::unique_ptr<::espv2::api_proxy::service_control::RequestBuilder>
       request_builder_;
 
-  const Token::TokenSubscriberFactoryImpl token_subscriber_factory_;
+  const token::TokenSubscriberFactoryImpl token_subscriber_factory_;
 
   // Token subscriber used to fetch access token from imds for service control
-  Token::TokenSubscriberPtr imds_token_sub_;
+  token::TokenSubscriberPtr imds_token_sub_;
 
   // Access Token for iam server
   std::string access_token_for_iam_;
   // Token subscriber used to fetch access token from imds for accessing iam
-  Token::TokenSubscriberPtr access_token_sub_;
+  token::TokenSubscriberPtr access_token_sub_;
   // Token subscriber used to fetch access token from iam for service control
-  Token::TokenSubscriberPtr iam_token_sub_;
+  token::TokenSubscriberPtr iam_token_sub_;
 
-  Token::ServiceAccountTokenPtr sc_token_gen_;
-  Token::ServiceAccountTokenPtr quota_token_gen_;
-  ThreadLocal::SlotPtr tls_;
+  token::ServiceAccountTokenPtr sc_token_gen_;
+  token::ServiceAccountTokenPtr quota_token_gen_;
+  Envoy::ThreadLocal::SlotPtr tls_;
 };  // namespace ServiceControl
 
 class ServiceControlCallFactoryImpl : public ServiceControlCallFactory {
  public:
   explicit ServiceControlCallFactoryImpl(
       FilterConfigProtoSharedPtr proto_config,
-      Server::Configuration::FactoryContext& context)
+      Envoy::Server::Configuration::FactoryContext& context)
       : proto_config_(proto_config), context_(context) {}
 
   ServiceControlCallPtr create(
@@ -147,10 +147,10 @@ class ServiceControlCallFactoryImpl : public ServiceControlCallFactory {
 
  private:
   FilterConfigProtoSharedPtr proto_config_;
-  Server::Configuration::FactoryContext& context_;
+  Envoy::Server::Configuration::FactoryContext& context_;
 };
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

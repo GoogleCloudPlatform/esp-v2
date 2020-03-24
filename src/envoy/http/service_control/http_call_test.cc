@@ -44,10 +44,10 @@ using ::google::api::servicecontrol::v1::CheckResponse;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 namespace {
 
 class HttpCallTest : public testing::Test {
@@ -67,23 +67,24 @@ class HttpCallTest : public testing::Test {
     ON_CALL(cm_, httpAsyncClientForCluster("test_cluster"))
         .WillByDefault(ReturnRef(http_client_));
     ON_CALL(http_client_, send_(_, _, _))
-        .WillByDefault(Invoke([this](Http::RequestMessagePtr& message_ptr,
-                                     Http::AsyncClient::Callbacks& callbacks,
-                                     const Http::AsyncClient::RequestOptions)
-                                  -> Http::AsyncClient::Request* {
-          // Check token is correctly set
-          auto token_header =
-              message_ptr->headers().get(Http::Headers::get().Authorization);
-          EXPECT_EQ(token_header->value().getStringView(),
-                    "Bearer " + fake_token_);
+        .WillByDefault(
+            Invoke([this](Envoy::Http::RequestMessagePtr& message_ptr,
+                          Envoy::Http::AsyncClient::Callbacks& callbacks,
+                          const Envoy::Http::AsyncClient::RequestOptions)
+                       -> Envoy::Http::AsyncClient::Request* {
+              // Check token is correctly set
+              auto token_header = message_ptr->headers().get(
+                  Envoy::Http::Headers::get().Authorization);
+              EXPECT_EQ(token_header->value().getStringView(),
+                        "Bearer " + fake_token_);
 
-          // Make callback and request
-          async_callbacks_.push_back(&callbacks);
-          auto request =
-              new NiceMock<Http::MockAsyncClientRequest>(&http_client_);
-          http_requests_.push_back(request);
-          return request;
-        }));
+              // Make callback and request
+              async_callbacks_.push_back(&callbacks);
+              auto request = new NiceMock<Envoy::Http::MockAsyncClientRequest>(
+                  &http_client_);
+              http_requests_.push_back(request);
+              return request;
+            }));
 
     fake_token_fn_ = [this]() -> const std::string& { return fake_token_; };
 
@@ -99,13 +100,13 @@ class HttpCallTest : public testing::Test {
     }
   }
 
-  NiceMock<Tracing::MockSpan>* makeMockChildSpan() {
+  NiceMock<Envoy::Tracing::MockSpan>* makeMockChildSpan() {
     auto span_name = http_requests_.empty()
                          ? fake_trace_operation_name_
                          : absl::StrCat(fake_trace_operation_name_, " - Retry ",
                                         http_requests_.size());
 
-    auto mock_child_span_ptr = new NiceMock<Tracing::MockSpan>();
+    auto mock_child_span_ptr = new NiceMock<Envoy::Tracing::MockSpan>();
 
     EXPECT_CALL(*mock_child_span_ptr, setTag(_, _)).Times(AtLeast(1));
     EXPECT_CALL(*mock_child_span_ptr, finishSpan())
@@ -116,15 +117,16 @@ class HttpCallTest : public testing::Test {
     return mock_child_span_ptr;
   }
 
-  static Http::ResponseMessagePtr makeResponseWithStatus(
+  static Envoy::Http::ResponseMessagePtr makeResponseWithStatus(
       const uint64_t status_code) {
     // Headers with status code
-    Http::ResponseHeaderMapPtr header_map =
-        std::make_unique<Http::ResponseHeaderMapImpl>();
+    Envoy::Http::ResponseHeaderMapPtr header_map =
+        std::make_unique<Envoy::Http::ResponseHeaderMapImpl>();
     header_map->setStatus(status_code);
 
     // Message with no body
-    return std::make_unique<Http::ResponseMessageImpl>(std::move(header_map));
+    return std::make_unique<Envoy::Http::ResponseMessageImpl>(
+        std::move(header_map));
   }
 
   // Callback for HttpCall. Expectations must be set by each test
@@ -134,13 +136,13 @@ class HttpCallTest : public testing::Test {
 
   // Underlying http client mocks
   HttpUri http_uri_;
-  NiceMock<Upstream::MockClusterManager> cm_;
-  NiceMock<Event::MockDispatcher> dispatcher_;
-  NiceMock<Http::MockAsyncClient> http_client_;
+  NiceMock<Envoy::Upstream::MockClusterManager> cm_;
+  NiceMock<Envoy::Event::MockDispatcher> dispatcher_;
+  NiceMock<Envoy::Http::MockAsyncClient> http_client_;
 
   // Keep track of all underlying http client callbacks and http requests
-  std::vector<Http::AsyncClient::Callbacks*> async_callbacks_;
-  std::vector<Http::MockAsyncClientRequest*> http_requests_;
+  std::vector<Envoy::Http::AsyncClient::Callbacks*> async_callbacks_;
+  std::vector<Envoy::Http::MockAsyncClientRequest*> http_requests_;
 
   // Token
   std::string fake_token_;
@@ -148,8 +150,8 @@ class HttpCallTest : public testing::Test {
 
   // Tracing
   std::string fake_trace_operation_name_;
-  NiceMock<Tracing::MockSpan> mock_parent_span_;
-  NiceMock<MockTimeSystem> mock_time_source_;
+  NiceMock<Envoy::Tracing::MockSpan> mock_parent_span_;
+  NiceMock<Envoy::MockTimeSystem> mock_time_source_;
 
   // Other hardcoded fake parameters
   CheckRequest fake_request_;
@@ -217,7 +219,8 @@ TEST_F(HttpCallTest, TestSingleCallFailure) {
               Call(Status(Code::INTERNAL, "Failed to call service control"), _))
       .Times(1);
 
-  async_callbacks_[0]->onFailure(Http::AsyncClient::FailureReason::Reset);
+  async_callbacks_[0]->onFailure(
+      Envoy::Http::AsyncClient::FailureReason::Reset);
 }
 
 TEST_F(HttpCallTest, TestEmptyTokenCallFailure) {
@@ -294,14 +297,16 @@ TEST_F(HttpCallTest, TestThreeRetriesWithLastSuccess) {
   // Phase 2: Emulate successful http response, but with a bad status code
   EXPECT_CALL(*mock_child_span_1, finishSpan()).Times(1);
   auto mock_child_span_2 = makeMockChildSpan();
-  async_callbacks_[0]->onFailure(Http::AsyncClient::FailureReason::Reset);
+  async_callbacks_[0]->onFailure(
+      Envoy::Http::AsyncClient::FailureReason::Reset);
   EXPECT_EQ(2, async_callbacks_.size());
 
   // Phase 3: Emulate another successful http response (on retry), but with a
   // bad status code
   EXPECT_CALL(*mock_child_span_2, finishSpan()).Times(1);
   auto mock_child_span_3 = makeMockChildSpan();
-  async_callbacks_[1]->onFailure(Http::AsyncClient::FailureReason::Reset);
+  async_callbacks_[1]->onFailure(
+      Envoy::Http::AsyncClient::FailureReason::Reset);
   EXPECT_EQ(3, async_callbacks_.size());
 
   // Phase 4: Emulate successful http response on last retry
@@ -330,14 +335,16 @@ TEST_F(HttpCallTest, TestThreeRetriesWithLastFailure) {
   // Phase 2: Emulate successful http response, but with a bad status code
   EXPECT_CALL(*mock_child_span_1, finishSpan()).Times(1);
   auto mock_child_span_2 = makeMockChildSpan();
-  async_callbacks_[0]->onFailure(Http::AsyncClient::FailureReason::Reset);
+  async_callbacks_[0]->onFailure(
+      Envoy::Http::AsyncClient::FailureReason::Reset);
   EXPECT_EQ(2, async_callbacks_.size());
 
   // Phase 3: Emulate another successful http response (on retry), but with a
   // bad status code
   EXPECT_CALL(*mock_child_span_2, finishSpan()).Times(1);
   auto mock_child_span_3 = makeMockChildSpan();
-  async_callbacks_[1]->onFailure(Http::AsyncClient::FailureReason::Reset);
+  async_callbacks_[1]->onFailure(
+      Envoy::Http::AsyncClient::FailureReason::Reset);
   EXPECT_EQ(3, async_callbacks_.size());
 
   // Phase 4: Emulate successful http response on last retry
@@ -393,7 +400,7 @@ TEST_F(HttpCallTest, TestSingleCallCancel) {
 }
 
 }  // namespace
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

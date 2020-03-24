@@ -16,15 +16,15 @@
 #include <functional>
 #include "src/api_proxy/service_control/request_info.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 
 // The function to be called when check call is completed.
 using CheckDoneFunc = std::function<void(
     const ::google::protobuf::util::Status& status,
-    const ::google::api_proxy::service_control::CheckResponseInfo&)>;
+    const ::espv2::api_proxy::service_control::CheckResponseInfo&)>;
 
 // The function to be called when allocateQuota call is completed.
 using QuotaDoneFunc =
@@ -33,7 +33,7 @@ using QuotaDoneFunc =
 // The function to cancel a on-going request.
 using CancelFunc = std::function<void()>;
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

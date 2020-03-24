@@ -28,10 +28,10 @@ using ::testing::_;
 using ::testing::Invoke;
 using ::testing::Return;
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace BackendRouting {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace backend_routing {
 namespace {
 
 const char kFilterConfig[] = R"(
@@ -92,8 +92,8 @@ class BackendRoutingFilterTest : public ::testing::Test {
 };
 
 TEST_F(BackendRoutingFilterTest, NoOperationName) {
-  Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
-                                         {":path", "/books/1"}};
+  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                                {":path", "/books/1"}};
 
   // Call function under test
   Envoy::Http::FilterHeadersStatus status =
@@ -105,10 +105,10 @@ TEST_F(BackendRoutingFilterTest, NoOperationName) {
 }
 
 TEST_F(BackendRoutingFilterTest, UnknownOperationName) {
-  Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
-                                         {":path", "/books/1"}};
-  Utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
+  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                                {":path", "/books/1"}};
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
       "unknown-operation-name");
 
   // Call function under test
@@ -121,9 +121,9 @@ TEST_F(BackendRoutingFilterTest, UnknownOperationName) {
 }
 
 TEST_F(BackendRoutingFilterTest, NoPathHeader) {
-  Http::TestRequestHeaderMapImpl headers{{":method", "GET"}};
-  Utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
+  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"}};
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
       "const-operation");
 
   // Call function under test
@@ -136,10 +136,10 @@ TEST_F(BackendRoutingFilterTest, NoPathHeader) {
 }
 
 TEST_F(BackendRoutingFilterTest, ConstantAddress) {
-  Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
-                                         {":path", "/books/1"}};
-  Utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
+  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                                {":path", "/books/1"}};
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
       "const-operation");
 
   // Call function under test
@@ -152,10 +152,10 @@ TEST_F(BackendRoutingFilterTest, ConstantAddress) {
 }
 
 TEST_F(BackendRoutingFilterTest, ConstantAddressWithBadPrefix) {
-  Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
-                                         {":path", "/books/1"}};
-  Utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
+  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                                {":path", "/books/1"}};
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
       "const-with-bad-prefix-operation");
 
   // Call function under test
@@ -166,18 +166,18 @@ TEST_F(BackendRoutingFilterTest, ConstantAddressWithBadPrefix) {
   // URL here. This is problematic in practice, since it doesn't have a '/'.
   // Config manager will ensure that this configuration is never passed to
   // Envoy.
-  ASSERT_EQ(headers.Path()->value().getStringView(), EMPTY_STRING);
+  ASSERT_EQ(headers.Path()->value().getStringView(), Envoy::EMPTY_STRING);
   ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 }
 
 TEST_F(BackendRoutingFilterTest, ConstantAddressWithPathMatcherQueryParams) {
-  Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
-                                         {":path", "/books/1"}};
-  Utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
+  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                                {":path", "/books/1"}};
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
       "const-operation");
-  Utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kQueryParams,
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kQueryParams,
       "id=1");
 
   // Call function under test
@@ -196,10 +196,10 @@ class BackendRoutingFilterWithQueryParamsTest
     : public BackendRoutingFilterTest {};
 
 TEST_F(BackendRoutingFilterWithQueryParamsTest, AppendPathToAddress) {
-  Http::TestRequestHeaderMapImpl headers{
+  Envoy::Http::TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/books/1?view=summary&filter=deleted"}};
-  Utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
       "append-operation");
 
   // Call function under test
@@ -213,10 +213,10 @@ TEST_F(BackendRoutingFilterWithQueryParamsTest, AppendPathToAddress) {
 }
 
 TEST_F(BackendRoutingFilterWithQueryParamsTest, AppendPathToAddressWithPrefix) {
-  Http::TestRequestHeaderMapImpl headers{
+  Envoy::Http::TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/books/1?view=summary&filter=deleted"}};
-  Utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
       "append-with-prefix-operation");
 
   // Call function under test
@@ -230,10 +230,10 @@ TEST_F(BackendRoutingFilterWithQueryParamsTest, AppendPathToAddressWithPrefix) {
 }
 
 TEST_F(BackendRoutingFilterWithQueryParamsTest, ConstantAddress) {
-  Http::TestRequestHeaderMapImpl headers{
+  Envoy::Http::TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/books/1?view=summary&filter=deleted"}};
-  Utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
       "const-operation");
 
   // Call function under test
@@ -248,13 +248,13 @@ TEST_F(BackendRoutingFilterWithQueryParamsTest, ConstantAddress) {
 
 TEST_F(BackendRoutingFilterWithQueryParamsTest,
        ConstantAddressWithPathMatcherQueryParams) {
-  Http::TestRequestHeaderMapImpl headers{
+  Envoy::Http::TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/books/1?view=summary&filter=deleted"}};
-  Utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
       "const-operation");
-  Utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kQueryParams,
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kQueryParams,
       "id=1");
 
   // Call function under test
@@ -268,10 +268,10 @@ TEST_F(BackendRoutingFilterWithQueryParamsTest,
 }
 
 TEST_F(BackendRoutingFilterWithQueryParamsTest, ConstantAddressWithPrefix) {
-  Http::TestRequestHeaderMapImpl headers{
+  Envoy::Http::TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/books/1?view=summary&filter=deleted"}};
-  Utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, Utils::kOperation,
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
       "const-with-prefix-operation");
 
   // Call function under test
@@ -286,7 +286,7 @@ TEST_F(BackendRoutingFilterWithQueryParamsTest, ConstantAddressWithPrefix) {
 
 }  // namespace
 
-}  // namespace BackendRouting
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace backend_routing
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

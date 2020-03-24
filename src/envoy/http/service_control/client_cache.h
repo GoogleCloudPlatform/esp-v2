@@ -24,20 +24,20 @@
 #include "src/envoy/http/service_control/http_call.h"
 #include "src/envoy/http/service_control/service_control_callback_func.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 
 // The class to cache check and batch report.
-class ClientCache : public Logger::Loggable<Logger::Id::filter> {
+class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   ClientCache(
       const ::google::api::envoy::http::service_control::Service& config,
       const ::google::api::envoy::http::service_control::FilterConfig&
           filter_config,
-      Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
-      Event::Dispatcher& dispatcher,
+      Envoy::Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
+      Envoy::Event::Dispatcher& dispatcher,
       std::function<const std::string&()> sc_token_fn,
       std::function<const std::string&()> quota_token_fn);
 
@@ -86,7 +86,7 @@ class ClientCache : public Logger::Loggable<Logger::Id::filter> {
   Envoy::TimeSource& time_source_;
 };
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

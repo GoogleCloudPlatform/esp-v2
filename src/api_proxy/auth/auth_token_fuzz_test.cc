@@ -4,12 +4,12 @@
 
 #include "tests/fuzz/structured_inputs/auth_token.pb.validate.h"
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace auth {
 namespace fuzz {
 
-DEFINE_PROTO_FUZZER(const tests::fuzz::protos::AuthTokenInput& input) {
+DEFINE_PROTO_FUZZER(const espv2::tests::fuzz::protos::AuthTokenInput& input) {
   char* token =
       get_auth_token(input.secret().c_str(), input.audience().c_str());
   if (token != nullptr) {
@@ -20,4 +20,4 @@ DEFINE_PROTO_FUZZER(const tests::fuzz::protos::AuthTokenInput& input) {
 }  // namespace fuzz
 }  // namespace auth
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

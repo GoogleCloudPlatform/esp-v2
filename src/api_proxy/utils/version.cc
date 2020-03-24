@@ -15,7 +15,7 @@
 
 #include "src/api_proxy/utils/version_macro.h"
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace utils {
 
@@ -26,4 +26,4 @@ Version& Version::instance() {
 
 }  // namespace utils
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

@@ -15,20 +15,21 @@
 #include "src/envoy/utils/http_header_utils.h"
 #include "common/common/empty_string.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Utils {
+namespace espv2 {
+namespace envoy {
+namespace utils {
 
 namespace {
 // TODO(kyuc): refactor it to be safe, move it to a class or make the type char*
-const Http::LowerCaseString kHttpMethodOverrideHeader{"x-http-method-override"};
+const Envoy::Http::LowerCaseString kHttpMethodOverrideHeader{
+    "x-http-method-override"};
 }  // namespace
 
 absl::string_view readHeaderEntry(const Envoy::Http::HeaderEntry* entry) {
   if (entry) {
     return entry->value().getStringView();
   }
-  return EMPTY_STRING;
+  return Envoy::EMPTY_STRING;
 }
 
 absl::string_view extractHeader(const Envoy::Http::HeaderMap& headers,
@@ -46,6 +47,6 @@ absl::string_view getRequestHTTPMethodWithOverride(
   return originalMethod;
 }
 
-}  // namespace Utils
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace utils
+}  // namespace envoy
+}  // namespace espv2

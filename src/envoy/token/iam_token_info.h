@@ -18,9 +18,9 @@
 #include "google/protobuf/repeated_field.h"
 #include "src/envoy/token/token_info.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Token {
+namespace espv2 {
+namespace envoy {
+namespace token {
 
 typedef std::function<std::string()> GetTokenFunc;
 
@@ -52,6 +52,6 @@ class IamTokenInfo : public TokenInfo {
   const GetTokenFunc access_token_fn_;
 };
 
-}  // namespace Token
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace token
+}  // namespace envoy
+}  // namespace espv2

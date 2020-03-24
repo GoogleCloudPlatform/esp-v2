@@ -15,7 +15,7 @@
 #include "src/api_proxy/path_matcher/path_matcher_node.h"
 #include "src/api_proxy/path_matcher/http_template.h"
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace path_matcher {
 
@@ -241,4 +241,4 @@ bool PathMatcherNode::GetResultForHttpMethod(
 
 }  // namespace path_matcher
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

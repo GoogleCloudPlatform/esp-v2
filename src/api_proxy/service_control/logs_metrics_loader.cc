@@ -17,7 +17,7 @@
 
 #include <algorithm>
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace service_control {
 
@@ -223,4 +223,4 @@ Status LogsMetricsLoader::LoadLogsMetrics(const Service& service,
 
 }  // namespace service_control
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

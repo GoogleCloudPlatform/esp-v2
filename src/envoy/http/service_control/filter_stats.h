@@ -17,10 +17,10 @@
 #include "envoy/stats/scope.h"
 #include "envoy/stats/stats_macros.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 
 /**
  * All stats for the service control filter. @see stats_macros.h
@@ -41,14 +41,15 @@ struct ServiceControlFilterStats {
 
 class ServiceControlFilterStatBase {
  public:
-  ServiceControlFilterStatBase(const std::string& prefix, Stats::Scope& scope)
+  ServiceControlFilterStatBase(const std::string& prefix,
+                               Envoy::Stats::Scope& scope)
       : stats_(generateStats(prefix, scope)) {}
 
   ServiceControlFilterStats& stats() { return stats_; }
 
  private:
   ServiceControlFilterStats generateStats(const std::string& prefix,
-                                          Stats::Scope& scope) {
+                                          Envoy::Stats::Scope& scope) {
     const std::string final_prefix = prefix + "service_control.";
     return {ALL_SERVICE_CONTROL_FILTER_STATS(
         POOL_COUNTER_PREFIX(scope, final_prefix))};
@@ -58,7 +59,7 @@ class ServiceControlFilterStatBase {
   ServiceControlFilterStats stats_;
 };
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

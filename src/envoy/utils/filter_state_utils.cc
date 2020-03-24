@@ -17,9 +17,9 @@
 #include "common/common/empty_string.h"
 #include "common/router/string_accessor_impl.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Utils {
+namespace espv2 {
+namespace envoy {
+namespace utils {
 
 using ::Envoy::Router::StringAccessor;
 using ::Envoy::Router::StringAccessorImpl;
@@ -38,12 +38,12 @@ absl::string_view getStringFilterState(
     const Envoy::StreamInfo::FilterState& filter_state,
     absl::string_view data_name) {
   if (!filter_state.hasData<StringAccessor>(data_name)) {
-    return EMPTY_STRING;
+    return Envoy::EMPTY_STRING;
   }
 
   return filter_state.getDataReadOnly<StringAccessor>(data_name).asString();
 }
 
-}  // namespace Utils
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace utils
+}  // namespace envoy
+}  // namespace espv2

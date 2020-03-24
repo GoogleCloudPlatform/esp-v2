@@ -21,40 +21,40 @@
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
 
-using ::google::api_proxy::path_matcher::VariableBinding;
-using ::google::api_proxy::path_matcher::VariableBindingsToQueryParameters;
+using ::espv2::api_proxy::path_matcher::VariableBinding;
+using ::espv2::api_proxy::path_matcher::VariableBindingsToQueryParameters;
 using ::google::protobuf::util::Status;
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace PathMatcher {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace path_matcher {
 namespace {
 
 struct RcDetailsValues {
   // The path is not defined in the service config.
   const std::string PathNotDefined = "path_not_defined";
 };
-typedef ConstSingleton<RcDetailsValues> RcDetails;
+typedef Envoy::ConstSingleton<RcDetailsValues> RcDetails;
 
 }  // namespace
 
-Http::FilterHeadersStatus Filter::decodeHeaders(Http::RequestHeaderMap& headers,
-                                                bool) {
-  std::string method(Utils::getRequestHTTPMethodWithOverride(
+Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
+    Envoy::Http::RequestHeaderMap& headers, bool) {
+  std::string method(utils::getRequestHTTPMethodWithOverride(
       headers.Method()->value().getStringView(), headers));
   std::string path(headers.Path()->value().getStringView());
   const std::string* operation = config_->findOperation(method, path);
   if (operation == nullptr) {
-    rejectRequest(Http::Code(404),
+    rejectRequest(Envoy::Http::Code(404),
                   "Path does not match any requirement URI template.");
-    return Http::FilterHeadersStatus::StopIteration;
+    return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 
   ENVOY_LOG(debug, "matched operation: {}", *operation);
-  StreamInfo::FilterState& filter_state =
+  Envoy::StreamInfo::FilterState& filter_state =
       *decoder_callbacks_->streamInfo().filterState();
-  Utils::setStringFilterState(filter_state, Utils::kOperation, *operation);
+  utils::setStringFilterState(filter_state, utils::kOperation, *operation);
 
   if (config_->needParameterExtraction(*operation)) {
     std::vector<VariableBinding> variable_bindings;
@@ -62,25 +62,26 @@ Http::FilterHeadersStatus Filter::decodeHeaders(Http::RequestHeaderMap& headers,
     if (!variable_bindings.empty()) {
       const std::string query_params = VariableBindingsToQueryParameters(
           variable_bindings, config_->getSnakeToJsonMap());
-      Utils::setStringFilterState(filter_state, Utils::kQueryParams,
+      utils::setStringFilterState(filter_state, utils::kQueryParams,
                                   query_params);
     }
   }
 
   config_->stats().allowed_.inc();
-  return Http::FilterHeadersStatus::Continue;
+  return Envoy::Http::FilterHeadersStatus::Continue;
 }
 
-void Filter::rejectRequest(Http::Code code, absl::string_view error_msg) {
+void Filter::rejectRequest(Envoy::Http::Code code,
+                           absl::string_view error_msg) {
   config_->stats().denied_.inc();
 
   decoder_callbacks_->sendLocalReply(code, error_msg, nullptr, absl::nullopt,
                                      RcDetails::get().PathNotDefined);
   decoder_callbacks_->streamInfo().setResponseFlag(
-      StreamInfo::ResponseFlag::UnauthorizedExternalService);
+      Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService);
 }
 
-}  // namespace PathMatcher
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace path_matcher
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

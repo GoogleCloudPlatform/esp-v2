@@ -19,9 +19,9 @@
 #include "common/http/utility.h"
 #include "envoy/http/header_map.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Utils {
+namespace espv2 {
+namespace envoy {
+namespace utils {
 
 // Returns HTTP header value if the entry is set, otherwise empty string.
 absl::string_view readHeaderEntry(const Envoy::Http::HeaderEntry* entry);
@@ -36,6 +36,6 @@ absl::string_view extractHeader(const Envoy::Http::HeaderMap& headers,
 absl::string_view getRequestHTTPMethodWithOverride(
     absl::string_view originalMethod, const Envoy::Http::HeaderMap& headers);
 
-}  // namespace Utils
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace utils
+}  // namespace envoy
+}  // namespace espv2

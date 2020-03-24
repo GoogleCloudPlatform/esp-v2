@@ -18,16 +18,20 @@
 #include "src/envoy/token/imds_token_info.h"
 #include "tests/fuzz/structured_inputs/imds_token_info.pb.validate.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Token {
-namespace Test {
+namespace espv2 {
+namespace envoy {
+namespace token {
+namespace fuzz {
 
-DEFINE_PROTO_FUZZER(const tests::fuzz::protos::ImdsTokenInfoInput& input) {
+// Needed for logger macro expansion.
+namespace Logger = Envoy::Logger;
+
+DEFINE_PROTO_FUZZER(
+    const espv2::tests::fuzz::protos::ImdsTokenInfoInput& input) {
   ENVOY_LOG_MISC(trace, "{}", input.DebugString());
 
   try {
-    TestUtility::validate(input);
+    Envoy::TestUtility::validate(input);
 
     ImdsTokenInfo token_info;
 
@@ -37,12 +41,12 @@ DEFINE_PROTO_FUZZER(const tests::fuzz::protos::ImdsTokenInfoInput& input) {
     (void)token_info.parseAccessToken(input.resp_body(), &ret);
     (void)token_info.parseIdentityToken(input.resp_body(), &ret);
 
-  } catch (const ProtoValidationException& e) {
+  } catch (const Envoy::ProtoValidationException& e) {
     ENVOY_LOG_MISC(debug, "Controlled proto validation failure: {}", e.what());
   }
 }
 
-}  // namespace Test
-}  // namespace Token
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace fuzz
+}  // namespace token
+}  // namespace envoy
+}  // namespace espv2

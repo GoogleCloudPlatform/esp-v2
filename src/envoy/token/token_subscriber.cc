@@ -20,9 +20,9 @@
 #include "envoy/http/async_client.h"
 #include "envoy/http/header_map.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Token {
+namespace espv2 {
+namespace envoy {
+namespace token {
 
 // Request timeout.
 constexpr std::chrono::milliseconds kRequestTimeoutMs(5000);
@@ -122,12 +122,12 @@ void TokenSubscriber::processResponse(
     const uint64_t status_code =
         Envoy::Http::Utility::getResponseStatus(response->headers());
 
-    if (status_code != enumToInt(Envoy::Http::Code::OK)) {
+    if (status_code != Envoy::enumToInt(Envoy::Http::Code::OK)) {
       ENVOY_LOG(error, "{}: failed: {}", debug_name_, status_code);
       handleFailResponse();
       return;
     }
-  } catch (const EnvoyException& e) {
+  } catch (const Envoy::EnvoyException& e) {
     // This occurs if the status header is missing.
     // Catch the exception to prevent unwinding and skipping cleanup.
     ENVOY_LOG(error, "{}: failed: {}", debug_name_, e.what());
@@ -162,7 +162,7 @@ void TokenSubscriber::processResponse(
   // Token will be used as a HTTP_HEADER_VALUE in the future. Ensure it is
   // sanitized. Otherwise, special characters will cause a runtime failure
   // in other components.
-  if (!Http::validHeaderString(result.token)) {
+  if (!Envoy::Http::validHeaderString(result.token)) {
     ENVOY_LOG(error,
               "{}: failed because invalid characters were detected in token {}",
               result.token);
@@ -182,7 +182,7 @@ void TokenSubscriber::onSuccess(Envoy::Http::ResponseMessagePtr&& response) {
 void TokenSubscriber::onFailure(
     Envoy::Http::AsyncClient::FailureReason reason) {
   switch (reason) {
-    case Http::AsyncClient::FailureReason::Reset:
+    case Envoy::Http::AsyncClient::FailureReason::Reset:
       ENVOY_LOG(error, "{}: failed with error: the stream has been reset",
                 debug_name_);
 
@@ -196,6 +196,6 @@ void TokenSubscriber::onFailure(
   handleFailResponse();
 }
 
-}  // namespace Token
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace token
+}  // namespace envoy
+}  // namespace espv2

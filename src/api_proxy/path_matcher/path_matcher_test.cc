@@ -24,7 +24,7 @@
 
 using ::testing::ReturnRef;
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace path_matcher {
 namespace {
@@ -648,4 +648,4 @@ TEST_F(PathMatcherTest, DifferentHttpMethod) {
 
 }  // namespace path_matcher
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

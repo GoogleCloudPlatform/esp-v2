@@ -18,10 +18,10 @@
 
 using ::google::api::envoy::http::service_control::FilterConfig;
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 namespace {
 
 // The operation name for not matched requests.
@@ -40,17 +40,18 @@ FilterConfigParser::FilterConfigParser(const FilterConfig& config,
     service_map_.emplace(service.service_name(), ServiceContextPtr(srv_ctx));
   }
   if (first_srv_ctx == nullptr) {
-    throw ProtoValidationException("Empty services", config_);
+    throw Envoy::ProtoValidationException("Empty services", config_);
   }
 
   if (service_map_.size() < static_cast<size_t>(config_.services_size())) {
-    throw ProtoValidationException("Duplicated service names", config_);
+    throw Envoy::ProtoValidationException("Duplicated service names", config_);
   }
 
   for (const auto& requirement : config_.requirements()) {
     const auto service_it = service_map_.find(requirement.service_name());
     if (service_it == service_map_.end()) {
-      throw ProtoValidationException("Invalid service name", requirement);
+      throw Envoy::ProtoValidationException("Invalid service name",
+                                            requirement);
     }
     requirements_map_.emplace(requirement.operation_name(),
                               RequirementContextPtr(new RequirementContext(
@@ -59,7 +60,8 @@ FilterConfigParser::FilterConfigParser(const FilterConfig& config,
 
   if (requirements_map_.size() <
       static_cast<size_t>(config_.requirements_size())) {
-    throw ProtoValidationException("Duplicated operation names", config_);
+    throw Envoy::ProtoValidationException("Duplicated operation names",
+                                          config_);
   }
 
   // Construct a requirement for non matched requests
@@ -74,7 +76,7 @@ FilterConfigParser::FilterConfigParser(const FilterConfig& config,
   default_api_keys_.add_locations()->set_header("x-api-key");
 }
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

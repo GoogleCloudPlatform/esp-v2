@@ -18,10 +18,10 @@
 #include "common/common/logger.h"
 #include "envoy/server/filter_config.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace BackendRouting {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace backend_routing {
 
 /**
  * All stats for the backend routing filter. @see stats_macros.h
@@ -41,12 +41,12 @@ struct FilterStats {
 };
 
 // The Envoy filter config for ESPv2 backend routing filter.
-class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
+class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   FilterConfig(const ::google::api::envoy::http::backend_routing::FilterConfig&
                    proto_config,
                const std::string& stats_prefix,
-               Server::Configuration::FactoryContext& context)
+               Envoy::Server::Configuration::FactoryContext& context)
       : proto_config_(proto_config),
         stats_(generateStats(stats_prefix, context.scope())) {
     for (const auto& rule : proto_config_.rules()) {
@@ -66,7 +66,7 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
   FilterStats& stats() { return stats_; }
 
  private:
-  FilterStats generateStats(const std::string& prefix, Stats::Scope& scope) {
+  FilterStats generateStats(const std::string& prefix, Envoy::Stats::Scope& scope) {
     const std::string final_prefix = prefix + "backend_routing.";
     return {ALL_BACKEND_ROUTING_FILTER_STATS(
         POOL_COUNTER_PREFIX(scope, final_prefix))};

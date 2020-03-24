@@ -19,20 +19,20 @@
 #include "common/http/headers.h"
 #include "src/envoy/utils/filter_state_utils.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace BackendRouting {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace backend_routing {
 
-using Http::FilterHeadersStatus;
+using Envoy::Http::FilterHeadersStatus;
 
 Filter::Filter(FilterConfigSharedPtr config) : config_(config) {}
 
-FilterHeadersStatus Filter::decodeHeaders(Http::RequestHeaderMap& headers,
-                                          bool) {
+FilterHeadersStatus Filter::decodeHeaders(
+    Envoy::Http::RequestHeaderMap& headers, bool) {
   const auto& filter_state = *decoder_callbacks_->streamInfo().filterState();
   absl::string_view operation =
-      Utils::getStringFilterState(filter_state, Utils::kOperation);
+      utils::getStringFilterState(filter_state, utils::kOperation);
   // NOTE: this shouldn't happen in practice because Path Matcher filter would
   // have already rejected the request.
   if (operation.empty()) {
@@ -60,7 +60,7 @@ FilterHeadersStatus Filter::decodeHeaders(Http::RequestHeaderMap& headers,
 
   if (rule->is_const_address()) {  // CONSTANT_ADDRESS
     absl::string_view queryParamFromPathParam =
-        Utils::getStringFilterState(filter_state, Utils::kQueryParams);
+        utils::getStringFilterState(filter_state, utils::kQueryParams);
     const auto originalPath = std::string(original_path);
     std::size_t originalQueryParamPos = originalPath.find('?');
     if (originalQueryParamPos != std::string::npos) {
@@ -89,14 +89,14 @@ FilterHeadersStatus Filter::decodeHeaders(Http::RequestHeaderMap& headers,
         "append path to address backend routing for operation {}, new path: {}",
         operation, newPath);
   }
-  const auto& pathField = Http::Headers::get().Path;
+  const auto& pathField = Envoy::Http::Headers::get().Path;
   headers.remove(pathField);
   headers.addCopy(pathField, newPath);
 
   return FilterHeadersStatus::Continue;
 }
 
-}  // namespace BackendRouting
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace backend_routing
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

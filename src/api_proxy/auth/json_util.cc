@@ -24,7 +24,7 @@ extern "C" {
 #include "grpc/support/log.h"
 }
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace auth {
 namespace {
@@ -139,4 +139,4 @@ void FillChild(grpc_json* child, grpc_json* brother, grpc_json* parent,
 
 }  // namespace auth
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

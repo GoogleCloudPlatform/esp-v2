@@ -23,12 +23,12 @@
 #include "src/envoy/http/backend_auth/config_parser.h"
 #include "src/envoy/token/token_subscriber_factory_impl.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace BackendAuth {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace backend_auth {
 
-class TokenCache : public ThreadLocal::ThreadLocalObject {
+class TokenCache : public Envoy::ThreadLocal::ThreadLocalObject {
  public:
   TokenSharedPtr token_;
 };
@@ -38,10 +38,10 @@ class AudienceContext {
   AudienceContext(
       const ::google::api::envoy::http::backend_auth::BackendAuthRule&
           proto_config,
-      Server::Configuration::FactoryContext& context,
+      Envoy::Server::Configuration::FactoryContext& context,
       const ::google::api::envoy::http::backend_auth::FilterConfig& config,
-      const Token::TokenSubscriberFactory& token_subscriber_factory,
-      Token::GetTokenFunc access_token_fn);
+      const token::TokenSubscriberFactory& token_subscriber_factory,
+      token::GetTokenFunc access_token_fn);
   TokenSharedPtr token() const {
     if (tls_->getTyped<TokenCache>().token_) {
       return tls_->getTyped<TokenCache>().token_;
@@ -50,9 +50,9 @@ class AudienceContext {
   }
 
  private:
-  ThreadLocal::SlotPtr tls_;
-  Token::TokenSubscriberPtr iam_token_sub_ptr_;
-  Token::TokenSubscriberPtr imds_token_sub_ptr_;
+  Envoy::ThreadLocal::SlotPtr tls_;
+  token::TokenSubscriberPtr iam_token_sub_ptr_;
+  token::TokenSubscriberPtr imds_token_sub_ptr_;
 };
 
 typedef std::unique_ptr<AudienceContext> AudienceContextPtr;
@@ -63,13 +63,13 @@ class FilterConfigParserImpl
  public:
   FilterConfigParserImpl(
       const ::google::api::envoy::http::backend_auth::FilterConfig& config,
-      Server::Configuration::FactoryContext& context,
-      const Token::TokenSubscriberFactory& token_subscriber_factory);
+      Envoy::Server::Configuration::FactoryContext& context,
+      const token::TokenSubscriberFactory& token_subscriber_factory);
 
   absl::string_view getAudience(absl::string_view operation) const override {
     auto operation_it = operation_map_.find(operation);
     if (operation_it == operation_map_.end()) {
-      return EMPTY_STRING;
+      return Envoy::EMPTY_STRING;
     }
     return operation_it->second;
   }
@@ -86,12 +86,12 @@ class FilterConfigParserImpl
   //  access_token_ is required for authentication during fetching id_token from
   //  IAM server.
   std::string access_token_;
-  Token::TokenSubscriberPtr access_token_sub_ptr_;
+  token::TokenSubscriberPtr access_token_sub_ptr_;
   absl::flat_hash_map<std::string, std::string> operation_map_;
   absl::flat_hash_map<std::string, AudienceContextPtr> audience_map_;
 };
 
-}  // namespace BackendAuth
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace backend_auth
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

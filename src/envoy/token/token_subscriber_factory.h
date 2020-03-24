@@ -19,9 +19,9 @@
 #include "src/envoy/token/sa_token_generator.h"
 #include "src/envoy/token/token_subscriber.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Token {
+namespace espv2 {
+namespace envoy {
+namespace token {
 
 class TokenSubscriberFactory {
  public:
@@ -43,6 +43,6 @@ class TokenSubscriberFactory {
       ServiceAccountTokenGenerator::TokenUpdateFunc callback) const PURE;
 };
 
-}  // namespace Token
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace token
+}  // namespace envoy
+}  // namespace espv2

@@ -25,9 +25,9 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Token {
+namespace espv2 {
+namespace envoy {
+namespace token {
 namespace {
 
 using ::Envoy::Server::Configuration::MockFactoryContext;
@@ -72,6 +72,6 @@ TEST_F(ServiceAccountTokenTest, BadTokenDoesNotCallback) {
 }
 
 }  // namespace
-}  // namespace Token
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace token
+}  // namespace envoy
+}  // namespace espv2

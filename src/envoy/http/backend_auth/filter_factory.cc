@@ -20,10 +20,10 @@
 #include "src/envoy/http/backend_auth/filter.h"
 #include "src/envoy/http/backend_auth/filter_config_impl.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace BackendAuth {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace backend_auth {
 
 const std::string FilterName = "envoy.filters.http.backend_auth";
 
@@ -31,35 +31,35 @@ const std::string FilterName = "envoy.filters.http.backend_auth";
  * Config registration for ESPv2 backend auth filter.
  */
 class FilterFactory
-    : public Common::FactoryBase<
+    : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
           ::google::api::envoy::http::backend_auth::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(FilterName) {}
 
  private:
-  Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
+  Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
       const ::google::api::envoy::http::backend_auth::FilterConfig&
           proto_config,
       const std::string& stats_prefix,
-      Server::Configuration::FactoryContext& context) override {
+      Envoy::Server::Configuration::FactoryContext& context) override {
     auto filter_config =
         std::make_shared<FilterConfigImpl>(proto_config, stats_prefix, context);
-    return
-        [filter_config](Http::FilterChainFactoryCallbacks& callbacks) -> void {
-          auto filter = std::make_shared<Filter>(filter_config);
-          callbacks.addStreamDecoderFilter(
-              Http::StreamDecoderFilterSharedPtr(filter));
-        };
+    return [filter_config](
+               Envoy::Http::FilterChainFactoryCallbacks& callbacks) -> void {
+      auto filter = std::make_shared<Filter>(filter_config);
+      callbacks.addStreamDecoderFilter(
+          Envoy::Http::StreamDecoderFilterSharedPtr(filter));
+    };
   }
 };
 /**
  * Static registration for the rate limit filter. @see RegisterFactory.
  */
-static Registry::RegisterFactory<
-    FilterFactory, Server::Configuration::NamedHttpFilterConfigFactory>
+static Envoy::Registry::RegisterFactory<
+    FilterFactory, Envoy::Server::Configuration::NamedHttpFilterConfigFactory>
     register_;
 
-}  // namespace BackendAuth
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace backend_auth
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

@@ -15,24 +15,24 @@
 #include "src/envoy/http/path_matcher/filter_config.h"
 #include "common/common/empty_string.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace PathMatcher {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace path_matcher {
 
 FilterConfig::FilterConfig(
     const ::google::api::envoy::http::path_matcher::FilterConfig& proto_config,
     const std::string& stats_prefix,
-    Server::Configuration::FactoryContext& context)
+    Envoy::Server::Configuration::FactoryContext& context)
     : proto_config_(proto_config),
       stats_(generateStats(stats_prefix, context.scope())) {
-  ::google::api_proxy::path_matcher::PathMatcherBuilder<const std::string*> pmb;
+  ::espv2::api_proxy::path_matcher::PathMatcherBuilder<const std::string*> pmb;
   for (const auto& rule : proto_config_.rules()) {
-    if (!pmb.Register(rule.pattern().http_method(),
-                      rule.pattern().uri_template(),
-                      /*body_field_path=*/EMPTY_STRING, &rule.operation())) {
-      throw ProtoValidationException("Duplicated pattern or invalid pattern",
-                                     rule.pattern());
+    if (!pmb.Register(
+            rule.pattern().http_method(), rule.pattern().uri_template(),
+            /*body_field_path=*/Envoy::EMPTY_STRING, &rule.operation())) {
+      throw Envoy::ProtoValidationException(
+          "Duplicated pattern or invalid pattern", rule.pattern());
     }
     if (rule.extract_path_parameters()) {
       path_params_operations_.insert(rule.operation());
@@ -46,7 +46,7 @@ FilterConfig::FilterConfig(
   }
 }
 
-}  // namespace PathMatcher
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace path_matcher
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

@@ -18,9 +18,9 @@
 #include "envoy/common/pure.h"
 #include "envoy/http/message.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Token {
+namespace espv2 {
+namespace envoy {
+namespace token {
 
 struct TokenResult {
   std::string token;
@@ -43,6 +43,6 @@ class TokenInfo : public Envoy::Logger::Loggable<Envoy::Logger::Id::init> {
 
 typedef std::unique_ptr<TokenInfo> TokenInfoPtr;
 
-}  // namespace Token
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace token
+}  // namespace envoy
+}  // namespace espv2

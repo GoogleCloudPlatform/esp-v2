@@ -26,15 +26,15 @@
 #include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/http/service_control/handler_utils.h"
 
+using ::espv2::api_proxy::service_control::LatencyInfo;
+using ::espv2::api_proxy::service_control::protocol::Protocol;
 using ::google::api::envoy::http::service_control::ApiKeyLocation;
 using ::google::api::envoy::http::service_control::Service;
-using ::google::api_proxy::service_control::LatencyInfo;
-using ::google::api_proxy::service_control::protocol::Protocol;
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 
 namespace {
 
@@ -42,21 +42,21 @@ namespace {
 constexpr char kJwtPayLoadsDelimeter = '.';
 
 constexpr char kContentTypeApplicationGrpcPrefix[] = "application/grpc";
-const Http::LowerCaseString kContentTypeHeader{"content-type"};
+const Envoy::Http::LowerCaseString kContentTypeHeader{"content-type"};
 
 inline int64_t convertNsToMs(std::chrono::nanoseconds ns) {
   return std::chrono::duration_cast<std::chrono::milliseconds>(ns).count();
 }
 
-bool extractAPIKeyFromQuery(const Http::RequestHeaderMap& headers,
+bool extractAPIKeyFromQuery(const Envoy::Http::RequestHeaderMap& headers,
                             const std::string& query, bool& were_params_parsed,
-                            Http::Utility::QueryParams& parsed_params,
+                            Envoy::Http::Utility::QueryParams& parsed_params,
                             std::string& api_key) {
   if (!were_params_parsed) {
     if (headers.Path() == nullptr) {
       return false;
     }
-    parsed_params = Http::Utility::parseQueryString(
+    parsed_params = Envoy::Http::Utility::parseQueryString(
         headers.Path()->value().getStringView());
     were_params_parsed = true;
   }
@@ -69,10 +69,10 @@ bool extractAPIKeyFromQuery(const Http::RequestHeaderMap& headers,
   return false;
 }
 
-bool extractAPIKeyFromHeader(const Http::RequestHeaderMap& headers,
+bool extractAPIKeyFromHeader(const Envoy::Http::RequestHeaderMap& headers,
                              const std::string& header, std::string& api_key) {
   // TODO(qiwzhang): optimize this by using LowerCaseString at init.
-  auto* entry = headers.get(Http::LowerCaseString(header));
+  auto* entry = headers.get(Envoy::Http::LowerCaseString(header));
   if (entry) {
     api_key = std::string(entry->value().getStringView());
     return true;
@@ -80,9 +80,10 @@ bool extractAPIKeyFromHeader(const Http::RequestHeaderMap& headers,
   return false;
 }
 
-bool extractAPIKeyFromCookie(const Http::RequestHeaderMap& headers,
+bool extractAPIKeyFromCookie(const Envoy::Http::RequestHeaderMap& headers,
                              const std::string& cookie, std::string& api_key) {
-  std::string parsed_api_key = Http::Utility::parseCookieValue(headers, cookie);
+  std::string parsed_api_key =
+      Envoy::Http::Utility::parseCookieValue(headers, cookie);
   if (!parsed_api_key.empty()) {
     api_key = parsed_api_key;
     return true;
@@ -90,7 +91,7 @@ bool extractAPIKeyFromCookie(const Http::RequestHeaderMap& headers,
   return false;
 }
 
-void extractJwtPayload(const ProtobufWkt::Value& value,
+void extractJwtPayload(const Envoy::ProtobufWkt::Value& value,
                        const std::string& jwt_payload_path,
                        std::string& info_jwt_payloads) {
   switch (value.kind_case()) {
@@ -128,7 +129,7 @@ bool isGrpcRequest(absl::string_view content_type) {
 void fillGCPInfo(
     const ::google::api::envoy::http::service_control::FilterConfig&
         filter_config,
-    ::google::api_proxy::service_control::ReportRequestInfo& info) {
+    ::espv2::api_proxy::service_control::ReportRequestInfo& info) {
   if (!filter_config.has_gcp_attributes()) {
     return;
   }
@@ -144,14 +145,14 @@ void fillGCPInfo(
 }
 
 void fillLoggedHeader(
-    const Http::HeaderMap* headers,
+    const Envoy::Http::HeaderMap* headers,
     const ::google::protobuf::RepeatedPtrField<::std::string>& log_headers,
     std::string& info_header_field) {
   if (headers == nullptr) {
     return;
   }
   for (const auto& log_header : log_headers) {
-    auto* entry = headers->get(Http::LowerCaseString(log_header));
+    auto* entry = headers->get(Envoy::Http::LowerCaseString(log_header));
     if (entry) {
       absl::StrAppend(&info_header_field, log_header, "=",
                       entry->value().getStringView(), ";");
@@ -159,7 +160,7 @@ void fillLoggedHeader(
   }
 }
 
-void fillLatency(const StreamInfo::StreamInfo& stream_info,
+void fillLatency(const Envoy::StreamInfo::StreamInfo& stream_info,
                  LatencyInfo& latency) {
   if (stream_info.requestComplete()) {
     latency.request_time_ms =
@@ -182,11 +183,11 @@ void fillLatency(const StreamInfo::StreamInfo& stream_info,
   }
 }
 
-Protocol getFrontendProtocol(const Http::HeaderMap* response_headers,
-                             const StreamInfo::StreamInfo& stream_info) {
+Protocol getFrontendProtocol(const Envoy::Http::HeaderMap* response_headers,
+                             const Envoy::StreamInfo::StreamInfo& stream_info) {
   if (response_headers != nullptr) {
     auto content_type =
-        Utils::extractHeader(*response_headers, kContentTypeHeader);
+        utils::extractHeader(*response_headers, kContentTypeHeader);
     if (isGrpcRequest(content_type)) {
       return Protocol::GRPC;
     }
@@ -215,7 +216,7 @@ Protocol getBackendProtocol(const Service& service) {
 }
 
 // TODO(taoxuy): Add Unit Test
-void fillJwtPayloads(const envoy::config::core::v3::Metadata& metadata,
+void fillJwtPayloads(const ::envoy::config::core::v3::Metadata& metadata,
                      const std::string& jwt_payload_metadata_name,
                      const ::google::protobuf::RepeatedPtrField<::std::string>&
                          jwt_payload_paths,
@@ -224,36 +225,42 @@ void fillJwtPayloads(const envoy::config::core::v3::Metadata& metadata,
     std::vector<std::string> steps =
         absl::StrSplit(jwt_payload_path, kJwtPayLoadsDelimeter);
     steps.insert(steps.begin(), jwt_payload_metadata_name);
-    const ProtobufWkt::Value& value = Config::Metadata::metadataValue(
-        &metadata, HttpFilters::HttpFilterNames::get().JwtAuthn, steps);
-    if (&value != &ProtobufWkt::Value::default_instance()) {
+    const Envoy::ProtobufWkt::Value& value =
+        Envoy::Config::Metadata::metadataValue(
+            &metadata,
+            Envoy::Extensions::HttpFilters::HttpFilterNames::get().JwtAuthn,
+            steps);
+    if (&value != &Envoy::ProtobufWkt::Value::default_instance()) {
       extractJwtPayload(value, jwt_payload_path, info_jwt_payloads);
     }
   }
 }
 
-void fillJwtPayload(const envoy::config::core::v3::Metadata& metadata,
+void fillJwtPayload(const ::envoy::config::core::v3::Metadata& metadata,
                     const std::string& jwt_payload_metadata_name,
                     const std::string& jwt_payload_path,
                     std::string& info_iss_or_aud) {
   std::vector<std::string> steps = {jwt_payload_metadata_name,
                                     jwt_payload_path};
-  const ProtobufWkt::Value& value = Config::Metadata::metadataValue(
-      &metadata, HttpFilters::HttpFilterNames::get().JwtAuthn, steps);
-  if (&value != &ProtobufWkt::Value::default_instance()) {
+  const Envoy::ProtobufWkt::Value& value =
+      Envoy::Config::Metadata::metadataValue(
+          &metadata,
+          Envoy::Extensions::HttpFilters::HttpFilterNames::get().JwtAuthn,
+          steps);
+  if (&value != &Envoy::ProtobufWkt::Value::default_instance()) {
     absl::StrAppend(&info_iss_or_aud, value.string_value());
   }
 }
 
 bool extractAPIKey(
-    const Http::RequestHeaderMap& headers,
+    const Envoy::Http::RequestHeaderMap& headers,
     const ::google::protobuf::RepeatedPtrField<
         ::google::api::envoy::http::service_control::ApiKeyLocation>& locations,
     std::string& api_key) {
   // If checking multiple headers, cache the parameters so they are only parsed
   // once
   bool were_params_parsed{false};
-  Http::Utility::QueryParams parsed_params;
+  Envoy::Http::Utility::QueryParams parsed_params;
 
   for (const auto& location : locations) {
     switch (location.key_case()) {
@@ -277,7 +284,7 @@ bool extractAPIKey(
   return false;
 }
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

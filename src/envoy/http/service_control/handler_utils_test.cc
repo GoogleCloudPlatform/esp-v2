@@ -25,18 +25,18 @@
 #include "test/mocks/server/mocks.h"
 #include "test/test_common/utility.h"
 
+using ::espv2::api_proxy::service_control::LatencyInfo;
+using ::espv2::api_proxy::service_control::ReportRequestInfo;
+using ::espv2::api_proxy::service_control::protocol::Protocol;
 using ::google::api::envoy::http::service_control::ApiKeyRequirement;
 using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::api::envoy::http::service_control::Service;
-using ::google::api_proxy::service_control::LatencyInfo;
-using ::google::api_proxy::service_control::ReportRequestInfo;
-using ::google::api_proxy::service_control::protocol::Protocol;
 using ::google::protobuf::TextFormat;
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 namespace {
 
 TEST(ServiceControlUtils, FillGCPInfo) {
@@ -48,23 +48,24 @@ TEST(ServiceControlUtils, FillGCPInfo) {
 
   const TestCase test_cases[] = {
       // Test: No gcp_attributes found
-      {EMPTY_STRING, EMPTY_STRING, "UNKNOWN(ESPv2)"},
+      {Envoy::EMPTY_STRING, Envoy::EMPTY_STRING, "UNKNOWN(ESPv2)"},
 
       // Test: gcp_attributes found but empty
-      {R"(gcp_attributes {})", EMPTY_STRING, "UNKNOWN(ESPv2)"},
+      {R"(gcp_attributes {})", Envoy::EMPTY_STRING, "UNKNOWN(ESPv2)"},
 
       // Test: bad platform provided should default to unknown
-      {R"(gcp_attributes { platform: "bad-platform"})", EMPTY_STRING,
+      {R"(gcp_attributes { platform: "bad-platform"})", Envoy::EMPTY_STRING,
        "bad-platform"},
 
       // Test: GAE_FLEX platform is passed through
-      {R"(gcp_attributes { platform: "GAE_FLEX"})", EMPTY_STRING, "GAE_FLEX"},
+      {R"(gcp_attributes { platform: "GAE_FLEX"})", Envoy::EMPTY_STRING,
+       "GAE_FLEX"},
 
       // Test: GCE platform is set
-      {R"(gcp_attributes { platform: "GCE"})", EMPTY_STRING, "GCE"},
+      {R"(gcp_attributes { platform: "GCE"})", Envoy::EMPTY_STRING, "GCE"},
 
       // Test: GKE platform is set
-      {R"(gcp_attributes { platform: "GKE"})", EMPTY_STRING, "GKE"},
+      {R"(gcp_attributes { platform: "GKE"})", Envoy::EMPTY_STRING, "GKE"},
 
       // Test: Provided zone is set
       {R"(gcp_attributes { zone: "test-zone"})", "test-zone", "UNKNOWN(ESPv2)"},
@@ -91,7 +92,7 @@ TEST(ServiceControlUtils, FillLoggedHeader) {
   EXPECT_TRUE(output.empty());
 
   struct TestCase {
-    Http::TestRequestHeaderMapImpl headers;
+    Envoy::Http::TestRequestHeaderMapImpl headers;
     std::string service_proto;
     std::string expected_output;
   };
@@ -107,7 +108,7 @@ TEST(ServiceControlUtils, FillLoggedHeader) {
       {
           {{"ignore-this", "foo"}},
           R"(log_request_headers: "log-this")",
-          EMPTY_STRING,
+          Envoy::EMPTY_STRING,
       },
 
       // Test: Search for one header when there are others
@@ -156,8 +157,8 @@ TEST(ServiceControlUtils, FillLoggedHeader) {
   std::string service_proto = R"(log_request_headers: "log-this")";
   ASSERT_TRUE(TextFormat::ParseFromString(service_proto, &service));
 
-  Http::TestRequestHeaderMapImpl headers{{"log-this", "foo"},
-                                         {"log-this", "bar"}};
+  Envoy::Http::TestRequestHeaderMapImpl headers{{"log-this", "foo"},
+                                                {"log-this", "bar"}};
   fillLoggedHeader(&headers, service.log_request_headers(), output);
   EXPECT_TRUE(output == "log-this=foo;" || output == "log-this=bar;");
 }
@@ -165,19 +166,19 @@ TEST(ServiceControlUtils, FillLoggedHeader) {
 TEST(ServiceControlUtils, ExtractApiKey) {
   struct TestCase {
     std::string requirement_proto;
-    Http::TestRequestHeaderMapImpl headers;
+    Envoy::Http::TestRequestHeaderMapImpl headers;
     std::string expected_api_key;
   };
 
   const TestCase test_cases[] = {
       // Test: No locations provided does nothing
-      {EMPTY_STRING, {}, EMPTY_STRING},
+      {Envoy::EMPTY_STRING, {}, Envoy::EMPTY_STRING},
 
       // Test: cookie location expected but not provided
       {
           R"(locations: { cookie: "apikey" } )",
           {},
-          EMPTY_STRING,
+          Envoy::EMPTY_STRING,
       },
 
       // Test: find apikey in cookie location
@@ -200,7 +201,7 @@ TEST(ServiceControlUtils, ExtractApiKey) {
       {
           R"(locations: { header: "apikey" } )",
           {},
-          EMPTY_STRING,
+          Envoy::EMPTY_STRING,
       },
 
       // Test: find apikey in header location
@@ -223,7 +224,7 @@ TEST(ServiceControlUtils, ExtractApiKey) {
       {
           R"(locations: { query: "apikey" } )",
           {{":path", "/echo"}},
-          EMPTY_STRING,
+          Envoy::EMPTY_STRING,
       },
 
       // Test: find apikey in query location
@@ -248,7 +249,7 @@ TEST(ServiceControlUtils, ExtractApiKey) {
             locations: { header: "apikey" }
             locations: { query: "apikey" } )",
           {{"cookie", "apikey=foobar"}, {":path", "/echo"}},
-          EMPTY_STRING},
+          Envoy::EMPTY_STRING},
 
       // Test: apikey is in header but header location is not expected
       {
@@ -256,7 +257,7 @@ TEST(ServiceControlUtils, ExtractApiKey) {
             locations: { cookie: "apikey" }
             locations: { query: "apikey" } )",
           {{"apikey", "foobar"}, {":path", "/echo"}},
-          EMPTY_STRING},
+          Envoy::EMPTY_STRING},
 
       // Test: apikey is in query but query location is not expected
       {
@@ -264,7 +265,7 @@ TEST(ServiceControlUtils, ExtractApiKey) {
             locations: { cookie: "apikey" }
             locations: { header: "apikey" } )",
           {{":path", "/echo?apikey=foobar"}},
-          EMPTY_STRING,
+          Envoy::EMPTY_STRING,
       }};
 
   for (const auto& test : test_cases) {
@@ -358,7 +359,7 @@ TEST(ServiceControlUtils, FillLatency) {
   };
 
   for (const auto& test : test_cases) {
-    testing::NiceMock<StreamInfo::MockStreamInfo> mock_stream_info;
+    testing::NiceMock<Envoy::StreamInfo::MockStreamInfo> mock_stream_info;
     if (test.end_time > zero) {
       mock_stream_info.end_time_ = test.end_time;
     }
@@ -403,8 +404,8 @@ TEST(ServiceControlUtils, GetBackendProtocol) {
 }
 
 TEST(ServiceControlUtils, GetFrontendProtocol) {
-  Http::TestRequestHeaderMapImpl headers;
-  testing::NiceMock<StreamInfo::MockStreamInfo> mock_stream_info;
+  Envoy::Http::TestRequestHeaderMapImpl headers;
+  testing::NiceMock<Envoy::StreamInfo::MockStreamInfo> mock_stream_info;
 
   // Test: header is nullptr and stream_info has no protocol
   EXPECT_EQ(Protocol::UNKNOWN, getFrontendProtocol(nullptr, mock_stream_info));
@@ -427,12 +428,12 @@ TEST(ServiceControlUtils, GetFrontendProtocol) {
 
   // Test: header does not have a grpc content-type and stream_info has HTTP
   // protocol This tests all stream info protocols as they are all HTTP
-  mock_stream_info.protocol_ = Http::Protocol::Http10;
+  mock_stream_info.protocol_ = Envoy::Http::Protocol::Http10;
   EXPECT_EQ(Protocol::HTTP, getFrontendProtocol(nullptr, mock_stream_info));
 }
 
 }  // namespace
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

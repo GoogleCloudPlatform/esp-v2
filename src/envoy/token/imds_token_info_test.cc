@@ -17,10 +17,10 @@
 #include "common/http/message_impl.h"
 #include "gtest/gtest.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Token {
-namespace Test {
+namespace espv2 {
+namespace envoy {
+namespace token {
+namespace test {
 
 // Default token expiry time for ID tokens.
 // Should match the value in `imds_token_info.cc`.
@@ -100,7 +100,7 @@ TEST_F(ImdsTokenInfoTest, AccessTokenSuccess) {
   EXPECT_NE(result.expiry_duration, kDefaultTokenExpiry);
 }
 
-}  // namespace Test
-}  // namespace Token
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace test
+}  // namespace token
+}  // namespace envoy
+}  // namespace espv2

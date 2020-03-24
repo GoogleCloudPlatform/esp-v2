@@ -19,10 +19,10 @@
 
 using ::testing::NiceMock;
 
-namespace Envoy {
-namespace Extensions {
-namespace Token {
-namespace Test {
+namespace espv2 {
+namespace envoy {
+namespace token {
+namespace test {
 
 class MockTokenSubscriberFactory : public TokenSubscriberFactory {
  public:
@@ -61,7 +61,7 @@ class MockTokenInfo : public TokenInfo {
 
 typedef std::unique_ptr<NiceMock<MockTokenInfo>> MockTokenInfoPtr;
 
-}  // namespace Test
-}  // namespace Token
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace test
+}  // namespace token
+}  // namespace envoy
+}  // namespace espv2

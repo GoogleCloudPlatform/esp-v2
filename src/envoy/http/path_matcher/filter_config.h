@@ -22,10 +22,10 @@
 #include "envoy/server/filter_config.h"
 #include "src/api_proxy/path_matcher/path_matcher.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace PathMatcher {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace path_matcher {
 
 /**
  * All stats for the path matcher filter. @see stats_macros.h
@@ -45,12 +45,12 @@ struct FilterStats {
 };
 
 // The Envoy filter config for ESPv2 path matcher filter.
-class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
+class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   FilterConfig(const ::google::api::envoy::http::path_matcher::FilterConfig&
                    proto_config,
                const std::string& stats_prefix,
-               Server::Configuration::FactoryContext& context);
+               Envoy::Server::Configuration::FactoryContext& context);
 
   const std::string* findOperation(const std::string& http_method,
                                    const std::string& path) const {
@@ -59,7 +59,7 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
 
   const std::string* findOperation(
       const std::string& http_method, const std::string& path,
-      std::vector<google::api_proxy::path_matcher::VariableBinding>*
+      std::vector<espv2::api_proxy::path_matcher::VariableBinding>*
           variable_bindings) const {
     return path_matcher_->Lookup(http_method, path, variable_bindings);
   }
@@ -80,14 +80,15 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
   }
 
  private:
-  FilterStats generateStats(const std::string& prefix, Stats::Scope& scope) {
+  FilterStats generateStats(const std::string& prefix,
+                            Envoy::Stats::Scope& scope) {
     const std::string final_prefix = prefix + "path_matcher.";
     return {ALL_BACKEND_AUTH_FILTER_STATS(
         POOL_COUNTER_PREFIX(scope, final_prefix))};
   }
 
   ::google::api::envoy::http::path_matcher::FilterConfig proto_config_;
-  ::google::api_proxy::path_matcher::PathMatcherPtr<const std::string*>
+  ::espv2::api_proxy::path_matcher::PathMatcherPtr<const std::string*>
       path_matcher_;
   // Mapping between snake-case segment name to JSON name as specified in
   // `Service.types` (e.g. "foo_bar" -> "fooBar").
@@ -98,7 +99,7 @@ class FilterConfig : public Logger::Loggable<Logger::Id::filter> {
 
 typedef std::shared_ptr<FilterConfig> FilterConfigSharedPtr;
 
-}  // namespace PathMatcher
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  //  namespace Envoy
+}  // namespace path_matcher
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

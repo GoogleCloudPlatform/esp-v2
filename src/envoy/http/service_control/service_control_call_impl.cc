@@ -17,19 +17,19 @@
 #include "src/api_proxy/service_control/logs_metrics_loader.h"
 #include "src/envoy/http/service_control/service_control_call_impl.h"
 
-using Envoy::Extensions::Token::ServiceAccountTokenGenerator;
-using Envoy::Extensions::Token::TokenSubscriber;
-using Envoy::Extensions::Token::TokenType;
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
+
+using ::espv2::api_proxy::service_control::LogsMetricsLoader;
+using ::espv2::api_proxy::service_control::RequestBuilder;
 using ::google::api::envoy::http::common::AccessToken;
 using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::api::envoy::http::service_control::Service;
-using ::google::api_proxy::service_control::LogsMetricsLoader;
-using ::google::api_proxy::service_control::RequestBuilder;
-
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+using token::ServiceAccountTokenGenerator;
+using token::TokenSubscriber;
+using token::TokenType;
 
 namespace {
 // The service_control service name. used for as audience to generate JWT token.
@@ -96,7 +96,7 @@ void ServiceControlCallImpl::createIamTokenSub() {
       break;
     }
     default: {
-      throw EnvoyException(
+      throw Envoy::EnvoyException(
           "Not support getting access token for iam server by "
           "service account file");
     }
@@ -121,15 +121,16 @@ void ServiceControlCallImpl::createIamTokenSub() {
 
 ServiceControlCallImpl::ServiceControlCallImpl(
     FilterConfigProtoSharedPtr proto_config, const Service& config,
-    Server::Configuration::FactoryContext& context)
+    Envoy::Server::Configuration::FactoryContext& context)
     : filter_config_(*proto_config),
       token_subscriber_factory_(context),
       tls_(context.threadLocal().allocateSlot()) {
   // Pass shared_ptr of proto_config to the function capture so that
   // it will not be released when the function is called.
   tls_->set([proto_config, &config, &cm = context.clusterManager(),
-             &time_source = context.timeSource()](Event::Dispatcher& dispatcher)
-                -> ThreadLocal::ThreadLocalObjectSharedPtr {
+             &time_source =
+                 context.timeSource()](Envoy::Event::Dispatcher& dispatcher)
+                -> Envoy::ThreadLocal::ThreadLocalObjectSharedPtr {
     return std::make_shared<ThreadLocalCache>(config, *proto_config, cm,
                                               time_source, dispatcher);
   });
@@ -152,7 +153,7 @@ ServiceControlCallImpl::ServiceControlCallImpl(
   if (config.has_service_config()) {
     ::google::api::Service origin_service;
     if (!config.service_config().UnpackTo(&origin_service)) {
-      throw ProtoValidationException("Invalid service config", config);
+      throw Envoy::ProtoValidationException("Invalid service config", config);
     }
 
     std::set<std::string> logs, metrics, labels;
@@ -167,7 +168,7 @@ ServiceControlCallImpl::ServiceControlCallImpl(
 }  // namespace ServiceControl
 
 CancelFunc ServiceControlCallImpl::callCheck(
-    const ::google::api_proxy::service_control::CheckRequestInfo& request_info,
+    const ::espv2::api_proxy::service_control::CheckRequestInfo& request_info,
     Envoy::Tracing::Span& parent_span, CheckDoneFunc on_done) {
   ::google::api::servicecontrol::v1::CheckRequest request;
   (void)request_builder_->FillCheckRequest(request_info, &request);
@@ -176,7 +177,7 @@ CancelFunc ServiceControlCallImpl::callCheck(
 }
 
 void ServiceControlCallImpl::callQuota(
-    const ::google::api_proxy::service_control::QuotaRequestInfo& request_info,
+    const ::espv2::api_proxy::service_control::QuotaRequestInfo& request_info,
     QuotaDoneFunc on_done) {
   ::google::api::servicecontrol::v1::AllocateQuotaRequest request;
   (void)request_builder_->FillAllocateQuotaRequest(request_info, &request);
@@ -185,7 +186,7 @@ void ServiceControlCallImpl::callQuota(
 }
 
 void ServiceControlCallImpl::callReport(
-    const ::google::api_proxy::service_control::ReportRequestInfo&
+    const ::espv2::api_proxy::service_control::ReportRequestInfo&
         request_info) {
   ::google::api::servicecontrol::v1::ReportRequest request;
   (void)request_builder_->FillReportRequest(request_info, &request);
@@ -193,7 +194,7 @@ void ServiceControlCallImpl::callReport(
   getTLCache().client_cache().callReport(request);
 }
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

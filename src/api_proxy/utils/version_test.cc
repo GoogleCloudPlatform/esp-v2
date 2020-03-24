@@ -15,7 +15,7 @@
 
 #include "gtest/gtest.h"
 
-namespace google {
+namespace espv2 {
 namespace api_proxy {
 namespace utils {
 
@@ -31,4 +31,4 @@ TEST(VerstionTest, SetVersionIsReturned) {
 
 }  // namespace utils
 }  // namespace api_proxy
-}  // namespace google
+}  // namespace espv2

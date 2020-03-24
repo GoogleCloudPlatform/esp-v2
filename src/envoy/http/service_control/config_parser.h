@@ -24,10 +24,10 @@
 // Default minimum interval (milliseconds) for streaming reports.
 #define kDefaultMinStreamReportIntervalMs 10000
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 
 class ServiceContext {
  public:
@@ -130,7 +130,7 @@ class FilterConfigParser {
       default_api_keys_;
 };
 
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

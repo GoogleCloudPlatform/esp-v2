@@ -32,12 +32,12 @@ using Envoy::Http::TestRequestTrailerMapImpl;
 using Envoy::Http::TestResponseHeaderMapImpl;
 using Envoy::Http::TestResponseTrailerMapImpl;
 using Envoy::StreamInfo::MockStreamInfo;
+using ::espv2::api_proxy::service_control::CheckRequestInfo;
+using ::espv2::api_proxy::service_control::CheckResponseInfo;
+using ::espv2::api_proxy::service_control::QuotaRequestInfo;
+using ::espv2::api_proxy::service_control::ReportRequestInfo;
+using ::espv2::api_proxy::service_control::protocol::Protocol;
 using ::google::api::envoy::http::service_control::FilterConfig;
-using ::google::api_proxy::service_control::CheckRequestInfo;
-using ::google::api_proxy::service_control::CheckResponseInfo;
-using ::google::api_proxy::service_control::QuotaRequestInfo;
-using ::google::api_proxy::service_control::ReportRequestInfo;
-using ::google::api_proxy::service_control::protocol::Protocol;
 using ::google::protobuf::TextFormat;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
@@ -46,10 +46,10 @@ using ::testing::ByMove;
 using ::testing::MockFunction;
 using ::testing::Return;
 
-namespace Envoy {
-namespace Extensions {
-namespace HttpFilters {
-namespace ServiceControl {
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
 namespace {
 
 const char kFilterConfig[] = R"(
@@ -216,7 +216,7 @@ class HandlerTest : public ::testing::Test {
     return false;                                                \
   }
 
-MATCHER_P(MatchesCheckInfo, expect, EMPTY_STRING) {
+MATCHER_P(MatchesCheckInfo, expect, Envoy::EMPTY_STRING) {
   // These must match. If not provided in expect, arg should be empty too
   MATCH(api_key);
   MATCH(ios_bundle_id);
@@ -233,7 +233,7 @@ MATCHER_P(MatchesCheckInfo, expect, EMPTY_STRING) {
   return true;
 }
 
-MATCHER_P(MatchesQuotaInfo, expect, EMPTY_STRING) {
+MATCHER_P(MatchesQuotaInfo, expect, Envoy::EMPTY_STRING) {
   MATCH(method_name);
   //  if (arg.metric_cost_vector != expect.metric_cost_vector) return false;
   MATCH(metric_cost_vector);
@@ -264,7 +264,7 @@ MATCHER_P(MatchesQuotaInfo, expect, EMPTY_STRING) {
   MATCH(streaming_durations);
 
 MATCHER_P4(MatchesReportInfo, expect, request_headers, response_headers,
-           response_trailers, EMPTY_STRING) {
+           response_trailers, Envoy::EMPTY_STRING) {
   std::string operation_name =
       (expect.operation_name.empty() ? "get_header_key"
                                      : expect.operation_name);
@@ -284,7 +284,7 @@ MATCHER_P4(MatchesReportInfo, expect, request_headers, response_headers,
   return true;
 }
 
-MATCHER_P(MatchesSimpleReportInfo, expect, EMPTY_STRING) {
+MATCHER_P(MatchesSimpleReportInfo, expect, Envoy::EMPTY_STRING) {
   std::string operation_name =
       (expect.operation_name.empty() ? "get_header_key"
                                      : expect.operation_name);
@@ -292,7 +292,7 @@ MATCHER_P(MatchesSimpleReportInfo, expect, EMPTY_STRING) {
   return true;
 }
 
-MATCHER_P(MatchesDataReportInfo, expect, EMPTY_STRING) {
+MATCHER_P(MatchesDataReportInfo, expect, Envoy::EMPTY_STRING) {
   std::string operation_name =
       (expect.operation_name.empty() ? "get_header_key"
                                      : expect.operation_name);
@@ -322,8 +322,8 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
 
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
-  expected_report_info.api_name = EMPTY_STRING;
-  expected_report_info.api_version = EMPTY_STRING;
+  expected_report_info.api_name = Envoy::EMPTY_STRING;
+  expected_report_info.api_version = Envoy::EMPTY_STRING;
   expected_report_info.status = Status::OK;
   expected_report_info.operation_name = "<Unknown Operation Name>";
 
@@ -348,12 +348,12 @@ TEST_F(HandlerTest, HandlerMissingHeaders) {
 
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
-  expected_report_info.api_name = EMPTY_STRING;
-  expected_report_info.api_version = EMPTY_STRING;
+  expected_report_info.api_name = Envoy::EMPTY_STRING;
+  expected_report_info.api_version = Envoy::EMPTY_STRING;
   expected_report_info.status = Status::OK;
   expected_report_info.operation_name = "<Unknown Operation Name>";
-  expected_report_info.url = EMPTY_STRING;
-  expected_report_info.method = EMPTY_STRING;
+  expected_report_info.url = Envoy::EMPTY_STRING;
+  expected_report_info.method = Envoy::EMPTY_STRING;
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
@@ -363,8 +363,8 @@ TEST_F(HandlerTest, HandlerMissingHeaders) {
 TEST_F(HandlerTest, HandlerNoRequirementMatched) {
   // Test: If no requirement is matched for the operation, check should 404
   // and report should do nothing
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "bad-operation-name");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "bad-operation-name");
   TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_, test_time_);
@@ -375,8 +375,8 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
 
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
-  expected_report_info.api_name = EMPTY_STRING;
-  expected_report_info.api_version = EMPTY_STRING;
+  expected_report_info.api_name = Envoy::EMPTY_STRING;
+  expected_report_info.api_version = Envoy::EMPTY_STRING;
   expected_report_info.status = Status::OK;
   expected_report_info.operation_name = "<Unknown Operation Name>";
   EXPECT_CALL(*mock_call_,
@@ -386,8 +386,8 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
 
 TEST_F(HandlerTest, HandlerCheckNotNeeded) {
   // Test: If the operation does not require check, check should return OK
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "get_no_key");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "get_no_key");
   TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
@@ -413,8 +413,8 @@ TEST_F(HandlerTest, HandlerCheckNotNeeded) {
 TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
   // Test: If the operation requires a check but none is found, check fails
   // and a report is made
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "get_header_key");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
@@ -444,8 +444,8 @@ TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
 TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithApiKeyRestrictionFields) {
   // Test: Check is required and succeeds, and api key restriction fields are
   // present on the check request
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "get_header_key");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{{":method", "GET"},
                                    {":path", "/echo"},
                                    {"x-api-key", "foobar"},
@@ -491,8 +491,8 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithApiKeyRestrictionFields) {
 TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
   // Test: Check is required and succeeds. The api key restriction fields are
   // left blank if not provided.
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "get_header_key");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -528,8 +528,8 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
 
 TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
   // Test: Quota is required and succeeds.
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "get_header_key_quota");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "get_header_key_quota");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -567,8 +567,8 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
 
 TEST_F(HandlerTest, HandlerCallQuotaWithoutCheck) {
   // Test: Quota is required but the Check is not
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "call_quota_without_check");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "call_quota_without_check");
   TestRequestHeaderMapImpl headers{{":method", "GET"},
                                    {":path", "/echo?key=foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -599,8 +599,8 @@ TEST_F(HandlerTest, HandlerCallQuotaWithoutCheck) {
 TEST_F(HandlerTest, HandlerFailCheckSync) {
   // Test: Check is required and a request is made, but service control
   // returns a bad status.
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "get_header_key");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -640,8 +640,8 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
 TEST_F(HandlerTest, HandlerFailQuotaSync) {
   // Test: Check is required and a request is made, but service control
   // returns a bad status.
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "get_header_key_quota");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "get_header_key_quota");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -682,8 +682,8 @@ TEST_F(HandlerTest, HandlerFailQuotaSync) {
 TEST_F(HandlerTest, HandlerSuccessfulCheckAsync) {
   // Test: Check is required and succeeds, even when the done callback is not
   // called until later.
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "get_header_key");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -727,8 +727,8 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckAsync) {
 TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
   // Test: Check is required and succeeds, even when the done callback is not
   // called until later.
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "get_header_key_quota");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "get_header_key_quota");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -779,8 +779,8 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
 TEST_F(HandlerTest, HandlerFailCheckAsync) {
   // Test: Check is required and a request is made, but later on service
   // control returns a bad status.
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "get_header_key");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -827,8 +827,8 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
 TEST_F(HandlerTest, HandlerFailQuotaAsync) {
   // Test: Quota is required and a request is made, but later on service
   // control returns a bad status.
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "get_header_key_quota");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "get_header_key_quota");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -880,8 +880,8 @@ TEST_F(HandlerTest, HandlerFailQuotaAsync) {
 
 TEST_F(HandlerTest, HandlerCancelFuncResetOnDone) {
   // Test: Cancel function will not be called if on_done is called
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "get_header_key");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   CheckDoneFunc stored_on_done;
@@ -909,8 +909,8 @@ TEST_F(HandlerTest, HandlerCancelFuncResetOnDone) {
 
 TEST_F(HandlerTest, HandlerCancelFuncCalledOnDestroy) {
   // Test: Cancel function will be called if on_done is not called
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "get_header_key");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   MockFunction<void()> mock_cancel;
@@ -931,8 +931,8 @@ TEST_F(HandlerTest, HandlerCancelFuncCalledOnDestroy) {
 
 TEST_F(HandlerTest, HandlerCancelFuncNotCalledOnDestroyForSyncOnDone) {
   // Test: Cancel function will not be called if on_done is called synchronously
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "get_header_key");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   MockFunction<void()> mock_cancel;
@@ -958,8 +958,8 @@ TEST_F(HandlerTest, HandlerCancelFuncNotCalledOnDestroyForSyncOnDone) {
 
 TEST_F(HandlerTest, HandlerReportWithoutCheck) {
   // Test: Test that callReport works when callCheck is not called first.
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "get_header_key");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -982,8 +982,8 @@ TEST_F(HandlerTest, HandlerReportWithoutCheck) {
 
 TEST_F(HandlerTest, TryIntermediateReport) {
   // CollectDecodeData test cases after the boilerplate
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "get_header_key");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{{":method", "GET"},
                                    {":path", "/echo"},
                                    {"x-api-key", "foobar"},
@@ -1062,8 +1062,8 @@ TEST_F(HandlerTest, TryIntermediateReport) {
 
 TEST_F(HandlerTest, FinalReports) {
   // CollectEncodeData test cases after the boilerplate
-  Utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              Utils::kOperation, "get_header_key");
+  utils::setStringFilterState(*mock_stream_info_.filter_state_,
+                              utils::kOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{{":method", "GET"},
                                    {":path", "/echo"},
                                    {"x-api-key", "foobar"},
@@ -1105,12 +1105,14 @@ TEST_F(HandlerTest, FinalReports) {
 
   {
     // message_counts is from grpc_stats filterState.
-    auto grpc_state = std::make_unique<GrpcStats::GrpcStatsObject>();
+    auto grpc_state = std::make_unique<
+        Envoy::Extensions::HttpFilters::GrpcStats::GrpcStatsObject>();
     grpc_state->request_message_count = 123;
     grpc_state->response_message_count = 456;
     mock_stream_info_.filter_state_->setData(
-        HttpFilterNames::get().GrpcStats, std::move(grpc_state),
-        StreamInfo::FilterState::StateType::Mutable);
+        Envoy::Extensions::HttpFilters::HttpFilterNames::get().GrpcStats,
+        std::move(grpc_state),
+        Envoy::StreamInfo::FilterState::StateType::Mutable);
   }
   expected_report_info.streaming_request_message_counts = 123;
   expected_report_info.streaming_response_message_counts = 456;
@@ -1134,7 +1136,7 @@ TEST_F(HandlerTest, FinalReports) {
 }
 
 }  // namespace
-}  // namespace ServiceControl
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace service_control
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2
