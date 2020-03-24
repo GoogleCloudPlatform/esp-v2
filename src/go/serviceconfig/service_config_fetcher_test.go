@@ -53,7 +53,7 @@ func initServiceManagementForTestServiceConfigFetcher(t *testing.T,
 }
 
 func genRolloutAndConfig(serviceRolloutId, serviceConfigId string) (*smpb.ListServiceRolloutsResponse, *confpb.Service) {
-	serviceRollouts := &smpb.ListServiceRolloutsResponse{
+	listServiceRolloutsResponse := &smpb.ListServiceRolloutsResponse{
 		Rollouts: []*smpb.Rollout{
 			{
 				RolloutId: serviceRolloutId,
@@ -71,7 +71,7 @@ func genRolloutAndConfig(serviceRolloutId, serviceConfigId string) (*smpb.ListSe
 		Name: "foo",
 		Id:   serviceConfigId,
 	}
-	return serviceRollouts, serviceConfig
+	return listServiceRolloutsResponse, serviceConfig
 }
 
 func TestServiceConfigFetcherFetchConfig(t *testing.T) {
@@ -85,87 +85,146 @@ func TestServiceConfigFetcherFetchConfig(t *testing.T) {
 
 	scf := NewServiceConfigFetcher(&http.Client{}, serviceManagementServer.URL, "service-name", accessToken)
 
-	_test := func(configId string, wantServiceConfig *confpb.Service, wantError string) {
-		getConfig, err := scf.FetchConfig(configId)
-		if err != nil {
-			if wantError == "" {
-				t.Fatalf("fail to fetch config: %v", err)
-			}
-
-			if err.Error() != wantError {
-				t.Fatalf("want error: %s, get error: %v", wantError, err)
-			}
-			return
-		}
-
-		if getConfig == nil {
-			if wantServiceConfig != nil {
-				t.Fatalf("want service config: %v, get service config: nil", wantServiceConfig)
-			}
-			return
-		}
-
-		if !proto.Equal(getConfig, serviceConfig) {
-			t.Fatalf("want service config: %v, get service config: %v", serviceConfig, getConfig)
-		}
+	testCase := []struct {
+		desc                    string
+		serviceConfigId         string
+		callGoogleapisOverriden bool
+		wantServiceConfig       *confpb.Service
+		wantError               string
+	}{
+		{
+			desc:              "Success of fetching the service config",
+			serviceConfigId:   serviceConfigId,
+			wantServiceConfig: serviceConfig,
+		},
+		{
+			desc:                    "Failure due to calling googleapis",
+			serviceConfigId:         serviceConfigId,
+			callGoogleapisOverriden: true,
+			wantError:               "error-from-CallGoogleapis",
+		},
 	}
 
-	// Test success of fetching the service config.
-	_test(serviceConfigId, serviceConfig, "")
+	for _, tc := range testCase {
+		_test := func(desc string, callGoogleapisOverridden bool, configId string, wantServiceConfig *confpb.Service, wantError string) {
+			if callGoogleapisOverridden {
+				oldCallGoogleapis := util.CallGoogleapis
+				util.CallGoogleapis = func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, output proto.Message) error {
+					return fmt.Errorf("error-from-CallGoogleapis")
+				}
+				defer func() { util.CallGoogleapis = oldCallGoogleapis }()
+			}
 
-	// Test failure due to calling googleapis.
-	callGoogleapis := util.CallGoogleapis
-	util.CallGoogleapis = func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, output proto.Message) error {
-		return fmt.Errorf("error-from-CallGoogleapis")
+			getConfig, err := scf.FetchConfig(configId)
+			if err != nil {
+				if wantError == "" {
+					t.Fatalf("test(%s), fail to fetch config: %v", desc, err)
+				}
+
+				if err.Error() != wantError {
+					t.Fatalf("test(%s), want error: %s, get error: %v", desc, wantError, err)
+				}
+				return
+			}
+
+			if getConfig == nil {
+				if wantServiceConfig != nil {
+					t.Fatalf("test(%s), want service config: %v, get service config: nil", desc, wantServiceConfig)
+				}
+				return
+			}
+
+			if !proto.Equal(getConfig, serviceConfig) {
+				t.Fatalf("test(%s), want service config: %v, get service config: %v", desc, serviceConfig, getConfig)
+			}
+		}
+
+		_test(tc.desc, tc.callGoogleapisOverriden, tc.serviceConfigId, tc.wantServiceConfig, tc.wantError)
 	}
-	_test(serviceConfigId, nil, "error-from-CallGoogleapis")
-	util.CallGoogleapis = callGoogleapis
 }
 
 func TestServiceConfigFetcherLoadConfigIdFromRollouts(t *testing.T) {
 	serviceName := "service-name"
 	serviceRolloutId := "test-rollout-id"
 	serviceConfigId := "test-config-id"
-	serviceRollouts, serviceConfig := genRolloutAndConfig(serviceRolloutId, serviceConfigId)
+	listServiceRolloutsResponse, serviceConfig := genRolloutAndConfig(serviceRolloutId, serviceConfigId)
 
-	serviceManagementServer := initServiceManagementForTestServiceConfigFetcher(t, serviceRollouts, serviceConfig, serviceName)
+	serviceManagementServer := initServiceManagementForTestServiceConfigFetcher(t, listServiceRolloutsResponse, serviceConfig, serviceName)
 	accessToken := func() (string, time.Duration, error) { return "access-token", time.Duration(60), nil }
 
 	scf := NewServiceConfigFetcher(&http.Client{}, serviceManagementServer.URL, "service-name", accessToken)
-	_test := func(wantConfigId string, wantError string) {
-		getConfigId, err := scf.LoadConfigIdFromRollouts()
 
-		if err != nil {
-			if err.Error() != wantError {
-				t.Errorf("want error: %s, get error: %v", wantError, err)
+	testCase := []struct {
+		desc                     string
+		callGoogleapisOverridden bool
+		serviceRollouts          []*smpb.Rollout
+		wantConfigId             string
+		wantError                string
+	}{
+		{
+			desc:         "Success of fetching the service config",
+			wantConfigId: serviceConfigId,
+		},
+		{
+			desc: "Test getting the configId with highest traffic percentage",
+			serviceRollouts: []*smpb.Rollout{
+				{
+					Strategy: &smpb.Rollout_TrafficPercentStrategy_{
+						TrafficPercentStrategy: &smpb.Rollout_TrafficPercentStrategy{
+							Percentages: map[string]float64{
+								serviceConfigId:      20,
+								"new-test-config-id": 80,
+							},
+						},
+					},
+				},
+			},
+			wantConfigId: "new-test-config-id",
+		},
+		{
+			desc:            "failure due to problematic rollouts",
+			serviceRollouts: []*smpb.Rollout{},
+			wantConfigId:    serviceConfigId,
+			wantError:       "problematic rollouts: ",
+		},
+		{
+			desc:                     "Test failure due to calling googleapis",
+			callGoogleapisOverridden: true,
+			wantConfigId:             serviceConfigId,
+			wantError:                "error-from-CallGoogleapis",
+		},
+	}
+
+	for _, tc := range testCase {
+		_test := func(desc string, callGoogleapisOverridden bool, serviceRollouts []*smpb.Rollout, wantConfigId string, wantError string) {
+			if callGoogleapisOverridden {
+				oldCallGoogleapis := util.CallGoogleapis
+				util.CallGoogleapis = func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, output proto.Message) error {
+					return fmt.Errorf("error-from-CallGoogleapis")
+				}
+				defer func() { util.CallGoogleapis = oldCallGoogleapis }()
 			}
-			return
+
+			if serviceRollouts != nil {
+				oldserviceRollouts := listServiceRolloutsResponse.Rollouts
+				listServiceRolloutsResponse.Rollouts = serviceRollouts
+				defer func() { listServiceRolloutsResponse.Rollouts = oldserviceRollouts }()
+			}
+
+			getConfigId, err := scf.LoadConfigIdFromRollouts()
+
+			if err != nil {
+				if err.Error() != wantError {
+					t.Errorf("test(%s), want error: %s, get error: %v", desc, wantError, err)
+				}
+				return
+			}
+
+			if getConfigId != wantConfigId {
+				t.Errorf("test(%s),wante configId: %s, get configId: %s", desc, wantConfigId, getConfigId)
+			}
 		}
 
-		if getConfigId != wantConfigId {
-			t.Errorf("wante configId: %s, get configId: %s", wantConfigId, getConfigId)
-		}
+		_test(tc.desc, tc.callGoogleapisOverridden, tc.serviceRollouts, tc.wantConfigId, tc.wantError)
 	}
-
-	// Test success of loading configId.
-	_test(serviceConfigId, "")
-
-	// Test getting the configId with highest traffic percentage.
-	serviceRollouts.Rollouts[0].GetTrafficPercentStrategy().Percentages = map[string]float64{
-		serviceConfigId:      20,
-		"new-test-config-id": 80,
-	}
-	_test("new-test-config-id", "")
-
-	// Test failure due to problematic rollouts.
-	serviceRollouts.Rollouts = nil
-	_test("", "problematic rollouts: ")
-
-	// Test failure due to calling googleapis.
-	callGoogleapis := util.CallGoogleapis
-	util.CallGoogleapis = func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, output proto.Message) error {
-		return fmt.Errorf("error-from-CallGoogleapis")
-	}
-	_test("", "error-from-CallGoogleapis")
-	util.CallGoogleapis = callGoogleapis
 }
