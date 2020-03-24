@@ -34,7 +34,8 @@ import (
 
 const (
 	// Additional wait time after `TestEnv.Setup`
-	setupWaitTime = time.Duration(1 * time.Second)
+	setupWaitTime = 1 * time.Second
+	initRolloutId = "test-rollout-id"
 )
 
 var (
@@ -59,6 +60,7 @@ type TestEnv struct {
 	configMgr                       *components.ConfigManagerServer
 	echoBackend                     *components.EchoHTTPServer
 	envoy                           *components.Envoy
+	rolloutId                       string
 	fakeServiceConfig               *confpb.Service
 	MockMetadataServer              *components.MockMetadataServer
 	MockIamServer                   *components.MockIamServer
@@ -89,10 +91,11 @@ func NewTestEnv(testId uint16, backend platform.Backend) *TestEnv {
 		testId:                      testId,
 		backend:                     backend,
 		mockMetadata:                true,
-		MockServiceManagementServer: components.NewMockServiceMrg(fakeServiceConfig.GetName(), fakeServiceConfig),
+		MockServiceManagementServer: components.NewMockServiceMrg(fakeServiceConfig.GetName(), initRolloutId, fakeServiceConfig),
 		ports:                       components.NewPorts(testId),
+		rolloutId:                   initRolloutId,
 		fakeServiceConfig:           fakeServiceConfig,
-		ServiceControlServer:        components.NewMockServiceCtrl(fakeServiceConfig.GetName()),
+		ServiceControlServer:        components.NewMockServiceCtrl(fakeServiceConfig.GetName(), initRolloutId),
 		healthRegistry:              components.NewHealthRegistry(),
 		FakeJwtService:              components.NewFakeJwtService(),
 	}
@@ -165,8 +168,18 @@ func (e *TestEnv) OverrideAuthentication(authentication *confpb.Authentication) 
 }
 
 // OverrideAuthentication overrides Service.Authentication.
-func (e *TestEnv) OverrideServiceConfigId(newServiceConfigId string) {
-	e.fakeServiceConfig.Id = newServiceConfigId
+func (e *TestEnv) OverrideRolloutIdAndConfigId(newRolloutId, newConfigId string) {
+	e.fakeServiceConfig.Id = newConfigId
+	e.rolloutId = newRolloutId
+	e.MockServiceManagementServer.SetRolloutId(newRolloutId)
+	e.ServiceControlServer.SetRolloutIdConfigIdInReport(newRolloutId)
+}
+
+func (e *TestEnv) ServiceConfigId() string {
+	if e.fakeServiceConfig == nil {
+		return ""
+	}
+	return e.fakeServiceConfig.Id
 }
 
 // OverrideSystemParameters overrides Service.SystemParameters.
@@ -275,7 +288,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 			return err
 		}
 
-		for providerId, _ := range mockJwtProviders {
+		for providerId := range mockJwtProviders {
 			provider, ok := e.FakeJwtService.ProviderMap[providerId]
 			if !ok {
 				return fmt.Errorf("not supported jwt provider id: %v", providerId)
@@ -286,6 +299,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 
 		e.ServiceControlServer.Setup()
 		testdata.SetFakeControlEnvironment(e.fakeServiceConfig, e.ServiceControlServer.GetURL())
+		confArgs = append(confArgs, "--service_control_url="+e.ServiceControlServer.GetURL())
 		if err := testdata.AppendLogMetrics(e.fakeServiceConfig); err != nil {
 			return err
 		}

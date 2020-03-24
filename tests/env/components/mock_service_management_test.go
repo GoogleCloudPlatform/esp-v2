@@ -65,27 +65,29 @@ func getServiceConfig(urlPrefix string, rolloutID string) (*conf.Service, error)
 
 func TestMockServiceManagement(t *testing.T) {
 	serviceConfig := &conf.Service{Name: "foo", Id: "999"}
+	rolloutId := serviceConfig.Id
 
-	s := NewMockServiceMrg(serviceConfig.Name, serviceConfig)
+	s := NewMockServiceMrg(serviceConfig.Name, rolloutId, serviceConfig)
 	urlPrefix := s.Start() + "/v1/services/" + serviceConfig.Name
-	rolloutID, err := getRolloutID(urlPrefix)
+	rolloutId, err := getRolloutID(urlPrefix)
 	if err != nil {
 		t.Errorf("TestMockServiceManagement: %v", err)
 	}
 
-	gotServiceConfig, err := getServiceConfig(urlPrefix, rolloutID)
+	gotServiceConfig, err := getServiceConfig(urlPrefix, rolloutId)
 	if !proto.Equal(gotServiceConfig, serviceConfig) {
 		t.Errorf("The got service config is different than what we what,\ngot: %v,\nwanted: %v", gotServiceConfig, serviceConfig)
 	}
 	newRollID, err := getRolloutID(urlPrefix)
-	if newRollID != rolloutID {
-		t.Errorf("TestMockServiceManagement: the rolloutID should be unchanged, got: %v, wanted: %v", newRollID, rolloutID)
+	if newRollID != "999" {
+		t.Errorf("TestMockServiceManagement: the rolloutID should be unchanged, got: %v, wanted: %v", newRollID, "999")
 	}
 
 	serviceConfig.Id = "1000"
+	s.SetRolloutId(serviceConfig.Id)
 	latestRolloutID, err := getRolloutID(urlPrefix)
-	if latestRolloutID == rolloutID {
-		t.Errorf("TestMockServiceManagement: the rolloutID should have been updated, got: %v, wanted: %v", latestRolloutID, rolloutID)
+	if latestRolloutID != "1000" {
+		t.Errorf("TestMockServiceManagement: the rolloutID should have been updated, got: %v, wanted: %v", latestRolloutID, "1000")
 	}
 
 	gotServiceConfig, err = getServiceConfig(urlPrefix, latestRolloutID)

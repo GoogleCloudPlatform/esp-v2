@@ -15,15 +15,12 @@
 package components
 
 import (
-	"bytes"
 	"crypto/tls"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
-
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	sm "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
@@ -34,7 +31,7 @@ type MockServiceMrg struct {
 	s                 *httptest.Server
 	serviceName       string
 	serviceConfig     *confpb.Service
-	rolloutID         int
+	rolloutId         string
 	configsHandler    http.Handler
 	rolloutsHandler   http.Handler
 	lastServiceConfig []byte
@@ -48,7 +45,7 @@ type configsHandler struct {
 func (h *configsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	serviceConfigByte, _ := proto.Marshal(h.m.serviceConfig)
 	h.m.lastServiceConfig = serviceConfigByte
-	w.Write(serviceConfigByte)
+	_, _ = w.Write(serviceConfigByte)
 }
 
 type rolloutsHandler struct {
@@ -56,33 +53,35 @@ type rolloutsHandler struct {
 }
 
 func (h *rolloutsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	serviceConfigByte, _ := proto.Marshal(h.m.serviceConfig)
-	if !bytes.Equal(serviceConfigByte, h.m.lastServiceConfig) {
-		h.m.rolloutID += 1
+	s := "/v1/services/" + h.m.serviceName + "/rollouts"
+	if r.URL.Path != s {
+		w.WriteHeader(http.StatusNotFound)
 	}
-	serviceConfigRollout := &sm.ListServiceRolloutsResponse{
+
+	serviceConfigRollouts := &sm.ListServiceRolloutsResponse{
 		Rollouts: []*sm.Rollout{
 			{
-				RolloutId: strconv.Itoa(h.m.rolloutID),
+				RolloutId: h.m.rolloutId,
 				Strategy: &sm.Rollout_TrafficPercentStrategy_{
 					TrafficPercentStrategy: &sm.Rollout_TrafficPercentStrategy{
 						Percentages: map[string]float64{
-							strconv.Itoa(h.m.rolloutID): 1.0,
+							h.m.rolloutId: 1.0,
 						},
 					},
 				},
 			},
 		},
 	}
-	serviceConfigRolloutBytes, _ := proto.Marshal(serviceConfigRollout)
-	w.Write(serviceConfigRolloutBytes)
+	serviceConfigRolloutsBytes, _ := proto.Marshal(serviceConfigRollouts)
+	_, _ = w.Write(serviceConfigRolloutsBytes)
 }
 
 // NewMockServiceMrg creates a new HTTP server.
-func NewMockServiceMrg(serviceName string, serviceConfig *confpb.Service) *MockServiceMrg {
+func NewMockServiceMrg(serviceName, rolloutId string, serviceConfig *confpb.Service) *MockServiceMrg {
 	m := &MockServiceMrg{
 		serviceName:   serviceName,
 		serviceConfig: serviceConfig,
+		rolloutId:     rolloutId,
 	}
 	m.configsHandler = &configsHandler{m: m}
 	m.rolloutsHandler = &rolloutsHandler{m: m}
@@ -118,5 +117,9 @@ func (m *MockServiceMrg) Start() (URL string) {
 // ServeHTTP responds to requests with static service config message.
 func (m *MockServiceMrg) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	serviceConfigByte, _ := proto.Marshal(m.serviceConfig)
-	w.Write(serviceConfigByte)
+	_, _ = w.Write(serviceConfigByte)
+}
+
+func (m *MockServiceMrg) SetRolloutId(newRolloutId string) {
+	m.rolloutId = newRolloutId
 }

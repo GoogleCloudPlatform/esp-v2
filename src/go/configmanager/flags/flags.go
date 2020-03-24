@@ -49,6 +49,7 @@ var (
 	BackendAddress       = flag.String("backend_address", "http://127.0.0.1:8082", `The application server URI to which ESPv2 proxies requests.`)
 	ListenerAddress      = flag.String("listener_address", "0.0.0.0", "listener socket ip address")
 	ServiceManagementURL = flag.String("service_management_url", "https://servicemanagement.googleapis.com", "url of service management server")
+	ServiceControlURL    = flag.String("service_control_url", "https://servicecontrol.googleapis.com", "url of service control server")
 
 	ListenerPort = flag.Int("listener_port", 8080, "listener port")
 	Healthz      = flag.String("healthz", "", "path for health check of ESPv2 proxy itself")
@@ -122,6 +123,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		ClusterConnectTimeout:                   *ClusterConnectTimeout,
 		ListenerAddress:                         *ListenerAddress,
 		ServiceManagementURL:                    *ServiceManagementURL,
+		ServiceControlURL:                       *ServiceControlURL,
 		ListenerPort:                            *ListenerPort,
 		Healthz:                                 *Healthz,
 		RootCertsPath:                           *RootCertsPath,

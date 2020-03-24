@@ -60,9 +60,6 @@ type MockServiceCtrl struct {
 	url                string
 	count              *int32
 	serviceName        string
-	checkResp          *serviceResponse
-	quotaResp          *serviceResponse
-	reportResp         *serviceResponse
 	checkHandler       http.Handler
 	quotaHandler       http.Handler
 	reportHandler      http.Handler
@@ -87,10 +84,10 @@ func (h *serviceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if h.resp.respStatusCode != 0 {
 		w.WriteHeader(h.resp.respStatusCode)
 	}
-	w.Write(h.resp.respBody)
+	_, _ = w.Write(h.resp.respBody)
 }
 
-func SetOKCheckResponse() []byte {
+func setOKCheckResponse() []byte {
 	req := &scpb.CheckResponse{
 		CheckInfo: &scpb.CheckResponse_CheckInfo{
 			ConsumerInfo: &scpb.CheckResponse_ConsumerInfo{
@@ -102,8 +99,16 @@ func SetOKCheckResponse() []byte {
 	return req_b
 }
 
+func setReportResponse(serviceRolloutId string) []byte {
+	req := &scpb.ReportResponse{
+		ServiceRolloutId: serviceRolloutId,
+	}
+	req_b, _ := proto.Marshal(req)
+	return req_b
+}
+
 // NewMockServiceCtrl creates a new HTTP server.
-func NewMockServiceCtrl(serviceName string) *MockServiceCtrl {
+func NewMockServiceCtrl(serviceName, rolloutId string) *MockServiceCtrl {
 	m := &MockServiceCtrl{
 		ch:                 make(chan *ServiceRequest, 100),
 		count:              new(int32),
@@ -111,31 +116,28 @@ func NewMockServiceCtrl(serviceName string) *MockServiceCtrl {
 		getRequestsTimeout: defaultTimeout,
 	}
 
-	m.checkResp = &serviceResponse{
-		reqType:  CHECK_REQUEST,
-		respBody: SetOKCheckResponse(),
-	}
 	m.checkHandler = &serviceHandler{
-		m:    m,
-		resp: m.checkResp,
+		m: m,
+		resp: &serviceResponse{
+			reqType:  CHECK_REQUEST,
+			respBody: setOKCheckResponse(),
+		},
 	}
 
-	m.quotaResp = &serviceResponse{
-		reqType:  QUOTA_REQUEST,
-		respBody: []byte(""),
-	}
 	m.quotaHandler = &serviceHandler{
-		m:    m,
-		resp: m.quotaResp,
+		m: m,
+		resp: &serviceResponse{
+			reqType:  QUOTA_REQUEST,
+			respBody: []byte(""),
+		},
 	}
 
-	m.reportResp = &serviceResponse{
-		reqType:  REPORT_REQUEST,
-		respBody: []byte(""),
-	}
 	m.reportHandler = &serviceHandler{
-		m:    m,
-		resp: m.reportResp,
+		m: m,
+		resp: &serviceResponse{
+			reqType:  REPORT_REQUEST,
+			respBody: setReportResponse(rolloutId),
+		},
 	}
 
 	return m
@@ -224,19 +226,23 @@ func (m *MockServiceCtrl) SetGetRequestsTimeout(timeout time.Duration) {
 // SetCheckResponse sets the response for the check of the service control.
 func (m *MockServiceCtrl) SetCheckResponse(checkResponse *scpb.CheckResponse) {
 	req_b, _ := proto.Marshal(checkResponse)
-	m.checkResp.respBody = req_b
+	(m.checkHandler).(*serviceHandler).resp.respBody = req_b
 }
 
 // SetCheckResponse sets the response for the check of the service control.
 func (m *MockServiceCtrl) SetQuotaResponse(quotaResponse *scpb.AllocateQuotaResponse) {
-	fmt.Println(quotaResponse)
 	req_b, _ := proto.Marshal(quotaResponse)
-	m.quotaResp.respBody = req_b
+	(m.quotaHandler).(*serviceHandler).resp.respBody = req_b
 }
 
 // SetReportResponseStatus sets the status of the report response of the service control.
 func (m *MockServiceCtrl) SetReportResponseStatus(statusCode int) {
-	m.reportResp.respStatusCode = statusCode
+	(m.reportHandler).(*serviceHandler).resp.respStatusCode = statusCode
+}
+
+// SetReportResponseStatus sets the status of the report response of the service control.
+func (m *MockServiceCtrl) SetRolloutIdConfigIdInReport(newRolloutId string) {
+	(m.reportHandler).(*serviceHandler).resp.respBody = setReportResponse(newRolloutId)
 }
 
 // GetRequests returns a slice of requests received.

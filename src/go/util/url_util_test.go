@@ -330,12 +330,12 @@ func TestResolveJwksUriUsingOpenID(t *testing.T) {
 	jwksUriEntry, _ := json.Marshal(map[string]string{"jwks_uri": "this-is-jwksUri"})
 	r.Path(OpenIDDiscoveryCfgURLSuffix).Methods("GET").Handler(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Write(jwksUriEntry)
+			_, _ = w.Write(jwksUriEntry)
 		}))
 	openIDServer := httptest.NewServer(r)
 
 	invalidOpenIDServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("{}"))
+		_, _ = w.Write([]byte("{}"))
 	}))
 
 	testData := []struct {
@@ -400,4 +400,27 @@ func TestExtraAddressFromURI(t *testing.T) {
 			t.Errorf("Test Desc(%d): %s, ExtraAddressFromURI got: %v, want: %v", i, tc.desc, err.Error(), tc.wantedError)
 		}
 	}
+}
+
+func TestFetchConfigRelatedUrl(t *testing.T) {
+	sm := "https://servicemanagement.googleapis.com"
+	sn := "service-name"
+	sc := "https://servicecontrol.googleapis.com"
+	ci := "config-id"
+
+	wantFetchRolloutIdUrl := "https://servicecontrol.googleapis.com/v1/services/service-name:report"
+	if getFetchRolloutIdUrl := FetchRolloutIdURL(sc, sn); getFetchRolloutIdUrl != wantFetchRolloutIdUrl {
+		t.Errorf("wantFetchRolloutIdUrl: %v, getFetchRolloutIdUrl: %v", wantFetchRolloutIdUrl, getFetchRolloutIdUrl)
+	}
+
+	wantFetchRolloutsUrl := "https://servicemanagement.googleapis.com/v1/services/service-name/rollouts?filter=status=SUCCESS"
+	if getFetchRolloutsUrl := FetchRolloutsURL(sm, sn); getFetchRolloutsUrl != wantFetchRolloutsUrl {
+		t.Errorf("wantFetchRolloutUrl: %v, getFetchRolloutUrl: %v", wantFetchRolloutsUrl, getFetchRolloutsUrl)
+	}
+
+	wantFetchConfigUrl := "https://servicemanagement.googleapis.com/v1/services/service-name/configs/config-id?view=FULL"
+	if getFetchConfigUrl := FetchConfigURL(sm, sn, ci); getFetchConfigUrl != wantFetchConfigUrl {
+		t.Errorf("wantFetchConfigUrl: %v, getFetchConfigUrl: %v", wantFetchConfigUrl, getFetchConfigUrl)
+	}
+
 }

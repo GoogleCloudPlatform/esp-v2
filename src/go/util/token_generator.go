@@ -16,6 +16,7 @@ package util
 
 import (
 	"io/ioutil"
+	"sync"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -27,9 +28,14 @@ var (
 		"https://www.googleapis.com/auth/service.management.readonly",
 	}
 	tokenCache = &oauth2.Token{}
+	tokenMux   = sync.Mutex{}
 )
 
 func GenerateAccessTokenFromFile(serviceAccountKey string) (string, time.Duration, error) {
+	if token, duration := activeAccessToken(); token != "" {
+		return token, duration, nil
+	}
+
 	data, err := ioutil.ReadFile(serviceAccountKey)
 	if err != nil {
 		return "", 0, err
@@ -38,13 +44,22 @@ func GenerateAccessTokenFromFile(serviceAccountKey string) (string, time.Duratio
 	return generateAccessToken(data)
 }
 
-func generateAccessToken(keyData []byte) (string, time.Duration, error) {
+func activeAccessToken() (string, time.Duration) {
 	now := time.Now()
+	tokenMux.Lock()
+	defer tokenMux.Unlock()
+
 	// Follow the similar logic as GCE metadata server, where returned token will be valid for at
 	// least 60s.
-	if tokenCache.AccessToken != "" && !now.After(tokenCache.Expiry.Add(-time.Second*60)) {
-		return tokenCache.AccessToken, tokenCache.Expiry.Sub(now), nil
+	if tokenCache.AccessToken == "" || now.After(tokenCache.Expiry.Add(-time.Second*60)) {
+		return "", 0
+
 	}
+
+	return tokenCache.AccessToken, tokenCache.Expiry.Sub(now)
+}
+
+func generateAccessToken(keyData []byte) (string, time.Duration, error) {
 	creds, err := google.CredentialsFromJSON(oauth2.NoContext, keyData, _GOOGLE_API_SCOPE...)
 	if err != nil {
 		return "", 0, err
@@ -54,6 +69,10 @@ func generateAccessToken(keyData []byte) (string, time.Duration, error) {
 	if err != nil {
 		return "", 0, err
 	}
+
+	tokenMux.Lock()
+	defer tokenMux.Unlock()
+
 	tokenCache = token
 	return token.AccessToken, token.Expiry.Sub(time.Now()), nil
 }
