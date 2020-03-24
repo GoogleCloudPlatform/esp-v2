@@ -48,7 +48,6 @@ func TestBackendAuthWithImdsIdToken(t *testing.T) {
 		desc     string
 		method   string
 		path     string
-		headers  map[string]string
 		message  string
 		wantResp string
 	}{
@@ -62,8 +61,7 @@ func TestBackendAuthWithImdsIdToken(t *testing.T) {
 			desc:     "Add Bearer token for APPEND_PATH_TO_ADDRESS backend that requires JWT token",
 			method:   "GET",
 			path:     "/bearertoken/append?key=api-key",
-			headers:  map[string]string{"Authorization": "Bearer origin-token"},
-			wantResp: `{"Authorization": "Bearer ya29.append", "RequestURI": "/bearertoken/append?key=api-key", "X-Forwarded-Authorization":"Bearer origin-token"}`,
+			wantResp: `{"Authorization": "Bearer ya29.append", "RequestURI": "/bearertoken/append?key=api-key"}`,
 		},
 		{
 			desc:     "Do not reject backend that doesn't require JWT token",
@@ -76,7 +74,7 @@ func TestBackendAuthWithImdsIdToken(t *testing.T) {
 
 	for _, tc := range testData {
 		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
-		resp, err := client.DoWithHeaders(url, tc.method, tc.message, tc.headers)
+		resp, err := client.DoWithHeaders(url, tc.method, tc.message, nil)
 
 		if err != nil {
 			t.Fatalf("Test Desc(%s): %v", tc.desc, err)
