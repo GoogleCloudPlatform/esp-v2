@@ -46,6 +46,7 @@ func TestBackendAuthDisableAuth(t *testing.T) {
 		desc     string
 		method   string
 		path     string
+		headers  map[string]string
 		message  string
 		wantResp string
 	}{
@@ -68,6 +69,20 @@ func TestBackendAuthDisableAuth(t *testing.T) {
 			wantResp: `{"Authorization": "Bearer ya29.DefaultAuth", "RequestURI": "/bearertoken/constant?foo=disableauthsettofalse"}`,
 		},
 		{
+			desc:     "With disable_auth=true, original Authorization header is preversed, X-Forwarded-Authorization is not set",
+			method:   "GET",
+			path:     "/disableauthsettotrue/constant/disableauthsettotrue",
+			headers:  map[string]string{"Authorization": "Bearer origin-token"},
+			wantResp: `{"Authorization": "Bearer origin-token", "RequestURI": "/bearertoken/constant?foo=disableauthsettotrue"}`,
+		},
+		{
+			desc:     "With disable_auth=false, original Authorization header is copied to X-Forwarded-Authorization",
+			method:   "GET",
+			path:     "/disableauthsettofalse/constant/disableauthsettofalse",
+			headers:  map[string]string{"Authorization": "Bearer origin-token"},
+			wantResp: `{"Authorization": "Bearer ya29.DefaultAuth", "RequestURI": "/bearertoken/constant?foo=disableauthsettofalse", "X-Forwarded-Authorization":"Bearer origin-token"}`,
+		},
+		{
 			desc:     "Authentication is not set so JwtAudience is set with the backend address",
 			method:   "GET",
 			path:     "/authenticationnotset/constant/authenticationnotset",
@@ -77,7 +92,7 @@ func TestBackendAuthDisableAuth(t *testing.T) {
 
 	for _, tc := range testData {
 		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
-		resp, err := client.DoWithHeaders(url, tc.method, tc.message, nil)
+		resp, err := client.DoWithHeaders(url, tc.method, tc.message, tc.headers)
 
 		if err != nil {
 			t.Fatalf("Test Desc(%s): %v", tc.desc, err)
