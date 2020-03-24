@@ -44,6 +44,7 @@ const (
 	ProxyKey
 	LogMetrics
 	Version
+	FakeAccessToken
 
 	// Configurations
 	AuthServiceConfig
@@ -88,6 +89,7 @@ var fileMap = map[RuntimeFile]string{
 	PmEnvoyConfig:               "../../../../src/go/bootstrap/static/testdata/path_matcher/envoy_config.json",
 	GrpcEchoServiceConfig:       "../../../../examples/grpc_dynamic_routing/service_config_generated.json",
 	GrpcEchoEnvoyConfig:         "../../../../examples/grpc_dynamic_routing/envoy_config.json",
+	FakeAccessToken:             "./testdata/fake_access_token.json",
 }
 
 // Get the runtime file path for the specified file.
