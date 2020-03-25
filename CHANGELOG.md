@@ -1,3 +1,18 @@
+# Release 2.7.0 25-03-2020
+
+- Add `X-Forwarded-Authorization` header (#90)
+- Detect rolloutId change from Google Service Control (#83)
+- Support custom JWT locations (#44)
+- Add missing logEntries for report (#68)
+- Support strict transport security (#77)
+- Add mTLS support for upstream connection (#52)
+- Add flag `--disable_cloud_trace_auto_sampling` (#81)
+- Add flags for print options in JSON transcoder (#57)
+- Add flags for unknown query parameters in JSON transcoder… (#79)
+- Add flags for Admin control (#67)
+- Add flags `ssl_minimum_protocol` and `ssl_maximum_protocol` for downstream (#58)
+- Suppress envoy debug headers when `--enable_debug=false` (#82)
+
 # Release 2.6.0 04-03-2020
 
 - Signal ready only when all tokens are successfully retried (#37)
