@@ -17,7 +17,6 @@
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 . ${ROOT}/scripts/all-utilities.sh || { echo "Cannot load Bash utilities"; exit 1; }
 
-DIRECT_REPO=''
 
 function usage() {
   [[ -n "${1}" ]] && echo "${1}"
@@ -44,9 +43,9 @@ function list_image_tags() {
   gcloud container images list-tags ${image} --project ${APIPROXY_RELEASE_PROJECT}
 }
 
-list_image_tags $(get_proxy_image_release_name)
-list_image_tags $(get_serverless_image_release_name)
-
+list_image_tags "$(get_proxy_image_release_name)"
+list_image_tags "$(get_serverless_image_release_name)"
+list_image_tags "$(get_gcsrunner_image_release_name)"
 
 printf '\e[31m
 ***************************************************************************

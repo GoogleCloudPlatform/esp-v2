@@ -102,6 +102,11 @@ push_docker_image \
   "$(get_serverless_image_release_name):${VERSION}" \
   || error_exit "Docker image push failed."
 
+push_docker_image \
+  "$(get_gcsrunner_image_name_with_sha)" \
+  "$(get_gcsrunner_image_release_name):${VERSION}" \
+  || error_exit "Docker image push failed."
+
 printf '\e[31m
 ***************************************************************************
 *      Please paste the script output verbatim into the release bug.      *
