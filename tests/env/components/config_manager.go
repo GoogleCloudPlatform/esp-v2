@@ -34,7 +34,7 @@ func formBackendAddress(ports *Ports, backend platform.Backend) (string, error) 
 	backendAddress := fmt.Sprintf("%v:%v", platform.GetLoopbackHost(), ports.BackendServerPort)
 
 	switch backend {
-	case platform.GrpcEchoRemote, platform.EchoRemote:
+	case platform.GrpcEchoRemote, platform.EchoRemote, platform.GrpcBookstoreRemote:
 		// Dynamic routing backends shouldn't have this flag set.
 		return "", nil
 	case platform.GrpcBookstoreSidecar, platform.GrpcEchoSidecar, platform.GrpcInteropSidecar:

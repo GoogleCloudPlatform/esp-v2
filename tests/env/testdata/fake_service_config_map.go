@@ -33,6 +33,7 @@ var (
 		platform.EchoSidecar:          FakeEchoConfig,
 		platform.EchoRemote:           FakeEchoConfigForDynamicRouting,
 		platform.GrpcBookstoreSidecar: FakeBookstoreConfig,
+		platform.GrpcBookstoreRemote:  FakeBookstoreConfigForDynamicRouting,
 		platform.GrpcInteropSidecar:   FakeGrpcInteropConfig,
 		platform.GrpcEchoSidecar:      FakeGrpcEchoConfig,
 		platform.GrpcEchoRemote:       FakeGrpcEchoConfigForDynamicRouting,
@@ -73,7 +74,7 @@ func SetupServiceConfig(info platform.Backend) *scpb.Service {
 
 	// Setup the proto descriptor for gRPC backends.
 	switch info {
-	case platform.GrpcBookstoreSidecar:
+	case platform.GrpcBookstoreSidecar, platform.GrpcBookstoreRemote:
 		serviceConfig.SourceInfo, err = generateSourceInfo(platform.GetFilePath(platform.FakeGrpcBookstoreDescriptor))
 		break
 	case platform.GrpcInteropSidecar:

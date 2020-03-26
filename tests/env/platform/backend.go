@@ -27,5 +27,6 @@ const (
 
 	// Run in API gateway mode for dynamic routing (Cloud Run).
 	EchoRemote
+	GrpcBookstoreRemote
 	GrpcEchoRemote
 )

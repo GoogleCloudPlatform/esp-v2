@@ -16,6 +16,7 @@ package integration_test
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 
@@ -25,6 +26,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
+	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
@@ -716,6 +718,76 @@ func TestDynamicBackendRoutingMutualTLS(t *testing.T) {
 			}
 			if err := utils.VerifyServiceControlResp(tc.desc, tc.wantScRequests, scRequests); err != nil {
 				t.Errorf("Test Desc(%s): %v", tc.desc, err)
+			}
+		}()
+	}
+}
+
+func TestDynamicGrpcBackendTLS(t *testing.T) {
+	t.Parallel()
+
+	configID := "test-config-id"
+	args := []string{"--service_config_id=" + configID, "--rollout_strategy=fixed"}
+
+	tests := []struct {
+		desc                string
+		clientProtocol      string
+		method              string
+		useWrongBackendCert bool
+		header              http.Header
+		wantResp            string
+		wantError           string
+	}{
+		{
+			desc:           "gRPC client calling gRPCs remote backend succeed",
+			clientProtocol: "grpc",
+			method:         "GetShelf",
+			header:         http.Header{"x-api-key": []string{"api-key"}},
+			wantResp:       `{"id":"100","theme":"Kids"}`,
+		},
+		{
+			desc:           "Http client calling gRPCs remote backend succeed",
+			clientProtocol: "http",
+			method:         "/v1/shelves/200?key=api-key",
+			wantResp:       `{"id":"200","theme":"Classic"}`,
+		},
+		{
+			desc:                "gRPC client calling gRPCs remote backend fail",
+			clientProtocol:      "grpc",
+			method:              "GetShelf",
+			useWrongBackendCert: true,
+			header:              http.Header{"x-api-key": []string{"api-key"}},
+			wantError:           "Unavailable",
+		},
+		{
+			desc:                "Http2 client calling gRPCs remote backend fail",
+			clientProtocol:      "http",
+			useWrongBackendCert: true,
+			method:              "/v1/shelves/200?key=api-key",
+			wantError:           "503 Service Unavailable",
+		},
+	}
+
+	for _, tc := range tests {
+		func() {
+			s := env.NewTestEnv(comp.TestDynamicGrpcBackendTLS, platform.GrpcBookstoreRemote)
+			s.UseWrongBackendCertForDR(tc.useWrongBackendCert)
+			defer s.TearDown()
+			if err := s.Setup(args); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			resp, err := bsclient.MakeCall(tc.clientProtocol, addr, "GET", tc.method, "", tc.header)
+			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
+				t.Errorf("Test (%s): failed, expected: %s, got: %v", tc.desc, tc.wantError, err)
+			}
+
+			if tc.wantError == "" && err != nil {
+				t.Errorf("Test (%s): got unexpected error: %s", tc.desc, resp)
+			}
+
+			if !strings.Contains(resp, tc.wantResp) {
+				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
 			}
 		}()
 	}
