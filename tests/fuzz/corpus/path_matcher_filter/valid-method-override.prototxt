@@ -1,0 +1,25 @@
+config {
+  rules {
+    operation: "1.cloudesf_testing_cloud_goog.FooBarOverride"
+    pattern {
+      http_method: "POST"
+      uri_template: "/foo/bar"
+    }
+  }
+}
+downstream_request {
+  headers {
+    headers {
+      key: ":method"
+      value: "GET"
+    }
+    headers {
+      key: "x-http-method-override"
+      value: "POST"
+    }
+    headers {
+      key: ":path"
+      value: "/foo/bar"
+    }
+  }
+}

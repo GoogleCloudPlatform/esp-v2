@@ -1,0 +1,21 @@
+config {
+  rules {
+    operation: "1.cloudesf_testing_cloud_goog.FooBar"
+    pattern {
+      http_method: "POST"
+      uri_template: "/foo/bar"
+    }
+  }
+}
+downstream_request {
+  headers {
+    headers {
+      key: ":method"
+      value: "POST"
+    }
+    headers {
+      key: ":path"
+      value: "/foo/bar"
+    }
+  }
+}

@@ -6,6 +6,7 @@ PATH_MATCHER_VISIBILITY = [
     "//src/envoy/http/path_matcher:__subpackages__",
     "//src/go:__subpackages__",
     "//tests/utils:__subpackages__",
+    "//tests/fuzz/structured_inputs:__subpackages__",
 ]
 
 package(default_visibility = PATH_MATCHER_VISIBILITY)
