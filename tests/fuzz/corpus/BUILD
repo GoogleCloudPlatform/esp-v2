@@ -60,3 +60,11 @@ filegroup(
         "service_control_filter/**",
     ]),
 )
+
+filegroup(
+    name = "path_matcher_filter_corpus",
+    testonly = 1,
+    srcs = glob([
+        "path_matcher_filter/**",
+    ]),
+)

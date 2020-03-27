@@ -4,7 +4,7 @@
 
 This filter operates on downstream headers to determine the operation name and
 map variable bindings for an API request.
-It them updates the shared filter state, reducing redundant work later filters.
+It then updates the shared filter state, reducing redundant work in later filters.
 
 State modifications:
 - Modifies shared filter state
@@ -20,6 +20,14 @@ in the shared filter state. The results of this match are used the following fil
 - [Backend Auth](../backend_auth/README.md)
 - [Backend Routing](../backend_routing/README.md)
 - [Service Control](../service_control/README.md)
+- [JWT Authn](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/security/jwt_authn_filter)
+
+This selector is used by these filters (instead of the path) for a variety of operations:
+
+- Selecting a JWT provider for client authentication
+- Checking if an API key is required
+- Rewriting paths for remote backends
+- Attached a JWT for backend authentication
 
 ### Variable Bindings
 
@@ -31,6 +39,10 @@ and stores them in the shared filter state. The result of the transformation is
 used by the following filters:
 
 - [Backend Routing](../backend_routing/README.md)
+
+The variable bindings are used for:
+
+- Attaching query parameters to the request
 
 ## Configuration
 

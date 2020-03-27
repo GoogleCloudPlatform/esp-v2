@@ -41,6 +41,14 @@ typedef Envoy::ConstSingleton<RcDetailsValues> RcDetails;
 
 Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
     Envoy::Http::RequestHeaderMap& headers, bool) {
+  if (!headers.Method()) {
+    rejectRequest(Envoy::Http::Code(400), "No method in request headers.");
+    return Envoy::Http::FilterHeadersStatus::StopIteration;
+  } else if (!headers.Path()) {
+    rejectRequest(Envoy::Http::Code(400), "No path in request headers.");
+    return Envoy::Http::FilterHeadersStatus::StopIteration;
+  }
+
   std::string method(utils::getRequestHTTPMethodWithOverride(
       headers.Method()->value().getStringView(), headers));
   std::string path(headers.Path()->value().getStringView());
