@@ -42,10 +42,10 @@ typedef Envoy::ConstSingleton<RcDetailsValues> RcDetails;
 Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
     Envoy::Http::RequestHeaderMap& headers, bool) {
   if (!headers.Method()) {
-    rejectRequest(Envoy::Http::Code(404), "No method in request headers.");
+    rejectRequest(Envoy::Http::Code(400), "No method in request headers.");
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   } else if (!headers.Path()) {
-    rejectRequest(Envoy::Http::Code(404), "No path in request headers.");
+    rejectRequest(Envoy::Http::Code(400), "No path in request headers.");
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 

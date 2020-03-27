@@ -4,7 +4,7 @@
 
 This filter operates on downstream headers to determine the operation name and
 map variable bindings for an API request.
-It them updates the shared filter state, reducing redundant work in later filters.
+It then updates the shared filter state, reducing redundant work in later filters.
 
 State modifications:
 - Modifies shared filter state

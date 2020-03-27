@@ -170,6 +170,23 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersNoMatch) {
                     ->value());
 }
 
+TEST_F(PathMatcherFilterTest, DecodeHeadersMissingHeaders) {
+  Envoy::Http::TestRequestHeaderMapImpl missingPath{{":method", "POST"}};
+  Envoy::Http::TestRequestHeaderMapImpl missingMethod{{":path", "/bar"}};
+
+  // Filter should reject this request
+  EXPECT_CALL(
+      mock_cb_.stream_info_,
+      setResponseFlag(
+          Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService))
+          .Times(2);
+
+  EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
+            filter_->decodeHeaders(missingPath, true));
+    EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
+            filter_->decodeHeaders(missingMethod, true));
+}
+
 }  // namespace
 
 }  // namespace path_matcher
