@@ -151,6 +151,7 @@ function setup() {
   local bookstore_health_code=0
   local proxy_args=""
   local endpoints_service_config_id=""
+  local backend_protocol=""
 
   # Get the service account for the prow job due to b/144867112
   # TODO(b/144445217): We should let prow handle this instead of manually doing so
@@ -211,6 +212,7 @@ function setup() {
     # so fake a host name for openapi service config.
     ENDPOINTS_SERVICE_NAME="${PROXY_SERVICE_NAME}.endpoints.cloudesf-testing.cloud.goog"
     local scheme="http"
+    backend_protocol="http/1.1"
   else
     PROXY_HOST=$(gcloud run services describe "${PROXY_SERVICE_NAME}" \
         --platform=managed \
@@ -218,6 +220,7 @@ function setup() {
       --quiet)
     ENDPOINTS_SERVICE_NAME=${PROXY_HOST}
     local scheme="https"
+    backend_protocol="h2"
   fi
 
   case "${BACKEND}" in
@@ -237,7 +240,7 @@ function setup() {
         | .info.title = \"${ENDPOINTS_SERVICE_TITLE}\" \
         | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${PROXY_HOST}\" \
         | . + { \"x-google-backend\": { \"address\": \"${BACKEND_HOST}\" } }  \
-      | .paths.\"/echo_token/disable_auth\".get  +=  { \"x-google-backend\": { \"address\": \"${BACKEND_HOST}\/echo_token\/disable_auth\", \"disable_auth\": true, \"protocol\": \"h2\"} } "\
+      | .paths.\"/echo_token/disable_auth\".get  +=  { \"x-google-backend\": { \"address\": \"${BACKEND_HOST}\/echo_token\/disable_auth\", \"disable_auth\": true, \"protocol\": \"${backend_protocol}\"} } "\
       > "${service_idl}"
     ;;
   'echo')
