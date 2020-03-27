@@ -732,7 +732,7 @@ func TestDynamicGrpcBackendTLS(t *testing.T) {
 	tests := []struct {
 		desc                string
 		clientProtocol      string
-		method              string
+		methodOrUrl         string
 		useWrongBackendCert bool
 		header              http.Header
 		wantResp            string
@@ -741,29 +741,29 @@ func TestDynamicGrpcBackendTLS(t *testing.T) {
 		{
 			desc:           "gRPC client calling gRPCs remote backend succeed",
 			clientProtocol: "grpc",
-			method:         "GetShelf",
+			methodOrUrl:    "GetShelf",
 			header:         http.Header{"x-api-key": []string{"api-key"}},
 			wantResp:       `{"id":"100","theme":"Kids"}`,
 		},
 		{
 			desc:           "Http client calling gRPCs remote backend succeed",
 			clientProtocol: "http",
-			method:         "/v1/shelves/200?key=api-key",
+			methodOrUrl:    "/v1/shelves/200?key=api-key",
 			wantResp:       `{"id":"200","theme":"Classic"}`,
 		},
 		{
-			desc:                "gRPC client calling gRPCs remote backend fail",
+			desc:                "gRPC client calling gRPCs remote backend fail with incorrect cert",
 			clientProtocol:      "grpc",
-			method:              "GetShelf",
+			methodOrUrl:         "GetShelf",
 			useWrongBackendCert: true,
 			header:              http.Header{"x-api-key": []string{"api-key"}},
 			wantError:           "Unavailable",
 		},
 		{
-			desc:                "Http2 client calling gRPCs remote backend fail",
-			clientProtocol:      "http",
+			desc:                "Http2 client calling gRPCs remote backend fail with incorrect cert",
+			clientProtocol:      "http2",
 			useWrongBackendCert: true,
-			method:              "/v1/shelves/200?key=api-key",
+			methodOrUrl:         "/v1/shelves/200?key=api-key",
 			wantError:           "503 Service Unavailable",
 		},
 	}
@@ -777,7 +777,7 @@ func TestDynamicGrpcBackendTLS(t *testing.T) {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-			resp, err := bsclient.MakeCall(tc.clientProtocol, addr, "GET", tc.method, "", tc.header)
+			resp, err := bsclient.MakeCall(tc.clientProtocol, addr, "GET", tc.methodOrUrl, "", tc.header)
 			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 				t.Errorf("Test (%s): failed, expected: %s, got: %v", tc.desc, tc.wantError, err)
 			}

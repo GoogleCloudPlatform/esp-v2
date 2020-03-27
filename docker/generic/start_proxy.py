@@ -621,8 +621,8 @@ def enforce_conflict_args(args):
         return "Flag --ssl_port is going to be deprecated, please use --ssl_server_cert_path only."
     if args.tls_mutual_auth and args.ssl_client_cert_path:
         return "Flag --tls_mutual_auth is going to be deprecated, please use --ssl_client_cert_path only."
-    if args.ssl_client_root_certs_file and args.enable_grpc_backend_ssl and args.grpc_backend_ssl_root_certs_file:
-        return "Flag --enable_grpc_backend_ssl and --grpc_backend_ssl_root_certs_file are going to be deprecated, please use --ssl_client_root_certs_file only."
+    if args.ssl_client_root_certs_file and args.enable_grpc_backend_ssl:
+        return "Flag --enable_grpc_backend_ssl are going to be deprecated, please use --ssl_client_root_certs_file only."
 
     port_flags = []
     if args.http_port:
