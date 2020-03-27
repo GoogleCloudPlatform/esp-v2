@@ -18,9 +18,8 @@ namespace fuzz {
 // Needed for logger macro expansion.
 namespace Logger = Envoy::Logger;
 
-void doTest(
-    Filter& filter,
-    const espv2::tests::fuzz::protos::PathMatcherFilterInput& input) {
+void doTest(Filter& filter,
+            const espv2::tests::fuzz::protos::PathMatcherFilterInput& input) {
   // Generate the user request.
   auto headers =
       Envoy::Fuzz::fromHeaders<Envoy::Http::TestRequestHeaderMapImpl>(
@@ -38,8 +37,8 @@ DEFINE_PROTO_FUZZER(
     Envoy::TestUtility::validate(input);
 
     if (input.config().rules_size() < 1) {
-      throw Envoy::ProtoValidationException("At least 1 path matcher rule needed",
-                                            input);
+      throw Envoy::ProtoValidationException(
+          "At least 1 path matcher rule needed", input);
     }
   } catch (const Envoy::ProtoValidationException& e) {
     ENVOY_LOG_MISC(debug, "Controlled proto validation failure: {}", e.what());
