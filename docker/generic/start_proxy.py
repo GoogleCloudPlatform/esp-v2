@@ -169,8 +169,8 @@ environment variable or by passing "-k" flag to this script.
         authentication for HTTPS backends. Requires the certificate and
         key files "client.crt" and "client.key" within this path.''')
 
-    parser.add_argument('--ssl_client_cert_chain_file', default=None, help='''
-        The file path of client certificate chain that ESPv2 uses to verify backend server certificate.
+    parser.add_argument('--ssl_client_root_certs_file', default=None, help='''
+        The file path of root certificates that ESPv2 uses to verify backend server certificate.
         If not specified, ESPv2 uses '/etc/ssl/certs/ca-certificates.crt' by default.''')
 
     parser.add_argument('--ssl_minimum_protocol', default=None,
@@ -621,8 +621,8 @@ def enforce_conflict_args(args):
         return "Flag --ssl_port is going to be deprecated, please use --ssl_server_cert_path only."
     if args.tls_mutual_auth and args.ssl_client_cert_path:
         return "Flag --tls_mutual_auth is going to be deprecated, please use --ssl_client_cert_path only."
-    if args.ssl_client_cert_chain_file and args.enable_grpc_backend_ssl and args.grpc_backend_ssl_cert_chain_file:
-        return "Flag --enable_grpc_backend_ssl and --grpc_backend_ssl_cert_chain_file are going to be deprecated, please use ssl_client_cert_chain_file only."
+    if args.ssl_client_root_certs_file and args.enable_grpc_backend_ssl and args.grpc_backend_ssl_root_certs_file:
+        return "Flag --enable_grpc_backend_ssl and --grpc_backend_ssl_root_certs_file are going to be deprecated, please use --ssl_client_root_certs_file only."
 
     port_flags = []
     if args.http_port:
@@ -698,8 +698,8 @@ def gen_proxy_config(args):
         proxy_conf.extend(["--ssl_client_cert_path", str(args.ssl_client_cert_path)])
     if args.enable_grpc_backend_ssl and args.grpc_backend_ssl_root_certs_file:
         proxy_conf.extend(["--root_certs_path", str(args.grpc_backend_ssl_root_certs_file)])
-    if args.ssl_client_cert_chain_file:
-        proxy_conf.extend(["--root_certs_path", str(args.ssl_client_cert_chain_file)])
+    if args.ssl_client_root_certs_file:
+        proxy_conf.extend(["--root_certs_path", str(args.ssl_client_root_certs_file)])
     if args.tls_mutual_auth:
         proxy_conf.extend(["--ssl_client_cert_path", "/etc/nginx/ssl"])
 

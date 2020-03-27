@@ -138,9 +138,9 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8080', '--ssl_client_cert_path',
               '/etc/endpoint/ssl', '--disable_tracing'
               ]),
-            # ssl_client_cert_chain_file specified
+            # ssl_client_root_certs_file specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
-              '--ssl_client_cert_chain_file=/etc/endpoints/ssl/ca-certificates.crt' ],
+              '--ssl_client_root_certs_file=/etc/endpoints/ssl/ca-certificates.crt' ],
              ['bin/configmanager', '--logtostderr',
               '--backend_address', 'http://127.0.0.1:8082',
               '--rollout_strategy', 'managed', '--v', '0',
@@ -339,6 +339,7 @@ class TestStartProxy(unittest.TestCase):
             ['--ssl_client_cert_path=/etc/endpoint/ssl', '--tls_mutual_auth'],
             ['--ssl_protocols=TLSv1.3',  '--ssl_minimum_protocol=TLSv1.1'],
             ['--ssl_minimum_protocol=TLSv11'],
+            ['--ssl_client_root_certs_file', '--enable_grpc_backend_ssl'],
             ['--transcoding_ignore_query_parameters=foo,bar',
              '--transcoding_ignore_unknown_query_parameters']
           ]
