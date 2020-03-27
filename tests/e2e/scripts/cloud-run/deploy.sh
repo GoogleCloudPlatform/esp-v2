@@ -237,7 +237,7 @@ function setup() {
         | .info.title = \"${ENDPOINTS_SERVICE_TITLE}\" \
         | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${PROXY_HOST}\" \
         | . + { \"x-google-backend\": { \"address\": \"${BACKEND_HOST}\" } }  \
-      | .paths.\"/echo_token/disable_auth\".get  +=  { \"x-google-backend\": { \"address\": \"${BACKEND_HOST}\/echo_token\/disable_auth\", \"disable_auth\": true} } "\
+      | .paths.\"/echo_token/disable_auth\".get  +=  { \"x-google-backend\": { \"address\": \"${BACKEND_HOST}\/echo_token\/disable_auth\", \"disable_auth\": true, \"protocol\": \"h2\"} } "\
       > "${service_idl}"
     ;;
   'echo')
