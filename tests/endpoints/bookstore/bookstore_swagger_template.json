@@ -162,7 +162,11 @@
             }
           }
         },
-        "security": []
+        "security": [
+          {
+            "auth0_jwk": []
+          }
+        ]
       },
       "post": {
         "description": "Creates a new shelf in the bookstore.",
@@ -501,7 +505,17 @@
       "type": "oauth2",
       "x-google-issuer": "245521401045-compute@developer.gserviceaccount.com",
       "x-google-jwks_uri": "https://www.googleapis.com/service_accounts/v1/jwk/245521401045-compute@developer.gserviceaccount.com",
-      "x-google-audiences": "bookstore.endpoints.cloudesf-testing.cloud.goog"
+      "x-google-audiences": "bookstore.endpoints.cloudesf-testing.cloud.goog",
+      "x-google-jwt-locations": [
+        {
+          "header": "Authorization",
+          "value_prefix": "Bearer "
+        },
+        {
+          "header": "Jwt-Header-Name",
+          "value_prefix": "Jwt-Value-Prefix"
+        }
+      ]
     }
   },
   "x-google-management": {

@@ -76,7 +76,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
     def clear(self):
         print 'Clear existing shelves.'
         # list shelves: no api_key, no auth
-        response = self._send_request('/shelves')
+        response = self._send_request('/shelves', auth=FLAGS.auth_token)
         self.assertEqual(response.status_code, 200)
         json_ret = response.json()
         for shelf in json_ret.get('shelves', []):
@@ -113,7 +113,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
     def verify_list_shelves(self, shelves):
         # list shelves: no api_key, no auth
         print 'List shelves.'
-        response = self._send_request('/shelves')
+        response = self._send_request('/shelves', auth=FLAGS.auth_token)
         self.assertEqual(response.status_code, 200)
 
         self.assertEqual(response.json().get('shelves', []), shelves)
@@ -152,6 +152,18 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json().get('books', []), books)
 
+    def verify_swagger_importer(self):
+        def _verify_x_google_jwt_locations():
+            response = self._call_http(
+                '/shelves')
+            self.assertEqual(response.status_code, 401)
+
+            response = self._call_http(
+                '/shelves',userHeaders={"Jwt-Header-Name": "Jwt-Value-Prefix {}".format(FLAGS.auth_token)})
+            self.assertEqual(response.status_code, 200)
+
+        _verify_x_google_jwt_locations()
+
     def run_all_tests(self):
         shelf1 = {
             'name': 'shelves/1',
@@ -182,6 +194,10 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
         self.verify_book(book13)
         self.verify_book(book24)
 
+        if FLAGS.test_swagger_importer:
+            self.verify_swagger_importer()
+
+
         if self._failed_tests:
             sys.exit(utils.red('%d tests passed, %d tests failed.' % (
                 self._passed_tests, self._failed_tests)))
@@ -202,6 +218,9 @@ if __name__ == '__main__':
     parser.add_argument('--allow_unverified_cert', type=bool,
                         default=False,
                         help='used for testing self-signed ssl cert.')
+    parser.add_argument('--test_swagger_importer', type=bool,
+                        default=False,
+                        help='Test certain cases for openapi swagger importer when set to true')
     flags = parser.parse_args(namespace=FLAGS)
 
     apiproxy_test = ApiProxyBookstoreTest()

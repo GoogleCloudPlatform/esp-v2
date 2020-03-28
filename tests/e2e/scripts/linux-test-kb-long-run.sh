@@ -80,6 +80,10 @@ while true; do
 
   # Generating token for each run, that they expire in 1 hour.
   JWT_TOKEN=`${ROOT}/tests/e2e/scripts/gen-auth-token.sh -a ${SERVICE_NAME}`
+  TEST_SWAGGER_IMPORTER="False"
+  if [ "$PLATFORM" = "cloud-run" ]; then
+    TEST_SWAGGER_IMPORTER="True"
+  fi
 
   echo "Auth token is: ${JWT_TOKEN}"
 
@@ -90,6 +94,7 @@ while true; do
       --api_key=${API_KEY}  \
       --auth_token=${JWT_TOKEN}  \
       --allow_unverified_cert=true \
+      --test_swagger_importer="${TEST_SWAGGER_IMPORTER}" \
     --host_header="${HOST_HEADER}")
 
   if [ "$PLATFORM" = "gke" ]; then
