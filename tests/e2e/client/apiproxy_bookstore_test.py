@@ -162,7 +162,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
         self.assertEqual(response.status_code, 200)
 
         response = self._call_http(
-            '/shelves?{}'.format('jwt_query_name=jwt_value_prefix' + FLAGS.auth_token))
+            '/shelves?{}'.format('jwt_query_name=' + FLAGS.auth_token))
         self.assertEqual(response.status_code, 200)
 
 

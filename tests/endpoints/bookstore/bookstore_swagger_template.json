@@ -516,8 +516,7 @@
           "value_prefix": "Jwt-Value-Prefix"
         },
         {
-          "query": "jwt_query_name",
-          "value_prefix": "jwt_value_prefix"
+          "query": "jwt_query_name"
         }
       ]
     }
