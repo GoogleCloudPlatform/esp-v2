@@ -158,7 +158,11 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
         self.assertEqual(response.status_code, 401)
 
         response = self._call_http(
-            '/shelves',userHeaders={"Jwt-Header-Name": "Jwt-Value-Prefix {}".format(FLAGS.auth_token)})
+            '/shelves', userHeaders={"Jwt-Header-Name": "Jwt-Value-Prefix {}".format(FLAGS.auth_token)})
+        self.assertEqual(response.status_code, 200)
+
+        response = self._call_http(
+            '/shelves?{}'.format('jwt_query_name=jwt_value_prefix' + FLAGS.auth_token))
         self.assertEqual(response.status_code, 200)
 
 
