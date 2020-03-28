@@ -76,7 +76,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
     def clear(self):
         print 'Clear existing shelves.'
         # list shelves: no api_key, no auth
-        response = self._send_request('/shelves', auth=FLAGS.auth_token)
+        response = self._send_request('/shelves')
         self.assertEqual(response.status_code, 200)
         json_ret = response.json()
         for shelf in json_ret.get('shelves', []):
@@ -113,7 +113,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
     def verify_list_shelves(self, shelves):
         # list shelves: no api_key, no auth
         print 'List shelves.'
-        response = self._send_request('/shelves', auth=FLAGS.auth_token)
+        response = self._send_request('/shelves')
         self.assertEqual(response.status_code, 200)
 
         self.assertEqual(response.json().get('shelves', []), shelves)
@@ -155,11 +155,11 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
     def verify_swagger_importer(self):
         def _verify_x_google_jwt_locations():
             response = self._call_http(
-                '/shelves')
+                '/echo')
             self.assertEqual(response.status_code, 401)
 
             response = self._call_http(
-                '/shelves',userHeaders={"Jwt-Header-Name": "Jwt-Value-Prefix {}".format(FLAGS.auth_token)})
+                '/echo',userHeaders={"Jwt-Header-Name": "Jwt-Value-Prefix {}".format(FLAGS.auth_token)})
             self.assertEqual(response.status_code, 200)
 
         _verify_x_google_jwt_locations()

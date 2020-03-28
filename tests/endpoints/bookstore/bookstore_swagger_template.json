@@ -40,7 +40,12 @@
           "200": {
             "description": "get message response"
           }
-        }
+        },
+        "security": [
+          {
+            "auth0_jwk": []
+          }
+        ]
       },
       "patch": {
         "description": "Echo Patch Message",
@@ -162,11 +167,7 @@
             }
           }
         },
-        "security": [
-          {
-            "auth0_jwk": []
-          }
-        ]
+        "security": []
       },
       "post": {
         "description": "Creates a new shelf in the bookstore.",
