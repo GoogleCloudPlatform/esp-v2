@@ -169,6 +169,10 @@ environment variable or by passing "-k" flag to this script.
         authentication for HTTPS backends. Requires the certificate and
         key files "client.crt" and "client.key" within this path.''')
 
+    parser.add_argument('--ssl_client_root_certs_file', default=None, help='''
+        The file path of root certificates that ESPv2 uses to verify backend server certificate.
+        If not specified, ESPv2 uses '/etc/ssl/certs/ca-certificates.crt' by default.''')
+
     parser.add_argument('--ssl_minimum_protocol', default=None,
         choices=['TLSv1.0', 'TLSv1.1', 'TLSv1.2', 'TLSv1.3'],
         help=''' Minimum TLS protocol version for client side connection.
@@ -180,7 +184,7 @@ environment variable or by passing "-k" flag to this script.
         help=''' Maximum TLS protocol version for client side connection.
         Please refer to https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/auth/cert.proto#common-tls-configuration.
         ''')
-    
+
     parser.add_argument('--enable_strict_transport_security', action='store_true',
         help='''Enable HSTS (HTTP Strict Transport Security). "Strict-Transport-Security" response header
         with value "max-age=31536000; includeSubdomains;" is added for all responses from local backend.
@@ -467,6 +471,47 @@ environment variable or by passing "-k" flag to this script.
         - Debug HTTP response headers
         ''')
 
+    parser.add_argument(
+        '--transcoding_always_print_primitive_fields',
+        action='store_true', help='''Whether to always print primitive fields
+        for grpc-json transcoding. By default primitive fields with default
+        values will be omitted in JSON output. For example, an int32 field set
+        to 0 will be omitted. Setting this flag to true will override the
+        default behavior and print primitive fields regardless of their values.
+        Defaults to false
+        ''')
+
+    parser.add_argument(
+        '--transcoding_always_print_enums_as_ints', action='store_true',
+        help='''Whether to always print enums as ints for grpc-json transcoding.
+        By default they are rendered as strings. Defaults to false.''')
+
+    parser.add_argument(
+        '--transcoding_preserve_proto_field_names', action='store_true',
+        help='''Whether to preserve proto field names for grpc-json transcoding.
+        By default protobuf will generate JSON field names using the json_name
+        option, or lower camel case, in that order. Setting this flag will
+        preserve the original field names. Defaults to false''')
+
+    parser.add_argument(
+        '--transcoding_ignore_query_parameters', action=None,
+        help='''
+         A list of query parameters(separated by comma) to be ignored for
+         transcoding method mapping in grpc-json transcoding. By default, the
+         transcoder filter will not transcode a request if there are any
+         unknown/invalid query parameters.
+         ''')
+
+    parser.add_argument(
+        '--transcoding_ignore_unknown_query_parameters', action='store_true',
+        help='''
+        Whether to ignore query parameters that cannot be mapped to a
+        corresponding protobuf field in grpc-json transcoding. Use this if you
+        cannot control the query parameters and do not know them beforehand.
+        Otherwise use ignored_query_parameters. Defaults to false.
+        ''')
+
+
     # Start Deprecated Flags Section
 
     parser.add_argument(
@@ -529,46 +574,17 @@ environment variable or by passing "-k" flag to this script.
         SSL protocols (e.g., --ssl_protocols=TLSv1.1 --ssl_protocols=TLSv1.2).
         ''')
 
-    parser.add_argument(
-        '--transcoding_always_print_primitive_fields',
-        action='store_true', help='''Whether to always print primitive fields
-        for grpc-json transcoding. By default primitive fields with default
-        values will be omitted in JSON output. For example, an int32 field set
-        to 0 will be omitted. Setting this flag to true will override the
-        default behavior and print primitive fields regardless of their values.
-        Defaults to false
-        ''')
+    parser.add_argument('--enable_grpc_backend_ssl',
+        action='store_true', help='''
+        This flag added for backward compatible for ESPv1 and will be deprecated.
+        Enable SSL for gRPC backend. ESPv2 auto enables SSL if schema `grpcs` is
+        detected.''')
 
-    parser.add_argument(
-        '--transcoding_always_print_enums_as_ints', action='store_true',
-        help='''Whether to always print enums as ints for grpc-json transcoding.
-        By default they are rendered as strings. Defaults to false.''')
-
-    parser.add_argument(
-        '--transcoding_preserve_proto_field_names', action='store_true',
-        help='''Whether to preserve proto field names for grpc-json transcoding.
-        By default protobuf will generate JSON field names using the json_name
-        option, or lower camel case, in that order. Setting this flag will
-        preserve the original field names. Defaults to false''')
-
-    parser.add_argument(
-        '--transcoding_ignore_query_parameters', action=None,
-        help='''
-         A list of query parameters(separated by comma) to be ignored for
-         transcoding method mapping in grpc-json transcoding. By default, the
-         transcoder filter will not transcode a request if there are any
-         unknown/invalid query parameters.
-         ''')
-
-    parser.add_argument(
-        '--transcoding_ignore_unknown_query_parameters', action='store_true',
-        help='''
-        Whether to ignore query parameters that cannot be mapped to a
-        corresponding protobuf field in grpc-json transcoding. Use this if you
-        cannot control the query parameters and do not know them beforehand.
-        Otherwise use ignored_query_parameters. Defaults to false.
-        ''')
-
+    parser.add_argument('--grpc_backend_ssl_root_certs_file',
+        default='/etc/nginx/trusted-ca-certificates.crt',
+        help='''This flag added for backward compatible for ESPv1 and will be deprecated.
+        ESPv2 uses `/etc/ssl/certs/ca-certificates.crt` by default.
+        The file path for gRPC backend SSL root certificates.''')
 
     # End Deprecated Flags Section
 
@@ -605,6 +621,8 @@ def enforce_conflict_args(args):
         return "Flag --ssl_port is going to be deprecated, please use --ssl_server_cert_path only."
     if args.tls_mutual_auth and args.ssl_client_cert_path:
         return "Flag --tls_mutual_auth is going to be deprecated, please use --ssl_client_cert_path only."
+    if args.ssl_client_root_certs_file and args.enable_grpc_backend_ssl:
+        return "Flag --enable_grpc_backend_ssl are going to be deprecated, please use --ssl_client_root_certs_file only."
 
     port_flags = []
     if args.http_port:
@@ -678,6 +696,10 @@ def gen_proxy_config(args):
         proxy_conf.extend(["--listener_port", str(args.ssl_port)])
     if args.ssl_client_cert_path:
         proxy_conf.extend(["--ssl_client_cert_path", str(args.ssl_client_cert_path)])
+    if args.enable_grpc_backend_ssl and args.grpc_backend_ssl_root_certs_file:
+        proxy_conf.extend(["--root_certs_path", str(args.grpc_backend_ssl_root_certs_file)])
+    if args.ssl_client_root_certs_file:
+        proxy_conf.extend(["--root_certs_path", str(args.ssl_client_root_certs_file)])
     if args.tls_mutual_auth:
         proxy_conf.extend(["--ssl_client_cert_path", "/etc/nginx/ssl"])
 

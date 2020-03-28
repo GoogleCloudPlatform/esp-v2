@@ -23,6 +23,7 @@ import (
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -95,14 +96,33 @@ func createDB() *database {
 
 // NewBookstoreServer creates a new server but does not start it.
 // This sets up the listening address.
-func NewBookstoreServer(port uint16) (*BookstoreServer, error) {
+func NewBookstoreServer(port uint16, enableTLS, useUnAuthorizedCert bool) (*BookstoreServer, error) {
 
 	// Setup health server
 	healthServer := health.NewServer()
 	healthServer.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
 
 	// Setup gRPC server
-	grpcServer := grpc.NewServer()
+	var grpcServer *grpc.Server
+
+	if enableTLS {
+		cert := platform.ProxyCert
+		key := platform.ProxyKey
+		if useUnAuthorizedCert {
+			cert = platform.ServerCert
+			key = platform.ServerKey
+		}
+		creds, err := credentials.NewServerTLSFromFile(platform.GetFilePath(cert),
+			platform.GetFilePath(key))
+		if err != nil {
+			return nil, err
+		}
+		grpcServer = grpc.NewServer(grpc.Creds(creds))
+		glog.Infof("Bookstore gRPCs server is listening on port %d", port)
+	} else {
+		grpcServer = grpc.NewServer()
+		glog.Infof("Bookstore gRPC server is listening on port %d", port)
+	}
 
 	// Create a new listener, allowing it to choose the port
 	lis, err := net.Listen("tcp", fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), port))

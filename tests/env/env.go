@@ -405,7 +405,13 @@ func (e *TestEnv) Setup(confArgs []string) error {
 			return err
 		}
 	case platform.GrpcBookstoreSidecar:
-		e.bookstoreServer, err = bookserver.NewBookstoreServer(e.ports.BackendServerPort)
+		e.bookstoreServer, err = bookserver.NewBookstoreServer(e.ports.BackendServerPort /*enableTLS=*/, false /*useAuthorizedBackendCert*/, false)
+		if err != nil {
+			return err
+		}
+		e.bookstoreServer.StartServer()
+	case platform.GrpcBookstoreRemote:
+		e.bookstoreServer, err = bookserver.NewBookstoreServer(e.ports.DynamicRoutingBackendPort /*enableTLS=*/, true, e.useWrongBackendCert)
 		if err != nil {
 			return err
 		}

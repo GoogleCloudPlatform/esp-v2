@@ -48,6 +48,7 @@ const (
 	TestDifferentOriginSimpleCors
 	TestDynamicBackendRoutingTLS
 	TestDynamicBackendRoutingMutualTLS
+	TestDynamicGrpcBackendTLS
 	TestDynamicRouting
 	TestDynamicRoutingCorsByEnvoy
 	TestDynamicRoutingWithAllowCors
