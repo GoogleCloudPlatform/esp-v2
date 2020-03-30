@@ -165,13 +165,13 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
             '/shelves?{}'.format('jwt_query_name=' + FLAGS.auth_token))
         self.assertEqual(response.status_code, 200)
 
-        # `X-Goog-Iap-Jwt-Assertion` is a default jwt location but it is not set
-        # in the customized x-google-jwt-locations.
+        # `X-Goog-Iap-Jwt-Assertion` is a default jwt location but it is ignored
+        # with customized x-google-jwt-locations.
         response = self._call_http(
             '/shelves', userHeaders={"X-Goog-Iap-Jwt-Assertion": FLAGS.auth_token})
         self.assertEqual(response.status_code, 401)
 
-        # `Authorization`is a default jwt location and is also set the in
+        # `Authorization`is a default jwt location and is also set in the
         # customized x-google-jwt-locations.
         response = self._call_http(
             '/shelves', userHeaders={
