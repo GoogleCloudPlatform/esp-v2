@@ -100,7 +100,7 @@ function long_running_test() {
   echo ${apiproxy_service}
   case "${BACKEND}" in
     'bookstore')
-      retry -n 20 check_http_service "${scheme}://${address}:${port}/shelves" ${http_code} "${host_header}"
+      retry -n 20 check_http_service "${scheme}://${address}:${port}/version" ${http_code} "${host_header}"
       status=${?}
       if [[ ${status} -eq 0 ]]; then
         echo 'Running long running test.'

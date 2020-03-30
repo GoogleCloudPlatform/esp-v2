@@ -30,11 +30,11 @@ FLAGS = C
 class ApiProxyBookstoreTest(ApiProxyClientTest):
     """End to end integration test of bookstore application with deployed
     APIPROXY at VM.  It will call bookstore API according its Swagger spec to
-    1) wipe out bookstore clean,
-    2) create 2 shelves,
-    3) add 2 books into the first shelf.
-    4) remove books one by one,
-    5) remove shelves one by one.
+    1) verify GET /shelves/{shelf},
+    2) verify GET /shelves,
+    3) verify GET /shelves/{shelf}/books.
+    4) verify GET /shelves/{shelf}/books/{book},
+    5) verify jwtLocations.
     """
 
     def __init__(self):
@@ -76,7 +76,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
     def clear(self):
         print 'Clear existing shelves.'
         # list shelves: no api_key, no auth
-        response = self._send_request('/shelves')
+        response = self._send_request('/shelves', auth=FLAGS.auth_token)
         self.assertEqual(response.status_code, 200)
         json_ret = response.json()
         for shelf in json_ret.get('shelves', []):
@@ -113,7 +113,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
     def verify_list_shelves(self, shelves):
         # list shelves: no api_key, no auth
         print 'List shelves.'
-        response = self._send_request('/shelves')
+        response = self._send_request('/shelves', auth=FLAGS.auth_token)
         self.assertEqual(response.status_code, 200)
 
         self.assertEqual(response.json().get('shelves', []), shelves)
@@ -152,6 +152,20 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json().get('books', []), books)
 
+    def verify_jwt_locations(self):
+        response = self._call_http(
+            '/shelves')
+        self.assertEqual(response.status_code, 401)
+
+        response = self._call_http(
+            '/shelves', userHeaders={"Jwt-Header-Name": "Jwt-Value-Prefix {}".format(FLAGS.auth_token)})
+        self.assertEqual(response.status_code, 200)
+
+        response = self._call_http(
+            '/shelves?{}'.format('jwt_query_name=' + FLAGS.auth_token))
+        self.assertEqual(response.status_code, 200)
+
+
     def run_all_tests(self):
         shelf1 = {
             'name': 'shelves/1',
@@ -181,6 +195,9 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
 
         self.verify_book(book13)
         self.verify_book(book24)
+
+        self.verify_jwt_locations()
+
 
         if self._failed_tests:
             sys.exit(utils.red('%d tests passed, %d tests failed.' % (
