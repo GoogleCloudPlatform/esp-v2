@@ -773,7 +773,7 @@ func TestDynamicGrpcBackendTLS(t *testing.T) {
 			wantResp:       `{"id":"100","theme":"Kids"}`,
 		},
 		{
-			desc:           "gRPC client calling gRPCs remote backend through mTLS failed with incorrect client root cert",
+			desc:           "HTTP2 client calling gRPCs remote backend through mTLS failed with incorrect client root cert",
 			clientProtocol: "http2",
 			methodOrUrl:    "/v1/shelves/200?key=api-key",
 			mtlsCertFile:   platform.GetFilePath(platform.ProxyCert),
