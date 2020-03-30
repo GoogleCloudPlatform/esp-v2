@@ -726,13 +726,11 @@ func TestDynamicBackendRoutingMutualTLS(t *testing.T) {
 func TestDynamicGrpcBackendTLS(t *testing.T) {
 	t.Parallel()
 
-	configID := "test-config-id"
-	args := []string{"--service_config_id=" + configID, "--rollout_strategy=fixed"}
-
 	tests := []struct {
 		desc                string
 		clientProtocol      string
 		methodOrUrl         string
+		mtlsCertFile        string
 		useWrongBackendCert bool
 		header              http.Header
 		wantResp            string
@@ -766,13 +764,35 @@ func TestDynamicGrpcBackendTLS(t *testing.T) {
 			methodOrUrl:         "/v1/shelves/200?key=api-key",
 			wantError:           "503 Service Unavailable",
 		},
+		{
+			desc:           "gRPC client calling gRPCs remote backend with mTLS succeed",
+			clientProtocol: "grpc",
+			methodOrUrl:    "GetShelf",
+			mtlsCertFile:   platform.GetFilePath(platform.ServerCert),
+			header:         http.Header{"x-api-key": []string{"api-key"}},
+			wantResp:       `{"id":"100","theme":"Kids"}`,
+		},
+		{
+			desc:           "HTTP2 client calling gRPCs remote backend through mTLS failed with incorrect client root cert",
+			clientProtocol: "http2",
+			methodOrUrl:    "/v1/shelves/200?key=api-key",
+			mtlsCertFile:   platform.GetFilePath(platform.ProxyCert),
+			header:         http.Header{"x-api-key": []string{"api-key"}},
+			wantError:      "503 Service Unavailable",
+		},
 	}
 
 	for _, tc := range tests {
+		args := utils.CommonArgs()
 		func() {
 			s := env.NewTestEnv(comp.TestDynamicGrpcBackendTLS, platform.GrpcBookstoreRemote)
-			s.UseWrongBackendCertForDR(tc.useWrongBackendCert)
 			defer s.TearDown()
+			s.UseWrongBackendCertForDR(tc.useWrongBackendCert)
+			if tc.mtlsCertFile != "" {
+				s.SetBackendMTLSCert(tc.mtlsCertFile)
+				args = append(args, "--ssl_client_cert_path=../env/testdata/")
+			}
+
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
