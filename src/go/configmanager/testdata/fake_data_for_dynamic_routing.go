@@ -237,7 +237,7 @@ var (
       {
          "filters":[
             {
-               "name":"envoy.http_connection_manager",
+               "name":"envoy.filters.network.http_connection_manager",
                "typedConfig":{
                   "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
                   "httpFilters":[
@@ -354,7 +354,7 @@ var (
                         }
                      },
                      {
-                        "name":"envoy.router",
+                        "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
                            "suppressEnvoyHeaders": true

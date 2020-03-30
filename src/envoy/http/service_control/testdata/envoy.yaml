@@ -54,7 +54,7 @@ static_resources:
           port_value: 9090
       filter_chains:
         - filters:
-            - name: envoy.http_connection_manager
+            - name: envoy.filters.network.http_connection_manager
               config:
                 codec_type: AUTO
                 stat_prefix: inbound_http
@@ -104,7 +104,7 @@ static_resources:
                         - service_name: REPLACE_SERVICE_NAME
                           operation_name: "DeleteShelf"
                           api_key:
-                  - name: envoy.router
+                  - name: envoy.filters.http.router
                 route_config:
                   name: backend
                   virtual_hosts:

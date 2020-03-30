@@ -118,7 +118,7 @@ func TestFetchListeners(t *testing.T) {
       {
          "filters":[
             {
-               "name":"envoy.http_connection_manager",
+               "name":"envoy.filters.network.http_connection_manager",
                "typedConfig":{
                   "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
                   "httpFilters":[
@@ -138,7 +138,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                      },
                      {
-                        "name":"envoy.grpc_json_transcoder",
+                        "name":"envoy.filters.http.grpc_json_transcoder",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.config.filter.http.transcoder.v2.GrpcJsonTranscoder",
                            "autoMapping":true,
@@ -155,7 +155,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                      },
                      {
-                        "name":"envoy.grpc_web"
+                        "name":"envoy.filters.http.grpc_web"
                      },
                      {
                         "name":"envoy.filters.http.grpc_stats",
@@ -165,7 +165,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                      },
                      {
-                        "name":"envoy.router",
+                        "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
                        		 "suppressEnvoyHeaders": true
@@ -262,7 +262,7 @@ func TestFetchListeners(t *testing.T) {
       {
          "filters":[
             {
-               "name":"envoy.http_connection_manager",
+               "name":"envoy.filters.network.http_connection_manager",
                "typedConfig":{
                   "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
                   "httpFilters":[
@@ -332,7 +332,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                      },
                      {
-                        "name":"envoy.grpc_web"
+                        "name":"envoy.filters.http.grpc_web"
                      },
                      {
                         "name":"envoy.filters.http.grpc_stats",
@@ -342,7 +342,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                      },
                      {
-                        "name":"envoy.router",
+                        "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
                        		 "suppressEnvoyHeaders": true
@@ -454,7 +454,7 @@ func TestFetchListeners(t *testing.T) {
       {
          "filters":[
             {
-               "name":"envoy.http_connection_manager",
+               "name":"envoy.filters.network.http_connection_manager",
                "typedConfig":{
                   "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
                   "httpFilters":[
@@ -542,7 +542,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                      },
                      {
-                        "name":"envoy.grpc_web"
+                        "name":"envoy.filters.http.grpc_web"
                      },
                      {
                         "name":"envoy.filters.http.grpc_stats",
@@ -552,7 +552,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                      },
                      {
-                        "name":"envoy.router",
+                        "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
                        		 "suppressEnvoyHeaders": true
@@ -666,7 +666,7 @@ func TestFetchListeners(t *testing.T) {
       {
          "filters":[
             {
-               "name":"envoy.http_connection_manager",
+               "name":"envoy.filters.network.http_connection_manager",
                "typedConfig":{
                   "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
                   "httpFilters":[
@@ -788,7 +788,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                      },
                      {
-                        "name":"envoy.grpc_web"
+                        "name":"envoy.filters.http.grpc_web"
                      },
                      {
                         "name":"envoy.filters.http.grpc_stats",
@@ -798,7 +798,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                      },
                      {
-                        "name":"envoy.router",
+                        "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
                        		 "suppressEnvoyHeaders": true
@@ -906,7 +906,7 @@ func TestFetchListeners(t *testing.T) {
       {
          "filters":[
             {
-               "name":"envoy.http_connection_manager",
+               "name":"envoy.filters.network.http_connection_manager",
                "typedConfig":{
                   "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
                   "httpFilters":[
@@ -1010,7 +1010,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                      },
                      {
-                        "name":"envoy.grpc_web"
+                        "name":"envoy.filters.http.grpc_web"
                      },
                      {
                         "name":"envoy.filters.http.grpc_stats",
@@ -1020,7 +1020,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                      },
                      {
-                        "name":"envoy.router",
+                        "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
                        		 "suppressEnvoyHeaders": true
@@ -1129,7 +1129,7 @@ func TestFetchListeners(t *testing.T) {
       {
          "filters":[
             {
-               "name":"envoy.http_connection_manager",
+               "name":"envoy.filters.network.http_connection_manager",
                "typedConfig":{
                   "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
                   "httpFilters":[
@@ -1206,7 +1206,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                      },
                      {
-                        "name":"envoy.router",
+                        "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
                        		 "suppressEnvoyHeaders": true
@@ -1294,7 +1294,7 @@ func TestFetchListeners(t *testing.T) {
       {
          "filters":[
             {
-               "name":"envoy.http_connection_manager",
+               "name":"envoy.filters.network.http_connection_manager",
                "typedConfig":{
                   "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
                   "httpFilters":[
@@ -1370,7 +1370,7 @@ func TestFetchListeners(t *testing.T) {
                         }
                      },
                      {
-                        "name":"envoy.router",
+                        "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
                            "startChildSpan":true

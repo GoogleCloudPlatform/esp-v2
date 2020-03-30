@@ -14,7 +14,7 @@ See [this example][example envoy] for details.
 ```yaml
 filter_chains:
   - filters:
-    - name: envoy.http_connection_manager
+    - name: envoy.filters.network.http_connection_manager
       config:
         ... other config options ...
         http_filters:
