@@ -84,7 +84,7 @@ func TestTranscoderFilter(t *testing.T) {
 			},
 			wantTranscoderFilter: fmt.Sprintf(`
 {
-   "name":"envoy.grpc_json_transcoder",
+   "name":"envoy.filters.http.grpc_json_transcoder",
    "typedConfig":{
       "@type":"type.googleapis.com/envoy.config.filter.http.transcoder.v2.GrpcJsonTranscoder",
       "autoMapping":true,
@@ -159,7 +159,7 @@ func TestTranscoderFilter(t *testing.T) {
 			},
 			wantTranscoderFilter: fmt.Sprintf(`
 {
-   "name":"envoy.grpc_json_transcoder",
+   "name":"envoy.filters.http.grpc_json_transcoder",
    "typedConfig":{
       "@type":"type.googleapis.com/envoy.config.filter.http.transcoder.v2.GrpcJsonTranscoder",
       "autoMapping":true,
@@ -203,7 +203,7 @@ func TestTranscoderFilter(t *testing.T) {
 			transcodingIgnoreUnknownQueryParameters: true,
 			wantTranscoderFilter: fmt.Sprintf(`
 {
-   "name":"envoy.grpc_json_transcoder",
+   "name":"envoy.filters.http.grpc_json_transcoder",
    "typedConfig":{
       "@type":"type.googleapis.com/envoy.config.filter.http.transcoder.v2.GrpcJsonTranscoder",
       "autoMapping":true,
@@ -1324,7 +1324,7 @@ func TestHealthCheckFilter(t *testing.T) {
 				},
 			},
 			wantHealthCheckFilter: `{
-        "name": "envoy.health_check",
+        "name": "envoy.filters.http.health_check",
         "typedConfig": {
           "@type":"type.googleapis.com/envoy.config.filter.http.health_check.v2.HealthCheck",
           "passThroughMode":false,
@@ -1365,7 +1365,7 @@ func TestHealthCheckFilter(t *testing.T) {
 				},
 			},
 			wantHealthCheckFilter: `{
-        "name": "envoy.health_check",
+        "name": "envoy.filters.http.health_check",
         "typedConfig": {
           "@type":"type.googleapis.com/envoy.config.filter.http.health_check.v2.HealthCheck",
           "passThroughMode":false,
@@ -1442,12 +1442,12 @@ func TestMakeListeners(t *testing.T) {
 						{
 							"filters":[
 								{
-									"name":"envoy.http_connection_manager",
+									"name":"envoy.filters.network.http_connection_manager",
 									"typedConfig":{
 										"@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
 									  "httpFilters":[
 											{
-												"name":"envoy.router",
+												"name":"envoy.filters.http.router",
 												"typedConfig":{
 													"@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
 													"startChildSpan":true,

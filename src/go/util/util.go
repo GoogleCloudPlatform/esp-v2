@@ -20,21 +20,21 @@ const (
 	// HTTP filter names.
 
 	// Buffer HTTP filter
-	Buffer = "envoy.buffer"
+	Buffer = "envoy.filters.http.buffer"
 	// CORS HTTP filter
-	CORS = "envoy.cors"
+	CORS = "envoy.filters.http.cors"
 	// GRPCJSONTranscoder HTTP filter
-	GRPCJSONTranscoder = "envoy.grpc_json_transcoder"
+	GRPCJSONTranscoder = "envoy.filters.http.grpc_json_transcoder"
 	// GRPCWeb HTTP filter
-	GRPCWeb = "envoy.grpc_web"
+	GRPCWeb = "envoy.filters.http.grpc_web"
 	// Router HTTP filter
-	Router = "envoy.router"
+	Router = "envoy.filters.http.router"
 	// Health checking HTTP filter
-	HealthCheck = "envoy.health_check"
+	HealthCheck = "envoy.filters.http.health_check"
 	// Echo network filter
-	Echo = "envoy.echo"
+	Echo = "envoy.filters.network.echo"
 	// HTTPConnectionManager network filter
-	HTTPConnectionManager = "envoy.http_connection_manager"
+	HTTPConnectionManager = "envoy.filters.network.http_connection_manager"
 	// ServiceControl filter.
 	ServiceControl = "envoy.filters.http.service_control"
 	// JwtAuthn filter.
