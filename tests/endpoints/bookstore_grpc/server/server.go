@@ -16,7 +16,10 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"net"
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
@@ -96,7 +99,7 @@ func createDB() *database {
 
 // NewBookstoreServer creates a new server but does not start it.
 // This sets up the listening address.
-func NewBookstoreServer(port uint16, enableTLS, useUnAuthorizedCert bool) (*BookstoreServer, error) {
+func NewBookstoreServer(port uint16, enableTLS, useUnAuthorizedCert bool, rootCertFile string) (*BookstoreServer, error) {
 
 	// Setup health server
 	healthServer := health.NewServer()
@@ -112,12 +115,31 @@ func NewBookstoreServer(port uint16, enableTLS, useUnAuthorizedCert bool) (*Book
 			cert = platform.ServerCert
 			key = platform.ServerKey
 		}
-		creds, err := credentials.NewServerTLSFromFile(platform.GetFilePath(cert),
-			platform.GetFilePath(key))
+		certificate, err := tls.LoadX509KeyPair(platform.GetFilePath(cert), platform.GetFilePath(key))
 		if err != nil {
 			return nil, err
 		}
-		grpcServer = grpc.NewServer(grpc.Creds(creds))
+
+		tlsConfig := &tls.Config{
+			Certificates: []tls.Certificate{certificate},
+		}
+
+		if rootCertFile != "" {
+			certPool := x509.NewCertPool()
+			bs, err := ioutil.ReadFile(rootCertFile)
+			if err != nil {
+				return nil, err
+			}
+
+			if !certPool.AppendCertsFromPEM(bs) {
+				return nil, fmt.Errorf("failed to append client certs")
+			}
+			tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
+			tlsConfig.ClientCAs = certPool
+		}
+
+		serverOption := grpc.Creds(credentials.NewTLS(tlsConfig))
+		grpcServer = grpc.NewServer(serverOption)
 		glog.Infof("Bookstore gRPCs server is listening on port %d", port)
 	} else {
 		grpcServer = grpc.NewServer()
