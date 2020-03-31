@@ -19,7 +19,8 @@ set -eo pipefail
 
 TOOLS_BUCKET="apiproxy_tools"
 PLATFORM="GCE"
-APIPROXY_RELEASE_PROJECT="endpoints-release"
+ESP_RELEASE_PROJECT="endpoints-release"
+GCSRUNNER_RELEASE_PROJECT="espv2-gcsrunner-release"
 
 # Setting SUDO if not running as root.
 if [[ $UID -ne 0 ]]; then
@@ -29,7 +30,7 @@ fi
 # Library of useful utilities.
 function set_gcloud() {
   export GCLOUD="$(which gcloud)" || export GCLOUD='/usr/lib/google-cloud-sdk/bin/gcloud'
-  export GSUTIL=$(which gsutil) || export GSUTIL='/usr/lib/google-cloud-sdk/bin/gsutil'
+  export GSUTIL="$(which gsutil)" || export GSUTIL='/usr/lib/google-cloud-sdk/bin/gsutil'
 }
 
 function set_bazel() {
@@ -310,11 +311,15 @@ function get_serverless_image_name() {
 }
 
 function get_proxy_image_release_name() {
-  echo -n 'gcr.io/endpoints-release/endpoints-runtime'
+  echo -n "gcr.io/${ESP_RELEASE_PROJECT}/endpoints-runtime"
 }
 
 function get_serverless_image_release_name() {
-  echo -n 'gcr.io/endpoints-release/endpoints-runtime-serverless'
+  echo -n "gcr.io/${ESP_RELEASE_PROJECT}/endpoints-runtime-serverless"
+}
+
+function get_gcsrunner_image_release_name() {
+  echo -n "gcr.io/${GCSRUNNER_RELEASE_PROJECT}/gcsrunner"
 }
 
 
@@ -388,7 +393,8 @@ function try_setup_bazel_remote_cache() {
   # Cache silo name is determined by image_name-UUID-[empty|asan|tsan].
   # This works because the environment is consistent in any containers of this docker image.
   # Also, replace special characters that RBE does not accept with a '/'
-  local cache_silo=$(echo "${docker_image_name}-uuid-${silo_uuid}-${presubmit_test_case}" | tr @: /)
+  local cache_silo
+  cache_silo="$(echo "${docker_image_name}-uuid-${silo_uuid}-${presubmit_test_case}" | tr @: /)"
   echo "Original Image Name: ${docker_image_name}"
   echo "Cache Silo Name: ${cache_silo}"
 
