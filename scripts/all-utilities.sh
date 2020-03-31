@@ -20,6 +20,7 @@ set -eo pipefail
 TOOLS_BUCKET="apiproxy_tools"
 PLATFORM="GCE"
 ESP_RELEASE_PROJECT="endpoints-release"
+GCSRUNNER_RELEASE_PROJECT="espv2-gcsrunner-release"
 
 # Setting SUDO if not running as root.
 if [[ $UID -ne 0 ]]; then
@@ -318,7 +319,7 @@ function get_serverless_image_release_name() {
 }
 
 function get_gcsrunner_image_release_name() {
-  echo -n "gcr.io/${ESP_RELEASE_PROJECT}/gcsrunner"
+  echo -n "gcr.io/${GCSRUNNER_RELEASE_PROJECT}/gcsrunner"
 }
 
 
