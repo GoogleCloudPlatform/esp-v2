@@ -459,7 +459,11 @@ var (
                         }
                      ]
                   },
-                  "upgradeConfigs":[{"upgradeType":"websocket"}],
+                  "upgradeConfigs": [
+		     {
+			"upgradeType": "websocket"
+		     }
+		  ],
 		  "statPrefix":"ingress_http",
                   "useRemoteAddress":false,
                   "xffNumTrustedHops":2

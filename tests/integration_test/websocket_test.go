@@ -36,16 +36,18 @@ func TestWebsocket(t *testing.T) {
 	}
 
 	testData := []struct {
-		desc     string
-		path     string
-		schema   string
-		wantResp string
+		desc         string
+		path         string
+		messageCount int
+		schema       string
+		wantResp     string
 	}{
 		{
-			desc:     "Websocket call succeed",
-			path:     "/duplexecho",
-			schema:   "ws",
-			wantResp: "hellohellohellohellohello",
+			desc:         "Websocket call succeed",
+			path:         "/websocketecho",
+			schema:       "ws",
+			messageCount: 5,
+			wantResp:     "hellohellohellohellohello",
 		},
 		{
 			desc:     "normal http call succeed, not affected by websocket config",
@@ -59,7 +61,7 @@ func TestWebsocket(t *testing.T) {
 		var resp []byte
 		var err error
 		if tc.schema == "ws" {
-			resp, err = client.DoWS(fmt.Sprintf("localhost:%v", s.Ports().ListenerPort), tc.path, "hello")
+			resp, err = client.DoWS(fmt.Sprintf("localhost:%v", s.Ports().ListenerPort), tc.path, "hello", tc.messageCount)
 		} else {
 			resp, err = client.DoPost(fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path), "hello")
 		}

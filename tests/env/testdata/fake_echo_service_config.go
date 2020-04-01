@@ -42,7 +42,7 @@ var (
 						ResponseTypeUrl: "type.googleapis.com/EchoMessage",
 					},
 					{
-						Name:            "DuplexEcho",
+						Name:            "WebsocketEcho",
 						RequestTypeUrl:  "type.googleapis.com/EchoRequest",
 						ResponseTypeUrl: "type.googleapis.com/EchoMessage",
 					},
@@ -82,9 +82,9 @@ var (
 					Body: "message",
 				},
 				{
-					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.DuplexEcho",
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.WebsocketEcho",
 					Pattern: &annotationspb.HttpRule_Get{
-						Get: "/duplexecho",
+						Get: "/websocketecho",
 					},
 				},
 				{
@@ -197,7 +197,7 @@ var (
 					AllowUnregisteredCalls: true,
 				},
 				{
-					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.DuplexEcho",
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.WebsocketEcho",
 					AllowUnregisteredCalls: true,
 				},
 			},

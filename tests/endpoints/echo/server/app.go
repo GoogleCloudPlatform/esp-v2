@@ -51,7 +51,7 @@ func main() {
 
 	r.Path("/echo").Methods("POST").
 		HandlerFunc(echoHandler)
-	r.Path("/duplexecho").HandlerFunc(duplexEchoHandler)
+	r.Path("/websocketecho").HandlerFunc(websocketEchoHandler)
 	r.Path("/echo/nokey").Methods("POST").
 		HandlerFunc(echoHandler)
 	r.Path("/echo/nokey/OverrideAsGet").Methods("POST").
@@ -179,8 +179,8 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(b)
 }
 
-// duplexEchoHandler handles duplex echo request through webstocket
-func duplexEchoHandler(w http.ResponseWriter, r *http.Request) {
+// websocketEchoHandler handles echo request through webstocket
+func websocketEchoHandler(w http.ResponseWriter, r *http.Request) {
 	c, err := webSocketUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		errorf(w, http.StatusInternalServerError, "websocket upgrade failed: %v", err)

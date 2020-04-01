@@ -194,7 +194,11 @@ func TestFetchListeners(t *testing.T) {
                         }
                      ]
                   },
-		  "upgradeConfigs":[{"upgradeType":"websocket"}],
+		  "upgradeConfigs": [
+		     {
+		       "upgradeType": "websocket"
+	             }
+		  ],
 		  "statPrefix":"ingress_http",
                   "useRemoteAddress":false,
                   "xffNumTrustedHops":2
@@ -372,7 +376,11 @@ func TestFetchListeners(t *testing.T) {
                         }
                      ]
                   },
-                  "upgradeConfigs":[{"upgradeType":"websocket"}],
+                  "upgradeConfigs": [
+		     {
+			"upgradeType": "websocket"
+		     }
+		  ],
 		  "statPrefix":"ingress_http",
                   "useRemoteAddress":false,
                   "xffNumTrustedHops":2
@@ -583,7 +591,11 @@ func TestFetchListeners(t *testing.T) {
                         }
                      ]
                   },
-                  "upgradeConfigs":[{"upgradeType":"websocket"}],
+                  "upgradeConfigs": [
+		     {
+			"upgradeType": "websocket"
+		     }
+		  ],
 		  "statPrefix":"ingress_http",
                   "useRemoteAddress":false,
                   "xffNumTrustedHops":2
@@ -830,7 +842,11 @@ func TestFetchListeners(t *testing.T) {
                         }
                      ]
                   },
-                  "upgradeConfigs":[{"upgradeType":"websocket"}],
+                  "upgradeConfigs": [
+		     {
+			"upgradeType": "websocket"
+		     }
+		  ],
 		  "statPrefix":"ingress_http",
                   "useRemoteAddress":false,
                   "xffNumTrustedHops":2
@@ -1053,7 +1069,11 @@ func TestFetchListeners(t *testing.T) {
                         }
                      ]
                   },
-                  "upgradeConfigs":[{"upgradeType":"websocket"}],
+                  "upgradeConfigs": [
+		     {
+			"upgradeType": "websocket"
+		     }
+		  ],
 		  "statPrefix":"ingress_http",
                   "useRemoteAddress":false,
                   "xffNumTrustedHops":2
@@ -1240,7 +1260,11 @@ func TestFetchListeners(t *testing.T) {
                         }
                      ]
                   },
-                  "upgradeConfigs":[{"upgradeType":"websocket"}],
+                  "upgradeConfigs": [
+		     {
+			"upgradeType": "websocket"
+		     }
+		  ],
 		  "statPrefix":"ingress_http",
                   "useRemoteAddress":false,
                   "xffNumTrustedHops":2
@@ -1405,7 +1429,11 @@ func TestFetchListeners(t *testing.T) {
                         }
                      ]
                   },
-                  "upgradeConfigs":[{"upgradeType":"websocket"}],
+                  "upgradeConfigs": [
+		     {
+			"upgradeType": "websocket"
+		     }
+		  ],
 		  "statPrefix":"ingress_http",
                   "tracing":{
 
