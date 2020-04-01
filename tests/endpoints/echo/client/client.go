@@ -263,11 +263,11 @@ func DoWS(address, path, reqMsg string) ([]byte, error) {
 	for i := 0; i < messageCount; i++ {
 		err = c.WriteMessage(websocket.TextMessage, []byte(reqMsg))
 		if err != nil {
-			return nil, fmt.Errorf("write error :", err)
+			return nil, err
 		}
 		_, respMsg, err := c.ReadMessage()
 		if err != nil {
-			return nil, fmt.Errorf("read error :", err)
+			return nil, err
 		}
 		resp = append(resp, respMsg...)
 	}

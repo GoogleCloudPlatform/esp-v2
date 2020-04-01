@@ -22,7 +22,7 @@
                   "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
                   "upgradeConfigs":[{"upgradeType":"websocket"}],
 		  "statPrefix": "ingress_http",
-                  "routeConfig": {
+		  "routeConfig": {
                     "name": "local_route",
                     "virtualHosts": [
                       {
