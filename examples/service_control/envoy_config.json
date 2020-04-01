@@ -18,15 +18,11 @@
             "filters": [
               {
                 "name": "envoy.filters.network.http_connection_manager",
-		"typedConfig": {
+                "typedConfig": {
                   "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
-                  "upgradeConfigs": [
-		    {
-		      "upgradeType": "websocket"
-		    }
-		  ],
-		  "statPrefix": "ingress_http",
-		  "routeConfig": {
+                  "upgradeConfigs": [{"upgradeType": "websocket"}],
+                  "statPrefix": "ingress_http",
+                  "routeConfig": {
                     "name": "local_route",
                     "virtualHosts": [
                       {
