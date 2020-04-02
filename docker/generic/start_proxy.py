@@ -190,6 +190,14 @@ environment variable or by passing "-k" flag to this script.
         with value "max-age=31536000; includeSubdomains;" is added for all responses from local backend.
         Not valid for remote backends.''')
 
+    parser.add_argument('--generate_self_signed_cert', action='store_true',
+        help='''Generate a self-signed certificate and key at start, then
+        store them in /tmp/ssl/endpoints/server.crt and /tmp/ssl/endponts/server.key.
+        This is useful when only a random self-sign cert is needed to serve
+        HTTPS requests. Generated certificate will have Common Name
+        "localhost" and valid for 10 years.
+        ''')
+
     parser.add_argument('-z', '--healthz', default=None, help='''Define a
         health checking endpoint on the same ports as the application backend.
         For example, "-z healthz" makes ESPv2 return code 200 for location
@@ -623,6 +631,8 @@ def enforce_conflict_args(args):
         return "Flag --tls_mutual_auth is going to be deprecated, please use --ssl_client_cert_path only."
     if args.ssl_client_root_certs_file and args.enable_grpc_backend_ssl:
         return "Flag --enable_grpc_backend_ssl are going to be deprecated, please use --ssl_client_root_certs_file only."
+    if args.generate_self_signed_cert and args.ssl_server_cert_path:
+         return "Flag --generate_self_signed_cert and --ssl_server_cert_path cannot be used simutaneously."
 
     port_flags = []
     if args.http_port:
@@ -712,6 +722,17 @@ def gen_proxy_config(args):
         proxy_conf.extend(["--ssl_minimum_protocol", args.ssl_protocols[0]])
         proxy_conf.extend(["--ssl_maximum_protocol", args.ssl_protocols[-1]])
 
+    # Generate self-signed cert if needed
+    if args.generate_self_signed_cert:
+        if not os.path.exists("/tmp/ssl/endpoints"):
+            os.makedirs("/tmp/ssl/endpoints")
+        logging.info("Generating self-signed certificate...")
+        os.system(("openssl req -x509 -newkey rsa:2048"
+                   " -keyout /tmp/ssl/endpoints/server.key -nodes"
+                   " -out /tmp/ssl/endpoints/server.crt"
+                   ' -days 3650 -subj "/CN=localhost"'))
+        proxy_conf.extend(["--ssl_server_cert_path", "/tmp/ssl/endpoints"])
+
     if args.enable_strict_transport_security:
             proxy_conf.append("--enable_strict_transport_security")
 
@@ -781,8 +802,6 @@ def gen_proxy_config(args):
 
     if args.transcoding_preserve_proto_field_names:
         proxy_conf.append("--transcoding_preserve_proto_field_names")
-
-
 
     if args.transcoding_ignore_query_parameters:
         proxy_conf.extend(["--transcoding_ignore_query_parameters",
@@ -893,3 +912,4 @@ if __name__ == '__main__':
             if cm_proc:
                os.kill(cm_proc.pid, signal.SIGKILL)
             sys.exit(1)
+
