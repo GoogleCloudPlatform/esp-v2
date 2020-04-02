@@ -487,7 +487,7 @@ func TestProcessTranscodingIgnoredQueryParams(t *testing.T) {
 		fakeServiceConfig                      *confpb.Service
 		transcodingIgnoredQueryParamsFlag      string
 		wantedAllTranscodingIgnoredQueryParams map[string]bool
-		wantedErrorPrefix                            string
+		wantedErrorPrefix                      string
 	}{
 		{
 			desc: "Success. Default jwt locations with transcoding_ignore_query_params flag",
