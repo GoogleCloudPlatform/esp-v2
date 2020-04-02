@@ -1,0 +1,260 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package integration_test
+
+import (
+	"fmt"
+	"strings"
+	"testing"
+
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
+
+	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
+	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+)
+
+func TestMethodOverrideBackendMethod(t *testing.T) {
+	t.Parallel()
+
+	s := env.NewTestEnv(comp.TestMethodOverrideBackendMethod, platform.EchoSidecar)
+	s.AppendHttpRules([]*annotationspb.HttpRule{
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoGET",
+			Pattern: &annotationspb.HttpRule_Get{
+				Get: "/echoMethod",
+			},
+		},
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoPOST",
+			Pattern: &annotationspb.HttpRule_Post{
+				Post: "/echoMethod",
+			},
+		},
+	})
+
+	defer s.TearDown()
+	if err := s.Setup(utils.CommonArgs()); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	testData := []struct {
+		desc          string
+		path          string
+		method        string
+		headers       map[string]string
+		wantResp      string
+		httpCallError error
+	}{
+		{
+			desc:   "Overridden POST is received as GET",
+			path:   "/echoMethod?key=api-key",
+			method: "POST",
+			headers: map[string]string{
+				"X-HTTP-Method-Override": "GET",
+			},
+			wantResp: `{"RequestMethod":"GET"}`,
+		},
+		{
+			desc:   "Overridden DELETE is received as POST",
+			path:   "/echoMethod?key=api-key",
+			method: "DELETE",
+			headers: map[string]string{
+				"X-HTTP-Method-Override": "POST",
+			},
+			wantResp: `{"RequestMethod":"POST"}`,
+		},
+		{
+			desc:   "Overridden POST is rejected because DELETE is not defined in the service config",
+			path:   "/echoMethod?key=api-key",
+			method: "POST",
+			headers: map[string]string{
+				"X-HTTP-Method-Override": "DELETE",
+			},
+			httpCallError: fmt.Errorf("404 Not Found"),
+		},
+	}
+	for _, tc := range testData {
+		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		gotResp, err := client.DoWithHeaders(url, tc.method, "test-body", tc.headers)
+
+		if tc.httpCallError == nil {
+			if err != nil {
+				t.Fatal(err)
+			}
+		} else {
+			if !strings.Contains(err.Error(), tc.httpCallError.Error()) {
+				t.Errorf("expected Http call error: %v, got: %v", tc.httpCallError, err)
+			}
+			continue
+		}
+		gotRespStr := string(gotResp)
+		if err := util.JsonEqual(tc.wantResp, gotRespStr); err != nil {
+			t.Errorf("Test(%s) fails: \n %s", tc.desc, err)
+		}
+	}
+}
+
+func TestMethodOverrideBackendBody(t *testing.T) {
+	t.Parallel()
+
+	s := env.NewTestEnv(comp.TestMethodOverrideBackendBody, platform.EchoSidecar)
+	defer s.TearDown()
+	if err := s.Setup(utils.CommonArgs()); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	testData := []struct {
+		desc          string
+		path          string
+		method        string
+		headers       map[string]string
+		body          string
+		wantResp      string
+		httpCallError error
+	}{
+		{
+			desc:   "Overridden PUT has body",
+			path:   "/echo?key=api-key",
+			method: "PUT",
+			headers: map[string]string{
+				"X-HTTP-Method-Override": "POST",
+			},
+			body:     `hello`,
+			wantResp: `{"message":"hello"}`,
+		},
+		{
+			desc:   "Overridden GET has no body for the backend to handle",
+			path:   "/echo?key=api-key",
+			method: "GET",
+			headers: map[string]string{
+				"X-HTTP-Method-Override": "POST",
+			},
+			body:          "This body will not be sent in the request",
+			httpCallError: fmt.Errorf(`{"code":500,"message":"Could not get body: EOF"}`),
+		},
+	}
+	for _, tc := range testData {
+		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		gotResp, err := client.DoWithHeaders(url, tc.method, tc.body, tc.headers)
+
+		if tc.httpCallError == nil {
+			if err != nil {
+				t.Fatal(err)
+			}
+		} else {
+			if !strings.Contains(err.Error(), tc.httpCallError.Error()) {
+				t.Errorf("expected Http call error: %v, got: %v", tc.httpCallError, err)
+			}
+			continue
+		}
+		gotRespStr := string(gotResp)
+		if err := util.JsonEqual(tc.wantResp, gotRespStr); err != nil {
+			t.Errorf("Test(%s) fails: \n %s", tc.desc, err)
+		}
+	}
+}
+
+func TestMethodOverrideScReport(t *testing.T) {
+	t.Parallel()
+
+	s := env.NewTestEnv(comp.TestMethodOverrideScReport, platform.EchoSidecar)
+	s.AppendHttpRules([]*annotationspb.HttpRule{
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get",
+			Pattern: &annotationspb.HttpRule_Get{
+				Get: "/echo/nokey/OverrideAsGet",
+			},
+		},
+	})
+	s.AppendUsageRules(
+		[]*confpb.UsageRule{
+			{
+				Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get",
+				AllowUnregisteredCalls: true,
+			},
+		})
+
+	defer s.TearDown()
+	if err := s.Setup(utils.CommonArgs()); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	testData := []struct {
+		desc           string
+		url            string
+		method         string
+		requestHeader  map[string]string
+		message        string
+		wantResp       string
+		httpCallError  error
+		wantScRequests []interface{}
+	}{
+		{
+			desc:    "Overridden POST is displayed as GET in SC Report",
+			url:     fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo/nokey/OverrideAsGet"),
+			message: "hello hello",
+			method:  "POST",
+			requestHeader: map[string]string{
+				"X-HTTP-Method-Override": "GET",
+			},
+			httpCallError: fmt.Errorf("405 Method Not Allowed"),
+			wantScRequests: []interface{}{
+				&utils.ExpectedReport{
+					Version:           utils.ESPv2Version(),
+					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:   "test-config-id",
+					URL:               "/echo/nokey/OverrideAsGet",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get",
+					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					ProducerProjectID: "producer-project",
+					HttpMethod:        "GET",
+					FrontendProtocol:  "http",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get is called",
+					StatusCode:        "0",
+					ResponseCode:      405, // Method is not implemented by backend
+					ErrorType:         "4xx",
+					Platform:          util.GCE,
+					Location:          "test-zone",
+				},
+			},
+		},
+	}
+	for _, tc := range testData {
+		resp, err := client.DoWithHeaders(tc.url, tc.method, tc.message, tc.requestHeader)
+		if tc.httpCallError == nil {
+			if err != nil {
+				t.Fatalf("Test (%s): failed, %v", tc.desc, err)
+			}
+			if !strings.Contains(string(resp), tc.wantResp) {
+				t.Errorf("Test (%s): failed,  expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
+			}
+		} else {
+			if !strings.Contains(err.Error(), tc.httpCallError.Error()) {
+				t.Errorf("Test (%s): failed,  expected Http call error: %v, got: %v", tc.desc, tc.httpCallError, err)
+			}
+		}
+
+		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
+		if err1 != nil {
+			t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err1)
+		}
+		utils.CheckScRequest(t, scRequests, tc.wantScRequests, tc.desc)
+	}
+}

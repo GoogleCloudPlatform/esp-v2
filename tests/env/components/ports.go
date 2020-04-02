@@ -72,6 +72,9 @@ const (
 	TestInvalidOpenIDConnectDiscovery
 	TestJwtLocations
 	TestManagedServiceConfig
+	TestMethodOverrideBackendMethod
+	TestMethodOverrideBackendBody
+	TestMethodOverrideScReport
 	TestMultiGrpcServices
 	TestPreflightCorsWithBasicPreset
 	TestPreflightRequestWithAllowCors

@@ -49,8 +49,13 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 
-  std::string method(utils::getRequestHTTPMethodWithOverride(
-      headers.Method()->value().getStringView(), headers));
+  bool usedMethodOverride = utils::handleHttpMethodOverride(headers);
+  if (usedMethodOverride) {
+    ENVOY_LOG(debug, "HTTP method override occurred, recalculating route");
+    decoder_callbacks_->clearRouteCache();
+  }
+
+  std::string method(headers.Method()->value().getStringView());
   std::string path(headers.Path()->value().getStringView());
   const std::string* operation = config_->findOperation(method, path);
   if (operation == nullptr) {

@@ -86,11 +86,11 @@ func TestServiceConfigFetcherFetchConfig(t *testing.T) {
 	scf := NewServiceConfigFetcher(&http.Client{}, serviceManagementServer.URL, "service-name", accessToken)
 
 	testCase := []struct {
-		desc                    string
-		serviceConfigId         string
-		callGoogleapisOverriden bool
-		wantServiceConfig       *confpb.Service
-		wantError               string
+		desc                     string
+		serviceConfigId          string
+		callGoogleapisOverridden bool
+		wantServiceConfig        *confpb.Service
+		wantError                string
 	}{
 		{
 			desc:              "Success of fetching the service config",
@@ -98,10 +98,10 @@ func TestServiceConfigFetcherFetchConfig(t *testing.T) {
 			wantServiceConfig: serviceConfig,
 		},
 		{
-			desc:                    "Failure due to calling googleapis",
-			serviceConfigId:         serviceConfigId,
-			callGoogleapisOverriden: true,
-			wantError:               "error-from-CallGoogleapis",
+			desc:                     "Failure due to calling googleapis",
+			serviceConfigId:          serviceConfigId,
+			callGoogleapisOverridden: true,
+			wantError:                "error-from-CallGoogleapis",
 		},
 	}
 
@@ -139,7 +139,7 @@ func TestServiceConfigFetcherFetchConfig(t *testing.T) {
 			}
 		}
 
-		_test(tc.desc, tc.callGoogleapisOverriden, tc.serviceConfigId, tc.wantServiceConfig, tc.wantError)
+		_test(tc.desc, tc.callGoogleapisOverridden, tc.serviceConfigId, tc.wantServiceConfig, tc.wantError)
 	}
 }
 

@@ -14,13 +14,13 @@
 
 #include "src/envoy/utils/http_header_utils.h"
 #include "common/common/empty_string.h"
+#include "common/http/headers.h"
 
 namespace espv2 {
 namespace envoy {
 namespace utils {
 
 namespace {
-// TODO(kyuc): refactor it to be safe, move it to a class or make the type char*
 const Envoy::Http::LowerCaseString kHttpMethodOverrideHeader{
     "x-http-method-override"};
 }  // namespace
@@ -38,13 +38,17 @@ absl::string_view extractHeader(const Envoy::Http::HeaderMap& headers,
   return readHeaderEntry(entry);
 }
 
-absl::string_view getRequestHTTPMethodWithOverride(
-    absl::string_view originalMethod, const Envoy::Http::HeaderMap& headers) {
+bool handleHttpMethodOverride(Envoy::Http::HeaderMap& headers) {
   const auto* entry = headers.get(kHttpMethodOverrideHeader);
   if (entry) {
-    return entry->value().getStringView();
+    // Move the header.
+    headers.remove(Envoy::Http::Headers::get().Method);
+    headers.addCopy(Envoy::Http::Headers::get().Method,
+                    entry->value().getStringView());
+    headers.remove(kHttpMethodOverrideHeader);
+    return true;
   }
-  return originalMethod;
+  return false;
 }
 
 }  // namespace utils
