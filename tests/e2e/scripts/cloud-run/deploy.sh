@@ -38,7 +38,7 @@ PROXY_RUNTIME_SERVICE_ACCOUNT="e2e-cloud-run-proxy-rt@${PROJECT_ID}.iam.gservice
 BACKEND_RUNTIME_SERVICE_ACCOUNT="e2e-${BACKEND_PLATFORM}-backend-rt@${PROJECT_ID}.iam.gserviceaccount.com"
 JOB_KEY_PATH="${ROOT}/tests/e2e/client/gob-prow-jobs-secret.json"
 LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
-CLUSTER_VERSION="1.14.10-gke.22"
+CLUSTER_VERSION="1.15.9-gke.26"
 
 # Determine names of all resources
 UNIQUE_ID=$(get_unique_id | cut -c 1-6)
@@ -294,8 +294,10 @@ function setup() {
 
 function test_disable_auth() {
   local fake_token="FAKE-TOKEN"
-  local echoed_overrided_token=$(curl "https://${PROXY_HOST}/echo_token/default_enable_auth" -H "Authorization:${fake_token}")
-  local echoed_unoverrided_token=$(curl "https://${PROXY_HOST}/echo_token/disable_auth" -H "Authorization:${fake_token}")
+  local echoed_overrided_token
+  local echoed_unoverrided_token
+  echoed_overrided_token=$(curl "https://${PROXY_HOST}/echo_token/default_enable_auth" -H "Authorization:${fake_token}")
+  echoed_unoverrided_token=$(curl "https://${PROXY_HOST}/echo_token/disable_auth" -H "Authorization:${fake_token}")
 
   if [ "${echoed_unoverrided_token}" != "\"${fake_token}\"" ] ||  [ "${echoed_overrided_token}" == "\"${fake_token}\"" ]; then
     echo "disable_auth field of X-Google-Backend in Openapi does not work"
@@ -315,7 +317,8 @@ function test() {
     local scheme="http"
     local port="80"
     # Get the external ip of cluster
-    local host=$( kubectl get svc istio-ingress -n gke-system | awk 'END {print $4}')
+    local host
+    host=$( kubectl get svc istio-ingress -n gke-system | awk 'END {print $4}')
     # Pass the real host by header `HOST`
     local host_header=${PROXY_HOST}
     local service_name=${PROXY_HOST}
