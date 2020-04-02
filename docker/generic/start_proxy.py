@@ -192,7 +192,7 @@ environment variable or by passing "-k" flag to this script.
 
     parser.add_argument('--generate_self_signed_cert', action='store_true',
         help='''Generate a self-signed certificate and key at start, then
-        store them in /etc/ssl/endpoints/server.crt and /etc/ssl/endponts/server.key.
+        store them in /tmp/ssl/endpoints/server.crt and /tmp/ssl/endponts/server.key.
         This is useful when only a random self-sign cert is needed to serve
         HTTPS requests. Generated certificate will have Common Name
         "localhost" and valid for 10 years.
