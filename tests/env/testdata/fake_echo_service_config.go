@@ -42,6 +42,11 @@ var (
 						ResponseTypeUrl: "type.googleapis.com/EchoMessage",
 					},
 					{
+						Name:            "WebsocketEcho",
+						RequestTypeUrl:  "type.googleapis.com/EchoRequest",
+						ResponseTypeUrl: "type.googleapis.com/EchoMessage",
+					},
+					{
 						Name:            "Simplegetcors",
 						RequestTypeUrl:  "type.googleapis.com/google.protobuf.Empty",
 						ResponseTypeUrl: "type.googleapis.com/SimpleCorsMessage",
@@ -75,6 +80,12 @@ var (
 						Post: "/echo",
 					},
 					Body: "message",
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.WebsocketEcho",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/websocketecho",
+					},
 				},
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Root",
@@ -183,6 +194,10 @@ var (
 				},
 				{
 					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Sleep",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.WebsocketEcho",
 					AllowUnregisteredCalls: true,
 				},
 			},

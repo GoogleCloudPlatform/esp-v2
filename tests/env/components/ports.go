@@ -121,6 +121,7 @@ const (
 	TestTranscodingPrintOptions
 	TestTranscodingErrors
 	TestTranscodingServiceUnavailableError
+	TestWebsocket
 	// The number of total tests. has to be the last one.
 	maxTestNum
 )

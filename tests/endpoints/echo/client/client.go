@@ -22,9 +22,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
+	"github.com/gorilla/websocket"
 	"golang.org/x/net/http2"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jws"
@@ -246,4 +248,28 @@ func DoHttpsGet(url string, httpVersion int, certPath string) (http.Header, []by
 		return nil, nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, string(body))
 	}
 	return resp.Header, body, err
+}
+
+func DoWS(address, path, reqMsg string, messageCount int) ([]byte, error) {
+	var resp []byte
+	u := url.URL{Scheme: "ws", Host: address, Path: path}
+	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+
+	for i := 0; i < messageCount; i++ {
+		err = c.WriteMessage(websocket.TextMessage, []byte(reqMsg))
+		if err != nil {
+			return nil, err
+		}
+		_, respMsg, err := c.ReadMessage()
+		if err != nil {
+			return nil, err
+		}
+		resp = append(resp, respMsg...)
+	}
+
+	return resp, nil
 }

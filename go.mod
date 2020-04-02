@@ -12,6 +12,7 @@ require (
 	github.com/golang/protobuf v1.3.3
 	github.com/google/go-cmp v0.3.0
 	github.com/gorilla/mux v1.6.3-0.20181030152528-3d80bc801bb0
+	github.com/gorilla/websocket v1.4.2
 	golang.org/x/net v0.0.0-20190628185345-da137c7871d7
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	google.golang.org/api v0.7.0

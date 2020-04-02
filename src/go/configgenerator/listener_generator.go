@@ -169,6 +169,11 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	}
 
 	httpConMgr := &hcmpb.HttpConnectionManager{
+		UpgradeConfigs: []*hcmpb.HttpConnectionManager_UpgradeConfig{
+			{
+				UpgradeType: "websocket",
+			},
+		},
 		CodecType:  hcmpb.HttpConnectionManager_AUTO,
 		StatPrefix: statPrefix,
 		RouteSpecifier: &hcmpb.HttpConnectionManager_RouteConfig{

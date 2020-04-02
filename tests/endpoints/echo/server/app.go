@@ -30,6 +30,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/golang/glog"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 )
 
 var (
@@ -40,6 +41,7 @@ var (
 	enableRootPathHandler = flag.Bool("enable_root_path_handler", false, "true for adding root path for dynamic routing handler")
 	httpsCertPath         = flag.String("https_cert_path", "", "path for HTTPS cert path")
 	httpsKeyPath          = flag.String("https_key_path", "", "path for HTTPS key path")
+	webSocketUpgrader     = websocket.Upgrader{}
 )
 
 func main() {
@@ -49,6 +51,7 @@ func main() {
 
 	r.Path("/echo").Methods("POST").
 		HandlerFunc(echoHandler)
+	r.Path("/websocketecho").HandlerFunc(websocketEchoHandler)
 	r.Path("/echo/nokey").Methods("POST").
 		HandlerFunc(echoHandler)
 	r.Path("/echo/nokey/OverrideAsGet").Methods("POST").
@@ -174,6 +177,29 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Write(b)
+}
+
+// websocketEchoHandler handles echo request through webstocket
+func websocketEchoHandler(w http.ResponseWriter, r *http.Request) {
+	c, err := webSocketUpgrader.Upgrade(w, r, nil)
+	if err != nil {
+		errorf(w, http.StatusInternalServerError, "websocket upgrade failed: %v", err)
+		return
+	}
+	defer c.Close()
+	for {
+		mt, message, err := c.ReadMessage()
+		if err != nil {
+			errorf(w, http.StatusInternalServerError, "websocket read failed: %v", err)
+			break
+		}
+		log.Printf("recv: %s", message)
+		err = c.WriteMessage(mt, message)
+		if err != nil {
+			errorf(w, http.StatusInternalServerError, "websocket write failed: %v", err)
+			break
+		}
+	}
 }
 
 // dynamicEoutingHandler reads URL from request header, and writes it back out.
