@@ -21,6 +21,7 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -486,7 +487,7 @@ func TestProcessTranscodingIgnoredQueryParams(t *testing.T) {
 		fakeServiceConfig                      *confpb.Service
 		transcodingIgnoredQueryParamsFlag      string
 		wantedAllTranscodingIgnoredQueryParams map[string]bool
-		wantedError                            string
+		wantedErrorPrefix                            string
 	}{
 		{
 			desc: "Success. Default jwt locations with transcoding_ignore_query_params flag",
@@ -547,7 +548,7 @@ func TestProcessTranscodingIgnoredQueryParams(t *testing.T) {
 					},
 				},
 			},
-			wantedError: `JwtLocation_Query should be set without valuePrefix, get JwtLocation {query:"jwt_query_param" value_prefix:"jwt_query_header_prefix" }`,
+			wantedErrorPrefix: `JwtLocation_Query should be set without valuePrefix`,
 		},
 		{
 			desc: "Success. Custom jwt locations with transcoding_ignore_query_params flag",
@@ -605,14 +606,14 @@ func TestProcessTranscodingIgnoredQueryParams(t *testing.T) {
 
 		err := serviceInfo.processTranscodingIgnoredQueryParams()
 		if err != nil {
-			if err.Error() != tc.wantedError {
+			if !strings.HasPrefix(err.Error(), tc.wantedErrorPrefix) {
 				// Error doesn't match with wantedError.
-				t.Errorf("Test Desc(%d): %s, gotError: %v, wantedError: %v", i, tc.desc, err.Error(), tc.wantedError)
+				t.Errorf("Test Desc(%d): %s, gotError: %v, wantedErrorPrefix: %v", i, tc.desc, err.Error(), tc.wantedErrorPrefix)
 			}
 
-		} else if tc.wantedError != "" {
+		} else if tc.wantedErrorPrefix != "" {
 			// Error is empty while wantedError is not.
-			t.Errorf("Test Desc(%d): %s, gotError: %v, wantedError: %v", i, tc.desc, err.Error(), tc.wantedError)
+			t.Errorf("Test Desc(%d): %s, gotError: %v, wantedErrorPrefix: %v", i, tc.desc, err.Error(), tc.wantedErrorPrefix)
 
 		} else if !reflect.DeepEqual(serviceInfo.AllTranscodingIgnoredQueryParams, tc.wantedAllTranscodingIgnoredQueryParams) {
 			// Generated TranscoderIgnoreApiKeyQueryParams is not expected.
