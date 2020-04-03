@@ -19,6 +19,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
@@ -43,6 +44,8 @@ func TestWebsocket(t *testing.T) {
 		messageCount int
 		schema       string
 		wantResp     string
+		wantScRequests        []interface{}
+		wantSkipScRequestNum                     int
 	}{
 		{
 			desc:         "Websocket call succeed with service control check and jwt authn",
@@ -51,6 +54,35 @@ func TestWebsocket(t *testing.T) {
 			schema:       "ws",
 			messageCount: 5,
 			wantResp:     "hellohellohellohellohello",
+			wantScRequests: []interface{}{
+				&utils.ExpectedCheck{
+					Version:         utils.ESPv2Version(),
+					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					ConsumerID:      "api_key:api-key",
+					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.WebsocketEcho",
+					CallerIp:        platform.GetLoopbackAddress(),
+				},
+				&utils.ExpectedReport{
+					Version:           utils.ESPv2Version(),
+					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:   "test-config-id",
+					URL:               "/websocketecho?key=api-key&access_token=" + testdata.FakeCloudTokenMultiAudiences,
+					ApiKey:            "api-key",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.WebsocketEcho",
+					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					ProducerProjectID: "producer-project",
+					ConsumerProjectID: "123456",
+					FrontendProtocol:  "http",
+					HttpMethod:        "GET",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.WebsocketEcho is called",
+					StatusCode:        "0",
+					ResponseCode:      101,
+					Platform:          util.GCE,
+					Location:          "test-zone",
+					ApiVersion: "1.0.0",
+				},
+			},
 		},
 		{
 			desc:     "normal http call succeed, not affected by websocket config",
@@ -58,6 +90,7 @@ func TestWebsocket(t *testing.T) {
 			query:    "key=api_key",
 			schema:   "http",
 			wantResp: `{"message":"hello"}`,
+			wantSkipScRequestNum: 2,
 		},
 	}
 
@@ -75,5 +108,16 @@ func TestWebsocket(t *testing.T) {
 		if !strings.Contains(string(resp), tc.wantResp) {
 			t.Errorf("expected: %s, got: %s", tc.wantResp, string(resp))
 		}
+
+		if tc.wantSkipScRequestNum != 0 {
+			_, _ = s.ServiceControlServer.GetRequests(tc.wantSkipScRequestNum)
+			continue
+		}
+
+		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
+		if err1 != nil {
+			t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err1)
+		}
+		utils.CheckScRequest(t, scRequests, tc.wantScRequests, tc.desc)
 	}
 }
