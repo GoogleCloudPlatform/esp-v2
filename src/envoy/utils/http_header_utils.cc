@@ -20,6 +20,9 @@ namespace espv2 {
 namespace envoy {
 namespace utils {
 
+// Needed for logger macro expansion.
+namespace Logger = Envoy::Logger;
+
 namespace {
 const Envoy::Http::LowerCaseString kHttpMethodOverrideHeader{
     "x-http-method-override"};
@@ -38,13 +41,18 @@ absl::string_view extractHeader(const Envoy::Http::HeaderMap& headers,
   return readHeaderEntry(entry);
 }
 
-bool handleHttpMethodOverride(Envoy::Http::HeaderMap& headers) {
+bool handleHttpMethodOverride(Envoy::Http::RequestHeaderMap& headers) {
   const auto* entry = headers.get(kHttpMethodOverrideHeader);
   if (entry) {
+    // Override can be confusing while debugging, log it.
+    absl::string_view method_original =
+        headers.Method()->value().getStringView();
+    absl::string_view method_override = entry->value().getStringView();
+    ENVOY_LOG_MISC(debug, "Original :method = {}, x-http-method-override = {}",
+                   method_original, method_override);
+
     // Move the header.
-    headers.remove(Envoy::Http::Headers::get().Method);
-    headers.addCopy(Envoy::Http::Headers::get().Method,
-                    entry->value().getStringView());
+    headers.setMethod(method_override);
     headers.remove(kHttpMethodOverrideHeader);
     return true;
   }
