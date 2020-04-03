@@ -250,9 +250,9 @@ func DoHttpsGet(url string, httpVersion int, certPath string) (http.Header, []by
 	return resp.Header, body, err
 }
 
-func DoWS(address, path, reqMsg string, messageCount int) ([]byte, error) {
+func DoWS(address, path, query, reqMsg string, messageCount int) ([]byte, error) {
 	var resp []byte
-	u := url.URL{Scheme: "ws", Host: address, Path: path}
+	u := url.URL{Scheme: "ws", Host: address, Path: path, RawQuery: query}
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		return nil, err

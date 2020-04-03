@@ -22,6 +22,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
@@ -38,20 +39,23 @@ func TestWebsocket(t *testing.T) {
 	testData := []struct {
 		desc         string
 		path         string
+		query        string
 		messageCount int
 		schema       string
 		wantResp     string
 	}{
 		{
-			desc:         "Websocket call succeed",
+			desc:         "Websocket call succeed with service control check and jwt authn",
 			path:         "/websocketecho",
+			query:        "key=api-key&access_token=" + testdata.FakeCloudTokenMultiAudiences,
 			schema:       "ws",
 			messageCount: 5,
 			wantResp:     "hellohellohellohellohello",
 		},
 		{
 			desc:     "normal http call succeed, not affected by websocket config",
-			path:     "/echo?key=api_key",
+			path:     "/echo",
+			query:    "key=api_key",
 			schema:   "http",
 			wantResp: `{"message":"hello"}`,
 		},
@@ -61,9 +65,9 @@ func TestWebsocket(t *testing.T) {
 		var resp []byte
 		var err error
 		if tc.schema == "ws" {
-			resp, err = client.DoWS(fmt.Sprintf("localhost:%v", s.Ports().ListenerPort), tc.path, "hello", tc.messageCount)
+			resp, err = client.DoWS(fmt.Sprintf("localhost:%v", s.Ports().ListenerPort), tc.path, tc.query, "hello", tc.messageCount)
 		} else {
-			resp, err = client.DoPost(fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path), "hello")
+			resp, err = client.DoPost(fmt.Sprintf("http://localhost:%v%v?%s", s.Ports().ListenerPort, tc.path, tc.query), "hello")
 		}
 		if err != nil {
 			t.Fatal(err)
