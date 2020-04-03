@@ -441,8 +441,13 @@ environment variable or by passing "-k" flag to this script.
         default="",
         help='''
         By default, traces will be sent to production Stackdriver Tracing.
-        If this is non-empty, will send traces here instead.
-        Must be in gRPC format: https://github.com/grpc/grpc/blob/master/doc/naming.md
+        If this is non-empty, ESPv2 will send traces to this gRPC service instead.
+        
+        The url must be in gRPC format.
+        https://github.com/grpc/grpc/blob/master/doc/naming.md
+        
+        The gRPC service must implement the cloud trace v2 RPCs.
+        https://github.com/googleapis/googleapis/tree/master/google/devtools/cloudtrace/v2
         '''
     )
     parser.add_argument(

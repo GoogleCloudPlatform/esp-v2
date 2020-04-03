@@ -27,7 +27,7 @@ import (
 	cloudtracepb "google.golang.org/genproto/googleapis/devtools/cloudtrace/v2"
 )
 
-// FakeTraceServer implements the cloud trace v3 RPCs (see cloudtracegrpc.TraceServiceServer)
+// FakeTraceServer implements the cloud trace v2 RPCs (see cloudtracegrpc.TraceServiceServer)
 type FakeTraceServer struct {
 	cloudtracegrpc.TraceServiceServer
 

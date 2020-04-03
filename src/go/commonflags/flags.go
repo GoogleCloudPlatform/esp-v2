@@ -35,7 +35,7 @@ var (
 	Node                       = flag.String("node", "ESPv2", "envoy node id")
 	NonGCP                     = flag.Bool("non_gcp", false, `By default, the proxy tries to talk to GCP metadata server to get VM location in the first few requests. Setting this flag to true to skip this step`)
 	TracingProjectId           = flag.String("tracing_project_id", "", "The Google project id required for Stack driver tracing. If not set, will automatically use fetch it from GCP Metadata server")
-	TracingStackdriverAddress  = flag.String("tracing_stackdriver_address", "", "By default, the Stackdriver exporter will connect to production Stackdriver. If this is non-empty, it will connect to this address. It must be in the gRPC format.")
+	TracingStackdriverAddress  = flag.String("tracing_stackdriver_address", "", "By default, the Stackdriver exporter will connect to production Stackdriver. If this is non-empty, it will connect to this address. It must be in the gRPC format and implement the cloud trace v2 RPCs.")
 	TracingSamplingRate        = flag.Float64("tracing_sample_rate", 0.001, "tracing sampling rate from 0.0 to 1.0")
 	TracingIncomingContext     = flag.String("tracing_incoming_context", "", "comma separated incoming trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)")
 	TracingOutgoingContext     = flag.String("tracing_outgoing_context", "", "comma separated outgoing trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)")
