@@ -67,7 +67,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 			method:                  "/v1/shelves?key=api-key-0",
 			token:                   testdata.FakeCloudTokenMultiAudiences,
 			wantHandlerRequestCount: 3,
-			wantError:               `500 Internal Server Error, INTERNAL:Failed to call service control`,
+			wantError:               `503 Service Unavailable, UNAVAILABLE:Calling ServiceControl failed with: 504`,
 		},
 		{
 			desc:                    "Backend responsive, the proxy will retry the check request 3 times and get the response in the last request",

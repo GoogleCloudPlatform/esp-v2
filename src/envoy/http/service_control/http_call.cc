@@ -18,6 +18,7 @@
 
 #include "common/common/empty_string.h"
 #include "common/common/enum_to_int.h"
+#include "common/grpc/status.h"
 #include "common/http/headers.h"
 #include "common/http/message_impl.h"
 #include "common/http/utility.h"
@@ -101,8 +102,13 @@ class HttpCallImpl : public HttpCall,
 
         ENVOY_LOG(debug, "http call response status code: {}, body: {}",
                   status_code, body);
-        on_done_(Status(Code::INTERNAL, "Failed to call service control"),
-                 body);
+        std::string error_msg =
+            absl::StrCat("Calling ServiceControl failed with: ", status_code);
+        if (!body.empty()) {
+          error_msg += absl::StrCat(" and body: " + body);
+        }
+        auto grpc_code = Envoy::Grpc::Utility::httpToGrpcStatus(status_code);
+        on_done_(Status(static_cast<Code>(grpc_code), error_msg), body);
       }
     } catch (const Envoy::EnvoyException& e) {
       ENVOY_LOG(debug, "http call invalid status");

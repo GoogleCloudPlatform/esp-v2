@@ -194,8 +194,10 @@ TEST_F(HttpCallTest, TestSingleCallSuccessHttpNotFound) {
 
   // Phase 2: Emulate successful http response, but a bad status code
   EXPECT_CALL(*mock_child_span, finishSpan()).Times(1);
-  EXPECT_CALL(mock_done_fn_,
-              Call(Status(Code::INTERNAL, "Failed to call service control"), _))
+  EXPECT_CALL(
+      mock_done_fn_,
+      Call(Status(Code::UNAVAILABLE, "Calling ServiceControl failed with: 503"),
+           _))
       .Times(1);
 
   async_callbacks_[0]->onSuccess(makeResponseWithStatus(503));
@@ -349,8 +351,10 @@ TEST_F(HttpCallTest, TestThreeRetriesWithLastFailure) {
 
   // Phase 4: Emulate successful http response on last retry
   EXPECT_CALL(*mock_child_span_3, finishSpan()).Times(1);
-  EXPECT_CALL(mock_done_fn_,
-              Call(Status(Code::INTERNAL, "Failed to call service control"), _))
+  EXPECT_CALL(
+      mock_done_fn_,
+      Call(Status(Code::UNAVAILABLE, "Calling ServiceControl failed with: 504"),
+           _))
       .Times(1);
   async_callbacks_[2]->onSuccess(makeResponseWithStatus(504));
 }
