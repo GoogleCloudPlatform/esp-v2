@@ -27,7 +27,6 @@ import (
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
-	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func TestMethodOverrideBackendMethod(t *testing.T) {
@@ -99,7 +98,7 @@ func TestMethodOverrideBackendMethod(t *testing.T) {
 				t.Fatal(err)
 			}
 		} else {
-			if !strings.Contains(err.Error(), tc.httpCallError.Error()) {
+			if err == nil || !strings.Contains(err.Error(), tc.httpCallError.Error()) {
 				t.Errorf("expected Http call error: %v, got: %v", tc.httpCallError, err)
 			}
 			continue
@@ -130,7 +129,7 @@ func TestMethodOverrideBackendBody(t *testing.T) {
 		httpCallError error
 	}{
 		{
-			desc:   "Overridden PUT has body",
+			desc:   "Overridden PUT has body sent from client",
 			path:   "/echo?key=api-key",
 			method: "PUT",
 			headers: map[string]string{
@@ -140,7 +139,7 @@ func TestMethodOverrideBackendBody(t *testing.T) {
 			wantResp: `{"message":"hello"}`,
 		},
 		{
-			desc:   "Overridden GET has no body for the backend to handle",
+			desc:   "Overridden GET has no body for the backend to handle, as client did not send it",
 			path:   "/echo?key=api-key",
 			method: "GET",
 			headers: map[string]string{
@@ -148,6 +147,16 @@ func TestMethodOverrideBackendBody(t *testing.T) {
 			},
 			body:          "This body will not be sent in the request",
 			httpCallError: fmt.Errorf(`{"code":500,"message":"Could not get body: EOF"}`),
+		},
+		{
+			desc:   "Overridden POST has body sent from client",
+			path:   "/echo?key=api-key",
+			method: "POST",
+			headers: map[string]string{
+				"X-HTTP-Method-Override": "GET",
+			},
+			body:     "hello",
+			wantResp: `{"message":"hello"}`,
 		},
 	}
 	for _, tc := range testData {
@@ -159,7 +168,7 @@ func TestMethodOverrideBackendBody(t *testing.T) {
 				t.Fatal(err)
 			}
 		} else {
-			if !strings.Contains(err.Error(), tc.httpCallError.Error()) {
+			if err == nil || !strings.Contains(err.Error(), tc.httpCallError.Error()) {
 				t.Errorf("expected Http call error: %v, got: %v", tc.httpCallError, err)
 			}
 			continue
@@ -175,22 +184,6 @@ func TestMethodOverrideScReport(t *testing.T) {
 	t.Parallel()
 
 	s := env.NewTestEnv(comp.TestMethodOverrideScReport, platform.EchoSidecar)
-	s.AppendHttpRules([]*annotationspb.HttpRule{
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get",
-			Pattern: &annotationspb.HttpRule_Get{
-				Get: "/echo/nokey/OverrideAsGet",
-			},
-		},
-	})
-	s.AppendUsageRules(
-		[]*confpb.UsageRule{
-			{
-				Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get",
-				AllowUnregisteredCalls: true,
-			},
-		})
-
 	defer s.TearDown()
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -207,29 +200,38 @@ func TestMethodOverrideScReport(t *testing.T) {
 		wantScRequests []interface{}
 	}{
 		{
-			desc:    "Overridden POST is displayed as GET in SC Report",
-			url:     fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo/nokey/OverrideAsGet"),
-			message: "hello hello",
+			desc:    "Overridden POST is displayed as GET in SC Report, success case",
+			url:     fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo?key=api-key"),
+			message: "hello",
 			method:  "POST",
 			requestHeader: map[string]string{
 				"X-HTTP-Method-Override": "GET",
 			},
-			httpCallError: fmt.Errorf("405 Method Not Allowed"),
+			wantResp: `{"message":"hello"}`,
 			wantScRequests: []interface{}{
+				&utils.ExpectedCheck{
+					Version:         utils.ESPv2Version(),
+					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					ConsumerID:      "api_key:api-key",
+					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoGetWithBody",
+					CallerIp:        platform.GetLoopbackAddress(),
+				},
 				&utils.ExpectedReport{
 					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
-					URL:               "/echo/nokey/OverrideAsGet",
-					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get",
+					URL:               "/echo?key=api-key",
+					ApiKey:            "api-key",
+					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoGetWithBody",
 					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					ProducerProjectID: "producer-project",
+					ConsumerProjectID: "123456",
 					HttpMethod:        "GET",
 					FrontendProtocol:  "http",
-					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get is called",
+					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoGetWithBody is called",
 					StatusCode:        "0",
-					ResponseCode:      405, // Method is not implemented by backend
-					ErrorType:         "4xx",
+					ResponseCode:      200,
 					Platform:          util.GCE,
 					Location:          "test-zone",
 				},
@@ -246,7 +248,7 @@ func TestMethodOverrideScReport(t *testing.T) {
 				t.Errorf("Test (%s): failed,  expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
 			}
 		} else {
-			if !strings.Contains(err.Error(), tc.httpCallError.Error()) {
+			if err == nil || !strings.Contains(err.Error(), tc.httpCallError.Error()) {
 				t.Errorf("Test (%s): failed,  expected Http call error: %v, got: %v", tc.desc, tc.httpCallError, err)
 			}
 		}

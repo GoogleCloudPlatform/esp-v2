@@ -44,6 +44,12 @@ The variable bindings are used for:
 
 - Attaching query parameters to the request
 
+### Method override
+
+If the original request has a `X-HTTP-Method-Override` header, this filter will overwrite
+the `:method` header. This will result in all future headers handling the request with
+the overridden path.
+
 ## Configuration
 
 View the [path matcher configuration proto](../../../../api/envoy/http/path_matcher/config.proto)
