@@ -38,14 +38,14 @@ func TestWebsocket(t *testing.T) {
 	}
 
 	testData := []struct {
-		desc         string
-		path         string
-		query        string
-		messageCount int
-		schema       string
-		wantResp     string
-		wantScRequests        []interface{}
-		wantSkipScRequestNum                     int
+		desc                 string
+		path                 string
+		query                string
+		messageCount         int
+		schema               string
+		wantResp             string
+		wantScRequests       []interface{}
+		wantSkipScRequestNum int
 	}{
 		{
 			desc:         "Websocket call succeed with service control check and jwt authn",
@@ -80,16 +80,16 @@ func TestWebsocket(t *testing.T) {
 					ResponseCode:      101,
 					Platform:          util.GCE,
 					Location:          "test-zone",
-					ApiVersion: "1.0.0",
+					ApiVersion:        "1.0.0",
 				},
 			},
 		},
 		{
-			desc:     "normal http call succeed, not affected by websocket config",
-			path:     "/echo",
-			query:    "key=api_key",
-			schema:   "http",
-			wantResp: `{"message":"hello"}`,
+			desc:                 "normal http call succeed, not affected by websocket config",
+			path:                 "/echo",
+			query:                "key=api_key",
+			schema:               "http",
+			wantResp:             `{"message":"hello"}`,
 			wantSkipScRequestNum: 2,
 		},
 	}
