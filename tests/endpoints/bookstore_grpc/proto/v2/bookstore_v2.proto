@@ -27,7 +27,7 @@ service Bookstore {
   // Returns a list of all shelves in the bookstore.
   rpc GetShelf(GetShelfRequest) returns (Shelf) {
     // Client example - returns the first shelf:
-    //   curl http://DOMAIN_NAME/v1/shelves/1
+    //   curl http://DOMAIN_NAME/v2/shelves/1
     option (google.api.http) = {
       get: "/v2/shelves/{shelf}"
     };
