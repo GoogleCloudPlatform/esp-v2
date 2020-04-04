@@ -87,6 +87,7 @@ const (
 	TestServiceControlCache
 	TestServiceControlCheckError
 	TestServiceControlCheckRetry
+	TestServiceControlCheckServerFail
 	TestServiceControlCheckTimeout
 	TestServiceControlCheckTracesWithRetry
 	TestServiceControlCheckWrongServerName
