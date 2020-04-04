@@ -41,6 +41,7 @@ func TestWebsocket(t *testing.T) {
 		desc                 string
 		path                 string
 		query                string
+		header               map[string][]string
 		messageCount         int
 		schema               string
 		wantResp             string
@@ -48,9 +49,14 @@ func TestWebsocket(t *testing.T) {
 		wantSkipScRequestNum int
 	}{
 		{
-			desc:         "Websocket call succeed with service control check and jwt authn",
-			path:         "/websocketecho",
-			query:        "key=api-key&access_token=" + testdata.FakeCloudTokenMultiAudiences,
+			desc:  "Websocket call succeed with service control check and jwt authn",
+			path:  "/websocketecho",
+			query: "key=api-key",
+			header: map[string][]string{
+				"Authorization": {
+					"Bearer " + testdata.FakeCloudTokenMultiAudiences,
+				},
+			},
 			schema:       "ws",
 			messageCount: 5,
 			wantResp:     "hellohellohellohellohello",
@@ -67,7 +73,7 @@ func TestWebsocket(t *testing.T) {
 					Version:           utils.ESPv2Version(),
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
-					URL:               "/websocketecho?key=api-key&access_token=" + testdata.FakeCloudTokenMultiAudiences,
+					URL:               "/websocketecho?key=api-key",
 					ApiKey:            "api-key",
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.WebsocketEcho",
 					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
@@ -98,7 +104,7 @@ func TestWebsocket(t *testing.T) {
 		var resp []byte
 		var err error
 		if tc.schema == "ws" {
-			resp, err = client.DoWS(fmt.Sprintf("localhost:%v", s.Ports().ListenerPort), tc.path, tc.query, "hello", tc.messageCount)
+			resp, err = client.DoWS(fmt.Sprintf("localhost:%v", s.Ports().ListenerPort), tc.path, tc.query, tc.header, "hello", tc.messageCount)
 		} else {
 			resp, err = client.DoPost(fmt.Sprintf("http://localhost:%v%v?%s", s.Ports().ListenerPort, tc.path, tc.query), "hello")
 		}
