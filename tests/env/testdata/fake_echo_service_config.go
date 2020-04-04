@@ -163,6 +163,15 @@ var (
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
 				},
 				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.WebsocketEcho",
+					Requirements: []*confpb.AuthRequirement{
+						{
+							ProviderId: GoogleJwtProvider,
+							Audiences:  "admin.cloud.goog",
+						},
+					},
+				},
+				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
 				},
 				{
@@ -194,10 +203,6 @@ var (
 				},
 				{
 					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Sleep",
-					AllowUnregisteredCalls: true,
-				},
-				{
-					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.WebsocketEcho",
 					AllowUnregisteredCalls: true,
 				},
 			},
