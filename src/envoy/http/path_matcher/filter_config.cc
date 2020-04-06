@@ -44,12 +44,24 @@ FilterConfig::FilterConfig(
   for (const auto& segment_name : proto_config_.segment_names()) {
     const auto& result = snake_to_json_map_.emplace(segment_name.snake_name(),
                                                     segment_name.json_name());
-    if (!result.second) {
-      // This should never occur in practice, but guard against manual edits
-      // to the service config.
-      throw Envoy::ProtoValidationException("Duplicated snake name in segment",
-                                            segment_name);
+
+    if (result.second) {
+      // Inserted successfully.
+      continue;
     }
+
+    const auto& duplicateSegment = result.first;
+    if (duplicateSegment->second == segment_name.json_name()) {
+      // Duplicate element value matches as well, this is allowed since it does
+      // not conflict with the current element.
+      continue;
+    }
+
+    // Duplicate element with same snake name but mismatching json names.
+    // This should never occur in practice, but guard against manual edits
+    // to the service config.
+    throw Envoy::ProtoValidationException("Duplicated snake name in segment",
+                                          segment_name);
   }
 }
 
