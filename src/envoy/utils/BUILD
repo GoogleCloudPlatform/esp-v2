@@ -87,3 +87,15 @@ envoy_cc_library(
         "@envoy//source/exe:envoy_common_lib",
     ],
 )
+
+envoy_cc_test(
+    name = "http_header_utils_test",
+    size = "small",
+    srcs = ["http_header_utils_test.cc"],
+    repository = "@envoy",
+    deps = [
+        ":http_header_utils_lib",
+        "@envoy//source/common/common:empty_string",
+        "@envoy//test/test_common:utility_lib",
+    ],
+)

@@ -31,10 +31,9 @@ absl::string_view extractHeader(const Envoy::Http::HeaderMap& headers,
                                 const Envoy::Http::LowerCaseString& header);
 
 // Get the HTTP method to be used for the request. This method understands the
-// x-http-method-override header and if present, returns the
-// x-http-method-override method. Otherwise, the actual HTTP method is returned.
-absl::string_view getRequestHTTPMethodWithOverride(
-    absl::string_view originalMethod, const Envoy::Http::HeaderMap& headers);
+// x-http-method-override header. If present, it will override the method
+// header and return true.
+bool handleHttpMethodOverride(Envoy::Http::RequestHeaderMap& headers);
 
 }  // namespace utils
 }  // namespace envoy

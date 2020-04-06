@@ -49,7 +49,7 @@ func main() {
 
 	r := mux.NewRouter()
 
-	r.Path("/echo").Methods("POST").
+	r.Path("/echo").Methods("POST", "GET").
 		HandlerFunc(echoHandler)
 	r.Path("/websocketecho").HandlerFunc(websocketEchoHandler)
 	r.Path("/echo/nokey").Methods("POST").

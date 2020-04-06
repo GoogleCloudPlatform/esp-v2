@@ -14,13 +14,16 @@
 
 #include "src/envoy/utils/http_header_utils.h"
 #include "common/common/empty_string.h"
+#include "common/http/headers.h"
 
 namespace espv2 {
 namespace envoy {
 namespace utils {
 
+// Needed for logger macro expansion.
+namespace Logger = Envoy::Logger;
+
 namespace {
-// TODO(kyuc): refactor it to be safe, move it to a class or make the type char*
 const Envoy::Http::LowerCaseString kHttpMethodOverrideHeader{
     "x-http-method-override"};
 }  // namespace
@@ -38,13 +41,22 @@ absl::string_view extractHeader(const Envoy::Http::HeaderMap& headers,
   return readHeaderEntry(entry);
 }
 
-absl::string_view getRequestHTTPMethodWithOverride(
-    absl::string_view originalMethod, const Envoy::Http::HeaderMap& headers) {
+bool handleHttpMethodOverride(Envoy::Http::RequestHeaderMap& headers) {
   const auto* entry = headers.get(kHttpMethodOverrideHeader);
-  if (entry) {
-    return entry->value().getStringView();
+  if (entry == nullptr) {
+    return false;
   }
-  return originalMethod;
+
+  // Override can be confusing while debugging, log it.
+  absl::string_view method_original = headers.Method()->value().getStringView();
+  absl::string_view method_override = entry->value().getStringView();
+  ENVOY_LOG_MISC(debug, "Original :method = {}, x-http-method-override = {}",
+                 method_original, method_override);
+
+  // Move the header.
+  headers.setMethod(method_override);
+  headers.remove(kHttpMethodOverrideHeader);
+  return true;
 }
 
 }  // namespace utils

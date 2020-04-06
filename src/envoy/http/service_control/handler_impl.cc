@@ -61,10 +61,7 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
       last_reported_(time_source_.systemTime()) {
   is_grpc_ = Envoy::Grpc::Common::hasGrpcContentType(headers);
 
-  absl::string_view original_http_method =
-      utils::readHeaderEntry(headers.Method());
-  http_method_ = std::string(
-      utils::getRequestHTTPMethodWithOverride(original_http_method, headers));
+  http_method_ = std::string(utils::readHeaderEntry(headers.Method()));
   path_ = std::string(utils::readHeaderEntry(headers.Path()));
   request_header_size_ = headers.byteSize();
 
