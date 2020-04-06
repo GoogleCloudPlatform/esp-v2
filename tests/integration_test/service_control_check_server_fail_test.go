@@ -27,19 +27,19 @@ import (
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
-type localServiceHandler struct {
+type serverFailCheckHandler struct {
 	m          *comp.MockServiceCtrl
 	retryCount int
 	respCode   int
 	respBody   string
 }
 
-func (h *localServiceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *serverFailCheckHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.retryCount++
 	http.Error(w, h.respBody, h.respCode)
 }
 
-func TestServiceControlNetworkFailFlag(t *testing.T) {
+func TestServiceControlCheckServerFailFlag(t *testing.T) {
 	t.Parallel()
 
 	serviceName := "bookstore-service"
@@ -98,7 +98,7 @@ func TestServiceControlNetworkFailFlag(t *testing.T) {
 	for _, tc := range tests {
 		func() {
 			s := env.NewTestEnv(comp.TestServiceControlCheckServerFail, platform.GrpcBookstoreSidecar)
-			handler := &localServiceHandler{
+			handler := &serverFailCheckHandler{
 				m:        s.ServiceControlServer,
 				respCode: tc.respCode,
 				respBody: tc.respBody,
