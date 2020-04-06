@@ -300,24 +300,32 @@ CancelFunc ClientCache::callCheck(
                   "Service Control cache query: Check");
 
   auto* response = new CheckResponse;
-  client_->Check(request, response,
-                 [this, response, on_done](const Status& status) {
-                   CheckResponseInfo response_info;
-                   if (status.ok()) {
-                     Status converted_status = ::espv2::api_proxy::
-                         service_control::RequestBuilder::ConvertCheckResponse(
-                             *response, config_.service_name(), &response_info);
-                     on_done(converted_status, response_info);
-                   } else {
-                     if (network_fail_open_) {
-                       on_done(Status::OK, response_info);
-                     } else {
-                       on_done(status, response_info);
-                     }
-                   }
-                   delete response;
-                 },
-                 check_transport);
+  client_->Check(
+      request, response,
+      [this, response, on_done](const Status& status) {
+        CheckResponseInfo response_info;
+        if (status.ok()) {
+          Status converted_status = ::espv2::api_proxy::service_control::
+              RequestBuilder::ConvertCheckResponse(
+                  *response, config_.service_name(), &response_info);
+          on_done(converted_status, response_info);
+        } else {
+          // Envoy::Grpc::httpToGrpcStatus() is called at http_call.cc at
+          // HttpCallImpl::onSuccess to map http_code to grpc_code.
+          // All 5xx server error codes have been mapped to Code::UNAVAILABLE.
+          // network_fail_open only applies to 5xx server error codes.
+          if (network_fail_open_ && status.error_code() == Code::UNAVAILABLE) {
+            ENVOY_LOG(debug,
+                      "service control check fails, but the request is allowed "
+                      "due to network_fail_open policy.");
+            on_done(Status::OK, response_info);
+          } else {
+            on_done(status, response_info);
+          }
+        }
+        delete response;
+      },
+      check_transport);
   return cancel_fn;
 }
 

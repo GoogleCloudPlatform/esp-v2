@@ -52,7 +52,7 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 			method:            "/v1/shelves/100?key=api-key-1",
 			serviceControlURL: "http://unavaliable_service_control_server_name",
 			allocatedPort:     comp.TestServiceControlCheckWrongServerName,
-			wantError:         "500 Internal Server Error, INTERNAL:Failed to call service control",
+			wantError:         "503 Service Unavailable, UNAVAILABLE:Calling Google Service Control API failed with: 503",
 		},
 		{
 			desc:              "Failed. When the service control is not set up, the request will be rejected by 500 Internal Server Error",
@@ -61,7 +61,7 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 			method:            "/v1/shelves/100?key=api-key-2",
 			serviceControlURL: "http://localhost:28753",
 			allocatedPort:     comp.TestServiceControlCheckWrongServerName,
-			wantError:         "500 Internal Server Error, INTERNAL:Failed to call service control",
+			wantError:         "503 Service Unavailable, UNAVAILABLE:Calling Google Service Control API failed with: 503",
 		},
 	}
 
@@ -128,7 +128,7 @@ func TestServiceControlCheckTimeout(t *testing.T) {
 		clientProtocol: "http",
 		httpMethod:     "GET",
 		method:         "/v1/shelves/100?key=api-key-2",
-		wantError:      "500 Internal Server Error, INTERNAL:Failed to call service control",
+		wantError:      "503 Service Unavailable, UNAVAILABLE:Calling Google Service Control API failed with: 503",
 	}
 
 	s.ServiceControlServer.ResetRequestCount()
@@ -189,7 +189,7 @@ func TestServiceControlNetworkFailFlag(t *testing.T) {
 			httpMethod:      "GET",
 			method:          "/v1/shelves?key=api-key",
 			token:           testdata.FakeCloudTokenMultiAudiences,
-			wantError:       "500 Internal Server Error, INTERNAL:Failed to call service control",
+			wantError:       "503 Service Unavailable, UNAVAILABLE:Calling Google Service Control API failed with: 504",
 		},
 	}
 

@@ -112,7 +112,7 @@ func TestServiceControlWithTLS(t *testing.T) {
 			port:      comp.TestServiceControlTLSWithValidCert,
 			certPath:  platform.GetFilePath(platform.ServerCert),
 			keyPath:   platform.GetFilePath(platform.ServerKey),
-			wantError: "500 Internal Server Error, INTERNAL:Failed to call service control",
+			wantError: "503 Service Unavailable, UNAVAILABLE:Calling Google Service Control API failed with: 503",
 		},
 	}
 
