@@ -106,7 +106,7 @@ class HttpCallImpl : public HttpCall,
         std::string error_msg = absl::StrCat(
             "Calling Google Service Control API failed with: ", status_code);
         if (!body.empty()) {
-          error_msg += absl::StrCat(" and body: " + body);
+          absl::StrAppend(&error_msg, " and body: ", body);
         }
         auto grpc_code = Envoy::Grpc::Utility::httpToGrpcStatus(status_code);
         on_done_(Status(static_cast<Code>(grpc_code), error_msg), body);
