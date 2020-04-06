@@ -69,6 +69,9 @@ def gen_bootstrap_conf(args):
         if args.tracing_outgoing_context:
             cmd.extend(
                 ["--tracing_outgoing_context", args.tracing_outgoing_context])
+        if args.cloud_trace_url_override:
+            cmd.extend(["--tracing_stackdriver_address",
+                        args.cloud_trace_url_override])
 
         if args.disable_cloud_trace_auto_sampling:
             cmd.extend(["--tracing_sample_rate", "0"])
@@ -440,6 +443,20 @@ environment variable or by passing "-k" flag to this script.
         default="",
         help='''
         comma separated outgoing trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)'''
+    )
+    parser.add_argument(
+        '--cloud_trace_url_override',
+        default="",
+        help='''
+        By default, traces will be sent to production Stackdriver Tracing.
+        If this is non-empty, ESPv2 will send traces to this gRPC service instead.
+        
+        The url must be in gRPC format.
+        https://github.com/grpc/grpc/blob/master/doc/naming.md
+        
+        The gRPC service must implement the cloud trace v2 RPCs.
+        https://github.com/googleapis/googleapis/tree/master/google/devtools/cloudtrace/v2
+        '''
     )
     parser.add_argument(
         '--non_gcp',
