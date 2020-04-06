@@ -315,6 +315,9 @@ CancelFunc ClientCache::callCheck(
           // All 5xx server error codes have been mapped to Code::UNAVAILABLE.
           // network_fail_open only applies to 5xx server error codes.
           if (network_fail_open_ && status.error_code() == Code::UNAVAILABLE) {
+            ENVOY_LOG(debug,
+                      "service control check fails, but the request is allowed "
+                      "due to network_fail_open policy.");
             on_done(Status::OK, response_info);
           } else {
             on_done(status, response_info);

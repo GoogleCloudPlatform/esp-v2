@@ -96,14 +96,15 @@ class HttpCallImpl : public HttpCall,
                   body);
         on_done_(Status::OK, body);
       } else {
+        ENVOY_LOG(debug, "http call response status code: {}, body: {}",
+                  status_code, body);
+
         if (attemptRetry(status_code)) {
           return;
         }
 
-        ENVOY_LOG(debug, "http call response status code: {}, body: {}",
-                  status_code, body);
-        std::string error_msg =
-            absl::StrCat("Calling ServiceControl failed with: ", status_code);
+        std::string error_msg = absl::StrCat(
+            "Calling Google Service Control API failed with: ", status_code);
         if (!body.empty()) {
           error_msg += absl::StrCat(" and body: " + body);
         }

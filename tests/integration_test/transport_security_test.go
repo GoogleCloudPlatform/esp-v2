@@ -112,7 +112,7 @@ func TestServiceControlWithTLS(t *testing.T) {
 			port:      comp.TestServiceControlTLSWithValidCert,
 			certPath:  platform.GetFilePath(platform.ServerCert),
 			keyPath:   platform.GetFilePath(platform.ServerKey),
-			wantError: "503 Service Unavailable, UNAVAILABLE:Calling ServiceControl failed with: 503",
+			wantError: "503 Service Unavailable, UNAVAILABLE:Calling Google Service Control API failed with: 503",
 		},
 	}
 

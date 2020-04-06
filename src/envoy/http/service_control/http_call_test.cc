@@ -196,7 +196,8 @@ TEST_F(HttpCallTest, TestSingleCallSuccessHttpNotFound) {
   EXPECT_CALL(*mock_child_span, finishSpan()).Times(1);
   EXPECT_CALL(
       mock_done_fn_,
-      Call(Status(Code::UNAVAILABLE, "Calling ServiceControl failed with: 503"),
+      Call(Status(Code::UNAVAILABLE,
+                  "Calling Google Service Control API failed with: 503"),
            _))
       .Times(1);
 
@@ -353,7 +354,8 @@ TEST_F(HttpCallTest, TestThreeRetriesWithLastFailure) {
   EXPECT_CALL(*mock_child_span_3, finishSpan()).Times(1);
   EXPECT_CALL(
       mock_done_fn_,
-      Call(Status(Code::UNAVAILABLE, "Calling ServiceControl failed with: 504"),
+      Call(Status(Code::UNAVAILABLE,
+                  "Calling Google Service Control API failed with: 504"),
            _))
       .Times(1);
   async_callbacks_[2]->onSuccess(makeResponseWithStatus(504));
