@@ -14,6 +14,7 @@
 
 #include "src/envoy/http/path_matcher/filter_config.h"
 #include "common/common/empty_string.h"
+#include "common/protobuf/utility.h"
 
 namespace espv2 {
 namespace envoy {
@@ -41,8 +42,14 @@ FilterConfig::FilterConfig(
   path_matcher_ = pmb.Build();
 
   for (const auto& segment_name : proto_config_.segment_names()) {
-    snake_to_json_map_.emplace(segment_name.snake_name(),
-                               segment_name.json_name());
+    const auto& result = snake_to_json_map_.emplace(segment_name.snake_name(),
+                                                    segment_name.json_name());
+    if (!result.second) {
+      // This should never occur in practice, but guard against manual edits
+      // to the service config.
+      throw Envoy::ProtoValidationException("Duplicated snake name in segment",
+                                            segment_name);
+    }
   }
 }
 

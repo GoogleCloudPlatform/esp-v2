@@ -208,6 +208,27 @@ rules {
   EXPECT_TRUE(cfg.getSnakeToJsonMap().empty());
 }
 
+TEST(FilterConfigTest, DuplicatedSegmentSnakeNames) {
+  const char kFilterConfig[] = R"(
+segment_names {
+  json_name: "fooBar"
+  snake_name: "foo_bar"
+}
+segment_names {
+  json_name: "foobar"
+  snake_name: "foo_bar"
+})";
+
+  ::google::api::envoy::http::path_matcher::FilterConfig config_pb;
+  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfig, &config_pb));
+  ::testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
+      mock_factory;
+
+  EXPECT_THROW_WITH_REGEX(
+      FilterConfig cfg(config_pb, Envoy::EMPTY_STRING, mock_factory),
+      Envoy::ProtoValidationException, "Duplicated snake name");
+}
+
 }  // namespace
 }  // namespace path_matcher
 }  // namespace http_filters

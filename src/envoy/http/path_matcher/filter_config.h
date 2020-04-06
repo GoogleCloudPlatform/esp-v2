@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include <unordered_map>
-
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "api/envoy/http/path_matcher/config.pb.h"
 #include "common/common/logger.h"
 #include "envoy/runtime/runtime.h"

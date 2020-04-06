@@ -175,15 +175,14 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersMissingHeaders) {
   Envoy::Http::TestRequestHeaderMapImpl missingMethod{{":path", "/bar"}};
 
   // Filter should reject this request
-  EXPECT_CALL(
-      mock_cb_.stream_info_,
-      setResponseFlag(
-          Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService))
-          .Times(2);
+  EXPECT_CALL(mock_cb_.stream_info_,
+              setResponseFlag(
+                  Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService))
+      .Times(2);
 
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
             filter_->decodeHeaders(missingPath, true));
-    EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
+  EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
             filter_->decodeHeaders(missingMethod, true));
 }
 
