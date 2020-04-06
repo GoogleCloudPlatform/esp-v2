@@ -49,8 +49,9 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 
-  bool usedMethodOverride = utils::handleHttpMethodOverride(headers);
-  if (usedMethodOverride) {
+  if (utils::handleHttpMethodOverride(headers)) {
+    // Update later filters that the HTTP method has changed by clearing the
+    // route cache.
     ENVOY_LOG(debug, "HTTP method override occurred, recalculating route");
     decoder_callbacks_->clearRouteCache();
   }
