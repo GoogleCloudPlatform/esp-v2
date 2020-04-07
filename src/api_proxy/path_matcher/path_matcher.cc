@@ -49,93 +49,11 @@ inline bool IsReservedChar(char c) {
   }
 }
 
-// Check if an ASCII character is a hex digit.  We can't use ctype's
-// isxdigit() because it is affected by locale. This function is applied
-// to the escaped characters in a url, not to natural-language
-// strings, so locale should not be taken into account.
-inline bool ascii_isxdigit(char c) {
-  return ('a' <= c && c <= 'f') || ('A' <= c && c <= 'F') ||
-         ('0' <= c && c <= '9');
-}
-
-inline int hex_digit_to_int(char c) {
-  /* Assume ASCII. */
-  int x = static_cast<unsigned char>(c);
-  if (x > '9') {
-    x += 9;
-  }
-  return x & 0xf;
-}
-
-// This is a helper function for UrlUnescapeString. It takes a string and
-// the index of where we are within that string.
-//
-// The function returns true if the next three characters are of the format:
-// "%[0-9A-Fa-f]{2}".
-//
-// If the next three characters are an escaped character then this function will
-// also return what character is escaped.
-bool GetEscapedChar(const std::string& src, size_t i,
-                    bool unescape_reserved_chars, char* out) {
-  if (i + 2 < src.size() && src[i] == '%') {
-    if (ascii_isxdigit(src[i + 1]) && ascii_isxdigit(src[i + 2])) {
-      char c =
-          (hex_digit_to_int(src[i + 1]) << 4) | hex_digit_to_int(src[i + 2]);
-      if (!unescape_reserved_chars && IsReservedChar(c)) {
-        return false;
-      }
-      *out = c;
-      return true;
-    }
-  }
-  return false;
-}
-
-// Unescapes string 'part' and returns the unescaped string. Reserved characters
-// (as specified in RFC 6570) are not escaped if unescape_reserved_chars is
-// false.
-std::string UrlUnescapeString(const std::string& part,
-                              bool unescape_reserved_chars) {
-  std::string unescaped;
-  // Check whether we need to escape at all.
-  bool needs_unescaping = false;
-  char ch = '\0';
-  for (size_t i = 0; i < part.size(); ++i) {
-    if (GetEscapedChar(part, i, unescape_reserved_chars, &ch)) {
-      needs_unescaping = true;
-      break;
-    }
-  }
-  if (!needs_unescaping) {
-    unescaped = part;
-    return unescaped;
-  }
-
-  unescaped.resize(part.size());
-
-  char* begin = &(unescaped)[0];
-  char* p = begin;
-
-  for (size_t i = 0; i < part.size();) {
-    if (GetEscapedChar(part, i, unescape_reserved_chars, &ch)) {
-      *p++ = ch;
-      i += 3;
-    } else {
-      *p++ = part[i];
-      i += 1;
-    }
-  }
-
-  unescaped.resize(p - begin);
-  return unescaped;
-}
-
 }  // namespace
 
 void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
                              const std::vector<std::string>& parts,
-                             std::vector<VariableBinding>* bindings,
-                             bool keep_binding_escaped) {
+                             std::vector<VariableBinding>* bindings) {
   for (const auto& var : vars) {
     // Determine the subpath bound to the variable based on the
     // [start_segment, end_segment) segment range of the variable.
@@ -155,12 +73,7 @@ void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
         (end_segment - var.start_segment) > 1 || var.end_segment < 0;
     // Joins parts with "/"  to form a path string.
     for (size_t i = var.start_segment; i < end_segment; ++i) {
-      // For multipart matches only unescape non-reserved characters.
-      if (keep_binding_escaped) {
-        binding.value += parts[i];
-      } else {
-        binding.value += UrlUnescapeString(parts[i], !is_multipart);
-      }
+      binding.value += parts[i];
       if (i < end_segment - 1) {
         binding.value += "/";
       }
