@@ -41,6 +41,8 @@ FilterConfig::FilterConfig(
   path_matcher_ = pmb.Build();
 
   for (const auto& segment_name : proto_config_.segment_names()) {
+    // Duplicate snake names with varying json names are disallowed by config
+    // manager.
     snake_to_json_map_.emplace(segment_name.snake_name(),
                                segment_name.json_name());
   }

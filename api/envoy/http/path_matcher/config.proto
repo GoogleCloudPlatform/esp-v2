@@ -46,5 +46,8 @@ message SegmentName {
 
 message FilterConfig {
   repeated PathMatcherRule rules = 1;
+
+  // It is invalid for multiple segments to share the same `snake_name` but have
+  // different `json_name`.
   repeated SegmentName segment_names = 2;
 }

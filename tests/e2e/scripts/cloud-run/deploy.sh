@@ -310,7 +310,7 @@ function test() {
 
   # Wait a few minutes for service to be enabled and the permissions to propagate
   echo "Waiting for the endpoints service to be enabled"
-  sleep 3m
+  sleep 5m
 
   if [[ ${PROXY_PLATFORM} == "anthos-cloud-run" ]];
   then
