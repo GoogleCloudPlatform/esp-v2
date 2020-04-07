@@ -50,8 +50,7 @@ function tag_stable_image() {
   local image=$1
 
   gcloud container images add-tag "${image}:${VERSION}" \
-    "${image}:${MINOR_BASE_VERSION}" "${image}:${MAJOR_BASE_VERSION}" \
-    --project ${APIPROXY_RELEASE_PROJECT} --quiet
+    "${image}:${MINOR_BASE_VERSION}" "${image}:${MAJOR_BASE_VERSION}" --quiet
 }
 
 tag_stable_image "$(get_proxy_image_release_name)"

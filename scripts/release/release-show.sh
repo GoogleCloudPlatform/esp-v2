@@ -40,7 +40,7 @@ done
 function list_image_tags() {
   local image=$1
   echo "show tags for ${image}"
-  gcloud container images list-tags ${image} --project ${APIPROXY_RELEASE_PROJECT}
+  gcloud container images list-tags ${image}
 }
 
 list_image_tags "$(get_proxy_image_release_name)"
