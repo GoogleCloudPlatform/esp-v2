@@ -117,6 +117,10 @@ class HttpCallTest : public testing::Test {
     return mock_child_span_ptr;
   }
 
+  const Envoy::Http::AsyncClient::Request& lastHttpRequest() const {
+    return *http_requests_[http_requests_.size() - 1];
+  }
+
   static Envoy::Http::ResponseMessagePtr makeResponseWithStatus(
       const uint64_t status_code) {
     // Headers with status code
@@ -177,7 +181,8 @@ TEST_F(HttpCallTest, TestSingleCallSuccessHttpOk) {
   EXPECT_CALL(*mock_child_span, finishSpan()).Times(1);
   EXPECT_CALL(mock_done_fn_, Call(Status::OK, _)).Times(1);
 
-  async_callbacks_[0]->onSuccess(makeResponseWithStatus(200));
+  async_callbacks_[0]->onSuccess(lastHttpRequest(),
+                                 makeResponseWithStatus(200));
 }
 
 TEST_F(HttpCallTest, TestSingleCallSuccessHttpNotFound) {
@@ -201,7 +206,8 @@ TEST_F(HttpCallTest, TestSingleCallSuccessHttpNotFound) {
            _))
       .Times(1);
 
-  async_callbacks_[0]->onSuccess(makeResponseWithStatus(503));
+  async_callbacks_[0]->onSuccess(lastHttpRequest(),
+                                 makeResponseWithStatus(503));
 }
 
 TEST_F(HttpCallTest, TestSingleCallFailure) {
@@ -223,7 +229,7 @@ TEST_F(HttpCallTest, TestSingleCallFailure) {
       .Times(1);
 
   async_callbacks_[0]->onFailure(
-      Envoy::Http::AsyncClient::FailureReason::Reset);
+      lastHttpRequest(), Envoy::Http::AsyncClient::FailureReason::Reset);
 }
 
 TEST_F(HttpCallTest, TestEmptyTokenCallFailure) {
@@ -262,20 +268,23 @@ TEST_F(HttpCallTest, TestRetryCallSuccess) {
   // Phase 2: Emulate successful http response, but with a bad status code
   EXPECT_CALL(*mock_child_span_1, finishSpan()).Times(1);
   auto mock_child_span_2 = makeMockChildSpan();
-  async_callbacks_[0]->onSuccess(makeResponseWithStatus(504));
+  async_callbacks_[0]->onSuccess(lastHttpRequest(),
+                                 makeResponseWithStatus(504));
   EXPECT_EQ(2, async_callbacks_.size());
 
   // Phase 3: Emulate another successful http response (on retry), but with a
   // bad status code
   EXPECT_CALL(*mock_child_span_2, finishSpan()).Times(1);
   auto mock_child_span_3 = makeMockChildSpan();
-  async_callbacks_[1]->onSuccess(makeResponseWithStatus(503));
+  async_callbacks_[1]->onSuccess(lastHttpRequest(),
+                                 makeResponseWithStatus(503));
   EXPECT_EQ(3, async_callbacks_.size());
 
   // Phase 4: Emulate successful http response on last retry
   EXPECT_CALL(*mock_child_span_3, finishSpan()).Times(1);
   EXPECT_CALL(mock_done_fn_, Call(Status::OK, _)).Times(1);
-  async_callbacks_[2]->onSuccess(makeResponseWithStatus(200));
+  async_callbacks_[2]->onSuccess(lastHttpRequest(),
+                                 makeResponseWithStatus(200));
 }
 
 TEST_F(HttpCallTest, TestThreeRetriesWithLastSuccess) {
@@ -301,7 +310,7 @@ TEST_F(HttpCallTest, TestThreeRetriesWithLastSuccess) {
   EXPECT_CALL(*mock_child_span_1, finishSpan()).Times(1);
   auto mock_child_span_2 = makeMockChildSpan();
   async_callbacks_[0]->onFailure(
-      Envoy::Http::AsyncClient::FailureReason::Reset);
+      lastHttpRequest(), Envoy::Http::AsyncClient::FailureReason::Reset);
   EXPECT_EQ(2, async_callbacks_.size());
 
   // Phase 3: Emulate another successful http response (on retry), but with a
@@ -309,13 +318,14 @@ TEST_F(HttpCallTest, TestThreeRetriesWithLastSuccess) {
   EXPECT_CALL(*mock_child_span_2, finishSpan()).Times(1);
   auto mock_child_span_3 = makeMockChildSpan();
   async_callbacks_[1]->onFailure(
-      Envoy::Http::AsyncClient::FailureReason::Reset);
+      lastHttpRequest(), Envoy::Http::AsyncClient::FailureReason::Reset);
   EXPECT_EQ(3, async_callbacks_.size());
 
   // Phase 4: Emulate successful http response on last retry
   EXPECT_CALL(*mock_child_span_3, finishSpan()).Times(1);
   EXPECT_CALL(mock_done_fn_, Call(Status::OK, _)).Times(1);
-  async_callbacks_[2]->onSuccess(makeResponseWithStatus(200));
+  async_callbacks_[2]->onSuccess(lastHttpRequest(),
+                                 makeResponseWithStatus(200));
 }
 
 TEST_F(HttpCallTest, TestThreeRetriesWithLastFailure) {
@@ -339,7 +349,7 @@ TEST_F(HttpCallTest, TestThreeRetriesWithLastFailure) {
   EXPECT_CALL(*mock_child_span_1, finishSpan()).Times(1);
   auto mock_child_span_2 = makeMockChildSpan();
   async_callbacks_[0]->onFailure(
-      Envoy::Http::AsyncClient::FailureReason::Reset);
+      lastHttpRequest(), Envoy::Http::AsyncClient::FailureReason::Reset);
   EXPECT_EQ(2, async_callbacks_.size());
 
   // Phase 3: Emulate another successful http response (on retry), but with a
@@ -347,7 +357,7 @@ TEST_F(HttpCallTest, TestThreeRetriesWithLastFailure) {
   EXPECT_CALL(*mock_child_span_2, finishSpan()).Times(1);
   auto mock_child_span_3 = makeMockChildSpan();
   async_callbacks_[1]->onFailure(
-      Envoy::Http::AsyncClient::FailureReason::Reset);
+      lastHttpRequest(), Envoy::Http::AsyncClient::FailureReason::Reset);
   EXPECT_EQ(3, async_callbacks_.size());
 
   // Phase 4: Emulate successful http response on last retry
@@ -358,7 +368,8 @@ TEST_F(HttpCallTest, TestThreeRetriesWithLastFailure) {
                   "Calling Google Service Control API failed with: 504"),
            _))
       .Times(1);
-  async_callbacks_[2]->onSuccess(makeResponseWithStatus(504));
+  async_callbacks_[2]->onSuccess(lastHttpRequest(),
+                                 makeResponseWithStatus(504));
 }
 
 TEST_F(HttpCallTest, TestActiveCallCancel) {

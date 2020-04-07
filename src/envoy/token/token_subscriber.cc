@@ -173,13 +173,15 @@ void TokenSubscriber::processResponse(
   handleSuccessResponse(result.token, result.expiry_duration);
 }
 
-void TokenSubscriber::onSuccess(Envoy::Http::ResponseMessagePtr&& response) {
+void TokenSubscriber::onSuccess(const Envoy::Http::AsyncClient::Request&,
+                                Envoy::Http::ResponseMessagePtr&& response) {
   ENVOY_LOG(debug, "{}: got response: {}", debug_name_,
             response->bodyAsString());
   processResponse(std::move(response));
 }
 
 void TokenSubscriber::onFailure(
+    const Envoy::Http::AsyncClient::Request&,
     Envoy::Http::AsyncClient::FailureReason reason) {
   switch (reason) {
     case Envoy::Http::AsyncClient::FailureReason::Reset:

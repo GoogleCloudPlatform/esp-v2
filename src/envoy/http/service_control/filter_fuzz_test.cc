@@ -178,7 +178,7 @@ DEFINE_PROTO_FUZZER(
         }
 
         // Callback.
-        callback.onSuccess(std::move(msg));
+        callback.onSuccess(request, std::move(msg));
         return &request;
       }));
 
