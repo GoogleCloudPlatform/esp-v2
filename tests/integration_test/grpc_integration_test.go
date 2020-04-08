@@ -431,7 +431,7 @@ func TestGRPCJwt(t *testing.T) {
 			httpMethod:     "DELETE",
 			method:         "/v1/shelves/120?key=api-key",
 			token:          testdata.FakeCloudToken,
-			wantError:      "401 Unauthorized, Jwt issuer is not configured",
+			wantError:      "403 Forbidden, Audiences in Jwt are not allowed",
 		},
 		// Test the default audience when one isn't specified.
 		{

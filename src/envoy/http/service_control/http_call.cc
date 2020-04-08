@@ -74,7 +74,8 @@ class HttpCallImpl : public HttpCall,
   void call() override { makeOneCall(); }
 
   // HTTP async receive methods
-  void onSuccess(Envoy::Http::ResponseMessagePtr&& response) override {
+  void onSuccess(const Envoy::Http::AsyncClient::Request&,
+                 Envoy::Http::ResponseMessagePtr&& response) override {
     ENVOY_LOG(trace, "{}", __func__);
 
     std::string body;
@@ -120,7 +121,8 @@ class HttpCallImpl : public HttpCall,
     deferredDelete();
   }
 
-  void onFailure(Envoy::Http::AsyncClient::FailureReason reason) override {
+  void onFailure(const Envoy::Http::AsyncClient::Request&,
+                 Envoy::Http::AsyncClient::FailureReason reason) override {
     // The status code in reason is always 0.
     ENVOY_LOG(debug, "http call network error");
 

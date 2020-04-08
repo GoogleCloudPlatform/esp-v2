@@ -56,8 +56,10 @@ class TokenSubscriber
   void refresh();
 
   // Envoy::Http::AsyncClient::Callbacks implemented by this class.
-  void onSuccess(Envoy::Http::ResponseMessagePtr&& response) override;
-  void onFailure(Envoy::Http::AsyncClient::FailureReason reason) override;
+  void onSuccess(const Envoy::Http::AsyncClient::Request& request,
+                 Envoy::Http::ResponseMessagePtr&& response) override;
+  void onFailure(const Envoy::Http::AsyncClient::Request& request,
+                 Envoy::Http::AsyncClient::FailureReason reason) override;
 
   Envoy::Server::Configuration::FactoryContext& context_;
   const TokenType token_type_;

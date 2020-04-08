@@ -93,6 +93,8 @@ class TokenSubscriberTest : public testing::Test {
 
   // Context
   NiceMock<MockFactoryContext> context_;
+  Envoy::Http::MockAsyncClientRequest client_request_{
+      &context_.cluster_manager_.async_client_};
 
   // Params to class under test.
   std::string token_url_ = "http://iam/uri_suffix";
@@ -187,7 +189,7 @@ TEST_F(TokenSubscriberTest, ProcessNon200Response) {
       new Envoy::Http::ResponseMessageImpl(std::move(resp_headers)));
 
   // Start the response.
-  client_callback_->onSuccess(std::move(response));
+  client_callback_->onSuccess(client_request_, std::move(response));
 
   // Assert subscriber did not succeed.
   ASSERT_EQ(call_count_, 1);
@@ -218,7 +220,7 @@ TEST_F(TokenSubscriberTest, ProcessMissingStatusResponse) {
       new Envoy::Http::ResponseMessageImpl(std::move(resp_headers)));
 
   // Start the response.
-  client_callback_->onSuccess(std::move(response));
+  client_callback_->onSuccess(client_request_, std::move(response));
 
   // Assert subscriber did not succeed.
   ASSERT_EQ(call_count_, 1);
@@ -254,7 +256,7 @@ TEST_F(TokenSubscriberTest, BadParseIdentityToken) {
       new Envoy::Http::ResponseMessageImpl(std::move(resp_headers)));
 
   // Start the response.
-  client_callback_->onSuccess(std::move(response));
+  client_callback_->onSuccess(client_request_, std::move(response));
 
   // Assert subscriber did not succeed.
   ASSERT_EQ(call_count_, 1);
@@ -290,7 +292,7 @@ TEST_F(TokenSubscriberTest, BadParseAccessToken) {
       new Envoy::Http::ResponseMessageImpl(std::move(resp_headers)));
 
   // Start the response.
-  client_callback_->onSuccess(std::move(response));
+  client_callback_->onSuccess(client_request_, std::move(response));
 
   // Assert subscriber did not succeed.
   ASSERT_EQ(call_count_, 1);
@@ -331,7 +333,7 @@ TEST_F(TokenSubscriberTest, TokenSantizationCheckFails) {
       new Envoy::Http::ResponseMessageImpl(std::move(resp_headers)));
 
   // Start the response.
-  client_callback_->onSuccess(std::move(response));
+  client_callback_->onSuccess(client_request_, std::move(response));
 
   // Assert subscriber did not succeed.
   ASSERT_EQ(call_count_, 1);
@@ -374,7 +376,7 @@ TEST_F(TokenSubscriberTest, Success) {
       new Envoy::Http::ResponseMessageImpl(std::move(resp_headers)));
 
   // Start the response.
-  client_callback_->onSuccess(std::move(response));
+  client_callback_->onSuccess(client_request_, std::move(response));
 
   // Assert subscriber did succeed.
   ASSERT_EQ(call_count_, 1);
@@ -427,7 +429,7 @@ TEST_F(TokenSubscriberTest, RetryMissingPreconditionThenSuccess) {
       new Envoy::Http::ResponseMessageImpl(std::move(resp_headers)));
 
   // Start the response.
-  client_callback_->onSuccess(std::move(response));
+  client_callback_->onSuccess(client_request_, std::move(response));
 
   // Assert subscriber did succeed.
   ASSERT_EQ(call_count_, 1);
