@@ -23,6 +23,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
@@ -179,5 +180,60 @@ func TestHttp1JWT(t *testing.T) {
 				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
 			}
 		}
+	}
+}
+
+func TestHttpHeaders(t *testing.T) {
+	t.Parallel()
+	testData := []struct {
+		desc                 string
+		method               string
+		requestHeader        map[string]string
+		underscoresInHeaders bool
+		wantResp             string
+		wantError            string
+	}{
+		{
+			desc:                 "Allow HTTP headers with underscore when configured",
+			underscoresInHeaders: true,
+			wantResp:             `{"id":"100","theme":"Kids"}`,
+			requestHeader: map[string]string{
+				"X-API-KEY":  "key-3",
+				"X_INTERNAL": "underscore-header",
+			},
+		},
+		{
+			desc: "Doesn't allow HTTP headers with underscore by default",
+			requestHeader: map[string]string{
+				"X-API-KEY":  "key-3",
+				"X_INTERNAL": "underscore-header",
+			},
+			wantError: `400 Bad Request`,
+		},
+	}
+	for _, tc := range testData {
+		func() {
+			s := env.NewTestEnv(comp.TestHttpHeaders, platform.GrpcBookstoreSidecar)
+			defer s.TearDown()
+			args := utils.CommonArgs()
+			if tc.underscoresInHeaders {
+				args = append(args, "--underscores_in_headers")
+			}
+			err := s.Setup(args)
+			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/v1/shelves/100")
+			resp, err := client.DoWithHeaders(url, "GET", "", tc.requestHeader)
+			if tc.wantError == "" {
+				if err != nil {
+					t.Fatal(err)
+				}
+				if !strings.Contains(string(resp), tc.wantResp) {
+					t.Errorf("Test desc (%v) expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
+				}
+			} else if err == nil {
+				t.Errorf("Test (%s): failed\nexpected: %v\ngot nil", tc.desc, tc.wantError)
+			} else if !strings.Contains(err.Error(), tc.wantError) {
+				t.Errorf("Test (%s): failed\nexpected: %v\ngot: %v", tc.desc, tc.wantError, err)
+			}
+		}()
 	}
 }
