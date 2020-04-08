@@ -191,7 +191,6 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 			HeadersWithUnderscoresAction: corepb.HttpProtocolOptions_ALLOW,
 		}
 	} else {
-		glog.Infof("==================================")
 		httpConMgr.CommonHttpProtocolOptions = &corepb.HttpProtocolOptions{
 			HeadersWithUnderscoresAction: corepb.HttpProtocolOptions_REJECT_REQUEST,
 		}

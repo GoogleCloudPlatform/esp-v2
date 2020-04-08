@@ -1478,7 +1478,7 @@ func TestMakeListeners(t *testing.T) {
 										"upgradeConfigs":[{"upgradeType":"websocket"}],
 										"statPrefix":"ingress_http",
 										"commonHttpProtocolOptions":{},
-                                                                                "tracing":{},
+										"tracing":{},
 										"useRemoteAddress":false,
 										"xffNumTrustedHops":2
 									}
