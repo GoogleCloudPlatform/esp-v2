@@ -29,6 +29,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 
@@ -42,7 +43,6 @@ import (
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
-	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/v2"
 	rspb "github.com/envoyproxy/go-control-plane/pkg/resource/v2"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
