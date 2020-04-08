@@ -186,6 +186,15 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	if !serviceInfo.Options.DisableTracing {
 		httpConMgr.Tracing = &hcmpb.HttpConnectionManager_Tracing{}
 	}
+	if serviceInfo.Options.UnderscoresInHeaders {
+		httpConMgr.CommonHttpProtocolOptions = &corepb.HttpProtocolOptions{
+			HeadersWithUnderscoresAction: corepb.HttpProtocolOptions_ALLOW,
+		}
+	} else {
+		httpConMgr.CommonHttpProtocolOptions = &corepb.HttpProtocolOptions{
+			HeadersWithUnderscoresAction: corepb.HttpProtocolOptions_REJECT_REQUEST,
+		}
+	}
 
 	jsonStr, _ := util.ProtoToJson(httpConMgr)
 	glog.Infof("adding Http Connection Manager config: %v", jsonStr)

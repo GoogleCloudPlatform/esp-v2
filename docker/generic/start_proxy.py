@@ -299,6 +299,10 @@ environment variable or by passing "-k" flag to this script.
         help='''Enable fetching service name, service config ID and rollout
         strategy from the metadata service.''')
 
+    parser.add_argument('--underscores_in_headers', action='store_true',
+        help='''Allow headers contain underscores to pass through. By default
+        ESPv2 rejects requests that have headers with underscores.''')
+
     parser.add_argument(
         '--envoy_use_remote_address',
         action='store_true',
@@ -807,6 +811,9 @@ def gen_proxy_config(args):
 
     if args.check_metadata:
         proxy_conf.append("--check_metadata")
+
+    if args.underscores_in_headers:
+        proxy_conf.append("--underscores_in_headers")
 
     if args.disable_tracing:
         proxy_conf.append("--disable_tracing")

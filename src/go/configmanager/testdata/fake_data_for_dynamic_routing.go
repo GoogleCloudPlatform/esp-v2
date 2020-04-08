@@ -461,6 +461,7 @@ var (
                   },
                   "upgradeConfigs": [{"upgradeType": "websocket"}],
                   "statPrefix":"ingress_http",
+                  "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
                   "useRemoteAddress":false,
                   "xffNumTrustedHops":2
                }

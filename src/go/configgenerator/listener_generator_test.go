@@ -1477,6 +1477,7 @@ func TestMakeListeners(t *testing.T) {
 										},
 										"upgradeConfigs":[{"upgradeType":"websocket"}],
 										"statPrefix":"ingress_http",
+										"commonHttpProtocolOptions":{},
 										"tracing":{},
 										"useRemoteAddress":false,
 										"xffNumTrustedHops":2
@@ -1512,6 +1513,7 @@ func TestMakeListeners(t *testing.T) {
 	for i, tc := range testdata {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.SslServerCertPath = tc.sslServerCertPath
+		opts.UnderscoresInHeaders = true
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)

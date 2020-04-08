@@ -72,8 +72,8 @@ type ConfigGeneratorOptions struct {
 	LogResponseHeaders        string
 	MinStreamReportIntervalMs uint64
 
-	SuppressEnvoyHeaders bool
-
+	SuppressEnvoyHeaders          bool
+	UnderscoresInHeaders          bool
 	ServiceControlNetworkFailOpen bool
 
 	JwksCacheDurationInS int

@@ -28,12 +28,13 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
-	"github.com/envoyproxy/go-control-plane/pkg/cache"
+	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/golang/glog"
 
 	gen "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator"
 	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/serviceconfig"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	cache "github.com/envoyproxy/go-control-plane/pkg/cache/v2"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -252,7 +253,7 @@ func (m *ConfigManager) applyServiceConfig(serviceConfig *confpb.Service) error 
 func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	m.Infof("making configuration for api: %v", m.serviceInfo.Name)
 
-	var clusterResources, endpoints, runtimes, routes, listenerResources []cache.Resource
+	var clusterResources, endpoints, runtimes, routes, listenerResources []types.Resource
 	clusters, err := gen.MakeClusters(m.serviceInfo)
 	if err != nil {
 		return nil, err
@@ -288,6 +289,16 @@ func (m *ConfigManager) ID(node *corepb.Node) string {
 
 // Infof implements the Infof method for Log interface.
 func (m *ConfigManager) Infof(format string, args ...interface{}) {
+	glog.Infof(format, args...)
+}
+
+// Debugf implements the Debugf method for Log interface.
+func (m *ConfigManager) Debugf(format string, args ...interface{}) {
+	glog.Infof(format, args...)
+}
+
+// Warnf implements the Warnf method for Log interface.
+func (m *ConfigManager) Warnf(format string, args ...interface{}) {
 	glog.Infof(format, args...)
 }
 

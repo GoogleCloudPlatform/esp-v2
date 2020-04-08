@@ -21,6 +21,7 @@
                 "typedConfig": {
                   "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
                   "upgradeConfigs": [{"upgradeType": "websocket"}],
+                  "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
                   "statPrefix": "ingress_http",
                   "routeConfig": {
                     "name": "local_route",
