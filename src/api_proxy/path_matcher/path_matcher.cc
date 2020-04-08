@@ -20,37 +20,6 @@ namespace espv2 {
 namespace api_proxy {
 namespace path_matcher {
 
-namespace {
-
-inline bool IsReservedChar(char c) {
-  // Reserved characters according to RFC 6570
-  switch (c) {
-    case '!':
-    case '#':
-    case '$':
-    case '&':
-    case '\'':
-    case '(':
-    case ')':
-    case '*':
-    case '+':
-    case ',':
-    case '/':
-    case ':':
-    case ';':
-    case '=':
-    case '?':
-    case '@':
-    case '[':
-    case ']':
-      return true;
-    default:
-      return false;
-  }
-}
-
-}  // namespace
-
 void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
                              const std::vector<std::string>& parts,
                              std::vector<VariableBinding>* bindings) {
@@ -66,11 +35,6 @@ void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
     size_t end_segment = (var.end_segment >= 0)
                              ? var.end_segment
                              : parts.size() + var.end_segment + 1;
-    // It is multi-part match if we have more than one segment. We also make
-    // sure that a single URL segment match with ** is also considered a
-    // multi-part match by checking if it->second.end_segment is negative.
-    bool is_multipart =
-        (end_segment - var.start_segment) > 1 || var.end_segment < 0;
     // Joins parts with "/"  to form a path string.
     for (size_t i = var.start_segment; i < end_segment; ++i) {
       binding.value += parts[i];
