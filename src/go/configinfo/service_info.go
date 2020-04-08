@@ -123,7 +123,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	}
 
 	serviceInfo.processAccessToken()
-	if err := serviceInfo.ProcessTypes(); err != nil {
+	if err := serviceInfo.processTypes(); err != nil {
 		return nil, err
 	}
 	serviceInfo.addGrpcHttpRules()
@@ -609,17 +609,13 @@ func (s *ServiceInfo) extractApiKeyLocations(method *methodInfo, parameters []*c
 	method.ApiKeyLocations = append(method.ApiKeyLocations, headerNames...)
 }
 
-func (s *ServiceInfo) ProcessTypes() error {
+func (s *ServiceInfo) processTypes() error {
 	// Create snake name to JSON name mapping (and validate against duplicates).
 	snakeToJson := make(map[string]string)
 
 	for _, t := range s.ServiceConfig().GetTypes() {
 		for _, f := range t.GetFields() {
 			if strings.ContainsRune(f.GetName(), '_') {
-				s.SegmentNames = append(s.SegmentNames, &pmpb.SegmentName{
-					SnakeName: f.GetName(),
-					JsonName:  f.GetJsonName(),
-				})
 
 				if prevJsonName, ok := snakeToJson[f.GetName()]; ok {
 					if prevJsonName != f.GetJsonName() {
@@ -628,8 +624,15 @@ func (s *ServiceInfo) ProcessTypes() error {
 						// Disallow it.
 						return fmt.Errorf("detected two types with same snake_name (%v) but mistmatching json_name (%v, %v)", f.GetName(), f.GetJsonName(), prevJsonName)
 					}
+				} else {
+					// Unique entry.
+					snakeToJson[f.GetName()] = f.GetJsonName()
+					s.SegmentNames = append(s.SegmentNames, &pmpb.SegmentName{
+						SnakeName: f.GetName(),
+						JsonName:  f.GetJsonName(),
+					})
 				}
-				snakeToJson[f.GetName()] = f.GetJsonName()
+
 			}
 		}
 	}

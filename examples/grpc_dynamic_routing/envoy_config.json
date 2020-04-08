@@ -318,10 +318,6 @@
                                                         "snakeName": "num_finite_buckets"
                                                     },
                                                     {
-                                                        "jsonName": "numFiniteBuckets",
-                                                        "snakeName": "num_finite_buckets"
-                                                    },
-                                                    {
                                                         "jsonName": "growthFactor",
                                                         "snakeName": "growth_factor"
                                                     },
@@ -334,20 +330,12 @@
                                                         "snakeName": "end_time"
                                                     },
                                                     {
-                                                        "jsonName": "boolValue",
-                                                        "snakeName": "bool_value"
-                                                    },
-                                                    {
                                                         "jsonName": "int64Value",
                                                         "snakeName": "int64_value"
                                                     },
                                                     {
                                                         "jsonName": "doubleValue",
                                                         "snakeName": "double_value"
-                                                    },
-                                                    {
-                                                        "jsonName": "stringValue",
-                                                        "snakeName": "string_value"
                                                     },
                                                     {
                                                         "jsonName": "distributionValue",
@@ -372,14 +360,6 @@
                                                     {
                                                         "jsonName": "consumerId",
                                                         "snakeName": "consumer_id"
-                                                    },
-                                                    {
-                                                        "jsonName": "startTime",
-                                                        "snakeName": "start_time"
-                                                    },
-                                                    {
-                                                        "jsonName": "endTime",
-                                                        "snakeName": "end_time"
                                                     },
                                                     {
                                                         "jsonName": "metricValueSets",

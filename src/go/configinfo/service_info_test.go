@@ -1966,7 +1966,7 @@ func TestProcessTypes(t *testing.T) {
 			},
 		},
 		{
-			desc: "Success for fully duplicated names",
+			desc: "Success for fully duplicated names, which are de-duped",
 			fakeServiceConfig: &confpb.Service{
 				Types: []*ptype.Type{
 					{
@@ -1988,8 +1988,33 @@ func TestProcessTypes(t *testing.T) {
 					SnakeName: "foo_bar",
 					JsonName:  "fooBar",
 				},
+			},
+		},
+		{
+			desc: "Success for duplicated json_name with mismatching snake_name",
+			fakeServiceConfig: &confpb.Service{
+				Types: []*ptype.Type{
+					{
+						Fields: []*ptype.Field{
+							{
+								Name:     "foo_bar",
+								JsonName: "fooBar",
+							},
+							{
+								Name:     "foo___bar",
+								JsonName: "fooBar",
+							},
+						},
+					},
+				},
+			},
+			wantSegments: []*pmpb.SegmentName{
 				{
 					SnakeName: "foo_bar",
+					JsonName:  "fooBar",
+				},
+				{
+					SnakeName: "foo___bar",
 					JsonName:  "fooBar",
 				},
 			},
@@ -2020,7 +2045,7 @@ func TestProcessTypes(t *testing.T) {
 		serviceInfo := &ServiceInfo{
 			serviceConfig: tc.fakeServiceConfig,
 		}
-		err := serviceInfo.ProcessTypes()
+		err := serviceInfo.processTypes()
 
 		if err != nil {
 			if tc.wantErr == nil || !strings.Contains(err.Error(), tc.wantErr.Error()) {
