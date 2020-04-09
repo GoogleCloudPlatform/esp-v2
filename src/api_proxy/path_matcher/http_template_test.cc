@@ -455,7 +455,11 @@ TEST(HttpTemplate, ErrorTests) {
   ASSERT_EQ(nullptr, HttpTemplate::Parse("/:"));
   ASSERT_EQ(nullptr, HttpTemplate::Parse("/*:"));
   ASSERT_EQ(nullptr, HttpTemplate::Parse("/**:"));
+  ASSERT_EQ(nullptr, HttpTemplate::Parse("/{{"));
   ASSERT_EQ(nullptr, HttpTemplate::Parse("/{var}:"));
+  ASSERT_EQ(nullptr, HttpTemplate::Parse("/{var}::"));
+  ASSERT_EQ(nullptr, HttpTemplate::Parse("/{var/a"));
+  ASSERT_EQ(nullptr, HttpTemplate::Parse("/{{var}}"));
 
   ASSERT_EQ(nullptr, HttpTemplate::Parse("/a/b/:"));
   ASSERT_EQ(nullptr, HttpTemplate::Parse("/a/b/*:"));
