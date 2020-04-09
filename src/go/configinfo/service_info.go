@@ -123,7 +123,9 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	}
 
 	serviceInfo.processAccessToken()
-	serviceInfo.processTypes()
+	if err := serviceInfo.processTypes(); err != nil {
+		return nil, err
+	}
 	serviceInfo.addGrpcHttpRules()
 	if err := serviceInfo.processTranscodingIgnoredQueryParams(); err != nil {
 		return nil, err
@@ -607,18 +609,34 @@ func (s *ServiceInfo) extractApiKeyLocations(method *methodInfo, parameters []*c
 	method.ApiKeyLocations = append(method.ApiKeyLocations, headerNames...)
 }
 
-func (s *ServiceInfo) processTypes() {
-	// Create snake name to JSON name mapping.
+func (s *ServiceInfo) processTypes() error {
+	// Create snake name to JSON name mapping (and validate against duplicates).
+	snakeToJson := make(map[string]string)
+
 	for _, t := range s.ServiceConfig().GetTypes() {
 		for _, f := range t.GetFields() {
 			if strings.ContainsRune(f.GetName(), '_') {
-				s.SegmentNames = append(s.SegmentNames, &pmpb.SegmentName{
-					SnakeName: f.GetName(),
-					JsonName:  f.GetJsonName(),
-				})
+
+				if prevJsonName, ok := snakeToJson[f.GetName()]; ok {
+					if prevJsonName != f.GetJsonName() {
+						// Duplicate snake name with mismatching JSON name.
+						// This will cause an error in path matcher variable bindings.
+						// Disallow it.
+						return fmt.Errorf("detected two types with same snake_name (%v) but mistmatching json_name (%v, %v)", f.GetName(), f.GetJsonName(), prevJsonName)
+					}
+				} else {
+					// Unique entry.
+					snakeToJson[f.GetName()] = f.GetJsonName()
+					s.SegmentNames = append(s.SegmentNames, &pmpb.SegmentName{
+						SnakeName: f.GetName(),
+						JsonName:  f.GetJsonName(),
+					})
+				}
+
 			}
 		}
 	}
+	return nil
 }
 
 // get the methodInfo by full name, and create a new one if not exists.

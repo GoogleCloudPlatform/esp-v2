@@ -30,8 +30,10 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/mux"
+	"google.golang.org/genproto/protobuf/ptype"
 
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/common"
+	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/path_matcher"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/service_control"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -1922,6 +1924,136 @@ func TestProcessApisForGrpc(t *testing.T) {
 			wantApiName := tc.wantApiNames[idx]
 			if gotApiName != wantApiName {
 				t.Errorf("Test Desc(%d): %s,\ngot ApiName: %v,\nwant Apiname: %v", i, tc.desc, gotApiName, wantApiName)
+			}
+		}
+	}
+}
+
+func TestProcessTypes(t *testing.T) {
+	testData := []struct {
+		desc              string
+		fakeServiceConfig *confpb.Service
+		wantSegments      []*pmpb.SegmentName
+		wantErr           error
+	}{
+		{
+			desc: "Success for distinct names",
+			fakeServiceConfig: &confpb.Service{
+				Types: []*ptype.Type{
+					{
+						Fields: []*ptype.Field{
+							{
+								Name:     "foo_bar",
+								JsonName: "fooBar",
+							},
+							{
+								Name:     "x_y",
+								JsonName: "xY",
+							},
+						},
+					},
+				},
+			},
+			wantSegments: []*pmpb.SegmentName{
+				{
+					SnakeName: "foo_bar",
+					JsonName:  "fooBar",
+				},
+				{
+					SnakeName: "x_y",
+					JsonName:  "xY",
+				},
+			},
+		},
+		{
+			desc: "Success for fully duplicated names, which are de-duped",
+			fakeServiceConfig: &confpb.Service{
+				Types: []*ptype.Type{
+					{
+						Fields: []*ptype.Field{
+							{
+								Name:     "foo_bar",
+								JsonName: "fooBar",
+							},
+							{
+								Name:     "foo_bar",
+								JsonName: "fooBar",
+							},
+						},
+					},
+				},
+			},
+			wantSegments: []*pmpb.SegmentName{
+				{
+					SnakeName: "foo_bar",
+					JsonName:  "fooBar",
+				},
+			},
+		},
+		{
+			desc: "Success for duplicated json_name with mismatching snake_name",
+			fakeServiceConfig: &confpb.Service{
+				Types: []*ptype.Type{
+					{
+						Fields: []*ptype.Field{
+							{
+								Name:     "foo_bar",
+								JsonName: "fooBar",
+							},
+							{
+								Name:     "foo___bar",
+								JsonName: "fooBar",
+							},
+						},
+					},
+				},
+			},
+			wantSegments: []*pmpb.SegmentName{
+				{
+					SnakeName: "foo_bar",
+					JsonName:  "fooBar",
+				},
+				{
+					SnakeName: "foo___bar",
+					JsonName:  "fooBar",
+				},
+			},
+		},
+		{
+			desc: "Failure for duplicated snake_name with mismatching json_name",
+			fakeServiceConfig: &confpb.Service{
+				Types: []*ptype.Type{
+					{
+						Fields: []*ptype.Field{
+							{
+								Name:     "foo_bar",
+								JsonName: "fooBar",
+							},
+							{
+								Name:     "foo_bar",
+								JsonName: "foo-bar",
+							},
+						},
+					},
+				},
+			},
+			wantErr: fmt.Errorf("detected two types with same snake_name (foo_bar) but mistmatching json_name (foo-bar, fooBar)"),
+		},
+	}
+
+	for _, tc := range testData {
+		serviceInfo := &ServiceInfo{
+			serviceConfig: tc.fakeServiceConfig,
+		}
+		err := serviceInfo.processTypes()
+
+		if err != nil {
+			if tc.wantErr == nil || !strings.Contains(err.Error(), tc.wantErr.Error()) {
+				t.Errorf("Test(%v): Expected err (%v), got err (%v)", tc.desc, tc.wantErr, err)
+			}
+		} else {
+			if !reflect.DeepEqual(serviceInfo.SegmentNames, tc.wantSegments) {
+				t.Errorf("Test(%v): Expected segments (%v), got segments (%v)", tc.desc, tc.wantSegments, serviceInfo.SegmentNames)
 			}
 		}
 	}
