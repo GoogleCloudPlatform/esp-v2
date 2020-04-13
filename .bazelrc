@@ -18,7 +18,6 @@ build --show_timestamps
 build:release -c opt
 build:debug -c dbg
 
-build --experimental_remap_main_repo
 build --experimental_local_memory_estimate
 build --experimental_strict_action_env=true
 build --host_force_python=PY2
