@@ -58,22 +58,22 @@ func TestServiceControlCheckServerFailFlag(t *testing.T) {
 		wantError       string
 	}{
 		{
-			desc:            "Failed, 403 check error should not retry and fail_open is false.",
+			desc:            "Failed, 403 check error should not retry and fail_open is false. Non-5xx is translated to 500.",
 			networkFailOpen: false,
 			method:          "/v1/shelves/100/books?key=api-key",
 			respCode:        403,
 			respBody:        "service control service is not enabled",
 			wantRetry:       1,
-			wantError:       "403 Forbidden, PERMISSION_DENIED:Calling Google Service Control API failed with: 403 and body: service control service is not enabled",
+			wantError:       "500 Internal Server Error, INTERNAL:Calling Google Service Control API failed with: 403 and body: service control service is not enabled",
 		},
 		{
-			desc:            "Failed, 403 check error should not retry and fail_open should not apply.",
+			desc:            "Failed, 403 check error should not retry and fail_open should not apply. Non-5xx is translated to 500.",
 			networkFailOpen: true,
 			method:          "/v1/shelves/100/books?key=api-key",
 			respCode:        403,
 			respBody:        "service control service is not enabled",
 			wantRetry:       1,
-			wantError:       "403 Forbidden, PERMISSION_DENIED:Calling Google Service Control API failed with: 403 and body: service control service is not enabled",
+			wantError:       "500 Internal Server Error, INTERNAL:Calling Google Service Control API failed with: 403 and body: service control service is not enabled",
 		},
 		{
 			desc:            "Failed, 503 check error should retry and fail_open is false.",
