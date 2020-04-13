@@ -320,7 +320,12 @@ CancelFunc ClientCache::callCheck(
                       "due to network_fail_open policy.");
             on_done(Status::OK, response_info);
           } else {
-            on_done(status, response_info);
+            // This is not a client request error, so translate non-5xx error
+            // codes to 500 Internal Server Error. Error message contains
+            // details on the original error (including the original HTTP status
+            // code).
+            Status converted(Code::INTERNAL, status.error_message());
+            on_done(converted, response_info);
           }
         }
         delete response;
