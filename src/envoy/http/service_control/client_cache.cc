@@ -309,24 +309,27 @@ CancelFunc ClientCache::callCheck(
               RequestBuilder::ConvertCheckResponse(
                   *response, config_.service_name(), &response_info);
           on_done(converted_status, response_info);
-        } else {
+        } else if (status.error_code() == Code::UNAVAILABLE) {
           // Envoy::Grpc::httpToGrpcStatus() is called at http_call.cc at
           // HttpCallImpl::onSuccess to map http_code to grpc_code.
           // All 5xx server error codes have been mapped to Code::UNAVAILABLE.
           // network_fail_open only applies to 5xx server error codes.
-          if (network_fail_open_ && status.error_code() == Code::UNAVAILABLE) {
+          if (network_fail_open_) {
             ENVOY_LOG(debug,
                       "service control check fails, but the request is allowed "
                       "due to network_fail_open policy.");
             on_done(Status::OK, response_info);
           } else {
-            // This is not a client request error, so translate non-5xx error
-            // codes to 500 Internal Server Error. Error message contains
-            // details on the original error (including the original HTTP status
-            // code).
-            Status converted(Code::INTERNAL, status.error_message());
-            on_done(converted, response_info);
+            // Preserve the original 5xx error code in the response back.
+            on_done(status, response_info);
           }
+        } else {
+          // This is not caused by a client request error, so translate non-5xx
+          // error codes to 500 Internal Server Error. Error message contains
+          // details on the original error (including the original HTTP status
+          // code).
+          Status converted(Code::INTERNAL, status.error_message());
+          on_done(converted, response_info);
         }
         delete response;
       },
