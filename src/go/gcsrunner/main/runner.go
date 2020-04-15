@@ -35,6 +35,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/gcsrunner"
@@ -94,7 +95,7 @@ func main() {
 	}
 
 	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan)
+	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 
 	if err := gcsrunner.FetchConfigFromGCS(gcsrunner.FetchConfigOptions{
 		BucketName:                    bucketName,
