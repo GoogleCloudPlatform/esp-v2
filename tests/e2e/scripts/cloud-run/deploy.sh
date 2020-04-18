@@ -201,7 +201,7 @@ function setup() {
 
 
 
-  # For Cloud Run(fully managed), deploy initial ESPv2 service to get assigend host
+  # For Cloud Run(Fully managed), deploy initial ESPv2 service to get assigend host
   if [[ ${PROXY_PLATFORM} == "cloud-run" ]]; then
     echo "Deploying ESPv2 ${BACKEND_SERVICE_NAME} on Cloud Run(Fully managed)"
     deployProxy "${APIPROXY_IMAGE}" ""
