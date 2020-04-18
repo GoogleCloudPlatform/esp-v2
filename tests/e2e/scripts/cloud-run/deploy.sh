@@ -200,10 +200,10 @@ function setup() {
   fi
 
 
-  echo "Deploying ESPv2 ${BACKEND_SERVICE_NAME} on ${PROXY_PLATFORM}"
 
   # For Cloud Run(fully managed), deploy initial ESPv2 service to get assigend host
-  if [[ ${PROXY_PLATFORM} != "anthos-cloud-run" ]]; then
+  if [[ ${PROXY_PLATFORM} == "cloud-run" ]]; then
+    echo "Deploying ESPv2 ${BACKEND_SERVICE_NAME} on Cloud Run(Fully managed)"
     deployProxy "${APIPROXY_IMAGE}" ""
   fi
 
@@ -292,11 +292,11 @@ function setup() {
   # Redeploy ESPv2 to update the service config
   proxy_args="--tracing_sample_rate=0.00001"
 
-  if [[ ${PROXY_PLATFORM} == "anthos-cloud-run" ]];
+  if [[ ${PROXY_PLATFORM} == "cloud-run" ]];
   then
-    echo "Deploying ESPv2 ${PROXY_SERVICE_NAME} on Cloud Run(Anthos)"
+    echo "Redeploying ESPv2 ${BACKEND_SERVICE_NAME} on Cloud Run(Fully managed)"
   else
-    echo "Redeploying ESPv2 ${PROXY_SERVICE_NAME} on Cloud Run(Fully managed)"
+    echo "Deploying ESPv2 ${BACKEND_SERVICE_NAME} on Cloud Run(Anthos)"
   fi
 
   deployProxy "gcr.io/${PROJECT_ID}/endpoints-runtime-serverless:${ENDPOINTS_SERVICE_NAME}-${endpoints_service_config_id}"  "${proxy_args}"
