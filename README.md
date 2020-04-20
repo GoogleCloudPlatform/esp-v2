@@ -72,6 +72,14 @@ ESPv2 also writes access logs for each request, providing insight into HTTP head
 * [Application Observability](https://cloud.google.com/endpoints/docs/grpc/tracing):
 Understand and debug problems with your API or ESPv2 by viewing traces and application logs.
 
+* Multi Transport Protocols: ESPv2 supports HTTP/1.1, HTTP/2, websockets, gRPC and gRPC-web.
+
+* Security: ESPv2 supports TLS for downstream and upstream, also mTLS for upstream connections, for both HTTP and gRPC.
+
+* Dynamic Routing: ESPv2 can route traffic across multiple remote upstream services.
+
+* Health Checks: ESPv2 can actively monitor your services.
+
 ## Getting Started
 
 The official Google Cloud Endpoints documentation contains tutorials and detailed documentation
@@ -84,6 +92,8 @@ Quickstart tutorials for deploying ESPv2:
 * [Cloud Endpoints for OpenAPI on Google Cloud Functions](https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-functions)
 
 * [Cloud Endpoints for gRPC on Google Cloud Run](https://cloud.google.com/endpoints/docs/grpc/get-started-cloud-run)
+
+* [Cloud Endpoints for OpenAPI on Google Cloud Run for Anthos](https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-run-anthos)
 
 Configuring ESPv2:
 
@@ -161,3 +171,4 @@ Your contributions are welcome:
 
 ESPv2 is currently in Beta for the API Gateway deployment mode.
 ESPv2 does not officially support the sidecar deployment mode (yet).
+
