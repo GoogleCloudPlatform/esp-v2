@@ -76,7 +76,7 @@ Understand and debug problems with your API or ESPv2 by viewing traces and appli
 
 * Security: ESPv2 supports TLS for downstream and upstream, also mTLS for upstream connections, for both HTTP and gRPC.
 
-* Dynamic Load Balancing: ESPv2 can load balance traffic across multiple remote upstream services.
+* Dynamic Routing: ESPv2 can route traffic across multiple remote upstream services.
 
 * Health Checks: ESPv2 can actively monitor your services.
 
