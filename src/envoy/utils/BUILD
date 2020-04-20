@@ -58,6 +58,7 @@ envoy_cc_library(
     ],
     repository = "@envoy",
     deps = [
+        "@envoy//include/envoy/stream_info:filter_state_interface",
         "@envoy//source/common/common:empty_string",
         "@envoy//source/common/router:string_accessor_lib",
         "@envoy//source/exe:envoy_common_lib",

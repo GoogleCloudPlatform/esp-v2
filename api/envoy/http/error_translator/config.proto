@@ -1,0 +1,38 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package google.api.envoy.http.error_translator;
+
+import "validate/validate.proto";
+
+message FilterConfig {
+  // Specified the level of error information that will be exposed to clients /
+  // API Consumers. Note this is independent of information exposed to API
+  // producers.
+  enum ClientErrorVisibility {
+    CLIENT_ERROR_VISIBILITY_UNSPECIFIED = 0;
+
+    // Debug information will be scrubbed before responding back to the client.
+    // Client will only receive a code and basic message.
+    MESSAGE_ONLY = 1;
+
+    // All debug details will be sent to the client.
+    // Mirrors the information an API Producer would see.
+    FULL_DETAILS = 2;
+  }
+
+  ClientErrorVisibility client_error_visibility = 1;
+}

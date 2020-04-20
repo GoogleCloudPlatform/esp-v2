@@ -13,9 +13,11 @@
 // limitations under the License.
 
 #include "src/envoy/utils/filter_state_utils.h"
+#include <memory>
 
 #include "common/common/empty_string.h"
 #include "common/router/string_accessor_impl.h"
+#include "envoy/stream_info/filter_state.h"
 
 namespace espv2 {
 namespace envoy {
@@ -25,13 +27,20 @@ using ::Envoy::Router::StringAccessor;
 using ::Envoy::Router::StringAccessorImpl;
 using ::Envoy::StreamInfo::FilterState;
 
+// FilterState container needed to store the google.rpc.Status error proto.
+struct RpcStatusWrapper : public Envoy::StreamInfo::FilterState::Object {
+  google::rpc::Status status_;
+
+  Envoy::ProtobufTypes::MessagePtr serializeAsProto() const override {
+    return std::make_unique<google::rpc::Status>(status_);
+  }
+};
+
 void setStringFilterState(FilterState& filter_state,
                           absl::string_view data_name,
                           absl::string_view value) {
-  filter_state.setData(
-      data_name,
-      std::make_unique<StringAccessorImpl>(StringAccessorImpl(value)),
-      Envoy::StreamInfo::FilterState::StateType::ReadOnly);
+  filter_state.setData(data_name, std::make_unique<StringAccessorImpl>(value),
+                       Envoy::StreamInfo::FilterState::StateType::ReadOnly);
 }
 
 absl::string_view getStringFilterState(
@@ -42,6 +51,24 @@ absl::string_view getStringFilterState(
   }
 
   return filter_state.getDataReadOnly<StringAccessor>(data_name).asString();
+}
+
+void setErrorFilterState(Envoy::StreamInfo::FilterState& filter_state,
+                         const google::rpc::Status& status) {
+  auto state = std::make_unique<RpcStatusWrapper>();
+  state->status_ = status;
+  filter_state.setData(kErrorRpcStatus, std::move(state),
+                       Envoy::StreamInfo::FilterState::StateType::ReadOnly);
+}
+
+bool hasErrorFilterState(Envoy::StreamInfo::FilterState& filter_state) {
+  return filter_state.hasData<RpcStatusWrapper>(kErrorRpcStatus);
+}
+
+google::rpc::Status getErrorFilterState(
+    Envoy::StreamInfo::FilterState& filter_state) {
+  auto state = filter_state.getDataReadOnly<RpcStatusWrapper>(kErrorRpcStatus);
+  return state.status_;
 }
 
 }  // namespace utils

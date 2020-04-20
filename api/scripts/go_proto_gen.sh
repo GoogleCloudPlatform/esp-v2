@@ -43,3 +43,7 @@ cp -f bazel-bin/api/envoy/http/backend_auth/*/config_go_proto%/github.com/Google
 bazel build //api/envoy/http/backend_routing:config_go_proto
 mkdir -p src/go/proto/api/envoy/http/backend_routing
 cp -f bazel-bin/api/envoy/http/backend_routing/*/config_go_proto%/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/backend_routing/* src/go/proto/api/envoy/http/backend_routing
+# HTTP filter error_translator
+bazel build //api/envoy/http/error_translator:config_go_proto
+mkdir -p src/go/proto/api/envoy/http/error_translator
+cp -f bazel-bin/api/envoy/http/error_translator/*/config_go_proto%/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/error_translator/* src/go/proto/api/envoy/http/error_translator
