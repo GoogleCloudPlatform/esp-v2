@@ -173,7 +173,7 @@ bool Filter::isUpstreamResponse() {
   if (!response_details) {
     return false;
   }
-  return *response_details !=
+  return *response_details ==
          Envoy::StreamInfo::ResponseCodeDetails::get().ViaUpstream;
 }
 
