@@ -110,7 +110,8 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         "//api/envoy/http/common:base_proto_cc_proto",
-        "//src/api_proxy/auth:lib",
+        "//external:abseil_optional",
+        "//src/api_proxy/auth:auth_token_lib",
         "//src/envoy/utils:json_struct_lib",
         "@envoy//include/envoy/event:dispatcher_interface",
         "@envoy//include/envoy/server:filter_config_interface",

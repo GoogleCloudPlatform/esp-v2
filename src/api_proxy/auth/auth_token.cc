@@ -15,187 +15,35 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 #include "src/api_proxy/auth/auth_token.h"
-#include "src/api_proxy/auth/json_util.h"
 
-#include <openssl/hmac.h>
-#include <openssl/pem.h>
-#include <cstring>
-#include <string>
-
-extern "C" {
-#include "grpc/grpc.h"
-#include "grpc/support/alloc.h"
-#include "grpc/support/log.h"
-#include "grpc/support/string_util.h"
-#include "grpc/support/sync.h"
-}
-
-#include "grpc_internals.h"
-
-using std::string;
+// This header file is for internal. A public header file should not
+// include it.
+#include "src/api_proxy/auth/grpc_internals.h"
 
 namespace espv2 {
 namespace api_proxy {
 namespace auth {
 
 namespace {
-
-#define GRPC_AUTH_JSON_TYPE_INVALID "invalid"
-
+// Token should expire in 1 hour.
 const gpr_timespec TOKEN_LIFETIME = {3600, 0, GPR_TIMESPAN};
-
-char *GenerateTokenSymmetricKey(const grpc_json *json, const char *audience);
-
-char *GenerateJoseHeader(const char *algorithm);
-char *GenerateJwtClaim(const char *issuer, const char *subject,
-                       const char *audience, gpr_timespec token_lifetime);
-char *GenerateSignatueHs256(const char *data, const char *key);
-string DotConcat(const string &str1, const string &str2);
-
 }  // namespace
 
-// TODO: this function can return a string instead of char* that need to be
-// freed.
-char *get_auth_token(const char *json_secret, const char *audience) {
-  char *scratchpad = gpr_strdup(json_secret);
-  grpc_json *json = grpc_json_parse_string(scratchpad);
-  char *token = nullptr;
+absl::optional<std::string> get_auth_token(const std::string& json_secret,
+                                           const std::string& audience) {
+  grpc_auth_json_key json_key =
+      grpc_auth_json_key_create_from_string(json_secret.c_str());
 
-  if (GetStringValue(json, "client_secret") != nullptr) {  // Symmetric key.
-    token = GenerateTokenSymmetricKey(json, audience);
-  } else {
-    grpc_auth_json_key json_key =
-        grpc_auth_json_key_create_from_string(json_secret);
-    if (strcmp(json_key.type, GRPC_AUTH_JSON_TYPE_INVALID) != 0) {
-      token = grpc_jwt_encode_and_sign(&json_key, audience, TOKEN_LIFETIME,
-                                       nullptr);
-      grpc_auth_json_key_destruct(&json_key);
-    }
+  if (grpc_auth_json_key_is_valid(&json_key) == 0) {
+    return absl::nullopt;
   }
 
-  if (json != nullptr) grpc_json_destroy(json);
-  gpr_free(scratchpad);
-  return token;
+  const char* token = grpc_jwt_encode_and_sign(&json_key, audience.c_str(),
+                                         TOKEN_LIFETIME, nullptr);
+  grpc_auth_json_key_destruct(&json_key);
+
+  return absl::optional<std::string>{token};
 }
-
-void grpc_free(char *token) { gpr_free(token); }
-
-namespace {
-
-char *GenerateTokenSymmetricKey(const grpc_json *json, const char *audience) {
-  const char *issuer = GetStringValue(json, "issuer");
-  if (issuer == nullptr) {
-    // TODO: move to common logging.
-    gpr_log(GPR_ERROR, "Missing issuer");
-    return nullptr;
-  }
-  const char *subject = GetStringValue(json, "subject");
-  if (subject == nullptr) {
-    gpr_log(GPR_ERROR, "Missing subject");
-    return nullptr;
-  }
-
-  char *header = GenerateJoseHeader("HS256");
-  if (header == nullptr) {
-    gpr_log(GPR_ERROR, "Unable to create JOSE header");
-    return nullptr;
-  }
-  char *claims = GenerateJwtClaim(issuer, subject, audience, TOKEN_LIFETIME);
-  if (claims == nullptr) {
-    gpr_log(GPR_ERROR, "Unable to create JWT claims payload");
-    return nullptr;
-  }
-  string signed_data = DotConcat(header, claims);
-  gpr_free(header);
-  gpr_free(claims);
-
-  const char *secret = GetStringValue(json, "client_secret");
-  char *signature = GenerateSignatueHs256(signed_data.c_str(), secret);
-  if (signature == nullptr) {
-    gpr_log(GPR_ERROR, "Unable to compute HS256 signature");
-    return nullptr;
-  }
-
-  string result = DotConcat(signed_data, signature);
-  gpr_free(signature);
-  // Match return type of get_auth_token.
-  return gpr_strdup(result.c_str());
-}
-
-char *GenerateJoseHeader(const char *algorithm) {
-  grpc_json json_top;
-  memset(&json_top, 0, sizeof(json_top));
-  json_top.type = GRPC_JSON_OBJECT;
-
-  grpc_json json_algorithm, json_type;
-
-  FillChild(&json_algorithm, nullptr, &json_top, "alg", algorithm,
-            GRPC_JSON_STRING);
-  FillChild(&json_type, &json_algorithm, &json_top, "typ", "JWT",
-            GRPC_JSON_STRING);
-
-  char *json_str = grpc_json_dump_to_string(&json_top, 0);
-  char *result = grpc_base64_encode(json_str, strlen(json_str), 1, 0);
-  gpr_free(json_str);
-  return result;
-}
-
-char *GenerateJwtClaim(const char *issuer, const char *subject,
-                       const char *audience, gpr_timespec token_lifetime) {
-  grpc_json json_top;
-  memset(&json_top, 0, sizeof(json_top));
-  json_top.type = GRPC_JSON_OBJECT;
-
-  gpr_timespec now = gpr_now(GPR_CLOCK_REALTIME);
-  gpr_timespec expiration = gpr_time_add(now, token_lifetime);
-  char now_str[GPR_LTOA_MIN_BUFSIZE];
-  char expiration_str[GPR_LTOA_MIN_BUFSIZE];
-  gpr_ltoa(now.tv_sec, now_str);
-  gpr_ltoa(expiration.tv_sec, expiration_str);
-
-  grpc_json json_issuer, json_subject, json_audience, json_now, json_expiration;
-  FillChild(&json_issuer, nullptr, &json_top, "iss", issuer, GRPC_JSON_STRING);
-  FillChild(&json_subject, &json_issuer, &json_top, "sub", subject,
-            GRPC_JSON_STRING);
-  FillChild(&json_audience, &json_subject, &json_top, "aud", audience,
-            GRPC_JSON_STRING);
-  FillChild(&json_now, &json_audience, &json_top, "iat", now_str,
-            GRPC_JSON_NUMBER);
-  FillChild(&json_expiration, &json_now, &json_top, "exp", expiration_str,
-            GRPC_JSON_NUMBER);
-
-  char *json_str = grpc_json_dump_to_string(&json_top, 0);
-  char *result = grpc_base64_encode(json_str, strlen(json_str), 1, 0);
-  gpr_free(json_str);
-  return result;
-}
-
-char *GenerateSignatueHs256(const char *data, const char *key) {
-  grpc_slice key_buffer = grpc_base64_decode(key, 1);
-  if (GRPC_SLICE_IS_EMPTY(key_buffer)) {
-    gpr_log(GPR_ERROR, "Unable to decode base64 of secret");
-    return nullptr;
-  }
-
-  unsigned char res[256 / 8];
-  unsigned int res_len = 0;
-  HMAC(EVP_sha256(), GRPC_SLICE_START_PTR(key_buffer),
-       GRPC_SLICE_LENGTH(key_buffer),
-       reinterpret_cast<const unsigned char *>(data), strlen(data), res,
-       &res_len);
-  grpc_slice_unref(key_buffer);
-  if (res_len == 0) {
-    gpr_log(GPR_ERROR, "Cannot compute HMAC from secret.");
-    return nullptr;
-  }
-  return grpc_base64_encode(res, res_len, 1, 0);
-}
-
-string DotConcat(const string &str1, const string &str2) {
-  return str1 + "." + str2;
-}
-
-}  // namespace
 
 }  // namespace auth
 }  // namespace api_proxy

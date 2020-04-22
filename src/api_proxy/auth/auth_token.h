@@ -14,18 +14,16 @@
  */
 #pragma once
 
-#include <stddef.h>
+#include <string>
+#include "absl/types/optional.h"
 
 namespace espv2 {
 namespace api_proxy {
 namespace auth {
 
-// Parse a json secret and generate auth_token
-// Returned pointer need to be freed by grpc_free
-char* get_auth_token(const char* json_secret, const char* audience);
-
-// Free a buffer allocated by gRPC library.
-void grpc_free(char* token);
+// Generates a JWT given a service account private key and audience.
+absl::optional<std::string> get_auth_token(const std::string& json_secret,
+                                           const std::string& audience);
 
 }  // namespace auth
 }  // namespace api_proxy
