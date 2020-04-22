@@ -18,9 +18,12 @@
 
 #include "absl/types/optional.h"
 #include "common/buffer/buffer_impl.h"
+#include "common/common/assert.h"
+#include "common/grpc/common.h"
 #include "common/grpc/status.h"
 #include "common/http/headers.h"
 #include "src/envoy/utils/filter_state_utils.h"
+#include "src/google/protobuf/util/json_util.h"
 
 namespace espv2 {
 namespace envoy {
@@ -30,7 +33,16 @@ namespace error_translator {
 using ::Envoy::Http::FilterDataStatus;
 using ::Envoy::Http::FilterHeadersStatus;
 
-Filter::Filter(FilterConfigSharedPtr config) : config_(config) {}
+Filter::Filter(FilterConfigSharedPtr config) : config_(config) {
+  type_helper_ = std::make_unique<google::grpc::transcoding::TypeHelper>(
+      Envoy::Protobuf::util::NewTypeResolverForDescriptorPool(
+          Envoy::Grpc::Common::typeUrlPrefix(), &descriptor_pool_));
+
+  print_options_.add_whitespace = true;
+  print_options_.always_print_primitive_fields = true;
+  print_options_.always_print_enums_as_ints = false;
+  print_options_.preserve_proto_field_names = false;
+}
 
 FilterHeadersStatus Filter::encodeHeaders(
     Envoy::Http::ResponseHeaderMap& headers, bool) {
@@ -39,37 +51,13 @@ FilterHeadersStatus Filter::encodeHeaders(
     return FilterHeadersStatus::Continue;
   }
 
-  if (headers.ContentType() != nullptr &&
-      headers.ContentType()->value().getStringView() ==
-          Envoy::Http::Headers::get().ContentTypeValues.Grpc) {
+  if (Envoy::Grpc::Common::hasGrpcContentType(headers)) {
     is_grpc_response_ = true;
   }
 
   if (isEspv2FilterError() && is_grpc_response_) {
-    // Do not translate for gRPC, body does not matter.
-    // gRPC error is already in filter state as well, so nothing to do.
-    return FilterHeadersStatus::Continue;
-  }
-
-  if (isEspv2FilterError()) {
-    // We need to modify the response body, but keep filter state as is.
-    ENVOY_LOG(debug, "Translating HTTP espv2 error headers");
-
-    // Store a copy and scrub details if needed.
-    error_ = utils::getErrorFilterState(
-        *encoder_callbacks_->streamInfo().filterState());
-    if (config_->shouldScrubDebugDetails()) {
-      error_.clear_details();
-    }
-
-    // Translate to JSON.
-    error_json_ = errorToJson(error_);
-
-    // Update content headers.
-    headers.setContentLength(error_json_.size());
-    headers.setReferenceContentType(
-        Envoy::Http::Headers::get().ContentTypeValues.Json);
-
+    // gRPC error is already in filter state. No need to translate body, as it
+    // is not used for gRPC errors. Hence, nothing to do.
     return FilterHeadersStatus::Continue;
   }
 
@@ -78,42 +66,38 @@ FilterHeadersStatus Filter::encodeHeaders(
     // This will be used by the access log (SC Report).
     // This handles the trailers-only response by `sendLocalReply`.
     ENVOY_LOG(debug,
-              "Translating gRPC non-espv2 (upstream envoy filter) "
-              "trailers-only error response");
+              "Translating gRPC non-espv2 trailers-only error response: {}",
+              __func__);
 
-    if (headers.GrpcStatus() != nullptr) {
-      const absl::string_view grpc_status =
-          headers.GrpcStatus()->value().getStringView();
-      uint32_t parsed;
-      if (absl::SimpleAtoi(grpc_status, &parsed)) {
-        error_.set_code(parsed);
-      } else {
-        error_.set_code(Envoy::Grpc::Status::WellKnownGrpcStatus::Internal);
-      }
+    // Craft the error (using canonical status code from gRPC header).
+    google::rpc::Status error;
+    const absl::optional<Envoy::Grpc::Status::GrpcStatus> status =
+        Envoy::Grpc::Common::getGrpcStatus(headers);
+    if (status) {
+      error.set_code(*status);
     } else {
-      error_.set_code(Envoy::Grpc::Status::WellKnownGrpcStatus::Internal);
+      error.set_code(Envoy::Grpc::Status::WellKnownGrpcStatus::Internal);
     }
-    if (headers.GrpcMessage() != nullptr) {
-      const std::string grpc_message =
-          std::string(headers.GrpcMessage()->value().getStringView());
-      error_.set_message(grpc_message);
-    }
+
+    const std::string grpc_message =
+        Envoy::Grpc::Common::getGrpcMessage(headers);
+    error.set_message(grpc_message);
 
     // Store in filter state.
     utils::setErrorFilterState(*encoder_callbacks_->streamInfo().filterState(),
-                               error_);
+                               error);
 
     return FilterHeadersStatus::Continue;
   }
 
-  // Now we are handling `sendLocalReply` from non-espv2 filters.
-  // We need to modify the response body and filter state.
-  // TODO(nareddyt): Do we also need to check the content type is "plain/text"?
+  // Now we are handling `sendLocalReply` for HTTP from espv2 and non-espv2
+  // filters. We need to modify the response body and filter state.
   ENVOY_LOG(debug,
-            "Translating HTTP non-espv2 (upstream envoy filter) error headers");
+            "Storing HTTP error headers for espv2 and non-espv2 errors: {}",
+            __func__);
 
   // Stop iteration because we will modify some headers based on the body
-  // (example: content length). Expect encodeData to unblock this.
+  // (example: content length). Expect encodeData() to unblock this.
   headers_ = &headers;
   return FilterHeadersStatus::StopIteration;
 }
@@ -125,63 +109,61 @@ FilterDataStatus Filter::encodeData(Envoy::Buffer::Instance& body,
     return FilterDataStatus::Continue;
   }
 
-  if (is_grpc_response_) {
-    // Do not translate body for gRPC. It is not used.
-    return FilterDataStatus::Continue;
-  }
+  google::rpc::Status error;
+  RELEASE_ASSERT(!is_grpc_response_,
+                 "sendLocalReply() for gRPC is trailers-only response, there "
+                 "should be no body");
+  RELEASE_ASSERT(end_stream,
+                 "sendLocalReply() will not buffer data or send trailers");
+  RELEASE_ASSERT(
+      headers_ != nullptr,
+      "encodeHeaders() should have stored headers, as they will be modified");
 
   if (isEspv2FilterError()) {
-    ENVOY_LOG(debug, "Translating HTTP espv2 error body");
-    GOOGLE_DCHECK(!error_.message().empty());
-    GOOGLE_DCHECK(!error_json_.empty());
+    // We need to scrub details from the error (in the filter state).
+    ENVOY_LOG(debug, "Translating HTTP espv2 error: {}", __func__);
 
-    if (!end_stream) {
-      // Keep buffering data until we have the full response.
-      // TODO(nareddyt): Is there a better way to discard the remaining data? We
-      // don't care about it.
-      return FilterDataStatus::StopIterationAndBuffer;
+    error = utils::getErrorFilterState(
+        *encoder_callbacks_->streamInfo().filterState());
+    if (config_->shouldScrubDebugDetails()) {
+      error.clear_details();
     }
 
-    // Replace the body with the JSON error.
-    Envoy::Buffer::OwnedImpl json_body(error_json_);
-    body.move(json_body);
+  } else {
+    // We need to craft the error and store it in the filter state.
+    ENVOY_LOG(debug, "Translating HTTP non-espv2 error: {}", __func__);
+
+    // Note: Translate to canonical status codes.
+    const unsigned int http_code =
+        encoder_callbacks_->streamInfo().responseCode().value_or(500);
+    const std::string body_string = body.toString();
+    error.set_code(Envoy::Grpc::Utility::httpToGrpcStatus(http_code));
+    error.set_message(body_string);
+
+    // Set in the filter state for the access log (SC Report).
+    utils::setErrorFilterState(*encoder_callbacks_->streamInfo().filterState(),
+                               error);
+  }
+
+  // Once the error is crafted, we translate to JSON.
+  std::string error_json;
+  const Envoy::ProtobufUtil::Status json_status =
+      errorToJson(error, &error_json);
+  if (!json_status.ok()) {
+    // Don't modify the response on failure.
     return FilterDataStatus::Continue;
   }
 
-  // Now we are handling `sendLocalReply` from non-espv2 filters.
-  // We need to modify the response body and filter state.
-  ENVOY_LOG(debug,
-            "Translating HTTP non-espv2 (upstream envoy filter) error body");
-  GOOGLE_DCHECK_NE(headers_, nullptr);
-
-  if (!end_stream) {
-    // Keep buffering data until we have the full response.
-    return FilterDataStatus::StopIterationAndBuffer;
-  }
-
-  // Craft the error. Translate to canonical status codes.
-  const unsigned int http_code =
-      encoder_callbacks_->streamInfo().responseCode().value_or(500);
-  error_.set_code(Envoy::Grpc::Utility::httpToGrpcStatus(http_code));
-
-  const std::string body_string = body.toString();
-  error_.set_message(body_string);
-
-  // Set in the filter state for the access log (SC Report).
-  utils::setErrorFilterState(*encoder_callbacks_->streamInfo().filterState(),
-                             error_);
-
-  // Translate to json.
-  error_json_ = errorToJson(error_);
-
   // Update content headers.
-  headers_->setContentLength(error_json_.size());
+  headers_->setContentLength(error_json.size());
   headers_->setReferenceContentType(
       Envoy::Http::Headers::get().ContentTypeValues.Json);
 
   // Replace the body with the JSON error.
-  Envoy::Buffer::OwnedImpl json_body(error_json_);
+  Envoy::Buffer::OwnedImpl json_body(error_json);
   body.move(json_body);
+
+  // Unblock the StopIteration in encodeHeaders().
   return FilterDataStatus::Continue;
 }
 
@@ -200,9 +182,12 @@ bool Filter::isEspv2FilterError() {
       *encoder_callbacks_->streamInfo().filterState());
 }
 
-std::string Filter::errorToJson(google::rpc::Status&) {
-  // TODO(nareddyt): convert to JSON.
-  return "";
+Envoy::ProtobufUtil::Status Filter::errorToJson(google::rpc::Status& error,
+                                                std::string* json_out) {
+  return Envoy::ProtobufUtil::BinaryToJsonString(
+      type_helper_->Resolver(),
+      Envoy::Grpc::Common::typeUrl(error.GetDescriptor()->full_name()),
+      error.SerializeAsString(), json_out, print_options_);
 }
 
 }  // namespace error_translator

@@ -34,7 +34,9 @@ envoy_cc_library(
     deps = [
         "//api/envoy/http/error_translator:config_proto_cc_proto",
         "//src/envoy/utils:filter_state_utils_lib",
+        "@envoy//source/common/grpc:common_lib",
         "@envoy//source/common/http:headers_lib",
+        "@envoy//source/common/protobuf",
         "@envoy//source/common/protobuf:utility_lib",
         "@envoy//source/exe:envoy_common_lib",
         "@envoy//source/extensions/filters/http/common:pass_through_filter_lib",

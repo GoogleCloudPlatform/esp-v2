@@ -17,10 +17,13 @@
 #include <string>
 
 #include "common/common/logger.h"
+#include "common/protobuf/protobuf.h"
 #include "envoy/http/filter.h"
 #include "envoy/http/header_map.h"
 #include "extensions/filters/http/common/pass_through_filter.h"
 #include "google/rpc/status.pb.h"
+#include "grpc_transcoding/transcoder.h"
+#include "grpc_transcoding/type_helper.h"
 #include "src/envoy/http/error_translator/filter_config.h"
 
 namespace espv2 {
@@ -43,7 +46,8 @@ class Filter : public Envoy::Http::PassThroughEncoderFilter,
 
   bool isEspv2FilterError();
 
-  std::string errorToJson(google::rpc::Status& error);
+  Envoy::ProtobufUtil::Status errorToJson(google::rpc::Status& error,
+                                          std::string* json_out);
 
  private:
   const FilterConfigSharedPtr config_;
@@ -51,14 +55,15 @@ class Filter : public Envoy::Http::PassThroughEncoderFilter,
   // Current response is gRPC. Filter does not try to create a gRPC body.
   bool is_grpc_response_;
 
-  // Stores the current error that is being translated.
-  google::rpc::Status error_;
-
-  // Caches the error converted to JSON.
-  std::string error_json_;
-
   // Save the response headers so they can be modified in `encodeData`.
   Envoy::Http::ResponseHeaderMap* headers_;
+
+  // Required for resolving error details (protobuf.Any types).
+  Envoy::Protobuf::DescriptorPool descriptor_pool_;
+  std::unique_ptr<google::grpc::transcoding::TypeHelper> type_helper_;
+
+  // Allows JSON to be pretty printed.
+  Envoy::Protobuf::util::JsonPrintOptions print_options_;
 };
 
 }  // namespace error_translator
