@@ -20,6 +20,7 @@
 #include "envoy/http/filter.h"
 #include "envoy/http/header_map.h"
 #include "extensions/filters/http/common/pass_through_filter.h"
+#include "google/rpc/status.pb.h"
 #include "src/envoy/http/error_translator/filter_config.h"
 
 namespace espv2 {
@@ -32,16 +33,32 @@ class Filter : public Envoy::Http::PassThroughEncoderFilter,
  public:
   Filter(FilterConfigSharedPtr config);
 
-  // Envoy::Http::StreamDecoderFilter
   Envoy::Http::FilterHeadersStatus encodeHeaders(
-      Envoy::Http::ResponseHeaderMap&, bool) override;
+      Envoy::Http::ResponseHeaderMap& headers, bool) override;
 
-  void handleEspv2FilterError();
+  Envoy::Http::FilterDataStatus encodeData(Envoy::Buffer::Instance&,
+                                           bool end_stream) override;
 
-  void handleEnvoyFilterError();
+  bool isUpstreamResponse();
+
+  bool isEspv2FilterError();
+
+  std::string errorToJson(google::rpc::Status& error);
 
  private:
   const FilterConfigSharedPtr config_;
+
+  // Current response is gRPC. Filter does not try to create a gRPC body.
+  bool is_grpc_response_;
+
+  // Stores the current error that is being translated.
+  google::rpc::Status error_;
+
+  // Caches the error converted to JSON.
+  std::string error_json_;
+
+  // Save the response headers so they can be modified in `encodeData`.
+  Envoy::Http::ResponseHeaderMap* headers_;
 };
 
 }  // namespace error_translator
