@@ -49,6 +49,8 @@ const (
 	GrpcStatsFilterName = "envoy.filters.http.grpc_stats"
 	// TLSTransportSocket is Envoy TLS Transport Socket name.
 	TLSTransportSocket = "envoy.transport_sockets.tls"
+	// AccessFileLogger filter name
+	AccessFileLogger = "envoy.access_loggers.file"
 	// DefaultRootCAPaths is the default certs path.
 	DefaultRootCAPaths = "/etc/ssl/certs/ca-certificates.crt"
 

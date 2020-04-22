@@ -408,6 +408,12 @@ environment variable or by passing "-k" flag to this script.
         Must be >= 0 and the default is 5 if not set.
         ''')
     parser.add_argument(
+        '--access_log',
+        help='''
+        Path to a local file to which the access log entries will be written.
+        '''
+    )
+    parser.add_argument(
         '--disable_tracing',
         action='store_true',
         default=False,
@@ -815,6 +821,9 @@ def gen_proxy_config(args):
     if args.underscores_in_headers:
         proxy_conf.append("--underscores_in_headers")
 
+    if args.access_log:
+        proxy_conf.extend(["--access_log",
+                           args.access_log])
     if args.disable_tracing:
         proxy_conf.append("--disable_tracing")
 

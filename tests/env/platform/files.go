@@ -45,6 +45,7 @@ const (
 	LogMetrics
 	Version
 	FakeServiceAccount
+	AccessLog
 
 	// Configurations
 	AuthServiceConfig
@@ -90,6 +91,7 @@ var fileMap = map[RuntimeFile]string{
 	GrpcEchoServiceConfig:       "../../../../examples/grpc_dynamic_routing/service_config_generated.json",
 	GrpcEchoEnvoyConfig:         "../../../../examples/grpc_dynamic_routing/envoy_config.json",
 	FakeServiceAccount:          "./testdata/fake_service_account.json",
+	AccessLog:                   "../env/testdata/access_log.txt",
 }
 
 // Get the runtime file path for the specified file.
