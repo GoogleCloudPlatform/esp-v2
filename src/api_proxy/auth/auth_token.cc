@@ -20,6 +20,10 @@
 // include it.
 #include "src/api_proxy/auth/grpc_internals.h"
 
+extern "C" {
+  #include "grpc/support/alloc.h"
+};
+
 namespace espv2 {
 namespace api_proxy {
 namespace auth {
@@ -38,11 +42,13 @@ absl::optional<std::string> get_auth_token(const std::string& json_secret,
     return absl::nullopt;
   }
 
-  const char* token = grpc_jwt_encode_and_sign(&json_key, audience.c_str(),
+  char* token = grpc_jwt_encode_and_sign(&json_key, audience.c_str(),
                                          TOKEN_LIFETIME, nullptr);
-  grpc_auth_json_key_destruct(&json_key);
+  const auto ret = absl::optional<std::string>{token};
 
-  return absl::optional<std::string>{token};
+  grpc_auth_json_key_destruct(&json_key);
+  gpr_free(token);
+  return ret;
 }
 
 }  // namespace auth
