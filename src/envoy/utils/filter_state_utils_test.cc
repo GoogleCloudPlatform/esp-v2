@@ -61,7 +61,7 @@ TEST(FilterStateUtilsTest, SetAndGetErrorFilterState) {
   EXPECT_TRUE(Envoy::Protobuf::util::MessageDifferencer::Equals(got, error));
 }
 
-TEST(FilterStateUtilsTest, ErrorFilterStateIsCopiedWhenSet) {
+TEST(FilterStateUtilsTest, ErrorFilterStateSetWithCopy) {
   Envoy::StreamInfo::FilterStateImpl filter_state(
       Envoy::StreamInfo::FilterState::LifeSpan::FilterChain);
 
@@ -74,6 +74,18 @@ TEST(FilterStateUtilsTest, ErrorFilterStateIsCopiedWhenSet) {
 
   const google::rpc::Status& got = getErrorFilterState(filter_state);
   EXPECT_NE(got.code(), error.code());
+  EXPECT_EQ(got.code(), 3);
+}
+
+TEST(FilterStateUtilsTest, ErrorFilterStateSetWithMove) {
+  Envoy::StreamInfo::FilterStateImpl filter_state(
+      Envoy::StreamInfo::FilterState::LifeSpan::FilterChain);
+
+  google::rpc::Status error;
+  error.set_code(3);
+
+  setErrorFilterState(filter_state, std::move(error));
+  const google::rpc::Status& got = getErrorFilterState(filter_state);
   EXPECT_EQ(got.code(), 3);
 }
 

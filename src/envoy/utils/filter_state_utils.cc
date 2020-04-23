@@ -28,13 +28,21 @@ using ::Envoy::Router::StringAccessorImpl;
 using ::Envoy::StreamInfo::FilterState;
 
 // FilterState container needed to store the google.rpc.Status error proto.
-struct RpcStatusWrapper : public Envoy::StreamInfo::FilterState::Object {
-  google::rpc::Status status_;
+class RpcStatusWrapper : public Envoy::StreamInfo::FilterState::Object {
+
+ public:
+  RpcStatusWrapper(const google::rpc::Status& status) : status_(status) {}
+  RpcStatusWrapper(google::rpc::Status&& status) : status_(std::move(status)) {}
+
+  const google::rpc::Status& getStatus() const { return status_; }
 
   // Used in case a user configures the access log flags.
   Envoy::ProtobufTypes::MessagePtr serializeAsProto() const override {
     return std::make_unique<google::rpc::Status>(status_);
   }
+
+ private:
+  google::rpc::Status status_;
 };
 
 void setStringFilterState(FilterState& filter_state,
@@ -56,21 +64,26 @@ absl::string_view getStringFilterState(
 
 void setErrorFilterState(Envoy::StreamInfo::FilterState& filter_state,
                          const google::rpc::Status& status) {
-  auto state = std::make_unique<RpcStatusWrapper>();
-  state->status_ = status;
+  auto state = std::make_unique<RpcStatusWrapper>(status);
   filter_state.setData(kErrorRpcStatus, std::move(state),
                        Envoy::StreamInfo::FilterState::StateType::ReadOnly);
 }
 
-bool hasErrorFilterState(Envoy::StreamInfo::FilterState& filter_state) {
+void setErrorFilterState(Envoy::StreamInfo::FilterState& filter_state,
+                         google::rpc::Status&& status) {
+  auto state = std::make_unique<RpcStatusWrapper>(std::move(status));
+  filter_state.setData(kErrorRpcStatus, std::move(state),
+                       Envoy::StreamInfo::FilterState::StateType::ReadOnly);
+}
+
+bool hasErrorFilterState(const Envoy::StreamInfo::FilterState& filter_state) {
   return filter_state.hasData<RpcStatusWrapper>(kErrorRpcStatus);
 }
 
-const google::rpc::Status& getErrorFilterState(
-    Envoy::StreamInfo::FilterState& filter_state) {
+const google::rpc::Status& getErrorFilterState(const Envoy::StreamInfo::FilterState& filter_state) {
   const auto& state =
       filter_state.getDataReadOnly<RpcStatusWrapper>(kErrorRpcStatus);
-  return state.status_;
+  return state.getStatus();
 }
 
 }  // namespace utils

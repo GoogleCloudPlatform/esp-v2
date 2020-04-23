@@ -41,10 +41,12 @@ absl::string_view getStringFilterState(
 void setErrorFilterState(Envoy::StreamInfo::FilterState& filter_state,
                          const google::rpc::Status& status);
 
-bool hasErrorFilterState(Envoy::StreamInfo::FilterState& filter_state);
+void setErrorFilterState(Envoy::StreamInfo::FilterState& filter_state,
+                         google::rpc::Status&& status);
 
-const google::rpc::Status& getErrorFilterState(
-    Envoy::StreamInfo::FilterState& filter_state);
+bool hasErrorFilterState(const Envoy::StreamInfo::FilterState& filter_state);
+
+const google::rpc::Status& getErrorFilterState(const Envoy::StreamInfo::FilterState& filter_state);
 
 }  // namespace utils
 }  // namespace envoy
