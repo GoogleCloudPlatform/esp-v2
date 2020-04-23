@@ -41,7 +41,7 @@ func makeOneRequest(t *testing.T, s *env.TestEnv) {
 	resp, err := client.DoPost(url, "hello")
 
 	if err != nil {
-		t.Errorf("got unexpected error: %s", err)
+		t.Fatal("got unexpected error: %s", err)
 		return
 	}
 	if !strings.Contains(string(resp), wantResp) {
@@ -83,9 +83,8 @@ func TestAccessLog(t *testing.T) {
 	if err != nil {
 		t.Fatalf("fail to read access log file: %v", err)
 	}
-	gotAccessLog := string(bytes)
 
-	if expectAccessLog!= gotAccessLog {
+	if gotAccessLog := string(bytes); expectAccessLog!= gotAccessLog {
 		t.Errorf("expect access log: %s, get acccess log: %v", expectAccessLog, gotAccessLog)
 	}
 
