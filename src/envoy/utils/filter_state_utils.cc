@@ -29,7 +29,6 @@ using ::Envoy::StreamInfo::FilterState;
 
 // FilterState container needed to store the google.rpc.Status error proto.
 class RpcStatusWrapper : public Envoy::StreamInfo::FilterState::Object {
-
  public:
   RpcStatusWrapper(const google::rpc::Status& status) : status_(status) {}
   RpcStatusWrapper(google::rpc::Status&& status) : status_(std::move(status)) {}
@@ -80,7 +79,8 @@ bool hasErrorFilterState(const Envoy::StreamInfo::FilterState& filter_state) {
   return filter_state.hasData<RpcStatusWrapper>(kErrorRpcStatus);
 }
 
-const google::rpc::Status& getErrorFilterState(const Envoy::StreamInfo::FilterState& filter_state) {
+const google::rpc::Status& getErrorFilterState(
+    const Envoy::StreamInfo::FilterState& filter_state) {
   const auto& state =
       filter_state.getDataReadOnly<RpcStatusWrapper>(kErrorRpcStatus);
   return state.getStatus();

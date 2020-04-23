@@ -46,7 +46,8 @@ void setErrorFilterState(Envoy::StreamInfo::FilterState& filter_state,
 
 bool hasErrorFilterState(const Envoy::StreamInfo::FilterState& filter_state);
 
-const google::rpc::Status& getErrorFilterState(const Envoy::StreamInfo::FilterState& filter_state);
+const google::rpc::Status& getErrorFilterState(
+    const Envoy::StreamInfo::FilterState& filter_state);
 
 }  // namespace utils
 }  // namespace envoy
