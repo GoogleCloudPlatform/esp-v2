@@ -13,15 +13,17 @@
 // limitations under the License.
 
 #include "src/envoy/token/sa_token_generator.h"
+
+#include "absl/types/optional.h"
 #include "src/api_proxy/auth/auth_token.h"
 
 namespace espv2 {
 namespace envoy {
 namespace token {
+
 namespace {
 // Token expired in 1 hour, reduce 5 seconds for grace buffer.
 const std::chrono::seconds kRefresherDefaultTokenExpiry(3600 - 5);
-
 }  // namespace
 
 ServiceAccountTokenGenerator::ServiceAccountTokenGenerator(
@@ -42,18 +44,17 @@ void ServiceAccountTokenGenerator::init() {
 }
 
 void ServiceAccountTokenGenerator::refresh() {
-  char* token = ::espv2::api_proxy::auth::get_auth_token(
-      service_account_key_.c_str(), audience_.c_str());
+  const absl::optional<std::string> token =
+      api_proxy::auth::get_auth_token(service_account_key_, audience_);
 
-  if (token == nullptr) {
+  if (!token) {
     // No point of retrying with the timer, it will be the same result.
     ENVOY_LOG(error, "Unable to generate token from service account key");
     return;
   }
 
-  ENVOY_LOG(debug, "Generated token: {}", token);
-  callback_(token);
-  ::espv2::api_proxy::auth::grpc_free(token);
+  ENVOY_LOG(debug, "Generated JWT from service account: {}", *token);
+  callback_(*token);
 
   // Update the token every 1 hour.
   refresh_timer_->enableTimer(kRefresherDefaultTokenExpiry);
