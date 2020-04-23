@@ -31,6 +31,10 @@ namespace http_filters {
 namespace path_matcher {
 namespace {
 
+// Half of the max header value size Envoy allows.
+// 4x the standard browser request size.
+uint32_t PATH_MAX_SIZE = 8192;
+
 struct RcDetailsValues {
   // The path is not defined in the service config.
   const std::string PathNotDefined = "path_not_defined";
@@ -46,6 +50,9 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   } else if (!headers.Path()) {
     rejectRequest(Envoy::Http::Code(400), "No path in request headers.");
+    return Envoy::Http::FilterHeadersStatus::StopIteration;
+  } else if (headers.Path()->value().size() > PATH_MAX_SIZE) {
+    rejectRequest(Envoy::Http::Code(400), "Path is too long.");
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 
