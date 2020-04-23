@@ -67,7 +67,9 @@ var (
   omitted, the proxy contacts the metadata service to fetch an access token`)
 
 	// Envoy configurations.
-	AccessLog              = flag.String("access_log", "", "Path to a local file to which the access log entries will be written")
+	AccessLog       = flag.String("access_log", "", "Path to a local file to which the access log entries will be written")
+	AccessLogFormat = flag.String("access_log_format", "", "String format to specify the format of access log")
+
 	EnvoyUseRemoteAddress  = flag.Bool("envoy_use_remote_address", false, "Envoy HttpConnectionManager configuration, please refer to envoy documentation for detailed information.")
 	EnvoyXffNumTrustedHops = flag.Int("envoy_xff_num_trusted_hops", 2, "Envoy HttpConnectionManager configuration, please refer to envoy documentation for detailed information.")
 
@@ -114,6 +116,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		CommonOptions:                           commonflags.DefaultCommonOptionsFromFlags(),
 		BackendAddress:                          *BackendAddress,
 		AccessLog:                               *AccessLog,
+		AccessLogFormat:                         *AccessLogFormat,
 		ComputePlatformOverride:                 *ComputePlatformOverride,
 		CorsAllowCredentials:                    *CorsAllowCredentials,
 		CorsAllowHeaders:                        *CorsAllowHeaders,

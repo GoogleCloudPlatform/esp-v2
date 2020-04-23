@@ -15,8 +15,8 @@
 package integration_test
 
 import (
-	"bufio"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -27,25 +27,26 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 )
 
-func lineCounter(path string) (uint32, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return 0, err
-	}
-	fileScanner := bufio.NewScanner(file)
-	lineCount := 0
-	for fileScanner.Scan() {
-		lineCount++
-	}
-	return uint32(lineCount), nil
-}
-
 func tryRemoveFile(path string) error {
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
 		return nil
 	}
 	return os.Remove(path)
+}
+
+func makeOneRequest(t *testing.T, s *env.TestEnv) {
+	wantResp := `{"message":"hello"}`
+	url := fmt.Sprintf("http://localhost:%v/echo?key=api-key", s.Ports().ListenerPort)
+	resp, err := client.DoPost(url, "hello")
+
+	if err != nil {
+		t.Errorf("got unexpected error: %s", err)
+		return
+	}
+	if !strings.Contains(string(resp), wantResp) {
+		t.Errorf("expected: %s, got: %s", wantResp, string(resp))
+	}
 }
 
 func TestAccessLog(t *testing.T) {
@@ -56,39 +57,36 @@ func TestAccessLog(t *testing.T) {
 		t.Fatalf("fail to remove accessLog file, %v", err)
 	}
 
+	// For the detailed rules, refer to
+	// https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log#command-operators
+	accessLogFormat := "\"%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%\"" +
+		"%RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT%" +
+		"\"%REQ(X-FORWARDED-FOR)%\" \"%REQ(USER-AGENT)%\"" +
+		"\"%REQ(:AUTHORITY)%\" \"%UPSTREAM_HOST%\"\n"
+
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
-		"--rollout_strategy=fixed", "--access_log=" + accessLog}
+		"--rollout_strategy=fixed", "--access_log=" + accessLog, "--access_log_format=" + accessLogFormat}
 
 	s := env.NewTestEnv(comp.TestAccessLog, platform.EchoSidecar)
 
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-
-	reqCnt := uint32(10)
-	for i := uint32(0); i < reqCnt; i++ {
-		wantResp := `{"message":"hello"}`
-		url := fmt.Sprintf("http://localhost:%v/echo?key=api-key", s.Ports().ListenerPort)
-		resp, err := client.DoPost(url, "hello")
-
-		if err != nil {
-			t.Errorf("got unexpected error: %s", err)
-			continue
-		}
-		if !strings.Contains(string(resp), wantResp) {
-			t.Errorf("expected: %s, got: %s", wantResp, string(resp))
-		}
-	}
-
+	makeOneRequest(t , s )
 	s.TearDown()
+	expectAccessLog := fmt.Sprintf("\"POST /echo?key=api-key HTTP/1.1\"200"+
+		" - 20 19\"-\" \"Go-http-client/1.1\"\"localhost:%v\" \"127.0.0.1:%v\"\n",
+		s.Ports().ListenerPort, s.Ports().BackendServerPort)
 
-	gotReqCnt, err := lineCounter(accessLog)
+	bytes, err := ioutil.ReadFile(accessLog)
 	if err != nil {
-		t.Fatalf("fail to get line count in access file: %v", err)
+		t.Fatalf("fail to read access log file: %v", err)
 	}
-	if reqCnt != gotReqCnt {
-		t.Errorf("expected request count: %v, got: %v", reqCnt, gotReqCnt)
+	gotAccessLog := string(bytes)
+
+	if expectAccessLog!= gotAccessLog {
+		t.Errorf("expect access log: %s, get acccess log: %v", expectAccessLog, gotAccessLog)
 	}
 
 	if err := tryRemoveFile(accessLog); err != nil {

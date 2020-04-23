@@ -1572,7 +1572,8 @@ func TestMakeHttpConMgr(t *testing.T) {
 		{
 			desc: "Generate HttpConMgr when accessLog is defined",
 			opts: options.ConfigGeneratorOptions{
-				AccessLog: "/foo/bar",
+				AccessLog: "/foo",
+				AccessLogFormat: "/bar",
 			},
 			wantHttpConnMgr: `
 				{
@@ -1581,7 +1582,8 @@ func TestMakeHttpConMgr(t *testing.T) {
 								 "name":"envoy.access_loggers.file",
 								 "typedConfig":{
 										"@type":"type.googleapis.com/envoy.extensions.access_loggers.file.v3.FileAccessLog",
-										"path":"/foo/bar"
+										"path":"/foo",
+										"format":"/bar"
 								 }
 							}
 					 ],

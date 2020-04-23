@@ -239,17 +239,24 @@ func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *v2pb.RouteConfi
 	}
 
 	if opts.AccessLog != "" {
-		fileAccessLog, _ := ptypes.MarshalAny(&facpb.FileAccessLog{
-			Path:            opts.AccessLog,
-			AccessLogFormat: nil,
-		})
+		fileAccessLog := &facpb.FileAccessLog{
+			Path: opts.AccessLog,
+		}
+
+		if opts.AccessLogFormat != "" {
+			fileAccessLog.AccessLogFormat = &facpb.FileAccessLog_Format{
+				Format: opts.AccessLogFormat,
+			}
+		}
+
+		serialized, _ := ptypes.MarshalAny(fileAccessLog)
 
 		httpConMgr.AccessLog = []*acpb.AccessLog{
 			{
 				Name:   util.AccessFileLogger,
 				Filter: nil,
 				ConfigType: &acpb.AccessLog_TypedConfig{
-					TypedConfig: fileAccessLog,
+					TypedConfig: serialized,
 				},
 			},
 		}

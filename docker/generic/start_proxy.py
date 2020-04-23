@@ -414,6 +414,15 @@ environment variable or by passing "-k" flag to this script.
         '''
     )
     parser.add_argument(
+        '--access_log_format',
+        help='''
+        String format to specify the format of access log. For the detailed
+        rules, please refer to the following document.
+        https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log#format-strings
+        '''
+    )
+
+    parser.add_argument(
         '--disable_tracing',
         action='store_true',
         default=False,
@@ -652,6 +661,9 @@ def enforce_conflict_args(args):
             # for non gcp case, disable tracing if tracing project id is not provided.
             args.disable_tracing = True
 
+    if not args.access_log and args.access_log_format:
+        return "Flag --access_log_format has to be used together with --access_log."
+
     if args.ssl_port and args.ssl_server_cert_path:
         return "Flag --ssl_port is going to be deprecated, please use --ssl_server_cert_path only."
     if args.tls_mutual_auth and args.ssl_client_cert_path:
@@ -824,6 +836,10 @@ def gen_proxy_config(args):
     if args.access_log:
         proxy_conf.extend(["--access_log",
                            args.access_log])
+    if args.access_log_format:
+        proxy_conf.extend(["--access_log_format",
+                           args.access_log_format])
+
     if args.disable_tracing:
         proxy_conf.append("--disable_tracing")
 
