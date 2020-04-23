@@ -16,6 +16,7 @@
 #include <string>
 
 #include "envoy/stream_info/filter_state.h"
+#include "google/rpc/status.pb.h"
 
 namespace espv2 {
 namespace envoy {
@@ -24,6 +25,8 @@ namespace utils {
 // Data names in `FilterState` set by Path Matcher filter:
 constexpr char kOperation[] = "envoy.filters.http.path_matcher.operation";
 constexpr char kQueryParams[] = "envoy.filters.http.path_matcher.query_params";
+constexpr char kErrorRpcStatus[] =
+    "envoy.filters.http.error_translator.rpc_status";
 
 // Sets a read only string value in the filter state.
 void setStringFilterState(Envoy::StreamInfo::FilterState& filter_state,
@@ -34,6 +37,14 @@ void setStringFilterState(Envoy::StreamInfo::FilterState& filter_state,
 absl::string_view getStringFilterState(
     const Envoy::StreamInfo::FilterState& filter_state,
     absl::string_view data_name);
+
+void setErrorFilterState(Envoy::StreamInfo::FilterState& filter_state,
+                         const google::rpc::Status& status);
+
+bool hasErrorFilterState(Envoy::StreamInfo::FilterState& filter_state);
+
+const google::rpc::Status& getErrorFilterState(
+    Envoy::StreamInfo::FilterState& filter_state);
 
 }  // namespace utils
 }  // namespace envoy

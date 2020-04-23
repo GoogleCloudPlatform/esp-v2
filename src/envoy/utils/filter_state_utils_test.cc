@@ -15,8 +15,10 @@
 #include "src/envoy/utils/filter_state_utils.h"
 
 #include "common/common/empty_string.h"
+#include "common/protobuf/utility.h"
 #include "common/stream_info/filter_state_impl.h"
 #include "gmock/gmock.h"
+#include "google/rpc/status.pb.h"
 #include "gtest/gtest.h"
 #include "test/test_common/utility.h"
 
@@ -41,6 +43,38 @@ TEST(FilterStateUtilsTest, ReturnEmptyStringViewForNonExistingDataName) {
       Envoy::StreamInfo::FilterState::LifeSpan::FilterChain);
   EXPECT_EQ(getStringFilterState(filter_state, "non_existing_data_name"),
             Envoy::EMPTY_STRING);
+}
+
+TEST(FilterStateUtilsTest, SetAndGetErrorFilterState) {
+  Envoy::StreamInfo::FilterStateImpl filter_state(
+      Envoy::StreamInfo::FilterState::LifeSpan::FilterChain);
+
+  google::rpc::Status error;
+  error.set_code(3);
+  error.set_message("test-error-message");
+
+  EXPECT_FALSE(hasErrorFilterState(filter_state));
+  setErrorFilterState(filter_state, error);
+  EXPECT_TRUE(hasErrorFilterState(filter_state));
+
+  const google::rpc::Status& got = getErrorFilterState(filter_state);
+  EXPECT_TRUE(Envoy::Protobuf::util::MessageDifferencer::Equals(got, error));
+}
+
+TEST(FilterStateUtilsTest, ErrorFilterStateIsCopiedWhenSet) {
+  Envoy::StreamInfo::FilterStateImpl filter_state(
+      Envoy::StreamInfo::FilterState::LifeSpan::FilterChain);
+
+  google::rpc::Status error;
+  error.set_code(3);
+
+  setErrorFilterState(filter_state, error);
+
+  error.set_code(0);
+
+  const google::rpc::Status& got = getErrorFilterState(filter_state);
+  EXPECT_NE(got.code(), error.code());
+  EXPECT_EQ(got.code(), 3);
 }
 
 }  // namespace
