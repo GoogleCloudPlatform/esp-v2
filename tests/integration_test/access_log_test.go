@@ -57,7 +57,7 @@ func TestAccessLog(t *testing.T) {
 		t.Fatalf("fail to remove accessLog file, %v", err)
 	}
 
-	// For the detailed rules, refer to
+	// For the detailed format grammar, refer to
 	// https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log#command-operators
 	accessLogFormat := "\"%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%\"" +
 		"%RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT%" +

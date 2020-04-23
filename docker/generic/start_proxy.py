@@ -416,8 +416,10 @@ environment variable or by passing "-k" flag to this script.
     parser.add_argument(
         '--access_log_format',
         help='''
-        String format to specify the format of access log. For the detailed
-        rules, please refer to the following document.
+        String format to specify the format of access log. If unset, the
+        following format will be used.
+        https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log#default-format-string
+        For the detailed format grammar, please refer to the following document.
         https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log#format-strings
         '''
     )
