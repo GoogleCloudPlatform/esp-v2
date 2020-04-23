@@ -53,15 +53,13 @@ FilterHeadersStatus Filter::encodeHeaders(
 
   if (Envoy::Grpc::Common::hasGrpcContentType(headers)) {
     is_grpc_response_ = true;
-  }
 
-  if (isEspv2FilterError() && is_grpc_response_) {
-    // gRPC error is already in filter state. No need to translate body, as it
-    // is not used for gRPC errors. Hence, nothing to do.
-    return FilterHeadersStatus::Continue;
-  }
+    if (isEspv2FilterError()) {
+      // gRPC error is already in filter state. No need to translate body, as it
+      // is not used for gRPC errors. Hence, nothing to do.
+      return FilterHeadersStatus::Continue;
+    }
 
-  if (is_grpc_response_) {
     // We keep the response body as is, but modify the filter state.
     // This will be used by the access log (SC Report).
     // This handles the trailers-only response by `sendLocalReply`.
