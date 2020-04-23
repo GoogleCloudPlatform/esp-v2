@@ -41,7 +41,7 @@ func makeOneRequest(t *testing.T, s *env.TestEnv) {
 	resp, err := client.DoPost(url, "hello")
 
 	if err != nil {
-		t.Fatal("got unexpected error: %s", err)
+		t.Fatalf("got unexpected error: %s", err)
 		return
 	}
 	if !strings.Contains(string(resp), wantResp) {
