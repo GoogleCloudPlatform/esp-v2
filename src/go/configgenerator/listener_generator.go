@@ -34,12 +34,14 @@ import (
 	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	listenerpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
+	acpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/accesslog/v2"
 	gspb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/grpc_stats/v2alpha"
 	hcpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/health_check/v2"
 	jwtpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
+	facpb "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
 	anypb "github.com/golang/protobuf/ptypes/any"
 	durationpb "github.com/golang/protobuf/ptypes/duration"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
@@ -168,33 +170,7 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		return nil, fmt.Errorf("makeHttpConnectionManagerRouteConfig got err: %s", err)
 	}
 
-	httpConMgr := &hcmpb.HttpConnectionManager{
-		UpgradeConfigs: []*hcmpb.HttpConnectionManager_UpgradeConfig{
-			{
-				UpgradeType: "websocket",
-			},
-		},
-		CodecType:  hcmpb.HttpConnectionManager_AUTO,
-		StatPrefix: statPrefix,
-		RouteSpecifier: &hcmpb.HttpConnectionManager_RouteConfig{
-			RouteConfig: route,
-		},
-
-		UseRemoteAddress:  &wrapperspb.BoolValue{Value: serviceInfo.Options.EnvoyUseRemoteAddress},
-		XffNumTrustedHops: uint32(serviceInfo.Options.EnvoyXffNumTrustedHops),
-	}
-	if !serviceInfo.Options.DisableTracing {
-		httpConMgr.Tracing = &hcmpb.HttpConnectionManager_Tracing{}
-	}
-	if serviceInfo.Options.UnderscoresInHeaders {
-		httpConMgr.CommonHttpProtocolOptions = &corepb.HttpProtocolOptions{
-			HeadersWithUnderscoresAction: corepb.HttpProtocolOptions_ALLOW,
-		}
-	} else {
-		httpConMgr.CommonHttpProtocolOptions = &corepb.HttpProtocolOptions{
-			HeadersWithUnderscoresAction: corepb.HttpProtocolOptions_REJECT_REQUEST,
-		}
-	}
+	httpConMgr := makeHttpConMgr(&serviceInfo.Options, route)
 
 	jsonStr, _ := util.ProtoToJson(httpConMgr)
 	glog.Infof("adding Http Connection Manager config: %v", jsonStr)
@@ -244,6 +220,63 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		},
 		FilterChains: []*listenerpb.FilterChain{filterChain},
 	}, nil
+}
+
+func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *v2pb.RouteConfiguration) *hcmpb.HttpConnectionManager {
+	httpConMgr := &hcmpb.HttpConnectionManager{
+		UpgradeConfigs: []*hcmpb.HttpConnectionManager_UpgradeConfig{
+			{
+				UpgradeType: "websocket",
+			},
+		},
+		CodecType:  hcmpb.HttpConnectionManager_AUTO,
+		StatPrefix: statPrefix,
+		RouteSpecifier: &hcmpb.HttpConnectionManager_RouteConfig{
+			RouteConfig: route,
+		},
+		UseRemoteAddress:  &wrapperspb.BoolValue{Value: opts.EnvoyUseRemoteAddress},
+		XffNumTrustedHops: uint32(opts.EnvoyXffNumTrustedHops),
+	}
+
+	if opts.AccessLog != "" {
+		fileAccessLog := &facpb.FileAccessLog{
+			Path: opts.AccessLog,
+		}
+
+		if opts.AccessLogFormat != "" {
+			fileAccessLog.AccessLogFormat = &facpb.FileAccessLog_Format{
+				Format: opts.AccessLogFormat,
+			}
+		}
+
+		serialized, _ := ptypes.MarshalAny(fileAccessLog)
+
+		httpConMgr.AccessLog = []*acpb.AccessLog{
+			{
+				Name:   util.AccessFileLogger,
+				Filter: nil,
+				ConfigType: &acpb.AccessLog_TypedConfig{
+					TypedConfig: serialized,
+				},
+			},
+		}
+	}
+
+	if !opts.DisableTracing {
+		httpConMgr.Tracing = &hcmpb.HttpConnectionManager_Tracing{}
+	}
+
+	if opts.UnderscoresInHeaders {
+		httpConMgr.CommonHttpProtocolOptions = &corepb.HttpProtocolOptions{
+			HeadersWithUnderscoresAction: corepb.HttpProtocolOptions_ALLOW,
+		}
+	} else {
+		httpConMgr.CommonHttpProtocolOptions = &corepb.HttpProtocolOptions{
+			HeadersWithUnderscoresAction: corepb.HttpProtocolOptions_REJECT_REQUEST,
+		}
+	}
+
+	return httpConMgr
 }
 
 func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {

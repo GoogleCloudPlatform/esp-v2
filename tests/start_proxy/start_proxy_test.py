@@ -324,6 +324,18 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--suppress_envoy_headers=false'
               ]),
+            (['--service=test_bookstore.gloud.run',
+              '--backend=grpc://127.0.0.1:8000',
+              '--access_log=/foo/bar', "--access_log_format=%START_TIME%"
+              ],
+             ['bin/configmanager', '--logtostderr',
+              '--backend_address', 'grpc://127.0.0.1:8000',
+              '--rollout_strategy', 'fixed',
+              '--v', '0',
+              '--service', 'test_bookstore.gloud.run',
+              '--access_log', '/foo/bar',
+              '--access_log_format', '%START_TIME%'
+              ]),
         ]
 
         for flags, wantedArgs in testcases:
@@ -352,7 +364,8 @@ class TestStartProxy(unittest.TestCase):
             ['--ssl_minimum_protocol=TLSv11'],
             ['--ssl_client_root_certs_file', '--enable_grpc_backend_ssl'],
             ['--transcoding_ignore_query_parameters=foo,bar',
-             '--transcoding_ignore_unknown_query_parameters']
+             '--transcoding_ignore_unknown_query_parameters'],
+            ['--access_log_format']
           ]
 
         for flags in testcases:

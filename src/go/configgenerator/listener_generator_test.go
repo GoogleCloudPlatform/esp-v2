@@ -1541,3 +1541,126 @@ func TestMakeListeners(t *testing.T) {
 		}
 	}
 }
+
+func TestMakeHttpConMgr(t *testing.T) {
+	testdata := []struct {
+		desc            string
+		opts            options.ConfigGeneratorOptions
+		wantHttpConnMgr string
+	}{
+		{
+			desc: "Generate HttpConMgr with default options",
+			opts: options.ConfigGeneratorOptions{},
+			wantHttpConnMgr: `
+			{
+				 "commonHttpProtocolOptions":{
+						"headersWithUnderscoresAction":"REJECT_REQUEST"
+				 },
+				 "routeConfig":null,
+				 "statPrefix":"ingress_http",
+				 "tracing":{
+			
+				 },
+				 "upgradeConfigs":[
+						{
+							 "upgradeType":"websocket"
+						}
+				 ],
+				 "useRemoteAddress":false
+			}`,
+		},
+		{
+			desc: "Generate HttpConMgr when accessLog is defined",
+			opts: options.ConfigGeneratorOptions{
+				AccessLog: "/foo",
+				AccessLogFormat: "/bar",
+			},
+			wantHttpConnMgr: `
+				{
+					 "accessLog":[
+							{
+								 "name":"envoy.access_loggers.file",
+								 "typedConfig":{
+										"@type":"type.googleapis.com/envoy.extensions.access_loggers.file.v3.FileAccessLog",
+										"path":"/foo",
+										"format":"/bar"
+								 }
+							}
+					 ],
+					 "commonHttpProtocolOptions":{
+							"headersWithUnderscoresAction":"REJECT_REQUEST"
+					 },
+					 "routeConfig":null,
+					 "statPrefix":"ingress_http",
+					 "tracing":{
+				
+					 },
+					 "upgradeConfigs":[
+							{
+								 "upgradeType":"websocket"
+							}
+					 ],
+					 "useRemoteAddress":false
+				}
+				`,
+		},
+		{
+			desc: "Generate HttpConMgr when tracing is disabled",
+			opts: options.ConfigGeneratorOptions{
+				CommonOptions: options.CommonOptions{
+					DisableTracing: true,
+				},
+			},
+			wantHttpConnMgr: `
+				{
+					 "commonHttpProtocolOptions":{
+							"headersWithUnderscoresAction":"REJECT_REQUEST"
+					 },
+					 "routeConfig":null,
+					 "statPrefix":"ingress_http",
+					 "upgradeConfigs":[
+							{
+								 "upgradeType":"websocket"
+							}
+					 ],
+					 "useRemoteAddress":false
+				}`,
+		},
+		{
+			desc: "Generate HttpConMgr when UnderscoresInHeaders is defined",
+			opts: options.ConfigGeneratorOptions{
+				UnderscoresInHeaders: true,
+			},
+			wantHttpConnMgr: `
+				{
+					 "commonHttpProtocolOptions":{
+				
+					 },
+					 "routeConfig":null,
+					 "statPrefix":"ingress_http",
+					 "tracing":{
+				
+					 },
+					 "upgradeConfigs":[
+							{
+								 "upgradeType":"websocket"
+							}
+					 ],
+					 "useRemoteAddress":false
+				}`,
+		},
+	}
+
+	for i, tc := range testdata {
+		hcm := makeHttpConMgr(&tc.opts, nil)
+		marshaler := &jsonpb.Marshaler{}
+		gotHttpConnMgr, err := marshaler.MarshalToString(hcm)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := util.JsonEqual(tc.wantHttpConnMgr, gotHttpConnMgr); err != nil {
+			t.Errorf("Test Desc(%d): %s, MakeHttpConMgr failed, \n %v ", i, tc.desc, err)
+		}
+	}
+}

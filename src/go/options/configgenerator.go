@@ -64,6 +64,9 @@ type ConfigGeneratorOptions struct {
 	SkipServiceControlFilter bool
 
 	// Envoy configurations.
+	AccessLog       string
+	AccessLogFormat string
+
 	EnvoyUseRemoteAddress  bool
 	EnvoyXffNumTrustedHops int
 
