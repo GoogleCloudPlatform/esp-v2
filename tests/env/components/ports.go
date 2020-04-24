@@ -137,7 +137,7 @@ const (
 	portBase uint16 = 20000
 
 	// Maximum number of ports used by non-jwt components.
-	portNum uint16 = 6
+	portNum uint16 = 7
 )
 
 var (

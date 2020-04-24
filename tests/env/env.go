@@ -365,7 +365,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	if e.backendAddress == "" {
 		backendAddress, err := formBackendAddress(e.ports, e.backend)
 		if err != nil {
-			return fmt.Errorf("unable to start config manager: %v", err)
+			return fmt.Errorf("unable to form backend address: %v", err)
 		}
 		e.backendAddress = backendAddress
 	}
@@ -549,7 +549,6 @@ func (e *TestEnv) TearDown() {
 // Form the backend address.
 func formBackendAddress(ports *components.Ports, backend platform.Backend) (string, error) {
 
-	//backendAddress := fmt.Sprintf("%v:%v", "dns_resolver_test.com.", ports.BackendServerPort)
 	backendAddress := fmt.Sprintf("%v:%v", platform.GetLoopbackHost(), ports.BackendServerPort)
 
 	switch backend {

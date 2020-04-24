@@ -35,8 +35,9 @@ func TestDnsResolver(t *testing.T) {
 
 	// Setup dns resolver.
 	backendHost := "dns-resolver-test-backend"
+	localHost := "127.0.0.1"
 	dnsRecords := map[string]string{
-		fullDns(backendHost): "127.0.0.1",
+		fullDns(backendHost): localHost,
 	}
 	dnsResolver := comp.NewDnsResolver(s.Ports().DnsResolverPort, dnsRecords)
 	go func() {
@@ -47,7 +48,7 @@ func TestDnsResolver(t *testing.T) {
 
 	// Check dns resolver's health.
 	dnsResolverAddress := fmt.Sprintf("127.0.0.1:%v", s.Ports().DnsResolverPort)
-	if err := comp.CheckDnsResolverHealth(dnsResolverAddress, backendHost, dnsRecords[fullDns(backendHost)]); err != nil {
+	if err := comp.CheckDnsResolverHealth(dnsResolverAddress, backendHost, localHost); err != nil {
 		t.Fatalf("DNS Resolver is not healthy: %v", err)
 	}
 
@@ -56,21 +57,51 @@ func TestDnsResolver(t *testing.T) {
 	args := []string{"--service_config_id=test-config-id",
 		"--rollout_strategy=fixed", "--healthz=/healthz", "--dns_resolver_address=" + dnsResolverAddress}
 
-	defer s.TearDown()
-	if err := s.Setup(args); err != nil {
-		t.Fatalf("fail to setup test env, %v", err)
+	testCase := []struct{
+		desc string
+		isResolveFailed bool
+		wantResp string
+		wantError string
+	} {
+		{
+			desc: "resolve domain name successfully",
+			wantResp: `{"message":"hello"}`,
+		},
+		{
+			desc: "resolve domain name unsuccessfully",
+			isResolveFailed: true,
+			wantError: `http response status is not 200 OK: 503 Service Unavailable, no healthy upstream`,
+		},
 	}
 
-	// Do the test.
-	wantResp := `{"message":"hello"}`
-	url := fmt.Sprintf("http://localhost:%v/echo?key=api-key", s.Ports().ListenerPort)
-	resp, err := client.DoPost(url, "hello")
-	if err != nil {
-		t.Fatalf("got unexpected error: %s", err)
-		return
+	for _, tc := range testCase {
+		if tc.isResolveFailed {
+			delete(dnsRecords, fullDns(backendHost))
+		} else {
+			dnsRecords[backendHost] = localHost
+		}
+
+		func () {
+			defer s.TearDown()
+			if err := s.Setup(args); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			url := fmt.Sprintf("http://localhost:%v/echo?key=api-key", s.Ports().ListenerPort)
+			resp, err := client.DoPost(url, "hello")
+			if err != nil {
+				if tc.wantError == "" {
+					t.Errorf("got unexpected error: %s", err)
+				} else if tc.wantError != err.Error() {
+					t.Errorf("got unexpected error, expect: %s, get: %s",tc.wantError, err.Error())
+				}
+				return
+			}
+
+			if !strings.Contains(string(resp), tc.wantResp) {
+				t.Errorf("expected: %s, got: %s", tc.wantResp, string(resp))
+			}
+		} ()
 	}
 
-	if !strings.Contains(string(resp), wantResp) {
-		t.Errorf("expected: %s, got: %s", wantResp, string(resp))
-	}
 }
