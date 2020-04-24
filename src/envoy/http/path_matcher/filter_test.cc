@@ -48,6 +48,13 @@ rules {
     uri_template: "/foo/{foo_bar}"
   }
 }
+rules {
+  operation: "1.cloudesf_testing_cloud_goog.Long"
+  pattern {
+    http_method: "GET"
+    uri_template: "/**/long"
+  }
+}
 segment_names {
   json_name: "fooBar"
   snake_name: "foo_bar"
@@ -184,6 +191,35 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersMissingHeaders) {
             filter_->decodeHeaders(missingPath, true));
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
             filter_->decodeHeaders(missingMethod, true));
+}
+
+TEST_F(PathMatcherFilterTest, DecodeHeadersShortWildcard) {
+  // Test: a request matches a operation
+  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                                {":path", "/foo/foo/long"}};
+  EXPECT_EQ(Envoy::Http::FilterHeadersStatus::Continue,
+            filter_->decodeHeaders(headers, true));
+
+  EXPECT_EQ(utils::getStringFilterState(*mock_cb_.stream_info_.filter_state_,
+                                        utils::kOperation),
+            "1.cloudesf_testing_cloud_goog.Long");
+}
+
+TEST_F(PathMatcherFilterTest, DecodeHeadersOverflowWildcard) {
+  // Construct a request with a long path: "/aaa...aaa/long"
+  std::string a_chars(9000, 'a');
+  std::string path = absl::StrCat("/", a_chars, "/long");
+
+  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                                {":path", path}};
+
+  // Filter should reject the request.
+  EXPECT_CALL(
+      mock_cb_.stream_info_,
+      setResponseFlag(
+          Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
+  EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
+            filter_->decodeHeaders(headers, true));
 }
 
 }  // namespace

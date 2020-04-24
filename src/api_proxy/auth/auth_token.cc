@@ -21,7 +21,7 @@
 #include "src/api_proxy/auth/grpc_internals.h"
 
 extern "C" {
-  #include "grpc/support/alloc.h"
+#include "grpc/support/alloc.h"
 };
 
 namespace espv2 {
