@@ -61,7 +61,7 @@ var (
 	RootCertsPath      = flag.String("root_certs_path", util.DefaultRootCAPaths, "Path to the root certificates to make TLS connection.")
 	EnableHSTS         = flag.Bool("enable_strict_transport_security", false, "Enable HSTS (HTTP Strict Transport Security).")
 	DnsResolverAddress = flag.String("dns_resolver_address", "", `The IP address or the IP address followed with port number used to
-	resolve the domain name of upstreams. It should be in format of IP_ADDR
+	resolve the domain name of backend. It should be in format of IP_ADDR
 	or IP_ADDR:PORT. For the IP_ADDR case, the default DNS port 53 will be
 	used.
 

@@ -501,7 +501,7 @@ environment variable or by passing "-k" flag to this script.
         '--dns_resolver_address',
         help='''
         The IP address or the IP address followed with port number used to
-        resolve the domain name of upstreams. It should be in format of IP_ADDR
+        resolve the domain name of backend. It should be in format of IP_ADDR
         or IP_ADDR:PORT. For the IP_ADDR case, the default DNS port 52 will be
         used.
 
