@@ -587,6 +587,7 @@ func TestMakeCatchAllBackendClusterCluster(t *testing.T) {
 		DnsResolverAddress string
 		tlsContextSni      string
 		wantedCluster      *v2pb.Cluster
+		wantedError string
 	}{
 		{
 			desc: "test DnsResolverAddress in form of IP_ADDR:PORT",
@@ -660,6 +661,25 @@ func TestMakeCatchAllBackendClusterCluster(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "test wrong-formatted DnsResolverAddress",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
+					},
+				},
+			},
+			BackendAddress:     "http://127.0.0.1:80",
+			DnsResolverAddress: "127.0.0.1:1:1",
+			wantedError: "fail to parse dnsResolverAddress:",
+		},
 	}
 
 	for i, tc := range testData {
@@ -674,8 +694,11 @@ func TestMakeCatchAllBackendClusterCluster(t *testing.T) {
 
 		clusters, err := makeCatchAllBackendCluster(fakeServiceInfo)
 		if err != nil {
+			if tc.wantedError == "" || !strings.Contains(err.Error(), tc.wantedError) {
 				t.Error(err)
 				continue
+			}
+
 		}
 
 		if tc.wantedCluster != nil && !cmp.Equal(clusters, tc.wantedCluster, cmp.Comparer(proto.Equal)) {
