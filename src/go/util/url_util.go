@@ -30,7 +30,7 @@ const (
 	HTTPDefaultPort = "80"
 
 	// Default port for HTTPS.
-	HTTPSDefaultPort = "433"
+	HTTPSDefaultPort = "443"
 
 	// Default port for DNS.
 	DNSDefaultPort = "53"

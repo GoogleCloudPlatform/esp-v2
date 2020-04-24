@@ -587,7 +587,7 @@ func TestMakeCatchAllBackendClusterCluster(t *testing.T) {
 		DnsResolverAddress string
 		tlsContextSni      string
 		wantedCluster      *v2pb.Cluster
-		wantedError string
+		wantedError        string
 	}{
 		{
 			desc: "test DnsResolverAddress in form of IP_ADDR:PORT",
@@ -678,7 +678,7 @@ func TestMakeCatchAllBackendClusterCluster(t *testing.T) {
 			},
 			BackendAddress:     "http://127.0.0.1:80",
 			DnsResolverAddress: "127.0.0.1:1:1",
-			wantedError: "fail to parse dnsResolverAddress:",
+			wantedError:        "fail to parse dnsResolverAddress:",
 		},
 	}
 

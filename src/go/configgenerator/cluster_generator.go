@@ -198,7 +198,7 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, erro
 	return providerClusters, nil
 }
 
-func parseDnsResolverAddress(address string) (string, uint32, error){
+func parseDnsResolverAddress(address string) (string, uint32, error) {
 	arr := strings.Split(address, ":")
 	if len(arr) == 0 || len(arr) > 2 {
 		return "", 0, fmt.Errorf("address has a more than one column: %s", address)
@@ -226,7 +226,7 @@ func makeBackendCluster(opt *options.ConfigGeneratorOptions, brc *sc.BackendRout
 	}
 
 	if opt.DnsResolverAddress != "" {
-		host, port,  err := parseDnsResolverAddress(opt.DnsResolverAddress)
+		host, port, err := parseDnsResolverAddress(opt.DnsResolverAddress)
 		if err != nil {
 			return nil, fmt.Errorf("fail to parse dnsResolverAddress: %v", err)
 		}
