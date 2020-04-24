@@ -579,6 +579,111 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 	}
 }
 
+func TestMakeCatchAllBackendClusterCluster(t *testing.T) {
+	testData := []struct {
+		desc               string
+		fakeServiceConfig  *confpb.Service
+		BackendAddress     string
+		DnsResolverAddress string
+		tlsContextSni      string
+		wantedCluster      *v2pb.Cluster
+	}{
+		{
+			desc: "test DnsResolverAddress in form of IP_ADDR:PORT",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
+					},
+				},
+			},
+			BackendAddress:     "http://127.0.0.1:80",
+			DnsResolverAddress: "127.0.0.1:53",
+			wantedCluster: &v2pb.Cluster{
+				Name:                 "bookstore.endpoints.project123.cloud.goog_local",
+				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+				ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+				LoadAssignment:       util.CreateLoadAssignment("127.0.0.1", 80),
+				DnsResolvers: []*corepb.Address{
+					{
+						Address: &corepb.Address_SocketAddress{
+							SocketAddress: &corepb.SocketAddress{
+								Address: "127.0.0.1",
+								PortSpecifier: &corepb.SocketAddress_PortValue{
+									PortValue: 53,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			desc: "test DnsResolverAddress in form of IP_ADDR",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
+					},
+				},
+			},
+			BackendAddress:     "http://127.0.0.1:80",
+			DnsResolverAddress: "127.0.0.1",
+			wantedCluster: &v2pb.Cluster{
+				Name:                 "bookstore.endpoints.project123.cloud.goog_local",
+				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+				ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+				LoadAssignment:       util.CreateLoadAssignment("127.0.0.1", 80),
+				DnsResolvers: []*corepb.Address{
+					{
+						Address: &corepb.Address_SocketAddress{
+							SocketAddress: &corepb.SocketAddress{
+								Address: "127.0.0.1",
+								PortSpecifier: &corepb.SocketAddress_PortValue{
+									PortValue: 53,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for i, tc := range testData {
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.BackendAddress = tc.BackendAddress
+		opts.DnsResolverAddress = tc.DnsResolverAddress
+
+		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		clusters, err := makeCatchAllBackendCluster(fakeServiceInfo)
+		if err != nil {
+				t.Error(err)
+				continue
+		}
+
+		if tc.wantedCluster != nil && !cmp.Equal(clusters, tc.wantedCluster, cmp.Comparer(proto.Equal)) {
+			t.Errorf("Test Desc(%d): %s, makeBackendRoutingClusters\n\tgot: %v,\n\twant: %v", i, tc.desc, clusters, tc.wantedCluster)
+		}
+	}
+}
+
 func TestMakeJwtProviderClusters(t *testing.T) {
 	testData := []struct {
 		desc            string

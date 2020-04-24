@@ -16,6 +16,8 @@ package configgenerator
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
@@ -196,6 +198,24 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, erro
 	return providerClusters, nil
 }
 
+func parseDnsResolverAddress(address string) (string, uint32, error){
+	arr := strings.Split(address, ":")
+	if len(arr) == 0 || len(arr) > 2 {
+		return "", 0, fmt.Errorf("address has a more than one column: %s", address)
+	}
+
+	if len(arr) == 1 {
+		arr = append(arr, util.DNSDefaultPort)
+	}
+
+	portVal, err := strconv.Atoi(arr[1])
+	if err != nil {
+		return "", 0, err
+	}
+
+	return arr[0], uint32(portVal), nil
+}
+
 func makeBackendCluster(opt *options.ConfigGeneratorOptions, brc *sc.BackendRoutingCluster) (*v2pb.Cluster, error) {
 	c := &v2pb.Cluster{
 		Name:                 brc.ClusterName,
@@ -203,6 +223,26 @@ func makeBackendCluster(opt *options.ConfigGeneratorOptions, brc *sc.BackendRout
 		ConnectTimeout:       ptypes.DurationProto(opt.ClusterConnectTimeout),
 		ClusterDiscoveryType: &v2pb.Cluster_Type{Type: v2pb.Cluster_LOGICAL_DNS},
 		LoadAssignment:       util.CreateLoadAssignment(brc.Hostname, brc.Port),
+	}
+
+	if opt.DnsResolverAddress != "" {
+		host, port,  err := parseDnsResolverAddress(opt.DnsResolverAddress)
+		if err != nil {
+			return nil, fmt.Errorf("fail to parse dnsResolverAddress: %v", err)
+		}
+
+		c.DnsResolvers = []*corepb.Address{
+			{
+				Address: &corepb.Address_SocketAddress{
+					SocketAddress: &corepb.SocketAddress{
+						Address: host,
+						PortSpecifier: &corepb.SocketAddress_PortValue{
+							PortValue: port,
+						},
+					},
+				},
+			},
+		}
 	}
 
 	isHttp2 := brc.Protocol == util.GRPC || brc.Protocol == util.HTTP2

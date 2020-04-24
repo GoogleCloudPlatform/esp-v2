@@ -90,7 +90,8 @@ class TestStartProxy(unittest.TestCase):
             (['--service=echo.gloud.run', '--backend=http://echo:8080',
               '--log_request_headers=x-google-x',
               '--service_control_check_timeout_ms=100', '-z=hc',
-              '--backend_dns_lookup_family=v4only', '--disable_tracing'],
+              '--backend_dns_lookup_family=v4only', '--disable_tracing',
+              '--dns_resolver_address=127.0.0.1:53'],
              ['bin/configmanager', '--logtostderr',
               '--backend_address', 'http://echo:8080',
               '--rollout_strategy', 'fixed', '--healthz', 'hc', '--v', '0',
@@ -98,7 +99,8 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'echo.gloud.run',
               '--service_control_check_timeout_ms', '100',
               '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4only'
+              '--backend_dns_lookup_family', 'v4only',
+              '--dns_resolver_address', '127.0.0.1:53'
               ]),
             # Default backend
             (['-R=managed','--enable_strict_transport_security',

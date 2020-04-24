@@ -47,6 +47,7 @@ const (
 	TestDeadlinesForGrpcDynamicRouting
 	TestDifferentOriginPreflightCors
 	TestDifferentOriginSimpleCors
+	TestDnsResolver
 	TestDynamicBackendRoutingTLS
 	TestDynamicBackendRoutingMutualTLS
 	TestDynamicGrpcBackendTLS
@@ -161,6 +162,7 @@ type Ports struct {
 	DiscoveryPort             uint16
 	AdminPort                 uint16
 	FakeStackdriverPort       uint16
+	DnsResolverPort           uint16
 	JwtRangeBase              uint16
 }
 
@@ -222,7 +224,8 @@ func NewPorts(testId uint16) *Ports {
 		DiscoveryPort:             base + 3,
 		AdminPort:                 base + 4,
 		FakeStackdriverPort:       base + 5,
-		JwtRangeBase:              base + 6,
+		DnsResolverPort:           base + 6,
+		JwtRangeBase:              base + 7,
 	}
 	glog.Infof(fmt.Sprintf("Ports generated for test(%v) are: %+v", testId, ports))
 	return ports

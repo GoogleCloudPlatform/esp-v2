@@ -496,6 +496,18 @@ environment variable or by passing "-k" flag to this script.
         the location of the service account credentials JSON file. If the option is
         omitted, the proxy contacts the metadata service to fetch an access token.
         '''.format(creds_key=GOOGLE_CREDS_KEY))
+
+    parser.add_argument(
+        '--dns_resolver_address',
+        help='''
+        The IP address or the IP address followed with port number used to
+        resolve the domain name of upstreams. It should be in format of IP_ADDR
+        or IP_ADDR:PORT. For the IP_ADDR case, the default DNS port 52 will be
+        used.
+
+        If unset, will use the default resolver configured in /etc/resolv.conf.
+        ''')
+
     parser.add_argument(
         '--backend_dns_lookup_family',
         default=None,
@@ -868,6 +880,10 @@ def gen_proxy_config(args):
     if args.backend_dns_lookup_family:
         proxy_conf.extend(
             ["--backend_dns_lookup_family", args.backend_dns_lookup_family])
+
+    if args.dns_resolver_address:
+        proxy_conf.extend(
+            ["--dns_resolver_address", args.dns_resolver_address])
 
     if args.envoy_use_remote_address:
         proxy_conf.append("--envoy_use_remote_address")

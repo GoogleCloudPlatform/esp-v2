@@ -13,7 +13,8 @@ require (
 	github.com/google/go-cmp v0.3.0
 	github.com/gorilla/mux v1.6.3-0.20181030152528-3d80bc801bb0
 	github.com/gorilla/websocket v1.4.2
-	golang.org/x/net v0.0.0-20190628185345-da137c7871d7
+	github.com/miekg/dns v1.1.29
+	golang.org/x/net v0.0.0-20190923162816-aa69164e4478
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	google.golang.org/api v0.7.0
 	google.golang.org/genproto v0.0.0-20200302123026-7795fca6ccb1
