@@ -55,22 +55,22 @@ func TestDnsResolver(t *testing.T) {
 	// Setup the whole test framework.
 	s.SetBackendAddress(fmt.Sprintf("http://%s:%v", backendHost, s.Ports().BackendServerPort))
 	args := []string{"--service_config_id=test-config-id",
-		"--rollout_strategy=fixed", "--healthz=/healthz", "--dns_resolver_address=" + dnsResolverAddress}
+		"--rollout_strategy=fixed", "--healthz=/healthz", "--dns_resolver_addresses=" + dnsResolverAddress}
 
-	testCase := []struct{
-		desc string
+	testCase := []struct {
+		desc            string
 		isResolveFailed bool
-		wantResp string
-		wantError string
-	} {
+		wantResp        string
+		wantError       string
+	}{
 		{
-			desc: "resolve domain name successfully",
+			desc:     "resolve domain name successfully",
 			wantResp: `{"message":"hello"}`,
 		},
 		{
-			desc: "resolve domain name unsuccessfully",
+			desc:            "resolve domain name unsuccessfully",
 			isResolveFailed: true,
-			wantError: `http response status is not 200 OK: 503 Service Unavailable, no healthy upstream`,
+			wantError:       `http response status is not 200 OK: 503 Service Unavailable, no healthy upstream`,
 		},
 	}
 
@@ -81,7 +81,7 @@ func TestDnsResolver(t *testing.T) {
 			dnsRecords[backendHost] = localHost
 		}
 
-		func () {
+		func() {
 			defer s.TearDown()
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
@@ -93,7 +93,7 @@ func TestDnsResolver(t *testing.T) {
 				if tc.wantError == "" {
 					t.Errorf("got unexpected error: %s", err)
 				} else if tc.wantError != err.Error() {
-					t.Errorf("got unexpected error, expect: %s, get: %s",tc.wantError, err.Error())
+					t.Errorf("got unexpected error, expect: %s, get: %s", tc.wantError, err.Error())
 				}
 				return
 			}
@@ -101,7 +101,7 @@ func TestDnsResolver(t *testing.T) {
 			if !strings.Contains(string(resp), tc.wantResp) {
 				t.Errorf("expected: %s, got: %s", tc.wantResp, string(resp))
 			}
-		} ()
+		}()
 	}
 
 }

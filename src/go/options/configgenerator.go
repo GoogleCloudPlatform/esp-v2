@@ -55,7 +55,7 @@ type ConfigGeneratorOptions struct {
 	SslMaximumProtocol   string
 	EnableHSTS           bool
 	RootCertsPath        string
-	DnsResolverAddress   string
+	DnsResolverAddresses string
 
 	// Flags for non_gcp deployment.
 	ServiceAccountKey string

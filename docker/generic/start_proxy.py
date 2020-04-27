@@ -498,12 +498,14 @@ environment variable or by passing "-k" flag to this script.
         '''.format(creds_key=GOOGLE_CREDS_KEY))
 
     parser.add_argument(
-        '--dns_resolver_address',
+        '--dns_resolver_addresses',
         help='''
-        The IP address or the IP address followed with port number used to
-        resolve the domain name of backend. It should be in format of IP_ADDR
-        or IP_ADDR:PORT. For the IP_ADDR case, the default DNS port 52 will be
-        used.
+        The addresses of dns resolvers. Each address should be in format of
+        IP_ADDR or IP_ADDR:PORT and they are separated by '.';. For the IP_ADDR
+        case, the default DNS port 52 will be used. (e.g.,
+        --dns_resolver_addresses=127.0.0.1, 
+        --dns_resolver_addresses=127.0.0.2:8000,
+        --dns_resolver_addresses=127.0.0.1;127.0.0.2:8000)
 
         If unset, will use the default resolver configured in /etc/resolv.conf.
         ''')
@@ -881,9 +883,9 @@ def gen_proxy_config(args):
         proxy_conf.extend(
             ["--backend_dns_lookup_family", args.backend_dns_lookup_family])
 
-    if args.dns_resolver_address:
+    if args.dns_resolver_addresses:
         proxy_conf.extend(
-            ["--dns_resolver_address", args.dns_resolver_address])
+            ["--dns_resolver_addresses", args.dns_resolver_addresses])
 
     if args.envoy_use_remote_address:
         proxy_conf.append("--envoy_use_remote_address")
