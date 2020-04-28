@@ -151,16 +151,8 @@ TEST_F(TokenSubscriberTest, VerifyRemoteRequest) {
 
   // Assert remote call matches.
   ASSERT_EQ(call_count_, 1);
-  EXPECT_EQ(message_->headers()
-                .get(Envoy::Http::Headers::get().Method)
-                ->value()
-                .getStringView(),
-            "POST");
-  EXPECT_EQ(message_->headers()
-                .get(Envoy::Http::Headers::get().Host)
-                ->value()
-                .getStringView(),
-            "TestValue");
+  EXPECT_EQ(message_->headers().Method()->value().getStringView(), "POST");
+  EXPECT_EQ(message_->headers().Host()->value().getStringView(), "TestValue");
 }
 
 TEST_F(TokenSubscriberTest, ProcessNon200Response) {

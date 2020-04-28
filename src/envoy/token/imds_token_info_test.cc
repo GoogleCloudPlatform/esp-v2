@@ -41,21 +41,9 @@ TEST_F(ImdsTokenInfoTest, SimpleSuccess) {
   // Assert success.
   EXPECT_NE(got_msg, nullptr);
   EXPECT_EQ(got_msg->bodyAsString(), R"()");
-  EXPECT_EQ(got_msg->headers()
-                .get(Envoy::Http::Headers::get().Method)
-                ->value()
-                .getStringView(),
-            "GET");
-  EXPECT_EQ(got_msg->headers()
-                .get(Envoy::Http::Headers::get().Host)
-                ->value()
-                .getStringView(),
-            "imds-url.com");
-  EXPECT_EQ(got_msg->headers()
-                .get(Envoy::Http::Headers::get().Path)
-                ->value()
-                .getStringView(),
-            "/path2");
+  EXPECT_EQ(got_msg->headers().Method()->value().getStringView(), "GET");
+  EXPECT_EQ(got_msg->headers().Host()->value().getStringView(), "imds-url.com");
+  EXPECT_EQ(got_msg->headers().Path()->value().getStringView(), "/path2");
   Envoy::Http::LowerCaseString metadata_key("Metadata-Flavor");
   EXPECT_EQ(got_msg->headers().get(metadata_key)->value().getStringView(),
             "Google");
