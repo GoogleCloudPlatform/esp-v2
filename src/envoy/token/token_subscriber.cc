@@ -153,24 +153,27 @@ void TokenSubscriber::processResponse(
       return;
   }
 
-  // Determine status.
-  if (!success) {
-    handleFailResponse();
-    return;
-  }
+  ENVOY_LOG(error, "!!! {} !!! {}", debug_name_, result.token);
+  handleFailResponse();
 
-  // Token will be used as a HTTP_HEADER_VALUE in the future. Ensure it is
-  // sanitized. Otherwise, special characters will cause a runtime failure
-  // in other components.
-  if (!Envoy::Http::validHeaderString(result.token)) {
-    ENVOY_LOG(error,
-              "{}: failed because invalid characters were detected in token {}",
-              result.token);
-    handleFailResponse();
-    return;
-  }
-
-  handleSuccessResponse(result.token, result.expiry_duration);
+//  // Determine status.
+//  if (!success) {
+//    handleFailResponse();
+//    return;
+//  }
+//
+//  // Token will be used as a HTTP_HEADER_VALUE in the future. Ensure it is
+//  // sanitized. Otherwise, special characters will cause a runtime failure
+//  // in other components.
+//  if (!Envoy::Http::validHeaderString(result.token)) {
+//    ENVOY_LOG(error,
+//              "{}: failed because invalid characters were detected in token {}",
+//              result.token);
+//    handleFailResponse();
+//    return;
+//  }
+//
+//  handleSuccessResponse(result.token, result.expiry_duration);
 }
 
 void TokenSubscriber::onSuccess(const Envoy::Http::AsyncClient::Request&,
