@@ -14,6 +14,7 @@
 
 #include "src/envoy/token/token_subscriber.h"
 #include "absl/strings/str_cat.h"
+#include "common/common/assert.h"
 #include "common/common/enum_to_int.h"
 #include "common/http/message_impl.h"
 #include "common/http/utility.h"
@@ -75,16 +76,17 @@ void TokenSubscriber::handleSuccessResponse(
 
   ENVOY_LOG(debug, "{}: Got token with expiry duration: {} , {} sec",
             debug_name_, token, expires_in.count());
-  callback_(token);
 
-  // Use the buffer to set the next refresh time.
+  // If the token will expire soon, then don't signal ready.
   if (expires_in <= kRefreshBuffer) {
     refresh();
-  } else {
-    refresh_timer_->enableTimer(expires_in - kRefreshBuffer);
+    return;
   }
 
+  refresh_timer_->enableTimer(expires_in - kRefreshBuffer);
+
   // Signal that we are ready for initialization.
+  callback_(token);
   init_target_->ready();
 }
 
@@ -148,9 +150,7 @@ void TokenSubscriber::processResponse(
           token_info_->parseAccessToken(response->bodyAsString(), &result);
       break;
     default:
-      ENVOY_LOG(error, "{}: failed with unknown token type {}", debug_name_,
-                token_type_);
-      return;
+      NOT_REACHED_GCOVR_EXCL_LINE;
   }
 
   // Determine status.

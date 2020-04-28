@@ -205,16 +205,49 @@ TEST_F(IamParseTokenTest, IdentityTokenSuccess) {
   EXPECT_FALSE(success);
 }
 
-TEST_F(IamParseTokenTest, AccessTokenSuccess) {
-  // Input.
+TEST_F(IamParseTokenTest, AccessTokenInvalidTimestamp) {
+  // Input with expiry time in the past.
   std::string response =
-      R"({ "accessToken": "fake-access-token", "expireTime": "2020-02-20T23:15:34-08:00" })";
+      R"({ "accessToken": "fake-access-token", "expireTime": "1999-34-08:00" })";
+  TokenResult result{};
+
+  // Test access token.
+  bool success = info_->parseAccessToken(response, &result);
+  EXPECT_FALSE(success);
+
+  // Test identity token.
+  success = info_->parseIdentityToken(response, &result);
+  EXPECT_FALSE(success);
+}
+
+TEST_F(IamParseTokenTest, AccessTokenSuccessPastExpiry) {
+  // Input with expiry time in the past.
+  std::string response =
+      R"({ "accessToken": "fake-access-token", "expireTime": "1999-02-20T23:15:34-08:00" })";
   TokenResult result{};
 
   // Test access token.
   bool success = info_->parseAccessToken(response, &result);
   EXPECT_TRUE(success);
   EXPECT_EQ(result.token, "fake-access-token");
+  EXPECT_LT(result.expiry_duration.count(), 0);
+
+  // Test identity token.
+  success = info_->parseIdentityToken(response, &result);
+  EXPECT_FALSE(success);
+}
+
+TEST_F(IamParseTokenTest, AccessTokenSuccessFutureExpiry) {
+  // Input with expiry time in the future.
+  std::string response =
+      R"({ "accessToken": "fake-access-token", "expireTime": "2111-02-20T23:15:34-08:00" })";
+  TokenResult result{};
+
+  // Test access token.
+  bool success = info_->parseAccessToken(response, &result);
+  EXPECT_TRUE(success);
+  EXPECT_EQ(result.token, "fake-access-token");
+  EXPECT_GT(result.expiry_duration.count(), 0);
   EXPECT_NE(result.expiry_duration, kDefaultTokenExpiry);
 
   // Test identity token.

@@ -436,6 +436,49 @@ TEST_F(TokenSubscriberTest, RetryMissingPreconditionThenSuccess) {
   ASSERT_TRUE(init_ready_);
 }
 
+TEST_F(TokenSubscriberTest, RetryShortExpiryTime) {
+  // Setup fake remote request.
+  EXPECT_CALL(*info_, prepareRequest(token_url_))
+      .Times(2)
+      .WillRepeatedly(Invoke([](absl::string_view) {
+        Envoy::Http::RequestHeaderMapPtr req_headers(
+            new Envoy::Http::TestRequestHeaderMapImpl());
+        return std::make_unique<Envoy::Http::RequestMessageImpl>(
+            std::move(req_headers));
+      }));
+
+  // Setup fake parse status with a low expiry time.
+  EXPECT_CALL(*info_, parseAccessToken(_, _))
+      .WillOnce(Invoke([](absl::string_view, TokenResult* ret) {
+        ret->token = "fake-token";
+        // Expiry time is below the buffer, will cause a retry.
+        ret->expiry_duration = std::chrono::seconds(1);
+        return true;
+      }));
+
+  // Expect subscriber does not succeed (since it retries).
+  EXPECT_CALL(*mock_timer_, enableTimer(_, _)).Times(0);
+  EXPECT_CALL(token_callback_, Call(_)).Times(0);
+
+  // Start class under test.
+  setUp(TokenType::AccessToken);
+
+  // Setup fake response.
+  Envoy::Http::ResponseHeaderMapPtr resp_headers(
+      new Envoy::Http::TestResponseHeaderMapImpl({
+          {":status", "200"},
+      }));
+  Envoy::Http::ResponseMessagePtr response(
+      new Envoy::Http::ResponseMessageImpl(std::move(resp_headers)));
+
+  // Start the response.
+  client_callback_->onSuccess(client_request_, std::move(response));
+
+  // Assert subscriber did a retry.
+  ASSERT_EQ(call_count_, 2);
+  ASSERT_FALSE(init_ready_);
+}
+
 }  // namespace test
 }  // namespace token
 }  // namespace envoy
