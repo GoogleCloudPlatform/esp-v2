@@ -75,9 +75,8 @@ class ThreadLocalCache : public Envoy::ThreadLocal::ThreadLocalObject {
   ClientCache client_cache_;
 };
 
-typedef std::shared_ptr<
-    ::google::api::envoy::http::service_control::FilterConfig>
-    FilterConfigProtoSharedPtr;
+using FilterConfigProtoSharedPtr =
+    std::shared_ptr<::google::api::envoy::http::service_control::FilterConfig>;
 
 class ServiceControlCallImpl
     : public ServiceControlCall,
