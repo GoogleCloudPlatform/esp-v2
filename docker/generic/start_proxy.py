@@ -501,7 +501,7 @@ environment variable or by passing "-k" flag to this script.
         '--dns_resolver_addresses',
         help='''
         The addresses of dns resolvers. Each address should be in format of
-        IP_ADDR or IP_ADDR:PORT and they are separated by '.';. For the IP_ADDR
+        IP_ADDR or IP_ADDR:PORT and they are separated by ';'. For the IP_ADDR
         case, the default DNS port 52 will be used. (e.g.,
         --dns_resolver_addresses=127.0.0.1;127.0.0.2;127.0.0.3:8000)
 
