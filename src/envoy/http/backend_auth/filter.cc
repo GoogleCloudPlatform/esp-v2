@@ -39,7 +39,7 @@ struct RcDetailsValues {
   // The request is rejected due to missing backend auth token.
   const std::string MissingBackendToken = "missing_backend_token";
 };
-typedef Envoy::ConstSingleton<RcDetailsValues> RcDetails;
+using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
 
 // The Http header to copy the original Authorization before it is overwritten.
 const Envoy::Http::LowerCaseString kXForwardedAuthorization{

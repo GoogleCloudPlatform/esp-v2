@@ -59,7 +59,7 @@ class ServiceControlFilterConfig
   ServiceControlHandlerFactoryImpl handler_factory_;
 };
 
-typedef std::shared_ptr<ServiceControlFilterConfig> FilterConfigSharedPtr;
+using FilterConfigSharedPtr = std::shared_ptr<ServiceControlFilterConfig>;
 
 }  // namespace service_control
 }  // namespace http_filters

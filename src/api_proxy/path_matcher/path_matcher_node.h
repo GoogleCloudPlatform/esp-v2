@@ -24,7 +24,7 @@ namespace espv2 {
 namespace api_proxy {
 namespace path_matcher {
 
-typedef std::string HttpMethod;
+using HttpMethod = std::string;
 
 struct PathMatcherLookupResult {
   PathMatcherLookupResult() : data(nullptr), is_multiple(false) {}

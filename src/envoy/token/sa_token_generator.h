@@ -47,7 +47,7 @@ class ServiceAccountTokenGenerator
   TokenUpdateFunc callback_;
   Envoy::Event::TimerPtr refresh_timer_;
 };
-typedef std::unique_ptr<ServiceAccountTokenGenerator> ServiceAccountTokenPtr;
+using ServiceAccountTokenPtr = std::unique_ptr<ServiceAccountTokenGenerator>;
 
 }  // namespace token
 }  // namespace envoy

@@ -56,7 +56,7 @@ class ServiceContext {
   ServiceControlCallPtr service_control_call_;
   int64_t min_stream_report_interval_ms_;
 };
-typedef std::unique_ptr<ServiceContext> ServiceContextPtr;
+using ServiceContextPtr = std::unique_ptr<ServiceContext>;
 
 class RequirementContext {
  public:
@@ -86,7 +86,7 @@ class RequirementContext {
   const ServiceContext& service_ctx_;
   std::vector<std::pair<std::string, int>> metric_costs_;
 };
-typedef std::unique_ptr<RequirementContext> RequirementContextPtr;
+using RequirementContextPtr = std::unique_ptr<RequirementContext>;
 
 class FilterConfigParser {
  public:

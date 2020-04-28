@@ -29,8 +29,8 @@ namespace {
 
 using ::espv2::api_proxy::path_matcher::VariableBinding;
 using ::google::protobuf::TextFormat;
-typedef std::vector<VariableBinding> VariableBindings;
-typedef std::vector<std::string> FieldPath;
+using VariableBindings = std::vector<VariableBinding>;
+using FieldPath = std::vector<std::string>;
 
 TEST(FilterConfigTest, EmptyConfig) {
   ::google::api::envoy::http::path_matcher::FilterConfig config_pb;

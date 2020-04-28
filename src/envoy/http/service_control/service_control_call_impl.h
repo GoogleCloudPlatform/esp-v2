@@ -31,7 +31,7 @@ namespace http_filters {
 namespace service_control {
 
 // Use shared_ptr to do atomic token update.
-typedef std::shared_ptr<std::string> TokenSharedPtr;
+using TokenSharedPtr = std::shared_ptr<std::string>;
 
 // The scope for Service Control API
 constexpr char kServiceControlScope[] =

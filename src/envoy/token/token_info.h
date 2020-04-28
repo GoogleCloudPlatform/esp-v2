@@ -41,7 +41,7 @@ class TokenInfo : public Envoy::Logger::Loggable<Envoy::Logger::Id::init> {
                                   TokenResult* ret) const PURE;
 };
 
-typedef std::unique_ptr<TokenInfo> TokenInfoPtr;
+using TokenInfoPtr = std::unique_ptr<TokenInfo>;
 
 }  // namespace token
 }  // namespace envoy

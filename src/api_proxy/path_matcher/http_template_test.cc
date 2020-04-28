@@ -23,10 +23,10 @@ namespace espv2 {
 namespace api_proxy {
 namespace path_matcher {
 
-typedef std::vector<std::string> Segments;
-typedef HttpTemplate::Variable Variable;
-typedef std::vector<Variable> Variables;
-typedef std::vector<std::string> FieldPath;
+using Segments = std::vector<std::string>;
+using Variable = HttpTemplate::Variable;
+using Variables = std::vector<Variable>;
+using FieldPath = std::vector<std::string>;
 
 bool operator==(const Variable& v1, const Variable& v2) {
   return v1.field_path == v2.field_path &&

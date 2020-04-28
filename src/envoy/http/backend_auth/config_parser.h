@@ -26,7 +26,7 @@ namespace envoy {
 namespace http_filters {
 namespace backend_auth {
 // Use shared_ptr to do atomic token update.
-typedef std::shared_ptr<std::string> TokenSharedPtr;
+using TokenSharedPtr = std::shared_ptr<std::string>;
 
 class FilterConfigParser {
  public:
@@ -38,7 +38,7 @@ class FilterConfigParser {
       absl::string_view audience) const PURE;
 };
 
-typedef std::unique_ptr<FilterConfigParser> FilterConfigParserPtr;
+using FilterConfigParserPtr = std::unique_ptr<FilterConfigParser>;
 
 }  // namespace backend_auth
 }  // namespace http_filters

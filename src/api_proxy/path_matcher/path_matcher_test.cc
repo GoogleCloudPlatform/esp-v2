@@ -29,8 +29,8 @@ namespace api_proxy {
 namespace path_matcher {
 namespace {
 
-typedef std::vector<VariableBinding> VariableBindings;
-typedef std::vector<std::string> FieldPath;
+using VariableBindings = std::vector<VariableBinding>;
+using FieldPath = std::vector<std::string>;
 
 class MethodInfo {
  public:
