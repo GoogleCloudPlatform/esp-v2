@@ -37,7 +37,7 @@ type FetchConfigOptions struct {
 	BucketName                    string
 	ConfigFileName                string
 	WantPort                      uint32
-	ReplacePort                   uint32
+	LoopbackPort                  uint32
 	WriteFilePath                 string
 	FetchGCSObjectInitialInterval time.Duration
 	FetchGCSObjectTimeout         time.Duration

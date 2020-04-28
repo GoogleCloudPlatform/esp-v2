@@ -15,6 +15,7 @@
 package gcsrunner
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -90,16 +91,14 @@ func TestReplaceListenerPort(t *testing.T) {
 	testCases := []struct {
 		name                   string
 		listener, wantListener *v2pb.Listener
-		opts                   FetchConfigOptions
+		wantPort               uint32
 		wantError              bool
 	}{
 		{
-			name: "successful replace",
-			opts: FetchConfigOptions{
-				ReplacePort: 1234,
-				WantPort:    5678,
-			},
+			name:     "successful replace",
+			wantPort: 5678,
 			listener: &v2pb.Listener{
+				Name: util.IngressListenerName,
 				Address: &corepb.Address{
 					Address: &corepb.Address_SocketAddress{
 						SocketAddress: &corepb.SocketAddress{
@@ -111,6 +110,7 @@ func TestReplaceListenerPort(t *testing.T) {
 				},
 			},
 			wantListener: &v2pb.Listener{
+				Name: util.IngressListenerName,
 				Address: &corepb.Address{
 					Address: &corepb.Address_SocketAddress{
 						SocketAddress: &corepb.SocketAddress{
@@ -124,10 +124,8 @@ func TestReplaceListenerPort(t *testing.T) {
 		},
 		{
 			name: "unset WantPort does not replace port",
-			opts: FetchConfigOptions{
-				ReplacePort: 1234,
-			},
 			listener: &v2pb.Listener{
+				Name: util.IngressListenerName,
 				Address: &corepb.Address{
 					Address: &corepb.Address_SocketAddress{
 						SocketAddress: &corepb.SocketAddress{
@@ -139,6 +137,7 @@ func TestReplaceListenerPort(t *testing.T) {
 				},
 			},
 			wantListener: &v2pb.Listener{
+				Name: util.IngressListenerName,
 				Address: &corepb.Address{
 					Address: &corepb.Address_SocketAddress{
 						SocketAddress: &corepb.SocketAddress{
@@ -151,32 +150,11 @@ func TestReplaceListenerPort(t *testing.T) {
 			},
 		},
 		{
-			name: "Port != ReplacePort should return an error",
-			opts: FetchConfigOptions{
-				ReplacePort: 1234,
-				WantPort:    5678,
-			},
+			name:      "Invalid config should return an error",
+			wantPort:  5678,
 			wantError: true,
 			listener: &v2pb.Listener{
-				Address: &corepb.Address{
-					Address: &corepb.Address_SocketAddress{
-						SocketAddress: &corepb.SocketAddress{
-							PortSpecifier: &corepb.SocketAddress_PortValue{
-								PortValue: 9999,
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "Invalid config should return an error",
-			opts: FetchConfigOptions{
-				ReplacePort: 1234,
-				WantPort:    5678,
-			},
-			wantError: true,
-			listener: &v2pb.Listener{
+				Name: util.IngressListenerName,
 				Address: &corepb.Address{
 					Address: &corepb.Address_Pipe{
 						Pipe: &corepb.Pipe{},
@@ -187,9 +165,9 @@ func TestReplaceListenerPort(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		err := replaceListenerPort(tc.listener, tc.opts)
+		err := replaceListenerPort(tc.listener, tc.wantPort)
 		if (err != nil) != tc.wantError {
-			t.Errorf("%s: replaceListenerPort(%v,%v) returned error %v, want err!=nil to be %v", tc.name, tc.listener, tc.opts, err, tc.wantError)
+			t.Errorf("%s: replaceListenerPort(%v,%v) returned error %v, want err!=nil to be %v", tc.name, tc.listener, tc.wantPort, err, tc.wantError)
 		}
 
 		if err == nil {
@@ -201,24 +179,38 @@ func TestReplaceListenerPort(t *testing.T) {
 }
 
 func TestTransformConfigBytes(t *testing.T) {
-	doListenerCalled := false
+	opts := FetchConfigOptions{
+		WantPort:     1234,
+		LoopbackPort: 5678,
+	}
+	doListenerCalledOnHTTP := false
+	doListenerCalledOnLoopback := false
 	doServiceControlCalled := false
-	doListenerTransform = func(_ *v2pb.Listener, _ FetchConfigOptions) error {
-		doListenerCalled = true
-		return nil
+	doListenerTransform = func(_ *v2pb.Listener, port uint32) error {
+		switch port {
+		case opts.WantPort:
+			doListenerCalledOnHTTP = true
+			return nil
+		case opts.LoopbackPort:
+			doListenerCalledOnLoopback = true
+			return nil
+		default:
+			return fmt.Errorf("wrong parameters: doListenerTransform(%d), want %d or %d", port, opts.WantPort, opts.LoopbackPort)
+		}
 	}
 	doServiceControlTransform = func(_ *scpb.FilterConfig, _ FetchConfigOptions) error {
 		doServiceControlCalled = true
 		return nil
 	}
-
-	_, err := transformConfigBytes(validConfigInput, FetchConfigOptions{})
+	_, err := transformConfigBytes(validConfigInput, opts)
 	if err != nil {
 		t.Fatalf("transformConfigBytes() returned %v, want nil", err)
 	}
-
-	if !doListenerCalled {
-		t.Errorf("doListenerTransform was not called")
+	if !doListenerCalledOnHTTP {
+		t.Errorf("doListenerTransform was not called for ingress_listener")
+	}
+	if !doListenerCalledOnLoopback {
+		t.Errorf("doListenerTransform was not called for loopback_listener")
 	}
 	if !doServiceControlCalled {
 		t.Errorf("doServiceControlTransform was not called")
@@ -226,12 +218,13 @@ func TestTransformConfigBytes(t *testing.T) {
 }
 
 var validConfigInput = []byte(`{
-	"static_resources": {
+"static_resources": {
     "listeners": [
       {
+      "name": "ingress_listener",
         "address": {
           "socket_address": {
-            "port_value": 1234
+            "port_value": 1111
           }
         },
         "filter_chains": [
@@ -245,7 +238,7 @@ var validConfigInput = []byte(`{
                     {
                       "name": "envoy.filters.http.service_control",
                       "typed_config": {
-												"@type": "type.googleapis.com/google.api.envoy.http.service_control.FilterConfig"
+                        "@type": "type.googleapis.com/google.api.envoy.http.service_control.FilterConfig"
                       }
                     }
                   ]
@@ -254,6 +247,14 @@ var validConfigInput = []byte(`{
             ]
           }
         ]
+      },
+      {
+        "name": "loopback_listener",
+        "address": {
+          "socket_address": {
+            "port_value": 2222
+          }
+        }
       }
     ]
   }

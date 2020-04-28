@@ -57,22 +57,19 @@ func addGCPAttributes(cfg *scpb.FilterConfig, opts FetchConfigOptions) error {
 	return nil
 }
 
-// replaceListenerPort replaces the listener port with opts.WantPort if specified.
-func replaceListenerPort(l *v2pb.Listener, opts FetchConfigOptions) error {
-	if opts.WantPort == 0 {
+func replaceListenerPort(l *v2pb.Listener, port uint32) error {
+	if port == 0 {
 		return nil
 	}
 	if addr := l.GetAddress().GetSocketAddress(); addr != nil {
 		portSpecifier := addr.GetPortSpecifier()
 		if portValue, ok := portSpecifier.(*corepb.SocketAddress_PortValue); ok {
-			if portValue.PortValue != opts.ReplacePort {
-				return fmt.Errorf("listener has port value %d but wanted %d", portValue.PortValue, opts.ReplacePort)
-			}
-			portValue.PortValue = opts.WantPort
+			portValue.PortValue = port
 			return nil
 		}
+		return fmt.Errorf("could not convert port to SocketAddress_PortValue: %d", port)
 	}
-	return fmt.Errorf("expected a listener with port value %d but got none: %v", opts.ReplacePort, l)
+	return fmt.Errorf("listener contains no SocketAddress: %v", l)
 }
 
 func transformConfigBytes(config []byte, opts FetchConfigOptions) ([]byte, error) {
@@ -101,29 +98,58 @@ func transformConfigBytes(config []byte, opts FetchConfigOptions) ([]byte, error
 
 func transformEnvoyConfig(bootstrap *bootstrappb.Bootstrap, opts FetchConfigOptions) error {
 	listeners := bootstrap.GetStaticResources().GetListeners()
-	if len(listeners) != 1 {
-		return fmt.Errorf("expected exactly 1 listener, got: %d", len(listeners))
+	if len(listeners) == 0 {
+		return fmt.Errorf("expected at least 1 listener, got: 0")
 	}
-	if err := doListenerTransform(listeners[0], opts); err != nil {
+	// Require ingress_listener, as the absence of these incidates a broken config.
+	// Note that loopback_listener is not required.
+	ingressListenerTransformed := false
+	for _, l := range listeners {
+		switch l.GetName() {
+		// The default listener created by this project's configgenerator package.
+		case util.IngressListenerName:
+			ingressListenerTransformed = true
+			if err := transformIngressListener(l, opts); err != nil {
+				return fmt.Errorf("failed to transform Ingress Listener: %v", err)
+			}
+		// Loopback listener can be optionally used to point async requests such as
+		// those sent by Service Control and JWT Authn filters in order to utilize
+		// Envoy's built-in Access Logging features.
+		// This requires the use of another unused port.
+		case util.LoopbackListenerName:
+			if err := transformLoopbackListener(l, opts); err != nil {
+				return fmt.Errorf("failed to transform Loopback Listener")
+			}
+		}
+	}
+
+	if !ingressListenerTransformed {
+		return fmt.Errorf("did not find an ingress listener: %v", listeners[0])
+	}
+	return nil
+}
+
+func transformIngressListener(l *v2pb.Listener, opts FetchConfigOptions) error {
+	if err := doListenerTransform(l, opts.WantPort); err != nil {
 		return err
 	}
-	httpConMgrTransformed := false
-	for _, c := range listeners[0].GetFilterChains() {
+	for _, c := range l.GetFilterChains() {
 		if filters := c.GetFilters(); filters != nil {
 			for _, f := range filters {
 				if f.GetName() == util.HTTPConnectionManager {
 					if err := transformHTTPConnectionManager(f, opts); err != nil {
 						return fmt.Errorf("failed to transform HttpConnectionManager: %v", err)
 					}
-					httpConMgrTransformed = true
+					return nil
 				}
 			}
 		}
 	}
-	if !httpConMgrTransformed {
-		return fmt.Errorf("did not find an http connection manager filter: %v", listeners[0])
-	}
-	return nil
+	return fmt.Errorf("failed to find HTTPConnectionManager on Ingress Listener")
+}
+
+func transformLoopbackListener(l *v2pb.Listener, opts FetchConfigOptions) error {
+	return doListenerTransform(l, opts.LoopbackPort)
 }
 
 func transformHTTPConnectionManager(f *listenerpb.Filter, opts FetchConfigOptions) error {

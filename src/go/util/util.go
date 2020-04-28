@@ -97,6 +97,9 @@ const (
 	// The service control server cluster name.
 	ServiceControlClusterName = "service-control-cluster"
 
+	IngressListenerName  = "ingress_listener"
+	LoopbackListenerName = "loopback_listener"
+
 	// Platforms
 
 	GAEFlex = "GAE_FLEX(ESPv2)"

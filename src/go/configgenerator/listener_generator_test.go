@@ -1431,7 +1431,7 @@ func TestMakeListeners(t *testing.T) {
 			},
 			wantListeners: []string{
 				`{
-					"name": "https_listener",
+					"name": "ingress_listener",
 					"address":{
 						"socketAddress":{
 							"address":"0.0.0.0",
@@ -1572,7 +1572,7 @@ func TestMakeHttpConMgr(t *testing.T) {
 		{
 			desc: "Generate HttpConMgr when accessLog is defined",
 			opts: options.ConfigGeneratorOptions{
-				AccessLog: "/foo",
+				AccessLog:       "/foo",
 				AccessLogFormat: "/bar",
 			},
 			wantHttpConnMgr: `
