@@ -86,7 +86,7 @@ func JsonEqual(want, got string) error {
 		return err
 	}
 	if !strings.EqualFold(want, got) {
-		return fmt.Errorf("got: %s \n want: %s", got, want)
+		return fmt.Errorf("\n  got: %s \n want: %s", got, want)
 	}
 	return nil
 }

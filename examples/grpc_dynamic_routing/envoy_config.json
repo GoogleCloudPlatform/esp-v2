@@ -429,6 +429,7 @@
                                                         "audiences": [
                                                             "https://esp-grpc-echo-oxouww7xzq-uc.a.run.app"
                                                         ],
+                                                        "forward": true,
                                                         "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
                                                         "fromHeaders": [
                                                             {

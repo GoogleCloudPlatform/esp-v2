@@ -402,6 +402,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 			FromHeaders:          fromHeaders,
 			FromParams:           fromParams,
 			ForwardPayloadHeader: "X-Endpoint-API-UserInfo",
+			Forward:              true,
 		}
 
 		if len(provider.GetAudiences()) != 0 {

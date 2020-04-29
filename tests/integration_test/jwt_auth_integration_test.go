@@ -20,11 +20,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
+	echo_client "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
@@ -236,6 +239,96 @@ func TestInvalidOpenIDConnectDiscovery(t *testing.T) {
 			t.Errorf("Test (%s): failed, expected error, got no err", tc.desc)
 		} else if !strings.Contains(err.Error(), tc.expectedErr) {
 			t.Errorf("Test (%s): failed, expected err: %v, got err: %v", tc.desc, tc.expectedErr, err)
+		}
+	}
+}
+
+func TestFrontendAndBackendAuthHeaders(t *testing.T) {
+	t.Parallel()
+
+	s := env.NewTestEnv(comp.TestFrontendAndBackendAuthHeaders, platform.EchoRemote)
+	s.OverrideAuthentication(&confpb.Authentication{
+		Rules: []*confpb.AuthenticationRule{
+			{
+				Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_BearertokenConstantAddress",
+				Requirements: []*confpb.AuthRequirement{
+					{
+						ProviderId: testdata.TestAuthProvider,
+						Audiences:  "ok_audience",
+					},
+				},
+			},
+			{
+				Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_DisableAuthSetToTrue",
+				Requirements: []*confpb.AuthRequirement{
+					{
+						ProviderId: testdata.TestAuthProvider,
+						Audiences:  "ok_audience",
+					},
+				},
+			},
+		},
+	})
+	s.OverrideMockMetadata(
+		map[string]string{
+			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.BackendAuthToken",
+		}, 0)
+
+	defer s.TearDown()
+	if err := s.Setup(utils.CommonArgs()); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	testData := []struct {
+		desc        string
+		method      string
+		path        string
+		headers     map[string]string
+		wantHeaders map[string]string
+	}{
+		{
+			desc: "Frontend auth preserves `Authorization` and creates `X-Endpoint-API-UserInfo`." +
+				"Backend auth is disabled, so no further header modifications.",
+			method: "GET",
+			path:   "/disableauthsettotrue/constant/disableauthsettotrue",
+			headers: map[string]string{
+				"Authorization": "Bearer " + testdata.Es256Token,
+			},
+			wantHeaders: map[string]string{
+				"Authorization":           "Bearer " + testdata.Es256Token,
+				"X-Endpoint-API-UserInfo": testdata.Es256TokenPayloadBase64,
+			},
+		},
+		{
+			desc: "Frontend auth preserves `Authorization` and creates `X-Endpoint-API-UserInfo`." +
+				"Backend auth then modifies `Authorization` and creates `X-Forwarded-Authorization`.",
+			method: "GET",
+			path:   "/bearertoken/constant/0",
+			headers: map[string]string{
+				"Authorization": "Bearer " + testdata.Es256Token,
+			},
+			wantHeaders: map[string]string{
+				"Authorization":             "Bearer ya29.BackendAuthToken",
+				"X-Endpoint-API-UserInfo":   testdata.Es256TokenPayloadBase64,
+				"X-Forwarded-Authorization": "Bearer " + testdata.Es256Token,
+			},
+		},
+	}
+
+	for _, tc := range testData {
+		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		resp, err := echo_client.DoWithHeaders(url, tc.method, "", tc.headers)
+
+		if err != nil {
+			t.Fatalf("Test Desc(%s): %v", tc.desc, err)
+		}
+
+		gotResp := string(resp)
+		for wantKey, wantValue := range tc.wantHeaders {
+			wantHeader := fmt.Sprintf(`"%v": "%v"`, wantKey, wantValue)
+			if !strings.Contains(gotResp, wantHeader) {
+				t.Fatalf("Test Desc(%s) failed,\n  got: %v\n want: %v", tc.desc, gotResp, tc.wantHeaders)
+			}
 		}
 	}
 }
