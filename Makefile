@@ -170,7 +170,11 @@ integration-debug: build build-envoy-debug build-grpc-interop build-grpc-echo
 	# debug-components can be set as "all", "configmanager", or "envoy".
 	@go test -v -timeout 20m ./tests/integration_test/... --debug_components=envoy --logtostderr
 
-integration-test-asan: build build-envoy-asan build-grpc-interop build-grpc-echo integration-test-run-sequential
+integration-test-asan:build build-envoy-asan build-grpc-interop build-grpc-echo
+	@echo "--> running dns_resolver_test"
+	@go test -v ./tests/integration_test/dns_resolver_test.go --debug_components=envoy
+	@echo "--> running all integration tests and showing debug logs"
+	@go test -v -timeout 50m -parallel 1 ./tests/integration_test/... --debug_components=envoy --logtostderr
 
 integration-test-tsan: build build-envoy-tsan build-grpc-interop build-grpc-echo integration-test-run-sequential
 

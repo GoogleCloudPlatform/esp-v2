@@ -67,11 +67,11 @@ func TestDnsResolver(t *testing.T) {
 			desc:     "resolve domain name successfully",
 			wantResp: `{"message":"hello"}`,
 		},
-		//{
-		//	desc:            "resolve domain name unsuccessfully",
-		//	isResolveFailed: true,
-		//	wantError:       `http response status is not 200 OK: 503 Service Unavailable, no healthy upstream`,
-		//},
+		{
+			desc:            "resolve domain name unsuccessfully",
+			isResolveFailed: true,
+			wantError:       `http response status is not 200 OK: 503 Service Unavailable, no healthy upstream`,
+		},
 	}
 
 	for _, tc := range testCase {
