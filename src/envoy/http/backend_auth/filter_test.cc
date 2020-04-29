@@ -141,9 +141,7 @@ TEST_F(BackendAuthFilterTest, SucceedAppendToken) {
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
 
-  EXPECT_EQ(headers.get(Envoy::Http::Headers::get().Authorization)
-                ->value()
-                .getStringView(),
+  EXPECT_EQ(headers.Authorization()->value().getStringView(),
             "Bearer this-is-token");
   EXPECT_EQ(headers.get(kXForwardedAuthorization), nullptr);
   EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
@@ -178,9 +176,7 @@ TEST_F(BackendAuthFilterTest, SucceedTokenCopied) {
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
 
-  EXPECT_EQ(headers.get(Envoy::Http::Headers::get().Authorization)
-                ->value()
-                .getStringView(),
+  EXPECT_EQ(headers.Authorization()->value().getStringView(),
             "Bearer new-id-token");
   EXPECT_EQ(headers.get(kXForwardedAuthorization)->value().getStringView(),
             "Bearer origin-token");

@@ -66,25 +66,10 @@ TEST_F(IamTokenInfoTest, SimpleSuccess) {
   // Assert success.
   EXPECT_NE(got_msg, nullptr);
   EXPECT_EQ(got_msg->bodyAsString(), R"()");
-  EXPECT_EQ(got_msg->headers()
-                .get(Envoy::Http::Headers::get().Method)
-                ->value()
-                .getStringView(),
-            "POST");
-  EXPECT_EQ(got_msg->headers()
-                .get(Envoy::Http::Headers::get().Host)
-                ->value()
-                .getStringView(),
-            "iam-url.com");
-  EXPECT_EQ(got_msg->headers()
-                .get(Envoy::Http::Headers::get().Path)
-                ->value()
-                .getStringView(),
-            "/path1");
-  EXPECT_EQ(got_msg->headers()
-                .get(Envoy::Http::Headers::get().Authorization)
-                ->value()
-                .getStringView(),
+  EXPECT_EQ(got_msg->headers().Method()->value().getStringView(), "POST");
+  EXPECT_EQ(got_msg->headers().Host()->value().getStringView(), "iam-url.com");
+  EXPECT_EQ(got_msg->headers().Path()->value().getStringView(), "/path1");
+  EXPECT_EQ(got_msg->headers().Authorization()->value().getStringView(),
             "Bearer valid-access-token");
 }
 
