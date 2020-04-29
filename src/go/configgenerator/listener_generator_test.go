@@ -1572,7 +1572,7 @@ func TestMakeHttpConMgr(t *testing.T) {
 		{
 			desc: "Generate HttpConMgr when accessLog is defined",
 			opts: options.ConfigGeneratorOptions{
-				AccessLog: "/foo",
+				AccessLog:       "/foo",
 				AccessLogFormat: "/bar",
 			},
 			wantHttpConnMgr: `

@@ -69,6 +69,7 @@ type TestEnv struct {
 	serviceControlIamServiceAccount string
 	serviceControlIamDelegates      string
 	MockServiceManagementServer     *components.MockServiceMrg
+	backendAddress                  string
 	ports                           *components.Ports
 	envoyDrainTimeInSec             int
 	ServiceControlServer            *components.MockServiceCtrl
@@ -114,6 +115,10 @@ func (e *TestEnv) OverrideMockMetadata(newImdsData map[string]string, imdsFailur
 
 func (e *TestEnv) GetDynamicRoutingBackendPort() uint16 {
 	return e.ports.DynamicRoutingBackendPort
+}
+
+func (e *TestEnv) SetBackendAddress(backendAddress string) {
+	e.backendAddress = backendAddress
 }
 
 // Dictates the responses and the number of failures mock IAM will respond with.
@@ -355,7 +360,21 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	// Starts XDS.
 	var err error
 	debugConfigMgr := *debugComponents == "all" || *debugComponents == "configmanager"
-	e.configMgr, err = components.NewConfigManagerServer(debugConfigMgr, e.ports, e.backend, confArgs)
+
+	// Set backend flag (for sidecar)
+	if e.backendAddress == "" {
+		backendAddress, err := formBackendAddress(e.ports, e.backend)
+		if err != nil {
+			return fmt.Errorf("unable to form backend address: %v", err)
+		}
+		e.backendAddress = backendAddress
+	}
+
+	if e.backendAddress != "" {
+		confArgs = append(confArgs, "--backend_address", e.backendAddress)
+	}
+
+	e.configMgr, err = components.NewConfigManagerServer(debugConfigMgr, e.ports, confArgs)
 	if err != nil {
 		return err
 	}
@@ -525,4 +544,22 @@ func (e *TestEnv) TearDown() {
 	}
 
 	glog.Infof("finish tearing down...")
+}
+
+// Form the backend address.
+func formBackendAddress(ports *components.Ports, backend platform.Backend) (string, error) {
+
+	backendAddress := fmt.Sprintf("%v:%v", platform.GetLoopbackHost(), ports.BackendServerPort)
+
+	switch backend {
+	case platform.GrpcEchoRemote, platform.EchoRemote, platform.GrpcBookstoreRemote:
+		// Dynamic routing backends shouldn't have this flag set.
+		return "", nil
+	case platform.GrpcBookstoreSidecar, platform.GrpcEchoSidecar, platform.GrpcInteropSidecar:
+		return fmt.Sprintf("grpc://%v", backendAddress), nil
+	case platform.EchoSidecar:
+		return fmt.Sprintf("http://%v", backendAddress), nil
+	default:
+		return "", fmt.Errorf("backend (%v) is not supported", backend)
+	}
 }

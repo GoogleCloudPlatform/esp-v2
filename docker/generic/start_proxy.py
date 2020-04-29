@@ -496,6 +496,18 @@ environment variable or by passing "-k" flag to this script.
         the location of the service account credentials JSON file. If the option is
         omitted, the proxy contacts the metadata service to fetch an access token.
         '''.format(creds_key=GOOGLE_CREDS_KEY))
+
+    parser.add_argument(
+        '--dns_resolver_addresses',
+        help='''
+        The addresses of dns resolvers. Each address should be in format of
+        IP_ADDR or IP_ADDR:PORT and they are separated by ';'. For the IP_ADDR
+        case, the default DNS port 52 will be used. (e.g.,
+        --dns_resolver_addresses=127.0.0.1;127.0.0.2;127.0.0.3:8000)
+
+        If unset, will use the default resolver configured in /etc/resolv.conf.
+        ''')
+
     parser.add_argument(
         '--backend_dns_lookup_family',
         default=None,
@@ -602,6 +614,11 @@ environment variable or by passing "-k" flag to this script.
         Requires the certificate and key files /etc/nginx/ssl/nginx.crt and
         /etc/nginx/ssl/nginx.key''')
 
+    parser.add_argument('--dns',  help='''
+        This flag is exactly same as --dns_resolver_addresses. This flag is added
+        for backward compatible for ESPv1 and will be deprecated.
+        Please use the flag --dns_resolver_addresses instead.''')
+
     parser.add_argument('-t', '--tls_mutual_auth', action='store_true', help='''
         This flag added for backward compatible for ESPv1 and will be deprecated.
         Please use the flag --ssl_client_cert_path instead.
@@ -692,6 +709,10 @@ def enforce_conflict_args(args):
         and args.transcoding_ignore_unknown_query_parameters:
         return "Flag --transcoding_ignore_query_parameters cannot be used" \
                " together with --transcoding_ignore_unknown_query_parameters."
+
+    if args.dns_resolver_addresses and args.dns:
+        return "Flag --dns_resolver_addresses cannot be used together with" \
+               " together with --dns."
 
     return None
 
@@ -868,6 +889,14 @@ def gen_proxy_config(args):
     if args.backend_dns_lookup_family:
         proxy_conf.extend(
             ["--backend_dns_lookup_family", args.backend_dns_lookup_family])
+
+    if args.dns_resolver_addresses:
+        proxy_conf.extend(
+            ["--dns_resolver_addresses", args.dns_resolver_addresses])
+    if args.dns:
+        proxy_conf.extend(
+            ["--dns_resolver_addresses", args.dns]
+        )
 
     if args.envoy_use_remote_address:
         proxy_conf.append("--envoy_use_remote_address")

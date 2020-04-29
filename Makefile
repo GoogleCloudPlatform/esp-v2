@@ -149,7 +149,7 @@ integration-test-run-sequential:
 	@go test -timeout 20m ./tests/endpoints/...
 	@go test -timeout 20m ./tests/env/... --logtostderr
 	@go test -timeout 20m ./tests/utils/... --logtostderr
-	@go test -timeout 30m -parallel 1 ./tests/integration_test --logtostderr
+	@go test -timeout 50m -parallel 1 ./tests/integration_test --logtostderr
 
 integration-test-run-parallel:
 	@echo "--> running integration tests"

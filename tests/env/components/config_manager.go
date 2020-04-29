@@ -28,38 +28,12 @@ type ConfigManagerServer struct {
 	grpcPort uint16
 }
 
-// Form the backend address.
-func formBackendAddress(ports *Ports, backend platform.Backend) (string, error) {
-
-	backendAddress := fmt.Sprintf("%v:%v", platform.GetLoopbackHost(), ports.BackendServerPort)
-
-	switch backend {
-	case platform.GrpcEchoRemote, platform.EchoRemote, platform.GrpcBookstoreRemote:
-		// Dynamic routing backends shouldn't have this flag set.
-		return "", nil
-	case platform.GrpcBookstoreSidecar, platform.GrpcEchoSidecar, platform.GrpcInteropSidecar:
-		return fmt.Sprintf("grpc://%v", backendAddress), nil
-	case platform.EchoSidecar:
-		return fmt.Sprintf("http://%v", backendAddress), nil
-	default:
-		return "", fmt.Errorf("backend (%v) is not supported", backend)
-	}
-}
-
-func NewConfigManagerServer(debugMode bool, ports *Ports, backend platform.Backend, args []string) (*ConfigManagerServer, error) {
+func NewConfigManagerServer(debugMode bool, ports *Ports, args []string) (*ConfigManagerServer, error) {
 
 	// Set config manager flags.
 	args = append(args, "--listener_address", platform.GetAnyAddress())
 	args = append(args, "--backend_dns_lookup_family", platform.GetDnsFamily())
 	args = append(args, "--root_certs_path", platform.GetFilePath(platform.ProxyCert))
-
-	// Set backend flag (for sidecar)
-	backendAddress, err := formBackendAddress(ports, backend)
-	if err != nil {
-		return nil, fmt.Errorf("unable to start config manager: %v", err)
-	} else if backendAddress != "" {
-		args = append(args, "--backend_address", backendAddress)
-	}
 
 	if debugMode {
 		args = append(args, "--logtostderr", "--v=1")

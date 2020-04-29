@@ -79,10 +79,32 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if providerClusters != nil {
 		clusters = append(clusters, providerClusters...)
 	}
+
+	if serviceInfo.Options.DnsResolverAddresses != "" {
+		if err = addDnsResolversToClusters(serviceInfo.Options.DnsResolverAddresses, clusters); err != nil {
+			return nil, fmt.Errorf("fail to add dns resovlers to clusters : %v", err)
+		}
+	}
+
+	glog.Infof("generate clusters: %v", clusters)
 	return clusters, nil
+}
+
+func addDnsResolversToClusters(dnsResolverAddresses string, clusters []*v2pb.Cluster) error {
+	dnsResolvers, err := util.DnsResolvers(dnsResolverAddresses)
+	if err != nil {
+		return err
+	}
+
+	for _, cluster := range clusters {
+		cluster.DnsResolvers = dnsResolvers
+	}
+
+	return nil
 }
 
 func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, error) {
@@ -190,8 +212,6 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, erro
 		}
 
 		providerClusters = append(providerClusters, c)
-
-		glog.Infof("Add provider cluster configuration for %v: %v", provider.JwksUri, c)
 	}
 	return providerClusters, nil
 }
@@ -242,7 +262,7 @@ func makeCatchAllBackendCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, err
 	if err != nil {
 		return nil, err
 	}
-	glog.Infof("Backend cluster configuration for service %s: %v", serviceInfo.Name, c)
+
 	return c, nil
 }
 
@@ -284,7 +304,7 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*v2pb.Cluster, erro
 		}
 		c.TransportSocket = transportSocket
 	}
-	glog.Infof("adding cluster Configuration for uri: %s: %v", uri, c)
+
 	return c, nil
 }
 
@@ -298,7 +318,7 @@ func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]*v2pb.Cluster, e
 		}
 
 		brClusters = append(brClusters, c)
-		glog.Infof("Add backend routing cluster configuration for %v: %v", v.ClusterName, c)
+
 	}
 	return brClusters, nil
 }

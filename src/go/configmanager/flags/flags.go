@@ -54,12 +54,13 @@ var (
 	ListenerPort = flag.Int("listener_port", 8080, "listener port")
 	Healthz      = flag.String("healthz", "", "path for health check of ESPv2 proxy itself")
 
-	SslServerCertPath  = flag.String("ssl_server_cert_path", "", "Path to the certificate and key that ESPv2 uses to act as a HTTPS server")
-	SslClientCertPath  = flag.String("ssl_client_cert_path", "", "Path to the certificate and key that ESPv2 uses to enable TLS mutual authentication for HTTPS backend")
-	SslMinimumProtocol = flag.String("ssl_minimum_protocol", "", "Minimum TLS protocol version for Downstream connections.")
-	SslMaximumProtocol = flag.String("ssl_maximum_protocol", "", "Maximum TLS protocol version for Downstream connections.")
-	RootCertsPath      = flag.String("root_certs_path", util.DefaultRootCAPaths, "Path to the root certificates to make TLS connection.")
-	EnableHSTS         = flag.Bool("enable_strict_transport_security", false, "Enable HSTS (HTTP Strict Transport Security).")
+	SslServerCertPath    = flag.String("ssl_server_cert_path", "", "Path to the certificate and key that ESPv2 uses to act as a HTTPS server")
+	SslClientCertPath    = flag.String("ssl_client_cert_path", "", "Path to the certificate and key that ESPv2 uses to enable TLS mutual authentication for HTTPS backend")
+	SslMinimumProtocol   = flag.String("ssl_minimum_protocol", "", "Minimum TLS protocol version for Downstream connections.")
+	SslMaximumProtocol   = flag.String("ssl_maximum_protocol", "", "Maximum TLS protocol version for Downstream connections.")
+	RootCertsPath        = flag.String("root_certs_path", util.DefaultRootCAPaths, "Path to the root certificates to make TLS connection.")
+	EnableHSTS           = flag.Bool("enable_strict_transport_security", false, "Enable HSTS (HTTP Strict Transport Security).")
+	DnsResolverAddresses = flag.String("dns_resolver_addresses", "", `The addresses of dns resolvers. Each address should be in format of either IP_ADDR or IP_ADDR:PORT and they are separated by ';'.`)
 
 	// Flags for non_gcp deployment.
 	ServiceAccountKey = flag.String("service_account_key", "", `Use the service account key JSON file to access the service control and the
@@ -142,6 +143,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		SslMinimumProtocol:                      *SslMinimumProtocol,
 		SslMaximumProtocol:                      *SslMaximumProtocol,
 		EnableHSTS:                              *EnableHSTS,
+		DnsResolverAddresses:                    *DnsResolverAddresses,
 		ServiceAccountKey:                       *ServiceAccountKey,
 		SkipJwtAuthnFilter:                      *SkipJwtAuthnFilter,
 		SkipServiceControlFilter:                *SkipServiceControlFilter,

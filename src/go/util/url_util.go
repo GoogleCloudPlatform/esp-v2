@@ -25,6 +25,17 @@ import (
 	"strings"
 )
 
+const (
+	// Default port for HTTP.
+	HTTPDefaultPort = "80"
+
+	// Default port for HTTPS.
+	HTTPSDefaultPort = "443"
+
+	// Default port for DNS.
+	DNSDefaultPort = "53"
+)
+
 // ParseURI parses uri into scheme, hostname, port, path with err(if exist).
 // If uri has no scheme, it will be regarded as https.
 // If uri has no port, it will use 80 for non-TLS and 443 for TLS.
@@ -43,9 +54,9 @@ func ParseURI(uri string) (string, string, uint32, string, error) {
 	_, port, _ := net.SplitHostPort(u.Host)
 	if port == "" {
 		// Determine the default port.
-		port = "443"
+		port = HTTPSDefaultPort
 		if !strings.HasSuffix(u.Scheme, "s") {
-			port = "80"
+			port = HTTPDefaultPort
 		}
 	}
 
