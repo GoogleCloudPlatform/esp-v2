@@ -52,6 +52,7 @@ envoy_cc_library(
         "@envoy//include/envoy/event:dispatcher_interface",
         "@envoy//include/envoy/server:filter_config_interface",
         "@envoy//include/envoy/upstream:cluster_manager_interface",
+        "@envoy//source/common/common:assert_lib",
         "@envoy//source/common/common:enum_to_int",
         "@envoy//source/common/http:headers_lib",
         "@envoy//source/common/http:message_lib",

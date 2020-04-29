@@ -75,7 +75,18 @@ TEST_F(ImdsTokenInfoTest, InvalidJsonResponse) {
   EXPECT_FALSE(success);
 }
 
-TEST_F(ImdsTokenInfoTest, AccessTokenSuccess) {
+TEST_F(ImdsTokenInfoTest, AccessTokenInvalidExpiry) {
+  // Input.
+  std::string response =
+      R"({ "access_token": "fake-access-token", "expires_in": "invalid" })";
+  TokenResult result{};
+
+  // Test access token.
+  bool success = info_->parseAccessToken(response, &result);
+  EXPECT_FALSE(success);
+}
+
+TEST_F(ImdsTokenInfoTest, AccessTokenSuccessPostiveExpiry) {
   // Input.
   std::string response =
       R"({ "access_token": "fake-access-token", "expires_in": 434432 })";
@@ -85,7 +96,21 @@ TEST_F(ImdsTokenInfoTest, AccessTokenSuccess) {
   bool success = info_->parseAccessToken(response, &result);
   EXPECT_TRUE(success);
   EXPECT_EQ(result.token, "fake-access-token");
+  EXPECT_GT(result.expiry_duration.count(), 0);
   EXPECT_NE(result.expiry_duration, kDefaultTokenExpiry);
+}
+
+TEST_F(ImdsTokenInfoTest, AccessTokenSuccessNegativeExpiry) {
+  // Input with an expiry time in the past (should never happen in practice).
+  std::string response =
+      R"({ "access_token": "fake-access-token", "expires_in": -434432 })";
+  TokenResult result{};
+
+  // Test access token.
+  bool success = info_->parseAccessToken(response, &result);
+  EXPECT_TRUE(success);
+  EXPECT_EQ(result.token, "fake-access-token");
+  EXPECT_LT(result.expiry_duration.count(), 0);
 }
 
 }  // namespace test

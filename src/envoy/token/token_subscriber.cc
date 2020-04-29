@@ -14,6 +14,7 @@
 
 #include "src/envoy/token/token_subscriber.h"
 #include "absl/strings/str_cat.h"
+#include "common/common/assert.h"
 #include "common/common/enum_to_int.h"
 #include "common/http/message_impl.h"
 #include "common/http/utility.h"
@@ -73,19 +74,18 @@ void TokenSubscriber::handleSuccessResponse(
     absl::string_view token, const std::chrono::seconds& expires_in) {
   active_request_ = nullptr;
 
-  ENVOY_LOG(debug, "{}: Got token with expiry duration: {} , {} sec",
+  // Signal that we are ready for initialization.
+  ENVOY_LOG(debug, "{}: Got token and expiry duration: {} , {} seconds",
             debug_name_, token, expires_in.count());
   callback_(token);
+  init_target_->ready();
 
-  // Use the buffer to set the next refresh time.
   if (expires_in <= kRefreshBuffer) {
+    // Handle low expiry time by retrying immediately.
     refresh();
   } else {
     refresh_timer_->enableTimer(expires_in - kRefreshBuffer);
   }
-
-  // Signal that we are ready for initialization.
-  init_target_->ready();
 }
 
 void TokenSubscriber::refresh() {
@@ -148,9 +148,7 @@ void TokenSubscriber::processResponse(
           token_info_->parseAccessToken(response->bodyAsString(), &result);
       break;
     default:
-      ENVOY_LOG(error, "{}: failed with unknown token type {}", debug_name_,
-                token_type_);
-      return;
+      NOT_REACHED_GCOVR_EXCL_LINE;
   }
 
   // Determine status.
@@ -165,7 +163,17 @@ void TokenSubscriber::processResponse(
   if (!Envoy::Http::validHeaderString(result.token)) {
     ENVOY_LOG(error,
               "{}: failed because invalid characters were detected in token {}",
-              result.token);
+              debug_name_, result.token);
+    handleFailResponse();
+    return;
+  }
+
+  // Tokens that have already expired are treated as failures.
+  if (result.expiry_duration.count() <= 0) {
+    ENVOY_LOG(error,
+              "{}: failed because token has already expired, it expired {} "
+              "seconds ago",
+              debug_name_, result.expiry_duration.count());
     handleFailResponse();
     return;
   }
