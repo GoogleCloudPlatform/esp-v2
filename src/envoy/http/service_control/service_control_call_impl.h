@@ -31,7 +31,7 @@ namespace http_filters {
 namespace service_control {
 
 // Use shared_ptr to do atomic token update.
-typedef std::shared_ptr<std::string> TokenSharedPtr;
+using TokenSharedPtr = std::shared_ptr<std::string>;
 
 // The scope for Service Control API
 constexpr char kServiceControlScope[] =
@@ -75,9 +75,8 @@ class ThreadLocalCache : public Envoy::ThreadLocal::ThreadLocalObject {
   ClientCache client_cache_;
 };
 
-typedef std::shared_ptr<
-    ::google::api::envoy::http::service_control::FilterConfig>
-    FilterConfigProtoSharedPtr;
+using FilterConfigProtoSharedPtr =
+    std::shared_ptr<::google::api::envoy::http::service_control::FilterConfig>;
 
 class ServiceControlCallImpl
     : public ServiceControlCall,

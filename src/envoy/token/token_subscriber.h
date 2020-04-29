@@ -29,7 +29,7 @@ namespace token {
 
 enum TokenType { AccessToken, IdentityToken };
 
-typedef std::function<void(absl::string_view)> UpdateTokenCallback;
+using UpdateTokenCallback = std::function<void(absl::string_view)>;
 
 // `TokenSubscriber` class contains platform logic to initiate token refreshes
 // and callback to the clients.
@@ -87,7 +87,7 @@ class TokenSubscriber
   std::string debug_name_;
 };
 
-typedef std::unique_ptr<TokenSubscriber> TokenSubscriberPtr;
+using TokenSubscriberPtr = std::unique_ptr<TokenSubscriber>;
 
 }  // namespace token
 }  // namespace envoy

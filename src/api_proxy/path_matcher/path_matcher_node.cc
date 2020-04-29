@@ -59,8 +59,8 @@ template <class Collection>
 typename Collection::value_type::second_type& LookupOrInsertNew(
     Collection* const collection,
     const typename Collection::value_type::first_type& key) {
-  typedef typename Collection::value_type::second_type Mapped;
-  typedef typename Mapped::element_type Element;
+  using Mapped = typename Collection::value_type::second_type;
+  using Element = typename Mapped::element_type;
   std::pair<typename Collection::iterator, bool> ret =
       collection->insert(typename Collection::value_type(key, Mapped()));
   if (ret.second) {

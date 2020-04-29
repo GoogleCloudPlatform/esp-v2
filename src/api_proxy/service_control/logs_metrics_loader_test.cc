@@ -65,8 +65,8 @@ bool IsMetricSupported(const MetricDescriptor& md) {
                      sizeof(unsupported_prefix) - 1);
 }
 
-typedef std::map<std::string, const LabelDescriptor&> LabelMap;
-typedef std::map<std::string, const MetricDescriptor&> MetricMap;
+using LabelMap = std::map<std::string, const LabelDescriptor&>;
+using MetricMap = std::map<std::string, const MetricDescriptor&>;
 
 }  // namespace
 

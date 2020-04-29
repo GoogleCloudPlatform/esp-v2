@@ -55,7 +55,7 @@ class AudienceContext {
   token::TokenSubscriberPtr imds_token_sub_ptr_;
 };
 
-typedef std::unique_ptr<AudienceContext> AudienceContextPtr;
+using AudienceContextPtr = std::unique_ptr<AudienceContext>;
 
 class FilterConfigParserImpl
     : public FilterConfigParser,

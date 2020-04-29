@@ -59,7 +59,7 @@ class ServiceControlHandler {
   // The request is about to be destroyed need to cancel all async requests.
   virtual void onDestroy() PURE;
 };
-typedef std::unique_ptr<ServiceControlHandler> ServiceControlHandlerPtr;
+using ServiceControlHandlerPtr = std::unique_ptr<ServiceControlHandler>;
 
 class ServiceControlHandlerFactory {
  public:

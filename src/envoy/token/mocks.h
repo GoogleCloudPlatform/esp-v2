@@ -59,7 +59,7 @@ class MockTokenInfo : public TokenInfo {
               (absl::string_view response, TokenResult* ret), (const));
 };
 
-typedef std::unique_ptr<NiceMock<MockTokenInfo>> MockTokenInfoPtr;
+using MockTokenInfoPtr = std::unique_ptr<NiceMock<MockTokenInfo>>;
 
 }  // namespace test
 }  // namespace token

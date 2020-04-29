@@ -41,7 +41,7 @@ class ServiceControlCall {
           request_info) PURE;
 };
 
-typedef std::unique_ptr<ServiceControlCall> ServiceControlCallPtr;
+using ServiceControlCallPtr = std::unique_ptr<ServiceControlCall>;
 
 class ServiceControlCallFactory {
  public:

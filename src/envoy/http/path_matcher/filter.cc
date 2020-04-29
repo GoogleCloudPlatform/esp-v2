@@ -39,7 +39,7 @@ struct RcDetailsValues {
   // The path is not defined in the service config.
   const std::string PathNotDefined = "path_not_defined";
 };
-typedef Envoy::ConstSingleton<RcDetailsValues> RcDetails;
+using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
 
 }  // namespace
 

@@ -133,7 +133,7 @@ class PathMatcherBuilder {
   // be multiple templates in different services on a server. Consider moving
   // this to PathMatcherNode.
   std::set<std::string> custom_verbs_;
-  typedef typename PathMatcher<Method>::MethodData MethodData;
+  using MethodData = typename PathMatcher<Method>::MethodData;
   std::vector<std::unique_ptr<MethodData>> methods_;
 
   friend class PathMatcher<Method>;

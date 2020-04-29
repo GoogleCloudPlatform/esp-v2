@@ -24,7 +24,7 @@ namespace espv2 {
 namespace api_proxy {
 namespace path_matcher {
 
-typedef std::string HttpMethod;
+using HttpMethod = std::string;
 
 struct PathMatcherLookupResult {
   PathMatcherLookupResult() : data(nullptr), is_multiple(false) {}
@@ -108,7 +108,7 @@ class PathMatcherNode {
     std::vector<std::string> path_;
   };  // class PathInfo
 
-  typedef std::vector<std::string> RequestPathParts;
+  using RequestPathParts = std::vector<std::string>;
 
   // Creates a Root node with an empty WrapperGraph map.
   PathMatcherNode() : result_map_(), children_(), wildcard_(false) {}

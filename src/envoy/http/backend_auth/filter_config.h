@@ -49,7 +49,7 @@ class FilterConfig {
   virtual const FilterConfigParser& cfg_parser() const PURE;
 };
 
-typedef std::shared_ptr<FilterConfig> FilterConfigSharedPtr;
+using FilterConfigSharedPtr = std::shared_ptr<FilterConfig>;
 
 }  // namespace backend_auth
 }  // namespace HttpFilters

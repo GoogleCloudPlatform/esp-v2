@@ -30,7 +30,7 @@ struct RcDetailsValues {
   const std::string RejectedByServiceControlCheck =
       "rejected_by_service_control_check";
 };
-typedef Envoy::ConstSingleton<RcDetailsValues> RcDetails;
+using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
 
 }  // namespace
 

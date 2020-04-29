@@ -22,7 +22,7 @@ namespace espv2 {
 namespace envoy {
 namespace token {
 
-typedef std::function<std::string()> GetTokenFunc;
+using GetTokenFunc = std::function<std::string()>;
 
 // `IamTokenInfo` is a bridge `TokenInfo` for parsing
 // identity and access tokens from the IAM server.
