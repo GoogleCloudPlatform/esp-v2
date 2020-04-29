@@ -308,6 +308,7 @@ func TestFetchListeners(t *testing.T) {
                                     "test_audience1",
                                     "test_audience2"
                                  ],
+                                 "forward": true,
                                  "forwardPayloadHeader":"X-Endpoint-API-UserInfo",
                                  "fromHeaders":[
                                     {
@@ -520,6 +521,7 @@ func TestFetchListeners(t *testing.T) {
                                  "audiences": [
                                      "https://bookstore.endpoints.project123.cloud.goog"
                                  ],
+                                 "forward": true,
                                  "forwardPayloadHeader":"X-Endpoint-API-UserInfo",
                                  "fromHeaders":[
                                     {
@@ -740,6 +742,7 @@ func TestFetchListeners(t *testing.T) {
                                  "audiences": [
                                      "https://bookstore.endpoints.project123.cloud.goog"
                                  ],
+                                 "forward": true,
                                  "forwardPayloadHeader":"X-Endpoint-API-UserInfo",
                                  "fromHeaders":[
                                     {
@@ -768,6 +771,7 @@ func TestFetchListeners(t *testing.T) {
                                  "audiences": [
                                      "https://bookstore.endpoints.project123.cloud.goog"
                                  ],
+                                 "forward": true,
                                  "forwardPayloadHeader":"X-Endpoint-API-UserInfo",
                                  "fromHeaders":[
                                     {
@@ -1190,6 +1194,7 @@ func TestFetchListeners(t *testing.T) {
                                     "test_audience1",
                                     "test_audience2"
                                  ],
+                                 "forward": true,
                                  "forwardPayloadHeader":"X-Endpoint-API-UserInfo",
                                  "fromHeaders":[
                                     {
@@ -1477,7 +1482,7 @@ func TestFetchListeners(t *testing.T) {
 			}
 
 			if err := util.JsonEqual(tc.wantedListeners, gotListeners); err != nil {
-				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got unexpected Listeners, \n %v", i, tc.desc, err)
+				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got unexpected Listeners, %v", i, tc.desc, err)
 			}
 		})
 	}

@@ -53,6 +53,7 @@ const (
 	TestDynamicRouting
 	TestDynamicRoutingCorsByEnvoy
 	TestDynamicRoutingWithAllowCors
+	TestFrontendAndBackendAuthHeaders
 	TestGRPC
 	TestGrpcBackendPreflightCors
 	TestGrpcBackendSimpleCors

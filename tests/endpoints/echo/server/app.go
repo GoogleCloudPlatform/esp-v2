@@ -281,11 +281,18 @@ func bearerTokenHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Expose-Headers", fmt.Sprintf("X-Token: %s", bearerToken))
 	}
 	reqURI := r.URL.RequestURI()
-	xForwarded := r.Header.Get("X-Forwarded-Authorization")
 	resp := fmt.Sprintf(`{"Authorization": "%s", "RequestURI": "%s"`, bearerToken, reqURI)
+
+	xForwarded := r.Header.Get("X-Forwarded-Authorization")
 	if xForwarded != "" {
 		resp += fmt.Sprintf(`, "X-Forwarded-Authorization": "%s"`, xForwarded)
 	}
+
+	xEndpoint := r.Header.Get("X-Endpoint-API-UserInfo")
+	if xEndpoint != "" {
+		resp += fmt.Sprintf(`, "X-Endpoint-API-UserInfo": "%s"`, xEndpoint)
+	}
+
 	resp += "}"
 	w.Write([]byte(resp))
 }

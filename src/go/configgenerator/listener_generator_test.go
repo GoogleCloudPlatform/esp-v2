@@ -295,6 +295,7 @@ func TestJwtAuthnFilter(t *testing.T) {
                 "audiences": [
                     "https://bookstore.endpoints.project123.cloud.goog"
                 ],
+                "forward": true,
                 "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
                 "fromHeaders": [
                     {
@@ -371,6 +372,7 @@ func TestJwtAuthnFilter(t *testing.T) {
                 "audiences": [
                     "https://bookstore.endpoints.project123.cloud.goog"
                 ],
+                "forward": true,
                 "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
                 "fromHeaders": [
                     {
@@ -413,7 +415,7 @@ func TestJwtAuthnFilter(t *testing.T) {
 		}
 
 		if err := util.JsonEqual(tc.wantJwtAuthnFilter, gotFilter); err != nil {
-			t.Errorf("Test Desc(%d): %s, makeTranscoderFilter failed, got: %s, want: %s", i, tc.desc, gotFilter, tc.wantJwtAuthnFilter)
+			t.Errorf("Test Desc(%d): %s, makeTranscoderFilter failed, %s", i, tc.desc, err)
 		}
 	}
 }
@@ -1572,7 +1574,7 @@ func TestMakeHttpConMgr(t *testing.T) {
 		{
 			desc: "Generate HttpConMgr when accessLog is defined",
 			opts: options.ConfigGeneratorOptions{
-				AccessLog: "/foo",
+				AccessLog:       "/foo",
 				AccessLogFormat: "/bar",
 			},
 			wantHttpConnMgr: `

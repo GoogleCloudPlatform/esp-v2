@@ -220,6 +220,9 @@ const (
 		"jZSJ9.hz9IUedX6WTbuxQSbcXBSKfvF2hK48o06CnxJn-5vyOkWfUNroJjb3JokQpweF9X" +
 		"FI8RxeMGPKFMdHb8qyIlqA"
 
+	Es256TokenPayloadBase64 = "eyJpc3MiOiJlczI1Ni1pc3N1ZXIiLCJzdWIiOiJlczI1Ni1p" +
+		"c3N1ZXIiLCJhdWQiOiJva19hdWRpZW5jZSJ9"
+
 	Rs256Token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjJiIn0.eyJpc3MiO" +
 		"iJyczI1Ni1pc3N1ZXIiLCJzdWIiOiJyczI1Ni1pc3N1ZXIiLCJhdWQiOiJva19hdWRpZW5" +
 		"jZSJ9.Idf-XyipQCoMmIkI8TT3LgHUseV5AG-tJGhGrEldto-q44oNz9ZEd3KoJ3TlZGKk" +
