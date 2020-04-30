@@ -73,7 +73,7 @@ func TestAccessLog(t *testing.T) {
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	makeOneRequest(t , s )
+	makeOneRequest(t, s)
 	s.TearDown()
 	expectAccessLog := fmt.Sprintf("\"POST /echo?key=api-key HTTP/1.1\"200"+
 		" - 20 19\"-\" \"Go-http-client/1.1\"\"localhost:%v\" \"127.0.0.1:%v\"\n",
@@ -84,7 +84,7 @@ func TestAccessLog(t *testing.T) {
 		t.Fatalf("fail to read access log file: %v", err)
 	}
 
-	if gotAccessLog := string(bytes); expectAccessLog!= gotAccessLog {
+	if gotAccessLog := string(bytes); expectAccessLog != gotAccessLog {
 		t.Errorf("expect access log: %s, get acccess log: %v", expectAccessLog, gotAccessLog)
 	}
 

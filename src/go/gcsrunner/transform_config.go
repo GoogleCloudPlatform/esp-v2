@@ -107,7 +107,8 @@ func transformEnvoyConfig(bootstrap *bootstrappb.Bootstrap, opts FetchConfigOpti
 	for _, l := range listeners {
 		switch l.GetName() {
 		// The default listener created by this project's configgenerator package.
-		case util.IngressListenerName:
+		// Also include the previous names of this listener so old configs still work.
+		case util.IngressListenerName, "http_listener", "https_listener":
 			ingressListenerTransformed = true
 			if err := transformIngressListener(l, opts); err != nil {
 				return fmt.Errorf("failed to transform Ingress Listener: %v", err)
@@ -116,6 +117,7 @@ func transformEnvoyConfig(bootstrap *bootstrappb.Bootstrap, opts FetchConfigOpti
 		// those sent by Service Control and JWT Authn filters in order to utilize
 		// Envoy's built-in Access Logging features.
 		// This requires the use of another unused port.
+		// This listener is optional so old configs without this listener still work.
 		case util.LoopbackListenerName:
 			if err := transformLoopbackListener(l, opts); err != nil {
 				return fmt.Errorf("failed to transform Loopback Listener")
