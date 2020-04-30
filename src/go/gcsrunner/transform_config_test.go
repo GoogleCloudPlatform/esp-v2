@@ -183,37 +183,66 @@ func TestTransformConfigBytes(t *testing.T) {
 		WantPort:     1234,
 		LoopbackPort: 5678,
 	}
-	doListenerCalledOnHTTP := false
-	doListenerCalledOnLoopback := false
-	doServiceControlCalled := false
-	doListenerTransform = func(_ *v2pb.Listener, port uint32) error {
-		switch port {
-		case opts.WantPort:
-			doListenerCalledOnHTTP = true
-			return nil
-		case opts.LoopbackPort:
-			doListenerCalledOnLoopback = true
-			return nil
-		default:
-			return fmt.Errorf("wrong parameters: doListenerTransform(%d), want %d or %d", port, opts.WantPort, opts.LoopbackPort)
+
+	testCases := []struct {
+		name            string
+		config          []byte
+		requireLoopback bool
+	}{
+		{
+			name:            "Valid config",
+			config:          validConfigInput,
+			requireLoopback: true,
+		},
+		{
+			name:            "Valid config with old name (http_listener)",
+			config:          validConfigInputHTTPListener,
+			requireLoopback: true,
+		},
+		{
+			name:            "Valid config with old name (https_listener)",
+			config:          validConfigInputHTTPSListener,
+			requireLoopback: true,
+		},
+		{
+			name:   "Valid config without Loopback",
+			config: validConfigInputWithoutLoopback,
+		},
+	}
+
+	for _, tc := range testCases {
+		doListenerCalledOnIngress := false
+		doListenerCalledOnLoopback := false
+		doServiceControlCalled := false
+		doListenerTransform = func(_ *v2pb.Listener, port uint32) error {
+			switch port {
+			case opts.WantPort:
+				doListenerCalledOnIngress = true
+				return nil
+			case opts.LoopbackPort:
+				doListenerCalledOnLoopback = true
+				return nil
+			default:
+				return fmt.Errorf("wrong parameters: doListenerTransform(%d), want %d or %d", port, opts.WantPort, opts.LoopbackPort)
+			}
 		}
-	}
-	doServiceControlTransform = func(_ *scpb.FilterConfig, _ FetchConfigOptions) error {
-		doServiceControlCalled = true
-		return nil
-	}
-	_, err := transformConfigBytes(validConfigInput, opts)
-	if err != nil {
-		t.Fatalf("transformConfigBytes() returned %v, want nil", err)
-	}
-	if !doListenerCalledOnHTTP {
-		t.Errorf("doListenerTransform was not called for ingress_listener")
-	}
-	if !doListenerCalledOnLoopback {
-		t.Errorf("doListenerTransform was not called for loopback_listener")
-	}
-	if !doServiceControlCalled {
-		t.Errorf("doServiceControlTransform was not called")
+		doServiceControlTransform = func(_ *scpb.FilterConfig, _ FetchConfigOptions) error {
+			doServiceControlCalled = true
+			return nil
+		}
+		_, err := transformConfigBytes(tc.config, opts)
+		if err != nil {
+			t.Fatalf("transformConfigBytes() returned %v, want nil", err)
+		}
+		if !doListenerCalledOnIngress {
+			t.Errorf("doListenerTransform was not called for ingress_listener")
+		}
+		if !doListenerCalledOnLoopback && tc.requireLoopback {
+			t.Errorf("doListenerTransform was not called for loopback_listener")
+		}
+		if !doServiceControlCalled {
+			t.Errorf("doServiceControlTransform was not called")
+		}
 	}
 }
 
@@ -222,6 +251,129 @@ var validConfigInput = []byte(`{
     "listeners": [
       {
       "name": "ingress_listener",
+        "address": {
+          "socket_address": {
+            "port_value": 1111
+          }
+        },
+        "filter_chains": [
+          {
+            "filters": [
+              {
+                "name": "envoy.filters.network.http_connection_manager",
+                "typed_config": {
+                  "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "http_filters": [
+                    {
+                      "name": "envoy.filters.http.service_control",
+                      "typed_config": {
+                        "@type": "type.googleapis.com/google.api.envoy.http.service_control.FilterConfig"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "loopback_listener",
+        "address": {
+          "socket_address": {
+            "port_value": 2222
+          }
+        }
+      }
+    ]
+  }
+}`)
+
+var validConfigInputWithoutLoopback = []byte(`{
+"static_resources": {
+    "listeners": [
+      {
+      "name": "ingress_listener",
+        "address": {
+          "socket_address": {
+            "port_value": 1111
+          }
+        },
+        "filter_chains": [
+          {
+            "filters": [
+              {
+                "name": "envoy.filters.network.http_connection_manager",
+                "typed_config": {
+                  "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "http_filters": [
+                    {
+                      "name": "envoy.filters.http.service_control",
+                      "typed_config": {
+                        "@type": "type.googleapis.com/google.api.envoy.http.service_control.FilterConfig"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}`)
+
+// This config has a listener name which old configs will be using.
+var validConfigInputHTTPListener = []byte(`{
+"static_resources": {
+    "listeners": [
+      {
+      "name": "http_listener",
+        "address": {
+          "socket_address": {
+            "port_value": 1111
+          }
+        },
+        "filter_chains": [
+          {
+            "filters": [
+              {
+                "name": "envoy.filters.network.http_connection_manager",
+                "typed_config": {
+                  "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "http_filters": [
+                    {
+                      "name": "envoy.filters.http.service_control",
+                      "typed_config": {
+                        "@type": "type.googleapis.com/google.api.envoy.http.service_control.FilterConfig"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "loopback_listener",
+        "address": {
+          "socket_address": {
+            "port_value": 2222
+          }
+        }
+      }
+    ]
+  }
+}`)
+
+// This config has a listener name which old configs will be using.
+var validConfigInputHTTPSListener = []byte(`{
+"static_resources": {
+    "listeners": [
+      {
+      "name": "https_listener",
         "address": {
           "socket_address": {
             "port_value": 1111
