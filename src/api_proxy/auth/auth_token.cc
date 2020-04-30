@@ -39,6 +39,7 @@ absl::optional<std::string> get_auth_token(const std::string& json_secret,
       grpc_auth_json_key_create_from_string(json_secret.c_str());
 
   if (grpc_auth_json_key_is_valid(&json_key) == 0) {
+    grpc_auth_json_key_destruct(&json_key);
     return absl::nullopt;
   }
 
