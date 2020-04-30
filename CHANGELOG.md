@@ -1,3 +1,19 @@
+# Release 2.9.0 30-04-2020
+
+- Forward `Authorization` header in JWT Authn filter (#141)
+- Add flag: `dns_resolver_address` (#133)
+- Add flags: `access_log` and `access_log_format` (#129)
+- Covert non-5xx sidestream errors to 500 Internal Server Error (#122)
+- Add flag: `underscores_in_headers` (#119)
+
+# Release 2.8.0 07-04-2020
+
+- Apply retry and `network_fail_open` for failed server response properly (#110)
+- Align `--cloud_trace_url_override` with ESPv1 (#107)
+- Support `generate_self_signed_certificate` (#105)
+- Support websocket (#102)
+- TLS support for grpcs backend (#95)
+
 # Release 2.7.0 25-03-2020
 
 - Add `X-Forwarded-Authorization` header (#90)
