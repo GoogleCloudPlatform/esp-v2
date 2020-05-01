@@ -117,7 +117,7 @@ func TestStatistics(t *testing.T) {
 				t.Errorf("Test (%s): failed, expected histogram %v not in the got histograms: %v", tc.desc, wantHistogramName, histograms)
 				break
 			} else if len(wantHistogramVals) != len(getHistogramVals) {
-				t.Errorf("Test (%s): failed, differnt value number for histogram %v, expected vals: %v , got vals: %v", tc.desc, wantHistogramName, wantHistogramVals, getHistogramVals)
+				t.Errorf("Test (%s): failed, different value number for histogram %v, expected vals: %v , got vals: %v", tc.desc, wantHistogramName, wantHistogramVals, getHistogramVals)
 			} else {
 				for i, wantHistogramVal := range wantHistogramVals {
 					if wantHistogramVal == 0 {
