@@ -47,7 +47,7 @@ func TestStatistics(t *testing.T) {
 	}{
 
 		{
-			desc:        "Success after 10s due to ESPv2 default response timeout being 15s",
+			desc:        "backend respond in 1s",
 			reqDuration: time.Second * 1,
 			wantCounts: map[string]int{
 				"http.ingress_http.backend_auth.token_added":                       1,
@@ -63,7 +63,7 @@ func TestStatistics(t *testing.T) {
 			},
 		},
 		{
-			desc:        "Success after 10s due to ESPv2 default response timeout being 15s",
+			desc:        "backend respond in 2s",
 			reqDuration: time.Second * 2,
 			wantCounts: map[string]int{
 				"http.ingress_http.backend_auth.token_added":                       2,
