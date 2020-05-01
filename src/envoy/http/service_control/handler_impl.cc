@@ -49,7 +49,8 @@ constexpr char JwtPayloadAuidencePath[] = "aud";
 ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     const Envoy::Http::RequestHeaderMap& headers,
     const Envoy::StreamInfo::StreamInfo& stream_info, const std::string& uuid,
-    const FilterConfigParser& cfg_parser, Envoy::TimeSource& time_source)
+    const FilterConfigParser& cfg_parser, Envoy::TimeSource& time_source,
+    ServiceControlFilterStats& filter_stats)
     : cfg_parser_(cfg_parser),
       stream_info_(stream_info),
       time_source_(time_source),
@@ -58,7 +59,8 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
       response_header_size_(0),
       is_grpc_(false),
       is_first_report_(true),
-      last_reported_(time_source_.systemTime()) {
+      last_reported_(time_source_.systemTime()),
+      filter_stats_(filter_stats) {
   is_grpc_ = Envoy::Grpc::Common::hasGrpcContentType(headers);
 
   http_method_ = std::string(utils::readHeaderEntry(headers.Method()));
@@ -292,7 +294,7 @@ void ServiceControlHandlerImpl::callReport(
         std::string(utils::extractHeader(*request_headers, kRefererHeader));
   }
 
-  fillLatency(stream_info_, info.latency);
+  fillLatency(stream_info_, info.latency, filter_stats_);
 
   info.response_code = stream_info_.responseCode().value_or(500);
 

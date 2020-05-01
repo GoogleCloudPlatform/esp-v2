@@ -44,7 +44,8 @@ class ServiceControlHandlerImpl
                             const Envoy::StreamInfo::StreamInfo& stream_info,
                             const std::string& uuid,
                             const FilterConfigParser& cfg_parser,
-                            Envoy::TimeSource& timeSource);
+                            Envoy::TimeSource& timeSource,
+                            ServiceControlFilterStats& filter_stats);
   ~ServiceControlHandlerImpl() override;
 
   void callCheck(Envoy::Http::RequestHeaderMap& headers,
@@ -130,6 +131,9 @@ class ServiceControlHandlerImpl
   bool is_first_report_;
   // Interval timer for sending intermediate reports.
   Envoy::SystemTime last_reported_;
+
+  // Filter statistics.
+  ServiceControlFilterStats& filter_stats_;
 };
 
 class ServiceControlHandlerFactoryImpl : public ServiceControlHandlerFactory {
@@ -141,9 +145,11 @@ class ServiceControlHandlerFactoryImpl : public ServiceControlHandlerFactory {
 
   ServiceControlHandlerPtr createHandler(
       const Envoy::Http::RequestHeaderMap& headers,
-      const Envoy::StreamInfo::StreamInfo& stream_info) const override {
+      const Envoy::StreamInfo::StreamInfo& stream_info,
+      ServiceControlFilterStats& filter_stats) const override {
     return std::make_unique<ServiceControlHandlerImpl>(
-        headers, stream_info, random_.uuid(), cfg_parser_, time_source_);
+        headers, stream_info, random_.uuid(), cfg_parser_, time_source_,
+        filter_stats);
   }
 
  private:

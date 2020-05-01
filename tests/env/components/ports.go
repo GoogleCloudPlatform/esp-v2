@@ -124,6 +124,7 @@ const (
 	TestServiceManagementWithValidCert
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
+	TestStatistics
 	TestTranscodingBindings
 	TestTranscodingIgnoreQueryParameters
 	TestTranscodingPrintOptions

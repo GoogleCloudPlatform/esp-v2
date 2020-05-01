@@ -27,16 +27,21 @@ namespace service_control {
  */
 
 // clang-format off
-#define ALL_SERVICE_CONTROL_FILTER_STATS(COUNTER)     \
+#define ALL_SERVICE_CONTROL_FILTER_STATS(COUNTER, HISTOGRAM)     \
   COUNTER(allowed)                                    \
-  COUNTER(denied)
+  COUNTER(denied) \
+  HISTOGRAM(request_time, Milliseconds)  \
+  HISTOGRAM(backend_time, Milliseconds)  \
+  HISTOGRAM(overhead_time, Milliseconds)
+
 // clang-format on
 
 /**
  * Wrapper struct for service control filter stats. @see stats_macros.h
  */
 struct ServiceControlFilterStats {
-  ALL_SERVICE_CONTROL_FILTER_STATS(GENERATE_COUNTER_STRUCT)
+  ALL_SERVICE_CONTROL_FILTER_STATS(GENERATE_COUNTER_STRUCT,
+                                   GENERATE_HISTOGRAM_STRUCT)
 };
 
 class ServiceControlFilterStatBase {
@@ -52,7 +57,8 @@ class ServiceControlFilterStatBase {
                                           Envoy::Stats::Scope& scope) {
     const std::string final_prefix = prefix + "service_control.";
     return {ALL_SERVICE_CONTROL_FILTER_STATS(
-        POOL_COUNTER_PREFIX(scope, final_prefix))};
+        POOL_COUNTER_PREFIX(scope, final_prefix),
+        POOL_HISTOGRAM_PREFIX(scope, final_prefix))};
   }
 
   // The stats for the filter.

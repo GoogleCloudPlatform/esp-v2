@@ -36,6 +36,7 @@ envoy_cc_library(
     hdrs = ["handler.h"],
     repository = "@envoy",
     deps = [
+        ":filter_stats_lib",
         ":service_control_callback_func_lib",
         "@envoy//include/envoy/http:header_map_interface",
         "@envoy//include/envoy/stream_info:stream_info_interface",

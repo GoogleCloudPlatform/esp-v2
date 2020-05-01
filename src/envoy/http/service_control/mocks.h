@@ -50,7 +50,8 @@ class MockServiceControlHandlerFactory : public ServiceControlHandlerFactory {
  public:
   MOCK_METHOD(ServiceControlHandlerPtr, createHandler,
               (const Envoy::Http::RequestHeaderMap& headers,
-               const Envoy::StreamInfo::StreamInfo& stream_info),
+               const Envoy::StreamInfo::StreamInfo& stream_info,
+               ServiceControlFilterStats& filter_stats),
               (const, override));
 };
 
