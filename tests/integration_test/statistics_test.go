@@ -27,6 +27,10 @@ import (
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
+func roughEqual(i, j, bufferPercent float64) bool {
+	return i > j*(1-bufferPercent) && i < j*(1+bufferPercent)
+}
+
 func TestStatistics(t *testing.T) {
 	t.Parallel()
 
@@ -123,7 +127,7 @@ func TestStatistics(t *testing.T) {
 					if wantHistogramVal == 0 {
 						continue
 					}
-					if wantHistogramVal/bufferPercent < getHistogramVals[i] || wantHistogramVal*bufferPercent > getHistogramVals[i] {
+					if !roughEqual(getHistogramVals[i], wantHistogramVal, bufferPercent) {
 						t.Errorf("Test (%s): failed, histogram %v not matched, expected vals: %v , got vals: %v", tc.desc, wantHistogramName, wantHistogramVals, getHistogramVals)
 						break
 					}
