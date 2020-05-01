@@ -44,7 +44,6 @@ func GetStatsPath() string {
 }
 
 func ParseStats(statsBytes []byte) (map[string]int, map[string][]float64, error) {
-
 	var stats Stats
 	if err := json.Unmarshal(statsBytes, &stats); err != nil {
 		return nil, nil, fmt.Errorf("fail to unmarshal respnse to Stats: %v", err)

@@ -27,7 +27,6 @@ import (
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
-// Tests the deadlines configured in backend rules for a HTTP/1.x backend (no streaming).
 func TestStatistics(t *testing.T) {
 	t.Parallel()
 
@@ -85,9 +84,7 @@ func TestStatistics(t *testing.T) {
 		path := fmt.Sprintf("/sleepDefault?duration=%v", tc.reqDuration.String())
 		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, path)
 
-		_, err := client.DoWithHeaders(url, "GET", "", nil)
-
-		if err != nil {
+		if _, err := client.DoWithHeaders(url, "GET", "", nil); err != nil {
 			t.Fatalf("Test (%s): failed, expected no err, got err (%v)", tc.desc, err)
 		}
 
