@@ -1,6 +1,8 @@
 load("@envoy_api//bazel:api_build_system.bzl", "api_cc_py_proto_library")
 load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 
+package(default_visibility = ["//visibility:public"])
+
 api_cc_py_proto_library(
     name = "base_proto",
     srcs = [
