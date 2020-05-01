@@ -30,6 +30,8 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
+	"github.com/envoyproxy/go-control-plane/pkg/cache/v2"
+	"github.com/envoyproxy/go-control-plane/pkg/resource/v2"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 
@@ -43,8 +45,6 @@ import (
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
-	cache "github.com/envoyproxy/go-control-plane/pkg/cache/v2"
-	rspb "github.com/envoyproxy/go-control-plane/pkg/resource/v2"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -1460,7 +1460,7 @@ func TestFetchListeners(t *testing.T) {
 				Node: &corepb.Node{
 					Id: opts.Node,
 				},
-				TypeUrl: rspb.ListenerType,
+				TypeUrl: resource.ListenerType,
 			}
 			resp, err := env.configManager.cache.Fetch(ctx, req)
 			if err != nil {
@@ -1523,7 +1523,7 @@ func TestDynamicBackendRouting(t *testing.T) {
 			Node: &corepb.Node{
 				Id: opts.Node,
 			},
-			TypeUrl: rspb.ClusterType,
+			TypeUrl: resource.ClusterType,
 		}
 
 		respForClusters, err := manager.cache.Fetch(ctx, reqForClusters)
@@ -1560,7 +1560,7 @@ func TestDynamicBackendRouting(t *testing.T) {
 			Node: &corepb.Node{
 				Id: opts.Node,
 			},
-			TypeUrl: rspb.ListenerType,
+			TypeUrl: resource.ListenerType,
 		}
 
 		respForListener, err := manager.cache.Fetch(ctx, reqForListener)
@@ -1729,7 +1729,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 			Node: &corepb.Node{
 				Id: opts.Node,
 			},
-			TypeUrl: rspb.ListenerType,
+			TypeUrl: resource.ListenerType,
 		}
 		resp, err = env.configManager.cache.Fetch(ctx, req)
 		if err != nil {
