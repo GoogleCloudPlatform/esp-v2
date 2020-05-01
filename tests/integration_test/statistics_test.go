@@ -91,7 +91,7 @@ func TestStatistics(t *testing.T) {
 		// Ensure the stats is available in admin.
 		time.Sleep(time.Millisecond * 5000)
 
-		statsUrl := fmt.Sprintf("http://localhost:%v%v", s.Ports().AdminPort, utils.GetStatsPath())
+		statsUrl := fmt.Sprintf("http://localhost:%v%v", s.Ports().AdminPort, utils.ESpv2FiltersStatsPath())
 		resp, err := utils.DoWithHeaders(statsUrl, "GET", "", nil)
 		if err != nil {
 			t.Fatalf("GET %s faild: %v", url, err)
