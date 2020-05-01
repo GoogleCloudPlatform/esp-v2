@@ -30,7 +30,6 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/mux"
-	"google.golang.org/genproto/protobuf/ptype"
 
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/common"
 	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/path_matcher"
@@ -38,6 +37,7 @@ import (
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
+	ptypepb "google.golang.org/genproto/protobuf/ptype"
 )
 
 var (
@@ -1939,9 +1939,9 @@ func TestProcessTypes(t *testing.T) {
 		{
 			desc: "Success for distinct names",
 			fakeServiceConfig: &confpb.Service{
-				Types: []*ptype.Type{
+				Types: []*ptypepb.Type{
 					{
-						Fields: []*ptype.Field{
+						Fields: []*ptypepb.Field{
 							{
 								Name:     "foo_bar",
 								JsonName: "fooBar",
@@ -1968,9 +1968,9 @@ func TestProcessTypes(t *testing.T) {
 		{
 			desc: "Success for fully duplicated names, which are de-duped",
 			fakeServiceConfig: &confpb.Service{
-				Types: []*ptype.Type{
+				Types: []*ptypepb.Type{
 					{
-						Fields: []*ptype.Field{
+						Fields: []*ptypepb.Field{
 							{
 								Name:     "foo_bar",
 								JsonName: "fooBar",
@@ -1993,9 +1993,9 @@ func TestProcessTypes(t *testing.T) {
 		{
 			desc: "Success for duplicated json_name with mismatching snake_name",
 			fakeServiceConfig: &confpb.Service{
-				Types: []*ptype.Type{
+				Types: []*ptypepb.Type{
 					{
-						Fields: []*ptype.Field{
+						Fields: []*ptypepb.Field{
 							{
 								Name:     "foo_bar",
 								JsonName: "fooBar",
@@ -2022,9 +2022,9 @@ func TestProcessTypes(t *testing.T) {
 		{
 			desc: "Failure for duplicated snake_name with mismatching json_name",
 			fakeServiceConfig: &confpb.Service{
-				Types: []*ptype.Type{
+				Types: []*ptypepb.Type{
 					{
-						Fields: []*ptype.Field{
+						Fields: []*ptypepb.Field{
 							{
 								Name:     "foo_bar",
 								JsonName: "fooBar",
