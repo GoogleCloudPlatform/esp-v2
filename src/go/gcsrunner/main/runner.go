@@ -28,6 +28,9 @@
 // Additionally, an optional `PORT` variable may be provided to override
 // where Envoy listens to traffic. This will be used only if the original config
 // specifies the port `8080`.
+//
+// Optionally, `LOOPBACK_PORT` may be used to configure Envoy configurations which
+// have an extra listener with the name "loopback_listener" to listen on this port.
 package main
 
 import (
@@ -48,7 +51,6 @@ const (
 	fetchGCSObjectInitialInterval = 10 * time.Second
 	fetchGCSObjectTimeout         = 5 * time.Minute
 	terminateEnvoyTimeout         = time.Minute
-	replaceListenerPort           = 8080
 )
 
 var (
@@ -59,16 +61,17 @@ var (
 
 func main() {
 	flag.Parse()
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-	portNum, err := strconv.ParseUint(port, 10, 32)
+	port, err := envNum("PORT", 8080)
 	if err != nil {
-		glog.Fatal("PORT variable must be a valid port number.")
+		glog.Fatalf("Failed to get PORT number: %v", err)
 	}
-
+	loopbackPort, err := envNum("LOOPBACK_PORT", 8090)
+	if err != nil {
+		glog.Fatalf("Failed to get LOOPBACK_PORT number: %v", err)
+	}
+	if port == loopbackPort {
+		glog.Fatalf("PORT and LOOPBACK_PORT cannot be the same, got: (%d == %d)", port, loopbackPort)
+	}
 	bucketName := os.Getenv("BUCKET")
 	if bucketName == "" {
 		glog.Fatal("Must specify the BUCKET environment variable.")
@@ -100,8 +103,8 @@ func main() {
 	if err := gcsrunner.FetchConfigFromGCS(gcsrunner.FetchConfigOptions{
 		BucketName:                    bucketName,
 		ConfigFileName:                configFileName,
-		WantPort:                      uint32(portNum),
-		ReplacePort:                   replaceListenerPort,
+		WantPort:                      port,
+		LoopbackPort:                  loopbackPort,
 		FetchGCSObjectInitialInterval: fetchGCSObjectInitialInterval,
 		FetchGCSObjectTimeout:         fetchGCSObjectTimeout,
 		WriteFilePath:                 envoyConfigPath,
@@ -118,4 +121,16 @@ func main() {
 	}); err != nil {
 		glog.Fatalf("Envoy erred: %v", err)
 	}
+}
+
+func envNum(v string, defaultVal uint32) (uint32, error) {
+	p := os.Getenv(v)
+	if p == "" {
+		return defaultVal, nil
+	}
+	num, err := strconv.ParseUint(p, 10, 32)
+	if err != nil {
+		return 0, err
+	}
+	return uint32(num), nil
 }

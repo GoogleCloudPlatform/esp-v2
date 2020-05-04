@@ -26,6 +26,7 @@ import (
 	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/path_matcher"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/service_control"
 	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
+	filepb "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v2"
 	gspb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/grpc_stats/v2alpha"
 	jwtpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
@@ -93,6 +94,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(authpb.UpstreamTlsContext), nil
 	case "type.googleapis.com/envoy.api.v2.auth.DownstreamTlsContext":
 		return new(authpb.DownstreamTlsContext), nil
+	case "type.googleapis.com/envoy.config.accesslog.v2.FileAccessLog":
+		return new(filepb.FileAccessLog), nil
 	default:
 		return nil, fmt.Errorf("unexpected protobuf.Any with url: %s", url)
 	}

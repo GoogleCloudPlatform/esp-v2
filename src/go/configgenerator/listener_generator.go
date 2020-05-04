@@ -191,10 +191,7 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		},
 	}
 
-	listenerName := "http_listener"
-
 	if serviceInfo.Options.SslServerCertPath != "" {
-		listenerName = "https_listener"
 		transportSocket, err := util.CreateDownstreamTransportSocket(
 			serviceInfo.Options.SslServerCertPath,
 			serviceInfo.Options.SslMinimumProtocol,
@@ -207,7 +204,7 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	}
 
 	return &v2pb.Listener{
-		Name: listenerName,
+		Name: util.IngressListenerName,
 		Address: &corepb.Address{
 			Address: &corepb.Address_SocketAddress{
 				SocketAddress: &corepb.SocketAddress{

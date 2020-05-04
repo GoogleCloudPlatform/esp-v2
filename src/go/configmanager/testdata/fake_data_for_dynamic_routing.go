@@ -226,7 +226,7 @@ var (
 
 	FakeWantedListenerForDynamicRouting = `
 {
-	 "name": "http_listener",
+	 "name": "ingress_listener",
    "address":{
       "socketAddress":{
          "address":"0.0.0.0",

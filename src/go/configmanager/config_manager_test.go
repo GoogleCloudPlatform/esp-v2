@@ -115,7 +115,7 @@ func TestFetchListeners(t *testing.T) {
          "portValue":8080
       }
 	 },
-	 "name": "http_listener",
+	 "name": "ingress_listener",
    "filterChains":[
       {
          "filters":[
@@ -261,7 +261,7 @@ func TestFetchListeners(t *testing.T) {
          "portValue":8080
       }
    },
-	 "name": "http_listener",
+	 "name": "ingress_listener",
    "filterChains":[
       {
          "filters":[
@@ -456,7 +456,7 @@ func TestFetchListeners(t *testing.T) {
          "portValue":8080
       }
 	 },
-	 "name": "http_listener",
+	 "name": "ingress_listener",
    "filterChains":[
       {
          "filters":[
@@ -671,7 +671,7 @@ func TestFetchListeners(t *testing.T) {
          "portValue":8080
       }
 	 },
-	 "name": "http_listener",
+	 "name": "ingress_listener",
    "filterChains":[
       {
          "filters":[
@@ -915,7 +915,7 @@ func TestFetchListeners(t *testing.T) {
          "portValue":8080
       }
 	 },
-	 "name": "http_listener",
+	 "name": "ingress_listener",
    "filterChains":[
       {
          "filters":[
@@ -1140,7 +1140,7 @@ func TestFetchListeners(t *testing.T) {
          "portValue":8080
       }
    },
-	 "name": "http_listener",
+	 "name": "ingress_listener",
    "filterChains":[
       {
          "filters":[
@@ -1308,7 +1308,7 @@ func TestFetchListeners(t *testing.T) {
          "portValue":8080
       }
 	 },
-	 "name": "http_listener",
+	 "name": "ingress_listener",
    "filterChains":[
       {
          "filters":[

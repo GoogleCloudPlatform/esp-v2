@@ -1433,7 +1433,7 @@ func TestMakeListeners(t *testing.T) {
 			},
 			wantListeners: []string{
 				`{
-					"name": "https_listener",
+					"name": "ingress_listener",
 					"address":{
 						"socketAddress":{
 							"address":"0.0.0.0",
