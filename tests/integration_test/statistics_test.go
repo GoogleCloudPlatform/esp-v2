@@ -27,8 +27,8 @@ import (
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
-func roughEqual(i, j, bufferPercent float64) bool {
-	return i > j*(1-bufferPercent) && i < j*(1+bufferPercent)
+func roughEqual(i, j, latencyMargin float64) bool {
+	return i > j*(1-latencyMargin) && i < j*(1+latencyMargin)
 }
 
 func TestStatistics(t *testing.T) {
@@ -40,8 +40,12 @@ func TestStatistics(t *testing.T) {
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	const bufferPercent = 0.8
+	const latencyMargin = 0.8
 
+	//the latency is different each run. Here the backend server introduces a
+	// fixed big N second latency, so the overall latency should be around N
+	// second. This test compares the latency with expected N second with certain
+	// error margin. As for the over_head, the test only checks if it exists.
 	testData := []struct {
 		desc           string
 		reqCnt         int
@@ -60,7 +64,6 @@ func TestStatistics(t *testing.T) {
 				"http.ingress_http.service_control.allowed":                        1,
 			},
 			wantHistograms: map[string][]float64{
-				// For overhead_time, don't exact comparison since overhead time varies a log in different build mode.
 				"http.ingress_http.service_control.overhead_time": {},
 				"http.ingress_http.service_control.backend_time":  {1000, 1025, 1050, 1075, 1090, 1095, 1099, 1099.5, 1099.9, 1100},
 				"http.ingress_http.service_control.request_time":  {1000, 1025, 1050, 1075, 1090, 1095, 1099, 1099.5, 1099.9, 1100},
@@ -76,7 +79,6 @@ func TestStatistics(t *testing.T) {
 				"http.ingress_http.service_control.allowed":                        2,
 			},
 			wantHistograms: map[string][]float64{
-				// For overhead_time, don't exact comparison since overhead time varies a log in different build mode.
 				"http.ingress_http.service_control.overhead_time": {},
 				"http.ingress_http.service_control.backend_time":  {1000, 1050, 1100, 2050, 2080, 2090, 2098, 2099, 2099.8, 2100},
 				"http.ingress_http.service_control.request_time":  {1000, 1050, 1100, 2050, 2080, 2090, 2098, 2099, 2099.8, 2100},
@@ -137,7 +139,7 @@ func TestStatistics(t *testing.T) {
 				if wantHistogramVal == 0 {
 					continue
 				}
-				if !roughEqual(getHistogramVals[i], wantHistogramVal, bufferPercent) {
+				if !roughEqual(getHistogramVals[i], wantHistogramVal, latencyMargin) {
 					t.Errorf("Test (%s): failed, histogram %v not matched, expected vals: %v , got vals: %v", tc.desc, wantHistogramName, wantHistogramVals, getHistogramVals)
 					break
 				}
