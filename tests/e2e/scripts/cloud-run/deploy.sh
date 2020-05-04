@@ -38,7 +38,6 @@ PROXY_RUNTIME_SERVICE_ACCOUNT="e2e-cloud-run-proxy-rt@${PROJECT_ID}.iam.gservice
 BACKEND_RUNTIME_SERVICE_ACCOUNT="e2e-${BACKEND_PLATFORM}-backend-rt@${PROJECT_ID}.iam.gserviceaccount.com"
 JOB_KEY_PATH="${ROOT}/tests/e2e/client/gob-prow-jobs-secret.json"
 LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
-CLUSTER_VERSION="1.15.9-gke.26"
 
 # Determine names of all resources
 UNIQUE_ID=$(get_unique_id | cut -c 1-6)
@@ -161,10 +160,13 @@ function setup() {
 
   if [[ -n ${CLUSTER_NAME} ]] ;
   then
+    # Cloud Run version depends on the cluster version and the auto-assigned version may not work.
+    # For details, refer to https://cloud.google.com/run/docs/gke/cluster-versions.
+    # b/142752619: The cluster version should be >= 1.15 to be compatible with istio.
     gcloud beta container clusters create ${CLUSTER_NAME} \
       --addons=HorizontalPodAutoscaling,HttpLoadBalancing,CloudRun \
       --machine-type=n1-standard-4 \
-      --cluster-version=${CLUSTER_VERSION}\
+      --cluster-version=latest \
       --enable-stackdriver-kubernetes \
       --service-account=${PROXY_RUNTIME_SERVICE_ACCOUNT} \
       --network=default \
