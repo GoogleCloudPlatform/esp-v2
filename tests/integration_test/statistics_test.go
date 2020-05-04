@@ -45,7 +45,9 @@ func TestStatistics(t *testing.T) {
 	//the latency is different each run. Here the backend server introduces a
 	// fixed big N second latency, so the overall latency should be around N
 	// second. This test compares the latency with expected N second with certain
-	// error margin. As for the over_head, the test only checks if it exists.
+	// error margin. As for the overhead time, the test only checks if the number of
+	// statistic values is correct by setting 0.0, which will be skipped for exact
+	// comparison.
 	testData := []struct {
 		desc           string
 		reqCnt         int
@@ -64,7 +66,7 @@ func TestStatistics(t *testing.T) {
 				"http.ingress_http.service_control.allowed":                        1,
 			},
 			wantHistograms: map[string][]float64{
-				"http.ingress_http.service_control.overhead_time": {},
+				"http.ingress_http.service_control.overhead_time": {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
 				"http.ingress_http.service_control.backend_time":  {1000, 1025, 1050, 1075, 1090, 1095, 1099, 1099.5, 1099.9, 1100},
 				"http.ingress_http.service_control.request_time":  {1000, 1025, 1050, 1075, 1090, 1095, 1099, 1099.5, 1099.9, 1100},
 			},
@@ -79,7 +81,7 @@ func TestStatistics(t *testing.T) {
 				"http.ingress_http.service_control.allowed":                        2,
 			},
 			wantHistograms: map[string][]float64{
-				"http.ingress_http.service_control.overhead_time": {},
+				"http.ingress_http.service_control.overhead_time": {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
 				"http.ingress_http.service_control.backend_time":  {1000, 1050, 1100, 2050, 2080, 2090, 2098, 2099, 2099.8, 2100},
 				"http.ingress_http.service_control.request_time":  {1000, 1050, 1100, 2050, 2080, 2090, 2098, 2099, 2099.8, 2100},
 			},
@@ -125,20 +127,16 @@ func TestStatistics(t *testing.T) {
 				break
 			}
 
-			// If it is empty, don't compare the exact content.
-			if len(wantHistogramVals) == 0 {
-				continue
-			}
-
 			if len(wantHistogramVals) != len(getHistogramVals) {
 				t.Errorf("Test (%s): failed, different value number for histogram %v, expected vals: %v , got vals: %v", tc.desc, wantHistogramName, wantHistogramVals, getHistogramVals)
 				continue
 			}
 
 			for i, wantHistogramVal := range wantHistogramVals {
-				if wantHistogramVal == 0 {
+				if wantHistogramVal == 0.0 {
 					continue
 				}
+
 				if !roughEqual(getHistogramVals[i], wantHistogramVal, latencyMargin) {
 					t.Errorf("Test (%s): failed, histogram %v not matched, expected vals: %v , got vals: %v", tc.desc, wantHistogramName, wantHistogramVals, getHistogramVals)
 					break
