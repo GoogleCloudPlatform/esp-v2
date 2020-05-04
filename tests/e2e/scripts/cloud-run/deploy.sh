@@ -160,11 +160,13 @@ function setup() {
 
   if [[ -n ${CLUSTER_NAME} ]] ;
   then
-    # Cloud Run version depends on the cluster version and the default cluster
-    # version may not work. For details, refer to https://cloud.google.com/run/docs/gke/cluster-versions.
+    # Cloud Run version depends on the cluster version and the auto-assigned version may not work.
+    # For details, refer to https://cloud.google.com/run/docs/gke/cluster-versions.
+    # b/142752619: The cluster version should be >= 1.15 to be compatible with istio.
     gcloud beta container clusters create ${CLUSTER_NAME} \
       --addons=HorizontalPodAutoscaling,HttpLoadBalancing,CloudRun \
       --machine-type=n1-standard-4 \
+      --cluster-version=latest \
       --enable-stackdriver-kubernetes \
       --service-account=${PROXY_RUNTIME_SERVICE_ACCOUNT} \
       --network=default \
