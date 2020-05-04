@@ -55,25 +55,10 @@ func TestStatistics(t *testing.T) {
 		wantCounts     map[string]int
 		wantHistograms map[string][]float64
 	}{
-
 		{
 			desc:        "backend respond in 1s",
+			reqCnt:      2,
 			reqDuration: time.Second * 1,
-			wantCounts: map[string]int{
-				"http.ingress_http.backend_auth.token_added":                       1,
-				"http.ingress_http.backend_routing.append_path_to_address_request": 1,
-				"http.ingress_http.path_matcher.allowed":                           1,
-				"http.ingress_http.service_control.allowed":                        1,
-			},
-			wantHistograms: map[string][]float64{
-				"http.ingress_http.service_control.overhead_time": {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-				"http.ingress_http.service_control.backend_time":  {1000, 1025, 1050, 1075, 1090, 1095, 1099, 1099.5, 1099.9, 1100},
-				"http.ingress_http.service_control.request_time":  {1000, 1025, 1050, 1075, 1090, 1095, 1099, 1099.5, 1099.9, 1100},
-			},
-		},
-		{
-			desc:        "backend respond in 2s",
-			reqDuration: time.Second * 2,
 			wantCounts: map[string]int{
 				"http.ingress_http.backend_auth.token_added":                       2,
 				"http.ingress_http.backend_routing.append_path_to_address_request": 2,
@@ -82,8 +67,8 @@ func TestStatistics(t *testing.T) {
 			},
 			wantHistograms: map[string][]float64{
 				"http.ingress_http.service_control.overhead_time": {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-				"http.ingress_http.service_control.backend_time":  {1000, 1050, 1100, 2050, 2080, 2090, 2098, 2099, 2099.8, 2100},
-				"http.ingress_http.service_control.request_time":  {1000, 1050, 1100, 2050, 2080, 2090, 2098, 2099, 2099.8, 2100},
+				"http.ingress_http.service_control.backend_time":  {1000, 1025, 1050, 1075, 1090, 1095, 1099, 1099.5, 1099.9, 1100},
+				"http.ingress_http.service_control.request_time":  {1000, 1025, 1050, 1075, 1090, 1095, 1099, 1099.5, 1099.9, 1100},
 			},
 		},
 	}
@@ -92,14 +77,16 @@ func TestStatistics(t *testing.T) {
 		path := fmt.Sprintf("/sleepDefault?duration=%v", tc.reqDuration.String())
 		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, path)
 
-		if _, err := client.DoWithHeaders(url, "GET", "", nil); err != nil {
-			t.Fatalf("Test (%s): failed, expected no err, got err (%v)", tc.desc, err)
+		for i := 0; i < tc.reqCnt; i += 1 {
+			if _, err := client.DoWithHeaders(url, "GET", "", nil); err != nil {
+				t.Fatalf("Test (%s): failed, expected no err, got err (%v)", tc.desc, err)
+			}
 		}
 
 		// Ensure the stats is available in admin.
 		time.Sleep(time.Millisecond * 5000)
 
-		statsUrl := fmt.Sprintf("http://localhost:%v%v", s.Ports().AdminPort, utils.ESpv2FiltersStatsPath())
+		statsUrl := fmt.Sprintf("http://localhost:%v%v", s.Ports().AdminPort, utils.ESpv2FiltersStatsPath)
 		resp, err := utils.DoWithHeaders(statsUrl, "GET", "", nil)
 		if err != nil {
 			t.Fatalf("GET %s faild: %v", url, err)

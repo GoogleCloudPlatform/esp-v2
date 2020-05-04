@@ -53,9 +53,7 @@ type Point struct {
 	Interval   float64 `json:"interval,omitempty"`
 }
 
-func ESpv2FiltersStatsPath() string {
-	return "/stats?format=json&usedonly&filter=http.ingress_http.(path_matcher|backend_auth|service_control|backend_routing)"
-}
+const ESpv2FiltersStatsPath = "/stats?format=json&usedonly&filter=http.ingress_http.(path_matcher|backend_auth|service_control|backend_routing)"
 
 func ParseStats(statsBytes []byte) (map[string]int, map[string][]float64, error) {
 	var stats Stats
