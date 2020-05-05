@@ -55,7 +55,7 @@ class ServiceControlFilterTest : public ::testing::Test {
 
     mock_handler_ = new testing::NiceMock<MockServiceControlHandler>();
     mock_handler_ptr_.reset(mock_handler_);
-    ON_CALL(mock_handler_factory_, createHandler(_, _))
+    ON_CALL(mock_handler_factory_, createHandler(_, _, _))
         .WillByDefault(Return(ByMove(std::move(mock_handler_ptr_))));
 
     mock_span_ = std::make_unique<Envoy::Tracing::MockSpan>();
@@ -98,7 +98,7 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersSyncOKStatus) {
 
 TEST_F(ServiceControlFilterTest, OnDestoryWithoutHandler) {
   // Test: calling filter::onDestroy() without handler
-  EXPECT_CALL(mock_handler_factory_, createHandler(_, _)).Times(0);
+  EXPECT_CALL(mock_handler_factory_, createHandler(_, _, _)).Times(0);
   filter_->onDestroy();
 }
 
@@ -175,7 +175,7 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersAsyncBadStatus) {
 
 TEST_F(ServiceControlFilterTest, LogWithoutHandlerOrHeaders) {
   // Test: If no handler and no headers, a handler is not created
-  EXPECT_CALL(mock_handler_factory_, createHandler(_, _)).Times(0);
+  EXPECT_CALL(mock_handler_factory_, createHandler(_, _, _)).Times(0);
 
   // Filter has no handler. If it tries to callReport, it will seg fault
   filter_->log(nullptr, &resp_headers_, &resp_trailer_,
@@ -194,7 +194,7 @@ TEST_F(ServiceControlFilterTest, LogWithHandler) {
   // that one is used for log() and another is not created
   filter_->decodeHeaders(req_headers_, true);
 
-  EXPECT_CALL(mock_handler_factory_, createHandler(_, _)).Times(0);
+  EXPECT_CALL(mock_handler_factory_, createHandler(_, _, _)).Times(0);
   EXPECT_CALL(*mock_handler_, callReport(_, _, _));
   filter_->log(&req_headers_, &resp_headers_, &resp_trailer_,
                mock_decoder_callbacks_.stream_info_);

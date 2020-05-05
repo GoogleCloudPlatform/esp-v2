@@ -18,6 +18,7 @@
 #include "common/config/metadata.h"
 #include "common/http/utility.h"
 #include "src/api_proxy/service_control/request_builder.h"
+#include "src/envoy/http/service_control/filter_stats.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
 
@@ -52,7 +53,8 @@ void fillLoggedHeader(
 // Fills the `request_time_ms`, `backend_time_ms`, and `overhead_time_ms` of the
 // info provided.
 void fillLatency(const Envoy::StreamInfo::StreamInfo& stream_info,
-                 ::espv2::api_proxy::service_control::LatencyInfo& latency);
+                 ::espv2::api_proxy::service_control::LatencyInfo& latency,
+                 ServiceControlFilterStats& filter_stats);
 
 // Fills the jwt payload of the info provided
 void fillJwtPayloads(const ::envoy::config::core::v3::Metadata& metadata,

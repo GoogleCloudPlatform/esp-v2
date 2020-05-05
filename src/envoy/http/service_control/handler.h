@@ -19,6 +19,7 @@
 #include "envoy/http/header_map.h"
 #include "envoy/stream_info/stream_info.h"
 #include "src/api_proxy/service_control/request_info.h"
+#include "src/envoy/http/service_control/filter_stats.h"
 
 namespace espv2 {
 namespace envoy {
@@ -67,7 +68,8 @@ class ServiceControlHandlerFactory {
 
   virtual ServiceControlHandlerPtr createHandler(
       const Envoy::Http::RequestHeaderMap& headers,
-      const Envoy::StreamInfo::StreamInfo& stream_info) const PURE;
+      const Envoy::StreamInfo::StreamInfo& stream_info,
+      ServiceControlFilterStats& filter_stats) const PURE;
 };
 
 }  // namespace service_control

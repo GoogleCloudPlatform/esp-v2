@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 	"github.com/gorilla/websocket"
 	"golang.org/x/net/http2"
 	"golang.org/x/oauth2/google"
@@ -36,68 +37,22 @@ import (
 
 // DoGet performs a Get request to a specified url
 func DoGet(url string) ([]byte, error) {
-	return DoWithHeaders(url, "GET", "", nil)
+	return utils.DoWithHeaders(url, "GET", "", nil)
 }
 
 // DoPost performs a POST request to a specified url
 func DoPost(url, message string) ([]byte, error) {
-	return DoWithHeaders(url, "POST", message, nil)
+	return utils.DoWithHeaders(url, "POST", message, nil)
 }
 
 // DoPostWithHeaders performs a POST request to a specified url with given headers and message
 func DoPostWithHeaders(url, message string, headers map[string]string) ([]byte, error) {
-	return DoWithHeaders(url, "POST", message, headers)
+	return utils.DoWithHeaders(url, "POST", message, headers)
 }
 
 // DoWithHeaders performs a GET/POST/PUT/DELETE/PATCH request to a specified url with given headers and message(if provided)
 func DoWithHeaders(url, method, message string, headers map[string]string) ([]byte, error) {
-	var request *http.Request
-	var err error
-	if method == "DELETE" || method == "GET" {
-		request, err = http.NewRequest(method, url, nil)
-	} else {
-		msg := map[string]string{
-			"message": message,
-		}
-		var buf bytes.Buffer
-		if err := json.NewEncoder(&buf).Encode(msg); err != nil {
-			return nil, err
-		}
-		request, err = http.NewRequest(method, url, &buf)
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("create request error: %v", err)
-	}
-
-	if message != "" {
-		request.Header.Set("Content-Type", "application/json")
-	}
-
-	for k, v := range headers {
-		request.Header.Set(k, v)
-	}
-
-	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		}}
-
-	resp, err := client.Do(request)
-	if err != nil {
-		return nil, fmt.Errorf("http %s error: %v", method, err)
-	}
-	defer resp.Body.Close()
-
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("http got error: %v", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, string(bodyBytes))
-	}
-	return bodyBytes, err
+	return utils.DoWithHeaders(url, method, message, headers)
 }
 
 // DoJWT performs an authenticated request using the credentials in the service account file.

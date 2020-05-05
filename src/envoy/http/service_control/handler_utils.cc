@@ -161,16 +161,19 @@ void fillLoggedHeader(
 }
 
 void fillLatency(const Envoy::StreamInfo::StreamInfo& stream_info,
-                 LatencyInfo& latency) {
+                 LatencyInfo& latency,
+                 ServiceControlFilterStats& filter_stats) {
   if (stream_info.requestComplete()) {
     latency.request_time_ms =
         convertNsToMs(stream_info.requestComplete().value());
+    filter_stats.request_time_.recordValue(latency.request_time_ms);
   }
 
   auto start = stream_info.firstUpstreamTxByteSent();
   auto end = stream_info.lastUpstreamRxByteReceived();
   if (start && end && end.value() >= start.value()) {
     latency.backend_time_ms = convertNsToMs(end.value() - start.value());
+    filter_stats.backend_time_.recordValue(latency.backend_time_ms);
   } else {
     // for cases like request is rejected at service control filter (does not
     // reach backend)
@@ -180,6 +183,7 @@ void fillLatency(const Envoy::StreamInfo::StreamInfo& stream_info,
   if (latency.request_time_ms >= latency.backend_time_ms) {
     latency.overhead_time_ms =
         latency.request_time_ms - latency.backend_time_ms;
+    filter_stats.overhead_time_.recordValue(latency.overhead_time_ms);
   }
 }
 

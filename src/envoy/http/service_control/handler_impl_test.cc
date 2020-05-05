@@ -154,7 +154,7 @@ requirements {
 
 class HandlerTest : public ::testing::Test {
  protected:
-  HandlerTest() {}
+  HandlerTest() : stats_base_(Envoy::EMPTY_STRING, mock_stats_scope_) {}
 
   ~HandlerTest() {}
 
@@ -184,6 +184,9 @@ class HandlerTest : public ::testing::Test {
     expected_report_info.url = "/echo";
     expected_report_info.method = "GET";
   }
+
+  testing::NiceMock<Envoy::Stats::MockStore> mock_stats_scope_;
+  ServiceControlFilterStatBase stats_base_;
 
   testing::NiceMock<MockCheckDoneCallback> mock_check_done_callback_;
   testing::NiceMock<MockStreamInfo> mock_stream_info_;
@@ -313,7 +316,8 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
   // should not set that value.
   TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
 
   EXPECT_CALL(mock_check_done_callback_,
               onCheckDone(Status(Code::NOT_FOUND, "Method does not exist.")));
@@ -339,7 +343,8 @@ TEST_F(HandlerTest, HandlerMissingHeaders) {
   // Note: This test builds off of `HandlerNoOperationFound` to keep mocks
   // simple
   ServiceControlHandlerImpl handler(req_headers_, mock_stream_info_,
-                                    "test-uuid", *cfg_parser_, test_time_);
+                                    "test-uuid", *cfg_parser_, test_time_,
+                                    stats_base_.stats());
 
   EXPECT_CALL(mock_check_done_callback_,
               onCheckDone(Status(Code::NOT_FOUND, "Method does not exist.")));
@@ -367,7 +372,8 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
                               utils::kOperation, "bad-operation-name");
   TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
   EXPECT_CALL(mock_check_done_callback_,
               onCheckDone(Status(Code::NOT_FOUND, "Method does not exist.")));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
@@ -392,7 +398,8 @@ TEST_F(HandlerTest, HandlerCheckNotNeeded) {
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
 
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   EXPECT_CALL(*mock_call_, callQuota(_, _)).Times(0);
@@ -420,7 +427,8 @@ TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
       {"content-type", "application/grpc"}};
 
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
   Status bad_status =
       Status(Code::UNAUTHENTICATED,
              "Method doesn't allow unregistered callers (callers without "
@@ -456,7 +464,8 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithApiKeyRestrictionFields) {
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
   CheckResponseInfo response_info;
   response_info.is_api_key_valid = true;
   response_info.service_is_activated = true;
@@ -498,7 +507,8 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
   CheckResponseInfo response_info;
   response_info.is_api_key_valid = true;
   response_info.service_is_activated = true;
@@ -535,7 +545,8 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
   CheckResponseInfo response_info;
   response_info.is_api_key_valid = true;
   response_info.service_is_activated = true;
@@ -574,7 +585,8 @@ TEST_F(HandlerTest, HandlerCallQuotaWithoutCheck) {
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
   // Check is not called.
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
 
@@ -606,7 +618,8 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
 
   Status bad_status = Status(Code::PERMISSION_DENIED,
                              "test bad status returned from service control");
@@ -647,7 +660,8 @@ TEST_F(HandlerTest, HandlerFailQuotaSync) {
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
   CheckResponseInfo response_info;
   response_info.is_api_key_valid = true;
   response_info.service_is_activated = true;
@@ -689,7 +703,8 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckAsync) {
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
 
   CheckResponseInfo response_info;
   response_info.is_api_key_valid = true;
@@ -734,7 +749,8 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
 
   CheckResponseInfo response_info;
   response_info.is_api_key_valid = true;
@@ -786,7 +802,8 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
 
   CheckResponseInfo response_info;
   response_info.is_api_key_valid = false;
@@ -834,7 +851,8 @@ TEST_F(HandlerTest, HandlerFailQuotaAsync) {
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
 
   CheckResponseInfo response_info;
   response_info.is_api_key_valid = true;
@@ -890,7 +908,8 @@ TEST_F(HandlerTest, HandlerCancelFuncResetOnDone) {
   CancelFunc cancel_fn = mock_cancel.AsStdFunction();
 
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
   EXPECT_CALL(*mock_call_, callCheck(_, _, _))
       .WillOnce(Invoke([&stored_on_done, cancel_fn](const CheckRequestInfo&,
                                                     Envoy::Tracing::Span&,
@@ -917,7 +936,8 @@ TEST_F(HandlerTest, HandlerCancelFuncCalledOnDestroy) {
   CancelFunc cancel_fn = mock_cancel.AsStdFunction();
 
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
   EXPECT_CALL(*mock_call_, callCheck(_, _, _))
       .WillOnce(
           Invoke([cancel_fn](const CheckRequestInfo&, Envoy::Tracing::Span&,
@@ -939,7 +959,8 @@ TEST_F(HandlerTest, HandlerCancelFuncNotCalledOnDestroyForSyncOnDone) {
   CancelFunc cancel_fn = mock_cancel.AsStdFunction();
 
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
   EXPECT_CALL(*mock_call_, callCheck(_, _, _))
       .WillOnce(
           Invoke([cancel_fn](const CheckRequestInfo&, Envoy::Tracing::Span&,
@@ -967,7 +988,8 @@ TEST_F(HandlerTest, HandlerReportWithoutCheck) {
   CheckDoneFunc stored_on_done;
   CheckResponseInfo response_info;
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
 
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
@@ -991,7 +1013,8 @@ TEST_F(HandlerTest, TryIntermediateReport) {
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
   CheckResponseInfo response_info;
   response_info.is_api_key_valid = true;
   response_info.service_is_activated = true;
@@ -1071,7 +1094,8 @@ TEST_F(HandlerTest, FinalReports) {
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_);
+                                    *cfg_parser_, test_time_,
+                                    stats_base_.stats());
   CheckResponseInfo response_info;
   response_info.is_api_key_valid = true;
   response_info.service_is_activated = true;

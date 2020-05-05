@@ -293,6 +293,9 @@ TEST(ServiceControlUtils, FillLatency) {
   };
 
   const std::chrono::nanoseconds zero = std::chrono::nanoseconds(0);
+  testing::NiceMock<Envoy::Stats::MockStore> mock_stats_scope;
+  ServiceControlFilterStatBase stats_base(Envoy::EMPTY_STRING,
+                                          mock_stats_scope);
 
   const TestCase test_cases[] = {
       // Test: If the stream has not ended, all stay their defaults.
@@ -373,7 +376,7 @@ TEST(ServiceControlUtils, FillLatency) {
     }
 
     LatencyInfo info;
-    fillLatency(mock_stream_info, info);
+    fillLatency(mock_stream_info, info, stats_base.stats());
     EXPECT_EQ(test.expect_request_time_ms, info.request_time_ms);
     EXPECT_EQ(test.expect_backend_time_ms, info.backend_time_ms);
     EXPECT_EQ(test.expect_overhead_time_ms, info.overhead_time_ms);
