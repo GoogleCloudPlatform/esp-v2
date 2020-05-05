@@ -27,11 +27,12 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-	tpoauth2 "github.com/GoogleCloudPlatform/esp-v2/third_party/golang_internal"
 	"github.com/gorilla/websocket"
 	"golang.org/x/net/http2"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jws"
+
+	tpoauth2 "github.com/GoogleCloudPlatform/esp-v2/third_party/golang_internal"
 )
 
 // DoGet performs a Get request to a specified url
