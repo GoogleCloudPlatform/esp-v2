@@ -16,6 +16,7 @@
 
 #include "envoy/stats/scope.h"
 #include "envoy/stats/stats_macros.h"
+#include "google/protobuf/stubs/status.h"
 
 namespace espv2 {
 namespace envoy {
@@ -29,7 +30,41 @@ namespace service_control {
 // clang-format off
 #define ALL_SERVICE_CONTROL_FILTER_STATS(COUNTER, HISTOGRAM)     \
   COUNTER(allowed)                                    \
-  COUNTER(denied) \
+  COUNTER(denied)                          \
+  COUNTER(check_count_0) \
+  COUNTER(check_count_1) \
+  COUNTER(check_count_2) \
+  COUNTER(check_count_3) \
+  COUNTER(check_count_4) \
+  COUNTER(check_count_5) \
+  COUNTER(check_count_6) \
+  COUNTER(check_count_7) \
+  COUNTER(check_count_8) \
+  COUNTER(check_count_9) \
+  COUNTER(check_count_10) \
+  COUNTER(check_count_11) \
+  COUNTER(check_count_12) \
+  COUNTER(check_count_13) \
+  COUNTER(check_count_14) \
+  COUNTER(check_count_15) \
+  COUNTER(check_count_16) \
+   COUNTER(report_count_0) \
+  COUNTER(report_count_1) \
+  COUNTER(report_count_2) \
+  COUNTER(report_count_3) \
+  COUNTER(report_count_4) \
+  COUNTER(report_count_5) \
+  COUNTER(report_count_6) \
+  COUNTER(report_count_7) \
+  COUNTER(report_count_8) \
+  COUNTER(report_count_9) \
+  COUNTER(report_count_10) \
+  COUNTER(report_count_11) \
+  COUNTER(report_count_12) \
+  COUNTER(report_count_13) \
+  COUNTER(report_count_14) \
+  COUNTER(report_count_15) \
+  COUNTER(report_count_16) \
   HISTOGRAM(request_time, Milliseconds)  \
   HISTOGRAM(backend_time, Milliseconds)  \
   HISTOGRAM(overhead_time, Milliseconds)
@@ -42,6 +77,15 @@ namespace service_control {
 struct ServiceControlFilterStats {
   ALL_SERVICE_CONTROL_FILTER_STATS(GENERATE_COUNTER_STRUCT,
                                    GENERATE_HISTOGRAM_STRUCT)
+  // Collect check call status.
+  static void collectCheckStatus(
+      ServiceControlFilterStats& filter_stats,
+      const ::google::protobuf::util::error::Code& code);
+
+  // Collect report call status.
+  static void collectReportStatus(
+      ServiceControlFilterStats& filter_stats,
+      const ::google::protobuf::util::error::Code& code);
 };
 
 class ServiceControlFilterStatBase {
@@ -53,8 +97,8 @@ class ServiceControlFilterStatBase {
   ServiceControlFilterStats& stats() { return stats_; }
 
  private:
-  ServiceControlFilterStats generateStats(const std::string& prefix,
-                                          Envoy::Stats::Scope& scope) {
+  static ServiceControlFilterStats generateStats(const std::string& prefix,
+                                                 Envoy::Stats::Scope& scope) {
     const std::string final_prefix = prefix + "service_control.";
     return {ALL_SERVICE_CONTROL_FILTER_STATS(
         POOL_COUNTER_PREFIX(scope, final_prefix),

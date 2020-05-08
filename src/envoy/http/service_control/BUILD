@@ -80,6 +80,7 @@ envoy_cc_library(
     ],
     repository = "@envoy",
     deps = [
+        "filter_stats_lib",
         ":http_call_lib",
         ":service_control_callback_func_lib",
         "//api/envoy/http/common:base_proto_cc_proto",
@@ -134,6 +135,9 @@ envoy_cc_library(
     name = "filter_stats_lib",
     hdrs = [
         "filter_stats.h",
+    ],
+    srcs = [
+        "filter_stats.cc",
     ],
     repository = "@envoy",
     deps = [
@@ -225,6 +229,20 @@ envoy_cc_test(
         "@envoy//test/mocks/stats:stats_mocks",
         "@envoy//test/mocks/tracing:tracing_mocks",
         "@envoy//test/test_common:utility_lib",
+    ],
+)
+
+envoy_cc_test(
+    name = "filter_stats_test",
+    size = "small",
+    srcs = [
+        "filter_stats_test.cc",
+    ],
+    repository = "@envoy",
+    deps = [
+        ":filter_stats_lib",
+        "@envoy//test/test_common:utility_lib",
+        "@envoy//test/mocks/server:server_mocks",
     ],
 )
 

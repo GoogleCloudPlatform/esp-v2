@@ -21,6 +21,7 @@
 #include "envoy/upstream/cluster_manager.h"
 #include "include/service_control_client.h"
 #include "src/api_proxy/service_control/request_info.h"
+#include "src/envoy/http/service_control/filter_stats.h"
 #include "src/envoy/http/service_control/http_call.h"
 #include "src/envoy/http/service_control/service_control_callback_func.h"
 
@@ -36,6 +37,7 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       const ::google::api::envoy::http::service_control::Service& config,
       const ::google::api::envoy::http::service_control::FilterConfig&
           filter_config,
+      ServiceControlFilterStats& filter_stats,
       Envoy::Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
       Envoy::Event::Dispatcher& dispatcher,
       std::function<const std::string&()> sc_token_fn,
@@ -58,6 +60,10 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
           filter_config);
 
   const ::google::api::envoy::http::service_control::Service& config_;
+
+  // Filter statistics.
+  ServiceControlFilterStats& filter_stats_;
+
   bool network_fail_open_;
 
   // the configurable timeouts

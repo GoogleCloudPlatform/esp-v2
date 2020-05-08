@@ -43,7 +43,7 @@ class ServiceControlFilterConfig
             std::make_shared<
                 ::google::api::envoy::http::service_control::FilterConfig>(
                 proto_config)),
-        call_factory_(proto_config_, context),
+        call_factory_(proto_config_, stats(), context),
         config_parser_(*proto_config_, call_factory_),
         handler_factory_(context.random(), config_parser_,
                          context.timeSource()) {}

@@ -83,6 +83,7 @@ func (h *serviceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if h.resp.respStatusCode != 0 {
 		w.WriteHeader(h.resp.respStatusCode)
+		return
 	}
 	_, _ = w.Write(h.resp.respBody)
 }
@@ -227,6 +228,11 @@ func (m *MockServiceCtrl) SetGetRequestsTimeout(timeout time.Duration) {
 func (m *MockServiceCtrl) SetCheckResponse(checkResponse *scpb.CheckResponse) {
 	req_b, _ := proto.Marshal(checkResponse)
 	(m.checkHandler).(*serviceHandler).resp.respBody = req_b
+}
+
+// SetCheckResponse sets the response for the check of the service control.
+func (m *MockServiceCtrl) SetCheckResponseStatus (status int) {
+	(m.checkHandler).(*serviceHandler).resp.respStatusCode= status
 }
 
 // SetCheckResponse sets the response for the check of the service control.

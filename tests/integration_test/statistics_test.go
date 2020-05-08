@@ -19,12 +19,15 @@ import (
 	"testing"
 	"time"
 
+
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
+	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
+	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
 func roughEqual(i, j, latencyMargin float64) bool {
@@ -131,5 +134,96 @@ func TestStatistics(t *testing.T) {
 			}
 
 		}
+	}
+}
+
+func TestStatisticsScCheckStatus(t *testing.T) {
+	t.Parallel()
+
+	serviceName := "bookstore-service"
+	configID := "test-config-id"
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
+		"--rollout_strategy=fixed"}
+
+	tests := []struct {
+		desc            string
+		networkFailOpen bool
+		checkRespCode        int
+		checkRespBody        *scpb.CheckResponse
+		reportRespCode        int
+		wantCount       string
+		wantError       string
+	}{
+		{
+			desc:      "check call is successful",
+			checkRespCode:  200,
+			wantCount: "http.ingress_http.service_control.check_count_0",
+		},
+		{
+			desc:      "check call transportation failed with 403",
+			checkRespCode:  403,
+			wantCount: "http.ingress_http.service_control.check_count_7",
+		},
+		// The mapping between checkError and error::Code is in
+		// https://github.com/GoogleCloudPlatform/esp-v2/blob/0fa3449c96e68a7e91afbf0c4478361b12ecf5e5/src/api_proxy/service_control/request_builder.cc#L1372
+		{
+			desc:            "check call transportation is successful but the checkResponse has failure API_KEY_INVALID",
+			networkFailOpen: true,
+			checkRespBody: &scpb.CheckResponse{
+				CheckErrors: []*scpb.CheckError{
+					{
+						Code: scpb.CheckError_API_KEY_INVALID,
+					},
+				},
+			},
+			wantCount: "http.ingress_http.service_control.check_count_3",
+		},
+		{
+			desc:      "report call is 403",
+			reportRespCode:  403,
+			wantCount: "http.ingress_http.service_control.report_count_7",
+		},
+	}
+
+	for _, tc := range tests {
+		func() {
+			s := env.NewTestEnv(comp.TestStatisticsCheckReportStatus, platform.GrpcBookstoreSidecar)
+
+			if tc.checkRespBody != nil {
+				s.ServiceControlServer.SetCheckResponse(tc.checkRespBody)
+			} else if tc.checkRespCode  != 0 {
+				s.ServiceControlServer.SetCheckResponseStatus(tc.checkRespCode)
+			} else if tc.reportRespCode != 0 {
+				s.ServiceControlServer.SetReportResponseStatus(tc.reportRespCode)
+			}
+
+			defer s.TearDown()
+			if err := s.Setup(args); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			_, _ = bsclient.MakeCall("http", addr, "GET", "/v1/shelves/100/books?key=api-key", "", nil)
+
+			// Ensure the stats is available in admin.
+			time.Sleep(time.Millisecond * 5000)
+
+			statsUrl := fmt.Sprintf("http://localhost:%v%v", s.Ports().AdminPort, utils.ESpv2FiltersStatsPath)
+			statsResp, err := utils.DoWithHeaders(statsUrl, "GET", "", nil)
+			if err != nil {
+				t.Fatalf("GET %s faild: %v", addr, err)
+			}
+
+			counts, _, err := utils.ParseStats(statsResp)
+			if err != nil {
+				t.Fatalf("fail to parse stats: %v", err)
+			}
+			if getCountVal, ok := counts[tc.wantCount]; !ok {
+				t.Errorf("Test (%s): failed, expected counter %v not in the got counters: %v", tc.desc, tc.wantCount, counts)
+
+			} else if getCountVal != 1 {
+				t.Errorf("Test (%s): failed, for counter %s, expected value %v:, got value: %v ", tc.desc, tc.wantCount, 1, getCountVal)
+			}
+		}()
 	}
 }

@@ -121,18 +121,20 @@ void ServiceControlCallImpl::createIamTokenSub() {
 
 ServiceControlCallImpl::ServiceControlCallImpl(
     FilterConfigProtoSharedPtr proto_config, const Service& config,
+    ServiceControlFilterStats& filter_stats,
     Envoy::Server::Configuration::FactoryContext& context)
     : filter_config_(*proto_config),
       token_subscriber_factory_(context),
       tls_(context.threadLocal().allocateSlot()) {
   // Pass shared_ptr of proto_config to the function capture so that
   // it will not be released when the function is called.
-  tls_->set([proto_config, &config, &cm = context.clusterManager(),
+  tls_->set([proto_config, &config, &filter_stats,
+                &cm = context.clusterManager(),
              &time_source =
                  context.timeSource()](Envoy::Event::Dispatcher& dispatcher)
                 -> Envoy::ThreadLocal::ThreadLocalObjectSharedPtr {
-    return std::make_shared<ThreadLocalCache>(config, *proto_config, cm,
-                                              time_source, dispatcher);
+    return std::make_shared<ThreadLocalCache>(
+        config, *proto_config, filter_stats, cm, time_source, dispatcher);
   });
 
   switch (filter_config_.access_token_case()) {

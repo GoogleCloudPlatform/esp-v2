@@ -119,7 +119,6 @@ class EnvoyPeriodicTimer
   std::function<void()> callback_;
   Envoy::Event::TimerPtr timer_;
 };
-
 }  // namespace
 
 void ClientCache::InitHttpRequestSetting(const FilterConfig& filter_config) {
@@ -160,11 +159,12 @@ void ClientCache::InitHttpRequestSetting(const FilterConfig& filter_config) {
 
 ClientCache::ClientCache(
     const ::google::api::envoy::http::service_control::Service& config,
-    const FilterConfig& filter_config, Envoy::Upstream::ClusterManager& cm,
-    Envoy::TimeSource& time_source, Envoy::Event::Dispatcher& dispatcher,
+    const FilterConfig& filter_config, ServiceControlFilterStats& filter_stats,
+    Envoy::Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
+    Envoy::Event::Dispatcher& dispatcher,
     std::function<const std::string&()> sc_token_fn,
     std::function<const std::string&()> quota_token_fn)
-    : config_(config), time_source_(time_source) {
+    : config_(config), filter_stats_(filter_stats), time_source_(time_source) {
   ServiceControlClientOptions options(getCheckAggregationOptions(),
                                       getQuotaAggregationOptions(),
                                       getReportAggregationOptions());
@@ -240,7 +240,8 @@ ClientCache::ClientCache(
     auto& null_span = Envoy::Tracing::NullSpan::instance();
     auto* call = report_call_factory_->createHttpCall(
         request, null_span,
-        [response, on_done](const Status& status, const std::string& body) {
+        [this, response, on_done](const Status& status,
+                                  const std::string& body) {
           if (status.ok()) {
             // Handle 200 response
             if (!response->ParseFromString(body)) {
@@ -252,6 +253,8 @@ ClientCache::ClientCache(
             ENVOY_LOG(error, "Failed to call report, error: {}, str body: {}",
                       status.ToString(), body);
           }
+          ServiceControlFilterStats::collectReportStatus(filter_stats_,
+                                                         status.code());
           on_done(status);
         });
     call->call();
@@ -321,6 +324,9 @@ CancelFunc ClientCache::callCheck(
           // Http call errors should NOT be displayed to the client.
           translate_non_5xx = true;
         }
+
+         ServiceControlFilterStats::collectCheckStatus(filter_stats_,
+                                                      final_status.code());
 
         if (final_status.ok()) {
           on_done(final_status, response_info);
