@@ -103,8 +103,8 @@ const (
 	TestServiceControlJwtAuthFail
 	TestServiceControlLogHeaders
 	TestServiceControlLogJwtPayloads
-	TestServiceControlNetworkFailFlagClosed
-	TestServiceControlNetworkFailFlagOpen
+	TestServiceControlNetworkFailFlagForTimeout
+	TestServiceControlNetworkFailFlagForUnavailableCheckResponse
 	TestServiceControlProtocolWithGRPCBackend
 	TestServiceControlProtocolWithHTTPBackend
 	TestServiceControlQuota
