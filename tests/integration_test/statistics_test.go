@@ -19,7 +19,6 @@ import (
 	"testing"
 	"time"
 
-
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
@@ -146,23 +145,21 @@ func TestStatisticsScCheckStatus(t *testing.T) {
 		"--rollout_strategy=fixed"}
 
 	tests := []struct {
-		desc            string
-		networkFailOpen bool
-		checkRespCode        int
-		checkRespBody        *scpb.CheckResponse
-		reportRespCode        int
-		wantCount       string
-		wantError       string
+		desc           string
+		checkRespCode  int
+		checkRespBody  *scpb.CheckResponse
+		reportRespCode int
+		wantCount      string
 	}{
 		{
-			desc:      "check call is successful",
-			checkRespCode:  200,
-			wantCount: "http.ingress_http.service_control.check_count_0",
+			desc:          "check call is successful",
+			checkRespCode: 200,
+			wantCount:     "http.ingress_http.service_control.check_count_0",
 		},
 		{
-			desc:      "check call transportation failed with 403",
-			checkRespCode:  403,
-			wantCount: "http.ingress_http.service_control.check_count_7",
+			desc:          "check call transportation failed with 403",
+			checkRespCode: 403,
+			wantCount:     "http.ingress_http.service_control.check_count_7",
 		},
 		// The mapping between checkError and error::Code is in
 		// https://github.com/GoogleCloudPlatform/esp-v2/blob/0fa3449c96e68a7e91afbf0c4478361b12ecf5e5/src/api_proxy/service_control/request_builder.cc#L1372
@@ -179,9 +176,9 @@ func TestStatisticsScCheckStatus(t *testing.T) {
 			wantCount: "http.ingress_http.service_control.check_count_3",
 		},
 		{
-			desc:      "report call is 403",
-			reportRespCode:  403,
-			wantCount: "http.ingress_http.service_control.report_count_7",
+			desc:           "report call is 403",
+			reportRespCode: 403,
+			wantCount:      "http.ingress_http.service_control.report_count_7",
 		},
 	}
 
@@ -191,7 +188,7 @@ func TestStatisticsScCheckStatus(t *testing.T) {
 
 			if tc.checkRespBody != nil {
 				s.ServiceControlServer.SetCheckResponse(tc.checkRespBody)
-			} else if tc.checkRespCode  != 0 {
+			} else if tc.checkRespCode != 0 {
 				s.ServiceControlServer.SetCheckResponseStatus(tc.checkRespCode)
 			} else if tc.reportRespCode != 0 {
 				s.ServiceControlServer.SetReportResponseStatus(tc.reportRespCode)
@@ -220,7 +217,6 @@ func TestStatisticsScCheckStatus(t *testing.T) {
 			}
 			if getCountVal, ok := counts[tc.wantCount]; !ok {
 				t.Errorf("Test (%s): failed, expected counter %v not in the got counters: %v", tc.desc, tc.wantCount, counts)
-
 			} else if getCountVal != 1 {
 				t.Errorf("Test (%s): failed, for counter %s, expected value %v:, got value: %v ", tc.desc, tc.wantCount, 1, getCountVal)
 			}
