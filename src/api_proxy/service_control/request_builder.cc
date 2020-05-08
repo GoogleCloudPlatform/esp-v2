@@ -1370,9 +1370,18 @@ Status RequestBuilder::ConvertCheckResponse(
   // TODO: unless they are the same entity
   const CheckError& error = check_response.check_errors(0);
   switch (error.code()) {
-    case CheckError::NOT_FOUND:  // The consumer's project id is not found.
+    case CheckError::NOT_FOUND:
       return Status(Code::INVALID_ARGUMENT,
                     "Client project not found. Please pass a valid project.");
+    case CheckError::RESOURCE_EXHAUSTED:
+      return Status(Code::RESOURCE_EXHAUSTED, "Quota check failed.");
+    case CheckError::ABUSER_DETECTED:
+      // Should not expose this to the client.
+      return Status(Code::PERMISSION_DENIED, "");
+    case CheckError::API_TARGET_BLOCKED:
+      return Status(Code::PERMISSION_DENIED,
+                    " The API targeted by this request is invalid for the "
+                    "given API key.");
     case CheckError::API_KEY_NOT_FOUND:
       if (check_response_info) check_response_info->is_api_key_valid = false;
       return Status(Code::INVALID_ARGUMENT,
@@ -1413,14 +1422,14 @@ Status RequestBuilder::ConvertCheckResponse(
                     "Request is not allowed as per security policies.");
     case CheckError::INVALID_CREDENTIAL:
       return Status(Code::PERMISSION_DENIED,
-                    "The credential in the request can not be verified");
+                    "The credential in the request can not be verified.");
     case CheckError::LOCATION_POLICY_VIOLATED:
       return Status(Code::PERMISSION_DENIED,
                     "Request is not allowed as per location policies.");
     case CheckError::CONSUMER_INVALID:
       return Status(Code::PERMISSION_DENIED,
                     "The consumer from the API key does not represent"
-                    " a valid consumer folder or organization");
+                    " a valid consumer folder or organization.");
 
     case CheckError::NAMESPACE_LOOKUP_UNAVAILABLE:
     case CheckError::SERVICE_STATUS_UNAVAILABLE:
@@ -1432,10 +1441,10 @@ Status RequestBuilder::ConvertCheckResponse(
       // Fail open for internal server errors per recommendation
       return Status::OK;
     default:
-      return Status(
-          Code::INTERNAL,
-          std::string("Request blocked due to unsupported error code: ") +
-              std::to_string(error.code()));
+      return Status(Code::INTERNAL,
+                    std::string("Request blocked due to unsupported error code "
+                                "in Google Service Control Check response: ") +
+                        std::to_string(error.code()));
   }
   return Status::OK;
 }
