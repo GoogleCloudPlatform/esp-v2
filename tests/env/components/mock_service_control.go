@@ -231,8 +231,8 @@ func (m *MockServiceCtrl) SetCheckResponse(checkResponse *scpb.CheckResponse) {
 }
 
 // SetCheckResponse sets the response for the check of the service control.
-func (m *MockServiceCtrl) SetCheckResponseStatus (status int) {
-	(m.checkHandler).(*serviceHandler).resp.respStatusCode= status
+func (m *MockServiceCtrl) SetCheckResponseStatus(status int) {
+	(m.checkHandler).(*serviceHandler).resp.respStatusCode = status
 }
 
 // SetCheckResponse sets the response for the check of the service control.

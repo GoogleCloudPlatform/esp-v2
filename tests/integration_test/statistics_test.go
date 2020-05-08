@@ -164,8 +164,7 @@ func TestStatisticsScCheckStatus(t *testing.T) {
 		// The mapping between checkError and error::Code is in
 		// https://github.com/GoogleCloudPlatform/esp-v2/blob/0fa3449c96e68a7e91afbf0c4478361b12ecf5e5/src/api_proxy/service_control/request_builder.cc#L1372
 		{
-			desc:            "check call transportation is successful but the checkResponse has failure API_KEY_INVALID",
-			networkFailOpen: true,
+			desc: "check call transportation is successful but the checkResponse has failure API_KEY_INVALID",
 			checkRespBody: &scpb.CheckResponse{
 				CheckErrors: []*scpb.CheckError{
 					{

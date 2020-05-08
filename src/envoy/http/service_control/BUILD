@@ -133,11 +133,11 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "filter_stats_lib",
-    hdrs = [
-        "filter_stats.h",
-    ],
     srcs = [
         "filter_stats.cc",
+    ],
+    hdrs = [
+        "filter_stats.h",
     ],
     repository = "@envoy",
     deps = [
@@ -241,8 +241,8 @@ envoy_cc_test(
     repository = "@envoy",
     deps = [
         ":filter_stats_lib",
-        "@envoy//test/test_common:utility_lib",
         "@envoy//test/mocks/server:server_mocks",
+        "@envoy//test/test_common:utility_lib",
     ],
 )
 
