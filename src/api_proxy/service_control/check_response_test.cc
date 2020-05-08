@@ -141,27 +141,46 @@ TEST(CheckResponseTest, WhenResponseIsBlockedWithConsumerInvalid) {
   EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
 }
 
-TEST(CheckResponseTest, FailOpenWhenResponseIsUnknownNamespaceLookup) {
-  EXPECT_TRUE(
-      ConvertCheckErrorToStatus(CheckError::NAMESPACE_LOOKUP_UNAVAILABLE).ok());
+TEST(CheckResponseTest, WhenResponseIsBlockedWithNamespaceLookup) {
+  const Status result =
+      ConvertCheckErrorToStatus(CheckError::NAMESPACE_LOOKUP_UNAVAILABLE);
+  EXPECT_EQ(Code::UNAVAILABLE, result.code());
 }
 
-TEST(CheckResponseTest, UnavailableCheckErrorStatus) {
-  EXPECT_TRUE(
-      ConvertCheckErrorToStatus(CheckError::BILLING_STATUS_UNAVAILABLE).ok());
-  EXPECT_TRUE(
-      ConvertCheckErrorToStatus(CheckError::SERVICE_STATUS_UNAVAILABLE).ok());
-  EXPECT_TRUE(
-      ConvertCheckErrorToStatus(CheckError::QUOTA_CHECK_UNAVAILABLE).ok());
-  EXPECT_TRUE(ConvertCheckErrorToStatus(
-                  CheckError::CLOUD_RESOURCE_MANAGER_BACKEND_UNAVAILABLE)
-                  .ok());
-  EXPECT_TRUE(
-      ConvertCheckErrorToStatus(CheckError::SECURITY_POLICY_BACKEND_UNAVAILABLE)
-          .ok());
-  EXPECT_TRUE(
-      ConvertCheckErrorToStatus(CheckError::LOCATION_POLICY_BACKEND_UNAVAILABLE)
-          .ok());
+TEST(CheckResponseTest, WhenResponseIsBlockedWithBillingStatus) {
+  const Status result =
+      ConvertCheckErrorToStatus(CheckError::BILLING_STATUS_UNAVAILABLE);
+  EXPECT_EQ(Code::UNAVAILABLE, result.code());
+}
+
+TEST(CheckResponseTest, WhenResponseIsBlockedWithServiceStatus) {
+  const Status result =
+      ConvertCheckErrorToStatus(CheckError::SERVICE_STATUS_UNAVAILABLE);
+  EXPECT_EQ(Code::UNAVAILABLE, result.code());
+}
+
+TEST(CheckResponseTest, WhenResponseIsBlockedWithQuotaCheck) {
+  const Status result =
+      ConvertCheckErrorToStatus(CheckError::QUOTA_CHECK_UNAVAILABLE);
+  EXPECT_EQ(Code::UNAVAILABLE, result.code());
+}
+
+TEST(CheckResponseTest, WhenResponseIsBlockedWithCloudResourceManager) {
+  const Status result = ConvertCheckErrorToStatus(
+      CheckError::CLOUD_RESOURCE_MANAGER_BACKEND_UNAVAILABLE);
+  EXPECT_EQ(Code::UNAVAILABLE, result.code());
+}
+
+TEST(CheckResponseTest, WhenResponseIsBlockedWithSecurityPolicy) {
+  const Status result = ConvertCheckErrorToStatus(
+      CheckError::SECURITY_POLICY_BACKEND_UNAVAILABLE);
+  EXPECT_EQ(Code::UNAVAILABLE, result.code());
+}
+
+TEST(CheckResponseTest, WhenResponseIsBlockedWithLocationPolicy) {
+  const Status result = ConvertCheckErrorToStatus(
+      CheckError::LOCATION_POLICY_BACKEND_UNAVAILABLE);
+  EXPECT_EQ(Code::UNAVAILABLE, result.code());
 }
 
 }  // namespace service_control
