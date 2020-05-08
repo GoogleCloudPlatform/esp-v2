@@ -1438,8 +1438,10 @@ Status RequestBuilder::ConvertCheckResponse(
     case CheckError::CLOUD_RESOURCE_MANAGER_BACKEND_UNAVAILABLE:
     case CheckError::SECURITY_POLICY_BACKEND_UNAVAILABLE:
     case CheckError::LOCATION_POLICY_BACKEND_UNAVAILABLE:
-      // Fail open for internal server errors per recommendation
-      return Status::OK;
+      return Status(
+          Code::UNAVAILABLE,
+          "One or more Google Service Control backends are unavailable.");
+
     default:
       return Status(Code::INTERNAL,
                     std::string("Request blocked due to unsupported error code "
