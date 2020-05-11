@@ -68,7 +68,7 @@ namespace service_control {
   COUNTER(report_count_INTERNAL)                             \
   COUNTER(report_count_UNAVAILABLE)                          \
   COUNTER(report_count_DATA_LOSS)                            \
-  COUNTER(report_count_UNAUTHENTICATED)                      \
+  COUNTER(report_count_UNAUTHENTICATED)
 
 // clang-format on
 
