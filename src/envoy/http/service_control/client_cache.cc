@@ -121,7 +121,7 @@ class EnvoyPeriodicTimer
 };
 
 template<class Response>
-Status processScClientTransportStatus(const Status& status, Response* resp,
+Status processScCallTransportStatus(const Status& status, Response* resp,
                                       const std::string& body) {
   if (status.ok()) {
     if (!resp->ParseFromString(body)) {
@@ -210,7 +210,7 @@ ClientCache::ClientCache(
                       status.ToString(), body);
           }
 
-          Status final_status = processScClientTransportStatus<CheckResponse>(
+          Status final_status = processScCallTransportStatus<CheckResponse>(
               status, response, body);
           ServiceControlFilterStats::collectCheckStatus(filter_stats_,
                                                         final_status.code());
@@ -233,7 +233,7 @@ ClientCache::ClientCache(
           }
 
           Status final_status =
-              processScClientTransportStatus<AllocateQuotaResponse>(
+              processScCallTransportStatus<AllocateQuotaResponse>(
                   status, response, body);
           on_done(final_status);
         });
@@ -254,7 +254,7 @@ ClientCache::ClientCache(
                       status.ToString(), body);
           }
 
-          Status final_status = processScClientTransportStatus<ReportResponse>(
+          Status final_status = processScCallTransportStatus<ReportResponse>(
               status, response, body);
           ServiceControlFilterStats::collectReportStatus(filter_stats_,
                                                          final_status.code());
@@ -291,7 +291,7 @@ CancelFunc ClientCache::callCheck(
                       status.ToString(), body);
           }
 
-          Status final_status = processScClientTransportStatus<CheckResponse>(
+          Status final_status = processScCallTransportStatus<CheckResponse>(
               status, response, body);
           ServiceControlFilterStats::collectCheckStatus(filter_stats_,
                                                         final_status.code());
