@@ -48,7 +48,7 @@ namespace service_control {
   COUNTER(check_count_14) \
   COUNTER(check_count_15) \
   COUNTER(check_count_16) \
-   COUNTER(report_count_0) \
+  COUNTER(report_count_0) \
   COUNTER(report_count_1) \
   COUNTER(report_count_2) \
   COUNTER(report_count_3) \
