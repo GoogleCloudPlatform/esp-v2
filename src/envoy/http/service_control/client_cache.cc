@@ -119,6 +119,18 @@ class EnvoyPeriodicTimer
   std::function<void()> callback_;
   Envoy::Event::TimerPtr timer_;
 };
+
+template<class Response>
+Status processScClientTransportStatus(const Status& status, Response* resp,
+                                      const std::string& body) {
+  if (status.ok()) {
+    if (!resp->ParseFromString(body)) {
+      return Status(Code::INVALID_ARGUMENT, std::string("Invalid response"));
+    }
+  }
+
+  return status;
+}
 }  // namespace
 
 void ClientCache::InitHttpRequestSetting(const FilterConfig& filter_config) {
@@ -191,19 +203,18 @@ ClientCache::ClientCache(
     auto& null_span = Envoy::Tracing::NullSpan::instance();
     auto* call = check_call_factory_->createHttpCall(
         request, null_span,
-        [response, on_done](const Status& status, const std::string& body) {
-          if (status.ok()) {
-            // Handle 200 response
-            if (!response->ParseFromString(body)) {
-              on_done(Status(Code::INVALID_ARGUMENT,
-                             std::string("Invalid response")));
-              return;
-            }
-          } else {
+        [this, response, on_done](const Status& status,
+                                  const std::string& body) {
+          if (!status.ok()) {
             ENVOY_LOG(error, "Failed to call check, error: {}, str body: {}",
                       status.ToString(), body);
           }
-          on_done(status);
+
+          Status final_status = processScClientTransportStatus<CheckResponse>(
+              status, response, body);
+          ServiceControlFilterStats::collectCheckStatus(filter_stats_,
+                                                        final_status.code());
+          on_done(final_status);
         });
     call->call();
   };
@@ -216,19 +227,15 @@ ClientCache::ClientCache(
     auto* call = quota_call_factory_->createHttpCall(
         request, null_span,
         [response, on_done](const Status& status, const std::string& body) {
-          if (status.ok()) {
-            // Handle 200 response
-            if (!response->ParseFromString(body)) {
-              on_done(Status(Code::INVALID_ARGUMENT,
-                             std::string("Invalid response")));
-              return;
-            }
-          } else {
-            ENVOY_LOG(error,
-                      "Failed to call allocateQuota, error: {}, str body: {}",
+          if (!status.ok()) {
+            ENVOY_LOG(error, "Failed to call report, error: {}, str body: {}",
                       status.ToString(), body);
           }
-          on_done(status);
+
+          Status final_status =
+              processScClientTransportStatus<AllocateQuotaResponse>(
+                  status, response, body);
+          on_done(final_status);
         });
     call->call();
   };
@@ -242,20 +249,16 @@ ClientCache::ClientCache(
         request, null_span,
         [this, response, on_done](const Status& status,
                                   const std::string& body) {
-          if (status.ok()) {
-            // Handle 200 response
-            if (!response->ParseFromString(body)) {
-              on_done(Status(Code::INVALID_ARGUMENT,
-                             std::string("Invalid response")));
-              return;
-            }
-          } else {
+          if (!status.ok()) {
             ENVOY_LOG(error, "Failed to call report, error: {}, str body: {}",
                       status.ToString(), body);
           }
+
+          Status final_status = processScClientTransportStatus<ReportResponse>(
+              status, response, body);
           ServiceControlFilterStats::collectReportStatus(filter_stats_,
-                                                         status.code());
-          on_done(status);
+                                                         final_status.code());
+          on_done(final_status);
         });
     call->call();
   };
@@ -281,18 +284,17 @@ CancelFunc ClientCache::callCheck(
                              TransportDoneFunc on_done) {
     auto* call = check_call_factory_->createHttpCall(
         request, parent_span,
-        [response, on_done](const Status& status, const std::string& body) {
-          if (status.ok()) {
-            // Handle 200 response
-            if (!response->ParseFromString(body)) {
-              on_done(Status(Code::INVALID_ARGUMENT,
-                             std::string("Invalid response")));
-              return;
-            }
-          } else {
+        [this, response, on_done](const Status& status,
+                                  const std::string& body) {
+          if (!status.ok()) {
             ENVOY_LOG(error, "Failed to call check, error: {}, str body: {}",
                       status.ToString(), body);
           }
+
+          Status final_status = processScClientTransportStatus<CheckResponse>(
+              status, response, body);
+          ServiceControlFilterStats::collectCheckStatus(filter_stats_,
+                                                        final_status.code());
           on_done(status);
         });
     call->call();
@@ -324,9 +326,6 @@ CancelFunc ClientCache::callCheck(
           // Http call errors should NOT be displayed to the client.
           translate_non_5xx = true;
         }
-
-         ServiceControlFilterStats::collectCheckStatus(filter_stats_,
-                                                      final_status.code());
 
         if (final_status.ok()) {
           on_done(final_status, response_info);

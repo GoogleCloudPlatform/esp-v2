@@ -63,7 +63,8 @@ void ServiceControlFilterStats::collectCheckStatus(
       return;
     case Code::UNAUTHENTICATED:filter_stats.check_count_16_.inc();
       return;
-    default:return;
+    default:
+      return;
   }
 }
 void ServiceControlFilterStats::collectReportStatus(

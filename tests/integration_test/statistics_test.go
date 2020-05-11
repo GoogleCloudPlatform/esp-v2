@@ -146,6 +146,7 @@ func TestStatisticsScCheckStatus(t *testing.T) {
 
 	tests := []struct {
 		desc           string
+		reqCnt         int
 		checkRespCode  int
 		checkRespBody  *scpb.CheckResponse
 		reportRespCode int
@@ -157,22 +158,26 @@ func TestStatisticsScCheckStatus(t *testing.T) {
 			wantCount:     "http.ingress_http.service_control.check_count_0",
 		},
 		{
+			desc:          "check call is cached and made by once",
+			reqCnt:        2,
+			checkRespCode: 200,
+			wantCount:     "http.ingress_http.service_control.check_count_0",
+		},
+		{
 			desc:          "check call transportation failed with 403",
 			checkRespCode: 403,
 			wantCount:     "http.ingress_http.service_control.check_count_7",
 		},
-		// The mapping between checkError and error::Code is in
-		// https://github.com/GoogleCloudPlatform/esp-v2/blob/0fa3449c96e68a7e91afbf0c4478361b12ecf5e5/src/api_proxy/service_control/request_builder.cc#L1372
 		{
-			desc: "check call transportation is successful but the checkResponse has failure API_KEY_INVALID",
-			checkRespBody: &scpb.CheckResponse{
-				CheckErrors: []*scpb.CheckError{
-					{
-						Code: scpb.CheckError_API_KEY_INVALID,
-					},
-				},
-			},
-			wantCount: "http.ingress_http.service_control.check_count_3",
+			desc:           "report call is 200",
+			reportRespCode: 200,
+			wantCount:      "http.ingress_http.service_control.report_count_0",
+		},
+		{
+			desc:           "report call is cached and made by once",
+			reqCnt:         2,
+			reportRespCode: 200,
+			wantCount:      "http.ingress_http.service_control.report_count_0",
 		},
 		{
 			desc:           "report call is 403",
@@ -199,7 +204,13 @@ func TestStatisticsScCheckStatus(t *testing.T) {
 			}
 
 			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-			_, _ = bsclient.MakeCall("http", addr, "GET", "/v1/shelves/100/books?key=api-key", "", nil)
+			if tc.reqCnt != 0 {
+				for i := 0; i < tc.reqCnt; i += 1 {
+					_, _ = bsclient.MakeCall("http", addr, "GET", "/v1/shelves/100/books?key=api-key", "", nil)
+				}
+			} else {
+				_, _ = bsclient.MakeCall("http", addr, "GET", "/v1/shelves/100/books?key=api-key", "", nil)
+			}
 
 			// Ensure the stats is available in admin.
 			time.Sleep(time.Millisecond * 5000)
