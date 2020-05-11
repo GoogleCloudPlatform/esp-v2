@@ -140,6 +140,22 @@ TEST(CheckResponseTest, WhenResponseIsBlockedWithConsumerInvalid) {
   Status result = ConvertCheckErrorToStatus(CheckError::CONSUMER_INVALID);
   EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
 }
+  
+TEST(CheckResponseTest, WhenResponseIsBlockedWithResourceExhuasted) {
+  Status result = ConvertCheckErrorToStatus(CheckError::RESOURCE_EXHAUSTED);
+  EXPECT_EQ(Code::RESOURCE_EXHAUSTED, result.code());
+}
+
+TEST(CheckResponseTest, WhenResponseIsBlockedWithAbuserDetected) {
+  Status result = ConvertCheckErrorToStatus(CheckError::ABUSER_DETECTED);
+  EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
+  EXPECT_EQ("", result.error_message());
+}
+
+TEST(CheckResponseTest, WhenResponseIsBlockedWithApiTargetBlocked) {
+  Status result = ConvertCheckErrorToStatus(CheckError::API_TARGET_BLOCKED);
+  EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
+}
 
 TEST(CheckResponseTest, WhenResponseIsBlockedWithNamespaceLookup) {
   const Status result =
