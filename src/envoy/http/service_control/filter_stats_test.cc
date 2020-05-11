@@ -70,23 +70,23 @@ class FilterStatsTest : public ::testing::Test {
 TEST_F(FilterStatsTest, CollectCheckStatus
 ) {
 std::vector<CodeToCounter> mappings = {
-    {Code::OK, stats_.check_count_0_},
-    {Code::CANCELLED, stats_.check_count_1_},
-    {Code::UNKNOWN, stats_.check_count_2_},
-    {Code::INVALID_ARGUMENT, stats_.check_count_3_},
-    {Code::DEADLINE_EXCEEDED, stats_.check_count_4_},
-    {Code::NOT_FOUND, stats_.check_count_5_},
-    {Code::ALREADY_EXISTS, stats_.check_count_6_},
-    {Code::PERMISSION_DENIED, stats_.check_count_7_},
-    {Code::RESOURCE_EXHAUSTED, stats_.check_count_8_},
-    {Code::FAILED_PRECONDITION, stats_.check_count_9_},
-    {Code::ABORTED, stats_.check_count_10_},
-    {Code::OUT_OF_RANGE, stats_.check_count_11_},
-    {Code::UNIMPLEMENTED, stats_.check_count_12_},
-    {Code::INTERNAL, stats_.check_count_13_},
-    {Code::UNAVAILABLE, stats_.check_count_14_},
-    {Code::DATA_LOSS, stats_.check_count_15_},
-    {Code::UNAUTHENTICATED, stats_.check_count_16_}};
+    {Code::OK, stats_.check_count_OK_},
+    {Code::CANCELLED, stats_.check_count_CANCELLED_},
+    {Code::UNKNOWN, stats_.check_count_UNKNOWN_},
+    {Code::INVALID_ARGUMENT, stats_.check_count_INVALID_ARGUMENT_},
+    {Code::DEADLINE_EXCEEDED, stats_.check_count_DEADLINE_EXCEEDED_},
+    {Code::NOT_FOUND, stats_.check_count_NOT_FOUND_},
+    {Code::ALREADY_EXISTS, stats_.check_count_ALREADY_EXISTS_},
+    {Code::PERMISSION_DENIED, stats_.check_count_PERMISSION_DENIED_},
+    {Code::RESOURCE_EXHAUSTED, stats_.check_count_RESOURCE_EXHAUSTED_},
+    {Code::FAILED_PRECONDITION, stats_.check_count_FAILED_PRECONDITION_},
+    {Code::ABORTED, stats_.check_count_ABORTED_},
+    {Code::OUT_OF_RANGE, stats_.check_count_OUT_OF_RANGE_},
+    {Code::UNIMPLEMENTED, stats_.check_count_UNIMPLEMENTED_},
+    {Code::INTERNAL, stats_.check_count_INTERNAL_},
+    {Code::UNAVAILABLE, stats_.check_count_UNAVAILABLE_},
+    {Code::DATA_LOSS, stats_.check_count_DATA_LOSS_},
+    {Code::UNAUTHENTICATED, stats_.check_count_UNAUTHENTICATED_}};
 
 runTest(mappings, ServiceControlFilterStats::collectCheckStatus
 );
@@ -95,23 +95,23 @@ runTest(mappings, ServiceControlFilterStats::collectCheckStatus
 TEST_F(FilterStatsTest, CollecReportStatus
 ) {
 std::vector<CodeToCounter> mappings = {
-    {Code::OK, stats_.report_count_0_},
-    {Code::CANCELLED, stats_.report_count_1_},
-    {Code::UNKNOWN, stats_.report_count_2_},
-    {Code::INVALID_ARGUMENT, stats_.report_count_3_},
-    {Code::DEADLINE_EXCEEDED, stats_.report_count_4_},
-    {Code::NOT_FOUND, stats_.report_count_5_},
-    {Code::ALREADY_EXISTS, stats_.report_count_6_},
-    {Code::PERMISSION_DENIED, stats_.report_count_7_},
-    {Code::RESOURCE_EXHAUSTED, stats_.report_count_8_},
-    {Code::FAILED_PRECONDITION, stats_.report_count_9_},
-    {Code::ABORTED, stats_.report_count_10_},
-    {Code::OUT_OF_RANGE, stats_.report_count_11_},
-    {Code::UNIMPLEMENTED, stats_.report_count_12_},
-    {Code::INTERNAL, stats_.report_count_13_},
-    {Code::UNAVAILABLE, stats_.report_count_14_},
-    {Code::DATA_LOSS, stats_.report_count_15_},
-    {Code::UNAUTHENTICATED, stats_.report_count_16_}};
+    {Code::OK, stats_.report_count_OK_},
+    {Code::CANCELLED, stats_.report_count_CANCELLED_},
+    {Code::UNKNOWN, stats_.report_count_UNKNOWN_},
+    {Code::INVALID_ARGUMENT, stats_.report_count_INVALID_ARGUMENT_},
+    {Code::DEADLINE_EXCEEDED, stats_.report_count_DEADLINE_EXCEEDED_},
+    {Code::NOT_FOUND, stats_.report_count_NOT_FOUND_},
+    {Code::ALREADY_EXISTS, stats_.report_count_ALREADY_EXISTS_},
+    {Code::PERMISSION_DENIED, stats_.report_count_PERMISSION_DENIED_},
+    {Code::RESOURCE_EXHAUSTED, stats_.report_count_RESOURCE_EXHAUSTED_},
+    {Code::FAILED_PRECONDITION, stats_.report_count_FAILED_PRECONDITION_},
+    {Code::ABORTED, stats_.report_count_ABORTED_},
+    {Code::OUT_OF_RANGE, stats_.report_count_OUT_OF_RANGE_},
+    {Code::UNIMPLEMENTED, stats_.report_count_UNIMPLEMENTED_},
+    {Code::INTERNAL, stats_.report_count_INTERNAL_},
+    {Code::UNAVAILABLE, stats_.report_count_UNAVAILABLE_},
+    {Code::DATA_LOSS, stats_.report_count_DATA_LOSS_},
+    {Code::UNAUTHENTICATED, stats_.report_count_UNAUTHENTICATED_}};
 
 runTest(mappings, ServiceControlFilterStats::collectReportStatus
 );

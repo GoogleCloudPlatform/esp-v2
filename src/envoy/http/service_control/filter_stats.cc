@@ -29,82 +29,83 @@ void ServiceControlFilterStats::collectCheckStatus(
   // The status error code cases must match the error codes defined by
   // https://github.com/protocolbuffers/protobuf/blob/4b4e66743503bf927cfb0f27a267ecd077250667/src/google/protobuf/stubs/status.h#L45
   switch (code) {
-    case Code::OK:filter_stats.check_count_0_.inc();
+    case Code::OK:filter_stats.check_count_OK_.inc();
       return;
-    case Code::CANCELLED:filter_stats.check_count_1_.inc();
+    case Code::CANCELLED:filter_stats.check_count_CANCELLED_.inc();
       return;
-    case Code::UNKNOWN:filter_stats.check_count_2_.inc();
+    case Code::UNKNOWN:filter_stats.check_count_UNKNOWN_.inc();
       return;
-    case Code::INVALID_ARGUMENT:filter_stats.check_count_3_.inc();
+    case Code::INVALID_ARGUMENT:filter_stats.check_count_INVALID_ARGUMENT_.inc();
       return;
-    case Code::DEADLINE_EXCEEDED:filter_stats.check_count_4_.inc();
+    case Code::DEADLINE_EXCEEDED:filter_stats.check_count_DEADLINE_EXCEEDED_.inc();
       return;
-    case Code::NOT_FOUND:filter_stats.check_count_5_.inc();
+    case Code::NOT_FOUND:filter_stats.check_count_NOT_FOUND_.inc();
       return;
-    case Code::ALREADY_EXISTS:filter_stats.check_count_6_.inc();
+    case Code::ALREADY_EXISTS:filter_stats.check_count_ALREADY_EXISTS_.inc();
       return;
-    case Code::PERMISSION_DENIED:filter_stats.check_count_7_.inc();
+    case Code::PERMISSION_DENIED:filter_stats.check_count_PERMISSION_DENIED_.inc();
       return;
-    case Code::RESOURCE_EXHAUSTED:filter_stats.check_count_8_.inc();
+    case Code::RESOURCE_EXHAUSTED:filter_stats.check_count_RESOURCE_EXHAUSTED_.inc();
       return;
-    case Code::FAILED_PRECONDITION:filter_stats.check_count_9_.inc();
+    case Code::FAILED_PRECONDITION:filter_stats.check_count_FAILED_PRECONDITION_.inc();
       return;
-    case Code::ABORTED:filter_stats.check_count_10_.inc();
+    case Code::ABORTED:filter_stats.check_count_ABORTED_.inc();
       return;
-    case Code::OUT_OF_RANGE:filter_stats.check_count_11_.inc();
+    case Code::OUT_OF_RANGE:filter_stats.check_count_OUT_OF_RANGE_.inc();
       return;
-    case Code::UNIMPLEMENTED:filter_stats.check_count_12_.inc();
+    case Code::UNIMPLEMENTED:filter_stats.check_count_UNIMPLEMENTED_.inc();
       return;
-    case Code::INTERNAL:filter_stats.check_count_13_.inc();
+    case Code::INTERNAL:filter_stats.check_count_INTERNAL_.inc();
       return;
-    case Code::UNAVAILABLE:filter_stats.check_count_14_.inc();
+    case Code::UNAVAILABLE:filter_stats.check_count_UNAVAILABLE_.inc();
       return;
-    case Code::DATA_LOSS:filter_stats.check_count_15_.inc();
+    case Code::DATA_LOSS:filter_stats.check_count_DATA_LOSS_.inc();
       return;
-    case Code::UNAUTHENTICATED:filter_stats.check_count_16_.inc();
+    case Code::UNAUTHENTICATED:filter_stats.check_count_UNAUTHENTICATED_.inc();
       return;
     default:
       return;
   }
 }
+
 void ServiceControlFilterStats::collectReportStatus(
     ServiceControlFilterStats& filter_stats, const Code& code) {
   // The status error code cases must match the error codes defined by
   // https://github.com/protocolbuffers/protobuf/blob/4b4e66743503bf927cfb0f27a267ecd077250667/src/google/protobuf/stubs/status.h#L45
   switch (code) {
-    case Code::OK:filter_stats.report_count_0_.inc();
+    case Code::OK:filter_stats.report_count_OK_.inc();
       return;
-    case Code::CANCELLED:filter_stats.report_count_1_.inc();
+    case Code::CANCELLED:filter_stats.report_count_CANCELLED_.inc();
       return;
-    case Code::UNKNOWN:filter_stats.report_count_2_.inc();
+    case Code::UNKNOWN:filter_stats.report_count_UNKNOWN_.inc();
       return;
-    case Code::INVALID_ARGUMENT:filter_stats.report_count_3_.inc();
+    case Code::INVALID_ARGUMENT:filter_stats.report_count_INVALID_ARGUMENT_.inc();
       return;
-    case Code::DEADLINE_EXCEEDED:filter_stats.report_count_4_.inc();
+    case Code::DEADLINE_EXCEEDED:filter_stats.report_count_DEADLINE_EXCEEDED_.inc();
       return;
-    case Code::NOT_FOUND:filter_stats.report_count_5_.inc();
+    case Code::NOT_FOUND:filter_stats.report_count_NOT_FOUND_.inc();
       return;
-    case Code::ALREADY_EXISTS:filter_stats.report_count_6_.inc();
+    case Code::ALREADY_EXISTS:filter_stats.report_count_ALREADY_EXISTS_.inc();
       return;
-    case Code::PERMISSION_DENIED:filter_stats.report_count_7_.inc();
+    case Code::PERMISSION_DENIED:filter_stats.report_count_PERMISSION_DENIED_.inc();
       return;
-    case Code::RESOURCE_EXHAUSTED:filter_stats.report_count_8_.inc();
+    case Code::RESOURCE_EXHAUSTED:filter_stats.report_count_RESOURCE_EXHAUSTED_.inc();
       return;
-    case Code::FAILED_PRECONDITION:filter_stats.report_count_9_.inc();
+    case Code::FAILED_PRECONDITION:filter_stats.report_count_FAILED_PRECONDITION_.inc();
       return;
-    case Code::ABORTED:filter_stats.report_count_10_.inc();
+    case Code::ABORTED:filter_stats.report_count_ABORTED_.inc();
       return;
-    case Code::OUT_OF_RANGE:filter_stats.report_count_11_.inc();
+    case Code::OUT_OF_RANGE:filter_stats.report_count_OUT_OF_RANGE_.inc();
       return;
-    case Code::UNIMPLEMENTED:filter_stats.report_count_12_.inc();
+    case Code::UNIMPLEMENTED:filter_stats.report_count_UNIMPLEMENTED_.inc();
       return;
-    case Code::INTERNAL:filter_stats.report_count_13_.inc();
+    case Code::INTERNAL:filter_stats.report_count_INTERNAL_.inc();
       return;
-    case Code::UNAVAILABLE:filter_stats.report_count_14_.inc();
+    case Code::UNAVAILABLE:filter_stats.report_count_UNAVAILABLE_.inc();
       return;
-    case Code::DATA_LOSS:filter_stats.report_count_15_.inc();
+    case Code::DATA_LOSS:filter_stats.report_count_DATA_LOSS_.inc();
       return;
-    case Code::UNAUTHENTICATED:filter_stats.report_count_16_.inc();
+    case Code::UNAUTHENTICATED:filter_stats.report_count_UNAUTHENTICATED_.inc();
       return;
     default:return;
   }

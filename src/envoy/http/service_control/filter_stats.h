@@ -27,47 +27,48 @@ namespace service_control {
  * All stats for the service control filter. @see stats_macros.h
  */
 
+// TODO(taoxuy): add macro function to init [check|report]_count_STATUS
 // clang-format off
-#define ALL_SERVICE_CONTROL_FILTER_STATS(COUNTER, HISTOGRAM)     \
-  COUNTER(allowed)                                    \
-  COUNTER(denied)                          \
-  COUNTER(check_count_0) \
-  COUNTER(check_count_1) \
-  COUNTER(check_count_2) \
-  COUNTER(check_count_3) \
-  COUNTER(check_count_4) \
-  COUNTER(check_count_5) \
-  COUNTER(check_count_6) \
-  COUNTER(check_count_7) \
-  COUNTER(check_count_8) \
-  COUNTER(check_count_9) \
-  COUNTER(check_count_10) \
-  COUNTER(check_count_11) \
-  COUNTER(check_count_12) \
-  COUNTER(check_count_13) \
-  COUNTER(check_count_14) \
-  COUNTER(check_count_15) \
-  COUNTER(check_count_16) \
-  COUNTER(report_count_0) \
-  COUNTER(report_count_1) \
-  COUNTER(report_count_2) \
-  COUNTER(report_count_3) \
-  COUNTER(report_count_4) \
-  COUNTER(report_count_5) \
-  COUNTER(report_count_6) \
-  COUNTER(report_count_7) \
-  COUNTER(report_count_8) \
-  COUNTER(report_count_9) \
-  COUNTER(report_count_10) \
-  COUNTER(report_count_11) \
-  COUNTER(report_count_12) \
-  COUNTER(report_count_13) \
-  COUNTER(report_count_14) \
-  COUNTER(report_count_15) \
-  COUNTER(report_count_16) \
-  HISTOGRAM(request_time, Milliseconds)  \
-  HISTOGRAM(backend_time, Milliseconds)  \
-  HISTOGRAM(overhead_time, Milliseconds)
+#define ALL_SERVICE_CONTROL_FILTER_STATS(COUNTER, HISTOGRAM) \
+  COUNTER(allowed)                                           \
+  COUNTER(denied)                                            \
+  HISTOGRAM(request_time, Milliseconds)                      \
+  HISTOGRAM(backend_time, Milliseconds)                      \
+  HISTOGRAM(overhead_time, Milliseconds)                     \
+  COUNTER(check_count_OK)                                    \
+  COUNTER(check_count_CANCELLED)                             \
+  COUNTER(check_count_UNKNOWN)                               \
+  COUNTER(check_count_INVALID_ARGUMENT)                      \
+  COUNTER(check_count_DEADLINE_EXCEEDED)                     \
+  COUNTER(check_count_NOT_FOUND)                             \
+  COUNTER(check_count_ALREADY_EXISTS)                        \
+  COUNTER(check_count_PERMISSION_DENIED)                     \
+  COUNTER(check_count_RESOURCE_EXHAUSTED)                    \
+  COUNTER(check_count_FAILED_PRECONDITION)                   \
+  COUNTER(check_count_ABORTED)                               \
+  COUNTER(check_count_OUT_OF_RANGE)                          \
+  COUNTER(check_count_UNIMPLEMENTED)                         \
+  COUNTER(check_count_INTERNAL)                              \
+  COUNTER(check_count_UNAVAILABLE)                           \
+  COUNTER(check_count_DATA_LOSS)                             \
+  COUNTER(check_count_UNAUTHENTICATED)                       \
+  COUNTER(report_count_OK)                                   \
+  COUNTER(report_count_CANCELLED)                            \
+  COUNTER(report_count_UNKNOWN)                              \
+  COUNTER(report_count_INVALID_ARGUMENT)                     \
+  COUNTER(report_count_DEADLINE_EXCEEDED)                    \
+  COUNTER(report_count_NOT_FOUND)                            \
+  COUNTER(report_count_ALREADY_EXISTS)                       \
+  COUNTER(report_count_PERMISSION_DENIED)                    \
+  COUNTER(report_count_RESOURCE_EXHAUSTED)                   \
+  COUNTER(report_count_FAILED_PRECONDITION)                  \
+  COUNTER(report_count_ABORTED)                              \
+  COUNTER(report_count_OUT_OF_RANGE)                         \
+  COUNTER(report_count_UNIMPLEMENTED)                        \
+  COUNTER(report_count_INTERNAL)                             \
+  COUNTER(report_count_UNAVAILABLE)                          \
+  COUNTER(report_count_DATA_LOSS)                            \
+  COUNTER(report_count_UNAUTHENTICATED)                      \
 
 // clang-format on
 

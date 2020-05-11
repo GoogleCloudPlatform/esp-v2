@@ -155,34 +155,34 @@ func TestStatisticsScCheckStatus(t *testing.T) {
 		{
 			desc:          "check call is successful",
 			checkRespCode: 200,
-			wantCount:     "http.ingress_http.service_control.check_count_0",
+			wantCount:     "http.ingress_http.service_control.check_count_OK",
 		},
 		{
 			desc:          "check call is cached and made by once",
 			reqCnt:        2,
 			checkRespCode: 200,
-			wantCount:     "http.ingress_http.service_control.check_count_0",
+			wantCount:     "http.ingress_http.service_control.check_count_OK",
 		},
 		{
 			desc:          "check call transportation failed with 403",
 			checkRespCode: 403,
-			wantCount:     "http.ingress_http.service_control.check_count_7",
+			wantCount:     "http.ingress_http.service_control.check_count_PERMISSION_DENIED",
 		},
 		{
 			desc:           "report call is 200",
 			reportRespCode: 200,
-			wantCount:      "http.ingress_http.service_control.report_count_0",
+			wantCount:      "http.ingress_http.service_control.report_count_OK",
 		},
 		{
 			desc:           "report call is cached and made by once",
 			reqCnt:         2,
 			reportRespCode: 200,
-			wantCount:      "http.ingress_http.service_control.report_count_0",
+			wantCount:      "http.ingress_http.service_control.report_count_OK",
 		},
 		{
 			desc:           "report call is 403",
 			reportRespCode: 403,
-			wantCount:      "http.ingress_http.service_control.report_count_7",
+			wantCount:      "http.ingress_http.service_control.report_count_PERMISSION_DENIED",
 		},
 	}
 
