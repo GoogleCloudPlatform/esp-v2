@@ -245,16 +245,16 @@ func TestStatisticsServiceControlCallStatus(t *testing.T) {
 				t.Fatalf("GET %s faild: %v", addr, err)
 			}
 
-			counts, _, err := utils.ParseStats(statsResp)
+			counters, _, err := utils.ParseStats(statsResp)
 			if err != nil {
 				t.Fatalf("fail to parse stats: %v", err)
 			}
 
 			for wantCounter, wantCounterVal := range tc.wantCounters {
-				if getCountVal, ok := counts[wantCounter]; !ok {
-					t.Errorf("Test (%s): failed, expected counter %v not in the got counters: %v", tc.desc, tc.wantCount, counts)
+				if getCountVal, ok := counters[wantCounter]; !ok {
+					t.Errorf("Test (%s): failed, expected counter %v not in the got counters: %v", tc.desc, wantCounter, counters)
 				} else if getCountVal != wantCounterVal {
-					t.Errorf("Test (%s): failed, for counter %v, expected value %v:, got value: %v ", tc.desc, tc.wantCount, wantCounterVal, getCountVal)
+					t.Errorf("Test (%s): failed, for counter %v, expected value %v:, got value: %v ", tc.desc, wantCounter, wantCounterVal, getCountVal)
 				}
 			}
 
