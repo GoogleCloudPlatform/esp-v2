@@ -67,8 +67,7 @@ class FilterStatsTest : public ::testing::Test {
   }
 };
 
-TEST_F(FilterStatsTest, CollectCallStatus
-) {
+TEST_F(FilterStatsTest, CollectCallStatus) {
   std::vector<CodeToCounter> mappings = {
       {Code::OK, stats_.check_.OK_},
       {Code::CANCELLED, stats_.check_.CANCELLED_},
@@ -88,8 +87,7 @@ TEST_F(FilterStatsTest, CollectCallStatus
       {Code::DATA_LOSS, stats_.check_.DATA_LOSS_},
       {Code::UNAUTHENTICATED, stats_.check_.UNAUTHENTICATED_}};
 
-runTest(mappings, ServiceControlFilterStats::collectCallStatus
-);
+  runTest(mappings, ServiceControlFilterStats::collectCallStatus);
 }
 
 }  // namespace

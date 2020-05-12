@@ -29,39 +29,56 @@ void ServiceControlFilterStats::collectCallStatus(CallStatusStats& stats,
   // The status error code cases must match the error codes defined by
   // https://github.com/protocolbuffers/protobuf/blob/4b4e66743503bf927cfb0f27a267ecd077250667/src/google/protobuf/stubs/status.h#L45
   switch (code) {
-    case Code::OK:stats.OK_.inc();
+    case Code::OK:
+      stats.OK_.inc();
       return;
-    case Code::CANCELLED:stats.CANCELLED_.inc();
+    case Code::CANCELLED:
+      stats.CANCELLED_.inc();
       return;
-    case Code::UNKNOWN:stats.UNKNOWN_.inc();
+    case Code::UNKNOWN:
+      stats.UNKNOWN_.inc();
       return;
-    case Code::INVALID_ARGUMENT:stats.INVALID_ARGUMENT_.inc();
+    case Code::INVALID_ARGUMENT:
+      stats.INVALID_ARGUMENT_.inc();
       return;
-    case Code::DEADLINE_EXCEEDED:stats.DEADLINE_EXCEEDED_.inc();
+    case Code::DEADLINE_EXCEEDED:
+      stats.DEADLINE_EXCEEDED_.inc();
       return;
-    case Code::NOT_FOUND:stats.NOT_FOUND_.inc();
+    case Code::NOT_FOUND:
+      stats.NOT_FOUND_.inc();
       return;
-    case Code::ALREADY_EXISTS:stats.ALREADY_EXISTS_.inc();
+    case Code::ALREADY_EXISTS:
+      stats.ALREADY_EXISTS_.inc();
       return;
-    case Code::PERMISSION_DENIED:stats.PERMISSION_DENIED_.inc();
+    case Code::PERMISSION_DENIED:
+      stats.PERMISSION_DENIED_.inc();
       return;
-    case Code::RESOURCE_EXHAUSTED:stats.RESOURCE_EXHAUSTED_.inc();
+    case Code::RESOURCE_EXHAUSTED:
+      stats.RESOURCE_EXHAUSTED_.inc();
       return;
-    case Code::FAILED_PRECONDITION:stats.FAILED_PRECONDITION_.inc();
+    case Code::FAILED_PRECONDITION:
+      stats.FAILED_PRECONDITION_.inc();
       return;
-    case Code::ABORTED:stats.ABORTED_.inc();
+    case Code::ABORTED:
+      stats.ABORTED_.inc();
       return;
-    case Code::OUT_OF_RANGE:stats.OUT_OF_RANGE_.inc();
+    case Code::OUT_OF_RANGE:
+      stats.OUT_OF_RANGE_.inc();
       return;
-    case Code::UNIMPLEMENTED:stats.UNIMPLEMENTED_.inc();
+    case Code::UNIMPLEMENTED:
+      stats.UNIMPLEMENTED_.inc();
       return;
-    case Code::INTERNAL:stats.INTERNAL_.inc();
+    case Code::INTERNAL:
+      stats.INTERNAL_.inc();
       return;
-    case Code::UNAVAILABLE:stats.UNAVAILABLE_.inc();
+    case Code::UNAVAILABLE:
+      stats.UNAVAILABLE_.inc();
       return;
-    case Code::DATA_LOSS:stats.DATA_LOSS_.inc();
+    case Code::DATA_LOSS:
+      stats.DATA_LOSS_.inc();
       return;
-    case Code::UNAUTHENTICATED:stats.UNAUTHENTICATED_.inc();
+    case Code::UNAUTHENTICATED:
+      stats.UNAUTHENTICATED_.inc();
       return;
     default:
       return;

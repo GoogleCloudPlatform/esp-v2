@@ -24,34 +24,36 @@ namespace http_filters {
 namespace service_control {
 
 /**
- * All stats for the service control filter. @see stats_macros.h
+ * General service control filter stats. @see stats_macros.h
  */
-
 // clang-format off
 #define FILTER_STATS(COUNTER, HISTOGRAM) \
-  COUNTER(allowed)                                       \
-  COUNTER(denied)                                        \
-  HISTOGRAM(request_time, Milliseconds)                  \
-  HISTOGRAM(backend_time, Milliseconds)                  \
+  COUNTER(allowed)                       \
+  COUNTER(denied)                        \
+  HISTOGRAM(request_time, Milliseconds)  \
+  HISTOGRAM(backend_time, Milliseconds)  \
   HISTOGRAM(overhead_time, Milliseconds)
 
+/**
+ * Service control call status stats. @see stats_macros.h
+ */
 #define CALL_STATUS_STATS(COUNTER) \
-  COUNTER(OK)                    \
-  COUNTER(CANCELLED)             \
-  COUNTER(UNKNOWN)               \
-  COUNTER(INVALID_ARGUMENT)      \
-  COUNTER(DEADLINE_EXCEEDED)     \
-  COUNTER(NOT_FOUND)             \
-  COUNTER(ALREADY_EXISTS)        \
-  COUNTER(PERMISSION_DENIED)     \
-  COUNTER(RESOURCE_EXHAUSTED)    \
-  COUNTER(FAILED_PRECONDITION)   \
-  COUNTER(ABORTED)               \
-  COUNTER(OUT_OF_RANGE)          \
-  COUNTER(UNIMPLEMENTED)         \
-  COUNTER(INTERNAL)              \
-  COUNTER(UNAVAILABLE)           \
-  COUNTER(DATA_LOSS)             \
+  COUNTER(OK)                      \
+  COUNTER(CANCELLED)               \
+  COUNTER(UNKNOWN)                 \
+  COUNTER(INVALID_ARGUMENT)        \
+  COUNTER(DEADLINE_EXCEEDED)       \
+  COUNTER(NOT_FOUND)               \
+  COUNTER(ALREADY_EXISTS)          \
+  COUNTER(PERMISSION_DENIED)       \
+  COUNTER(RESOURCE_EXHAUSTED)      \
+  COUNTER(FAILED_PRECONDITION)     \
+  COUNTER(ABORTED)                 \
+  COUNTER(OUT_OF_RANGE)            \
+  COUNTER(UNIMPLEMENTED)           \
+  COUNTER(INTERNAL)                \
+  COUNTER(UNAVAILABLE)             \
+  COUNTER(DATA_LOSS)               \
   COUNTER(UNAUTHENTICATED)
 
 // clang-format on
@@ -62,8 +64,9 @@ namespace service_control {
 struct FilterStats {
   FILTER_STATS(GENERATE_COUNTER_STRUCT, GENERATE_HISTOGRAM_STRUCT);
 };
+
 /**
- * Wrapper struct for service control call stats. @see stats_macros.h
+ * Wrapper struct for service control call status stats. @see stats_macros.h
  */
 struct CallStatusStats {
   CALL_STATUS_STATS(GENERATE_COUNTER_STRUCT);
@@ -104,11 +107,11 @@ class ServiceControlFilterStatBase {
     return {{FILTER_STATS(POOL_COUNTER_PREFIX(scope, final_prefix),
                           POOL_HISTOGRAM_PREFIX(scope, final_prefix))},
             {CALL_STATUS_STATS(
-                 POOL_COUNTER_PREFIX(scope, final_prefix + "check."))},
+                POOL_COUNTER_PREFIX(scope, final_prefix + "check."))},
             {CALL_STATUS_STATS(
-                 POOL_COUNTER_PREFIX(scope, final_prefix + "allocate_quota."))},
+                POOL_COUNTER_PREFIX(scope, final_prefix + "allocate_quota."))},
             {CALL_STATUS_STATS(
-                 POOL_COUNTER_PREFIX(scope, final_prefix + "report."))}};
+                POOL_COUNTER_PREFIX(scope, final_prefix + "report."))}};
   }
 
   // The stats for the filter.
