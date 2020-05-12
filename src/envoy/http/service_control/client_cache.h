@@ -55,9 +55,14 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       const ::google::api::servicecontrol::v1::ReportRequest& request);
 
  private:
-  void InitHttpRequestSetting(
+  void initHttpRequestSetting(
       const ::google::api::envoy::http::service_control::FilterConfig&
           filter_config);
+
+  template <class Response>
+  static ::google::protobuf::util::Status processScCallTransportStatus(
+      const ::google::protobuf::util::Status& status, Response* resp,
+      const std::string& body);
 
   const ::google::api::envoy::http::service_control::Service& config_;
 

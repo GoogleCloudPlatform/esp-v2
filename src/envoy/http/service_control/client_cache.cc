@@ -120,20 +120,38 @@ class EnvoyPeriodicTimer
   Envoy::Event::TimerPtr timer_;
 };
 
+}  // namespace
+
 template <class Response>
-Status processScCallTransportStatus(const Status& status, Response* resp,
-                                    const std::string& body) {
+Status ClientCache::processScCallTransportStatus(const Status& status,
+                                                 Response* resp,
+                                                 const std::string& body) {
+  std::string callName;
+  if (std::is_same<Response, CheckResponse>::value) {
+    callName = "check";
+  } else if (std::is_same<Response, AllocateQuotaResponse>::value) {
+    callName = "allocateQuota";
+  } else if (std::is_same<Response, ReportResponse>::value) {
+    callName = "report";
+  }
+
+  if (!status.ok()) {
+    ENVOY_LOG(error, "Failed to call {}, error: {}, str body: {}", callName,
+              status.ToString(), body);
+  }
+
   if (status.ok()) {
     if (!resp->ParseFromString(body)) {
+      ENVOY_LOG(error, "Failed to call {}, error: {}, str body: {}", callName,
+                status.ToString(), body);
       return Status(Code::INVALID_ARGUMENT, std::string("Invalid response"));
     }
   }
 
   return status;
 }
-}  // namespace
 
-void ClientCache::InitHttpRequestSetting(const FilterConfig& filter_config) {
+void ClientCache::initHttpRequestSetting(const FilterConfig& filter_config) {
   if (!filter_config.has_sc_calling_config()) {
     network_fail_open_ = kDefaultNetworkFailOpen;
     check_timeout_ms_ = kCheckDefaultTimeoutInMs;
@@ -181,7 +199,7 @@ ClientCache::ClientCache(
                                       getQuotaAggregationOptions(),
                                       getReportAggregationOptions());
 
-  InitHttpRequestSetting(filter_config);
+  initHttpRequestSetting(filter_config);
   check_call_factory_ = std::make_unique<HttpCallFactory>(
       cm, dispatcher, filter_config.service_control_uri(),
       config_.service_name() + ":check", sc_token_fn, check_timeout_ms_,
@@ -205,11 +223,6 @@ ClientCache::ClientCache(
         request, null_span,
         [this, response, on_done](const Status& status,
                                   const std::string& body) {
-          if (!status.ok()) {
-            ENVOY_LOG(error, "Failed to call check, error: {}, str body: {}",
-                      status.ToString(), body);
-          }
-
           Status final_status = processScCallTransportStatus<CheckResponse>(
               status, response, body);
           ServiceControlFilterStats::collectCallStatus(filter_stats_.check_,
@@ -228,11 +241,6 @@ ClientCache::ClientCache(
         request, null_span,
         [this, response, on_done](const Status& status,
                                   const std::string& body) {
-          if (!status.ok()) {
-            ENVOY_LOG(error, "Failed to call report, error: {}, str body: {}",
-                      status.ToString(), body);
-          }
-
           Status final_status =
               processScCallTransportStatus<AllocateQuotaResponse>(
                   status, response, body);
@@ -252,11 +260,6 @@ ClientCache::ClientCache(
         request, null_span,
         [this, response, on_done](const Status& status,
                                   const std::string& body) {
-          if (!status.ok()) {
-            ENVOY_LOG(error, "Failed to call report, error: {}, str body: {}",
-                      status.ToString(), body);
-          }
-
           Status final_status = processScCallTransportStatus<ReportResponse>(
               status, response, body);
           ServiceControlFilterStats::collectCallStatus(filter_stats_.report_,
@@ -289,11 +292,6 @@ CancelFunc ClientCache::callCheck(
         request, parent_span,
         [this, response, on_done](const Status& status,
                                   const std::string& body) {
-          if (!status.ok()) {
-            ENVOY_LOG(error, "Failed to call check, error: {}, str body: {}",
-                      status.ToString(), body);
-          }
-
           Status final_status = processScCallTransportStatus<CheckResponse>(
               status, response, body);
           ServiceControlFilterStats::collectCallStatus(filter_stats_.check_,

@@ -27,7 +27,6 @@ import (
 	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
-	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
 func roughEqual(i, j, latencyMargin float64) bool {
@@ -149,7 +148,6 @@ func TestStatisticsServiceControlCallStatus(t *testing.T) {
 		desc           string
 		reqCnt         int
 		checkRespCode  int
-		checkRespBody  *scpb.CheckResponse
 		quotaRespCode  int
 		reportRespCode int
 		wantCounters   map[string]int
