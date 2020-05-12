@@ -138,12 +138,10 @@ Status ClientCache::processScCallTransportStatus(const Status& status,
   if (!status.ok()) {
     ENVOY_LOG(error, "Failed to call {}, error: {}, str body: {}", callName,
               status.ToString(), body);
-  }
-
-  if (status.ok()) {
+  } else  {
     if (!resp->ParseFromString(body)) {
       ENVOY_LOG(error, "Failed to call {}, error: {}, str body: {}", callName,
-                status.ToString(), body);
+                "invalid response", body);
       return Status(Code::INVALID_ARGUMENT, std::string("Invalid response"));
     }
   }
