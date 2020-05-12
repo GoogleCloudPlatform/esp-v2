@@ -28,96 +28,63 @@ namespace service_control {
  */
 
 // clang-format off
-#define SERVICE_CONTROL_FILTER_STATS(COUNTER, HISTOGRAM) \
+#define FILTER_STATS(COUNTER, HISTOGRAM) \
   COUNTER(allowed)                                       \
   COUNTER(denied)                                        \
   HISTOGRAM(request_time, Milliseconds)                  \
   HISTOGRAM(backend_time, Milliseconds)                  \
   HISTOGRAM(overhead_time, Milliseconds)
 
-// TODO(taoxuy): add macro function to init [check|quota|report]_count_STATUS
-#define SERVICE_CONTROL_CHECK_STATS(COUNTER) \
-  COUNTER(check_count_OK)                    \
-  COUNTER(check_count_CANCELLED)             \
-  COUNTER(check_count_UNKNOWN)               \
-  COUNTER(check_count_INVALID_ARGUMENT)      \
-  COUNTER(check_count_DEADLINE_EXCEEDED)     \
-  COUNTER(check_count_NOT_FOUND)             \
-  COUNTER(check_count_ALREADY_EXISTS)        \
-  COUNTER(check_count_PERMISSION_DENIED)     \
-  COUNTER(check_count_RESOURCE_EXHAUSTED)    \
-  COUNTER(check_count_FAILED_PRECONDITION)   \
-  COUNTER(check_count_ABORTED)               \
-  COUNTER(check_count_OUT_OF_RANGE)          \
-  COUNTER(check_count_UNIMPLEMENTED)         \
-  COUNTER(check_count_INTERNAL)              \
-  COUNTER(check_count_UNAVAILABLE)           \
-  COUNTER(check_count_DATA_LOSS)             \
-  COUNTER(check_count_UNAUTHENTICATED)
-
-#define SERVICE_CONTROL_QUOTA_STATS(COUNTER) \
-  COUNTER(quota_count_OK)                    \
-  COUNTER(quota_count_CANCELLED)             \
-  COUNTER(quota_count_UNKNOWN)               \
-  COUNTER(quota_count_INVALID_ARGUMENT)      \
-  COUNTER(quota_count_DEADLINE_EXCEEDED)     \
-  COUNTER(quota_count_NOT_FOUND)             \
-  COUNTER(quota_count_ALREADY_EXISTS)        \
-  COUNTER(quota_count_PERMISSION_DENIED)     \
-  COUNTER(quota_count_RESOURCE_EXHAUSTED)    \
-  COUNTER(quota_count_FAILED_PRECONDITION)   \
-  COUNTER(quota_count_ABORTED)               \
-  COUNTER(quota_count_OUT_OF_RANGE)          \
-  COUNTER(quota_count_UNIMPLEMENTED)         \
-  COUNTER(quota_count_INTERNAL)              \
-  COUNTER(quota_count_UNAVAILABLE)           \
-  COUNTER(quota_count_DATA_LOSS)             \
-  COUNTER(quota_count_UNAUTHENTICATED)
-
-#define SERVICE_CONTROL_REPORT_STATS(COUNTER) \
-  COUNTER(report_count_OK)                    \
-  COUNTER(report_count_CANCELLED)             \
-  COUNTER(report_count_UNKNOWN)               \
-  COUNTER(report_count_INVALID_ARGUMENT)      \
-  COUNTER(report_count_DEADLINE_EXCEEDED)     \
-  COUNTER(report_count_NOT_FOUND)             \
-  COUNTER(report_count_ALREADY_EXISTS)        \
-  COUNTER(report_count_PERMISSION_DENIED)     \
-  COUNTER(report_count_RESOURCE_EXHAUSTED)    \
-  COUNTER(report_count_FAILED_PRECONDITION)   \
-  COUNTER(report_count_ABORTED)               \
-  COUNTER(report_count_OUT_OF_RANGE)          \
-  COUNTER(report_count_UNIMPLEMENTED)         \
-  COUNTER(report_count_INTERNAL)              \
-  COUNTER(report_count_UNAVAILABLE)           \
-  COUNTER(report_count_DATA_LOSS)             \
-  COUNTER(report_count_UNAUTHENTICATED)
+#define CALL_STATUS_STATS(COUNTER) \
+  COUNTER(OK)                    \
+  COUNTER(CANCELLED)             \
+  COUNTER(UNKNOWN)               \
+  COUNTER(INVALID_ARGUMENT)      \
+  COUNTER(DEADLINE_EXCEEDED)     \
+  COUNTER(NOT_FOUND)             \
+  COUNTER(ALREADY_EXISTS)        \
+  COUNTER(PERMISSION_DENIED)     \
+  COUNTER(RESOURCE_EXHAUSTED)    \
+  COUNTER(FAILED_PRECONDITION)   \
+  COUNTER(ABORTED)               \
+  COUNTER(OUT_OF_RANGE)          \
+  COUNTER(UNIMPLEMENTED)         \
+  COUNTER(INTERNAL)              \
+  COUNTER(UNAVAILABLE)           \
+  COUNTER(DATA_LOSS)             \
+  COUNTER(UNAUTHENTICATED)
 
 // clang-format on
 
 /**
- * Wrapper struct for service control filter stats. @see stats_macros.h
+ * Wrapper struct for general service control filter stats. @see stats_macros.h
+ */
+struct FilterStats {
+  FILTER_STATS(GENERATE_COUNTER_STRUCT, GENERATE_HISTOGRAM_STRUCT);
+};
+/**
+ * Wrapper struct for service control call stats. @see stats_macros.h
+ */
+struct CallStatusStats {
+  CALL_STATUS_STATS(GENERATE_COUNTER_STRUCT);
+};
+
+/**
+ * Wrapper struct for all the stats structs of service control filter .
  */
 struct ServiceControlFilterStats {
-  SERVICE_CONTROL_FILTER_STATS(GENERATE_COUNTER_STRUCT,
-                               GENERATE_HISTOGRAM_STRUCT);
-  SERVICE_CONTROL_CHECK_STATS(GENERATE_COUNTER_STRUCT);
-  SERVICE_CONTROL_QUOTA_STATS(GENERATE_COUNTER_STRUCT);
-  SERVICE_CONTROL_REPORT_STATS(GENERATE_COUNTER_STRUCT)
+  // The general filter stats.
+  FilterStats filter_;
+  // The stats of service control check call status.
+  CallStatusStats check_;
+  // The stats of service control allocate quota call status.
+  CallStatusStats allocate_quota_;
+  // The stats of service control report call status.
+  CallStatusStats report_;
 
-  // Collect check call status.
-  static void collectCheckStatus(
-      ServiceControlFilterStats& filter_stats,
-      const ::google::protobuf::util::error::Code& code);
-
-  // Collect allocateQuota call status.
-  static void collectQuotaStatus(
-      ServiceControlFilterStats& filter_stats,
-      const ::google::protobuf::util::error::Code& code);
-
-  // Collect report call status.
-  static void collectReportStatus(
-      ServiceControlFilterStats& filter_stats,
+  // Collect service control call status.
+  static void collectCallStatus(
+      CallStatusStats& filter_stats,
       const ::google::protobuf::util::error::Code& code);
 };
 
@@ -133,18 +100,15 @@ class ServiceControlFilterStatBase {
   static ServiceControlFilterStats generateStats(const std::string& prefix,
                                                  Envoy::Stats::Scope& scope) {
     const std::string final_prefix = prefix + "service_control.";
-    // clang-format off
-    return {
-        SERVICE_CONTROL_FILTER_STATS(
-            POOL_COUNTER_PREFIX(scope, final_prefix),
-            POOL_HISTOGRAM_PREFIX(scope, final_prefix))
-        SERVICE_CONTROL_CHECK_STATS(
-            POOL_COUNTER_PREFIX(scope, final_prefix))
-        SERVICE_CONTROL_QUOTA_STATS(
-            POOL_COUNTER_PREFIX(scope, final_prefix))
-        SERVICE_CONTROL_REPORT_STATS(
-            POOL_COUNTER_PREFIX(scope, final_prefix))};
-    // clang-format on
+
+    return {{FILTER_STATS(POOL_COUNTER_PREFIX(scope, final_prefix),
+                          POOL_HISTOGRAM_PREFIX(scope, final_prefix))},
+            {CALL_STATUS_STATS(
+                 POOL_COUNTER_PREFIX(scope, final_prefix + "check."))},
+            {CALL_STATUS_STATS(
+                 POOL_COUNTER_PREFIX(scope, final_prefix + "allocate_quota."))},
+            {CALL_STATUS_STATS(
+                 POOL_COUNTER_PREFIX(scope, final_prefix + "report."))}};
   }
 
   // The stats for the filter.

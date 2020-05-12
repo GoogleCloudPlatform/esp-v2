@@ -158,9 +158,9 @@ func TestStatisticsServiceControlCallStatus(t *testing.T) {
 			desc:          "check call, quota call and report call are successful",
 			checkRespCode: 200,
 			wantCounters: map[string]int{
-				"http.ingress_http.service_control.check_count_OK":  1,
-				"http.ingress_http.service_control.quota_count_OK":  1,
-				"http.ingress_http.service_control.report_count_OK": 1,
+				"http.ingress_http.service_control.check.OK":          1,
+				"http.ingress_http.service_control.allocate_quota.OK": 1,
+				"http.ingress_http.service_control.report.OK":         1,
 			},
 		},
 		{
@@ -168,10 +168,10 @@ func TestStatisticsServiceControlCallStatus(t *testing.T) {
 			checkRespCode: 200,
 			reqCnt:        5,
 			wantCounters: map[string]int{
-				"http.ingress_http.service_control.check_count_OK": 1,
+				"http.ingress_http.service_control.check.OK": 1,
 				// The quota call for the first incoming request and the quota call by cache flush after 1s.
-				"http.ingress_http.service_control.quota_count_OK":  2,
-				"http.ingress_http.service_control.report_count_OK": 1,
+				"http.ingress_http.service_control.allocate_quota.OK": 2,
+				"http.ingress_http.service_control.report.OK":         1,
 			},
 		},
 		{
@@ -179,16 +179,16 @@ func TestStatisticsServiceControlCallStatus(t *testing.T) {
 			checkRespCode:  403,
 			reportRespCode: 403,
 			wantCounters: map[string]int{
-				"http.ingress_http.service_control.check_count_PERMISSION_DENIED":  1,
-				"http.ingress_http.service_control.report_count_PERMISSION_DENIED": 1,
+				"http.ingress_http.service_control.check.PERMISSION_DENIED":  1,
+				"http.ingress_http.service_control.report.PERMISSION_DENIED": 1,
 			},
 		},
 		{
 			desc:          "quota call is 403",
 			quotaRespCode: 403,
 			wantCounters: map[string]int{
-				"http.ingress_http.service_control.check_count_OK":                1,
-				"http.ingress_http.service_control.quota_count_PERMISSION_DENIED": 1,
+				"http.ingress_http.service_control.check.OK":                         1,
+				"http.ingress_http.service_control.allocate_quota.PERMISSION_DENIED": 1,
 			},
 		},
 	}

@@ -77,7 +77,7 @@ void ServiceControlFilter::onCheckDone(
     return;
   }
 
-  stats_.allowed_.inc();
+  stats_.filter_.allowed_.inc();
   state_ = Complete;
   if (stopped_) {
     decoder_callbacks_->continueDecoding();
@@ -86,7 +86,7 @@ void ServiceControlFilter::onCheckDone(
 
 void ServiceControlFilter::rejectRequest(Envoy::Http::Code code,
                                          absl::string_view error_msg) {
-  stats_.denied_.inc();
+  stats_.filter_.denied_.inc();
   state_ = Responded;
 
   decoder_callbacks_->sendLocalReply(

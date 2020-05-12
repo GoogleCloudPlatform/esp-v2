@@ -43,16 +43,16 @@ class FilterStatsTest : public ::testing::Test {
   ServiceControlFilterStatBase statBase_;
   ServiceControlFilterStats stats_;
 
-  void runTest(const std::vector<CodeToCounter>& mappings,
-               const std::function<void(ServiceControlFilterStats&, Code&)>&
-                   collectStatus) {
+  $ void runTest(
+      const std::vector<CodeToCounter>& mappings,
+      const std::function<void(CallStatusStats&, Code&)>& collectStatus) {
     for (auto i : mappings) {
       // All counters are 0.
       for (auto j : mappings) {
         EXPECT_EQ(j.counter.value(), 0);
       }
 
-      collectStatus(stats_, i.code);
+      collectStatus(stats_.check_, i.code);
 
       // Counter in i is 1 and all other counters are 0.
       for (auto j : mappings) {
@@ -67,73 +67,29 @@ class FilterStatsTest : public ::testing::Test {
   }
 };
 
-TEST_F(FilterStatsTest, CollectCheckStatus) {
+TEST_F(FilterStatsTest, CollectCallStatus
+) {
   std::vector<CodeToCounter> mappings = {
-      {Code::OK, stats_.check_count_OK_},
-      {Code::CANCELLED, stats_.check_count_CANCELLED_},
-      {Code::UNKNOWN, stats_.check_count_UNKNOWN_},
-      {Code::INVALID_ARGUMENT, stats_.check_count_INVALID_ARGUMENT_},
-      {Code::DEADLINE_EXCEEDED, stats_.check_count_DEADLINE_EXCEEDED_},
-      {Code::NOT_FOUND, stats_.check_count_NOT_FOUND_},
-      {Code::ALREADY_EXISTS, stats_.check_count_ALREADY_EXISTS_},
-      {Code::PERMISSION_DENIED, stats_.check_count_PERMISSION_DENIED_},
-      {Code::RESOURCE_EXHAUSTED, stats_.check_count_RESOURCE_EXHAUSTED_},
-      {Code::FAILED_PRECONDITION, stats_.check_count_FAILED_PRECONDITION_},
-      {Code::ABORTED, stats_.check_count_ABORTED_},
-      {Code::OUT_OF_RANGE, stats_.check_count_OUT_OF_RANGE_},
-      {Code::UNIMPLEMENTED, stats_.check_count_UNIMPLEMENTED_},
-      {Code::INTERNAL, stats_.check_count_INTERNAL_},
-      {Code::UNAVAILABLE, stats_.check_count_UNAVAILABLE_},
-      {Code::DATA_LOSS, stats_.check_count_DATA_LOSS_},
-      {Code::UNAUTHENTICATED, stats_.check_count_UNAUTHENTICATED_}};
+      {Code::OK, stats_.check_.OK_},
+      {Code::CANCELLED, stats_.check_.CANCELLED_},
+      {Code::UNKNOWN, stats_.check_.UNKNOWN_},
+      {Code::INVALID_ARGUMENT, stats_.check_.INVALID_ARGUMENT_},
+      {Code::DEADLINE_EXCEEDED, stats_.check_.DEADLINE_EXCEEDED_},
+      {Code::NOT_FOUND, stats_.check_.NOT_FOUND_},
+      {Code::ALREADY_EXISTS, stats_.check_.ALREADY_EXISTS_},
+      {Code::PERMISSION_DENIED, stats_.check_.PERMISSION_DENIED_},
+      {Code::RESOURCE_EXHAUSTED, stats_.check_.RESOURCE_EXHAUSTED_},
+      {Code::FAILED_PRECONDITION, stats_.check_.FAILED_PRECONDITION_},
+      {Code::ABORTED, stats_.check_.ABORTED_},
+      {Code::OUT_OF_RANGE, stats_.check_.OUT_OF_RANGE_},
+      {Code::UNIMPLEMENTED, stats_.check_.UNIMPLEMENTED_},
+      {Code::INTERNAL, stats_.check_.INTERNAL_},
+      {Code::UNAVAILABLE, stats_.check_.UNAVAILABLE_},
+      {Code::DATA_LOSS, stats_.check_.DATA_LOSS_},
+      {Code::UNAUTHENTICATED, stats_.check_.UNAUTHENTICATED_}};
 
-  runTest(mappings, ServiceControlFilterStats::collectCheckStatus);
-}
-
-TEST_F(FilterStatsTest, CollecReportStatus) {
-  std::vector<CodeToCounter> mappings = {
-      {Code::OK, stats_.report_count_OK_},
-      {Code::CANCELLED, stats_.report_count_CANCELLED_},
-      {Code::UNKNOWN, stats_.report_count_UNKNOWN_},
-      {Code::INVALID_ARGUMENT, stats_.report_count_INVALID_ARGUMENT_},
-      {Code::DEADLINE_EXCEEDED, stats_.report_count_DEADLINE_EXCEEDED_},
-      {Code::NOT_FOUND, stats_.report_count_NOT_FOUND_},
-      {Code::ALREADY_EXISTS, stats_.report_count_ALREADY_EXISTS_},
-      {Code::PERMISSION_DENIED, stats_.report_count_PERMISSION_DENIED_},
-      {Code::RESOURCE_EXHAUSTED, stats_.report_count_RESOURCE_EXHAUSTED_},
-      {Code::FAILED_PRECONDITION, stats_.report_count_FAILED_PRECONDITION_},
-      {Code::ABORTED, stats_.report_count_ABORTED_},
-      {Code::OUT_OF_RANGE, stats_.report_count_OUT_OF_RANGE_},
-      {Code::UNIMPLEMENTED, stats_.report_count_UNIMPLEMENTED_},
-      {Code::INTERNAL, stats_.report_count_INTERNAL_},
-      {Code::UNAVAILABLE, stats_.report_count_UNAVAILABLE_},
-      {Code::DATA_LOSS, stats_.report_count_DATA_LOSS_},
-      {Code::UNAUTHENTICATED, stats_.report_count_UNAUTHENTICATED_}};
-
-  runTest(mappings, ServiceControlFilterStats::collectReportStatus);
-}
-
-TEST_F(FilterStatsTest, CollecQuotaStatus) {
-  std::vector<CodeToCounter> mappings = {
-      {Code::OK, stats_.quota_count_OK_},
-      {Code::CANCELLED, stats_.quota_count_CANCELLED_},
-      {Code::UNKNOWN, stats_.quota_count_UNKNOWN_},
-      {Code::INVALID_ARGUMENT, stats_.quota_count_INVALID_ARGUMENT_},
-      {Code::DEADLINE_EXCEEDED, stats_.quota_count_DEADLINE_EXCEEDED_},
-      {Code::NOT_FOUND, stats_.quota_count_NOT_FOUND_},
-      {Code::ALREADY_EXISTS, stats_.quota_count_ALREADY_EXISTS_},
-      {Code::PERMISSION_DENIED, stats_.quota_count_PERMISSION_DENIED_},
-      {Code::RESOURCE_EXHAUSTED, stats_.quota_count_RESOURCE_EXHAUSTED_},
-      {Code::FAILED_PRECONDITION, stats_.quota_count_FAILED_PRECONDITION_},
-      {Code::ABORTED, stats_.quota_count_ABORTED_},
-      {Code::OUT_OF_RANGE, stats_.quota_count_OUT_OF_RANGE_},
-      {Code::UNIMPLEMENTED, stats_.quota_count_UNIMPLEMENTED_},
-      {Code::INTERNAL, stats_.quota_count_INTERNAL_},
-      {Code::UNAVAILABLE, stats_.quota_count_UNAVAILABLE_},
-      {Code::DATA_LOSS, stats_.quota_count_DATA_LOSS_},
-      {Code::UNAUTHENTICATED, stats_.quota_count_UNAUTHENTICATED_}};
-
-  runTest(mappings, ServiceControlFilterStats::collectQuotaStatus);
+runTest(mappings, ServiceControlFilterStats::collectCallStatus
+);
 }
 
 }  // namespace

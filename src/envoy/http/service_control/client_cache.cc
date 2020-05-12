@@ -212,8 +212,8 @@ ClientCache::ClientCache(
 
           Status final_status = processScCallTransportStatus<CheckResponse>(
               status, response, body);
-          ServiceControlFilterStats::collectCheckStatus(filter_stats_,
-                                                        final_status.code());
+          ServiceControlFilterStats::collectCallStatus(filter_stats_.check_,
+                                                       final_status.code());
           on_done(final_status);
         });
     call->call();
@@ -236,8 +236,8 @@ ClientCache::ClientCache(
           Status final_status =
               processScCallTransportStatus<AllocateQuotaResponse>(
                   status, response, body);
-          ServiceControlFilterStats::collectQuotaStatus(filter_stats_,
-                                                        final_status.code());
+          ServiceControlFilterStats::collectCallStatus(
+              filter_stats_.allocate_quota_, final_status.code());
           on_done(final_status);
         });
     call->call();
@@ -259,8 +259,8 @@ ClientCache::ClientCache(
 
           Status final_status = processScCallTransportStatus<ReportResponse>(
               status, response, body);
-          ServiceControlFilterStats::collectReportStatus(filter_stats_,
-                                                         final_status.code());
+          ServiceControlFilterStats::collectCallStatus(filter_stats_.report_,
+                                                       final_status.code());
           on_done(final_status);
         });
     call->call();
@@ -296,8 +296,8 @@ CancelFunc ClientCache::callCheck(
 
           Status final_status = processScCallTransportStatus<CheckResponse>(
               status, response, body);
-          ServiceControlFilterStats::collectCheckStatus(filter_stats_,
-                                                        final_status.code());
+          ServiceControlFilterStats::collectCallStatus(filter_stats_.check_,
+                                                       final_status.code());
           on_done(status);
         });
     call->call();
