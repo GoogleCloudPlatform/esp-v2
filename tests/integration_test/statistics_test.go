@@ -26,6 +26,7 @@ import (
 
 	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
@@ -136,7 +137,7 @@ func TestStatistics(t *testing.T) {
 	}
 }
 
-func TestStatisticsScCheckStatus(t *testing.T) {
+func TestStatisticsServiceControlCallStatus(t *testing.T) {
 	t.Parallel()
 
 	serviceName := "bookstore-service"
@@ -149,55 +150,78 @@ func TestStatisticsScCheckStatus(t *testing.T) {
 		reqCnt         int
 		checkRespCode  int
 		checkRespBody  *scpb.CheckResponse
+		quotaRespCode  int
 		reportRespCode int
-		wantCount      string
+		wantCounters   map[string]int
 	}{
 		{
-			desc:          "check call is successful",
+			desc:          "check call, quota call and report call are successful",
 			checkRespCode: 200,
-			wantCount:     "http.ingress_http.service_control.check_count_OK",
+			wantCounters: map[string]int{
+				"http.ingress_http.service_control.check_count_OK":  1,
+				"http.ingress_http.service_control.quota_count_OK":  1,
+				"http.ingress_http.service_control.report_count_OK": 1,
+			},
 		},
 		{
-			desc:          "check call is cached and made by once",
-			reqCnt:        2,
+			desc:          "check call, quota call and report call are cached",
 			checkRespCode: 200,
-			wantCount:     "http.ingress_http.service_control.check_count_OK",
+			reqCnt:        5,
+			wantCounters: map[string]int{
+				"http.ingress_http.service_control.check_count_OK": 1,
+				// The quota call for the first incoming request and the quota call by cache flush after 1s.
+				"http.ingress_http.service_control.quota_count_OK":  2,
+				"http.ingress_http.service_control.report_count_OK": 1,
+			},
 		},
 		{
-			desc:          "check call transportation failed with 403",
-			checkRespCode: 403,
-			wantCount:     "http.ingress_http.service_control.check_count_PERMISSION_DENIED",
-		},
-		{
-			desc:           "report call is 200",
-			reportRespCode: 200,
-			wantCount:      "http.ingress_http.service_control.report_count_OK",
-		},
-		{
-			desc:           "report call is cached and made by once",
-			reqCnt:         2,
-			reportRespCode: 200,
-			wantCount:      "http.ingress_http.service_control.report_count_OK",
-		},
-		{
-			desc:           "report call is 403",
+			desc:           "check call and report call are both 403",
+			checkRespCode:  403,
 			reportRespCode: 403,
-			wantCount:      "http.ingress_http.service_control.report_count_PERMISSION_DENIED",
+			wantCounters: map[string]int{
+				"http.ingress_http.service_control.check_count_PERMISSION_DENIED":  1,
+				"http.ingress_http.service_control.report_count_PERMISSION_DENIED": 1,
+			},
+		},
+		{
+			desc:          "quota call is 403",
+			quotaRespCode: 403,
+			wantCounters: map[string]int{
+				"http.ingress_http.service_control.check_count_OK":                1,
+				"http.ingress_http.service_control.quota_count_PERMISSION_DENIED": 1,
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		func() {
-			s := env.NewTestEnv(comp.TestStatisticsCheckReportStatus, platform.GrpcBookstoreSidecar)
+			s := env.NewTestEnv(comp.TestStatisticsServiceControlCallStatus, platform.GrpcBookstoreSidecar)
 
-			if tc.checkRespBody != nil {
-				s.ServiceControlServer.SetCheckResponse(tc.checkRespBody)
-			} else if tc.checkRespCode != 0 {
+			if tc.checkRespCode != 0 {
 				s.ServiceControlServer.SetCheckResponseStatus(tc.checkRespCode)
-			} else if tc.reportRespCode != 0 {
+			}
+			if tc.quotaRespCode != 0 {
+				s.ServiceControlServer.SetQuotaResponseStatus(tc.quotaRespCode)
+			}
+			if tc.reportRespCode != 0 {
 				s.ServiceControlServer.SetReportResponseStatus(tc.reportRespCode)
 			}
 
+			if tc.checkRespBody != nil {
+				s.ServiceControlServer.SetCheckResponse(tc.checkRespBody)
+			}
+
+			s.OverrideQuota(&confpb.Quota{
+				MetricRules: []*confpb.MetricRule{
+					{
+						Selector: "endpoints.examples.bookstore.Bookstore.ListBooks",
+						MetricCosts: map[string]int64{
+							"metrics_first":  2,
+							"metrics_second": 1,
+						},
+					},
+				},
+			})
 			defer s.TearDown()
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
@@ -225,11 +249,15 @@ func TestStatisticsScCheckStatus(t *testing.T) {
 			if err != nil {
 				t.Fatalf("fail to parse stats: %v", err)
 			}
-			if getCountVal, ok := counts[tc.wantCount]; !ok {
-				t.Errorf("Test (%s): failed, expected counter %v not in the got counters: %v", tc.desc, tc.wantCount, counts)
-			} else if getCountVal != 1 {
-				t.Errorf("Test (%s): failed, for counter %s, expected value %v:, got value: %v ", tc.desc, tc.wantCount, 1, getCountVal)
+
+			for wantCounter, wantCounterVal := range tc.wantCounters {
+				if getCountVal, ok := counts[wantCounter]; !ok {
+					t.Errorf("Test (%s): failed, expected counter %v not in the got counters: %v", tc.desc, tc.wantCount, counts)
+				} else if getCountVal != wantCounterVal {
+					t.Errorf("Test (%s): failed, for counter %v, expected value %v:, got value: %v ", tc.desc, tc.wantCount, wantCounterVal, getCountVal)
+				}
 			}
+
 		}()
 	}
 }

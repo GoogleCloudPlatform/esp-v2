@@ -122,7 +122,7 @@ class EnvoyPeriodicTimer
 
 template<class Response>
 Status processScCallTransportStatus(const Status& status, Response* resp,
-                                      const std::string& body) {
+                                    const std::string& body) {
   if (status.ok()) {
     if (!resp->ParseFromString(body)) {
       return Status(Code::INVALID_ARGUMENT, std::string("Invalid response"));
@@ -226,7 +226,8 @@ ClientCache::ClientCache(
     auto& null_span = Envoy::Tracing::NullSpan::instance();
     auto* call = quota_call_factory_->createHttpCall(
         request, null_span,
-        [response, on_done](const Status& status, const std::string& body) {
+        [this, response, on_done](const Status& status,
+                                  const std::string& body) {
           if (!status.ok()) {
             ENVOY_LOG(error, "Failed to call report, error: {}, str body: {}",
                       status.ToString(), body);
@@ -235,6 +236,8 @@ ClientCache::ClientCache(
           Status final_status =
               processScCallTransportStatus<AllocateQuotaResponse>(
                   status, response, body);
+          ServiceControlFilterStats::collectQuotaStatus(filter_stats_,
+                                                        final_status.code());
           on_done(final_status);
         });
     call->call();

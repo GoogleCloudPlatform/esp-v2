@@ -117,6 +117,31 @@ runTest(mappings, ServiceControlFilterStats::collectReportStatus
 );
 }
 
+TEST_F(FilterStatsTest, CollecQuotaStatus
+) {
+std::vector<CodeToCounter> mappings = {
+    {Code::OK, stats_.quota_count_OK_},
+    {Code::CANCELLED, stats_.quota_count_CANCELLED_},
+    {Code::UNKNOWN, stats_.quota_count_UNKNOWN_},
+    {Code::INVALID_ARGUMENT, stats_.quota_count_INVALID_ARGUMENT_},
+    {Code::DEADLINE_EXCEEDED, stats_.quota_count_DEADLINE_EXCEEDED_},
+    {Code::NOT_FOUND, stats_.quota_count_NOT_FOUND_},
+    {Code::ALREADY_EXISTS, stats_.quota_count_ALREADY_EXISTS_},
+    {Code::PERMISSION_DENIED, stats_.quota_count_PERMISSION_DENIED_},
+    {Code::RESOURCE_EXHAUSTED, stats_.quota_count_RESOURCE_EXHAUSTED_},
+    {Code::FAILED_PRECONDITION, stats_.quota_count_FAILED_PRECONDITION_},
+    {Code::ABORTED, stats_.quota_count_ABORTED_},
+    {Code::OUT_OF_RANGE, stats_.quota_count_OUT_OF_RANGE_},
+    {Code::UNIMPLEMENTED, stats_.quota_count_UNIMPLEMENTED_},
+    {Code::INTERNAL, stats_.quota_count_INTERNAL_},
+    {Code::UNAVAILABLE, stats_.quota_count_UNAVAILABLE_},
+    {Code::DATA_LOSS, stats_.quota_count_DATA_LOSS_},
+    {Code::UNAUTHENTICATED, stats_.quota_count_UNAUTHENTICATED_}};
+
+runTest(mappings, ServiceControlFilterStats::collectQuotaStatus
+);
+}
+
 }  // namespace
 }  // namespace service_control
 }  // namespace http_filters

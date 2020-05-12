@@ -125,7 +125,7 @@ const (
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
 	TestStatistics
-	TestStatisticsCheckReportStatus
+	TestStatisticsServiceControlCallStatus
 	TestTranscodingBindings
 	TestTranscodingIgnoreQueryParameters
 	TestTranscodingPrintOptions
