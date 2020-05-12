@@ -205,10 +205,6 @@ func TestStatisticsServiceControlCallStatus(t *testing.T) {
 				s.ServiceControlServer.SetReportResponseStatus(tc.reportRespCode)
 			}
 
-			if tc.checkRespBody != nil {
-				s.ServiceControlServer.SetCheckResponse(tc.checkRespBody)
-			}
-
 			s.OverrideQuota(&confpb.Quota{
 				MetricRules: []*confpb.MetricRule{
 					{
