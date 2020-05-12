@@ -43,7 +43,7 @@ class FilterStatsTest : public ::testing::Test {
   ServiceControlFilterStatBase statBase_;
   ServiceControlFilterStats stats_;
 
-  $ void runTest(
+  void runTest(
       const std::vector<CodeToCounter>& mappings,
       const std::function<void(CallStatusStats&, Code&)>& collectStatus) {
     for (auto i : mappings) {
