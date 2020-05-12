@@ -47,9 +47,9 @@ class ThreadLocalCache : public Envoy::ThreadLocal::ThreadLocalObject {
       Envoy::Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
       Envoy::Event::Dispatcher& dispatcher)
       : client_cache_(
-      config, filter_config, filter_stats, cm, time_source, dispatcher,
-      [this]() -> const std::string& { return sc_token(); },
-      [this]() -> const std::string& { return quota_token(); }) {}
+            config, filter_config, filter_stats, cm, time_source, dispatcher,
+            [this]() -> const std::string& { return sc_token(); },
+            [this]() -> const std::string& { return quota_token(); }) {}
 
   void set_sc_token(TokenSharedPtr sc_token) { sc_token_ = sc_token; }
   const std::string& sc_token() const {

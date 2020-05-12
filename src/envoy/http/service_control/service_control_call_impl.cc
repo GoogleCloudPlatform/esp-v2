@@ -129,7 +129,7 @@ ServiceControlCallImpl::ServiceControlCallImpl(
   // Pass shared_ptr of proto_config to the function capture so that
   // it will not be released when the function is called.
   tls_->set([proto_config, &config, &filter_stats,
-                &cm = context.clusterManager(),
+             &cm = context.clusterManager(),
              &time_source =
                  context.timeSource()](Envoy::Event::Dispatcher& dispatcher)
                 -> Envoy::ThreadLocal::ThreadLocalObjectSharedPtr {

@@ -120,7 +120,7 @@ class EnvoyPeriodicTimer
   Envoy::Event::TimerPtr timer_;
 };
 
-template<class Response>
+template <class Response>
 Status processScCallTransportStatus(const Status& status, Response* resp,
                                     const std::string& body) {
   if (status.ok()) {
