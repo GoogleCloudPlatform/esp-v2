@@ -4,6 +4,7 @@
 #include "test/mocks/server/mocks.h"
 
 #include "src/envoy/http/path_matcher/filter.h"
+#include "src/envoy/utils/filter_state_utils.h"
 #include "tests/fuzz/structured_inputs/path_matcher_filter.pb.validate.h"
 
 #include "gmock/gmock.h"
@@ -60,6 +61,12 @@ DEFINE_PROTO_FUZZER(
 
     // Run data against the filter.
     ASSERT_NO_THROW(doTest(filter, input));
+
+    // Ensure the query param filter state is valid.
+    absl::string_view query_params = utils::getStringFilterState(
+        *mock_decoder_callbacks.stream_info_.filter_state_,
+        utils::kQueryParams);
+    ASSERT_TRUE(Envoy::Http::validHeaderString(query_params));
 
   } catch (const Envoy::EnvoyException& e) {
     ENVOY_LOG_MISC(debug, "Controlled envoy exception: {}", e.what());

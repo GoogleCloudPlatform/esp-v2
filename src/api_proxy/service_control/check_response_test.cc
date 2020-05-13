@@ -140,7 +140,7 @@ TEST(CheckResponseTest, WhenResponseIsBlockedWithConsumerInvalid) {
   Status result = ConvertCheckErrorToStatus(CheckError::CONSUMER_INVALID);
   EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
 }
-  
+
 TEST(CheckResponseTest, WhenResponseIsBlockedWithResourceExhuasted) {
   Status result = ConvertCheckErrorToStatus(CheckError::RESOURCE_EXHAUSTED);
   EXPECT_EQ(Code::RESOURCE_EXHAUSTED, result.code());
