@@ -70,7 +70,7 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
 
   // Filter statistics. When service control client is destroyed in worker thread,
   // filter_stats_ may have already been destructed in the main thread, so don't
-  // collect stats when service control client is being destroyed.
+  // collect stats at this point.
   ServiceControlFilterStats& filter_stats_;
 
   // Whether the client_cache is being destructed.
