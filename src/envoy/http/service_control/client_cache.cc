@@ -138,7 +138,7 @@ Status ClientCache::processScCallTransportStatus(const Status& status,
   if (!status.ok()) {
     ENVOY_LOG(error, "Failed to call {}, error: {}, str body: {}", callName,
               status.ToString(), body);
-  } else  {
+  } else {
     if (!resp->ParseFromString(body)) {
       ENVOY_LOG(error, "Failed to call {}, error: {}, str body: {}", callName,
                 "invalid response", body);
@@ -192,7 +192,10 @@ ClientCache::ClientCache(
     Envoy::Event::Dispatcher& dispatcher,
     std::function<const std::string&()> sc_token_fn,
     std::function<const std::string&()> quota_token_fn)
-    : config_(config), filter_stats_(filter_stats), time_source_(time_source) {
+    : config_(config),
+      filter_stats_(filter_stats),
+      destruct_mode_(false),
+      time_source_(time_source) {
   ServiceControlClientOptions options(getCheckAggregationOptions(),
                                       getQuotaAggregationOptions(),
                                       getReportAggregationOptions());
@@ -223,8 +226,10 @@ ClientCache::ClientCache(
                                   const std::string& body) {
           Status final_status = processScCallTransportStatus<CheckResponse>(
               status, response, body);
-          ServiceControlFilterStats::collectCallStatus(filter_stats_.check_,
-                                                       final_status.code());
+          if (!destruct_mode_) {
+            ServiceControlFilterStats::collectCallStatus(filter_stats_.check_,
+                                                         final_status.code());
+          }
           on_done(final_status);
         });
     call->call();
@@ -242,8 +247,10 @@ ClientCache::ClientCache(
           Status final_status =
               processScCallTransportStatus<AllocateQuotaResponse>(
                   status, response, body);
-          ServiceControlFilterStats::collectCallStatus(
-              filter_stats_.allocate_quota_, final_status.code());
+          if (!destruct_mode_) {
+            ServiceControlFilterStats::collectCallStatus(
+                filter_stats_.allocate_quota_, final_status.code());
+          }
           on_done(final_status);
         });
     call->call();
@@ -260,8 +267,11 @@ ClientCache::ClientCache(
                                   const std::string& body) {
           Status final_status = processScCallTransportStatus<ReportResponse>(
               status, response, body);
-          ServiceControlFilterStats::collectCallStatus(filter_stats_.report_,
-                                                       final_status.code());
+          if (!destruct_mode_) {
+            ServiceControlFilterStats::collectCallStatus(filter_stats_.report_,
+                                                         final_status.code());
+          }
+
           on_done(final_status);
         });
     call->call();
@@ -292,8 +302,10 @@ CancelFunc ClientCache::callCheck(
                                   const std::string& body) {
           Status final_status = processScCallTransportStatus<CheckResponse>(
               status, response, body);
-          ServiceControlFilterStats::collectCallStatus(filter_stats_.check_,
-                                                       final_status.code());
+          if (!destruct_mode_) {
+            ServiceControlFilterStats::collectCallStatus(filter_stats_.check_,
+                                                         final_status.code());
+          }
           on_done(status);
         });
     call->call();
