@@ -62,6 +62,8 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       const ::google::api::servicecontrol::v1::ReportRequest& request);
 
  private:
+  friend class test::ClientCacheCheckResponseTest;
+
   // Ownership of CheckResponse is passed to this function.
   // The function will always call CheckDoneFunc.
   void handleCheckResponse(
@@ -117,8 +119,6 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
 
   // Used to retrieve the current time for tracing.
   Envoy::TimeSource& time_source_;
-
-  friend class test::ClientCacheCheckResponseTest;
 };
 
 }  // namespace service_control
