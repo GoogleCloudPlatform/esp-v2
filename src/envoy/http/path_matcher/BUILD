@@ -91,6 +91,7 @@ envoy_cc_fuzz_test(
     repository = "@envoy",
     deps = [
         ":filter_lib",
+        "//src/envoy/utils:filter_state_utils_lib",
         "//tests/fuzz/structured_inputs:path_matcher_filter_proto_cc_proto",
         "@envoy//test/fuzz:utility_lib",
         "@envoy//test/mocks/init:init_mocks",
