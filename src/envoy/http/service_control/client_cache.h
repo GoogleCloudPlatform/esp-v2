@@ -68,13 +68,16 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
 
   const ::google::api::envoy::http::service_control::Service& config_;
 
-  // Filter statistics.
+  // Filter statistics. When service control client is destroyed in worker thread,
+  // filter_stats_ may have already been destructed in the main thread, so don't
+  // collect stats when service control client is being destroyed.
   ServiceControlFilterStats& filter_stats_;
-
-  bool network_fail_open_;
 
   // Whether the client_cache is being destructed.
   bool destruct_mode_;
+
+  bool network_fail_open_;
+
 
   // the configurable timeouts
   uint32_t check_timeout_ms_;
