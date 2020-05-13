@@ -30,8 +30,10 @@ namespace envoy {
 namespace http_filters {
 namespace service_control {
 
-using ::google::api::servicecontrol::v1::CheckResponse;
-using ::google::protobuf::util::Status;
+// Forward declare friend class to test private functions.
+namespace test {
+class ClientCacheCheckResponseTest;
+}
 
 // The class to cache check and batch report.
 class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
@@ -52,11 +54,6 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       const ::google::api::servicecontrol::v1::CheckRequest& request,
       Envoy::Tracing::Span& parent_span, CheckDoneFunc on_done);
 
-  // Ownership of CheckResponse is passed to this function.
-  // The function will always call CheckDoneFunc.
-  void handleCheckResponse(const Status& http_status, CheckResponse* response,
-                           CheckDoneFunc on_done);
-
   void callQuota(
       const ::google::api::servicecontrol::v1::AllocateQuotaRequest& request,
       QuotaDoneFunc on_done);
@@ -65,6 +62,13 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       const ::google::api::servicecontrol::v1::ReportRequest& request);
 
  private:
+  // Ownership of CheckResponse is passed to this function.
+  // The function will always call CheckDoneFunc.
+  void handleCheckResponse(
+      const ::google::protobuf::util::Status& http_status,
+      ::google::api::servicecontrol::v1::CheckResponse* response,
+      CheckDoneFunc on_done);
+
   void initHttpRequestSetting(
       const ::google::api::envoy::http::service_control::FilterConfig&
           filter_config);
@@ -113,6 +117,8 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
 
   // Used to retrieve the current time for tracing.
   Envoy::TimeSource& time_source_;
+
+  friend class test::ClientCacheCheckResponseTest;
 };
 
 }  // namespace service_control

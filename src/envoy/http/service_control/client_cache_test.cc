@@ -26,12 +26,13 @@ namespace espv2 {
 namespace envoy {
 namespace http_filters {
 namespace service_control {
-namespace {
+namespace test {
 
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::api::envoy::http::service_control::Service;
 using ::google::api::servicecontrol::v1::CheckError;
+using ::google::api::servicecontrol::v1::CheckResponse;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 using ::testing::NiceMock;
@@ -58,6 +59,12 @@ class ClientCacheCheckResponseTest : public ::testing::Test {
     CheckAndReset(stats_base_.stats().filter_.denied_control_plane_fault_, 0);
   }
 
+  // Serves as test peer that allows access to private function.
+  void callFuncUnderTest(const Status& http_status, CheckResponse* response,
+                         CheckDoneFunc on_done) {
+    cache_->handleCheckResponse(http_status, response, on_done);
+  }
+
   // Helpers for SetUp.
   Service service_config_;
   FilterConfig filter_config_;
@@ -79,7 +86,7 @@ TEST_F(ClientCacheCheckResponseTest, Http5xxAllowed) {
 
   CheckResponse* resp = new CheckResponse();
   const Status http_status(Code::UNAVAILABLE, "");
-  cache_->handleCheckResponse(http_status, resp, on_done);
+  callFuncUnderTest(http_status, resp, on_done);
 
   CheckAndReset(stats_base_.stats().filter_.allowed_control_plane_fault_, 1);
 }
@@ -91,7 +98,7 @@ TEST_F(ClientCacheCheckResponseTest, Http4xxTranslatedAndBlocked) {
 
   CheckResponse* resp = new CheckResponse();
   const Status http_status(Code::PERMISSION_DENIED, "");
-  cache_->handleCheckResponse(http_status, resp, on_done);
+  callFuncUnderTest(http_status, resp, on_done);
 }
 
 TEST_F(ClientCacheCheckResponseTest, Sc5xxAllowed) {
@@ -104,7 +111,7 @@ TEST_F(ClientCacheCheckResponseTest, Sc5xxAllowed) {
   check_error->set_code(CheckError::NAMESPACE_LOOKUP_UNAVAILABLE);
 
   const Status http_status(Code::OK, "");
-  cache_->handleCheckResponse(http_status, resp, on_done);
+  callFuncUnderTest(http_status, resp, on_done);
 
   CheckAndReset(stats_base_.stats().filter_.allowed_control_plane_fault_, 1);
 }
@@ -119,7 +126,7 @@ TEST_F(ClientCacheCheckResponseTest, Sc4xxBlocked) {
   check_error->set_code(CheckError::CLIENT_APP_BLOCKED);
 
   const Status http_status(Code::OK, "");
-  cache_->handleCheckResponse(http_status, resp, on_done);
+  callFuncUnderTest(http_status, resp, on_done);
 }
 
 TEST_F(ClientCacheCheckResponseTest, ScOkAllowed) {
@@ -130,7 +137,7 @@ TEST_F(ClientCacheCheckResponseTest, ScOkAllowed) {
   CheckResponse* resp = new CheckResponse();
 
   const Status http_status(Code::OK, "");
-  cache_->handleCheckResponse(http_status, resp, on_done);
+  callFuncUnderTest(http_status, resp, on_done);
 }
 
 class ClientCacheCheckResponseNetworkFailClosedTest
@@ -152,7 +159,7 @@ TEST_F(ClientCacheCheckResponseNetworkFailClosedTest, Http5xxBlocked) {
 
   CheckResponse* resp = new CheckResponse();
   const Status http_status(Code::UNAVAILABLE, "");
-  cache_->handleCheckResponse(http_status, resp, on_done);
+  callFuncUnderTest(http_status, resp, on_done);
 
   CheckAndReset(stats_base_.stats().filter_.denied_control_plane_fault_, 1);
 }
@@ -167,12 +174,12 @@ TEST_F(ClientCacheCheckResponseNetworkFailClosedTest, Sc5xxBlocked) {
   check_error->set_code(CheckError::NAMESPACE_LOOKUP_UNAVAILABLE);
 
   const Status http_status(Code::OK, "");
-  cache_->handleCheckResponse(http_status, resp, on_done);
+  callFuncUnderTest(http_status, resp, on_done);
 
   CheckAndReset(stats_base_.stats().filter_.denied_control_plane_fault_, 1);
 }
 
-}  // namespace
+}  // namespace test
 }  // namespace service_control
 }  // namespace http_filters
 }  // namespace envoy
