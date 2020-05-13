@@ -26,10 +26,11 @@ namespace service_control {
 /**
  * General service control filter stats. @see stats_macros.h
  */
-// clang-format off
 #define FILTER_STATS(COUNTER, HISTOGRAM) \
   COUNTER(allowed)                       \
+  COUNTER(allowed_control_plane_fault)   \
   COUNTER(denied)                        \
+  COUNTER(denied_control_plane_fault)    \
   HISTOGRAM(request_time, Milliseconds)  \
   HISTOGRAM(backend_time, Milliseconds)  \
   HISTOGRAM(overhead_time, Milliseconds)
@@ -55,8 +56,6 @@ namespace service_control {
   COUNTER(UNAVAILABLE)             \
   COUNTER(DATA_LOSS)               \
   COUNTER(UNAUTHENTICATED)
-
-// clang-format on
 
 /**
  * Wrapper struct for general service control filter stats. @see stats_macros.h

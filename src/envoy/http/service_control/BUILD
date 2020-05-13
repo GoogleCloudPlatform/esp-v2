@@ -92,6 +92,24 @@ envoy_cc_library(
     ],
 )
 
+envoy_cc_test(
+    name = "client_cache_test",
+    size = "small",
+    srcs = [
+        "client_cache_test.cc",
+    ],
+    repository = "@envoy",
+    deps = [
+        ":client_cache_lib",
+        ":mocks_lib",
+        "@envoy//source/common/common:empty_string",
+        "@envoy//test/mocks/event:event_mocks",
+        "@envoy//test/mocks/server:server_mocks",
+        "@envoy//test/mocks/stats:stats_mocks",
+        "@envoy//test/test_common:utility_lib",
+    ],
+)
+
 envoy_cc_library(
     name = "service_control_call_impl_lib",
     srcs = ["service_control_call_impl.cc"],
