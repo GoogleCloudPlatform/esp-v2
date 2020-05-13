@@ -61,6 +61,9 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       const ::google::api::envoy::http::service_control::FilterConfig&
           filter_config);
 
+  void collectCallStatus(CallStatusStats& filter_stats,
+                         const ::google::protobuf::util::error::Code& code);
+
   template <class Response>
   static ::google::protobuf::util::Status processScCallTransportStatus(
       const ::google::protobuf::util::Status& status, Response* resp,
@@ -68,16 +71,15 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
 
   const ::google::api::envoy::http::service_control::Service& config_;
 
-  // Filter statistics. When service control client is destroyed in worker thread,
-  // filter_stats_ may have already been destructed in the main thread, so don't
-  // collect stats at this point.
+  // Filter statistics. When service control client is destroyed in worker
+  // thread, filter_stats_ may have already been destructed in the main thread,
+  // so don't collect stats at this point.
   ServiceControlFilterStats& filter_stats_;
 
   // Whether the client_cache is being destructed.
   bool destruct_mode_;
 
   bool network_fail_open_;
-
 
   // the configurable timeouts
   uint32_t check_timeout_ms_;

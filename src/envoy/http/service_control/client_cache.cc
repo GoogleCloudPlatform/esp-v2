@@ -185,6 +185,14 @@ void ClientCache::initHttpRequestSetting(const FilterConfig& filter_config) {
                         : kReportDefaultNumberOfRetries;
 }
 
+void ClientCache::collectCallStatus(CallStatusStats& filter_stats,
+                                    const Code& code) {
+  if (destruct_mode_) {
+    return;
+  }
+  ServiceControlFilterStats::collectCallStatus(filter_stats, code);
+}
+
 ClientCache::ClientCache(
     const ::google::api::envoy::http::service_control::Service& config,
     const FilterConfig& filter_config, ServiceControlFilterStats& filter_stats,
@@ -226,10 +234,7 @@ ClientCache::ClientCache(
                                   const std::string& body) {
           Status final_status = processScCallTransportStatus<CheckResponse>(
               status, response, body);
-          if (!destruct_mode_) {
-            ServiceControlFilterStats::collectCallStatus(filter_stats_.check_,
-                                                         final_status.code());
-          }
+          collectCallStatus(filter_stats_.check_, final_status.code());
           on_done(final_status);
         });
     call->call();
@@ -247,10 +252,7 @@ ClientCache::ClientCache(
           Status final_status =
               processScCallTransportStatus<AllocateQuotaResponse>(
                   status, response, body);
-          if (!destruct_mode_) {
-            ServiceControlFilterStats::collectCallStatus(
-                filter_stats_.allocate_quota_, final_status.code());
-          }
+          collectCallStatus(filter_stats_.allocate_quota_, final_status.code());
           on_done(final_status);
         });
     call->call();
@@ -267,10 +269,7 @@ ClientCache::ClientCache(
                                   const std::string& body) {
           Status final_status = processScCallTransportStatus<ReportResponse>(
               status, response, body);
-          if (!destruct_mode_) {
-            ServiceControlFilterStats::collectCallStatus(filter_stats_.report_,
-                                                         final_status.code());
-          }
+          collectCallStatus(filter_stats_.report_, final_status.code());
 
           on_done(final_status);
         });
@@ -302,10 +301,7 @@ CancelFunc ClientCache::callCheck(
                                   const std::string& body) {
           Status final_status = processScCallTransportStatus<CheckResponse>(
               status, response, body);
-          if (!destruct_mode_) {
-            ServiceControlFilterStats::collectCallStatus(filter_stats_.check_,
-                                                         final_status.code());
-          }
+          collectCallStatus(filter_stats_.check_, final_status.code());
           on_done(status);
         });
     call->call();
