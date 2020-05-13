@@ -21,6 +21,7 @@
 #include "envoy/upstream/cluster_manager.h"
 #include "include/service_control_client.h"
 #include "src/api_proxy/service_control/request_info.h"
+#include "src/envoy/http/service_control/filter_stats.h"
 #include "src/envoy/http/service_control/http_call.h"
 #include "src/envoy/http/service_control/service_control_callback_func.h"
 
@@ -36,10 +37,13 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       const ::google::api::envoy::http::service_control::Service& config,
       const ::google::api::envoy::http::service_control::FilterConfig&
           filter_config,
+      ServiceControlFilterStats& filter_stats,
       Envoy::Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
       Envoy::Event::Dispatcher& dispatcher,
       std::function<const std::string&()> sc_token_fn,
       std::function<const std::string&()> quota_token_fn);
+
+  ~ClientCache() { destruct_mode_ = true; };
 
   CancelFunc callCheck(
       const ::google::api::servicecontrol::v1::CheckRequest& request,
@@ -53,11 +57,28 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       const ::google::api::servicecontrol::v1::ReportRequest& request);
 
  private:
-  void InitHttpRequestSetting(
+  void initHttpRequestSetting(
       const ::google::api::envoy::http::service_control::FilterConfig&
           filter_config);
 
+  void collectCallStatus(CallStatusStats& filter_stats,
+                         const ::google::protobuf::util::error::Code& code);
+
+  template <class Response>
+  static ::google::protobuf::util::Status processScCallTransportStatus(
+      const ::google::protobuf::util::Status& status, Response* resp,
+      const std::string& body);
+
   const ::google::api::envoy::http::service_control::Service& config_;
+
+  // Filter statistics. When service control client is destroyed in worker
+  // thread, filter_stats_ may have already been destructed in the main thread,
+  // so don't collect stats at this point.
+  ServiceControlFilterStats& filter_stats_;
+
+  // Whether the client_cache is being destructed.
+  bool destruct_mode_;
+
   bool network_fail_open_;
 
   // the configurable timeouts

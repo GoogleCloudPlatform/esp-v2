@@ -24,7 +24,9 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
+	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func roughEqual(i, j, latencyMargin float64) bool {
@@ -131,5 +133,125 @@ func TestStatistics(t *testing.T) {
 			}
 
 		}
+	}
+}
+
+func TestStatisticsServiceControlCallStatus(t *testing.T) {
+	t.Parallel()
+
+	serviceName := "bookstore-service"
+	configID := "test-config-id"
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
+		"--rollout_strategy=fixed"}
+
+	tests := []struct {
+		desc           string
+		reqCnt         int
+		checkRespCode  int
+		quotaRespCode  int
+		reportRespCode int
+		wantCounters   map[string]int
+	}{
+		{
+			desc:          "check call, quota call and report call are successful",
+			checkRespCode: 200,
+			wantCounters: map[string]int{
+				"http.ingress_http.service_control.check.OK":          1,
+				"http.ingress_http.service_control.allocate_quota.OK": 1,
+				"http.ingress_http.service_control.report.OK":         1,
+			},
+		},
+		{
+			desc:          "check call, quota call and report call are cached",
+			checkRespCode: 200,
+			reqCnt:        5,
+			wantCounters: map[string]int{
+				"http.ingress_http.service_control.check.OK": 1,
+				// The quota call for the first incoming request and the quota call by cache flush after 1s.
+				"http.ingress_http.service_control.allocate_quota.OK": 2,
+				"http.ingress_http.service_control.report.OK":         1,
+			},
+		},
+		{
+			desc:           "check call and report call are both 403",
+			checkRespCode:  403,
+			reportRespCode: 403,
+			wantCounters: map[string]int{
+				"http.ingress_http.service_control.check.PERMISSION_DENIED":  1,
+				"http.ingress_http.service_control.report.PERMISSION_DENIED": 1,
+			},
+		},
+		{
+			desc:          "quota call is 403",
+			quotaRespCode: 403,
+			wantCounters: map[string]int{
+				"http.ingress_http.service_control.check.OK":                         1,
+				"http.ingress_http.service_control.allocate_quota.PERMISSION_DENIED": 1,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		func() {
+			s := env.NewTestEnv(comp.TestStatisticsServiceControlCallStatus, platform.GrpcBookstoreSidecar)
+
+			if tc.checkRespCode != 0 {
+				s.ServiceControlServer.SetCheckResponseStatus(tc.checkRespCode)
+			}
+			if tc.quotaRespCode != 0 {
+				s.ServiceControlServer.SetQuotaResponseStatus(tc.quotaRespCode)
+			}
+			if tc.reportRespCode != 0 {
+				s.ServiceControlServer.SetReportResponseStatus(tc.reportRespCode)
+			}
+
+			s.OverrideQuota(&confpb.Quota{
+				MetricRules: []*confpb.MetricRule{
+					{
+						Selector: "endpoints.examples.bookstore.Bookstore.ListBooks",
+						MetricCosts: map[string]int64{
+							"metrics_first":  2,
+							"metrics_second": 1,
+						},
+					},
+				},
+			})
+			defer s.TearDown()
+			if err := s.Setup(args); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			if tc.reqCnt != 0 {
+				for i := 0; i < tc.reqCnt; i += 1 {
+					_, _ = bsclient.MakeCall("http", addr, "GET", "/v1/shelves/100/books?key=api-key", "", nil)
+				}
+			} else {
+				_, _ = bsclient.MakeCall("http", addr, "GET", "/v1/shelves/100/books?key=api-key", "", nil)
+			}
+
+			// Ensure the stats is available in admin.
+			time.Sleep(time.Millisecond * 5000)
+
+			statsUrl := fmt.Sprintf("http://localhost:%v%v", s.Ports().AdminPort, utils.ESpv2FiltersStatsPath)
+			statsResp, err := utils.DoWithHeaders(statsUrl, "GET", "", nil)
+			if err != nil {
+				t.Fatalf("GET %s faild: %v", addr, err)
+			}
+
+			counters, _, err := utils.ParseStats(statsResp)
+			if err != nil {
+				t.Fatalf("fail to parse stats: %v", err)
+			}
+
+			for wantCounter, wantCounterVal := range tc.wantCounters {
+				if getCountVal, ok := counters[wantCounter]; !ok {
+					t.Errorf("Test (%s): failed, expected counter %v not in the got counters: %v", tc.desc, wantCounter, counters)
+				} else if getCountVal != wantCounterVal {
+					t.Errorf("Test (%s): failed, for counter %v, expected value %v:, got value: %v ", tc.desc, wantCounter, wantCounterVal, getCountVal)
+				}
+			}
+
+		}()
 	}
 }

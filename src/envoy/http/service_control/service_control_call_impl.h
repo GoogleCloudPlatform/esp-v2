@@ -43,10 +43,11 @@ class ThreadLocalCache : public Envoy::ThreadLocal::ThreadLocalObject {
       const ::google::api::envoy::http::service_control::Service& config,
       const ::google::api::envoy::http::service_control::FilterConfig&
           filter_config,
+      ServiceControlFilterStats& filter_stats,
       Envoy::Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
       Envoy::Event::Dispatcher& dispatcher)
       : client_cache_(
-            config, filter_config, cm, time_source, dispatcher,
+            config, filter_config, filter_stats, cm, time_source, dispatcher,
             [this]() -> const std::string& { return sc_token(); },
             [this]() -> const std::string& { return quota_token(); }) {}
 
@@ -85,6 +86,7 @@ class ServiceControlCallImpl
   ServiceControlCallImpl(
       FilterConfigProtoSharedPtr proto_config,
       const ::google::api::envoy::http::service_control::Service& config,
+      ServiceControlFilterStats& filter_stats,
       Envoy::Server::Configuration::FactoryContext& context);
 
   CancelFunc callCheck(
@@ -134,18 +136,22 @@ class ServiceControlCallFactoryImpl : public ServiceControlCallFactory {
  public:
   explicit ServiceControlCallFactoryImpl(
       FilterConfigProtoSharedPtr proto_config,
+      ServiceControlFilterStats& filter_stats,
       Envoy::Server::Configuration::FactoryContext& context)
-      : proto_config_(proto_config), context_(context) {}
+      : proto_config_(proto_config),
+        filter_stats_(filter_stats),
+        context_(context) {}
 
   ServiceControlCallPtr create(
       const ::google::api::envoy::http::service_control::Service& config)
       override {
     return std::make_unique<ServiceControlCallImpl>(proto_config_, config,
-                                                    context_);
+                                                    filter_stats_, context_);
   }
 
  private:
   FilterConfigProtoSharedPtr proto_config_;
+  ServiceControlFilterStats& filter_stats_;
   Envoy::Server::Configuration::FactoryContext& context_;
 };
 

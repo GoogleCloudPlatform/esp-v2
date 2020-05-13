@@ -16,6 +16,7 @@
 
 #include "envoy/stats/scope.h"
 #include "envoy/stats/stats_macros.h"
+#include "google/protobuf/stubs/status.h"
 
 namespace espv2 {
 namespace envoy {
@@ -23,25 +24,71 @@ namespace http_filters {
 namespace service_control {
 
 /**
- * All stats for the service control filter. @see stats_macros.h
+ * General service control filter stats. @see stats_macros.h
  */
-
 // clang-format off
-#define ALL_SERVICE_CONTROL_FILTER_STATS(COUNTER, HISTOGRAM)     \
-  COUNTER(allowed)                                    \
-  COUNTER(denied) \
+#define FILTER_STATS(COUNTER, HISTOGRAM) \
+  COUNTER(allowed)                       \
+  COUNTER(denied)                        \
   HISTOGRAM(request_time, Milliseconds)  \
   HISTOGRAM(backend_time, Milliseconds)  \
   HISTOGRAM(overhead_time, Milliseconds)
 
+/**
+ * Service control call status stats. @see stats_macros.h
+ */
+#define CALL_STATUS_STATS(COUNTER) \
+  COUNTER(OK)                      \
+  COUNTER(CANCELLED)               \
+  COUNTER(UNKNOWN)                 \
+  COUNTER(INVALID_ARGUMENT)        \
+  COUNTER(DEADLINE_EXCEEDED)       \
+  COUNTER(NOT_FOUND)               \
+  COUNTER(ALREADY_EXISTS)          \
+  COUNTER(PERMISSION_DENIED)       \
+  COUNTER(RESOURCE_EXHAUSTED)      \
+  COUNTER(FAILED_PRECONDITION)     \
+  COUNTER(ABORTED)                 \
+  COUNTER(OUT_OF_RANGE)            \
+  COUNTER(UNIMPLEMENTED)           \
+  COUNTER(INTERNAL)                \
+  COUNTER(UNAVAILABLE)             \
+  COUNTER(DATA_LOSS)               \
+  COUNTER(UNAUTHENTICATED)
+
 // clang-format on
 
 /**
- * Wrapper struct for service control filter stats. @see stats_macros.h
+ * Wrapper struct for general service control filter stats. @see stats_macros.h
+ */
+struct FilterStats {
+  FILTER_STATS(GENERATE_COUNTER_STRUCT, GENERATE_HISTOGRAM_STRUCT);
+};
+
+/**
+ * Wrapper struct for service control call status stats. @see stats_macros.h
+ */
+struct CallStatusStats {
+  CALL_STATUS_STATS(GENERATE_COUNTER_STRUCT);
+};
+
+/**
+ * Wrapper struct for all the stats structs of service control filter .
  */
 struct ServiceControlFilterStats {
-  ALL_SERVICE_CONTROL_FILTER_STATS(GENERATE_COUNTER_STRUCT,
-                                   GENERATE_HISTOGRAM_STRUCT)
+  // The general filter stats.
+  FilterStats filter_;
+  // The stats of service control check call status.
+  CallStatusStats check_;
+  // The stats of service control allocate quota call status.
+  CallStatusStats allocate_quota_;
+  // The stats of service control report call status.
+  CallStatusStats report_;
+
+  // Collect service control call status.
+  static void collectCallStatus(
+      CallStatusStats& filter_stats,
+      const ::google::protobuf::util::error::Code& code);
 };
 
 class ServiceControlFilterStatBase {
@@ -53,12 +100,18 @@ class ServiceControlFilterStatBase {
   ServiceControlFilterStats& stats() { return stats_; }
 
  private:
-  ServiceControlFilterStats generateStats(const std::string& prefix,
-                                          Envoy::Stats::Scope& scope) {
+  static ServiceControlFilterStats generateStats(const std::string& prefix,
+                                                 Envoy::Stats::Scope& scope) {
     const std::string final_prefix = prefix + "service_control.";
-    return {ALL_SERVICE_CONTROL_FILTER_STATS(
-        POOL_COUNTER_PREFIX(scope, final_prefix),
-        POOL_HISTOGRAM_PREFIX(scope, final_prefix))};
+
+    return {{FILTER_STATS(POOL_COUNTER_PREFIX(scope, final_prefix),
+                          POOL_HISTOGRAM_PREFIX(scope, final_prefix))},
+            {CALL_STATUS_STATS(
+                POOL_COUNTER_PREFIX(scope, final_prefix + "check."))},
+            {CALL_STATUS_STATS(
+                POOL_COUNTER_PREFIX(scope, final_prefix + "allocate_quota."))},
+            {CALL_STATUS_STATS(
+                POOL_COUNTER_PREFIX(scope, final_prefix + "report."))}};
   }
 
   // The stats for the filter.
