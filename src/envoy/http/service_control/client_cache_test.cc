@@ -49,20 +49,25 @@ class ClientCacheCheckResponseTest : public ::testing::Test {
         dispatcher_, token_fn_, token_fn_);
   }
 
-  void CheckAndReset(Envoy::Stats::Counter& counter, const int expected_value) {
+  void checkAndReset(Envoy::Stats::Counter& counter, const int expected_value) {
     EXPECT_EQ(counter.value(), expected_value);
     counter.reset();
   }
 
-  void TearDown() override {
-    CheckAndReset(stats_base_.stats().filter_.allowed_control_plane_fault_, 0);
-    CheckAndReset(stats_base_.stats().filter_.denied_control_plane_fault_, 0);
+  void runTest(Code got_http_code, CheckResponse* got_response,
+               Code want_client_code) {
+    CheckDoneFunc on_done = [&](const Status& status,
+                                const CheckResponseInfo&) {
+      EXPECT_EQ(status.code(), want_client_code);
+    };
+
+    const Status http_status(got_http_code, Envoy::EMPTY_STRING);
+    cache_->handleCheckResponse(http_status, got_response, on_done);
   }
 
-  // Serves as test peer that allows access to private function.
-  void callFuncUnderTest(const Status& http_status, CheckResponse* response,
-                         CheckDoneFunc on_done) {
-    cache_->handleCheckResponse(http_status, response, on_done);
+  void TearDown() override {
+    checkAndReset(stats_base_.stats().filter_.allowed_control_plane_fault_, 0);
+    checkAndReset(stats_base_.stats().filter_.denied_control_plane_fault_, 0);
   }
 
   // Helpers for SetUp.
@@ -80,64 +85,39 @@ class ClientCacheCheckResponseTest : public ::testing::Test {
 };
 
 TEST_F(ClientCacheCheckResponseTest, Http5xxAllowed) {
-  CheckDoneFunc on_done = [](const Status& status, const CheckResponseInfo&) {
-    EXPECT_EQ(status.code(), Code::OK);
-  };
+  CheckResponse* response = new CheckResponse();
 
-  CheckResponse* resp = new CheckResponse();
-  const Status http_status(Code::UNAVAILABLE, "");
-  callFuncUnderTest(http_status, resp, on_done);
-
-  CheckAndReset(stats_base_.stats().filter_.allowed_control_plane_fault_, 1);
+  runTest(Code::UNAVAILABLE, response, Code::OK);
+  checkAndReset(stats_base_.stats().filter_.allowed_control_plane_fault_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseTest, Http4xxTranslatedAndBlocked) {
-  CheckDoneFunc on_done = [](const Status& status, const CheckResponseInfo&) {
-    EXPECT_EQ(status.code(), Code::INTERNAL);
-  };
+  CheckResponse* response = new CheckResponse();
 
-  CheckResponse* resp = new CheckResponse();
-  const Status http_status(Code::PERMISSION_DENIED, "");
-  callFuncUnderTest(http_status, resp, on_done);
+  runTest(Code::PERMISSION_DENIED, response, Code::INTERNAL);
 }
 
 TEST_F(ClientCacheCheckResponseTest, Sc5xxAllowed) {
-  CheckDoneFunc on_done = [](const Status& status, const CheckResponseInfo&) {
-    EXPECT_EQ(status.code(), Code::OK);
-  };
-
-  CheckResponse* resp = new CheckResponse();
-  CheckError* check_error = resp->mutable_check_errors()->Add();
+  CheckResponse* response = new CheckResponse();
+  CheckError* check_error = response->mutable_check_errors()->Add();
   check_error->set_code(CheckError::NAMESPACE_LOOKUP_UNAVAILABLE);
 
-  const Status http_status(Code::OK, "");
-  callFuncUnderTest(http_status, resp, on_done);
-
-  CheckAndReset(stats_base_.stats().filter_.allowed_control_plane_fault_, 1);
+  runTest(Code::OK, response, Code::OK);
+  checkAndReset(stats_base_.stats().filter_.allowed_control_plane_fault_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseTest, Sc4xxBlocked) {
-  CheckDoneFunc on_done = [](const Status& status, const CheckResponseInfo&) {
-    EXPECT_EQ(status.code(), Code::PERMISSION_DENIED);
-  };
-
-  CheckResponse* resp = new CheckResponse();
-  CheckError* check_error = resp->mutable_check_errors()->Add();
+  CheckResponse* response = new CheckResponse();
+  CheckError* check_error = response->mutable_check_errors()->Add();
   check_error->set_code(CheckError::CLIENT_APP_BLOCKED);
 
-  const Status http_status(Code::OK, "");
-  callFuncUnderTest(http_status, resp, on_done);
+  runTest(Code::OK, response, Code::PERMISSION_DENIED);
 }
 
 TEST_F(ClientCacheCheckResponseTest, ScOkAllowed) {
-  CheckDoneFunc on_done = [](const Status& status, const CheckResponseInfo&) {
-    EXPECT_EQ(status.code(), Code::OK);
-  };
+  CheckResponse* response = new CheckResponse();
 
-  CheckResponse* resp = new CheckResponse();
-
-  const Status http_status(Code::OK, "");
-  callFuncUnderTest(http_status, resp, on_done);
+  runTest(Code::OK, response, Code::OK);
 }
 
 class ClientCacheCheckResponseNetworkFailClosedTest
@@ -153,30 +133,19 @@ class ClientCacheCheckResponseNetworkFailClosedTest
 };
 
 TEST_F(ClientCacheCheckResponseNetworkFailClosedTest, Http5xxBlocked) {
-  CheckDoneFunc on_done = [](const Status& status, const CheckResponseInfo&) {
-    EXPECT_EQ(status.code(), Code::UNAVAILABLE);
-  };
+  CheckResponse* response = new CheckResponse();
 
-  CheckResponse* resp = new CheckResponse();
-  const Status http_status(Code::UNAVAILABLE, "");
-  callFuncUnderTest(http_status, resp, on_done);
-
-  CheckAndReset(stats_base_.stats().filter_.denied_control_plane_fault_, 1);
+  runTest(Code::UNAVAILABLE, response, Code::UNAVAILABLE);
+  checkAndReset(stats_base_.stats().filter_.denied_control_plane_fault_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseNetworkFailClosedTest, Sc5xxBlocked) {
-  CheckDoneFunc on_done = [](const Status& status, const CheckResponseInfo&) {
-    EXPECT_EQ(status.code(), Code::UNAVAILABLE);
-  };
-
-  CheckResponse* resp = new CheckResponse();
-  CheckError* check_error = resp->mutable_check_errors()->Add();
+  CheckResponse* response = new CheckResponse();
+  CheckError* check_error = response->mutable_check_errors()->Add();
   check_error->set_code(CheckError::NAMESPACE_LOOKUP_UNAVAILABLE);
 
-  const Status http_status(Code::OK, "");
-  callFuncUnderTest(http_status, resp, on_done);
-
-  CheckAndReset(stats_base_.stats().filter_.denied_control_plane_fault_, 1);
+  runTest(Code::OK, response, Code::UNAVAILABLE);
+  checkAndReset(stats_base_.stats().filter_.denied_control_plane_fault_, 1);
 }
 
 }  // namespace test
