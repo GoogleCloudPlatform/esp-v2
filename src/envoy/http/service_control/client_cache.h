@@ -30,6 +30,11 @@ namespace envoy {
 namespace http_filters {
 namespace service_control {
 
+// Forward declare friend class to test private functions.
+namespace test {
+class ClientCacheCheckResponseTest;
+}
+
 // The class to cache check and batch report.
 class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
@@ -57,6 +62,15 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       const ::google::api::servicecontrol::v1::ReportRequest& request);
 
  private:
+  friend class test::ClientCacheCheckResponseTest;
+
+  // Ownership of CheckResponse is passed to this function.
+  // The function will always call CheckDoneFunc.
+  void handleCheckResponse(
+      const ::google::protobuf::util::Status& http_status,
+      ::google::api::servicecontrol::v1::CheckResponse* response,
+      CheckDoneFunc on_done);
+
   void initHttpRequestSetting(
       const ::google::api::envoy::http::service_control::FilterConfig&
           filter_config);

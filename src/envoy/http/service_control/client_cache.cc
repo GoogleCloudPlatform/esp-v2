@@ -17,6 +17,11 @@
 #include "common/tracing/http_tracer_impl.h"
 #include "src/api_proxy/service_control/request_builder.h"
 
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
+
 using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
@@ -35,10 +40,6 @@ using ::google::service_control_client::ReportAggregationOptions;
 using ::google::service_control_client::ServiceControlClientOptions;
 using ::google::service_control_client::TransportDoneFunc;
 
-namespace espv2 {
-namespace envoy {
-namespace http_filters {
-namespace service_control {
 namespace {
 
 // Default config for check aggregator
@@ -287,9 +288,9 @@ ClientCache::ClientCache(
       config_.service_name(), config_.service_config_id(), options);
 }
 
-CancelFunc ClientCache::callCheck(
-    const CheckRequest& request, Envoy::Tracing::Span& parent_span,
-    std::function<void(const Status&, const CheckResponseInfo&)> on_done) {
+CancelFunc ClientCache::callCheck(const CheckRequest& request,
+                                  Envoy::Tracing::Span& parent_span,
+                                  CheckDoneFunc on_done) {
   CancelFunc cancel_fn;
   auto check_transport = [this, &parent_span, &cancel_fn](
                              const CheckRequest& request,
@@ -312,64 +313,70 @@ CancelFunc ClientCache::callCheck(
                   "Service Control cache query: Check");
 
   auto* response = new CheckResponse;
-  client_->Check(
-      request, response,
-      [this, response, on_done](const Status& http_status) {
-        CheckResponseInfo response_info;
-        Status final_status;
-        bool translate_non_5xx;
-
-        if (http_status.ok()) {
-          // If the http call succeeded, then use the CheckResponseInfo
-          // to retrieve the final status.
-          final_status =
-              api_proxy::service_control::RequestBuilder::ConvertCheckResponse(
-                  *response, config_.service_name(), &response_info);
-          // Check errors should be displayed to the client.
-          translate_non_5xx = false;
-        } else {
-          // Otherwise, http call failed. Use that status to respond.
-          final_status = http_status;
-          // Http call errors should NOT be displayed to the client.
-          translate_non_5xx = true;
-        }
-
-        if (final_status.ok()) {
-          on_done(final_status, response_info);
-        } else if (final_status.error_code() == Code::UNAVAILABLE) {
-          // All 5xx errors are already translated to Unavailable.
-          if (network_fail_open_) {
-            ENVOY_LOG(warn,
-                      "Google Service Control Check is unavailable, but the "
-                      "request is allowed due to network fail open. Original "
-                      "error: {}",
-                      final_status.error_message());
-            on_done(Status::OK, response_info);
-          } else {
-            // Preserve the original 5xx error code in the response back.
-            ENVOY_LOG(warn,
-                      "Google Service Control Check is unavailable, and the "
-                      "request is denied with error: {}",
-                      final_status.error_message());
-            on_done(final_status, response_info);
-          }
-        } else {
-          if (translate_non_5xx) {
-            // This is not caused by a client request error, so translate
-            // non-5xx error codes to 500 Internal Server Error. Error message
-            // contains details on the original error (including the original
-            // HTTP status code).
-            Status scrubbed_status(Code::INTERNAL,
-                                   final_status.error_message());
-            on_done(scrubbed_status, response_info);
-          } else {
-            on_done(final_status, response_info);
-          }
-        }
-        delete response;
-      },
-      check_transport);
+  client_->Check(request, response,
+                 [this, response, on_done](const Status& http_status) {
+                   handleCheckResponse(http_status, response, on_done);
+                 },
+                 check_transport);
   return cancel_fn;
+}
+
+void ClientCache::handleCheckResponse(const Status& http_status,
+                                      CheckResponse* response,
+                                      CheckDoneFunc on_done) {
+  CheckResponseInfo response_info;
+  Status final_status;
+  bool translate_non_5xx;
+
+  if (http_status.ok()) {
+    // If the http call succeeded, then use the CheckResponseInfo
+    // to retrieve the final status.
+    final_status =
+        api_proxy::service_control::RequestBuilder::ConvertCheckResponse(
+            *response, config_.service_name(), &response_info);
+    // Check errors should be displayed to the client.
+    translate_non_5xx = false;
+  } else {
+    // Otherwise, http call failed. Use that status to respond.
+    final_status = http_status;
+    // Http call errors should NOT be displayed to the client.
+    translate_non_5xx = true;
+  }
+
+  if (final_status.ok()) {
+    on_done(final_status, response_info);
+  } else if (final_status.error_code() == Code::UNAVAILABLE) {
+    // All 5xx errors are already translated to Unavailable.
+    if (network_fail_open_) {
+      filter_stats_.filter_.allowed_control_plane_fault_.inc();
+      ENVOY_LOG(warn,
+                "Google Service Control Check is unavailable, but the "
+                "request is allowed due to network fail open. Original "
+                "error: {}",
+                final_status.error_message());
+      on_done(Status::OK, response_info);
+    } else {
+      // Preserve the original 5xx error code in the response back.
+      filter_stats_.filter_.denied_control_plane_fault_.inc();
+      ENVOY_LOG(warn,
+                "Google Service Control Check is unavailable, and the "
+                "request is denied with error: {}",
+                final_status.error_message());
+      on_done(final_status, response_info);
+    }
+  } else {
+    if (translate_non_5xx) {
+      // This is not caused by a client request error, so translate
+      // non-5xx error codes to 500 Internal Server Error. Error message
+      // contains details on the original error (including the original
+      // HTTP status code).
+      Status scrubbed_status(Code::INTERNAL, final_status.error_message());
+      on_done(scrubbed_status, response_info);
+    } else {
+      on_done(final_status, response_info);
+    }
+  }
+  delete response;
 }
 
 void ClientCache::callQuota(
