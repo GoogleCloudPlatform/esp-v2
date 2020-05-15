@@ -12,255 +12,192 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "gtest/gtest.h"
 #include "src/api_proxy/service_control/request_builder.h"
 
-namespace gasv1 = ::google::api::servicecontrol::v1;
-
-using ::google::api::servicecontrol::v1::CheckError;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
+#include "gtest/gtest.h"
 
 namespace espv2 {
 namespace api_proxy {
 namespace service_control {
-
 namespace {
 
-Status ConvertCheckErrorToStatus(gasv1::CheckError::Code code,
-                                 const char* error_detail,
-                                 const char* service_name,
-                                 CheckResponseInfo* info) {
-  gasv1::CheckResponse response;
-  gasv1::CheckError* check_error = response.add_check_errors();
-  check_error->set_code(code);
-  check_error->set_detail(error_detail);
-  return RequestBuilder::ConvertCheckResponse(response, service_name, info);
+using ::google::api::servicecontrol::v1::CheckError;
+using ::google::api::servicecontrol::v1::CheckError_Code;
+using ::google::api::servicecontrol::v1::CheckResponse;
+using ::google::protobuf::util::Status;
+using ::google::protobuf::util::error::Code;
+
+class ConvertCheckResponseTest : public ::testing::Test {
+ protected:
+  void runTest(CheckError_Code got_check_error_code, Code want_code,
+               CheckResponseErrorType want_error_type) {
+    CheckResponseInfo info;
+    CheckResponse response;
+    response.add_check_errors()->set_code(got_check_error_code);
+
+    Status result = RequestBuilder::ConvertCheckResponse(response, "", &info);
+
+    EXPECT_EQ(want_code, result.code());
+    EXPECT_EQ(info.error_type, want_error_type);
+  }
+};
+
+TEST_F(ConvertCheckResponseTest,
+       AbortedWithInvalidArgumentWhenRespIsKeyInvalid) {
+  runTest(CheckError::API_KEY_INVALID, Code::INVALID_ARGUMENT,
+          CheckResponseErrorType::API_KEY_INVALID);
 }
 
-Status ConvertCheckErrorToStatus(gasv1::CheckError::Code code,
-                                 CheckResponseInfo* info) {
-  gasv1::CheckResponse response;
-  std::string service_name;
-  response.add_check_errors()->set_code(code);
-  return RequestBuilder::ConvertCheckResponse(response, service_name, info);
+TEST_F(ConvertCheckResponseTest,
+       AbortedWithInvalidArgumentWhenRespIsKeyExpired) {
+  runTest(CheckError::API_KEY_EXPIRED, Code::INVALID_ARGUMENT,
+          CheckResponseErrorType::API_KEY_INVALID);
 }
 
-}  // namespace
+TEST_F(ConvertCheckResponseTest,
+       AbortedWithInvalidArgumentWhenRespIsBlockedWithKeyNotFound) {
+  runTest(CheckError::API_KEY_NOT_FOUND, Code::INVALID_ARGUMENT,
+          CheckResponseErrorType::API_KEY_INVALID);
+}
 
-TEST(CheckResponseTest, AbortedWithInvalidArgumentWhenRespIsKeyInvalid) {
+TEST_F(ConvertCheckResponseTest,
+       AbortedWithInvalidArgumentWhenRespIsBlockedWithNotFound) {
+  runTest(CheckError::NOT_FOUND, Code::INVALID_ARGUMENT,
+          CheckResponseErrorType::CONSUMER_ERROR);
+}
+
+TEST_F(ConvertCheckResponseTest,
+       AbortedWithPermissionDeniedWhenRespIsBlockedWithPermissionDenied) {
+  runTest(CheckError::PERMISSION_DENIED, Code::PERMISSION_DENIED,
+          CheckResponseErrorType::CONSUMER_ERROR);
+}
+
+TEST_F(ConvertCheckResponseTest,
+       AbortedWithPermissionDeniedWhenRespIsBlockedWithIpAddressBlocked) {
+  runTest(CheckError::IP_ADDRESS_BLOCKED, Code::PERMISSION_DENIED,
+          CheckResponseErrorType::CONSUMER_BLOCKED);
+}
+
+TEST_F(ConvertCheckResponseTest,
+       AbortedWithPermissionDeniedWhenRespIsBlockedWithRefererBlocked) {
+  runTest(CheckError::REFERER_BLOCKED, Code::PERMISSION_DENIED,
+          CheckResponseErrorType::CONSUMER_BLOCKED);
+}
+
+TEST_F(ConvertCheckResponseTest,
+       AbortedWithPermissionDeniedWhenRespIsBlockedWithClientAppBlocked) {
+  runTest(CheckError::CLIENT_APP_BLOCKED, Code::PERMISSION_DENIED,
+          CheckResponseErrorType::CONSUMER_BLOCKED);
+}
+
+TEST_F(ConvertCheckResponseTest,
+       AbortedWithPermissionDeniedWhenResponseIsBlockedWithProjectDeleted) {
+  runTest(CheckError::PROJECT_DELETED, Code::PERMISSION_DENIED,
+          CheckResponseErrorType::CONSUMER_ERROR);
+}
+
+TEST_F(ConvertCheckResponseTest,
+       AbortedWithPermissionDeniedWhenResponseIsBlockedWithProjectInvalid) {
+  runTest(CheckError::PROJECT_INVALID, Code::INVALID_ARGUMENT,
+          CheckResponseErrorType::CONSUMER_ERROR);
+}
+
+TEST_F(ConvertCheckResponseTest,
+       AbortedWithPermissionDeniedWhenResponseIsBlockedWithBillingDisabled) {
+  runTest(CheckError::BILLING_DISABLED, Code::PERMISSION_DENIED,
+          CheckResponseErrorType::CONSUMER_ERROR);
+}
+
+TEST_F(ConvertCheckResponseTest,
+       WhenResponseIsBlockedWithSecurityPolicyViolated) {
+  runTest(CheckError::SECURITY_POLICY_VIOLATED, Code::PERMISSION_DENIED,
+          CheckResponseErrorType::CONSUMER_BLOCKED);
+}
+
+TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithInvalidCredentail) {
+  runTest(CheckError::INVALID_CREDENTIAL, Code::PERMISSION_DENIED,
+          CheckResponseErrorType::CONSUMER_ERROR);
+}
+
+TEST_F(ConvertCheckResponseTest,
+       WhenResponseIsBlockedWithLocationPolicyViolated) {
+  runTest(CheckError::LOCATION_POLICY_VIOLATED, Code::PERMISSION_DENIED,
+          CheckResponseErrorType::CONSUMER_BLOCKED);
+}
+
+TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithConsumerInvalid) {
+  runTest(CheckError::CONSUMER_INVALID, Code::PERMISSION_DENIED,
+          CheckResponseErrorType::CONSUMER_ERROR);
+}
+
+TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithResourceExhuasted) {
+  runTest(CheckError::RESOURCE_EXHAUSTED, Code::RESOURCE_EXHAUSTED,
+          CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
+}
+
+TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithAbuserDetected) {
+  runTest(CheckError::ABUSER_DETECTED, Code::PERMISSION_DENIED,
+          CheckResponseErrorType::CONSUMER_ERROR);
+}
+
+TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithApiTargetBlocked) {
+  runTest(CheckError::API_TARGET_BLOCKED, Code::PERMISSION_DENIED,
+          CheckResponseErrorType::CONSUMER_BLOCKED);
+}
+
+TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithNamespaceLookup) {
+  runTest(CheckError::NAMESPACE_LOOKUP_UNAVAILABLE, Code::UNAVAILABLE,
+          CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
+}
+
+TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithBillingStatus) {
+  runTest(CheckError::BILLING_STATUS_UNAVAILABLE, Code::UNAVAILABLE,
+          CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
+}
+
+TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithServiceStatus) {
+  runTest(CheckError::SERVICE_STATUS_UNAVAILABLE, Code::UNAVAILABLE,
+          CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
+}
+
+TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithQuotaCheck) {
+  runTest(CheckError::QUOTA_CHECK_UNAVAILABLE, Code::UNAVAILABLE,
+          CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
+}
+
+TEST_F(ConvertCheckResponseTest,
+       WhenResponseIsBlockedWithCloudResourceManager) {
+  runTest(CheckError::CLOUD_RESOURCE_MANAGER_BACKEND_UNAVAILABLE,
+          Code::UNAVAILABLE, CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
+}
+
+TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithSecurityPolicy) {
+  runTest(CheckError::SECURITY_POLICY_BACKEND_UNAVAILABLE, Code::UNAVAILABLE,
+          CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
+}
+
+TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithLocationPolicy) {
+  runTest(CheckError::LOCATION_POLICY_BACKEND_UNAVAILABLE, Code::UNAVAILABLE,
+          CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
+}
+
+TEST_F(ConvertCheckResponseTest,
+       AbortedWithPermissionDeniedWhenRespIsBlockedWithServiceNotActivated) {
   CheckResponseInfo info;
-  Status result = ConvertCheckErrorToStatus(CheckError::API_KEY_INVALID, &info);
-  EXPECT_EQ(Code::INVALID_ARGUMENT, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::API_KEY_INVALID);
-}
+  CheckResponse response;
+  CheckError* check_error = response.add_check_errors();
+  check_error->set_code(CheckError::SERVICE_NOT_ACTIVATED);
+  check_error->set_detail("Service not activated.");
 
-TEST(CheckResponseTest, AbortedWithInvalidArgumentWhenRespIsKeyExpired) {
-  CheckResponseInfo info;
-  Status result = ConvertCheckErrorToStatus(CheckError::API_KEY_EXPIRED, &info);
-  EXPECT_EQ(Code::INVALID_ARGUMENT, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::API_KEY_INVALID);
-}
-
-TEST(CheckResponseTest,
-     AbortedWithInvalidArgumentWhenRespIsBlockedWithNotFound) {
-  CheckResponseInfo info;
-  Status result = ConvertCheckErrorToStatus(CheckError::NOT_FOUND, &info);
-  EXPECT_EQ(Code::INVALID_ARGUMENT, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::CONSUMER_ERROR);
-}
-
-TEST(CheckResponseTest,
-     AbortedWithInvalidArgumentWhenRespIsBlockedWithKeyNotFound) {
-  CheckResponseInfo info;
   Status result =
-      ConvertCheckErrorToStatus(CheckError::API_KEY_NOT_FOUND, &info);
-  EXPECT_EQ(Code::INVALID_ARGUMENT, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::API_KEY_INVALID);
-}
+      RequestBuilder::ConvertCheckResponse(response, "api_xxxx", &info);
 
-TEST(CheckResponseTest,
-     AbortedWithPermissionDeniedWhenRespIsBlockedWithServiceNotActivated) {
-  CheckResponseInfo info;
-  Status result =
-      ConvertCheckErrorToStatus(CheckError::SERVICE_NOT_ACTIVATED,
-                                "Service not activated.", "api_xxxx", &info);
   EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
   EXPECT_EQ(result.message(), "API api_xxxx is not enabled for the project.");
   EXPECT_EQ(info.error_type, CheckResponseErrorType::SERVICE_NOT_ACTIVATED);
 }
 
-TEST(CheckResponseTest,
-     AbortedWithPermissionDeniedWhenRespIsBlockedWithPermissionDenied) {
-  CheckResponseInfo info;
-  Status result =
-      ConvertCheckErrorToStatus(CheckError::PERMISSION_DENIED, &info);
-  EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::CONSUMER_ERROR);
-}
-
-TEST(CheckResponseTest,
-     AbortedWithPermissionDeniedWhenRespIsBlockedWithIpAddressBlocked) {
-  CheckResponseInfo info;
-  Status result =
-      ConvertCheckErrorToStatus(CheckError::IP_ADDRESS_BLOCKED, &info);
-  EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::CONSUMER_BLOCKED);
-}
-
-TEST(CheckResponseTest,
-     AbortedWithPermissionDeniedWhenRespIsBlockedWithRefererBlocked) {
-  CheckResponseInfo info;
-  Status result = ConvertCheckErrorToStatus(CheckError::REFERER_BLOCKED, &info);
-  EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::CONSUMER_BLOCKED);
-}
-
-TEST(CheckResponseTest,
-     AbortedWithPermissionDeniedWhenRespIsBlockedWithClientAppBlocked) {
-  CheckResponseInfo info;
-  Status result =
-      ConvertCheckErrorToStatus(CheckError::CLIENT_APP_BLOCKED, &info);
-  EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::CONSUMER_BLOCKED);
-}
-
-TEST(CheckResponseTest,
-     AbortedWithPermissionDeniedWhenResponseIsBlockedWithProjectDeleted) {
-  CheckResponseInfo info;
-  Status result = ConvertCheckErrorToStatus(CheckError::PROJECT_DELETED, &info);
-  EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::CONSUMER_ERROR);
-}
-
-TEST(CheckResponseTest,
-     AbortedWithPermissionDeniedWhenResponseIsBlockedWithProjectInvalid) {
-  CheckResponseInfo info;
-  Status result = ConvertCheckErrorToStatus(CheckError::PROJECT_INVALID, &info);
-  EXPECT_EQ(Code::INVALID_ARGUMENT, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::CONSUMER_ERROR);
-}
-
-TEST(CheckResponseTest,
-     AbortedWithPermissionDeniedWhenResponseIsBlockedWithBillingDisabled) {
-  CheckResponseInfo info;
-  Status result =
-      ConvertCheckErrorToStatus(CheckError::BILLING_DISABLED, &info);
-  EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::CONSUMER_ERROR);
-}
-
-TEST(CheckResponseTest, WhenResponseIsBlockedWithSecurityPolicyViolated) {
-  CheckResponseInfo info;
-  Status result =
-      ConvertCheckErrorToStatus(CheckError::SECURITY_POLICY_VIOLATED, &info);
-  EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::CONSUMER_BLOCKED);
-}
-
-TEST(CheckResponseTest, WhenResponseIsBlockedWithInvalidCredentail) {
-  CheckResponseInfo info;
-  Status result =
-      ConvertCheckErrorToStatus(CheckError::INVALID_CREDENTIAL, &info);
-  EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::CONSUMER_ERROR);
-}
-
-TEST(CheckResponseTest, WhenResponseIsBlockedWithLocationPolicyViolated) {
-  CheckResponseInfo info;
-  Status result =
-      ConvertCheckErrorToStatus(CheckError::LOCATION_POLICY_VIOLATED, &info);
-  EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::CONSUMER_BLOCKED);
-}
-
-TEST(CheckResponseTest, WhenResponseIsBlockedWithConsumerInvalid) {
-  CheckResponseInfo info;
-  Status result =
-      ConvertCheckErrorToStatus(CheckError::CONSUMER_INVALID, &info);
-  EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::CONSUMER_ERROR);
-}
-
-TEST(CheckResponseTest, WhenResponseIsBlockedWithResourceExhuasted) {
-  CheckResponseInfo info;
-  Status result =
-      ConvertCheckErrorToStatus(CheckError::RESOURCE_EXHAUSTED, &info);
-  EXPECT_EQ(Code::RESOURCE_EXHAUSTED, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
-}
-
-TEST(CheckResponseTest, WhenResponseIsBlockedWithAbuserDetected) {
-  CheckResponseInfo info;
-  Status result = ConvertCheckErrorToStatus(CheckError::ABUSER_DETECTED, &info);
-  EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::CONSUMER_ERROR);
-}
-
-TEST(CheckResponseTest, WhenResponseIsBlockedWithApiTargetBlocked) {
-  CheckResponseInfo info;
-  Status result =
-      ConvertCheckErrorToStatus(CheckError::API_TARGET_BLOCKED, &info);
-  EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::CONSUMER_BLOCKED);
-}
-
-TEST(CheckResponseTest, WhenResponseIsBlockedWithNamespaceLookup) {
-  CheckResponseInfo info;
-  const Status result = ConvertCheckErrorToStatus(
-      CheckError::NAMESPACE_LOOKUP_UNAVAILABLE, &info);
-  EXPECT_EQ(Code::UNAVAILABLE, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
-}
-
-TEST(CheckResponseTest, WhenResponseIsBlockedWithBillingStatus) {
-  CheckResponseInfo info;
-  const Status result =
-      ConvertCheckErrorToStatus(CheckError::BILLING_STATUS_UNAVAILABLE, &info);
-  EXPECT_EQ(Code::UNAVAILABLE, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
-}
-
-TEST(CheckResponseTest, WhenResponseIsBlockedWithServiceStatus) {
-  CheckResponseInfo info;
-  const Status result =
-      ConvertCheckErrorToStatus(CheckError::SERVICE_STATUS_UNAVAILABLE, &info);
-  EXPECT_EQ(Code::UNAVAILABLE, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
-}
-
-TEST(CheckResponseTest, WhenResponseIsBlockedWithQuotaCheck) {
-  CheckResponseInfo info;
-  const Status result =
-      ConvertCheckErrorToStatus(CheckError::QUOTA_CHECK_UNAVAILABLE, &info);
-  EXPECT_EQ(Code::UNAVAILABLE, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
-}
-
-TEST(CheckResponseTest, WhenResponseIsBlockedWithCloudResourceManager) {
-  CheckResponseInfo info;
-  const Status result = ConvertCheckErrorToStatus(
-      CheckError::CLOUD_RESOURCE_MANAGER_BACKEND_UNAVAILABLE, &info);
-  EXPECT_EQ(Code::UNAVAILABLE, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
-}
-
-TEST(CheckResponseTest, WhenResponseIsBlockedWithSecurityPolicy) {
-  CheckResponseInfo info;
-  const Status result = ConvertCheckErrorToStatus(
-      CheckError::SECURITY_POLICY_BACKEND_UNAVAILABLE, &info);
-  EXPECT_EQ(Code::UNAVAILABLE, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
-}
-
-TEST(CheckResponseTest, WhenResponseIsBlockedWithLocationPolicy) {
-  CheckResponseInfo info;
-  const Status result = ConvertCheckErrorToStatus(
-      CheckError::LOCATION_POLICY_BACKEND_UNAVAILABLE, &info);
-  EXPECT_EQ(Code::UNAVAILABLE, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
-}
-
+}  // namespace
 }  // namespace service_control
 }  // namespace api_proxy
 }  // namespace espv2

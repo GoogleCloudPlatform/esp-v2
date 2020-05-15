@@ -72,6 +72,8 @@ class ClientCacheCheckResponseTest : public ::testing::Test {
   void TearDown() override {
     checkAndReset(stats_base_.stats().filter_.allowed_control_plane_fault_, 0);
     checkAndReset(stats_base_.stats().filter_.denied_control_plane_fault_, 0);
+    checkAndReset(stats_base_.stats().filter_.denied_consumer_blocked_, 0);
+    checkAndReset(stats_base_.stats().filter_.denied_consumer_error_, 0);
   }
 
   // Helpers for SetUp.
@@ -116,6 +118,7 @@ TEST_F(ClientCacheCheckResponseTest, Sc4xxBlocked) {
   check_error->set_code(CheckError::CLIENT_APP_BLOCKED);
 
   runTest(Code::OK, response, Code::PERMISSION_DENIED);
+  checkAndReset(stats_base_.stats().filter_.denied_consumer_blocked_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseTest, ScOkAllowed) {

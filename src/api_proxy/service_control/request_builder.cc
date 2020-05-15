@@ -1429,8 +1429,8 @@ Status RequestBuilder::ConvertCheckResponse(
     case CheckError::BILLING_DISABLED:
       check_response_info->error_type = CheckResponseErrorType::CONSUMER_ERROR;
       return Status(Code::PERMISSION_DENIED,
-                    std::string("API ") + service_name +
-                        " has billing disabled. Please enable it.");
+                    absl::StrCat("API ", service_name,
+                                 " has billing disabled. Please enable it."));
     case CheckError::SECURITY_POLICY_VIOLATED:
       check_response_info->error_type =
           CheckResponseErrorType::CONSUMER_BLOCKED;
