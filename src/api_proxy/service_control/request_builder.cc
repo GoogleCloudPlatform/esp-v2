@@ -1371,62 +1371,82 @@ Status RequestBuilder::ConvertCheckResponse(
   const CheckError& error = check_response.check_errors(0);
   switch (error.code()) {
     case CheckError::NOT_FOUND:
+      check_response_info->error_type = CheckResponseErrorType::CONSUMER_ERROR;
       return Status(Code::INVALID_ARGUMENT,
                     "Client project not found. Please pass a valid project.");
     case CheckError::RESOURCE_EXHAUSTED:
       return Status(Code::RESOURCE_EXHAUSTED, "Quota check failed.");
     case CheckError::ABUSER_DETECTED:
+      check_response_info->error_type = CheckResponseErrorType::CONSUMER_ERROR;
       // Should not expose this to the client.
-      return Status(Code::PERMISSION_DENIED, "");
+      return Status(Code::PERMISSION_DENIED, "Permission denied.");
     case CheckError::API_TARGET_BLOCKED:
+      check_response_info->error_type =
+          CheckResponseErrorType::CONSUMER_BLOCKED;
       return Status(Code::PERMISSION_DENIED,
                     " The API targeted by this request is invalid for the "
                     "given API key.");
     case CheckError::API_KEY_NOT_FOUND:
-      if (check_response_info) check_response_info->is_api_key_valid = false;
+      check_response_info->error_type = CheckResponseErrorType::API_KEY_INVALID;
       return Status(Code::INVALID_ARGUMENT,
                     "API key not found. Please pass a valid API key.");
     case CheckError::API_KEY_EXPIRED:
-      if (check_response_info) check_response_info->is_api_key_valid = false;
+      check_response_info->error_type = CheckResponseErrorType::API_KEY_INVALID;
       return Status(Code::INVALID_ARGUMENT,
                     "API key expired. Please renew the API key.");
     case CheckError::API_KEY_INVALID:
-      if (check_response_info) check_response_info->is_api_key_valid = false;
+      check_response_info->error_type = CheckResponseErrorType::API_KEY_INVALID;
       return Status(Code::INVALID_ARGUMENT,
                     "API key not valid. Please pass a valid API key.");
     case CheckError::SERVICE_NOT_ACTIVATED:
-      if (check_response_info)
-        check_response_info->service_is_activated = false;
+      check_response_info->error_type =
+          CheckResponseErrorType::SERVICE_NOT_ACTIVATED;
       return Status(Code::PERMISSION_DENIED,
-                    std::string("API ") + service_name +
-                        " is not enabled for the project.");
+                    absl::StrCat("API ", service_name,
+                                 " is not enabled for the project."));
     case CheckError::PERMISSION_DENIED:
+      check_response_info->error_type = CheckResponseErrorType::CONSUMER_ERROR;
       return Status(Code::PERMISSION_DENIED, "Permission denied.");
     case CheckError::IP_ADDRESS_BLOCKED:
+      check_response_info->error_type =
+          CheckResponseErrorType::CONSUMER_BLOCKED;
       return Status(Code::PERMISSION_DENIED, "IP address blocked.");
     case CheckError::REFERER_BLOCKED:
+      check_response_info->error_type =
+          CheckResponseErrorType::CONSUMER_BLOCKED;
       return Status(Code::PERMISSION_DENIED, "Referer blocked.");
     case CheckError::CLIENT_APP_BLOCKED:
+      check_response_info->error_type =
+          CheckResponseErrorType::CONSUMER_BLOCKED;
       return Status(Code::PERMISSION_DENIED, "Client application blocked.");
     case CheckError::PROJECT_DELETED:
+      check_response_info->error_type = CheckResponseErrorType::CONSUMER_ERROR;
       return Status(Code::PERMISSION_DENIED, "Project has been deleted.");
     case CheckError::PROJECT_INVALID:
+      check_response_info->error_type = CheckResponseErrorType::CONSUMER_ERROR;
       return Status(Code::INVALID_ARGUMENT,
                     "Client project not valid. Please pass a valid project.");
     case CheckError::BILLING_DISABLED:
+      check_response_info->error_type = CheckResponseErrorType::CONSUMER_ERROR;
       return Status(Code::PERMISSION_DENIED,
                     std::string("API ") + service_name +
                         " has billing disabled. Please enable it.");
     case CheckError::SECURITY_POLICY_VIOLATED:
+      check_response_info->error_type =
+          CheckResponseErrorType::CONSUMER_BLOCKED;
       return Status(Code::PERMISSION_DENIED,
                     "Request is not allowed as per security policies.");
     case CheckError::INVALID_CREDENTIAL:
+      check_response_info->error_type = CheckResponseErrorType::CONSUMER_ERROR;
       return Status(Code::PERMISSION_DENIED,
                     "The credential in the request can not be verified.");
     case CheckError::LOCATION_POLICY_VIOLATED:
+      check_response_info->error_type =
+          CheckResponseErrorType::CONSUMER_BLOCKED;
       return Status(Code::PERMISSION_DENIED,
                     "Request is not allowed as per location policies.");
     case CheckError::CONSUMER_INVALID:
+      check_response_info->error_type = CheckResponseErrorType::CONSUMER_ERROR;
       return Status(Code::PERMISSION_DENIED,
                     "The consumer from the API key does not represent"
                     " a valid consumer folder or organization.");

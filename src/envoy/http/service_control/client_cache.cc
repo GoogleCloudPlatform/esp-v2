@@ -26,6 +26,7 @@ using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
+using ::espv2::api_proxy::service_control::CheckResponseErrorType;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::google::api::servicecontrol::v1::AllocateQuotaRequest;
 using ::google::api::servicecontrol::v1::AllocateQuotaResponse;
@@ -336,6 +337,20 @@ void ClientCache::handleCheckResponse(const Status& http_status,
             *response, config_.service_name(), &response_info);
     // Check errors should be displayed to the client.
     translate_non_5xx = false;
+
+    switch (response_info.error_type) {
+      case CheckResponseErrorType::CONSUMER_BLOCKED:
+        filter_stats_.filter_.denied_consumer_blocked_.inc();
+        break;
+      case CheckResponseErrorType::CONSUMER_ERROR:
+      case CheckResponseErrorType::SERVICE_NOT_ACTIVATED:
+      case CheckResponseErrorType::API_KEY_INVALID:
+        filter_stats_.filter_.denied_consumer_error_.inc();
+        break;
+      default:
+        break;
+    }
+
   } else {
     // Otherwise, http call failed. Use that status to respond.
     final_status = http_status;

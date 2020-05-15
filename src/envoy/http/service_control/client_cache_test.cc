@@ -148,6 +148,52 @@ TEST_F(ClientCacheCheckResponseNetworkFailClosedTest, Sc5xxBlocked) {
   checkAndReset(stats_base_.stats().filter_.denied_control_plane_fault_, 1);
 }
 
+class ClientCacheCheckResponseErrorTypeTest
+    : public ClientCacheCheckResponseTest {
+ protected:
+  void runTest(CheckResponse* got_response) {
+    CheckDoneFunc on_done = [&](const Status&, const CheckResponseInfo&) {};
+    const Status http_status(Code::OK, Envoy::EMPTY_STRING);
+    cache_->handleCheckResponse(http_status, got_response, on_done);
+  }
+};
+
+TEST_F(ClientCacheCheckResponseErrorTypeTest, ConsumerBlocked) {
+  CheckResponse* response = new CheckResponse();
+  CheckError* check_error = response->mutable_check_errors()->Add();
+  check_error->set_code(CheckError::CLIENT_APP_BLOCKED);
+
+  runTest(response);
+  checkAndReset(stats_base_.stats().filter_.denied_consumer_blocked_, 1);
+}
+
+TEST_F(ClientCacheCheckResponseErrorTypeTest, ConsumerError) {
+  CheckResponse* response = new CheckResponse();
+  CheckError* check_error = response->mutable_check_errors()->Add();
+  check_error->set_code(CheckError::BILLING_DISABLED);
+
+  runTest(response);
+  checkAndReset(stats_base_.stats().filter_.denied_consumer_error_, 1);
+}
+
+TEST_F(ClientCacheCheckResponseErrorTypeTest, ApiKeyInvalid) {
+  CheckResponse* response = new CheckResponse();
+  CheckError* check_error = response->mutable_check_errors()->Add();
+  check_error->set_code(CheckError::API_KEY_NOT_FOUND);
+
+  runTest(response);
+  checkAndReset(stats_base_.stats().filter_.denied_consumer_error_, 1);
+}
+
+TEST_F(ClientCacheCheckResponseErrorTypeTest, ServiceNotActivated) {
+  CheckResponse* response = new CheckResponse();
+  CheckError* check_error = response->mutable_check_errors()->Add();
+  check_error->set_code(CheckError::SERVICE_NOT_ACTIVATED);
+
+  runTest(response);
+  checkAndReset(stats_base_.stats().filter_.denied_consumer_error_, 1);
+}
+
 }  // namespace test
 }  // namespace service_control
 }  // namespace http_filters

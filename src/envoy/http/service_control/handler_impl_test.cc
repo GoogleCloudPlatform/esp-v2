@@ -27,12 +27,19 @@
 #include "src/envoy/http/service_control/mocks.h"
 #include "src/envoy/utils/filter_state_utils.h"
 
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
+namespace {
+
 using Envoy::Http::TestRequestHeaderMapImpl;
 using Envoy::Http::TestRequestTrailerMapImpl;
 using Envoy::Http::TestResponseHeaderMapImpl;
 using Envoy::Http::TestResponseTrailerMapImpl;
 using Envoy::StreamInfo::MockStreamInfo;
 using ::espv2::api_proxy::service_control::CheckRequestInfo;
+using ::espv2::api_proxy::service_control::CheckResponseErrorType;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::QuotaRequestInfo;
 using ::espv2::api_proxy::service_control::ReportRequestInfo;
@@ -45,12 +52,6 @@ using ::testing::_;
 using ::testing::ByMove;
 using ::testing::MockFunction;
 using ::testing::Return;
-
-namespace espv2 {
-namespace envoy {
-namespace http_filters {
-namespace service_control {
-namespace {
 
 const char kFilterConfig[] = R"(
 services {
@@ -206,17 +207,17 @@ class HandlerTest : public ::testing::Test {
   TestResponseTrailerMapImpl resp_trailer_;
 };
 
-#define MATCH(name)                                              \
-  if (arg.name != expect.name) {                                 \
-    std::cerr << "MATCH fails for " << #name << ": " << arg.name \
-              << " != " << expect.name << std::endl;             \
-    return false;                                                \
+#define MATCH(name)                                                           \
+  if (arg.name != expect.name) {                                              \
+    std::cerr << "MATCH fails for " << #name << ": '" << arg.name << "' != '" \
+              << expect.name << "'" << std::endl;                             \
+    return false;                                                             \
   }
-#define MATCH2(name, want)                                       \
-  if (arg.name != want) {                                        \
-    std::cerr << "MATCH fails for " << #name << ": " << arg.name \
-              << " != " << want << std::endl;                    \
-    return false;                                                \
+#define MATCH2(name, want)                                                    \
+  if (arg.name != want) {                                                     \
+    std::cerr << "MATCH fails for " << #name << ": '" << arg.name << "' != '" \
+              << want << "'" << std::endl;                                    \
+    return false;                                                             \
   }
 
 MATCHER_P(MatchesCheckInfo, expect, Envoy::EMPTY_STRING) {
@@ -467,8 +468,6 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithApiKeyRestrictionFields) {
                                     *cfg_parser_, test_time_,
                                     stats_base_.stats());
   CheckResponseInfo response_info;
-  response_info.is_api_key_valid = true;
-  response_info.service_is_activated = true;
 
   CheckRequestInfo expected_check_info;
   expected_check_info.api_key = "foobar";
@@ -510,8 +509,6 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
                                     *cfg_parser_, test_time_,
                                     stats_base_.stats());
   CheckResponseInfo response_info;
-  response_info.is_api_key_valid = true;
-  response_info.service_is_activated = true;
 
   CheckRequestInfo expected_check_info;
   expected_check_info.api_key = "foobar";
@@ -548,8 +545,6 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
                                     *cfg_parser_, test_time_,
                                     stats_base_.stats());
   CheckResponseInfo response_info;
-  response_info.is_api_key_valid = true;
-  response_info.service_is_activated = true;
 
   EXPECT_CALL(*mock_call_, callCheck(_, _, _))
       .WillOnce(Invoke([&response_info](const CheckRequestInfo&,
@@ -625,8 +620,8 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
                              "test bad status returned from service control");
 
   CheckResponseInfo response_info;
-  response_info.is_api_key_valid = false;
-  response_info.service_is_activated = false;
+  response_info.error_type = CheckResponseErrorType::API_KEY_INVALID;
+
   CheckRequestInfo expected_check_info;
   expected_check_info.api_key = "foobar";
   EXPECT_CALL(*mock_call_,
@@ -663,8 +658,6 @@ TEST_F(HandlerTest, HandlerFailQuotaSync) {
                                     *cfg_parser_, test_time_,
                                     stats_base_.stats());
   CheckResponseInfo response_info;
-  response_info.is_api_key_valid = true;
-  response_info.service_is_activated = true;
 
   EXPECT_CALL(*mock_call_, callCheck(_, _, _))
       .WillOnce(Invoke([&response_info](const CheckRequestInfo&,
@@ -707,8 +700,6 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckAsync) {
                                     stats_base_.stats());
 
   CheckResponseInfo response_info;
-  response_info.is_api_key_valid = true;
-  response_info.service_is_activated = true;
 
   CheckRequestInfo expected_check_info;
   expected_check_info.api_key = "foobar";
@@ -753,8 +744,6 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
                                     stats_base_.stats());
 
   CheckResponseInfo response_info;
-  response_info.is_api_key_valid = true;
-  response_info.service_is_activated = true;
   EXPECT_CALL(*mock_call_, callCheck(_, _, _))
       .WillOnce(Invoke([&response_info](const CheckRequestInfo&,
                                         Envoy::Tracing::Span&,
@@ -806,8 +795,7 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
                                     stats_base_.stats());
 
   CheckResponseInfo response_info;
-  response_info.is_api_key_valid = false;
-  response_info.service_is_activated = false;
+  response_info.error_type = CheckResponseErrorType::API_KEY_INVALID;
 
   CheckRequestInfo expected_check_info;
   expected_check_info.api_key = "foobar";
@@ -855,8 +843,6 @@ TEST_F(HandlerTest, HandlerFailQuotaAsync) {
                                     stats_base_.stats());
 
   CheckResponseInfo response_info;
-  response_info.is_api_key_valid = true;
-  response_info.service_is_activated = true;
   EXPECT_CALL(*mock_call_, callCheck(_, _, _))
       .WillOnce(Invoke([&response_info](const CheckRequestInfo&,
                                         Envoy::Tracing::Span&,
@@ -1016,8 +1002,6 @@ TEST_F(HandlerTest, TryIntermediateReport) {
                                     *cfg_parser_, test_time_,
                                     stats_base_.stats());
   CheckResponseInfo response_info;
-  response_info.is_api_key_valid = true;
-  response_info.service_is_activated = true;
   EXPECT_CALL(*mock_call_, callCheck(_, _, _))
       .WillOnce(Invoke([&response_info](const CheckRequestInfo&,
                                         Envoy::Tracing::Span&,
@@ -1097,8 +1081,6 @@ TEST_F(HandlerTest, FinalReports) {
                                     *cfg_parser_, test_time_,
                                     stats_base_.stats());
   CheckResponseInfo response_info;
-  response_info.is_api_key_valid = true;
-  response_info.service_is_activated = true;
   EXPECT_CALL(*mock_call_, callCheck(_, _, _))
       .WillOnce(Invoke([&response_info](const CheckRequestInfo&,
                                         Envoy::Tracing::Span&,
