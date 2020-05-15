@@ -104,16 +104,17 @@ struct CheckRequestInfo : public OperationInfo {
 };
 
 enum CheckResponseErrorType {
-  UNKNOWN = 0,
+  ERROR_TYPE_UNSPECIFIED = 0,
   API_KEY_INVALID = 1,
   SERVICE_NOT_ACTIVATED = 2,
   CONSUMER_BLOCKED = 3,
   CONSUMER_ERROR = 4,
 };
 
-// Stores the information subtracted from the check response.
+// Stores the information extracted from the check response.
 struct CheckResponseInfo {
-  CheckResponseErrorType error_type = CheckResponseErrorType::UNKNOWN;
+  CheckResponseErrorType error_type =
+      CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED;
 
   std::string consumer_project_id;
 };

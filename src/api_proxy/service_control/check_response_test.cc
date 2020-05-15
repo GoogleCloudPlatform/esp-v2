@@ -187,7 +187,7 @@ TEST(CheckResponseTest, WhenResponseIsBlockedWithResourceExhuasted) {
   Status result =
       ConvertCheckErrorToStatus(CheckError::RESOURCE_EXHAUSTED, &info);
   EXPECT_EQ(Code::RESOURCE_EXHAUSTED, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::UNKNOWN);
+  EXPECT_EQ(info.error_type, CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
 }
 
 TEST(CheckResponseTest, WhenResponseIsBlockedWithAbuserDetected) {
@@ -210,7 +210,7 @@ TEST(CheckResponseTest, WhenResponseIsBlockedWithNamespaceLookup) {
   const Status result = ConvertCheckErrorToStatus(
       CheckError::NAMESPACE_LOOKUP_UNAVAILABLE, &info);
   EXPECT_EQ(Code::UNAVAILABLE, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::UNKNOWN);
+  EXPECT_EQ(info.error_type, CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
 }
 
 TEST(CheckResponseTest, WhenResponseIsBlockedWithBillingStatus) {
@@ -218,7 +218,7 @@ TEST(CheckResponseTest, WhenResponseIsBlockedWithBillingStatus) {
   const Status result =
       ConvertCheckErrorToStatus(CheckError::BILLING_STATUS_UNAVAILABLE, &info);
   EXPECT_EQ(Code::UNAVAILABLE, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::UNKNOWN);
+  EXPECT_EQ(info.error_type, CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
 }
 
 TEST(CheckResponseTest, WhenResponseIsBlockedWithServiceStatus) {
@@ -226,7 +226,7 @@ TEST(CheckResponseTest, WhenResponseIsBlockedWithServiceStatus) {
   const Status result =
       ConvertCheckErrorToStatus(CheckError::SERVICE_STATUS_UNAVAILABLE, &info);
   EXPECT_EQ(Code::UNAVAILABLE, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::UNKNOWN);
+  EXPECT_EQ(info.error_type, CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
 }
 
 TEST(CheckResponseTest, WhenResponseIsBlockedWithQuotaCheck) {
@@ -234,7 +234,7 @@ TEST(CheckResponseTest, WhenResponseIsBlockedWithQuotaCheck) {
   const Status result =
       ConvertCheckErrorToStatus(CheckError::QUOTA_CHECK_UNAVAILABLE, &info);
   EXPECT_EQ(Code::UNAVAILABLE, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::UNKNOWN);
+  EXPECT_EQ(info.error_type, CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
 }
 
 TEST(CheckResponseTest, WhenResponseIsBlockedWithCloudResourceManager) {
@@ -242,7 +242,7 @@ TEST(CheckResponseTest, WhenResponseIsBlockedWithCloudResourceManager) {
   const Status result = ConvertCheckErrorToStatus(
       CheckError::CLOUD_RESOURCE_MANAGER_BACKEND_UNAVAILABLE, &info);
   EXPECT_EQ(Code::UNAVAILABLE, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::UNKNOWN);
+  EXPECT_EQ(info.error_type, CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
 }
 
 TEST(CheckResponseTest, WhenResponseIsBlockedWithSecurityPolicy) {
@@ -250,7 +250,7 @@ TEST(CheckResponseTest, WhenResponseIsBlockedWithSecurityPolicy) {
   const Status result = ConvertCheckErrorToStatus(
       CheckError::SECURITY_POLICY_BACKEND_UNAVAILABLE, &info);
   EXPECT_EQ(Code::UNAVAILABLE, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::UNKNOWN);
+  EXPECT_EQ(info.error_type, CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
 }
 
 TEST(CheckResponseTest, WhenResponseIsBlockedWithLocationPolicy) {
@@ -258,7 +258,7 @@ TEST(CheckResponseTest, WhenResponseIsBlockedWithLocationPolicy) {
   const Status result = ConvertCheckErrorToStatus(
       CheckError::LOCATION_POLICY_BACKEND_UNAVAILABLE, &info);
   EXPECT_EQ(Code::UNAVAILABLE, result.code());
-  EXPECT_EQ(info.error_type, CheckResponseErrorType::UNKNOWN);
+  EXPECT_EQ(info.error_type, CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED);
 }
 
 }  // namespace service_control
