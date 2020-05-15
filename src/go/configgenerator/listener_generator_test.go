@@ -25,6 +25,7 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
 
+	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	anypb "github.com/golang/protobuf/ptypes/any"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -1558,7 +1559,7 @@ func TestMakeHttpConMgr(t *testing.T) {
 				 "commonHttpProtocolOptions":{
 						"headersWithUnderscoresAction":"REJECT_REQUEST"
 				 },
-				 "routeConfig":null,
+				 "routeConfig":{},
 				 "statPrefix":"ingress_http",
 				 "tracing":{
 			
@@ -1592,7 +1593,7 @@ func TestMakeHttpConMgr(t *testing.T) {
 					 "commonHttpProtocolOptions":{
 							"headersWithUnderscoresAction":"REJECT_REQUEST"
 					 },
-					 "routeConfig":null,
+					 "routeConfig":{},
 					 "statPrefix":"ingress_http",
 					 "tracing":{
 				
@@ -1618,7 +1619,7 @@ func TestMakeHttpConMgr(t *testing.T) {
 					 "commonHttpProtocolOptions":{
 							"headersWithUnderscoresAction":"REJECT_REQUEST"
 					 },
-					 "routeConfig":null,
+					 "routeConfig":{},
 					 "statPrefix":"ingress_http",
 					 "upgradeConfigs":[
 							{
@@ -1638,7 +1639,7 @@ func TestMakeHttpConMgr(t *testing.T) {
 					 "commonHttpProtocolOptions":{
 				
 					 },
-					 "routeConfig":null,
+					 "routeConfig":{},
 					 "statPrefix":"ingress_http",
 					 "tracing":{
 				
@@ -1654,7 +1655,9 @@ func TestMakeHttpConMgr(t *testing.T) {
 	}
 
 	for i, tc := range testdata {
-		hcm := makeHttpConMgr(&tc.opts, nil)
+		routeConfig := v2pb.RouteConfiguration{}
+		hcm := makeHttpConMgr(&tc.opts, &routeConfig)
+
 		marshaler := &jsonpb.Marshaler{}
 		gotHttpConnMgr, err := marshaler.MarshalToString(hcm)
 		if err != nil {
