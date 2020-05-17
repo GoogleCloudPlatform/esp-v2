@@ -31,6 +31,8 @@ namespace service_control {
   COUNTER(allowed_control_plane_fault)   \
   COUNTER(denied)                        \
   COUNTER(denied_control_plane_fault)    \
+  COUNTER(denied_consumer_blocked)       \
+  COUNTER(denied_consumer_error)         \
   HISTOGRAM(request_time, Milliseconds)  \
   HISTOGRAM(backend_time, Milliseconds)  \
   HISTOGRAM(overhead_time, Milliseconds)

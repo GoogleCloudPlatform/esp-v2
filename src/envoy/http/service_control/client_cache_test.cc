@@ -13,9 +13,12 @@
 // limitations under the License.
 
 #include "src/envoy/http/service_control/client_cache.h"
+
 #include "common/common/empty_string.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+
+#include "src/envoy/http/service_control/service_control_callback_func.h"
 #include "test/mocks/common.h"
 #include "test/mocks/event/mocks.h"
 #include "test/mocks/server/mocks.h"
@@ -32,6 +35,7 @@ using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::api::envoy::http::service_control::Service;
 using ::google::api::servicecontrol::v1::CheckError;
+using ::google::api::servicecontrol::v1::CheckError_Code;
 using ::google::api::servicecontrol::v1::CheckResponse;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
@@ -68,6 +72,8 @@ class ClientCacheCheckResponseTest : public ::testing::Test {
   void TearDown() override {
     checkAndReset(stats_base_.stats().filter_.allowed_control_plane_fault_, 0);
     checkAndReset(stats_base_.stats().filter_.denied_control_plane_fault_, 0);
+    checkAndReset(stats_base_.stats().filter_.denied_consumer_blocked_, 0);
+    checkAndReset(stats_base_.stats().filter_.denied_consumer_error_, 0);
   }
 
   // Helpers for SetUp.
@@ -112,6 +118,7 @@ TEST_F(ClientCacheCheckResponseTest, Sc4xxBlocked) {
   check_error->set_code(CheckError::CLIENT_APP_BLOCKED);
 
   runTest(Code::OK, response, Code::PERMISSION_DENIED);
+  checkAndReset(stats_base_.stats().filter_.denied_consumer_blocked_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseTest, ScOkAllowed) {
@@ -146,6 +153,40 @@ TEST_F(ClientCacheCheckResponseNetworkFailClosedTest, Sc5xxBlocked) {
 
   runTest(Code::OK, response, Code::UNAVAILABLE);
   checkAndReset(stats_base_.stats().filter_.denied_control_plane_fault_, 1);
+}
+
+class ClientCacheCheckResponseErrorTypeTest
+    : public ClientCacheCheckResponseTest {
+ protected:
+  void runTest(CheckError_Code got_check_error_code) {
+    CheckResponse* response = new CheckResponse();
+    CheckError* check_error = response->mutable_check_errors()->Add();
+    check_error->set_code(got_check_error_code);
+
+    CheckDoneFunc on_done = [&](const Status&, const CheckResponseInfo&) {};
+    const Status http_status(Code::OK, Envoy::EMPTY_STRING);
+    cache_->handleCheckResponse(http_status, response, on_done);
+  }
+};
+
+TEST_F(ClientCacheCheckResponseErrorTypeTest, ConsumerBlocked) {
+  runTest(CheckError::CLIENT_APP_BLOCKED);
+  checkAndReset(stats_base_.stats().filter_.denied_consumer_blocked_, 1);
+}
+
+TEST_F(ClientCacheCheckResponseErrorTypeTest, ConsumerError) {
+  runTest(CheckError::BILLING_DISABLED);
+  checkAndReset(stats_base_.stats().filter_.denied_consumer_error_, 1);
+}
+
+TEST_F(ClientCacheCheckResponseErrorTypeTest, ApiKeyInvalid) {
+  runTest(CheckError::API_KEY_NOT_FOUND);
+  checkAndReset(stats_base_.stats().filter_.denied_consumer_error_, 1);
+}
+
+TEST_F(ClientCacheCheckResponseErrorTypeTest, ServiceNotActivated) {
+  runTest(CheckError::SERVICE_NOT_ACTIVATED);
+  checkAndReset(stats_base_.stats().filter_.denied_consumer_error_, 1);
 }
 
 }  // namespace test

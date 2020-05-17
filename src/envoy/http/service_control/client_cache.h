@@ -33,7 +33,8 @@ namespace service_control {
 // Forward declare friend class to test private functions.
 namespace test {
 class ClientCacheCheckResponseTest;
-}
+class ClientCacheCheckResponseErrorTypeTest;
+}  // namespace test
 
 // The class to cache check and batch report.
 class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
@@ -63,6 +64,7 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
 
  private:
   friend class test::ClientCacheCheckResponseTest;
+  friend class test::ClientCacheCheckResponseErrorTypeTest;
 
   // Ownership of CheckResponse is passed to this function.
   // The function will always call CheckDoneFunc.

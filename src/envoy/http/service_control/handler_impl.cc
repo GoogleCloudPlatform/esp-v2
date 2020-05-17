@@ -22,15 +22,16 @@
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
 
-using ::espv2::api_proxy::service_control::CheckResponseInfo;
-using ::espv2::api_proxy::service_control::OperationInfo;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
-
 namespace espv2 {
 namespace envoy {
 namespace http_filters {
 namespace service_control {
+
+using ::espv2::api_proxy::service_control::CheckResponseErrorType;
+using ::espv2::api_proxy::service_control::CheckResponseInfo;
+using ::espv2::api_proxy::service_control::OperationInfo;
+using ::google::protobuf::util::Status;
+using ::google::protobuf::util::error::Code;
 
 // The HTTP header to send consumer project to backend.
 const Envoy::Http::LowerCaseString kConsumerProjectId(
@@ -130,8 +131,10 @@ void ServiceControlHandlerImpl::prepareReportRequest(
   fillOperationInfo(info);
 
   // Report: not to send api-key if invalid or service is not enabled.
-  if (!check_response_info_.is_api_key_valid ||
-      !check_response_info_.service_is_activated) {
+  if (check_response_info_.error_type ==
+          CheckResponseErrorType::API_KEY_INVALID ||
+      check_response_info_.error_type ==
+          CheckResponseErrorType::SERVICE_NOT_ACTIVATED) {
     info.api_key.clear();
   }
 

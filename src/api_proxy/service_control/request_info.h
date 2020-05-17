@@ -103,18 +103,20 @@ struct CheckRequestInfo : public OperationInfo {
   std::string ios_bundle_id;
 };
 
-// Stores the information subtracted from the check response.
-struct CheckResponseInfo {
-  // If the request have a valid api key.
-  bool is_api_key_valid;
-  // If service is activated.
-  bool service_is_activated;
-  // Consumer project id
-  std::string consumer_project_id;
+enum CheckResponseErrorType {
+  ERROR_TYPE_UNSPECIFIED = 0,
+  API_KEY_INVALID = 1,
+  SERVICE_NOT_ACTIVATED = 2,
+  CONSUMER_BLOCKED = 3,
+  CONSUMER_ERROR = 4,
+};
 
-  // By default api_key is valid and service is activated.
-  // They only set to false by the check response from server.
-  CheckResponseInfo() : is_api_key_valid(true), service_is_activated(true) {}
+// Stores the information extracted from the check response.
+struct CheckResponseInfo {
+  CheckResponseErrorType error_type =
+      CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED;
+
+  std::string consumer_project_id;
 };
 
 struct QuotaRequestInfo : public OperationInfo {
