@@ -44,10 +44,10 @@ const (
 	ProxyKey
 	LogMetrics
 	Version
-	FakeServiceAccount
 	AccessLog
+	RootCaCerts
 
-	// Configurations
+	// Configurations from examples directory
 	AuthServiceConfig
 	AuthEnvoyConfig
 	ScServiceConfig
@@ -58,10 +58,20 @@ const (
 	PmEnvoyConfig
 	GrpcEchoServiceConfig
 	GrpcEchoEnvoyConfig
+
+	// Other configurations for testing
+	FixedDrServiceConfig
 )
 
+// go tests are not executed from the root fo the repository.
+// So the file path will change based on which test is using the file.
+// i.e. unit tests are more deeply nested that integration tests.
 var fileMap = map[RuntimeFile]string{
-	GrpcBookstore:               "../endpoints/bookstore_grpc/grpc_server.js",
+
+	// Used by integration test library.
+	Version: "../../VERSION",
+
+	// Used by integration tests.
 	Bootstrapper:                "../../bin/bootstrap",
 	ConfigManager:               "../../bin/configmanager",
 	Echo:                        "../../bin/echo/server",
@@ -71,6 +81,7 @@ var fileMap = map[RuntimeFile]string{
 	GrpcInteropClient:           "../../bin/interop_client",
 	GrpcInteropServer:           "../../bin/interop_server",
 	GrpcInteropStressClient:     "../../bin/stress_test",
+	GrpcBookstore:               "../endpoints/bookstore_grpc/grpc_server.js",
 	FakeGrpcEchoDescriptor:      "../endpoints/grpc_echo/proto/api_descriptor.pb",
 	FakeGrpcInteropDescriptor:   "../endpoints/grpc_interop/proto/api_descriptor.pb",
 	FakeGrpcBookstoreDescriptor: "../endpoints/bookstore_grpc/proto/api_descriptor.pb",
@@ -79,19 +90,23 @@ var fileMap = map[RuntimeFile]string{
 	ProxyCert:                   "../env/testdata/proxy.crt",
 	ProxyKey:                    "../env/testdata/proxy.key",
 	LogMetrics:                  "../env/testdata/logs_metrics.pb.txt",
-	Version:                     "../../VERSION",
-	AuthServiceConfig:           "../../../../examples/auth/service_config_generated.json",
-	AuthEnvoyConfig:             "../../../../examples/auth/envoy_config.json",
-	ScServiceConfig:             "../../../../examples/service_control/service_config_generated.json",
-	ScEnvoyConfig:               "../../../../examples/service_control/envoy_config.json",
-	DrServiceConfig:             "../../../../examples/dynamic_routing/service_config_generated.json",
-	DrEnvoyConfig:               "../../../../examples/dynamic_routing/envoy_config.json",
-	PmServiceConfig:             "../../../../src/go/bootstrap/static/testdata/path_matcher/service_config_generated.json",
-	PmEnvoyConfig:               "../../../../src/go/bootstrap/static/testdata/path_matcher/envoy_config.json",
-	GrpcEchoServiceConfig:       "../../../../examples/grpc_dynamic_routing/service_config_generated.json",
-	GrpcEchoEnvoyConfig:         "../../../../examples/grpc_dynamic_routing/envoy_config.json",
-	FakeServiceAccount:          "./testdata/fake_service_account.json",
 	AccessLog:                   "../env/testdata/access_log.txt",
+
+	// Used by static bootstrap unit tests.
+	AuthServiceConfig:     "../../../../examples/auth/service_config_generated.json",
+	AuthEnvoyConfig:       "../../../../examples/auth/envoy_config.json",
+	ScServiceConfig:       "../../../../examples/service_control/service_config_generated.json",
+	ScEnvoyConfig:         "../../../../examples/service_control/envoy_config.json",
+	DrServiceConfig:       "../../../../examples/dynamic_routing/service_config_generated.json",
+	DrEnvoyConfig:         "../../../../examples/dynamic_routing/envoy_config.json",
+	PmServiceConfig:       "../../../../examples/testdata/path_matcher/service_config_generated.json",
+	PmEnvoyConfig:         "../../../../examples/testdata/path_matcher/envoy_config.json",
+	GrpcEchoServiceConfig: "../../../../examples/grpc_dynamic_routing/service_config_generated.json",
+	GrpcEchoEnvoyConfig:   "../../../../examples/grpc_dynamic_routing/envoy_config.json",
+
+	// Used by other unit tests.
+	RootCaCerts:          "../../../tests/env/testdata/roots.pem",
+	FixedDrServiceConfig: "../../../tests/env/testdata/service_config_for_fixed_dynamic_routing.json",
 }
 
 // Get the runtime file path for the specified file.

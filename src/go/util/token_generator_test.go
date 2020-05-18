@@ -15,12 +15,10 @@
 package util
 
 import (
-	"io/ioutil"
 	"strings"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/testdata"
-	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 )
 
 func TestGenerateAccessToken(t *testing.T) {
@@ -31,28 +29,18 @@ func TestGenerateAccessToken(t *testing.T) {
 
 	fakeKey := strings.Replace(testdata.FakeServiceAccountKeyData, "FAKE-TOKEN-URI", mockTokenServer.GetURL(), 1)
 	fakeKeyData := []byte(fakeKey)
-	if err := ioutil.WriteFile(platform.GetFilePath(platform.FakeServiceAccount), fakeKeyData, 0644); err != nil {
-		t.Fatal("Cannot write fakeKeyData to file", err)
-	}
 
-	token, duration, err := GenerateAccessTokenFromFile(platform.GetFilePath(platform.FakeServiceAccount))
+	token, duration, err := generateAccessTokenFromData(fakeKeyData)
 	if token != "ya29.new" || duration.Seconds() < 3598 || err != nil {
 		t.Errorf("Test : Fail to make access token, got token: %s, duration: %v, err: %v", token, duration, err)
 	}
 
 	latestFakeToken := `{"access_token": "ya29.latest", "expires_in":3599, "token_type":"Bearer"}`
-	if err := ioutil.WriteFile(platform.GetFilePath(platform.FakeServiceAccount), []byte(latestFakeToken), 0644); err != nil {
-		t.Fatal("Cannot write fakeKeyData to file", err)
-	}
 	mockTokenServer.SetResp(latestFakeToken)
 
 	// The token is cached so the old token gets returned.
-	token, duration, err = GenerateAccessTokenFromFile(platform.GetFilePath(platform.FakeServiceAccount))
+	token, duration, err = generateAccessTokenFromData([]byte("Invalid data, not a service account"))
 	if token != "ya29.new" || err != nil {
 		t.Errorf("Test : Fail to make access token, got token: %s, duration: %v, err: %v", token, duration, err)
-	}
-
-	if err := ioutil.WriteFile(platform.GetFilePath(platform.FakeServiceAccount), []byte(""), 0644); err != nil {
-		t.Fatal("Cannot write fakeKeyData to file", err)
 	}
 }
