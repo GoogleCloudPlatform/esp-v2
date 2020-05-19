@@ -1,12 +1,12 @@
 # ESPv2 Configurations Testdata
 
-Similar to [ESPv2 Configurations](../../../../../examples/README.md), but primarily for:
+Similar to [ESPv2 Configurations](../README.md), but primarily for:
 - Full Config Manager bootstrap tests
 - Explaining config translation to developers
 
 ## [Path Matcher](path_matcher)
 
-Configuration example for the [Path Matcher filter](../../../../envoy/http/path_matcher/README.md).
+Configuration example for the [Path Matcher filter](../../src/envoy/http/path_matcher/README.md).
 
 **Operation Name (Selector)**:
 

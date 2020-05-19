@@ -31,17 +31,26 @@ var (
 	tokenMux   = sync.Mutex{}
 )
 
-func GenerateAccessTokenFromFile(serviceAccountKey string) (string, time.Duration, error) {
+func GenerateAccessTokenFromFile(saFilePath string) (string, time.Duration, error) {
 	if token, duration := activeAccessToken(); token != "" {
 		return token, duration, nil
 	}
 
-	data, err := ioutil.ReadFile(serviceAccountKey)
+	data, err := ioutil.ReadFile(saFilePath)
 	if err != nil {
 		return "", 0, err
 	}
 
 	return generateAccessToken(data)
+}
+
+// A test-friendly version of `GenerateAccessTokenFromFile`
+func generateAccessTokenFromData(saData []byte) (string, time.Duration, error) {
+	if token, duration := activeAccessToken(); token != "" {
+		return token, duration, nil
+	}
+
+	return generateAccessToken(saData)
 }
 
 func activeAccessToken() (string, time.Duration) {

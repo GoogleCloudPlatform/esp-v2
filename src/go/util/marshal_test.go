@@ -15,6 +15,7 @@
 package util
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -32,7 +33,7 @@ func TestUnmarshalBytesToPbMessage(t *testing.T) {
 		bytes, _ := proto.Marshal(wantResp)
 		err := UnmarshalBytesToPbMessage(bytes, getResp)
 		if err != nil {
-			if err.Error() != wantError {
+			if !strings.Contains(err.Error(), wantError) {
 				t.Errorf("fail in UnmarshalBytesToPbMessage on %T, want error: %s, get error: %v", wantResp, wantError, err)
 			}
 			return
@@ -64,6 +65,6 @@ func TestUnmarshalBytesToPbMessage(t *testing.T) {
 		ServiceConfigId: "test-id",
 	}
 	getResp = &scpb.ReportRequest{}
-	wantError = "not support unmarshalling *servicecontrol.ReportRequest"
+	wantError = "not support unmarshalling"
 	_test()
 }

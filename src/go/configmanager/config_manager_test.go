@@ -29,6 +29,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/cache/v2"
 	"github.com/envoyproxy/go-control-plane/pkg/resource/v2"
@@ -1488,18 +1489,16 @@ func TestFetchListeners(t *testing.T) {
 	}
 }
 
-func TestDynamicBackendRouting(t *testing.T) {
+func TestFixedModeDynamicRouting(t *testing.T) {
 	testData := []struct {
 		desc              string
 		serviceConfigPath string
-		BackendAddress    string
 		wantedClusters    []string
 		wantedListener    string
 	}{
 		{
-			desc:              "Success for http with dynamic routing",
-			serviceConfigPath: "testdata/service_config_for_dynamic_routing.json",
-			BackendAddress:    "http://127.0.0.1:8082",
+			desc:              "Success for http with dynamic routing with fixed config",
+			serviceConfigPath: platform.GetFilePath(platform.FixedDrServiceConfig),
 			wantedClusters:    testdata.FakeWantedClustersForDynamicRouting,
 			wantedListener:    testdata.FakeWantedListenerForDynamicRouting,
 		},
@@ -1508,7 +1507,6 @@ func TestDynamicBackendRouting(t *testing.T) {
 	marshaler := &jsonpb.Marshaler{}
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendAddress = tc.BackendAddress
 		opts.DisableTracing = true
 
 		_ = flag.Set("service_json_path", tc.serviceConfigPath)
@@ -1803,6 +1801,7 @@ func runTest(t *testing.T, opts options.ConfigGeneratorOptions, f func(*testEnv)
 
 	metadataFetcher := metadata.NewMockMetadataFetcher(mockMetadataServer.URL, time.Now())
 
+	opts.RootCertsPath = platform.GetFilePath(platform.TestRootCaCerts)
 	manager, err := NewConfigManager(metadataFetcher, opts)
 	if err != nil {
 		t.Fatal("fail to initialize Config Manager: ", err)
