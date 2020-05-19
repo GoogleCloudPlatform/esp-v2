@@ -1,3 +1,10 @@
+# Release 2.10.0 18-05-2020
+
+- Implement `denied_consumer_blocked` and `denied_consumer_error` stats (#156)
+- Implement `denied_control_plane_fault` (#155)
+- Add statistical counter for check/allocateQuota/report call status (#151)
+- Add latency in ServiceControl statistics (#146)
+
 # Release 2.9.0 30-04-2020
 
 - Forward `Authorization` header in JWT Authn filter (#141)
