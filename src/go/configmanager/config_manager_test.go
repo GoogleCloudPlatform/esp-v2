@@ -1801,7 +1801,7 @@ func runTest(t *testing.T, opts options.ConfigGeneratorOptions, f func(*testEnv)
 
 	metadataFetcher := metadata.NewMockMetadataFetcher(mockMetadataServer.URL, time.Now())
 
-	opts.RootCertsPath = platform.GetFilePath(platform.RootCaCerts)
+	opts.RootCertsPath = platform.GetFilePath(platform.TestRootCaCerts)
 	manager, err := NewConfigManager(metadataFetcher, opts)
 	if err != nil {
 		t.Fatal("fail to initialize Config Manager: ", err)

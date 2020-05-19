@@ -45,7 +45,7 @@ const (
 	LogMetrics
 	Version
 	AccessLog
-	RootCaCerts
+	TestRootCaCerts
 
 	// Configurations from examples directory
 	AuthServiceConfig
@@ -105,7 +105,7 @@ var fileMap = map[RuntimeFile]string{
 	GrpcEchoEnvoyConfig:   "../../../../examples/grpc_dynamic_routing/envoy_config.json",
 
 	// Used by other unit tests.
-	RootCaCerts:          "../../../tests/env/testdata/roots.pem",
+	TestRootCaCerts:      "../../../tests/env/testdata/roots.pem",
 	FixedDrServiceConfig: "../../../tests/env/testdata/service_config_for_fixed_dynamic_routing.json",
 }
 
