@@ -19,6 +19,8 @@ package google.api.envoy.http.backend_routing;
 import "validate/validate.proto";
 
 message BackendRoutingRule {
+  reserved 2;
+
   // Operation name, also known as selector.
   string operation = 1 [(validate.rules).string.min_bytes = 1];
 
@@ -30,7 +32,7 @@ message BackendRoutingRule {
     APPEND_PATH_TO_ADDRESS = 2;
   }
 
-  PathTranslation path_translation = 2;
+  PathTranslation path_translation = 4;
 
   // Prefix used when re-writing the path for the backend.
   string path_prefix = 3 [(validate.rules).string = {

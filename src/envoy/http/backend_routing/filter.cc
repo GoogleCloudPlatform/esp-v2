@@ -16,6 +16,7 @@
 
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "common/common/assert.h"
 #include "common/http/headers.h"
 #include "src/envoy/utils/filter_state_utils.h"
@@ -59,7 +60,7 @@ FilterHeadersStatus Filter::decodeHeaders(
 
   switch (rule->path_translation()) {
     case BackendRoutingRule::CONSTANT_ADDRESS:
-      new_path = translateConstPath(rule, original_path);
+      new_path = translateConstPath(rule->path_prefix(), original_path);
       config_->stats().constant_address_request_.inc();
       ENVOY_LOG(debug,
                 "constant address backend routing for operation {}"
@@ -68,7 +69,7 @@ FilterHeadersStatus Filter::decodeHeaders(
       break;
 
     case BackendRoutingRule::APPEND_PATH_TO_ADDRESS:
-      new_path = translateAppendPath(rule, original_path);
+      new_path = translateAppendPath(rule->path_prefix(), original_path);
       config_->stats().append_path_to_address_request_.inc();
       ENVOY_LOG(debug,
                 "append path to address backend routing for operation {}"
@@ -84,7 +85,9 @@ FilterHeadersStatus Filter::decodeHeaders(
   return FilterHeadersStatus::Continue;
 }
 
-std::string Filter::translateConstPath(const BackendRoutingRule* rule,
+// Replace the original path with the constant path prefix.
+// If any variable bindings were extracted, append them as query params.
+std::string Filter::translateConstPath(absl::string_view prefix,
                                        absl::string_view original_path) {
   const auto& filter_state = *decoder_callbacks_->streamInfo().filterState();
   absl::string_view extracted_query_params =
@@ -94,7 +97,7 @@ std::string Filter::translateConstPath(const BackendRoutingRule* rule,
   std::size_t originalQueryParamPos = original_path_str.find('?');
   if (originalQueryParamPos == std::string::npos) {
     // No query param in original request.
-    std::string new_path = rule->path_prefix();
+    std::string new_path = std::string(prefix);
     if (!extracted_query_params.empty()) {
       // Add extracted variable bindings.
       absl::StrAppend(&new_path, "?", extracted_query_params);
@@ -105,7 +108,7 @@ std::string Filter::translateConstPath(const BackendRoutingRule* rule,
   // Has query parameters in original request.
   const std::string& originalQueryParam =
       original_path_str.substr(originalQueryParamPos);
-  std::string new_path = absl::StrCat(rule->path_prefix(), originalQueryParam);
+  std::string new_path = absl::StrCat(prefix, originalQueryParam);
   if (!extracted_query_params.empty()) {
     // Append extracted variable bindings.
     absl::StrAppend(&new_path, "&", extracted_query_params);
@@ -113,12 +116,12 @@ std::string Filter::translateConstPath(const BackendRoutingRule* rule,
   return new_path;
 }
 
-std::string Filter::translateAppendPath(const BackendRoutingRule* rule,
+// Just append the original request path to the configured path prefix.
+// Extracted variable bindings should not be attached as query params.
+// If the original path has query params, they will be included.
+std::string Filter::translateAppendPath(absl::string_view prefix,
                                         absl::string_view original_path) {
-  // Just append the original request path to the configured path prefix.
-  // Extracted variable bindings can be ignored.
-  // If the original path has query params, they will be included.
-  return absl::StrCat(rule->path_prefix(), original_path);
+  return absl::StrCat(prefix, original_path);
 }
 
 }  // namespace backend_routing
