@@ -1,3 +1,12 @@
+# Release 2.10.0 18-05-2020
+
+- Implement `denied_consumer_blocked` and `denied_consumer_error` stats (#156)
+- Refactor callback for testability and implement `denied_control_plane_fault` (#155)
+- Add statistical counter for check/allocateQuota/report call status (#151)
+- Fix network fail open for Unavailable CheckResponse errors (#152)
+- Add latency in ServiceControl statistics (#146)
+- Destruct invalid json keys in grpc auth lib (#144)
+
 # Release 2.9.0 30-04-2020
 
 - Forward `Authorization` header in JWT Authn filter (#141)
