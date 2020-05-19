@@ -37,27 +37,27 @@ namespace {
 const char kFilterConfig[] = R"(
 rules {
   operation: "append-operation"
-  is_const_address: false
+  path_translation: APPEND_PATH_TO_ADDRESS
   path_prefix: ""
 }
 rules {
   operation: "append-with-prefix-operation"
-  is_const_address: false
+  path_translation: APPEND_PATH_TO_ADDRESS
   path_prefix: "/test-prefix"
 }
 rules {
   operation: "const-operation"
-  is_const_address: true
+  path_translation: CONSTANT_ADDRESS
   path_prefix: "/"
 }
 rules {
   operation: "const-with-prefix-operation"
-  is_const_address: true
+  path_translation: CONSTANT_ADDRESS
   path_prefix: "/test-prefix"
 }
 rules {
   operation: "const-with-bad-prefix-operation"
-  is_const_address: true
+  path_translation: CONSTANT_ADDRESS
   path_prefix: ""
 }
 )";

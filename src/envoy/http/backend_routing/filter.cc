@@ -16,6 +16,7 @@
 
 #include <string>
 
+#include "common/common/assert.h"
 #include "common/http/headers.h"
 #include "src/envoy/utils/filter_state_utils.h"
 
@@ -25,6 +26,7 @@ namespace http_filters {
 namespace backend_routing {
 
 using Envoy::Http::FilterHeadersStatus;
+using ::google::api::envoy::http::backend_routing::BackendRoutingRule;
 
 Filter::Filter(FilterConfigSharedPtr config) : config_(config) {}
 
@@ -40,7 +42,6 @@ FilterHeadersStatus Filter::decodeHeaders(
     return FilterHeadersStatus::Continue;
   }
 
-  ENVOY_LOG(debug, "Found operation: {}", operation);
   const auto* rule = config_->findRule(operation);
   if (rule == nullptr) {
     ENVOY_LOG(debug, "No backend routing rule found for operation {}",
@@ -52,48 +53,72 @@ FilterHeadersStatus Filter::decodeHeaders(
     ENVOY_LOG(debug, "No path header in request");
     return FilterHeadersStatus::Continue;
   }
-  const absl::string_view original_path =
-      headers.Path()->value().getStringView();
-  ENVOY_LOG(debug, "backend routing for operation {}, original path: {}",
-            operation, original_path);
-  std::string newPath;
 
-  if (rule->is_const_address()) {  // CONSTANT_ADDRESS
-    absl::string_view queryParamFromPathParam =
-        utils::getStringFilterState(filter_state, utils::kQueryParams);
-    const auto originalPath = std::string(original_path);
-    std::size_t originalQueryParamPos = originalPath.find('?');
-    if (originalQueryParamPos != std::string::npos) {
-      // has query parameters in original url
-      const std::string& originalQueryParam =
-          originalPath.substr(originalQueryParamPos);
-      newPath = absl::StrCat(rule->path_prefix(), originalQueryParam);
-      if (!queryParamFromPathParam.empty()) {
-        absl::StrAppend(&newPath, "&", queryParamFromPathParam);
-      }
-    } else {
-      newPath = rule->path_prefix();
-      if (!queryParamFromPathParam.empty()) {
-        absl::StrAppend(&newPath, "?", queryParamFromPathParam);
-      }
-    }
-    config_->stats().constant_address_request_.inc();
-    ENVOY_LOG(debug,
-              "constant address backend routing for operation {}, new path: {}",
-              operation, newPath);
-  } else {  // APPEND_PATH_TO_ADDRESS
-    newPath = absl::StrCat(rule->path_prefix(), original_path);
-    config_->stats().append_path_to_address_request_.inc();
-    ENVOY_LOG(
-        debug,
-        "append path to address backend routing for operation {}, new path: {}",
-        operation, newPath);
+  absl::string_view original_path = headers.Path()->value().getStringView();
+  std::string new_path;
+
+  switch (rule->path_translation()) {
+    case BackendRoutingRule::CONSTANT_ADDRESS:
+      new_path = translateConstPath(rule, original_path);
+      config_->stats().constant_address_request_.inc();
+      ENVOY_LOG(debug,
+                "constant address backend routing for operation {}"
+                ", original path: {}, new path: {}",
+                operation, original_path, new_path);
+      break;
+
+    case BackendRoutingRule::APPEND_PATH_TO_ADDRESS:
+      new_path = translateAppendPath(rule, original_path);
+      config_->stats().append_path_to_address_request_.inc();
+      ENVOY_LOG(debug,
+                "append path to address backend routing for operation {}"
+                ", original path: {}, new path: {}",
+                operation, original_path, new_path);
+      break;
+
+    default:
+      NOT_REACHED_GCOVR_EXCL_LINE;
   }
-  const auto& pathField = Envoy::Http::Headers::get().Path;
-  headers.remove(pathField);
-  headers.addCopy(pathField, newPath);
 
+  headers.setPath(new_path);
   return FilterHeadersStatus::Continue;
+}
+
+std::string Filter::translateConstPath(const BackendRoutingRule* rule,
+                                       absl::string_view original_path) {
+  const auto& filter_state = *decoder_callbacks_->streamInfo().filterState();
+  absl::string_view extracted_query_params =
+      utils::getStringFilterState(filter_state, utils::kQueryParams);
+
+  const auto original_path_str = std::string(original_path);
+  std::size_t originalQueryParamPos = original_path_str.find('?');
+  if (originalQueryParamPos == std::string::npos) {
+    // No query param in original request.
+    std::string new_path = rule->path_prefix();
+    if (!extracted_query_params.empty()) {
+      // Add extracted variable bindings.
+      absl::StrAppend(&new_path, "?", extracted_query_params);
+    }
+    return new_path;
+  }
+
+  // Has query parameters in original request.
+  const std::string& originalQueryParam =
+      original_path_str.substr(originalQueryParamPos);
+  std::string new_path = absl::StrCat(rule->path_prefix(), originalQueryParam);
+  if (!extracted_query_params.empty()) {
+    // Append extracted variable bindings.
+    absl::StrAppend(&new_path, "&", extracted_query_params);
+  }
+  return new_path;
+}
+
+std::string Filter::translateAppendPath(const BackendRoutingRule* rule,
+                                        absl::string_view original_path) {
+  // Just append the original request path to the configured path prefix.
+  // Extracted variable bindings can be ignored.
+  // If the original path has query params, they will be included.
+  return absl::StrCat(rule->path_prefix(), original_path);
 }
 
 }  // namespace backend_routing

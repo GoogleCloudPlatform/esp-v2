@@ -775,14 +775,25 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 }
 
 func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
-	rules := []*brpb.BackendRoutingRule{}
+	var rules []*brpb.BackendRoutingRule
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
+
+		// For gRPC service config that has no path translation, no need for backend routing filter (only host rewrite via route config).
 		if method.BackendInfo != nil && method.BackendInfo.TranslationType != confpb.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
 			newRule := &brpb.BackendRoutingRule{
-				Operation:      operation,
-				IsConstAddress: method.BackendInfo.TranslationType == confpb.BackendRule_CONSTANT_ADDRESS,
+				Operation: operation,
 			}
+
+			switch method.BackendInfo.TranslationType {
+			case confpb.BackendRule_CONSTANT_ADDRESS:
+				newRule.PathTranslation = brpb.BackendRoutingRule_CONSTANT_ADDRESS
+			case confpb.BackendRule_APPEND_PATH_TO_ADDRESS:
+				newRule.PathTranslation = brpb.BackendRoutingRule_APPEND_PATH_TO_ADDRESS
+			default:
+				return nil, fmt.Errorf("invalid translation type %v for BackendRule in operation %v", method.BackendInfo.TranslationType, operation)
+			}
+
 			if method.BackendInfo != nil {
 				newRule.PathPrefix = method.BackendInfo.Uri
 			}
