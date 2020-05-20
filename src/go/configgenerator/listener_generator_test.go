@@ -487,13 +487,14 @@ func TestBackendRoutingFilter(t *testing.T) {
           "@type":"type.googleapis.com/google.api.envoy.http.backend_routing.FilterConfig",
           "rules": [
             {
-              "isConstAddress": true,
               "operation": "endpoints.examples.bookstore.Bookstore.CreateShelf",
-              "pathPrefix": "/foo"
+              "pathPrefix": "/foo",
+              "pathTranslation":"CONSTANT_ADDRESS"
             },
             {
               "operation":  "endpoints.examples.bookstore.Bookstore.ListShelves",
-              "pathPrefix": "/foo"
+              "pathPrefix": "/foo",
+              "pathTranslation":"APPEND_PATH_TO_ADDRESS"
             }
           ]
         }
@@ -564,12 +565,13 @@ func TestBackendRoutingFilter(t *testing.T) {
           "rules": [
             {
               "operation": "testapi.bar",
-              "pathPrefix": "/foo"
+              "pathPrefix": "/foo",
+              "pathTranslation":"APPEND_PATH_TO_ADDRESS"
             },
             {
-              "isConstAddress": true,
               "operation":"testapi.foo",
-              "pathPrefix": "/foo"
+              "pathPrefix": "/foo",
+              "pathTranslation":"CONSTANT_ADDRESS"
             }
           ]
         }
@@ -646,21 +648,23 @@ func TestBackendRoutingFilter(t *testing.T) {
           "rules": [
             {
               "operation":"testapi.CORS_bar",
-              "pathPrefix": "/bar"
+              "pathPrefix": "/bar",
+              "pathTranslation":"APPEND_PATH_TO_ADDRESS"
             },
             {
-              "isConstAddress": true,
               "operation":"testapi.CORS_foo",
-              "pathPrefix": "/foo"
+              "pathPrefix": "/foo",
+              "pathTranslation":"CONSTANT_ADDRESS"
             },
             {
               "operation": "testapi.bar",
-              "pathPrefix": "/bar"
+              "pathPrefix": "/bar",
+              "pathTranslation":"APPEND_PATH_TO_ADDRESS"
             },
             {
-              "isConstAddress": true,
               "operation":"testapi.foo",
-              "pathPrefix": "/foo"
+              "pathPrefix": "/foo",
+              "pathTranslation":"CONSTANT_ADDRESS"
             }
           ]
         }

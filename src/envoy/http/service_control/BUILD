@@ -101,8 +101,8 @@ envoy_cc_test(
     repository = "@envoy",
     deps = [
         ":client_cache_lib",
-        ":service_control_callback_func_lib",
         ":mocks_lib",
+        ":service_control_callback_func_lib",
         "@envoy//source/common/common:empty_string",
         "@envoy//test/mocks/event:event_mocks",
         "@envoy//test/mocks/server:server_mocks",

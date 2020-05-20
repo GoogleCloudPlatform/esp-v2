@@ -37,6 +37,12 @@ class Filter : public Envoy::Http::PassThroughDecoderFilter,
                                                  bool) override;
 
  private:
+  std::string translateConstPath(absl::string_view prefix,
+                                 absl::string_view original_path);
+
+  std::string translateAppendPath(absl::string_view prefix,
+                                  absl::string_view original_path);
+
   const FilterConfigSharedPtr config_;
 };
 

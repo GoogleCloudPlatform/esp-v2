@@ -260,13 +260,14 @@
                                                 "@type": "type.googleapis.com/google.api.envoy.http.backend_routing.FilterConfig",
                                                 "rules": [
                                                     {
-                                                        "isConstAddress": true,
                                                         "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.CreateShelf",
-                                                        "pathPrefix": "/shelves"
+                                                        "pathPrefix": "/shelves",
+                                                        "pathTranslation":"CONSTANT_ADDRESS"
                                                     },
                                                     {
                                                         "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.ListShelves",
-                                                        "pathPrefix": "/shelves"
+                                                        "pathPrefix": "/shelves",
+                                                        "pathTranslation":"APPEND_PATH_TO_ADDRESS"
                                                     }
                                                 ]
                                             }

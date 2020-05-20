@@ -331,24 +331,28 @@ var (
                            "rules":[
                               {
                                  "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet",
-                                 "pathPrefix":"/api"
+                                 "pathPrefix":"/api",
+                                 "pathTranslation":"APPEND_PATH_TO_ADDRESS"
                               },
                               {
                                  "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
-                                 "pathPrefix":"/api"
+                                 "pathPrefix":"/api",
+                                 "pathTranslation":"APPEND_PATH_TO_ADDRESS"
                               },
                               {
                                  "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello",
-                                 "pathPrefix":"/hello"
+                                 "pathPrefix":"/hello",
+                                 "pathTranslation":"APPEND_PATH_TO_ADDRESS"
                               },
                               {
                                  "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets",
-                                 "pathPrefix":"/api"
+                                 "pathPrefix":"/api",
+                                 "pathTranslation":"APPEND_PATH_TO_ADDRESS"
                               },
                               {
-                                 "isConstAddress":true,
                                  "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search",
-                                 "pathPrefix":"/search"
+                                 "pathPrefix":"/search",
+                                 "pathTranslation":"CONSTANT_ADDRESS"
                               }
                            ]
                         }

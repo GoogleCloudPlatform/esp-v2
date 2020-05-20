@@ -50,6 +50,9 @@ class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       : proto_config_(proto_config),
         stats_(generateStats(stats_prefix, context.scope())) {
     for (const auto& rule : proto_config_.rules()) {
+      if (rule.path_translation() == ::google::api::envoy::http::backend_routing::BackendRoutingRule::PATH_TRANSLATION_UNSPECIFIED) {
+        throw Envoy::ProtoValidationException("Path translation for BackendRouting rule must be specified", rule);
+      }
       backend_routing_map_[rule.operation()] = &rule;
     }
   }

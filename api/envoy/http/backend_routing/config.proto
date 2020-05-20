@@ -19,18 +19,22 @@ package google.api.envoy.http.backend_routing;
 import "validate/validate.proto";
 
 message BackendRoutingRule {
+  reserved 2;
+
   // Operation name, also known as selector.
   string operation = 1 [(validate.rules).string.min_bytes = 1];
 
-  // True if CONSTANT_ADDRESS, otherwise is APPEND_PATH_TO_ADDRESS.
+  // Corresponds to the path translation options in Google Cloud Endpoints.
   // https://cloud.google.com/endpoints/docs/openapi/openapi-extensions#understanding_path_translation
-  bool is_const_address = 2;
+  enum PathTranslation {
+    PATH_TRANSLATION_UNSPECIFIED = 0;
+    CONSTANT_ADDRESS = 1;
+    APPEND_PATH_TO_ADDRESS = 2;
+  }
+
+  PathTranslation path_translation = 4;
 
   // Prefix used when re-writing the path for the backend.
-  // Example for CONSTANT_ADDRESS:
-  //     https://us-central1-my-project-id.cloudfunctions.net/helloGET
-  // Example for APPEND_PATH_TO_ADDRESS:
-  //     https://my-project-id.appspot.com
   string path_prefix = 3 [(validate.rules).string = {
     well_known_regex: HTTP_HEADER_VALUE,
     strict: false
@@ -38,7 +42,7 @@ message BackendRoutingRule {
 }
 
 message FilterConfig {
-  // A list of backend routing rules for those selectors which needs path
+  // A list of backend routing rules for those selectors that needs path
   // translation.
   repeated BackendRoutingRule rules = 1;
 }
