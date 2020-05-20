@@ -26,8 +26,9 @@ using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
-using ::espv2::api_proxy::service_control::CheckResponseErrorType;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
+using ::espv2::api_proxy::service_control::QuotaResponseInfo;
+using ::espv2::api_proxy::service_control::ScResponseErrorType;
 using ::google::api::servicecontrol::v1::AllocateQuotaRequest;
 using ::google::api::servicecontrol::v1::AllocateQuotaResponse;
 using ::google::api::servicecontrol::v1::CheckRequest;
@@ -289,6 +290,23 @@ ClientCache::ClientCache(
       config_.service_name(), config_.service_config_id(), options);
 }
 
+void ClientCache::handleScResponseErrorStats(ScResponseErrorType error_type) {
+  switch (error_type) {
+    case ScResponseErrorType::CONSUMER_BLOCKED:
+      filter_stats_.filter_.denied_consumer_blocked_.inc();
+      break;
+    case ScResponseErrorType::CONSUMER_ERROR:
+    case ScResponseErrorType::SERVICE_NOT_ACTIVATED:
+    case ScResponseErrorType::API_KEY_INVALID:
+      filter_stats_.filter_.denied_consumer_error_.inc();
+      break;
+    case ScResponseErrorType::CONSUMER_QUOTA:
+      filter_stats_.filter_.denied_consumer_quota_.inc();
+    default:
+      break;
+  }
+}
+
 CancelFunc ClientCache::callCheck(const CheckRequest& request,
                                   Envoy::Tracing::Span& parent_span,
                                   CheckDoneFunc on_done) {
@@ -338,18 +356,7 @@ void ClientCache::handleCheckResponse(const Status& http_status,
     // Check errors should be displayed to the client.
     translate_non_5xx = false;
 
-    switch (response_info.error_type) {
-      case CheckResponseErrorType::CONSUMER_BLOCKED:
-        filter_stats_.filter_.denied_consumer_blocked_.inc();
-        break;
-      case CheckResponseErrorType::CONSUMER_ERROR:
-      case CheckResponseErrorType::SERVICE_NOT_ACTIVATED:
-      case CheckResponseErrorType::API_KEY_INVALID:
-        filter_stats_.filter_.denied_consumer_error_.inc();
-        break;
-      default:
-        break;
-    }
+    handleScResponseErrorStats(response_info.error_type);
 
   } else {
     // Otherwise, http call failed. Use that status to respond.
@@ -381,6 +388,9 @@ void ClientCache::handleCheckResponse(const Status& http_status,
     }
   } else {
     if (translate_non_5xx) {
+      // Most likely an auth error in ESPv2 or API producer deployment.
+      filter_stats_.filter_.denied_producer_error_.inc();
+
       // This is not caused by a client request error, so translate
       // non-5xx error codes to 500 Internal Server Error. Error message
       // contains details on the original error (including the original
@@ -388,30 +398,40 @@ void ClientCache::handleCheckResponse(const Status& http_status,
       Status scrubbed_status(Code::INTERNAL, final_status.error_message());
       on_done(scrubbed_status, response_info);
     } else {
+      // Stats already incremented for this case.
       on_done(final_status, response_info);
     }
   }
   delete response;
 }
 
-void ClientCache::callQuota(
-    const ::google::api::servicecontrol::v1::AllocateQuotaRequest& request,
-    std::function<void(const ::google::protobuf::util::Status& status)>
-        on_done) {
+void ClientCache::callQuota(const AllocateQuotaRequest& request,
+                            QuotaDoneFunc on_done) {
   auto* response = new AllocateQuotaResponse;
-  client_->Quota(
-      request, response, [this, response, on_done](const Status& status) {
-        if (status.ok()) {
-          on_done(::espv2::api_proxy::service_control::RequestBuilder::
-                      ConvertAllocateQuotaResponse(*response,
-                                                   config_.service_name()));
-        } else {
-          on_done(Status(static_cast<google::protobuf::util::error::Code>(
-                             status.error_code()),
-                         status.error_message()));
-        }
-        delete response;
-      });
+  client_->Quota(request, response,
+                 [this, response, on_done](const Status& status) {
+                   handleQuotaResponse(status, response, on_done);
+                 });
+}
+
+void ClientCache::handleQuotaResponse(const Status& http_status,
+                                      AllocateQuotaResponse* response,
+                                      QuotaDoneFunc on_done) {
+  if (http_status.ok()) {
+    QuotaResponseInfo response_info;
+    Status quota_status = ::espv2::api_proxy::service_control::RequestBuilder::
+        ConvertAllocateQuotaResponse(*response, config_.service_name(),
+                                     &response_info);
+
+    handleScResponseErrorStats(response_info.error_type);
+    on_done(quota_status);
+  } else {
+    // Most likely an auth error in ESPv2 or API producer deployment.
+    filter_stats_.filter_.denied_producer_error_.inc();
+    on_done(http_status);
+  }
+
+  delete response;
 }
 
 void ClientCache::callReport(const ReportRequest& request) {

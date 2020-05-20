@@ -103,18 +103,18 @@ struct CheckRequestInfo : public OperationInfo {
   std::string ios_bundle_id;
 };
 
-enum CheckResponseErrorType {
+enum ScResponseErrorType {
   ERROR_TYPE_UNSPECIFIED = 0,
   API_KEY_INVALID = 1,
   SERVICE_NOT_ACTIVATED = 2,
   CONSUMER_BLOCKED = 3,
   CONSUMER_ERROR = 4,
+  CONSUMER_QUOTA = 5,
 };
 
 // Stores the information extracted from the check response.
 struct CheckResponseInfo {
-  CheckResponseErrorType error_type =
-      CheckResponseErrorType::ERROR_TYPE_UNSPECIFIED;
+  ScResponseErrorType error_type = ScResponseErrorType::ERROR_TYPE_UNSPECIFIED;
 
   std::string consumer_project_id;
 };
@@ -123,6 +123,11 @@ struct QuotaRequestInfo : public OperationInfo {
   std::string method_name;
 
   const std::vector<std::pair<std::string, int>>* metric_cost_vector;
+};
+
+// Stores the information extracted from the quota response.
+struct QuotaResponseInfo {
+  ScResponseErrorType error_type = ScResponseErrorType::ERROR_TYPE_UNSPECIFIED;
 };
 
 // Information to fill Report request protobuf.
