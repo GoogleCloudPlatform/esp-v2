@@ -71,7 +71,7 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
   friend class test::ClientCacheQuotaResponseErrorTypeTest;
 
   // Increments the corresponding stat for the given error type.
-  void handleScResponseErrorStats(
+  void collectScResponseErrorStats(
       ::espv2::api_proxy::service_control::ScResponseErrorType error_type);
 
   // Ownership of CheckResponse is passed to this function.
@@ -83,7 +83,7 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
 
   // Ownership of AllocateQuotaResponse is passed to this function.
   // The function will always call QuotaDoneFunction.
-  void handleQuotaResponse(
+  void handleQuotaOnDone(
       const ::google::protobuf::util::Status& http_status,
       ::google::api::servicecontrol::v1::AllocateQuotaResponse* response,
       QuotaDoneFunc on_done);

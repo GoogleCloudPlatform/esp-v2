@@ -214,7 +214,7 @@ class ClientCacheQuotaResponseTest : public ClientCacheTestBase {
     };
 
     const Status http_status(got_http_code, Envoy::EMPTY_STRING);
-    cache_->handleQuotaResponse(http_status, got_response, on_done);
+    cache_->handleQuotaOnDone(http_status, got_response, on_done);
   }
 };
 
@@ -249,7 +249,7 @@ class ClientCacheQuotaResponseErrorTypeTest : public ClientCacheTestBase {
 
     QuotaDoneFunc on_done = [&](const Status&) {};
     const Status http_status(Code::OK, Envoy::EMPTY_STRING);
-    cache_->handleQuotaResponse(http_status, response, on_done);
+    cache_->handleQuotaOnDone(http_status, response, on_done);
   }
 };
 

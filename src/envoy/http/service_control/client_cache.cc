@@ -290,7 +290,7 @@ ClientCache::ClientCache(
       config_.service_name(), config_.service_config_id(), options);
 }
 
-void ClientCache::handleScResponseErrorStats(ScResponseErrorType error_type) {
+void ClientCache::collectScResponseErrorStats(ScResponseErrorType error_type) {
   switch (error_type) {
     case ScResponseErrorType::CONSUMER_BLOCKED:
       filter_stats_.filter_.denied_consumer_blocked_.inc();
@@ -345,7 +345,6 @@ void ClientCache::handleCheckResponse(const Status& http_status,
                                       CheckDoneFunc on_done) {
   CheckResponseInfo response_info;
   Status final_status;
-  bool translate_non_5xx;
 
   if (http_status.ok()) {
     // If the http call succeeded, then use the CheckResponseInfo
@@ -353,16 +352,12 @@ void ClientCache::handleCheckResponse(const Status& http_status,
     final_status =
         api_proxy::service_control::RequestBuilder::ConvertCheckResponse(
             *response, config_.service_name(), &response_info);
-    // Check errors should be displayed to the client.
-    translate_non_5xx = false;
 
-    handleScResponseErrorStats(response_info.error_type);
+    collectScResponseErrorStats(response_info.error_type);
 
   } else {
     // Otherwise, http call failed. Use that status to respond.
     final_status = http_status;
-    // Http call errors should NOT be displayed to the client.
-    translate_non_5xx = true;
   }
 
   if (final_status.ok()) {
@@ -382,12 +377,12 @@ void ClientCache::handleCheckResponse(const Status& http_status,
       filter_stats_.filter_.denied_control_plane_fault_.inc();
       ENVOY_LOG(warn,
                 "Google Service Control Check is unavailable, and the "
-                "request is denied with error: {}",
+                "request is denied due to network fail closed, with error: {}",
                 final_status.error_message());
       on_done(final_status, response_info);
     }
   } else {
-    if (translate_non_5xx) {
+    if (!http_status.ok()) {
       // Most likely an auth error in ESPv2 or API producer deployment.
       filter_stats_.filter_.denied_producer_error_.inc();
 
@@ -398,6 +393,7 @@ void ClientCache::handleCheckResponse(const Status& http_status,
       Status scrubbed_status(Code::INTERNAL, final_status.error_message());
       on_done(scrubbed_status, response_info);
     } else {
+      // HTTP succeeded, but SC Check returned 4xx.
       // Stats already incremented for this case.
       on_done(final_status, response_info);
     }
@@ -410,20 +406,26 @@ void ClientCache::callQuota(const AllocateQuotaRequest& request,
   auto* response = new AllocateQuotaResponse;
   client_->Quota(request, response,
                  [this, response, on_done](const Status& status) {
-                   handleQuotaResponse(status, response, on_done);
+                   // Configured to always use the quota cache, so the status
+                   // will always be OK. Response message is from the cache. If
+                   // a cache miss occurs or the quota server is unavailable
+                   // during cache refresh, the status will still be OK and the
+                   // response message will be empty. This is also treated as a
+                   // success.
+                   handleQuotaOnDone(status, response, on_done);
                  });
 }
 
-void ClientCache::handleQuotaResponse(const Status& http_status,
-                                      AllocateQuotaResponse* response,
-                                      QuotaDoneFunc on_done) {
+void ClientCache::handleQuotaOnDone(const Status& http_status,
+                                    AllocateQuotaResponse* response,
+                                    QuotaDoneFunc on_done) {
   if (http_status.ok()) {
     QuotaResponseInfo response_info;
     Status quota_status = ::espv2::api_proxy::service_control::RequestBuilder::
         ConvertAllocateQuotaResponse(*response, config_.service_name(),
                                      &response_info);
 
-    handleScResponseErrorStats(response_info.error_type);
+    collectScResponseErrorStats(response_info.error_type);
     on_done(quota_status);
   } else {
     // Most likely an auth error in ESPv2 or API producer deployment.
