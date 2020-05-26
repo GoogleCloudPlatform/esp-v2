@@ -21,3 +21,15 @@ This filter is designed to strongly integrate with the following filters:
 
 View the [backend routing configuration proto](../../../../api/envoy/http/backend_routing/config.proto)
 for inline documentation.
+
+## Statistics
+
+This filter records statistics.
+
+### Counters
+
+- `denied`: Number of API Consumer requests that are denied due to invalid headers, etc.
+- `append_path_to_address_request`: Number of API Consumer requests that are
+ accepted and translated as APPEND_PATH_TO_ADDRESS.
+- `constant_address_request`: Number of API Consumer requests that are
+ accepted and translated as CONSTANT_ADDRESS.

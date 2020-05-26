@@ -26,6 +26,14 @@ namespace envoy {
 namespace http_filters {
 namespace backend_routing {
 
+namespace {
+struct RcDetailsValues {
+  const std::string BadRequest = "bad_request";
+  const std::string InvalidOperation = "invalid_operation";
+};
+using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
+}  // namespace
+
 using Envoy::Http::FilterHeadersStatus;
 using ::google::api::envoy::http::backend_routing::BackendRoutingRule;
 
@@ -39,20 +47,25 @@ FilterHeadersStatus Filter::decodeHeaders(
   // NOTE: this shouldn't happen in practice because Path Matcher filter would
   // have already rejected the request.
   if (operation.empty()) {
-    ENVOY_LOG(debug, "No operation found from DynamicMetadata");
-    return FilterHeadersStatus::Continue;
+    rejectRequest(Envoy::Http::Code::InternalServerError,
+                  "No operation found from DynamicMetadata",
+                  RcDetails::get().BadRequest);
+    return FilterHeadersStatus::StopIteration;
   }
 
   const auto* rule = config_->findRule(operation);
   if (rule == nullptr) {
-    ENVOY_LOG(debug, "No backend routing rule found for operation {}",
-              operation);
-    return FilterHeadersStatus::Continue;
+    rejectRequest(Envoy::Http::Code::InternalServerError,
+                  absl::StrCat("No backend routing rule found for operation: ",
+                               operation),
+                  RcDetails::get().InvalidOperation);
+    return FilterHeadersStatus::StopIteration;
   }
 
   if (headers.Path() == nullptr) {
-    ENVOY_LOG(debug, "No path header in request");
-    return FilterHeadersStatus::Continue;
+    rejectRequest(Envoy::Http::Code::BadRequest, "No path in request headers",
+                  RcDetails::get().BadRequest);
+    return FilterHeadersStatus::StopIteration;
   }
 
   absl::string_view original_path = headers.Path()->value().getStringView();
@@ -83,6 +96,17 @@ FilterHeadersStatus Filter::decodeHeaders(
 
   headers.setPath(new_path);
   return FilterHeadersStatus::Continue;
+}
+
+void Filter::rejectRequest(Envoy::Http::Code code, absl::string_view error_msg,
+                           absl::string_view details) {
+  ENVOY_LOG(debug, "{}", error_msg);
+  config_->stats().denied_.inc();
+
+  decoder_callbacks_->sendLocalReply(code, error_msg, nullptr, absl::nullopt,
+                                     details);
+  decoder_callbacks_->streamInfo().setResponseFlag(
+      Envoy::StreamInfo::ResponseFlag::NoRouteFound);
 }
 
 // Replace the original path with the constant path prefix.
