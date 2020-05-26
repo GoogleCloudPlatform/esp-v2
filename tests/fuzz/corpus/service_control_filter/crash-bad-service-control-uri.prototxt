@@ -38,5 +38,7 @@ sidestream_response {
       value: "200"
     }
   }
-  data: "{ \"access_token\": \"fuzz-access-token\", \"expires_in\": 60000 }"
+  http_body {
+    data: "{ \"access_token\": \"fuzz-access-token\", \"expires_in\": 60000 }"
+  }
 }

@@ -1,12 +1,12 @@
 config {
   rules {
     operation: "test-append-operation-query-params"
-    is_const_address: false
+    path_translation: APPEND_PATH_TO_ADDRESS
     path_prefix: "/appendPath"
   }
 }
 binding_query_params: "param1=1&param2=2"
-user_request {
+downstream_request {
   headers {
     headers {
       key: ":path"

@@ -1,4 +1,5 @@
 #include "google/protobuf/text_format.h"
+#include "test/extensions/filters/http/common/fuzz/uber_filter.h"
 #include "test/fuzz/fuzz_runner.h"
 #include "test/fuzz/utility.h"
 #include "test/mocks/http/mocks.h"
@@ -34,69 +35,15 @@ namespace fuzz {
 namespace Logger = Envoy::Logger;
 
 void doTest(
-    ServiceControlFilter& filter, Envoy::TestStreamInfo& stream_info,
+    ServiceControlFilter& filter, Envoy::TestStreamInfo&,
     const espv2::tests::fuzz::protos::ServiceControlFilterInput& input) {
-  // Decode headers.
-  bool end_stream = false;
-  auto downstream_headers =
-      Envoy::Fuzz::fromHeaders<Envoy::Http::TestRequestHeaderMapImpl>(
-          input.downstream_request().headers());
-  if (input.downstream_request().data().size() == 0 &&
-      !input.downstream_request().has_trailers()) {
-    end_stream = true;
-  }
-  filter.decodeHeaders(downstream_headers, end_stream);
+  static Envoy::Extensions::HttpFilters::UberFilterFuzzer fuzzer;
+  fuzzer.runData(static_cast<Envoy::Http::StreamDecoderFilter*>(&filter),
+                 input.downstream_request());
+  fuzzer.runData(static_cast<Envoy::Http::StreamEncoderFilter*>(&filter),
+                 input.upstream_response());
 
-  // Decode body (if needed).
-  for (int i = 0; i < input.downstream_request().data().size(); i++) {
-    if (i == input.downstream_request().data().size() - 1 &&
-        !input.downstream_request().has_trailers()) {
-      end_stream = true;
-    }
-    Envoy::Buffer::OwnedImpl buffer(input.downstream_request().data().Get(i));
-    filter.decodeData(buffer, end_stream);
-  }
-
-  // Decode trailers (if needed).
-  auto downstream_trailers =
-      Envoy::Fuzz::fromHeaders<Envoy::Http::TestRequestTrailerMapImpl>(
-          input.downstream_request().trailers());
-  if (input.downstream_request().has_trailers()) {
-    filter.decodeTrailers(downstream_trailers);
-  }
-
-  // Encode headers.
-  end_stream = false;
-  auto upstream_headers =
-      Envoy::Fuzz::fromHeaders<Envoy::Http::TestResponseHeaderMapImpl>(
-          input.upstream_response().headers());
-  if (input.upstream_response().data().size() == 0 &&
-      !input.upstream_response().has_trailers()) {
-    end_stream = true;
-  }
-  filter.encodeHeaders(upstream_headers, end_stream);
-
-  // Encode body (if needed).
-  for (int i = 0; i < input.upstream_response().data().size(); i++) {
-    if (i == input.upstream_response().data().size() - 1 &&
-        !input.upstream_response().has_trailers()) {
-      end_stream = true;
-    }
-    Envoy::Buffer::OwnedImpl buffer(input.upstream_response().data().Get(i));
-    filter.encodeData(buffer, end_stream);
-  }
-
-  // Encode trailers (if needed).
-  auto upstream_trailers =
-      Envoy::Fuzz::fromHeaders<Envoy::Http::TestResponseTrailerMapImpl>(
-          input.upstream_response().trailers());
-  if (input.upstream_response().has_trailers()) {
-    filter.encodeTrailers(upstream_trailers);
-  }
-
-  // Access log (report).
-  filter.log(&downstream_headers, &upstream_headers, &upstream_trailers,
-             stream_info);
+  // TODO(nareddyt): Fuzz access log once #11288 is in upstream envoy.
 }
 
 DEFINE_PROTO_FUZZER(
@@ -105,15 +52,15 @@ DEFINE_PROTO_FUZZER(
 
   try {
     Envoy::TestUtility::validate(input);
-
-    // Validate nested protos with stricter requirements for the fuzz test.
-    // We need at least 1 requirement in the config to match a selector.
-    if (input.config().requirements_size() < 1) {
-      throw Envoy::ProtoValidationException("Need at least 1 requirement",
-                                            input);
-    }
   } catch (const Envoy::ProtoValidationException& e) {
     ENVOY_LOG_MISC(debug, "Controlled proto validation failure: {}", e.what());
+    return;
+  }
+
+  // Validate nested protos with stricter requirements for the fuzz test.
+  // We need at least 1 requirement in the config to match a selector.
+  if (input.config().requirements_size() < 1) {
+    ENVOY_LOG_MISC(debug, "Need at least 1 requirement");
     return;
   }
 
@@ -168,11 +115,11 @@ DEFINE_PROTO_FUZZER(
         auto msg = std::make_unique<Envoy::Http::ResponseMessageImpl>(
             std::move(headers_ptr));
         msg->trailers(std::move(trailers_ptr));
-        if (response_data.data_size() > 0) {
-          // FIXME(nareddyt): For now, just grab 1 data item from the
-          // proto.
+        if (response_data.has_http_body() &&
+            response_data.http_body().data_size() > 0) {
+          // FIXME(nareddyt): For now, just grab 1 HTTP body data.
           msg->body() = std::make_unique<Envoy::Buffer::OwnedImpl>(
-              response_data.data().Get(0));
+              response_data.http_body().data().Get(0));
         } else {
           msg->body() = std::make_unique<Envoy::Buffer::OwnedImpl>();
         }
