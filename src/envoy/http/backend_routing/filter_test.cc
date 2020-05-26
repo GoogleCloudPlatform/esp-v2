@@ -91,7 +91,7 @@ class BackendRoutingFilterTest : public ::testing::Test {
       mock_factory_context_;
 };
 
-TEST_F(BackendRoutingFilterTest, NoOperationName) {
+TEST_F(BackendRoutingFilterTest, NoOperationNameBlocked) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
 
@@ -111,7 +111,7 @@ TEST_F(BackendRoutingFilterTest, NoOperationName) {
   EXPECT_EQ(counter->value(), 1);
 }
 
-TEST_F(BackendRoutingFilterTest, UnknownOperationName) {
+TEST_F(BackendRoutingFilterTest, OperationNotConfiguredAllowed) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
   utils::setStringFilterState(
@@ -135,7 +135,7 @@ TEST_F(BackendRoutingFilterTest, UnknownOperationName) {
   EXPECT_EQ(counter->value(), 1);
 }
 
-TEST_F(BackendRoutingFilterTest, NoPathHeader) {
+TEST_F(BackendRoutingFilterTest, NoPathHeaderBlocked) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"}};
   utils::setStringFilterState(
       *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
