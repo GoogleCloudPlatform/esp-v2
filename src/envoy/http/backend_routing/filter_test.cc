@@ -106,7 +106,7 @@ TEST_F(BackendRoutingFilterTest, NoOperationName) {
   // Stats.
   const Envoy::Stats::CounterSharedPtr counter =
       Envoy::TestUtility::findCounter(mock_factory_context_.scope_,
-                                      "backend_routing.denied");
+                                      "backend_routing.denied_by_no_operation");
   ASSERT_NE(counter, nullptr);
   EXPECT_EQ(counter->value(), 1);
 }
@@ -128,8 +128,9 @@ TEST_F(BackendRoutingFilterTest, UnknownOperationName) {
 
   // Stats.
   const Envoy::Stats::CounterSharedPtr counter =
-      Envoy::TestUtility::findCounter(mock_factory_context_.scope_,
-                                      "backend_routing.pass_through");
+      Envoy::TestUtility::findCounter(
+          mock_factory_context_.scope_,
+          "backend_routing.allowed_by_no_configured_rules");
   ASSERT_NE(counter, nullptr);
   EXPECT_EQ(counter->value(), 1);
 }
@@ -151,7 +152,7 @@ TEST_F(BackendRoutingFilterTest, NoPathHeader) {
   // Stats.
   const Envoy::Stats::CounterSharedPtr counter =
       Envoy::TestUtility::findCounter(mock_factory_context_.scope_,
-                                      "backend_routing.denied");
+                                      "backend_routing.denied_by_no_path");
   ASSERT_NE(counter, nullptr);
   EXPECT_EQ(counter->value(), 1);
 }

@@ -43,6 +43,7 @@ FilterHeadersStatus Filter::decodeHeaders(
   if (headers.Path() == nullptr) {
     // NOTE: this shouldn't happen in practice because Path Matcher filter would
     // have already rejected the request.
+    config_->stats().denied_by_no_path_.inc();
     rejectRequest(Envoy::Http::Code::BadRequest, "No path in request headers",
                   RcDetails::get().BadRequest);
     return FilterHeadersStatus::StopIteration;
@@ -54,6 +55,7 @@ FilterHeadersStatus Filter::decodeHeaders(
   // NOTE: this shouldn't happen in practice because Path Matcher filter would
   // have already rejected the request.
   if (operation.empty()) {
+    config_->stats().denied_by_no_operation_.inc();
     rejectRequest(Envoy::Http::Code::InternalServerError,
                   "No operation found from DynamicMetadata",
                   RcDetails::get().BadRequest);
@@ -65,11 +67,11 @@ FilterHeadersStatus Filter::decodeHeaders(
     // By design, we only want to apply the filter to operations that are in the
     // configuration. Otherwise, let it pass through (not a dynamic routing
     // request).
+    config_->stats().allowed_by_no_configured_rules_.inc();
     ENVOY_LOG(debug,
               "Allow request to pass through, as filter is not configured for "
               "operation: {}",
               operation);
-    config_->stats().pass_through_.inc();
     return FilterHeadersStatus::Continue;
   }
 
@@ -106,8 +108,6 @@ FilterHeadersStatus Filter::decodeHeaders(
 void Filter::rejectRequest(Envoy::Http::Code code, absl::string_view error_msg,
                            absl::string_view details) {
   ENVOY_LOG(debug, "{}", error_msg);
-  config_->stats().denied_.inc();
-
   decoder_callbacks_->sendLocalReply(code, error_msg, nullptr, absl::nullopt,
                                      details);
   decoder_callbacks_->streamInfo().setResponseFlag(
