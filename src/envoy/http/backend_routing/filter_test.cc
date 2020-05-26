@@ -79,7 +79,7 @@ class BackendRoutingFilterTest : public ::testing::Test {
     ASSERT_GT(proto_config.rules_size(), 0);
 
     FilterConfigSharedPtr config = std::make_shared<FilterConfig>(
-        proto_config, "test-stats", mock_factory_context_);
+        proto_config, Envoy::EMPTY_STRING, mock_factory_context_);
     filter_ = std::make_unique<Filter>(config);
     filter_->setDecoderFilterCallbacks(mock_decoder_callbacks_);
   }
@@ -91,7 +91,7 @@ class BackendRoutingFilterTest : public ::testing::Test {
       mock_factory_context_;
 };
 
-TEST_F(BackendRoutingFilterTest, NoOperationName) {
+TEST_F(BackendRoutingFilterTest, NoOperationNameBlocked) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
 
@@ -99,12 +99,19 @@ TEST_F(BackendRoutingFilterTest, NoOperationName) {
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
 
-  // Expect the filter to be a NOOP
-  ASSERT_EQ(headers.Path()->value().getStringView(), "/books/1");
-  ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+  // Expect the filter to be a NOOP and reject the request.
+  EXPECT_EQ(headers.Path()->value().getStringView(), "/books/1");
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::StopIteration);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(mock_factory_context_.scope_,
+                                      "backend_routing.denied_by_no_operation");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
 }
 
-TEST_F(BackendRoutingFilterTest, UnknownOperationName) {
+TEST_F(BackendRoutingFilterTest, OperationNotConfiguredAllowed) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
   utils::setStringFilterState(
@@ -115,12 +122,20 @@ TEST_F(BackendRoutingFilterTest, UnknownOperationName) {
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
 
-  // Expect the filter to be a NOOP
-  ASSERT_EQ(headers.Path()->value().getStringView(), "/books/1");
-  ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+  // Expect the filter to be a NOOP and pass the request through.
+  EXPECT_EQ(headers.Path()->value().getStringView(), "/books/1");
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(
+          mock_factory_context_.scope_,
+          "backend_routing.allowed_by_no_configured_rules");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
 }
 
-TEST_F(BackendRoutingFilterTest, NoPathHeader) {
+TEST_F(BackendRoutingFilterTest, NoPathHeaderBlocked) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"}};
   utils::setStringFilterState(
       *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
@@ -130,9 +145,16 @@ TEST_F(BackendRoutingFilterTest, NoPathHeader) {
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
 
-  // Expect the filter to be a NOOP
-  ASSERT_EQ(headers.Path(), nullptr);
-  ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+  // Expect the filter to be a NOOP and reject the request.
+  EXPECT_EQ(headers.Path(), nullptr);
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::StopIteration);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(mock_factory_context_.scope_,
+                                      "backend_routing.denied_by_no_path");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
 }
 
 TEST_F(BackendRoutingFilterTest, ConstantAddress) {
@@ -147,8 +169,16 @@ TEST_F(BackendRoutingFilterTest, ConstantAddress) {
       filter_->decodeHeaders(headers, false);
 
   // Expect the path to be modified.
-  ASSERT_EQ(headers.Path()->value().getStringView(), "/");
-  ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+  EXPECT_EQ(headers.Path()->value().getStringView(), "/");
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(
+          mock_factory_context_.scope_,
+          "backend_routing.constant_address_request");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
 }
 
 TEST_F(BackendRoutingFilterTest, ConstantAddressWithBadPrefix) {
@@ -166,8 +196,16 @@ TEST_F(BackendRoutingFilterTest, ConstantAddressWithBadPrefix) {
   // URL here. This is problematic in practice, since it doesn't have a '/'.
   // Config manager will ensure that this configuration is never passed to
   // Envoy.
-  ASSERT_EQ(headers.Path()->value().getStringView(), Envoy::EMPTY_STRING);
-  ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+  EXPECT_EQ(headers.Path()->value().getStringView(), Envoy::EMPTY_STRING);
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(
+          mock_factory_context_.scope_,
+          "backend_routing.constant_address_request");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
 }
 
 TEST_F(BackendRoutingFilterTest, ConstantAddressWithPathMatcherQueryParams) {
@@ -185,8 +223,16 @@ TEST_F(BackendRoutingFilterTest, ConstantAddressWithPathMatcherQueryParams) {
       filter_->decodeHeaders(headers, false);
 
   // Expect the path to be modified.
-  ASSERT_EQ(headers.Path()->value().getStringView(), "/?id=1");
-  ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+  EXPECT_EQ(headers.Path()->value().getStringView(), "/?id=1");
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(
+          mock_factory_context_.scope_,
+          "backend_routing.constant_address_request");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
 }
 
 /**
@@ -207,9 +253,17 @@ TEST_F(BackendRoutingFilterWithQueryParamsTest, AppendPathToAddress) {
       filter_->decodeHeaders(headers, false);
 
   // Expect the path to be modified.
-  ASSERT_EQ(headers.Path()->value().getStringView(),
+  EXPECT_EQ(headers.Path()->value().getStringView(),
             "/books/1?view=summary&filter=deleted");
-  ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(
+          mock_factory_context_.scope_,
+          "backend_routing.append_path_to_address_request");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
 }
 
 TEST_F(BackendRoutingFilterWithQueryParamsTest, AppendPathToAddressWithPrefix) {
@@ -224,9 +278,17 @@ TEST_F(BackendRoutingFilterWithQueryParamsTest, AppendPathToAddressWithPrefix) {
       filter_->decodeHeaders(headers, false);
 
   // Expect the path to be modified.
-  ASSERT_EQ(headers.Path()->value().getStringView(),
+  EXPECT_EQ(headers.Path()->value().getStringView(),
             "/test-prefix/books/1?view=summary&filter=deleted");
-  ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(
+          mock_factory_context_.scope_,
+          "backend_routing.append_path_to_address_request");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
 }
 
 TEST_F(BackendRoutingFilterWithQueryParamsTest, ConstantAddress) {
@@ -241,9 +303,17 @@ TEST_F(BackendRoutingFilterWithQueryParamsTest, ConstantAddress) {
       filter_->decodeHeaders(headers, false);
 
   // Expect the path to be modified.
-  ASSERT_EQ(headers.Path()->value().getStringView(),
+  EXPECT_EQ(headers.Path()->value().getStringView(),
             "/?view=summary&filter=deleted");
-  ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(
+          mock_factory_context_.scope_,
+          "backend_routing.constant_address_request");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
 }
 
 TEST_F(BackendRoutingFilterWithQueryParamsTest,
@@ -262,9 +332,17 @@ TEST_F(BackendRoutingFilterWithQueryParamsTest,
       filter_->decodeHeaders(headers, false);
 
   // Expect the path to be modified.
-  ASSERT_EQ(headers.Path()->value().getStringView(),
+  EXPECT_EQ(headers.Path()->value().getStringView(),
             "/?view=summary&filter=deleted&id=1");
-  ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(
+          mock_factory_context_.scope_,
+          "backend_routing.constant_address_request");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
 }
 
 TEST_F(BackendRoutingFilterWithQueryParamsTest, ConstantAddressWithPrefix) {
@@ -279,9 +357,17 @@ TEST_F(BackendRoutingFilterWithQueryParamsTest, ConstantAddressWithPrefix) {
       filter_->decodeHeaders(headers, false);
 
   // Expect the path to be modified.
-  ASSERT_EQ(headers.Path()->value().getStringView(),
+  EXPECT_EQ(headers.Path()->value().getStringView(),
             "/test-prefix?view=summary&filter=deleted");
-  ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(
+          mock_factory_context_.scope_,
+          "backend_routing.constant_address_request");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
 }
 
 }  // namespace

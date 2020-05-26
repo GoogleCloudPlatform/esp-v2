@@ -27,11 +27,12 @@ namespace backend_routing {
  * All stats for the backend routing filter. @see stats_macros.h
  */
 
-// clang-format off
-#define ALL_BACKEND_ROUTING_FILTER_STATS(COUNTER)     \
-  COUNTER(append_path_to_address_request)             \
-  COUNTER(constant_address_request)                   \
-// clang-format on
+#define ALL_BACKEND_ROUTING_FILTER_STATS(COUNTER) \
+  COUNTER(append_path_to_address_request)         \
+  COUNTER(constant_address_request)               \
+  COUNTER(denied_by_no_path)                      \
+  COUNTER(denied_by_no_operation)                 \
+  COUNTER(allowed_by_no_configured_rules)
 
 /**
  * Wrapper struct for backend routing filter stats. @see stats_macros.h
@@ -50,15 +51,18 @@ class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       : proto_config_(proto_config),
         stats_(generateStats(stats_prefix, context.scope())) {
     for (const auto& rule : proto_config_.rules()) {
-      if (rule.path_translation() == ::google::api::envoy::http::backend_routing::BackendRoutingRule::PATH_TRANSLATION_UNSPECIFIED) {
-        throw Envoy::ProtoValidationException("Path translation for BackendRouting rule must be specified", rule);
+      if (rule.path_translation() ==
+          ::google::api::envoy::http::backend_routing::BackendRoutingRule::
+              PATH_TRANSLATION_UNSPECIFIED) {
+        throw Envoy::ProtoValidationException(
+            "Path translation for BackendRouting rule must be specified", rule);
       }
       backend_routing_map_[rule.operation()] = &rule;
     }
   }
 
-  const ::google::api::envoy::http::backend_routing::BackendRoutingRule* findRule(
-	  absl::string_view operation) const {
+  const ::google::api::envoy::http::backend_routing::BackendRoutingRule*
+  findRule(absl::string_view operation) const {
     const auto it = backend_routing_map_.find(operation);
     if (it == backend_routing_map_.end()) {
       return nullptr;
@@ -69,7 +73,8 @@ class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
   FilterStats& stats() { return stats_; }
 
  private:
-  FilterStats generateStats(const std::string& prefix, Envoy::Stats::Scope& scope) {
+  FilterStats generateStats(const std::string& prefix,
+                            Envoy::Stats::Scope& scope) {
     const std::string final_prefix = prefix + "backend_routing.";
     return {ALL_BACKEND_ROUTING_FILTER_STATS(
         POOL_COUNTER_PREFIX(scope, final_prefix))};
@@ -88,8 +93,7 @@ class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
 
 using FilterConfigSharedPtr = std::shared_ptr<FilterConfig>;
 
-}  // namespace BackendRouting
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
-
+}  // namespace backend_routing
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2

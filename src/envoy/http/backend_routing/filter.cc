@@ -26,6 +26,13 @@ namespace envoy {
 namespace http_filters {
 namespace backend_routing {
 
+namespace {
+struct RcDetailsValues {
+  const std::string BadRequest = "bad_request";
+};
+using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
+}  // namespace
+
 using Envoy::Http::FilterHeadersStatus;
 using ::google::api::envoy::http::backend_routing::BackendRoutingRule;
 
@@ -33,25 +40,38 @@ Filter::Filter(FilterConfigSharedPtr config) : config_(config) {}
 
 FilterHeadersStatus Filter::decodeHeaders(
     Envoy::Http::RequestHeaderMap& headers, bool) {
+  if (headers.Path() == nullptr) {
+    // NOTE: this shouldn't happen in practice because Path Matcher filter would
+    // have already rejected the request.
+    config_->stats().denied_by_no_path_.inc();
+    rejectRequest(Envoy::Http::Code::BadRequest, "No path in request headers",
+                  RcDetails::get().BadRequest);
+    return FilterHeadersStatus::StopIteration;
+  }
+
   const auto& filter_state = *decoder_callbacks_->streamInfo().filterState();
   absl::string_view operation =
       utils::getStringFilterState(filter_state, utils::kOperation);
   // NOTE: this shouldn't happen in practice because Path Matcher filter would
   // have already rejected the request.
   if (operation.empty()) {
-    ENVOY_LOG(debug, "No operation found from DynamicMetadata");
-    return FilterHeadersStatus::Continue;
+    config_->stats().denied_by_no_operation_.inc();
+    rejectRequest(Envoy::Http::Code::InternalServerError,
+                  "No operation found from DynamicMetadata",
+                  RcDetails::get().BadRequest);
+    return FilterHeadersStatus::StopIteration;
   }
 
   const auto* rule = config_->findRule(operation);
   if (rule == nullptr) {
-    ENVOY_LOG(debug, "No backend routing rule found for operation {}",
+    // By design, we only want to apply the filter to operations that are in the
+    // configuration. Otherwise, let it pass through (not a dynamic routing
+    // request).
+    config_->stats().allowed_by_no_configured_rules_.inc();
+    ENVOY_LOG(debug,
+              "Allow request to pass through, as filter is not configured for "
+              "operation: {}",
               operation);
-    return FilterHeadersStatus::Continue;
-  }
-
-  if (headers.Path() == nullptr) {
-    ENVOY_LOG(debug, "No path header in request");
     return FilterHeadersStatus::Continue;
   }
 
@@ -83,6 +103,15 @@ FilterHeadersStatus Filter::decodeHeaders(
 
   headers.setPath(new_path);
   return FilterHeadersStatus::Continue;
+}
+
+void Filter::rejectRequest(Envoy::Http::Code code, absl::string_view error_msg,
+                           absl::string_view details) {
+  ENVOY_LOG(debug, "{}", error_msg);
+  decoder_callbacks_->sendLocalReply(code, error_msg, nullptr, absl::nullopt,
+                                     details);
+  decoder_callbacks_->streamInfo().setResponseFlag(
+      Envoy::StreamInfo::ResponseFlag::NoRouteFound);
 }
 
 // Replace the original path with the constant path prefix.

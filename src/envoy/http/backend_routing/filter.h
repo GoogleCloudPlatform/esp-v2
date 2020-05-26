@@ -16,7 +16,9 @@
 
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "common/common/logger.h"
+#include "envoy/http/codes.h"
 #include "envoy/http/filter.h"
 #include "envoy/http/header_map.h"
 #include "extensions/filters/http/common/pass_through_filter.h"
@@ -37,6 +39,9 @@ class Filter : public Envoy::Http::PassThroughDecoderFilter,
                                                  bool) override;
 
  private:
+  void rejectRequest(Envoy::Http::Code code, absl::string_view error_msg,
+                     absl::string_view details);
+
   std::string translateConstPath(absl::string_view prefix,
                                  absl::string_view original_path);
 
