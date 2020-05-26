@@ -34,6 +34,8 @@ namespace service_control {
 namespace test {
 class ClientCacheCheckResponseTest;
 class ClientCacheCheckResponseErrorTypeTest;
+class ClientCacheQuotaResponseTest;
+class ClientCacheQuotaResponseErrorTypeTest;
 }  // namespace test
 
 // The class to cache check and batch report.
@@ -65,6 +67,12 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  private:
   friend class test::ClientCacheCheckResponseTest;
   friend class test::ClientCacheCheckResponseErrorTypeTest;
+  friend class test::ClientCacheQuotaResponseTest;
+  friend class test::ClientCacheQuotaResponseErrorTypeTest;
+
+  // Increments the corresponding stat for the given error type.
+  void collectScResponseErrorStats(
+      ::espv2::api_proxy::service_control::ScResponseErrorType error_type);
 
   // Ownership of CheckResponse is passed to this function.
   // The function will always call CheckDoneFunc.
@@ -72,6 +80,13 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       const ::google::protobuf::util::Status& http_status,
       ::google::api::servicecontrol::v1::CheckResponse* response,
       CheckDoneFunc on_done);
+
+  // Ownership of AllocateQuotaResponse is passed to this function.
+  // The function will always call QuotaDoneFunction.
+  void handleQuotaOnDone(
+      const ::google::protobuf::util::Status& http_status,
+      ::google::api::servicecontrol::v1::AllocateQuotaResponse* response,
+      QuotaDoneFunc on_done);
 
   void initHttpRequestSetting(
       const ::google::api::envoy::http::service_control::FilterConfig&

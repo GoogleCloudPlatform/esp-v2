@@ -27,9 +27,9 @@ namespace envoy {
 namespace http_filters {
 namespace service_control {
 
-using ::espv2::api_proxy::service_control::CheckResponseErrorType;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::OperationInfo;
+using ::espv2::api_proxy::service_control::ScResponseErrorType;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
@@ -131,10 +131,9 @@ void ServiceControlHandlerImpl::prepareReportRequest(
   fillOperationInfo(info);
 
   // Report: not to send api-key if invalid or service is not enabled.
-  if (check_response_info_.error_type ==
-          CheckResponseErrorType::API_KEY_INVALID ||
+  if (check_response_info_.error_type == ScResponseErrorType::API_KEY_INVALID ||
       check_response_info_.error_type ==
-          CheckResponseErrorType::SERVICE_NOT_ACTIVATED) {
+          ScResponseErrorType::SERVICE_NOT_ACTIVATED) {
     info.api_key.clear();
   }
 

@@ -84,7 +84,7 @@ class RequestBuilder final {
 
   static ::google::protobuf::util::Status ConvertAllocateQuotaResponse(
       const ::google::api::servicecontrol::v1::AllocateQuotaResponse& response,
-      const std::string& service_name);
+      const std::string& service_name, QuotaResponseInfo* quota_response_info);
 
   static bool IsMetricSupported(const ::google::api::MetricDescriptor& metric);
   static bool IsLabelSupported(const ::google::api::LabelDescriptor& label);

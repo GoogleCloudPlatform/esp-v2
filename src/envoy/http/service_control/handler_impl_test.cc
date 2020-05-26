@@ -39,10 +39,10 @@ using Envoy::Http::TestResponseHeaderMapImpl;
 using Envoy::Http::TestResponseTrailerMapImpl;
 using Envoy::StreamInfo::MockStreamInfo;
 using ::espv2::api_proxy::service_control::CheckRequestInfo;
-using ::espv2::api_proxy::service_control::CheckResponseErrorType;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::QuotaRequestInfo;
 using ::espv2::api_proxy::service_control::ReportRequestInfo;
+using ::espv2::api_proxy::service_control::ScResponseErrorType;
 using ::espv2::api_proxy::service_control::protocol::Protocol;
 using ::google::api::envoy::http::service_control::FilterConfig;
 using ::google::protobuf::TextFormat;
@@ -620,7 +620,7 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
                              "test bad status returned from service control");
 
   CheckResponseInfo response_info;
-  response_info.error_type = CheckResponseErrorType::API_KEY_INVALID;
+  response_info.error_type = ScResponseErrorType::API_KEY_INVALID;
 
   CheckRequestInfo expected_check_info;
   expected_check_info.api_key = "foobar";
@@ -795,7 +795,7 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
                                     stats_base_.stats());
 
   CheckResponseInfo response_info;
-  response_info.error_type = CheckResponseErrorType::API_KEY_INVALID;
+  response_info.error_type = ScResponseErrorType::API_KEY_INVALID;
 
   CheckRequestInfo expected_check_info;
   expected_check_info.api_key = "foobar";
