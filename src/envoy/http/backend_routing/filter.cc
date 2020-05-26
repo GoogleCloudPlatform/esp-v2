@@ -29,7 +29,6 @@ namespace backend_routing {
 namespace {
 struct RcDetailsValues {
   const std::string BadRequest = "bad_request";
-  const std::string InvalidOperation = "invalid_operation";
 };
 using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
 }  // namespace
@@ -41,6 +40,14 @@ Filter::Filter(FilterConfigSharedPtr config) : config_(config) {}
 
 FilterHeadersStatus Filter::decodeHeaders(
     Envoy::Http::RequestHeaderMap& headers, bool) {
+  if (headers.Path() == nullptr) {
+    // NOTE: this shouldn't happen in practice because Path Matcher filter would
+    // have already rejected the request.
+    rejectRequest(Envoy::Http::Code::BadRequest, "No path in request headers",
+                  RcDetails::get().BadRequest);
+    return FilterHeadersStatus::StopIteration;
+  }
+
   const auto& filter_state = *decoder_callbacks_->streamInfo().filterState();
   absl::string_view operation =
       utils::getStringFilterState(filter_state, utils::kOperation);
@@ -55,17 +62,15 @@ FilterHeadersStatus Filter::decodeHeaders(
 
   const auto* rule = config_->findRule(operation);
   if (rule == nullptr) {
-    rejectRequest(Envoy::Http::Code::InternalServerError,
-                  absl::StrCat("No backend routing rule found for operation: ",
-                               operation),
-                  RcDetails::get().InvalidOperation);
-    return FilterHeadersStatus::StopIteration;
-  }
-
-  if (headers.Path() == nullptr) {
-    rejectRequest(Envoy::Http::Code::BadRequest, "No path in request headers",
-                  RcDetails::get().BadRequest);
-    return FilterHeadersStatus::StopIteration;
+    // By design, we only want to apply the filter to operations that are in the
+    // configuration. Otherwise, let it pass through (not a dynamic routing
+    // request).
+    ENVOY_LOG(debug,
+              "Allow request to pass through, as filter is not configured for "
+              "operation: {}",
+              operation);
+    config_->stats().pass_through_.inc();
+    return FilterHeadersStatus::Continue;
   }
 
   absl::string_view original_path = headers.Path()->value().getStringView();

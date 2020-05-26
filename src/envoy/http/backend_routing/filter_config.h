@@ -30,7 +30,8 @@ namespace backend_routing {
 #define ALL_BACKEND_ROUTING_FILTER_STATS(COUNTER) \
   COUNTER(append_path_to_address_request)         \
   COUNTER(constant_address_request)               \
-  COUNTER(denied)
+  COUNTER(denied)                                 \
+  COUNTER(pass_through)
 
 /**
  * Wrapper struct for backend routing filter stats. @see stats_macros.h

@@ -29,6 +29,8 @@ This filter records statistics.
 ### Counters
 
 - `denied`: Number of API Consumer requests that are denied due to invalid headers, etc.
+- `pass_through`: Number of API Consumer requests that are allowed through
+ without modification. Occurs when the request is not for dynamic routing.
 - `append_path_to_address_request`: Number of API Consumer requests that are
  accepted and translated as APPEND_PATH_TO_ADDRESS.
 - `constant_address_request`: Number of API Consumer requests that are

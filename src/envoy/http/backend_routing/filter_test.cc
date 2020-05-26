@@ -122,14 +122,14 @@ TEST_F(BackendRoutingFilterTest, UnknownOperationName) {
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
 
-  // Expect the filter to be a NOOP and reject the request.
+  // Expect the filter to be a NOOP and pass the request through.
   EXPECT_EQ(headers.Path()->value().getStringView(), "/books/1");
-  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::StopIteration);
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 
   // Stats.
   const Envoy::Stats::CounterSharedPtr counter =
       Envoy::TestUtility::findCounter(mock_factory_context_.scope_,
-                                      "backend_routing.denied");
+                                      "backend_routing.pass_through");
   ASSERT_NE(counter, nullptr);
   EXPECT_EQ(counter->value(), 1);
 }
