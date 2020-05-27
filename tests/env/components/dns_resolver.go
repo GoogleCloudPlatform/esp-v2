@@ -19,6 +19,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/golang/glog"
 	"github.com/miekg/dns"
 )
 
@@ -31,6 +32,7 @@ const healthCheckInterval = time.Millisecond * 200
 func (h *handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	msg := dns.Msg{}
 	msg.SetReply(r)
+	glog.Infof("dns query:\n%+v", r)
 	switch r.Question[0].Qtype {
 	case dns.TypeA:
 		msg.Authoritative = true
@@ -43,6 +45,8 @@ func (h *handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 			})
 		}
 	}
+
+	glog.Infof("dns response: %+v", msg.Answer)
 	_ = w.WriteMsg(&msg)
 }
 

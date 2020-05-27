@@ -35,9 +35,8 @@ func TestDnsResolver(t *testing.T) {
 
 	// Setup dns resolver.
 	backendHost := "dns-resolver-test-backend"
-	localHost := "127.0.0.1"
 	dnsRecords := map[string]string{
-		fullDns(backendHost): localHost,
+		fullDns(backendHost): platform.GetLoopbackAddress(),
 	}
 	dnsResolver := comp.NewDnsResolver(s.Ports().DnsResolverPort, dnsRecords)
 	go func() {
@@ -47,8 +46,8 @@ func TestDnsResolver(t *testing.T) {
 	}()
 
 	// Check dns resolver's health.
-	dnsResolverAddress := fmt.Sprintf("127.0.0.1:%v", s.Ports().DnsResolverPort)
-	if err := comp.CheckDnsResolverHealth(dnsResolverAddress, backendHost, localHost); err != nil {
+	dnsResolverAddress := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().DnsResolverPort)
+	if err := comp.CheckDnsResolverHealth(dnsResolverAddress, backendHost, platform.GetLoopbackAddress()); err != nil {
 		t.Fatalf("DNS Resolver is not healthy: %v", err)
 	}
 
@@ -78,7 +77,7 @@ func TestDnsResolver(t *testing.T) {
 		if tc.isResolveFailed {
 			delete(dnsRecords, fullDns(backendHost))
 		} else {
-			dnsRecords[backendHost] = localHost
+			dnsRecords[backendHost] = platform.GetLoopbackAddress()
 		}
 
 		func() {
@@ -91,15 +90,15 @@ func TestDnsResolver(t *testing.T) {
 			resp, err := client.DoPost(url, "hello")
 			if err != nil {
 				if tc.wantError == "" {
-					t.Errorf("got unexpected error: %s", err)
+					t.Errorf("Test(%v): got unexpected error: %s", tc.desc, err)
 				} else if tc.wantError != err.Error() {
-					t.Errorf("got unexpected error, expect: %s, get: %s", tc.wantError, err.Error())
+					t.Errorf("Test(%v): got unexpected error, expect: %s, get: %s", tc.desc, tc.wantError, err.Error())
 				}
 				return
 			}
 
 			if !strings.Contains(string(resp), tc.wantResp) {
-				t.Errorf("expected: %s, got: %s", tc.wantResp, string(resp))
+				t.Errorf("Test(%v): expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
 			}
 		}()
 	}
