@@ -39,9 +39,9 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 # 3) Check if envoy_build_config/extensions_build_config.bzl is up-to-date.
 # Try to match it with the one in source/extensions and comment out unneeded extensions.
 
-ENVOY_SHA1 = "74290ef76a76fbbf50f072dc33438791f93f68c7"  # 2020-05-23
+ENVOY_SHA1 = "c8f330c1f99ee5d89048d52ac98faab2539d5a52"  # 2020-05-26
 
-ENVOY_SHA256 = "4509462b95654e9f7b84c6c11df515eaf97c18eb28b1a56700fe63e00b06edce"
+ENVOY_SHA256 = "65480d91dc8f432a3b4b42d63d542b09d9803d4c76ea0accfd08f3a5f8b313d7"
 
 http_archive(
     name = "envoy",
