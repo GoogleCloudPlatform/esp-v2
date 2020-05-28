@@ -33,7 +33,7 @@ else
   BAZEL_BUILD_OPTIONS+=" --config=test-coverage --test_tag_filters=-nocoverage,-fuzz_target"
 fi
 
-bazel coverage ${BAZEL_BUILD_OPTIONS} --test_output=all ${COVERAGE_TARGETS}
+bazel coverage ${BAZEL_BUILD_OPTIONS} ${COVERAGE_TARGETS}
 
 COVERAGE_DIR="${SRCDIR}"/generated/coverage
 

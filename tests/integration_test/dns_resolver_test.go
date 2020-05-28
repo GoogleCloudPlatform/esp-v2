@@ -40,7 +40,7 @@ func TestDnsResolver(t *testing.T) {
 		wantError       string
 	}{
 		{
-			desc:        "resolve non-FQDN domain name successfully",
+			desc:        "resolve PQDN domain name successfully",
 			backendHost: "dns-resolver-test-backend",
 			wantResp:    `{"message":"hello"}`,
 		},
@@ -60,7 +60,7 @@ func TestDnsResolver(t *testing.T) {
 			wantResp:    `{"message":"hello"}`,
 		},
 		{
-			desc:            "resolve domain name unsuccessfully",
+			desc:            "resolve domain name fails because record not exist in resolver",
 			backendHost:     "dns-resolver-test-backend",
 			isResolveFailed: true,
 			wantError:       `http response status is not 200 OK: 503 Service Unavailable, no healthy upstream`,
