@@ -25,7 +25,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 )
 
-func fullDns(dns string) string {
+func toFqdnWithRoot(dns string) string {
 	return dns + "."
 }
 
@@ -34,9 +34,9 @@ func TestDnsResolver(t *testing.T) {
 	s := env.NewTestEnv(comp.TestDnsResolver, platform.EchoSidecar)
 
 	// Setup dns resolver.
-	backendHost := "dns-resolver-test-backend"
+	backendHost := "dns-resolver-test-backend.example.com"
 	dnsRecords := map[string]string{
-		fullDns(backendHost): platform.GetLoopbackAddress(),
+		toFqdnWithRoot(backendHost): platform.GetLoopbackAddress(),
 	}
 	dnsResolver := comp.NewDnsResolver(s.Ports().DnsResolverPort, dnsRecords)
 	go func() {
@@ -75,7 +75,7 @@ func TestDnsResolver(t *testing.T) {
 
 	for _, tc := range testCase {
 		if tc.isResolveFailed {
-			delete(dnsRecords, fullDns(backendHost))
+			delete(dnsRecords, toFqdnWithRoot(backendHost))
 		} else {
 			dnsRecords[backendHost] = platform.GetLoopbackAddress()
 		}

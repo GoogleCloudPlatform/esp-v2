@@ -55,17 +55,14 @@ func TestManagedServiceConfig(t *testing.T) {
 	}
 
 	tests := []struct {
-		desc               string
-		clientProtocol     string
-		httpMethod         string
-		method             string
-		queryInToken       bool
-		token              string
-		headers            map[string][]string
-		wantResp           string
-		wantError          string
-		wantGRPCWebError   string
-		wantGRPCWebTrailer client.GRPCWebTrailer
+		desc           string
+		clientProtocol string
+		httpMethod     string
+		method         string
+		token          string
+		headers        map[string][]string
+		wantResp       string
+		wantError      string
 	}{
 		{
 			desc:           "Fail, since the request doesn't have token",
@@ -75,7 +72,7 @@ func TestManagedServiceConfig(t *testing.T) {
 			wantError:      "401 Unauthorized, Jwt is missing",
 		},
 		{
-			desc:           "Success, the new service config doesn't require authz for this API",
+			desc:           "Success, the new service config doesn't require JWT for this API",
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
@@ -88,17 +85,11 @@ func TestManagedServiceConfig(t *testing.T) {
 		if idx == 1 {
 			s.OverrideAuthentication(&confpb.Authentication{})
 			s.OverrideRolloutIdAndConfigId("new-service-rollout-id", "new-service-config-id")
-			time.Sleep(time.Second * 1)
+			time.Sleep(time.Second * 3)
 		}
 
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-		var resp string
-		var err error
-		if tc.queryInToken {
-			resp, err = client.MakeTokenInQueryCall(addr, tc.httpMethod, tc.method, tc.token)
-		} else {
-			resp, err = client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, tc.headers)
-		}
+		resp, err := client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, tc.headers)
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 			t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
