@@ -38,15 +38,19 @@ func (h *handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 		msg.Authoritative = true
 		domain := msg.Question[0].Name
 
-		if address, ok := h.records[domain]; ok {
+		address, ok := h.records[domain]
+		if ok {
 			msg.Answer = append(msg.Answer, &dns.A{
 				Hdr: dns.RR_Header{Name: domain, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 60},
 				A:   net.ParseIP(address),
 			})
+			glog.Infof("dns answer: %+v", msg.Answer)
+		} else {
+			msg.Rcode = dns.RcodeNameError
+			glog.Infof("dns return code: %v", dns.RcodeToString[msg.Rcode])
 		}
 	}
 
-	glog.Infof("dns response: %+v", msg.Answer)
 	_ = w.WriteMsg(&msg)
 }
 
