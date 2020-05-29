@@ -60,6 +60,7 @@ func TestServiceManagementWithTLS(t *testing.T) {
 	for _, tc := range testData {
 		func() {
 			s := env.NewTestEnv(tc.port, platform.EchoSidecar)
+			defer s.SkipHealthChecks()
 			defer s.TearDown(t)
 			serverCerts, err := comp.GenerateCert(tc.certPath, tc.keyPath)
 			if err != nil {

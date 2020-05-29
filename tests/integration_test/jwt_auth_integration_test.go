@@ -234,6 +234,7 @@ func TestInvalidOpenIDConnectDiscovery(t *testing.T) {
 
 		err := s.Setup(args)
 		// No need to defer teardown, there should be a setup error.
+		s.SkipHealthChecks()
 		s.TearDown(t)
 
 		if err == nil {

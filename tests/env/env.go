@@ -244,6 +244,7 @@ func (e *TestEnv) EnableEchoServerRootPathHandler() {
 // Limit usage of this, as it causes flakes in CI.
 // Only intended to be used to test if Envoy starts up correctly.
 // Ideally, the test using this should have it's own retry loop.
+// Can also call after setup but before teardown to skip teardown checks.
 func (e *TestEnv) SkipHealthChecks() {
 	e.skipHealthChecks = true
 }
