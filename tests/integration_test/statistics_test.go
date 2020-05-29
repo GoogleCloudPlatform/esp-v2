@@ -38,7 +38,7 @@ func TestStatistics(t *testing.T) {
 
 	s := env.NewTestEnv(comp.TestStatistics, platform.EchoRemote)
 
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -216,7 +216,7 @@ func TestStatisticsServiceControlCallStatus(t *testing.T) {
 					},
 				},
 			})
-			defer s.TearDown()
+			defer s.TearDown(t)
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}

@@ -53,7 +53,7 @@ func TestServiceControlQuota(t *testing.T) {
 			},
 		},
 	})
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -178,7 +178,7 @@ func TestServiceControlQuotaUnavailable(t *testing.T) {
 		},
 	})
 	s.ServiceControlServer.OverrideQuotaHandler(&unavailableQuotaServiceHandler{m: s.ServiceControlServer})
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -246,7 +246,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 			},
 		},
 	})
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

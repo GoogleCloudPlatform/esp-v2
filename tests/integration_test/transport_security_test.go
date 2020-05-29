@@ -60,7 +60,7 @@ func TestServiceManagementWithTLS(t *testing.T) {
 	for _, tc := range testData {
 		func() {
 			s := env.NewTestEnv(tc.port, platform.EchoSidecar)
-			defer s.TearDown()
+			defer s.TearDown(t)
 			serverCerts, err := comp.GenerateCert(tc.certPath, tc.keyPath)
 			if err != nil {
 				t.Fatalf("fial to generate cert: %v", err)
@@ -119,7 +119,7 @@ func TestServiceControlWithTLS(t *testing.T) {
 	for _, tc := range tests {
 		func() {
 			s := env.NewTestEnv(tc.port, platform.GrpcBookstoreSidecar)
-			defer s.TearDown()
+			defer s.TearDown(t)
 			serverCerts, err := comp.GenerateCert(tc.certPath, tc.keyPath)
 			if err != nil {
 				t.Fatalf("fail to create cert, %v", err)
@@ -148,7 +148,7 @@ func TestHttpsClients(t *testing.T) {
 	args = append(args, "--ssl_server_cert_path=../env/testdata/")
 
 	s := env.NewTestEnv(comp.TestHttpsClients, platform.EchoSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",
@@ -222,7 +222,7 @@ func TestHSTS(t *testing.T) {
 	args = append(args, "--enable_strict_transport_security")
 
 	s := env.NewTestEnv(comp.TestHttpsClients, platform.EchoSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",

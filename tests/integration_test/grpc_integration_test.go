@@ -46,7 +46,7 @@ func TestGRPC(t *testing.T) {
 	args := []string{"--service_config_id=" + configID, "--rollout_strategy=fixed", "--healthz=healthz"}
 
 	s := env.NewTestEnv(comp.TestGRPC, platform.GrpcBookstoreSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -152,7 +152,7 @@ func TestGRPCWeb(t *testing.T) {
 		"--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPCWeb, platform.GrpcBookstoreSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -236,7 +236,7 @@ func TestGRPCJwt(t *testing.T) {
 		"--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPCJwt, platform.GrpcBookstoreSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -501,7 +501,7 @@ func TestGRPCMetadata(t *testing.T) {
 		"--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPCMetadata, platform.GrpcEchoSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

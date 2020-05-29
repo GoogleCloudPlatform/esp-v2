@@ -104,7 +104,7 @@ func TestDnsResolver(t *testing.T) {
 				"--dns_resolver_addresses=" + dnsResolverAddress,
 			}
 
-			defer s.TearDown()
+			defer s.TearDown(t)
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}

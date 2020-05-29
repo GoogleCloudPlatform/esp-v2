@@ -58,7 +58,7 @@ func TestGRPCInterops(t *testing.T) {
 		t.Fatalf("TestGRPCInteropMiniStress: grpc-interop test binaris are not built. Please run make build-grpc-interop.")
 	}
 
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -103,7 +103,7 @@ func TestGRPCInteropMiniStress(t *testing.T) {
 		t.Fatalf("TestGRPCInteropMiniStress: grpc-interop test binaris are not built. Please run make build-grpc-interop.")
 	}
 
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

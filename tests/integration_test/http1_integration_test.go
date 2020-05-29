@@ -41,7 +41,7 @@ func TestHttp1Basic(t *testing.T) {
 		"--rollout_strategy=fixed", "--healthz=/healthz"}
 
 	s := env.NewTestEnv(comp.TestHttp1Basic, platform.EchoSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -114,7 +114,7 @@ func TestHttp1JWT(t *testing.T) {
 		"--skip_service_control_filter=true", "--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestHttp1JWT, platform.EchoSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -214,7 +214,7 @@ func TestHttpHeaders(t *testing.T) {
 	for _, tc := range testData {
 		func() {
 			s := env.NewTestEnv(comp.TestHttpHeaders, platform.GrpcBookstoreSidecar)
-			defer s.TearDown()
+			defer s.TearDown(t)
 			args := utils.CommonArgs()
 			if tc.underscoresInHeaders {
 				args = append(args, "--underscores_in_headers")

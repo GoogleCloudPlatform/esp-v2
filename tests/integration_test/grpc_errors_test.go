@@ -34,7 +34,7 @@ func TestGRPCErrors(t *testing.T) {
 		"--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPCErrors, platform.GrpcEchoSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

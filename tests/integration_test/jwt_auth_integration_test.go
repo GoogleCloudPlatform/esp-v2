@@ -76,7 +76,7 @@ func TestAsymmetricKeys(t *testing.T) {
 			},
 		},
 	})
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -233,7 +233,8 @@ func TestInvalidOpenIDConnectDiscovery(t *testing.T) {
 		})
 
 		err := s.Setup(args)
-		s.TearDown()
+		// No need to defer teardown, there should be a setup error.
+		s.TearDown(t)
 
 		if err == nil {
 			t.Errorf("Test (%s): failed, expected error, got no err", tc.desc)
@@ -274,7 +275,7 @@ func TestFrontendAndBackendAuthHeaders(t *testing.T) {
 			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.BackendAuthToken",
 		}, 0)
 
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

@@ -41,7 +41,7 @@ func TestDeadlinesForDynamicRouting(t *testing.T) {
 
 	s := env.NewTestEnv(comp.TestDeadlinesForDynamicRouting, platform.EchoRemote)
 
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -121,7 +121,7 @@ func TestDeadlinesForCatchAllBackend(t *testing.T) {
 
 	s := env.NewTestEnv(comp.TestDeadlinesForCatchAllBackend, platform.EchoSidecar)
 
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

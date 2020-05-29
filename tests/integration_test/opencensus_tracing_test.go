@@ -87,7 +87,7 @@ func TestServiceControlCheckTracesWithRetry(t *testing.T) {
 		M: s.ServiceControlServer,
 	}
 	s.ServiceControlServer.OverrideCheckHandler(&handler)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -186,7 +186,7 @@ func TestServiceControlSkipUsageTraces(t *testing.T) {
 			},
 		},
 	)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -255,7 +255,7 @@ func TestFetchingJwksTraces(t *testing.T) {
 			},
 		},
 	})
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

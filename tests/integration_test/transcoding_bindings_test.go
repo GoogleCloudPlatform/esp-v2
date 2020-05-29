@@ -54,7 +54,7 @@ func TestTranscodingBindings(t *testing.T) {
 		Rules: []*confpb.AuthenticationRule{},
 	})
 
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -216,7 +216,7 @@ func TestTranscodingPrintOptions(t *testing.T) {
 				Rules: []*confpb.AuthenticationRule{},
 			})
 
-			defer s.TearDown()
+			defer s.TearDown(t)
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
@@ -303,7 +303,7 @@ func TestTranscodingIgnoreParameters(t *testing.T) {
 				Rules: []*confpb.AuthenticationRule{},
 			})
 
-			defer s.TearDown()
+			defer s.TearDown(t)
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}

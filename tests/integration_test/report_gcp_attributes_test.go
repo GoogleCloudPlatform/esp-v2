@@ -119,7 +119,7 @@ func TestReportGCPAttributes(t *testing.T) {
 			s := env.NewTestEnv(comp.TestReportGCPAttributes, platform.EchoSidecar)
 			s.OverrideMockMetadata(tc.mockMetadataOverride, 0)
 
-			defer s.TearDown()
+			defer s.TearDown(t)
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("Test(%s): fail to setup test env, %v", tc.desc, err)
 			}

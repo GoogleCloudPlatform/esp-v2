@@ -36,7 +36,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 	s := env.NewTestEnv(comp.TestServiceControlFailedRequestReport, platform.GrpcBookstoreSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

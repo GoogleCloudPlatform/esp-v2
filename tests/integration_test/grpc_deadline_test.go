@@ -33,7 +33,7 @@ func TestDeadlinesForGrpcDynamicRouting(t *testing.T) {
 
 	s := env.NewTestEnv(comp.TestDeadlinesForGrpcDynamicRouting, platform.GrpcEchoRemote)
 
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -127,7 +127,7 @@ func TestDeadlinesForGrpcCatchAllBackend(t *testing.T) {
 
 	s := env.NewTestEnv(comp.TestDeadlinesForGrpcCatchAllBackend, platform.GrpcEchoSidecar)
 
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

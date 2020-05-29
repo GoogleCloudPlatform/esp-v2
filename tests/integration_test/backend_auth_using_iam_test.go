@@ -42,7 +42,7 @@ func TestBackendAuthWithIamIdToken(t *testing.T) {
 			fmt.Sprintf("%s?audience=https://localhost/bearertoken/append", util.IamIdentityTokenSuffix(serviceAccount)):   `{"token":  "id-token-for-append"}`,
 		}, 0)
 
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -119,7 +119,7 @@ func TestBackendAuthWithIamIdTokenRetries(t *testing.T) {
 					fmt.Sprintf("%s?audience=https://localhost/bearertoken/constant", util.IamIdentityTokenSuffix(serviceAccount)): `{"token":  "id-token-for-constant"}`,
 				}, tc.wantNumFails)
 
-			defer s.TearDown()
+			defer s.TearDown(t)
 			if err := s.Setup(utils.CommonArgs()); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
@@ -166,7 +166,7 @@ func TestBackendAuthUsingIamIdTokenWithDelegates(t *testing.T) {
 			fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateIdToken?audience=https://localhost/bearertoken/constant", serviceAccount): `{"token":  "id-token-for-constant"}`,
 		}, 0)
 
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

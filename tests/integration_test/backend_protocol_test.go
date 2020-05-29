@@ -90,7 +90,7 @@ func TestBackendHttpProtocol(t *testing.T) {
 			}
 
 			// Setup test env.
-			defer s.TearDown()
+			defer s.TearDown(t)
 			if err := s.Setup(utils.CommonArgs()); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}

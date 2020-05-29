@@ -36,7 +36,7 @@ func TestServiceControlReportNetworkFail(t *testing.T) {
 		"--rollout_strategy=fixed", "--service_control_report_retries=0"}
 
 	s := env.NewTestEnv(comp.TestServiceControlReportNetworkFail, platform.GrpcBookstoreSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

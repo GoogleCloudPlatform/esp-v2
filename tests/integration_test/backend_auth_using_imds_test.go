@@ -39,7 +39,7 @@ func TestBackendAuthWithImdsIdToken(t *testing.T) {
 			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/append":   "ya29.append",
 		}, 0)
 
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -121,7 +121,7 @@ func TestBackendAuthWithImdsIdTokenRetries(t *testing.T) {
 					util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",
 				}, tc.wantNumFails)
 
-			defer s.TearDown()
+			defer s.TearDown(t)
 			if err := s.Setup(utils.CommonArgs()); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
@@ -169,7 +169,7 @@ func TestBackendAuthWithImdsIdTokenWhileAllowCors(t *testing.T) {
 		}, 0)
 	s.SetAllowCors()
 
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

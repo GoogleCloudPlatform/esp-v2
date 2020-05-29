@@ -45,7 +45,7 @@ func TestServiceControlProtocolWithGRPCBackend(t *testing.T) {
 
 	s := env.NewTestEnv(comp.TestServiceControlProtocolWithGRPCBackend, platform.GrpcBookstoreSidecar)
 
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -157,7 +157,7 @@ func TestServiceControlProtocolWithHTTPBackend(t *testing.T) {
 
 	s := env.NewTestEnv(comp.TestServiceControlProtocolWithHTTPBackend, platform.EchoSidecar)
 
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
