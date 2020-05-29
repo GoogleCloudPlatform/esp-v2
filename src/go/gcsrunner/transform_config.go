@@ -25,11 +25,10 @@ import (
 	"github.com/golang/protobuf/ptypes"
 
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/service_control"
-	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	listenerpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
-	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
-	hcmpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
+	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	listenerpb "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
+	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 )
 
 var (
@@ -57,7 +56,7 @@ func addGCPAttributes(cfg *scpb.FilterConfig, opts FetchConfigOptions) error {
 	return nil
 }
 
-func replaceListenerPort(l *v2pb.Listener, port uint32) error {
+func replaceListenerPort(l *listenerpb.Listener, port uint32) error {
 	if port == 0 {
 		return nil
 	}
@@ -131,7 +130,7 @@ func transformEnvoyConfig(bootstrap *bootstrappb.Bootstrap, opts FetchConfigOpti
 	return nil
 }
 
-func transformIngressListener(l *v2pb.Listener, opts FetchConfigOptions) error {
+func transformIngressListener(l *listenerpb.Listener, opts FetchConfigOptions) error {
 	if err := doListenerTransform(l, opts.WantPort); err != nil {
 		return err
 	}
@@ -150,7 +149,7 @@ func transformIngressListener(l *v2pb.Listener, opts FetchConfigOptions) error {
 	return fmt.Errorf("failed to find HTTPConnectionManager on Ingress Listener")
 }
 
-func transformLoopbackListener(l *v2pb.Listener, opts FetchConfigOptions) error {
+func transformLoopbackListener(l *listenerpb.Listener, opts FetchConfigOptions) error {
 	return doListenerTransform(l, opts.LoopbackPort)
 }
 
