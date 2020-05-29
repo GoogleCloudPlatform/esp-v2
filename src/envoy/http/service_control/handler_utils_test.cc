@@ -293,7 +293,7 @@ TEST(ServiceControlUtils, FillLatency) {
   };
 
   const std::chrono::nanoseconds zero = std::chrono::nanoseconds(0);
-  testing::NiceMock<Envoy::Stats::MockStore> mock_stats_scope;
+  testing::NiceMock<Envoy::Stats::MockIsolatedStatsStore> mock_stats_scope;
   ServiceControlFilterStatBase stats_base(Envoy::EMPTY_STRING,
                                           mock_stats_scope);
 

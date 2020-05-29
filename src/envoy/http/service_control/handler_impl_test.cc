@@ -186,7 +186,12 @@ class HandlerTest : public ::testing::Test {
     expected_report_info.method = "GET";
   }
 
-  testing::NiceMock<Envoy::Stats::MockStore> mock_stats_scope_;
+  void checkAndReset(Envoy::Stats::Counter& counter, const int expected_value) {
+    EXPECT_EQ(counter.value(), expected_value);
+    counter.reset();
+  }
+
+  testing::NiceMock<Envoy::Stats::MockIsolatedStatsStore> mock_stats_scope_;
   ServiceControlFilterStatBase stats_base_;
 
   testing::NiceMock<MockCheckDoneCallback> mock_check_done_callback_;
@@ -335,6 +340,9 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
   handler.callReport(&headers, &resp_headers_, &resp_trailer_);
+
+  // Stats.
+  checkAndReset(stats_base_.stats().filter_.denied_producer_error_, 1);
 }
 
 TEST_F(HandlerTest, HandlerMissingHeaders) {
@@ -448,6 +456,9 @@ TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
   handler.callReport(&headers, &response_headers, &resp_trailer_);
+
+  // Stats.
+  checkAndReset(stats_base_.stats().filter_.denied_consumer_error_, 1);
 }
 
 TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithApiKeyRestrictionFields) {

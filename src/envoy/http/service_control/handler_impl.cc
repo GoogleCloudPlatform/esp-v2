@@ -45,7 +45,7 @@ const Envoy::Http::LowerCaseString kAndroidCertHeader{"x-android-cert"};
 const Envoy::Http::LowerCaseString kRefererHeader{"referer"};
 
 constexpr char JwtPayloadIssuerPath[] = "iss";
-constexpr char JwtPayloadAuidencePath[] = "aud";
+constexpr char JwtPayloadAudiencePath[] = "aud";
 
 ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     const Envoy::Http::RequestHeaderMap& headers,
@@ -154,6 +154,7 @@ void ServiceControlHandlerImpl::callCheck(
     Envoy::Http::RequestHeaderMap& headers, Envoy::Tracing::Span& parent_span,
     CheckDoneCallback& callback) {
   if (!isConfigured()) {
+    filter_stats_.filter_.denied_producer_error_.inc();
     callback.onCheckDone(Status(Code::NOT_FOUND, "Method does not exist."));
     return;
   }
@@ -165,6 +166,7 @@ void ServiceControlHandlerImpl::callCheck(
   }
 
   if (!hasApiKey()) {
+    filter_stats_.filter_.denied_consumer_error_.inc();
     check_status_ =
         Status(Code::UNAUTHENTICATED,
                "Method doesn't allow unregistered callers (callers without "
@@ -285,7 +287,7 @@ void ServiceControlHandlerImpl::callReport(
   fillJwtPayload(
       stream_info_.dynamicMetadata(),
       require_ctx_->service_ctx().config().jwt_payload_metadata_name(),
-      JwtPayloadAuidencePath, info.auth_audience);
+      JwtPayloadAudiencePath, info.auth_audience);
 
   info.frontend_protocol = getFrontendProtocol(response_headers, stream_info_);
   info.backend_protocol =
