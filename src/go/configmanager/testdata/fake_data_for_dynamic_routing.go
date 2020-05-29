@@ -93,7 +93,7 @@ var (
    "transportSocket":{
       "name":"envoy.transport_sockets.tls",
       "typedConfig":{
-         "@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
+         "@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
          "sni":"pets.appspot.com",
          "commonTlsContext": {
             "validationContext": {
@@ -131,7 +131,7 @@ var (
    "transportSocket":{
       "name":"envoy.transport_sockets.tls",
       "typedConfig":{
-         "@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
+         "@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
          "sni":"pets.appspot.com",
          "commonTlsContext": {
             "validationContext": {
@@ -170,7 +170,7 @@ var (
    "transportSocket":{
       "name":"envoy.transport_sockets.tls",
       "typedConfig":{
-         "@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
+         "@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
          "sni":"us-central1-cloud-esf.cloudfunctions.net",
          "commonTlsContext": {
             "validationContext": {
@@ -209,7 +209,7 @@ var (
    "transportSocket":{
       "name":"envoy.transport_sockets.tls",
       "typedConfig":{
-         "@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
+         "@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
          "sni":"us-west2-cloud-esf.cloudfunctions.net",
          "commonTlsContext": {
             "validationContext": {
@@ -226,7 +226,6 @@ var (
 
 	FakeWantedListenerForDynamicRouting = `
 {
-	 "name": "ingress_listener",
    "address":{
       "socketAddress":{
          "address":"0.0.0.0",
@@ -239,7 +238,10 @@ var (
             {
                "name":"envoy.filters.network.http_connection_manager",
                "typedConfig":{
-                  "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
+                  "commonHttpProtocolOptions":{
+                     "headersWithUnderscoresAction":"REJECT_REQUEST"
+                  },
                   "httpFilters":[
                      {
                         "name":"envoy.filters.http.path_matcher",
@@ -296,9 +298,9 @@ var (
                         "typedConfig":{
                            "@type":"type.googleapis.com/google.api.envoy.http.backend_auth.FilterConfig",
                            "imdsToken":{
-                               "cluster":"metadata-cluster",
-                               "timeout":"5s",
-                               "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
+                              "cluster":"metadata-cluster",
+                              "timeout":"5s",
+                              "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
                            },
                            "rules":[
                               {
@@ -361,7 +363,7 @@ var (
                         "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
-                           "suppressEnvoyHeaders": true
+                           "suppressEnvoyHeaders":true
                         }
                      }
                   ],
@@ -386,7 +388,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"pets.appspot.com:443",
-                                    "hostRewrite":"pets.appspot.com",
+                                    "hostRewriteLiteral":"pets.appspot.com",
                                     "timeout":"15s"
                                  }
                               },
@@ -399,15 +401,15 @@ var (
                                        }
                                     ],
                                     "safeRegex":{
-                                      "googleRe2":{
-                                        "maxProgramSize":1000
-                                      },
-                                      "regex":"/pet/[^\\/]+$"
+                                       "googleRe2":{
+                                          "maxProgramSize":1000
+                                       },
+                                       "regex":"/pet/[^\\/]+$"
                                     }
                                  },
                                  "route":{
                                     "cluster":"pets.appspot.com:8008",
-                                    "hostRewrite":"pets.appspot.com",
+                                    "hostRewriteLiteral":"pets.appspot.com",
                                     "timeout":"15s"
                                  }
                               },
@@ -423,7 +425,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"us-central1-cloud-esf.cloudfunctions.net:443",
-                                    "hostRewrite":"us-central1-cloud-esf.cloudfunctions.net",
+                                    "hostRewriteLiteral":"us-central1-cloud-esf.cloudfunctions.net",
                                     "timeout":"15s"
                                  }
                               },
@@ -439,7 +441,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"pets.appspot.com:443",
-                                    "hostRewrite":"pets.appspot.com",
+                                    "hostRewriteLiteral":"pets.appspot.com",
                                     "timeout":"15s"
                                  }
                               },
@@ -455,7 +457,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"us-west2-cloud-esf.cloudfunctions.net:443",
-                                    "hostRewrite":"us-west2-cloud-esf.cloudfunctions.net",
+                                    "hostRewriteLiteral":"us-west2-cloud-esf.cloudfunctions.net",
                                     "timeout":"15s"
                                  }
                               }
@@ -463,16 +465,20 @@ var (
                         }
                      ]
                   },
-                  "upgradeConfigs": [{"upgradeType": "websocket"}],
                   "statPrefix":"ingress_http",
-                  "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
+                  "upgradeConfigs":[
+                     {
+                        "upgradeType":"websocket"
+                     }
+                  ],
                   "useRemoteAddress":false,
                   "xffNumTrustedHops":2
                }
             }
          ]
       }
-   ]
+   ],
+   "name":"ingress_listener"
 }
 `
 )

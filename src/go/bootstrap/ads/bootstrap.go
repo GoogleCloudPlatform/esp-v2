@@ -23,13 +23,14 @@ import (
 	"github.com/golang/protobuf/ptypes"
 
 	bt "github.com/GoogleCloudPlatform/esp-v2/src/go/bootstrap"
-	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
+	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
+	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 )
 
 // CreateBootstrapConfig outputs envoy bootstrap config for xDS.
 func CreateBootstrapConfig(opts options.AdsBootstrapperOptions) (string, error) {
+	apiVersion := corepb.ApiVersion_V3
 
 	// Parse the ADS address
 	_, adsHostname, adsPort, _, err := util.ParseURI(opts.DiscoveryAddress)
@@ -53,14 +54,17 @@ func CreateBootstrapConfig(opts options.AdsBootstrapperOptions) (string, error) 
 				ConfigSourceSpecifier: &corepb.ConfigSource_Ads{
 					Ads: &corepb.AggregatedConfigSource{},
 				},
+				ResourceApiVersion: apiVersion,
 			},
 			CdsConfig: &corepb.ConfigSource{
 				ConfigSourceSpecifier: &corepb.ConfigSource_Ads{
 					Ads: &corepb.AggregatedConfigSource{},
 				},
+				ResourceApiVersion: apiVersion,
 			},
 			AdsConfig: &corepb.ApiConfigSource{
-				ApiType: corepb.ApiConfigSource_GRPC,
+				ApiType:             corepb.ApiConfigSource_GRPC,
+				TransportApiVersion: apiVersion,
 				GrpcServices: []*corepb.GrpcService{{
 					TargetSpecifier: &corepb.GrpcService_EnvoyGrpc_{
 						EnvoyGrpc: &corepb.GrpcService_EnvoyGrpc{
@@ -73,13 +77,13 @@ func CreateBootstrapConfig(opts options.AdsBootstrapperOptions) (string, error) 
 
 		// Static resource
 		StaticResources: &bootstrappb.Bootstrap_StaticResources{
-			Clusters: []*v2pb.Cluster{
+			Clusters: []*clusterpb.Cluster{
 				{
 					Name:           "ads_cluster",
-					LbPolicy:       v2pb.Cluster_ROUND_ROBIN,
+					LbPolicy:       clusterpb.Cluster_ROUND_ROBIN,
 					ConnectTimeout: connectTimeoutProto,
-					ClusterDiscoveryType: &v2pb.Cluster_Type{
-						Type: v2pb.Cluster_STRICT_DNS,
+					ClusterDiscoveryType: &clusterpb.Cluster_Type{
+						Type: clusterpb.Cluster_STRICT_DNS,
 					},
 					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{},
 					LoadAssignment:       util.CreateLoadAssignment(adsHostname, adsPort),

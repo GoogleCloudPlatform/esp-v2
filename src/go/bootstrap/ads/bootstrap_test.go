@@ -35,82 +35,83 @@ func TestCreateBootstrapConfig(t *testing.T) {
 				"admin_port":         "0",
 				"tracing_project_id": "test_project",
 			},
-			wantConfig: `{
-			  "node": {
-          "id": "ESPv2",
-          "cluster": "ESPv2_cluster"
-        },
-        "staticResources": {
-          "clusters": [
+			wantConfig: `
+{
+  "admin": {},
+  "dynamicResources": {
+    "adsConfig": {
+      "apiType": "GRPC",
+      "grpcServices": [
+        {
+          "envoyGrpc": {
+            "clusterName": "ads_cluster"
+          }
+        }
+      ],
+      "transportApiVersion": "V3"
+    },
+    "cdsConfig": {
+      "ads": {},
+      "resourceApiVersion": "V3"
+    },
+    "ldsConfig": {
+      "ads": {},
+      "resourceApiVersion": "V3"
+    }
+  },
+  "node": {
+    "cluster": "ESPv2_cluster",
+    "id": "ESPv2"
+  },
+  "staticResources": {
+    "clusters": [
+      {
+        "connectTimeout": "10s",
+        "http2ProtocolOptions": {},
+        "loadAssignment": {
+          "clusterName": "127.0.0.1",
+          "endpoints": [
             {
-              "name": "ads_cluster",
-              "type": "STRICT_DNS",
-              "connectTimeout": "10s",
-              "loadAssignment": {
-                "clusterName": "127.0.0.1",
-                "endpoints": [
-                  {
-                    "lbEndpoints": [
-                      {
-                        "endpoint": {
-                          "address": {
-                            "socketAddress": {
-                              "address": "127.0.0.1",
-                              "portValue": 8790
-                            }
-                          }
-                        }
+              "lbEndpoints": [
+                {
+                  "endpoint": {
+                    "address": {
+                      "socketAddress": {
+                        "address": "127.0.0.1",
+                        "portValue": 8790
                       }
-                    ]
+                    }
                   }
-                ]
-              },
-              "http2ProtocolOptions": {
-              }
+                }
+              ]
             }
           ]
         },
-        "dynamicResources": {
-          "ldsConfig": {
-            "ads": {
-            }
-          },
-          "cdsConfig": {
-            "ads": {
-            }
-          },
-          "adsConfig": {
-            "apiType": "GRPC",
-            "grpcServices": [
-              {
-                "envoyGrpc": {
-                  "clusterName": "ads_cluster"
-                }
-              }
-            ]
+        "name": "ads_cluster",
+        "type": "STRICT_DNS"
+      }
+    ]
+  },
+  "tracing": {
+    "http": {
+      "name": "envoy.tracers.opencensus",
+      "typedConfig": {
+        "@type": "type.googleapis.com/envoy.config.trace.v3.OpenCensusConfig",
+        "stackdriverExporterEnabled": true,
+        "stackdriverProjectId": "test_project",
+        "traceConfig": {
+          "maxNumberOfAnnotations": "32",
+          "maxNumberOfAttributes": "32",
+          "maxNumberOfLinks": "128",
+          "maxNumberOfMessageEvents": "128",
+          "probabilitySampler": {
+            "samplingProbability": 0.001
           }
-        },
-        "tracing": {
-          "http": {
-            "name": "envoy.tracers.opencensus",
-            "typedConfig": {
-              "@type": "type.googleapis.com/envoy.config.trace.v2.OpenCensusConfig",
-              "traceConfig": {
-                "probabilitySampler": {
-                  "samplingProbability": 0.001
-                },
-                "maxNumberOfAttributes": "32",
-                "maxNumberOfAnnotations": "32",
-                "maxNumberOfMessageEvents": "128",
-                "maxNumberOfLinks": "128"
-              },
-              "stackdriverExporterEnabled": true,
-              "stackdriverProjectId": "test_project"
-            }
-          }
-        },
-        "admin": {}
-      }`,
+        }
+      }
+    }
+  }
+}`,
 		},
 		{
 			desc: "bootstrap with options",
@@ -119,71 +120,73 @@ func TestCreateBootstrapConfig(t *testing.T) {
 				"admin_port":      "8001",
 				"node":            "test-node",
 			},
-			wantConfig: `{
-			  "node": {
-          "id": "test-node",
-          "cluster": "test-node_cluster"
-        },
-        "staticResources": {
-          "clusters": [
+			wantConfig: `
+{
+  "admin": {
+    "accessLogPath": "/dev/null",
+    "address": {
+      "socketAddress": {
+        "address": "0.0.0.0",
+        "portValue": 8001
+      }
+    }
+  },
+  "dynamicResources": {
+    "adsConfig": {
+      "apiType": "GRPC",
+      "grpcServices": [
+        {
+          "envoyGrpc": {
+            "clusterName": "ads_cluster"
+          }
+        }
+      ],
+      "transportApiVersion": "V3"
+    },
+    "cdsConfig": {
+      "ads": {},
+      "resourceApiVersion": "V3"
+    },
+    "ldsConfig": {
+      "ads": {},
+      "resourceApiVersion": "V3"
+    }
+  },
+  "node": {
+    "cluster": "test-node_cluster",
+    "id": "test-node"
+  },
+  "staticResources": {
+    "clusters": [
+      {
+        "connectTimeout": "10s",
+        "http2ProtocolOptions": {},
+        "loadAssignment": {
+          "clusterName": "127.0.0.1",
+          "endpoints": [
             {
-              "name": "ads_cluster",
-              "type": "STRICT_DNS",
-              "connectTimeout": "10s",
-              "loadAssignment": {
-                "clusterName": "127.0.0.1",
-                "endpoints": [
-                  {
-                    "lbEndpoints": [
-                      {
-                        "endpoint": {
-                          "address": {
-                            "socketAddress": {
-                              "address": "127.0.0.1",
-                              "portValue": 8790
-                            }
-                          }
-                        }
+              "lbEndpoints": [
+                {
+                  "endpoint": {
+                    "address": {
+                      "socketAddress": {
+                        "address": "127.0.0.1",
+                        "portValue": 8790
                       }
-                    ]
+                    }
                   }
-                ]
-              },
-              "http2ProtocolOptions": {
-              }
+                }
+              ]
             }
           ]
         },
-        "dynamicResources": {
-          "ldsConfig": {
-            "ads": {
-            }
-          },
-          "cdsConfig": {
-            "ads": {
-            }
-          },
-          "adsConfig": {
-            "apiType": "GRPC",
-            "grpcServices": [
-              {
-                "envoyGrpc": {
-                  "clusterName": "ads_cluster"
-                }
-              }
-            ]
-          }
-        },
-        "admin": {
-          "accessLogPath": "/dev/null",
-          "address": {
-            "socketAddress": {
-              "address": "0.0.0.0",
-              "portValue": 8001
-            }
-          }
-        }
-      }`,
+        "name": "ads_cluster",
+        "type": "STRICT_DNS"
+      }
+    ]
+  }
+}
+`,
 		},
 	}
 

@@ -26,7 +26,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/golang/protobuf/jsonpb"
 
-	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
+	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 

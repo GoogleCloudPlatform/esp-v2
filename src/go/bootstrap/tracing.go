@@ -24,7 +24,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 
 	opencensuspb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
-	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v2"
+	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
 )
 
 func createTraceContexts(ctx_str string) ([]tracepb.OpenCensusConfig_TraceContext, error) {

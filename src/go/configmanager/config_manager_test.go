@@ -31,23 +31,13 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
-	"github.com/envoyproxy/go-control-plane/pkg/cache/v2"
-	"github.com/envoyproxy/go-control-plane/pkg/resource/v2"
+	"github.com/envoyproxy/go-control-plane/pkg/cache/v3"
+	"github.com/envoyproxy/go-control-plane/pkg/resource/v3"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 
-	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/path_matcher"
-	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/service_control"
-	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
-	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	grpcstatspb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/grpc_stats/v2alpha"
-	jwtauthnpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
-	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
-	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
-	hcmpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
-	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
-	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	discoverypb "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	servicecontrolpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
@@ -123,7 +113,7 @@ func TestFetchListeners(t *testing.T) {
             {
                "name":"envoy.filters.network.http_connection_manager",
                "typedConfig":{
-                  "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
                      {
                         "name":"envoy.filters.http.path_matcher",
@@ -269,7 +259,7 @@ func TestFetchListeners(t *testing.T) {
             {
                "name":"envoy.filters.network.http_connection_manager",
                "typedConfig":{
-                  "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
                      {
                         "name":"envoy.filters.http.path_matcher",
@@ -464,7 +454,7 @@ func TestFetchListeners(t *testing.T) {
             {
                "name":"envoy.filters.network.http_connection_manager",
                "typedConfig":{
-                  "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
                      {
                         "name":"envoy.filters.http.path_matcher",
@@ -679,7 +669,7 @@ func TestFetchListeners(t *testing.T) {
             {
                "name":"envoy.filters.network.http_connection_manager",
                "typedConfig":{
-                  "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
                      {
                         "name":"envoy.filters.http.path_matcher",
@@ -923,7 +913,7 @@ func TestFetchListeners(t *testing.T) {
             {
                "name":"envoy.filters.network.http_connection_manager",
                "typedConfig":{
-                  "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
                      {
                         "name":"envoy.filters.http.path_matcher",
@@ -1148,7 +1138,7 @@ func TestFetchListeners(t *testing.T) {
             {
                "name":"envoy.filters.network.http_connection_manager",
                "typedConfig":{
-                  "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
                      {
                         "name":"envoy.filters.http.path_matcher",
@@ -1316,7 +1306,7 @@ func TestFetchListeners(t *testing.T) {
             {
                "name":"envoy.filters.network.http_connection_manager",
                "typedConfig":{
-                  "@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
                      {
                         "name":"envoy.filters.http.path_matcher",
@@ -1457,7 +1447,7 @@ func TestFetchListeners(t *testing.T) {
 		runTest(t, opts, func(env *testEnv) {
 			ctx := context.Background()
 			// First request, VersionId should be empty.
-			req := v2pb.DiscoveryRequest{
+			req := discoverypb.DiscoveryRequest{
 				Node: &corepb.Node{
 					Id: opts.Node,
 				},
@@ -1468,7 +1458,7 @@ func TestFetchListeners(t *testing.T) {
 				t.Fatal(err)
 			}
 			marshaler := &jsonpb.Marshaler{
-				AnyResolver: Resolver,
+				AnyResolver: util.Resolver,
 			}
 			gotListeners, err := marshaler.MarshalToString(resp.Resources[0])
 			if err != nil {
@@ -1517,7 +1507,7 @@ func TestFixedModeDynamicRouting(t *testing.T) {
 		}
 		ctx := context.Background()
 		// First request, VersionId should be empty.
-		reqForClusters := v2pb.DiscoveryRequest{
+		reqForClusters := discoverypb.DiscoveryRequest{
 			Node: &corepb.Node{
 				Id: opts.Node,
 			},
@@ -1554,7 +1544,7 @@ func TestFixedModeDynamicRouting(t *testing.T) {
 			}
 		}
 
-		reqForListener := v2pb.DiscoveryRequest{
+		reqForListener := discoverypb.DiscoveryRequest{
 			Node: &corepb.Node{
 				Id: opts.Node,
 			},
@@ -1723,7 +1713,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		var resp *cache.Response
 		var err error
 		ctx := context.Background()
-		req := v2pb.DiscoveryRequest{
+		req := discoverypb.DiscoveryRequest{
 			Node: &corepb.Node{
 				Id: opts.Node,
 			},
@@ -1853,7 +1843,7 @@ func sortResources(response *cache.Response) []types.Resource {
 
 func genFakeConfig(input string) ([]byte, error) {
 	unmarshaler := &jsonpb.Unmarshaler{
-		AnyResolver: Resolver,
+		AnyResolver: util.Resolver,
 	}
 	service := new(confpb.Service)
 	if err := unmarshaler.Unmarshal(strings.NewReader(input), service); err != nil {
@@ -1893,40 +1883,3 @@ func genFakeRollouts(input string) ([]byte, error) {
 	}
 	return protoBytesArray, nil
 }
-
-type FuncResolver func(url string) (proto.Message, error)
-
-func (fn FuncResolver) Resolve(url string) (proto.Message, error) {
-	return fn(url)
-}
-
-var Resolver = FuncResolver(func(url string) (proto.Message, error) {
-	switch url {
-	case "type.googleapis.com/google.api.servicemanagement.v1.ConfigFile":
-		return new(smpb.ConfigFile), nil
-	case "type.googleapis.com/google.api.HttpRule":
-		return new(annotationspb.HttpRule), nil
-	case "type.googleapis.com/google.protobuf.BoolValue":
-		return new(wrapperspb.BoolValue), nil
-	case "type.googleapis.com/google.api.Service":
-		return new(confpb.Service), nil
-	case "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager":
-		return new(hcmpb.HttpConnectionManager), nil
-	case "type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig":
-		return new(pmpb.FilterConfig), nil
-	case "type.googleapis.com/google.api.envoy.http.service_control.FilterConfig":
-		return new(scpb.FilterConfig), nil
-	case "type.googleapis.com/envoy.config.filter.http.router.v2.Router":
-		return new(routerpb.Router), nil
-	case "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext":
-		return new(authpb.UpstreamTlsContext), nil
-	case "type.googleapis.com/envoy.config.filter.http.transcoder.v2.GrpcJsonTranscoder":
-		return new(transcoderpb.GrpcJsonTranscoder), nil
-	case "type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication":
-		return new(jwtauthnpb.JwtAuthentication), nil
-	case "type.googleapis.com/envoy.config.filter.http.grpc_stats.v2alpha.FilterConfig":
-		return new(grpcstatspb.FilterConfig), nil
-	default:
-		return nil, fmt.Errorf("unexpected protobuf.Any with url: %s", url)
-	}
-})

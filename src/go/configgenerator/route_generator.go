@@ -25,10 +25,9 @@ import (
 	"github.com/golang/protobuf/ptypes"
 
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/common"
-	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
-	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 )
 
@@ -37,7 +36,7 @@ const (
 	virtualHostName = "backend"
 )
 
-func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*v2pb.RouteConfiguration, error) {
+func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfiguration, error) {
 	var virtualHosts []*routepb.VirtualHost
 	host := routepb.VirtualHost{
 		Name:    virtualHostName,
@@ -172,7 +171,7 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*v2pb.RouteConfigurat
 	}
 
 	virtualHosts = append(virtualHosts, &host)
-	return &v2pb.RouteConfiguration{
+	return &routepb.RouteConfiguration{
 		Name:         routeName,
 		VirtualHosts: virtualHosts,
 	}, nil
@@ -209,8 +208,8 @@ func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.R
 						ClusterSpecifier: &routepb.RouteAction_Cluster{
 							Cluster: method.BackendInfo.ClusterName,
 						},
-						HostRewriteSpecifier: &routepb.RouteAction_HostRewrite{
-							HostRewrite: method.BackendInfo.Hostname,
+						HostRewriteSpecifier: &routepb.RouteAction_HostRewriteLiteral{
+							HostRewriteLiteral: method.BackendInfo.Hostname,
 						},
 						Timeout: ptypes.DurationProto(respTimeout),
 					},

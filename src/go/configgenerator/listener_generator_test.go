@@ -25,7 +25,7 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
 
-	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	anypb "github.com/golang/protobuf/ptypes/any"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -1333,7 +1333,7 @@ func TestHealthCheckFilter(t *testing.T) {
 			wantHealthCheckFilter: `{
         "name": "envoy.filters.http.health_check",
         "typedConfig": {
-          "@type":"type.googleapis.com/envoy.config.filter.http.health_check.v2.HealthCheck",
+          "@type":"type.googleapis.com/envoy.extensions.filters.http.health_check.v3.HealthCheck",
           "passThroughMode":false,
           "headers": [
             {
@@ -1374,7 +1374,7 @@ func TestHealthCheckFilter(t *testing.T) {
 			wantHealthCheckFilter: `{
         "name": "envoy.filters.http.health_check",
         "typedConfig": {
-          "@type":"type.googleapis.com/envoy.config.filter.http.health_check.v2.HealthCheck",
+          "@type":"type.googleapis.com/envoy.extensions.filters.http.health_check.v3.HealthCheck",
           "passThroughMode":false,
           "headers": [
             {
@@ -1436,83 +1436,92 @@ func TestMakeListeners(t *testing.T) {
 					},
 				},
 			},
-			wantListeners: []string{
-				`{
-					"name": "ingress_listener",
-					"address":{
-						"socketAddress":{
-							"address":"0.0.0.0",
-							"portValue":8080
-							}
-					},
-					"filterChains":[
-						{
-							"filters":[
-								{
-									"name":"envoy.filters.network.http_connection_manager",
-									"typedConfig":{
-										"@type":"type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
-									  "httpFilters":[
-											{
-												"name":"envoy.filters.http.router",
-												"typedConfig":{
-													"@type":"type.googleapis.com/envoy.config.filter.http.router.v2.Router",
-													"startChildSpan":true,
-													"suppressEnvoyHeaders":true
-												}
-											}
-										],
-										"routeConfig":{
-											"name":"local_route",
-											"virtualHosts":[
-												{
-													"domains":["*"],
-													"name":"backend",
-													"routes":[
-														{
-															"match":{
-																"prefix":"/"
-															},
-															"route":{
-																"cluster":"bookstore.endpoints.project123.cloud.goog_local",
-																"timeout":"15s"
-															}
-														}
-													]
-												}
-											]
-										},
-										"upgradeConfigs":[{"upgradeType":"websocket"}],
-										"statPrefix":"ingress_http",
-										"commonHttpProtocolOptions":{},
-										"tracing":{},
-										"useRemoteAddress":false,
-										"xffNumTrustedHops":2
-									}
-								}
-							],
-							"transportSocket":{
-								"name":"envoy.transport_sockets.tls",
-								"typedConfig":{
-									"@type":"type.googleapis.com/envoy.api.v2.auth.DownstreamTlsContext",
-									"commonTlsContext":{
-										"alpnProtocols": ["h2", "http/1.1"],
-										"tlsCertificates":[
-											{
-												"certificateChain":{
-													"filename":"/etc/endpoints/ssl/server.crt"
-											  },
-					 						  "privateKey":{
-												  "filename":"/etc/endpoints/ssl/server.key"
-											  }
-										  }
-									  ]
-								  }
-							  }
-						  }
-					  }
-					]
-				}`,
+			wantListeners: []string{`
+{
+  "address": {
+    "socketAddress": {
+      "address": "0.0.0.0",
+      "portValue": 8080
+    }
+  },
+  "filterChains": [
+    {
+      "filters": [
+        {
+          "name": "envoy.filters.network.http_connection_manager",
+          "typedConfig": {
+            "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
+            "commonHttpProtocolOptions": {},
+            "httpFilters": [
+              {
+                "name": "envoy.filters.http.router",
+                "typedConfig": {
+                  "@type": "type.googleapis.com/envoy.config.filter.http.router.v2.Router",
+                  "startChildSpan": true,
+                  "suppressEnvoyHeaders": true
+                }
+              }
+            ],
+            "routeConfig": {
+              "name": "local_route",
+              "virtualHosts": [
+                {
+                  "domains": [
+                    "*"
+                  ],
+                  "name": "backend",
+                  "routes": [
+                    {
+                      "match": {
+                        "prefix": "/"
+                      },
+                      "route": {
+                        "cluster": "bookstore.endpoints.project123.cloud.goog_local",
+                        "timeout": "15s"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "statPrefix": "ingress_http",
+            "tracing": {},
+            "upgradeConfigs": [
+              {
+                "upgradeType": "websocket"
+              }
+            ],
+            "useRemoteAddress": false,
+            "xffNumTrustedHops": 2
+          }
+        }
+      ],
+      "transportSocket": {
+        "name": "envoy.transport_sockets.tls",
+        "typedConfig": {
+          "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext",
+          "commonTlsContext": {
+            "alpnProtocols": [
+              "h2",
+              "http/1.1"
+            ],
+            "tlsCertificates": [
+              {
+                "certificateChain": {
+                  "filename": "/etc/endpoints/ssl/server.crt"
+                },
+                "privateKey": {
+                  "filename": "/etc/endpoints/ssl/server.key"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "name": "ingress_listener"
+}`,
 			},
 		},
 	}
@@ -1659,7 +1668,7 @@ func TestMakeHttpConMgr(t *testing.T) {
 	}
 
 	for i, tc := range testdata {
-		routeConfig := v2pb.RouteConfiguration{}
+		routeConfig := routepb.RouteConfiguration{}
 		hcm := makeHttpConMgr(&tc.opts, &routeConfig)
 
 		marshaler := &jsonpb.Marshaler{}

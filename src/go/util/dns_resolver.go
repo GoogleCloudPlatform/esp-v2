@@ -19,7 +19,7 @@ import (
 	"strconv"
 	"strings"
 
-	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 )
 
 func DnsResolvers(dnsResolverAddresses string) ([]*corepb.Address, error) {

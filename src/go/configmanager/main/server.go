@@ -29,8 +29,8 @@ import (
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
 
-	discoverygrpc "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v2"
-	xds "github.com/envoyproxy/go-control-plane/pkg/server/v2"
+	discoverygrpc "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
+	xds "github.com/envoyproxy/go-control-plane/pkg/server/v3"
 )
 
 func main() {

@@ -29,12 +29,12 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
+	"github.com/envoyproxy/go-control-plane/pkg/cache/v3"
 	"github.com/golang/glog"
 
 	gen "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator"
 	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/serviceconfig"
-	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	cache "github.com/envoyproxy/go-control-plane/pkg/cache/v2"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
