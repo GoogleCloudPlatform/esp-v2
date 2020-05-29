@@ -52,8 +52,10 @@ downstream_request {
       value: "GET"
     }
   }
-  data: "Some data to test the metrics such as request_sizes."
-  data: "ec\310\253-api.endpoints.cloudesf-testing.cloud.goog"
+  http_body {
+    data: "Some data to test the metrics such as request_sizes."
+    data: "ec\310\253-api.endpoints.cloudesf-testing.cloud.goog"
+  }
 }
 upstream_response {
   headers {
@@ -62,7 +64,9 @@ upstream_response {
       value: "200"
     }
   }
-  data: "Some data to test the metrics such as response_sizes."
+  http_body {
+    data: "Some data to test the metrics such as response_sizes."
+  }
 }
 stream_info {
   response_code {
@@ -76,7 +80,9 @@ sidestream_response {
       value: "200"
     }
   }
-  data: "{ \"access_token\": \"fuzz-access-token\", \"expires_in\": 60000 }"
+  http_body {
+    data: "{ \"access_token\": \"fuzz-access-token\", \"expires_in\": 60000 }"
+  }
 }
 sidestream_response {
   headers {
@@ -101,8 +107,10 @@ sidestream_response {
       value: "/echo?key=test-api-key"
     }
   }
-  data: "\000\000\000\000\000\000\000\000"
-  data: "2\006\022\004\010\300\304\007"
+  http_body {
+    data: "\000\000\000\000\000\000\000\000"
+    data: "2\006\022\004\010\300\304\007"
+  }
 }
 sidestream_response {
   headers {
@@ -127,5 +135,7 @@ sidestream_response {
       value: "200"
     }
   }
-  data: ""
+  http_body {
+    data: ""
+  }
 }

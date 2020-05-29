@@ -1018,12 +1018,12 @@ TEST_F(HandlerTest, TryIntermediateReport) {
   handler.tryIntermediateReport();
 
   // Test: Next call is skipped because not enough time has passed
-  test_time_.sleep(std::chrono::milliseconds(1));
+  test_time_.timeSystem().advanceTimeAsync(std::chrono::milliseconds(1));
   handler.tryIntermediateReport();
 
   // Test: Next call is sent because enough time has passed
   // In the config: min_stream_report_interval_ms: 100
-  test_time_.sleep(std::chrono::milliseconds(200));
+  test_time_.timeSystem().advanceTimeAsync(std::chrono::milliseconds(200));
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
   expected_report_info.api_key = "foobar";
@@ -1051,7 +1051,7 @@ TEST_F(HandlerTest, TryIntermediateReport) {
   handler.tryIntermediateReport();
 
   // Test: Next call is sent. First report is false
-  test_time_.sleep(std::chrono::milliseconds(200));
+  test_time_.timeSystem().advanceTimeAsync(std::chrono::milliseconds(200));
   expected_report_info.is_first_report = false;
 
   mock_stream_info_.bytes_received_ = 789;
@@ -1095,7 +1095,7 @@ TEST_F(HandlerTest, FinalReports) {
 
   handler.tryIntermediateReport();
 
-  test_time_.sleep(std::chrono::milliseconds(200));
+  test_time_.timeSystem().advanceTimeAsync(std::chrono::milliseconds(200));
   int duration = std::chrono::duration_cast<std::chrono::microseconds>(
                      std::chrono::milliseconds(200))
                      .count();

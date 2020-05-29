@@ -25,63 +25,85 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 )
 
-func fullDns(dns string) string {
+func toFqdnWithRoot(dns string) string {
 	return dns + "."
 }
 
 func TestDnsResolver(t *testing.T) {
 	t.Parallel()
-	s := env.NewTestEnv(comp.TestDnsResolver, platform.EchoSidecar)
-
-	// Setup dns resolver.
-	backendHost := "dns-resolver-test-backend"
-	localHost := "127.0.0.1"
-	dnsRecords := map[string]string{
-		fullDns(backendHost): localHost,
-	}
-	dnsResolver := comp.NewDnsResolver(s.Ports().DnsResolverPort, dnsRecords)
-	go func() {
-		if err := dnsResolver.ListenAndServe(); err != nil {
-			t.Fatalf("Failed to set udp listener %s\n", err.Error())
-		}
-	}()
-
-	// Check dns resolver's health.
-	dnsResolverAddress := fmt.Sprintf("127.0.0.1:%v", s.Ports().DnsResolverPort)
-	if err := comp.CheckDnsResolverHealth(dnsResolverAddress, backendHost, localHost); err != nil {
-		t.Fatalf("DNS Resolver is not healthy: %v", err)
-	}
-
-	// Setup the whole test framework.
-	s.SetBackendAddress(fmt.Sprintf("http://%s:%v", backendHost, s.Ports().BackendServerPort))
-	args := []string{"--service_config_id=test-config-id",
-		"--rollout_strategy=fixed", "--healthz=/healthz", "--dns_resolver_addresses=" + dnsResolverAddress}
 
 	testCase := []struct {
 		desc            string
+		backendHost     string
 		isResolveFailed bool
 		wantResp        string
 		wantError       string
 	}{
 		{
-			desc:     "resolve domain name successfully",
-			wantResp: `{"message":"hello"}`,
+			desc:        "resolve PQDN domain name successfully",
+			backendHost: "dns-resolver-test-backend",
+			wantResp:    `{"message":"hello"}`,
 		},
 		{
-			desc:            "resolve domain name unsuccessfully",
+			desc:        "resolve FQDN domain name successfully",
+			backendHost: "dns-resolver-test-backend.example.com",
+			wantResp:    `{"message":"hello"}`,
+		},
+		{
+			desc:        "resolve workstation FQDN domain name successfully",
+			backendHost: "dns-resolver-test-backend.corp.google.com",
+			wantResp:    `{"message":"hello"}`,
+		},
+		{
+			desc:        "resolve k8s FQDN domain name successfully",
+			backendHost: "dns-resolver-test-backend.test-pods.svc.cluster.local",
+			wantResp:    `{"message":"hello"}`,
+		},
+		{
+			desc:            "resolve domain name fails because record not exist in resolver",
+			backendHost:     "dns-resolver-test-backend",
 			isResolveFailed: true,
 			wantError:       `http response status is not 200 OK: 503 Service Unavailable, no healthy upstream`,
 		},
 	}
 
 	for _, tc := range testCase {
-		if tc.isResolveFailed {
-			delete(dnsRecords, fullDns(backendHost))
-		} else {
-			dnsRecords[backendHost] = localHost
-		}
-
 		func() {
+			s := env.NewTestEnv(comp.TestDnsResolver, platform.EchoSidecar)
+
+			// Setup dns resolver.
+			dnsRecords := map[string]string{
+				toFqdnWithRoot(tc.backendHost): platform.GetLoopbackAddress(),
+			}
+			dnsResolver := comp.NewDnsResolver(s.Ports().DnsResolverPort, dnsRecords)
+			defer dnsResolver.Shutdown()
+			go func() {
+				if err := dnsResolver.ListenAndServe(); err != nil {
+					t.Fatalf("Failed to set udp listener %s\n", err.Error())
+				}
+			}()
+
+			// Check dns resolver's health.
+			dnsResolverAddress := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().DnsResolverPort)
+			if err := comp.CheckDnsResolverHealth(dnsResolverAddress, tc.backendHost, platform.GetLoopbackAddress()); err != nil {
+				t.Fatalf("DNS Resolver is not healthy: %v", err)
+			}
+
+			// If testing failure case, remove records after dns health check passes.
+			if tc.isResolveFailed {
+				delete(dnsRecords, toFqdnWithRoot(tc.backendHost))
+				dnsRecords[toFqdnWithRoot("invalid."+tc.backendHost)] = platform.GetLoopbackAddress()
+			}
+
+			// Setup the whole test framework.
+			s.SetBackendAddress(fmt.Sprintf("http://%s:%v", tc.backendHost, s.Ports().BackendServerPort))
+			args := []string{"" +
+				"--service_config_id=test-config-id",
+				"--rollout_strategy=fixed",
+				"--healthz=/healthz",
+				"--dns_resolver_addresses=" + dnsResolverAddress,
+			}
+
 			defer s.TearDown()
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
@@ -91,15 +113,15 @@ func TestDnsResolver(t *testing.T) {
 			resp, err := client.DoPost(url, "hello")
 			if err != nil {
 				if tc.wantError == "" {
-					t.Errorf("got unexpected error: %s", err)
+					t.Errorf("Test(%v): got unexpected error: %s", tc.desc, err)
 				} else if tc.wantError != err.Error() {
-					t.Errorf("got unexpected error, expect: %s, get: %s", tc.wantError, err.Error())
+					t.Errorf("Test(%v): got unexpected error, expect: %s, get: %s", tc.desc, tc.wantError, err.Error())
 				}
 				return
 			}
 
 			if !strings.Contains(string(resp), tc.wantResp) {
-				t.Errorf("expected: %s, got: %s", tc.wantResp, string(resp))
+				t.Errorf("Test(%v): expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
 			}
 		}()
 	}

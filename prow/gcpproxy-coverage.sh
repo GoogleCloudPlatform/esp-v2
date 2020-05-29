@@ -28,11 +28,21 @@ cd "${ROOT}"
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
 
-echo '======================================================='
-echo '===================== Setup Cache ====================='
-echo '======================================================='
-try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "${JOB_TYPE}-coverage"
-
+# https://github.com/bazelbuild/bazel/issues/7247
+# TODO(nareddyt): See if there are workarounds.
+case "${JOB_TYPE}" in
+  "presubmit")
+    echo "Coverage job is disabled for presubmits due to a bug with remote caching."
+    echo "Otherwise, presubmits would take too long to complete."
+    echo "If you need to see coverage for your commit, please run this script locally."
+    echo "Coverage job will still run periodically on the master branch."
+    exit 0
+    ;;
+esac
+#echo '======================================================='
+#echo '===================== Setup Cache ====================='
+#echo '======================================================='
+#try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "${JOB_TYPE}-coverage"
 
 echo '======================================================='
 echo '==================== C++ Coverage ====================='

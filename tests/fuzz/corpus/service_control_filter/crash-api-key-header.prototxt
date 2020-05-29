@@ -66,7 +66,9 @@ downstream_request {
       value: "GET"
     }
   }
-  data: "echo-api.endpoints.cloudesf-testing.cloud.goog"
+  http_body {
+    data: "echo-api.endpoints.cloudesf-testing.cloud.goog"
+  }
 }
 upstream_response {
   headers {
@@ -75,7 +77,9 @@ upstream_response {
       value: "200"
     }
   }
-  data: "Some data to test the metrics such as response_sizes."
+  http_body {
+    data: "Some data to test the metrics such as response_sizes."
+  }
 }
 stream_info {
   dynamic_metadata {
@@ -101,8 +105,10 @@ sidestream_response {
       value: "200"
     }
   }
-  data: "200"
-  data: "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  http_body {
+    data: "200"
+    data: "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  }
 }
 sidestream_response {
   headers {
@@ -127,8 +133,10 @@ sidestream_response {
       value: "200"
     }
   }
-  data: "\000\000\000\000\000\000\000\000"
-  data: "2\006\022config {\n  services {\n    service_name: \"echo-api.endpoints.cloudesf-testing.cloud.goog\"\n    service_config_id: \"test-config-id\"\n    producer_project_id: \"producer-project\"\n    service_config {\n      type_url: \"type.googleapis.com/google.api.Service\"\n      value: \"\\272\\001\\017\\n\\rendpoints_log\\302\\001^\\nHserviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer\\022\\016\\n\\014/consumer_id\\030\\002 \\005\\312\\001)\\n\\003api\\\"\\\"\\n\\035cloud.googleapis.com/location\\032\\001\\002\\322\\001IBG\\nE\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\17\004\0107\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\332\\001\\007\\n\\005\\032\\003api\\342\\001\\235\\001\\n@\\n>\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\nO\\n\\003api\\022Hserviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer\\022\\010\\n\\003api\\022\\001!\"\n    }\n    backend_protocol: \"http1\"\n    jwt_payload_metadata_name: \"jwt_payloads\"\n  }\n  requirements {\n    service_name: \"echo-api.endpoints.cloudesf-testing.cloud.goog\"\n    operation_name: \"1.echo_api_endpoints_cloudesf_tentsig_cloud_goog.Echo\"\n    metric_costs {\n      name: \"metrics_first\"\n      cost: 2\n    }\n  }\n  imds_token {\n    uri: \"http://127.0.0.1:42761/v1/instance/service-accounts/default/token\"\n    cluster: \"metadata-cluster\"\n    timeout {\n      seconds: 5\n    }\n  }\n  sc_calling_config {\n    network_fail_open {\n    }\n    report_retries {\n      value: 200\n    }\n  }\n  service_control_uri {\n    uri: \"http://127.0.0.1/v1/services/\"\n    cluster: \"service-control-cluster\"\n    timeout {\n      seconds: 5\n    }\n  }\n}\ndownstream_request {\n  headers {\n    headers {\n      key: \":path\"\n      value: \"/echo?key=test-api-key\"\n    }\n    headers {\n      key: \":method\"\n      value: \"GET\"\n    }\n  }\n  data: \"Some data to test the metrics such as request_sizes.\"\n}\nupstream_response {\n  headers {\n    headers {\n      key: \":status\"\n      value: \"200\"\n    }\n  }\n  data: \"Some data to test the metrics such as response_sizes.\"\n}\nstream_info {\n  dynamic_metadata {\n  }\n  response_code {\n    value: 200\n  }\n}\nsidestream_response {\n  headers {\n    headers {\n      key: \":status\"\n      value: \"200\"\n    }\n  }\n  data: \"{ \\\"access_token\\\": \\\"fuzz-access-token\\\", \\\"expires_in\\\": 60000 }\"\n}\nsidestream_response {\n  headers {\n    headers {\n      key: \":status\"\n      value: \"504\"\n    }\n  }\n  data: \"number_value\"\n}\nsidestream_response {\n  headers {\n    headers {\n      key: \":status\"\n      value: \"504\"\n    }\n  }\n}\nsidestream_response {\n  headers {\n    headers {\n      key: \"\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\"\n    }\n  }\n  data: \"2\\006\\022\\004\\010\\300\\304\\007\"\n}\nsidestream_response {\n  headers {\n    headers {\n      key: \":status\"\n      value: \"504\"\n    }\n  }\n}\nsidestream_response {\n  headers {\n    headers {\n      key: \":status\"\n      value: \"200\"\n    }\n  }\n  data: \"test-@config-id\"\n}\nsidestream_response {\nD  headers {\n    hea\007ders {\n      key: \":status\"\n      value: \"200\"\n    }\n  }\n  data: \"\"\n}\n"
+  http_body {
+    data: "\000\000\000\000\000\000\000\000"
+    data: "2\006\022config {\n  services {\n    service_name: \"echo-api.endpoints.cloudesf-testing.cloud.goog\"\n    service_config_id: \"test-config-id\"\n    producer_project_id: \"producer-project\"\n    service_config {\n      type_url: \"type.googleapis.com/google.api.Service\"\n      value: \"\\272\\001\\017\\n\\rendpoints_log\\302\\001^\\nHserviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer\\022\\016\\n\\014/consumer_id\\030\\002 \\005\\312\\001)\\n\\003api\\\"\\\"\\n\\035cloud.googleapis.com/location\\032\\001\\002\\322\\001IBG\\nE\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\17\004\0107\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\177\\332\\001\\007\\n\\005\\032\\003api\\342\\001\\235\\001\\n@\\n>\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\013\\nO\\n\\003api\\022Hserviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer\\022\\010\\n\\003api\\022\\001!\"\n    }\n    backend_protocol: \"http1\"\n    jwt_payload_metadata_name: \"jwt_payloads\"\n  }\n  requirements {\n    service_name: \"echo-api.endpoints.cloudesf-testing.cloud.goog\"\n    operation_name: \"1.echo_api_endpoints_cloudesf_tentsig_cloud_goog.Echo\"\n    metric_costs {\n      name: \"metrics_first\"\n      cost: 2\n    }\n  }\n  imds_token {\n    uri: \"http://127.0.0.1:42761/v1/instance/service-accounts/default/token\"\n    cluster: \"metadata-cluster\"\n    timeout {\n      seconds: 5\n    }\n  }\n  sc_calling_config {\n    network_fail_open {\n    }\n    report_retries {\n      value: 200\n    }\n  }\n  service_control_uri {\n    uri: \"http://127.0.0.1/v1/services/\"\n    cluster: \"service-control-cluster\"\n    timeout {\n      seconds: 5\n    }\n  }\n}\ndownstream_request {\n  headers {\n    headers {\n      key: \":path\"\n      value: \"/echo?key=test-api-key\"\n    }\n    headers {\n      key: \":method\"\n      value: \"GET\"\n    }\n  }\n  data: \"Some data to test the metrics such as request_sizes.\"\n}\nupstream_response {\n  headers {\n    headers {\n      key: \":status\"\n      value: \"200\"\n    }\n  }\n  data: \"Some data to test the metrics such as response_sizes.\"\n}\nstream_info {\n  dynamic_metadata {\n  }\n  response_code {\n    value: 200\n  }\n}\nsidestream_response {\n  headers {\n    headers {\n      key: \":status\"\n      value: \"200\"\n    }\n  }\n  data: \"{ \\\"access_token\\\": \\\"fuzz-access-token\\\", \\\"expires_in\\\": 60000 }\"\n}\nsidestream_response {\n  headers {\n    headers {\n      key: \":status\"\n      value: \"504\"\n    }\n  }\n  data: \"number_value\"\n}\nsidestream_response {\n  headers {\n    headers {\n      key: \":status\"\n      value: \"504\"\n    }\n  }\n}\nsidestream_response {\n  headers {\n    headers {\n      key: \"\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\"\n    }\n  }\n  data: \"2\\006\\022\\004\\010\\300\\304\\007\"\n}\nsidestream_response {\n  headers {\n    headers {\n      key: \":status\"\n      value: \"504\"\n    }\n  }\n}\nsidestream_response {\n  headers {\n    headers {\n      key: \":status\"\n      value: \"200\"\n    }\n  }\n  data: \"test-@config-id\"\n}\nsidestream_response {\nD  headers {\n    hea\007ders {\n      key: \":status\"\n      value: \"200\"\n    }\n  }\n  data: \"\"\n}\n"
+  }
 }
 sidestream_response {
   headers {
@@ -153,5 +161,7 @@ sidestream_response {
       value: "200"
     }
   }
-  data: ""
+  http_body {
+    data: ""
+  }
 }

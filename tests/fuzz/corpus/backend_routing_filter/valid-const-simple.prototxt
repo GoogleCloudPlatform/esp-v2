@@ -1,11 +1,11 @@
 config {
   rules {
     operation: "test-const-operation"
-    is_const_address: true
+    path_translation: CONSTANT_ADDRESS
     path_prefix: "/constPath"
   }
 }
-user_request {
+downstream_request {
   headers {
     headers {
       key: ":path"

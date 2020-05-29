@@ -19,6 +19,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/golang/glog"
 	"github.com/miekg/dns"
 )
 
@@ -31,18 +32,25 @@ const healthCheckInterval = time.Millisecond * 200
 func (h *handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	msg := dns.Msg{}
 	msg.SetReply(r)
+	glog.Infof("dns query:\n%+v", r)
 	switch r.Question[0].Qtype {
 	case dns.TypeA:
 		msg.Authoritative = true
 		domain := msg.Question[0].Name
 
-		if address, ok := h.records[domain]; ok {
+		address, ok := h.records[domain]
+		if ok {
 			msg.Answer = append(msg.Answer, &dns.A{
 				Hdr: dns.RR_Header{Name: domain, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 60},
 				A:   net.ParseIP(address),
 			})
+			glog.Infof("dns answer: %+v", msg.Answer)
+		} else {
+			msg.Rcode = dns.RcodeNameError
+			glog.Infof("dns return code: %v", dns.RcodeToString[msg.Rcode])
 		}
 	}
+
 	_ = w.WriteMsg(&msg)
 }
 

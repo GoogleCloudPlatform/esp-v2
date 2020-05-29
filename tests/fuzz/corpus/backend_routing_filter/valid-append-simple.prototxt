@@ -1,11 +1,11 @@
 config {
   rules {
     operation: "test-append-operation"
-    is_const_address: false
+    path_translation: APPEND_PATH_TO_ADDRESS
     path_prefix: "/appendPath"
   }
 }
-user_request {
+downstream_request {
   headers {
     headers {
       key: ":path"

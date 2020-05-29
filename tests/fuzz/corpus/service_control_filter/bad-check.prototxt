@@ -85,7 +85,9 @@ downstream_request {
       value: "GET"
     }
   }
-  data: "Some data to test the metrics such as request_sizes."
+  http_body {
+    data: "Some data to test the metrics such as request_sizes."
+  }
 }
 upstream_response {
   headers {
@@ -94,7 +96,9 @@ upstream_response {
       value: "200"
     }
   }
-  data: "Some data to test the metrics such as response_sizes."
+  http_body {
+    data: "Some data to test the metrics such as response_sizes."
+  }
 }
 stream_info {
   response_code {
@@ -108,7 +112,9 @@ sidestream_response {
       value: "200"
     }
   }
-  data: "{ \"access_token\": \"fuzz-access-token\", \"expires_in\": 60000 }"
+  http_body {
+    data: "{ \"access_token\": \"fuzz-access-token\", \"expires_in\": 60000 }"
+  }
 }
 sidestream_response {
   headers {
@@ -117,7 +123,9 @@ sidestream_response {
       value: "200"
     }
   }
-  data: "\022\002\bi2\006\022\004\b\300\304\a"
+  http_body {
+    data: "\022\002\bi2\006\022\004\b\300\304\a"
+  }
 }
 sidestream_response {
   headers {
@@ -126,7 +134,9 @@ sidestream_response {
       value: "200"
     }
   }
-  data: ""
+  http_body {
+    data: ""
+  }
 }
 sidestream_response {
   headers {
@@ -135,5 +145,7 @@ sidestream_response {
       value: "200"
     }
   }
-  data: ""
+  http_body {
+    data: ""
+  }
 }

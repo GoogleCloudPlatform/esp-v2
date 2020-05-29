@@ -18,5 +18,5 @@ message BackendRoutingFilterInput {
   }];
 
   // The user's HTTP request to the filter.
-  test.fuzz.HttpData user_request = 3 [(validate.rules).message.required = true];
+  test.fuzz.HttpData downstream_request = 3 [(validate.rules).message.required = true];
 }

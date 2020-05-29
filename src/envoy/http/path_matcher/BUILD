@@ -93,6 +93,7 @@ envoy_cc_fuzz_test(
         ":filter_lib",
         "//src/envoy/utils:filter_state_utils_lib",
         "//tests/fuzz/structured_inputs:path_matcher_filter_proto_cc_proto",
+        "@envoy//test/extensions/filters/http/common/fuzz:uber_filter_lib",
         "@envoy//test/fuzz:utility_lib",
         "@envoy//test/mocks/init:init_mocks",
         "@envoy//test/mocks/server:server_mocks",
