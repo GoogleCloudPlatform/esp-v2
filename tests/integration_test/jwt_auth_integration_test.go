@@ -195,11 +195,6 @@ func TestInvalidOpenIDConnectDiscovery(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestInvalidOpenIDConnectDiscovery, platform.GrpcBookstoreSidecar)
-	if err := s.FakeJwtService.SetupInvalidOpenId(); err != nil {
-		t.Fatalf("fail to setup open id servers: %v", err)
-	}
-
 	tests := []struct {
 		desc        string
 		providerId  string
@@ -218,30 +213,38 @@ func TestInvalidOpenIDConnectDiscovery(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		s.OverrideAuthentication(&confpb.Authentication{
-			Rules: []*confpb.AuthenticationRule{
-				{
-					Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-					Requirements: []*confpb.AuthRequirement{
-						{
-							ProviderId: tc.providerId,
-							Audiences:  "ok_audience",
+		func() {
+			s := env.NewTestEnv(comp.TestInvalidOpenIDConnectDiscovery, platform.GrpcBookstoreSidecar)
+			if err := s.FakeJwtService.SetupInvalidOpenId(); err != nil {
+				t.Fatalf("fail to setup open id servers: %v", err)
+			}
+
+			s.OverrideAuthentication(&confpb.Authentication{
+				Rules: []*confpb.AuthenticationRule{
+					{
+						Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
+						Requirements: []*confpb.AuthRequirement{
+							{
+								ProviderId: tc.providerId,
+								Audiences:  "ok_audience",
+							},
 						},
 					},
 				},
-			},
-		})
+			})
 
-		err := s.Setup(args)
-		// No need to defer teardown, there should be a setup error.
-		s.SkipHealthChecks()
-		s.TearDown(t)
+			err := s.Setup(args)
 
-		if err == nil {
-			t.Errorf("Test (%s): failed, expected error, got no err", tc.desc)
-		} else if !strings.Contains(err.Error(), tc.expectedErr) {
-			t.Errorf("Test (%s): failed, expected err: %v, got err: %v", tc.desc, tc.expectedErr, err)
-		}
+			// LIFO ordering. Disable health checks before teardown, we expect a failure.
+			defer s.TearDown(t)
+			defer s.SkipHealthChecks()
+
+			if err == nil {
+				t.Errorf("Test (%s): failed, expected error, got no err", tc.desc)
+			} else if !strings.Contains(err.Error(), tc.expectedErr) {
+				t.Errorf("Test (%s): failed, expected err: %v, got err: %v", tc.desc, tc.expectedErr, err)
+			}
+		}()
 	}
 }
 

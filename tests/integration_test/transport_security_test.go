@@ -60,8 +60,11 @@ func TestServiceManagementWithTLS(t *testing.T) {
 	for _, tc := range testData {
 		func() {
 			s := env.NewTestEnv(tc.port, platform.EchoSidecar)
-			defer s.SkipHealthChecks()
+
+			// LIFO ordering. Disable health checks before teardown, we expect a failure.
 			defer s.TearDown(t)
+			defer s.SkipHealthChecks()
+
 			serverCerts, err := comp.GenerateCert(tc.certPath, tc.keyPath)
 			if err != nil {
 				t.Fatalf("fial to generate cert: %v", err)
