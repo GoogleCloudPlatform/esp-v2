@@ -27,7 +27,7 @@
             }
           ]
         },
-        "name": "esp-bookstore-f6x3rlu5aa-uc.a.run.app_local",
+        "name": "auth.endpoints.apiproxy-231719.cloud.goog_local",
         "type": "LOGICAL_DNS"
       },
       {
@@ -95,9 +95,9 @@
       },
       {
         "connectTimeout": "20s",
-        "http2ProtocolOptions": {},
+        "dnsLookupFamily": "V4_ONLY",
         "loadAssignment": {
-          "clusterName": "http-bookstore-abc123456-uc.a.run.app",
+          "clusterName": "www.googleapis.com",
           "endpoints": [
             {
               "lbEndpoints": [
@@ -105,7 +105,7 @@
                   "endpoint": {
                     "address": {
                       "socketAddress": {
-                        "address": "http-bookstore-abc123456-uc.a.run.app",
+                        "address": "www.googleapis.com",
                         "portValue": 443
                       }
                     }
@@ -115,48 +115,7 @@
             }
           ]
         },
-        "name": "http-bookstore-abc123456-uc.a.run.app:443",
-        "transportSocket": {
-          "name": "envoy.transport_sockets.tls",
-          "typedConfig": {
-            "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
-            "commonTlsContext": {
-              "alpnProtocols": [
-                "h2"
-              ],
-              "validationContext": {
-                "trustedCa": {
-                  "filename": "/etc/ssl/certs/ca-certificates.crt"
-                }
-              }
-            },
-            "sni": "http-bookstore-abc123456-uc.a.run.app"
-          }
-        },
-        "type": "LOGICAL_DNS"
-      },
-      {
-        "connectTimeout": "20s",
-        "loadAssignment": {
-          "clusterName": "http-bookstore-edf123456-uc.a.run.app",
-          "endpoints": [
-            {
-              "lbEndpoints": [
-                {
-                  "endpoint": {
-                    "address": {
-                      "socketAddress": {
-                        "address": "http-bookstore-edf123456-uc.a.run.app",
-                        "portValue": 443
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        "name": "http-bookstore-edf123456-uc.a.run.app:443",
+        "name": "www.googleapis.com:443",
         "transportSocket": {
           "name": "envoy.transport_sockets.tls",
           "typedConfig": {
@@ -168,7 +127,7 @@
                 }
               }
             },
-            "sni": "http-bookstore-edf123456-uc.a.run.app"
+            "sni": "www.googleapis.com"
           }
         },
         "type": "LOGICAL_DNS"
@@ -199,81 +158,145 @@
                         "@type": "type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
                         "rules": [
                           {
-                            "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.CreateShelf",
+                            "operation": "1.auth_endpoints_apiproxy_231719_cloud_goog.CreateShelf",
                             "pattern": {
                               "httpMethod": "POST",
                               "uriTemplate": "/shelves"
                             }
                           },
                           {
-                            "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.ListShelves",
+                            "operation": "1.auth_endpoints_apiproxy_231719_cloud_goog.ListShelves",
                             "pattern": {
                               "httpMethod": "GET",
                               "uriTemplate": "/shelves"
                             }
                           }
-                        ],
-                        "segmentNames": [
-                          {
-                            "jsonName": "nullValue",
-                            "snakeName": "null_value"
-                          },
-                          {
-                            "jsonName": "numberValue",
-                            "snakeName": "number_value"
-                          },
-                          {
-                            "jsonName": "stringValue",
-                            "snakeName": "string_value"
-                          },
-                          {
-                            "jsonName": "boolValue",
-                            "snakeName": "bool_value"
-                          },
-                          {
-                            "jsonName": "structValue",
-                            "snakeName": "struct_value"
-                          },
-                          {
-                            "jsonName": "listValue",
-                            "snakeName": "list_value"
-                          }
                         ]
                       }
                     },
                     {
-                      "name": "envoy.filters.http.backend_auth",
+                      "name": "envoy.filters.http.jwt_authn",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/google.api.envoy.http.backend_auth.FilterConfig",
-                        "imdsToken": {
-                          "cluster": "metadata-cluster",
-                          "timeout": "5s",
-                          "uri": "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
+                        "@type": "type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication",
+                        "filterStateRules": {
+                          "name": "envoy.filters.http.path_matcher.operation",
+                          "requires": {
+                            "1.auth_endpoints_apiproxy_231719_cloud_goog.CreateShelf": {
+                              "providerAndAudiences": {
+                                "audiences": [
+                                  "bookstore.endpoints.cloudesf-testing.cloud.goog"
+                                ],
+                                "providerName": "auth0_jwk"
+                              }
+                            },
+                            "1.auth_endpoints_apiproxy_231719_cloud_goog.ListShelves": {
+                              "requiresAny": {
+                                "requirements": [
+                                  {
+                                    "providerAndAudiences": {
+                                      "audiences": [
+                                        "apiproxy-231719"
+                                      ],
+                                      "providerName": "firebase"
+                                    }
+                                  },
+                                  {
+                                    "providerName": "google_id_token"
+                                  }
+                                ]
+                              }
+                            }
+                          }
                         },
-                        "rules": [
-                          {
-                            "jwtAudience": "ESPv2",
-                            "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.ListShelves"
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "name": "envoy.filters.http.backend_routing",
-                      "typedConfig": {
-                        "@type": "type.googleapis.com/google.api.envoy.http.backend_routing.FilterConfig",
-                        "rules": [
-                          {
-                            "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.CreateShelf",
-                            "pathPrefix": "/shelves",
-                            "pathTranslation": "CONSTANT_ADDRESS"
+                        "providers": {
+                          "auth0_jwk": {
+                            "audiences": [
+                              "bookstore.endpoints.cloudesf-testing.cloud.goog"
+                            ],
+                            "forward": true,
+                            "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
+                            "fromHeaders": [
+                              {
+                                "name": "Authorization",
+                                "valuePrefix": "Bearer "
+                              },
+                              {
+                                "name": "X-Goog-Iap-Jwt-Assertion"
+                              }
+                            ],
+                            "fromParams": [
+                              "access_token"
+                            ],
+                            "issuer": "123456789-compute@developer.gserviceaccount.com",
+                            "payloadInMetadata": "jwt_payloads",
+                            "remoteJwks": {
+                              "cacheDuration": "300s",
+                              "httpUri": {
+                                "cluster": "www.googleapis.com:443",
+                                "timeout": "5s",
+                                "uri": "https://www.googleapis.com/service_accounts/v1/jwk/123456789-compute@developer.gserviceaccount.com"
+                              }
+                            }
                           },
-                          {
-                            "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.ListShelves",
-                            "pathPrefix": "/shelves",
-                            "pathTranslation": "APPEND_PATH_TO_ADDRESS"
+                          "firebase": {
+                            "audiences": [
+                              "apiproxy-231719"
+                            ],
+                            "forward": true,
+                            "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
+                            "fromHeaders": [
+                              {
+                                "name": "Authorization",
+                                "valuePrefix": "Bearer "
+                              },
+                              {
+                                "name": "X-Goog-Iap-Jwt-Assertion"
+                              }
+                            ],
+                            "fromParams": [
+                              "access_token"
+                            ],
+                            "issuer": "https://securetoken.google.com/apiproxy-231719",
+                            "payloadInMetadata": "jwt_payloads",
+                            "remoteJwks": {
+                              "cacheDuration": "300s",
+                              "httpUri": {
+                                "cluster": "www.googleapis.com:443",
+                                "timeout": "5s",
+                                "uri": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
+                              }
+                            }
+                          },
+                          "google_id_token": {
+                            "audiences": [
+                              "https://auth.endpoints.apiproxy-231719.cloud.goog"
+                            ],
+                            "forward": true,
+                            "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
+                            "fromHeaders": [
+                              {
+                                "name": "Authorization",
+                                "valuePrefix": "Bearer "
+                              },
+                              {
+                                "name": "X-Goog-Iap-Jwt-Assertion"
+                              }
+                            ],
+                            "fromParams": [
+                              "access_token"
+                            ],
+                            "issuer": "https://accounts.google.com",
+                            "payloadInMetadata": "jwt_payloads",
+                            "remoteJwks": {
+                              "cacheDuration": "300s",
+                              "httpUri": {
+                                "cluster": "www.googleapis.com:443",
+                                "timeout": "5s",
+                                "uri": "https://www.googleapis.com/oauth2/v3/certs"
+                              }
+                            }
                           }
-                        ]
+                        }
                       }
                     },
                     {
@@ -295,34 +318,11 @@
                         "routes": [
                           {
                             "match": {
-                              "headers": [
-                                {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
-                                }
-                              ],
-                              "path": "/shelves"
+                              "prefix": "/"
                             },
                             "route": {
-                              "cluster": "http-bookstore-edf123456-uc.a.run.app:443",
-                              "hostRewriteLiteral": "http-bookstore-edf123456-uc.a.run.app",
-                              "timeout": "30s"
-                            }
-                          },
-                          {
-                            "match": {
-                              "headers": [
-                                {
-                                  "exactMatch": "GET",
-                                  "name": ":method"
-                                }
-                              ],
-                              "path": "/shelves"
-                            },
-                            "route": {
-                              "cluster": "http-bookstore-abc123456-uc.a.run.app:443",
-                              "hostRewriteLiteral": "http-bookstore-abc123456-uc.a.run.app",
-                              "timeout": "5s"
+                              "cluster": "auth.endpoints.apiproxy-231719.cloud.goog_local",
+                              "timeout": "15s"
                             }
                           }
                         ]
