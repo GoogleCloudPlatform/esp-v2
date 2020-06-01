@@ -26,8 +26,8 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/google/go-cmp/cmp"
 
-	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
@@ -54,7 +54,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 	testData := []struct {
 		desc              string
 		fakeServiceConfig *confpb.Service
-		wantedCluster     v2pb.Cluster
+		wantedCluster     clusterpb.Cluster
 		BackendAddress    string
 	}{
 		{
@@ -71,11 +71,11 @@ func TestMakeServiceControlCluster(t *testing.T) {
 				},
 			},
 			BackendAddress: "grpc://127.0.0.1:80",
-			wantedCluster: v2pb.Cluster{
+			wantedCluster: clusterpb.Cluster{
 				Name:                 "service-control-cluster",
 				ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
-				ClusterDiscoveryType: &v2pb.Cluster_Type{Type: v2pb.Cluster_LOGICAL_DNS},
-				DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
+				ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
+				DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 				LoadAssignment:       util.CreateLoadAssignment(testServiceControlEnv, 443),
 				TransportSocket:      createTransportSocket("servicecontrol.googleapis.com"),
 			},
@@ -104,11 +104,11 @@ func TestMakeServiceControlCluster(t *testing.T) {
 				},
 			},
 			BackendAddress: "http://127.0.0.1:80",
-			wantedCluster: v2pb.Cluster{
+			wantedCluster: clusterpb.Cluster{
 				Name:                 "service-control-cluster",
 				ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
-				ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
-				DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
+				ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
+				DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 				LoadAssignment:       util.CreateLoadAssignment("127.0.0.1", 8000),
 			},
 		},
@@ -140,7 +140,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 		backendDnsLookupFamily string
 		BackendAddress         string
 		tlsContextSni          string
-		wantedClusters         []*v2pb.Cluster
+		wantedClusters         []*clusterpb.Cluster
 		wantedError            string
 	}{
 		{
@@ -192,11 +192,11 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 				},
 			},
 			BackendAddress: "http://127.0.0.1:80",
-			wantedClusters: []*v2pb.Cluster{
+			wantedClusters: []*clusterpb.Cluster{
 				{
 					Name:                 "mybackend.com:443",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 443),
 					TransportSocket:      createTransportSocket("mybackend.com"),
 				},
@@ -240,11 +240,11 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 				},
 			},
 			BackendAddress: "http://127.0.0.1:80",
-			wantedClusters: []*v2pb.Cluster{
+			wantedClusters: []*clusterpb.Cluster{
 				{
 					Name:                 "mybackend.com:80",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 80),
 				},
 			},
@@ -290,17 +290,17 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 				},
 			},
 			BackendAddress: "http://127.0.0.1:80",
-			wantedClusters: []*v2pb.Cluster{
+			wantedClusters: []*clusterpb.Cluster{
 				{
 					Name:                 "mybackend_http.com:80",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend_http.com", 80),
 				},
 				{
 					Name:                 "mybackend_https.com:443",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend_https.com", 443),
 					TransportSocket:      createTransportSocket("mybackend_https.com"),
 				},
@@ -347,11 +347,11 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 				},
 			},
 			BackendAddress: "http://127.0.0.1:80",
-			wantedClusters: []*v2pb.Cluster{
+			wantedClusters: []*clusterpb.Cluster{
 				{
 					Name:                 "mybackend.com:443",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 443),
 					TransportSocket:      createH2TransportSocket("mybackend.com"),
 					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{},
@@ -392,11 +392,11 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 				},
 			},
 			BackendAddress: "http://127.0.0.1:80",
-			wantedClusters: []*v2pb.Cluster{
+			wantedClusters: []*clusterpb.Cluster{
 				{
 					Name:                 "mybackend.com:80",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 80),
 					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{},
 				},
@@ -443,18 +443,18 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 				},
 			},
 			BackendAddress: "http://127.0.0.1:80",
-			wantedClusters: []*v2pb.Cluster{
+			wantedClusters: []*clusterpb.Cluster{
 				{
 					Name:                 "mybackend_http.com:80",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend_http.com", 80),
 					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{},
 				},
 				{
 					Name:                 "mybackend_https.com:443",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
+					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend_https.com", 443),
 					TransportSocket:      createH2TransportSocket("mybackend_https.com"),
 					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{},
@@ -500,12 +500,12 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 				},
 			},
 			BackendAddress: "http://127.0.0.1:80",
-			wantedClusters: []*v2pb.Cluster{
+			wantedClusters: []*clusterpb.Cluster{
 				{
 					Name:                 "mybackend.run.app:443",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
-					ClusterDiscoveryType: &v2pb.Cluster_Type{Type: v2pb.Cluster_LOGICAL_DNS},
+					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
+					ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.run.app", 443),
 					TransportSocket:      createTransportSocket("mybackend.run.app"),
 				},
@@ -584,7 +584,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 		desc            string
 		fakeProviders   []*confpb.AuthProvider
 		backendProtocol string
-		wantedClusters  []*v2pb.Cluster
+		wantedClusters  []*clusterpb.Cluster
 		wantedError     string
 	}{
 		{
@@ -601,20 +601,20 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					JwksUri: "http://metadata.com/pkey",
 				},
 			},
-			wantedClusters: []*v2pb.Cluster{
+			wantedClusters: []*clusterpb.Cluster{
 				{
 					Name:                 "metadata.com:443",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
-					DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
+					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
+					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 					LoadAssignment:       util.CreateLoadAssignment("metadata.com", 443),
 					TransportSocket:      createTransportSocket("metadata.com"),
 				},
 				{
 					Name:                 "metadata.com:80",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
-					DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
+					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
+					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 					LoadAssignment:       util.CreateLoadAssignment("metadata.com", 80),
 				},
 			},
@@ -643,12 +643,12 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					JwksUri: "https://metadata.com/pkey",
 				},
 			},
-			wantedClusters: []*v2pb.Cluster{
+			wantedClusters: []*clusterpb.Cluster{
 				{
 					Name:                 "metadata.com:443",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-					ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_LOGICAL_DNS},
-					DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
+					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
+					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 					LoadAssignment:       util.CreateLoadAssignment("metadata.com", 443),
 					TransportSocket:      createTransportSocket("metadata.com"),
 				},
@@ -693,7 +693,7 @@ func TestMakeIamCluster(t *testing.T) {
 		backendAuthIamCredential    *options.IAMCredentialsOptions
 		serviceControlIamCredential *options.IAMCredentialsOptions
 		fakeServiceConfig           *confpb.Service
-		wantedCluster               *v2pb.Cluster
+		wantedCluster               *clusterpb.Cluster
 		wantedError                 string
 	}{
 		{
@@ -711,11 +711,11 @@ func TestMakeIamCluster(t *testing.T) {
 				},
 			},
 			BackendAddress: "grpc://127.0.0.1:80",
-			wantedCluster: &v2pb.Cluster{
+			wantedCluster: &clusterpb.Cluster{
 				Name:                 util.IamServerClusterName,
 				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-				DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
-				ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_STRICT_DNS},
+				DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
+				ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_STRICT_DNS},
 				LoadAssignment:       util.CreateLoadAssignment("iamcredentials.googleapis.com", 443),
 				TransportSocket:      createTransportSocket("iamcredentials.googleapis.com"),
 			},
@@ -735,11 +735,11 @@ func TestMakeIamCluster(t *testing.T) {
 				},
 			},
 			BackendAddress: "grpc://127.0.0.1:80",
-			wantedCluster: &v2pb.Cluster{
+			wantedCluster: &clusterpb.Cluster{
 				Name:                 util.IamServerClusterName,
 				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
-				DnsLookupFamily:      v2pb.Cluster_V4_ONLY,
-				ClusterDiscoveryType: &v2pb.Cluster_Type{v2pb.Cluster_STRICT_DNS},
+				DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
+				ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_STRICT_DNS},
 				LoadAssignment:       util.CreateLoadAssignment("iamcredentials.googleapis.com", 443),
 				TransportSocket:      createTransportSocket("iamcredentials.googleapis.com"),
 			},

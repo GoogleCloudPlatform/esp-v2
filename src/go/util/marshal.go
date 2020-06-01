@@ -31,7 +31,10 @@ import (
 	jwtpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
-	hcmpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
+	hcmpbv2 "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
+	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	tlspb "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
+
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -79,6 +82,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 	case "type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication":
 		return new(jwtpb.JwtAuthentication), nil
 	case "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager":
+		return new(hcmpbv2.HttpConnectionManager), nil
+	case "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager":
 		return new(hcmpb.HttpConnectionManager), nil
 	case "type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig":
 		return new(pmpb.FilterConfig), nil
@@ -90,6 +95,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(drpb.FilterConfig), nil
 	case "type.googleapis.com/envoy.config.filter.http.router.v2.Router":
 		return new(routerpb.Router), nil
+	case "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext":
+		return new(tlspb.UpstreamTlsContext), nil
 	case "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext":
 		return new(authpb.UpstreamTlsContext), nil
 	case "type.googleapis.com/envoy.api.v2.auth.DownstreamTlsContext":

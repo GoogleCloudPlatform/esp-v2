@@ -20,8 +20,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes"
 
-	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
-	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	tlspb "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 )
 
 const (
@@ -30,11 +30,11 @@ const (
 )
 
 var (
-	tlsProtocolVersionMap = map[string]authpb.TlsParameters_TlsProtocol{
-		"TLSv1.0": authpb.TlsParameters_TLSv1_0,
-		"TLSv1.1": authpb.TlsParameters_TLSv1_1,
-		"TLSv1.2": authpb.TlsParameters_TLSv1_2,
-		"TLSv1.3": authpb.TlsParameters_TLSv1_3,
+	tlsProtocolVersionMap = map[string]tlspb.TlsParameters_TlsProtocol{
+		"TLSv1.0": tlspb.TlsParameters_TLSv1_0,
+		"TLSv1.1": tlspb.TlsParameters_TLSv1_1,
+		"TLSv1.2": tlspb.TlsParameters_TLSv1_2,
+		"TLSv1.3": tlspb.TlsParameters_TLSv1_3,
 	}
 )
 
@@ -58,7 +58,7 @@ func CreateUpstreamTransportSocket(hostname, rootCertsPath, sslClientPath string
 		common_tls.AlpnProtocols = alpnProtocols
 	}
 
-	tlsContext, err := ptypes.MarshalAny(&authpb.UpstreamTlsContext{
+	tlsContext, err := ptypes.MarshalAny(&tlspb.UpstreamTlsContext{
 		Sni:              hostname,
 		CommonTlsContext: common_tls,
 	},
@@ -91,7 +91,7 @@ func CreateDownstreamTransportSocket(sslServerPath, sslMinimumProtocol, sslMaxim
 		return nil, err
 	}
 	common_tls.AlpnProtocols = []string{"h2", "http/1.1"}
-	tlsContext, err := ptypes.MarshalAny(&authpb.DownstreamTlsContext{
+	tlsContext, err := ptypes.MarshalAny(&tlspb.DownstreamTlsContext{
 		CommonTlsContext: common_tls,
 	},
 	)
@@ -106,15 +106,15 @@ func CreateDownstreamTransportSocket(sslServerPath, sslMinimumProtocol, sslMaxim
 	}, nil
 }
 
-func createCommonTlsContext(rootCertsPath, sslPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol string) (*authpb.CommonTlsContext, error) {
-	common_tls := &authpb.CommonTlsContext{}
+func createCommonTlsContext(rootCertsPath, sslPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol string) (*tlspb.CommonTlsContext, error) {
+	common_tls := &tlspb.CommonTlsContext{}
 	// Add TLS certificate
 	if sslPath != "" && sslFileName != "" {
 		if !strings.HasSuffix(sslPath, "/") {
 			sslPath = fmt.Sprintf("%s/", sslPath)
 		}
 
-		common_tls.TlsCertificates = []*authpb.TlsCertificate{
+		common_tls.TlsCertificates = []*tlspb.TlsCertificate{
 			{
 				CertificateChain: &corepb.DataSource{
 					Specifier: &corepb.DataSource_Filename{
@@ -132,8 +132,8 @@ func createCommonTlsContext(rootCertsPath, sslPath, sslFileName, sslMinimumProto
 
 	// Add Validation Context
 	if rootCertsPath != "" {
-		common_tls.ValidationContextType = &authpb.CommonTlsContext_ValidationContext{
-			ValidationContext: &authpb.CertificateValidationContext{
+		common_tls.ValidationContextType = &tlspb.CommonTlsContext_ValidationContext{
+			ValidationContext: &tlspb.CertificateValidationContext{
 				TrustedCa: &corepb.DataSource{
 					Specifier: &corepb.DataSource_Filename{
 						Filename: rootCertsPath,
@@ -144,7 +144,7 @@ func createCommonTlsContext(rootCertsPath, sslPath, sslFileName, sslMinimumProto
 	}
 
 	if sslMinimumProtocol != "" || sslMaximumProtocol != "" {
-		common_tls.TlsParams = &authpb.TlsParameters{}
+		common_tls.TlsParams = &tlspb.TlsParameters{}
 		if minVersion, ok := tlsProtocolVersionMap[sslMinimumProtocol]; ok {
 			common_tls.TlsParams.TlsMinimumProtocolVersion = minVersion
 		}

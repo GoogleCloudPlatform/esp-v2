@@ -1,341 +1,349 @@
 {
-    "admin": {},
-    "node": {
-        "cluster": "ESPv2_cluster",
-        "id": "ESPv2"
-    },
-    "staticResources": {
-        "clusters": [
+  "admin": {},
+  "node": {
+    "cluster": "ESPv2_cluster",
+    "id": "ESPv2"
+  },
+  "staticResources": {
+    "clusters": [
+      {
+        "connectTimeout": "20s",
+        "loadAssignment": {
+          "clusterName": "127.0.0.1",
+          "endpoints": [
             {
-                "connectTimeout": "20s",
-                "loadAssignment": {
-                    "clusterName": "127.0.0.1",
-                    "endpoints": [
-                        {
-                            "lbEndpoints": [
-                                {
-                                    "endpoint": {
-                                        "address": {
-                                            "socketAddress": {
-                                                "address": "127.0.0.1",
-                                                "portValue": 8082
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                },
-                "name": "esp-bookstore-f6x3rlu5aa-uc.a.run.app_local",
-                "type": "LOGICAL_DNS"
-            },
-            {
-                "connectTimeout": "20s",
-                "loadAssignment": {
-                    "clusterName": "169.254.169.254",
-                    "endpoints": [
-                        {
-                            "lbEndpoints": [
-                                {
-                                    "endpoint": {
-                                        "address": {
-                                            "socketAddress": {
-                                                "address": "169.254.169.254",
-                                                "portValue": 80
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                },
-                "name": "metadata-cluster",
-                "type": "STRICT_DNS"
-            },
-            {
-                "connectTimeout": "5s",
-                "dnsLookupFamily": "V4_ONLY",
-                "loadAssignment": {
-                    "clusterName": "servicecontrol.googleapis.com",
-                    "endpoints": [
-                        {
-                            "lbEndpoints": [
-                                {
-                                    "endpoint": {
-                                        "address": {
-                                            "socketAddress": {
-                                                "address": "servicecontrol.googleapis.com",
-                                                "portValue": 443
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                },
-                "name": "service-control-cluster",
-                "transportSocket": {
-                    "name": "envoy.transport_sockets.tls",
-                    "typedConfig": {
-                        "@type": "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
-                        "commonTlsContext": {
-                            "validationContext": {
-                                "trustedCa": {
-                                    "filename": "/etc/ssl/certs/ca-certificates.crt"
-                                }
-                            }
-                        },
-                        "sni": "servicecontrol.googleapis.com"
+              "lbEndpoints": [
+                {
+                  "endpoint": {
+                    "address": {
+                      "socketAddress": {
+                        "address": "127.0.0.1",
+                        "portValue": 8082
+                      }
                     }
-                },
-                "type": "LOGICAL_DNS"
-            },
-            {
-                "connectTimeout": "20s",
-                "http2ProtocolOptions":{},
-                "loadAssignment": {
-                    "clusterName": "http-bookstore-abc123456-uc.a.run.app",
-                    "endpoints": [
-                        {
-                            "lbEndpoints": [
-                                {
-                                    "endpoint": {
-                                        "address": {
-                                            "socketAddress": {
-                                                "address": "http-bookstore-abc123456-uc.a.run.app",
-                                                "portValue": 443
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                },
-                "name": "http-bookstore-abc123456-uc.a.run.app:443",
-                "transportSocket": {
-                    "name": "envoy.transport_sockets.tls",
-                    "typedConfig": {
-                        "@type": "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
-                        "commonTlsContext": {
-                            "alpnProtocols":["h2"],
-                            "validationContext": {
-                                "trustedCa": {
-                                    "filename": "/etc/ssl/certs/ca-certificates.crt"
-                                }
-                            }
-                        },
-                        "sni": "http-bookstore-abc123456-uc.a.run.app"
-                    }
-                },
-                "type": "LOGICAL_DNS"
-            },
-            {
-                "connectTimeout": "20s",
-                "loadAssignment": {
-                    "clusterName": "http-bookstore-edf123456-uc.a.run.app",
-                    "endpoints": [
-                        {
-                            "lbEndpoints": [
-                                {
-                                    "endpoint": {
-                                        "address": {
-                                            "socketAddress": {
-                                                "address": "http-bookstore-edf123456-uc.a.run.app",
-                                                "portValue": 443
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                },
-                "name": "http-bookstore-edf123456-uc.a.run.app:443",
-                "transportSocket": {
-                    "name": "envoy.transport_sockets.tls",
-                    "typedConfig": {
-                        "@type": "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
-                        "commonTlsContext": {
-                            "validationContext": {
-                                "trustedCa": {
-                                    "filename": "/etc/ssl/certs/ca-certificates.crt"
-                                }
-                            }
-                        },
-                        "sni": "http-bookstore-edf123456-uc.a.run.app"
-                    }
-                },
-                "type": "LOGICAL_DNS"
+                  }
+                }
+              ]
             }
-        ],
-        "listeners": [
+          ]
+        },
+        "name": "esp-bookstore-f6x3rlu5aa-uc.a.run.app_local",
+        "type": "LOGICAL_DNS"
+      },
+      {
+        "connectTimeout": "20s",
+        "loadAssignment": {
+          "clusterName": "169.254.169.254",
+          "endpoints": [
             {
-                "name": "ingress_listener",
-                "address": {
-                    "socketAddress": {
-                        "address": "0.0.0.0",
-                        "portValue": 8080
+              "lbEndpoints": [
+                {
+                  "endpoint": {
+                    "address": {
+                      "socketAddress": {
+                        "address": "169.254.169.254",
+                        "portValue": 80
+                      }
                     }
-                },
-                "filterChains": [
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "name": "metadata-cluster",
+        "type": "STRICT_DNS"
+      },
+      {
+        "connectTimeout": "5s",
+        "dnsLookupFamily": "V4_ONLY",
+        "loadAssignment": {
+          "clusterName": "servicecontrol.googleapis.com",
+          "endpoints": [
+            {
+              "lbEndpoints": [
+                {
+                  "endpoint": {
+                    "address": {
+                      "socketAddress": {
+                        "address": "servicecontrol.googleapis.com",
+                        "portValue": 443
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "name": "service-control-cluster",
+        "transportSocket": {
+          "name": "envoy.transport_sockets.tls",
+          "typedConfig": {
+            "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
+            "commonTlsContext": {
+              "validationContext": {
+                "trustedCa": {
+                  "filename": "/etc/ssl/certs/ca-certificates.crt"
+                }
+              }
+            },
+            "sni": "servicecontrol.googleapis.com"
+          }
+        },
+        "type": "LOGICAL_DNS"
+      },
+      {
+        "connectTimeout": "20s",
+        "http2ProtocolOptions": {},
+        "loadAssignment": {
+          "clusterName": "http-bookstore-abc123456-uc.a.run.app",
+          "endpoints": [
+            {
+              "lbEndpoints": [
+                {
+                  "endpoint": {
+                    "address": {
+                      "socketAddress": {
+                        "address": "http-bookstore-abc123456-uc.a.run.app",
+                        "portValue": 443
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "name": "http-bookstore-abc123456-uc.a.run.app:443",
+        "transportSocket": {
+          "name": "envoy.transport_sockets.tls",
+          "typedConfig": {
+            "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
+            "commonTlsContext": {
+              "alpnProtocols": [
+                "h2"
+              ],
+              "validationContext": {
+                "trustedCa": {
+                  "filename": "/etc/ssl/certs/ca-certificates.crt"
+                }
+              }
+            },
+            "sni": "http-bookstore-abc123456-uc.a.run.app"
+          }
+        },
+        "type": "LOGICAL_DNS"
+      },
+      {
+        "connectTimeout": "20s",
+        "loadAssignment": {
+          "clusterName": "http-bookstore-edf123456-uc.a.run.app",
+          "endpoints": [
+            {
+              "lbEndpoints": [
+                {
+                  "endpoint": {
+                    "address": {
+                      "socketAddress": {
+                        "address": "http-bookstore-edf123456-uc.a.run.app",
+                        "portValue": 443
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "name": "http-bookstore-edf123456-uc.a.run.app:443",
+        "transportSocket": {
+          "name": "envoy.transport_sockets.tls",
+          "typedConfig": {
+            "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
+            "commonTlsContext": {
+              "validationContext": {
+                "trustedCa": {
+                  "filename": "/etc/ssl/certs/ca-certificates.crt"
+                }
+              }
+            },
+            "sni": "http-bookstore-edf123456-uc.a.run.app"
+          }
+        },
+        "type": "LOGICAL_DNS"
+      }
+    ],
+    "listeners": [
+      {
+        "address": {
+          "socketAddress": {
+            "address": "0.0.0.0",
+            "portValue": 8080
+          }
+        },
+        "filterChains": [
+          {
+            "filters": [
+              {
+                "name": "envoy.filters.network.http_connection_manager",
+                "typedConfig": {
+                  "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
+                  "commonHttpProtocolOptions": {
+                    "headersWithUnderscoresAction": "REJECT_REQUEST"
+                  },
+                  "httpFilters": [
                     {
-                        "filters": [
-                            {
-                                "name": "envoy.filters.network.http_connection_manager",
-                                "typedConfig": {
-                                    "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
-                                    "httpFilters": [
-                                        {
-                                            "name": "envoy.filters.http.path_matcher",
-                                            "typedConfig": {
-                                                "@type": "type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
-                                                "rules": [
-                                                    {
-                                                        "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.CreateShelf",
-                                                        "pattern": {
-                                                            "httpMethod": "POST",
-                                                            "uriTemplate": "/shelves"
-                                                        }
-                                                    },
-                                                    {
-                                                        "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.ListShelves",
-                                                        "pattern": {
-                                                            "httpMethod": "GET",
-                                                            "uriTemplate": "/shelves"
-                                                        }
-                                                    }
-                                                ],
-                                                "segmentNames": [
-                                                    {
-                                                        "jsonName": "nullValue",
-                                                        "snakeName": "null_value"
-                                                    },
-                                                    {
-                                                        "jsonName": "numberValue",
-                                                        "snakeName": "number_value"
-                                                    },
-                                                    {
-                                                        "jsonName": "stringValue",
-                                                        "snakeName": "string_value"
-                                                    },
-                                                    {
-                                                        "jsonName": "boolValue",
-                                                        "snakeName": "bool_value"
-                                                    },
-                                                    {
-                                                        "jsonName": "structValue",
-                                                        "snakeName": "struct_value"
-                                                    },
-                                                    {
-                                                        "jsonName": "listValue",
-                                                        "snakeName": "list_value"
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                        {
-                                            "name": "envoy.filters.http.backend_auth",
-                                            "typedConfig": {
-                                                "@type": "type.googleapis.com/google.api.envoy.http.backend_auth.FilterConfig",
-                                                "imdsToken": {
-                                                    "cluster": "metadata-cluster",
-                                                    "timeout": "5s",
-                                                    "uri": "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
-                                                },
-                                                "rules": [
-                                                    {
-                                                        "jwtAudience": "ESPv2",
-                                                        "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.ListShelves"
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                        {
-                                            "name": "envoy.filters.http.backend_routing",
-                                            "typedConfig": {
-                                                "@type": "type.googleapis.com/google.api.envoy.http.backend_routing.FilterConfig",
-                                                "rules": [
-                                                    {
-                                                        "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.CreateShelf",
-                                                        "pathPrefix": "/shelves",
-                                                        "pathTranslation":"CONSTANT_ADDRESS"
-                                                    },
-                                                    {
-                                                        "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.ListShelves",
-                                                        "pathPrefix": "/shelves",
-                                                        "pathTranslation":"APPEND_PATH_TO_ADDRESS"
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                        {
-                                            "name": "envoy.filters.http.router",
-                                            "typedConfig": {
-                                                "@type": "type.googleapis.com/envoy.config.filter.http.router.v2.Router",
-                                                "suppressEnvoyHeaders": true
-                                            }
-                                        }
-                                    ],
-                                    "routeConfig": {
-                                        "name": "local_route",
-                                        "virtualHosts": [
-                                            {
-                                                "domains": [
-                                                    "*"
-                                                ],
-                                                "name": "backend",
-                                                "routes": [
-                                                    {
-                                                        "match": {
-                                                            "headers": [
-                                                                {
-                                                                    "exactMatch": "POST",
-                                                                    "name": ":method"
-                                                                }
-                                                            ],
-                                                            "path": "/shelves"
-                                                        },
-                                                        "route": {
-                                                            "cluster": "http-bookstore-edf123456-uc.a.run.app:443",
-                                                            "hostRewrite": "http-bookstore-edf123456-uc.a.run.app",
-                                                            "timeout": "30s"
-                                                        }
-                                                    },
-                                                    {
-                                                        "match": {
-                                                            "headers": [
-                                                                {
-                                                                    "exactMatch": "GET",
-                                                                    "name": ":method"
-                                                                }
-                                                            ],
-                                                            "path": "/shelves"
-                                                        },
-                                                        "route": {
-                                                            "cluster": "http-bookstore-abc123456-uc.a.run.app:443",
-                                                            "hostRewrite": "http-bookstore-abc123456-uc.a.run.app",
-                                                            "timeout": "5s"
-                                                        }
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    },
-                                    "upgradeConfigs": [{"upgradeType": "websocket"}],
-                                    "statPrefix": "ingress_http",
-                                    "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
-                                    "useRemoteAddress": false,
-                                    "xffNumTrustedHops": 2
-                                }
+                      "name": "envoy.filters.http.path_matcher",
+                      "typedConfig": {
+                        "@type": "type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                        "rules": [
+                          {
+                            "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.CreateShelf",
+                            "pattern": {
+                              "httpMethod": "POST",
+                              "uriTemplate": "/shelves"
                             }
+                          },
+                          {
+                            "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.ListShelves",
+                            "pattern": {
+                              "httpMethod": "GET",
+                              "uriTemplate": "/shelves"
+                            }
+                          }
+                        ],
+                        "segmentNames": [
+                          {
+                            "jsonName": "nullValue",
+                            "snakeName": "null_value"
+                          },
+                          {
+                            "jsonName": "numberValue",
+                            "snakeName": "number_value"
+                          },
+                          {
+                            "jsonName": "stringValue",
+                            "snakeName": "string_value"
+                          },
+                          {
+                            "jsonName": "boolValue",
+                            "snakeName": "bool_value"
+                          },
+                          {
+                            "jsonName": "structValue",
+                            "snakeName": "struct_value"
+                          },
+                          {
+                            "jsonName": "listValue",
+                            "snakeName": "list_value"
+                          }
                         ]
+                      }
+                    },
+                    {
+                      "name": "envoy.filters.http.backend_auth",
+                      "typedConfig": {
+                        "@type": "type.googleapis.com/google.api.envoy.http.backend_auth.FilterConfig",
+                        "imdsToken": {
+                          "cluster": "metadata-cluster",
+                          "timeout": "5s",
+                          "uri": "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
+                        },
+                        "rules": [
+                          {
+                            "jwtAudience": "ESPv2",
+                            "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.ListShelves"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "envoy.filters.http.backend_routing",
+                      "typedConfig": {
+                        "@type": "type.googleapis.com/google.api.envoy.http.backend_routing.FilterConfig",
+                        "rules": [
+                          {
+                            "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.CreateShelf",
+                            "pathPrefix": "/shelves",
+                            "pathTranslation": "CONSTANT_ADDRESS"
+                          },
+                          {
+                            "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.ListShelves",
+                            "pathPrefix": "/shelves",
+                            "pathTranslation": "APPEND_PATH_TO_ADDRESS"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "envoy.filters.http.router",
+                      "typedConfig": {
+                        "@type": "type.googleapis.com/envoy.config.filter.http.router.v2.Router",
+                        "suppressEnvoyHeaders": true
+                      }
                     }
-                ]
-            }
-        ]
-    }
+                  ],
+                  "routeConfig": {
+                    "name": "local_route",
+                    "virtualHosts": [
+                      {
+                        "domains": [
+                          "*"
+                        ],
+                        "name": "backend",
+                        "routes": [
+                          {
+                            "match": {
+                              "headers": [
+                                {
+                                  "exactMatch": "POST",
+                                  "name": ":method"
+                                }
+                              ],
+                              "path": "/shelves"
+                            },
+                            "route": {
+                              "cluster": "http-bookstore-edf123456-uc.a.run.app:443",
+                              "hostRewriteLiteral": "http-bookstore-edf123456-uc.a.run.app",
+                              "timeout": "30s"
+                            }
+                          },
+                          {
+                            "match": {
+                              "headers": [
+                                {
+                                  "exactMatch": "GET",
+                                  "name": ":method"
+                                }
+                              ],
+                              "path": "/shelves"
+                            },
+                            "route": {
+                              "cluster": "http-bookstore-abc123456-uc.a.run.app:443",
+                              "hostRewriteLiteral": "http-bookstore-abc123456-uc.a.run.app",
+                              "timeout": "5s"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "statPrefix": "ingress_http",
+                  "upgradeConfigs": [
+                    {
+                      "upgradeType": "websocket"
+                    }
+                  ],
+                  "useRemoteAddress": false,
+                  "xffNumTrustedHops": 2
+                }
+              }
+            ]
+          }
+        ],
+        "name": "ingress_listener"
+      }
+    ]
+  }
 }

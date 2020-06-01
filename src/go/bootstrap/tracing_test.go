@@ -27,7 +27,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 
 	opencensuspb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
-	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v2"
+	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
 )
 
 const (
@@ -286,7 +286,7 @@ func TestNonGCPTracingConfig(t *testing.T) {
 
 			gotCfg := &tracepb.OpenCensusConfig{}
 			if err := ptypes.UnmarshalAny(got.Http.GetTypedConfig(), gotCfg); err != nil {
-				t.Errorf("Test (%s): failed, failed to unmarshall any", tc.desc)
+				t.Errorf("Test (%s): failed, failed to unmarshall any, %v", tc.desc, err)
 			}
 			if !proto.Equal(gotCfg, tc.wantResult) {
 				t.Errorf("Test (%s): failed, got : %v, want: %v", tc.desc, gotCfg, tc.wantResult)

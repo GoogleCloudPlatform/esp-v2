@@ -30,18 +30,18 @@ import (
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/common"
 	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/path_matcher"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/service_control"
-	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	listenerpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
-	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
-	acpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/accesslog/v2"
+	corepbv2 "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	acpb "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v3"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	gspb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/grpc_stats/v2alpha"
-	hcpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/health_check/v2"
 	jwtpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
-	hcmpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
+	listenerpb "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
+	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	facpb "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
+	hcpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/health_check/v3"
+	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	anypb "github.com/golang/protobuf/ptypes/any"
 	durationpb "github.com/golang/protobuf/ptypes/duration"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
@@ -54,16 +54,16 @@ const (
 )
 
 // MakeListeners provides dynamic listeners for Envoy
-func MakeListeners(serviceInfo *sc.ServiceInfo) ([]*v2pb.Listener, error) {
+func MakeListeners(serviceInfo *sc.ServiceInfo) ([]*listenerpb.Listener, error) {
 	listener, err := makeListener(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
-	return []*v2pb.Listener{listener}, nil
+	return []*listenerpb.Listener{listener}, nil
 }
 
 // makeListener provides a dynamic listener for Envoy
-func makeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
+func makeListener(serviceInfo *sc.ServiceInfo) (*listenerpb.Listener, error) {
 	httpFilters := []*hcmpb.HttpFilter{}
 
 	if serviceInfo.Options.CorsPreset == "basic" || serviceInfo.Options.CorsPreset == "cors_with_regex" {
@@ -203,7 +203,7 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 		filterChain.TransportSocket = transportSocket
 	}
 
-	return &v2pb.Listener{
+	return &listenerpb.Listener{
 		Name: util.IngressListenerName,
 		Address: &corepb.Address{
 			Address: &corepb.Address_SocketAddress{
@@ -219,7 +219,7 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*v2pb.Listener, error) {
 	}, nil
 }
 
-func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *v2pb.RouteConfiguration) *hcmpb.HttpConnectionManager {
+func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteConfiguration) *hcmpb.HttpConnectionManager {
 	httpConMgr := &hcmpb.HttpConnectionManager{
 		UpgradeConfigs: []*hcmpb.HttpConnectionManager_UpgradeConfig{
 			{
@@ -384,9 +384,9 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 			Issuer: provider.GetIssuer(),
 			JwksSourceSpecifier: &jwtpb.JwtProvider_RemoteJwks{
 				RemoteJwks: &jwtpb.RemoteJwks{
-					HttpUri: &corepb.HttpUri{
+					HttpUri: &corepbv2.HttpUri{
 						Uri: provider.GetJwksUri(),
-						HttpUpstreamType: &corepb.HttpUri_Cluster{
+						HttpUpstreamType: &corepbv2.HttpUri_Cluster{
 							Cluster: clusterName,
 						},
 						Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),

@@ -23,8 +23,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/service_control"
-	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	listenerpb "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 )
 
 func TestAddGCPAttributes(t *testing.T) {
@@ -90,14 +90,14 @@ func TestAddGCPAttributes(t *testing.T) {
 func TestReplaceListenerPort(t *testing.T) {
 	testCases := []struct {
 		name                   string
-		listener, wantListener *v2pb.Listener
+		listener, wantListener *listenerpb.Listener
 		wantPort               uint32
 		wantError              bool
 	}{
 		{
 			name:     "successful replace",
 			wantPort: 5678,
-			listener: &v2pb.Listener{
+			listener: &listenerpb.Listener{
 				Name: util.IngressListenerName,
 				Address: &corepb.Address{
 					Address: &corepb.Address_SocketAddress{
@@ -109,7 +109,7 @@ func TestReplaceListenerPort(t *testing.T) {
 					},
 				},
 			},
-			wantListener: &v2pb.Listener{
+			wantListener: &listenerpb.Listener{
 				Name: util.IngressListenerName,
 				Address: &corepb.Address{
 					Address: &corepb.Address_SocketAddress{
@@ -124,7 +124,7 @@ func TestReplaceListenerPort(t *testing.T) {
 		},
 		{
 			name: "unset WantPort does not replace port",
-			listener: &v2pb.Listener{
+			listener: &listenerpb.Listener{
 				Name: util.IngressListenerName,
 				Address: &corepb.Address{
 					Address: &corepb.Address_SocketAddress{
@@ -136,7 +136,7 @@ func TestReplaceListenerPort(t *testing.T) {
 					},
 				},
 			},
-			wantListener: &v2pb.Listener{
+			wantListener: &listenerpb.Listener{
 				Name: util.IngressListenerName,
 				Address: &corepb.Address{
 					Address: &corepb.Address_SocketAddress{
@@ -153,7 +153,7 @@ func TestReplaceListenerPort(t *testing.T) {
 			name:      "Invalid config should return an error",
 			wantPort:  5678,
 			wantError: true,
-			listener: &v2pb.Listener{
+			listener: &listenerpb.Listener{
 				Name: util.IngressListenerName,
 				Address: &corepb.Address{
 					Address: &corepb.Address_Pipe{
@@ -214,7 +214,7 @@ func TestTransformConfigBytes(t *testing.T) {
 		doListenerCalledOnIngress := false
 		doListenerCalledOnLoopback := false
 		doServiceControlCalled := false
-		doListenerTransform = func(_ *v2pb.Listener, port uint32) error {
+		doListenerTransform = func(_ *listenerpb.Listener, port uint32) error {
 			switch port {
 			case opts.WantPort:
 				doListenerCalledOnIngress = true
@@ -262,7 +262,7 @@ var validConfigInput = []byte(`{
               {
                 "name": "envoy.filters.network.http_connection_manager",
                 "typed_config": {
-                  "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "http_filters": [
                     {
                       "name": "envoy.filters.http.service_control",
@@ -305,7 +305,7 @@ var validConfigInputWithoutLoopback = []byte(`{
               {
                 "name": "envoy.filters.network.http_connection_manager",
                 "typed_config": {
-                  "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "http_filters": [
                     {
                       "name": "envoy.filters.http.service_control",
@@ -341,7 +341,7 @@ var validConfigInputHTTPListener = []byte(`{
               {
                 "name": "envoy.filters.network.http_connection_manager",
                 "typed_config": {
-                  "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "http_filters": [
                     {
                       "name": "envoy.filters.http.service_control",
@@ -385,7 +385,7 @@ var validConfigInputHTTPSListener = []byte(`{
               {
                 "name": "envoy.filters.network.http_connection_manager",
                 "typed_config": {
-                  "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "http_filters": [
                     {
                       "name": "envoy.filters.http.service_control",

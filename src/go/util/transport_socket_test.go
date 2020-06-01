@@ -34,21 +34,25 @@ func TestCreateUpstreamTransportSocket(t *testing.T) {
 			hostName:      "https://echo-http-12345-uc.a.run.app",
 			rootCertsPath: "/etc/ssl/certs/ca-certificates.crt",
 			alpnProtocols: []string{"h2"},
-			wantTransportSocket: `{
-				"name":"envoy.transport_sockets.tls",
-				"typedConfig":{
-					"@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
-					"commonTlsContext":{
-						"alpnProtocols":["h2"],
-						"validationContext":{
-							"trustedCa":{
-								"filename":"/etc/ssl/certs/ca-certificates.crt"
-							}
-						}
-					},
-				  "sni":"https://echo-http-12345-uc.a.run.app"
-				}
-			}`,
+			wantTransportSocket: `
+{
+   "name":"envoy.transport_sockets.tls",
+   "typedConfig":{
+      "@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
+      "commonTlsContext":{
+         "alpnProtocols":[
+            "h2"
+         ],
+         "validationContext":{
+            "trustedCa":{
+               "filename":"/etc/ssl/certs/ca-certificates.crt"
+            }
+         }
+      },
+      "sni":"https://echo-http-12345-uc.a.run.app"
+   }
+}
+`,
 		},
 		{
 			desc:           "Upstream Transport Socket for mTLS",
@@ -56,29 +60,35 @@ func TestCreateUpstreamTransportSocket(t *testing.T) {
 			rootCertsPath:  "/etc/ssl/certs/ca-certificates.crt",
 			sslBackendPath: "/etc/endpoint/ssl/",
 			alpnProtocols:  []string{"h2"},
-			wantTransportSocket: `{
-				"name":"envoy.transport_sockets.tls",
-				"typedConfig":{
-					"@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
-					"commonTlsContext":{
-						"alpnProtocols":["h2"],
-						"tlsCertificates":[
-							{
-								"certificateChain":{
-									"filename":"/etc/endpoint/ssl/client.crt"
-								},
-								"privateKey":{
-									"filename":"/etc/endpoint/ssl/client.key"
-								}
-							}
-						],
-						"validationContext":{
-							"trustedCa":{
-								"filename":"/etc/ssl/certs/ca-certificates.crt"
-								}
-							}
-						},
-						"sni":"https://echo-http-12345-uc.a.run.app"}}`,
+			wantTransportSocket: `
+{
+   "name":"envoy.transport_sockets.tls",
+   "typedConfig":{
+      "@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
+      "commonTlsContext":{
+         "alpnProtocols":[
+            "h2"
+         ],
+         "tlsCertificates":[
+            {
+               "certificateChain":{
+                  "filename":"/etc/endpoint/ssl/client.crt"
+               },
+               "privateKey":{
+                  "filename":"/etc/endpoint/ssl/client.key"
+               }
+            }
+         ],
+         "validationContext":{
+            "trustedCa":{
+               "filename":"/etc/ssl/certs/ca-certificates.crt"
+            }
+         }
+      },
+      "sni":"https://echo-http-12345-uc.a.run.app"
+   }
+}
+`,
 		},
 		{
 			desc:           "Upstream Transport Socket for mTLS, for legacy ESPv1",
@@ -86,29 +96,35 @@ func TestCreateUpstreamTransportSocket(t *testing.T) {
 			rootCertsPath:  "/etc/ssl/certs/ca-certificates.crt",
 			sslBackendPath: "/etc/nginx/ssl",
 			alpnProtocols:  []string{"h2"},
-			wantTransportSocket: `{
-				"name":"envoy.transport_sockets.tls",
-				"typedConfig":{
-					"@type":"type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
-					"commonTlsContext":{
-						"alpnProtocols":["h2"],
-						"tlsCertificates":[
-							{
-								"certificateChain":{
-									"filename":"/etc/nginx/ssl/backend.crt"
-								},
-								"privateKey":{
-									"filename":"/etc/nginx/ssl/backend.key"
-								}
-							}
-						],
-						"validationContext":{
-							"trustedCa":{
-								"filename":"/etc/ssl/certs/ca-certificates.crt"
-								}
-							}
-						},
-						"sni":"https://echo-http-12345-uc.a.run.app"}}`,
+			wantTransportSocket: `
+{
+   "name":"envoy.transport_sockets.tls",
+   "typedConfig":{
+      "@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
+      "commonTlsContext":{
+         "alpnProtocols":[
+            "h2"
+         ],
+         "tlsCertificates":[
+            {
+               "certificateChain":{
+                  "filename":"/etc/nginx/ssl/backend.crt"
+               },
+               "privateKey":{
+                  "filename":"/etc/nginx/ssl/backend.key"
+               }
+            }
+         ],
+         "validationContext":{
+            "trustedCa":{
+               "filename":"/etc/ssl/certs/ca-certificates.crt"
+            }
+         }
+      },
+      "sni":"https://echo-http-12345-uc.a.run.app"
+   }
+}
+`,
 		},
 	}
 
@@ -143,7 +159,7 @@ func TestCreateDownstreamTransportSocket(t *testing.T) {
 			wantTransportSocket: `{
 				"name":"envoy.transport_sockets.tls",
 				"typedConfig":{
-					"@type":"type.googleapis.com/envoy.api.v2.auth.DownstreamTlsContext",
+					"@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext",
 					"commonTlsContext":{
 						"alpnProtocols":["h2","http/1.1"],
 						"tlsCertificates":[
@@ -171,7 +187,7 @@ func TestCreateDownstreamTransportSocket(t *testing.T) {
 			wantTransportSocket: `{
 				"name":"envoy.transport_sockets.tls",
 				"typedConfig":{
-					"@type":"type.googleapis.com/envoy.api.v2.auth.DownstreamTlsContext",
+					"@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext",
 					"commonTlsContext":{
 						"alpnProtocols":["h2","http/1.1"],
 						"tlsCertificates":[
@@ -199,7 +215,7 @@ func TestCreateDownstreamTransportSocket(t *testing.T) {
 			wantTransportSocket: `{
 				"name":"envoy.transport_sockets.tls",
 				"typedConfig":{
-					"@type":"type.googleapis.com/envoy.api.v2.auth.DownstreamTlsContext",
+					"@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext",
 					"commonTlsContext":{
 						"alpnProtocols":["h2","http/1.1"],
 						"tlsCertificates":[

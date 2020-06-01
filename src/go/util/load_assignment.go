@@ -15,14 +15,13 @@
 package util
 
 import (
-	v2pb "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	endpointpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/endpoint"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	endpointpb "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 )
 
 // CreateLoadAssignment creates a ClusterLoadAssignment
-func CreateLoadAssignment(hostname string, port uint32) *v2pb.ClusterLoadAssignment {
-	return &v2pb.ClusterLoadAssignment{
+func CreateLoadAssignment(hostname string, port uint32) *endpointpb.ClusterLoadAssignment {
+	return &endpointpb.ClusterLoadAssignment{
 		ClusterName: hostname,
 		Endpoints: []*endpointpb.LocalityLbEndpoints{
 			{

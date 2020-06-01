@@ -19,7 +19,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 
-	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 )
 
 // CreateBootstrapConfig outputs Node struct for bootstrap config

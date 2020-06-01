@@ -22,7 +22,7 @@ import (
 
 	gen "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator"
 	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
-	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
+	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 

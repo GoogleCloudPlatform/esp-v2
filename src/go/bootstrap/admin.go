@@ -17,8 +17,8 @@ package bootstrap
 import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 
-	corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
+	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 )
 
 // CreateAdmin outputs Admin struct for bootstrap config

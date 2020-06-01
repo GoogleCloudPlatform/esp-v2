@@ -24,8 +24,8 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 
-	routepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
-	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher"
+	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -115,43 +115,44 @@ func TestMakeRouteConfig(t *testing.T) {
 					},
 				},
 			},
-			wantRouteConfig: `{
-                             "name": "local_route",
-                             "virtualHosts": [
-                                 {
-                                     "domains": [
-                                         "*"
-                                     ],
-                                     "name": "backend",
-                                     "routes": [
-                                         {
-                                             "match": {
-                                                 "headers": [
-                                                     {
-                                                         "exactMatch": "GET",
-                                                         "name": ":method"
-                                                     }
-                                                 ],
-                                                 "path": "foo"
-                                             },
-                                             "responseHeadersToAdd": [
-                                                 {
-                                                     "header": {
-                                                         "key": "Strict-Transport-Security",
-                                                         "value": "max-age=31536000; includeSubdomains"
-                                                     }
-                                                 }
-                                             ],
-                                             "route": {
-                                                 "cluster": "testapipb.com:443",
-                                                 "hostRewrite": "testapipb.com",
-                                                 "timeout": "15s"
-                                             }
-                                         }
-                                     ]
-                                 }
-                             ]
-                       }`,
+			wantRouteConfig: `
+{
+  "name": "local_route",
+  "virtualHosts": [
+    {
+      "domains": [
+        "*"
+      ],
+      "name": "backend",
+      "routes": [
+        {
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "foo"
+          },
+          "responseHeadersToAdd": [
+            {
+              "header": {
+                "key": "Strict-Transport-Security",
+                "value": "max-age=31536000; includeSubdomains"
+              }
+            }
+          ],
+          "route": {
+            "cluster": "testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "timeout": "15s"
+          }
+        }
+      ]
+    }
+  ]
+}`,
 		},
 	}
 

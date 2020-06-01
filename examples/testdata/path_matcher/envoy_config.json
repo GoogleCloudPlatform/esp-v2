@@ -80,7 +80,7 @@
         "transportSocket": {
           "name": "envoy.transport_sockets.tls",
           "typedConfig": {
-            "@type": "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
+            "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
             "commonTlsContext": {
               "validationContext": {
                 "trustedCa": {
@@ -96,7 +96,6 @@
     ],
     "listeners": [
       {
-        "name": "ingress_listener",
         "address": {
           "socketAddress": {
             "address": "0.0.0.0",
@@ -109,7 +108,10 @@
               {
                 "name": "envoy.filters.network.http_connection_manager",
                 "typedConfig": {
-                  "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager",
+                  "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
+                  "commonHttpProtocolOptions": {
+                    "headersWithUnderscoresAction": "REJECT_REQUEST"
+                  },
                   "httpFilters": [
                     {
                       "name": "envoy.filters.http.path_matcher",
@@ -156,16 +158,20 @@
                       }
                     ]
                   },
-                  "upgradeConfigs": [{"upgradeType": "websocket"}],
                   "statPrefix": "ingress_http",
-                  "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
+                  "upgradeConfigs": [
+                    {
+                      "upgradeType": "websocket"
+                    }
+                  ],
                   "useRemoteAddress": false,
                   "xffNumTrustedHops": 2
                 }
               }
             ]
           }
-        ]
+        ],
+        "name": "ingress_listener"
       }
     ]
   }
