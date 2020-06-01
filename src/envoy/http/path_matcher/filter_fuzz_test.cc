@@ -58,6 +58,7 @@ DEFINE_PROTO_FUZZER(
   static Envoy::Extensions::HttpFilters::UberFilterFuzzer fuzzer;
   fuzzer.runData(static_cast<Envoy::Http::StreamDecoderFilter*>(&filter),
                  input.downstream_request());
+  fuzzer.reset();
 
   // Ensure the query param filter state is valid.
   absl::string_view query_params = utils::getStringFilterState(

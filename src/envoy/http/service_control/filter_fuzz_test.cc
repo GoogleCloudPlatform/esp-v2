@@ -35,15 +35,15 @@ namespace fuzz {
 namespace Logger = Envoy::Logger;
 
 void doTest(
-    ServiceControlFilter& filter, Envoy::TestStreamInfo&,
+    ServiceControlFilter& filter, Envoy::TestStreamInfo& stream_info,
     const espv2::tests::fuzz::protos::ServiceControlFilterInput& input) {
   static Envoy::Extensions::HttpFilters::UberFilterFuzzer fuzzer;
   fuzzer.runData(static_cast<Envoy::Http::StreamDecoderFilter*>(&filter),
                  input.downstream_request());
   fuzzer.runData(static_cast<Envoy::Http::StreamEncoderFilter*>(&filter),
                  input.upstream_response());
-
-  // TODO(nareddyt): Fuzz access log once #11288 is in upstream envoy.
+  fuzzer.accessLog(static_cast<Envoy::AccessLog::Instance*>(&filter), stream_info);
+  fuzzer.reset();
 }
 
 DEFINE_PROTO_FUZZER(

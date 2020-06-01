@@ -68,6 +68,7 @@ DEFINE_PROTO_FUZZER(
   static Envoy::Extensions::HttpFilters::UberFilterFuzzer fuzzer;
   fuzzer.runData(static_cast<Envoy::Http::StreamDecoderFilter*>(&filter),
                  input.downstream_request());
+  fuzzer.reset();
 }
 
 }  // namespace fuzz
