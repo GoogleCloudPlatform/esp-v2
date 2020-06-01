@@ -30,18 +30,19 @@ import (
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/common"
 	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/path_matcher"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/service_control"
-	corepbv2 "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+
 	acpb "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v3"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	gspb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/grpc_stats/v2alpha"
-	jwtpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
-	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
-	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
 	listenerpb "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	facpb "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
+	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_json_transcoder/v3"
+	gspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_stats/v3"
 	hcpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/health_check/v3"
+	jwtpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/jwt_authn/v3"
+	routerpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+
 	anypb "github.com/golang/protobuf/ptypes/any"
 	durationpb "github.com/golang/protobuf/ptypes/duration"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
@@ -315,6 +316,11 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 func makeGrpcStatsFilter() *hcmpb.HttpFilter {
 	cfg := &gspb.FilterConfig{
 		EmitFilterState: true,
+		PerMethodStatSpecifier: &gspb.FilterConfig_StatsForAllMethods{
+			StatsForAllMethods: &wrappers.BoolValue{
+				Value: true,
+			},
+		},
 	}
 	cfg_any, _ := ptypes.MarshalAny(cfg)
 
@@ -384,9 +390,9 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 			Issuer: provider.GetIssuer(),
 			JwksSourceSpecifier: &jwtpb.JwtProvider_RemoteJwks{
 				RemoteJwks: &jwtpb.RemoteJwks{
-					HttpUri: &corepbv2.HttpUri{
+					HttpUri: &corepb.HttpUri{
 						Uri: provider.GetJwksUri(),
-						HttpUpstreamType: &corepbv2.HttpUri_Cluster{
+						HttpUpstreamType: &corepb.HttpUri_Cluster{
 							Cluster: clusterName,
 						},
 						Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),

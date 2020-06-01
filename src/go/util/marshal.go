@@ -25,13 +25,11 @@ import (
 	drpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/backend_routing"
 	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/path_matcher"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/service_control"
-	authpb "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
-	filepb "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v2"
-	gspb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/grpc_stats/v2alpha"
-	jwtpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/jwt_authn/v2alpha"
-	routerpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/router/v2"
-	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/transcoder/v2"
-	hcmpbv2 "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
+
+	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_json_transcoder/v3"
+	gspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_stats/v3"
+	jwtpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/jwt_authn/v3"
+	routerpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	tlspb "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 
@@ -75,14 +73,12 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(wrapperspb.UInt32Value), nil
 	case "type.googleapis.com/google.api.Service":
 		return new(confpb.Service), nil
-	case "type.googleapis.com/envoy.config.filter.http.grpc_stats.v2alpha.FilterConfig":
+	case "type.googleapis.com/envoy.extensions.filters.http.grpc_stats.v3.FilterConfig":
 		return new(gspb.FilterConfig), nil
-	case "type.googleapis.com/envoy.config.filter.http.transcoder.v2.GrpcJsonTranscoder":
+	case "type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder":
 		return new(transcoderpb.GrpcJsonTranscoder), nil
-	case "type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication":
+	case "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication":
 		return new(jwtpb.JwtAuthentication), nil
-	case "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager":
-		return new(hcmpbv2.HttpConnectionManager), nil
 	case "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager":
 		return new(hcmpb.HttpConnectionManager), nil
 	case "type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig":
@@ -93,16 +89,10 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(bapb.FilterConfig), nil
 	case "type.googleapis.com/google.api.envoy.http.backend_routing.FilterConfig":
 		return new(drpb.FilterConfig), nil
-	case "type.googleapis.com/envoy.config.filter.http.router.v2.Router":
+	case "type.googleapis.com/envoy.extensions.filters.http.router.v3.Router":
 		return new(routerpb.Router), nil
 	case "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext":
 		return new(tlspb.UpstreamTlsContext), nil
-	case "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext":
-		return new(authpb.UpstreamTlsContext), nil
-	case "type.googleapis.com/envoy.api.v2.auth.DownstreamTlsContext":
-		return new(authpb.DownstreamTlsContext), nil
-	case "type.googleapis.com/envoy.config.accesslog.v2.FileAccessLog":
-		return new(filepb.FileAccessLog), nil
 	default:
 		return nil, fmt.Errorf("unexpected protobuf.Any with url: %s", url)
 	}

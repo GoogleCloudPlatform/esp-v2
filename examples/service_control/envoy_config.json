@@ -742,7 +742,7 @@
                     {
                       "name": "envoy.filters.http.router",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/envoy.config.filter.http.router.v2.Router",
+                        "@type": "type.googleapis.com/envoy.extensions.filters.http.router.v3.Router",
                         "suppressEnvoyHeaders": true
                       }
                     }
