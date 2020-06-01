@@ -23,6 +23,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/wrappers"
 
 	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/backend_auth"
