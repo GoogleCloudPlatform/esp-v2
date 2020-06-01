@@ -68,7 +68,7 @@ class ServiceControlFilterTest : public ::testing::Test {
   testing::NiceMock<MockServiceControlHandler>* mock_handler_;
   ServiceControlHandlerPtr mock_handler_ptr_;
   testing::NiceMock<Envoy::MockBuffer> mock_buffer_;
-  testing::NiceMock<Envoy::Stats::MockStore> mock_stats_scope_;
+  testing::NiceMock<Envoy::Stats::MockIsolatedStatsStore> mock_stats_scope_;
   ServiceControlFilterStatBase stats_base_;
   Envoy::Http::TestRequestHeaderMapImpl req_headers_;
   Envoy::Http::TestRequestTrailerMapImpl req_trailer_;

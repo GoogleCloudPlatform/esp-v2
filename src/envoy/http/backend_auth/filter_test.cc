@@ -120,7 +120,7 @@ TEST_F(BackendAuthFilterTest, SucceedAppendToken) {
   utils::setStringFilterState(
       *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
       "operation-with-audience");
-  testing::NiceMock<Envoy::Stats::MockStore> scope;
+  testing::NiceMock<Envoy::Stats::MockIsolatedStatsStore> scope;
   const std::string prefix = Envoy::EMPTY_STRING;
   FilterStats filter_stats{
       ALL_BACKEND_AUTH_FILTER_STATS(POOL_COUNTER_PREFIX(scope, prefix))};
@@ -155,7 +155,7 @@ TEST_F(BackendAuthFilterTest, SucceedTokenCopied) {
   utils::setStringFilterState(
       *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
       "operation-with-audience");
-  testing::NiceMock<Envoy::Stats::MockStore> scope;
+  testing::NiceMock<Envoy::Stats::MockIsolatedStatsStore> scope;
   const std::string prefix = Envoy::EMPTY_STRING;
   FilterStats filter_stats{
       ALL_BACKEND_AUTH_FILTER_STATS(POOL_COUNTER_PREFIX(scope, prefix))};
