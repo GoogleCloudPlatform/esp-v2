@@ -146,8 +146,8 @@ type unavailableQuotaServiceHandler struct {
 }
 
 func (h *unavailableQuotaServiceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	req := &comp.ServiceRequest{
-		ReqType: comp.QUOTA_REQUEST,
+	req := &utils.ServiceRequest{
+		ReqType: utils.QuotaRequest,
 	}
 	req.ReqBody, _ = ioutil.ReadAll(r.Body)
 	h.m.CacheRequest(req)

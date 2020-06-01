@@ -83,9 +83,7 @@ func TestServiceControlCheckTracesWithRetry(t *testing.T) {
 	}
 	s := env.NewTestEnv(comp.TestServiceControlCheckTracesWithRetry, platform.GrpcBookstoreSidecar)
 	s.SetupFakeTraceServer()
-	handler := utils.RetryServiceHandler{
-		M: s.ServiceControlServer,
-	}
+	handler := utils.RetryServiceHandler{}
 	s.ServiceControlServer.OverrideCheckHandler(&handler)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {

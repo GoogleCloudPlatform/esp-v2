@@ -604,14 +604,14 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 				reqBody := scRequests[i].ReqBody
 				switch wantScRequest.(type) {
 				case *utils.ExpectedCheck:
-					if scRequests[i].ReqType != comp.CHECK_REQUEST {
+					if scRequests[i].ReqType != utils.CheckRequest {
 						t.Errorf("Test Desc(%s): service control request %v: should be Check", tc.desc, i)
 					}
 					if err := utils.VerifyCheck(reqBody, wantScRequest.(*utils.ExpectedCheck)); err != nil {
 						t.Error(err)
 					}
 				case *utils.ExpectedReport:
-					if scRequests[i].ReqType != comp.REPORT_REQUEST {
+					if scRequests[i].ReqType != utils.ReportRequest {
 						t.Errorf("Test Desc(%s): service control request %v: should be Report", tc.desc, i)
 					}
 					if err := utils.VerifyReport(reqBody, wantScRequest.(*utils.ExpectedReport)); err != nil {
@@ -751,14 +751,14 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 				reqBody := scRequests[i].ReqBody
 				switch wantScRequest.(type) {
 				case *utils.ExpectedCheck:
-					if scRequests[i].ReqType != comp.CHECK_REQUEST {
+					if scRequests[i].ReqType != utils.CheckRequest {
 						t.Errorf("Test Desc(%s): service control request %v: should be Check", tc.desc, i)
 					}
 					if err := utils.VerifyCheck(reqBody, wantScRequest.(*utils.ExpectedCheck)); err != nil {
 						t.Error(err)
 					}
 				case *utils.ExpectedReport:
-					if scRequests[i].ReqType != comp.REPORT_REQUEST {
+					if scRequests[i].ReqType != utils.ReportRequest {
 						t.Errorf("Test Desc(%s): service control request %v: should be Report", tc.desc, i)
 					}
 					if err := utils.VerifyReport(reqBody, wantScRequest.(*utils.ExpectedReport)); err != nil {

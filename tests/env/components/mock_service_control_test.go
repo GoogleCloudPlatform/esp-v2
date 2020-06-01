@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 	"github.com/golang/protobuf/proto"
 
 	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
@@ -54,7 +55,7 @@ func TestMockServiceControl(t *testing.T) {
 	if len(rr) != 1 {
 		t.Errorf("Wrong number: %d", len(rr))
 	}
-	if rr[0].ReqType != CHECK_REQUEST {
+	if rr[0].ReqType != utils.CheckRequest {
 		t.Errorf("Wrong type: %v", rr[0].ReqType)
 	}
 	req1 := &scpb.CheckRequest{}

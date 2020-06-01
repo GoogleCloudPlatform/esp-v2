@@ -118,7 +118,7 @@ func TestServiceControlProtocolWithGRPCBackend(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if scRequests[tc.numRequestsToSkip].ReqType != comp.REPORT_REQUEST {
+		if scRequests[tc.numRequestsToSkip].ReqType != utils.ReportRequest {
 			t.Fatalf("Test (%s): Expected but did not get a ReportRequest", tc.desc)
 		}
 
@@ -181,7 +181,7 @@ func TestServiceControlProtocolWithHTTPBackend(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if scRequests[0].ReqType != comp.REPORT_REQUEST {
+	if scRequests[0].ReqType != utils.ReportRequest {
 		t.Fatalf("Test (%s): Expected but did not get a ReportRequest", desc)
 	}
 

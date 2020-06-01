@@ -181,13 +181,13 @@ plans {
 	}
 
 	//The first service control call should be check.
-	if len(scRequests) == 0 || scRequests[0].ReqType != comp.CHECK_REQUEST {
+	if len(scRequests) == 0 || scRequests[0].ReqType != utils.CheckRequest {
 		t.Errorf("First ScRequest should be check")
 	}
 
 	// All the rest service control call should be report.
 	for i := 1; i < len(scRequests); i++ {
-		if scRequests[i].ReqType != comp.REPORT_REQUEST {
+		if scRequests[i].ReqType != utils.ReportRequest {
 			t.Errorf("Except the first ScRequest, all the rest should be report")
 		}
 	}

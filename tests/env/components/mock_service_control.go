@@ -23,6 +23,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
@@ -30,24 +31,10 @@ import (
 	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
-type ServiceRequestType int
-
-const (
-	CHECK_REQUEST = 1 + iota
-	QUOTA_REQUEST
-	REPORT_REQUEST
-)
-
 const defaultTimeout = 2500 * time.Millisecond
 
-type ServiceRequest struct {
-	ReqType   ServiceRequestType
-	ReqHeader http.Header
-	ReqBody   []byte
-}
-
 type serviceResponse struct {
-	reqType        ServiceRequestType
+	reqType        utils.ServiceRequestType
 	respBody       []byte
 	respStatusCode int
 }
@@ -55,7 +42,7 @@ type serviceResponse struct {
 // MockServiceMrg mocks the Service Management server.
 type MockServiceCtrl struct {
 	s                  *httptest.Server
-	ch                 chan *ServiceRequest
+	ch                 chan *utils.ServiceRequest
 	serverCerts        *tls.Certificate
 	url                string
 	count              *int32
@@ -73,7 +60,7 @@ type serviceHandler struct {
 
 func (h *serviceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	glog.Infof("Mock service control handler: %v", h.resp.reqType)
-	req := &ServiceRequest{
+	req := &utils.ServiceRequest{
 		ReqType:   h.resp.reqType,
 		ReqHeader: r.Header,
 	}
@@ -111,7 +98,7 @@ func setReportResponse(serviceRolloutId string) []byte {
 // NewMockServiceCtrl creates a new HTTP server.
 func NewMockServiceCtrl(serviceName, rolloutId string) *MockServiceCtrl {
 	m := &MockServiceCtrl{
-		ch:                 make(chan *ServiceRequest, 100),
+		ch:                 make(chan *utils.ServiceRequest, 100),
 		count:              new(int32),
 		serviceName:        serviceName,
 		getRequestsTimeout: defaultTimeout,
@@ -120,7 +107,7 @@ func NewMockServiceCtrl(serviceName, rolloutId string) *MockServiceCtrl {
 	m.checkHandler = &serviceHandler{
 		m: m,
 		resp: &serviceResponse{
-			reqType:  CHECK_REQUEST,
+			reqType:  utils.CheckRequest,
 			respBody: setOKCheckResponse(),
 		},
 	}
@@ -128,7 +115,7 @@ func NewMockServiceCtrl(serviceName, rolloutId string) *MockServiceCtrl {
 	m.quotaHandler = &serviceHandler{
 		m: m,
 		resp: &serviceResponse{
-			reqType:  QUOTA_REQUEST,
+			reqType:  utils.QuotaRequest,
 			respBody: []byte(""),
 		},
 	}
@@ -136,7 +123,7 @@ func NewMockServiceCtrl(serviceName, rolloutId string) *MockServiceCtrl {
 	m.reportHandler = &serviceHandler{
 		m: m,
 		resp: &serviceResponse{
-			reqType:  REPORT_REQUEST,
+			reqType:  utils.ReportRequest,
 			respBody: setReportResponse(rolloutId),
 		},
 	}
@@ -205,7 +192,7 @@ func (m *MockServiceCtrl) GetRequestCount() int {
 	return int(atomic.LoadInt32(m.count))
 }
 
-func (m *MockServiceCtrl) CacheRequest(req *ServiceRequest) {
+func (m *MockServiceCtrl) CacheRequest(req *utils.ServiceRequest) {
 	m.ch <- req
 }
 
@@ -257,8 +244,8 @@ func (m *MockServiceCtrl) SetRolloutIdConfigIdInReport(newRolloutId string) {
 }
 
 // GetRequests returns a slice of requests received.
-func (m *MockServiceCtrl) GetRequests(n int) ([]*ServiceRequest, error) {
-	r := make([]*ServiceRequest, n)
+func (m *MockServiceCtrl) GetRequests(n int) ([]*utils.ServiceRequest, error) {
+	r := make([]*utils.ServiceRequest, n)
 	for i := 0; i < n; i++ {
 		select {
 		case d := <-m.ch:
@@ -271,8 +258,8 @@ func (m *MockServiceCtrl) GetRequests(n int) ([]*ServiceRequest, error) {
 }
 
 // GetRequests returns a slice of requests received.
-func (m *MockServiceCtrl) GetAllRequests() []*ServiceRequest {
-	r := []*ServiceRequest{}
+func (m *MockServiceCtrl) GetAllRequests() []*utils.ServiceRequest {
+	r := []*utils.ServiceRequest{}
 	for {
 		select {
 		case d := <-m.ch:
