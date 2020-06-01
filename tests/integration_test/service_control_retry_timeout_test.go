@@ -41,7 +41,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 		M: s.ServiceControlServer,
 	}
 	s.ServiceControlServer.OverrideCheckHandler(&handler)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -142,7 +142,7 @@ func TestServiceControlQuotaRetry(t *testing.T) {
 		M: s.ServiceControlServer,
 	}
 	s.ServiceControlServer.OverrideQuotaHandler(&handler)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -216,7 +216,7 @@ func TestServiceControlReportRetry(t *testing.T) {
 		M: s.ServiceControlServer,
 	}
 	s.ServiceControlServer.OverrideReportHandler(&handler)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

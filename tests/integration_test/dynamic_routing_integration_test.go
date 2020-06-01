@@ -38,7 +38,7 @@ func NewDynamicRoutingTestEnv(port uint16) *env.TestEnv {
 func TestDynamicRouting(t *testing.T) {
 	t.Parallel()
 	s := NewDynamicRoutingTestEnv(comp.TestDynamicRouting)
-	defer s.TearDown()
+	defer s.TearDown(t)
 
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -230,7 +230,7 @@ func TestDynamicRoutingWithAllowCors(t *testing.T) {
 	s := NewDynamicRoutingTestEnv(comp.TestDynamicRoutingWithAllowCors)
 	s.SetAllowCors()
 
-	defer s.TearDown()
+	defer s.TearDown(t)
 
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -293,7 +293,7 @@ func TestDynamicRoutingCorsByEnvoy(t *testing.T) {
 		"--cors_allow_credentials"}...)
 
 	s := NewDynamicRoutingTestEnv(comp.TestDynamicRoutingCorsByEnvoy)
-	defer s.TearDown()
+	defer s.TearDown(t)
 
 	if err := s.Setup(dynamicRoutingArgs); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -334,7 +334,7 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 	t.Parallel()
 
 	s := NewDynamicRoutingTestEnv(comp.TestServiceControlRequestForDynamicRouting)
-	defer s.TearDown()
+	defer s.TearDown(t)
 
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -569,7 +569,7 @@ func TestDynamicBackendRoutingTLS(t *testing.T) {
 		func() {
 			s := env.NewTestEnv(comp.TestDynamicBackendRoutingTLS, platform.EchoRemote)
 			s.UseWrongBackendCertForDR(tc.useWrongCert)
-			defer s.TearDown()
+			defer s.TearDown(t)
 
 			if err := s.Setup(utils.CommonArgs()); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
@@ -692,7 +692,7 @@ func TestDynamicBackendRoutingMutualTLS(t *testing.T) {
 		func() {
 			s := env.NewTestEnv(comp.TestDynamicBackendRoutingMutualTLS, platform.EchoRemote)
 			s.SetBackendMTLSCert(tc.mtlsCertFile)
-			defer s.TearDown()
+			defer s.TearDown(t)
 
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
@@ -786,7 +786,7 @@ func TestDynamicGrpcBackendTLS(t *testing.T) {
 		args := utils.CommonArgs()
 		func() {
 			s := env.NewTestEnv(comp.TestDynamicGrpcBackendTLS, platform.GrpcBookstoreRemote)
-			defer s.TearDown()
+			defer s.TearDown(t)
 			s.UseWrongBackendCertForDR(tc.useWrongBackendCert)
 			if tc.mtlsCertFile != "" {
 				s.SetBackendMTLSCert(tc.mtlsCertFile)

@@ -43,7 +43,7 @@ func TestServiceControlAccessToken(t *testing.T) {
 			fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateAccessToken", serviceAccount): `{"accessToken":  "access-token-from-iam", "expireTime": "2022-10-02T15:01:23.045123456Z"}`,
 		}, 0)
 
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

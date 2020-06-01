@@ -91,7 +91,7 @@ func TestIamImdsDataPath(t *testing.T) {
 				time.Sleep(7 * time.Second)
 			}
 
-			defer s.TearDown()
+			defer s.TearDown(t)
 			if err := s.Setup(utils.CommonArgs()); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}

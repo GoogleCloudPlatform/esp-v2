@@ -76,7 +76,7 @@ func TestAuthJwksCache(t *testing.T) {
 				args = append(args, fmt.Sprintf("--jwks_cache_duration_in_s=%v", tc.jwksCacheDurationInS))
 			}
 
-			defer s.TearDown()
+			defer s.TearDown(t)
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}

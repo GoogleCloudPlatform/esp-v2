@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
@@ -243,6 +244,7 @@ func (e *TestEnv) EnableEchoServerRootPathHandler() {
 // Limit usage of this, as it causes flakes in CI.
 // Only intended to be used to test if Envoy starts up correctly.
 // Ideally, the test using this should have it's own retry loop.
+// Can also call after setup but before teardown to skip teardown checks.
 func (e *TestEnv) SkipHealthChecks() {
 	e.skipHealthChecks = true
 }
@@ -492,16 +494,21 @@ func (e *TestEnv) StopBackendServer() error {
 }
 
 // TearDown shutdown the servers.
-func (e *TestEnv) TearDown() {
+func (e *TestEnv) TearDown(t *testing.T) {
 	glog.Infof("start tearing down...")
 
-	// Run all health checks. If they fail, our test causes a server to become unhealthy...
+	// Run all health checks. If they fail, our test causes a server to crash.
+	// Fail the test.
 	if !e.skipHealthChecks {
 		if err := e.healthRegistry.RunAllHealthChecks(); err != nil {
-			glog.Errorf("health check failure during teardown: %v", err)
+			t.Errorf("health check failure during teardown: %v", err)
 		}
 	}
 
+	// TODO(nareddyt): Verify stats invariants and fail test on error.
+	// https://github.com/GoogleCloudPlatform/esp-v2/pull/167
+
+	// No need to fail test if any of these have errors.
 	if e.FakeJwtService != nil {
 		e.FakeJwtService.TearDown()
 	}

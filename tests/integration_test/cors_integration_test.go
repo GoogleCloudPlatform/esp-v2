@@ -46,7 +46,7 @@ func TestSimpleCorsWithBasicPreset(t *testing.T) {
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
 	s := env.NewTestEnv(comp.TestSimpleCorsWithBasicPreset, platform.EchoSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -110,7 +110,7 @@ func TestDifferentOriginSimpleCors(t *testing.T) {
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
 	s := env.NewTestEnv(comp.TestDifferentOriginSimpleCors, platform.EchoSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -154,7 +154,7 @@ func TestSimpleCorsWithRegexPreset(t *testing.T) {
 	s := env.NewTestEnv(comp.TestSimpleCorsWithRegexPreset, platform.EchoSidecar)
 	// UseWrongBackendCertForDR shouldn't impact simple Cors.
 	s.UseWrongBackendCertForDR(true)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -203,7 +203,7 @@ func TestPreflightCorsWithBasicPreset(t *testing.T) {
 		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
 
 	s := env.NewTestEnv(comp.TestPreflightCorsWithBasicPreset, platform.EchoSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -257,7 +257,7 @@ func TestDifferentOriginPreflightCors(t *testing.T) {
 		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
 
 	s := env.NewTestEnv(comp.TestDifferentOriginPreflightCors, platform.EchoSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -304,7 +304,7 @@ func TestGrpcBackendSimpleCors(t *testing.T) {
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
 	s := env.NewTestEnv(comp.TestGrpcBackendSimpleCors, platform.GrpcBookstoreSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -352,7 +352,7 @@ func TestGrpcBackendPreflightCors(t *testing.T) {
 		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
 
 	s := env.NewTestEnv(comp.TestGrpcBackendPreflightCors, platform.GrpcBookstoreSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -404,7 +404,7 @@ func TestPreflightRequestWithAllowCors(t *testing.T) {
 
 	s := env.NewTestEnv(comp.TestPreflightRequestWithAllowCors, platform.EchoSidecar)
 	s.SetAllowCors()
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -497,7 +497,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 			},
 		},
 	})
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -667,7 +667,7 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 			},
 		},
 	})
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

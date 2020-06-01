@@ -74,7 +74,7 @@ func TestAccessLog(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 	makeOneRequest(t, s)
-	s.TearDown()
+	s.TearDown(t)
 	expectAccessLog := fmt.Sprintf("\"POST /echo?key=api-key HTTP/1.1\"200"+
 		" - 20 19\"-\" \"Go-http-client/1.1\"\"localhost:%v\" \"127.0.0.1:%v\"\n",
 		s.Ports().ListenerPort, s.Ports().BackendServerPort)

@@ -37,7 +37,7 @@ func TestServiceControlCache(t *testing.T) {
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlCache, platform.EchoSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

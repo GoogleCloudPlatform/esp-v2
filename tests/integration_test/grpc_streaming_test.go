@@ -36,7 +36,7 @@ func TestGRPCStreaming(t *testing.T) {
 		"--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(comp.TestGRPCStreaming, platform.GrpcEchoSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -153,7 +153,7 @@ func TestGRPCLongStreaming(t *testing.T) {
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	defer s.TearDown()
+	defer s.TearDown(t)
 
 	testPlans := `
 plans {

@@ -36,7 +36,7 @@ func TestServiceControlAPIKeyDefaultLocation(t *testing.T) {
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(comp.TestServiceControlAPIKeyDefaultLocation, platform.GrpcBookstoreSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -129,7 +129,7 @@ func TestServiceControlAPIKeyCustomLocation(t *testing.T) {
 			},
 		},
 	})
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

@@ -73,7 +73,7 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 			s := env.NewTestEnv(tc.allocatedPort, platform.GrpcBookstoreSidecar)
 			s.ServiceControlServer.SetURL(tc.serviceControlURL)
 
-			defer s.TearDown()
+			defer s.TearDown(t)
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
@@ -110,7 +110,7 @@ func TestServiceControlCheckTimeout(t *testing.T) {
 
 	s := env.NewTestEnv(comp.TestServiceControlCheckTimeout, platform.GrpcBookstoreSidecar)
 	s.ServiceControlServer.SetURL("http://wrong_service_control_server_name")
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
@@ -201,7 +201,7 @@ func TestServiceControlNetworkFailFlagForTimeout(t *testing.T) {
 				s.EnableScNetworkFailOpen()
 			}
 
-			defer s.TearDown()
+			defer s.TearDown(t)
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
@@ -297,7 +297,7 @@ func TestServiceControlNetworkFailFlagForUnavailableCheckResponse(t *testing.T) 
 				s.EnableScNetworkFailOpen()
 			}
 
-			defer s.TearDown()
+			defer s.TearDown(t)
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}

@@ -37,7 +37,7 @@ func TestBackendAuthDisableAuth(t *testing.T) {
 			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost":                      "ya29.DefaultAuth",
 		}, 0)
 
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

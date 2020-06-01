@@ -32,7 +32,7 @@ import (
 func TestWebsocket(t *testing.T) {
 	t.Parallel()
 	s := env.NewTestEnv(comp.TestWebsocket, platform.EchoSidecar)
-	defer s.TearDown()
+	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
