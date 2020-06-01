@@ -420,7 +420,7 @@ func (s *ServiceInfo) processBackendRule() error {
 
 	for _, r := range s.ServiceConfig().Backend.GetRules() {
 		if r.Address != "" {
-			scheme, hostname, port, uri, err := util.ParseURI(r.Address)
+			scheme, hostname, port, path, err := util.ParseURI(r.Address)
 			if err != nil {
 				return err
 			}
@@ -459,8 +459,8 @@ func (s *ServiceInfo) processBackendRule() error {
 
 			// For CONSTANT_ADDRESS, an empty uri will generate an empty path header.
 			// It is an invalid Http header if path is empty.
-			if uri == "" && r.PathTranslation == confpb.BackendRule_CONSTANT_ADDRESS {
-				uri = "/"
+			if path == "" && r.PathTranslation == confpb.BackendRule_CONSTANT_ADDRESS {
+				path = "/"
 			}
 
 			var deadline time.Duration
@@ -481,7 +481,7 @@ func (s *ServiceInfo) processBackendRule() error {
 
 			method.BackendInfo = &backendInfo{
 				ClusterName:     clusterName,
-				Uri:             uri,
+				Path:            path,
 				Hostname:        hostname,
 				TranslationType: r.PathTranslation,
 				Deadline:        deadline,

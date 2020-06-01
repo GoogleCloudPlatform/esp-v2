@@ -36,11 +36,6 @@ namespace {
 
 const char kFilterConfig[] = R"(
 rules {
-  operation: "append-operation"
-  path_translation: APPEND_PATH_TO_ADDRESS
-  path_prefix: ""
-}
-rules {
   operation: "append-with-prefix-operation"
   path_translation: APPEND_PATH_TO_ADDRESS
   path_prefix: "/test-prefix"
@@ -54,11 +49,6 @@ rules {
   operation: "const-with-prefix-operation"
   path_translation: CONSTANT_ADDRESS
   path_prefix: "/test-prefix"
-}
-rules {
-  operation: "const-with-bad-prefix-operation"
-  path_translation: CONSTANT_ADDRESS
-  path_prefix: ""
 }
 )";
 
@@ -181,33 +171,6 @@ TEST_F(BackendRoutingFilterTest, ConstantAddress) {
   EXPECT_EQ(counter->value(), 1);
 }
 
-TEST_F(BackendRoutingFilterTest, ConstantAddressWithBadPrefix) {
-  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
-                                                {":path", "/books/1"}};
-  utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
-      "const-with-bad-prefix-operation");
-
-  // Call function under test
-  Envoy::Http::FilterHeadersStatus status =
-      filter_->decodeHeaders(headers, false);
-
-  // Expect the path to be modified. Note that it is expected to be an empty
-  // URL here. This is problematic in practice, since it doesn't have a '/'.
-  // Config manager will ensure that this configuration is never passed to
-  // Envoy.
-  EXPECT_EQ(headers.Path()->value().getStringView(), Envoy::EMPTY_STRING);
-  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
-
-  // Stats.
-  const Envoy::Stats::CounterSharedPtr counter =
-      Envoy::TestUtility::findCounter(
-          mock_factory_context_.scope_,
-          "backend_routing.constant_address_request");
-  ASSERT_NE(counter, nullptr);
-  EXPECT_EQ(counter->value(), 1);
-}
-
 TEST_F(BackendRoutingFilterTest, ConstantAddressWithPathMatcherQueryParams) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
@@ -238,35 +201,11 @@ TEST_F(BackendRoutingFilterTest, ConstantAddressWithPathMatcherQueryParams) {
 /**
  * The request URL contains multiple query parameters.
  */
-class BackendRoutingFilterWithQueryParamsTest
+class BackendRoutingFilterQueryParamInRequestTest
     : public BackendRoutingFilterTest {};
 
-TEST_F(BackendRoutingFilterWithQueryParamsTest, AppendPathToAddress) {
-  Envoy::Http::TestRequestHeaderMapImpl headers{
-      {":method", "GET"}, {":path", "/books/1?view=summary&filter=deleted"}};
-  utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
-      "append-operation");
-
-  // Call function under test
-  Envoy::Http::FilterHeadersStatus status =
-      filter_->decodeHeaders(headers, false);
-
-  // Expect the path to be modified.
-  EXPECT_EQ(headers.Path()->value().getStringView(),
-            "/books/1?view=summary&filter=deleted");
-  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
-
-  // Stats.
-  const Envoy::Stats::CounterSharedPtr counter =
-      Envoy::TestUtility::findCounter(
-          mock_factory_context_.scope_,
-          "backend_routing.append_path_to_address_request");
-  ASSERT_NE(counter, nullptr);
-  EXPECT_EQ(counter->value(), 1);
-}
-
-TEST_F(BackendRoutingFilterWithQueryParamsTest, AppendPathToAddressWithPrefix) {
+TEST_F(BackendRoutingFilterQueryParamInRequestTest,
+       AppendPathToAddressWithPrefix) {
   Envoy::Http::TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/books/1?view=summary&filter=deleted"}};
   utils::setStringFilterState(
@@ -291,7 +230,7 @@ TEST_F(BackendRoutingFilterWithQueryParamsTest, AppendPathToAddressWithPrefix) {
   EXPECT_EQ(counter->value(), 1);
 }
 
-TEST_F(BackendRoutingFilterWithQueryParamsTest, ConstantAddress) {
+TEST_F(BackendRoutingFilterQueryParamInRequestTest, ConstantAddress) {
   Envoy::Http::TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/books/1?view=summary&filter=deleted"}};
   utils::setStringFilterState(
@@ -316,7 +255,7 @@ TEST_F(BackendRoutingFilterWithQueryParamsTest, ConstantAddress) {
   EXPECT_EQ(counter->value(), 1);
 }
 
-TEST_F(BackendRoutingFilterWithQueryParamsTest,
+TEST_F(BackendRoutingFilterQueryParamInRequestTest,
        ConstantAddressWithPathMatcherQueryParams) {
   Envoy::Http::TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/books/1?view=summary&filter=deleted"}};
@@ -345,7 +284,35 @@ TEST_F(BackendRoutingFilterWithQueryParamsTest,
   EXPECT_EQ(counter->value(), 1);
 }
 
-TEST_F(BackendRoutingFilterWithQueryParamsTest, ConstantAddressWithPrefix) {
+TEST_F(BackendRoutingFilterQueryParamInRequestTest,
+       ConstantAddressWithDuplicatedPathMatcherQueryParams) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                                {":path", "/books/1?id=2"}};
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
+      "const-operation");
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kQueryParams,
+      "id=1");
+
+  // Call function under test
+  Envoy::Http::FilterHeadersStatus status =
+      filter_->decodeHeaders(headers, false);
+
+  // Expect the path to be modified.
+  EXPECT_EQ(headers.Path()->value().getStringView(), "/?id=2&id=1");
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(
+          mock_factory_context_.scope_,
+          "backend_routing.constant_address_request");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
+}
+
+TEST_F(BackendRoutingFilterQueryParamInRequestTest, ConstantAddressWithPrefix) {
   Envoy::Http::TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/books/1?view=summary&filter=deleted"}};
   utils::setStringFilterState(

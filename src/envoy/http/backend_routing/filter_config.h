@@ -15,6 +15,7 @@
 #pragma once
 
 #include "api/envoy/http/backend_routing/config.pb.h"
+#include "common/common/empty_string.h"
 #include "common/common/logger.h"
 #include "envoy/server/filter_config.h"
 
@@ -56,6 +57,14 @@ class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
               PATH_TRANSLATION_UNSPECIFIED) {
         throw Envoy::ProtoValidationException(
             "Path translation for BackendRouting rule must be specified", rule);
+      }
+      if (rule.path_prefix() == Envoy::EMPTY_STRING) {
+        throw Envoy::ProtoValidationException("Path prefix cannot be empty",
+                                              rule);
+      }
+      if (!Envoy::Http::validHeaderString(rule.path_prefix())) {
+        throw Envoy::ProtoValidationException(
+            "Path prefix contains invalid characters", rule);
       }
       backend_routing_map_[rule.operation()] = &rule;
     }
