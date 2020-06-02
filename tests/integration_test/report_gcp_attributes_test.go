@@ -135,7 +135,7 @@ func TestReportGCPAttributes(t *testing.T) {
 				t.Fatalf("Test(%s): GetRequests returns error: %v", tc.desc, err)
 			}
 
-			if scRequests[0].ReqType != comp.REPORT_REQUEST {
+			if scRequests[0].ReqType != utils.ReportRequest {
 				t.Fatalf("Test(%s): service control request: should be Report", tc.desc)
 			}
 

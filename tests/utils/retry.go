@@ -17,12 +17,9 @@ package utils
 import (
 	"net/http"
 	"time"
-
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 type RetryServiceHandler struct {
-	M             *comp.MockServiceCtrl
 	RequestCount  int32
 	SleepTimes    int32
 	SleepLengthMs int32

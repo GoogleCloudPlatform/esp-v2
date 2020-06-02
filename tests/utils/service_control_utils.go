@@ -17,16 +17,30 @@ package utils
 import (
 	"fmt"
 	"math"
+	"net/http"
 	"sort"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
 
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 	ltypepb "google.golang.org/genproto/googleapis/logging/type"
 )
+
+type ServiceRequestType int
+
+const (
+	CheckRequest = 1 + iota
+	QuotaRequest
+	ReportRequest
+)
+
+type ServiceRequest struct {
+	ReqType   ServiceRequestType
+	ReqHeader http.Header
+	ReqBody   []byte
+}
 
 type ExpectedCheck struct {
 	Version                string
@@ -836,7 +850,7 @@ func AggregateReport(pb *scpb.ReportRequest, n int64) {
 	}
 }
 
-func CheckScRequest(t *testing.T, scRequests []*comp.ServiceRequest, wantScRequests []interface{}, desc string) {
+func CheckScRequest(t *testing.T, scRequests []*ServiceRequest, wantScRequests []interface{}, desc string) {
 	t.Helper()
 
 	for i, wantScRequest := range wantScRequests {
@@ -844,21 +858,21 @@ func CheckScRequest(t *testing.T, scRequests []*comp.ServiceRequest, wantScReque
 		reqBody := scRequest.ReqBody
 		switch wantScRequest.(type) {
 		case *ExpectedCheck:
-			if scRequest.ReqType != comp.CHECK_REQUEST {
+			if scRequest.ReqType != CheckRequest {
 				t.Errorf("Test (%s): failed, service control request %v: should be Check", desc, i)
 			}
 			if err := VerifyCheck(reqBody, wantScRequest.(*ExpectedCheck)); err != nil {
 				t.Errorf("Test (%s): failed,  %v", desc, err)
 			}
 		case *ExpectedQuota:
-			if scRequest.ReqType != comp.QUOTA_REQUEST {
+			if scRequest.ReqType != QuotaRequest {
 				t.Errorf("Test (%s): failed, service control request %v: should be Quota", desc, i)
 			}
 			if err := VerifyQuota(reqBody, wantScRequest.(*ExpectedQuota)); err != nil {
 				t.Errorf("Test (%s): failed,  %v", desc, err)
 			}
 		case *ExpectedReport:
-			if scRequest.ReqType != comp.REPORT_REQUEST {
+			if scRequest.ReqType != ReportRequest {
 				t.Errorf("Test (%s): failed, service control request %v: should be Report", desc, i)
 			}
 			if err := VerifyReport(reqBody, wantScRequest.(*ExpectedReport)); err != nil {
@@ -870,8 +884,8 @@ func CheckScRequest(t *testing.T, scRequests []*comp.ServiceRequest, wantScReque
 	}
 }
 
-func CheckAPIKey(t *testing.T, scCheck *comp.ServiceRequest, wantApiKey string, desc string) {
-	if scCheck.ReqType != comp.CHECK_REQUEST {
+func CheckAPIKey(t *testing.T, scCheck *ServiceRequest, wantApiKey string, desc string) {
+	if scCheck.ReqType != CheckRequest {
 		t.Errorf("Test (%s): failed, the service control request should be Check", desc)
 	}
 
@@ -886,19 +900,19 @@ func CheckAPIKey(t *testing.T, scCheck *comp.ServiceRequest, wantApiKey string, 
 	}
 }
 
-func VerifyServiceControlResp(desc string, wantScRequests []interface{}, scRequests []*comp.ServiceRequest) error {
+func VerifyServiceControlResp(desc string, wantScRequests []interface{}, scRequests []*ServiceRequest) error {
 	for i, wantScRequest := range wantScRequests {
 		reqBody := scRequests[i].ReqBody
 		switch wantScRequest.(type) {
 		case *ExpectedCheck:
-			if scRequests[i].ReqType != comp.CHECK_REQUEST {
+			if scRequests[i].ReqType != CheckRequest {
 				return fmt.Errorf("Test Desc(%s): service control request %v: should be Check", desc, i)
 			}
 			if err := VerifyCheck(reqBody, wantScRequest.(*ExpectedCheck)); err != nil {
 				return err
 			}
 		case *ExpectedReport:
-			if scRequests[i].ReqType != comp.REPORT_REQUEST {
+			if scRequests[i].ReqType != ReportRequest {
 				return fmt.Errorf("Test Desc(%s): service control request %v: should be Report", desc, i)
 			}
 			if err := VerifyReport(reqBody, wantScRequest.(*ExpectedReport)); err != nil {

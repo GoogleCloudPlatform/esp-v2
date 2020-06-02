@@ -37,9 +37,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--rollout_strategy=fixed", "--service_control_check_retries=2", "--service_control_check_timeout_ms=100"}
 	s := env.NewTestEnv(comp.TestServiceControlCheckRetry, platform.GrpcBookstoreSidecar)
-	handler := utils.RetryServiceHandler{
-		M: s.ServiceControlServer,
-	}
+	handler := utils.RetryServiceHandler{}
 	s.ServiceControlServer.OverrideCheckHandler(&handler)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
@@ -138,9 +136,7 @@ func TestServiceControlQuotaRetry(t *testing.T) {
 			},
 		},
 	})
-	handler := utils.RetryServiceHandler{
-		M: s.ServiceControlServer,
-	}
+	handler := utils.RetryServiceHandler{}
 	s.ServiceControlServer.OverrideQuotaHandler(&handler)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
@@ -212,9 +208,7 @@ func TestServiceControlReportRetry(t *testing.T) {
 	}
 	s := env.NewTestEnv(comp.TestServiceControlReportRetry, platform.GrpcBookstoreSidecar)
 
-	handler := utils.RetryServiceHandler{
-		M: s.ServiceControlServer,
-	}
+	handler := utils.RetryServiceHandler{}
 	s.ServiceControlServer.OverrideReportHandler(&handler)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
