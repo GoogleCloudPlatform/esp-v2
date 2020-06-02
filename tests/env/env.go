@@ -78,6 +78,7 @@ type TestEnv struct {
 	healthRegistry                  *components.HealthRegistry
 	FakeJwtService                  *components.FakeJwtService
 	skipHealthChecks                bool
+	StatsVerifier                   *components.StatsVerifier
 
 	// Only implemented for the RemoteEcho backend.
 	useWrongBackendCert         bool
@@ -408,6 +409,9 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		return err
 	}
 
+	e.StatsVerifier = components.NewStatsVerifier(e.ports)
+	e.healthRegistry.RegisterHealthChecker(e.StatsVerifier)
+
 	switch e.backend {
 	case platform.EchoSidecar:
 		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.BackendServerPort /*enableHttps=*/, false /*enableRootPathHandler=*/, e.enableEchoServerRootPathHandler /*useAuthorizedBackendCert*/, false, e.backendMTLSCertFile, e.disableHttp2ForHttpsBackend)
@@ -505,10 +509,12 @@ func (e *TestEnv) TearDown(t *testing.T) {
 		}
 	}
 
-	// TODO(nareddyt): Verify stats invariants and fail test on error.
-	// https://github.com/GoogleCloudPlatform/esp-v2/pull/167
+	// Verify invariants in statistics.
+	if err := e.StatsVerifier.VerifyInvariants(); err != nil {
+		t.Errorf("Error verifying stats invariants: %v", err)
+	}
 
-	// No need to fail test if any of these have errors.
+	// Tear down servers.
 	if e.FakeJwtService != nil {
 		e.FakeJwtService.TearDown()
 	}
