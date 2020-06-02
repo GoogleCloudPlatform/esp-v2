@@ -155,7 +155,7 @@ func TestFetchListeners(t *testing.T) {
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_stats.v3.FilterConfig",
                            "emitFilterState":true,
-                           "statsForAllMethods":true
+                           "statsForAllMethods":false
                         }
                      },
                      {
@@ -336,7 +336,7 @@ func TestFetchListeners(t *testing.T) {
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_stats.v3.FilterConfig",
                            "emitFilterState":true,
-                           "statsForAllMethods":true
+                           "statsForAllMethods":false
                         }
                      },
                      {
@@ -550,7 +550,7 @@ func TestFetchListeners(t *testing.T) {
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_stats.v3.FilterConfig",
                            "emitFilterState":true,
-                           "statsForAllMethods":true
+                           "statsForAllMethods":false
                         }
                      },
                      {
@@ -801,7 +801,7 @@ func TestFetchListeners(t *testing.T) {
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_stats.v3.FilterConfig",
                            "emitFilterState":true,
-                           "statsForAllMethods":true
+                           "statsForAllMethods":false
                         }
                      },
                      {
@@ -1026,7 +1026,7 @@ func TestFetchListeners(t *testing.T) {
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_stats.v3.FilterConfig",
                            "emitFilterState":true,
-                           "statsForAllMethods":true
+                           "statsForAllMethods":false
                         }
                      },
                      {
