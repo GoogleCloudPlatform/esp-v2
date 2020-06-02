@@ -63,7 +63,7 @@ func TestStatistics(t *testing.T) {
 			reqDuration: time.Second * 1,
 			wantCounts: map[string]int{
 				"http.ingress_http.backend_auth.token_added":                       2,
-				"http.ingress_http.backend_routing.append_path_to_address_request": 2,
+				"http.ingress_http.backend_routing.allowed_by_no_configured_rules": 2,
 				"http.ingress_http.path_matcher.allowed":                           2,
 				"http.ingress_http.service_control.allowed":                        2,
 			},
