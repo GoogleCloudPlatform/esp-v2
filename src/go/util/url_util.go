@@ -39,6 +39,8 @@ const (
 // ParseURI parses uri into scheme, hostname, port, path with err(if exist).
 // If uri has no scheme, it will be regarded as https.
 // If uri has no port, it will use 80 for non-TLS and 443 for TLS.
+// Ensures the path has no trailing slash.
+// Strips out query parameters from the path.
 func ParseURI(uri string) (string, string, uint32, string, error) {
 	arr := strings.Split(uri, "://")
 	if len(arr) == 1 {
@@ -64,7 +66,9 @@ func ParseURI(uri string) (string, string, uint32, string, error) {
 	if err != nil {
 		return "", "", 0, "", err
 	}
-	return u.Scheme, u.Hostname(), uint32(portVal), strings.TrimSuffix(u.RequestURI(), "/"), nil
+
+	pathNoTrailingSlash := strings.TrimSuffix(u.Path, "/")
+	return u.Scheme, u.Hostname(), uint32(portVal), pathNoTrailingSlash, nil
 }
 
 // ParseBackendProtocol parses a scheme string and http protocol string into BackendProtocol and UseTLS bool.

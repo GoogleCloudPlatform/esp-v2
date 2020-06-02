@@ -142,6 +142,15 @@ func TestParseURI(t *testing.T) {
 			wantedPort:     443,
 			wantURI:        "",
 		},
+		{
+			desc:           "successful with query params ignored",
+			url:            "https://abcde.youtube.com/api?query=ignored&query2=ignored2",
+			wantedScheme:   "https",
+			wantedHostname: "abcde.youtube.com",
+			wantedPort:     443,
+			wantURI:        "/api",
+			wantErr:        "",
+		},
 	}
 
 	for i, tc := range testData {

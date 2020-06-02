@@ -624,7 +624,7 @@ func TestBackendRoutingFilter(t *testing.T) {
 						},
 						{
 							Selector:        "testapi.foo",
-							Address:         "https://testapipb.com/foo",
+							Address:         "https://testapipb.com/foo?query=ignored",
 							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 							Authentication: &confpb.BackendRule_JwtAudience{
 								JwtAudience: "foo.com",
@@ -670,6 +670,128 @@ func TestBackendRoutingFilter(t *testing.T) {
         }
       }`,
 		},
+		{
+			desc:           "Success, empty path for APPEND generate no backend filter",
+			BackendAddress: "http://127.0.0.1:80",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "testapi",
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+							{
+								Name: "bar",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "testapi.foo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "foo",
+							},
+						},
+						{
+							Selector: "testapi.bar",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "bar",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector: "ignore_me",
+						},
+						{
+							Selector:        "testapi.foo",
+							Address:         "https://testapipb.com",
+							PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+						},
+						{
+							Selector:        "testapi.bar",
+							Address:         "https://testapipb.com/",
+							PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+						},
+					},
+				},
+			},
+			wantBackendRoutingFilter: ``,
+		},
+		{
+			desc:           "Success, empty path for CONST always generates `/` prefix",
+			BackendAddress: "http://127.0.0.1:80",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "testapi",
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+							{
+								Name: "bar",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "testapi.foo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "foo",
+							},
+						},
+						{
+							Selector: "testapi.bar",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "bar",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector:        "testapi.foo",
+							Address:         "https://testapipb.com",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+						},
+						{
+							Selector:        "testapi.bar",
+							Address:         "https://testapipb.com/",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+						},
+					},
+				},
+			},
+			wantBackendRoutingFilter: `{
+        "name": "envoy.filters.http.backend_routing",
+        "typedConfig": {
+          "@type":"type.googleapis.com/google.api.envoy.http.backend_routing.FilterConfig",
+          "rules": [
+            {
+              "operation": "testapi.bar",
+              "pathPrefix": "/",
+              "pathTranslation":"CONSTANT_ADDRESS"
+            },
+            {
+              "operation":"testapi.foo",
+              "pathPrefix": "/",
+              "pathTranslation":"CONSTANT_ADDRESS"
+            }
+          ]
+        }
+      }`,
+		},
 	}
 
 	for i, tc := range testdata {
@@ -684,6 +806,13 @@ func TestBackendRoutingFilter(t *testing.T) {
 		filter, err := makeBackendRoutingFilter(fakeServiceInfo)
 		if err != nil {
 			t.Fatal(err)
+		}
+
+		if filter == nil {
+			if tc.wantBackendRoutingFilter != "" {
+				t.Errorf("Test (%v): got no backend routing filter", tc.desc)
+			}
+			continue
 		}
 
 		gotFilter, err := marshaler.MarshalToString(filter)

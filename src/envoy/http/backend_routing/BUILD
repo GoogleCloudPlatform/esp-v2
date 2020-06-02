@@ -59,6 +59,21 @@ envoy_cc_test(
     ],
 )
 
+envoy_cc_test(
+    name = "filter_config_test",
+    size = "small",
+    srcs = [
+        "filter_config_test.cc",
+    ],
+    repository = "@envoy",
+    deps = [
+        ":filter_lib",
+        "//api/envoy/http/backend_routing:config_proto_cc_proto",
+        "@envoy//test/mocks/server:server_mocks",
+        "@envoy//test/test_common:utility_lib",
+    ],
+)
+
 envoy_cc_fuzz_test(
     name = "backend_routing_filter_fuzz_test",
     srcs = ["filter_fuzz_test.cc"],

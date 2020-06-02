@@ -42,7 +42,7 @@ type methodInfo struct {
 // backendInfo stores information from Backend rule for backend rerouting.
 type backendInfo struct {
 	ClusterName     string
-	Uri             string
+	Path            string
 	Hostname        string
 	TranslationType confpb.BackendRule_PathTranslation
 	JwtAudience     string

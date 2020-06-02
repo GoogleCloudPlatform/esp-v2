@@ -788,8 +788,13 @@ func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, e
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
 
-		// For gRPC service config that has no path translation, no need for backend routing filter (only host rewrite via route config).
-		if method.BackendInfo != nil && method.BackendInfo.TranslationType != confpb.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
+		if method.BackendInfo != nil {
+
+			// For gRPC service config that has no path translation, no need for backend routing filter (only host rewrite via route config).
+			if method.BackendInfo.TranslationType == confpb.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
+				continue
+			}
+
 			newRule := &brpb.BackendRoutingRule{
 				Operation: operation,
 			}
@@ -804,8 +809,15 @@ func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, e
 			}
 
 			if method.BackendInfo != nil {
-				newRule.PathPrefix = method.BackendInfo.Uri
+				newRule.PathPrefix = method.BackendInfo.Path
 			}
+
+			// If the path prefix is empty, then the filter is a no-op for this operation.
+			// It doesn't need to be in the filter config, skip it.
+			if newRule.PathPrefix == "" {
+				continue
+			}
+
 			rules = append(rules, newRule)
 		}
 	}
