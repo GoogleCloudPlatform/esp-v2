@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/golang/glog"
@@ -152,25 +151,16 @@ func GrpcHealthCheck(addr string, opts *HealthCheckOptions) error {
 
 // HttpHealthCheck checks the service running at the specified port and path for a 200 OK response.
 // Does not support authentication. Supports retries and timeouts.
-func HttpHealthCheck(addr string, endpoint string, opts *HealthCheckOptions) error {
+func HttpHealthCheck(uri string, opts *HealthCheckOptions) error {
 
-	// Server address
-	u, err := url.Parse(addr)
-	if err != nil {
-		return err
-	}
-
-	// Health check path
-	u.Path = endpoint
-
-	err = withRetry(opts.HealthCheckRetries, opts.HealthCheckRetryBackoff, func() error {
+	err := withRetry(opts.HealthCheckRetries, opts.HealthCheckRetryBackoff, func() error {
 		// Create a client with an explicit deadline
 		client := http.Client{
 			Timeout: opts.HealthCheckDeadline,
 		}
 
 		// Make the request
-		resp, err := client.Get(u.String())
+		resp, err := client.Get(uri)
 		if err != nil {
 			return err
 		}

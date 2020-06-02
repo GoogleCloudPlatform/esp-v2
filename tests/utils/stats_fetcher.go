@@ -18,6 +18,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+
+	"github.com/golang/glog"
+)
+
+type StatCounters map[string]int
+type StatHistograms map[string][]float64
+
+const (
+	// Path with filtering for ESPv2 stats.
+	ESpv2FiltersStatsPath = "/stats?format=json&usedonly&filter=http.ingress_http.(path_matcher|backend_auth|service_control|backend_routing)"
 )
 
 // Stats is the struct to decode envoy admin json raw data.
@@ -53,20 +63,28 @@ type Point struct {
 	Interval   float64 `json:"interval,omitempty"`
 }
 
-const ESpv2FiltersStatsPath = "/stats?format=json&usedonly&filter=http.ingress_http.(path_matcher|backend_auth|service_control|backend_routing)"
+func FetchStats(adminPort uint16) (StatCounters, StatHistograms, error) {
+	glog.Infof("Fetching stats from envoy")
 
-func ParseStats(statsBytes []byte) (map[string]int, map[string][]float64, error) {
+	// Fetch from envoy admin.
+	statsUrl := fmt.Sprintf("http://localhost:%v%v", adminPort, ESpv2FiltersStatsPath)
+	statsResp, err := DoWithHeaders(statsUrl, "GET", "", nil)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to fetch envoy stats: %v", err)
+	}
+
+	// Parse into our own structures (maps) for easy lookups.
 	var stats Stats
-	if err := json.Unmarshal(statsBytes, &stats); err != nil {
+	if err := json.Unmarshal(statsResp, &stats); err != nil {
 		return nil, nil, fmt.Errorf("fail to unmarshal respnse to Stats: %v", err)
 	}
 
-	counts := map[string]int{}
-	histograms := map[string][]float64{}
+	counters := StatCounters{}
+	histograms := StatHistograms{}
 
 	for _, stat := range stats.Stat {
 		if metricName := stat.MetricName; metricName != "" {
-			counts[metricName] = int(stat.MetricValue)
+			counters[metricName] = int(stat.MetricValue)
 			continue
 		}
 
@@ -80,5 +98,7 @@ func ParseStats(statsBytes []byte) (map[string]int, map[string][]float64, error)
 			}
 		}
 	}
-	return counts, histograms, nil
+
+	glog.Infof("Fetched stats\n  counters: %v\n  histograms: %v", counters, histograms)
+	return counters, histograms, nil
 }
