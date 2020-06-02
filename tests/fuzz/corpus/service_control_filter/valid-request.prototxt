@@ -4,38 +4,36 @@ config {
     service_config_id: "test-config-id"
     producer_project_id: "producer-project"
     service_config {
-      [type.googleapis.com/google.api.Service] {
-        logs {
-          name: "endpoints_log"
+      logs {
+        name: "endpoints_log"
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer"
+        labels {
+          key: "/consumer_id"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer"
-          labels {
-            key: "/consumer_id"
-          }
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      monitored_resources {
+        type: "api"
+        labels {
+          key: "cloud.googleapis.com/location"
         }
-        monitored_resources {
-          type: "api"
-          labels {
-            key: "cloud.googleapis.com/location"
-          }
+      }
+      logging {
+        producer_destinations {
+          logs: "endpoints_log"
+          monitored_resource: "api"
         }
-        logging {
-          producer_destinations {
-            logs: "endpoints_log"
-            monitored_resource: "api"
-          }
+      }
+      monitoring {
+        producer_destinations {
+          monitored_resource: "api"
+          metrics: "serviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer"
         }
-        monitoring {
-          producer_destinations {
-            monitored_resource: "api"
-            metrics: "serviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer"
-          }
-          consumer_destinations {
-            monitored_resource: "api"
-          }
+        consumer_destinations {
+          monitored_resource: "api"
         }
       }
     }

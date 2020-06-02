@@ -4,424 +4,422 @@ config {
     service_config_id: "test-config-id"
     producer_project_id: "producer-project"
     service_config {
-      [type.googleapis.com/google.api.Service] {
-        logs {
-          name: "endpoints_log"
+      logs {
+        name: "endpoints_log"
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/consumer/request_count"
+        labels {
+          key: "/credential_id"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/consumer/request_count"
-          labels {
-            key: "/credential_id"
-          }
-          labels {
-            key: "/protocol"
-          }
-          labels {
-            key: "/response_code"
-          }
-          labels {
-            key: "/response_code_class"
-          }
-          labels {
-            key: "/status_code"
-          }
-          metric_kind: DELTA
-          value_type: INT64
+        labels {
+          key: "/protocol"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/consumer/error_count"
-          labels {
-            key: "/credential_id"
-          }
-          labels {
-            key: "/error_type"
-          }
-          metric_kind: DELTA
-          value_type: INT64
+        labels {
+          key: "/response_code"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/consumer/total_latencies"
-          labels {
-            key: "/credential_id"
-          }
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        labels {
+          key: "/response_code_class"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/request_count"
-          labels {
-            key: "/protocol"
-          }
-          labels {
-            key: "/response_code"
-          }
-          labels {
-            key: "/response_code_class"
-          }
-          labels {
-            key: "/status_code"
-          }
-          metric_kind: DELTA
-          value_type: INT64
+        labels {
+          key: "/status_code"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/error_count"
-          labels {
-            key: "/error_type"
-          }
-          metric_kind: DELTA
-          value_type: INT64
+        metric_kind: DELTA
+        value_type: INT64
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/consumer/error_count"
+        labels {
+          key: "/credential_id"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/total_latencies"
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        labels {
+          key: "/error_type"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user"
-          labels {
-            key: "/credential_id"
-          }
-          labels {
-            key: "/end_user"
-          }
-          metric_kind: DELTA
-          value_type: INT64
+        metric_kind: DELTA
+        value_type: INT64
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/consumer/total_latencies"
+        labels {
+          key: "/credential_id"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user_country"
-          labels {
-            key: "/credential_id"
-          }
-          labels {
-            key: "/end_user_country"
-          }
-          metric_kind: DELTA
-          value_type: INT64
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/request_count"
+        labels {
+          key: "/protocol"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/consumer/top_request_count_by_referer"
-          labels {
-            key: "/credential_id"
-          }
-          labels {
-            key: "/referer"
-          }
-          metric_kind: DELTA
-          value_type: INT64
+        labels {
+          key: "/response_code"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/top_request_count_by_consumer"
-          labels {
-            key: "/protocol"
-          }
-          labels {
-            key: "/response_code"
-          }
-          labels {
-            key: "/consumer_id"
-          }
-          labels {
-            key: "/status_code"
-          }
-          metric_kind: DELTA
-          value_type: INT64
+        labels {
+          key: "/response_code_class"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/consumer/quota_used_count"
-          labels {
-            key: "/credential_id"
-          }
-          labels {
-            key: "/quota_group_name"
-          }
-          metric_kind: DELTA
-          value_type: INT64
+        labels {
+          key: "/status_code"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/consumer/quota_billable_count"
-          labels {
-            key: "/quota_group_name"
-          }
-          metric_kind: DELTA
-          value_type: INT64
+        metric_kind: DELTA
+        value_type: INT64
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/error_count"
+        labels {
+          key: "/error_type"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/consumer/request_overhead_latencies"
-          labels {
-            key: "/credential_id"
-          }
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        metric_kind: DELTA
+        value_type: INT64
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/total_latencies"
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user"
+        labels {
+          key: "/credential_id"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/consumer/backend_latencies"
-          labels {
-            key: "/credential_id"
-          }
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        labels {
+          key: "/end_user"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/consumer/request_sizes"
-          labels {
-            key: "/credential_id"
-          }
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        metric_kind: DELTA
+        value_type: INT64
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user_country"
+        labels {
+          key: "/credential_id"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/consumer/response_sizes"
-          labels {
-            key: "/credential_id"
-          }
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        labels {
+          key: "/end_user_country"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/request_overhead_latencies"
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        metric_kind: DELTA
+        value_type: INT64
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/consumer/top_request_count_by_referer"
+        labels {
+          key: "/credential_id"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/backend_latencies"
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        labels {
+          key: "/referer"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/request_sizes"
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        metric_kind: DELTA
+        value_type: INT64
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/top_request_count_by_consumer"
+        labels {
+          key: "/protocol"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/response_sizes"
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        labels {
+          key: "/response_code"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/request_bytes"
-          metric_kind: DELTA
-          value_type: INT64
+        labels {
+          key: "/consumer_id"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/response_bytes"
-          metric_kind: DELTA
-          value_type: INT64
+        labels {
+          key: "/status_code"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/consumer/request_bytes"
-          metric_kind: DELTA
-          value_type: INT64
+        metric_kind: DELTA
+        value_type: INT64
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/consumer/quota_used_count"
+        labels {
+          key: "/credential_id"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/consumer/response_bytes"
-          metric_kind: DELTA
-          value_type: INT64
+        labels {
+          key: "/quota_group_name"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/streaming_request_message_counts"
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        metric_kind: DELTA
+        value_type: INT64
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/consumer/quota_billable_count"
+        labels {
+          key: "/quota_group_name"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/streaming_response_message_counts"
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        metric_kind: DELTA
+        value_type: INT64
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/consumer/request_overhead_latencies"
+        labels {
+          key: "/credential_id"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/consumer/streaming_request_message_counts"
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/consumer/backend_latencies"
+        labels {
+          key: "/credential_id"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/consumer/streaming_response_message_counts"
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/consumer/request_sizes"
+        labels {
+          key: "/credential_id"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/streaming_durations"
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/consumer/response_sizes"
+        labels {
+          key: "/credential_id"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/consumer/streaming_durations"
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/request_overhead_latencies"
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/backend_latencies"
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/request_sizes"
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/response_sizes"
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/request_bytes"
+        metric_kind: DELTA
+        value_type: INT64
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/response_bytes"
+        metric_kind: DELTA
+        value_type: INT64
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/consumer/request_bytes"
+        metric_kind: DELTA
+        value_type: INT64
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/consumer/response_bytes"
+        metric_kind: DELTA
+        value_type: INT64
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/streaming_request_message_counts"
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/streaming_response_message_counts"
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/consumer/streaming_request_message_counts"
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/consumer/streaming_response_message_counts"
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/streaming_durations"
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/consumer/streaming_durations"
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer"
+        labels {
+          key: "/consumer_id"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer"
-          labels {
-            key: "/consumer_id"
-          }
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/top_response_sizes_by_consumer"
+        labels {
+          key: "/consumer_id"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/top_response_sizes_by_consumer"
-          labels {
-            key: "/consumer_id"
-          }
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/by_consumer/request_count"
+        labels {
+          key: "/credential_id"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/by_consumer/request_count"
-          labels {
-            key: "/credential_id"
-          }
-          labels {
-            key: "/protocol"
-          }
-          labels {
-            key: "/response_code"
-          }
-          labels {
-            key: "/response_code_class"
-          }
-          labels {
-            key: "/status_code"
-          }
-          metric_kind: DELTA
-          value_type: INT64
+        labels {
+          key: "/protocol"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/by_consumer/error_count"
-          labels {
-            key: "/credential_id"
-          }
-          labels {
-            key: "/error_type"
-          }
-          metric_kind: DELTA
-          value_type: INT64
+        labels {
+          key: "/response_code"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/by_consumer/total_latencies"
-          labels {
-            key: "/credential_id"
-          }
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        labels {
+          key: "/response_code_class"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/by_consumer/quota_used_count"
-          labels {
-            key: "/credential_id"
-          }
-          labels {
-            key: "/quota_group_name"
-          }
-          metric_kind: DELTA
-          value_type: INT64
+        labels {
+          key: "/status_code"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/by_consumer/request_overhead_latencies"
-          labels {
-            key: "/credential_id"
-          }
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        metric_kind: DELTA
+        value_type: INT64
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/by_consumer/error_count"
+        labels {
+          key: "/credential_id"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/by_consumer/backend_latencies"
-          labels {
-            key: "/credential_id"
-          }
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        labels {
+          key: "/error_type"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/by_consumer/request_sizes"
-          labels {
-            key: "/credential_id"
-          }
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        metric_kind: DELTA
+        value_type: INT64
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/by_consumer/total_latencies"
+        labels {
+          key: "/credential_id"
         }
-        metrics {
-          name: "serviceruntime.googleapis.com/api/producer/by_consumer/response_sizes"
-          labels {
-            key: "/credential_id"
-          }
-          metric_kind: DELTA
-          value_type: DISTRIBUTION
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/by_consumer/quota_used_count"
+        labels {
+          key: "/credential_id"
         }
-        monitored_resources {
-          type: "api"
-          labels {
-            key: "cloud.googleapis.com/location"
-          }
-          labels {
-            key: "cloud.googleapis.com/uid"
-          }
-          labels {
-            key: "serviceruntime.googleapis.com/api_version"
-          }
-          labels {
-            key: "serviceruntime.googleapis.com/api_method"
-          }
-          labels {
-            key: "serviceruntime.googleapis.com/consumer_project"
-          }
-          labels {
-            key: "cloud.googleapis.com/project"
-          }
-          labels {
-            key: "cloud.googleapis.com/service"
-          }
+        labels {
+          key: "/quota_group_name"
         }
-        logging {
-          producer_destinations {
-            logs: "endpoints_log"
-            monitored_resource: "api"
-          }
+        metric_kind: DELTA
+        value_type: INT64
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/by_consumer/request_overhead_latencies"
+        labels {
+          key: "/credential_id"
         }
-        monitoring {
-          producer_destinations {
-            monitored_resource: "api"
-            metrics: "serviceruntime.googleapis.com/api/producer/request_count"
-            metrics: "serviceruntime.googleapis.com/api/producer/error_count"
-            metrics: "serviceruntime.googleapis.com/api/producer/total_latencies"
-            metrics: "serviceruntime.googleapis.com/api/producer/request_overhead_latencies"
-            metrics: "serviceruntime.googleapis.com/api/producer/backend_latencies"
-            metrics: "serviceruntime.googleapis.com/api/producer/request_sizes"
-            metrics: "serviceruntime.googleapis.com/api/producer/response_sizes"
-            metrics: "serviceruntime.googleapis.com/api/producer/top_request_count_by_consumer"
-            metrics: "serviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer"
-            metrics: "serviceruntime.googleapis.com/api/producer/top_response_sizes_by_consumer"
-            metrics: "serviceruntime.googleapis.com/api/producer/by_consumer/request_count"
-            metrics: "serviceruntime.googleapis.com/api/producer/by_consumer/error_count"
-            metrics: "serviceruntime.googleapis.com/api/producer/by_consumer/total_latencies"
-            metrics: "serviceruntime.googleapis.com/api/producer/by_consumer/quota_used_count"
-            metrics: "serviceruntime.googleapis.com/api/producer/by_consumer/request_overhead_latencies"
-            metrics: "serviceruntime.googleapis.com/api/producer/by_consumer/backend_latencies"
-            metrics: "serviceruntime.googleapis.com/api/producer/by_consumer/request_sizes"
-            metrics: "serviceruntime.googleapis.com/api/producer/by_consumer/response_sizes"
-            metrics: "serviceruntime.googleapis.com/api/producer/streaming_request_message_counts"
-            metrics: "serviceruntime.googleapis.com/api/producer/streaming_response_message_counts"
-            metrics: "serviceruntime.googleapis.com/api/producer/streaming_durations"
-            metrics: "serviceruntime.googleapis.com/api/producer/request_bytes"
-            metrics: "serviceruntime.googleapis.com/api/producer/response_bytes"
-          }
-          consumer_destinations {
-            monitored_resource: "api"
-            metrics: "serviceruntime.googleapis.com/api/consumer/request_count"
-            metrics: "serviceruntime.googleapis.com/api/consumer/error_count"
-            metrics: "serviceruntime.googleapis.com/api/consumer/quota_used_count"
-            metrics: "serviceruntime.googleapis.com/api/consumer/total_latencies"
-            metrics: "serviceruntime.googleapis.com/api/consumer/request_overhead_latencies"
-            metrics: "serviceruntime.googleapis.com/api/consumer/backend_latencies"
-            metrics: "serviceruntime.googleapis.com/api/consumer/request_sizes"
-            metrics: "serviceruntime.googleapis.com/api/consumer/response_sizes"
-            metrics: "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user"
-            metrics: "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user_country"
-            metrics: "serviceruntime.googleapis.com/api/consumer/top_request_count_by_referer"
-            metrics: "serviceruntime.googleapis.com/api/consumer/streaming_request_message_counts"
-            metrics: "serviceruntime.googleapis.com/api/consumer/streaming_response_message_counts"
-            metrics: "serviceruntime.googleapis.com/api/consumer/streaming_durations"
-            metrics: "serviceruntime.googleapis.com/api/consumer/request_bytes"
-            metrics: "serviceruntime.googleapis.com/api/consumer/response_bytes"
-          }
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/by_consumer/backend_latencies"
+        labels {
+          key: "/credential_id"
+        }
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/by_consumer/request_sizes"
+        labels {
+          key: "/credential_id"
+        }
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      metrics {
+        name: "serviceruntime.googleapis.com/api/producer/by_consumer/response_sizes"
+        labels {
+          key: "/credential_id"
+        }
+        metric_kind: DELTA
+        value_type: DISTRIBUTION
+      }
+      monitored_resources {
+        type: "api"
+        labels {
+          key: "cloud.googleapis.com/location"
+        }
+        labels {
+          key: "cloud.googleapis.com/uid"
+        }
+        labels {
+          key: "serviceruntime.googleapis.com/api_version"
+        }
+        labels {
+          key: "serviceruntime.googleapis.com/api_method"
+        }
+        labels {
+          key: "serviceruntime.googleapis.com/consumer_project"
+        }
+        labels {
+          key: "cloud.googleapis.com/project"
+        }
+        labels {
+          key: "cloud.googleapis.com/service"
+        }
+      }
+      logging {
+        producer_destinations {
+          logs: "endpoints_log"
+          monitored_resource: "api"
+        }
+      }
+      monitoring {
+        producer_destinations {
+          monitored_resource: "api"
+          metrics: "serviceruntime.googleapis.com/api/producer/request_count"
+          metrics: "serviceruntime.googleapis.com/api/producer/error_count"
+          metrics: "serviceruntime.googleapis.com/api/producer/total_latencies"
+          metrics: "serviceruntime.googleapis.com/api/producer/request_overhead_latencies"
+          metrics: "serviceruntime.googleapis.com/api/producer/backend_latencies"
+          metrics: "serviceruntime.googleapis.com/api/producer/request_sizes"
+          metrics: "serviceruntime.googleapis.com/api/producer/response_sizes"
+          metrics: "serviceruntime.googleapis.com/api/producer/top_request_count_by_consumer"
+          metrics: "serviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer"
+          metrics: "serviceruntime.googleapis.com/api/producer/top_response_sizes_by_consumer"
+          metrics: "serviceruntime.googleapis.com/api/producer/by_consumer/request_count"
+          metrics: "serviceruntime.googleapis.com/api/producer/by_consumer/error_count"
+          metrics: "serviceruntime.googleapis.com/api/producer/by_consumer/total_latencies"
+          metrics: "serviceruntime.googleapis.com/api/producer/by_consumer/quota_used_count"
+          metrics: "serviceruntime.googleapis.com/api/producer/by_consumer/request_overhead_latencies"
+          metrics: "serviceruntime.googleapis.com/api/producer/by_consumer/backend_latencies"
+          metrics: "serviceruntime.googleapis.com/api/producer/by_consumer/request_sizes"
+          metrics: "serviceruntime.googleapis.com/api/producer/by_consumer/response_sizes"
+          metrics: "serviceruntime.googleapis.com/api/producer/streaming_request_message_counts"
+          metrics: "serviceruntime.googleapis.com/api/producer/streaming_response_message_counts"
+          metrics: "serviceruntime.googleapis.com/api/producer/streaming_durations"
+          metrics: "serviceruntime.googleapis.com/api/producer/request_bytes"
+          metrics: "serviceruntime.googleapis.com/api/producer/response_bytes"
+        }
+        consumer_destinations {
+          monitored_resource: "api"
+          metrics: "serviceruntime.googleapis.com/api/consumer/request_count"
+          metrics: "serviceruntime.googleapis.com/api/consumer/error_count"
+          metrics: "serviceruntime.googleapis.com/api/consumer/quota_used_count"
+          metrics: "serviceruntime.googleapis.com/api/consumer/total_latencies"
+          metrics: "serviceruntime.googleapis.com/api/consumer/request_overhead_latencies"
+          metrics: "serviceruntime.googleapis.com/api/consumer/backend_latencies"
+          metrics: "serviceruntime.googleapis.com/api/consumer/request_sizes"
+          metrics: "serviceruntime.googleapis.com/api/consumer/response_sizes"
+          metrics: "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user"
+          metrics: "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user_country"
+          metrics: "serviceruntime.googleapis.com/api/consumer/top_request_count_by_referer"
+          metrics: "serviceruntime.googleapis.com/api/consumer/streaming_request_message_counts"
+          metrics: "serviceruntime.googleapis.com/api/consumer/streaming_response_message_counts"
+          metrics: "serviceruntime.googleapis.com/api/consumer/streaming_durations"
+          metrics: "serviceruntime.googleapis.com/api/consumer/request_bytes"
+          metrics: "serviceruntime.googleapis.com/api/consumer/response_bytes"
         }
       }
     }

@@ -3,10 +3,6 @@ config {
     service_name: "echo-api.endpoints.cloudesf-testing.cloud.goog"
     service_config_id: "test-config-id"
     producer_project_id: "producer-project"
-    service_config {
-      type_url: "type.googleapis.com/google.api.Service"
-      value: "\272\001\017\n\rendpoints_log\302\001^\nHserviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer\022\016\n\014/consumer_id\030\002 \005\312\001)\n\003api\"\"\n\035cloud.googleapis.com/location\032\001\002\322\001IBG\nE\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\177\332\001\007\n\005\032\003api\342\001\235\001\n@\n>\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\013\nO\n\003api\022Hserviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer\022\010\n\003api\022\001!"
-    }
     backend_protocol: "http1"
     jwt_payload_metadata_name: "jwt_payloads"
   }

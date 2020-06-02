@@ -153,13 +153,9 @@ ServiceControlCallImpl::ServiceControlCallImpl(
   }
 
   if (config.has_service_config()) {
-    ::google::api::Service origin_service;
-    if (!config.service_config().UnpackTo(&origin_service)) {
-      throw Envoy::ProtoValidationException("Invalid service config", config);
-    }
-
     std::set<std::string> logs, metrics, labels;
-    (void)LogsMetricsLoader::Load(origin_service, &logs, &metrics, &labels);
+    (void)LogsMetricsLoader::Load(config.service_config(), &logs, &metrics,
+                                  &labels);
     request_builder_.reset(new RequestBuilder(logs, metrics, labels,
                                               config.service_name(),
                                               config.service_config_id()));

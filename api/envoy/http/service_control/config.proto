@@ -17,6 +17,7 @@ syntax = "proto3";
 package google.api.envoy.http.service_control;
 
 import "api/envoy/http/service_control/requirement.proto";
+import "google/api/service.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/duration.proto";
@@ -60,10 +61,10 @@ message Service {
   // The producer project id
   string producer_project_id = 3 [(validate.rules).string.min_bytes = 1];
 
-  // Some of service config fields needed by Envoy filter.
-  // Not easy to import the googleapis/google/api/service.proto
-  // Use any to work around it.
-  google.protobuf.Any service_config = 4;
+  // The service config that config manager received.
+  // Some of these fields are used to configure SC Report (logging, etc).
+  // Fields that are not needed by the filter may be cleared for simplicity.
+  google.api.Service service_config = 4;
 
   // The protocol of the backend, either "grpc", "http1", or "http2"
   string backend_protocol = 5;
