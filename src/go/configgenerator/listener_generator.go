@@ -319,10 +319,6 @@ func makeGrpcStatsFilter() *hcmpb.HttpFilter {
 		EmitFilterState: true,
 		PerMethodStatSpecifier: &gspb.FilterConfig_StatsForAllMethods{
 			StatsForAllMethods: &wrappers.BoolValue{
-				// Right now, StatsForAllMethods is set to true by default for backward
-				// compatibility and will be flipped to false latter. In terms of
-				// security, set to false here specifically. Details are in
-				// https://github.com/envoyproxy/envoy/blob/3b52fc36373272902d9817f0db97dd2fccc40784/api/envoy/extensions/filters/http/grpc_stats/v3/config.proto#L55
 				Value: false,
 			},
 		},
