@@ -87,7 +87,7 @@ func TestTranscoderFilter(t *testing.T) {
 {
    "name":"envoy.filters.http.grpc_json_transcoder",
    "typedConfig":{
-      "@type":"type.googleapis.com/envoy.config.filter.http.transcoder.v2.GrpcJsonTranscoder",
+      "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder",
       "autoMapping":true,
       "convertGrpcStatus":true,
       "ignoredQueryParameters":[
@@ -162,7 +162,7 @@ func TestTranscoderFilter(t *testing.T) {
 {
    "name":"envoy.filters.http.grpc_json_transcoder",
    "typedConfig":{
-      "@type":"type.googleapis.com/envoy.config.filter.http.transcoder.v2.GrpcJsonTranscoder",
+      "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder",
       "autoMapping":true,
       "convertGrpcStatus":true,
       "ignoredQueryParameters":[
@@ -206,7 +206,7 @@ func TestTranscoderFilter(t *testing.T) {
 {
    "name":"envoy.filters.http.grpc_json_transcoder",
    "typedConfig":{
-      "@type":"type.googleapis.com/envoy.config.filter.http.transcoder.v2.GrpcJsonTranscoder",
+      "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder",
       "autoMapping":true,
       "convertGrpcStatus":true,
       "ignoreUnknownQueryParameters":true,
@@ -287,7 +287,7 @@ func TestJwtAuthnFilter(t *testing.T) {
 			wantJwtAuthnFilter: `{
     "name": "envoy.filters.http.jwt_authn",
     "typedConfig": {
-        "@type": "type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication",
+        "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
         "filterStateRules": {
             "name": "envoy.filters.http.path_matcher.operation"
         },
@@ -364,7 +364,7 @@ func TestJwtAuthnFilter(t *testing.T) {
 			wantJwtAuthnFilter: `{
     "name": "envoy.filters.http.jwt_authn",
     "typedConfig": {
-        "@type": "type.googleapis.com/envoy.config.filter.http.jwt_authn.v2alpha.JwtAuthentication",
+        "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
         "filterStateRules": {
             "name": "envoy.filters.http.path_matcher.operation"
         },
@@ -1456,7 +1456,7 @@ func TestMakeListeners(t *testing.T) {
               {
                 "name": "envoy.filters.http.router",
                 "typedConfig": {
-                  "@type": "type.googleapis.com/envoy.config.filter.http.router.v2.Router",
+                  "@type": "type.googleapis.com/envoy.extensions.filters.http.router.v3.Router",
                   "startChildSpan": true,
                   "suppressEnvoyHeaders": true
                 }
