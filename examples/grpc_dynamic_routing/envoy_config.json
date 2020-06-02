@@ -1037,6 +1037,9 @@
                       }
                     },
                     {
+                      "name": "envoy.filters.http.grpc_web"
+                    },
+                    {
                       "name": "envoy.filters.http.grpc_json_transcoder",
                       "typedConfig": {
                         "@type": "type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder",
@@ -1053,9 +1056,6 @@
                           "test.grpc.Test"
                         ]
                       }
-                    },
-                    {
-                      "name": "envoy.filters.http.grpc_web"
                     },
                     {
                       "name": "envoy.filters.http.grpc_stats",

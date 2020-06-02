@@ -124,17 +124,22 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*listenerpb.Listener, error) {
 
 	// Add gRPC Transcoder filter and gRPCWeb filter configs for gRPC backend.
 	if serviceInfo.GrpcSupportRequired {
+		// grpc-web filter should be before grpc transcoder filter.
+		// It converts content-type application/grpc-web to application/grpc and
+		// grpc transcoder will bypass requests with application/grpc content type.
+		// Otherwise grpc transcoder will try to transcode a grpc-web request which
+		// will fail.
+		grpcWebFilter := &hcmpb.HttpFilter{
+			Name: util.GRPCWeb,
+		}
+		httpFilters = append(httpFilters, grpcWebFilter)
+
 		transcoderFilter := makeTranscoderFilter(serviceInfo)
 		if transcoderFilter != nil {
 			httpFilters = append(httpFilters, transcoderFilter)
 			jsonStr, _ := util.ProtoToJson(transcoderFilter)
 			glog.Infof("adding Transcoder Filter config: %v", jsonStr)
 		}
-
-		grpcWebFilter := &hcmpb.HttpFilter{
-			Name: util.GRPCWeb,
-		}
-		httpFilters = append(httpFilters, grpcWebFilter)
 
 		// GrpcStats filter is used to count gRPC frames.
 		// The data is stored in filterState and used by ServiceControl
