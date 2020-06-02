@@ -68,6 +68,7 @@ envoy_cc_test(
     repository = "@envoy",
     deps = [
         ":filter_lib",
+        "//api/envoy/http/backend_routing:config_proto_cc_proto",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/test_common:utility_lib",
     ],

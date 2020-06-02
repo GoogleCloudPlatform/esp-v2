@@ -32,12 +32,14 @@ message BackendRoutingRule {
     APPEND_PATH_TO_ADDRESS = 2;
   }
 
-  PathTranslation path_translation = 4;
+  PathTranslation path_translation = 4
+      [(validate.rules).enum = { not_in: [ 0 ] }];
 
   // Prefix used when re-writing the path for the backend.
   string path_prefix = 3 [(validate.rules).string = {
     well_known_regex: HTTP_HEADER_VALUE,
-    strict: false
+    strict: false,
+    min_len: 1,
   }];
 }
 

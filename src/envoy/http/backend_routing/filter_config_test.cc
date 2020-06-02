@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/envoy/http/backend_routing/filter.h"
+#include "src/envoy/http/backend_routing/filter_config.h"
 
+#include "api/envoy/http/backend_routing/config.pb.validate.h"
 #include "common/common/empty_string.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
@@ -33,22 +34,18 @@ namespace {
 
 class BackendRoutingConfigTest : public ::testing::Test {
  protected:
-  void createConfig(absl::string_view filter_config) {
+  void validateConfig(absl::string_view filter_config) {
     google::api::envoy::http::backend_routing::FilterConfig proto_config;
     ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
         std::string(filter_config), &proto_config));
     ASSERT_GT(proto_config.rules_size(), 0);
 
-    FilterConfig config(proto_config, Envoy::EMPTY_STRING,
-                        mock_factory_context_);
+    Envoy::TestUtility::validate(proto_config);
   }
-
-  testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
-      mock_factory_context_;
 };
 
 TEST_F(BackendRoutingConfigTest, AppendAddressNoPrefixThrows) {
-  ASSERT_THROW(createConfig(R"(
+  ASSERT_THROW(validateConfig(R"(
     rules {
       operation: "append-with-noop-prefix-operation"
       path_translation: APPEND_PATH_TO_ADDRESS
@@ -59,7 +56,7 @@ TEST_F(BackendRoutingConfigTest, AppendAddressNoPrefixThrows) {
 }
 
 TEST_F(BackendRoutingConfigTest, ConstAddressNoPrefixThrows) {
-  ASSERT_THROW(createConfig(R"(
+  ASSERT_THROW(validateConfig(R"(
     rules {
       operation: "const-with-invalid-prefix-operation"
       path_translation: CONSTANT_ADDRESS
@@ -70,7 +67,7 @@ TEST_F(BackendRoutingConfigTest, ConstAddressNoPrefixThrows) {
 }
 
 TEST_F(BackendRoutingConfigTest, ConstAddressRootPrefixWorks) {
-  ASSERT_NO_THROW(createConfig(R"(
+  ASSERT_NO_THROW(validateConfig(R"(
     rules {
       operation: "const-with-root-prefix-operation"
       path_translation: CONSTANT_ADDRESS
@@ -80,7 +77,7 @@ TEST_F(BackendRoutingConfigTest, ConstAddressRootPrefixWorks) {
 }
 
 TEST_F(BackendRoutingConfigTest, PathTranslationUnspecifiedThrows) {
-  ASSERT_THROW(createConfig(R"(
+  ASSERT_THROW(validateConfig(R"(
     rules {
       operation: "invalid-path-translation-operation"
       path_prefix: "/test"
@@ -90,7 +87,7 @@ TEST_F(BackendRoutingConfigTest, PathTranslationUnspecifiedThrows) {
 }
 
 TEST_F(BackendRoutingConfigTest, InvalidPathCharactersThrows) {
-  ASSERT_THROW(createConfig(R"(
+  ASSERT_THROW(validateConfig(R"(
     rules {
       operation: "invalid-path-prefix-operation"
       path_translation: APPEND_PATH_TO_ADDRESS
