@@ -131,6 +131,9 @@ func TestFetchListeners(t *testing.T) {
                         }
                      },
                      {
+                        "name":"envoy.filters.http.grpc_web"
+                     },
+                     {
                         "name":"envoy.filters.http.grpc_json_transcoder",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.config.filter.http.transcoder.v2.GrpcJsonTranscoder",
@@ -146,9 +149,6 @@ func TestFetchListeners(t *testing.T) {
                               "%s"
                            ]
                         }
-                     },
-                     {
-                        "name":"envoy.filters.http.grpc_web"
                      },
                      {
                         "name":"envoy.filters.http.grpc_stats",
