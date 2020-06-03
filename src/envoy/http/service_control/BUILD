@@ -85,10 +85,10 @@ envoy_cc_library(
         ":service_control_callback_func_lib",
         "//api/envoy/http/common:base_proto_cc_proto",
         "//api/envoy/http/service_control:config_proto_cc_proto",
-        "//external:servicecontrol_client",
         "@envoy//include/envoy/event:dispatcher_interface",
         "@envoy//include/envoy/upstream:cluster_manager_interface",
         "@envoy//source/common/tracing:http_tracer_lib",
+        "@servicecontrol_client_git//:service_control_client_lib",
     ],
 )
 

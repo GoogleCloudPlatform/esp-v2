@@ -43,8 +43,6 @@ import (
 	jwtpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/jwt_authn/v3"
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
-
-	anypb "github.com/golang/protobuf/ptypes/any"
 	durationpb "github.com/golang/protobuf/ptypes/duration"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -669,22 +667,16 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	return filter
 }
 
-func copyServiceConfigForReportMetrics(src *confpb.Service) *anypb.Any {
+func copyServiceConfigForReportMetrics(src *confpb.Service) *confpb.Service {
 	// Logs and metrics fields are needed by the Envoy HTTP filter
 	// to generate proper Metrics for Report calls.
-	serviceConfigCopy := &confpb.Service{
+	return &confpb.Service{
 		Logs:               src.GetLogs(),
 		Metrics:            src.GetMetrics(),
 		MonitoredResources: src.GetMonitoredResources(),
 		Monitoring:         src.GetMonitoring(),
 		Logging:            src.GetLogging(),
 	}
-	a, err := ptypes.MarshalAny(serviceConfigCopy)
-	if err != nil {
-		glog.Warningf("failed to copy certain service config, error: %v", err)
-		return nil
-	}
-	return a
 }
 
 func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {

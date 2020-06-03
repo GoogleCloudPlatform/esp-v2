@@ -207,7 +207,6 @@
                             "jwtPayloadMetadataName": "jwt_payloads",
                             "producerProjectId": "apiproxy-231719",
                             "serviceConfig": {
-                              "@type": "type.googleapis.com/google.api.Service",
                               "logging": {
                                 "producerDestinations": [
                                   {

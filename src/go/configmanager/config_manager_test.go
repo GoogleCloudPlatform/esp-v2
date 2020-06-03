@@ -995,7 +995,6 @@ func TestFetchListeners(t *testing.T) {
                                  "jwtPayloadMetadataName":"jwt_payloads",
                                  "producerProjectId":"%v",
                                  "serviceConfig":{
-                                    "@type":"type.googleapis.com/google.api.Service",
                                     "logging":{
                                        "producerDestinations":[
                                           {
@@ -1375,9 +1374,7 @@ func TestFetchListeners(t *testing.T) {
                                  "backendProtocol":"http1",
                                  "jwtPayloadMetadataName":"jwt_payloads",
                                  "producerProjectId":"project123",
-                                 "serviceConfig":{
-                                    "@type":"type.googleapis.com/google.api.Service"
-                                 },
+                                 "serviceConfig":{},
                                  "serviceConfigId":"2017-05-01r0",
                                  "serviceName":"bookstore.endpoints.project123.cloud.goog"
                               }

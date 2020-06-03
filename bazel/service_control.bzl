@@ -20,25 +20,9 @@ SERVICE_CONTROL_CLIENT_SHA = "82ac2408502c4908c56cae107f51ffcac0bad880ee7a6e1431
 def service_control_client_repositories(bind = True):
     http_archive(
         name = "servicecontrol_client_git",
-                sha256 = SERVICE_CONTROL_CLIENT_SHA,
+        sha256 = SERVICE_CONTROL_CLIENT_SHA,
         strip_prefix = "service-control-client-cxx-" + SERVICE_CONTROL_CLIENT_GIT_SHA,
         urls = ["https://github.com/cloudendpoints/service-control-client-cxx/archive/" + SERVICE_CONTROL_CLIENT_GIT_SHA + ".tar.gz"],
         #TODO(taoxuy): remove this mapping once Envoy googleapis_git is updated to use the version with servicecontrol_proto change
         repo_mapping = {"@googleapis_git": "@com_github_googleapis_googleapis"},
     )
-
-    if bind:
-        native.bind(
-            name = "servicecontrol_client",
-            actual = "@servicecontrol_client_git//:service_control_client_lib",
-        )
-
-        native.bind(
-            name = "quotacontrol",
-            actual = "@servicecontrol_client_git//proto:quotacontrol",
-        )
-
-        native.bind(
-            name = "quotacontrol_genproto",
-            actual = "@servicecontrol_client_git//proto:quotacontrol_genproto",
-        )

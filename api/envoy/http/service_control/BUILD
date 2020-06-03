@@ -12,6 +12,7 @@ api_cc_py_proto_library(
     visibility = ["//visibility:public"],
     deps = [
         "//api/envoy/http/common:base_proto",
+        "//external:service_proto",
     ],
 )
 
@@ -22,5 +23,6 @@ go_proto_library(
     deps = [
         "//api/envoy/http/common:base_go_proto",
         "@com_envoyproxy_protoc_gen_validate//validate:go_default_library",
+        "@com_github_googleapis_googleapis//google/api:serviceconfig_go_proto",
     ],
 )

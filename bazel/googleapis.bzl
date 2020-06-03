@@ -21,3 +21,15 @@ def googleapis_repositories(bind = True):
         url = "https://github.com/googleapis/googleapis/archive/ab2685d8d3a0e191dc8aef83df36773c07cb3d06.tar.gz",
         sha256 = "d4072ff0000e1dcb3a0a80930a628d860d5be55ebdf9733297206f4cd941cdd4",
     )
+
+    if bind:
+        # Bindings needed to allow envoy api build system to build cc proto.
+        # Envoy will automatically look for `service_proto_cc_proto` instead of `service_cc_proto`.
+        native.bind(
+            name = "service_proto",
+            actual = "@com_github_googleapis_googleapis//google/api:service_proto",
+        )
+        native.bind(
+            name = "service_proto_cc_proto",
+            actual = "@com_github_googleapis_googleapis//google/api:service_cc_proto",
+        )
