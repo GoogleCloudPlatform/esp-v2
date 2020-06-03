@@ -122,6 +122,7 @@ envoy_cc_library(
         "//src/api_proxy/service_control:logs_metrics_loader_lib",
         "//src/envoy/token:token_subscriber_factory_lib",
         "@envoy//include/envoy/server:filter_config_interface",
+        "@envoy//source/common/common:empty_string",
         "@envoy//source/common/protobuf:utility_lib",
     ],
 )

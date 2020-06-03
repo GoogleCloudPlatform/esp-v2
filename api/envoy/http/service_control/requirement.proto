@@ -24,6 +24,8 @@ import "validate/validate.proto";
 // for a general overview of API keys as defined by OpenAPI.
 message ApiKeyLocation {
   oneof key {
+    option (validate.required) = true;
+
     // API Key is sent as a query parameter. `query` represents the
     // query string parameter name.
     //

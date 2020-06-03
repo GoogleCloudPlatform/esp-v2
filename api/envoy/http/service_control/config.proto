@@ -110,6 +110,8 @@ message FilterConfig {
   GcpAttributes gcp_attributes = 3;
 
   oneof access_token {
+    option (validate.required) = true;
+
     // The Instance Metadata Server uri used to fetch access token from Instance
     // Metadata Server.
     api.envoy.http.common.HttpUri imds_token = 4;

@@ -14,7 +14,9 @@
 
 #include <memory>
 
+#include "common/common/assert.h"
 #include "src/envoy/http/backend_auth/config_parser_impl.h"
+
 namespace espv2 {
 namespace envoy {
 namespace http_filters {
@@ -50,7 +52,7 @@ AudienceContext::AudienceContext(
   };
 
   switch (filter_config.id_token_info_case()) {
-    case FilterConfig::kIamToken: {
+    case FilterConfig::IdTokenInfoCase::kIamToken: {
       const std::string& uri = filter_config.iam_token().iam_uri().uri();
       const std::string& cluster =
           filter_config.iam_token().iam_uri().cluster();
@@ -63,7 +65,7 @@ AudienceContext::AudienceContext(
           ::google::protobuf::RepeatedPtrField<std::string>(), access_token_fn);
     }
       return;
-    case FilterConfig::kImdsToken: {
+    case FilterConfig::IdTokenInfoCase::kImdsToken: {
       const std::string& uri = filter_config.imds_token().uri();
       const std::string& cluster = filter_config.imds_token().cluster();
       const std::string real_uri = absl::StrCat(
@@ -74,7 +76,7 @@ AudienceContext::AudienceContext(
     }
       return;
     default:
-      return;
+      NOT_REACHED_GCOVR_EXCL_LINE;
   }
 }
 
@@ -82,12 +84,10 @@ FilterConfigParserImpl::FilterConfigParserImpl(
     const FilterConfig& config,
     Envoy::Server::Configuration::FactoryContext& context,
     const token::TokenSubscriberFactory& token_subscriber_factory) {
-  // Subscribe access token for fetching id token from iam when IdTokenFromIam
-  // is set.
-  if (config.id_token_info_case() == FilterConfig::kIamToken) {
-    // TODO(taoxuy): support getting access token from service account file.
+  // If using IAM, then we need an access token to call IAM.
+  if (config.id_token_info_case() == FilterConfig::IdTokenInfoCase::kIamToken) {
     switch (config.iam_token().access_token().token_type_case()) {
-      case AccessToken::kRemoteToken: {
+      case AccessToken::TokenTypeCase::kRemoteToken: {
         const std::string& cluster =
             config.iam_token().access_token().remote_token().cluster();
         const std::string& uri =
@@ -100,11 +100,13 @@ FilterConfigParserImpl::FilterConfigParserImpl(
                 });
         break;
       }
-      default: {
+      case AccessToken::TokenTypeCase::kServiceAccountSecret:
+        // TODO(taoxuy): support getting access token from service account file.
         ENVOY_LOG(error,
                   "Not support getting access token by service account file");
         return;
-      }
+      default:
+        NOT_REACHED_GCOVR_EXCL_LINE;
     }
   }
 
