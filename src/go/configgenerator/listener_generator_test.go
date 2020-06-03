@@ -1621,7 +1621,15 @@ func TestMakeListeners(t *testing.T) {
               }
             ],
             "useRemoteAddress": false,
-            "xffNumTrustedHops": 2
+            "xffNumTrustedHops": 2,
+            "localReplyConfig": {
+              "bodyFormat": {
+                "jsonFormat": {
+                  "code": "%RESPONSE_CODE%",
+                  "message":"%LOCAL_REPLY_BODY%"
+                }
+              }
+            }
           }
         }
       ],
@@ -1701,6 +1709,14 @@ func TestMakeHttpConMgr(t *testing.T) {
 				 "commonHttpProtocolOptions":{
 						"headersWithUnderscoresAction":"REJECT_REQUEST"
 				 },
+                                "localReplyConfig": {
+                                  "bodyFormat": {
+                                    "jsonFormat": {
+                                      "code": "%RESPONSE_CODE%",
+                                      "message":"%LOCAL_REPLY_BODY%"
+                                     }
+                                   }
+                                 },
 				 "routeConfig":{},
 				 "statPrefix":"ingress_http",
 				 "tracing":{
@@ -1735,6 +1751,14 @@ func TestMakeHttpConMgr(t *testing.T) {
 					 "commonHttpProtocolOptions":{
 							"headersWithUnderscoresAction":"REJECT_REQUEST"
 					 },
+                                         "localReplyConfig": {
+                                            "bodyFormat": {
+                                               "jsonFormat": {
+                                                  "code": "%RESPONSE_CODE%",
+                                                  "message":"%LOCAL_REPLY_BODY%"
+                                               }
+                                            }
+                                         },
 					 "routeConfig":{},
 					 "statPrefix":"ingress_http",
 					 "tracing":{
@@ -1761,6 +1785,14 @@ func TestMakeHttpConMgr(t *testing.T) {
 					 "commonHttpProtocolOptions":{
 							"headersWithUnderscoresAction":"REJECT_REQUEST"
 					 },
+                                         "localReplyConfig": {
+                                            "bodyFormat": {
+                                               "jsonFormat": {
+                                                  "code": "%RESPONSE_CODE%",
+                                                  "message":"%LOCAL_REPLY_BODY%"
+                                               }
+                                            }
+                                         },
 					 "routeConfig":{},
 					 "statPrefix":"ingress_http",
 					 "upgradeConfigs":[
@@ -1781,6 +1813,14 @@ func TestMakeHttpConMgr(t *testing.T) {
 					 "commonHttpProtocolOptions":{
 				
 					 },
+                                         "localReplyConfig": {
+                                            "bodyFormat": {
+                                               "jsonFormat": {
+                                                  "code": "%RESPONSE_CODE%",
+                                                  "message":"%LOCAL_REPLY_BODY%"
+                                               }
+                                            }
+                                         },
 					 "routeConfig":{},
 					 "statPrefix":"ingress_http",
 					 "tracing":{

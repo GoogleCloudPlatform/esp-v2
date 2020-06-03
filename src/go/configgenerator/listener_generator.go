@@ -43,6 +43,7 @@ import (
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	durationpb "github.com/golang/protobuf/ptypes/duration"
+	structpb "github.com/golang/protobuf/ptypes/struct"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
@@ -237,6 +238,29 @@ func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteCo
 		},
 		UseRemoteAddress:  &wrapperspb.BoolValue{Value: opts.EnvoyUseRemoteAddress},
 		XffNumTrustedHops: uint32(opts.EnvoyXffNumTrustedHops),
+		// Converting the error message for requests rejected by Envoy to JSON format:
+		//
+		//    {
+		//       "code": "http-status-code",
+		//       "message": "the error message",
+		//    }
+		//
+		LocalReplyConfig: &hcmpb.LocalReplyConfig{
+			BodyFormat: &corepb.SubstitutionFormatString{
+				Format: &corepb.SubstitutionFormatString_JsonFormat{
+					JsonFormat: &structpb.Struct{
+						Fields: map[string]*structpb.Value{
+							"code": &structpb.Value{
+								Kind: &structpb.Value_StringValue{StringValue: "%RESPONSE_CODE%"},
+							},
+							"message": &structpb.Value{
+								Kind: &structpb.Value_StringValue{StringValue: "%LOCAL_REPLY_BODY%"},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	if opts.AccessLog != "" {

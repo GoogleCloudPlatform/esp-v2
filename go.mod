@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go v0.41.1-0.20190709211438-47e9997a900f
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/census-instrumentation/opencensus-proto v0.2.1
-	github.com/envoyproxy/go-control-plane v0.9.6-0.20200405163022-84b87ba75ace
+	github.com/envoyproxy/go-control-plane v0.9.6-0.20200604153225-4cec4df827f2
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.3.3

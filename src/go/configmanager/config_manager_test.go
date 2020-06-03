@@ -49,6 +49,14 @@ const (
 	testConfigID     = "2017-05-01r0"
 	testProjectID    = "project123"
 	fakeToken        = `{"access_token": "ya29.new", "expires_in":3599, "token_type":"Bearer"}`
+	localReplyConfig = `"localReplyConfig": {
+                    "bodyFormat": {
+                      "jsonFormat": {
+                        "code": "%RESPONSE_CODE%",
+                        "message":"%LOCAL_REPLY_BODY%"
+                      }
+                    }
+                  }`
 )
 
 var (
@@ -192,6 +200,7 @@ func TestFetchListeners(t *testing.T) {
                   "statPrefix":"ingress_http",
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
                   "useRemoteAddress":false,
+                  %s,
                   "xffNumTrustedHops":2
                }
             }
@@ -200,7 +209,7 @@ func TestFetchListeners(t *testing.T) {
    ]
 }
 `,
-				fakeProtoDescriptor, testEndpointName, testBackendClusterName),
+				fakeProtoDescriptor, testEndpointName, testBackendClusterName, localReplyConfig),
 		},
 		{
 			desc:           "Success for grpc backend, with Jwt filter, with audiences, no Http Rules",
@@ -373,6 +382,7 @@ func TestFetchListeners(t *testing.T) {
                   "statPrefix":"ingress_http",
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
                   "useRemoteAddress":false,
+                  %s,
                   "xffNumTrustedHops":2
                }
             }
@@ -380,7 +390,7 @@ func TestFetchListeners(t *testing.T) {
       }
    ]
 }
-              `, testBackendClusterName),
+              `, testBackendClusterName, localReplyConfig),
 		},
 		{
 			desc:           "Success for gRPC backend, with Jwt filter, without audiences",
@@ -587,13 +597,14 @@ func TestFetchListeners(t *testing.T) {
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
                   "statPrefix":"ingress_http",
                   "useRemoteAddress":false,
+                  %s,
                   "xffNumTrustedHops":2
                }
             }
          ]
       }
    ]
-}`, testBackendClusterName),
+}`, testBackendClusterName, localReplyConfig),
 		},
 		{
 			desc:           "Success for gRPC backend, with Jwt filter, with multi requirements, matching with regex",
@@ -838,13 +849,14 @@ func TestFetchListeners(t *testing.T) {
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
                   "statPrefix":"ingress_http",
                   "useRemoteAddress":false,
+                  %s,
                   "xffNumTrustedHops":2
                }
             }
          ]
       }
    ]
-}`, testBackendClusterName),
+}`, testBackendClusterName, localReplyConfig),
 		},
 		{
 			desc:           "Success for gRPC backend with Service Control",
@@ -1062,13 +1074,14 @@ func TestFetchListeners(t *testing.T) {
                   "statPrefix":"ingress_http",
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
                   "useRemoteAddress":false,
+                  %s,
                   "xffNumTrustedHops":2
                }
             }
          ]
       }
    ]
-}`, testProjectID, testConfigID, testProjectName, testBackendClusterName),
+}`, testProjectID, testConfigID, testProjectName, testBackendClusterName, localReplyConfig),
 		},
 		{
 			desc:           "Success for http backend, with Jwt filter, with audiences",
@@ -1251,13 +1264,14 @@ func TestFetchListeners(t *testing.T) {
                   "statPrefix":"ingress_http",
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
                   "useRemoteAddress":false,
+                  %s,
                   "xffNumTrustedHops":2
                }
             }
          ]
       }
    ]
-}`, testBackendClusterName),
+}`, testBackendClusterName, localReplyConfig),
 		},
 		{
 			desc:           "Success for backend that allow CORS, with tracing and debug enabled",
@@ -1418,6 +1432,14 @@ func TestFetchListeners(t *testing.T) {
 
                   },
                   "useRemoteAddress":false,
+                  "localReplyConfig": {
+                    "bodyFormat": {
+                      "jsonFormat": {
+                        "code": "%RESPONSE_CODE%",
+                        "message":"%LOCAL_REPLY_BODY%"
+                      }
+                    }
+                  },
                   "xffNumTrustedHops":2
                }
             }
@@ -1455,10 +1477,11 @@ func TestFetchListeners(t *testing.T) {
 				},
 				TypeUrl: resource.ListenerType,
 			}
-			resp, err := env.configManager.cache.Fetch(ctx, req)
+			resp_i, err := env.configManager.cache.Fetch(ctx, req)
 			if err != nil {
 				t.Fatal(err)
 			}
+			resp := resp_i.(cache.Response)
 			marshaler := &jsonpb.Marshaler{
 				AnyResolver: util.Resolver,
 			}
@@ -1516,11 +1539,12 @@ func TestFixedModeDynamicRouting(t *testing.T) {
 			TypeUrl: resource.ClusterType,
 		}
 
-		respForClusters, err := manager.cache.Fetch(ctx, reqForClusters)
-		if err != nil {
+		resp_i, err1 := manager.cache.Fetch(ctx, reqForClusters)
+		if err1 != nil {
 			t.Error(err)
 			continue
 		}
+		respForClusters := resp_i.(cache.Response)
 
 		if !proto.Equal(&respForClusters.Request, &reqForClusters) {
 			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, respForClusters.Request, reqForClusters)
@@ -1553,11 +1577,13 @@ func TestFixedModeDynamicRouting(t *testing.T) {
 			TypeUrl: resource.ListenerType,
 		}
 
-		respForListener, err := manager.cache.Fetch(ctx, reqForListener)
-		if err != nil {
+		resp_i, err2 := manager.cache.Fetch(ctx, reqForListener)
+		if err2 != nil {
 			t.Error(err)
 			continue
 		}
+		respForListener := resp_i.(cache.Response)
+
 		if respForListener.Version != testConfigID {
 			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, respForListener.Version, testConfigID)
 			continue
@@ -1567,8 +1593,8 @@ func TestFixedModeDynamicRouting(t *testing.T) {
 			continue
 		}
 
-		gotListener, err := marshaler.MarshalToString(respForListener.Resources[0])
-		if err != nil {
+		gotListener, err3 := marshaler.MarshalToString(respForListener.Resources[0])
+		if err3 != nil {
 			t.Error(err)
 			continue
 		}
@@ -1712,7 +1738,8 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 	_ = flag.Set("service_json_path", "")
 
 	runTest(t, opts, func(env *testEnv) {
-		var resp *cache.Response
+		var resp_i cache.ResponseIface
+		var resp cache.Response
 		var err error
 		ctx := context.Background()
 		req := discoverypb.DiscoveryRequest{
@@ -1721,10 +1748,11 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 			},
 			TypeUrl: resource.ListenerType,
 		}
-		resp, err = env.configManager.cache.Fetch(ctx, req)
+		resp_i, err = env.configManager.cache.Fetch(ctx, req)
 		if err != nil {
 			t.Fatal(err)
 		}
+		resp = resp_i.(cache.Response)
 
 		if resp.Version != oldConfigID {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got version: %v, want: %v", testCase.desc, resp.Version, oldConfigID)
@@ -1745,10 +1773,11 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 
 		time.Sleep(time.Duration(*checkNewRolloutInterval + time.Second))
 
-		resp, err = env.configManager.cache.Fetch(ctx, req)
+		resp_i, err = env.configManager.cache.Fetch(ctx, req)
 		if err != nil {
 			t.Fatal(err)
 		}
+		resp = resp_i.(cache.Response)
 
 		if resp.Version != newConfigID || env.configManager.curConfigId() != newConfigID {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got version: %v, want: %v", testCase.desc, resp.Version, newConfigID)
@@ -1833,7 +1862,7 @@ func initMockScReportServer(t *testing.T) *httptest.Server {
 	}))
 }
 
-func sortResources(response *cache.Response) []types.Resource {
+func sortResources(response cache.Response) []types.Resource {
 	// configManager.cache may change the order
 	// sort them before comparing results.
 	sortedResources := response.Resources
