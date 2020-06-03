@@ -1,3 +1,12 @@
+# Release 2.11.0 03-06-2020
+
+- Fix grpc-web: move grpc-web filter in front of transcoder (#176)
+- Migrate Envoy configs from api/v2 to api/v3 (#169, #175, #174)
+- Ensure all consumer/producer errors are logged in stats (#166)
+- Update envoy to 2020-05-26 (#165)
+- Handle errors and test stats in Backend Routing (#164)
+- Implement `denied_consumer_quota` and `denied_producer_error` stats (#163)
+
 # Release 2.10.0 18-05-2020
 
 - Implement `denied_consumer_blocked` and `denied_consumer_error` stats (#156)
