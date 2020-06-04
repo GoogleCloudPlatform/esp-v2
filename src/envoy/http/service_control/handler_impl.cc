@@ -235,7 +235,7 @@ void ServiceControlHandlerImpl::onCheckResponse(
 
   check_status_ = status;
 
-  // Set consumer project_id to backend.
+  // Set consumer project number to backend.
   if (!response_info.consumer_proejct_number.empty()) {
     headers.setReferenceKey(consumer_project_number_header_,
                             response_info.consumer_proejct_number);
