@@ -23,7 +23,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/wrappers"
 
 	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/backend_auth"
@@ -321,7 +320,7 @@ func makeGrpcStatsFilter() *hcmpb.HttpFilter {
 	cfg := &gspb.FilterConfig{
 		EmitFilterState: true,
 		PerMethodStatSpecifier: &gspb.FilterConfig_StatsForAllMethods{
-			StatsForAllMethods: &wrappers.BoolValue{
+			StatsForAllMethods: &wrapperspb.BoolValue{
 				Value: false,
 			},
 		},
