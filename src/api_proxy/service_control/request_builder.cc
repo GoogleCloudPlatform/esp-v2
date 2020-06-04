@@ -596,7 +596,7 @@ Status set_backend_protocol(const SupportedLabel& l,
 Status set_consumer_project(const SupportedLabel& l,
                             const ReportRequestInfo& info,
                             Map<std::string, std::string>* labels) {
-  (*labels)[l.name] = info.check_response_info.consumer_project_id;
+  (*labels)[l.name] = info.check_response_info.consumer_proejct_number;
   return Status::OK;
 }
 
@@ -1263,7 +1263,7 @@ Status RequestBuilder::FillReportRequest(const ReportRequestInfo& info,
     }
   }
 
-  if (!info.check_response_info.consumer_project_id.empty()) {
+  if (!info.check_response_info.consumer_proejct_number.empty()) {
     return AppendByConsumerOperations(info, request, current_time);
   }
 
@@ -1362,7 +1362,7 @@ Status RequestBuilder::ConvertCheckResponse(
     CheckResponseInfo* check_response_info) {
   if (check_response.check_info().consumer_info().project_number() > 0) {
     // Store project id to check_response_info
-    check_response_info->consumer_project_id = std::to_string(
+    check_response_info->consumer_proejct_number = std::to_string(
         check_response.check_info().consumer_info().project_number());
   }
 

@@ -42,7 +42,8 @@ void doTest(
                  input.downstream_request());
   fuzzer.runData(static_cast<Envoy::Http::StreamEncoderFilter*>(&filter),
                  input.upstream_response());
-  fuzzer.accessLog(static_cast<Envoy::AccessLog::Instance*>(&filter), stream_info);
+  fuzzer.accessLog(static_cast<Envoy::AccessLog::Instance*>(&filter),
+                   stream_info);
   fuzzer.reset();
 }
 

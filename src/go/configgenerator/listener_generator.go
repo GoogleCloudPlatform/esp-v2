@@ -412,7 +412,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 			},
 			FromHeaders:          fromHeaders,
 			FromParams:           fromParams,
-			ForwardPayloadHeader: "X-Endpoint-API-UserInfo",
+			ForwardPayloadHeader: serviceInfo.Options.GeneratedHeaderPrefix + "API-UserInfo",
 			Forward:              true,
 		}
 
@@ -576,7 +576,6 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		service.MinStreamReportIntervalMs = serviceInfo.Options.MinStreamReportIntervalMs
 	}
 	service.JwtPayloadMetadataName = util.JwtPayloadMetadataName
-
 	filterConfig := &scpb.FilterConfig{
 		Services:        []*scpb.Service{service},
 		ScCallingConfig: makeServiceControlCallingConfig(serviceInfo.Options),
@@ -585,6 +584,7 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 			Cluster: util.ServiceControlClusterName,
 			Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),
 		},
+		GeneratedHeaderPrefix: serviceInfo.Options.GeneratedHeaderPrefix,
 	}
 
 	if serviceInfo.Options.ServiceControlCredentials != nil {

@@ -51,6 +51,11 @@ func main() {
 
 	r.Path("/echo").Methods("POST", "GET").
 		HandlerFunc(echoHandler)
+	r.Path("/echoHeader").Methods("GET").
+		HandlerFunc(echoHeaderHandler)
+	r.PathPrefix("/echoMethod").Methods("GET", "POST", "PUT", "DELETE", "PATCH").
+		HandlerFunc(echoMethodHandler)
+
 	r.Path("/websocketecho").HandlerFunc(websocketEchoHandler)
 	r.Path("/echo/nokey").Methods("POST").
 		HandlerFunc(echoHandler)
@@ -86,17 +91,6 @@ func main() {
 		HandlerFunc(bearerTokenHandler)
 	r.PathPrefix("/dynamicrouting").Methods("GET", "POST").
 		HandlerFunc(dynamicRoutingHandler)
-
-	r.PathPrefix("/echoMethod").Methods("GET").
-		HandlerFunc(echoMethodHandler)
-	r.PathPrefix("/echoMethod").Methods("POST").
-		HandlerFunc(echoMethodHandler)
-	r.PathPrefix("/echoMethod").Methods("PUT").
-		HandlerFunc(echoMethodHandler)
-	r.PathPrefix("/echoMethod").Methods("DELETE").
-		HandlerFunc(echoMethodHandler)
-	r.PathPrefix("/echoMethod").Methods("PATCH").
-		HandlerFunc(echoMethodHandler)
 
 	r.PathPrefix("/sleep").Methods("GET").
 		HandlerFunc(sleepHandler)
@@ -177,6 +171,18 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Write(b)
+}
+
+// echoHandler echo received with prefix `Fake-Header-Key` and prefix `X-` after appending `Echo-`
+func echoHeaderHandler(w http.ResponseWriter, r *http.Request) {
+	for key, vals := range r.Header {
+		if strings.HasPrefix(key, "Fake-Header-Key") || strings.HasPrefix(key, "X-") {
+			for _, val := range vals {
+				w.Header().Add(fmt.Sprintf("Echo-%s", key), val)
+			}
+		}
+	}
+
 }
 
 // websocketEchoHandler handles echo request through webstocket

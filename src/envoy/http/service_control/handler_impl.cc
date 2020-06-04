@@ -33,9 +33,8 @@ using ::espv2::api_proxy::service_control::ScResponseErrorType;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
-// The HTTP header to send consumer project to backend.
-const Envoy::Http::LowerCaseString kConsumerProjectId(
-    "x-endpoint-api-project-id");
+// The HTTP header suffix to send consumer project to backend.
+constexpr char kConsumerProjectNumberHeaderSuffix[] = "api-project-number";
 
 // CheckRequest headers
 const Envoy::Http::LowerCaseString kIosBundleIdHeader{
@@ -56,6 +55,8 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
       stream_info_(stream_info),
       time_source_(time_source),
       uuid_(uuid),
+      consumer_project_number_header_( cfg_parser_.config().generated_header_prefix() +
+            kConsumerProjectNumberHeaderSuffix),
       request_header_size_(0),
       response_header_size_(0),
       is_grpc_(false),
@@ -234,9 +235,10 @@ void ServiceControlHandlerImpl::onCheckResponse(
   check_status_ = status;
 
   // Set consumer project_id to backend.
-  if (!response_info.consumer_project_id.empty()) {
-    headers.setReferenceKey(kConsumerProjectId,
-                            response_info.consumer_project_id);
+  if (!response_info.consumer_proejct_number.empty()) {
+    headers.setReferenceKey(
+        consumer_project_number_header_,
+        response_info.consumer_proejct_number);
   }
 
   if (!check_status_.ok()) {

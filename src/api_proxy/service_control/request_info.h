@@ -116,7 +116,7 @@ enum ScResponseErrorType {
 struct CheckResponseInfo {
   ScResponseErrorType error_type = ScResponseErrorType::ERROR_TYPE_UNSPECIFIED;
 
-  std::string consumer_project_id;
+  std::string consumer_proejct_number;
 };
 
 struct QuotaRequestInfo : public OperationInfo {

@@ -37,22 +37,26 @@ import (
 
 // DoGet performs a Get request to a specified url
 func DoGet(url string) ([]byte, error) {
-	return utils.DoWithHeaders(url, "GET", "", nil)
+	_, body, err := utils.DoWithHeaders(url, "GET", "", nil)
+	return body, err
 }
 
 // DoPost performs a POST request to a specified url
 func DoPost(url, message string) ([]byte, error) {
-	return utils.DoWithHeaders(url, "POST", message, nil)
+	_, body, err := utils.DoWithHeaders(url, "POST", message, nil)
+	return body, err
 }
 
 // DoPostWithHeaders performs a POST request to a specified url with given headers and message
 func DoPostWithHeaders(url, message string, headers map[string]string) ([]byte, error) {
-	return utils.DoWithHeaders(url, "POST", message, headers)
+	_, body, err := utils.DoWithHeaders(url, "POST", message, headers)
+	return body, err
 }
 
 // DoWithHeaders performs a GET/POST/PUT/DELETE/PATCH request to a specified url with given headers and message(if provided)
 func DoWithHeaders(url, method, message string, headers map[string]string) ([]byte, error) {
-	return utils.DoWithHeaders(url, method, message, headers)
+	_, body, err := utils.DoWithHeaders(url, method, message, headers)
+	return body, err
 }
 
 // DoJWT performs an authenticated request using the credentials in the service account file.

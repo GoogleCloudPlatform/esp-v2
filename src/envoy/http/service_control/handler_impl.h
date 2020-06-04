@@ -29,6 +29,7 @@
 #include "src/api_proxy/service_control/request_info.h"
 #include "src/envoy/http/service_control/config_parser.h"
 #include "src/envoy/http/service_control/handler.h"
+#include "src/envoy/utils/http_header_utils.h"
 
 namespace espv2 {
 namespace envoy {
@@ -112,6 +113,9 @@ class ServiceControlHandlerImpl
   std::string http_method_;
   std::string uuid_;
   std::string api_key_;
+
+  // The name of header to send consumer project number.
+  const Envoy::Http::LowerCaseString consumer_project_number_header_;
 
   CheckDoneCallback* check_callback_{};
   ::espv2::api_proxy::service_control::CheckResponseInfo check_response_info_;

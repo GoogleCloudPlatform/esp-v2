@@ -959,6 +959,7 @@ func TestFetchListeners(t *testing.T) {
                         "name":"envoy.filters.http.service_control",
                         "typedConfig":{
                            "@type":"type.googleapis.com/google.api.envoy.http.service_control.FilterConfig",
+                           "generatedHeaderPrefix": "X-Endpoint-",
                            "imdsToken":{
                               "cluster":"metadata-cluster",
                               "timeout":"5s",
@@ -1339,6 +1340,7 @@ func TestFetchListeners(t *testing.T) {
                         "name":"envoy.filters.http.service_control",
                         "typedConfig":{
                            "@type":"type.googleapis.com/google.api.envoy.http.service_control.FilterConfig",
+                           "generatedHeaderPrefix": "X-Endpoint-",
                            "imdsToken":{
                               "cluster":"metadata-cluster",
                               "timeout":"5s",
