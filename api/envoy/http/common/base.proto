@@ -65,7 +65,8 @@ message HttpUri {
       [(validate.rules).duration.required = true];
 }
 
-/* TODO(taoxuy): replace with envoy internal DataSource proto */
+// Duplicate DataSource from envoy for self containment.
+// https://aip.dev/213
 message DataSource {
   oneof specifier {
     option (validate.required) = true;
@@ -80,6 +81,8 @@ message DataSource {
 
 message AccessToken {
   oneof token_type {
+    option (validate.required) = true;
+
     // remote_token contains:
     // - Token server uri. The Default is
     //   http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity

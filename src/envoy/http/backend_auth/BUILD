@@ -50,6 +50,7 @@ envoy_cc_library(
     deps = [
         "//api/envoy/http/backend_auth:config_proto_cc_proto",
         "//src/envoy/token:token_subscriber_factory_lib",
+        "@envoy//source/common/common:assert_lib",
     ],
 )
 
@@ -65,6 +66,7 @@ envoy_cc_test(
         ":filter_lib",
         ":mocks_lib",
         "//src/envoy/token:mocks_lib",
+        "@envoy//source/common/common:empty_string",
         "@envoy//test/mocks/http:http_mocks",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/test_common:utility_lib",

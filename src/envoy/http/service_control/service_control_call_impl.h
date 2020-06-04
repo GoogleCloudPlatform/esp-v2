@@ -15,6 +15,7 @@
 #pragma once
 
 #include "api/envoy/http/service_control/config.pb.h"
+#include "common/common/empty_string.h"
 #include "common/common/logger.h"
 #include "envoy/server/filter_config.h"
 #include "envoy/thread_local/thread_local.h"
@@ -53,19 +54,14 @@ class ThreadLocalCache : public Envoy::ThreadLocal::ThreadLocalObject {
 
   void set_sc_token(TokenSharedPtr sc_token) { sc_token_ = sc_token; }
   const std::string& sc_token() const {
-    return (sc_token_) ? *sc_token_ : empty_token();
+    return (sc_token_) ? *sc_token_ : Envoy::EMPTY_STRING;
   }
 
   void set_quota_token(TokenSharedPtr quota_token) {
     quota_token_ = quota_token;
   }
   const std::string& quota_token() const {
-    return (quota_token_) ? *quota_token_ : empty_token();
-  }
-
-  const std::string& empty_token() const {
-    static const std::string* const kEmptyToken = new std::string;
-    return *kEmptyToken;
+    return (quota_token_) ? *quota_token_ : Envoy::EMPTY_STRING;
   }
 
   ClientCache& client_cache() { return client_cache_; }

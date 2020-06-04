@@ -24,9 +24,13 @@ message BackendAuthRule {
   string operation = 1 [(validate.rules).string.min_bytes = 1];
 
   // Audience used to create the JWT token sent to the backend.
-  // If empty, then no JWT token will be created.
+  // Must have a value, otherwise JWT is not valid.
   // https://cloud.google.com/endpoints/docs/openapi/openapi-extensions#jwt_audience_disable_auth
-  string jwt_audience = 2 [(validate.rules).string.min_bytes = 1];
+  string jwt_audience = 2 [(validate.rules).string = {
+    min_bytes: 1,
+    well_known_regex: HTTP_HEADER_VALUE,
+    strict: false
+  }];
 }
 
 message FilterConfig {
@@ -34,6 +38,8 @@ message FilterConfig {
   repeated BackendAuthRule rules = 1;
 
   oneof id_token_info {
+    option (validate.required) = true;
+
     // The Instance Metadata Server uri used to fetch id token from Instance
     // Metadata Server.
     api.envoy.http.common.HttpUri imds_token = 2;
