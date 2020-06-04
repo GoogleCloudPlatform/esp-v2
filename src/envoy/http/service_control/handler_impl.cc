@@ -55,8 +55,9 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
       stream_info_(stream_info),
       time_source_(time_source),
       uuid_(uuid),
-      consumer_project_number_header_( cfg_parser_.config().generated_header_prefix() +
-            kConsumerProjectNumberHeaderSuffix),
+      consumer_project_number_header_(
+          cfg_parser_.config().generated_header_prefix() +
+          kConsumerProjectNumberHeaderSuffix),
       request_header_size_(0),
       response_header_size_(0),
       is_grpc_(false),
@@ -236,9 +237,8 @@ void ServiceControlHandlerImpl::onCheckResponse(
 
   // Set consumer project_id to backend.
   if (!response_info.consumer_proejct_number.empty()) {
-    headers.setReferenceKey(
-        consumer_project_number_header_,
-        response_info.consumer_proejct_number);
+    headers.setReferenceKey(consumer_project_number_header_,
+                            response_info.consumer_proejct_number);
   }
 
   if (!check_status_.ok()) {

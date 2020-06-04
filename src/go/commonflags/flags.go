@@ -34,7 +34,7 @@ var (
 	HttpRequestTimeoutS        = flag.Int("http_request_timeout_s", 5, `Set the timeout in second for all requests. Must be > 0 and the default is 5 seconds if not set.`)
 	Node                       = flag.String("node", "ESPv2", "envoy node id")
 	NonGCP                     = flag.Bool("non_gcp", false, `By default, the proxy tries to talk to GCP metadata server to get VM location in the first few requests. Setting this flag to true to skip this step`)
-	GeneratedHeaderPrefix      = flag.String("generated_header_prefix", "X-Endpoint-", "Set the header prefix for the generated headers and it should be in form of (?i)^x(-[a-z]+)+-$. By default, it is `X-Endpoint-``")
+	GeneratedHeaderPrefix      = flag.String("generated_header_prefix", "X-Endpoint-", "Set the header prefix for the generated headers. By default, it is `X-Endpoint-``")
 	TracingProjectId           = flag.String("tracing_project_id", "", "The Google project id required for Stack driver tracing. If not set, will automatically use fetch it from GCP Metadata server")
 	TracingStackdriverAddress  = flag.String("tracing_stackdriver_address", "", "By default, the Stackdriver exporter will connect to production Stackdriver. If this is non-empty, it will connect to this address. It must be in the gRPC format and implement the cloud trace v2 RPCs.")
 	TracingSamplingRate        = flag.Float64("tracing_sample_rate", 0.001, "tracing sampling rate from 0.0 to 1.0")

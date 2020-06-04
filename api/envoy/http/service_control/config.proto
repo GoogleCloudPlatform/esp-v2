@@ -126,6 +126,6 @@ message FilterConfig {
   // The Http uri to call service control
   api.envoy.http.common.HttpUri service_control_uri = 8;
 
-   // The prefix added to generated headers
+  // The prefix added to generated headers
   string generated_header_prefix = 9 [(validate.rules).string.min_bytes = 1];
 }
