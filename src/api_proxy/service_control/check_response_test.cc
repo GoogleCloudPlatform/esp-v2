@@ -108,22 +108,12 @@ TEST_F(ConvertCheckResponseTest,
           ScResponseErrorType::CONSUMER_ERROR);
 }
 
-TEST_F(ConvertCheckResponseTest,
-       WhenResponseIsBlockedWithSecurityPolicyViolated) {
-  runTest(CheckError::SECURITY_POLICY_VIOLATED, Code::PERMISSION_DENIED,
-          ScResponseErrorType::CONSUMER_BLOCKED);
-}
 
 TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithInvalidCredentail) {
   runTest(CheckError::INVALID_CREDENTIAL, Code::PERMISSION_DENIED,
           ScResponseErrorType::CONSUMER_ERROR);
 }
 
-TEST_F(ConvertCheckResponseTest,
-       WhenResponseIsBlockedWithLocationPolicyViolated) {
-  runTest(CheckError::LOCATION_POLICY_VIOLATED, Code::PERMISSION_DENIED,
-          ScResponseErrorType::CONSUMER_BLOCKED);
-}
 
 TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithConsumerInvalid) {
   runTest(CheckError::CONSUMER_INVALID, Code::PERMISSION_DENIED,
@@ -133,11 +123,6 @@ TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithConsumerInvalid) {
 TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithResourceExhuasted) {
   runTest(CheckError::RESOURCE_EXHAUSTED, Code::RESOURCE_EXHAUSTED,
           ScResponseErrorType::CONSUMER_QUOTA);
-}
-
-TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithAbuserDetected) {
-  runTest(CheckError::ABUSER_DETECTED, Code::PERMISSION_DENIED,
-          ScResponseErrorType::CONSUMER_ERROR);
 }
 
 TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithApiTargetBlocked) {
@@ -160,25 +145,10 @@ TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithServiceStatus) {
           ScResponseErrorType::ERROR_TYPE_UNSPECIFIED);
 }
 
-TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithQuotaCheck) {
-  runTest(CheckError::QUOTA_CHECK_UNAVAILABLE, Code::UNAVAILABLE,
-          ScResponseErrorType::ERROR_TYPE_UNSPECIFIED);
-}
-
 TEST_F(ConvertCheckResponseTest,
        WhenResponseIsBlockedWithCloudResourceManager) {
   runTest(CheckError::CLOUD_RESOURCE_MANAGER_BACKEND_UNAVAILABLE,
           Code::UNAVAILABLE, ScResponseErrorType::ERROR_TYPE_UNSPECIFIED);
-}
-
-TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithSecurityPolicy) {
-  runTest(CheckError::SECURITY_POLICY_BACKEND_UNAVAILABLE, Code::UNAVAILABLE,
-          ScResponseErrorType::ERROR_TYPE_UNSPECIFIED);
-}
-
-TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithLocationPolicy) {
-  runTest(CheckError::LOCATION_POLICY_BACKEND_UNAVAILABLE, Code::UNAVAILABLE,
-          ScResponseErrorType::ERROR_TYPE_UNSPECIFIED);
 }
 
 TEST_F(ConvertCheckResponseTest,

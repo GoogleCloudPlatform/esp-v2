@@ -17,9 +17,9 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 def googleapis_repositories(bind = True):
     http_archive(
         name = "com_github_googleapis_googleapis",
-        strip_prefix = "googleapis-ab2685d8d3a0e191dc8aef83df36773c07cb3d06",  # Feb 18, 2020
-        url = "https://github.com/googleapis/googleapis/archive/ab2685d8d3a0e191dc8aef83df36773c07cb3d06.tar.gz",
-        sha256 = "d4072ff0000e1dcb3a0a80930a628d860d5be55ebdf9733297206f4cd941cdd4",
+        strip_prefix = "googleapis-68c72c1d1ffff49b7d0019a21e65705b5d9c23c2",  # June 4, 2020
+        url = "https://github.com/googleapis/googleapis/archive/68c72c1d1ffff49b7d0019a21e65705b5d9c23c2.tar.gz",
+        sha256 = "0eaf8c4d0ea4aa3ebf94bc8f5ec57403c633920ada57a498fea4a8eb8c17b948",
     )
 
     if bind:
