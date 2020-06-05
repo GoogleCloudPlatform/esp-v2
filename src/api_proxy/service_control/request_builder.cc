@@ -1383,10 +1383,6 @@ Status RequestBuilder::ConvertCheckResponse(
     case CheckError::RESOURCE_EXHAUSTED:
       check_response_info->error_type = ScResponseErrorType::CONSUMER_QUOTA;
       return Status(Code::RESOURCE_EXHAUSTED, "Quota check failed.");
-    case CheckError::ABUSER_DETECTED:
-      check_response_info->error_type = ScResponseErrorType::CONSUMER_ERROR;
-      // Should not expose this to the client.
-      return Status(Code::PERMISSION_DENIED, "Permission denied.");
     case CheckError::API_TARGET_BLOCKED:
       check_response_info->error_type = ScResponseErrorType::CONSUMER_BLOCKED;
       return Status(Code::PERMISSION_DENIED,
@@ -1434,18 +1430,10 @@ Status RequestBuilder::ConvertCheckResponse(
       return Status(Code::PERMISSION_DENIED,
                     absl::StrCat("API ", service_name,
                                  " has billing disabled. Please enable it."));
-    case CheckError::SECURITY_POLICY_VIOLATED:
-      check_response_info->error_type = ScResponseErrorType::CONSUMER_BLOCKED;
-      return Status(Code::PERMISSION_DENIED,
-                    "Request is not allowed as per security policies.");
     case CheckError::INVALID_CREDENTIAL:
       check_response_info->error_type = ScResponseErrorType::CONSUMER_ERROR;
       return Status(Code::PERMISSION_DENIED,
                     "The credential in the request can not be verified.");
-    case CheckError::LOCATION_POLICY_VIOLATED:
-      check_response_info->error_type = ScResponseErrorType::CONSUMER_BLOCKED;
-      return Status(Code::PERMISSION_DENIED,
-                    "Request is not allowed as per location policies.");
     case CheckError::CONSUMER_INVALID:
       check_response_info->error_type = ScResponseErrorType::CONSUMER_ERROR;
       return Status(Code::PERMISSION_DENIED,
@@ -1455,10 +1443,7 @@ Status RequestBuilder::ConvertCheckResponse(
     case CheckError::NAMESPACE_LOOKUP_UNAVAILABLE:
     case CheckError::SERVICE_STATUS_UNAVAILABLE:
     case CheckError::BILLING_STATUS_UNAVAILABLE:
-    case CheckError::QUOTA_CHECK_UNAVAILABLE:
     case CheckError::CLOUD_RESOURCE_MANAGER_BACKEND_UNAVAILABLE:
-    case CheckError::SECURITY_POLICY_BACKEND_UNAVAILABLE:
-    case CheckError::LOCATION_POLICY_BACKEND_UNAVAILABLE:
       return Status(
           Code::UNAVAILABLE,
           "One or more Google Service Control backends are unavailable.");
