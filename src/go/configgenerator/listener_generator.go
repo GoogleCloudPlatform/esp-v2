@@ -412,7 +412,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 			},
 			FromHeaders:          fromHeaders,
 			FromParams:           fromParams,
-			ForwardPayloadHeader: serviceInfo.Options.GeneratedHeaderPrefix + "API-UserInfo",
+			ForwardPayloadHeader: serviceInfo.Options.GeneratedHeaderPrefix + util.JwtAuthnForwardPayloadHeaderSuffix,
 			Forward:              true,
 		}
 

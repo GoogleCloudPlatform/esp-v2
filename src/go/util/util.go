@@ -123,6 +123,9 @@ const (
 	DefaultJwtHeaderNameXGoogleIapJwtAssertion = "X-Goog-Iap-Jwt-Assertion"
 	DefaultJwtQueryParamAccessToken            = "access_token"
 
+	// The suffix of jwtAuthn filter header to forward payload
+	JwtAuthnForwardPayloadHeaderSuffix = "API-UserInfo"
+
 	// Default api key locations
 	DefaultApiKeyQueryParamKey    = "key"
 	DefaultApiKeyQueryParamApiKey = "api_key"
