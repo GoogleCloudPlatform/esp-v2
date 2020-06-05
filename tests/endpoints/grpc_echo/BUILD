@@ -1,8 +1,9 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load(
     "@com_google_googleapis_imports//:imports.bzl",
+    "cc_grpc_library",
     "cc_proto_library",
-    "cc_grpc_library")
+)
 
 proto_library(
     name = "grpc-test_proto",
@@ -10,14 +11,12 @@ proto_library(
     deps = [
         "@com_github_googleapis_googleapis//google/api:annotations_proto",
         "@com_github_googleapis_googleapis//google/api/servicecontrol/v1:servicecontrol_proto",
-
     ],
 )
 
 cc_proto_library(
     name = "grpc-test_cc_proto",
     deps = [
-
         ":grpc-test_proto",
     ],
 )
@@ -76,6 +75,7 @@ genrule(
         "@com_github_googleapis_googleapis//google/api/servicecontrol/v1:metric_value.proto",
         "@com_github_googleapis_googleapis//google/api/servicecontrol/v1:operation.proto",
         "@com_github_googleapis_googleapis//google/api:annotations.proto",
+        "@com_github_googleapis_googleapis//google/api:client.proto",
         "@com_github_googleapis_googleapis//google/api:http.proto",
         "@com_github_googleapis_googleapis//google/logging/type:log_severity.proto",
         "@com_github_googleapis_googleapis//google/type:money.proto",
