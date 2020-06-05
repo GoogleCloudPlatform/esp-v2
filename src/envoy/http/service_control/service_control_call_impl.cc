@@ -22,11 +22,11 @@ namespace envoy {
 namespace http_filters {
 namespace service_control {
 
-using ::espv2::api_proxy::service_control::LogsMetricsLoader;
-using ::espv2::api_proxy::service_control::RequestBuilder;
 using ::espv2::api::envoy::http::common::AccessToken;
 using ::espv2::api::envoy::http::service_control::FilterConfig;
 using ::espv2::api::envoy::http::service_control::Service;
+using ::espv2::api_proxy::service_control::LogsMetricsLoader;
+using ::espv2::api_proxy::service_control::RequestBuilder;
 using token::ServiceAccountTokenGenerator;
 using token::TokenSubscriber;
 using token::TokenType;

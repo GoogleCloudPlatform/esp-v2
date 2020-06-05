@@ -41,15 +41,15 @@ class ClientCacheQuotaResponseErrorTypeTest;
 // The class to cache check and batch report.
 class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
-  ClientCache(
-      const ::espv2::api::envoy::http::service_control::Service& config,
-      const ::espv2::api::envoy::http::service_control::FilterConfig&
-          filter_config,
-      ServiceControlFilterStats& filter_stats,
-      Envoy::Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
-      Envoy::Event::Dispatcher& dispatcher,
-      std::function<const std::string&()> sc_token_fn,
-      std::function<const std::string&()> quota_token_fn);
+  ClientCache(const ::espv2::api::envoy::http::service_control::Service& config,
+              const ::espv2::api::envoy::http::service_control::FilterConfig&
+                  filter_config,
+              ServiceControlFilterStats& filter_stats,
+              Envoy::Upstream::ClusterManager& cm,
+              Envoy::TimeSource& time_source,
+              Envoy::Event::Dispatcher& dispatcher,
+              std::function<const std::string&()> sc_token_fn,
+              std::function<const std::string&()> quota_token_fn);
 
   ~ClientCache() { destruct_mode_ = true; };
 

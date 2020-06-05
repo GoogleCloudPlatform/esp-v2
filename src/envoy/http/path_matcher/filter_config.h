@@ -47,10 +47,10 @@ struct FilterStats {
 // The Envoy filter config for ESPv2 path matcher filter.
 class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
-  FilterConfig(const ::espv2::api::envoy::http::path_matcher::FilterConfig&
-                   proto_config,
-               const std::string& stats_prefix,
-               Envoy::Server::Configuration::FactoryContext& context);
+  FilterConfig(
+      const ::espv2::api::envoy::http::path_matcher::FilterConfig& proto_config,
+      const std::string& stats_prefix,
+      Envoy::Server::Configuration::FactoryContext& context);
 
   const std::string* findOperation(const std::string& http_method,
                                    const std::string& path) const {

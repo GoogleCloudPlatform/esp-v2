@@ -38,10 +38,9 @@ bool extractAPIKey(
     std::string& api_key);
 
 // Adds information from the `FilterConfig`'s gcp_attributes to the given info.
-void fillGCPInfo(
-    const ::espv2::api::envoy::http::service_control::FilterConfig&
-        filter_config,
-    ::espv2::api_proxy::service_control::ReportRequestInfo& info);
+void fillGCPInfo(const ::espv2::api::envoy::http::service_control::FilterConfig&
+                     filter_config,
+                 ::espv2::api_proxy::service_control::ReportRequestInfo& info);
 
 // Searches the `headers` for the given `log_headers` and appends all matches
 // to the string provided.

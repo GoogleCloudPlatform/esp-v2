@@ -30,10 +30,10 @@ class FilterConfigImpl
     : public FilterConfig,
       public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
-  FilterConfigImpl(const ::espv2::api::envoy::http::backend_auth::FilterConfig&
-                       proto_config,
-                   const std::string& stats_prefix,
-                   Envoy::Server::Configuration::FactoryContext& context)
+  FilterConfigImpl(
+      const ::espv2::api::envoy::http::backend_auth::FilterConfig& proto_config,
+      const std::string& stats_prefix,
+      Envoy::Server::Configuration::FactoryContext& context)
       : proto_config_(proto_config),
         stats_(generateStats(stats_prefix, context.scope())),
         token_subscriber_factory_(context),

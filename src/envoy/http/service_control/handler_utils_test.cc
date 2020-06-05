@@ -25,12 +25,12 @@
 #include "test/mocks/server/mocks.h"
 #include "test/test_common/utility.h"
 
-using ::espv2::api_proxy::service_control::LatencyInfo;
-using ::espv2::api_proxy::service_control::ReportRequestInfo;
-using ::espv2::api_proxy::service_control::protocol::Protocol;
 using ::espv2::api::envoy::http::service_control::ApiKeyRequirement;
 using ::espv2::api::envoy::http::service_control::FilterConfig;
 using ::espv2::api::envoy::http::service_control::Service;
+using ::espv2::api_proxy::service_control::LatencyInfo;
+using ::espv2::api_proxy::service_control::ReportRequestInfo;
+using ::espv2::api_proxy::service_control::protocol::Protocol;
 using ::google::protobuf::TextFormat;
 
 namespace espv2 {
