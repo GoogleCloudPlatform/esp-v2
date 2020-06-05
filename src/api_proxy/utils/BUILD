@@ -39,7 +39,6 @@ envoy_basic_cc_library(
 
 envoy_cc_test(
     name = "version_test",
-    size = "small",
     srcs = [
         "version_test.cc",
     ],

@@ -30,7 +30,6 @@ envoy_basic_cc_library(
 
 envoy_cc_test(
     name = "http_template_test",
-    size = "small",
     srcs = ["http_template_test.cc"],
     repository = "@envoy",
     deps = [
@@ -40,7 +39,6 @@ envoy_cc_test(
 
 envoy_cc_test(
     name = "path_matcher_test",
-    size = "small",
     srcs = ["path_matcher_test.cc"],
     repository = "@envoy",
     deps = [
@@ -65,7 +63,6 @@ envoy_basic_cc_library(
 
 envoy_cc_test(
     name = "variable_binding_utils_test",
-    size = "small",
     srcs = [
         "variable_binding_utils_test.cc",
     ],

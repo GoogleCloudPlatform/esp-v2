@@ -25,7 +25,6 @@ envoy_cc_library(
 
 envoy_cc_test(
     name = "json_struct_test",
-    size = "small",
     srcs = [
         "json_struct_test.cc",
     ],
@@ -66,7 +65,6 @@ envoy_cc_library(
 
 envoy_cc_test(
     name = "filter_state_utils_test",
-    size = "small",
     srcs = ["filter_state_utils_test.cc"],
     repository = "@envoy",
     deps = [
@@ -90,7 +88,6 @@ envoy_cc_library(
 
 envoy_cc_test(
     name = "http_header_utils_test",
-    size = "small",
     srcs = ["http_header_utils_test.cc"],
     repository = "@envoy",
     deps = [
