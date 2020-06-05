@@ -82,6 +82,12 @@ var (
 					Body: "message",
 				},
 				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoHeader",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/echoHeader",
+					},
+				},
+				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoGetWithBody",
 					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/echo",

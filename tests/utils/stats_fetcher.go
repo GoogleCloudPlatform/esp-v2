@@ -68,7 +68,7 @@ func FetchStats(adminPort uint16) (StatCounters, StatHistograms, error) {
 
 	// Fetch from envoy admin.
 	statsUrl := fmt.Sprintf("http://localhost:%v%v", adminPort, ESpv2FiltersStatsPath)
-	statsResp, err := DoWithHeaders(statsUrl, "GET", "", nil)
+	_, statsResp, err := DoWithHeaders(statsUrl, "GET", "", nil)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to fetch envoy stats: %v", err)
 	}

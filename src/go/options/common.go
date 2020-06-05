@@ -22,10 +22,11 @@ import (
 // By defining all the common options in one struct, we prevent duplicate flag initialization and reduce repeated code.
 type CommonOptions struct {
 	// Flags for envoy
-	AdminAddress  string
-	AdminPort     int
-	DiscoveryPort int
-	Node          string
+	AdminAddress          string
+	AdminPort             int
+	DiscoveryPort         int
+	Node                  string
+	GeneratedHeaderPrefix string
 
 	// Flags for tracing
 	DisableTracing             bool
@@ -88,5 +89,6 @@ func DefaultCommonOptions() CommonOptions {
 		TracingMaxNumLinks:         128,
 		MetadataURL:                "http://169.254.169.254/computeMetadata",
 		IamURL:                     "https://iamcredentials.googleapis.com",
+		GeneratedHeaderPrefix:      "X-Endpoint-",
 	}
 }

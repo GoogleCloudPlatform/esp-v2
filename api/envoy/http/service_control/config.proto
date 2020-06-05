@@ -20,7 +20,6 @@ import "api/envoy/http/service_control/requirement.proto";
 import "google/api/service.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/wrappers.proto";
-import "google/protobuf/duration.proto";
 import "validate/validate.proto";
 import "api/envoy/http/common/base.proto";
 
@@ -129,4 +128,11 @@ message FilterConfig {
 
   // The Http uri to call service control
   api.envoy.http.common.HttpUri service_control_uri = 8;
+
+  // The prefix added to generated headers
+  string generated_header_prefix = 9 [(validate.rules).string = {
+    well_known_regex: HTTP_HEADER_VALUE,
+    strict: false,
+    min_len: 1,
+  }];
 }
