@@ -108,12 +108,10 @@ TEST_F(ConvertCheckResponseTest,
           ScResponseErrorType::CONSUMER_ERROR);
 }
 
-
 TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithInvalidCredentail) {
   runTest(CheckError::INVALID_CREDENTIAL, Code::PERMISSION_DENIED,
           ScResponseErrorType::CONSUMER_ERROR);
 }
-
 
 TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithConsumerInvalid) {
   runTest(CheckError::CONSUMER_INVALID, Code::PERMISSION_DENIED,
