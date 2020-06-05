@@ -38,6 +38,7 @@ constexpr char kBearer[] = "Bearer ";
 struct RcDetailsValues {
   // The request is rejected due to missing backend auth token.
   const std::string MissingBackendToken = "missing_backend_token";
+  const std::string MissingOperation = "missing_operation";
 };
 using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
 
@@ -53,8 +54,15 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   // NOTE: this shouldn't happen in practice because Path Matcher filter would
   // have already rejected the request.
   if (operation.empty()) {
+    config_->stats().denied_by_no_operation_.inc();
     ENVOY_LOG(debug, "No operation found from DynamicMetadata");
-    return FilterHeadersStatus::Continue;
+
+    decoder_callbacks_->sendLocalReply(
+        Envoy::Http::Code::InternalServerError, "missing operation", nullptr,
+        absl::nullopt, RcDetails::get().MissingOperation);
+    decoder_callbacks_->streamInfo().setResponseFlag(
+        Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService);
+    return FilterHeadersStatus::StopIteration;
   }
 
   ENVOY_LOG(debug, "Found operation: {}", operation);
@@ -62,12 +70,15 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   if (audience.empty()) {
     // This filter does not need to set a JWT Token for this operation.
     // If the request already has an Authorization header, it will be preserved.
+    config_->stats().allowed_by_no_configured_rules_.inc();
     return FilterHeadersStatus::Continue;
   }
 
   const TokenSharedPtr jwt_token = config_->cfg_parser().getJwtToken(audience);
   if (!jwt_token) {
+    config_->stats().denied_by_no_token_.inc();
     ENVOY_LOG(debug, "Token not found for audience: {}", audience);
+
     decoder_callbacks_->sendLocalReply(Envoy::Http::Code::InternalServerError,
                                        "missing tokens", nullptr, absl::nullopt,
                                        RcDetails::get().MissingBackendToken);
