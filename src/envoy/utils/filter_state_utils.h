@@ -22,8 +22,8 @@ namespace envoy {
 namespace utils {
 
 // Data names in `FilterState` set by Path Matcher filter:
-constexpr char kOperation[] = "envoy.filters.http.path_matcher.operation";
-constexpr char kQueryParams[] = "envoy.filters.http.path_matcher.query_params";
+constexpr char kOperation[] = "com.google.espv2.filters.http.path_matcher.operation";
+constexpr char kQueryParams[] = "com.google.espv2.filters.http.path_matcher.query_params";
 
 // Sets a read only string value in the filter state.
 void setStringFilterState(Envoy::StreamInfo::FilterState& filter_state,

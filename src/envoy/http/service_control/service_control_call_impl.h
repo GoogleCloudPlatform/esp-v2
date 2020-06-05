@@ -41,8 +41,8 @@ constexpr char kServiceControlScope[] =
 class ThreadLocalCache : public Envoy::ThreadLocal::ThreadLocalObject {
  public:
   ThreadLocalCache(
-      const ::google::api::envoy::http::service_control::Service& config,
-      const ::google::api::envoy::http::service_control::FilterConfig&
+      const ::espv2::api::envoy::http::service_control::Service& config,
+      const ::espv2::api::envoy::http::service_control::FilterConfig&
           filter_config,
       ServiceControlFilterStats& filter_stats,
       Envoy::Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
@@ -73,7 +73,7 @@ class ThreadLocalCache : public Envoy::ThreadLocal::ThreadLocalObject {
 };
 
 using FilterConfigProtoSharedPtr =
-    std::shared_ptr<::google::api::envoy::http::service_control::FilterConfig>;
+    std::shared_ptr<::espv2::api::envoy::http::service_control::FilterConfig>;
 
 class ServiceControlCallImpl
     : public ServiceControlCall,
@@ -81,7 +81,7 @@ class ServiceControlCallImpl
  public:
   ServiceControlCallImpl(
       FilterConfigProtoSharedPtr proto_config,
-      const ::google::api::envoy::http::service_control::Service& config,
+      const ::espv2::api::envoy::http::service_control::Service& config,
       ServiceControlFilterStats& filter_stats,
       Envoy::Server::Configuration::FactoryContext& context);
 
@@ -106,7 +106,7 @@ class ServiceControlCallImpl
   void createTokenGen();
   void createIamTokenSub();
 
-  const ::google::api::envoy::http::service_control::FilterConfig&
+  const ::espv2::api::envoy::http::service_control::FilterConfig&
       filter_config_;
   std::unique_ptr<::espv2::api_proxy::service_control::RequestBuilder>
       request_builder_;
@@ -139,7 +139,7 @@ class ServiceControlCallFactoryImpl : public ServiceControlCallFactory {
         context_(context) {}
 
   ServiceControlCallPtr create(
-      const ::google::api::envoy::http::service_control::Service& config)
+      const ::espv2::api::envoy::http::service_control::Service& config)
       override {
     return std::make_unique<ServiceControlCallImpl>(proto_config_, config,
                                                     filter_stats_, context_);

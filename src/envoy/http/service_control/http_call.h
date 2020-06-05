@@ -45,7 +45,7 @@ class HttpCallFactory
  public:
   HttpCallFactory(Envoy::Upstream::ClusterManager& cm,
                   Envoy::Event::Dispatcher& dispatcher,
-                  const ::google::api::envoy::http::common::HttpUri& uri,
+                  const ::espv2::api::envoy::http::common::HttpUri& uri,
                   const std::string& suffix_url,
                   std::function<const std::string&()> token_fn,
                   uint32_t timeout_ms, uint32_t retries,
@@ -67,7 +67,7 @@ class HttpCallFactory
   Envoy::Event::Dispatcher& dispatcher_;
 
   // call uri address
-  const ::google::api::envoy::http::common::HttpUri uri_;
+  const ::espv2::api::envoy::http::common::HttpUri uri_;
   const std::string suffix_url_;
 
   // token getter

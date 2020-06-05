@@ -24,9 +24,9 @@ namespace service_control {
 
 using ::espv2::api_proxy::service_control::LogsMetricsLoader;
 using ::espv2::api_proxy::service_control::RequestBuilder;
-using ::google::api::envoy::http::common::AccessToken;
-using ::google::api::envoy::http::service_control::FilterConfig;
-using ::google::api::envoy::http::service_control::Service;
+using ::espv2::api::envoy::http::common::AccessToken;
+using ::espv2::api::envoy::http::service_control::FilterConfig;
+using ::espv2::api::envoy::http::service_control::Service;
 using token::ServiceAccountTokenGenerator;
 using token::TokenSubscriber;
 using token::TokenType;

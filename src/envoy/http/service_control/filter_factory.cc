@@ -25,20 +25,20 @@ namespace envoy {
 namespace http_filters {
 namespace service_control {
 
-const std::string FilterName = "envoy.filters.http.service_control";
+const std::string FilterName = "com.google.espv2.filters.http.service_control";
 
 /**
  * Config registration for ESPv2 service control filter.
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::google::api::envoy::http::service_control::FilterConfig> {
+          ::espv2::api::envoy::http::service_control::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(FilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::google::api::envoy::http::service_control::FilterConfig&
+      const ::espv2::api::envoy::http::service_control::FilterConfig&
           proto_config,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context) override {

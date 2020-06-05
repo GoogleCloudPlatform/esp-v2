@@ -14,14 +14,14 @@
 
 syntax = "proto3";
 
-package google.api.envoy.http.path_matcher;
+package espv2.api.envoy.http.path_matcher;
 
 import "api/envoy/http/common/base.proto";
 import "validate/validate.proto";
 
 message PathMatcherRule {
   // The pattern used to match a HTTP request.
-  api.envoy.http.common.Pattern pattern = 1;
+  espv2.api.envoy.http.common.Pattern pattern = 1;
 
   // Operation name (selector) used as a unique ID for the operation.
   string operation = 2 [(validate.rules).string.min_bytes = 1];

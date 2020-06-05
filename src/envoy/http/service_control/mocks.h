@@ -79,7 +79,7 @@ class MockServiceControlCallFactory : public ServiceControlCallFactory {
  public:
   MOCK_METHOD(
       ServiceControlCallPtr, create,
-      (const ::google::api::envoy::http::service_control::Service& config),
+      (const ::espv2::api::envoy::http::service_control::Service& config),
       (override));
 };
 

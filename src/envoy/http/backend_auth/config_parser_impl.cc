@@ -22,8 +22,8 @@ namespace envoy {
 namespace http_filters {
 namespace backend_auth {
 
-using ::google::api::envoy::http::backend_auth::FilterConfig;
-using ::google::api::envoy::http::common::AccessToken;
+using ::espv2::api::envoy::http::backend_auth::FilterConfig;
+using ::espv2::api::envoy::http::common::AccessToken;
 using token::GetTokenFunc;
 using token::TokenSubscriber;
 using token::TokenType;
@@ -32,7 +32,7 @@ using token::UpdateTokenCallback;
 // TODO(kyuc): add unit tests for all possible backend rule configs.
 
 AudienceContext::AudienceContext(
-    const ::google::api::envoy::http::backend_auth::BackendAuthRule&
+    const ::espv2::api::envoy::http::backend_auth::BackendAuthRule&
         proto_config,
     Envoy::Server::Configuration::FactoryContext& context,
     const FilterConfig& filter_config,

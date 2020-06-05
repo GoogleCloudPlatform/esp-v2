@@ -116,9 +116,9 @@ func TestFetchListeners(t *testing.T) {
                   "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
                      {
-                        "name":"envoy.filters.http.path_matcher",
+                        "name":"com.google.espv2.filters.http.path_matcher",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
                            "rules":[
                               {
                                  "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
@@ -263,9 +263,9 @@ func TestFetchListeners(t *testing.T) {
                   "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
                      {
-                        "name":"envoy.filters.http.path_matcher",
+                        "name":"com.google.espv2.filters.http.path_matcher",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
                            "rules":[
                               {
                                  "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
@@ -282,7 +282,7 @@ func TestFetchListeners(t *testing.T) {
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
                            "filterStateRules":{
-                              "name":"envoy.filters.http.path_matcher.operation",
+                              "name":"com.google.espv2.filters.http.path_matcher.operation",
                               "requires":{
                                  "endpoints.examples.bookstore.Bookstore.CreateShelf":{
                                     "providerAndAudiences":{
@@ -459,9 +459,9 @@ func TestFetchListeners(t *testing.T) {
                   "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
                      {
-                        "name":"envoy.filters.http.path_matcher",
+                        "name":"com.google.espv2.filters.http.path_matcher",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
                            "rules":[
                               {
                                  "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
@@ -499,7 +499,7 @@ func TestFetchListeners(t *testing.T) {
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
                            "filterStateRules":{
-                              "name":"envoy.filters.http.path_matcher.operation",
+                              "name":"com.google.espv2.filters.http.path_matcher.operation",
                               "requires":{
                                  "endpoints.examples.bookstore.Bookstore.CreateShelf":{
                                     "providerName":"firebase"
@@ -675,9 +675,9 @@ func TestFetchListeners(t *testing.T) {
                   "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
                      {
-                        "name":"envoy.filters.http.path_matcher",
+                        "name":"com.google.espv2.filters.http.path_matcher",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
                            "rules":[
                               {
                                  "operation":"endpoints.examples.bookstore.Bookstore.DeleteBook",
@@ -715,7 +715,7 @@ func TestFetchListeners(t *testing.T) {
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
                            "filterStateRules":{
-                              "name":"envoy.filters.http.path_matcher.operation",
+                              "name":"com.google.espv2.filters.http.path_matcher.operation",
                               "requires":{
                                  "endpoints.examples.bookstore.Bookstore.GetBook":{
                                     "requiresAny":{
@@ -920,9 +920,9 @@ func TestFetchListeners(t *testing.T) {
                   "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
                      {
-                        "name":"envoy.filters.http.path_matcher",
+                        "name":"com.google.espv2.filters.http.path_matcher",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
                            "rules":[
                               {
                                  "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
@@ -956,9 +956,9 @@ func TestFetchListeners(t *testing.T) {
                         }
                      },
                      {
-                        "name":"envoy.filters.http.service_control",
+                        "name":"com.google.espv2.filters.http.service_control",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/google.api.envoy.http.service_control.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig",
                            "generatedHeaderPrefix": "X-Endpoint-",
                            "imdsToken":{
                               "cluster":"metadata-cluster",
@@ -1146,9 +1146,9 @@ func TestFetchListeners(t *testing.T) {
                   "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
                      {
-                        "name":"envoy.filters.http.path_matcher",
+                        "name":"com.google.espv2.filters.http.path_matcher",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
                            "rules":[
                               {
                                  "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
@@ -1172,7 +1172,7 @@ func TestFetchListeners(t *testing.T) {
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
                            "filterStateRules":{
-                              "name":"envoy.filters.http.path_matcher.operation",
+                              "name":"com.google.espv2.filters.http.path_matcher.operation",
                               "requires":{
                                  "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt":{
                                     "providerAndAudiences":{
@@ -1314,9 +1314,9 @@ func TestFetchListeners(t *testing.T) {
                   "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
                      {
-                        "name":"envoy.filters.http.path_matcher",
+                        "name":"com.google.espv2.filters.http.path_matcher",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
                            "rules":[
                               {
                                  "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_simplegetcors",
@@ -1336,9 +1336,9 @@ func TestFetchListeners(t *testing.T) {
                         }
                      },
                      {
-                        "name":"envoy.filters.http.service_control",
+                        "name":"com.google.espv2.filters.http.service_control",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/google.api.envoy.http.service_control.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig",
                            "generatedHeaderPrefix": "X-Endpoint-",
                            "imdsToken":{
                               "cluster":"metadata-cluster",

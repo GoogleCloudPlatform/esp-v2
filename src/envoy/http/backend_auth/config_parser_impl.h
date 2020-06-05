@@ -36,10 +36,10 @@ class TokenCache : public Envoy::ThreadLocal::ThreadLocalObject {
 class AudienceContext {
  public:
   AudienceContext(
-      const ::google::api::envoy::http::backend_auth::BackendAuthRule&
+      const ::espv2::api::envoy::http::backend_auth::BackendAuthRule&
           proto_config,
       Envoy::Server::Configuration::FactoryContext& context,
-      const ::google::api::envoy::http::backend_auth::FilterConfig& config,
+      const ::espv2::api::envoy::http::backend_auth::FilterConfig& config,
       const token::TokenSubscriberFactory& token_subscriber_factory,
       token::GetTokenFunc access_token_fn);
   TokenSharedPtr token() const {
@@ -62,7 +62,7 @@ class FilterConfigParserImpl
       public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   FilterConfigParserImpl(
-      const ::google::api::envoy::http::backend_auth::FilterConfig& config,
+      const ::espv2::api::envoy::http::backend_auth::FilterConfig& config,
       Envoy::Server::Configuration::FactoryContext& context,
       const token::TokenSubscriberFactory& token_subscriber_factory);
 

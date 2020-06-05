@@ -16,7 +16,7 @@
 
 #include "common/protobuf/utility.h"
 
-using ::google::api::envoy::http::service_control::FilterConfig;
+using ::espv2::api::envoy::http::service_control::FilterConfig;
 
 namespace espv2 {
 namespace envoy {

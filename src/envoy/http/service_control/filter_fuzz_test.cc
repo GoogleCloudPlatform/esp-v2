@@ -18,7 +18,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace filter_api = ::google::api::envoy::http::service_control;
+namespace filter_api = ::espv2::api::envoy::http::service_control;
 namespace sc_api = ::google::api::servicecontrol::v1;
 using ::Envoy::Server::Configuration::MockFactoryContext;
 using ::testing::MockFunction;

@@ -34,12 +34,12 @@ namespace service_control {
 bool extractAPIKey(
     const Envoy::Http::RequestHeaderMap& headers,
     const ::google::protobuf::RepeatedPtrField<
-        ::google::api::envoy::http::service_control::ApiKeyLocation>& locations,
+        ::espv2::api::envoy::http::service_control::ApiKeyLocation>& locations,
     std::string& api_key);
 
 // Adds information from the `FilterConfig`'s gcp_attributes to the given info.
 void fillGCPInfo(
-    const ::google::api::envoy::http::service_control::FilterConfig&
+    const ::espv2::api::envoy::http::service_control::FilterConfig&
         filter_config,
     ::espv2::api_proxy::service_control::ReportRequestInfo& info);
 
@@ -75,7 +75,7 @@ void fillJwtPayload(const ::envoy::config::core::v3::Metadata& metadata,
 
 // Returns the protocol of the backend service or UNKNOWN if not found
 ::espv2::api_proxy::service_control::protocol::Protocol getBackendProtocol(
-    const ::google::api::envoy::http::service_control::Service& service);
+    const ::espv2::api::envoy::http::service_control::Service& service);
 
 }  // namespace service_control
 }  // namespace http_filters

@@ -42,8 +42,8 @@ class ClientCacheQuotaResponseErrorTypeTest;
 class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   ClientCache(
-      const ::google::api::envoy::http::service_control::Service& config,
-      const ::google::api::envoy::http::service_control::FilterConfig&
+      const ::espv2::api::envoy::http::service_control::Service& config,
+      const ::espv2::api::envoy::http::service_control::FilterConfig&
           filter_config,
       ServiceControlFilterStats& filter_stats,
       Envoy::Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
@@ -89,7 +89,7 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       QuotaDoneFunc on_done);
 
   void initHttpRequestSetting(
-      const ::google::api::envoy::http::service_control::FilterConfig&
+      const ::espv2::api::envoy::http::service_control::FilterConfig&
           filter_config);
 
   void collectCallStatus(CallStatusStats& filter_stats,
@@ -100,7 +100,7 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       const ::google::protobuf::util::Status& status, Response* resp,
       const std::string& body);
 
-  const ::google::api::envoy::http::service_control::Service& config_;
+  const ::espv2::api::envoy::http::service_control::Service& config_;
 
   // Filter statistics. When service control client is destroyed in worker
   // thread, filter_stats_ may have already been destructed in the main thread,

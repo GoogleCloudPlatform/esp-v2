@@ -44,7 +44,7 @@ using ::espv2::api_proxy::service_control::QuotaRequestInfo;
 using ::espv2::api_proxy::service_control::ReportRequestInfo;
 using ::espv2::api_proxy::service_control::ScResponseErrorType;
 using ::espv2::api_proxy::service_control::protocol::Protocol;
-using ::google::api::envoy::http::service_control::FilterConfig;
+using ::espv2::api::envoy::http::service_control::FilterConfig;
 using ::google::protobuf::TextFormat;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;

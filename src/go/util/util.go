@@ -17,7 +17,7 @@ package util
 import "time"
 
 const (
-	// HTTP filter names.
+	// Upstream envoy http filter names.
 
 	// Buffer HTTP filter
 	Buffer = "envoy.filters.http.buffer"
@@ -35,16 +35,8 @@ const (
 	Echo = "envoy.filters.network.echo"
 	// HTTPConnectionManager network filter
 	HTTPConnectionManager = "envoy.filters.network.http_connection_manager"
-	// ServiceControl filter.
-	ServiceControl = "envoy.filters.http.service_control"
 	// JwtAuthn filter.
 	JwtAuthn = "envoy.filters.http.jwt_authn"
-	// PathMatcher filter.
-	PathMatcher = "envoy.filters.http.path_matcher"
-	// BackendAuth filter.
-	BackendAuth = "envoy.filters.http.backend_auth"
-	// BackendRouting filter.
-	BackendRouting = "envoy.filters.http.backend_routing"
 	// GrpcStats filter name
 	GrpcStatsFilterName = "envoy.filters.http.grpc_stats"
 	// TLSTransportSocket is Envoy TLS Transport Socket name.
@@ -53,6 +45,17 @@ const (
 	AccessFileLogger = "envoy.access_loggers.file"
 	// DefaultRootCAPaths is the default certs path.
 	DefaultRootCAPaths = "/etc/ssl/certs/ca-certificates.crt"
+
+	// ESPv2 custom http filters.
+
+	// ServiceControl filter.
+	ServiceControl = "com.google.espv2.filters.http.service_control"
+	// PathMatcher filter.
+	PathMatcher = "com.google.espv2.filters.http.path_matcher"
+	// BackendAuth filter.
+	BackendAuth = "com.google.espv2.filters.http.backend_auth"
+	// BackendRouting filter.
+	BackendRouting = "com.google.espv2.filters.http.backend_routing"
 
 	// JwtPayloadMetadataName is the field name passed into metadata
 	JwtPayloadMetadataName = "jwt_payloads"

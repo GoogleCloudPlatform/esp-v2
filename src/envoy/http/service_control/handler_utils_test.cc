@@ -28,9 +28,9 @@
 using ::espv2::api_proxy::service_control::LatencyInfo;
 using ::espv2::api_proxy::service_control::ReportRequestInfo;
 using ::espv2::api_proxy::service_control::protocol::Protocol;
-using ::google::api::envoy::http::service_control::ApiKeyRequirement;
-using ::google::api::envoy::http::service_control::FilterConfig;
-using ::google::api::envoy::http::service_control::Service;
+using ::espv2::api::envoy::http::service_control::ApiKeyRequirement;
+using ::espv2::api::envoy::http::service_control::FilterConfig;
+using ::espv2::api::envoy::http::service_control::Service;
 using ::google::protobuf::TextFormat;
 
 namespace espv2 {
