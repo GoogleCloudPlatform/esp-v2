@@ -29,7 +29,6 @@ envoy_basic_cc_library(
 
 envoy_cc_test(
     name = "check_response_test",
-    size = "small",
     srcs = [
         "check_response_test.cc",
     ],
@@ -41,7 +40,6 @@ envoy_cc_test(
 
 envoy_cc_test(
     name = "request_builder_test",
-    size = "small",
     srcs = [
         "request_builder_test.cc",
     ],
@@ -66,7 +64,6 @@ envoy_basic_cc_library(
 
 envoy_cc_test(
     name = "logs_metrics_loader_test",
-    size = "small",
     srcs = [
         "logs_metrics_loader_test.cc",
     ],

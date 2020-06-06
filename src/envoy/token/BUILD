@@ -136,7 +136,6 @@ envoy_cc_fuzz_test(
 
 envoy_cc_test(
     name = "imds_token_info_test",
-    size = "small",
     srcs = ["imds_token_info_test.cc"],
     repository = "@envoy",
     deps = [
@@ -159,7 +158,6 @@ envoy_cc_fuzz_test(
 
 envoy_cc_test(
     name = "iam_token_info_test",
-    size = "small",
     srcs = ["iam_token_info_test.cc"],
     repository = "@envoy",
     deps = [
@@ -171,7 +169,6 @@ envoy_cc_test(
 
 envoy_cc_test(
     name = "token_subscriber_test",
-    size = "small",
     srcs = ["token_subscriber_test.cc"],
     repository = "@envoy",
     deps = [
@@ -185,7 +182,6 @@ envoy_cc_test(
 
 envoy_cc_test(
     name = "service_account_token_test",
-    size = "small",
     srcs = ["sa_token_generator_test.cc"],
     repository = "@envoy",
     deps = [

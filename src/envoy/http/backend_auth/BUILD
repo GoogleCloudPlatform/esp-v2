@@ -56,7 +56,6 @@ envoy_cc_library(
 
 envoy_cc_test(
     name = "config_parser_impl_test",
-    size = "small",
     srcs = [
         "config_parser_impl_test.cc",
     ],
@@ -100,7 +99,6 @@ envoy_cc_library(
 
 envoy_cc_test(
     name = "filter_test",
-    size = "small",
     srcs = [
         "filter_test.cc",
     ],
