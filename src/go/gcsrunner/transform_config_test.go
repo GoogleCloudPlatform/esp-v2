@@ -265,9 +265,9 @@ var validConfigInput = []byte(`{
                   "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "http_filters": [
                     {
-                      "name": "envoy.filters.http.service_control",
+                      "name": "com.google.espv2.filters.http.service_control",
                       "typed_config": {
-                        "@type": "type.googleapis.com/google.api.envoy.http.service_control.FilterConfig"
+                        "@type": "type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig"
                       }
                     }
                   ]
@@ -308,9 +308,9 @@ var validConfigInputWithoutLoopback = []byte(`{
                   "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "http_filters": [
                     {
-                      "name": "envoy.filters.http.service_control",
+                      "name": "com.google.espv2.filters.http.service_control",
                       "typed_config": {
-                        "@type": "type.googleapis.com/google.api.envoy.http.service_control.FilterConfig"
+                        "@type": "type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig"
                       }
                     }
                   ]
@@ -344,9 +344,9 @@ var validConfigInputHTTPListener = []byte(`{
                   "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "http_filters": [
                     {
-                      "name": "envoy.filters.http.service_control",
+                      "name": "com.google.espv2.filters.http.service_control",
                       "typed_config": {
-                        "@type": "type.googleapis.com/google.api.envoy.http.service_control.FilterConfig"
+                        "@type": "type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig"
                       }
                     }
                   ]
@@ -388,9 +388,9 @@ var validConfigInputHTTPSListener = []byte(`{
                   "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "http_filters": [
                     {
-                      "name": "envoy.filters.http.service_control",
+                      "name": "com.google.espv2.filters.http.service_control",
                       "typed_config": {
-                        "@type": "type.googleapis.com/google.api.envoy.http.service_control.FilterConfig"
+                        "@type": "type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig"
                       }
                     }
                   ]

@@ -22,7 +22,7 @@ namespace envoy {
 namespace http_filters {
 namespace service_control {
 
-using ::google::api::envoy::http::service_control::FilterConfig;
+using ::espv2::api::envoy::http::service_control::FilterConfig;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
@@ -197,7 +197,7 @@ void ClientCache::collectCallStatus(CallStatusStats& filter_stats,
 }
 
 ClientCache::ClientCache(
-    const ::google::api::envoy::http::service_control::Service& config,
+    const ::espv2::api::envoy::http::service_control::Service& config,
     const FilterConfig& filter_config, ServiceControlFilterStats& filter_stats,
     Envoy::Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
     Envoy::Event::Dispatcher& dispatcher,

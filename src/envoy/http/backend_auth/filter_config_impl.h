@@ -23,24 +23,24 @@ namespace envoy {
 namespace http_filters {
 namespace backend_auth {
 using ConfigParserCreateFunc = std::function<FilterConfigParserPtr(
-    const ::google::api::envoy::http::backend_auth::FilterConfig& proto_config,
+    const ::espv2::api::envoy::http::backend_auth::FilterConfig& proto_config,
     Envoy::Server::Configuration::FactoryContext& context)>;
 // The Envoy filter config for ESPv2 backend auth filter.
 class FilterConfigImpl
     : public FilterConfig,
       public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
-  FilterConfigImpl(const ::google::api::envoy::http::backend_auth::FilterConfig&
-                       proto_config,
-                   const std::string& stats_prefix,
-                   Envoy::Server::Configuration::FactoryContext& context)
+  FilterConfigImpl(
+      const ::espv2::api::envoy::http::backend_auth::FilterConfig& proto_config,
+      const std::string& stats_prefix,
+      Envoy::Server::Configuration::FactoryContext& context)
       : proto_config_(proto_config),
         stats_(generateStats(stats_prefix, context.scope())),
         token_subscriber_factory_(context),
         config_parser_(std::make_unique<FilterConfigParserImpl>(
             proto_config_, context, token_subscriber_factory_)) {}
 
-  const ::google::api::envoy::http::backend_auth::FilterConfig& config() const {
+  const ::espv2::api::envoy::http::backend_auth::FilterConfig& config() const {
     return proto_config_;
   }
 
@@ -57,7 +57,7 @@ class FilterConfigImpl
         POOL_COUNTER_PREFIX(scope, final_prefix))};
   }
 
-  ::google::api::envoy::http::backend_auth::FilterConfig proto_config_;
+  ::espv2::api::envoy::http::backend_auth::FilterConfig proto_config_;
   FilterStats stats_;
   const token::TokenSubscriberFactoryImpl token_subscriber_factory_;
   FilterConfigParserPtr config_parser_;

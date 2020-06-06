@@ -34,15 +34,14 @@ class ServiceControlFilterConfig
       public ServiceControlFilterStatBase {
  public:
   ServiceControlFilterConfig(
-      const ::google::api::envoy::http::service_control::FilterConfig&
+      const ::espv2::api::envoy::http::service_control::FilterConfig&
           proto_config,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context)
       : ServiceControlFilterStatBase(stats_prefix, context.scope()),
-        proto_config_(
-            std::make_shared<
-                ::google::api::envoy::http::service_control::FilterConfig>(
-                proto_config)),
+        proto_config_(std::make_shared<
+                      ::espv2::api::envoy::http::service_control::FilterConfig>(
+            proto_config)),
         call_factory_(proto_config_, stats(), context),
         config_parser_(*proto_config_, call_factory_),
         handler_factory_(context.random(), config_parser_,

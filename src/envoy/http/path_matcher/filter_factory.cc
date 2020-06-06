@@ -25,21 +25,21 @@ namespace envoy {
 namespace http_filters {
 namespace path_matcher {
 
-constexpr char kPathMatcherFilterName[] = "envoy.filters.http.path_matcher";
+constexpr char kPathMatcherFilterName[] =
+    "com.google.espv2.filters.http.path_matcher";
 
 /**
  * Config registration for ESPv2 path matcher filter.
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::google::api::envoy::http::path_matcher::FilterConfig> {
+          ::espv2::api::envoy::http::path_matcher::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(kPathMatcherFilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::google::api::envoy::http::path_matcher::FilterConfig&
-          proto_config,
+      const ::espv2::api::envoy::http::path_matcher::FilterConfig& proto_config,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context) override {
     auto filter_config =

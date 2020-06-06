@@ -196,9 +196,9 @@
                   },
                   "httpFilters": [
                     {
-                      "name": "envoy.filters.http.path_matcher",
+                      "name": "com.google.espv2.filters.http.path_matcher",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                        "@type": "type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
                         "rules": [
                           {
                             "operation": "test.grpc.Test.Cork",
@@ -419,7 +419,7 @@
                       "typedConfig": {
                         "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
                         "filterStateRules": {
-                          "name": "envoy.filters.http.path_matcher.operation",
+                          "name": "com.google.espv2.filters.http.path_matcher.operation",
                           "requires": {
                             "test.grpc.Test.EchoStream": {
                               "providerName": "test_jwk"
@@ -460,9 +460,9 @@
                       }
                     },
                     {
-                      "name": "envoy.filters.http.service_control",
+                      "name": "com.google.espv2.filters.http.service_control",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/google.api.envoy.http.service_control.FilterConfig",
+                        "@type": "type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig",
                         "generatedHeaderPrefix": "X-Endpoint-",
                         "imdsToken": {
                           "cluster": "metadata-cluster",
@@ -1067,9 +1067,9 @@
                       }
                     },
                     {
-                      "name": "envoy.filters.http.backend_auth",
+                      "name": "com.google.espv2.filters.http.backend_auth",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/google.api.envoy.http.backend_auth.FilterConfig",
+                        "@type": "type.googleapis.com/espv2.api.envoy.http.backend_auth.FilterConfig",
                         "imdsToken": {
                           "cluster": "metadata-cluster",
                           "timeout": "5s",

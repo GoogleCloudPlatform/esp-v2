@@ -114,9 +114,9 @@
                   },
                   "httpFilters": [
                     {
-                      "name": "envoy.filters.http.path_matcher",
+                      "name": "com.google.espv2.filters.http.path_matcher",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                        "@type": "type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
                         "rules": [
                           {
                             "operation": "1.bookstore_endpoints_apiproxy_231719_cloud_goog.CreateShelf",
@@ -162,9 +162,9 @@
                       }
                     },
                     {
-                      "name": "envoy.filters.http.service_control",
+                      "name": "com.google.espv2.filters.http.service_control",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/google.api.envoy.http.service_control.FilterConfig",
+                        "@type": "type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig",
                         "generatedHeaderPrefix": "X-Endpoint-",
                         "imdsToken": {
                           "cluster": "metadata-cluster",

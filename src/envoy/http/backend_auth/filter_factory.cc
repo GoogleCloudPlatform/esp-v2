@@ -25,21 +25,20 @@ namespace envoy {
 namespace http_filters {
 namespace backend_auth {
 
-const std::string FilterName = "envoy.filters.http.backend_auth";
+const std::string FilterName = "com.google.espv2.filters.http.backend_auth";
 
 /**
  * Config registration for ESPv2 backend auth filter.
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::google::api::envoy::http::backend_auth::FilterConfig> {
+          ::espv2::api::envoy::http::backend_auth::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(FilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::google::api::envoy::http::backend_auth::FilterConfig&
-          proto_config,
+      const ::espv2::api::envoy::http::backend_auth::FilterConfig& proto_config,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context) override {
     auto filter_config =

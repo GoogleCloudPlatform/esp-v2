@@ -9,7 +9,7 @@ import "validate/validate.proto";
 message PathMatcherFilterInput {
 
   // The fuzzed filter config for this test.
-  google.api.envoy.http.path_matcher.FilterConfig config = 1 [(validate.rules).message.required = true];
+  espv2.api.envoy.http.path_matcher.FilterConfig config = 1 [(validate.rules).message.required = true];
 
   // The user's HTTP request to the filter.
   test.fuzz.HttpData downstream_request = 3 [(validate.rules).message.required = true];

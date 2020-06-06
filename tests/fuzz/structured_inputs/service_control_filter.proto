@@ -9,7 +9,7 @@ import "validate/validate.proto";
 message ServiceControlFilterInput {
 
   // Filter config.
-  google.api.envoy.http.service_control.FilterConfig config = 1 [(validate.rules).message.required = true];
+  espv2.api.envoy.http.service_control.FilterConfig config = 1 [(validate.rules).message.required = true];
 
   // The user's HTTP request to the filter.
   test.fuzz.HttpData downstream_request = 2 [(validate.rules).message.required = true];

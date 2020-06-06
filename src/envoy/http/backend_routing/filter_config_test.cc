@@ -35,7 +35,7 @@ namespace {
 class BackendRoutingConfigTest : public ::testing::Test {
  protected:
   void validateConfig(absl::string_view filter_config) {
-    google::api::envoy::http::backend_routing::FilterConfig proto_config;
+    ::espv2::api::envoy::http::backend_routing::FilterConfig proto_config;
     ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
         std::string(filter_config), &proto_config));
     ASSERT_GT(proto_config.rules_size(), 0);

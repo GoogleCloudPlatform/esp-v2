@@ -24,20 +24,20 @@ namespace envoy {
 namespace http_filters {
 namespace backend_routing {
 
-const std::string FilterName = "envoy.filters.http.backend_routing";
+const std::string FilterName = "com.google.espv2.filters.http.backend_routing";
 
 /**
  * Config registration for ESPv2 backend routing filter.
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::google::api::envoy::http::backend_routing::FilterConfig> {
+          ::espv2::api::envoy::http::backend_routing::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(FilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::google::api::envoy::http::backend_routing::FilterConfig&
+      const ::espv2::api::envoy::http::backend_routing::FilterConfig&
           proto_config,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context) override {

@@ -114,9 +114,9 @@
                   },
                   "httpFilters": [
                     {
-                      "name": "envoy.filters.http.path_matcher",
+                      "name": "com.google.espv2.filters.http.path_matcher",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/google.api.envoy.http.path_matcher.FilterConfig",
+                        "@type": "type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
                         "rules": [
                           {
                             "operation": "1.path_matcher_endpoints_apiproxy_231719_cloud_goog.GetShelf",

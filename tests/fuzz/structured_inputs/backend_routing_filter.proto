@@ -9,7 +9,7 @@ import "validate/validate.proto";
 message BackendRoutingFilterInput {
 
   // The fuzzed filter config for this test.
-  google.api.envoy.http.backend_routing.FilterConfig config = 1 [(validate.rules).message.required = true];
+  espv2.api.envoy.http.backend_routing.FilterConfig config = 1 [(validate.rules).message.required = true];
 
   // The query params extracted by the path matcher filter for variable bindings in the backend rule.
   string binding_query_params = 2 [(validate.rules).string = {
