@@ -80,7 +80,7 @@ message Service {
 
   // Minimum amount of time (milliseconds) between sending intermediate
   // reports on a stream.
-  uint64 min_stream_report_interval_ms = 8 [(validate.rules).uint64.gte = 100];
+  uint64 min_stream_report_interval_ms = 8;
 
   // The array of jwt payloads demanded to be logged
   repeated string log_jwt_payloads = 9;
