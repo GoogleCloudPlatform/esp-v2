@@ -80,7 +80,7 @@ message Service {
 
   // Minimum amount of time (milliseconds) between sending intermediate
   // reports on a stream.
-  uint64 min_stream_report_interval_ms = 8;
+  uint64 min_stream_report_interval_ms = 8 [(validate.rules).uint64.gte = 100];
 
   // The array of jwt payloads demanded to be logged
   repeated string log_jwt_payloads = 9;
@@ -131,8 +131,7 @@ message FilterConfig {
 
   // The prefix added to generated headers
   string generated_header_prefix = 9 [(validate.rules).string = {
-    well_known_regex: HTTP_HEADER_VALUE,
-    strict: false,
+    well_known_regex: HTTP_HEADER_NAME,
     min_len: 1,
   }];
 }

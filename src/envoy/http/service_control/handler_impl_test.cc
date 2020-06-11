@@ -123,8 +123,8 @@ requirements {
     cost: 2
   }
   metric_costs: {
-    name: "metric_name_1"
-    cost: 2
+    name: "metric_name_2"
+    cost: 4
   }
 }
 requirements {
@@ -224,6 +224,13 @@ class HandlerTest : public ::testing::Test {
               << want << "'" << std::endl;                                    \
     return false;                                                             \
   }
+#define MATCH_VECTOR(name)                              \
+  if (arg.name != expect.name) {                        \
+    std::cerr << "MATCH fails for vector " << #name;    \
+    std::cerr << "\ngot:  size=" << arg.name.size();    \
+    std::cerr << "\nwant: size=" << expect.name.size(); \
+    return false;                                       \
+  }
 
 MATCHER_P(MatchesCheckInfo, expect, Envoy::EMPTY_STRING) {
   // These must match. If not provided in expect, arg should be empty too
@@ -244,8 +251,7 @@ MATCHER_P(MatchesCheckInfo, expect, Envoy::EMPTY_STRING) {
 
 MATCHER_P(MatchesQuotaInfo, expect, Envoy::EMPTY_STRING) {
   MATCH(method_name);
-  //  if (arg.metric_cost_vector != expect.metric_cost_vector) return false;
-  MATCH(metric_cost_vector);
+  MATCH_VECTOR(metric_cost_vector);
   MATCH(api_key);
 
   MATCH2(operation_id, "test-uuid");
@@ -564,11 +570,10 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
         on_done(Status::OK, response_info);
         return nullptr;
       }));
-  QuotaRequestInfo expected_quota_info;
+  QuotaRequestInfo expected_quota_info{
+      cfg_parser_->find_requirement("get_header_key_quota")->metric_costs()};
   expected_quota_info.method_name = "get_header_key_quota";
   expected_quota_info.api_key = "foobar";
-  expected_quota_info.metric_cost_vector =
-      cfg_parser_->FindRequirement("get_header_key_quota")->metric_costs();
 
   EXPECT_CALL(*mock_call_, callQuota(MatchesQuotaInfo(expected_quota_info), _))
       .WillOnce(Invoke([](const QuotaRequestInfo&, QuotaDoneFunc on_done) {
@@ -596,12 +601,11 @@ TEST_F(HandlerTest, HandlerCallQuotaWithoutCheck) {
   // Check is not called.
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
 
-  QuotaRequestInfo expected_quota_info;
+  QuotaRequestInfo expected_quota_info{
+      cfg_parser_->find_requirement("call_quota_without_check")
+          ->metric_costs()};
   expected_quota_info.method_name = "call_quota_without_check";
   expected_quota_info.api_key = "foobar";
-  expected_quota_info.metric_cost_vector =
-      cfg_parser_->FindRequirement("call_quota_without_check")->metric_costs();
-
   EXPECT_CALL(*mock_call_, callQuota(MatchesQuotaInfo(expected_quota_info), _))
       .WillOnce(Invoke([](const QuotaRequestInfo&, QuotaDoneFunc on_done) {
         on_done(Status::OK);
@@ -677,11 +681,10 @@ TEST_F(HandlerTest, HandlerFailQuotaSync) {
         on_done(Status::OK, response_info);
         return nullptr;
       }));
-  QuotaRequestInfo expected_quota_info;
+  QuotaRequestInfo expected_quota_info{
+      cfg_parser_->find_requirement("get_header_key_quota")->metric_costs()};
   expected_quota_info.method_name = "get_header_key_quota";
   expected_quota_info.api_key = "foobar";
-  expected_quota_info.metric_cost_vector =
-      cfg_parser_->FindRequirement("get_header_key_quota")->metric_costs();
 
   Status bad_status = Status(Code::RESOURCE_EXHAUSTED,
                              "test bad status returned from service control");
@@ -763,11 +766,10 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
         return nullptr;
       }));
 
-  QuotaRequestInfo expected_quota_info;
+  QuotaRequestInfo expected_quota_info{
+      cfg_parser_->find_requirement("get_header_key_quota")->metric_costs()};
   expected_quota_info.method_name = "get_header_key_quota";
   expected_quota_info.api_key = "foobar";
-  expected_quota_info.metric_cost_vector =
-      cfg_parser_->FindRequirement("get_header_key_quota")->metric_costs();
   // Store the done callback
   QuotaDoneFunc stored_on_done;
   EXPECT_CALL(*mock_call_, callQuota(MatchesQuotaInfo(expected_quota_info), _))
@@ -862,11 +864,10 @@ TEST_F(HandlerTest, HandlerFailQuotaAsync) {
         return nullptr;
       }));
 
-  QuotaRequestInfo expected_quota_info;
+  QuotaRequestInfo expected_quota_info{
+      cfg_parser_->find_requirement("get_header_key_quota")->metric_costs()};
   expected_quota_info.method_name = "get_header_key_quota";
   expected_quota_info.api_key = "foobar";
-  expected_quota_info.metric_cost_vector =
-      cfg_parser_->FindRequirement("get_header_key_quota")->metric_costs();
   // Store the done callback
   QuotaDoneFunc stored_on_done;
   EXPECT_CALL(*mock_call_, callQuota(MatchesQuotaInfo(expected_quota_info), _))

@@ -64,6 +64,7 @@ class RequirementContext {
       const ::google::api::envoy::http::service_control::Requirement& config,
       const ServiceContext& service_ctx)
       : config_(config), service_ctx_(service_ctx) {
+    metric_costs_.reserve(config.metric_costs().size());
     for (const auto& metric_cost : config.metric_costs()) {
       metric_costs_.push_back(
           std::make_pair(metric_cost.name(), metric_cost.cost()));
@@ -77,8 +78,8 @@ class RequirementContext {
 
   const ServiceContext& service_ctx() const { return service_ctx_; }
 
-  const std::vector<std::pair<std::string, int>>* metric_costs() const {
-    return &metric_costs_;
+  const std::vector<std::pair<std::string, int>>& metric_costs() const {
+    return metric_costs_;
   }
 
  private:
@@ -98,7 +99,8 @@ class FilterConfigParser {
       const {
     return config_;
   }
-  const RequirementContext* FindRequirement(absl::string_view operation) const {
+  const RequirementContext* find_requirement(
+      absl::string_view operation) const {
     const auto requirement_it = requirements_map_.find(operation);
     if (requirement_it == requirements_map_.end()) {
       return nullptr;
