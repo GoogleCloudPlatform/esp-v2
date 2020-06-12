@@ -118,7 +118,7 @@ TEST_F(BackendRoutingConfigTest, PathFragmentIdentifierThrows) {
     rules {
       operation: "invalid-path-prefix-operation"
       path_translation: APPEND_PATH_TO_ADDRESS
-      path_prefix: "/test/invalid#fragement"
+      path_prefix: "/test/invalid#fragment"
     }
   )"),
                           Envoy::ProtoValidationException,
