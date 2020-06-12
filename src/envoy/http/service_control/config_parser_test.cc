@@ -131,6 +131,24 @@ requirements {
                           "Invalid service name");
 }
 
+TEST(ConfigParserTest, InvalidMinReportInterval) {
+  FilterConfig config;
+  const char kFilterInvalidService[] = R"(
+services {
+  service_name: "echo"
+  min_stream_report_interval_ms: 50
+}
+requirements {
+  service_name: "echo"
+  operation_name: "get_foo"
+})";
+  ASSERT_TRUE(TextFormat::ParseFromString(kFilterInvalidService, &config));
+  testing::NiceMock<MockServiceControlCallFactory> mock_factory;
+  EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config, mock_factory),
+                          Envoy::ProtoValidationException,
+                          "min_stream_report_interval_ms");
+}
+
 }  // namespace
 }  // namespace service_control
 }  // namespace http_filters
