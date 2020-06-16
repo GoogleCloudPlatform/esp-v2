@@ -25,7 +25,7 @@
     "rules": [
       {
         "address": "https://http-bookstore-abc123456-uc.a.run.app/shelves",
-        "deadline": 5.0,
+        "deadline": 7.0,
         "protocol": "h2",
         "jwtAudience": "ESPv2",
         "pathTranslation": "APPEND_PATH_TO_ADDRESS",
@@ -33,7 +33,7 @@
       },
       {
         "address": "https://http-bookstore-edf123456-uc.a.run.app/shelves",
-        "deadline": 30.0,
+        "deadline": 23.0,
         "protocol": "http/1.1",
         "disableAuth": true,
         "pathTranslation": "CONSTANT_ADDRESS",

@@ -767,7 +767,7 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 			ImdsToken: &commonpb.HttpUri{
 				Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.MetadataURL, util.IdentityTokenSuffix),
 				Cluster: util.MetadataServerClusterName,
-				Timeout: ptypes.DurationProto(util.DefaultImdsDeadline),
+				Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),
 			},
 		}
 	}

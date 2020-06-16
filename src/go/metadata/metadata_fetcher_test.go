@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/proto"
 
@@ -314,4 +315,20 @@ func TestFetchGCPAttributes(t *testing.T) {
 		}
 	}
 
+}
+
+func TestMetadataFetcherTimeout(t *testing.T) {
+	opts := options.DefaultCommonOptions()
+	opts.HttpRequestTimeout = 1 * time.Second
+	mf := NewMetadataFetcher(opts)
+	server := util.InitMockServer(`{}`)
+	_, err := mf.getMetadata(server.GetURL())
+	if err != nil {
+		t.Errorf("TestMetadataFetcherTimeout: the metadata fetcher should get the config but get the error %v", err)
+	}
+	server.SetSleepTime(2 * opts.HttpRequestTimeout)
+	_, err = mf.getMetadata(server.GetURL())
+	if err == nil || !strings.Contains(err.Error(), "Client.Timeout exceeded while awaiting headers") {
+		t.Errorf("TestMetadataFetcherTimeout: the metadata fetcher get the config but should get timeout error")
+	}
 }

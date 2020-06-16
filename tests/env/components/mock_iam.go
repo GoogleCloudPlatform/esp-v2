@@ -21,6 +21,8 @@ import (
 	"net/http/httptest"
 	"regexp"
 	"time"
+
+	"github.com/golang/glog"
 )
 
 // MockIamServer mocks the Metadata server.
@@ -47,6 +49,7 @@ func NewIamMetadata(pathResp map[string]string, wantNumFails int, respTime time.
 		retryHandler: NewRetryHandler(wantNumFails),
 	}
 	m.s = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		glog.Infof("Fake IAM handling request: %v %v", r.Method, r.URL)
 		w.Header().Set("Content-Type", "application/json")
 
 		// Test timeouts and retries.

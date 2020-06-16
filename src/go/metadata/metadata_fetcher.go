@@ -61,7 +61,7 @@ var (
 	NewMetadataFetcher = func(opts options.CommonOptions) *MetadataFetcher {
 		return &MetadataFetcher{
 			client: http.Client{
-				Timeout: util.DefaultImdsDeadline,
+				Timeout: opts.HttpRequestTimeout,
 			},
 			baseUrl: opts.MetadataURL,
 			timeNow: time.Now,

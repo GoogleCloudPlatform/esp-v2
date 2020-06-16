@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
+	"github.com/golang/glog"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
@@ -180,6 +181,14 @@ func TestBackendAuthWithIamIdTokenTimeouts(t *testing.T) {
 			iamResponseTime:    time.Second * 1,
 			wantResp:           `{"Authorization": "Bearer id-token-for-constant", "RequestURI": "/bearertoken/constant?foo=42"}`,
 		},
+		{
+			// Even though the p99 latency applies to IMDS, it's easier to test with IAM. Same code / config path.
+			desc:            "Envoy is healthy because the default timeout is enough time for IMDS p99 latency (b/148454048).",
+			method:          "GET",
+			path:            "/bearertoken/constant/42",
+			iamResponseTime: time.Second * 20,
+			wantResp:        `{"Authorization": "Bearer id-token-for-constant", "RequestURI": "/bearertoken/constant?foo=42"}`,
+		},
 	}
 
 	for _, tc := range testData {
@@ -201,7 +210,9 @@ func TestBackendAuthWithIamIdTokenTimeouts(t *testing.T) {
 
 			// Setup ESPv2 with the http request timeout (used for making calls to IAM).
 			args := utils.CommonArgs()
-			args = append(args, fmt.Sprintf("--http_request_timeout_s=%v", tc.httpRequestTimeout.Seconds()))
+			if tc.httpRequestTimeout != 0 {
+				args = append(args, fmt.Sprintf("--http_request_timeout_s=%v", tc.httpRequestTimeout.Seconds()))
+			}
 
 			defer s.TearDown(t)
 			if err := s.Setup(args); err != nil {
@@ -209,7 +220,9 @@ func TestBackendAuthWithIamIdTokenTimeouts(t *testing.T) {
 			}
 
 			// Sleep some time to allow startup (we skip health checks).
-			time.Sleep(tc.httpRequestTimeout * 3)
+			sleepTime := tc.httpRequestTimeout + tc.iamResponseTime + (6 * time.Second)
+			glog.Infof("Sleeping %v", sleepTime)
+			time.Sleep(sleepTime)
 
 			// Make the request.
 			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)

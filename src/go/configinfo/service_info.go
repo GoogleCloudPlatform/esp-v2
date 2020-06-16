@@ -252,7 +252,7 @@ func (s *ServiceInfo) processAccessToken() {
 			RemoteToken: &commonpb.HttpUri{
 				Uri:     fmt.Sprintf("%s%s", s.Options.MetadataURL, util.AccessTokenSuffix),
 				Cluster: util.MetadataServerClusterName,
-				Timeout: ptypes.DurationProto(util.DefaultImdsDeadline),
+				Timeout: ptypes.DurationProto(s.Options.HttpRequestTimeout),
 			},
 		},
 	}

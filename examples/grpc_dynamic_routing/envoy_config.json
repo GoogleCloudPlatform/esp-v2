@@ -451,7 +451,7 @@
                               "cacheDuration": "300s",
                               "httpUri": {
                                 "cluster": "www.googleapis.com:443",
-                                "timeout": "5s",
+                                "timeout": "30s",
                                 "uri": "https://www.googleapis.com/service_accounts/v1/jwk/245521401045-compute@developer.gserviceaccount.com"
                               }
                             }
@@ -503,7 +503,7 @@
                         },
                         "serviceControlUri": {
                           "cluster": "service-control-cluster",
-                          "timeout": "5s",
+                          "timeout": "30s",
                           "uri": "https://servicecontrol.googleapis.com/v1/services/"
                         },
                         "services": [

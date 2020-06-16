@@ -21,6 +21,7 @@ import (
 	"sync"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/golang/glog"
 )
 
 const (
@@ -68,6 +69,7 @@ func NewMockMetadata(pathResp map[string]string, wantNumFails int) *MockMetadata
 		retryHandler: NewRetryHandler(wantNumFails),
 	}
 	m.s = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		glog.Infof("Fake IMDS handling request: %v %v", r.Method, r.URL)
 		w.Header().Set("Content-Type", "application/json")
 
 		if m.retryHandler.handleRetryExceptFirst(w) {

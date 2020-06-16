@@ -316,7 +316,7 @@ func TestJwtAuthnFilter(t *testing.T) {
                     "cacheDuration": "300s",
                     "httpUri": {
                         "cluster": "fake-jwks.com:443",
-                        "timeout": "5s",
+                        "timeout": "30s",
                         "uri": "https://fake-jwks.com"
                     }
                 }
@@ -390,7 +390,7 @@ func TestJwtAuthnFilter(t *testing.T) {
                     "cacheDuration": "300s",
                     "httpUri": {
                         "cluster": "fake-jwks.com:443",
-                        "timeout": "5s",
+                        "timeout": "30s",
                         "uri": "https://fake-jwks.com"
                     }
                 }
@@ -1030,7 +1030,7 @@ func TestBackendAuthFilter(t *testing.T) {
          },
          "iamUri":{
             "cluster":"iam-cluster",
-            "timeout":"5s",
+            "timeout":"30s",
             "uri":"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/service-account@google.com:generateIdToken"
          },
          "delegates":["delegate_foo","delegate_bar","delegate_baz"],

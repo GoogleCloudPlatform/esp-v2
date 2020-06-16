@@ -279,7 +279,7 @@ var (
                                     "cacheDuration":"300s",
                                     "httpUri":{
                                        "cluster":"$JWKSURI:443",
-                                       "timeout":"5s",
+                                       "timeout":"30s",
                                        "uri":"$JWKSURI"
                                     }
                                  }
@@ -491,7 +491,7 @@ var (
                                     "cacheDuration":"300s",
                                     "httpUri":{
                                        "cluster":"$JWKSURI:443",
-                                       "timeout":"5s",
+                                       "timeout":"30s",
                                        "uri":"$JWKSURI"
                                     }
                                  }
@@ -710,7 +710,7 @@ var (
                                     "cacheDuration":"300s",
                                     "httpUri":{
                                        "cluster":"$JWKSURI:443",
-                                       "timeout":"5s",
+                                       "timeout":"30s",
                                        "uri":"$JWKSURI"
                                     }
                                  }
@@ -739,7 +739,7 @@ var (
                                     "cacheDuration":"300s",
                                     "httpUri":{
                                        "cluster":"$JWKSURI:443",
-                                       "timeout":"5s",
+                                       "timeout":"30s",
                                        "uri":"$JWKSURI"
                                     }
                                  }
@@ -913,7 +913,7 @@ var (
                            "@type":"type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig",
                            "imdsToken":{
                               "cluster":"metadata-cluster",
-                              "timeout":"5s",
+                              "timeout":"30s",
                               "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
                            },
                            "gcpAttributes":{
@@ -939,7 +939,7 @@ var (
                            },
                            "serviceControlUri":{
                               "cluster":"service-control-cluster",
-                              "timeout":"5s",
+                              "timeout":"30s",
                               "uri":"https://servicecontrol.googleapis.com/v1/services/"
                            },
                            "services":[
@@ -1160,7 +1160,7 @@ var (
                                     "cacheDuration":"300s",
                                     "httpUri":{
                                        "cluster":"$JWKSURI:443",
-                                       "timeout":"5s",
+                                       "timeout":"30s",
                                        "uri":"$JWKSURI"
                                     }
                                  }
@@ -1287,7 +1287,7 @@ var (
                            "@type":"type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig",
                            "imdsToken":{
                               "cluster":"metadata-cluster",
-                              "timeout":"5s",
+                              "timeout":"30s",
                               "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
                            },
                            "gcpAttributes":{
@@ -1314,7 +1314,7 @@ var (
                            },
                            "serviceControlUri":{
                               "cluster":"service-control-cluster",
-                              "timeout":"5s",
+                              "timeout":"30s",
                               "uri":"https://servicecontrol.googleapis.com/v1/services/"
                            },
                            "services":[

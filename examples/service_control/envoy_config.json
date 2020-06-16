@@ -199,7 +199,7 @@
                         },
                         "serviceControlUri": {
                           "cluster": "service-control-cluster",
-                          "timeout": "5s",
+                          "timeout": "30s",
                           "uri": "https://servicecontrol.googleapis.com/v1/services/"
                         },
                         "services": [

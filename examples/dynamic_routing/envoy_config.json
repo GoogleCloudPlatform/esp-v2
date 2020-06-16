@@ -306,7 +306,7 @@
                             "route": {
                               "cluster": "http-bookstore-edf123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-edf123456-uc.a.run.app",
-                              "timeout": "30s"
+                              "timeout": "23s"
                             }
                           },
                           {
@@ -322,7 +322,7 @@
                             "route": {
                               "cluster": "http-bookstore-abc123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-abc123456-uc.a.run.app",
-                              "timeout": "5s"
+                              "timeout": "7s"
                             }
                           }
                         ]
