@@ -44,9 +44,17 @@ class BackendAuthFilterTest : public ::testing::Test {
     mock_filter_config_parser_ =
         std::make_shared<NiceMock<MockFilterConfigParser>>();
     mock_filter_config_ = std::make_shared<NiceMock<MockFilterConfig>>();
+
+    EXPECT_CALL(*mock_filter_config_, stats)
+        .WillRepeatedly(testing::ReturnRef(stats_));
+
     filter_ = std::make_unique<Filter>(mock_filter_config_);
     filter_->setDecoderFilterCallbacks(mock_decoder_callbacks_);
   }
+
+  testing::NiceMock<Envoy::Stats::MockIsolatedStatsStore> scope_;
+  FilterStats stats_{ALL_BACKEND_AUTH_FILTER_STATS(
+      POOL_COUNTER_PREFIX(scope_, "backend_auth."))};
 
   std::shared_ptr<MockFilterConfigParser> mock_filter_config_parser_;
   std::shared_ptr<MockFilterConfig> mock_filter_config_;
@@ -55,19 +63,30 @@ class BackendAuthFilterTest : public ::testing::Test {
   std::unique_ptr<Filter> filter_;
 };
 
-TEST_F(BackendAuthFilterTest, NoOperationName) {
+TEST_F(BackendAuthFilterTest, MissingOperationNameRejected) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
 
   EXPECT_CALL(*mock_filter_config_, cfg_parser).Times(0);
+  EXPECT_CALL(
+      mock_decoder_callbacks_.stream_info_,
+      setResponseFlag(
+          Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
 
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
 
-  ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+  ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::StopIteration);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(scope_,
+                                      "backend_auth.denied_by_no_operation");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
 }
 
-TEST_F(BackendAuthFilterTest, NotHaveAudience) {
+TEST_F(BackendAuthFilterTest, MissingAudienceAllowed) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
   utils::setStringFilterState(
@@ -86,9 +105,16 @@ TEST_F(BackendAuthFilterTest, NotHaveAudience) {
       filter_->decodeHeaders(headers, false);
 
   ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(
+          scope_, "backend_auth.allowed_by_no_configured_rules");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
 }
 
-TEST_F(BackendAuthFilterTest, HasAudienceButGetsEmptyToken) {
+TEST_F(BackendAuthFilterTest, HasAudienceButGetsEmptyTokenRejected) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
   utils::setStringFilterState(
@@ -112,6 +138,13 @@ TEST_F(BackendAuthFilterTest, HasAudienceButGetsEmptyToken) {
       filter_->decodeHeaders(headers, false);
 
   ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::StopIteration);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(scope_,
+                                      "backend_auth.denied_by_no_token");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
 }
 
 TEST_F(BackendAuthFilterTest, SucceedAppendToken) {
@@ -120,15 +153,9 @@ TEST_F(BackendAuthFilterTest, SucceedAppendToken) {
   utils::setStringFilterState(
       *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
       "operation-with-audience");
-  testing::NiceMock<Envoy::Stats::MockIsolatedStatsStore> scope;
-  const std::string prefix = Envoy::EMPTY_STRING;
-  FilterStats filter_stats{
-      ALL_BACKEND_AUTH_FILTER_STATS(POOL_COUNTER_PREFIX(scope, prefix))};
 
   EXPECT_CALL(*mock_filter_config_, cfg_parser)
       .WillRepeatedly(testing::ReturnRef(*mock_filter_config_parser_));
-  EXPECT_CALL(*mock_filter_config_, stats)
-      .WillRepeatedly(testing::ReturnRef(filter_stats));
 
   EXPECT_CALL(*mock_filter_config_parser_, getAudience)
       .Times(1)
@@ -145,6 +172,12 @@ TEST_F(BackendAuthFilterTest, SucceedAppendToken) {
             "Bearer this-is-token");
   EXPECT_EQ(headers.get(kXForwardedAuthorization), nullptr);
   EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(scope_, "backend_auth.token_added");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
 }
 
 TEST_F(BackendAuthFilterTest, SucceedTokenCopied) {
@@ -155,15 +188,9 @@ TEST_F(BackendAuthFilterTest, SucceedTokenCopied) {
   utils::setStringFilterState(
       *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
       "operation-with-audience");
-  testing::NiceMock<Envoy::Stats::MockIsolatedStatsStore> scope;
-  const std::string prefix = Envoy::EMPTY_STRING;
-  FilterStats filter_stats{
-      ALL_BACKEND_AUTH_FILTER_STATS(POOL_COUNTER_PREFIX(scope, prefix))};
 
   EXPECT_CALL(*mock_filter_config_, cfg_parser)
       .WillRepeatedly(testing::ReturnRef(*mock_filter_config_parser_));
-  EXPECT_CALL(*mock_filter_config_, stats)
-      .WillRepeatedly(testing::ReturnRef(filter_stats));
 
   EXPECT_CALL(*mock_filter_config_parser_, getAudience)
       .Times(1)
@@ -181,6 +208,12 @@ TEST_F(BackendAuthFilterTest, SucceedTokenCopied) {
   EXPECT_EQ(headers.get(kXForwardedAuthorization)->value().getStringView(),
             "Bearer origin-token");
   EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(scope_, "backend_auth.token_added");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
 }
 
 }  // namespace backend_auth

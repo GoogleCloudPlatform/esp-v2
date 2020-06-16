@@ -16,8 +16,7 @@ package testdata
 
 var (
 	// These resources must be ordered in alphabetic order by name
-	FakeWantedClustersForDynamicRouting = []string{
-		`
+	FakeWantedClustersForDynamicRouting = []string{`
 {
   "name": "echo-api.endpoints.cloudesf-testing.cloud.goog_local",
   "type": "LOGICAL_DNS",

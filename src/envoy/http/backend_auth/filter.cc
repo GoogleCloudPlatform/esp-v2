@@ -36,8 +36,11 @@ namespace {
 constexpr char kBearer[] = "Bearer ";
 
 struct RcDetailsValues {
-  // The request is rejected due to missing backend auth token.
+  // The request is rejected due to missing backend auth token in internal
+  // filter config.
   const std::string MissingBackendToken = "missing_backend_token";
+  // The request is rejected due to missing operation in internal filter state.
+  const std::string MissingOperation = "missing_operation";
 };
 using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
 
@@ -53,8 +56,11 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   // NOTE: this shouldn't happen in practice because Path Matcher filter would
   // have already rejected the request.
   if (operation.empty()) {
-    ENVOY_LOG(debug, "No operation found from DynamicMetadata");
-    return FilterHeadersStatus::Continue;
+    config_->stats().denied_by_no_operation_.inc();
+    rejectRequest(Envoy::Http::Code::InternalServerError,
+                  "No operation found from DynamicMetadata",
+                  RcDetails::get().MissingOperation);
+    return FilterHeadersStatus::StopIteration;
   }
 
   ENVOY_LOG(debug, "Found operation: {}", operation);
@@ -62,17 +68,16 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   if (audience.empty()) {
     // This filter does not need to set a JWT Token for this operation.
     // If the request already has an Authorization header, it will be preserved.
+    config_->stats().allowed_by_no_configured_rules_.inc();
     return FilterHeadersStatus::Continue;
   }
 
   const TokenSharedPtr jwt_token = config_->cfg_parser().getJwtToken(audience);
   if (!jwt_token) {
-    ENVOY_LOG(debug, "Token not found for audience: {}", audience);
-    decoder_callbacks_->sendLocalReply(Envoy::Http::Code::InternalServerError,
-                                       "missing tokens", nullptr, absl::nullopt,
-                                       RcDetails::get().MissingBackendToken);
-    decoder_callbacks_->streamInfo().setResponseFlag(
-        Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService);
+    config_->stats().denied_by_no_token_.inc();
+    rejectRequest(Envoy::Http::Code::InternalServerError,
+                  absl::StrCat("Token not found for audience: ", audience),
+                  RcDetails::get().MissingBackendToken);
     return FilterHeadersStatus::StopIteration;
   }
 
@@ -83,6 +88,15 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   headers.setAuthorization(kBearer + *jwt_token);
   config_->stats().token_added_.inc();
   return FilterHeadersStatus::Continue;
+}
+
+void Filter::rejectRequest(Envoy::Http::Code code, absl::string_view error_msg,
+                           absl::string_view details) {
+  ENVOY_LOG(debug, "{}", error_msg);
+  decoder_callbacks_->sendLocalReply(code, error_msg, nullptr, absl::nullopt,
+                                     details);
+  decoder_callbacks_->streamInfo().setResponseFlag(
+      Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService);
 }
 
 }  // namespace backend_auth
