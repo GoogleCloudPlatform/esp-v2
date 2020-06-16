@@ -37,6 +37,7 @@ const (
 	TestBackendAuthUsingIamIdTokenWithDelegates
 	TestBackendAuthWithIamIdToken
 	TestBackendAuthWithIamIdTokenRetries
+	TestBackendAuthWithIamIdTokenTimeouts
 	TestBackendAuthWithImdsIdToken
 	TestBackendAuthWithImdsIdTokenRetries
 	TestBackendAuthWithImdsIdTokenWhileAllowCors

@@ -116,6 +116,7 @@ const (
 	DefaultResponseDeadline = 15 * time.Second
 
 	// Default deadline used for IMDS calls to fetch access token.
+	// b/148454048: This should be at least 20s due to latency issues with k8s workload identities.
 	DefaultImdsDeadline = 30 * time.Second
 
 	// A limit configured to reduce resource usage in Envoy's SafeRegex GoogleRE2 matcher.

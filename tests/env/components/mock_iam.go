@@ -35,7 +35,7 @@ type MockIamServer struct {
 }
 
 // NewMockMetadata creates a new HTTP server.
-func NewIamMetadata(pathResp map[string]string, wantNumFails int) *MockIamServer {
+func NewIamMetadata(pathResp map[string]string, wantNumFails int, respTime time.Duration) *MockIamServer {
 	mockPathResp := make(map[string]string)
 	for k, v := range pathResp {
 		mockPathResp[k] = v
@@ -49,6 +49,8 @@ func NewIamMetadata(pathResp map[string]string, wantNumFails int) *MockIamServer
 	m.s = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
+		// Test timeouts and retries.
+		time.Sleep(respTime)
 		if m.retryHandler.handleRetry(w) {
 			return
 		}

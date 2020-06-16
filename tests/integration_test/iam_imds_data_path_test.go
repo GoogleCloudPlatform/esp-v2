@@ -71,7 +71,7 @@ func TestIamImdsDataPath(t *testing.T) {
 				// Use IAM for service control and backend auth.
 				serviceAccount := "fakeServiceAccount@google.com"
 				s.SetBackendAuthIamServiceAccount(serviceAccount)
-				s.SetIamResps(map[string]string{}, 1)
+				s.SetIamResps(map[string]string{}, 1, 0)
 			}
 
 			if tc.fakeImdsDown {
@@ -81,7 +81,7 @@ func TestIamImdsDataPath(t *testing.T) {
 
 			if tc.fakeIamDown {
 				// Fake IAM will respond with failures.
-				s.SetIamResps(map[string]string{}, 100)
+				s.SetIamResps(map[string]string{}, 100, 0)
 			}
 
 			if tc.wantErr != "" {
