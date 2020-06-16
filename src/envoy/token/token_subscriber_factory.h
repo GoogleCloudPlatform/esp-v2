@@ -29,11 +29,13 @@ class TokenSubscriberFactory {
 
   virtual TokenSubscriberPtr createImdsTokenSubscriber(
       const TokenType& token_type, const std::string& token_cluster,
-      const std::string& token_url, UpdateTokenCallback callback) const PURE;
+      const std::string& token_url, const std::chrono::seconds fetch_timeout,
+      UpdateTokenCallback callback) const PURE;
 
   virtual TokenSubscriberPtr createIamTokenSubscriber(
       const TokenType& token_type, const std::string& token_cluster,
-      const std::string& token_url, UpdateTokenCallback callback,
+      const std::string& token_url, const std::chrono::seconds fetch_timeout,
+      UpdateTokenCallback callback,
       const ::google::protobuf::RepeatedPtrField<std::string>& delegates,
       const ::google::protobuf::RepeatedPtrField<std::string>& scopes,
       GetTokenFunc access_token_fn) const PURE;

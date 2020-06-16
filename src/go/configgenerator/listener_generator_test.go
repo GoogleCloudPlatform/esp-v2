@@ -881,7 +881,7 @@ func TestBackendAuthFilter(t *testing.T) {
       "@type":"type.googleapis.com/espv2.api.envoy.http.backend_auth.FilterConfig",
       "imdsToken":{
           "cluster":"metadata-cluster",
-          "timeout":"5s",
+          "timeout":"30s",
           "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
       },
       "rules":[
@@ -967,7 +967,7 @@ func TestBackendAuthFilter(t *testing.T) {
           "@type":"type.googleapis.com/espv2.api.envoy.http.backend_auth.FilterConfig",
           "imdsToken":{
             "cluster":"metadata-cluster",
-            "timeout":"5s",
+            "timeout":"30s",
             "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
           },
           "rules":[
@@ -1024,7 +1024,7 @@ func TestBackendAuthFilter(t *testing.T) {
          "accessToken":{
             "remoteToken":{
                "cluster":"metadata-cluster",
-               "timeout":"5s",
+               "timeout":"30s",
                "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
             }
          },

@@ -25,9 +25,6 @@ namespace espv2 {
 namespace envoy {
 namespace token {
 
-// Request timeout.
-constexpr std::chrono::milliseconds kRequestTimeoutMs(5000);
-
 // Delay after a failed fetch.
 constexpr std::chrono::seconds kFailedRequestRetryTime(2);
 
@@ -37,12 +34,13 @@ constexpr std::chrono::seconds kRefreshBuffer(5);
 TokenSubscriber::TokenSubscriber(
     Envoy::Server::Configuration::FactoryContext& context,
     const TokenType& token_type, const std::string& token_cluster,
-    const std::string& token_url, UpdateTokenCallback callback,
-    TokenInfoPtr token_info)
+    const std::string& token_url, const std::chrono::seconds fetch_timeout,
+    UpdateTokenCallback callback, TokenInfoPtr token_info)
     : context_(context),
       token_type_(token_type),
       token_cluster_(token_cluster),
       token_url_(token_url),
+      fetch_timeout_(fetch_timeout),
       callback_(callback),
       token_info_(std::move(token_info)),
       active_request_(nullptr),
@@ -106,7 +104,8 @@ void TokenSubscriber::refresh() {
 
   const struct Envoy::Http::AsyncClient::RequestOptions options =
       Envoy::Http::AsyncClient::RequestOptions()
-          .setTimeout(kRequestTimeoutMs)
+          .setTimeout(std::chrono::duration_cast<std::chrono::milliseconds>(
+              fetch_timeout_))
           // Metadata server rejects X-Forwarded-For requests.
           // https://cloud.google.com/compute/docs/storing-retrieving-metadata#x-forwarded-for_header
           .setSendXff(false);

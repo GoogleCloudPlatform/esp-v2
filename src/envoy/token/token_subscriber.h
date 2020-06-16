@@ -42,8 +42,9 @@ class TokenSubscriber
  public:
   TokenSubscriber(Envoy::Server::Configuration::FactoryContext& context,
                   const TokenType& token_type, const std::string& token_cluster,
-                  const std::string& token_url, UpdateTokenCallback callback,
-                  TokenInfoPtr token_info);
+                  const std::string& token_url,
+                  const std::chrono::seconds fetch_timeout,
+                  UpdateTokenCallback callback, TokenInfoPtr token_info);
   void init();
 
   ~TokenSubscriber();
@@ -65,6 +66,7 @@ class TokenSubscriber
   const TokenType token_type_;
   const std::string token_cluster_;
   const std::string token_url_;
+  const std::chrono::seconds fetch_timeout_;
   const UpdateTokenCallback callback_;
   TokenInfoPtr token_info_;
 

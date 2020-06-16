@@ -962,7 +962,7 @@ func TestFetchListeners(t *testing.T) {
                            "generatedHeaderPrefix": "X-Endpoint-",
                            "imdsToken":{
                               "cluster":"metadata-cluster",
-                              "timeout":"5s",
+                              "timeout":"30s",
                               "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
                            },
                            "gcpAttributes":{
@@ -1342,7 +1342,7 @@ func TestFetchListeners(t *testing.T) {
                            "generatedHeaderPrefix": "X-Endpoint-",
                            "imdsToken":{
                               "cluster":"metadata-cluster",
-                              "timeout":"5s",
+                              "timeout":"30s",
                               "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
                            },
                            "gcpAttributes":{
