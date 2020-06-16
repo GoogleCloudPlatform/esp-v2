@@ -28,7 +28,8 @@ This filter records statistics.
 
 ### Counters
 
-- `denied_by_no_path`: Number of API Consumer requests that are denied due to invalid path header.
+- `denied_by_no_path`: Number of API Consumer requests that are denied due to a missing path header.
+- `denied_by_invalid_path`: Number of API Consumer requests that are denied due to invalid path header (contains fragments).
 - `denied_by_no_operation`: Number of API Consumer requests that are denied due to missing filter state.
 - `allowed_by_no_configured_rules`: Number of API Consumer requests that are allowed through
  without modification. Occurs when the operation is not configured for path rewrite.

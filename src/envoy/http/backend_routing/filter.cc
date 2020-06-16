@@ -78,6 +78,17 @@ FilterHeadersStatus Filter::decodeHeaders(
   absl::string_view original_path = headers.Path()->value().getStringView();
   std::string new_path;
 
+  // Reject requests with fragment identifiers. They should never be sent to
+  // servers, and it breaks how we handle path translation (query params
+  // appended incorrectly).
+  if (absl::StrContains(original_path, "#")) {
+    config_->stats().denied_by_invalid_path_.inc();
+    rejectRequest(Envoy::Http::Code::BadRequest,
+                  "Path cannot contain fragment identifier (#)",
+                  RcDetails::get().BadRequest);
+    return FilterHeadersStatus::StopIteration;
+  }
+
   switch (rule->path_translation()) {
     case BackendRoutingRule::CONSTANT_ADDRESS:
       new_path = translateConstPath(rule->path_prefix(), original_path);
@@ -119,7 +130,7 @@ void Filter::rejectRequest(Envoy::Http::Code code, absl::string_view error_msg,
 std::string Filter::translateConstPath(absl::string_view prefix,
                                        absl::string_view original_path) {
   const auto& filter_state = *decoder_callbacks_->streamInfo().filterState();
-  absl::string_view extracted_query_params =
+  const absl::string_view extracted_query_params =
       utils::getStringFilterState(filter_state, utils::kQueryParams);
 
   const auto original_path_str = std::string(original_path);
@@ -135,7 +146,7 @@ std::string Filter::translateConstPath(absl::string_view prefix,
   }
 
   // Has query parameters in original request.
-  const std::string& originalQueryParam =
+  const std::string originalQueryParam =
       original_path_str.substr(originalQueryParamPos);
   std::string new_path = absl::StrCat(prefix, originalQueryParam);
   if (!extracted_query_params.empty()) {

@@ -147,6 +147,29 @@ TEST_F(BackendRoutingFilterTest, NoPathHeaderBlocked) {
   EXPECT_EQ(counter->value(), 1);
 }
 
+TEST_F(BackendRoutingFilterTest, InvalidPathHeaderWithFragmentBlocked) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                                {":path", "/books/1#fragment"}};
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
+      "const-operation");
+
+  // Call function under test
+  Envoy::Http::FilterHeadersStatus status =
+      filter_->decodeHeaders(headers, false);
+
+  // Expect the filter to be a NOOP and reject the request.
+  EXPECT_EQ(headers.Path()->value().getStringView(), "/books/1#fragment");
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::StopIteration);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(mock_factory_context_.scope_,
+                                      "backend_routing.denied_by_invalid_path");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
+}
+
 TEST_F(BackendRoutingFilterTest, ConstantAddress) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
@@ -299,7 +322,9 @@ TEST_F(BackendRoutingFilterQueryParamInRequestTest,
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
 
-  // Expect the path to be modified.
+  // Expect the path to be modified: the same query param is appended with
+  // different values. Value 1 is from variable bindings, value 2 is from
+  // original query params.
   EXPECT_EQ(headers.Path()->value().getStringView(), "/?id=2&id=1");
   EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 
