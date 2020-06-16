@@ -26,11 +26,11 @@ namespace backend_auth {
 /**
  * All stats for the backend auth filter. @see stats_macros.h
  */
-
-// clang-format off
-#define ALL_BACKEND_AUTH_FILTER_STATS(COUNTER)     \
-  COUNTER(token_added)                             \
-// clang-format on
+#define ALL_BACKEND_AUTH_FILTER_STATS(COUNTER) \
+  COUNTER(denied_by_no_operation)              \
+  COUNTER(denied_by_no_token)                  \
+  COUNTER(allowed_by_no_configured_rules)      \
+  COUNTER(token_added)
 
 /**
  * Wrapper struct for backend auth filter stats. @see stats_macros.h
@@ -38,7 +38,6 @@ namespace backend_auth {
 struct FilterStats {
   ALL_BACKEND_AUTH_FILTER_STATS(GENERATE_COUNTER_STRUCT)
 };
-
 
 class FilterConfig {
  public:
@@ -52,6 +51,6 @@ class FilterConfig {
 using FilterConfigSharedPtr = std::shared_ptr<FilterConfig>;
 
 }  // namespace backend_auth
-}  // namespace HttpFilters
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace http_filters
+}  // namespace envoy
+}  // namespace espv2
