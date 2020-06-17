@@ -117,6 +117,10 @@ struct CheckResponseInfo {
   ScResponseErrorType error_type = ScResponseErrorType::ERROR_TYPE_UNSPECIFIED;
 
   std::string consumer_project_number;
+
+  std::string consumer_type;
+
+  std::string consumer_number;
 };
 
 struct QuotaRequestInfo : public OperationInfo {
