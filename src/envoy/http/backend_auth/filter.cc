@@ -66,8 +66,10 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   ENVOY_LOG(debug, "Found operation: {}", operation);
   absl::string_view audience = config_->cfg_parser().getAudience(operation);
   if (audience.empty()) {
-    // This filter does not need to set a JWT Token for this operation.
-    // If the request already has an Authorization header, it will be preserved.
+    // By design, we only want to apply the filter to operations that are in the
+    // configuration. Otherwise, let it pass through (no need to add a JWT for
+    // this request). If the request already has an Authorization header, it
+    // will be preserved.
     config_->stats().allowed_by_no_configured_rules_.inc();
     return FilterHeadersStatus::Continue;
   }

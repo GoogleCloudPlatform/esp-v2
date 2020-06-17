@@ -4,6 +4,9 @@ This filter enables proxy-to-service authorization when sending requests to back
 via Dynamic Routing. If authentication is configured inside a backend rule,
 this filter overwrites the `Authorization` header with corresponding identity token.
 
+_Note_: this is a pass through filter. If the requested operation is not configured in the
+filter config, the request will pass through unmodified.
+
 ## Prerequisites
 
 This filter will not function unless the following filters appear earlier in the filter chain:
