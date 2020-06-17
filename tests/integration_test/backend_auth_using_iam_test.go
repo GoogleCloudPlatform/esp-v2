@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
+	"github.com/golang/glog"
 
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
@@ -40,7 +41,7 @@ func TestBackendAuthWithIamIdToken(t *testing.T) {
 		map[string]string{
 			fmt.Sprintf("%s?audience=https://localhost/bearertoken/constant", util.IamIdentityTokenSuffix(serviceAccount)): `{"token":  "id-token-for-constant"}`,
 			fmt.Sprintf("%s?audience=https://localhost/bearertoken/append", util.IamIdentityTokenSuffix(serviceAccount)):   `{"token":  "id-token-for-append"}`,
-		}, 0)
+		}, 0, 0)
 
 	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
@@ -101,7 +102,7 @@ func TestBackendAuthWithIamIdTokenRetries(t *testing.T) {
 		wantFinalResp  string
 	}{
 		{
-			desc:           "Add Bearer token for CONSTANT_ADDRESS backend that requires JWT token",
+			desc:           "Envoy is not healthy at first because IAM is failing. Retries occur. Eventually IAM sends a good response, and Envoy is healthy.",
 			method:         "GET",
 			path:           "/bearertoken/constant/42",
 			wantNumFails:   5,
@@ -117,7 +118,7 @@ func TestBackendAuthWithIamIdTokenRetries(t *testing.T) {
 			s.SetIamResps(
 				map[string]string{
 					fmt.Sprintf("%s?audience=https://localhost/bearertoken/constant", util.IamIdentityTokenSuffix(serviceAccount)): `{"token":  "id-token-for-constant"}`,
-				}, tc.wantNumFails)
+				}, tc.wantNumFails, 0)
 
 			defer s.TearDown(t)
 			if err := s.Setup(utils.CommonArgs()); err != nil {
@@ -152,6 +153,96 @@ func TestBackendAuthWithIamIdTokenRetries(t *testing.T) {
 	}
 }
 
+func TestBackendAuthWithIamIdTokenTimeouts(t *testing.T) {
+	t.Parallel()
+
+	testData := []struct {
+		desc               string
+		method             string
+		path               string
+		httpRequestTimeout time.Duration
+		iamResponseTime    time.Duration
+		wantError          string
+		wantResp           string
+	}{
+		{
+			desc:               "Envoy is never healthy because IAM responses take more time than the configured ESPv2 timeout.",
+			method:             "GET",
+			path:               "/bearertoken/constant/42",
+			httpRequestTimeout: time.Second * 2,
+			iamResponseTime:    time.Second * 4,
+			wantError:          `connect: connection refused`,
+		},
+		{
+			desc:               "Envoy is healthy because IAM responses take less time than the configured ESPv2 timeout.",
+			method:             "GET",
+			path:               "/bearertoken/constant/42",
+			httpRequestTimeout: time.Second * 3,
+			iamResponseTime:    time.Second * 1,
+			wantResp:           `{"Authorization": "Bearer id-token-for-constant", "RequestURI": "/bearertoken/constant?foo=42"}`,
+		},
+		{
+			// Even though the p99 latency applies to IMDS, it's easier to test with IAM. Same code / config path.
+			desc:            "Envoy is healthy because the default timeout is enough time for IMDS p99 latency (b/148454048).",
+			method:          "GET",
+			path:            "/bearertoken/constant/42",
+			iamResponseTime: time.Second * 20,
+			wantResp:        `{"Authorization": "Bearer id-token-for-constant", "RequestURI": "/bearertoken/constant?foo=42"}`,
+		},
+	}
+
+	for _, tc := range testData {
+
+		// Place in closure to allow deferring in loop.
+		func() {
+			s := env.NewTestEnv(comp.TestBackendAuthWithIamIdTokenTimeouts, platform.EchoRemote)
+			serviceAccount := "fakeServiceAccount@google.com"
+			s.SetBackendAuthIamServiceAccount(serviceAccount)
+
+			// Health checks prevent envoy from starting up due to IAM response time.
+			s.SkipHealthChecks()
+
+			// Setup IAM with the iam response time.
+			s.SetIamResps(
+				map[string]string{
+					fmt.Sprintf("%s?audience=https://localhost/bearertoken/constant", util.IamIdentityTokenSuffix(serviceAccount)): `{"token":  "id-token-for-constant"}`,
+				}, 0, tc.iamResponseTime)
+
+			// Setup ESPv2 with the http request timeout (used for making calls to IAM).
+			args := utils.CommonArgs()
+			if tc.httpRequestTimeout != 0 {
+				args = append(args, fmt.Sprintf("--http_request_timeout_s=%v", tc.httpRequestTimeout.Seconds()))
+			}
+
+			defer s.TearDown(t)
+			if err := s.Setup(args); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			// Sleep some time to allow startup (we skip health checks).
+			sleepTime := tc.httpRequestTimeout + tc.iamResponseTime + (6 * time.Second)
+			glog.Infof("Sleeping %v", sleepTime)
+			time.Sleep(sleepTime)
+
+			// Make the request.
+			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+			resp, err := client.DoWithHeaders(url, tc.method, "", nil)
+			if err != nil {
+				if tc.wantError == "" {
+					t.Errorf("Test(%v): got unexpected error: %s", tc.desc, err)
+				} else if !strings.Contains(err.Error(), tc.wantError) {
+					t.Errorf("Test(%v): got unexpected error, expect: %s, get: %s", tc.desc, tc.wantError, err.Error())
+				}
+				return
+			}
+
+			if !strings.Contains(string(resp), tc.wantResp) {
+				t.Errorf("Test(%v): expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
+			}
+		}()
+	}
+}
+
 func TestBackendAuthUsingIamIdTokenWithDelegates(t *testing.T) {
 	t.Parallel()
 
@@ -164,7 +255,7 @@ func TestBackendAuthUsingIamIdTokenWithDelegates(t *testing.T) {
 	s.SetIamResps(
 		map[string]string{
 			fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateIdToken?audience=https://localhost/bearertoken/constant", serviceAccount): `{"token":  "id-token-for-constant"}`,
-		}, 0)
+		}, 0, 0)
 
 	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {

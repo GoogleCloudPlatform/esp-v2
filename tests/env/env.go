@@ -55,6 +55,7 @@ type TestEnv struct {
 	mockMetadataFailures            int
 	mockIamResps                    map[string]string
 	mockIamFailures                 int
+	mockIamRespTime                 time.Duration
 	bookstoreServer                 *bookserver.BookstoreServer
 	grpcInteropServer               *components.GrpcInteropGrpcServer
 	grpcEchoServer                  *components.GrpcEchoGrpcServer
@@ -124,9 +125,10 @@ func (e *TestEnv) SetBackendAddress(backendAddress string) {
 }
 
 // Dictates the responses and the number of failures mock IAM will respond with.
-func (e *TestEnv) SetIamResps(iamResps map[string]string, iamFailures int) {
+func (e *TestEnv) SetIamResps(iamResps map[string]string, iamFailures int, iamRespTime time.Duration) {
 	e.mockIamResps = iamResps
 	e.mockIamFailures = iamFailures
+	e.mockIamRespTime = iamRespTime
 }
 
 func (e *TestEnv) SetBackendAuthIamServiceAccount(serviecAccount string) {
@@ -325,8 +327,8 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		bootstrapperArgs = append(bootstrapperArgs, "--metadata_url="+e.MockMetadataServer.GetURL())
 	}
 
-	if e.mockIamResps != nil || e.mockIamFailures != 0 {
-		e.MockIamServer = components.NewIamMetadata(e.mockIamResps, e.mockIamFailures)
+	if e.mockIamResps != nil || e.mockIamFailures != 0 || e.mockIamRespTime != 0 {
+		e.MockIamServer = components.NewIamMetadata(e.mockIamResps, e.mockIamFailures, e.mockIamRespTime)
 		confArgs = append(confArgs, "--iam_url="+e.MockIamServer.GetURL())
 	}
 

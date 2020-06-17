@@ -233,7 +233,7 @@
                               "cacheDuration": "300s",
                               "httpUri": {
                                 "cluster": "www.googleapis.com:443",
-                                "timeout": "5s",
+                                "timeout": "30s",
                                 "uri": "https://www.googleapis.com/service_accounts/v1/jwk/123456789-compute@developer.gserviceaccount.com"
                               }
                             }
@@ -262,7 +262,7 @@
                               "cacheDuration": "300s",
                               "httpUri": {
                                 "cluster": "www.googleapis.com:443",
-                                "timeout": "5s",
+                                "timeout": "30s",
                                 "uri": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
                               }
                             }
@@ -291,7 +291,7 @@
                               "cacheDuration": "300s",
                               "httpUri": {
                                 "cluster": "www.googleapis.com:443",
-                                "timeout": "5s",
+                                "timeout": "30s",
                                 "uri": "https://www.googleapis.com/oauth2/v3/certs"
                               }
                             }

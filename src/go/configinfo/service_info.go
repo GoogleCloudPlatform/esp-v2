@@ -26,11 +26,11 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/ptypes"
 
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/common"
 	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/path_matcher"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/service_control"
-	durationpb "github.com/golang/protobuf/ptypes/duration"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
@@ -252,8 +252,7 @@ func (s *ServiceInfo) processAccessToken() {
 			RemoteToken: &commonpb.HttpUri{
 				Uri:     fmt.Sprintf("%s%s", s.Options.MetadataURL, util.AccessTokenSuffix),
 				Cluster: util.MetadataServerClusterName,
-				// TODO(taoxuy): make token_subscriber use this timeout
-				Timeout: &durationpb.Duration{Seconds: 5},
+				Timeout: ptypes.DurationProto(s.Options.HttpRequestTimeout),
 			},
 		},
 	}

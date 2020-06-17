@@ -15,6 +15,7 @@
 // limitations under the License.
 
 #include "common/common/assert.h"
+#include "google/protobuf/util/time_util.h"
 #include "src/api_proxy/service_control/logs_metrics_loader.h"
 #include "src/envoy/http/service_control/service_control_call_impl.h"
 
@@ -28,6 +29,7 @@ using ::espv2::api::envoy::http::service_control::FilterConfig;
 using ::espv2::api::envoy::http::service_control::Service;
 using ::espv2::api_proxy::service_control::LogsMetricsLoader;
 using ::espv2::api_proxy::service_control::RequestBuilder;
+using ::google::protobuf::util::TimeUtil;
 using token::ServiceAccountTokenGenerator;
 using token::TokenSubscriber;
 using token::TokenType;
@@ -46,8 +48,10 @@ constexpr char kQuotaControlService[] =
 void ServiceControlCallImpl::createImdsTokenSub() {
   const std::string& token_cluster = filter_config_.imds_token().cluster();
   const std::string& token_uri = filter_config_.imds_token().uri();
+  const std::chrono::seconds fetch_timeout(
+      TimeUtil::DurationToSeconds(filter_config_.imds_token().timeout()));
   imds_token_sub_ = token_subscriber_factory_.createImdsTokenSubscriber(
-      TokenType::AccessToken, token_cluster, token_uri,
+      TokenType::AccessToken, token_cluster, token_uri, fetch_timeout,
       [this](absl::string_view token) {
         TokenSharedPtr new_token = std::make_shared<std::string>(token);
         tls_->runOnAllThreads([this, new_token]() {
@@ -58,11 +62,11 @@ void ServiceControlCallImpl::createImdsTokenSub() {
 }
 
 void ServiceControlCallImpl::createTokenGen() {
-  const std::string service_control_auidence =
+  const std::string service_control_audience =
       filter_config_.service_control_uri().uri() + kServiceControlService;
   sc_token_gen_ = token_subscriber_factory_.createServiceAccountTokenGenerator(
       filter_config_.service_account_secret().inline_string(),
-      service_control_auidence, [this](const std::string& token) {
+      service_control_audience, [this](const std::string& token) {
         TokenSharedPtr new_token = std::make_shared<std::string>(token);
         tls_->runOnAllThreads([this, new_token]() {
           tls_->getTyped<ThreadLocalCache>().set_sc_token(new_token);
@@ -89,8 +93,10 @@ void ServiceControlCallImpl::createIamTokenSub() {
           filter_config_.iam_token().access_token().remote_token().cluster();
       const std::string& uri =
           filter_config_.iam_token().access_token().remote_token().uri();
+      const std::chrono::seconds fetch_timeout(TimeUtil::DurationToSeconds(
+          filter_config_.iam_token().access_token().remote_token().timeout()));
       access_token_sub_ = token_subscriber_factory_.createImdsTokenSubscriber(
-          TokenType::AccessToken, cluster, uri,
+          TokenType::AccessToken, cluster, uri, fetch_timeout,
           [this](absl::string_view access_token) {
             access_token_for_iam_ = std::string(access_token);
           });
@@ -105,10 +111,12 @@ void ServiceControlCallImpl::createIamTokenSub() {
   const std::string& token_cluster =
       filter_config_.iam_token().iam_uri().cluster();
   const std::string& token_uri = filter_config_.iam_token().iam_uri().uri();
+  const std::chrono::seconds fetch_timeout(TimeUtil::DurationToSeconds(
+      filter_config_.iam_token().iam_uri().timeout()));
   ::google::protobuf::RepeatedPtrField<std::string> scopes;
   scopes.Add(kServiceControlScope);
   iam_token_sub_ = token_subscriber_factory_.createIamTokenSubscriber(
-      TokenType::AccessToken, token_cluster, token_uri,
+      TokenType::AccessToken, token_cluster, token_uri, fetch_timeout,
       [this](absl::string_view token) {
         TokenSharedPtr new_token = std::make_shared<std::string>(token);
         tls_->runOnAllThreads([this, new_token]() {
