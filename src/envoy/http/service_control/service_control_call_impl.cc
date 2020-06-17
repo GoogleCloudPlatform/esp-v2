@@ -14,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "common/common/assert.h"
 #include "src/api_proxy/service_control/logs_metrics_loader.h"
 #include "src/envoy/http/service_control/service_control_call_impl.h"
 
@@ -138,18 +139,17 @@ ServiceControlCallImpl::ServiceControlCallImpl(
   });
 
   switch (filter_config_.access_token_case()) {
-    case FilterConfig::kImdsToken: {
+    case FilterConfig::kImdsToken:
       createImdsTokenSub();
-    } break;
-    case FilterConfig::kServiceAccountSecret: {
-      createTokenGen();
-    } break;
-    case FilterConfig::kIamToken: {
-      createIamTokenSub();
-    } break;
-    default:
-      ENVOY_LOG(error, "No access token set!");
       break;
+    case FilterConfig::kServiceAccountSecret:
+      createTokenGen();
+      break;
+    case FilterConfig::kIamToken:
+      createIamTokenSub();
+      break;
+    default:
+      NOT_REACHED_GCOVR_EXCL_LINE;
   }
 
   if (config.has_service_config()) {

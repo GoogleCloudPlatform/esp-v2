@@ -122,7 +122,10 @@ struct CheckResponseInfo {
 struct QuotaRequestInfo : public OperationInfo {
   std::string method_name;
 
-  const std::vector<std::pair<std::string, int>>* metric_cost_vector;
+  const std::vector<std::pair<std::string, int>>& metric_cost_vector;
+
+  QuotaRequestInfo(const std::vector<std::pair<std::string, int>>& metric_costs)
+      : metric_cost_vector(metric_costs) {}
 };
 
 // Stores the information extracted from the quota response.
