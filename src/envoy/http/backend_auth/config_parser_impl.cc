@@ -29,8 +29,6 @@ using token::TokenSubscriber;
 using token::TokenType;
 using token::UpdateTokenCallback;
 
-// TODO(kyuc): add unit tests for all possible backend rule configs.
-
 AudienceContext::AudienceContext(
     const ::espv2::api::envoy::http::backend_auth::BackendAuthRule&
         proto_config,
@@ -111,7 +109,13 @@ FilterConfigParserImpl::FilterConfigParserImpl(
   }
 
   for (const auto& rule : config.rules()) {
-    operation_map_[rule.operation()] = rule.jwt_audience();
+    auto insert =
+        operation_map_.insert({rule.operation(), rule.jwt_audience()});
+    if (!insert.second) {
+      throw Envoy::ProtoValidationException(
+          absl::StrCat("Duplicated operation: ", rule.operation()), config);
+    }
+
     auto it = audience_map_.find(rule.jwt_audience());
     if (it == audience_map_.end()) {
       audience_map_[rule.jwt_audience()] = AudienceContextPtr(

@@ -44,6 +44,26 @@ class ConfigParserImplTest : public ::testing::Test {
   std::unique_ptr<FilterConfigParser> config_parser_;
 };
 
+TEST_F(ConfigParserImplTest, DuplicateOperationThrows) {
+  const char filter_config[] = R"(
+imds_token {
+  uri: "this-is-uri"
+  cluster: "this-is-cluster"
+}
+rules {
+  operation: "operation-dup"
+  jwt_audience: "audience-foo"
+}
+rules {
+  operation: "operation-dup"
+  jwt_audience: "audience-bar"
+}
+)";
+
+  EXPECT_THROW_WITH_REGEX(setUp(filter_config), Envoy::ProtoValidationException,
+                          "Duplicated operation");
+}
+
 TEST_F(ConfigParserImplTest, IamIdTokenWithServiceAccountAsAccessToken) {
   const char filter_config[] = R"(
 iam_token {

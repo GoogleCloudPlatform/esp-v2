@@ -7,6 +7,9 @@ this filter overwrites the `:path` header with corresponding remote backend addr
 For more information on configuration and usage, see
 [Understanding Path Translation](https://cloud.google.com/endpoints/docs/openapi/openapi-extensions#understanding_path_translation).
 
+_Note_: this is a pass through filter. If the requested operation is not configured in the
+filter config, the request will pass through unmodified.
+
 ## Prerequisites
 
 This filter will not function unless the following filters appear earlier in the filter chain:
