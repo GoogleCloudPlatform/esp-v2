@@ -28,15 +28,14 @@ class MockTokenSubscriberFactory : public TokenSubscriberFactory {
  public:
   MOCK_METHOD(TokenSubscriberPtr, createImdsTokenSubscriber,
               (const TokenType& token_type, const std::string& token_cluster,
-               const std::string& token_url,
-               const std::chrono::seconds fetch_timeout,
+               const std::string& token_url, std::chrono::seconds fetch_timeout,
                UpdateTokenCallback callback),
               (const));
 
   MOCK_METHOD(
       TokenSubscriberPtr, createIamTokenSubscriber,
       (const TokenType& token_type, const std::string& token_cluster,
-       const std::string& token_url, const std::chrono::seconds fetch_timeout,
+       const std::string& token_url, std::chrono::seconds fetch_timeout,
        UpdateTokenCallback callback,
        const ::google::protobuf::RepeatedPtrField<std::string>& delegates,
        const ::google::protobuf::RepeatedPtrField<std::string>& scopes,

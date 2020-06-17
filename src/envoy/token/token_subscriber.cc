@@ -34,7 +34,7 @@ constexpr std::chrono::seconds kRefreshBuffer(5);
 TokenSubscriber::TokenSubscriber(
     Envoy::Server::Configuration::FactoryContext& context,
     const TokenType& token_type, const std::string& token_cluster,
-    const std::string& token_url, const std::chrono::seconds fetch_timeout,
+    const std::string& token_url, std::chrono::seconds fetch_timeout,
     UpdateTokenCallback callback, TokenInfoPtr token_info)
     : context_(context),
       token_type_(token_type),
@@ -68,8 +68,8 @@ void TokenSubscriber::handleFailResponse() {
   refresh_timer_->enableTimer(kFailedRequestRetryTime);
 }
 
-void TokenSubscriber::handleSuccessResponse(
-    absl::string_view token, const std::chrono::seconds& expires_in) {
+void TokenSubscriber::handleSuccessResponse(absl::string_view token,
+                                            std::chrono::seconds expires_in) {
   active_request_ = nullptr;
 
   // Signal that we are ready for initialization.

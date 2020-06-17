@@ -31,7 +31,7 @@ class TokenSubscriberFactoryImpl : public TokenSubscriberFactory {
 
   TokenSubscriberPtr createImdsTokenSubscriber(
       const TokenType& token_type, const std::string& token_cluster,
-      const std::string& token_url, const std::chrono::seconds fetch_timeout,
+      const std::string& token_url, std::chrono::seconds fetch_timeout,
       UpdateTokenCallback callback) const override {
     TokenInfoPtr info = std::make_unique<ImdsTokenInfo>();
     TokenSubscriberPtr subscriber = std::make_unique<TokenSubscriber>(
@@ -43,7 +43,7 @@ class TokenSubscriberFactoryImpl : public TokenSubscriberFactory {
 
   TokenSubscriberPtr createIamTokenSubscriber(
       const TokenType& token_type, const std::string& token_cluster,
-      const std::string& token_url, const std::chrono::seconds fetch_timeout,
+      const std::string& token_url, std::chrono::seconds fetch_timeout,
       UpdateTokenCallback callback,
       const ::google::protobuf::RepeatedPtrField<std::string>& delegates,
       const ::google::protobuf::RepeatedPtrField<std::string>& scopes,

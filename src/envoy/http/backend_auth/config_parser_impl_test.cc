@@ -91,27 +91,25 @@ rules {
                   token::TokenType::IdentityToken, "this-is-cluster",
                   "this-is-uri?format=standard&audience=audience-foo",
                   std::chrono::seconds(20), _))
-      .WillOnce(
-          Invoke([&token_foo](const token::TokenType&, const std::string&,
-                              const std::string&, const std::chrono::seconds,
-                              token::UpdateTokenCallback callback)
-                     -> token::TokenSubscriberPtr {
-            callback(token_foo);
-            return nullptr;
-          }));
+      .WillOnce(Invoke([&token_foo](const token::TokenType&, const std::string&,
+                                    const std::string&, std::chrono::seconds,
+                                    token::UpdateTokenCallback callback)
+                           -> token::TokenSubscriberPtr {
+        callback(token_foo);
+        return nullptr;
+      }));
   EXPECT_CALL(mock_token_subscriber_factory_,
               createImdsTokenSubscriber(
                   token::TokenType::IdentityToken, "this-is-cluster",
                   "this-is-uri?format=standard&audience=audience-bar",
                   std::chrono::seconds(20), _))
-      .WillOnce(
-          Invoke([&token_bar](const token::TokenType&, const std::string&,
-                              const std::string&, const std::chrono::seconds,
-                              token::UpdateTokenCallback callback)
-                     -> token::TokenSubscriberPtr {
-            callback(token_bar);
-            return nullptr;
-          }));
+      .WillOnce(Invoke([&token_bar](const token::TokenType&, const std::string&,
+                                    const std::string&, std::chrono::seconds,
+                                    token::UpdateTokenCallback callback)
+                           -> token::TokenSubscriberPtr {
+        callback(token_bar);
+        return nullptr;
+      }));
 
   setUp(filter_config);
 
@@ -165,7 +163,7 @@ rules {
                   "this-is-imds-uri", std::chrono::seconds(20), _))
       .WillOnce(
           Invoke([&access_token](const token::TokenType&, const std::string&,
-                                 const std::string&, const std::chrono::seconds,
+                                 const std::string&, std::chrono::seconds,
                                  token::UpdateTokenCallback callback)
                      -> token::TokenSubscriberPtr {
             callback(access_token);
@@ -176,14 +174,14 @@ rules {
               createIamTokenSubscriber(_, "this-is-iam-cluster",
                                        "this-is-iam-uri?audience=audience-foo",
                                        std::chrono::seconds(4), _, _, _, _))
-      .WillOnce(Invoke(
-          [&id_token_foo](
-              token::TokenType, const std::string&, const std::string&,
-              const std::chrono::seconds, token::UpdateTokenCallback callback,
-              const ::google::protobuf::RepeatedPtrField<std::string>&,
-              const ::google::protobuf::RepeatedPtrField<std::string>&,
-              token::GetTokenFunc access_token_fn)
-              -> token::TokenSubscriberPtr {
+      .WillOnce(
+          Invoke([&id_token_foo](
+                     token::TokenType, const std::string&, const std::string&,
+                     std::chrono::seconds, token::UpdateTokenCallback callback,
+                     const ::google::protobuf::RepeatedPtrField<std::string>&,
+                     const ::google::protobuf::RepeatedPtrField<std::string>&,
+                     token::GetTokenFunc access_token_fn)
+                     -> token::TokenSubscriberPtr {
             EXPECT_EQ(access_token_fn(), "access_token");
             callback(id_token_foo);
             return nullptr;
@@ -192,14 +190,14 @@ rules {
               createIamTokenSubscriber(_, "this-is-iam-cluster",
                                        "this-is-iam-uri?audience=audience-bar",
                                        std::chrono::seconds(4), _, _, _, _))
-      .WillOnce(Invoke(
-          [&id_token_bar](
-              token::TokenType, const std::string&, const std::string&,
-              const std::chrono::seconds, token::UpdateTokenCallback callback,
-              const ::google::protobuf::RepeatedPtrField<std::string>&,
-              const ::google::protobuf::RepeatedPtrField<std::string>&,
-              token::GetTokenFunc access_token_fn)
-              -> token::TokenSubscriberPtr {
+      .WillOnce(
+          Invoke([&id_token_bar](
+                     token::TokenType, const std::string&, const std::string&,
+                     std::chrono::seconds, token::UpdateTokenCallback callback,
+                     const ::google::protobuf::RepeatedPtrField<std::string>&,
+                     const ::google::protobuf::RepeatedPtrField<std::string>&,
+                     token::GetTokenFunc access_token_fn)
+                     -> token::TokenSubscriberPtr {
             EXPECT_EQ(access_token_fn(), "access_token");
             callback(id_token_bar);
             return nullptr;

@@ -43,7 +43,7 @@ class TokenSubscriber
   TokenSubscriber(Envoy::Server::Configuration::FactoryContext& context,
                   const TokenType& token_type, const std::string& token_cluster,
                   const std::string& token_url,
-                  const std::chrono::seconds fetch_timeout,
+                  std::chrono::seconds fetch_timeout,
                   UpdateTokenCallback callback, TokenInfoPtr token_info);
   void init();
 
@@ -52,7 +52,7 @@ class TokenSubscriber
  private:
   void handleFailResponse();
   void handleSuccessResponse(absl::string_view token,
-                             const std::chrono::seconds& expires_in);
+                             std::chrono::seconds expires_in);
   void processResponse(Envoy::Http::ResponseMessagePtr&& response);
   void refresh();
 
