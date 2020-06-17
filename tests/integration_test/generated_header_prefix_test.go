@@ -66,9 +66,9 @@ func TestGeneratedHeaders(t *testing.T) {
 				"Authorization": "Bearer " + testdata.Es256Token,
 			},
 			wantRespHeader: map[string]string{
-				"Echo-X-Apigateway-Consumer-Type":   "PROJECT",
-				"Echo-X-Apigateway-Consumer-Number": "123456",
-				"Echo-X-Apigateway-Api-Userinfo":    testdata.Es256TokenPayloadBase64,
+				"Echo-X-Apigateway-Api-Consumer-Type":   "PROJECT",
+				"Echo-X-Apigateway-Api-Consumer-Number": "123456",
+				"Echo-X-Apigateway-Api-Userinfo":        testdata.Es256TokenPayloadBase64,
 			},
 		},
 	}
