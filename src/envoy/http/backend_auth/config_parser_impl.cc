@@ -58,7 +58,7 @@ AudienceContext::AudienceContext(
       const std::string& uri = filter_config.iam_token().iam_uri().uri();
       const std::string& cluster =
           filter_config.iam_token().iam_uri().cluster();
-      std::chrono::seconds fetch_timeout(TimeUtil::DurationToSeconds(
+      const std::chrono::seconds fetch_timeout(TimeUtil::DurationToSeconds(
           filter_config.iam_token().iam_uri().timeout()));
       const std::string real_uri =
           absl::StrCat(uri, "?audience=", proto_config.jwt_audience());
@@ -73,7 +73,7 @@ AudienceContext::AudienceContext(
     case FilterConfig::IdTokenInfoCase::kImdsToken: {
       const std::string& uri = filter_config.imds_token().uri();
       const std::string& cluster = filter_config.imds_token().cluster();
-      std::chrono::seconds fetch_timeout(
+      const std::chrono::seconds fetch_timeout(
           TimeUtil::DurationToSeconds(filter_config.imds_token().timeout()));
       const std::string real_uri = absl::StrCat(
           uri, "?format=standard&audience=", proto_config.jwt_audience());
@@ -99,7 +99,7 @@ FilterConfigParserImpl::FilterConfigParserImpl(
             config.iam_token().access_token().remote_token().cluster();
         const std::string& uri =
             config.iam_token().access_token().remote_token().uri();
-        std::chrono::seconds fetch_timeout(TimeUtil::DurationToSeconds(
+        const std::chrono::seconds fetch_timeout(TimeUtil::DurationToSeconds(
             config.iam_token().access_token().remote_token().timeout()));
         access_token_sub_ptr_ =
             token_subscriber_factory.createImdsTokenSubscriber(

@@ -48,7 +48,7 @@ constexpr char kQuotaControlService[] =
 void ServiceControlCallImpl::createImdsTokenSub() {
   const std::string& token_cluster = filter_config_.imds_token().cluster();
   const std::string& token_uri = filter_config_.imds_token().uri();
-  std::chrono::seconds fetch_timeout(
+  const std::chrono::seconds fetch_timeout(
       TimeUtil::DurationToSeconds(filter_config_.imds_token().timeout()));
   imds_token_sub_ = token_subscriber_factory_.createImdsTokenSubscriber(
       TokenType::AccessToken, token_cluster, token_uri, fetch_timeout,
@@ -93,7 +93,7 @@ void ServiceControlCallImpl::createIamTokenSub() {
           filter_config_.iam_token().access_token().remote_token().cluster();
       const std::string& uri =
           filter_config_.iam_token().access_token().remote_token().uri();
-      std::chrono::seconds fetch_timeout(TimeUtil::DurationToSeconds(
+      const std::chrono::seconds fetch_timeout(TimeUtil::DurationToSeconds(
           filter_config_.iam_token().access_token().remote_token().timeout()));
       access_token_sub_ = token_subscriber_factory_.createImdsTokenSubscriber(
           TokenType::AccessToken, cluster, uri, fetch_timeout,
@@ -111,7 +111,7 @@ void ServiceControlCallImpl::createIamTokenSub() {
   const std::string& token_cluster =
       filter_config_.iam_token().iam_uri().cluster();
   const std::string& token_uri = filter_config_.iam_token().iam_uri().uri();
-  std::chrono::seconds fetch_timeout(TimeUtil::DurationToSeconds(
+  const std::chrono::seconds fetch_timeout(TimeUtil::DurationToSeconds(
       filter_config_.iam_token().iam_uri().timeout()));
   ::google::protobuf::RepeatedPtrField<std::string> scopes;
   scopes.Add(kServiceControlScope);
