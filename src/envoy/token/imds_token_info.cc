@@ -88,7 +88,7 @@ bool ImdsTokenInfo::parseAccessToken(absl::string_view response,
     return false;
   }
 
-  std::chrono::seconds expires_in = std::chrono::seconds(expires_seconds);
+  const std::chrono::seconds expires_in = std::chrono::seconds(expires_seconds);
   ret->token = token;
   ret->expiry_duration = expires_in;
   return true;
