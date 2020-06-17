@@ -1154,14 +1154,12 @@ Status RequestBuilder::FillAllocateQuotaRequest(
   (*labels)[kServiceControlUserAgent] = kUserAgent;
   (*labels)[kServiceControlServiceAgent] = get_service_agent();
 
-  if (info.metric_cost_vector) {
-    for (auto metric : *info.metric_cost_vector) {
-      MetricValueSet* value_set = operation->add_quota_metrics();
-      value_set->set_metric_name(metric.first);
-      MetricValue* value = value_set->add_metric_values();
-      const auto& cost = metric.second;
-      value->set_int64_value(cost <= 0 ? 1 : cost);
-    }
+  for (auto metric : info.metric_cost_vector) {
+    MetricValueSet* value_set = operation->add_quota_metrics();
+    value_set->set_metric_name(metric.first);
+    MetricValue* value = value_set->add_metric_values();
+    const auto& cost = metric.second;
+    value->set_int64_value(cost <= 0 ? 1 : cost);
   }
 
   return Status::OK;

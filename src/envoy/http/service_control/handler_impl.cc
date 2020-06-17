@@ -83,7 +83,7 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     return;
   }
 
-  require_ctx_ = cfg_parser_.FindRequirement(operation);
+  require_ctx_ = cfg_parser_.find_requirement(operation);
   if (!require_ctx_) {
     ENVOY_LOG(debug, "No requirement matched!");
     // Extract api-key to be used for Report for an operation without
@@ -211,11 +211,10 @@ void ServiceControlHandlerImpl::callQuota() {
     return;
   }
 
-  ::espv2::api_proxy::service_control::QuotaRequestInfo info;
-  fillOperationInfo(info);
-
+  ::espv2::api_proxy::service_control::QuotaRequestInfo info{
+      require_ctx_->metric_costs()};
   info.method_name = require_ctx_->config().operation_name();
-  info.metric_cost_vector = require_ctx_->metric_costs();
+  fillOperationInfo(info);
 
   // TODO: if quota cache is disabled, need to use in-flight
   // transport, need to save its cancel function.

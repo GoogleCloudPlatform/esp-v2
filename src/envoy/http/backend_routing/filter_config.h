@@ -32,6 +32,7 @@ namespace backend_routing {
   COUNTER(append_path_to_address_request)         \
   COUNTER(constant_address_request)               \
   COUNTER(denied_by_no_path)                      \
+  COUNTER(denied_by_invalid_path)                 \
   COUNTER(denied_by_no_operation)                 \
   COUNTER(allowed_by_no_configured_rules)
 

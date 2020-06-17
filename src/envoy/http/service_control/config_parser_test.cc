@@ -58,19 +58,21 @@ requirements {
   testing::NiceMock<MockServiceControlCallFactory> mock_factory;
   FilterConfigParser parser(config, mock_factory);
 
-  EXPECT_EQ(parser.FindRequirement("get_foo")->config().operation_name(),
+  EXPECT_EQ(parser.find_requirement("get_foo")->config().operation_name(),
             "get_foo");
   EXPECT_EQ(
-      parser.FindRequirement("get_foo")->service_ctx().config().service_name(),
+      parser.find_requirement("get_foo")->service_ctx().config().service_name(),
       "echo");
 
-  EXPECT_EQ(parser.FindRequirement("post_bar")->config().operation_name(),
+  EXPECT_EQ(parser.find_requirement("post_bar")->config().operation_name(),
             "post_bar");
-  EXPECT_EQ(
-      parser.FindRequirement("post_bar")->service_ctx().config().service_name(),
-      "echo111");
+  EXPECT_EQ(parser.find_requirement("post_bar")
+                ->service_ctx()
+                .config()
+                .service_name(),
+            "echo111");
 
-  EXPECT_FALSE(parser.FindRequirement("non-existing-operation"));
+  EXPECT_FALSE(parser.find_requirement("non-existing-operation"));
 }
 
 TEST(ConfigParserTest, DuplicatedServiceNames) {
@@ -127,6 +129,24 @@ requirements {
   EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config, mock_factory),
                           Envoy::ProtoValidationException,
                           "Invalid service name");
+}
+
+TEST(ConfigParserTest, InvalidMinReportInterval) {
+  FilterConfig config;
+  const char kFilterInvalidService[] = R"(
+services {
+  service_name: "echo"
+  min_stream_report_interval_ms: 50
+}
+requirements {
+  service_name: "echo"
+  operation_name: "get_foo"
+})";
+  ASSERT_TRUE(TextFormat::ParseFromString(kFilterInvalidService, &config));
+  testing::NiceMock<MockServiceControlCallFactory> mock_factory;
+  EXPECT_THROW_WITH_REGEX(FilterConfigParser parser(config, mock_factory),
+                          Envoy::ProtoValidationException,
+                          "min_stream_report_interval_ms");
 }
 
 }  // namespace

@@ -130,8 +130,7 @@ message FilterConfig {
 
   // The prefix added to generated headers
   string generated_header_prefix = 9 [(validate.rules).string = {
-    well_known_regex: HTTP_HEADER_VALUE,
-    strict: false,
+    well_known_regex: HTTP_HEADER_NAME,
     min_len: 1,
   }];
 }
