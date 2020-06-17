@@ -87,6 +87,8 @@ func TestMockServiceControlCheckError(t *testing.T) {
 				CheckInfo: &scpb.CheckResponse_CheckInfo{
 					ConsumerInfo: &scpb.CheckResponse_ConsumerInfo{
 						ProjectNumber: 123456,
+						ConsumerNumber: 123456,
+						Type: scpb.CheckResponse_ConsumerInfo_PROJECT,
 					},
 				},
 			},
@@ -97,6 +99,8 @@ func TestMockServiceControlCheckError(t *testing.T) {
 				CheckInfo: &scpb.CheckResponse_CheckInfo{
 					ConsumerInfo: &scpb.CheckResponse_ConsumerInfo{
 						ProjectNumber: 123456,
+						ConsumerNumber: 123456,
+						Type: scpb.CheckResponse_ConsumerInfo_PROJECT,
 					},
 				},
 				CheckErrors: []*scpb.CheckError{
@@ -109,6 +113,8 @@ func TestMockServiceControlCheckError(t *testing.T) {
 				CheckInfo: &scpb.CheckResponse_CheckInfo{
 					ConsumerInfo: &scpb.CheckResponse_ConsumerInfo{
 						ProjectNumber: 123456,
+						ConsumerNumber: 123456,
+						Type: scpb.CheckResponse_ConsumerInfo_PROJECT,
 					},
 				},
 				CheckErrors: []*scpb.CheckError{
