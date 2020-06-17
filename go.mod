@@ -9,14 +9,14 @@ require (
 	github.com/envoyproxy/go-control-plane v0.9.6-0.20200405163022-84b87ba75ace
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-	github.com/golang/protobuf v1.3.3
-	github.com/google/go-cmp v0.3.0
+	github.com/golang/protobuf v1.4.1
+	github.com/google/go-cmp v0.4.0 // indirect
 	github.com/gorilla/mux v1.6.3-0.20181030152528-3d80bc801bb0
 	github.com/gorilla/websocket v1.4.2
 	github.com/miekg/dns v1.1.29
 	golang.org/x/net v0.0.0-20190923162816-aa69164e4478
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	google.golang.org/api v0.7.0
-	google.golang.org/genproto v0.0.0-20200302123026-7795fca6ccb1
+	google.golang.org/genproto v0.0.0-20200617032506-f1bdc9086088
 	google.golang.org/grpc v1.27.0
 )

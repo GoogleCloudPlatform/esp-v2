@@ -79,7 +79,9 @@ func setOKCheckResponse() []byte {
 	req := &scpb.CheckResponse{
 		CheckInfo: &scpb.CheckResponse_CheckInfo{
 			ConsumerInfo: &scpb.CheckResponse_ConsumerInfo{
-				ProjectNumber: 123456,
+				ProjectNumber:  123456,
+				ConsumerNumber: 123456,
+				Type:           scpb.CheckResponse_ConsumerInfo_PROJECT,
 			},
 		},
 	}

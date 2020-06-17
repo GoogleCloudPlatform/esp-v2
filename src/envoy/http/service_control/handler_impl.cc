@@ -33,8 +33,9 @@ using ::espv2::api_proxy::service_control::ScResponseErrorType;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
-// The HTTP header suffix to send consumer project to backend.
-constexpr char kConsumerProjectNumberHeaderSuffix[] = "api-project-number";
+// The HTTP header suffix to send consumer info to backend.
+constexpr char kConsumerTypeHeaderSuffix[] = "api-consumer-type";
+constexpr char kConsumerNumberHeaderSuffix[] = "api-consumer-number";
 
 // CheckRequest headers
 const Envoy::Http::LowerCaseString kIosBundleIdHeader{
@@ -55,9 +56,10 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
       stream_info_(stream_info),
       time_source_(time_source),
       uuid_(uuid),
-      consumer_project_number_header_(
-          cfg_parser_.config().generated_header_prefix() +
-          kConsumerProjectNumberHeaderSuffix),
+      consumer_type_header_(cfg_parser_.config().generated_header_prefix() +
+                            kConsumerTypeHeaderSuffix),
+      consumer_number_header_(cfg_parser_.config().generated_header_prefix() +
+                              kConsumerNumberHeaderSuffix),
       request_header_size_(0),
       response_header_size_(0),
       is_grpc_(false),
@@ -234,10 +236,15 @@ void ServiceControlHandlerImpl::onCheckResponse(
 
   check_status_ = status;
 
-  // Set consumer project number to backend.
-  if (!response_info.consumer_project_number.empty()) {
-    headers.setReferenceKey(consumer_project_number_header_,
-                            response_info.consumer_project_number);
+  // Set consumer info to backend. Since consumer_project_id is deprecated and
+  // replaced by consumer_number so don't set it here.
+  if (!response_info.consumer_type.empty()) {
+    headers.setReferenceKey(consumer_type_header_, response_info.consumer_type);
+  }
+
+  if (!response_info.consumer_number.empty()) {
+    headers.setReferenceKey(consumer_number_header_,
+                            response_info.consumer_number);
   }
 
   if (!check_status_.ok()) {

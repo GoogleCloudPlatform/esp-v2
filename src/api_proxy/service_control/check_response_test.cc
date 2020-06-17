@@ -24,6 +24,8 @@ namespace {
 using ::google::api::servicecontrol::v1::CheckError;
 using ::google::api::servicecontrol::v1::CheckError_Code;
 using ::google::api::servicecontrol::v1::CheckResponse;
+using ::google::api::servicecontrol::v1::
+    CheckResponse_ConsumerInfo_ConsumerType;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
@@ -37,7 +39,7 @@ class ConvertCheckResponseTest : public ::testing::Test {
 
     Status result = RequestBuilder::ConvertCheckResponse(response, "", &info);
 
-    EXPECT_EQ(want_code, result.code());
+    EXPECT_EQ(result.code(), want_code);
     EXPECT_EQ(info.error_type, want_error_type);
   }
 };
@@ -163,6 +165,28 @@ TEST_F(ConvertCheckResponseTest,
   EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
   EXPECT_EQ(result.message(), "API api_xxxx is not enabled for the project.");
   EXPECT_EQ(info.error_type, ScResponseErrorType::SERVICE_NOT_ACTIVATED);
+}
+
+TEST_F(ConvertCheckResponseTest, ConvertConsumerInfo) {
+  CheckResponseInfo info;
+  CheckResponse response;
+  int consumer_number = 123456;
+  CheckResponse_ConsumerInfo_ConsumerType type =
+      CheckResponse_ConsumerInfo_ConsumerType::
+          CheckResponse_ConsumerInfo_ConsumerType_PROJECT;
+  response.mutable_check_info()->mutable_consumer_info()->set_project_number(
+      consumer_number);
+  response.mutable_check_info()->mutable_consumer_info()->set_type(type);
+  response.mutable_check_info()->mutable_consumer_info()->set_consumer_number(
+      consumer_number);
+
+  Status result =
+      RequestBuilder::ConvertCheckResponse(response, "api_xxxx", &info);
+
+  EXPECT_EQ(info.consumer_project_number, std::to_string(consumer_number));
+  EXPECT_EQ(info.consumer_type,
+            CheckResponse_ConsumerInfo_ConsumerType_Name(type));
+  EXPECT_EQ(info.consumer_number, std::to_string(consumer_number));
 }
 
 }  // namespace

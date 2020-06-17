@@ -27,6 +27,8 @@
 using ::google::api::servicecontrol::v1::CheckError;
 using ::google::api::servicecontrol::v1::CheckRequest;
 using ::google::api::servicecontrol::v1::CheckResponse;
+using ::google::api::servicecontrol::v1::
+    CheckResponse_ConsumerInfo_ConsumerType;
 using ::google::api::servicecontrol::v1::Distribution;
 using ::google::api::servicecontrol::v1::LogEntry;
 using ::google::api::servicecontrol::v1::MetricValue;
@@ -1362,6 +1364,19 @@ Status RequestBuilder::ConvertCheckResponse(
     // Store project id to check_response_info
     check_response_info->consumer_project_number = std::to_string(
         check_response.check_info().consumer_info().project_number());
+  }
+
+  if (check_response.check_info().consumer_info().consumer_number() > 0) {
+    check_response_info->consumer_number = std::to_string(
+        check_response.check_info().consumer_info().consumer_number());
+  }
+
+  if (check_response.check_info().consumer_info().type() !=
+      CheckResponse_ConsumerInfo_ConsumerType::
+          CheckResponse_ConsumerInfo_ConsumerType_CONSUMER_TYPE_UNSPECIFIED) {
+    check_response_info->consumer_type =
+        CheckResponse_ConsumerInfo_ConsumerType_Name(
+            check_response.check_info().consumer_info().type());
   }
 
   if (check_response.check_errors().empty()) {
