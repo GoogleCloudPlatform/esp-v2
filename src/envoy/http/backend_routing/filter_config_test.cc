@@ -41,7 +41,12 @@ class BackendRoutingConfigTest : public ::testing::Test {
     ASSERT_GT(proto_config.rules_size(), 0);
 
     Envoy::TestUtility::validate(proto_config);
+    (void)FilterConfig(proto_config, Envoy::EMPTY_STRING,
+                       mock_factory_context_);
   }
+
+  testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
+      mock_factory_context_;
 };
 
 TEST_F(BackendRoutingConfigTest, AppendAddressNoPrefixThrows) {
@@ -123,6 +128,23 @@ TEST_F(BackendRoutingConfigTest, PathFragmentIdentifierThrows) {
   )"),
                           Envoy::ProtoValidationException,
                           "BackendRoutingRuleValidationError.PathPrefix");
+}
+
+TEST_F(BackendRoutingConfigTest, DuplicateOperationThrows) {
+  EXPECT_THROW_WITH_REGEX(validateConfig(R"(
+    rules {
+      operation: "dup-operation"
+      path_translation: APPEND_PATH_TO_ADDRESS
+      path_prefix: "/prefix-1"
+    }
+    rules {
+      operation: "dup-operation"
+      path_translation: APPEND_PATH_TO_ADDRESS
+      path_prefix: "/prefix-2"
+    }
+  )"),
+                          Envoy::ProtoValidationException,
+                          "Duplicated operation");
 }
 
 }  // namespace
