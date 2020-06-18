@@ -131,7 +131,7 @@ test-debug: format
 
 test-envoy: format
 	@echo "--> running envoy's unit tests"
-	@bazel test //src/...
+	@CC=clang-8 CXX=clang++-8  bazel test //src/...
 
 test-envoy-asan: format
 	@echo "--> running envoy's unit tests (asan)"

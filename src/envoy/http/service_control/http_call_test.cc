@@ -125,7 +125,7 @@ class HttpCallTest : public testing::Test {
       const uint64_t status_code) {
     // Headers with status code
     Envoy::Http::ResponseHeaderMapPtr header_map =
-        std::make_unique<Envoy::Http::ResponseHeaderMapImpl>();
+        Envoy::Http::ResponseHeaderMapImpl::create();
     header_map->setStatus(status_code);
 
     // Message with no body
