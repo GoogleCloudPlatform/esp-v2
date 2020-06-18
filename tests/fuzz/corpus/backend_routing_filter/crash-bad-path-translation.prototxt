@@ -1,0 +1,10 @@
+config {
+  rules {
+    operation: "&"
+    path_prefix: ";;;;;;;;;;;;;;;;;;;;;;;google.protobuf.Enu;C;;"
+    path_translation: 1197
+  }
+}
+binding_query_params: ";;;;;;;;;;;;;;;;;;;;;;;;C;;"
+downstream_request {
+}
