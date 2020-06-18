@@ -78,7 +78,11 @@ func TestRolloutIdChangeFetcherSetDetectRolloutIdChangeTimer(t *testing.T) {
 		}
 	})
 
+	// Sleep long enough to make sure the callback is called 3 times so that `cnt`
+	// won't be updated in callback since no update on rolloutId. Otherwise, it
+	// will cause data race on `cnt`.
 	time.Sleep(time.Millisecond * 1000)
+
 	if cnt != wantCnt {
 		t.Fatalf("want callback called by %v times, get %v times", wantCnt, cnt)
 	}
