@@ -17,6 +17,7 @@ package serviceconfig
 import (
 	"fmt"
 	"net/http"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -65,22 +66,29 @@ func TestRolloutIdChangeFetcherSetDetectRolloutIdChangeTimer(t *testing.T) {
 	accessToken := func() (string, time.Duration, error) { return "token", time.Duration(60), nil }
 	cif := NewRolloutIdChangeDetector(&http.Client{}, serviceControlServer.GetURL(), "service-name", accessToken)
 
-	cnt := 0
-	wantCnt := 3
+	// `unsafeCnt` will be accessed in muilti-goroutine so please access it using atomic
+	// library.
+	var unsafeCnt, wantCnt uint32
+	unsafeCnt = 0
+	wantCnt = 3
+
 	wantRolloutId := fmt.Sprintf("test-rollout-id-%v", wantCnt)
-	cif.SetDetectRolloutIdChangeTimer(time.Millisecond*100, func() {
-		cnt += 1
+	cif.SetDetectRolloutIdChangeTimer(time.Millisecond*50, func() {
+		atomic.AddUint32(&unsafeCnt, 1)
+
 		// Update rolloutId so the callback will be called.
 		// It will be updated only three times.
-		if cnt < wantCnt {
-			serviceRolloutId = fmt.Sprintf("test-rollout-id-%v", cnt+1)
+		curCnt := atomic.LoadUint32(&unsafeCnt)
+		if curCnt < wantCnt {
+			serviceRolloutId = fmt.Sprintf("test-rollout-id-%v", curCnt+1)
 			serviceControlServer.SetResp(genFakeReport(serviceRolloutId))
 		}
 	})
 
-	time.Sleep(time.Millisecond * 500)
-	if cnt != wantCnt {
-		t.Fatalf("want callback called by %v times, get %v times", wantCnt, cnt)
+	time.Sleep(time.Millisecond * 1500)
+	curCnt := atomic.LoadUint32(&unsafeCnt)
+	if curCnt != wantCnt {
+		t.Fatalf("want callback called by %v times, get %v times", wantCnt, curCnt)
 	}
 
 	if cif.curRolloutId != wantRolloutId {
