@@ -34,7 +34,7 @@ message BackendRoutingRule {
   }
 
   PathTranslation path_translation = 4
-      [(validate.rules).enum = { not_in: [ 0 ] }];
+      [(validate.rules).enum = { in: [ 1, 2 ] }];
 
   // Prefix used when re-writing the path for the backend.
   string path_prefix = 3 [(validate.rules).string = {
