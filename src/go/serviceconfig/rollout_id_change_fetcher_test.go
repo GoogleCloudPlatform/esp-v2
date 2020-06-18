@@ -68,7 +68,7 @@ func TestRolloutIdChangeFetcherSetDetectRolloutIdChangeTimer(t *testing.T) {
 	cnt := 0
 	wantCnt := 3
 	wantRolloutId := fmt.Sprintf("test-rollout-id-%v", wantCnt)
-	cif.SetDetectRolloutIdChangeTimer(time.Millisecond*100, func() {
+	cif.SetDetectRolloutIdChangeTimer(time.Millisecond*50, func() {
 		cnt += 1
 		// Update rolloutId so the callback will be called.
 		// It will be updated only three times.
@@ -78,7 +78,11 @@ func TestRolloutIdChangeFetcherSetDetectRolloutIdChangeTimer(t *testing.T) {
 		}
 	})
 
-	time.Sleep(time.Millisecond * 500)
+	// Sleep long enough to make sure the callback is called 3 times so that `cnt`
+	// won't be updated in callback since no update on rolloutId. Otherwise, it
+	// will cause data race on `cnt`.
+	time.Sleep(time.Millisecond * 1000)
+
 	if cnt != wantCnt {
 		t.Fatalf("want callback called by %v times, get %v times", wantCnt, cnt)
 	}
