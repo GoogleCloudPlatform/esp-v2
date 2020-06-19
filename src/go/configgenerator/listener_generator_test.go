@@ -1706,28 +1706,26 @@ func TestMakeHttpConMgr(t *testing.T) {
 			opts: options.ConfigGeneratorOptions{},
 			wantHttpConnMgr: `
 			{
-				 "commonHttpProtocolOptions":{
-						"headersWithUnderscoresAction":"REJECT_REQUEST"
-				 },
-        "localReplyConfig": {
-          "bodyFormat": {
-            "jsonFormat": {
-              "code": "%RESPONSE_CODE%",
-              "message":"%LOCAL_REPLY_BODY%"
-             }
-           }
-         },
-				 "routeConfig":{},
-				 "statPrefix":"ingress_http",
-				 "tracing":{
-			
-				 },
-				 "upgradeConfigs":[
-						{
-							 "upgradeType":"websocket"
+				"commonHttpProtocolOptions": {
+					"headersWithUnderscoresAction": "REJECT_REQUEST"
+				},
+				"localReplyConfig": {
+					"bodyFormat": {
+						"jsonFormat": {
+							"code": "%RESPONSE_CODE%",
+							"message": "%LOCAL_REPLY_BODY%"
 						}
-				 ],
-				 "useRemoteAddress":false
+					}
+				},
+				"routeConfig": {},
+				"statPrefix": "ingress_http",
+				"tracing": {},
+				"upgradeConfigs": [
+					{
+						"upgradeType": "websocket"
+					}
+				],
+				"useRemoteAddress": false
 			}`,
 		},
 		{
