@@ -59,7 +59,8 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
                     rpcStatus = json.loads(r.text)
                     self.assertEqual(rpcStatus, json.loads('{"message":"Jwt is missing","code":401}'))
                 except:
-                    print("fail to decode json payload")
+                    self.fail("fail to decode json payload")
+
                 print 'Completed Negative test.'
             if api_key:
                 print 'Negative test: remove api_key.'
@@ -73,7 +74,8 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
                                                            'Key or other form of API consumer identity to '
                                                            'call this API."}'))
                 except:
-                    print("fail to decode json payload")
+                    self.fail("fail to decode json payload")
+
                 print 'Completed Negative test.'
             return self._call_http(path, api_key, auth, data, method)
         else:

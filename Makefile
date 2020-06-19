@@ -102,8 +102,11 @@ build-grpc-interop:
 	@cp -f bazel-bin/external/com_github_grpc_grpc/test/cpp/interop/interop_server bin/
 	@cp -f bazel-bin/external/com_github_grpc_grpc/test/cpp/interop/stress_test bin/
 
-# This target is to upload e2e client binaries so once they get updated,
-# this target should be executed.
+# This target is to upload e2e client binaries so once they get updated.
+# The execution environment of prow image may be imcompatiable with your local
+# builidng environemnt which fails the client binaries so you may have to make
+# this target in the prow image, for which you can find the latest version under
+# https://github.com/GoogleCloudPlatform/oss-test-infra/blob/master/prow/prowjobs/GoogleCloudPlatform/esp-v2/esp-v2.yaml
 upload-e2e-client-binaries: build-grpc-echo build-grpc-interop
 	@mkdir -p /tmp/apiproxy-test-presubmit-binaries/
 	@cp -n bin/interop_client /tmp/apiproxy-test-presubmit-binaries/interop_client
