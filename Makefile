@@ -102,7 +102,8 @@ build-grpc-interop:
 	@cp -f bazel-bin/external/com_github_grpc_grpc/test/cpp/interop/interop_server bin/
 	@cp -f bazel-bin/external/com_github_grpc_grpc/test/cpp/interop/stress_test bin/
 
-# This target is to upload e2e client binaries so once they get updated.
+# This target is to upload e2e client binaries so once they get updated, please
+# upload the binaries to GCS buckets by this target.
 # The execution environment of prow image may be incompatible with your local
 # building environment which fails the client binaries so you may have to make
 # this target in the prow image, for which you can find the latest version under
