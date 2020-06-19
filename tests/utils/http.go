@@ -33,9 +33,9 @@ func (r rpcStatus) toString() string {
 	return fmt.Sprintf("{\"code\":%v,\"message\":\"%s\"}", r.Code, r.Message)
 }
 
-// DeterministicSerializeRpcStatus converts the unordered json format of
+// RpcStatusDeterministicJsonFormat converts the unordered json format of
 // rpcStatus to an ordered one.
-func DeterministicSerializeRpcStatus(jsonBytes []byte) string {
+func RpcStatusDeterministicJsonFormat(jsonBytes []byte) string {
 	var jsonErr rpcStatus
 	_ = json.Unmarshal(jsonBytes, &jsonErr)
 	return jsonErr.toString()
@@ -88,7 +88,7 @@ func DoWithHeaders(url, method, message string, headers map[string]string) (http
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, DeterministicSerializeRpcStatus(bodyBytes))
+		return nil, nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, RpcStatusDeterministicJsonFormat(bodyBytes))
 	}
 	return resp.Header, bodyBytes, err
 }

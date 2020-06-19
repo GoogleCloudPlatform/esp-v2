@@ -111,7 +111,7 @@ func DoJWT(host, method, path, apiKey, serviceAccount, token string) ([]byte, er
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, utils.DeterministicSerializeRpcStatus(bodyBytes))
+		return nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, utils.RpcStatusDeterministicJsonFormat(bodyBytes))
 	}
 	return bodyBytes, err
 }
@@ -204,7 +204,7 @@ func DoHttpsGet(url string, httpVersion int, certPath string) (http.Header, []by
 		return nil, nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, utils.DeterministicSerializeRpcStatus(body))
+		return nil, nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, utils.RpcStatusDeterministicJsonFormat(body))
 	}
 	return resp.Header, body, err
 }

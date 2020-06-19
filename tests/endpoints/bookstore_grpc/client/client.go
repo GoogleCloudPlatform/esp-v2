@@ -107,7 +107,7 @@ var makeHTTPCall = func(addr, httpMethod, method, token string, header http.Head
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, utils.DeterministicSerializeRpcStatus(content))
+		return "", fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, utils.RpcStatusDeterministicJsonFormat(content))
 	}
 
 	return string(content), nil
@@ -139,7 +139,7 @@ func makeHTTP2Call(addr, httpMethod, method, token string, header http.Header) (
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, utils.DeterministicSerializeRpcStatus(content))
+		return "", fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, utils.RpcStatusDeterministicJsonFormat(content))
 	}
 
 	return string(content), nil
@@ -168,7 +168,7 @@ var MakeHttpCallWithBody = func(addr, httpMethod, method, token string, bodyByte
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, utils.DeterministicSerializeRpcStatus(content))
+		return "", fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, utils.RpcStatusDeterministicJsonFormat(content))
 	}
 
 	return string(content), nil
@@ -231,7 +231,7 @@ var makeGRPCCall = func(addr, method, token string, header http.Header) (string,
 
 	if err != nil {
 		statusErr := status.Convert(err)
-		return "", fmt.Errorf("%v got unexpected error: code = %v, message = %v", method, statusErr.Code(), utils.DeterministicSerializeRpcStatus([]byte(statusErr.Message())))
+		return "", fmt.Errorf("%v got unexpected error: code = %v, message = %v", method, statusErr.Code(), utils.RpcStatusDeterministicJsonFormat([]byte(statusErr.Message())))
 	}
 
 	var marshaler jsonpb.Marshaler
@@ -337,7 +337,7 @@ func MakeGRPCWebCall(addr, method, token string, header http.Header) (string, GR
 
 	if resp.StatusCode != http.StatusOK {
 		content, _ := ioutil.ReadAll(resp.Body)
-		return "", nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, utils.DeterministicSerializeRpcStatus(content))
+		return "", nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, utils.RpcStatusDeterministicJsonFormat(content))
 	}
 
 	bytesMsg, trailer, err := DecodeGRPCWebResponseBody(resp.Body)
@@ -392,7 +392,7 @@ func MakeTokenInQueryCall(addr, httpMethod, method, token string) (string, error
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, utils.DeterministicSerializeRpcStatus(content))
+		return "", fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, utils.RpcStatusDeterministicJsonFormat(content))
 	}
 
 	return string(content), nil
