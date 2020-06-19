@@ -72,12 +72,12 @@ func TestServiceControlCheckError(t *testing.T) {
 			message: "",
 			mockedCheckResponse: &scpb.CheckResponse{
 				CheckErrors: []*scpb.CheckError{
-					&scpb.CheckError{
+					{
 						Code: scpb.CheckError_SERVICE_NOT_ACTIVATED,
 					},
 				},
 			},
-			wantError: "403 Forbidden, PERMISSION_DENIED:API echo-api.endpoints.cloudesf-testing.cloud.goog is not enabled for the project",
+			wantError: `403 Forbidden, {"code":403,"message":"PERMISSION_DENIED:API echo-api.endpoints.cloudesf-testing.cloud.goog is not enabled for the project."}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
 					Version:         utils.ESPv2Version(),
@@ -115,12 +115,12 @@ func TestServiceControlCheckError(t *testing.T) {
 			message: "",
 			mockedCheckResponse: &scpb.CheckResponse{
 				CheckErrors: []*scpb.CheckError{
-					&scpb.CheckError{
+					{
 						Code: scpb.CheckError_API_KEY_INVALID,
 					},
 				},
 			},
-			wantError: "400 Bad Request, INVALID_ARGUMENT:API key not valid. Please pass a valid API key",
+			wantError: `400 Bad Request, {"code":400,"message":"INVALID_ARGUMENT:API key not valid. Please pass a valid API key."}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
 					Version:         utils.ESPv2Version(),
@@ -164,7 +164,7 @@ func TestServiceControlCheckError(t *testing.T) {
 					},
 				},
 				CheckErrors: []*scpb.CheckError{
-					&scpb.CheckError{
+					{
 						Code: scpb.CheckError_PROJECT_INVALID,
 					},
 				},
@@ -172,7 +172,7 @@ func TestServiceControlCheckError(t *testing.T) {
 			// Note: first request is from Config Manager, second is from ESPv2
 			wantRequestsToMetaServer: &expectedRequestCount{"/v1/instance/service-accounts/default/token", 2},
 			wantRequestsToProvider:   &expectedRequestCount{provider, 1},
-			wantError:                "400 Bad Request, INVALID_ARGUMENT:Client project not valid. Please pass a valid project",
+			wantError:                `400 Bad Request, {"code":400,"message":"INVALID_ARGUMENT:Client project not valid. Please pass a valid project."}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
 					Version:         utils.ESPv2Version(),

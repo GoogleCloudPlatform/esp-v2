@@ -22,7 +22,27 @@ import (
 	"net/http"
 )
 
-// DoWithHeaders performs a GET/POST/PUT/DELETE/PATCH request to a specified url with given headers and message(if provided)
+// rpcStatus is a type, used to parse the json format of google.rpc.Status,
+// https://github.com/googleapis/googleapis/blob/master/google/rpc/status.proto.
+type rpcStatus struct {
+	Code    uint16
+	Message string
+}
+
+func (r rpcStatus) toString() string {
+	return fmt.Sprintf("{\"code\":%v,\"message\":\"%s\"}", r.Code, r.Message)
+}
+
+// DeterministicSerializeRpcStatus converts the unordered json format of
+// rpcStatus to an ordered one.
+func DeterministicSerializeRpcStatus(jsonBytes []byte) string {
+	var jsonErr rpcStatus
+	_ = json.Unmarshal(jsonBytes, &jsonErr)
+	return jsonErr.toString()
+}
+
+// DoWithHeaders performs a GET/POST/PUT/DELETE/PATCH request to a specified url
+// with given headers and message(if provided)
 func DoWithHeaders(url, method, message string, headers map[string]string) (http.Header, []byte, error) {
 	var request *http.Request
 	var err error
@@ -68,7 +88,7 @@ func DoWithHeaders(url, method, message string, headers map[string]string) (http
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, string(bodyBytes))
+		return nil, nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, DeterministicSerializeRpcStatus(bodyBytes))
 	}
 	return resp.Header, bodyBytes, err
 }

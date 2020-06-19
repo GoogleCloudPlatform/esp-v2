@@ -270,10 +270,14 @@ class Echo {
           } else {
             result.mutable_echo()->set_text(echo->response_.text());
           }
+
+          // error_message is a json map, which is unordered, so only check if
+          // it contains target message.
           ok = ((echo->desc_.expected_status().code() ==
                  echo->status_.error_code()) &&
-                (echo->desc_.expected_status().details() ==
-                 echo->status_.error_message()));
+                (echo->status_.error_message().find(
+                     echo->desc_.expected_status().details()) !=
+                 std::string::npos));
           if (echo->status_.ok()) {
             ok &= (echo->desc_.request().text() == echo->response_.text());
 
@@ -473,8 +477,11 @@ class EchoStream {
         result.mutable_echo_stream()->set_count(es->read_count_);
 
         ok &= es->status_.error_code() == es->status_expected_.error_code();
-        ok &= (es->status_.error_message() ==
-               es->status_expected_.error_message());
+
+        // error_message is a json map, which is unordered, so only check if
+        // it contains target message.
+        ok &= (es->status_.error_message().find(
+                   es->status_expected_.error_message()) != std::string::npos);
         if (es->status_.ok()) {
           ok &= (es->read_count_expected_ == es->read_count_);
         }

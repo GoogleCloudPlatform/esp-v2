@@ -17,6 +17,7 @@
 import argparse
 import utils
 import sys
+import json
 from utils import ApiProxyClientTest
 
 
@@ -55,19 +56,20 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
                 r = self._call_http(path, api_key, None, data, method)
                 self.assertEqual(r.status_code, 401)
                 self.assertEqual(
-                    r.text,
-                    'Jwt is missing')
+                    json.loads(r.text),
+                    json.loads({"message":"Jwt is missing","code":401}))
                 print 'Completed Negative test.'
             if api_key:
                 print 'Negative test: remove api_key.'
                 r = self._call_http(path, None, auth, data, method)
                 self.assertEqual(r.status_code, 401)
                 self.assertEqual(
-                    r.text,
-                    (
+                    json.loads(r.text),
+                    json.loads(
+                        ('{"code":401,"message":'
                         'UNAUTHENTICATED:Method doesn\'t allow unregistered callers (callers without '
                         'established identity). Please use API Key or other form of '
-                        'API consumer identity to call this API.'))
+                        'API consumer identity to call this API.}')))
                 print 'Completed Negative test.'
             return self._call_http(path, api_key, auth, data, method)
         else:

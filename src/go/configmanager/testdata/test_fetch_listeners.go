@@ -24,6 +24,14 @@ const (
 	TestFetchListenersEndpointName = "endpoints.examples.bookstore.Bookstore"
 	TestFetchListenersConfigID     = "2017-05-01r0"
 	testProjectID                  = "project123"
+	localReplyConfig               = `"localReplyConfig": {
+                    "bodyFormat": {
+                      "jsonFormat": {
+                        "code": "%RESPONSE_CODE%",
+                        "message":"%LOCAL_REPLY_BODY%"
+                      }
+                    }
+                  }`
 )
 
 var (
@@ -154,6 +162,7 @@ var (
                   "statPrefix":"ingress_http",
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
                   "useRemoteAddress":false,
+                  %s,
                   "xffNumTrustedHops":2
                }
             }
@@ -162,7 +171,7 @@ var (
    ]
 }
 `,
-		fakeProtoDescriptor, TestFetchListenersEndpointName, testBackendClusterName)
+		fakeProtoDescriptor, TestFetchListenersEndpointName, testBackendClusterName, localReplyConfig)
 
 	FakeServiceConfigForGrpcWithJwtFilterWithAuds = fmt.Sprintf(`{
                 "name":"bookstore.endpoints.project123.cloud.goog",
@@ -332,6 +341,7 @@ var (
                   "statPrefix":"ingress_http",
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
                   "useRemoteAddress":false,
+                  %s,
                   "xffNumTrustedHops":2
                }
             }
@@ -339,7 +349,7 @@ var (
       }
    ]
 }
-              `, testBackendClusterName)
+              `, testBackendClusterName, localReplyConfig)
 
 	FakeServiceConfigForGrpcWithJwtFilterWithoutAuds = fmt.Sprintf(`{
                 "name":"bookstore.endpoints.project123.cloud.goog",
@@ -544,13 +554,14 @@ var (
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
                   "statPrefix":"ingress_http",
                   "useRemoteAddress":false,
+                  %s,
                   "xffNumTrustedHops":2
                }
             }
          ]
       }
    ]
-}`, testBackendClusterName)
+}`, testBackendClusterName, localReplyConfig)
 
 	FakeServiceConfigForGrpcWithJwtFilterWithMultiReqs = fmt.Sprintf(`{
                 "name":"bookstore.endpoints.project123.cloud.goog",
@@ -792,13 +803,14 @@ var (
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
                   "statPrefix":"ingress_http",
                   "useRemoteAddress":false,
+                  %s,
                   "xffNumTrustedHops":2
                }
             }
          ]
       }
    ]
-}`, testBackendClusterName)
+}`, testBackendClusterName, localReplyConfig)
 
 	FakeServiceConfigForGrpcWithServiceControl = fmt.Sprintf(`{
                 "name":"%s",
@@ -1015,13 +1027,14 @@ var (
                   "statPrefix":"ingress_http",
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
                   "useRemoteAddress":false,
+                  %s,
                   "xffNumTrustedHops":2
                }
             }
          ]
       }
    ]
-}`, testProjectID, TestFetchListenersConfigID, TestFetchListenersProjectName, testBackendClusterName)
+}`, testProjectID, TestFetchListenersConfigID, TestFetchListenersProjectName, testBackendClusterName, localReplyConfig)
 
 	FakeServiceConfigForHttp = fmt.Sprintf(`{
                 "name":"bookstore.endpoints.project123.cloud.goog",
@@ -1202,13 +1215,14 @@ var (
                   "statPrefix":"ingress_http",
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
                   "useRemoteAddress":false,
+                  %s,
                   "xffNumTrustedHops":2
                }
             }
          ]
       }
    ]
-}`, testBackendClusterName)
+}`, testBackendClusterName, localReplyConfig)
 
 	FakeServiceConfigAllowCorsTracingDebug = fmt.Sprintf(`{
                 "name":"%s",
@@ -1243,7 +1257,7 @@ var (
                 ]
             }`, TestFetchListenersProjectName, testProjectID, TestFetchListenersProjectName)
 
-	WantedListenersAllowCorsTracingDebug = `{
+	WantedListenersAllowCorsTracingDebug = fmt.Sprintf(`{
    "address":{
       "socketAddress":{
          "address":"0.0.0.0",
@@ -1366,11 +1380,12 @@ var (
 
                   },
                   "useRemoteAddress":false,
+                  %s,
                   "xffNumTrustedHops":2
                }
             }
          ]
       }
    ]
-}`
+}`, localReplyConfig)
 )

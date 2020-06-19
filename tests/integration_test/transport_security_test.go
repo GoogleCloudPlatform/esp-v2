@@ -116,7 +116,7 @@ func TestServiceControlWithTLS(t *testing.T) {
 			port:      comp.TestServiceControlTLSWithValidCert,
 			certPath:  platform.GetFilePath(platform.ServerCert),
 			keyPath:   platform.GetFilePath(platform.ServerKey),
-			wantError: "503 Service Unavailable, UNAVAILABLE:Calling Google Service Control API failed with: 503",
+			wantError: "UNAVAILABLE:Calling Google Service Control API failed with: 503 and body: upstream connect error or disconnect/reset before headers. reset reason: connection failure",
 		},
 	}
 
@@ -213,7 +213,7 @@ func TestHttpsClients(t *testing.T) {
 			if !strings.Contains(string(resp), tc.wantResp) {
 				t.Errorf("Test desc (%v) expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
 			}
-		} else if !strings.Contains(err.Error(), tc.wantError.Error()) {
+		} else if err != nil && !strings.Contains(err.Error(), tc.wantError.Error()) {
 			t.Errorf("Test (%s): failed\nexpected: %v\ngot: %v", tc.desc, tc.wantError, err)
 		}
 	}

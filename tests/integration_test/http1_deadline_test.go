@@ -63,7 +63,7 @@ func TestDeadlinesForDynamicRouting(t *testing.T) {
 			desc:           "Fail before 20s due to ESPv2 default response timeout being 15s",
 			reqDuration:    time.Second * 20,
 			deadlineToTest: Default,
-			wantErr:        "504 Gateway Timeout, upstream request timeout",
+			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
 		},
 		{
 			desc:           "Success after 2s due to user-configured deadline being 5s",
@@ -74,7 +74,7 @@ func TestDeadlinesForDynamicRouting(t *testing.T) {
 			desc:           "Fail before 8s due to user-configured deadline being 5s",
 			reqDuration:    time.Second * 8,
 			deadlineToTest: Short,
-			wantErr:        "504 Gateway Timeout, upstream request timeout",
+			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
 		},
 	}
 
@@ -140,7 +140,7 @@ func TestDeadlinesForCatchAllBackend(t *testing.T) {
 		{
 			desc:        "Fail before 20s due to ESPv2 default response timeout being 15s",
 			reqDuration: time.Second * 20,
-			wantErr:     "504 Gateway Timeout, upstream request timeout",
+			wantErr:     `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
 		},
 	}
 

@@ -258,15 +258,15 @@ func TestGRPCJwt(t *testing.T) {
 			desc:             "Fail for gRPC client, without valid JWT token",
 			clientProtocol:   "grpc",
 			method:           "ListShelves",
-			wantError:        "code = Unauthenticated desc = Jwt is missing",
-			wantGRPCWebError: "401 Unauthorized, Jwt is missing",
+			wantError:        `code = Unauthenticated, message = {"code":401,"message":"Jwt is missing"}`,
+			wantGRPCWebError: `401 Unauthorized, {"code":401,"message":"Jwt is missing"}`,
 		},
 		{
 			desc:           "Fail for Http client, without valid JWT token",
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves",
-			wantError:      "401 Unauthorized, Jwt is missing",
+			wantError:      `401 Unauthorized, {"code":401,"message":"Jwt is missing"}`,
 		},
 		{
 			desc:           "Succeed for Http client, JWT rule recognizes {shelf} correctly",
@@ -280,8 +280,8 @@ func TestGRPCJwt(t *testing.T) {
 			clientProtocol:   "grpc",
 			method:           "ListShelves",
 			token:            testdata.FakeBadToken,
-			wantError:        "code = Unauthenticated desc = Jwt issuer is not configured",
-			wantGRPCWebError: "401 Unauthorized, Jwt issuer is not configured",
+			wantError:        `code = Unauthenticated, message = {"code":401,"message":"Jwt issuer is not configured"}`,
+			wantGRPCWebError: `401 Unauthorized, {"code":401,"message":"Jwt issuer is not configured"}`,
 		},
 		{
 			desc:           "Fail for Http client, with bad JWT token",
@@ -289,7 +289,7 @@ func TestGRPCJwt(t *testing.T) {
 			httpMethod:     "GET",
 			method:         "/v1/shelves",
 			token:          testdata.FakeBadToken,
-			wantError:      "401 Unauthorized, Jwt issuer is not configured",
+			wantError:      `{"code":401,"message":"Jwt issuer is not configured"}`,
 		},
 		{
 			desc:           "Succeed for Http client, with valid JWT token, with url binding",
@@ -322,7 +322,7 @@ func TestGRPCJwt(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves",
-			wantError:      "401 Unauthorized, Jwt is missing",
+			wantError:      `401 Unauthorized, {"code":401,"message":"Jwt is missing"}`,
 		},
 		{
 			desc:           "Succeed for Http client, Jwt RouteMatcher works for multi query parameters",
@@ -337,7 +337,7 @@ func TestGRPCJwt(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "DELETE",
 			method:         "/v1/shelves/125/books/001",
-			wantError:      "401 Unauthorized, Jwt is missing",
+			wantError:      `401 Unauthorized, {"code":401,"message":"Jwt is missing"}`,
 		},
 		{
 			desc:           "Succeed for Http client, Jwt RouteMatcher works for multi query parameters and HttpHeader, no audience",
@@ -370,8 +370,8 @@ func TestGRPCJwt(t *testing.T) {
 			clientProtocol:   "grpc",
 			method:           "ListShelves",
 			token:            testdata.FakeCloudToken,
-			wantError:        "code = PermissionDenied desc = Audiences in Jwt are not allowed",
-			wantGRPCWebError: "403 Forbidden, Audiences in Jwt are not allowed",
+			wantError:        `code = PermissionDenied, message = {"code":403,"message":"Audiences in Jwt are not allowed"}`,
+			wantGRPCWebError: `403 Forbidden, {"code":403,"message":"Audiences in Jwt are not allowed"}`,
 		},
 		{
 			desc:           "Fail for Http client, with JWT token but not expected audience",
@@ -379,15 +379,15 @@ func TestGRPCJwt(t *testing.T) {
 			httpMethod:     "GET",
 			method:         "/v1/shelves",
 			token:          testdata.FakeCloudToken,
-			wantError:      "403 Forbidden, Audiences in Jwt are not allowed",
+			wantError:      `403 Forbidden, {"code":403,"message":"Audiences in Jwt are not allowed"}`,
 		},
 		{
 			desc:             "Fail for gRPC client, with JWT token but wrong audience",
 			clientProtocol:   "grpc",
 			method:           "ListShelves",
 			token:            testdata.FakeCloudTokenSingleAudience2,
-			wantError:        "code = PermissionDenied desc = Audiences in Jwt are not allowed",
-			wantGRPCWebError: "403 Forbidden, Audiences in Jwt are not allowed",
+			wantError:        `code = PermissionDenied, message = {"code":403,"message":"Audiences in Jwt are not allowed"}`,
+			wantGRPCWebError: `403 Forbidden, {"code":403,"message":"Audiences in Jwt are not allowed"}`,
 		},
 		{
 			desc:               "Succeed for gRPC client, with JWT token with one audience while multi audiences are allowed",
@@ -431,7 +431,7 @@ func TestGRPCJwt(t *testing.T) {
 			httpMethod:     "DELETE",
 			method:         "/v1/shelves/120?key=api-key",
 			token:          testdata.FakeCloudToken,
-			wantError:      "403 Forbidden, Audiences in Jwt are not allowed",
+			wantError:      `403 Forbidden, {"code":403,"message":"Audiences in Jwt are not allowed"}`,
 		},
 		// Test the default audience when one isn't specified.
 		{
@@ -440,7 +440,7 @@ func TestGRPCJwt(t *testing.T) {
 			httpMethod:     "POST",
 			method:         "/v1/shelves",
 			token:          testdata.FakeCloudToken,
-			wantError:      "403 Forbidden, Audiences in Jwt are not allowed",
+			wantError:      ` 403 Forbidden, {"code":403,"message":"Audiences in Jwt are not allowed"}`,
 		},
 		{
 			desc:           "Fail for HTTP client calling endpoint with default audience due to token audience mismatch",
@@ -448,7 +448,7 @@ func TestGRPCJwt(t *testing.T) {
 			httpMethod:     "POST",
 			method:         "/v1/shelves",
 			token:          testdata.FakeCloudTokenSingleAudience2,
-			wantError:      "403 Forbidden, Audiences in Jwt are not allowed",
+			wantError:      `403 Forbidden, {"code":403,"message":"Audiences in Jwt are not allowed"}`,
 		},
 		{
 			desc:           "Success for HTTP client calling endpoint with default audience",
@@ -465,10 +465,10 @@ func TestGRPCJwt(t *testing.T) {
 		resp, err := client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, tc.header)
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
-			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
+			t.Errorf("Test (%s): failed,\n expected err: %v,\n got: %v", tc.desc, tc.wantError, err)
 		} else {
 			if !strings.Contains(resp, tc.wantResp) {
-				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
+				t.Errorf("Test (%s): failed,\n expected: %s,\n got: %s", tc.desc, tc.wantResp, resp)
 			}
 		}
 

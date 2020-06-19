@@ -123,10 +123,12 @@ func TestFetchListeners(t *testing.T) {
 				},
 				TypeUrl: resource.ListenerType,
 			}
-			resp, err := configManager.cache.Fetch(ctx, req)
+			respInterface, err := configManager.cache.Fetch(ctx, req)
 			if err != nil {
 				t.Fatal(err)
 			}
+			resp := respInterface.(cache.Response)
+
 			marshaler := &jsonpb.Marshaler{
 				AnyResolver: util.Resolver,
 			}
@@ -184,11 +186,11 @@ func TestFixedModeDynamicRouting(t *testing.T) {
 			TypeUrl: resource.ClusterType,
 		}
 
-		respForClusters, err := manager.cache.Fetch(ctx, reqForClusters)
+		respInterface, err := manager.cache.Fetch(ctx, reqForClusters)
 		if err != nil {
-			t.Error(err)
-			continue
+			t.Fatal(err)
 		}
+		respForClusters := respInterface.(cache.Response)
 
 		if !proto.Equal(&respForClusters.Request, &reqForClusters) {
 			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, respForClusters.Request, reqForClusters)
@@ -221,11 +223,13 @@ func TestFixedModeDynamicRouting(t *testing.T) {
 			TypeUrl: resource.ListenerType,
 		}
 
-		respForListener, err := manager.cache.Fetch(ctx, reqForListener)
+		respInterface, err = manager.cache.Fetch(ctx, reqForListener)
 		if err != nil {
 			t.Error(err)
 			continue
 		}
+		respForListener := respInterface.(cache.Response)
+
 		if respForListener.Version != testdata.TestFetchListenersConfigID {
 			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, respForListener.Version, testdata.TestFetchListenersConfigID)
 			continue
@@ -384,7 +388,8 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 	setFlags(testProjectName, testConfigID, util.ManagedRolloutStrategy, "100ms", "")
 
 	runTest(t, &fakeScReport, &fakeRollouts, &fakeConfig, opts, func(configManager *ConfigManager) {
-		var resp *cache.Response
+		var respInterface cache.ResponseIface
+		var resp cache.Response
 		var err error
 		ctx := context.Background()
 		req := discoverypb.DiscoveryRequest{
@@ -393,10 +398,11 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 			},
 			TypeUrl: resource.ListenerType,
 		}
-		resp, err = configManager.cache.Fetch(ctx, req)
+		respInterface, err = configManager.cache.Fetch(ctx, req)
 		if err != nil {
 			t.Fatal(err)
 		}
+		resp = respInterface.(cache.Response)
 
 		if resp.Version != oldConfigID {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got version: %v, want: %v", tc.desc, resp.Version, oldConfigID)
@@ -419,10 +425,11 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 
 		time.Sleep(*checkNewRolloutInterval + time.Second)
 
-		resp, err = configManager.cache.Fetch(ctx, req)
+		respInterface, err = configManager.cache.Fetch(ctx, req)
 		if err != nil {
 			t.Fatal(err)
 		}
+		resp = respInterface.(cache.Response)
 
 		if resp.Version != newConfigID || configManager.curConfigId() != newConfigID {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got version: %v, want: %v", tc.desc, resp.Version, newConfigID)
@@ -500,7 +507,7 @@ func initMockServer(t *testing.T, config *safeData) *httptest.Server {
 	}))
 }
 
-func sortResources(response *cache.Response) []types.Resource {
+func sortResources(response cache.Response) []types.Resource {
 	// configManager.cache may change the order
 	// sort them before comparing results.
 	sortedResources := response.Resources

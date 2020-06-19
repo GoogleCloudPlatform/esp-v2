@@ -51,7 +51,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 		requestHeader  map[string]string
 		message        string
 		wantResp       string
-		httpCallError  error
+		httpCallError  string
 		wantScRequests []interface{}
 	}{
 		{
@@ -59,7 +59,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			url:           fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
 			httpMethod:    "GET",
 			method:        "/noexistoperation?key=api-key",
-			httpCallError: fmt.Errorf("404 Not Found, Path does not match any requirement URI template"),
+			httpCallError: `404 Not Found, {"code":404,"message":"Path does not match any requirement URI template."}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:           utils.ESPv2Version(),
@@ -86,7 +86,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			url:           fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
 			httpMethod:    "GET",
 			method:        "/noexistoperation",
-			httpCallError: fmt.Errorf("404 Not Found, Path does not match any requirement URI template"),
+			httpCallError: `404 Not Found, {"code":404,"message":"Path does not match any requirement URI template."}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:           utils.ESPv2Version(),
@@ -112,7 +112,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			url:           fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
 			httpMethod:    "GET",
 			method:        "/v1/shelves?key=api-key",
-			httpCallError: fmt.Errorf("http response status is not 200 OK: 401 Unauthorized, Jwt is missing"),
+			httpCallError: `401 Unauthorized, {"code":401,"message":"Jwt is missing"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:           utils.ESPv2Version(),
@@ -142,7 +142,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			token:         testdata.Es256Token,
 			httpMethod:    "GET",
 			method:        "/v1/shelves/0/books/0",
-			httpCallError: fmt.Errorf("401 Unauthorized, UNAUTHENTICATED:Method doesn't allow unregistered callers (callers without established identity)"),
+			httpCallError: `401 Unauthorized, {"code":401,"message":"UNAUTHENTICATED:Method doesn't allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API."}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:           utils.ESPv2Version(),
@@ -169,7 +169,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 	}
 	for _, tc := range testData {
 		_, err := client.MakeCall("http", tc.url, tc.httpMethod, tc.method, tc.token, nil)
-		if err == nil || !strings.Contains(err.Error(), tc.httpCallError.Error()) {
+		if err == nil || !strings.Contains(err.Error(), tc.httpCallError) {
 			t.Errorf("Test (%s): failed,  expected Http call error: %v, got: %v", tc.desc, tc.httpCallError, err)
 		}
 

@@ -110,7 +110,9 @@ func TestTranscodingErrors(t *testing.T) {
 			token:          testdata.FakeCloudTokenMultiAudiences,
 			bodyBytes:      []byte(`NO_BRACES_JSON`),
 			noBackend:      true,
-			wantErr:        "400 Bad Request, Unexpected token",
+			wantErr: `400 Bad Request, {"code":400,"message":"Unexpected token.
+NO_BRACES_JSON
+^"}`,
 		},
 		{
 			desc:           "failed with 400, not closed json",
@@ -120,7 +122,9 @@ func TestTranscodingErrors(t *testing.T) {
 			token:          testdata.FakeCloudTokenMultiAudiences,
 			bodyBytes:      []byte(`{"theme" : "Children"`),
 			noBackend:      true,
-			wantErr:        "400 Bad Request, Unexpected end of string. Expected , or } after key:value pair",
+			wantErr: `400 Bad Request, {"code":400,"message":"Unexpected end of string. Expected , or } after key:value pair.
+
+^"}`,
 		},
 		{
 			desc:           "failed with 400, no colon",
@@ -130,7 +134,9 @@ func TestTranscodingErrors(t *testing.T) {
 			token:          testdata.FakeCloudTokenMultiAudiences,
 			bodyBytes:      []byte(`{"theme"  "Children"}`),
 			noBackend:      true,
-			wantErr:        "400 Bad Request, Expected : between key:value pair",
+			wantErr: `400 Bad Request, {"code":400,"message":"Expected : between key:value pair.
+{"theme"  "Children"}
+          ^"}`,
 		},
 		{
 			desc:           "failed with 400, extra chars",
@@ -140,7 +146,9 @@ func TestTranscodingErrors(t *testing.T) {
 			token:          testdata.FakeCloudTokenMultiAudiences,
 			bodyBytes:      []byte(`{"theme" : "Children"}EXTRA`),
 			noBackend:      true,
-			wantErr:        "400 Bad Request, Parsing terminated before end of input",
+			wantErr: `{"code":400,"message":"Parsing terminated before end of input.
+theme" : "Children"}EXTRA
+                    ^"}`,
 		},
 	}
 	for _, tc := range tests {
