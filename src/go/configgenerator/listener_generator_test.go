@@ -1738,38 +1738,36 @@ func TestMakeHttpConMgr(t *testing.T) {
 			},
 			wantHttpConnMgr: `
 				{
-					 "accessLog":[
-							{
-								 "name":"envoy.access_loggers.file",
-								 "typedConfig":{
-										"@type":"type.googleapis.com/envoy.extensions.access_loggers.file.v3.FileAccessLog",
-										"path":"/foo",
-										"format":"/bar"
-								 }
+					"accessLog": [
+						{
+							"name": "envoy.access_loggers.file",
+							"typedConfig": {
+								"@type": "type.googleapis.com/envoy.extensions.access_loggers.file.v3.FileAccessLog",
+								"path": "/foo",
+								"format": "/bar"
 							}
-					 ],
-					 "commonHttpProtocolOptions":{
-							"headersWithUnderscoresAction":"REJECT_REQUEST"
-					 },
-					 "localReplyConfig": {
-							"bodyFormat": {
-								 "jsonFormat": {
-										"code": "%RESPONSE_CODE%",
-										"message":"%LOCAL_REPLY_BODY%"
-								 }
+						}
+					],
+					"commonHttpProtocolOptions": {
+						"headersWithUnderscoresAction": "REJECT_REQUEST"
+					},
+					"localReplyConfig": {
+						"bodyFormat": {
+							"jsonFormat": {
+								"code": "%RESPONSE_CODE%",
+								"message": "%LOCAL_REPLY_BODY%"
 							}
-					 },
-					 "routeConfig":{},
-					 "statPrefix":"ingress_http",
-					 "tracing":{
-				
-					 },
-					 "upgradeConfigs":[
-							{
-								 "upgradeType":"websocket"
-							}
-					 ],
-					 "useRemoteAddress":false
+						}
+					},
+					"routeConfig": {},
+					"statPrefix": "ingress_http",
+					"tracing": {},
+					"upgradeConfigs": [
+						{
+							"upgradeType": "websocket"
+						}
+					],
+					"useRemoteAddress": false
 				}
 				`,
 		},
@@ -1782,25 +1780,25 @@ func TestMakeHttpConMgr(t *testing.T) {
 			},
 			wantHttpConnMgr: `
 				{
-					 "commonHttpProtocolOptions":{
-							"headersWithUnderscoresAction":"REJECT_REQUEST"
-					 },
-					 "localReplyConfig": {
-							"bodyFormat": {
-								 "jsonFormat": {
-										"code": "%RESPONSE_CODE%",
-										"message":"%LOCAL_REPLY_BODY%"
-								 }
+					"commonHttpProtocolOptions": {
+						"headersWithUnderscoresAction": "REJECT_REQUEST"
+					},
+					"localReplyConfig": {
+						"bodyFormat": {
+							"jsonFormat": {
+								"code": "%RESPONSE_CODE%",
+								"message": "%LOCAL_REPLY_BODY%"
 							}
-					 },
-					 "routeConfig":{},
-					 "statPrefix":"ingress_http",
-					 "upgradeConfigs":[
-							{
-								 "upgradeType":"websocket"
-							}
-					 ],
-					 "useRemoteAddress":false
+						}
+					},
+					"routeConfig": {},
+					"statPrefix": "ingress_http",
+					"upgradeConfigs": [
+						{
+							"upgradeType": "websocket"
+						}
+					],
+					"useRemoteAddress": false
 				}`,
 		},
 		{
@@ -1810,28 +1808,24 @@ func TestMakeHttpConMgr(t *testing.T) {
 			},
 			wantHttpConnMgr: `
 				{
-					 "commonHttpProtocolOptions":{
-				
-					 },
-					 "localReplyConfig": {
-							"bodyFormat": {
-								 "jsonFormat": {
-										"code": "%RESPONSE_CODE%",
-										"message":"%LOCAL_REPLY_BODY%"
-								 }
+					"commonHttpProtocolOptions": {},
+					"localReplyConfig": {
+						"bodyFormat": {
+							"jsonFormat": {
+								"code": "%RESPONSE_CODE%",
+								"message": "%LOCAL_REPLY_BODY%"
 							}
-					 },
-					 "routeConfig":{},
-					 "statPrefix":"ingress_http",
-					 "tracing":{
-				
-					 },
-					 "upgradeConfigs":[
-							{
-								 "upgradeType":"websocket"
-							}
-					 ],
-					 "useRemoteAddress":false
+						}
+					},
+					"routeConfig": {},
+					"statPrefix": "ingress_http",
+					"tracing": {},
+					"upgradeConfigs": [
+						{
+							"upgradeType": "websocket"
+						}
+					],
+					"useRemoteAddress": false
 				}`,
 		},
 	}
