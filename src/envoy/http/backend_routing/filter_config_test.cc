@@ -41,29 +41,36 @@ class BackendRoutingConfigTest : public ::testing::Test {
     ASSERT_GT(proto_config.rules_size(), 0);
 
     Envoy::TestUtility::validate(proto_config);
+    (void)FilterConfig(proto_config, Envoy::EMPTY_STRING,
+                       mock_factory_context_);
   }
+
+  testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
+      mock_factory_context_;
 };
 
 TEST_F(BackendRoutingConfigTest, AppendAddressNoPrefixThrows) {
-  ASSERT_THROW(validateConfig(R"(
+  EXPECT_THROW_WITH_REGEX(validateConfig(R"(
     rules {
       operation: "append-with-noop-prefix-operation"
       path_translation: APPEND_PATH_TO_ADDRESS
       path_prefix: ""
     }
   )"),
-               Envoy::ProtoValidationException);
+                          Envoy::ProtoValidationException,
+                          "BackendRoutingRuleValidationError.PathPrefix");
 }
 
 TEST_F(BackendRoutingConfigTest, ConstAddressNoPrefixThrows) {
-  ASSERT_THROW(validateConfig(R"(
+  EXPECT_THROW_WITH_REGEX(validateConfig(R"(
     rules {
       operation: "const-with-invalid-prefix-operation"
       path_translation: CONSTANT_ADDRESS
       path_prefix: ""
     }
   )"),
-               Envoy::ProtoValidationException);
+                          Envoy::ProtoValidationException,
+                          "BackendRoutingRuleValidationError.PathPrefix");
 }
 
 TEST_F(BackendRoutingConfigTest, ConstAddressRootPrefixWorks) {
@@ -77,24 +84,67 @@ TEST_F(BackendRoutingConfigTest, ConstAddressRootPrefixWorks) {
 }
 
 TEST_F(BackendRoutingConfigTest, PathTranslationUnspecifiedThrows) {
-  ASSERT_THROW(validateConfig(R"(
+  EXPECT_THROW_WITH_REGEX(validateConfig(R"(
     rules {
       operation: "invalid-path-translation-operation"
       path_prefix: "/test"
     }
   )"),
-               Envoy::ProtoValidationException);
+                          Envoy::ProtoValidationException,
+                          "BackendRoutingRuleValidationError.PathTranslation");
 }
 
 TEST_F(BackendRoutingConfigTest, InvalidPathCharactersThrows) {
-  ASSERT_THROW(validateConfig(R"(
+  EXPECT_THROW_WITH_REGEX(validateConfig(R"(
     rules {
       operation: "invalid-path-prefix-operation"
       path_translation: APPEND_PATH_TO_ADDRESS
       path_prefix: "/test\r\n/invalid"
     }
   )"),
-               Envoy::ProtoValidationException);
+                          Envoy::ProtoValidationException,
+                          "BackendRoutingRuleValidationError.PathPrefix");
+}
+
+TEST_F(BackendRoutingConfigTest, PathQueryParamsThrows) {
+  EXPECT_THROW_WITH_REGEX(validateConfig(R"(
+    rules {
+      operation: "invalid-path-prefix-operation"
+      path_translation: APPEND_PATH_TO_ADDRESS
+      path_prefix: "/test/invalid?query=param"
+    }
+  )"),
+                          Envoy::ProtoValidationException,
+                          "BackendRoutingRuleValidationError.PathPrefix");
+}
+
+TEST_F(BackendRoutingConfigTest, PathFragmentIdentifierThrows) {
+  EXPECT_THROW_WITH_REGEX(validateConfig(R"(
+    rules {
+      operation: "invalid-path-prefix-operation"
+      path_translation: APPEND_PATH_TO_ADDRESS
+      path_prefix: "/test/invalid#fragment"
+    }
+  )"),
+                          Envoy::ProtoValidationException,
+                          "BackendRoutingRuleValidationError.PathPrefix");
+}
+
+TEST_F(BackendRoutingConfigTest, DuplicateOperationThrows) {
+  EXPECT_THROW_WITH_REGEX(validateConfig(R"(
+    rules {
+      operation: "dup-operation"
+      path_translation: APPEND_PATH_TO_ADDRESS
+      path_prefix: "/prefix-1"
+    }
+    rules {
+      operation: "dup-operation"
+      path_translation: APPEND_PATH_TO_ADDRESS
+      path_prefix: "/prefix-2"
+    }
+  )"),
+                          Envoy::ProtoValidationException,
+                          "Duplicated operation");
 }
 
 }  // namespace

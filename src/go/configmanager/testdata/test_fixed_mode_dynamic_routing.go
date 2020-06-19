@@ -16,8 +16,7 @@ package testdata
 
 var (
 	// These resources must be ordered in alphabetic order by name
-	FakeWantedClustersForDynamicRouting = []string{
-		`
+	FakeWantedClustersForDynamicRouting = []string{`
 {
   "name": "echo-api.endpoints.cloudesf-testing.cloud.goog_local",
   "type": "LOGICAL_DNS",
@@ -299,7 +298,7 @@ var (
                            "@type":"type.googleapis.com/espv2.api.envoy.http.backend_auth.FilterConfig",
                            "imdsToken":{
                               "cluster":"metadata-cluster",
-                              "timeout":"5s",
+                              "timeout":"30s",
                               "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
                            },
                            "rules":[

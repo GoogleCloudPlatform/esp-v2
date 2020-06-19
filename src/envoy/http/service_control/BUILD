@@ -121,6 +121,7 @@ envoy_cc_library(
         "//src/api_proxy/service_control:logs_metrics_loader_lib",
         "//src/envoy/token:token_subscriber_factory_lib",
         "@envoy//include/envoy/server:filter_config_interface",
+        "@envoy//source/common/common:assert_lib",
         "@envoy//source/common/common:empty_string",
         "@envoy//source/common/protobuf:utility_lib",
     ],
@@ -264,6 +265,7 @@ envoy_cc_test(
 
 envoy_cc_test(
     name = "handler_test",
+    size = "large",
     srcs = [
         "handler_impl_test.cc",
         "handler_utils_test.cc",

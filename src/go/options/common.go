@@ -77,10 +77,13 @@ type IAMCredentialsOptions struct {
 // The default values are expected to match the default values from the flags.
 func DefaultCommonOptions() CommonOptions {
 	return CommonOptions{
-		AdminAddress:               "0.0.0.0",
-		AdminPort:                  8001,
-		DiscoveryPort:              8790,
-		HttpRequestTimeout:         5 * time.Second,
+		AdminAddress:  "0.0.0.0",
+		AdminPort:     8001,
+		DiscoveryPort: 8790,
+
+		// b/148454048: This should be at least 20s due to IMDS latency issues with k8s workload identities.
+		HttpRequestTimeout: 30 * time.Second,
+
 		Node:                       "ESPv2",
 		TracingSamplingRate:        0.001,
 		TracingMaxNumAttributes:    32,

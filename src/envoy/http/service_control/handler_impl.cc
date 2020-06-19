@@ -33,8 +33,9 @@ using ::espv2::api_proxy::service_control::ScResponseErrorType;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
-// The HTTP header suffix to send consumer project to backend.
-constexpr char kConsumerProjectNumberHeaderSuffix[] = "api-project-number";
+// The HTTP header suffix to send consumer info to backend.
+constexpr char kConsumerTypeHeaderSuffix[] = "api-consumer-type";
+constexpr char kConsumerNumberHeaderSuffix[] = "api-consumer-number";
 
 // CheckRequest headers
 const Envoy::Http::LowerCaseString kIosBundleIdHeader{
@@ -55,9 +56,10 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
       stream_info_(stream_info),
       time_source_(time_source),
       uuid_(uuid),
-      consumer_project_number_header_(
-          cfg_parser_.config().generated_header_prefix() +
-          kConsumerProjectNumberHeaderSuffix),
+      consumer_type_header_(cfg_parser_.config().generated_header_prefix() +
+                            kConsumerTypeHeaderSuffix),
+      consumer_number_header_(cfg_parser_.config().generated_header_prefix() +
+                              kConsumerNumberHeaderSuffix),
       request_header_size_(0),
       response_header_size_(0),
       is_grpc_(false),
@@ -83,7 +85,7 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     return;
   }
 
-  require_ctx_ = cfg_parser_.FindRequirement(operation);
+  require_ctx_ = cfg_parser_.find_requirement(operation);
   if (!require_ctx_) {
     ENVOY_LOG(debug, "No requirement matched!");
     // Extract api-key to be used for Report for an operation without
@@ -211,11 +213,10 @@ void ServiceControlHandlerImpl::callQuota() {
     return;
   }
 
-  ::espv2::api_proxy::service_control::QuotaRequestInfo info;
-  fillOperationInfo(info);
-
+  ::espv2::api_proxy::service_control::QuotaRequestInfo info{
+      require_ctx_->metric_costs()};
   info.method_name = require_ctx_->config().operation_name();
-  info.metric_cost_vector = require_ctx_->metric_costs();
+  fillOperationInfo(info);
 
   // TODO: if quota cache is disabled, need to use in-flight
   // transport, need to save its cancel function.
@@ -235,10 +236,15 @@ void ServiceControlHandlerImpl::onCheckResponse(
 
   check_status_ = status;
 
-  // Set consumer project number to backend.
-  if (!response_info.consumer_project_number.empty()) {
-    headers.setReferenceKey(consumer_project_number_header_,
-                            response_info.consumer_project_number);
+  // Set consumer info to backend. Since consumer_project_id is deprecated and
+  // replaced by consumer_number so don't set it here.
+  if (!response_info.consumer_type.empty()) {
+    headers.setReferenceKey(consumer_type_header_, response_info.consumer_type);
+  }
+
+  if (!response_info.consumer_number.empty()) {
+    headers.setReferenceKey(consumer_number_header_,
+                            response_info.consumer_number);
   }
 
   if (!check_status_.ok()) {

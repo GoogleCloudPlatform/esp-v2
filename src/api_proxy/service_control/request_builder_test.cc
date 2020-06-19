@@ -190,8 +190,7 @@ TEST_F(RequestBuilderTest, FillGoodAllocateQuotaRequestTest) {
   std::vector<std::pair<std::string, int>> metric_cost_vector = {
       {"metric_first", 1}, {"metric_second", 2}};
 
-  QuotaRequestInfo info;
-  info.metric_cost_vector = &metric_cost_vector;
+  QuotaRequestInfo info{metric_cost_vector};
 
   FillOperationInfo(&info);
   FillAllocateQuotaRequestInfo(&info);
@@ -208,9 +207,8 @@ TEST_F(RequestBuilderTest, FillAllocateQuotaRequestNoMethodNameTest) {
   std::vector<std::pair<std::string, int>> metric_cost_vector = {
       {"metric_first", 1}, {"metric_second", 2}};
 
-  QuotaRequestInfo info;
+  QuotaRequestInfo info{metric_cost_vector};
   FillOperationInfo(&info);
-  info.metric_cost_vector = &metric_cost_vector;
   info.client_ip = "1.2.3.4";
   info.referer = "referer";
   info.method_name = "";

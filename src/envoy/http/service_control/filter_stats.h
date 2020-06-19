@@ -24,7 +24,9 @@ namespace http_filters {
 namespace service_control {
 
 /**
- * General service control filter stats. @see stats_macros.h
+ * General service control filter stats.
+ * For description of each stat, @see the README.md for this filter.
+ * @see stats_macros.h
  */
 #define FILTER_STATS(COUNTER, HISTOGRAM) \
   COUNTER(allowed)                       \
@@ -40,7 +42,10 @@ namespace service_control {
   HISTOGRAM(overhead_time, Milliseconds)
 
 /**
- * Service control call status stats. @see stats_macros.h
+ * Service control call status stats.
+ * These match the canonical RPC status codes.
+ * https://github.com/googleapis/googleapis/blob/master/google/rpc/code.proto
+ * @see stats_macros.h
  */
 #define CALL_STATUS_STATS(COUNTER) \
   COUNTER(OK)                      \

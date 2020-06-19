@@ -22,6 +22,7 @@ message BackendRoutingRule {
   reserved 2;
 
   // Operation name, also known as selector.
+  // https://cloud.google.com/endpoints/docs/grpc/grpc-service-config#rules_and_selectors
   string operation = 1 [(validate.rules).string.min_bytes = 1];
 
   // Corresponds to the path translation options in Google Cloud Endpoints.
@@ -33,13 +34,15 @@ message BackendRoutingRule {
   }
 
   PathTranslation path_translation = 4
-      [(validate.rules).enum = { not_in: [ 0 ] }];
+      [(validate.rules).enum = { in: [ 1, 2 ] }];
 
   // Prefix used when re-writing the path for the backend.
   string path_prefix = 3 [(validate.rules).string = {
-    well_known_regex: HTTP_HEADER_VALUE,
-    strict: false,
+    // Filter should not be configured for NO-OP path re-rewrites.
     min_len: 1,
+    // Does not contain query params ('?'), fragments ('#'), or invalid
+    // HTTP_HEADER_VALUE ('\r', '\n', '\0') characters.
+    pattern: '^[^?#\\r\\n\\0]+$',
   }];
 }
 

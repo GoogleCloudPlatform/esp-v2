@@ -362,8 +362,10 @@ environment variable or by passing "-k" flag to this script.
         '--http_request_timeout_s',
         default=None, type=int,
         help='''
-        Set the timeout in second(eg. 10) for all the requests made by Config Manager.
-        Must be > 0 and the default is 5 seconds if not set.
+        Set the timeout in seconds for all requests made to all external services
+        from ESPv2 (ie. Service Management, Instance Metadata Server, etc.).
+        This timeout does not apply to requests proxied to the backend.
+        Must be > 0 and the default is 30 seconds if not set.
         ''')
     parser.add_argument(
         '--service_control_check_timeout_ms',

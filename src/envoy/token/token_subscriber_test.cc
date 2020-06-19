@@ -78,7 +78,8 @@ class TokenSubscriberTest : public testing::Test {
     // Create token subscriber under test.
     token_sub_ = std::make_unique<TokenSubscriber>(
         context_, token_type, "token_cluster", token_url_,
-        token_callback_.AsStdFunction(), std::move(info_));
+        std::chrono::seconds(5), token_callback_.AsStdFunction(),
+        std::move(info_));
     token_sub_->init();
 
     // TokenSubscriber must call `ready` to signal Init::Manager once it

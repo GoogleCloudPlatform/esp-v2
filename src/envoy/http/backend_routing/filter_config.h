@@ -32,6 +32,7 @@ namespace backend_routing {
   COUNTER(append_path_to_address_request)         \
   COUNTER(constant_address_request)               \
   COUNTER(denied_by_no_path)                      \
+  COUNTER(denied_by_invalid_path)                 \
   COUNTER(denied_by_no_operation)                 \
   COUNTER(allowed_by_no_configured_rules)
 
@@ -52,7 +53,12 @@ class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       : proto_config_(proto_config),
         stats_(generateStats(stats_prefix, context.scope())) {
     for (const auto& rule : proto_config_.rules()) {
-      backend_routing_map_[rule.operation()] = &rule;
+      auto insert = backend_routing_map_.insert({rule.operation(), &rule});
+      if (!insert.second) {
+        throw Envoy::ProtoValidationException(
+            absl::StrCat("Duplicated operation: ", rule.operation()),
+            proto_config_);
+      }
     }
   }
 

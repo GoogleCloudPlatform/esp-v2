@@ -15,6 +15,7 @@
 #include <memory>
 
 #include "common/common/assert.h"
+#include "google/protobuf/util/time_util.h"
 #include "src/envoy/http/backend_auth/config_parser_impl.h"
 
 namespace espv2 {
@@ -24,12 +25,11 @@ namespace backend_auth {
 
 using ::espv2::api::envoy::http::backend_auth::FilterConfig;
 using ::espv2::api::envoy::http::common::AccessToken;
+using ::google::protobuf::util::TimeUtil;
 using token::GetTokenFunc;
 using token::TokenSubscriber;
 using token::TokenType;
 using token::UpdateTokenCallback;
-
-// TODO(kyuc): add unit tests for all possible backend rule configs.
 
 AudienceContext::AudienceContext(
     const ::espv2::api::envoy::http::backend_auth::BackendAuthRule&
@@ -56,23 +56,28 @@ AudienceContext::AudienceContext(
       const std::string& uri = filter_config.iam_token().iam_uri().uri();
       const std::string& cluster =
           filter_config.iam_token().iam_uri().cluster();
+      const std::chrono::seconds fetch_timeout(TimeUtil::DurationToSeconds(
+          filter_config.iam_token().iam_uri().timeout()));
       const std::string real_uri =
           absl::StrCat(uri, "?audience=", proto_config.jwt_audience());
       const ::google::protobuf::RepeatedPtrField<std::string>& delegates =
           filter_config.iam_token().delegates();
       iam_token_sub_ptr_ = token_subscriber_factory.createIamTokenSubscriber(
-          TokenType::IdentityToken, cluster, real_uri, callback, delegates,
-          ::google::protobuf::RepeatedPtrField<std::string>(), access_token_fn);
+          TokenType::IdentityToken, cluster, real_uri, fetch_timeout, callback,
+          delegates, ::google::protobuf::RepeatedPtrField<std::string>(),
+          access_token_fn);
     }
       return;
     case FilterConfig::IdTokenInfoCase::kImdsToken: {
       const std::string& uri = filter_config.imds_token().uri();
       const std::string& cluster = filter_config.imds_token().cluster();
+      const std::chrono::seconds fetch_timeout(
+          TimeUtil::DurationToSeconds(filter_config.imds_token().timeout()));
       const std::string real_uri = absl::StrCat(
           uri, "?format=standard&audience=", proto_config.jwt_audience());
 
       imds_token_sub_ptr_ = token_subscriber_factory.createImdsTokenSubscriber(
-          TokenType::IdentityToken, cluster, real_uri, callback);
+          TokenType::IdentityToken, cluster, real_uri, fetch_timeout, callback);
     }
       return;
     default:
@@ -92,9 +97,11 @@ FilterConfigParserImpl::FilterConfigParserImpl(
             config.iam_token().access_token().remote_token().cluster();
         const std::string& uri =
             config.iam_token().access_token().remote_token().uri();
+        const std::chrono::seconds fetch_timeout(TimeUtil::DurationToSeconds(
+            config.iam_token().access_token().remote_token().timeout()));
         access_token_sub_ptr_ =
             token_subscriber_factory.createImdsTokenSubscriber(
-                TokenType::AccessToken, cluster, uri,
+                TokenType::AccessToken, cluster, uri, fetch_timeout,
                 [this](absl::string_view access_token) {
                   access_token_ = std::string(access_token);
                 });
@@ -111,7 +118,13 @@ FilterConfigParserImpl::FilterConfigParserImpl(
   }
 
   for (const auto& rule : config.rules()) {
-    operation_map_[rule.operation()] = rule.jwt_audience();
+    auto insert =
+        operation_map_.insert({rule.operation(), rule.jwt_audience()});
+    if (!insert.second) {
+      throw Envoy::ProtoValidationException(
+          absl::StrCat("Duplicated operation: ", rule.operation()), config);
+    }
+
     auto it = audience_map_.find(rule.jwt_audience());
     if (it == audience_map_.end()) {
       audience_map_[rule.jwt_audience()] = AudienceContextPtr(

@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <common/protobuf/utility.h>
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/string_view.h"
 
@@ -21,13 +22,19 @@
 #include "api/envoy/http/service_control/requirement.pb.h"
 #include "src/envoy/http/service_control/service_control_call.h"
 
-// Default minimum interval (milliseconds) for streaming reports.
-#define kDefaultMinStreamReportIntervalMs 10000
-
 namespace espv2 {
 namespace envoy {
 namespace http_filters {
 namespace service_control {
+
+namespace {
+// Default minimum interval (milliseconds) for streaming reports.
+constexpr int64_t kDefaultMinStreamReportIntervalMs = 10000;
+
+// The lower bound a user can configure the interval too.
+// This represents a realistic round-trip time for SC Report from GCP.
+constexpr int64_t kLowerBoundMinStreamReportIntervalMs = 100;
+}  // namespace
 
 class ServiceContext {
  public:
@@ -38,6 +45,12 @@ class ServiceContext {
     min_stream_report_interval_ms_ = config_.min_stream_report_interval_ms();
     if (!min_stream_report_interval_ms_) {
       min_stream_report_interval_ms_ = kDefaultMinStreamReportIntervalMs;
+    }
+    if (min_stream_report_interval_ms_ < kLowerBoundMinStreamReportIntervalMs) {
+      throw Envoy::ProtoValidationException(
+          absl::StrCat("min_stream_report_interval_ms must be larger than: ",
+                       kLowerBoundMinStreamReportIntervalMs),
+          config);
     }
   }
 
@@ -64,6 +77,7 @@ class RequirementContext {
       const ::espv2::api::envoy::http::service_control::Requirement& config,
       const ServiceContext& service_ctx)
       : config_(config), service_ctx_(service_ctx) {
+    metric_costs_.reserve(config.metric_costs().size());
     for (const auto& metric_cost : config.metric_costs()) {
       metric_costs_.push_back(
           std::make_pair(metric_cost.name(), metric_cost.cost()));
@@ -77,8 +91,8 @@ class RequirementContext {
 
   const ServiceContext& service_ctx() const { return service_ctx_; }
 
-  const std::vector<std::pair<std::string, int>>* metric_costs() const {
-    return &metric_costs_;
+  const std::vector<std::pair<std::string, int>>& metric_costs() const {
+    return metric_costs_;
   }
 
  private:
@@ -98,7 +112,8 @@ class FilterConfigParser {
       const {
     return config_;
   }
-  const RequirementContext* FindRequirement(absl::string_view operation) const {
+  const RequirementContext* find_requirement(
+      absl::string_view operation) const {
     const auto requirement_it = requirements_map_.find(operation);
     if (requirement_it == requirements_map_.end()) {
       return nullptr;

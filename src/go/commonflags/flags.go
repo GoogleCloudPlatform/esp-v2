@@ -31,7 +31,7 @@ var (
 	DiscoveryPort              = flag.Int("discovery_port", 8790, "Port that envoy should use to contact ADS. Defaults to config manager's port.")
 	DisableTracing             = flag.Bool("disable_tracing", false, `Disable stackdriver tracing`)
 	AdminPort                  = flag.Int("admin_port", 8001, "Enables envoy's admin interface on this port if it is not 0. Not recommended for production use-cases, as the admin port is unauthenticated.")
-	HttpRequestTimeoutS        = flag.Int("http_request_timeout_s", 5, `Set the timeout in second for all requests. Must be > 0 and the default is 5 seconds if not set.`)
+	HttpRequestTimeoutS        = flag.Int("http_request_timeout_s", 30, `Set the timeout in second for all requests. Must be > 0 and the default is 30 seconds if not set.`)
 	Node                       = flag.String("node", "ESPv2", "envoy node id")
 	NonGCP                     = flag.Bool("non_gcp", false, `By default, the proxy tries to talk to GCP metadata server to get VM location in the first few requests. Setting this flag to true to skip this step`)
 	GeneratedHeaderPrefix      = flag.String("generated_header_prefix", "X-Endpoint-", "Set the header prefix for the generated headers. By default, it is `X-Endpoint-`")

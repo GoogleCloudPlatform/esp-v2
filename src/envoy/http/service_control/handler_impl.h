@@ -114,8 +114,9 @@ class ServiceControlHandlerImpl
   std::string uuid_;
   std::string api_key_;
 
-  // The name of header to send consumer project number.
-  const Envoy::Http::LowerCaseString consumer_project_number_header_;
+  // The name of headers to send consumer info
+  const Envoy::Http::LowerCaseString consumer_type_header_;
+  const Envoy::Http::LowerCaseString consumer_number_header_;
 
   CheckDoneCallback* check_callback_{};
   ::espv2::api_proxy::service_control::CheckResponseInfo check_response_info_;

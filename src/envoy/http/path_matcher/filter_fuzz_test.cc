@@ -49,6 +49,7 @@ DEFINE_PROTO_FUZZER(
                                             mock_factory_context);
   } catch (const Envoy::EnvoyException& e) {
     ENVOY_LOG_MISC(debug, "Controlled envoy exception: {}", e.what());
+    return;
   }
 
   Filter filter(config);

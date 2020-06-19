@@ -141,7 +141,7 @@ bool IamTokenInfo::parseAccessToken(absl::string_view response,
     return false;
   }
 
-  const std::chrono::seconds& expires_in = std::chrono::seconds(
+  const std::chrono::seconds expires_in = std::chrono::seconds(
       (expireTime - ::google::protobuf::util::TimeUtil::GetCurrentTime())
           .seconds());
   ret->token = token;
