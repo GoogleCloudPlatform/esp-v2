@@ -265,6 +265,7 @@ envoy_cc_test(
 
 envoy_cc_test(
     name = "handler_test",
+    size = "large",
     srcs = [
         "handler_impl_test.cc",
         "handler_utils_test.cc",
