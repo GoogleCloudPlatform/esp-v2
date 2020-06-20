@@ -229,7 +229,6 @@ function create_service() {
   case "$#" in
     '1')
       local swagger_json="${1}"
-      # b/158767160: workaround servicemanagement service deploy issue.
       retry -n 3 ${GCLOUD} endpoints services deploy "${swagger_json}"
       ;;
     '2')
