@@ -471,6 +471,14 @@ var (
                      }
                   ],
                   "useRemoteAddress":false,
+                  "localReplyConfig": {
+                    "bodyFormat": {
+                      "jsonFormat": {
+                        "code": "%RESPONSE_CODE%",
+                        "message":"%LOCAL_REPLY_BODY%"
+                      }
+                    }
+                  },
                   "xffNumTrustedHops":2
                }
             }

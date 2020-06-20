@@ -17,6 +17,7 @@
 import argparse
 import utils
 import sys
+import json
 from utils import ApiProxyClientTest
 
 
@@ -54,20 +55,27 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
                 print 'Negative test: remove auth.'
                 r = self._call_http(path, api_key, None, data, method)
                 self.assertEqual(r.status_code, 401)
-                self.assertEqual(
-                    r.text,
-                    'Jwt is missing')
+                try:
+                    rpcStatus = json.loads(r.text)
+                    self.assertEqual(rpcStatus, json.loads('{"message":"Jwt is missing","code":401}'))
+                except:
+                    self.fail("fail to decode json payload")
+
                 print 'Completed Negative test.'
             if api_key:
                 print 'Negative test: remove api_key.'
                 r = self._call_http(path, None, auth, data, method)
                 self.assertEqual(r.status_code, 401)
-                self.assertEqual(
-                    r.text,
-                    (
-                        'UNAUTHENTICATED:Method doesn\'t allow unregistered callers (callers without '
-                        'established identity). Please use API Key or other form of '
-                        'API consumer identity to call this API.'))
+                try:
+                    rpcStatus = json.loads(r.text)
+                    self.assertEqual(rpcStatus, json.loads('{"code":401,"message":"UNAUTHENTICATED:Method '
+                                                           'doesn\'t allow unregistered callers (callers '
+                                                           'without established identity). Please use API '
+                                                           'Key or other form of API consumer identity to '
+                                                           'call this API."}'))
+                except:
+                    self.fail("fail to decode json payload")
+
                 print 'Completed Negative test.'
             return self._call_http(path, api_key, auth, data, method)
         else:

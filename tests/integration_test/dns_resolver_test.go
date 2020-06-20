@@ -63,7 +63,7 @@ func TestDnsResolver(t *testing.T) {
 			desc:            "resolve domain name fails because record not exist in resolver",
 			backendHost:     "dns-resolver-test-backend",
 			isResolveFailed: true,
-			wantError:       `http response status is not 200 OK: 503 Service Unavailable, no healthy upstream`,
+			wantError:       `503 Service Unavailable, {"message":"no healthy upstream","code":503}`,
 		},
 	}
 
@@ -114,7 +114,7 @@ func TestDnsResolver(t *testing.T) {
 			if err != nil {
 				if tc.wantError == "" {
 					t.Errorf("Test(%v): got unexpected error: %s", tc.desc, err)
-				} else if tc.wantError != err.Error() {
+				} else if strings.Contains(err.Error(), tc.wantError) {
 					t.Errorf("Test(%v): got unexpected error, expect: %s, get: %s", tc.desc, tc.wantError, err.Error())
 				}
 				return

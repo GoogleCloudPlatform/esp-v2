@@ -36,7 +36,7 @@ func TestBackendHttpProtocol(t *testing.T) {
 		backendIsHttp2 bool
 		configHttp2    bool
 		wantResp       string
-		httpCallError  error
+		httpCallError  string
 	}{
 		{
 			desc:           "Success when backend is http/1 only and envoy is configured for http/1 backend",
@@ -60,7 +60,7 @@ func TestBackendHttpProtocol(t *testing.T) {
 			desc:           "Failure when backend is http/1 only and envoy is configured for http/2 backend",
 			backendIsHttp2: false,
 			configHttp2:    true,
-			httpCallError:  fmt.Errorf("503 Service Unavailable, upstream connect error or disconnect/reset before headers. reset reason: connection termination"),
+			httpCallError:  `upstream connect error or disconnect/reset before headers. reset reason: connection termination`,
 		},
 	}
 	for _, tc := range testData {
@@ -100,11 +100,11 @@ func TestBackendHttpProtocol(t *testing.T) {
 			gotResp, err := client.DoWithHeaders(url, "POST", "hello", nil)
 
 			// Assertions.
-			if tc.httpCallError != nil {
+			if tc.httpCallError != "" {
 				// Expect an error.
 				if err == nil {
 					t.Errorf("Test(%s) expected error: %v, got: none", tc.desc, tc.httpCallError)
-				} else if !strings.Contains(err.Error(), tc.httpCallError.Error()) {
+				} else if !strings.Contains(err.Error(), tc.httpCallError) {
 					t.Errorf("Test(%s) expected error: %v, got: %v", tc.desc, tc.httpCallError, err)
 				}
 			} else {

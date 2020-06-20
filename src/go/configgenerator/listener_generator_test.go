@@ -1621,7 +1621,15 @@ func TestMakeListeners(t *testing.T) {
               }
             ],
             "useRemoteAddress": false,
-            "xffNumTrustedHops": 2
+            "xffNumTrustedHops": 2,
+            "localReplyConfig": {
+              "bodyFormat": {
+                "jsonFormat": {
+                  "code": "%RESPONSE_CODE%",
+                  "message":"%LOCAL_REPLY_BODY%"
+                }
+              }
+            }
           }
         }
       ],
@@ -1698,20 +1706,26 @@ func TestMakeHttpConMgr(t *testing.T) {
 			opts: options.ConfigGeneratorOptions{},
 			wantHttpConnMgr: `
 			{
-				 "commonHttpProtocolOptions":{
-						"headersWithUnderscoresAction":"REJECT_REQUEST"
-				 },
-				 "routeConfig":{},
-				 "statPrefix":"ingress_http",
-				 "tracing":{
-			
-				 },
-				 "upgradeConfigs":[
-						{
-							 "upgradeType":"websocket"
+				"commonHttpProtocolOptions": {
+					"headersWithUnderscoresAction": "REJECT_REQUEST"
+				},
+				"localReplyConfig": {
+					"bodyFormat": {
+						"jsonFormat": {
+							"code": "%RESPONSE_CODE%",
+							"message": "%LOCAL_REPLY_BODY%"
 						}
-				 ],
-				 "useRemoteAddress":false
+					}
+				},
+				"routeConfig": {},
+				"statPrefix": "ingress_http",
+				"tracing": {},
+				"upgradeConfigs": [
+					{
+						"upgradeType": "websocket"
+					}
+				],
+				"useRemoteAddress": false
 			}`,
 		},
 		{
@@ -1722,30 +1736,36 @@ func TestMakeHttpConMgr(t *testing.T) {
 			},
 			wantHttpConnMgr: `
 				{
-					 "accessLog":[
-							{
-								 "name":"envoy.access_loggers.file",
-								 "typedConfig":{
-										"@type":"type.googleapis.com/envoy.extensions.access_loggers.file.v3.FileAccessLog",
-										"path":"/foo",
-										"format":"/bar"
-								 }
+					"accessLog": [
+						{
+							"name": "envoy.access_loggers.file",
+							"typedConfig": {
+								"@type": "type.googleapis.com/envoy.extensions.access_loggers.file.v3.FileAccessLog",
+								"path": "/foo",
+								"format": "/bar"
 							}
-					 ],
-					 "commonHttpProtocolOptions":{
-							"headersWithUnderscoresAction":"REJECT_REQUEST"
-					 },
-					 "routeConfig":{},
-					 "statPrefix":"ingress_http",
-					 "tracing":{
-				
-					 },
-					 "upgradeConfigs":[
-							{
-								 "upgradeType":"websocket"
+						}
+					],
+					"commonHttpProtocolOptions": {
+						"headersWithUnderscoresAction": "REJECT_REQUEST"
+					},
+					"localReplyConfig": {
+						"bodyFormat": {
+							"jsonFormat": {
+								"code": "%RESPONSE_CODE%",
+								"message": "%LOCAL_REPLY_BODY%"
 							}
-					 ],
-					 "useRemoteAddress":false
+						}
+					},
+					"routeConfig": {},
+					"statPrefix": "ingress_http",
+					"tracing": {},
+					"upgradeConfigs": [
+						{
+							"upgradeType": "websocket"
+						}
+					],
+					"useRemoteAddress": false
 				}
 				`,
 		},
@@ -1758,17 +1778,25 @@ func TestMakeHttpConMgr(t *testing.T) {
 			},
 			wantHttpConnMgr: `
 				{
-					 "commonHttpProtocolOptions":{
-							"headersWithUnderscoresAction":"REJECT_REQUEST"
-					 },
-					 "routeConfig":{},
-					 "statPrefix":"ingress_http",
-					 "upgradeConfigs":[
-							{
-								 "upgradeType":"websocket"
+					"commonHttpProtocolOptions": {
+						"headersWithUnderscoresAction": "REJECT_REQUEST"
+					},
+					"localReplyConfig": {
+						"bodyFormat": {
+							"jsonFormat": {
+								"code": "%RESPONSE_CODE%",
+								"message": "%LOCAL_REPLY_BODY%"
 							}
-					 ],
-					 "useRemoteAddress":false
+						}
+					},
+					"routeConfig": {},
+					"statPrefix": "ingress_http",
+					"upgradeConfigs": [
+						{
+							"upgradeType": "websocket"
+						}
+					],
+					"useRemoteAddress": false
 				}`,
 		},
 		{
@@ -1778,20 +1806,24 @@ func TestMakeHttpConMgr(t *testing.T) {
 			},
 			wantHttpConnMgr: `
 				{
-					 "commonHttpProtocolOptions":{
-				
-					 },
-					 "routeConfig":{},
-					 "statPrefix":"ingress_http",
-					 "tracing":{
-				
-					 },
-					 "upgradeConfigs":[
-							{
-								 "upgradeType":"websocket"
+					"commonHttpProtocolOptions": {},
+					"localReplyConfig": {
+						"bodyFormat": {
+							"jsonFormat": {
+								"code": "%RESPONSE_CODE%",
+								"message": "%LOCAL_REPLY_BODY%"
 							}
-					 ],
-					 "useRemoteAddress":false
+						}
+					},
+					"routeConfig": {},
+					"statPrefix": "ingress_http",
+					"tracing": {},
+					"upgradeConfigs": [
+						{
+							"upgradeType": "websocket"
+						}
+					],
+					"useRemoteAddress": false
 				}`,
 		},
 	}

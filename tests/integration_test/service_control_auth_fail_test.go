@@ -77,7 +77,7 @@ func TestServiceControlJwtAuthFail(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
-			wantError:      "401 Unauthorized, Jwt is missing",
+			wantError:      `401 Unauthorized, {"code":401,"message":"Jwt is missing"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:           utils.ESPv2Version(),

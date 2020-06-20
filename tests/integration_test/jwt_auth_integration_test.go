@@ -100,7 +100,7 @@ func TestAsymmetricKeys(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
-			wantError:      "401 Unauthorized, Jwt is missing",
+			wantError:      `401 Unauthorized, {"code":401,"message":"Jwt is missing"}`,
 		},
 		{
 			desc:           "Succeeded, with right token",
@@ -116,7 +116,7 @@ func TestAsymmetricKeys(t *testing.T) {
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
 			token:          testdata.FakeInvalidJwksProviderToken,
-			wantError:      "401 Unauthorized, Jwks remote fetch is failed",
+			wantError:      `401 Unauthorized, {"code":401,"message":"Jwks remote fetch is failed"}`,
 		},
 		{
 			desc:           "Failed, provider not existing",
@@ -124,7 +124,7 @@ func TestAsymmetricKeys(t *testing.T) {
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
 			token:          testdata.FakeNonexistJwksProviderToken,
-			wantError:      "401 Unauthorized, Jwks remote fetch is failed",
+			wantError:      `401 Unauthorized, {"code":401,"message":"Jwks remote fetch is failed"}`,
 		},
 		{
 			desc:           "Succeeded, using openID discovery",

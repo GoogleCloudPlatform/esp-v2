@@ -269,7 +269,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 		requestHeader         map[string]string
 		message               string
 		wantResp              string
-		httpCallError         error
+		httpCallError         string
 		wantScRequests        []interface{}
 		wantGetScRequestError error
 	}{
@@ -334,7 +334,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 			method:         "/v1/shelves?key=api-key",
 			token:          testdata.FakeCloudTokenMultiAudiences,
 			httpMethod:     "GET",
-			httpCallError:  fmt.Errorf("429 Too Many Requests, RESOURCE_EXHAUSTED"),
+			httpCallError:  `429 Too Many Requests, {"code":429,"message":"RESOURCE_EXHAUSTED"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedQuota{
 					ServiceName: "bookstore.endpoints.cloudesf-testing.cloud.goog",
@@ -378,7 +378,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
 		resp, err := bsClient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, http.Header{})
 
-		if tc.httpCallError == nil {
+		if tc.httpCallError == "" {
 			if err != nil {
 				t.Fatalf("Test (%s): failed, %v", tc.desc, err)
 			}
@@ -386,7 +386,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 				t.Errorf("Test (%s): failed,  expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
 			}
 		} else {
-			if !strings.Contains(err.Error(), tc.httpCallError.Error()) {
+			if err == nil || !strings.Contains(err.Error(), tc.httpCallError) {
 				t.Errorf("Test (%s): failed,  expected Http call error: %v, got: %v", tc.desc, tc.httpCallError, err)
 			}
 		}

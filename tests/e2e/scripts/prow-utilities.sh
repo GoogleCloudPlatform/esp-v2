@@ -229,10 +229,10 @@ function create_service() {
   case "$#" in
     '1')
       local swagger_json="${1}"
-      retry -n 3 run ${GCLOUD} endpoints services deploy "${swagger_json}"
+      retry -n 3 ${GCLOUD} endpoints services deploy "${swagger_json}"
       ;;
     '2')
-      retry -n 3 run ${GCLOUD} endpoints services deploy ${@:1}
+      retry -n 3 ${GCLOUD} endpoints services deploy ${@:1}
       ;;
     *)
       echo "Invalid arguments ${@} provided for create service"

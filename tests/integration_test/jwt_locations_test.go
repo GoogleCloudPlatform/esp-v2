@@ -62,7 +62,7 @@ func TestJwtLocations(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 
-	tests := []struct {
+	var tests = []struct {
 		desc               string
 		clientProtocol     string
 		httpMethod         string
@@ -106,7 +106,7 @@ func TestJwtLocations(t *testing.T) {
 			httpMethod:     "GET",
 			method:         "/v1/shelves/100?key=api-key",
 			headers: map[string][]string{
-				"jwt-header-foo": []string{"jwt-prefix-foo " + testdata.Rs256Token},
+				"jwt-header-foo": {"jwt-prefix-foo " + testdata.Rs256Token},
 			},
 			wantResp: `{"id":"100","theme":"Kids"}`,
 		},
@@ -140,9 +140,9 @@ func TestJwtLocations(t *testing.T) {
 			httpMethod:     "GET",
 			method:         "/v1/shelves/100?key=api-key",
 			headers: map[string][]string{
-				"Authorization": []string{"Bearer " + testdata.Rs256Token},
+				"Authorization": {"Bearer " + testdata.Rs256Token},
 			},
-			wantError: `http response status is not 200 OK: 401 Unauthorized, Jwt is missing`,
+			wantError: `401 Unauthorized, {"code":401,"message":"Jwt is missing"}`,
 		},
 		{
 			desc:           "Failure. Jwt token is passed in default \"x-goog-iap-jwt-assertion\" header for the customized jwt locations",
@@ -150,19 +150,18 @@ func TestJwtLocations(t *testing.T) {
 			httpMethod:     "GET",
 			method:         "/v1/shelves/100?key=api-key",
 			headers: map[string][]string{
-				"x-goog-iap-jwt-assertion": []string{testdata.Rs256Token},
+				"x-goog-iap-jwt-assertion": {testdata.Rs256Token},
 			},
-			wantError: `http response status is not 200 OK: 401 Unauthorized, Jwt is missing`,
+			wantError: `401 Unauthorized, {"code":401,"message":"Jwt is missing"}`,
 		},
 		{
 			desc:           "Failure. Jwt token is passed in default in query param \"access_token\" for the customized jwt locations",
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves/100?key=api-key&access_token=" + testdata.Rs256Token,
-			wantError:      `http response status is not 200 OK: 401 Unauthorized, Jwt is missing`,
+			wantError:      `401 Unauthorized, {"code":401,"message":"Jwt is missing"}`,
 		},
 	}
-
 	for _, tc := range tests {
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
 		resp, err := client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, "", tc.headers)

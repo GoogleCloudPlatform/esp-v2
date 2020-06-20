@@ -53,7 +53,7 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 			method:            "/v1/shelves/100?key=api-key-1",
 			serviceControlURL: "http://unavaliable_service_control_server_name",
 			allocatedPort:     comp.TestServiceControlCheckWrongServerName,
-			wantError:         "503 Service Unavailable, UNAVAILABLE:Calling Google Service Control API failed with: 503",
+			wantError:         `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:Calling Google Service Control API failed with: 503 and body: no healthy upstream"}`,
 		},
 		{
 			desc:              "Failed. When the service control is not set up, the request will be rejected by 500 Internal Server Error",
@@ -62,7 +62,7 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 			method:            "/v1/shelves/100?key=api-key-2",
 			serviceControlURL: "http://localhost:28753",
 			allocatedPort:     comp.TestServiceControlCheckWrongServerName,
-			wantError:         "503 Service Unavailable, UNAVAILABLE:Calling Google Service Control API failed with: 503",
+			wantError:         `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:Calling Google Service Control API failed with: 503 and body: upstream connect error or disconnect/reset before headers. reset reason: connection failure"}`,
 		},
 	}
 
@@ -89,15 +89,6 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 			}
 		}()
 	}
-}
-
-type checkTimeoutServiceHandler struct {
-	m *comp.MockServiceCtrl
-}
-
-func (h *checkTimeoutServiceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	time.Sleep(2 * time.Second)
-	w.Write([]byte(""))
 }
 
 func TestServiceControlCheckTimeout(t *testing.T) {
@@ -129,7 +120,7 @@ func TestServiceControlCheckTimeout(t *testing.T) {
 		clientProtocol: "http",
 		httpMethod:     "GET",
 		method:         "/v1/shelves/100?key=api-key-2",
-		wantError:      "503 Service Unavailable, UNAVAILABLE:Calling Google Service Control API failed with: 503",
+		wantError:      `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:Calling Google Service Control API failed with: 503 and body: no healthy upstream"}`,
 	}
 
 	s.ServiceControlServer.ResetRequestCount()
@@ -149,7 +140,7 @@ type localServiceHandler struct {
 
 func (h *localServiceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	time.Sleep(time.Second * 100)
-	w.Write([]byte(""))
+	_, _ = w.Write([]byte(""))
 }
 
 func TestServiceControlNetworkFailFlagForTimeout(t *testing.T) {
@@ -187,7 +178,7 @@ func TestServiceControlNetworkFailFlagForTimeout(t *testing.T) {
 			httpMethod:      "GET",
 			method:          "/v1/shelves?key=api-key",
 			token:           testdata.FakeCloudTokenMultiAudiences,
-			wantError:       "503 Service Unavailable, UNAVAILABLE:Calling Google Service Control API failed with: 504",
+			wantError:       `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:Calling Google Service Control API failed with: 504 and body: upstream request timeout"}`,
 		},
 	}
 
@@ -269,7 +260,7 @@ func TestServiceControlNetworkFailFlagForUnavailableCheckResponse(t *testing.T) 
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
 			token:          testdata.FakeCloudTokenMultiAudiences,
-			wantError:      "503 Service Unavailable, UNAVAILABLE:One or more Google Service Control backends are unavailable.",
+			wantError:      `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:One or more Google Service Control backends are unavailable."}`,
 		},
 		{
 			desc:            "Failed, even though service_control_network_fail_open is set as true, non-5xx check error won't be ignored.",
@@ -285,7 +276,7 @@ func TestServiceControlNetworkFailFlagForUnavailableCheckResponse(t *testing.T) 
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
 			token:          testdata.FakeCloudTokenMultiAudiences,
-			wantError:      "400 Bad Request, INVALID_ARGUMENT:Client project not valid. Please pass a valid project.",
+			wantError:      `400 Bad Request, {"code":400,"message":"INVALID_ARGUMENT:Client project not valid. Please pass a valid project."}`,
 		},
 	}
 
