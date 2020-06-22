@@ -1,0 +1,38 @@
+config {
+  services {
+    service_name: "echo-api.endpoints.cloudesf-testing.cloud.goog"
+    service_config_id: ","
+    producer_project_id: "producer-project"
+    backend_protocol: "]"
+    log_request_headers: ":path"
+    log_request_headers: "api"
+    log_request_headers: ":path"
+    min_stream_report_interval_ms: 8575352176
+    log_jwt_payloads: "\014Q1\000\000\000\000\000"
+    jwt_payload_metadata_name: "jwt_payloads"
+  }
+  requirements {
+    service_name: "echo-api.endpoints.cloudesf-testing.cloud.goog"
+    operation_name: "205*"
+    api_version: "]WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"
+  }
+  gcp_attributes {
+  }
+  imds_token {
+    uri: "]"
+    cluster: "["
+    timeout {
+      seconds: -6148914383199002583
+    }
+  }
+  generated_header_prefix: "api"
+}
+downstream_request {
+}
+upstream_response {
+}
+stream_info {
+  start_time: 13565952
+}
+sidestream_response {
+}
