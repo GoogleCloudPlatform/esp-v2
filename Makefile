@@ -133,15 +133,15 @@ test-debug: format
 	@echo "--> running unit tests"
 	@go test -v ./src/go/... --logtostderr
 
-test-envoy: format
+test-envoy: clang-format
 	@echo "--> running envoy's unit tests"
 	@CC=clang-8 CXX=clang++-8  bazel test //src/...
 
-test-envoy-asan: format
+test-envoy-asan: clang-format
 	@echo "--> running envoy's unit tests (asan)"
 	@CC=clang-8 CXX=clang++-8 ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-8) bazel test --config=clang-asan  --test_output=errors //src/...
 
-test-envoy-tsan: format
+test-envoy-tsan: clang-format
 	@echo "--> running envoy's unit tests (tsan)"
 	@CC=clang-8 CXX=clang++-8 ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-8) bazel test --config=clang-tsan  --test_output=errors  //src/...
 

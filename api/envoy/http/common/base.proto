@@ -61,8 +61,10 @@ message HttpUri {
   string cluster = 2 [(validate.rules).string.min_bytes = 1];
 
   // The timeout.
-  google.protobuf.Duration timeout = 3
-      [(validate.rules).duration.required = true];
+  google.protobuf.Duration timeout = 3 [(validate.rules).duration = {
+    required: true,
+    gte: { seconds: 0 }
+  }];
 }
 
 // Duplicate DataSource from envoy for self containment.
