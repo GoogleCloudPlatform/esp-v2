@@ -1,3 +1,11 @@
+# Release 2.12.0 24-06-2020
+
+- Send error message as JSON format in response (#206)
+- Add consumer-type and consumer-number headers (#200)
+- Increase IMDS access token timeout to 30s (#198)
+- More stats for Backend Auth, handle rejections properly. (#191)
+- Add flag to control production prefix in generated headers (#184)
+
 # Release 2.11.0 03-06-2020
 
 - Fix grpc-web: move grpc-web filter in front of transcoder (#176)
