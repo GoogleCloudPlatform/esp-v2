@@ -14,7 +14,7 @@
 
 syntax = "proto3";
 
-package espv2.api.envoy.http.service_control;
+package espv2.api.envoy.v6.http.service_control;
 
 import "validate/validate.proto";
 

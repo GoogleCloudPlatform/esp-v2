@@ -14,9 +14,9 @@
 
 syntax = "proto3";
 
-package espv2.api.envoy.http.backend_auth;
+package espv2.api.envoy.v6.http.backend_auth;
 
-import "api/envoy/http/common/base.proto";
+import "api/envoy/v6/http/common/base.proto";
 import "validate/validate.proto";
 
 message BackendAuthRule {
@@ -42,9 +42,9 @@ message FilterConfig {
 
     // The Instance Metadata Server uri used to fetch id token from Instance
     // Metadata Server.
-    espv2.api.envoy.http.common.HttpUri imds_token = 2;
+    espv2.api.envoy.v6.http.common.HttpUri imds_token = 2;
 
     // Information used to fetch id token from Google Cloud IAM.
-    espv2.api.envoy.http.common.IamTokenInfo iam_token = 3;
+    espv2.api.envoy.v6.http.common.IamTokenInfo iam_token = 3;
   }
 }

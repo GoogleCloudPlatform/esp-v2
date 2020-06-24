@@ -19,7 +19,7 @@ This filter is designed to strongly integrate with the following filters:
 
 ## Configuration
 
-View the [backend auth configuration proto](../../../../api/envoy/http/backend_auth/config.proto)
+View the [backend auth configuration proto](../../../../api/envoy/v6/http/backend_auth/config.proto)
 for inline documentation.
 
 ## Statistics

@@ -3,7 +3,7 @@ syntax = "proto3";
 package espv2.tests.fuzz.protos;
 
 import "test/fuzz/common.proto";
-import "api/envoy/http/path_matcher/config.proto";
+import "api/envoy/v6/http/path_matcher/config.proto";
 import "validate/validate.proto";
 
 message PathMatcherFilterInput {

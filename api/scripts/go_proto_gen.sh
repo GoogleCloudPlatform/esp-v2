@@ -24,22 +24,22 @@ rm -rf vendor/github.com/census-instrumentation/opencensus-proto/gen-go
 
 #TODO(bochun): probably we can programatically generate these.
 # HTTP filter common
-bazel build //api/envoy/http/common:base_go_proto
-mkdir -p src/go/proto/api/envoy/http/common
-cp -f bazel-bin/api/envoy/http/common/base_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/common/* src/go/proto/api/envoy/http/common
+bazel build //api/envoy/v6/http/common:base_go_proto
+mkdir -p src/go/proto/api/envoy/v6/http/common
+cp -f bazel-bin/api/envoy/v6/http/common/base_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v6/http/common/* src/go/proto/api/envoy/v6/http/common
 # HTTP filter service_control
-bazel build //api/envoy/http/service_control:config_go_proto
-mkdir -p src/go/proto/api/envoy/http/service_control
-cp -f bazel-bin/api/envoy/http/service_control/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/service_control/* src/go/proto/api/envoy/http/service_control
+bazel build //api/envoy/v6/http/service_control:config_go_proto
+mkdir -p src/go/proto/api/envoy/v6/http/service_control
+cp -f bazel-bin/api/envoy/v6/http/service_control/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v6/http/service_control/* src/go/proto/api/envoy/v6/http/service_control
 # HTTP filter path_matcher
-bazel build //api/envoy/http/path_matcher:config_go_proto
-mkdir -p src/go/proto/api/envoy/http/path_matcher
-cp -f bazel-bin/api/envoy/http/path_matcher/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/path_matcher/* src/go/proto/api/envoy/http/path_matcher
+bazel build //api/envoy/v6/http/path_matcher:config_go_proto
+mkdir -p src/go/proto/api/envoy/v6/http/path_matcher
+cp -f bazel-bin/api/envoy/v6/http/path_matcher/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v6/http/path_matcher/* src/go/proto/api/envoy/v6/http/path_matcher
 # HTTP filter backend_auth
-bazel build //api/envoy/http/backend_auth:config_go_proto
-mkdir -p src/go/proto/api/envoy/http/backend_auth
-cp -f bazel-bin/api/envoy/http/backend_auth/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/backend_auth/* src/go/proto/api/envoy/http/backend_auth
+bazel build //api/envoy/v6/http/backend_auth:config_go_proto
+mkdir -p src/go/proto/api/envoy/v6/http/backend_auth
+cp -f bazel-bin/api/envoy/v6/http/backend_auth/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v6/http/backend_auth/* src/go/proto/api/envoy/v6/http/backend_auth
 # HTTP filter backend_routing
-bazel build //api/envoy/http/backend_routing:config_go_proto
-mkdir -p src/go/proto/api/envoy/http/backend_routing
-cp -f bazel-bin/api/envoy/http/backend_routing/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/backend_routing/* src/go/proto/api/envoy/http/backend_routing
+bazel build //api/envoy/v6/http/backend_routing:config_go_proto
+mkdir -p src/go/proto/api/envoy/v6/http/backend_routing
+cp -f bazel-bin/api/envoy/v6/http/backend_routing/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v6/http/backend_routing/* src/go/proto/api/envoy/v6/http/backend_routing
