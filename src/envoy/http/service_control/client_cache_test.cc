@@ -31,8 +31,8 @@ namespace http_filters {
 namespace service_control {
 namespace test {
 
-using ::espv2::api::envoy::http::service_control::FilterConfig;
-using ::espv2::api::envoy::http::service_control::Service;
+using ::espv2::api::envoy::v6::http::service_control::FilterConfig;
+using ::espv2::api::envoy::v6::http::service_control::Service;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::google::api::servicecontrol::v1::AllocateQuotaResponse;
 using ::google::api::servicecontrol::v1::CheckError;

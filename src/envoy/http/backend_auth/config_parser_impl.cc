@@ -23,8 +23,8 @@ namespace envoy {
 namespace http_filters {
 namespace backend_auth {
 
-using ::espv2::api::envoy::http::backend_auth::FilterConfig;
-using ::espv2::api::envoy::http::common::AccessToken;
+using ::espv2::api::envoy::v6::http::backend_auth::FilterConfig;
+using ::espv2::api::envoy::v6::http::common::AccessToken;
 using ::google::protobuf::util::TimeUtil;
 using token::GetTokenFunc;
 using token::TokenSubscriber;
@@ -32,7 +32,7 @@ using token::TokenType;
 using token::UpdateTokenCallback;
 
 AudienceContext::AudienceContext(
-    const ::espv2::api::envoy::http::backend_auth::BackendAuthRule&
+    const ::espv2::api::envoy::v6::http::backend_auth::BackendAuthRule&
         proto_config,
     Envoy::Server::Configuration::FactoryContext& context,
     const FilterConfig& filter_config,

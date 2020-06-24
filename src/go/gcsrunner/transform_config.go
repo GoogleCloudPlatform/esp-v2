@@ -24,7 +24,7 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
 
-	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/service_control"
+	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v6/http/service_control"
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	listenerpb "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"

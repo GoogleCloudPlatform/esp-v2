@@ -38,7 +38,7 @@ using ::testing::Invoke;
 using ::testing::MockFunction;
 using ::testing::Return;
 
-using ::espv2::api::envoy::http::common::HttpUri;
+using ::espv2::api::envoy::v6::http::common::HttpUri;
 using ::google::api::servicecontrol::v1::CheckRequest;
 using ::google::api::servicecontrol::v1::CheckResponse;
 using ::google::protobuf::util::Status;

@@ -13,7 +13,7 @@
 // limitations under the License.
 #pragma once
 
-#include "api/envoy/http/backend_auth/config.pb.h"
+#include "api/envoy/v6/http/backend_auth/config.pb.h"
 #include "common/common/logger.h"
 #include "src/envoy/http/backend_auth/config_parser.h"
 #include "src/envoy/http/backend_auth/filter_config.h"
@@ -23,7 +23,8 @@ namespace envoy {
 namespace http_filters {
 namespace backend_auth {
 using ConfigParserCreateFunc = std::function<FilterConfigParserPtr(
-    const ::espv2::api::envoy::http::backend_auth::FilterConfig& proto_config,
+    const ::espv2::api::envoy::v6::http::backend_auth::FilterConfig&
+        proto_config,
     Envoy::Server::Configuration::FactoryContext& context)>;
 // The Envoy filter config for ESPv2 backend auth filter.
 class FilterConfigImpl
@@ -31,7 +32,8 @@ class FilterConfigImpl
       public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   FilterConfigImpl(
-      const ::espv2::api::envoy::http::backend_auth::FilterConfig& proto_config,
+      const ::espv2::api::envoy::v6::http::backend_auth::FilterConfig&
+          proto_config,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context)
       : proto_config_(proto_config),
@@ -40,7 +42,8 @@ class FilterConfigImpl
         config_parser_(std::make_unique<FilterConfigParserImpl>(
             proto_config_, context, token_subscriber_factory_)) {}
 
-  const ::espv2::api::envoy::http::backend_auth::FilterConfig& config() const {
+  const ::espv2::api::envoy::v6::http::backend_auth::FilterConfig& config()
+      const {
     return proto_config_;
   }
 
@@ -57,7 +60,7 @@ class FilterConfigImpl
         POOL_COUNTER_PREFIX(scope, final_prefix))};
   }
 
-  ::espv2::api::envoy::http::backend_auth::FilterConfig proto_config_;
+  ::espv2::api::envoy::v6::http::backend_auth::FilterConfig proto_config_;
   FilterStats stats_;
   const token::TokenSubscriberFactoryImpl token_subscriber_factory_;
   FilterConfigParserPtr config_parser_;

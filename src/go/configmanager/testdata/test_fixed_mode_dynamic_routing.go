@@ -245,7 +245,7 @@ var (
                      {
                         "name":"com.google.espv2.filters.http.path_matcher",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.v6.http.path_matcher.FilterConfig",
                            "rules":[
                               {
                                  "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
@@ -295,7 +295,7 @@ var (
                      {
                         "name":"com.google.espv2.filters.http.backend_auth",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.http.backend_auth.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.v6.http.backend_auth.FilterConfig",
                            "imdsToken":{
                               "cluster":"metadata-cluster",
                               "timeout":"30s",
@@ -328,7 +328,7 @@ var (
                      {
                         "name":"com.google.espv2.filters.http.backend_routing",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.http.backend_routing.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.v6.http.backend_routing.FilterConfig",
                            "rules":[
                               {
                                  "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet",
