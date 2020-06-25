@@ -14,13 +14,13 @@
 
 syntax = "proto3";
 
-package espv2.api.envoy.http.service_control;
+package espv2.api.envoy.v6.http.service_control;
 
-import "api/envoy/http/service_control/requirement.proto";
+import "api/envoy/v6/http/service_control/requirement.proto";
 import "google/api/service.proto";
 import "google/protobuf/wrappers.proto";
 import "validate/validate.proto";
-import "api/envoy/http/common/base.proto";
+import "api/envoy/v6/http/common/base.proto";
 
 message ServiceControlCallingConfig {
   // In case of failing to connect to service control service, the requests
@@ -112,21 +112,21 @@ message FilterConfig {
 
     // The Instance Metadata Server uri used to fetch access token from Instance
     // Metadata Server.
-    espv2.api.envoy.http.common.HttpUri imds_token = 4;
+    espv2.api.envoy.v6.http.common.HttpUri imds_token = 4;
 
     // The local path or inline content of the service account json file used to
     // generate access token.
-    espv2.api.envoy.http.common.DataSource service_account_secret = 5;
+    espv2.api.envoy.v6.http.common.DataSource service_account_secret = 5;
 
     // Information used to fetch access token from Google Cloud IAM.
-    espv2.api.envoy.http.common.IamTokenInfo iam_token = 6;
+    espv2.api.envoy.v6.http.common.IamTokenInfo iam_token = 6;
   }
 
   // The service control call configuration.
   ServiceControlCallingConfig sc_calling_config = 7;
 
   // The Http uri to call service control
-  espv2.api.envoy.http.common.HttpUri service_control_uri = 8;
+  espv2.api.envoy.v6.http.common.HttpUri service_control_uri = 8;
 
   // The prefix added to generated headers
   string generated_header_prefix = 9 [(validate.rules).string = {

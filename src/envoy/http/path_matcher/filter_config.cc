@@ -21,7 +21,8 @@ namespace http_filters {
 namespace path_matcher {
 
 FilterConfig::FilterConfig(
-    const ::espv2::api::envoy::http::path_matcher::FilterConfig& proto_config,
+    const ::espv2::api::envoy::v6::http::path_matcher::FilterConfig&
+        proto_config,
     const std::string& stats_prefix,
     Envoy::Server::Configuration::FactoryContext& context)
     : proto_config_(proto_config),

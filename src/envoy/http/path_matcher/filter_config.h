@@ -16,7 +16,7 @@
 
 #include <unordered_map>
 
-#include "api/envoy/http/path_matcher/config.pb.h"
+#include "api/envoy/v6/http/path_matcher/config.pb.h"
 #include "common/common/logger.h"
 #include "envoy/runtime/runtime.h"
 #include "envoy/server/filter_config.h"
@@ -47,10 +47,10 @@ struct FilterStats {
 // The Envoy filter config for ESPv2 path matcher filter.
 class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
-  FilterConfig(
-      const ::espv2::api::envoy::http::path_matcher::FilterConfig& proto_config,
-      const std::string& stats_prefix,
-      Envoy::Server::Configuration::FactoryContext& context);
+  FilterConfig(const ::espv2::api::envoy::v6::http::path_matcher::FilterConfig&
+                   proto_config,
+               const std::string& stats_prefix,
+               Envoy::Server::Configuration::FactoryContext& context);
 
   const std::string* findOperation(const std::string& http_method,
                                    const std::string& path) const {
@@ -87,7 +87,7 @@ class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
         POOL_COUNTER_PREFIX(scope, final_prefix))};
   }
 
-  ::espv2::api::envoy::http::path_matcher::FilterConfig proto_config_;
+  ::espv2::api::envoy::v6::http::path_matcher::FilterConfig proto_config_;
   ::espv2::api_proxy::path_matcher::PathMatcherPtr<const std::string*>
       path_matcher_;
   // Mapping between snake-case segment name to JSON name as specified in

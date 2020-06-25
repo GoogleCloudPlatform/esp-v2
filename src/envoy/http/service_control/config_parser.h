@@ -18,8 +18,8 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/string_view.h"
 
-#include "api/envoy/http/service_control/config.pb.h"
-#include "api/envoy/http/service_control/requirement.pb.h"
+#include "api/envoy/v6/http/service_control/config.pb.h"
+#include "api/envoy/v6/http/service_control/requirement.pb.h"
 #include "src/envoy/http/service_control/service_control_call.h"
 
 namespace espv2 {
@@ -39,7 +39,7 @@ constexpr int64_t kLowerBoundMinStreamReportIntervalMs = 100;
 class ServiceContext {
  public:
   ServiceContext(
-      const ::espv2::api::envoy::http::service_control::Service& config,
+      const ::espv2::api::envoy::v6::http::service_control::Service& config,
       ServiceControlCallFactory& factory)
       : config_(config), service_control_call_(factory.create(config_)) {
     min_stream_report_interval_ms_ = config_.min_stream_report_interval_ms();
@@ -54,7 +54,8 @@ class ServiceContext {
     }
   }
 
-  const ::espv2::api::envoy::http::service_control::Service& config() const {
+  const ::espv2::api::envoy::v6::http::service_control::Service& config()
+      const {
     return config_;
   }
 
@@ -65,7 +66,7 @@ class ServiceContext {
   ServiceControlCall& call() const { return *service_control_call_; }
 
  private:
-  const ::espv2::api::envoy::http::service_control::Service& config_;
+  const ::espv2::api::envoy::v6::http::service_control::Service& config_;
   ServiceControlCallPtr service_control_call_;
   int64_t min_stream_report_interval_ms_;
 };
@@ -74,7 +75,7 @@ using ServiceContextPtr = std::unique_ptr<ServiceContext>;
 class RequirementContext {
  public:
   RequirementContext(
-      const ::espv2::api::envoy::http::service_control::Requirement& config,
+      const ::espv2::api::envoy::v6::http::service_control::Requirement& config,
       const ServiceContext& service_ctx)
       : config_(config), service_ctx_(service_ctx) {
     metric_costs_.reserve(config.metric_costs().size());
@@ -84,7 +85,7 @@ class RequirementContext {
     }
   }
 
-  const ::espv2::api::envoy::http::service_control::Requirement& config()
+  const ::espv2::api::envoy::v6::http::service_control::Requirement& config()
       const {
     return config_;
   }
@@ -96,7 +97,7 @@ class RequirementContext {
   }
 
  private:
-  const ::espv2::api::envoy::http::service_control::Requirement& config_;
+  const ::espv2::api::envoy::v6::http::service_control::Requirement& config_;
   const ServiceContext& service_ctx_;
   std::vector<std::pair<std::string, int>> metric_costs_;
 };
@@ -105,10 +106,11 @@ using RequirementContextPtr = std::unique_ptr<RequirementContext>;
 class FilterConfigParser {
  public:
   FilterConfigParser(
-      const ::espv2::api::envoy::http::service_control::FilterConfig& config,
+      const ::espv2::api::envoy::v6::http::service_control::FilterConfig&
+          config,
       ServiceControlCallFactory& factory);
 
-  const ::espv2::api::envoy::http::service_control::FilterConfig& config()
+  const ::espv2::api::envoy::v6::http::service_control::FilterConfig& config()
       const {
     return config_;
   }
@@ -121,7 +123,7 @@ class FilterConfigParser {
     return requirement_it->second.get();
   }
 
-  const ::espv2::api::envoy::http::service_control::ApiKeyRequirement&
+  const ::espv2::api::envoy::v6::http::service_control::ApiKeyRequirement&
   default_api_keys() const {
     return default_api_keys_;
   }
@@ -132,16 +134,17 @@ class FilterConfigParser {
 
  private:
   // The proto config.
-  const ::espv2::api::envoy::http::service_control::FilterConfig& config_;
+  const ::espv2::api::envoy::v6::http::service_control::FilterConfig& config_;
   // Operation name to RequirementContext map.
   absl::flat_hash_map<std::string, RequirementContextPtr> requirements_map_;
   // The requirement for non matched requests for sending their reports.
-  ::espv2::api::envoy::http::service_control::Requirement non_match_rqm_cfg_;
+  ::espv2::api::envoy::v6::http::service_control::Requirement
+      non_match_rqm_cfg_;
   RequirementContextPtr non_match_rqm_ctx_;
   // Service name to ServiceContext map.
   absl::flat_hash_map<std::string, ServiceContextPtr> service_map_;
   // The default locations to extract api-key.
-  ::espv2::api::envoy::http::service_control::ApiKeyRequirement
+  ::espv2::api::envoy::v6::http::service_control::ApiKeyRequirement
       default_api_keys_;
 };
 

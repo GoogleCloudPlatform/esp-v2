@@ -206,7 +206,7 @@
                     {
                       "name": "com.google.espv2.filters.http.path_matcher",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
+                        "@type": "type.googleapis.com/espv2.api.envoy.v6.http.path_matcher.FilterConfig",
                         "rules": [
                           {
                             "operation": "test.grpc.Test.Cork",
@@ -470,7 +470,7 @@
                     {
                       "name": "com.google.espv2.filters.http.service_control",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig",
+                        "@type": "type.googleapis.com/espv2.api.envoy.v6.http.service_control.FilterConfig",
                         "generatedHeaderPrefix": "X-Endpoint-",
                         "imdsToken": {
                           "cluster": "metadata-cluster",
@@ -1077,7 +1077,7 @@
                     {
                       "name": "com.google.espv2.filters.http.backend_auth",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.http.backend_auth.FilterConfig",
+                        "@type": "type.googleapis.com/espv2.api.envoy.v6.http.backend_auth.FilterConfig",
                         "imdsToken": {
                           "cluster": "metadata-cluster",
                           "timeout": "30s",

@@ -14,7 +14,7 @@
 
 syntax = "proto3";
 
-package espv2.api.envoy.http.backend_routing;
+package espv2.api.envoy.v6.http.backend_routing;
 
 import "validate/validate.proto";
 

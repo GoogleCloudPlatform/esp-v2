@@ -22,7 +22,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
 
-	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/service_control"
+	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v6/http/service_control"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	listenerpb "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 )
@@ -267,7 +267,7 @@ var validConfigInput = []byte(`{
                     {
                       "name": "com.google.espv2.filters.http.service_control",
                       "typed_config": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig"
+                        "@type": "type.googleapis.com/espv2.api.envoy.v6.http.service_control.FilterConfig"
                       }
                     }
                   ]
@@ -310,7 +310,7 @@ var validConfigInputWithoutLoopback = []byte(`{
                     {
                       "name": "com.google.espv2.filters.http.service_control",
                       "typed_config": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig"
+                        "@type": "type.googleapis.com/espv2.api.envoy.v6.http.service_control.FilterConfig"
                       }
                     }
                   ]
@@ -346,7 +346,7 @@ var validConfigInputHTTPListener = []byte(`{
                     {
                       "name": "com.google.espv2.filters.http.service_control",
                       "typed_config": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig"
+                        "@type": "type.googleapis.com/espv2.api.envoy.v6.http.service_control.FilterConfig"
                       }
                     }
                   ]
@@ -390,7 +390,7 @@ var validConfigInputHTTPSListener = []byte(`{
                     {
                       "name": "com.google.espv2.filters.http.service_control",
                       "typed_config": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig"
+                        "@type": "type.googleapis.com/espv2.api.envoy.v6.http.service_control.FilterConfig"
                       }
                     }
                   ]

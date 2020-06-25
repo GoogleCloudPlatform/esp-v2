@@ -24,7 +24,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 
-	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/common"
+	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v6/http/common"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"

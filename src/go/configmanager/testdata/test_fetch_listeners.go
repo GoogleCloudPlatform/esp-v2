@@ -88,7 +88,7 @@ var (
                      {
                         "name":"com.google.espv2.filters.http.path_matcher",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.v6.http.path_matcher.FilterConfig",
                            "rules":[
                               {
                                  "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
@@ -233,7 +233,7 @@ var (
                      {
                         "name":"com.google.espv2.filters.http.path_matcher",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.v6.http.path_matcher.FilterConfig",
                            "rules":[
                               {
                                  "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
@@ -428,7 +428,7 @@ var (
                      {
                         "name":"com.google.espv2.filters.http.path_matcher",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.v6.http.path_matcher.FilterConfig",
                            "rules":[
                               {
                                  "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
@@ -642,7 +642,7 @@ var (
                      {
                         "name":"com.google.espv2.filters.http.path_matcher",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.v6.http.path_matcher.FilterConfig",
                            "rules":[
                               {
                                  "operation":"endpoints.examples.bookstore.Bookstore.DeleteBook",
@@ -886,7 +886,7 @@ var (
                      {
                         "name":"com.google.espv2.filters.http.path_matcher",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.v6.http.path_matcher.FilterConfig",
                            "rules":[
                               {
                                  "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
@@ -922,7 +922,7 @@ var (
                      {
                         "name":"com.google.espv2.filters.http.service_control",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.v6.http.service_control.FilterConfig",
                            "imdsToken":{
                               "cluster":"metadata-cluster",
                               "timeout":"30s",
@@ -1111,7 +1111,7 @@ var (
                      {
                         "name":"com.google.espv2.filters.http.path_matcher",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.v6.http.path_matcher.FilterConfig",
                            "rules":[
                               {
                                  "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
@@ -1276,7 +1276,7 @@ var (
                      {
                         "name":"com.google.espv2.filters.http.path_matcher",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.http.path_matcher.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.v6.http.path_matcher.FilterConfig",
                            "rules":[
                               {
                                  "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_simplegetcors",
@@ -1298,7 +1298,7 @@ var (
                      {
                         "name":"com.google.espv2.filters.http.service_control",
                         "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.http.service_control.FilterConfig",
+                           "@type":"type.googleapis.com/espv2.api.envoy.v6.http.service_control.FilterConfig",
                            "imdsToken":{
                               "cluster":"metadata-cluster",
                               "timeout":"30s",

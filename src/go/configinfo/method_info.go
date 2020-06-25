@@ -17,8 +17,8 @@ package configinfo
 import (
 	"time"
 
-	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/common"
-	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/http/service_control"
+	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v6/http/common"
+	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v6/http/service_control"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 

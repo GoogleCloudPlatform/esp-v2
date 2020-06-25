@@ -33,7 +33,7 @@ using VariableBindings = std::vector<VariableBinding>;
 using FieldPath = std::vector<std::string>;
 
 TEST(FilterConfigTest, EmptyConfig) {
-  ::espv2::api::envoy::http::path_matcher::FilterConfig config_pb;
+  ::espv2::api::envoy::v6::http::path_matcher::FilterConfig config_pb;
   ::testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
       mock_factory;
   FilterConfig cfg(config_pb, Envoy::EMPTY_STRING, mock_factory);
@@ -60,7 +60,7 @@ rules {
   }
 })";
 
-  ::espv2::api::envoy::http::path_matcher::FilterConfig config_pb;
+  ::espv2::api::envoy::v6::http::path_matcher::FilterConfig config_pb;
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigBasic, &config_pb));
   ::testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
       mock_factory;
@@ -91,7 +91,7 @@ rules {
   }
 })";
 
-  ::espv2::api::envoy::http::path_matcher::FilterConfig config_pb;
+  ::espv2::api::envoy::v6::http::path_matcher::FilterConfig config_pb;
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigBasic, &config_pb));
   ::testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
       mock_factory;
@@ -125,7 +125,7 @@ segment_names {
   snake_name: "x_y_z"
 })";
 
-  ::espv2::api::envoy::http::path_matcher::FilterConfig config_pb;
+  ::espv2::api::envoy::v6::http::path_matcher::FilterConfig config_pb;
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfig, &config_pb));
   ::testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
       mock_factory;
@@ -153,7 +153,7 @@ rules {
   }
 })";
 
-  ::espv2::api::envoy::http::path_matcher::FilterConfig config_pb;
+  ::espv2::api::envoy::v6::http::path_matcher::FilterConfig config_pb;
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfig, &config_pb));
   ::testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
       mock_factory;
@@ -173,7 +173,7 @@ rules {
   }
 })";
 
-  ::espv2::api::envoy::http::path_matcher::FilterConfig config_pb;
+  ::espv2::api::envoy::v6::http::path_matcher::FilterConfig config_pb;
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfig, &config_pb));
   ::testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
       mock_factory;
@@ -193,7 +193,7 @@ rules {
   }
 })";
 
-  ::espv2::api::envoy::http::path_matcher::FilterConfig config_pb;
+  ::espv2::api::envoy::v6::http::path_matcher::FilterConfig config_pb;
   ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigBasic, &config_pb));
   ::testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
       mock_factory;
