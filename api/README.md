@@ -4,7 +4,7 @@ This folder stores filter config proto files for ESPv2 http filters.
 ## Config versioning:
 
 ESPv2 config is versioned. The current version is stored in `api/VERSION` file.
-The folder names under `api/` contain version, e.g. `api/envoy.v7.http/backend_auth`.
+The folder names under `api/` contain version, e.g. `api/envoy/v7/http/backend_auth`.
 The proto package names contain version too, e.g. `espv2.api.envoy.v7.http.common.Pattern`.
 
 ## Versioning Rules:
