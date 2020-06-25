@@ -21,10 +21,16 @@ CURR_VERSION=$(cat $VERSION_FILE)
 VERSION_NUM=${CURR_VERSION#v}
 NEXT_VERSION="v$((VERSION_NUM + 1))"
 
+# Update the version file
+echo "${NEXT_VERSION}" > "$VERSION_FILE"
+
 # rename version folder
 git mv "api/envoy/${CURR_VERSION}" "api/envoy/${NEXT_VERSION}"
 
 ALL_FILES=$(find ./ -type f)
+# Apply folder name changes to BUILD, proto, go and cc files
 sed -i -e "s|envoy/${CURR_VERSION}/http|envoy/${NEXT_VERSION}/http|g" $ALL_FILES
+# Apply package name changes to proto, go and json (typed_url in config) files
 sed -i -e "s|envoy.${CURR_VERSION}.http|envoy.${NEXT_VERSION}.http|g" $ALL_FILES
+# Apply package name changes in cc files
 sed -i -e "s|envoy::${CURR_VERSION}::http|envoy::${NEXT_VERSION}::http|g" $ALL_FILES
