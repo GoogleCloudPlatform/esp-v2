@@ -18,11 +18,14 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+#include "absl/functional/bind_front.h"
+#include "src/envoy/http/service_control/mocks.h"
 #include "src/envoy/http/service_control/service_control_callback_func.h"
 #include "test/mocks/common.h"
 #include "test/mocks/event/mocks.h"
 #include "test/mocks/server/mocks.h"
 #include "test/mocks/stats/mocks.h"
+#include "test/mocks/tracing/mocks.h"
 #include "test/test_common/utility.h"
 
 namespace espv2 {
@@ -34,15 +37,27 @@ namespace test {
 using ::espv2::api::envoy::v6::http::service_control::FilterConfig;
 using ::espv2::api::envoy::v6::http::service_control::Service;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
+using ::google::api::servicecontrol::v1::AllocateQuotaRequest;
 using ::google::api::servicecontrol::v1::AllocateQuotaResponse;
 using ::google::api::servicecontrol::v1::CheckError;
 using ::google::api::servicecontrol::v1::CheckError_Code;
+using ::google::api::servicecontrol::v1::CheckRequest;
 using ::google::api::servicecontrol::v1::CheckResponse;
+using ::google::api::servicecontrol::v1::Operation;
 using ::google::api::servicecontrol::v1::QuotaError;
 using ::google::api::servicecontrol::v1::QuotaError_Code;
+using ::google::api::servicecontrol::v1::ReportRequest;
+using ::google::api::servicecontrol::v1::ReportResponse;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
+
+using ::testing::_;
 using ::testing::NiceMock;
+using ::testing::Return;
+
+constexpr char kServiceName[] = "bookstore.endpoints.test";
+constexpr char kServiceConfigId[] = "2020-06-24r1";
+constexpr char kCheckOperationId[] = "test.check.operation";
 
 class ClientCacheTestBase : public ::testing::Test {
  protected:
@@ -266,6 +281,184 @@ TEST_F(ClientCacheQuotaResponseErrorTypeTest, ConsumerQuota) {
 TEST_F(ClientCacheQuotaResponseErrorTypeTest, ApiKeyInvalid) {
   runTest(QuotaError::API_KEY_INVALID);
   checkAndReset(stats_base_.stats().filter_.denied_consumer_error_, 1);
+}
+
+class ClientCacheHttpRequestTest : public ClientCacheTestBase {
+ public:
+  void SetUp() override {
+    service_config_.set_service_name(kServiceName);
+    service_config_.set_service_config_id(kServiceConfigId);
+
+    cache_ = std::make_unique<ClientCache>(
+        service_config_, filter_config_, stats_base_.stats(), cm_, time_source_,
+        dispatcher_, token_fn_, token_fn_);
+
+    // Setup mock http call.
+    http_call_ = std::make_unique<MockHttpCall>();
+    check_call_factory_ = std::make_unique<MockHttpCallFactory>();
+    quota_call_factory_ = std::make_unique<MockHttpCallFactory>();
+    report_call_factory_ = std::make_unique<MockHttpCallFactory>();
+  }
+
+  void TearDown() override {
+    EXPECT_EQ(got_num_callbacks, want_num_callbacks);
+    ClientCacheTestBase::TearDown();
+  }
+
+  void injectFactoryMocks() {
+    cache_->check_call_factory_ = std::move(check_call_factory_);
+    cache_->quota_call_factory_ = std::move(quota_call_factory_);
+    cache_->report_call_factory_ = std::move(report_call_factory_);
+  }
+
+  NiceMock<Envoy::Tracing::MockSpan> mock_parent_span_;
+  std::unique_ptr<MockHttpCall> http_call_;
+
+  // Ownership of these is passed to ClientCache after calling
+  // `injectFactoryMocks`.
+  std::unique_ptr<MockHttpCallFactory> check_call_factory_;
+  std::unique_ptr<MockHttpCallFactory> quota_call_factory_;
+  std::unique_ptr<MockHttpCallFactory> report_call_factory_;
+
+  // Track the number of callbacks. This will ensure no async calls are left on
+  // destruction / tearDown.
+  int got_num_callbacks = 0;
+  int want_num_callbacks = 0;
+};
+
+class ClientCacheCheckHttpRequestTest : public ClientCacheHttpRequestTest {
+ public:
+  CheckRequest getValidCheckRequest() {
+    CheckRequest request;
+    request.set_service_name(kServiceName);
+    request.set_service_config_id(kServiceConfigId);
+    Operation* op = request.mutable_operation();
+    op->set_operation_id(kCheckOperationId);
+    op->set_operation_name("test_check_operation_name");
+    op->set_consumer_id("test-api-key");
+    return request;
+  }
+
+  CheckResponse getValidCheckResponse() {
+    CheckResponse response;
+    response.set_operation_id(kCheckOperationId);
+    response.set_service_config_id(kServiceConfigId);
+    return response;
+  }
+
+  void verifyCheckDone(const Code want_code, const Status& got_status,
+                       const CheckResponseInfo&) {
+    got_num_callbacks++;
+    EXPECT_EQ(got_status.code(), want_code)
+        << "Got message: " << got_status.message();
+  };
+};
+
+TEST_F(ClientCacheCheckHttpRequestTest, OneSuccessfulHttpCall) {
+  // Only 1 http call will be created.
+  HttpCall::DoneFunc http_done;
+  EXPECT_CALL(*check_call_factory_, createHttpCall(_, _, _))
+      .WillOnce(Invoke([this, &http_done](const Envoy::Protobuf::Message&,
+                                          Envoy::Tracing::Span&,
+                                          HttpCall::DoneFunc on_done) {
+        http_done = on_done;
+        return http_call_.get();
+      }));
+  EXPECT_CALL(*http_call_, call()).Times(1);
+  injectFactoryMocks();
+
+  // Run function under test.
+  const CheckRequest request = getValidCheckRequest();
+  cache_->callCheck(
+      request, mock_parent_span_,
+      absl::bind_front(&ClientCacheCheckHttpRequestTest::verifyCheckDone, this,
+                       Code::OK));
+
+  // RPC is pending, no callback invoked until http is done.
+  EXPECT_EQ(got_num_callbacks, 0);
+
+  // Stimulate successful http response.
+  // Test tear down will check the check callback is invoked.
+  want_num_callbacks++;
+  std::string response_body;
+  const CheckResponse response = getValidCheckResponse();
+  response.SerializeToString(&response_body);
+  http_done(Status::OK, response_body);
+
+  // Check stats.
+  checkAndReset(stats_base_.stats().check_.OK_, 1);
+}
+
+TEST_F(ClientCacheCheckHttpRequestTest, OneHttpCallWithBadBody) {
+  // Only 1 http call will be created.
+  HttpCall::DoneFunc http_done;
+  EXPECT_CALL(*check_call_factory_, createHttpCall(_, _, _))
+      .WillOnce(Invoke([this, &http_done](const Envoy::Protobuf::Message&,
+                                          Envoy::Tracing::Span&,
+                                          HttpCall::DoneFunc on_done) {
+        http_done = on_done;
+        return http_call_.get();
+      }));
+  EXPECT_CALL(*http_call_, call()).Times(1);
+  injectFactoryMocks();
+
+  // Run function under test.
+  const CheckRequest request = getValidCheckRequest();
+  cache_->callCheck(
+      request, mock_parent_span_,
+      absl::bind_front(&ClientCacheCheckHttpRequestTest::verifyCheckDone, this,
+                       Code::INTERNAL));
+
+  // RPC is pending, no callback invoked until http is done.
+  EXPECT_EQ(got_num_callbacks, 0);
+
+  // Stimulate bad http response body.
+  // Test tear down will check the check callback is invoked.
+  want_num_callbacks++;
+  http_done(Status::OK, "this http body does not parse into a CheckResponse");
+
+  // Check stats.
+  checkAndReset(stats_base_.stats().check_.INVALID_ARGUMENT_, 1);
+  // TODO(nareddyt): This should probably be treated as a control plane fault.
+  checkAndReset(stats_base_.stats().filter_.denied_producer_error_, 1);
+}
+
+TEST_F(ClientCacheCheckHttpRequestTest, OnePendingHttpCallCancelled) {
+  // Only 1 http call will be created.
+  HttpCall::DoneFunc http_done;
+  EXPECT_CALL(*check_call_factory_, createHttpCall(_, _, _))
+      .WillOnce(Invoke([this, &http_done](const Envoy::Protobuf::Message&,
+                                          Envoy::Tracing::Span&,
+                                          HttpCall::DoneFunc on_done) {
+        http_done = on_done;
+        return http_call_.get();
+      }));
+  EXPECT_CALL(*http_call_, call()).Times(1);
+  injectFactoryMocks();
+
+  // Run function under test.
+  const CheckRequest request = getValidCheckRequest();
+  CancelFunc cancel_func = cache_->callCheck(
+      request, mock_parent_span_,
+      absl::bind_front(&ClientCacheCheckHttpRequestTest::verifyCheckDone, this,
+                       Code::INTERNAL));
+
+  // RPC is pending, no callback invoked until http is done.
+  EXPECT_EQ(got_num_callbacks, 0);
+
+  // Cancel the pending RPC.
+  // Test tear down will check the check callback is invoked.
+  EXPECT_CALL(*http_call_, cancel()).WillOnce(Invoke([&http_done]() {
+    http_done(Status(Code::CANCELLED, "Request cancelled"),
+              Envoy::EMPTY_STRING);
+  }));
+  want_num_callbacks++;
+  cancel_func();
+
+  // Check stats.
+  checkAndReset(stats_base_.stats().check_.CANCELLED_, 1);
+  // TODO(nareddyt): This should probably be treated as a control plane fault.
+  checkAndReset(stats_base_.stats().filter_.denied_producer_error_, 1);
 }
 
 }  // namespace test

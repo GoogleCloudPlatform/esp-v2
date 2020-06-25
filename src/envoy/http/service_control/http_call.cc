@@ -295,7 +295,7 @@ class HttpCallImpl : public HttpCall,
 
 }  // namespace
 
-HttpCallFactory::HttpCallFactory(
+HttpCallFactoryImpl::HttpCallFactoryImpl(
     Envoy::Upstream::ClusterManager& cm, Envoy::Event::Dispatcher& dispatcher,
     const ::espv2::api::envoy::v6::http::common::HttpUri& uri,
     const std::string& suffix_url, std::function<const std::string&()> token_fn,
@@ -312,9 +312,9 @@ HttpCallFactory::HttpCallFactory(
       time_source_(time_source),
       trace_operation_name_(trace_operation_name){};
 
-HttpCall* HttpCallFactory::createHttpCall(const Envoy::Protobuf::Message& body,
-                                          Envoy::Tracing::Span& parent_span,
-                                          HttpCall::DoneFunc on_done) {
+HttpCall* HttpCallFactoryImpl::createHttpCall(
+    const Envoy::Protobuf::Message& body, Envoy::Tracing::Span& parent_span,
+    HttpCall::DoneFunc on_done) {
   ENVOY_LOG(debug, "{} is created", trace_operation_name_);
   HttpCallImpl* http_call = new HttpCallImpl(
       cm_, dispatcher_, uri_, suffix_url_, token_fn_, body, timeout_ms_,
@@ -334,7 +334,7 @@ HttpCall* HttpCallFactory::createHttpCall(const Envoy::Protobuf::Message& body,
   return http_call;
 }
 
-HttpCallFactory::~HttpCallFactory() {
+HttpCallFactoryImpl::~HttpCallFactoryImpl() {
   destruct_mode_ = true;
   for (auto* httpCall : active_calls_) {
     httpCall->cancel();

@@ -212,36 +212,22 @@ ClientCache::ClientCache(
                                       getReportAggregationOptions());
 
   initHttpRequestSetting(filter_config);
-  check_call_factory_ = std::make_unique<HttpCallFactory>(
+  check_call_factory_ = std::make_unique<HttpCallFactoryImpl>(
       cm, dispatcher, filter_config.service_control_uri(),
       config_.service_name() + ":check", sc_token_fn, check_timeout_ms_,
       check_retries_, time_source, "Service Control remote call: Check");
-  quota_call_factory_ = std::make_unique<HttpCallFactory>(
+  quota_call_factory_ = std::make_unique<HttpCallFactoryImpl>(
       cm, dispatcher, filter_config.service_control_uri(),
       config_.service_name() + ":allocateQuota", quota_token_fn,
       quota_timeout_ms_, quota_retries_, time_source,
       "Service Control remote call: Allocate Quota");
-  report_call_factory_ = std::make_unique<HttpCallFactory>(
+  report_call_factory_ = std::make_unique<HttpCallFactoryImpl>(
       cm, dispatcher, filter_config.service_control_uri(),
       config_.service_name() + ":report", sc_token_fn, report_timeout_ms_,
       report_retries_, time_source, "Service Control remote call: Report");
 
-  options.check_transport = [this](const CheckRequest& request,
-                                   CheckResponse* response,
-                                   TransportDoneFunc on_done) {
-    // Don't support tracing on this transport
-    auto& null_span = Envoy::Tracing::NullSpan::instance();
-    auto* call = check_call_factory_->createHttpCall(
-        request, null_span,
-        [this, response, on_done](const Status& status,
-                                  const std::string& body) {
-          Status final_status = processScCallTransportStatus<CheckResponse>(
-              status, response, body);
-          collectCallStatus(filter_stats_.check_, final_status.code());
-          on_done(final_status);
-        });
-    call->call();
-  };
+  // Quota and report transport is defined here.
+  // Check transport is defined per request instead.
 
   options.quota_transport = [this](const AllocateQuotaRequest& request,
                                    AllocateQuotaResponse* response,
@@ -322,7 +308,7 @@ CancelFunc ClientCache::callCheck(const CheckRequest& request,
           Status final_status = processScCallTransportStatus<CheckResponse>(
               status, response, body);
           collectCallStatus(filter_stats_.check_, final_status.code());
-          on_done(status);
+          on_done(final_status);
         });
     call->call();
     cancel_fn = [call]() { call->cancel(); };

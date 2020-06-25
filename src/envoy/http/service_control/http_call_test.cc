@@ -89,7 +89,7 @@ class HttpCallTest : public testing::Test {
     fake_token_fn_ = [this]() -> const std::string& { return fake_token_; };
 
     fake_request_ = CheckRequest{};
-    http_call_factory_ = std::make_unique<HttpCallFactory>(
+    http_call_factory_ = std::make_unique<HttpCallFactoryImpl>(
         cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
         timeout_ms_, retries_, mock_time_source_, fake_trace_operation_name_);
   }
@@ -163,7 +163,7 @@ class HttpCallTest : public testing::Test {
   uint32_t timeout_ms_;
   uint32_t retries_;
 
-  std::unique_ptr<HttpCallFactory> http_call_factory_;
+  std::unique_ptr<HttpCallFactoryImpl> http_call_factory_;
 };
 
 TEST_F(HttpCallTest, TestSingleCallSuccessHttpOk) {
@@ -251,7 +251,7 @@ TEST_F(HttpCallTest, TestEmptyTokenCallFailure) {
 TEST_F(HttpCallTest, TestRetryCallSuccess) {
   // Set request to retry 2 more times
   retries_ = 2;
-  http_call_factory_ = std::make_unique<HttpCallFactory>(
+  http_call_factory_ = std::make_unique<HttpCallFactoryImpl>(
       cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
       timeout_ms_, retries_, mock_time_source_, fake_trace_operation_name_);
   // Phase 1: Create HttpCall and send the request
@@ -290,7 +290,7 @@ TEST_F(HttpCallTest, TestRetryCallSuccess) {
 TEST_F(HttpCallTest, TestThreeRetriesWithLastSuccess) {
   // Set request to retry 2 more times
   retries_ = 2;
-  http_call_factory_ = std::make_unique<HttpCallFactory>(
+  http_call_factory_ = std::make_unique<HttpCallFactoryImpl>(
       cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
       timeout_ms_, retries_, mock_time_source_, fake_trace_operation_name_);
 
@@ -331,7 +331,7 @@ TEST_F(HttpCallTest, TestThreeRetriesWithLastSuccess) {
 TEST_F(HttpCallTest, TestThreeRetriesWithLastFailure) {
   // Set request to retry 2 more times
   retries_ = 2;
-  http_call_factory_ = std::make_unique<HttpCallFactory>(
+  http_call_factory_ = std::make_unique<HttpCallFactoryImpl>(
       cm_, dispatcher_, http_uri_, fake_suffix_url_, fake_token_fn_,
       timeout_ms_, retries_, mock_time_source_, fake_trace_operation_name_);
 
