@@ -77,13 +77,19 @@ class ClientCacheTestBase : public ::testing::Test {
   }
 
   void TearDown() override {
-    // All stats in the code path of ClientCache should be reset here.
+    // All stats that are verified in tests below should be reset here.
+    // Response tests.
     checkAndReset(stats_base_.stats().filter_.allowed_control_plane_fault_, 0);
     checkAndReset(stats_base_.stats().filter_.denied_control_plane_fault_, 0);
     checkAndReset(stats_base_.stats().filter_.denied_consumer_blocked_, 0);
     checkAndReset(stats_base_.stats().filter_.denied_consumer_error_, 0);
     checkAndReset(stats_base_.stats().filter_.denied_consumer_quota_, 0);
     checkAndReset(stats_base_.stats().filter_.denied_producer_error_, 0);
+
+    // Check request tests.
+    checkAndReset(stats_base_.stats().check_.OK_, 0);
+    checkAndReset(stats_base_.stats().check_.CANCELLED_, 0);
+    checkAndReset(stats_base_.stats().check_.INVALID_ARGUMENT_, 0);
   }
 
   // Helpers for SetUp.
@@ -300,10 +306,7 @@ class ClientCacheHttpRequestTest : public ClientCacheTestBase {
     report_call_factory_ = std::make_unique<MockHttpCallFactory>();
   }
 
-  void TearDown() override {
-    EXPECT_EQ(got_num_callbacks, want_num_callbacks);
-    ClientCacheTestBase::TearDown();
-  }
+  void TearDown() override { ClientCacheTestBase::TearDown(); }
 
   void injectFactoryMocks() {
     cache_->check_call_factory_ = std::move(check_call_factory_);
@@ -320,14 +323,26 @@ class ClientCacheHttpRequestTest : public ClientCacheTestBase {
   std::unique_ptr<MockHttpCallFactory> quota_call_factory_;
   std::unique_ptr<MockHttpCallFactory> report_call_factory_;
 
-  // Track the number of callbacks. This will ensure no async calls are left on
-  // destruction / tearDown.
   int got_num_callbacks = 0;
-  int want_num_callbacks = 0;
 };
 
 class ClientCacheCheckHttpRequestTest : public ClientCacheHttpRequestTest {
  public:
+  void SetUp() override {
+    ClientCacheHttpRequestTest::SetUp();
+
+    // Only 1 http call will be created.
+    EXPECT_CALL(*check_call_factory_, createHttpCall(_, _, _))
+        .WillOnce(
+            Invoke([this](const Envoy::Protobuf::Message&,
+                          Envoy::Tracing::Span&, HttpCall::DoneFunc on_done) {
+              http_done_ = on_done;
+              return http_call_.get();
+            }));
+    EXPECT_CALL(*http_call_, call()).Times(1);
+    injectFactoryMocks();
+  }
+
   CheckRequest getValidCheckRequest() {
     CheckRequest request;
     request.set_service_name(kServiceName);
@@ -352,22 +367,13 @@ class ClientCacheCheckHttpRequestTest : public ClientCacheHttpRequestTest {
     EXPECT_EQ(got_status.code(), want_code)
         << "Got message: " << got_status.message();
   };
+
+  HttpCall::DoneFunc http_done_;
 };
 
+// Cache miss occurs, so cache makes HttpCall to SC Check.
+// Call is successful, and the CheckDoneFunc is called.
 TEST_F(ClientCacheCheckHttpRequestTest, OneSuccessfulHttpCall) {
-  // Only 1 http call will be created.
-  HttpCall::DoneFunc http_done;
-  EXPECT_CALL(*check_call_factory_, createHttpCall(_, _, _))
-      .WillOnce(Invoke([this, &http_done](const Envoy::Protobuf::Message&,
-                                          Envoy::Tracing::Span&,
-                                          HttpCall::DoneFunc on_done) {
-        http_done = on_done;
-        return http_call_.get();
-      }));
-  EXPECT_CALL(*http_call_, call()).Times(1);
-  injectFactoryMocks();
-
-  // Run function under test.
   const CheckRequest request = getValidCheckRequest();
   cache_->callCheck(
       request, mock_parent_span_,
@@ -379,30 +385,22 @@ TEST_F(ClientCacheCheckHttpRequestTest, OneSuccessfulHttpCall) {
 
   // Stimulate successful http response.
   // Test tear down will check the check callback is invoked.
-  want_num_callbacks++;
   std::string response_body;
   const CheckResponse response = getValidCheckResponse();
   response.SerializeToString(&response_body);
-  http_done(Status::OK, response_body);
+  http_done_(Status::OK, response_body);
+
+  // RPC finished and invoked callback.
+  EXPECT_EQ(got_num_callbacks, 1);
 
   // Check stats.
   checkAndReset(stats_base_.stats().check_.OK_, 1);
 }
 
+// Cache miss occurs, so cache makes HttpCall to SC Check.
+// HttpCall is successful but returns a bad body.
+// The CheckDoneFunc is called.
 TEST_F(ClientCacheCheckHttpRequestTest, OneHttpCallWithBadBody) {
-  // Only 1 http call will be created.
-  HttpCall::DoneFunc http_done;
-  EXPECT_CALL(*check_call_factory_, createHttpCall(_, _, _))
-      .WillOnce(Invoke([this, &http_done](const Envoy::Protobuf::Message&,
-                                          Envoy::Tracing::Span&,
-                                          HttpCall::DoneFunc on_done) {
-        http_done = on_done;
-        return http_call_.get();
-      }));
-  EXPECT_CALL(*http_call_, call()).Times(1);
-  injectFactoryMocks();
-
-  // Run function under test.
   const CheckRequest request = getValidCheckRequest();
   cache_->callCheck(
       request, mock_parent_span_,
@@ -413,9 +411,10 @@ TEST_F(ClientCacheCheckHttpRequestTest, OneHttpCallWithBadBody) {
   EXPECT_EQ(got_num_callbacks, 0);
 
   // Stimulate bad http response body.
-  // Test tear down will check the check callback is invoked.
-  want_num_callbacks++;
-  http_done(Status::OK, "this http body does not parse into a CheckResponse");
+  http_done_(Status::OK, "this http body does not parse into a CheckResponse");
+
+  // RPC finished and invoked callback.
+  EXPECT_EQ(got_num_callbacks, 1);
 
   // Check stats.
   checkAndReset(stats_base_.stats().check_.INVALID_ARGUMENT_, 1);
@@ -423,20 +422,10 @@ TEST_F(ClientCacheCheckHttpRequestTest, OneHttpCallWithBadBody) {
   checkAndReset(stats_base_.stats().filter_.denied_producer_error_, 1);
 }
 
+// Cache miss occurs, so cache makes HttpCall to SC Check.
+// HttpCall is cancelled while it's still pending.
+// The CheckDoneFunc is called.
 TEST_F(ClientCacheCheckHttpRequestTest, OnePendingHttpCallCancelled) {
-  // Only 1 http call will be created.
-  HttpCall::DoneFunc http_done;
-  EXPECT_CALL(*check_call_factory_, createHttpCall(_, _, _))
-      .WillOnce(Invoke([this, &http_done](const Envoy::Protobuf::Message&,
-                                          Envoy::Tracing::Span&,
-                                          HttpCall::DoneFunc on_done) {
-        http_done = on_done;
-        return http_call_.get();
-      }));
-  EXPECT_CALL(*http_call_, call()).Times(1);
-  injectFactoryMocks();
-
-  // Run function under test.
   const CheckRequest request = getValidCheckRequest();
   CancelFunc cancel_func = cache_->callCheck(
       request, mock_parent_span_,
@@ -447,13 +436,14 @@ TEST_F(ClientCacheCheckHttpRequestTest, OnePendingHttpCallCancelled) {
   EXPECT_EQ(got_num_callbacks, 0);
 
   // Cancel the pending RPC.
-  // Test tear down will check the check callback is invoked.
-  EXPECT_CALL(*http_call_, cancel()).WillOnce(Invoke([&http_done]() {
-    http_done(Status(Code::CANCELLED, "Request cancelled"),
-              Envoy::EMPTY_STRING);
+  EXPECT_CALL(*http_call_, cancel()).WillOnce(Invoke([this]() {
+    http_done_(Status(Code::CANCELLED, "Request cancelled"),
+               Envoy::EMPTY_STRING);
   }));
-  want_num_callbacks++;
   cancel_func();
+
+  // RPC cancelled and invoked callback.
+  EXPECT_EQ(got_num_callbacks, 1);
 
   // Check stats.
   checkAndReset(stats_base_.stats().check_.CANCELLED_, 1);

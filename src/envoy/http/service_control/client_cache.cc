@@ -16,6 +16,7 @@
 
 #include "common/tracing/http_tracer_impl.h"
 #include "src/api_proxy/service_control/request_builder.h"
+#include "src/envoy/http/service_control/http_call.h"
 
 namespace espv2 {
 namespace envoy {
