@@ -52,6 +52,7 @@ using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
 using ::testing::_;
+using ::testing::InSequence;
 using ::testing::NiceMock;
 using ::testing::Return;
 
@@ -295,15 +296,15 @@ class ClientCacheHttpRequestTest : public ClientCacheTestBase {
     service_config_.set_service_name(kServiceName);
     service_config_.set_service_config_id(kServiceConfigId);
 
+    cache_ = std::make_unique<ClientCache>(
+        service_config_, filter_config_, stats_base_.stats(), cm_, time_source_,
+        dispatcher_, token_fn_, token_fn_);
+
     // Setup mock http call.
     http_call_ = std::make_unique<MockHttpCall>();
     check_call_factory_ = std::make_unique<MockHttpCallFactory>();
     quota_call_factory_ = std::make_unique<MockHttpCallFactory>();
     report_call_factory_ = std::make_unique<MockHttpCallFactory>();
-
-    cache_ = std::make_unique<ClientCache>(
-        service_config_, filter_config_, stats_base_.stats(), cm_, time_source_,
-        dispatcher_, token_fn_, token_fn_);
   }
 
   void TearDown() override { ClientCacheTestBase::TearDown(); }
@@ -323,26 +324,40 @@ class ClientCacheHttpRequestTest : public ClientCacheTestBase {
   std::unique_ptr<MockHttpCallFactory> check_call_factory_;
   std::unique_ptr<MockHttpCallFactory> quota_call_factory_;
   std::unique_ptr<MockHttpCallFactory> report_call_factory_;
-
-  // Class under test. This MUST be destructed before the mock factories above.
-  // Hence, make this the last item in this class.
-  std::unique_ptr<ClientCache> cache_;
 };
 
 class ClientCacheCheckHttpRequestTest : public ClientCacheHttpRequestTest {
  public:
   void SetUp() override { ClientCacheHttpRequestTest::SetUp(); }
 
-  void setupHttpMocks(int want_num_http_calls) {
+  void setupHttpMocks(int want_http_calls_on_check,
+                      int want_http_calls_on_flush) {
+    EXPECT_CALL(*http_call_, call())
+        .Times(want_http_calls_on_check + want_http_calls_on_flush);
+
+    // This is for cache misses.
+    InSequence s;
     EXPECT_CALL(*check_call_factory_, createHttpCall(_, _, _))
-        .Times(want_num_http_calls)
+        .Times(want_http_calls_on_check)
         .WillRepeatedly(
             Invoke([this](const Envoy::Protobuf::Message&,
                           Envoy::Tracing::Span&, HttpCall::DoneFunc on_done) {
               http_done_ = on_done;
               return http_call_.get();
             }));
-    EXPECT_CALL(*http_call_, call()).Times(want_num_http_calls);
+
+    // This is for cache flushes on destruction of the cache.
+    EXPECT_CALL(*check_call_factory_, createHttpCall(_, _, _))
+        .Times(want_http_calls_on_flush)
+        .WillRepeatedly(
+            Invoke([this](const Envoy::Protobuf::Message&,
+                          Envoy::Tracing::Span&, HttpCall::DoneFunc on_done) {
+              // Similar to production behavior of the HttpCallFactory.
+              on_done(Status(Code::CANCELLED, "Request cancelled"),
+                      Envoy::EMPTY_STRING);
+              return http_call_.get();
+            }));
+
     injectFactoryMocks();
   }
 
@@ -370,7 +385,7 @@ class ClientCacheCheckHttpRequestTest : public ClientCacheHttpRequestTest {
 // Cache miss occurs, so cache makes HttpCall to SC Check.
 // Call is successful, and the CheckDoneFunc is called.
 TEST_F(ClientCacheCheckHttpRequestTest, OneSuccessfulHttpCall) {
-  setupHttpMocks(1);
+  setupHttpMocks(1, 0);
 
   const CheckRequest request = getValidCheckRequest();
   cache_->callCheck(request, mock_parent_span_,
@@ -392,6 +407,9 @@ TEST_F(ClientCacheCheckHttpRequestTest, OneSuccessfulHttpCall) {
   // RPC finished and invoked callback.
   EXPECT_EQ(got_num_callbacks_, 1);
 
+  // Force destructor on cache.
+  cache_.reset(nullptr);
+
   // Check stats.
   checkAndReset(stats_base_.stats().check_.OK_, 1);
 }
@@ -400,7 +418,7 @@ TEST_F(ClientCacheCheckHttpRequestTest, OneSuccessfulHttpCall) {
 // HttpCall is successful but returns a bad body.
 // The CheckDoneFunc is called.
 TEST_F(ClientCacheCheckHttpRequestTest, OneHttpCallWithBadBody) {
-  setupHttpMocks(1);
+  setupHttpMocks(1, 0);
 
   const CheckRequest request = getValidCheckRequest();
   cache_->callCheck(request, mock_parent_span_,
@@ -418,6 +436,9 @@ TEST_F(ClientCacheCheckHttpRequestTest, OneHttpCallWithBadBody) {
   // RPC finished and invoked callback.
   EXPECT_EQ(got_num_callbacks_, 1);
 
+  // Force destructor on cache.
+  cache_.reset(nullptr);
+
   // Check stats.
   checkAndReset(stats_base_.stats().check_.INVALID_ARGUMENT_, 1);
   // TODO(nareddyt): This should probably be treated as a control plane fault.
@@ -428,7 +449,7 @@ TEST_F(ClientCacheCheckHttpRequestTest, OneHttpCallWithBadBody) {
 // HttpCall is cancelled while it's still pending.
 // The CheckDoneFunc is called.
 TEST_F(ClientCacheCheckHttpRequestTest, OnePendingHttpCallCancelled) {
-  setupHttpMocks(1);
+  setupHttpMocks(1, 0);
 
   const CheckRequest request = getValidCheckRequest();
   CancelFunc cancel_func = cache_->callCheck(
@@ -451,6 +472,9 @@ TEST_F(ClientCacheCheckHttpRequestTest, OnePendingHttpCallCancelled) {
   // RPC cancelled and invoked callback.
   EXPECT_EQ(got_num_callbacks_, 1);
 
+  // Force destructor on cache.
+  cache_.reset(nullptr);
+
   // Check stats.
   checkAndReset(stats_base_.stats().check_.CANCELLED_, 1);
   // TODO(nareddyt): This should probably be treated as a control plane fault.
@@ -463,7 +487,7 @@ TEST_F(ClientCacheCheckHttpRequestTest, OnePendingHttpCallCancelled) {
 TEST_F(ClientCacheCheckHttpRequestTest, SuccessfulHttpCallWithCache) {
   // First http call is due to the first miss, the second call is for cache
   // flush on destruction.
-  setupHttpMocks(2);
+  setupHttpMocks(1, 1);
 
   CheckDoneFunc on_check_done = [this](const Status& got_status,
                                        const CheckResponseInfo&) {
@@ -488,7 +512,17 @@ TEST_F(ClientCacheCheckHttpRequestTest, SuccessfulHttpCallWithCache) {
 
   // 2nd + 3rd call successful due to cache, but only 1 http call was made.
   EXPECT_EQ(got_num_callbacks_, 3);
+
+  // Force destructor on cache. This will result in a cache flush.
+  cache_.reset(nullptr);
+
+  // No more callbacks invoked during destructor.
+  EXPECT_EQ(got_num_callbacks_, 3);
+
+  // Stats.
   checkAndReset(stats_base_.stats().check_.OK_, 1);
+  // Note: Destruct mode prevents the last cancelled http call from being
+  // recorded. This is expected.
 }
 
 }  // namespace test

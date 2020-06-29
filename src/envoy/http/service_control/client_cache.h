@@ -135,10 +135,9 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
   std::unique_ptr<HttpCallFactory> quota_call_factory_;
   std::unique_ptr<HttpCallFactory> report_call_factory_;
 
-  // When service control client is destroyed, it will flush out some batched
-  // reports and call report_transport_func to send them. Since
-  // report_transport_func is using some member variables, placing the client_
-  // as the last one to make sure it is destroyed first.
+  // The main caching client. On destruction, some cached requests are flushed,
+  // calling the transports and making more http calls. Therefore, this should
+  // always be the last member of the class (so it's destructed first).
   std::unique_ptr<::google::service_control_client::ServiceControlClient>
       client_;
 };
