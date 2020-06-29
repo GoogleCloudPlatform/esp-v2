@@ -461,9 +461,8 @@ TEST_F(ClientCacheCheckHttpRequestTest, OnePendingHttpCallCancelled) {
 // HttpCall is successful, and the onCheckDone callback is called.
 // Check call 2 & 3: Cache hit, the CheckDoneFunc is called again.
 TEST_F(ClientCacheCheckHttpRequestTest, SuccessfulHttpCallWithCache) {
-  // Initially, we should only expect 1 HTTP call. But when a cached item is
-  // flushed, another http call is made. For this test, the flush happens during
-  // destruction.
+  // First http call is due to the first miss, the second call is for cache
+  // flush on destruction.
   setupHttpMocks(2);
 
   CheckDoneFunc on_check_done = [this](const Status& got_status,
