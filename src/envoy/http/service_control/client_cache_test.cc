@@ -334,7 +334,6 @@ class ClientCacheCheckHttpRequestTest : public ClientCacheHttpRequestTest {
   void SetUp() override { ClientCacheHttpRequestTest::SetUp(); }
 
   void setupHttpMocks(int want_num_http_calls) {
-    // Only 1 http call will be created.
     EXPECT_CALL(*check_call_factory_, createHttpCall(_, _, _))
         .Times(want_num_http_calls)
         .WillRepeatedly(
@@ -462,7 +461,7 @@ TEST_F(ClientCacheCheckHttpRequestTest, OnePendingHttpCallCancelled) {
 // HttpCall is successful, and the onCheckDone callback is called.
 // Check call 2 & 3: Cache hit, the CheckDoneFunc is called again.
 TEST_F(ClientCacheCheckHttpRequestTest, SuccessfulHttpCallWithCache) {
-  // Initially, we should only expect 1 HTTP call. But when a cached items is
+  // Initially, we should only expect 1 HTTP call. But when a cached item is
   // flushed, another http call is made. For this test, the flush happens during
   // destruction.
   setupHttpMocks(2);

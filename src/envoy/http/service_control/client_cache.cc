@@ -228,8 +228,8 @@ ClientCache::ClientCache(
       report_retries_, time_source, "Service Control remote call: Report");
 
   // Note: Check transport is also defined per request.
-  // But this must be defined, it may be called on destruction of service
-  // control client.
+  // But this must be defined, it will be called on each flush of the cache
+  // entry. This occurs on periodic timer and cache destruction.
   options.check_transport = [this](const CheckRequest& request,
                                    CheckResponse* response,
                                    TransportDoneFunc on_done) {
