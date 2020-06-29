@@ -227,8 +227,25 @@ ClientCache::ClientCache(
       config_.service_name() + ":report", sc_token_fn, report_timeout_ms_,
       report_retries_, time_source, "Service Control remote call: Report");
 
-  // Quota and report transport is defined here.
-  // Check transport is defined per request instead.
+  // Note: Check transport is also defined per request.
+  // But this must be defined, it may be called on destruction of service
+  // control client.
+  options.check_transport = [this](const CheckRequest& request,
+                                   CheckResponse* response,
+                                   TransportDoneFunc on_done) {
+    // Don't support tracing on this transport
+    auto& null_span = Envoy::Tracing::NullSpan::instance();
+    auto* call = check_call_factory_->createHttpCall(
+        request, null_span,
+        [this, response, on_done](const Status& status,
+                                  const std::string& body) {
+          Status final_status = processScCallTransportStatus<CheckResponse>(
+              status, response, body);
+          collectCallStatus(filter_stats_.check_, final_status.code());
+          on_done(final_status);
+        });
+    call->call();
+  };
 
   options.quota_transport = [this](const AllocateQuotaRequest& request,
                                    AllocateQuotaResponse* response,

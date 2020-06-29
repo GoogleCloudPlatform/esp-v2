@@ -295,15 +295,15 @@ class ClientCacheHttpRequestTest : public ClientCacheTestBase {
     service_config_.set_service_name(kServiceName);
     service_config_.set_service_config_id(kServiceConfigId);
 
-    cache_ = std::make_unique<ClientCache>(
-        service_config_, filter_config_, stats_base_.stats(), cm_, time_source_,
-        dispatcher_, token_fn_, token_fn_);
-
     // Setup mock http call.
     http_call_ = std::make_unique<MockHttpCall>();
     check_call_factory_ = std::make_unique<MockHttpCallFactory>();
     quota_call_factory_ = std::make_unique<MockHttpCallFactory>();
     report_call_factory_ = std::make_unique<MockHttpCallFactory>();
+
+    cache_ = std::make_unique<ClientCache>(
+        service_config_, filter_config_, stats_base_.stats(), cm_, time_source_,
+        dispatcher_, token_fn_, token_fn_);
   }
 
   void TearDown() override { ClientCacheTestBase::TearDown(); }
@@ -314,6 +314,7 @@ class ClientCacheHttpRequestTest : public ClientCacheTestBase {
     cache_->report_call_factory_ = std::move(report_call_factory_);
   }
 
+  int got_num_callbacks_ = 0;
   NiceMock<Envoy::Tracing::MockSpan> mock_parent_span_;
   std::unique_ptr<MockHttpCall> http_call_;
 
@@ -323,23 +324,26 @@ class ClientCacheHttpRequestTest : public ClientCacheTestBase {
   std::unique_ptr<MockHttpCallFactory> quota_call_factory_;
   std::unique_ptr<MockHttpCallFactory> report_call_factory_;
 
-  int got_num_callbacks_ = 0;
+  // Class under test. This MUST be destructed before the mock factories above.
+  // Hence, make this the last item in this class.
+  std::unique_ptr<ClientCache> cache_;
 };
 
 class ClientCacheCheckHttpRequestTest : public ClientCacheHttpRequestTest {
  public:
-  void SetUp() override {
-    ClientCacheHttpRequestTest::SetUp();
+  void SetUp() override { ClientCacheHttpRequestTest::SetUp(); }
 
+  void setupHttpMocks(int want_num_http_calls) {
     // Only 1 http call will be created.
     EXPECT_CALL(*check_call_factory_, createHttpCall(_, _, _))
-        .WillOnce(
+        .Times(want_num_http_calls)
+        .WillRepeatedly(
             Invoke([this](const Envoy::Protobuf::Message&,
                           Envoy::Tracing::Span&, HttpCall::DoneFunc on_done) {
               http_done_ = on_done;
               return http_call_.get();
             }));
-    EXPECT_CALL(*http_call_, call()).Times(1);
+    EXPECT_CALL(*http_call_, call()).Times(want_num_http_calls);
     injectFactoryMocks();
   }
 
@@ -367,6 +371,8 @@ class ClientCacheCheckHttpRequestTest : public ClientCacheHttpRequestTest {
 // Cache miss occurs, so cache makes HttpCall to SC Check.
 // Call is successful, and the CheckDoneFunc is called.
 TEST_F(ClientCacheCheckHttpRequestTest, OneSuccessfulHttpCall) {
+  setupHttpMocks(1);
+
   const CheckRequest request = getValidCheckRequest();
   cache_->callCheck(request, mock_parent_span_,
                     [this](const Status& got_status, const CheckResponseInfo&) {
@@ -395,6 +401,8 @@ TEST_F(ClientCacheCheckHttpRequestTest, OneSuccessfulHttpCall) {
 // HttpCall is successful but returns a bad body.
 // The CheckDoneFunc is called.
 TEST_F(ClientCacheCheckHttpRequestTest, OneHttpCallWithBadBody) {
+  setupHttpMocks(1);
+
   const CheckRequest request = getValidCheckRequest();
   cache_->callCheck(request, mock_parent_span_,
                     [this](const Status& got_status, const CheckResponseInfo&) {
@@ -421,6 +429,8 @@ TEST_F(ClientCacheCheckHttpRequestTest, OneHttpCallWithBadBody) {
 // HttpCall is cancelled while it's still pending.
 // The CheckDoneFunc is called.
 TEST_F(ClientCacheCheckHttpRequestTest, OnePendingHttpCallCancelled) {
+  setupHttpMocks(1);
+
   const CheckRequest request = getValidCheckRequest();
   CancelFunc cancel_func = cache_->callCheck(
       request, mock_parent_span_,
@@ -446,6 +456,41 @@ TEST_F(ClientCacheCheckHttpRequestTest, OnePendingHttpCallCancelled) {
   checkAndReset(stats_base_.stats().check_.CANCELLED_, 1);
   // TODO(nareddyt): This should probably be treated as a control plane fault.
   checkAndReset(stats_base_.stats().filter_.denied_producer_error_, 1);
+}
+
+// Check call 1: Cache miss occurs, so cache makes HttpCall to SC Check.
+// HttpCall is successful, and the onCheckDone callback is called.
+// Check call 2 & 3: Cache hit, the CheckDoneFunc is called again.
+TEST_F(ClientCacheCheckHttpRequestTest, SuccessfulHttpCallWithCache) {
+  // Initially, we should only expect 1 HTTP call. But when a cached items is
+  // flushed, another http call is made. For this test, the flush happens during
+  // destruction.
+  setupHttpMocks(2);
+
+  CheckDoneFunc on_check_done = [this](const Status& got_status,
+                                       const CheckResponseInfo&) {
+    got_num_callbacks_++;
+    EXPECT_EQ(got_status.code(), Code::OK);
+  };
+
+  // Check call 1.
+  const CheckRequest request = getValidCheckRequest();
+  cache_->callCheck(request, mock_parent_span_, on_check_done);
+
+  // Stimulate successful http response.
+  // Test tear down will check the check callback is invoked.
+  std::string response_body;
+  const CheckResponse response = getValidCheckResponse();
+  response.SerializeToString(&response_body);
+  http_done_(Status::OK, response_body);
+
+  // Check call 2 & 3.
+  cache_->callCheck(request, mock_parent_span_, on_check_done);
+  cache_->callCheck(request, mock_parent_span_, on_check_done);
+
+  // 2nd + 3rd call successful due to cache, but only 1 http call was made.
+  EXPECT_EQ(got_num_callbacks_, 3);
+  checkAndReset(stats_base_.stats().check_.OK_, 1);
 }
 
 }  // namespace test
