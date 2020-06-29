@@ -323,7 +323,7 @@ class ClientCacheHttpRequestTest : public ClientCacheTestBase {
   std::unique_ptr<MockHttpCallFactory> quota_call_factory_;
   std::unique_ptr<MockHttpCallFactory> report_call_factory_;
 
-  int got_num_callbacks = 0;
+  int got_num_callbacks_ = 0;
 };
 
 class ClientCacheCheckHttpRequestTest : public ClientCacheHttpRequestTest {
@@ -361,13 +361,6 @@ class ClientCacheCheckHttpRequestTest : public ClientCacheHttpRequestTest {
     return response;
   }
 
-  void verifyCheckDone(const Code want_code, const Status& got_status,
-                       const CheckResponseInfo&) {
-    got_num_callbacks++;
-    EXPECT_EQ(got_status.code(), want_code)
-        << "Got message: " << got_status.message();
-  };
-
   HttpCall::DoneFunc http_done_;
 };
 
@@ -375,13 +368,14 @@ class ClientCacheCheckHttpRequestTest : public ClientCacheHttpRequestTest {
 // Call is successful, and the CheckDoneFunc is called.
 TEST_F(ClientCacheCheckHttpRequestTest, OneSuccessfulHttpCall) {
   const CheckRequest request = getValidCheckRequest();
-  cache_->callCheck(
-      request, mock_parent_span_,
-      absl::bind_front(&ClientCacheCheckHttpRequestTest::verifyCheckDone, this,
-                       Code::OK));
+  cache_->callCheck(request, mock_parent_span_,
+                    [this](const Status& got_status, const CheckResponseInfo&) {
+                      got_num_callbacks_++;
+                      EXPECT_EQ(got_status.code(), Code::OK);
+                    });
 
   // RPC is pending, no callback invoked until http is done.
-  EXPECT_EQ(got_num_callbacks, 0);
+  EXPECT_EQ(got_num_callbacks_, 0);
 
   // Stimulate successful http response.
   // Test tear down will check the check callback is invoked.
@@ -391,7 +385,7 @@ TEST_F(ClientCacheCheckHttpRequestTest, OneSuccessfulHttpCall) {
   http_done_(Status::OK, response_body);
 
   // RPC finished and invoked callback.
-  EXPECT_EQ(got_num_callbacks, 1);
+  EXPECT_EQ(got_num_callbacks_, 1);
 
   // Check stats.
   checkAndReset(stats_base_.stats().check_.OK_, 1);
@@ -402,19 +396,20 @@ TEST_F(ClientCacheCheckHttpRequestTest, OneSuccessfulHttpCall) {
 // The CheckDoneFunc is called.
 TEST_F(ClientCacheCheckHttpRequestTest, OneHttpCallWithBadBody) {
   const CheckRequest request = getValidCheckRequest();
-  cache_->callCheck(
-      request, mock_parent_span_,
-      absl::bind_front(&ClientCacheCheckHttpRequestTest::verifyCheckDone, this,
-                       Code::INTERNAL));
+  cache_->callCheck(request, mock_parent_span_,
+                    [this](const Status& got_status, const CheckResponseInfo&) {
+                      got_num_callbacks_++;
+                      EXPECT_EQ(got_status.code(), Code::INTERNAL);
+                    });
 
   // RPC is pending, no callback invoked until http is done.
-  EXPECT_EQ(got_num_callbacks, 0);
+  EXPECT_EQ(got_num_callbacks_, 0);
 
   // Stimulate bad http response body.
   http_done_(Status::OK, "this http body does not parse into a CheckResponse");
 
   // RPC finished and invoked callback.
-  EXPECT_EQ(got_num_callbacks, 1);
+  EXPECT_EQ(got_num_callbacks_, 1);
 
   // Check stats.
   checkAndReset(stats_base_.stats().check_.INVALID_ARGUMENT_, 1);
@@ -429,11 +424,13 @@ TEST_F(ClientCacheCheckHttpRequestTest, OnePendingHttpCallCancelled) {
   const CheckRequest request = getValidCheckRequest();
   CancelFunc cancel_func = cache_->callCheck(
       request, mock_parent_span_,
-      absl::bind_front(&ClientCacheCheckHttpRequestTest::verifyCheckDone, this,
-                       Code::INTERNAL));
+      [this](const Status& got_status, const CheckResponseInfo&) {
+        got_num_callbacks_++;
+        EXPECT_EQ(got_status.code(), Code::INTERNAL);
+      });
 
   // RPC is pending, no callback invoked until http is done.
-  EXPECT_EQ(got_num_callbacks, 0);
+  EXPECT_EQ(got_num_callbacks_, 0);
 
   // Cancel the pending RPC.
   EXPECT_CALL(*http_call_, cancel()).WillOnce(Invoke([this]() {
@@ -443,7 +440,7 @@ TEST_F(ClientCacheCheckHttpRequestTest, OnePendingHttpCallCancelled) {
   cancel_func();
 
   // RPC cancelled and invoked callback.
-  EXPECT_EQ(got_num_callbacks, 1);
+  EXPECT_EQ(got_num_callbacks_, 1);
 
   // Check stats.
   checkAndReset(stats_base_.stats().check_.CANCELLED_, 1);
