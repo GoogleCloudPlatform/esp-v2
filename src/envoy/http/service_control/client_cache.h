@@ -52,8 +52,6 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       std::function<const std::string&()> sc_token_fn,
       std::function<const std::string&()> quota_token_fn);
 
-  ~ClientCache() { destruct_mode_ = false; };
-
   CancelFunc callCheck(
       const ::google::api::servicecontrol::v1::CheckRequest& request,
       Envoy::Tracing::Span& parent_span, CheckDoneFunc on_done);
@@ -108,9 +106,6 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
   // thread, filter_stats_ may have already been destructed in the main thread,
   // so don't collect stats at this point.
   ServiceControlFilterStats& filter_stats_;
-
-  // Whether the client_cache is being destructed.
-  bool destruct_mode_;
 
   bool network_fail_open_;
 

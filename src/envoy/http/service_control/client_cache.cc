@@ -191,9 +191,6 @@ void ClientCache::initHttpRequestSetting(const FilterConfig& filter_config) {
 
 void ClientCache::collectCallStatus(CallStatusStats& filter_stats,
                                     const Code& code) {
-  if (destruct_mode_) {
-    return;
-  }
   ServiceControlFilterStats::collectCallStatus(filter_stats, code);
 }
 
@@ -206,7 +203,6 @@ ClientCache::ClientCache(
     std::function<const std::string&()> quota_token_fn)
     : config_(config),
       filter_stats_(filter_stats),
-      destruct_mode_(false),
       time_source_(time_source) {
   ServiceControlClientOptions options(getCheckAggregationOptions(),
                                       getQuotaAggregationOptions(),
