@@ -52,7 +52,7 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       std::function<const std::string&()> sc_token_fn,
       std::function<const std::string&()> quota_token_fn);
 
-  ~ClientCache() { destruct_mode_ = true; };
+  ~ClientCache() { destruct_mode_ = false; };
 
   CancelFunc callCheck(
       const ::google::api::servicecontrol::v1::CheckRequest& request,

@@ -519,10 +519,9 @@ TEST_F(ClientCacheCheckHttpRequestTest, SuccessfulHttpCallWithCache) {
   // No more callbacks invoked during destructor.
   EXPECT_EQ(got_num_callbacks_, 3);
 
-  // Stats.
+  // Stats. Account for cancellation on cache flush.
   checkAndReset(stats_base_.stats().check_.OK_, 1);
-  // Note: Destruct mode prevents the last cancelled http call from being
-  // recorded. This is expected.
+  checkAndReset(stats_base_.stats().check_.CANCELLED_, 1);
 }
 
 }  // namespace test
