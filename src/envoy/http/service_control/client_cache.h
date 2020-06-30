@@ -36,6 +36,7 @@ class ClientCacheCheckResponseTest;
 class ClientCacheCheckResponseErrorTypeTest;
 class ClientCacheQuotaResponseTest;
 class ClientCacheQuotaResponseErrorTypeTest;
+class ClientCacheHttpRequestTest;
 }  // namespace test
 
 // The class to cache check and batch report.
@@ -69,6 +70,7 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
   friend class test::ClientCacheCheckResponseErrorTypeTest;
   friend class test::ClientCacheQuotaResponseTest;
   friend class test::ClientCacheQuotaResponseErrorTypeTest;
+  friend class test::ClientCacheHttpRequestTest;
 
   // Increments the corresponding stat for the given error type.
   void collectScResponseErrorStats(
@@ -122,20 +124,22 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
   uint32_t report_retries_;
   uint32_t quota_retries_;
 
-  // the http call factories
+  // Used to retrieve the current time for tracing.
+  Envoy::TimeSource& time_source_;
+
+  // The http call factories. On destruction, they automatically cancel all
+  // pending RPCs. These should always be close to the last member variables in
+  // the class to mitigate use-after-free of other class members (destructor
+  // ordering).
   std::unique_ptr<HttpCallFactory> check_call_factory_;
   std::unique_ptr<HttpCallFactory> quota_call_factory_;
   std::unique_ptr<HttpCallFactory> report_call_factory_;
 
-  // When service control client is destroyed, it will flush out some batched
-  // reports and call report_transport_func to send them. Since
-  // report_transport_func is using some member variables, placing the client_
-  // as the last one to make sure it is destroyed first.
+  // The main caching client. On destruction, some cached requests are flushed,
+  // calling the transports and making more http calls. Therefore, this should
+  // always be the last member of the class (so it's destructed first).
   std::unique_ptr<::google::service_control_client::ServiceControlClient>
       client_;
-
-  // Used to retrieve the current time for tracing.
-  Envoy::TimeSource& time_source_;
 };
 
 }  // namespace service_control

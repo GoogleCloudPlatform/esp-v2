@@ -16,6 +16,7 @@
 
 #include "common/tracing/http_tracer_impl.h"
 #include "src/api_proxy/service_control/request_builder.h"
+#include "src/envoy/http/service_control/http_call.h"
 
 namespace espv2 {
 namespace envoy {
@@ -212,20 +213,23 @@ ClientCache::ClientCache(
                                       getReportAggregationOptions());
 
   initHttpRequestSetting(filter_config);
-  check_call_factory_ = std::make_unique<HttpCallFactory>(
+  check_call_factory_ = std::make_unique<HttpCallFactoryImpl>(
       cm, dispatcher, filter_config.service_control_uri(),
       config_.service_name() + ":check", sc_token_fn, check_timeout_ms_,
       check_retries_, time_source, "Service Control remote call: Check");
-  quota_call_factory_ = std::make_unique<HttpCallFactory>(
+  quota_call_factory_ = std::make_unique<HttpCallFactoryImpl>(
       cm, dispatcher, filter_config.service_control_uri(),
       config_.service_name() + ":allocateQuota", quota_token_fn,
       quota_timeout_ms_, quota_retries_, time_source,
       "Service Control remote call: Allocate Quota");
-  report_call_factory_ = std::make_unique<HttpCallFactory>(
+  report_call_factory_ = std::make_unique<HttpCallFactoryImpl>(
       cm, dispatcher, filter_config.service_control_uri(),
       config_.service_name() + ":report", sc_token_fn, report_timeout_ms_,
       report_retries_, time_source, "Service Control remote call: Report");
 
+  // Note: Check transport is also defined per request.
+  // But this must be defined, it will be called on each flush of the cache
+  // entry. This occurs on periodic timer and cache destruction.
   options.check_transport = [this](const CheckRequest& request,
                                    CheckResponse* response,
                                    TransportDoneFunc on_done) {
@@ -322,7 +326,7 @@ CancelFunc ClientCache::callCheck(const CheckRequest& request,
           Status final_status = processScCallTransportStatus<CheckResponse>(
               status, response, body);
           collectCallStatus(filter_stats_.check_, final_status.code());
-          on_done(status);
+          on_done(final_status);
         });
     call->call();
     cancel_fn = [call]() { call->cancel(); };

@@ -17,6 +17,7 @@
 #include "envoy/http/header_map.h"
 #include "gmock/gmock.h"
 #include "src/envoy/http/service_control/handler.h"
+#include "src/envoy/http/service_control/http_call.h"
 #include "src/envoy/http/service_control/service_control_call.h"
 
 namespace espv2 {
@@ -90,6 +91,25 @@ class MockCheckDoneCallback : public ServiceControlHandler::CheckDoneCallback {
 
   MOCK_METHOD(void, onCheckDone, (const ::google::protobuf::util::Status&),
               (override));
+};
+
+class MockHttpCall : public HttpCall {
+ public:
+  MockHttpCall() {}
+  ~MockHttpCall() {}
+
+  MOCK_METHOD(void, cancel, (), (override));
+  MOCK_METHOD(void, call, (), (override));
+};
+
+class MockHttpCallFactory : public HttpCallFactory {
+ public:
+  MockHttpCallFactory() {}
+  ~MockHttpCallFactory() {}
+
+  MOCK_METHOD(HttpCall*, createHttpCall,
+              (const Envoy::Protobuf::Message& body,
+               Envoy::Tracing::Span& parent_span, HttpCall::DoneFunc on_done));
 };
 
 }  // namespace service_control
