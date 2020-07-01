@@ -44,12 +44,12 @@ class ThreadLocalCache : public Envoy::ThreadLocal::ThreadLocalObject {
       const ::espv2::api::envoy::v6::http::service_control::Service& config,
       const ::espv2::api::envoy::v6::http::service_control::FilterConfig&
           filter_config,
-      ServiceControlFilterStats& filter_stats,
+      const std::string& stats_prefix, Envoy::Stats::Scope& scope,
       Envoy::Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
       Envoy::Event::Dispatcher& dispatcher)
       : client_cache_(
-            config, filter_config, filter_stats, cm, time_source, dispatcher,
-            [this]() -> const std::string& { return sc_token(); },
+            config, filter_config, stats_prefix, scope, cm, time_source,
+            dispatcher, [this]() -> const std::string& { return sc_token(); },
             [this]() -> const std::string& { return quota_token(); }) {}
 
   void set_sc_token(TokenSharedPtr sc_token) { sc_token_ = sc_token; }
@@ -82,7 +82,7 @@ class ServiceControlCallImpl
   ServiceControlCallImpl(
       FilterConfigProtoSharedPtr proto_config,
       const ::espv2::api::envoy::v6::http::service_control::Service& config,
-      ServiceControlFilterStats& filter_stats,
+      const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context);
 
   CancelFunc callCheck(
@@ -131,23 +131,22 @@ class ServiceControlCallImpl
 class ServiceControlCallFactoryImpl : public ServiceControlCallFactory {
  public:
   explicit ServiceControlCallFactoryImpl(
-      FilterConfigProtoSharedPtr proto_config,
-      ServiceControlFilterStats& filter_stats,
+      FilterConfigProtoSharedPtr proto_config, const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context)
       : proto_config_(proto_config),
-        filter_stats_(filter_stats),
+        stats_prefix_(stats_prefix),
         context_(context) {}
 
   ServiceControlCallPtr create(
       const ::espv2::api::envoy::v6::http::service_control::Service& config)
       override {
     return std::make_unique<ServiceControlCallImpl>(proto_config_, config,
-                                                    filter_stats_, context_);
+                                                    stats_prefix_, context_);
   }
 
  private:
   FilterConfigProtoSharedPtr proto_config_;
-  ServiceControlFilterStats& filter_stats_;
+  std::string stats_prefix_;
   Envoy::Server::Configuration::FactoryContext& context_;
 };
 

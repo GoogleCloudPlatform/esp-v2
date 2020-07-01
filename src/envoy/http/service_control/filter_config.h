@@ -30,20 +30,20 @@ namespace service_control {
 
 // The Envoy filter config for ESPv2 service control client.
 class ServiceControlFilterConfig
-    : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter>,
-      public ServiceControlFilterStatBase {
+    : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   ServiceControlFilterConfig(
       const ::espv2::api::envoy::v6::http::service_control::FilterConfig&
           proto_config,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context)
-      : ServiceControlFilterStatBase(stats_prefix, context.scope()),
+      : filter_stats_(
+            ServiceControlFilterStats::create(stats_prefix, context.scope())),
         proto_config_(
             std::make_shared<
                 ::espv2::api::envoy::v6::http::service_control::FilterConfig>(
                 proto_config)),
-        call_factory_(proto_config_, stats(), context),
+        call_factory_(proto_config_, stats_prefix, context),
         config_parser_(*proto_config_, call_factory_),
         handler_factory_(context.random(), config_parser_,
                          context.timeSource()) {}
@@ -52,7 +52,10 @@ class ServiceControlFilterConfig
     return handler_factory_;
   }
 
+  ServiceControlFilterStats& stats() { return filter_stats_; }
+
  private:
+  ServiceControlFilterStats filter_stats_;
   FilterConfigProtoSharedPtr proto_config_;
   ServiceControlCallFactoryImpl call_factory_;
   FilterConfigParser config_parser_;
