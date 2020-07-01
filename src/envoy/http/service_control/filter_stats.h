@@ -97,19 +97,10 @@ struct ServiceControlFilterStats {
   static void collectCallStatus(
       CallStatusStats& filter_stats,
       const ::google::protobuf::util::error::Code& code);
-};
 
-class ServiceControlFilterStatBase {
- public:
-  ServiceControlFilterStatBase(const std::string& prefix,
-                               Envoy::Stats::Scope& scope)
-      : stats_(generateStats(prefix, scope)) {}
-
-  ServiceControlFilterStats& stats() { return stats_; }
-
- private:
-  static ServiceControlFilterStats generateStats(const std::string& prefix,
-                                                 Envoy::Stats::Scope& scope) {
+  // Create a stat struct.
+  static ServiceControlFilterStats create(const std::string& prefix,
+                                          Envoy::Stats::Scope& scope) {
     const std::string final_prefix = prefix + "service_control.";
 
     return {{FILTER_STATS(POOL_COUNTER_PREFIX(scope, final_prefix),
@@ -121,9 +112,6 @@ class ServiceControlFilterStatBase {
             {CALL_STATUS_STATS(
                 POOL_COUNTER_PREFIX(scope, final_prefix + "report."))}};
   }
-
-  // The stats for the filter.
-  ServiceControlFilterStats stats_;
 };
 
 }  // namespace service_control

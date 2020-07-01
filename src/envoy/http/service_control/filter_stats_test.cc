@@ -36,11 +36,9 @@ class FilterStatsTest : public ::testing::Test {
  public:
   FilterStatsTest()
       : context_(),
-        statBase_(ServiceControlFilterStatBase("", context_.scope_)),
-        stats_(statBase_.stats()) {}
+        stats_(ServiceControlFilterStats::create("", context_.scope_)) {}
 
   NiceMock<MockFactoryContext> context_;
-  ServiceControlFilterStatBase statBase_;
   ServiceControlFilterStats stats_;
 
   void runTest(
