@@ -46,13 +46,11 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       const ::espv2::api::envoy::v6::http::service_control::Service& config,
       const ::espv2::api::envoy::v6::http::service_control::FilterConfig&
           filter_config,
-      ServiceControlFilterStats& filter_stats,
+      const std::string& stats_prefix, Envoy::Stats::Scope& scope,
       Envoy::Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
       Envoy::Event::Dispatcher& dispatcher,
       std::function<const std::string&()> sc_token_fn,
       std::function<const std::string&()> quota_token_fn);
-
-  ~ClientCache() { destruct_mode_ = true; };
 
   CancelFunc callCheck(
       const ::google::api::servicecontrol::v1::CheckRequest& request,
@@ -104,14 +102,10 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
 
   const ::espv2::api::envoy::v6::http::service_control::Service& config_;
 
-  // Filter statistics. When service control client is destroyed in worker
-  // thread, filter_stats_ may have already been destructed in the main thread,
-  // so don't collect stats at this point.
-  ServiceControlFilterStats& filter_stats_;
+  // Filter statistics.
+  ServiceControlFilterStats filter_stats_;
 
-  // Whether the client_cache is being destructed.
-  bool destruct_mode_;
-
+  // network fail policy
   bool network_fail_open_;
 
   // the configurable timeouts

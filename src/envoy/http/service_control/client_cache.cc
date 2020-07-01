@@ -189,24 +189,20 @@ void ClientCache::initHttpRequestSetting(const FilterConfig& filter_config) {
                         : kReportDefaultNumberOfRetries;
 }
 
-void ClientCache::collectCallStatus(CallStatusStats& filter_stats,
+void ClientCache::collectCallStatus(CallStatusStats& call_stats,
                                     const Code& code) {
-  if (destruct_mode_) {
-    return;
-  }
-  ServiceControlFilterStats::collectCallStatus(filter_stats, code);
+  ServiceControlFilterStats::collectCallStatus(call_stats, code);
 }
 
 ClientCache::ClientCache(
     const ::espv2::api::envoy::v6::http::service_control::Service& config,
-    const FilterConfig& filter_config, ServiceControlFilterStats& filter_stats,
-    Envoy::Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
-    Envoy::Event::Dispatcher& dispatcher,
+    const FilterConfig& filter_config, const std::string& stats_prefix,
+    Envoy::Stats::Scope& scope, Envoy::Upstream::ClusterManager& cm,
+    Envoy::TimeSource& time_source, Envoy::Event::Dispatcher& dispatcher,
     std::function<const std::string&()> sc_token_fn,
     std::function<const std::string&()> quota_token_fn)
     : config_(config),
-      filter_stats_(filter_stats),
-      destruct_mode_(false),
+      filter_stats_(ServiceControlFilterStats::create(stats_prefix, scope)),
       time_source_(time_source) {
   ServiceControlClientOptions options(getCheckAggregationOptions(),
                                       getQuotaAggregationOptions(),

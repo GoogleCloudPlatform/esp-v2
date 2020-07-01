@@ -62,14 +62,15 @@ constexpr char kCheckOperationId[] = "test.check.operation";
 
 class ClientCacheTestBase : public ::testing::Test {
  protected:
-  ClientCacheTestBase() : stats_base_("test", context_.scope_) {
+  ClientCacheTestBase()
+      : stats_(ServiceControlFilterStats::create("test", context_.scope_)) {
     token_fn_ = []() { return Envoy::EMPTY_STRING; };
   }
 
   void SetUp() override {
     cache_ = std::make_unique<ClientCache>(
-        service_config_, filter_config_, stats_base_.stats(), cm_, time_source_,
-        dispatcher_, token_fn_, token_fn_);
+        service_config_, filter_config_, "test", context_.scope_, cm_,
+        time_source_, dispatcher_, token_fn_, token_fn_);
   }
 
   void checkAndReset(Envoy::Stats::Counter& counter, const int expected_value) {
@@ -80,17 +81,17 @@ class ClientCacheTestBase : public ::testing::Test {
   void TearDown() override {
     // All stats that are verified in tests below should be reset here.
     // Response tests.
-    checkAndReset(stats_base_.stats().filter_.allowed_control_plane_fault_, 0);
-    checkAndReset(stats_base_.stats().filter_.denied_control_plane_fault_, 0);
-    checkAndReset(stats_base_.stats().filter_.denied_consumer_blocked_, 0);
-    checkAndReset(stats_base_.stats().filter_.denied_consumer_error_, 0);
-    checkAndReset(stats_base_.stats().filter_.denied_consumer_quota_, 0);
-    checkAndReset(stats_base_.stats().filter_.denied_producer_error_, 0);
+    checkAndReset(stats_.filter_.allowed_control_plane_fault_, 0);
+    checkAndReset(stats_.filter_.denied_control_plane_fault_, 0);
+    checkAndReset(stats_.filter_.denied_consumer_blocked_, 0);
+    checkAndReset(stats_.filter_.denied_consumer_error_, 0);
+    checkAndReset(stats_.filter_.denied_consumer_quota_, 0);
+    checkAndReset(stats_.filter_.denied_producer_error_, 0);
 
     // Check request tests.
-    checkAndReset(stats_base_.stats().check_.OK_, 0);
-    checkAndReset(stats_base_.stats().check_.CANCELLED_, 0);
-    checkAndReset(stats_base_.stats().check_.INVALID_ARGUMENT_, 0);
+    checkAndReset(stats_.check_.OK_, 0);
+    checkAndReset(stats_.check_.CANCELLED_, 0);
+    checkAndReset(stats_.check_.INVALID_ARGUMENT_, 0);
   }
 
   // Helpers for SetUp.
@@ -100,7 +101,7 @@ class ClientCacheTestBase : public ::testing::Test {
   NiceMock<Envoy::Event::MockDispatcher> dispatcher_;
   NiceMock<Envoy::MockTimeSystem> time_source_;
   NiceMock<Envoy::Server::Configuration::MockFactoryContext> context_;
-  ServiceControlFilterStatBase stats_base_;
+  ServiceControlFilterStats stats_;
   std::function<const std::string&()> token_fn_;
 
   // Class under test.
@@ -125,14 +126,14 @@ TEST_F(ClientCacheCheckResponseTest, Http5xxAllowed) {
   CheckResponse* response = new CheckResponse();
 
   runTest(Code::UNAVAILABLE, response, Code::OK);
-  checkAndReset(stats_base_.stats().filter_.allowed_control_plane_fault_, 1);
+  checkAndReset(stats_.filter_.allowed_control_plane_fault_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseTest, Http4xxTranslatedAndBlocked) {
   CheckResponse* response = new CheckResponse();
 
   runTest(Code::PERMISSION_DENIED, response, Code::INTERNAL);
-  checkAndReset(stats_base_.stats().filter_.denied_producer_error_, 1);
+  checkAndReset(stats_.filter_.denied_producer_error_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseTest, Sc5xxAllowed) {
@@ -141,7 +142,7 @@ TEST_F(ClientCacheCheckResponseTest, Sc5xxAllowed) {
   check_error->set_code(CheckError::NAMESPACE_LOOKUP_UNAVAILABLE);
 
   runTest(Code::OK, response, Code::OK);
-  checkAndReset(stats_base_.stats().filter_.allowed_control_plane_fault_, 1);
+  checkAndReset(stats_.filter_.allowed_control_plane_fault_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseTest, Sc4xxBlocked) {
@@ -150,7 +151,7 @@ TEST_F(ClientCacheCheckResponseTest, Sc4xxBlocked) {
   check_error->set_code(CheckError::CLIENT_APP_BLOCKED);
 
   runTest(Code::OK, response, Code::PERMISSION_DENIED);
-  checkAndReset(stats_base_.stats().filter_.denied_consumer_blocked_, 1);
+  checkAndReset(stats_.filter_.denied_consumer_blocked_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseTest, ScOkAllowed) {
@@ -166,8 +167,8 @@ class ClientCacheCheckResponseNetworkFailClosedTest
         ->mutable_network_fail_open()
         ->set_value(false);
     cache_ = std::make_unique<ClientCache>(
-        service_config_, filter_config_, stats_base_.stats(), cm_, time_source_,
-        dispatcher_, token_fn_, token_fn_);
+        service_config_, filter_config_, "test", context_.scope_, cm_,
+        time_source_, dispatcher_, token_fn_, token_fn_);
   }
 };
 
@@ -175,7 +176,7 @@ TEST_F(ClientCacheCheckResponseNetworkFailClosedTest, Http5xxBlocked) {
   CheckResponse* response = new CheckResponse();
 
   runTest(Code::UNAVAILABLE, response, Code::UNAVAILABLE);
-  checkAndReset(stats_base_.stats().filter_.denied_control_plane_fault_, 1);
+  checkAndReset(stats_.filter_.denied_control_plane_fault_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseNetworkFailClosedTest, Sc5xxBlocked) {
@@ -184,7 +185,7 @@ TEST_F(ClientCacheCheckResponseNetworkFailClosedTest, Sc5xxBlocked) {
   check_error->set_code(CheckError::NAMESPACE_LOOKUP_UNAVAILABLE);
 
   runTest(Code::OK, response, Code::UNAVAILABLE);
-  checkAndReset(stats_base_.stats().filter_.denied_control_plane_fault_, 1);
+  checkAndReset(stats_.filter_.denied_control_plane_fault_, 1);
 }
 
 class ClientCacheCheckResponseErrorTypeTest : public ClientCacheTestBase {
@@ -202,29 +203,29 @@ class ClientCacheCheckResponseErrorTypeTest : public ClientCacheTestBase {
 
 TEST_F(ClientCacheCheckResponseErrorTypeTest, ConsumerBlocked) {
   runTest(CheckError::CLIENT_APP_BLOCKED);
-  checkAndReset(stats_base_.stats().filter_.denied_consumer_blocked_, 1);
+  checkAndReset(stats_.filter_.denied_consumer_blocked_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseErrorTypeTest, ConsumerError) {
   runTest(CheckError::BILLING_DISABLED);
-  checkAndReset(stats_base_.stats().filter_.denied_consumer_error_, 1);
+  checkAndReset(stats_.filter_.denied_consumer_error_, 1);
 }
 
 // This should never happen since we use quota calls, but test it for
 // completeness.
 TEST_F(ClientCacheCheckResponseErrorTypeTest, ConsumerQuota) {
   runTest(CheckError::RESOURCE_EXHAUSTED);
-  checkAndReset(stats_base_.stats().filter_.denied_consumer_quota_, 1);
+  checkAndReset(stats_.filter_.denied_consumer_quota_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseErrorTypeTest, ApiKeyInvalid) {
   runTest(CheckError::API_KEY_NOT_FOUND);
-  checkAndReset(stats_base_.stats().filter_.denied_consumer_error_, 1);
+  checkAndReset(stats_.filter_.denied_consumer_error_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseErrorTypeTest, ServiceNotActivated) {
   runTest(CheckError::SERVICE_NOT_ACTIVATED);
-  checkAndReset(stats_base_.stats().filter_.denied_consumer_error_, 1);
+  checkAndReset(stats_.filter_.denied_consumer_error_, 1);
 }
 
 class ClientCacheQuotaResponseTest : public ClientCacheTestBase {
@@ -244,7 +245,7 @@ TEST_F(ClientCacheQuotaResponseTest, HttpErrorBlocked) {
   AllocateQuotaResponse* response = new AllocateQuotaResponse();
 
   runTest(Code::INTERNAL, response, Code::INTERNAL);
-  checkAndReset(stats_base_.stats().filter_.denied_producer_error_, 1);
+  checkAndReset(stats_.filter_.denied_producer_error_, 1);
 }
 
 TEST_F(ClientCacheQuotaResponseTest, ScErrorBlocked) {
@@ -253,7 +254,7 @@ TEST_F(ClientCacheQuotaResponseTest, ScErrorBlocked) {
   quota_error->set_code(QuotaError::RESOURCE_EXHAUSTED);
 
   runTest(Code::OK, response, Code::RESOURCE_EXHAUSTED);
-  checkAndReset(stats_base_.stats().filter_.denied_consumer_quota_, 1);
+  checkAndReset(stats_.filter_.denied_consumer_quota_, 1);
 }
 
 TEST_F(ClientCacheQuotaResponseTest, ScOkAllowed) {
@@ -277,17 +278,17 @@ class ClientCacheQuotaResponseErrorTypeTest : public ClientCacheTestBase {
 
 TEST_F(ClientCacheQuotaResponseErrorTypeTest, ConsumerError) {
   runTest(QuotaError::PROJECT_DELETED);
-  checkAndReset(stats_base_.stats().filter_.denied_consumer_error_, 1);
+  checkAndReset(stats_.filter_.denied_consumer_error_, 1);
 }
 
 TEST_F(ClientCacheQuotaResponseErrorTypeTest, ConsumerQuota) {
   runTest(QuotaError::RESOURCE_EXHAUSTED);
-  checkAndReset(stats_base_.stats().filter_.denied_consumer_quota_, 1);
+  checkAndReset(stats_.filter_.denied_consumer_quota_, 1);
 }
 
 TEST_F(ClientCacheQuotaResponseErrorTypeTest, ApiKeyInvalid) {
   runTest(QuotaError::API_KEY_INVALID);
-  checkAndReset(stats_base_.stats().filter_.denied_consumer_error_, 1);
+  checkAndReset(stats_.filter_.denied_consumer_error_, 1);
 }
 
 class ClientCacheHttpRequestTest : public ClientCacheTestBase {
@@ -297,8 +298,8 @@ class ClientCacheHttpRequestTest : public ClientCacheTestBase {
     service_config_.set_service_config_id(kServiceConfigId);
 
     cache_ = std::make_unique<ClientCache>(
-        service_config_, filter_config_, stats_base_.stats(), cm_, time_source_,
-        dispatcher_, token_fn_, token_fn_);
+        service_config_, filter_config_, "test", context_.scope_, cm_,
+        time_source_, dispatcher_, token_fn_, token_fn_);
 
     // Setup mock http call.
     http_call_ = std::make_unique<MockHttpCall>();
@@ -411,7 +412,7 @@ TEST_F(ClientCacheCheckHttpRequestTest, OneSuccessfulHttpCall) {
   cache_.reset(nullptr);
 
   // Check stats.
-  checkAndReset(stats_base_.stats().check_.OK_, 1);
+  checkAndReset(stats_.check_.OK_, 1);
 }
 
 // Cache miss occurs, so cache makes HttpCall to SC Check.
@@ -440,9 +441,9 @@ TEST_F(ClientCacheCheckHttpRequestTest, OneHttpCallWithBadBody) {
   cache_.reset(nullptr);
 
   // Check stats.
-  checkAndReset(stats_base_.stats().check_.INVALID_ARGUMENT_, 1);
+  checkAndReset(stats_.check_.INVALID_ARGUMENT_, 1);
   // TODO(nareddyt): This should probably be treated as a control plane fault.
-  checkAndReset(stats_base_.stats().filter_.denied_producer_error_, 1);
+  checkAndReset(stats_.filter_.denied_producer_error_, 1);
 }
 
 // Cache miss occurs, so cache makes HttpCall to SC Check.
@@ -476,9 +477,9 @@ TEST_F(ClientCacheCheckHttpRequestTest, OnePendingHttpCallCancelled) {
   cache_.reset(nullptr);
 
   // Check stats.
-  checkAndReset(stats_base_.stats().check_.CANCELLED_, 1);
+  checkAndReset(stats_.check_.CANCELLED_, 1);
   // TODO(nareddyt): This should probably be treated as a control plane fault.
-  checkAndReset(stats_base_.stats().filter_.denied_producer_error_, 1);
+  checkAndReset(stats_.filter_.denied_producer_error_, 1);
 }
 
 // Check call 1: Cache miss occurs, so cache makes HttpCall to SC Check.
@@ -520,9 +521,8 @@ TEST_F(ClientCacheCheckHttpRequestTest, SuccessfulHttpCallWithCache) {
   EXPECT_EQ(got_num_callbacks_, 3);
 
   // Stats.
-  checkAndReset(stats_base_.stats().check_.OK_, 1);
-  // Note: Destruct mode prevents the last cancelled http call from being
-  // recorded. This is expected.
+  checkAndReset(stats_.check_.OK_, 1);
+  checkAndReset(stats_.check_.CANCELLED_, 1);
 }
 
 }  // namespace test

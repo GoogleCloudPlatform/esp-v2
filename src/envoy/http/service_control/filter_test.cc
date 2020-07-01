@@ -46,11 +46,12 @@ const Status kBadStatus(Code::UNAUTHENTICATED, "test");
 class ServiceControlFilterTest : public ::testing::Test {
  protected:
   ServiceControlFilterTest()
-      : stats_base_(Envoy::EMPTY_STRING, mock_stats_scope_) {}
+      : stats_(ServiceControlFilterStats::create(Envoy::EMPTY_STRING,
+                                                 mock_stats_scope_)) {}
 
   void SetUp() override {
-    filter_ = std::make_unique<ServiceControlFilter>(stats_base_.stats(),
-                                                     mock_handler_factory_);
+    filter_ =
+        std::make_unique<ServiceControlFilter>(stats_, mock_handler_factory_);
     filter_->setDecoderFilterCallbacks(mock_decoder_callbacks_);
 
     mock_handler_ = new testing::NiceMock<MockServiceControlHandler>();
@@ -69,7 +70,7 @@ class ServiceControlFilterTest : public ::testing::Test {
   ServiceControlHandlerPtr mock_handler_ptr_;
   testing::NiceMock<Envoy::MockBuffer> mock_buffer_;
   testing::NiceMock<Envoy::Stats::MockIsolatedStatsStore> mock_stats_scope_;
-  ServiceControlFilterStatBase stats_base_;
+  ServiceControlFilterStats stats_;
   Envoy::Http::TestRequestHeaderMapImpl req_headers_;
   Envoy::Http::TestRequestTrailerMapImpl req_trailer_;
   Envoy::Http::TestResponseHeaderMapImpl resp_headers_;
