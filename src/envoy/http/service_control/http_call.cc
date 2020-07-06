@@ -148,6 +148,9 @@ class HttpCallImpl : public HttpCall,
     deferredDelete();
   }
 
+  void onBeforeFinalizeUpstreamSpan(
+      Envoy::Tracing::Span&, const Envoy::Http::ResponseHeaderMap*) override {}
+
  private:
   bool attemptRetry(const uint64_t& status_code) {
     // skip if it is the client side problem.
@@ -241,7 +244,8 @@ class HttpCallImpl : public HttpCall,
 
     // assume token is not empty
     std::string token_value = "Bearer " + token;
-    message->headers().setAuthorization(token_value);
+    message->headers().setCopy(Envoy::Http::CustomHeaders::get().Authorization,
+                               token_value);
     message->headers().setContentType(KApplicationProto);
     return message;
   }

@@ -49,6 +49,9 @@ class TokenSubscriber
 
   ~TokenSubscriber();
 
+  void onBeforeFinalizeUpstreamSpan(
+      Envoy::Tracing::Span&, const Envoy::Http::ResponseHeaderMap*) override {}
+
  private:
   void handleFailResponse();
   void handleSuccessResponse(absl::string_view token,
