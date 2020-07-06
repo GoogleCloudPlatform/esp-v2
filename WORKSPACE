@@ -45,7 +45,7 @@ ENVOY_SHA256 = "f4f7015ae3974ac56491563475b66215872f5ff4ef8318e03325891e8d104ae4
 
 http_archive(
     name = "envoy",
-    #    sha256 = ENVOY_SHA256,
+    sha256 = ENVOY_SHA256,
     strip_prefix = "envoy-" + ENVOY_SHA1,
     url = "https://github.com/envoyproxy/envoy/archive/" + ENVOY_SHA1 + ".zip",
 )
