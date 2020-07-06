@@ -20,7 +20,6 @@
 
 #include "common/http/headers.h"
 #include "common/http/utility.h"
-#include "external/envoy/include/envoy/http/_virtual_includes/header_map_interface/envoy/http/header_map.h"
 #include "src/envoy/utils/filter_state_utils.h"
 
 namespace espv2 {
