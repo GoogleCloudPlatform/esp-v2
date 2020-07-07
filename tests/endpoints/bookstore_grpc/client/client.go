@@ -92,7 +92,11 @@ func MakeCall(clientProtocol, addr, httpMethod, method, token string, header htt
 var makeHTTPCall = func(addr, httpMethod, method, token string, header http.Header) (string, error) {
 	var cli http.Client
 	req, _ := http.NewRequest(httpMethod, fmt.Sprintf("http://%s%s", addr, method), nil)
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+
+	if token != "" {
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	}
+
 	addAllHeaders(req, header)
 
 	resp, err := cli.Do(req)
