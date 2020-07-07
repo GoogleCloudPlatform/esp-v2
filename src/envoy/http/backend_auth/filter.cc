@@ -83,11 +83,17 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
     return FilterHeadersStatus::StopIteration;
   }
 
-  if (headers.Authorization()) {
+  // Copy the existing `Authorization` header to `x-forwarded-authorization`
+  // header.
+  const Envoy::Http::HeaderEntry* existAuthToken =
+      headers.get(Envoy::Http::CustomHeaders::get().Authorization);
+  if (existAuthToken != nullptr) {
     headers.addCopy(kXForwardedAuthorization,
-                    headers.Authorization()->value().getStringView());
+                    existAuthToken->value().getStringView());
   }
-  headers.setAuthorization(kBearer + *jwt_token);
+
+  headers.setCopy(Envoy::Http::CustomHeaders::get().Authorization,
+                  kBearer + *jwt_token);
   config_->stats().token_added_.inc();
   return FilterHeadersStatus::Continue;
 }

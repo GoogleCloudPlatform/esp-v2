@@ -74,7 +74,7 @@ class HttpCallTest : public testing::Test {
                        -> Envoy::Http::AsyncClient::Request* {
               // Check token is correctly set
               auto token_header = message_ptr->headers().get(
-                  Envoy::Http::Headers::get().Authorization);
+                  Envoy::Http::CustomHeaders::get().Authorization);
               EXPECT_EQ(token_header->value().getStringView(),
                         "Bearer " + fake_token_);
 

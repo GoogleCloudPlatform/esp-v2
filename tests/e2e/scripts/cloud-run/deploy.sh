@@ -54,6 +54,10 @@ BACKEND_HOST=""
 CLUSTER_ZONE="us-central1-a"
 CLOUD_RUN_REGION="us-central1"
 
+# TODO(b/160643986): pin to latest cluster version.
+# CLUSTER_VERSION="latest"
+CLUSTER_VERSION="1.16.9-gke.6"
+
 STATUS=0
 if [[ "${PROXY_PLATFORM}" == "anthos-cloud-run" ]] ; then
   CLUSTER_NAME=$(get_anthos_cluster_name_with_sha)-${UNIQUE_ID}
@@ -166,7 +170,7 @@ function setup() {
     gcloud beta container clusters create ${CLUSTER_NAME} \
       --addons=HorizontalPodAutoscaling,HttpLoadBalancing,CloudRun \
       --machine-type=n1-standard-4 \
-      --cluster-version=latest \
+      --cluster-version=${CLUSTER_VERSION} \
       --enable-stackdriver-kubernetes \
       --service-account=${PROXY_RUNTIME_SERVICE_ACCOUNT} \
       --network=default \
