@@ -40,7 +40,7 @@ build:sanitizer --test_tag_filters=-no_san
 
 # Common flags for Clang
 build:clang --action_env=BAZEL_COMPILER=clang
-build:clang --linkopt=-fuse-ld=lld
+build:clang --linkopt -fuse-ld=lld-9
 
 # Compile with the Scudo allocator
 # https://llvm.org/docs/ScudoHardenedAllocator.html
@@ -71,7 +71,7 @@ build:asan --test_env=UBSAN_OPTIONS=halt_on_error=true:print_stacktrace=1
 build:asan --test_env=ASAN_SYMBOLIZER_PATH
 
 build:clang-asan --config=asan
-build:clang-asan --linkopt -fuse-ld=lld
+build:clang-asan --linkopt -fuse-ld=lld-9
 build:clang-asan --copt -fno-sanitize=vptr,function
 build:clang-asan --linkopt -fno-sanitize=vptr,function
 build:clang-asan --copt -fno-optimize-sibling-calls
@@ -88,8 +88,8 @@ build:clang-tsan --copt -DEVENT__DISABLE_DEBUG_MODE
 # Fuzz builds
 build:asan-fuzzer --config=clang-asan
 build:asan-fuzzer -c opt
-build:asan-fuzzer --action_env=CC=clang-8
-build:asan-fuzzer --action_env=CXX=clang++-8
+build:asan-fuzzer --action_env=CC=clang-9
+build:asan-fuzzer --action_env=CXX=clang++-9
 build:asan-fuzzer --nocache_test_results
 build:asan-fuzzer --define=FUZZING_ENGINE=libfuzzer
 build:asan-fuzzer --copt=-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
@@ -99,10 +99,11 @@ build:asan-fuzzer --test_env=UBSAN_OPTIONS=print_stacktrace=1
 
 # Coverage
 coverage --config=coverage
+coverage --config=clang
 build:coverage --action_env=BAZEL_USE_LLVM_NATIVE_COVERAGE=1
 build:coverage --action_env=GCOV=llvm-profdata
-build:coverage --action_env=CC=clang-8
-build:coverage --action_env=CXX=clang++-8
+build:coverage --action_env=CC=clang-9
+build:coverage --action_env=CXX=clang++-9
 build:coverage --copt=-DNDEBUG
 build:coverage --test_timeout=900
 build:coverage --define=ENVOY_CONFIG_COVERAGE=1

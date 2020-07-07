@@ -19,24 +19,13 @@ sudo chmod +x /usr/local/bin/bazel
 
 To get started building Envoy locally, following the instructions from [Envoy](https://github.com/envoyproxy/envoy/blob/master/bazel/README.md#quick-start-bazel-build-for-developers).
 
-## Install Clang-8
+## Install clang-9
 
 ```
 wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key| apt-key add - && \
-    echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-8 main" >> /etc/apt/sources.list && \
+    echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-9 main" >> /etc/apt/sources.list && \
     sudo apt-get update && \
-    sudo apt-get install -y llvm-8-dev libclang-8-dev clang-8 xz-utils lld # install clang-8
-```
-
-## Install Clang-format-7
-
-```
-$ sudo apt-get install -y software-properties-common
-$ sudo add-apt-repository "deb http://apt.llvm.org/stretch/ llvm-toolchain-stretch-7 main"
-$ wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-$ sudo apt-get update
-
-$ sudo apt-get install clang-format-7
+    sudo apt-get install -y llvm-9-dev libclang-9-dev clang-9 xz-utils lld-9 clang-tools-9 clang-format-9
 ```
 
 ## Install Golang

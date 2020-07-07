@@ -19,9 +19,32 @@
 # Fail on any error.
 set -eo pipefail
 
-gcloud config set core/project cloudesf-testing
-gcloud auth activate-service-account \
-  --key-file="${GOOGLE_APPLICATION_CREDENTIALS}"
+# Note that JOB_TYPE is set by Prow.
+# https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md#job-environment-variables
+PUBLIC_DIRECTORY=""
+case "${JOB_TYPE}" in
+  "presubmit")
+    # Store in directory with the SHA for each presubmit run.
+    PUBLIC_DIRECTORY=$(get_tag_name)
+
+    gcloud config set core/project cloudesf-testing
+    gcloud auth activate-service-account \
+      --key-file="${GOOGLE_APPLICATION_CREDENTIALS}"
+    ;;
+  "periodic")
+    # Overwrite global directory with latest coverage for all continuous runs.
+    PUBLIC_DIRECTORY="latest"
+
+    gcloud config set core/project cloudesf-testing
+    gcloud auth activate-service-account \
+      --key-file="${GOOGLE_APPLICATION_CREDENTIALS}"
+    ;;
+  *)
+    # If running locally, just upload to special-case folder.
+    echo "Unknown job type: ${JOB_TYPE}"
+    PUBLIC_DIRECTORY="local-run"
+    ;;
+esac
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT}"
@@ -41,25 +64,6 @@ echo '======================================================='
 echo '======================================================='
 echo '=================== Upload Coverage ==================='
 echo '======================================================='
-
-# Note that JOB_TYPE is set by Prow.
-# https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md#job-environment-variables
-PUBLIC_DIRECTORY=""
-case "${JOB_TYPE}" in
-  "presubmit")
-    # Store in directory with the SHA for each presubmit run.
-    PUBLIC_DIRECTORY=$(get_tag_name)
-    ;;
-  "periodic")
-    # Overwrite global directory with latest coverage for all continuous runs.
-    PUBLIC_DIRECTORY="latest"
-    ;;
-  *)
-    # If running locally, just upload to special-case folder.
-    echo "Unknown job type: ${JOB_TYPE}"
-    PUBLIC_DIRECTORY="local-run"
-    ;;
-esac
 
 # Upload folder.
 gsutil -m rsync -r -d "${ROOT}/generated" "gs://esp-v2-coverage/${PUBLIC_DIRECTORY}"
