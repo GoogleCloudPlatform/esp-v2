@@ -136,6 +136,9 @@ const (
 	// Strict Transport Security header key and value
 	HSTSHeaderKey   = "Strict-Transport-Security"
 	HSTSHeaderValue = "max-age=31536000; includeSubdomains"
+
+	// Standard type url prefix.
+	TypeUrlPrefix = "type.googleapis.com/"
 )
 
 type BackendProtocol int32

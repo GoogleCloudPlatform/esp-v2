@@ -19,6 +19,7 @@ package espv2.api.envoy.v6.http.path_matcher;
 import "api/envoy/v6/http/common/base.proto";
 import "validate/validate.proto";
 
+
 message PathMatcherRule {
   // The pattern used to match a HTTP request.
   espv2.api.envoy.v6.http.common.Pattern pattern = 1;
@@ -30,24 +31,14 @@ message PathMatcherRule {
   // Ref:
   // https://cloud.google.com/endpoints/docs/openapi/openapi-extensions#understanding_path_translation
   bool extract_path_parameters = 3;
-}
 
-// FieldName stores the snake name to JSON name mapping as specified in
-// Service config.
-// For example, for a URI template: /{foo_bar}
-//  * snake_name = "foo_bar"
-//  * json_name = "fooBar"
-message SegmentName {
-  // Snake name of a segment.
-  string snake_name = 1;
-  // JSON name of a segment.
-  string json_name = 2;
+  // Each rule has a mapping of snake_case segments to jsonCase segments.
+  // For example, for a URI template: /{foo_bar}
+  //  * snake_name = "foo_bar"
+  //  * json_name = "fooBar"
+  map<string, string> snake_to_json_segments = 4;
 }
 
 message FilterConfig {
   repeated PathMatcherRule rules = 1;
-
-  // It is invalid for multiple segments to share the same `snake_name` but have
-  // different `json_name`.
-  repeated SegmentName segment_names = 2;
 }

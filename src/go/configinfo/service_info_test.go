@@ -32,7 +32,6 @@ import (
 	"github.com/gorilla/mux"
 
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v6/http/common"
-	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v6/http/path_matcher"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v6/http/service_control"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -1027,6 +1026,11 @@ func TestMethods(t *testing.T) {
 						},
 					},
 				},
+				Types: []*ptypepb.Type{
+					{
+						Name: "endpoints.examples.bookstore.CreateBookRequest",
+					},
+				},
 			},
 			BackendAddress: "grpc://127.0.0.1:80",
 			wantMethods: map[string]*methodInfo{
@@ -1091,6 +1095,11 @@ func TestMethods(t *testing.T) {
 						},
 					},
 				},
+				Types: []*ptypepb.Type{
+					{
+						Name: "endpoints.examples.bookstore.CreateBookRequest",
+					},
+				},
 			},
 			BackendAddress: "grpc://127.0.0.1:80",
 			wantMethods: map[string]*methodInfo{
@@ -1120,29 +1129,29 @@ func TestMethods(t *testing.T) {
 		},
 	}
 
-	for i, tc := range testData {
+	for _, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendAddress = tc.BackendAddress
 		opts.Healthz = tc.healthz
 		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if tc.wantError != "" {
 			if err == nil || err.Error() != tc.wantError {
-				t.Errorf("Test Desc(%d): %s, got Errors : %v, want: %v", i, tc.desc, err, tc.wantError)
+				t.Errorf("Test(%v): got Errors : %v, want: %v", tc.desc, err, tc.wantError)
 			}
 			continue
 		}
 		if err != nil {
-			t.Error(err)
+			t.Errorf("Test(%v): got err %v", tc.desc, err)
 			continue
 		}
 		if len(serviceInfo.Methods) != len(tc.wantMethods) {
-			t.Errorf("Test Desc(%d): %s, diff in number of Methods, got: %v, want: %v", i, tc.desc, len(serviceInfo.Methods), len(tc.wantMethods))
+			t.Errorf("Test(%v): diff in number of Methods, got: %v, want: %v", tc.desc, len(serviceInfo.Methods), len(tc.wantMethods))
 			continue
 		}
 		for key, gotMethod := range serviceInfo.Methods {
 			wantMethod := tc.wantMethods[key]
 			if eq := cmp.Equal(gotMethod, wantMethod, cmp.Comparer(proto.Equal)); !eq {
-				t.Errorf("Test Desc(%d): %s, got Method: %v, want: %v", i, tc.desc, gotMethod, wantMethod)
+				t.Errorf("Test(%v): got Method: %v, want: %v", tc.desc, gotMethod, wantMethod)
 			}
 		}
 	}
@@ -1729,10 +1738,11 @@ func TestProcessEmptyJwksUriByOpenID(t *testing.T) {
 
 func TestProcessApis(t *testing.T) {
 	testData := []struct {
-		desc              string
-		fakeServiceConfig *confpb.Service
-		wantMethods       map[string]*methodInfo
-		wantApiNames      []string
+		desc                 string
+		fakeServiceConfig    *confpb.Service
+		wantMethods          map[string]*methodInfo
+		wantApiNames         []string
+		wantRequestTypeNames map[string]string
 	}{
 		{
 			desc: "Succeed, process multiple apis",
@@ -1742,10 +1752,12 @@ func TestProcessApis(t *testing.T) {
 						Name: "api-1",
 						Methods: []*apipb.Method{
 							{
-								Name: "foo",
+								Name:           "foo",
+								RequestTypeUrl: "type.googleapis.com/google.protobuf.Empty",
 							},
 							{
-								Name: "bar",
+								Name:           "bar",
+								RequestTypeUrl: "type.googleapis.com/CreateShelfRequest",
 							},
 						},
 					},
@@ -1753,10 +1765,12 @@ func TestProcessApis(t *testing.T) {
 						Name: "api-2",
 						Methods: []*apipb.Method{
 							{
-								Name: "foo",
+								Name:           "foo",
+								RequestTypeUrl: "type.googleapis.com/CreateBookRequest",
 							},
 							{
-								Name: "bar",
+								Name:           "bar",
+								RequestTypeUrl: "type.googleapis.com/CreateShelfRequest",
 							},
 						},
 					},
@@ -1769,36 +1783,38 @@ func TestProcessApis(t *testing.T) {
 						Methods: []*apipb.Method{
 							{
 								Name: "bar",
+								// Missing request type.
 							},
 							{
-								Name: "baz",
+								Name:           "baz",
+								RequestTypeUrl: "types.MALFORMED.com/google.protobuf.Empty",
 							},
 						},
 					},
 				},
 			},
 			wantMethods: map[string]*methodInfo{
-				"api-1.foo": &methodInfo{
+				"api-1.foo": {
 					ShortName: "foo",
 					ApiName:   "api-1",
 				},
-				"api-1.bar": &methodInfo{
+				"api-1.bar": {
 					ShortName: "bar",
 					ApiName:   "api-1",
 				},
-				"api-2.foo": &methodInfo{
+				"api-2.foo": {
 					ShortName: "foo",
 					ApiName:   "api-2",
 				},
-				"api-2.bar": &methodInfo{
+				"api-2.bar": {
 					ShortName: "bar",
 					ApiName:   "api-2",
 				},
-				"api-4.bar": &methodInfo{
+				"api-4.bar": {
 					ShortName: "bar",
 					ApiName:   "api-4",
 				},
-				"api-4.baz": &methodInfo{
+				"api-4.baz": {
 					ShortName: "baz",
 					ApiName:   "api-4",
 				},
@@ -1809,28 +1825,39 @@ func TestProcessApis(t *testing.T) {
 				"api-3",
 				"api-4",
 			},
+			wantRequestTypeNames: map[string]string{
+				"api-1.foo": "google.protobuf.Empty",
+				"api-1.bar": "CreateShelfRequest",
+				"api-2.foo": "CreateBookRequest",
+				"api-2.bar": "CreateShelfRequest",
+			},
 		},
 	}
 
-	for i, tc := range testData {
+	for _, tc := range testData {
 
 		serviceInfo := &ServiceInfo{
-			serviceConfig: tc.fakeServiceConfig,
-			Methods:       make(map[string]*methodInfo),
+			serviceConfig:    tc.fakeServiceConfig,
+			Methods:          make(map[string]*methodInfo),
+			RequestTypeNames: make(map[string]string),
 		}
 		serviceInfo.processApis()
 
 		for key, gotMethod := range serviceInfo.Methods {
 			wantMethod := tc.wantMethods[key]
 			if eq := cmp.Equal(gotMethod, wantMethod, cmp.Comparer(proto.Equal)); !eq {
-				t.Errorf("Test Desc(%d): %s,\ngot Method: %v,\nwant Method: %v", i, tc.desc, gotMethod, wantMethod)
+				t.Errorf("Test(%v) failed: \n got Method: %v,\nwant Method: %v", tc.desc, gotMethod, wantMethod)
 			}
 		}
 		for idx, gotApiName := range serviceInfo.ApiNames {
 			wantApiName := tc.wantApiNames[idx]
 			if gotApiName != wantApiName {
-				t.Errorf("Test Desc(%d): %s,\ngot ApiName: %v,\nwant Apiname: %v", i, tc.desc, gotApiName, wantApiName)
+				t.Errorf("Test(%v) failed: \n got ApiName: %v,\nwant Apiname: %v", tc.desc, gotApiName, wantApiName)
 			}
+		}
+
+		if ok := reflect.DeepEqual(serviceInfo.RequestTypeNames, tc.wantRequestTypeNames); !ok {
+			t.Errorf("Test(%v) failed: \n got RequestTypeNames: %v,\nwant RequestTypeNames: %v", tc.desc, serviceInfo.RequestTypeNames, tc.wantRequestTypeNames)
 		}
 	}
 }
@@ -1931,16 +1958,18 @@ func TestProcessApisForGrpc(t *testing.T) {
 
 func TestProcessTypes(t *testing.T) {
 	testData := []struct {
-		desc              string
-		fakeServiceConfig *confpb.Service
-		wantSegments      []*pmpb.SegmentName
-		wantErr           error
+		desc                 string
+		fakeServiceConfig    *confpb.Service
+		fakeRequestTypeNames map[string]string
+		wantSegments         map[string]SnakeToJsonSegments
+		wantErr              error
 	}{
 		{
-			desc: "Success for distinct names",
+			desc: "Success for single type with multiple distinct fields",
 			fakeServiceConfig: &confpb.Service{
 				Types: []*ptypepb.Type{
 					{
+						Name: "CreateShelvesRequest",
 						Fields: []*ptypepb.Field{
 							{
 								Name:     "foo_bar",
@@ -1954,22 +1983,22 @@ func TestProcessTypes(t *testing.T) {
 					},
 				},
 			},
-			wantSegments: []*pmpb.SegmentName{
-				{
-					SnakeName: "foo_bar",
-					JsonName:  "fooBar",
-				},
-				{
-					SnakeName: "x_y",
-					JsonName:  "xY",
+			fakeRequestTypeNames: map[string]string{
+				"api-1.operation-1": "CreateShelvesRequest",
+			},
+			wantSegments: map[string]SnakeToJsonSegments{
+				"api-1.operation-1": {
+					"foo_bar": "fooBar",
+					"x_y":     "xY",
 				},
 			},
 		},
 		{
-			desc: "Success for fully duplicated names, which are de-duped",
+			desc: "Success for single type with multiple duplicated fields, which can be de-duped",
 			fakeServiceConfig: &confpb.Service{
 				Types: []*ptypepb.Type{
 					{
+						Name: "CreateShelvesRequest",
 						Fields: []*ptypepb.Field{
 							{
 								Name:     "foo_bar",
@@ -1983,68 +2012,192 @@ func TestProcessTypes(t *testing.T) {
 					},
 				},
 			},
-			wantSegments: []*pmpb.SegmentName{
-				{
-					SnakeName: "foo_bar",
-					JsonName:  "fooBar",
+			fakeRequestTypeNames: map[string]string{
+				"api-1.operation-1": "CreateShelvesRequest",
+			},
+			wantSegments: map[string]SnakeToJsonSegments{
+				"api-1.operation-1": {
+					"foo_bar": "fooBar",
 				},
 			},
 		},
 		{
-			desc: "Success for duplicated json_name with mismatching snake_name",
+			desc: "Success for single type with multiple non-conflicting fields",
 			fakeServiceConfig: &confpb.Service{
 				Types: []*ptypepb.Type{
 					{
+						Name: "CreateShelvesRequest",
 						Fields: []*ptypepb.Field{
 							{
-								Name:     "foo_bar",
+								// This one is ignored, it's not a snake name.
+								Name:     "fooBar",
 								JsonName: "fooBar",
 							},
 							{
-								Name:     "foo___bar",
+								Name:     "foo_bar",
 								JsonName: "fooBar",
 							},
 						},
 					},
 				},
 			},
-			wantSegments: []*pmpb.SegmentName{
-				{
-					SnakeName: "foo_bar",
-					JsonName:  "fooBar",
-				},
-				{
-					SnakeName: "foo___bar",
-					JsonName:  "fooBar",
+			fakeRequestTypeNames: map[string]string{
+				"api-1.operation-1": "CreateShelvesRequest",
+			},
+			wantSegments: map[string]SnakeToJsonSegments{
+				"api-1.operation-1": {
+					"foo_bar": "fooBar",
 				},
 			},
 		},
 		{
-			desc: "Failure for duplicated snake_name with mismatching json_name",
+			desc: "Failure for single type with multiple conflicting fields",
 			fakeServiceConfig: &confpb.Service{
 				Types: []*ptypepb.Type{
 					{
+						Name: "CreateShelvesRequest",
+						Fields: []*ptypepb.Field{
+							{
+								Name:     "foo_bar",
+								JsonName: "foo-bar",
+							},
+							{
+								Name:     "foo_bar",
+								JsonName: "fooBar",
+							},
+						},
+					},
+				},
+			},
+			fakeRequestTypeNames: map[string]string{
+				"api-1.operation-1": "CreateShelvesRequest",
+			},
+			wantErr: fmt.Errorf("for operation (api-1.operation-1): detected two types with same snake_name (foo_bar) but mistmatching json_name"),
+		},
+		{
+			desc: "Failure for request type not found in types",
+			fakeServiceConfig: &confpb.Service{
+				Types: []*ptypepb.Type{
+					{
+						Name:   "CreateShelvesRequest",
+						Fields: []*ptypepb.Field{},
+					},
+				},
+			},
+			fakeRequestTypeNames: map[string]string{
+				"api-1.operation-1": "NON_EXISTENT_TYPE_NAME",
+			},
+			wantErr: fmt.Errorf("for operation (api-1.operation-1): could not find type with name (NON_EXISTENT_TYPE_NAME)"),
+		},
+		{
+			desc: "Success for multiple types with distinct fields",
+			fakeServiceConfig: &confpb.Service{
+				Types: []*ptypepb.Type{
+					{
+						Name: "CreateShelvesRequest",
 						Fields: []*ptypepb.Field{
 							{
 								Name:     "foo_bar",
 								JsonName: "fooBar",
 							},
+							{
+								Name:     "x_y",
+								JsonName: "xY",
+							},
+						},
+					},
+					{
+						Name: "CreateBookRequest",
+						Fields: []*ptypepb.Field{
+							{
+								// This one will be ignored, no snake case.
+								Name:     "baz",
+								JsonName: "baz",
+							},
+							{
+								Name:     "a_b",
+								JsonName: "aB",
+							},
+						},
+					},
+					{
+						Name: "google.protobuf.Empty",
+						// This will be ignored, no fields at all.
+						Fields: []*ptypepb.Field{},
+					},
+					{
+						// This will be ignored, it's not directly any operation's request type.
+						Name: "Library",
+						Fields: []*ptypepb.Field{
+							{
+								Name:     "lib_name",
+								JsonName: "libName",
+							},
+						},
+					},
+				},
+			},
+			fakeRequestTypeNames: map[string]string{
+				"api-1.operation-1": "CreateShelvesRequest",
+				"api-1.operation-2": "CreateBookRequest",
+				"api-2.operation-1": "google.protobuf.Empty",
+			},
+			wantSegments: map[string]SnakeToJsonSegments{
+				"api-1.operation-1": {
+					"foo_bar": "fooBar",
+					"x_y":     "xY",
+				},
+				"api-1.operation-2": {
+					"a_b": "aB",
+				},
+			},
+		},
+		{
+			desc: "Success for multiple types with conflicting fields across types, but no conflicts within a single type",
+			fakeServiceConfig: &confpb.Service{
+				Types: []*ptypepb.Type{
+					{
+						Name: "CreateShelvesRequest",
+						Fields: []*ptypepb.Field{
 							{
 								Name:     "foo_bar",
 								JsonName: "foo-bar",
 							},
 						},
 					},
+					{
+						Name: "CreateBookRequest",
+						Fields: []*ptypepb.Field{
+							{
+								Name:     "foo_bar",
+								JsonName: "fooBar",
+							},
+						},
+					},
 				},
 			},
-			wantErr: fmt.Errorf("detected two types with same snake_name (foo_bar) but mistmatching json_name (foo-bar, fooBar)"),
+			fakeRequestTypeNames: map[string]string{
+				"api-1.operation-1": "CreateShelvesRequest",
+				"api-1.operation-2": "CreateBookRequest",
+			},
+			wantSegments: map[string]SnakeToJsonSegments{
+				"api-1.operation-1": {
+					"foo_bar": "foo-bar",
+				},
+				"api-1.operation-2": {
+					"foo_bar": "fooBar",
+				},
+			},
 		},
 	}
 
 	for _, tc := range testData {
 		serviceInfo := &ServiceInfo{
 			serviceConfig: tc.fakeServiceConfig,
+			SegmentNames:  make(map[string]SnakeToJsonSegments),
 		}
+		serviceInfo.RequestTypeNames = tc.fakeRequestTypeNames
+
 		err := serviceInfo.processTypes()
 
 		if err != nil {

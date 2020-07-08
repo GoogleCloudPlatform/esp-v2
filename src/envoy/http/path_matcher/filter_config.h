@@ -74,7 +74,7 @@ class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
 
   FilterStats& stats() { return stats_; }
 
-  // Returns the mapp from snake-case segment name to JSON name.
+  // Returns the map from snake-case segment name to JSON name.
   const absl::flat_hash_map<std::string, std::string>& getSnakeToJsonMap() {
     return snake_to_json_map_;
   }

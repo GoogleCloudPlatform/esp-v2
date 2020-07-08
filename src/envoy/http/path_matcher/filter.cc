@@ -81,7 +81,7 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
 
   if (config_->needParameterExtraction(*operation)) {
     std::vector<VariableBinding> variable_bindings;
-    operation = config_->findOperation(method, path, &variable_bindings);
+    config_->findOperation(method, path, &variable_bindings);
     if (!variable_bindings.empty()) {
       const std::string query_params = VariableBindingsToQueryParameters(
           variable_bindings, config_->getSnakeToJsonMap());
