@@ -1,9 +1,7 @@
 # Release 2.13.0 08-07-2020
 
-- Update envoy to 7/6/2020 (#217)
 - Create FilterStats in client_cache (#216)
 - Fix bug in processing HTTP response, unit tests for client cache CHECK (#212)
-- Add api/README.md and api/script/update_version.h (#211)
 - Support api config versioning:  add v6 to api folder name and package name (#210)
 
 # Release 2.12.0 24-06-2020
