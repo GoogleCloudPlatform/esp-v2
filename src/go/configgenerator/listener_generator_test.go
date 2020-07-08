@@ -1278,9 +1278,7 @@ func TestPathMatcherFilter(t *testing.T) {
                "httpMethod":"GET",
                "uriTemplate":"foo/{id}"
             },
-						"pathParameterExtraction":{
-							"extractPathParameters":true
-						}
+						"pathParameterExtraction":{}
          }
       ]
    }
@@ -1407,7 +1405,6 @@ func TestPathMatcherFilter(t *testing.T) {
                "uriTemplate":"foo/{foo_bar}"
             },
 						"pathParameterExtraction":{
-							"extractPathParameters":true,
 							"snakeToJsonSegments":{
 								"foo_bar":"fooBar"
 							}

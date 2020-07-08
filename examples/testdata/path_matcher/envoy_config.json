@@ -168,13 +168,12 @@
                             "operation": "1.path_matcher_endpoints_nareddyt_cloud_esf_cloud_goog.GetShelf",
                             "pattern": {
                               "httpMethod": "GET",
-                              "uriTemplate": "/libraries/{library_id}/shelves/{shelf}"
+                              "uriTemplate": "/libraries/{library_id}/shelves/{shelf_id}"
                             },
                             "pathParameterExtraction": {
-                              "extractPathParameters": true
-                            },
-                            "snakeToJsonSegments": {
-                              "shelf_id": "shelfId"
+                              "snakeToJsonSegments": {
+                                "shelf_id": "shelfId"
+                              }
                             }
                           }
                         ]
