@@ -172,6 +172,9 @@
                             },
                             "pathParameterExtraction": {
                               "extractPathParameters": true
+                            },
+                            "snakeToJsonSegments": {
+                              "shelf_id": "shelfId"
                             }
                           }
                         ]

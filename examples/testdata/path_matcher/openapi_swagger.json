@@ -17,7 +17,7 @@
     "https"
   ],
   "paths": {
-    "/libraries/{library_id}/shelves/{shelf}": {
+    "/libraries/{library_id}/shelves/{shelfId}": {
       "get": {
         "description": "Get a single shelf resource with the given name.",
         "operationId": "getShelf",
@@ -38,7 +38,7 @@
             "description": "Name of the shelf to get.",
             "format": "int64",
             "in": "path",
-            "name": "shelf",
+            "name": "shelfId",
             "required": true,
             "type": "integer"
           }

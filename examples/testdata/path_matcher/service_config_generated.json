@@ -41,12 +41,12 @@
   "http": {
     "rules": [
       {
-        "get": "/libraries/{library_id}/shelves/{shelf}",
+        "get": "/libraries/{library_id}/shelves/{shelf_id}",
         "selector": "1.path_matcher_endpoints_nareddyt_cloud_esf_cloud_goog.GetShelf"
       }
     ]
   },
-  "id": "2020-07-08r0",
+  "id": "2020-07-08r1",
   "logging": {
     "producerDestinations": [
       {
@@ -600,9 +600,9 @@
         },
         {
           "cardinality": "CARDINALITY_OPTIONAL",
-          "jsonName": "shelf",
+          "jsonName": "shelfId",
           "kind": "TYPE_INT64",
-          "name": "shelf",
+          "name": "shelf_id",
           "number": 2
         }
       ],
