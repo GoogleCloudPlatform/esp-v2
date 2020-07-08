@@ -1,6 +1,6 @@
 # Release 2.13.0 08-07-2020
 
-- Fix bug in processing HTTP response, unit tests for client cache CHECK (#212)
+- Fix a rare use-after-free by creating FilterStats in client_cache (#212)
 - Support api config versioning:  add v6 to api folder name and package name (#210)
 
 # Release 2.12.0 24-06-2020
