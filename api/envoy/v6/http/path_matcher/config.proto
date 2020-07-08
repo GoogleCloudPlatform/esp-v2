@@ -27,16 +27,20 @@ message PathMatcherRule {
   // Operation name (selector) used as a unique ID for the operation.
   string operation = 2 [(validate.rules).string.min_bytes = 1];
 
+  PathParameterExtractionRule path_parameter_extraction = 3;
+}
+
+message PathParameterExtractionRule {
   // If true, the path parameters in the `pattern` must be extracted.
   // Ref:
   // https://cloud.google.com/endpoints/docs/openapi/openapi-extensions#understanding_path_translation
-  bool extract_path_parameters = 3;
+  bool extract_path_parameters = 1;
 
   // Each rule has a mapping of snake_case segments to jsonCase segments.
   // For example, for a URI template: /{foo_bar}
   //  * snake_name = "foo_bar"
   //  * json_name = "fooBar"
-  map<string, string> snake_to_json_segments = 4;
+  map<string, string> snake_to_json_segments = 2;
 }
 
 message FilterConfig {

@@ -642,7 +642,7 @@ func (s *ServiceInfo) processTypes() error {
 		snakeToJson := make(SnakeToJsonSegments)
 		for _, field := range requestType.GetFields() {
 
-			if strings.ContainsRune(field.GetName(), '_') {
+			if field.Name != field.JsonName {
 
 				if prevJsonName, ok := snakeToJson[field.GetName()]; ok {
 					if prevJsonName != field.GetJsonName() {

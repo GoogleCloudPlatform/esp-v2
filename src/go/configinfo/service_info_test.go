@@ -2110,7 +2110,7 @@ func TestProcessTypes(t *testing.T) {
 						Name: "CreateBookRequest",
 						Fields: []*ptypepb.Field{
 							{
-								// This one will be ignored, no snake case.
+								// This one will be ignored, the names match.
 								Name:     "baz",
 								JsonName: "baz",
 							},

@@ -1273,12 +1273,14 @@ func TestPathMatcherFilter(t *testing.T) {
             }
          },
          {
-            "extractPathParameters":true,
             "operation":"1.cloudesf_testing_cloud_goog.Foo",
             "pattern":{
                "httpMethod":"GET",
                "uriTemplate":"foo/{id}"
-            }
+            },
+						"pathParameterExtraction":{
+							"extractPathParameters":true
+						}
          }
       ]
    }
@@ -1351,13 +1353,15 @@ func TestPathMatcherFilter(t *testing.T) {
 						Name: "1.cloudesf_testing_cloud_goog",
 						Methods: []*apipb.Method{
 							{
-								Name: "Foo",
+								Name:           "Foo",
+								RequestTypeUrl: "type.googleapis.com/CreateFooRequest",
 							},
 						},
 					},
 				},
 				Types: []*ptypepb.Type{
 					{
+						Name: "CreateFooRequest",
 						Fields: []*ptypepb.Field{
 							{
 								JsonName: "fooBar",
@@ -1397,39 +1401,38 @@ func TestPathMatcherFilter(t *testing.T) {
       "@type":"type.googleapis.com/espv2.api.envoy.v6.http.path_matcher.FilterConfig",
       "rules":[
          {
-            "extractPathParameters":true,
             "operation":"1.cloudesf_testing_cloud_goog.Foo",
             "pattern":{
                "httpMethod":"GET",
                "uriTemplate":"foo/{foo_bar}"
-            }
-         }
-      ],
-      "segmentNames":[
-         {
-            "jsonName":"fooBar",
-            "snakeName":"foo_bar"
+            },
+						"pathParameterExtraction":{
+							"extractPathParameters":true,
+							"snakeToJsonSegments":{
+								"foo_bar":"fooBar"
+							}
+						}
          }
       ]
    }
 }`,
 		},
 	}
-	for i, tc := range testData {
+	for _, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendAddress = tc.BackendAddress
 		opts.Healthz = tc.healthz
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
-			t.Fatal(err)
+			t.Errorf("Test(%v): makePathMatcherFilter failed with err: \n %v", tc.desc, err)
 		}
 		marshaler := &jsonpb.Marshaler{}
 		gotFilter, err := marshaler.MarshalToString(makePathMatcherFilter(fakeServiceInfo))
 		if err != nil {
-			t.Fatal(err)
+			t.Errorf("Test(%v): makePathMatcherFilter failed with err: \n %v", tc.desc, err)
 		}
 		if err := util.JsonEqual(tc.wantPathMatcherFilter, gotFilter); err != nil {
-			t.Errorf("Test Desc(%d): %s, makePathMatcherFilter failed, \n %v", i, tc.desc, err)
+			t.Errorf("Test(%v): makePathMatcherFilter failed with err: \n %v", tc.desc, err)
 		}
 	}
 }
