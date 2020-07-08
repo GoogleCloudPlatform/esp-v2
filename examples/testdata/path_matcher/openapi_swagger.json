@@ -5,7 +5,7 @@
     "title": "Example - Path Matcher - Bookstore",
     "version": "1.0.0"
   },
-  "host": "path-matcher.endpoints.apiproxy-231719.cloud.goog",
+  "host": "path-matcher.endpoints.nareddyt-cloud-esf.cloud.goog",
   "basePath": "/",
   "consumes": [
     "application/json"
@@ -17,11 +17,23 @@
     "https"
   ],
   "paths": {
-    "/shelves/{shelf}": {
+    "/libraries/{library_id}/shelves/{shelf}": {
       "get": {
         "description": "Get a single shelf resource with the given name.",
         "operationId": "getShelf",
+        "x-google-backend": {
+          "address": "https://http-bookstore-edf123456-uc.a.run.app/shelves",
+          "path_translation": "CONSTANT_ADDRESS"
+        },
         "parameters": [
+          {
+            "description": "Id of the library to search.",
+            "format": "int64",
+            "in": "path",
+            "name": "library_id",
+            "required": true,
+            "type": "integer"
+          },
           {
             "description": "Name of the shelf to get.",
             "format": "int64",

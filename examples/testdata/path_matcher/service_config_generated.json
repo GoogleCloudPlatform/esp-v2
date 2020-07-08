@@ -8,7 +8,7 @@
           "responseTypeUrl": "type.googleapis.com/Shelf"
         }
       ],
-      "name": "1.path_matcher_endpoints_apiproxy_231719_cloud_goog",
+      "name": "1.path_matcher_endpoints_nareddyt_cloud_esf_cloud_goog",
       "sourceContext": {
         "fileName": "openapi_swagger.json"
       },
@@ -19,7 +19,10 @@
   "backend": {
     "rules": [
       {
-        "selector": "1.path_matcher_endpoints_apiproxy_231719_cloud_goog.GetShelf"
+        "address": "https://http-bookstore-edf123456-uc.a.run.app/shelves",
+        "jwtAudience": "https://http-bookstore-edf123456-uc.a.run.app/shelves",
+        "pathTranslation": "CONSTANT_ADDRESS",
+        "selector": "1.path_matcher_endpoints_nareddyt_cloud_esf_cloud_goog.GetShelf"
       }
     ]
   },
@@ -32,21 +35,18 @@
   },
   "endpoints": [
     {
-      "features": [
-        "googleapis.com/endpoint/grpc-autobahn"
-      ],
-      "name": "path-matcher.endpoints.apiproxy-231719.cloud.goog"
+      "name": "path-matcher.endpoints.nareddyt-cloud-esf.cloud.goog"
     }
   ],
   "http": {
     "rules": [
       {
-        "get": "/shelves/{shelf}",
-        "selector": "1.path_matcher_endpoints_apiproxy_231719_cloud_goog.GetShelf"
+        "get": "/libraries/{library_id}/shelves/{shelf}",
+        "selector": "1.path_matcher_endpoints_nareddyt_cloud_esf_cloud_goog.GetShelf"
       }
     ]
   },
-  "id": "2020-01-06r0",
+  "id": "2020-07-08r0",
   "logging": {
     "producerDestinations": [
       {
@@ -564,8 +564,8 @@
       }
     ]
   },
-  "name": "path-matcher.endpoints.apiproxy-231719.cloud.goog",
-  "producerProjectId": "apiproxy-231719",
+  "name": "path-matcher.endpoints.nareddyt-cloud-esf.cloud.goog",
+  "producerProjectId": "nareddyt-cloud-esf",
   "systemParameters": {},
   "title": "Example - Path Matcher - Bookstore",
   "types": [
@@ -593,10 +593,17 @@
       "fields": [
         {
           "cardinality": "CARDINALITY_OPTIONAL",
+          "jsonName": "library_id",
+          "kind": "TYPE_INT64",
+          "name": "library_id",
+          "number": 1
+        },
+        {
+          "cardinality": "CARDINALITY_OPTIONAL",
           "jsonName": "shelf",
           "kind": "TYPE_INT64",
           "name": "shelf",
-          "number": 1
+          "number": 2
         }
       ],
       "name": "GetShelfRequest",
@@ -607,7 +614,7 @@
     "rules": [
       {
         "allowUnregisteredCalls": true,
-        "selector": "1.path_matcher_endpoints_apiproxy_231719_cloud_goog.GetShelf"
+        "selector": "1.path_matcher_endpoints_nareddyt_cloud_esf_cloud_goog.GetShelf"
       }
     ]
   }
