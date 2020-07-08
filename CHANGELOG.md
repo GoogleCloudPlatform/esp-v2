@@ -1,5 +1,6 @@
 # Release 2.13.0 08-07-2020
 
+- Update envoy to 7/6/2020 (#217)
 - Fix a rare use-after-free by creating FilterStats in client_cache (#212)
 - Support api config versioning:  add v6 to api folder name and package name (#210)
 
