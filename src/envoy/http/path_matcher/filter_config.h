@@ -17,7 +17,6 @@
 #include <unordered_map>
 
 #include "absl/container/flat_hash_map.h"
-#include "absl/types/optional.h"
 #include "api/envoy/v6/http/path_matcher/config.pb.h"
 #include "common/common/logger.h"
 #include "envoy/runtime/runtime.h"
