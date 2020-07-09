@@ -21,14 +21,16 @@
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
 
-using ::espv2::api_proxy::path_matcher::VariableBinding;
-using ::espv2::api_proxy::path_matcher::VariableBindingsToQueryParameters;
-using ::google::protobuf::util::Status;
-
 namespace espv2 {
 namespace envoy {
 namespace http_filters {
 namespace path_matcher {
+
+using ::espv2::api::envoy::v6::http::path_matcher::PathParameterExtractionRule;
+using ::espv2::api_proxy::path_matcher::VariableBinding;
+using ::espv2::api_proxy::path_matcher::VariableBindingsToQueryParameters;
+using ::google::protobuf::util::Status;
+
 namespace {
 
 // Half of the max header value size Envoy allows.
@@ -79,12 +81,15 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
       *decoder_callbacks_->streamInfo().filterState();
   utils::setStringFilterState(filter_state, utils::kOperation, *operation);
 
-  if (config_->needParameterExtraction(*operation)) {
+  const PathParameterExtractionRule* path_param_extraction =
+      config_->needParameterExtraction(*operation);
+  if (path_param_extraction != nullptr) {
     std::vector<VariableBinding> variable_bindings;
     config_->findOperation(method, path, &variable_bindings);
+
     if (!variable_bindings.empty()) {
       const std::string query_params = VariableBindingsToQueryParameters(
-          variable_bindings, config_->getSnakeToJsonMap());
+          variable_bindings, path_param_extraction->snake_to_json_segments());
       utils::setStringFilterState(filter_state, utils::kQueryParams,
                                   query_params);
     }

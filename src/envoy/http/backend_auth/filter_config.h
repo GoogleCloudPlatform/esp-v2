@@ -26,7 +26,7 @@ namespace backend_auth {
 /**
  * All stats for the backend auth filter. @see stats_macros.h
  */
-#define ALL_BACKEND_AUTH_FILTER_STATS(COUNTER) \
+#define ALL_PATH_MATCHER_FILTER_STATS(COUNTER) \
   COUNTER(denied_by_no_operation)              \
   COUNTER(denied_by_no_token)                  \
   COUNTER(allowed_by_no_configured_rules)      \
@@ -36,7 +36,7 @@ namespace backend_auth {
  * Wrapper struct for backend auth filter stats. @see stats_macros.h
  */
 struct FilterStats {
-  ALL_BACKEND_AUTH_FILTER_STATS(GENERATE_COUNTER_STRUCT)
+  ALL_PATH_MATCHER_FILTER_STATS(GENERATE_COUNTER_STRUCT)
 };
 
 class FilterConfig {

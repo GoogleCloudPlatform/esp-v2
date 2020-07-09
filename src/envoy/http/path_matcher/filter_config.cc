@@ -35,18 +35,14 @@ FilterConfig::FilterConfig(
       throw Envoy::ProtoValidationException(
           "Duplicated pattern or invalid pattern", rule.pattern());
     }
-    if (rule.extract_path_parameters()) {
-      path_params_operations_.insert(rule.operation());
+
+    // Only stores the operations that need path param extraction.
+    if (rule.has_path_parameter_extraction()) {
+      path_param_extractions_[rule.operation()] =
+          rule.path_parameter_extraction();
     }
   }
   path_matcher_ = pmb.Build();
-
-  for (const auto& segment_name : proto_config_.segment_names()) {
-    // Duplicate snake names with varying json names are disallowed by config
-    // manager.
-    snake_to_json_map_.emplace(segment_name.snake_name(),
-                               segment_name.json_name());
-  }
 }
 
 }  // namespace path_matcher

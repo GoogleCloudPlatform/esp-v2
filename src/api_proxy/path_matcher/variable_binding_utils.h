@@ -18,6 +18,7 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_split.h"
+#include "google/protobuf/map.h"
 #include "src/api_proxy/path_matcher/path_matcher.h"
 
 namespace espv2 {
@@ -33,7 +34,7 @@ namespace path_matcher {
 // it returns "fooBar=42&foo.bar=42&a.b.c=xyz".
 const std::string VariableBindingsToQueryParameters(
     const std::vector<VariableBinding>& variable_bindings,
-    const absl::flat_hash_map<std::string, std::string>& snake_to_json);
+    const ::google::protobuf::Map<std::string, std::string>& snake_to_json);
 
 }  // namespace path_matcher
 }  // namespace api_proxy

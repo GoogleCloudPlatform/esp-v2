@@ -27,6 +27,7 @@ namespace http_filters {
 namespace path_matcher {
 namespace {
 
+using ::espv2::api::envoy::v6::http::path_matcher::PathParameterExtractionRule;
 using ::espv2::api_proxy::path_matcher::VariableBinding;
 using ::google::protobuf::TextFormat;
 using VariableBindings = std::vector<VariableBinding>;
@@ -39,7 +40,6 @@ TEST(FilterConfigTest, EmptyConfig) {
   FilterConfig cfg(config_pb, Envoy::EMPTY_STRING, mock_factory);
 
   EXPECT_TRUE(cfg.findOperation("GET", "/foo") == nullptr);
-  EXPECT_TRUE(cfg.getSnakeToJsonMap().empty());
 }
 
 TEST(FilterConfigTest, BasicConfig) {
@@ -53,7 +53,6 @@ rules {
 }
 rules {
   operation: "1.cloudesf_testing_cloud_goog.Foo"
-  extract_path_parameters: true
   pattern {
     http_method: "GET"
     uri_template: "/foo/{id}"
@@ -73,12 +72,6 @@ rules {
 
   EXPECT_EQ(nullptr, cfg.findOperation("POST", "/bar"));
   EXPECT_EQ(nullptr, cfg.findOperation("POST", "/foo/xyz"));
-
-  EXPECT_FALSE(
-      cfg.needParameterExtraction("1.cloudesf_testing_cloud_goog.Bar"));
-  EXPECT_TRUE(cfg.needParameterExtraction("1.cloudesf_testing_cloud_goog.Foo"));
-
-  EXPECT_TRUE(cfg.getSnakeToJsonMap().empty());
 }
 
 TEST(FilterConfigTest, VariableBinding) {
@@ -114,26 +107,60 @@ rules {
             bindings);
 }
 
-TEST(FilterConfigTest, SegmentNames) {
-  const char kFilterConfig[] = R"(
-segment_names {
-  json_name: "fooBar"
-  snake_name: "foo_bar"
+TEST(FilterConfigTest, PathParameterExtraction) {
+  const char kFilterConfigBasic[] = R"(
+rules {
+  operation: "1.cloudesf_testing_cloud_goog.Bar"
+  pattern {
+    http_method: "GET"
+    uri_template: "/bar/{shelf_id}"
+  }
+  path_parameter_extraction {
+    snake_to_json_segments {
+      key: "shelf_id"
+      value: "shelfId"
+    }
+    snake_to_json_segments {
+      key: "foo_bar"
+      value: "fooBar"
+    }
+  }
 }
-segment_names {
-  json_name: "xYZ"
-  snake_name: "x_y_z"
+rules {
+  operation: "1.cloudesf_testing_cloud_goog.Foo"
+  pattern {
+    http_method: "GET"
+    uri_template: "/foo/{id}"
+  }
+  path_parameter_extraction {}
+}
+rules {
+  operation: "1.cloudesf_testing_cloud_goog.Baz"
+  pattern {
+    http_method: "GET"
+    uri_template: "/baz/{id}"
+  }
 })";
 
   ::espv2::api::envoy::v6::http::path_matcher::FilterConfig config_pb;
-  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfig, &config_pb));
+  ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfigBasic, &config_pb));
   ::testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
       mock_factory;
   FilterConfig cfg(config_pb, Envoy::EMPTY_STRING, mock_factory);
 
-  absl::flat_hash_map<std::string, std::string> expected = {
-      {"foo_bar", "fooBar"}, {"x_y_z", "xYZ"}};
-  EXPECT_EQ(cfg.getSnakeToJsonMap(), expected);
+  const PathParameterExtractionRule* path_rule =
+      cfg.needParameterExtraction("1.cloudesf_testing_cloud_goog.Baz");
+  EXPECT_EQ(path_rule, nullptr);
+
+  path_rule = cfg.needParameterExtraction("1.cloudesf_testing_cloud_goog.Foo");
+  EXPECT_NE(path_rule, nullptr);
+  EXPECT_TRUE(path_rule->snake_to_json_segments().empty());
+
+  path_rule = cfg.needParameterExtraction("1.cloudesf_testing_cloud_goog.Bar");
+  EXPECT_NE(path_rule, nullptr);
+  EXPECT_FALSE(path_rule->snake_to_json_segments().empty());
+  EXPECT_EQ(path_rule->snake_to_json_segments().at("shelf_id"), "shelfId");
+  EXPECT_EQ(path_rule->snake_to_json_segments().at("foo_bar"), "fooBar");
 }
 
 TEST(FilterConfigTest, DuplicatedPatterns) {
@@ -204,8 +231,6 @@ rules {
 
   EXPECT_EQ(nullptr, cfg.findOperation("GET", "/bar"));
   EXPECT_EQ(nullptr, cfg.findOperation("POST", "/bar"));
-
-  EXPECT_TRUE(cfg.getSnakeToJsonMap().empty());
 }
 
 }  // namespace

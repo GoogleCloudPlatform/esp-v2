@@ -53,7 +53,7 @@ class BackendAuthFilterTest : public ::testing::Test {
   }
 
   testing::NiceMock<Envoy::Stats::MockIsolatedStatsStore> scope_;
-  FilterStats stats_{ALL_BACKEND_AUTH_FILTER_STATS(
+  FilterStats stats_{ALL_PATH_MATCHER_FILTER_STATS(
       POOL_COUNTER_PREFIX(scope_, "backend_auth."))};
 
   std::shared_ptr<MockFilterConfigParser> mock_filter_config_parser_;
