@@ -48,11 +48,6 @@ type ServiceInfo struct {
 	// Stores all methods info for this service, using selector as key.
 	Methods map[string]*methodInfo
 
-	// Stores the request type url for each selector.
-	RequestTypeNames map[string]string
-	// Stores mapping of snake_case to jsonCase segments for all fields per selector.
-	SegmentNames map[string]SnakeToJsonSegments
-
 	// Stores all the query parameters to be ignored for json-grpc transcoder.
 	AllTranscodingIgnoredQueryParams map[string]bool
 
@@ -70,8 +65,6 @@ type ServiceInfo struct {
 	CatchAllBackend        *BackendRoutingCluster
 	BackendRoutingClusters []*BackendRoutingCluster
 }
-
-type SnakeToJsonSegments = map[string]string
 
 type BackendRoutingCluster struct {
 	ClusterName string
@@ -96,8 +89,6 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 		serviceConfig:                    serviceConfig,
 		Options:                          opts,
 		Methods:                          make(map[string]*methodInfo),
-		RequestTypeNames:                 make(map[string]string),
-		SegmentNames:                     make(map[string]SnakeToJsonSegments),
 		AllTranscodingIgnoredQueryParams: make(map[string]bool),
 	}
 
@@ -224,7 +215,9 @@ func (s *ServiceInfo) processApis() {
 			// Keep track of request type name.
 			if strings.HasPrefix(method.RequestTypeUrl, util.TypeUrlPrefix) {
 				requestTypeName := strings.TrimPrefix(method.RequestTypeUrl, util.TypeUrlPrefix)
-				s.RequestTypeNames[selector] = requestTypeName
+				mi.RequestTypeName = requestTypeName
+			} else {
+				glog.Warningf("For operation (%v), request type name (%v) is in an unexpected format", selector, mi.RequestTypeName)
 			}
 		}
 	}
@@ -631,11 +624,13 @@ func (s *ServiceInfo) processTypes() error {
 		typesByTypeName[t.Name] = t
 	}
 
-	// For each operation, lookup the request type.
-	for operation, requestTypeName := range s.RequestTypeNames {
+	// For each method, lookup the request type.
+	for operation, mi := range s.Methods {
+		requestTypeName := mi.RequestTypeName
 		requestType, ok := typesByTypeName[requestTypeName]
 		if !ok {
-			return fmt.Errorf("for operation (%v): could not find type with name (%v)", operation, requestTypeName)
+			glog.Warningf("for operation (%v): could not find type with name (%v)", operation, requestTypeName)
+			continue
 		}
 
 		// Create snake name to JSON name mapping for the request operation (and validate against duplicates).
@@ -661,7 +656,7 @@ func (s *ServiceInfo) processTypes() error {
 
 		// Store the mapping per selector.
 		if len(snakeToJson) > 0 {
-			s.SegmentNames[operation] = snakeToJson
+			mi.SegmentMappings = snakeToJson
 		}
 	}
 	return nil

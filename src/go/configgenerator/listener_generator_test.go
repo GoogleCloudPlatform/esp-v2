@@ -1354,6 +1354,10 @@ func TestPathMatcherFilter(t *testing.T) {
 								Name:           "Foo",
 								RequestTypeUrl: "type.googleapis.com/CreateFooRequest",
 							},
+							{
+								Name:           "Baz",
+								RequestTypeUrl: "type.googleapis.com/CreateBazRequest",
+							},
 						},
 					},
 				},
@@ -1362,8 +1366,21 @@ func TestPathMatcherFilter(t *testing.T) {
 						Name: "CreateFooRequest",
 						Fields: []*ptypepb.Field{
 							{
-								JsonName: "fooBar",
 								Name:     "foo_bar",
+								JsonName: "fooBar",
+							},
+						},
+					},
+					{
+						Name: "CreateBazRequest",
+						Fields: []*ptypepb.Field{
+							{
+								Name:     "aaa_bbb",
+								JsonName: "aaaBbb",
+							},
+							{
+								Name:     "baz_baz",
+								JsonName: "bazBaz",
 							},
 						},
 					},
@@ -1371,12 +1388,14 @@ func TestPathMatcherFilter(t *testing.T) {
 				Backend: &confpb.Backend{
 					Rules: []*confpb.BackendRule{
 						{
-							Address:         "https://mybackend.com",
+							Address:         "https://mybackend.com/foo",
 							Selector:        "1.cloudesf_testing_cloud_goog.Foo",
 							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
-							Authentication: &confpb.BackendRule_JwtAudience{
-								JwtAudience: "mybackend.com",
-							},
+						},
+						{
+							Address:         "https://mybackend.com/baz",
+							Selector:        "1.cloudesf_testing_cloud_goog.Baz",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 						},
 					},
 				},
@@ -1386,6 +1405,12 @@ func TestPathMatcherFilter(t *testing.T) {
 							Selector: "1.cloudesf_testing_cloud_goog.Foo",
 							Pattern: &annotationspb.HttpRule_Get{
 								Get: "foo/{foo_bar}",
+							},
+						},
+						{
+							Selector: "1.cloudesf_testing_cloud_goog.Baz",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "baz/{baz_baz}",
 							},
 						},
 					},
@@ -1398,6 +1423,19 @@ func TestPathMatcherFilter(t *testing.T) {
    "typedConfig":{
       "@type":"type.googleapis.com/espv2.api.envoy.v6.http.path_matcher.FilterConfig",
       "rules":[
+         {
+            "operation":"1.cloudesf_testing_cloud_goog.Baz",
+            "pattern":{
+               "httpMethod":"GET",
+               "uriTemplate":"baz/{baz_baz}"
+            },
+            "pathParameterExtraction":{
+              "snakeToJsonSegments":{
+                "aaa_bbb":"aaaBbb",
+                "baz_baz":"bazBaz"
+              }
+            }
+         },
          {
             "operation":"1.cloudesf_testing_cloud_goog.Foo",
             "pattern":{

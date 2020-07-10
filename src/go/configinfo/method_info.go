@@ -37,6 +37,11 @@ type methodInfo struct {
 	MetricCosts        []*scpb.MetricCost
 	// All non-unary gRPC methods are considered streaming.
 	IsStreaming bool
+
+	// The request type name (not the entire type URL).
+	RequestTypeName string
+	// Mapping of snake_case to jsonCase segments.
+	SegmentMappings SnakeToJsonSegments
 }
 
 // backendInfo stores information from Backend rule for backend rerouting.
@@ -49,3 +54,5 @@ type backendInfo struct {
 	// Response timeout for the backend.
 	Deadline time.Duration
 }
+
+type SnakeToJsonSegments = map[string]string

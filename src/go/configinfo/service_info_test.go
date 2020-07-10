@@ -1035,8 +1035,9 @@ func TestMethods(t *testing.T) {
 			BackendAddress: "grpc://127.0.0.1:80",
 			wantMethods: map[string]*methodInfo{
 				"endpoints.examples.bookstore.Bookstore.CreateBook": &methodInfo{
-					ShortName: "CreateBook",
-					ApiName:   "endpoints.examples.bookstore.Bookstore",
+					ShortName:       "CreateBook",
+					ApiName:         "endpoints.examples.bookstore.Bookstore",
+					RequestTypeName: "endpoints.examples.bookstore.CreateBookRequest",
 					HttpRule: []*commonpb.Pattern{
 						{
 							UriTemplate: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
@@ -1104,8 +1105,9 @@ func TestMethods(t *testing.T) {
 			BackendAddress: "grpc://127.0.0.1:80",
 			wantMethods: map[string]*methodInfo{
 				"endpoints.examples.bookstore.Bookstore.CreateBook": &methodInfo{
-					ShortName: "CreateBook",
-					ApiName:   "endpoints.examples.bookstore.Bookstore",
+					ShortName:       "CreateBook",
+					ApiName:         "endpoints.examples.bookstore.Bookstore",
+					RequestTypeName: "endpoints.examples.bookstore.CreateBookRequest",
 					HttpRule: []*commonpb.Pattern{
 						{
 							UriTemplate: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
@@ -1151,7 +1153,7 @@ func TestMethods(t *testing.T) {
 		for key, gotMethod := range serviceInfo.Methods {
 			wantMethod := tc.wantMethods[key]
 			if eq := cmp.Equal(gotMethod, wantMethod, cmp.Comparer(proto.Equal)); !eq {
-				t.Errorf("Test(%v): got Method: %v, want: %v", tc.desc, gotMethod, wantMethod)
+				t.Errorf("Test(%v): \n got method: %v, \nwant method: %v", tc.desc, gotMethod, wantMethod)
 			}
 		}
 	}
@@ -1738,11 +1740,10 @@ func TestProcessEmptyJwksUriByOpenID(t *testing.T) {
 
 func TestProcessApis(t *testing.T) {
 	testData := []struct {
-		desc                 string
-		fakeServiceConfig    *confpb.Service
-		wantMethods          map[string]*methodInfo
-		wantApiNames         []string
-		wantRequestTypeNames map[string]string
+		desc              string
+		fakeServiceConfig *confpb.Service
+		wantMethods       map[string]*methodInfo
+		wantApiNames      []string
 	}{
 		{
 			desc: "Succeed, process multiple apis",
@@ -1795,20 +1796,24 @@ func TestProcessApis(t *testing.T) {
 			},
 			wantMethods: map[string]*methodInfo{
 				"api-1.foo": {
-					ShortName: "foo",
-					ApiName:   "api-1",
+					ShortName:       "foo",
+					ApiName:         "api-1",
+					RequestTypeName: "google.protobuf.Empty",
 				},
 				"api-1.bar": {
-					ShortName: "bar",
-					ApiName:   "api-1",
+					ShortName:       "bar",
+					ApiName:         "api-1",
+					RequestTypeName: "CreateShelfRequest",
 				},
 				"api-2.foo": {
-					ShortName: "foo",
-					ApiName:   "api-2",
+					ShortName:       "foo",
+					ApiName:         "api-2",
+					RequestTypeName: "CreateBookRequest",
 				},
 				"api-2.bar": {
-					ShortName: "bar",
-					ApiName:   "api-2",
+					ShortName:       "bar",
+					ApiName:         "api-2",
+					RequestTypeName: "CreateShelfRequest",
 				},
 				"api-4.bar": {
 					ShortName: "bar",
@@ -1825,21 +1830,14 @@ func TestProcessApis(t *testing.T) {
 				"api-3",
 				"api-4",
 			},
-			wantRequestTypeNames: map[string]string{
-				"api-1.foo": "google.protobuf.Empty",
-				"api-1.bar": "CreateShelfRequest",
-				"api-2.foo": "CreateBookRequest",
-				"api-2.bar": "CreateShelfRequest",
-			},
 		},
 	}
 
 	for _, tc := range testData {
 
 		serviceInfo := &ServiceInfo{
-			serviceConfig:    tc.fakeServiceConfig,
-			Methods:          make(map[string]*methodInfo),
-			RequestTypeNames: make(map[string]string),
+			serviceConfig: tc.fakeServiceConfig,
+			Methods:       make(map[string]*methodInfo),
 		}
 		serviceInfo.processApis()
 
@@ -1854,10 +1852,6 @@ func TestProcessApis(t *testing.T) {
 			if gotApiName != wantApiName {
 				t.Errorf("Test(%v) failed: \n got ApiName: %v,\nwant Apiname: %v", tc.desc, gotApiName, wantApiName)
 			}
-		}
-
-		if ok := reflect.DeepEqual(serviceInfo.RequestTypeNames, tc.wantRequestTypeNames); !ok {
-			t.Errorf("Test(%v) failed: \n got RequestTypeNames: %v,\nwant RequestTypeNames: %v", tc.desc, serviceInfo.RequestTypeNames, tc.wantRequestTypeNames)
 		}
 	}
 }
@@ -1958,11 +1952,11 @@ func TestProcessApisForGrpc(t *testing.T) {
 
 func TestProcessTypes(t *testing.T) {
 	testData := []struct {
-		desc                 string
-		fakeServiceConfig    *confpb.Service
-		fakeRequestTypeNames map[string]string
-		wantSegments         map[string]SnakeToJsonSegments
-		wantErr              error
+		desc                            string
+		fakeServiceConfig               *confpb.Service
+		fakeRequestTypeNamesByOperation map[string]string
+		wantSegmentsByOperation         map[string]SnakeToJsonSegments
+		wantErr                         error
 	}{
 		{
 			desc: "Success for single type with multiple distinct fields",
@@ -1983,10 +1977,10 @@ func TestProcessTypes(t *testing.T) {
 					},
 				},
 			},
-			fakeRequestTypeNames: map[string]string{
+			fakeRequestTypeNamesByOperation: map[string]string{
 				"api-1.operation-1": "CreateShelvesRequest",
 			},
-			wantSegments: map[string]SnakeToJsonSegments{
+			wantSegmentsByOperation: map[string]SnakeToJsonSegments{
 				"api-1.operation-1": {
 					"foo_bar": "fooBar",
 					"x_y":     "xY",
@@ -2012,10 +2006,10 @@ func TestProcessTypes(t *testing.T) {
 					},
 				},
 			},
-			fakeRequestTypeNames: map[string]string{
+			fakeRequestTypeNamesByOperation: map[string]string{
 				"api-1.operation-1": "CreateShelvesRequest",
 			},
-			wantSegments: map[string]SnakeToJsonSegments{
+			wantSegmentsByOperation: map[string]SnakeToJsonSegments{
 				"api-1.operation-1": {
 					"foo_bar": "fooBar",
 				},
@@ -2041,10 +2035,10 @@ func TestProcessTypes(t *testing.T) {
 					},
 				},
 			},
-			fakeRequestTypeNames: map[string]string{
+			fakeRequestTypeNamesByOperation: map[string]string{
 				"api-1.operation-1": "CreateShelvesRequest",
 			},
-			wantSegments: map[string]SnakeToJsonSegments{
+			wantSegmentsByOperation: map[string]SnakeToJsonSegments{
 				"api-1.operation-1": {
 					"foo_bar": "fooBar",
 				},
@@ -2069,7 +2063,7 @@ func TestProcessTypes(t *testing.T) {
 					},
 				},
 			},
-			fakeRequestTypeNames: map[string]string{
+			fakeRequestTypeNamesByOperation: map[string]string{
 				"api-1.operation-1": "CreateShelvesRequest",
 			},
 			wantErr: fmt.Errorf("for operation (api-1.operation-1): detected two types with same snake_name (foo_bar) but mistmatching json_name"),
@@ -2084,7 +2078,7 @@ func TestProcessTypes(t *testing.T) {
 					},
 				},
 			},
-			fakeRequestTypeNames: map[string]string{
+			fakeRequestTypeNamesByOperation: map[string]string{
 				"api-1.operation-1": "NON_EXISTENT_TYPE_NAME",
 			},
 			wantErr: fmt.Errorf("for operation (api-1.operation-1): could not find type with name (NON_EXISTENT_TYPE_NAME)"),
@@ -2137,12 +2131,12 @@ func TestProcessTypes(t *testing.T) {
 					},
 				},
 			},
-			fakeRequestTypeNames: map[string]string{
+			fakeRequestTypeNamesByOperation: map[string]string{
 				"api-1.operation-1": "CreateShelvesRequest",
 				"api-1.operation-2": "CreateBookRequest",
 				"api-2.operation-1": "google.protobuf.Empty",
 			},
-			wantSegments: map[string]SnakeToJsonSegments{
+			wantSegmentsByOperation: map[string]SnakeToJsonSegments{
 				"api-1.operation-1": {
 					"foo_bar": "fooBar",
 					"x_y":     "xY",
@@ -2176,11 +2170,11 @@ func TestProcessTypes(t *testing.T) {
 					},
 				},
 			},
-			fakeRequestTypeNames: map[string]string{
+			fakeRequestTypeNamesByOperation: map[string]string{
 				"api-1.operation-1": "CreateShelvesRequest",
 				"api-1.operation-2": "CreateBookRequest",
 			},
-			wantSegments: map[string]SnakeToJsonSegments{
+			wantSegmentsByOperation: map[string]SnakeToJsonSegments{
 				"api-1.operation-1": {
 					"foo_bar": "foo-bar",
 				},
@@ -2194,9 +2188,15 @@ func TestProcessTypes(t *testing.T) {
 	for _, tc := range testData {
 		serviceInfo := &ServiceInfo{
 			serviceConfig: tc.fakeServiceConfig,
-			SegmentNames:  make(map[string]SnakeToJsonSegments),
+			Methods:       make(map[string]*methodInfo),
 		}
-		serviceInfo.RequestTypeNames = tc.fakeRequestTypeNames
+		// Emulate a part of processApis().
+		for operation, requestType := range tc.fakeRequestTypeNamesByOperation {
+			mi := &methodInfo{
+				RequestTypeName: requestType,
+			}
+			serviceInfo.Methods[operation] = mi
+		}
 
 		err := serviceInfo.processTypes()
 
@@ -2204,9 +2204,13 @@ func TestProcessTypes(t *testing.T) {
 			if tc.wantErr == nil || !strings.Contains(err.Error(), tc.wantErr.Error()) {
 				t.Errorf("Test(%v): Expected err (%v), got err (%v)", tc.desc, tc.wantErr, err)
 			}
-		} else {
-			if !reflect.DeepEqual(serviceInfo.SegmentNames, tc.wantSegments) {
-				t.Errorf("Test(%v): Expected segments (%v), got segments (%v)", tc.desc, tc.wantSegments, serviceInfo.SegmentNames)
+			continue
+		}
+
+		for operation, wantMapping := range tc.wantSegmentsByOperation {
+			gotMapping := serviceInfo.Methods[operation].SegmentMappings
+			if !reflect.DeepEqual(wantMapping, gotMapping) {
+				t.Errorf("Test(%v): For operation (%v), expected segment mapping (%v), got segments (%v)", tc.desc, operation, wantMapping, gotMapping)
 			}
 		}
 	}
