@@ -217,7 +217,7 @@ func (s *ServiceInfo) processApis() {
 				requestTypeName := strings.TrimPrefix(method.RequestTypeUrl, util.TypeUrlPrefix)
 				mi.RequestTypeName = requestTypeName
 			} else {
-				glog.Warningf("For operation (%v), request type name (%v) is in an unexpected format", selector, mi.RequestTypeName)
+				glog.Warningf("For operation (%v), request type name (%v) is in an unexpected format", selector, method.RequestTypeUrl)
 			}
 		}
 	}
@@ -627,6 +627,11 @@ func (s *ServiceInfo) processTypes() error {
 	// For each method, lookup the request type.
 	for operation, mi := range s.Methods {
 		requestTypeName := mi.RequestTypeName
+		if requestTypeName == "" {
+			glog.Warningf("for operation (%v): request type was malformed", operation)
+			continue
+		}
+
 		requestType, ok := typesByTypeName[requestTypeName]
 		if !ok {
 			glog.Warningf("for operation (%v): could not find type with name (%v)", operation, requestTypeName)

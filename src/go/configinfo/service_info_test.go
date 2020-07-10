@@ -2023,7 +2023,7 @@ func TestProcessTypes(t *testing.T) {
 						Name: "CreateShelvesRequest",
 						Fields: []*ptypepb.Field{
 							{
-								// This one is ignored, it's not a snake name.
+								// This one is ignored, its doesn't map anything.
 								Name:     "fooBar",
 								JsonName: "fooBar",
 							},
@@ -2067,21 +2067,6 @@ func TestProcessTypes(t *testing.T) {
 				"api-1.operation-1": "CreateShelvesRequest",
 			},
 			wantErr: fmt.Errorf("for operation (api-1.operation-1): detected two types with same snake_name (foo_bar) but mistmatching json_name"),
-		},
-		{
-			desc: "Failure for request type not found in types",
-			fakeServiceConfig: &confpb.Service{
-				Types: []*ptypepb.Type{
-					{
-						Name:   "CreateShelvesRequest",
-						Fields: []*ptypepb.Field{},
-					},
-				},
-			},
-			fakeRequestTypeNamesByOperation: map[string]string{
-				"api-1.operation-1": "NON_EXISTENT_TYPE_NAME",
-			},
-			wantErr: fmt.Errorf("for operation (api-1.operation-1): could not find type with name (NON_EXISTENT_TYPE_NAME)"),
 		},
 		{
 			desc: "Success for multiple types with distinct fields",
@@ -2135,6 +2120,10 @@ func TestProcessTypes(t *testing.T) {
 				"api-1.operation-1": "CreateShelvesRequest",
 				"api-1.operation-2": "CreateBookRequest",
 				"api-2.operation-1": "google.protobuf.Empty",
+				// This will be ignored, it doesn't exist in types.
+				"api-3.operation-1": "NonExistingType",
+				// This will be ignored, it is empty.
+				"api-3.operation-2": "",
 			},
 			wantSegmentsByOperation: map[string]SnakeToJsonSegments{
 				"api-1.operation-1": {
@@ -2205,6 +2194,10 @@ func TestProcessTypes(t *testing.T) {
 				t.Errorf("Test(%v): Expected err (%v), got err (%v)", tc.desc, tc.wantErr, err)
 			}
 			continue
+		}
+
+		if tc.wantErr != nil {
+			t.Errorf("Test(%v): Expected err (%v), got no err", tc.desc, tc.wantErr)
 		}
 
 		for operation, wantMapping := range tc.wantSegmentsByOperation {
