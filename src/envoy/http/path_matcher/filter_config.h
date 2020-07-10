@@ -78,10 +78,7 @@ class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       return nullptr;
     }
 
-    // Relies on pointer safety in absl::flat_hash_map.
-    // The map will never change after filter config is generated, so it should
-    // be safe.
-    return &(operation_it->second);
+    return operation_it->second;
   }
 
   FilterStats& stats() { return stats_; }
@@ -100,9 +97,9 @@ class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
 
   // Map from operation id to a PathParameterExtractionRule.
   // Only stores the operations that need path param extraction.
-  absl::flat_hash_map<
-      std::string,
-      ::espv2::api::envoy::v6::http::path_matcher::PathParameterExtractionRule>
+  absl::flat_hash_map<std::string,
+                      const ::espv2::api::envoy::v6::http::path_matcher::
+                          PathParameterExtractionRule*>
       path_param_extractions_;
 
   FilterStats stats_;

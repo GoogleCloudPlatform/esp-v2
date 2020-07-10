@@ -56,7 +56,7 @@ class FilterConfigImpl
   FilterStats generateStats(const std::string& prefix,
                             Envoy::Stats::Scope& scope) {
     const std::string final_prefix = prefix + "backend_auth.";
-    return {ALL_PATH_MATCHER_FILTER_STATS(
+    return {ALL_BACKEND_AUTH_FILTER_STATS(
         POOL_COUNTER_PREFIX(scope, final_prefix))};
   }
 

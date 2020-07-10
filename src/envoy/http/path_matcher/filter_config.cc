@@ -39,7 +39,7 @@ FilterConfig::FilterConfig(
     // Only stores the operations that need path param extraction.
     if (rule.has_path_parameter_extraction()) {
       path_param_extractions_[rule.operation()] =
-          rule.path_parameter_extraction();
+          &rule.path_parameter_extraction();
     }
   }
   path_matcher_ = pmb.Build();
