@@ -26,10 +26,7 @@ import (
 )
 
 func TestUnmarshalBytesToPbMessage(t *testing.T) {
-	var wantResp, getResp proto.Message
-	wantError := ""
-
-	_test := func() {
+	_test := func(wantResp, getResp proto.Message, wantError string) {
 		bytes, _ := proto.Marshal(wantResp)
 		err := UnmarshalBytesToPbMessage(bytes, getResp)
 		if err != nil {
@@ -43,28 +40,36 @@ func TestUnmarshalBytesToPbMessage(t *testing.T) {
 		}
 	}
 
-	wantResp = &confpb.Service{
-		Id: "test-id",
+	testCases := []struct {
+		getResp   proto.Message
+		wantResp  proto.Message
+		wantError string
+	}{
+		{
+			getResp: &confpb.Service{},
+			wantResp: &confpb.Service{
+				Id: "test-id",
+			},
+		},
+		{
+			getResp: &smpb.ListServiceRolloutsResponse{},
+			wantResp: &smpb.ListServiceRolloutsResponse{
+				NextPageToken: "next-page-token",
+			},
+		},
+		{
+			getResp: &scpb.ReportResponse{},
+			wantResp: &scpb.ReportResponse{
+				ServiceConfigId: "test-id",
+			},
+		},
+		{
+			getResp:   &scpb.ReportRequest{},
+			wantError: "not support unmarshalling",
+		},
 	}
-	getResp = &confpb.Service{}
-	_test()
 
-	wantResp = &smpb.ListServiceRolloutsResponse{
-		NextPageToken: "next-page-token",
+	for _, tc := range testCases {
+		_test(tc.getResp, tc.wantResp, tc.wantError)
 	}
-	getResp = &smpb.ListServiceRolloutsResponse{}
-	_test()
-
-	wantResp = &scpb.ReportResponse{
-		ServiceConfigId: "test-id",
-	}
-	getResp = &scpb.ReportResponse{}
-	_test()
-
-	wantResp = &scpb.ReportRequest{
-		ServiceConfigId: "test-id",
-	}
-	getResp = &scpb.ReportRequest{}
-	wantError = "not support unmarshalling"
-	_test()
 }
