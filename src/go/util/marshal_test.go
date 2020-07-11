@@ -26,50 +26,51 @@ import (
 )
 
 func TestUnmarshalBytesToPbMessage(t *testing.T) {
-	_test := func(wantResp, getResp proto.Message, wantError string) {
-		bytes, _ := proto.Marshal(wantResp)
-		err := UnmarshalBytesToPbMessage(bytes, getResp)
-		if err != nil {
-			if !strings.Contains(err.Error(), wantError) {
-				t.Errorf("fail in UnmarshalBytesToPbMessage on %T, want error: %s, get error: %v", wantResp, wantError, err)
-			}
-			return
-		}
-		if !proto.Equal(getResp, wantResp) {
-			t.Errorf("fail in UnmarshalBytesToPbMessage on %T, want: %v, ge: %v", wantResp, wantResp, getResp)
-		}
-	}
-
 	testCases := []struct {
-		getResp   proto.Message
-		wantResp  proto.Message
-		wantError string
+		desc          string
+		wantResp      proto.Message
+		getRespHolder proto.Message
+		wantError     string
 	}{
 		{
-			getResp: &confpb.Service{},
+			desc: "unmarshal Service",
 			wantResp: &confpb.Service{
 				Id: "test-id",
 			},
+			getRespHolder: &confpb.Service{},
 		},
 		{
-			getResp: &smpb.ListServiceRolloutsResponse{},
+			desc: "unmarshal ListServiceRolloutsResponse",
 			wantResp: &smpb.ListServiceRolloutsResponse{
 				NextPageToken: "next-page-token",
 			},
+			getRespHolder: &smpb.ListServiceRolloutsResponse{},
 		},
 		{
-			getResp: &scpb.ReportResponse{},
+			desc: "unmarshal ReportResponse",
 			wantResp: &scpb.ReportResponse{
 				ServiceConfigId: "test-id",
 			},
+			getRespHolder: &scpb.ReportResponse{},
 		},
 		{
-			getResp:   &scpb.ReportRequest{},
-			wantError: "not support unmarshalling",
+			desc:          "unmarshal ReportRequest",
+			getRespHolder: &scpb.ReportRequest{},
+			wantError:     "not support unmarshalling",
 		},
 	}
 
 	for _, tc := range testCases {
-		_test(tc.getResp, tc.wantResp, tc.wantError)
+		bytes, _ := proto.Marshal(tc.wantResp)
+		err := UnmarshalBytesToPbMessage(bytes, tc.getRespHolder)
+		if err != nil {
+			if !strings.Contains(err.Error(), tc.wantError) {
+				t.Errorf("Test (%s): fail in UnmarshalBytesToPbMessage on %T, want error: %s, get error: %v", tc.desc, tc.wantResp, tc.wantError, err)
+			}
+			return
+		}
+		if !proto.Equal(tc.getRespHolder, tc.wantResp) {
+			t.Errorf("Test (%s): fail in UnmarshalBytesToPbMessage on %T, want: %v, ge: %v", tc.desc, tc.wantResp, tc.wantResp, tc.getRespHolder)
+		}
 	}
 }
