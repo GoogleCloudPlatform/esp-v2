@@ -57,6 +57,14 @@ Similar to the Dynamic Routing example above, but:
 - Configures the gRPC Transcoding filter.
 - Configures the [Service Control](../src/envoy/http/service_control/README.md) filter.
 
+**Note**: When updating the service config, you must call Service Management directly.
+Otherwise, the proto descriptor will not be included.
+
+```shell script
+curl --fail -o "service.json" -H "Authorization: Bearer $(gcloud auth print-access-token)" \                                                             ✔  10419  15:21:31
+  "https://servicemanagement.googleapis.com/v1/services/${SERVICE}/configs/${CONFIG_ID}?view=FULL"
+```
+
 ## [Service Control](service_control)
 
 Configurations of authorization by API key, limiting by quota, and reporting logs / metrics.
