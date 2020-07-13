@@ -27,7 +27,7 @@
             }
           ]
         },
-        "name": "bookstore.endpoints.apiproxy-231719.cloud.goog_local",
+        "name": "examples-service-control.endpoints.cloudesf-testing.cloud.goog_local",
         "type": "LOGICAL_DNS"
       },
       {
@@ -112,14 +112,6 @@
                   "commonHttpProtocolOptions": {
                     "headersWithUnderscoresAction": "REJECT_REQUEST"
                   },
-                  "localReplyConfig": {
-                    "bodyFormat": {
-                      "jsonFormat": {
-                        "code": "%RESPONSE_CODE%",
-                        "message":"%LOCAL_REPLY_BODY%"
-                      }
-                    }
-                  },
                   "httpFilters": [
                     {
                       "name": "com.google.espv2.filters.http.path_matcher",
@@ -127,14 +119,14 @@
                         "@type": "type.googleapis.com/espv2.api.envoy.v6.http.path_matcher.FilterConfig",
                         "rules": [
                           {
-                            "operation": "1.bookstore_endpoints_apiproxy_231719_cloud_goog.CreateShelf",
+                            "operation": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.CreateShelf",
                             "pattern": {
                               "httpMethod": "POST",
                               "uriTemplate": "/shelves"
                             }
                           },
                           {
-                            "operation": "1.bookstore_endpoints_apiproxy_231719_cloud_goog.ListShelves",
+                            "operation": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.ListShelves",
                             "pattern": {
                               "httpMethod": "GET",
                               "uriTemplate": "/shelves"
@@ -181,16 +173,16 @@
                         },
                         "requirements": [
                           {
-                            "apiName": "1.bookstore_endpoints_apiproxy_231719_cloud_goog",
+                            "apiName": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog",
                             "apiVersion": "1.0.0",
-                            "operationName": "1.bookstore_endpoints_apiproxy_231719_cloud_goog.CreateShelf",
-                            "serviceName": "bookstore.endpoints.apiproxy-231719.cloud.goog"
+                            "operationName": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.CreateShelf",
+                            "serviceName": "examples-service-control.endpoints.cloudesf-testing.cloud.goog"
                           },
                           {
                             "apiKey": {
                               "allowWithoutApiKey": true
                             },
-                            "apiName": "1.bookstore_endpoints_apiproxy_231719_cloud_goog",
+                            "apiName": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog",
                             "apiVersion": "1.0.0",
                             "metricCosts": [
                               {
@@ -198,8 +190,8 @@
                                 "name": "read-requests"
                               }
                             ],
-                            "operationName": "1.bookstore_endpoints_apiproxy_231719_cloud_goog.ListShelves",
-                            "serviceName": "bookstore.endpoints.apiproxy-231719.cloud.goog"
+                            "operationName": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.ListShelves",
+                            "serviceName": "examples-service-control.endpoints.cloudesf-testing.cloud.goog"
                           }
                         ],
                         "scCallingConfig": {
@@ -214,7 +206,7 @@
                           {
                             "backendProtocol": "http1",
                             "jwtPayloadMetadataName": "jwt_payloads",
-                            "producerProjectId": "apiproxy-231719",
+                            "producerProjectId": "cloudesf-testing",
                             "serviceConfig": {
                               "logging": {
                                 "producerDestinations": [
@@ -742,7 +734,7 @@
                               }
                             },
                             "serviceConfigId": "2019-12-16r0",
-                            "serviceName": "bookstore.endpoints.apiproxy-231719.cloud.goog"
+                            "serviceName": "examples-service-control.endpoints.cloudesf-testing.cloud.goog"
                           }
                         ]
                       }
@@ -755,6 +747,14 @@
                       }
                     }
                   ],
+                  "localReplyConfig": {
+                    "bodyFormat": {
+                      "jsonFormat": {
+                        "code": "%RESPONSE_CODE%",
+                        "message": "%LOCAL_REPLY_BODY%"
+                      }
+                    }
+                  },
                   "routeConfig": {
                     "name": "local_route",
                     "virtualHosts": [
@@ -769,7 +769,7 @@
                               "prefix": "/"
                             },
                             "route": {
-                              "cluster": "bookstore.endpoints.apiproxy-231719.cloud.goog_local",
+                              "cluster": "examples-service-control.endpoints.cloudesf-testing.cloud.goog_local",
                               "timeout": "15s"
                             }
                           }

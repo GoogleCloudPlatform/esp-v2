@@ -6,7 +6,7 @@ Similar to [ESPv2 Configurations](../README.md), but primarily for:
 
 ## [Path Matcher](path_matcher)
 
-Configuration example for the [Path Matcher filter](../../src/envoy/http/path_matcher/README.md).
+Configuration for the [Path Matcher filter](../../src/envoy/http/path_matcher/README.md).
 
 **Operation Name (Selector)**:
 

@@ -27,7 +27,7 @@
             }
           ]
         },
-        "name": "path-matcher.endpoints.apiproxy-231719.cloud.goog_local",
+        "name": "examples-service-control.endpoints.cloudesf-testing.cloud.goog_local",
         "type": "LOGICAL_DNS"
       },
       {
@@ -112,14 +112,6 @@
                   "commonHttpProtocolOptions": {
                     "headersWithUnderscoresAction": "REJECT_REQUEST"
                   },
-                  "localReplyConfig": {
-                    "bodyFormat": {
-                      "jsonFormat": {
-                        "code": "%RESPONSE_CODE%",
-                        "message":"%LOCAL_REPLY_BODY%"
-                      }
-                    }
-                  },
                   "httpFilters": [
                     {
                       "name": "com.google.espv2.filters.http.path_matcher",
@@ -127,11 +119,622 @@
                         "@type": "type.googleapis.com/espv2.api.envoy.v6.http.path_matcher.FilterConfig",
                         "rules": [
                           {
-                            "operation": "1.path_matcher_endpoints_apiproxy_231719_cloud_goog.GetShelf",
+                            "operation": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.CreateShelf",
+                            "pattern": {
+                              "httpMethod": "POST",
+                              "uriTemplate": "/shelves"
+                            }
+                          },
+                          {
+                            "operation": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.ListShelves",
                             "pattern": {
                               "httpMethod": "GET",
-                              "uriTemplate": "/shelves/{shelf}"
+                              "uriTemplate": "/shelves"
                             }
+                          }
+                        ],
+                        "segmentNames": [
+                          {
+                            "jsonName": "nullValue",
+                            "snakeName": "null_value"
+                          },
+                          {
+                            "jsonName": "numberValue",
+                            "snakeName": "number_value"
+                          },
+                          {
+                            "jsonName": "stringValue",
+                            "snakeName": "string_value"
+                          },
+                          {
+                            "jsonName": "boolValue",
+                            "snakeName": "bool_value"
+                          },
+                          {
+                            "jsonName": "structValue",
+                            "snakeName": "struct_value"
+                          },
+                          {
+                            "jsonName": "listValue",
+                            "snakeName": "list_value"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "com.google.espv2.filters.http.service_control",
+                      "typedConfig": {
+                        "@type": "type.googleapis.com/espv2.api.envoy.v6.http.service_control.FilterConfig",
+                        "generatedHeaderPrefix": "X-Endpoint-",
+                        "imdsToken": {
+                          "cluster": "metadata-cluster",
+                          "timeout": "30s",
+                          "uri": "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
+                        },
+                        "requirements": [
+                          {
+                            "apiName": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog",
+                            "apiVersion": "1.0.0",
+                            "operationName": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.CreateShelf",
+                            "serviceName": "examples-service-control.endpoints.cloudesf-testing.cloud.goog"
+                          },
+                          {
+                            "apiKey": {
+                              "allowWithoutApiKey": true
+                            },
+                            "apiName": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog",
+                            "apiVersion": "1.0.0",
+                            "metricCosts": [
+                              {
+                                "cost": "1",
+                                "name": "read-requests"
+                              }
+                            ],
+                            "operationName": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.ListShelves",
+                            "serviceName": "examples-service-control.endpoints.cloudesf-testing.cloud.goog"
+                          }
+                        ],
+                        "scCallingConfig": {
+                          "networkFailOpen": true
+                        },
+                        "serviceControlUri": {
+                          "cluster": "service-control-cluster",
+                          "timeout": "30s",
+                          "uri": "https://servicecontrol.googleapis.com/v1/services/"
+                        },
+                        "services": [
+                          {
+                            "backendProtocol": "http1",
+                            "jwtPayloadMetadataName": "jwt_payloads",
+                            "producerProjectId": "cloudesf-testing",
+                            "serviceConfig": {
+                              "logging": {
+                                "producerDestinations": [
+                                  {
+                                    "logs": [
+                                      "endpoints_log"
+                                    ],
+                                    "monitoredResource": "api"
+                                  }
+                                ]
+                              },
+                              "logs": [
+                                {
+                                  "name": "endpoints_log"
+                                }
+                              ],
+                              "metrics": [
+                                {
+                                  "displayName": "Read requests",
+                                  "metricKind": "DELTA",
+                                  "name": "read-requests",
+                                  "type": "read-requests",
+                                  "valueType": "INT64"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    },
+                                    {
+                                      "key": "/protocol"
+                                    },
+                                    {
+                                      "key": "/response_code"
+                                    },
+                                    {
+                                      "key": "/response_code_class"
+                                    },
+                                    {
+                                      "key": "/status_code"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/consumer/request_count",
+                                  "type": "serviceruntime.googleapis.com/api/consumer/request_count",
+                                  "valueType": "INT64"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    },
+                                    {
+                                      "key": "/error_type"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/consumer/error_count",
+                                  "type": "serviceruntime.googleapis.com/api/consumer/error_count",
+                                  "valueType": "INT64"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/consumer/total_latencies",
+                                  "type": "serviceruntime.googleapis.com/api/consumer/total_latencies",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/protocol"
+                                    },
+                                    {
+                                      "key": "/response_code"
+                                    },
+                                    {
+                                      "key": "/response_code_class"
+                                    },
+                                    {
+                                      "key": "/status_code"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/request_count",
+                                  "type": "serviceruntime.googleapis.com/api/producer/request_count",
+                                  "valueType": "INT64"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/error_type"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/error_count",
+                                  "type": "serviceruntime.googleapis.com/api/producer/error_count",
+                                  "valueType": "INT64"
+                                },
+                                {
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/total_latencies",
+                                  "type": "serviceruntime.googleapis.com/api/producer/total_latencies",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    },
+                                    {
+                                      "key": "/end_user"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user",
+                                  "type": "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user",
+                                  "valueType": "INT64"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    },
+                                    {
+                                      "key": "/end_user_country"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user_country",
+                                  "type": "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user_country",
+                                  "valueType": "INT64"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    },
+                                    {
+                                      "key": "/referer"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/consumer/top_request_count_by_referer",
+                                  "type": "serviceruntime.googleapis.com/api/consumer/top_request_count_by_referer",
+                                  "valueType": "INT64"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/protocol"
+                                    },
+                                    {
+                                      "key": "/response_code"
+                                    },
+                                    {
+                                      "key": "/consumer_id"
+                                    },
+                                    {
+                                      "key": "/status_code"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/top_request_count_by_consumer",
+                                  "type": "serviceruntime.googleapis.com/api/producer/top_request_count_by_consumer",
+                                  "valueType": "INT64"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    },
+                                    {
+                                      "key": "/quota_group_name"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/consumer/quota_used_count",
+                                  "type": "serviceruntime.googleapis.com/api/consumer/quota_used_count",
+                                  "valueType": "INT64"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/consumer/request_overhead_latencies",
+                                  "type": "serviceruntime.googleapis.com/api/consumer/request_overhead_latencies",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/consumer/backend_latencies",
+                                  "type": "serviceruntime.googleapis.com/api/consumer/backend_latencies",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/consumer/request_sizes",
+                                  "type": "serviceruntime.googleapis.com/api/consumer/request_sizes",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/consumer/response_sizes",
+                                  "type": "serviceruntime.googleapis.com/api/consumer/response_sizes",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/request_overhead_latencies",
+                                  "type": "serviceruntime.googleapis.com/api/producer/request_overhead_latencies",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/backend_latencies",
+                                  "type": "serviceruntime.googleapis.com/api/producer/backend_latencies",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/request_sizes",
+                                  "type": "serviceruntime.googleapis.com/api/producer/request_sizes",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/response_sizes",
+                                  "type": "serviceruntime.googleapis.com/api/producer/response_sizes",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/consumer_id"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer",
+                                  "type": "serviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/consumer_id"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/top_response_sizes_by_consumer",
+                                  "type": "serviceruntime.googleapis.com/api/producer/top_response_sizes_by_consumer",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    },
+                                    {
+                                      "key": "/protocol"
+                                    },
+                                    {
+                                      "key": "/response_code"
+                                    },
+                                    {
+                                      "key": "/response_code_class"
+                                    },
+                                    {
+                                      "key": "/status_code"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/by_consumer/request_count",
+                                  "type": "serviceruntime.googleapis.com/api/producer/by_consumer/request_count",
+                                  "valueType": "INT64"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    },
+                                    {
+                                      "key": "/error_type"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/by_consumer/error_count",
+                                  "type": "serviceruntime.googleapis.com/api/producer/by_consumer/error_count",
+                                  "valueType": "INT64"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/by_consumer/total_latencies",
+                                  "type": "serviceruntime.googleapis.com/api/producer/by_consumer/total_latencies",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    },
+                                    {
+                                      "key": "/quota_group_name"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/by_consumer/quota_used_count",
+                                  "type": "serviceruntime.googleapis.com/api/producer/by_consumer/quota_used_count",
+                                  "valueType": "INT64"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/by_consumer/request_overhead_latencies",
+                                  "type": "serviceruntime.googleapis.com/api/producer/by_consumer/request_overhead_latencies",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/by_consumer/backend_latencies",
+                                  "type": "serviceruntime.googleapis.com/api/producer/by_consumer/backend_latencies",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/by_consumer/request_sizes",
+                                  "type": "serviceruntime.googleapis.com/api/producer/by_consumer/request_sizes",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "/credential_id"
+                                    }
+                                  ],
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/by_consumer/response_sizes",
+                                  "type": "serviceruntime.googleapis.com/api/producer/by_consumer/response_sizes",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/streaming_request_message_counts",
+                                  "type": "serviceruntime.googleapis.com/api/producer/streaming_request_message_counts",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/streaming_response_message_counts",
+                                  "type": "serviceruntime.googleapis.com/api/producer/streaming_response_message_counts",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/consumer/streaming_request_message_counts",
+                                  "type": "serviceruntime.googleapis.com/api/consumer/streaming_request_message_counts",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/consumer/streaming_response_message_counts",
+                                  "type": "serviceruntime.googleapis.com/api/consumer/streaming_response_message_counts",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/streaming_durations",
+                                  "type": "serviceruntime.googleapis.com/api/producer/streaming_durations",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/consumer/streaming_durations",
+                                  "type": "serviceruntime.googleapis.com/api/consumer/streaming_durations",
+                                  "valueType": "DISTRIBUTION"
+                                },
+                                {
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/request_bytes",
+                                  "type": "serviceruntime.googleapis.com/api/producer/request_bytes",
+                                  "valueType": "INT64"
+                                },
+                                {
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/producer/response_bytes",
+                                  "type": "serviceruntime.googleapis.com/api/producer/response_bytes",
+                                  "valueType": "INT64"
+                                },
+                                {
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/consumer/request_bytes",
+                                  "type": "serviceruntime.googleapis.com/api/consumer/request_bytes",
+                                  "valueType": "INT64"
+                                },
+                                {
+                                  "metricKind": "DELTA",
+                                  "name": "serviceruntime.googleapis.com/api/consumer/response_bytes",
+                                  "type": "serviceruntime.googleapis.com/api/consumer/response_bytes",
+                                  "valueType": "INT64"
+                                }
+                              ],
+                              "monitoredResources": [
+                                {
+                                  "labels": [
+                                    {
+                                      "key": "cloud.googleapis.com/location"
+                                    },
+                                    {
+                                      "key": "cloud.googleapis.com/uid"
+                                    },
+                                    {
+                                      "key": "serviceruntime.googleapis.com/api_version"
+                                    },
+                                    {
+                                      "key": "serviceruntime.googleapis.com/api_method"
+                                    },
+                                    {
+                                      "key": "serviceruntime.googleapis.com/consumer_project"
+                                    },
+                                    {
+                                      "key": "cloud.googleapis.com/project"
+                                    },
+                                    {
+                                      "key": "cloud.googleapis.com/service"
+                                    }
+                                  ],
+                                  "type": "api"
+                                }
+                              ],
+                              "monitoring": {
+                                "consumerDestinations": [
+                                  {
+                                    "metrics": [
+                                      "serviceruntime.googleapis.com/api/consumer/request_count",
+                                      "serviceruntime.googleapis.com/api/consumer/error_count",
+                                      "serviceruntime.googleapis.com/api/consumer/quota_used_count",
+                                      "serviceruntime.googleapis.com/api/consumer/total_latencies",
+                                      "serviceruntime.googleapis.com/api/consumer/request_overhead_latencies",
+                                      "serviceruntime.googleapis.com/api/consumer/backend_latencies",
+                                      "serviceruntime.googleapis.com/api/consumer/request_sizes",
+                                      "serviceruntime.googleapis.com/api/consumer/response_sizes",
+                                      "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user",
+                                      "serviceruntime.googleapis.com/api/consumer/top_request_count_by_end_user_country",
+                                      "serviceruntime.googleapis.com/api/consumer/top_request_count_by_referer",
+                                      "serviceruntime.googleapis.com/api/consumer/streaming_request_message_counts",
+                                      "serviceruntime.googleapis.com/api/consumer/streaming_response_message_counts",
+                                      "serviceruntime.googleapis.com/api/consumer/streaming_durations",
+                                      "serviceruntime.googleapis.com/api/consumer/request_bytes",
+                                      "serviceruntime.googleapis.com/api/consumer/response_bytes"
+                                    ],
+                                    "monitoredResource": "api"
+                                  }
+                                ],
+                                "producerDestinations": [
+                                  {
+                                    "metrics": [
+                                      "serviceruntime.googleapis.com/api/producer/request_count",
+                                      "serviceruntime.googleapis.com/api/producer/error_count",
+                                      "serviceruntime.googleapis.com/api/producer/total_latencies",
+                                      "serviceruntime.googleapis.com/api/producer/request_overhead_latencies",
+                                      "serviceruntime.googleapis.com/api/producer/backend_latencies",
+                                      "serviceruntime.googleapis.com/api/producer/request_sizes",
+                                      "serviceruntime.googleapis.com/api/producer/response_sizes",
+                                      "serviceruntime.googleapis.com/api/producer/top_request_count_by_consumer",
+                                      "serviceruntime.googleapis.com/api/producer/top_request_sizes_by_consumer",
+                                      "serviceruntime.googleapis.com/api/producer/top_response_sizes_by_consumer",
+                                      "serviceruntime.googleapis.com/api/producer/streaming_request_message_counts",
+                                      "serviceruntime.googleapis.com/api/producer/streaming_response_message_counts",
+                                      "serviceruntime.googleapis.com/api/producer/streaming_durations",
+                                      "serviceruntime.googleapis.com/api/producer/request_bytes",
+                                      "serviceruntime.googleapis.com/api/producer/response_bytes",
+                                      "serviceruntime.googleapis.com/api/producer/by_consumer/request_count",
+                                      "serviceruntime.googleapis.com/api/producer/by_consumer/error_count",
+                                      "serviceruntime.googleapis.com/api/producer/by_consumer/total_latencies",
+                                      "serviceruntime.googleapis.com/api/producer/by_consumer/quota_used_count",
+                                      "serviceruntime.googleapis.com/api/producer/by_consumer/request_overhead_latencies",
+                                      "serviceruntime.googleapis.com/api/producer/by_consumer/backend_latencies",
+                                      "serviceruntime.googleapis.com/api/producer/by_consumer/request_sizes",
+                                      "serviceruntime.googleapis.com/api/producer/by_consumer/response_sizes"
+                                    ],
+                                    "monitoredResource": "api"
+                                  }
+                                ]
+                              }
+                            },
+                            "serviceConfigId": "2019-12-16r0",
+                            "serviceName": "examples-service-control.endpoints.cloudesf-testing.cloud.goog"
                           }
                         ]
                       }
@@ -144,6 +747,14 @@
                       }
                     }
                   ],
+                  "localReplyConfig": {
+                    "bodyFormat": {
+                      "jsonFormat": {
+                        "code": "%RESPONSE_CODE%",
+                        "message": "%LOCAL_REPLY_BODY%"
+                      }
+                    }
+                  },
                   "routeConfig": {
                     "name": "local_route",
                     "virtualHosts": [
@@ -158,7 +769,7 @@
                               "prefix": "/"
                             },
                             "route": {
-                              "cluster": "path-matcher.endpoints.apiproxy-231719.cloud.goog_local",
+                              "cluster": "examples-service-control.endpoints.cloudesf-testing.cloud.goog_local",
                               "timeout": "15s"
                             }
                           }

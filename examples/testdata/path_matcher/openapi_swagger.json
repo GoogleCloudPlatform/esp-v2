@@ -1,11 +1,11 @@
 {
   "swagger": "2.0",
   "info": {
-    "description": "Example of the Path Matcher filter using a simple Bookstore API.",
-    "title": "Example - Path Matcher - Bookstore",
+    "description": "Configuration of the Path Matcher filter using a simple Bookstore API.",
+    "title": "Examples - Path Matcher",
     "version": "1.0.0"
   },
-  "host": "path-matcher.endpoints.apiproxy-231719.cloud.goog",
+  "host": "examples-path-matcher.endpoints.cloudesf-testing.cloud.goog",
   "basePath": "/",
   "consumes": [
     "application/json"
