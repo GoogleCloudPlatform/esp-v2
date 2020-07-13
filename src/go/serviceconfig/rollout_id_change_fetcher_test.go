@@ -33,6 +33,8 @@ func genFakeReport(serviceRolloutId string) string {
 	return string(reportRespBytes)
 }
 
+type getCallGoogleapisFunc func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, output proto.Message) error
+
 func TestFetchLatestRolloutId(t *testing.T) {
 	serviceRolloutId := "service-config-id"
 	serviceControlServer := util.InitMockServer(genFakeReport(serviceRolloutId))
@@ -40,22 +42,42 @@ func TestFetchLatestRolloutId(t *testing.T) {
 
 	cif := NewRolloutIdChangeDetector(&http.Client{}, serviceControlServer.GetURL(), "service-name", accessToken)
 
-	// Test success of fetching the latest rolloutId.
-	rolloutId, _ := cif.fetchLatestRolloutId()
-	if rolloutId != serviceRolloutId {
-		t.Errorf("fail in fetchLatestRolloutId, want rolloutId %s, get rolloutId %s", rolloutId, serviceRolloutId)
+	callGoogleapis := util.CallGoogleapis
+
+	testCases := []struct {
+		desc           string
+		callGoogleapis getCallGoogleapisFunc
+		wantRolloutId  string
+		wantError      string
+	}{
+		{
+			desc:           "success of fetching the latest rolloutId",
+			callGoogleapis: callGoogleapis,
+			wantRolloutId:  serviceRolloutId,
+		},
+		{
+			desc: "failure due to call googleapis",
+			callGoogleapis: func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, output proto.Message) error {
+				return fmt.Errorf("error-from-CallGoogleapis")
+			},
+			wantError: "fail to fetch new rollout id, error-from-CallGoogleapis",
+		},
+	}
+	for _, tc := range testCases {
+		util.CallGoogleapis = tc.callGoogleapis
+		rolloutId, err := cif.fetchLatestRolloutId()
+		if tc.wantRolloutId != "" && tc.wantRolloutId != rolloutId {
+			t.Errorf("Test(%s): fail in fetchLatestRolloutId, want rolloutId %s, get rolloutId %s", tc.desc, tc.wantRolloutId, rolloutId)
+		}
+
+		if tc.wantError != "" {
+			if err == nil ||  err.Error() != tc.wantError {
+				t.Errorf("Test(%s): fail in fetchLatestRolloutId, want error %v, get error %s", tc.desc, tc.wantError, err)
+			}
+		}
 	}
 
-	// Fail due to calling googleapis.
-	callGoogleapis := util.CallGoogleapis
-	util.CallGoogleapis = func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, output proto.Message) error {
-		return fmt.Errorf("error-from-CallGoogleapis")
-	}
-	_, err := cif.fetchLatestRolloutId()
-	wantError := "fail to fetch new rollout id, error-from-CallGoogleapis"
-	if err == nil || err.Error() != wantError {
-		t.Errorf("fail in fetchLatestRolloutId, want error %v, get error %s", err, wantError)
-	}
+	// Recover util.CallGoogleapis.
 	util.CallGoogleapis = callGoogleapis
 }
 
