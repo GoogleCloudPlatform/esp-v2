@@ -61,8 +61,8 @@ Similar to the Dynamic Routing example above, but:
 Otherwise, the proto descriptor will not be included.
 
 ```shell script
-curl --fail -o "service.json" -H "Authorization: Bearer $(gcloud auth print-access-token)" \                                                             ✔  10419  15:21:31
-  "https://servicemanagement.googleapis.com/v1/services/${SERVICE}/configs/${CONFIG_ID}?view=FULL"
+curl --fail -o "service.json" -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+    "https://servicemanagement.googleapis.com/v1/services/${SERVICE}/configs/${CONFIG_ID}?view=FULL"
 ```
 
 ## [Service Control](service_control)
