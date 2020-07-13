@@ -26,6 +26,7 @@ namespace envoy {
 namespace http_filters {
 namespace path_matcher {
 
+using ::espv2::api::envoy::v6::http::path_matcher::PathMatcherRule;
 using ::espv2::api::envoy::v6::http::path_matcher::PathParameterExtractionRule;
 using ::espv2::api_proxy::path_matcher::VariableBinding;
 using ::espv2::api_proxy::path_matcher::VariableBindingsToQueryParameters;
@@ -69,27 +70,29 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
 
   std::string method(headers.Method()->value().getStringView());
   std::string path(headers.Path()->value().getStringView());
-  const std::string* operation = config_->findOperation(method, path);
-  if (operation == nullptr) {
+  const PathMatcherRule* rule = config_->findRule(method, path);
+  if (rule == nullptr) {
     rejectRequest(Envoy::Http::Code(404),
                   "Path does not match any requirement URI template.");
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 
-  ENVOY_LOG(debug, "matched operation: {}", *operation);
+  const absl::string_view operation = rule->operation();
+  ENVOY_LOG(debug, "matched operation: {}", operation);
   Envoy::StreamInfo::FilterState& filter_state =
       *decoder_callbacks_->streamInfo().filterState();
-  utils::setStringFilterState(filter_state, utils::kOperation, *operation);
+  utils::setStringFilterState(filter_state, utils::kOperation, operation);
 
-  const PathParameterExtractionRule* path_param_extraction =
-      config_->needParameterExtraction(*operation);
-  if (path_param_extraction != nullptr) {
+  if (rule->has_path_parameter_extraction()) {
+    const PathParameterExtractionRule& param_rule =
+        rule->path_parameter_extraction();
+
     std::vector<VariableBinding> variable_bindings;
-    config_->findOperation(method, path, &variable_bindings);
+    config_->findRule(method, path, &variable_bindings);
 
     if (!variable_bindings.empty()) {
       const std::string query_params = VariableBindingsToQueryParameters(
-          variable_bindings, path_param_extraction->snake_to_json_segments());
+          variable_bindings, param_rule.snake_to_json_segments());
       utils::setStringFilterState(filter_state, utils::kQueryParams,
                                   query_params);
     }

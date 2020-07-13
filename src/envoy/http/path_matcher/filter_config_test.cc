@@ -27,6 +27,7 @@ namespace http_filters {
 namespace path_matcher {
 namespace {
 
+using ::espv2::api::envoy::v6::http::path_matcher::PathMatcherRule;
 using ::espv2::api::envoy::v6::http::path_matcher::PathParameterExtractionRule;
 using ::espv2::api_proxy::path_matcher::VariableBinding;
 using ::google::protobuf::TextFormat;
@@ -39,7 +40,7 @@ TEST(FilterConfigTest, EmptyConfig) {
       mock_factory;
   FilterConfig cfg(config_pb, Envoy::EMPTY_STRING, mock_factory);
 
-  EXPECT_TRUE(cfg.findOperation("GET", "/foo") == nullptr);
+  EXPECT_EQ(cfg.findRule("GET", "/foo"), nullptr);
 }
 
 TEST(FilterConfigTest, BasicConfig) {
@@ -65,13 +66,13 @@ rules {
       mock_factory;
   FilterConfig cfg(config_pb, Envoy::EMPTY_STRING, mock_factory);
 
-  EXPECT_EQ("1.cloudesf_testing_cloud_goog.Bar",
-            *cfg.findOperation("GET", "/bar"));
-  EXPECT_EQ("1.cloudesf_testing_cloud_goog.Foo",
-            *cfg.findOperation("GET", "/foo/xyz"));
+  EXPECT_EQ(cfg.findRule("GET", "/bar")->operation(),
+            "1.cloudesf_testing_cloud_goog.Bar");
+  EXPECT_EQ(cfg.findRule("GET", "/foo/xyz")->operation(),
+            "1.cloudesf_testing_cloud_goog.Foo");
 
-  EXPECT_EQ(nullptr, cfg.findOperation("POST", "/bar"));
-  EXPECT_EQ(nullptr, cfg.findOperation("POST", "/foo/xyz"));
+  EXPECT_EQ(cfg.findRule("POST", "/bar"), nullptr);
+  EXPECT_EQ(cfg.findRule("POST", "/foo/xyz"), nullptr);
 }
 
 TEST(FilterConfigTest, VariableBinding) {
@@ -91,20 +92,18 @@ rules {
   FilterConfig cfg(config_pb, Envoy::EMPTY_STRING, mock_factory);
 
   VariableBindings bindings;
-  EXPECT_EQ("1.cloudesf_testing_cloud_goog.Foo",
-            *cfg.findOperation("GET", "/foo/xyz", &bindings));
-  EXPECT_EQ(VariableBindings({
-                VariableBinding{FieldPath{"id"}, "xyz"},
-            }),
-            bindings);
+  EXPECT_EQ(cfg.findRule("GET", "/foo/xyz", &bindings)->operation(),
+            "1.cloudesf_testing_cloud_goog.Foo");
+  EXPECT_EQ(bindings, VariableBindings({
+                          VariableBinding{FieldPath{"id"}, "xyz"},
+                      }));
 
   // With query parameters
-  EXPECT_EQ("1.cloudesf_testing_cloud_goog.Foo",
-            *cfg.findOperation("GET", "/foo/xyz?zone=east", &bindings));
-  EXPECT_EQ(VariableBindings({
-                VariableBinding{FieldPath{"id"}, "xyz"},
-            }),
-            bindings);
+  EXPECT_EQ(cfg.findRule("GET", "/foo/xyz?zone=east", &bindings)->operation(),
+            "1.cloudesf_testing_cloud_goog.Foo");
+  EXPECT_EQ(bindings, VariableBindings({
+                          VariableBinding{FieldPath{"id"}, "xyz"},
+                      }));
 }
 
 TEST(FilterConfigTest, PathParameterExtraction) {
@@ -148,19 +147,21 @@ rules {
       mock_factory;
   FilterConfig cfg(config_pb, Envoy::EMPTY_STRING, mock_factory);
 
-  const PathParameterExtractionRule* path_rule =
-      cfg.needParameterExtraction("1.cloudesf_testing_cloud_goog.Baz");
-  EXPECT_EQ(path_rule, nullptr);
+  const PathMatcherRule* matcher_rule = cfg.findRule("GET", "/baz/1");
+  EXPECT_FALSE(matcher_rule->has_path_parameter_extraction());
 
-  path_rule = cfg.needParameterExtraction("1.cloudesf_testing_cloud_goog.Foo");
-  EXPECT_NE(path_rule, nullptr);
-  EXPECT_TRUE(path_rule->snake_to_json_segments().empty());
+  matcher_rule = cfg.findRule("GET", "/foo/2");
+  ASSERT_TRUE(matcher_rule->has_path_parameter_extraction());
+  PathParameterExtractionRule param_rule =
+      matcher_rule->path_parameter_extraction();
+  EXPECT_TRUE(param_rule.snake_to_json_segments().empty());
 
-  path_rule = cfg.needParameterExtraction("1.cloudesf_testing_cloud_goog.Bar");
-  EXPECT_NE(path_rule, nullptr);
-  EXPECT_FALSE(path_rule->snake_to_json_segments().empty());
-  EXPECT_EQ(path_rule->snake_to_json_segments().at("shelf_id"), "shelfId");
-  EXPECT_EQ(path_rule->snake_to_json_segments().at("foo_bar"), "fooBar");
+  matcher_rule = cfg.findRule("GET", "/bar/3");
+  ASSERT_TRUE(matcher_rule->has_path_parameter_extraction());
+  param_rule = matcher_rule->path_parameter_extraction();
+  EXPECT_FALSE(param_rule.snake_to_json_segments().empty());
+  EXPECT_EQ(param_rule.snake_to_json_segments().at("shelf_id"), "shelfId");
+  EXPECT_EQ(param_rule.snake_to_json_segments().at("foo_bar"), "fooBar");
 }
 
 TEST(FilterConfigTest, DuplicatedPatterns) {
@@ -226,11 +227,11 @@ rules {
       mock_factory;
   FilterConfig cfg(config_pb, Envoy::EMPTY_STRING, mock_factory);
 
-  EXPECT_EQ("1.cloudesf_testing_cloud_goog.Bar",
-            *cfg.findOperation("NonStandardMethod", "/bar"));
+  EXPECT_EQ(cfg.findRule("NonStandardMethod", "/bar")->operation(),
+            "1.cloudesf_testing_cloud_goog.Bar");
 
-  EXPECT_EQ(nullptr, cfg.findOperation("GET", "/bar"));
-  EXPECT_EQ(nullptr, cfg.findOperation("POST", "/bar"));
+  EXPECT_EQ(cfg.findRule("GET", "/bar"), nullptr);
+  EXPECT_EQ(cfg.findRule("POST", "/bar"), nullptr);
 }
 
 }  // namespace

@@ -53,32 +53,16 @@ class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
                const std::string& stats_prefix,
                Envoy::Server::Configuration::FactoryContext& context);
 
-  const std::string* findOperation(const std::string& http_method,
-                                   const std::string& path) const {
+  const ::espv2::api::envoy::v6::http::path_matcher::PathMatcherRule* findRule(
+      const std::string& http_method, const std::string& path) const {
     return path_matcher_->Lookup(http_method, path);
   }
 
-  const std::string* findOperation(
+  const ::espv2::api::envoy::v6::http::path_matcher::PathMatcherRule* findRule(
       const std::string& http_method, const std::string& path,
       std::vector<espv2::api_proxy::path_matcher::VariableBinding>*
           variable_bindings) const {
     return path_matcher_->Lookup(http_method, path, variable_bindings);
-  }
-
-  // Returns whether an operation needs path parameter extraction.
-  // If needed, it will also return a map of snake to json segment conversions.
-  //
-  // NOTE: path parameter extraction is only needed when backend rule path
-  // translation is CONSTANT_ADDRESS.
-  const ::espv2::api::envoy::v6::http::path_matcher::
-      PathParameterExtractionRule*
-      needParameterExtraction(const std::string& operation) const {
-    auto operation_it = path_param_extractions_.find(operation);
-    if (operation_it == path_param_extractions_.end()) {
-      return nullptr;
-    }
-
-    return operation_it->second;
   }
 
   FilterStats& stats() { return stats_; }
@@ -92,15 +76,9 @@ class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
   }
 
   ::espv2::api::envoy::v6::http::path_matcher::FilterConfig proto_config_;
-  ::espv2::api_proxy::path_matcher::PathMatcherPtr<const std::string*>
+  ::espv2::api_proxy::path_matcher::PathMatcherPtr<
+      const ::espv2::api::envoy::v6::http::path_matcher::PathMatcherRule*>
       path_matcher_;
-
-  // Map from operation id to a PathParameterExtractionRule.
-  // Only stores the operations that need path param extraction.
-  absl::flat_hash_map<std::string,
-                      const ::espv2::api::envoy::v6::http::path_matcher::
-                          PathParameterExtractionRule*>
-      path_param_extractions_;
 
   FilterStats stats_;
 };
