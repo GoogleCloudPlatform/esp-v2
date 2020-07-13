@@ -71,9 +71,7 @@ func TestFetchLatestRolloutId(t *testing.T) {
 		}
 
 		if tc.wantError != "" {
-			if err == nil {
-				t.Errorf("Test(%s): fail in fetchLatestRolloutId, want error %v, get error %s", tc.desc, tc.wantError, err)
-			} else if err.Error() != tc.wantError {
+			if err == nil ||  err.Error() != tc.wantError {
 				t.Errorf("Test(%s): fail in fetchLatestRolloutId, want error %v, get error %s", tc.desc, tc.wantError, err)
 			}
 		}
