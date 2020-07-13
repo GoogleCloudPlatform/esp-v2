@@ -27,7 +27,7 @@
             }
           ]
         },
-        "name": "esp-bookstore-f6x3rlu5aa-uc.a.run.app_local",
+        "name": "examples-dynamic-routing-wd6ufmzfya-uc.a.run.app_local",
         "type": "LOGICAL_DNS"
       },
       {
@@ -192,14 +192,6 @@
                   "commonHttpProtocolOptions": {
                     "headersWithUnderscoresAction": "REJECT_REQUEST"
                   },
-                  "localReplyConfig": {
-                    "bodyFormat": {
-                      "jsonFormat": {
-                        "code": "%RESPONSE_CODE%",
-                        "message":"%LOCAL_REPLY_BODY%"
-                      }
-                    }
-                  },
                   "httpFilters": [
                     {
                       "name": "com.google.espv2.filters.http.path_matcher",
@@ -207,14 +199,14 @@
                         "@type": "type.googleapis.com/espv2.api.envoy.v6.http.path_matcher.FilterConfig",
                         "rules": [
                           {
-                            "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.CreateShelf",
+                            "operation": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.CreateShelf",
                             "pattern": {
                               "httpMethod": "POST",
                               "uriTemplate": "/shelves"
                             }
                           },
                           {
-                            "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.ListShelves",
+                            "operation": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.ListShelves",
                             "pattern": {
                               "httpMethod": "GET",
                               "uriTemplate": "/shelves"
@@ -261,7 +253,7 @@
                         "rules": [
                           {
                             "jwtAudience": "ESPv2",
-                            "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.ListShelves"
+                            "operation": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.ListShelves"
                           }
                         ]
                       }
@@ -272,12 +264,12 @@
                         "@type": "type.googleapis.com/espv2.api.envoy.v6.http.backend_routing.FilterConfig",
                         "rules": [
                           {
-                            "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.CreateShelf",
+                            "operation": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.CreateShelf",
                             "pathPrefix": "/shelves",
                             "pathTranslation": "CONSTANT_ADDRESS"
                           },
                           {
-                            "operation": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.ListShelves",
+                            "operation": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.ListShelves",
                             "pathPrefix": "/shelves",
                             "pathTranslation": "APPEND_PATH_TO_ADDRESS"
                           }
@@ -292,6 +284,14 @@
                       }
                     }
                   ],
+                  "localReplyConfig": {
+                    "bodyFormat": {
+                      "jsonFormat": {
+                        "code": "%RESPONSE_CODE%",
+                        "message": "%LOCAL_REPLY_BODY%"
+                      }
+                    }
+                  },
                   "routeConfig": {
                     "name": "local_route",
                     "virtualHosts": [

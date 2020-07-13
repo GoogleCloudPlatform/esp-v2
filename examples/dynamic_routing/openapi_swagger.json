@@ -1,11 +1,11 @@
 {
   "swagger": "2.0",
   "info": {
-    "description": "A simple Google Cloud Endpoints Bookstore API example.",
-    "title": "Bookstore",
+    "description": "Configurations of Dynamic Routing (where ESPv2 acts as an API Gateway) using a simple Bookstore API.",
+    "title": "Examples - Dynamic Routing",
     "version": "1.0.0"
   },
-  "host": "esp-bookstore-f6x3rlu5aa-uc.a.run.app",
+  "host": "examples-dynamic-routing-wd6ufmzfya-uc.a.run.app",
   "basePath": "/",
   "consumes": [
     "application/json"
