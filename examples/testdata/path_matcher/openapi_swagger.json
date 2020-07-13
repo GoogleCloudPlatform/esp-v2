@@ -1,21 +1,30 @@
 {
-  "swagger": "2.0",
+  "basePath": "/",
+  "consumes": [
+    "application/json"
+  ],
+  "definitions": {
+    "shelf": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "theme": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "theme"
+      ]
+    }
+  },
+  "host": "examples-path-matcher.endpoints.cloudesf-testing.cloud.goog",
   "info": {
     "description": "Configuration of the Path Matcher filter using a simple Bookstore API.",
     "title": "Examples - Path Matcher",
     "version": "1.0.0"
   },
-  "host": "examples-path-matcher.endpoints.cloudesf-testing.cloud.goog",
-  "basePath": "/",
-  "consumes": [
-    "application/json"
-  ],
-  "produces": [
-    "application/json"
-  ],
-  "schemes": [
-    "https"
-  ],
   "paths": {
     "/shelves/{shelf}": {
       "get": {
@@ -45,20 +54,11 @@
       }
     }
   },
-  "definitions": {
-    "shelf": {
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "theme": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "name",
-        "theme"
-      ]
-    }
-  }
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "https"
+  ],
+  "swagger": "2.0"
 }

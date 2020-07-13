@@ -1,21 +1,41 @@
 {
-  "swagger": "2.0",
+  "basePath": "/",
+  "consumes": [
+    "application/json"
+  ],
+  "definitions": {
+    "listShelvesResponse": {
+      "properties": {
+        "shelves": {
+          "items": {
+            "$ref": "#/definitions/shelf"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "shelf": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "theme": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "theme"
+      ]
+    }
+  },
+  "host": "examples-auth.endpoints.cloudesf-testing.cloud.goog",
   "info": {
     "description": "Configurations of JWT Authn filter using a simple Bookstore API.",
     "title": "Examples - Auth",
     "version": "1.0.0"
   },
-  "host": "examples-auth.endpoints.cloudesf-testing.cloud.goog",
-  "basePath": "/",
-  "consumes": [
-    "application/json"
-  ],
-  "produces": [
-    "application/json"
-  ],
-  "schemes": [
-    "https"
-  ],
   "paths": {
     "/shelves": {
       "get": {
@@ -74,49 +94,28 @@
       }
     }
   },
-  "definitions": {
-    "listShelvesResponse": {
-      "properties": {
-        "shelves": {
-          "items": {
-            "$ref": "#/definitions/shelf"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "shelf": {
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "theme": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "name",
-        "theme"
-      ]
-    }
-  },
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "https"
+  ],
   "securityDefinitions": {
     "auth0_jwk": {
       "authorizationUrl": "",
       "flow": "implicit",
       "type": "oauth2",
+      "x-google-audiences": "bookstore.endpoints.cloudesf-testing.cloud.goog",
       "x-google-issuer": "123456789-compute@developer.gserviceaccount.com",
-      "x-google-jwks_uri": "https://www.googleapis.com/service_accounts/v1/jwk/123456789-compute@developer.gserviceaccount.com",
-      "x-google-audiences": "bookstore.endpoints.cloudesf-testing.cloud.goog"
+      "x-google-jwks_uri": "https://www.googleapis.com/service_accounts/v1/jwk/123456789-compute@developer.gserviceaccount.com"
     },
     "firebase": {
       "authorizationUrl": "",
       "flow": "implicit",
       "type": "oauth2",
+      "x-google-audiences": "apiproxy-231719",
       "x-google-issuer": "https://securetoken.google.com/apiproxy-231719",
-      "x-google-jwks_uri": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
-      "x-google-audiences": "apiproxy-231719"
+      "x-google-jwks_uri": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
     },
     "google_id_token": {
       "authorizationUrl": "",
@@ -124,5 +123,6 @@
       "type": "oauth2",
       "x-google-issuer": "https://accounts.google.com"
     }
-  }
+  },
+  "swagger": "2.0"
 }
