@@ -18,4 +18,4 @@ If a breaking change is required, use following steps to increase config version
 * Rename folder name from `api/envoy/v6/http` to `api/envoy/v7/http`.
 * Replace package names from `api.envoy.v6.http` to `api.envoy.v7.http` for all proto files under folder `api/`.
 
-Above steps can be achieved by running script `api/script/update_version.sh`.
+Above steps can be achieved by running script `api/scripts/update_version.sh`.

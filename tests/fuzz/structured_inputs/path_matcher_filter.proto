@@ -3,13 +3,13 @@ syntax = "proto3";
 package espv2.tests.fuzz.protos;
 
 import "test/fuzz/common.proto";
-import "api/envoy/v6/http/path_matcher/config.proto";
+import "api/envoy/v7/http/path_matcher/config.proto";
 import "validate/validate.proto";
 
 message PathMatcherFilterInput {
 
   // The fuzzed filter config for this test.
-  espv2.api.envoy.v6.http.path_matcher.FilterConfig config = 1 [(validate.rules).message.required = true];
+  espv2.api.envoy.v7.http.path_matcher.FilterConfig config = 1 [(validate.rules).message.required = true];
 
   // The user's HTTP request to the filter.
   test.fuzz.HttpData downstream_request = 3 [(validate.rules).message.required = true];

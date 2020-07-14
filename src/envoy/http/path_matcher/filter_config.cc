@@ -20,10 +20,10 @@ namespace envoy {
 namespace http_filters {
 namespace path_matcher {
 
-using ::espv2::api::envoy::v6::http::path_matcher::PathMatcherRule;
+using ::espv2::api::envoy::v7::http::path_matcher::PathMatcherRule;
 
 FilterConfig::FilterConfig(
-    const ::espv2::api::envoy::v6::http::path_matcher::FilterConfig&
+    const ::espv2::api::envoy::v7::http::path_matcher::FilterConfig&
         proto_config,
     const std::string& stats_prefix,
     Envoy::Server::Configuration::FactoryContext& context)

@@ -14,7 +14,7 @@
 
 #include "src/envoy/http/backend_routing/filter_config.h"
 
-#include "api/envoy/v6/http/backend_routing/config.pb.validate.h"
+#include "api/envoy/v7/http/backend_routing/config.pb.validate.h"
 #include "common/common/empty_string.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
@@ -35,7 +35,7 @@ namespace {
 class BackendRoutingConfigTest : public ::testing::Test {
  protected:
   void validateConfig(absl::string_view filter_config) {
-    ::espv2::api::envoy::v6::http::backend_routing::FilterConfig proto_config;
+    ::espv2::api::envoy::v7::http::backend_routing::FilterConfig proto_config;
     ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
         std::string(filter_config), &proto_config));
     ASSERT_GT(proto_config.rules_size(), 0);

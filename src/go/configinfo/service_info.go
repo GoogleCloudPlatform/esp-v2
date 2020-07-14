@@ -29,8 +29,8 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/protobuf/types/known/typepb"
 
-	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v6/http/common"
-	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v6/http/service_control"
+	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v7/http/common"
+	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v7/http/service_control"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )

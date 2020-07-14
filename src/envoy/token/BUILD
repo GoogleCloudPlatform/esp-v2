@@ -110,7 +110,7 @@ envoy_cc_library(
     hdrs = ["sa_token_generator.h"],
     repository = "@envoy",
     deps = [
-        "//api/envoy/v6/http/common:base_proto_cc_proto",
+        "//api/envoy/v7/http/common:base_proto_cc_proto",
         "//external:abseil_optional",
         "//src/api_proxy/auth:auth_token_lib",
         "//src/envoy/utils:json_struct_lib",

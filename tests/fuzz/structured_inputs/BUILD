@@ -30,7 +30,7 @@ envoy_proto_library(
     name = "backend_routing_filter_proto",
     srcs = ["backend_routing_filter.proto"],
     deps = [
-        "//api/envoy/v6/http/backend_routing:config_proto",
+        "//api/envoy/v7/http/backend_routing:config_proto",
         "@envoy//test/fuzz:common_proto",
     ],
 )
@@ -55,7 +55,7 @@ envoy_proto_library(
     name = "service_control_filter_proto",
     srcs = ["service_control_filter.proto"],
     deps = [
-        "//api/envoy/v6/http/service_control:config_proto",
+        "//api/envoy/v7/http/service_control:config_proto",
         "@envoy//test/fuzz:common_proto",
     ],
 )
@@ -64,7 +64,7 @@ envoy_proto_library(
     name = "path_matcher_filter_proto",
     srcs = ["path_matcher_filter.proto"],
     deps = [
-        "//api/envoy/v6/http/path_matcher:config_proto",
+        "//api/envoy/v7/http/path_matcher:config_proto",
         "@envoy//test/fuzz:common_proto",
     ],
 )
