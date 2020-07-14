@@ -27,7 +27,7 @@
             }
           ]
         },
-        "name": "path-matcher.endpoints.nareddyt-cloud-esf.cloud.goog_local",
+        "name": "examples-path-matcher.endpoints.cloudesf-testing.cloud.goog_local",
         "type": "LOGICAL_DNS"
       },
       {
@@ -92,44 +92,6 @@
           }
         },
         "type": "LOGICAL_DNS"
-      },
-      {
-        "connectTimeout": "20s",
-        "loadAssignment": {
-          "clusterName": "http-bookstore-edf123456-uc.a.run.app",
-          "endpoints": [
-            {
-              "lbEndpoints": [
-                {
-                  "endpoint": {
-                    "address": {
-                      "socketAddress": {
-                        "address": "http-bookstore-edf123456-uc.a.run.app",
-                        "portValue": 443
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        "name": "http-bookstore-edf123456-uc.a.run.app:443",
-        "transportSocket": {
-          "name": "envoy.transport_sockets.tls",
-          "typedConfig": {
-            "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
-            "commonTlsContext": {
-              "validationContext": {
-                "trustedCa": {
-                  "filename": "/etc/ssl/certs/ca-certificates.crt"
-                }
-              }
-            },
-            "sni": "http-bookstore-edf123456-uc.a.run.app"
-          }
-        },
-        "type": "LOGICAL_DNS"
       }
     ],
     "listeners": [
@@ -150,14 +112,6 @@
                   "commonHttpProtocolOptions": {
                     "headersWithUnderscoresAction": "REJECT_REQUEST"
                   },
-                  "localReplyConfig": {
-                    "bodyFormat": {
-                      "jsonFormat": {
-                        "code": "%RESPONSE_CODE%",
-                        "message": "%LOCAL_REPLY_BODY%"
-                      }
-                    }
-                  },
                   "httpFilters": [
                     {
                       "name": "com.google.espv2.filters.http.path_matcher",
@@ -165,46 +119,11 @@
                         "@type": "type.googleapis.com/espv2.api.envoy.v6.http.path_matcher.FilterConfig",
                         "rules": [
                           {
-                            "operation": "1.path_matcher_endpoints_nareddyt_cloud_esf_cloud_goog.GetShelf",
+                            "operation": "1.examples_path_matcher_endpoints_cloudesf_testing_cloud_goog.GetShelf",
                             "pattern": {
                               "httpMethod": "GET",
-                              "uriTemplate": "/libraries/{library_id}/shelves/{shelf_id}"
-                            },
-                            "pathParameterExtraction": {
-                              "snakeToJsonSegments": {
-                                "shelf_id": "shelfId"
-                              }
+                              "uriTemplate": "/shelves/{shelf}"
                             }
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "name": "com.google.espv2.filters.http.backend_auth",
-                      "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.v6.http.backend_auth.FilterConfig",
-                        "imdsToken": {
-                          "cluster": "metadata-cluster",
-                          "timeout": "30s",
-                          "uri": "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
-                        },
-                        "rules": [
-                          {
-                            "jwtAudience": "https://http-bookstore-edf123456-uc.a.run.app/shelves",
-                            "operation": "1.path_matcher_endpoints_nareddyt_cloud_esf_cloud_goog.GetShelf"
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "name": "com.google.espv2.filters.http.backend_routing",
-                      "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.v6.http.backend_routing.FilterConfig",
-                        "rules": [
-                          {
-                            "operation": "1.path_matcher_endpoints_nareddyt_cloud_esf_cloud_goog.GetShelf",
-                            "pathPrefix": "/shelves",
-                            "pathTranslation": "CONSTANT_ADDRESS"
                           }
                         ]
                       }
@@ -217,6 +136,14 @@
                       }
                     }
                   ],
+                  "localReplyConfig": {
+                    "bodyFormat": {
+                      "jsonFormat": {
+                        "code": "%RESPONSE_CODE%",
+                        "message": "%LOCAL_REPLY_BODY%"
+                      }
+                    }
+                  },
                   "routeConfig": {
                     "name": "local_route",
                     "virtualHosts": [
@@ -228,22 +155,10 @@
                         "routes": [
                           {
                             "match": {
-                              "headers": [
-                                {
-                                  "exactMatch": "GET",
-                                  "name": ":method"
-                                }
-                              ],
-                              "safeRegex": {
-                                "googleRe2": {
-                                  "maxProgramSize": 1000
-                                },
-                                "regex": "/libraries/[^\\/]+/shelves/[^\\/]+$"
-                              }
+                              "prefix": "/"
                             },
                             "route": {
-                              "cluster": "http-bookstore-edf123456-uc.a.run.app:443",
-                              "hostRewriteLiteral": "http-bookstore-edf123456-uc.a.run.app",
+                              "cluster": "examples-path-matcher.endpoints.cloudesf-testing.cloud.goog_local",
                               "timeout": "15s"
                             }
                           }

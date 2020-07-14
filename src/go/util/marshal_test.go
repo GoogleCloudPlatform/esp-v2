@@ -26,45 +26,51 @@ import (
 )
 
 func TestUnmarshalBytesToPbMessage(t *testing.T) {
-	var wantResp, getResp proto.Message
-	wantError := ""
+	testCases := []struct {
+		desc          string
+		wantResp      proto.Message
+		getRespHolder proto.Message
+		wantError     string
+	}{
+		{
+			desc: "unmarshal Service",
+			wantResp: &confpb.Service{
+				Id: "test-id",
+			},
+			getRespHolder: &confpb.Service{},
+		},
+		{
+			desc: "unmarshal ListServiceRolloutsResponse",
+			wantResp: &smpb.ListServiceRolloutsResponse{
+				NextPageToken: "next-page-token",
+			},
+			getRespHolder: &smpb.ListServiceRolloutsResponse{},
+		},
+		{
+			desc: "unmarshal ReportResponse",
+			wantResp: &scpb.ReportResponse{
+				ServiceConfigId: "test-id",
+			},
+			getRespHolder: &scpb.ReportResponse{},
+		},
+		{
+			desc:          "unmarshal ReportRequest",
+			getRespHolder: &scpb.ReportRequest{},
+			wantError:     "not support unmarshalling",
+		},
+	}
 
-	_test := func() {
-		bytes, _ := proto.Marshal(wantResp)
-		err := UnmarshalBytesToPbMessage(bytes, getResp)
+	for _, tc := range testCases {
+		bytes, _ := proto.Marshal(tc.wantResp)
+		err := UnmarshalBytesToPbMessage(bytes, tc.getRespHolder)
 		if err != nil {
-			if !strings.Contains(err.Error(), wantError) {
-				t.Errorf("fail in UnmarshalBytesToPbMessage on %T, want error: %s, get error: %v", wantResp, wantError, err)
+			if !strings.Contains(err.Error(), tc.wantError) {
+				t.Errorf("Test (%s): fail in UnmarshalBytesToPbMessage on %T, want error: %s, get error: %v", tc.desc, tc.wantResp, tc.wantError, err)
 			}
 			return
 		}
-		if !proto.Equal(getResp, wantResp) {
-			t.Errorf("fail in UnmarshalBytesToPbMessage on %T, want: %v, ge: %v", wantResp, wantResp, getResp)
+		if !proto.Equal(tc.getRespHolder, tc.wantResp) {
+			t.Errorf("Test (%s): fail in UnmarshalBytesToPbMessage on %T, want: %v, ge: %v", tc.desc, tc.wantResp, tc.wantResp, tc.getRespHolder)
 		}
 	}
-
-	wantResp = &confpb.Service{
-		Id: "test-id",
-	}
-	getResp = &confpb.Service{}
-	_test()
-
-	wantResp = &smpb.ListServiceRolloutsResponse{
-		NextPageToken: "next-page-token",
-	}
-	getResp = &smpb.ListServiceRolloutsResponse{}
-	_test()
-
-	wantResp = &scpb.ReportResponse{
-		ServiceConfigId: "test-id",
-	}
-	getResp = &scpb.ReportResponse{}
-	_test()
-
-	wantResp = &scpb.ReportRequest{
-		ServiceConfigId: "test-id",
-	}
-	getResp = &scpb.ReportRequest{}
-	wantError = "not support unmarshalling"
-	_test()
 }

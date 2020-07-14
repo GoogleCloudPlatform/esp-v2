@@ -1,31 +1,33 @@
 {
-  "swagger": "2.0",
-  "info": {
-    "description": "A simple Google Cloud Endpoints Bookstore API example.",
-    "title": "Bookstore",
-    "version": "1.0.0"
-  },
-  "host": "esp-bookstore-f6x3rlu5aa-uc.a.run.app",
   "basePath": "/",
   "consumes": [
     "application/json"
   ],
-  "produces": [
-    "application/json"
-  ],
-  "schemes": [
-    "https"
-  ],
+  "definitions": {
+    "shelf": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "theme": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "theme"
+      ]
+    }
+  },
+  "host": "examples-dynamic-routing-wd6ufmzfya-uc.a.run.app",
+  "info": {
+    "description": "Configurations of Dynamic Routing (where ESPv2 acts as an API Gateway) using a simple Bookstore API.",
+    "title": "Examples - Dynamic Routing",
+    "version": "1.0.0"
+  },
   "paths": {
     "/shelves": {
       "get": {
-        "x-google-backend": {
-          "address": "https://http-bookstore-abc123456-uc.a.run.app/shelves",
-          "jwt_audience": "ESPv2",
-          "path_translation": "APPEND_PATH_TO_ADDRESS",
-          "deadline": 7.0,
-          "protocol": "h2"
-        },
         "description": "Returns all shelves in the bookstore.",
         "operationId": "listShelves",
         "produces": [
@@ -38,16 +40,16 @@
               "$ref": "#/definitions/listShelvesResponse"
             }
           }
+        },
+        "x-google-backend": {
+          "address": "https://http-bookstore-abc123456-uc.a.run.app/shelves",
+          "deadline": 7,
+          "jwt_audience": "ESPv2",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "protocol": "h2"
         }
       },
       "post": {
-        "x-google-backend": {
-          "address": "https://http-bookstore-edf123456-uc.a.run.app/shelves",
-          "path_translation": "CONSTANT_ADDRESS",
-          "disable_auth": true,
-          "deadline": 23.0,
-          "protocol": "http/1.1"
-        },
         "description": "Creates a new shelf in the bookstore.",
         "operationId": "createShelf",
         "parameters": [
@@ -71,24 +73,22 @@
               "$ref": "#/definitions/shelf"
             }
           }
+        },
+        "x-google-backend": {
+          "address": "https://http-bookstore-edf123456-uc.a.run.app/shelves",
+          "deadline": 23,
+          "disable_auth": true,
+          "path_translation": "CONSTANT_ADDRESS",
+          "protocol": "http/1.1"
         }
       }
     }
   },
-  "definitions": {
-    "shelf": {
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "theme": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "name",
-        "theme"
-      ]
-    }
-  }
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "https"
+  ],
+  "swagger": "2.0"
 }

@@ -8,7 +8,7 @@
           "responseTypeUrl": "type.googleapis.com/Shelf"
         }
       ],
-      "name": "1.path_matcher_endpoints_nareddyt_cloud_esf_cloud_goog",
+      "name": "1.examples_path_matcher_endpoints_cloudesf_testing_cloud_goog",
       "sourceContext": {
         "fileName": "openapi_swagger.json"
       },
@@ -19,10 +19,7 @@
   "backend": {
     "rules": [
       {
-        "address": "https://http-bookstore-edf123456-uc.a.run.app/shelves",
-        "jwtAudience": "https://http-bookstore-edf123456-uc.a.run.app/shelves",
-        "pathTranslation": "CONSTANT_ADDRESS",
-        "selector": "1.path_matcher_endpoints_nareddyt_cloud_esf_cloud_goog.GetShelf"
+        "selector": "1.examples_path_matcher_endpoints_cloudesf_testing_cloud_goog.GetShelf"
       }
     ]
   },
@@ -31,22 +28,22 @@
     "environment": "servicecontrol.googleapis.com"
   },
   "documentation": {
-    "summary": "Example of the Path Matcher filter using a simple Bookstore API."
+    "summary": "Configuration of the Path Matcher filter using a simple Bookstore API."
   },
   "endpoints": [
     {
-      "name": "path-matcher.endpoints.nareddyt-cloud-esf.cloud.goog"
+      "name": "examples-path-matcher.endpoints.cloudesf-testing.cloud.goog"
     }
   ],
   "http": {
     "rules": [
       {
-        "get": "/libraries/{library_id}/shelves/{shelf_id}",
-        "selector": "1.path_matcher_endpoints_nareddyt_cloud_esf_cloud_goog.GetShelf"
+        "get": "/shelves/{shelf}",
+        "selector": "1.examples_path_matcher_endpoints_cloudesf_testing_cloud_goog.GetShelf"
       }
     ]
   },
-  "id": "2020-07-08r1",
+  "id": "2020-07-13r0",
   "logging": {
     "producerDestinations": [
       {
@@ -564,10 +561,10 @@
       }
     ]
   },
-  "name": "path-matcher.endpoints.nareddyt-cloud-esf.cloud.goog",
-  "producerProjectId": "nareddyt-cloud-esf",
+  "name": "examples-path-matcher.endpoints.cloudesf-testing.cloud.goog",
+  "producerProjectId": "cloudesf-testing",
   "systemParameters": {},
-  "title": "Example - Path Matcher - Bookstore",
+  "title": "Examples - Path Matcher",
   "types": [
     {
       "fields": [
@@ -593,17 +590,10 @@
       "fields": [
         {
           "cardinality": "CARDINALITY_OPTIONAL",
-          "jsonName": "library_id",
+          "jsonName": "shelf",
           "kind": "TYPE_INT64",
-          "name": "library_id",
+          "name": "shelf",
           "number": 1
-        },
-        {
-          "cardinality": "CARDINALITY_OPTIONAL",
-          "jsonName": "shelfId",
-          "kind": "TYPE_INT64",
-          "name": "shelf_id",
-          "number": 2
         }
       ],
       "name": "GetShelfRequest",
@@ -614,7 +604,7 @@
     "rules": [
       {
         "allowUnregisteredCalls": true,
-        "selector": "1.path_matcher_endpoints_nareddyt_cloud_esf_cloud_goog.GetShelf"
+        "selector": "1.examples_path_matcher_endpoints_cloudesf_testing_cloud_goog.GetShelf"
       }
     ]
   }

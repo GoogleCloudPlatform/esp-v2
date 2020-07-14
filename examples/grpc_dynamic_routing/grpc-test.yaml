@@ -14,8 +14,8 @@
 
 type: google.api.Service
 config_version: 3
-name: esp-grpc-echo-oxouww7xzq-uc.a.run.app
-title: GRPC Echo Test
+name: examples-grpc-dynamic-routing-wd6ufmzfya-uc.a.run.app
+title: Examples - gRPC Dynamic Routing
 apis:
   - name: test.grpc.Test
 authentication:

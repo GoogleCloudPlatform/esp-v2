@@ -6,7 +6,7 @@ Similar to [ESPv2 Configurations](../README.md), but primarily for:
 
 ## [Path Matcher](path_matcher)
 
-Configuration example for the [Path Matcher filter](../../src/envoy/http/path_matcher/README.md).
+Configuration for the [Path Matcher filter](../../src/envoy/http/path_matcher/README.md).
 
 Specifically, this tests constant address path translation, where the request has 
 path parameters (aka variable bindings) in snake_case vs jsonCase.
