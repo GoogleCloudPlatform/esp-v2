@@ -102,6 +102,9 @@ case ${TEST_CASE} in
   "cloud-run-cloud-function-http-bookstore")
     runE2E -p "cloud-run" -f "cloud-function" -t "http" -g "bookstore" -R "managed" -m "$(get_serverless_image_name_with_sha)"
     ;;
+    "cloud-run-app-engine-http-bookstore")
+    runE2E -p "cloud-run" -f "app-engine" -t "http" -g "bookstore" -R "managed" -m "$(get_serverless_image_name_with_sha)"
+    ;;
   "anthos-cloud-run-anthos-cloud-run-http-bookstore")
     runE2E -p "anthos-cloud-run" -f "anthos-cloud-run" -t "http" -g "bookstore" -R "managed" -m "$(get_serverless_image_name_with_sha)"
     ;;

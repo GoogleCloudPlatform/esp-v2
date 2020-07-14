@@ -1,0 +1,16 @@
+runtime: nodejs10
+service: SERVICE_NAME
+
+resources:
+  cpu: .5
+  memory_gb: 1.3
+  disk_size_gb: 10
+
+manual_scaling:
+  instances: 1
+
+beta_settings:
+  # Enable Google Cloud Endpoints API management.
+  use_endpoints_api_management: true
+  # Specify the Swagger API specification.
+  endpoints_swagger_spec_file: bookstore_swagger.json
