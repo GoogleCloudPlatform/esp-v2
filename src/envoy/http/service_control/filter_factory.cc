@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "api/envoy/v6/http/service_control/config.pb.h"
-#include "api/envoy/v6/http/service_control/config.pb.validate.h"
+#include "api/envoy/v7/http/service_control/config.pb.h"
+#include "api/envoy/v7/http/service_control/config.pb.validate.h"
 #include "src/envoy/http/service_control/filter.h"
 #include "src/envoy/http/service_control/filter_config.h"
 
@@ -32,13 +32,13 @@ const std::string FilterName = "com.google.espv2.filters.http.service_control";
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::espv2::api::envoy::v6::http::service_control::FilterConfig> {
+          ::espv2::api::envoy::v7::http::service_control::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(FilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::espv2::api::envoy::v6::http::service_control::FilterConfig&
+      const ::espv2::api::envoy::v7::http::service_control::FilterConfig&
           proto_config,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context) override {

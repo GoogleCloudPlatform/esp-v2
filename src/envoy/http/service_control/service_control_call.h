@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "api/envoy/v6/http/service_control/config.pb.h"
+#include "api/envoy/v7/http/service_control/config.pb.h"
 #include "envoy/common/pure.h"
 #include "envoy/tracing/http_tracer.h"
 #include "src/envoy/http/service_control/service_control_callback_func.h"
@@ -48,7 +48,7 @@ class ServiceControlCallFactory {
   virtual ~ServiceControlCallFactory() = default;
 
   virtual ServiceControlCallPtr create(
-      const ::espv2::api::envoy::v6::http::service_control::Service& config)
+      const ::espv2::api::envoy::v7::http::service_control::Service& config)
       PURE;
 };
 

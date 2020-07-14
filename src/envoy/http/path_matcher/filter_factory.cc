@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "api/envoy/v6/http/path_matcher/config.pb.h"
-#include "api/envoy/v6/http/path_matcher/config.pb.validate.h"
+#include "api/envoy/v7/http/path_matcher/config.pb.h"
+#include "api/envoy/v7/http/path_matcher/config.pb.validate.h"
 #include "src/envoy/http/path_matcher/filter.h"
 #include "src/envoy/http/path_matcher/filter_config.h"
 
@@ -33,13 +33,13 @@ constexpr char kPathMatcherFilterName[] =
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::espv2::api::envoy::v6::http::path_matcher::FilterConfig> {
+          ::espv2::api::envoy::v7::http::path_matcher::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(kPathMatcherFilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::espv2::api::envoy::v6::http::path_matcher::FilterConfig&
+      const ::espv2::api::envoy::v7::http::path_matcher::FilterConfig&
           proto_config,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context) override {
