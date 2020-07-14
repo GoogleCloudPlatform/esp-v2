@@ -262,6 +262,8 @@ format: tools.goimports tools.buildifier
 	@goimports -w -l $(GOFILES)
 	@echo "--> formatting BUILD files with 'buildifier' tool"
 	@buildifier -r WORKSPACE ./src/ ./api/
+	@echo "--> formatting examples"
+	./scripts/format-examples.sh
 
 	@make spelling.fix
 

@@ -13,7 +13,7 @@
           "responseTypeUrl": "type.googleapis.com/Shelf"
         }
       ],
-      "name": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app",
+      "name": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app",
       "sourceContext": {
         "fileName": "openapi_swagger.json"
       },
@@ -25,19 +25,19 @@
     "rules": [
       {
         "address": "https://http-bookstore-abc123456-uc.a.run.app/shelves",
-        "deadline": 7.0,
-        "protocol": "h2",
+        "deadline": 7,
         "jwtAudience": "ESPv2",
         "pathTranslation": "APPEND_PATH_TO_ADDRESS",
-        "selector": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.ListShelves"
+        "protocol": "h2",
+        "selector": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.ListShelves"
       },
       {
         "address": "https://http-bookstore-edf123456-uc.a.run.app/shelves",
-        "deadline": 23.0,
-        "protocol": "http/1.1",
+        "deadline": 23,
         "disableAuth": true,
         "pathTranslation": "CONSTANT_ADDRESS",
-        "selector": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.CreateShelf"
+        "protocol": "http/1.1",
+        "selector": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.CreateShelf"
       }
     ]
   },
@@ -46,14 +46,11 @@
     "environment": "servicecontrol.googleapis.com"
   },
   "documentation": {
-    "summary": "A simple Google Cloud Endpoints Bookstore API example."
+    "summary": "Configurations of Dynamic Routing (where ESPv2 acts as an API Gateway) using a simple Bookstore API."
   },
   "endpoints": [
     {
-      "features": [
-        "googleapis.com/endpoint/grpc-autobahn"
-      ],
-      "name": "esp-bookstore-f6x3rlu5aa-uc.a.run.app"
+      "name": "examples-dynamic-routing-wd6ufmzfya-uc.a.run.app"
     }
   ],
   "enums": [
@@ -73,19 +70,16 @@
     "rules": [
       {
         "get": "/shelves",
-        "selector": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.ListShelves"
+        "selector": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.ListShelves"
       },
       {
         "body": "shelf",
         "post": "/shelves",
-        "selector": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.CreateShelf"
+        "selector": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.CreateShelf"
       }
     ]
   },
-  "id": "2019-12-17r4",
-  "legacy": {
-    "apiV1Name": "esp-bookstore-f6x3rlu5aa-uc.a.run.app"
-  },
+  "id": "2020-07-13r0",
   "logging": {
     "producerDestinations": [
       {
@@ -603,10 +597,10 @@
       }
     ]
   },
-  "name": "esp-bookstore-f6x3rlu5aa-uc.a.run.app",
-  "producerProjectId": "apiproxy-231719",
+  "name": "examples-dynamic-routing-wd6ufmzfya-uc.a.run.app",
+  "producerProjectId": "cloudesf-testing",
   "systemParameters": {},
-  "title": "Bookstore",
+  "title": "Examples - Dynamic Routing",
   "types": [
     {
       "fields": [
@@ -761,11 +755,11 @@
     "rules": [
       {
         "allowUnregisteredCalls": true,
-        "selector": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.ListShelves"
+        "selector": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.ListShelves"
       },
       {
         "allowUnregisteredCalls": true,
-        "selector": "1.esp_bookstore_f6x3rlu5aa_uc_a_run_app.CreateShelf"
+        "selector": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.CreateShelf"
       }
     ]
   }

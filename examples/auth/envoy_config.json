@@ -27,7 +27,7 @@
             }
           ]
         },
-        "name": "auth.endpoints.apiproxy-231719.cloud.goog_local",
+        "name": "examples-auth.endpoints.cloudesf-testing.cloud.goog_local",
         "type": "LOGICAL_DNS"
       },
       {
@@ -151,14 +151,6 @@
                   "commonHttpProtocolOptions": {
                     "headersWithUnderscoresAction": "REJECT_REQUEST"
                   },
-                  "localReplyConfig": {
-                    "bodyFormat": {
-                      "jsonFormat": {
-                        "code": "%RESPONSE_CODE%",
-                        "message":"%LOCAL_REPLY_BODY%"
-                      }
-                    }
-                  },
                   "httpFilters": [
                     {
                       "name": "com.google.espv2.filters.http.path_matcher",
@@ -166,14 +158,14 @@
                         "@type": "type.googleapis.com/espv2.api.envoy.v6.http.path_matcher.FilterConfig",
                         "rules": [
                           {
-                            "operation": "1.auth_endpoints_apiproxy_231719_cloud_goog.CreateShelf",
+                            "operation": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.CreateShelf",
                             "pattern": {
                               "httpMethod": "POST",
                               "uriTemplate": "/shelves"
                             }
                           },
                           {
-                            "operation": "1.auth_endpoints_apiproxy_231719_cloud_goog.ListShelves",
+                            "operation": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.ListShelves",
                             "pattern": {
                               "httpMethod": "GET",
                               "uriTemplate": "/shelves"
@@ -189,7 +181,7 @@
                         "filterStateRules": {
                           "name": "com.google.espv2.filters.http.path_matcher.operation",
                           "requires": {
-                            "1.auth_endpoints_apiproxy_231719_cloud_goog.CreateShelf": {
+                            "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.CreateShelf": {
                               "providerAndAudiences": {
                                 "audiences": [
                                   "bookstore.endpoints.cloudesf-testing.cloud.goog"
@@ -197,7 +189,7 @@
                                 "providerName": "auth0_jwk"
                               }
                             },
-                            "1.auth_endpoints_apiproxy_231719_cloud_goog.ListShelves": {
+                            "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.ListShelves": {
                               "requiresAny": {
                                 "requirements": [
                                   {
@@ -277,7 +269,7 @@
                           },
                           "google_id_token": {
                             "audiences": [
-                              "https://auth.endpoints.apiproxy-231719.cloud.goog"
+                              "https://examples-auth.endpoints.cloudesf-testing.cloud.goog"
                             ],
                             "forward": true,
                             "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
@@ -315,6 +307,14 @@
                       }
                     }
                   ],
+                  "localReplyConfig": {
+                    "bodyFormat": {
+                      "jsonFormat": {
+                        "code": "%RESPONSE_CODE%",
+                        "message": "%LOCAL_REPLY_BODY%"
+                      }
+                    }
+                  },
                   "routeConfig": {
                     "name": "local_route",
                     "virtualHosts": [
@@ -329,7 +329,7 @@
                               "prefix": "/"
                             },
                             "route": {
-                              "cluster": "auth.endpoints.apiproxy-231719.cloud.goog_local",
+                              "cluster": "examples-auth.endpoints.cloudesf-testing.cloud.goog_local",
                               "timeout": "15s"
                             }
                           }

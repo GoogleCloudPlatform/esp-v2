@@ -27,7 +27,7 @@
             }
           ]
         },
-        "name": "path-matcher.endpoints.apiproxy-231719.cloud.goog_local",
+        "name": "examples-path-matcher.endpoints.cloudesf-testing.cloud.goog_local",
         "type": "LOGICAL_DNS"
       },
       {
@@ -112,14 +112,6 @@
                   "commonHttpProtocolOptions": {
                     "headersWithUnderscoresAction": "REJECT_REQUEST"
                   },
-                  "localReplyConfig": {
-                    "bodyFormat": {
-                      "jsonFormat": {
-                        "code": "%RESPONSE_CODE%",
-                        "message":"%LOCAL_REPLY_BODY%"
-                      }
-                    }
-                  },
                   "httpFilters": [
                     {
                       "name": "com.google.espv2.filters.http.path_matcher",
@@ -127,7 +119,7 @@
                         "@type": "type.googleapis.com/espv2.api.envoy.v6.http.path_matcher.FilterConfig",
                         "rules": [
                           {
-                            "operation": "1.path_matcher_endpoints_apiproxy_231719_cloud_goog.GetShelf",
+                            "operation": "1.examples_path_matcher_endpoints_cloudesf_testing_cloud_goog.GetShelf",
                             "pattern": {
                               "httpMethod": "GET",
                               "uriTemplate": "/shelves/{shelf}"
@@ -144,6 +136,14 @@
                       }
                     }
                   ],
+                  "localReplyConfig": {
+                    "bodyFormat": {
+                      "jsonFormat": {
+                        "code": "%RESPONSE_CODE%",
+                        "message": "%LOCAL_REPLY_BODY%"
+                      }
+                    }
+                  },
                   "routeConfig": {
                     "name": "local_route",
                     "virtualHosts": [
@@ -158,7 +158,7 @@
                               "prefix": "/"
                             },
                             "route": {
-                              "cluster": "path-matcher.endpoints.apiproxy-231719.cloud.goog_local",
+                              "cluster": "examples-path-matcher.endpoints.cloudesf-testing.cloud.goog_local",
                               "timeout": "15s"
                             }
                           }
