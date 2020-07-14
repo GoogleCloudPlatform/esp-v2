@@ -53,28 +53,29 @@ TEST(VariableBindingsToQueryParameters, WithoutSnakeToJsonNameConversion) {
 }
 
 TEST(VariableBindingsToQueryParameters, WithSnakeToJsonNameConversion) {
+  ::google::protobuf::Map<std::string, std::string> snake_to_json;
+  snake_to_json["foo_bar"] = "fooBar";
   EXPECT_EQ(VariableBindingsToQueryParameters(
                 /*variable_bindings=*/
                 {
                     {{"foo_bar"}, "42"},
                 },
-                /*snake_to_json=*/
-                {{"foo_bar", "fooBar"}}),
+                /*snake_to_json=*/snake_to_json),
             "fooBar=42");
 
+  snake_to_json.clear();
+  snake_to_json["foo_foo"] = "fooFoo";
+  snake_to_json["bar_bar"] = "barBar";
+  snake_to_json["book_shelf"] = "bookShelf";
+  snake_to_json["book_id"] = "bookId";
+  snake_to_json["non_exist"] = "nonExist";
   EXPECT_EQ(VariableBindingsToQueryParameters(
                 /*variable_bindings=*/
                 {
                     {{"foo_foo", "bar_bar"}, "value"},
                     {{"book_shelf", "book_id"}, "42"},
                 },
-                /*snake_to_json=*/
-                {
-                    {"foo_foo", "fooFoo"},
-                    {"bar_bar", "barBar"},
-                    {"book_shelf", "bookShelf"},
-                    {"book_id", "bookId"},
-                }),
+                /*snake_to_json=*/snake_to_json),
             "fooFoo.barBar=value&bookShelf.bookId=42");
 }
 

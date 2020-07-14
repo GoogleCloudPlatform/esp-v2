@@ -26,28 +26,17 @@ message PathMatcherRule {
   // Operation name (selector) used as a unique ID for the operation.
   string operation = 2 [(validate.rules).string.min_bytes = 1];
 
-  // If true, the path parameters in the `pattern` must be extracted.
-  // Ref:
+  // If set, the path parameters in the `pattern` must be extracted. Ref:
   // https://cloud.google.com/endpoints/docs/openapi/openapi-extensions#understanding_path_translation
-  bool extract_path_parameters = 3;
+  PathParameterExtractionRule path_parameter_extraction = 3;
 }
 
-// FieldName stores the snake name to JSON name mapping as specified in
-// Service config.
-// For example, for a URI template: /{foo_bar}
-//  * snake_name = "foo_bar"
-//  * json_name = "fooBar"
-message SegmentName {
-  // Snake name of a segment.
-  string snake_name = 1;
-  // JSON name of a segment.
-  string json_name = 2;
+message PathParameterExtractionRule {
+  // Each rule has a mapping of snake_case segments to jsonCase segments.
+  // If the map is empty, the path params still need to be extracted.
+  map<string, string> snake_to_json_segments = 2;
 }
 
 message FilterConfig {
   repeated PathMatcherRule rules = 1;
-
-  // It is invalid for multiple segments to share the same `snake_name` but have
-  // different `json_name`.
-  repeated SegmentName segment_names = 2;
 }

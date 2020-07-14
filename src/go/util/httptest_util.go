@@ -94,7 +94,9 @@ func JsonEqual(want, got string) error {
 // normalizeJson returns normalized JSON string.
 func normalizeJson(input string) (string, error) {
 	var jsonObject map[string]interface{}
-	json.Unmarshal([]byte(input), &jsonObject)
+	if err := json.Unmarshal([]byte(input), &jsonObject); err != nil {
+		return "", err
+	}
 	outputString, err := json.Marshal(jsonObject)
 	return string(outputString), err
 }

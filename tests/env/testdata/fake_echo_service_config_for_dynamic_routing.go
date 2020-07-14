@@ -58,10 +58,12 @@ var (
 						Name: "dynamic_routing_ListShelves",
 					},
 					{
-						Name: "dynamic_routing_GetBookInfoWithSnakeCase",
+						Name:           "dynamic_routing_GetBookInfoWithSnakeCase",
+						RequestTypeUrl: "type.googleapis.com/GetBookRequest",
 					},
 					{
-						Name: "dynamic_routing_GetBookIdWithSnakeCase",
+						Name:           "dynamic_routing_GetBookIdWithSnakeCase",
+						RequestTypeUrl: "type.googleapis.com/GetBookRequest",
 					},
 					{
 						Name: "dynamic_routing_SearchPetWithServiceControlVerification",
@@ -248,15 +250,16 @@ var (
 		Types: []*ptypepb.Type{
 			{
 				Fields: []*ptypepb.Field{
-					&ptypepb.Field{
+					{
 						JsonName: "BOOK",
 						Name:     "b_o_o_k",
 					},
-					&ptypepb.Field{
+					{
 						JsonName: "SHELF",
 						Name:     "s_h_e_l_f",
 					},
 				},
+				Name: "GetBookRequest",
 			},
 		},
 		Authentication: &confpb.Authentication{

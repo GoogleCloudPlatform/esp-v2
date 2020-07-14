@@ -20,6 +20,8 @@ namespace envoy {
 namespace http_filters {
 namespace path_matcher {
 
+using ::espv2::api::envoy::v6::http::path_matcher::PathMatcherRule;
+
 FilterConfig::FilterConfig(
     const ::espv2::api::envoy::v6::http::path_matcher::FilterConfig&
         proto_config,
@@ -27,26 +29,17 @@ FilterConfig::FilterConfig(
     Envoy::Server::Configuration::FactoryContext& context)
     : proto_config_(proto_config),
       stats_(generateStats(stats_prefix, context.scope())) {
-  ::espv2::api_proxy::path_matcher::PathMatcherBuilder<const std::string*> pmb;
+  ::espv2::api_proxy::path_matcher::PathMatcherBuilder<const PathMatcherRule*>
+      pmb;
   for (const auto& rule : proto_config_.rules()) {
-    if (!pmb.Register(
-            rule.pattern().http_method(), rule.pattern().uri_template(),
-            /*body_field_path=*/Envoy::EMPTY_STRING, &rule.operation())) {
+    if (!pmb.Register(rule.pattern().http_method(),
+                      rule.pattern().uri_template(),
+                      /*body_field_path=*/Envoy::EMPTY_STRING, &rule)) {
       throw Envoy::ProtoValidationException(
           "Duplicated pattern or invalid pattern", rule.pattern());
     }
-    if (rule.extract_path_parameters()) {
-      path_params_operations_.insert(rule.operation());
-    }
   }
   path_matcher_ = pmb.Build();
-
-  for (const auto& segment_name : proto_config_.segment_names()) {
-    // Duplicate snake names with varying json names are disallowed by config
-    // manager.
-    snake_to_json_map_.emplace(segment_name.snake_name(),
-                               segment_name.json_name());
-  }
 }
 
 }  // namespace path_matcher

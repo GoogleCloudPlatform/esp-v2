@@ -97,7 +97,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 		},
 	}
 
-	for testIdx, tc := range testData {
+	for _, tc := range testData {
 		configBytes, err := ioutil.ReadFile(tc.serviceConfigPath)
 		if err != nil {
 			t.Errorf("ReadFile failed, got %v", err)
@@ -146,8 +146,8 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 			t.Error(err)
 			continue
 		}
-		if gotString != wantString {
-			t.Errorf("test(%d): %s\ngot : %v, \nwant: %v", testIdx, tc.desc, gotString, wantString)
+		if err := util.JsonEqual(wantString, gotString); err != nil {
+			t.Errorf("Test(%v) got err: %v", tc.desc, err)
 			continue
 		}
 	}

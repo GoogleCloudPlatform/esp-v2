@@ -19,6 +19,9 @@
   "backend": {
     "rules": [
       {
+        "address": "https://http-bookstore-edf123456-uc.a.run.app/shelves",
+        "jwtAudience": "https://http-bookstore-edf123456-uc.a.run.app/shelves",
+        "pathTranslation": "CONSTANT_ADDRESS",
         "selector": "1.examples_path_matcher_endpoints_cloudesf_testing_cloud_goog.GetShelf"
       }
     ]
@@ -38,12 +41,12 @@
   "http": {
     "rules": [
       {
-        "get": "/shelves/{shelf}",
+        "get": "/libraries/{library_id}/shelves/{shelf_id}",
         "selector": "1.examples_path_matcher_endpoints_cloudesf_testing_cloud_goog.GetShelf"
       }
     ]
   },
-  "id": "2020-07-13r0",
+  "id": "2020-07-14r0",
   "logging": {
     "producerDestinations": [
       {
@@ -590,10 +593,17 @@
       "fields": [
         {
           "cardinality": "CARDINALITY_OPTIONAL",
-          "jsonName": "shelf",
+          "jsonName": "library_id",
           "kind": "TYPE_INT64",
-          "name": "shelf",
+          "name": "library_id",
           "number": 1
+        },
+        {
+          "cardinality": "CARDINALITY_OPTIONAL",
+          "jsonName": "shelfId",
+          "kind": "TYPE_INT64",
+          "name": "shelf_id",
+          "number": 2
         }
       ],
       "name": "GetShelfRequest",

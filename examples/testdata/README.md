@@ -8,6 +8,9 @@ Similar to [ESPv2 Configurations](../README.md), but primarily for:
 
 Configuration for the [Path Matcher filter](../../src/envoy/http/path_matcher/README.md).
 
+Specifically, this tests constant address path translation, where the request has 
+path parameters (aka variable bindings) in snake_case vs jsonCase.
+
 **Operation Name (Selector)**:
 
 - In the OpenAPI specification, the `path` and `HTTP method` serve as a unique ID.

@@ -26,16 +26,24 @@
     "version": "1.0.0"
   },
   "paths": {
-    "/shelves/{shelf}": {
+    "/libraries/{library_id}/shelves/{shelfId}": {
       "get": {
         "description": "Get a single shelf resource with the given name.",
         "operationId": "getShelf",
         "parameters": [
           {
+            "description": "Id of the library to search.",
+            "format": "int64",
+            "in": "path",
+            "name": "library_id",
+            "required": true,
+            "type": "integer"
+          },
+          {
             "description": "Name of the shelf to get.",
             "format": "int64",
             "in": "path",
-            "name": "shelf",
+            "name": "shelfId",
             "required": true,
             "type": "integer"
           }
@@ -50,6 +58,10 @@
               "$ref": "#/definitions/shelf"
             }
           }
+        },
+        "x-google-backend": {
+          "address": "https://http-bookstore-edf123456-uc.a.run.app/shelves",
+          "path_translation": "CONSTANT_ADDRESS"
         }
       }
     }

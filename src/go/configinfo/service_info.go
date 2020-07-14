@@ -27,9 +27,9 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
+	"google.golang.org/protobuf/types/known/typepb"
 
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v6/http/common"
-	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v6/http/path_matcher"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v6/http/service_control"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -47,8 +47,7 @@ type ServiceInfo struct {
 	Operations []string
 	// Stores all methods info for this service, using selector as key.
 	Methods map[string]*methodInfo
-	// Stores url segment names, mapping snake name to Json name.
-	SegmentNames []*pmpb.SegmentName
+
 	// Stores all the query parameters to be ignored for json-grpc transcoder.
 	AllTranscodingIgnoredQueryParams map[string]bool
 
@@ -206,11 +205,20 @@ func (s *ServiceInfo) processApis() {
 		for _, method := range api.GetMethods() {
 			selector := fmt.Sprintf("%s.%s", api.GetName(), method.GetName())
 			mi, _ := s.getOrCreateMethod(selector)
+
 			// Keep track of non-unary gRPC methods.
 			if method.RequestStreaming || method.ResponseStreaming {
 				mi.IsStreaming = true
 			}
 			mi.ApiVersion = api.Version
+
+			// Keep track of request type name.
+			if strings.HasPrefix(method.RequestTypeUrl, util.TypeUrlPrefix) {
+				requestTypeName := strings.TrimPrefix(method.RequestTypeUrl, util.TypeUrlPrefix)
+				mi.RequestTypeName = requestTypeName
+			} else {
+				glog.Warningf("For operation (%v), request type name (%v) is in an unexpected format", selector, method.RequestTypeUrl)
+			}
 		}
 	}
 }
@@ -609,30 +617,51 @@ func (s *ServiceInfo) extractApiKeyLocations(method *methodInfo, parameters []*c
 }
 
 func (s *ServiceInfo) processTypes() error {
-	// Create snake name to JSON name mapping (and validate against duplicates).
-	snakeToJson := make(map[string]string)
 
+	// Convert into map by type name for easy lookup.
+	typesByTypeName := make(map[string]*typepb.Type)
 	for _, t := range s.ServiceConfig().GetTypes() {
-		for _, f := range t.GetFields() {
-			if strings.ContainsRune(f.GetName(), '_') {
+		typesByTypeName[t.Name] = t
+	}
 
-				if prevJsonName, ok := snakeToJson[f.GetName()]; ok {
-					if prevJsonName != f.GetJsonName() {
+	// For each method, lookup the request type.
+	for operation, mi := range s.Methods {
+		requestTypeName := mi.RequestTypeName
+		if requestTypeName == "" {
+			glog.Warningf("for operation (%v): request type was malformed", operation)
+			continue
+		}
+
+		requestType, ok := typesByTypeName[requestTypeName]
+		if !ok {
+			glog.Warningf("for operation (%v): could not find type with name (%v)", operation, requestTypeName)
+			continue
+		}
+
+		// Create snake name to JSON name mapping for the request operation (and validate against duplicates).
+		snakeToJson := make(SnakeToJsonSegments)
+		for _, field := range requestType.GetFields() {
+
+			if field.Name != field.JsonName {
+
+				if prevJsonName, ok := snakeToJson[field.GetName()]; ok {
+					if prevJsonName != field.GetJsonName() {
 						// Duplicate snake name with mismatching JSON name.
 						// This will cause an error in path matcher variable bindings.
 						// Disallow it.
-						return fmt.Errorf("detected two types with same snake_name (%v) but mistmatching json_name (%v, %v)", f.GetName(), f.GetJsonName(), prevJsonName)
+						return fmt.Errorf("for operation (%v): detected two types with same snake_name (%v) "+
+							"but mistmatching json_name (%v, %v)", operation, field.GetName(), field.GetJsonName(), prevJsonName)
 					}
-				} else {
-					// Unique entry.
-					snakeToJson[f.GetName()] = f.GetJsonName()
-					s.SegmentNames = append(s.SegmentNames, &pmpb.SegmentName{
-						SnakeName: f.GetName(),
-						JsonName:  f.GetJsonName(),
-					})
 				}
 
+				// Unique entry.
+				snakeToJson[field.GetName()] = field.GetJsonName()
 			}
+		}
+
+		// Store the mapping per selector.
+		if len(snakeToJson) > 0 {
+			mi.SegmentMappings = snakeToJson
 		}
 	}
 	return nil

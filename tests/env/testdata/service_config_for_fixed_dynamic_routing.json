@@ -93,6 +93,11 @@
             }
         ]
     },
+    "types": [
+        {
+            "name": "EchoRequest"
+        }
+    ],
     "id": "2017-05-01r0",
     "name": "echo-api.endpoints.cloudesf-testing.cloud.goog",
     "producerProjectId": "producer-project",

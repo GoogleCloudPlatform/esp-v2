@@ -16,6 +16,7 @@
 
 #include <unordered_map>
 
+#include "absl/container/flat_hash_map.h"
 #include "api/envoy/v6/http/path_matcher/config.pb.h"
 #include "common/common/logger.h"
 #include "envoy/runtime/runtime.h"
@@ -32,7 +33,7 @@ namespace path_matcher {
  */
 
 // clang-format off
-#define ALL_BACKEND_AUTH_FILTER_STATS(COUNTER)     \
+#define ALL_PATH_MATCHER_FILTER_STATS(COUNTER)     \
   COUNTER(allowed)                                 \
   COUNTER(denied)
 // clang-format on
@@ -41,7 +42,7 @@ namespace path_matcher {
  * Wrapper struct for path matcher filter stats. @see stats_macros.h
  */
 struct FilterStats {
-  ALL_BACKEND_AUTH_FILTER_STATS(GENERATE_COUNTER_STRUCT)
+  ALL_PATH_MATCHER_FILTER_STATS(GENERATE_COUNTER_STRUCT)
 };
 
 // The Envoy filter config for ESPv2 path matcher filter.
@@ -52,48 +53,33 @@ class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
                const std::string& stats_prefix,
                Envoy::Server::Configuration::FactoryContext& context);
 
-  const std::string* findOperation(const std::string& http_method,
-                                   const std::string& path) const {
+  const ::espv2::api::envoy::v6::http::path_matcher::PathMatcherRule* findRule(
+      const std::string& http_method, const std::string& path) const {
     return path_matcher_->Lookup(http_method, path);
   }
 
-  const std::string* findOperation(
+  const ::espv2::api::envoy::v6::http::path_matcher::PathMatcherRule* findRule(
       const std::string& http_method, const std::string& path,
       std::vector<espv2::api_proxy::path_matcher::VariableBinding>*
           variable_bindings) const {
     return path_matcher_->Lookup(http_method, path, variable_bindings);
   }
 
-  // Returns whether an operation needs path parameter extraction.
-  // NOTE: path parameter extraction is only needed when backend rule path
-  // translation is CONSTANT_ADDRESS.
-  bool needParameterExtraction(const std::string& operation) const {
-    auto operation_it = path_params_operations_.find(operation);
-    return operation_it != path_params_operations_.end();
-  }
-
   FilterStats& stats() { return stats_; }
-
-  // Returns the mapp from snake-case segment name to JSON name.
-  const absl::flat_hash_map<std::string, std::string>& getSnakeToJsonMap() {
-    return snake_to_json_map_;
-  }
 
  private:
   FilterStats generateStats(const std::string& prefix,
                             Envoy::Stats::Scope& scope) {
     const std::string final_prefix = prefix + "path_matcher.";
-    return {ALL_BACKEND_AUTH_FILTER_STATS(
+    return {ALL_PATH_MATCHER_FILTER_STATS(
         POOL_COUNTER_PREFIX(scope, final_prefix))};
   }
 
   ::espv2::api::envoy::v6::http::path_matcher::FilterConfig proto_config_;
-  ::espv2::api_proxy::path_matcher::PathMatcherPtr<const std::string*>
+  ::espv2::api_proxy::path_matcher::PathMatcherPtr<
+      const ::espv2::api::envoy::v6::http::path_matcher::PathMatcherRule*>
       path_matcher_;
-  // Mapping between snake-case segment name to JSON name as specified in
-  // `Service.types` (e.g. "foo_bar" -> "fooBar").
-  absl::flat_hash_map<std::string, std::string> snake_to_json_map_;
-  absl::flat_hash_set<std::string> path_params_operations_;
+
   FilterStats stats_;
 };
 

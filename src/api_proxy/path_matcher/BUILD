@@ -58,6 +58,7 @@ envoy_basic_cc_library(
         ":path_matcher_lib",
         "//external:abseil_flat_hash_map",
         "//external:abseil_strings",
+        "//external:protobuf",
     ],
 )
 

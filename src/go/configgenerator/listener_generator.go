@@ -305,9 +305,10 @@ func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteCo
 }
 
 func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
-	rules := []*pmpb.PathMatcherRule{}
+	var rules []*pmpb.PathMatcherRule
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
+
 		// Adds PathMatcherRule for HTTP method, whose HttpRule is not empty.
 		for _, httpRule := range method.HttpRule {
 			if httpRule.UriTemplate != "" && httpRule.HttpMethod != "" {
@@ -316,7 +317,10 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 					Pattern:   httpRule,
 				}
 				if method.BackendInfo != nil && method.BackendInfo.TranslationType == confpb.BackendRule_CONSTANT_ADDRESS && hasPathParameter(newHttpRule.Pattern.UriTemplate) {
-					newHttpRule.ExtractPathParameters = true
+					pathRule := &pmpb.PathParameterExtractionRule{
+						SnakeToJsonSegments: method.SegmentMappings,
+					}
+					newHttpRule.PathParameterExtraction = pathRule
 				}
 				rules = append(rules, newHttpRule)
 			}
@@ -327,15 +331,11 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		return nil
 	}
 
-	pathMathcherConfig := &pmpb.FilterConfig{Rules: rules}
-	if len(serviceInfo.SegmentNames) > 0 {
-		pathMathcherConfig.SegmentNames = serviceInfo.SegmentNames
-	}
-
-	pathMathcherConfigStruct, _ := ptypes.MarshalAny(pathMathcherConfig)
+	pathMatcherConfig := &pmpb.FilterConfig{Rules: rules}
+	pathMatcherConfigStruct, _ := ptypes.MarshalAny(pathMatcherConfig)
 	pathMatcherFilter := &hcmpb.HttpFilter{
 		Name:       util.PathMatcher,
-		ConfigType: &hcmpb.HttpFilter_TypedConfig{pathMathcherConfigStruct},
+		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: pathMatcherConfigStruct},
 	}
 	return pathMatcherFilter
 }

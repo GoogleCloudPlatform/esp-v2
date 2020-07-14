@@ -1273,12 +1273,12 @@ func TestPathMatcherFilter(t *testing.T) {
             }
          },
          {
-            "extractPathParameters":true,
             "operation":"1.cloudesf_testing_cloud_goog.Foo",
             "pattern":{
                "httpMethod":"GET",
                "uriTemplate":"foo/{id}"
-            }
+            },
+            "pathParameterExtraction":{}
          }
       ]
    }
@@ -1351,17 +1351,36 @@ func TestPathMatcherFilter(t *testing.T) {
 						Name: "1.cloudesf_testing_cloud_goog",
 						Methods: []*apipb.Method{
 							{
-								Name: "Foo",
+								Name:           "Foo",
+								RequestTypeUrl: "type.googleapis.com/CreateFooRequest",
+							},
+							{
+								Name:           "Baz",
+								RequestTypeUrl: "type.googleapis.com/CreateBazRequest",
 							},
 						},
 					},
 				},
 				Types: []*ptypepb.Type{
 					{
+						Name: "CreateFooRequest",
 						Fields: []*ptypepb.Field{
 							{
-								JsonName: "fooBar",
 								Name:     "foo_bar",
+								JsonName: "fooBar",
+							},
+						},
+					},
+					{
+						Name: "CreateBazRequest",
+						Fields: []*ptypepb.Field{
+							{
+								Name:     "aaa_bbb",
+								JsonName: "aaaBbb",
+							},
+							{
+								Name:     "baz_baz",
+								JsonName: "bazBaz",
 							},
 						},
 					},
@@ -1369,12 +1388,14 @@ func TestPathMatcherFilter(t *testing.T) {
 				Backend: &confpb.Backend{
 					Rules: []*confpb.BackendRule{
 						{
-							Address:         "https://mybackend.com",
+							Address:         "https://mybackend.com/foo",
 							Selector:        "1.cloudesf_testing_cloud_goog.Foo",
 							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
-							Authentication: &confpb.BackendRule_JwtAudience{
-								JwtAudience: "mybackend.com",
-							},
+						},
+						{
+							Address:         "https://mybackend.com/baz",
+							Selector:        "1.cloudesf_testing_cloud_goog.Baz",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 						},
 					},
 				},
@@ -1384,6 +1405,12 @@ func TestPathMatcherFilter(t *testing.T) {
 							Selector: "1.cloudesf_testing_cloud_goog.Foo",
 							Pattern: &annotationspb.HttpRule_Get{
 								Get: "foo/{foo_bar}",
+							},
+						},
+						{
+							Selector: "1.cloudesf_testing_cloud_goog.Baz",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "baz/{baz_baz}",
 							},
 						},
 					},
@@ -1397,39 +1424,50 @@ func TestPathMatcherFilter(t *testing.T) {
       "@type":"type.googleapis.com/espv2.api.envoy.v6.http.path_matcher.FilterConfig",
       "rules":[
          {
-            "extractPathParameters":true,
+            "operation":"1.cloudesf_testing_cloud_goog.Baz",
+            "pattern":{
+               "httpMethod":"GET",
+               "uriTemplate":"baz/{baz_baz}"
+            },
+            "pathParameterExtraction":{
+              "snakeToJsonSegments":{
+                "aaa_bbb":"aaaBbb",
+                "baz_baz":"bazBaz"
+              }
+            }
+         },
+         {
             "operation":"1.cloudesf_testing_cloud_goog.Foo",
             "pattern":{
                "httpMethod":"GET",
                "uriTemplate":"foo/{foo_bar}"
+            },
+            "pathParameterExtraction":{
+              "snakeToJsonSegments":{
+                "foo_bar":"fooBar"
+              }
             }
-         }
-      ],
-      "segmentNames":[
-         {
-            "jsonName":"fooBar",
-            "snakeName":"foo_bar"
          }
       ]
    }
 }`,
 		},
 	}
-	for i, tc := range testData {
+	for _, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendAddress = tc.BackendAddress
 		opts.Healthz = tc.healthz
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
-			t.Fatal(err)
+			t.Errorf("Test(%v): makePathMatcherFilter failed with err: \n %v", tc.desc, err)
 		}
 		marshaler := &jsonpb.Marshaler{}
 		gotFilter, err := marshaler.MarshalToString(makePathMatcherFilter(fakeServiceInfo))
 		if err != nil {
-			t.Fatal(err)
+			t.Errorf("Test(%v): makePathMatcherFilter failed with err: \n %v", tc.desc, err)
 		}
 		if err := util.JsonEqual(tc.wantPathMatcherFilter, gotFilter); err != nil {
-			t.Errorf("Test Desc(%d): %s, makePathMatcherFilter failed, \n %v", i, tc.desc, err)
+			t.Errorf("Test(%v): makePathMatcherFilter failed with err: \n %v", tc.desc, err)
 		}
 	}
 }
