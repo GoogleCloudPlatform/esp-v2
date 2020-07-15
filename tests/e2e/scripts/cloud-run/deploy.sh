@@ -203,7 +203,6 @@ function setup() {
   # Deploy backend service (authenticated) and set BACKEND_HOST
   echo "Deploying backend ${BACKEND_SERVICE_NAME} on ${BACKEND_PLATFORM}"
   deployBackend
-  sleep 1m
 
   #  # Only enable for http backends with external IP.
   #  # Verify the backend is up using the identity of the current machine/user
