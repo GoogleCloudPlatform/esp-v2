@@ -14,26 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This file contains utility functions that can only be used for Cloud Run
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# Fail on any error.
-set -eo pipefail
+. ${ROOT}/prow/utils/prow_test_utils.sh
 
-function get_proxy_service_name_with_sha() {
-  local service_type=$1
+DURATION_IN_HOUR=${LONG_RUN_DURATION_IN_HOUR:-""}
+BUCKET=${LONG_RUN_BUCKET:-""}
 
-  local service_format="e2e-test-%h-${service_type}"
-  local service_name="$(git show -q HEAD --pretty=format:"${service_format}")"
-
-  echo -n "${service_name}"
-  return 0
-}
-
-function get_anthos_cluster_name_with_sha() {
-
-  local service_format="e2e-cloud-run-%h"
-  local service_name="$(git show -q HEAD --pretty=format:"${service_format}")"
-
-  echo -n "${service_name}"
-  return 0
-}
+TEST_CASE=cloud-run-app-engine-http-bookstore
+. ${ROOT}/prow/gcpproxy-e2e.sh

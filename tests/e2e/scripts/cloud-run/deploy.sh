@@ -41,11 +41,11 @@ LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
 
 # Determine names of all resources
 UNIQUE_ID=$(get_unique_id | cut -c 1-6)
-BACKEND_SERVICE_NAME=$(get_cloud_run_service_name_with_sha "${BACKEND}")
-BACKEND_SERVICE_NAME="${BACKEND_SERVICE_NAME}-${UNIQUE_ID}"
-PROXY_SERVICE_NAME=$(get_cloud_run_service_name_with_sha "api-proxy")
+BACKEND_SERVICE_NAME="e2e-test-${BACKEND_PLATFORM}-${BACKEND}-${UNIQUE_ID}"
+
+PROXY_SERVICE_NAME=$(get_proxy_service_name_with_sha "api-proxy")
 PROXY_SERVICE_NAME="${PROXY_SERVICE_NAME}-${UNIQUE_ID}"
-ENDPOINTS_SERVICE_TITLE=$(get_cloud_run_service_name_with_sha "${BACKEND}-service")
+ENDPOINTS_SERVICE_TITLE=$(get_proxy_service_name_with_sha "${BACKEND}-service")
 ENDPOINTS_SERVICE_TITLE="${ENDPOINTS_SERVICE_TITLE}-${UNIQUE_ID}"
 ENDPOINTS_SERVICE_NAME=""
 PROXY_HOST=""
@@ -57,6 +57,8 @@ CLOUD_RUN_REGION="us-central1"
 # TODO(b/160643986): pin to latest cluster version.
 # CLUSTER_VERSION="latest"
 CLUSTER_VERSION="1.16.9-gke.6"
+
+APP_ENGINE_IAP_CLIENT_ID="245521401045-qh1j3eq583qdkmn9m60pfc67303ps6cu.apps.googleusercontent.com"
 
 STATUS=0
 if [[ "${PROXY_PLATFORM}" == "anthos-cloud-run" ]] ; then
@@ -116,6 +118,19 @@ function deployBackend() {
 
       BACKEND_HOST=$(gcloud functions describe ${BACKEND_SERVICE_NAME}  --format="value(httpsTrigger.url)" --quiet)
       ;;
+    "app-engine")
+    cd ${ROOT}/tests/endpoints/bookstore
+
+    sed "s/SERVICE_NAME/${BACKEND_SERVICE_NAME}/g" app_template.yaml > app.yaml
+    gcloud app deploy --quiet
+
+    # For how requests are routed in App Engine, refer to
+    # https://cloud.google.com/appengine/docs/standard/python/how-requests-are-routed#example_urls
+    BACKEND_HOST="https://${BACKEND_SERVICE_NAME}-dot-cloudesf-testing.uc.r.appspot.com"
+
+    cd ${ROOT}
+    ;;
+
     *)
       echo "No such backend platform ${BACKEND_PLATFORM}"
       exit 1
@@ -192,11 +207,17 @@ function setup() {
   #  # Only enable for http backends with external IP.
   #  # Verify the backend is up using the identity of the current machine/user
   if [[ "${PROXY_PLATFORM}" == "cloud-run"  && "${BACKEND}" == "bookstore" ]]; then
+    if [[ ${BACKEND_PLATFORM} == "app-engine" ]]; then
+      token=$(gcloud auth print-identity-token --audiences=${APP_ENGINE_IAP_CLIENT_ID})
+    else
+      token=$(gcloud auth print-identity-token)
+    fi
+
     bookstore_health_code=$(curl \
         --write-out %{http_code} \
         --silent \
         --output /dev/null \
-        -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
+        -H "Authorization: Bearer ${token}" \
       "${BACKEND_HOST}"/shelves)
 
     if [[ "$bookstore_health_code" -ne 200 ]] ; then
@@ -252,6 +273,14 @@ function setup() {
         | . + { \"x-google-backend\": { \"address\": \"${BACKEND_HOST}\", \"protocol\": \"${backend_protocol}\" } }  \
       | .paths.\"/echo_token/disable_auth\".get  +=  { \"x-google-backend\": { \"address\": \"${BACKEND_HOST}\/echo_token\/disable_auth\", \"disable_auth\": true } } "\
       > "${service_idl}"
+
+    if [[ ${BACKEND_PLATFORM} == "app-engine" ]]; then
+      tmpfile=$(mktemp)
+      cp "${service_idl}" "${tmpfile}"
+      cat "${tmpfile}" \
+        | jq ".\"x-google-backend\" += { \"jwt_audience\": \"${APP_ENGINE_IAP_CLIENT_ID}\"  }" \
+        > "${service_idl}"
+    fi
     ;;
   'echo')
     local service_idl_tmpl="${ROOT}/tests/endpoints/grpc_echo/grpc-test-dynamic-routing.tmpl.yaml"
@@ -389,6 +418,10 @@ function tearDown() {
     "cloud-function")
       gcloud functions delete "${BACKEND_SERVICE_NAME}" --quiet || true
       ;;
+
+    "app-engine")
+      gcloud app services delete "${BACKEND_SERVICE_NAME}" --quiet
+     ;;
     *)
       echo "No such backend platform ${BACKEND_PLATFORM}"
       exit 1

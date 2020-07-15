@@ -33,7 +33,7 @@ done
 ### Cloud Run ###
 CLOUD_RUN_SERVICES=$(gcloud run services list \
     --platform=managed \
-    --filter="metadata.name ~ ^cloudesf-testing-e2e-test- \
+    --filter="metadata.name ~ ^e2e-test- \
     AND metadata.creationTimestamp < ${LIMIT_DATE}" \
   --format="value(metadata.name)")
 
@@ -49,7 +49,7 @@ echo "Done cleaning up Cloud Run services"
 
 ### Cloud Functions ###
 GOOGLE_FUNCTIONS=$(gcloud functions list \
-    --filter="name ~ cloudesf-testing-e2e-test- \
+    --filter="name ~ ^e2e-test- \
     AND updateTime < ${LIMIT_DATE}" \
   --format="value(name)")
 
@@ -62,9 +62,21 @@ for gf in $GOOGLE_FUNCTIONS ; do
 done
 echo "Done cleaning up Cloud Functions"
 
+### App Engines ###
+APP_ENGINES=$(gcloud app services list \
+--filter="SERVICE ~ ^e2e-test-" \
+--format="value(SERVICE)")
+for ap in ${APP_ENGINES} ; do
+  echo "Deleting App Engine: ${ap}"
+  gcloud app services delete "${ap}" \
+    --quiet
+done
+echo "Done cleaning up App Engines"
+
+
 ### Endpoints Services ###
 ENDPOINTS_SERVICES=$(gcloud endpoints services list \
-    --filter="serviceName ~ cloudesf-testing-e2e-test-" \
+    --filter="serviceName ~ ^e2e-test-" \
   --format="value(serviceName)")
 
 # Note: This variable should NOT be in quotation marks,
