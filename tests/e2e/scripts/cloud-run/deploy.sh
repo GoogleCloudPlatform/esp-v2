@@ -43,9 +43,9 @@ LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
 UNIQUE_ID=$(get_unique_id | cut -c 1-6)
 BACKEND_SERVICE_NAME="e2e-test-${BACKEND_PLATFORM}-${BACKEND}-${UNIQUE_ID}"
 
-PROXY_SERVICE_NAME=$(get_cloud_run_service_name_with_sha "api-proxy")
+PROXY_SERVICE_NAME=$(get_proxy_service_name_with_sha "api-proxy")
 PROXY_SERVICE_NAME="${PROXY_SERVICE_NAME}-${UNIQUE_ID}"
-ENDPOINTS_SERVICE_TITLE=$(get_cloud_run_service_name_with_sha "${BACKEND}-service")
+ENDPOINTS_SERVICE_TITLE=$(get_proxy_service_name_with_sha "${BACKEND}-service")
 ENDPOINTS_SERVICE_TITLE="${ENDPOINTS_SERVICE_TITLE}-${UNIQUE_ID}"
 ENDPOINTS_SERVICE_NAME=""
 PROXY_HOST=""

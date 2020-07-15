@@ -19,7 +19,7 @@
 # Fail on any error.
 set -eo pipefail
 
-function get_cloud_run_service_name_with_sha() {
+function get_proxy_service_name_with_sha() {
   local service_type=$1
 
   local service_format="e2e-test-%h-${service_type}"

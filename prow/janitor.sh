@@ -49,7 +49,7 @@ echo "Done cleaning up Cloud Run services"
 
 ### Cloud Functions ###
 GOOGLE_FUNCTIONS=$(gcloud functions list \
-    --filter="name ~ cloudesf-testing-e2e-test- \
+    --filter="name ~ ^e2e-test- \
     AND updateTime < ${LIMIT_DATE}" \
   --format="value(name)")
 
@@ -76,7 +76,7 @@ echo "Done cleaning up App Engines"
 
 ### Endpoints Services ###
 ENDPOINTS_SERVICES=$(gcloud endpoints services list \
-    --filter="serviceName ~ cloudesf-testing-e2e-test-" \
+    --filter="serviceName ~ ^e2e-test-" \
   --format="value(serviceName)")
 
 # Note: This variable should NOT be in quotation marks,
