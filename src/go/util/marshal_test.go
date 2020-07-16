@@ -40,6 +40,7 @@ func TestResolver(t *testing.T) {
 		{msg: &accessgrpcpb.TcpGrpcAccessLogConfig{}},
 		{msg: &accessgrpcpb.CommonGrpcAccessLogConfig{}},
 		{msg: &statspb.StatsSink{}},
+		{msg: &statspb.StatsdSink{}},
 		{msg: &statspb.StatsConfig{}},
 	}
 
