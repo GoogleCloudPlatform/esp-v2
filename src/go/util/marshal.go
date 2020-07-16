@@ -106,12 +106,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(accessgrpcpb.CommonGrpcAccessLogConfig), nil
 	case "type.googleapis.com/envoy.config.metrics.v3.StatsConfig":
 		return new(statspb.StatsConfig), nil
-	case "type.googleapis.com/envoy.config.metrics.v3.StatsMatcher":
-		return new(statspb.StatsMatcher), nil
 	case "type.googleapis.com/envoy.config.metrics.v3.StatsSink":
 		return new(statspb.StatsSink), nil
-	case "type.googleapis.com/envoy.config.metrics.v3.TagSpecifier":
-		return new(statspb.TagSpecifier), nil
 	default:
 		return nil, fmt.Errorf("unexpected protobuf.Any with url: %s", url)
 	}
