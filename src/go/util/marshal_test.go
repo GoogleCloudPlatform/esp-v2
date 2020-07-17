@@ -23,6 +23,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 
+	statspb "github.com/envoyproxy/go-control-plane/envoy/config/metrics/v3"
 	accessfilepb "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
 	accessgrpcpb "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/grpc/v3"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -34,18 +35,13 @@ func TestResolver(t *testing.T) {
 	tests := []struct {
 		msg proto.Message
 	}{
-		{
-			msg: &accessfilepb.FileAccessLog{},
-		},
-		{
-			msg: &accessgrpcpb.HttpGrpcAccessLogConfig{},
-		},
-		{
-			msg: &accessgrpcpb.TcpGrpcAccessLogConfig{},
-		},
-		{
-			msg: &accessgrpcpb.CommonGrpcAccessLogConfig{},
-		},
+		{msg: &accessfilepb.FileAccessLog{}},
+		{msg: &accessgrpcpb.HttpGrpcAccessLogConfig{}},
+		{msg: &accessgrpcpb.TcpGrpcAccessLogConfig{}},
+		{msg: &accessgrpcpb.CommonGrpcAccessLogConfig{}},
+		{msg: &statspb.StatsSink{}},
+		{msg: &statspb.StatsdSink{}},
+		{msg: &statspb.StatsConfig{}},
 	}
 
 	marshaler := &jsonpb.Marshaler{

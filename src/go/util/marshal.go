@@ -26,6 +26,7 @@ import (
 	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v7/http/path_matcher"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v7/http/service_control"
 
+	statspb "github.com/envoyproxy/go-control-plane/envoy/config/metrics/v3"
 	accessfilepb "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
 	accessgrpcpb "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/grpc/v3"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_json_transcoder/v3"
@@ -103,6 +104,12 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(accessgrpcpb.TcpGrpcAccessLogConfig), nil
 	case "type.googleapis.com/envoy.extensions.access_loggers.grpc.v3.CommonGrpcAccessLogConfig":
 		return new(accessgrpcpb.CommonGrpcAccessLogConfig), nil
+	case "type.googleapis.com/envoy.config.metrics.v3.StatsConfig":
+		return new(statspb.StatsConfig), nil
+	case "type.googleapis.com/envoy.config.metrics.v3.StatsSink":
+		return new(statspb.StatsSink), nil
+	case "type.googleapis.com/envoy.config.metrics.v3.StatsdSink":
+		return new(statspb.StatsdSink), nil
 	default:
 		return nil, fmt.Errorf("unexpected protobuf.Any with url: %s", url)
 	}
