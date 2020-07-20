@@ -1,3 +1,8 @@
+# Release 2.15.0 20-07-2020
+
+- Config versioning v6 to v7 (#226)
+- Move snake to json segment mapping to per-operation instead of global (#218)
+
 # Release 2.13.0 08-07-2020
 
 - Update envoy to 7/6/2020 (#217)
