@@ -1,4 +1,4 @@
-# Release 2.15.0 20-07-2020
+# Release 2.14.0 20-07-2020
 
 - Config versioning v6 to v7 (#226)
 - Move snake to json segment mapping to per-operation instead of global (#218)
