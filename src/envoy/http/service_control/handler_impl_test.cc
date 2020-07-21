@@ -385,7 +385,8 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
   // Test: If no requirement is matched for the operation, check should 404
   // and report should do nothing
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kFilterStateOperation, "bad-operation-name");
+                              utils::kFilterStateOperation,
+                              "bad-operation-name");
   TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_, test_time_, stats_);
@@ -549,7 +550,8 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
 TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
   // Test: Quota is required and succeeds.
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kFilterStateOperation, "get_header_key_quota");
+                              utils::kFilterStateOperation,
+                              "get_header_key_quota");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -585,7 +587,8 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
 TEST_F(HandlerTest, HandlerCallQuotaWithoutCheck) {
   // Test: Quota is required but the Check is not
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kFilterStateOperation, "call_quota_without_check");
+                              utils::kFilterStateOperation,
+                              "call_quota_without_check");
   TestRequestHeaderMapImpl headers{{":method", "GET"},
                                    {":path", "/echo?key=foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -657,7 +660,8 @@ TEST_F(HandlerTest, HandlerFailQuotaSync) {
   // Test: Check is required and a request is made, but service control
   // returns a bad status.
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kFilterStateOperation, "get_header_key_quota");
+                              utils::kFilterStateOperation,
+                              "get_header_key_quota");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -739,7 +743,8 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
   // Test: Check is required and succeeds, even when the done callback is not
   // called until later.
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kFilterStateOperation, "get_header_key_quota");
+                              utils::kFilterStateOperation,
+                              "get_header_key_quota");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -835,7 +840,8 @@ TEST_F(HandlerTest, HandlerFailQuotaAsync) {
   // Test: Quota is required and a request is made, but later on service
   // control returns a bad status.
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kFilterStateOperation, "get_header_key_quota");
+                              utils::kFilterStateOperation,
+                              "get_header_key_quota");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{

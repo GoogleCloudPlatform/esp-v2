@@ -108,7 +108,8 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
 ServiceControlHandlerImpl::~ServiceControlHandlerImpl() {}
 
 void ServiceControlHandlerImpl::fillFilterState(FilterState& filter_state) {
-  utils::setStringFilterState(filter_state, utils::kFilterStateApiKey, api_key_);
+  utils::setStringFilterState(filter_state, utils::kFilterStateApiKey,
+                              api_key_);
 }
 
 void ServiceControlHandlerImpl::onDestroy() {

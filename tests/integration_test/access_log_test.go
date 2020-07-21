@@ -37,7 +37,7 @@ func tryRemoveFile(path string) error {
 
 func makeOneRequest(t *testing.T, s *env.TestEnv) {
 	wantResp := `{"message":"hello"}`
-	url := fmt.Sprintf("http://localhost:%v/echo?key=api-key", s.Ports().ListenerPort)
+	url := fmt.Sprintf("http://localhost:%v/echo?key=test-api-key", s.Ports().ListenerPort)
 	resp, err := client.DoPost(url, "hello")
 
 	if err != nil {
@@ -77,9 +77,9 @@ func TestAccessLog(t *testing.T) {
 	}
 	makeOneRequest(t, s)
 	s.TearDown(t)
-	expectAccessLog := fmt.Sprintf("\"POST /echo?key=api-key HTTP/1.1\"200"+
+	expectAccessLog := fmt.Sprintf("\"POST /echo?key=test-api-key HTTP/1.1\"200"+
 		" - 20 19\"-\" \"Go-http-client/1.1\"\"localhost:%v\" \"127.0.0.1:%v\" "+
-		"\"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo\" \"api-key\"\n",
+		"\"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo\" \"test-api-key\"\n",
 		s.Ports().ListenerPort, s.Ports().BackendServerPort)
 
 	bytes, err := ioutil.ReadFile(accessLog)

@@ -105,8 +105,8 @@ TEST_F(BackendRoutingFilterTest, OperationNotConfiguredAllowed) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
   utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kFilterStateOperation,
-      "unknown-operation-name");
+      *mock_decoder_callbacks_.stream_info_.filter_state_,
+      utils::kFilterStateOperation, "unknown-operation-name");
 
   // Call function under test
   Envoy::Http::FilterHeadersStatus status =
@@ -128,8 +128,8 @@ TEST_F(BackendRoutingFilterTest, OperationNotConfiguredAllowed) {
 TEST_F(BackendRoutingFilterTest, NoPathHeaderBlocked) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"}};
   utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kFilterStateOperation,
-      "const-operation");
+      *mock_decoder_callbacks_.stream_info_.filter_state_,
+      utils::kFilterStateOperation, "const-operation");
 
   // Call function under test
   Envoy::Http::FilterHeadersStatus status =
@@ -151,8 +151,8 @@ TEST_F(BackendRoutingFilterTest, InvalidPathHeaderWithFragmentBlocked) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1#fragment"}};
   utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kFilterStateOperation,
-      "const-operation");
+      *mock_decoder_callbacks_.stream_info_.filter_state_,
+      utils::kFilterStateOperation, "const-operation");
 
   // Call function under test
   Envoy::Http::FilterHeadersStatus status =
@@ -174,8 +174,8 @@ TEST_F(BackendRoutingFilterTest, ConstantAddress) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
   utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kFilterStateOperation,
-      "const-operation");
+      *mock_decoder_callbacks_.stream_info_.filter_state_,
+      utils::kFilterStateOperation, "const-operation");
 
   // Call function under test
   Envoy::Http::FilterHeadersStatus status =
@@ -198,11 +198,11 @@ TEST_F(BackendRoutingFilterTest, ConstantAddressWithPathMatcherQueryParams) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
   utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kFilterStateOperation,
-      "const-operation");
+      *mock_decoder_callbacks_.stream_info_.filter_state_,
+      utils::kFilterStateOperation, "const-operation");
   utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kFilterStateQueryParams,
-      "id=1");
+      *mock_decoder_callbacks_.stream_info_.filter_state_,
+      utils::kFilterStateQueryParams, "id=1");
 
   // Call function under test
   Envoy::Http::FilterHeadersStatus status =
@@ -232,8 +232,8 @@ TEST_F(BackendRoutingFilterQueryParamInRequestTest,
   Envoy::Http::TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/books/1?view=summary&filter=deleted"}};
   utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kFilterStateOperation,
-      "append-with-prefix-operation");
+      *mock_decoder_callbacks_.stream_info_.filter_state_,
+      utils::kFilterStateOperation, "append-with-prefix-operation");
 
   // Call function under test
   Envoy::Http::FilterHeadersStatus status =
@@ -257,8 +257,8 @@ TEST_F(BackendRoutingFilterQueryParamInRequestTest, ConstantAddress) {
   Envoy::Http::TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/books/1?view=summary&filter=deleted"}};
   utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kFilterStateOperation,
-      "const-operation");
+      *mock_decoder_callbacks_.stream_info_.filter_state_,
+      utils::kFilterStateOperation, "const-operation");
 
   // Call function under test
   Envoy::Http::FilterHeadersStatus status =
@@ -283,11 +283,11 @@ TEST_F(BackendRoutingFilterQueryParamInRequestTest,
   Envoy::Http::TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/books/1?view=summary&filter=deleted"}};
   utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kFilterStateOperation,
-      "const-operation");
+      *mock_decoder_callbacks_.stream_info_.filter_state_,
+      utils::kFilterStateOperation, "const-operation");
   utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kFilterStateQueryParams,
-      "id=1");
+      *mock_decoder_callbacks_.stream_info_.filter_state_,
+      utils::kFilterStateQueryParams, "id=1");
 
   // Call function under test
   Envoy::Http::FilterHeadersStatus status =
@@ -312,11 +312,11 @@ TEST_F(BackendRoutingFilterQueryParamInRequestTest,
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1?id=2"}};
   utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kFilterStateOperation,
-      "const-operation");
+      *mock_decoder_callbacks_.stream_info_.filter_state_,
+      utils::kFilterStateOperation, "const-operation");
   utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kFilterStateQueryParams,
-      "id=1");
+      *mock_decoder_callbacks_.stream_info_.filter_state_,
+      utils::kFilterStateQueryParams, "id=1");
 
   // Call function under test
   Envoy::Http::FilterHeadersStatus status =
@@ -341,8 +341,8 @@ TEST_F(BackendRoutingFilterQueryParamInRequestTest, ConstantAddressWithPrefix) {
   Envoy::Http::TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/books/1?view=summary&filter=deleted"}};
   utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kFilterStateOperation,
-      "const-with-prefix-operation");
+      *mock_decoder_callbacks_.stream_info_.filter_state_,
+      utils::kFilterStateOperation, "const-with-prefix-operation");
 
   // Call function under test
   Envoy::Http::FilterHeadersStatus status =

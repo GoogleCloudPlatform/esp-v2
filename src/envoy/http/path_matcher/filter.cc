@@ -81,7 +81,8 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
   ENVOY_LOG(debug, "matched operation: {}", operation);
   Envoy::StreamInfo::FilterState& filter_state =
       *decoder_callbacks_->streamInfo().filterState();
-  utils::setStringFilterState(filter_state, utils::kFilterStateOperation, operation);
+  utils::setStringFilterState(filter_state, utils::kFilterStateOperation,
+                              operation);
 
   if (rule->has_path_parameter_extraction()) {
     const PathParameterExtractionRule& param_rule =
