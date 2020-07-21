@@ -52,7 +52,7 @@ const Envoy::Http::LowerCaseString kXForwardedAuthorization{
 
 FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   absl::string_view operation = utils::getStringFilterState(
-      *decoder_callbacks_->streamInfo().filterState(), utils::kOperation);
+      *decoder_callbacks_->streamInfo().filterState(), utils::kFilterStateOperation);
   // NOTE: this shouldn't happen in practice because Path Matcher filter would
   // have already rejected the request.
   if (operation.empty()) {

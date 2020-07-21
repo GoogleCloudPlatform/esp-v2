@@ -87,10 +87,10 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersWithOperation) {
             filter_->decodeHeaders(headers, false));
 
   EXPECT_EQ(utils::getStringFilterState(*mock_cb_.stream_info_.filter_state_,
-                                        utils::kOperation),
+                                        utils::kFilterStateOperation),
             "1.cloudesf_testing_cloud_goog.Bar");
   EXPECT_EQ(utils::getStringFilterState(*mock_cb_.stream_info_.filter_state_,
-                                        utils::kQueryParams),
+                                        utils::kFilterStateQueryParams),
             Envoy::EMPTY_STRING);
 
   EXPECT_EQ(1L, Envoy::TestUtility::findCounter(mock_factory_context_.scope_,
@@ -119,7 +119,7 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersWithMethodOverride) {
             filter_->decodeHeaders(headers, true));
 
   EXPECT_EQ(utils::getStringFilterState(*mock_cb_.stream_info_.filter_state_,
-                                        utils::kOperation),
+                                        utils::kFilterStateOperation),
             "1.cloudesf_testing_cloud_goog.Bar");
 
   EXPECT_EQ(1L, Envoy::TestUtility::findCounter(mock_factory_context_.scope_,
@@ -138,10 +138,10 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersExtractParameters) {
             filter_->decodeHeaders(headers, true));
 
   EXPECT_EQ(utils::getStringFilterState(*mock_cb_.stream_info_.filter_state_,
-                                        utils::kOperation),
+                                        utils::kFilterStateOperation),
             "1.cloudesf_testing_cloud_goog.Foo");
   EXPECT_EQ(utils::getStringFilterState(*mock_cb_.stream_info_.filter_state_,
-                                        utils::kQueryParams),
+                                        utils::kFilterStateQueryParams),
             "fooBar=123");
 
   EXPECT_EQ(1L, Envoy::TestUtility::findCounter(mock_factory_context_.scope_,
@@ -167,7 +167,7 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersNoMatch) {
             filter_->decodeHeaders(headers, true));
 
   EXPECT_EQ(utils::getStringFilterState(*mock_cb_.stream_info_.filter_state_,
-                                        utils::kOperation),
+                                        utils::kFilterStateOperation),
             Envoy::EMPTY_STRING);
 
   EXPECT_EQ(0L, Envoy::TestUtility::findCounter(mock_factory_context_.scope_,
@@ -202,7 +202,7 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersShortWildcard) {
             filter_->decodeHeaders(headers, true));
 
   EXPECT_EQ(utils::getStringFilterState(*mock_cb_.stream_info_.filter_state_,
-                                        utils::kOperation),
+                                        utils::kFilterStateOperation),
             "1.cloudesf_testing_cloud_goog.Long");
 }
 

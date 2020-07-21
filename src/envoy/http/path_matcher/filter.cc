@@ -81,7 +81,7 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
   ENVOY_LOG(debug, "matched operation: {}", operation);
   Envoy::StreamInfo::FilterState& filter_state =
       *decoder_callbacks_->streamInfo().filterState();
-  utils::setStringFilterState(filter_state, utils::kOperation, operation);
+  utils::setStringFilterState(filter_state, utils::kFilterStateOperation, operation);
 
   if (rule->has_path_parameter_extraction()) {
     const PathParameterExtractionRule& param_rule =
@@ -93,7 +93,7 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
     if (!variable_bindings.empty()) {
       const std::string query_params = VariableBindingsToQueryParameters(
           variable_bindings, param_rule.snake_to_json_segments());
-      utils::setStringFilterState(filter_state, utils::kQueryParams,
+      utils::setStringFilterState(filter_state, utils::kFilterStateQueryParams,
                                   query_params);
     }
   }

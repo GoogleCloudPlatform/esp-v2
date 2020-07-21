@@ -90,7 +90,7 @@ TEST_F(BackendAuthFilterTest, MissingAudienceAllowed) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
   utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kFilterStateOperation,
       "operation-without-audience");
 
   EXPECT_CALL(*mock_filter_config_, cfg_parser)
@@ -118,7 +118,7 @@ TEST_F(BackendAuthFilterTest, HasAudienceButGetsEmptyTokenRejected) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
   utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kFilterStateOperation,
       "operation-with-audience");
 
   EXPECT_CALL(*mock_filter_config_, cfg_parser)
@@ -151,7 +151,7 @@ TEST_F(BackendAuthFilterTest, SucceedAppendToken) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
   utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kFilterStateOperation,
       "operation-with-audience");
 
   EXPECT_CALL(*mock_filter_config_, cfg_parser)
@@ -188,7 +188,7 @@ TEST_F(BackendAuthFilterTest, SucceedTokenCopied) {
       {":path", "/books/1"},
       {"authorization", "Bearer origin-token"}};
   utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kOperation,
+      *mock_decoder_callbacks_.stream_info_.filter_state_, utils::kFilterStateOperation,
       "operation-with-audience");
 
   EXPECT_CALL(*mock_filter_config_, cfg_parser)

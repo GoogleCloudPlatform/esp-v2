@@ -147,7 +147,7 @@ DEFINE_PROTO_FUZZER(
     // and has configured metric costs.
     // This ensures both CHECK and QUOTA are called.
     utils::setStringFilterState(
-        *stream_info.filter_state_, utils::kOperation,
+        *stream_info.filter_state_, utils::kFilterStateOperation,
         input.config().requirements(0).operation_name());
 
     // Create filter.

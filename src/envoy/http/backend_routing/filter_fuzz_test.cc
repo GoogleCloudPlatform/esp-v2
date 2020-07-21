@@ -44,12 +44,12 @@ DEFINE_PROTO_FUZZER(
 
   // Set the operation name using the first backend routing rule.
   utils::setStringFilterState(
-      *mock_decoder_callbacks.stream_info_.filter_state_, utils::kOperation,
+      *mock_decoder_callbacks.stream_info_.filter_state_, utils::kFilterStateOperation,
       input.config().rules(0).operation());
 
   // Set the variable binding query params.
   utils::setStringFilterState(
-      *mock_decoder_callbacks.stream_info_.filter_state_, utils::kQueryParams,
+      *mock_decoder_callbacks.stream_info_.filter_state_, utils::kFilterStateQueryParams,
       input.binding_query_params());
 
   // Create the filter.

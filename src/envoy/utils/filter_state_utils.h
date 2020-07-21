@@ -22,11 +22,13 @@ namespace envoy {
 namespace utils {
 
 // Data names in `FilterState` set by Path Matcher filter:
-constexpr char kOperation[] =
+constexpr char kFilterStateOperation[] =
     "com.google.espv2.filters.http.path_matcher.operation";
-constexpr char kQueryParams[] =
+constexpr char kFilterStateQueryParams[] =
     "com.google.espv2.filters.http.path_matcher.query_params";
-constexpr char kApiKey[] =
+
+// Data name in `FilterState` set by Service Control filter:
+constexpr char kFilterStateApiKey[] =
     "com.google.espv2.filters.http.service_control.api_key";
 
 // Sets a read only string value in the filter state.
