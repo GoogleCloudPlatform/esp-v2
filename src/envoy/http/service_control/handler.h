@@ -20,6 +20,7 @@
 #include "envoy/stream_info/stream_info.h"
 #include "src/api_proxy/service_control/request_info.h"
 #include "src/envoy/http/service_control/filter_stats.h"
+#include "src/envoy/utils/filter_state_utils.h"
 
 namespace espv2 {
 namespace envoy {
@@ -56,6 +57,10 @@ class ServiceControlHandler {
   // intermediate reports.
   virtual void processResponseHeaders(
       const Envoy::Http::ResponseHeaderMap& response_headers) PURE;
+
+  // Fill filter state with request information for access logging.
+  virtual void fillFilterState(
+      ::Envoy::StreamInfo::FilterState& filter_state) PURE;
 
   // The request is about to be destroyed need to cancel all async requests.
   virtual void onDestroy() PURE;

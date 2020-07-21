@@ -63,6 +63,8 @@ class ServiceControlHandlerImpl
   void processResponseHeaders(
       const Envoy::Http::ResponseHeaderMap& response_headers) override;
 
+  void fillFilterState(::Envoy::StreamInfo::FilterState& filter_state) override;
+
   void onDestroy() override;
 
  private:

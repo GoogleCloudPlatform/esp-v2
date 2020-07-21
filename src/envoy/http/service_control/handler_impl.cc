@@ -27,6 +27,7 @@ namespace envoy {
 namespace http_filters {
 namespace service_control {
 
+using ::Envoy::StreamInfo::FilterState;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::OperationInfo;
 using ::espv2::api_proxy::service_control::ScResponseErrorType;
@@ -105,6 +106,10 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
 }
 
 ServiceControlHandlerImpl::~ServiceControlHandlerImpl() {}
+
+void ServiceControlHandlerImpl::fillFilterState(FilterState& filter_state) {
+  utils::setStringFilterState(filter_state, utils::kApiKey, api_key_);
+}
 
 void ServiceControlHandlerImpl::onDestroy() {
   if (cancel_fn_) {
