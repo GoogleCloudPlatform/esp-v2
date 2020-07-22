@@ -119,7 +119,7 @@ void ServiceControlHandlerImpl::fillFilterState(
   auto* entry = headers.get(Headers::get().Path);
   if (entry) {
     utils::setStringFilterState(filter_state, utils::kFilterStateOriginalPath,
-                                std::string(entry->value().getStringView()));
+                                entry->value().getStringView());
   }
 }
 
