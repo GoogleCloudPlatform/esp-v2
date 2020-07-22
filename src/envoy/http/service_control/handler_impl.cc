@@ -15,6 +15,7 @@
 #include <chrono>
 
 #include "absl/strings/match.h"
+#include "common/http/headers.h"
 #include "common/http/utility.h"
 #include "extensions/filters/http/grpc_stats/grpc_stats_filter.h"
 #include "src/envoy/http/service_control/handler_impl.h"
@@ -36,15 +37,14 @@ const Envoy::Http::LowerCaseString kIosBundleIdHeader{
     "x-ios-bundle-identifier"};
 const Envoy::Http::LowerCaseString kAndroidPackageHeader{"x-android-package"};
 const Envoy::Http::LowerCaseString kAndroidCertHeader{"x-android-cert"};
-const Envoy::Http::LowerCaseString kRefererHeader{"referer"};
-
-const Envoy::Http::LowerCaseString kPathHeader{":path"};
 
 constexpr char JwtPayloadIssuerPath[] = "iss";
 constexpr char JwtPayloadAudiencePath[] = "aud";
 
 }  // namespace
 
+using ::Envoy::Http::CustomHeaders;
+using ::Envoy::Http::Headers;
 using ::Envoy::StreamInfo::FilterState;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::OperationInfo;
@@ -116,7 +116,7 @@ void ServiceControlHandlerImpl::fillFilterState(
   utils::setStringFilterState(filter_state, utils::kFilterStateApiKey,
                               api_key_);
 
-  auto* entry = headers.get(kPathHeader);
+  auto* entry = headers.get(Headers::get().Path);
   if (entry) {
     utils::setStringFilterState(filter_state, utils::kFilterStateOriginalPath,
                                 std::string(entry->value().getStringView()));
@@ -203,7 +203,8 @@ void ServiceControlHandlerImpl::callCheck(
 
   info.ios_bundle_id =
       std::string(utils::extractHeader(headers, kIosBundleIdHeader));
-  info.referer = std::string(utils::extractHeader(headers, kRefererHeader));
+  info.referer =
+      std::string(utils::extractHeader(headers, CustomHeaders::get().Referer));
   info.android_package_name =
       std::string(utils::extractHeader(headers, kAndroidPackageHeader));
   info.android_cert_fingerprint =
@@ -319,8 +320,8 @@ void ServiceControlHandlerImpl::callReport(
       getBackendProtocol(require_ctx_->service_ctx().config());
 
   if (request_headers) {
-    info.referer =
-        std::string(utils::extractHeader(*request_headers, kRefererHeader));
+    info.referer = std::string(
+        utils::extractHeader(*request_headers, CustomHeaders::get().Referer));
   }
 
   fillLatency(stream_info_, info.latency, filter_stats_);
