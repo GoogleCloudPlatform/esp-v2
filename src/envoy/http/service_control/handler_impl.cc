@@ -26,14 +26,7 @@ namespace espv2 {
 namespace envoy {
 namespace http_filters {
 namespace service_control {
-
-using ::Envoy::StreamInfo::FilterState;
-using ::espv2::api_proxy::service_control::CheckResponseInfo;
-using ::espv2::api_proxy::service_control::OperationInfo;
-using ::espv2::api_proxy::service_control::ScResponseErrorType;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
-
+namespace {
 // The HTTP header suffix to send consumer info to backend.
 constexpr char kConsumerTypeHeaderSuffix[] = "api-consumer-type";
 constexpr char kConsumerNumberHeaderSuffix[] = "api-consumer-number";
@@ -45,8 +38,19 @@ const Envoy::Http::LowerCaseString kAndroidPackageHeader{"x-android-package"};
 const Envoy::Http::LowerCaseString kAndroidCertHeader{"x-android-cert"};
 const Envoy::Http::LowerCaseString kRefererHeader{"referer"};
 
+const Envoy::Http::LowerCaseString kPathHeader{":path"};
+
 constexpr char JwtPayloadIssuerPath[] = "iss";
 constexpr char JwtPayloadAudiencePath[] = "aud";
+
+}  // namespace
+
+using ::Envoy::StreamInfo::FilterState;
+using ::espv2::api_proxy::service_control::CheckResponseInfo;
+using ::espv2::api_proxy::service_control::OperationInfo;
+using ::espv2::api_proxy::service_control::ScResponseErrorType;
+using ::google::protobuf::util::Status;
+using ::google::protobuf::util::error::Code;
 
 ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     const Envoy::Http::RequestHeaderMap& headers,
@@ -107,9 +111,16 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
 
 ServiceControlHandlerImpl::~ServiceControlHandlerImpl() {}
 
-void ServiceControlHandlerImpl::fillFilterState(FilterState& filter_state) {
+void ServiceControlHandlerImpl::fillFilterState(
+    const Envoy::Http::RequestHeaderMap& headers, FilterState& filter_state) {
   utils::setStringFilterState(filter_state, utils::kFilterStateApiKey,
                               api_key_);
+
+  auto* entry = headers.get(kPathHeader);
+  if (entry) {
+    utils::setStringFilterState(filter_state, utils::kFilterStateOriginalPath,
+                                std::string(entry->value().getStringView()));
+  }
 }
 
 void ServiceControlHandlerImpl::onDestroy() {
