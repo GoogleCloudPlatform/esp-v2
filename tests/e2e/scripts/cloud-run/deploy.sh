@@ -334,7 +334,7 @@ function setup() {
     echo "Deploying ESPv2 ${BACKEND_SERVICE_NAME} on Cloud Run(Anthos)"
   fi
 
-  deployProxy "gcr.io/${PROJECT_ID}/endpoints-runtime-serverless:${ENDPOINTS_SERVICE_NAME}-${endpoints_service_config_id}"  "${proxy_args}"
+  deployProxy "gcr.io/${PROJECT_ID}/endpoints-runtime-serverless:custom-${ENDPOINTS_SERVICE_NAME}-${endpoints_service_config_id}"  "${proxy_args}"
 }
 
 function test_disable_auth() {
