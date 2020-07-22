@@ -37,7 +37,7 @@ func tryRemoveFile(path string) error {
 
 func makeOneRequest(t *testing.T, s *env.TestEnv) {
 	wantResp := `{"message":"hello"}`
-	url := fmt.Sprintf("http://localhost:%v/echo?key=api-key", s.Ports().ListenerPort)
+	url := fmt.Sprintf("http://localhost:%v/echo?key=test-api-key", s.Ports().ListenerPort)
 	resp, err := client.DoPost(url, "hello")
 
 	if err != nil {
@@ -58,11 +58,13 @@ func TestAccessLog(t *testing.T) {
 	}
 
 	// For the detailed format grammar, refer to
-	// https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log#command-operators
+	// https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log/usage#command-operators
 	accessLogFormat := "\"%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%\"" +
 		"%RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT%" +
 		"\"%REQ(X-FORWARDED-FOR)%\" \"%REQ(USER-AGENT)%\"" +
-		"\"%REQ(:AUTHORITY)%\" \"%UPSTREAM_HOST%\"\n"
+		"\"%REQ(:AUTHORITY)%\" \"%UPSTREAM_HOST%\" " +
+		"%FILTER_STATE(com.google.espv2.filters.http.path_matcher.operation):60% " +
+		"%FILTER_STATE(com.google.espv2.filters.http.service_control.api_key):30%\n"
 
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
@@ -75,8 +77,9 @@ func TestAccessLog(t *testing.T) {
 	}
 	makeOneRequest(t, s)
 	s.TearDown(t)
-	expectAccessLog := fmt.Sprintf("\"POST /echo?key=api-key HTTP/1.1\"200"+
-		" - 20 19\"-\" \"Go-http-client/1.1\"\"localhost:%v\" \"127.0.0.1:%v\"\n",
+	expectAccessLog := fmt.Sprintf("\"POST /echo?key=test-api-key HTTP/1.1\"200"+
+		" - 20 19\"-\" \"Go-http-client/1.1\"\"localhost:%v\" \"127.0.0.1:%v\" "+
+		"\"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo\" \"test-api-key\"\n",
 		s.Ports().ListenerPort, s.Ports().BackendServerPort)
 
 	bytes, err := ioutil.ReadFile(accessLog)

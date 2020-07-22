@@ -38,6 +38,7 @@ envoy_cc_library(
     deps = [
         ":filter_stats_lib",
         ":service_control_callback_func_lib",
+        "//src/envoy/utils:filter_state_utils_lib",
         "@envoy//include/envoy/http:header_map_interface",
         "@envoy//include/envoy/stream_info:stream_info_interface",
     ],

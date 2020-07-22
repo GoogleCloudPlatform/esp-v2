@@ -385,7 +385,8 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
   // Test: If no requirement is matched for the operation, check should 404
   // and report should do nothing
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "bad-operation-name");
+                              utils::kFilterStateOperation,
+                              "bad-operation-name");
   TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_, test_time_, stats_);
@@ -408,7 +409,7 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
 TEST_F(HandlerTest, HandlerCheckNotNeeded) {
   // Test: If the operation does not require check, check should return OK
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "get_no_key");
+                              utils::kFilterStateOperation, "get_no_key");
   TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
@@ -435,7 +436,7 @@ TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
   // Test: If the operation requires a check but none is found, check fails
   // and a report is made
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "get_header_key");
+                              utils::kFilterStateOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
@@ -469,7 +470,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithApiKeyRestrictionFields) {
   // Test: Check is required and succeeds, and api key restriction fields are
   // present on the check request
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "get_header_key");
+                              utils::kFilterStateOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{{":method", "GET"},
                                    {":path", "/echo"},
                                    {"x-api-key", "foobar"},
@@ -514,7 +515,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
   // Test: Check is required and succeeds. The api key restriction fields are
   // left blank if not provided.
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "get_header_key");
+                              utils::kFilterStateOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -549,7 +550,8 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
 TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
   // Test: Quota is required and succeeds.
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "get_header_key_quota");
+                              utils::kFilterStateOperation,
+                              "get_header_key_quota");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -585,7 +587,8 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
 TEST_F(HandlerTest, HandlerCallQuotaWithoutCheck) {
   // Test: Quota is required but the Check is not
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "call_quota_without_check");
+                              utils::kFilterStateOperation,
+                              "call_quota_without_check");
   TestRequestHeaderMapImpl headers{{":method", "GET"},
                                    {":path", "/echo?key=foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -616,7 +619,7 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
   // Test: Check is required and a request is made, but service control
   // returns a bad status.
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "get_header_key");
+                              utils::kFilterStateOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -657,7 +660,8 @@ TEST_F(HandlerTest, HandlerFailQuotaSync) {
   // Test: Check is required and a request is made, but service control
   // returns a bad status.
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "get_header_key_quota");
+                              utils::kFilterStateOperation,
+                              "get_header_key_quota");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -696,7 +700,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckAsync) {
   // Test: Check is required and succeeds, even when the done callback is not
   // called until later.
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "get_header_key");
+                              utils::kFilterStateOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -739,7 +743,8 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
   // Test: Check is required and succeeds, even when the done callback is not
   // called until later.
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "get_header_key_quota");
+                              utils::kFilterStateOperation,
+                              "get_header_key_quota");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -788,7 +793,7 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
   // Test: Check is required and a request is made, but later on service
   // control returns a bad status.
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "get_header_key");
+                              utils::kFilterStateOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -835,7 +840,8 @@ TEST_F(HandlerTest, HandlerFailQuotaAsync) {
   // Test: Quota is required and a request is made, but later on service
   // control returns a bad status.
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "get_header_key_quota");
+                              utils::kFilterStateOperation,
+                              "get_header_key_quota");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -885,7 +891,7 @@ TEST_F(HandlerTest, HandlerFailQuotaAsync) {
 TEST_F(HandlerTest, HandlerCancelFuncResetOnDone) {
   // Test: Cancel function will not be called if on_done is called
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "get_header_key");
+                              utils::kFilterStateOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   CheckDoneFunc stored_on_done;
@@ -914,7 +920,7 @@ TEST_F(HandlerTest, HandlerCancelFuncResetOnDone) {
 TEST_F(HandlerTest, HandlerCancelFuncCalledOnDestroy) {
   // Test: Cancel function will be called if on_done is not called
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "get_header_key");
+                              utils::kFilterStateOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   MockFunction<void()> mock_cancel;
@@ -936,7 +942,7 @@ TEST_F(HandlerTest, HandlerCancelFuncCalledOnDestroy) {
 TEST_F(HandlerTest, HandlerCancelFuncNotCalledOnDestroyForSyncOnDone) {
   // Test: Cancel function will not be called if on_done is called synchronously
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "get_header_key");
+                              utils::kFilterStateOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   MockFunction<void()> mock_cancel;
@@ -963,7 +969,7 @@ TEST_F(HandlerTest, HandlerCancelFuncNotCalledOnDestroyForSyncOnDone) {
 TEST_F(HandlerTest, HandlerReportWithoutCheck) {
   // Test: Test that callReport works when callCheck is not called first.
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "get_header_key");
+                              utils::kFilterStateOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
@@ -987,7 +993,7 @@ TEST_F(HandlerTest, HandlerReportWithoutCheck) {
 TEST_F(HandlerTest, TryIntermediateReport) {
   // CollectDecodeData test cases after the boilerplate
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "get_header_key");
+                              utils::kFilterStateOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{{":method", "GET"},
                                    {":path", "/echo"},
                                    {"x-api-key", "foobar"},
@@ -1065,7 +1071,7 @@ TEST_F(HandlerTest, TryIntermediateReport) {
 TEST_F(HandlerTest, FinalReports) {
   // CollectEncodeData test cases after the boilerplate
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kOperation, "get_header_key");
+                              utils::kFilterStateOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{{":method", "GET"},
                                    {":path", "/echo"},
                                    {"x-api-key", "foobar"},

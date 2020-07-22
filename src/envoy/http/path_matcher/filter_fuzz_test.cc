@@ -63,7 +63,8 @@ DEFINE_PROTO_FUZZER(
 
   // Ensure the query param filter state is valid.
   absl::string_view query_params = utils::getStringFilterState(
-      *mock_decoder_callbacks.stream_info_.filter_state_, utils::kQueryParams);
+      *mock_decoder_callbacks.stream_info_.filter_state_,
+      utils::kFilterStateQueryParams);
   ASSERT_TRUE(Envoy::Http::validHeaderString(query_params));
 }
 

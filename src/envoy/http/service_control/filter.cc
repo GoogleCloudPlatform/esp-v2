@@ -49,7 +49,7 @@ Envoy::Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
 
   handler_ =
       factory_.createHandler(headers, decoder_callbacks_->streamInfo(), stats_);
-
+  handler_->fillFilterState(*decoder_callbacks_->streamInfo().filterState());
   state_ = Calling;
   stopped_ = false;
 

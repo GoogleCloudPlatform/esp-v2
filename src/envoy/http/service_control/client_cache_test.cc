@@ -58,7 +58,7 @@ using ::testing::Return;
 
 constexpr char kServiceName[] = "bookstore.endpoints.test";
 constexpr char kServiceConfigId[] = "2020-06-24r1";
-constexpr char kCheckOperationId[] = "test.check.operation";
+constexpr char kCheckFilterStateOperationId[] = "test.check.operation";
 
 class ClientCacheTestBase : public ::testing::Test {
  protected:
@@ -367,7 +367,7 @@ class ClientCacheCheckHttpRequestTest : public ClientCacheHttpRequestTest {
     request.set_service_name(kServiceName);
     request.set_service_config_id(kServiceConfigId);
     Operation* op = request.mutable_operation();
-    op->set_operation_id(kCheckOperationId);
+    op->set_operation_id(kCheckFilterStateOperationId);
     op->set_operation_name("test_check_operation_name");
     op->set_consumer_id("test-api-key");
     return request;
@@ -375,7 +375,7 @@ class ClientCacheCheckHttpRequestTest : public ClientCacheHttpRequestTest {
 
   CheckResponse getValidCheckResponse() {
     CheckResponse response;
-    response.set_operation_id(kCheckOperationId);
+    response.set_operation_id(kCheckFilterStateOperationId);
     response.set_service_config_id(kServiceConfigId);
     return response;
   }

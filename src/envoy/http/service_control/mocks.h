@@ -45,6 +45,9 @@ class MockServiceControlHandler : public ServiceControlHandler {
               (override));
 
   MOCK_METHOD(void, onDestroy, (), (override));
+
+  MOCK_METHOD(void, fillFilterState,
+              (::Envoy::StreamInfo::FilterState & filter_state), (override));
 };
 
 class MockServiceControlHandlerFactory : public ServiceControlHandlerFactory {

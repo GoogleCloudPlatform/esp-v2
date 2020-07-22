@@ -51,7 +51,7 @@ FilterHeadersStatus Filter::decodeHeaders(
 
   const auto& filter_state = *decoder_callbacks_->streamInfo().filterState();
   absl::string_view operation =
-      utils::getStringFilterState(filter_state, utils::kOperation);
+      utils::getStringFilterState(filter_state, utils::kFilterStateOperation);
   // NOTE: this shouldn't happen in practice because Path Matcher filter would
   // have already rejected the request.
   if (operation.empty()) {
@@ -131,7 +131,7 @@ std::string Filter::translateConstPath(absl::string_view prefix,
                                        absl::string_view original_path) {
   const auto& filter_state = *decoder_callbacks_->streamInfo().filterState();
   const absl::string_view extracted_query_params =
-      utils::getStringFilterState(filter_state, utils::kQueryParams);
+      utils::getStringFilterState(filter_state, utils::kFilterStateQueryParams);
 
   const auto original_path_str = std::string(original_path);
   std::size_t originalQueryParamPos = original_path_str.find('?');
