@@ -31,7 +31,7 @@ constexpr char kFilterStateQueryParams[] =
 constexpr char kFilterStateApiKey[] =
     "com.google.espv2.filters.http.service_control.api_key";
 constexpr char kFilterStateOriginalPath[] =
-    "com.google.espv2.filters.http.service_control.original_path";
+    "com.google.espv2.filters.http.service_control.path";
 
 // Sets a read only string value in the filter state.
 void setStringFilterState(Envoy::StreamInfo::FilterState& filter_state,

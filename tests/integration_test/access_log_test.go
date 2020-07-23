@@ -65,7 +65,7 @@ func TestAccessLog(t *testing.T) {
 		"\"%REQ(:AUTHORITY)%\" \"%UPSTREAM_HOST%\" " +
 		"%FILTER_STATE(com.google.espv2.filters.http.path_matcher.operation):60% " +
 		"%FILTER_STATE(com.google.espv2.filters.http.service_control.api_key):30% " +
-		"%FILTER_STATE(com.google.espv2.filters.http.service_control.original_path):60%" +
+		"%FILTER_STATE(com.google.espv2.filters.http.service_control.path):60%" +
 		"\n"
 
 	configID := "test-config-id"
