@@ -60,6 +60,7 @@ class ServiceControlHandler {
 
   // Fill filter state with request information for access logging.
   virtual void fillFilterState(
+      const Envoy::Http::RequestHeaderMap& request_headers,
       ::Envoy::StreamInfo::FilterState& filter_state) PURE;
 
   // The request is about to be destroyed need to cancel all async requests.

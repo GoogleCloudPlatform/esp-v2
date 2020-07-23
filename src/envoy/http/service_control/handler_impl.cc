@@ -15,6 +15,7 @@
 #include <chrono>
 
 #include "absl/strings/match.h"
+#include "common/http/headers.h"
 #include "common/http/utility.h"
 #include "extensions/filters/http/grpc_stats/grpc_stats_filter.h"
 #include "src/envoy/http/service_control/handler_impl.h"
@@ -26,14 +27,7 @@ namespace espv2 {
 namespace envoy {
 namespace http_filters {
 namespace service_control {
-
-using ::Envoy::StreamInfo::FilterState;
-using ::espv2::api_proxy::service_control::CheckResponseInfo;
-using ::espv2::api_proxy::service_control::OperationInfo;
-using ::espv2::api_proxy::service_control::ScResponseErrorType;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
-
+namespace {
 // The HTTP header suffix to send consumer info to backend.
 constexpr char kConsumerTypeHeaderSuffix[] = "api-consumer-type";
 constexpr char kConsumerNumberHeaderSuffix[] = "api-consumer-number";
@@ -43,16 +37,36 @@ const Envoy::Http::LowerCaseString kIosBundleIdHeader{
     "x-ios-bundle-identifier"};
 const Envoy::Http::LowerCaseString kAndroidPackageHeader{"x-android-package"};
 const Envoy::Http::LowerCaseString kAndroidCertHeader{"x-android-cert"};
-const Envoy::Http::LowerCaseString kRefererHeader{"referer"};
 
 constexpr char JwtPayloadIssuerPath[] = "iss";
 constexpr char JwtPayloadAudiencePath[] = "aud";
 
+}  // namespace
+
+using ::Envoy::TimeSource;
+using ::Envoy::Extensions::HttpFilters::HttpFilterNames;
+using ::Envoy::Extensions::HttpFilters::GrpcStats::GrpcStatsObject;
+using ::Envoy::Grpc::Common;
+using ::Envoy::Http::CustomHeaders;
+using ::Envoy::Http::Headers;
+using ::Envoy::Http::RequestHeaderMap;
+using ::Envoy::Http::ResponseHeaderMap;
+using ::Envoy::Http::ResponseTrailerMap;
+using ::Envoy::Network::Address::Type;
+using ::Envoy::StreamInfo::FilterState;
+using ::Envoy::StreamInfo::StreamInfo;
+using ::Envoy::Tracing::Span;
+
+using ::espv2::api_proxy::service_control::CheckResponseInfo;
+using ::espv2::api_proxy::service_control::OperationInfo;
+using ::espv2::api_proxy::service_control::ScResponseErrorType;
+using ::google::protobuf::util::Status;
+using ::google::protobuf::util::error::Code;
+
 ServiceControlHandlerImpl::ServiceControlHandlerImpl(
-    const Envoy::Http::RequestHeaderMap& headers,
-    const Envoy::StreamInfo::StreamInfo& stream_info, const std::string& uuid,
-    const FilterConfigParser& cfg_parser, Envoy::TimeSource& time_source,
-    ServiceControlFilterStats& filter_stats)
+    const RequestHeaderMap& headers, const StreamInfo& stream_info,
+    const std::string& uuid, const FilterConfigParser& cfg_parser,
+    TimeSource& time_source, ServiceControlFilterStats& filter_stats)
     : cfg_parser_(cfg_parser),
       stream_info_(stream_info),
       time_source_(time_source),
@@ -67,7 +81,7 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
       is_first_report_(true),
       last_reported_(time_source_.systemTime()),
       filter_stats_(filter_stats) {
-  is_grpc_ = Envoy::Grpc::Common::hasGrpcContentType(headers);
+  is_grpc_ = Common::hasGrpcContentType(headers);
 
   http_method_ = std::string(utils::readHeaderEntry(headers.Method()));
   path_ = std::string(utils::readHeaderEntry(headers.Path()));
@@ -107,9 +121,16 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
 
 ServiceControlHandlerImpl::~ServiceControlHandlerImpl() {}
 
-void ServiceControlHandlerImpl::fillFilterState(FilterState& filter_state) {
+void ServiceControlHandlerImpl::fillFilterState(const RequestHeaderMap& headers,
+                                                FilterState& filter_state) {
   utils::setStringFilterState(filter_state, utils::kFilterStateApiKey,
                               api_key_);
+
+  auto* entry = headers.get(Headers::get().Path);
+  if (entry) {
+    utils::setStringFilterState(filter_state, utils::kFilterStateOriginalPath,
+                                entry->value().getStringView());
+  }
 }
 
 void ServiceControlHandlerImpl::onDestroy() {
@@ -127,8 +148,7 @@ void ServiceControlHandlerImpl::fillOperationInfo(
       require_ctx_->service_ctx().config().producer_project_id();
   info.current_time = time_source_.systemTime();
 
-  if (stream_info_.downstreamRemoteAddress()->type() ==
-      Envoy::Network::Address::Type::Ip) {
+  if (stream_info_.downstreamRemoteAddress()->type() == Type::Ip) {
     info.client_ip =
         stream_info_.downstreamRemoteAddress()->ip()->addressAsString();
   }
@@ -160,9 +180,9 @@ void ServiceControlHandlerImpl::prepareReportRequest(
   fillGCPInfo(cfg_parser_.config(), info);
 }
 
-void ServiceControlHandlerImpl::callCheck(
-    Envoy::Http::RequestHeaderMap& headers, Envoy::Tracing::Span& parent_span,
-    CheckDoneCallback& callback) {
+void ServiceControlHandlerImpl::callCheck(RequestHeaderMap& headers,
+                                          Span& parent_span,
+                                          CheckDoneCallback& callback) {
   if (!isConfigured()) {
     filter_stats_.filter_.denied_producer_error_.inc();
     callback.onCheckDone(Status(Code::NOT_FOUND, "Method does not exist."));
@@ -192,7 +212,8 @@ void ServiceControlHandlerImpl::callCheck(
 
   info.ios_bundle_id =
       std::string(utils::extractHeader(headers, kIosBundleIdHeader));
-  info.referer = std::string(utils::extractHeader(headers, kRefererHeader));
+  info.referer =
+      std::string(utils::extractHeader(headers, CustomHeaders::get().Referer));
   info.android_package_name =
       std::string(utils::extractHeader(headers, kAndroidPackageHeader));
   info.android_cert_fingerprint =
@@ -236,7 +257,7 @@ void ServiceControlHandlerImpl::callQuota() {
 }
 
 void ServiceControlHandlerImpl::onCheckResponse(
-    Envoy::Http::RequestHeaderMap& headers, const Status& status,
+    RequestHeaderMap& headers, const Status& status,
     const CheckResponseInfo& response_info) {
   check_response_info_ = response_info;
 
@@ -262,15 +283,15 @@ void ServiceControlHandlerImpl::onCheckResponse(
 }
 
 void ServiceControlHandlerImpl::processResponseHeaders(
-    const Envoy::Http::ResponseHeaderMap& response_headers) {
+    const ResponseHeaderMap& response_headers) {
   frontend_protocol_ = getFrontendProtocol(&response_headers, stream_info_);
   response_header_size_ = response_headers.byteSize();
 }
 
 void ServiceControlHandlerImpl::callReport(
-    const Envoy::Http::RequestHeaderMap* request_headers,
-    const Envoy::Http::ResponseHeaderMap* response_headers,
-    const Envoy::Http::ResponseTrailerMap* response_trailers) {
+    const RequestHeaderMap* request_headers,
+    const ResponseHeaderMap* response_headers,
+    const ResponseTrailerMap* response_trailers) {
   if (require_ctx_ == nullptr) {
     require_ctx_ = cfg_parser_.non_match_rqm_ctx();
   }
@@ -308,8 +329,8 @@ void ServiceControlHandlerImpl::callReport(
       getBackendProtocol(require_ctx_->service_ctx().config());
 
   if (request_headers) {
-    info.referer =
-        std::string(utils::extractHeader(*request_headers, kRefererHeader));
+    info.referer = std::string(
+        utils::extractHeader(*request_headers, CustomHeaders::get().Referer));
   }
 
   fillLatency(stream_info_, info.latency, filter_stats_);
@@ -329,16 +350,11 @@ void ServiceControlHandlerImpl::callReport(
   info.response_size = stream_info_.bytesSent() + response_header_size;
   info.response_bytes = stream_info_.bytesSent() + response_header_size;
 
-  if (stream_info_.filterState()
-          .hasData<Envoy::Extensions::HttpFilters::GrpcStats::GrpcStatsObject>(
-              Envoy::Extensions::HttpFilters::HttpFilterNames::get()
-                  .GrpcStats)) {
+  if (stream_info_.filterState().hasData<GrpcStatsObject>(
+          HttpFilterNames::get().GrpcStats)) {
     const auto& stat_obj =
-        stream_info_.filterState()
-            .getDataReadOnly<
-                Envoy::Extensions::HttpFilters::GrpcStats::GrpcStatsObject>(
-                Envoy::Extensions::HttpFilters::HttpFilterNames::get()
-                    .GrpcStats);
+        stream_info_.filterState().getDataReadOnly<GrpcStatsObject>(
+            HttpFilterNames::get().GrpcStats);
     info.streaming_request_message_counts = stat_obj.request_message_count;
     info.streaming_response_message_counts = stat_obj.response_message_count;
   }
