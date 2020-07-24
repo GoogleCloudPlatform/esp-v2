@@ -35,9 +35,9 @@ func tryRemoveFile(path string) error {
 	return os.Remove(path)
 }
 
-func makeOneRequest(t *testing.T, s *env.TestEnv, path, wantResp, wantError string) {
+func makeOneRequest(t *testing.T, s *env.TestEnv, path, wantError string) {
 	url := fmt.Sprintf("http://localhost:%v%s?key=test-api-key", s.Ports().ListenerPort, path)
-	resp, err := client.DoGet(url)
+	_, err := client.DoGet(url)
 
 	if err != nil {
 		if wantError == "" {
@@ -58,41 +58,34 @@ func TestAccessLog(t *testing.T) {
 		t.Fatalf("fail to remove accessLog file, %v", err)
 	}
 
+	// For the detailed format grammar, refer to
+	// https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log/usage#command-operators
+	accessLogFormat := "\"%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%\"" +
+		"%RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT%" +
+		"\"%REQ(X-FORWARDED-FOR)%\" \"%REQ(USER-AGENT)%\" " +
+		"%FILTER_STATE(com.google.espv2.filters.http.path_matcher.operation):70% " +
+		"%FILTER_STATE(com.google.espv2.filters.http.service_control.api_key):30% " +
+		"%FILTER_STATE(com.google.espv2.filters.http.path_matcher.path):60%" +
+		"\n"
+
 	testCases := []struct {
-		desc        string
-		requestPath string
-		// For the detailed format grammar, refer to
-		// https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log/usage#command-operators
-		accessLogFormat string
-		wantError       string
-		wantAccessLog   string
+		desc          string
+		requestPath   string
+		wantError     string
+		wantAccessLog string
 	}{
 		{
-			desc: "successful request",
+			desc:        "successful request",
 			requestPath: "/echoHeader",
-			accessLogFormat: "\"%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%\"" +
-					"%RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT%" +
-					"\"%REQ(X-FORWARDED-FOR)%\" \"%REQ(USER-AGENT)%\" " +
-					"%FILTER_STATE(com.google.espv2.filters.http.path_matcher.operation):70% " +
-					"%FILTER_STATE(com.google.espv2.filters.http.service_control.api_key):30% " +
-					"%FILTER_STATE(com.google.espv2.filters.http.path_matcher.path):60%" +
-					"\n",
-			wantAccessLog: "\"GET /echoHeader?key=test-api-key HTTP/1.1\"200"+
-					" - 0 0\"-\" \"Go-http-client/1.1\" "+
-					"\"1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoHeader\" \"test-api-key\" "+
-					"\"/echoHeader?key=test-api-key\"\n",
+			wantAccessLog: "\"GET /echoHeader?key=test-api-key HTTP/1.1\"200" +
+				" - 0 0\"-\" \"Go-http-client/1.1\" " +
+				"\"1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoHeader\" \"test-api-key\" " +
+				"\"/echoHeader?key=test-api-key\"\n",
 		},
 		{
 			desc:        "request failed in path matcher",
 			requestPath: "/noexistpath",
-			accessLogFormat: "\"%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%\"" +
-				"%RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT%" +
-				"\"%REQ(X-FORWARDED-FOR)%\" \"%REQ(USER-AGENT)%\" " +
-				"%FILTER_STATE(com.google.espv2.filters.http.path_matcher.operation):60% " +
-				"%FILTER_STATE(com.google.espv2.filters.http.service_control.api_key):30% " +
-				"%FILTER_STATE(com.google.espv2.filters.http.path_matcher.path):60%" +
-				"\n",
-			wantError: `http response status is not 200 OK: 404 Not Found`,
+			wantError:   `http response status is not 200 OK: 404 Not Found`,
 			wantAccessLog: "\"GET /noexistpath?key=test-api-key HTTP/1.1\"404" +
 				" UAEX 0 75\"-\" \"Go-http-client/1.1\" " +
 				"- - \"/noexistpath?key=test-api-key\"\n",
@@ -103,7 +96,7 @@ func TestAccessLog(t *testing.T) {
 		_t := func() {
 			configID := "test-config-id"
 			args := []string{"--service_config_id=" + configID,
-				"--rollout_strategy=fixed", "--access_log=" + accessLog, "--access_log_format=" + tc.accessLogFormat}
+				"--rollout_strategy=fixed", "--access_log=" + accessLog, "--access_log_format=" + accessLogFormat}
 
 			s := env.NewTestEnv(comp.TestAccessLog, platform.EchoSidecar)
 
@@ -117,7 +110,6 @@ func TestAccessLog(t *testing.T) {
 			if err != nil {
 				t.Fatalf("fail to read access log file: %v", err)
 			}
-
 
 			if gotAccessLog := string(bytes); tc.wantAccessLog != gotAccessLog {
 				t.Errorf("expect access log: %s, get acccess log: %v", tc.wantAccessLog, gotAccessLog)
