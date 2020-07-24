@@ -90,7 +90,8 @@ TEST_F(BackendRoutingFilterTest, NoOperationNameBlocked) {
       filter_->decodeHeaders(headers, false);
 
   // Expect the filter to be a NOOP and reject the request.
-  EXPECT_EQ(headers.Path()->value().getStringView(), "/books/1");
+  EXPECT_EQ(headers.getPathValue(), "/books/1");
+  EXPECT_EQ(headers.EnvoyOriginalPath(), nullptr);
   EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::StopIteration);
 
   // Stats.
@@ -113,7 +114,8 @@ TEST_F(BackendRoutingFilterTest, OperationNotConfiguredAllowed) {
       filter_->decodeHeaders(headers, false);
 
   // Expect the filter to be a NOOP and pass the request through.
-  EXPECT_EQ(headers.Path()->value().getStringView(), "/books/1");
+  EXPECT_EQ(headers.getPathValue(), "/books/1");
+  EXPECT_EQ(headers.EnvoyOriginalPath(), nullptr);
   EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 
   // Stats.
@@ -137,6 +139,7 @@ TEST_F(BackendRoutingFilterTest, NoPathHeaderBlocked) {
 
   // Expect the filter to be a NOOP and reject the request.
   EXPECT_EQ(headers.Path(), nullptr);
+  EXPECT_EQ(headers.EnvoyOriginalPath(), nullptr);
   EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::StopIteration);
 
   // Stats.
@@ -159,7 +162,8 @@ TEST_F(BackendRoutingFilterTest, InvalidPathHeaderWithFragmentBlocked) {
       filter_->decodeHeaders(headers, false);
 
   // Expect the filter to be a NOOP and reject the request.
-  EXPECT_EQ(headers.Path()->value().getStringView(), "/books/1#fragment");
+  EXPECT_EQ(headers.getPathValue(), "/books/1#fragment");
+  EXPECT_EQ(headers.EnvoyOriginalPath(), nullptr);
   EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::StopIteration);
 
   // Stats.
@@ -182,7 +186,8 @@ TEST_F(BackendRoutingFilterTest, ConstantAddress) {
       filter_->decodeHeaders(headers, false);
 
   // Expect the path to be modified.
-  EXPECT_EQ(headers.Path()->value().getStringView(), "/");
+  EXPECT_EQ(headers.getPathValue(), "/");
+  EXPECT_EQ(headers.getEnvoyOriginalPathValue(), "/books/1");
   EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 
   // Stats.
@@ -192,6 +197,26 @@ TEST_F(BackendRoutingFilterTest, ConstantAddress) {
           "backend_routing.constant_address_request");
   ASSERT_NE(counter, nullptr);
   EXPECT_EQ(counter->value(), 1);
+}
+
+TEST_F(BackendRoutingFilterTest, EnvoyOriginalPathAlreadySet) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{
+      {":method", "GET"},
+      {":path", "/books/1"},
+      {"x-envoy-original-path", "this-is-original-path"}};
+  utils::setStringFilterState(
+      *mock_decoder_callbacks_.stream_info_.filter_state_,
+      utils::kFilterStateOperation, "const-operation");
+
+  // Call function under test
+  Envoy::Http::FilterHeadersStatus status =
+      filter_->decodeHeaders(headers, false);
+
+  // Expect the path to be modified.
+  EXPECT_EQ(headers.getPathValue(), "/");
+  // Expect X-Envoy-Original-Path to be preserved.
+  EXPECT_EQ(headers.getEnvoyOriginalPathValue(), "this-is-original-path");
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 }
 
 TEST_F(BackendRoutingFilterTest, ConstantAddressWithPathMatcherQueryParams) {
@@ -209,7 +234,8 @@ TEST_F(BackendRoutingFilterTest, ConstantAddressWithPathMatcherQueryParams) {
       filter_->decodeHeaders(headers, false);
 
   // Expect the path to be modified.
-  EXPECT_EQ(headers.Path()->value().getStringView(), "/?id=1");
+  EXPECT_EQ(headers.getPathValue(), "/?id=1");
+  EXPECT_EQ(headers.getEnvoyOriginalPathValue(), "/books/1");
   EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 
   // Stats.
@@ -240,8 +266,10 @@ TEST_F(BackendRoutingFilterQueryParamInRequestTest,
       filter_->decodeHeaders(headers, false);
 
   // Expect the path to be modified.
-  EXPECT_EQ(headers.Path()->value().getStringView(),
+  EXPECT_EQ(headers.getPathValue(),
             "/test-prefix/books/1?view=summary&filter=deleted");
+  EXPECT_EQ(headers.getEnvoyOriginalPathValue(),
+            "/books/1?view=summary&filter=deleted");
   EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 
   // Stats.
@@ -265,8 +293,9 @@ TEST_F(BackendRoutingFilterQueryParamInRequestTest, ConstantAddress) {
       filter_->decodeHeaders(headers, false);
 
   // Expect the path to be modified.
-  EXPECT_EQ(headers.Path()->value().getStringView(),
-            "/?view=summary&filter=deleted");
+  EXPECT_EQ(headers.getPathValue(), "/?view=summary&filter=deleted");
+  EXPECT_EQ(headers.getEnvoyOriginalPathValue(),
+            "/books/1?view=summary&filter=deleted");
   EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 
   // Stats.
@@ -294,8 +323,9 @@ TEST_F(BackendRoutingFilterQueryParamInRequestTest,
       filter_->decodeHeaders(headers, false);
 
   // Expect the path to be modified.
-  EXPECT_EQ(headers.Path()->value().getStringView(),
-            "/?view=summary&filter=deleted&id=1");
+  EXPECT_EQ(headers.getPathValue(), "/?view=summary&filter=deleted&id=1");
+  EXPECT_EQ(headers.getEnvoyOriginalPathValue(),
+            "/books/1?view=summary&filter=deleted");
   EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 
   // Stats.
@@ -325,7 +355,8 @@ TEST_F(BackendRoutingFilterQueryParamInRequestTest,
   // Expect the path to be modified: the same query param is appended with
   // different values. Value 1 is from variable bindings, value 2 is from
   // original query params.
-  EXPECT_EQ(headers.Path()->value().getStringView(), "/?id=2&id=1");
+  EXPECT_EQ(headers.getPathValue(), "/?id=2&id=1");
+  EXPECT_EQ(headers.getEnvoyOriginalPathValue(), "/books/1?id=2");
   EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 
   // Stats.
@@ -349,8 +380,9 @@ TEST_F(BackendRoutingFilterQueryParamInRequestTest, ConstantAddressWithPrefix) {
       filter_->decodeHeaders(headers, false);
 
   // Expect the path to be modified.
-  EXPECT_EQ(headers.Path()->value().getStringView(),
-            "/test-prefix?view=summary&filter=deleted");
+  EXPECT_EQ(headers.getPathValue(), "/test-prefix?view=summary&filter=deleted");
+  EXPECT_EQ(headers.getEnvoyOriginalPathValue(),
+            "/books/1?view=summary&filter=deleted");
   EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 
   // Stats.

@@ -112,6 +112,9 @@ FilterHeadersStatus Filter::decodeHeaders(
       NOT_REACHED_GCOVR_EXCL_LINE;
   }
 
+  if (!headers.EnvoyOriginalPath()) {
+    headers.setEnvoyOriginalPath(headers.getPathValue());
+  }
   headers.setPath(new_path);
   return FilterHeadersStatus::Continue;
 }

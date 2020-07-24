@@ -64,8 +64,7 @@ func TestAccessLog(t *testing.T) {
 		"%RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT%" +
 		"\"%REQ(X-FORWARDED-FOR)%\" \"%REQ(USER-AGENT)%\" " +
 		"%FILTER_STATE(com.google.espv2.filters.http.path_matcher.operation):70% " +
-		"%FILTER_STATE(com.google.espv2.filters.http.service_control.api_key):30% " +
-		"%FILTER_STATE(com.google.espv2.filters.http.path_matcher.path):60%" +
+		"%FILTER_STATE(com.google.espv2.filters.http.service_control.api_key):30%" +
 		"\n"
 
 	testCases := []struct {
@@ -79,8 +78,7 @@ func TestAccessLog(t *testing.T) {
 			requestPath: "/echoHeader",
 			wantAccessLog: "\"GET /echoHeader?key=test-api-key HTTP/1.1\"200" +
 				" - 0 0\"-\" \"Go-http-client/1.1\" " +
-				"\"1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoHeader\" \"test-api-key\" " +
-				"\"/echoHeader?key=test-api-key\"\n",
+				"\"1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoHeader\" \"test-api-key\"\n",
 		},
 		{
 			desc:        "request failed in path matcher",
@@ -88,7 +86,7 @@ func TestAccessLog(t *testing.T) {
 			wantError:   `http response status is not 200 OK: 404 Not Found`,
 			wantAccessLog: "\"GET /noexistpath?key=test-api-key HTTP/1.1\"404" +
 				" UAEX 0 75\"-\" \"Go-http-client/1.1\" " +
-				"- - \"/noexistpath?key=test-api-key\"\n",
+				"- -\n",
 		},
 	}
 

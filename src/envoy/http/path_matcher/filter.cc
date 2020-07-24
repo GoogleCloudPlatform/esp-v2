@@ -74,7 +74,6 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
 
   Envoy::StreamInfo::FilterState& filter_state =
       *decoder_callbacks_->streamInfo().filterState();
-  utils::setStringFilterState(filter_state, utils::kFilterStatePath, path);
 
   const PathMatcherRule* rule = config_->findRule(method, path);
   if (rule == nullptr) {
