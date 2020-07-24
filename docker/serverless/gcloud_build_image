@@ -16,6 +16,9 @@
 # The script will use the latest ESPv2 version by default.
 # Use the -v option to pass in a custom version (example: -v 2.9).
 
+# Fail on any error.
+set -eo pipefail
+
 # Default to the latest released ESPv2 version.
 BASE_IMAGE_NAME="gcr.io/endpoints-release/endpoints-runtime-serverless"
 ESP_TAG="2"
