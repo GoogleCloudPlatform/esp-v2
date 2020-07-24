@@ -47,9 +47,7 @@ class MockServiceControlHandler : public ServiceControlHandler {
   MOCK_METHOD(void, onDestroy, (), (override));
 
   MOCK_METHOD(void, fillFilterState,
-              (const Envoy::Http::RequestHeaderMap& headers,
-               ::Envoy::StreamInfo::FilterState& filter_state),
-              (override));
+              (::Envoy::StreamInfo::FilterState & filter_state), (override));
 };
 
 class MockServiceControlHandlerFactory : public ServiceControlHandlerFactory {
