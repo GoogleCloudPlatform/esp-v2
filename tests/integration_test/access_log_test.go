@@ -35,17 +35,18 @@ func tryRemoveFile(path string) error {
 	return os.Remove(path)
 }
 
-func makeOneRequest(t *testing.T, s *env.TestEnv) {
-	wantResp := `{"message":"hello"}`
-	url := fmt.Sprintf("http://localhost:%v/echo?key=test-api-key", s.Ports().ListenerPort)
-	resp, err := client.DoPost(url, "hello")
+func makeOneRequest(t *testing.T, s *env.TestEnv, path, wantResp, wantError string) {
+	url := fmt.Sprintf("http://localhost:%v%s?key=test-api-key", s.Ports().ListenerPort, path)
+	resp, err := client.DoGet(url)
 
 	if err != nil {
-		t.Fatalf("got unexpected error: %s", err)
+		if wantError == "" {
+			t.Errorf("got unexpected error: %s", err)
+		} else if !strings.Contains(err.Error(), wantError) {
+			t.Errorf("expected error: %s, got: %s", wantError, err.Error())
+		}
+
 		return
-	}
-	if !strings.Contains(string(resp), wantResp) {
-		t.Errorf("expected: %s, got: %s", wantResp, string(resp))
 	}
 }
 
@@ -57,41 +58,76 @@ func TestAccessLog(t *testing.T) {
 		t.Fatalf("fail to remove accessLog file, %v", err)
 	}
 
-	// For the detailed format grammar, refer to
-	// https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log/usage#command-operators
-	accessLogFormat := "\"%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%\"" +
-		"%RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT%" +
-		"\"%REQ(X-FORWARDED-FOR)%\" \"%REQ(USER-AGENT)%\"" +
-		"\"%REQ(:AUTHORITY)%\" \"%UPSTREAM_HOST%\" " +
-		"%FILTER_STATE(com.google.espv2.filters.http.path_matcher.operation):60% " +
-		"%FILTER_STATE(com.google.espv2.filters.http.service_control.api_key):30%\n"
-
-	configID := "test-config-id"
-	args := []string{"--service_config_id=" + configID,
-		"--rollout_strategy=fixed", "--access_log=" + accessLog, "--access_log_format=" + accessLogFormat}
-
-	s := env.NewTestEnv(comp.TestAccessLog, platform.EchoSidecar)
-
-	if err := s.Setup(args); err != nil {
-		t.Fatalf("fail to setup test env, %v", err)
+	testCases := []struct {
+		desc        string
+		requestPath string
+		// For the detailed format grammar, refer to
+		// https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log/usage#command-operators
+		accessLogFormat string
+		wantError       string
+		wantAccessLog   string
+	}{
+		{
+			desc: "successful request",
+			requestPath: "/echoHeader",
+			accessLogFormat: "\"%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%\"" +
+					"%RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT%" +
+					"\"%REQ(X-FORWARDED-FOR)%\" \"%REQ(USER-AGENT)%\" " +
+					"%FILTER_STATE(com.google.espv2.filters.http.path_matcher.operation):70% " +
+					"%FILTER_STATE(com.google.espv2.filters.http.service_control.api_key):30% " +
+					"%FILTER_STATE(com.google.espv2.filters.http.path_matcher.path):60%" +
+					"\n",
+			wantAccessLog: "\"GET /echoHeader?key=test-api-key HTTP/1.1\"200"+
+					" - 0 0\"-\" \"Go-http-client/1.1\" "+
+					"\"1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoHeader\" \"test-api-key\" "+
+					"\"/echoHeader?key=test-api-key\"\n",
+		},
+		{
+			desc:        "request failed in path matcher",
+			requestPath: "/noexistpath",
+			accessLogFormat: "\"%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%\"" +
+				"%RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT%" +
+				"\"%REQ(X-FORWARDED-FOR)%\" \"%REQ(USER-AGENT)%\" " +
+				"%FILTER_STATE(com.google.espv2.filters.http.path_matcher.operation):60% " +
+				"%FILTER_STATE(com.google.espv2.filters.http.service_control.api_key):30% " +
+				"%FILTER_STATE(com.google.espv2.filters.http.path_matcher.path):60%" +
+				"\n",
+			wantError: `http response status is not 200 OK: 404 Not Found`,
+			wantAccessLog: "\"GET /noexistpath?key=test-api-key HTTP/1.1\"404" +
+				" UAEX 0 75\"-\" \"Go-http-client/1.1\" " +
+				"- - \"/noexistpath?key=test-api-key\"\n",
+		},
 	}
-	makeOneRequest(t, s)
-	s.TearDown(t)
-	expectAccessLog := fmt.Sprintf("\"POST /echo?key=test-api-key HTTP/1.1\"200"+
-		" - 20 19\"-\" \"Go-http-client/1.1\"\"localhost:%v\" \"127.0.0.1:%v\" "+
-		"\"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo\" \"test-api-key\"\n",
-		s.Ports().ListenerPort, s.Ports().BackendServerPort)
 
-	bytes, err := ioutil.ReadFile(accessLog)
-	if err != nil {
-		t.Fatalf("fail to read access log file: %v", err)
-	}
+	for _, tc := range testCases {
+		_t := func() {
+			configID := "test-config-id"
+			args := []string{"--service_config_id=" + configID,
+				"--rollout_strategy=fixed", "--access_log=" + accessLog, "--access_log_format=" + tc.accessLogFormat}
 
-	if gotAccessLog := string(bytes); expectAccessLog != gotAccessLog {
-		t.Errorf("expect access log: %s, get acccess log: %v", expectAccessLog, gotAccessLog)
-	}
+			s := env.NewTestEnv(comp.TestAccessLog, platform.EchoSidecar)
 
-	if err := tryRemoveFile(accessLog); err != nil {
-		t.Fatalf("fail to remove accessLog file, %v", err)
+			if err := s.Setup(args); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+			defer s.TearDown(t)
+			makeOneRequest(t, s, tc.requestPath, tc.wantError)
+
+			bytes, err := ioutil.ReadFile(accessLog)
+			if err != nil {
+				t.Fatalf("fail to read access log file: %v", err)
+			}
+
+
+			if gotAccessLog := string(bytes); tc.wantAccessLog != gotAccessLog {
+				t.Errorf("expect access log: %s, get acccess log: %v", tc.wantAccessLog, gotAccessLog)
+			}
+
+			if err := tryRemoveFile(accessLog); err != nil {
+				t.Fatalf("fail to remove accessLog file, %v", err)
+			}
+		}
+
+		_t()
 	}
 }

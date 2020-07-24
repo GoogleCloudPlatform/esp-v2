@@ -26,6 +26,8 @@ constexpr char kFilterStateOperation[] =
     "com.google.espv2.filters.http.path_matcher.operation";
 constexpr char kFilterStateQueryParams[] =
     "com.google.espv2.filters.http.path_matcher.query_params";
+constexpr char kFilterStatePath[] =
+    "com.google.espv2.filters.http.path_matcher.path";
 
 // Data name in `FilterState` set by Service Control filter:
 constexpr char kFilterStateApiKey[] =

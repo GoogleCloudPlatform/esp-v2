@@ -25,6 +25,7 @@ namespace espv2 {
 namespace envoy {
 namespace http_filters {
 namespace path_matcher {
+using ::Envoy::Http::RequestHeaderMap;
 
 using ::espv2::api::envoy::v7::http::path_matcher::PathMatcherRule;
 using ::espv2::api::envoy::v7::http::path_matcher::PathParameterExtractionRule;
@@ -47,7 +48,7 @@ using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
 }  // namespace
 
 Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
-    Envoy::Http::RequestHeaderMap& headers, bool) {
+    RequestHeaderMap& headers, bool) {
   if (!headers.Method()) {
     rejectRequest(Envoy::Http::Code(400), "No method in request headers.");
     return Envoy::Http::FilterHeadersStatus::StopIteration;
@@ -70,6 +71,11 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
 
   std::string method(headers.Method()->value().getStringView());
   std::string path(headers.Path()->value().getStringView());
+
+  Envoy::StreamInfo::FilterState& filter_state =
+      *decoder_callbacks_->streamInfo().filterState();
+  utils::setStringFilterState(filter_state, utils::kFilterStatePath, path);
+
   const PathMatcherRule* rule = config_->findRule(method, path);
   if (rule == nullptr) {
     rejectRequest(Envoy::Http::Code(404),
@@ -79,8 +85,6 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
 
   const absl::string_view operation = rule->operation();
   ENVOY_LOG(debug, "matched operation: {}", operation);
-  Envoy::StreamInfo::FilterState& filter_state =
-      *decoder_callbacks_->streamInfo().filterState();
   utils::setStringFilterState(filter_state, utils::kFilterStateOperation,
                               operation);
 

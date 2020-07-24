@@ -90,6 +90,9 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersWithOperation) {
                                         utils::kFilterStateOperation),
             "1.cloudesf_testing_cloud_goog.Bar");
   EXPECT_EQ(utils::getStringFilterState(*mock_cb_.stream_info_.filter_state_,
+                                        utils::kFilterStatePath),
+            "/bar");
+  EXPECT_EQ(utils::getStringFilterState(*mock_cb_.stream_info_.filter_state_,
                                         utils::kFilterStateQueryParams),
             Envoy::EMPTY_STRING);
 
