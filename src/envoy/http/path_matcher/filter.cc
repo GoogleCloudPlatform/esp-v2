@@ -71,7 +71,6 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
 
   std::string method(headers.Method()->value().getStringView());
   std::string path(headers.Path()->value().getStringView());
-
   const PathMatcherRule* rule = config_->findRule(method, path);
   if (rule == nullptr) {
     rejectRequest(Envoy::Http::Code(404),
@@ -79,10 +78,10 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 
-  Envoy::StreamInfo::FilterState& filter_state =
-      *decoder_callbacks_->streamInfo().filterState();
   const absl::string_view operation = rule->operation();
   ENVOY_LOG(debug, "matched operation: {}", operation);
+  Envoy::StreamInfo::FilterState& filter_state =
+      *decoder_callbacks_->streamInfo().filterState();
   utils::setStringFilterState(filter_state, utils::kFilterStateOperation,
                               operation);
 
