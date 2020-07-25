@@ -89,7 +89,7 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersSyncOKStatus) {
                           ServiceControlHandler::CheckDoneCallback& callback) {
         callback.onCheckDone(Status::OK);
       }));
-  EXPECT_CALL(*mock_handler_, fillFilterState(_, _));
+  EXPECT_CALL(*mock_handler_, fillFilterState(_));
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::Continue,
             filter_->decodeHeaders(req_headers_, true));
 

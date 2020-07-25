@@ -656,26 +656,6 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
   handler.callReport(&headers, &response_headers, &resp_trailer_);
 }
 
-TEST_F(HandlerTest, FillFilterState) {
-  utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kFilterStateOperation, "get_header_key");
-  TestRequestHeaderMapImpl headers{
-      {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
-  TestResponseHeaderMapImpl response_headers{
-      {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_, stats_);
-
-  handler.fillFilterState(headers, *mock_stream_info_.filter_state_);
-
-  EXPECT_EQ(utils::getStringFilterState(*mock_stream_info_.filter_state_,
-                                        utils::kFilterStateApiKey),
-            "foobar");
-  EXPECT_EQ(utils::getStringFilterState(*mock_stream_info_.filter_state_,
-                                        utils::kFilterStateOriginalPath),
-            "/echo");
-}
-
 TEST_F(HandlerTest, HandlerFailQuotaSync) {
   // Test: Check is required and a request is made, but service control
   // returns a bad status.
