@@ -53,9 +53,9 @@ func makeOneRequest(t *testing.T, s *env.TestEnv, path, wantError string) {
 func TestAccessLog(t *testing.T) {
 	t.Parallel()
 
-	accessLog := platform.GetFilePath(platform.AccessLog)
-	if err := tryRemoveFile(accessLog); err != nil {
-		t.Fatalf("fail to remove accessLog file, %v", err)
+	accessLogFilePath := platform.GetFilePath(platform.AccessLog)
+	if err := tryRemoveFile(accessLogFilePath); err != nil {
+		t.Fatalf("fail to remove accessLogFile, %v", err)
 	}
 
 	// For the detailed format grammar, refer to
@@ -94,7 +94,7 @@ func TestAccessLog(t *testing.T) {
 		_t := func() {
 			configID := "test-config-id"
 			args := []string{"--service_config_id=" + configID,
-				"--rollout_strategy=fixed", "--access_log=" + accessLog, "--access_log_format=" + accessLogFormat}
+				"--rollout_strategy=fixed", "--access_log=" + accessLogFilePath, "--access_log_format=" + accessLogFormat}
 
 			s := env.NewTestEnv(comp.TestAccessLog, platform.EchoSidecar)
 
@@ -104,7 +104,7 @@ func TestAccessLog(t *testing.T) {
 			defer s.TearDown(t)
 			makeOneRequest(t, s, tc.requestPath, tc.wantError)
 
-			bytes, err := ioutil.ReadFile(accessLog)
+			bytes, err := ioutil.ReadFile(accessLogFilePath)
 			if err != nil {
 				t.Fatalf("fail to read access log file: %v", err)
 			}
@@ -113,8 +113,8 @@ func TestAccessLog(t *testing.T) {
 				t.Errorf("expect access log: %s, get acccess log: %v", tc.wantAccessLog, gotAccessLog)
 			}
 
-			if err := tryRemoveFile(accessLog); err != nil {
-				t.Fatalf("fail to remove accessLog file, %v", err)
+			if err := tryRemoveFile(accessLogFilePath); err != nil {
+				t.Fatalf("fail to remove accessLogFile, %v", err)
 			}
 		}
 
