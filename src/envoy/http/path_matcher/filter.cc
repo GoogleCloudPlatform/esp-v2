@@ -25,8 +25,8 @@ namespace espv2 {
 namespace envoy {
 namespace http_filters {
 namespace path_matcher {
-using ::Envoy::Http::RequestHeaderMap;
 
+using ::Envoy::Http::RequestHeaderMap;
 using ::espv2::api::envoy::v7::http::path_matcher::PathMatcherRule;
 using ::espv2::api::envoy::v7::http::path_matcher::PathParameterExtractionRule;
 using ::espv2::api_proxy::path_matcher::VariableBinding;
@@ -72,9 +72,6 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
   std::string method(headers.Method()->value().getStringView());
   std::string path(headers.Path()->value().getStringView());
 
-  Envoy::StreamInfo::FilterState& filter_state =
-      *decoder_callbacks_->streamInfo().filterState();
-
   const PathMatcherRule* rule = config_->findRule(method, path);
   if (rule == nullptr) {
     rejectRequest(Envoy::Http::Code(404),
@@ -82,6 +79,8 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 
+  Envoy::StreamInfo::FilterState& filter_state =
+      *decoder_callbacks_->streamInfo().filterState();
   const absl::string_view operation = rule->operation();
   ENVOY_LOG(debug, "matched operation: {}", operation);
   utils::setStringFilterState(filter_state, utils::kFilterStateOperation,
