@@ -108,7 +108,7 @@ function deployBackend() {
       ;;
     "cloud-function")
       cd ${ROOT}/tests/endpoints/bookstore
-      gcloud functions deploy ${BACKEND_SERVICE_NAME}  --runtime nodejs8 \
+      gcloud functions deploy ${BACKEND_SERVICE_NAME}  --runtime nodejs12 \
         --trigger-http --service-account "${BACKEND_RUNTIME_SERVICE_ACCOUNT}" \
         --quiet --entry-point app
       cd ${ROOT}
@@ -325,7 +325,7 @@ function setup() {
     -i "${APIPROXY_IMAGE}"
 
   # Redeploy ESPv2 to update the service config
-  proxy_args="^++^--tracing_sample_rate=0.00001++--tracing_outgoing_context=--tracing_outgoing_context"
+  proxy_args="^++^--tracing_sample_rate=0.00001++--tracing_outgoing_context=--x-cloud-trace-context"
 
   if [[ ${PROXY_PLATFORM} == "cloud-run" ]];
   then
