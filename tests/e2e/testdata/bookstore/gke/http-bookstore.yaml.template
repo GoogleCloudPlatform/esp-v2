@@ -49,7 +49,7 @@ spec:
         ports:
           - containerPort: 8080
       - name: bookstore
-        image: gcr.io/cloudesf-testing/app:bookstore
+        image: gcr.io/cloudesf-testing/http-bookstore:2
         ports:
           - containerPort: 8081
         env:

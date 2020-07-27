@@ -14,6 +14,13 @@
   "author": "Google Inc.",
   "license": "Apache-2.0",
   "dependencies": {
+    "@google-cloud/opentelemetry-cloud-trace-exporter": "^0.3.0",
+    "@opentelemetry/api": "^0.9.0",
+    "@opentelemetry/node": "^0.9.0",
+    "@opentelemetry/plugin-express": "^0.8.0",
+    "@opentelemetry/plugin-http": "^0.9.0",
+    "@opentelemetry/plugin-https": "^0.9.0",
+    "@opentelemetry/tracing": "^0.9.0",
     "body-parser": "^1.12.2",
     "express": "^4.12.3",
     "swagger-tools": "0.8.*"
