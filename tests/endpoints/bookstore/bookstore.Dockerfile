@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM node:0.12
+FROM node:lts
 COPY tests/endpoints/bookstore/http_bookstore.js /http_bookstore.js
 COPY tests/endpoints/bookstore/bookstore_swagger_template.json /bookstore_swagger_template.json
 COPY tests/endpoints/bookstore/package.json /package.json

@@ -21,6 +21,18 @@
 
 'use strict';
 
+const opentelemetry = require('@opentelemetry/api');
+const { NodeTracerProvider } = require('@opentelemetry/node');
+const { BatchSpanProcessor } = require('@opentelemetry/tracing');
+const { TraceExporter } = require('@google-cloud/opentelemetry-cloud-trace-exporter');
+
+// Initialize the OpenTelemetry APIs to use the NodeTracerProvider bindings
+const provider = new NodeTracerProvider();
+const exporter = new TraceExporter();
+provider.addSpanProcessor(new BatchSpanProcessor(exporter));
+provider.register();
+
+// Load express afterwords.
 var express = require('express');
 var bodyParser = require('body-parser');
 var swaggerTools = require('swagger-tools');
@@ -87,7 +99,7 @@ function bookstore(options) {
       var timestamp = date.getHours() + ":" + date.getMinutes() + ":" +
         date.getSeconds() + ":" + date.getMilliseconds();
       console.log(timestamp + ' Echo requests received: ', echoCount);
-  }, 1000);
+  }, 1000 * 60);
 
   // Install tracing middleware.
   if (options.log === true) {
