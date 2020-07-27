@@ -26,6 +26,7 @@ namespace envoy {
 namespace http_filters {
 namespace path_matcher {
 
+using ::Envoy::Http::RequestHeaderMap;
 using ::espv2::api::envoy::v7::http::path_matcher::PathMatcherRule;
 using ::espv2::api::envoy::v7::http::path_matcher::PathParameterExtractionRule;
 using ::espv2::api_proxy::path_matcher::VariableBinding;
@@ -47,7 +48,7 @@ using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
 }  // namespace
 
 Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
-    Envoy::Http::RequestHeaderMap& headers, bool) {
+    RequestHeaderMap& headers, bool) {
   if (!headers.Method()) {
     rejectRequest(Envoy::Http::Code(400), "No method in request headers.");
     return Envoy::Http::FilterHeadersStatus::StopIteration;
