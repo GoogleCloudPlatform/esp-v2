@@ -49,12 +49,6 @@ func ServiceToBootstrapConfig(serviceConfig *confpb.Service, id string, opts opt
 		return nil, err
 	}
 
-	if !opts.DisableTracing {
-		if bt.Tracing, err = bootstrap.CreateTracing(opts.CommonOptions); err != nil {
-			return nil, fmt.Errorf("failed to create tracing config, error: %v", err)
-		}
-	}
-
 	bt.StaticResources = &bootstrappb.Bootstrap_StaticResources{
 		Listeners: listeners,
 		Clusters:  clusters,

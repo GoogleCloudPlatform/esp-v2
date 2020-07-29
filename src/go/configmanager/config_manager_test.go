@@ -110,6 +110,7 @@ func TestFetchListeners(t *testing.T) {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendAddress = tc.BackendAddress
 		opts.DisableTracing = !tc.enableTracing
+		opts.TracingProjectId = "fake-project-id"
 		opts.SuppressEnvoyHeaders = !tc.enableDebug
 
 		setFlags(testdata.TestFetchListenersProjectName, testdata.TestFetchListenersConfigID, util.FixedRolloutStrategy, "100ms", "")
@@ -384,6 +385,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 
 	opts := options.DefaultConfigGeneratorOptions()
 	opts.BackendAddress = tc.BackendAddress
+	opts.DisableTracing = true
 
 	setFlags(testProjectName, testConfigID, util.ManagedRolloutStrategy, "100ms", "")
 

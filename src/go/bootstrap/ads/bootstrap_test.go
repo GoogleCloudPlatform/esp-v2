@@ -91,31 +91,13 @@ func TestCreateBootstrapConfig(t *testing.T) {
         "type": "STRICT_DNS"
       }
     ]
-  },
-  "tracing": {
-    "http": {
-      "name": "envoy.tracers.opencensus",
-      "typedConfig": {
-        "@type": "type.googleapis.com/envoy.config.trace.v3.OpenCensusConfig",
-        "stackdriverExporterEnabled": true,
-        "stackdriverProjectId": "test_project",
-        "traceConfig": {
-          "maxNumberOfAnnotations": "32",
-          "maxNumberOfAttributes": "32",
-          "maxNumberOfLinks": "128",
-          "maxNumberOfMessageEvents": "128",
-          "probabilitySampler": {
-            "samplingProbability": 0.001
-          }
-        }
-      }
-    }
   }
 }`,
 		},
 		{
 			desc: "bootstrap with options",
 			args: map[string]string{
+				// TODO(nareddyt): Remove flag from bootstrap binary in follow-up PR
 				"disable_tracing": "true",
 				"admin_port":      "8001",
 				"node":            "test-node",

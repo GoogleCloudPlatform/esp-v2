@@ -114,5 +114,6 @@ func (s *FakeTraceServer) RetrieveSpanCount() (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	glog.Infof("got %v spans", len(names))
 	return len(names), nil
 }

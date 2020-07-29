@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bootstrap
+package tracing
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
@@ -25,6 +26,8 @@ import (
 
 	opencensuspb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
 	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
+	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	typepb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 )
 
 func createTraceContexts(ctx_str string) ([]tracepb.OpenCensusConfig_TraceContext, error) {
@@ -67,9 +70,7 @@ func getTracingProjectId(opts options.CommonOptions) (string, error) {
 	return metadata.NewMetadataFetcher(opts).FetchProjectId()
 }
 
-// CreateTracing outputs envoy tracing config
-func CreateTracing(opts options.CommonOptions) (*tracepb.Tracing, error) {
-
+func createOpenCensusConfig(opts options.CommonOptions) (*tracepb.OpenCensusConfig, error) {
 	projectId, err := getTracingProjectId(opts)
 	if err != nil {
 		return nil, err
@@ -102,34 +103,46 @@ func CreateTracing(opts options.CommonOptions) (*tracepb.Tracing, error) {
 		return nil, err
 	}
 
-	if opts.TracingSamplingRate == 1.0 {
-		cfg.TraceConfig.Sampler = &opencensuspb.TraceConfig_ConstantSampler{
-			ConstantSampler: &opencensuspb.ConstantSampler{
-				Decision: opencensuspb.ConstantSampler_ALWAYS_ON,
-			},
-		}
-	} else if opts.TracingSamplingRate == 0.0 {
-		cfg.TraceConfig.Sampler = &opencensuspb.TraceConfig_ConstantSampler{
-			ConstantSampler: &opencensuspb.ConstantSampler{
-				Decision: opencensuspb.ConstantSampler_ALWAYS_PARENT,
-			},
-		}
-	} else {
-		if opts.TracingSamplingRate < 0.0 || opts.TracingSamplingRate > 1.0 {
-			return nil, fmt.Errorf("Invalid trace sampling rate: %v. It must be >= 0.0 and <= 1.0", opts.TracingSamplingRate)
-		}
-		cfg.TraceConfig.Sampler = &opencensuspb.TraceConfig_ProbabilitySampler{
-			ProbabilitySampler: &opencensuspb.ProbabilitySampler{
-				SamplingProbability: opts.TracingSamplingRate,
-			},
-		}
+	// Tracing sample rate in OpenCensusConfig is not used at all by Envoy.
+	// No need to set it.
+
+	return cfg, nil
+}
+
+// CreateTracing outputs envoy HCM tracing config.
+func CreateTracing(opts options.CommonOptions) (*hcmpb.HttpConnectionManager_Tracing, error) {
+
+	openCensusConfig, err := createOpenCensusConfig(opts)
+	if err != nil {
+		return nil, err
 	}
 
-	v, _ := ptypes.MarshalAny(cfg)
-	return &tracepb.Tracing{
-		Http: &tracepb.Tracing_Http{
+	typedConfig, err := ptypes.MarshalAny(openCensusConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	if opts.TracingSamplingRate < 0.0 || opts.TracingSamplingRate > 1.0 {
+		return nil, fmt.Errorf("invalid trace sampling rate: %v. It must be >= 0.0 and <= 1.0", opts.TracingSamplingRate)
+	}
+
+	// This results in precision errors. Round percentage to 4 decimal points.
+	percentSampleRate := opts.TracingSamplingRate * 100
+	percentSampleRate = math.Round(percentSampleRate*10000) / 10000
+
+	return &hcmpb.HttpConnectionManager_Tracing{
+		ClientSampling: &typepb.Percent{
+			Value: 0,
+		},
+		RandomSampling: &typepb.Percent{
+			Value: percentSampleRate,
+		},
+		OverallSampling: &typepb.Percent{
+			Value: percentSampleRate,
+		},
+		Provider: &tracepb.Tracing_Http{
 			Name:       "envoy.tracers.opencensus",
-			ConfigType: &tracepb.Tracing_Http_TypedConfig{TypedConfig: v},
+			ConfigType: &tracepb.Tracing_Http_TypedConfig{TypedConfig: typedConfig},
 		},
 	}, nil
 }

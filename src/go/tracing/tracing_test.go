@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bootstrap
+package tracing
 
 import (
 	"reflect"
@@ -23,11 +23,12 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	typepb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
 
 	opencensuspb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
 	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
+	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 )
 
 const (
@@ -37,14 +38,13 @@ const (
 )
 
 // Tests the various combination of tracing flags on a non-GCP deployment
-func TestNonGCPTracingConfig(t *testing.T) {
+func TestNonGcpOpenCensusConfig(t *testing.T) {
 
 	defaultOpts := options.DefaultCommonOptions()
 
 	testData := []struct {
 		desc                       string
 		tracingProjectId           string
-		tracingSampleRate          float64
 		tracingIncomingContext     string
 		tracingOutgoingContext     string
 		tracingStackdriverAddress  string
@@ -58,7 +58,6 @@ func TestNonGCPTracingConfig(t *testing.T) {
 		{
 			desc:                       "Success with default tracing",
 			tracingProjectId:           fakeOptsProjectId,
-			tracingSampleRate:          defaultOpts.TracingSamplingRate,
 			tracingMaxNumAttributes:    defaultOpts.TracingMaxNumAttributes,
 			tracingMaxNumAnnotations:   defaultOpts.TracingMaxNumAnnotations,
 			tracingMaxNumMessageEvents: defaultOpts.TracingMaxNumMessageEvents,
@@ -69,11 +68,6 @@ func TestNonGCPTracingConfig(t *testing.T) {
 					MaxNumberOfAnnotations:   defaultOpts.TracingMaxNumAnnotations,
 					MaxNumberOfMessageEvents: defaultOpts.TracingMaxNumMessageEvents,
 					MaxNumberOfLinks:         defaultOpts.TracingMaxNumLinks,
-					Sampler: &opencensuspb.TraceConfig_ProbabilitySampler{
-						ProbabilitySampler: &opencensuspb.ProbabilitySampler{
-							SamplingProbability: defaultOpts.TracingSamplingRate,
-						},
-					},
 				},
 				StackdriverExporterEnabled: true,
 				StackdriverProjectId:       fakeOptsProjectId,
@@ -94,7 +88,6 @@ func TestNonGCPTracingConfig(t *testing.T) {
 		{
 			desc:                       "Success with some tracing contexts",
 			tracingProjectId:           fakeOptsProjectId,
-			tracingSampleRate:          defaultOpts.TracingSamplingRate,
 			tracingIncomingContext:     "traceparent,grpc-trace-bin",
 			tracingOutgoingContext:     "x-cloud-trace-context",
 			tracingMaxNumAttributes:    defaultOpts.TracingMaxNumAttributes,
@@ -107,11 +100,6 @@ func TestNonGCPTracingConfig(t *testing.T) {
 					MaxNumberOfAnnotations:   defaultOpts.TracingMaxNumAnnotations,
 					MaxNumberOfMessageEvents: defaultOpts.TracingMaxNumMessageEvents,
 					MaxNumberOfLinks:         defaultOpts.TracingMaxNumLinks,
-					Sampler: &opencensuspb.TraceConfig_ProbabilitySampler{
-						ProbabilitySampler: &opencensuspb.ProbabilitySampler{
-							SamplingProbability: defaultOpts.TracingSamplingRate,
-						},
-					},
 				},
 				StackdriverExporterEnabled: true,
 				StackdriverProjectId:       fakeOptsProjectId,
@@ -125,87 +113,8 @@ func TestNonGCPTracingConfig(t *testing.T) {
 			},
 		},
 		{
-			desc:              "Failed with invalid sampling rate",
-			tracingProjectId:  fakeOptsProjectId,
-			tracingSampleRate: 2.1,
-			wantError:         "Invalid trace sampling rate: 2.1",
-		},
-		{
-			desc:                       "Success with sample rate 0.0",
-			tracingProjectId:           fakeOptsProjectId,
-			tracingSampleRate:          0.0,
-			tracingMaxNumAttributes:    defaultOpts.TracingMaxNumAttributes,
-			tracingMaxNumAnnotations:   defaultOpts.TracingMaxNumAnnotations,
-			tracingMaxNumMessageEvents: defaultOpts.TracingMaxNumMessageEvents,
-			tracingMaxNumLinks:         defaultOpts.TracingMaxNumLinks,
-			wantResult: &tracepb.OpenCensusConfig{
-				TraceConfig: &opencensuspb.TraceConfig{
-					MaxNumberOfAttributes:    defaultOpts.TracingMaxNumAttributes,
-					MaxNumberOfAnnotations:   defaultOpts.TracingMaxNumAnnotations,
-					MaxNumberOfMessageEvents: defaultOpts.TracingMaxNumMessageEvents,
-					MaxNumberOfLinks:         defaultOpts.TracingMaxNumLinks,
-					Sampler: &opencensuspb.TraceConfig_ConstantSampler{
-						ConstantSampler: &opencensuspb.ConstantSampler{
-							Decision: opencensuspb.ConstantSampler_ALWAYS_PARENT,
-						},
-					},
-				},
-				StackdriverExporterEnabled: true,
-				StackdriverProjectId:       fakeOptsProjectId,
-			},
-		},
-		{
-			desc:                       "Success with sample rate 1.0",
-			tracingProjectId:           fakeOptsProjectId,
-			tracingSampleRate:          1.0,
-			tracingMaxNumAttributes:    defaultOpts.TracingMaxNumAttributes,
-			tracingMaxNumAnnotations:   defaultOpts.TracingMaxNumAnnotations,
-			tracingMaxNumMessageEvents: defaultOpts.TracingMaxNumMessageEvents,
-			tracingMaxNumLinks:         defaultOpts.TracingMaxNumLinks,
-			wantResult: &tracepb.OpenCensusConfig{
-				TraceConfig: &opencensuspb.TraceConfig{
-					MaxNumberOfAttributes:    defaultOpts.TracingMaxNumAttributes,
-					MaxNumberOfAnnotations:   defaultOpts.TracingMaxNumAnnotations,
-					MaxNumberOfMessageEvents: defaultOpts.TracingMaxNumMessageEvents,
-					MaxNumberOfLinks:         defaultOpts.TracingMaxNumLinks,
-					Sampler: &opencensuspb.TraceConfig_ConstantSampler{
-						ConstantSampler: &opencensuspb.ConstantSampler{
-							Decision: opencensuspb.ConstantSampler_ALWAYS_ON,
-						},
-					},
-				},
-				StackdriverExporterEnabled: true,
-				StackdriverProjectId:       fakeOptsProjectId,
-			},
-		},
-		{
-			desc:                       "Success with sample rate 0.27",
-			tracingProjectId:           fakeOptsProjectId,
-			tracingSampleRate:          0.27,
-			tracingMaxNumAttributes:    defaultOpts.TracingMaxNumAttributes,
-			tracingMaxNumAnnotations:   defaultOpts.TracingMaxNumAnnotations,
-			tracingMaxNumMessageEvents: defaultOpts.TracingMaxNumMessageEvents,
-			tracingMaxNumLinks:         defaultOpts.TracingMaxNumLinks,
-			wantResult: &tracepb.OpenCensusConfig{
-				TraceConfig: &opencensuspb.TraceConfig{
-					MaxNumberOfAttributes:    defaultOpts.TracingMaxNumAttributes,
-					MaxNumberOfAnnotations:   defaultOpts.TracingMaxNumAnnotations,
-					MaxNumberOfMessageEvents: defaultOpts.TracingMaxNumMessageEvents,
-					MaxNumberOfLinks:         defaultOpts.TracingMaxNumLinks,
-					Sampler: &opencensuspb.TraceConfig_ProbabilitySampler{
-						ProbabilitySampler: &opencensuspb.ProbabilitySampler{
-							SamplingProbability: 0.27,
-						},
-					},
-				},
-				StackdriverExporterEnabled: true,
-				StackdriverProjectId:       fakeOptsProjectId,
-			},
-		},
-		{
 			desc:                       "Success with custom stackdriver address",
 			tracingProjectId:           fakeOptsProjectId,
-			tracingSampleRate:          defaultOpts.TracingSamplingRate,
 			tracingStackdriverAddress:  fakeStackdriverAddress,
 			tracingMaxNumAttributes:    defaultOpts.TracingMaxNumAttributes,
 			tracingMaxNumAnnotations:   defaultOpts.TracingMaxNumAnnotations,
@@ -217,11 +126,6 @@ func TestNonGCPTracingConfig(t *testing.T) {
 					MaxNumberOfAnnotations:   defaultOpts.TracingMaxNumAnnotations,
 					MaxNumberOfMessageEvents: defaultOpts.TracingMaxNumMessageEvents,
 					MaxNumberOfLinks:         defaultOpts.TracingMaxNumLinks,
-					Sampler: &opencensuspb.TraceConfig_ProbabilitySampler{
-						ProbabilitySampler: &opencensuspb.ProbabilitySampler{
-							SamplingProbability: defaultOpts.TracingSamplingRate,
-						},
-					},
 				},
 				StackdriverExporterEnabled: true,
 				StackdriverProjectId:       fakeOptsProjectId,
@@ -231,7 +135,6 @@ func TestNonGCPTracingConfig(t *testing.T) {
 		{
 			desc:                       "Success with custom max number of attributes/annotations/message_events/links",
 			tracingProjectId:           fakeOptsProjectId,
-			tracingSampleRate:          defaultOpts.TracingSamplingRate,
 			tracingStackdriverAddress:  fakeStackdriverAddress,
 			tracingMaxNumAttributes:    1,
 			tracingMaxNumAnnotations:   2,
@@ -243,11 +146,6 @@ func TestNonGCPTracingConfig(t *testing.T) {
 					MaxNumberOfAnnotations:   2,
 					MaxNumberOfMessageEvents: 3,
 					MaxNumberOfLinks:         4,
-					Sampler: &opencensuspb.TraceConfig_ProbabilitySampler{
-						ProbabilitySampler: &opencensuspb.ProbabilitySampler{
-							SamplingProbability: defaultOpts.TracingSamplingRate,
-						},
-					},
 				},
 				StackdriverExporterEnabled: true,
 				StackdriverProjectId:       fakeOptsProjectId,
@@ -261,7 +159,6 @@ func TestNonGCPTracingConfig(t *testing.T) {
 		opts := options.DefaultCommonOptions()
 		opts.NonGCP = true
 		opts.TracingProjectId = tc.tracingProjectId
-		opts.TracingSamplingRate = tc.tracingSampleRate
 		opts.TracingIncomingContext = tc.tracingIncomingContext
 		opts.TracingOutgoingContext = tc.tracingOutgoingContext
 		opts.TracingStackdriverAddress = tc.tracingStackdriverAddress
@@ -270,7 +167,7 @@ func TestNonGCPTracingConfig(t *testing.T) {
 		opts.TracingMaxNumMessageEvents = tc.tracingMaxNumMessageEvents
 		opts.TracingMaxNumLinks = tc.tracingMaxNumLinks
 
-		got, err := CreateTracing(opts)
+		got, err := createOpenCensusConfig(opts)
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
@@ -280,23 +177,16 @@ func TestNonGCPTracingConfig(t *testing.T) {
 			if got == nil {
 				t.Errorf("Test (%s): failed, expected result should not be nil", tc.desc)
 			}
-			if got.Http.Name != "envoy.tracers.opencensus" {
-				t.Errorf("Test (%s): failed, expected config name is wrong", tc.desc)
-			}
 
-			gotCfg := &tracepb.OpenCensusConfig{}
-			if err := ptypes.UnmarshalAny(got.Http.GetTypedConfig(), gotCfg); err != nil {
-				t.Errorf("Test (%s): failed, failed to unmarshall any, %v", tc.desc, err)
-			}
-			if !proto.Equal(gotCfg, tc.wantResult) {
-				t.Errorf("Test (%s): failed, got : %v, want: %v", tc.desc, gotCfg, tc.wantResult)
+			if !proto.Equal(got, tc.wantResult) {
+				t.Errorf("Test (%s): failed, got : %v, want: %v", tc.desc, got, tc.wantResult)
 			}
 		}
 	}
 }
 
 // Ensures that the project-id is automatically populated in the tracing config on GCP deployments
-func TestGCPTracingConfig(t *testing.T) {
+func TestGcpOpenCensusConfig(t *testing.T) {
 
 	defaultOpts := options.DefaultCommonOptions()
 
@@ -312,11 +202,6 @@ func TestGCPTracingConfig(t *testing.T) {
 					MaxNumberOfAnnotations:   defaultOpts.TracingMaxNumAnnotations,
 					MaxNumberOfMessageEvents: defaultOpts.TracingMaxNumMessageEvents,
 					MaxNumberOfLinks:         defaultOpts.TracingMaxNumLinks,
-					Sampler: &opencensuspb.TraceConfig_ProbabilitySampler{
-						ProbabilitySampler: &opencensuspb.ProbabilitySampler{
-							SamplingProbability: defaultOpts.TracingSamplingRate,
-						},
-					},
 				},
 				StackdriverExporterEnabled: true,
 				StackdriverProjectId:       fakeMetadataProjectId,
@@ -329,9 +214,7 @@ func TestGCPTracingConfig(t *testing.T) {
 		runTest(t, true, func() {
 
 			opts := options.DefaultCommonOptions()
-
-			got, err := CreateTracing(opts)
-
+			got, err := createOpenCensusConfig(opts)
 			if err != nil {
 				t.Fatalf("Test (%s): failed, got err: %v, want no err", tc.desc, err)
 			}
@@ -340,16 +223,94 @@ func TestGCPTracingConfig(t *testing.T) {
 				if got == nil {
 					t.Errorf("Test (%s): failed, expected result should not be nil", tc.desc)
 				}
-				if got.Http.Name != "envoy.tracers.opencensus" {
-					t.Errorf("Test (%s): failed, expected config name is wrong", tc.desc)
+
+				if !proto.Equal(got, tc.wantResult) {
+					t.Errorf("Test (%s): failed, got : %v, want: %v", tc.desc, got, tc.wantResult)
+				}
+			}
+
+		})
+
+	}
+}
+
+// Tests the sample rate is correctly populated in the HCM tracing config.
+func TestHcmTracingSampleRate(t *testing.T) {
+
+	testData := []struct {
+		desc              string
+		tracingSampleRate float64
+		wantResult        *hcmpb.HttpConnectionManager_Tracing
+		wantError         string
+	}{
+		{
+			desc:              "Custom sampling rate works",
+			tracingSampleRate: 0.275,
+			wantResult: &hcmpb.HttpConnectionManager_Tracing{
+				ClientSampling: &typepb.Percent{
+					Value: 0,
+				},
+				RandomSampling: &typepb.Percent{
+					Value: 27.5,
+				},
+				OverallSampling: &typepb.Percent{
+					Value: 27.5,
+				},
+				Provider: &tracepb.Tracing_Http{
+					Name: "envoy.tracers.opencensus",
+					// Typed config is already tested, so strip it out.
+					ConfigType: nil,
+				},
+			},
+		},
+		{
+			desc:              "Sample rate rounded at 6 decimal points",
+			tracingSampleRate: 0.123456789,
+			wantResult: &hcmpb.HttpConnectionManager_Tracing{
+				ClientSampling: &typepb.Percent{
+					Value: 0,
+				},
+				RandomSampling: &typepb.Percent{
+					Value: 12.3457,
+				},
+				OverallSampling: &typepb.Percent{
+					Value: 12.3457,
+				},
+				Provider: &tracepb.Tracing_Http{
+					Name: "envoy.tracers.opencensus",
+					// Typed config is already tested, so strip it out.
+					ConfigType: nil,
+				},
+			},
+		},
+		{
+			desc:              "Invalid sampling rate has error",
+			tracingSampleRate: 1.3,
+			wantError:         "invalid trace sampling rate",
+		},
+	}
+
+	for _, tc := range testData {
+
+		runTest(t, true, func() {
+
+			opts := options.DefaultCommonOptions()
+			opts.TracingSamplingRate = tc.tracingSampleRate
+
+			got, err := CreateTracing(opts)
+
+			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
+				t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
+			}
+
+			if tc.wantResult != nil {
+				if got == nil {
+					t.Errorf("Test (%s): failed, expected result should not be nil", tc.desc)
 				}
 
-				gotCfg := &tracepb.OpenCensusConfig{}
-				if err := ptypes.UnmarshalAny(got.Http.GetTypedConfig(), gotCfg); err != nil {
-					t.Errorf("Test (%s): failed, failed to unmarshall any", tc.desc)
-				}
-				if !proto.Equal(gotCfg, tc.wantResult) {
-					t.Errorf("Test (%s): failed, got : %v, want: %v", tc.desc, gotCfg, tc.wantResult)
+				got.Provider.ConfigType = nil
+				if !proto.Equal(got, tc.wantResult) {
+					t.Errorf("Test (%s): failed, got : %v, want: %v", tc.desc, got, tc.wantResult)
 				}
 			}
 

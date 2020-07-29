@@ -1373,12 +1373,32 @@ var (
                         }
                      ]
                   },
+                  "tracing":{
+                     "clientSampling":{},
+                     "overallSampling":{
+                        "value":0.1
+                     },
+                     "provider":{
+                        "name":"envoy.tracers.opencensus",
+                        "typedConfig":{
+                           "@type":"type.googleapis.com/envoy.config.trace.v3.OpenCensusConfig",
+                           "stackdriverExporterEnabled":true,
+                           "stackdriverProjectId":"fake-project-id",
+                           "traceConfig":{
+                              "maxNumberOfAnnotations":"32",
+                              "maxNumberOfAttributes":"32",
+                              "maxNumberOfLinks":"128",
+                              "maxNumberOfMessageEvents":"128"
+                           }
+                        }
+                     },
+                     "randomSampling":{
+                        "value":0.1
+                     }
+                  },
                   "upgradeConfigs": [{"upgradeType": "websocket"}],
                   "statPrefix":"ingress_http",
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
-                  "tracing":{
-
-                  },
                   "useRemoteAddress":false,
                   %s,
                   "xffNumTrustedHops":2
