@@ -244,6 +244,26 @@ func TestHcmTracingSampleRate(t *testing.T) {
 		wantError         string
 	}{
 		{
+			desc:              "Default sampling rate works",
+			tracingSampleRate: options.DefaultCommonOptions().TracingSamplingRate,
+			wantResult: &hcmpb.HttpConnectionManager_Tracing{
+				ClientSampling: &typepb.Percent{
+					Value: 0,
+				},
+				RandomSampling: &typepb.Percent{
+					Value: 0.1,
+				},
+				OverallSampling: &typepb.Percent{
+					Value: 0.1,
+				},
+				Provider: &tracepb.Tracing_Http{
+					Name: "envoy.tracers.opencensus",
+					// Typed config is already tested, so strip it out.
+					ConfigType: nil,
+				},
+			},
+		},
+		{
 			desc:              "Custom sampling rate works",
 			tracingSampleRate: 0.275,
 			wantResult: &hcmpb.HttpConnectionManager_Tracing{

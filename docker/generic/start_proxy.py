@@ -930,8 +930,6 @@ def gen_proxy_config(args):
     if args.enable_debug:
         proxy_conf.append("--suppress_envoy_headers=false")
 
-
-
     return proxy_conf
 
 def gen_envoy_args(args):
