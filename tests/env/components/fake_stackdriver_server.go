@@ -46,7 +46,7 @@ func (s *FakeTraceServer) BatchWriteSpans(ctx context.Context, req *cloudtracepb
 }
 
 func (s *FakeTraceServer) CreateSpan(ctx context.Context, span *cloudtracepb.Span) (*cloudtracepb.Span, error) {
-	glog.Info("Fake stackdriver server created span with name: %v", span.DisplayName.Value)
+	glog.Infof("Fake stackdriver server created span with name: %v", span.DisplayName.Value)
 	return span, nil
 }
 
