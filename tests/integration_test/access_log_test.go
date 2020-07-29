@@ -63,7 +63,7 @@ func TestAccessLog(t *testing.T) {
 	accessLogFormat := "\"%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%\"" +
 		"%RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT%" +
 		"\"%REQ(X-FORWARDED-FOR)%\" \"%REQ(USER-AGENT)%\" " +
-		"%FILTER_STATE(com.google.espv2.filters.http.path_matcher.operation):70% " +
+		"%FILTER_STATE(com.google.espv2.filters.http.service_control.api_method):70% " +
 		"%FILTER_STATE(com.google.espv2.filters.http.service_control.api_key):30%" +
 		"\n"
 

@@ -671,6 +671,9 @@ TEST_F(HandlerTest, FillFilterState) {
   EXPECT_EQ(utils::getStringFilterState(*mock_stream_info_.filter_state_,
                                         utils::kFilterStateApiKey),
             "foobar");
+  EXPECT_EQ(utils::getStringFilterState(*mock_stream_info_.filter_state_,
+                                        utils::kFilterStateApiMethod),
+            "get_header_key");
 }
 
 TEST_F(HandlerTest, HandlerFailQuotaSync) {
