@@ -27,6 +27,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/tokengenerator"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/cache/v3"
@@ -132,7 +133,7 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 
 	accessToken := func() (string, time.Duration, error) {
 		if opts.ServiceAccountKey != "" {
-			return util.GenerateAccessTokenFromFile(opts.ServiceAccountKey)
+			return tokengenerator.GenerateAccessTokenFromFile(opts.ServiceAccountKey)
 		}
 		return mf.FetchAccessToken()
 	}

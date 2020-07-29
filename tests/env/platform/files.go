@@ -45,6 +45,7 @@ const (
 	LogMetrics
 	Version
 	AccessLog
+	ServiceAccountFile
 	TestRootCaCerts
 
 	// Configurations from examples directory
@@ -61,6 +62,7 @@ const (
 
 	// Other configurations for testing
 	FixedDrServiceConfig
+	FakeServiceAccountFile
 )
 
 // go tests are not executed from the root fo the repository.
@@ -91,6 +93,7 @@ var fileMap = map[RuntimeFile]string{
 	ProxyKey:                    "../env/testdata/proxy.key",
 	LogMetrics:                  "../env/testdata/logs_metrics.pb.txt",
 	AccessLog:                   "../env/testdata/access_log.txt",
+	ServiceAccountFile:          "../env/testdata/service_account.json",
 
 	// Used by static bootstrap unit tests.
 	AuthServiceConfig:     "../../../../examples/auth/service_config_generated.json",
@@ -105,8 +108,9 @@ var fileMap = map[RuntimeFile]string{
 	GrpcEchoEnvoyConfig:   "../../../../examples/grpc_dynamic_routing/envoy_config.json",
 
 	// Used by other unit tests.
-	TestRootCaCerts:      "../../../tests/env/testdata/roots.pem",
-	FixedDrServiceConfig: "../../../tests/env/testdata/service_config_for_fixed_dynamic_routing.json",
+	TestRootCaCerts:        "../../../tests/env/testdata/roots.pem",
+	FixedDrServiceConfig:   "../../../tests/env/testdata/service_config_for_fixed_dynamic_routing.json",
+	FakeServiceAccountFile: "./service_account.json",
 }
 
 // Get the runtime file path for the specified file.

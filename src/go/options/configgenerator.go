@@ -59,6 +59,7 @@ type ConfigGeneratorOptions struct {
 
 	// Flags for non_gcp deployment.
 	ServiceAccountKey string
+	SaGenTokenPort    uint
 
 	// Flags for testing purpose.
 	SkipJwtAuthnFilter       bool
@@ -113,6 +114,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		JwksCacheDurationInS:          300,
 		ListenerAddress:               "0.0.0.0",
 		ListenerPort:                  8080,
+		SaGenTokenPort:                8791,
 		RootCertsPath:                 util.DefaultRootCAPaths,
 		SuppressEnvoyHeaders:          true,
 		ServiceControlNetworkFailOpen: true,

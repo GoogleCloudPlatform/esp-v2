@@ -34,17 +34,6 @@ using token::ServiceAccountTokenGenerator;
 using token::TokenSubscriber;
 using token::TokenType;
 
-namespace {
-// The service_control service name. used for as audience to generate JWT token.
-constexpr char kServiceControlService[] =
-    "/google.api.servicecontrol.v1.ServiceController";
-
-// The quota_control service name. used for as audience to generate JWT token.
-constexpr char kQuotaControlService[] =
-    "/google.api.servicecontrol.v1.QuotaController";
-
-}  // namespace
-
 void ServiceControlCallImpl::createImdsTokenSub() {
   const std::string& token_cluster = filter_config_.imds_token().cluster();
   const std::string& token_uri = filter_config_.imds_token().uri();
@@ -61,29 +50,20 @@ void ServiceControlCallImpl::createImdsTokenSub() {
       });
 }
 
-void ServiceControlCallImpl::createTokenGen() {
-  const std::string service_control_audience =
-      filter_config_.service_control_uri().uri() + kServiceControlService;
-  sc_token_gen_ = token_subscriber_factory_.createServiceAccountTokenGenerator(
-      filter_config_.service_account_secret().inline_string(),
-      service_control_audience, [this](const std::string& token) {
+void ServiceControlCallImpl::createSaGenTokenSub() {
+  const std::string& token_cluster = filter_config_.sa_gen_token().cluster();
+  const std::string& token_uri = filter_config_.sa_gen_token().uri();
+  const std::chrono::seconds fetch_timeout(
+      TimeUtil::DurationToSeconds(filter_config_.sa_gen_token().timeout()));
+  sa_gen_token_sub_ = token_subscriber_factory_.createImdsTokenSubscriber(
+      TokenType::AccessToken, token_cluster, token_uri, fetch_timeout,
+      [this](absl::string_view token) {
         TokenSharedPtr new_token = std::make_shared<std::string>(token);
         tls_->runOnAllThreads([this, new_token]() {
           tls_->getTyped<ThreadLocalCache>().set_sc_token(new_token);
+          tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
         });
       });
-
-  const std::string quota_audience =
-      filter_config_.service_control_uri().uri() + kQuotaControlService;
-  quota_token_gen_ =
-      token_subscriber_factory_.createServiceAccountTokenGenerator(
-          filter_config_.service_account_secret().inline_string(),
-          quota_audience, [this](const std::string& token) {
-            TokenSharedPtr new_token = std::make_shared<std::string>(token);
-            tls_->runOnAllThreads([this, new_token]() {
-              tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
-            });
-          });
 }
 
 void ServiceControlCallImpl::createIamTokenSub() {
@@ -151,8 +131,8 @@ ServiceControlCallImpl::ServiceControlCallImpl(
     case FilterConfig::kImdsToken:
       createImdsTokenSub();
       break;
-    case FilterConfig::kServiceAccountSecret:
-      createTokenGen();
+    case FilterConfig::kSaGenToken:
+      createSaGenTokenSub();
       break;
     case FilterConfig::kIamToken:
       createIamTokenSub();

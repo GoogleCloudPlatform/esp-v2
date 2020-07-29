@@ -48,6 +48,17 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]*clusterpb.Cluster, error) {
 		clusters = append(clusters, metadataCluster)
 	}
 
+	if serviceInfo.Options.ServiceAccountKey != "" {
+		saGenSaGenTokenCluster, err := makeSaGenTokenCluster(serviceInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		if saGenSaGenTokenCluster != nil {
+			clusters = append(clusters, saGenSaGenTokenCluster)
+		}
+	}
+
 	iamCluster, err := makeIamCluster(serviceInfo)
 	if err != nil {
 		return nil, err
@@ -133,6 +144,20 @@ func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, error
 		c.TransportSocket = transportSocket
 	}
 
+	return c, nil
+}
+
+func makeSaGenTokenCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, error) {
+	connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
+	c := &clusterpb.Cluster{
+		Name:           util.SaGenTokenClusterName,
+		LbPolicy:       clusterpb.Cluster_ROUND_ROBIN,
+		ConnectTimeout: connectTimeoutProto,
+		ClusterDiscoveryType: &clusterpb.Cluster_Type{
+			Type: clusterpb.Cluster_STRICT_DNS,
+		},
+		LoadAssignment: util.CreateLoadAssignment("127.0.0.1", uint32(serviceInfo.Options.SaGenTokenPort)),
+	}
 	return c, nil
 }
 
@@ -286,7 +311,7 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster,
 	}
 
 	connectTimeoutProto := ptypes.DurationProto(5 * time.Second)
-	serviceInfo.ServiceControlURI = scheme + "://" + hostname + "/v1/services/"
+	serviceInfo.ServiceControlURI = scheme + "://" + hostname + "/v1/services"
 	c := &clusterpb.Cluster{
 		Name:                 util.ServiceControlClusterName,
 		LbPolicy:             clusterpb.Cluster_ROUND_ROBIN,

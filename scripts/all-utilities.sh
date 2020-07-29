@@ -142,8 +142,7 @@ function set_api_keys() {
 function get_test_client_key() {
   local remote_file_name=$1
   local key_path=$2
-  [[ -e $key_path ]] || $GSUTIL  \
-    cp "gs://apiproxy-testing-client-secret-files/$remote_file_name" "$key_path"
+  $GSUTIL  cp "gs://apiproxy-testing-client-secret-files/$remote_file_name" "$key_path"
   echo -n "$key_path"
   return 0
 }

@@ -12,26 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package util
+package tokengenerator
 
 import (
+	"fmt"
 	"io/ioutil"
+	"net/http"
 	"sync"
 	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/gorilla/mux"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
 
 var (
 	_GOOGLE_API_SCOPE = []string{
+		// Call servicemanagement to fetch service config.
 		"https://www.googleapis.com/auth/service.management.readonly",
+		// Call servicecontrol to get latest rollout id.
+		"https://www.googleapis.com/auth/servicecontrol",
 	}
 	tokenCache = &oauth2.Token{}
 	tokenMux   = sync.Mutex{}
 )
 
-func GenerateAccessTokenFromFile(saFilePath string) (string, time.Duration, error) {
+var GenerateAccessTokenFromFile = func(saFilePath string) (string, time.Duration, error) {
 	if token, duration := activeAccessToken(); token != "" {
 		return token, duration, nil
 	}
@@ -84,4 +91,26 @@ func generateAccessToken(keyData []byte) (string, time.Duration, error) {
 
 	tokenCache = token
 	return token.AccessToken, token.Expiry.Sub(time.Now()), nil
+}
+
+func MakeSaGenTokenHandler(serviceAccountKey string) http.Handler {
+	r := mux.NewRouter()
+
+	r.PathPrefix(util.AccessTokenSuffix).Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token, expire, err := GenerateAccessTokenFromFile(serviceAccountKey)
+
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		// Access token response is a JSON payload in the format:
+		// {
+		//   "access_token": "string",
+		//   "expires_in": uint
+		// }
+		_, _ = w.Write([]byte(fmt.Sprintf(`{"access_token": "%s", "expires_in": %v}`, token, int(expire.Seconds()))))
+	})
+
+	return r
 }
