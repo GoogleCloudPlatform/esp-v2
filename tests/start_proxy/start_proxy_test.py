@@ -32,40 +32,11 @@ class TestStartProxy(unittest.TestCase):
         testcases = [
             (["--http_request_timeout_s=1", "--disable_tracing", "--admin_port=8001"],
              ['bin/bootstrap', '--logtostderr', '--admin_port', '8001',
-              '--disable_tracing',
               '--http_request_timeout_s', '1',
               '/tmp/bootstrap.json']),
             ([], ['bin/bootstrap',
                   '--logtostderr', '--admin_port', '0',
-                  '--tracing_sample_rate', '0.001',
                   '/tmp/bootstrap.json']),
-            (['--service_account_key', '/tmp/service_accout_key', "-N=8001",
-              '--tracing_project_id=test_project_1234',
-              '--cloud_trace_url_override=localhost:9990'],
-             ['bin/bootstrap', '--logtostderr', '--admin_port', '8001',
-              '--tracing_project_id', 'test_project_1234',
-              '--tracing_stackdriver_address', 'localhost:9990',
-              '--tracing_sample_rate', '0.001',
-              '/tmp/bootstrap.json']),
-            (['--tracing_project_id=123',
-              '--tracing_sample_rate=1', "--status_port=8001",
-              '--tracing_incoming_context=fake-incoming-context',
-              '--tracing_outgoing_context=fake-outgoing-context'],
-             ['bin/bootstrap',
-              '--logtostderr', '--admin_port', '8001',
-              '--tracing_project_id',
-              '123', '--tracing_incoming_context',
-              'fake-incoming-context', '--tracing_outgoing_context',
-              'fake-outgoing-context',
-              '--tracing_sample_rate', '1',
-              '/tmp/bootstrap.json']),
-            # --disable_cloud_trace_auto_sampling overrides --tracing_sample_rate
-            (['--disable_cloud_trace_auto_sampling',
-              '--tracing_sample_rate=0.5'],
-             ['bin/bootstrap',
-              '--logtostderr', '--admin_port', '0',
-              '--tracing_sample_rate', '0',
-              '/tmp/bootstrap.json']),
         ]
 
         for flags, wantedArgs in testcases:
@@ -249,16 +220,6 @@ class TestStartProxy(unittest.TestCase):
               '--check_metadata',
               '--disable_tracing'
               ]),
-            # with service account key
-            (['--service=test_bookstore.gloud.run',
-              '--backend=http://127.0.0.1',
-              '--service_account_key', '/tmp/service_accout_key',
-              '--tracing_project_id=test_project_1234'],
-             ['bin/configmanager', '--logtostderr','--backend_address', 'http://127.0.0.1',
-              '--rollout_strategy', 'fixed', '--v', '0',
-              '--service', 'test_bookstore.gloud.run',
-              '--service_account_key', '/tmp/service_accout_key', '--non_gcp',
-              ]),
             # Cors
             (['--service=test_bookstore.gloud.run',
               '--backend=https://127.0.0.1', '--cors_preset=basic',
@@ -353,11 +314,77 @@ class TestStartProxy(unittest.TestCase):
               '--access_log', '/foo/bar',
               '--access_log_format', '%START_TIME%'
               ]),
+            # Tracing disabled on non-gcp
+            (['--service=test_bookstore.gloud.run',
+              '--backend=http://127.0.0.1',
+              '--service_account_key', '/tmp/service_accout_key',],
+             ['bin/configmanager', '--logtostderr','--backend_address', 'http://127.0.0.1',
+              '--rollout_strategy', 'fixed', '--v', '0',
+              '--service', 'test_bookstore.gloud.run',
+              '--disable_tracing',
+              '--service_account_key', '/tmp/service_accout_key', '--non_gcp',
+              ]),
+            # Tracing enabled when manually specifying project id on non-gcp.
+            (['--service=test_bookstore.gloud.run',
+              '--backend=http://127.0.0.1',
+              '--service_account_key', '/tmp/service_accout_key',
+              '--tracing_project_id=test_project_1234'],
+             ['bin/configmanager', '--logtostderr','--backend_address', 'http://127.0.0.1',
+              '--rollout_strategy', 'fixed', '--v', '0',
+              '--service', 'test_bookstore.gloud.run',
+              '--tracing_project_id', 'test_project_1234',
+              '--service_account_key', '/tmp/service_accout_key', '--non_gcp',
+              ]),
+            # Tracing params preserved.
+            (['--service=test_bookstore.gloud.run',
+              '--backend=grpc://127.0.0.1:8000',
+              '--tracing_sample_rate=1',
+              '--cloud_trace_url_override=localhost:9990',
+              '--tracing_incoming_context=fake-incoming-context',
+              '--tracing_outgoing_context=fake-outgoing-context',
+              ],
+             ['bin/configmanager', '--logtostderr',
+              '--backend_address', 'grpc://127.0.0.1:8000',
+              '--rollout_strategy', 'fixed',
+              '--v', '0',
+              '--service', 'test_bookstore.gloud.run',
+              '--tracing_incoming_context', 'fake-incoming-context',
+              '--tracing_outgoing_context', 'fake-outgoing-context',
+              '--tracing_stackdriver_address', 'localhost:9990',
+              '--tracing_sample_rate', '1',
+              ]),
+            # --disable_cloud_trace_auto_sampling overrides --tracing_sample_rate
+            (['--service=test_bookstore.gloud.run',
+              '--backend=grpc://127.0.0.1:8000',
+              '--tracing_sample_rate=1',
+              '--disable_cloud_trace_auto_sampling'
+              ],
+             ['bin/configmanager', '--logtostderr',
+              '--backend_address', 'grpc://127.0.0.1:8000',
+              '--rollout_strategy', 'fixed',
+              '--v', '0',
+              '--service', 'test_bookstore.gloud.run',
+              '--tracing_sample_rate', '0',
+              ]),
+            # --disable_tracing overrides all other tracing flags
+            (['--service=test_bookstore.gloud.run',
+              '--backend=grpc://127.0.0.1:8000',
+              '--tracing_sample_rate=1',
+              '--disable_tracing'
+              ],
+             ['bin/configmanager', '--logtostderr',
+              '--backend_address', 'grpc://127.0.0.1:8000',
+              '--rollout_strategy', 'fixed',
+              '--v', '0',
+              '--service', 'test_bookstore.gloud.run',
+              '--disable_tracing'
+              ]),
         ]
 
         for flags, wantedArgs in testcases:
             gotArgs = gen_proxy_config(self.parser.parse_args(flags))
-            self.assertEqual(gotArgs, wantedArgs)
+            self.assertEqual(gotArgs, wantedArgs,
+                             msg="Fail for input [{}] : got != want".format(', '.join(flags)))
 
     def test_gen_proxy_config_error(self):
         testcases = [
