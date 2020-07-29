@@ -61,9 +61,12 @@ case "${BACKEND}" in
     return 1 ;;
 esac
 
+set -x
 if [[ -n ${USING_SA_CRED} ]]; then
+  SA_CRED_PATH="$(mktemp  /tmp/servie_account_cred.XXXX)"
+
   # This file path is set in tests/e2e/testdata/bookstore/gke/http-bookstore.yaml
-  ARGS="$ARGS, \"--service_account_key=/etc/creds/service-account.json\""
+  ARGS="$ARGS, \"--service_account_key=/etc/creds/$(basename "${SA_CRED_PATH}")\""
 fi
 
 sed "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g" ${YAML_TEMPLATE}  \
@@ -107,7 +110,6 @@ if [[ -n ${USING_SA_CRED} ]]; then
         return 1
   fi
 
-  SA_CRED_PATH="$(mktemp -d /tmp/servie_account_cred.XXXX)"
   get_test_client_key "e2e-non-gcp-instance-proxy-rt-sa.json" "${SA_CRED_PATH}"
   run kubectl create secret generic service-account-cred --from-file="${SA_CRED_PATH}" --namespace "${NAMESPACE}"
 fi

@@ -36,7 +36,7 @@ PROJECT_ID="cloudesf-testing"
 TEST_ID="cloud-run-${BACKEND}"
 PROXY_RUNTIME_SERVICE_ACCOUNT="e2e-cloud-run-proxy-rt@${PROJECT_ID}.iam.gserviceaccount.com"
 BACKEND_RUNTIME_SERVICE_ACCOUNT="e2e-${BACKEND_PLATFORM}-backend-rt@${PROJECT_ID}.iam.gserviceaccount.com"
-JOB_KEY_PATH="$(mktemp -d /tmp/servie_account_cred.XXXX)"
+JOB_KEY_PATH="$(mktemp /tmp/servie_account_cred.XXXX)"
 LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
 
 # Determine names of all resources
