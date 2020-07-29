@@ -361,11 +361,10 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	// Enable tracing if the stackdriver server was setup for this test
 	shouldEnableTrace := e.FakeStackdriverServer != nil
 	if shouldEnableTrace {
-		bootstrapperArgs = append(bootstrapperArgs, fmt.Sprintf("--tracing_sample_rate=%v", e.tracingSampleRate))
+		confArgs = append(confArgs, fmt.Sprintf("--tracing_sample_rate=%v", e.tracingSampleRate))
 		// This address must be in gRPC format: https://github.com/grpc/grpc/blob/master/doc/naming.md
-		bootstrapperArgs = append(bootstrapperArgs, fmt.Sprintf("--tracing_stackdriver_address=%v:%v:%v", platform.GetIpProtocol(), platform.GetLoopbackAddress(), e.ports.FakeStackdriverPort))
+		confArgs = append(confArgs, fmt.Sprintf("--tracing_stackdriver_address=%v:%v:%v", platform.GetIpProtocol(), platform.GetLoopbackAddress(), e.ports.FakeStackdriverPort))
 	} else {
-		bootstrapperArgs = append(bootstrapperArgs, "--disable_tracing")
 		confArgs = append(confArgs, "--disable_tracing")
 	}
 

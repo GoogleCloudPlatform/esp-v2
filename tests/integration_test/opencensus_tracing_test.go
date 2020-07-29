@@ -289,44 +289,38 @@ func TestTracingSampleRate(t *testing.T) {
 		desc              string
 		clientProtocol    string
 		httpMethod        string
-		path              string
 		tracingSampleRate float32
 		numRequests       int
 		numWantSpansMin   int
 		numWantSpansMax   int
 	}{
 		{
-			desc:           "A single request with sample rate 1.0 has 1 span",
-			clientProtocol: "http",
-			httpMethod:     "GET",
-			// Use a path that results in 404, so only ingress span is created.
-			path:              "/v1/random-path-error",
+			desc:              "A single request with sample rate 1.0 has 1 span",
+			clientProtocol:    "http",
+			httpMethod:        "GET",
 			tracingSampleRate: 1,
 			numRequests:       1,
 			numWantSpansMin:   1,
 			numWantSpansMax:   1,
 		},
 		{
-			desc:           "A single request with sample rate 0.0 has 0 spans",
-			clientProtocol: "http",
-			httpMethod:     "GET",
-			// Use a path that results in 404, so only ingress span is created.
-			path:              "/v1/random-path-error",
+			desc:              "A single request with sample rate 0.0 has 0 spans",
+			clientProtocol:    "http",
+			httpMethod:        "GET",
 			tracingSampleRate: 0,
 			numRequests:       1,
 			numWantSpansMin:   0,
 			numWantSpansMax:   0,
 		},
 		{
-			desc:           "20 requests with sample rate 0.5 has [5, 15] spans",
-			clientProtocol: "http",
-			httpMethod:     "GET",
-			// Use a path that results in 404, so only ingress span is created.
-			path:              "/v1/random-path-error",
+			// Binomial distribution tells us this has < 0.1% chance of failing.
+			desc:              "40 requests with sample rate 0.5 has [10, 30] spans",
+			clientProtocol:    "http",
+			httpMethod:        "GET",
 			tracingSampleRate: 0.5,
-			numRequests:       20,
-			numWantSpansMin:   5,
-			numWantSpansMax:   15,
+			numRequests:       40,
+			numWantSpansMin:   10,
+			numWantSpansMax:   30,
 		},
 	}
 
@@ -341,9 +335,12 @@ func TestTracingSampleRate(t *testing.T) {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
+			// Use a path that results in 404, so only 1 ingress span is created per request.
+			path := "/v9/non-existent-path"
+
 			for i := 0; i < tc.numRequests; i++ {
 				addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-				_, _ = bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.path, "", nil)
+				_, _ = bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, path, "", nil)
 			}
 
 			numGotSpans, err := s.FakeStackdriverServer.RetrieveSpanCount()
