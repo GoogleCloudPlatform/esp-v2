@@ -1,5 +1,4 @@
 bazel-*/
-bazel-esp-v2/
 bazel-*
 vendor/
 bin/
