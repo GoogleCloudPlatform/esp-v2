@@ -16,73 +16,44 @@ package integration_test
 
 import (
 	"fmt"
-	"strings"
+	"reflect"
 	"testing"
 	"time"
 
+	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-
-	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-func checkWantSpans(env *env.TestEnv, wantSpanNames []string) error {
-
-	// Check that we received each expected span
-	for _, wantName := range wantSpanNames {
-
-		select {
-		case span := <-env.FakeStackdriverServer.RcvSpan:
-
-			// Check name
-			if wantName != span.DisplayName.Value {
-				return fmt.Errorf("expected span name: %s, got span with name: %s", wantName, span.DisplayName.Value)
-			}
-
-			// Check attributes
-			if len(span.Attributes.AttributeMap) == 0 {
-				return fmt.Errorf("expected span %s to have more than 0 attributes attached to it", wantName)
-			}
-
-			// Check for project id
-			if !strings.Contains(span.Name, comp.FakeProjectID) {
-				return fmt.Errorf("expected span %s to have the project id in its name, but got name: %s", wantName, span.Name)
-			}
-
-		// Prevents test from being frozen if envoy fails to create spans
-		case <-time.After(5 * time.Second):
-			return fmt.Errorf("timeout on waiting for Stackdriver tracing server to receive spans, expected span name: %s", wantName)
-		}
+func checkSpanNames(env *env.TestEnv, wantSpanNames []string) error {
+	gotSpanNames, err := env.FakeStackdriverServer.RetrieveSpanNames()
+	if err != nil {
+		return err
 	}
 
-	// Ensure we didn't receive any extra spans
-	select {
-	case span := <-env.FakeStackdriverServer.RcvSpan:
-		return fmt.Errorf("received span name: %s, was not expecting any more spans", span.DisplayName)
-
-	case <-time.After(1 * time.Second):
-		// Successful, no more extra spans
-		return nil
+	if !reflect.DeepEqual(gotSpanNames, wantSpanNames) {
+		return fmt.Errorf("got span names: %+q, want span names: %+q", gotSpanNames, wantSpanNames)
 	}
+
+	return nil
 }
 
-func TestServiceControlCheckTracesWithRetry(t *testing.T) {
+func TestTracesServiceControlCheckWithRetry(t *testing.T) {
 	t.Parallel()
 	configID := "test-config-id"
 	args := []string{
 		"--service_config_id=" + configID,
-
 		"--rollout_strategy=fixed",
 		"--service_control_check_retries=2",
 		"--service_control_check_timeout_ms=100",
 	}
-	s := env.NewTestEnv(comp.TestServiceControlCheckTracesWithRetry, platform.GrpcBookstoreSidecar)
-	s.SetupFakeTraceServer()
+	s := env.NewTestEnv(comp.TestTracesServiceControlCheckWithRetry, platform.GrpcBookstoreSidecar)
+	s.SetupFakeTraceServer(1)
 	handler := utils.RetryServiceHandler{}
 	s.ServiceControlServer.OverrideCheckHandler(&handler)
 	defer s.TearDown(t)
@@ -156,26 +127,24 @@ func TestServiceControlCheckTracesWithRetry(t *testing.T) {
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
 		_, _ = bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, nil)
 
-		if err := checkWantSpans(s, tc.wantSpanNames); err != nil {
+		if err := checkSpanNames(s, tc.wantSpanNames); err != nil {
 			t.Errorf("Test (%s) failed: %v", tc.desc, err)
 		}
 	}
 }
 
-func TestServiceControlSkipUsageTraces(t *testing.T) {
+func TestTracesServiceControlSkipUsage(t *testing.T) {
 	t.Parallel()
 
 	configId := "test-config-id"
-
 	args := []string{
 		"--service_config_id=" + configId,
-
 		"--rollout_strategy=fixed",
 		"--suppress_envoy_headers",
 	}
 
-	s := env.NewTestEnv(comp.TestServiceControlSkipUsageTraces, platform.EchoSidecar)
-	s.SetupFakeTraceServer()
+	s := env.NewTestEnv(comp.TestTracesServiceControlSkipUsage, platform.EchoSidecar)
+	s.SetupFakeTraceServer(1)
 	s.AppendUsageRules(
 		[]*confpb.UsageRule{
 			{
@@ -221,25 +190,24 @@ func TestServiceControlSkipUsageTraces(t *testing.T) {
 	for _, tc := range testData {
 		_, _ = client.DoWithHeaders(tc.url, tc.method, tc.message, tc.requestHeader)
 
-		if err := checkWantSpans(s, tc.wantSpanNames); err != nil {
+		if err := checkSpanNames(s, tc.wantSpanNames); err != nil {
 			t.Errorf("Test (%s) failed: %v", tc.desc, err)
 		}
 	}
 }
 
-func TestFetchingJwksTraces(t *testing.T) {
+func TestTracesFetchingJwks(t *testing.T) {
 	t.Parallel()
 
 	configID := "test-config-id"
 	args := []string{
 		"--service_config_id=" + configID,
-
 		"--rollout_strategy=fixed",
 	}
 
-	s := env.NewTestEnv(comp.TestAsymmetricKeysTraces, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(comp.TestTracesFetchingJwks, platform.GrpcBookstoreSidecar)
 
-	s.SetupFakeTraceServer()
+	s.SetupFakeTraceServer(1)
 	s.OverrideAuthentication(&confpb.Authentication{
 		Rules: []*confpb.AuthenticationRule{
 			{
@@ -258,7 +226,7 @@ func TestFetchingJwksTraces(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 
-	time.Sleep(time.Duration(5 * time.Second))
+	time.Sleep(5 * time.Second)
 	tests := []struct {
 		desc           string
 		clientProtocol string
@@ -301,8 +269,90 @@ func TestFetchingJwksTraces(t *testing.T) {
 			_, _ = bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, tc.headers)
 		}
 
-		if err := checkWantSpans(s, tc.wantSpanNames); err != nil {
+		if err := checkSpanNames(s, tc.wantSpanNames); err != nil {
 			t.Errorf("Test (%s) failed: %v", tc.desc, err)
 		}
+	}
+}
+
+func TestTracingSampleRate(t *testing.T) {
+	t.Parallel()
+
+	configID := "test-config-id"
+	args := []string{
+		"--service_config_id=" + configID,
+		"--rollout_strategy=fixed",
+	}
+
+	time.Sleep(5 * time.Second)
+	tests := []struct {
+		desc              string
+		clientProtocol    string
+		httpMethod        string
+		path              string
+		tracingSampleRate float32
+		numRequests       int
+		numWantSpansMin   int
+		numWantSpansMax   int
+	}{
+		{
+			desc:           "A single request with sample rate 1.0 has 1 span",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			// Use a path that results in 404, so only ingress span is created.
+			path:              "/v1/random-path-error",
+			tracingSampleRate: 1,
+			numRequests:       1,
+			numWantSpansMin:   1,
+			numWantSpansMax:   1,
+		},
+		{
+			desc:           "A single request with sample rate 0.0 has 0 spans",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			// Use a path that results in 404, so only ingress span is created.
+			path:              "/v1/random-path-error",
+			tracingSampleRate: 0,
+			numRequests:       1,
+			numWantSpansMin:   0,
+			numWantSpansMax:   0,
+		},
+		{
+			desc:           "20 requests with sample rate 0.5 has [5, 15] spans",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			// Use a path that results in 404, so only ingress span is created.
+			path:              "/v1/random-path-error",
+			tracingSampleRate: 0.5,
+			numRequests:       20,
+			numWantSpansMin:   5,
+			numWantSpansMax:   15,
+		},
+	}
+
+	for _, tc := range tests {
+		// Place in closure to allow deferring in loop.
+		func() {
+			s := env.NewTestEnv(comp.TestTracingSampleRate, platform.GrpcBookstoreSidecar)
+			s.SetupFakeTraceServer(tc.tracingSampleRate)
+
+			defer s.TearDown(t)
+			if err := s.Setup(args); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			for i := 0; i < tc.numRequests; i++ {
+				addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+				_, _ = bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.path, "", nil)
+			}
+
+			numGotSpans, err := s.FakeStackdriverServer.RetrieveSpanCount()
+			if err != nil {
+				t.Errorf("Test (%s) failed: %v", tc.desc, err)
+			}
+			if numGotSpans < tc.numWantSpansMin || numGotSpans > tc.numWantSpansMax {
+				t.Errorf("Test (%s) failed: got num spans %v, want num spans range [%v, %v]", tc.desc, numGotSpans, tc.numWantSpansMin, tc.numWantSpansMax)
+			}
+		}()
 	}
 }

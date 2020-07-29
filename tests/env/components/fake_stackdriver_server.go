@@ -18,6 +18,8 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strings"
+	"time"
 
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
@@ -76,4 +78,41 @@ func (s *FakeTraceServer) StartStackdriverServer(port uint16) {
 			glog.Fatalf("fake stackdriver server terminated abnormally: %v", err)
 		}
 	}()
+}
+
+func (s *FakeTraceServer) RetrieveSpanNames() ([]string, error) {
+	names := make([]string, 0)
+	for true {
+
+		select {
+		case span := <-s.RcvSpan:
+
+			// Check attributes
+			if len(span.Attributes.AttributeMap) == 0 {
+				return nil, fmt.Errorf("expected span %s to have more than 0 attributes attached to it", span.DisplayName.Value)
+			}
+
+			// Check for project id
+			if !strings.Contains(span.Name, FakeProjectID) {
+				return nil, fmt.Errorf("expected span %s to have the project id in its name, but got name: %s", span.DisplayName.Value, span.Name)
+			}
+
+			names = append(names, span.DisplayName.Value)
+
+		case <-time.After(5 * time.Second):
+			// No more spans received by the server.
+			glog.Infof("got spans: %+q", names)
+			return names, nil
+		}
+	}
+
+	return nil, fmt.Errorf("did not expect fake stackdriver server to close channel")
+}
+
+func (s *FakeTraceServer) RetrieveSpanCount() (int, error) {
+	names, err := s.RetrieveSpanNames()
+	if err != nil {
+		return 0, err
+	}
+	return len(names), nil
 }
