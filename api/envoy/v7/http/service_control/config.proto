@@ -114,9 +114,8 @@ message FilterConfig {
     // Metadata Server.
     espv2.api.envoy.v7.http.common.HttpUri imds_token = 4;
 
-    // The local path or inline content of the service account json file used to
-    // generate access token.
-    espv2.api.envoy.v7.http.common.DataSource service_account_secret = 5;
+    // THe local server generating access token from service account credential.
+    espv2.api.envoy.v7.http.common.HttpUri sa_gen_token = 5;
 
     // Information used to fetch access token from Google Cloud IAM.
     espv2.api.envoy.v7.http.common.IamTokenInfo iam_token = 6;

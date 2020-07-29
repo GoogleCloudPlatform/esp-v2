@@ -36,6 +36,7 @@ function runE2E() {
       g) local backend="${OPTARG}" ;;
       m) local apiproxy_image="${OPTARG}" ;;
       R) local rollout_strategy="${OPTARG}" ;;
+      S) local using_sa_cred='true';;
       t) local test_type="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')" ;;
     esac
   done
@@ -61,7 +62,8 @@ function runE2E() {
     -i "${unique_id}"  \
     -B "${BUCKET}"  \
     -l "${DURATION_IN_HOUR}" \
-    -f "${backend_platform}"
+    -f "${backend_platform}" \
+    -S "${using_sa_cred}"
 }
 
 if [ ! -d "$GOPATH/bin" ]; then
@@ -86,6 +88,9 @@ echo '======================================================='
 case ${TEST_CASE} in
   "tight-http-bookstore-managed")
     runE2E -p "gke" -c "tight" -t "http" -g "bookstore" -R "managed" -m "$(get_proxy_image_name_with_sha)"
+    ;;
+    "tight-http-bookstore-managed-using-sa-cred")
+    runE2E -p "gke" -c "tight" -t "http" -g "bookstore" -R "managed" -S -m "$(get_proxy_image_name_with_sha)"
     ;;
   "tight-grpc-echo-managed")
     runE2E -p "gke" -c "tight" -t "grpc" -g "echo" -R "managed" -m "$(get_proxy_image_name_with_sha)"

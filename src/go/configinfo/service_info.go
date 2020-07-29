@@ -16,7 +16,6 @@ package configinfo
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math"
 	"net"
 	"sort"
@@ -243,18 +242,20 @@ func (s *ServiceInfo) addGrpcHttpRules() {
 
 func (s *ServiceInfo) processAccessToken() {
 	if s.Options.ServiceAccountKey != "" {
-		data, _ := ioutil.ReadFile(s.Options.ServiceAccountKey)
 		s.AccessToken = &commonpb.AccessToken{
-			TokenType: &commonpb.AccessToken_ServiceAccountSecret{
-				ServiceAccountSecret: &commonpb.DataSource{
-					Specifier: &commonpb.DataSource_InlineString{
-						InlineString: string(data),
-					},
+			TokenType: &commonpb.AccessToken_RemoteToken{
+				RemoteToken: &commonpb.HttpUri{
+					// Use the same path as IMDS to get access token.
+					Uri:     fmt.Sprintf("http://127.0.0.1:%v%s", s.Options.SaGenTokenPort, util.AccessTokenSuffix),
+					Cluster: util.SaGenTokenClusterName,
+					Timeout: ptypes.DurationProto(s.Options.HttpRequestTimeout),
 				},
 			},
 		}
+
 		return
 	}
+
 	s.AccessToken = &commonpb.AccessToken{
 		TokenType: &commonpb.AccessToken_RemoteToken{
 			RemoteToken: &commonpb.HttpUri{
@@ -264,6 +265,7 @@ func (s *ServiceInfo) processAccessToken() {
 			},
 		},
 	}
+
 }
 
 func (s *ServiceInfo) processQuota() {

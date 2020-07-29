@@ -19,6 +19,7 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -26,6 +27,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configmanager"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configmanager/flags"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/tokengenerator"
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
 
@@ -73,6 +75,15 @@ func main() {
 		cancel()
 		grpcServer.Stop()
 	}()
+
+	if opts.ServiceAccountKey != "" {
+		// Setup local service-account-generated token server
+		r := tokengenerator.MakeSaGenTokenHandler(opts.ServiceAccountKey)
+		go func() {
+			_ = http.ListenAndServe(fmt.Sprintf(":%v", opts.SaGenTokenPort), r)
+		}()
+
+	}
 
 	if err := grpcServer.Serve(lis); err != nil {
 		glog.Exitf("Server fail to serve: %v", err)

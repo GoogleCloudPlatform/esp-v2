@@ -94,6 +94,9 @@ const (
 	// The metadata server cluster name.
 	MetadataServerClusterName = "metadata-cluster"
 
+	// The service-account-generated token server cluster name.
+	SaGenTokenClusterName = "sa-gen-token-cluster"
+
 	// The iam server cluster name.
 	IamServerClusterName = "iam-cluster"
 

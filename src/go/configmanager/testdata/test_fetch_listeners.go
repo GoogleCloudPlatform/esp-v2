@@ -952,7 +952,7 @@ var (
                            "serviceControlUri":{
                               "cluster":"service-control-cluster",
                               "timeout":"30s",
-                              "uri":"https://servicecontrol.googleapis.com/v1/services/"
+                              "uri":"https://servicecontrol.googleapis.com/v1/services"
                            },
                            "services":[
                               {
@@ -1329,7 +1329,7 @@ var (
                            "serviceControlUri":{
                               "cluster":"service-control-cluster",
                               "timeout":"30s",
-                              "uri":"https://servicecontrol.googleapis.com/v1/services/"
+                              "uri":"https://servicecontrol.googleapis.com/v1/services"
                            },
                            "services":[
                               {

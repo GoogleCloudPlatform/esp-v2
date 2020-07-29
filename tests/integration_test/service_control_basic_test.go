@@ -16,16 +16,18 @@ package integration_test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"strings"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
+	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
@@ -33,10 +35,16 @@ import (
 func TestServiceControlBasic(t *testing.T) {
 	t.Parallel()
 
-	configId := "test-config-id"
+	fakeToken := `{"access_token": "ya29.new", "expires_in":3599, "token_type":"Bearer"}`
+	mockTokenServer := util.InitMockServer(fakeToken)
+	defer mockTokenServer.Close()
+	fakeKey := strings.Replace(testdata.FakeServiceAccountKeyData, "FAKE-TOKEN-URI", mockTokenServer.GetURL(), 1)
+	serviceAccountFilePath := platform.GetFilePath(platform.ServiceAccountFile)
+	_ = ioutil.WriteFile(serviceAccountFilePath, []byte(fakeKey), 0644)
+	defer utils.TryRemoveFile(serviceAccountFilePath)
 
-	args := []string{"--service_config_id=" + configId,
-		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
+	args := []string{"--service_config_id=test-config-id",
+		"--rollout_strategy=fixed", "--suppress_envoy_headers", "--service_account_key=" + serviceAccountFilePath}
 
 	s := env.NewTestEnv(comp.TestServiceControlBasic, platform.EchoSidecar)
 	s.AppendHttpRules([]*annotationspb.HttpRule{
@@ -112,175 +120,6 @@ func TestServiceControlBasic(t *testing.T) {
 				},
 			},
 		},
-		{
-			desc:     "succeed, no Jwt required, service control sends check request and report request for POST request",
-			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key"),
-			method:   "POST",
-			message:  "hello",
-			wantResp: `{"message":"hello"}`,
-			wantScRequests: []interface{}{
-				&utils.ExpectedCheck{
-					Version:         utils.ESPv2Version(),
-					ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
-					ServiceConfigID: "test-config-id",
-					ConsumerID:      "api_key:api-key",
-					OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-					CallerIp:        platform.GetLoopbackAddress(),
-				},
-				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version(),
-					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
-					ServiceConfigID:   "test-config-id",
-					URL:               "/echo?key=api-key",
-					ApiKey:            "api-key",
-					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					ApiVersion:        "1.0.0",
-					ProducerProjectID: "producer-project",
-					ConsumerProjectID: "123456",
-					FrontendProtocol:  "http",
-					HttpMethod:        "POST",
-					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo is called",
-					StatusCode:        "0",
-					ResponseCode:      200,
-					Platform:          util.GCE,
-					Location:          "test-zone",
-				},
-			},
-		},
-		{
-			desc:          "fail, no Jwt required, service control sends report request only for request that does not have API key but is actually required",
-			url:           fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo"),
-			method:        "POST",
-			message:       "hello",
-			httpCallError: fmt.Errorf("http response status is not 200 OK: 401 Unauthorized"),
-			wantScRequests: []interface{}{
-				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version(),
-					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
-					ServiceConfigID:   "test-config-id",
-					URL:               "/echo",
-					ErrorType:         "4xx",
-					StatusCode:        "16",
-					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					ErrorCause:        "Method doesn't allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API.",
-					ApiVersion:        "1.0.0",
-					ProducerProjectID: "producer-project",
-					FrontendProtocol:  "http",
-					HttpMethod:        "POST",
-					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo is called",
-					ResponseCode:      401,
-					Platform:          util.GCE,
-					Location:          "test-zone",
-				},
-			},
-		},
-		{
-			desc:     "succeed, no Jwt required, allow no api key (unregistered request), service control sends report only",
-			url:      fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo/nokey"),
-			message:  "hello",
-			method:   "POST",
-			wantResp: `{"message":"hello"}`,
-			wantScRequests: []interface{}{
-				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version(),
-					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
-					ServiceConfigID:   "test-config-id",
-					URL:               "/echo/nokey",
-					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey",
-					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					ProducerProjectID: "producer-project",
-					HttpMethod:        "POST",
-					FrontendProtocol:  "http",
-					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey is called",
-					StatusCode:        "0",
-					ResponseCode:      200,
-					Platform:          util.GCE,
-					Location:          "test-zone",
-				},
-			},
-		},
-		{
-			desc:     "succeed, no Jwt required, allow no api key (there is API key in request though it is not required), service control sends report only",
-			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo/nokey", "?key=api-key"),
-			message:  "hello",
-			method:   "POST",
-			wantResp: `{"message":"hello"}`,
-			wantScRequests: []interface{}{
-				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version(),
-					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
-					ServiceConfigID:   "test-config-id",
-					ApiKey:            "api-key",
-					URL:               "/echo/nokey?key=api-key",
-					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey",
-					ProducerProjectID: "producer-project",
-					HttpMethod:        "POST",
-					FrontendProtocol:  "http",
-					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey is called",
-					StatusCode:        "0",
-					ResponseCode:      200,
-					Platform:          util.GCE,
-					Location:          "test-zone",
-				},
-			},
-		},
-		{
-			desc:    "succeed with request with referer header, no Jwt required, allow no api key (unregistered request), service control sends report (with referer information) only",
-			url:     fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo/nokey"),
-			message: "hi",
-			method:  "POST",
-			requestHeader: map[string]string{
-				"Referer": "http://google.com/bookstore/root",
-			},
-			wantResp: `{"message":"hi"}`,
-			wantScRequests: []interface{}{
-				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version(),
-					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
-					ServiceConfigID:   "test-config-id",
-					URL:               "/echo/nokey",
-					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey",
-					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					ProducerProjectID: "producer-project",
-					HttpMethod:        "POST",
-					FrontendProtocol:  "http",
-					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey is called",
-					Referer:           "http://google.com/bookstore/root",
-					StatusCode:        "0",
-					ResponseCode:      200,
-					Platform:          util.GCE,
-					Location:          "test-zone",
-				},
-			},
-		},
-		{
-			desc:     "succeed for unconfigured requests with any path (/**) and POST method, no JWT required, service control sends report request only",
-			url:      fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/anypath/x/y/z"),
-			method:   "POST",
-			message:  "hello",
-			wantResp: `{"message":"hello"}`,
-			wantScRequests: []interface{}{
-				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version(),
-					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
-					ServiceConfigID:   "test-config-id",
-					URL:               "/anypath/x/y/z",
-					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog._post_anypath",
-					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					ProducerProjectID: "producer-project",
-					HttpMethod:        "POST",
-					FrontendProtocol:  "http",
-					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog._post_anypath is called",
-					StatusCode:        "0",
-					ResponseCode:      200,
-					Platform:          util.GCE,
-					Location:          "test-zone",
-				},
-			},
-		},
 	}
 	for _, tc := range testData {
 		resp, err := client.DoWithHeaders(tc.url, tc.method, tc.message, tc.requestHeader)
@@ -313,4 +152,5 @@ func TestServiceControlBasic(t *testing.T) {
 		}
 		utils.CheckScRequest(t, scRequests, tc.wantScRequests, tc.desc)
 	}
+
 }
