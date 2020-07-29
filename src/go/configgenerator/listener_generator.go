@@ -622,22 +622,16 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 				AccessToken:         serviceInfo.AccessToken,
 			},
 		}
-	} else {
-		// Use access token from fetched the Instance Metadata Server to talk to Service Controller
-		switch serviceInfo.AccessToken.TokenType.(type) {
-		case *commonpb.AccessToken_RemoteToken:
-			filterConfig.AccessToken = &scpb.FilterConfig_ImdsToken{
-				ImdsToken: serviceInfo.AccessToken.GetRemoteToken(),
-			}
-			break
-		case *commonpb.AccessToken_ServiceAccountSecret:
-			filterConfig.AccessToken = &scpb.FilterConfig_ServiceAccountSecret{
-				ServiceAccountSecret: serviceInfo.AccessToken.GetServiceAccountSecret(),
-			}
-			break
-		default:
-			break
+	} else if serviceInfo.Options.ServiceAccountKey != "" {
+		filterConfig.AccessToken = &scpb.FilterConfig_SaGenToken{
+			SaGenToken: serviceInfo.AccessToken.GetRemoteToken(),
 		}
+
+	} else {
+		filterConfig.AccessToken = &scpb.FilterConfig_ImdsToken{
+			ImdsToken: serviceInfo.AccessToken.GetRemoteToken(),
+		}
+
 	}
 
 	if serviceInfo.GcpAttributes != nil {

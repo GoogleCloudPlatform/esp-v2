@@ -59,8 +59,12 @@ case "${BACKEND}" in
   *)
     echo "Invalid backend ${BACKEND}"
     return 1 ;;
-
 esac
+
+if [[ -n ${USING_SA_CRED} ]]; then
+  # This file path is set in tests/e2e/testdata/bookstore/gke/http-bookstore.yaml
+  ARGS="$ARGS, \"--service_account_key=/etc/creds/service-account.json\""
+fi
 
 sed "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g" ${YAML_TEMPLATE}  \
   | sed "s|ARGS|${ARGS}|g" | tee ${YAML_FILE}
@@ -96,6 +100,18 @@ create_service ${CREATE_SERVICE_ARGS}
 # Creates service on GKE cluster.
 NAMESPACE="${UNIQUE_ID}"
 run kubectl create namespace "${NAMESPACE}" || error_exit "Namespace already exists"
+
+if [[ -n ${USING_SA_CRED} ]]; then
+  if [ "${BACKEND}" != 'bookstore' ]; then
+        echo "Only bookstore is supported for using service account credential and ${BACKEND} is not"
+        return 1
+  fi
+
+  SA_CRED_PATH="$(mktemp -d /tmp/servie_account_cred.XXXX)"
+  get_test_client_key "e2e-non-gcp-instance-proxy-rt-sa.json" "${SA_CRED_PATH}"
+  run kubectl create secret generic service-account-cred --from-file="${SA_CRED_PATH}" --namespace "${NAMESPACE}"
+fi
+
 run kubectl create -f ${YAML_FILE} --namespace "${NAMESPACE}"
 HOST=$(get_cluster_host "${NAMESPACE}")
 

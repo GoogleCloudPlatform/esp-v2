@@ -25,7 +25,7 @@ set -eo pipefail
 # End to End tests common options
 function e2e_options() {
   local OPTIND OPTARG arg
-  while getopts :a:b:B:m:g:i:k:l:r:p:R:s:t:v:V:f: arg; do
+  while getopts :a:b:B:m:g:i:k:l:r:p:R:s:S:t:v:V:f: arg; do
     case ${arg} in
       a) APIPROXY_SERVICE="${OPTARG}" ;;
       b) BOOKSTORE_IMAGE="${OPTARG}" ;;
@@ -39,6 +39,7 @@ function e2e_options() {
       p) PROXY_PLATFORM="${OPTARG}" ;;
       R) ROLLOUT_STRATEGY="${OPTARG}" ;;
       s) SKIP_CLEANUP='true' ;;
+      S) USING_SA_CRED='true' ;;
       t) TEST_TYPE="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')" ;;
       v) VM_IMAGE="${OPTARG}" ;;
       V) ENDPOINTS_RUNTIME_VERSION="${OPTARG}" ;;

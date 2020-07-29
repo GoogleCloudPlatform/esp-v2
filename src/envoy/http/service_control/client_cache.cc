@@ -211,17 +211,19 @@ ClientCache::ClientCache(
   initHttpRequestSetting(filter_config);
   check_call_factory_ = std::make_unique<HttpCallFactoryImpl>(
       cm, dispatcher, filter_config.service_control_uri(),
-      config_.service_name() + ":check", sc_token_fn, check_timeout_ms_,
-      check_retries_, time_source, "Service Control remote call: Check");
+      absl::StrCat("/", config_.service_name(), ":check"), sc_token_fn,
+      check_timeout_ms_, check_retries_, time_source,
+      "Service Control remote call: Check");
   quota_call_factory_ = std::make_unique<HttpCallFactoryImpl>(
       cm, dispatcher, filter_config.service_control_uri(),
-      config_.service_name() + ":allocateQuota", quota_token_fn,
-      quota_timeout_ms_, quota_retries_, time_source,
+      absl::StrCat("/", config_.service_name(), ":allocateQuota"),
+      quota_token_fn, quota_timeout_ms_, quota_retries_, time_source,
       "Service Control remote call: Allocate Quota");
   report_call_factory_ = std::make_unique<HttpCallFactoryImpl>(
       cm, dispatcher, filter_config.service_control_uri(),
-      config_.service_name() + ":report", sc_token_fn, report_timeout_ms_,
-      report_retries_, time_source, "Service Control remote call: Report");
+      absl::StrCat("/", config_.service_name(), ":report"), sc_token_fn,
+      report_timeout_ms_, report_retries_, time_source,
+      "Service Control remote call: Report");
 
   // Note: Check transport is also defined per request.
   // But this must be defined, it will be called on each flush of the cache
