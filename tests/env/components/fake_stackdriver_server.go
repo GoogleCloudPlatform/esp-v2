@@ -38,8 +38,8 @@ type FakeTraceServer struct {
 }
 
 func (s *FakeTraceServer) BatchWriteSpans(ctx context.Context, req *cloudtracepb.BatchWriteSpansRequest) (*emptypb.Empty, error) {
-	for _, span := range req.Spans {
-		glog.Infof("Fake stackdriver server received span with name: %v", span.DisplayName.Value)
+	for i, span := range req.Spans {
+		glog.Infof("Fake stackdriver server received span %v with name: %v", i, span.DisplayName.Value)
 		s.RcvSpan <- span
 	}
 	return &emptypb.Empty{}, nil
@@ -60,7 +60,7 @@ func NewFakeStackdriver() *FakeTraceServer {
 
 	grpcServer := grpc.NewServer()
 	fsds := &FakeTraceServer{
-		RcvSpan: make(chan *cloudtracepb.Span, 10),
+		RcvSpan: make(chan *cloudtracepb.Span, 20),
 		server:  grpcServer,
 	}
 	cloudtracegrpc.RegisterTraceServiceServer(grpcServer, fsds)
