@@ -17,7 +17,6 @@ package integration_test
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 	"testing"
 
@@ -27,14 +26,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 )
-
-func tryRemoveFile(path string) error {
-	_, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		return nil
-	}
-	return os.Remove(path)
-}
 
 func makeOneRequest(t *testing.T, s *env.TestEnv, path, wantError string) {
 	url := fmt.Sprintf("http://localhost:%v%s?key=test-api-key", s.Ports().ListenerPort, path)
