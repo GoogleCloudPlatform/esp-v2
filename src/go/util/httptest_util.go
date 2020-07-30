@@ -92,7 +92,10 @@ func JsonEqual(want, got string) error {
 	return nil
 }
 
-// JsonContains should be used for test only.
+// JsonContains should be used for test only. It can check whether partial
+// target json string belong to the source json string.
+// JsonContains will remove regex(`(\t|\n|\s)`) inside target so it shouldn't
+// contains these chars in its content.
 func JsonContains(source, target string) error {
 	normalizedSource, err := normalizeJson(source)
 	if err != nil {
