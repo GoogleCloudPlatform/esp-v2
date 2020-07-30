@@ -83,7 +83,6 @@ func DoWithHeaders(url, method, message string, headers map[string]string) (http
 	defer resp.Body.Close()
 
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	fmt.Println(string(bodyBytes))
 	if err != nil {
 		return nil, nil, fmt.Errorf("http got error: %v", err)
 	}
