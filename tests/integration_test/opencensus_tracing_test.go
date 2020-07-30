@@ -315,24 +315,24 @@ func TestTracingSampleRate(t *testing.T) {
 		{
 			// Don't make too many requests, as Envoy will batch writes with multiple minutes of delay.
 			// Binomial distribution tells us this test has < 0.3% chance of a false negative.
-			desc:              "20 requests with sample rate 0.5 has [4, 16] spans",
+			desc:              "10 requests with sample rate 0.1 has [0, 4] spans",
 			clientProtocol:    "http",
 			httpMethod:        "GET",
-			tracingSampleRate: 0.5,
-			numRequests:       20,
-			numWantSpansMin:   4,
-			numWantSpansMax:   16,
+			tracingSampleRate: 0.1,
+			numRequests:       10,
+			numWantSpansMin:   0,
+			numWantSpansMax:   4,
 		},
 		{
 			// Don't make too many requests, as Envoy will batch writes with multiple minutes of delay.
 			// Binomial distribution tells us this test has < 0.3% chance of a false negative.
-			desc:              "20 requests with sample rate 0.9 has [14, 20] spans",
+			desc:              "5 requests with sample rate 0.9 has [2, 5] spans",
 			clientProtocol:    "http",
 			httpMethod:        "GET",
 			tracingSampleRate: 0.9,
-			numRequests:       20,
-			numWantSpansMin:   14,
-			numWantSpansMax:   20,
+			numRequests:       5,
+			numWantSpansMin:   2,
+			numWantSpansMax:   5,
 		},
 	}
 
