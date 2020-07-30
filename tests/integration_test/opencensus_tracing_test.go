@@ -304,11 +304,11 @@ func TestTracingSampleRate(t *testing.T) {
 			numWantSpansMax:   1,
 		},
 		{
-			desc:              "A single request with sample rate 0.0 has 0 spans",
+			desc:              "20 requests with sample rate 0.0 has 0 spans",
 			clientProtocol:    "http",
 			httpMethod:        "GET",
 			tracingSampleRate: 0,
-			numRequests:       1,
+			numRequests:       20,
 			numWantSpansMin:   0,
 			numWantSpansMax:   0,
 		},
