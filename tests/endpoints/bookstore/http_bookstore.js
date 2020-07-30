@@ -25,12 +25,28 @@ const opentelemetry = require('@opentelemetry/api');
 const { NodeTracerProvider } = require('@opentelemetry/node');
 const { BatchSpanProcessor } = require('@opentelemetry/tracing');
 const { TraceExporter } = require('@google-cloud/opentelemetry-cloud-trace-exporter');
+const { AlwaysOffSampler } = require("@opentelemetry/core");
+const { CloudPropagator } = require('@google-cloud/opentelemetry-cloud-trace-propagator');
 
 // Initialize the OpenTelemetry APIs to use the NodeTracerProvider bindings
-const provider = new NodeTracerProvider();
+const provider = new NodeTracerProvider({
+  sampler: new AlwaysOffSampler(),
+  plugins: {
+    express: {
+      enabled: true,
+      path: '@opentelemetry/plugin-express',
+      ignoreLayersType: [
+          "middleware",
+          "request_handler",
+      ],
+    }
+  }
+});
 const exporter = new TraceExporter();
 provider.addSpanProcessor(new BatchSpanProcessor(exporter));
-provider.register();
+provider.register({
+  propagator: new CloudPropagator(),
+});
 
 // Load express afterwords.
 var express = require('express');
