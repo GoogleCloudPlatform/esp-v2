@@ -93,7 +93,7 @@ func generateAccessToken(keyData []byte) (string, time.Duration, error) {
 	return token.AccessToken, token.Expiry.Sub(time.Now()), nil
 }
 
-func MakeSaGenTokenHandler(serviceAccountKey string) http.Handler {
+func MakeLatsTokenHandler(serviceAccountKey string) http.Handler {
 	r := mux.NewRouter()
 
 	r.PathPrefix(util.AccessTokenSuffix).Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

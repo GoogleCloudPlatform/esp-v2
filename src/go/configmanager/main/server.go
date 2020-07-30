@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configmanager/flags"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/tokengenerator"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
 
@@ -55,7 +56,7 @@ func main() {
 	}
 	server := xds.NewServer(ctx, m.Cache(), nil)
 	grpcServer := grpc.NewServer()
-	lis, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", opts.DiscoveryPort))
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", util.LoopbackIPv4Addr, opts.DiscoveryPort))
 	if err != nil {
 		glog.Exitf("Server failed to listen: %v", err)
 	}
@@ -78,9 +79,9 @@ func main() {
 
 	if opts.ServiceAccountKey != "" {
 		// Setup local service-account-generated token server
-		r := tokengenerator.MakeSaGenTokenHandler(opts.ServiceAccountKey)
+		r := tokengenerator.MakeLatsTokenHandler(opts.ServiceAccountKey)
 		go func() {
-			_ = http.ListenAndServe(fmt.Sprintf(":%v", opts.SaGenTokenPort), r)
+			_ = http.ListenAndServe(fmt.Sprintf(":%v", opts.LocalAccessTokenServerPort), r)
 		}()
 
 	}

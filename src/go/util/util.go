@@ -94,8 +94,8 @@ const (
 	// The metadata server cluster name.
 	MetadataServerClusterName = "metadata-cluster"
 
-	// The service-account-generated token server cluster name.
-	SaGenTokenClusterName = "sa-gen-token-cluster"
+	// The local access token  server cluster name.
+	LatsTokenClusterName = "local-access-token-server-cluster"
 
 	// The iam server cluster name.
 	IamServerClusterName = "iam-cluster"
@@ -107,7 +107,6 @@ const (
 	LoopbackListenerName = "loopback_listener"
 
 	// Platforms
-
 	GAEFlex = "GAE_FLEX(ESPv2)"
 	GKE     = "GKE(ESPv2)"
 	GCE     = "GCE(ESPv2)"
@@ -142,6 +141,9 @@ const (
 
 	// Standard type url prefix.
 	TypeUrlPrefix = "type.googleapis.com/"
+
+	// Loopback Address
+	LoopbackIPv4Addr = "127.0.0.1"
 )
 
 type BackendProtocol int32

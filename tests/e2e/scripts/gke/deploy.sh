@@ -62,7 +62,6 @@ case "${BACKEND}" in
     return 1 ;;
 esac
 
-set -x
 if [[ -n ${USING_SA_CRED} ]]; then
   SA_CRED_PATH="$(mktemp  /tmp/servie_account_cred.XXXX)"
 

@@ -103,7 +103,7 @@ class ServiceControlCallImpl
   }
 
   void createImdsTokenSub();
-  void createSaGenTokenSub();
+  void createLatsSub();
   void createIamTokenSub();
 
   const ::espv2::api::envoy::v7::http::service_control::FilterConfig&

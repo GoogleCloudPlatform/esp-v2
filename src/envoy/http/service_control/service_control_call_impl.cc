@@ -50,11 +50,11 @@ void ServiceControlCallImpl::createImdsTokenSub() {
       });
 }
 
-void ServiceControlCallImpl::createSaGenTokenSub() {
-  const std::string& token_cluster = filter_config_.sa_gen_token().cluster();
-  const std::string& token_uri = filter_config_.sa_gen_token().uri();
+void ServiceControlCallImpl::createLatsSub() {
+  const std::string& token_cluster = filter_config_.lats_token().cluster();
+  const std::string& token_uri = filter_config_.lats_token().uri();
   const std::chrono::seconds fetch_timeout(
-      TimeUtil::DurationToSeconds(filter_config_.sa_gen_token().timeout()));
+      TimeUtil::DurationToSeconds(filter_config_.lats_token().timeout()));
   sa_gen_token_sub_ = token_subscriber_factory_.createImdsTokenSubscriber(
       TokenType::AccessToken, token_cluster, token_uri, fetch_timeout,
       [this](absl::string_view token) {
@@ -131,8 +131,8 @@ ServiceControlCallImpl::ServiceControlCallImpl(
     case FilterConfig::kImdsToken:
       createImdsTokenSub();
       break;
-    case FilterConfig::kSaGenToken:
-      createSaGenTokenSub();
+    case FilterConfig::kLatsToken:
+      createLatsSub();
       break;
     case FilterConfig::kIamToken:
       createIamTokenSub();
