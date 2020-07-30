@@ -1472,6 +1472,101 @@ func TestPathMatcherFilter(t *testing.T) {
 	}
 }
 
+func TestServiceControl(t *testing.T) {
+	fakeServiceConfig := &confpb.Service{
+		Name: testProjectName,
+		Apis: []*apipb.Api{
+			{
+				Name: testApiName,
+				Methods: []*apipb.Method{
+					{
+						Name: "ListShelves",
+					},
+				},
+			},
+		},
+		Control: &confpb.Control{
+			Environment: statPrefix,
+		},
+	}
+	testData := []struct {
+		desc                            string
+		serviceControlCredentials       *options.IAMCredentialsOptions
+		serviceAccountKey               string
+		wantPartialServiceControlFilter string
+	}{
+		{
+			desc: "get access token from imds",
+			wantPartialServiceControlFilter: `
+    "imdsToken": {
+      "cluster": "metadata-cluster",
+      "timeout": "30s",
+      "uri": "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
+    },`,
+		},
+		{
+			desc: "get access token from iam",
+			serviceControlCredentials: &options.IAMCredentialsOptions{
+				ServiceAccountEmail: "ServiceControl@iam.com",
+				Delegates:           []string{"delegate_foo", "delegate_bar"},
+			},
+			wantPartialServiceControlFilter: `
+    "iamToken": {
+      "accessToken": {
+        "remoteToken": {
+          "cluster": "metadata-cluster",
+          "timeout": "30s",
+          "uri": "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
+        }
+      },
+      "delegates": [
+        "delegate_foo",
+        "delegate_bar"
+      ],
+      "iamUri": {
+        "cluster": "iam-cluster",
+        "timeout": "30s",
+        "uri": "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/ServiceControl@iam.com:generateAccessToken"
+      },
+      "serviceAccountEmail": "ServiceControl@iam.com"
+    },`,
+		},
+		{
+			desc:              "get access token from the local access token server",
+			serviceAccountKey: "this-is-sa-cred",
+			wantPartialServiceControlFilter: `
+    "latsToken": {
+      "cluster": "local-access-token-server-cluster",
+      "timeout": "30s",
+      "uri": "http://127.0.0.1:8791/v1/instance/service-accounts/default/token"
+    },`,
+		},
+	}
+	for i, tc := range testData {
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.ServiceControlCredentials = tc.serviceControlCredentials
+		opts.ServiceAccountKey = tc.serviceAccountKey
+
+		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
+		if err != nil {
+			t.Error(err)
+		}
+
+		marshaler := &jsonpb.Marshaler{}
+		filter := makeServiceControlFilter(fakeServiceInfo)
+
+		gotFilter, err := marshaler.MarshalToString(filter)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := util.JsonContains(gotFilter, tc.wantPartialServiceControlFilter); err != nil {
+			t.Errorf("Test Desc(%d): %s, makeServiceControlFilter failed,\n%v", i, tc.desc, err)
+		}
+
+	}
+}
+
 func TestHealthCheckFilter(t *testing.T) {
 	testdata := []struct {
 		desc                  string

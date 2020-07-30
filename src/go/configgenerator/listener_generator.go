@@ -630,8 +630,8 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 			},
 		}
 	} else if serviceInfo.Options.ServiceAccountKey != "" {
-		filterConfig.AccessToken = &scpb.FilterConfig_SaGenToken{
-			SaGenToken: serviceInfo.AccessToken.GetRemoteToken(),
+		filterConfig.AccessToken = &scpb.FilterConfig_LatsToken{
+			LatsToken: serviceInfo.AccessToken.GetRemoteToken(),
 		}
 
 	} else {

@@ -51,9 +51,9 @@ func TestGenerateAccessToken(t *testing.T) {
 	}
 }
 
-func TestMakeSaGenTokenHandler(t *testing.T) {
+func TestMakeLatsTokenHandler(t *testing.T) {
 
-	s := httptest.NewServer(MakeSaGenTokenHandler(platform.GetFilePath(platform.FakeServiceAccountFile)))
+	s := httptest.NewServer(MakeLatsTokenHandler(platform.GetFilePath(platform.FakeServiceAccountFile)))
 
 	testCases := []struct {
 		desc                   string

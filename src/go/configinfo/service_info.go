@@ -246,8 +246,8 @@ func (s *ServiceInfo) processAccessToken() {
 			TokenType: &commonpb.AccessToken_RemoteToken{
 				RemoteToken: &commonpb.HttpUri{
 					// Use the same path as IMDS to get access token.
-					Uri:     fmt.Sprintf("http://127.0.0.1:%v%s", s.Options.SaGenTokenPort, util.AccessTokenSuffix),
-					Cluster: util.SaGenTokenClusterName,
+					Uri:     fmt.Sprintf("http://%s:%v%s", util.LoopbackIPv4Addr, s.Options.LocalAccessTokenServerPort, util.AccessTokenSuffix),
+					Cluster: util.LatsTokenClusterName,
 					Timeout: ptypes.DurationProto(s.Options.HttpRequestTimeout),
 				},
 			},
