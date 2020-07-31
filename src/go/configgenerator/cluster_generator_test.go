@@ -784,7 +784,7 @@ func TestMakeIamCluster(t *testing.T) {
 	}
 }
 
-func TestMakeLatsTokenCluster(t *testing.T) {
+func TestMakeLatsCluster(t *testing.T) {
 	fakeServiceInfo, _ := configinfo.NewServiceInfoFromServiceConfig(&confpb.Service{
 		Apis: []*apipb.Api{
 			{
@@ -793,9 +793,9 @@ func TestMakeLatsTokenCluster(t *testing.T) {
 		},
 	}, testConfigID, options.DefaultConfigGeneratorOptions())
 
-	cluster := makeLatsTokenCluster(fakeServiceInfo)
+	cluster := makeLatsCluster(fakeServiceInfo)
 	wantCluster := &clusterpb.Cluster{
-		Name:           util.LatsTokenClusterName,
+		Name:           util.LatsClusterName,
 		LbPolicy:       clusterpb.Cluster_ROUND_ROBIN,
 		ConnectTimeout: ptypes.DurationProto(fakeServiceInfo.Options.ClusterConnectTimeout),
 		ClusterDiscoveryType: &clusterpb.Cluster_Type{
@@ -805,6 +805,6 @@ func TestMakeLatsTokenCluster(t *testing.T) {
 	}
 
 	if !proto.Equal(cluster, wantCluster) {
-		t.Errorf("Test makeLatsTokenClusters, \ngot: %v,\nwant: %v", cluster, wantCluster)
+		t.Errorf("Test makeLatsClusters, \ngot: %v,\nwant: %v", cluster, wantCluster)
 	}
 }
