@@ -17,6 +17,7 @@ package integration_test
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -24,8 +25,16 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
-	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 )
+
+func tryRemoveFile(path string) error {
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	return os.Remove(path)
+}
+
 
 func makeOneRequest(t *testing.T, s *env.TestEnv, path, wantError string) {
 	url := fmt.Sprintf("http://localhost:%v%s?key=test-api-key", s.Ports().ListenerPort, path)
@@ -46,7 +55,7 @@ func TestAccessLog(t *testing.T) {
 	t.Parallel()
 
 	accessLogFilePath := platform.GetFilePath(platform.AccessLog)
-	if err := utils.TryRemoveFile(accessLogFilePath); err != nil {
+	if err := tryRemoveFile(accessLogFilePath); err != nil {
 		t.Fatalf("fail to remove accessLogFile, %v", err)
 	}
 
@@ -105,7 +114,7 @@ func TestAccessLog(t *testing.T) {
 				t.Errorf("expect access log: %s, get acccess log: %v", tc.wantAccessLog, gotAccessLog)
 			}
 
-			if err := utils.TryRemoveFile(accessLogFilePath); err != nil {
+			if err := tryRemoveFile(accessLogFilePath); err != nil {
 				t.Fatalf("fail to remove accessLogFile, %v", err)
 			}
 		}
