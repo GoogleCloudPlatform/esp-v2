@@ -157,7 +157,7 @@ func makeLatsTokenCluster(serviceInfo *sc.ServiceInfo) *clusterpb.Cluster {
 		LbPolicy:       clusterpb.Cluster_ROUND_ROBIN,
 		ConnectTimeout: ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout),
 		ClusterDiscoveryType: &clusterpb.Cluster_Type{
-			Type: clusterpb.Cluster_STRICT_DNS,
+			Type: clusterpb.Cluster_STATIC,
 		},
 		LoadAssignment: util.CreateLoadAssignment(util.LoopbackIPv4Addr, uint32(serviceInfo.Options.LocalAccessTokenServerPort)),
 	}

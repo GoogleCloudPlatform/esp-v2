@@ -89,7 +89,7 @@ case ${TEST_CASE} in
   "tight-http-bookstore-managed")
     runE2E -p "gke" -c "tight" -t "http" -g "bookstore" -R "managed" -m "$(get_proxy_image_name_with_sha)"
     ;;
-    "tight-http-bookstore-managed-using-sa-cred")
+  "tight-http-bookstore-managed-using-sa-cred")
     runE2E -p "gke" -c "tight" -t "http" -g "bookstore" -R "managed" -S -m "$(get_proxy_image_name_with_sha)"
     ;;
   "tight-grpc-echo-managed")

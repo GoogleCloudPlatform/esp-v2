@@ -799,7 +799,7 @@ func TestMakeLatsTokenCluster(t *testing.T) {
 		LbPolicy:       clusterpb.Cluster_ROUND_ROBIN,
 		ConnectTimeout: ptypes.DurationProto(fakeServiceInfo.Options.ClusterConnectTimeout),
 		ClusterDiscoveryType: &clusterpb.Cluster_Type{
-			Type: clusterpb.Cluster_STRICT_DNS,
+			Type: clusterpb.Cluster_STATIC,
 		},
 		LoadAssignment: util.CreateLoadAssignment("127.0.0.1", uint32(fakeServiceInfo.Options.LocalAccessTokenServerPort)),
 	}

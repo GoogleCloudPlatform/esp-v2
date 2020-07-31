@@ -1535,7 +1535,7 @@ func TestServiceControl(t *testing.T) {
 			desc:              "get access token from the local access token server",
 			serviceAccountKey: "this-is-sa-cred",
 			wantPartialServiceControlFilter: `
-    "latsToken": {
+    "imdsToken": {
       "cluster": "local-access-token-server-cluster",
       "timeout": "30s",
       "uri": "http://127.0.0.1:8791/v1/instance/service-accounts/default/token"

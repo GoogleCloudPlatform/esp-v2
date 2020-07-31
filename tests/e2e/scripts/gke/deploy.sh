@@ -78,7 +78,17 @@ sed "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g" ${YAML_TEMPLATE}  \
 #
 case "${BACKEND}" in
   'bookstore')
-    SERVICE_IDL="${ROOT}/tests/endpoints/bookstore/bookstore_swagger_template.json"
+    SERVICE_IDL_TMPL="${ROOT}/tests/endpoints/bookstore/bookstore_swagger_template.json"
+    SERVICE_IDL="${ROOT}/tests/endpoints/bookstore/bookstore_swagger.json"
+
+    ENDPOINTS_SERVICE_NAME="bookstore.endpoints.cloudesf-testing.cloud.goog"
+    if [[ -n ${USING_SA_CRED} ]]; then
+      ENDPOINTS_SERVICE_NAME="bookstore-using-sa-cred.endpoints.cloudesf-testing.cloud.goog"
+    fi
+
+    cat "${SERVICE_IDL_TMPL}" | jq ".host = \"${ENDPOINTS_SERVICE_NAME}\"" \
+      > "${SERVICE_IDL}"
+
     CREATE_SERVICE_ARGS="${SERVICE_IDL}"
     ;;
   'echo')
