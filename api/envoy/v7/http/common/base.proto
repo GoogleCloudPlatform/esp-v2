@@ -67,20 +67,6 @@ message HttpUri {
   }];
 }
 
-// Duplicate DataSource from envoy for self containment.
-// https://aip.dev/213
-message DataSource {
-  oneof specifier {
-    option (validate.required) = true;
-
-    // Local filesystem data source.
-    string filename = 1 [(validate.rules).string.min_bytes = 1];
-
-    // String inlined in the configuration.
-    string inline_string = 2 [(validate.rules).string.min_bytes = 1];
-  }
-}
-
 message AccessToken {
   oneof token_type {
     option (validate.required) = true;
@@ -91,9 +77,6 @@ message AccessToken {
     //   Query parameters are added by the filter
     // - Token cluster address to fetch JWT token.
     HttpUri remote_token = 1;
-
-    // The local path or inline content of the service account json file.
-    DataSource service_account_secret = 2;
   }
 }
 

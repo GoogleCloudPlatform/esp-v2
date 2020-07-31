@@ -104,7 +104,7 @@ func TestServiceControlAccessTokenFromIam(t *testing.T) {
 	}
 }
 
-func TestServiceControlAccessTokenFromSaGen(t *testing.T) {
+func TestServiceControlAccessTokenFromLocalAccessTokenServer(t *testing.T) {
 	t.Parallel()
 
 	// Setup token server which will be queried by configmanager.
@@ -120,7 +120,7 @@ func TestServiceControlAccessTokenFromSaGen(t *testing.T) {
 	args := []string{"--service_config_id=test-config-id",
 		"--rollout_strategy=fixed", "--suppress_envoy_headers", "--service_account_key=" + serviceAccountFilePath}
 
-	s := env.NewTestEnv(comp.TestServiceControlAccessTokenFromSaGen, platform.EchoSidecar)
+	s := env.NewTestEnv(comp.TestServiceControlAccessTokenFromLocalAccessTokenServer, platform.EchoSidecar)
 
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
@@ -146,9 +146,9 @@ func TestServiceControlAccessTokenFromSaGen(t *testing.T) {
 		}
 
 		// The check call and the report call will be sent.
-		scRequests, err1 := s.ServiceControlServer.GetRequests(2)
-		if err1 != nil {
-			t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err1)
+		scRequests, err := s.ServiceControlServer.GetRequests(2)
+		if err != nil {
+			t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err)
 		}
 
 		for _, scRequest := range scRequests {

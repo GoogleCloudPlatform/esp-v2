@@ -50,21 +50,6 @@ void ServiceControlCallImpl::createImdsTokenSub() {
       });
 }
 
-void ServiceControlCallImpl::createLatsSub() {
-  const std::string& token_cluster = filter_config_.lats_token().cluster();
-  const std::string& token_uri = filter_config_.lats_token().uri();
-  const std::chrono::seconds fetch_timeout(
-      TimeUtil::DurationToSeconds(filter_config_.lats_token().timeout()));
-  sa_gen_token_sub_ = token_subscriber_factory_.createImdsTokenSubscriber(
-      TokenType::AccessToken, token_cluster, token_uri, fetch_timeout,
-      [this](absl::string_view token) {
-        TokenSharedPtr new_token = std::make_shared<std::string>(token);
-        tls_->runOnAllThreads([this, new_token]() {
-          tls_->getTyped<ThreadLocalCache>().set_sc_token(new_token);
-          tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
-        });
-      });
-}
 
 void ServiceControlCallImpl::createIamTokenSub() {
   switch (filter_config_.iam_token().access_token().token_type_case()) {
@@ -130,9 +115,6 @@ ServiceControlCallImpl::ServiceControlCallImpl(
   switch (filter_config_.access_token_case()) {
     case FilterConfig::kImdsToken:
       createImdsTokenSub();
-      break;
-    case FilterConfig::kLatsToken:
-      createLatsSub();
       break;
     case FilterConfig::kIamToken:
       createIamTokenSub();
