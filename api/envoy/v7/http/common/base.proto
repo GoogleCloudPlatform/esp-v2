@@ -68,6 +68,8 @@ message HttpUri {
 }
 
 message AccessToken {
+  reserved 2;
+
   oneof token_type {
     option (validate.required) = true;
 

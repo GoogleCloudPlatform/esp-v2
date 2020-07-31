@@ -77,16 +77,16 @@ const (
 
 	// Metadata suffix
 
-	ConfigIDSuffix          = "/v1/instance/attributes/endpoints-service-version"
-	GAEServerSoftwareSuffix = "/v1/instance/attributes/gae_server_software"
-	KubeEnvSuffix           = "/v1/instance/attributes/kube-env"
-	RolloutStrategySuffix   = "/v1/instance/attributes/endpoints-rollout-strategy"
-	ServiceNameSuffix       = "/v1/instance/attributes/endpoints-service-name"
+	ConfigIDPath          = "/computeMetadata/v1/instance/attributes/endpoints-service-version"
+	GAEServerSoftwarePath = "/computeMetadata/v1/instance/attributes/gae_server_software"
+	KubeEnvPath           = "/computeMetadata/v1/instance/attributes/kube-env"
+	RolloutStrategyPath   = "/computeMetadata/v1/instance/attributes/endpoints-rollout-strategy"
+	ServiceNamePath       = "/computeMetadata/v1/instance/attributes/endpoints-service-name"
 
-	AccessTokenSuffix   = "/v1/instance/service-accounts/default/token"
-	IdentityTokenSuffix = "/v1/instance/service-accounts/default/identity"
-	ProjectIDSuffix     = "/v1/project/project-id"
-	ZoneSuffix          = "/v1/instance/zone"
+	AccessTokenPath   = "/computeMetadata/v1/instance/service-accounts/default/token"
+	IdentityTokenPath = "/computeMetadata/v1/instance/service-accounts/default/identity"
+	ProjectIDPath     = "/computeMetadata/v1/project/project-id"
+	ZonePath          = "/computeMetadata/v1/instance/zone"
 
 	// b/147591854: This string must NOT have a trailing slash
 	OpenIDDiscoveryCfgURLSuffix = "/.well-known/openid-configuration"
@@ -95,7 +95,7 @@ const (
 	MetadataServerClusterName = "metadata-cluster"
 
 	// The local access token  server cluster name.
-	LatsClusterName = "local-access-token-server-cluster"
+	LatsClusterName = "local-access-token-cluster"
 
 	// The iam server cluster name.
 	IamServerClusterName = "iam-cluster"

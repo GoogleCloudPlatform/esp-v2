@@ -142,11 +142,11 @@ func ResolveJwksUriUsingOpenID(uri string) (string, error) {
 	return jwksURI, nil
 }
 
-func IamIdentityTokenSuffix(IamServiceAccount string) string {
+func IamIdentityTokenPath(IamServiceAccount string) string {
 	return fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateIdToken", IamServiceAccount)
 }
 
-func IamAccessTokenSuffix(IamServiceAccount string) string {
+func IamAccessTokenPath(IamServiceAccount string) string {
 	return fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateAccessToken", IamServiceAccount)
 }
 

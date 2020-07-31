@@ -98,6 +98,8 @@ message GcpAttributes {
 }
 
 message FilterConfig {
+  reserved 5;
+
   // A list of services supported on this Envoy server.
   repeated Service services = 1;  // ref:multi-service
 
@@ -116,17 +118,17 @@ message FilterConfig {
     espv2.api.envoy.v7.http.common.HttpUri imds_token = 4;
 
     // Information used to fetch access token from Google Cloud IAM.
-    espv2.api.envoy.v7.http.common.IamTokenInfo iam_token = 5;
+    espv2.api.envoy.v7.http.common.IamTokenInfo iam_token = 6;
   }
 
   // The service control call configuration.
-  ServiceControlCallingConfig sc_calling_config = 6;
+  ServiceControlCallingConfig sc_calling_config = 7;
 
   // The Http uri to call service control
-  espv2.api.envoy.v7.http.common.HttpUri service_control_uri = 7;
+  espv2.api.envoy.v7.http.common.HttpUri service_control_uri = 8;
 
   // The prefix added to generated headers
-  string generated_header_prefix = 8 [(validate.rules).string = {
+  string generated_header_prefix = 9 [(validate.rules).string = {
     well_known_regex: HTTP_HEADER_NAME,
     min_len: 1,
   }];

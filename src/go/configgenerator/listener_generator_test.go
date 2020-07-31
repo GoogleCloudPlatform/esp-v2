@@ -1536,9 +1536,9 @@ func TestServiceControl(t *testing.T) {
 			serviceAccountKey: "this-is-sa-cred",
 			wantPartialServiceControlFilter: `
     "imdsToken": {
-      "cluster": "local-access-token-server-cluster",
+      "cluster": "local-access-token-cluster",
       "timeout": "30s",
-      "uri": "http://127.0.0.1:8791/v1/instance/service-accounts/default/token"
+      "uri": "http://127.0.0.1:8791/computeMetadata/v1/instance/service-accounts/default/token"
     },`,
 		},
 	}

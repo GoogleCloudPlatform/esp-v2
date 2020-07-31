@@ -246,7 +246,7 @@ func (s *ServiceInfo) processAccessToken() {
 			TokenType: &commonpb.AccessToken_RemoteToken{
 				RemoteToken: &commonpb.HttpUri{
 					// Use the same path as IMDS to get access token.
-					Uri:     fmt.Sprintf("http://%s:%v%s", util.LoopbackIPv4Addr, s.Options.LocalAccessTokenServerPort, util.AccessTokenSuffix),
+					Uri:     fmt.Sprintf("http://%s:%v%s", util.LoopbackIPv4Addr, s.Options.LocalAccessTokenServerPort, util.AccessTokenPath),
 					Cluster: util.LatsClusterName,
 					Timeout: ptypes.DurationProto(s.Options.HttpRequestTimeout),
 				},
@@ -259,7 +259,7 @@ func (s *ServiceInfo) processAccessToken() {
 	s.AccessToken = &commonpb.AccessToken{
 		TokenType: &commonpb.AccessToken_RemoteToken{
 			RemoteToken: &commonpb.HttpUri{
-				Uri:     fmt.Sprintf("%s%s", s.Options.MetadataURL, util.AccessTokenSuffix),
+				Uri:     fmt.Sprintf("%s%s", s.Options.MetadataURL, util.AccessTokenPath),
 				Cluster: util.MetadataServerClusterName,
 				Timeout: ptypes.DurationProto(s.Options.HttpRequestTimeout),
 			},

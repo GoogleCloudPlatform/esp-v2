@@ -38,8 +38,8 @@ func TestAddGCPAttributes(t *testing.T) {
 			name: "success with default platform",
 			in:   &scpb.FilterConfig{},
 			metadataResponds: map[string]string{
-				util.ProjectIDSuffix: "project",
-				util.ZoneSuffix:      "projectzs/project/zone",
+				util.ProjectIDPath: "project",
+				util.ZonePath:      "projectzs/project/zone",
 			},
 			want: &scpb.FilterConfig{
 				GcpAttributes: &scpb.GcpAttributes{
@@ -57,8 +57,8 @@ func TestAddGCPAttributes(t *testing.T) {
 				},
 			},
 			metadataResponds: map[string]string{
-				util.ProjectIDSuffix: "project",
-				util.ZoneSuffix:      "projectzs/project/zone",
+				util.ProjectIDPath: "project",
+				util.ZonePath:      "projectzs/project/zone",
 			},
 			want: &scpb.FilterConfig{
 				GcpAttributes: &scpb.GcpAttributes{

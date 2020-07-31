@@ -52,7 +52,7 @@ var (
 	//listener is marked as ready but the whole Envoy server is not marked as ready
 	//(worker did not start) somehow. To work around this problem, use IP for
 	//metadata server to fetch access token.
-	MetadataURL = flag.String("metadata_url", "http://169.254.169.254/computeMetadata", "url of metadata server")
+	MetadataURL = flag.String("metadata_url", "http://169.254.169.254", "url of metadata server")
 	IamURL      = flag.String("iam_url", "https://iamcredentials.googleapis.com", "url of iam server")
 
 	ServiceControlIamServiceAccount = flag.String("service_control_iam_service_account", "", "The service account used to fetch access token for the Service Control from Google Cloud IAM")
