@@ -39,7 +39,7 @@ function e2e_options() {
       p) PROXY_PLATFORM="${OPTARG}" ;;
       R) ROLLOUT_STRATEGY="${OPTARG}" ;;
       s) SKIP_CLEANUP='true' ;;
-      S) USING_SA_CRED='true' ;;
+      S) USING_SA_CRED="${OPTARG}" ;;
       t) TEST_TYPE="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')" ;;
       v) VM_IMAGE="${OPTARG}" ;;
       V) ENDPOINTS_RUNTIME_VERSION="${OPTARG}" ;;
@@ -295,7 +295,11 @@ function download_client_binaries() {
 
 function get_apiproxy_service() {
   if [[ "${1}" == "bookstore" ]]; then
-    echo "bookstore.endpoints.cloudesf-testing.cloud.goog"
+    if [ -n "${2}" ]; then
+      echo "bookstore-using-sa-cred.endpoints.cloudesf-testing.cloud.goog"
+    else
+      echo "bookstore.endpoints.cloudesf-testing.cloud.goog"
+    fi
   elif [[ "${1}" == "echo" ]]; then
     echo "echo.endpoints.cloudesf-testing.cloud.goog"
   elif [[ "${1}" == "interop" ]]; then

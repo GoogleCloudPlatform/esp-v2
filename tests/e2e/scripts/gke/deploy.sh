@@ -81,12 +81,9 @@ case "${BACKEND}" in
     SERVICE_IDL_TMPL="${ROOT}/tests/endpoints/bookstore/bookstore_swagger_template.json"
     SERVICE_IDL="${ROOT}/tests/endpoints/bookstore/bookstore_swagger.json"
 
-    ENDPOINTS_SERVICE_NAME="bookstore.endpoints.cloudesf-testing.cloud.goog"
-    if [[ -n ${USING_SA_CRED} ]]; then
-      ENDPOINTS_SERVICE_NAME="bookstore-using-sa-cred.endpoints.cloudesf-testing.cloud.goog"
-    fi
-
-    cat "${SERVICE_IDL_TMPL}" | jq ".host = \"${ENDPOINTS_SERVICE_NAME}\"" \
+    cat "${SERVICE_IDL_TMPL}" \
+    | jq ".host = \"${APIPROXY_SERVICE}\" \
+       | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${APIPROXY_SERVICE}\"" \
       > "${SERVICE_IDL}"
 
     CREATE_SERVICE_ARGS="${SERVICE_IDL}"
@@ -103,8 +100,10 @@ case "${BACKEND}" in
     ARGS="$ARGS -g" ;;
   *)
     echo "Invalid backend ${BACKEND}"
-    return 1 ;;
+    exit 1;;
 esac
+
+
 
 LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
 
@@ -114,10 +113,10 @@ create_service ${CREATE_SERVICE_ARGS}
 NAMESPACE="${UNIQUE_ID}"
 run kubectl create namespace "${NAMESPACE}" || error_exit "Namespace already exists"
 
-if [[ -n ${USING_SA_CRED} ]]; then
+if [ -n "${USING_SA_CRED}" ]; then
   if [ "${BACKEND}" != 'bookstore' ]; then
         echo "Only bookstore is supported for using service account credential and ${BACKEND} is not"
-        return 1
+        exit 1
   fi
 
   get_test_client_key "e2e-non-gcp-instance-proxy-rt-sa.json" "${SA_CRED_PATH}"
