@@ -17,6 +17,7 @@ package integration_test
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -24,10 +25,8 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
-	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
-	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 )
 
 func TestServiceControlAccessTokenFromIam(t *testing.T) {
@@ -113,12 +112,14 @@ func TestServiceControlAccessTokenFromLocalAccessTokenServer(t *testing.T) {
 	defer mockTokenServer.Close()
 
 	fakeKey := strings.Replace(testdata.FakeServiceAccountKeyData, "FAKE-TOKEN-URI", mockTokenServer.GetURL(), 1)
-	serviceAccountFilePath := platform.GetFilePath(platform.ServiceAccountFile)
-	_ = ioutil.WriteFile(serviceAccountFilePath, []byte(fakeKey), 0644)
-	defer utils.TryRemoveFile(serviceAccountFilePath)
+	serviceAccountFile, err := ioutil.TempFile(os.TempDir(), "sa-cred-")
+	if err !=nil {
+		t.Fatal("fail to create a temp service account file")
+	}
+	_ = ioutil.WriteFile(serviceAccountFile.Name(), []byte(fakeKey), 0644)
 
 	args := []string{"--service_config_id=test-config-id",
-		"--rollout_strategy=fixed", "--suppress_envoy_headers", "--service_account_key=" + serviceAccountFilePath}
+		"--rollout_strategy=fixed", "--suppress_envoy_headers", "--service_account_key=" + serviceAccountFile.Name()}
 
 	s := env.NewTestEnv(comp.TestServiceControlAccessTokenFromLocalAccessTokenServer, platform.EchoSidecar)
 
