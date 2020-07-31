@@ -921,6 +921,27 @@ func TestMethods(t *testing.T) {
 								Post: "/auth/info/googlejwt",
 							},
 						},
+						{
+							// This will also have a CORS method generated for it.
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.GetBook",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/shelves/{shelf_id}/books/{book.id}",
+							},
+						},
+						{
+							// No CORS method generated due to an equivalent path.
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.UpdateBook",
+							Pattern: &annotationspb.HttpRule_Patch{
+								Patch: "/shelves/{shelf_id}/books/{book.id}",
+							},
+						},
+						{
+							// No CORS method generated due to a **semantically** equivalent path.
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.DeleteBook",
+							Pattern: &annotationspb.HttpRule_Delete{
+								Delete: "/shelves/{shelf_id_different_param}/books/{book.id}",
+							},
+						},
 					},
 				},
 			},
@@ -944,6 +965,47 @@ func TestMethods(t *testing.T) {
 						{
 							UriTemplate: "/echo",
 							HttpMethod:  util.POST,
+						},
+					},
+				},
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.GetBook": &methodInfo{
+					ShortName: "GetBook",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/shelves/{shelf_id}/books/{book.id}",
+							HttpMethod:  util.GET,
+						},
+					},
+				},
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_shelves_shelf_id_books_book.id": &methodInfo{
+					ShortName: "CORS_shelves_shelf_id_books_book.id",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/shelves/{shelf_id}/books/{book.id}",
+							HttpMethod:  util.OPTIONS,
+						},
+					},
+					IsGenerated: true,
+				},
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.UpdateBook": &methodInfo{
+					ShortName: "UpdateBook",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/shelves/{shelf_id}/books/{book.id}",
+							HttpMethod:  util.PATCH,
+						},
+					},
+				},
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.DeleteBook": &methodInfo{
+					ShortName: "DeleteBook",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/shelves/{shelf_id_different_param}/books/{book.id}",
+							HttpMethod:  util.DELETE,
 						},
 					},
 				},
