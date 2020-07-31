@@ -124,6 +124,7 @@ const (
 	TestServiceControlTLSWithValidCert
 	TestServiceManagementWithInvalidCert
 	TestServiceManagementWithValidCert
+	TestStartupDuplicatedPathsWithAllowCors
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
 	TestStatistics
