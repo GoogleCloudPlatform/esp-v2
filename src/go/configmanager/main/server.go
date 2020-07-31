@@ -79,7 +79,7 @@ func main() {
 
 	if opts.ServiceAccountKey != "" {
 		// Setup local service-account-generated token server
-		r := tokengenerator.MakeLatsTokenHandler(opts.ServiceAccountKey)
+		r := tokengenerator.MakeLatsHandler(opts.ServiceAccountKey)
 		go func() {
 			_ = http.ListenAndServe(fmt.Sprintf(":%v", opts.LocalAccessTokenServerPort), r)
 		}()

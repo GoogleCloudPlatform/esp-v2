@@ -95,7 +95,7 @@ const (
 	MetadataServerClusterName = "metadata-cluster"
 
 	// The local access token  server cluster name.
-	LatsTokenClusterName = "local-access-token-server-cluster"
+	LatsClusterName = "local-access-token-server-cluster"
 
 	// The iam server cluster name.
 	IamServerClusterName = "iam-cluster"

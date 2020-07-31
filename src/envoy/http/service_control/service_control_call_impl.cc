@@ -50,7 +50,6 @@ void ServiceControlCallImpl::createImdsTokenSub() {
       });
 }
 
-
 void ServiceControlCallImpl::createIamTokenSub() {
   switch (filter_config_.iam_token().access_token().token_type_case()) {
     case AccessToken::kRemoteToken: {

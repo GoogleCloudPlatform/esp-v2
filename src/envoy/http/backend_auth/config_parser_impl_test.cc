@@ -64,26 +64,6 @@ rules {
                           "Duplicated operation");
 }
 
-TEST_F(ConfigParserImplTest, IamIdTokenWithServiceAccountAsAccessToken) {
-  const char filter_config[] = R"(
-iam_token {
-  access_token {
-    service_account_secret{}
-  }
-}
-rules {
-  operation: "append-with-audience"
-  jwt_audience: "this-is-audience"
-}
-)";
-
-  EXPECT_CALL(mock_token_subscriber_factory_, createImdsTokenSubscriber)
-      .Times(0);
-  EXPECT_CALL(mock_token_subscriber_factory_, createIamTokenSubscriber)
-      .Times(0);
-  setUp(filter_config);
-}
-
 TEST_F(ConfigParserImplTest, GetIdTokenByImds) {
   const char filter_config[] = R"(
 imds_token {
