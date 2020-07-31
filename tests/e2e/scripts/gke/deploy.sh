@@ -62,11 +62,11 @@ case "${BACKEND}" in
     return 1 ;;
 esac
 
-if [[ -n ${USING_SA_CRED} ]]; then
+if [ ${BACKEND} == "bookstore" ]; then
   SA_CRED_PATH="$(mktemp  /tmp/servie_account_cred.XXXX)"
 
-  # This file path is set in tests/e2e/testdata/bookstore/gke/http-bookstore.yaml
-  ARGS="$ARGS, \"--service_account_key=/etc/creds/$(basename "${SA_CRED_PATH}")\""
+  # This file mount path is set in tests/e2e/testdata/bookstore/gke/http-bookstore.yaml
+  [[ -n ${USING_SA_CRED} ]] && ARGS="$ARGS, \"--service_account_key=/etc/creds/$(basename "${SA_CRED_PATH}")\""
 fi
 
 sed "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g" ${YAML_TEMPLATE}  \
@@ -113,12 +113,7 @@ create_service ${CREATE_SERVICE_ARGS}
 NAMESPACE="${UNIQUE_ID}"
 run kubectl create namespace "${NAMESPACE}" || error_exit "Namespace already exists"
 
-if [ -n "${USING_SA_CRED}" ]; then
-  if [ "${BACKEND}" != 'bookstore' ]; then
-        echo "Only bookstore is supported for using service account credential and ${BACKEND} is not"
-        exit 1
-  fi
-
+if [ "${BACKEND}" == 'bookstore' ]; then
   get_test_client_key "e2e-non-gcp-instance-proxy-rt-sa.json" "${SA_CRED_PATH}"
   run kubectl create secret generic service-account-cred --from-file="${SA_CRED_PATH}" --namespace "${NAMESPACE}"
 fi

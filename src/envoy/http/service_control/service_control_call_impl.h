@@ -115,10 +115,6 @@ class ServiceControlCallImpl
   // Token subscriber used to fetch access token from imds for service control
   token::TokenSubscriberPtr imds_token_sub_;
 
-  // Token subscriber used to fetch access token from local
-  // service-account-generated token server for service control
-  token::TokenSubscriberPtr sa_gen_token_sub_;
-
   // Access Token for iam server
   std::string access_token_for_iam_;
   // Token subscriber used to fetch access token from imds for accessing iam
