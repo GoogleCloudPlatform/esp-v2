@@ -110,8 +110,9 @@ message FilterConfig {
   oneof access_token {
     option (validate.required) = true;
 
-    // Uri used to fetch access token from Instance
-    // Metadata Server.
+    // Uri used to fetch access token from Instance Metadata Server or the local
+    // access token server, which follows the same request/response scheme as
+    // Instance Metadata Server for getting access token.
     espv2.api.envoy.v7.http.common.HttpUri imds_token = 4;
 
     // Information used to fetch access token from Google Cloud IAM.

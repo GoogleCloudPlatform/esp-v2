@@ -113,7 +113,7 @@ func TestServiceControlAccessTokenFromLocalAccessTokenServer(t *testing.T) {
 
 	fakeKey := strings.Replace(testdata.FakeServiceAccountKeyData, "FAKE-TOKEN-URI", mockTokenServer.GetURL(), 1)
 	serviceAccountFile, err := ioutil.TempFile(os.TempDir(), "sa-cred-")
-	if err !=nil {
+	if err != nil {
 		t.Fatal("fail to create a temp service account file")
 	}
 	_ = ioutil.WriteFile(serviceAccountFile.Name(), []byte(fakeKey), 0644)

@@ -325,7 +325,7 @@ function get_gcsrunner_image_release_name() {
 function get_tag_name() {
   local tag_format="%H"
   tag_name="$(git show -q HEAD --pretty=format:"${tag_format}")"
-  echo -n "92ed2e1b8a92a1bd3d73c2d605775a0a65828026"
+  echo -n "${tag_name}"
 }
 
 function get_envoy_image_name_with_sha() {

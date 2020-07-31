@@ -2350,6 +2350,7 @@ func TestProcessAccessToken(t *testing.T) {
 		wantAccessToken   *commonpb.AccessToken
 	}{
 		{
+			desc: "get access token from imds",
 			wantAccessToken: &commonpb.AccessToken{
 				TokenType: &commonpb.AccessToken_RemoteToken{
 					RemoteToken: &commonpb.HttpUri{
@@ -2361,6 +2362,7 @@ func TestProcessAccessToken(t *testing.T) {
 			},
 		},
 		{
+			desc:              "get access token from lmds",
 			serviceAccountKey: "this-is-service-account-key",
 			wantAccessToken: &commonpb.AccessToken{
 				TokenType: &commonpb.AccessToken_RemoteToken{
