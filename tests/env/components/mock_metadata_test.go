@@ -72,7 +72,7 @@ func TestMockMetadata(t *testing.T) {
 		},
 		{
 			desc:       "Success, query hard-code metadata",
-			url:        util.ConfigIDSuffix,
+			url:        util.ConfigIDPath,
 			wantedResp: fakeConfigID,
 		},
 		{

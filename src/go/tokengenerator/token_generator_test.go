@@ -68,7 +68,7 @@ func TestMakeLatsHandler(t *testing.T) {
 			genAccessTokenFromFile: func(saFilePath string) (string, time.Duration, error) {
 				return "ya29.new", time.Duration(time.Second * 100), nil
 			},
-			path:     "/v1/instance/service-accounts/default/token",
+			path:     "/computeMetadata/v1/instance/service-accounts/default/token",
 			method:   "GET",
 			wantResp: `{"access_token": "ya29.new", "expires_in": 100}`,
 		},
@@ -77,7 +77,7 @@ func TestMakeLatsHandler(t *testing.T) {
 			genAccessTokenFromFile: func(saFilePath string) (string, time.Duration, error) {
 				return "", 0, fmt.Errorf("gen-access-token-error")
 			},
-			path:      "/v1/instance/service-accounts/default/token",
+			path:      "/computeMetadata/v1/instance/service-accounts/default/token",
 			method:    "GET",
 			wantError: "500 Internal Server Error, gen-access-token-error",
 		},

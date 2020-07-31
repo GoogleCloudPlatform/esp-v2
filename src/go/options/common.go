@@ -90,7 +90,7 @@ func DefaultCommonOptions() CommonOptions {
 		TracingMaxNumAnnotations:   32,
 		TracingMaxNumMessageEvents: 128,
 		TracingMaxNumLinks:         128,
-		MetadataURL:                "http://169.254.169.254/computeMetadata",
+		MetadataURL:                "http://169.254.169.254",
 		IamURL:                     "https://iamcredentials.googleapis.com",
 		GeneratedHeaderPrefix:      "X-Endpoint-",
 	}

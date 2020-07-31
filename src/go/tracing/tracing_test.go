@@ -450,7 +450,7 @@ func runTest(_ *testing.T, shouldRunServer bool, f func()) {
 	if shouldRunServer {
 		// Run a mock server and point injected client to mock server
 		mockMetadataServer := util.InitMockServerFromPathResp(map[string]string{
-			util.ProjectIDSuffix: fakeMetadataProjectId,
+			util.ProjectIDPath: fakeMetadataProjectId,
 		})
 		defer mockMetadataServer.Close()
 		metadata.SetMockMetadataFetcher(mockMetadataServer.URL, time.Now())
