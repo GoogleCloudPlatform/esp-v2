@@ -272,11 +272,15 @@ func (s *BookstoreServerV1Impl) CreateShelf(ctx context.Context, req *bspbv1.Cre
 		var book bspbv1.Book
 		err := ptypes.UnmarshalAny(req.Shelf.Any, &book)
 		if err != nil {
-			return nil, status.New(codes.Internal, "Cannot unmarshal shelf.any").Err()
+			return nil, status.New(codes.Internal, "cannot unmarshal shelf.any").Err()
 		}
+
 		newBook := book
 
-		req.Shelf.Any, _ = ptypes.MarshalAny(&newBook)
+		req.Shelf.Any, err = ptypes.MarshalAny(&newBook)
+		if err != nil {
+			return nil, status.New(codes.Internal, "cannot marshal shelf.any").Err()
+		}
 	}
 
 	return req.Shelf, nil
