@@ -24,6 +24,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -264,6 +265,18 @@ func (s *BookstoreServerV1Impl) ListShelves(ctx context.Context, req *bspbv1.Emp
 func (s *BookstoreServerV1Impl) CreateShelf(ctx context.Context, req *bspbv1.CreateShelfRequest) (*bspbv1.Shelf, error) {
 	if err := testDecorator(ctx); err != nil {
 		return nil, err
+	}
+
+	// Unmarshal, deepcopy and marshal, to verify the received binary `any`
+	if req.Shelf.Any != nil {
+		var book bspbv1.Book
+		err := ptypes.UnmarshalAny(req.Shelf.Any, &book)
+		if err != nil {
+			return nil, status.New(codes.Internal, "Cannot unmarshal shelf.any").Err()
+		}
+		newBook := book
+
+		req.Shelf.Any, _ = ptypes.MarshalAny(&newBook)
 	}
 
 	return req.Shelf, nil
