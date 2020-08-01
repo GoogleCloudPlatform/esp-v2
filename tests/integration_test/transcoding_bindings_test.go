@@ -129,7 +129,7 @@ func TestTranscodingBindings(t *testing.T) {
 			wantResp:       `{"books":[{"id":"1001","title":"Alphabet"},{"id":"4","author":"Leo Tolstoy","title":"War and Peace"},{"id":"5","author":"Mark","title":"The Adventures of Huckleberry Finn"},{"id":"6","author":"Foo/Bar/Baz","title":"The Adventures of Huckleberry Finn"}]}`,
 		},
 		{
-			desc:           "Succeed, test transcoding Any type json <-> grpc by echoing book in Any",
+			desc:           "Succeed, test basic Any type transcoding by echoing book in Any",
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves?key=api-key",
