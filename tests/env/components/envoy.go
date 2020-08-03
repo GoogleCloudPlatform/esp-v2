@@ -31,17 +31,9 @@ type Envoy struct {
 }
 
 // createEnvoyConf create envoy config.
-func createEnvoyConf(configPath string, bootstrapArgs []string, shouldEnableTrace bool, ports *Ports) error {
+func createEnvoyConf(configPath string, bootstrapArgs []string, ports *Ports) error {
 
 	glog.Infof("Outputting envoy bootstrap config to: %v", configPath)
-
-	if shouldEnableTrace {
-		bootstrapArgs = append(bootstrapArgs, "--tracing_sample_rate=1.0")
-		// This address must be in gRPC format: https://github.com/grpc/grpc/blob/master/doc/naming.md
-		bootstrapArgs = append(bootstrapArgs, fmt.Sprintf("--tracing_stackdriver_address=%v:%v:%v", platform.GetIpProtocol(), platform.GetLoopbackAddress(), ports.FakeStackdriverPort))
-	} else {
-		bootstrapArgs = append(bootstrapArgs, "--disable_tracing")
-	}
 
 	bootstrapArgs = append(bootstrapArgs, fmt.Sprintf("--discovery_port=%v", ports.DiscoveryPort))
 	bootstrapArgs = append(bootstrapArgs, fmt.Sprintf("--admin_port=%v", ports.AdminPort))
@@ -57,9 +49,9 @@ func createEnvoyConf(configPath string, bootstrapArgs []string, shouldEnableTrac
 }
 
 // NewEnvoy creates a new Envoy struct and starts envoy.
-func NewEnvoy(args []string, bootstrapArgs []string, confPath string, shouldEnableTrace bool, ports *Ports, testId uint16) (*Envoy, error) {
+func NewEnvoy(args []string, bootstrapArgs []string, confPath string, ports *Ports, testId uint16) (*Envoy, error) {
 
-	if err := createEnvoyConf(confPath, bootstrapArgs, shouldEnableTrace, ports); err != nil {
+	if err := createEnvoyConf(confPath, bootstrapArgs, ports); err != nil {
 		return nil, err
 	}
 

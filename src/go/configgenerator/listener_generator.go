@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/tracing"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
@@ -170,12 +171,14 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*listenerpb.Listener, error) {
 	httpFilters = append(httpFilters, routerFilter)
 
 	route, err := MakeRouteConfig(serviceInfo)
-
 	if err != nil {
 		return nil, fmt.Errorf("makeHttpConnectionManagerRouteConfig got err: %s", err)
 	}
 
-	httpConMgr := makeHttpConMgr(&serviceInfo.Options, route)
+	httpConMgr, err := makeHttpConMgr(&serviceInfo.Options, route)
+	if err != nil {
+		return nil, fmt.Errorf("makeHttpConnectionManager got err: %s", err)
+	}
 
 	jsonStr, _ := util.ProtoToJson(httpConMgr)
 	glog.Infof("adding Http Connection Manager config: %v", jsonStr)
@@ -224,7 +227,7 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*listenerpb.Listener, error) {
 	}, nil
 }
 
-func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteConfiguration) *hcmpb.HttpConnectionManager {
+func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteConfiguration) (*hcmpb.HttpConnectionManager, error) {
 	httpConMgr := &hcmpb.HttpConnectionManager{
 		UpgradeConfigs: []*hcmpb.HttpConnectionManager_UpgradeConfig{
 			{
@@ -288,7 +291,11 @@ func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteCo
 	}
 
 	if !opts.DisableTracing {
-		httpConMgr.Tracing = &hcmpb.HttpConnectionManager_Tracing{}
+		var err error
+		httpConMgr.Tracing, err = tracing.CreateTracing(opts.CommonOptions)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if opts.UnderscoresInHeaders {
@@ -301,7 +308,7 @@ func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteCo
 		}
 	}
 
-	return httpConMgr
+	return httpConMgr, nil
 }
 
 func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {

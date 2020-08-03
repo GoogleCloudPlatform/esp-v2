@@ -17,7 +17,6 @@ package ads
 import (
 	"fmt"
 
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/bootstrap"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/ptypes"
@@ -90,12 +89,6 @@ func CreateBootstrapConfig(opts options.AdsBootstrapperOptions) (string, error) 
 				},
 			},
 		},
-	}
-
-	if !opts.DisableTracing {
-		if bt.Tracing, err = bootstrap.CreateTracing(opts.CommonOptions); err != nil {
-			return "", fmt.Errorf("failed to create tracing config, error: %v", err)
-		}
 	}
 
 	jsonStr, err := util.ProtoToJson(bt)
