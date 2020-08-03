@@ -284,6 +284,46 @@ func TestHcmTracingSampleRate(t *testing.T) {
 			},
 		},
 		{
+			desc:              "Sample rate of 1 works",
+			tracingSampleRate: 1,
+			wantResult: &hcmpb.HttpConnectionManager_Tracing{
+				ClientSampling: &typepb.Percent{
+					Value: 0,
+				},
+				RandomSampling: &typepb.Percent{
+					Value: 100,
+				},
+				OverallSampling: &typepb.Percent{
+					Value: 100,
+				},
+				Provider: &tracepb.Tracing_Http{
+					Name: "envoy.tracers.opencensus",
+					// Typed config is already tested, so strip it out.
+					ConfigType: nil,
+				},
+			},
+		},
+		{
+			desc:              "Sample rate of 0 works",
+			tracingSampleRate: 0,
+			wantResult: &hcmpb.HttpConnectionManager_Tracing{
+				ClientSampling: &typepb.Percent{
+					Value: 0,
+				},
+				RandomSampling: &typepb.Percent{
+					Value: 0,
+				},
+				OverallSampling: &typepb.Percent{
+					Value: 0,
+				},
+				Provider: &tracepb.Tracing_Http{
+					Name: "envoy.tracers.opencensus",
+					// Typed config is already tested, so strip it out.
+					ConfigType: nil,
+				},
+			},
+		},
+		{
 			desc:              "Sample rate rounded at 6 decimal points",
 			tracingSampleRate: 0.123456789,
 			wantResult: &hcmpb.HttpConnectionManager_Tracing{
