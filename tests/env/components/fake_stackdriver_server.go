@@ -119,3 +119,19 @@ func (s *FakeTraceServer) RetrieveSpanCount() (int, error) {
 	glog.Infof("got %v spans", len(names))
 	return len(names), nil
 }
+
+// When the test is over, there should be no more spans left.
+func (s *FakeTraceServer) VerifyInvariants() error {
+	glog.Infof("Verifying trace invariants")
+
+	gotSpansNum, err := s.RetrieveSpanCount()
+	if err != nil {
+		return err
+	}
+
+	if gotSpansNum != 0 {
+		return fmt.Errorf("at the end of the test, there were (%v) spans unaccounted for", gotSpansNum)
+	}
+
+	return nil
+}
