@@ -267,7 +267,7 @@ func (s *BookstoreServerV1Impl) CreateShelf(ctx context.Context, req *bspbv1.Cre
 		return nil, err
 	}
 
-	// Unmarshal, deepcopy and marshal, to verify the received binary `any`
+	// Unmarshal, copy and marshal, to verify the received binary `any`
 	if req.Shelf.Any != nil {
 		var obj bspbv1.ObjectOnlyForAny
 		err := ptypes.UnmarshalAny(req.Shelf.Any, &obj)
