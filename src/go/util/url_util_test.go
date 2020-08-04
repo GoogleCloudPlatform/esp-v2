@@ -450,6 +450,11 @@ func TestWildcardMatcherForPath(t *testing.T) {
 			uri:         "/shelves/{shelf_id}/books/{book.id}",
 			wantMatcher: `/shelves/[^\/]+/books/[^\/]+$`,
 		},
+		{
+			desc:        "Path param with wildcard",
+			uri:         "/test/{x=*}/test/{y=**}",
+			wantMatcher: `/test/[^\/]+/test/[^\/]+$`,
+		},
 	}
 
 	for _, tc := range testData {
