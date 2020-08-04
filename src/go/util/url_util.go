@@ -164,15 +164,15 @@ func ExtraAddressFromURI(jwksUri string) (string, error) {
 }
 
 // Returns a regex that will match requests to the uri with path parameters.
-// If there are no path params, returns error.
-func GetRegexForUriWithPathParams(uri string) (string, error) {
+// If there are no path params, returns empty string.
+func WildcardMatcherForPath(uri string) string {
 	if !pathParamMatcherRegexp.MatchString(uri) {
-		return "", fmt.Errorf("uri (%v) has no path parameters", uri)
+		return ""
 	}
 
 	// Replace path templates inside "{}" by regex "[^\/]+", which means
 	// any character except `/`, also adds `$` to match to the end of the string.
-	return pathParamMatcherRegexp.ReplaceAllString(uri, `[^\/]+`) + `$`, nil
+	return pathParamMatcherRegexp.ReplaceAllString(uri, `[^\/]+`) + `$`
 }
 
 var (

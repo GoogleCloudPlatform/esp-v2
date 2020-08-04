@@ -317,15 +317,20 @@ func addHttpRule(method *methodInfo, r *annotationspb.HttpRule, httpMatcherWithO
 			HttpMethod:  util.PATCH,
 		}
 	case *annotationspb.HttpRule_Custom:
+		httpMethod := r.GetCustom().GetKind()
 		httpRule = &commonpb.Pattern{
 			UriTemplate: r.GetCustom().GetPath(),
-			HttpMethod:  r.GetCustom().GetKind(),
+			HttpMethod:  httpMethod,
 		}
-		matcher, err := util.GetRegexForUriWithPathParams(r.GetCustom().GetPath())
-		if err != nil {
-			matcher = r.GetCustom().GetPath()
+
+		if httpMethod == util.OPTIONS {
+			// Ensure we don't generate duplicate methods later for AllowCors.
+			matcher := util.WildcardMatcherForPath(r.GetCustom().GetPath())
+			if matcher == "" {
+				matcher = r.GetCustom().GetPath()
+			}
+			httpMatcherWithOptionsSet[matcher] = true
 		}
-		httpMatcherWithOptionsSet[matcher] = true
 	default:
 		return fmt.Errorf("unsupported http method %T", r.GetPattern())
 	}
@@ -365,8 +370,8 @@ func (s *ServiceInfo) processHttpRule() error {
 			method := s.Methods[r.GetSelector()]
 			for _, httpRule := range method.HttpRule {
 				if httpRule.HttpMethod != "OPTIONS" {
-					matcher, err := util.GetRegexForUriWithPathParams(httpRule.UriTemplate)
-					if err != nil {
+					matcher := util.WildcardMatcherForPath(httpRule.UriTemplate)
+					if matcher == "" {
 						matcher = httpRule.UriTemplate
 					}
 					if _, exist := httpMatcherWithOptionsSet[matcher]; !exist {

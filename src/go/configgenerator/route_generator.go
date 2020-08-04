@@ -239,8 +239,8 @@ func makeHttpRouteMatcher(httpRule *commonpb.Pattern) *routepb.RouteMatch {
 	}
 	var routeMatcher routepb.RouteMatch
 
-	regex, err := util.GetRegexForUriWithPathParams(httpRule.UriTemplate)
-	if err != nil {
+	regex := util.WildcardMatcherForPath(httpRule.UriTemplate)
+	if regex == "" {
 		// Match with HttpHeader method. Some methods may have same path.
 		routeMatcher = routepb.RouteMatch{
 			PathSpecifier: &routepb.RouteMatch_Path{
