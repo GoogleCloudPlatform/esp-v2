@@ -133,8 +133,8 @@ func TestTranscodingBindings(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves?key=api-key",
-			bodyBytes:      []byte(`{"id":"300","theme":"Horror","any":{"@type":"type.googleapis.com/endpoints.examples.bookstore.Book","id":"123","author":"author","title":"title"}}`),
-			wantResp:       `{"id":"300","theme":"Horror","any":{"@type":"type.googleapis.com/endpoints.examples.bookstore.Book","id":"123","author":"author","title":"title"}}`,
+			bodyBytes:      []byte(`{"id":"300","theme":"Horror","any":{"@type":"type.googleapis.com/endpoints.examples.bookstore.ObjectOnlyForAny","id":"123","name":"name"}}`),
+			wantResp:       `{"id":"300","theme":"Horror","any":{"@type":"type.googleapis.com/endpoints.examples.bookstore.ObjectOnlyForAny","id":123,"name":"name"}}`,
 		},
 	}
 	for _, tc := range tests {

@@ -269,15 +269,14 @@ func (s *BookstoreServerV1Impl) CreateShelf(ctx context.Context, req *bspbv1.Cre
 
 	// Unmarshal, deepcopy and marshal, to verify the received binary `any`
 	if req.Shelf.Any != nil {
-		var book bspbv1.Book
-		err := ptypes.UnmarshalAny(req.Shelf.Any, &book)
+		var obj bspbv1.ObjectOnlyForAny
+		err := ptypes.UnmarshalAny(req.Shelf.Any, &obj)
 		if err != nil {
 			return nil, status.New(codes.Internal, "cannot unmarshal shelf.any").Err()
 		}
 
-		newBook := book
-
-		req.Shelf.Any, err = ptypes.MarshalAny(&newBook)
+		newObj := obj
+		req.Shelf.Any, err = ptypes.MarshalAny(&newObj)
 		if err != nil {
 			return nil, status.New(codes.Internal, "cannot marshal shelf.any").Err()
 		}
