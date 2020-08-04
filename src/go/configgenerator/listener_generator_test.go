@@ -1538,7 +1538,7 @@ func TestServiceControl(t *testing.T) {
     "imdsToken": {
       "cluster": "local-access-token-cluster",
       "timeout": "30s",
-      "uri": "http://127.0.0.1:8791/computeMetadata/v1/instance/service-accounts/default/token"
+      "uri": "http://127.0.0.1:8791/local/access_token"
     },`,
 		},
 	}

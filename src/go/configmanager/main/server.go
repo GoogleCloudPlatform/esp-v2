@@ -81,7 +81,12 @@ func main() {
 		// Setup local service-account-generated token server
 		r := tokengenerator.MakeLatsHandler(opts.ServiceAccountKey)
 		go func() {
-			_ = http.ListenAndServe(fmt.Sprintf(":%v", opts.LocalAccessTokenServerPort), r)
+			latsErr := http.ListenAndServe(fmt.Sprintf(":%v", opts.TokenAgentPort), r)
+
+			if latsErr != nil {
+				glog.Errorf("local access token server fail to serve: %v", latsErr)
+			}
+
 		}()
 
 	}

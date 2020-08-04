@@ -88,6 +88,9 @@ const (
 	ProjectIDPath     = "/computeMetadata/v1/project/project-id"
 	ZonePath          = "/computeMetadata/v1/instance/zone"
 
+	// Local access token server suffix
+	LatsAccessTokenPath = "/local/access_token"
+
 	// b/147591854: This string must NOT have a trailing slash
 	OpenIDDiscoveryCfgURLSuffix = "/.well-known/openid-configuration"
 
