@@ -59,8 +59,8 @@ type ConfigGeneratorOptions struct {
 	DnsResolverAddresses string
 
 	// Flags for non_gcp deployment.
-	ServiceAccountKey          string
-	LocalAccessTokenServerPort uint
+	ServiceAccountKey string
+	TokenAgentPort    uint
 
 	// Flags for testing purpose.
 	SkipJwtAuthnFilter       bool
@@ -115,7 +115,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		JwksCacheDurationInS:          300,
 		ListenerAddress:               "0.0.0.0",
 		ListenerPort:                  8080,
-		LocalAccessTokenServerPort:    8791,
+		TokenAgentPort:                8791,
 		RootCertsPath:                 util.DefaultRootCAPaths,
 		SuppressEnvoyHeaders:          true,
 		ServiceControlNetworkFailOpen: true,

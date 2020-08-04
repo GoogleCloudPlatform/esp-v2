@@ -106,7 +106,7 @@ func generateAccessToken(keyData []byte) (string, time.Duration, error) {
 func MakeLatsHandler(serviceAccountKey string) http.Handler {
 	r := mux.NewRouter()
 
-	r.PathPrefix(util.AccessTokenPath).Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	r.PathPrefix(util.LatsAccessTokenPath).Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token, expire, err := GenerateAccessTokenFromFile(serviceAccountKey)
 
 		if err != nil {

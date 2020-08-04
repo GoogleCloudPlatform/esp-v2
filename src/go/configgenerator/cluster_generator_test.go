@@ -801,7 +801,7 @@ func TestMakeLatsCluster(t *testing.T) {
 		ClusterDiscoveryType: &clusterpb.Cluster_Type{
 			Type: clusterpb.Cluster_STATIC,
 		},
-		LoadAssignment: util.CreateLoadAssignment("127.0.0.1", uint32(fakeServiceInfo.Options.LocalAccessTokenServerPort)),
+		LoadAssignment: util.CreateLoadAssignment("127.0.0.1", uint32(fakeServiceInfo.Options.TokenAgentPort)),
 	}
 
 	if !proto.Equal(cluster, wantCluster) {
