@@ -1055,6 +1055,66 @@ func TestMethods(t *testing.T) {
 			},
 		},
 		{
+			desc: "Succeed for HTTP with custom method and allow CORS",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "EchoCustom",
+							},
+						},
+					},
+				},
+				Endpoints: []*confpb.Endpoint{
+					{
+						Name:      testProjectName,
+						AllowCors: true,
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoCustom",
+							Pattern: &annotationspb.HttpRule_Custom{
+								Custom: &annotationspb.CustomHttpPattern{
+									Kind: "CustomMethod",
+									Path: "/echo/test",
+								},
+							},
+						},
+					},
+				},
+			},
+			BackendAddress: "http://127.0.0.1:80",
+			wantMethods: map[string]*methodInfo{
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoCustom": &methodInfo{
+					ShortName: "EchoCustom",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/echo/test",
+							HttpMethod:  "CustomMethod",
+						},
+					},
+				},
+				// CORS method generated for the above path.
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_echo_test": &methodInfo{
+					ShortName: "CORS_echo_test",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/echo/test",
+							HttpMethod:  util.OPTIONS,
+						},
+					},
+					IsGenerated: true,
+				},
+			},
+		},
+		{
 			desc: "Succeed for multiple url Pattern",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
@@ -1213,7 +1273,11 @@ func TestMethods(t *testing.T) {
 			continue
 		}
 		for key, gotMethod := range serviceInfo.Methods {
-			wantMethod := tc.wantMethods[key]
+			wantMethod, ok := tc.wantMethods[key]
+			if !ok {
+				t.Errorf("Test(%v): \n cannot find key: %v\n got methods: %+v", tc.desc, key, serviceInfo.Methods)
+			}
+
 			if eq := cmp.Equal(gotMethod, wantMethod, cmp.Comparer(proto.Equal)); !eq {
 				t.Errorf("Test(%v): \n got method: %v, \nwant method: %v", tc.desc, gotMethod, wantMethod)
 			}
