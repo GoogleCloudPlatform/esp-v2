@@ -26,7 +26,6 @@ import (
 
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v7/http/service_control"
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
-	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	listenerpb "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 )
@@ -34,7 +33,6 @@ import (
 var (
 	// Transformers which can be stubbed in unit testing.
 	doServiceControlTransform = addGCPAttributes
-	doListenerTransform       = replaceListenerPort
 )
 
 func addGCPAttributes(cfg *scpb.FilterConfig, opts FetchConfigOptions) error {
@@ -54,21 +52,6 @@ func addGCPAttributes(cfg *scpb.FilterConfig, opts FetchConfigOptions) error {
 	}
 	cfg.GcpAttributes = attrs
 	return nil
-}
-
-func replaceListenerPort(l *listenerpb.Listener, port uint32) error {
-	if port == 0 {
-		return nil
-	}
-	if addr := l.GetAddress().GetSocketAddress(); addr != nil {
-		portSpecifier := addr.GetPortSpecifier()
-		if portValue, ok := portSpecifier.(*corepb.SocketAddress_PortValue); ok {
-			portValue.PortValue = port
-			return nil
-		}
-		return fmt.Errorf("could not convert port to SocketAddress_PortValue: %d", port)
-	}
-	return fmt.Errorf("listener contains no SocketAddress: %v", l)
 }
 
 func transformConfigBytes(config []byte, opts FetchConfigOptions) ([]byte, error) {
@@ -100,40 +83,24 @@ func transformEnvoyConfig(bootstrap *bootstrappb.Bootstrap, opts FetchConfigOpti
 	if len(listeners) == 0 {
 		return fmt.Errorf("expected at least 1 listener, got: 0")
 	}
-	// Require ingress_listener, as the absence of these incidates a broken config.
-	// Note that loopback_listener is not required.
 	ingressListenerTransformed := false
 	for _, l := range listeners {
 		switch l.GetName() {
-		// The default listener created by this project's configgenerator package.
-		// Also include the previous names of this listener so old configs still work.
-		case util.IngressListenerName, "http_listener", "https_listener":
+		case util.IngressListenerName:
 			ingressListenerTransformed = true
 			if err := transformIngressListener(l, opts); err != nil {
 				return fmt.Errorf("failed to transform Ingress Listener: %v", err)
 			}
-		// Loopback listener can be optionally used to point async requests such as
-		// those sent by Service Control and JWT Authn filters in order to utilize
-		// Envoy's built-in Access Logging features.
-		// This requires the use of another unused port.
-		// This listener is optional so old configs without this listener still work.
-		case util.LoopbackListenerName:
-			if err := transformLoopbackListener(l, opts); err != nil {
-				return fmt.Errorf("failed to transform Loopback Listener")
-			}
 		}
-	}
 
-	if !ingressListenerTransformed {
-		return fmt.Errorf("did not find an ingress listener: %v", listeners[0])
+		if !ingressListenerTransformed {
+			return fmt.Errorf("did not find an ingress listener: %v", listeners[0])
+		}
 	}
 	return nil
 }
 
 func transformIngressListener(l *listenerpb.Listener, opts FetchConfigOptions) error {
-	if err := doListenerTransform(l, opts.WantPort); err != nil {
-		return err
-	}
 	for _, c := range l.GetFilterChains() {
 		if filters := c.GetFilters(); filters != nil {
 			for _, f := range filters {
@@ -147,10 +114,6 @@ func transformIngressListener(l *listenerpb.Listener, opts FetchConfigOptions) e
 		}
 	}
 	return fmt.Errorf("failed to find HTTPConnectionManager on Ingress Listener")
-}
-
-func transformLoopbackListener(l *listenerpb.Listener, opts FetchConfigOptions) error {
-	return doListenerTransform(l, opts.LoopbackPort)
 }
 
 func transformHTTPConnectionManager(f *listenerpb.Filter, opts FetchConfigOptions) error {
