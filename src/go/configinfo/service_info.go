@@ -369,7 +369,7 @@ func (s *ServiceInfo) processHttpRule() error {
 		for _, r := range s.ServiceConfig().GetHttp().GetRules() {
 			method := s.Methods[r.GetSelector()]
 			for _, httpRule := range method.HttpRule {
-				if httpRule.HttpMethod != "OPTIONS" {
+				if httpRule.HttpMethod != util.OPTIONS {
 					matcher := util.WildcardMatcherForPath(httpRule.UriTemplate)
 					if matcher == "" {
 						matcher = httpRule.UriTemplate

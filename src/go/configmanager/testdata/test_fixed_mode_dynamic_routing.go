@@ -403,7 +403,7 @@ var (
                                        "googleRe2":{
                                           "maxProgramSize":1000
                                        },
-                                       "regex":"/pet/[^\\/]+$"
+                                       "regex":"^/pet/[^\\/]+$"
                                     }
                                  },
                                  "route":{
