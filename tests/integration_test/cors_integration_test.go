@@ -771,3 +771,39 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 		}
 	}
 }
+
+// Test case to reproduce: https://github.com/GoogleCloudPlatform/esp-v2/issues/254
+func TestStartupDuplicatedPathsWithAllowCors(t *testing.T) {
+	t.Parallel()
+
+	s := env.NewTestEnv(comp.TestStartupDuplicatedPathsWithAllowCors, platform.EchoSidecar)
+	s.SetAllowCors()
+	s.AppendHttpRules([]*annotationspb.HttpRule{
+		{
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.GetShelf",
+			Pattern: &annotationspb.HttpRule_Get{
+				Get: "/bookstore/shelves/{shelf}",
+			},
+		},
+		{
+			// URL is exactly the same even though method differs.
+			// When the bug was reported, our code already handles this.
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.UpdateShelf",
+			Pattern: &annotationspb.HttpRule_Patch{
+				Patch: "/bookstore/shelves/{shelf}",
+			},
+		},
+		{
+			// URL is semantically the same, but path parameter names differ.
+			// When the bug was reported, our code did NOT handle this.
+			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.DeleteShelf",
+			Pattern: &annotationspb.HttpRule_Delete{
+				Delete: "/bookstore/shelves/{shelf_with_different_path_parameter}",
+			},
+		},
+	})
+	defer s.TearDown(t)
+	if err := s.Setup(utils.CommonArgs()); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+}

@@ -433,3 +433,35 @@ func TestFetchConfigRelatedUrl(t *testing.T) {
 	}
 
 }
+
+func TestWildcardMatcherForPath(t *testing.T) {
+	testData := []struct {
+		desc        string
+		uri         string
+		wantMatcher string
+	}{
+		{
+			desc:        "No path params",
+			uri:         "/shelves",
+			wantMatcher: "",
+		},
+		{
+			desc:        "Multiple path params",
+			uri:         "/shelves/{shelf_id}/books/{book.id}",
+			wantMatcher: `/shelves/[^\/]+/books/[^\/]+$`,
+		},
+		{
+			desc:        "Path param with wildcard",
+			uri:         "/test/{x=*}/test/{y=**}",
+			wantMatcher: `/test/[^\/]+/test/[^\/]+$`,
+		},
+	}
+
+	for _, tc := range testData {
+		got := WildcardMatcherForPath(tc.uri)
+
+		if tc.wantMatcher != got {
+			t.Errorf("Test (%v): \n got %v \nwant %v", tc.desc, got, tc.wantMatcher)
+		}
+	}
+}

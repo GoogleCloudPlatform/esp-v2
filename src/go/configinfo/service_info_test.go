@@ -921,6 +921,27 @@ func TestMethods(t *testing.T) {
 								Post: "/auth/info/googlejwt",
 							},
 						},
+						{
+							// This will also have a CORS method generated for it.
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.GetBook",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/shelves/{shelf_id}/books/{book.id}",
+							},
+						},
+						{
+							// No CORS method generated due to an equivalent path.
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.UpdateBook",
+							Pattern: &annotationspb.HttpRule_Patch{
+								Patch: "/shelves/{shelf_id}/books/{book.id}",
+							},
+						},
+						{
+							// No CORS method generated due to a **semantically** equivalent path.
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.DeleteBook",
+							Pattern: &annotationspb.HttpRule_Delete{
+								Delete: "/shelves/{shelf_id_different_param}/books/{book.id}",
+							},
+						},
 					},
 				},
 			},
@@ -944,6 +965,47 @@ func TestMethods(t *testing.T) {
 						{
 							UriTemplate: "/echo",
 							HttpMethod:  util.POST,
+						},
+					},
+				},
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.GetBook": &methodInfo{
+					ShortName: "GetBook",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/shelves/{shelf_id}/books/{book.id}",
+							HttpMethod:  util.GET,
+						},
+					},
+				},
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_shelves_shelf_id_books_book.id": &methodInfo{
+					ShortName: "CORS_shelves_shelf_id_books_book.id",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/shelves/{shelf_id}/books/{book.id}",
+							HttpMethod:  util.OPTIONS,
+						},
+					},
+					IsGenerated: true,
+				},
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.UpdateBook": &methodInfo{
+					ShortName: "UpdateBook",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/shelves/{shelf_id}/books/{book.id}",
+							HttpMethod:  util.PATCH,
+						},
+					},
+				},
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.DeleteBook": &methodInfo{
+					ShortName: "DeleteBook",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/shelves/{shelf_id_different_param}/books/{book.id}",
+							HttpMethod:  util.DELETE,
 						},
 					},
 				},
@@ -989,6 +1051,66 @@ func TestMethods(t *testing.T) {
 							HttpMethod:  util.GET,
 						},
 					},
+				},
+			},
+		},
+		{
+			desc: "Succeed for HTTP with custom method and allow CORS",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "EchoCustom",
+							},
+						},
+					},
+				},
+				Endpoints: []*confpb.Endpoint{
+					{
+						Name:      testProjectName,
+						AllowCors: true,
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoCustom",
+							Pattern: &annotationspb.HttpRule_Custom{
+								Custom: &annotationspb.CustomHttpPattern{
+									Kind: "CustomMethod",
+									Path: "/echo/test",
+								},
+							},
+						},
+					},
+				},
+			},
+			BackendAddress: "http://127.0.0.1:80",
+			wantMethods: map[string]*methodInfo{
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoCustom": &methodInfo{
+					ShortName: "EchoCustom",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/echo/test",
+							HttpMethod:  "CustomMethod",
+						},
+					},
+				},
+				// CORS method generated for the above path.
+				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.CORS_echo_test": &methodInfo{
+					ShortName: "CORS_echo_test",
+					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					HttpRule: []*commonpb.Pattern{
+						{
+							UriTemplate: "/echo/test",
+							HttpMethod:  util.OPTIONS,
+						},
+					},
+					IsGenerated: true,
 				},
 			},
 		},
@@ -1151,7 +1273,11 @@ func TestMethods(t *testing.T) {
 			continue
 		}
 		for key, gotMethod := range serviceInfo.Methods {
-			wantMethod := tc.wantMethods[key]
+			wantMethod, ok := tc.wantMethods[key]
+			if !ok {
+				t.Errorf("Test(%v): \n cannot find key: %v\n got methods: %+v", tc.desc, key, serviceInfo.Methods)
+			}
+
 			if eq := cmp.Equal(gotMethod, wantMethod, cmp.Comparer(proto.Equal)); !eq {
 				t.Errorf("Test(%v): \n got method: %v, \nwant method: %v", tc.desc, gotMethod, wantMethod)
 			}

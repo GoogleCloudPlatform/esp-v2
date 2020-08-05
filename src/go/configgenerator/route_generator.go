@@ -16,7 +16,6 @@ package configgenerator
 
 import (
 	"fmt"
-	"regexp"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
@@ -239,11 +238,16 @@ func makeHttpRouteMatcher(httpRule *commonpb.Pattern) *routepb.RouteMatch {
 		return nil
 	}
 	var routeMatcher routepb.RouteMatch
-	re := regexp.MustCompile(`{[^{}]+}`)
 
-	// Replace path templates inside "{}" by regex "[^\/]+", which means
-	// any character except `/`, also adds `$` to match to the end of the string.
-	if re.MatchString(httpRule.UriTemplate) {
+	regex := util.WildcardMatcherForPath(httpRule.UriTemplate)
+	if regex == "" {
+		// Match with HttpHeader method. Some methods may have same path.
+		routeMatcher = routepb.RouteMatch{
+			PathSpecifier: &routepb.RouteMatch_Path{
+				Path: httpRule.UriTemplate,
+			},
+		}
+	} else {
 		routeMatcher = routepb.RouteMatch{
 			PathSpecifier: &routepb.RouteMatch_SafeRegex{
 				SafeRegex: &matcher.RegexMatcher{
@@ -254,18 +258,12 @@ func makeHttpRouteMatcher(httpRule *commonpb.Pattern) *routepb.RouteMatch {
 							},
 						},
 					},
-					Regex: re.ReplaceAllString(httpRule.UriTemplate, `[^\/]+`) + `$`,
+					Regex: regex,
 				},
 			},
 		}
-	} else {
-		// Match with HttpHeader method. Some methods may have same path.
-		routeMatcher = routepb.RouteMatch{
-			PathSpecifier: &routepb.RouteMatch_Path{
-				Path: httpRule.UriTemplate,
-			},
-		}
 	}
+
 	routeMatcher.Headers = []*routepb.HeaderMatcher{
 		{
 			Name: ":method",
