@@ -706,9 +706,13 @@ def gen_proxy_config(args):
     proxy_conf = [
         CONFIGMANAGER_BIN,
         "--logtostderr",
-        "--backend_address", args.backend,
         "--rollout_strategy", args.rollout_strategy,
     ]
+
+    if "://" not in args.backend:
+      proxy_conf.extend(["--backend_address", "http://" + args.backend])
+    else:
+      proxy_conf.extend(["--backend_address", args.backend])
 
     if args.healthz:
       proxy_conf.extend(["--healthz", args.healthz])
