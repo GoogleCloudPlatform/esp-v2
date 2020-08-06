@@ -191,6 +191,42 @@ func TestDynamicRouting(t *testing.T) {
 			method:        "GET",
 			httpCallError: fmt.Errorf("http response status is not 200 OK: 404 Not Found"),
 		},
+		{
+			desc:     "Succeed, CONSTANT_ADDRESS with single segments in double wildcards",
+			path:     "/wildcard/a/1/b/2/c/3",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?name=2"}`,
+		},
+		{
+			desc:     "Succeed, CONSTANT_ADDRESS with multiple segments in double wildcards",
+			path:     "/wildcard/a/1/b/2/c/3/4/5",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?name=2"}`,
+		},
+		{
+			desc:     "Succeed, CONSTANT_ADDRESS with no segments in double wildcards",
+			path:     "/wildcard/a/1/b/2/c/",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?name=2"}`,
+		},
+		{
+			desc:          "Fail, CONSTANT_ADDRESS with no segments in single wildcards",
+			path:          "/wildcard/a/b/2/c/",
+			method:        "GET",
+			httpCallError: fmt.Errorf("http response status is not 200 OK: 404 Not Found"),
+		},
+		{
+			desc:          "Fail, CONSTANT_ADDRESS with multiple segments in single wildcards",
+			path:          "/wildcard/a/1/2/3/b/4/c/",
+			method:        "GET",
+			httpCallError: fmt.Errorf("http response status is not 200 OK: 404 Not Found"),
+		},
+		{
+			desc:     "Succeed, CONSTANT_ADDRESS with query params for double wildcards",
+			path:     "/wildcard/a/1/b/2/c/3/4/5?key=value",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?key=value&name=2"}`,
+		},
 	}
 	for _, tc := range testData {
 		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
