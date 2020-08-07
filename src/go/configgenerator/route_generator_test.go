@@ -180,7 +180,7 @@ func TestMakeRouteConfig(t *testing.T) {
 						{
 							Selector: "endpoints.examples.bookstore.Bookstore.Foo",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/v1/{book_name=books/*}/test/**",
+								Get: "/v1/{book_name=*}/test/**",
 							},
 						},
 					},
@@ -208,7 +208,7 @@ func TestMakeRouteConfig(t *testing.T) {
               "googleRe2": {
                 "maxProgramSize": 1000
               },
-              "regex": "^/v1/[^\\/]+/test/.*$"
+              "regex": "^/v1/[^\\/]+/test.*$"
             }
           },
           "route": {
