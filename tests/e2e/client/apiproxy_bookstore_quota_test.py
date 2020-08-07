@@ -34,7 +34,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
   """
 
   def __init__(self):
-    ApiProxyClientTest.__init__(self, FLAGS.host,
+    ApiProxyClientTest.__init__(self, FLAGS.host, FLAGS.host_header,
                            FLAGS.allow_unverified_cert,
                            FLAGS.verbose)
 
@@ -50,20 +50,24 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
     response = self._call_http(path='/quota_read',
                                api_key=FLAGS.api_key)
     if response.status_code != 429:
-      while True:
+      for i in range(100):
         response = self._call_http(path='/quota_read',
                                    api_key=FLAGS.api_key)
         if response.status_code == 429:
           break;
+        elif i == 99:
+          sys.exit(utils.red("Fail to exhaust quota"))
 
     # waiting for the next quota refill.
     print("Wait for the next quota refill...");
-    while True:
+    for _ in range(100):
       time.sleep(1);
       response = self._call_http(path='/quota_read',
                                  api_key=FLAGS.api_key)
       if response.status_code != 429:
         break;
+      elif i == 99:
+        sys.exit(utils.red("Fail to exhaust quota"))
 
     # start counting
     print("Sending requests to count response codes for 150 seconds...");
@@ -120,6 +124,7 @@ if __name__ == '__main__':
   parser.add_argument('--verbose', type=bool, help='Turn on/off verbosity.')
   parser.add_argument('--api_key', help='Project api_key to access service.')
   parser.add_argument('--host', help='Deployed application host name.')
+  parser.add_argument('--host_header', help='Deployed application host name.')
   parser.add_argument('--auth_token', help='Auth token.')
   parser.add_argument('--allow_unverified_cert', type=bool,
                       default=False, help='used for testing self-signed ssl cert.')
