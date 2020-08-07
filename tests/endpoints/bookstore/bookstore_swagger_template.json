@@ -417,6 +417,30 @@
           }
         ]
       }
+    },
+    "/quota_read": {
+      "get": {
+        "description": "Read API behind quota",
+        "operationId": "readApiQuota",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "get read message response"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "x-google-quota": {
+          "metricCosts": {
+            "bookstore/read_requests": 1
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -528,6 +552,14 @@
         "value_type": "INT64",
         "metric_kind": "DELTA"
       }
-    ]
+    ],
+    "quota": {
+      "limits": [{
+        "name": "bookstore-read-requests",
+        "values": {"STANDARD": 30},
+        "unit": "1/min/{project}",
+        "metric": "bookstore/read_requests"
+      }]
+    }
   }
 }
