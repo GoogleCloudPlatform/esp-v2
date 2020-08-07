@@ -35,7 +35,6 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/gcsrunner"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/golang/glog"
 )
 
@@ -74,11 +73,6 @@ func main() {
 		envoyBin = *envoyBinaryPath
 	}
 
-	metadataURL := os.Getenv("METADATA_URL")
-	if metadataURL == "" {
-		metadataURL = options.DefaultCommonOptions().MetadataURL
-	}
-
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 
@@ -88,7 +82,6 @@ func main() {
 		FetchGCSObjectInitialInterval: fetchGCSObjectInitialInterval,
 		FetchGCSObjectTimeout:         fetchGCSObjectTimeout,
 		WriteFilePath:                 envoyConfigPath,
-		MetadataURL:                   metadataURL,
 	}); err != nil {
 		glog.Fatalf("Failed to fetch config: %v", err)
 	}
