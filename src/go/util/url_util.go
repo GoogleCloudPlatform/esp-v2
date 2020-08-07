@@ -52,8 +52,7 @@ var (
 	// Matches 1 or more segments of any character except '/'.
 	singleWildcardReplacementRegex = `/[^\/]+`
 	// Matches any character or no characters at all.
-	// Note this also allows paths without a '/' suffix.
-	doubleWildcardReplacementRegex = `.*`
+	doubleWildcardReplacementRegex = `/.*`
 )
 
 // ParseURI parses uri into scheme, hostname, port, path with err(if exist).

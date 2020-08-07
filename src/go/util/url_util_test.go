@@ -453,17 +453,17 @@ func TestWildcardMatcherForPath(t *testing.T) {
 		{
 			desc:        "Path param with wildcard segments",
 			uri:         "/test/*/test/**",
-			wantMatcher: `^/test/[^\/]+/test.*$`,
+			wantMatcher: `^/test/[^\/]+/test/.*$`,
 		},
 		{
 			desc:        "Path param with wildcard in segment binding",
 			uri:         "/test/{x=*}/test/{y=**}",
-			wantMatcher: `^/test/[^\/]+/test.*$`,
+			wantMatcher: `^/test/[^\/]+/test/.*$`,
 		},
 		{
 			desc:        "Path param with mixed wildcards",
 			uri:         "/test/{name=*}/test/**",
-			wantMatcher: `^/test/[^\/]+/test.*$`,
+			wantMatcher: `^/test/[^\/]+/test/.*$`,
 		},
 		{
 			desc:        "Invalid http template, not preceded by '/' ",

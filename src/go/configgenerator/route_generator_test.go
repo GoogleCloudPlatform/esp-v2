@@ -208,7 +208,7 @@ func TestMakeRouteConfig(t *testing.T) {
               "googleRe2": {
                 "maxProgramSize": 1000
               },
-              "regex": "^/v1/[^\\/]+/test.*$"
+              "regex": "^/v1/[^\\/]+/test/.*$"
             }
           },
           "route": {

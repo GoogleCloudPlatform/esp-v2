@@ -210,10 +210,10 @@ func TestDynamicRouting(t *testing.T) {
 			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?name=2"}`,
 		},
 		{
-			desc:     "Succeed, CONSTANT_ADDRESS with no segments and no ending '/' in double wildcards",
-			path:     "/wildcard/a/1/b/2/c",
-			method:   "GET",
-			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?name=2"}`,
+			desc:          "Fail, CONSTANT_ADDRESS with missing last segment in double wildcards",
+			path:          "/wildcard/a/1/b/2/c",
+			method:        "GET",
+			httpCallError: fmt.Errorf("http response status is not 200 OK: 404 Not Found"),
 		},
 		{
 			desc:          "Fail, CONSTANT_ADDRESS with no segments in single wildcards",
