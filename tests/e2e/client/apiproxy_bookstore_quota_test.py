@@ -95,8 +95,10 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
     # code_200 should be between 45 to 135. Allow +- 50% margin.
     # code_else should be 0.
     # The rest is code 429
+    print("checking the count of code 200")
     self.assertGE(code_200 , 45);
     self.assertLE(code_200 , 135);
+    print("checking the count of code other than 200 and 429")
     self.assertEqual(code_else, 0);
 
     # restore verbose flag
