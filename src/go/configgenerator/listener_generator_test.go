@@ -1532,11 +1532,11 @@ func TestServiceControl(t *testing.T) {
     },`,
 		},
 		{
-			desc:              "get access token from the local access token server",
+			desc:              "get access token from the token agent server",
 			serviceAccountKey: "this-is-sa-cred",
 			wantPartialServiceControlFilter: `
     "imdsToken": {
-      "cluster": "local-access-token-cluster",
+      "cluster": "token-agent-cluster",
       "timeout": "30s",
       "uri": "http://127.0.0.1:8791/local/access_token"
     },`,

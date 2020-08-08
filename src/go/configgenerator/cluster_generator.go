@@ -57,9 +57,9 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]*clusterpb.Cluster, error) {
 		}
 
 	} else {
-		latsCluster := makeLatsCluster(serviceInfo)
+		tokenAgentCluster := makeTokenAgentCluster(serviceInfo)
 
-		clusters = append(clusters, latsCluster)
+		clusters = append(clusters, tokenAgentCluster)
 
 	}
 
@@ -151,9 +151,9 @@ func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, error
 	return c, nil
 }
 
-func makeLatsCluster(serviceInfo *sc.ServiceInfo) *clusterpb.Cluster {
+func makeTokenAgentCluster(serviceInfo *sc.ServiceInfo) *clusterpb.Cluster {
 	return &clusterpb.Cluster{
-		Name:           util.LatsClusterName,
+		Name:           util.TokenAgentClusterName,
 		LbPolicy:       clusterpb.Cluster_ROUND_ROBIN,
 		ConnectTimeout: ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout),
 		ClusterDiscoveryType: &clusterpb.Cluster_Type{

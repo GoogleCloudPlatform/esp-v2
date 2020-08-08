@@ -246,8 +246,8 @@ func (s *ServiceInfo) processAccessToken() {
 			TokenType: &commonpb.AccessToken_RemoteToken{
 				RemoteToken: &commonpb.HttpUri{
 					// Use http://127.0.0.1:8791/local/access_token by default.
-					Uri:     fmt.Sprintf("http://%s:%v%s", util.LoopbackIPv4Addr, s.Options.TokenAgentPort, util.LatsAccessTokenPath),
-					Cluster: util.LatsClusterName,
+					Uri:     fmt.Sprintf("http://%s:%v%s", util.LoopbackIPv4Addr, s.Options.TokenAgentPort, util.TokenAgentAccessTokenPath),
+					Cluster: util.TokenAgentClusterName,
 					Timeout: ptypes.DurationProto(s.Options.HttpRequestTimeout),
 				},
 			},

@@ -103,7 +103,7 @@ func TestServiceControlAccessTokenFromIam(t *testing.T) {
 	}
 }
 
-func TestServiceControlAccessTokenFromLocalAccessTokenServer(t *testing.T) {
+func TestServiceControlAccessTokenFromTokenAgent(t *testing.T) {
 	t.Parallel()
 
 	// Setup token server which will be queried by configmanager.
@@ -121,7 +121,7 @@ func TestServiceControlAccessTokenFromLocalAccessTokenServer(t *testing.T) {
 	args := []string{"--service_config_id=test-config-id",
 		"--rollout_strategy=fixed", "--suppress_envoy_headers", "--service_account_key=" + serviceAccountFile.Name()}
 
-	s := env.NewTestEnv(comp.TestServiceControlAccessTokenFromLocalAccessTokenServer, platform.EchoSidecar)
+	s := env.NewTestEnv(comp.TestServiceControlAccessTokenFromTokenAgent, platform.EchoSidecar)
 
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {

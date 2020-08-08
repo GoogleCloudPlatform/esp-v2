@@ -2368,7 +2368,7 @@ func TestProcessAccessToken(t *testing.T) {
 				TokenType: &commonpb.AccessToken_RemoteToken{
 					RemoteToken: &commonpb.HttpUri{
 						Uri:     "http://127.0.0.1:8791/local/access_token",
-						Cluster: "local-access-token-cluster",
+						Cluster: "token-agent-cluster",
 						Timeout: ptypes.DurationProto(30 * time.Second),
 					},
 				},

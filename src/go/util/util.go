@@ -88,8 +88,8 @@ const (
 	ProjectIDPath     = "/computeMetadata/v1/project/project-id"
 	ZonePath          = "/computeMetadata/v1/instance/zone"
 
-	// Local access token server suffix
-	LatsAccessTokenPath = "/local/access_token"
+	// The path of getting access token from token agent server
+	TokenAgentAccessTokenPath = "/local/access_token"
 
 	// b/147591854: This string must NOT have a trailing slash
 	OpenIDDiscoveryCfgURLSuffix = "/.well-known/openid-configuration"
@@ -97,8 +97,8 @@ const (
 	// The metadata server cluster name.
 	MetadataServerClusterName = "metadata-cluster"
 
-	// The local access token  server cluster name.
-	LatsClusterName = "local-access-token-cluster"
+	// The token agent server cluster name.
+	TokenAgentClusterName = "token-agent-cluster"
 
 	// The iam server cluster name.
 	IamServerClusterName = "iam-cluster"

@@ -86,7 +86,7 @@ const (
 	TestPreflightRequestWithAllowCors
 	TestReportGCPAttributes
 	TestServiceControlAccessTokenFromIam
-	TestServiceControlAccessTokenFromLocalAccessTokenServer
+	TestServiceControlAccessTokenFromTokenAgent
 	TestServiceControlAllHTTPMethod
 	TestServiceControlAllHTTPPath
 	TestServiceControlAPIKeyCustomLocation
