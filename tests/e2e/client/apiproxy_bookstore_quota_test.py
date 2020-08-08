@@ -50,12 +50,12 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
     response = self._call_http(path='/quota_read',
                                api_key=FLAGS.api_key)
     if response.status_code != 429:
-      for i in range(100):
+      for i in range(10000):
         response = self._call_http(path='/quota_read',
                                    api_key=FLAGS.api_key)
         if response.status_code == 429:
           break;
-        elif i == 99:
+        elif i == 9999:
           sys.exit(utils.red("Fail to exhaust quota"))
 
     # waiting for the next quota refill.
