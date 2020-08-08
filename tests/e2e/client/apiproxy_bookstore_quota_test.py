@@ -60,7 +60,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
 
     # waiting for the next quota refill.
     print("Wait for the next quota refill...");
-    for _ in range(100):
+    for i in range(100):
       time.sleep(1);
       response = self._call_http(path='/quota_read',
                                  api_key=FLAGS.api_key)

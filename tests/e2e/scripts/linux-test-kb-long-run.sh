@@ -89,6 +89,7 @@ while true; do
       --api_key=${API_KEY} \
       --auth_token=${JWT_TOKEN} \
       --allow_unverified_cert=true \
+      --host_header="${HOST_HEADER}" \
     || ((BOOKSTORE_FAILURES++)))
 
   echo "Starting bookstore test at $(date)."
