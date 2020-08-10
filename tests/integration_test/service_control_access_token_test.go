@@ -16,16 +16,20 @@ package integration_test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
 	"testing"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
-	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
-
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 )
 
-func TestServiceControlAccessToken(t *testing.T) {
+func TestServiceControlAccessTokenFromIam(t *testing.T) {
 	t.Parallel()
 
 	configId := "test-config-id"
@@ -33,7 +37,7 @@ func TestServiceControlAccessToken(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlAccessToken, platform.EchoSidecar)
+	s := env.NewTestEnv(comp.TestServiceControlAccessTokenFromIam, platform.EchoSidecar)
 	serviceAccount := "ServiceAccount@google.com"
 	s.SetServiceControlIamServiceAccount(serviceAccount)
 	s.SetServiceControlIamDelegates("delegate_foo,delegate_bar,delegate_baz")
@@ -95,6 +99,63 @@ func TestServiceControlAccessToken(t *testing.T) {
 			t.Errorf("Test Desc(%s): failed to get request body", tc.desc)
 		} else if tc.wantIamReqBody != "" && tc.wantIamReqBody != iamReqBody {
 			t.Errorf("Test Desc(%s), different request body received by iam, expected: %s, got: %s", tc.desc, tc.wantIamReqBody, iamReqBody)
+		}
+	}
+}
+
+func TestServiceControlAccessTokenFromTokenAgent(t *testing.T) {
+	t.Parallel()
+
+	// Setup token server which will be queried by configmanager.
+	fakeToken := `{"access_token": "this-is-sa_gen_token", "expires_in":3599, "token_type":"Bearer"}`
+	mockTokenServer := util.InitMockServer(fakeToken)
+	defer mockTokenServer.Close()
+
+	fakeKey := strings.Replace(testdata.FakeServiceAccountKeyData, "FAKE-TOKEN-URI", mockTokenServer.GetURL(), 1)
+	serviceAccountFile, err := ioutil.TempFile(os.TempDir(), "sa-cred-")
+	if err != nil {
+		t.Fatal("fail to create a temp service account file")
+	}
+	_ = ioutil.WriteFile(serviceAccountFile.Name(), []byte(fakeKey), 0644)
+
+	args := []string{"--service_config_id=test-config-id",
+		"--rollout_strategy=fixed", "--suppress_envoy_headers", "--service_account_key=" + serviceAccountFile.Name()}
+
+	s := env.NewTestEnv(comp.TestServiceControlAccessTokenFromTokenAgent, platform.EchoSidecar)
+
+	defer s.TearDown(t)
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+	testData := []struct {
+		desc                     string
+		url                      string
+		method                   string
+		wantScRequestAccessToken string
+	}{
+		{
+			desc:                     "succeed, fetching access token from local server",
+			url:                      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key"),
+			method:                   "POST",
+			wantScRequestAccessToken: "Bearer this-is-sa_gen_token",
+		},
+	}
+	for _, tc := range testData {
+		_, err := client.DoWithHeaders(tc.url, tc.method, "message", nil)
+		if err != nil {
+			t.Fatalf("Test (%s): failed, %v", tc.desc, err)
+		}
+
+		// The check call and the report call will be sent.
+		scRequests, err := s.ServiceControlServer.GetRequests(2)
+		if err != nil {
+			t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err)
+		}
+
+		for _, scRequest := range scRequests {
+			if gotAccessToken := scRequest.ReqHeader.Get("Authorization"); gotAccessToken != tc.wantScRequestAccessToken {
+				t.Errorf("Test (%s): failed, different access token received by service controller, expected: %v, but got: %v", tc.desc, tc.wantScRequestAccessToken, gotAccessToken)
+			}
 		}
 	}
 }

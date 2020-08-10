@@ -34,12 +34,12 @@ const (
 )
 
 var defaultResp = map[string]string{
-	util.ConfigIDSuffix:      fakeConfigID,
-	util.ServiceNameSuffix:   fakeServiceName,
-	util.AccessTokenSuffix:   fakeToken,
-	util.IdentityTokenSuffix: fakeIdentityToken,
-	util.ProjectIDSuffix:     FakeProjectID,
-	util.ZoneSuffix:          fakeZonePath,
+	util.ConfigIDPath:      fakeConfigID,
+	util.ServiceNamePath:   fakeServiceName,
+	util.AccessTokenPath:   fakeToken,
+	util.IdentityTokenPath: fakeIdentityToken,
+	util.ProjectIDPath:     FakeProjectID,
+	util.ZonePath:          fakeZonePath,
 }
 
 // MockMetadataServer mocks the Metadata server.

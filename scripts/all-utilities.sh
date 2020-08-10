@@ -142,8 +142,7 @@ function set_api_keys() {
 function get_test_client_key() {
   local remote_file_name=$1
   local key_path=$2
-  [[ -e $key_path ]] || $GSUTIL  \
-    cp "gs://apiproxy-testing-client-secret-files/$remote_file_name" "$key_path"
+  $GSUTIL  cp "gs://apiproxy-testing-client-secret-files/$remote_file_name" "$key_path"
   echo -n "$key_path"
   return 0
 }
@@ -326,7 +325,7 @@ function get_gcsrunner_image_release_name() {
 function get_tag_name() {
   local tag_format="%H"
   tag_name="$(git show -q HEAD --pretty=format:"${tag_format}")"
-  echo -n ${tag_name}
+  echo -n "${tag_name}"
 }
 
 function get_envoy_image_name_with_sha() {

@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/mux"
 
@@ -2333,4 +2334,60 @@ func TestProcessTypes(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestProcessAccessToken(t *testing.T) {
+	fakeServiceConfig := &confpb.Service{
+		Apis: []*apipb.Api{
+			{
+				Name: testApiName,
+			},
+		},
+	}
+	testCases := []struct {
+		desc              string
+		serviceAccountKey string
+		wantAccessToken   *commonpb.AccessToken
+	}{
+		{
+			desc: "get access token from imds",
+			wantAccessToken: &commonpb.AccessToken{
+				TokenType: &commonpb.AccessToken_RemoteToken{
+					RemoteToken: &commonpb.HttpUri{
+						Uri:     "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token",
+						Cluster: "metadata-cluster",
+						Timeout: ptypes.DurationProto(30 * time.Second),
+					},
+				},
+			},
+		},
+		{
+			desc:              "get access token from lmds",
+			serviceAccountKey: "this-is-service-account-key",
+			wantAccessToken: &commonpb.AccessToken{
+				TokenType: &commonpb.AccessToken_RemoteToken{
+					RemoteToken: &commonpb.HttpUri{
+						Uri:     "http://127.0.0.1:8791/local/access_token",
+						Cluster: "token-agent-cluster",
+						Timeout: ptypes.DurationProto(30 * time.Second),
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.ServiceAccountKey = tc.serviceAccountKey
+		serviceInfo, err := NewServiceInfoFromServiceConfig(fakeServiceConfig, "ConfigID", opts)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		serviceInfo.processAccessToken()
+		if !reflect.DeepEqual(serviceInfo.AccessToken, tc.wantAccessToken) {
+			t.Errorf("fail(%s): expect accessToken: %v, get accessToken: %v", tc.desc, tc.wantAccessToken, serviceInfo.AccessToken)
+		}
+	}
+
 }

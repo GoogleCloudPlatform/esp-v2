@@ -15,6 +15,7 @@
 package options
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -59,6 +60,7 @@ type ConfigGeneratorOptions struct {
 
 	// Flags for non_gcp deployment.
 	ServiceAccountKey string
+	TokenAgentPort    uint
 
 	// Flags for testing purpose.
 	SkipJwtAuthnFilter       bool
@@ -107,12 +109,13 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 	return ConfigGeneratorOptions{
 		CommonOptions:                 DefaultCommonOptions(),
 		BackendDnsLookupFamily:        "auto",
-		BackendAddress:                "http://127.0.0.1:8082",
+		BackendAddress:                fmt.Sprintf("http://%s:8082", util.LoopbackIPv4Addr),
 		ClusterConnectTimeout:         20 * time.Second,
 		EnvoyXffNumTrustedHops:        2,
 		JwksCacheDurationInS:          300,
 		ListenerAddress:               "0.0.0.0",
 		ListenerPort:                  8080,
+		TokenAgentPort:                8791,
 		RootCertsPath:                 util.DefaultRootCAPaths,
 		SuppressEnvoyHeaders:          true,
 		ServiceControlNetworkFailOpen: true,

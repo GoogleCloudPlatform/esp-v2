@@ -28,7 +28,7 @@ exit 1; }
 
 function runE2E() {
   local OPTIND OPTARG arg
-  while getopts :f:p:c:g:m:R:t: arg; do
+  while getopts :f:p:c:g:m:R:St: arg; do
     case ${arg} in
       f) local backend_platform="${OPTARG}" ;;
       p) local platform="${OPTARG}" ;;
@@ -36,11 +36,12 @@ function runE2E() {
       g) local backend="${OPTARG}" ;;
       m) local apiproxy_image="${OPTARG}" ;;
       R) local rollout_strategy="${OPTARG}" ;;
+      S) local using_sa_cred='true';;
       t) local test_type="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')" ;;
     esac
   done
 
-  local apiproxy_service=$(get_apiproxy_service ${backend})
+  local apiproxy_service=$(get_apiproxy_service "${backend}" "${using_sa_cred}")
   local unique_id=$(get_unique_id "gke-${test_type}-${backend}")
   if [ "${platform}" == "anthos-cloud-run" ]
   then
@@ -61,7 +62,8 @@ function runE2E() {
     -i "${unique_id}"  \
     -B "${BUCKET}"  \
     -l "${DURATION_IN_HOUR}" \
-    -f "${backend_platform}"
+    -f "${backend_platform}" \
+    -S "${using_sa_cred}"
 }
 
 if [ ! -d "$GOPATH/bin" ]; then
@@ -86,6 +88,9 @@ echo '======================================================='
 case ${TEST_CASE} in
   "tight-http-bookstore-managed")
     runE2E -p "gke" -c "tight" -t "http" -g "bookstore" -R "managed" -m "$(get_proxy_image_name_with_sha)"
+    ;;
+    "tight-http-bookstore-managed-using-sa-cred")
+    runE2E -p "gke" -c "tight" -t "http" -g "bookstore" -R "managed" -S -m "$(get_proxy_image_name_with_sha)"
     ;;
   "tight-grpc-echo-managed")
     runE2E -p "gke" -c "tight" -t "grpc" -g "echo" -R "managed" -m "$(get_proxy_image_name_with_sha)"

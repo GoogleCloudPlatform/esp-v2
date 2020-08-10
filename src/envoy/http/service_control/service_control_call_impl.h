@@ -103,7 +103,6 @@ class ServiceControlCallImpl
   }
 
   void createImdsTokenSub();
-  void createTokenGen();
   void createIamTokenSub();
 
   const ::espv2::api::envoy::v7::http::service_control::FilterConfig&
@@ -123,8 +122,6 @@ class ServiceControlCallImpl
   // Token subscriber used to fetch access token from iam for service control
   token::TokenSubscriberPtr iam_token_sub_;
 
-  token::ServiceAccountTokenPtr sc_token_gen_;
-  token::ServiceAccountTokenPtr quota_token_gen_;
   Envoy::ThreadLocal::SlotPtr tls_;
 };  // namespace ServiceControl
 

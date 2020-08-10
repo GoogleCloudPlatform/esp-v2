@@ -107,11 +107,6 @@ FilterConfigParserImpl::FilterConfigParserImpl(
                 });
         break;
       }
-      case AccessToken::TokenTypeCase::kServiceAccountSecret:
-        // TODO(taoxuy): support getting access token from service account file.
-        ENVOY_LOG(error,
-                  "Not support getting access token by service account file");
-        return;
       default:
         NOT_REACHED_GCOVR_EXCL_LINE;
     }
