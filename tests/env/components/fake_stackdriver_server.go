@@ -101,7 +101,7 @@ func (s *FakeTraceServer) RetrieveSpanNames() ([]string, error) {
 
 			names = append(names, span.DisplayName.Value)
 
-		case <-time.After(5 * time.Second):
+		case <-time.After(1 * time.Second):
 			// No more spans received by the server.
 			glog.Infof("got spans: %+q", names)
 			return names, nil
