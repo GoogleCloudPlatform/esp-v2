@@ -98,7 +98,6 @@ const (
 	TestServiceControlCheckRetry
 	TestServiceControlCheckServerFail
 	TestServiceControlCheckTimeout
-	TestServiceControlCheckTracesWithRetry
 	TestServiceControlCheckWrongServerName
 	TestServiceControlCredentialId
 	TestServiceControlFailedRequestReport
@@ -120,14 +119,18 @@ const (
 	TestServiceControlRequestWithAllowCors
 	TestServiceControlRequestWithoutAllowCors
 	TestServiceControlSkipUsage
-	TestServiceControlSkipUsageTraces
 	TestServiceControlTLSWithValidCert
 	TestServiceManagementWithInvalidCert
 	TestServiceManagementWithValidCert
+	TestStartupDuplicatedPathsWithAllowCors
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
 	TestStatistics
 	TestStatisticsServiceControlCallStatus
+	TestTracesFetchingJwks
+	TestTracesServiceControlCheckWithRetry
+	TestTracesServiceControlSkipUsage
+	TestTracingSampleRate
 	TestTranscodingBindings
 	TestTranscodingIgnoreQueryParameters
 	TestTranscodingPrintOptions

@@ -1624,7 +1624,6 @@ func TestMakeListeners(t *testing.T) {
                 "name": "envoy.filters.http.router",
                 "typedConfig": {
                   "@type": "type.googleapis.com/envoy.extensions.filters.http.router.v3.Router",
-                  "startChildSpan": true,
                   "suppressEnvoyHeaders": true
                 }
               }
@@ -1652,7 +1651,6 @@ func TestMakeListeners(t *testing.T) {
               ]
             },
             "statPrefix": "ingress_http",
-            "tracing": {},
             "upgradeConfigs": [
               {
                 "upgradeType": "websocket"
@@ -1705,6 +1703,7 @@ func TestMakeListeners(t *testing.T) {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.SslServerCertPath = tc.sslServerCertPath
 		opts.UnderscoresInHeaders = true
+		opts.DisableTracing = true
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
@@ -1741,7 +1740,11 @@ func TestMakeHttpConMgr(t *testing.T) {
 	}{
 		{
 			desc: "Generate HttpConMgr with default options",
-			opts: options.ConfigGeneratorOptions{},
+			opts: options.ConfigGeneratorOptions{
+				CommonOptions: options.CommonOptions{
+					DisableTracing: true,
+				},
+			},
 			wantHttpConnMgr: `
 			{
 				"commonHttpProtocolOptions": {
@@ -1757,7 +1760,6 @@ func TestMakeHttpConMgr(t *testing.T) {
 				},
 				"routeConfig": {},
 				"statPrefix": "ingress_http",
-				"tracing": {},
 				"upgradeConfigs": [
 					{
 						"upgradeType": "websocket"
@@ -1771,6 +1773,9 @@ func TestMakeHttpConMgr(t *testing.T) {
 			opts: options.ConfigGeneratorOptions{
 				AccessLog:       "/foo",
 				AccessLogFormat: "/bar",
+				CommonOptions: options.CommonOptions{
+					DisableTracing: true,
+				},
 			},
 			wantHttpConnMgr: `
 				{
@@ -1797,7 +1802,6 @@ func TestMakeHttpConMgr(t *testing.T) {
 					},
 					"routeConfig": {},
 					"statPrefix": "ingress_http",
-					"tracing": {},
 					"upgradeConfigs": [
 						{
 							"upgradeType": "websocket"
@@ -1808,10 +1812,12 @@ func TestMakeHttpConMgr(t *testing.T) {
 				`,
 		},
 		{
-			desc: "Generate HttpConMgr when tracing is disabled",
+			desc: "Generate HttpConMgr when tracing is enabled",
 			opts: options.ConfigGeneratorOptions{
 				CommonOptions: options.CommonOptions{
-					DisableTracing: true,
+					DisableTracing:      false,
+					TracingProjectId:    "test-project",
+					TracingSamplingRate: 1,
 				},
 			},
 			wantHttpConnMgr: `
@@ -1829,6 +1835,24 @@ func TestMakeHttpConMgr(t *testing.T) {
 					},
 					"routeConfig": {},
 					"statPrefix": "ingress_http",
+					"tracing":{
+						"clientSampling":{},
+						"overallSampling":{
+							"value": 100
+						},
+						"provider":{
+							"name":"envoy.tracers.opencensus",
+							"typedConfig":{
+								 "@type":"type.googleapis.com/envoy.config.trace.v3.OpenCensusConfig",
+								 "stackdriverExporterEnabled":true,
+								 "stackdriverProjectId":"test-project",
+								 "traceConfig":{}
+							}
+						},
+						"randomSampling":{
+							"value": 100
+						}
+					},
 					"upgradeConfigs": [
 						{
 							"upgradeType": "websocket"
@@ -1841,6 +1865,9 @@ func TestMakeHttpConMgr(t *testing.T) {
 			desc: "Generate HttpConMgr when UnderscoresInHeaders is defined",
 			opts: options.ConfigGeneratorOptions{
 				UnderscoresInHeaders: true,
+				CommonOptions: options.CommonOptions{
+					DisableTracing: true,
+				},
 			},
 			wantHttpConnMgr: `
 				{
@@ -1855,7 +1882,6 @@ func TestMakeHttpConMgr(t *testing.T) {
 					},
 					"routeConfig": {},
 					"statPrefix": "ingress_http",
-					"tracing": {},
 					"upgradeConfigs": [
 						{
 							"upgradeType": "websocket"
@@ -1866,18 +1892,21 @@ func TestMakeHttpConMgr(t *testing.T) {
 		},
 	}
 
-	for i, tc := range testdata {
+	for _, tc := range testdata {
 		routeConfig := routepb.RouteConfiguration{}
-		hcm := makeHttpConMgr(&tc.opts, &routeConfig)
+		hcm, err := makeHttpConMgr(&tc.opts, &routeConfig)
+		if err != nil {
+			t.Fatalf("Test (%v) failed with error: %v", tc.desc, err)
+		}
 
 		marshaler := &jsonpb.Marshaler{}
 		gotHttpConnMgr, err := marshaler.MarshalToString(hcm)
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("Test (%v) failed with error: %v", tc.desc, err)
 		}
 
 		if err := util.JsonEqual(tc.wantHttpConnMgr, gotHttpConnMgr); err != nil {
-			t.Errorf("Test Desc(%d): %s, MakeHttpConMgr failed, \n %v ", i, tc.desc, err)
+			t.Errorf("Test (%v): failed, \n %v ", tc.desc, err)
 		}
 	}
 }

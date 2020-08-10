@@ -18,6 +18,8 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strings"
+	"time"
 
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
@@ -36,13 +38,15 @@ type FakeTraceServer struct {
 }
 
 func (s *FakeTraceServer) BatchWriteSpans(ctx context.Context, req *cloudtracepb.BatchWriteSpansRequest) (*emptypb.Empty, error) {
-	for _, span := range req.Spans {
+	for i, span := range req.Spans {
+		glog.Infof("Fake stackdriver server received span %v with name: %v", i, span.DisplayName.Value)
 		s.RcvSpan <- span
 	}
 	return &emptypb.Empty{}, nil
 }
 
 func (s *FakeTraceServer) CreateSpan(ctx context.Context, span *cloudtracepb.Span) (*cloudtracepb.Span, error) {
+	glog.Infof("Fake stackdriver server created span with name: %v", span.DisplayName.Value)
 	return span, nil
 }
 
@@ -56,7 +60,7 @@ func NewFakeStackdriver() *FakeTraceServer {
 
 	grpcServer := grpc.NewServer()
 	fsds := &FakeTraceServer{
-		RcvSpan: make(chan *cloudtracepb.Span, 10),
+		RcvSpan: make(chan *cloudtracepb.Span, 20),
 		server:  grpcServer,
 	}
 	cloudtracegrpc.RegisterTraceServiceServer(grpcServer, fsds)
@@ -76,4 +80,42 @@ func (s *FakeTraceServer) StartStackdriverServer(port uint16) {
 			glog.Fatalf("fake stackdriver server terminated abnormally: %v", err)
 		}
 	}()
+}
+
+func (s *FakeTraceServer) RetrieveSpanNames() ([]string, error) {
+	names := make([]string, 0)
+	for true {
+
+		select {
+		case span := <-s.RcvSpan:
+
+			// Check attributes
+			if len(span.Attributes.AttributeMap) == 0 {
+				return nil, fmt.Errorf("expected span %s to have more than 0 attributes attached to it", span.DisplayName.Value)
+			}
+
+			// Check for project id
+			if !strings.Contains(span.Name, FakeProjectID) {
+				return nil, fmt.Errorf("expected span %s to have the project id in its name, but got name: %s", span.DisplayName.Value, span.Name)
+			}
+
+			names = append(names, span.DisplayName.Value)
+
+		case <-time.After(5 * time.Second):
+			// No more spans received by the server.
+			glog.Infof("got spans: %+q", names)
+			return names, nil
+		}
+	}
+
+	return nil, fmt.Errorf("did not expect fake stackdriver server to close channel")
+}
+
+func (s *FakeTraceServer) RetrieveSpanCount() (int, error) {
+	names, err := s.RetrieveSpanNames()
+	if err != nil {
+		return 0, err
+	}
+	glog.Infof("got %v spans", len(names))
+	return len(names), nil
 }

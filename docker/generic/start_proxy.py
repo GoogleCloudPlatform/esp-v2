@@ -58,26 +58,6 @@ def gen_bootstrap_conf(args):
     cmd = [BOOTSTRAP_CMD, "--logtostderr"]
 
     cmd.extend(["--admin_port", str(args.status_port)])
-    if args.disable_tracing:
-        cmd.append("--disable_tracing")
-    else:
-        if args.tracing_project_id:
-            cmd.extend(["--tracing_project_id", args.tracing_project_id])
-        if args.tracing_incoming_context:
-            cmd.extend(
-                ["--tracing_incoming_context", args.tracing_incoming_context])
-        if args.tracing_outgoing_context:
-            cmd.extend(
-                ["--tracing_outgoing_context", args.tracing_outgoing_context])
-        if args.cloud_trace_url_override:
-            cmd.extend(["--tracing_stackdriver_address",
-                        args.cloud_trace_url_override])
-
-        if args.disable_cloud_trace_auto_sampling:
-            cmd.extend(["--tracing_sample_rate", "0"])
-        elif args.tracing_sample_rate:
-            cmd.extend(["--tracing_sample_rate", str(args.tracing_sample_rate)])
-
     if args.http_request_timeout_s:
         cmd.extend(
             ["--http_request_timeout_s",
@@ -442,7 +422,6 @@ environment variable or by passing "-k" flag to this script.
         help="The Google project id for Stack driver tracing")
     parser.add_argument(
         '--tracing_sample_rate',
-        default=0.001,
         help='''
         Tracing sampling rate from 0.0 to 1.0.
         By default, 1 out of 1000 requests are sampled.
@@ -867,6 +846,24 @@ def gen_proxy_config(args):
 
     if args.disable_tracing:
         proxy_conf.append("--disable_tracing")
+    else:
+        if args.tracing_project_id:
+            proxy_conf.extend(["--tracing_project_id", args.tracing_project_id])
+        if args.tracing_incoming_context:
+            proxy_conf.extend(
+                ["--tracing_incoming_context", args.tracing_incoming_context])
+        if args.tracing_outgoing_context:
+            proxy_conf.extend(
+                ["--tracing_outgoing_context", args.tracing_outgoing_context])
+        if args.cloud_trace_url_override:
+            proxy_conf.extend(["--tracing_stackdriver_address",
+                        args.cloud_trace_url_override])
+
+        if args.disable_cloud_trace_auto_sampling:
+            proxy_conf.extend(["--tracing_sample_rate", "0"])
+        elif args.tracing_sample_rate:
+            proxy_conf.extend(["--tracing_sample_rate",
+                               str(args.tracing_sample_rate)])
 
     if args.transcoding_always_print_primitive_fields:
         proxy_conf.append("--transcoding_always_print_primitive_fields")

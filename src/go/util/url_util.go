@@ -21,6 +21,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -34,6 +35,10 @@ const (
 
 	// Default port for DNS.
 	DNSDefaultPort = "53"
+)
+
+var (
+	pathParamMatcherRegexp = regexp.MustCompile(`{[^{}]+}`)
 )
 
 // ParseURI parses uri into scheme, hostname, port, path with err(if exist).
@@ -156,6 +161,18 @@ func ExtraAddressFromURI(jwksUri string) (string, error) {
 		return "", fmt.Errorf("Fail to parse uri %s with error %v", jwksUri, err)
 	}
 	return fmt.Sprintf("%s:%v", hostname, port), nil
+}
+
+// Returns a regex that will match requests to the uri with path parameters.
+// If there are no path params, returns empty string.
+func WildcardMatcherForPath(uri string) string {
+	if !pathParamMatcherRegexp.MatchString(uri) {
+		return ""
+	}
+
+	// Replace path templates inside "{}" by regex "[^\/]+", which means
+	// any character except `/`, also adds `$` to match to the end of the string.
+	return pathParamMatcherRegexp.ReplaceAllString(uri, `[^\/]+`) + `$`
 }
 
 var (

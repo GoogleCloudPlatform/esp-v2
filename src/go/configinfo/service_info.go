@@ -287,7 +287,7 @@ func (s *ServiceInfo) processEndpoints() {
 	}
 }
 
-func addHttpRule(method *methodInfo, r *annotationspb.HttpRule, httpPathWithOptionsSet map[string]bool) error {
+func addHttpRule(method *methodInfo, r *annotationspb.HttpRule, httpMatcherWithOptionsSet map[string]bool) error {
 
 	var httpRule *commonpb.Pattern
 	switch r.GetPattern().(type) {
@@ -317,11 +317,20 @@ func addHttpRule(method *methodInfo, r *annotationspb.HttpRule, httpPathWithOpti
 			HttpMethod:  util.PATCH,
 		}
 	case *annotationspb.HttpRule_Custom:
+		httpMethod := r.GetCustom().GetKind()
 		httpRule = &commonpb.Pattern{
 			UriTemplate: r.GetCustom().GetPath(),
-			HttpMethod:  r.GetCustom().GetKind(),
+			HttpMethod:  httpMethod,
 		}
-		httpPathWithOptionsSet[r.GetCustom().GetPath()] = true
+
+		if httpMethod == util.OPTIONS {
+			// Ensure we don't generate duplicate methods later for AllowCors.
+			matcher := util.WildcardMatcherForPath(r.GetCustom().GetPath())
+			if matcher == "" {
+				matcher = r.GetCustom().GetPath()
+			}
+			httpMatcherWithOptionsSet[matcher] = true
+		}
 	default:
 		return fmt.Errorf("unsupported http method %T", r.GetPattern())
 	}
@@ -332,14 +341,14 @@ func addHttpRule(method *methodInfo, r *annotationspb.HttpRule, httpPathWithOpti
 
 func (s *ServiceInfo) processHttpRule() error {
 	// An temporary map to record generated OPTION methods, to avoid duplication.
-	httpPathWithOptionsSet := make(map[string]bool)
+	httpMatcherWithOptionsSet := make(map[string]bool)
 
 	for _, rule := range s.ServiceConfig().GetHttp().GetRules() {
 		method, err := s.getOrCreateMethod(rule.GetSelector())
 		if err != nil {
 			return err
 		}
-		if err := addHttpRule(method, rule, httpPathWithOptionsSet); err != nil {
+		if err := addHttpRule(method, rule, httpMatcherWithOptionsSet); err != nil {
 			return err
 		}
 
@@ -348,7 +357,7 @@ func (s *ServiceInfo) processHttpRule() error {
 		// when interpret the httprules from the descriptor. Therefore, no need to
 		// check for nested additional_bindings.
 		for _, additionalRule := range rule.AdditionalBindings {
-			if err := addHttpRule(method, additionalRule, httpPathWithOptionsSet); err != nil {
+			if err := addHttpRule(method, additionalRule, httpMatcherWithOptionsSet); err != nil {
 				return err
 			}
 		}
@@ -361,9 +370,13 @@ func (s *ServiceInfo) processHttpRule() error {
 			method := s.Methods[r.GetSelector()]
 			for _, httpRule := range method.HttpRule {
 				if httpRule.HttpMethod != "OPTIONS" {
-					if _, exist := httpPathWithOptionsSet[httpRule.UriTemplate]; !exist {
+					matcher := util.WildcardMatcherForPath(httpRule.UriTemplate)
+					if matcher == "" {
+						matcher = httpRule.UriTemplate
+					}
+					if _, exist := httpMatcherWithOptionsSet[matcher]; !exist {
 						s.addOptionMethod(method.ApiName, httpRule.UriTemplate, method.BackendInfo)
-						httpPathWithOptionsSet[httpRule.UriTemplate] = true
+						httpMatcherWithOptionsSet[matcher] = true
 					}
 
 				}

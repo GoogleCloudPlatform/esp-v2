@@ -76,6 +76,7 @@ type TestEnv struct {
 	envoyDrainTimeInSec             int
 	ServiceControlServer            *components.MockServiceCtrl
 	FakeStackdriverServer           *components.FakeTraceServer
+	tracingSampleRate               float32
 	healthRegistry                  *components.HealthRegistry
 	FakeJwtService                  *components.FakeJwtService
 	skipHealthChecks                bool
@@ -266,9 +267,10 @@ func addDynamicRoutingBackendPort(serviceConfig *confpb.Service, port uint16) er
 	return nil
 }
 
-func (e *TestEnv) SetupFakeTraceServer() {
+func (e *TestEnv) SetupFakeTraceServer(sampleRate float32) {
 	// Start fake stackdriver server
 	e.FakeStackdriverServer = components.NewFakeStackdriver()
+	e.tracingSampleRate = sampleRate
 }
 
 func (e *TestEnv) DisableHttp2ForHttpsBackend() {
@@ -358,7 +360,11 @@ func (e *TestEnv) Setup(confArgs []string) error {
 
 	// Enable tracing if the stackdriver server was setup for this test
 	shouldEnableTrace := e.FakeStackdriverServer != nil
-	if !shouldEnableTrace {
+	if shouldEnableTrace {
+		confArgs = append(confArgs, fmt.Sprintf("--tracing_sample_rate=%v", e.tracingSampleRate))
+		// This address must be in gRPC format: https://github.com/grpc/grpc/blob/master/doc/naming.md
+		confArgs = append(confArgs, fmt.Sprintf("--tracing_stackdriver_address=%v:%v:%v", platform.GetIpProtocol(), platform.GetLoopbackAddress(), e.ports.FakeStackdriverPort))
+	} else {
 		confArgs = append(confArgs, "--disable_tracing")
 	}
 
@@ -400,7 +406,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		envoyArgs = append(envoyArgs, "--drain-time-s", strconv.Itoa(e.envoyDrainTimeInSec))
 	}
 
-	e.envoy, err = components.NewEnvoy(envoyArgs, bootstrapperArgs, envoyConfPath, shouldEnableTrace, e.ports, e.testId)
+	e.envoy, err = components.NewEnvoy(envoyArgs, bootstrapperArgs, envoyConfPath, e.ports, e.testId)
 	if err != nil {
 		glog.Errorf("unable to create Envoy %v", err)
 		return err

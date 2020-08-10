@@ -27,6 +27,7 @@ import (
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v7/http/service_control"
 
 	statspb "github.com/envoyproxy/go-control-plane/envoy/config/metrics/v3"
+	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
 	accessfilepb "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
 	accessgrpcpb "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/grpc/v3"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_json_transcoder/v3"
@@ -110,6 +111,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(statspb.StatsSink), nil
 	case "type.googleapis.com/envoy.config.metrics.v3.StatsdSink":
 		return new(statspb.StatsdSink), nil
+	case "type.googleapis.com/envoy.config.trace.v3.OpenCensusConfig":
+		return new(tracepb.OpenCensusConfig), nil
 	default:
 		return nil, fmt.Errorf("unexpected protobuf.Any with url: %s", url)
 	}

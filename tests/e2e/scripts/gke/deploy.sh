@@ -41,7 +41,8 @@ PROJECT_ID="cloudesf-testing"
 # Parses parameters into config file.
 ARGS="$ARGS \"--service=${APIPROXY_SERVICE}\","
 ARGS="$ARGS \"--rollout_strategy=${ROLLOUT_STRATEGY}\","
-ARGS="$ARGS \"--tracing_sample_rate=0.00001\","
+ARGS="$ARGS \"--tracing_sample_rate=0.01\","
+ARGS="$ARGS \"--tracing_outgoing_context=x-cloud-trace-context\","
 ARGS="$ARGS \"--admin_port=8001\""
 case "${BACKEND}" in
   'bookstore')
