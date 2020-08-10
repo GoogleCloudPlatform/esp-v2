@@ -111,26 +111,17 @@ func (s *FakeTraceServer) RetrieveSpanNames() ([]string, error) {
 	return nil, fmt.Errorf("did not expect fake stackdriver server to close channel")
 }
 
-func (s *FakeTraceServer) RetrieveSpanCount() (int, error) {
-	names, err := s.RetrieveSpanNames()
-	if err != nil {
-		return 0, err
-	}
-	glog.Infof("got %v spans", len(names))
-	return len(names), nil
-}
-
 // When the test is over, there should be no more spans left.
 func (s *FakeTraceServer) VerifyInvariants() error {
 	glog.Infof("Verifying trace invariants")
 
-	gotSpansNum, err := s.RetrieveSpanCount()
+	gotSpans, err := s.RetrieveSpanNames()
 	if err != nil {
 		return err
 	}
 
-	if gotSpansNum != 0 {
-		return fmt.Errorf("at the end of the test, there were (%v) spans unaccounted for", gotSpansNum)
+	if len(gotSpans) != 0 {
+		return fmt.Errorf("at the end of the test, there were (%v) spans unaccounted for", len(gotSpans))
 	}
 
 	return nil

@@ -31,6 +31,8 @@ import (
 )
 
 func checkSpanNames(env *env.TestEnv, wantSpanNames []string) error {
+	time.Sleep(5 * time.Second)
+
 	gotSpanNames, err := env.FakeStackdriverServer.RetrieveSpanNames()
 	if err != nil {
 		return err
@@ -355,10 +357,13 @@ func TestTracingSampleRate(t *testing.T) {
 				_, _ = bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, path, "", nil)
 			}
 
-			numGotSpans, err := s.FakeStackdriverServer.RetrieveSpanCount()
+			time.Sleep(5 * time.Second)
+			gotSpans, err := s.FakeStackdriverServer.RetrieveSpanNames()
 			if err != nil {
 				t.Errorf("Test (%s) failed: %v", tc.desc, err)
 			}
+
+			numGotSpans := len(gotSpans)
 			if numGotSpans < tc.numWantSpansMin || numGotSpans > tc.numWantSpansMax {
 				t.Errorf("Test (%s) failed: got num spans %v, want num spans range [%v, %v]", tc.desc, numGotSpans, tc.numWantSpansMin, tc.numWantSpansMax)
 			}
