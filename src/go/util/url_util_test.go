@@ -446,14 +446,37 @@ func TestWildcardMatcherForPath(t *testing.T) {
 			wantMatcher: "",
 		},
 		{
-			desc:        "Multiple path params",
+			desc:        "Path params with fieldpath-only bindings",
 			uri:         "/shelves/{shelf_id}/books/{book.id}",
-			wantMatcher: `/shelves/[^\/]+/books/[^\/]+$`,
+			wantMatcher: `^/shelves/[^\/]+/books/[^\/]+$`,
 		},
 		{
-			desc:        "Path param with wildcard",
+			desc:        "Path param with wildcard segments",
+			uri:         "/test/*/test/**",
+			wantMatcher: `^/test/[^\/]+/test/.*$`,
+		},
+		{
+			desc:        "Path param with wildcard in segment binding",
 			uri:         "/test/{x=*}/test/{y=**}",
-			wantMatcher: `/test/[^\/]+/test/[^\/]+$`,
+			wantMatcher: `^/test/[^\/]+/test/.*$`,
+		},
+		{
+			desc:        "Path param with mixed wildcards",
+			uri:         "/test/{name=*}/test/**",
+			wantMatcher: `^/test/[^\/]+/test/.*$`,
+		},
+		{
+			desc:        "Invalid http template, not preceded by '/' ",
+			uri:         "**",
+			wantMatcher: "",
+		},
+		{
+			// TODO(nareddyt): This is incorrect. But it should be fine, it's only a problem
+			// when user configures gRPC transcoding manually. OpenAPI compiler will
+			// never generate such a segment binding.
+			desc:        "Path params with full segment binding",
+			uri:         "/v1/{name=books/*}",
+			wantMatcher: `^/v1/[^\/]+$`,
 		},
 	}
 

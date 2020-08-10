@@ -208,7 +208,7 @@ func websocketEchoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// dynamicEoutingHandler reads URL from request header, and writes it back out.
+// dynamicRoutingHandler reads URL from request header, and writes it back out.
 func dynamicRoutingHandler(w http.ResponseWriter, r *http.Request) {
 	// Handle sleeps
 	if strings.Contains(r.URL.Path, "/sleep") {
