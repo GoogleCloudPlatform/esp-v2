@@ -16,7 +16,6 @@
 
 #include "src/envoy/token/iam_token_info.h"
 #include "src/envoy/token/imds_token_info.h"
-#include "src/envoy/token/sa_token_generator.h"
 #include "src/envoy/token/token_subscriber.h"
 
 namespace espv2 {
@@ -39,10 +38,6 @@ class TokenSubscriberFactory {
       const ::google::protobuf::RepeatedPtrField<std::string>& delegates,
       const ::google::protobuf::RepeatedPtrField<std::string>& scopes,
       GetTokenFunc access_token_fn) const PURE;
-
-  virtual ServiceAccountTokenPtr createServiceAccountTokenGenerator(
-      const std::string& service_account_key, const std::string& audience,
-      ServiceAccountTokenGenerator::TokenUpdateFunc callback) const PURE;
 };
 
 }  // namespace token
