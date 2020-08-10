@@ -98,6 +98,8 @@ message GcpAttributes {
 }
 
 message FilterConfig {
+  reserved 5;
+
   // A list of services supported on this Envoy server.
   repeated Service services = 1;  // ref:multi-service
 
@@ -110,13 +112,9 @@ message FilterConfig {
   oneof access_token {
     option (validate.required) = true;
 
-    // The Instance Metadata Server uri used to fetch access token from Instance
-    // Metadata Server.
+    // Uri used to fetch access token from Instance Metadata Server or the local
+    // token agent server.
     espv2.api.envoy.v7.http.common.HttpUri imds_token = 4;
-
-    // The local path or inline content of the service account json file used to
-    // generate access token.
-    espv2.api.envoy.v7.http.common.DataSource service_account_secret = 5;
 
     // Information used to fetch access token from Google Cloud IAM.
     espv2.api.envoy.v7.http.common.IamTokenInfo iam_token = 6;

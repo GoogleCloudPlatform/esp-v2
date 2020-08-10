@@ -464,7 +464,7 @@ func runTest(t *testing.T, fakeScReport, fakeRollouts, fakeConfig *safeData, opt
 	}
 
 	mockMetadataServer := util.InitMockServerFromPathResp(map[string]string{
-		util.AccessTokenSuffix: fakeToken,
+		util.AccessTokenPath: fakeToken,
 	})
 	defer mockMetadataServer.Close()
 

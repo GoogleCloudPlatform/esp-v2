@@ -19,6 +19,7 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -26,6 +27,8 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configmanager"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configmanager/flags"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/tokengenerator"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
 
@@ -53,7 +56,7 @@ func main() {
 	}
 	server := xds.NewServer(ctx, m.Cache(), nil)
 	grpcServer := grpc.NewServer()
-	lis, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", opts.DiscoveryPort))
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", util.LoopbackIPv4Addr, opts.DiscoveryPort))
 	if err != nil {
 		glog.Exitf("Server failed to listen: %v", err)
 	}
@@ -73,6 +76,20 @@ func main() {
 		cancel()
 		grpcServer.Stop()
 	}()
+
+	if opts.ServiceAccountKey != "" {
+		// Setup token agent server
+		r := tokengenerator.MakeTokenAgentHandler(opts.ServiceAccountKey)
+		go func() {
+			err := http.ListenAndServe(fmt.Sprintf(":%v", opts.TokenAgentPort), r)
+
+			if err != nil {
+				glog.Errorf("token agent fail to serve: %v", err)
+			}
+
+		}()
+
+	}
 
 	if err := grpcServer.Serve(lis); err != nil {
 		glog.Exitf("Server fail to serve: %v", err)

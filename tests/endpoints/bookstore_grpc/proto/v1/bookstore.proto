@@ -23,6 +23,7 @@ option java_outer_classname = "BookstoreProto";
 option java_package = "com.google.endpoints.examples.bookstore";
 
 import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
 
 // A simple Bookstore API.
 //
@@ -124,14 +125,6 @@ service Bookstore {
 
 message Empty{}
 
-// A shelf resource.
-message Shelf {
-  // A unique shelf id.
-  int64 id = 1;
-  // A theme of the shelf (fiction, poetry, etc).
-  string theme = 2;
-}
-
 // A book resource.
 message Book {
   // A unique book id.
@@ -171,6 +164,22 @@ message GetShelfRequest {
   // The ID of the shelf resource to retrieve.
   int64 shelf = 1;
 }
+
+message ObjectOnlyForAny {
+  int32 id = 1;
+
+  string name = 2;
+}
+// A shelf resource.
+message Shelf {
+  // A unique shelf id.
+  int64 id = 1;
+  // A theme of the shelf (fiction, poetry, etc).
+  string theme = 2;
+
+  google.protobuf.Any any = 3;
+}
+
 
 // Request message for DeleteShelf method.
 message DeleteShelfRequest {

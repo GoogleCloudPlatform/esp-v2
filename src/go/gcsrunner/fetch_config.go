@@ -36,12 +36,9 @@ import (
 type FetchConfigOptions struct {
 	BucketName                    string
 	ConfigFileName                string
-	WantPort                      uint32
-	LoopbackPort                  uint32
 	WriteFilePath                 string
 	FetchGCSObjectInitialInterval time.Duration
 	FetchGCSObjectTimeout         time.Duration
-	MetadataURL                   string
 }
 
 var findDefaultCredentials = google_oauth.FindDefaultCredentials
@@ -90,11 +87,7 @@ func FetchConfigFromGCS(opts FetchConfigOptions) error {
 	if err != nil {
 		return fmt.Errorf("failed to get reader for object: %v", err)
 	}
-	updated, err := transformConfigBytes(b, opts)
-	if err != nil {
-		return fmt.Errorf("failed to apply transformations: %v", err)
-	}
-	if err := writeFile(updated, opts); err != nil {
+	if err := writeFile(b, opts); err != nil {
 		return fmt.Errorf("failed to write data to file: %v", err)
 	}
 	return nil

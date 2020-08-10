@@ -16,7 +16,6 @@ package configinfo
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math"
 	"net"
 	"sort"
@@ -243,27 +242,30 @@ func (s *ServiceInfo) addGrpcHttpRules() {
 
 func (s *ServiceInfo) processAccessToken() {
 	if s.Options.ServiceAccountKey != "" {
-		data, _ := ioutil.ReadFile(s.Options.ServiceAccountKey)
 		s.AccessToken = &commonpb.AccessToken{
-			TokenType: &commonpb.AccessToken_ServiceAccountSecret{
-				ServiceAccountSecret: &commonpb.DataSource{
-					Specifier: &commonpb.DataSource_InlineString{
-						InlineString: string(data),
-					},
+			TokenType: &commonpb.AccessToken_RemoteToken{
+				RemoteToken: &commonpb.HttpUri{
+					// Use http://127.0.0.1:8791/local/access_token by default.
+					Uri:     fmt.Sprintf("http://%s:%v%s", util.LoopbackIPv4Addr, s.Options.TokenAgentPort, util.TokenAgentAccessTokenPath),
+					Cluster: util.TokenAgentClusterName,
+					Timeout: ptypes.DurationProto(s.Options.HttpRequestTimeout),
 				},
 			},
 		}
+
 		return
 	}
+
 	s.AccessToken = &commonpb.AccessToken{
 		TokenType: &commonpb.AccessToken_RemoteToken{
 			RemoteToken: &commonpb.HttpUri{
-				Uri:     fmt.Sprintf("%s%s", s.Options.MetadataURL, util.AccessTokenSuffix),
+				Uri:     fmt.Sprintf("%s%s", s.Options.MetadataURL, util.AccessTokenPath),
 				Cluster: util.MetadataServerClusterName,
 				Timeout: ptypes.DurationProto(s.Options.HttpRequestTimeout),
 			},
 		},
 	}
+
 }
 
 func (s *ServiceInfo) processQuota() {
@@ -287,7 +289,7 @@ func (s *ServiceInfo) processEndpoints() {
 	}
 }
 
-func addHttpRule(method *methodInfo, r *annotationspb.HttpRule, httpPathWithOptionsSet map[string]bool) error {
+func addHttpRule(method *methodInfo, r *annotationspb.HttpRule, httpMatcherWithOptionsSet map[string]bool) error {
 
 	var httpRule *commonpb.Pattern
 	switch r.GetPattern().(type) {
@@ -317,11 +319,20 @@ func addHttpRule(method *methodInfo, r *annotationspb.HttpRule, httpPathWithOpti
 			HttpMethod:  util.PATCH,
 		}
 	case *annotationspb.HttpRule_Custom:
+		httpMethod := r.GetCustom().GetKind()
 		httpRule = &commonpb.Pattern{
 			UriTemplate: r.GetCustom().GetPath(),
-			HttpMethod:  r.GetCustom().GetKind(),
+			HttpMethod:  httpMethod,
 		}
-		httpPathWithOptionsSet[r.GetCustom().GetPath()] = true
+
+		if httpMethod == util.OPTIONS {
+			// Ensure we don't generate duplicate methods later for AllowCors.
+			matcher := util.WildcardMatcherForPath(r.GetCustom().GetPath())
+			if matcher == "" {
+				matcher = r.GetCustom().GetPath()
+			}
+			httpMatcherWithOptionsSet[matcher] = true
+		}
 	default:
 		return fmt.Errorf("unsupported http method %T", r.GetPattern())
 	}
@@ -332,14 +343,14 @@ func addHttpRule(method *methodInfo, r *annotationspb.HttpRule, httpPathWithOpti
 
 func (s *ServiceInfo) processHttpRule() error {
 	// An temporary map to record generated OPTION methods, to avoid duplication.
-	httpPathWithOptionsSet := make(map[string]bool)
+	httpMatcherWithOptionsSet := make(map[string]bool)
 
 	for _, rule := range s.ServiceConfig().GetHttp().GetRules() {
 		method, err := s.getOrCreateMethod(rule.GetSelector())
 		if err != nil {
 			return err
 		}
-		if err := addHttpRule(method, rule, httpPathWithOptionsSet); err != nil {
+		if err := addHttpRule(method, rule, httpMatcherWithOptionsSet); err != nil {
 			return err
 		}
 
@@ -348,7 +359,7 @@ func (s *ServiceInfo) processHttpRule() error {
 		// when interpret the httprules from the descriptor. Therefore, no need to
 		// check for nested additional_bindings.
 		for _, additionalRule := range rule.AdditionalBindings {
-			if err := addHttpRule(method, additionalRule, httpPathWithOptionsSet); err != nil {
+			if err := addHttpRule(method, additionalRule, httpMatcherWithOptionsSet); err != nil {
 				return err
 			}
 		}
@@ -360,10 +371,14 @@ func (s *ServiceInfo) processHttpRule() error {
 		for _, r := range s.ServiceConfig().GetHttp().GetRules() {
 			method := s.Methods[r.GetSelector()]
 			for _, httpRule := range method.HttpRule {
-				if httpRule.HttpMethod != "OPTIONS" {
-					if _, exist := httpPathWithOptionsSet[httpRule.UriTemplate]; !exist {
+				if httpRule.HttpMethod != util.OPTIONS {
+					matcher := util.WildcardMatcherForPath(httpRule.UriTemplate)
+					if matcher == "" {
+						matcher = httpRule.UriTemplate
+					}
+					if _, exist := httpMatcherWithOptionsSet[matcher]; !exist {
 						s.addOptionMethod(method.ApiName, httpRule.UriTemplate, method.BackendInfo)
-						httpPathWithOptionsSet[httpRule.UriTemplate] = true
+						httpMatcherWithOptionsSet[matcher] = true
 					}
 
 				}

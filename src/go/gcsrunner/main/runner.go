@@ -24,13 +24,6 @@
 // `gsutil cp "gs://${BUCKET}/${CONFIG_FILE_NAME}" envoy.json`
 //
 // without needing `gsutil` in the image.
-//
-// Additionally, an optional `PORT` variable may be provided to override
-// where Envoy listens to traffic. This will be used only if the original config
-// specifies the port `8080`.
-//
-// Optionally, `LOOPBACK_PORT` may be used to configure Envoy configurations which
-// have an extra listener with the name "loopback_listener" to listen on this port.
 package main
 
 import (
@@ -42,7 +35,6 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/gcsrunner"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/golang/glog"
 )
 
@@ -61,17 +53,6 @@ var (
 
 func main() {
 	flag.Parse()
-	port, err := envNum("PORT", 8080)
-	if err != nil {
-		glog.Fatalf("Failed to get PORT number: %v", err)
-	}
-	loopbackPort, err := envNum("LOOPBACK_PORT", 8090)
-	if err != nil {
-		glog.Fatalf("Failed to get LOOPBACK_PORT number: %v", err)
-	}
-	if port == loopbackPort {
-		glog.Fatalf("PORT and LOOPBACK_PORT cannot be the same, got: (%d == %d)", port, loopbackPort)
-	}
 	bucketName := os.Getenv("BUCKET")
 	if bucketName == "" {
 		glog.Fatal("Must specify the BUCKET environment variable.")
@@ -92,23 +73,15 @@ func main() {
 		envoyBin = *envoyBinaryPath
 	}
 
-	metadataURL := os.Getenv("METADATA_URL")
-	if metadataURL == "" {
-		metadataURL = options.DefaultCommonOptions().MetadataURL
-	}
-
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 
 	if err := gcsrunner.FetchConfigFromGCS(gcsrunner.FetchConfigOptions{
 		BucketName:                    bucketName,
 		ConfigFileName:                configFileName,
-		WantPort:                      port,
-		LoopbackPort:                  loopbackPort,
 		FetchGCSObjectInitialInterval: fetchGCSObjectInitialInterval,
 		FetchGCSObjectTimeout:         fetchGCSObjectTimeout,
 		WriteFilePath:                 envoyConfigPath,
-		MetadataURL:                   metadataURL,
 	}); err != nil {
 		glog.Fatalf("Failed to fetch config: %v", err)
 	}

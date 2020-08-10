@@ -42,12 +42,21 @@ spec:
       labels:
         app: app
     spec:
+      volumes:
+        - name: service-account-cred
+          secret:
+            secretName: service-account-cred
       containers:
       - name: apiproxy
         image: APIPROXY_IMAGE
         args: [ARGS]
         ports:
           - containerPort: 8080
+        volumeMounts:
+          - mountPath: /etc/creds
+            name: service-account-cred
+            readOnly: true
+        imagePullPolicy: Always
       - name: bookstore
         image: gcr.io/cloudesf-testing/http-bookstore:2
         ports:

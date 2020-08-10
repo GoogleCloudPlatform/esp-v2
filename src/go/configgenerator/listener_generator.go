@@ -620,7 +620,7 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		filterConfig.AccessToken = &scpb.FilterConfig_IamToken{
 			IamToken: &commonpb.IamTokenInfo{
 				IamUri: &commonpb.HttpUri{
-					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.IamURL, util.IamAccessTokenSuffix(serviceInfo.Options.ServiceControlCredentials.ServiceAccountEmail)),
+					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.IamURL, util.IamAccessTokenPath(serviceInfo.Options.ServiceControlCredentials.ServiceAccountEmail)),
 					Cluster: util.IamServerClusterName,
 					Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),
 				},
@@ -630,21 +630,10 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 			},
 		}
 	} else {
-		// Use access token from fetched the Instance Metadata Server to talk to Service Controller
-		switch serviceInfo.AccessToken.TokenType.(type) {
-		case *commonpb.AccessToken_RemoteToken:
-			filterConfig.AccessToken = &scpb.FilterConfig_ImdsToken{
-				ImdsToken: serviceInfo.AccessToken.GetRemoteToken(),
-			}
-			break
-		case *commonpb.AccessToken_ServiceAccountSecret:
-			filterConfig.AccessToken = &scpb.FilterConfig_ServiceAccountSecret{
-				ServiceAccountSecret: serviceInfo.AccessToken.GetServiceAccountSecret(),
-			}
-			break
-		default:
-			break
+		filterConfig.AccessToken = &scpb.FilterConfig_ImdsToken{
+			ImdsToken: serviceInfo.AccessToken.GetRemoteToken(),
 		}
+
 	}
 
 	if serviceInfo.GcpAttributes != nil {
@@ -783,7 +772,7 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		backendAuthConfig.IdTokenInfo = &bapb.FilterConfig_IamToken{
 			IamToken: &commonpb.IamTokenInfo{
 				IamUri: &commonpb.HttpUri{
-					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.IamURL, util.IamIdentityTokenSuffix(serviceInfo.Options.BackendAuthCredentials.ServiceAccountEmail)),
+					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.IamURL, util.IamIdentityTokenPath(serviceInfo.Options.BackendAuthCredentials.ServiceAccountEmail)),
 					Cluster: util.IamServerClusterName,
 					Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),
 				},
@@ -796,7 +785,7 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	} else {
 		backendAuthConfig.IdTokenInfo = &bapb.FilterConfig_ImdsToken{
 			ImdsToken: &commonpb.HttpUri{
-				Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.MetadataURL, util.IdentityTokenSuffix),
+				Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.MetadataURL, util.IdentityTokenPath),
 				Cluster: util.MetadataServerClusterName,
 				Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),
 			},

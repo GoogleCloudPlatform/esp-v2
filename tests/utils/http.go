@@ -88,7 +88,10 @@ func DoWithHeaders(url, method, message string, headers map[string]string) (http
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, RpcStatusDeterministicJsonFormat(bodyBytes))
+		if resp.Header.Get("Content-Type") == "application/json" {
+			return nil, nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, RpcStatusDeterministicJsonFormat(bodyBytes))
+		}
+		return nil, nil, fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, bodyBytes)
 	}
 	return resp.Header, bodyBytes, err
 }

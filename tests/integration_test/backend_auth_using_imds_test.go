@@ -35,8 +35,8 @@ func TestBackendAuthWithImdsIdToken(t *testing.T) {
 	s := env.NewTestEnv(comp.TestBackendAuthWithImdsIdToken, platform.EchoRemote)
 	s.OverrideMockMetadata(
 		map[string]string{
-			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",
-			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/append":   "ya29.append",
+			util.IdentityTokenPath + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",
+			util.IdentityTokenPath + "?format=standard&audience=https://localhost/bearertoken/append":   "ya29.append",
 		}, 0)
 
 	defer s.TearDown(t)
@@ -118,7 +118,7 @@ func TestBackendAuthWithImdsIdTokenRetries(t *testing.T) {
 		func() {
 			s.OverrideMockMetadata(
 				map[string]string{
-					util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",
+					util.IdentityTokenPath + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",
 				}, tc.wantNumFails)
 
 			defer s.TearDown(t)
@@ -164,8 +164,8 @@ func TestBackendAuthWithImdsIdTokenWhileAllowCors(t *testing.T) {
 	s := env.NewTestEnv(comp.TestBackendAuthWithImdsIdTokenWhileAllowCors, platform.EchoRemote)
 	s.OverrideMockMetadata(
 		map[string]string{
-			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",
-			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/append":   "ya29.append",
+			util.IdentityTokenPath + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",
+			util.IdentityTokenPath + "?format=standard&audience=https://localhost/bearertoken/append":   "ya29.append",
 		}, 0)
 	s.SetAllowCors()
 

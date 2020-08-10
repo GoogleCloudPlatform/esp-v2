@@ -60,8 +60,14 @@ case "${BACKEND}" in
   *)
     echo "Invalid backend ${BACKEND}"
     return 1 ;;
-
 esac
+
+if [ ${BACKEND} == "bookstore" ]; then
+  SA_CRED_PATH="$(mktemp  /tmp/servie_account_cred.XXXX)"
+
+  # This file mount path is set in tests/e2e/testdata/bookstore/gke/http-bookstore.yaml
+  [[ -n ${USING_SA_CRED} ]] && ARGS="$ARGS, \"--service_account_key=/etc/creds/$(basename "${SA_CRED_PATH}")\""
+fi
 
 sed "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g" ${YAML_TEMPLATE}  \
   | sed "s|ARGS|${ARGS}|g" | tee ${YAML_FILE}
@@ -72,7 +78,14 @@ sed "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g" ${YAML_TEMPLATE}  \
 #
 case "${BACKEND}" in
   'bookstore')
-    SERVICE_IDL="${ROOT}/tests/endpoints/bookstore/bookstore_swagger_template.json"
+    SERVICE_IDL_TMPL="${ROOT}/tests/endpoints/bookstore/bookstore_swagger_template.json"
+    SERVICE_IDL="${ROOT}/tests/endpoints/bookstore/bookstore_swagger.json"
+
+    cat "${SERVICE_IDL_TMPL}" \
+    | jq ".host = \"${APIPROXY_SERVICE}\" \
+       | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${APIPROXY_SERVICE}\"" \
+      > "${SERVICE_IDL}"
+
     CREATE_SERVICE_ARGS="${SERVICE_IDL}"
     ;;
   'echo')
@@ -87,8 +100,10 @@ case "${BACKEND}" in
     ARGS="$ARGS -g" ;;
   *)
     echo "Invalid backend ${BACKEND}"
-    return 1 ;;
+    exit 1;;
 esac
+
+
 
 LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
 
@@ -97,6 +112,12 @@ create_service ${CREATE_SERVICE_ARGS}
 # Creates service on GKE cluster.
 NAMESPACE="${UNIQUE_ID}"
 run kubectl create namespace "${NAMESPACE}" || error_exit "Namespace already exists"
+
+if [ "${BACKEND}" == 'bookstore' ]; then
+  get_test_client_key "e2e-non-gcp-instance-proxy-rt-sa.json" "${SA_CRED_PATH}"
+  run kubectl create secret generic service-account-cred --from-file="${SA_CRED_PATH}" --namespace "${NAMESPACE}"
+fi
+
 run kubectl create -f ${YAML_FILE} --namespace "${NAMESPACE}"
 HOST=$(get_cluster_host "${NAMESPACE}")
 

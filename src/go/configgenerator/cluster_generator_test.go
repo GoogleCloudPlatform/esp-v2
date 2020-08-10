@@ -783,3 +783,28 @@ func TestMakeIamCluster(t *testing.T) {
 		}
 	}
 }
+
+func TestMakeTokenAgentCluster(t *testing.T) {
+	fakeServiceInfo, _ := configinfo.NewServiceInfoFromServiceConfig(&confpb.Service{
+		Apis: []*apipb.Api{
+			{
+				Name: testApiName,
+			},
+		},
+	}, testConfigID, options.DefaultConfigGeneratorOptions())
+
+	cluster := makeTokenAgentCluster(fakeServiceInfo)
+	wantCluster := &clusterpb.Cluster{
+		Name:           util.TokenAgentClusterName,
+		LbPolicy:       clusterpb.Cluster_ROUND_ROBIN,
+		ConnectTimeout: ptypes.DurationProto(fakeServiceInfo.Options.ClusterConnectTimeout),
+		ClusterDiscoveryType: &clusterpb.Cluster_Type{
+			Type: clusterpb.Cluster_STATIC,
+		},
+		LoadAssignment: util.CreateLoadAssignment("127.0.0.1", uint32(fakeServiceInfo.Options.TokenAgentPort)),
+	}
+
+	if !proto.Equal(cluster, wantCluster) {
+		t.Errorf("Test makeTokenAgentClusters, \ngot: %v,\nwant: %v", cluster, wantCluster)
+	}
+}

@@ -85,7 +85,8 @@ const (
 	TestPreflightCorsWithBasicPreset
 	TestPreflightRequestWithAllowCors
 	TestReportGCPAttributes
-	TestServiceControlAccessToken
+	TestServiceControlAccessTokenFromIam
+	TestServiceControlAccessTokenFromTokenAgent
 	TestServiceControlAllHTTPMethod
 	TestServiceControlAllHTTPPath
 	TestServiceControlAPIKeyCustomLocation
@@ -122,6 +123,7 @@ const (
 	TestServiceControlTLSWithValidCert
 	TestServiceManagementWithInvalidCert
 	TestServiceManagementWithValidCert
+	TestStartupDuplicatedPathsWithAllowCors
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
 	TestStatistics

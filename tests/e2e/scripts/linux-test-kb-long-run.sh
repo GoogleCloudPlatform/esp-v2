@@ -83,6 +83,15 @@ while true; do
 
   echo "Auth token is: ${JWT_TOKEN}"
 
+  echo "Starting bookstore quota control test at $(date)."
+  (set -x; python ${ROOT}/tests/e2e/client/apiproxy_bookstore_quota_test.py \
+      --host="${SCHEME}://${HOST}:${PORT}" \
+      --api_key=${API_KEY} \
+      --auth_token=${JWT_TOKEN} \
+      --allow_unverified_cert=true \
+      --host_header="${HOST_HEADER}" \
+    || ((BOOKSTORE_FAILURES++)))
+
   echo "Starting bookstore test at $(date)."
   (set -x;
     python ${ROOT}/tests/e2e/client/apiproxy_bookstore_test.py  \
@@ -90,7 +99,7 @@ while true; do
       --api_key=${API_KEY}  \
       --auth_token=${JWT_TOKEN}  \
       --allow_unverified_cert=true \
-    --host_header="${HOST_HEADER}")
+    --host_header="${HOST_HEADER}" || ((BOOKSTORE_FAILURES++)))
 
   if [ "$PLATFORM" = "gke" ]; then
     echo "Starting bookstore API Key restriction test at $(date)."

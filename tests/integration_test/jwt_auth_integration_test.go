@@ -276,7 +276,7 @@ func TestFrontendAndBackendAuthHeaders(t *testing.T) {
 	})
 	s.OverrideMockMetadata(
 		map[string]string{
-			util.IdentityTokenSuffix + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.BackendAuthToken",
+			util.IdentityTokenPath + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.BackendAuthToken",
 		}, 0)
 
 	defer s.TearDown(t)
