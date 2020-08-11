@@ -19,6 +19,7 @@ import argparse
 import utils
 import sys
 import time
+import requests
 from utils import ApiProxyClientTest
 
 class C:
@@ -46,29 +47,34 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
     self.set_verbose(FLAGS.verbose)
 
 
-    def _exhaust_quota():
-      for i in range(100):
-        time.sleep(1)
-        try:
-          response = self._call_http(path='/quota_read',
-                                     api_key=FLAGS.api_key)
-        except Exception, e:
-          print "Exception {0} occurred".format(e)
-          continue
-        if response.status_code == 429:
-          break;
-        elif i == 99:
-          sys.exit(utils.red("Fail to exhaust quota"))
+    def _try_call_quota_read():
+      try:
+        return self._call_http(path='/quota_read',
+                                   api_key=FLAGS.api_key)
+      except requests.exceptions.SSLError as e:
+        print "Exception {0} occurred".format(e)
+        return None
 
     # exhaust the quota in the current window.
-    print("Exhaust current quota...")
-    _exhaust_quota()
-
-    time.sleep(5)
+    print("Exhaust current quota...");
+    response = self._call_http(path='/quota_read',
+                               api_key=FLAGS.api_key)
+    if response.status_code != 429:
+        while True:
+          # service control quota call has 1s cache.
+          time.sleep(1)
+          response = _try_call_quota_read()
+          if response and response.status_code == 429:
+              break;
 
     # waiting for the next quota refill.
     print("Wait for the next quota refill...")
-    _exhaust_quota()
+    while True:
+      # service control quota call has 1s cache.
+        time.sleep(1)
+        response = _try_call_quota_read()
+        if response and response.status_code != 429:
+            break;
 
     # start counting
     print("Sending requests to count response codes for 150 seconds...");
@@ -80,12 +86,10 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
     t_end = time.time() + 60 * 2 + 30
     count = 0;
     while time.time() < t_end:
-      try:
-        response = self._call_http(path='/quota_read',
-                                   api_key=FLAGS.api_key)
-      except Exception, e:
-          print "Exception {0} occurred".format(e)
-          continue
+      response = _try_call_quota_read()
+
+      if response is None:
+        continue
 
       if response.status_code == 429:
         code_429 += 1
