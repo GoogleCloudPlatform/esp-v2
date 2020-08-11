@@ -100,8 +100,9 @@ EOF
 
 NEW_IMAGE="gcr.io/${PROJECT}/endpoints-runtime-serverless:${ESP_FULL_VERSION}-${SERVICE}-${CONFIG_ID}"
 gcloud builds submit --tag "${NEW_IMAGE}" . --project="${PROJECT}"
-
-# Delete the temporary directory we created earlier.
-rm -r "${PWD}"
 )
 
+# Delete the temporary directory we created earlier.
+# Move back to the previous directory with an echo.
+rm -r "${PWD}"
+cd ~-
