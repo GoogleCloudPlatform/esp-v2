@@ -19,7 +19,7 @@ import argparse
 import utils
 import sys
 import time
-import requests
+import ssl
 from utils import ApiProxyClientTest
 
 class C:
@@ -51,7 +51,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
       try:
         return self._call_http(path='/quota_read',
                                    api_key=FLAGS.api_key)
-      except requests.exceptions.SSLError as e:
+      except ssl.SSLError as e:
         print "Exception {0} occurred".format(e)
         return None
 
