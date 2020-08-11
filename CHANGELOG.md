@@ -1,3 +1,12 @@
+# Release 2.15.0 11-08-2020
+
+- Support wildcards in envoy route matching with dynamic routing (#262)
+- For local backend address, use HTTP as default schema (#263)
+- Fix tracing sample rate (#249)
+- Set `x-envoy-original-path` in backend routing filter for access logging (#241)
+- Add api_key in filter_state for access logging (#233)
+- Support ESP versions in `gcloud_build_image` (#229)
+
 # Release 2.14.0 20-07-2020
 
 - Config versioning v6 to v7 (#226)
