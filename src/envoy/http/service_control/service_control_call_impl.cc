@@ -30,7 +30,6 @@ using ::espv2::api::envoy::v7::http::service_control::Service;
 using ::espv2::api_proxy::service_control::LogsMetricsLoader;
 using ::espv2::api_proxy::service_control::RequestBuilder;
 using ::google::protobuf::util::TimeUtil;
-using token::ServiceAccountTokenGenerator;
 using token::TokenSubscriber;
 using token::TokenType;
 

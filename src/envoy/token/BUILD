@@ -77,7 +77,6 @@ envoy_cc_library(
     deps = [
         ":iam_token_info_lib",
         ":imds_token_info_lib",
-        ":sa_token_generator_lib",
         ":token_subscriber_lib",
     ],
 )
@@ -101,23 +100,6 @@ envoy_cc_library(
         ":imds_token_info_lib",
         ":token_subscriber_factory_interface",
         ":token_subscriber_lib",
-    ],
-)
-
-envoy_cc_library(
-    name = "sa_token_generator_lib",
-    srcs = ["sa_token_generator.cc"],
-    hdrs = ["sa_token_generator.h"],
-    repository = "@envoy",
-    deps = [
-        "//api/envoy/v7/http/common:base_proto_cc_proto",
-        "//external:abseil_optional",
-        "//src/api_proxy/auth:auth_token_lib",
-        "//src/envoy/utils:json_struct_lib",
-        "@envoy//include/envoy/event:dispatcher_interface",
-        "@envoy//include/envoy/server:filter_config_interface",
-        "@envoy//include/envoy/upstream:cluster_manager_interface",
-        "@envoy//source/common/init:target_lib",
     ],
 )
 
@@ -174,19 +156,6 @@ envoy_cc_test(
     deps = [
         ":mocks_lib",
         ":token_subscriber_lib",
-        "@envoy//test/mocks/init:init_mocks",
-        "@envoy//test/mocks/server:server_mocks",
-        "@envoy//test/test_common:utility_lib",
-    ],
-)
-
-envoy_cc_test(
-    name = "service_account_token_test",
-    srcs = ["sa_token_generator_test.cc"],
-    repository = "@envoy",
-    deps = [
-        ":sa_token_generator_lib",
-        "@envoy//source/common/tracing:http_tracer_lib",
         "@envoy//test/mocks/init:init_mocks",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/test_common:utility_lib",
