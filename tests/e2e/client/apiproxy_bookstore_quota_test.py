@@ -45,29 +45,30 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
     FLAGS.verbose = False
     self.set_verbose(FLAGS.verbose)
 
-    # exhaust the quota in the current window.
-    print("Exhaust current quota...");
-    response = self._call_http(path='/quota_read',
-                               api_key=FLAGS.api_key)
-    if response.status_code != 429:
-      for i in range(10000):
-        response = self._call_http(path='/quota_read',
-                                   api_key=FLAGS.api_key)
+
+    def _exhaust_quota():
+      for i in range(100):
+        time.sleep(1)
+        try:
+          response = self._call_http(path='/quota_read',
+                                     api_key=FLAGS.api_key)
+        except Exception, e:
+          print "Exception {0} occurred".format(e)
+          continue
         if response.status_code == 429:
           break;
-        elif i == 9999:
+        elif i == 99:
           sys.exit(utils.red("Fail to exhaust quota"))
 
+    # exhaust the quota in the current window.
+    print("Exhaust current quota...")
+    _exhaust_quota()
+
+    time.sleep(5)
+
     # waiting for the next quota refill.
-    print("Wait for the next quota refill...");
-    for i in range(100):
-      time.sleep(1);
-      response = self._call_http(path='/quota_read',
-                                 api_key=FLAGS.api_key)
-      if response.status_code != 429:
-        break;
-      elif i == 99:
-        sys.exit(utils.red("Fail to exhaust quota"))
+    print("Wait for the next quota refill...")
+    _exhaust_quota()
 
     # start counting
     print("Sending requests to count response codes for 150 seconds...");
@@ -79,8 +80,13 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
     t_end = time.time() + 60 * 2 + 30
     count = 0;
     while time.time() < t_end:
-      response = self._call_http(path='/quota_read',
-                                 api_key=FLAGS.api_key)
+      try:
+        response = self._call_http(path='/quota_read',
+                                   api_key=FLAGS.api_key)
+      except Exception, e:
+          print "Exception {0} occurred".format(e)
+          continue
+
       if response.status_code == 429:
         code_429 += 1
       elif response.status_code == 200:
