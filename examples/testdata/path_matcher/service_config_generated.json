@@ -78,6 +78,7 @@
   },
   "endpoints": [
     {
+      "allowCors": true,
       "name": "examples-path-matcher.endpoints.cloudesf-testing.cloud.goog"
     }
   ],
@@ -109,7 +110,7 @@
       }
     ]
   },
-  "id": "2020-08-05r0",
+  "id": "2020-08-12r0",
   "logging": {
     "producerDestinations": [
       {
