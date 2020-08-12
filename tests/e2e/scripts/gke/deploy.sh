@@ -134,7 +134,20 @@ function doServiceRollout() {
     echo 'Sleeping until next service rollout'
     sleep 15m
 
+    local allow_cors=''
+    if (( RANDOM % 2 )); then
+      allow_cors=true
+    else
+      allow_cors=false
+    fi
+
+    echo "Setting allowCors = ${allow_cors}"
+    cat "${SERVICE_IDL}" \
+        | jq ".\"x-google-endpoints\"[0].allowCors = $allow_cors" \
+        | sponge "${SERVICE_IDL}"
+
     echo 'Deploying a modified service config'
+    create_service ${CREATE_SERVICE_ARGS}
   done
 }
 
