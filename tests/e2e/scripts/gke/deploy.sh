@@ -82,9 +82,10 @@ case "${BACKEND}" in
     SERVICE_IDL="${ROOT}/tests/endpoints/bookstore/bookstore_swagger.json"
 
     cat "${SERVICE_IDL_TMPL}" \
-    | jq ".host = \"${APIPROXY_SERVICE}\" \
-       | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${APIPROXY_SERVICE}\"" \
-      > "${SERVICE_IDL}"
+        | jq ".host = \"${APIPROXY_SERVICE}\" \
+        | .\"x-google-endpoints\"[0].name = \"${APIPROXY_SERVICE}\" \
+        | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${APIPROXY_SERVICE}\"" \
+        > "${SERVICE_IDL}"
 
     CREATE_SERVICE_ARGS="${SERVICE_IDL}"
     ;;
@@ -126,12 +127,12 @@ HOST=$(get_cluster_host "${NAMESPACE}")
 # This will cause ESPv2 to rebuild the Envoy listener while lots of traffic is running through.
 function doServiceRollout() {
   if [ "${BACKEND}" != 'bookstore' ]; then
-    echo "TODO(nareddyt): Support managed service rollout for ${BACKEND}"
+    echo "doServiceRollout: TODO(nareddyt): Support managed service rollout for ${BACKEND}"
     return 0
   fi
 
   while true; do
-    echo 'Sleeping until next service rollout'
+    echo 'doServiceRollout: Sleeping until next service rollout'
     sleep 15m
 
     local allow_cors=''
@@ -141,12 +142,14 @@ function doServiceRollout() {
       allow_cors=false
     fi
 
-    echo "Setting allowCors = ${allow_cors}"
+    echo "doServiceRollout: Setting allowCors = ${allow_cors}"
+    local tmp_file=$(mktemp)
     cat "${SERVICE_IDL}" \
         | jq ".\"x-google-endpoints\"[0].allowCors = $allow_cors" \
-        | sponge "${SERVICE_IDL}"
+        > "${tmp_file}"
+    mv "${tmp_file}" "${SERVICE_IDL}"
 
-    echo 'Deploying a modified service config'
+    echo "doServiceRollout: Deploying and rolling out new config for service ${APIPROXY_SERVICE}"
     create_service ${CREATE_SERVICE_ARGS}
   done
 }
