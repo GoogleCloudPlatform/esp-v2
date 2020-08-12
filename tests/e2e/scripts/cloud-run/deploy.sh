@@ -54,9 +54,7 @@ BACKEND_HOST=""
 CLUSTER_ZONE="us-central1-a"
 CLOUD_RUN_REGION="us-central1"
 
-# TODO(b/160643986): pin to latest cluster version.
-# CLUSTER_VERSION="latest"
-CLUSTER_VERSION="1.16.9-gke.6"
+ CLUSTER_VERSION="latest"
 
 APP_ENGINE_IAP_CLIENT_ID="245521401045-qh1j3eq583qdkmn9m60pfc67303ps6cu.apps.googleusercontent.com"
 
