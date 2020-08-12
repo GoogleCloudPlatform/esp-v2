@@ -72,5 +72,11 @@
     "https"
   ],
   "swagger": "2.0",
-  "x-google-allow": "all"
+  "x-google-allow": "all",
+  "x-google-endpoints": [
+    {
+      "name": "examples-path-matcher.endpoints.cloudesf-testing.cloud.goog",
+      "allowCors": true
+    }
+  ]
 }

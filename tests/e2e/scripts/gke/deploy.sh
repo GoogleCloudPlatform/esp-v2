@@ -121,6 +121,25 @@ fi
 run kubectl create -f ${YAML_FILE} --namespace "${NAMESPACE}"
 HOST=$(get_cluster_host "${NAMESPACE}")
 
+# Run in background while e2e tests are running.
+# ESPv2 is deployed in managed mode for all these e2e tests.
+# This will cause ESPv2 to rebuild the Envoy listener while lots of traffic is running through.
+function doServiceRollout() {
+  if [ "${BACKEND}" != 'bookstore' ]; then
+    echo "TODO(nareddyt): Support managed service rollout for ${BACKEND}"
+    return 0
+  fi
+
+  while true; do
+    echo 'Sleeping until next service rollout'
+    sleep 15m
+
+    echo 'Deploying a modified service config'
+  done
+}
+
+doServiceRollout &
+
 # Running Test
 STATUS=0
 run_nonfatal long_running_test  \
