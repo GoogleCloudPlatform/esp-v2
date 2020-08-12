@@ -76,6 +76,7 @@ type TestEnv struct {
 	envoyDrainTimeInSec             int
 	ServiceControlServer            *components.MockServiceCtrl
 	FakeStackdriverServer           *components.FakeTraceServer
+	enableTracing                   bool
 	tracingSampleRate               float32
 	healthRegistry                  *components.HealthRegistry
 	FakeJwtService                  *components.FakeJwtService
@@ -103,6 +104,7 @@ func NewTestEnv(testId uint16, backend platform.Backend) *TestEnv {
 		ServiceControlServer:        components.NewMockServiceCtrl(fakeServiceConfig.GetName(), initRolloutId),
 		healthRegistry:              components.NewHealthRegistry(),
 		FakeJwtService:              components.NewFakeJwtService(),
+		FakeStackdriverServer:       components.NewFakeStackdriver(),
 	}
 }
 
@@ -268,8 +270,7 @@ func addDynamicRoutingBackendPort(serviceConfig *confpb.Service, port uint16) er
 }
 
 func (e *TestEnv) SetupFakeTraceServer(sampleRate float32) {
-	// Start fake stackdriver server
-	e.FakeStackdriverServer = components.NewFakeStackdriver()
+	e.enableTracing = true
 	e.tracingSampleRate = sampleRate
 }
 
@@ -350,17 +351,12 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		confArgs = append(confArgs, "--service_control_iam_delegates="+e.serviceControlIamDelegates)
 	}
 
-	if e.FakeStackdriverServer != nil {
-		e.FakeStackdriverServer.StartStackdriverServer(e.ports.FakeStackdriverPort)
-	}
-
 	confArgs = append(confArgs, fmt.Sprintf("--listener_port=%v", e.ports.ListenerPort))
 	confArgs = append(confArgs, fmt.Sprintf("--discovery_port=%v", e.ports.DiscoveryPort))
 	confArgs = append(confArgs, fmt.Sprintf("--service=%v", e.fakeServiceConfig.Name))
 
-	// Enable tracing if the stackdriver server was setup for this test
-	shouldEnableTrace := e.FakeStackdriverServer != nil
-	if shouldEnableTrace {
+	// Tracing configuration.
+	if e.enableTracing {
 		confArgs = append(confArgs, fmt.Sprintf("--tracing_sample_rate=%v", e.tracingSampleRate))
 		// This address must be in gRPC format: https://github.com/grpc/grpc/blob/master/doc/naming.md
 		confArgs = append(confArgs, fmt.Sprintf("--tracing_stackdriver_address=%v:%v:%v", platform.GetIpProtocol(), platform.GetLoopbackAddress(), e.ports.FakeStackdriverPort))
@@ -419,6 +415,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 
 	e.StatsVerifier = components.NewStatsVerifier(e.ports)
 	e.healthRegistry.RegisterHealthChecker(e.StatsVerifier)
+	e.FakeStackdriverServer.StartStackdriverServer(e.ports.FakeStackdriverPort)
 
 	switch e.backend {
 	case platform.EchoSidecar:
@@ -522,6 +519,11 @@ func (e *TestEnv) TearDown(t *testing.T) {
 		t.Errorf("Error verifying stats invariants: %v", err)
 	}
 
+	// Verify invariants in tracing.
+	if err := e.FakeStackdriverServer.VerifyInvariants(); err != nil {
+		t.Errorf("Error verifying tracing invariants: %v", err)
+	}
+
 	// Tear down servers.
 	if e.FakeJwtService != nil {
 		e.FakeJwtService.TearDown()
@@ -559,10 +561,7 @@ func (e *TestEnv) TearDown(t *testing.T) {
 		}
 	}
 
-	// Only need to stop the stackdriver server if it was ever enabled
-	if e.FakeStackdriverServer != nil {
-		e.FakeStackdriverServer.StopAndWait()
-	}
+	e.FakeStackdriverServer.StopAndWait()
 
 	glog.Infof("finish tearing down...")
 }
