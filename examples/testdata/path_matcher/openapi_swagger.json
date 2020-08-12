@@ -75,8 +75,8 @@
   "x-google-allow": "all",
   "x-google-endpoints": [
     {
-      "name": "examples-path-matcher.endpoints.cloudesf-testing.cloud.goog",
-      "allowCors": true
+      "allowCors": true,
+      "name": "examples-path-matcher.endpoints.cloudesf-testing.cloud.goog"
     }
   ]
 }
