@@ -194,6 +194,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
         FLAGS.verbose = False
         self.set_verbose(False)
 
+        print('Running CORS requests, no verifications')
         for _ in range(100):
             # Response doesn't matter, we just want to run some data through.
             self._call_http('/shelves', method='OPTIONS')
