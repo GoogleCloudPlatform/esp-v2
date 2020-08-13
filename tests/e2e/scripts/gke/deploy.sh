@@ -147,7 +147,7 @@ function doServiceRollout() {
     cat "${SERVICE_IDL}" \
         | jq ".\"x-google-endpoints\"[0].allowCors = $allow_cors" \
         > "${tmp_file}"
-    mv "${tmp_file}" "${SERVICE_IDL}"
+    mv -f "${tmp_file}" "${SERVICE_IDL}"
 
     echo "doServiceRollout: Deploying and rolling out new config for service ${APIPROXY_SERVICE}"
     create_service ${CREATE_SERVICE_ARGS}
@@ -172,11 +172,8 @@ run_nonfatal long_running_test  \
   "" \
   || STATUS=${?}
 
-# Deploy new config and check new rollout on /endpoints_status
-if [[ ( "${ROLLOUT_STRATEGY}" == "managed" ) && ( "${BACKEND}" == "bookstore" ) ]]; then
-  # Deploy new service config
-  create_service "${SERVICE_IDL}"
-fi
+# Kill background process.
+kill $(jobs -p)
 
 if [[ -n ${REMOTE_LOG_DIR} ]]; then
   fetch_proxy_logs "${NAMESPACE}" "${LOG_DIR}"
