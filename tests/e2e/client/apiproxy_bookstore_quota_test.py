@@ -57,8 +57,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
 
     # exhaust the quota in the current window.
     print("Exhaust current quota...");
-    response = self._call_http(path='/quota_read',
-                               api_key=FLAGS.api_key)
+    response = _try_call_quota_read()
     if response.status_code != 429:
         while True:
           # service control quota call has 1s cache.
