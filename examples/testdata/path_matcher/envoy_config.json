@@ -157,21 +157,6 @@
                         "@type": "type.googleapis.com/espv2.api.envoy.v7.http.path_matcher.FilterConfig",
                         "rules": [
                           {
-                            "operation": "1.examples_path_matcher_endpoints_cloudesf_testing_cloud_goog.CORS_**",
-                            "pattern": {
-                              "httpMethod": "OPTIONS",
-                              "uriTemplate": "/**"
-                            }
-                          },
-                          {
-                            "operation": "1.examples_path_matcher_endpoints_cloudesf_testing_cloud_goog.CORS_libraries_library_id_shelves_shelf_id",
-                            "pathParameterExtraction": {},
-                            "pattern": {
-                              "httpMethod": "OPTIONS",
-                              "uriTemplate": "/libraries/{library_id}/shelves/{shelf_id}"
-                            }
-                          },
-                          {
                             "operation": "1.examples_path_matcher_endpoints_cloudesf_testing_cloud_goog.GetShelf",
                             "pathParameterExtraction": {
                               "snakeToJsonSegments": {
@@ -233,10 +218,6 @@
                         "rules": [
                           {
                             "jwtAudience": "https://http-bookstore-edf123456-uc.a.run.app/shelves",
-                            "operation": "1.examples_path_matcher_endpoints_cloudesf_testing_cloud_goog.CORS_libraries_library_id_shelves_shelf_id"
-                          },
-                          {
-                            "jwtAudience": "https://http-bookstore-edf123456-uc.a.run.app/shelves",
                             "operation": "1.examples_path_matcher_endpoints_cloudesf_testing_cloud_goog.GetShelf"
                           }
                         ]
@@ -247,11 +228,6 @@
                       "typedConfig": {
                         "@type": "type.googleapis.com/espv2.api.envoy.v7.http.backend_routing.FilterConfig",
                         "rules": [
-                          {
-                            "operation": "1.examples_path_matcher_endpoints_cloudesf_testing_cloud_goog.CORS_libraries_library_id_shelves_shelf_id",
-                            "pathPrefix": "/shelves",
-                            "pathTranslation": "CONSTANT_ADDRESS"
-                          },
                           {
                             "operation": "1.examples_path_matcher_endpoints_cloudesf_testing_cloud_goog.GetShelf",
                             "pathPrefix": "/shelves",
@@ -285,27 +261,6 @@
                         ],
                         "name": "backend",
                         "routes": [
-                          {
-                            "match": {
-                              "headers": [
-                                {
-                                  "exactMatch": "OPTIONS",
-                                  "name": ":method"
-                                }
-                              ],
-                              "safeRegex": {
-                                "googleRe2": {
-                                  "maxProgramSize": 1000
-                                },
-                                "regex": "^/libraries/[^\\/]+/shelves/[^\\/]+$"
-                              }
-                            },
-                            "route": {
-                              "cluster": "http-bookstore-edf123456-uc.a.run.app:443",
-                              "hostRewriteLiteral": "http-bookstore-edf123456-uc.a.run.app",
-                              "timeout": "15s"
-                            }
-                          },
                           {
                             "match": {
                               "headers": [
