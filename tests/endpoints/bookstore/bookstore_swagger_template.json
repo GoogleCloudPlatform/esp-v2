@@ -564,7 +564,7 @@
   },
   "x-google-endpoints": [
     {
-      "allowCors": false,
+      "allowCors": true,
       "name": "bookstore.endpoints.cloudesf-testing.cloud.goog"
     }
   ]
