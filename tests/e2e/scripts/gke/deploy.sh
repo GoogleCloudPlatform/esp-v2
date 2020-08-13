@@ -82,10 +82,9 @@ case "${BACKEND}" in
     SERVICE_IDL="${ROOT}/tests/endpoints/bookstore/bookstore_swagger.json"
 
     cat "${SERVICE_IDL_TMPL}" \
-        | jq ".host = \"${APIPROXY_SERVICE}\" \
-        | .\"x-google-endpoints\"[0].name = \"${APIPROXY_SERVICE}\" \
-        | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${APIPROXY_SERVICE}\"" \
-        > "${SERVICE_IDL}"
+    | jq ".host = \"${APIPROXY_SERVICE}\" \
+       | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${APIPROXY_SERVICE}\"" \
+      > "${SERVICE_IDL}"
 
     CREATE_SERVICE_ARGS="${SERVICE_IDL}"
     ;;
@@ -122,40 +121,6 @@ fi
 run kubectl create -f ${YAML_FILE} --namespace "${NAMESPACE}"
 HOST=$(get_cluster_host "${NAMESPACE}")
 
-# Run in background while e2e tests are running.
-# ESPv2 is deployed in managed mode for all these e2e tests.
-# This will cause ESPv2 to rebuild the Envoy listener while lots of traffic is running through.
-function doServiceRollout() {
-  if [ "${BACKEND}" != 'bookstore' ]; then
-    echo "doServiceRollout: TODO(nareddyt): Support managed service rollout for ${BACKEND}"
-    return 0
-  fi
-
-  while true; do
-    echo 'doServiceRollout: Sleeping until next service rollout'
-    sleep 15m
-
-    local allow_cors=''
-    if (( RANDOM % 2 )); then
-      allow_cors=true
-    else
-      allow_cors=false
-    fi
-
-    echo "doServiceRollout: Setting allowCors = ${allow_cors}"
-    local tmp_file=$(mktemp)
-    cat "${SERVICE_IDL}" \
-        | jq ".\"x-google-endpoints\"[0].allowCors = $allow_cors" \
-        > "${tmp_file}"
-    mv -f "${tmp_file}" "${SERVICE_IDL}"
-
-    echo "doServiceRollout: Deploying and rolling out new config for service ${APIPROXY_SERVICE}"
-    create_service ${CREATE_SERVICE_ARGS}
-  done
-}
-
-doServiceRollout &
-
 # Running Test
 STATUS=0
 run_nonfatal long_running_test  \
@@ -172,8 +137,11 @@ run_nonfatal long_running_test  \
   "" \
   || STATUS=${?}
 
-# Kill background process.
-kill $(jobs -p)
+# Deploy new config and check new rollout on /endpoints_status
+if [[ ( "${ROLLOUT_STRATEGY}" == "managed" ) && ( "${BACKEND}" == "bookstore" ) ]]; then
+  # Deploy new service config
+  create_service "${SERVICE_IDL}"
+fi
 
 if [[ -n ${REMOTE_LOG_DIR} ]]; then
   fetch_proxy_logs "${NAMESPACE}" "${LOG_DIR}"

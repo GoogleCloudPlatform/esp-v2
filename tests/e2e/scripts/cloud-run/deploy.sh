@@ -265,7 +265,6 @@ function setup() {
     # Modify one path with `disable_auth`.
     cat "${service_idl_tmpl}" \
       | jq ".host = \"${ENDPOINTS_SERVICE_NAME}\" \
-        | .\"x-google-endpoints\"[0].name = \"${ENDPOINTS_SERVICE_NAME}\" \
         | .schemes = [\"${scheme}\"] \
         | .info.title = \"${ENDPOINTS_SERVICE_TITLE}\" \
         | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${PROXY_HOST}\" \

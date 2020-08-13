@@ -188,20 +188,6 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
         })
         self.assertEqual(response.status_code, 200)
 
-    def run_options_queries(self):
-        # turn off verbose log
-        verbose = FLAGS.verbose
-        FLAGS.verbose = False
-        self.set_verbose(False)
-
-        print('Running CORS requests, no verifications')
-        for _ in range(100):
-            # Response doesn't matter, we just want to run some data through.
-            self._call_http('/shelves', method='OPTIONS')
-
-        # restore verbose flag
-        FLAGS.verbose = verbose
-        self.set_verbose(FLAGS.verbose)
 
     def run_all_tests(self):
         shelf1 = {
@@ -234,7 +220,6 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
         self.verify_book(book24)
 
         self.verify_jwt_locations()
-        self.run_options_queries()
 
 
         if self._failed_tests:
