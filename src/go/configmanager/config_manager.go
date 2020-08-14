@@ -144,7 +144,7 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 	}
 
 	m.serviceConfigFetcher = sc.NewServiceConfigFetcher(client, opts.ServiceManagementURL,
-		m.serviceName, accessToken)
+		m.serviceName, accessToken, opts.SmCallRetryConfigs)
 
 	configId := ""
 	if rolloutStrategy == util.FixedRolloutStrategy {

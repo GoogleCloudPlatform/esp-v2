@@ -107,13 +107,13 @@ func TestManagedServiceConfig(t *testing.T) {
 }
 
 type configsHandler struct {
-	m                *comp.MockServiceMrg
-	failWith429Times int
-	curFailCnt       int
+	m                  *comp.MockServiceMrg
+	rejectWith429Times int
+	curFailCnt         int
 }
 
 func (h *configsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if h.curFailCnt < h.failWith429Times {
+	if h.curFailCnt < h.rejectWith429Times {
 		h.curFailCnt += 1
 		w.WriteHeader(http.StatusTooManyRequests)
 		return
@@ -129,29 +129,49 @@ func TestRetryCallServiceManagement(t *testing.T) {
 
 	configID := "test-config-id"
 
-	args := []string{"--service_config_id=" + configID,
-		"--rollout_strategy=fixed", "--healthz=/healthz"}
-
-	s := env.NewTestEnv(comp.TestRetryCallServiceManagement, platform.EchoSidecar)
-	defer s.TearDown(t)
-
-	s.MockServiceManagementServer.ConfigsHandler = &configsHandler{
-		m:                s.MockServiceManagementServer,
-		failWith429Times: 2,
+	testCases := []struct {
+		desc     string
+		retryNum int
+	}{
+		{
+			desc:     "fail, retry 2 times while servicemanagement reject 2 times",
+			retryNum: 2,
+		},
+		{
+			desc:     "success, retry 3 times while servicemanagement reject 2 times",
+			retryNum: 3,
+		},
 	}
+	for _, tc := range testCases {
 
-	if err := s.Setup(args); err != nil {
-		t.Fatalf("fail to setup test env, %v", err)
-	}
+		_test := func() {
+			args := []string{"--service_config_id=" + configID,
+				"--rollout_strategy=fixed", "--healthz=/healthz", fmt.Sprintf(`--service_management_call_retry_configs={"429":{"RetryNum":%v,"RetryInterval":100000000,}}`, tc.retryNum)}
 
-	url := fmt.Sprintf("http://localhost:%v/echo", s.Ports().ListenerPort)
+			s := env.NewTestEnv(comp.TestRetryCallServiceManagement, platform.EchoSidecar)
+			defer s.TearDown(t)
 
-	resp, err := echoClient.DoPost(fmt.Sprintf("%s?key=api-key", url), echo)
-	if err != nil {
-		t.Errorf("got unexpected error: %v", err)
-	}
-	wantResp := `{"message":"hello"}`
-	if string(resp) != wantResp {
-		t.Errorf("expected resp: %s, got response: %s", wantResp, string(resp))
+			s.MockServiceManagementServer.ConfigsHandler = &configsHandler{
+				m:                  s.MockServiceManagementServer,
+				rejectWith429Times: 2,
+			}
+
+			if err := s.Setup(args); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			url := fmt.Sprintf("http://localhost:%v/echo", s.Ports().ListenerPort)
+
+			resp, err := echoClient.DoPost(fmt.Sprintf("%s?key=api-key", url), echo)
+			if err != nil {
+				t.Errorf("got unexpected error: %v", err)
+			}
+			wantResp := `{"message":"hello"}`
+			if string(resp) != wantResp {
+				t.Errorf("expected resp: %s, got response: %s", wantResp, string(resp))
+			}
+		}
+
+		_test()
 	}
 }

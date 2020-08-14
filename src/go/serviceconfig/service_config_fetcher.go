@@ -15,8 +15,10 @@
 package serviceconfig
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
@@ -29,15 +31,39 @@ type ServiceConfigFetcher struct {
 	serviceName          string
 	client               *http.Client
 	accessToken          util.GetAccessTokenFunc
+	retryConfigs         map[int]util.RetryConfig
+}
+
+var defaultSmRetryConfigs = map[int]util.RetryConfig{
+	http.StatusTooManyRequests: util.RetryConfig{
+		RetryNum:      30,
+		RetryInterval: time.Second * 3,
+	},
 }
 
 func NewServiceConfigFetcher(client *http.Client, serviceManagementUrl,
-	serviceName string, accessToken util.GetAccessTokenFunc) *ServiceConfigFetcher {
+	serviceName string, accessToken util.GetAccessTokenFunc, SmCallRetryConfigs string) *ServiceConfigFetcher {
+	var retryConfigs map[int]util.RetryConfig
+
+	if SmCallRetryConfigs == "" {
+		retryConfigs = defaultSmRetryConfigs
+	} else {
+		retryConfigs = map[int]util.RetryConfig{}
+
+		err := json.Unmarshal([]byte(SmCallRetryConfigs), &retryConfigs)
+		if err != nil {
+			glog.Errorf("fail to parse smRetryConfig(%s): %v", SmCallRetryConfigs, err)
+			retryConfigs = defaultSmRetryConfigs
+		}
+
+	}
+
 	return &ServiceConfigFetcher{
 		client:               client,
 		serviceName:          serviceName,
 		serviceManagementUrl: serviceManagementUrl,
 		accessToken:          accessToken,
+		retryConfigs:         retryConfigs,
 	}
 }
 
@@ -45,7 +71,7 @@ func NewServiceConfigFetcher(client *http.Client, serviceManagementUrl,
 func (s *ServiceConfigFetcher) FetchConfig(configId string) (*confpb.Service, error) {
 	serviceConfig := new(confpb.Service)
 	fetchConfigUrl := util.FetchConfigURL(s.serviceManagementUrl, s.serviceName, configId)
-	if err := util.CallGoogleapis(s.client, fetchConfigUrl, util.GET, s.accessToken, serviceConfig); err != nil {
+	if err := util.CallGoogleapis(s.client, fetchConfigUrl, util.GET, s.accessToken, s.retryConfigs, serviceConfig); err != nil {
 		return nil, err
 	}
 
@@ -57,7 +83,7 @@ func (s *ServiceConfigFetcher) FetchConfig(configId string) (*confpb.Service, er
 func (s *ServiceConfigFetcher) LoadConfigIdFromRollouts() (string, error) {
 	rollouts := new(smpb.ListServiceRolloutsResponse)
 	fetchRolloutUrl := util.FetchRolloutsURL(s.serviceManagementUrl, s.serviceName)
-	if err := util.CallGoogleapis(s.client, fetchRolloutUrl, util.GET, s.accessToken, rollouts); err != nil {
+	if err := util.CallGoogleapis(s.client, fetchRolloutUrl, util.GET, s.accessToken, s.retryConfigs, rollouts); err != nil {
 		return "", err
 	}
 

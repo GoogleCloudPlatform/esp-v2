@@ -25,9 +25,11 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-func initServerForTestCallWithAccessToken(t *testing.T, desc, wantMethod, wantToken string, respBody []byte, respStatusCode, rejectTimes int) *httptest.Server {
+func initServerForTestCallWithAccessToken(t *testing.T, desc, wantMethod, wantToken string, respBody []byte, respStatusCode, rejectTimes int, silentInterval time.Duration) *httptest.Server {
 	rejectCnt := 0
+	var lastCallTime time.Time
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		if got := r.Method; got != wantMethod {
 			t.Errorf("test(%v) fail, want Method: %s, get Method: %s", desc, wantMethod, got)
 		}
@@ -43,6 +45,14 @@ func initServerForTestCallWithAccessToken(t *testing.T, desc, wantMethod, wantTo
 		if respStatusCode != 0 && rejectCnt < rejectTimes {
 			w.WriteHeader(respStatusCode)
 			rejectCnt += 1
+			lastCallTime = time.Now()
+			return
+		}
+
+		if !lastCallTime.IsZero() && lastCallTime.Add(silentInterval).After(time.Now()) {
+			w.WriteHeader(http.StatusInternalServerError)
+			rejectCnt += 1
+			lastCallTime = time.Now()
 			return
 		}
 
@@ -53,23 +63,24 @@ func initServerForTestCallWithAccessToken(t *testing.T, desc, wantMethod, wantTo
 				t.Fatalf("test(%s) fail, fail to write response: %v", desc, err)
 			}
 		}
+		lastCallTime = time.Now()
 
 	}))
 }
 
 func TestCallGoogleapis(t *testing.T) {
-	RetryInterval = time.Millisecond * 100
-	Retries = 3
 	normalTokenFunc := func() (string, time.Duration, error) { return "this-is-token", time.Duration(100), nil }
 	testCase := []struct {
-		desc          string
-		method        string
-		token         GetAccessTokenFunc
-		respBody      []byte
-		respStatus    int
-		rejectTimes   int
-		unmarshalFunc func(input []byte, output proto.Message) error
-		wantError     string
+		desc           string
+		method         string
+		token          GetAccessTokenFunc
+		respBody       []byte
+		respStatus     int
+		rejectTimes    int
+		silentInterval time.Duration
+		unmarshalFunc  func(input []byte, output proto.Message) error
+		retryConfigs   map[int]RetryConfig
+		wantError      string
 	}{
 		{
 			desc:     "success",
@@ -102,27 +113,83 @@ func TestCallGoogleapis(t *testing.T) {
 			wantError: "fail to unmarshal",
 		},
 		{
-			desc:        "fail",
+			desc:        "fail, server rejects 3 times",
 			method:      "GET",
 			token:       normalTokenFunc,
 			respStatus:  http.StatusTooManyRequests,
 			rejectTimes: 3,
-			wantError:   "http call to GET %URL returns not 200 OK: 429 Too Many Requests",
+			retryConfigs: map[int]RetryConfig{
+				http.StatusTooManyRequests: RetryConfig{
+					RetryNum:      3,
+					RetryInterval: time.Millisecond * 100,
+				},
+			},
+			wantError: "http call to GET %URL returns not 200 OK: 429 Too Many Requests",
 		},
 		{
-			desc:        "success",
+			desc:        "fail, server reject with different error status",
+			method:      "GET",
+			token:       normalTokenFunc,
+			respStatus:  http.StatusBadRequest,
+			rejectTimes: 1,
+			retryConfigs: map[int]RetryConfig{
+				http.StatusTooManyRequests: RetryConfig{
+					RetryNum:      3,
+					RetryInterval: time.Millisecond * 100,
+				},
+			},
+			wantError: "http call to GET %URL returns not 200 OK: 400 Bad Request",
+		},
+		{
+			desc:        "success, server return 200 in the end",
 			method:      "GET",
 			token:       normalTokenFunc,
 			respStatus:  http.StatusTooManyRequests,
 			rejectTimes: 2,
-
-			respBody: []byte("this-is-resp-body"),
+			respBody:    []byte("this-is-resp-body"),
+			retryConfigs: map[int]RetryConfig{
+				http.StatusTooManyRequests: RetryConfig{
+					RetryNum:      3,
+					RetryInterval: time.Millisecond * 100,
+				},
+			},
+		},
+		{
+			desc:           "fail, retry interval is too short",
+			method:         "GET",
+			token:          normalTokenFunc,
+			respStatus:     http.StatusTooManyRequests,
+			rejectTimes:    1,
+			silentInterval: time.Millisecond * 500,
+			respBody:       []byte("this-is-resp-body"),
+			retryConfigs: map[int]RetryConfig{
+				http.StatusTooManyRequests: RetryConfig{
+					RetryNum:      2,
+					RetryInterval: time.Millisecond * 100,
+				},
+			},
+			wantError: "http call to GET %URL returns not 200 OK: 500 Internal Server Error",
+		},
+		{
+			desc:           "success, retry interval is long enough",
+			method:         "GET",
+			token:          normalTokenFunc,
+			respStatus:     http.StatusTooManyRequests,
+			rejectTimes:    1,
+			silentInterval: time.Millisecond * 100,
+			respBody:       []byte("this-is-resp-body"),
+			retryConfigs: map[int]RetryConfig{
+				http.StatusTooManyRequests: RetryConfig{
+					RetryNum:      2,
+					RetryInterval: time.Millisecond * 500,
+				},
+			},
 		},
 	}
 
 	for _, tc := range testCase {
 		token, _, _ := tc.token()
-		s := initServerForTestCallWithAccessToken(t, tc.desc, tc.method, token, tc.respBody, tc.respStatus, tc.rejectTimes)
+		s := initServerForTestCallWithAccessToken(t, tc.desc, tc.method, token, tc.respBody, tc.respStatus, tc.rejectTimes, tc.silentInterval)
 		if tc.unmarshalFunc == nil {
 			UnmarshalBytesToPbMessage = func(gotBody []byte, output proto.Message) error {
 				if string(gotBody) != string(tc.respBody) {
@@ -134,7 +201,7 @@ func TestCallGoogleapis(t *testing.T) {
 			UnmarshalBytesToPbMessage = tc.unmarshalFunc
 		}
 
-		err := CallGoogleapis(&http.Client{}, s.URL, tc.method, tc.token, nil)
+		err := CallGoogleapis(&http.Client{}, s.URL, tc.method, tc.token, tc.retryConfigs, nil)
 
 		if err != nil {
 			if tc.wantError == "" {

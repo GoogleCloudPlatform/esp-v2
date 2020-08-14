@@ -24,8 +24,10 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-var Retries = 30
-var RetryInterval = 3 * time.Second
+type RetryConfig struct {
+	RetryNum      int
+	RetryInterval time.Duration
+}
 
 func callWithAccessToken(client *http.Client, path, method, token string) ([]byte, int, error) {
 	req, _ := http.NewRequest(method, path, nil)
@@ -50,7 +52,7 @@ func callWithAccessToken(client *http.Client, path, method, token string) ([]byt
 }
 
 // Method to call servicecontrol for latest service rolloutId and servicecontrol for service rollout and service config.
-var CallGoogleapis = func(client *http.Client, path, method string, getTokenFunc GetAccessTokenFunc, output proto.Message) error {
+var CallGoogleapis = func(client *http.Client, path, method string, getTokenFunc GetAccessTokenFunc, retryConfigs map[int]RetryConfig, output proto.Message) error {
 	token, _, err := getTokenFunc()
 	if err != nil {
 		return fmt.Errorf("fail to get access token: %v", err)
@@ -59,15 +61,22 @@ var CallGoogleapis = func(client *http.Client, path, method string, getTokenFunc
 	var respBytes []byte
 	var statusCode int
 
-	// Retry calls for code 429 Too Many Requests.
-	for i := 0; i < Retries; i++ {
-		respBytes, statusCode, err = callWithAccessToken(client, path, method, token)
-		if statusCode != http.StatusTooManyRequests {
-			break
-		}
+	callStatusCnts := map[int]int{}
 
-		glog.Warningf("after %v times failures because of quota limit(429 Too Many Requests), retrying http call %s with %v remaining chances", i, path, Retries-1-i)
-		time.Sleep(RetryInterval)
+	for {
+		respBytes, statusCode, err = callWithAccessToken(client, path, method, token)
+		if retryConfigs == nil {
+			break
+		} else if retryConfig, ok := retryConfigs[statusCode]; !ok {
+			break
+		} else if retryConfig.RetryNum <= callStatusCnts[statusCode] {
+			break
+		} else {
+			callStatusCnts[statusCode] += 1
+			glog.Warningf("after %v times failures on status %v, retrying http call %s with %v remaining chances", callStatusCnts[statusCode], statusCode, path, retryConfig.RetryNum-callStatusCnts[statusCode])
+
+			time.Sleep(retryConfig.RetryInterval)
+		}
 	}
 
 	if err != nil {
