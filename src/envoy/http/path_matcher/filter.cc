@@ -51,11 +51,13 @@ using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
 
 Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
     RequestHeaderMap& headers, bool) {
+  ENVOY_LOG(debug, "path_matcher Filter::decodeHeaders is called.");
   if (Envoy::Grpc::Common::hasGrpcContentType(headers)) {
     // For gRPC request, set "TE: trailers" header per gRPC protocol definition:
     //   https://github.com/grpc/grpc/blob/master/doc/PROTOCOL-HTTP2.md
     if (headers.TE() == nullptr) {
       headers.setTE(Envoy::Http::Headers::get().TEValues.Trailers);
+      ENVOY_LOG(debug, "Header TE: trailers is added");
     }
   }
   return Envoy::Http::FilterHeadersStatus::Continue;
@@ -117,7 +119,9 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
 
 Envoy::Http::FilterHeadersStatus Filter::encodeHeaders(
     Envoy::Http::ResponseHeaderMap& headers, bool) {
+  ENVOY_LOG(debug, "path_matcher Filter::encodeHeaders is called.");
   if (Envoy::Grpc::Common::hasGrpcContentType(headers)) {
+    ENVOY_LOG(debug, "Content-length header is removed");
     headers.removeContentLength();
   }
   return Envoy::Http::FilterHeadersStatus::Continue;

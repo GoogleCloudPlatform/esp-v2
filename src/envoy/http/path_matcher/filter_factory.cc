@@ -48,8 +48,7 @@ class FilterFactory
     return [filter_config](
                Envoy::Http::FilterChainFactoryCallbacks& callbacks) -> void {
       auto filter = std::make_shared<Filter>(filter_config);
-      callbacks.addStreamDecoderFilter(
-          Envoy::Http::StreamDecoderFilterSharedPtr(filter));
+      callbacks.addStreamFilter(Envoy::Http::StreamFilterSharedPtr(filter));
     };
   }
 };
