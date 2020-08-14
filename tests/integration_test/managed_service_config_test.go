@@ -16,6 +16,7 @@ package integration_test
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -24,7 +25,9 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
+	"github.com/golang/protobuf/proto"
 
+	echoClient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
@@ -100,5 +103,55 @@ func TestManagedServiceConfig(t *testing.T) {
 				t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
 			}
 		}
+	}
+}
+
+type configsHandler struct {
+	m                *comp.MockServiceMrg
+	failWith429Times int
+	curFailCnt       int
+}
+
+func (h *configsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if h.curFailCnt < h.failWith429Times {
+		h.curFailCnt += 1
+		w.WriteHeader(http.StatusTooManyRequests)
+		return
+	}
+
+	serviceConfigByte, _ := proto.Marshal(h.m.ServiceConfig)
+	h.m.LastServiceConfig = serviceConfigByte
+	_, _ = w.Write(serviceConfigByte)
+}
+
+func TestRetryCallServiceManagement(t *testing.T) {
+	t.Parallel()
+
+	configID := "test-config-id"
+
+	args := []string{"--service_config_id=" + configID,
+		"--rollout_strategy=fixed", "--healthz=/healthz"}
+
+	s := env.NewTestEnv(comp.TestRetryCallServiceManagement, platform.EchoSidecar)
+	defer s.TearDown(t)
+
+	s.MockServiceManagementServer.ConfigsHandler = &configsHandler{
+		m:                s.MockServiceManagementServer,
+		failWith429Times: 2,
+	}
+
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	url := fmt.Sprintf("http://localhost:%v/echo", s.Ports().ListenerPort)
+
+	resp, err := echoClient.DoPost(fmt.Sprintf("%s?key=api-key", url), echo)
+	if err != nil {
+		t.Errorf("got unexpected error: %v", err)
+	}
+	wantResp := `{"message":"hello"}`
+	if string(resp) != wantResp {
+		t.Errorf("expected resp: %s, got response: %s", wantResp, string(resp))
 	}
 }

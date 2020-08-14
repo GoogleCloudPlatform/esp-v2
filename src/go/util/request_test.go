@@ -25,7 +25,8 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-func initServerForTestCallWithAccessToken(t *testing.T, desc, wantMethod, wantToken string, respBody []byte, respStatus int) *httptest.Server {
+func initServerForTestCallWithAccessToken(t *testing.T, desc, wantMethod, wantToken string, respBody []byte, respStatusCode, rejectTimes int) *httptest.Server {
+	rejectCnt := 0
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if got := r.Method; got != wantMethod {
 			t.Errorf("test(%v) fail, want Method: %s, get Method: %s", desc, wantMethod, got)
@@ -39,6 +40,12 @@ func initServerForTestCallWithAccessToken(t *testing.T, desc, wantMethod, wantTo
 			t.Errorf("test(%v) fail, want Content-Type: application/x-protobuf, get Content-Type: %s", desc, got)
 		}
 
+		if respStatusCode != 0 && rejectCnt < rejectTimes {
+			w.WriteHeader(respStatusCode)
+			rejectCnt += 1
+			return
+		}
+
 		if respBody != nil {
 			w.Header().Set("Content-Type", "application/json")
 			_, err := w.Write(respBody)
@@ -47,13 +54,12 @@ func initServerForTestCallWithAccessToken(t *testing.T, desc, wantMethod, wantTo
 			}
 		}
 
-		if respStatus != 0 {
-			w.WriteHeader(http.StatusForbidden)
-		}
 	}))
 }
 
 func TestCallGoogleapis(t *testing.T) {
+	RetryInterval = time.Millisecond * 100
+	Retries = 3
 	normalTokenFunc := func() (string, time.Duration, error) { return "this-is-token", time.Duration(100), nil }
 	testCase := []struct {
 		desc          string
@@ -61,6 +67,7 @@ func TestCallGoogleapis(t *testing.T) {
 		token         GetAccessTokenFunc
 		respBody      []byte
 		respStatus    int
+		rejectTimes   int
 		unmarshalFunc func(input []byte, output proto.Message) error
 		wantError     string
 	}{
@@ -94,11 +101,28 @@ func TestCallGoogleapis(t *testing.T) {
 			},
 			wantError: "fail to unmarshal",
 		},
+		{
+			desc:        "fail",
+			method:      "GET",
+			token:       normalTokenFunc,
+			respStatus:  http.StatusTooManyRequests,
+			rejectTimes: 3,
+			wantError:   "http call to GET %URL returns not 200 OK: 429 Too Many Requests",
+		},
+		{
+			desc:        "success",
+			method:      "GET",
+			token:       normalTokenFunc,
+			respStatus:  http.StatusTooManyRequests,
+			rejectTimes: 2,
+
+			respBody: []byte("this-is-resp-body"),
+		},
 	}
 
 	for _, tc := range testCase {
 		token, _, _ := tc.token()
-		s := initServerForTestCallWithAccessToken(t, tc.desc, tc.method, token, tc.respBody, tc.respStatus)
+		s := initServerForTestCallWithAccessToken(t, tc.desc, tc.method, token, tc.respBody, tc.respStatus, tc.rejectTimes)
 		if tc.unmarshalFunc == nil {
 			UnmarshalBytesToPbMessage = func(gotBody []byte, output proto.Message) error {
 				if string(gotBody) != string(tc.respBody) {

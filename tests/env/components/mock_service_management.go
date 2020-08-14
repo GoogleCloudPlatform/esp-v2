@@ -30,11 +30,11 @@ import (
 type MockServiceMrg struct {
 	s                 *httptest.Server
 	serviceName       string
-	serviceConfig     *confpb.Service
+	ServiceConfig     *confpb.Service
 	rolloutId         string
-	configsHandler    http.Handler
+	ConfigsHandler    http.Handler
 	rolloutsHandler   http.Handler
-	lastServiceConfig []byte
+	LastServiceConfig []byte
 	serverCerts       *tls.Certificate
 }
 
@@ -43,8 +43,8 @@ type configsHandler struct {
 }
 
 func (h *configsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	serviceConfigByte, _ := proto.Marshal(h.m.serviceConfig)
-	h.m.lastServiceConfig = serviceConfigByte
+	serviceConfigByte, _ := proto.Marshal(h.m.ServiceConfig)
+	h.m.LastServiceConfig = serviceConfigByte
 	_, _ = w.Write(serviceConfigByte)
 }
 
@@ -80,10 +80,10 @@ func (h *rolloutsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func NewMockServiceMrg(serviceName, rolloutId string, serviceConfig *confpb.Service) *MockServiceMrg {
 	m := &MockServiceMrg{
 		serviceName:   serviceName,
-		serviceConfig: serviceConfig,
+		ServiceConfig: serviceConfig,
 		rolloutId:     rolloutId,
 	}
-	m.configsHandler = &configsHandler{m: m}
+	m.ConfigsHandler = &configsHandler{m: m}
 	m.rolloutsHandler = &rolloutsHandler{m: m}
 	return m
 }
@@ -98,7 +98,7 @@ func (m *MockServiceMrg) Start() (URL string) {
 	r := mux.NewRouter()
 	configPath := "/v1/services/" + m.serviceName + "/configs/{configID}"
 	rolloutsPath := "/v1/services/" + m.serviceName + "/rollouts"
-	r.Path(configPath).Methods("GET").Handler(m.configsHandler)
+	r.Path(configPath).Methods("GET").Handler(m.ConfigsHandler)
 	r.Path(rolloutsPath).Methods("GET").Handler(m.rolloutsHandler).Queries("filter", "{filter}")
 	m.s = httptest.NewUnstartedServer(r)
 
@@ -116,7 +116,7 @@ func (m *MockServiceMrg) Start() (URL string) {
 
 // ServeHTTP responds to requests with static service config message.
 func (m *MockServiceMrg) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	serviceConfigByte, _ := proto.Marshal(m.serviceConfig)
+	serviceConfigByte, _ := proto.Marshal(m.ServiceConfig)
 	_, _ = w.Write(serviceConfigByte)
 }
 
