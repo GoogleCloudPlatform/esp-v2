@@ -58,7 +58,8 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
       headers.setTE(Envoy::Http::Headers::get().TEValues.Trailers);
     }
   }
-#if 0
+  return Envoy::Http::FilterHeadersStatus::Continue;
+
   if (!headers.Method()) {
     rejectRequest(Envoy::Http::Code(400), "No method in request headers.");
     return Envoy::Http::FilterHeadersStatus::StopIteration;
@@ -109,7 +110,7 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
                                   query_params);
     }
   }
-#endif
+
   config_->stats().allowed_.inc();
   return Envoy::Http::FilterHeadersStatus::Continue;
 }
