@@ -107,7 +107,7 @@ So far you have deployed the service configuration to Service Management, but yo
 * Deploy service on kubernetes
 
   ```
-  kubectl create -f tests/e2e/testdata/bookstore_grpc/bookstore-k8s.yaml
+  kubectl create -f tests/e2e/testdata/bookstore_grpc/gke/bookstore.yaml
   ```
 
 ## Testing the API
