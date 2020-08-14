@@ -17,6 +17,8 @@
 #include "src/envoy/http/path_matcher/filter.h"
 
 #include "common/http/utility.h"
+#include "common/grpc/common.h"
+#include "common/http/headers.h"
 #include "src/api_proxy/path_matcher/variable_binding_utils.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
@@ -49,6 +51,14 @@ using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
 
 Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
     RequestHeaderMap& headers, bool) {
+  if (Envoy::Grpc::Common::hasGrpcContentType(headers)) {
+    // For gRPC request, set "TE: trailers" header per gRPC protocol definition:
+    //   https://github.com/grpc/grpc/blob/master/doc/PROTOCOL-HTTP2.md
+    if (headers.TE() == nullptr) {
+      headers.setTE(Envoy::Http::Headers::get().TEValues.Trailers);
+    }
+  }
+#if 0
   if (!headers.Method()) {
     rejectRequest(Envoy::Http::Code(400), "No method in request headers.");
     return Envoy::Http::FilterHeadersStatus::StopIteration;
@@ -99,7 +109,7 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
                                   query_params);
     }
   }
-
+#endif
   config_->stats().allowed_.inc();
   return Envoy::Http::FilterHeadersStatus::Continue;
 }
