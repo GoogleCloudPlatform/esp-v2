@@ -173,7 +173,9 @@ run_nonfatal long_running_test  \
   || STATUS=${?}
 
 # Kill background process.
-kill $(jobs -p)
+if [ "${BACKEND}" == 'bookstore' ]; then
+  kill $(jobs -p)
+fi
 
 if [[ -n ${REMOTE_LOG_DIR} ]]; then
   fetch_proxy_logs "${NAMESPACE}" "${LOG_DIR}"
