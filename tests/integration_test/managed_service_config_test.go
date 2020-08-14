@@ -134,11 +134,11 @@ func TestRetryCallServiceManagement(t *testing.T) {
 		retryNum int
 	}{
 		{
-			desc:     "fail, retry 2 times while servicemanagement reject 2 times",
+			desc:     "fail, retry 2 times for servicemanagement server rejects 2 times",
 			retryNum: 2,
 		},
 		{
-			desc:     "success, retry 3 times while servicemanagement reject 2 times",
+			desc:     "success, retry 3 times while servicemanagement server rejects 2 times",
 			retryNum: 3,
 		},
 	}

@@ -127,7 +127,7 @@ func TestCallGoogleapis(t *testing.T) {
 			wantError: "http call to GET %URL returns not 200 OK: 429 Too Many Requests",
 		},
 		{
-			desc:        "fail, server reject with different error status",
+			desc:        "fail, server rejects with different error status",
 			method:      "GET",
 			token:       normalTokenFunc,
 			respStatus:  http.StatusBadRequest,
@@ -141,7 +141,7 @@ func TestCallGoogleapis(t *testing.T) {
 			wantError: "http call to GET %URL returns not 200 OK: 400 Bad Request",
 		},
 		{
-			desc:        "success, server return 200 in the end",
+			desc:        "success, server returns 200 in the end",
 			method:      "GET",
 			token:       normalTokenFunc,
 			respStatus:  http.StatusTooManyRequests,
