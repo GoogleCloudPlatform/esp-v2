@@ -115,6 +115,14 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
   return Envoy::Http::FilterHeadersStatus::Continue;
 }
 
+Envoy::Http::FilterHeadersStatus Filter::encodeHeaders(
+    Envoy::Http::ResponseHeaderMap& headers, bool) {
+  if (Envoy::Grpc::Common::hasGrpcContentType(headers)) {
+    headers.removeContentLength();
+  }
+  return Envoy::Http::FilterHeadersStatus::Continue;
+}
+
 void Filter::rejectRequest(Envoy::Http::Code code,
                            absl::string_view error_msg) {
   config_->stats().denied_.inc();

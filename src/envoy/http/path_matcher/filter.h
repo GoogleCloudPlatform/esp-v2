@@ -24,13 +24,15 @@ namespace envoy {
 namespace http_filters {
 namespace path_matcher {
 
-class Filter : public Envoy::Http::PassThroughDecoderFilter,
+class Filter : public Envoy::Http::PassThroughFilter,
                public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   Filter(FilterConfigSharedPtr config) : config_(config) {}
 
   Envoy::Http::FilterHeadersStatus decodeHeaders(Envoy::Http::RequestHeaderMap&,
                                                  bool) override;
+  Envoy::Http::FilterHeadersStatus encodeHeaders(
+      Envoy::Http::ResponseHeaderMap& headers, bool) override;
 
  private:
   void rejectRequest(Envoy::Http::Code code, absl::string_view error_msg);
