@@ -17,6 +17,7 @@ package serviceconfig
 import (
 	"fmt"
 	"net/http"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -81,31 +82,32 @@ func TestFetchLatestRolloutId(t *testing.T) {
 	util.CallGoogleapis = callGoogleapis
 }
 
-func TestRolloutIdChangeFetcherSetDetectRolloutIdChangeTimer(t *testing.T) {
+func TestSetDetectRolloutIdChangeTimer(t *testing.T) {
 	serviceRolloutId := "service-config-id"
 	serviceControlServer := util.InitMockServer(genFakeReport(serviceRolloutId))
 	accessToken := func() (string, time.Duration, error) { return "token", time.Duration(60), nil }
 	cif := NewRolloutIdChangeDetector(&http.Client{}, serviceControlServer.GetURL(), "service-name", accessToken)
 
-	cnt := 0
-	wantCnt := 3
+	var cnt, wantCnt int32
+	cnt = 0
+	wantCnt = 3
+
 	wantRolloutId := fmt.Sprintf("test-rollout-id-%v", wantCnt)
 	cif.SetDetectRolloutIdChangeTimer(time.Millisecond*50, func() {
-		cnt += 1
+		atomic.AddInt32(&cnt, 1)
+
 		// Update rolloutId so the callback will be called.
 		// It will be updated only three times.
 		if cnt < wantCnt {
-			serviceRolloutId = fmt.Sprintf("test-rollout-id-%v", cnt+1)
+			serviceRolloutId = fmt.Sprintf("test-rollout-id-%v", atomic.LoadInt32(&cnt)+1)
 			serviceControlServer.SetResp(genFakeReport(serviceRolloutId))
 		}
 	})
 
-	// Sleep long enough to make sure the callback is called 3 times so that `cnt`
-	// won't be updated in callback since no update on rolloutId. Otherwise, it
-	// will cause data race on `cnt`.
+	// Sleep long enough to make sure the callback is called 3 times.
 	time.Sleep(time.Millisecond * 1000)
 
-	if cnt != wantCnt {
+	if atomic.LoadInt32(&cnt) != wantCnt {
 		t.Fatalf("want callback called by %v times, get %v times", wantCnt, cnt)
 	}
 
