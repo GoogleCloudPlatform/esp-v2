@@ -73,7 +73,7 @@ var CallGoogleapis = func(client *http.Client, path, method string, getTokenFunc
 			break
 		} else {
 			callStatusCnts[statusCode] += 1
-			glog.Warningf("after %v times failures on status %v, retrying http call %s with %v remaining chances", callStatusCnts[statusCode], statusCode, path, retryConfig.RetryNum-callStatusCnts[statusCode])
+			glog.Warningf("after %v failures on status %v, retrying http call %s with %v remaining chances", callStatusCnts[statusCode], statusCode, path, retryConfig.RetryNum-callStatusCnts[statusCode])
 
 			time.Sleep(retryConfig.RetryInterval)
 		}
