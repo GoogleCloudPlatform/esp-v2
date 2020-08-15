@@ -137,7 +137,7 @@ func TestRetryCallServiceManagement(t *testing.T) {
 
 	s.MockServiceManagementServer.ConfigsHandler = &configsHandler{
 		m:                  s.MockServiceManagementServer,
-		rejectWith429Times: 2,
+		rejectWith429Times: 1,
 	}
 
 	if err := s.Setup(args); err != nil {

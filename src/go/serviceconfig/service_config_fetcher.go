@@ -36,7 +36,7 @@ type ServiceConfigFetcher struct {
 var SmRetryConfigs = map[int]util.RetryConfig{
 	http.StatusTooManyRequests: util.RetryConfig{
 		RetryNum:      30,
-		RetryInterval: time.Second * 3,
+		RetryInterval: time.Second * 10,
 	},
 }
 
