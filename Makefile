@@ -47,6 +47,24 @@ build: format
 	@go build -o bin/gcsrunner ./src/go/gcsrunner/main/runner.go
 	@go build -o bin/echo/server ./tests/endpoints/echo/server/app.go
 
+build-msan: format
+	@echo "--> building"
+	@go build -msan ./src/go/...
+	@go build -msan ./tests...
+	@go build -msan -o bin/configmanager ./src/go/configmanager/main/server.go
+	@go build -msan  -o bin/bootstrap ./src/go/bootstrap/ads/main/main.go
+	@go build -msan -o bin/gcsrunner ./src/go/gcsrunner/main/runner.go
+	@go build -msan -o bin/echo/server ./tests/endpoints/echo/server/app.go
+
+build-race: format
+	@echo "--> building"
+	@go build -race ./src/go/...
+	@go build -race ./tests...
+	@go build -race -o bin/configmanager ./src/go/configmanager/main/server.go
+	@go build -race  -o bin/bootstrap ./src/go/bootstrap/ads/main/main.go
+	@go build -race -o bin/gcsrunner ./src/go/gcsrunner/main/runner.go
+	@go build -race -o bin/echo/server ./tests/endpoints/echo/server/app.go
+
 
 
 build-envoy-asan:
@@ -126,6 +144,8 @@ upload-e2e-client-binaries: build-grpc-echo build-grpc-interop
 test: format
 	@echo "--> running unit tests"
 	@go test ./src/go/...
+	@go test -race ./src/go/...
+	@go test -msan ./src/go/...
 	@python3 -m unittest tests/start_proxy/start_proxy_test.py
 	@python3 -m unittest tests/start_proxy/env_start_proxy_test.py
 
@@ -174,9 +194,9 @@ integration-debug: build build-envoy-debug build-grpc-interop build-grpc-echo
 	# debug-components can be set as "all", "configmanager", or "envoy".
 	@go test -v -timeout 20m ./tests/integration_test/... --debug_components=envoy --logtostderr
 
-integration-test-asan: build build-envoy-asan build-grpc-interop build-grpc-echo integration-test-run-sequential
+integration-test-asan: build-msan build-envoy-asan build-grpc-interop build-grpc-echo integration-test-run-sequential
 
-integration-test-tsan: build build-envoy-tsan build-grpc-interop build-grpc-echo integration-test-run-sequential
+integration-test-tsan: build-race build-envoy-tsan build-grpc-interop build-grpc-echo integration-test-run-sequential
 
 
 #-----------------------------------------------------------------------------
@@ -298,7 +318,7 @@ lint: tools.golint
 # Target : docker
 # ----------------------------------------------------------------------------
 
-.PHONY: docker.build-prow, docker.push-prow, docker.build-configmanager
+.PHONY: docker.build-prow docker.push-prow docker.build-configmanager
 docker.build-prow:
 	docker build -f docker/Dockerfile-prow-env --build-arg IMAGE_ARG=$(IMG):$(TAG)-$(K8S) -t $(IMG):$(TAG)-$(K8S) .
 
