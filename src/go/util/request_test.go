@@ -119,7 +119,7 @@ func TestCallGoogleapis(t *testing.T) {
 			respStatus:  http.StatusTooManyRequests,
 			rejectTimes: 3,
 			retryConfigs: map[int]RetryConfig{
-				http.StatusTooManyRequests: RetryConfig{
+				http.StatusTooManyRequests: {
 					RetryNum:      3,
 					RetryInterval: time.Millisecond * 100,
 				},
@@ -133,7 +133,7 @@ func TestCallGoogleapis(t *testing.T) {
 			respStatus:  http.StatusBadRequest,
 			rejectTimes: 1,
 			retryConfigs: map[int]RetryConfig{
-				http.StatusTooManyRequests: RetryConfig{
+				http.StatusTooManyRequests: {
 					RetryNum:      3,
 					RetryInterval: time.Millisecond * 100,
 				},
@@ -148,7 +148,7 @@ func TestCallGoogleapis(t *testing.T) {
 			rejectTimes: 2,
 			respBody:    []byte("this-is-resp-body"),
 			retryConfigs: map[int]RetryConfig{
-				http.StatusTooManyRequests: RetryConfig{
+				http.StatusTooManyRequests: {
 					RetryNum:      3,
 					RetryInterval: time.Millisecond * 100,
 				},
@@ -163,7 +163,7 @@ func TestCallGoogleapis(t *testing.T) {
 			silentInterval: time.Millisecond * 500,
 			respBody:       []byte("this-is-resp-body"),
 			retryConfigs: map[int]RetryConfig{
-				http.StatusTooManyRequests: RetryConfig{
+				http.StatusTooManyRequests: {
 					RetryNum:      2,
 					RetryInterval: time.Millisecond * 100,
 				},
@@ -179,7 +179,7 @@ func TestCallGoogleapis(t *testing.T) {
 			silentInterval: time.Millisecond * 100,
 			respBody:       []byte("this-is-resp-body"),
 			retryConfigs: map[int]RetryConfig{
-				http.StatusTooManyRequests: RetryConfig{
+				http.StatusTooManyRequests: {
 					RetryNum:      2,
 					RetryInterval: time.Millisecond * 500,
 				},

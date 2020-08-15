@@ -121,24 +121,7 @@ func TestFetchListeners(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			ctx := context.Background()
-			// First request, VersionId should be empty.
-			req := discoverypb.DiscoveryRequest{
-				Node: &corepb.Node{
-					Id: opts.Node,
-				},
-				TypeUrl: resource.ListenerType,
-			}
-			respInterface, err := configManager.cache.Fetch(ctx, req)
-			if err != nil {
-				t.Fatal(err)
-			}
-			resp := respInterface.(cache.Response)
-
-			marshaler := &jsonpb.Marshaler{
-				AnyResolver: util.Resolver,
-			}
-			gotListeners, err := marshaler.MarshalToString(resp.Resources[0])
+			req, resp, gotListeners, err := getListeners(configManager, opts)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -146,7 +129,7 @@ func TestFetchListeners(t *testing.T) {
 			if resp.Version != testdata.TestFetchListenersConfigID {
 				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, resp.Version, testdata.TestFetchListenersConfigID)
 			}
-			if !proto.Equal(&resp.Request, &req) {
+			if !proto.Equal(&resp.Request, req) {
 				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, resp.Request, req)
 			}
 
@@ -160,6 +143,7 @@ func TestFetchListeners(t *testing.T) {
 func TestRetryCallServiceManagement(t *testing.T) {
 	var fakeConfig, fakeScReport, fakeRollouts safeData
 	fakeServiceConfig := testdata.FakeServiceConfigForGrpcWithTranscoding
+	wantedListeners := testdata.WantedListsenerForGrpcWithTranscoding
 	if err := genProtoBinary(fakeServiceConfig, new(confpb.Service), &fakeConfig); err != nil {
 		t.Fatalf("generate fake service config failed: %v", err)
 	}
@@ -167,6 +151,7 @@ func TestRetryCallServiceManagement(t *testing.T) {
 	opts := options.DefaultConfigGeneratorOptions()
 	opts.BackendAddress = "grpc://127.0.0.1:80"
 	opts.TracingProjectId = "fake-project-id"
+	opts.DisableTracing = true
 
 	var originalInitMockServer = initMockServer
 	defer func() { initMockServer = originalInitMockServer }()
@@ -202,59 +187,94 @@ func TestRetryCallServiceManagement(t *testing.T) {
 		}))
 	}
 
-	testData := []struct {
+	var testData = []struct {
 		desc          string
 		retryNum      int
 		retryInterval int
 		retryConfigs  map[int]util.RetryConfig
-		wantError     string
+		wantedError   string
 	}{
 		{
 			desc: "fail, retryInterval is too short",
 			retryConfigs: map[int]util.RetryConfig{
-				http.StatusTooManyRequests: util.RetryConfig{
+				http.StatusTooManyRequests: {
 					RetryNum:      3,
 					RetryInterval: time.Millisecond * 100,
 				},
 			},
-			wantError: "fail to fetch and apply the startup service config",
+			wantedError: "fail to fetch and apply the startup service config",
 		},
 		{
 			desc: "fail, insufficient retryNum",
 			retryConfigs: map[int]util.RetryConfig{
-				http.StatusTooManyRequests: util.RetryConfig{
+				http.StatusTooManyRequests: {
 					RetryNum:      2,
 					RetryInterval: time.Millisecond * 200,
 				},
 			},
-			wantError: "fail to fetch and apply the startup service config",
+			wantedError: "fail to fetch and apply the startup service config",
 		},
 		{
 			desc: "Success, sufficient retryNum and long enough retryInterval",
 			retryConfigs: map[int]util.RetryConfig{
-				http.StatusTooManyRequests: util.RetryConfig{
+				http.StatusTooManyRequests: {
 					RetryNum:      3,
 					RetryInterval: time.Millisecond * 200,
 				},
 			},
 		},
 	}
-
 	for _, tc := range testData {
 		serviceconfig.SmRetryConfigs = tc.retryConfigs
 
 		setFlags(testdata.TestFetchListenersProjectName, testdata.TestFetchListenersConfigID, util.FixedRolloutStrategy, "100ms", "")
 
 		runTest(t, &fakeScReport, &fakeRollouts, &fakeConfig, opts, func(configManager *ConfigManager, err error) {
-			if tc.wantError != "" {
-				if err == nil || !strings.Contains(err.Error(), tc.wantError) {
-					t.Errorf("test(%s) expected error: %v, got error: %v", tc.desc, tc.wantError, err)
+			if tc.wantedError != "" {
+				if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
+					t.Errorf("test(%s) expected error: %v, got error: %v", tc.desc, tc.wantedError, err)
 				}
 			} else if err != nil {
-				t.Errorf("test(%s) expected error: %v, got error: %v", tc.desc, tc.wantError, err)
+				t.Errorf("test(%s) expected error: %v, got error: %v", tc.desc, tc.wantedError, err)
+			}
+
+			_, _, gotListeners, err := getListeners(configManager, opts)
+
+			if tc.wantedError == "" {
+				if err != nil {
+					t.Errorf("test(%s) fail to get listener config from configmanager, error: %v", tc.desc, err)
+				} else if err := util.JsonEqual(wantedListeners, gotListeners); err != nil {
+					t.Errorf("Test Desc: %s, snapshot cache fetch got unexpected Listeners, %v", tc.desc, err)
+				}
 			}
 		})
 	}
+}
+
+func getListeners(configManager *ConfigManager, opts options.ConfigGeneratorOptions) (*cache.Request, *cache.Response, string, error) {
+	if configManager == nil {
+		return nil, nil, "", fmt.Errorf("configmanager is empty")
+	}
+
+	ctx := context.Background()
+	// First request, VersionId should be empty.
+	req := discoverypb.DiscoveryRequest{
+		Node: &corepb.Node{
+			Id: opts.Node,
+		},
+		TypeUrl: resource.ListenerType,
+	}
+	respInterface, err := configManager.cache.Fetch(ctx, req)
+	if err != nil {
+		return nil, nil, "", err
+	}
+	resp := respInterface.(cache.Response)
+
+	marshaler := &jsonpb.Marshaler{
+		AnyResolver: util.Resolver,
+	}
+	gotListeners, err := marshaler.MarshalToString(resp.Resources[0])
+	return &req, &resp, gotListeners, err
 }
 
 func TestFixedModeDynamicRouting(t *testing.T) {
