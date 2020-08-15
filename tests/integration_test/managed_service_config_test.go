@@ -129,49 +129,29 @@ func TestRetryCallServiceManagement(t *testing.T) {
 
 	configID := "test-config-id"
 
-	testCases := []struct {
-		desc     string
-		retryNum int
-	}{
-		{
-			desc:     "fail, retry 2 times for servicemanagement server rejects 2 times",
-			retryNum: 2,
-		},
-		{
-			desc:     "success, retry 3 times while servicemanagement server rejects 2 times",
-			retryNum: 3,
-		},
+	args := []string{"--service_config_id=" + configID,
+		"--rollout_strategy=fixed", "--healthz=/healthz"}
+
+	s := env.NewTestEnv(comp.TestRetryCallServiceManagement, platform.EchoSidecar)
+	defer s.TearDown(t)
+
+	s.MockServiceManagementServer.ConfigsHandler = &configsHandler{
+		m:                  s.MockServiceManagementServer,
+		rejectWith429Times: 2,
 	}
-	for _, tc := range testCases {
 
-		_test := func() {
-			args := []string{"--service_config_id=" + configID,
-				"--rollout_strategy=fixed", "--healthz=/healthz", fmt.Sprintf(`--service_management_call_retry_configs={"429":{"RetryNum":%v,"RetryInterval":100000000,}}`, tc.retryNum)}
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
 
-			s := env.NewTestEnv(comp.TestRetryCallServiceManagement, platform.EchoSidecar)
-			defer s.TearDown(t)
+	url := fmt.Sprintf("http://localhost:%v/echo", s.Ports().ListenerPort)
 
-			s.MockServiceManagementServer.ConfigsHandler = &configsHandler{
-				m:                  s.MockServiceManagementServer,
-				rejectWith429Times: 2,
-			}
-
-			if err := s.Setup(args); err != nil {
-				t.Fatalf("fail to setup test env, %v", err)
-			}
-
-			url := fmt.Sprintf("http://localhost:%v/echo", s.Ports().ListenerPort)
-
-			resp, err := echoClient.DoPost(fmt.Sprintf("%s?key=api-key", url), echo)
-			if err != nil {
-				t.Errorf("got unexpected error: %v", err)
-			}
-			wantResp := `{"message":"hello"}`
-			if string(resp) != wantResp {
-				t.Errorf("expected resp: %s, got response: %s", wantResp, string(resp))
-			}
-		}
-
-		_test()
+	resp, err := echoClient.DoPost(fmt.Sprintf("%s?key=api-key", url), echo)
+	if err != nil {
+		t.Errorf("got unexpected error: %v", err)
+	}
+	wantResp := `{"message":"hello"}`
+	if string(resp) != wantResp {
+		t.Errorf("expected resp: %s, got response: %s", wantResp, string(resp))
 	}
 }

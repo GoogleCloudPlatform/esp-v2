@@ -65,7 +65,6 @@ type ConfigGeneratorOptions struct {
 	// Flags for testing purpose.
 	SkipJwtAuthnFilter       bool
 	SkipServiceControlFilter bool
-	SmCallRetryConfigs       string
 
 	// Envoy configurations.
 	AccessLog       string

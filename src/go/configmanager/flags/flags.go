@@ -109,7 +109,6 @@ var (
 	// Flags for testing purpose.
 	SkipJwtAuthnFilter       = flag.Bool("skip_jwt_authn_filter", false, "skip jwt authn filter, for test purpose")
 	SkipServiceControlFilter = flag.Bool("skip_service_control_filter", false, "skip service control filter, for test purpose")
-	SmCallRetryConfigs       = flag.String("service_management_call_retry_configs", "", `Set retry times and retry intervals for different status calling service management by json string. For example, setting retry 30 times with 3sec interval for status 429 is {"429":{"RetryNum":30,"RetryInterval":3000000000}}. This flag is used for test only`)
 
 	TranscodingAlwaysPrintPrimitiveFields   = flag.Bool("transcoding_always_print_primitive_fields", false, "Whether to always print primitive fields for grpc-json transcoding")
 	TranscodingAlwaysPrintEnumsAsInts       = flag.Bool("transcoding_always_print_enums_as_ints", false, "Whether to always print enums as ints for grpc-json transcoding")
@@ -150,7 +149,6 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		TokenAgentPort:                          *TokenAgentPort,
 		SkipJwtAuthnFilter:                      *SkipJwtAuthnFilter,
 		SkipServiceControlFilter:                *SkipServiceControlFilter,
-		SmCallRetryConfigs:                      *SmCallRetryConfigs,
 		EnvoyUseRemoteAddress:                   *EnvoyUseRemoteAddress,
 		EnvoyXffNumTrustedHops:                  *EnvoyXffNumTrustedHops,
 		LogJwtPayloads:                          *LogJwtPayloads,

@@ -15,7 +15,6 @@
 package serviceconfig
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -34,7 +33,7 @@ type ServiceConfigFetcher struct {
 	retryConfigs         map[int]util.RetryConfig
 }
 
-var defaultSmRetryConfigs = map[int]util.RetryConfig{
+var SmRetryConfigs = map[int]util.RetryConfig{
 	http.StatusTooManyRequests: util.RetryConfig{
 		RetryNum:      30,
 		RetryInterval: time.Second * 3,
@@ -42,28 +41,14 @@ var defaultSmRetryConfigs = map[int]util.RetryConfig{
 }
 
 func NewServiceConfigFetcher(client *http.Client, serviceManagementUrl,
-	serviceName string, accessToken util.GetAccessTokenFunc, SmCallRetryConfigs string) *ServiceConfigFetcher {
-	var retryConfigs map[int]util.RetryConfig
-
-	if SmCallRetryConfigs == "" {
-		retryConfigs = defaultSmRetryConfigs
-	} else {
-		retryConfigs = map[int]util.RetryConfig{}
-
-		err := json.Unmarshal([]byte(SmCallRetryConfigs), &retryConfigs)
-		if err != nil {
-			glog.Errorf("fail to parse smRetryConfig(%s): %v", SmCallRetryConfigs, err)
-			retryConfigs = defaultSmRetryConfigs
-		}
-
-	}
+	serviceName string, accessToken util.GetAccessTokenFunc) *ServiceConfigFetcher {
 
 	return &ServiceConfigFetcher{
 		client:               client,
 		serviceName:          serviceName,
 		serviceManagementUrl: serviceManagementUrl,
 		accessToken:          accessToken,
-		retryConfigs:         retryConfigs,
+		retryConfigs:         SmRetryConfigs,
 	}
 }
 

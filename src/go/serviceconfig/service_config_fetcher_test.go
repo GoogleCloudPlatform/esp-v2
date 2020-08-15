@@ -83,7 +83,7 @@ func TestServiceConfigFetcherFetchConfig(t *testing.T) {
 	serviceManagementServer := initServiceManagementForTestServiceConfigFetcher(t, serviceRollout, serviceConfig, serviceName)
 	accessToken := func() (string, time.Duration, error) { return "access-token", time.Duration(60), nil }
 
-	scf := NewServiceConfigFetcher(&http.Client{}, serviceManagementServer.URL, "service-name", accessToken, "")
+	scf := NewServiceConfigFetcher(&http.Client{}, serviceManagementServer.URL, "service-name", accessToken)
 
 	testCase := []struct {
 		desc                     string
@@ -152,7 +152,7 @@ func TestServiceConfigFetcherLoadConfigIdFromRollouts(t *testing.T) {
 	serviceManagementServer := initServiceManagementForTestServiceConfigFetcher(t, listServiceRolloutsResponse, serviceConfig, serviceName)
 	accessToken := func() (string, time.Duration, error) { return "access-token", time.Duration(60), nil }
 
-	scf := NewServiceConfigFetcher(&http.Client{}, serviceManagementServer.URL, "service-name", accessToken, "")
+	scf := NewServiceConfigFetcher(&http.Client{}, serviceManagementServer.URL, "service-name", accessToken)
 
 	testCase := []struct {
 		desc                     string
