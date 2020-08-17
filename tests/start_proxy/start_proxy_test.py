@@ -111,11 +111,11 @@ class TestStartProxy(unittest.TestCase):
               '/etc/endpoint/ssl', '--disable_tracing'
               ]),
             # legacy ssl_port specified
-            (['-R=managed','--ssl_port=443'],
+            (['-R=managed','--ssl_port=9000'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--ssl_server_cert_path', '/etc/nginx/ssl',
-              '--listener_port', '443',
+              '--listener_port', '9000',
               ]),
             # ssl_client_cert_path specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
@@ -388,9 +388,17 @@ class TestStartProxy(unittest.TestCase):
              '--service_json_path=/tmp/service.json'],
             ['--backend_dns_lookup_family=v4'],
             ['--non_gcp'],
-            ['--http_port=80', '--http2_port=80'],
-            ['--http_port=80', '--listener_port=80'],
-            ['--ssl_server_cert_path=/etc/endpoint/ssl', '--ssl_port=443'],
+            # Duplicate port flags.
+            ['--http_port=8000', '--http2_port=8000'],
+            ['--http_port=8000', '--listener_port=8000'],
+            ['--listener_port=8000', '--ssl_port=9000'],
+            # Privileged ports.
+            ['--listener_port=80'],
+            ['--http_port=80'],
+            ['--listener_port=80'],
+            ['--ssl_port=443'],
+            # SSL config.
+            ['--ssl_server_cert_path=/etc/endpoint/ssl', '--ssl_port=9000'],
             ['--ssl_server_cert_path=/etc/endpoint/ssl', '--generate_self_signed_cert'],
             ['--ssl_client_cert_path=/etc/endpoint/ssl', '--tls_mutual_auth'],
             ['--ssl_protocols=TLSv1.3',  '--ssl_minimum_protocol=TLSv1.1'],
@@ -404,7 +412,7 @@ class TestStartProxy(unittest.TestCase):
 
         for flags in testcases:
           with self.assertRaises(SystemExit) as cm:
-            gotArgs = gen_proxy_config(self.parser.parse_args(flags))
+            gen_proxy_config(self.parser.parse_args(flags))
           print(cm.exception)
           self.assertEqual(cm.exception.code, 1)
 
