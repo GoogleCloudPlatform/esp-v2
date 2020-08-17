@@ -590,8 +590,8 @@ environment variable or by passing "-k" flag to this script.
 
     parser.add_argument('--ssl_port', default=None, type=int, help='''
         This flag added for backward compatible for ESPv1 and will be deprecated.
-        Please use the flag --ssl_server_cert_path instead. When configured, ESPv2
-        accepts HTTP/1.x and HTTP/2 secure connections on this port,
+        Please use the flags --listener_port and --ssl_server_cert_path instead. 
+        When configured, ESPv2 accepts HTTP/1.x and HTTP/2 secure connections on this port,
         Requires the certificate and key files /etc/nginx/ssl/nginx.crt and
         /etc/nginx/ssl/nginx.key''')
 
@@ -674,14 +674,26 @@ def enforce_conflict_args(args):
          return "Flag --generate_self_signed_cert and --ssl_server_cert_path cannot be used simutaneously."
 
     port_flags = []
+    port_num = DEFAULT_LISTENER_PORT
     if args.http_port:
         port_flags.append("--http_port")
+        port_num = args.http_port
     if args.http2_port:
         port_flags.append("--http2_port")
+        port_num = args.http2_port
     if args.listener_port:
         port_flags.append("--listener_port")
+        port_num = args.listener_port
+    if args.ssl_port:
+        port_flags.append("--ssl_port")
+        port_num = args.ssl_port
+
     if len(port_flags) > 1:
-        return "Multiple port flags {} are not allowed, please just use --listener_port flag".format(",".join(port_flags))
+        return "Multiple port flags {} are not allowed, use only the --listener_port flag".format(",".join(port_flags))
+    elif port_num < 1024:
+        return "Port {} is a privileged port. " \
+               "For security purposes, the ESPv2 container cannot bind to it. " \
+               "Use any port above 1024 instead.".format(port_num)
 
     if args.ssl_protocols and (args.ssl_minimum_protocol or args.ssl_maximum_protocol):
         return "Flag --ssl_protocols is going to be deprecated, please use --ssl_minimum_protocol and --ssl_maximum_protocol."
