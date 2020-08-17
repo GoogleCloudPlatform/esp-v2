@@ -395,7 +395,7 @@ class TestStartProxy(unittest.TestCase):
             # Privileged ports.
             ['--listener_port=80'],
             ['--http_port=80'],
-            ['--listener_port=80'],
+            ['--http2_port=80'],
             ['--ssl_port=443'],
             # SSL config.
             ['--ssl_server_cert_path=/etc/endpoint/ssl', '--ssl_port=9000'],
