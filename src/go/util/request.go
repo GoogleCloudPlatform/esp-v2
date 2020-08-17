@@ -18,39 +18,67 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
+	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 )
 
-func callWithAccessToken(client *http.Client, path, method, token string) ([]byte, error) {
+type RetryConfig struct {
+	RetryNum      int
+	RetryInterval time.Duration
+}
+
+func callWithAccessToken(client *http.Client, path, method, token string) ([]byte, int, error) {
 	req, _ := http.NewRequest(method, path, nil)
 	req.Header.Add("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/x-protobuf")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, http.StatusOK, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("http call to %s %s returns not 200 OK: %v", method, path, resp.Status)
+		return nil, resp.StatusCode, fmt.Errorf("http call to %s %s returns not 200 OK: %v", method, path, resp.Status)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("fail to read response body: %s", err)
+		return nil, http.StatusOK, fmt.Errorf("fail to read response body: %s", err)
 	}
 
-	return body, nil
+	return body, http.StatusOK, nil
 }
 
-var CallGoogleapis = func(client *http.Client, path, method string, getTokenFunc GetAccessTokenFunc, output proto.Message) error {
+// Method to call servicecontrol for latest service rolloutId and servicecontrol for service rollout and service config.
+var CallGoogleapis = func(client *http.Client, path, method string, getTokenFunc GetAccessTokenFunc, retryConfigs map[int]RetryConfig, output proto.Message) error {
 	token, _, err := getTokenFunc()
 	if err != nil {
 		return fmt.Errorf("fail to get access token: %v", err)
 	}
 
-	respBytes, err := callWithAccessToken(client, path, method, token)
+	var respBytes []byte
+	var statusCode int
+
+	callStatusCnts := map[int]int{}
+
+	for {
+		respBytes, statusCode, err = callWithAccessToken(client, path, method, token)
+		if retryConfigs == nil {
+			break
+		} else if retryConfig, ok := retryConfigs[statusCode]; !ok {
+			break
+		} else if retryConfig.RetryNum <= callStatusCnts[statusCode] {
+			break
+		} else {
+			callStatusCnts[statusCode] += 1
+			glog.Warningf("after %v failures on status %v, retrying http call %s with %v remaining chances", callStatusCnts[statusCode], statusCode, path, retryConfig.RetryNum-callStatusCnts[statusCode])
+
+			time.Sleep(retryConfig.RetryInterval)
+		}
+	}
+
 	if err != nil {
 		return err
 	}

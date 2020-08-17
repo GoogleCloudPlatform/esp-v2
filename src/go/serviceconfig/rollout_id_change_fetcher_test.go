@@ -33,7 +33,7 @@ func genFakeReport(serviceRolloutId string) string {
 	return string(reportRespBytes)
 }
 
-type getCallGoogleapisFunc func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, output proto.Message) error
+type getCallGoogleapisFunc func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, retryConfigs map[int]util.RetryConfig, output proto.Message) error
 
 func TestFetchLatestRolloutId(t *testing.T) {
 	serviceRolloutId := "service-config-id"
@@ -57,7 +57,7 @@ func TestFetchLatestRolloutId(t *testing.T) {
 		},
 		{
 			desc: "failure due to call googleapis",
-			callGoogleapis: func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, output proto.Message) error {
+			callGoogleapis: func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, retryConfigs map[int]util.RetryConfig, output proto.Message) error {
 				return fmt.Errorf("error-from-CallGoogleapis")
 			},
 			wantError: "fail to fetch new rollout id, error-from-CallGoogleapis",
