@@ -17,7 +17,7 @@
 #include <unordered_map>
 
 #include "absl/container/flat_hash_map.h"
-#include "api/envoy/v7/http/path_matcher/config.pb.h"
+#include "api/envoy/v8/http/path_matcher/config.pb.h"
 #include "common/common/logger.h"
 #include "envoy/runtime/runtime.h"
 #include "envoy/server/filter_config.h"
@@ -48,17 +48,17 @@ struct FilterStats {
 // The Envoy filter config for ESPv2 path matcher filter.
 class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
-  FilterConfig(const ::espv2::api::envoy::v7::http::path_matcher::FilterConfig&
+  FilterConfig(const ::espv2::api::envoy::v8::http::path_matcher::FilterConfig&
                    proto_config,
                const std::string& stats_prefix,
                Envoy::Server::Configuration::FactoryContext& context);
 
-  const ::espv2::api::envoy::v7::http::path_matcher::PathMatcherRule* findRule(
+  const ::espv2::api::envoy::v8::http::path_matcher::PathMatcherRule* findRule(
       const std::string& http_method, const std::string& path) const {
     return path_matcher_->Lookup(http_method, path);
   }
 
-  const ::espv2::api::envoy::v7::http::path_matcher::PathMatcherRule* findRule(
+  const ::espv2::api::envoy::v8::http::path_matcher::PathMatcherRule* findRule(
       const std::string& http_method, const std::string& path,
       std::vector<espv2::api_proxy::path_matcher::VariableBinding>*
           variable_bindings) const {
@@ -75,9 +75,9 @@ class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
         POOL_COUNTER_PREFIX(scope, final_prefix))};
   }
 
-  ::espv2::api::envoy::v7::http::path_matcher::FilterConfig proto_config_;
+  ::espv2::api::envoy::v8::http::path_matcher::FilterConfig proto_config_;
   ::espv2::api_proxy::path_matcher::PathMatcherPtr<
-      const ::espv2::api::envoy::v7::http::path_matcher::PathMatcherRule*>
+      const ::espv2::api::envoy::v8::http::path_matcher::PathMatcherRule*>
       path_matcher_;
 
   FilterStats stats_;

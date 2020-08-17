@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "api/envoy/v7/http/backend_routing/config.pb.h"
+#include "api/envoy/v8/http/backend_routing/config.pb.h"
 #include "common/common/empty_string.h"
 #include "common/common/logger.h"
 #include "envoy/server/filter_config.h"
@@ -47,7 +47,7 @@ struct FilterStats {
 class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   FilterConfig(
-      const ::espv2::api::envoy::v7::http::backend_routing::FilterConfig&
+      const ::espv2::api::envoy::v8::http::backend_routing::FilterConfig&
           proto_config,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context)
@@ -63,7 +63,7 @@ class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
     }
   }
 
-  const ::espv2::api::envoy::v7::http::backend_routing::BackendRoutingRule*
+  const ::espv2::api::envoy::v8::http::backend_routing::BackendRoutingRule*
   findRule(absl::string_view operation) const {
     const auto it = backend_routing_map_.find(operation);
     if (it == backend_routing_map_.end()) {
@@ -83,13 +83,13 @@ class FilterConfig : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
   }
 
   // The config proto
-  ::espv2::api::envoy::v7::http::backend_routing::FilterConfig proto_config_;
+  ::espv2::api::envoy::v8::http::backend_routing::FilterConfig proto_config_;
   // The stats
   FilterStats stats_;
   // The map from operation to rule.
   absl::flat_hash_map<
       std::string,
-      const ::espv2::api::envoy::v7::http::backend_routing::BackendRoutingRule*>
+      const ::espv2::api::envoy::v8::http::backend_routing::BackendRoutingRule*>
       backend_routing_map_;
 };
 

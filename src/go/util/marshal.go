@@ -21,10 +21,10 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 
-	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v7/http/backend_auth"
-	drpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v7/http/backend_routing"
-	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v7/http/path_matcher"
-	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v7/http/service_control"
+	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v8/http/backend_auth"
+	drpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v8/http/backend_routing"
+	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v8/http/path_matcher"
+	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v8/http/service_control"
 
 	statspb "github.com/envoyproxy/go-control-plane/envoy/config/metrics/v3"
 	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
@@ -85,13 +85,13 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(jwtpb.JwtAuthentication), nil
 	case "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager":
 		return new(hcmpb.HttpConnectionManager), nil
-	case "type.googleapis.com/espv2.api.envoy.v7.http.path_matcher.FilterConfig":
+	case "type.googleapis.com/espv2.api.envoy.v8.http.path_matcher.FilterConfig":
 		return new(pmpb.FilterConfig), nil
-	case "type.googleapis.com/espv2.api.envoy.v7.http.service_control.FilterConfig":
+	case "type.googleapis.com/espv2.api.envoy.v8.http.service_control.FilterConfig":
 		return new(scpb.FilterConfig), nil
-	case "type.googleapis.com/espv2.api.envoy.v7.http.backend_auth.FilterConfig":
+	case "type.googleapis.com/espv2.api.envoy.v8.http.backend_auth.FilterConfig":
 		return new(bapb.FilterConfig), nil
-	case "type.googleapis.com/espv2.api.envoy.v7.http.backend_routing.FilterConfig":
+	case "type.googleapis.com/espv2.api.envoy.v8.http.backend_routing.FilterConfig":
 		return new(drpb.FilterConfig), nil
 	case "type.googleapis.com/envoy.extensions.filters.http.router.v3.Router":
 		return new(routerpb.Router), nil
