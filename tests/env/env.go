@@ -351,7 +351,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		confArgs = append(confArgs, "--service_control_iam_delegates="+e.serviceControlIamDelegates)
 	}
 
-	confArgs = append(confArgs, fmt.Sprintf("--listener_port=%v", e.ports.ListenerPort))
+	confArgs = append(confArgs, fmt.Sprintf("--listener_port=%v", 8080))
 	confArgs = append(confArgs, fmt.Sprintf("--discovery_port=%v", e.ports.DiscoveryPort))
 	confArgs = append(confArgs, fmt.Sprintf("--service=%v", e.fakeServiceConfig.Name))
 
