@@ -126,11 +126,6 @@ HOST=$(get_cluster_host "${NAMESPACE}")
 # ESPv2 is deployed in managed mode for all these e2e tests.
 # This will cause ESPv2 to rebuild the Envoy listener while lots of traffic is running through.
 function doServiceRollout() {
-  if [ "${BACKEND}" != 'bookstore' ]; then
-    echo "doServiceRollout: TODO(nareddyt): Support managed service rollout for ${BACKEND}"
-    return 0
-  fi
-
   while true; do
     echo 'doServiceRollout: Sleeping until next service rollout'
     sleep 15m
@@ -154,7 +149,10 @@ function doServiceRollout() {
   done
 }
 
-doServiceRollout &
+# Start background process, only supported for bookstore backend.
+if [ "${BACKEND}" == 'bookstore' ]; then
+  doServiceRollout &
+fi
 
 # Running Test
 STATUS=0
