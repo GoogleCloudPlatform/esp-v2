@@ -38,7 +38,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
     """
 
     def __init__(self):
-        ApiProxyClientTest.__init__(self, FLAGS.host,
+        ApiProxyClientTest.__init__(self, FLAGS.host, '',
                                FLAGS.allow_unverified_cert,
                                FLAGS.verbose)
 
