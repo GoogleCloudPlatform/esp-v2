@@ -1,6 +1,5 @@
 # Release 2.16.0 18-08-2020
 
-- Update api version v7 -> v8 (#284)
 - Add more port restrictions for usability (#281)
 - Add retry mechanism on callgoogleapis when it comes into 429 (#278)
 
