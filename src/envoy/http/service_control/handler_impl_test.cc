@@ -38,7 +38,7 @@ using Envoy::Http::TestRequestTrailerMapImpl;
 using Envoy::Http::TestResponseHeaderMapImpl;
 using Envoy::Http::TestResponseTrailerMapImpl;
 using Envoy::StreamInfo::MockStreamInfo;
-using ::espv2::api::envoy::v7::http::service_control::FilterConfig;
+using ::espv2::api::envoy::v8::http::service_control::FilterConfig;
 using ::espv2::api_proxy::service_control::CheckRequestInfo;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::QuotaRequestInfo;

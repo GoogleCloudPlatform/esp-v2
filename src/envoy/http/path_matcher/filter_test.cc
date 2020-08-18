@@ -64,7 +64,7 @@ rules {
 class PathMatcherFilterTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    ::espv2::api::envoy::v7::http::path_matcher::FilterConfig config_pb;
+    ::espv2::api::envoy::v8::http::path_matcher::FilterConfig config_pb;
     ASSERT_TRUE(TextFormat::ParseFromString(kFilterConfig, &config_pb));
     config_ = std::make_shared<FilterConfig>(config_pb, Envoy::EMPTY_STRING,
                                              mock_factory_context_);

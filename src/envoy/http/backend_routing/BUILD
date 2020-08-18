@@ -32,7 +32,7 @@ envoy_cc_library(
     ],
     repository = "@envoy",
     deps = [
-        "//api/envoy/v7/http/backend_routing:config_proto_cc_proto",
+        "//api/envoy/v8/http/backend_routing:config_proto_cc_proto",
         "//src/envoy/utils:filter_state_utils_lib",
         "@envoy//source/common/common:assert_lib",
         "@envoy//source/common/http:codes_lib",
@@ -66,7 +66,7 @@ envoy_cc_test(
     repository = "@envoy",
     deps = [
         ":filter_lib",
-        "//api/envoy/v7/http/backend_routing:config_proto_cc_proto",
+        "//api/envoy/v8/http/backend_routing:config_proto_cc_proto",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/test_common:utility_lib",
     ],
