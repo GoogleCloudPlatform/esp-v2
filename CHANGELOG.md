@@ -1,3 +1,8 @@
+# Release 2.16.0 18-08-2020
+
+- Add more port restrictions for usability (#281)
+- Add retry mechanism on callgoogleapis when it comes into 429 (#278)
+
 # Release 2.15.0 11-08-2020
 
 - Support wildcards in envoy route matching with dynamic routing (#262)

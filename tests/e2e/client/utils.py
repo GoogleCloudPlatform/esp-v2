@@ -69,11 +69,11 @@ def http_connection(host, allow_unverified_cert):
         if allow_unverified_cert:
             try:
                 return httplib.HTTPSConnection(
-                    host, timeout=5, context=ssl._create_unverified_context())
+                    host, timeout=10, context=ssl._create_unverified_context())
             except AttributeError:
                 # Legacy versions of python do not check certificate.
                 return httplib.HTTPSConnection(
-                    host, timeout=5)
+                    host, timeout=10)
         else:
             return httplib.HTTPSConnection(host)
     else:
