@@ -449,14 +449,14 @@
                             "fromParams": [
                               "access_token"
                             ],
-                            "issuer": "245521401045-compute@developer.gserviceaccount.com",
+                            "issuer": "e2e-client-jwk@cloudesf-testing.iam.gserviceaccount.com",
                             "payloadInMetadata": "jwt_payloads",
                             "remoteJwks": {
                               "cacheDuration": "300s",
                               "httpUri": {
                                 "cluster": "www.googleapis.com:443",
                                 "timeout": "30s",
-                                "uri": "https://www.googleapis.com/service_accounts/v1/jwk/245521401045-compute@developer.gserviceaccount.com"
+                                "uri": "https://www.googleapis.com/service_accounts/v1/jwk/e2e-client-jwk@cloudesf-testing.iam.gserviceaccount.com"
                               }
                             }
                           }
