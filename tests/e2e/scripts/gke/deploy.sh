@@ -20,6 +20,8 @@ set -eo pipefail
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${SCRIPT_PATH}/../../../.." && pwd)"
 ARGS=""
+SCHEME="http"
+LISTENER_PORT="80"
 
 . ${ROOT}/tests/e2e/scripts/prow-utilities.sh || { echo "Cannot load Bash utilities";
 exit 1; }
@@ -63,10 +65,14 @@ case "${BACKEND}" in
 esac
 
 if [ ${BACKEND} == "bookstore" ]; then
-  SA_CRED_PATH="$(mktemp  /tmp/servie_account_cred.XXXX)"
+  # These file mount paths are set in tests/e2e/testdata/bookstore/gke/http-bookstore.yaml
 
-  # This file mount path is set in tests/e2e/testdata/bookstore/gke/http-bookstore.yaml
+  # Support service account credentials for non-gcp deployment.
+  SA_CRED_PATH="$(mktemp  /tmp/servie_account_cred.XXXX)"
   [[ -n ${USING_SA_CRED} ]] && ARGS="$ARGS, \"--service_account_key=/etc/creds/$(basename "${SA_CRED_PATH}")\""
+
+  # Support TLS termination in ESPv2.
+  ARGS="$ARGS, \"--ssl_server_cert_path=/etc/esp/ssl\""
 fi
 
 sed "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g" ${YAML_TEMPLATE}  \
@@ -114,8 +120,21 @@ NAMESPACE="${UNIQUE_ID}"
 run kubectl create namespace "${NAMESPACE}" || error_exit "Namespace already exists"
 
 if [ "${BACKEND}" == 'bookstore' ]; then
+  # Service account key secret.
   get_test_client_key "e2e-non-gcp-instance-proxy-rt-sa.json" "${SA_CRED_PATH}"
   run kubectl create secret generic service-account-cred --from-file="${SA_CRED_PATH}" --namespace "${NAMESPACE}"
+
+  # Generate untrusted self-signed cert.
+  # Common name doesn't matter, client will not verify it.
+  openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+      -keyout ./server.key -out ./server.crt \
+      -subj "/C=US/ST=CA/O=Google/CN=fake-fqdn.cloud.google.com"
+
+  # SSL cert secret.
+  run kubectl create secret generic esp-ssl --from-file=./server.crt --from-file=./server.key --namespace "${NAMESPACE}"
+
+  SCHEME="https"
+  LISTENER_PORT="443"
 fi
 
 run kubectl create -f ${YAML_FILE} --namespace "${NAMESPACE}"
@@ -125,8 +144,8 @@ HOST=$(get_cluster_host "${NAMESPACE}")
 STATUS=0
 run_nonfatal long_running_test  \
   "${HOST}"  \
-  "http" \
-  "80" \
+  "${SCHEME}" \
+  "${LISTENER_PORT}" \
   "${DURATION_IN_HOUR}"  \
   "${API_KEY}"  \
   "${APIPROXY_SERVICE}"  \
