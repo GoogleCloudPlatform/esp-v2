@@ -28,8 +28,7 @@ Google Cloud Endpoints and ESPv2 provide:
 
 * **Easy Adoption**: The API service can be implemented in any coding language using any IDLs.
 
-* **Multiple Deployment Modes**: Deploy ESPv2 as an API Gateway.
-Support for ESPv2 as a sidecar is planned.
+* **Multiple Deployment Modes**: Deploy ESPv2 as an API Gateway or a sidecar.
 
 * **Platform Flexibility**: Support the deployment on any cloud or hybrid environment.
 
@@ -76,7 +75,7 @@ Understand and debug problems with your API or ESPv2 by viewing traces and appli
 
 * Security: ESPv2 supports TLS for downstream and upstream, also mTLS for upstream connections, for both HTTP and gRPC.
 
-* Dynamic Routing: ESPv2 can route traffic across multiple remote upstream services.
+* Dynamic Routing: In API Gateway mode, ESPv2 can route traffic across multiple remote upstream services.
 
 * Health Checks: ESPv2 can actively monitor your services.
 
@@ -85,15 +84,11 @@ Understand and debug problems with your API or ESPv2 by viewing traces and appli
 The official Google Cloud Endpoints documentation contains tutorials and detailed documentation
 on deploying ESPv2 and managing API traffic.
 
-Quickstart tutorials for deploying ESPv2:
+Getting started with Extensible Service Proxy V2 Beta (ESPv2 Beta) tutorials:
 
-* [Cloud Endpoints for OpenAPI on Google Cloud Run](https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-run)
+* [Cloud Endpoints for OpenAPI](https://cloud.google.com/endpoints/docs/openapi/tutorials)
 
-* [Cloud Endpoints for OpenAPI on Google Cloud Functions](https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-functions)
-
-* [Cloud Endpoints for gRPC on Google Cloud Run](https://cloud.google.com/endpoints/docs/grpc/get-started-cloud-run)
-
-* [Cloud Endpoints for OpenAPI on Google Cloud Run for Anthos](https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-run-anthos)
+* [Cloud Endpoints for gRPC](https://cloud.google.com/endpoints/docs/grpc/tutorials)
 
 Configuring ESPv2:
 
@@ -107,13 +102,10 @@ Understanding ESPv2:
 
 ## ESPv2 Releases
 
-ESPv2 is released as a docker image.
-Currently, the only supported deployment platform is Cloud Run:
+ESPv2 is released as two docker images - one for sidecar deployment and one for API Gateway deployment.
 
+* [gcr.io/endpoints-release/endpoints-runtime:2](https://gcr.io/endpoints-release/endpoints-runtime:2)
 * [gcr.io/endpoints-release/endpoints-runtime-serverless:2](https://gcr.io/endpoints-release/endpoints-runtime-serverless:2)
-
-ESPv2 can be deployed to GKE, but is not supported yet.
-This is a planned feature.
 
 ## ESPv2 vs ESP
 
@@ -169,6 +161,5 @@ Your contributions are welcome:
 
 ## Disclaimer
 
-ESPv2 is currently in Beta for the API Gateway deployment mode.
-ESPv2 does not officially support the sidecar deployment mode (yet).
+ESPv2 is currently in Beta for the API Gateway deployment mode and sidecar deployment mode.
 
