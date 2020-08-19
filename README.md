@@ -121,7 +121,7 @@ Please refer to the [migration guide](https://cloud.google.com/endpoints/docs/gr
 for more details on the incompatible changes.
 
 For serverless reverse proxy deployments, it is recommended to use ESPv2 instead of ESP.
-For sidecar deployments, either ESPv2 or ESP can be used, but ESP will receive more features.
+For sidecar deployments, either ESPv2 or ESP can be used, but ESPv2 will receive more features.
 
 ## Repository Structure
 
