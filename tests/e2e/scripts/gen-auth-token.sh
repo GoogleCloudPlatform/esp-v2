@@ -26,7 +26,7 @@ ROOT="$(cd "${SCRIPT_PATH}/../../.." && pwd)"
 # By default audience is service name,  use -a to change it to your service
 # name or other allowed audiences (check service swagger configuration).
 AUDIENCE="apiproxy.cloudendpointsapis.com"
-SERVICE_ACCOUNT="245521401045-compute@developer.gserviceaccount.com"
+SERVICE_ACCOUNT="e2e-client-jwk@cloudesf-testing.iam.gserviceaccount.com"
 
 function usage() {
   echo "usage: $0 [options ...]"
@@ -48,7 +48,8 @@ while getopts a:c:s:? arg; do
 done
 
 # By default, use jwk key. Can be switched to x509 or symmetric key.
-SECRET_FILE="${SECRET_FILE:-$(get_test_client_key e2e-client-service-account.json ${ROOT}/tests/e2e/client/test-client-secret-jwk.json)}"
+KEY_PATH="$(mktemp /tmp/e2e-client-secret-jwk.XXXX)"
+SECRET_FILE="${SECRET_FILE:-$(get_test_client_key e2e-client-jwk.json ${KEY_PATH})}"
 
 go run ${ROOT}/tests/e2e/client/jwt_client.go \
   --service-account-file=${SECRET_FILE} \

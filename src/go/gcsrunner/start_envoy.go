@@ -42,6 +42,8 @@ type StartEnvoyOptions struct {
 func StartEnvoyAndWait(signalChan chan os.Signal, opts StartEnvoyOptions) error {
 	cmd := execCommand(
 		opts.BinaryPath,
+		"--service-cluster", "front-envoy",
+		"--service-node", "front-envoy",
 		"--disable-hot-restart",
 		"--config-path", opts.ConfigPath,
 		"--log-level", opts.LogLevel,

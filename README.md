@@ -28,8 +28,7 @@ Google Cloud Endpoints and ESPv2 provide:
 
 * **Easy Adoption**: The API service can be implemented in any coding language using any IDLs.
 
-* **Multiple Deployment Modes**: Deploy ESPv2 as an API Gateway.
-Support for ESPv2 as a sidecar is planned.
+* **Multiple Deployment Modes**: Deploy ESPv2 as a sidecar for local backends or as a reverse proxy for remote backends.
 
 * **Platform Flexibility**: Support the deployment on any cloud or hybrid environment.
 
@@ -72,11 +71,13 @@ ESPv2 also writes access logs for each request, providing insight into HTTP head
 * [Application Observability](https://cloud.google.com/endpoints/docs/grpc/tracing):
 Understand and debug problems with your API or ESPv2 by viewing traces and application logs.
 
-* Multi Transport Protocols: ESPv2 supports HTTP/1.1, HTTP/2, websockets, gRPC and gRPC-web.
+* Multi Transport Protocols: ESPv2 supports HTTP/1.1, HTTP/2, web sockets, gRPC and gRPC-web.
 
 * Security: ESPv2 supports TLS for downstream and upstream, also mTLS for upstream connections, for both HTTP and gRPC.
 
-* Dynamic Routing: ESPv2 can route traffic across multiple remote upstream services.
+* Dynamic Routing: When deployed on non-serverless platforms (GCE, GKE, K8S) as a sidecar, ESPv2 routes all traffic
+to a single local backend. When deployed on serverless platforms (Cloud Run) as a reverse proxy, ESPv2 can route traffic 
+across multiple remote upstream services.
 
 * Health Checks: ESPv2 can actively monitor your services.
 
@@ -85,15 +86,11 @@ Understand and debug problems with your API or ESPv2 by viewing traces and appli
 The official Google Cloud Endpoints documentation contains tutorials and detailed documentation
 on deploying ESPv2 and managing API traffic.
 
-Quickstart tutorials for deploying ESPv2:
+Getting started with Extensible Service Proxy V2 Beta (ESPv2 Beta) tutorials:
 
-* [Cloud Endpoints for OpenAPI on Google Cloud Run](https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-run)
+* [Cloud Endpoints for OpenAPI](https://cloud.google.com/endpoints/docs/openapi/tutorials)
 
-* [Cloud Endpoints for OpenAPI on Google Cloud Functions](https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-functions)
-
-* [Cloud Endpoints for gRPC on Google Cloud Run](https://cloud.google.com/endpoints/docs/grpc/get-started-cloud-run)
-
-* [Cloud Endpoints for OpenAPI on Google Cloud Run for Anthos](https://cloud.google.com/endpoints/docs/openapi/get-started-cloud-run-anthos)
+* [Cloud Endpoints for gRPC](https://cloud.google.com/endpoints/docs/grpc/tutorials)
 
 Configuring ESPv2:
 
@@ -107,13 +104,10 @@ Understanding ESPv2:
 
 ## ESPv2 Releases
 
-ESPv2 is released as a docker image.
-Currently, the only supported deployment platform is Cloud Run:
+ESPv2 is released as two docker images:
 
-* [gcr.io/endpoints-release/endpoints-runtime-serverless:2](https://gcr.io/endpoints-release/endpoints-runtime-serverless:2)
-
-ESPv2 can be deployed to GKE, but is not supported yet.
-This is a planned feature.
+* For sidecar mode with local backends: [gcr.io/endpoints-release/endpoints-runtime:2](https://gcr.io/endpoints-release/endpoints-runtime:2)
+* For reverse proxy mode with remote backends: [gcr.io/endpoints-release/endpoints-runtime-serverless:2](https://gcr.io/endpoints-release/endpoints-runtime-serverless:2)
 
 ## ESPv2 vs ESP
 
@@ -126,7 +120,8 @@ API producers do not need to modify the Endpoints Service Configuration to use E
 Please refer to the [migration guide](https://cloud.google.com/endpoints/docs/grpc/migrate-to-esp-v2)
 for more details on the incompatible changes.
 
-For serverless API gateway deployments, it is recommended to use ESPv2 instead of ESP.
+For serverless reverse proxy deployments, it is recommended to use ESPv2 instead of ESP.
+For sidecar deployments, either ESPv2 or ESP can be used, but ESPv2 will receive more features.
 
 ## Repository Structure
 
@@ -169,6 +164,4 @@ Your contributions are welcome:
 
 ## Disclaimer
 
-ESPv2 is currently in Beta for the API Gateway deployment mode.
-ESPv2 does not officially support the sidecar deployment mode (yet).
-
+ESPv2 is currently in Beta for both sidecar and reverse proxy deployment modes.
