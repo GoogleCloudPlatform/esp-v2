@@ -154,6 +154,74 @@ func TestMakeRouteConfig(t *testing.T) {
   ]
 }`,
 		},
+		{
+			desc: "Wildcard paths for remote backend",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector:        "endpoints.examples.bookstore.Bookstore.Foo",
+							Address:         "https://testapipb.com/foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "bar.com",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.Foo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/v1/{book_name=*}/test/**",
+							},
+						},
+					},
+				},
+			},
+			wantRouteConfig: `
+{
+  "name": "local_route",
+  "virtualHosts": [
+    {
+      "domains": [
+        "*"
+      ],
+      "name": "backend",
+      "routes": [
+        {
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "safeRegex": {
+              "googleRe2": {
+                "maxProgramSize": 1000
+              },
+              "regex": "^/v1/[^\\/]+/test/.*$"
+            }
+          },
+          "route": {
+            "cluster": "testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "timeout": "15s"
+          }
+        }
+      ]
+    }
+  ]
+}`,
+		},
 	}
 
 	for i, tc := range testData {

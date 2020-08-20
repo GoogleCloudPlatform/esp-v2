@@ -71,6 +71,7 @@ const (
 	TestGRPCStreaming
 	TestGRPCWeb
 	TestHttp1Basic
+	TestRetryCallServiceManagement
 	TestHttp1JWT
 	TestHttpHeaders
 	TestHttpsClients
@@ -85,7 +86,8 @@ const (
 	TestPreflightCorsWithBasicPreset
 	TestPreflightRequestWithAllowCors
 	TestReportGCPAttributes
-	TestServiceControlAccessToken
+	TestServiceControlAccessTokenFromIam
+	TestServiceControlAccessTokenFromTokenAgent
 	TestServiceControlAllHTTPMethod
 	TestServiceControlAllHTTPPath
 	TestServiceControlAPIKeyCustomLocation

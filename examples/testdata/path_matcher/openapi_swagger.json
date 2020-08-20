@@ -1,5 +1,4 @@
 {
-  "basePath": "/",
   "consumes": [
     "application/json"
   ],
@@ -72,5 +71,12 @@
   "schemes": [
     "https"
   ],
-  "swagger": "2.0"
+  "swagger": "2.0",
+  "x-google-allow": "all",
+  "x-google-endpoints": [
+    {
+      "allowCors": true,
+      "name": "examples-path-matcher.endpoints.cloudesf-testing.cloud.goog"
+    }
+  ]
 }

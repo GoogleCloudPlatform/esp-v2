@@ -155,7 +155,7 @@
                     {
                       "name": "com.google.espv2.filters.http.path_matcher",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.v7.http.path_matcher.FilterConfig",
+                        "@type": "type.googleapis.com/espv2.api.envoy.v8.http.path_matcher.FilterConfig",
                         "rules": [
                           {
                             "operation": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.CreateShelf",

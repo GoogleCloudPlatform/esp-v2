@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -87,6 +88,25 @@ func JsonEqual(want, got string) error {
 	}
 	if !strings.EqualFold(want, got) {
 		return fmt.Errorf("\n  got: %s \n want: %s", got, want)
+	}
+	return nil
+}
+
+// JsonContains should be used for test only. It can check whether partial
+// target json string belong to the source json string.
+// JsonContains will remove regex(`(\t|\n|\s)`) inside target so it shouldn't
+// contains these chars in its content.
+func JsonContains(source, target string) error {
+	normalizedSource, err := normalizeJson(source)
+	if err != nil {
+		return err
+	}
+
+	var re = regexp.MustCompile(`(\t|\n|\s)`)
+	normalizedTarget := re.ReplaceAllString(target, "")
+
+	if !strings.Contains(normalizedSource, normalizedTarget) {
+		return fmt.Errorf("source doesn't contain the target,\nsource: %s,\ntarget: %s\n", normalizedSource, normalizedTarget)
 	}
 	return nil
 }

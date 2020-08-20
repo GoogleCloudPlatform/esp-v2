@@ -484,7 +484,7 @@ func TestBackendRoutingFilter(t *testing.T) {
 			wantBackendRoutingFilter: `{
         "name": "com.google.espv2.filters.http.backend_routing",
         "typedConfig": {
-          "@type":"type.googleapis.com/espv2.api.envoy.v7.http.backend_routing.FilterConfig",
+          "@type":"type.googleapis.com/espv2.api.envoy.v8.http.backend_routing.FilterConfig",
           "rules": [
             {
               "operation": "endpoints.examples.bookstore.Bookstore.CreateShelf",
@@ -561,7 +561,7 @@ func TestBackendRoutingFilter(t *testing.T) {
 			wantBackendRoutingFilter: `{
         "name": "com.google.espv2.filters.http.backend_routing",
         "typedConfig": {
-          "@type":"type.googleapis.com/espv2.api.envoy.v7.http.backend_routing.FilterConfig",
+          "@type":"type.googleapis.com/espv2.api.envoy.v8.http.backend_routing.FilterConfig",
           "rules": [
             {
               "operation": "testapi.bar",
@@ -644,7 +644,7 @@ func TestBackendRoutingFilter(t *testing.T) {
 			wantBackendRoutingFilter: `{
         "name": "com.google.espv2.filters.http.backend_routing",
         "typedConfig": {
-          "@type":"type.googleapis.com/espv2.api.envoy.v7.http.backend_routing.FilterConfig",
+          "@type":"type.googleapis.com/espv2.api.envoy.v8.http.backend_routing.FilterConfig",
           "rules": [
             {
               "operation":"testapi.CORS_bar",
@@ -776,7 +776,7 @@ func TestBackendRoutingFilter(t *testing.T) {
 			wantBackendRoutingFilter: `{
         "name": "com.google.espv2.filters.http.backend_routing",
         "typedConfig": {
-          "@type":"type.googleapis.com/espv2.api.envoy.v7.http.backend_routing.FilterConfig",
+          "@type":"type.googleapis.com/espv2.api.envoy.v8.http.backend_routing.FilterConfig",
           "rules": [
             {
               "operation": "testapi.bar",
@@ -878,7 +878,7 @@ func TestBackendAuthFilter(t *testing.T) {
 {
    "name":"com.google.espv2.filters.http.backend_auth",
    "typedConfig":{
-      "@type":"type.googleapis.com/espv2.api.envoy.v7.http.backend_auth.FilterConfig",
+      "@type":"type.googleapis.com/espv2.api.envoy.v8.http.backend_auth.FilterConfig",
       "imdsToken":{
           "cluster":"metadata-cluster",
           "timeout":"30s",
@@ -964,7 +964,7 @@ func TestBackendAuthFilter(t *testing.T) {
 			wantBackendAuthFilter: `{
         "name":"com.google.espv2.filters.http.backend_auth",
         "typedConfig":{
-          "@type":"type.googleapis.com/espv2.api.envoy.v7.http.backend_auth.FilterConfig",
+          "@type":"type.googleapis.com/espv2.api.envoy.v8.http.backend_auth.FilterConfig",
           "imdsToken":{
             "cluster":"metadata-cluster",
             "timeout":"30s",
@@ -1019,7 +1019,7 @@ func TestBackendAuthFilter(t *testing.T) {
 {
    "name":"com.google.espv2.filters.http.backend_auth",
    "typedConfig":{
-      "@type":"type.googleapis.com/espv2.api.envoy.v7.http.backend_auth.FilterConfig",
+      "@type":"type.googleapis.com/espv2.api.envoy.v8.http.backend_auth.FilterConfig",
       "iamToken":{
          "accessToken":{
             "remoteToken":{
@@ -1107,7 +1107,7 @@ func TestPathMatcherFilter(t *testing.T) {
 {
    "name":"com.google.espv2.filters.http.path_matcher",
    "typedConfig":{
-      "@type":"type.googleapis.com/espv2.api.envoy.v7.http.path_matcher.FilterConfig",
+      "@type":"type.googleapis.com/espv2.api.envoy.v8.http.path_matcher.FilterConfig",
       "rules":[
          {
             "operation":"ESPv2.HealthCheck",
@@ -1176,7 +1176,7 @@ func TestPathMatcherFilter(t *testing.T) {
 			        {
    "name":"com.google.espv2.filters.http.path_matcher",
    "typedConfig":{
-      "@type":"type.googleapis.com/espv2.api.envoy.v7.http.path_matcher.FilterConfig",
+      "@type":"type.googleapis.com/espv2.api.envoy.v8.http.path_matcher.FilterConfig",
       "rules":[
          {
             "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
@@ -1263,7 +1263,7 @@ func TestPathMatcherFilter(t *testing.T) {
 			        {
    "name":"com.google.espv2.filters.http.path_matcher",
    "typedConfig":{
-      "@type":"type.googleapis.com/espv2.api.envoy.v7.http.path_matcher.FilterConfig",
+      "@type":"type.googleapis.com/espv2.api.envoy.v8.http.path_matcher.FilterConfig",
       "rules":[
          {
             "operation":"1.cloudesf_testing_cloud_goog.Bar",
@@ -1321,7 +1321,7 @@ func TestPathMatcherFilter(t *testing.T) {
 			        {
    "name":"com.google.espv2.filters.http.path_matcher",
    "typedConfig":{
-      "@type":"type.googleapis.com/espv2.api.envoy.v7.http.path_matcher.FilterConfig",
+      "@type":"type.googleapis.com/espv2.api.envoy.v8.http.path_matcher.FilterConfig",
       "rules":[
          {
             "operation":"1.cloudesf_testing_cloud_goog.CORS_foo",
@@ -1421,7 +1421,7 @@ func TestPathMatcherFilter(t *testing.T) {
 			        {
    "name":"com.google.espv2.filters.http.path_matcher",
    "typedConfig":{
-      "@type":"type.googleapis.com/espv2.api.envoy.v7.http.path_matcher.FilterConfig",
+      "@type":"type.googleapis.com/espv2.api.envoy.v8.http.path_matcher.FilterConfig",
       "rules":[
          {
             "operation":"1.cloudesf_testing_cloud_goog.Baz",
@@ -1469,6 +1469,101 @@ func TestPathMatcherFilter(t *testing.T) {
 		if err := util.JsonEqual(tc.wantPathMatcherFilter, gotFilter); err != nil {
 			t.Errorf("Test(%v): makePathMatcherFilter failed with err: \n %v", tc.desc, err)
 		}
+	}
+}
+
+func TestServiceControl(t *testing.T) {
+	fakeServiceConfig := &confpb.Service{
+		Name: testProjectName,
+		Apis: []*apipb.Api{
+			{
+				Name: testApiName,
+				Methods: []*apipb.Method{
+					{
+						Name: "ListShelves",
+					},
+				},
+			},
+		},
+		Control: &confpb.Control{
+			Environment: statPrefix,
+		},
+	}
+	testData := []struct {
+		desc                            string
+		serviceControlCredentials       *options.IAMCredentialsOptions
+		serviceAccountKey               string
+		wantPartialServiceControlFilter string
+	}{
+		{
+			desc: "get access token from imds",
+			wantPartialServiceControlFilter: `
+    "imdsToken": {
+      "cluster": "metadata-cluster",
+      "timeout": "30s",
+      "uri": "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
+    },`,
+		},
+		{
+			desc: "get access token from iam",
+			serviceControlCredentials: &options.IAMCredentialsOptions{
+				ServiceAccountEmail: "ServiceControl@iam.com",
+				Delegates:           []string{"delegate_foo", "delegate_bar"},
+			},
+			wantPartialServiceControlFilter: `
+    "iamToken": {
+      "accessToken": {
+        "remoteToken": {
+          "cluster": "metadata-cluster",
+          "timeout": "30s",
+          "uri": "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
+        }
+      },
+      "delegates": [
+        "delegate_foo",
+        "delegate_bar"
+      ],
+      "iamUri": {
+        "cluster": "iam-cluster",
+        "timeout": "30s",
+        "uri": "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/ServiceControl@iam.com:generateAccessToken"
+      },
+      "serviceAccountEmail": "ServiceControl@iam.com"
+    },`,
+		},
+		{
+			desc:              "get access token from the token agent server",
+			serviceAccountKey: "this-is-sa-cred",
+			wantPartialServiceControlFilter: `
+    "imdsToken": {
+      "cluster": "token-agent-cluster",
+      "timeout": "30s",
+      "uri": "http://127.0.0.1:8791/local/access_token"
+    },`,
+		},
+	}
+	for i, tc := range testData {
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.ServiceControlCredentials = tc.serviceControlCredentials
+		opts.ServiceAccountKey = tc.serviceAccountKey
+
+		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
+		if err != nil {
+			t.Error(err)
+		}
+
+		marshaler := &jsonpb.Marshaler{}
+		filter := makeServiceControlFilter(fakeServiceInfo)
+
+		gotFilter, err := marshaler.MarshalToString(filter)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := util.JsonContains(gotFilter, tc.wantPartialServiceControlFilter); err != nil {
+			t.Errorf("Test Desc(%d): %s, makeServiceControlFilter failed,\n%v", i, tc.desc, err)
+		}
+
 	}
 }
 

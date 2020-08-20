@@ -417,6 +417,30 @@
           }
         ]
       }
+    },
+    "/quota_read": {
+      "get": {
+        "description": "Read API behind quota",
+        "operationId": "readApiQuota",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "get read message response"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "x-google-quota": {
+          "metricCosts": {
+            "bookstore/read_requests": 1
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -503,8 +527,8 @@
       "authorizationUrl": "",
       "flow": "implicit",
       "type": "oauth2",
-      "x-google-issuer": "245521401045-compute@developer.gserviceaccount.com",
-      "x-google-jwks_uri": "https://www.googleapis.com/service_accounts/v1/jwk/245521401045-compute@developer.gserviceaccount.com",
+      "x-google-issuer": "e2e-client-jwk@cloudesf-testing.iam.gserviceaccount.com",
+      "x-google-jwks_uri": "https://www.googleapis.com/service_accounts/v1/jwk/e2e-client-jwk@cloudesf-testing.iam.gserviceaccount.com",
       "x-google-audiences": "bookstore.endpoints.cloudesf-testing.cloud.goog",
       "x-google-jwt-locations": [
         {
@@ -528,6 +552,14 @@
         "value_type": "INT64",
         "metric_kind": "DELTA"
       }
-    ]
+    ],
+    "quota": {
+      "limits": [{
+        "name": "bookstore-read-requests",
+        "values": {"STANDARD": 30},
+        "unit": "1/min/{project}",
+        "metric": "bookstore/read_requests"
+      }]
+    }
   }
 }

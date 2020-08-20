@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configmanager/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/serviceconfig"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
@@ -115,25 +116,12 @@ func TestFetchListeners(t *testing.T) {
 
 		setFlags(testdata.TestFetchListenersProjectName, testdata.TestFetchListenersConfigID, util.FixedRolloutStrategy, "100ms", "")
 
-		runTest(t, &fakeScReport, &fakeRollouts, &fakeConfig, opts, func(configManager *ConfigManager) {
-			ctx := context.Background()
-			// First request, VersionId should be empty.
-			req := discoverypb.DiscoveryRequest{
-				Node: &corepb.Node{
-					Id: opts.Node,
-				},
-				TypeUrl: resource.ListenerType,
-			}
-			respInterface, err := configManager.cache.Fetch(ctx, req)
+		runTest(t, &fakeScReport, &fakeRollouts, &fakeConfig, opts, func(configManager *ConfigManager, err error) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			resp := respInterface.(cache.Response)
 
-			marshaler := &jsonpb.Marshaler{
-				AnyResolver: util.Resolver,
-			}
-			gotListeners, err := marshaler.MarshalToString(resp.Resources[0])
+			req, resp, gotListeners, err := getListeners(configManager, opts)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -141,7 +129,7 @@ func TestFetchListeners(t *testing.T) {
 			if resp.Version != testdata.TestFetchListenersConfigID {
 				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, resp.Version, testdata.TestFetchListenersConfigID)
 			}
-			if !proto.Equal(&resp.Request, &req) {
+			if !proto.Equal(&resp.Request, req) {
 				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, resp.Request, req)
 			}
 
@@ -150,6 +138,143 @@ func TestFetchListeners(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRetryCallServiceManagement(t *testing.T) {
+	var fakeConfig, fakeScReport, fakeRollouts safeData
+	fakeServiceConfig := testdata.FakeServiceConfigForGrpcWithTranscoding
+	wantedListeners := testdata.WantedListsenerForGrpcWithTranscoding
+	if err := genProtoBinary(fakeServiceConfig, new(confpb.Service), &fakeConfig); err != nil {
+		t.Fatalf("generate fake service config failed: %v", err)
+	}
+
+	opts := options.DefaultConfigGeneratorOptions()
+	opts.BackendAddress = "grpc://127.0.0.1:80"
+	opts.TracingProjectId = "fake-project-id"
+	opts.DisableTracing = true
+
+	var originalInitMockServer = initMockServer
+	defer func() { initMockServer = originalInitMockServer }()
+
+	// The mock server will reject the first 3 requests with 429 and it has a
+	//silent interval, during which it will reject incoming requests with 500.
+	initMockServer = func(t *testing.T, config *safeData) *httptest.Server {
+		rejectWith429Times := 3
+		rejectCnt := 0
+		var lastCallTime time.Time
+		silentInterval := time.Millisecond * 150
+		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if rejectCnt < rejectWith429Times {
+				rejectCnt += 1
+				w.WriteHeader(http.StatusTooManyRequests)
+				lastCallTime = time.Now()
+				return
+			}
+
+			if !lastCallTime.IsZero() && lastCallTime.Add(silentInterval).After(time.Now()) {
+				w.WriteHeader(http.StatusInternalServerError)
+				rejectCnt += 1
+				lastCallTime = time.Now()
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			_, err := w.Write(config.read())
+			if err != nil {
+				t.Fatal("fail to write config: ", err)
+			}
+			lastCallTime = time.Now()
+		}))
+	}
+
+	var testData = []struct {
+		desc          string
+		retryNum      int
+		retryInterval int
+		retryConfigs  map[int]util.RetryConfig
+		wantedError   string
+	}{
+		{
+			desc: "fail, retryInterval is too short",
+			retryConfigs: map[int]util.RetryConfig{
+				http.StatusTooManyRequests: {
+					RetryNum:      3,
+					RetryInterval: time.Millisecond * 100,
+				},
+			},
+			wantedError: "fail to fetch and apply the startup service config",
+		},
+		{
+			desc: "fail, insufficient retryNum",
+			retryConfigs: map[int]util.RetryConfig{
+				http.StatusTooManyRequests: {
+					RetryNum:      2,
+					RetryInterval: time.Millisecond * 200,
+				},
+			},
+			wantedError: "fail to fetch and apply the startup service config",
+		},
+		{
+			desc: "Success, sufficient retryNum and long enough retryInterval",
+			retryConfigs: map[int]util.RetryConfig{
+				http.StatusTooManyRequests: {
+					RetryNum:      3,
+					RetryInterval: time.Millisecond * 200,
+				},
+			},
+		},
+	}
+	for _, tc := range testData {
+		serviceconfig.SmRetryConfigs = tc.retryConfigs
+
+		setFlags(testdata.TestFetchListenersProjectName, testdata.TestFetchListenersConfigID, util.FixedRolloutStrategy, "100ms", "")
+
+		runTest(t, &fakeScReport, &fakeRollouts, &fakeConfig, opts, func(configManager *ConfigManager, err error) {
+			if tc.wantedError != "" {
+				if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
+					t.Errorf("test(%s) expected error: %v, got error: %v", tc.desc, tc.wantedError, err)
+				}
+			} else if err != nil {
+				t.Errorf("test(%s) expected error: %v, got error: %v", tc.desc, tc.wantedError, err)
+			}
+
+			_, _, gotListeners, err := getListeners(configManager, opts)
+
+			if tc.wantedError == "" {
+				if err != nil {
+					t.Errorf("test(%s) fail to get listener config from configmanager, error: %v", tc.desc, err)
+				} else if err := util.JsonEqual(wantedListeners, gotListeners); err != nil {
+					t.Errorf("Test Desc: %s, snapshot cache fetch got unexpected Listeners, %v", tc.desc, err)
+				}
+			}
+		})
+	}
+}
+
+func getListeners(configManager *ConfigManager, opts options.ConfigGeneratorOptions) (*cache.Request, *cache.Response, string, error) {
+	if configManager == nil {
+		return nil, nil, "", fmt.Errorf("configmanager is empty")
+	}
+
+	ctx := context.Background()
+	// First request, VersionId should be empty.
+	req := discoverypb.DiscoveryRequest{
+		Node: &corepb.Node{
+			Id: opts.Node,
+		},
+		TypeUrl: resource.ListenerType,
+	}
+	respInterface, err := configManager.cache.Fetch(ctx, req)
+	if err != nil {
+		return nil, nil, "", err
+	}
+	resp := respInterface.(cache.Response)
+
+	marshaler := &jsonpb.Marshaler{
+		AnyResolver: util.Resolver,
+	}
+	gotListeners, err := marshaler.MarshalToString(resp.Resources[0])
+	return &req, &resp, gotListeners, err
 }
 
 func TestFixedModeDynamicRouting(t *testing.T) {
@@ -389,10 +514,12 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 
 	setFlags(testProjectName, testConfigID, util.ManagedRolloutStrategy, "100ms", "")
 
-	runTest(t, &fakeScReport, &fakeRollouts, &fakeConfig, opts, func(configManager *ConfigManager) {
+	runTest(t, &fakeScReport, &fakeRollouts, &fakeConfig, opts, func(configManager *ConfigManager, err error) {
+		if err != nil {
+			t.Fatal(err)
+		}
 		var respInterface cache.ResponseIface
 		var resp cache.Response
-		var err error
 		ctx := context.Background()
 		req := discoverypb.DiscoveryRequest{
 			Node: &corepb.Node{
@@ -443,7 +570,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 	})
 }
 
-func runTest(t *testing.T, fakeScReport, fakeRollouts, fakeConfig *safeData, opts options.ConfigGeneratorOptions, f func(configManager *ConfigManager)) {
+func runTest(t *testing.T, fakeScReport, fakeRollouts, fakeConfig *safeData, opts options.ConfigGeneratorOptions, f func(configManager *ConfigManager, err error)) {
 	fakeToken := `{"access_token": "ya29.new", "expires_in":3599, "token_type":"Bearer"}`
 	mockServiceControl := initMockServer(t, fakeScReport)
 	defer mockServiceControl.Close()
@@ -464,19 +591,15 @@ func runTest(t *testing.T, fakeScReport, fakeRollouts, fakeConfig *safeData, opt
 	}
 
 	mockMetadataServer := util.InitMockServerFromPathResp(map[string]string{
-		util.AccessTokenSuffix: fakeToken,
+		util.AccessTokenPath: fakeToken,
 	})
 	defer mockMetadataServer.Close()
 
 	metadataFetcher := metadata.NewMockMetadataFetcher(mockMetadataServer.URL, time.Now())
 
 	opts.RootCertsPath = platform.GetFilePath(platform.TestRootCaCerts)
-	manager, err := NewConfigManager(metadataFetcher, opts)
-	if err != nil {
-		t.Fatal("fail to initialize Config Manager: ", err)
-	}
 
-	f(manager)
+	f(NewConfigManager(metadataFetcher, opts))
 }
 
 type safeData struct {
@@ -499,7 +622,7 @@ func (s *safeData) read() []byte {
 	return ret
 }
 
-func initMockServer(t *testing.T, config *safeData) *httptest.Server {
+var initMockServer = func(t *testing.T, config *safeData) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, err := w.Write(config.read())

@@ -94,6 +94,9 @@ var (
 					{
 						Name: "dynamic_routing_Re2ProgramSize",
 					},
+					{
+						Name: "dynamic_routing_Wildcards",
+					},
 				},
 				Version: "1.0.0",
 			},
@@ -245,6 +248,15 @@ var (
 						Get: "/test/{path}/template/test/{path}/template/test/{path}/template/test/{path}/template/test/{path}/template",
 					},
 				},
+				{
+					// Regression test for b/162888708.
+					// Some of these patterns were not supported in dynamic routing mode.
+					// This would cause ESPv2 to crash loop.
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Wildcards",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/wildcard/a/*/b/{name=*}/c/**",
+					},
+				},
 			},
 		},
 		Types: []*ptypepb.Type{
@@ -341,6 +353,10 @@ var (
 				},
 				{
 					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SleepDurationShort",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Wildcards",
 					AllowUnregisteredCalls: true,
 				},
 			},
@@ -527,6 +543,11 @@ var (
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/non-existant-url",
 					},
+				},
+				{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Wildcards",
+					Address:         "https://localhost:-1/dynamicrouting/const_wildcard",
+					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
 			},
 		},

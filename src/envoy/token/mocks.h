@@ -41,12 +41,6 @@ class MockTokenSubscriberFactory : public TokenSubscriberFactory {
        const ::google::protobuf::RepeatedPtrField<std::string>& scopes,
        GetTokenFunc access_token_fn),
       (const));
-
-  MOCK_METHOD(ServiceAccountTokenPtr, createServiceAccountTokenGenerator,
-              (const std::string& service_account_key,
-               const std::string& audience,
-               ServiceAccountTokenGenerator::TokenUpdateFunc callback),
-              (const));
 };
 
 class MockTokenInfo : public TokenInfo {

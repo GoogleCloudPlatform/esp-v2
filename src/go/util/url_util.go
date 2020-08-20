@@ -38,7 +38,21 @@ const (
 )
 
 var (
-	pathParamMatcherRegexp = regexp.MustCompile(`{[^{}]+}`)
+	// Various hacky regular expressions to match a subset of the http template syntax.
+	// Replace segments with single wildcards: /v1/books/*
+	singleWildcardMatcher = regexp.MustCompile(`/\*`)
+	// Replace segments with double wildcards: /v1/**
+	doubleWildcardMatcher = regexp.MustCompile(`/\*\*`)
+	// Replace any path templates: /v1/books/{book_id}
+	pathParamMatcher = regexp.MustCompile(`/{[^{}]+}`)
+	// Replace path templates with double wildcards: /v1/{name=**}
+	pathParamDoubleWildcardMatcher = regexp.MustCompile(`/{[^{}]+=\*\*}`)
+
+	// Common regex forms that emulate http template syntax.
+	// Matches 1 or more segments of any character except '/'.
+	singleWildcardReplacementRegex = `/[^\/]+`
+	// Matches any character or no characters at all.
+	doubleWildcardReplacementRegex = `/.*`
 )
 
 // ParseURI parses uri into scheme, hostname, port, path with err(if exist).
@@ -147,11 +161,11 @@ func ResolveJwksUriUsingOpenID(uri string) (string, error) {
 	return jwksURI, nil
 }
 
-func IamIdentityTokenSuffix(IamServiceAccount string) string {
+func IamIdentityTokenPath(IamServiceAccount string) string {
 	return fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateIdToken", IamServiceAccount)
 }
 
-func IamAccessTokenSuffix(IamServiceAccount string) string {
+func IamAccessTokenPath(IamServiceAccount string) string {
 	return fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateAccessToken", IamServiceAccount)
 }
 
@@ -163,16 +177,25 @@ func ExtraAddressFromURI(jwksUri string) (string, error) {
 	return fmt.Sprintf("%s:%v", hostname, port), nil
 }
 
-// Returns a regex that will match requests to the uri with path parameters.
-// If there are no path params, returns empty string.
+// Returns a regex that will match requests to the uri with path parameters or wildcards.
+// If there are no path params or wildcards, returns empty string.
+//
+// Essentially matches a subset of the http template syntax.
+// FIXME(nareddyt): Remove this hack completely when envoy route config supports path matching with path templates.
 func WildcardMatcherForPath(uri string) string {
-	if !pathParamMatcherRegexp.MatchString(uri) {
+
+	// Ordering matters, start with most specific and work upwards.
+	matcher := pathParamDoubleWildcardMatcher.ReplaceAllString(uri, doubleWildcardReplacementRegex)
+	matcher = pathParamMatcher.ReplaceAllString(matcher, singleWildcardReplacementRegex)
+	matcher = doubleWildcardMatcher.ReplaceAllString(matcher, doubleWildcardReplacementRegex)
+	matcher = singleWildcardMatcher.ReplaceAllString(matcher, singleWildcardReplacementRegex)
+
+	if matcher == uri {
 		return ""
 	}
 
-	// Replace path templates inside "{}" by regex "[^\/]+", which means
-	// any character except `/`, also adds `$` to match to the end of the string.
-	return pathParamMatcherRegexp.ReplaceAllString(uri, `[^\/]+`) + `$`
+	// Enforce strict prefix / suffix.
+	return "^" + matcher + "$"
 }
 
 var (

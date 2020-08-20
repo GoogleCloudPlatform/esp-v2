@@ -23,8 +23,8 @@ namespace envoy {
 namespace http_filters {
 namespace backend_auth {
 
-using ::espv2::api::envoy::v7::http::backend_auth::FilterConfig;
-using ::espv2::api::envoy::v7::http::common::AccessToken;
+using ::espv2::api::envoy::v8::http::backend_auth::FilterConfig;
+using ::espv2::api::envoy::v8::http::common::AccessToken;
 using ::google::protobuf::util::TimeUtil;
 using token::GetTokenFunc;
 using token::TokenSubscriber;
@@ -32,7 +32,7 @@ using token::TokenType;
 using token::UpdateTokenCallback;
 
 AudienceContext::AudienceContext(
-    const ::espv2::api::envoy::v7::http::backend_auth::BackendAuthRule&
+    const ::espv2::api::envoy::v8::http::backend_auth::BackendAuthRule&
         proto_config,
     Envoy::Server::Configuration::FactoryContext& context,
     const FilterConfig& filter_config,
@@ -107,11 +107,6 @@ FilterConfigParserImpl::FilterConfigParserImpl(
                 });
         break;
       }
-      case AccessToken::TokenTypeCase::kServiceAccountSecret:
-        // TODO(taoxuy): support getting access token from service account file.
-        ENVOY_LOG(error,
-                  "Not support getting access token by service account file");
-        return;
       default:
         NOT_REACHED_GCOVR_EXCL_LINE;
     }

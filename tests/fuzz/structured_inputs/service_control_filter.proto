@@ -3,13 +3,13 @@ syntax = "proto3";
 package espv2.tests.fuzz.protos;
 
 import "test/fuzz/common.proto";
-import "api/envoy/v7/http/service_control/config.proto";
+import "api/envoy/v8/http/service_control/config.proto";
 import "validate/validate.proto";
 
 message ServiceControlFilterInput {
 
   // Filter config.
-  espv2.api.envoy.v7.http.service_control.FilterConfig config = 1 [(validate.rules).message.required = true];
+  espv2.api.envoy.v8.http.service_control.FilterConfig config = 1 [(validate.rules).message.required = true];
 
   // The user's HTTP request to the filter.
   test.fuzz.HttpData downstream_request = 2 [(validate.rules).message.required = true];

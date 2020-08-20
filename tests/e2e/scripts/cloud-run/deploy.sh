@@ -36,7 +36,7 @@ PROJECT_ID="cloudesf-testing"
 TEST_ID="cloud-run-${BACKEND}"
 PROXY_RUNTIME_SERVICE_ACCOUNT="e2e-cloud-run-proxy-rt@${PROJECT_ID}.iam.gserviceaccount.com"
 BACKEND_RUNTIME_SERVICE_ACCOUNT="e2e-${BACKEND_PLATFORM}-backend-rt@${PROJECT_ID}.iam.gserviceaccount.com"
-JOB_KEY_PATH="${ROOT}/tests/e2e/client/gob-prow-jobs-secret.json"
+JOB_KEY_PATH="$(mktemp /tmp/servie_account_cred.XXXX)"
 LOG_DIR="$(mktemp -d /tmp/log.XXXX)"
 
 # Determine names of all resources
@@ -54,9 +54,7 @@ BACKEND_HOST=""
 CLUSTER_ZONE="us-central1-a"
 CLOUD_RUN_REGION="us-central1"
 
-# TODO(b/160643986): pin to latest cluster version.
-# CLUSTER_VERSION="latest"
-CLUSTER_VERSION="1.16.9-gke.6"
+ CLUSTER_VERSION="latest"
 
 APP_ENGINE_IAP_CLIENT_ID="245521401045-qh1j3eq583qdkmn9m60pfc67303ps6cu.apps.googleusercontent.com"
 

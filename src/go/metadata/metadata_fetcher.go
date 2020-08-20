@@ -27,7 +27,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
 
-	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v7/http/service_control"
+	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v8/http/service_control"
 )
 
 const (
@@ -97,7 +97,7 @@ func (mf *MetadataFetcher) FetchAccessToken() (string, time.Duration, error) {
 		return mf.tokenInfo.accessToken, mf.tokenInfo.tokenTimeout.Sub(now), nil
 	}
 
-	tokenBody, err := mf.getMetadata(mf.createUrl(util.AccessTokenSuffix))
+	tokenBody, err := mf.getMetadata(mf.createUrl(util.AccessTokenPath))
 	if err != nil {
 		return "", 0, err
 	}
@@ -124,15 +124,15 @@ func (mf *MetadataFetcher) fetchMetadata(key string) (string, error) {
 }
 
 func (mf *MetadataFetcher) FetchServiceName() (string, error) {
-	return mf.fetchMetadata(util.ServiceNameSuffix)
+	return mf.fetchMetadata(util.ServiceNamePath)
 }
 
 func (mf *MetadataFetcher) FetchConfigId() (string, error) {
-	return mf.fetchMetadata(util.ConfigIDSuffix)
+	return mf.fetchMetadata(util.ConfigIDPath)
 }
 
 func (mf *MetadataFetcher) FetchRolloutStrategy() (string, error) {
-	return mf.fetchMetadata(util.RolloutStrategySuffix)
+	return mf.fetchMetadata(util.RolloutStrategyPath)
 }
 
 func (mf *MetadataFetcher) FetchIdentityJWTToken(audience string) (string, time.Duration, error) {
@@ -146,7 +146,7 @@ func (mf *MetadataFetcher) FetchIdentityJWTToken(audience string) (string, time.
 		}
 	}
 
-	identityTokenURI := util.IdentityTokenSuffix + "?audience=" + audience + "&format=standard"
+	identityTokenURI := util.IdentityTokenPath + "?audience=" + audience + "&format=standard"
 	token, err := mf.fetchMetadata(identityTokenURI)
 	if err != nil {
 		return "", 0, err
@@ -181,12 +181,12 @@ func (mf *MetadataFetcher) FetchGCPAttributes() (*scpb.GcpAttributes, error) {
 }
 
 func (mf *MetadataFetcher) FetchProjectId() (string, error) {
-	return mf.fetchMetadata(util.ProjectIDSuffix)
+	return mf.fetchMetadata(util.ProjectIDPath)
 }
 
 // Do not directly use this function. Use fetchGCPAttributes instead.
 func (mf *MetadataFetcher) fetchZone() (string, error) {
-	zonePath, err := mf.fetchMetadata(util.ZoneSuffix)
+	zonePath, err := mf.fetchMetadata(util.ZonePath)
 	if err != nil {
 		return "", err
 	}
@@ -203,11 +203,11 @@ func (mf *MetadataFetcher) fetchZone() (string, error) {
 
 // Do not directly use this function. Use fetchGCPAttributes instead.
 func (mf *MetadataFetcher) fetchPlatform() string {
-	if _, err := mf.fetchMetadata(util.GAEServerSoftwareSuffix); err == nil {
+	if _, err := mf.fetchMetadata(util.GAEServerSoftwarePath); err == nil {
 		return util.GAEFlex
 	}
 
-	if _, err := mf.fetchMetadata(util.KubeEnvSuffix); err == nil {
+	if _, err := mf.fetchMetadata(util.KubeEnvPath); err == nil {
 		return util.GKE
 	}
 

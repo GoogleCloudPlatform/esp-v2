@@ -18,11 +18,11 @@ metadata:
   name: app
 spec:
   ports:
-  # Port that accepts gRPC and JSON/HTTP2 requests over HTTP.
-  - port: 80
+  # Port that accepts gRPC and JSON/HTTP2 requests over HTTPS.
+  - port: 443
     targetPort: 8080
     protocol: TCP
-    name: http
+    name: https
   - port: 8001
     targetPort: 8001
     protocol: TCP
@@ -31,23 +31,41 @@ spec:
     app: app
   type: LoadBalancer
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: app
   template:
     metadata:
       labels:
         app: app
     spec:
+      volumes:
+        - name: service-account-cred
+          secret:
+            secretName: service-account-cred
+        - name: esp-ssl
+          secret:
+            secretName: esp-ssl
       containers:
       - name: apiproxy
         image: APIPROXY_IMAGE
         args: [ARGS]
         ports:
           - containerPort: 8080
+        volumeMounts:
+          - mountPath: /etc/creds
+            name: service-account-cred
+            readOnly: true
+          - mountPath: /etc/esp/ssl
+            name: esp-ssl
+            readOnly: true
+        imagePullPolicy: Always
       - name: bookstore
         image: gcr.io/cloudesf-testing/http-bookstore:2
         ports:

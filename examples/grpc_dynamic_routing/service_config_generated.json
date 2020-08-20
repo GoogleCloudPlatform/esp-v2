@@ -69,8 +69,8 @@
     "providers": [
       {
         "id": "test_jwk",
-        "issuer": "245521401045-compute@developer.gserviceaccount.com",
-        "jwksUri": "https://www.googleapis.com/service_accounts/v1/jwk/245521401045-compute@developer.gserviceaccount.com"
+        "issuer": "e2e-client-jwk@cloudesf-testing.iam.gserviceaccount.com",
+        "jwksUri": "https://www.googleapis.com/service_accounts/v1/jwk/e2e-client-jwk@cloudesf-testing.iam.gserviceaccount.com"
       }
     ],
     "rules": [

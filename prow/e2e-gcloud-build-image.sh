@@ -29,6 +29,7 @@ export CLOUDSDK_CORE_DISABLE_PROMPTS=1
 # Use a service that is not used for any other tests.
 SERVICE_NAME="gcloud-build-image-e2e-test.endpoints.cloudesf-testing.cloud.goog"
 CONFIG_ID="2020-07-20r1"
+START_DIR="$(pwd)"
 
 function error_exit() {
   # ${BASH_SOURCE[1]} is the file name of the caller.
@@ -53,6 +54,9 @@ function expectImage() {
   local image_name=$1
   gcloud container images describe "${image_name}" || error_exit "Failed to find image: ${image_name}"
   echo "Successfully verified image exists: ${image_name}"
+
+  local curr_dir=$(pwd)
+  [ "${curr_dir}" == "${START_DIR}" ] || error_exit "New working directory changed: ${curr_dir}"
 }
 
 echo "=== Test 1: Specify a fully qualified version. ==="

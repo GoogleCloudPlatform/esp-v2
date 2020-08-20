@@ -23,7 +23,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/proto"
 
-	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v7/http/service_control"
+	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v8/http/service_control"
 )
 
 const (
@@ -204,7 +204,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 		{
 			desc: "ProjectID",
 			mockedResp: map[string]string{
-				util.ProjectIDSuffix: fakeProjectID,
+				util.ProjectIDPath: fakeProjectID,
 			},
 			expectedGCPAttributes: &scpb.GcpAttributes{
 				ProjectId: fakeProjectID,
@@ -214,7 +214,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 		{
 			desc: "Valid Zone",
 			mockedResp: map[string]string{
-				util.ZoneSuffix: fakeZonePath,
+				util.ZonePath: fakeZonePath,
 			},
 			expectedGCPAttributes: &scpb.GcpAttributes{
 				Zone:     fakeZone,
@@ -224,7 +224,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 		{
 			desc: "Invalid Zone - without '/'",
 			mockedResp: map[string]string{
-				util.ZoneSuffix: "noslash",
+				util.ZonePath: "noslash",
 			},
 			expectedGCPAttributes: &scpb.GcpAttributes{
 				Platform: util.GCE,
@@ -233,7 +233,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 		{
 			desc: "Invalid Zone - ends with '/'",
 			mockedResp: map[string]string{
-				util.ZoneSuffix: "project/123123/",
+				util.ZonePath: "project/123123/",
 			},
 			expectedGCPAttributes: &scpb.GcpAttributes{
 				Platform: util.GCE,
@@ -242,7 +242,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 		{
 			desc: "Platform - GAE_FLEX",
 			mockedResp: map[string]string{
-				util.GAEServerSoftwareSuffix: "foo",
+				util.GAEServerSoftwarePath: "foo",
 			},
 			expectedGCPAttributes: &scpb.GcpAttributes{
 				Platform: util.GAEFlex,
@@ -251,7 +251,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 		{
 			desc: "Platform - GKE",
 			mockedResp: map[string]string{
-				util.KubeEnvSuffix: "foo",
+				util.KubeEnvPath: "foo",
 			},
 			expectedGCPAttributes: &scpb.GcpAttributes{
 				Platform: util.GKE,
@@ -267,9 +267,9 @@ func TestFetchGCPAttributes(t *testing.T) {
 		{
 			desc: "Combined - ProjectID, Zone, and Platform",
 			mockedResp: map[string]string{
-				util.ProjectIDSuffix:         fakeProjectID,
-				util.ZoneSuffix:              fakeZonePath,
-				util.GAEServerSoftwareSuffix: "foo",
+				util.ProjectIDPath:         fakeProjectID,
+				util.ZonePath:              fakeZonePath,
+				util.GAEServerSoftwarePath: "foo",
 			},
 			expectedGCPAttributes: &scpb.GcpAttributes{
 				ProjectId: fakeProjectID,

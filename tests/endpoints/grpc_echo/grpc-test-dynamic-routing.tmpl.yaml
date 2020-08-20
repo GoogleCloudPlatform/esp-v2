@@ -25,8 +25,8 @@ authentication:
         - provider_id: test_jwk
   providers:
     - id: test_jwk
-      issuer: 245521401045-compute@developer.gserviceaccount.com
-      jwks_uri: https://www.googleapis.com/service_accounts/v1/jwk/245521401045-compute@developer.gserviceaccount.com
+      issuer: e2e-client-jwk@cloudesf-testing.iam.gserviceaccount.com
+      jwks_uri: https://www.googleapis.com/service_accounts/v1/jwk/e2e-client-jwk@cloudesf-testing.iam.gserviceaccount.com
 usage:
   rules:
     - selector: test.grpc.Test.Echo

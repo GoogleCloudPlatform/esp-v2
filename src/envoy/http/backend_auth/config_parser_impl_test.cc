@@ -35,7 +35,7 @@ class ConfigParserImplTest : public ::testing::Test {
     config_parser_ = std::make_unique<FilterConfigParserImpl>(
         proto_config_, mock_factory_context_, mock_token_subscriber_factory_);
   }
-  ::espv2::api::envoy::v7::http::backend_auth::FilterConfig proto_config_;
+  ::espv2::api::envoy::v8::http::backend_auth::FilterConfig proto_config_;
   testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
       mock_factory_context_;
   testing::NiceMock<token::test::MockTokenSubscriberFactory>
@@ -62,26 +62,6 @@ rules {
 
   EXPECT_THROW_WITH_REGEX(setUp(filter_config), Envoy::ProtoValidationException,
                           "Duplicated operation");
-}
-
-TEST_F(ConfigParserImplTest, IamIdTokenWithServiceAccountAsAccessToken) {
-  const char filter_config[] = R"(
-iam_token {
-  access_token {
-    service_account_secret{}
-  }
-}
-rules {
-  operation: "append-with-audience"
-  jwt_audience: "this-is-audience"
-}
-)";
-
-  EXPECT_CALL(mock_token_subscriber_factory_, createImdsTokenSubscriber)
-      .Times(0);
-  EXPECT_CALL(mock_token_subscriber_factory_, createIamTokenSubscriber)
-      .Times(0);
-  setUp(filter_config);
 }
 
 TEST_F(ConfigParserImplTest, GetIdTokenByImds) {

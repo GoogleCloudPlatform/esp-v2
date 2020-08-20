@@ -198,7 +198,7 @@
                     {
                       "name": "com.google.espv2.filters.http.path_matcher",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.v7.http.path_matcher.FilterConfig",
+                        "@type": "type.googleapis.com/espv2.api.envoy.v8.http.path_matcher.FilterConfig",
                         "rules": [
                           {
                             "operation": "test.grpc.Test.Cork",
@@ -449,14 +449,14 @@
                             "fromParams": [
                               "access_token"
                             ],
-                            "issuer": "245521401045-compute@developer.gserviceaccount.com",
+                            "issuer": "e2e-client-jwk@cloudesf-testing.iam.gserviceaccount.com",
                             "payloadInMetadata": "jwt_payloads",
                             "remoteJwks": {
                               "cacheDuration": "300s",
                               "httpUri": {
                                 "cluster": "www.googleapis.com:443",
                                 "timeout": "30s",
-                                "uri": "https://www.googleapis.com/service_accounts/v1/jwk/245521401045-compute@developer.gserviceaccount.com"
+                                "uri": "https://www.googleapis.com/service_accounts/v1/jwk/e2e-client-jwk@cloudesf-testing.iam.gserviceaccount.com"
                               }
                             }
                           }
@@ -466,7 +466,7 @@
                     {
                       "name": "com.google.espv2.filters.http.service_control",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.v7.http.service_control.FilterConfig",
+                        "@type": "type.googleapis.com/espv2.api.envoy.v8.http.service_control.FilterConfig",
                         "generatedHeaderPrefix": "X-Endpoint-",
                         "imdsToken": {
                           "cluster": "metadata-cluster",
@@ -508,7 +508,7 @@
                         "serviceControlUri": {
                           "cluster": "service-control-cluster",
                           "timeout": "30s",
-                          "uri": "https://servicecontrol.googleapis.com/v1/services/"
+                          "uri": "https://servicecontrol.googleapis.com/v1/services"
                         },
                         "services": [
                           {
@@ -1072,7 +1072,7 @@
                     {
                       "name": "com.google.espv2.filters.http.backend_auth",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.v7.http.backend_auth.FilterConfig",
+                        "@type": "type.googleapis.com/espv2.api.envoy.v8.http.backend_auth.FilterConfig",
                         "imdsToken": {
                           "cluster": "metadata-cluster",
                           "timeout": "30s",

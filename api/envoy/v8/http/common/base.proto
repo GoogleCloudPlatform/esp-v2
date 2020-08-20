@@ -14,7 +14,7 @@
 
 syntax = "proto3";
 
-package espv2.api.envoy.v7.http.common;
+package espv2.api.envoy.v8.http.common;
 
 import "google/protobuf/duration.proto";
 import "validate/validate.proto";
@@ -67,21 +67,9 @@ message HttpUri {
   }];
 }
 
-// Duplicate DataSource from envoy for self containment.
-// https://aip.dev/213
-message DataSource {
-  oneof specifier {
-    option (validate.required) = true;
-
-    // Local filesystem data source.
-    string filename = 1 [(validate.rules).string.min_bytes = 1];
-
-    // String inlined in the configuration.
-    string inline_string = 2 [(validate.rules).string.min_bytes = 1];
-  }
-}
-
 message AccessToken {
+  reserved 2;
+
   oneof token_type {
     option (validate.required) = true;
 
@@ -91,18 +79,15 @@ message AccessToken {
     //   Query parameters are added by the filter
     // - Token cluster address to fetch JWT token.
     HttpUri remote_token = 1;
-
-    // The local path or inline content of the service account json file.
-    DataSource service_account_secret = 2;
   }
 }
 
 message IamTokenInfo {
   // The Google Cloud IAM server uri.
-  espv2.api.envoy.v7.http.common.HttpUri iam_uri = 1;
+  espv2.api.envoy.v8.http.common.HttpUri iam_uri = 1;
 
   // Information used to get access token.
-  espv2.api.envoy.v7.http.common.AccessToken access_token = 2;
+  espv2.api.envoy.v8.http.common.AccessToken access_token = 2;
 
   // The Service Account Email.
   string service_account_email = 3;

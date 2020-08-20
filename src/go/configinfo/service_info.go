@@ -16,7 +16,6 @@ package configinfo
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math"
 	"net"
 	"sort"
@@ -28,8 +27,8 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 
-	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v7/http/common"
-	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v7/http/service_control"
+	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v8/http/common"
+	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v8/http/service_control"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	typepb "google.golang.org/genproto/protobuf/ptype"
@@ -243,27 +242,30 @@ func (s *ServiceInfo) addGrpcHttpRules() {
 
 func (s *ServiceInfo) processAccessToken() {
 	if s.Options.ServiceAccountKey != "" {
-		data, _ := ioutil.ReadFile(s.Options.ServiceAccountKey)
 		s.AccessToken = &commonpb.AccessToken{
-			TokenType: &commonpb.AccessToken_ServiceAccountSecret{
-				ServiceAccountSecret: &commonpb.DataSource{
-					Specifier: &commonpb.DataSource_InlineString{
-						InlineString: string(data),
-					},
+			TokenType: &commonpb.AccessToken_RemoteToken{
+				RemoteToken: &commonpb.HttpUri{
+					// Use http://127.0.0.1:8791/local/access_token by default.
+					Uri:     fmt.Sprintf("http://%s:%v%s", util.LoopbackIPv4Addr, s.Options.TokenAgentPort, util.TokenAgentAccessTokenPath),
+					Cluster: util.TokenAgentClusterName,
+					Timeout: ptypes.DurationProto(s.Options.HttpRequestTimeout),
 				},
 			},
 		}
+
 		return
 	}
+
 	s.AccessToken = &commonpb.AccessToken{
 		TokenType: &commonpb.AccessToken_RemoteToken{
 			RemoteToken: &commonpb.HttpUri{
-				Uri:     fmt.Sprintf("%s%s", s.Options.MetadataURL, util.AccessTokenSuffix),
+				Uri:     fmt.Sprintf("%s%s", s.Options.MetadataURL, util.AccessTokenPath),
 				Cluster: util.MetadataServerClusterName,
 				Timeout: ptypes.DurationProto(s.Options.HttpRequestTimeout),
 			},
 		},
 	}
+
 }
 
 func (s *ServiceInfo) processQuota() {
@@ -369,7 +371,7 @@ func (s *ServiceInfo) processHttpRule() error {
 		for _, r := range s.ServiceConfig().GetHttp().GetRules() {
 			method := s.Methods[r.GetSelector()]
 			for _, httpRule := range method.HttpRule {
-				if httpRule.HttpMethod != "OPTIONS" {
+				if httpRule.HttpMethod != util.OPTIONS {
 					matcher := util.WildcardMatcherForPath(httpRule.UriTemplate)
 					if matcher == "" {
 						matcher = httpRule.UriTemplate

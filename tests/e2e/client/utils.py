@@ -64,24 +64,26 @@ def red(text):
 
 def http_connection(host, allow_unverified_cert):
     if host.startswith(HTTPS_PREFIX):
+        print('Create HTTPS connection')
         host = host[len(HTTPS_PREFIX):]
-        print 'Use https to connect: %s' % host
+
+        ssl_ctx = ssl.create_default_context()
         if allow_unverified_cert:
-            try:
-                return httplib.HTTPSConnection(
-                    host, timeout=5, context=ssl._create_unverified_context())
-            except AttributeError:
-                # Legacy versions of python do not check certificate.
-                return httplib.HTTPSConnection(
-                    host, timeout=5)
+            print('Certs NOT verified for this connection')
+            ssl_ctx.check_hostname = False
+            ssl_ctx.verify_mode = ssl.CERT_NONE
         else:
-            return httplib.HTTPSConnection(host)
+            print('Certs will be verified for this connection')
+            ssl_ctx.check_hostname = True
+            ssl_ctx.verify_mode = ssl.CERT_REQUIRED
+        return httplib.HTTPSConnection(host, timeout=10, context=ssl_ctx)
+
     else:
+        print('Create HTTP connection')
         if host.startswith(HTTP_PREFIX):
             host = host[len(HTTP_PREFIX):]
         else:
             host = host
-        print 'Use http to connect: %s' % host
         return httplib.HTTPConnection(host)
 
 

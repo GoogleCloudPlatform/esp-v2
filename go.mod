@@ -16,6 +16,7 @@ require (
 	github.com/miekg/dns v1.1.29
 	golang.org/x/net v0.0.0-20190923162816-aa69164e4478
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
+	golang.org/x/tools v0.0.0-20191216052735-49a3e744a425
 	google.golang.org/api v0.7.0
 	google.golang.org/genproto v0.0.0-20200617032506-f1bdc9086088
 	google.golang.org/grpc v1.27.0
