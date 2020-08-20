@@ -405,3 +405,22 @@ function try_setup_bazel_remote_cache() {
   sed -i -e "s@CACHE_SILO_NAME@${cache_silo}@g" ${root_dir}/.bazelrc
   sed -i -e "s@CACHE_PROJECT_ID@${gcp_project_id}@g" ${root_dir}/.bazelrc
 }
+
+function upload_envoy_binary() {
+#  local envoy_path="${ROOT}/bin/path"
+  gsutil -m cp ${ROOT}/bin/envoy "gs://apiproxy-testing-envoy-binaries/$(get_sha)"
+}
+
+function check_envoy_artifact_exist() {
+  gsutil stats "gs://apiproxy-testing-envoy-binaries/$(get_sha)"
+  if [ $? = 0 ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+function download_envoy_binary() {
+#  local envoy_path="${ROOT}/bin/path"
+  gsutil -m cp "gs://apiproxy-testing-envoy-binaries/$(get_sha)"  ${ROOT}/bin/envoy
+}
