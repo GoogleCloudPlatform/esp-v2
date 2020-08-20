@@ -157,6 +157,12 @@ run_nonfatal long_running_test  \
   "" \
   || STATUS=${?}
 
+# Deploy new config and check new rollout on /endpoints_status
+if [[ ( "${ROLLOUT_STRATEGY}" == "managed" ) && ( "${BACKEND}" == "bookstore" ) ]]; then
+  # Deploy new service config
+  create_service "${SERVICE_IDL}"
+fi
+
 if [[ -n ${REMOTE_LOG_DIR} ]]; then
   fetch_proxy_logs "${NAMESPACE}" "${LOG_DIR}"
   upload_logs "${REMOTE_LOG_DIR}" "${LOG_DIR}"
