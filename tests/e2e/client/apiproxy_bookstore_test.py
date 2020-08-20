@@ -198,7 +198,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
         response = self._call_http('/random/route', method='OPTIONS')
         self.assertEqual(response.status_code, 404)
 
-def run_all_tests(self):
+    def run_all_tests(self):
         shelf1 = {
             'name': 'shelves/1',
             'theme': 'Fiction'
