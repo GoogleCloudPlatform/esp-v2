@@ -141,38 +141,6 @@ fi
 run kubectl create -f ${YAML_FILE} --namespace "${NAMESPACE}"
 HOST=$(get_cluster_host "${NAMESPACE}")
 
-# Run in background while e2e tests are running.
-# ESPv2 is deployed in managed mode for all these e2e tests.
-# This will cause ESPv2 to rebuild the Envoy listener while lots of traffic is running through.
-function doServiceRollout() {
-  while true; do
-    echo 'doServiceRollout: Sleeping until next service rollout'
-    sleep 15m
-
-    local allow_cors=''
-    if (( RANDOM % 2 )); then
-      allow_cors=true
-    else
-      allow_cors=false
-    fi
-
-    echo "doServiceRollout: Setting allowCors = ${allow_cors}"
-    local tmp_file=$(mktemp)
-    cat "${SERVICE_IDL}" \
-        | jq ".\"x-google-endpoints\"[0].allowCors = $allow_cors" \
-        > "${tmp_file}"
-    mv -f "${tmp_file}" "${SERVICE_IDL}"
-
-    echo "doServiceRollout: Deploying and rolling out new config for service ${APIPROXY_SERVICE}"
-    create_service ${CREATE_SERVICE_ARGS}
-  done
-}
-
-# Start background process, only supported for bookstore backend.
-if [ "${BACKEND}" == 'bookstore' ]; then
-  doServiceRollout &
-fi
-
 # Running Test
 STATUS=0
 run_nonfatal long_running_test  \
@@ -188,11 +156,6 @@ run_nonfatal long_running_test  \
   "gke" \
   "" \
   || STATUS=${?}
-
-# Kill background process.
-if [ "${BACKEND}" == 'bookstore' ]; then
-  kill $(jobs -p)
-fi
 
 if [[ -n ${REMOTE_LOG_DIR} ]]; then
   fetch_proxy_logs "${NAMESPACE}" "${LOG_DIR}"
