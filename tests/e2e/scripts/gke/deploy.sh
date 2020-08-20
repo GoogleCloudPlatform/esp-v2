@@ -89,7 +89,6 @@ case "${BACKEND}" in
 
     cat "${SERVICE_IDL_TMPL}" \
         | jq ".host = \"${APIPROXY_SERVICE}\" \
-        | .\"x-google-endpoints\"[0].name = \"${APIPROXY_SERVICE}\" \
         | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${APIPROXY_SERVICE}\"" \
         > "${SERVICE_IDL}"
 
@@ -148,21 +147,6 @@ function doServiceRollout() {
   while true; do
     echo 'doServiceRollout: Sleeping until next service rollout'
     sleep 15m
-
-    local allow_cors=''
-    if (( RANDOM % 2 )); then
-      allow_cors=true
-    else
-      allow_cors=false
-    fi
-
-    echo "doServiceRollout: Setting allowCors = ${allow_cors}"
-    local tmp_file=$(mktemp)
-    cat "${SERVICE_IDL}" \
-        | jq ".\"x-google-endpoints\"[0].allowCors = $allow_cors" \
-        > "${tmp_file}"
-    mv -f "${tmp_file}" "${SERVICE_IDL}"
-
     echo "doServiceRollout: Deploying and rolling out new config for service ${APIPROXY_SERVICE}"
     create_service ${CREATE_SERVICE_ARGS}
   done
