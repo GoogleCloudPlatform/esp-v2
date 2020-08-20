@@ -88,9 +88,9 @@ case "${BACKEND}" in
     SERVICE_IDL="${ROOT}/tests/endpoints/bookstore/bookstore_swagger.json"
 
     cat "${SERVICE_IDL_TMPL}" \
-    | jq ".host = \"${APIPROXY_SERVICE}\" \
-       | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${APIPROXY_SERVICE}\"" \
-      > "${SERVICE_IDL}"
+        | jq ".host = \"${APIPROXY_SERVICE}\" \
+        | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${APIPROXY_SERVICE}\"" \
+        > "${SERVICE_IDL}"
 
     CREATE_SERVICE_ARGS="${SERVICE_IDL}"
     ;;
@@ -140,6 +140,23 @@ fi
 run kubectl create -f ${YAML_FILE} --namespace "${NAMESPACE}"
 HOST=$(get_cluster_host "${NAMESPACE}")
 
+# Run in background while e2e tests are running.
+# ESPv2 is deployed in managed mode for all these e2e tests.
+# This will cause ESPv2 to rebuild the Envoy listener while lots of traffic is running through.
+function doServiceRollout() {
+  while true; do
+    echo 'doServiceRollout: Sleeping until next service rollout'
+    sleep 15m
+    echo "doServiceRollout: Deploying and rolling out new config for service ${APIPROXY_SERVICE}"
+    create_service ${CREATE_SERVICE_ARGS}
+  done
+}
+
+# Start background process, only supported for bookstore backend.
+if [ "${BACKEND}" == 'bookstore' ]; then
+  doServiceRollout &
+fi
+
 # Running Test
 STATUS=0
 run_nonfatal long_running_test  \
@@ -156,10 +173,9 @@ run_nonfatal long_running_test  \
   "" \
   || STATUS=${?}
 
-# Deploy new config and check new rollout on /endpoints_status
-if [[ ( "${ROLLOUT_STRATEGY}" == "managed" ) && ( "${BACKEND}" == "bookstore" ) ]]; then
-  # Deploy new service config
-  create_service "${SERVICE_IDL}"
+# Kill background process.
+if [ "${BACKEND}" == 'bookstore' ]; then
+  kill $(jobs -p)
 fi
 
 if [[ -n ${REMOTE_LOG_DIR} ]]; then
