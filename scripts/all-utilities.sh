@@ -411,15 +411,6 @@ function upload_envoy_binary() {
   gsutil -m cp ${ROOT}/bin/envoy "gs://apiproxy-testing-envoy-binaries/$(get_sha)"
 }
 
-function check_envoy_artifact_exist() {
-  gsutil stats "gs://apiproxy-testing-envoy-binaries/$(get_sha)"
-  if [ $? = 0 ]; then
-    return 0
-  else
-    return 1
-  fi
-}
-
 function download_envoy_binary() {
 #  local envoy_path="${ROOT}/bin/path"
   gsutil -m cp "gs://apiproxy-testing-envoy-binaries/$(get_sha)"  ${ROOT}/bin/envoy
