@@ -117,7 +117,7 @@ function bookstore(options) {
       console.log(timestamp + ' Echo requests received: ', echoCount);
   }, 1000 * 60);
 
-  // Install tracing middleware.
+  // Install logging middleware.
   if (options.log === true) {
     app.use(function(req, res, next) {
       console.log(req.method, req.originalUrl);
