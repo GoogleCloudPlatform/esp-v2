@@ -67,7 +67,7 @@ spec:
             readOnly: true
         imagePullPolicy: Always
       - name: bookstore
-        image: gcr.io/cloudesf-testing/http-bookstore:2
+        image: gcr.io/cloudesf-testing/http-bookstore:3
         ports:
           - containerPort: 8081
         env:
