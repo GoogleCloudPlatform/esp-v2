@@ -26,15 +26,14 @@
 
 #include "src/api_proxy/utils/version.h"
 
-namespace gasv1 = ::google::api::servicecontrol::v1;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
-
 namespace espv2 {
 namespace api_proxy {
 namespace service_control {
-
 namespace {
+
+namespace gasv1 = ::google::api::servicecontrol::v1;
+using ::google::protobuf::util::Status;
+using ::google::protobuf::util::error::Code;
 
 const char kFakeVersion[] = "TEST.0.0";
 
@@ -105,6 +104,8 @@ void FillReportRequestInfo(ReportRequestInfo* request) {
 
   request->request_bytes = 100;
   request->response_bytes = 1024 * 1024;
+
+  request->api_consumer_identity = identity::ApiConsumerIdentity::VERIFIED;
 }
 
 std::string CheckRequestToString(gasv1::CheckRequest* request) {
@@ -335,10 +336,11 @@ TEST_F(RequestBuilderTest, FillFinalReportRequestTest) {
 TEST_F(RequestBuilderTest, FillReportRequestFailedTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
-  // Remove api_key to test not api_key case for
-  // producer_project_id and credential_id.
-  info.api_key = "";
   FillReportRequestInfo(&info);
+
+  // Test case where API Key is not present, but required.
+  info.api_key = "";
+  info.api_consumer_identity = identity::ApiConsumerIdentity::NOT_CHECKED;
 
   // Use 401 as a failed response code.
   info.response_code = 401;
@@ -354,9 +356,35 @@ TEST_F(RequestBuilderTest, FillReportRequestFailedTest) {
   ASSERT_EQ(expected_text, text);
 }
 
+TEST_F(RequestBuilderTest, FillReportWithInvalidApiConsumerTest) {
+  ReportRequestInfo info;
+  FillOperationInfo(&info);
+  FillReportRequestInfo(&info);
+
+  // Test case where API consumer's identity is invalid.
+  info.api_key = "invalid-api-key";
+  info.api_consumer_identity = identity::ApiConsumerIdentity::INVALID;
+
+  // Use 401 as a failed response code.
+  info.response_code = 401;
+
+  // Use the corresponding status for that response code.
+  info.status = Status(Code::PERMISSION_DENIED, "");
+
+  gasv1::ReportRequest request;
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+
+  std::string text = ReportRequestToString(&request);
+  std::string expected_text =
+      ReadTestBaseline("report_request_invalid_api_consumer.golden");
+  ASSERT_EQ(expected_text, text);
+}
+
 TEST_F(RequestBuilderTest, FillReportRequestEmptyOptionalTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
+
+  info.api_consumer_identity = identity::ApiConsumerIdentity::VERIFIED;
 
   gasv1::ReportRequest request;
   ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
@@ -367,15 +395,42 @@ TEST_F(RequestBuilderTest, FillReportRequestEmptyOptionalTest) {
   ASSERT_EQ(expected_text, text);
 }
 
-TEST_F(RequestBuilderTest, CredentailIdApiKeyTest) {
+TEST_F(RequestBuilderTest, CredentailIdApiConsumerVerifiedTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
+
+  info.api_consumer_identity = identity::ApiConsumerIdentity::VERIFIED;
 
   gasv1::ReportRequest request;
   ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
 
+  ASSERT_TRUE(request.operations(0).labels().contains("/credential_id"));
   ASSERT_EQ(request.operations(0).labels().at("/credential_id"),
             "apikey:api_key_x");
+}
+
+TEST_F(RequestBuilderTest, CredentailIdApiConsumerInvalidTest) {
+  ReportRequestInfo info;
+  FillOperationInfo(&info);
+
+  info.api_consumer_identity = identity::ApiConsumerIdentity::INVALID;
+
+  gasv1::ReportRequest request;
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+
+  ASSERT_FALSE(request.operations(0).labels().contains("/credential_id"));
+}
+
+TEST_F(RequestBuilderTest, CredentailIdApiConsumerNotCheckedTest) {
+  ReportRequestInfo info;
+  FillOperationInfo(&info);
+
+  info.api_consumer_identity = identity::ApiConsumerIdentity::NOT_CHECKED;
+
+  gasv1::ReportRequest request;
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+
+  ASSERT_FALSE(request.operations(0).labels().contains("/credential_id"));
 }
 
 TEST_F(RequestBuilderTest, CredentailIdIssuerOnlyTest) {

@@ -45,6 +45,28 @@ inline const char* ToString(Protocol p) {
 
 }  // namespace protocol
 
+namespace identity {
+
+// Indicates whether the API key is verified by SC Check.
+enum ApiConsumerIdentity {
+  NOT_CHECKED = 0,
+  VERIFIED = 1,
+  INVALID = 2,
+};
+
+inline const char* ToString(ApiConsumerIdentity aci) {
+  switch (aci) {
+    case VERIFIED:
+      return "VERIFIED";
+    case INVALID:
+      return "INVALID";
+    case NOT_CHECKED:
+    default:
+      return "NOT CHECKED";
+  }
+}
+}  // namespace identity
+
 // Per request latency statistics.
 struct LatencyInfo {
   // The request time in milliseconds. -1 if not available.
@@ -214,6 +236,9 @@ struct ReportRequestInfo : public OperationInfo {
   // Flag to indicate the final report
   bool is_final_report;
 
+  // Influences the log entry and consumer metric.
+  identity::ApiConsumerIdentity api_consumer_identity;
+
   ReportRequestInfo()
       : response_code(200),
         request_size(-1),
@@ -227,7 +252,8 @@ struct ReportRequestInfo : public OperationInfo {
         streaming_response_message_counts(0),
         streaming_durations(0),
         is_first_report(true),
-        is_final_report(true) {}
+        is_final_report(true),
+        api_consumer_identity(identity::ApiConsumerIdentity::NOT_CHECKED) {}
 };
 
 }  // namespace service_control

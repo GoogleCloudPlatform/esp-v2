@@ -31,6 +31,7 @@ using ::Envoy::StreamInfo::FilterState;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::OperationInfo;
 using ::espv2::api_proxy::service_control::ScResponseErrorType;
+using ::espv2::api_proxy::service_control::identity::ApiConsumerIdentity;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
@@ -61,6 +62,7 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
                             kConsumerTypeHeaderSuffix),
       consumer_number_header_(cfg_parser_.config().generated_header_prefix() +
                               kConsumerNumberHeaderSuffix),
+      on_check_done_called_(false),
       request_header_size_(0),
       response_header_size_(0),
       is_grpc_(false),
@@ -143,11 +145,20 @@ void ServiceControlHandlerImpl::prepareReportRequest(
     ::espv2::api_proxy::service_control::ReportRequestInfo& info) {
   fillOperationInfo(info);
 
-  // Report: not to send api-key if invalid or service is not enabled.
-  if (check_response_info_.error_type == ScResponseErrorType::API_KEY_INVALID ||
-      check_response_info_.error_type ==
-          ScResponseErrorType::SERVICE_NOT_ACTIVATED) {
-    info.api_key.clear();
+  if (on_check_done_called_) {
+    if (check_response_info_.error_type ==
+            ScResponseErrorType::API_KEY_INVALID ||
+        check_response_info_.error_type ==
+            ScResponseErrorType::SERVICE_NOT_ACTIVATED) {
+      // Do not send consumer metric if api-key is invalid or service is not
+      // enabled.
+      info.api_consumer_identity = ApiConsumerIdentity::INVALID;
+    } else {
+      info.api_consumer_identity = ApiConsumerIdentity::VERIFIED;
+    }
+  } else {
+    // Do not send consumer metric if api-key is never checked for validity.
+    info.api_consumer_identity = ApiConsumerIdentity::NOT_CHECKED;
   }
 
   info.url = path_;
