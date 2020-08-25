@@ -401,7 +401,7 @@ class TestStartProxy(unittest.TestCase):
             ['--ssl_server_cert_path=/etc/endpoint/ssl', '--ssl_port=9000'],
             ['--ssl_server_cert_path=/etc/endpoint/ssl', '--generate_self_signed_cert'],
             ['--ssl_client_cert_path=/etc/endpoint/ssl', '--tls_mutual_auth'],
-            ['--ssl_protocols=TLSv1.3',  '--ssl_minimum_protocol=TLSv1.1'],\
+            ['--ssl_protocols=TLSv1.3',  '--ssl_minimum_protocol=TLSv1.1'],
             ['--ssl_minimum_protocol=TLSv11'],
             ['--ssl_client_root_certs_file', '--enable_grpc_backend_ssl'],
             ['--transcoding_ignore_query_parameters=foo,bar',
