@@ -955,7 +955,7 @@ def gen_envoy_args(args):
            "--log-format-escaped"]
 
     if args.enable_debug:
-        cmd.append("-l debug")
+        cmd.append("-l debug --component-log-level upstream:info,main:info")
 
     return cmd
 
