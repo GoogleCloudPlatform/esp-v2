@@ -40,8 +40,6 @@ void doTest(
   static Envoy::Extensions::HttpFilters::UberFilterFuzzer fuzzer;
   fuzzer.runData(static_cast<Envoy::Http::StreamDecoderFilter*>(&filter),
                  input.downstream_request());
-  fuzzer.runData(static_cast<Envoy::Http::StreamEncoderFilter*>(&filter),
-                 input.upstream_response());
   fuzzer.accessLog(static_cast<Envoy::AccessLog::Instance*>(&filter),
                    stream_info);
   fuzzer.reset();
@@ -71,8 +69,6 @@ DEFINE_PROTO_FUZZER(
       &context.cluster_manager_.async_client_);
   NiceMock<Envoy::Http::MockStreamDecoderFilterCallbacks>
       mock_decoder_callbacks;
-  NiceMock<Envoy::Http::MockStreamEncoderFilterCallbacks>
-      mock_encoder_callbacks;
 
   // Return a fake span.
   EXPECT_CALL(mock_decoder_callbacks, activeSpan())
@@ -136,8 +132,6 @@ DEFINE_PROTO_FUZZER(
         Envoy::Fuzz::fromStreamInfo(input.stream_info());
     EXPECT_CALL(mock_decoder_callbacks, streamInfo())
         .WillRepeatedly(ReturnRef(stream_info));
-    EXPECT_CALL(mock_encoder_callbacks, streamInfo())
-        .WillRepeatedly(ReturnRef(stream_info));
 
     // Create filter config.
     ServiceControlFilterConfig filter_config(input.config(), "fuzz-test-stats",
@@ -154,7 +148,6 @@ DEFINE_PROTO_FUZZER(
     ServiceControlFilter filter(filter_config.stats(),
                                 filter_config.handler_factory());
     filter.setDecoderFilterCallbacks(mock_decoder_callbacks);
-    filter.setEncoderFilterCallbacks(mock_encoder_callbacks);
 
     if (onReadyCallback != nullptr) {
       // Filter config is valid enough to start the token subscriber.
