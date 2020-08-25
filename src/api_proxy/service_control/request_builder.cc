@@ -1138,6 +1138,7 @@ Status RequestBuilder::FillAllocateQuotaRequest(
   }
   // allocate_operation.consumer_id
   if (!info.api_key.empty()) {
+    // For quota request, we send the API key as is.
     operation->set_consumer_id(std::string(kConsumerIdApiKey) +
                                std::string(info.api_key));
   } else if (!info.producer_project_id.empty()) {
@@ -1186,8 +1187,7 @@ Status RequestBuilder::FillCheckRequest(const CheckRequestInfo& info,
   Operation* op = request->mutable_operation();
   SetOperationCommonFields(info, current_time, op);
   if (!info.api_key.empty()) {
-    ASSERT(!info.api_key.empty(),
-           "API Key must be set, otherwise consumer would not be verified.");
+    // For check request, we send the API key as is.
     op->set_consumer_id(std::string(kConsumerIdApiKey) +
                         std::string(info.api_key));
   }
@@ -1229,6 +1229,8 @@ Status RequestBuilder::FillReportRequest(const ReportRequestInfo& info,
   Operation* op = request->add_operations();
   SetOperationCommonFields(info, current_time, op);
   if (info.api_consumer_identity == identity::ApiConsumerIdentity::VERIFIED) {
+    ASSERT(!info.api_key.empty(),
+           "API Key must be set, otherwise consumer would not be verified.");
     op->set_consumer_id(std::string(kConsumerIdApiKey) +
                         std::string(info.api_key));
   }
