@@ -951,10 +951,13 @@ def gen_proxy_config(args):
 def gen_envoy_args(args):
     cmd = [ENVOY_BIN, "-c", DEFAULT_CONFIG_DIR + BOOTSTRAP_CONFIG,
            "--disable-hot-restart",
+           # This will print logs in `glog` format.
+           # Stackdriver logging integrates nicely with this format.
            "--log-format %L%m%d %T.%e %t envoy] [%t][%n]%v",
            "--log-format-escaped"]
 
     if args.enable_debug:
+        # Enable debug logging, but not for everything... too noisy otherwise.
         cmd.append("-l debug")
         cmd.append("--component-log-level upstream:info,main:info")
 
