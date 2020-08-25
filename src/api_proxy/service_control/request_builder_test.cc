@@ -362,6 +362,8 @@ TEST_F(RequestBuilderTest, FillReportWithInvalidApiConsumerTest) {
   FillReportRequestInfo(&info);
 
   // Test case where API consumer's identity is invalid.
+  // The key point is the API Key will be included in the log entry,
+  // but not the `credential_id` or `consumer_id` metrics.
   info.api_key = "invalid-api-key";
   info.api_consumer_identity = identity::ApiConsumerIdentity::INVALID;
 
