@@ -193,7 +193,6 @@ func TestServiceControlCheckError(t *testing.T) {
 					FrontendProtocol:             "http",
 					HttpMethod:                   "GET",
 					LogMessage:                   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth0 is called",
-
 					StatusCode:                   "3",
 					ResponseCode:                 400,
 					Platform:                     util.GCE,

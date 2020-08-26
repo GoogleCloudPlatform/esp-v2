@@ -93,7 +93,6 @@ results {
 			HttpMethod:                   "POST",
 			LogMessage:                   "test.grpc.Test.EchoStream is called",
 			StatusCode:                   "0",
-
 			ResponseCode:                 200,
 			Platform:                     util.GCE,
 			Location:                     "test-zone",

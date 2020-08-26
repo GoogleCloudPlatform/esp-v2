@@ -127,7 +127,6 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					LogMessage:                   "endpoints.examples.bookstore.Bookstore.ListShelves is called",
 					StatusCode:                   "0",
 					ResponseCode:                 401,
-
 					Platform:                     util.GCE,
 					Location:                     "test-zone",
 					BackendProtocol:              "grpc",

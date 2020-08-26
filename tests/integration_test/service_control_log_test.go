@@ -222,7 +222,6 @@ func TestServiceControlLogJwtPayloads(t *testing.T) {
 					LogMessage:                   "endpoints.examples.bookstore.Bookstore.ListShelves is called",
 					StatusCode:                   "0",
 					ResponseCode:                 200,
-
 					Platform:                     util.GCE,
 					Location:                     "test-zone",
 					JwtPayloads:                  "exp=4703162488;google.compute_engine.project_id=cloudendpoint_testing;google.project_number=12345;google.google_bool=false;foo.foo_bool=true;aud=ok_audience_1;",

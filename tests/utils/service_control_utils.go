@@ -84,7 +84,7 @@ type ExpectedReport struct {
 	ResponseCode                 int
 	Referer                      string
 	StatusCode                   string
-	ErrorCause                                       string
+	ErrorCause                   string
 	FrontendProtocol             string
 	BackendProtocol              string
 	Platform                     string

@@ -358,7 +358,6 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 					BackendProtocol:              "grpc",
 					HttpMethod:                   "GET",
 					LogMessage:                   "endpoints.examples.bookstore.Bookstore.ListShelves is called",
-
 					StatusCode:                   "8",
 					// It always allow the first request, then cache its cost, accumulate all costs for 1 second,
 					// then call remote allocateQuota,  if fail, the next request will be failed with 429.

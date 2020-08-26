@@ -792,7 +792,6 @@ func TestCreateReport(t *testing.T) {
 		LogMessage:                   "Method: ListShelves",
 		ResponseCode:                 503,
 		StatusCode:                   "14",
-
 	})
 
 	want := scpb.ReportRequest{}
@@ -1637,7 +1636,6 @@ func TestCreateAggregateReport(t *testing.T) {
 		LogMessage:                   "Method: ListShelves",
 		ResponseCode:                 503,
 		StatusCode:                   "14",
-
 	})
 
 	AggregateReport(&got, 3)
