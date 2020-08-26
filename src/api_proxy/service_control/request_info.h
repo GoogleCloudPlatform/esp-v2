@@ -61,17 +61,22 @@ enum ApiKeyState {
   VERIFIED = 3,
 };
 
+/*
+ * TODO(nareddyt): Enable in follow-up PR - log state in log entry.
 inline const char* ToString(ApiKeyState state) {
   switch (state) {
     case VERIFIED:
       return "VERIFIED";
     case INVALID:
       return "INVALID";
+    case NOT_ENABLED:
+      return "NOT ENABLED";
     case NOT_CHECKED:
     default:
       return "NOT CHECKED";
   }
 }
+*/
 }  // namespace api_key
 
 // Per request latency statistics.
