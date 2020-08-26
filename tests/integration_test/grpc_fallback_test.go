@@ -112,8 +112,6 @@ results {
 				FrontendProtocol:  "grpc",
 				HttpMethod:        "POST",
 				LogMessage:        "endpoints.examples.bookstore.Bookstore.Unspecified is called",
-				RequestMsgCounts:  1,
-				ResponseMsgCounts: 1,
 				StatusCode:        "0",
 				ResponseCode:      200,
 				Platform:          util.GCE,
