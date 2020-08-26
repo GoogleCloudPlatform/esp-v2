@@ -160,7 +160,6 @@ func TestServiceControlBasic(t *testing.T) {
 					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:   "test-config-id",
 					URL:               "/echo",
-					ErrorType:         "4xx",
 					StatusCode:        "16",
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
 					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",

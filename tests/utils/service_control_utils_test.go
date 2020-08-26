@@ -93,10 +93,6 @@ operations: <
     value: "apikey:api-key"
   >
   labels: <
-    key: "/error_type"
-    value: "5xx"
-  >
-  labels: <
     key: "/protocol"
     value: "unknown"
   >
@@ -137,115 +133,9 @@ operations: <
     value: "1.0.0"
   >
   metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/consumer/backend_latencies"
-    metric_values: <
-      distribution_value: <
-        count: 1
-        mean: 1000
-        minimum: 1000
-        maximum: 1000
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 1
-        exponential_buckets: <
-          num_finite_buckets: 29
-          growth_factor: 2
-          scale: 1e-06
-        >
-      >
-    >
-  >
-  metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/consumer/error_count"
-    metric_values: <
-      int64_value: 1
-    >
-  >
-  metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/consumer/request_bytes"
-    metric_values: <
-      int64_value: 200
-    >
-  >
-  metric_value_sets: <
     metric_name: "serviceruntime.googleapis.com/api/consumer/request_count"
     metric_values: <
       int64_value: 1
-    >
-  >
-  metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/consumer/request_overhead_latencies"
-    metric_values: <
-      distribution_value: <
-        count: 1
-        mean: 1000
-        minimum: 1000
-        maximum: 1000
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 1
-        exponential_buckets: <
-          num_finite_buckets: 29
-          growth_factor: 2
-          scale: 1e-06
-        >
-      >
     >
   >
   metric_value_sets: <
@@ -275,12 +165,6 @@ operations: <
     >
   >
   metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/consumer/response_bytes"
-    metric_values: <
-      int64_value: 200
-    >
-  >
-  metric_value_sets: <
     metric_name: "serviceruntime.googleapis.com/api/consumer/response_sizes"
     metric_values: <
       distribution_value: <
@@ -302,53 +186,6 @@ operations: <
           num_finite_buckets: 8
           growth_factor: 10
           scale: 1
-        >
-      >
-    >
-  >
-  metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/consumer/streaming_durations"
-    metric_values: <
-      distribution_value: <
-        count: 1
-        mean: 1000
-        minimum: 1000
-        maximum: 1000
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 1
-        exponential_buckets: <
-          num_finite_buckets: 29
-          growth_factor: 2
-          scale: 1e-06
         >
       >
     >
@@ -448,18 +285,6 @@ operations: <
     >
   >
   metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/producer/error_count"
-    metric_values: <
-      int64_value: 1
-    >
-  >
-  metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/producer/request_bytes"
-    metric_values: <
-      int64_value: 200
-    >
-  >
-  metric_value_sets: <
     metric_name: "serviceruntime.googleapis.com/api/producer/request_count"
     metric_values: <
       int64_value: 1
@@ -539,12 +364,6 @@ operations: <
     >
   >
   metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/producer/response_bytes"
-    metric_values: <
-      int64_value: 200
-    >
-  >
-  metric_value_sets: <
     metric_name: "serviceruntime.googleapis.com/api/producer/response_sizes"
     metric_values: <
       distribution_value: <
@@ -566,53 +385,6 @@ operations: <
           num_finite_buckets: 8
           growth_factor: 10
           scale: 1
-        >
-      >
-    >
-  >
-  metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/producer/streaming_durations"
-    metric_values: <
-      distribution_value: <
-        count: 1
-        mean: 1000
-        minimum: 1000
-        maximum: 1000
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 1
-        exponential_buckets: <
-          num_finite_buckets: 29
-          growth_factor: 2
-          scale: 1e-06
         >
       >
     >
@@ -757,10 +529,6 @@ operations: <
     value: "apikey:api-key"
   >
   labels: <
-    key: "/error_type"
-    value: "5xx"
-  >
-  labels: <
     key: "/protocol"
     value: "unknown"
   >
@@ -849,12 +617,6 @@ operations: <
           scale: 1e-06
         >
       >
-    >
-  >
-  metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/error_count"
-    metric_values: <
-      int64_value: 1
     >
   >
   metric_value_sets: <
@@ -1030,7 +792,6 @@ func TestCreateReport(t *testing.T) {
 		LogMessage:        "Method: ListShelves",
 		ResponseCode:      503,
 		StatusCode:        "14",
-		ErrorType:         "5xx",
 	})
 
 	want := scpb.ReportRequest{}
@@ -1052,10 +813,6 @@ operations: <
   labels: <
     key: "/credential_id"
     value: "apikey:api-key"
-  >
-  labels: <
-    key: "/error_type"
-    value: "5xx"
   >
   labels: <
     key: "/protocol"
@@ -1094,115 +851,9 @@ operations: <
     value: "ListShelves"
   >
   metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/consumer/backend_latencies"
-    metric_values: <
-      distribution_value: <
-        count: 3
-        mean: 1000
-        minimum: 1000
-        maximum: 1000
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 3
-        exponential_buckets: <
-          num_finite_buckets: 29
-          growth_factor: 2
-          scale: 1e-06
-        >
-      >
-    >
-  >
-  metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/consumer/error_count"
-    metric_values: <
-      int64_value: 3
-    >
-  >
-  metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/consumer/request_bytes"
-    metric_values: <
-      int64_value: 600
-    >
-  >
-  metric_value_sets: <
     metric_name: "serviceruntime.googleapis.com/api/consumer/request_count"
     metric_values: <
       int64_value: 3
-    >
-  >
-  metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/consumer/request_overhead_latencies"
-    metric_values: <
-      distribution_value: <
-        count: 3
-        mean: 1000
-        minimum: 1000
-        maximum: 1000
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 3
-        exponential_buckets: <
-          num_finite_buckets: 29
-          growth_factor: 2
-          scale: 1e-06
-        >
-      >
     >
   >
   metric_value_sets: <
@@ -1232,12 +883,6 @@ operations: <
     >
   >
   metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/consumer/response_bytes"
-    metric_values: <
-      int64_value: 600
-    >
-  >
-  metric_value_sets: <
     metric_name: "serviceruntime.googleapis.com/api/consumer/response_sizes"
     metric_values: <
       distribution_value: <
@@ -1259,53 +904,6 @@ operations: <
           num_finite_buckets: 8
           growth_factor: 10
           scale: 1
-        >
-      >
-    >
-  >
-  metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/consumer/streaming_durations"
-    metric_values: <
-      distribution_value: <
-        count: 3
-        mean: 1000
-        minimum: 1000
-        maximum: 1000
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 3
-        exponential_buckets: <
-          num_finite_buckets: 29
-          growth_factor: 2
-          scale: 1e-06
         >
       >
     >
@@ -1405,18 +1003,6 @@ operations: <
     >
   >
   metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/producer/error_count"
-    metric_values: <
-      int64_value: 3
-    >
-  >
-  metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/producer/request_bytes"
-    metric_values: <
-      int64_value: 600
-    >
-  >
-  metric_value_sets: <
     metric_name: "serviceruntime.googleapis.com/api/producer/request_count"
     metric_values: <
       int64_value: 3
@@ -1496,12 +1082,6 @@ operations: <
     >
   >
   metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/producer/response_bytes"
-    metric_values: <
-      int64_value: 600
-    >
-  >
-  metric_value_sets: <
     metric_name: "serviceruntime.googleapis.com/api/producer/response_sizes"
     metric_values: <
       distribution_value: <
@@ -1523,53 +1103,6 @@ operations: <
           num_finite_buckets: 8
           growth_factor: 10
           scale: 1
-        >
-      >
-    >
-  >
-  metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/producer/streaming_durations"
-    metric_values: <
-      distribution_value: <
-        count: 3
-        mean: 1000
-        minimum: 1000
-        maximum: 1000
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 0
-        bucket_counts: 3
-        exponential_buckets: <
-          num_finite_buckets: 29
-          growth_factor: 2
-          scale: 1e-06
         >
       >
     >
@@ -1846,10 +1379,6 @@ operations: <
     value: "apikey:api-key"
   >
   labels: <
-    key: "/error_type"
-    value: "5xx"
-  >
-  labels: <
     key: "/protocol"
     value: "unknown"
   >
@@ -1934,12 +1463,6 @@ operations: <
           scale: 1e-06
         >
       >
-    >
-  >
-  metric_value_sets: <
-    metric_name: "serviceruntime.googleapis.com/api/producer/by_consumer/error_count"
-    metric_values: <
-      int64_value: 3
     >
   >
   metric_value_sets: <
@@ -2113,7 +1636,6 @@ func TestCreateAggregateReport(t *testing.T) {
 		LogMessage:        "Method: ListShelves",
 		ResponseCode:      503,
 		StatusCode:        "14",
-		ErrorType:         "5xx",
 	})
 
 	AggregateReport(&got, 3)
