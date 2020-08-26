@@ -433,7 +433,8 @@ class TestStartProxy(unittest.TestCase):
                "--disable-hot-restart",
                "--log-format %L%m%d %T.%e %t envoy] [%t][%n]%v",
                "--log-format-escaped",
-               "-l debug"]
+               "-l debug",
+               "--component-log-level upstream:info,main:info"]
           )
       ]
 
