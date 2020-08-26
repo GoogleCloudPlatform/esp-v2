@@ -82,8 +82,6 @@ func TestMultiGrpcServices(t *testing.T) {
 					LogMessage:                   "endpoints.examples.bookstore.Bookstore.GetShelf is called",
 					StatusCode:                   "0",
 					ResponseCode:                 200,
-					RequestMsgCounts:             1,
-					ResponseMsgCounts:            1,
 					Platform:                     util.GCE,
 					Location:                     "test-zone",
 				},
@@ -120,8 +118,7 @@ func TestMultiGrpcServices(t *testing.T) {
 					LogMessage:                   "endpoints.examples.bookstore.Bookstore.GetShelf is called",
 					StatusCode:                   "0",
 					ResponseCode:                 200,
-					RequestMsgCounts:             1,
-					ResponseMsgCounts:            1,
+
 					Platform:                     util.GCE,
 					Location:                     "test-zone",
 				},
@@ -159,8 +156,7 @@ func TestMultiGrpcServices(t *testing.T) {
 					LogMessage:                   "endpoints.examples.bookstore.v2.Bookstore.GetShelf is called",
 					StatusCode:                   "0",
 					ResponseCode:                 200,
-					RequestMsgCounts:             1,
-					ResponseMsgCounts:            1,
+
 					Platform:                     util.GCE,
 					Location:                     "test-zone",
 				},
@@ -198,8 +194,7 @@ func TestMultiGrpcServices(t *testing.T) {
 					LogMessage:                   "endpoints.examples.bookstore.v2.Bookstore.GetShelf is called",
 					StatusCode:                   "0",
 					ResponseCode:                 200,
-					RequestMsgCounts:             1,
-					ResponseMsgCounts:            1,
+
 					Platform:                     util.GCE,
 					Location:                     "test-zone",
 				},
@@ -238,8 +233,7 @@ func TestMultiGrpcServices(t *testing.T) {
 					LogMessage:                   "endpoints.examples.bookstore.v2.Bookstore.GetShelfAutoBind is called",
 					StatusCode:                   "0",
 					ResponseCode:                 200,
-					RequestMsgCounts:             1,
-					ResponseMsgCounts:            1,
+
 					Platform:                     util.GCE,
 					Location:                     "test-zone",
 				},

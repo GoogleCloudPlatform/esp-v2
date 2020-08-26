@@ -81,13 +81,10 @@ type ExpectedReport struct {
 	Location                     string
 	HttpMethod                   string
 	LogMessage                   string
-	RequestMsgCounts             int64
-	ResponseMsgCounts            int64
 	ResponseCode                 int
 	Referer                      string
 	StatusCode                   string
-	ErrorCause                   string
-	ErrorType                    string
+	ErrorCause                                       string
 	FrontendProtocol             string
 	BackendProtocol              string
 	Platform                     string
@@ -146,11 +143,6 @@ var (
 			MetricValueType: Distribution,
 			ShouldInit:      true,
 		},
-		"serviceruntime.googleapis.com/api/consumer/backend_latencies": {
-			MetricCreator:   MTConsumer,
-			MetricValueType: Distribution,
-			ShouldInit:      true,
-		},
 		"serviceruntime.googleapis.com/api/producer/backend_latencies": {
 			MetricCreator:   MTProducer,
 			MetricValueType: Distribution,
@@ -158,11 +150,6 @@ var (
 		},
 		"serviceruntime.googleapis.com/api/producer/by_consumer/backend_latencies": {
 			MetricCreator:   MTProducerByConsumer,
-			MetricValueType: Distribution,
-			ShouldInit:      true,
-		},
-		"serviceruntime.googleapis.com/api/consumer/request_overhead_latencies": {
-			MetricCreator:   MTConsumer,
 			MetricValueType: Distribution,
 			ShouldInit:      true,
 		},
@@ -176,16 +163,6 @@ var (
 			MetricValueType: Distribution,
 			ShouldInit:      true,
 		},
-		"serviceruntime.googleapis.com/api/consumer/streaming_durations": {
-			MetricCreator:   MTConsumerUnderGrpcStream,
-			MetricValueType: Distribution,
-			ShouldInit:      true,
-		},
-		"serviceruntime.googleapis.com/api/producer/streaming_durations": {
-			MetricCreator:   MTProducerUnderGrpcStream,
-			MetricValueType: Distribution,
-			ShouldInit:      true,
-		},
 		"serviceruntime.googleapis.com/api/consumer/request_sizes": {
 			MetricCreator:   MTConsumer,
 			MetricValueType: Distribution,
@@ -194,14 +171,6 @@ var (
 			MetricCreator:   MTConsumer,
 			MetricValueType: Distribution,
 		},
-		"serviceruntime.googleapis.com/api/consumer/request_bytes": {
-			MetricCreator:   MTConsumer,
-			MetricValueType: Int64,
-		},
-		"serviceruntime.googleapis.com/api/consumer/response_bytes": {
-			MetricCreator:   MTConsumer,
-			MetricValueType: Int64,
-		},
 		"serviceruntime.googleapis.com/api/producer/request_sizes": {
 			MetricCreator:   MTProducer,
 			MetricValueType: Distribution,
@@ -209,14 +178,6 @@ var (
 		"serviceruntime.googleapis.com/api/producer/response_sizes": {
 			MetricCreator:   MTProducer,
 			MetricValueType: Distribution,
-		},
-		"serviceruntime.googleapis.com/api/producer/request_bytes": {
-			MetricCreator:   MTProducer,
-			MetricValueType: Int64,
-		},
-		"serviceruntime.googleapis.com/api/producer/response_bytes": {
-			MetricCreator:   MTProducer,
-			MetricValueType: Int64,
 		},
 		"serviceruntime.googleapis.com/api/producer/by_consumer/request_sizes": {
 			MetricCreator:   MTProducerByConsumer,
@@ -290,9 +251,6 @@ func createReportLabels(er *ExpectedReport) map[string]string {
 	}
 	if er.StatusCode != "" {
 		labels["/status_code"] = er.StatusCode
-	}
-	if er.ErrorType != "" {
-		labels["/error_type"] = er.ErrorType
 	}
 
 	if er.Location != "" {
@@ -527,11 +485,6 @@ func createByConsumerOperation(er *ExpectedReport) *scpb.Operation {
 		}
 	}
 
-	if er.ErrorType != "" {
-		ms = append(ms,
-			createInt64MetricSet("serviceruntime.googleapis.com/api/producer/by_consumer/error_count", 1))
-	}
-
 	sort.Sort(metricSetSorter(ms))
 	op.MetricValueSets = ms
 	return op
@@ -556,15 +509,6 @@ func CreateReport(er *ExpectedReport) scpb.ReportRequest {
 			"serviceruntime.googleapis.com/api/producer/response_sizes", int64(fakeDistVal)),
 	}
 
-	if er.RequestMsgCounts != 0 {
-		ms = append(ms,
-			createDistMetricSet(&sizeDistOptions, "serviceruntime.googleapis.com/api/producer/streaming_request_message_counts", er.RequestMsgCounts))
-	}
-	if er.ResponseMsgCounts != 0 {
-		ms = append(ms,
-			createDistMetricSet(&sizeDistOptions, "serviceruntime.googleapis.com/api/producer/streaming_response_message_counts", er.ResponseMsgCounts))
-	}
-
 	if sendConsumer {
 		ms = append(ms,
 			createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/request_count", 1))
@@ -574,27 +518,6 @@ func CreateReport(er *ExpectedReport) scpb.ReportRequest {
 		ms = append(ms,
 			createDistMetricSet(&sizeDistOptions,
 				"serviceruntime.googleapis.com/api/consumer/response_sizes", int64(fakeDistVal)))
-
-		if er.RequestMsgCounts != 0 {
-			ms = append(ms,
-				createDistMetricSet(&sizeDistOptions, "serviceruntime.googleapis.com/api/consumer/streaming_request_message_counts", er.RequestMsgCounts))
-		}
-		if er.ResponseMsgCounts != 0 {
-			ms = append(ms,
-				createDistMetricSet(&sizeDistOptions, "serviceruntime.googleapis.com/api/consumer/streaming_response_message_counts", er.ResponseMsgCounts))
-		}
-	}
-	ms = append(ms,
-		createInt64MetricSet("serviceruntime.googleapis.com/api/producer/request_bytes", int64(fakeInt64Val)))
-	if sendConsumer {
-		ms = append(ms,
-			createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/request_bytes", int64(fakeInt64Val)))
-	}
-	ms = append(ms,
-		createInt64MetricSet("serviceruntime.googleapis.com/api/producer/response_bytes", int64(fakeInt64Val)))
-	if sendConsumer {
-		ms = append(ms,
-			createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/response_bytes", int64(fakeInt64Val)))
 	}
 
 	for name, t := range randomMetrics {
@@ -607,15 +530,6 @@ func CreateReport(er *ExpectedReport) scpb.ReportRequest {
 		}
 		if t.MetricCreator == MTProducerUnderGrpcStream || sendConsumer && t.MetricCreator == MTConsumerUnderGrpcStream {
 			ms = append(ms, createDistMetricSet(&timeDistOptions, name, int64(fakeDistVal)))
-		}
-	}
-
-	if er.ErrorType != "" {
-		ms = append(ms,
-			createInt64MetricSet("serviceruntime.googleapis.com/api/producer/error_count", 1))
-		if sendConsumer {
-			ms = append(ms,
-				createInt64MetricSet("serviceruntime.googleapis.com/api/consumer/error_count", 1))
 		}
 	}
 

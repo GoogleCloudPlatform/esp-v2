@@ -598,7 +598,7 @@ func TestDynamicBackendRoutingTLS(t *testing.T) {
 					HttpMethod:                   "POST",
 					LogMessage:                   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchPetWithServiceControlVerification is called",
 					StatusCode:                   "0",
-					ErrorType:                    "5xx",
+
 					ResponseCode:                 503,
 					Platform:                     util.GCE,
 					Location:                     "test-zone",
@@ -721,7 +721,7 @@ func TestDynamicBackendRoutingMutualTLS(t *testing.T) {
 					HttpMethod:                   "POST",
 					LogMessage:                   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchPetWithServiceControlVerification is called",
 					StatusCode:                   "0",
-					ErrorType:                    "5xx",
+
 					ResponseCode:                 503,
 					Platform:                     util.GCE,
 					Location:                     "test-zone",

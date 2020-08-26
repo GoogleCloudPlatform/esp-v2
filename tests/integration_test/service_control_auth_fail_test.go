@@ -93,7 +93,6 @@ func TestServiceControlJwtAuthFail(t *testing.T) {
 					BackendProtocol:              "grpc",
 					HttpMethod:                   "GET",
 					LogMessage:                   "endpoints.examples.bookstore.Bookstore.ListShelves is called",
-					ErrorType:                    "4xx",
 					StatusCode:                   "0",
 					ResponseCode:                 401,
 					Platform:                     util.GCE,
