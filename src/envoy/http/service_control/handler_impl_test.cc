@@ -44,7 +44,7 @@ using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::QuotaRequestInfo;
 using ::espv2::api_proxy::service_control::ReportRequestInfo;
 using ::espv2::api_proxy::service_control::ScResponseErrorType;
-using ::espv2::api_proxy::service_control::identity::ApiConsumerIdentity;
+using ::espv2::api_proxy::service_control::api_key::ApiKeyState;
 using ::espv2::api_proxy::service_control::protocol::Protocol;
 using ::google::protobuf::TextFormat;
 using ::google::protobuf::util::Status;
@@ -187,7 +187,7 @@ class HandlerTest : public ::testing::Test {
     expected_report_info.api_version = "test_version";
     expected_report_info.url = "/echo";
     expected_report_info.method = "GET";
-    expected_report_info.api_consumer_identity = ApiConsumerIdentity::VERIFIED;
+    expected_report_info.api_key_state = ApiKeyState::VERIFIED;
   }
 
   void checkAndReset(Envoy::Stats::Counter& counter, const int expected_value) {
@@ -269,7 +269,7 @@ MATCHER_P(MatchesQuotaInfo, expect, Envoy::EMPTY_STRING) {
   MATCH2(operation_name, operation_name);                      \
   MATCH2(log_message, operation_name + " is called");          \
   MATCH(api_key);                                              \
-  MATCH(api_consumer_identity);                                \
+  MATCH(api_key_state);                                        \
   MATCH(status);                                               \
   MATCH(request_headers);                                      \
   MATCH(response_headers);                                     \
@@ -346,7 +346,7 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
   expected_report_info.api_version = Envoy::EMPTY_STRING;
   expected_report_info.status = Status::OK;
   expected_report_info.operation_name = "<Unknown Operation Name>";
-  expected_report_info.api_consumer_identity = ApiConsumerIdentity::NOT_CHECKED;
+  expected_report_info.api_key_state = ApiKeyState::NOT_CHECKED;
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
@@ -379,7 +379,7 @@ TEST_F(HandlerTest, HandlerMissingHeaders) {
   expected_report_info.operation_name = "<Unknown Operation Name>";
   expected_report_info.url = Envoy::EMPTY_STRING;
   expected_report_info.method = Envoy::EMPTY_STRING;
-  expected_report_info.api_consumer_identity = ApiConsumerIdentity::NOT_CHECKED;
+  expected_report_info.api_key_state = ApiKeyState::NOT_CHECKED;
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
@@ -406,7 +406,7 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
   expected_report_info.api_version = Envoy::EMPTY_STRING;
   expected_report_info.status = Status::OK;
   expected_report_info.operation_name = "<Unknown Operation Name>";
-  expected_report_info.api_consumer_identity = ApiConsumerIdentity::NOT_CHECKED;
+  expected_report_info.api_key_state = ApiKeyState::NOT_CHECKED;
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
@@ -433,7 +433,7 @@ TEST_F(HandlerTest, HandlerCheckNotNeeded) {
   initExpectedReportInfo(expected_report_info);
   expected_report_info.status = Status::OK;
   expected_report_info.operation_name = "get_no_key";
-  expected_report_info.api_consumer_identity = ApiConsumerIdentity::NOT_CHECKED;
+  expected_report_info.api_key_state = ApiKeyState::NOT_CHECKED;
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
@@ -463,7 +463,7 @@ TEST_F(HandlerTest, HandlerCheckNotNeededWithUntrustedApiKey) {
   expected_report_info.status = Status::OK;
   expected_report_info.operation_name = "get_no_key";
   expected_report_info.api_key = "invalid-key";
-  expected_report_info.api_consumer_identity = ApiConsumerIdentity::NOT_CHECKED;
+  expected_report_info.api_key_state = ApiKeyState::NOT_CHECKED;
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
@@ -496,7 +496,7 @@ TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
   expected_report_info.status = bad_status;
-  expected_report_info.api_consumer_identity = ApiConsumerIdentity::NOT_CHECKED;
+  expected_report_info.api_key_state = ApiKeyState::NOT_CHECKED;
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
@@ -692,7 +692,7 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
   initExpectedReportInfo(expected_report_info);
   expected_report_info.status = bad_status;
   expected_report_info.api_key = "foobar";
-  expected_report_info.api_consumer_identity = ApiConsumerIdentity::INVALID;
+  expected_report_info.api_key_state = ApiKeyState::INVALID;
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
@@ -866,7 +866,7 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
                                     *cfg_parser_, test_time_, stats_);
 
   CheckResponseInfo response_info;
-  response_info.error_type = ScResponseErrorType::API_KEY_INVALID;
+  response_info.error_type = ScResponseErrorType::SERVICE_NOT_ACTIVATED;
 
   CheckRequestInfo expected_check_info;
   expected_check_info.api_key = "foobar";
@@ -895,7 +895,7 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
   initExpectedReportInfo(expected_report_info);
   expected_report_info.status = bad_status;
   expected_report_info.api_key = "foobar";
-  expected_report_info.api_consumer_identity = ApiConsumerIdentity::INVALID;
+  expected_report_info.api_key_state = ApiKeyState::NOT_ENABLED;
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
@@ -1049,7 +1049,7 @@ TEST_F(HandlerTest, HandlerReportWithoutCheck) {
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
   expected_report_info.api_key = "foobar";
-  expected_report_info.api_consumer_identity = ApiConsumerIdentity::NOT_CHECKED;
+  expected_report_info.api_key_state = ApiKeyState::NOT_CHECKED;
 
   // The default value of status if a check is not made is OK
   expected_report_info.status = Status::OK;

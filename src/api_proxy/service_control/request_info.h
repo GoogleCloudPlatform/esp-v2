@@ -45,17 +45,24 @@ inline const char* ToString(Protocol p) {
 
 }  // namespace protocol
 
-namespace identity {
+namespace api_key {
 
-// Indicates whether the API key is verified by SC Check.
-enum ApiConsumerIdentity {
+enum ApiKeyState {
+  // API Key was not checked, unsure if it's valid.
   NOT_CHECKED = 0,
-  VERIFIED = 1,
-  INVALID = 2,
+
+  // API Key is invalid.
+  INVALID = 1,
+
+  // API Key is valid, but the API Consumer did not enable the service.
+  NOT_ENABLED = 2,
+
+  // API Key is valid and API Consumer enabled the service.
+  VERIFIED = 3,
 };
 
-inline const char* ToString(ApiConsumerIdentity aci) {
-  switch (aci) {
+inline const char* ToString(ApiKeyState state) {
+  switch (state) {
     case VERIFIED:
       return "VERIFIED";
     case INVALID:
@@ -65,7 +72,7 @@ inline const char* ToString(ApiConsumerIdentity aci) {
       return "NOT CHECKED";
   }
 }
-}  // namespace identity
+}  // namespace api_key
 
 // Per request latency statistics.
 struct LatencyInfo {
@@ -237,7 +244,7 @@ struct ReportRequestInfo : public OperationInfo {
   bool is_final_report;
 
   // Influences the log entry and consumer metric.
-  identity::ApiConsumerIdentity api_consumer_identity;
+  api_key::ApiKeyState api_key_state;
 
   ReportRequestInfo()
       : response_code(200),
@@ -253,7 +260,7 @@ struct ReportRequestInfo : public OperationInfo {
         streaming_durations(0),
         is_first_report(true),
         is_final_report(true),
-        api_consumer_identity(identity::ApiConsumerIdentity::NOT_CHECKED) {}
+        api_key_state(api_key::ApiKeyState::NOT_CHECKED) {}
 };
 
 }  // namespace service_control

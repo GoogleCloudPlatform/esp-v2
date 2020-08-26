@@ -31,7 +31,7 @@ using ::Envoy::StreamInfo::FilterState;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::OperationInfo;
 using ::espv2::api_proxy::service_control::ScResponseErrorType;
-using ::espv2::api_proxy::service_control::identity::ApiConsumerIdentity;
+using ::espv2::api_proxy::service_control::api_key::ApiKeyState;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
@@ -145,20 +145,20 @@ void ServiceControlHandlerImpl::prepareReportRequest(
     ::espv2::api_proxy::service_control::ReportRequestInfo& info) {
   fillOperationInfo(info);
 
+  // This logic determines if consumer metric is sent in report based on the
+  // validity of the API Key.
   if (on_check_done_called_) {
     if (check_response_info_.error_type ==
-            ScResponseErrorType::API_KEY_INVALID ||
-        check_response_info_.error_type ==
-            ScResponseErrorType::SERVICE_NOT_ACTIVATED) {
-      // Do not send consumer metric if api-key is invalid or service is not
-      // enabled.
-      info.api_consumer_identity = ApiConsumerIdentity::INVALID;
+        ScResponseErrorType::API_KEY_INVALID) {
+      info.api_key_state = ApiKeyState::INVALID;
+    } else if (check_response_info_.error_type ==
+               ScResponseErrorType::SERVICE_NOT_ACTIVATED) {
+      info.api_key_state = ApiKeyState::NOT_ENABLED;
     } else {
-      info.api_consumer_identity = ApiConsumerIdentity::VERIFIED;
+      info.api_key_state = ApiKeyState::VERIFIED;
     }
   } else {
-    // Do not send consumer metric if api-key is never checked for validity.
-    info.api_consumer_identity = ApiConsumerIdentity::NOT_CHECKED;
+    info.api_key_state = ApiKeyState::NOT_CHECKED;
   }
 
   info.url = path_;

@@ -105,7 +105,7 @@ void FillReportRequestInfo(ReportRequestInfo* request) {
   request->request_bytes = 100;
   request->response_bytes = 1024 * 1024;
 
-  request->api_consumer_identity = identity::ApiConsumerIdentity::VERIFIED;
+  request->api_key_state = api_key::ApiKeyState::VERIFIED;
 }
 
 std::string CheckRequestToString(gasv1::CheckRequest* request) {
@@ -340,7 +340,7 @@ TEST_F(RequestBuilderTest, FillReportRequestFailedTest) {
 
   // Test case where API Key is not present, but required.
   info.api_key = "";
-  info.api_consumer_identity = identity::ApiConsumerIdentity::NOT_CHECKED;
+  info.api_key_state = api_key::ApiKeyState::NOT_CHECKED;
 
   // Use 401 as a failed response code.
   info.response_code = 401;
@@ -356,16 +356,41 @@ TEST_F(RequestBuilderTest, FillReportRequestFailedTest) {
   ASSERT_EQ(expected_text, text);
 }
 
-TEST_F(RequestBuilderTest, FillReportWithInvalidApiConsumerTest) {
+TEST_F(RequestBuilderTest, FillReportWithInvalidApiKeyTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
   FillReportRequestInfo(&info);
 
-  // Test case where API consumer's identity is invalid.
+  // Test case where API key is invalid.
   // The key point is the API Key will be included in the log entry,
   // but not the `credential_id` or `consumer_id` metrics.
   info.api_key = "invalid-api-key";
-  info.api_consumer_identity = identity::ApiConsumerIdentity::INVALID;
+  info.api_key_state = api_key::ApiKeyState::INVALID;
+
+  // Use 401 as a failed response code.
+  info.response_code = 401;
+
+  // Use the corresponding status for that response code.
+  info.status = Status(Code::PERMISSION_DENIED, "");
+
+  gasv1::ReportRequest request;
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+
+  std::string text = ReportRequestToString(&request);
+  std::string expected_text =
+      ReadTestBaseline("report_request_invalid_api_consumer.golden");
+  ASSERT_EQ(expected_text, text);
+}
+
+TEST_F(RequestBuilderTest, FillReportWithNotEnabledApiKeyTest) {
+  ReportRequestInfo info;
+  FillOperationInfo(&info);
+  FillReportRequestInfo(&info);
+
+  // Test case where API key is valid but not enabled.
+  // This will behave the same was an an invalid api key.
+  info.api_key = "invalid-api-key";
+  info.api_key_state = api_key::ApiKeyState::NOT_ENABLED;
 
   // Use 401 as a failed response code.
   info.response_code = 401;
@@ -386,7 +411,7 @@ TEST_F(RequestBuilderTest, FillReportRequestEmptyOptionalTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
 
-  info.api_consumer_identity = identity::ApiConsumerIdentity::VERIFIED;
+  info.api_key_state = api_key::ApiKeyState::VERIFIED;
 
   gasv1::ReportRequest request;
   ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
@@ -397,11 +422,11 @@ TEST_F(RequestBuilderTest, FillReportRequestEmptyOptionalTest) {
   ASSERT_EQ(expected_text, text);
 }
 
-TEST_F(RequestBuilderTest, CredentailIdApiConsumerVerifiedTest) {
+TEST_F(RequestBuilderTest, CredentailIdApiKeyVerifiedTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
 
-  info.api_consumer_identity = identity::ApiConsumerIdentity::VERIFIED;
+  info.api_key_state = api_key::ApiKeyState::VERIFIED;
 
   gasv1::ReportRequest request;
   ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
@@ -411,11 +436,11 @@ TEST_F(RequestBuilderTest, CredentailIdApiConsumerVerifiedTest) {
             "apikey:api_key_x");
 }
 
-TEST_F(RequestBuilderTest, CredentailIdApiConsumerInvalidTest) {
+TEST_F(RequestBuilderTest, CredentailIdApiKeyInvalidTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
 
-  info.api_consumer_identity = identity::ApiConsumerIdentity::INVALID;
+  info.api_key_state = api_key::ApiKeyState::INVALID;
 
   gasv1::ReportRequest request;
   ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
@@ -423,11 +448,23 @@ TEST_F(RequestBuilderTest, CredentailIdApiConsumerInvalidTest) {
   ASSERT_FALSE(request.operations(0).labels().contains("/credential_id"));
 }
 
-TEST_F(RequestBuilderTest, CredentailIdApiConsumerNotCheckedTest) {
+TEST_F(RequestBuilderTest, CredentailIdApiKeyNotCheckedTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
 
-  info.api_consumer_identity = identity::ApiConsumerIdentity::NOT_CHECKED;
+  info.api_key_state = api_key::ApiKeyState::NOT_CHECKED;
+
+  gasv1::ReportRequest request;
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+
+  ASSERT_FALSE(request.operations(0).labels().contains("/credential_id"));
+}
+
+TEST_F(RequestBuilderTest, CredentailIdApiKeyNotEnabledTest) {
+  ReportRequestInfo info;
+  FillOperationInfo(&info);
+
+  info.api_key_state = api_key::ApiKeyState::NOT_ENABLED;
 
   gasv1::ReportRequest request;
   ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
