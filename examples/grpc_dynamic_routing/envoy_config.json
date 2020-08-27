@@ -1062,14 +1062,6 @@
                       }
                     },
                     {
-                      "name": "envoy.filters.http.grpc_stats",
-                      "typedConfig": {
-                        "@type": "type.googleapis.com/envoy.extensions.filters.http.grpc_stats.v3.FilterConfig",
-                        "emitFilterState": true,
-                        "statsForAllMethods": false
-                      }
-                    },
-                    {
                       "name": "com.google.espv2.filters.http.backend_auth",
                       "typedConfig": {
                         "@type": "type.googleapis.com/espv2.api.envoy.v8.http.backend_auth.FilterConfig",
