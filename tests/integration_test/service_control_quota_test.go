@@ -59,15 +59,17 @@ func TestServiceControlQuota(t *testing.T) {
 	}
 
 	testData := []struct {
-		desc           string
-		clientProtocol string
-		method         string
-		httpMethod     string
-		token          string
-		requestHeader  map[string]string
-		message        string
-		wantResp       string
-		wantScRequests []interface{}
+		desc                string
+		clientProtocol      string
+		method              string
+		httpMethod          string
+		token               string
+		requestHeader       map[string]string
+		message             string
+		mockedCheckResponse *scpb.CheckResponse
+		wantResp            string
+		wantError           string
+		wantScRequests      []interface{}
 	}{
 		{
 			desc:           "succeed, quota allocation works well",
@@ -118,17 +120,68 @@ func TestServiceControlQuota(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc:           "Quota not called when Check fails with invalid API Key",
+			clientProtocol: "http",
+			method:         "/v1/shelves?key=invalid-api-key",
+			token:          testdata.FakeCloudTokenMultiAudiences,
+			httpMethod:     "GET",
+			mockedCheckResponse: &scpb.CheckResponse{
+				CheckErrors: []*scpb.CheckError{
+					{
+						Code: scpb.CheckError_API_KEY_INVALID,
+					},
+				},
+			},
+			wantError: `400 Bad Request, {"code":400,"message":"INVALID_ARGUMENT:API key not valid. Please pass a valid API key."}`,
+			wantScRequests: []interface{}{
+				&utils.ExpectedCheck{
+					Version:         utils.ESPv2Version(),
+					ServiceName:     "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					ConsumerID:      "api_key:invalid-api-key",
+					OperationName:   "endpoints.examples.bookstore.Bookstore.ListShelves",
+					CallerIp:        platform.GetLoopbackAddress(),
+				},
+				&utils.ExpectedReport{
+					Version:         utils.ESPv2Version(),
+					ServiceName:     "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					URL:             "/v1/shelves?key=invalid-api-key",
+					// API Key is invalid, so only in log entry.
+					ApiKeyInLogEntryOnly: "invalid-api-key",
+					// API Key is invalid, so JWT is used as credential_id instead.
+					JwtAuth:           "issuer=YXBpLXByb3h5LXRlc3RpbmdAY2xvdWQuZ29vZw",
+					ApiMethod:         "endpoints.examples.bookstore.Bookstore.ListShelves",
+					ApiName:           "endpoints.examples.bookstore.Bookstore",
+					ApiVersion:        "1.0.0",
+					ErrorCause:        "API key not valid. Please pass a valid API key.",
+					ProducerProjectID: "producer project",
+					FrontendProtocol:  "http",
+					BackendProtocol:   "grpc",
+					HttpMethod:        "GET",
+					LogMessage:        "endpoints.examples.bookstore.Bookstore.ListShelves is called",
+					StatusCode:        "3",
+					ResponseCode:      400,
+					Platform:          util.GCE,
+					Location:          "test-zone",
+				},
+			},
+		},
 	}
 
 	for _, tc := range testData {
+		if tc.mockedCheckResponse != nil {
+			s.ServiceControlServer.SetCheckResponse(tc.mockedCheckResponse)
+		}
+
 		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
 		resp, err := bsClient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, http.Header{})
 
-		if err != nil {
-			t.Fatalf("Test (%s): failed, %v", tc.desc, err)
-		}
-		if !strings.Contains(string(resp), tc.wantResp) {
-			t.Errorf("Test (%s): failed,  expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
+		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
+			t.Errorf("Test (%s): failed\nexpected: %v\ngot: %v", tc.desc, tc.wantError, err)
+		} else if !strings.Contains(string(resp), tc.wantResp) {
+			t.Errorf("Test (%s): failed\nexpected: %s\ngot: %s", tc.desc, tc.wantResp, string(resp))
 		}
 
 		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))

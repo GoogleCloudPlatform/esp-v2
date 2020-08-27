@@ -278,7 +278,8 @@ func createReportLabels(er *ExpectedReport) map[string]string {
 
 	if er.ApiKeyInOperationAndLogEntry != "" {
 		labels["/credential_id"] = "apikey:" + er.ApiKeyInOperationAndLogEntry
-	} else if er.JwtAuth != "" {
+	}
+	if er.JwtAuth != "" {
 		labels["/credential_id"] = "jwtauth:" + er.JwtAuth
 	}
 
@@ -663,7 +664,10 @@ func VerifyReport(body []byte, er *ExpectedReport) error {
 	}
 
 	if er.ApiKeyInOperationAndLogEntry != "" && er.ApiKeyInLogEntryOnly != "" {
-		return fmt.Errorf("cannot set both `ApiKeyInOperationAndLogEntry` and `ApiKeyInLogEntryOnly`")
+		return fmt.Errorf("cannot set both `ApiKeyInOperationAndLogEntry` and `ApiKeyInLogEntryOnly`, they imply different api key validity")
+	}
+	if er.ApiKeyInOperationAndLogEntry != "" && er.JwtAuth != "" {
+		return fmt.Errorf("cannot set both `ApiKeyInOperationAndLogEntry` and `JwtAuth`, they imply different api key validity")
 	}
 
 	var n int64
