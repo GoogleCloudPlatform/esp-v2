@@ -56,4 +56,9 @@ git checkout "${SHA}"
 # keep the current version
 echo ${VERSION} > ${ROOT}/VERSION
 
-make integration-test-without-envoy-build
+# Since the Makefile is still in v16 after checkout, the following cmds can only
+# be replaced with `make integration-test-without-envoy-build` after release v17.
+make build
+make build-grpc-interop
+make build-grpc-echo
+make integration-test-run-sequential
