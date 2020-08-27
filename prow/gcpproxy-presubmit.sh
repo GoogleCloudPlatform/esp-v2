@@ -19,6 +19,13 @@
 # Fail on any error.
 set -eo pipefail
 
+WD=$(dirname "$0")
+WD=$(cd "$WD";
+pwd)
+ROOT=$(dirname "$WD")
+export PATH=$PATH:$GOPATH/bin
+
+
 gcloud config set core/project cloudesf-testing
 gcloud auth activate-service-account \
   --key-file="${GOOGLE_APPLICATION_CREDENTIALS}"
