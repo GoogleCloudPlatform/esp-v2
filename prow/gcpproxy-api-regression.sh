@@ -56,5 +56,4 @@ git checkout "${SHA}"
 # keep the current version
 echo ${VERSION} > ${ROOT}/VERSION
 
-
 make integration-test-without-envoy-build
