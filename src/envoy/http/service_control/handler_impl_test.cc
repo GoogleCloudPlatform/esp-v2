@@ -1035,6 +1035,7 @@ TEST_F(HandlerTest, HandlerCancelFuncNotCalledOnDestroyForSyncOnDone) {
 
 TEST_F(HandlerTest, HandlerReportWithoutCheck) {
   // Test: Test that callReport works when callCheck is not called first.
+  // This can happen when request does not match any operation.
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               utils::kFilterStateOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{
