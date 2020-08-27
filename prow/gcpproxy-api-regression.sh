@@ -58,6 +58,7 @@ echo ${VERSION} > ${ROOT}/VERSION
 
 # Since the Makefile is still in v16 after checkout, the following cmds can only
 # be replaced with `make integration-test-without-envoy-build` after release v17.
+make depend.update
 make build
 make build-grpc-interop
 make build-grpc-echo
