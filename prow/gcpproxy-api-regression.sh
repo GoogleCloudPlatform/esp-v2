@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Build script triggered by Prow.
+# Presubmit script triggered by Prow.
 
 # Fail on any error.
 set -eo pipefail
@@ -25,25 +25,36 @@ pwd)
 ROOT=$(dirname "$WD")
 export PATH=$PATH:$GOPATH/bin
 
-gcloud config set core/project cloudesf-testing
 
+gcloud config set core/project cloudesf-testing
+gcloud auth activate-service-account \
+  --key-file="${GOOGLE_APPLICATION_CREDENTIALS}"
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT}"
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
+. ${ROOT}/tests/e2e/scripts/prow-utilities.sh || { echo 'Cannot load Bash utilities';
+exit 1; }
 
+
+wait_apiproxy_image
 
 echo '======================================================='
-echo '===================== Setup Cache ====================='
+echo '================ Download latest envoy ================'
 echo '======================================================='
-try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" ""
+download_envoy_binary
+chmod +x ${ROOT}/bin/envoy
+
+# keep the current version
+VERSION=$(cat ${ROOT}/VERSION)
+
+# checkout to last releasd commit
+SHA=$(git rev-list -n 1 $(git describe --abbrev=0))
+git checkout "${SHA}"
+
+# keep the current version
+echo ${VERSION} > ${ROOT}/VERSION
 
 
-if [ ! -d "$GOPATH/bin" ]; then
-  mkdir $GOPATH/bin
-fi
-if [ ! -d "bin" ]; then
-  mkdir bin
-fi
-export GO111MODULE=on
-
-${ROOT}/scripts/robot-release.sh
+make integration-test-without-envoy-build

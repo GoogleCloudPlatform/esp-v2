@@ -56,14 +56,15 @@ checkImageExistence $(get_envoy_image_name) $(get_tag_name)  \
   && { echo "Images $(get_envoy_image_name_with_sha), $(get_gcsrunner_image_name_with_sha), and $(get_proxy_image_name_with_sha) already exists; Skip.";
 exit 0; }
 
-gcloud config list account --format "value(core.account)"
-upload_envoy_binary
 
 echo "Images $(get_envoy_image_name_with_sha), $(get_gcsrunner_image_name_with_sha), and $(get_proxy_image_name_with_sha) don't exist; Start to build."
 
 echo '======================================================='
 echo '================= Cloud Build Docker =================='
 echo '======================================================='
+
+# Update latest envoy binary for API backward compatibility test
+upload_envoy_binary
 
 ${ROOT}/scripts/cloud-build-docker.sh  \
   || error_exit 'Failed to build a generic Docker Image.'

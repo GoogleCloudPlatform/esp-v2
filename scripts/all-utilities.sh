@@ -406,12 +406,14 @@ function try_setup_bazel_remote_cache() {
   sed -i -e "s@CACHE_PROJECT_ID@${gcp_project_id}@g" ${root_dir}/.bazelrc
 }
 
+function envoy_binary_gcs_path() {
+  echo -n "gs://apiproxy-testing-envoy-binaries/$(get_sha)"
+}
+
 function upload_envoy_binary() {
-#  local envoy_path="${ROOT}/bin/path"
-  gsutil -m cp ${ROOT}/bin/envoy "gs://apiproxy-testing-envoy-binaries/$(get_sha)"
+  gsutil -m cp ${ROOT}/bin/envoy $(head_envoy_binary_gcs_path)
 }
 
 function download_envoy_binary() {
-#  local envoy_path="${ROOT}/bin/path"
-  gsutil -m cp "gs://apiproxy-testing-envoy-binaries/$(get_sha)"  ${ROOT}/bin/envoy
+  gsutil -m cp $(head_envoy_binary_gcs_path)  ${ROOT}/bin/envoy
 }

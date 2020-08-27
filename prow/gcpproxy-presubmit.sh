@@ -25,31 +25,83 @@ pwd)
 ROOT=$(dirname "$WD")
 export PATH=$PATH:$GOPATH/bin
 
-
 gcloud config set core/project cloudesf-testing
-gcloud auth activate-service-account \
-  --key-file="${GOOGLE_APPLICATION_CREDENTIALS}"
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT}"
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
-. ${ROOT}/tests/e2e/scripts/prow-utilities.sh || { echo 'Cannot load Bash utilities';
-exit 1; }
 
-wait_apiproxy_image
+echo '======================================================='
+echo '===================== Setup Cache ====================='
+echo '======================================================='
+try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "presubmit-${PRESUBMIT_TEST_CASE}"
 
-download_envoy_binary
-chmod +x ${ROOT}/bin/envoy
-VERSION=$(cat ${ROOT}/VERSION)
+echo '======================================================='
+echo '===================== Spelling Check ====================='
+echo '======================================================='
+make spelling.check
 
-SHA=$(git rev-list -n 1 $(git describe --abbrev=0))
-git checkout "${SHA}"
+# golang test
+echo '======================================================'
+echo '=====================   Go test  ====================='
+echo '======================================================'
+if [ ! -d "$GOPATH/bin" ]; then
+  mkdir $GOPATH/bin
+fi
+if [ ! -d "bin" ]; then
+  mkdir bin
+fi
+export GO111MODULE=on
+make tools
+make depend.install
 
-echo ${VERSION} > ${ROOT}/VERSION
+# GOOGLE_APPLICATION_CREDENTIALS will be set in our test environment but this env
+# var if set will be used by start_proxy.py as service_json_path.
+ (unset GOOGLE_APPLICATION_CREDENTIALS; make test)
 
-make depend.update
-make build
-make build-grpc-interop
-make build-grpc-echo
-make integration-test-run-sequential
+# c++ test
+echo '======================================================'
+echo '===================== Bazel test ====================='
+echo '======================================================'
+if [ -z ${PRESUBMIT_TEST_CASE} ];
+then
+  echo "running normal presubmit test"
+else
+  echo "running ${PRESUBMIT_TEST_CASE} presubmit test"
+fi
+
+case "${PRESUBMIT_TEST_CASE}" in
+  "asan")
+    make test-envoy-asan
+    ;;
+  "msan")
+    make test-envoy-msan
+    ;;
+  "tsan")
+    make test-envoy-tsan
+    ;;
+  *)
+    make test-envoy
+    ;;
+esac
+
+echo '======================================================'
+echo '===================== Integration test  =============='
+echo '======================================================'
+make depend.install.endpoints
+case "${PRESUBMIT_TEST_CASE}" in
+  "asan")
+    make integration-test-asan
+    ;;
+  "msan")
+    make integration-test-tsan
+    ;;
+  "tsan")
+    make integration-test-tsan
+    ;;
+  *)
+    make integration-test
+    ;;
+esac
+
+make clean
