@@ -411,9 +411,9 @@ function envoy_binary_gcs_path() {
 }
 
 function upload_envoy_binary() {
-  gsutil -m cp ${ROOT}/bin/envoy $(head_envoy_binary_gcs_path)
+  gsutil -m cp ${ROOT}/bin/envoy $(envoy_binary_gcs_path)
 }
 
 function download_envoy_binary() {
-  gsutil -m cp $(head_envoy_binary_gcs_path)  ${ROOT}/bin/envoy
+  gsutil -m cp $(envoy_binary_gcs_path)  ${ROOT}/bin/envoy
 }
