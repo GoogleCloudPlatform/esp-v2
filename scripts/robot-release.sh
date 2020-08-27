@@ -63,7 +63,7 @@ echo '======================================================='
 echo '================= Cloud Build Docker =================='
 echo '======================================================='
 
-# Update latest envoy binary for API backward compatibility test
+# Update latest envoy binary for API regression test
 upload_envoy_binary
 
 ${ROOT}/scripts/cloud-build-docker.sh  \
