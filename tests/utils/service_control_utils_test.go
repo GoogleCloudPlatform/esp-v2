@@ -777,21 +777,21 @@ service_config_id: "SERVICE_CONFIG_ID"
 
 func TestCreateReport(t *testing.T) {
 	got := CreateReport(&ExpectedReport{
-		ServiceName:       "SERVICE_NAME",
-		ServiceConfigID:   "SERVICE_CONFIG_ID",
-		URL:               "/shelves",
-		ApiMethod:         "ListShelves",
-		ApiName:           "API_NAME",
-		ApiVersion:        "1.0.0",
-		ErrorCause:        "SERVICE UNAVAILABLE",
-		ApiKey:            "api-key",
-		ProducerProjectID: "endpoints-test",
-		ConsumerProjectID: "123456",
-		Location:          "us-central1",
-		HttpMethod:        "GET",
-		LogMessage:        "Method: ListShelves",
-		ResponseCode:      503,
-		StatusCode:        "14",
+		ServiceName:                  "SERVICE_NAME",
+		ServiceConfigID:              "SERVICE_CONFIG_ID",
+		URL:                          "/shelves",
+		ApiMethod:                    "ListShelves",
+		ApiName:                      "API_NAME",
+		ApiVersion:                   "1.0.0",
+		ErrorCause:                   "SERVICE UNAVAILABLE",
+		ApiKeyInOperationAndLogEntry: "api-key",
+		ProducerProjectID:            "endpoints-test",
+		ConsumerProjectID:            "123456",
+		Location:                     "us-central1",
+		HttpMethod:                   "GET",
+		LogMessage:                   "Method: ListShelves",
+		ResponseCode:                 503,
+		StatusCode:                   "14",
 	})
 
 	want := scpb.ReportRequest{}
@@ -1623,19 +1623,19 @@ service_config_id: "SERVICE_CONFIG_ID"
 
 func TestCreateAggregateReport(t *testing.T) {
 	got := CreateReport(&ExpectedReport{
-		ServiceName:       "SERVICE_NAME",
-		ServiceConfigID:   "SERVICE_CONFIG_ID",
-		URL:               "/shelves",
-		ApiMethod:         "ListShelves",
-		ApiKey:            "api-key",
-		ApiName:           "API-NAME",
-		ProducerProjectID: "endpoints-test",
-		ConsumerProjectID: "123456",
-		Location:          "us-central1",
-		HttpMethod:        "GET",
-		LogMessage:        "Method: ListShelves",
-		ResponseCode:      503,
-		StatusCode:        "14",
+		ServiceName:                  "SERVICE_NAME",
+		ServiceConfigID:              "SERVICE_CONFIG_ID",
+		URL:                          "/shelves",
+		ApiMethod:                    "ListShelves",
+		ApiKeyInOperationAndLogEntry: "api-key",
+		ApiName:                      "API-NAME",
+		ProducerProjectID:            "endpoints-test",
+		ConsumerProjectID:            "123456",
+		Location:                     "us-central1",
+		HttpMethod:                   "GET",
+		LogMessage:                   "Method: ListShelves",
+		ResponseCode:                 503,
+		StatusCode:                   "14",
 	})
 
 	AggregateReport(&got, 3)

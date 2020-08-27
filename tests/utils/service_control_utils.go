@@ -66,31 +66,32 @@ type ExpectedQuota struct {
 }
 
 type ExpectedReport struct {
-	Aggregate         int64
-	Version           string
-	ServiceName       string
-	ServiceConfigID   string
-	ApiVersion        string
-	ApiMethod         string
-	ApiName           string
-	ApiKey            string
-	ProducerProjectID string
-	ConsumerProjectID string
-	URL               string
-	Location          string
-	HttpMethod        string
-	LogMessage        string
-	ResponseCode      int
-	Referer           string
-	StatusCode        string
-	ErrorCause        string
-	FrontendProtocol  string
-	BackendProtocol   string
-	Platform          string
-	JwtAuth           string
-	RequestHeaders    string
-	ResponseHeaders   string
-	JwtPayloads       string
+	Aggregate                    int64
+	Version                      string
+	ServiceName                  string
+	ServiceConfigID              string
+	ApiVersion                   string
+	ApiMethod                    string
+	ApiName                      string
+	ApiKeyInOperationAndLogEntry string
+	ApiKeyInLogEntryOnly         string
+	ProducerProjectID            string
+	ConsumerProjectID            string
+	URL                          string
+	Location                     string
+	HttpMethod                   string
+	LogMessage                   string
+	ResponseCode                 int
+	Referer                      string
+	StatusCode                   string
+	ErrorCause                   string
+	FrontendProtocol             string
+	BackendProtocol              string
+	Platform                     string
+	JwtAuth                      string
+	RequestHeaders               string
+	ResponseHeaders              string
+	JwtPayloads                  string
 }
 
 type distOptions struct {
@@ -275,8 +276,8 @@ func createReportLabels(er *ExpectedReport) map[string]string {
 		labels["servicecontrol.googleapis.com/platform"] = "unknown"
 	}
 
-	if er.ApiKey != "" {
-		labels["/credential_id"] = "apikey:" + er.ApiKey
+	if er.ApiKeyInOperationAndLogEntry != "" {
+		labels["/credential_id"] = "apikey:" + er.ApiKeyInOperationAndLogEntry
 	} else if er.JwtAuth != "" {
 		labels["/credential_id"] = "jwtauth:" + er.JwtAuth
 	}
@@ -305,9 +306,14 @@ func createLogEntry(er *ExpectedReport) *scpb.LogEntry {
 	if er.ProducerProjectID != "" {
 		pl["producer_project_id"] = makeStringValue(er.ProducerProjectID)
 	}
-	if er.ApiKey != "" {
-		pl["api_key"] = makeStringValue(er.ApiKey)
+
+	if er.ApiKeyInOperationAndLogEntry != "" {
+		pl["api_key"] = makeStringValue(er.ApiKeyInOperationAndLogEntry)
 	}
+	if er.ApiKeyInLogEntryOnly != "" {
+		pl["api_key"] = makeStringValue(er.ApiKeyInLogEntryOnly)
+	}
+
 	if er.ApiName != "" {
 		pl["api_name"] = makeStringValue(er.ApiName)
 	}
@@ -450,8 +456,8 @@ func createOperation(er *ExpectedReport) *scpb.Operation {
 		OperationName: er.ApiMethod,
 	}
 
-	if er.ApiKey != "" {
-		op.ConsumerId = "api_key:" + er.ApiKey
+	if er.ApiKeyInOperationAndLogEntry != "" {
+		op.ConsumerId = "api_key:" + er.ApiKeyInOperationAndLogEntry
 	}
 	op.Labels = createReportLabels(er)
 	return op
@@ -486,7 +492,7 @@ func createByConsumerOperation(er *ExpectedReport) *scpb.Operation {
 
 // CreateReport makes a service_controller.proto ReportRequest out of an ExpectedReport
 func CreateReport(er *ExpectedReport) scpb.ReportRequest {
-	sendConsumer := er.ApiKey != ""
+	sendConsumer := er.ApiKeyInOperationAndLogEntry != ""
 	sendByConsumer := er.ConsumerProjectID != ""
 
 	op := createOperation(er)
@@ -652,9 +658,12 @@ func VerifyReportRequestOperationLabel(body []byte, label, value string) error {
 // If the verification fails, it returns an error.
 func VerifyReport(body []byte, er *ExpectedReport) error {
 	got, err := UnmarshalReportRequest(body)
-
 	if err != nil {
 		return err
+	}
+
+	if er.ApiKeyInOperationAndLogEntry != "" && er.ApiKeyInLogEntryOnly != "" {
+		return fmt.Errorf("cannot set both `ApiKeyInOperationAndLogEntry` and `ApiKeyInLogEntryOnly`")
 	}
 
 	var n int64
