@@ -50,7 +50,7 @@ chmod +x ${ROOT}/bin/envoy
 VERSION=$(cat ${ROOT}/VERSION)
 
 # Checkout to the head of master
-SHA=$(git ls-remote https://github.com/GoogleCloudPlatform/esp-v2.git HEAD)
+SHA=$(git ls-remote https://github.com/GoogleCloudPlatform/esp-v2.git HEAD | cut -f 1)
 git checkout ${SHA}
 
 # keep the current version
