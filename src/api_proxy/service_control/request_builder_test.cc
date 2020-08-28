@@ -306,7 +306,7 @@ TEST_F(RequestBuilderTest, FillReportRequestFailedTest) {
   ASSERT_EQ(expected_text, text);
 }
 
-TEST_F(RequestBuilderTest, FillReportWithInvalidApiKeyTest) {
+TEST_F(RequestBuilderTest, FillReportWithUntrustedApiKeyTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
   FillReportRequestInfo(&info);
@@ -315,7 +315,6 @@ TEST_F(RequestBuilderTest, FillReportWithInvalidApiKeyTest) {
   // The key point is the API Key will be included in the log entry,
   // but not the `credential_id` or `consumer_id` metrics.
   info.api_key = "invalid-api-key";
-  info.check_response_info.api_key_state = api_key::ApiKeyState::INVALID;
 
   // Use 401 as a failed response code.
   info.response_code = 401;
@@ -323,38 +322,17 @@ TEST_F(RequestBuilderTest, FillReportWithInvalidApiKeyTest) {
   // Use the corresponding status for that response code.
   info.status = Status(Code::PERMISSION_DENIED, "");
 
-  gasv1::ReportRequest request;
-  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+  for (const auto api_key_state : {api_key::ApiKeyState::INVALID, api_key::ApiKeyState::NOT_ENABLED, api_key::ApiKeyState::NOT_CHECKED}) {
+    info.check_response_info.api_key_state = api_key_state;
 
-  std::string text = ReportRequestToString(&request);
-  std::string expected_text =
-      ReadTestBaseline("report_request_failed_bad_api_key.golden");
-  ASSERT_EQ(expected_text, text);
-}
+    gasv1::ReportRequest request;
+    ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
 
-TEST_F(RequestBuilderTest, FillReportWithNotEnabledApiKeyTest) {
-  ReportRequestInfo info;
-  FillOperationInfo(&info);
-  FillReportRequestInfo(&info);
-
-  // Test case where API key is valid but not enabled.
-  // This will behave the same was an an invalid api key.
-  info.api_key = "invalid-api-key";
-  info.check_response_info.api_key_state = api_key::ApiKeyState::NOT_ENABLED;
-
-  // Use 401 as a failed response code.
-  info.response_code = 401;
-
-  // Use the corresponding status for that response code.
-  info.status = Status(Code::PERMISSION_DENIED, "");
-
-  gasv1::ReportRequest request;
-  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
-
-  std::string text = ReportRequestToString(&request);
-  std::string expected_text =
-      ReadTestBaseline("report_request_failed_bad_api_key.golden");
-  ASSERT_EQ(expected_text, text);
+    std::string text = ReportRequestToString(&request);
+    std::string expected_text =
+        ReadTestBaseline("report_request_failed_bad_api_key.golden");
+    ASSERT_EQ(expected_text, text);
+  }
 }
 
 TEST_F(RequestBuilderTest, FillReportRequestEmptyOptionalTest) {
