@@ -37,8 +37,7 @@ exit 1; }
 . ${ROOT}/tests/e2e/scripts/prow-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
 
-git remote -v
-git branch
+
 wait_apiproxy_image
 
 echo '======================================================='
@@ -50,8 +49,9 @@ chmod +x ${ROOT}/bin/envoy
 # keep the current version
 VERSION=$(cat ${ROOT}/VERSION)
 
-# checkout to the head of master
-git checkout master
+# Checkout to the head of master
+SHA=$(git ls-remote https://github.com/GoogleCloudPlatform/esp-v2.git HEAD)
+git checkout ${SHA}
 
 # keep the current version
 echo ${VERSION} > ${ROOT}/VERSION
