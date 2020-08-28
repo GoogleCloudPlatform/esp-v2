@@ -37,7 +37,8 @@ exit 1; }
 . ${ROOT}/tests/e2e/scripts/prow-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
 
-
+git remotve -v
+git branch
 wait_apiproxy_image
 
 echo '======================================================='
@@ -49,8 +50,6 @@ chmod +x ${ROOT}/bin/envoy
 # keep the current version
 VERSION=$(cat ${ROOT}/VERSION)
 
-
-git branch
 # checkout to the head of master
 git checkout master
 
