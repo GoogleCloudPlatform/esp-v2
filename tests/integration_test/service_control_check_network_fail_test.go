@@ -21,9 +21,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
@@ -161,6 +163,7 @@ func TestServiceControlNetworkFailFlagForTimeout(t *testing.T) {
 		checkFailStatus int
 		wantResp        string
 		wantError       string
+		wantScRequests  []interface{}
 	}{
 		{
 			desc:            "Successful, since service_control_network_fail_open is set as true, the timeout of service control check response will be ignored.",
@@ -169,7 +172,30 @@ func TestServiceControlNetworkFailFlagForTimeout(t *testing.T) {
 			httpMethod:      "GET",
 			method:          "/v1/shelves?key=api-key",
 			token:           testdata.FakeCloudTokenMultiAudiences,
-			wantResp:        `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
+			wantResp:        `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`, wantScRequests: []interface{}{
+				&utils.ExpectedReport{
+					Version:         utils.ESPv2Version(),
+					ServiceName:     "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					URL:             "/v1/shelves?key=api-key",
+					// API Key is not trusted due to SC network failure.
+					ApiKeyInLogEntryOnly: "api-key",
+					// API Key is not trusted, so JWT is used as credential_id instead.
+					JwtAuthCredentialId: "issuer=YXBpLXByb3h5LXRlc3RpbmdAY2xvdWQuZ29vZw",
+					ApiMethod:           "endpoints.examples.bookstore.Bookstore.ListShelves",
+					ApiName:             "endpoints.examples.bookstore.Bookstore",
+					ApiVersion:          "1.0.0",
+					ProducerProjectID:   "producer project",
+					FrontendProtocol:    "http",
+					BackendProtocol:     "grpc",
+					HttpMethod:          "GET",
+					LogMessage:          "endpoints.examples.bookstore.Bookstore.ListShelves is called",
+					StatusCode:          "0",
+					ResponseCode:        200,
+					Platform:            util.GCE,
+					Location:            "test-zone",
+				},
+			},
 		},
 		{
 			desc:            "Failed, since service_control_network_fail_open is set as false, the timeout of service control check response won't be ignored.",
@@ -179,6 +205,31 @@ func TestServiceControlNetworkFailFlagForTimeout(t *testing.T) {
 			method:          "/v1/shelves?key=api-key",
 			token:           testdata.FakeCloudTokenMultiAudiences,
 			wantError:       `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:Calling Google Service Control API failed with: 504 and body: upstream request timeout"}`,
+			wantScRequests: []interface{}{
+				&utils.ExpectedReport{
+					Version:         utils.ESPv2Version(),
+					ServiceName:     "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					URL:             "/v1/shelves?key=api-key",
+					// API Key is not trusted due to SC network failure.
+					ApiKeyInLogEntryOnly: "api-key",
+					// API Key is not trusted, so JWT is used as credential_id instead.
+					JwtAuthCredentialId: "issuer=YXBpLXByb3h5LXRlc3RpbmdAY2xvdWQuZ29vZw",
+					ApiMethod:           "endpoints.examples.bookstore.Bookstore.ListShelves",
+					ApiName:             "endpoints.examples.bookstore.Bookstore",
+					ApiVersion:          "1.0.0",
+					ErrorCause:          "Calling Google Service Control API failed with: 504 and body: upstream request timeout",
+					ProducerProjectID:   "producer project",
+					FrontendProtocol:    "http",
+					BackendProtocol:     "grpc",
+					HttpMethod:          "GET",
+					LogMessage:          "endpoints.examples.bookstore.Bookstore.ListShelves is called",
+					StatusCode:          "14",
+					ResponseCode:        503,
+					Platform:            util.GCE,
+					Location:            "test-zone",
+				},
+			},
 		},
 	}
 
@@ -206,6 +257,12 @@ func TestServiceControlNetworkFailFlagForTimeout(t *testing.T) {
 			} else if !strings.Contains(resp, tc.wantResp) {
 				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
 			}
+
+			scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
+			if err != nil {
+				t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err)
+			}
+			utils.CheckScRequest(t, scRequests, tc.wantScRequests, tc.desc)
 		}()
 	}
 }

@@ -22,6 +22,7 @@ envoy_basic_cc_library(
         "//external:abseil_strings",
         "//src/api_proxy/utils",
         "@com_github_googleapis_googleapis//google/api:service_cc_proto",
+        "@envoy//source/common/common:assert_lib",
         "@envoy//source/common/common:base64_lib",
         "@servicecontrol_client_git//:service_control_client_lib",
     ],

@@ -26,15 +26,14 @@
 
 #include "src/api_proxy/utils/version.h"
 
-namespace gasv1 = ::google::api::servicecontrol::v1;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
-
 namespace espv2 {
 namespace api_proxy {
 namespace service_control {
-
 namespace {
+
+namespace gasv1 = ::google::api::servicecontrol::v1;
+using ::google::protobuf::util::Status;
+using ::google::protobuf::util::error::Code;
 
 const char kFakeVersion[] = "TEST.0.0";
 
@@ -102,6 +101,7 @@ void FillReportRequestInfo(ReportRequestInfo* request) {
   request->compute_platform = "GKE";
   request->auth_issuer = "auth-issuer";
   request->auth_audience = "auth-audience";
+  request->check_response_info.api_key_state = api_key::ApiKeyState::VERIFIED;
 }
 
 std::string CheckRequestToString(gasv1::CheckRequest* request) {
@@ -286,10 +286,11 @@ TEST_F(RequestBuilderTest, FillGoodReportRequestByConsumerTest) {
 TEST_F(RequestBuilderTest, FillReportRequestFailedTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
-  // Remove api_key to test not api_key case for
-  // producer_project_id and credential_id.
-  info.api_key = "";
   FillReportRequestInfo(&info);
+
+  // Test case where API Key is not present, but required.
+  info.api_key = "";
+  info.check_response_info.api_key_state = api_key::ApiKeyState::NOT_CHECKED;
 
   // Use 401 as a failed response code.
   info.response_code = 401;
@@ -305,9 +306,42 @@ TEST_F(RequestBuilderTest, FillReportRequestFailedTest) {
   ASSERT_EQ(expected_text, text);
 }
 
+TEST_F(RequestBuilderTest, FillReportWithUntrustedApiKeyTest) {
+  ReportRequestInfo info;
+  FillOperationInfo(&info);
+  FillReportRequestInfo(&info);
+
+  // Test case where API key is invalid.
+  // The key point is the API Key will be included in the log entry,
+  // but not the `credential_id` or `consumer_id` metrics.
+  info.api_key = "invalid-api-key";
+
+  // Use 401 as a failed response code.
+  info.response_code = 401;
+
+  // Use the corresponding status for that response code.
+  info.status = Status(Code::PERMISSION_DENIED, "");
+
+  for (const auto api_key_state :
+       {api_key::ApiKeyState::INVALID, api_key::ApiKeyState::NOT_ENABLED,
+        api_key::ApiKeyState::NOT_CHECKED}) {
+    info.check_response_info.api_key_state = api_key_state;
+
+    gasv1::ReportRequest request;
+    ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+
+    std::string text = ReportRequestToString(&request);
+    std::string expected_text =
+        ReadTestBaseline("report_request_failed_bad_api_key.golden");
+    ASSERT_EQ(expected_text, text);
+  }
+}
+
 TEST_F(RequestBuilderTest, FillReportRequestEmptyOptionalTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
+
+  info.check_response_info.api_key_state = api_key::ApiKeyState::VERIFIED;
 
   gasv1::ReportRequest request;
   ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
@@ -318,15 +352,54 @@ TEST_F(RequestBuilderTest, FillReportRequestEmptyOptionalTest) {
   ASSERT_EQ(expected_text, text);
 }
 
-TEST_F(RequestBuilderTest, CredentailIdApiKeyTest) {
+TEST_F(RequestBuilderTest, ReportApiKeyVerifiedTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
+
+  info.check_response_info.api_key_state = api_key::ApiKeyState::VERIFIED;
 
   gasv1::ReportRequest request;
   ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
 
+  // Credential id is filled.
+  ASSERT_TRUE(request.operations(0).labels().contains("/credential_id"));
   ASSERT_EQ(request.operations(0).labels().at("/credential_id"),
             "apikey:api_key_x");
+
+  // Consumer id is filled.
+  ASSERT_EQ(request.operations(0).consumer_id(), "api_key:api_key_x");
+
+  // Log entry is filled.
+  const gasv1::LogEntry log_entry = request.operations(0).log_entries(0);
+  const auto fields = log_entry.struct_payload().fields();
+  ASSERT_TRUE(fields.contains("api_key"));
+  ASSERT_EQ(fields.at("api_key").string_value(), "api_key_x");
+}
+
+TEST_F(RequestBuilderTest, ReportApiKeyNotVerifiedTest) {
+  ReportRequestInfo info;
+  FillOperationInfo(&info);
+
+  for (const auto api_key_state :
+       {api_key::ApiKeyState::NOT_CHECKED, api_key::ApiKeyState::NOT_ENABLED,
+        api_key::ApiKeyState::INVALID}) {
+    info.check_response_info.api_key_state = api_key_state;
+
+    gasv1::ReportRequest request;
+    ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+
+    // Credential id is not filled.
+    ASSERT_FALSE(request.operations(0).labels().contains("/credential_id"));
+
+    // Consumer id is not filled.
+    ASSERT_EQ(request.operations(0).consumer_id(), "");
+
+    // Log entry is filled.
+    const gasv1::LogEntry log_entry = request.operations(0).log_entries(0);
+    const auto fields = log_entry.struct_payload().fields();
+    ASSERT_TRUE(fields.contains("api_key"));
+    ASSERT_EQ(fields.at("api_key").string_value(), "api_key_x");
+  }
 }
 
 TEST_F(RequestBuilderTest, CredentailIdIssuerOnlyTest) {

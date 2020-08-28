@@ -45,6 +45,40 @@ inline const char* ToString(Protocol p) {
 
 }  // namespace protocol
 
+namespace api_key {
+
+enum ApiKeyState {
+  // API Key was not checked, unsure if it's valid.
+  NOT_CHECKED = 0,
+
+  // API Key is invalid.
+  INVALID = 1,
+
+  // API Key is valid, but the API Consumer did not enable the service.
+  NOT_ENABLED = 2,
+
+  // API Key is valid and API Consumer enabled the service.
+  VERIFIED = 3,
+};
+
+/*
+ * TODO(nareddyt): Enable in follow-up PR - log state in log entry.
+inline const char* ToString(ApiKeyState state) {
+  switch (state) {
+    case VERIFIED:
+      return "VERIFIED";
+    case INVALID:
+      return "INVALID";
+    case NOT_ENABLED:
+      return "NOT ENABLED";
+    case NOT_CHECKED:
+    default:
+      return "NOT CHECKED";
+  }
+}
+*/
+}  // namespace api_key
+
 // Per request latency statistics.
 struct LatencyInfo {
   // The request time in milliseconds. -1 if not available.
@@ -121,6 +155,9 @@ struct CheckResponseInfo {
   std::string consumer_type;
 
   std::string consumer_number;
+
+  // The trust level of the API Key that was checked.
+  api_key::ApiKeyState api_key_state = api_key::ApiKeyState::NOT_CHECKED;
 };
 
 struct QuotaRequestInfo : public OperationInfo {

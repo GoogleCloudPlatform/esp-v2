@@ -137,13 +137,6 @@ void ServiceControlHandlerImpl::prepareReportRequest(
     ::espv2::api_proxy::service_control::ReportRequestInfo& info) {
   fillOperationInfo(info);
 
-  // Report: not to send api-key if invalid or service is not enabled.
-  if (check_response_info_.error_type == ScResponseErrorType::API_KEY_INVALID ||
-      check_response_info_.error_type ==
-          ScResponseErrorType::SERVICE_NOT_ACTIVATED) {
-    info.api_key.clear();
-  }
-
   info.url = path_;
   info.method = http_method_;
   info.api_method = require_ctx_->config().operation_name();
