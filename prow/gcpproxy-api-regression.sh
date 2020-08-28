@@ -49,15 +49,16 @@ chmod +x ${ROOT}/bin/envoy
 # keep the current version
 VERSION=$(cat ${ROOT}/VERSION)
 
-# checkout to last releasd commit
-SHA=$(git rev-list -n 1 $(git describe --abbrev=0))
-git checkout "${SHA}"
+
+git branch
+# checkout to the head of master
+git checkout master
 
 # keep the current version
 echo ${VERSION} > ${ROOT}/VERSION
 
-# Since the Makefile is still in v16 after checkout, the following cmds can only
-# be replaced with `make integration-test-without-envoy-build` after release v17.
+# Since the Makefile is on the submitted commit, the following cmds can only be
+# replaced with `make integration-test-without-envoy-build` after this pr submitted
 make depend.update
 make build
 make build-grpc-interop
