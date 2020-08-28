@@ -328,7 +328,7 @@ TEST_F(RequestBuilderTest, FillReportWithInvalidApiKeyTest) {
 
   std::string text = ReportRequestToString(&request);
   std::string expected_text =
-      ReadTestBaseline("report_request_invalid_api_consumer.golden");
+      ReadTestBaseline("report_request_failed_bad_api_key.golden");
   ASSERT_EQ(expected_text, text);
 }
 
@@ -353,7 +353,7 @@ TEST_F(RequestBuilderTest, FillReportWithNotEnabledApiKeyTest) {
 
   std::string text = ReportRequestToString(&request);
   std::string expected_text =
-      ReadTestBaseline("report_request_invalid_api_consumer.golden");
+      ReadTestBaseline("report_request_failed_bad_api_key.golden");
   ASSERT_EQ(expected_text, text);
 }
 
