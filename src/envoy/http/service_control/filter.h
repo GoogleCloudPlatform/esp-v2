@@ -31,7 +31,7 @@ namespace service_control {
 
 // The Envoy filter for ESPv2 service control client.
 class ServiceControlFilter
-    : public Envoy::Http::PassThroughFilter,
+    : public Envoy::Http::PassThroughDecoderFilter,
       public Envoy::AccessLog::Instance,
       public ServiceControlHandler::CheckDoneCallback,
       public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
@@ -49,12 +49,6 @@ class ServiceControlFilter
                                            bool end_stream) override;
   Envoy::Http::FilterTrailersStatus decodeTrailers(
       Envoy::Http::RequestTrailerMap&) override;
-
-  // Envoy::Http::StreamEncoderFilter
-  Envoy::Http::FilterHeadersStatus encodeHeaders(
-      Envoy::Http::ResponseHeaderMap& headers, bool) override;
-  Envoy::Http::FilterDataStatus encodeData(Envoy::Buffer::Instance& data,
-                                           bool end_stream) override;
 
   // Called when the request is completed.
   void log(const Envoy::Http::RequestHeaderMap* request_headers,

@@ -49,15 +49,6 @@ class ServiceControlHandler {
       const Envoy::Http::ResponseHeaderMap* response_headers,
       const Envoy::Http::ResponseTrailerMap* response_trailers) PURE;
 
-  // If the stream report interval has passed,
-  // make an intermediate report call for long-lived gRPC streaming.
-  virtual void tryIntermediateReport() PURE;
-
-  // Process the response header to get the information needed for sending
-  // intermediate reports.
-  virtual void processResponseHeaders(
-      const Envoy::Http::ResponseHeaderMap& response_headers) PURE;
-
   // Fill filter state with request information for access logging.
   virtual void fillFilterState(
       ::Envoy::StreamInfo::FilterState& filter_state) PURE;

@@ -235,38 +235,6 @@ TEST_F(ServiceControlFilterTest, DecodeHelpersWhileContinuing) {
             filter_->decodeTrailers(req_trailer_));
 }
 
-TEST_F(ServiceControlFilterTest, DecodeDataSendStreamReport) {
-  // This puts the Filter into a continue state
-  EXPECT_CALL(*mock_handler_, callCheck(_, _, _))
-      .WillOnce(Invoke([](Envoy::Http::RequestHeaderMap&, Envoy::Tracing::Span&,
-                          ServiceControlHandler::CheckDoneCallback& callback) {
-        callback.onCheckDone(Status::OK);
-      }));
-  EXPECT_EQ(Envoy::Http::FilterHeadersStatus::Continue,
-            filter_->decodeHeaders(req_headers_, /*end_stream=*/true));
-
-  mock_buffer_.add("filler");
-
-  EXPECT_CALL(*mock_handler_, tryIntermediateReport());
-  filter_->decodeData(mock_buffer_, /*end_stream=*/false);
-}
-
-TEST_F(ServiceControlFilterTest, EncodeDataSendStreamReport) {
-  // This puts the Filter into a continue state
-  EXPECT_CALL(*mock_handler_, callCheck(_, _, _))
-      .WillOnce(Invoke([](Envoy::Http::RequestHeaderMap&, Envoy::Tracing::Span&,
-                          ServiceControlHandler::CheckDoneCallback& callback) {
-        callback.onCheckDone(Status::OK);
-      }));
-  EXPECT_EQ(Envoy::Http::FilterHeadersStatus::Continue,
-            filter_->decodeHeaders(req_headers_, /*end_stream=*/true));
-
-  mock_buffer_.add("filler");
-
-  EXPECT_CALL(*mock_handler_, tryIntermediateReport());
-  filter_->encodeData(mock_buffer_, /*end_stream=*/false);
-}
-
 }  // namespace
 
 }  // namespace service_control

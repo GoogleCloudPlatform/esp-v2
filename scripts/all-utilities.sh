@@ -405,3 +405,15 @@ function try_setup_bazel_remote_cache() {
   sed -i -e "s@CACHE_SILO_NAME@${cache_silo}@g" ${root_dir}/.bazelrc
   sed -i -e "s@CACHE_PROJECT_ID@${gcp_project_id}@g" ${root_dir}/.bazelrc
 }
+
+function envoy_binary_gcs_path() {
+  echo -n "gs://apiproxy-testing-envoy-binaries/$(get_sha)"
+}
+
+function upload_envoy_binary() {
+  gsutil -m cp ${ROOT}/bin/envoy $(envoy_binary_gcs_path)
+}
+
+function download_envoy_binary() {
+  gsutil -m cp $(envoy_binary_gcs_path)  ${ROOT}/bin/envoy
+}
