@@ -31,7 +31,6 @@ using ::Envoy::StreamInfo::FilterState;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::OperationInfo;
 using ::espv2::api_proxy::service_control::ScResponseErrorType;
-using ::espv2::api_proxy::service_control::api_key::ApiKeyState;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
@@ -62,7 +61,6 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
                             kConsumerTypeHeaderSuffix),
       consumer_number_header_(cfg_parser_.config().generated_header_prefix() +
                               kConsumerNumberHeaderSuffix),
-      on_check_done_called_(false),
       request_header_size_(0),
       response_header_size_(0),
       is_grpc_(false),

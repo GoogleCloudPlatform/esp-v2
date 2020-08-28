@@ -157,7 +157,7 @@ struct CheckResponseInfo {
   std::string consumer_number;
 
   // The trust level of the API Key that was checked.
-  api_key::ApiKeyState api_key_state;
+  api_key::ApiKeyState api_key_state = api_key::ApiKeyState::NOT_CHECKED;
 };
 
 struct QuotaRequestInfo : public OperationInfo {
@@ -251,9 +251,6 @@ struct ReportRequestInfo : public OperationInfo {
   // Flag to indicate the final report
   bool is_final_report;
 
-  // Influences the log entry and consumer metric.
-  api_key::ApiKeyState api_key_state;
-
   ReportRequestInfo()
       : response_code(200),
         request_size(-1),
@@ -267,8 +264,7 @@ struct ReportRequestInfo : public OperationInfo {
         streaming_response_message_counts(0),
         streaming_durations(0),
         is_first_report(true),
-        is_final_report(true),
-        api_key_state(api_key::ApiKeyState::NOT_CHECKED) {}
+        is_final_report(true) {}
 };
 
 }  // namespace service_control

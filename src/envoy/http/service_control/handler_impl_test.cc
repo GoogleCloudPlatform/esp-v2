@@ -44,8 +44,8 @@ using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::QuotaRequestInfo;
 using ::espv2::api_proxy::service_control::ReportRequestInfo;
 using ::espv2::api_proxy::service_control::ScResponseErrorType;
-using ::espv2::api_proxy::service_control::api_key::ApiKeyState;
 using ::espv2::api_proxy::service_control::protocol::Protocol;
+using ::espv2::api_proxy::service_control::api_key::ApiKeyState;
 using ::google::protobuf::TextFormat;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
@@ -187,7 +187,6 @@ class HandlerTest : public ::testing::Test {
     expected_report_info.api_version = "test_version";
     expected_report_info.url = "/echo";
     expected_report_info.method = "GET";
-    expected_report_info.api_key_state = ApiKeyState::VERIFIED;
   }
 
   void checkAndReset(Envoy::Stats::Counter& counter, const int expected_value) {
@@ -269,7 +268,6 @@ MATCHER_P(MatchesQuotaInfo, expect, Envoy::EMPTY_STRING) {
   MATCH2(operation_name, operation_name);                      \
   MATCH2(log_message, operation_name + " is called");          \
   MATCH(api_key);                                              \
-  MATCH(api_key_state);                                        \
   MATCH(status);                                               \
   MATCH(request_headers);                                      \
   MATCH(response_headers);                                     \
@@ -346,7 +344,6 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
   expected_report_info.api_version = Envoy::EMPTY_STRING;
   expected_report_info.status = Status::OK;
   expected_report_info.operation_name = "<Unknown Operation Name>";
-  expected_report_info.api_key_state = ApiKeyState::NOT_CHECKED;
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
@@ -379,7 +376,6 @@ TEST_F(HandlerTest, HandlerMissingHeaders) {
   expected_report_info.operation_name = "<Unknown Operation Name>";
   expected_report_info.url = Envoy::EMPTY_STRING;
   expected_report_info.method = Envoy::EMPTY_STRING;
-  expected_report_info.api_key_state = ApiKeyState::NOT_CHECKED;
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
@@ -406,8 +402,6 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
   expected_report_info.api_version = Envoy::EMPTY_STRING;
   expected_report_info.status = Status::OK;
   expected_report_info.operation_name = "<Unknown Operation Name>";
-  expected_report_info.api_key_state = ApiKeyState::NOT_CHECKED;
-
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
   handler.callReport(&headers, &resp_headers_, &resp_trailer_);
@@ -428,43 +422,11 @@ TEST_F(HandlerTest, HandlerCheckNotNeeded) {
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
-  // No api key in request, and check is not called.
+  // no api key is set on this info
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
   expected_report_info.status = Status::OK;
   expected_report_info.operation_name = "get_no_key";
-  expected_report_info.api_key_state = ApiKeyState::NOT_CHECKED;
-
-  EXPECT_CALL(*mock_call_,
-              callReport(MatchesReportInfo(expected_report_info, headers,
-                                           response_headers, resp_trailer_)));
-  handler.callReport(&headers, &response_headers, &resp_trailer_);
-}
-
-TEST_F(HandlerTest, HandlerCheckNotNeededWithUntrustedApiKey) {
-  // Test: If the operation does not require check, check should return OK
-  utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kFilterStateOperation, "get_no_key");
-  TestRequestHeaderMapImpl headers{
-      {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "invalid-key"}};
-  TestResponseHeaderMapImpl response_headers{
-      {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_, stats_);
-
-  EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
-  EXPECT_CALL(*mock_call_, callQuota(_, _)).Times(0);
-  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
-
-  // API key in request, but it's not trusted because check is not called.
-  ReportRequestInfo expected_report_info;
-  initExpectedReportInfo(expected_report_info);
-  expected_report_info.status = Status::OK;
-  expected_report_info.operation_name = "get_no_key";
-  expected_report_info.api_key = "invalid-key";
-  expected_report_info.api_key_state = ApiKeyState::NOT_CHECKED;
-
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
@@ -492,12 +454,10 @@ TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(bad_status));
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
-  // No api key in the request, so optimize and check is not called.
+  // no api key is set on this info
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
   expected_report_info.status = bad_status;
-  expected_report_info.api_key_state = ApiKeyState::NOT_CHECKED;
-
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
@@ -687,13 +647,10 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(bad_status));
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
-  // API key is set, but key is not trusted.
+  // no api key is set on this info
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
   expected_report_info.status = bad_status;
-  expected_report_info.api_key = "foobar";
-  expected_report_info.api_key_state = ApiKeyState::INVALID;
-
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
@@ -866,7 +823,7 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
                                     *cfg_parser_, test_time_, stats_);
 
   CheckResponseInfo response_info;
-  response_info.error_type = ScResponseErrorType::SERVICE_NOT_ACTIVATED;
+  response_info.error_type = ScResponseErrorType::API_KEY_INVALID;
 
   CheckRequestInfo expected_check_info;
   expected_check_info.api_key = "foobar";
@@ -890,13 +847,10 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(bad_status));
   stored_on_done(bad_status, response_info);
 
-  // API key is set, but key is not trusted.
+  // no api key is set on this info
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
   expected_report_info.status = bad_status;
-  expected_report_info.api_key = "foobar";
-  expected_report_info.api_key_state = ApiKeyState::NOT_ENABLED;
-
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
@@ -1035,7 +989,6 @@ TEST_F(HandlerTest, HandlerCancelFuncNotCalledOnDestroyForSyncOnDone) {
 
 TEST_F(HandlerTest, HandlerReportWithoutCheck) {
   // Test: Test that callReport works when callCheck is not called first.
-  // This can happen when request does not match any operation.
   utils::setStringFilterState(*mock_stream_info_.filter_state_,
                               utils::kFilterStateOperation, "get_header_key");
   TestRequestHeaderMapImpl headers{
@@ -1050,8 +1003,6 @@ TEST_F(HandlerTest, HandlerReportWithoutCheck) {
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
   expected_report_info.api_key = "foobar";
-  expected_report_info.api_key_state = ApiKeyState::NOT_CHECKED;
-
   // The default value of status if a check is not made is OK
   expected_report_info.status = Status::OK;
   EXPECT_CALL(*mock_call_,
