@@ -322,7 +322,9 @@ TEST_F(RequestBuilderTest, FillReportWithUntrustedApiKeyTest) {
   // Use the corresponding status for that response code.
   info.status = Status(Code::PERMISSION_DENIED, "");
 
-  for (const auto api_key_state : {api_key::ApiKeyState::INVALID, api_key::ApiKeyState::NOT_ENABLED, api_key::ApiKeyState::NOT_CHECKED}) {
+  for (const auto api_key_state :
+       {api_key::ApiKeyState::INVALID, api_key::ApiKeyState::NOT_ENABLED,
+        api_key::ApiKeyState::NOT_CHECKED}) {
     info.check_response_info.api_key_state = api_key_state;
 
     gasv1::ReportRequest request;
