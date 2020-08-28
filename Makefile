@@ -166,6 +166,8 @@ integration-test-run-parallel:
 
 integration-test: build  build-envoy build-grpc-interop build-grpc-echo integration-test-run-sequential
 
+integration-test-without-envoy-build: build build-grpc-interop build-grpc-echo integration-test-run-sequential
+
 integration-debug: build build-envoy-debug build-grpc-interop build-grpc-echo
 	@echo "--> running integration tests and showing debug logs"
 	@go test -timeout 20m ./tests/endpoints/...

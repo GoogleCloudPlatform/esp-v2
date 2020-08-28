@@ -37,8 +37,6 @@ const (
 	HTTPConnectionManager = "envoy.filters.network.http_connection_manager"
 	// JwtAuthn filter.
 	JwtAuthn = "envoy.filters.http.jwt_authn"
-	// GrpcStats filter name
-	GrpcStatsFilterName = "envoy.filters.http.grpc_stats"
 	// TLSTransportSocket is Envoy TLS Transport Socket name.
 	TLSTransportSocket = "envoy.transport_sockets.tls"
 	// AccessFileLogger filter name

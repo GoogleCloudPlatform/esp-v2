@@ -58,11 +58,6 @@ class ServiceControlHandlerImpl
       const Envoy::Http::ResponseHeaderMap* response_headers,
       const Envoy::Http::ResponseTrailerMap* response_trailers) override;
 
-  void tryIntermediateReport() override;
-
-  void processResponseHeaders(
-      const Envoy::Http::ResponseHeaderMap& response_headers) override;
-
   void fillFilterState(::Envoy::StreamInfo::FilterState& filter_state) override;
 
   void onDestroy() override;
@@ -126,18 +121,9 @@ class ServiceControlHandlerImpl
 
   CancelFunc cancel_fn_;
   bool on_check_done_called_;
-  uint64_t request_header_size_;
-  uint64_t response_header_size_;
-
-  // The frontend protocol only for intermediate reports.
-  ::espv2::api_proxy::service_control::protocol::Protocol frontend_protocol_;
 
   // If true, it is a grpc and need to send multiple reports.
   bool is_grpc_;
-  // If true, this is the first report.
-  bool is_first_report_;
-  // Interval timer for sending intermediate reports.
-  Envoy::SystemTime last_reported_;
 
   // Filter statistics.
   ServiceControlFilterStats& filter_stats_;

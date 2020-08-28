@@ -184,14 +184,8 @@ struct ReportRequestInfo : public OperationInfo {
   // If consumer data should be sent.
   CheckResponseInfo check_response_info;
 
-  // request message size till the current time point.
-  int64_t request_bytes;
-
   // The request headers logged
   std::string request_headers;
-
-  // response message size till the current time point.
-  int64_t response_bytes;
 
   // The request headers logged
   std::string response_headers;
@@ -199,35 +193,13 @@ struct ReportRequestInfo : public OperationInfo {
   // The jwt payloads logged
   std::string jwt_payloads;
 
-  // number of messages for a stream.
-  int64_t streaming_request_message_counts;
-
-  // number of messages for a stream.
-  int64_t streaming_response_message_counts;
-
-  // streaming duration (us) between first message and last message.
-  int64_t streaming_durations;
-
-  // Flag to indicate the first report
-  bool is_first_report;
-
-  // Flag to indicate the final report
-  bool is_final_report;
-
   ReportRequestInfo()
       : response_code(200),
         request_size(-1),
         response_size(-1),
         frontend_protocol(protocol::UNKNOWN),
         backend_protocol(protocol::UNKNOWN),
-        compute_platform("UNKNOWN(ESPv2)"),
-        request_bytes(0),
-        response_bytes(0),
-        streaming_request_message_counts(0),
-        streaming_response_message_counts(0),
-        streaming_durations(0),
-        is_first_report(true),
-        is_final_report(true) {}
+        compute_platform("UNKNOWN(ESPv2)") {}
 };
 
 }  // namespace service_control

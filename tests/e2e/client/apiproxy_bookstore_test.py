@@ -188,6 +188,15 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
         })
         self.assertEqual(response.status_code, 200)
 
+    def verify_allow_cors_passthrough(self):
+
+        # Bookstore backend supports options for known routes
+        response = self._call_http('/shelves', method='OPTIONS')
+        self.assertEqual(response.status_code, 200)
+
+        # Bookstore backend does not support options for unknown routes
+        response = self._call_http('/random/route', method='OPTIONS')
+        self.assertEqual(response.status_code, 404)
 
     def run_all_tests(self):
         shelf1 = {
@@ -220,6 +229,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
         self.verify_book(book24)
 
         self.verify_jwt_locations()
+        self.verify_allow_cors_passthrough()
 
 
         if self._failed_tests:

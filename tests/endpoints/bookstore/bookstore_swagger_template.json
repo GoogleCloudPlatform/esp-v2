@@ -561,5 +561,11 @@
         "metric": "bookstore/read_requests"
       }]
     }
-  }
+  },
+  "x-google-endpoints": [
+    {
+      "allowCors": true,
+      "name": "bookstore.endpoints.cloudesf-testing.cloud.goog"
+    }
+  ]
 }

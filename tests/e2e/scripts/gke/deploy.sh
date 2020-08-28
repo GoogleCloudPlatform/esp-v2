@@ -90,6 +90,7 @@ case "${BACKEND}" in
 
     cat "${SERVICE_IDL_TMPL}" \
         | jq ".host = \"${APIPROXY_SERVICE}\" \
+        | .\"x-google-endpoints\"[0].name = \"${APIPROXY_SERVICE}\" \
         | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${APIPROXY_SERVICE}\"" \
         > "${SERVICE_IDL}"
 

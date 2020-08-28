@@ -121,14 +121,6 @@ var (
                         }
                      },
                      {
-                        "name":"envoy.filters.http.grpc_stats",
-                        "typedConfig":{
-                           "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_stats.v3.FilterConfig",
-                           "emitFilterState":true,
-                           "statsForAllMethods":false
-                        }
-                     },
-                     {
                         "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.router.v3.Router",
@@ -298,14 +290,6 @@ var (
                      },
                      {
                         "name":"envoy.filters.http.grpc_web"
-                     },
-                     {
-                        "name":"envoy.filters.http.grpc_stats",
-                        "typedConfig":{
-                           "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_stats.v3.FilterConfig",
-                           "emitFilterState":true,
-                           "statsForAllMethods":false
-                        }
                      },
                      {
                         "name":"envoy.filters.http.router",
@@ -511,14 +495,6 @@ var (
                      },
                      {
                         "name":"envoy.filters.http.grpc_web"
-                     },
-                     {
-                        "name":"envoy.filters.http.grpc_stats",
-                        "typedConfig":{
-                           "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_stats.v3.FilterConfig",
-                           "emitFilterState":true,
-                           "statsForAllMethods":false
-                        }
                      },
                      {
                         "name":"envoy.filters.http.router",
@@ -762,14 +738,6 @@ var (
                         "name":"envoy.filters.http.grpc_web"
                      },
                      {
-                        "name":"envoy.filters.http.grpc_stats",
-                        "typedConfig":{
-                           "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_stats.v3.FilterConfig",
-                           "emitFilterState":true,
-                           "statsForAllMethods":false
-                        }
-                     },
-                     {
                         "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.router.v3.Router",
@@ -984,14 +952,6 @@ var (
                      },
                      {
                         "name":"envoy.filters.http.grpc_web"
-                     },
-                     {
-                        "name":"envoy.filters.http.grpc_stats",
-                        "typedConfig":{
-                           "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_stats.v3.FilterConfig",
-                           "emitFilterState":true,
-                           "statsForAllMethods":false
-                        }
                      },
                      {
                         "name":"envoy.filters.http.router",

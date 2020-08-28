@@ -106,8 +106,6 @@ func TestServiceControlCredentialId(t *testing.T) {
 					LogMessage:        "endpoints.examples.bookstore.Bookstore.ListShelves is called",
 					StatusCode:        "0",
 					ResponseCode:      200,
-					RequestMsgCounts:  1,
-					ResponseMsgCounts: 1,
 					Platform:          util.GCE,
 					Location:          "test-zone",
 				},
