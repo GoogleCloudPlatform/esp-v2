@@ -450,7 +450,9 @@ TEST_F(RequestBuilderTest, ReportApiKeyNotVerifiedTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
 
-  for (const auto api_key_state : {api_key::ApiKeyState::NOT_CHECKED, api_key::ApiKeyState::NOT_ENABLED, api_key::ApiKeyState::INVALID}) {
+  for (const auto api_key_state :
+       {api_key::ApiKeyState::NOT_CHECKED, api_key::ApiKeyState::NOT_ENABLED,
+        api_key::ApiKeyState::INVALID}) {
     info.check_response_info.api_key_state = api_key_state;
 
     gasv1::ReportRequest request;

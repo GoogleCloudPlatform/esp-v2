@@ -410,7 +410,8 @@ void ClientCache::handleCheckResponse(const Status& http_status,
       // Handle API Key validity.
       if (response_info.error_type == ScResponseErrorType::API_KEY_INVALID) {
         response_info.api_key_state = ApiKeyState::INVALID;
-      } else if (response_info.error_type == ScResponseErrorType::SERVICE_NOT_ACTIVATED) {
+      } else if (response_info.error_type ==
+                 ScResponseErrorType::SERVICE_NOT_ACTIVATED) {
         response_info.api_key_state = ApiKeyState::NOT_ENABLED;
       } else {
         // All other SC Check errors assume consumer was identified.

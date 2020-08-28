@@ -44,8 +44,8 @@ using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::QuotaRequestInfo;
 using ::espv2::api_proxy::service_control::ReportRequestInfo;
 using ::espv2::api_proxy::service_control::ScResponseErrorType;
-using ::espv2::api_proxy::service_control::protocol::Protocol;
 using ::espv2::api_proxy::service_control::api_key::ApiKeyState;
+using ::espv2::api_proxy::service_control::protocol::Protocol;
 using ::google::protobuf::TextFormat;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
@@ -647,10 +647,11 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(bad_status));
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
-  // no api key is set on this info
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
   expected_report_info.status = bad_status;
+  expected_report_info.api_key = "foobar";
+
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
@@ -851,6 +852,8 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
   expected_report_info.status = bad_status;
+  expected_report_info.api_key = "foobar";
+
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
