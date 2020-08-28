@@ -270,15 +270,10 @@ MATCHER_P(MatchesQuotaInfo, expect, Envoy::EMPTY_STRING) {
   MATCH(status);                                               \
   MATCH(request_headers);                                      \
   MATCH(response_headers);                                     \
-  MATCH(is_first_report);                                      \
-  MATCH(is_final_report);                                      \
   MATCH(url);                                                  \
   MATCH(method);                                               \
   MATCH(api_name);                                             \
-  MATCH(api_version);                                          \
-  MATCH(streaming_request_message_counts);                     \
-  MATCH(streaming_response_message_counts);                    \
-  MATCH(streaming_durations);
+  MATCH(api_version);
 
 MATCHER_P4(MatchesReportInfo, expect, request_headers, response_headers,
            response_trailers, Envoy::EMPTY_STRING) {
@@ -291,12 +286,10 @@ MATCHER_P4(MatchesReportInfo, expect, request_headers, response_headers,
   MATCH2(frontend_protocol, Protocol::GRPC);
 
   int64_t request_size = request_headers.byteSize();
-  MATCH2(request_bytes, request_size);
   MATCH2(request_size, request_size);
 
   int64_t response_size =
       response_headers.byteSize() + response_trailers.byteSize();
-  MATCH2(response_bytes, response_size);
   MATCH2(response_size, response_size);
   return true;
 }
@@ -315,10 +308,6 @@ MATCHER_P(MatchesDataReportInfo, expect, Envoy::EMPTY_STRING) {
                                      : expect.operation_name);
 
   MATCH_DEFAULT_REPORT_INFO(arg, expect, operation_name);
-
-  // the buffer implementation is doing.
-  MATCH(request_bytes);
-  MATCH(response_bytes);
   return true;
 }
 
@@ -1007,157 +996,6 @@ TEST_F(HandlerTest, HandlerReportWithoutCheck) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
-  handler.callReport(&headers, &response_headers, &resp_trailer_);
-}
-
-TEST_F(HandlerTest, TryIntermediateReport) {
-  // CollectDecodeData test cases after the boilerplate
-  utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kFilterStateOperation, "get_header_key");
-  TestRequestHeaderMapImpl headers{{":method", "GET"},
-                                   {":path", "/echo"},
-                                   {"x-api-key", "foobar"},
-                                   {"content-type", "application/grpc"}};
-  TestResponseHeaderMapImpl response_headers{
-      {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_, stats_);
-  CheckResponseInfo response_info;
-  EXPECT_CALL(*mock_call_, callCheck(_, _, _))
-      .WillOnce(Invoke([&response_info](const CheckRequestInfo&,
-                                        Envoy::Tracing::Span&,
-                                        CheckDoneFunc on_done) {
-        on_done(Status::OK, response_info);
-        return nullptr;
-      }));
-  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
-
-  handler.processResponseHeaders(response_headers);
-  // Test: First call is skipped because start time == start time
-  EXPECT_CALL(*mock_call_, callReport(_)).Times(0);
-  handler.tryIntermediateReport();
-
-  // Test: Next call is skipped because not enough time has passed
-  test_time_.timeSystem().advanceTimeAsync(std::chrono::milliseconds(1));
-  handler.tryIntermediateReport();
-
-  // Test: Next call is sent because enough time has passed
-  // In the config: min_stream_report_interval_ms: 100
-  test_time_.timeSystem().advanceTimeAsync(std::chrono::milliseconds(200));
-  ReportRequestInfo expected_report_info;
-  initExpectedReportInfo(expected_report_info);
-  expected_report_info.api_key = "foobar";
-  expected_report_info.is_first_report = true;
-  expected_report_info.is_final_report = false;
-  expected_report_info.status = Status::OK;
-  // streaming_request_message_counts and streaming_durations only exist in
-  // the final report.
-  expected_report_info.streaming_request_message_counts = 0;
-  expected_report_info.streaming_durations = 0;
-
-  // Mock stream_info_ bytes
-  mock_stream_info_.bytes_received_ = 123;
-  mock_stream_info_.bytes_sent_ = 456;
-  // request_bytes = mock_stream_info.bytes_received_ + headers.
-  expected_report_info.request_bytes =
-      mock_stream_info_.bytes_received_ + headers.byteSize();
-  // response_bytes = mock_stream_info_.bytes_sent_ + response headers
-  expected_report_info.response_bytes =
-      mock_stream_info_.bytes_sent_ + response_headers.byteSize();
-
-  EXPECT_CALL(*mock_call_,
-              callReport(MatchesDataReportInfo(expected_report_info)))
-      .Times(1);
-  handler.tryIntermediateReport();
-
-  // Test: Next call is sent. First report is false
-  test_time_.timeSystem().advanceTimeAsync(std::chrono::milliseconds(200));
-  expected_report_info.is_first_report = false;
-
-  mock_stream_info_.bytes_received_ = 789;
-  mock_stream_info_.bytes_sent_ = 1456;
-  expected_report_info.request_bytes =
-      mock_stream_info_.bytes_received_ + headers.byteSize();
-  expected_report_info.response_bytes =
-      mock_stream_info_.bytes_sent_ + response_headers.byteSize();
-
-  EXPECT_CALL(*mock_call_,
-              callReport(MatchesDataReportInfo(expected_report_info)))
-      .Times(1);
-  handler.tryIntermediateReport();
-}
-
-TEST_F(HandlerTest, FinalReports) {
-  // CollectEncodeData test cases after the boilerplate
-  utils::setStringFilterState(*mock_stream_info_.filter_state_,
-                              utils::kFilterStateOperation, "get_header_key");
-  TestRequestHeaderMapImpl headers{{":method", "GET"},
-                                   {":path", "/echo"},
-                                   {"x-api-key", "foobar"},
-                                   {"content-type", "application/grpc"}};
-  TestResponseHeaderMapImpl response_headers{
-      {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_, stats_);
-  CheckResponseInfo response_info;
-  EXPECT_CALL(*mock_call_, callCheck(_, _, _))
-      .WillOnce(Invoke([&response_info](const CheckRequestInfo&,
-                                        Envoy::Tracing::Span&,
-                                        CheckDoneFunc on_done) {
-        on_done(Status::OK, response_info);
-        return nullptr;
-      }));
-  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
-
-  handler.processResponseHeaders(response_headers);
-
-  handler.tryIntermediateReport();
-
-  test_time_.timeSystem().advanceTimeAsync(std::chrono::milliseconds(200));
-  int duration = std::chrono::duration_cast<std::chrono::microseconds>(
-                     std::chrono::milliseconds(200))
-                     .count();
-  ReportRequestInfo expected_report_info;
-  initExpectedReportInfo(expected_report_info);
-  expected_report_info.api_key = "foobar";
-
-  expected_report_info.is_first_report = true;
-  expected_report_info.is_final_report = true;
-  expected_report_info.status = Status::OK;
-
-  expected_report_info.streaming_durations = duration;
-
-  {
-    // message_counts is from grpc_stats filterState.
-    auto grpc_state = std::make_unique<
-        Envoy::Extensions::HttpFilters::GrpcStats::GrpcStatsObject>();
-    grpc_state->request_message_count = 123;
-    grpc_state->response_message_count = 456;
-    mock_stream_info_.filter_state_->setData(
-        Envoy::Extensions::HttpFilters::HttpFilterNames::get().GrpcStats,
-        std::move(grpc_state),
-        Envoy::StreamInfo::FilterState::StateType::Mutable);
-  }
-  expected_report_info.streaming_request_message_counts = 123;
-  expected_report_info.streaming_response_message_counts = 456;
-
-  // Check the final report.
-  mock_stream_info_.bytes_received_ = 123;
-  mock_stream_info_.bytes_sent_ = 456;
-  // request_bytes = mock_stream_info.bytes_received_ + 1 headers.
-  expected_report_info.request_bytes =
-      mock_stream_info_.bytes_received_ + headers.byteSize();
-  // response_bytes = mock_stream_info_.bytes_sent_
-  //  + response_headers + response_trailers.
-  expected_report_info.response_bytes = mock_stream_info_.bytes_sent_ +
-                                        response_headers.byteSize() +
-                                        resp_trailer_.byteSize();
-
-  EXPECT_CALL(*mock_call_,
-              callReport(MatchesDataReportInfo(expected_report_info)))
-      .Times(1);
   handler.callReport(&headers, &response_headers, &resp_trailer_);
 }
 

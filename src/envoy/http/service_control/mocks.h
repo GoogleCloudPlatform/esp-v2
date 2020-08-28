@@ -38,12 +38,6 @@ class MockServiceControlHandler : public ServiceControlHandler {
                const Envoy::Http::ResponseTrailerMap* response_trailers),
               (override));
 
-  MOCK_METHOD(void, tryIntermediateReport, (), (override));
-
-  MOCK_METHOD(void, processResponseHeaders,
-              (const Envoy::Http::ResponseHeaderMap& response_headers),
-              (override));
-
   MOCK_METHOD(void, onDestroy, (), (override));
 
   MOCK_METHOD(void, fillFilterState,

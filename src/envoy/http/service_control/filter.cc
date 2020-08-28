@@ -97,12 +97,8 @@ void ServiceControlFilter::rejectRequest(Envoy::Http::Code code,
 }
 
 Envoy::Http::FilterDataStatus ServiceControlFilter::decodeData(
-    Envoy::Buffer::Instance& data, bool end_stream) {
+    Envoy::Buffer::Instance&, bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
-  if (!end_stream && data.length() > 0) {
-    handler_->tryIntermediateReport();
-  }
-
   if (state_ == Calling) {
     return Envoy::Http::FilterDataStatus::StopIterationAndWatermark;
   }
@@ -116,27 +112,6 @@ Envoy::Http::FilterTrailersStatus ServiceControlFilter::decodeTrailers(
     return Envoy::Http::FilterTrailersStatus::StopIteration;
   }
   return Envoy::Http::FilterTrailersStatus::Continue;
-}
-
-Envoy::Http::FilterHeadersStatus ServiceControlFilter::encodeHeaders(
-    Envoy::Http::ResponseHeaderMap& headers, bool) {
-  ENVOY_LOG(debug, "Called ServiceControl Filter : {} before", __func__);
-
-  // For the cases the decodeHeaders not called, like the request get failed in
-  // the Jwt-Authn filter, the handler_ is not initialized.
-  if (handler_ != nullptr) {
-    handler_->processResponseHeaders(headers);
-  }
-  return Envoy::Http::FilterHeadersStatus::Continue;
-}
-
-Envoy::Http::FilterDataStatus ServiceControlFilter::encodeData(
-    Envoy::Buffer::Instance& data, bool end_stream) {
-  ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
-  if (!end_stream && data.length() > 0) {
-    handler_->tryIntermediateReport();
-  }
-  return Envoy::Http::FilterDataStatus::Continue;
 }
 
 void ServiceControlFilter::log(

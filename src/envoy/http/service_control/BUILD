@@ -149,7 +149,6 @@ envoy_cc_library(
         "@envoy//source/common/grpc:common_lib",
         "@envoy//source/common/http:headers_lib",
         "@envoy//source/extensions/filters/http:well_known_names",
-        "@envoy//source/extensions/filters/http/grpc_stats:config",
     ],
 )
 

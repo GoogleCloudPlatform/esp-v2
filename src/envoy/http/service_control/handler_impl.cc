@@ -16,7 +16,6 @@
 
 #include "absl/strings/match.h"
 #include "common/http/utility.h"
-#include "extensions/filters/http/grpc_stats/grpc_stats_filter.h"
 #include "src/envoy/http/service_control/handler_impl.h"
 #include "src/envoy/http/service_control/handler_utils.h"
 #include "src/envoy/utils/filter_state_utils.h"
@@ -61,17 +60,12 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
                             kConsumerTypeHeaderSuffix),
       consumer_number_header_(cfg_parser_.config().generated_header_prefix() +
                               kConsumerNumberHeaderSuffix),
-      request_header_size_(0),
-      response_header_size_(0),
       is_grpc_(false),
-      is_first_report_(true),
-      last_reported_(time_source_.systemTime()),
       filter_stats_(filter_stats) {
   is_grpc_ = Envoy::Grpc::Common::hasGrpcContentType(headers);
 
   http_method_ = std::string(utils::readHeaderEntry(headers.Method()));
   path_ = std::string(utils::readHeaderEntry(headers.Path()));
-  request_header_size_ = headers.byteSize();
 
   const absl::string_view operation = utils::getStringFilterState(
       stream_info_.filterState(), utils::kFilterStateOperation);
@@ -264,12 +258,6 @@ void ServiceControlHandlerImpl::onCheckResponse(
   callQuota();
 }
 
-void ServiceControlHandlerImpl::processResponseHeaders(
-    const Envoy::Http::ResponseHeaderMap& response_headers) {
-  frontend_protocol_ = getFrontendProtocol(&response_headers, stream_info_);
-  response_header_size_ = response_headers.byteSize();
-}
-
 void ServiceControlHandlerImpl::callReport(
     const Envoy::Http::RequestHeaderMap* request_headers,
     const Envoy::Http::ResponseHeaderMap* response_headers,
@@ -310,17 +298,18 @@ void ServiceControlHandlerImpl::callReport(
   info.backend_protocol =
       getBackendProtocol(require_ctx_->service_ctx().config());
 
+  uint64_t request_header_size = 0;
   if (request_headers) {
     info.referer =
         std::string(utils::extractHeader(*request_headers, kRefererHeader));
+    request_header_size = request_headers->byteSize();
   }
 
   fillLatency(stream_info_, info.latency, filter_stats_);
 
   info.response_code = stream_info_.responseCode().value_or(500);
 
-  info.request_size = stream_info_.bytesReceived() + request_header_size_;
-  info.request_bytes = stream_info_.bytesReceived() + request_header_size_;
+  info.request_size = stream_info_.bytesReceived() + request_header_size;
 
   uint64_t response_header_size = 0;
   if (response_headers) {
@@ -330,57 +319,8 @@ void ServiceControlHandlerImpl::callReport(
     response_header_size += response_trailers->byteSize();
   }
   info.response_size = stream_info_.bytesSent() + response_header_size;
-  info.response_bytes = stream_info_.bytesSent() + response_header_size;
-
-  if (stream_info_.filterState()
-          .hasData<Envoy::Extensions::HttpFilters::GrpcStats::GrpcStatsObject>(
-              Envoy::Extensions::HttpFilters::HttpFilterNames::get()
-                  .GrpcStats)) {
-    const auto& stat_obj =
-        stream_info_.filterState()
-            .getDataReadOnly<
-                Envoy::Extensions::HttpFilters::GrpcStats::GrpcStatsObject>(
-                Envoy::Extensions::HttpFilters::HttpFilterNames::get()
-                    .GrpcStats);
-    info.streaming_request_message_counts = stat_obj.request_message_count;
-    info.streaming_response_message_counts = stat_obj.response_message_count;
-  }
-
-  info.streaming_durations =
-      std::chrono::duration_cast<std::chrono::microseconds>(
-          time_source_.systemTime() - stream_info_.startTime())
-          .count();
-
-  info.is_first_report = is_first_report_;
 
   require_ctx_->service_ctx().call().callReport(info);
-}
-
-void ServiceControlHandlerImpl::tryIntermediateReport() {
-  if (!is_grpc_) {
-    return;
-  }
-
-  // Avoid reporting more frequently than the configured interval.
-  if (std::chrono::duration_cast<std::chrono::milliseconds>(
-          time_source_.systemTime() - last_reported_)
-          .count() <
-      require_ctx_->service_ctx().get_min_stream_report_interval_ms()) {
-    return;
-  }
-
-  ::espv2::api_proxy::service_control::ReportRequestInfo info;
-  prepareReportRequest(info);
-
-  info.request_bytes = stream_info_.bytesReceived() + request_header_size_;
-  info.response_bytes = stream_info_.bytesSent() + response_header_size_;
-
-  info.frontend_protocol = frontend_protocol_;
-  info.is_first_report = is_first_report_;
-  info.is_final_report = false;
-  require_ctx_->service_ctx().call().callReport(info);
-  last_reported_ = time_source_.systemTime();
-  is_first_report_ = false;
 }
 
 }  // namespace service_control
