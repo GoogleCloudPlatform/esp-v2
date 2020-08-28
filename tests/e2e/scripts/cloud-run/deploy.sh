@@ -121,6 +121,7 @@ function deployBackend() {
 
     sed "s/SERVICE_NAME/${BACKEND_SERVICE_NAME}/g" app_template.yaml > app.yaml
     gcloud app deploy --quiet
+    sleep 1m
 
     # For how requests are routed in App Engine, refer to
     # https://cloud.google.com/appengine/docs/standard/python/how-requests-are-routed#example_urls
@@ -134,7 +135,6 @@ function deployBackend() {
       exit 1
       ;;
   esac
-  sleep 1m
 }
 
 function deployProxy() {
