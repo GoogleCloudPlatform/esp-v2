@@ -151,7 +151,7 @@ func TestServiceControlQuota(t *testing.T) {
 					// API Key is invalid, so only in log entry.
 					ApiKeyInLogEntryOnly: "invalid-api-key",
 					// API Key is invalid, so JWT is used as credential_id instead.
-					JwtAuth:           "issuer=YXBpLXByb3h5LXRlc3RpbmdAY2xvdWQuZ29vZw",
+					CredentialId:      "issuer=YXBpLXByb3h5LXRlc3RpbmdAY2xvdWQuZ29vZw",
 					ApiMethod:         "endpoints.examples.bookstore.Bookstore.ListShelves",
 					ApiName:           "endpoints.examples.bookstore.Bookstore",
 					ApiVersion:        "1.0.0",

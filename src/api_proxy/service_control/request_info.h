@@ -155,6 +155,9 @@ struct CheckResponseInfo {
   std::string consumer_type;
 
   std::string consumer_number;
+
+  // The trust level of the API Key that was checked.
+  api_key::ApiKeyState api_key_state;
 };
 
 struct QuotaRequestInfo : public OperationInfo {

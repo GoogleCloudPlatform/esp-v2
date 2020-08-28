@@ -145,22 +145,6 @@ void ServiceControlHandlerImpl::prepareReportRequest(
     ::espv2::api_proxy::service_control::ReportRequestInfo& info) {
   fillOperationInfo(info);
 
-  // This logic determines if consumer metric is sent in report based on the
-  // validity of the API Key.
-  if (on_check_done_called_) {
-    if (check_response_info_.error_type ==
-        ScResponseErrorType::API_KEY_INVALID) {
-      info.api_key_state = ApiKeyState::INVALID;
-    } else if (check_response_info_.error_type ==
-               ScResponseErrorType::SERVICE_NOT_ACTIVATED) {
-      info.api_key_state = ApiKeyState::NOT_ENABLED;
-    } else {
-      info.api_key_state = ApiKeyState::VERIFIED;
-    }
-  } else {
-    info.api_key_state = ApiKeyState::NOT_CHECKED;
-  }
-
   info.url = path_;
   info.method = http_method_;
   info.api_method = require_ctx_->config().operation_name();

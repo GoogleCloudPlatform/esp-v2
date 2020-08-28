@@ -30,6 +30,7 @@ using ::google::protobuf::util::error::Code;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::QuotaResponseInfo;
 using ::espv2::api_proxy::service_control::ScResponseErrorType;
+using ::espv2::api_proxy::service_control::api_key::ApiKeyState;
 using ::google::api::servicecontrol::v1::AllocateQuotaRequest;
 using ::google::api::servicecontrol::v1::AllocateQuotaResponse;
 using ::google::api::servicecontrol::v1::CheckRequest;
@@ -363,9 +364,14 @@ void ClientCache::handleCheckResponse(const Status& http_status,
   }
 
   if (final_status.ok()) {
+    // Everything succeeded, API Key is trusted.
+    response_info.api_key_state = ApiKeyState::VERIFIED;
     on_done(final_status, response_info);
   } else if (final_status.error_code() == Code::UNAVAILABLE) {
     // All 5xx errors are already translated to Unavailable.
+    // API Key cannot be trusted due to a network error.
+    response_info.api_key_state = ApiKeyState::NOT_CHECKED;
+
     if (network_fail_open_) {
       filter_stats_.filter_.allowed_control_plane_fault_.inc();
       ENVOY_LOG(warn,
@@ -388,6 +394,9 @@ void ClientCache::handleCheckResponse(const Status& http_status,
       // Most likely an auth error in ESPv2 or API producer deployment.
       filter_stats_.filter_.denied_producer_error_.inc();
 
+      // API Key cannot be trusted due to network error with Service Control.
+      response_info.api_key_state = ApiKeyState::NOT_CHECKED;
+
       // This is not caused by a client request error, so translate
       // non-5xx error codes to 500 Internal Server Error. Error message
       // contains details on the original error (including the original
@@ -397,6 +406,17 @@ void ClientCache::handleCheckResponse(const Status& http_status,
     } else {
       // HTTP succeeded, but SC Check returned 4xx.
       // Stats already incremented for this case.
+
+      // Handle API Key validity.
+      if (response_info.error_type == ScResponseErrorType::API_KEY_INVALID) {
+        response_info.api_key_state = ApiKeyState::INVALID;
+      } else if (response_info.error_type == ScResponseErrorType::SERVICE_NOT_ACTIVATED) {
+        response_info.api_key_state = ApiKeyState::NOT_ENABLED;
+      } else {
+        // All other SC Check errors assume consumer was identified.
+        response_info.api_key_state = ApiKeyState::VERIFIED;
+      }
+
       on_done(final_status, response_info);
     }
   }
