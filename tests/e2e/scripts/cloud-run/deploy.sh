@@ -134,6 +134,7 @@ function deployBackend() {
       exit 1
       ;;
   esac
+  sleep 1m
 }
 
 function deployProxy() {
