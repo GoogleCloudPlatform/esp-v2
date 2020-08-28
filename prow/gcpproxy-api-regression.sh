@@ -37,7 +37,7 @@ exit 1; }
 . ${ROOT}/tests/e2e/scripts/prow-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
 
-git remotve -v
+git remote -v
 git branch
 wait_apiproxy_image
 
