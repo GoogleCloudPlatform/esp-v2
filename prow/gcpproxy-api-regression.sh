@@ -37,6 +37,8 @@ exit 1; }
 . ${ROOT}/tests/e2e/scripts/prow-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
 
+# Get the SHA of the head of master
+SHA=$(git ls-remote https://github.com/GoogleCloudPlatform/esp-v2.git HEAD | cut -f 1)
 
 wait_apiproxy_image
 
@@ -50,16 +52,9 @@ chmod +x ${ROOT}/bin/envoy
 VERSION=$(cat ${ROOT}/VERSION)
 
 # Checkout to the head of master
-SHA=$(git ls-remote https://github.com/GoogleCloudPlatform/esp-v2.git HEAD | cut -f 1)
 git checkout ${SHA}
 
 # keep the current version
 echo ${VERSION} > ${ROOT}/VERSION
 
-# Since the Makefile is on the submitted commit, the following cmds can only be
-# replaced with `make integration-test-without-envoy-build` after this pr submitted
-make depend.update
-make build
-make build-grpc-interop
-make build-grpc-echo
-make integration-test-run-sequential
+integration-test-without-envoy-build:
