@@ -815,9 +815,8 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
   (*fields)[kLogFieldNameServiceAgent].set_string_value(
       kServiceAgentPrefix + utils::Version::instance().get());
 
-  // TODO(nareddyt): Enable this in a follow-up PR (minimize diff in tests).
-  //  (*fields)[kLogFieldNameApiKeyState].set_string_value(
-  //      identity::ToString(info.check_response_info.api_key_state));
+  (*fields)[kLogFieldNameApiKeyState].set_string_value(
+      api_key::ToString(info.check_response_info.api_key_state));
 
   if (!info.producer_project_id.empty()) {
     (*fields)[kLogFieldNameProducerProjectId].set_string_value(

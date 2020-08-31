@@ -21,6 +21,7 @@
 #include <string>
 
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_replace.h"
 #include "google/protobuf/struct.pb.h"
 #include "google/protobuf/text_format.h"
 
@@ -331,9 +332,16 @@ TEST_F(RequestBuilderTest, FillReportWithUntrustedApiKeyTest) {
     ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
 
     std::string text = ReportRequestToString(&request);
-    std::string expected_text =
+
+    // It doesn't make sense to create different files just for one minor change.
+    // Template the file and replace the string as needed.
+    std::string template_expected_text =
         ReadTestBaseline("report_request_failed_bad_api_key.golden");
-    ASSERT_EQ(expected_text, text);
+    std::string expected_text = absl::StrReplaceAll(
+        template_expected_text,
+        {{"<API_KEY_STATE>", api_key::ToString(api_key_state)}});
+
+    EXPECT_EQ(expected_text, text);
   }
 }
 
