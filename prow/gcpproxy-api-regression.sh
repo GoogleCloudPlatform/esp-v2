@@ -57,4 +57,5 @@ git checkout ${SHA}
 # keep the current version
 echo ${VERSION} > ${ROOT}/VERSION
 
+make depend.install
 make integration-test-without-envoy-build
