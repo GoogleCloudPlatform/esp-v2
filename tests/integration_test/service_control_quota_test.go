@@ -104,6 +104,7 @@ func TestServiceControlQuota(t *testing.T) {
 					ServiceConfigID:              "test-config-id",
 					URL:                          "/v1/shelves?key=api-key",
 					ApiKeyInOperationAndLogEntry: "api-key",
+					ApiKeyState:                  "VERIFIED",
 					ApiMethod:                    "endpoints.examples.bookstore.Bookstore.ListShelves",
 					ApiName:                      "endpoints.examples.bookstore.Bookstore",
 					ApiVersion:                   "1.0.0",
@@ -150,6 +151,7 @@ func TestServiceControlQuota(t *testing.T) {
 					URL:             "/v1/shelves?key=invalid-api-key",
 					// API Key is invalid, so only in log entry.
 					ApiKeyInLogEntryOnly: "invalid-api-key",
+					ApiKeyState:          "INVALID",
 					// API Key is invalid, so JWT is used as credential_id instead.
 					JwtAuthCredentialId: "issuer=YXBpLXByb3h5LXRlc3RpbmdAY2xvdWQuZ29vZw",
 					ApiMethod:           "endpoints.examples.bookstore.Bookstore.ListShelves",
@@ -359,6 +361,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 					URL:                          "/v1/shelves?key=api-key",
 					ApiKeyInOperationAndLogEntry: "api-key",
 					ApiVersion:                   "1.0.0",
+					ApiKeyState:                  "VERIFIED",
 					ApiMethod:                    "endpoints.examples.bookstore.Bookstore.ListShelves",
 					ApiName:                      "endpoints.examples.bookstore.Bookstore",
 					ProducerProjectID:            "producer project",
@@ -402,6 +405,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 					ServiceConfigID:              "test-config-id",
 					URL:                          "/v1/shelves?key=api-key",
 					ApiKeyInOperationAndLogEntry: "api-key",
+					ApiKeyState:                  "VERIFIED",
 					ApiVersion:                   "1.0.0",
 					ApiName:                      "endpoints.examples.bookstore.Bookstore",
 					ApiMethod:                    "endpoints.examples.bookstore.Bookstore.ListShelves",

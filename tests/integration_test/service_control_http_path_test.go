@@ -68,6 +68,7 @@ func TestServiceControlAllHTTPPath(t *testing.T) {
 					ServiceConfigID:   "test-config-id",
 					URL:               "/",
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Root",
+					ApiKeyState:       "NOT CHECKED",
 					ProducerProjectID: "producer-project",
 					FrontendProtocol:  "http",
 					HttpMethod:        "GET",

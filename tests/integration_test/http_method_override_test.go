@@ -223,6 +223,7 @@ func TestMethodOverrideScReport(t *testing.T) {
 					ServiceConfigID:              "test-config-id",
 					URL:                          "/echo?key=api-key",
 					ApiKeyInOperationAndLogEntry: "api-key",
+					ApiKeyState:                  "VERIFIED",
 					ApiMethod:                    "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoGetWithBody",
 					ApiName:                      "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					ProducerProjectID:            "producer-project",
