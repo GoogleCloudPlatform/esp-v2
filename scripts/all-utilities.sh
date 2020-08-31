@@ -406,6 +406,14 @@ function try_setup_bazel_remote_cache() {
   sed -i -e "s@CACHE_PROJECT_ID@${gcp_project_id}@g" ${root_dir}/.bazelrc
 }
 
+function sleep_wrapper() {
+  local length=$1
+  local msg=$2
+  echo "$(date): ${msg}"
+  sleep ${length}
+  echo "$(date): End sleep"
+}
+
 function envoy_binary_gcs_path() {
   echo -n "gs://apiproxy-testing-envoy-binaries/$(get_sha)"
 }

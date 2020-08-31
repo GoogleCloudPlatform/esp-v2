@@ -88,7 +88,7 @@ type ExpectedReport struct {
 	FrontendProtocol             string
 	BackendProtocol              string
 	Platform                     string
-	JwtAuth                      string
+	JwtAuthCredentialId          string
 	RequestHeaders               string
 	ResponseHeaders              string
 	JwtPayloads                  string
@@ -278,8 +278,9 @@ func createReportLabels(er *ExpectedReport) map[string]string {
 
 	if er.ApiKeyInOperationAndLogEntry != "" {
 		labels["/credential_id"] = "apikey:" + er.ApiKeyInOperationAndLogEntry
-	} else if er.JwtAuth != "" {
-		labels["/credential_id"] = "jwtauth:" + er.JwtAuth
+	}
+	if er.JwtAuthCredentialId != "" {
+		labels["/credential_id"] = "jwtauth:" + er.JwtAuthCredentialId
 	}
 
 	return labels
@@ -663,7 +664,10 @@ func VerifyReport(body []byte, er *ExpectedReport) error {
 	}
 
 	if er.ApiKeyInOperationAndLogEntry != "" && er.ApiKeyInLogEntryOnly != "" {
-		return fmt.Errorf("cannot set both `ApiKeyInOperationAndLogEntry` and `ApiKeyInLogEntryOnly`")
+		return fmt.Errorf("cannot set both `ApiKeyInOperationAndLogEntry` and `ApiKeyInLogEntryOnly`, they imply different api key validity")
+	}
+	if er.ApiKeyInOperationAndLogEntry != "" && er.JwtAuthCredentialId != "" {
+		return fmt.Errorf("cannot set both `ApiKeyInOperationAndLogEntry` and `JwtAuthCredentialId`, they imply different api key validity")
 	}
 
 	var n int64

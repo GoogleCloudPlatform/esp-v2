@@ -37,6 +37,7 @@ namespace test {
 using ::espv2::api::envoy::v8::http::service_control::FilterConfig;
 using ::espv2::api::envoy::v8::http::service_control::Service;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
+using ::espv2::api_proxy::service_control::api_key::ApiKeyState;
 using ::google::api::servicecontrol::v1::AllocateQuotaRequest;
 using ::google::api::servicecontrol::v1::AllocateQuotaResponse;
 using ::google::api::servicecontrol::v1::CheckError;
@@ -111,10 +112,11 @@ class ClientCacheTestBase : public ::testing::Test {
 class ClientCacheCheckResponseTest : public ClientCacheTestBase {
  protected:
   void runTest(Code got_http_code, CheckResponse* got_response,
-               Code want_client_code) {
+               Code want_client_code, ApiKeyState want_api_key_state) {
     CheckDoneFunc on_done = [&](const Status& status,
-                                const CheckResponseInfo&) {
+                                const CheckResponseInfo& info) {
       EXPECT_EQ(status.code(), want_client_code);
+      EXPECT_EQ(info.api_key_state, want_api_key_state);
     };
 
     const Status http_status(got_http_code, Envoy::EMPTY_STRING);
@@ -125,14 +127,15 @@ class ClientCacheCheckResponseTest : public ClientCacheTestBase {
 TEST_F(ClientCacheCheckResponseTest, Http5xxAllowed) {
   CheckResponse* response = new CheckResponse();
 
-  runTest(Code::UNAVAILABLE, response, Code::OK);
+  runTest(Code::UNAVAILABLE, response, Code::OK, ApiKeyState::NOT_CHECKED);
   checkAndReset(stats_.filter_.allowed_control_plane_fault_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseTest, Http4xxTranslatedAndBlocked) {
   CheckResponse* response = new CheckResponse();
 
-  runTest(Code::PERMISSION_DENIED, response, Code::INTERNAL);
+  runTest(Code::PERMISSION_DENIED, response, Code::INTERNAL,
+          ApiKeyState::NOT_CHECKED);
   checkAndReset(stats_.filter_.denied_producer_error_, 1);
 }
 
@@ -141,7 +144,7 @@ TEST_F(ClientCacheCheckResponseTest, Sc5xxAllowed) {
   CheckError* check_error = response->mutable_check_errors()->Add();
   check_error->set_code(CheckError::NAMESPACE_LOOKUP_UNAVAILABLE);
 
-  runTest(Code::OK, response, Code::OK);
+  runTest(Code::OK, response, Code::OK, ApiKeyState::NOT_CHECKED);
   checkAndReset(stats_.filter_.allowed_control_plane_fault_, 1);
 }
 
@@ -150,14 +153,14 @@ TEST_F(ClientCacheCheckResponseTest, Sc4xxBlocked) {
   CheckError* check_error = response->mutable_check_errors()->Add();
   check_error->set_code(CheckError::CLIENT_APP_BLOCKED);
 
-  runTest(Code::OK, response, Code::PERMISSION_DENIED);
+  runTest(Code::OK, response, Code::PERMISSION_DENIED, ApiKeyState::VERIFIED);
   checkAndReset(stats_.filter_.denied_consumer_blocked_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseTest, ScOkAllowed) {
   CheckResponse* response = new CheckResponse();
 
-  runTest(Code::OK, response, Code::OK);
+  runTest(Code::OK, response, Code::OK, ApiKeyState::VERIFIED);
 }
 
 class ClientCacheCheckResponseNetworkFailClosedTest
@@ -175,7 +178,8 @@ class ClientCacheCheckResponseNetworkFailClosedTest
 TEST_F(ClientCacheCheckResponseNetworkFailClosedTest, Http5xxBlocked) {
   CheckResponse* response = new CheckResponse();
 
-  runTest(Code::UNAVAILABLE, response, Code::UNAVAILABLE);
+  runTest(Code::UNAVAILABLE, response, Code::UNAVAILABLE,
+          ApiKeyState::NOT_CHECKED);
   checkAndReset(stats_.filter_.denied_control_plane_fault_, 1);
 }
 
@@ -184,47 +188,50 @@ TEST_F(ClientCacheCheckResponseNetworkFailClosedTest, Sc5xxBlocked) {
   CheckError* check_error = response->mutable_check_errors()->Add();
   check_error->set_code(CheckError::NAMESPACE_LOOKUP_UNAVAILABLE);
 
-  runTest(Code::OK, response, Code::UNAVAILABLE);
+  runTest(Code::OK, response, Code::UNAVAILABLE, ApiKeyState::NOT_CHECKED);
   checkAndReset(stats_.filter_.denied_control_plane_fault_, 1);
 }
 
 class ClientCacheCheckResponseErrorTypeTest : public ClientCacheTestBase {
  protected:
-  void runTest(CheckError_Code got_check_error_code) {
+  void runTest(CheckError_Code got_check_error_code,
+               ApiKeyState want_api_key_state) {
     CheckResponse* response = new CheckResponse();
     CheckError* check_error = response->mutable_check_errors()->Add();
     check_error->set_code(got_check_error_code);
 
-    CheckDoneFunc on_done = [&](const Status&, const CheckResponseInfo&) {};
+    CheckDoneFunc on_done = [&](const Status&, const CheckResponseInfo& info) {
+      EXPECT_EQ(info.api_key_state, want_api_key_state);
+    };
     const Status http_status(Code::OK, Envoy::EMPTY_STRING);
     cache_->handleCheckResponse(http_status, response, on_done);
   }
 };
 
 TEST_F(ClientCacheCheckResponseErrorTypeTest, ConsumerBlocked) {
-  runTest(CheckError::CLIENT_APP_BLOCKED);
+  runTest(CheckError::CLIENT_APP_BLOCKED, ApiKeyState::VERIFIED);
   checkAndReset(stats_.filter_.denied_consumer_blocked_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseErrorTypeTest, ConsumerError) {
-  runTest(CheckError::BILLING_DISABLED);
+  runTest(CheckError::BILLING_DISABLED, ApiKeyState::VERIFIED);
   checkAndReset(stats_.filter_.denied_consumer_error_, 1);
 }
 
 // This should never happen since we use quota calls, but test it for
 // completeness.
 TEST_F(ClientCacheCheckResponseErrorTypeTest, ConsumerQuota) {
-  runTest(CheckError::RESOURCE_EXHAUSTED);
+  runTest(CheckError::RESOURCE_EXHAUSTED, ApiKeyState::VERIFIED);
   checkAndReset(stats_.filter_.denied_consumer_quota_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseErrorTypeTest, ApiKeyInvalid) {
-  runTest(CheckError::API_KEY_NOT_FOUND);
+  runTest(CheckError::API_KEY_NOT_FOUND, ApiKeyState::INVALID);
   checkAndReset(stats_.filter_.denied_consumer_error_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseErrorTypeTest, ServiceNotActivated) {
-  runTest(CheckError::SERVICE_NOT_ACTIVATED);
+  runTest(CheckError::SERVICE_NOT_ACTIVATED, ApiKeyState::NOT_ENABLED);
   checkAndReset(stats_.filter_.denied_consumer_error_, 1);
 }
 

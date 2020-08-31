@@ -121,6 +121,8 @@ function deployBackend() {
 
     sed "s/SERVICE_NAME/${BACKEND_SERVICE_NAME}/g" app_template.yaml > app.yaml
     gcloud app deploy --quiet
+    sleep_wrapper "1m" "Sleep 1m for App Engine backend setup"
+
 
     # For how requests are routed in App Engine, refer to
     # https://cloud.google.com/appengine/docs/standard/python/how-requests-are-routed#example_urls
@@ -189,7 +191,7 @@ function setup() {
       --network=default \
       --zone=${CLUSTER_ZONE} \
       --scopes cloud-platform
-    sleep 1m
+    sleep_wrapper "1m" "Sleep 1m for Anthos cluster setup"
     gcloud config set run/cluster ${CLUSTER_NAME}
     gcloud config set run/cluster_location ${CLUSTER_ZONE}
   else
@@ -353,8 +355,7 @@ function test() {
   echo "Testing"
 
   # Wait a few minutes for service to be enabled and the permissions to propagate
-  echo "Waiting for the endpoints service to be enabled"
-  sleep 5m
+  sleep_wrapper "1m" "Sleep 5m for the endpoints service to be enabled"
 
   if [[ ${PROXY_PLATFORM} == "anthos-cloud-run" ]];
   then
@@ -391,8 +392,7 @@ function test() {
 }
 
 function tearDown() {
-  echo "Waiting for Stackdriver Logging to collect logs"
-  sleep 1m
+  sleep_wrapper "1m" "Sleep 1m for Stackdriver Logging to collect logs"
 
   echo "Teardown env"
 

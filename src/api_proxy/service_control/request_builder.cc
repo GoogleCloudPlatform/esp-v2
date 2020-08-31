@@ -18,9 +18,11 @@
 #include <functional>
 
 #include "absl/strings/str_cat.h"
+#include "common/common/assert.h"
 #include "common/common/base64.h"
 #include "google/api/metric.pb.h"
 #include "google/protobuf/timestamp.pb.h"
+#include "src/api_proxy/service_control/request_info.h"
 #include "src/api_proxy/utils/version.h"
 #include "utils/distribution_helper.h"
 
@@ -354,10 +356,13 @@ const std::string get_service_agent() {
 Status set_credential_id(const SupportedLabel& l, const ReportRequestInfo& info,
                          Map<std::string, std::string>* labels) {
   // The rule to set /credential_id is:
-  // 1) If api_key is available, set it as apiKey:API-KEY
+  // 1) If api_key is available and valid, set it as apiKey:API-KEY
   // 2) If auth issuer and audience both are available, set it as:
   //    jwtAuth:issuer=base64(issuer)&audience=base64(audience)
-  if (!info.api_key.empty()) {
+  if (info.check_response_info.api_key_state ==
+      api_key::ApiKeyState::VERIFIED) {
+    ASSERT(!info.api_key.empty(),
+           "API Key must be set, otherwise consumer would not be verified.");
     std::string credential_id("apikey:");
     credential_id += info.api_key;
     (*labels)[l.name] = credential_id;
@@ -756,6 +761,7 @@ constexpr char kLogFieldNameServiceAgent[] = "service_agent";
 constexpr char kLogFieldNameConfigId[] = "service_config_id";
 constexpr char kLogFieldNameTimestamp[] = "timestamp";
 constexpr char kLogFieldNameUrl[] = "url";
+constexpr char kLogFieldNameApiKeyState[] = "api_key_state";
 
 // Convert time point to proto Timestamp
 Timestamp CreateTimestamp(std::chrono::system_clock::time_point tp) {
@@ -788,10 +794,6 @@ void SetOperationCommonFields(const OperationInfo& info,
   if (!info.operation_name.empty()) {
     op->set_operation_name(info.operation_name);
   }
-  if (!info.api_key.empty()) {
-    op->set_consumer_id(std::string(kConsumerIdApiKey) +
-                        std::string(info.api_key));
-  }
   *op->mutable_start_time() = current_time;
   *op->mutable_end_time() = current_time;
 }
@@ -812,6 +814,11 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
   (*fields)[kLogFieldNameConfigId].set_string_value(config_id);
   (*fields)[kLogFieldNameServiceAgent].set_string_value(
       kServiceAgentPrefix + utils::Version::instance().get());
+
+  // TODO(nareddyt): Enable this in a follow-up PR (minimize diff in tests).
+  //  (*fields)[kLogFieldNameApiKeyState].set_string_value(
+  //      identity::ToString(info.check_response_info.api_key_state));
+
   if (!info.producer_project_id.empty()) {
     (*fields)[kLogFieldNameProducerProjectId].set_string_value(
         info.producer_project_id);
@@ -945,6 +952,7 @@ Status RequestBuilder::FillAllocateQuotaRequest(
   }
   // allocate_operation.consumer_id
   if (!info.api_key.empty()) {
+    // For quota request, we send the API key as is.
     operation->set_consumer_id(std::string(kConsumerIdApiKey) +
                                std::string(info.api_key));
   } else if (!info.producer_project_id.empty()) {
@@ -992,6 +1000,11 @@ Status RequestBuilder::FillCheckRequest(const CheckRequestInfo& info,
   Timestamp current_time = CreateTimestamp(info.current_time);
   Operation* op = request->mutable_operation();
   SetOperationCommonFields(info, current_time, op);
+  if (!info.api_key.empty()) {
+    // For check request, we send the API key as is.
+    op->set_consumer_id(std::string(kConsumerIdApiKey) +
+                        std::string(info.api_key));
+  }
 
   auto* labels = op->mutable_labels();
   if (!info.client_ip.empty()) {
@@ -1029,6 +1042,13 @@ Status RequestBuilder::FillReportRequest(const ReportRequestInfo& info,
   Timestamp current_time = CreateTimestamp(info.current_time);
   Operation* op = request->add_operations();
   SetOperationCommonFields(info, current_time, op);
+  if (info.check_response_info.api_key_state ==
+      api_key::ApiKeyState::VERIFIED) {
+    ASSERT(!info.api_key.empty(),
+           "API Key must be set, otherwise consumer would not be verified.");
+    op->set_consumer_id(std::string(kConsumerIdApiKey) +
+                        std::string(info.api_key));
+  }
 
   // Only populate metrics if we can associate them with a method/operation.
   if (!info.operation_id.empty() && !info.operation_name.empty()) {
@@ -1042,12 +1062,10 @@ Status RequestBuilder::FillReportRequest(const ReportRequestInfo& info,
       }
     }
 
-    // Not to send consumer metrics if api_key is empty.
-    // api_key is empty in one of following cases:
-    // 1) api_key is not provided,
-    // 2) api_key is invalid determined by the server from the Check call.
-    // 3) the service is not activated for the consumer project.
-    bool send_consumer_metric = !info.api_key.empty();
+    // Report will reject consumer metric if it's based on a invalid/unknown api
+    // key, or if the service is not activated in the consumer project.
+    bool send_consumer_metric = info.check_response_info.api_key_state ==
+                                api_key::ApiKeyState::VERIFIED;
 
     // Populate all metrics.
     for (auto it = metrics_.begin(), end = metrics_.end(); it != end; it++) {
@@ -1080,6 +1098,13 @@ Status RequestBuilder::AppendByConsumerOperations(
     Timestamp current_time) const {
   Operation* op = request->add_operations();
   SetOperationCommonFields(info, current_time, op);
+  if (info.check_response_info.api_key_state ==
+      api_key::ApiKeyState::VERIFIED) {
+    ASSERT(!info.api_key.empty(),
+           "API Key must be set, otherwise consumer would not be verified.");
+    op->set_consumer_id(std::string(kConsumerIdApiKey) +
+                        std::string(info.api_key));
+  }
   // issue a new operation id
   op->set_operation_id(op->operation_id() + "1");
 
