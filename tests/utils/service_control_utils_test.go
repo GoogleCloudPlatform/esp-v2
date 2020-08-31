@@ -446,7 +446,7 @@ operations: <
           string_value: "api-key"
         >
       >
-			fields: <
+      fields: <
         key: "api_key_state"
         value: <
           string_value: "NOT CHECKED"
