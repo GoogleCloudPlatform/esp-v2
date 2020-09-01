@@ -116,3 +116,12 @@ func (m *MockMetadataServer) GetReqCnt(reqURI string) int {
 	m.mtx.RUnlock()
 	return reqCnt
 }
+
+func (m *MockMetadataServer) GetTotalReqCnt() int {
+	m.mtx.RLock()
+	totalCount := 0
+	for _, pathCount := range m.reqCache {
+		totalCount += pathCount
+	}
+	return totalCount
+}

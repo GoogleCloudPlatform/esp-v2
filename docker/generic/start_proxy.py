@@ -650,10 +650,6 @@ def enforce_conflict_args(args):
         if args.version:
             return "Flag --version cannot be used together with --service_json_path."
 
-    # set non_gcp to True if service account key is provided.
-    if args.service_account_key:
-        args.non_gcp = True
-
     if args.non_gcp:
         if args.service_account_key is None and GOOGLE_CREDS_KEY not in os.environ:
             return "If --non_gcp is specified, --service_account_key has to be specified, or GOOGLE_APPLICATION_CREDENTIALS has to set in os.environ."
