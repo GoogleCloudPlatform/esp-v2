@@ -124,7 +124,8 @@ message FilterConfig {
   ServiceControlCallingConfig sc_calling_config = 7;
 
   // The Http uri to call service control
-  espv2.api.envoy.v8.http.common.HttpUri service_control_uri = 8;
+  espv2.api.envoy.v8.http.common.HttpUri service_control_uri = 8
+      [(validate.rules).message.required = true];
 
   // The prefix added to generated headers
   string generated_header_prefix = 9 [(validate.rules).string = {

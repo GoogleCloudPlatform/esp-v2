@@ -1,0 +1,68 @@
+config {
+  services {
+    service_name: "\000\000p\177\177\177\177W"
+    service_config_id: "te\323\257.fuzz.Protoy"
+    producer_project_id: "dest.fuzz.ProtoBody"
+  }
+  requirements {
+    service_name: "\000\000p\177\177\177\177W"
+    operation_name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo"
+    api_version: "$"
+    metric_costs {
+      name: "}eric_sfirsttric_sfirst"
+      cost: 5
+    }
+  }
+  gcp_attributes {
+    project_id: "\177\177\177"
+  }
+  imds_token {
+    uri: "."
+    cluster: "."
+    timeout {
+      seconds: 5
+    }
+  }
+  generated_header_prefix: "jwt_payl#ads"
+}
+downstream_request {
+}
+upstream_response {
+  trailers {
+  }
+}
+stream_info {
+  upstream_metadata {
+  }
+}
+sidestream_response {
+  headers {
+    headers {
+      key: ":method"
+      value: "test-config-id"
+    }
+    headers {
+      key: ":method"
+      value: "0]"
+    }
+    headers {
+      key: "+"
+      value: "/echo?key=test-api-key"
+    }
+    headers {
+      key: ":status"
+      value: "200"
+    }
+  }
+  http_body {
+    data: "{ \"access_token\": \"fuzz-access-token\", \"expires_in\": 60000 }"
+  }
+}
+sidestream_response {
+  headers {
+    headers {
+      key: "\016"
+      value: "200"
+    }
+  }
+}
