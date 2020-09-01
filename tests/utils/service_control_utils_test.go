@@ -447,6 +447,12 @@ operations: <
         >
       >
       fields: <
+        key: "api_key_state"
+        value: <
+          string_value: "NOT CHECKED"
+        >
+      >
+      fields: <
         key: "api_method"
         value: <
           string_value: "ListShelves"
@@ -783,6 +789,7 @@ func TestCreateReport(t *testing.T) {
 		ApiMethod:                    "ListShelves",
 		ApiName:                      "API_NAME",
 		ApiVersion:                   "1.0.0",
+		ApiKeyState:                  "NOT CHECKED",
 		ErrorCause:                   "SERVICE UNAVAILABLE",
 		ApiKeyInOperationAndLogEntry: "api-key",
 		ProducerProjectID:            "endpoints-test",
@@ -1165,75 +1172,9 @@ operations: <
         >
       >
       fields: <
-        key: "api_method"
+        key: "api_key_state"
         value: <
-          string_value: "ListShelves"
-        >
-      >
-      fields: <
-        key: "api_name"
-        value: <
-          string_value: "API-NAME"
-        >
-      >
-      fields: <
-        key: "client_ip"
-        value: <
-          string_value: "127.0.0.1"
-        >
-      >
-      fields: <
-        key: "http_method"
-        value: <
-          string_value: "GET"
-        >
-      >
-      fields: <
-        key: "http_response_code"
-        value: <
-          number_value: 503
-        >
-      >
-      fields: <
-        key: "location"
-        value: <
-          string_value: "us-central1"
-        >
-      >
-      fields: <
-        key: "log_message"
-        value: <
-          string_value: "Method: ListShelves"
-        >
-      >
-      fields: <
-        key: "producer_project_id"
-        value: <
-          string_value: "endpoints-test"
-        >
-      >
-      fields: <
-        key: "service_config_id"
-        value: <
-          string_value: "test-config-id"
-        >
-      >
-      fields: <
-        key: "url"
-        value: <
-          string_value: "/shelves"
-        >
-      >
-    >
-  >
-  log_entries: <
-    name: "endpoints_log"
-    severity: ERROR
-    struct_payload: <
-      fields: <
-        key: "api_key"
-        value: <
-          string_value: "api-key"
+          string_value: "INVALID"
         >
       >
       fields: <
@@ -1306,6 +1247,90 @@ operations: <
         key: "api_key"
         value: <
           string_value: "api-key"
+        >
+      >
+      fields: <
+        key: "api_key_state"
+        value: <
+          string_value: "INVALID"
+        >
+      >
+      fields: <
+        key: "api_method"
+        value: <
+          string_value: "ListShelves"
+        >
+      >
+      fields: <
+        key: "api_name"
+        value: <
+          string_value: "API-NAME"
+        >
+      >
+      fields: <
+        key: "client_ip"
+        value: <
+          string_value: "127.0.0.1"
+        >
+      >
+      fields: <
+        key: "http_method"
+        value: <
+          string_value: "GET"
+        >
+      >
+      fields: <
+        key: "http_response_code"
+        value: <
+          number_value: 503
+        >
+      >
+      fields: <
+        key: "location"
+        value: <
+          string_value: "us-central1"
+        >
+      >
+      fields: <
+        key: "log_message"
+        value: <
+          string_value: "Method: ListShelves"
+        >
+      >
+      fields: <
+        key: "producer_project_id"
+        value: <
+          string_value: "endpoints-test"
+        >
+      >
+      fields: <
+        key: "service_config_id"
+        value: <
+          string_value: "test-config-id"
+        >
+      >
+      fields: <
+        key: "url"
+        value: <
+          string_value: "/shelves"
+        >
+      >
+    >
+  >
+  log_entries: <
+    name: "endpoints_log"
+    severity: ERROR
+    struct_payload: <
+      fields: <
+        key: "api_key"
+        value: <
+          string_value: "api-key"
+        >
+      >
+      fields: <
+        key: "api_key_state"
+        value: <
+          string_value: "INVALID"
         >
       >
       fields: <
@@ -1629,6 +1654,7 @@ func TestCreateAggregateReport(t *testing.T) {
 		ApiMethod:                    "ListShelves",
 		ApiKeyInOperationAndLogEntry: "api-key",
 		ApiName:                      "API-NAME",
+		ApiKeyState:                  "INVALID",
 		ProducerProjectID:            "endpoints-test",
 		ConsumerProjectID:            "123456",
 		Location:                     "us-central1",

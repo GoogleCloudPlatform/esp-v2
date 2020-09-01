@@ -98,7 +98,7 @@ results {
 		desc           string
 		wantScRequests []interface{}
 	}{
-		desc: "succeed GET, no Jwt required, service control sends check request and report request for GET request",
+		desc: "Success, no api key needed, report made",
 		wantScRequests: []interface{}{
 			&utils.ExpectedReport{
 				Version:           utils.ESPv2Version(),
@@ -108,6 +108,7 @@ results {
 				ApiMethod:         "endpoints.examples.bookstore.Bookstore.Unspecified",
 				ApiName:           "endpoints.examples.bookstore.Bookstore",
 				ApiVersion:        "1.0.0",
+				ApiKeyState:       "NOT CHECKED",
 				ProducerProjectID: "producer project",
 				FrontendProtocol:  "grpc",
 				HttpMethod:        "POST",

@@ -90,6 +90,7 @@ func TestServiceControlJwtAuthFail(t *testing.T) {
 					ApiName:           "endpoints.examples.bookstore.Bookstore",
 					// API Key is not checked, only shows up in the log entry.
 					ApiKeyInLogEntryOnly: "api-key",
+					ApiKeyState:          "NOT CHECKED",
 					FrontendProtocol:     "http",
 					BackendProtocol:      "grpc",
 					HttpMethod:           "GET",

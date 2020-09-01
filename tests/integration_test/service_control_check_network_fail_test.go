@@ -180,6 +180,7 @@ func TestServiceControlNetworkFailFlagForTimeout(t *testing.T) {
 					URL:             "/v1/shelves?key=api-key",
 					// API Key is not trusted due to SC network failure.
 					ApiKeyInLogEntryOnly: "api-key",
+					ApiKeyState:          "NOT CHECKED",
 					// API Key is not trusted, so JWT is used as credential_id instead.
 					JwtAuthCredentialId: "issuer=YXBpLXByb3h5LXRlc3RpbmdAY2xvdWQuZ29vZw",
 					ApiMethod:           "endpoints.examples.bookstore.Bookstore.ListShelves",
@@ -213,6 +214,7 @@ func TestServiceControlNetworkFailFlagForTimeout(t *testing.T) {
 					URL:             "/v1/shelves?key=api-key",
 					// API Key is not trusted due to SC network failure.
 					ApiKeyInLogEntryOnly: "api-key",
+					ApiKeyState:          "NOT CHECKED",
 					// API Key is not trusted, so JWT is used as credential_id instead.
 					JwtAuthCredentialId: "issuer=YXBpLXByb3h5LXRlc3RpbmdAY2xvdWQuZ29vZw",
 					ApiMethod:           "endpoints.examples.bookstore.Bookstore.ListShelves",

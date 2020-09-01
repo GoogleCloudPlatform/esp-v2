@@ -97,6 +97,7 @@ func TestServiceControlCheckError(t *testing.T) {
 					ApiName:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					// API Key is not trusted, so only shows up in log entry.
 					ApiKeyInLogEntryOnly: "api-key-1",
+					ApiKeyState:          "NOT ENABLED",
 					ErrorCause:           "API echo-api.endpoints.cloudesf-testing.cloud.goog is not enabled for the project.",
 					ProducerProjectID:    "producer-project",
 					FrontendProtocol:     "http",
@@ -142,6 +143,7 @@ func TestServiceControlCheckError(t *testing.T) {
 					ApiName:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					// API Key is not trusted, so only shows up in log entry.
 					ApiKeyInLogEntryOnly: "api-key-2",
+					ApiKeyState:          "INVALID",
 					ProducerProjectID:    "producer-project",
 					FrontendProtocol:     "http",
 					HttpMethod:           "POST",
@@ -190,6 +192,7 @@ func TestServiceControlCheckError(t *testing.T) {
 					URL: "/auth/info/auth0?key=api-key",
 					// API Key is validated.
 					ApiKeyInOperationAndLogEntry: "api-key",
+					ApiKeyState:                  "VERIFIED",
 					ApiMethod:                    "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth0",
 					ErrorCause:                   "Client project not valid. Please pass a valid project.",
 					ApiName:                      "1.echo_api_endpoints_cloudesf_testing_cloud_goog",

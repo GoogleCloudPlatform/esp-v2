@@ -69,6 +69,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					ApiMethod:       "<Unknown Operation Name>",
 					// API Key is extracted but not trusted.
 					ApiKeyInLogEntryOnly: "api-key",
+					ApiKeyState:          "NOT CHECKED",
 					ProducerProjectID:    "producer project",
 					FrontendProtocol:     "http",
 					HttpMethod:           "GET",
@@ -94,8 +95,9 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					ServiceConfigID: "test-config-id",
 					URL:             "/noexistoperation",
 					ApiMethod:       "<Unknown Operation Name>",
-					// API Key is not extracted.
+					// API Key is not present.
 					ProducerProjectID: "producer project",
+					ApiKeyState:       "NOT CHECKED",
 					FrontendProtocol:  "http",
 					HttpMethod:        "GET",
 					LogMessage:        "<Unknown Operation Name> is called",
@@ -123,6 +125,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					ApiName:         "endpoints.examples.bookstore.Bookstore",
 					// API Key is not checked, only shows up in the log entry.
 					ApiKeyInLogEntryOnly: "api-key",
+					ApiKeyState:          "NOT CHECKED",
 					ApiVersion:           "1.0.0",
 					ProducerProjectID:    "producer project",
 					FrontendProtocol:     "http",
@@ -152,6 +155,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					ApiMethod:         "endpoints.examples.bookstore.Bookstore.GetBook",
 					ApiName:           "endpoints.examples.bookstore.Bookstore",
 					ApiVersion:        "1.0.0",
+					ApiKeyState:       "NOT CHECKED",
 					ProducerProjectID: "producer project",
 					FrontendProtocol:  "http",
 					HttpMethod:        "GET",

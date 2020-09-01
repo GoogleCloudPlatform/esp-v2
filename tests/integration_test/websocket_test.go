@@ -74,6 +74,7 @@ func TestWebsocket(t *testing.T) {
 					ServiceName:                  "echo-api.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:              "test-config-id",
 					URL:                          "/websocketecho?key=api-key",
+					ApiKeyState:                  "VERIFIED",
 					ApiKeyInOperationAndLogEntry: "api-key",
 					ApiMethod:                    "1.echo_api_endpoints_cloudesf_testing_cloud_goog.WebsocketEcho",
 					ApiName:                      "1.echo_api_endpoints_cloudesf_testing_cloud_goog",

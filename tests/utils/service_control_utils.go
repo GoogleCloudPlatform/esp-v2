@@ -75,6 +75,7 @@ type ExpectedReport struct {
 	ApiName                      string
 	ApiKeyInOperationAndLogEntry string
 	ApiKeyInLogEntryOnly         string
+	ApiKeyState                  string
 	ProducerProjectID            string
 	ConsumerProjectID            string
 	URL                          string
@@ -298,8 +299,8 @@ func createLogEntry(er *ExpectedReport) *scpb.LogEntry {
 	pl := make(map[string]*structpb.Value)
 
 	pl["api_method"] = makeStringValue(er.ApiMethod)
-
 	pl["http_response_code"] = makeNumberValue(int64(er.ResponseCode))
+	pl["api_key_state"] = makeStringValue(er.ApiKeyState)
 
 	if er.ApiVersion != "" {
 		pl["api_version"] = makeStringValue(er.ApiVersion)

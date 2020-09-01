@@ -64,6 +64,12 @@ operations {
         }
       }
       fields {
+        key: "api_key_state"
+        value {
+          string_value: "VERIFIED"
+        }
+      }
+      fields {
         key: "http_response_code"
         value {
           number_value: 200

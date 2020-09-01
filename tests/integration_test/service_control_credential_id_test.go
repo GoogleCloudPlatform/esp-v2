@@ -96,6 +96,7 @@ func TestServiceControlCredentialId(t *testing.T) {
 					ServiceName:         "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID:     "test-config-id",
 					URL:                 "/v1/shelves",
+					ApiKeyState:         "NOT CHECKED",
 					JwtAuthCredentialId: "issuer=YXBpLXByb3h5LXRlc3RpbmdAY2xvdWQuZ29vZw&audience=Ym9va3N0b3JlX3Rlc3RfY2xpZW50LmNsb3VkLmdvb2c",
 					ApiMethod:           "endpoints.examples.bookstore.Bookstore.ListShelves",
 					ApiName:             "endpoints.examples.bookstore.Bookstore",

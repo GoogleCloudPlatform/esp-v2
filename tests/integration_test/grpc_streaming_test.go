@@ -84,6 +84,7 @@ results {
 			ServiceConfigID:              "test-config-id",
 			URL:                          "/test.grpc.Test/EchoStream",
 			ApiKeyInOperationAndLogEntry: "this-is-an-api-key",
+			ApiKeyState:                  "VERIFIED",
 			ApiMethod:                    "test.grpc.Test.EchoStream",
 			ApiName:                      "test.grpc.Test",
 			ApiVersion:                   "v1",

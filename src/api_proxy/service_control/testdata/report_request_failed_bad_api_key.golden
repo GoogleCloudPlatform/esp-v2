@@ -270,6 +270,12 @@ operations {
         }
       }
       fields {
+        key: "api_key_state"
+        value {
+          string_value: "<API_KEY_STATE>"
+        }
+      }
+      fields {
         key: "api_method"
         value {
           string_value: "api-method"

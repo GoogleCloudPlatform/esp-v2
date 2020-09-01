@@ -72,6 +72,7 @@ func TestServiceControlCache(t *testing.T) {
 			ServiceConfigID:              "test-config-id",
 			URL:                          "/echo?key=api-key",
 			ApiKeyInOperationAndLogEntry: "api-key",
+			ApiKeyState:                  "VERIFIED",
 			ApiMethod:                    "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
 			ApiName:                      "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 			ApiVersion:                   "1.0.0",
