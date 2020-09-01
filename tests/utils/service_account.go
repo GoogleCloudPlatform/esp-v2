@@ -34,14 +34,14 @@ func NewServiceAccountForTest() (*ServiceAccountForTest, error) {
 	fakeToken := `{"access_token": "this-is-sa_gen_token", "expires_in":3599, "token_type":"Bearer"}`
 	mockTokenServer := util.InitMockServer(fakeToken)
 
-	// Update fake token with server URI.
+	// Update service account file template with server URI.
 	fakeKey := strings.Replace(testdata.FakeServiceAccountKeyData, "FAKE-TOKEN-URI", mockTokenServer.GetURL(), 1)
 	serviceAccountFile, err := ioutil.TempFile(os.TempDir(), "sa-cred-")
 	if err != nil {
 		return nil, fmt.Errorf("fail to create a temp service account file")
 	}
 
-	// Write token and return file name.
+	// Write actual service account file and return file name.
 	_ = ioutil.WriteFile(serviceAccountFile.Name(), []byte(fakeKey), 0644)
 	return &ServiceAccountForTest{
 		MockTokenServer: mockTokenServer,
