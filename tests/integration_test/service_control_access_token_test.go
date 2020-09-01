@@ -16,17 +16,13 @@ package integration_test
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"strings"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 )
 
 func TestServiceControlAccessTokenFromIam(t *testing.T) {
@@ -106,20 +102,14 @@ func TestServiceControlAccessTokenFromIam(t *testing.T) {
 func TestServiceControlAccessTokenFromTokenAgent(t *testing.T) {
 	t.Parallel()
 
-	// Setup token server which will be queried by configmanager.
-	fakeToken := `{"access_token": "this-is-sa_gen_token", "expires_in":3599, "token_type":"Bearer"}`
-	mockTokenServer := util.InitMockServer(fakeToken)
-	defer mockTokenServer.Close()
-
-	fakeKey := strings.Replace(testdata.FakeServiceAccountKeyData, "FAKE-TOKEN-URI", mockTokenServer.GetURL(), 1)
-	serviceAccountFile, err := ioutil.TempFile(os.TempDir(), "sa-cred-")
+	customSa, err := utils.NewServiceAccountForTest()
 	if err != nil {
-		t.Fatal("fail to create a temp service account file")
+		t.Fatalf("Test failed: %v", err)
 	}
-	_ = ioutil.WriteFile(serviceAccountFile.Name(), []byte(fakeKey), 0644)
+	defer customSa.MockTokenServer.Close()
 
 	args := []string{"--service_config_id=test-config-id",
-		"--rollout_strategy=fixed", "--suppress_envoy_headers", "--service_account_key=" + serviceAccountFile.Name()}
+		"--rollout_strategy=fixed", "--suppress_envoy_headers", "--service_account_key=" + customSa.FileName}
 
 	s := env.NewTestEnv(comp.TestServiceControlAccessTokenFromTokenAgent, platform.EchoSidecar)
 

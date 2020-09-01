@@ -173,7 +173,7 @@ func TestServiceControlCheckError(t *testing.T) {
 					},
 				},
 			},
-			// Note: first request is from Config Manager, second is from ESPv2
+			// Note: first request is from Config Manager, second is from Envoy.
 			wantRequestsToMetaServer: &expectedRequestCount{util.AccessTokenPath, 2},
 			wantRequestsToProvider:   &expectedRequestCount{provider, 1},
 			wantError:                `400 Bad Request, {"code":400,"message":"INVALID_ARGUMENT:Client project not valid. Please pass a valid project."}`,

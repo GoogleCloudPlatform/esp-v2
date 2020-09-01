@@ -306,7 +306,7 @@ class TestStartProxy(unittest.TestCase):
             # Tracing disabled on non-gcp
             (['--service=test_bookstore.gloud.run',
               '--backend=http://127.0.0.1',
-              '--service_account_key', '/tmp/service_accout_key',],
+              '--service_account_key', '/tmp/service_accout_key', '--non_gcp'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
@@ -316,7 +316,7 @@ class TestStartProxy(unittest.TestCase):
             # Tracing enabled when manually specifying project id on non-gcp.
             (['--service=test_bookstore.gloud.run',
               '--backend=http://127.0.0.1',
-              '--service_account_key', '/tmp/service_accout_key',
+              '--service_account_key', '/tmp/service_accout_key', '--non_gcp',
               '--tracing_project_id=test_project_1234'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1', '--v', '0',
@@ -367,6 +367,18 @@ class TestStartProxy(unittest.TestCase):
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--disable_tracing'
+              ]),
+            # Service account key does not assume non-gcp
+            # and does not disable tracing.
+            (['--service=test_bookstore.gloud.run',
+              '--backend=http://127.0.0.1',
+              '--service_account_key', '/tmp/service_account_key'],
+             ['bin/configmanager', '--logtostderr',
+              '--rollout_strategy', 'fixed',
+              '--backend_address', 'http://127.0.0.1',
+              '--v', '0',
+              '--service', 'test_bookstore.gloud.run',
+              '--service_account_key', '/tmp/service_account_key',
               ]),
         ]
 

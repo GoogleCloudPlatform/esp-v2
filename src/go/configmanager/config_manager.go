@@ -124,9 +124,10 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 		return nil, fmt.Errorf(`failed to set rollout strategy. It must be either "managed" or "fixed"`)
 	}
 
-	// when --non_gcp  is set, instance metadata server(imds) is not defined so
+	// when --non_gcp  is set, instance metadata server(imds) is not defined. So
 	// accessToken is unavailable from imds and --service_account_key must be
 	// set to generate accessToken.
+	// The inverse is not true. We can still use IMDS on GCP when service account key is specified.
 	if mf == nil && opts.ServiceAccountKey == "" {
 		return nil, fmt.Errorf("If --non_gcp is specified, --service_account_key has to be specified.")
 	}

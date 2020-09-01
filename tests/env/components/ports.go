@@ -78,6 +78,7 @@ const (
 	TestIamImdsDataPath
 	TestInvalidOpenIDConnectDiscovery
 	TestJwtLocations
+	TestMetadataRequestsPerPlatform
 	TestManagedServiceConfig
 	TestMethodOverrideBackendMethod
 	TestMethodOverrideBackendBody

@@ -69,7 +69,7 @@ if [ ${BACKEND} == "bookstore" ]; then
 
   # Support service account credentials for non-gcp deployment.
   SA_CRED_PATH="$(mktemp  /tmp/servie_account_cred.XXXX)"
-  [[ -n ${USING_SA_CRED} ]] && ARGS="$ARGS, \"--service_account_key=/etc/creds/$(basename "${SA_CRED_PATH}")\""
+  [[ -n ${USING_SA_CRED} ]] && ARGS="$ARGS, \"--non_gcp\", \"--service_account_key=/etc/creds/$(basename "${SA_CRED_PATH}")\""
 
   # Support TLS termination in ESPv2.
   ARGS="$ARGS, \"--ssl_server_cert_path=/etc/esp/ssl\""
