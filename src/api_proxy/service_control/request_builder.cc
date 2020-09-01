@@ -48,6 +48,10 @@ namespace espv2 {
 namespace api_proxy {
 namespace service_control {
 
+// Default location. "global" should be used if the location is unknown.
+// It is used for the metric label "cloud.googleapis.com/location".
+const char kDefaultLocation[] = "global";
+
 struct SupportedMetric {
   const char* name;
   ::google::api::MetricDescriptor_MetricKind metric_kind;
@@ -465,6 +469,9 @@ Status set_location(const SupportedLabel& l, const ReportRequestInfo& info,
                     Map<std::string, std::string>* labels) {
   if (!info.location.empty()) {
     (*labels)[l.name] = info.location;
+  } else {
+    // This label SHOULD not be empty, otherwise the server will fail the call.
+    (*labels)[l.name] = kDefaultLocation;
   }
   return Status::OK;
 }

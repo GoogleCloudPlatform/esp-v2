@@ -32,6 +32,10 @@ operations {
     value: "0"
   }
   labels {
+    key: "cloud.googleapis.com/location"
+    value: "global"
+  }
+  labels {
     key: "servicecontrol.googleapis.com/platform"
     value: "UNKNOWN(ESPv2)"
   }
