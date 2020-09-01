@@ -55,7 +55,7 @@ func TestReportGCPAttributes(t *testing.T) {
 			mockMetadataOverride: map[string]string{
 				util.ZonePath: "some-invalid-zone",
 			},
-			wantLocation: "",
+			wantLocation: "global",
 			wantPlatform: "GCE(ESPv2)",
 		},
 		{
@@ -63,7 +63,7 @@ func TestReportGCPAttributes(t *testing.T) {
 			mockMetadataOverride: map[string]string{
 				util.ZonePath: "project/123123/",
 			},
-			wantLocation: "",
+			wantLocation: "global",
 			wantPlatform: "GCE(ESPv2)",
 		},
 		{
