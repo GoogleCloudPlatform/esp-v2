@@ -284,7 +284,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 			expectedGCPAttributes: nil,
 		},
 		{
-			desc: "When region path is support, zone is ignored",
+			desc: "When region path is supported, zone is ignored",
 			mockedResp: map[string]string{
 				util.ZonePath:   fakeZonePath,
 				util.RegionPath: fakeRegion,
