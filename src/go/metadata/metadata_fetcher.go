@@ -185,7 +185,7 @@ func (mf *MetadataFetcher) FetchProjectId() (string, error) {
 }
 
 func (mf *MetadataFetcher) fetchLocation() (string, error) {
-	// Fetch try to fetch the region. Cloud run will support this path, while other
+	// Try to fetch the region. Cloud run will support this path, while other
 	// platforms will return 404.
 	region, err := mf.fetchMetadata(util.RegionPath)
 	if err == nil {
