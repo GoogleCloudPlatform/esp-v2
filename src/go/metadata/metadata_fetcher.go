@@ -187,25 +187,23 @@ func (mf *MetadataFetcher) FetchProjectId() (string, error) {
 func (mf *MetadataFetcher) fetchLocation() (string, error) {
 	// Try to fetch the region. Cloud run will support this path, while other
 	// platforms will return 404.
-	region, err := mf.fetchMetadata(util.RegionPath)
-	if err == nil {
-		return region, nil
-	}
-
-	// Otherwise we're not on Cloud Run, fetch the zone directly.
-	zonePath, err := mf.fetchMetadata(util.ZonePath)
+	locationPath, err := mf.fetchMetadata(util.RegionPath)
 	if err != nil {
-		return "", err
+		// Otherwise we're not on Cloud Run, fetch the zone directly.
+		locationPath, err = mf.fetchMetadata(util.ZonePath)
+		if err != nil {
+			return "", err
+		}
 	}
 
-	// Zone format: projects/PROJECT_ID/ZONE
+	// Location format: projects/PROJECT_ID/<zone|region>/LOCATION
 	// Get the substring after the last '/'.
-	index := strings.LastIndex(zonePath, "/")
-	if index == -1 || index+1 >= len(zonePath) {
-		glog.Warningf("Invalid zone format is fetched: %s", zonePath)
-		return "", fmt.Errorf("Invalid zone format: %s", zonePath)
+	index := strings.LastIndex(locationPath, "/")
+	if index == -1 || index+1 >= len(locationPath) {
+		glog.Warningf("Invalid location format is fetched: %s", locationPath)
+		return "", fmt.Errorf("Invalid location format: %s", locationPath)
 	}
-	return zonePath[index+1:], nil
+	return locationPath[index+1:], nil
 }
 
 func (mf *MetadataFetcher) fetchPlatform() string {

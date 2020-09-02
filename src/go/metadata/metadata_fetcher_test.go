@@ -33,6 +33,7 @@ const (
 	fakeConfigID         = "canary-config"
 	fakeZonePath         = "projects/4242424242/zones/us-west-1b"
 	fakeZone             = "us-west-1b"
+	fakeRegionPath       = "projects/4242424242/regions/us-central1"
 	fakeRegion           = "us-central1"
 	fakeProjectID        = "gcpproxy"
 )
@@ -287,7 +288,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 			desc: "When region path is supported, zone is ignored",
 			mockedResp: map[string]string{
 				util.ZonePath:   fakeZonePath,
-				util.RegionPath: fakeRegion,
+				util.RegionPath: fakeRegionPath,
 			},
 			expectedGCPAttributes: &scpb.GcpAttributes{
 				Zone:     fakeRegion,
