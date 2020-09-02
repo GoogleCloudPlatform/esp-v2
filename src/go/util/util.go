@@ -84,7 +84,12 @@ const (
 	AccessTokenPath   = "/computeMetadata/v1/instance/service-accounts/default/token"
 	IdentityTokenPath = "/computeMetadata/v1/instance/service-accounts/default/identity"
 	ProjectIDPath     = "/computeMetadata/v1/project/project-id"
-	ZonePath          = "/computeMetadata/v1/instance/zone"
+
+	// Cloud Run platform is regional, use the region path.
+	RegionPath = "/computeMetadata/v1/instance/region"
+
+	// GKE/GCE platforms are zonal. Regional path does not exist in IMDS.
+	ZonePath = "/computeMetadata/v1/instance/zone"
 
 	// The path of getting access token from token agent server
 	TokenAgentAccessTokenPath = "/local/access_token"

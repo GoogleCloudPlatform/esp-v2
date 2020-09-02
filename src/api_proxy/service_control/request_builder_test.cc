@@ -333,8 +333,8 @@ TEST_F(RequestBuilderTest, FillReportWithUntrustedApiKeyTest) {
 
     std::string text = ReportRequestToString(&request);
 
-    // It doesn't make sense to create different files just for one minor change.
-    // Template the file and replace the string as needed.
+    // It doesn't make sense to create different files just for one minor
+    // change. Template the file and replace the string as needed.
     std::string template_expected_text =
         ReadTestBaseline("report_request_failed_bad_api_key.golden");
     std::string expected_text = absl::StrReplaceAll(
