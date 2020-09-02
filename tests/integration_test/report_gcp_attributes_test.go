@@ -32,6 +32,38 @@ const (
 	locationKey = "cloud.googleapis.com/location"
 )
 
+func validateReportGcpAttributes(s *env.TestEnv, wantPlatform string, wantLocation string) error {
+	scRequests, err := s.ServiceControlServer.GetRequests(1)
+	if err != nil {
+		return fmt.Errorf("GetRequests returns error: %v", err)
+	}
+
+	if scRequests[0].ReqType != utils.ReportRequest {
+		return fmt.Errorf("service control request: should be Report")
+	}
+
+	gotRequest, err := utils.UnmarshalReportRequest(scRequests[0].ReqBody)
+	if err != nil {
+		return err
+	}
+
+	if len(gotRequest.GetOperations()) != 1 {
+		return fmt.Errorf("service control request: number of operations should be 1")
+	}
+
+	labels := gotRequest.GetOperations()[0].GetLabels()
+
+	if gotPlatform := labels[platformKey]; gotPlatform != wantPlatform {
+		return fmt.Errorf("Platform does not match got: %v: want: %v", gotPlatform, wantPlatform)
+	}
+
+	if gotLocation := labels[locationKey]; gotLocation != wantLocation {
+		return fmt.Errorf("Location does not match got: %v: want: %v", gotLocation, wantLocation)
+	}
+
+	return nil
+}
+
 func TestReportGCPAttributes(t *testing.T) {
 	t.Parallel()
 
@@ -130,32 +162,73 @@ func TestReportGCPAttributes(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			scRequests, err := s.ServiceControlServer.GetRequests(1)
+			err = validateReportGcpAttributes(s, tc.wantPlatform, tc.wantLocation)
 			if err != nil {
-				t.Fatalf("Test(%s): GetRequests returns error: %v", tc.desc, err)
+				t.Errorf("Test (%v) failed: %v", tc.desc, err)
+			}
+		}()
+	}
+}
+
+// Regression test for https://github.com/GoogleCloudPlatform/esp-v2/issues/304.
+func TestReportGCPAttributesPerPlatform(t *testing.T) {
+	t.Parallel()
+
+	customSa, err := utils.NewServiceAccountForTest()
+	if err != nil {
+		t.Fatalf("Test failed: %v", err)
+	}
+	defer customSa.MockTokenServer.Close()
+
+	testdata := []struct {
+		desc         string
+		confArgs     []string
+		wantPlatform string
+		wantLocation string
+	}{
+		{
+			desc:         "Uses IMDS for GCP deployment",
+			confArgs:     utils.CommonArgs(),
+			wantLocation: "test-zone",
+			wantPlatform: "GCE(ESPv2)",
+		},
+		{
+			desc: "Uses IMDS for GCP deployment with custom service account",
+			confArgs: append([]string{
+				"--service_account_key=" + customSa.FileName,
+			}, utils.CommonArgs()...),
+			wantLocation: "test-zone",
+			wantPlatform: "GCE(ESPv2)",
+		},
+		{
+			desc: "Uses built-in defaults for non-GCP deployment",
+			confArgs: append([]string{
+				"--non_gcp",
+				"--service_account_key=" + customSa.FileName,
+			}, utils.CommonArgs()...),
+			wantLocation: "global",
+			wantPlatform: "UNKNOWN(ESPv2)",
+		},
+	}
+
+	for _, tc := range testdata {
+		func() {
+			s := env.NewTestEnv(comp.TestReportGCPAttributesPerPlatform, platform.EchoSidecar)
+
+			defer s.TearDown(t)
+			if err := s.Setup(tc.confArgs); err != nil {
+				t.Fatalf("Test(%s): fail to setup test env, %v", tc.desc, err)
 			}
 
-			if scRequests[0].ReqType != utils.ReportRequest {
-				t.Fatalf("Test(%s): service control request: should be Report", tc.desc)
-			}
-
-			gotRequest, err := utils.UnmarshalReportRequest(scRequests[0].ReqBody)
+			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo/nokey")
+			_, err := client.DoPost(url, "hello")
 			if err != nil {
-				t.Fatalf("Test(%s): %v", tc.desc, err)
+				t.Fatal(err)
 			}
 
-			if len(gotRequest.GetOperations()) != 1 {
-				t.Fatalf("Test(%s): service control request: number of operations should be 1", tc.desc)
-			}
-
-			labels := gotRequest.GetOperations()[0].GetLabels()
-
-			if gotPlatform := labels[platformKey]; gotPlatform != tc.wantPlatform {
-				t.Errorf("Test(%s): Platform does not match got: %v: want: %v", tc.desc, gotPlatform, tc.wantPlatform)
-			}
-
-			if gotLocation := labels[locationKey]; gotLocation != tc.wantLocation {
-				t.Errorf("Test(%s): Location does not match got: %v: want: %v", tc.desc, gotLocation, tc.wantLocation)
+			err = validateReportGcpAttributes(s, tc.wantPlatform, tc.wantLocation)
+			if err != nil {
+				t.Errorf("Test (%v) failed: %v", tc.desc, err)
 			}
 		}()
 	}

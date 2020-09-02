@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/golang/glog"
 	"github.com/gorilla/mux"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -110,6 +111,7 @@ func MakeTokenAgentHandler(serviceAccountKey string) http.Handler {
 		token, expire, err := GenerateAccessTokenFromFile(serviceAccountKey)
 
 		if err != nil {
+			glog.Errorf("local access token agent had error: %v", err)
 			http.Error(w, err.Error(), 500)
 			return
 		}
