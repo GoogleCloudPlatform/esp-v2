@@ -377,7 +377,7 @@ func (s *ServiceInfo) processHttpRule() error {
 						matcher = httpRule.UriTemplate
 					}
 					if _, exist := httpMatcherWithOptionsSet[matcher]; !exist {
-						s.addOptionMethod(method.ApiName, httpRule.UriTemplate, method.BackendInfo)
+						s.addOptionMethod(method, httpRule.UriTemplate)
 						httpMatcherWithOptionsSet[matcher] = true
 					}
 
@@ -409,7 +409,7 @@ func (s *ServiceInfo) processHttpRule() error {
 	return nil
 }
 
-func (s *ServiceInfo) addOptionMethod(apiName string, path string, backendInfo *backendInfo) {
+func (s *ServiceInfo) addOptionMethod(originalMethod *methodInfo, path string) {
 	// All options have their operation as the following format: CORS_${suffix}.
 	// Appends ${suffix} to make sure it is not used by any http rules.
 	//
@@ -423,11 +423,12 @@ func (s *ServiceInfo) addOptionMethod(apiName string, path string, backendInfo *
 	formattedPath = strings.ReplaceAll(formattedPath, "{", "")
 	formattedPath = strings.ReplaceAll(formattedPath, "}", "")
 	corsOperation := fmt.Sprintf("%s_%s", corsOperationBase, formattedPath)
-	genOperation := fmt.Sprintf("%s.%s", apiName, corsOperation)
+	genOperation := fmt.Sprintf("%s.%s", originalMethod.ApiName, corsOperation)
 
 	s.Methods[genOperation] = &methodInfo{
-		ShortName: corsOperation,
-		ApiName:   apiName,
+		ShortName:  corsOperation,
+		ApiName:    originalMethod.ApiName,
+		ApiVersion: originalMethod.ApiVersion,
 		HttpRule: []*commonpb.Pattern{
 			{
 				UriTemplate: path,
@@ -435,7 +436,7 @@ func (s *ServiceInfo) addOptionMethod(apiName string, path string, backendInfo *
 			},
 		},
 		IsGenerated: true,
-		BackendInfo: backendInfo,
+		BackendInfo: originalMethod.BackendInfo,
 	}
 }
 
