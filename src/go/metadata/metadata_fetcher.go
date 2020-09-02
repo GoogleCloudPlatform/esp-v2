@@ -172,8 +172,8 @@ func (mf *MetadataFetcher) FetchGCPAttributes() (*scpb.GcpAttributes, error) {
 		attrs.ProjectId = projectID
 	}
 
-	if zone, err := mf.fetchZone(); err == nil {
-		attrs.Zone = zone
+	if location, err := mf.fetchLocation(); err == nil {
+		attrs.Zone = location
 	}
 
 	attrs.Platform = mf.fetchPlatform()
@@ -184,8 +184,15 @@ func (mf *MetadataFetcher) FetchProjectId() (string, error) {
 	return mf.fetchMetadata(util.ProjectIDPath)
 }
 
-// Do not directly use this function. Use fetchGCPAttributes instead.
-func (mf *MetadataFetcher) fetchZone() (string, error) {
+func (mf *MetadataFetcher) fetchLocation() (string, error) {
+	// Fetch try to fetch the region. Cloud run will support this path, while other
+	// platforms will return 404.
+	region, err := mf.fetchMetadata(util.RegionPath)
+	if err == nil {
+		return region, nil
+	}
+
+	// Otherwise we're not on Cloud Run, fetch the zone directly.
 	zonePath, err := mf.fetchMetadata(util.ZonePath)
 	if err != nil {
 		return "", err
@@ -201,7 +208,6 @@ func (mf *MetadataFetcher) fetchZone() (string, error) {
 	return zonePath[index+1:], nil
 }
 
-// Do not directly use this function. Use fetchGCPAttributes instead.
 func (mf *MetadataFetcher) fetchPlatform() string {
 	if _, err := mf.fetchMetadata(util.GAEServerSoftwarePath); err == nil {
 		return util.GAEFlex

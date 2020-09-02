@@ -91,7 +91,9 @@ message Service {
 message GcpAttributes {
   // GCP Project ID
   string project_id = 1;
-  // The zone where the GCP proxy is running (e.g. us-west-1)
+  // The location where the GCP proxy is running (e.g. us-west1-a, us-central1).
+  // Note: The naming is not correct, it doesn't always hold a zone.
+  // Cloud Run platform is regional, so this location will be a region instead.
   string zone = 2;
   // Platform where the GCP Proxy is running: GAE_FLEX, GKE, GCE, or UNKNOWN
   string platform = 3;

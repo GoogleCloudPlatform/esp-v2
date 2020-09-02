@@ -137,6 +137,15 @@ func TestReportGCPAttributes(t *testing.T) {
 			wantLocation:         "test-zone",
 			wantPlatform:         "Cloud Run",
 		},
+		{
+			desc: "Cloud Run uses regional location, zone is ignored",
+			mockMetadataOverride: map[string]string{
+				util.RegionPath: "test-region",
+			},
+			platformOverride: "Cloud Run(ESPv2)",
+			wantLocation:     "test-region",
+			wantPlatform:     "Cloud Run(ESPv2)",
+		},
 	}
 
 	configID := "test-config-id"
