@@ -814,6 +814,26 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
                                               : google::logging::type::INFO;
   log_entry->set_severity(severity);
 
+  // Fill in http request.
+  auto* http_request = log_entry->mutable_http_request();
+  http_request->set_status(info.response_code);
+  http_request->set_protocol(protocol::ToString(info.frontend_protocol));
+  if (!info.method.empty()) {
+    http_request->set_request_method(info.method);
+  }
+  if (!info.url.empty()) {
+    http_request->set_request_url(info.url);
+  }
+  if (info.request_size >= 0) {
+    http_request->set_request_size(info.request_size);
+  }
+  if (info.response_size >= 0) {
+    http_request->set_response_size(info.response_size);
+  }
+
+  // Fill in JSON struct.
+  // TODO(nareddyt): For backwards compatibility, some of the information from
+  // the `http_request` fields is duplicated. Decide if we should remove.
   auto* fields = log_entry->mutable_struct_payload()->mutable_fields();
   (*fields)[kLogFieldNameTimestamp].set_number_value(
       static_cast<double>(current_time.seconds()) +
