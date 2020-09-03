@@ -25,12 +25,37 @@ const opentelemetry = require('@opentelemetry/api');
 const { NodeTracerProvider } = require('@opentelemetry/node');
 const { BatchSpanProcessor } = require('@opentelemetry/tracing');
 const { TraceExporter } = require('@google-cloud/opentelemetry-cloud-trace-exporter');
+const { AlwaysOnSampler, AlwaysOffSampler, ParentOrElseSampler } = require("@opentelemetry/core");
+const { HttpTraceContext } = require("@opentelemetry/core");
 
 // Initialize the OpenTelemetry APIs to use the NodeTracerProvider bindings
-const provider = new NodeTracerProvider();
+const provider = new NodeTracerProvider({
+  // TODO(nareddyt): Only sample when the incoming request creates a new span.
+  // Otherwise don't make new spans, but propagate the context.
+  // sampler: new ParentOrElseSampler(new AlwaysOffSampler()),
+  sampler: new AlwaysOnSampler(),
+  plugins: {
+    express: {
+      enabled: true,
+      path: '@opentelemetry/plugin-express',
+      ignoreLayersType: [
+          "middleware",
+          "request_handler",
+      ],
+    },
+    http: {
+      enabled: true,
+      path: '@opentelemetry/plugin-http',
+    }
+  }
+});
 const exporter = new TraceExporter();
 provider.addSpanProcessor(new BatchSpanProcessor(exporter));
 provider.register();
+
+// Registration. Use W3C trace context propagation with `traceparent` header.
+opentelemetry.trace.setGlobalTracerProvider(provider);
+opentelemetry.propagation.setGlobalPropagator(new HttpTraceContext());
 
 // Load express afterwords.
 var express = require('express');
@@ -68,9 +93,7 @@ function bookstore(options) {
   // bookstore was deployed correctly.
   app.get('/version', function(req, res) {
     res.set('Content-Type', 'application/json');
-    res.status(200).send({
-      version: '${VERSION}'
-    });
+    res.status(200).send(req.headers);
   });
 
   var echoCount = 0;
@@ -93,15 +116,7 @@ function bookstore(options) {
   app.get('/echo_token/disable_auth', echoToken);
   app.get('/echo_token/default_enable_auth', echoToken);
 
-  // Show number of echo requests
-  setInterval(function() {
-      var date = new Date();
-      var timestamp = date.getHours() + ":" + date.getMinutes() + ":" +
-        date.getSeconds() + ":" + date.getMilliseconds();
-      console.log(timestamp + ' Echo requests received: ', echoCount);
-  }, 1000 * 60);
-
-  // Install tracing middleware.
+  // Install logging middleware for all other paths.
   if (options.log === true) {
     app.use(function(req, res, next) {
       console.log(req.method, req.originalUrl);
