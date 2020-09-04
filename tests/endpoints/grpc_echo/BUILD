@@ -38,7 +38,7 @@ cc_library(
     deps = [
         ":grpc-test_cc_grpc",
         "@com_github_grpc_grpc//:grpc++",
-        "@envoy//test/test_common:utility_lib",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -60,7 +60,7 @@ cc_binary(
     deps = [
         ":client-test-lib",
         ":grpc-test_cc_grpc",
-        "@envoy//test/test_common:utility_lib",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
