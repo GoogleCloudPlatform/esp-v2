@@ -84,14 +84,11 @@ def serve_warning_msg(msg):
 
 
 def gen_args(cmd):
-    PLATFORM = "Cloud Run(ESPv2)"
+
     ARGS = [
         cmd,
         "/apiproxy/start_proxy.py",
-        "--compute_platform_override={}".format(PLATFORM),
-        # Even though we are an edge proxy, Cloud Run and GFE sanitize headers.
-        # We can trust the xff header to only have the client IP, no proxy IPs.
-        "--envoy_xff_num_trusted_hops=0"
+        "--on_serverless"
     ]
 
     # Uncaught AssertionError;

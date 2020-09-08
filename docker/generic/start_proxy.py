@@ -53,6 +53,9 @@ DEFAULT_ROLLOUT_STRATEGY = "fixed"
 # Google default application credentials environment variable
 GOOGLE_CREDS_KEY = "GOOGLE_APPLICATION_CREDENTIALS"
 
+# Flag defaults when running on serverless.
+SERVERLESS_PLATFORM = "Cloud Run(ESPv2)"
+SERVERLESS_XFF_NUM_TRUSTED_HOPS = 0
 
 def gen_bootstrap_conf(args):
     cmd = [BOOTSTRAP_CMD, "--logtostderr"]
@@ -295,7 +298,7 @@ environment variable or by passing "-k" flag to this script.
         default=None,
         help='''Envoy HttpConnectionManager configuration, please refer to envoy
         documentation for detailed information. The default value is 2 for
-        sidecar deployments. It is hardcoded to 0 for serverless deployments.''')
+        sidecar deployments and 0 for serverless deployments.''')
 
     parser.add_argument(
         '--log_request_headers',
@@ -497,12 +500,6 @@ environment variable or by passing "-k" flag to this script.
         help='''
         Define the dns lookup family for all backends. The options are "auto", "v4only" and "v6only". The default is "auto".
         ''')
-    parser.add_argument(
-        '--compute_platform_override',
-        default=None,
-        help='''
-        The overridden platform where the proxy is running on.
-        ''')
     parser.add_argument('--enable_debug', action='store_true', default=False,
         help='''
         Enables a variety of debug features in both Config Manager and Envoy, such as:
@@ -633,6 +630,18 @@ environment variable or by passing "-k" flag to this script.
 
     # End Deprecated Flags Section
 
+    # Start internal flags section
+
+    parser.add_argument(
+        '--on_serverless',
+        action='store_true',
+        default=False,
+        help='''
+        When ESPv2 is started via the serverless image, this is true.
+        ''')
+
+    # End internal flags section
+
     return parser
 
 # Check whether there are conflict flags. If so, return the error string.
@@ -732,7 +741,11 @@ def gen_proxy_config(args):
         proxy_conf.extend(["--v", "0"])
 
     if args.envoy_xff_num_trusted_hops:
-         proxy_conf.extend(["--envoy_xff_num_trusted_hops", args.envoy_xff_num_trusted_hops])
+        proxy_conf.extend(["--envoy_xff_num_trusted_hops",
+                           args.envoy_xff_num_trusted_hops])
+    elif args.on_serverless:
+        proxy_conf.extend(["--envoy_xff_num_trusted_hops",
+                           '{}'.format(SERVERLESS_XFF_NUM_TRUSTED_HOPS)])
 
     if args.jwks_cache_duration_in_s:
          proxy_conf.extend(["--jwks_cache_duration_in_s", args.jwks_cache_duration_in_s])
@@ -894,9 +907,9 @@ def gen_proxy_config(args):
     if args.transcoding_ignore_unknown_query_parameters:
         proxy_conf.append("--transcoding_ignore_unknown_query_parameters")
 
-    if args.compute_platform_override:
+    if args.on_serverless:
         proxy_conf.extend([
-            "--compute_platform_override", args.compute_platform_override])
+            "--compute_platform_override", SERVERLESS_PLATFORM])
 
     if args.backend_dns_lookup_family:
         proxy_conf.extend(
