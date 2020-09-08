@@ -294,7 +294,8 @@ environment variable or by passing "-k" flag to this script.
         '--envoy_xff_num_trusted_hops',
         default=None,
         help='''Envoy HttpConnectionManager configuration, please refer to envoy
-        documentation for detailed information. The default value is 2.''')
+        documentation for detailed information. The default value is 2 for
+        sidecar deployments. It is hardcoded to 0 for serverless deployments.''')
 
     parser.add_argument(
         '--log_request_headers',
