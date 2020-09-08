@@ -73,7 +73,7 @@ function deployBackend() {
       # Determine the backend image.
       case ${BACKEND} in
         "bookstore")
-          backend_image="gcr.io/cloudesf-testing/http-bookstore:2"
+          backend_image="gcr.io/cloudesf-testing/http-bookstore:3"
           backend_port=8080
         ;;
         "echo")
@@ -98,7 +98,7 @@ function deployBackend() {
       ;;
     "anthos-cloud-run")
       gcloud run deploy "${BACKEND_SERVICE_NAME}" \
-        --image="gcr.io/cloudesf-testing/http-bookstore:2" \
+        --image="gcr.io/cloudesf-testing/http-bookstore:3" \
         --platform=gke \
         --quiet
 
@@ -326,7 +326,7 @@ function setup() {
     -i "${APIPROXY_IMAGE}"
 
   # Redeploy ESPv2 to update the service config
-  proxy_args="^++^--tracing_sample_rate=0.01++--tracing_outgoing_context=x-cloud-trace-context"
+  proxy_args="^++^--tracing_sample_rate=0.05++--tracing_outgoing_context=traceparent++--tracing_incoming_context=traceparent"
 
   if [[ ${PROXY_PLATFORM} == "cloud-run" ]];
   then
