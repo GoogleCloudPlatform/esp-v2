@@ -120,9 +120,6 @@ struct OperationInfo {
   // The client IP address.
   std::string client_ip;
 
-  // The client host name.
-  std::string client_host;
-
   OperationInfo() {}
 };
 

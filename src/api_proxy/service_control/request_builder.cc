@@ -22,6 +22,7 @@
 #include "common/common/base64.h"
 #include "google/api/metric.pb.h"
 #include "google/protobuf/timestamp.pb.h"
+#include "google/protobuf/util/time_util.h"
 #include "src/api_proxy/service_control/request_info.h"
 #include "src/api_proxy/utils/version.h"
 #include "utils/distribution_helper.h"
@@ -829,6 +830,15 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
   }
   if (info.response_size >= 0) {
     http_request->set_response_size(info.response_size);
+  }
+  if (!info.client_ip.empty()) {
+    http_request->set_remote_ip(info.client_ip);
+  }
+  if (info.latency.request_time_ms >= 0) {
+    const google::protobuf::Duration duration =
+        google::protobuf::util::TimeUtil::MillisecondsToDuration(
+            info.latency.request_time_ms);
+    http_request->mutable_latency()->CopyFrom(duration);
   }
 
   // Fill in JSON struct.
