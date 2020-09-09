@@ -123,7 +123,8 @@ const (
 	// Default response deadline used if user does not specify one in the BackendRule.
 	DefaultResponseDeadline = 15 * time.Second
 
-	// A limit configured to reduce resource usage in Envoy's SafeRegex GoogleRE2 matcher.
+	// A limit configured to restrict resource usage in Envoy's SafeRegex GoogleRE2 matcher.
+	// It will be validated on configmanager side though it may use different GoogleRE2 library.
 	// b/148606900: It is safe to set this to a fairly high value.
 	// This won't impact resource usage for customers who have short UriTemplates.
 	GoogleRE2MaxProgramSize = 1000

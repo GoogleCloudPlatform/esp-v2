@@ -294,9 +294,7 @@
                                 }
                               ],
                               "safeRegex": {
-                                "googleRe2": {
-                                  "maxProgramSize": 1000
-                                },
+                                "googleRe2": {},
                                 "regex": "^/libraries/[^\\/]+/shelves/[^\\/]+$"
                               }
                             },
@@ -315,9 +313,7 @@
                                 }
                               ],
                               "safeRegex": {
-                                "googleRe2": {
-                                  "maxProgramSize": 1000
-                                },
+                                "googleRe2": {},
                                 "regex": "^/libraries/[^\\/]+/shelves/[^\\/]+$"
                               }
                             },

@@ -16,6 +16,7 @@ package configgenerator
 
 import (
 	"fmt"
+	"regexp/syntax"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
@@ -106,17 +107,16 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 		if orgReg == "" {
 			return nil, fmt.Errorf("cors_allow_origin_regex cannot be empty when cors_preset=cors_with_regex")
 		}
+		if err := validateRegexProgramSize(orgReg, util.GoogleRE2MaxProgramSize); err != nil {
+			return nil, fmt.Errorf("invalid cors origin regex: %v", err)
+		}
 		host.Cors = &routepb.CorsPolicy{
 			AllowOriginStringMatch: []*matcher.StringMatcher{
 				{
 					MatchPattern: &matcher.StringMatcher_SafeRegex{
 						SafeRegex: &matcher.RegexMatcher{
 							EngineType: &matcher.RegexMatcher_GoogleRe2{
-								GoogleRe2: &matcher.RegexMatcher_GoogleRE2{
-									MaxProgramSize: &wrapperspb.UInt32Value{
-										Value: util.GoogleRE2MaxProgramSize,
-									},
-								},
+								GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
 							},
 							Regex: orgReg,
 						},
@@ -196,8 +196,9 @@ func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.R
 		}
 
 		for _, httpRule := range method.HttpRule {
-			if routeMatcher = makeHttpRouteMatcher(httpRule); routeMatcher == nil {
-				return nil, fmt.Errorf("error making HTTP route matcher for selector: %v", operation)
+			var err error
+			if routeMatcher, err = makeHttpRouteMatcher(httpRule); err != nil {
+				return nil, fmt.Errorf("error making HTTP route matcher for selector (%v): %v", operation, err)
 			}
 
 			r := routepb.Route{
@@ -233,9 +234,9 @@ func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.R
 	return backendRoutes, nil
 }
 
-func makeHttpRouteMatcher(httpRule *commonpb.Pattern) *routepb.RouteMatch {
+func makeHttpRouteMatcher(httpRule *commonpb.Pattern) (*routepb.RouteMatch, error) {
 	if httpRule == nil {
-		return nil
+		return nil, fmt.Errorf("httpRule is nil")
 	}
 	var routeMatcher routepb.RouteMatch
 
@@ -248,15 +249,15 @@ func makeHttpRouteMatcher(httpRule *commonpb.Pattern) *routepb.RouteMatch {
 			},
 		}
 	} else {
+		if err := validateRegexProgramSize(regex, util.GoogleRE2MaxProgramSize); err != nil {
+			return nil, fmt.Errorf("invalid route path regex: %v", err)
+		}
+
 		routeMatcher = routepb.RouteMatch{
 			PathSpecifier: &routepb.RouteMatch_SafeRegex{
 				SafeRegex: &matcher.RegexMatcher{
 					EngineType: &matcher.RegexMatcher_GoogleRe2{
-						GoogleRe2: &matcher.RegexMatcher_GoogleRE2{
-							MaxProgramSize: &wrapperspb.UInt32Value{
-								Value: util.GoogleRE2MaxProgramSize,
-							},
-						},
+						GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
 					},
 					Regex: regex,
 				},
@@ -272,5 +273,23 @@ func makeHttpRouteMatcher(httpRule *commonpb.Pattern) *routepb.RouteMatch {
 			},
 		},
 	}
-	return &routeMatcher
+	return &routeMatcher, nil
+}
+
+func validateRegexProgramSize(regex string, maxProgramSize int) error {
+	regParse, err := syntax.Parse(regex, 0)
+	if err != nil {
+		return err
+	}
+
+	prog, err := syntax.Compile(regParse)
+	if err != nil {
+		return err
+	}
+
+	if len(prog.Inst) > maxProgramSize {
+		return fmt.Errorf("regex program size(%v) is larger than the max expected(%v)", len(prog.Inst), maxProgramSize)
+	}
+
+	return nil
 }

@@ -268,7 +268,7 @@ func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteCo
 		if opts.AccessLogFormat != "" {
 			fileAccessLog.AccessLogFormat = &facpb.FileAccessLog_LogFormat{
 				LogFormat: &corepb.SubstitutionFormatString{
-					Format:              &corepb.SubstitutionFormatString_TextFormat{
+					Format: &corepb.SubstitutionFormatString_TextFormat{
 						TextFormat: opts.AccessLogFormat,
 					},
 				},
