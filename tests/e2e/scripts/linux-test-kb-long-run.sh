@@ -106,7 +106,7 @@ while true; do
     python ${ROOT}/tests/e2e/client/apiproxy_bookstore_key_restriction_test.py  \
       --host="${SCHEME}://${HOST}:${PORT}"   \
       --allow_unverified_cert=true  \
-      --key_restriction_tests=${ROOT}/tests/e2e/testdata/bookstore/key_restriction_test.tmpl.json  \
+      --key_restriction_tests=${ROOT}/tests/e2e/testdata/bookstore/key_restriction_test.json.template  \
       --key_restriction_keys_file=${API_RESTRICTION_KEYS_FILE})
 
   #TODO(taoxuy): b/148950591 enable stress test for cloud run on anthos
