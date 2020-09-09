@@ -220,7 +220,8 @@ func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.R
 					},
 				},
 				Decorator: &routepb.Decorator{
-					Operation: fmt.Sprintf("%s %s.%s", util.SpanNamePrefix, method.ApiName, method.ShortName),
+					// Note we don't add ApiName to reduce the length of the span name.
+					Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
 				},
 			}
 			if serviceInfo.Options.EnableHSTS {

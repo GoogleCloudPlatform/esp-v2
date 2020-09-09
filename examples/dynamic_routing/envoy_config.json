@@ -303,7 +303,7 @@
                         "routes": [
                           {
                             "decorator":{
-                              "operation":"ingress 1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.CreateShelf"
+                              "operation":"ingress CreateShelf"
                             },
                             "match": {
                               "headers": [
@@ -322,7 +322,7 @@
                           },
                           {
                             "decorator":{
-                              "operation":"ingress 1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.ListShelves"
+                              "operation":"ingress ListShelves"
                             },
                             "match": {
                               "headers": [

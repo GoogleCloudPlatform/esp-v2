@@ -1117,7 +1117,7 @@
                         "routes": [
                           {
                             "decorator":{
-                              "operation":"ingress test.grpc.Test.Cork"
+                              "operation":"ingress Cork"
                             },
                             "match": {
                               "headers": [
@@ -1136,7 +1136,7 @@
                           },
                           {
                             "decorator":{
-                              "operation":"ingress test.grpc.Test.Echo"
+                              "operation":"ingress Echo"
                             },
                             "match": {
                               "headers": [
@@ -1155,7 +1155,7 @@
                           },
                           {
                             "decorator":{
-                              "operation":"ingress test.grpc.Test.Echo"
+                              "operation":"ingress Echo"
                             },
                             "match": {
                               "headers": [
@@ -1174,7 +1174,7 @@
                           },
                           {
                             "decorator":{
-                              "operation":"ingress test.grpc.Test.EchoReport"
+                              "operation":"ingress EchoReport"
                             },
                             "match": {
                               "headers": [
@@ -1193,7 +1193,7 @@
                           },
                           {
                             "decorator":{
-                              "operation":"ingress test.grpc.Test.EchoReport"
+                              "operation":"ingress EchoReport"
                             },
                             "match": {
                               "headers": [
@@ -1212,7 +1212,7 @@
                           },
                           {
                             "decorator":{
-                              "operation":"ingress test.grpc.Test.EchoStream"
+                              "operation":"ingress EchoStream"
                             },
                             "match": {
                               "headers": [
@@ -1231,7 +1231,7 @@
                           },
                           {
                             "decorator":{
-                              "operation":"ingress test.grpc.Test.EchoStream"
+                              "operation":"ingress EchoStream"
                             },
                             "match": {
                               "headers": [

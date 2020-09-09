@@ -131,7 +131,7 @@ func TestMakeRouteConfig(t *testing.T) {
       "routes": [
         {
           "decorator":{
-            "operation":"ingress endpoints.examples.bookstore.Bookstore.Foo"
+            "operation":"ingress Foo"
           },
           "match": {
             "headers": [
@@ -205,7 +205,7 @@ func TestMakeRouteConfig(t *testing.T) {
       "routes": [
         {
           "decorator":{
-            "operation":"ingress endpoints.examples.bookstore.Bookstore.Foo"
+            "operation":"ingress Foo"
           },
           "match": {
             "headers": [
