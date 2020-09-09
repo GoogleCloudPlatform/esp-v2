@@ -84,11 +84,11 @@ def serve_warning_msg(msg):
 
 
 def gen_args(cmd):
-    PLATFORM = "Cloud Run(ESPv2)"
+
     ARGS = [
         cmd,
         "/apiproxy/start_proxy.py",
-        "--compute_platform_override={}".format(PLATFORM)
+        "--on_serverless"
     ]
 
     # Uncaught AssertionError;
