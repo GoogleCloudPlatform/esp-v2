@@ -109,8 +109,9 @@ struct OperationInfo {
   // The API key.
   std::string api_key;
 
-  // Uses Referer header, if the Referer header doesn't present, use the
+  // Uses Referer header, if the Referer header isn't present, use the
   // Origin header. If both of them not present, it's empty.
+  // FIXME: Currently we don't check the Origin header.
   std::string referer;
 
   // The current time used for operation.start_time for both Check

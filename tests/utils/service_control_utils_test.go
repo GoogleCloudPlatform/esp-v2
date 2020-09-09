@@ -438,6 +438,12 @@ operations: <
   >
   log_entries: <
     name: "endpoints_log"
+    http_request: <
+      request_method: "GET"
+      request_url: "/shelves"
+      status: 503
+      remote_ip: "127.0.0.1"
+    >
     severity: ERROR
     struct_payload: <
       fields: <
@@ -471,27 +477,9 @@ operations: <
         >
       >
       fields: <
-        key: "client_ip"
-        value: <
-          string_value: "127.0.0.1"
-        >
-      >
-      fields: <
         key: "error_cause"
         value: <
           string_value: "SERVICE UNAVAILABLE"
-        >
-      >
-      fields: <
-        key: "http_method"
-        value: <
-          string_value: "GET"
-        >
-      >
-      fields: <
-        key: "http_response_code"
-        value: <
-          number_value: 503
         >
       >
       fields: <
@@ -516,12 +504,6 @@ operations: <
         key: "service_config_id"
         value: <
           string_value: "test-config-id"
-        >
-      >
-      fields: <
-        key: "url"
-        value: <
-          string_value: "/shelves"
         >
       >
     >
@@ -1163,6 +1145,12 @@ operations: <
   >
   log_entries: <
     name: "endpoints_log"
+    http_request: <
+		  request_method: "GET"
+		  request_url: "/shelves"
+		  status: 503
+		  remote_ip: "127.0.0.1"
+		>
     severity: ERROR
     struct_payload: <
       fields: <
@@ -1190,24 +1178,6 @@ operations: <
         >
       >
       fields: <
-        key: "client_ip"
-        value: <
-          string_value: "127.0.0.1"
-        >
-      >
-      fields: <
-        key: "http_method"
-        value: <
-          string_value: "GET"
-        >
-      >
-      fields: <
-        key: "http_response_code"
-        value: <
-          number_value: 503
-        >
-      >
-      fields: <
         key: "location"
         value: <
           string_value: "us-central1"
@@ -1229,18 +1199,18 @@ operations: <
         key: "service_config_id"
         value: <
           string_value: "test-config-id"
-        >
-      >
-      fields: <
-        key: "url"
-        value: <
-          string_value: "/shelves"
         >
       >
     >
   >
   log_entries: <
     name: "endpoints_log"
+    http_request: <
+		  request_method: "GET"
+		  request_url: "/shelves"
+		  status: 503
+		  remote_ip: "127.0.0.1"
+		>
     severity: ERROR
     struct_payload: <
       fields: <
@@ -1268,24 +1238,6 @@ operations: <
         >
       >
       fields: <
-        key: "client_ip"
-        value: <
-          string_value: "127.0.0.1"
-        >
-      >
-      fields: <
-        key: "http_method"
-        value: <
-          string_value: "GET"
-        >
-      >
-      fields: <
-        key: "http_response_code"
-        value: <
-          number_value: 503
-        >
-      >
-      fields: <
         key: "location"
         value: <
           string_value: "us-central1"
@@ -1307,18 +1259,18 @@ operations: <
         key: "service_config_id"
         value: <
           string_value: "test-config-id"
-        >
-      >
-      fields: <
-        key: "url"
-        value: <
-          string_value: "/shelves"
         >
       >
     >
   >
   log_entries: <
     name: "endpoints_log"
+    http_request: <
+		  request_method: "GET"
+		  request_url: "/shelves"
+		  status: 503
+		  remote_ip: "127.0.0.1"
+		>
     severity: ERROR
     struct_payload: <
       fields: <
@@ -1346,24 +1298,6 @@ operations: <
         >
       >
       fields: <
-        key: "client_ip"
-        value: <
-          string_value: "127.0.0.1"
-        >
-      >
-      fields: <
-        key: "http_method"
-        value: <
-          string_value: "GET"
-        >
-      >
-      fields: <
-        key: "http_response_code"
-        value: <
-          number_value: 503
-        >
-      >
-      fields: <
         key: "location"
         value: <
           string_value: "us-central1"
@@ -1385,12 +1319,6 @@ operations: <
         key: "service_config_id"
         value: <
           string_value: "test-config-id"
-        >
-      >
-      fields: <
-        key: "url"
-        value: <
-          string_value: "/shelves"
         >
       >
     >
