@@ -68,6 +68,9 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 					Timeout: ptypes.DurationProto(util.DefaultResponseDeadline),
 				},
 			},
+			Decorator: &routepb.Decorator{
+				Operation: util.SpanNamePrefix,
+			},
 		}
 		if serviceInfo.Options.EnableHSTS {
 			catchAllRt.ResponseHeadersToAdd = []*corepb.HeaderValueOption{
@@ -162,6 +165,9 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 					},
 				},
 			},
+			Decorator: &routepb.Decorator{
+				Operation: util.SpanNamePrefix,
+			},
 		}
 		host.Routes = append(host.Routes, corsRoute)
 
@@ -212,6 +218,9 @@ func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.R
 						},
 						Timeout: ptypes.DurationProto(respTimeout),
 					},
+				},
+				Decorator: &routepb.Decorator{
+					Operation: fmt.Sprintf("%s %s.%s", util.SpanNamePrefix, method.ApiName, method.ShortName),
 				},
 			}
 			if serviceInfo.Options.EnableHSTS {

@@ -1116,6 +1116,9 @@
                         "name": "backend",
                         "routes": [
                           {
+                            "decorator":{
+                              "operation":"ingress test.grpc.Test.Cork"
+                            },
                             "match": {
                               "headers": [
                                 {
@@ -1132,6 +1135,9 @@
                             }
                           },
                           {
+                            "decorator":{
+                              "operation":"ingress test.grpc.Test.Echo"
+                            },
                             "match": {
                               "headers": [
                                 {
@@ -1148,6 +1154,9 @@
                             }
                           },
                           {
+                            "decorator":{
+                              "operation":"ingress test.grpc.Test.Echo"
+                            },
                             "match": {
                               "headers": [
                                 {
@@ -1164,6 +1173,9 @@
                             }
                           },
                           {
+                            "decorator":{
+                              "operation":"ingress test.grpc.Test.EchoReport"
+                            },
                             "match": {
                               "headers": [
                                 {
@@ -1180,6 +1192,9 @@
                             }
                           },
                           {
+                            "decorator":{
+                              "operation":"ingress test.grpc.Test.EchoReport"
+                            },
                             "match": {
                               "headers": [
                                 {
@@ -1196,6 +1211,9 @@
                             }
                           },
                           {
+                            "decorator":{
+                              "operation":"ingress test.grpc.Test.EchoStream"
+                            },
                             "match": {
                               "headers": [
                                 {
@@ -1212,6 +1230,9 @@
                             }
                           },
                           {
+                            "decorator":{
+                              "operation":"ingress test.grpc.Test.EchoStream"
+                            },
                             "match": {
                               "headers": [
                                 {

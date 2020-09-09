@@ -1733,6 +1733,9 @@ func TestMakeListeners(t *testing.T) {
                   "name": "backend",
                   "routes": [
                     {
+                      "decorator":{
+                        "operation":"ingress"
+                      },
                       "match": {
                         "prefix": "/"
                       },

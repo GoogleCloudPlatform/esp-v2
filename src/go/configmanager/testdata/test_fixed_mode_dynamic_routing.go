@@ -376,6 +376,9 @@ var (
                            "name":"backend",
                            "routes":[
                               {
+                                "decorator":{
+                                  "operation":"ingress 1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet"
+                                 },
                                  "match":{
                                     "headers":[
                                        {
@@ -392,6 +395,9 @@ var (
                                  }
                               },
                               {
+                                "decorator":{
+                                  "operation":"ingress 1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById"
+                                 },
                                  "match":{
                                     "headers":[
                                        {
@@ -413,6 +419,9 @@ var (
                                  }
                               },
                               {
+                                "decorator":{
+                                  "operation":"ingress 1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello"
+                                 },
                                  "match":{
                                     "headers":[
                                        {
@@ -429,6 +438,9 @@ var (
                                  }
                               },
                               {
+                                "decorator":{
+                                  "operation":"ingress 1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets"
+                                 },
                                  "match":{
                                     "headers":[
                                        {
@@ -445,6 +457,9 @@ var (
                                  }
                               },
                               {
+                                "decorator":{
+                                  "operation":"ingress 1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search"
+                                 },
                                  "match":{
                                     "headers":[
                                        {

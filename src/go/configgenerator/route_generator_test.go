@@ -51,36 +51,40 @@ func TestMakeRouteConfig(t *testing.T) {
 					},
 				},
 			},
-			wantRouteConfig: `{
-                             "name": "local_route",
-                             "virtualHosts": [
-                                 {
-                                     "domains": [
-                                         "*"
-                                     ],
-                                     "name": "backend",
-                                     "routes": [
-                                         {
-                                             "match": {
-                                                 "prefix": "/"
-                                             },
-                                             "responseHeadersToAdd": [
-                                                 {
-                                                     "header": {
-                                                         "key": "Strict-Transport-Security",
-                                                         "value": "max-age=31536000; includeSubdomains"
-                                                     }
-                                                 }
-                                             ],
-                                             "route": {
-                                                 "cluster": "bookstore.endpoints.project123.cloud.goog_local",
-                                                 "timeout": "15s"
-                                             }
-                                         }
-                                     ]
-                                 }
-                             ]
-                       }`,
+			wantRouteConfig: `
+{
+  "name":"local_route",
+  "virtualHosts":[
+    {
+      "domains":[
+        "*"
+      ],
+      "name":"backend",
+      "routes":[
+        {
+          "decorator":{
+            "operation":"ingress"
+          },
+          "match":{
+            "prefix":"/"
+          },
+          "responseHeadersToAdd":[
+            {
+              "header":{
+                "key":"Strict-Transport-Security",
+                "value":"max-age=31536000; includeSubdomains"
+              }
+            }
+          ],
+          "route":{
+            "cluster":"bookstore.endpoints.project123.cloud.goog_local",
+            "timeout":"15s"
+          }
+        }
+      ]
+    }
+  ]
+}`,
 		},
 		{
 			desc:                          "Enable Strict Transport Security for remote backend",
@@ -126,6 +130,9 @@ func TestMakeRouteConfig(t *testing.T) {
       "name": "backend",
       "routes": [
         {
+          "decorator":{
+            "operation":"ingress endpoints.examples.bookstore.Bookstore.Foo"
+          },
           "match": {
             "headers": [
               {
@@ -197,6 +204,9 @@ func TestMakeRouteConfig(t *testing.T) {
       "name": "backend",
       "routes": [
         {
+          "decorator":{
+            "operation":"ingress endpoints.examples.bookstore.Bookstore.Foo"
+          },
           "match": {
             "headers": [
               {

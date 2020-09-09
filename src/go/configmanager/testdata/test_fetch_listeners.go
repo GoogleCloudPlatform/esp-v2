@@ -138,6 +138,9 @@ var (
                            "name":"backend",
                            "routes":[
                               {
+                                 "decorator":{
+                                   "operation":"ingress"
+                                 },
                                  "match":{
                                     "prefix":"/"
                                  },
@@ -309,6 +312,9 @@ var (
                            "name":"backend",
                            "routes":[
                               {
+                                 "decorator":{
+                                   "operation":"ingress"
+                                 },
                                  "match":{
                                     "prefix":"/"
                                  },
@@ -514,6 +520,9 @@ var (
                            "name":"backend",
                            "routes":[
                               {
+                                 "decorator":{
+                                   "operation":"ingress"
+                                 },
                                  "match":{
                                     "prefix":"/"
                                  },
@@ -755,6 +764,9 @@ var (
                            "name":"backend",
                            "routes":[
                               {
+                                 "decorator":{
+                                   "operation":"ingress"
+                                 },
                                  "match":{
                                     "prefix":"/"
                                  },
@@ -971,6 +983,9 @@ var (
                            "name":"backend",
                            "routes":[
                               {
+                                 "decorator":{
+                                   "operation":"ingress"
+                                 },
                                  "match":{
                                     "prefix":"/"
                                  },
@@ -1159,6 +1174,9 @@ var (
                            "name":"backend",
                            "routes":[
                               {
+                                 "decorator":{
+                                   "operation":"ingress"
+                                 },
                                  "match":{
                                     "prefix":"/"
                                  },
@@ -1321,6 +1339,9 @@ var (
                            "name":"backend",
                            "routes":[
                               {
+                                 "decorator":{
+                                   "operation":"ingress"
+                                 },
                                  "match":{
                                     "prefix":"/"
                                  },
