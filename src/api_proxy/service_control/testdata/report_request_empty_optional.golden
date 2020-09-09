@@ -74,12 +74,6 @@ operations {
         }
       }
       fields {
-        key: "http_response_code"
-        value {
-          number_value: 200
-        }
-      }
-      fields {
         key: "producer_project_id"
         value {
           string_value: "project_id"
@@ -110,6 +104,10 @@ operations {
       nanos: 100000
     }
     severity: INFO
+    http_request {
+      status: 200
+      protocol: "unknown"
+    }
   }
 }
 service_config_id: "2016-09-19r0"
