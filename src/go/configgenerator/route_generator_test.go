@@ -254,7 +254,7 @@ func TestMakeRouteConfig(t *testing.T) {
 					},
 				},
 			},
-			wantedError: "invalid route path regex: regex program size(1003) is larger than the max expected(1000)",
+			wantedError: "invalid route path regex<regex program size(1003) is larger than the max expected(1000)>",
 		},
 	}
 
@@ -416,11 +416,11 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 	}
 }
 
-// Used to generate a oversize cors origin regex or a oversize wildcard path regex.
+// Used to generate a oversize cors origin regex or a oversize wildcard uri template.
 func getOversizeRegex() string {
 	overSizeRegex := ""
 	for i := 0; i < 333; i += 1 {
-		// Use "/**" as it is a replacement token for wildcard path.
+		// Use "/**" as it is a replacement token for wildcard uri template.
 		overSizeRegex += "/**"
 	}
 	return overSizeRegex
