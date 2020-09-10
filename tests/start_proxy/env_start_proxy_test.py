@@ -34,7 +34,7 @@ class TestStartProxy(unittest.TestCase):
             "wantArgs": [
               '/apiproxy/start_proxy.py',
               '/apiproxy/start_proxy.py',
-              "--compute_platform_override=Cloud Run(ESPv2)",
+              '--on_serverless',
               '--http_port=8080',
               '--service=test_bookstore.goog.cloud',
               '--rollout_strategy=managed',
@@ -49,7 +49,7 @@ class TestStartProxy(unittest.TestCase):
             "wantArgs": [
               '/apiproxy/start_proxy.py',
               '/apiproxy/start_proxy.py',
-              "--compute_platform_override=Cloud Run(ESPv2)",
+              '--on_serverless',
               '--http_port=8082',
               '--service=test_bookstore.goog.cloud',
               '--rollout_strategy=fixed',
@@ -64,7 +64,7 @@ class TestStartProxy(unittest.TestCase):
             "wantArgs": [
               '/apiproxy/start_proxy.py',
               '/apiproxy/start_proxy.py',
-              "--compute_platform_override=Cloud Run(ESPv2)",
+              '--on_serverless',
               '--http_port=8080',
               '--rollout_strategy=fixed',
               '--service_json_path=/tmp/service_config.json',

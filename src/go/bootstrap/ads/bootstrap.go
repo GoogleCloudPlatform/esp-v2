@@ -47,6 +47,9 @@ func CreateBootstrapConfig(opts options.AdsBootstrapperOptions) (string, error) 
 		// admin
 		Admin: bt.CreateAdmin(opts.CommonOptions),
 
+		// layer runtime
+		LayeredRuntime: bt.CreateLayeredRuntime(),
+
 		// Dynamic resource
 		DynamicResources: &bootstrappb.Bootstrap_DynamicResources{
 			LdsConfig: &corepb.ConfigSource{

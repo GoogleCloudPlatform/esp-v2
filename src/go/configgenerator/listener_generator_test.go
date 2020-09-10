@@ -1883,7 +1883,7 @@ func TestMakeHttpConMgr(t *testing.T) {
 							"typedConfig": {
 								"@type": "type.googleapis.com/envoy.extensions.access_loggers.file.v3.FileAccessLog",
 								"path": "/foo",
-								"format": "/bar"
+								"logFormat":{"textFormat":"/bar"}
 							}
 						}
 					],

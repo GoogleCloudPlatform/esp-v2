@@ -407,7 +407,6 @@ var (
                                     ],
                                     "safeRegex":{
                                        "googleRe2":{
-                                          "maxProgramSize":1000
                                        },
                                        "regex":"^/pet/[^\\/]+$"
                                     }

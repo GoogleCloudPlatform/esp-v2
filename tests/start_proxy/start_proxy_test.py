@@ -227,10 +227,11 @@ class TestStartProxy(unittest.TestCase):
             # backend routing (with deprecated flag)
             (['--backend=https://127.0.0.1:8000', '--enable_backend_routing',
               '--service_json_path=/tmp/service.json',
-              '--compute_platform_override', 'Cloud Run(ESPv2)',
+              '--on_serverless',
               '--disable_tracing'],
              ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'https://127.0.0.1:8000', '--v', '0',
+              '--envoy_xff_num_trusted_hops', '0',
               '--service_json_path', '/tmp/service.json',
               '--disable_tracing',
               '--compute_platform_override', 'Cloud Run(ESPv2)'
@@ -379,6 +380,31 @@ class TestStartProxy(unittest.TestCase):
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_account_key', '/tmp/service_account_key',
+              ]),
+            # Serverless sets compute platform and xff_num_trusted_hops.
+            (['--on_serverless',
+              '--http_port=8080',
+              '--rollout_strategy=fixed',
+              '--service_json_path=/tmp/service_config.json'],
+             ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--envoy_xff_num_trusted_hops', '0',
+              '--listener_port', '8080',
+              '--service_json_path', '/tmp/service_config.json',
+              '--compute_platform_override', 'Cloud Run(ESPv2)'
+              ]),
+            # Serverless with override for xff_num_trusted_hops.
+            (['--on_serverless',
+              '--http_port=8080',
+              '--rollout_strategy=fixed',
+              '--service_json_path=/tmp/service_config.json',
+              '--envoy_xff_num_trusted_hops=3'],
+             ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--envoy_xff_num_trusted_hops', '3',
+              '--listener_port', '8080',
+              '--service_json_path', '/tmp/service_config.json',
+              '--compute_platform_override', 'Cloud Run(ESPv2)'
               ]),
         ]
 
