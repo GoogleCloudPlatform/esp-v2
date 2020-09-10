@@ -17,7 +17,6 @@ package configinfo
 import (
 	"fmt"
 	"math"
-	"net"
 	"sort"
 	"strings"
 	"time"
@@ -448,9 +447,6 @@ func (s *ServiceInfo) processBackendRule() error {
 			scheme, hostname, port, path, err := util.ParseURI(r.Address)
 			if err != nil {
 				return err
-			}
-			if net.ParseIP(hostname) != nil {
-				return fmt.Errorf("dynamic routing only supports domain name, got IP address: %v", hostname)
 			}
 			address := fmt.Sprintf("%v:%v", hostname, port)
 

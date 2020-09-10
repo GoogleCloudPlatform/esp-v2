@@ -1496,6 +1496,128 @@ func TestProcessBackendRuleForProtocol(t *testing.T) {
 	}
 }
 
+func TestProcessBackendRuleForClusterName(t *testing.T) {
+	testData := []struct {
+		desc        string
+		Address     string
+		ClusterName string
+	}{
+		{
+			desc:        "Domain name with default http port",
+			Address:     "http://abc.com/api/",
+			ClusterName: "abc.com:80",
+		},
+		{
+			desc:        "Domain name with default https port",
+			Address:     "https://abc.com/api/",
+			ClusterName: "abc.com:443",
+		},
+		{
+			desc:        "Domain name with default grpc port",
+			Address:     "grpc://abc.com/api/",
+			ClusterName: "abc.com:80",
+		},
+		{
+			desc:        "Domain name with default grpcs port",
+			Address:     "grpcs://abc.com/api/",
+			ClusterName: "abc.com:443",
+		},
+		{
+			desc:        "Domain name with custom http port",
+			Address:     "http://abc.com:8080/api/",
+			ClusterName: "abc.com:8080",
+		},
+		{
+			desc:        "Domain name with custom https port",
+			Address:     "https://abc.com:8080/api/",
+			ClusterName: "abc.com:8080",
+		},
+		{
+			desc:        "Domain name with custom grpc port",
+			Address:     "grpc://abc.com:8080/api/",
+			ClusterName: "abc.com:8080",
+		},
+		{
+			desc:        "Domain name with custom grpcs port",
+			Address:     "grpcs://abc.com:8080/api/",
+			ClusterName: "abc.com:8080",
+		},
+		{
+			desc:        "IP with default http port",
+			Address:     "http://127.0.0.1/api/",
+			ClusterName: "127.0.0.1:80",
+		},
+		{
+			desc:        "IP with default https port",
+			Address:     "https://127.0.0.1/api/",
+			ClusterName: "127.0.0.1:443",
+		},
+		{
+			desc:        "IP with default grpc port",
+			Address:     "grpc://127.0.0.1/api/",
+			ClusterName: "127.0.0.1:80",
+		},
+		{
+			desc:        "IP with default grpcs port",
+			Address:     "grpcs://127.0.0.1/api/",
+			ClusterName: "127.0.0.1:443",
+		},
+		{
+			desc:        "IP with custom http port",
+			Address:     "http://127.0.0.1:8080/api/",
+			ClusterName: "127.0.0.1:8080",
+		},
+		{
+			desc:        "IP with custom https port",
+			Address:     "https://127.0.0.1:8080/api/",
+			ClusterName: "127.0.0.1:8080",
+		},
+		{
+			desc:        "IP with custom grpc port",
+			Address:     "grpc://127.0.0.1:8080/api/",
+			ClusterName: "127.0.0.1:8080",
+		},
+		{
+			desc:        "IP with custom grpcs port",
+			Address:     "grpcs://127.0.0.1:8080/api/",
+			ClusterName: "127.0.0.1:8080",
+		},
+	}
+
+	for _, tc := range testData {
+		fakeServiceConfig := &confpb.Service{
+			Apis: []*apipb.Api{
+				{
+					Name: testApiName,
+				},
+			},
+			Backend: &confpb.Backend{
+				Rules: []*confpb.BackendRule{
+					{
+						Address:  tc.Address,
+						Selector: "http.abc.com.api",
+					},
+				},
+			},
+		}
+		opts := options.DefaultConfigGeneratorOptions()
+		s, err := NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
+
+		if err != nil {
+			t.Errorf("Test Desc(%s): error not expected, got: %v", tc.desc, err)
+			return
+		}
+
+		if len(s.BackendRoutingClusters) != 1 {
+			t.Errorf("Test Desc(%s): generated number of clusters is not 1", tc.desc)
+			return
+		}
+		if tc.ClusterName != s.BackendRoutingClusters[0].ClusterName {
+			t.Errorf("Test Desc(%s): cluster name is different, want: %s, got %s", tc.desc, tc.ClusterName, s.BackendRoutingClusters[0].ClusterName)
+		}
+	}
+}
+
 func TestProcessBackendRuleForJwtAudience(t *testing.T) {
 	testData := []struct {
 		desc              string
