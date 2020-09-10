@@ -51,36 +51,37 @@ func TestMakeRouteConfig(t *testing.T) {
 					},
 				},
 			},
-			wantRouteConfig: `{
-                             "name": "local_route",
-                             "virtualHosts": [
-                                 {
-                                     "domains": [
-                                         "*"
-                                     ],
-                                     "name": "backend",
-                                     "routes": [
-                                         {
-                                             "match": {
-                                                 "prefix": "/"
-                                             },
-                                             "responseHeadersToAdd": [
-                                                 {
-                                                     "header": {
-                                                         "key": "Strict-Transport-Security",
-                                                         "value": "max-age=31536000; includeSubdomains"
-                                                     }
-                                                 }
-                                             ],
-                                             "route": {
-                                                 "cluster": "bookstore.endpoints.project123.cloud.goog_local",
-                                                 "timeout": "15s"
-                                             }
-                                         }
-                                     ]
-                                 }
-                             ]
-                       }`,
+			wantRouteConfig: `
+{
+   "name":"local_route",
+   "virtualHosts":[
+      {
+         "domains":[
+            "*"
+         ],
+         "name":"backend",
+         "routes":[
+            {
+               "match":{
+                  "prefix":"/"
+               },
+               "responseHeadersToAdd":[
+                  {
+                     "header":{
+                        "key":"Strict-Transport-Security",
+                        "value":"max-age=31536000; includeSubdomains"
+                     }
+                  }
+               ],
+               "route":{
+                  "cluster":"bookstore.endpoints.project123.cloud.goog_local",
+                  "timeout":"15s"
+               }
+            }
+         ]
+      }
+   ]
+}`,
 		},
 		{
 			desc:                          "Enable Strict Transport Security for remote backend",
@@ -188,39 +189,72 @@ func TestMakeRouteConfig(t *testing.T) {
 			},
 			wantRouteConfig: `
 {
-  "name": "local_route",
-  "virtualHosts": [
-    {
-      "domains": [
-        "*"
-      ],
-      "name": "backend",
-      "routes": [
-        {
-          "match": {
-            "headers": [
-              {
-                "exactMatch": "GET",
-                "name": ":method"
-              }
-            ],
-            "safeRegex": {
-              "googleRe2": {
-                "maxProgramSize": 1000
-              },
-              "regex": "^/v1/[^\\/]+/test/.*$"
+   "name":"local_route",
+   "virtualHosts":[
+      {
+         "domains":[
+            "*"
+         ],
+         "name":"backend",
+         "routes":[
+            {
+               "match":{
+                  "headers":[
+                     {
+                        "exactMatch":"GET",
+                        "name":":method"
+                     }
+                  ],
+                  "safeRegex":{
+                     "googleRe2":{
+                     },
+                     "regex":"^/v1/[^\\/]+/test/.*$"
+                  }
+               },
+               "route":{
+                  "cluster":"testapipb.com:443",
+                  "hostRewriteLiteral":"testapipb.com",
+                  "timeout":"15s"
+               }
             }
-          },
-          "route": {
-            "cluster": "testapipb.com:443",
-            "hostRewriteLiteral": "testapipb.com",
-            "timeout": "15s"
-          }
-        }
-      ]
-    }
-  ]
+         ]
+      }
+   ]
 }`,
+		},
+		{
+			desc: "Oversize wildcard path regex",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector:        "endpoints.examples.bookstore.Bookstore.Foo",
+							Address:         "https://testapipb.com/foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "bar.com",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.Foo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: getOverSizeRegexForTest(),
+							},
+						},
+					},
+				},
+			},
+			wantedError: "invalid route path regex: regex program size(1003) is larger than the max expected(1000)",
 		},
 	}
 
@@ -237,6 +271,9 @@ func TestMakeRouteConfig(t *testing.T) {
 			if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
 				t.Errorf("Test (%s): expected err: %v, got: %v", tc.desc, tc.wantedError, err)
 			}
+			continue
+		} else if err != nil {
+			t.Errorf("Test (%s): expected err: %v, got: %v", tc.desc, tc.wantedError, err)
 			continue
 		}
 
@@ -283,6 +320,11 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 			wantedError: `cors_preset must be either "basic" or "cors_with_regex"`,
 		},
 		{
+			desc:        "Oversize cors origin regex",
+			params:      []string{"cors_with_regex", "", getOverSizeRegexForTest(), "", "Origin,Content-Type,Accept", ""},
+			wantedError: `invalid cors origin regex: regex program size(1001) is larger than the max expected(1000)`,
+		},
+		{
 			desc:   "Correct configured basic Cors, with allow methods",
 			params: []string{"basic", "http://example.com", "", "GET,POST,PUT,OPTIONS", "", ""},
 			wantCorsPolicy: &routepb.CorsPolicy{
@@ -306,11 +348,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 						MatchPattern: &matcher.StringMatcher_SafeRegex{
 							SafeRegex: &matcher.RegexMatcher{
 								EngineType: &matcher.RegexMatcher_GoogleRe2{
-									GoogleRe2: &matcher.RegexMatcher_GoogleRE2{
-										MaxProgramSize: &wrapperspb.UInt32Value{
-											Value: util.GoogleRE2MaxProgramSize,
-										},
-									},
+									GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
 								},
 								Regex: `^https?://.+\\.example\\.com$`,
 							},
@@ -331,11 +369,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 						MatchPattern: &matcher.StringMatcher_SafeRegex{
 							SafeRegex: &matcher.RegexMatcher{
 								EngineType: &matcher.RegexMatcher_GoogleRe2{
-									GoogleRe2: &matcher.RegexMatcher_GoogleRE2{
-										MaxProgramSize: &wrapperspb.UInt32Value{
-											Value: util.GoogleRE2MaxProgramSize,
-										},
-									},
+									GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
 								},
 								Regex: `^https?://.+\\.example\\.com$`,
 							},
@@ -380,4 +414,14 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 			t.Errorf("Test (%v): makeRouteConfig failed, got Cors: %v, want: %v", tc.desc, gotCors, tc.wantCorsPolicy)
 		}
 	}
+}
+
+// Used to generate a oversize cors origin regex or a oversize wildcard uri template.
+func getOverSizeRegexForTest() string {
+	overSizeRegex := ""
+	for i := 0; i < 333; i += 1 {
+		// Use "/**" as it is a replacement token for wildcard uri template.
+		overSizeRegex += "/**"
+	}
+	return overSizeRegex
 }

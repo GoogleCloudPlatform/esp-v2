@@ -37,61 +37,79 @@ func TestCreateBootstrapConfig(t *testing.T) {
 			},
 			wantConfig: `
 {
-  "admin": {},
-  "dynamicResources": {
-    "adsConfig": {
-      "apiType": "GRPC",
-      "grpcServices": [
-        {
-          "envoyGrpc": {
-            "clusterName": "ads_cluster"
-          }
-        }
-      ],
-      "transportApiVersion": "V3"
-    },
-    "cdsConfig": {
-      "ads": {},
-      "resourceApiVersion": "V3"
-    },
-    "ldsConfig": {
-      "ads": {},
-      "resourceApiVersion": "V3"
-    }
-  },
-  "node": {
-    "cluster": "ESPv2_cluster",
-    "id": "ESPv2"
-  },
-  "staticResources": {
-    "clusters": [
-      {
-        "connectTimeout": "10s",
-        "http2ProtocolOptions": {},
-        "loadAssignment": {
-          "clusterName": "127.0.0.1",
-          "endpoints": [
+   "admin":{
+      
+   },
+   "dynamicResources":{
+      "adsConfig":{
+         "apiType":"GRPC",
+         "grpcServices":[
             {
-              "lbEndpoints": [
-                {
-                  "endpoint": {
-                    "address": {
-                      "socketAddress": {
-                        "address": "127.0.0.1",
-                        "portValue": 8790
-                      }
-                    }
-                  }
-                }
-              ]
+               "envoyGrpc":{
+                  "clusterName":"ads_cluster"
+               }
             }
-          ]
-        },
-        "name": "ads_cluster",
-        "type": "STRICT_DNS"
+         ],
+         "transportApiVersion":"V3"
+      },
+      "cdsConfig":{
+         "ads":{
+            
+         },
+         "resourceApiVersion":"V3"
+      },
+      "ldsConfig":{
+         "ads":{
+            
+         },
+         "resourceApiVersion":"V3"
       }
-    ]
-  }
+   },
+   "layeredRuntime":{
+      "layers":[
+         {
+            "name":"deprecation",
+            "staticLayer":{
+               "re2.max_program_size.error_level":1000
+            }
+         }
+      ]
+   },
+   "node":{
+      "cluster":"ESPv2_cluster",
+      "id":"ESPv2"
+   },
+   "staticResources":{
+      "clusters":[
+         {
+            "connectTimeout":"10s",
+            "http2ProtocolOptions":{
+               
+            },
+            "loadAssignment":{
+               "clusterName":"127.0.0.1",
+               "endpoints":[
+                  {
+                     "lbEndpoints":[
+                        {
+                           "endpoint":{
+                              "address":{
+                                 "socketAddress":{
+                                    "address":"127.0.0.1",
+                                    "portValue":8790
+                                 }
+                              }
+                           }
+                        }
+                     ]
+                  }
+               ]
+            },
+            "name":"ads_cluster",
+            "type":"STRICT_DNS"
+         }
+      ]
+   }
 }`,
 		},
 		{
@@ -104,69 +122,85 @@ func TestCreateBootstrapConfig(t *testing.T) {
 			},
 			wantConfig: `
 {
-  "admin": {
-    "accessLogPath": "/dev/null",
-    "address": {
-      "socketAddress": {
-        "address": "0.0.0.0",
-        "portValue": 8001
+   "admin":{
+      "accessLogPath":"/dev/null",
+      "address":{
+         "socketAddress":{
+            "address":"0.0.0.0",
+            "portValue":8001
+         }
       }
-    }
-  },
-  "dynamicResources": {
-    "adsConfig": {
-      "apiType": "GRPC",
-      "grpcServices": [
-        {
-          "envoyGrpc": {
-            "clusterName": "ads_cluster"
-          }
-        }
-      ],
-      "transportApiVersion": "V3"
-    },
-    "cdsConfig": {
-      "ads": {},
-      "resourceApiVersion": "V3"
-    },
-    "ldsConfig": {
-      "ads": {},
-      "resourceApiVersion": "V3"
-    }
-  },
-  "node": {
-    "cluster": "test-node_cluster",
-    "id": "test-node"
-  },
-  "staticResources": {
-    "clusters": [
-      {
-        "connectTimeout": "10s",
-        "http2ProtocolOptions": {},
-        "loadAssignment": {
-          "clusterName": "127.0.0.1",
-          "endpoints": [
+   },
+   "dynamicResources":{
+      "adsConfig":{
+         "apiType":"GRPC",
+         "grpcServices":[
             {
-              "lbEndpoints": [
-                {
-                  "endpoint": {
-                    "address": {
-                      "socketAddress": {
-                        "address": "127.0.0.1",
-                        "portValue": 8790
-                      }
-                    }
-                  }
-                }
-              ]
+               "envoyGrpc":{
+                  "clusterName":"ads_cluster"
+               }
             }
-          ]
-        },
-        "name": "ads_cluster",
-        "type": "STRICT_DNS"
+         ],
+         "transportApiVersion":"V3"
+      },
+      "cdsConfig":{
+         "ads":{
+            
+         },
+         "resourceApiVersion":"V3"
+      },
+      "ldsConfig":{
+         "ads":{
+            
+         },
+         "resourceApiVersion":"V3"
       }
-    ]
-  }
+   },
+   "layeredRuntime":{
+      "layers":[
+         {
+            "name":"deprecation",
+            "staticLayer":{
+               "re2.max_program_size.error_level":1000
+            }
+         }
+      ]
+   },
+   "node":{
+      "cluster":"test-node_cluster",
+      "id":"test-node"
+   },
+   "staticResources":{
+      "clusters":[
+         {
+            "connectTimeout":"10s",
+            "http2ProtocolOptions":{
+               
+            },
+            "loadAssignment":{
+               "clusterName":"127.0.0.1",
+               "endpoints":[
+                  {
+                     "lbEndpoints":[
+                        {
+                           "endpoint":{
+                              "address":{
+                                 "socketAddress":{
+                                    "address":"127.0.0.1",
+                                    "portValue":8790
+                                 }
+                              }
+                           }
+                        }
+                     ]
+                  }
+               ]
+            },
+            "name":"ads_cluster",
+            "type":"STRICT_DNS"
+         }
+      ]
+   }
 }
 `,
 		},

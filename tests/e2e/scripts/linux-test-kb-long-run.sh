@@ -101,15 +101,13 @@ while true; do
       --allow_unverified_cert=true \
     --host_header="${HOST_HEADER}" || ((BOOKSTORE_FAILURES++)))
 
-  if [ "$PLATFORM" = "gke" ]; then
-    echo "Starting bookstore API Key restriction test at $(date)."
-    (set -x;
-      python ${ROOT}/tests/e2e/client/apiproxy_bookstore_key_restriction_test.py  \
-        --host="${SCHEME}://${HOST}:${PORT}"   \
-        --allow_unverified_cert=true  \
-        --key_restriction_tests=${ROOT}/tests/e2e/testdata/bookstore/key_restriction_test.json.template  \
+  echo "Starting bookstore API Key restriction test at $(date)."
+  (set -x;
+    python ${ROOT}/tests/e2e/client/apiproxy_bookstore_key_restriction_test.py  \
+      --host="${SCHEME}://${HOST}:${PORT}"   \
+      --allow_unverified_cert=true  \
+      --key_restriction_tests=${ROOT}/tests/e2e/testdata/bookstore/key_restriction_test.json.template  \
       --key_restriction_keys_file=${API_RESTRICTION_KEYS_FILE})
-  fi
 
   #TODO(taoxuy): b/148950591 enable stress test for cloud run on anthos
   if [[ -z ${HOST_HEADER} ]]; then

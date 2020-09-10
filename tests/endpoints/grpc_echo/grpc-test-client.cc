@@ -16,7 +16,6 @@
 
 #include "google/protobuf/io/zero_copy_stream_impl.h"
 #include "google/protobuf/text_format.h"
-#include "test/test_common/utility.h"
 #include "tests/endpoints/grpc_echo/client-test-lib.h"
 #include "tests/endpoints/grpc_echo/proto/grpc-test.grpc.pb.h"
 

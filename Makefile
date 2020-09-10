@@ -72,9 +72,9 @@ build-envoy-debug:
 
 build-grpc-echo:
 	@echo "--> building grpc-echo"
-	@bazel build --cxxopt='-std=c++14' tests/endpoints/grpc_echo:grpc-test-client --incompatible_no_support_tools_in_action_inputs=false
-	@bazel build --cxxopt='-std=c++14' //tests/endpoints/grpc_echo:grpc-test-server --incompatible_no_support_tools_in_action_inputs=false
-	@bazel build --cxxopt='-std=c++14' tests/endpoints/grpc_echo:grpc-test_descriptor --incompatible_no_support_tools_in_action_inputs=false
+	@bazel build  //tests/endpoints/grpc_echo:grpc-test-client --incompatible_no_support_tools_in_action_inputs=false
+	@bazel build  //tests/endpoints/grpc_echo:grpc-test-server --incompatible_no_support_tools_in_action_inputs=false
+	@bazel build  //tests/endpoints/grpc_echo:grpc-test_descriptor --incompatible_no_support_tools_in_action_inputs=false
 	@cp -f bazel-bin/tests/endpoints/grpc_echo/grpc-test-client bin/grpc_echo_client
 	@cp -f bazel-bin/tests/endpoints/grpc_echo/grpc-test-server bin/grpc_echo_server
 	@cp -f bazel-bin/tests/endpoints/grpc_echo/grpc-test.descriptor tests/endpoints/grpc_echo/proto/api_descriptor.pb
@@ -309,6 +309,6 @@ docker.push-prow: docker.build-prow
 
 # bookstore image used in e2e test. Only push when there is changes.
 docker.build-bookstore:
-	docker build -f tests/endpoints/bookstore/bookstore.Dockerfile -t gcr.io/cloudesf-testing/http-bookstore:2 .
+	docker build -f tests/endpoints/bookstore/bookstore.Dockerfile -t gcr.io/cloudesf-testing/http-bookstore:3 .
 docker.push-bookstore:
-	gcloud docker -- push gcr.io/cloudesf-testing/http-bookstore:2
+	gcloud docker -- push gcr.io/cloudesf-testing/http-bookstore:3

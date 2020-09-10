@@ -31,8 +31,9 @@ import (
 // service config to ServiceManagement Server, example: 2017-02-13r0.
 func ServiceToBootstrapConfig(serviceConfig *confpb.Service, id string, opts options.ConfigGeneratorOptions) (*bootstrappb.Bootstrap, error) {
 	bt := &bootstrappb.Bootstrap{
-		Node:  bootstrap.CreateNode(opts.CommonOptions),
-		Admin: bootstrap.CreateAdmin(opts.CommonOptions),
+		Node:           bootstrap.CreateNode(opts.CommonOptions),
+		Admin:          bootstrap.CreateAdmin(opts.CommonOptions),
+		LayeredRuntime: bootstrap.CreateLayeredRuntime(),
 	}
 
 	serviceInfo, err := sc.NewServiceInfoFromServiceConfig(serviceConfig, id, opts)

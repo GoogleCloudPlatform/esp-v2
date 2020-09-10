@@ -73,7 +73,7 @@ function deployBackend() {
       # Determine the backend image.
       case ${BACKEND} in
         "bookstore")
-          backend_image="gcr.io/cloudesf-testing/http-bookstore:2"
+          backend_image="gcr.io/cloudesf-testing/http-bookstore:3"
           backend_port=8080
         ;;
         "echo")
@@ -98,7 +98,7 @@ function deployBackend() {
       ;;
     "anthos-cloud-run")
       gcloud run deploy "${BACKEND_SERVICE_NAME}" \
-        --image="gcr.io/cloudesf-testing/http-bookstore:2" \
+        --image="gcr.io/cloudesf-testing/http-bookstore:3" \
         --platform=gke \
         --quiet
 
@@ -325,8 +325,16 @@ function setup() {
     -p "${PROJECT_ID}" \
     -i "${APIPROXY_IMAGE}"
 
-  # Redeploy ESPv2 to update the service config
-  proxy_args="^++^--tracing_sample_rate=0.01++--tracing_outgoing_context=x-cloud-trace-context"
+  # Redeploy ESPv2 to update the service config. Set flags as follows:
+  # - Tracing: Support trace context propagation to the backend and from AppHosting.
+  # - Hops: Allow our fake client IP restriction test (via API keys) to function.
+  #         If we were restricting by our actual client ip, then the default of 0 would work.
+  #         But we are actually testing with a fake xff header, so we need a higher hops count.
+  #         On GKE we default to 2. AppHosting infra adds one more IP to xff, so 3 for serverless.
+  proxy_args="^++^--tracing_sample_rate=0.05"\
+"++--tracing_outgoing_context=traceparent"\
+"++--tracing_incoming_context=traceparent"\
+"++--envoy_xff_num_trusted_hops=3"
 
   if [[ ${PROXY_PLATFORM} == "cloud-run" ]];
   then
