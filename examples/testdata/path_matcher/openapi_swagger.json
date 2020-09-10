@@ -73,6 +73,9 @@
   ],
   "swagger": "2.0",
   "x-google-allow": "all",
+  "x-google-backend": {
+    "address": "https://http-bookstore-abc9876-uc.a.run.app"
+  },
   "x-google-endpoints": [
     {
       "allowCors": true,
