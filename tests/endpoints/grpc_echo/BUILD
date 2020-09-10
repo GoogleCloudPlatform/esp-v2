@@ -71,6 +71,7 @@ genrule(
         "@com_github_googleapis_googleapis//google/api/servicecontrol/v1:service_controller.proto",
         "@com_github_googleapis_googleapis//google/api/servicecontrol/v1:check_error.proto",
         "@com_github_googleapis_googleapis//google/api/servicecontrol/v1:distribution.proto",
+        "@com_github_googleapis_googleapis//google/api/servicecontrol/v1:http_request.proto",
         "@com_github_googleapis_googleapis//google/api/servicecontrol/v1:log_entry.proto",
         "@com_github_googleapis_googleapis//google/api/servicecontrol/v1:metric_value.proto",
         "@com_github_googleapis_googleapis//google/api/servicecontrol/v1:operation.proto",
