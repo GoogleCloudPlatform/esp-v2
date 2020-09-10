@@ -1,5 +1,15 @@
 {
   "admin": {},
+  "layeredRuntime": {
+    "layers": [
+      {
+        "name": "deprecation",
+        "staticLayer": {
+          "re2.max_program_size.error_level": 1000
+        }
+      }
+    ]
+  },
   "node": {
     "cluster": "ESPv2_cluster",
     "id": "ESPv2"

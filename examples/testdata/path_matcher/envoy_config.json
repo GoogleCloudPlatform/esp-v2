@@ -1,5 +1,15 @@
 {
   "admin": {},
+  "layeredRuntime": {
+    "layers": [
+      {
+        "name": "deprecation",
+        "staticLayer": {
+          "re2.max_program_size.error_level": 1000
+        }
+      }
+    ]
+  },
   "node": {
     "cluster": "ESPv2_cluster",
     "id": "ESPv2"
@@ -294,9 +304,7 @@
                                 }
                               ],
                               "safeRegex": {
-                                "googleRe2": {
-                                  "maxProgramSize": 1000
-                                },
+                                "googleRe2": {},
                                 "regex": "^/libraries/[^\\/]+/shelves/[^\\/]+$"
                               }
                             },
@@ -315,9 +323,7 @@
                                 }
                               ],
                               "safeRegex": {
-                                "googleRe2": {
-                                  "maxProgramSize": 1000
-                                },
+                                "googleRe2": {},
                                 "regex": "^/libraries/[^\\/]+/shelves/[^\\/]+$"
                               }
                             },
