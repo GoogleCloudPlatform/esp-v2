@@ -248,13 +248,13 @@ func TestMakeRouteConfig(t *testing.T) {
 						{
 							Selector: "endpoints.examples.bookstore.Bookstore.Foo",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: getOversizeRegex(),
+								Get: getOverSizeRegexForTest(),
 							},
 						},
 					},
 				},
 			},
-			wantedError: "invalid route path regex<regex program size(1003) is larger than the max expected(1000)>",
+			wantedError: "invalid route path regex: regex program size(1003) is larger than the max expected(1000)",
 		},
 	}
 
@@ -321,7 +321,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		},
 		{
 			desc:        "Oversize cors origin regex",
-			params:      []string{"cors_with_regex", "", getOversizeRegex(), "", "Origin,Content-Type,Accept", ""},
+			params:      []string{"cors_with_regex", "", getOverSizeRegexForTest(), "", "Origin,Content-Type,Accept", ""},
 			wantedError: `invalid cors origin regex: regex program size(1001) is larger than the max expected(1000)`,
 		},
 		{
@@ -417,7 +417,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 }
 
 // Used to generate a oversize cors origin regex or a oversize wildcard uri template.
-func getOversizeRegex() string {
+func getOverSizeRegexForTest() string {
 	overSizeRegex := ""
 	for i := 0; i < 333; i += 1 {
 		// Use "/**" as it is a replacement token for wildcard uri template.
