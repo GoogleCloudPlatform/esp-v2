@@ -597,7 +597,7 @@ func runTest(t *testing.T, fakeScReport, fakeRollouts, fakeConfig *safeData, opt
 
 	metadataFetcher := metadata.NewMockMetadataFetcher(mockMetadataServer.URL, time.Now())
 
-	opts.RootCertsPath = platform.GetFilePath(platform.TestRootCaCerts)
+	opts.SslSidestreamClientRootCertsPath = platform.GetFilePath(platform.TestRootCaCerts)
 
 	f(NewConfigManager(metadataFetcher, opts))
 }

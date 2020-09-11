@@ -37,6 +37,7 @@ func TestServiceManagementWithTLS(t *testing.T) {
 		desc         string
 		certPath     string
 		keyPath      string
+		confArgs     []string
 		port         uint16
 		wantResp     string
 		wantSetupErr string
@@ -45,13 +46,30 @@ func TestServiceManagementWithTLS(t *testing.T) {
 			desc:     "Succeed, ServiceManagement HTTPS server uses same cert as proxy",
 			certPath: platform.GetFilePath(platform.ProxyCert),
 			keyPath:  platform.GetFilePath(platform.ProxyKey),
+			confArgs: append([]string{
+				"--ssl_sidestream_client_root_certs_path", platform.GetFilePath(platform.ProxyCert),
+			}, utils.CommonArgs()...),
 			port:     comp.TestServiceManagementWithValidCert,
 			wantResp: `{"message":"hello"}`,
 		},
 		{
-			desc:         "Fail, ServiceManagement HTTPS server uses different cert as proxy",
-			certPath:     platform.GetFilePath(platform.ServerCert),
-			keyPath:      platform.GetFilePath(platform.ServerKey),
+			desc:     "Fail, ServiceManagement HTTPS server uses different cert as proxy",
+			certPath: platform.GetFilePath(platform.ServerCert),
+			keyPath:  platform.GetFilePath(platform.ServerKey),
+			confArgs: append([]string{
+				"--ssl_sidestream_client_root_certs_path", platform.GetFilePath(platform.ProxyCert),
+			}, utils.CommonArgs()...),
+			port:         comp.TestServiceManagementWithInvalidCert,
+			wantSetupErr: "health check response was not healthy",
+		},
+		{
+			// Regression test for b/168120858
+			// By default, config manager will use the proxy cert for the backend.
+			// But it won't be used for sidestream connections.
+			desc:         "Fail, proxy not configured to use the same root cert for sidestream connections",
+			certPath:     platform.GetFilePath(platform.ProxyCert),
+			keyPath:      platform.GetFilePath(platform.ProxyKey),
+			confArgs:     utils.CommonArgs(),
 			port:         comp.TestServiceManagementWithInvalidCert,
 			wantSetupErr: "health check response was not healthy",
 		},
@@ -67,11 +85,11 @@ func TestServiceManagementWithTLS(t *testing.T) {
 
 			serverCerts, err := comp.GenerateCert(tc.certPath, tc.keyPath)
 			if err != nil {
-				t.Fatalf("fial to generate cert: %v", err)
+				t.Fatalf("Test (%v): fail to generate cert: %v", tc.desc, err)
 			}
 
 			s.MockServiceManagementServer.SetCert(serverCerts)
-			err = s.Setup(utils.CommonArgs())
+			err = s.Setup(tc.confArgs)
 
 			if tc.wantSetupErr != "" {
 				if err == nil || !strings.Contains(err.Error(), tc.wantSetupErr) {
@@ -93,6 +111,9 @@ func TestServiceManagementWithTLS(t *testing.T) {
 
 func TestServiceControlWithTLS(t *testing.T) {
 	t.Parallel()
+
+	args := utils.CommonArgs()
+	args = append(args, "--ssl_sidestream_client_root_certs_path", platform.GetFilePath(platform.ProxyCert))
 
 	tests := []struct {
 		desc      string
@@ -130,7 +151,7 @@ func TestServiceControlWithTLS(t *testing.T) {
 			}
 			s.ServiceControlServer.SetCert(serverCerts)
 
-			if err := s.Setup(utils.CommonArgs()); err != nil {
+			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
