@@ -327,20 +327,23 @@ function setup() {
 
   # Redeploy ESPv2 to update the service config. Set flags as follows:
   # - Tracing: Support trace context propagation to the backend and from AppHosting.
-  # - Hops: Allow our fake client IP restriction test (via API keys) to function.
-  #         If we were restricting by our actual client ip, then the default of 0 would work.
-  #         But we are actually testing with a fake xff header, so we need a higher hops count.
-  #         On GKE we default to 2. AppHosting infra adds one more IP to xff, so 3 for serverless.
   proxy_args="^++^--tracing_sample_rate=0.05"\
 "++--tracing_outgoing_context=traceparent"\
-"++--tracing_incoming_context=traceparent"\
-"++--envoy_xff_num_trusted_hops=3"
+"++--tracing_incoming_context=traceparent"
 
   if [[ ${PROXY_PLATFORM} == "cloud-run" ]];
   then
     echo "Redeploying ESPv2 ${BACKEND_SERVICE_NAME} on Cloud Run(Fully managed)"
+      # - Hops: Allow our fake client IP restriction test (via API keys) to function.
+      #         If we were restricting by our actual client ip, then the default of 0 would work.
+      #         But we are actually testing with a fake xff header, so we need a higher hops count.
+      #         On GKE we default to 2. AppHosting infra adds one more IP to xff, so 3 for serverless.
+    proxy_args="${proxy_args}++--envoy_xff_num_trusted_hops=3"
   else
     echo "Deploying ESPv2 ${BACKEND_SERVICE_NAME} on Cloud Run(Anthos)"
+      # - Hops: Allow our fake client IP restriction test (via API keys) to function.
+      #         Anthos has 2 more proxies than Cloud Run(Fully managed).
+    proxy_args="${proxy_args}++--envoy_xff_num_trusted_hops=5"
   fi
 
   deployProxy "gcr.io/${PROJECT_ID}/endpoints-runtime-serverless:custom-${ENDPOINTS_SERVICE_NAME}-${endpoints_service_config_id}"  "${proxy_args}"
