@@ -1126,6 +1126,9 @@
                         "name": "backend",
                         "routes": [
                           {
+                            "decorator": {
+                              "operation": "ingress Cork"
+                            },
                             "match": {
                               "headers": [
                                 {
@@ -1142,6 +1145,9 @@
                             }
                           },
                           {
+                            "decorator": {
+                              "operation": "ingress Echo"
+                            },
                             "match": {
                               "headers": [
                                 {
@@ -1158,6 +1164,9 @@
                             }
                           },
                           {
+                            "decorator": {
+                              "operation": "ingress Echo"
+                            },
                             "match": {
                               "headers": [
                                 {
@@ -1174,6 +1183,9 @@
                             }
                           },
                           {
+                            "decorator": {
+                              "operation": "ingress EchoReport"
+                            },
                             "match": {
                               "headers": [
                                 {
@@ -1190,6 +1202,9 @@
                             }
                           },
                           {
+                            "decorator": {
+                              "operation": "ingress EchoReport"
+                            },
                             "match": {
                               "headers": [
                                 {
@@ -1206,6 +1221,9 @@
                             }
                           },
                           {
+                            "decorator": {
+                              "operation": "ingress EchoStream"
+                            },
                             "match": {
                               "headers": [
                                 {
@@ -1222,6 +1240,9 @@
                             }
                           },
                           {
+                            "decorator": {
+                              "operation": "ingress EchoStream"
+                            },
                             "match": {
                               "headers": [
                                 {

@@ -312,6 +312,9 @@
                         "name": "backend",
                         "routes": [
                           {
+                            "decorator": {
+                              "operation": "ingress CreateShelf"
+                            },
                             "match": {
                               "headers": [
                                 {
@@ -328,6 +331,9 @@
                             }
                           },
                           {
+                            "decorator": {
+                              "operation": "ingress ListShelves"
+                            },
                             "match": {
                               "headers": [
                                 {
