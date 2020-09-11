@@ -64,8 +64,8 @@ func TestServiceManagementWithTLS(t *testing.T) {
 		},
 		{
 			// Regression test for b/168120858
-			// By default, config manager will use the proxy cert for the backend.
-			// But it won't be used for sidestream connections.
+			// By default in our integration test framework, config manager will use the proxy cert for the backend.
+			// But it won't be used for sidestream connections in this test.
 			desc:         "Fail, proxy not configured to use the same root cert for sidestream connections",
 			certPath:     platform.GetFilePath(platform.ProxyCert),
 			keyPath:      platform.GetFilePath(platform.ProxyKey),

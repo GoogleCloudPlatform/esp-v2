@@ -117,20 +117,20 @@ class TestStartProxy(unittest.TestCase):
               '--ssl_server_cert_path', '/etc/nginx/ssl',
               '--listener_port', '9000',
               ]),
-            # ssl_client_cert_path specified
+            # ssl_backend_client_cert_path specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
-              '--ssl_client_cert_path=/etc/endpoint/ssl'],
+              '--ssl_backend_client_cert_path=/etc/endpoint/ssl'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
-              '--listener_port', '8080', '--ssl_client_cert_path',
+              '--listener_port', '8080', '--ssl_backend_client_cert_path',
               '/etc/endpoint/ssl', '--disable_tracing'
               ]),
-            # ssl_client_root_certs_file specified
+            # ssl_backend_client_root_certs_file specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
-              '--ssl_client_root_certs_file=/etc/endpoints/ssl/ca-certificates.crt' ],
+              '--ssl_backend_client_root_certs_file=/etc/endpoints/ssl/ca-certificates.crt' ],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
-              '--listener_port', '8080', '--root_certs_path',
+              '--listener_port', '8080', '--ssl_backend_client_root_certs_path',
               '/etc/endpoints/ssl/ca-certificates.crt', '--disable_tracing'
               ]), 
             # legacy enable_grpc_backend_ssl specified
@@ -138,7 +138,7 @@ class TestStartProxy(unittest.TestCase):
               '--enable_grpc_backend_ssl' ],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
-              '--listener_port', '8080', '--root_certs_path',
+              '--listener_port', '8080', '--ssl_backend_client_root_certs_path',
               '/etc/nginx/trusted-ca-certificates.crt', '--disable_tracing'
               ]),
             # legacy tls_mutual_auth specified
@@ -146,7 +146,7 @@ class TestStartProxy(unittest.TestCase):
               '--tls_mutual_auth'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
-              '--listener_port', '8080', '--ssl_client_cert_path',
+              '--listener_port', '8080', '--ssl_backend_client_cert_path',
               '/etc/nginx/ssl', '--disable_tracing'
               ]),
             # ssl_minimum_protocol and ssl_maximum_protocol specified
@@ -438,10 +438,10 @@ class TestStartProxy(unittest.TestCase):
             # SSL config.
             ['--ssl_server_cert_path=/etc/endpoint/ssl', '--ssl_port=9000'],
             ['--ssl_server_cert_path=/etc/endpoint/ssl', '--generate_self_signed_cert'],
-            ['--ssl_client_cert_path=/etc/endpoint/ssl', '--tls_mutual_auth'],
+            ['--ssl_backend_client_cert_path=/etc/endpoint/ssl', '--tls_mutual_auth'],
             ['--ssl_protocols=TLSv1.3',  '--ssl_minimum_protocol=TLSv1.1'],
             ['--ssl_minimum_protocol=TLSv11'],
-            ['--ssl_client_root_certs_file', '--enable_grpc_backend_ssl'],
+            ['--ssl_backend_client_root_certs_file', '--enable_grpc_backend_ssl'],
             ['--transcoding_ignore_query_parameters=foo,bar',
              '--transcoding_ignore_unknown_query_parameters'],
             ['--access_log_format'],
