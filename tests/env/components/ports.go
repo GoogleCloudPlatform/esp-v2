@@ -131,6 +131,7 @@ const (
 	TestSimpleCorsWithRegexPreset
 	TestStatistics
 	TestStatisticsServiceControlCallStatus
+	TestTracesDynamicRouting
 	TestTracesFetchingJwks
 	TestTracesServiceControlCheckWithRetry
 	TestTracesServiceControlSkipUsage

@@ -775,8 +775,8 @@
                         "name": "backend",
                         "routes": [
                           {
-                            "decorator":{
-                              "operation":"ingress"
+                            "decorator": {
+                              "operation": "ingress"
                             },
                             "match": {
                               "prefix": "/"
