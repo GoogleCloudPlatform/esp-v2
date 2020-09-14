@@ -15,7 +15,6 @@
 #include "src/envoy/http/service_control/http_call.h"
 #include "absl/strings/string_view.h"
 #include "common/http/headers.h"
-#include "common/http/message_impl.h"
 #include "common/tracing/http_tracer_impl.h"
 #include "envoy/http/async_client.h"
 #include "google/api/servicecontrol/v1/service_controller.pb.h"
@@ -32,12 +31,6 @@
 #include "test/mocks/tracing/mocks.h"
 #include "test/test_common/utility.h"
 
-namespace espv2 {
-namespace envoy {
-namespace http_filters {
-namespace service_control {
-namespace {
-
 using ::testing::_;
 using ::testing::AtLeast;
 using ::testing::ByMove;
@@ -45,12 +38,17 @@ using ::testing::Invoke;
 using ::testing::MockFunction;
 using ::testing::Return;
 
-using ::Envoy::Http::ResponseMessageImpl;
 using ::espv2::api::envoy::v8::http::common::HttpUri;
 using ::google::api::servicecontrol::v1::CheckRequest;
 using ::google::api::servicecontrol::v1::CheckResponse;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
+
+namespace espv2 {
+namespace envoy {
+namespace http_filters {
+namespace service_control {
+namespace {
 
 class HttpCallTest : public testing::Test {
  protected:
@@ -131,7 +129,8 @@ class HttpCallTest : public testing::Test {
     header_map->setStatus(status_code);
 
     // Message with no body
-    return std::make_unique<ResponseMessageImpl>(std::move(header_map));
+    return std::make_unique<Envoy::Http::ResponseMessageImpl>(
+        std::move(header_map));
   }
 
   // Callback for HttpCall. Expectations must be set by each test
