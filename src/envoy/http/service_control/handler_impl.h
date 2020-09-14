@@ -21,7 +21,6 @@
 #include "common/grpc/codec.h"
 #include "common/grpc/common.h"
 #include "envoy/buffer/buffer.h"
-#include "envoy/common/random_generator.h"
 #include "envoy/common/time.h"
 #include "envoy/http/header_map.h"
 #include "envoy/http/query_params.h"
@@ -132,7 +131,7 @@ class ServiceControlHandlerImpl
 
 class ServiceControlHandlerFactoryImpl : public ServiceControlHandlerFactory {
  public:
-  ServiceControlHandlerFactoryImpl(Envoy::Random::RandomGenerator& random,
+  ServiceControlHandlerFactoryImpl(Envoy::Runtime::RandomGenerator& random,
                                    const FilterConfigParser& cfg_parser,
                                    Envoy::TimeSource& time_source)
       : random_(random), cfg_parser_(cfg_parser), time_source_(time_source) {}
@@ -148,7 +147,7 @@ class ServiceControlHandlerFactoryImpl : public ServiceControlHandlerFactory {
 
  private:
   // Random object.
-  Envoy::Random::RandomGenerator& random_;
+  Envoy::Runtime::RandomGenerator& random_;
   // The filter config parser.
   const FilterConfigParser& cfg_parser_;
   // The timeSource
