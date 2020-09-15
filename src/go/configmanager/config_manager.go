@@ -311,7 +311,7 @@ func (m *ConfigManager) Errorf(format string, args ...interface{}) { glog.Errorf
 func (m *ConfigManager) Cache() cache.Cache { return m.cache }
 
 func httpsClient(opts options.ConfigGeneratorOptions) (*http.Client, error) {
-	caCert, err := ioutil.ReadFile(opts.RootCertsPath)
+	caCert, err := ioutil.ReadFile(opts.SslSidestreamClientRootCertsPath)
 	if err != nil {
 		return nil, err
 	}

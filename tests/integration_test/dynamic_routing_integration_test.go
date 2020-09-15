@@ -650,7 +650,7 @@ func TestDynamicBackendRoutingMutualTLS(t *testing.T) {
 	t.Parallel()
 
 	args := utils.CommonArgs()
-	args = append(args, "--ssl_client_cert_path=../env/testdata/")
+	args = append(args, "--ssl_backend_client_cert_path=../env/testdata/")
 
 	testData := []struct {
 		desc           string
@@ -770,6 +770,7 @@ func TestDynamicBackendRoutingMutualTLS(t *testing.T) {
 	}
 }
 
+// Tests both TLS and mTLS for gRPC backends.
 func TestDynamicGrpcBackendTLS(t *testing.T) {
 	t.Parallel()
 
@@ -837,7 +838,7 @@ func TestDynamicGrpcBackendTLS(t *testing.T) {
 			s.UseWrongBackendCertForDR(tc.useWrongBackendCert)
 			if tc.mtlsCertFile != "" {
 				s.SetBackendMTLSCert(tc.mtlsCertFile)
-				args = append(args, "--ssl_client_cert_path=../env/testdata/")
+				args = append(args, "--ssl_backend_client_cert_path=../env/testdata/")
 			}
 
 			if err := s.Setup(args); err != nil {

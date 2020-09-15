@@ -140,7 +140,7 @@ func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, error
 	}
 
 	if scheme == "https" {
-		transportSocket, err := util.CreateUpstreamTransportSocket(hostname, serviceInfo.Options.RootCertsPath, "", nil)
+		transportSocket, err := util.CreateUpstreamTransportSocket(hostname, serviceInfo.Options.SslSidestreamClientRootCertsPath, "", nil)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
 				c.Name, err)
@@ -185,7 +185,7 @@ func makeIamCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, error) {
 	}
 
 	if scheme == "https" {
-		transportSocket, err := util.CreateUpstreamTransportSocket(hostname, serviceInfo.Options.RootCertsPath, "", nil)
+		transportSocket, err := util.CreateUpstreamTransportSocket(hostname, serviceInfo.Options.SslSidestreamClientRootCertsPath, "", nil)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
 				c.Name, err)
@@ -230,7 +230,7 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*clusterpb.Cluster,
 			LoadAssignment:       util.CreateLoadAssignment(hostname, port),
 		}
 		if scheme == "https" {
-			transportSocket, err := util.CreateUpstreamTransportSocket(hostname, serviceInfo.Options.RootCertsPath, "", nil)
+			transportSocket, err := util.CreateUpstreamTransportSocket(hostname, serviceInfo.Options.SslSidestreamClientRootCertsPath, "", nil)
 			if err != nil {
 				return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
 					c.Name, err)
@@ -259,7 +259,7 @@ func makeBackendCluster(opt *options.ConfigGeneratorOptions, brc *sc.BackendRout
 		if isHttp2 {
 			alpnProtocols = []string{"h2"}
 		}
-		transportSocket, err := util.CreateUpstreamTransportSocket(brc.Hostname, opt.RootCertsPath, opt.SslClientCertPath, alpnProtocols)
+		transportSocket, err := util.CreateUpstreamTransportSocket(brc.Hostname, opt.SslBackendClientRootCertsPath, opt.SslBackendClientCertPath, alpnProtocols)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
 				brc.ClusterName, err)
@@ -324,7 +324,7 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster,
 	}
 
 	if scheme == "https" {
-		transportSocket, err := util.CreateUpstreamTransportSocket(hostname, serviceInfo.Options.RootCertsPath, "", nil)
+		transportSocket, err := util.CreateUpstreamTransportSocket(hostname, serviceInfo.Options.SslSidestreamClientRootCertsPath, "", nil)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
 				c.Name, err)

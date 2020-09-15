@@ -46,8 +46,7 @@ var (
 type TestEnv struct {
 	testId  uint16
 	backend platform.Backend
-	// used to enable mutual authentication for HTTPS backend
-	backendMTLSCertFile             string
+
 	mockMetadata                    bool
 	enableScNetworkFailOpen         bool
 	enableEchoServerRootPathHandler bool
@@ -83,7 +82,8 @@ type TestEnv struct {
 	skipHealthChecks                bool
 	StatsVerifier                   *components.StatsVerifier
 
-	// Only implemented for the RemoteEcho backend.
+	// Only implemented for a subset of backends.
+	backendMTLSCertFile         string
 	useWrongBackendCert         bool
 	disableHttp2ForHttpsBackend bool
 }
@@ -515,13 +515,17 @@ func (e *TestEnv) TearDown(t *testing.T) {
 	}
 
 	// Verify invariants in statistics.
-	if err := e.StatsVerifier.VerifyInvariants(); err != nil {
-		t.Errorf("Error verifying stats invariants: %v", err)
+	if e.StatsVerifier != nil {
+		if err := e.StatsVerifier.VerifyInvariants(); err != nil {
+			t.Errorf("Error verifying stats invariants: %v", err)
+		}
 	}
 
 	// Verify invariants in tracing.
-	if err := e.FakeStackdriverServer.VerifyInvariants(); err != nil {
-		t.Errorf("Error verifying tracing invariants: %v", err)
+	if e.FakeStackdriverServer != nil {
+		if err := e.FakeStackdriverServer.VerifyInvariants(); err != nil {
+			t.Errorf("Error verifying tracing invariants: %v", err)
+		}
 	}
 
 	// Tear down servers.
