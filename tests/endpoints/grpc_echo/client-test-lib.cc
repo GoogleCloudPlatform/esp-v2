@@ -24,10 +24,9 @@
 
 #include <grpc++/alarm.h>
 #include <grpc++/grpc++.h>
-#include "google/protobuf/io/zero_copy_stream_impl.h"
-#include "google/protobuf/text_format.h"
-#include "google/protobuf/util/type_resolver_util.h"
+
 #include "google/protobuf/util/message_differencer.h"
+#include "test/test_common/utility.h"
 #include "tests/endpoints/grpc_echo/client-test-lib.h"
 // #include "src/api_manager/utils/marshalling.h"
 

@@ -33,7 +33,7 @@ func NewConfigManagerServer(debugMode bool, ports *Ports, args []string) (*Confi
 	// Set config manager flags.
 	args = append(args, "--listener_address", platform.GetAnyAddress())
 	args = append(args, "--backend_dns_lookup_family", platform.GetDnsFamily())
-	args = append(args, "--root_certs_path", platform.GetFilePath(platform.ProxyCert))
+	args = append(args, "--ssl_backend_client_root_certs_path", platform.GetFilePath(platform.ProxyCert))
 
 	if debugMode {
 		args = append(args, "--logtostderr", "--v=1")

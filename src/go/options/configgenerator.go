@@ -45,18 +45,19 @@ type ConfigGeneratorOptions struct {
 	BackendAddress string
 
 	// Network related configurations.
-	ListenerAddress      string
-	Healthz              string
-	ServiceManagementURL string
-	ServiceControlURL    string
-	ListenerPort         int
-	SslServerCertPath    string
-	SslClientCertPath    string
-	SslMinimumProtocol   string
-	SslMaximumProtocol   string
-	EnableHSTS           bool
-	RootCertsPath        string
-	DnsResolverAddresses string
+	ListenerAddress                  string
+	Healthz                          string
+	ServiceManagementURL             string
+	ServiceControlURL                string
+	ListenerPort                     int
+	SslServerCertPath                string
+	SslMinimumProtocol               string
+	SslMaximumProtocol               string
+	EnableHSTS                       bool
+	SslSidestreamClientRootCertsPath string
+	SslBackendClientCertPath         string
+	SslBackendClientRootCertsPath    string
+	DnsResolverAddresses             string
 
 	// Flags for non_gcp deployment.
 	ServiceAccountKey string
@@ -107,22 +108,23 @@ type ConfigGeneratorOptions struct {
 func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 
 	return ConfigGeneratorOptions{
-		CommonOptions:                 DefaultCommonOptions(),
-		BackendDnsLookupFamily:        "auto",
-		BackendAddress:                fmt.Sprintf("http://%s:8082", util.LoopbackIPv4Addr),
-		ClusterConnectTimeout:         20 * time.Second,
-		EnvoyXffNumTrustedHops:        2,
-		JwksCacheDurationInS:          300,
-		ListenerAddress:               "0.0.0.0",
-		ListenerPort:                  8080,
-		TokenAgentPort:                8791,
-		RootCertsPath:                 util.DefaultRootCAPaths,
-		SuppressEnvoyHeaders:          true,
-		ServiceControlNetworkFailOpen: true,
-		ServiceManagementURL:          "https://servicemanagement.googleapis.com",
-		ServiceControlURL:             "https://servicecontrol.googleapis.com",
-		ScCheckRetries:                -1,
-		ScQuotaRetries:                -1,
-		ScReportRetries:               -1,
+		CommonOptions:                    DefaultCommonOptions(),
+		BackendDnsLookupFamily:           "auto",
+		BackendAddress:                   fmt.Sprintf("http://%s:8082", util.LoopbackIPv4Addr),
+		ClusterConnectTimeout:            20 * time.Second,
+		EnvoyXffNumTrustedHops:           2,
+		JwksCacheDurationInS:             300,
+		ListenerAddress:                  "0.0.0.0",
+		ListenerPort:                     8080,
+		TokenAgentPort:                   8791,
+		SslSidestreamClientRootCertsPath: util.DefaultRootCAPaths,
+		SslBackendClientRootCertsPath:    util.DefaultRootCAPaths,
+		SuppressEnvoyHeaders:             true,
+		ServiceControlNetworkFailOpen:    true,
+		ServiceManagementURL:             "https://servicemanagement.googleapis.com",
+		ServiceControlURL:                "https://servicecontrol.googleapis.com",
+		ScCheckRetries:                   -1,
+		ScQuotaRetries:                   -1,
+		ScReportRetries:                  -1,
 	}
 }

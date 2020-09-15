@@ -20,12 +20,12 @@ ARG IMAGE_ARG
 ENV IMAGE=${IMAGE_ARG}
 
 
-RUN apt-get update -y
-RUN apt-get -y install \
+RUN apt-get update && \
+    apt-get -y install \
     wget make cmake python python-pip pkg-config coreutils \
     zlib1g-dev curl libtool automake zip time rsync ninja-build \
     git bash-completion clang-format-7 jq default-jdk \
-    python3-distutils libicu-dev
+    python3-distutils
 
 # clang is used for formatting
 RUN sh -c 'curl https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -'

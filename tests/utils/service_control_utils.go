@@ -191,9 +191,6 @@ var (
 	}
 	randomLogEntries = []string{
 		"timestamp",
-		"request_latency_in_ms",
-		"request_size_in_bytes",
-		"response_size_in_bytes",
 	}
 	fakeDistVal  = 1000
 	fakeInt64Val = 200
@@ -296,10 +293,24 @@ func makeNumberValue(v int64) *structpb.Value {
 }
 
 func createLogEntry(er *ExpectedReport) *scpb.LogEntry {
-	pl := make(map[string]*structpb.Value)
+	httpRequest := &scpb.HttpRequest{}
+	httpRequest.Status = int32(er.ResponseCode)
+	httpRequest.RemoteIp = "127.0.0.1"
+	if er.URL != "" {
+		httpRequest.RequestUrl = er.URL
+	}
+	if er.Referer != "" {
+		httpRequest.Referer = er.Referer
+	}
+	if er.HttpMethod != "" {
+		httpRequest.RequestMethod = er.HttpMethod
+	}
+	if er.FrontendProtocol != "" {
+		httpRequest.Protocol = er.FrontendProtocol
+	}
 
+	pl := make(map[string]*structpb.Value)
 	pl["api_method"] = makeStringValue(er.ApiMethod)
-	pl["http_response_code"] = makeNumberValue(int64(er.ResponseCode))
 	pl["api_key_state"] = makeStringValue(er.ApiKeyState)
 
 	if er.ApiVersion != "" {
@@ -319,20 +330,11 @@ func createLogEntry(er *ExpectedReport) *scpb.LogEntry {
 	if er.ApiName != "" {
 		pl["api_name"] = makeStringValue(er.ApiName)
 	}
-	if er.Referer != "" {
-		pl["referer"] = makeStringValue(er.Referer)
-	}
 	if er.Location != "" {
 		pl["location"] = makeStringValue(er.Location)
 	}
 	if er.LogMessage != "" {
 		pl["log_message"] = makeStringValue(er.LogMessage)
-	}
-	if er.URL != "" {
-		pl["url"] = makeStringValue(er.URL)
-	}
-	if er.HttpMethod != "" {
-		pl["http_method"] = makeStringValue(er.HttpMethod)
 	}
 	if er.ErrorCause != "" {
 		pl["error_cause"] = makeStringValue(er.ErrorCause)
@@ -353,7 +355,6 @@ func createLogEntry(er *ExpectedReport) *scpb.LogEntry {
 		pl["error_cause"] = makeStringValue(er.ErrorCause)
 	}
 	pl["service_config_id"] = makeStringValue("test-config-id")
-	pl["client_ip"] = makeStringValue("127.0.0.1")
 
 	severity := ltypepb.LogSeverity_INFO
 	if er.ResponseCode >= 400 {
@@ -364,10 +365,11 @@ func createLogEntry(er *ExpectedReport) *scpb.LogEntry {
 		Name:     "endpoints_log",
 		Severity: severity,
 		Payload: &scpb.LogEntry_StructPayload{
-			&structpb.Struct{
+			StructPayload: &structpb.Struct{
 				Fields: pl,
 			},
 		},
+		HttpRequest: httpRequest,
 	}
 }
 
@@ -575,6 +577,9 @@ func stripRandomFields(op *scpb.Operation, n int64) error {
 		for _, s := range randomLogEntries {
 			delete(l.GetStructPayload().Fields, s)
 		}
+		l.HttpRequest.Latency = nil
+		l.HttpRequest.RequestSize = 0
+		l.HttpRequest.ResponseSize = 0
 	}
 
 	return nil

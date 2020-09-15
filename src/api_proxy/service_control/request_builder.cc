@@ -22,6 +22,7 @@
 #include "common/common/base64.h"
 #include "google/api/metric.pb.h"
 #include "google/protobuf/timestamp.pb.h"
+#include "google/protobuf/util/time_util.h"
 #include "src/api_proxy/service_control/request_info.h"
 #include "src/api_proxy/utils/version.h"
 #include "utils/distribution_helper.h"
@@ -750,24 +751,16 @@ constexpr char kLogFieldNameApiKey[] = "api_key";
 constexpr char kLogFieldNameApiMethod[] = "api_method";
 constexpr char kLogFieldNameApiName[] = "api_name";
 constexpr char kLogFieldNameApiVersion[] = "api_version";
-constexpr char kLogFieldNameClientIp[] = "client_ip";
-constexpr char kLogFieldNameHttpMethod[] = "http_method";
 constexpr char kLogFieldNameErrorCause[] = "error_cause";
-constexpr char kLogFieldNameHttpResponseCode[] = "http_response_code";
 constexpr char kLogFieldNameJwtPayloads[] = "jwt_payloads";
 constexpr char kLogFieldNameLocation[] = "location";
 constexpr char kLogFieldNameLogMessage[] = "log_message";
 constexpr char kLogFieldNameProducerProjectId[] = "producer_project_id";
-constexpr char kLogFieldNameReferer[] = "referer";
 constexpr char kLogFieldNameRequestHeaders[] = "request_headers";
-constexpr char kLogFieldNameRequestLatency[] = "request_latency_in_ms";
-constexpr char kLogFieldNameRequestSize[] = "request_size_in_bytes";
 constexpr char kLogFieldNameResponseHeaders[] = "response_headers";
-constexpr char kLogFieldNameResponseSize[] = "response_size_in_bytes";
 constexpr char kLogFieldNameServiceAgent[] = "service_agent";
 constexpr char kLogFieldNameConfigId[] = "service_config_id";
 constexpr char kLogFieldNameTimestamp[] = "timestamp";
-constexpr char kLogFieldNameUrl[] = "url";
 constexpr char kLogFieldNameApiKeyState[] = "api_key_state";
 
 // Convert time point to proto Timestamp
@@ -814,6 +807,38 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
                                               : google::logging::type::INFO;
   log_entry->set_severity(severity);
 
+  // Fill in http request.
+  auto* http_request = log_entry->mutable_http_request();
+  http_request->set_status(info.response_code);
+  http_request->set_protocol(protocol::ToString(info.frontend_protocol));
+  if (!info.method.empty()) {
+    http_request->set_request_method(info.method);
+  }
+  if (!info.url.empty()) {
+    http_request->set_request_url(info.url);
+  }
+  if (info.request_size >= 0) {
+    http_request->set_request_size(info.request_size);
+  }
+  if (info.response_size >= 0) {
+    http_request->set_response_size(info.response_size);
+  }
+  if (!info.client_ip.empty()) {
+    http_request->set_remote_ip(info.client_ip);
+  }
+  if (!info.referer.empty()) {
+    http_request->set_referer(info.referer);
+  }
+  if (info.latency.request_time_ms >= 0) {
+    const google::protobuf::Duration duration =
+        google::protobuf::util::TimeUtil::MillisecondsToDuration(
+            info.latency.request_time_ms);
+    http_request->mutable_latency()->CopyFrom(duration);
+  }
+
+  // Fill in JSON struct.
+  // TODO(nareddyt): For backwards compatibility, some of the information from
+  // the `http_request` fields is duplicated. Decide if we should remove.
   auto* fields = log_entry->mutable_struct_payload()->mutable_fields();
   (*fields)[kLogFieldNameTimestamp].set_number_value(
       static_cast<double>(current_time.seconds()) +
@@ -832,17 +857,11 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
   if (!info.api_key.empty()) {
     (*fields)[kLogFieldNameApiKey].set_string_value(info.api_key);
   }
-  if (!info.referer.empty()) {
-    (*fields)[kLogFieldNameReferer].set_string_value(info.referer);
-  }
   if (!info.api_name.empty()) {
     (*fields)[kLogFieldNameApiName].set_string_value(info.api_name);
   }
   if (!info.api_version.empty()) {
     (*fields)[kLogFieldNameApiVersion].set_string_value(info.api_version);
-  }
-  if (!info.url.empty()) {
-    (*fields)[kLogFieldNameUrl].set_string_value(info.url);
   }
   if (!info.api_method.empty()) {
     (*fields)[kLogFieldNameApiMethod].set_string_value(info.api_method);
@@ -853,31 +872,13 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
   if (!info.log_message.empty()) {
     (*fields)[kLogFieldNameLogMessage].set_string_value(info.log_message);
   }
-
-  (*fields)[kLogFieldNameHttpResponseCode].set_number_value(info.response_code);
-  if (info.request_size >= 0) {
-    (*fields)[kLogFieldNameRequestSize].set_number_value(info.request_size);
-  }
   if (!info.request_headers.empty()) {
     (*fields)[kLogFieldNameRequestHeaders].set_string_value(
         info.request_headers);
   }
-  if (info.response_size >= 0) {
-    (*fields)[kLogFieldNameResponseSize].set_number_value(info.response_size);
-  }
   if (!info.response_headers.empty()) {
     (*fields)[kLogFieldNameResponseHeaders].set_string_value(
         info.response_headers);
-  }
-  if (info.latency.request_time_ms >= 0) {
-    (*fields)[kLogFieldNameRequestLatency].set_number_value(
-        info.latency.request_time_ms);
-  }
-  if (!info.method.empty()) {
-    (*fields)[kLogFieldNameHttpMethod].set_string_value(info.method);
-  }
-  if (!info.client_ip.empty()) {
-    (*fields)[kLogFieldNameClientIp].set_string_value(info.client_ip);
   }
   if (!info.jwt_payloads.empty()) {
     (*fields)[kLogFieldNameJwtPayloads].set_string_value(info.jwt_payloads);

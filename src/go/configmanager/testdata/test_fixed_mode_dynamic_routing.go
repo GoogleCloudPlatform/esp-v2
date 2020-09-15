@@ -376,6 +376,9 @@ var (
                            "name":"backend",
                            "routes":[
                               {
+                                "decorator":{
+                                  "operation":"ingress dynamic_routing_AddPet"
+                                 },
                                  "match":{
                                     "headers":[
                                        {
@@ -392,6 +395,9 @@ var (
                                  }
                               },
                               {
+                                "decorator":{
+                                  "operation":"ingress dynamic_routing_GetPetById"
+                                 },
                                  "match":{
                                     "headers":[
                                        {
@@ -412,6 +418,9 @@ var (
                                  }
                               },
                               {
+                                "decorator":{
+                                  "operation":"ingress dynamic_routing_Hello"
+                                 },
                                  "match":{
                                     "headers":[
                                        {
@@ -428,6 +437,9 @@ var (
                                  }
                               },
                               {
+                                "decorator":{
+                                  "operation":"ingress dynamic_routing_ListPets"
+                                 },
                                  "match":{
                                     "headers":[
                                        {
@@ -444,6 +456,9 @@ var (
                                  }
                               },
                               {
+                                "decorator":{
+                                  "operation":"ingress dynamic_routing_Search"
+                                 },
                                  "match":{
                                     "headers":[
                                        {

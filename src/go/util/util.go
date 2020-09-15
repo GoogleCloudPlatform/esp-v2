@@ -158,6 +158,9 @@ const (
 
 	// For operations not tied to a specific API.
 	EspOperation = "espv2_deployment"
+
+	// All traces created by ESPv2 should have this prefix.
+	SpanNamePrefix = "ingress"
 )
 
 type BackendProtocol int32

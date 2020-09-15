@@ -18,7 +18,8 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/tools v0.0.0-20191216052735-49a3e744a425
 	google.golang.org/api v0.7.0
-	google.golang.org/genproto v0.0.0-20200617032506-f1bdc9086088
+	google.golang.org/genproto v0.0.0-20200904004341-0bd0a958aa1d
 	google.golang.org/grpc v1.27.0
 	google.golang.org/protobuf v1.24.0
+	honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc // indirect
 )

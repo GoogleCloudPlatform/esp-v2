@@ -38,7 +38,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
     """
 
     def __init__(self):
-        ApiProxyClientTest.__init__(self, FLAGS.host, '',
+        ApiProxyClientTest.__init__(self, FLAGS.host, FLAGS.host_header,
                                FLAGS.allow_unverified_cert,
                                FLAGS.verbose)
 
@@ -96,6 +96,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--verbose', type=bool, help='Turn on/off verbosity.')
     parser.add_argument('--host', help='Deployed application host name.')
+    parser.add_argument('--host_header', help='Deployed application host name.')
     parser.add_argument('--allow_unverified_cert', type=bool,
             default=False, help='used for testing self-signed ssl cert.')
     parser.add_argument('--key_restriction_tests',

@@ -288,12 +288,6 @@ operations {
         }
       }
       fields {
-        key: "http_response_code"
-        value {
-          number_value: 401
-        }
-      }
-      fields {
         key: "location"
         value {
           string_value: "us-central"
@@ -309,30 +303,6 @@ operations {
         key: "producer_project_id"
         value {
           string_value: "project_id"
-        }
-      }
-      fields {
-        key: "referer"
-        value {
-          string_value: "referer"
-        }
-      }
-      fields {
-        key: "request_latency_in_ms"
-        value {
-          number_value: 123
-        }
-      }
-      fields {
-        key: "request_size_in_bytes"
-        value {
-          number_value: 100
-        }
-      }
-      fields {
-        key: "response_size_in_bytes"
-        value {
-          number_value: 1048576
         }
       }
       fields {
@@ -360,6 +330,16 @@ operations {
       nanos: 100000
     }
     severity: ERROR
+    http_request {
+      request_size: 100
+      status: 401
+      response_size: 1048576
+      referer: "referer"
+      latency {
+        nanos: 123000000
+      }
+      protocol: "http"
+    }
   }
 }
 service_config_id: "2016-09-19r0"

@@ -150,12 +150,12 @@ environment variable or by passing "-k" flag to this script.
         HTTP/2 secure connections on listener_port. Requires the certificate and
         key files "server.crt" and "server.key" within this path.''')
 
-    parser.add_argument('--ssl_client_cert_path', default=None, help='''
+    parser.add_argument('--ssl_backend_client_cert_path', default=None, help='''
         Proxy's client cert path. When configured, ESPv2 enables TLS mutual
         authentication for HTTPS backends. Requires the certificate and
         key files "client.crt" and "client.key" within this path.''')
 
-    parser.add_argument('--ssl_client_root_certs_file', default=None, help='''
+    parser.add_argument('--ssl_backend_client_root_certs_file', default=None, help='''
         The file path of root certificates that ESPv2 uses to verify backend server certificate.
         If not specified, ESPv2 uses '/etc/ssl/certs/ca-certificates.crt' by default.''')
 
@@ -600,7 +600,7 @@ environment variable or by passing "-k" flag to this script.
 
     parser.add_argument('-t', '--tls_mutual_auth', action='store_true', help='''
         This flag added for backward compatible for ESPv1 and will be deprecated.
-        Please use the flag --ssl_client_cert_path instead.
+        Please use the flag --ssl_backend_client_cert_path instead.
         Enable TLS mutual authentication for HTTPS backends.
         Default value: Not enabled. Please provide the certificate and key files
         /etc/nginx/ssl/backend.crt and /etc/nginx/ssl/backend.key.''')
@@ -627,6 +627,14 @@ environment variable or by passing "-k" flag to this script.
         help='''This flag added for backward compatible for ESPv1 and will be deprecated.
         ESPv2 uses `/etc/ssl/certs/ca-certificates.crt` by default.
         The file path for gRPC backend SSL root certificates.''')
+
+    parser.add_argument('--ssl_client_cert_path', default=None, help='''
+        This flag is renamed and deprecated for clarity. 
+        Use `--ssl_backend_client_cert_path` instead.''')
+
+    parser.add_argument('--ssl_client_root_certs_file', default=None, help='''
+        This flag is renamed and deprecated for clarity. 
+        Use `--ssl_backend_client_root_certs_file` instead.''')
 
     # End Deprecated Flags Section
 
@@ -672,10 +680,10 @@ def enforce_conflict_args(args):
 
     if args.ssl_port and args.ssl_server_cert_path:
         return "Flag --ssl_port is going to be deprecated, please use --ssl_server_cert_path only."
-    if args.tls_mutual_auth and args.ssl_client_cert_path:
-        return "Flag --tls_mutual_auth is going to be deprecated, please use --ssl_client_cert_path only."
-    if args.ssl_client_root_certs_file and args.enable_grpc_backend_ssl:
-        return "Flag --enable_grpc_backend_ssl are going to be deprecated, please use --ssl_client_root_certs_file only."
+    if args.tls_mutual_auth and (args.ssl_backend_client_cert_path or args.ssl_client_cert_path):
+        return "Flag --tls_mutual_auth is going to be deprecated, please use --ssl_backend_client_cert_path only."
+    if (args.ssl_backend_client_root_certs_file or args.ssl_client_root_certs_file) and args.enable_grpc_backend_ssl:
+        return "Flag --enable_grpc_backend_ssl are going to be deprecated, please use --ssl_backend_client_root_certs_file only."
     if args.generate_self_signed_cert and args.ssl_server_cert_path:
          return "Flag --generate_self_signed_cert and --ssl_server_cert_path cannot be used simutaneously."
 
@@ -712,6 +720,14 @@ def enforce_conflict_args(args):
     if args.dns_resolver_addresses and args.dns:
         return "Flag --dns_resolver_addresses cannot be used together with" \
                " together with --dns."
+
+    if args.ssl_backend_client_cert_path and args.ssl_client_cert_path:
+        return "Flag --ssl_client_cert_path is renamed to " \
+               "--ssl_backend_client_cert_path, only use the latter flag."
+
+    if args.ssl_backend_client_root_certs_file and args.ssl_client_root_certs_file:
+        return "Flag --ssl_client_root_certs_file is renamed to " \
+               "--ssl_backend_client_root_certs_file, only use the latter flag."
 
     return None
 
@@ -773,14 +789,22 @@ def gen_proxy_config(args):
     if args.ssl_port:
         proxy_conf.extend(["--ssl_server_cert_path", "/etc/nginx/ssl"])
         proxy_conf.extend(["--listener_port", str(args.ssl_port)])
+
+    if args.ssl_backend_client_cert_path:
+        proxy_conf.extend(["--ssl_backend_client_cert_path", str(args.ssl_backend_client_cert_path)])
     if args.ssl_client_cert_path:
-        proxy_conf.extend(["--ssl_client_cert_path", str(args.ssl_client_cert_path)])
+        proxy_conf.extend(["--ssl_backend_client_cert_path", str(args.ssl_client_cert_path)])
+
     if args.enable_grpc_backend_ssl and args.grpc_backend_ssl_root_certs_file:
-        proxy_conf.extend(["--root_certs_path", str(args.grpc_backend_ssl_root_certs_file)])
+        proxy_conf.extend(["--ssl_backend_client_root_certs_path", str(args.grpc_backend_ssl_root_certs_file)])
+
+    if args.ssl_backend_client_root_certs_file:
+        proxy_conf.extend(["--ssl_backend_client_root_certs_path", str(args.ssl_backend_client_root_certs_file)])
     if args.ssl_client_root_certs_file:
-        proxy_conf.extend(["--root_certs_path", str(args.ssl_client_root_certs_file)])
+        proxy_conf.extend(["--ssl_backend_client_root_certs_path", str(args.ssl_client_root_certs_file)])
+
     if args.tls_mutual_auth:
-        proxy_conf.extend(["--ssl_client_cert_path", "/etc/nginx/ssl"])
+        proxy_conf.extend(["--ssl_backend_client_cert_path", "/etc/nginx/ssl"])
 
     if args.ssl_minimum_protocol:
         proxy_conf.extend(["--ssl_minimum_protocol", args.ssl_minimum_protocol])

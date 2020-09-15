@@ -53,34 +53,37 @@ func TestMakeRouteConfig(t *testing.T) {
 			},
 			wantRouteConfig: `
 {
-   "name":"local_route",
-   "virtualHosts":[
-      {
-         "domains":[
-            "*"
-         ],
-         "name":"backend",
-         "routes":[
+  "name":"local_route",
+  "virtualHosts":[
+    {
+      "domains":[
+        "*"
+      ],
+      "name":"backend",
+      "routes":[
+        {
+          "decorator":{
+            "operation":"ingress"
+          },
+          "match":{
+            "prefix":"/"
+          },
+          "responseHeadersToAdd":[
             {
-               "match":{
-                  "prefix":"/"
-               },
-               "responseHeadersToAdd":[
-                  {
-                     "header":{
-                        "key":"Strict-Transport-Security",
-                        "value":"max-age=31536000; includeSubdomains"
-                     }
-                  }
-               ],
-               "route":{
-                  "cluster":"bookstore.endpoints.project123.cloud.goog_local",
-                  "timeout":"15s"
-               }
+              "header":{
+                "key":"Strict-Transport-Security",
+                "value":"max-age=31536000; includeSubdomains"
+              }
             }
-         ]
-      }
-   ]
+          ],
+          "route":{
+            "cluster":"bookstore.endpoints.project123.cloud.goog_local",
+            "timeout":"15s"
+          }
+        }
+      ]
+    }
+  ]
 }`,
 		},
 		{
@@ -127,6 +130,9 @@ func TestMakeRouteConfig(t *testing.T) {
       "name": "backend",
       "routes": [
         {
+          "decorator":{
+            "operation":"ingress Foo"
+          },
           "match": {
             "headers": [
               {
@@ -198,7 +204,10 @@ func TestMakeRouteConfig(t *testing.T) {
          "name":"backend",
          "routes":[
             {
-               "match":{
+               "decorator":{
+            "operation":"ingress Foo"
+          },
+          "match":{
                   "headers":[
                      {
                         "exactMatch":"GET",

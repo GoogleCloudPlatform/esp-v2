@@ -20,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
@@ -368,5 +369,57 @@ func TestTracingSampleRate(t *testing.T) {
 				t.Errorf("Test (%s) failed: got num spans %v, want num spans range [%v, %v]", tc.desc, numGotSpans, tc.numWantSpansMin, tc.numWantSpansMax)
 			}
 		}()
+	}
+}
+
+func TestTracesDynamicRouting(t *testing.T) {
+	t.Parallel()
+
+	configId := "test-config-id"
+	args := []string{
+		"--service_config_id=" + configId,
+		"--rollout_strategy=fixed",
+		"--suppress_envoy_headers",
+	}
+
+	s := env.NewTestEnv(comp.TestTracesDynamicRouting, platform.EchoRemote)
+	s.SetupFakeTraceServer(1)
+	defer s.TearDown(t)
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	testData := []struct {
+		desc          string
+		url           string
+		method        string
+		requestHeader map[string]string
+		message       string
+		wantSpanNames []string
+	}{
+		{
+			desc:   "method name is present in span for remote backend routes",
+			url:    fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/pet/1/num/2", ""),
+			method: util.GET,
+			wantSpanNames: []string{
+				"router localhost:21837 egress",
+				"ingress dynamic_routing_GetPetById",
+			},
+		},
+		{
+			desc:   "unknown operation has no method name",
+			url:    fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/random/path", ""),
+			method: util.GET,
+			wantSpanNames: []string{
+				"ingress",
+			},
+		},
+	}
+	for _, tc := range testData {
+		_, _ = client.DoWithHeaders(tc.url, tc.method, tc.message, tc.requestHeader)
+
+		if err := checkSpanNames(s, tc.wantSpanNames); err != nil {
+			t.Errorf("Test (%s) failed: %v", tc.desc, err)
+		}
 	}
 }
