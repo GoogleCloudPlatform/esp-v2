@@ -37,7 +37,7 @@
             }
           ]
         },
-        "name": "examples-path-matcher.endpoints.cloudesf-testing.cloud.goog_local",
+        "name": "backend-cluster-examples-path-matcher.endpoints.cloudesf-testing.cloud.goog_local",
         "type": "LOGICAL_DNS"
       },
       {
@@ -124,7 +124,7 @@
             }
           ]
         },
-        "name": "http-bookstore-edf123456-uc.a.run.app:443",
+        "name": "backend-cluster-http-bookstore-edf123456-uc.a.run.app:443",
         "transportSocket": {
           "name": "envoy.transport_sockets.tls",
           "typedConfig": {
@@ -312,7 +312,7 @@
                               }
                             },
                             "route": {
-                              "cluster": "http-bookstore-edf123456-uc.a.run.app:443",
+                              "cluster": "backend-cluster-http-bookstore-edf123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-edf123456-uc.a.run.app",
                               "timeout": "15s"
                             }
@@ -334,7 +334,7 @@
                               }
                             },
                             "route": {
-                              "cluster": "http-bookstore-edf123456-uc.a.run.app:443",
+                              "cluster": "backend-cluster-http-bookstore-edf123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-edf123456-uc.a.run.app",
                               "timeout": "15s"
                             }

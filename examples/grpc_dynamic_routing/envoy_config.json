@@ -38,7 +38,7 @@
             }
           ]
         },
-        "name": "examples-grpc-dynamic-routing-wd6ufmzfya-uc.a.run.app_local",
+        "name": "backend-cluster-examples-grpc-dynamic-routing-wd6ufmzfya-uc.a.run.app_local",
         "type": "LOGICAL_DNS"
       },
       {
@@ -126,7 +126,7 @@
             }
           ]
         },
-        "name": "grpc-echo-oxouww7xzq-uc.a.run.app:443",
+        "name": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
         "transportSocket": {
           "name": "envoy.transport_sockets.tls",
           "typedConfig": {
@@ -1139,7 +1139,7 @@
                               "path": "/test.grpc.Test/Cork"
                             },
                             "route": {
-                              "cluster": "grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "timeout": "0s"
                             }
@@ -1158,7 +1158,7 @@
                               "path": "/echo"
                             },
                             "route": {
-                              "cluster": "grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "timeout": "300s"
                             }
@@ -1177,7 +1177,7 @@
                               "path": "/test.grpc.Test/Echo"
                             },
                             "route": {
-                              "cluster": "grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "timeout": "300s"
                             }
@@ -1196,7 +1196,7 @@
                               "path": "/echoreport"
                             },
                             "route": {
-                              "cluster": "grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "timeout": "300s"
                             }
@@ -1215,7 +1215,7 @@
                               "path": "/test.grpc.Test/EchoReport"
                             },
                             "route": {
-                              "cluster": "grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "timeout": "300s"
                             }
@@ -1234,7 +1234,7 @@
                               "path": "/echostream"
                             },
                             "route": {
-                              "cluster": "grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "timeout": "0s"
                             }
@@ -1253,7 +1253,7 @@
                               "path": "/test.grpc.Test/EchoStream"
                             },
                             "route": {
-                              "cluster": "grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "timeout": "0s"
                             }

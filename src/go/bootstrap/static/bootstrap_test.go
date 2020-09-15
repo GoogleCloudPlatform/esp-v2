@@ -34,7 +34,7 @@ var (
 	FakeConfigID = "2019-12-16r0"
 )
 
-func zTestServiceToBootstrapConfig(t *testing.T) {
+func TestServiceToBootstrapConfig(t *testing.T) {
 	testData := []struct {
 		desc              string
 		opt_mod           func(opt *options.ConfigGeneratorOptions)
