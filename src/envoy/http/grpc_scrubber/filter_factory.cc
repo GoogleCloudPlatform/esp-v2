@@ -49,7 +49,7 @@ class FilterFactory
   }
 };
 /**
- * Static registration for the rate limit filter. @see RegisterFactory.
+ * Static registration for the filter. @see RegisterFactory.
  */
 static Envoy::Registry::RegisterFactory<
     FilterFactory, Envoy::Server::Configuration::NamedHttpFilterConfigFactory>
