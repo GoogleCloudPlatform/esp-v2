@@ -142,32 +142,6 @@
                               "uriTemplate": "/shelves"
                             }
                           }
-                        ],
-                        "segmentNames": [
-                          {
-                            "jsonName": "nullValue",
-                            "snakeName": "null_value"
-                          },
-                          {
-                            "jsonName": "numberValue",
-                            "snakeName": "number_value"
-                          },
-                          {
-                            "jsonName": "stringValue",
-                            "snakeName": "string_value"
-                          },
-                          {
-                            "jsonName": "boolValue",
-                            "snakeName": "bool_value"
-                          },
-                          {
-                            "jsonName": "structValue",
-                            "snakeName": "struct_value"
-                          },
-                          {
-                            "jsonName": "listValue",
-                            "snakeName": "list_value"
-                          }
                         ]
                       }
                     },

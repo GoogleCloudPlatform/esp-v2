@@ -105,7 +105,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 		}
 		unmarshaler := &jsonpb.Unmarshaler{
 			AnyResolver:        util.Resolver,
-			AllowUnknownFields: true,
+			AllowUnknownFields: false,
 		}
 
 		var s confpb.Service
