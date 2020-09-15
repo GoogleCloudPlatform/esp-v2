@@ -64,22 +64,18 @@ def red(text):
 
 def http_connection(host, allow_unverified_cert):
     if host.startswith(HTTPS_PREFIX):
-        print('Create HTTPS connection')
         host = host[len(HTTPS_PREFIX):]
 
         ssl_ctx = ssl.create_default_context()
         if allow_unverified_cert:
-            print('Certs NOT verified for this connection')
             ssl_ctx.check_hostname = False
             ssl_ctx.verify_mode = ssl.CERT_NONE
         else:
-            print('Certs will be verified for this connection')
             ssl_ctx.check_hostname = True
             ssl_ctx.verify_mode = ssl.CERT_REQUIRED
         return httplib.HTTPSConnection(host, timeout=10, context=ssl_ctx)
 
     else:
-        print('Create HTTP connection')
         if host.startswith(HTTP_PREFIX):
             host = host[len(HTTP_PREFIX):]
         else:
@@ -124,9 +120,10 @@ class ApiProxyClientTest(object):
     def __init__(self, host, host_header, allow_unverified_cert, verbose=False):
         self._failed_tests = 0
         self._passed_tests = 0
-        self._verbose = verbose
-        self.conn = http_connection(host, allow_unverified_cert)
+        self.host = host
         self.host_header = host_header
+        self.allow_unverified_cert = allow_unverified_cert
+        self._verbose = verbose
 
     def fail(self, msg):
         print '%s: %s' % (red('FAILED'), msg if msg else '')
@@ -177,8 +174,10 @@ class ApiProxyClientTest(object):
             print 'HTTP: %s %s' % (method, url)
             print 'headers: %s' % str(headers)
             print 'body: %s' % body
-        self.conn.request(method, url, body, headers)
-        response = Response(self.conn.getresponse())
+
+        conn = http_connection(self.host, self.allow_unverified_cert)
+        conn.request(method, url, body, headers)
+        response = Response(conn.getresponse())
         print response.status_code
 
         if self._verbose:
