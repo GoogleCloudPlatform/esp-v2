@@ -628,6 +628,14 @@ environment variable or by passing "-k" flag to this script.
         ESPv2 uses `/etc/ssl/certs/ca-certificates.crt` by default.
         The file path for gRPC backend SSL root certificates.''')
 
+    parser.add_argument('--ssl_client_cert_path', default=None, help='''
+        This flag is renamed and deprecated for clarity. 
+        Use `--ssl_backend_client_cert_path` instead.''')
+
+    parser.add_argument('--ssl_client_root_certs_file', default=None, help='''
+        This flag is renamed and deprecated for clarity. 
+        Use `--ssl_backend_client_root_certs_file` instead.''')
+
     # End Deprecated Flags Section
 
     # Start internal flags section
@@ -713,6 +721,14 @@ def enforce_conflict_args(args):
         return "Flag --dns_resolver_addresses cannot be used together with" \
                " together with --dns."
 
+    if args.ssl_backend_client_cert_path and args.ssl_client_cert_path:
+        return "Flag --ssl_client_cert_path is renamed to " \
+               "--ssl_backend_client_cert_path, only use the latter flag."
+
+    if args.ssl_backend_client_root_certs_file and args.ssl_client_root_certs_file:
+        return "Flag --ssl_client_root_certs_file is renamed to " \
+               "--ssl_backend_client_root_certs_file, only use the latter flag."
+
     return None
 
 def gen_proxy_config(args):
@@ -773,12 +789,20 @@ def gen_proxy_config(args):
     if args.ssl_port:
         proxy_conf.extend(["--ssl_server_cert_path", "/etc/nginx/ssl"])
         proxy_conf.extend(["--listener_port", str(args.ssl_port)])
+
     if args.ssl_backend_client_cert_path:
         proxy_conf.extend(["--ssl_backend_client_cert_path", str(args.ssl_backend_client_cert_path)])
+    if args.ssl_client_cert_path:
+        proxy_conf.extend(["--ssl_backend_client_cert_path", str(args.ssl_client_cert_path)])
+
     if args.enable_grpc_backend_ssl and args.grpc_backend_ssl_root_certs_file:
         proxy_conf.extend(["--ssl_backend_client_root_certs_path", str(args.grpc_backend_ssl_root_certs_file)])
+
     if args.ssl_backend_client_root_certs_file:
         proxy_conf.extend(["--ssl_backend_client_root_certs_path", str(args.ssl_backend_client_root_certs_file)])
+    if args.ssl_client_root_certs_file:
+        proxy_conf.extend(["--ssl_backend_client_root_certs_path", str(args.ssl_client_root_certs_file)])
+
     if args.tls_mutual_auth:
         proxy_conf.extend(["--ssl_backend_client_cert_path", "/etc/nginx/ssl"])
 

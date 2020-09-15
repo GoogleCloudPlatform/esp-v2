@@ -125,6 +125,13 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8080', '--ssl_backend_client_cert_path',
               '/etc/endpoint/ssl', '--disable_tracing'
               ]),
+            (['-R=managed','--listener_port=8080',  '--disable_tracing',
+              '--ssl_client_cert_path=/etc/endpoint/ssl'],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--listener_port', '8080', '--ssl_backend_client_cert_path',
+              '/etc/endpoint/ssl', '--disable_tracing'
+              ]),
             # ssl_backend_client_root_certs_file specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
               '--ssl_backend_client_root_certs_file=/etc/endpoints/ssl/ca-certificates.crt' ],
@@ -132,7 +139,14 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_backend_client_root_certs_path',
               '/etc/endpoints/ssl/ca-certificates.crt', '--disable_tracing'
-              ]), 
+              ]),
+            (['-R=managed','--listener_port=8080',  '--disable_tracing',
+              '--ssl_client_root_certs_file=/etc/endpoints/ssl/ca-certificates.crt' ],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--listener_port', '8080', '--ssl_backend_client_root_certs_path',
+              '/etc/endpoints/ssl/ca-certificates.crt', '--disable_tracing'
+              ]),
             # legacy enable_grpc_backend_ssl specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
               '--enable_grpc_backend_ssl' ],
@@ -445,7 +459,9 @@ class TestStartProxy(unittest.TestCase):
             ['--transcoding_ignore_query_parameters=foo,bar',
              '--transcoding_ignore_unknown_query_parameters'],
             ['--access_log_format'],
-            ['--dns=127.0.0.1', '--dns_resolver_address=127.0.0.1']
+            ['--dns=127.0.0.1', '--dns_resolver_address=127.0.0.1'],
+            ['--ssl_client_cert_path=/tmp', '--ssl_backend_client_cert_path=/tmp'],
+            ['--ssl_client_root_certs_file=/tmp/server.crt', '--ssl_backend_client_root_certs_file=/tmp/server.crt']
           ]
 
         for flags in testcases:
