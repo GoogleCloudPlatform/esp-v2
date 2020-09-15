@@ -77,7 +77,7 @@ func TestMakeRouteConfig(t *testing.T) {
             }
           ],
           "route":{
-            "cluster":"bookstore.endpoints.project123.cloud.goog_local",
+            "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
             "timeout":"15s"
           }
         }
@@ -151,7 +151,7 @@ func TestMakeRouteConfig(t *testing.T) {
             }
           ],
           "route": {
-            "cluster": "testapipb.com:443",
+            "cluster": "backend-cluster-testapipb.com:443",
             "hostRewriteLiteral": "testapipb.com",
             "timeout": "15s"
           }
@@ -221,7 +221,7 @@ func TestMakeRouteConfig(t *testing.T) {
                   }
                },
                "route":{
-                  "cluster":"testapipb.com:443",
+                  "cluster":"backend-cluster-testapipb.com:443",
                   "hostRewriteLiteral":"testapipb.com",
                   "timeout":"15s"
                }

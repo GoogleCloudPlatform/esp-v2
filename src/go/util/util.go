@@ -17,43 +17,10 @@ package util
 import "time"
 
 const (
-	// Upstream envoy http filter names.
-
-	// Buffer HTTP filter
-	Buffer = "envoy.filters.http.buffer"
-	// CORS HTTP filter
-	CORS = "envoy.filters.http.cors"
-	// GRPCJSONTranscoder HTTP filter
-	GRPCJSONTranscoder = "envoy.filters.http.grpc_json_transcoder"
-	// GRPCWeb HTTP filter
-	GRPCWeb = "envoy.filters.http.grpc_web"
-	// Router HTTP filter
-	Router = "envoy.filters.http.router"
-	// Health checking HTTP filter
-	HealthCheck = "envoy.filters.http.health_check"
-	// Echo network filter
-	Echo = "envoy.filters.network.echo"
-	// HTTPConnectionManager network filter
-	HTTPConnectionManager = "envoy.filters.network.http_connection_manager"
-	// JwtAuthn filter.
-	JwtAuthn = "envoy.filters.http.jwt_authn"
-	// TLSTransportSocket is Envoy TLS Transport Socket name.
-	TLSTransportSocket = "envoy.transport_sockets.tls"
-	// AccessFileLogger filter name
-	AccessFileLogger = "envoy.access_loggers.file"
 	// DefaultRootCAPaths is the default certs path.
 	DefaultRootCAPaths = "/etc/ssl/certs/ca-certificates.crt"
 
 	// ESPv2 custom http filters.
-
-	// ServiceControl filter.
-	ServiceControl = "com.google.espv2.filters.http.service_control"
-	// PathMatcher filter.
-	PathMatcher = "com.google.espv2.filters.http.path_matcher"
-	// BackendAuth filter.
-	BackendAuth = "com.google.espv2.filters.http.backend_auth"
-	// BackendRouting filter.
-	BackendRouting = "com.google.espv2.filters.http.backend_routing"
 
 	// JwtPayloadMetadataName is the field name passed into metadata
 	JwtPayloadMetadataName = "jwt_payloads"
@@ -96,21 +63,6 @@ const (
 
 	// b/147591854: This string must NOT have a trailing slash
 	OpenIDDiscoveryCfgURLSuffix = "/.well-known/openid-configuration"
-
-	// The metadata server cluster name.
-	MetadataServerClusterName = "metadata-cluster"
-
-	// The token agent server cluster name.
-	TokenAgentClusterName = "token-agent-cluster"
-
-	// The iam server cluster name.
-	IamServerClusterName = "iam-cluster"
-
-	// The service control server cluster name.
-	ServiceControlClusterName = "service-control-cluster"
-
-	IngressListenerName  = "ingress_listener"
-	LoopbackListenerName = "loopback_listener"
 
 	// Platforms
 	GAEFlex = "GAE_FLEX(ESPv2)"

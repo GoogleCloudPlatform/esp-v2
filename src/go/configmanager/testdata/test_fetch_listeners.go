@@ -36,7 +36,7 @@ const (
 
 var (
 	fakeProtoDescriptor    = base64.StdEncoding.EncodeToString([]byte("rawDescriptor"))
-	testBackendClusterName = fmt.Sprintf("%s_local", TestFetchListenersProjectName)
+	testBackendClusterName = fmt.Sprintf("backend-cluster-%s_local", TestFetchListenersProjectName)
 )
 
 var (
@@ -282,7 +282,7 @@ var (
                                  "remoteJwks":{
                                     "cacheDuration":"300s",
                                     "httpUri":{
-                                       "cluster":"$JWKSURI:443",
+                                       "cluster":"jwt-provider-cluster-$JWKSURI:443",
                                        "timeout":"30s",
                                        "uri":"$JWKSURI"
                                     }
@@ -490,7 +490,7 @@ var (
                                  "remoteJwks":{
                                     "cacheDuration":"300s",
                                     "httpUri":{
-                                       "cluster":"$JWKSURI:443",
+                                       "cluster":"jwt-provider-cluster-$JWKSURI:443",
                                        "timeout":"30s",
                                        "uri":"$JWKSURI"
                                     }
@@ -705,7 +705,7 @@ var (
                                  "remoteJwks":{
                                     "cacheDuration":"300s",
                                     "httpUri":{
-                                       "cluster":"$JWKSURI:443",
+                                       "cluster":"jwt-provider-cluster-$JWKSURI:443",
                                        "timeout":"30s",
                                        "uri":"$JWKSURI"
                                     }
@@ -734,7 +734,7 @@ var (
                                  "remoteJwks":{
                                     "cacheDuration":"300s",
                                     "httpUri":{
-                                       "cluster":"$JWKSURI:443",
+                                       "cluster":"jwt-provider-cluster-$JWKSURI:443",
                                        "timeout":"30s",
                                        "uri":"$JWKSURI"
                                     }
@@ -1147,7 +1147,7 @@ var (
                                  "remoteJwks":{
                                     "cacheDuration":"300s",
                                     "httpUri":{
-                                       "cluster":"$JWKSURI:443",
+                                       "cluster":"jwt-provider-cluster-$JWKSURI:443",
                                        "timeout":"30s",
                                        "uri":"$JWKSURI"
                                     }
@@ -1346,7 +1346,7 @@ var (
                                     "prefix":"/"
                                  },
                                  "route":{
-                                    "cluster":"bookstore.endpoints.project123.cloud.goog_local",
+                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
                                  }
                               }

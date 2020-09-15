@@ -203,10 +203,12 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*clusterpb.Cluster,
 
 	for _, provider := range authn.GetProviders() {
 		jwksUri := provider.GetJwksUri()
-		clusterName, err := util.ExtraAddressFromURI(jwksUri)
+		addr, err := util.ExtraAddressFromURI(jwksUri)
 		if err != nil {
 			return nil, err
 		}
+
+		clusterName := util.JwtProviderClusterName(addr)
 		if ok, _ := generatedClusters[clusterName]; ok {
 			continue
 		}

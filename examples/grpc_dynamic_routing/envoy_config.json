@@ -168,7 +168,7 @@
             }
           ]
         },
-        "name": "www.googleapis.com:443",
+        "name": "jwt-provider-cluster-www.googleapis.com:443",
         "transportSocket": {
           "name": "envoy.transport_sockets.tls",
           "typedConfig": {
@@ -464,7 +464,7 @@
                             "remoteJwks": {
                               "cacheDuration": "300s",
                               "httpUri": {
-                                "cluster": "www.googleapis.com:443",
+                                "cluster": "jwt-provider-cluster-www.googleapis.com:443",
                                 "timeout": "30s",
                                 "uri": "https://www.googleapis.com/service_accounts/v1/jwk/e2e-client-jwk@cloudesf-testing.iam.gserviceaccount.com"
                               }

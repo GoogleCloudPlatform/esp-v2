@@ -18,209 +18,205 @@ var (
 	// These resources must be ordered in alphabetic order by name
 	FakeWantedClustersForDynamicRouting = []string{`
 {
-  "name": "echo-api.endpoints.cloudesf-testing.cloud.goog_local",
-  "type": "LOGICAL_DNS",
-  "connectTimeout": "20s",
-  "loadAssignment": {
-    "clusterName": "127.0.0.1",
-    "endpoints": [
-      {
-       "lbEndpoints": [
-         {
-           "endpoint": {
-             "address": {
-	              "socketAddress": {
-	                "address": "127.0.0.1",
-	                "portValue": 8082
-	              }
-	            }
-	          }
-          }
-        ]
-      }
-    ]
-  }
+	"name": "backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local",
+	"type": "LOGICAL_DNS",
+	"connectTimeout": "20s",
+	"loadAssignment": {
+		"clusterName": "127.0.0.1",
+		"endpoints": [
+		{
+			"lbEndpoints": [
+			{
+				"endpoint": {
+					"address": {
+						"socketAddress": {
+							"address": "127.0.0.1",
+							"portValue": 8082
+						}
+					}
+				}
+			}
+		]
+		}
+	]
+	}
 }`,
-		`
+		`{
+		"connectTimeout":"20s",
+		"loadAssignment":{
+			"clusterName":"pets.appspot.com",
+			"endpoints":[
+			{
+				"lbEndpoints":[
+				{
+					"endpoint":{
+						"address":{
+							"socketAddress":{
+								"address":"pets.appspot.com",
+								"portValue":443
+							}
+						}
+					}
+				}
+			]
+			}
+		]
+		},
+		"name":"backend-cluster-pets.appspot.com:443",
+		"transportSocket":{
+			"name":"envoy.transport_sockets.tls",
+			"typedConfig":{
+				"@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
+				"sni":"pets.appspot.com",
+				"commonTlsContext": {
+					"validationContext": {
+						"trustedCa": {
+							"filename": "/etc/ssl/certs/ca-certificates.crt"
+						}
+					}
+				}
+			}
+		},
+		"type":"LOGICAL_DNS"
+	}`, `
 {
-  "name": "metadata-cluster",
-  "type": "STRICT_DNS",
-  "connectTimeout": "20s",
-  "loadAssignment":{
-    "clusterName":"169.254.169.254",
-    "endpoints":[
-      {
-        "lbEndpoints":[
-          {
-            "endpoint":{
-              "address":{
-	              "socketAddress":{
-	                "address":"169.254.169.254",
-	                "portValue":80
-	              }
-	            }
-	          }
-          }
-        ]
-      }
-    ]
-  }
-}`,
-		`
-{
-   "connectTimeout":"20s",
-   "loadAssignment":{
-      "clusterName":"pets.appspot.com",
-      "endpoints":[
-         {
-            "lbEndpoints":[
-               {
-                  "endpoint":{
-                     "address":{
-                        "socketAddress":{
-                           "address":"pets.appspot.com",
-                           "portValue":443
-                        }
-                     }
-                  }
-               }
-            ]
-         }
-      ]
-   },
-   "name":"pets.appspot.com:443",
-   "transportSocket":{
-      "name":"envoy.transport_sockets.tls",
-      "typedConfig":{
-         "@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
-         "sni":"pets.appspot.com",
-         "commonTlsContext": {
-            "validationContext": {
-               "trustedCa": {
-                  "filename": "/etc/ssl/certs/ca-certificates.crt"
-               }
-            }
-         }
-      }
-   },
-   "type":"LOGICAL_DNS"
-}`, `
-{
-   "connectTimeout":"20s",
-   "loadAssignment":{
-      "clusterName":"pets.appspot.com",
-      "endpoints":[
-         {
-            "lbEndpoints":[
-               {
-                  "endpoint":{
-                     "address":{
-                        "socketAddress":{
-                           "address":"pets.appspot.com",
-                           "portValue":8008
-                        }
-                     }
-                  }
-               }
-            ]
-         }
-      ]
-   },
-   "name":"pets.appspot.com:8008",
-   "transportSocket":{
-      "name":"envoy.transport_sockets.tls",
-      "typedConfig":{
-         "@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
-         "sni":"pets.appspot.com",
-         "commonTlsContext": {
-            "validationContext": {
-               "trustedCa": {
-                  "filename": "/etc/ssl/certs/ca-certificates.crt"
-               }
-            }
-         }
-      }
-   },
-   "type":"LOGICAL_DNS"
-}`,
-		`
-{
-   "connectTimeout":"20s",
-   "loadAssignment":{
-      "clusterName":"us-central1-cloud-esf.cloudfunctions.net",
-      "endpoints":[
-         {
-            "lbEndpoints":[
-               {
-                  "endpoint":{
-                     "address":{
-                        "socketAddress":{
-                           "address":"us-central1-cloud-esf.cloudfunctions.net",
-                           "portValue":443
-                        }
-                     }
-                  }
-               }
-            ]
-         }
-      ]
-   },
-   "name":"us-central1-cloud-esf.cloudfunctions.net:443",
-   "transportSocket":{
-      "name":"envoy.transport_sockets.tls",
-      "typedConfig":{
-         "@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
-         "sni":"us-central1-cloud-esf.cloudfunctions.net",
-         "commonTlsContext": {
-            "validationContext": {
-               "trustedCa": {
-                  "filename": "/etc/ssl/certs/ca-certificates.crt"
-               }
-            }
-         }
-      }
-   },
-   "type":"LOGICAL_DNS"
-}`,
-		`
-{
-   "connectTimeout":"20s",
-   "loadAssignment":{
-      "clusterName":"us-west2-cloud-esf.cloudfunctions.net",
-      "endpoints":[
-         {
-            "lbEndpoints":[
-               {
-                  "endpoint":{
-                     "address":{
-                        "socketAddress":{
-                           "address":"us-west2-cloud-esf.cloudfunctions.net",
-                           "portValue":443
-                        }
-                     }
-                  }
-               }
-            ]
-         }
-      ]
-   },
-   "name":"us-west2-cloud-esf.cloudfunctions.net:443",
-   "transportSocket":{
-      "name":"envoy.transport_sockets.tls",
-      "typedConfig":{
-         "@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
-         "sni":"us-west2-cloud-esf.cloudfunctions.net",
-         "commonTlsContext": {
-            "validationContext": {
-               "trustedCa": {
-                  "filename": "/etc/ssl/certs/ca-certificates.crt"
-               }
-            }
-         }
-      }
-   },
-   "type":"LOGICAL_DNS"
-}`,
+		"connectTimeout":"20s",
+		"loadAssignment":{
+			"clusterName":"pets.appspot.com",
+			"endpoints":[
+			{
+				"lbEndpoints":[
+				{
+					"endpoint":{
+						"address":{
+							"socketAddress":{
+								"address":"pets.appspot.com",
+								"portValue":8008
+							}
+						}
+					}
+				}
+			]
+			}
+		]
+		},
+		"name":"backend-cluster-pets.appspot.com:8008",
+		"transportSocket":{
+			"name":"envoy.transport_sockets.tls",
+			"typedConfig":{
+				"@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
+				"sni":"pets.appspot.com",
+				"commonTlsContext": {
+					"validationContext": {
+						"trustedCa": {
+							"filename": "/etc/ssl/certs/ca-certificates.crt"
+						}
+					}
+				}
+			}
+		},
+		"type":"LOGICAL_DNS"
+		}`,
+		`{
+			"connectTimeout":"20s",
+			"loadAssignment":{
+				"clusterName":"us-central1-cloud-esf.cloudfunctions.net",
+				"endpoints":[
+				{
+					"lbEndpoints":[
+					{
+						"endpoint":{
+							"address":{
+								"socketAddress":{
+									"address":"us-central1-cloud-esf.cloudfunctions.net",
+									"portValue":443
+								}
+							}
+						}
+					}
+				]
+				}
+			]
+			},
+			"name":"backend-cluster-us-central1-cloud-esf.cloudfunctions.net:443",
+			"transportSocket":{
+				"name":"envoy.transport_sockets.tls",
+				"typedConfig":{
+					"@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
+					"sni":"us-central1-cloud-esf.cloudfunctions.net",
+					"commonTlsContext": {
+						"validationContext": {
+							"trustedCa": {
+								"filename": "/etc/ssl/certs/ca-certificates.crt"
+							}
+						}
+					}
+				}
+			},
+			"type":"LOGICAL_DNS"
+		}`,
+		`	{
+			"connectTimeout":"20s",
+			"loadAssignment":{
+				"clusterName":"us-west2-cloud-esf.cloudfunctions.net",
+				"endpoints":[
+				{
+					"lbEndpoints":[
+					{
+						"endpoint":{
+							"address":{
+								"socketAddress":{
+									"address":"us-west2-cloud-esf.cloudfunctions.net",
+									"portValue":443
+								}
+							}
+						}
+					}
+				]
+				}
+			]
+			},
+			"name":"backend-cluster-us-west2-cloud-esf.cloudfunctions.net:443",
+			"transportSocket":{
+				"name":"envoy.transport_sockets.tls",
+				"typedConfig":{
+					"@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
+					"sni":"us-west2-cloud-esf.cloudfunctions.net",
+					"commonTlsContext": {
+						"validationContext": {
+							"trustedCa": {
+								"filename": "/etc/ssl/certs/ca-certificates.crt"
+							}
+						}
+					}
+				}
+			},
+			"type":"LOGICAL_DNS"
+		}`,
+		`{
+			"name": "metadata-cluster",
+			"type": "STRICT_DNS",
+			"connectTimeout": "20s",
+			"loadAssignment":{
+				"clusterName":"169.254.169.254",
+				"endpoints":[
+				{
+					"lbEndpoints":[
+					{
+						"endpoint":{
+							"address":{
+								"socketAddress":{
+									"address":"169.254.169.254",
+									"portValue":80
+								}
+							}
+						}
+					}
+				]
+				}
+			]
+			}
+		}`,
 	}
 
 	FakeWantedListenerForDynamicRouting = `
@@ -389,7 +385,7 @@ var (
                                     "path":"/pet"
                                  },
                                  "route":{
-                                    "cluster":"pets.appspot.com:443",
+                                    "cluster":"backend-cluster-pets.appspot.com:443",
                                     "hostRewriteLiteral":"pets.appspot.com",
                                     "timeout":"15s"
                                  }
@@ -412,7 +408,7 @@ var (
                                     }
                                  },
                                  "route":{
-                                    "cluster":"pets.appspot.com:8008",
+                                    "cluster":"backend-cluster-pets.appspot.com:8008",
                                     "hostRewriteLiteral":"pets.appspot.com",
                                     "timeout":"15s"
                                  }
@@ -431,7 +427,7 @@ var (
                                     "path":"/hello"
                                  },
                                  "route":{
-                                    "cluster":"us-central1-cloud-esf.cloudfunctions.net:443",
+                                    "cluster":"backend-cluster-us-central1-cloud-esf.cloudfunctions.net:443",
                                     "hostRewriteLiteral":"us-central1-cloud-esf.cloudfunctions.net",
                                     "timeout":"15s"
                                  }
@@ -450,7 +446,7 @@ var (
                                     "path":"/pets"
                                  },
                                  "route":{
-                                    "cluster":"pets.appspot.com:443",
+                                    "cluster":"backend-cluster-pets.appspot.com:443",
                                     "hostRewriteLiteral":"pets.appspot.com",
                                     "timeout":"15s"
                                  }
@@ -469,7 +465,7 @@ var (
                                     "path":"/search"
                                  },
                                  "route":{
-                                    "cluster":"us-west2-cloud-esf.cloudfunctions.net:443",
+                                    "cluster":"backend-cluster-us-west2-cloud-esf.cloudfunctions.net:443",
                                     "hostRewriteLiteral":"us-west2-cloud-esf.cloudfunctions.net",
                                     "timeout":"15s"
                                  }

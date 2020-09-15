@@ -163,7 +163,7 @@ func (s *ServiceInfo) buildCatchAllBackend() error {
 	s.CatchAllBackend = &BackendRoutingCluster{
 		UseTLS:      tls,
 		Protocol:    protocol,
-		ClusterName: s.BackendClusterName(),
+		ClusterName: s.CatchAllBackendClusterName(),
 		Hostname:    hostname,
 		Port:        port,
 	}
@@ -459,16 +459,16 @@ func (s *ServiceInfo) processBackendRule() error {
 					s.GrpcSupportRequired = true
 				}
 
-				backendSelector := address
+				clusterName := util.BackendClusterName(address)
 				s.BackendRoutingClusters = append(s.BackendRoutingClusters,
 					&BackendRoutingCluster{
-						ClusterName: backendSelector,
+						ClusterName: clusterName,
 						UseTLS:      tls,
 						Protocol:    protocol,
 						Hostname:    hostname,
 						Port:        port,
 					})
-				backendRoutingClustersMap[address] = backendSelector
+				backendRoutingClustersMap[address] = clusterName
 			}
 
 			clusterName := backendRoutingClustersMap[address]
@@ -699,8 +699,8 @@ func (s *ServiceInfo) getOrCreateMethod(name string) (*methodInfo, error) {
 	return s.Methods[name], nil
 }
 
-func (s *ServiceInfo) BackendClusterName() string {
-	return fmt.Sprintf("%s_local", s.Name)
+func (s *ServiceInfo) CatchAllBackendClusterName() string {
+	return util.BackendClusterName(fmt.Sprintf("%s_local", s.Name))
 }
 
 // If the backend address's scheme is grpc/grpcs, it should be changed it http or https.
