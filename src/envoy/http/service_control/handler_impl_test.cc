@@ -15,7 +15,6 @@
 
 #include "common/common/empty_string.h"
 #include "envoy/http/header_map.h"
-#include "extensions/filters/http/grpc_stats/grpc_stats_filter.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
