@@ -2,6 +2,7 @@
 
 - Add name prefix for backend/jwtProvider cluster (#330)
 - Split specifying root certs for backend vs sidestream SSL clients (#325)
+- Fix reading the remote client IP when deploying ESPv2 on Cloud Run (#318)
 - Rich access logging of http request information (#316)
 - Support IP in backend address (#323)
 - For Cloud Run, report location with region instead of zone (#314)
