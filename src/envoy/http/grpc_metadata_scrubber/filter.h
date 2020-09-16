@@ -15,6 +15,7 @@
 #pragma once
 
 #include "extensions/filters/http/common/pass_through_filter.h"
+#include "src/envoy/http/grpc_metadata_scrubber/filter_config.h"
 
 #include <string>
 
@@ -26,10 +27,13 @@ namespace grpc_metadata_scrubber {
 class Filter : public Envoy::Http::PassThroughEncoderFilter,
                public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
+  Filter(FilterConfigSharedPtr config) : config_(config) {}
 
   Envoy::Http::FilterHeadersStatus encodeHeaders(
       Envoy::Http::ResponseHeaderMap& headers, bool) override;
 
+ private:
+  const FilterConfigSharedPtr config_;
 };
 
 }  // namespace grpc_metadata_scrubber

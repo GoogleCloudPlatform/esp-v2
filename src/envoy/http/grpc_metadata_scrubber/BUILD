@@ -27,6 +27,7 @@ envoy_cc_library(
     ],
     hdrs = [
         "filter.h",
+        "filter_config.h",
     ],
     repository = "@envoy",
     deps = [
@@ -34,5 +35,19 @@ envoy_cc_library(
         "@envoy//source/common/grpc:common_lib",
         "@envoy//source/common/http:headers_lib",
         "@envoy//source/extensions/filters/http/common:pass_through_filter_lib",
+    ],
+)
+
+envoy_cc_test(
+    name = "filter_test",
+    srcs = [
+        "filter_test.cc",
+    ],
+    repository = "@envoy",
+    deps = [
+        ":filter_lib",
+        "@envoy//source/common/common:empty_string",
+        "@envoy//test/mocks/server:server_mocks",
+        "@envoy//test/test_common:utility_lib",
     ],
 )

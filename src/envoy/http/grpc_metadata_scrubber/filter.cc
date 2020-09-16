@@ -27,10 +27,14 @@ namespace grpc_metadata_scrubber {
 Envoy::Http::FilterHeadersStatus Filter::encodeHeaders(
     Envoy::Http::ResponseHeaderMap& headers, bool) {
   ENVOY_LOG(debug, "Filter::encodeHeaders is called.");
-  if (Envoy::Grpc::Common::hasGrpcContentType(headers)) {
+  config_->stats().all_.inc();
+
+  if (Envoy::Grpc::Common::hasGrpcContentType(headers) && headers.ContentLength() != nullptr) {
     ENVOY_LOG(debug, "Content-length header is removed");
     headers.removeContentLength();
+    config_->stats().removed_.inc();
   }
+
   return Envoy::Http::FilterHeadersStatus::Continue;
 }
 
