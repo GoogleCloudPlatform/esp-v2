@@ -1437,8 +1437,8 @@ func TestProcessBackendRuleForProtocol(t *testing.T) {
 				},
 			},
 			wantedClusterProtocols: map[string]util.BackendProtocol{
-				"abc.com:443": util.HTTP1,
-				"cnn.com:443": util.HTTP2,
+				"backend-cluster-abc.com:443": util.HTTP1,
+				"backend-cluster-cnn.com:443": util.HTTP2,
 			},
 		},
 		{
@@ -1466,7 +1466,7 @@ func TestProcessBackendRuleForProtocol(t *testing.T) {
 				},
 			},
 			wantedClusterProtocols: map[string]util.BackendProtocol{
-				"abc.com:443": util.HTTP1,
+				"backend-cluster-abc.com:443": util.HTTP1,
 			},
 		},
 	}
@@ -1505,82 +1505,82 @@ func TestProcessBackendRuleForClusterName(t *testing.T) {
 		{
 			desc:        "Domain name with default http port",
 			Address:     "http://abc.com/api/",
-			ClusterName: "abc.com:80",
+			ClusterName: "backend-cluster-abc.com:80",
 		},
 		{
 			desc:        "Domain name with default https port",
 			Address:     "https://abc.com/api/",
-			ClusterName: "abc.com:443",
+			ClusterName: "backend-cluster-abc.com:443",
 		},
 		{
 			desc:        "Domain name with default grpc port",
 			Address:     "grpc://abc.com/api/",
-			ClusterName: "abc.com:80",
+			ClusterName: "backend-cluster-abc.com:80",
 		},
 		{
 			desc:        "Domain name with default grpcs port",
 			Address:     "grpcs://abc.com/api/",
-			ClusterName: "abc.com:443",
+			ClusterName: "backend-cluster-abc.com:443",
 		},
 		{
 			desc:        "Domain name with custom http port",
 			Address:     "http://abc.com:8080/api/",
-			ClusterName: "abc.com:8080",
+			ClusterName: "backend-cluster-abc.com:8080",
 		},
 		{
 			desc:        "Domain name with custom https port",
 			Address:     "https://abc.com:8080/api/",
-			ClusterName: "abc.com:8080",
+			ClusterName: "backend-cluster-abc.com:8080",
 		},
 		{
 			desc:        "Domain name with custom grpc port",
 			Address:     "grpc://abc.com:8080/api/",
-			ClusterName: "abc.com:8080",
+			ClusterName: "backend-cluster-abc.com:8080",
 		},
 		{
 			desc:        "Domain name with custom grpcs port",
 			Address:     "grpcs://abc.com:8080/api/",
-			ClusterName: "abc.com:8080",
+			ClusterName: "backend-cluster-abc.com:8080",
 		},
 		{
 			desc:        "IP with default http port",
 			Address:     "http://127.0.0.1/api/",
-			ClusterName: "127.0.0.1:80",
+			ClusterName: "backend-cluster-127.0.0.1:80",
 		},
 		{
 			desc:        "IP with default https port",
 			Address:     "https://127.0.0.1/api/",
-			ClusterName: "127.0.0.1:443",
+			ClusterName: "backend-cluster-127.0.0.1:443",
 		},
 		{
 			desc:        "IP with default grpc port",
 			Address:     "grpc://127.0.0.1/api/",
-			ClusterName: "127.0.0.1:80",
+			ClusterName: "backend-cluster-127.0.0.1:80",
 		},
 		{
 			desc:        "IP with default grpcs port",
 			Address:     "grpcs://127.0.0.1/api/",
-			ClusterName: "127.0.0.1:443",
+			ClusterName: "backend-cluster-127.0.0.1:443",
 		},
 		{
 			desc:        "IP with custom http port",
 			Address:     "http://127.0.0.1:8080/api/",
-			ClusterName: "127.0.0.1:8080",
+			ClusterName: "backend-cluster-127.0.0.1:8080",
 		},
 		{
 			desc:        "IP with custom https port",
 			Address:     "https://127.0.0.1:8080/api/",
-			ClusterName: "127.0.0.1:8080",
+			ClusterName: "backend-cluster-127.0.0.1:8080",
 		},
 		{
 			desc:        "IP with custom grpc port",
 			Address:     "grpc://127.0.0.1:8080/api/",
-			ClusterName: "127.0.0.1:8080",
+			ClusterName: "backend-cluster-127.0.0.1:8080",
 		},
 		{
 			desc:        "IP with custom grpcs port",
 			Address:     "grpcs://127.0.0.1:8080/api/",
-			ClusterName: "127.0.0.1:8080",
+			ClusterName: "backend-cluster-127.0.0.1:8080",
 		},
 	}
 

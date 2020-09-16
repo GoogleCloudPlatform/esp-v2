@@ -102,7 +102,7 @@ func TestTracesServiceControlCheckWithRetry(t *testing.T) {
 				"Service Control remote call: Check",
 				"Service Control remote call: Check - Retry 1",
 				"Service Control remote call: Check - Retry 2",
-				"router bookstore.endpoints.cloudesf-testing.cloud.goog_local egress",
+				"router backend-cluster-bookstore.endpoints.cloudesf-testing.cloud.goog_local egress",
 				"ingress",
 			},
 		},
@@ -116,7 +116,7 @@ func TestTracesServiceControlCheckWithRetry(t *testing.T) {
 			token:          testdata.FakeCloudTokenMultiAudiences,
 			wantSpanNames: []string{
 				"Service Control remote call: Check",
-				"router bookstore.endpoints.cloudesf-testing.cloud.goog_local egress",
+				"router backend-cluster-bookstore.endpoints.cloudesf-testing.cloud.goog_local egress",
 				"ingress",
 			},
 		},
@@ -175,7 +175,7 @@ func TestTracesServiceControlSkipUsage(t *testing.T) {
 			method: "GET",
 			wantSpanNames: []string{
 				"Service Control remote call: Check",
-				"router echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
+				"router backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
 				"ingress",
 			},
 		},
@@ -185,7 +185,7 @@ func TestTracesServiceControlSkipUsage(t *testing.T) {
 			method:  "POST",
 			message: "hello",
 			wantSpanNames: []string{
-				"router echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
+				"router backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
 				"ingress",
 			},
 		},
@@ -258,7 +258,7 @@ func TestTracesFetchingJwks(t *testing.T) {
 			wantSpanNames: []string{
 				"JWT Remote PubKey Fetch",
 				"Service Control remote call: Check",
-				"router bookstore.endpoints.cloudesf-testing.cloud.goog_local egress",
+				"router backend-cluster-bookstore.endpoints.cloudesf-testing.cloud.goog_local egress",
 				"ingress",
 			},
 		},
@@ -402,7 +402,7 @@ func TestTracesDynamicRouting(t *testing.T) {
 			url:    fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/pet/1/num/2", ""),
 			method: util.GET,
 			wantSpanNames: []string{
-				"router localhost:21837 egress",
+				"router backend-cluster-localhost:21837 egress",
 				"ingress dynamic_routing_GetPetById",
 			},
 		},

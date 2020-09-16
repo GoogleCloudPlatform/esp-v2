@@ -194,7 +194,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 			BackendAddress: "http://127.0.0.1:80",
 			wantedClusters: []*clusterpb.Cluster{
 				{
-					Name:                 "mybackend.com:443",
+					Name:                 "backend-cluster-mybackend.com:443",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 443),
@@ -242,7 +242,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 			BackendAddress: "http://127.0.0.1:80",
 			wantedClusters: []*clusterpb.Cluster{
 				{
-					Name:                 "mybackend.com:80",
+					Name:                 "backend-cluster-mybackend.com:80",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 80),
@@ -292,13 +292,13 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 			BackendAddress: "http://127.0.0.1:80",
 			wantedClusters: []*clusterpb.Cluster{
 				{
-					Name:                 "mybackend_http.com:80",
+					Name:                 "backend-cluster-mybackend_http.com:80",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend_http.com", 80),
 				},
 				{
-					Name:                 "mybackend_https.com:443",
+					Name:                 "backend-cluster-mybackend_https.com:443",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend_https.com", 443),
@@ -349,7 +349,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 			BackendAddress: "http://127.0.0.1:80",
 			wantedClusters: []*clusterpb.Cluster{
 				{
-					Name:                 "mybackend.com:443",
+					Name:                 "backend-cluster-mybackend.com:443",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 443),
@@ -394,7 +394,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 			BackendAddress: "http://127.0.0.1:80",
 			wantedClusters: []*clusterpb.Cluster{
 				{
-					Name:                 "mybackend.com:80",
+					Name:                 "backend-cluster-mybackend.com:80",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 80),
@@ -445,14 +445,14 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 			BackendAddress: "http://127.0.0.1:80",
 			wantedClusters: []*clusterpb.Cluster{
 				{
-					Name:                 "mybackend_http.com:80",
+					Name:                 "backend-cluster-mybackend_http.com:80",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend_http.com", 80),
 					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{},
 				},
 				{
-					Name:                 "mybackend_https.com:443",
+					Name:                 "backend-cluster-mybackend_https.com:443",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend_https.com", 443),
@@ -502,7 +502,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 			BackendAddress: "http://127.0.0.1:80",
 			wantedClusters: []*clusterpb.Cluster{
 				{
-					Name:                 "mybackend.run.app:443",
+					Name:                 "backend-cluster-mybackend.run.app:443",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
@@ -574,7 +574,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 		}
 
 		if tc.wantedClusters != nil && !cmp.Equal(clusters, tc.wantedClusters, cmp.Comparer(proto.Equal)) {
-			t.Errorf("Test Desc(%d): %s, makeBackendRoutingClusters got: %v, want: %v", i, tc.desc, clusters, tc.wantedClusters)
+			t.Errorf("Test Desc(%d): %s, makeBackendRoutingClusters\ngot: %v,\nwant: %v", i, tc.desc, clusters, tc.wantedClusters)
 		}
 	}
 }
@@ -603,7 +603,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 			},
 			wantedClusters: []*clusterpb.Cluster{
 				{
-					Name:                 "metadata.com:443",
+					Name:                 "jwt-provider-cluster-metadata.com:443",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
@@ -611,7 +611,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 					TransportSocket:      createTransportSocket("metadata.com"),
 				},
 				{
-					Name:                 "metadata.com:80",
+					Name:                 "jwt-provider-cluster-metadata.com:80",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
@@ -645,7 +645,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 			},
 			wantedClusters: []*clusterpb.Cluster{
 				{
-					Name:                 "metadata.com:443",
+					Name:                 "jwt-provider-cluster-metadata.com:443",
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,

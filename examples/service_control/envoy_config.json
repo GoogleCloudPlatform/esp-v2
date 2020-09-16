@@ -37,7 +37,7 @@
             }
           ]
         },
-        "name": "examples-service-control.endpoints.cloudesf-testing.cloud.goog_local",
+        "name": "backend-cluster-examples-service-control.endpoints.cloudesf-testing.cloud.goog_local",
         "type": "LOGICAL_DNS"
       },
       {
@@ -756,7 +756,7 @@
                               "prefix": "/"
                             },
                             "route": {
-                              "cluster": "examples-service-control.endpoints.cloudesf-testing.cloud.goog_local",
+                              "cluster": "backend-cluster-examples-service-control.endpoints.cloudesf-testing.cloud.goog_local",
                               "timeout": "15s"
                             }
                           }

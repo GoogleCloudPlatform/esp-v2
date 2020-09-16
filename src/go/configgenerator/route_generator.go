@@ -60,7 +60,7 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 			Action: &routepb.Route_Route{
 				Route: &routepb.RouteAction{
 					ClusterSpecifier: &routepb.RouteAction_Cluster{
-						Cluster: serviceInfo.BackendClusterName(),
+						Cluster: serviceInfo.CatchAllBackendClusterName(),
 					},
 					// Use the default deadline for the catch-all route.
 					// If a customer needs to override this, dynamic routing must be used.
@@ -160,7 +160,7 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 			Action: &routepb.Route_Route{
 				Route: &routepb.RouteAction{
 					ClusterSpecifier: &routepb.RouteAction_Cluster{
-						Cluster: serviceInfo.BackendClusterName(),
+						Cluster: serviceInfo.CatchAllBackendClusterName(),
 					},
 				},
 			},

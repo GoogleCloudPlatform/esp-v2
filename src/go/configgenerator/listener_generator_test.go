@@ -315,7 +315,7 @@ func TestJwtAuthnFilter(t *testing.T) {
                 "remoteJwks": {
                     "cacheDuration": "300s",
                     "httpUri": {
-                        "cluster": "fake-jwks.com:443",
+                        "cluster": "jwt-provider-cluster-fake-jwks.com:443",
                         "timeout": "30s",
                         "uri": "https://fake-jwks.com"
                     }
@@ -389,7 +389,7 @@ func TestJwtAuthnFilter(t *testing.T) {
                 "remoteJwks": {
                     "cacheDuration": "300s",
                     "httpUri": {
-                        "cluster": "fake-jwks.com:443",
+                        "cluster": "jwt-provider-cluster-fake-jwks.com:443",
                         "timeout": "30s",
                         "uri": "https://fake-jwks.com"
                     }
@@ -1740,7 +1740,7 @@ func TestMakeListeners(t *testing.T) {
                         "prefix": "/"
                       },
                       "route": {
-                        "cluster": "bookstore.endpoints.project123.cloud.goog_local",
+                        "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "timeout": "15s"
                       }
                     }

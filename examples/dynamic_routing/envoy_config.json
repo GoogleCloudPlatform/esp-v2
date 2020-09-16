@@ -37,7 +37,7 @@
             }
           ]
         },
-        "name": "examples-dynamic-routing-wd6ufmzfya-uc.a.run.app_local",
+        "name": "backend-cluster-examples-dynamic-routing-wd6ufmzfya-uc.a.run.app_local",
         "type": "LOGICAL_DNS"
       },
       {
@@ -125,7 +125,7 @@
             }
           ]
         },
-        "name": "http-bookstore-abc123456-uc.a.run.app:443",
+        "name": "backend-cluster-http-bookstore-abc123456-uc.a.run.app:443",
         "transportSocket": {
           "name": "envoy.transport_sockets.tls",
           "typedConfig": {
@@ -166,7 +166,7 @@
             }
           ]
         },
-        "name": "http-bookstore-edf123456-uc.a.run.app:443",
+        "name": "backend-cluster-http-bookstore-edf123456-uc.a.run.app:443",
         "transportSocket": {
           "name": "envoy.transport_sockets.tls",
           "typedConfig": {
@@ -299,7 +299,7 @@
                               "path": "/shelves"
                             },
                             "route": {
-                              "cluster": "http-bookstore-edf123456-uc.a.run.app:443",
+                              "cluster": "backend-cluster-http-bookstore-edf123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-edf123456-uc.a.run.app",
                               "timeout": "23s"
                             }
@@ -318,7 +318,7 @@
                               "path": "/shelves"
                             },
                             "route": {
-                              "cluster": "http-bookstore-abc123456-uc.a.run.app:443",
+                              "cluster": "backend-cluster-http-bookstore-abc123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-abc123456-uc.a.run.app",
                               "timeout": "7s"
                             }

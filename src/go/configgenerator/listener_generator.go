@@ -394,11 +394,11 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	}
 	providers := make(map[string]*jwtpb.JwtProvider)
 	for _, provider := range auth.GetProviders() {
-		clusterName, err := util.ExtraAddressFromURI(provider.GetJwksUri())
+		addr, err := util.ExtraAddressFromURI(provider.GetJwksUri())
 		if err != nil {
 			return nil
 		}
-
+		clusterName := util.JwtProviderClusterName(addr)
 		fromHeaders, fromParams := processJwtLocations(provider)
 
 		jp := &jwtpb.JwtProvider{
