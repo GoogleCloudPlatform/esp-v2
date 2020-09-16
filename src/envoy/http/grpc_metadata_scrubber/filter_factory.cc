@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "api/envoy/v8/http/grpc_scrubber/config.pb.h"
-#include "api/envoy/v8/http/grpc_scrubber/config.pb.validate.h"
-#include "src/envoy/http/grpc_scrubber/filter.h"
+#include "api/envoy/v8/http/grpc_metadata_scrubber/config.pb.h"
+#include "api/envoy/v8/http/grpc_metadata_scrubber/config.pb.validate.h"
+#include "src/envoy/http/grpc_metadata_scrubber/filter.h"
 
 #include "envoy/registry/registry.h"
 #include "extensions/filters/http/common/factory_base.h"
@@ -22,23 +22,23 @@
 namespace espv2 {
 namespace envoy {
 namespace http_filters {
-namespace grpc_scrubber {
+namespace grpc_metadata_scrubber {
 
 constexpr char kGrpcScrubberFilterName[] =
-    "com.google.espv2.filters.http.grpc_scrubber";
+    "com.google.espv2.filters.http.grpc_metadata_scrubber";
 
 /**
  * Config registration for ESPv2 grpc scrubber filter.
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::espv2::api::envoy::v8::http::grpc_scrubber::FilterConfig> {
+          ::espv2::api::envoy::v8::http::grpc_metadata_scrubber::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(kGrpcScrubberFilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::espv2::api::envoy::v8::http::grpc_scrubber::FilterConfig&,
+      const ::espv2::api::envoy::v8::http::grpc_metadata_scrubber::FilterConfig&,
       const std::string&,
       Envoy::Server::Configuration::FactoryContext&) override {
     return [](Envoy::Http::FilterChainFactoryCallbacks& callbacks) -> void {
@@ -55,7 +55,7 @@ static Envoy::Registry::RegisterFactory<
     FilterFactory, Envoy::Server::Configuration::NamedHttpFilterConfigFactory>
     register_;
 
-}  // namespace grpc_scrubber
+}  // namespace grpc_metadata_scrubber
 }  // namespace http_filters
 }  // namespace envoy
 }  // namespace espv2

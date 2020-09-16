@@ -14,9 +14,10 @@
 
 syntax = "proto3";
 
-package espv2.api.envoy.v8.http.grpc_scrubber;
+package espv2.api.envoy.v8.http.grpc_metadata_scrubber;
 
-// grpc_scrubber doesn't need any config.
+// grpc_metadata_scrubber filter doesn't need any config.
 // But a config protobuf type is required by FilterFactory.
+// Hence defines an empty FilterConfig here.
 message FilterConfig {
 }

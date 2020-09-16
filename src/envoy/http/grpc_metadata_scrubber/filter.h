@@ -12,29 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#pragma once
+
+#include "extensions/filters/http/common/pass_through_filter.h"
+
 #include <string>
-
-#include "src/envoy/http/grpc_scrubber/filter.h"
-
-#include "common/grpc/common.h"
-#include "common/http/headers.h"
 
 namespace espv2 {
 namespace envoy {
 namespace http_filters {
-namespace grpc_scrubber {
+namespace grpc_metadata_scrubber {
 
-Envoy::Http::FilterHeadersStatus Filter::encodeHeaders(
-    Envoy::Http::ResponseHeaderMap& headers, bool) {
-  ENVOY_LOG(debug, "Filter::encodeHeaders is called.");
-  if (Envoy::Grpc::Common::hasGrpcContentType(headers)) {
-    ENVOY_LOG(debug, "Content-length header is removed");
-    headers.removeContentLength();
-  }
-  return Envoy::Http::FilterHeadersStatus::Continue;
-}
+class Filter : public Envoy::Http::PassThroughEncoderFilter,
+               public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
+ public:
 
-}  // namespace grpc_scrubber
+  Envoy::Http::FilterHeadersStatus encodeHeaders(
+      Envoy::Http::ResponseHeaderMap& headers, bool) override;
+
+};
+
+}  // namespace grpc_metadata_scrubber
 }  // namespace http_filters
 }  // namespace envoy
 }  // namespace espv2
