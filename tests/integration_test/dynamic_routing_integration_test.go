@@ -233,6 +233,27 @@ func TestDynamicRouting(t *testing.T) {
 			method:   "GET",
 			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?key=value&name=2"}`,
 		},
+		{
+			desc:          "Operation ordering - The first operation is matched, resulting in an invalid host rewrite.",
+			path:          "/allow-all/abc",
+			method:        "POST",
+			message:       "hello",
+			httpCallError: fmt.Errorf("http response status is not 200 OK: 503 Service Unavailable"),
+		},
+		{
+			desc:     "Operation ordering - The second operation is matched due to the catch-all rule, resulting in a correct message.",
+			path:     "/allow-all/some/random/route",
+			method:   "POST",
+			message:  "hello",
+			wantResp: `{"message": "hello"}`,
+		},
+		{
+			desc:     "Operation ordering - The second operation is matched again; the third operation will never be matched.",
+			path:     "/allow-all/xyz",
+			method:   "POST",
+			message:  "hello",
+			wantResp: `{"message": "hello"}`,
+		},
 	}
 	for _, tc := range testData {
 		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
@@ -243,8 +264,13 @@ func TestDynamicRouting(t *testing.T) {
 				t.Fatal(err)
 			}
 		} else {
+			if err == nil {
+				t.Errorf("Test(%s): got no error, expected err: %v", tc.desc, tc.httpCallError)
+				continue
+			}
+
 			if !strings.Contains(err.Error(), tc.httpCallError.Error()) {
-				t.Errorf("expected Http call error: %v, got: %v", tc.httpCallError, err)
+				t.Errorf("Test(%s): expected Http call error: %v, got: %v", tc.desc, tc.httpCallError, err)
 			}
 			continue
 		}
@@ -505,22 +531,22 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 		gotResp, err = client.DoPost(url, tc.message)
 
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("Test (%v): %v", tc.desc, err)
 		}
 
 		gotRespStr := string(gotResp)
 
 		if err := util.JsonEqual(tc.wantResp, gotRespStr); err != nil {
-			t.Errorf("Test Desc(%s) fails: \n %s", tc.desc, err)
+			t.Errorf("Test (%v) fails: \n %s", tc.desc, err)
 		}
 
 		scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
 		if err != nil {
-			t.Fatalf("Test Desc(%s): GetRequests returns error: %v", tc.desc, err)
+			t.Fatalf("Test (%v): GetRequests returns error: %v", tc.desc, err)
 		}
 
 		if err := utils.VerifyServiceControlResp(tc.desc, tc.wantScRequests, scRequests); err != nil {
-			t.Error(err)
+			t.Fatalf("Test (%v): %v", tc.desc, err)
 		}
 	}
 }

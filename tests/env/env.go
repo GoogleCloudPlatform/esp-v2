@@ -258,9 +258,10 @@ func (e *TestEnv) SkipHealthChecks() {
 // In the service config for each backend, the backend port is represented with a "-1".
 // Example: Address: "https://localhost:-1/"
 // During env setup, replace the -1 with the actual dynamic routing port for the test.
+// To force routing to a non-existent backend host, use "9".
 func addDynamicRoutingBackendPort(serviceConfig *confpb.Service, port uint16) error {
 	for _, rule := range serviceConfig.Backend.GetRules() {
-		if !strings.Contains(rule.Address, "-1") {
+		if !strings.Contains(rule.Address, "-1") && !strings.Contains(rule.Address, "9") {
 			return fmt.Errorf("backend rule address (%v) is not properly formatted", rule.Address)
 		}
 

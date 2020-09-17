@@ -209,16 +209,16 @@
                         "@type": "type.googleapis.com/espv2.api.envoy.v8.http.path_matcher.FilterConfig",
                         "rules": [
                           {
-                            "operation": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.CreateShelf",
+                            "operation": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.ListShelves",
                             "pattern": {
-                              "httpMethod": "POST",
+                              "httpMethod": "GET",
                               "uriTemplate": "/shelves"
                             }
                           },
                           {
-                            "operation": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.ListShelves",
+                            "operation": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.CreateShelf",
                             "pattern": {
-                              "httpMethod": "GET",
+                              "httpMethod": "POST",
                               "uriTemplate": "/shelves"
                             }
                           }
@@ -248,14 +248,14 @@
                         "@type": "type.googleapis.com/espv2.api.envoy.v8.http.backend_routing.FilterConfig",
                         "rules": [
                           {
-                            "operation": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.CreateShelf",
-                            "pathPrefix": "/shelves",
-                            "pathTranslation": "CONSTANT_ADDRESS"
-                          },
-                          {
                             "operation": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.ListShelves",
                             "pathPrefix": "/shelves",
                             "pathTranslation": "APPEND_PATH_TO_ADDRESS"
+                          },
+                          {
+                            "operation": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.CreateShelf",
+                            "pathPrefix": "/shelves",
+                            "pathTranslation": "CONSTANT_ADDRESS"
                           }
                         ]
                       }
@@ -287,25 +287,6 @@
                         "routes": [
                           {
                             "decorator": {
-                              "operation": "ingress CreateShelf"
-                            },
-                            "match": {
-                              "headers": [
-                                {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
-                                }
-                              ],
-                              "path": "/shelves"
-                            },
-                            "route": {
-                              "cluster": "backend-cluster-http-bookstore-edf123456-uc.a.run.app:443",
-                              "hostRewriteLiteral": "http-bookstore-edf123456-uc.a.run.app",
-                              "timeout": "23s"
-                            }
-                          },
-                          {
-                            "decorator": {
                               "operation": "ingress ListShelves"
                             },
                             "match": {
@@ -321,6 +302,25 @@
                               "cluster": "backend-cluster-http-bookstore-abc123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-abc123456-uc.a.run.app",
                               "timeout": "7s"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress CreateShelf"
+                            },
+                            "match": {
+                              "headers": [
+                                {
+                                  "exactMatch": "POST",
+                                  "name": ":method"
+                                }
+                              ],
+                              "path": "/shelves"
+                            },
+                            "route": {
+                              "cluster": "backend-cluster-http-bookstore-edf123456-uc.a.run.app:443",
+                              "hostRewriteLiteral": "http-bookstore-edf123456-uc.a.run.app",
+                              "timeout": "23s"
                             }
                           }
                         ]
