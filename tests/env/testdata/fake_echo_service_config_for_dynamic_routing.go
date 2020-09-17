@@ -97,6 +97,21 @@ var (
 					{
 						Name: "dynamic_routing_Wildcards",
 					},
+
+					// Regression test for operation ordering: b/145520483.
+					// Config manager should not change method ordering.
+					// We test that the third method below will never be routed to.
+					{
+						Name: "operation_order_first_matched",
+					},
+					{
+						Name: "operation_order_second_catch_all",
+					},
+					{
+						Name: "operation_order_third_unmatched",
+					},
+					// End operation ordering methods.
+
 				},
 				Version: "1.0.0",
 			},
@@ -257,6 +272,24 @@ var (
 						Get: "/wildcard/a/*/b/{name=*}/c/**",
 					},
 				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_first_matched",
+					Pattern: &annotationspb.HttpRule_Post{
+						Post: "/allow-all/abc",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_second_catch_all",
+					Pattern: &annotationspb.HttpRule_Post{
+						Post: "/allow-all/**",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_third_unmatched",
+					Pattern: &annotationspb.HttpRule_Post{
+						Post: "/allow-all/xyz",
+					},
+				},
 			},
 		},
 		Types: []*ptypepb.Type{
@@ -357,6 +390,18 @@ var (
 				},
 				{
 					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Wildcards",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_first_matched",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_second_catch_all",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_third_unmatched",
 					AllowUnregisteredCalls: true,
 				},
 			},
@@ -547,6 +592,23 @@ var (
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Wildcards",
 					Address:         "https://localhost:-1/dynamicrouting/const_wildcard",
+					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_first_matched",
+					// Address is malformed on purpose. We can ensure envoy host rewrite fails.
+					Address:         "https://localhost:9/echo",
+					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+				},
+				{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_second_catch_all",
+					Address:         "https://localhost:-1/echo",
+					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_third_unmatched",
+					// Address is malformed on purpose. We can ensure envoy host rewrite fails.
+					Address:         "https://localhost:9/echo",
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
 			},
