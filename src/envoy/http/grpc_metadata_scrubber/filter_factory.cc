@@ -38,12 +38,13 @@ class FilterFactory
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::espv2::api::envoy::v8::http::grpc_metadata_scrubber::FilterConfig&,
+      const ::espv2::api::envoy::v8::http::grpc_metadata_scrubber::
+          FilterConfig&,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context) override {
-    auto filter_config =
-        std::make_shared<FilterConfig>(stats_prefix, context);
-    return [filter_config](Envoy::Http::FilterChainFactoryCallbacks& callbacks) -> void {
+    auto filter_config = std::make_shared<FilterConfig>(stats_prefix, context);
+    return [filter_config](
+               Envoy::Http::FilterChainFactoryCallbacks& callbacks) -> void {
       auto filter = std::make_shared<Filter>(filter_config);
       callbacks.addStreamEncoderFilter(
           Envoy::Http::StreamEncoderFilterSharedPtr(filter));

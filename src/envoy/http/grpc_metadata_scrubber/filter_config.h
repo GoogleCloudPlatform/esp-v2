@@ -42,10 +42,8 @@ struct FilterStats {
 class FilterConfig {
  public:
   FilterConfig(const std::string& stats_prefix,
-               Envoy::Server::Configuration::FactoryContext& context):
-      stats_(generateStats(stats_prefix, context.scope())) {
-  }
-
+               Envoy::Server::Configuration::FactoryContext& context)
+      : stats_(generateStats(stats_prefix, context.scope())) {}
 
   FilterStats& stats() { return stats_; }
 

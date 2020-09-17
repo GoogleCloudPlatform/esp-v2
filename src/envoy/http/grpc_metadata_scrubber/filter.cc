@@ -29,7 +29,8 @@ Envoy::Http::FilterHeadersStatus Filter::encodeHeaders(
   ENVOY_LOG(debug, "Filter::encodeHeaders is called.");
   config_->stats().all_.inc();
 
-  if (Envoy::Grpc::Common::hasGrpcContentType(headers) && headers.ContentLength() != nullptr) {
+  if (Envoy::Grpc::Common::hasGrpcContentType(headers) &&
+      headers.ContentLength() != nullptr) {
     ENVOY_LOG(debug, "Content-length header is removed");
     headers.removeContentLength();
     config_->stats().removed_.inc();
