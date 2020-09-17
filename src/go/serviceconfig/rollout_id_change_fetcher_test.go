@@ -82,7 +82,7 @@ func TestFetchLatestRolloutId(t *testing.T) {
 	util.CallGoogleapis = callGoogleapis
 }
 
-func TestRolloutIdChangeFetcherSetDetectRolloutIdChangeTimer(t *testing.T) {
+func TestSetDetectRolloutIdChangeTimer(t *testing.T) {
 	serviceRolloutId := "service-config-id"
 	serviceControlServer := util.InitMockServer(genFakeReport(serviceRolloutId))
 	accessToken := func() (string, time.Duration, error) { return "token", time.Duration(60), nil }
