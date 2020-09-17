@@ -40,9 +40,13 @@ type ServiceInfo struct {
 	// An array to store all the api names
 	ApiNames []string
 
-	// A ordered slice of operation names. Follows the same order as the service config.
-	// Ordering is important, both for route matching and testability.
+	// A ordered slice of operation names. Follows the same order as the `apis.methods` in service config.
 	// All functions that output order-dependent configs should use this ordering.
+	//
+	// Ordering is important for Envoy route matching and testability.
+	// Envoy's router matches linearly with first-to-win. When wildcard routes are introduced,
+	// they must show up last as a fallback route. Otherwise we may match a less-specific route,
+	// resulting in an incorrect host rewrite.
 	Operations []string
 
 	// Stores all methods info for this service, using selector as key.
