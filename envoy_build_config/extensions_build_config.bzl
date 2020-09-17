@@ -25,6 +25,7 @@ EXTENSIONS = {
 
     # Remaining items are for API Gateway and not covered by our tests. Do not remove.
     "envoy.access_loggers.http_grpc": "//source/extensions/access_loggers/grpc:http_config",
+    "envoy.filters.http.header_to_metadata": "//source/extensions/filters/http/header_to_metadata:config",
     "envoy.stat_sinks.metrics_service": "//source/extensions/stat_sinks/metrics_service:config",
     "envoy.stat_sinks.statsd": "//source/extensions/stat_sinks/statsd:config",
 }
