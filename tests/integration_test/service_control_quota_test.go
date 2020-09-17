@@ -41,7 +41,7 @@ func TestServiceControlQuota(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlQuota, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlQuota, platform.GrpcBookstoreSidecar)
 	s.OverrideQuota(&confpb.Quota{
 		MetricRules: []*confpb.MetricRule{
 			{
@@ -218,7 +218,7 @@ func TestServiceControlQuotaUnavailable(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlQuotaUnavailable, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlQuotaUnavailable, platform.GrpcBookstoreSidecar)
 	s.OverrideQuota(&confpb.Quota{
 		MetricRules: []*confpb.MetricRule{
 			{
@@ -287,7 +287,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlQuotaExhausted, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlQuotaExhausted, platform.GrpcBookstoreSidecar)
 	s.OverrideQuota(&confpb.Quota{
 		MetricRules: []*confpb.MetricRule{
 			{

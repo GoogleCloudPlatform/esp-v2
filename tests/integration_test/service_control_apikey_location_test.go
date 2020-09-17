@@ -24,7 +24,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -35,7 +34,7 @@ func TestServiceControlAPIKeyDefaultLocation(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlAPIKeyDefaultLocation, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlAPIKeyDefaultLocation, platform.GrpcBookstoreSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -109,7 +108,7 @@ func TestServiceControlAPIKeyCustomLocation(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlAPIKeyCustomLocation, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlAPIKeyCustomLocation, platform.GrpcBookstoreSidecar)
 	s.OverrideSystemParameters(&confpb.SystemParameters{
 		Rules: []*confpb.SystemParameterRule{
 			{

@@ -25,13 +25,11 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 func TestWebsocket(t *testing.T) {
 	t.Parallel()
-	s := env.NewTestEnv(comp.TestWebsocket, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestWebsocket, platform.EchoSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

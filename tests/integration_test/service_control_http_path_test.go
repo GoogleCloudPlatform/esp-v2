@@ -24,8 +24,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 func TestServiceControlAllHTTPPath(t *testing.T) {
@@ -36,7 +34,7 @@ func TestServiceControlAllHTTPPath(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlAllHTTPPath, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlAllHTTPPath, platform.EchoSidecar)
 	s.EnableEchoServerRootPathHandler()
 
 	defer s.TearDown(t)

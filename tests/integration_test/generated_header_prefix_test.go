@@ -24,7 +24,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -80,7 +79,7 @@ func TestGeneratedHeaders(t *testing.T) {
 				args = append(args, tc.generatedHeaderPrefixArg)
 			}
 
-			s := env.NewTestEnv(comp.TestGeneratedHeaders, platform.EchoSidecar)
+			s := env.NewTestEnv(platform.TestGeneratedHeaders, platform.EchoSidecar)
 			s.OverrideAuthentication(&confpb.Authentication{
 				Rules: []*confpb.AuthenticationRule{
 					{

@@ -25,8 +25,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 func TestMultiGrpcServices(t *testing.T) {
@@ -34,7 +32,7 @@ func TestMultiGrpcServices(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID, "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestMultiGrpcServices, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestMultiGrpcServices, platform.GrpcBookstoreSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

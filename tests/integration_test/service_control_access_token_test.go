@@ -20,7 +20,6 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 )
@@ -33,7 +32,7 @@ func TestServiceControlAccessTokenFromIam(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlAccessTokenFromIam, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlAccessTokenFromIam, platform.EchoSidecar)
 	serviceAccount := "ServiceAccount@google.com"
 	s.SetServiceControlIamServiceAccount(serviceAccount)
 	s.SetServiceControlIamDelegates("delegate_foo,delegate_bar,delegate_baz")
@@ -111,7 +110,7 @@ func TestServiceControlAccessTokenFromTokenAgent(t *testing.T) {
 	args := []string{"--service_config_id=test-config-id",
 		"--rollout_strategy=fixed", "--suppress_envoy_headers", "--service_account_key=" + customSa.FileName}
 
-	s := env.NewTestEnv(comp.TestServiceControlAccessTokenFromTokenAgent, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlAccessTokenFromTokenAgent, platform.EchoSidecar)
 
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {

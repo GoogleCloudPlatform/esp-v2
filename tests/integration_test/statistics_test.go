@@ -25,14 +25,13 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func TestStatistics(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewTestEnv(comp.TestStatistics, platform.EchoRemote)
+	s := env.NewTestEnv(platform.TestStatistics, platform.EchoRemote)
 
 	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
@@ -147,7 +146,7 @@ func TestStatisticsServiceControlCallStatus(t *testing.T) {
 
 	for _, tc := range tests {
 		func() {
-			s := env.NewTestEnv(comp.TestStatisticsServiceControlCallStatus, platform.GrpcBookstoreSidecar)
+			s := env.NewTestEnv(platform.TestStatisticsServiceControlCallStatus, platform.GrpcBookstoreSidecar)
 
 			if tc.checkRespCode != 0 {
 				s.ServiceControlServer.SetCheckResponseStatus(tc.checkRespCode)

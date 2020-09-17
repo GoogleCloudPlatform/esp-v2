@@ -27,7 +27,6 @@ import (
 
 	bookstore "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	echoclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 func TestServiceControlProtocolWithGRPCBackend(t *testing.T) {
@@ -43,7 +42,7 @@ func TestServiceControlProtocolWithGRPCBackend(t *testing.T) {
 
 	headerWithAPIKey := http.Header{bookstore.APIKeyHeaderKey: []string{"foobar"}}
 
-	s := env.NewTestEnv(comp.TestServiceControlProtocolWithGRPCBackend, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlProtocolWithGRPCBackend, platform.GrpcBookstoreSidecar)
 
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
@@ -155,7 +154,7 @@ func TestServiceControlProtocolWithHTTPBackend(t *testing.T) {
 		"--rollout_strategy=fixed",
 	}
 
-	s := env.NewTestEnv(comp.TestServiceControlProtocolWithHTTPBackend, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlProtocolWithHTTPBackend, platform.EchoSidecar)
 
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {

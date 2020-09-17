@@ -31,7 +31,7 @@ type Envoy struct {
 }
 
 // createEnvoyConf create envoy config.
-func createEnvoyConf(configPath string, bootstrapArgs []string, ports *Ports) error {
+func createEnvoyConf(configPath string, bootstrapArgs []string, ports *platform.Ports) error {
 
 	glog.Infof("Outputting envoy bootstrap config to: %v", configPath)
 
@@ -49,7 +49,7 @@ func createEnvoyConf(configPath string, bootstrapArgs []string, ports *Ports) er
 }
 
 // NewEnvoy creates a new Envoy struct and starts envoy.
-func NewEnvoy(args []string, bootstrapArgs []string, confPath string, ports *Ports, testId uint16) (*Envoy, error) {
+func NewEnvoy(args []string, bootstrapArgs []string, confPath string, ports *platform.Ports, testId uint16) (*Envoy, error) {
 
 	if err := createEnvoyConf(confPath, bootstrapArgs, ports); err != nil {
 		return nil, err

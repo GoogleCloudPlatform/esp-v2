@@ -24,8 +24,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 const (
@@ -40,7 +38,7 @@ func TestHttp1Basic(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--rollout_strategy=fixed", "--healthz=/healthz"}
 
-	s := env.NewTestEnv(comp.TestHttp1Basic, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestHttp1Basic, platform.EchoSidecar)
 	defer s.TearDown(t)
 
 	if err := s.Setup(args); err != nil {
@@ -113,7 +111,7 @@ func TestHttp1JWT(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--skip_service_control_filter=true", "--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestHttp1JWT, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestHttp1JWT, platform.EchoSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -213,7 +211,7 @@ func TestHttpHeaders(t *testing.T) {
 	}
 	for _, tc := range testData {
 		func() {
-			s := env.NewTestEnv(comp.TestHttpHeaders, platform.GrpcBookstoreSidecar)
+			s := env.NewTestEnv(platform.TestHttpHeaders, platform.GrpcBookstoreSidecar)
 			defer s.TearDown(t)
 			args := utils.CommonArgs()
 			if tc.underscoresInHeaders {

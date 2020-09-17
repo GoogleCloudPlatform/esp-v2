@@ -26,14 +26,12 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 	"github.com/golang/glog"
-
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 func TestBackendAuthWithIamIdToken(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewTestEnv(comp.TestBackendAuthWithIamIdToken, platform.EchoRemote)
+	s := env.NewTestEnv(platform.TestBackendAuthWithIamIdToken, platform.EchoRemote)
 	serviceAccount := "fakeServiceAccount@google.com"
 
 	s.SetBackendAuthIamServiceAccount(serviceAccount)
@@ -86,7 +84,7 @@ func TestBackendAuthWithIamIdToken(t *testing.T) {
 
 func TestBackendAuthWithIamIdTokenRetries(t *testing.T) {
 	t.Parallel()
-	s := env.NewTestEnv(comp.TestBackendAuthWithIamIdTokenRetries, platform.EchoRemote)
+	s := env.NewTestEnv(platform.TestBackendAuthWithIamIdTokenRetries, platform.EchoRemote)
 	serviceAccount := "fakeServiceAccount@google.com"
 	s.SetBackendAuthIamServiceAccount(serviceAccount)
 
@@ -195,7 +193,7 @@ func TestBackendAuthWithIamIdTokenTimeouts(t *testing.T) {
 
 		// Place in closure to allow deferring in loop.
 		func() {
-			s := env.NewTestEnv(comp.TestBackendAuthWithIamIdTokenTimeouts, platform.EchoRemote)
+			s := env.NewTestEnv(platform.TestBackendAuthWithIamIdTokenTimeouts, platform.EchoRemote)
 			serviceAccount := "fakeServiceAccount@google.com"
 			s.SetBackendAuthIamServiceAccount(serviceAccount)
 
@@ -246,7 +244,7 @@ func TestBackendAuthWithIamIdTokenTimeouts(t *testing.T) {
 func TestBackendAuthUsingIamIdTokenWithDelegates(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewTestEnv(comp.TestBackendAuthUsingIamIdTokenWithDelegates, platform.EchoRemote)
+	s := env.NewTestEnv(platform.TestBackendAuthUsingIamIdTokenWithDelegates, platform.EchoRemote)
 	serviceAccount := "fakeServiceAccount@google.com"
 
 	s.SetBackendAuthIamServiceAccount(serviceAccount)

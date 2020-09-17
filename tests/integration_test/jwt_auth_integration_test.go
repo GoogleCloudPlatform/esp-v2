@@ -28,7 +28,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	echo_client "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -39,7 +38,7 @@ func TestAsymmetricKeys(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestAsymmetricKeys, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestAsymmetricKeys, platform.GrpcBookstoreSidecar)
 	if err := s.FakeJwtService.SetupValidOpenId(); err != nil {
 		t.Fatalf("fail to setup open id servers: %v", err)
 	}
@@ -214,7 +213,7 @@ func TestInvalidOpenIDConnectDiscovery(t *testing.T) {
 
 	for _, tc := range tests {
 		func() {
-			s := env.NewTestEnv(comp.TestInvalidOpenIDConnectDiscovery, platform.GrpcBookstoreSidecar)
+			s := env.NewTestEnv(platform.TestInvalidOpenIDConnectDiscovery, platform.GrpcBookstoreSidecar)
 			if err := s.FakeJwtService.SetupInvalidOpenId(); err != nil {
 				t.Fatalf("fail to setup open id servers: %v", err)
 			}
@@ -251,7 +250,7 @@ func TestInvalidOpenIDConnectDiscovery(t *testing.T) {
 func TestFrontendAndBackendAuthHeaders(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewTestEnv(comp.TestFrontendAndBackendAuthHeaders, platform.EchoRemote)
+	s := env.NewTestEnv(platform.TestFrontendAndBackendAuthHeaders, platform.EchoRemote)
 	s.OverrideAuthentication(&confpb.Authentication{
 		Rules: []*confpb.AuthenticationRule{
 			{

@@ -21,8 +21,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/grpc_echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
-
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 func TestGRPCErrors(t *testing.T) {
@@ -33,7 +31,7 @@ func TestGRPCErrors(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestGRPCErrors, platform.GrpcEchoSidecar)
+	s := env.NewTestEnv(platform.TestGRPCErrors, platform.GrpcEchoSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

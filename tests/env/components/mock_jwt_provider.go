@@ -58,7 +58,7 @@ func NewFakeJwtService() *FakeJwtService {
 }
 
 // Setup non-OpenId providers.
-func (fjs *FakeJwtService) SetupJwt(requestedProviders map[string]bool, ports *Ports) error {
+func (fjs *FakeJwtService) SetupJwt(requestedProviders map[string]bool, ports *platform.Ports) error {
 
 	// Setup non-OpenID providers
 	for i, config := range testdata.ProviderConfigs {

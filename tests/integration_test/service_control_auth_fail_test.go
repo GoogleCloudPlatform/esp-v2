@@ -28,7 +28,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -39,7 +38,7 @@ func TestServiceControlJwtAuthFail(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestServiceControlJwtAuthFail, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlJwtAuthFail, platform.GrpcBookstoreSidecar)
 	s.OverrideAuthentication(&confpb.Authentication{
 		Rules: []*confpb.AuthenticationRule{
 			{

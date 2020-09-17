@@ -21,7 +21,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 )
@@ -89,7 +88,7 @@ func TestMetadataRequestsPerPlatform(t *testing.T) {
 
 		// Place in closure to allow deferring in loop.
 		func() {
-			s := env.NewTestEnv(comp.TestMetadataRequestsPerPlatform, platform.EchoSidecar)
+			s := env.NewTestEnv(platform.TestMetadataRequestsPerPlatform, platform.EchoSidecar)
 			defer s.TearDown(t)
 			if err := s.Setup(tc.confArgs); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)

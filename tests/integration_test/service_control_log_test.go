@@ -28,7 +28,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	bsClient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
@@ -41,7 +40,7 @@ func TestServiceControlLogHeaders(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers", "--log_request_headers=Fake-Header-Key0,Fake-Header-Key1,Fake-Header-Key2,Non-Existing-Header-Key", "--log_response_headers=Echo-Fake-Header-Key0,Echo-Fake-Header-Key1,Echo-Fake-Header-Key2,Non-Existing-Header-Key"}
 
-	s := env.NewTestEnv(comp.TestServiceControlLogHeaders, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlLogHeaders, platform.EchoSidecar)
 	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",
@@ -157,7 +156,7 @@ func TestServiceControlLogJwtPayloads(t *testing.T) {
 		"--rollout_strategy=fixed", "--suppress_envoy_headers", `--log_jwt_payloads=exp,foo.foo_list,google,google.compute_engine.project_id,google.project_number,google.google_bool,foo.foo_bool,google.compute_engine.not_existed,aud,not_existed`,
 	}
 
-	s := env.NewTestEnv(comp.TestServiceControlLogJwtPayloads, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlLogJwtPayloads, platform.GrpcBookstoreSidecar)
 	s.OverrideAuthentication(&confpb.Authentication{
 		Rules: []*confpb.AuthenticationRule{
 			{

@@ -24,7 +24,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
@@ -35,7 +34,7 @@ func TestGRPCStreaming(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestGRPCStreaming, platform.GrpcEchoSidecar)
+	s := env.NewTestEnv(platform.TestGRPCStreaming, platform.GrpcEchoSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

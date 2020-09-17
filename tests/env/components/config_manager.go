@@ -28,7 +28,7 @@ type ConfigManagerServer struct {
 	grpcPort uint16
 }
 
-func NewConfigManagerServer(debugMode bool, ports *Ports, args []string) (*ConfigManagerServer, error) {
+func NewConfigManagerServer(debugMode bool, ports *platform.Ports, args []string) (*ConfigManagerServer, error) {
 
 	// Set config manager flags.
 	args = append(args, "--listener_address", platform.GetAnyAddress())

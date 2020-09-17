@@ -25,7 +25,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
@@ -38,7 +37,7 @@ func TestServiceControlBasic(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlBasic, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlBasic, platform.EchoSidecar)
 	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",

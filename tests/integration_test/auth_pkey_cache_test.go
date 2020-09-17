@@ -25,8 +25,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 func TestAuthJwksCache(t *testing.T) {
@@ -71,7 +69,7 @@ func TestAuthJwksCache(t *testing.T) {
 		func() {
 			args := utils.CommonArgs()
 
-			s := env.NewTestEnv(comp.TestAuthJwksCache, platform.EchoSidecar)
+			s := env.NewTestEnv(platform.TestAuthJwksCache, platform.EchoSidecar)
 			if tc.jwksCacheDurationInS != 0 {
 				args = append(args, fmt.Sprintf("--jwks_cache_duration_in_s=%v", tc.jwksCacheDurationInS))
 			}

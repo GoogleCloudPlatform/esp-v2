@@ -15,6 +15,9 @@
 package testdata
 
 import (
+	"fmt"
+
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
@@ -415,13 +418,13 @@ var (
 			Rules: []*confpb.BackendRule{
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-					Address:         "https://localhost:-1/echo",
+					Address:         fmt.Sprintf("https://localhost:%s/echo", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					// No authentication on this rule, essentially the same as `disable_auth`
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
-					Address:         "https://localhost:-1/dynamicrouting/getpetbyid",
+					Address:         fmt.Sprintf("https://localhost:%s/dynamicrouting/getpetbyid", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/dynamicrouting/getpetbyid",
@@ -429,7 +432,7 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchPet",
-					Address:         "https://localhost:-1/dynamicrouting/searchpet",
+					Address:         fmt.Sprintf("https://localhost:%s/dynamicrouting/searchpet", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/dynamicrouting/searchpet",
@@ -437,7 +440,7 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchDogsWithSlash",
-					Address:         "https://localhost:-1/dynamicrouting/searchdogs/",
+					Address:         fmt.Sprintf("https://localhost:%s/dynamicrouting/searchdogs/", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/dynamicrouting/searchpet",
@@ -445,7 +448,7 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AppendToRoot",
-					Address:         "https://localhost:-1",
+					Address:         fmt.Sprintf("https://localhost:%s", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/searchroot",
@@ -453,7 +456,7 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AppendToRootWithSlash",
-					Address:         "https://localhost:-1/",
+					Address:         fmt.Sprintf("https://localhost:%s/", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/searchrootwithslash",
@@ -461,7 +464,7 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets",
-					Address:         "https://localhost:-1/dynamicrouting/listpet",
+					Address:         fmt.Sprintf("https://localhost:%s/dynamicrouting/listpet", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/dynamicrouting/listpet",
@@ -469,7 +472,7 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListShelves",
-					Address:         "https://localhost:-1/dynamicrouting/shelves",
+					Address:         fmt.Sprintf("https://localhost:%s/dynamicrouting/shelves", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/dynamicrouting/shelves",
@@ -477,7 +480,7 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_EmptyPath",
-					Address:         "https://localhost:-1",
+					Address:         fmt.Sprintf("https://localhost:%s", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/dynamicrouting/emptypath",
@@ -485,7 +488,7 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetBookInfoWithSnakeCase",
-					Address:         "https://localhost:-1/dynamicrouting/bookinfo",
+					Address:         fmt.Sprintf("https://localhost:%s/dynamicrouting/bookinfo", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/dynamicrouting/bookinfo",
@@ -493,7 +496,7 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetBookIdWithSnakeCase",
-					Address:         "https://localhost:-1/dynamicrouting/bookid",
+					Address:         fmt.Sprintf("https://localhost:%s/dynamicrouting/bookid", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/dynamicrouting/bookid",
@@ -501,7 +504,7 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchPetWithServiceControlVerification",
-					Address:         "https://localhost:-1/dynamicrouting/",
+					Address:         fmt.Sprintf("https://localhost:%s/dynamicrouting/", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/dynamicrouting",
@@ -509,7 +512,7 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetByIdWithServiceControlVerification",
-					Address:         "https://localhost:-1/dynamicrouting/",
+					Address:         fmt.Sprintf("https://localhost:%s/dynamicrouting/", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/dynamicrouting",
@@ -517,7 +520,7 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_BearertokenConstantAddress",
-					Address:         "https://localhost:-1/bearertoken/constant",
+					Address:         fmt.Sprintf("https://localhost:%s/bearertoken/constant", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/bearertoken/constant",
@@ -525,7 +528,7 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_BearertokenAppendAddress",
-					Address:         "https://localhost:-1",
+					Address:         fmt.Sprintf("https://localhost:%s", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/bearertoken/append",
@@ -533,24 +536,24 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AuthenticationNotSet",
-					Address:         "https://localhost:-1/bearertoken/constant",
+					Address:         fmt.Sprintf("https://localhost:%s/bearertoken/constant", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_DisableAuthSetToTrue",
-					Address:         "https://localhost:-1/bearertoken/constant",
+					Address:         fmt.Sprintf("https://localhost:%s/bearertoken/constant", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication:  &confpb.BackendRule_DisableAuth{DisableAuth: true},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_DisableAuthSetToFalse",
-					Address:         "https://localhost:-1/bearertoken/constant",
+					Address:         fmt.Sprintf("https://localhost:%s/bearertoken/constant", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication:  &confpb.BackendRule_DisableAuth{DisableAuth: false},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Simplegetcors",
-					Address:         "https://localhost:-1",
+					Address:         fmt.Sprintf("https://localhost:%s", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/simplegetcors",
@@ -558,7 +561,7 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Auth_info_firebase",
-					Address:         "https://localhost:-1",
+					Address:         fmt.Sprintf("https://localhost:%s", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/auth/info/firebase",
@@ -566,7 +569,7 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SleepDurationDefault",
-					Address:         "https://localhost:-1",
+					Address:         fmt.Sprintf("https://localhost:%s", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/sleepDefault",
@@ -574,7 +577,7 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SleepDurationShort",
-					Address:         "https://localhost:-1",
+					Address:         fmt.Sprintf("https://localhost:%s", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/sleepShort",
@@ -583,7 +586,7 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Re2ProgramSize",
-					Address:         "https://localhost:-1",
+					Address:         fmt.Sprintf("https://localhost:%s", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
 						JwtAudience: "https://localhost/non-existant-url",
@@ -591,24 +594,24 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Wildcards",
-					Address:         "https://localhost:-1/dynamicrouting/const_wildcard",
+					Address:         fmt.Sprintf("https://localhost:%s/dynamicrouting/const_wildcard", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_first_matched",
 					// Address is malformed on purpose. We can ensure envoy host rewrite fails.
-					Address:         "https://localhost:9/echo",
+					Address:         fmt.Sprintf("https://localhost:%s/echo", platform.InvalidBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_second_catch_all",
-					Address:         "https://localhost:-1/echo",
+					Address:         fmt.Sprintf("https://localhost:%s/echo", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_third_unmatched",
 					// Address is malformed on purpose. We can ensure envoy host rewrite fails.
-					Address:         "https://localhost:9/echo",
+					Address:         fmt.Sprintf("https://localhost:%s/echo", platform.InvalidBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
 			},

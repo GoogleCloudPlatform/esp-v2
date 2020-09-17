@@ -27,7 +27,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 
 	grpcEchoClient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/grpc_echo/client"
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 var successTrailer, abortedTrailer, dataLossTrailer, internalTrailer client.GRPCWebTrailer
@@ -45,7 +44,7 @@ func TestGRPC(t *testing.T) {
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID, "--rollout_strategy=fixed", "--healthz=healthz"}
 
-	s := env.NewTestEnv(comp.TestGRPC, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestGRPC, platform.GrpcBookstoreSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -151,7 +150,7 @@ func TestGRPCWeb(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestGRPCWeb, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestGRPCWeb, platform.GrpcBookstoreSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -235,7 +234,7 @@ func TestGRPCJwt(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestGRPCJwt, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestGRPCJwt, platform.GrpcBookstoreSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -500,7 +499,7 @@ func TestGRPCMetadata(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestGRPCMetadata, platform.GrpcEchoSidecar)
+	s := env.NewTestEnv(platform.TestGRPCMetadata, platform.GrpcEchoSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

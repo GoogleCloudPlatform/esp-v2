@@ -23,15 +23,13 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 // Tests the deadlines configured in backend rules for a gRPC remote backends.
 func TestDeadlinesForGrpcDynamicRouting(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewTestEnv(comp.TestDeadlinesForGrpcDynamicRouting, platform.GrpcEchoRemote)
+	s := env.NewTestEnv(platform.TestDeadlinesForGrpcDynamicRouting, platform.GrpcEchoRemote)
 
 	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
@@ -125,7 +123,7 @@ plans {
 func TestDeadlinesForGrpcCatchAllBackend(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewTestEnv(comp.TestDeadlinesForGrpcCatchAllBackend, platform.GrpcEchoSidecar)
+	s := env.NewTestEnv(platform.TestDeadlinesForGrpcCatchAllBackend, platform.GrpcEchoSidecar)
 
 	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {

@@ -23,8 +23,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 const (
@@ -157,7 +155,7 @@ func TestReportGCPAttributes(t *testing.T) {
 			args = append(args, fmt.Sprintf("--compute_platform_override=%v", tc.platformOverride))
 		}
 		func() {
-			s := env.NewTestEnv(comp.TestReportGCPAttributes, platform.EchoSidecar)
+			s := env.NewTestEnv(platform.TestReportGCPAttributes, platform.EchoSidecar)
 			s.OverrideMockMetadata(tc.mockMetadataOverride, 0)
 
 			defer s.TearDown(t)
@@ -222,7 +220,7 @@ func TestReportGCPAttributesPerPlatform(t *testing.T) {
 
 	for _, tc := range testdata {
 		func() {
-			s := env.NewTestEnv(comp.TestReportGCPAttributesPerPlatform, platform.EchoSidecar)
+			s := env.NewTestEnv(platform.TestReportGCPAttributesPerPlatform, platform.EchoSidecar)
 
 			defer s.TearDown(t)
 			if err := s.Setup(tc.confArgs); err != nil {

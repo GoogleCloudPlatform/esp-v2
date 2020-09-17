@@ -36,7 +36,7 @@ func TestManagedServiceConfig(t *testing.T) {
 	t.Parallel()
 
 	args := []string{"--rollout_strategy=managed", "--check_rollout_interval=500ms"}
-	s := env.NewTestEnv(comp.TestManagedServiceConfig, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestManagedServiceConfig, platform.GrpcBookstoreSidecar)
 	s.SetEnvoyDrainTimeInSec(1)
 
 	s.OverrideAuthentication(&confpb.Authentication{
@@ -132,7 +132,7 @@ func TestRetryCallServiceManagement(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--rollout_strategy=fixed", "--healthz=/healthz"}
 
-	s := env.NewTestEnv(comp.TestRetryCallServiceManagement, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestRetryCallServiceManagement, platform.EchoSidecar)
 	defer s.TearDown(t)
 
 	s.MockServiceManagementServer.ConfigsHandler = &configsHandler{

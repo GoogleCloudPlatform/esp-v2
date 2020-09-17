@@ -25,7 +25,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 	apipb "google.golang.org/genproto/protobuf/api"
 
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 )
 
@@ -46,7 +45,7 @@ func TestSimpleCorsWithBasicPreset(t *testing.T) {
 		"--cors_allow_origin=" + corsAllowOriginValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
-	s := env.NewTestEnv(comp.TestSimpleCorsWithBasicPreset, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestSimpleCorsWithBasicPreset, platform.EchoSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -110,7 +109,7 @@ func TestDifferentOriginSimpleCors(t *testing.T) {
 		"--cors_allow_origin=" + corsAllowOriginValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
-	s := env.NewTestEnv(comp.TestDifferentOriginSimpleCors, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestDifferentOriginSimpleCors, platform.EchoSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -152,7 +151,7 @@ func TestSimpleCorsWithRegexPreset(t *testing.T) {
 		"--cors_allow_origin_regex=" + corsAllowOriginRegex,
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
-	s := env.NewTestEnv(comp.TestSimpleCorsWithRegexPreset, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestSimpleCorsWithRegexPreset, platform.EchoSidecar)
 	// UseWrongBackendCertForDR shouldn't impact simple Cors.
 	s.UseWrongBackendCertForDR(true)
 	defer s.TearDown(t)
@@ -203,7 +202,7 @@ func TestPreflightCorsWithBasicPreset(t *testing.T) {
 		"--cors_allow_headers=" + corsAllowHeadersValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
 
-	s := env.NewTestEnv(comp.TestPreflightCorsWithBasicPreset, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestPreflightCorsWithBasicPreset, platform.EchoSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -257,7 +256,7 @@ func TestDifferentOriginPreflightCors(t *testing.T) {
 		"--cors_allow_headers=" + corsAllowHeadersValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
 
-	s := env.NewTestEnv(comp.TestDifferentOriginPreflightCors, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestDifferentOriginPreflightCors, platform.EchoSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -304,7 +303,7 @@ func TestGrpcBackendSimpleCors(t *testing.T) {
 		"--cors_allow_origin=" + corsAllowOriginValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
-	s := env.NewTestEnv(comp.TestGrpcBackendSimpleCors, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestGrpcBackendSimpleCors, platform.GrpcBookstoreSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -352,7 +351,7 @@ func TestGrpcBackendPreflightCors(t *testing.T) {
 		"--cors_allow_headers=" + corsAllowHeadersValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
 
-	s := env.NewTestEnv(comp.TestGrpcBackendPreflightCors, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestGrpcBackendPreflightCors, platform.GrpcBookstoreSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -403,7 +402,7 @@ func TestPreflightRequestWithAllowCors(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestPreflightRequestWithAllowCors, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestPreflightRequestWithAllowCors, platform.EchoSidecar)
 	s.SetAllowCors()
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
@@ -473,7 +472,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlRequestWithAllowCors, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlRequestWithAllowCors, platform.EchoSidecar)
 	s.SetAllowCors()
 	s.AppendApiMethods([]*apipb.Method{
 		{
@@ -658,7 +657,7 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlRequestWithoutAllowCors, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlRequestWithoutAllowCors, platform.EchoSidecar)
 	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.ListShelves",
@@ -792,7 +791,7 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 func TestStartupDuplicatedPathsWithAllowCors(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewTestEnv(comp.TestStartupDuplicatedPathsWithAllowCors, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestStartupDuplicatedPathsWithAllowCors, platform.EchoSidecar)
 	s.SetAllowCors()
 	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{

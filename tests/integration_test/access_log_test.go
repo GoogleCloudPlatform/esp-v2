@@ -23,7 +23,6 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 )
 
@@ -96,7 +95,7 @@ func TestAccessLog(t *testing.T) {
 			args := []string{"--service_config_id=" + configID,
 				"--rollout_strategy=fixed", "--access_log=" + accessLogFilePath, "--access_log_format=" + accessLogFormat}
 
-			s := env.NewTestEnv(comp.TestAccessLog, platform.EchoSidecar)
+			s := env.NewTestEnv(platform.TestAccessLog, platform.EchoSidecar)
 
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)

@@ -27,7 +27,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 func NewDynamicRoutingTestEnv(port uint16) *env.TestEnv {
@@ -37,7 +36,7 @@ func NewDynamicRoutingTestEnv(port uint16) *env.TestEnv {
 
 func TestDynamicRouting(t *testing.T) {
 	t.Parallel()
-	s := NewDynamicRoutingTestEnv(comp.TestDynamicRouting)
+	s := NewDynamicRoutingTestEnv(platform.TestDynamicRouting)
 	defer s.TearDown(t)
 
 	if err := s.Setup(utils.CommonArgs()); err != nil {
@@ -295,7 +294,7 @@ func TestDynamicRoutingWithAllowCors(t *testing.T) {
 	respHeaderMap["Access-Control-Expose-Headers"] = "Cache-Control,Content-Type,Authorization, X-PINGOTHER"
 	respHeaderMap["Access-Control-Allow-Credentials"] = "true"
 
-	s := NewDynamicRoutingTestEnv(comp.TestDynamicRoutingWithAllowCors)
+	s := NewDynamicRoutingTestEnv(platform.TestDynamicRoutingWithAllowCors)
 	s.SetAllowCors()
 
 	defer s.TearDown(t)
@@ -360,7 +359,7 @@ func TestDynamicRoutingCorsByEnvoy(t *testing.T) {
 		"--cors_expose_headers=" + corsExposeHeadersValue,
 		"--cors_allow_credentials"}...)
 
-	s := NewDynamicRoutingTestEnv(comp.TestDynamicRoutingCorsByEnvoy)
+	s := NewDynamicRoutingTestEnv(platform.TestDynamicRoutingCorsByEnvoy)
 	defer s.TearDown(t)
 
 	if err := s.Setup(dynamicRoutingArgs); err != nil {
@@ -401,7 +400,7 @@ func TestDynamicRoutingCorsByEnvoy(t *testing.T) {
 func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 	t.Parallel()
 
-	s := NewDynamicRoutingTestEnv(comp.TestServiceControlRequestForDynamicRouting)
+	s := NewDynamicRoutingTestEnv(platform.TestServiceControlRequestForDynamicRouting)
 	defer s.TearDown(t)
 
 	if err := s.Setup(utils.CommonArgs()); err != nil {
@@ -639,7 +638,7 @@ func TestDynamicBackendRoutingTLS(t *testing.T) {
 
 	for _, tc := range testData {
 		func() {
-			s := env.NewTestEnv(comp.TestDynamicBackendRoutingTLS, platform.EchoRemote)
+			s := env.NewTestEnv(platform.TestDynamicBackendRoutingTLS, platform.EchoRemote)
 			s.UseWrongBackendCertForDR(tc.useWrongCert)
 			defer s.TearDown(t)
 
@@ -763,7 +762,7 @@ func TestDynamicBackendRoutingMutualTLS(t *testing.T) {
 
 	for _, tc := range testData {
 		func() {
-			s := env.NewTestEnv(comp.TestDynamicBackendRoutingMutualTLS, platform.EchoRemote)
+			s := env.NewTestEnv(platform.TestDynamicBackendRoutingMutualTLS, platform.EchoRemote)
 			s.SetBackendMTLSCert(tc.mtlsCertFile)
 			defer s.TearDown(t)
 
@@ -859,7 +858,7 @@ func TestDynamicGrpcBackendTLS(t *testing.T) {
 	for _, tc := range tests {
 		args := utils.CommonArgs()
 		func() {
-			s := env.NewTestEnv(comp.TestDynamicGrpcBackendTLS, platform.GrpcBookstoreRemote)
+			s := env.NewTestEnv(platform.TestDynamicGrpcBackendTLS, platform.GrpcBookstoreRemote)
 			defer s.TearDown(t)
 			s.UseWrongBackendCertForDR(tc.useWrongBackendCert)
 			if tc.mtlsCertFile != "" {

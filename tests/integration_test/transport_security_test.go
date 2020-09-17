@@ -49,7 +49,7 @@ func TestServiceManagementWithTLS(t *testing.T) {
 			confArgs: append([]string{
 				"--ssl_sidestream_client_root_certs_path", platform.GetFilePath(platform.ProxyCert),
 			}, utils.CommonArgs()...),
-			port:     comp.TestServiceManagementWithValidCert,
+			port:     platform.TestServiceManagementWithValidCert,
 			wantResp: `{"message":"hello"}`,
 		},
 		{
@@ -59,7 +59,7 @@ func TestServiceManagementWithTLS(t *testing.T) {
 			confArgs: append([]string{
 				"--ssl_sidestream_client_root_certs_path", platform.GetFilePath(platform.ProxyCert),
 			}, utils.CommonArgs()...),
-			port:         comp.TestServiceManagementWithInvalidCert,
+			port:         platform.TestServiceManagementWithInvalidCert,
 			wantSetupErr: "health check response was not healthy",
 		},
 		{
@@ -70,7 +70,7 @@ func TestServiceManagementWithTLS(t *testing.T) {
 			certPath:     platform.GetFilePath(platform.ProxyCert),
 			keyPath:      platform.GetFilePath(platform.ProxyKey),
 			confArgs:     utils.CommonArgs(),
-			port:         comp.TestServiceManagementWithInvalidCert,
+			port:         platform.TestServiceManagementWithInvalidCert,
 			wantSetupErr: "health check response was not healthy",
 		},
 	}
@@ -134,7 +134,7 @@ func TestServiceControlWithTLS(t *testing.T) {
 		{
 			desc:      "Failed to call ServiceControl HTTPS server, with different Cert as proxy",
 			token:     testdata.FakeCloudTokenMultiAudiences,
-			port:      comp.TestServiceControlTLSWithValidCert,
+			port:      platform.TestServiceControlTLSWithValidCert,
 			certPath:  platform.GetFilePath(platform.ServerCert),
 			keyPath:   platform.GetFilePath(platform.ServerKey),
 			wantError: "UNAVAILABLE:Calling Google Service Control API failed with: 503 and body: upstream connect error or disconnect/reset before headers. reset reason: connection failure",
@@ -172,7 +172,7 @@ func TestHttpsClients(t *testing.T) {
 	args := utils.CommonArgs()
 	args = append(args, "--ssl_server_cert_path=../env/testdata/")
 
-	s := env.NewTestEnv(comp.TestHttpsClients, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestHttpsClients, platform.EchoSidecar)
 	defer s.TearDown(t)
 	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{
@@ -246,7 +246,7 @@ func TestHSTS(t *testing.T) {
 	args = append(args, "--ssl_server_cert_path=../env/testdata/")
 	args = append(args, "--enable_strict_transport_security")
 
-	s := env.NewTestEnv(comp.TestHttpsClients, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestHttpsClients, platform.EchoSidecar)
 	defer s.TearDown(t)
 	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{

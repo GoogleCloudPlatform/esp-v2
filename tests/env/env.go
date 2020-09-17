@@ -71,7 +71,7 @@ type TestEnv struct {
 	serviceControlIamDelegates      string
 	MockServiceManagementServer     *components.MockServiceMrg
 	backendAddress                  string
-	ports                           *components.Ports
+	ports                           *platform.Ports
 	envoyDrainTimeInSec             int
 	ServiceControlServer            *components.MockServiceCtrl
 	FakeStackdriverServer           *components.FakeTraceServer
@@ -98,7 +98,7 @@ func NewTestEnv(testId uint16, backend platform.Backend) *TestEnv {
 		backend:                     backend,
 		mockMetadata:                true,
 		MockServiceManagementServer: components.NewMockServiceMrg(fakeServiceConfig.GetName(), initRolloutId, fakeServiceConfig),
-		ports:                       components.NewPorts(testId),
+		ports:                       platform.NewPorts(testId),
 		rolloutId:                   initRolloutId,
 		fakeServiceConfig:           fakeServiceConfig,
 		ServiceControlServer:        components.NewMockServiceCtrl(fakeServiceConfig.GetName(), initRolloutId),
@@ -117,10 +117,6 @@ func (e *TestEnv) SetEnvoyDrainTimeInSec(envoyDrainTimeInSec int) {
 func (e *TestEnv) OverrideMockMetadata(newImdsData map[string]string, imdsFailures int) {
 	e.mockMetadataOverride = newImdsData
 	e.mockMetadataFailures = imdsFailures
-}
-
-func (e *TestEnv) GetDynamicRoutingBackendPort() uint16 {
-	return e.ports.DynamicRoutingBackendPort
 }
 
 func (e *TestEnv) SetBackendAddress(backendAddress string) {
@@ -170,7 +166,7 @@ func (e *TestEnv) SetBackendMTLSCert(fileName string) {
 }
 
 // Ports returns test environment ports.
-func (e *TestEnv) Ports() *components.Ports {
+func (e *TestEnv) Ports() *platform.Ports {
 	return e.ports
 }
 
@@ -255,17 +251,15 @@ func (e *TestEnv) SkipHealthChecks() {
 	e.skipHealthChecks = true
 }
 
-// In the service config for each backend, the backend port is represented with a "-1".
-// Example: Address: "https://localhost:-1/"
-// During env setup, replace the -1 with the actual dynamic routing port for the test.
-// To force routing to a non-existent backend host, use "9".
+// In the service config for each backend, the backend port is represented with 2 constants.
+// Replace them as needed.
 func addDynamicRoutingBackendPort(serviceConfig *confpb.Service, port uint16) error {
 	for _, rule := range serviceConfig.Backend.GetRules() {
-		if !strings.Contains(rule.Address, "-1") && !strings.Contains(rule.Address, "9") {
+		if !strings.Contains(rule.Address, platform.WorkingBackendPort) && !strings.Contains(rule.Address, platform.InvalidBackendPort) {
 			return fmt.Errorf("backend rule address (%v) is not properly formatted", rule.Address)
 		}
 
-		rule.Address = strings.ReplaceAll(rule.Address, "-1", strconv.Itoa(int(port)))
+		rule.Address = strings.ReplaceAll(rule.Address, platform.WorkingBackendPort, strconv.Itoa(int(port)))
 	}
 	return nil
 }
@@ -572,7 +566,7 @@ func (e *TestEnv) TearDown(t *testing.T) {
 }
 
 // Form the backend address.
-func formBackendAddress(ports *components.Ports, backend platform.Backend) (string, error) {
+func formBackendAddress(ports *platform.Ports, backend platform.Backend) (string, error) {
 
 	backendAddress := fmt.Sprintf("%v:%v", platform.GetLoopbackHost(), ports.BackendServerPort)
 
