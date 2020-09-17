@@ -129,16 +129,16 @@
                         "@type": "type.googleapis.com/espv2.api.envoy.v8.http.path_matcher.FilterConfig",
                         "rules": [
                           {
-                            "operation": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.CreateShelf",
+                            "operation": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.ListShelves",
                             "pattern": {
-                              "httpMethod": "POST",
+                              "httpMethod": "GET",
                               "uriTemplate": "/shelves"
                             }
                           },
                           {
-                            "operation": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.ListShelves",
+                            "operation": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.CreateShelf",
                             "pattern": {
-                              "httpMethod": "GET",
+                              "httpMethod": "POST",
                               "uriTemplate": "/shelves"
                             }
                           }
@@ -157,12 +157,6 @@
                         },
                         "requirements": [
                           {
-                            "apiName": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog",
-                            "apiVersion": "1.0.0",
-                            "operationName": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.CreateShelf",
-                            "serviceName": "examples-service-control.endpoints.cloudesf-testing.cloud.goog"
-                          },
-                          {
                             "apiKey": {
                               "allowWithoutApiKey": true
                             },
@@ -175,6 +169,12 @@
                               }
                             ],
                             "operationName": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.ListShelves",
+                            "serviceName": "examples-service-control.endpoints.cloudesf-testing.cloud.goog"
+                          },
+                          {
+                            "apiName": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog",
+                            "apiVersion": "1.0.0",
+                            "operationName": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.CreateShelf",
                             "serviceName": "examples-service-control.endpoints.cloudesf-testing.cloud.goog"
                           }
                         ],

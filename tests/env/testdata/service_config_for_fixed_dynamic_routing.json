@@ -8,19 +8,19 @@
                     "responseTypeUrl": "type.googleapis.com/EchoMessage"
                 },
                 {
-                    "name": "dynamic_routing_Hello"
-                },
-                {
-                    "name": "dynamic_routing_Search"
+                    "name": "dynamic_routing_AddPet"
                 },
                 {
                     "name": "dynamic_routing_GetPetById"
                 },
                 {
-                    "name": "dynamic_routing_AddPet"
+                    "name": "dynamic_routing_Hello"
                 },
                 {
                     "name": "dynamic_routing_ListPets"
+                },
+                {
+                    "name": "dynamic_routing_Search"
                 }
             ],
             "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog",

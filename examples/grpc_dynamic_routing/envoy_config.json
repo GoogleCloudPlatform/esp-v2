@@ -211,13 +211,6 @@
                         "@type": "type.googleapis.com/espv2.api.envoy.v8.http.path_matcher.FilterConfig",
                         "rules": [
                           {
-                            "operation": "test.grpc.Test.Cork",
-                            "pattern": {
-                              "httpMethod": "POST",
-                              "uriTemplate": "/test.grpc.Test/Cork"
-                            }
-                          },
-                          {
                             "operation": "test.grpc.Test.Echo",
                             "pattern": {
                               "httpMethod": "POST",
@@ -232,20 +225,6 @@
                             }
                           },
                           {
-                            "operation": "test.grpc.Test.EchoReport",
-                            "pattern": {
-                              "httpMethod": "POST",
-                              "uriTemplate": "/echoreport"
-                            }
-                          },
-                          {
-                            "operation": "test.grpc.Test.EchoReport",
-                            "pattern": {
-                              "httpMethod": "POST",
-                              "uriTemplate": "/test.grpc.Test/EchoReport"
-                            }
-                          },
-                          {
                             "operation": "test.grpc.Test.EchoStream",
                             "pattern": {
                               "httpMethod": "POST",
@@ -257,6 +236,27 @@
                             "pattern": {
                               "httpMethod": "POST",
                               "uriTemplate": "/test.grpc.Test/EchoStream"
+                            }
+                          },
+                          {
+                            "operation": "test.grpc.Test.Cork",
+                            "pattern": {
+                              "httpMethod": "POST",
+                              "uriTemplate": "/test.grpc.Test/Cork"
+                            }
+                          },
+                          {
+                            "operation": "test.grpc.Test.EchoReport",
+                            "pattern": {
+                              "httpMethod": "POST",
+                              "uriTemplate": "/echoreport"
+                            }
+                          },
+                          {
+                            "operation": "test.grpc.Test.EchoReport",
+                            "pattern": {
+                              "httpMethod": "POST",
+                              "uriTemplate": "/test.grpc.Test/EchoReport"
                             }
                           }
                         ]
@@ -319,12 +319,6 @@
                         },
                         "requirements": [
                           {
-                            "apiName": "test.grpc.Test",
-                            "apiVersion": "v1",
-                            "operationName": "test.grpc.Test.Cork",
-                            "serviceName": "examples-grpc-dynamic-routing-wd6ufmzfya-uc.a.run.app"
-                          },
-                          {
                             "apiKey": {
                               "allowWithoutApiKey": true
                             },
@@ -336,13 +330,19 @@
                           {
                             "apiName": "test.grpc.Test",
                             "apiVersion": "v1",
-                            "operationName": "test.grpc.Test.EchoReport",
+                            "operationName": "test.grpc.Test.EchoStream",
                             "serviceName": "examples-grpc-dynamic-routing-wd6ufmzfya-uc.a.run.app"
                           },
                           {
                             "apiName": "test.grpc.Test",
                             "apiVersion": "v1",
-                            "operationName": "test.grpc.Test.EchoStream",
+                            "operationName": "test.grpc.Test.Cork",
+                            "serviceName": "examples-grpc-dynamic-routing-wd6ufmzfya-uc.a.run.app"
+                          },
+                          {
+                            "apiName": "test.grpc.Test",
+                            "apiVersion": "v1",
+                            "operationName": "test.grpc.Test.EchoReport",
                             "serviceName": "examples-grpc-dynamic-routing-wd6ufmzfya-uc.a.run.app"
                           }
                         ],
@@ -917,19 +917,19 @@
                         "rules": [
                           {
                             "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app",
-                            "operation": "test.grpc.Test.Cork"
-                          },
-                          {
-                            "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app",
                             "operation": "test.grpc.Test.Echo"
                           },
                           {
                             "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app",
-                            "operation": "test.grpc.Test.EchoReport"
+                            "operation": "test.grpc.Test.EchoStream"
                           },
                           {
                             "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app",
-                            "operation": "test.grpc.Test.EchoStream"
+                            "operation": "test.grpc.Test.Cork"
+                          },
+                          {
+                            "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app",
+                            "operation": "test.grpc.Test.EchoReport"
                           }
                         ]
                       }
@@ -961,25 +961,6 @@
                         "routes": [
                           {
                             "decorator": {
-                              "operation": "ingress Cork"
-                            },
-                            "match": {
-                              "headers": [
-                                {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
-                                }
-                              ],
-                              "path": "/test.grpc.Test/Cork"
-                            },
-                            "route": {
-                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
-                              "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
-                              "timeout": "0s"
-                            }
-                          },
-                          {
-                            "decorator": {
                               "operation": "ingress Echo"
                             },
                             "match": {
@@ -1009,44 +990,6 @@
                                 }
                               ],
                               "path": "/test.grpc.Test/Echo"
-                            },
-                            "route": {
-                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
-                              "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
-                              "timeout": "300s"
-                            }
-                          },
-                          {
-                            "decorator": {
-                              "operation": "ingress EchoReport"
-                            },
-                            "match": {
-                              "headers": [
-                                {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
-                                }
-                              ],
-                              "path": "/echoreport"
-                            },
-                            "route": {
-                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
-                              "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
-                              "timeout": "300s"
-                            }
-                          },
-                          {
-                            "decorator": {
-                              "operation": "ingress EchoReport"
-                            },
-                            "match": {
-                              "headers": [
-                                {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
-                                }
-                              ],
-                              "path": "/test.grpc.Test/EchoReport"
                             },
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
@@ -1090,6 +1033,63 @@
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "timeout": "0s"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress Cork"
+                            },
+                            "match": {
+                              "headers": [
+                                {
+                                  "exactMatch": "POST",
+                                  "name": ":method"
+                                }
+                              ],
+                              "path": "/test.grpc.Test/Cork"
+                            },
+                            "route": {
+                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                              "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
+                              "timeout": "0s"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress EchoReport"
+                            },
+                            "match": {
+                              "headers": [
+                                {
+                                  "exactMatch": "POST",
+                                  "name": ":method"
+                                }
+                              ],
+                              "path": "/echoreport"
+                            },
+                            "route": {
+                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                              "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
+                              "timeout": "300s"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress EchoReport"
+                            },
+                            "match": {
+                              "headers": [
+                                {
+                                  "exactMatch": "POST",
+                                  "name": ":method"
+                                }
+                              ],
+                              "path": "/test.grpc.Test/EchoReport"
+                            },
+                            "route": {
+                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                              "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
+                              "timeout": "300s"
                             }
                           }
                         ]

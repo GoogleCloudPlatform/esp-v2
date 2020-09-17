@@ -17,7 +17,6 @@ package configinfo
 import (
 	"fmt"
 	"math"
-	"sort"
 	"strings"
 	"time"
 
@@ -40,9 +39,12 @@ type ServiceInfo struct {
 
 	// An array to store all the api names
 	ApiNames []string
-	// A sorted array to store all the method name for this service.
-	// Should always iterate this array to avoid test fail due to order issue.
+
+	// A ordered slice of operation names. Follows the same order as the service config.
+	// Ordering is important, both for route matching and testability.
+	// All functions that output order-dependent configs should use this ordering.
 	Operations []string
+
 	// Stores all methods info for this service, using selector as key.
 	Methods map[string]*methodInfo
 
@@ -134,9 +136,6 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	if err := serviceInfo.processEmptyJwksUriByOpenID(); err != nil {
 		return nil, err
 	}
-
-	// Sort Methods according to name.
-	sort.Strings(serviceInfo.Operations)
 
 	return serviceInfo, nil
 }
