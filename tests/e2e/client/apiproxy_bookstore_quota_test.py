@@ -57,14 +57,12 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
 
     # exhaust the quota in the current window.
     print("Exhaust current quota...");
-    response = _try_call_quota_read()
-    if response.status_code != 429:
-        while True:
-          # service control quota call has 1s cache.
-          time.sleep(1)
-          response = _try_call_quota_read()
-          if response and response.status_code == 429:
-              break;
+    while True:
+      # service control quota call has 1s cache.
+      time.sleep(1)
+      response = _try_call_quota_read()
+      if response and response.status_code == 429:
+          break;
 
     # waiting for the next quota refill.
     print("Wait for the next quota refill...")
