@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package components
+package platform
 
 import (
 	"fmt"
 	"net"
 	"time"
 
-	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/golang/glog"
 )
 
@@ -147,15 +146,21 @@ const (
 )
 
 const (
+	// Start port allocation range.
 	portBase uint16 = 20000
 
 	// Maximum number of ports used by non-jwt components.
 	portNum uint16 = 7
 )
 
+const (
+	WorkingBackendPort string = "-1"
+	InvalidBackendPort string = "6"
+)
+
 var (
 	// Maximum number of ports used by jwt fake servers.
-	jwtPortNum = uint16(len(testdata.ProviderConfigs))
+	jwtPortNum = uint16(20)
 
 	preAllocatedPorts = map[uint16]bool{
 		// Ports allocated to Jwt open-id servers

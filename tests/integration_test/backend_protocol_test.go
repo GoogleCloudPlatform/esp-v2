@@ -25,7 +25,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -73,7 +72,7 @@ func TestBackendHttpProtocol(t *testing.T) {
 			}
 
 			// Setup the protocol in the backend rule for the endpoint under test.
-			s := env.NewTestEnv(comp.TestBackendHttpProtocol, platform.EchoRemote)
+			s := env.NewTestEnv(platform.TestBackendHttpProtocol, platform.EchoRemote)
 			s.RemoveAllBackendRules()
 			s.AppendBackendRules([]*confpb.BackendRule{
 				{

@@ -23,7 +23,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -35,7 +34,7 @@ func TestServiceControlSkipUsage(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlSkipUsage, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlSkipUsage, platform.EchoSidecar)
 	s.AppendUsageRules(
 		[]*confpb.UsageRule{
 			{

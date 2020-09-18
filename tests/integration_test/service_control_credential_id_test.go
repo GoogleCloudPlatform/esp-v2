@@ -26,7 +26,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	bsClient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -38,7 +37,7 @@ func TestServiceControlCredentialId(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers",
 	}
-	s := env.NewTestEnv(comp.TestServiceControlCredentialId, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlCredentialId, platform.GrpcBookstoreSidecar)
 
 	s.OverrideAuthentication(&confpb.Authentication{Rules: []*confpb.AuthenticationRule{
 		{

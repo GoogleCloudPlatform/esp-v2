@@ -100,7 +100,7 @@ func TestServiceControlCheckServerFailFlag(t *testing.T) {
 
 	for _, tc := range tests {
 		func() {
-			s := env.NewTestEnv(comp.TestServiceControlCheckServerFail, platform.GrpcBookstoreSidecar)
+			s := env.NewTestEnv(platform.TestServiceControlCheckServerFail, platform.GrpcBookstoreSidecar)
 			handler := &serverFailCheckHandler{
 				m:        s.ServiceControlServer,
 				respCode: tc.respCode,

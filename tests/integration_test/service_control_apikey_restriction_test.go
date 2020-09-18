@@ -23,8 +23,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 type testDataStruct struct {
@@ -47,7 +45,7 @@ func TestServiceControlAPIKeyRestriction(t *testing.T) {
 		"--rollout_strategy=fixed",
 	}
 
-	s := env.NewTestEnv(comp.TestServiceControlAPIKeyRestriction, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlAPIKeyRestriction, platform.EchoSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("failed to setup test env, %v", err)
@@ -142,7 +140,7 @@ func TestServiceControlAPIKeyIpRestriction(t *testing.T) {
 		"--envoy_xff_num_trusted_hops=1",
 	}
 
-	s := env.NewTestEnv(comp.TestServiceControlAPIKeyIpRestriction, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlAPIKeyIpRestriction, platform.EchoSidecar)
 
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {

@@ -23,8 +23,6 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
-
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 func runAndWait(cmd *exec.Cmd, t *testing.T) {
@@ -51,7 +49,7 @@ func TestGRPCInterops(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestGRPCInterops, platform.GrpcInteropSidecar)
+	s := env.NewTestEnv(platform.TestGRPCInterops, platform.GrpcInteropSidecar)
 	clientPath := platform.GetFilePath(platform.GrpcInteropClient)
 	_, err := os.Stat(clientPath)
 	if os.IsNotExist(err) {
@@ -96,7 +94,7 @@ func TestGRPCInteropMiniStress(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestGRPCInteropMiniStress, platform.GrpcInteropSidecar)
+	s := env.NewTestEnv(platform.TestGRPCInteropMiniStress, platform.GrpcInteropSidecar)
 	clientPath := platform.GetFilePath(platform.GrpcInteropStressClient)
 	_, err := os.Stat(clientPath)
 	if os.IsNotExist(err) {

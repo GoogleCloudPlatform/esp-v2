@@ -54,7 +54,7 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 			httpMethod:        "GET",
 			method:            "/v1/shelves/100?key=api-key-1",
 			serviceControlURL: "http://unavaliable_service_control_server_name",
-			allocatedPort:     comp.TestServiceControlCheckWrongServerName,
+			allocatedPort:     platform.TestServiceControlCheckWrongServerName,
 			wantError:         `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:Calling Google Service Control API failed with: 503 and body: no healthy upstream"}`,
 		},
 		{
@@ -63,7 +63,7 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 			httpMethod:        "GET",
 			method:            "/v1/shelves/100?key=api-key-2",
 			serviceControlURL: "http://localhost:28753",
-			allocatedPort:     comp.TestServiceControlCheckWrongServerName,
+			allocatedPort:     platform.TestServiceControlCheckWrongServerName,
 			wantError:         `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:Calling Google Service Control API failed with: 503 and body: upstream connect error or disconnect/reset before headers. reset reason: connection failure"}`,
 		},
 	}
@@ -101,7 +101,7 @@ func TestServiceControlCheckTimeout(t *testing.T) {
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(comp.TestServiceControlCheckTimeout, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlCheckTimeout, platform.GrpcBookstoreSidecar)
 	s.ServiceControlServer.SetURL("http://wrong_service_control_server_name")
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
@@ -237,7 +237,7 @@ func TestServiceControlNetworkFailFlagForTimeout(t *testing.T) {
 
 	for _, tc := range tests {
 		func() {
-			s := env.NewTestEnv(comp.TestServiceControlNetworkFailFlagForTimeout, platform.GrpcBookstoreSidecar)
+			s := env.NewTestEnv(platform.TestServiceControlNetworkFailFlagForTimeout, platform.GrpcBookstoreSidecar)
 			s.ServiceControlServer.OverrideCheckHandler(&localServiceHandler{
 				m: s.ServiceControlServer,
 			})
@@ -341,7 +341,7 @@ func TestServiceControlNetworkFailFlagForUnavailableCheckResponse(t *testing.T) 
 
 	for _, tc := range tests {
 		func() {
-			s := env.NewTestEnv(comp.TestServiceControlNetworkFailFlagForUnavailableCheckResponse, platform.GrpcBookstoreSidecar)
+			s := env.NewTestEnv(platform.TestServiceControlNetworkFailFlagForUnavailableCheckResponse, platform.GrpcBookstoreSidecar)
 			s.ServiceControlServer.SetCheckResponse(&tc.checkResponse)
 			if tc.networkFailOpen {
 				s.EnableScNetworkFailOpen()

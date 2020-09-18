@@ -26,7 +26,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
@@ -39,7 +38,7 @@ func TestServiceControlCheckError(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlCheckError, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlCheckError, platform.EchoSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

@@ -24,8 +24,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 type ConfiguredDeadline int
@@ -39,7 +37,7 @@ const (
 func TestDeadlinesForDynamicRouting(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewTestEnv(comp.TestDeadlinesForDynamicRouting, platform.EchoRemote)
+	s := env.NewTestEnv(platform.TestDeadlinesForDynamicRouting, platform.EchoRemote)
 
 	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
@@ -119,7 +117,7 @@ func TestDeadlinesForDynamicRouting(t *testing.T) {
 func TestDeadlinesForCatchAllBackend(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewTestEnv(comp.TestDeadlinesForCatchAllBackend, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestDeadlinesForCatchAllBackend, platform.EchoSidecar)
 
 	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {

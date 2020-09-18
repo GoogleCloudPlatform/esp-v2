@@ -35,7 +35,7 @@ type StatsVerifier struct {
 	adminPort uint16
 }
 
-func NewStatsVerifier(ports *Ports) *StatsVerifier {
+func NewStatsVerifier(ports *platform.Ports) *StatsVerifier {
 	return &StatsVerifier{
 		adminPort: ports.AdminPort,
 	}

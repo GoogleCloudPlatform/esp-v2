@@ -25,14 +25,12 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 func TestBackendAuthWithImdsIdToken(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewTestEnv(comp.TestBackendAuthWithImdsIdToken, platform.EchoRemote)
+	s := env.NewTestEnv(platform.TestBackendAuthWithImdsIdToken, platform.EchoRemote)
 	s.OverrideMockMetadata(
 		map[string]string{
 			util.IdentityTokenPath + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",
@@ -90,7 +88,7 @@ func TestBackendAuthWithImdsIdToken(t *testing.T) {
 func TestBackendAuthWithImdsIdTokenRetries(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewTestEnv(comp.TestBackendAuthWithImdsIdTokenRetries, platform.EchoRemote)
+	s := env.NewTestEnv(platform.TestBackendAuthWithImdsIdTokenRetries, platform.EchoRemote)
 	// Health checks prevent envoy from starting up due to bad responses from IMDS for tokens.
 	s.SkipHealthChecks()
 
@@ -161,7 +159,7 @@ func TestBackendAuthWithImdsIdTokenWhileAllowCors(t *testing.T) {
 	corsRequestHeader := "X-PINGOTHER"
 	corsOrigin := "http://cloud.google.com"
 
-	s := env.NewTestEnv(comp.TestBackendAuthWithImdsIdTokenWhileAllowCors, platform.EchoRemote)
+	s := env.NewTestEnv(platform.TestBackendAuthWithImdsIdTokenWhileAllowCors, platform.EchoRemote)
 	s.OverrideMockMetadata(
 		map[string]string{
 			util.IdentityTokenPath + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",

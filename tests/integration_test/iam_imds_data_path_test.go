@@ -12,8 +12,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 	"github.com/golang/glog"
-
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 func TestIamImdsDataPath(t *testing.T) {
@@ -65,7 +63,7 @@ func TestIamImdsDataPath(t *testing.T) {
 		func() {
 
 			// By default, IMDS will be used for service control and backend auth.
-			s := env.NewTestEnv(comp.TestIamImdsDataPath, platform.EchoRemote)
+			s := env.NewTestEnv(platform.TestIamImdsDataPath, platform.EchoRemote)
 
 			if tc.useIam {
 				// Use IAM for service control and backend auth.

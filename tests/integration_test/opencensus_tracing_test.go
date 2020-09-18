@@ -17,6 +17,7 @@ package integration_test
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
@@ -24,7 +25,6 @@ import (
 	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
@@ -55,7 +55,7 @@ func TestTracesServiceControlCheckWithRetry(t *testing.T) {
 		"--service_control_check_retries=2",
 		"--service_control_check_timeout_ms=100",
 	}
-	s := env.NewTestEnv(comp.TestTracesServiceControlCheckWithRetry, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestTracesServiceControlCheckWithRetry, platform.GrpcBookstoreSidecar)
 	s.SetupFakeTraceServer(1)
 	handler := utils.RetryServiceHandler{}
 	s.ServiceControlServer.OverrideCheckHandler(&handler)
@@ -146,7 +146,7 @@ func TestTracesServiceControlSkipUsage(t *testing.T) {
 		"--suppress_envoy_headers",
 	}
 
-	s := env.NewTestEnv(comp.TestTracesServiceControlSkipUsage, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestTracesServiceControlSkipUsage, platform.EchoSidecar)
 	s.SetupFakeTraceServer(1)
 	s.AppendUsageRules(
 		[]*confpb.UsageRule{
@@ -208,7 +208,7 @@ func TestTracesFetchingJwks(t *testing.T) {
 		"--rollout_strategy=fixed",
 	}
 
-	s := env.NewTestEnv(comp.TestTracesFetchingJwks, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestTracesFetchingJwks, platform.GrpcBookstoreSidecar)
 
 	s.SetupFakeTraceServer(1)
 	s.OverrideAuthentication(&confpb.Authentication{
@@ -342,7 +342,7 @@ func TestTracingSampleRate(t *testing.T) {
 	for _, tc := range tests {
 		// Place in closure to allow deferring in loop.
 		func() {
-			s := env.NewTestEnv(comp.TestTracingSampleRate, platform.GrpcBookstoreSidecar)
+			s := env.NewTestEnv(platform.TestTracingSampleRate, platform.GrpcBookstoreSidecar)
 			s.SetupFakeTraceServer(tc.tracingSampleRate)
 
 			defer s.TearDown(t)
@@ -382,7 +382,7 @@ func TestTracesDynamicRouting(t *testing.T) {
 		"--suppress_envoy_headers",
 	}
 
-	s := env.NewTestEnv(comp.TestTracesDynamicRouting, platform.EchoRemote)
+	s := env.NewTestEnv(platform.TestTracesDynamicRouting, platform.EchoRemote)
 	s.SetupFakeTraceServer(1)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
@@ -402,7 +402,7 @@ func TestTracesDynamicRouting(t *testing.T) {
 			url:    fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/pet/1/num/2", ""),
 			method: util.GET,
 			wantSpanNames: []string{
-				"router backend-cluster-localhost:21837 egress",
+				fmt.Sprintf("router backend-cluster-localhost:%s egress", strconv.Itoa(int(s.Ports().DynamicRoutingBackendPort))),
 				"ingress dynamic_routing_GetPetById",
 			},
 		},

@@ -24,7 +24,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
@@ -38,7 +37,7 @@ func TestGRPCFallback(t *testing.T) {
 		"--rollout_strategy=fixed"}
 
 	// Setup the service config for gRPC Bookstore.
-	s := env.NewTestEnv(comp.TestGRPCFallback, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestGRPCFallback, platform.GrpcBookstoreSidecar)
 
 	// But then spin up the gRPC Echo backend.
 	s.OverrideBackendService(platform.GrpcEchoSidecar)

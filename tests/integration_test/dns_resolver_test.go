@@ -69,7 +69,7 @@ func TestDnsResolver(t *testing.T) {
 
 	for _, tc := range testCase {
 		func() {
-			s := env.NewTestEnv(comp.TestDnsResolver, platform.EchoSidecar)
+			s := env.NewTestEnv(platform.TestDnsResolver, platform.EchoSidecar)
 
 			// Setup dns resolver.
 			dnsRecords := map[string]string{

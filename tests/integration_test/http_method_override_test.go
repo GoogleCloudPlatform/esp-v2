@@ -25,14 +25,13 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 )
 
 func TestMethodOverrideBackendMethod(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewTestEnv(comp.TestMethodOverrideBackendMethod, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestMethodOverrideBackendMethod, platform.EchoSidecar)
 	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoGET",
@@ -113,7 +112,7 @@ func TestMethodOverrideBackendMethod(t *testing.T) {
 func TestMethodOverrideBackendBody(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewTestEnv(comp.TestMethodOverrideBackendBody, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestMethodOverrideBackendBody, platform.EchoSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -183,7 +182,7 @@ func TestMethodOverrideBackendBody(t *testing.T) {
 func TestMethodOverrideScReport(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewTestEnv(comp.TestMethodOverrideScReport, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestMethodOverrideScReport, platform.EchoSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

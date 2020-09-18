@@ -24,8 +24,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 )
 
 func TestServiceControlCache(t *testing.T) {
@@ -36,7 +34,7 @@ func TestServiceControlCache(t *testing.T) {
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
-	s := env.NewTestEnv(comp.TestServiceControlCache, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlCache, platform.EchoSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

@@ -23,7 +23,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -96,7 +95,7 @@ func TestTranscodingPrintOptions(t *testing.T) {
 				args = append(args, "--transcoding_preserve_proto_field_names=true")
 			}
 
-			s := env.NewTestEnv(comp.TestTranscodingPrintOptions, platform.GrpcBookstoreSidecar)
+			s := env.NewTestEnv(platform.TestTranscodingPrintOptions, platform.GrpcBookstoreSidecar)
 			s.OverrideAuthentication(&confpb.Authentication{
 				Rules: []*confpb.AuthenticationRule{},
 			})
@@ -183,7 +182,7 @@ func TestTranscodingIgnoreParameters(t *testing.T) {
 				args = append(args, "--transcoding_ignore_query_parameters="+tc.transcodingIgnoreQueryParameters)
 			}
 
-			s := env.NewTestEnv(comp.TestTranscodingIgnoreQueryParameters, platform.GrpcBookstoreSidecar)
+			s := env.NewTestEnv(platform.TestTranscodingIgnoreQueryParameters, platform.GrpcBookstoreSidecar)
 			s.OverrideAuthentication(&confpb.Authentication{
 				Rules: []*confpb.AuthenticationRule{},
 			})
