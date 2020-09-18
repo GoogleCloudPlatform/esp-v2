@@ -52,6 +52,8 @@ const (
 	BackendAuth = "com.google.espv2.filters.http.backend_auth"
 	// BackendRouting filter.
 	BackendRouting = "com.google.espv2.filters.http.backend_routing"
+	// gRPC Metadata Scrubber filter.
+	GrpcMetadataScrubber = "com.google.espv2.filters.http.grpc_metadata_scrubber"
 
 	// The metadata server cluster name.
 	MetadataServerClusterName = "metadata-cluster"

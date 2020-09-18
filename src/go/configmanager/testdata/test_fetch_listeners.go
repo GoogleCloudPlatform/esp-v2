@@ -121,6 +121,9 @@ var (
                         }
                      },
                      {
+                       "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                     },
+                     {
                         "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.router.v3.Router",
@@ -156,6 +159,7 @@ var (
                   "upgradeConfigs": [{"upgradeType": "websocket"}],
                   "statPrefix":"ingress_http",
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
+                  "httpProtocolOptions": {"enableTrailers": true},
                   "useRemoteAddress":false,
                   %s,
                   "xffNumTrustedHops":2
@@ -295,6 +299,9 @@ var (
                         "name":"envoy.filters.http.grpc_web"
                      },
                      {
+                       "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                     },
+                     {
                         "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.router.v3.Router",
@@ -330,6 +337,7 @@ var (
                   "upgradeConfigs": [{"upgradeType": "websocket"}],
                   "statPrefix":"ingress_http",
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
+                  "httpProtocolOptions": {"enableTrailers": true},
                   "useRemoteAddress":false,
                   %s,
                   "xffNumTrustedHops":2
@@ -503,6 +511,9 @@ var (
                         "name":"envoy.filters.http.grpc_web"
                      },
                      {
+                       "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                     },
+                     {
                         "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.router.v3.Router",
@@ -537,6 +548,7 @@ var (
                   },
                   "upgradeConfigs": [{"upgradeType": "websocket"}],
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
+                  "httpProtocolOptions": {"enableTrailers": true},
                   "statPrefix":"ingress_http",
                   "useRemoteAddress":false,
                   %s,
@@ -747,6 +759,9 @@ var (
                         "name":"envoy.filters.http.grpc_web"
                      },
                      {
+                       "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                     },
+                     {
                         "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.router.v3.Router",
@@ -781,6 +796,7 @@ var (
                   },
                   "upgradeConfigs": [{"upgradeType": "websocket"}],
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
+                  "httpProtocolOptions": {"enableTrailers": true},
                   "statPrefix":"ingress_http",
                   "useRemoteAddress":false,
                   %s,
@@ -966,6 +982,9 @@ var (
                         "name":"envoy.filters.http.grpc_web"
                      },
                      {
+                       "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                     },
+                     {
                         "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.router.v3.Router",
@@ -1001,6 +1020,7 @@ var (
                   "upgradeConfigs": [{"upgradeType": "websocket"}],
                   "statPrefix":"ingress_http",
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
+                  "httpProtocolOptions": {"enableTrailers": true},
                   "useRemoteAddress":false,
                   %s,
                   "xffNumTrustedHops":2
@@ -1157,6 +1177,9 @@ var (
                         }
                      },
                      {
+                       "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                     },
+                     {
                         "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.router.v3.Router",
@@ -1192,6 +1215,7 @@ var (
                   "upgradeConfigs": [{"upgradeType": "websocket"}],
                   "statPrefix":"ingress_http",
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
+                  "httpProtocolOptions": {"enableTrailers": true},
                   "useRemoteAddress":false,
                   %s,
                   "xffNumTrustedHops":2
@@ -1322,6 +1346,9 @@ var (
                         }
                      },
                      {
+                       "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                     },
+                     {
                         "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.router.v3.Router",
@@ -1380,6 +1407,7 @@ var (
                   "upgradeConfigs": [{"upgradeType": "websocket"}],
                   "statPrefix":"ingress_http",
                   "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
+                  "httpProtocolOptions": {"enableTrailers": true},
                   "useRemoteAddress":false,
                   %s,
                   "xffNumTrustedHops":2

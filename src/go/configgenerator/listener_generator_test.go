@@ -1714,7 +1714,11 @@ func TestMakeListeners(t *testing.T) {
           "typedConfig": {
             "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
             "commonHttpProtocolOptions": {},
+            "httpProtocolOptions": {"enableTrailers": true},
             "httpFilters": [
+              {
+                "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+              },
               {
                 "name": "envoy.filters.http.router",
                 "typedConfig": {
@@ -1970,6 +1974,37 @@ func TestMakeHttpConMgr(t *testing.T) {
 			wantHttpConnMgr: `
 				{
 					"commonHttpProtocolOptions": {},
+					"localReplyConfig": {
+						"bodyFormat": {
+							"jsonFormat": {
+								"code": "%RESPONSE_CODE%",
+								"message": "%LOCAL_REPLY_BODY%"
+							}
+						}
+					},
+					"routeConfig": {},
+					"statPrefix": "ingress_http",
+					"upgradeConfigs": [
+						{
+							"upgradeType": "websocket"
+						}
+					],
+					"useRemoteAddress": false
+				}`,
+		},
+		{
+			desc: "Generate HttpConMgr when EnableGrpcForHttp1 is defined",
+			opts: options.ConfigGeneratorOptions{
+				EnableGrpcForHttp1:   true,
+				UnderscoresInHeaders: true,
+				CommonOptions: options.CommonOptions{
+					DisableTracing: true,
+				},
+			},
+			wantHttpConnMgr: `
+				{
+					"commonHttpProtocolOptions": {},
+                                        "httpProtocolOptions": {"enableTrailers": true},
 					"localReplyConfig": {
 						"bodyFormat": {
 							"jsonFormat": {

@@ -237,6 +237,7 @@ var (
                   "commonHttpProtocolOptions":{
                      "headersWithUnderscoresAction":"REJECT_REQUEST"
                   },
+                  "httpProtocolOptions": {"enableTrailers": true},
                   "httpFilters":[
                      {
                         "name":"com.google.espv2.filters.http.path_matcher",
@@ -353,6 +354,9 @@ var (
                               }
                            ]
                         }
+                     },
+                     {
+                       "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
                      },
                      {
                         "name":"envoy.filters.http.router",
