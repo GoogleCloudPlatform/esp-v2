@@ -82,7 +82,7 @@ type ConfigGeneratorOptions struct {
 	SuppressEnvoyHeaders          bool
 	UnderscoresInHeaders          bool
 	ServiceControlNetworkFailOpen bool
-	RetainGrpcTrailersForHttp1    bool
+	EnableGrpcForHttp1            bool
 
 	JwksCacheDurationInS int
 
@@ -122,7 +122,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		SslBackendClientRootCertsPath:    util.DefaultRootCAPaths,
 		SuppressEnvoyHeaders:             true,
 		ServiceControlNetworkFailOpen:    true,
-		RetainGrpcTrailersForHttp1:       true,
+		EnableGrpcForHttp1:               true,
 		ServiceManagementURL:             "https://servicemanagement.googleapis.com",
 		ServiceControlURL:                "https://servicecontrol.googleapis.com",
 		ScCheckRetries:                   -1,

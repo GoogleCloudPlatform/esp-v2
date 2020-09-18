@@ -1993,10 +1993,10 @@ func TestMakeHttpConMgr(t *testing.T) {
 				}`,
 		},
 		{
-			desc: "Generate HttpConMgr when RetainGrpcTrailersForHttp1 is defined",
+			desc: "Generate HttpConMgr when EnableGrpcForHttp1 is defined",
 			opts: options.ConfigGeneratorOptions{
-				RetainGrpcTrailersForHttp1: true,
-				UnderscoresInHeaders:       true,
+				EnableGrpcForHttp1:   true,
+				UnderscoresInHeaders: true,
 				CommonOptions: options.CommonOptions{
 					DisableTracing: true,
 				},
