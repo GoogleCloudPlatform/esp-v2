@@ -159,10 +159,12 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*listenerpb.Listener, error) {
 		glog.Infof("adding Backend Routing Filter config: %v", jsonStr)
 	}
 
-	// add this filter to retain gRPC trailers
-	httpFilters = append(httpFilters, &hcmpb.HttpFilter{
-		Name: util.GrpcMetadataScrubber,
-	})
+	if serviceInfo.Options.RetainGrpcTrailersForHttp1 {
+		// Add GrpcMetadataScrubber filter to retain gRPC trailers
+		httpFilters = append(httpFilters, &hcmpb.HttpFilter{
+			Name: util.GrpcMetadataScrubber,
+		})
+	}
 
 	// Add Envoy Router filter so requests are routed upstream.
 	// Router filter should be the last.
@@ -310,9 +312,12 @@ func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteCo
 			HeadersWithUnderscoresAction: corepb.HttpProtocolOptions_REJECT_REQUEST,
 		}
 	}
-	// To retain gRPC trailers if downstream is using http1 for gRPC requests.
-	httpConMgr.HttpProtocolOptions = &corepb.Http1ProtocolOptions{
-		EnableTrailers: true,
+
+	if opts.RetainGrpcTrailersForHttp1 {
+		// Retain gRPC trailers if downstream is using http1.
+		httpConMgr.HttpProtocolOptions = &corepb.Http1ProtocolOptions{
+			EnableTrailers: true,
+		}
 	}
 
 	return httpConMgr, nil

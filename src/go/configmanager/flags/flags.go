@@ -95,6 +95,9 @@ var (
 	ServiceControlNetworkFailOpen = flag.Bool("service_control_network_fail_open", true, ` In case of network failures when connecting to Google service control,
         the requests will be allowed if this flag is on. The default is on.`)
 
+	RetainGrpcTrailersForHttp1 = flag.Bool("retain_grpc_trailers_for_http1", true, `If downstream is using Http/1.1 to transport gRPC requests, turn this flag on to retain
+        gRPC trailers. The default is on.`)
+
 	JwksCacheDurationInS = flag.Int("jwks_cache_duration_in_s", 300, "Specify JWT public key cache duration in seconds. The default is 5 minutes.")
 
 	ScCheckTimeoutMs  = flag.Int("service_control_check_timeout_ms", 0, `Set the timeout in millisecond for service control Check request. Must be > 0 and the default is 1000 if not set.`)
@@ -160,6 +163,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		SuppressEnvoyHeaders:                    *SuppressEnvoyHeaders,
 		UnderscoresInHeaders:                    *UnderscoresInHeaders,
 		ServiceControlNetworkFailOpen:           *ServiceControlNetworkFailOpen,
+		RetainGrpcTrailersForHttp1:              *RetainGrpcTrailersForHttp1,
 		JwksCacheDurationInS:                    *JwksCacheDurationInS,
 		ScCheckTimeoutMs:                        *ScCheckTimeoutMs,
 		ScQuotaTimeoutMs:                        *ScQuotaTimeoutMs,

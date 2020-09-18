@@ -261,6 +261,9 @@
                       }
                     },
                     {
+                      "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                    },
+                    {
                       "name": "envoy.filters.http.router",
                       "typedConfig": {
                         "@type": "type.googleapis.com/envoy.extensions.filters.http.router.v3.Router",
@@ -268,6 +271,9 @@
                       }
                     }
                   ],
+                  "httpProtocolOptions": {
+                    "enableTrailers": true
+                  },
                   "localReplyConfig": {
                     "bodyFormat": {
                       "jsonFormat": {
