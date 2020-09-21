@@ -27,6 +27,10 @@ namespace utils {
 absl::string_view readHeaderEntry(const Envoy::Http::HeaderEntry* entry);
 
 // Returns HTTP header value if the header is found, otherwise empty string.
+// If the header is one of inline headers, please use inline getter instead for
+// better performance.
+// For details, see
+// https://github.com/envoyproxy/envoy/blob/c5f4302325223765b660f0f366ce25bf8570e7a5/include/envoy/http/header_map.h#L271
 absl::string_view extractHeader(const Envoy::Http::HeaderMap& headers,
                                 const Envoy::Http::LowerCaseString& header);
 

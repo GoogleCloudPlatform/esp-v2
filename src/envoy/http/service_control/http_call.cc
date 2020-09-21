@@ -25,9 +25,13 @@
 #include "common/tracing/http_tracer_impl.h"
 #include "envoy/event/deferred_deletable.h"
 
+using Envoy::Http::CustomHeaders;
+using Envoy::Http::CustomInlineHeaderRegistry;
+using Envoy::Http::RegisterCustomInlineHeader;
 using ::espv2::api::envoy::v8::http::common::HttpUri;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
+
 namespace espv2 {
 namespace envoy {
 namespace http_filters {
@@ -35,6 +39,9 @@ namespace service_control {
 namespace {
 
 constexpr absl::string_view KApplicationProto = "application/x-protobuf";
+
+RegisterCustomInlineHeader<CustomInlineHeaderRegistry::Type::RequestHeaders>
+    authorization_handle(CustomHeaders::get().Authorization);
 
 class HttpCallImpl : public HttpCall,
                      public Envoy::Event::DeferredDeletable,
@@ -243,9 +250,8 @@ class HttpCallImpl : public HttpCall,
     message->headers().setContentLength(message->body()->length());
 
     // assume token is not empty
-    std::string token_value = "Bearer " + token;
-    message->headers().setCopy(Envoy::Http::CustomHeaders::get().Authorization,
-                               token_value);
+    message->headers().setInline(authorization_handle.handle(),
+                                 "Bearer " + token);
     message->headers().setContentType(KApplicationProto);
     return message;
   }

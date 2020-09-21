@@ -20,6 +20,7 @@
 
 #include "common/http/headers.h"
 #include "common/http/utility.h"
+#include "envoy/http/header_map.h"
 #include "src/envoy/utils/filter_state_utils.h"
 
 namespace espv2 {
@@ -27,13 +28,19 @@ namespace envoy {
 namespace http_filters {
 namespace backend_auth {
 
+using Envoy::Http::CustomHeaders;
+using Envoy::Http::CustomInlineHeaderRegistry;
 using Envoy::Http::FilterDataStatus;
 using Envoy::Http::FilterHeadersStatus;
 using Envoy::Http::FilterTrailersStatus;
+using Envoy::Http::RegisterCustomInlineHeader;
 using Envoy::Http::RequestHeaderMap;
 
 namespace {
 constexpr char kBearer[] = "Bearer ";
+
+RegisterCustomInlineHeader<CustomInlineHeaderRegistry::Type::RequestHeaders>
+    authorization_handle(CustomHeaders::get().Authorization);
 
 struct RcDetailsValues {
   // The request is rejected due to missing backend auth token in internal
@@ -42,6 +49,7 @@ struct RcDetailsValues {
   // The request is rejected due to missing operation in internal filter state.
   const std::string MissingOperation = "missing_operation";
 };
+
 using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
 
 // The Http header to copy the original Authorization before it is overwritten.
@@ -87,14 +95,13 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   // Copy the existing `Authorization` header to `x-forwarded-authorization`
   // header.
   const Envoy::Http::HeaderEntry* existAuthToken =
-      headers.get(Envoy::Http::CustomHeaders::get().Authorization);
+      headers.getInline(authorization_handle.handle());
   if (existAuthToken != nullptr) {
     headers.addCopy(kXForwardedAuthorization,
                     existAuthToken->value().getStringView());
   }
 
-  headers.setCopy(Envoy::Http::CustomHeaders::get().Authorization,
-                  kBearer + *jwt_token);
+  headers.setInline(authorization_handle.handle(), kBearer + *jwt_token);
   config_->stats().token_added_.inc();
   return FilterHeadersStatus::Continue;
 }
