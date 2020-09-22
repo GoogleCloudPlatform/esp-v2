@@ -548,6 +548,13 @@ environment variable or by passing "-k" flag to this script.
         Otherwise use ignored_query_parameters. Defaults to false.
         ''')
 
+    parser.add_argument(
+        '--connection_buffer_limit_bytes', action=None,
+        help='''
+        Configure the maximum amount of data that is buffered for each 
+        request/response body. This should be increased for large bodies used 
+        by gRPC transcoding. Default is 1 MB.
+        ''')
 
     # Start Deprecated Flags Section
 
@@ -979,6 +986,10 @@ def gen_proxy_config(args):
 
     if args.enable_debug:
         proxy_conf.append("--suppress_envoy_headers=false")
+
+    if args.connection_buffer_limit_bytes:
+        proxy_conf.extend(["--connection_buffer_limit_bytes",
+                           args.connection_buffer_limit_bytes])
 
     return proxy_conf
 

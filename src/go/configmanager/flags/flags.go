@@ -97,6 +97,9 @@ var (
 
 	EnableGrpcForHttp1 = flag.Bool("enable_grpc_for_http1", true, `Enable gRPC when the downstream is HTTP/1.1. The default is on.`)
 
+	ConnectionBufferLimitBytes = flag.Int("connection_buffer_limit_bytes", 1*1024*1024, `Configure the maximum amount of data that is buffered for each request/response body. 
+			This should be increased for large bodies used by gRPC transcoding. Default is 1 MB.`)
+
 	JwksCacheDurationInS = flag.Int("jwks_cache_duration_in_s", 300, "Specify JWT public key cache duration in seconds. The default is 5 minutes.")
 
 	ScCheckTimeoutMs  = flag.Int("service_control_check_timeout_ms", 0, `Set the timeout in millisecond for service control Check request. Must be > 0 and the default is 1000 if not set.`)
@@ -163,6 +166,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		UnderscoresInHeaders:                    *UnderscoresInHeaders,
 		ServiceControlNetworkFailOpen:           *ServiceControlNetworkFailOpen,
 		EnableGrpcForHttp1:                      *EnableGrpcForHttp1,
+		ConnectionBufferLimitBytes:              *ConnectionBufferLimitBytes,
 		JwksCacheDurationInS:                    *JwksCacheDurationInS,
 		ScCheckTimeoutMs:                        *ScCheckTimeoutMs,
 		ScQuotaTimeoutMs:                        *ScQuotaTimeoutMs,

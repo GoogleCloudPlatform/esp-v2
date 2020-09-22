@@ -225,6 +225,9 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*listenerpb.Listener, error) {
 			},
 		},
 		FilterChains: []*listenerpb.FilterChain{filterChain},
+		PerConnectionBufferLimitBytes: &wrapperspb.UInt32Value{
+			Value: uint32(serviceInfo.Options.ConnectionBufferLimitBytes),
+		},
 	}, nil
 }
 

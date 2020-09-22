@@ -83,6 +83,7 @@ type ConfigGeneratorOptions struct {
 	UnderscoresInHeaders          bool
 	ServiceControlNetworkFailOpen bool
 	EnableGrpcForHttp1            bool
+	ConnectionBufferLimitBytes    int
 
 	JwksCacheDurationInS int
 
@@ -123,6 +124,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		SuppressEnvoyHeaders:             true,
 		ServiceControlNetworkFailOpen:    true,
 		EnableGrpcForHttp1:               true,
+		ConnectionBufferLimitBytes:       1 * 1024 * 1024, // 1 MB
 		ServiceManagementURL:             "https://servicemanagement.googleapis.com",
 		ServiceControlURL:                "https://servicecontrol.googleapis.com",
 		ScCheckRetries:                   -1,

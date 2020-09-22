@@ -294,6 +294,16 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--transcoding_ignore_unknown_query_parameters'
               ]),
+            # Connection buffer limit bytes
+            (['--service=test_bookstore.gloud.run',
+              '--backend=grpc://127.0.0.1:8000',
+              '--connection_buffer_limit_bytes=1024'
+              ],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'fixed',
+              '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
+              '--service', 'test_bookstore.gloud.run',
+              '--connection_buffer_limit_bytes', '1024'
+              ]),
             # --enable_debug, with default http schema
             (['--service=test_bookstore.gloud.run',
               '--backend=echo:8000',
