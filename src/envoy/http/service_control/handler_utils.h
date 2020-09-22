@@ -71,7 +71,7 @@ void fillJwtPayload(const ::envoy::config::core::v3::Metadata& metadata,
 
 // Returns the protocol of the frontend request or UNKNOWN if not found
 ::espv2::api_proxy::service_control::protocol::Protocol getFrontendProtocol(
-    const Envoy::Http::HeaderMap* response_headers,
+    const Envoy::Http::ResponseHeaderMap* response_headers,
     const Envoy::StreamInfo::StreamInfo& stream_info);
 
 // Returns the protocol of the backend service or UNKNOWN if not found

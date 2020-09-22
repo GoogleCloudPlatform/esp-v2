@@ -187,11 +187,12 @@ void fillLatency(const Envoy::StreamInfo::StreamInfo& stream_info,
   }
 }
 
-Protocol getFrontendProtocol(const Envoy::Http::HeaderMap* response_headers,
-                             const Envoy::StreamInfo::StreamInfo& stream_info) {
+Protocol getFrontendProtocol(
+    const Envoy::Http::ResponseHeaderMap* response_headers,
+    const Envoy::StreamInfo::StreamInfo& stream_info) {
   if (response_headers != nullptr) {
-    auto content_type =
-        utils::extractHeader(*response_headers, kContentTypeHeader);
+    auto content_type = response_headers->getContentTypeValue();
+
     if (isGrpcRequest(content_type)) {
       return Protocol::GRPC;
     }

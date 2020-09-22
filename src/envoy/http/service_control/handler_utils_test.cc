@@ -407,7 +407,7 @@ TEST(ServiceControlUtils, GetBackendProtocol) {
 }
 
 TEST(ServiceControlUtils, GetFrontendProtocol) {
-  Envoy::Http::TestRequestHeaderMapImpl headers;
+  Envoy::Http::TestResponseHeaderMapImpl headers;
   testing::NiceMock<Envoy::StreamInfo::MockStreamInfo> mock_stream_info;
 
   // Test: header is nullptr and stream_info has no protocol
