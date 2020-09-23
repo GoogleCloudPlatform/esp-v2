@@ -1795,8 +1795,7 @@ func TestMakeListeners(t *testing.T) {
       }
     }
   ],
-  "name": "ingress_listener",
-  "perConnectionBufferLimitBytes":1048576
+  "name": "ingress_listener"
 }`,
 			},
 		},

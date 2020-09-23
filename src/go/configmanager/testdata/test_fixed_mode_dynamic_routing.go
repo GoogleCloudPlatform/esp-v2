@@ -499,8 +499,7 @@ var (
          ]
       }
    ],
-   "name":"ingress_listener",
-   "perConnectionBufferLimitBytes":1048576
+   "name":"ingress_listener"
 }
 `
 )
