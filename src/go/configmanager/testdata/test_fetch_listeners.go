@@ -77,6 +77,7 @@ var (
       }
 	 },
 	 "name": "ingress_listener",
+   "perConnectionBufferLimitBytes":1048576,
    "filterChains":[
       {
          "filters":[
@@ -221,6 +222,7 @@ var (
       }
    },
 	 "name": "ingress_listener",
+   "perConnectionBufferLimitBytes":1048576,
    "filterChains":[
       {
          "filters":[
@@ -415,6 +417,7 @@ var (
       }
 	 },
 	 "name": "ingress_listener",
+   "perConnectionBufferLimitBytes":1048576,
    "filterChains":[
       {
          "filters":[
@@ -628,6 +631,7 @@ var (
       }
 	 },
 	 "name": "ingress_listener",
+   "perConnectionBufferLimitBytes":1048576,
    "filterChains":[
       {
          "filters":[
@@ -871,6 +875,7 @@ var (
       }
 	 },
 	 "name": "ingress_listener",
+   "perConnectionBufferLimitBytes":1048576,
    "filterChains":[
       {
          "filters":[
@@ -1095,6 +1100,7 @@ var (
       }
    },
 	 "name": "ingress_listener",
+   "perConnectionBufferLimitBytes":1048576,
    "filterChains":[
       {
          "filters":[
@@ -1267,6 +1273,7 @@ var (
       }
 	 },
 	 "name": "ingress_listener",
+   "perConnectionBufferLimitBytes":1048576,
    "filterChains":[
       {
          "filters":[
