@@ -97,8 +97,8 @@ var (
 
 	EnableGrpcForHttp1 = flag.Bool("enable_grpc_for_http1", true, `Enable gRPC when the downstream is HTTP/1.1. The default is on.`)
 
-	ConnectionBufferLimitBytes = flag.Int("connection_buffer_limit_bytes", 1*1024*1024, `Configure the maximum amount of data that is buffered for each request/response body. 
-			This should be increased for large bodies used by gRPC transcoding. Default is 1 MB.`)
+	ConnectionBufferLimitBytes = flag.Int("connection_buffer_limit_bytes", -1, `Configure the maximum amount of data that is buffered for each request/response body. 
+			If not provided, Envoy will decide the default value.`)
 
 	JwksCacheDurationInS = flag.Int("jwks_cache_duration_in_s", 300, "Specify JWT public key cache duration in seconds. The default is 5 minutes.")
 

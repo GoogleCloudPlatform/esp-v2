@@ -124,7 +124,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		SuppressEnvoyHeaders:             true,
 		ServiceControlNetworkFailOpen:    true,
 		EnableGrpcForHttp1:               true,
-		ConnectionBufferLimitBytes:       1 * 1024 * 1024, // 1 MB
+		ConnectionBufferLimitBytes:       -1,
 		ServiceManagementURL:             "https://servicemanagement.googleapis.com",
 		ServiceControlURL:                "https://servicecontrol.googleapis.com",
 		ScCheckRetries:                   -1,

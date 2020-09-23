@@ -1795,7 +1795,8 @@ func TestMakeListeners(t *testing.T) {
       }
     }
   ],
-  "name": "ingress_listener"
+  "name": "ingress_listener",
+  "perConnectionBufferLimitBytes":1024
 }`,
 			},
 		},
@@ -1806,6 +1807,7 @@ func TestMakeListeners(t *testing.T) {
 		opts.SslServerCertPath = tc.sslServerCertPath
 		opts.UnderscoresInHeaders = true
 		opts.DisableTracing = true
+		opts.ConnectionBufferLimitBytes = 1024
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)

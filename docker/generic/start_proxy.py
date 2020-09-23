@@ -552,8 +552,8 @@ environment variable or by passing "-k" flag to this script.
         '--connection_buffer_limit_bytes', action=None,
         help='''
         Configure the maximum amount of data that is buffered for each 
-        request/response body. This should be increased for large bodies used 
-        by gRPC transcoding. Default is 1 MB.
+        request/response body, in bytes. If not set, default is decided by
+        Envoy (currently 1 MiB). 
         ''')
 
     # Start Deprecated Flags Section
