@@ -212,7 +212,7 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*listenerpb.Listener, error) {
 		filterChain.TransportSocket = transportSocket
 	}
 
-	return &listenerpb.Listener{
+	listener := &listenerpb.Listener{
 		Name: util.IngressListenerName,
 		Address: &corepb.Address{
 			Address: &corepb.Address_SocketAddress{
@@ -225,7 +225,15 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*listenerpb.Listener, error) {
 			},
 		},
 		FilterChains: []*listenerpb.FilterChain{filterChain},
-	}, nil
+	}
+
+	if serviceInfo.Options.ConnectionBufferLimitBytes >= 0 {
+		listener.PerConnectionBufferLimitBytes = &wrapperspb.UInt32Value{
+			Value: uint32(serviceInfo.Options.ConnectionBufferLimitBytes),
+		}
+	}
+
+	return listener, nil
 }
 
 func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteConfiguration) (*hcmpb.HttpConnectionManager, error) {

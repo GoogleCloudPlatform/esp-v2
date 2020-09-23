@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	grpcEchoClient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/grpc_echo/client"
 )
@@ -139,6 +140,65 @@ func TestGRPC(t *testing.T) {
 		if !strings.Contains(resp, tc.wantResp) {
 			t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
 		}
+	}
+}
+
+func TestGrpcConnectionBufferLimit(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		desc           string
+		confArgs       []string
+		clientProtocol string
+		method         string
+		header         http.Header
+		wantResp       string
+		wantError      string
+	}{
+		{
+			desc: "Transcoding fails when buffer limit is too small.",
+			confArgs: append([]string{
+				"--connection_buffer_limit_bytes", "5",
+			}, utils.CommonArgs()...),
+			clientProtocol: "http",
+			method:         "/v1/shelves/200?key=api-key",
+			// Due to a bug in Envoy gRPC Transcoder, the correct error is not returned to the client.
+			// Ref: https://github.com/envoyproxy/envoy/issues/13207
+			wantResp: ``,
+		},
+		{
+			desc: "Transcoding succeeds when buffer limit is higher.",
+			confArgs: append([]string{
+				"--connection_buffer_limit_bytes", "100",
+			}, utils.CommonArgs()...),
+			clientProtocol: "http",
+			method:         "/v1/shelves/200?key=api-key",
+			wantResp:       `{"id":"200","theme":"Classic"}`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			s := env.NewTestEnv(platform.TestGrpcConnectionBufferLimit, platform.GrpcBookstoreSidecar)
+			defer s.TearDown(t)
+			if err := s.Setup(tc.confArgs); err != nil {
+				t.Fatalf("Fail to setup test env, %v", err)
+			}
+
+			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			resp, err := client.MakeCall(tc.clientProtocol, addr, "GET", tc.method, "", tc.header)
+			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
+				t.Errorf("Failed, expected: %s, got: %v", tc.wantError, err)
+			}
+
+			if tc.wantError == "" && err != nil {
+				t.Errorf("Got unexpected error: %s", resp)
+			}
+
+			if !strings.Contains(resp, tc.wantResp) {
+				t.Errorf("Failed, expected: %s, got: %s", tc.wantResp, resp)
+			}
+		})
 	}
 }
 

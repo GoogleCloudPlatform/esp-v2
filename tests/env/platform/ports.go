@@ -57,6 +57,7 @@ const (
 	TestFrontendAndBackendAuthHeaders
 	TestGeneratedHeaders
 	TestGRPC
+	TestGrpcConnectionBufferLimit
 	TestGrpcBackendPreflightCors
 	TestGrpcBackendSimpleCors
 	TestGRPCErrors
