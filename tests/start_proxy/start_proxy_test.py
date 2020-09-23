@@ -297,7 +297,7 @@ class TestStartProxy(unittest.TestCase):
             # Connection buffer limit bytes
             (['--service=test_bookstore.gloud.run',
               '--backend=grpc://127.0.0.1:8000',
-              '--connection_buffer_limit_bytes=1024'
+              '--envoy_connection_buffer_limit_bytes=1024'
               ],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',

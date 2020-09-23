@@ -301,6 +301,16 @@ environment variable or by passing "-k" flag to this script.
         sidecar deployments and 0 for serverless deployments.''')
 
     parser.add_argument(
+        '--envoy_connection_buffer_limit_bytes', action=None,
+        help='''
+        Configure the maximum amount of data that is buffered for each 
+        request/response body, in bytes. If not set, default is decided by
+        Envoy.
+        
+        https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/listener/v3/listener.proto
+        ''')
+
+    parser.add_argument(
         '--log_request_headers',
         default=None,
         help='''Log corresponding request headers through
@@ -546,14 +556,6 @@ environment variable or by passing "-k" flag to this script.
         corresponding protobuf field in grpc-json transcoding. Use this if you
         cannot control the query parameters and do not know them beforehand.
         Otherwise use ignored_query_parameters. Defaults to false.
-        ''')
-
-    parser.add_argument(
-        '--connection_buffer_limit_bytes', action=None,
-        help='''
-        Configure the maximum amount of data that is buffered for each 
-        request/response body, in bytes. If not set, default is decided by
-        Envoy (currently 1 MiB). 
         ''')
 
     # Start Deprecated Flags Section
@@ -987,9 +989,9 @@ def gen_proxy_config(args):
     if args.enable_debug:
         proxy_conf.append("--suppress_envoy_headers=false")
 
-    if args.connection_buffer_limit_bytes:
+    if args.envoy_connection_buffer_limit_bytes:
         proxy_conf.extend(["--connection_buffer_limit_bytes",
-                           args.connection_buffer_limit_bytes])
+                           args.envoy_connection_buffer_limit_bytes])
 
     return proxy_conf
 
