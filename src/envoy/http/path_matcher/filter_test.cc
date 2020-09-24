@@ -166,7 +166,7 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersNoMatch) {
   EXPECT_CALL(
       mock_cb_,
       sendLocalReply(Envoy::Http::Code::NotFound,
-                     "POST /bar does not match any requirement URI template.",
+                     "`POST /bar` does not match any requirement URI template.",
                      _, _, "path_not_defined"));
 
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,

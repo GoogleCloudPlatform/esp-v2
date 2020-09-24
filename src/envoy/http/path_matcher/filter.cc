@@ -76,7 +76,7 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
   if (rule == nullptr) {
     rejectRequest(
         Envoy::Http::Code::NotFound,
-        absl::StrCat(method, " ", path,
+        absl::StrCat("`", method, " ", path, "`"
                      " does not match any requirement URI template."));
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
