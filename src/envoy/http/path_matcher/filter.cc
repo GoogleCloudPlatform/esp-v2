@@ -14,10 +14,10 @@
 
 #include <string>
 
-#include "src/envoy/http/path_matcher/filter.h"
-
 #include "common/http/utility.h"
+
 #include "src/api_proxy/path_matcher/variable_binding_utils.h"
+#include "src/envoy/http/path_matcher/filter.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
 
@@ -50,13 +50,14 @@ using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
 Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
     RequestHeaderMap& headers, bool) {
   if (!headers.Method()) {
-    rejectRequest(Envoy::Http::Code(400), "No method in request headers.");
+    rejectRequest(Envoy::Http::Code::BadRequest,
+                  "No method in request headers.");
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   } else if (!headers.Path()) {
-    rejectRequest(Envoy::Http::Code(400), "No path in request headers.");
+    rejectRequest(Envoy::Http::Code::BadRequest, "No path in request headers.");
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   } else if (headers.Path()->value().size() > PathMaxSize) {
-    rejectRequest(Envoy::Http::Code(400),
+    rejectRequest(Envoy::Http::Code::BadRequest,
                   absl::StrCat("Path is too long, max allowed size is ",
                                PathMaxSize, "."));
     return Envoy::Http::FilterHeadersStatus::StopIteration;
@@ -73,8 +74,10 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
   std::string path(headers.Path()->value().getStringView());
   const PathMatcherRule* rule = config_->findRule(method, path);
   if (rule == nullptr) {
-    rejectRequest(Envoy::Http::Code(404),
-                  "Path does not match any requirement URI template.");
+    rejectRequest(
+        Envoy::Http::Code::NotFound,
+        absl::StrCat(method, " ", path,
+                     " does not match any requirement URI template."));
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 
