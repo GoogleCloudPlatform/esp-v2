@@ -225,6 +225,8 @@ struct ReportRequestInfo : public OperationInfo {
   // The jwt payloads logged
   std::string jwt_payloads;
 
+  std::string response_detail;
+
   ReportRequestInfo()
       : response_code(200),
         request_size(-1),

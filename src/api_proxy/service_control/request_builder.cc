@@ -762,6 +762,7 @@ constexpr char kLogFieldNameServiceAgent[] = "service_agent";
 constexpr char kLogFieldNameConfigId[] = "service_config_id";
 constexpr char kLogFieldNameTimestamp[] = "timestamp";
 constexpr char kLogFieldNameApiKeyState[] = "api_key_state";
+constexpr char kLogFieldNameResponseDetail[] = "response_detail";
 
 // Convert time point to proto Timestamp
 Timestamp CreateTimestamp(std::chrono::system_clock::time_point tp) {
@@ -849,6 +850,11 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
 
   (*fields)[kLogFieldNameApiKeyState].set_string_value(
       api_key::ToString(info.check_response_info.api_key_state));
+
+  if (!info.response_detail.empty()) {
+    (*fields)[kLogFieldNameResponseDetail].set_string_value(
+        info.response_detail);
+  }
 
   if (!info.producer_project_id.empty()) {
     (*fields)[kLogFieldNameProducerProjectId].set_string_value(

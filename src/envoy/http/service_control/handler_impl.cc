@@ -323,6 +323,9 @@ void ServiceControlHandlerImpl::callReport(
   }
   info.response_size = stream_info_.bytesSent() + response_header_size;
 
+  info.response_detail = stream_info_.responseCodeDetails().value_or("");
+
+
   require_ctx_->service_ctx().call().callReport(info);
 }
 
