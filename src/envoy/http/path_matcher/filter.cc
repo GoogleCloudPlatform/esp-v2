@@ -77,7 +77,7 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
     rejectRequest(
         Envoy::Http::Code::NotFound,
         absl::StrCat("`", method, " ", path, "`"
-                     " does not match any requirement URI template."));
+                     " does not match any defined routes."));
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 
