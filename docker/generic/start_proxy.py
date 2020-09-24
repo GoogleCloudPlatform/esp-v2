@@ -338,13 +338,11 @@ environment variable or by passing "-k" flag to this script.
         if the fields are available. The value must be a primitive field,
         JSON objects and arrays will not be logged.
         ''')
-    parser.add_argument(
-        '--service_control_network_fail_open',
-        default=True,
-        action='store_true',
-        help='''
-        In case of network failures when connecting to Google service control,
-        the requests will be allowed if this flag is on. The default is on.
+    parser.add_argument('--service_control_network_fail_policy',
+        default='open',  choices=['open', 'close'], help='''
+        Specify the policy to handle the request in case of network failures when
+        connecting to Google service control. If it is `open`, the request will be allowed,
+        otherwise, it will be rejected. Default is `open`.
         ''')
     parser.add_argument(
         '--jwks_cache_duration_in_s',
@@ -881,7 +879,7 @@ def gen_proxy_config(args):
         ])
 
     #  NOTE: It is true by default in configmangager's flags.
-    if not args.service_control_network_fail_open:
+    if args.service_control_network_fail_policy == "close":
         proxy_conf.extend(["--service_control_network_fail_open=false"])
 
     if args.version:

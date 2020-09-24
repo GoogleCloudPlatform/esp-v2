@@ -92,13 +92,42 @@ class TestStartProxy(unittest.TestCase):
             (['-R=managed','--enable_strict_transport_security',
               '--http_port=8079', '--service_control_quota_retries=3',
               '--service_control_report_timeout_ms=300',
-              '--service_control_network_fail_open', '--check_metadata',
+              '--check_metadata',
               '--disable_tracing', '--underscores_in_headers'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8079', '--enable_strict_transport_security',
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
+              '--check_metadata', '--underscores_in_headers',
+              '--disable_tracing'
+              ]),
+            # service_control_network_fail_policy=open
+            (['-R=managed','--enable_strict_transport_security',
+              '--http_port=8079', '--service_control_quota_retries=3',
+              '--service_control_report_timeout_ms=300',
+              '--service_control_network_fail_policy=open', '--check_metadata',
+              '--disable_tracing', '--underscores_in_headers'],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--listener_port', '8079', '--enable_strict_transport_security',
+              '--service_control_quota_retries', '3',
+              '--service_control_report_timeout_ms', '300',
+              '--check_metadata', '--underscores_in_headers',
+              '--disable_tracing'
+              ]),
+            # service_control_network_fail_policy=close
+            (['-R=managed','--enable_strict_transport_security',
+              '--http_port=8079', '--service_control_quota_retries=3',
+              '--service_control_report_timeout_ms=300',
+              '--service_control_network_fail_policy=close', '--check_metadata',
+              '--disable_tracing', '--underscores_in_headers'],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--listener_port', '8079', '--enable_strict_transport_security',
+              '--service_control_quota_retries', '3',
+              '--service_control_report_timeout_ms', '300',
+              '--service_control_network_fail_open=false',
               '--check_metadata', '--underscores_in_headers',
               '--disable_tracing'
               ]),
@@ -198,7 +227,7 @@ class TestStartProxy(unittest.TestCase):
             (['-R=managed',
               '--http2_port=8079', '--service_control_quota_retries=3',
               '--service_control_report_timeout_ms=300',
-              '--service_control_network_fail_open', '--check_metadata',
+              '--check_metadata',
               '--disable_tracing'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
@@ -212,7 +241,7 @@ class TestStartProxy(unittest.TestCase):
             (['-R=managed',
               '--listener_port=8079', '--service_control_quota_retries=3',
               '--service_control_report_timeout_ms=300',
-              '--service_control_network_fail_open', '--check_metadata',
+              '--check_metadata',
               '--disable_tracing'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
@@ -510,4 +539,3 @@ class TestStartProxy(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
