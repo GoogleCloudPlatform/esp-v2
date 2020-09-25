@@ -74,10 +74,10 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
   std::string path(headers.Path()->value().getStringView());
   const PathMatcherRule* rule = config_->findRule(method, path);
   if (rule == nullptr) {
-    rejectRequest(
-        Envoy::Http::Code::NotFound,
-        absl::StrCat("`", method, " ", path, "`"
-                     " does not match any defined routes."));
+    rejectRequest(Envoy::Http::Code::NotFound,
+                  absl::StrCat("Request `", method, " ", path,
+                               "`"
+                               " is not defined in the service spec."));
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 

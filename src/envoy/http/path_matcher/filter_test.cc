@@ -166,7 +166,7 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersNoMatch) {
   EXPECT_CALL(
       mock_cb_,
       sendLocalReply(Envoy::Http::Code::NotFound,
-                     "`POST /bar` does not match any defined routes.",
+                     "Request `POST /bar` is not defined in the service spec.",
                      _, _, "path_not_defined"));
 
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
