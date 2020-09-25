@@ -76,8 +76,7 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
   if (rule == nullptr) {
     rejectRequest(Envoy::Http::Code::NotFound,
                   absl::StrCat("Request `", method, " ", path,
-                               "`"
-                               " is not defined in the service spec."));
+                               "` is not defined in the service spec."));
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 
