@@ -163,11 +163,10 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersNoMatch) {
       setResponseFlag(
           Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
 
-  EXPECT_CALL(
-      mock_cb_,
-      sendLocalReply(Envoy::Http::Code::NotFound,
-                     "Request `POST /bar` is not defined in the service spec.",
-                     _, _, "path_not_defined"));
+  EXPECT_CALL(mock_cb_,
+              sendLocalReply(Envoy::Http::Code::NotFound,
+                             "Request `POST /bar` is not defined by this API.",
+                             _, _, "path_not_defined"));
 
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
             filter_->decodeHeaders(headers, true));
