@@ -1,0 +1,212 @@
+{
+  "admin": {},
+  "layeredRuntime": {
+    "layers": [
+      {
+        "name": "deprecation",
+        "staticLayer": {
+          "re2.max_program_size.error_level": 1000
+        }
+      }
+    ]
+  },
+  "node": {
+    "cluster": "ESPv2_cluster",
+    "id": "ESPv2"
+  },
+  "staticResources": {
+    "clusters": [
+      {
+        "connectTimeout": "20s",
+        "loadAssignment": {
+          "clusterName": "127.0.0.1",
+          "endpoints": [
+            {
+              "lbEndpoints": [
+                {
+                  "endpoint": {
+                    "address": {
+                      "socketAddress": {
+                        "address": "127.0.0.1",
+                        "portValue": 8082
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "name": "backend-cluster-examples-sidecar-backend.endpoints.cloudesf-testing.cloud.goog_local",
+        "type": "LOGICAL_DNS"
+      },
+      {
+        "connectTimeout": "20s",
+        "loadAssignment": {
+          "clusterName": "169.254.169.254",
+          "endpoints": [
+            {
+              "lbEndpoints": [
+                {
+                  "endpoint": {
+                    "address": {
+                      "socketAddress": {
+                        "address": "169.254.169.254",
+                        "portValue": 80
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "name": "metadata-cluster",
+        "type": "STRICT_DNS"
+      },
+      {
+        "connectTimeout": "5s",
+        "dnsLookupFamily": "V4_ONLY",
+        "loadAssignment": {
+          "clusterName": "servicecontrol.googleapis.com",
+          "endpoints": [
+            {
+              "lbEndpoints": [
+                {
+                  "endpoint": {
+                    "address": {
+                      "socketAddress": {
+                        "address": "servicecontrol.googleapis.com",
+                        "portValue": 443
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "name": "service-control-cluster",
+        "transportSocket": {
+          "name": "envoy.transport_sockets.tls",
+          "typedConfig": {
+            "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
+            "commonTlsContext": {
+              "validationContext": {
+                "trustedCa": {
+                  "filename": "/etc/ssl/certs/ca-certificates.crt"
+                }
+              }
+            },
+            "sni": "servicecontrol.googleapis.com"
+          }
+        },
+        "type": "LOGICAL_DNS"
+      }
+    ],
+    "listeners": [
+      {
+        "address": {
+          "socketAddress": {
+            "address": "0.0.0.0",
+            "portValue": 8080
+          }
+        },
+        "filterChains": [
+          {
+            "filters": [
+              {
+                "name": "envoy.filters.network.http_connection_manager",
+                "typedConfig": {
+                  "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
+                  "commonHttpProtocolOptions": {
+                    "headersWithUnderscoresAction": "REJECT_REQUEST"
+                  },
+                  "httpFilters": [
+                    {
+                      "name": "com.google.espv2.filters.http.path_matcher",
+                      "typedConfig": {
+                        "@type": "type.googleapis.com/espv2.api.envoy.v8.http.path_matcher.FilterConfig",
+                        "rules": [
+                          {
+                            "operation": "1.examples_sidecar_backend_endpoints_cloudesf_testing_cloud_goog.ListShelves",
+                            "pattern": {
+                              "httpMethod": "GET",
+                              "uriTemplate": "/shelves"
+                            }
+                          },
+                          {
+                            "operation": "1.examples_sidecar_backend_endpoints_cloudesf_testing_cloud_goog.CreateShelf",
+                            "pattern": {
+                              "httpMethod": "POST",
+                              "uriTemplate": "/shelves"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                    },
+                    {
+                      "name": "envoy.filters.http.router",
+                      "typedConfig": {
+                        "@type": "type.googleapis.com/envoy.extensions.filters.http.router.v3.Router",
+                        "suppressEnvoyHeaders": true
+                      }
+                    }
+                  ],
+                  "httpProtocolOptions": {
+                    "enableTrailers": true
+                  },
+                  "localReplyConfig": {
+                    "bodyFormat": {
+                      "jsonFormat": {
+                        "code": "%RESPONSE_CODE%",
+                        "message": "%LOCAL_REPLY_BODY%"
+                      }
+                    }
+                  },
+                  "routeConfig": {
+                    "name": "local_route",
+                    "virtualHosts": [
+                      {
+                        "domains": [
+                          "*"
+                        ],
+                        "name": "backend",
+                        "routes": [
+                          {
+                            "decorator": {
+                              "operation": "ingress"
+                            },
+                            "match": {
+                              "prefix": "/"
+                            },
+                            "route": {
+                              "cluster": "backend-cluster-examples-sidecar-backend.endpoints.cloudesf-testing.cloud.goog_local",
+                              "timeout": "15s"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "statPrefix": "ingress_http",
+                  "upgradeConfigs": [
+                    {
+                      "upgradeType": "websocket"
+                    }
+                  ],
+                  "useRemoteAddress": false,
+                  "xffNumTrustedHops": 2
+                }
+              }
+            ]
+          }
+        ],
+        "name": "ingress_listener"
+      }
+    ]
+  }
+}
