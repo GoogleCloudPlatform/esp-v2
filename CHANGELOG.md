@@ -1,3 +1,19 @@
+# Release 2.19.0 29-09-2020
+
+- b/169095072: fix path matcher misleading error message (#350)
+- Deprecated flag --service_control_network_fail_open (#348)
+- Add flag `--connection_buffer_limit_bytes` (#344)
+- b/160645642: use inline headers (#343)
+- fix quota test (#339)
+- Enable gRPC when downstream is HTTP/1.1 (#336)
+- Enable race/msan for go build/test (#337)
+- Refactor test framework for port rewrite (#338)
+- b/145520483: Fix Envoy route ordering for wildcard dynamic routing (#335)
+- b/119265126: Remove unnecessary extensions from Envoy build (#334)
+- add grpc_metadata_scrubber filter (#328)
+- Cleanup autogeneted CORS method names (#332)
+- b/145520483: Update example with support for dynamic routing of unconfigured requests (#322)
+
 # Release 2.18.0 16-09-2020
 
 - Add name prefix for backend/jwtProvider cluster (#330)
