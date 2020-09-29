@@ -163,6 +163,11 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersNoMatch) {
       setResponseFlag(
           Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
 
+  EXPECT_CALL(mock_cb_,
+              sendLocalReply(Envoy::Http::Code::NotFound,
+                             "Request `POST /bar` is not defined by this API.",
+                             _, _, "path_not_defined"));
+
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
             filter_->decodeHeaders(headers, true));
 
@@ -188,8 +193,16 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersMissingHeaders) {
                   Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService))
       .Times(2);
 
+  EXPECT_CALL(mock_cb_, sendLocalReply(Envoy::Http::Code::BadRequest,
+                                       "No path in request headers.", _, _,
+                                       "path_not_defined"))
+      .Times(1);
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
             filter_->decodeHeaders(missingPath, true));
+  EXPECT_CALL(mock_cb_, sendLocalReply(Envoy::Http::Code::BadRequest,
+                                       "No method in request headers.", _, _,
+                                       "path_not_defined"))
+      .Times(1);
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
             filter_->decodeHeaders(missingMethod, true));
 }
@@ -219,6 +232,12 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersOverflowWildcard) {
       mock_cb_.stream_info_,
       setResponseFlag(
           Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
+
+  EXPECT_CALL(mock_cb_,
+              sendLocalReply(Envoy::Http::Code::BadRequest,
+                             "Path is too long, max allowed size is 8192.", _,
+                             _, "path_not_defined"))
+      .Times(1);
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
             filter_->decodeHeaders(headers, true));
 }

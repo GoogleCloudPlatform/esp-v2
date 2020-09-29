@@ -57,7 +57,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			url:           fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
 			httpMethod:    "GET",
 			method:        "/noexistoperation?key=api-key",
-			httpCallError: `404 Not Found, {"code":404,"message":"Path does not match any requirement URI template."}`,
+			httpCallError: "404 Not Found, {\"code\":404,\"message\":\"Request `GET /noexistoperation?key=api-key` is not defined by this API.\"}",
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:         utils.ESPv2Version(),
@@ -85,7 +85,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			url:           fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
 			httpMethod:    "GET",
 			method:        "/noexistoperation",
-			httpCallError: `404 Not Found, {"code":404,"message":"Path does not match any requirement URI template."}`,
+			httpCallError: "404 Not Found, {\"code\":404,\"message\":\"Request `GET /noexistoperation` is not defined by this API.\"}",
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:         utils.ESPv2Version(),
