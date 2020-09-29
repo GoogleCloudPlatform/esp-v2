@@ -1,8 +1,5 @@
 # Release 2.19.0 29-09-2020
 
-TODO: Edit the section below before submitting! DIRECTORY /usr/local/google/home/florayan/esp-v2
-===============================================
-
 - b/169095072: fix path matcher misleading error message (#350)
 - Deprecated flag --service_control_network_fail_open (#348)
 - Add flag `--connection_buffer_limit_bytes` (#344)
@@ -15,12 +12,8 @@ TODO: Edit the section below before submitting! DIRECTORY /usr/local/google/home
 - b/119265126: Remove unnecessary extensions from Envoy build (#334)
 - add grpc_metadata_scrubber filter (#328)
 - Cleanup autogeneted CORS method names (#332)
-- Update CHANGELOG for 2.18.0 release (#333)
-- Update version number to 2.19.0. (#331)
 - b/145520483: Update example with support for dynamic routing of unconfigured requests (#322)
 
-TODO: Edit the section above before submitting! DIRECTORY /usr/local/google/home/florayan/esp-v2
-===============================================
 # Release 2.18.0 16-09-2020
 
 - Add name prefix for backend/jwtProvider cluster (#330)
