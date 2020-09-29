@@ -1,10 +1,10 @@
 # Release 2.19.0 29-09-2020
 
-- b/169095072: fix path matcher misleading error message (#350)
+- b/169095072: Fix path matcher misleading error message (#350)
 - Deprecated flag --service_control_network_fail_open (#348)
 - Add flag `--connection_buffer_limit_bytes` (#344)
 - Enable gRPC when downstream is HTTP/1.1 (#336)
-- add grpc_metadata_scrubber filter (#328)
+- Add grpc_metadata_scrubber filter (#328)
 
 # Release 2.18.0 16-09-2020
 
