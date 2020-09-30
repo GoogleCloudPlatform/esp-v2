@@ -75,8 +75,7 @@ var (
          "address":"0.0.0.0",
          "portValue":8080
       }
-	 },
-	 "name": "ingress_listener",
+   },
    "filterChains":[
       {
          "filters":[
@@ -84,6 +83,9 @@ var (
                "name":"envoy.filters.network.http_connection_manager",
                "typedConfig":{
                   "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
+                  "commonHttpProtocolOptions":{
+                     "headersWithUnderscoresAction":"REJECT_REQUEST"
+                  },
                   "httpFilters":[
                      {
                         "name":"com.google.espv2.filters.http.path_matcher",
@@ -121,16 +123,19 @@ var (
                         }
                      },
                      {
-                       "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                        "name":"com.google.espv2.filters.http.grpc_metadata_scrubber"
                      },
                      {
                         "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.router.v3.Router",
-                       		 "suppressEnvoyHeaders": true
+                           "suppressEnvoyHeaders":true
                         }
                      }
                   ],
+                  "httpProtocolOptions":{
+                     "enableTrailers":true
+                  },
                   "routeConfig":{
                      "name":"local_route",
                      "virtualHosts":[
@@ -142,10 +147,16 @@ var (
                            "routes":[
                               {
                                  "decorator":{
-                                   "operation":"ingress"
+                                    "operation":"ingress CreateShelf"
                                  },
                                  "match":{
-                                    "prefix":"/"
+                                    "headers":[
+                                       {
+                                          "exactMatch":"POST",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
                                  },
                                  "route":{
                                     "cluster":"%s",
@@ -156,10 +167,12 @@ var (
                         }
                      ]
                   },
-                  "upgradeConfigs": [{"upgradeType": "websocket"}],
                   "statPrefix":"ingress_http",
-                  "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
-                  "httpProtocolOptions": {"enableTrailers": true},
+                  "upgradeConfigs":[
+                     {
+                        "upgradeType":"websocket"
+                     }
+                  ],
                   "useRemoteAddress":false,
                   %s,
                   "xffNumTrustedHops":2
@@ -167,7 +180,8 @@ var (
             }
          ]
       }
-   ]
+   ],
+   "name":"ingress_listener"
 }
 `,
 		fakeProtoDescriptor, TestFetchListenersEndpointName, testBackendClusterName, localReplyConfig)

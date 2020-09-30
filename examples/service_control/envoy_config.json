@@ -756,10 +756,34 @@
                         "routes": [
                           {
                             "decorator": {
-                              "operation": "ingress"
+                              "operation": "ingress ListShelves"
                             },
                             "match": {
-                              "prefix": "/"
+                              "headers": [
+                                {
+                                  "exactMatch": "GET",
+                                  "name": ":method"
+                                }
+                              ],
+                              "path": "/shelves"
+                            },
+                            "route": {
+                              "cluster": "backend-cluster-examples-service-control.endpoints.cloudesf-testing.cloud.goog_local",
+                              "timeout": "15s"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress CreateShelf"
+                            },
+                            "match": {
+                              "headers": [
+                                {
+                                  "exactMatch": "POST",
+                                  "name": ":method"
+                                }
+                              ],
+                              "path": "/shelves"
                             },
                             "route": {
                               "cluster": "backend-cluster-examples-service-control.endpoints.cloudesf-testing.cloud.goog_local",

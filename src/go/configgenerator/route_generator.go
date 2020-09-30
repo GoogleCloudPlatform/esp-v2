@@ -42,52 +42,12 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 		Domains: []string{"*"},
 	}
 
-	// Per-selector routes for dynamic routing.
-	brRoutes, err := makeDynamicRoutingConfig(serviceInfo)
+	// Per-selector routes for both local and remote backends.
+	brRoutes, err := makeRouteTable(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
 	host.Routes = brRoutes
-
-	if len(host.Routes) == 0 {
-		// Catch-all route if dynamic routing is not enabled.
-		catchAllRt := &routepb.Route{
-			Match: &routepb.RouteMatch{
-				PathSpecifier: &routepb.RouteMatch_Prefix{
-					Prefix: "/",
-				},
-			},
-			Action: &routepb.Route_Route{
-				Route: &routepb.RouteAction{
-					ClusterSpecifier: &routepb.RouteAction_Cluster{
-						Cluster: serviceInfo.CatchAllBackendClusterName(),
-					},
-					// Use the default deadline for the catch-all route.
-					// If a customer needs to override this, dynamic routing must be used.
-					// This is the intended design of the feature (b/147813008).
-					Timeout: ptypes.DurationProto(util.DefaultResponseDeadline),
-				},
-			},
-			Decorator: &routepb.Decorator{
-				Operation: util.SpanNamePrefix,
-			},
-		}
-		if serviceInfo.Options.EnableHSTS {
-			catchAllRt.ResponseHeadersToAdd = []*corepb.HeaderValueOption{
-				{
-					Header: &corepb.HeaderValue{
-						Key:   util.HSTSHeaderKey,
-						Value: util.HSTSHeaderValue,
-					},
-				},
-			}
-		}
-
-		host.Routes = append(host.Routes, catchAllRt)
-
-		jsonStr, _ := util.ProtoToJson(catchAllRt)
-		glog.Infof("adding catch-all routing configuration: %v", jsonStr)
-	}
 
 	switch serviceInfo.Options.CorsPreset {
 	case "basic":
@@ -181,14 +141,11 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 	}, nil
 }
 
-func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, error) {
+func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, error) {
 	var backendRoutes []*routepb.Route
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
 		var routeMatcher *routepb.RouteMatch
-		if method.BackendInfo == nil {
-			continue
-		}
 
 		// Response timeouts are not compatible with streaming methods (documented in Envoy).
 		// If this method is non-unary gRPC, explicitly set 0s to disable the timeout.
@@ -213,9 +170,6 @@ func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.R
 						ClusterSpecifier: &routepb.RouteAction_Cluster{
 							Cluster: method.BackendInfo.ClusterName,
 						},
-						HostRewriteSpecifier: &routepb.RouteAction_HostRewriteLiteral{
-							HostRewriteLiteral: method.BackendInfo.Hostname,
-						},
 						Timeout: ptypes.DurationProto(respTimeout),
 					},
 				},
@@ -224,6 +178,14 @@ func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.R
 					Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
 				},
 			}
+
+			if method.BackendInfo.Hostname != "" {
+				// For routing to remote backends.
+				r.GetRoute().HostRewriteSpecifier = &routepb.RouteAction_HostRewriteLiteral{
+					HostRewriteLiteral: method.BackendInfo.Hostname,
+				}
+			}
+
 			if serviceInfo.Options.EnableHSTS {
 				r.ResponseHeadersToAdd = []*corepb.HeaderValueOption{
 					{
@@ -237,7 +199,7 @@ func makeDynamicRoutingConfig(serviceInfo *configinfo.ServiceInfo) ([]*routepb.R
 			backendRoutes = append(backendRoutes, &r)
 
 			jsonStr, _ := util.ProtoToJson(&r)
-			glog.Infof("adding Dynamic Routing configuration: %v", jsonStr)
+			glog.Infof("adding route: %v", jsonStr)
 		}
 	}
 	return backendRoutes, nil
@@ -274,13 +236,15 @@ func makeHttpRouteMatcher(httpRule *commonpb.Pattern) (*routepb.RouteMatch, erro
 		}
 	}
 
-	routeMatcher.Headers = []*routepb.HeaderMatcher{
-		{
-			Name: ":method",
-			HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
-				ExactMatch: httpRule.HttpMethod,
+	if httpRule.HttpMethod != "*" {
+		routeMatcher.Headers = []*routepb.HeaderMatcher{
+			{
+				Name: ":method",
+				HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
+					ExactMatch: httpRule.HttpMethod,
+				},
 			},
-		},
+		}
 	}
 	return &routeMatcher, nil
 }

@@ -162,7 +162,7 @@ func TestMakeRouteConfig(t *testing.T) {
 }`,
 		},
 		{
-			desc: "Wildcard paths for remote backend",
+			desc: "Wildcard paths and wildcard http method for remote backend",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -186,8 +186,11 @@ func TestMakeRouteConfig(t *testing.T) {
 					Rules: []*annotationspb.HttpRule{
 						{
 							Selector: "endpoints.examples.bookstore.Bookstore.Foo",
-							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/v1/{book_name=*}/test/**",
+							Pattern: &annotationspb.HttpRule_Custom{
+								Custom: &annotationspb.CustomHttpPattern{
+									Path: "/v1/{book_name=*}/test/**",
+									Kind: "*",
+								},
 							},
 						},
 					},
@@ -195,40 +198,33 @@ func TestMakeRouteConfig(t *testing.T) {
 			},
 			wantRouteConfig: `
 {
-   "name":"local_route",
-   "virtualHosts":[
-      {
-         "domains":[
-            "*"
-         ],
-         "name":"backend",
-         "routes":[
-            {
-               "decorator":{
+  "name":"local_route",
+  "virtualHosts":[
+    {
+      "domains":[
+        "*"
+      ],
+      "name":"backend",
+      "routes":[
+        {
+          "decorator":{
             "operation":"ingress Foo"
           },
           "match":{
-                  "headers":[
-                     {
-                        "exactMatch":"GET",
-                        "name":":method"
-                     }
-                  ],
-                  "safeRegex":{
-                     "googleRe2":{
-                     },
-                     "regex":"^/v1/[^\\/]+/test/.*$"
-                  }
-               },
-               "route":{
-                  "cluster":"backend-cluster-testapipb.com:443",
-                  "hostRewriteLiteral":"testapipb.com",
-                  "timeout":"15s"
-               }
+            "safeRegex":{
+              "googleRe2":{},
+              "regex":"^/v1/[^\\/]+/test/.*$"
             }
-         ]
-      }
-   ]
+          },
+          "route":{
+            "cluster":"backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral":"testapipb.com",
+            "timeout":"15s"
+          }
+        }
+      ]
+    }
+  ]
 }`,
 		},
 		{
