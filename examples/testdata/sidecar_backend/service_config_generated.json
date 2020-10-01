@@ -29,7 +29,7 @@
         "selector": "1.examples_sidecar_backend_endpoints_cloudesf_testing_cloud_goog.ListShelves"
       },
       {
-        "deadline": 25.0,
+        "deadline": 25,
         "disableAuth": true,
         "selector": "1.examples_sidecar_backend_endpoints_cloudesf_testing_cloud_goog.CreateShelf"
       }
