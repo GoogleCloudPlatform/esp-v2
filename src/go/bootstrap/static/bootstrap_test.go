@@ -112,7 +112,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			configBytes, err := ioutil.ReadFile(tc.serviceConfigPath)
 			if err != nil {
-				t.Errorf("ReadFile failed, got %v", err)
+				t.Fatalf("ReadFile failed, got %v", err)
 			}
 
 			unmarshaler := &jsonpb.Unmarshaler{
@@ -122,7 +122,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 
 			var s confpb.Service
 			if err := unmarshaler.Unmarshal(bytes.NewBuffer(configBytes), &s); err != nil {
-				t.Errorf("Unmarshal() returned error %v, want nil", err)
+				t.Fatalf("Unmarshal() returned error %v, want nil", err)
 			}
 
 			opts := flags.EnvoyConfigOptionsFromFlags()
@@ -131,29 +131,29 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 			// Function under test
 			gotBootstrap, err := ServiceToBootstrapConfig(&s, FakeConfigID, opts)
 			if err != nil {
-				t.Error(err)
+				t.Fatal(err)
 			}
 
 			envoyConfig, err := ioutil.ReadFile(tc.envoyConfigPath)
 			if err != nil {
-				t.Errorf("ReadFile failed, got %v", err)
+				t.Fatalf("ReadFile failed, got %v", err)
 			}
 
 			var expectedBootstrap bootstrappb.Bootstrap
 			if err := unmarshaler.Unmarshal(bytes.NewBuffer(envoyConfig), &expectedBootstrap); err != nil {
-				t.Errorf("Unmarshal() returned error %v, want nil", err)
+				t.Fatalf("Unmarshal() returned error %v, want nil", err)
 			}
 
 			gotString, err := bootstrapToJson(gotBootstrap)
 			if err != nil {
-				t.Error(err)
+				t.Fatal(err)
 			}
 			wantString, err := bootstrapToJson(&expectedBootstrap)
 			if err != nil {
-				t.Error(err)
+				t.Fatal(err)
 			}
 			if err := util.JsonEqual(wantString, gotString); err != nil {
-				t.Errorf("got err: %v", err)
+				t.Fatalf("got err: %v", err)
 			}
 		})
 	}

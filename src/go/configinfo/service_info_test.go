@@ -1357,34 +1357,32 @@ func TestMethods(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendAddress = tc.BackendAddress
-		opts.Healthz = tc.healthz
-		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
-		if tc.wantError != "" {
-			if err == nil || err.Error() != tc.wantError {
-				t.Errorf("Test(%v): got Errors : %v, want: %v", tc.desc, err, tc.wantError)
+		t.Run(tc.desc, func(t *testing.T) {
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.BackendAddress = tc.BackendAddress
+			opts.Healthz = tc.healthz
+			serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			if tc.wantError != "" {
+				if err == nil || err.Error() != tc.wantError {
+					t.Fatalf("Test(%v): got Errors : %v, want: %v", tc.desc, err, tc.wantError)
+				}
+				return
 			}
-			continue
-		}
-		if err != nil {
-			t.Errorf("Test(%v): got err %v", tc.desc, err)
-			continue
-		}
-		if len(serviceInfo.Methods) != len(tc.wantMethods) {
-			t.Errorf("Test(%v): diff in number of Methods, got: %v, want: %v", tc.desc, len(serviceInfo.Methods), len(tc.wantMethods))
-			continue
-		}
-		for key, gotMethod := range serviceInfo.Methods {
-			wantMethod, ok := tc.wantMethods[key]
-			if !ok {
-				t.Errorf("Test(%v): \n cannot find key: %v\n got methods: %+v\nwant methods: %+v", tc.desc, key, serviceInfo.Methods, tc.wantMethods)
+			if err != nil {
+				t.Fatalf("Test(%v): got err %v", tc.desc, err)
 			}
-
-			if eq := cmp.Equal(gotMethod, wantMethod, cmp.Comparer(proto.Equal)); !eq {
-				t.Errorf("Test(%v): \n got method: %+v, \nwant method: %+v", tc.desc, gotMethod, wantMethod)
+			if len(serviceInfo.Methods) != len(tc.wantMethods) {
+				t.Fatalf("Test(%v): diff in number of Methods, got: %v, want: %v", tc.desc, len(serviceInfo.Methods), len(tc.wantMethods))
 			}
-		}
+			for key, gotMethod := range serviceInfo.Methods {
+				wantMethod, ok := tc.wantMethods[key]
+				if !ok {
+					t.Errorf("Test(%v): \n cannot find key: %v\n got methods: %+v\nwant methods: %+v", tc.desc, key, serviceInfo.Methods, tc.wantMethods)
+				} else if eq := cmp.Equal(gotMethod, wantMethod, cmp.Comparer(proto.Equal)); !eq {
+					t.Errorf("Test(%v): \n got method: %+v, \nwant method: %+v", tc.desc, gotMethod, wantMethod)
+				}
+			}
+		})
 	}
 }
 
