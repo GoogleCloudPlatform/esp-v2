@@ -1700,93 +1700,81 @@ func TestMakeListeners(t *testing.T) {
 			},
 			wantListeners: []string{`
 {
-  "address": {
-    "socketAddress": {
-      "address": "0.0.0.0",
-      "portValue": 8080
+  "address":{
+    "socketAddress":{
+      "address":"0.0.0.0",
+      "portValue":8080
     }
   },
-  "filterChains": [
+  "filterChains":[
     {
-      "filters": [
+      "filters":[
         {
-          "name": "envoy.filters.network.http_connection_manager",
-          "typedConfig": {
-            "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
-            "commonHttpProtocolOptions": {},
-            "httpProtocolOptions": {"enableTrailers": true},
-            "httpFilters": [
+          "name":"envoy.filters.network.http_connection_manager",
+          "typedConfig":{
+            "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
+            "commonHttpProtocolOptions":{},
+            "httpFilters":[
               {
-                "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                "name":"com.google.espv2.filters.http.grpc_metadata_scrubber"
               },
               {
-                "name": "envoy.filters.http.router",
-                "typedConfig": {
-                  "@type": "type.googleapis.com/envoy.extensions.filters.http.router.v3.Router",
-                  "suppressEnvoyHeaders": true
+                "name":"envoy.filters.http.router",
+                "typedConfig":{
+                  "@type":"type.googleapis.com/envoy.extensions.filters.http.router.v3.Router",
+                  "suppressEnvoyHeaders":true
                 }
               }
             ],
-            "routeConfig": {
-              "name": "local_route",
-              "virtualHosts": [
-                {
-                  "domains": [
-                    "*"
-                  ],
-                  "name": "backend",
-                  "routes": [
-                    {
-                      "decorator":{
-                        "operation":"ingress"
-                      },
-                      "match": {
-                        "prefix": "/"
-                      },
-                      "route": {
-                        "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
-                        "timeout": "15s"
-                      }
-                    }
-                  ]
-                }
-              ]
+            "httpProtocolOptions":{
+              "enableTrailers":true
             },
-            "statPrefix": "ingress_http",
-            "upgradeConfigs": [
-              {
-                "upgradeType": "websocket"
-              }
-            ],
-            "useRemoteAddress": false,
-            "xffNumTrustedHops": 2,
-            "localReplyConfig": {
-              "bodyFormat": {
-                "jsonFormat": {
-                  "code": "%RESPONSE_CODE%",
+            "localReplyConfig":{
+              "bodyFormat":{
+                "jsonFormat":{
+                  "code":"%RESPONSE_CODE%",
                   "message":"%LOCAL_REPLY_BODY%"
                 }
               }
-            }
+            },
+            "routeConfig":{
+              "name":"local_route",
+              "virtualHosts":[
+                {
+                  "domains":[
+                    "*"
+                  ],
+                  "name":"backend"
+                }
+              ]
+            },
+            "statPrefix":"ingress_http",
+            "upgradeConfigs":[
+              {
+                "upgradeType":"websocket"
+              }
+            ],
+            "useRemoteAddress":false,
+            "xffNumTrustedHops":2
           }
         }
       ],
-      "transportSocket": {
-        "name": "envoy.transport_sockets.tls",
-        "typedConfig": {
-          "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext",
-          "commonTlsContext": {
-            "alpnProtocols": [
+      "transportSocket":{
+        "name":"envoy.transport_sockets.tls",
+        "typedConfig":{
+          "@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext",
+          "commonTlsContext":{
+            "alpnProtocols":[
               "h2",
               "http/1.1"
             ],
-            "tlsCertificates": [
+            "tlsCertificates":[
               {
-                "certificateChain": {
-                  "filename": "/etc/endpoints/ssl/server.crt"
+                "certificateChain":{
+                  "filename":"/etc/endpoints/ssl/server.crt"
                 },
-                "privateKey": {
-                  "filename": "/etc/endpoints/ssl/server.key"
+                "privateKey":{
+                  "filename":"/etc/endpoints/ssl/server.key"
                 }
               }
             ]
@@ -1795,7 +1783,7 @@ func TestMakeListeners(t *testing.T) {
       }
     }
   ],
-  "name": "ingress_listener",
+  "name":"ingress_listener",
   "perConnectionBufferLimitBytes":1024
 }`,
 			},

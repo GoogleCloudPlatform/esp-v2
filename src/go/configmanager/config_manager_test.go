@@ -101,41 +101,42 @@ func TestFetchListeners(t *testing.T) {
 		},
 	}
 
-	for i, tc := range testData {
-		// Overrides fakeConfig for the test case.
-
-		if err := genProtoBinary(tc.fakeServiceConfig, new(confpb.Service), &fakeConfig); err != nil {
-			t.Fatalf("generate fake service config failed: %v", err)
-		}
-
-		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendAddress = tc.BackendAddress
-		opts.DisableTracing = !tc.enableTracing
-		opts.TracingProjectId = "fake-project-id"
-		opts.SuppressEnvoyHeaders = !tc.enableDebug
-
-		setFlags(testdata.TestFetchListenersProjectName, testdata.TestFetchListenersConfigID, util.FixedRolloutStrategy, "100ms", "")
-
-		runTest(t, &fakeScReport, &fakeRollouts, &fakeConfig, opts, func(configManager *ConfigManager, err error) {
-			if err != nil {
-				t.Fatal(err)
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			// Overrides fakeConfig for the test case.
+			if err := genProtoBinary(tc.fakeServiceConfig, new(confpb.Service), &fakeConfig); err != nil {
+				t.Fatalf("generate fake service config failed: %v", err)
 			}
 
-			req, resp, gotListeners, err := getListeners(configManager, opts)
-			if err != nil {
-				t.Fatal(err)
-			}
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.BackendAddress = tc.BackendAddress
+			opts.DisableTracing = !tc.enableTracing
+			opts.TracingProjectId = "fake-project-id"
+			opts.SuppressEnvoyHeaders = !tc.enableDebug
 
-			if resp.Version != testdata.TestFetchListenersConfigID {
-				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, resp.Version, testdata.TestFetchListenersConfigID)
-			}
-			if !proto.Equal(&resp.Request, req) {
-				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, resp.Request, req)
-			}
+			setFlags(testdata.TestFetchListenersProjectName, testdata.TestFetchListenersConfigID, util.FixedRolloutStrategy, "100ms", "")
 
-			if err := util.JsonEqual(tc.wantedListeners, gotListeners); err != nil {
-				t.Errorf("Test Desc(%d): %s, snapshot cache fetch got unexpected Listeners, %v", i, tc.desc, err)
-			}
+			runTest(t, &fakeScReport, &fakeRollouts, &fakeConfig, opts, func(configManager *ConfigManager, err error) {
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				req, resp, gotListeners, err := getListeners(configManager, opts)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if resp.Version != testdata.TestFetchListenersConfigID {
+					t.Fatalf("snapshot cache fetch got version: %v, want: %v", resp.Version, testdata.TestFetchListenersConfigID)
+				}
+				if !proto.Equal(&resp.Request, req) {
+					t.Fatalf("snapshot cache fetch got request: %v, want: %v", resp.Request, req)
+				}
+
+				if err := util.JsonEqual(tc.wantedListeners, gotListeners); err != nil {
+					t.Fatalf("snapshot cache fetch got unexpected Listeners, %v", err)
+				}
+			})
 		})
 	}
 }
