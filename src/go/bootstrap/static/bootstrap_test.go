@@ -25,9 +25,9 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/golang/protobuf/jsonpb"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
-	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 var (
@@ -95,61 +95,67 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 			serviceConfigPath: platform.GetFilePath(platform.GrpcEchoServiceConfig),
 			envoyConfigPath:   platform.GetFilePath(platform.GrpcEchoEnvoyConfig),
 		},
+		{
+			desc: "envoy config for sidecar with x-google-backend",
+			opt_mod: func(opt *options.ConfigGeneratorOptions) {
+				opt.AdminPort = 0
+				opt.BackendAddress = "http://127.0.0.1:8082"
+				opt.DisableTracing = true
+				opt.SkipServiceControlFilter = true
+			},
+			serviceConfigPath: platform.GetFilePath(platform.SbServiceConfig),
+			envoyConfigPath:   platform.GetFilePath(platform.SbEnvoyConfig),
+		},
 	}
 
 	for _, tc := range testData {
-		configBytes, err := ioutil.ReadFile(tc.serviceConfigPath)
-		if err != nil {
-			t.Errorf("ReadFile failed, got %v", err)
-			continue
-		}
-		unmarshaler := &jsonpb.Unmarshaler{
-			AnyResolver:        util.Resolver,
-			AllowUnknownFields: false,
-		}
+		t.Run(tc.desc, func(t *testing.T) {
+			configBytes, err := ioutil.ReadFile(tc.serviceConfigPath)
+			if err != nil {
+				t.Errorf("ReadFile failed, got %v", err)
+			}
 
-		var s confpb.Service
-		if err := unmarshaler.Unmarshal(bytes.NewBuffer(configBytes), &s); err != nil {
-			t.Errorf("Unmarshal() returned error %v, want nil", err)
-			continue
-		}
+			unmarshaler := &jsonpb.Unmarshaler{
+				AnyResolver:        util.Resolver,
+				AllowUnknownFields: false,
+			}
 
-		opts := flags.EnvoyConfigOptionsFromFlags()
-		tc.opt_mod(&opts)
+			var s confpb.Service
+			if err := unmarshaler.Unmarshal(bytes.NewBuffer(configBytes), &s); err != nil {
+				t.Errorf("Unmarshal() returned error %v, want nil", err)
+			}
 
-		// Function under test
-		gotBootstrap, err := ServiceToBootstrapConfig(&s, FakeConfigID, opts)
-		if err != nil {
-			t.Error(err)
-			continue
-		}
+			opts := flags.EnvoyConfigOptionsFromFlags()
+			tc.opt_mod(&opts)
 
-		envoyConfig, err := ioutil.ReadFile(tc.envoyConfigPath)
-		if err != nil {
-			t.Errorf("ReadFile failed, got %v", err)
-			continue
-		}
+			// Function under test
+			gotBootstrap, err := ServiceToBootstrapConfig(&s, FakeConfigID, opts)
+			if err != nil {
+				t.Error(err)
+			}
 
-		var expectedBootstrap bootstrappb.Bootstrap
-		if err := unmarshaler.Unmarshal(bytes.NewBuffer(envoyConfig), &expectedBootstrap); err != nil {
-			t.Errorf("Unmarshal() returned error %v, want nil", err)
-			continue
-		}
+			envoyConfig, err := ioutil.ReadFile(tc.envoyConfigPath)
+			if err != nil {
+				t.Errorf("ReadFile failed, got %v", err)
+			}
 
-		gotString, err := bootstrapToJson(gotBootstrap)
-		if err != nil {
-			t.Error(err)
-			continue
-		}
-		wantString, err := bootstrapToJson(&expectedBootstrap)
-		if err != nil {
-			t.Error(err)
-			continue
-		}
-		if err := util.JsonEqual(wantString, gotString); err != nil {
-			t.Errorf("Test(%v) got err: %v", tc.desc, err)
-			continue
-		}
+			var expectedBootstrap bootstrappb.Bootstrap
+			if err := unmarshaler.Unmarshal(bytes.NewBuffer(envoyConfig), &expectedBootstrap); err != nil {
+				t.Errorf("Unmarshal() returned error %v, want nil", err)
+			}
+
+			gotString, err := bootstrapToJson(gotBootstrap)
+			if err != nil {
+				t.Error(err)
+			}
+			wantString, err := bootstrapToJson(&expectedBootstrap)
+			if err != nil {
+				t.Error(err)
+			}
+			if err := util.JsonEqual(wantString, gotString); err != nil {
+				t.Errorf("got err: %v", err)
+			}
+		})
 	}
 }
 

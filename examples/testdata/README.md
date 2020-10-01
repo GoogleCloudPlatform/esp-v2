@@ -25,3 +25,12 @@ All other fields in the proto contain references to the operation name via the `
 - Under certain scenarios, the path matcher filter must parse these variable bindings.
 See [Understanding path translation](https://cloud.google.com/endpoints/docs/openapi/openapi-extensions#understanding_path_translation)
 for more information.
+
+## [Sidecar Backend](sidecar_backend)
+
+Configuration for ESPv2 in sidecar mode, but with `x-google-backend` defined to configure timeouts per route.
+
+Historically, ESPv2 could not handle per-route configs when running in sidecar mode (for GKE/GCE).
+It was only usable when running in remote proxy mode (for serverless platforms).
+
+This example validates per-route configs in sidecar mode.

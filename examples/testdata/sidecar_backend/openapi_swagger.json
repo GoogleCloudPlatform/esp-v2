@@ -1,0 +1,96 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "definitions": {
+    "listShelvesResponse": {
+      "properties": {
+        "shelves": {
+          "items": {
+            "$ref": "#/definitions/shelf"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "shelf": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "theme": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "theme"
+      ]
+    }
+  },
+  "host": "examples-sidecar-backend.endpoints.cloudesf-testing.cloud.goog",
+  "info": {
+    "description": "Configuration for ESPv2 in sidecar mode where x-google-backend is defined without an address.",
+    "title": "Examples - Sidecar Backend",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/shelves": {
+      "get": {
+        "description": "Returns all shelves in the bookstore.",
+        "operationId": "listShelves",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of shelves in the bookstore.",
+            "schema": {
+              "$ref": "#/definitions/listShelvesResponse"
+            }
+          }
+        },
+        "x-google-backend": {
+          "deadline": "7.5"
+        }
+      },
+      "post": {
+        "description": "Creates a new shelf in the bookstore.",
+        "operationId": "createShelf",
+        "parameters": [
+          {
+            "description": "A shelf resource to create.",
+            "in": "body",
+            "name": "shelf",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/shelf"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "A newly created shelf resource.",
+            "schema": {
+              "$ref": "#/definitions/shelf"
+            }
+          }
+        }
+      }
+    }
+  },
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "https"
+  ],
+  "swagger": "2.0",
+  "x-google-backend": {
+    "deadline": "25"
+  }
+}
