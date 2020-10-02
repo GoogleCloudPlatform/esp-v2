@@ -11,14 +11,21 @@ package(
 )
 
 envoy_basic_cc_library(
+    name = "request_info_lib",
+    hdrs = [
+        "request_info.h",
+    ],
+)
+
+envoy_basic_cc_library(
     name = "request_builder_lib",
     srcs = ["request_builder.cc"],
     hdrs = [
         "request_builder.h",
-        "request_info.h",
     ],
     visibility = ["//visibility:public"],
     deps = [
+        ":request_info_lib",
         "//external:abseil_strings",
         "//src/api_proxy/utils",
         "@com_github_googleapis_googleapis//google/api:service_cc_proto",
@@ -28,14 +35,30 @@ envoy_basic_cc_library(
     ],
 )
 
+envoy_basic_cc_library(
+    name = "check_response_converter_lib",
+    srcs = ["check_response_converter.cc"],
+    hdrs = [
+        "check_response_converter.h",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":request_info_lib",
+        "//external:abseil_strings",
+        "//src/api_proxy/utils",
+        "@com_github_googleapis_googleapis//google/api:service_cc_proto",
+        "@servicecontrol_client_git//:service_control_client_lib",
+    ],
+)
+
 envoy_cc_test(
-    name = "check_response_test",
+    name = "check_response_converter_test",
     srcs = [
-        "check_response_test.cc",
+        "check_response_converter_test.cc",
     ],
     repository = "@envoy",
     deps = [
-        ":request_builder_lib",
+        ":check_response_converter_lib",
     ],
 )
 

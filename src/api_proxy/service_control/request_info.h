@@ -143,7 +143,7 @@ enum ScResponseErrorType {
 
 // Stores the information extracted from the check response.
 struct CheckResponseInfo {
-  ScResponseErrorType error_type = ScResponseErrorType::ERROR_TYPE_UNSPECIFIED;
+  ScResponseErrorType error_type;
 
   std::string consumer_project_number;
 
@@ -151,8 +151,18 @@ struct CheckResponseInfo {
 
   std::string consumer_number;
 
+  std::string error_name;
+
   // The trust level of the API Key that was checked.
-  api_key::ApiKeyState api_key_state = api_key::ApiKeyState::NOT_CHECKED;
+  api_key::ApiKeyState api_key_state;
+
+  CheckResponseInfo()
+      : error_type(ScResponseErrorType::ERROR_TYPE_UNSPECIFIED),
+        consumer_project_number(),
+        consumer_type(),
+        consumer_number(),
+        error_name(),
+        api_key_state(api_key::ApiKeyState::NOT_CHECKED) {}
 };
 
 struct QuotaRequestInfo : public OperationInfo {
@@ -166,7 +176,12 @@ struct QuotaRequestInfo : public OperationInfo {
 
 // Stores the information extracted from the quota response.
 struct QuotaResponseInfo {
-  ScResponseErrorType error_type = ScResponseErrorType::ERROR_TYPE_UNSPECIFIED;
+  ScResponseErrorType error_type;
+
+  std::string error_name;
+
+  QuotaResponseInfo()
+      : error_type(ScResponseErrorType::ERROR_TYPE_UNSPECIFIED), error_name() {}
 };
 
 // Information to fill Report request protobuf.
@@ -225,7 +240,8 @@ struct ReportRequestInfo : public OperationInfo {
   // The jwt payloads logged
   std::string jwt_payloads;
 
-  std::string response_detail;
+  // The response code detail.
+  std::string response_code_detail;
 
   ReportRequestInfo()
       : response_code(200),

@@ -33,6 +33,7 @@ using Envoy::Http::RegisterCustomInlineHeader;
 using ::Envoy::StreamInfo::FilterState;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::OperationInfo;
+using ::espv2::api_proxy::service_control::QuotaResponseInfo;
 using ::espv2::api_proxy::service_control::ScResponseErrorType;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
@@ -53,6 +54,26 @@ const Envoy::Http::LowerCaseString kAndroidCertHeader{"x-android-cert"};
 
 constexpr char JwtPayloadIssuerPath[] = "iss";
 constexpr char JwtPayloadAudiencePath[] = "aud";
+
+std::string CheckErrorNameToRcDetail(absl::string_view rc_detail) {
+  return absl::StrCat("service_control_check_error{", rc_detail, "}");
+}
+
+std::string QuotaErrorNameToRcDetail(absl::string_view rc_detail) {
+  return absl::StrCat("service_control_quota_error{", rc_detail, "}");
+}
+
+struct RcDetailsValues {
+  // The request isn't defined in the service config.
+  const std::string UndefinedRequest =
+      "service_control_bad_request{UNDEFINED_REQUEST}";
+
+  // The request corresponding to the registered operation doesn't have api key.
+  const std::string MissingApiKey =
+      "service_control_bad_request{MISSING_API_KEY}";
+};
+
+using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
 
 }  // namespace
 
@@ -164,7 +185,8 @@ void ServiceControlHandlerImpl::callCheck(
     CheckDoneCallback& callback) {
   if (!isConfigured()) {
     filter_stats_.filter_.denied_producer_error_.inc();
-    callback.onCheckDone(Status(Code::NOT_FOUND, "Method does not exist."));
+    callback.onCheckDone(Status(Code::NOT_FOUND, "Method does not exist."),
+                         RcDetails::get().UndefinedRequest);
     return;
   }
   check_callback_ = &callback;
@@ -181,7 +203,7 @@ void ServiceControlHandlerImpl::callCheck(
                "Method doesn't allow unregistered callers (callers without "
                "established identity). Please use API Key or other form of "
                "API consumer identity to call this API.");
-    callback.onCheckDone(check_status_);
+    callback.onCheckDone(check_status_, RcDetails::get().MissingApiKey);
     return;
   }
 
@@ -215,7 +237,7 @@ void ServiceControlHandlerImpl::callCheck(
 // TODO(taoxuy): add unit test
 void ServiceControlHandlerImpl::callQuota() {
   if (!isQuotaRequired()) {
-    check_callback_->onCheckDone(check_status_);
+    check_callback_->onCheckDone(check_status_, rc_detail_);
     return;
   }
 
@@ -229,9 +251,13 @@ void ServiceControlHandlerImpl::callQuota() {
   // For now, quota cache is always enabled, in-flight transport
   // is not called.
   require_ctx_->service_ctx().call().callQuota(
-      info, [this](const Status& status) {
+      info,
+      [this](const Status& status, const QuotaResponseInfo& response_info) {
+        if (!response_info.error_name.empty()) {
+          rc_detail_ = QuotaErrorNameToRcDetail(response_info.error_name);
+        }
         check_status_ = status;
-        check_callback_->onCheckDone(status);
+        check_callback_->onCheckDone(status, rc_detail_);
       });
 }
 
@@ -240,6 +266,9 @@ void ServiceControlHandlerImpl::onCheckResponse(
     const CheckResponseInfo& response_info) {
   check_response_info_ = response_info;
 
+  if (!response_info.error_name.empty()) {
+    rc_detail_ = CheckErrorNameToRcDetail(response_info.error_name);
+  }
   check_status_ = status;
 
   // Set consumer info to backend. Since consumer_project_id is deprecated and
@@ -254,7 +283,7 @@ void ServiceControlHandlerImpl::onCheckResponse(
   }
 
   if (!check_status_.ok()) {
-    check_callback_->onCheckDone(check_status_);
+    check_callback_->onCheckDone(check_status_, rc_detail_);
     return;
   }
 
@@ -323,8 +352,7 @@ void ServiceControlHandlerImpl::callReport(
   }
   info.response_size = stream_info_.bytesSent() + response_header_size;
 
-  info.response_detail = stream_info_.responseCodeDetails().value_or("");
-
+  info.response_code_detail = stream_info_.responseCodeDetails().value_or("");
 
   require_ctx_->service_ctx().call().callReport(info);
 }

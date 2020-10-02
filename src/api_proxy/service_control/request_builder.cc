@@ -762,7 +762,7 @@ constexpr char kLogFieldNameServiceAgent[] = "service_agent";
 constexpr char kLogFieldNameConfigId[] = "service_config_id";
 constexpr char kLogFieldNameTimestamp[] = "timestamp";
 constexpr char kLogFieldNameApiKeyState[] = "api_key_state";
-constexpr char kLogFieldNameResponseDetail[] = "response_detail";
+constexpr char kLogFieldNameResponseCodeDetail[] = "response_code_detail";
 
 // Convert time point to proto Timestamp
 Timestamp CreateTimestamp(std::chrono::system_clock::time_point tp) {
@@ -851,9 +851,9 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
   (*fields)[kLogFieldNameApiKeyState].set_string_value(
       api_key::ToString(info.check_response_info.api_key_state));
 
-  if (!info.response_detail.empty()) {
-    (*fields)[kLogFieldNameResponseDetail].set_string_value(
-        info.response_detail);
+  if (!info.response_code_detail.empty()) {
+    (*fields)[kLogFieldNameResponseCodeDetail].set_string_value(
+        info.response_code_detail);
   }
 
   if (!info.producer_project_id.empty()) {
@@ -1143,165 +1143,6 @@ Status RequestBuilder::AppendByConsumerOperations(
     }
   }
 
-  return Status::OK;
-}
-
-Status RequestBuilder::ConvertAllocateQuotaResponse(
-    const ::google::api::servicecontrol::v1::AllocateQuotaResponse& response,
-    const std::string&, QuotaResponseInfo* quota_response_info) {
-  // response.operation_id()
-  if (response.allocate_errors().empty()) {
-    return Status::OK;
-  }
-
-  const ::google::api::servicecontrol::v1::QuotaError& error =
-      response.allocate_errors().Get(0);
-
-  switch (error.code()) {
-    case ::google::api::servicecontrol::v1::QuotaError::UNSPECIFIED:
-      // This is never used.
-      break;
-
-    case ::google::api::servicecontrol::v1::QuotaError::RESOURCE_EXHAUSTED:
-      // Quota allocation failed.
-      // Same as [google.rpc.Code.RESOURCE_EXHAUSTED][].
-      quota_response_info->error_type = ScResponseErrorType::CONSUMER_QUOTA;
-      return Status(Code::RESOURCE_EXHAUSTED, error.description());
-
-    case ::google::api::servicecontrol::v1::QuotaError::BILLING_NOT_ACTIVE:
-      // Consumer cannot access the service because billing is disabled.
-      quota_response_info->error_type = ScResponseErrorType::CONSUMER_ERROR;
-      return Status(Code::PERMISSION_DENIED, error.description());
-
-    case ::google::api::servicecontrol::v1::QuotaError::PROJECT_DELETED:
-      // Consumer's project has been marked as deleted (soft deletion).
-      quota_response_info->error_type = ScResponseErrorType::CONSUMER_ERROR;
-      return Status(Code::INVALID_ARGUMENT, error.description());
-
-    case ::google::api::servicecontrol::v1::QuotaError::API_KEY_INVALID:
-      // Specified API key is invalid.
-    case ::google::api::servicecontrol::v1::QuotaError::API_KEY_EXPIRED:
-      // Specified API Key has expired.
-      quota_response_info->error_type = ScResponseErrorType::API_KEY_INVALID;
-      return Status(Code::INVALID_ARGUMENT, error.description());
-
-    default:
-      return Status(Code::INTERNAL, error.description());
-  }
-
-  return Status::OK;
-}
-
-Status RequestBuilder::ConvertCheckResponse(
-    const CheckResponse& check_response, const std::string& service_name,
-    CheckResponseInfo* check_response_info) {
-  if (check_response.check_info().consumer_info().project_number() > 0) {
-    // Store project id to check_response_info
-    check_response_info->consumer_project_number = std::to_string(
-        check_response.check_info().consumer_info().project_number());
-  }
-
-  if (check_response.check_info().consumer_info().consumer_number() > 0) {
-    check_response_info->consumer_number = std::to_string(
-        check_response.check_info().consumer_info().consumer_number());
-  }
-
-  if (check_response.check_info().consumer_info().type() !=
-      CheckResponse_ConsumerInfo_ConsumerType::
-          CheckResponse_ConsumerInfo_ConsumerType_CONSUMER_TYPE_UNSPECIFIED) {
-    check_response_info->consumer_type =
-        CheckResponse_ConsumerInfo_ConsumerType_Name(
-            check_response.check_info().consumer_info().type());
-  }
-
-  if (check_response.check_errors().empty()) {
-    return Status::OK;
-  }
-
-  // TODO: aggregate status responses for all errors (including error.detail)
-  // TODO: report a detailed status to the producer project, but hide it from
-  // consumer
-  // TODO: unless they are the same entity
-  const CheckError& error = check_response.check_errors(0);
-  switch (error.code()) {
-    case CheckError::NOT_FOUND:
-      check_response_info->error_type = ScResponseErrorType::CONSUMER_ERROR;
-      return Status(Code::INVALID_ARGUMENT,
-                    "Client project not found. Please pass a valid project.");
-    case CheckError::RESOURCE_EXHAUSTED:
-      check_response_info->error_type = ScResponseErrorType::CONSUMER_QUOTA;
-      return Status(Code::RESOURCE_EXHAUSTED, "Quota check failed.");
-    case CheckError::API_TARGET_BLOCKED:
-      check_response_info->error_type = ScResponseErrorType::CONSUMER_BLOCKED;
-      return Status(Code::PERMISSION_DENIED,
-                    " The API targeted by this request is invalid for the "
-                    "given API key.");
-    case CheckError::API_KEY_NOT_FOUND:
-      check_response_info->error_type = ScResponseErrorType::API_KEY_INVALID;
-      return Status(Code::INVALID_ARGUMENT,
-                    "API key not found. Please pass a valid API key.");
-    case CheckError::API_KEY_EXPIRED:
-      check_response_info->error_type = ScResponseErrorType::API_KEY_INVALID;
-      return Status(Code::INVALID_ARGUMENT,
-                    "API key expired. Please renew the API key.");
-    case CheckError::API_KEY_INVALID:
-      check_response_info->error_type = ScResponseErrorType::API_KEY_INVALID;
-      return Status(Code::INVALID_ARGUMENT,
-                    "API key not valid. Please pass a valid API key.");
-    case CheckError::SERVICE_NOT_ACTIVATED:
-      check_response_info->error_type =
-          ScResponseErrorType::SERVICE_NOT_ACTIVATED;
-      return Status(Code::PERMISSION_DENIED,
-                    absl::StrCat("API ", service_name,
-                                 " is not enabled for the project."));
-    case CheckError::PERMISSION_DENIED:
-      check_response_info->error_type = ScResponseErrorType::CONSUMER_ERROR;
-      return Status(Code::PERMISSION_DENIED, "Permission denied.");
-    case CheckError::IP_ADDRESS_BLOCKED:
-      check_response_info->error_type = ScResponseErrorType::CONSUMER_BLOCKED;
-      return Status(Code::PERMISSION_DENIED, "IP address blocked.");
-    case CheckError::REFERER_BLOCKED:
-      check_response_info->error_type = ScResponseErrorType::CONSUMER_BLOCKED;
-      return Status(Code::PERMISSION_DENIED, "Referer blocked.");
-    case CheckError::CLIENT_APP_BLOCKED:
-      check_response_info->error_type = ScResponseErrorType::CONSUMER_BLOCKED;
-      return Status(Code::PERMISSION_DENIED, "Client application blocked.");
-    case CheckError::PROJECT_DELETED:
-      check_response_info->error_type = ScResponseErrorType::CONSUMER_ERROR;
-      return Status(Code::PERMISSION_DENIED, "Project has been deleted.");
-    case CheckError::PROJECT_INVALID:
-      check_response_info->error_type = ScResponseErrorType::CONSUMER_ERROR;
-      return Status(Code::INVALID_ARGUMENT,
-                    "Client project not valid. Please pass a valid project.");
-    case CheckError::BILLING_DISABLED:
-      check_response_info->error_type = ScResponseErrorType::CONSUMER_ERROR;
-      return Status(Code::PERMISSION_DENIED,
-                    absl::StrCat("API ", service_name,
-                                 " has billing disabled. Please enable it."));
-    case CheckError::INVALID_CREDENTIAL:
-      check_response_info->error_type = ScResponseErrorType::CONSUMER_ERROR;
-      return Status(Code::PERMISSION_DENIED,
-                    "The credential in the request can not be verified.");
-    case CheckError::CONSUMER_INVALID:
-      check_response_info->error_type = ScResponseErrorType::CONSUMER_ERROR;
-      return Status(Code::PERMISSION_DENIED,
-                    "The consumer from the API key does not represent"
-                    " a valid consumer folder or organization.");
-
-    case CheckError::NAMESPACE_LOOKUP_UNAVAILABLE:
-    case CheckError::SERVICE_STATUS_UNAVAILABLE:
-    case CheckError::BILLING_STATUS_UNAVAILABLE:
-    case CheckError::CLOUD_RESOURCE_MANAGER_BACKEND_UNAVAILABLE:
-      return Status(
-          Code::UNAVAILABLE,
-          "One or more Google Service Control backends are unavailable.");
-
-    default:
-      return Status(Code::INTERNAL,
-                    std::string("Request blocked due to unsupported error code "
-                                "in Google Service Control Check response: ") +
-                        std::to_string(error.code()));
-  }
   return Status::OK;
 }
 

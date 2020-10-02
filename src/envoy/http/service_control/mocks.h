@@ -86,7 +86,8 @@ class MockCheckDoneCallback : public ServiceControlHandler::CheckDoneCallback {
   MockCheckDoneCallback() {}
   ~MockCheckDoneCallback() {}
 
-  MOCK_METHOD(void, onCheckDone, (const ::google::protobuf::util::Status&),
+  MOCK_METHOD(void, onCheckDone,
+              (const ::google::protobuf::util::Status&, absl::string_view),
               (override));
 };
 

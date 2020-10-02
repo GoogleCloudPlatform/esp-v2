@@ -41,6 +41,7 @@ using ::espv2::api::envoy::v9::http::service_control::FilterConfig;
 using ::espv2::api_proxy::service_control::CheckRequestInfo;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::QuotaRequestInfo;
+using ::espv2::api_proxy::service_control::QuotaResponseInfo;
 using ::espv2::api_proxy::service_control::ReportRequestInfo;
 using ::espv2::api_proxy::service_control::ScResponseErrorType;
 using ::espv2::api_proxy::service_control::api_key::ApiKeyState;
@@ -282,6 +283,8 @@ MATCHER_P4(MatchesReportInfo, expect, request_headers, response_headers,
                                      : expect.operation_name);
   MATCH_DEFAULT_REPORT_INFO(arg, expect, operation_name);
 
+  MATCH2(response_code_detail, expect.response_code_detail);
+
   MATCH2(backend_protocol, Protocol::GRPC);
   MATCH2(frontend_protocol, Protocol::GRPC);
 
@@ -322,7 +325,8 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
                                     *cfg_parser_, test_time_, stats_);
 
   EXPECT_CALL(mock_check_done_callback_,
-              onCheckDone(Status(Code::NOT_FOUND, "Method does not exist.")));
+              onCheckDone(Status(Code::NOT_FOUND, "Method does not exist."),
+                          "service_control_bad_request{UNDEFINED_REQUEST}"));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
@@ -352,7 +356,8 @@ TEST_F(HandlerTest, HandlerMissingHeaders) {
                                     stats_);
 
   EXPECT_CALL(mock_check_done_callback_,
-              onCheckDone(Status(Code::NOT_FOUND, "Method does not exist.")));
+              onCheckDone(Status(Code::NOT_FOUND, "Method does not exist."),
+                          "service_control_bad_request{UNDEFINED_REQUEST}"));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   handler.callCheck(req_headers_, *mock_span_, mock_check_done_callback_);
 
@@ -380,7 +385,8 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_, test_time_, stats_);
   EXPECT_CALL(mock_check_done_callback_,
-              onCheckDone(Status(Code::NOT_FOUND, "Method does not exist.")));
+              onCheckDone(Status(Code::NOT_FOUND, "Method does not exist."),
+                          "service_control_bad_request{UNDEFINED_REQUEST}"));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
@@ -407,7 +413,7 @@ TEST_F(HandlerTest, HandlerCheckNotNeeded) {
 
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   EXPECT_CALL(*mock_call_, callQuota(_, _)).Times(0);
-  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   // no api key is set on this info
@@ -439,7 +445,9 @@ TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
              "API consumer identity to call this API.");
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   EXPECT_CALL(*mock_call_, callQuota(_, _)).Times(0);
-  EXPECT_CALL(mock_check_done_callback_, onCheckDone(bad_status));
+  EXPECT_CALL(
+      mock_check_done_callback_,
+      onCheckDone(bad_status, "service_control_bad_request{MISSING_API_KEY}"));
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   // no api key is set on this info
@@ -487,7 +495,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithApiKeyRestrictionFields) {
         on_done(Status::OK, response_info);
         return nullptr;
       }));
-  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   ReportRequestInfo expected_report_info;
@@ -523,7 +531,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
         on_done(Status::OK, response_info);
         return nullptr;
       }));
-  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   ReportRequestInfo expected_report_info;
@@ -561,12 +569,15 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
   expected_quota_info.method_name = "get_header_key_quota";
   expected_quota_info.api_key = "foobar";
 
+  QuotaResponseInfo quota_response_info;
+
   EXPECT_CALL(*mock_call_, callQuota(MatchesQuotaInfo(expected_quota_info), _))
-      .WillOnce(Invoke([](const QuotaRequestInfo&, QuotaDoneFunc on_done) {
-        on_done(Status::OK);
+      .WillOnce(Invoke([&quota_response_info](const QuotaRequestInfo&,
+                                              QuotaDoneFunc on_done) {
+        on_done(Status::OK, quota_response_info);
       }));
 
-  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   EXPECT_CALL(*mock_call_, callReport(_));
@@ -592,12 +603,16 @@ TEST_F(HandlerTest, HandlerCallQuotaWithoutCheck) {
           ->metric_costs()};
   expected_quota_info.method_name = "call_quota_without_check";
   expected_quota_info.api_key = "foobar";
+
+  QuotaResponseInfo quota_response_info;
+
   EXPECT_CALL(*mock_call_, callQuota(MatchesQuotaInfo(expected_quota_info), _))
-      .WillOnce(Invoke([](const QuotaRequestInfo&, QuotaDoneFunc on_done) {
-        on_done(Status::OK);
+      .WillOnce(Invoke([&quota_response_info](const QuotaRequestInfo&,
+                                              QuotaDoneFunc on_done) {
+        on_done(Status::OK, quota_response_info);
       }));
 
-  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   EXPECT_CALL(*mock_call_, callReport(_));
@@ -621,7 +636,9 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
 
   CheckResponseInfo response_info;
   response_info.error_type = ScResponseErrorType::API_KEY_INVALID;
-
+  response_info.error_name = "API_KEY_INVALID";
+  std::string expected_rc_detail =
+      "service_control_check_error{API_KEY_INVALID}";
   CheckRequestInfo expected_check_info;
   expected_check_info.api_key = "foobar";
   EXPECT_CALL(*mock_call_,
@@ -632,13 +649,17 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
         on_done(bad_status, response_info);
         return nullptr;
       }));
-  EXPECT_CALL(mock_check_done_callback_, onCheckDone(bad_status));
+  EXPECT_CALL(mock_check_done_callback_,
+              onCheckDone(bad_status, expected_rc_detail));
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
+  mock_stream_info_.response_code_details_ = expected_rc_detail;
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
   expected_report_info.status = bad_status;
   expected_report_info.api_key = "foobar";
+  expected_report_info.response_code_detail =
+      "service_control_check_error{API_KEY_INVALID}";
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
@@ -694,12 +715,14 @@ TEST_F(HandlerTest, HandlerFailQuotaSync) {
 
   Status bad_status = Status(Code::RESOURCE_EXHAUSTED,
                              "test bad status returned from service control");
+  QuotaResponseInfo quota_response_info;
   EXPECT_CALL(*mock_call_, callQuota(MatchesQuotaInfo(expected_quota_info), _))
-      .WillOnce(
-          Invoke([bad_status](const QuotaRequestInfo&, QuotaDoneFunc on_done) {
-            on_done(bad_status);
-          }));
-  EXPECT_CALL(mock_check_done_callback_, onCheckDone(bad_status));
+      .WillOnce(Invoke([bad_status, &quota_response_info](
+                           const QuotaRequestInfo&, QuotaDoneFunc on_done) {
+        on_done(bad_status, quota_response_info);
+      }));
+
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(bad_status, ""));
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   EXPECT_CALL(*mock_call_, callReport(_));
@@ -736,7 +759,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckAsync) {
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   // Async, later call the done callback
-  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
   stored_on_done(Status::OK, response_info);
 
   ReportRequestInfo expected_report_info;
@@ -785,8 +808,10 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
   // Async, later call the done callback
-  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK));
-  stored_on_done(Status::OK);
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
+
+  QuotaResponseInfo quota_response_info;
+  stored_on_done(Status::OK, quota_response_info);
 
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
@@ -813,6 +838,7 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
 
   CheckResponseInfo response_info;
   response_info.error_type = ScResponseErrorType::API_KEY_INVALID;
+  response_info.error_name = "API_KEY_INVALID";
 
   CheckRequestInfo expected_check_info;
   expected_check_info.api_key = "foobar";
@@ -833,7 +859,9 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
   // Async, later call the done callback
   Status bad_status = Status(Code::PERMISSION_DENIED,
                              "test bad status returned from service control");
-  EXPECT_CALL(mock_check_done_callback_, onCheckDone(bad_status));
+  EXPECT_CALL(
+      mock_check_done_callback_,
+      onCheckDone(bad_status, "service_control_check_error{API_KEY_INVALID}"));
   stored_on_done(bad_status, response_info);
 
   // no api key is set on this info
@@ -883,11 +911,16 @@ TEST_F(HandlerTest, HandlerFailQuotaAsync) {
           }));
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
+  std::string expect_rc_detail =
+      "service_control_quota_error{RESOURCE_EXHAUSTED}";
   // Async, later call the done callback
   Status bad_status = Status(Code::RESOURCE_EXHAUSTED,
                              "test bad status returned from service control");
-  EXPECT_CALL(mock_check_done_callback_, onCheckDone(bad_status));
-  stored_on_done(bad_status);
+  EXPECT_CALL(mock_check_done_callback_,
+              onCheckDone(bad_status, expect_rc_detail));
+  QuotaResponseInfo quota_response_info;
+  quota_response_info.error_name = "RESOURCE_EXHAUSTED";
+  stored_on_done(bad_status, quota_response_info);
 
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);

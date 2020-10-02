@@ -239,9 +239,11 @@ class ClientCacheQuotaResponseTest : public ClientCacheTestBase {
  protected:
   void runTest(Code got_http_code, AllocateQuotaResponse* got_response,
                Code want_client_code) {
-    QuotaDoneFunc on_done = [&](const Status& status) {
-      EXPECT_EQ(status.code(), want_client_code);
-    };
+    QuotaDoneFunc on_done =
+        [&](const Status& status,
+            const ::espv2::api_proxy::service_control::QuotaResponseInfo&) {
+          EXPECT_EQ(status.code(), want_client_code);
+        };
 
     const Status http_status(got_http_code, Envoy::EMPTY_STRING);
     cache_->handleQuotaOnDone(http_status, got_response, on_done);
@@ -277,7 +279,9 @@ class ClientCacheQuotaResponseErrorTypeTest : public ClientCacheTestBase {
     QuotaError* quota_error = response->mutable_allocate_errors()->Add();
     quota_error->set_code(got_quota_error_code);
 
-    QuotaDoneFunc on_done = [&](const Status&) {};
+    QuotaDoneFunc on_done =
+        [&](const Status&,
+            const ::espv2::api_proxy::service_control::QuotaResponseInfo&) {};
     const Status http_status(Code::OK, Envoy::EMPTY_STRING);
     cache_->handleQuotaOnDone(http_status, response, on_done);
   }

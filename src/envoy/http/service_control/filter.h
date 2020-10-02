@@ -57,10 +57,12 @@ class ServiceControlFilter
            const Envoy::StreamInfo::StreamInfo& stream_info) override;
 
   // For Handler::CheckDoneCallback, called when callCheck() is done
-  void onCheckDone(const ::google::protobuf::util::Status& status) override;
+  void onCheckDone(const ::google::protobuf::util::Status& status,
+                   absl::string_view rc_detail) override;
 
  private:
-  void rejectRequest(Envoy::Http::Code code, absl::string_view error_msg);
+  void rejectRequest(Envoy::Http::Code code, absl::string_view error_msg,
+                     absl::string_view rc_detail);
 
   ServiceControlFilterStats& stats_;
   const ServiceControlHandlerFactory& factory_;

@@ -34,7 +34,8 @@ class ServiceControlHandler {
   class CheckDoneCallback {
    public:
     virtual ~CheckDoneCallback() = default;
-    virtual void onCheckDone(const ::google::protobuf::util::Status&) PURE;
+    virtual void onCheckDone(const ::google::protobuf::util::Status&,
+                             absl::string_view) PURE;
   };
 
   // Make an async check call.

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/api_proxy/service_control/request_builder.h"
+#include "src/api_proxy/service_control/check_response_converter.h"
 
 #include "gtest/gtest.h"
 
@@ -23,13 +23,14 @@ namespace {
 
 using ::google::api::servicecontrol::v1::CheckError;
 using ::google::api::servicecontrol::v1::CheckError_Code;
+using ::google::api::servicecontrol::v1::CheckError_Code_Name;
 using ::google::api::servicecontrol::v1::CheckResponse;
 using ::google::api::servicecontrol::v1::
     CheckResponse_ConsumerInfo_ConsumerType;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
-class ConvertCheckResponseTest : public ::testing::Test {
+class CheckResponseConverterTest : public ::testing::Test {
  protected:
   void runTest(CheckError_Code got_check_error_code, Code want_code,
                ScResponseErrorType want_error_type) {
@@ -37,121 +38,123 @@ class ConvertCheckResponseTest : public ::testing::Test {
     CheckResponse response;
     response.add_check_errors()->set_code(got_check_error_code);
 
-    Status result = RequestBuilder::ConvertCheckResponse(response, "", &info);
+    Status result =
+        CheckResponseConverter::ConvertCheckResponse(response, "", &info);
 
     EXPECT_EQ(result.code(), want_code);
     EXPECT_EQ(info.error_type, want_error_type);
+    EXPECT_EQ(info.error_name, CheckError_Code_Name(got_check_error_code));
   }
 };
 
-TEST_F(ConvertCheckResponseTest,
+TEST_F(CheckResponseConverterTest,
        AbortedWithInvalidArgumentWhenRespIsKeyInvalid) {
   runTest(CheckError::API_KEY_INVALID, Code::INVALID_ARGUMENT,
           ScResponseErrorType::API_KEY_INVALID);
 }
 
-TEST_F(ConvertCheckResponseTest,
+TEST_F(CheckResponseConverterTest,
        AbortedWithInvalidArgumentWhenRespIsKeyExpired) {
   runTest(CheckError::API_KEY_EXPIRED, Code::INVALID_ARGUMENT,
           ScResponseErrorType::API_KEY_INVALID);
 }
 
-TEST_F(ConvertCheckResponseTest,
+TEST_F(CheckResponseConverterTest,
        AbortedWithInvalidArgumentWhenRespIsBlockedWithKeyNotFound) {
   runTest(CheckError::API_KEY_NOT_FOUND, Code::INVALID_ARGUMENT,
           ScResponseErrorType::API_KEY_INVALID);
 }
 
-TEST_F(ConvertCheckResponseTest,
+TEST_F(CheckResponseConverterTest,
        AbortedWithInvalidArgumentWhenRespIsBlockedWithNotFound) {
   runTest(CheckError::NOT_FOUND, Code::INVALID_ARGUMENT,
           ScResponseErrorType::CONSUMER_ERROR);
 }
 
-TEST_F(ConvertCheckResponseTest,
+TEST_F(CheckResponseConverterTest,
        AbortedWithPermissionDeniedWhenRespIsBlockedWithPermissionDenied) {
   runTest(CheckError::PERMISSION_DENIED, Code::PERMISSION_DENIED,
           ScResponseErrorType::CONSUMER_ERROR);
 }
 
-TEST_F(ConvertCheckResponseTest,
+TEST_F(CheckResponseConverterTest,
        AbortedWithPermissionDeniedWhenRespIsBlockedWithIpAddressBlocked) {
   runTest(CheckError::IP_ADDRESS_BLOCKED, Code::PERMISSION_DENIED,
           ScResponseErrorType::CONSUMER_BLOCKED);
 }
 
-TEST_F(ConvertCheckResponseTest,
+TEST_F(CheckResponseConverterTest,
        AbortedWithPermissionDeniedWhenRespIsBlockedWithRefererBlocked) {
   runTest(CheckError::REFERER_BLOCKED, Code::PERMISSION_DENIED,
           ScResponseErrorType::CONSUMER_BLOCKED);
 }
 
-TEST_F(ConvertCheckResponseTest,
+TEST_F(CheckResponseConverterTest,
        AbortedWithPermissionDeniedWhenRespIsBlockedWithClientAppBlocked) {
   runTest(CheckError::CLIENT_APP_BLOCKED, Code::PERMISSION_DENIED,
           ScResponseErrorType::CONSUMER_BLOCKED);
 }
 
-TEST_F(ConvertCheckResponseTest,
+TEST_F(CheckResponseConverterTest,
        AbortedWithPermissionDeniedWhenResponseIsBlockedWithProjectDeleted) {
   runTest(CheckError::PROJECT_DELETED, Code::PERMISSION_DENIED,
           ScResponseErrorType::CONSUMER_ERROR);
 }
 
-TEST_F(ConvertCheckResponseTest,
+TEST_F(CheckResponseConverterTest,
        AbortedWithPermissionDeniedWhenResponseIsBlockedWithProjectInvalid) {
   runTest(CheckError::PROJECT_INVALID, Code::INVALID_ARGUMENT,
           ScResponseErrorType::CONSUMER_ERROR);
 }
 
-TEST_F(ConvertCheckResponseTest,
+TEST_F(CheckResponseConverterTest,
        AbortedWithPermissionDeniedWhenResponseIsBlockedWithBillingDisabled) {
   runTest(CheckError::BILLING_DISABLED, Code::PERMISSION_DENIED,
           ScResponseErrorType::CONSUMER_ERROR);
 }
 
-TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithInvalidCredentail) {
+TEST_F(CheckResponseConverterTest, WhenResponseIsBlockedWithInvalidCredentail) {
   runTest(CheckError::INVALID_CREDENTIAL, Code::PERMISSION_DENIED,
           ScResponseErrorType::CONSUMER_ERROR);
 }
 
-TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithConsumerInvalid) {
+TEST_F(CheckResponseConverterTest, WhenResponseIsBlockedWithConsumerInvalid) {
   runTest(CheckError::CONSUMER_INVALID, Code::PERMISSION_DENIED,
           ScResponseErrorType::CONSUMER_ERROR);
 }
 
-TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithResourceExhuasted) {
+TEST_F(CheckResponseConverterTest, WhenResponseIsBlockedWithResourceExhuasted) {
   runTest(CheckError::RESOURCE_EXHAUSTED, Code::RESOURCE_EXHAUSTED,
           ScResponseErrorType::CONSUMER_QUOTA);
 }
 
-TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithApiTargetBlocked) {
+TEST_F(CheckResponseConverterTest, WhenResponseIsBlockedWithApiTargetBlocked) {
   runTest(CheckError::API_TARGET_BLOCKED, Code::PERMISSION_DENIED,
           ScResponseErrorType::CONSUMER_BLOCKED);
 }
 
-TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithNamespaceLookup) {
+TEST_F(CheckResponseConverterTest, WhenResponseIsBlockedWithNamespaceLookup) {
   runTest(CheckError::NAMESPACE_LOOKUP_UNAVAILABLE, Code::UNAVAILABLE,
           ScResponseErrorType::ERROR_TYPE_UNSPECIFIED);
 }
 
-TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithBillingStatus) {
+TEST_F(CheckResponseConverterTest, WhenResponseIsBlockedWithBillingStatus) {
   runTest(CheckError::BILLING_STATUS_UNAVAILABLE, Code::UNAVAILABLE,
           ScResponseErrorType::ERROR_TYPE_UNSPECIFIED);
 }
 
-TEST_F(ConvertCheckResponseTest, WhenResponseIsBlockedWithServiceStatus) {
+TEST_F(CheckResponseConverterTest, WhenResponseIsBlockedWithServiceStatus) {
   runTest(CheckError::SERVICE_STATUS_UNAVAILABLE, Code::UNAVAILABLE,
           ScResponseErrorType::ERROR_TYPE_UNSPECIFIED);
 }
 
-TEST_F(ConvertCheckResponseTest,
+TEST_F(CheckResponseConverterTest,
        WhenResponseIsBlockedWithCloudResourceManager) {
   runTest(CheckError::CLOUD_RESOURCE_MANAGER_BACKEND_UNAVAILABLE,
           Code::UNAVAILABLE, ScResponseErrorType::ERROR_TYPE_UNSPECIFIED);
 }
 
-TEST_F(ConvertCheckResponseTest,
+TEST_F(CheckResponseConverterTest,
        AbortedWithPermissionDeniedWhenRespIsBlockedWithServiceNotActivated) {
   CheckResponseInfo info;
   CheckResponse response;
@@ -160,14 +163,14 @@ TEST_F(ConvertCheckResponseTest,
   check_error->set_detail("Service not activated.");
 
   Status result =
-      RequestBuilder::ConvertCheckResponse(response, "api_xxxx", &info);
+      CheckResponseConverter::ConvertCheckResponse(response, "api_xxxx", &info);
 
   EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
   EXPECT_EQ(result.message(), "API api_xxxx is not enabled for the project.");
   EXPECT_EQ(info.error_type, ScResponseErrorType::SERVICE_NOT_ACTIVATED);
 }
 
-TEST_F(ConvertCheckResponseTest, ConvertConsumerInfo) {
+TEST_F(CheckResponseConverterTest, ConvertConsumerInfo) {
   CheckResponseInfo info;
   CheckResponse response;
   int consumer_number = 123456;
@@ -181,7 +184,7 @@ TEST_F(ConvertCheckResponseTest, ConvertConsumerInfo) {
       consumer_number);
 
   Status result =
-      RequestBuilder::ConvertCheckResponse(response, "api_xxxx", &info);
+      CheckResponseConverter::ConvertCheckResponse(response, "api_xxxx", &info);
 
   EXPECT_EQ(info.consumer_project_number, std::to_string(consumer_number));
   EXPECT_EQ(info.consumer_type,

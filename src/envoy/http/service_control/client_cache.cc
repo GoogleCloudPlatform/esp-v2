@@ -15,6 +15,7 @@
 #include "src/envoy/http/service_control/client_cache.h"
 
 #include "common/tracing/http_tracer_impl.h"
+#include "src/api_proxy/service_control/check_response_converter.h"
 #include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/http/service_control/http_call.h"
 
@@ -79,6 +80,14 @@ constexpr uint32_t kReportDefaultNumberOfRetries = 5;
 
 // The default value for network_fail_open flag.
 constexpr bool kDefaultNetworkFailOpen = true;
+
+// The service control call 4xx failure name, used in response code detail
+// later.
+constexpr char kScCallFail4XX[] = "4XX";
+
+// The service control call 5xx failure name, used in response code detail
+// later.
+constexpr char kScCallFail5XX[] = "5XX";
 
 // Generates CheckAggregationOptions.
 CheckAggregationOptions getCheckAggregationOptions() {
@@ -352,10 +361,8 @@ void ClientCache::handleCheckResponse(const Status& http_status,
   if (http_status.ok()) {
     // If the http call succeeded, then use the CheckResponseInfo
     // to retrieve the final status.
-    final_status =
-        api_proxy::service_control::RequestBuilder::ConvertCheckResponse(
-            *response, config_.service_name(), &response_info);
-
+    final_status = api_proxy::service_control::CheckResponseConverter::
+        ConvertCheckResponse(*response, config_.service_name(), &response_info);
     collectScResponseErrorStats(response_info.error_type);
 
   } else {
@@ -387,6 +394,9 @@ void ClientCache::handleCheckResponse(const Status& http_status,
                 "Google Service Control Check is unavailable, and the "
                 "request is denied due to network fail closed, with error: {}",
                 final_status.error_message());
+
+      response_info.error_name = kScCallFail5XX;
+
       on_done(final_status, response_info);
     }
   } else {
@@ -402,6 +412,7 @@ void ClientCache::handleCheckResponse(const Status& http_status,
       // contains details on the original error (including the original
       // HTTP status code).
       Status scrubbed_status(Code::INTERNAL, final_status.error_message());
+      response_info.error_name = kScCallFail4XX;
       on_done(scrubbed_status, response_info);
     } else {
       // HTTP succeeded, but SC Check returned 4xx.
@@ -418,6 +429,7 @@ void ClientCache::handleCheckResponse(const Status& http_status,
         response_info.api_key_state = ApiKeyState::VERIFIED;
       }
 
+      response_info.error_name = kScCallFail4XX;
       on_done(final_status, response_info);
     }
   }
@@ -442,18 +454,20 @@ void ClientCache::callQuota(const AllocateQuotaRequest& request,
 void ClientCache::handleQuotaOnDone(const Status& http_status,
                                     AllocateQuotaResponse* response,
                                     QuotaDoneFunc on_done) {
+  QuotaResponseInfo response_info;
   if (http_status.ok()) {
-    QuotaResponseInfo response_info;
-    Status quota_status = ::espv2::api_proxy::service_control::RequestBuilder::
-        ConvertAllocateQuotaResponse(*response, config_.service_name(),
-                                     &response_info);
+    Status quota_status = ::espv2::api_proxy::service_control::
+        CheckResponseConverter::ConvertAllocateQuotaResponse(
+            *response, config_.service_name(), &response_info);
 
     collectScResponseErrorStats(response_info.error_type);
-    on_done(quota_status);
+    on_done(quota_status, response_info);
   } else {
     // Most likely an auth error in ESPv2 or API producer deployment.
     filter_stats_.filter_.denied_producer_error_.inc();
-    on_done(http_status);
+    response_info.error_name = kScCallFail5XX;
+
+    on_done(http_status, response_info);
   }
 
   delete response;
