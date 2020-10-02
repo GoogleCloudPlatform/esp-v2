@@ -419,9 +419,11 @@ function configmanager_binary_gcs_path() {
 }
 
 function upload_configmanager_binary() {
-  gsutil -m cp ${ROOT}/bin/configmanager $(configmanager_binary_gcs_path)
+  gsutil -m cp ${ROOT}/bin/configmanager $(configmanager_binary_gcs_path)/configmanager
+  gsutil -m cp ${ROOT}/bin/bootstrap $(configmanager_binary_gcs_path)/bootstrap
 }
 
 function download_configmanager_binary() {
-  gsutil -m cp $(configmanager_binary_gcs_path)  ${ROOT}/bin/configmanager
+  gsutil -m cp $(configmanager_binary_gcs_path)/configmanager  ${ROOT}/bin/configmanager
+  gsutil -m cp $(configmanager_binary_gcs_path)/bootstrap  ${ROOT}/bin/bootstrap
 }

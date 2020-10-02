@@ -47,14 +47,6 @@ exit 1; }
 # Get the SHA of the head of master
 SHA=$(git ls-remote https://github.com/GoogleCloudPlatform/esp-v2.git HEAD | cut -f 1)
 
-wait_apiproxy_image
-
-echo '======================================================='
-echo '============ Download latest configmanager ============'
-echo '======================================================='
-download_configmanager_binary
-chmod +x ${ROOT}/bin/configmanager
-
 # keep the current version
 VERSION=$(cat ${ROOT}/VERSION)
 
@@ -65,4 +57,14 @@ git checkout ${SHA}
 echo ${VERSION} > ${ROOT}/VERSION
 
 make depend.install
-make build-envoy build-grpc-interop build-grpc-echo integration-test-run-sequential
+make build build-envoy build-grpc-interop build-grpc-echo
+
+echo '======================================================='
+echo '============ Download latest configmanager ============'
+echo '======================================================='
+wait_apiproxy_image
+download_configmanager_binary
+chmod +x ${ROOT}/bin/configmanager
+chmod +x ${ROOT}/bin/bootstrap
+
+make integration-test-run-sequential
