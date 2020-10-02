@@ -41,14 +41,6 @@ class CheckResponseConverter {
   static ::google::protobuf::util::Status ConvertAllocateQuotaResponse(
       const ::google::api::servicecontrol::v1::AllocateQuotaResponse& response,
       const std::string& service_name, QuotaResponseInfo* quota_response_info);
-
-  static std::string CheckRcDetail(absl::string_view rc_detail);
-
-  static std::string QuotaRcDetail(absl::string_view rc_detail);
-
-  // CheckResponseConverter is neither copyable nor movable.
-  CheckResponseConverter(const CheckResponseConverter&) = delete;
-  CheckResponseConverter& operator=(const CheckResponseConverter&) = delete;
 };
 
 }  // namespace service_control
