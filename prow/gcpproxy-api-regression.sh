@@ -44,6 +44,11 @@ exit 1; }
 # The test will use the latest configmanager(configgen library) with the MASTER envoy to
 # run all the MASTER integrations.
 
+# Build latest configmanager.
+make depend.install
+make build
+
+# Checkout to the master.
 # Get the SHA of the head of master
 SHA=$(git ls-remote https://github.com/GoogleCloudPlatform/esp-v2.git HEAD | cut -f 1)
 
@@ -57,14 +62,6 @@ git checkout ${SHA}
 echo ${VERSION} > ${ROOT}/VERSION
 
 make depend.install
-make build build-envoy build-grpc-interop build-grpc-echo
-
-echo '======================================================='
-echo '============ Download latest configmanager ============'
-echo '======================================================='
-wait_apiproxy_image
-download_configmanager_binary
-chmod +x ${ROOT}/bin/configmanager
-chmod +x ${ROOT}/bin/bootstrap
+make build-envoy build-grpc-interop build-grpc-echo
 
 make integration-test-run-sequential
