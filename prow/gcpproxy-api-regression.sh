@@ -65,4 +65,4 @@ git checkout ${SHA}
 echo ${VERSION} > ${ROOT}/VERSION
 
 make depend.install
-make integration-test-without-envoy-build
+make integration-test-without-configmanager-build
