@@ -28,7 +28,7 @@
 using Envoy::Http::CustomHeaders;
 using Envoy::Http::CustomInlineHeaderRegistry;
 using Envoy::Http::RegisterCustomInlineHeader;
-using ::espv2::api::envoy::v8::http::common::HttpUri;
+using ::espv2::api::envoy::v9::http::common::HttpUri;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
@@ -307,7 +307,7 @@ class HttpCallImpl : public HttpCall,
 
 HttpCallFactoryImpl::HttpCallFactoryImpl(
     Envoy::Upstream::ClusterManager& cm, Envoy::Event::Dispatcher& dispatcher,
-    const ::espv2::api::envoy::v8::http::common::HttpUri& uri,
+    const ::espv2::api::envoy::v9::http::common::HttpUri& uri,
     const std::string& suffix_url, std::function<const std::string&()> token_fn,
     uint32_t timeout_ms, uint32_t retries, Envoy::TimeSource& time_source,
     const std::string& trace_operation_name)

@@ -31,7 +31,7 @@ envoy_cc_library(
     ],
     repository = "@envoy",
     deps = [
-        "//api/envoy/v8/http/grpc_metadata_scrubber:config_proto_cc_proto",
+        "//api/envoy/v9/http/grpc_metadata_scrubber:config_proto_cc_proto",
         "@envoy//source/common/grpc:common_lib",
         "@envoy//source/common/http:headers_lib",
         "@envoy//source/extensions/filters/http/common:pass_through_filter_lib",

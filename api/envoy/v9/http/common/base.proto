@@ -14,7 +14,7 @@
 
 syntax = "proto3";
 
-package espv2.api.envoy.v8.http.common;
+package espv2.api.envoy.v9.http.common;
 
 import "google/protobuf/duration.proto";
 import "validate/validate.proto";
@@ -84,10 +84,10 @@ message AccessToken {
 
 message IamTokenInfo {
   // The Google Cloud IAM server uri.
-  espv2.api.envoy.v8.http.common.HttpUri iam_uri = 1;
+  espv2.api.envoy.v9.http.common.HttpUri iam_uri = 1;
 
   // Information used to get access token.
-  espv2.api.envoy.v8.http.common.AccessToken access_token = 2;
+  espv2.api.envoy.v9.http.common.AccessToken access_token = 2;
 
   // The Service Account Email.
   string service_account_email = 3;
