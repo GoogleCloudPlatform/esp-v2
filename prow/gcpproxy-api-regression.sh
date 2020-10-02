@@ -65,4 +65,4 @@ git checkout ${SHA}
 echo ${VERSION} > ${ROOT}/VERSION
 
 make depend.install
-make integration-test-without-configmanager-build
+make build-envoy build-grpc-interop build-grpc-echo integration-test-run-sequential
