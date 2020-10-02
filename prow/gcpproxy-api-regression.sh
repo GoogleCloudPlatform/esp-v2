@@ -37,16 +37,23 @@ exit 1; }
 . ${ROOT}/tests/e2e/scripts/prow-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
 
+# This integration test is used to ensure the backward-compatibility between ESPv2
+# and API Gateway use case. Once this test is broken, it reminds us to increment
+# api version if necessary.
+#
+# The test will use the latest configmanager(configgen library) with the MASTER envoy to
+# run all the MASTER integrations.
+
 # Get the SHA of the head of master
 SHA=$(git ls-remote https://github.com/GoogleCloudPlatform/esp-v2.git HEAD | cut -f 1)
 
 wait_apiproxy_image
 
 echo '======================================================='
-echo '================ Download latest envoy ================'
+echo '============ Download latest configmanager ============'
 echo '======================================================='
-download_envoy_binary
-chmod +x ${ROOT}/bin/envoy
+download_configmanager_binary
+chmod +x ${ROOT}/bin/configmanager
 
 # keep the current version
 VERSION=$(cat ${ROOT}/VERSION)
