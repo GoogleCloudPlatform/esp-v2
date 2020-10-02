@@ -396,7 +396,6 @@ void ClientCache::handleCheckResponse(const Status& http_status,
                 final_status.error_message());
 
       response_info.error_name = kScCallFail5XX;
-
       on_done(final_status, response_info);
     }
   } else {
@@ -429,7 +428,6 @@ void ClientCache::handleCheckResponse(const Status& http_status,
         response_info.api_key_state = ApiKeyState::VERIFIED;
       }
 
-      response_info.error_name = kScCallFail4XX;
       on_done(final_status, response_info);
     }
   }
