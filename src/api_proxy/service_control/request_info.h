@@ -141,27 +141,33 @@ enum ScResponseErrorType {
   CONSUMER_QUOTA = 5,
 };
 
+// Store the info of service control http call failure/call error response.
+struct ScResponseError {
+  std::string name;
+
+  bool is_error_from_http_call;
+
+  ScResponseErrorType type;
+};
+
 // Stores the information extracted from the check response.
 struct CheckResponseInfo {
-  ScResponseErrorType error_type;
-
   std::string consumer_project_number;
 
   std::string consumer_type;
 
   std::string consumer_number;
 
-  std::string error_name;
+  ScResponseError error;
 
   // The trust level of the API Key that was checked.
   api_key::ApiKeyState api_key_state;
 
   CheckResponseInfo()
-      : error_type(ScResponseErrorType::ERROR_TYPE_UNSPECIFIED),
-        consumer_project_number(),
+      : consumer_project_number(),
         consumer_type(),
         consumer_number(),
-        error_name(),
+        error({"", false, ScResponseErrorType::ERROR_TYPE_UNSPECIFIED}),
         api_key_state(api_key::ApiKeyState::NOT_CHECKED) {}
 };
 
@@ -176,12 +182,12 @@ struct QuotaRequestInfo : public OperationInfo {
 
 // Stores the information extracted from the quota response.
 struct QuotaResponseInfo {
-  ScResponseErrorType error_type;
+  ScResponseErrorType type;
 
-  std::string error_name;
+  ScResponseError error;
 
   QuotaResponseInfo()
-      : error_type(ScResponseErrorType::ERROR_TYPE_UNSPECIFIED), error_name() {}
+      : error({"", false, ScResponseErrorType::ERROR_TYPE_UNSPECIFIED}) {}
 };
 
 // Information to fill Report request protobuf.

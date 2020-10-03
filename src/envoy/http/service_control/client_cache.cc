@@ -85,8 +85,7 @@ constexpr bool kDefaultNetworkFailOpen = true;
 std::string httpFailStatusToErrorName(const Status& status) {
   return absl::StrCat(
       "HTTP_CALL_",
-      absl::StatusCodeToString(static_cast<absl::StatusCode>(status.code()))
-      );
+      absl::StatusCodeToString(static_cast<absl::StatusCode>(status.code())));
 }
 
 // Generates CheckAggregationOptions.
@@ -363,7 +362,7 @@ void ClientCache::handleCheckResponse(const Status& http_status,
     // to retrieve the final status.
     final_status = api_proxy::service_control::CheckResponseConverter::
         ConvertCheckResponse(*response, config_.service_name(), &response_info);
-    collectScResponseErrorStats(response_info.error_type);
+    collectScResponseErrorStats(response_info.error.type);
 
   } else {
     // Otherwise, http call failed. Use that status to respond.
@@ -397,7 +396,9 @@ void ClientCache::handleCheckResponse(const Status& http_status,
 
       // If http_status is not ok, the Code::UNAVAILABLE is from http_status.
       if (!http_status.ok()) {
-        response_info.error_name = httpFailStatusToErrorName(http_status);
+        response_info.error = {httpFailStatusToErrorName(http_status),
+                               /*is_error_from_http_call=*/true,
+                               ScResponseErrorType::ERROR_TYPE_UNSPECIFIED};
       }
       on_done(final_status, response_info);
     }
@@ -415,16 +416,18 @@ void ClientCache::handleCheckResponse(const Status& http_status,
       // HTTP status code).
       Status scrubbed_status(Code::INTERNAL, final_status.error_message());
 
-      response_info.error_name = httpFailStatusToErrorName(http_status);
+      response_info.error = {httpFailStatusToErrorName(http_status),
+                             /*is_error_from_http_call=*/true,
+                             ScResponseErrorType::ERROR_TYPE_UNSPECIFIED};
       on_done(scrubbed_status, response_info);
     } else {
       // HTTP succeeded, but SC Check returned 4xx.
       // Stats already incremented for this case.
 
       // Handle API Key validity.
-      if (response_info.error_type == ScResponseErrorType::API_KEY_INVALID) {
+      if (response_info.error.type == ScResponseErrorType::API_KEY_INVALID) {
         response_info.api_key_state = ApiKeyState::INVALID;
-      } else if (response_info.error_type ==
+      } else if (response_info.error.type ==
                  ScResponseErrorType::SERVICE_NOT_ACTIVATED) {
         response_info.api_key_state = ApiKeyState::NOT_ENABLED;
       } else {
@@ -462,13 +465,15 @@ void ClientCache::handleQuotaOnDone(const Status& http_status,
         CheckResponseConverter::ConvertAllocateQuotaResponse(
             *response, config_.service_name(), &response_info);
 
-    collectScResponseErrorStats(response_info.error_type);
+    collectScResponseErrorStats(response_info.error.type);
     on_done(quota_status, response_info);
   } else {
     // Most likely an auth error in ESPv2 or API producer deployment.
     filter_stats_.filter_.denied_producer_error_.inc();
 
-    response_info.error_name = httpFailStatusToErrorName(http_status);
+    response_info.error = {httpFailStatusToErrorName(http_status),
+                           /*is_error_from_http_call=*/true,
+                           ScResponseErrorType::ERROR_TYPE_UNSPECIFIED};
     on_done(http_status, response_info);
   }
 

@@ -118,7 +118,7 @@ class ClientCacheCheckResponseTest : public ClientCacheTestBase {
                                 const CheckResponseInfo& info) {
       EXPECT_EQ(status.code(), want_client_code);
       EXPECT_EQ(info.api_key_state, want_api_key_state);
-      EXPECT_EQ(info.error_name, want_error_name);
+      EXPECT_EQ(info.error.name, want_error_name);
     };
 
     const Status http_status(got_http_code, Envoy::EMPTY_STRING);
@@ -207,7 +207,7 @@ class ClientCacheCheckResponseErrorTypeTest : public ClientCacheTestBase {
 
     CheckDoneFunc on_done = [&](const Status&, const CheckResponseInfo& info) {
       EXPECT_EQ(info.api_key_state, want_api_key_state);
-      EXPECT_EQ(info.error_name, want_error_name);
+      EXPECT_EQ(info.error.name, want_error_name);
     };
     const Status http_status(Code::OK, Envoy::EMPTY_STRING);
     cache_->handleCheckResponse(http_status, response, on_done);
@@ -255,7 +255,7 @@ class ClientCacheQuotaResponseTest : public ClientCacheTestBase {
             const ::espv2::api_proxy::service_control::QuotaResponseInfo&
                 response_info) {
           EXPECT_EQ(status.code(), want_client_code);
-          EXPECT_EQ(response_info.error_name, want_error_name);
+          EXPECT_EQ(response_info.error.name, want_error_name);
         };
 
     const Status http_status(got_http_code, Envoy::EMPTY_STRING);
@@ -266,8 +266,7 @@ class ClientCacheQuotaResponseTest : public ClientCacheTestBase {
 TEST_F(ClientCacheQuotaResponseTest, HttpErrorBlocked) {
   AllocateQuotaResponse* response = new AllocateQuotaResponse();
 
-  runTest(Code::INTERNAL, response, Code::INTERNAL,
-          "HTTP_CALL_INTERNAL");
+  runTest(Code::INTERNAL, response, Code::INTERNAL, "HTTP_CALL_INTERNAL");
   checkAndReset(stats_.filter_.denied_producer_error_, 1);
 }
 

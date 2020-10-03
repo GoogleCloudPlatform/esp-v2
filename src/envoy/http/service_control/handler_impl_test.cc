@@ -635,8 +635,8 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
                              "test bad status returned from service control");
 
   CheckResponseInfo response_info;
-  response_info.error_type = ScResponseErrorType::API_KEY_INVALID;
-  response_info.error_name = "API_KEY_INVALID";
+  response_info.error = {"API_KEY_INVALID", false,
+                         ScResponseErrorType::API_KEY_INVALID};
   std::string expected_rc_detail =
       "service_control_check_error{API_KEY_INVALID}";
   CheckRequestInfo expected_check_info;
@@ -837,8 +837,8 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
                                     *cfg_parser_, test_time_, stats_);
 
   CheckResponseInfo response_info;
-  response_info.error_type = ScResponseErrorType::API_KEY_INVALID;
-  response_info.error_name = "API_KEY_INVALID";
+  response_info.error = {"API_KEY_INVALID", false,
+                         ScResponseErrorType::API_KEY_INVALID};
 
   CheckRequestInfo expected_check_info;
   expected_check_info.api_key = "foobar";
@@ -919,7 +919,8 @@ TEST_F(HandlerTest, HandlerFailQuotaAsync) {
   EXPECT_CALL(mock_check_done_callback_,
               onCheckDone(bad_status, expect_rc_detail));
   QuotaResponseInfo quota_response_info;
-  quota_response_info.error_name = "RESOURCE_EXHAUSTED";
+  quota_response_info.error = {"RESOURCE_EXHAUSTED", false,
+                               ScResponseErrorType::CONSUMER_QUOTA};
   stored_on_done(bad_status, quota_response_info);
 
   ReportRequestInfo expected_report_info;

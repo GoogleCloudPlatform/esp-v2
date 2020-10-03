@@ -34,6 +34,7 @@ using ::Envoy::StreamInfo::FilterState;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::OperationInfo;
 using ::espv2::api_proxy::service_control::QuotaResponseInfo;
+using ::espv2::api_proxy::service_control::ScResponseError;
 using ::espv2::api_proxy::service_control::ScResponseErrorType;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
@@ -55,12 +56,18 @@ const Envoy::Http::LowerCaseString kAndroidCertHeader{"x-android-cert"};
 constexpr char JwtPayloadIssuerPath[] = "iss";
 constexpr char JwtPayloadAudiencePath[] = "aud";
 
-std::string CheckErrorNameToRcDetail(absl::string_view rc_detail) {
-  return absl::StrCat("service_control_check_error{", rc_detail, "}");
+std::string CheckErrorToRcDetail(const ScResponseError& error) {
+  return error.is_error_from_http_call
+             ? absl::StrCat("service_control_check_call_failure{", error.name,
+                            "}")
+             : absl::StrCat("service_control_check_error{", error.name, "}");
 }
 
-std::string QuotaErrorNameToRcDetail(absl::string_view rc_detail) {
-  return absl::StrCat("service_control_quota_error{", rc_detail, "}");
+std::string QuotaErrorToRcDetail(const ScResponseError& error) {
+  return error.is_error_from_http_call
+             ? absl::StrCat("service_control_quota_call_failure{", error.name,
+                            "}")
+             : absl::StrCat("service_control_quota_error{", error.name, "}");
 }
 
 struct RcDetailsValues {
@@ -253,8 +260,8 @@ void ServiceControlHandlerImpl::callQuota() {
   require_ctx_->service_ctx().call().callQuota(
       info,
       [this](const Status& status, const QuotaResponseInfo& response_info) {
-        if (!response_info.error_name.empty()) {
-          rc_detail_ = QuotaErrorNameToRcDetail(response_info.error_name);
+        if (!response_info.error.name.empty()) {
+          rc_detail_ = QuotaErrorToRcDetail(response_info.error);
         }
         check_status_ = status;
         check_callback_->onCheckDone(status, rc_detail_);
@@ -266,8 +273,8 @@ void ServiceControlHandlerImpl::onCheckResponse(
     const CheckResponseInfo& response_info) {
   check_response_info_ = response_info;
 
-  if (!response_info.error_name.empty()) {
-    rc_detail_ = CheckErrorNameToRcDetail(response_info.error_name);
+  if (!response_info.error.name.empty()) {
+    rc_detail_ = CheckErrorToRcDetail(response_info.error);
   }
   check_status_ = status;
 
