@@ -137,7 +137,7 @@ TEST_F(ClientCacheCheckResponseTest, Http4xxTranslatedAndBlocked) {
   CheckResponse* response = new CheckResponse();
 
   runTest(Code::PERMISSION_DENIED, response, Code::INTERNAL,
-          ApiKeyState::NOT_CHECKED, "4XX");
+          ApiKeyState::NOT_CHECKED, "HTTP_CALL_FAILURE{PERMISSION_DENIED}");
   checkAndReset(stats_.filter_.denied_producer_error_, 1);
 }
 
@@ -183,7 +183,7 @@ TEST_F(ClientCacheCheckResponseNetworkFailClosedTest, Http5xxBlocked) {
   CheckResponse* response = new CheckResponse();
 
   runTest(Code::UNAVAILABLE, response, Code::UNAVAILABLE,
-          ApiKeyState::NOT_CHECKED, "5XX");
+          ApiKeyState::NOT_CHECKED, "HTTP_CALL_FAILURE{UNAVAILABLE}");
   checkAndReset(stats_.filter_.denied_control_plane_fault_, 1);
 }
 
@@ -193,7 +193,7 @@ TEST_F(ClientCacheCheckResponseNetworkFailClosedTest, Sc5xxBlocked) {
   check_error->set_code(CheckError::NAMESPACE_LOOKUP_UNAVAILABLE);
 
   runTest(Code::OK, response, Code::UNAVAILABLE, ApiKeyState::NOT_CHECKED,
-          "5XX");
+          "NAMESPACE_LOOKUP_UNAVAILABLE");
   checkAndReset(stats_.filter_.denied_control_plane_fault_, 1);
 }
 
@@ -266,7 +266,8 @@ class ClientCacheQuotaResponseTest : public ClientCacheTestBase {
 TEST_F(ClientCacheQuotaResponseTest, HttpErrorBlocked) {
   AllocateQuotaResponse* response = new AllocateQuotaResponse();
 
-  runTest(Code::INTERNAL, response, Code::INTERNAL, "5XX");
+  runTest(Code::INTERNAL, response, Code::INTERNAL,
+          "HTTP_CALL_FAILURE{INTERNAL}");
   checkAndReset(stats_.filter_.denied_producer_error_, 1);
 }
 

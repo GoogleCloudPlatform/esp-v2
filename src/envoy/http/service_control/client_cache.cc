@@ -81,13 +81,13 @@ constexpr uint32_t kReportDefaultNumberOfRetries = 5;
 // The default value for network_fail_open flag.
 constexpr bool kDefaultNetworkFailOpen = true;
 
-// The service control call 4xx failure name, used in response code detail
-// later.
-constexpr char kScCallFail4XX[] = "4XX";
-
-// The service control call 5xx failure name, used in response code detail
-// later.
-constexpr char kScCallFail5XX[] = "5XX";
+// Convert http error status into the error name.
+std::string httpFailStatusToErrorName(const Status& status) {
+  return absl::StrCat(
+      "HTTP_CALL_FAILURE{",
+      absl::StatusCodeToString(static_cast<absl::StatusCode>(status.code())),
+      "}");
+}
 
 // Generates CheckAggregationOptions.
 CheckAggregationOptions getCheckAggregationOptions() {
@@ -395,7 +395,10 @@ void ClientCache::handleCheckResponse(const Status& http_status,
                 "request is denied due to network fail closed, with error: {}",
                 final_status.error_message());
 
-      response_info.error_name = kScCallFail5XX;
+      // If http_status is not ok, the Code::UNAVAILABLE is from http_status.
+      if (!http_status.ok()) {
+        response_info.error_name = httpFailStatusToErrorName(http_status);
+      }
       on_done(final_status, response_info);
     }
   } else {
@@ -411,7 +414,8 @@ void ClientCache::handleCheckResponse(const Status& http_status,
       // contains details on the original error (including the original
       // HTTP status code).
       Status scrubbed_status(Code::INTERNAL, final_status.error_message());
-      response_info.error_name = kScCallFail4XX;
+
+      response_info.error_name = httpFailStatusToErrorName(http_status);
       on_done(scrubbed_status, response_info);
     } else {
       // HTTP succeeded, but SC Check returned 4xx.
@@ -463,8 +467,8 @@ void ClientCache::handleQuotaOnDone(const Status& http_status,
   } else {
     // Most likely an auth error in ESPv2 or API producer deployment.
     filter_stats_.filter_.denied_producer_error_.inc();
-    response_info.error_name = kScCallFail5XX;
 
+    response_info.error_name = httpFailStatusToErrorName(http_status);
     on_done(http_status, response_info);
   }
 
