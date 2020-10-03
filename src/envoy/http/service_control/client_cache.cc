@@ -84,9 +84,9 @@ constexpr bool kDefaultNetworkFailOpen = true;
 // Convert http error status into the error name.
 std::string httpFailStatusToErrorName(const Status& status) {
   return absl::StrCat(
-      "HTTP_CALL_FAILURE{",
-      absl::StatusCodeToString(static_cast<absl::StatusCode>(status.code())),
-      "}");
+      "HTTP_CALL_",
+      absl::StatusCodeToString(static_cast<absl::StatusCode>(status.code()))
+      );
 }
 
 // Generates CheckAggregationOptions.

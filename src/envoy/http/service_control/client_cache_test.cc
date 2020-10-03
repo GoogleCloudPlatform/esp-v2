@@ -137,7 +137,7 @@ TEST_F(ClientCacheCheckResponseTest, Http4xxTranslatedAndBlocked) {
   CheckResponse* response = new CheckResponse();
 
   runTest(Code::PERMISSION_DENIED, response, Code::INTERNAL,
-          ApiKeyState::NOT_CHECKED, "HTTP_CALL_FAILURE{PERMISSION_DENIED}");
+          ApiKeyState::NOT_CHECKED, "HTTP_CALL_PERMISSION_DENIED");
   checkAndReset(stats_.filter_.denied_producer_error_, 1);
 }
 
@@ -183,7 +183,7 @@ TEST_F(ClientCacheCheckResponseNetworkFailClosedTest, Http5xxBlocked) {
   CheckResponse* response = new CheckResponse();
 
   runTest(Code::UNAVAILABLE, response, Code::UNAVAILABLE,
-          ApiKeyState::NOT_CHECKED, "HTTP_CALL_FAILURE{UNAVAILABLE}");
+          ApiKeyState::NOT_CHECKED, "HTTP_CALL_UNAVAILABLE");
   checkAndReset(stats_.filter_.denied_control_plane_fault_, 1);
 }
 
@@ -267,7 +267,7 @@ TEST_F(ClientCacheQuotaResponseTest, HttpErrorBlocked) {
   AllocateQuotaResponse* response = new AllocateQuotaResponse();
 
   runTest(Code::INTERNAL, response, Code::INTERNAL,
-          "HTTP_CALL_FAILURE{INTERNAL}");
+          "HTTP_CALL_INTERNAL");
   checkAndReset(stats_.filter_.denied_producer_error_, 1);
 }
 
