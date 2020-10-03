@@ -42,8 +42,8 @@ class CheckResponseConverterTest : public ::testing::Test {
         CheckResponseConverter::ConvertCheckResponse(response, "", &info);
 
     EXPECT_EQ(result.code(), want_code);
-    EXPECT_EQ(info.error_type, want_error_type);
-    EXPECT_EQ(info.error_name, CheckError_Code_Name(got_check_error_code));
+    EXPECT_EQ(info.error.type, want_error_type);
+    EXPECT_EQ(info.error.name, CheckError_Code_Name(got_check_error_code));
   }
 };
 
@@ -167,7 +167,7 @@ TEST_F(CheckResponseConverterTest,
 
   EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
   EXPECT_EQ(result.message(), "API api_xxxx is not enabled for the project.");
-  EXPECT_EQ(info.error_type, ScResponseErrorType::SERVICE_NOT_ACTIVATED);
+  EXPECT_EQ(info.error.type, ScResponseErrorType::SERVICE_NOT_ACTIVATED);
 }
 
 TEST_F(CheckResponseConverterTest, ConvertConsumerInfo) {
