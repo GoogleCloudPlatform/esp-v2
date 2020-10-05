@@ -413,15 +413,3 @@ function sleep_wrapper() {
   sleep ${length}
   echo "$(date): End sleep"
 }
-
-function envoy_binary_gcs_path() {
-  echo -n "gs://apiproxy-testing-envoy-binaries/$(get_sha)"
-}
-
-function upload_envoy_binary() {
-  gsutil -m cp ${ROOT}/bin/envoy $(envoy_binary_gcs_path)
-}
-
-function download_envoy_binary() {
-  gsutil -m cp $(envoy_binary_gcs_path)  ${ROOT}/bin/envoy
-}
