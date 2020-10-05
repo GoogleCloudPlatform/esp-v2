@@ -521,12 +521,7 @@ func (s *ServiceInfo) processBackendRule() error {
 // For methods that are not associated with any backend rules, create one
 // to associate with the local backend cluster.
 func (s *ServiceInfo) processLocalBackendOperations() error {
-	for _, operation := range s.Operations {
-		method, err := s.getOrCreateMethod(operation)
-		if err != nil {
-			return err
-		}
-
+	for _, method := range s.Methods {
 		if method.BackendInfo != nil {
 			// This method is already associated with a backend rule.
 			continue
