@@ -22,7 +22,7 @@ This filter is designed to strongly integrate with the following filters:
 
 ## Configuration
 
-View the [backend routing configuration proto](../../../../api/envoy/v8/http/backend_routing/config.proto)
+View the [backend routing configuration proto](../../../../api/envoy/v9/http/backend_routing/config.proto)
 for inline documentation.
 
 ## Statistics

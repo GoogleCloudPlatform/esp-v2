@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "api/envoy/v8/http/service_control/config.pb.h"
+#include "api/envoy/v9/http/service_control/config.pb.h"
 #include "common/common/empty_string.h"
 #include "common/common/logger.h"
 #include "envoy/server/filter_config.h"
@@ -41,8 +41,8 @@ constexpr char kServiceControlScope[] =
 class ThreadLocalCache : public Envoy::ThreadLocal::ThreadLocalObject {
  public:
   ThreadLocalCache(
-      const ::espv2::api::envoy::v8::http::service_control::Service& config,
-      const ::espv2::api::envoy::v8::http::service_control::FilterConfig&
+      const ::espv2::api::envoy::v9::http::service_control::Service& config,
+      const ::espv2::api::envoy::v9::http::service_control::FilterConfig&
           filter_config,
       const std::string& stats_prefix, Envoy::Stats::Scope& scope,
       Envoy::Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
@@ -73,7 +73,7 @@ class ThreadLocalCache : public Envoy::ThreadLocal::ThreadLocalObject {
 };
 
 using FilterConfigProtoSharedPtr = std::shared_ptr<
-    ::espv2::api::envoy::v8::http::service_control::FilterConfig>;
+    ::espv2::api::envoy::v9::http::service_control::FilterConfig>;
 
 class ServiceControlCallImpl
     : public ServiceControlCall,
@@ -81,7 +81,7 @@ class ServiceControlCallImpl
  public:
   ServiceControlCallImpl(
       FilterConfigProtoSharedPtr proto_config,
-      const ::espv2::api::envoy::v8::http::service_control::Service& config,
+      const ::espv2::api::envoy::v9::http::service_control::Service& config,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context);
 
@@ -105,7 +105,7 @@ class ServiceControlCallImpl
   void createImdsTokenSub();
   void createIamTokenSub();
 
-  const ::espv2::api::envoy::v8::http::service_control::FilterConfig&
+  const ::espv2::api::envoy::v9::http::service_control::FilterConfig&
       filter_config_;
   std::unique_ptr<::espv2::api_proxy::service_control::RequestBuilder>
       request_builder_;
@@ -135,7 +135,7 @@ class ServiceControlCallFactoryImpl : public ServiceControlCallFactory {
         context_(context) {}
 
   ServiceControlCallPtr create(
-      const ::espv2::api::envoy::v8::http::service_control::Service& config)
+      const ::espv2::api::envoy::v9::http::service_control::Service& config)
       override {
     return std::make_unique<ServiceControlCallImpl>(proto_config_, config,
                                                     stats_prefix_, context_);

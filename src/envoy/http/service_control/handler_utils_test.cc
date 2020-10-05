@@ -15,7 +15,7 @@
 
 #include "src/envoy/http/service_control/handler_utils.h"
 
-#include "api/envoy/v8/http/service_control/config.pb.h"
+#include "api/envoy/v9/http/service_control/config.pb.h"
 #include "common/common/empty_string.h"
 #include "envoy/http/header_map.h"
 #include "gmock/gmock.h"
@@ -25,9 +25,9 @@
 #include "test/mocks/server/mocks.h"
 #include "test/test_common/utility.h"
 
-using ::espv2::api::envoy::v8::http::service_control::ApiKeyRequirement;
-using ::espv2::api::envoy::v8::http::service_control::FilterConfig;
-using ::espv2::api::envoy::v8::http::service_control::Service;
+using ::espv2::api::envoy::v9::http::service_control::ApiKeyRequirement;
+using ::espv2::api::envoy::v9::http::service_control::FilterConfig;
+using ::espv2::api::envoy::v9::http::service_control::Service;
 using ::espv2::api_proxy::service_control::LatencyInfo;
 using ::espv2::api_proxy::service_control::ReportRequestInfo;
 using ::espv2::api_proxy::service_control::protocol::Protocol;

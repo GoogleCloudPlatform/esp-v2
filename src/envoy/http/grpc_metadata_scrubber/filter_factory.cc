@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "api/envoy/v8/http/grpc_metadata_scrubber/config.pb.h"
-#include "api/envoy/v8/http/grpc_metadata_scrubber/config.pb.validate.h"
+#include "api/envoy/v9/http/grpc_metadata_scrubber/config.pb.h"
+#include "api/envoy/v9/http/grpc_metadata_scrubber/config.pb.validate.h"
 #include "src/envoy/http/grpc_metadata_scrubber/filter.h"
 
 #include "envoy/registry/registry.h"
@@ -32,13 +32,13 @@ constexpr char kGrpcScrubberFilterName[] =
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::espv2::api::envoy::v8::http::grpc_metadata_scrubber::FilterConfig> {
+          ::espv2::api::envoy::v9::http::grpc_metadata_scrubber::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(kGrpcScrubberFilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::espv2::api::envoy::v8::http::grpc_metadata_scrubber::
+      const ::espv2::api::envoy::v9::http::grpc_metadata_scrubber::
           FilterConfig&,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context) override {

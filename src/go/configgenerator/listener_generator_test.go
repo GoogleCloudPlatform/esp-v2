@@ -484,7 +484,7 @@ func TestBackendRoutingFilter(t *testing.T) {
 			wantBackendRoutingFilter: `{
         "name": "com.google.espv2.filters.http.backend_routing",
         "typedConfig": {
-          "@type":"type.googleapis.com/espv2.api.envoy.v8.http.backend_routing.FilterConfig",
+          "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_routing.FilterConfig",
           "rules": [
             {
               "operation": "endpoints.examples.bookstore.Bookstore.CreateShelf",
@@ -561,7 +561,7 @@ func TestBackendRoutingFilter(t *testing.T) {
 			wantBackendRoutingFilter: `{
         "name": "com.google.espv2.filters.http.backend_routing",
         "typedConfig": {
-          "@type":"type.googleapis.com/espv2.api.envoy.v8.http.backend_routing.FilterConfig",
+          "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_routing.FilterConfig",
           "rules": [
             {
               "operation":"testapi.foo",
@@ -644,7 +644,7 @@ func TestBackendRoutingFilter(t *testing.T) {
 			wantBackendRoutingFilter: `{
         "name": "com.google.espv2.filters.http.backend_routing",
         "typedConfig": {
-          "@type":"type.googleapis.com/espv2.api.envoy.v8.http.backend_routing.FilterConfig",
+          "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_routing.FilterConfig",
           "rules": [
             {
               "operation":"testapi.foo",
@@ -776,7 +776,7 @@ func TestBackendRoutingFilter(t *testing.T) {
 			wantBackendRoutingFilter: `{
         "name": "com.google.espv2.filters.http.backend_routing",
         "typedConfig": {
-          "@type":"type.googleapis.com/espv2.api.envoy.v8.http.backend_routing.FilterConfig",
+          "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_routing.FilterConfig",
           "rules": [
             {
               "operation":"testapi.foo",
@@ -878,7 +878,7 @@ func TestBackendAuthFilter(t *testing.T) {
 {
    "name":"com.google.espv2.filters.http.backend_auth",
    "typedConfig":{
-      "@type":"type.googleapis.com/espv2.api.envoy.v8.http.backend_auth.FilterConfig",
+      "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.FilterConfig",
       "imdsToken":{
           "cluster":"metadata-cluster",
           "timeout":"30s",
@@ -964,7 +964,7 @@ func TestBackendAuthFilter(t *testing.T) {
 			wantBackendAuthFilter: `{
         "name":"com.google.espv2.filters.http.backend_auth",
         "typedConfig":{
-          "@type":"type.googleapis.com/espv2.api.envoy.v8.http.backend_auth.FilterConfig",
+          "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.FilterConfig",
           "imdsToken":{
             "cluster":"metadata-cluster",
             "timeout":"30s",
@@ -1019,7 +1019,7 @@ func TestBackendAuthFilter(t *testing.T) {
 {
    "name":"com.google.espv2.filters.http.backend_auth",
    "typedConfig":{
-      "@type":"type.googleapis.com/espv2.api.envoy.v8.http.backend_auth.FilterConfig",
+      "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.FilterConfig",
       "iamToken":{
          "accessToken":{
             "remoteToken":{
@@ -1107,7 +1107,7 @@ func TestPathMatcherFilter(t *testing.T) {
 {
    "name":"com.google.espv2.filters.http.path_matcher",
    "typedConfig":{
-      "@type":"type.googleapis.com/espv2.api.envoy.v8.http.path_matcher.FilterConfig",
+      "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_matcher.FilterConfig",
       "rules":[
          {
             "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
@@ -1176,7 +1176,7 @@ func TestPathMatcherFilter(t *testing.T) {
 			        {
    "name":"com.google.espv2.filters.http.path_matcher",
    "typedConfig":{
-      "@type":"type.googleapis.com/espv2.api.envoy.v8.http.path_matcher.FilterConfig",
+      "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_matcher.FilterConfig",
       "rules":[
          {
             "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
@@ -1263,7 +1263,7 @@ func TestPathMatcherFilter(t *testing.T) {
 			        {
    "name":"com.google.espv2.filters.http.path_matcher",
    "typedConfig":{
-      "@type":"type.googleapis.com/espv2.api.envoy.v8.http.path_matcher.FilterConfig",
+      "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_matcher.FilterConfig",
       "rules":[
          {
             "operation":"1.cloudesf_testing_cloud_goog.Bar",
@@ -1321,7 +1321,7 @@ func TestPathMatcherFilter(t *testing.T) {
 			        {
    "name":"com.google.espv2.filters.http.path_matcher",
    "typedConfig":{
-      "@type":"type.googleapis.com/espv2.api.envoy.v8.http.path_matcher.FilterConfig",
+      "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_matcher.FilterConfig",
       "rules":[
          {
             "operation":"1.cloudesf_testing_cloud_goog.Foo",
@@ -1421,7 +1421,7 @@ func TestPathMatcherFilter(t *testing.T) {
 			        {
    "name":"com.google.espv2.filters.http.path_matcher",
    "typedConfig":{
-      "@type":"type.googleapis.com/espv2.api.envoy.v8.http.path_matcher.FilterConfig",
+      "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_matcher.FilterConfig",
       "rules":[
          {
             "operation":"1.cloudesf_testing_cloud_goog.Baz",

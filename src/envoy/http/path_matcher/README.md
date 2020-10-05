@@ -52,5 +52,5 @@ the overridden path.
 
 ## Configuration
 
-View the [path matcher configuration proto](../../../../api/envoy/v8/http/path_matcher/config.proto)
+View the [path matcher configuration proto](../../../../api/envoy/v9/http/path_matcher/config.proto)
 for inline documentation.
