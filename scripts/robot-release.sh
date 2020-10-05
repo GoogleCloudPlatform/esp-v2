@@ -63,8 +63,6 @@ echo '======================================================='
 echo '================= Cloud Build Docker =================='
 echo '======================================================='
 
-# Update latest configmanager binary for API regression test
-upload_configmanager_binary
 
 ${ROOT}/scripts/cloud-build-docker.sh  \
   || error_exit 'Failed to build a generic Docker Image.'
