@@ -63,8 +63,6 @@ echo '======================================================='
 echo '================= Cloud Build Docker =================='
 echo '======================================================='
 
-# Update latest envoy binary for API regression test
-upload_envoy_binary
 
 ${ROOT}/scripts/cloud-build-docker.sh  \
   || error_exit 'Failed to build a generic Docker Image.'
