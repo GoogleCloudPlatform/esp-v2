@@ -27,8 +27,8 @@ namespace http_filters {
 namespace path_matcher {
 
 using ::Envoy::Http::RequestHeaderMap;
-using ::espv2::api::envoy::v8::http::path_matcher::PathMatcherRule;
-using ::espv2::api::envoy::v8::http::path_matcher::PathParameterExtractionRule;
+using ::espv2::api::envoy::v9::http::path_matcher::PathMatcherRule;
+using ::espv2::api::envoy::v9::http::path_matcher::PathParameterExtractionRule;
 using ::espv2::api_proxy::path_matcher::VariableBinding;
 using ::espv2::api_proxy::path_matcher::VariableBindingsToQueryParameters;
 using ::google::protobuf::util::Status;

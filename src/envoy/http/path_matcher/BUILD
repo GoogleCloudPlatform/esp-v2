@@ -46,7 +46,7 @@ envoy_cc_library(
     hdrs = ["filter_config.h"],
     repository = "@envoy",
     deps = [
-        "//api/envoy/v8/http/path_matcher:config_proto_cc_proto",
+        "//api/envoy/v9/http/path_matcher:config_proto_cc_proto",
         "//src/api_proxy/path_matcher:path_matcher_lib",
         "//src/api_proxy/path_matcher:variable_binding_utils_lib",
         "@envoy//source/common/common:empty_string",

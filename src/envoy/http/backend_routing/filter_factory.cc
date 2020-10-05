@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "api/envoy/v8/http/backend_routing/config.pb.h"
-#include "api/envoy/v8/http/backend_routing/config.pb.validate.h"
+#include "api/envoy/v9/http/backend_routing/config.pb.h"
+#include "api/envoy/v9/http/backend_routing/config.pb.validate.h"
 #include "envoy/registry/registry.h"
 #include "extensions/filters/http/common/factory_base.h"
 #include "src/envoy/http/backend_routing/filter.h"
@@ -31,13 +31,13 @@ const std::string FilterName = "com.google.espv2.filters.http.backend_routing";
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::espv2::api::envoy::v8::http::backend_routing::FilterConfig> {
+          ::espv2::api::envoy::v9::http::backend_routing::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(FilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::espv2::api::envoy::v8::http::backend_routing::FilterConfig&
+      const ::espv2::api::envoy::v9::http::backend_routing::FilterConfig&
           proto_config,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context) override {

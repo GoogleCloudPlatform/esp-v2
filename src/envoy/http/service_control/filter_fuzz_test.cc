@@ -5,7 +5,7 @@
 #include "test/mocks/http/mocks.h"
 #include "test/mocks/server/mocks.h"
 
-#include "api/envoy/v8/http/service_control/config.pb.validate.h"
+#include "api/envoy/v9/http/service_control/config.pb.validate.h"
 #include "src/envoy/http/service_control/filter.h"
 #include "src/envoy/http/service_control/filter_config.h"
 #include "src/envoy/utils/filter_state_utils.h"
@@ -18,7 +18,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace filter_api = ::espv2::api::envoy::v8::http::service_control;
+namespace filter_api = ::espv2::api::envoy::v9::http::service_control;
 namespace sc_api = ::google::api::servicecontrol::v1;
 using ::Envoy::Server::Configuration::MockFactoryContext;
 using ::testing::MockFunction;

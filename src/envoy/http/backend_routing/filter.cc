@@ -34,7 +34,7 @@ using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
 }  // namespace
 
 using Envoy::Http::FilterHeadersStatus;
-using ::espv2::api::envoy::v8::http::backend_routing::BackendRoutingRule;
+using ::espv2::api::envoy::v9::http::backend_routing::BackendRoutingRule;
 
 Filter::Filter(FilterConfigSharedPtr config) : config_(config) {}
 

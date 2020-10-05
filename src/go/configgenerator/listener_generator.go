@@ -26,11 +26,11 @@ import (
 	"github.com/golang/protobuf/ptypes"
 
 	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
-	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v8/http/backend_auth"
-	brpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v8/http/backend_routing"
-	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v8/http/common"
-	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v8/http/path_matcher"
-	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v8/http/service_control"
+	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/backend_auth"
+	brpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/backend_routing"
+	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/common"
+	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/path_matcher"
+	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/service_control"
 
 	acpb "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v3"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"

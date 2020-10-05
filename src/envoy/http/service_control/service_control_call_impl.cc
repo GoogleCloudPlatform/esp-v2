@@ -24,9 +24,9 @@ namespace envoy {
 namespace http_filters {
 namespace service_control {
 
-using ::espv2::api::envoy::v8::http::common::AccessToken;
-using ::espv2::api::envoy::v8::http::service_control::FilterConfig;
-using ::espv2::api::envoy::v8::http::service_control::Service;
+using ::espv2::api::envoy::v9::http::common::AccessToken;
+using ::espv2::api::envoy::v9::http::service_control::FilterConfig;
+using ::espv2::api::envoy::v9::http::service_control::Service;
 using ::espv2::api_proxy::service_control::LogsMetricsLoader;
 using ::espv2::api_proxy::service_control::RequestBuilder;
 using ::google::protobuf::util::TimeUtil;

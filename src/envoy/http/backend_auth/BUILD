@@ -33,7 +33,7 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         ":config_parser_lib",
-        "//api/envoy/v8/http/backend_auth:config_proto_cc_proto",
+        "//api/envoy/v9/http/backend_auth:config_proto_cc_proto",
         "//src/envoy/utils:filter_state_utils_lib",
         "@envoy//source/extensions/filters/http/common:pass_through_filter_lib",
     ],
@@ -48,7 +48,7 @@ envoy_cc_library(
     ],
     repository = "@envoy",
     deps = [
-        "//api/envoy/v8/http/backend_auth:config_proto_cc_proto",
+        "//api/envoy/v9/http/backend_auth:config_proto_cc_proto",
         "//src/envoy/token:token_subscriber_factory_lib",
         "@envoy//source/common/common:assert_lib",
     ],
