@@ -506,6 +506,12 @@ operations: <
           string_value: "test-config-id"
         >
       >
+      fields: <
+        key: "response_code_detail"
+        value: <
+          string_value: "service_control_check_call_error{UNAVAILABLE}"
+        >
+      >
     >
   >
 >
@@ -781,6 +787,7 @@ func TestCreateReport(t *testing.T) {
 		LogMessage:                   "Method: ListShelves",
 		ResponseCode:                 503,
 		StatusCode:                   "14",
+		ResponseCodeDetail:           "service_control_check_call_error{UNAVAILABLE}",
 	})
 
 	want := scpb.ReportRequest{}
@@ -1201,64 +1208,10 @@ operations: <
           string_value: "test-config-id"
         >
       >
-    >
-  >
-  log_entries: <
-    name: "endpoints_log"
-    http_request: <
-		  request_method: "GET"
-		  request_url: "/shelves"
-		  status: 503
-		  remote_ip: "127.0.0.1"
-		>
-    severity: ERROR
-    struct_payload: <
       fields: <
-        key: "api_key"
+        key: "response_code_detail"
         value: <
-          string_value: "api-key"
-        >
-      >
-      fields: <
-        key: "api_key_state"
-        value: <
-          string_value: "INVALID"
-        >
-      >
-      fields: <
-        key: "api_method"
-        value: <
-          string_value: "ListShelves"
-        >
-      >
-      fields: <
-        key: "api_name"
-        value: <
-          string_value: "API-NAME"
-        >
-      >
-      fields: <
-        key: "location"
-        value: <
-          string_value: "us-central1"
-        >
-      >
-      fields: <
-        key: "log_message"
-        value: <
-          string_value: "Method: ListShelves"
-        >
-      >
-      fields: <
-        key: "producer_project_id"
-        value: <
-          string_value: "endpoints-test"
-        >
-      >
-      fields: <
-        key: "service_config_id"
-        value: <
-          string_value: "test-config-id"
+          string_value: "service_control_check_call_error{UNAVAILABLE}"
         >
       >
     >
@@ -1319,6 +1272,78 @@ operations: <
         key: "service_config_id"
         value: <
           string_value: "test-config-id"
+        >
+      >
+      fields: <
+        key: "response_code_detail"
+        value: <
+          string_value: "service_control_check_call_error{UNAVAILABLE}"
+        >
+      >
+    >
+  >
+  log_entries: <
+    name: "endpoints_log"
+    http_request: <
+		  request_method: "GET"
+		  request_url: "/shelves"
+		  status: 503
+		  remote_ip: "127.0.0.1"
+		>
+    severity: ERROR
+    struct_payload: <
+      fields: <
+        key: "api_key"
+        value: <
+          string_value: "api-key"
+        >
+      >
+      fields: <
+        key: "api_key_state"
+        value: <
+          string_value: "INVALID"
+        >
+      >
+      fields: <
+        key: "api_method"
+        value: <
+          string_value: "ListShelves"
+        >
+      >
+      fields: <
+        key: "api_name"
+        value: <
+          string_value: "API-NAME"
+        >
+      >
+      fields: <
+        key: "location"
+        value: <
+          string_value: "us-central1"
+        >
+      >
+      fields: <
+        key: "log_message"
+        value: <
+          string_value: "Method: ListShelves"
+        >
+      >
+      fields: <
+        key: "producer_project_id"
+        value: <
+          string_value: "endpoints-test"
+        >
+      >
+      fields: <
+        key: "service_config_id"
+        value: <
+          string_value: "test-config-id"
+        >
+      >
+      fields: <
+        key: "response_code_detail"
+        value: <
+          string_value: "service_control_check_call_error{UNAVAILABLE}"
         >
       >
     >
@@ -1589,6 +1614,7 @@ func TestCreateAggregateReport(t *testing.T) {
 		HttpMethod:                   "GET",
 		LogMessage:                   "Method: ListShelves",
 		ResponseCode:                 503,
+		ResponseCodeDetail:           "service_control_check_call_error{UNAVAILABLE}",
 		StatusCode:                   "14",
 	})
 
