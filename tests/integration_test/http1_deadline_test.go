@@ -80,7 +80,7 @@ func TestDeadlinesForDynamicRouting(t *testing.T) {
 
 		// Place in closure to allow efficient measuring of elapsed time.
 		// Elapsed time is not checked in the test, it's just for debugging.
-		func() {
+		t.Run(tc.desc, func(t *testing.T) {
 			defer utils.Elapsed(fmt.Sprintf("Test (%s):", tc.desc))()
 
 			// Decide which path to call based on which configured deadline to test against.
@@ -108,16 +108,15 @@ func TestDeadlinesForDynamicRouting(t *testing.T) {
 			if err != nil && !strings.Contains(err.Error(), tc.wantErr) {
 				t.Errorf("Test (%s): failed, got err (%v), expected err (%v)", tc.desc, err, tc.wantErr)
 			}
-
-		}()
+		})
 	}
 }
 
 // Tests the default deadline in the catch-all HTTP/1.x backend (no streaming).
-func TestDeadlinesForCatchAllBackend(t *testing.T) {
+func TestDeadlinesForLocalBackend(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewTestEnv(platform.TestDeadlinesForCatchAllBackend, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestDeadlinesForLocalBackend, platform.EchoSidecar)
 
 	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
@@ -127,6 +126,7 @@ func TestDeadlinesForCatchAllBackend(t *testing.T) {
 	testData := []struct {
 		desc        string
 		reqDuration time.Duration
+		path        string
 		wantErr     string
 	}{
 		// Please be cautious about adding too many time-based tests here.
@@ -134,10 +134,23 @@ func TestDeadlinesForCatchAllBackend(t *testing.T) {
 		{
 			desc:        "Success after 10s due to ESPv2 default response timeout being 15s",
 			reqDuration: time.Second * 10,
+			path:        "/sleep",
 		},
 		{
 			desc:        "Fail before 20s due to ESPv2 default response timeout being 15s",
 			reqDuration: time.Second * 20,
+			wantErr:     `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			path:        "/sleep",
+		},
+		{
+			desc:        "Success after 2s due to user-configured deadline being 5s, even for a local backend.",
+			reqDuration: time.Second * 2,
+			path:        "/sleep/with/backend/rule",
+		},
+		{
+			desc:        "Fail before 8s due to user-configured deadline being 5s, even for a local backend.",
+			reqDuration: time.Second * 8,
+			path:        "/sleep/with/backend/rule",
 			wantErr:     `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
 		},
 	}
@@ -146,12 +159,10 @@ func TestDeadlinesForCatchAllBackend(t *testing.T) {
 
 		// Place in closure to allow efficient measuring of elapsed time.
 		// Elapsed time is not checked in the test, it's just for debugging.
-		func() {
+		t.Run(tc.desc, func(t *testing.T) {
 			defer utils.Elapsed(fmt.Sprintf("Test (%s):", tc.desc))()
 
-			path := fmt.Sprintf("/sleep?duration=%v", tc.reqDuration.String())
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, path)
-
+			url := fmt.Sprintf("http://localhost:%v%v?duration=%v", s.Ports().ListenerPort, tc.path, tc.reqDuration.String())
 			_, err := client.DoWithHeaders(url, "GET", "", nil)
 
 			if tc.wantErr == "" && err != nil {
@@ -166,6 +177,6 @@ func TestDeadlinesForCatchAllBackend(t *testing.T) {
 				t.Errorf("Test (%s): failed, got err (%v), expected err (%v)", tc.desc, err, tc.wantErr)
 			}
 
-		}()
+		})
 	}
 }
