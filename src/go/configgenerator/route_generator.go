@@ -120,7 +120,7 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 			Action: &routepb.Route_Route{
 				Route: &routepb.RouteAction{
 					ClusterSpecifier: &routepb.RouteAction_Cluster{
-						Cluster: serviceInfo.CatchAllBackendClusterName(),
+						Cluster: serviceInfo.LocalBackendClusterName(),
 					},
 				},
 			},

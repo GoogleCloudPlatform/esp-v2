@@ -1671,7 +1671,7 @@ func TestProcessBackendRuleForProtocol(t *testing.T) {
 			return
 		}
 
-		for _, gotBackendRoutingCluster := range s.BackendRoutingClusters {
+		for _, gotBackendRoutingCluster := range s.RemoteBackendClusters {
 			gotProtocol := gotBackendRoutingCluster.Protocol
 			wantProtocol, ok := tc.wantedClusterProtocols[gotBackendRoutingCluster.ClusterName]
 
@@ -1799,12 +1799,12 @@ func TestProcessBackendRuleForClusterName(t *testing.T) {
 			return
 		}
 
-		if len(s.BackendRoutingClusters) != 1 {
+		if len(s.RemoteBackendClusters) != 1 {
 			t.Errorf("Test Desc(%s): generated number of clusters is not 1", tc.desc)
 			return
 		}
-		if tc.ClusterName != s.BackendRoutingClusters[0].ClusterName {
-			t.Errorf("Test Desc(%s): cluster name is different, want: %s, got %s", tc.desc, tc.ClusterName, s.BackendRoutingClusters[0].ClusterName)
+		if tc.ClusterName != s.RemoteBackendClusters[0].ClusterName {
+			t.Errorf("Test Desc(%s): cluster name is different, want: %s, got %s", tc.desc, tc.ClusterName, s.RemoteBackendClusters[0].ClusterName)
 		}
 	}
 }

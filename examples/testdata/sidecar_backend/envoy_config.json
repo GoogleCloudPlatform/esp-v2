@@ -191,7 +191,7 @@
                             },
                             "route": {
                               "cluster": "backend-cluster-examples-sidecar-backend.endpoints.cloudesf-testing.cloud.goog_local",
-                              "timeout": "15s"
+                              "timeout": "7.500s"
                             }
                           },
                           {
@@ -209,7 +209,7 @@
                             },
                             "route": {
                               "cluster": "backend-cluster-examples-sidecar-backend.endpoints.cloudesf-testing.cloud.goog_local",
-                              "timeout": "15s"
+                              "timeout": "25s"
                             }
                           }
                         ]

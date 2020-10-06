@@ -565,7 +565,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		clusters, err := makeBackendRoutingClusters(fakeServiceInfo)
+		clusters, err := makeRemoteBackendClusters(fakeServiceInfo)
 		if err != nil {
 			if tc.wantedError == "" || !strings.Contains(err.Error(), tc.wantedError) {
 				t.Fatal(err)
@@ -574,7 +574,7 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 		}
 
 		if tc.wantedClusters != nil && !cmp.Equal(clusters, tc.wantedClusters, cmp.Comparer(proto.Equal)) {
-			t.Errorf("Test Desc(%d): %s, makeBackendRoutingClusters\ngot: %v,\nwant: %v", i, tc.desc, clusters, tc.wantedClusters)
+			t.Errorf("Test Desc(%d): %s, makeRemoteBackendClusters\ngot: %v,\nwant: %v", i, tc.desc, clusters, tc.wantedClusters)
 		}
 	}
 }
@@ -779,7 +779,7 @@ func TestMakeIamCluster(t *testing.T) {
 		}
 
 		if !proto.Equal(cluster, tc.wantedCluster) {
-			t.Errorf("Test Desc(%d): %s, makeBackendRoutingClusters\ngot: %v,\nwant: %v", i, tc.desc, cluster, tc.wantedCluster)
+			t.Errorf("Test Desc(%d): %s, makeRemoteBackendClusters\ngot: %v,\nwant: %v", i, tc.desc, cluster, tc.wantedCluster)
 		}
 	}
 }
