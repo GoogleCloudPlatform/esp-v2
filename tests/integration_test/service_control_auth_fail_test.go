@@ -98,6 +98,7 @@ func TestServiceControlJwtAuthFail(t *testing.T) {
 					ResponseCode:         401,
 					Platform:             util.GCE,
 					Location:             "test-zone",
+					ResponseCodeDetail:   "jwt_authn_access_denied",
 				},
 			},
 		},
