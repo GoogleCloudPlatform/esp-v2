@@ -156,6 +156,7 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 					ResponseCode:      401,
 					Platform:          util.GCE,
 					Location:          "test-zone",
+					ResponseCodeDetail: "service_control_bad_request{MISSING_API_KEY}",
 				},
 			},
 		},
