@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/api_proxy/service_control/check_response_converter.h"
+#include "src/api_proxy/service_control/check_response_convert_utils.h"
 
 #include "gtest/gtest.h"
 
@@ -38,8 +38,7 @@ class CheckResponseConverterTest : public ::testing::Test {
     CheckResponse response;
     response.add_check_errors()->set_code(got_check_error_code);
 
-    Status result =
-        CheckResponseConverter::ConvertCheckResponse(response, "", &info);
+    Status result = ConvertCheckResponse(response, "", &info);
 
     EXPECT_EQ(result.code(), want_code);
     EXPECT_EQ(info.error.type, want_error_type);
@@ -162,8 +161,7 @@ TEST_F(CheckResponseConverterTest,
   check_error->set_code(CheckError::SERVICE_NOT_ACTIVATED);
   check_error->set_detail("Service not activated.");
 
-  Status result =
-      CheckResponseConverter::ConvertCheckResponse(response, "api_xxxx", &info);
+  Status result = ConvertCheckResponse(response, "api_xxxx", &info);
 
   EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
   EXPECT_EQ(result.message(), "API api_xxxx is not enabled for the project.");
@@ -183,8 +181,7 @@ TEST_F(CheckResponseConverterTest, ConvertConsumerInfo) {
   response.mutable_check_info()->mutable_consumer_info()->set_consumer_number(
       consumer_number);
 
-  Status result =
-      CheckResponseConverter::ConvertCheckResponse(response, "api_xxxx", &info);
+  Status result = ConvertCheckResponse(response, "api_xxxx", &info);
 
   EXPECT_EQ(info.consumer_project_number, std::to_string(consumer_number));
   EXPECT_EQ(info.consumer_type,

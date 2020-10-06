@@ -57,14 +57,14 @@ constexpr char JwtPayloadIssuerPath[] = "iss";
 constexpr char JwtPayloadAudiencePath[] = "aud";
 
 std::string CheckErrorToRcDetail(const ScResponseError& error) {
-  return error.is_error_from_http_call
+  return error.is_network_error
              ? absl::StrCat("service_control_check_call_failure{", error.name,
                             "}")
              : absl::StrCat("service_control_check_error{", error.name, "}");
 }
 
 std::string QuotaErrorToRcDetail(const ScResponseError& error) {
-  return error.is_error_from_http_call
+  return error.is_network_error
              ? absl::StrCat("service_control_quota_call_failure{", error.name,
                             "}")
              : absl::StrCat("service_control_quota_error{", error.name, "}");

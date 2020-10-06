@@ -37,9 +37,9 @@ envoy_basic_cc_library(
 
 envoy_basic_cc_library(
     name = "check_response_converter_lib",
-    srcs = ["check_response_converter.cc"],
+    srcs = ["check_response_convert_utils.cc"],
     hdrs = [
-        "check_response_converter.h",
+        "check_response_convert_utils.h",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -54,7 +54,7 @@ envoy_basic_cc_library(
 envoy_cc_test(
     name = "check_response_converter_test",
     srcs = [
-        "check_response_converter_test.cc",
+        "check_response_convert_utils_test.cc",
     ],
     repository = "@envoy",
     deps = [

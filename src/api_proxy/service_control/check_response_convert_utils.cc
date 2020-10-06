@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "src/api_proxy/service_control/check_response_converter.h"
+#include "src/api_proxy/service_control/check_response_convert_utils.h"
 
 namespace espv2 {
 namespace api_proxy {
 namespace service_control {
-namespace {}
 
 using ::google::api::servicecontrol::v1::CheckError;
 using ::google::api::servicecontrol::v1::CheckError_Code;
@@ -28,9 +27,9 @@ using ::google::api::servicecontrol::v1::
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
-Status CheckResponseConverter::ConvertCheckResponse(
-    const CheckResponse& check_response, const std::string& service_name,
-    CheckResponseInfo* check_response_info) {
+Status ConvertCheckResponse(const CheckResponse& check_response,
+                            const std::string& service_name,
+                            CheckResponseInfo* check_response_info) {
   if (check_response.check_info().consumer_info().project_number() > 0) {
     // Store project id to check_response_info
     check_response_info->consumer_project_number = std::to_string(
@@ -61,7 +60,7 @@ Status CheckResponseConverter::ConvertCheckResponse(
   const CheckError& error = check_response.check_errors(0);
 
   check_response_info->error = {CheckError_Code_Name(error.code()),
-                                /*is_error_from_http_call=*/false,
+                                /*is_network_error=*/false,
                                 ScResponseErrorType::ERROR_TYPE_UNSPECIFIED};
 
   ScResponseError& check_error = check_response_info->error;
@@ -146,7 +145,7 @@ Status CheckResponseConverter::ConvertCheckResponse(
   return Status::OK;
 }
 
-Status CheckResponseConverter::ConvertAllocateQuotaResponse(
+Status ConvertAllocateQuotaResponse(
     const ::google::api::servicecontrol::v1::AllocateQuotaResponse& response,
     const std::string&, QuotaResponseInfo* quota_response_info) {
   // response.operation_id()
@@ -158,7 +157,7 @@ Status CheckResponseConverter::ConvertAllocateQuotaResponse(
       response.allocate_errors().Get(0);
 
   quota_response_info->error = {QuotaError_Code_Name(error.code()),
-                                /*is_error_from_http_call=*/false,
+                                /*is_network_error=*/false,
                                 ScResponseErrorType::ERROR_TYPE_UNSPECIFIED};
 
   ScResponseError& quota_error = quota_response_info->error;

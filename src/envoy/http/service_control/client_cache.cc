@@ -15,7 +15,7 @@
 #include "src/envoy/http/service_control/client_cache.h"
 
 #include "common/tracing/http_tracer_impl.h"
-#include "src/api_proxy/service_control/check_response_converter.h"
+#include "src/api_proxy/service_control/check_response_convert_utils.h"
 #include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/http/service_control/http_call.h"
 
@@ -81,11 +81,12 @@ constexpr uint32_t kReportDefaultNumberOfRetries = 5;
 // The default value for network_fail_open flag.
 constexpr bool kDefaultNetworkFailOpen = true;
 
-// Convert http error status into the error name.
-std::string httpFailStatusToErrorName(const Status& status) {
-  return absl::StrCat(
-      "HTTP_CALL_",
-      absl::StatusCodeToString(static_cast<absl::StatusCode>(status.code())));
+// Convert http error status into the ScResponseError.
+api_proxy::service_control::ScResponseError failCallStatusToScResponseError(
+    const Status& status) {
+  return {
+      absl::StatusCodeToString(static_cast<absl::StatusCode>(status.code())),
+      /*is_network_error=*/true, ScResponseErrorType::ERROR_TYPE_UNSPECIFIED};
 }
 
 // Generates CheckAggregationOptions.
@@ -360,8 +361,8 @@ void ClientCache::handleCheckResponse(const Status& http_status,
   if (http_status.ok()) {
     // If the http call succeeded, then use the CheckResponseInfo
     // to retrieve the final status.
-    final_status = api_proxy::service_control::CheckResponseConverter::
-        ConvertCheckResponse(*response, config_.service_name(), &response_info);
+    final_status = api_proxy::service_control::ConvertCheckResponse(
+        *response, config_.service_name(), &response_info);
     collectScResponseErrorStats(response_info.error.type);
 
   } else {
@@ -396,9 +397,7 @@ void ClientCache::handleCheckResponse(const Status& http_status,
 
       // If http_status is not ok, the Code::UNAVAILABLE is from http_status.
       if (!http_status.ok()) {
-        response_info.error = {httpFailStatusToErrorName(http_status),
-                               /*is_error_from_http_call=*/true,
-                               ScResponseErrorType::ERROR_TYPE_UNSPECIFIED};
+        response_info.error = failCallStatusToScResponseError(http_status);
       }
       on_done(final_status, response_info);
     }
@@ -416,9 +415,7 @@ void ClientCache::handleCheckResponse(const Status& http_status,
       // HTTP status code).
       Status scrubbed_status(Code::INTERNAL, final_status.error_message());
 
-      response_info.error = {httpFailStatusToErrorName(http_status),
-                             /*is_error_from_http_call=*/true,
-                             ScResponseErrorType::ERROR_TYPE_UNSPECIFIED};
+      response_info.error = failCallStatusToScResponseError(http_status);
       on_done(scrubbed_status, response_info);
     } else {
       // HTTP succeeded, but SC Check returned 4xx.
@@ -461,8 +458,8 @@ void ClientCache::handleQuotaOnDone(const Status& http_status,
                                     QuotaDoneFunc on_done) {
   QuotaResponseInfo response_info;
   if (http_status.ok()) {
-    Status quota_status = ::espv2::api_proxy::service_control::
-        CheckResponseConverter::ConvertAllocateQuotaResponse(
+    Status quota_status =
+        ::espv2::api_proxy::service_control::ConvertAllocateQuotaResponse(
             *response, config_.service_name(), &response_info);
 
     collectScResponseErrorStats(response_info.error.type);
@@ -471,9 +468,7 @@ void ClientCache::handleQuotaOnDone(const Status& http_status,
     // Most likely an auth error in ESPv2 or API producer deployment.
     filter_stats_.filter_.denied_producer_error_.inc();
 
-    response_info.error = {httpFailStatusToErrorName(http_status),
-                           /*is_error_from_http_call=*/true,
-                           ScResponseErrorType::ERROR_TYPE_UNSPECIFIED};
+    response_info.error = failCallStatusToScResponseError(http_status);
     on_done(http_status, response_info);
   }
 

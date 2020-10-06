@@ -145,9 +145,18 @@ enum ScResponseErrorType {
 struct ScResponseError {
   std::string name;
 
-  bool is_error_from_http_call;
+  bool is_network_error;
 
   ScResponseErrorType type;
+
+  ScResponseError(std::string _name, bool _is_network_error,
+                  ScResponseErrorType _type)
+      : name(_name), is_network_error(_is_network_error), type(_type) {}
+
+  ScResponseError()
+      : name(""),
+        is_network_error(false),
+        type(ScResponseErrorType::ERROR_TYPE_UNSPECIFIED) {}
 };
 
 // Stores the information extracted from the check response.
@@ -167,7 +176,7 @@ struct CheckResponseInfo {
       : consumer_project_number(),
         consumer_type(),
         consumer_number(),
-        error({"", false, ScResponseErrorType::ERROR_TYPE_UNSPECIFIED}),
+        error(),
         api_key_state(api_key::ApiKeyState::NOT_CHECKED) {}
 };
 
