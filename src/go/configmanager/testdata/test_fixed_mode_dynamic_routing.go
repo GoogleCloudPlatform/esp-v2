@@ -237,7 +237,6 @@ var (
                   "commonHttpProtocolOptions":{
                      "headersWithUnderscoresAction":"REJECT_REQUEST"
                   },
-                  "httpProtocolOptions": {"enableTrailers": true},
                   "httpFilters":[
                      {
                         "name":"com.google.espv2.filters.http.path_matcher",
@@ -356,7 +355,7 @@ var (
                         }
                      },
                      {
-                       "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                        "name":"com.google.espv2.filters.http.grpc_metadata_scrubber"
                      },
                      {
                         "name":"envoy.filters.http.router",
@@ -366,6 +365,17 @@ var (
                         }
                      }
                   ],
+                  "httpProtocolOptions":{
+                     "enableTrailers":true
+                  },
+                  "localReplyConfig":{
+                     "bodyFormat":{
+                        "jsonFormat":{
+                           "code":"%RESPONSE_CODE%",
+                           "message":"%LOCAL_REPLY_BODY%"
+                        }
+                     }
+                  },
                   "routeConfig":{
                      "name":"local_route",
                      "virtualHosts":[
@@ -376,8 +386,26 @@ var (
                            "name":"backend",
                            "routes":[
                               {
-                                "decorator":{
-                                  "operation":"ingress dynamic_routing_AddPet"
+                                 "decorator":{
+                                    "operation":"ingress Echo"
+                                 },
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"POST",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/echo"
+                                 },
+                                 "route":{
+                                    "cluster":"backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local",
+                                    "timeout":"15s"
+                                 }
+                              },
+                              {
+                                 "decorator":{
+                                    "operation":"ingress dynamic_routing_AddPet"
                                  },
                                  "match":{
                                     "headers":[
@@ -395,8 +423,8 @@ var (
                                  }
                               },
                               {
-                                "decorator":{
-                                  "operation":"ingress dynamic_routing_GetPetById"
+                                 "decorator":{
+                                    "operation":"ingress dynamic_routing_GetPetById"
                                  },
                                  "match":{
                                     "headers":[
@@ -406,8 +434,7 @@ var (
                                        }
                                     ],
                                     "safeRegex":{
-                                       "googleRe2":{
-                                       },
+                                       "googleRe2":{},
                                        "regex":"^/pet/[^\\/]+$"
                                     }
                                  },
@@ -418,8 +445,8 @@ var (
                                  }
                               },
                               {
-                                "decorator":{
-                                  "operation":"ingress dynamic_routing_Hello"
+                                 "decorator":{
+                                    "operation":"ingress dynamic_routing_Hello"
                                  },
                                  "match":{
                                     "headers":[
@@ -437,8 +464,8 @@ var (
                                  }
                               },
                               {
-                                "decorator":{
-                                  "operation":"ingress dynamic_routing_ListPets"
+                                 "decorator":{
+                                    "operation":"ingress dynamic_routing_ListPets"
                                  },
                                  "match":{
                                     "headers":[
@@ -456,8 +483,8 @@ var (
                                  }
                               },
                               {
-                                "decorator":{
-                                  "operation":"ingress dynamic_routing_Search"
+                                 "decorator":{
+                                    "operation":"ingress dynamic_routing_Search"
                                  },
                                  "match":{
                                     "headers":[
@@ -485,14 +512,6 @@ var (
                      }
                   ],
                   "useRemoteAddress":false,
-                  "localReplyConfig": {
-                    "bodyFormat": {
-                      "jsonFormat": {
-                        "code": "%RESPONSE_CODE%",
-                        "message":"%LOCAL_REPLY_BODY%"
-                      }
-                    }
-                  },
                   "xffNumTrustedHops":2
                }
             }

@@ -140,6 +140,9 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	if err := serviceInfo.processEmptyJwksUriByOpenID(); err != nil {
 		return nil, err
 	}
+	if err := serviceInfo.processLocalBackendOperations(); err != nil {
+		return nil, err
+	}
 
 	return serviceInfo, nil
 }
@@ -512,6 +515,25 @@ func (s *ServiceInfo) processBackendRule() error {
 			}
 		}
 	}
+	return nil
+}
+
+// For methods that are not associated with any backend rules, create one
+// to associate with the local backend cluster.
+func (s *ServiceInfo) processLocalBackendOperations() error {
+	for _, method := range s.Methods {
+		if method.BackendInfo != nil {
+			// This method is already associated with a backend rule.
+			continue
+		}
+
+		// Associate the method with the local backend.
+		method.BackendInfo = &backendInfo{
+			ClusterName: s.CatchAllBackend.ClusterName,
+			Deadline:    util.DefaultResponseDeadline,
+		}
+	}
+
 	return nil
 }
 

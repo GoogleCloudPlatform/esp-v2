@@ -75,8 +75,7 @@ var (
          "address":"0.0.0.0",
          "portValue":8080
       }
-	 },
-	 "name": "ingress_listener",
+   },
    "filterChains":[
       {
          "filters":[
@@ -84,6 +83,9 @@ var (
                "name":"envoy.filters.network.http_connection_manager",
                "typedConfig":{
                   "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
+                  "commonHttpProtocolOptions":{
+                     "headersWithUnderscoresAction":"REJECT_REQUEST"
+                  },
                   "httpFilters":[
                      {
                         "name":"com.google.espv2.filters.http.path_matcher",
@@ -121,16 +123,19 @@ var (
                         }
                      },
                      {
-                       "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                        "name":"com.google.espv2.filters.http.grpc_metadata_scrubber"
                      },
                      {
                         "name":"envoy.filters.http.router",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.router.v3.Router",
-                       		 "suppressEnvoyHeaders": true
+                           "suppressEnvoyHeaders":true
                         }
                      }
                   ],
+                  "httpProtocolOptions":{
+                     "enableTrailers":true
+                  },
                   "routeConfig":{
                      "name":"local_route",
                      "virtualHosts":[
@@ -142,10 +147,16 @@ var (
                            "routes":[
                               {
                                  "decorator":{
-                                   "operation":"ingress"
+                                    "operation":"ingress CreateShelf"
                                  },
                                  "match":{
-                                    "prefix":"/"
+                                    "headers":[
+                                       {
+                                          "exactMatch":"POST",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
                                  },
                                  "route":{
                                     "cluster":"%s",
@@ -156,10 +167,12 @@ var (
                         }
                      ]
                   },
-                  "upgradeConfigs": [{"upgradeType": "websocket"}],
                   "statPrefix":"ingress_http",
-                  "commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},
-                  "httpProtocolOptions": {"enableTrailers": true},
+                  "upgradeConfigs":[
+                     {
+                        "upgradeType":"websocket"
+                     }
+                  ],
                   "useRemoteAddress":false,
                   %s,
                   "xffNumTrustedHops":2
@@ -167,7 +180,8 @@ var (
             }
          ]
       }
-   ]
+   ],
+   "name":"ingress_listener"
 }
 `,
 		fakeProtoDescriptor, TestFetchListenersEndpointName, testBackendClusterName, localReplyConfig)
@@ -320,10 +334,16 @@ var (
                            "routes":[
                               {
                                  "decorator":{
-                                   "operation":"ingress"
+                                    "operation":"ingress CreateShelf"
                                  },
                                  "match":{
-                                    "prefix":"/"
+                                    "headers":[
+                                       {
+                                          "exactMatch":"POST",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
                                  },
                                  "route":{
                                     "cluster":"%s",
@@ -532,13 +552,78 @@ var (
                            "routes":[
                               {
                                  "decorator":{
-                                   "operation":"ingress"
+                                    "operation":"ingress CreateShelf"
                                  },
                                  "match":{
-                                    "prefix":"/"
+                                    "headers":[
+                                       {
+                                          "exactMatch":"POST",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "safeRegex":{
+                                       "googleRe2":{
+                                          
+                                       },
+                                       "regex":"^/v1/shelves/[^\\/]+$"
+                                    }
                                  },
                                  "route":{
-                                    "cluster":"%s",
+                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "timeout":"15s"
+                                 }
+                              },
+                              {
+                                 "decorator":{
+                                    "operation":"ingress CreateShelf"
+                                 },
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"POST",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                 },
+                                 "route":{
+                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "timeout":"15s"
+                                 }
+                              },
+                              {
+                                 "decorator":{
+                                    "operation":"ingress ListShelves"
+                                 },
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"GET",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/v1/shelves"
+                                 },
+                                 "route":{
+                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "timeout":"15s"
+                                 }
+                              },
+                              {
+                                 "decorator":{
+                                    "operation":"ingress ListShelves"
+                                 },
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"POST",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/endpoints.examples.bookstore.Bookstore/ListShelves"
+                                 },
+                                 "route":{
+                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
                                  }
                               }
@@ -558,7 +643,7 @@ var (
          ]
       }
    ]
-}`, testBackendClusterName, localReplyConfig)
+}`, localReplyConfig)
 
 	FakeServiceConfigForGrpcWithJwtFilterWithMultiReqs = fmt.Sprintf(`{
                 "name":"bookstore.endpoints.project123.cloud.goog",
@@ -780,13 +865,83 @@ var (
                            "routes":[
                               {
                                  "decorator":{
-                                   "operation":"ingress"
+                                    "operation":"ingress DeleteBook"
                                  },
                                  "match":{
-                                    "prefix":"/"
+                                    "headers":[
+                                       {
+                                          "exactMatch":"DELETE",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "safeRegex":{
+                                       "googleRe2":{
+                                          
+                                       },
+                                       "regex":"^/v1/shelves/[^\\/]+/books/[^\\/]+$"
+                                    }
                                  },
                                  "route":{
-                                    "cluster":"%s",
+                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "timeout":"15s"
+                                 }
+                              },
+                              {
+                                 "decorator":{
+                                    "operation":"ingress DeleteBook"
+                                 },
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"POST",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/endpoints.examples.bookstore.Bookstore/DeleteBook"
+                                 },
+                                 "route":{
+                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "timeout":"15s"
+                                 }
+                              },
+                              {
+                                 "decorator":{
+                                    "operation":"ingress GetBook"
+                                 },
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"GET",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "safeRegex":{
+                                       "googleRe2":{
+                                          
+                                       },
+                                       "regex":"^/v1/shelves/[^\\/]+/books/[^\\/]+$"
+                                    }
+                                 },
+                                 "route":{
+                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "timeout":"15s"
+                                 }
+                              },
+                              {
+                                 "decorator":{
+                                    "operation":"ingress GetBook"
+                                 },
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"POST",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/endpoints.examples.bookstore.Bookstore/GetBook"
+                                 },
+                                 "route":{
+                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
                                  }
                               }
@@ -806,7 +961,7 @@ var (
          ]
       }
    ]
-}`, testBackendClusterName, localReplyConfig)
+}`, localReplyConfig)
 
 	FakeServiceConfigForGrpcWithServiceControl = fmt.Sprintf(`{
                 "name":"%s",
@@ -1003,13 +1158,73 @@ var (
                            "routes":[
                               {
                                  "decorator":{
-                                   "operation":"ingress"
+                                    "operation":"ingress CreateShelf"
                                  },
                                  "match":{
-                                    "prefix":"/"
+                                    "headers":[
+                                       {
+                                          "exactMatch":"POST",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/v1/shelves"
                                  },
                                  "route":{
-                                    "cluster":"%s",
+                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "timeout":"15s"
+                                 }
+                              },
+                              {
+                                 "decorator":{
+                                    "operation":"ingress CreateShelf"
+                                 },
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"POST",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                 },
+                                 "route":{
+                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "timeout":"15s"
+                                 }
+                              },
+                              {
+                                 "decorator":{
+                                    "operation":"ingress ListShelves"
+                                 },
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"GET",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/v1/shelves"
+                                 },
+                                 "route":{
+                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "timeout":"15s"
+                                 }
+                              },
+                              {
+                                 "decorator":{
+                                    "operation":"ingress ListShelves"
+                                 },
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"POST",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/endpoints.examples.bookstore.Bookstore/ListShelves"
+                                 },
+                                 "route":{
+                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
                                  }
                               }
@@ -1029,7 +1244,7 @@ var (
          ]
       }
    ]
-}`, testProjectID, TestFetchListenersConfigID, TestFetchListenersProjectName, testBackendClusterName, localReplyConfig)
+}`, testProjectID, TestFetchListenersConfigID, TestFetchListenersProjectName, localReplyConfig)
 
 	FakeServiceConfigForHttp = fmt.Sprintf(`{
                 "name":"bookstore.endpoints.project123.cloud.goog",
@@ -1198,13 +1413,37 @@ var (
                            "routes":[
                               {
                                  "decorator":{
-                                   "operation":"ingress"
+                                    "operation":"ingress Echo"
                                  },
                                  "match":{
-                                    "prefix":"/"
+                                    "headers":[
+                                       {
+                                          "exactMatch":"POST",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/echo"
                                  },
                                  "route":{
-                                    "cluster":"%s",
+                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "timeout":"15s"
+                                 }
+                              },
+                              {
+                                 "decorator":{
+                                    "operation":"ingress Echo_Auth_Jwt"
+                                 },
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"GET",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/auth/info/googlejwt"
+                                 },
+                                 "route":{
+                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
                                  }
                               }
@@ -1224,7 +1463,7 @@ var (
          ]
       }
    ]
-}`, testBackendClusterName, localReplyConfig)
+}`, localReplyConfig)
 
 	FakeServiceConfigAllowCorsTracingDebug = fmt.Sprintf(`{
                 "name":"%s",
@@ -1367,10 +1606,34 @@ var (
                            "routes":[
                               {
                                  "decorator":{
-                                   "operation":"ingress"
+                                    "operation":"ingress Simplegetcors"
                                  },
                                  "match":{
-                                    "prefix":"/"
+                                    "headers":[
+                                       {
+                                          "exactMatch":"GET",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/simplegetcors"
+                                 },
+                                 "route":{
+                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "timeout":"15s"
+                                 }
+                              },
+                              {
+                                 "decorator":{
+                                    "operation":"ingress ESPv2_Autogenerated_CORS_Simplegetcors"
+                                 },
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"OPTIONS",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/simplegetcors"
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",

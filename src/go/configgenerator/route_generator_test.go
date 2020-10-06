@@ -15,6 +15,7 @@
 package configgenerator
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -48,7 +49,21 @@ func TestMakeRouteConfig(t *testing.T) {
 				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo",
+							},
+						},
 					},
+				},
+				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
+					{
+						Selector: fmt.Sprintf("%s.Echo", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/echo",
+						},
+					},
+				},
 				},
 			},
 			wantRouteConfig: `
@@ -63,10 +78,16 @@ func TestMakeRouteConfig(t *testing.T) {
       "routes":[
         {
           "decorator":{
-            "operation":"ingress"
+            "operation":"ingress Echo"
           },
           "match":{
-            "prefix":"/"
+            "headers":[
+              {
+                "exactMatch":"GET",
+                "name":":method"
+              }
+            ],
+            "path":"/echo"
           },
           "responseHeadersToAdd":[
             {
@@ -162,7 +183,7 @@ func TestMakeRouteConfig(t *testing.T) {
 }`,
 		},
 		{
-			desc: "Wildcard paths for remote backend",
+			desc: "Wildcard paths and wildcard http method for remote backend",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -186,8 +207,11 @@ func TestMakeRouteConfig(t *testing.T) {
 					Rules: []*annotationspb.HttpRule{
 						{
 							Selector: "endpoints.examples.bookstore.Bookstore.Foo",
-							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/v1/{book_name=*}/test/**",
+							Pattern: &annotationspb.HttpRule_Custom{
+								Custom: &annotationspb.CustomHttpPattern{
+									Path: "/v1/{book_name=*}/test/**",
+									Kind: "*",
+								},
 							},
 						},
 					},
@@ -195,40 +219,33 @@ func TestMakeRouteConfig(t *testing.T) {
 			},
 			wantRouteConfig: `
 {
-   "name":"local_route",
-   "virtualHosts":[
-      {
-         "domains":[
-            "*"
-         ],
-         "name":"backend",
-         "routes":[
-            {
-               "decorator":{
+  "name":"local_route",
+  "virtualHosts":[
+    {
+      "domains":[
+        "*"
+      ],
+      "name":"backend",
+      "routes":[
+        {
+          "decorator":{
             "operation":"ingress Foo"
           },
           "match":{
-                  "headers":[
-                     {
-                        "exactMatch":"GET",
-                        "name":":method"
-                     }
-                  ],
-                  "safeRegex":{
-                     "googleRe2":{
-                     },
-                     "regex":"^/v1/[^\\/]+/test/.*$"
-                  }
-               },
-               "route":{
-                  "cluster":"backend-cluster-testapipb.com:443",
-                  "hostRewriteLiteral":"testapipb.com",
-                  "timeout":"15s"
-               }
+            "safeRegex":{
+              "googleRe2":{},
+              "regex":"^/v1/[^\\/]+/test/.*$"
             }
-         ]
-      }
-   ]
+          },
+          "route":{
+            "cluster":"backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral":"testapipb.com",
+            "timeout":"15s"
+          }
+        }
+      ]
+    }
+  ]
 }`,
 		},
 		{
@@ -267,34 +284,35 @@ func TestMakeRouteConfig(t *testing.T) {
 		},
 	}
 
-	for i, tc := range testData {
-		opts := options.DefaultConfigGeneratorOptions()
-		opts.EnableHSTS = tc.enableStrictTransportSecurity
-		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		gotRoute, err := MakeRouteConfig(fakeServiceInfo)
-		if tc.wantedError != "" {
-			if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
-				t.Errorf("Test (%s): expected err: %v, got: %v", tc.desc, tc.wantedError, err)
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.EnableHSTS = tc.enableStrictTransportSecurity
+			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			if err != nil {
+				t.Fatal(err)
 			}
-			continue
-		} else if err != nil {
-			t.Errorf("Test (%s): expected err: %v, got: %v", tc.desc, tc.wantedError, err)
-			continue
-		}
 
-		marshaler := &jsonpb.Marshaler{}
-		gotConfig, err := marshaler.MarshalToString(gotRoute)
-		if err != nil {
-			t.Fatal(err)
-		}
+			gotRoute, err := MakeRouteConfig(fakeServiceInfo)
+			if tc.wantedError != "" {
+				if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
+					t.Fatalf("expected err: %v, got: %v", tc.wantedError, err)
+				}
+				return
+			} else if err != nil {
+				t.Fatalf("expected err: %v, got: %v", tc.wantedError, err)
+			}
 
-		if err := util.JsonEqual(tc.wantRouteConfig, gotConfig); err != nil {
-			t.Errorf("Test Desc(%d): %s, MakeRouteConfig failed, \n %v", i, tc.desc, err)
-		}
+			marshaler := &jsonpb.Marshaler{}
+			gotConfig, err := marshaler.MarshalToString(gotRoute)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if err := util.JsonEqual(tc.wantRouteConfig, gotConfig); err != nil {
+				t.Errorf("MakeRouteConfig failed, \n %v", err)
+			}
+		})
 	}
 }
 

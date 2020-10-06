@@ -87,7 +87,7 @@ func TestTracesServiceControlCheckWithRetry(t *testing.T) {
 				"Service Control remote call: Check",
 				"Service Control remote call: Check - Retry 1",
 				"Service Control remote call: Check - Retry 2",
-				"ingress",
+				"ingress ListShelves",
 			},
 		},
 		{
@@ -103,7 +103,7 @@ func TestTracesServiceControlCheckWithRetry(t *testing.T) {
 				"Service Control remote call: Check - Retry 1",
 				"Service Control remote call: Check - Retry 2",
 				"router backend-cluster-bookstore.endpoints.cloudesf-testing.cloud.goog_local egress",
-				"ingress",
+				"ingress ListShelves",
 			},
 		},
 		{
@@ -117,7 +117,7 @@ func TestTracesServiceControlCheckWithRetry(t *testing.T) {
 			wantSpanNames: []string{
 				"Service Control remote call: Check",
 				"router backend-cluster-bookstore.endpoints.cloudesf-testing.cloud.goog_local egress",
-				"ingress",
+				"ingress ListShelves",
 			},
 		},
 	}
@@ -176,7 +176,7 @@ func TestTracesServiceControlSkipUsage(t *testing.T) {
 			wantSpanNames: []string{
 				"Service Control remote call: Check",
 				"router backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
-				"ingress",
+				"ingress Simplegetcors",
 			},
 		},
 		{
@@ -186,7 +186,7 @@ func TestTracesServiceControlSkipUsage(t *testing.T) {
 			message: "hello",
 			wantSpanNames: []string{
 				"router backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
-				"ingress",
+				"ingress Echo",
 			},
 		},
 	}
@@ -246,7 +246,7 @@ func TestTracesFetchingJwks(t *testing.T) {
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
 			wantSpanNames: []string{
-				"ingress",
+				"ingress ListShelves",
 			},
 		},
 		{
@@ -259,7 +259,7 @@ func TestTracesFetchingJwks(t *testing.T) {
 				"JWT Remote PubKey Fetch",
 				"Service Control remote call: Check",
 				"router backend-cluster-bookstore.endpoints.cloudesf-testing.cloud.goog_local egress",
-				"ingress",
+				"ingress ListShelves",
 			},
 		},
 	}
