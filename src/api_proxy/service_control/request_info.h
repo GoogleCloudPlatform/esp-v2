@@ -143,10 +143,13 @@ enum ScResponseErrorType {
 
 // Store the info of service control http call failure/call error response.
 struct ScResponseError {
+  // The display name, used in the Response Code Detail.
   std::string name;
 
+  // If the error comes from network.
   bool is_network_error;
 
+  // The service control response type.
   ScResponseErrorType type;
 
   ScResponseError(std::string _name, bool _is_network_error,
@@ -172,12 +175,7 @@ struct CheckResponseInfo {
   // The trust level of the API Key that was checked.
   api_key::ApiKeyState api_key_state;
 
-  CheckResponseInfo()
-      : consumer_project_number(),
-        consumer_type(),
-        consumer_number(),
-        error(),
-        api_key_state(api_key::ApiKeyState::NOT_CHECKED) {}
+  CheckResponseInfo() : api_key_state(api_key::ApiKeyState::NOT_CHECKED) {}
 };
 
 struct QuotaRequestInfo : public OperationInfo {
