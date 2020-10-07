@@ -537,9 +537,6 @@ func TestBackendRoutingFilter(t *testing.T) {
 				Backend: &confpb.Backend{
 					Rules: []*confpb.BackendRule{
 						{
-							Selector: "ignore_me",
-						},
-						{
 							Selector:        "testapi.foo",
 							Address:         "https://testapipb.com/foo",
 							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
@@ -619,9 +616,6 @@ func TestBackendRoutingFilter(t *testing.T) {
 				},
 				Backend: &confpb.Backend{
 					Rules: []*confpb.BackendRule{
-						{
-							Selector: "ignore_me",
-						},
 						{
 							Selector:        "testapi.foo",
 							Address:         "https://testapipb.com/foo?query=ignored",
@@ -706,9 +700,6 @@ func TestBackendRoutingFilter(t *testing.T) {
 				},
 				Backend: &confpb.Backend{
 					Rules: []*confpb.BackendRule{
-						{
-							Selector: "ignore_me",
-						},
 						{
 							Selector:        "testapi.foo",
 							Address:         "https://testapipb.com",
@@ -853,9 +844,6 @@ func TestBackendAuthFilter(t *testing.T) {
 				Backend: &confpb.Backend{
 					Rules: []*confpb.BackendRule{
 						{
-							Selector: "ignore_me",
-						},
-						{
 							Selector:        "testapipb.foo",
 							Address:         "https://testapipb.com/foo",
 							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
@@ -939,9 +927,6 @@ func TestBackendAuthFilter(t *testing.T) {
 				},
 				Backend: &confpb.Backend{
 					Rules: []*confpb.BackendRule{
-						{
-							Selector: "ignore_me",
-						},
 						{
 							Selector:        "get_testapi.foo",
 							Address:         "https://testapipb.com/foo",

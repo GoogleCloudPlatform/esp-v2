@@ -65,9 +65,9 @@ type ServiceInfo struct {
 	Options       options.ConfigGeneratorOptions
 
 	// Stores information about all backend clusters.
-	GrpcSupportRequired    bool
-	CatchAllBackend        *BackendRoutingCluster
-	BackendRoutingClusters []*BackendRoutingCluster
+	GrpcSupportRequired   bool
+	LocalBackendCluster   *BackendRoutingCluster
+	RemoteBackendClusters []*BackendRoutingCluster
 }
 
 type BackendRoutingCluster struct {
@@ -104,12 +104,12 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	//    set by processApi
 	//    used by processBackendRule
 	// * GrpcSupportRequired:
-	//     set by processBackendRule, buildCatchAllBackend
+	//     set by processBackendRule, buildLocalBackend
 	//     used by addGrpcHttpRules
 	// * Methods:
 	//		 set by processApis, processHttpRule, addGrpcHttpRules, processUsageRule
 	//     used by processApiKeyLocations
-	if err := serviceInfo.buildCatchAllBackend(); err != nil {
+	if err := serviceInfo.buildLocalBackend(); err != nil {
 		return nil, err
 	}
 	serviceInfo.processEndpoints()
@@ -147,7 +147,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	return serviceInfo, nil
 }
 
-func (s *ServiceInfo) buildCatchAllBackend() error {
+func (s *ServiceInfo) buildLocalBackend() error {
 
 	scheme, hostname, port, _, err := util.ParseURI(s.Options.BackendAddress)
 	if err != nil {
@@ -163,10 +163,10 @@ func (s *ServiceInfo) buildCatchAllBackend() error {
 		s.GrpcSupportRequired = true
 	}
 
-	s.CatchAllBackend = &BackendRoutingCluster{
+	s.LocalBackendCluster = &BackendRoutingCluster{
 		UseTLS:      tls,
 		Protocol:    protocol,
-		ClusterName: s.CatchAllBackendClusterName(),
+		ClusterName: s.LocalBackendClusterName(),
 		Hostname:    hostname,
 		Port:        port,
 	}
@@ -436,7 +436,14 @@ func (s *ServiceInfo) processBackendRule() error {
 	backendRoutingClustersMap := make(map[string]string)
 
 	for _, r := range s.ServiceConfig().Backend.GetRules() {
-		if r.Address != "" {
+
+		if r.Address == "" {
+			// Processing a backend rule associated with the local backend.
+			if err := s.addBackendInfoToMethod(r, "", "", "", s.LocalBackendClusterName()); err != nil {
+				return err
+			}
+		} else {
+			// Processing a backend rule associated with a remote backend.
 			scheme, hostname, port, path, err := util.ParseURI(r.Address)
 			if err != nil {
 				return err
@@ -444,6 +451,7 @@ func (s *ServiceInfo) processBackendRule() error {
 			address := fmt.Sprintf("%v:%v", hostname, port)
 
 			if _, exist := backendRoutingClustersMap[address]; !exist {
+				// Create cluster for the remote backend.
 				protocol, tls, err := util.ParseBackendProtocol(scheme, r.Protocol)
 				if err != nil {
 					return err
@@ -452,69 +460,80 @@ func (s *ServiceInfo) processBackendRule() error {
 					s.GrpcSupportRequired = true
 				}
 
-				clusterName := util.BackendClusterName(address)
-				s.BackendRoutingClusters = append(s.BackendRoutingClusters,
+				backendClusterName := util.BackendClusterName(address)
+				s.RemoteBackendClusters = append(s.RemoteBackendClusters,
 					&BackendRoutingCluster{
-						ClusterName: clusterName,
+						ClusterName: backendClusterName,
 						UseTLS:      tls,
 						Protocol:    protocol,
 						Hostname:    hostname,
 						Port:        port,
 					})
-				backendRoutingClustersMap[address] = clusterName
+				backendRoutingClustersMap[address] = backendClusterName
 			}
 
-			clusterName := backendRoutingClustersMap[address]
-
-			method, err := s.getOrCreateMethod(r.GetSelector())
-			if err != nil {
+			backendClusterName := backendRoutingClustersMap[address]
+			if err := s.addBackendInfoToMethod(r, scheme, hostname, path, backendClusterName); err != nil {
 				return err
 			}
-
-			// For CONSTANT_ADDRESS, an empty uri will generate an empty path header.
-			// It is an invalid Http header if path is empty.
-			if path == "" && r.PathTranslation == confpb.BackendRule_CONSTANT_ADDRESS {
-				path = "/"
-			}
-
-			var deadline time.Duration
-			if r.Deadline == 0 {
-				// If no deadline specified by the user, explicitly use default.
-				deadline = util.DefaultResponseDeadline
-			} else if r.Deadline < 0 {
-				glog.Warningf("Negative deadline of %v specified for method %v. "+
-					"Using default deadline %v instead.", r.Deadline, address, util.DefaultResponseDeadline)
-				deadline = util.DefaultResponseDeadline
-			} else {
-				// The backend deadline from the BackendRule is a float64 that represents seconds.
-				// But float64 has a large precision, so we must explicitly lower the precision.
-				// For the purposes of a network proxy, round the deadline to the nearest millisecond.
-				deadlineMs := int64(math.Round(r.Deadline * 1000))
-				deadline = time.Duration(deadlineMs) * time.Millisecond
-			}
-
-			method.BackendInfo = &backendInfo{
-				ClusterName:     clusterName,
-				Path:            path,
-				Hostname:        hostname,
-				TranslationType: r.PathTranslation,
-				Deadline:        deadline,
-			}
-
-			//TODO(taoxuy): b/149334660 Check if the scopes for IAM include the path prefix
-			switch r.GetAuthentication().(type) {
-			case *confpb.BackendRule_JwtAudience:
-				method.BackendInfo.JwtAudience = r.GetJwtAudience()
-			case *confpb.BackendRule_DisableAuth:
-				if r.GetDisableAuth() {
-					break
-				}
-				method.BackendInfo.JwtAudience = getJwtAudienceFromBackendAddr(scheme, hostname)
-			default:
-				method.BackendInfo.JwtAudience = getJwtAudienceFromBackendAddr(scheme, hostname)
-			}
 		}
+
 	}
+	return nil
+}
+
+func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme string, hostname string, path string, backendClusterName string) error {
+	method, err := s.getOrCreateMethod(r.GetSelector())
+	if err != nil {
+		return err
+	}
+
+	// For CONSTANT_ADDRESS, an empty uri will generate an empty path header.
+	// It is an invalid Http header if path is empty.
+	if path == "" && r.PathTranslation == confpb.BackendRule_CONSTANT_ADDRESS {
+		path = "/"
+	}
+
+	var deadline time.Duration
+	if r.Deadline == 0 {
+		// If no deadline specified by the user, explicitly use default.
+		deadline = util.DefaultResponseDeadline
+	} else if r.Deadline < 0 {
+		glog.Warningf("Negative deadline of %v specified for method %v. "+
+			"Using default deadline %v instead.", r.Deadline, r.Selector, util.DefaultResponseDeadline)
+		deadline = util.DefaultResponseDeadline
+	} else {
+		// The backend deadline from the BackendRule is a float64 that represents seconds.
+		// But float64 has a large precision, so we must explicitly lower the precision.
+		// For the purposes of a network proxy, round the deadline to the nearest millisecond.
+		deadlineMs := int64(math.Round(r.Deadline * 1000))
+		deadline = time.Duration(deadlineMs) * time.Millisecond
+	}
+
+	method.BackendInfo = &backendInfo{
+		ClusterName:     backendClusterName,
+		Path:            path,
+		Hostname:        hostname,
+		TranslationType: r.PathTranslation,
+		Deadline:        deadline,
+	}
+
+	//TODO(taoxuy): b/149334660 Check if the scopes for IAM include the path prefix
+	switch r.GetAuthentication().(type) {
+	case *confpb.BackendRule_JwtAudience:
+		method.BackendInfo.JwtAudience = r.GetJwtAudience()
+	case *confpb.BackendRule_DisableAuth:
+		if r.GetDisableAuth() {
+			break
+		}
+		method.BackendInfo.JwtAudience = getJwtAudienceFromBackendAddr(scheme, hostname)
+	default:
+		if r.Address == "" {
+			break
+		}
+		method.BackendInfo.JwtAudience = getJwtAudienceFromBackendAddr(scheme, hostname)
+	}
+
 	return nil
 }
 
@@ -529,7 +548,7 @@ func (s *ServiceInfo) processLocalBackendOperations() error {
 
 		// Associate the method with the local backend.
 		method.BackendInfo = &backendInfo{
-			ClusterName: s.CatchAllBackend.ClusterName,
+			ClusterName: s.LocalBackendCluster.ClusterName,
 			Deadline:    util.DefaultResponseDeadline,
 		}
 	}
@@ -712,7 +731,7 @@ func (s *ServiceInfo) getOrCreateMethod(name string) (*methodInfo, error) {
 	return s.Methods[name], nil
 }
 
-func (s *ServiceInfo) CatchAllBackendClusterName() string {
+func (s *ServiceInfo) LocalBackendClusterName() string {
 	return util.BackendClusterName(fmt.Sprintf("%s_local", s.Name))
 }
 

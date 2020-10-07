@@ -255,6 +255,11 @@ func (e *TestEnv) SkipHealthChecks() {
 // Replace them as needed.
 func addDynamicRoutingBackendPort(serviceConfig *confpb.Service, port uint16) error {
 	for _, rule := range serviceConfig.Backend.GetRules() {
+		if rule.Address == "" {
+			// Empty address is now allowed, ESPv2 will override with `--backend` flag.
+			continue
+		}
+
 		if !strings.Contains(rule.Address, platform.WorkingBackendPort) && !strings.Contains(rule.Address, platform.InvalidBackendPort) {
 			return fmt.Errorf("backend rule address (%v) is not properly formatted", rule.Address)
 		}

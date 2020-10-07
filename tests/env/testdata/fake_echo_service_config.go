@@ -56,8 +56,26 @@ var (
 						RequestTypeUrl:  "type.googleapis.com/google.protobuf.Empty",
 						ResponseTypeUrl: "type.googleapis.com/AuthInfoResponse",
 					},
+					{
+						Name: "Sleep",
+					},
+					{
+						Name: "SleepWithBackendRule",
+					},
 				},
 				Version: "1.0.0",
+			},
+		},
+		Backend: &confpb.Backend{
+			// ESPv2 supports backend rules even in sidecar mode.
+			Rules: []*confpb.BackendRule{
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SleepWithBackendRule",
+					Deadline: 5,
+					Authentication: &confpb.BackendRule_DisableAuth{
+						DisableAuth: true,
+					},
+				},
 			},
 		},
 		Http: &annotationspb.Http{
@@ -134,6 +152,12 @@ var (
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Sleep",
 					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/sleep",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SleepWithBackendRule",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/sleep/with/backend/rule",
 					},
 				},
 			},
@@ -215,6 +239,10 @@ var (
 				},
 				{
 					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Sleep",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SleepWithBackendRule",
 					AllowUnregisteredCalls: true,
 				},
 			},

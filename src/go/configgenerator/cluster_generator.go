@@ -32,7 +32,7 @@ import (
 // This must be called before MakeListeners.
 func MakeClusters(serviceInfo *sc.ServiceInfo) ([]*clusterpb.Cluster, error) {
 	var clusters []*clusterpb.Cluster
-	backendCluster, err := makeCatchAllBackendCluster(serviceInfo)
+	backendCluster, err := makeLocalBackendCluster(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]*clusterpb.Cluster, error) {
 		clusters = append(clusters, scCluster)
 	}
 
-	brClusters, err := makeBackendRoutingClusters(serviceInfo)
+	brClusters, err := makeRemoteBackendClusters(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -286,8 +286,8 @@ func makeBackendCluster(opt *options.ConfigGeneratorOptions, brc *sc.BackendRout
 	return c, nil
 }
 
-func makeCatchAllBackendCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, error) {
-	c, err := makeBackendCluster(&serviceInfo.Options, serviceInfo.CatchAllBackend)
+func makeLocalBackendCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, error) {
+	c, err := makeBackendCluster(&serviceInfo.Options, serviceInfo.LocalBackendCluster)
 	if err != nil {
 		return nil, err
 	}
@@ -337,10 +337,10 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster,
 	return c, nil
 }
 
-func makeBackendRoutingClusters(serviceInfo *sc.ServiceInfo) ([]*clusterpb.Cluster, error) {
+func makeRemoteBackendClusters(serviceInfo *sc.ServiceInfo) ([]*clusterpb.Cluster, error) {
 	var brClusters []*clusterpb.Cluster
 
-	for _, v := range serviceInfo.BackendRoutingClusters {
+	for _, v := range serviceInfo.RemoteBackendClusters {
 		c, err := makeBackendCluster(&serviceInfo.Options, v)
 		if err != nil {
 			return nil, err
