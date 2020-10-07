@@ -76,11 +76,10 @@ func NewMockMetadata(pathResp map[string]string, wantNumFails int) *MockMetadata
 			return
 		}
 
-		reqURI := r.URL.RequestURI()
 		m.mtx.Lock()
-		reqCnt, _ := m.reqCache[reqURI]
-		m.reqCache[reqURI] = reqCnt + 1
+		m.reqCache[r.URL.Path] += 1
 		m.mtx.Unlock()
+
 		if r.URL.Path == "" || r.URL.Path == "/" {
 			w.WriteHeader(http.StatusOK)
 			return
@@ -110,9 +109,11 @@ func (m *MockMetadataServer) GetURL() string {
 	return m.s.URL
 }
 
-func (m *MockMetadataServer) GetReqCnt(reqURI string) int {
+// Returns the number of requests to the given path.
+// Query params are ignored.
+func (m *MockMetadataServer) GetReqCnt(reqPath string) int {
 	m.mtx.RLock()
-	reqCnt, _ := m.reqCache[reqURI]
+	reqCnt, _ := m.reqCache[reqPath]
 	m.mtx.RUnlock()
 	return reqCnt
 }

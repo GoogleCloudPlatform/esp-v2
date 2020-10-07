@@ -50,7 +50,11 @@ type backendInfo struct {
 	Path            string
 	Hostname        string
 	TranslationType confpb.BackendRule_PathTranslation
-	JwtAudience     string
+
+	// Audience to use when creating a JWT for backend auth.
+	// If empty, backend auth should be disabled for the method.
+	JwtAudience string
+
 	// Response timeout for the backend.
 	Deadline time.Duration
 }
