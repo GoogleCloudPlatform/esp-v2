@@ -88,10 +88,11 @@ TEST_F(BackendRoutingFilterTest, NoOperationNameBlocked) {
   EXPECT_CALL(mock_decoder_callbacks_.stream_info_,
               setResponseFlag(Envoy::StreamInfo::ResponseFlag::NoRouteFound))
       .Times(1);
-  EXPECT_CALL(mock_decoder_callbacks_,
-              sendLocalReply(Envoy::Http::Code::InternalServerError,
-                             "No operation found from DynamicMetadata", _, _,
-                             "backend_routing_missing_operation"));
+  EXPECT_CALL(
+      mock_decoder_callbacks_,
+      sendLocalReply(Envoy::Http::Code::InternalServerError,
+                     "Request `GET /books/1` is not defined by this API.", _, _,
+                     "backend_routing_undefined_request"));
 
   // Call function under test
   Envoy::Http::FilterHeadersStatus status =

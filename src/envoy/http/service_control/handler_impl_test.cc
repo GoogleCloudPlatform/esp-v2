@@ -324,9 +324,11 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_, test_time_, stats_);
 
-  EXPECT_CALL(mock_check_done_callback_,
-              onCheckDone(Status(Code::NOT_FOUND, "Method does not exist."),
-                          "service_control_bad_request{UNDEFINED_REQUEST}"));
+  EXPECT_CALL(
+      mock_check_done_callback_,
+      onCheckDone(Status(Code::NOT_FOUND,
+                         "Request `GET /echo` is not defined by this API."),
+                  "service_control_bad_request{UNDEFINED_REQUEST}"));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
@@ -356,7 +358,8 @@ TEST_F(HandlerTest, HandlerMissingHeaders) {
                                     stats_);
 
   EXPECT_CALL(mock_check_done_callback_,
-              onCheckDone(Status(Code::NOT_FOUND, "Method does not exist."),
+              onCheckDone(Status(Code::NOT_FOUND,
+                                 "Request ` ` is not defined by this API."),
                           "service_control_bad_request{UNDEFINED_REQUEST}"));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   handler.callCheck(req_headers_, *mock_span_, mock_check_done_callback_);
@@ -384,9 +387,11 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
   TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_, test_time_, stats_);
-  EXPECT_CALL(mock_check_done_callback_,
-              onCheckDone(Status(Code::NOT_FOUND, "Method does not exist."),
-                          "service_control_bad_request{UNDEFINED_REQUEST}"));
+  EXPECT_CALL(
+      mock_check_done_callback_,
+      onCheckDone(Status(Code::NOT_FOUND,
+                         "Request `GET /echo` is not defined by this API."),
+                  "service_control_bad_request{UNDEFINED_REQUEST}"));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 

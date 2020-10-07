@@ -73,10 +73,11 @@ TEST_F(BackendAuthFilterTest, MissingOperationNameRejected) {
       setResponseFlag(
           Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
 
-  EXPECT_CALL(mock_decoder_callbacks_,
-              sendLocalReply(Envoy::Http::Code::InternalServerError,
-                             "No operation found from DynamicMetadata", _, _,
-                             "backend_auth_missing_operation"));
+  EXPECT_CALL(
+      mock_decoder_callbacks_,
+      sendLocalReply(Envoy::Http::Code::InternalServerError,
+                     "Request `GET /books/1` is not defined by this API.", _, _,
+                     "backend_auth_undefined_request"));
 
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);

@@ -190,10 +190,15 @@ void ServiceControlHandlerImpl::prepareReportRequest(
 void ServiceControlHandlerImpl::callCheck(
     Envoy::Http::RequestHeaderMap& headers, Envoy::Tracing::Span& parent_span,
     CheckDoneCallback& callback) {
+  // NOTE: this shouldn't happen in practice because Path Matcher filter would
+    // have already rejected the request.
   if (!isConfigured()) {
     filter_stats_.filter_.denied_producer_error_.inc();
-    callback.onCheckDone(Status(Code::NOT_FOUND, "Method does not exist."),
-                         RcDetails::get().UndefinedRequest);
+    callback.onCheckDone(
+        Status(Code::NOT_FOUND,
+               absl::StrCat("Request `", http_method_, " ", path_,
+                            "` is not defined by this API.")),
+        RcDetails::get().UndefinedRequest);
     return;
   }
   check_callback_ = &callback;

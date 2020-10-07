@@ -22,6 +22,7 @@
 #include "common/http/utility.h"
 #include "envoy/http/header_map.h"
 #include "src/envoy/utils/filter_state_utils.h"
+#include "src/envoy/utils/http_header_utils.h"
 
 namespace espv2 {
 namespace envoy {
@@ -46,8 +47,8 @@ struct RcDetailsValues {
   // Missing backend auth token in internal filter config.
   const std::string MissingBackendToken = "backend_auth_missing_backend_token";
 
-  // Missing operation in internal filter state.
-  const std::string MissingOperation = "backend_auth_missing_operation";
+  // Undefined request in internal filter state.
+  const std::string UndefinedRequest = "backend_auth_undefined_request";
 };
 
 using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
@@ -66,9 +67,13 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   // have already rejected the request.
   if (operation.empty()) {
     config_->stats().denied_by_no_operation_.inc();
-    rejectRequest(Envoy::Http::Code::InternalServerError,
-                  "No operation found from DynamicMetadata",
-                  RcDetails::get().MissingOperation);
+
+    rejectRequest(
+        Envoy::Http::Code::InternalServerError,
+        absl::StrCat("Request `", utils::readHeaderEntry(headers.Method()), " ",
+                     utils::readHeaderEntry(headers.Path()),
+                     "` is not defined by this API."),
+        RcDetails::get().UndefinedRequest);
     return FilterHeadersStatus::StopIteration;
   }
 

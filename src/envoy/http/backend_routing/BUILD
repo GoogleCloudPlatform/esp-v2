@@ -34,6 +34,7 @@ envoy_cc_library(
     deps = [
         "//api/envoy/v9/http/backend_routing:config_proto_cc_proto",
         "//src/envoy/utils:filter_state_utils_lib",
+        "//src/envoy/utils:http_header_utils_lib",
         "@envoy//source/common/common:assert_lib",
         "@envoy//source/common/http:codes_lib",
         "@envoy//source/common/http:headers_lib",
