@@ -141,18 +141,41 @@ enum ScResponseErrorType {
   CONSUMER_QUOTA = 5,
 };
 
+// Store the info of service control http call failure/call error response.
+struct ScResponseError {
+  // The display name, used in the Response Code Detail.
+  std::string name;
+
+  // If the error comes from network.
+  bool is_network_error;
+
+  // The service control response type.
+  ScResponseErrorType type;
+
+  ScResponseError(std::string _name, bool _is_network_error,
+                  ScResponseErrorType _type)
+      : name(_name), is_network_error(_is_network_error), type(_type) {}
+
+  ScResponseError()
+      : name(""),
+        is_network_error(false),
+        type(ScResponseErrorType::ERROR_TYPE_UNSPECIFIED) {}
+};
+
 // Stores the information extracted from the check response.
 struct CheckResponseInfo {
-  ScResponseErrorType error_type = ScResponseErrorType::ERROR_TYPE_UNSPECIFIED;
-
   std::string consumer_project_number;
 
   std::string consumer_type;
 
   std::string consumer_number;
 
+  ScResponseError error;
+
   // The trust level of the API Key that was checked.
-  api_key::ApiKeyState api_key_state = api_key::ApiKeyState::NOT_CHECKED;
+  api_key::ApiKeyState api_key_state;
+
+  CheckResponseInfo() : api_key_state(api_key::ApiKeyState::NOT_CHECKED) {}
 };
 
 struct QuotaRequestInfo : public OperationInfo {
@@ -166,7 +189,12 @@ struct QuotaRequestInfo : public OperationInfo {
 
 // Stores the information extracted from the quota response.
 struct QuotaResponseInfo {
-  ScResponseErrorType error_type = ScResponseErrorType::ERROR_TYPE_UNSPECIFIED;
+  ScResponseErrorType type;
+
+  ScResponseError error;
+
+  QuotaResponseInfo()
+      : error({"", false, ScResponseErrorType::ERROR_TYPE_UNSPECIFIED}) {}
 };
 
 // Information to fill Report request protobuf.
@@ -224,6 +252,9 @@ struct ReportRequestInfo : public OperationInfo {
 
   // The jwt payloads logged
   std::string jwt_payloads;
+
+  // The response code detail.
+  std::string response_code_detail;
 
   ReportRequestInfo()
       : response_code(200),

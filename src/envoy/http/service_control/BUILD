@@ -86,6 +86,7 @@ envoy_cc_library(
         ":service_control_callback_func_lib",
         "//api/envoy/v9/http/common:base_proto_cc_proto",
         "//api/envoy/v9/http/service_control:config_proto_cc_proto",
+        "//src/api_proxy/service_control:check_response_converter_lib",
         "@envoy//include/envoy/event:dispatcher_interface",
         "@envoy//include/envoy/upstream:cluster_manager_interface",
         "@envoy//source/common/tracing:http_tracer_lib",

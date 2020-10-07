@@ -312,6 +312,12 @@ operations {
         }
       }
       fields {
+        key: "response_code_detail"
+        value {
+          string_value: "response-code-detail"
+        }
+      }
+      fields {
         key: "service_agent"
         value {
           string_value: "ESPv2/TEST.0.0"

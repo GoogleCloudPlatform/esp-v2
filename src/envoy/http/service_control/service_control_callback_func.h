@@ -27,8 +27,9 @@ using CheckDoneFunc = std::function<void(
     const ::espv2::api_proxy::service_control::CheckResponseInfo&)>;
 
 // The function to be called when allocateQuota call is completed.
-using QuotaDoneFunc =
-    std::function<void(const ::google::protobuf::util::Status& status)>;
+using QuotaDoneFunc = std::function<void(
+    const ::google::protobuf::util::Status& status,
+    const ::espv2::api_proxy::service_control::QuotaResponseInfo&)>;
 
 // The function to cancel a on-going request.
 using CancelFunc = std::function<void()>;

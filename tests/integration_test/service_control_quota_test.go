@@ -167,6 +167,7 @@ func TestServiceControlQuota(t *testing.T) {
 					ResponseCode:        400,
 					Platform:            util.GCE,
 					Location:            "test-zone",
+					ResponseCodeDetail:  "service_control_check_error{API_KEY_INVALID}",
 				},
 			},
 		},
@@ -419,9 +420,10 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 					// It always allow the first request, then cache its cost, accumulate all costs for 1 second,
 					// then call remote allocateQuota,  if fail, the next request will be failed with 429.
 					// Here is the second request.
-					ResponseCode: 429,
-					Platform:     util.GCE,
-					Location:     "test-zone",
+					ResponseCode:       429,
+					Platform:           util.GCE,
+					Location:           "test-zone",
+					ResponseCodeDetail: "service_control_quota_error{RESOURCE_EXHAUSTED}",
 				},
 			},
 		},

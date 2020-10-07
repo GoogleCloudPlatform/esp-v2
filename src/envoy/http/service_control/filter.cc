@@ -23,16 +23,6 @@ namespace espv2 {
 namespace envoy {
 namespace http_filters {
 namespace service_control {
-namespace {
-
-struct RcDetailsValues {
-  // Rejected by service control check call.
-  const std::string RejectedByServiceControlCheck =
-      "rejected_by_service_control_check";
-};
-using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
-
-}  // namespace
 
 void ServiceControlFilter::onDestroy() {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
@@ -67,13 +57,15 @@ Envoy::Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
 }
 
 void ServiceControlFilter::onCheckDone(
-    const ::google::protobuf::util::Status& status) {
+    const ::google::protobuf::util::Status& status,
+    absl::string_view rc_detail) {
   if (!status.ok()) {
     // protobuf::util::Status.error_code is the same as Envoy GrpcStatus
     // This cast is safe.
     auto http_code = Envoy::Grpc::Utility::grpcToHttpStatus(
         static_cast<Envoy::Grpc::Status::GrpcStatus>(status.error_code()));
-    rejectRequest(static_cast<Envoy::Http::Code>(http_code), status.ToString());
+    rejectRequest(static_cast<Envoy::Http::Code>(http_code), status.ToString(),
+                  rc_detail);
     return;
   }
 
@@ -85,13 +77,13 @@ void ServiceControlFilter::onCheckDone(
 }
 
 void ServiceControlFilter::rejectRequest(Envoy::Http::Code code,
-                                         absl::string_view error_msg) {
+                                         absl::string_view error_msg,
+                                         absl::string_view rc_detail) {
   stats_.filter_.denied_.inc();
   state_ = Responded;
 
-  decoder_callbacks_->sendLocalReply(
-      code, error_msg, nullptr, absl::nullopt,
-      RcDetails::get().RejectedByServiceControlCheck);
+  decoder_callbacks_->sendLocalReply(code, error_msg, nullptr, absl::nullopt,
+                                     rc_detail);
   decoder_callbacks_->streamInfo().setResponseFlag(
       Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService);
 }

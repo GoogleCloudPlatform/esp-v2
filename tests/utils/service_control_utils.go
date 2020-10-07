@@ -92,6 +92,7 @@ type ExpectedReport struct {
 	JwtAuthCredentialId          string
 	RequestHeaders               string
 	ResponseHeaders              string
+	ResponseCodeDetail           string
 	JwtPayloads                  string
 }
 
@@ -312,6 +313,11 @@ func createLogEntry(er *ExpectedReport) *scpb.LogEntry {
 	pl := make(map[string]*structpb.Value)
 	pl["api_method"] = makeStringValue(er.ApiMethod)
 	pl["api_key_state"] = makeStringValue(er.ApiKeyState)
+	if er.ResponseCodeDetail != "" {
+		pl["response_code_detail"] = makeStringValue(er.ResponseCodeDetail)
+	} else {
+		pl["response_code_detail"] = makeStringValue("via_upstream")
+	}
 
 	if er.ApiVersion != "" {
 		pl["api_version"] = makeStringValue(er.ApiVersion)

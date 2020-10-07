@@ -87,7 +87,7 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersSyncOKStatus) {
   EXPECT_CALL(*mock_handler_, callCheck(_, _, _))
       .WillOnce(Invoke([](Envoy::Http::RequestHeaderMap&, Envoy::Tracing::Span&,
                           ServiceControlHandler::CheckDoneCallback& callback) {
-        callback.onCheckDone(Status::OK);
+        callback.onCheckDone(Status::OK, "");
       }));
   EXPECT_CALL(*mock_handler_, fillFilterState(_));
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::Continue,
@@ -111,7 +111,8 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersSyncBadStatus) {
   EXPECT_CALL(*mock_handler_, callCheck(_, _, _))
       .WillOnce(Invoke([](Envoy::Http::RequestHeaderMap&, Envoy::Tracing::Span&,
                           ServiceControlHandler::CheckDoneCallback& callback) {
-        callback.onCheckDone(kBadStatus);
+        callback.onCheckDone(kBadStatus,
+                             "service_control_check_error{API_KEY_INVALID}");
       }));
 
   // TODO(toddbeckman) Figure out how to EXPECT_CALL sendLocalReply directly
@@ -119,6 +120,10 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersSyncBadStatus) {
       mock_decoder_callbacks_.stream_info_,
       setResponseFlag(
           Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
+  EXPECT_CALL(
+      mock_decoder_callbacks_,
+      sendLocalReply(Envoy::Http::Code::Unauthorized, "UNAUTHENTICATED:test", _,
+                     _, "service_control_check_error{API_KEY_INVALID}"));
 
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
             filter_->decodeHeaders(req_headers_, true));
@@ -143,7 +148,7 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersAsyncGoodStatus) {
             filter_->decodeHeaders(req_headers_, true));
 
   EXPECT_CALL(mock_decoder_callbacks_, continueDecoding());
-  stored_check_done_callback->onCheckDone(Status::OK);
+  stored_check_done_callback->onCheckDone(Status::OK, "");
 }
 
 TEST_F(ServiceControlFilterTest, DecodeHeadersAsyncBadStatus) {
@@ -172,7 +177,13 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersAsyncBadStatus) {
       mock_decoder_callbacks_.stream_info_,
       setResponseFlag(
           Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
-  stored_check_done_callback->onCheckDone(kBadStatus);
+
+  EXPECT_CALL(
+      mock_decoder_callbacks_,
+      sendLocalReply(Envoy::Http::Code::Unauthorized, "UNAUTHENTICATED:test", _,
+                     _, "service_control_check_error{API_KEY_INVALID}"));
+  stored_check_done_callback->onCheckDone(
+      kBadStatus, "service_control_check_error{API_KEY_INVALID}");
 }
 
 TEST_F(ServiceControlFilterTest, LogWithoutHandlerOrHeaders) {
@@ -221,7 +232,7 @@ TEST_F(ServiceControlFilterTest, DecodeHelpersWhileContinuing) {
   EXPECT_CALL(*mock_handler_, callCheck(_, _, _))
       .WillOnce(Invoke([](Envoy::Http::RequestHeaderMap&, Envoy::Tracing::Span&,
                           ServiceControlHandler::CheckDoneCallback& callback) {
-        callback.onCheckDone(Status::OK);
+        callback.onCheckDone(Status::OK, "");
       }));
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::Continue,
             filter_->decodeHeaders(req_headers_, true));

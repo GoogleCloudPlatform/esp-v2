@@ -98,6 +98,7 @@ void FillReportRequestInfo(ReportRequestInfo* request) {
   request->latency.request_time_ms = 123;
   request->latency.backend_time_ms = 101;
   request->latency.overhead_time_ms = 22;
+  request->response_code_detail = "response-code-detail";
   request->frontend_protocol = protocol::HTTP;
   request->compute_platform = "GKE";
   request->auth_issuer = "auth-issuer";

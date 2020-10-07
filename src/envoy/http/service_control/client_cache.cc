@@ -15,6 +15,7 @@
 #include "src/envoy/http/service_control/client_cache.h"
 
 #include "common/tracing/http_tracer_impl.h"
+#include "src/api_proxy/service_control/check_response_convert_utils.h"
 #include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/http/service_control/http_call.h"
 
@@ -79,6 +80,14 @@ constexpr uint32_t kReportDefaultNumberOfRetries = 5;
 
 // The default value for network_fail_open flag.
 constexpr bool kDefaultNetworkFailOpen = true;
+
+// Convert http error status into the ScResponseError.
+api_proxy::service_control::ScResponseError failCallStatusToScResponseError(
+    const Status& status) {
+  return {
+      absl::StatusCodeToString(static_cast<absl::StatusCode>(status.code())),
+      /*is_network_error=*/true, ScResponseErrorType::ERROR_TYPE_UNSPECIFIED};
+}
 
 // Generates CheckAggregationOptions.
 CheckAggregationOptions getCheckAggregationOptions() {
@@ -352,11 +361,9 @@ void ClientCache::handleCheckResponse(const Status& http_status,
   if (http_status.ok()) {
     // If the http call succeeded, then use the CheckResponseInfo
     // to retrieve the final status.
-    final_status =
-        api_proxy::service_control::RequestBuilder::ConvertCheckResponse(
-            *response, config_.service_name(), &response_info);
-
-    collectScResponseErrorStats(response_info.error_type);
+    final_status = api_proxy::service_control::ConvertCheckResponse(
+        *response, config_.service_name(), &response_info);
+    collectScResponseErrorStats(response_info.error.type);
 
   } else {
     // Otherwise, http call failed. Use that status to respond.
@@ -387,6 +394,11 @@ void ClientCache::handleCheckResponse(const Status& http_status,
                 "Google Service Control Check is unavailable, and the "
                 "request is denied due to network fail closed, with error: {}",
                 final_status.error_message());
+
+      // If http_status is not ok, the Code::UNAVAILABLE is from http_status.
+      if (!http_status.ok()) {
+        response_info.error = failCallStatusToScResponseError(http_status);
+      }
       on_done(final_status, response_info);
     }
   } else {
@@ -402,15 +414,17 @@ void ClientCache::handleCheckResponse(const Status& http_status,
       // contains details on the original error (including the original
       // HTTP status code).
       Status scrubbed_status(Code::INTERNAL, final_status.error_message());
+
+      response_info.error = failCallStatusToScResponseError(http_status);
       on_done(scrubbed_status, response_info);
     } else {
       // HTTP succeeded, but SC Check returned 4xx.
       // Stats already incremented for this case.
 
       // Handle API Key validity.
-      if (response_info.error_type == ScResponseErrorType::API_KEY_INVALID) {
+      if (response_info.error.type == ScResponseErrorType::API_KEY_INVALID) {
         response_info.api_key_state = ApiKeyState::INVALID;
-      } else if (response_info.error_type ==
+      } else if (response_info.error.type ==
                  ScResponseErrorType::SERVICE_NOT_ACTIVATED) {
         response_info.api_key_state = ApiKeyState::NOT_ENABLED;
       } else {
@@ -442,18 +456,20 @@ void ClientCache::callQuota(const AllocateQuotaRequest& request,
 void ClientCache::handleQuotaOnDone(const Status& http_status,
                                     AllocateQuotaResponse* response,
                                     QuotaDoneFunc on_done) {
+  QuotaResponseInfo response_info;
   if (http_status.ok()) {
-    QuotaResponseInfo response_info;
-    Status quota_status = ::espv2::api_proxy::service_control::RequestBuilder::
-        ConvertAllocateQuotaResponse(*response, config_.service_name(),
-                                     &response_info);
+    Status quota_status =
+        ::espv2::api_proxy::service_control::ConvertAllocateQuotaResponse(
+            *response, config_.service_name(), &response_info);
 
-    collectScResponseErrorStats(response_info.error_type);
-    on_done(quota_status);
+    collectScResponseErrorStats(response_info.error.type);
+    on_done(quota_status, response_info);
   } else {
     // Most likely an auth error in ESPv2 or API producer deployment.
     filter_stats_.filter_.denied_producer_error_.inc();
-    on_done(http_status);
+
+    response_info.error = failCallStatusToScResponseError(http_status);
+    on_done(http_status, response_info);
   }
 
   delete response;

@@ -119,6 +119,9 @@ class ServiceControlHandlerImpl
   ::espv2::api_proxy::service_control::CheckResponseInfo check_response_info_;
   ::google::protobuf::util::Status check_status_;
 
+  // The response code detail.
+  std::string rc_detail_;
+
   CancelFunc cancel_fn_;
   bool on_check_done_called_;
 
