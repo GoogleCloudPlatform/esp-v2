@@ -43,11 +43,11 @@ RegisterCustomInlineHeader<CustomInlineHeaderRegistry::Type::RequestHeaders>
     authorization_handle(CustomHeaders::get().Authorization);
 
 struct RcDetailsValues {
-  // The request is rejected due to missing backend auth token in internal
-  // filter config.
-  const std::string MissingBackendToken = "missing_backend_token";
-  // The request is rejected due to missing operation in internal filter state.
-  const std::string MissingOperation = "missing_operation";
+  // Missing backend auth token in internal filter config.
+  const std::string MissingBackendToken = "backend_auth_missing_backend_token";
+
+  // Missing operation in internal filter state.
+  const std::string MissingOperation = "backend_auth_missing_operation";
 };
 
 using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;

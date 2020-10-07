@@ -85,6 +85,14 @@ TEST_F(BackendRoutingFilterTest, NoOperationNameBlocked) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
 
+  EXPECT_CALL(mock_decoder_callbacks_.stream_info_,
+              setResponseFlag(Envoy::StreamInfo::ResponseFlag::NoRouteFound))
+      .Times(1);
+  EXPECT_CALL(mock_decoder_callbacks_,
+              sendLocalReply(Envoy::Http::Code::InternalServerError,
+                             "No operation found from DynamicMetadata", _, _,
+                             "backend_routing_missing_operation"));
+
   // Call function under test
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
@@ -133,6 +141,13 @@ TEST_F(BackendRoutingFilterTest, NoPathHeaderBlocked) {
       *mock_decoder_callbacks_.stream_info_.filter_state_,
       utils::kFilterStateOperation, "const-operation");
 
+  EXPECT_CALL(mock_decoder_callbacks_.stream_info_,
+              setResponseFlag(Envoy::StreamInfo::ResponseFlag::NoRouteFound))
+      .Times(1);
+  EXPECT_CALL(mock_decoder_callbacks_,
+              sendLocalReply(Envoy::Http::Code::BadRequest,
+                             "No path in request headers", _, _,
+                             "backend_routing_bad_request{MISSING_PATH}"));
   // Call function under test
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
@@ -157,6 +172,15 @@ TEST_F(BackendRoutingFilterTest, InvalidPathHeaderWithFragmentBlocked) {
       *mock_decoder_callbacks_.stream_info_.filter_state_,
       utils::kFilterStateOperation, "const-operation");
 
+  EXPECT_CALL(mock_decoder_callbacks_.stream_info_,
+              setResponseFlag(Envoy::StreamInfo::ResponseFlag::NoRouteFound))
+      .Times(1);
+  EXPECT_CALL(
+      mock_decoder_callbacks_,
+      sendLocalReply(
+          Envoy::Http::Code::BadRequest,
+          "Path cannot contain fragment identifier (#)", _, _,
+          "backend_routing_bad_request{PATH_WITH_FRAGMENT_IDENTIFIER}"));
   // Call function under test
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);

@@ -40,8 +40,17 @@ namespace {
 constexpr uint32_t PathMaxSize = 8192;
 
 struct RcDetailsValues {
-  // The path is not defined in the service config.
-  const std::string PathNotDefined = "path_not_defined";
+  // The request doesn't contain METHOD header.
+  const std::string MissingMethod = "path_matcher_bad_request{MISSING_METHOD}";
+
+  // The request doesn't contain PATH header.
+  const std::string MissingPath = "path_matcher_bad_request{MISSING_PATH}";
+
+  // The PATH is oversize..
+  const std::string OversizePath = "path_matcher_bad_request{OVERSIZE_PATH}";
+
+  // The request is not defined in the service config.
+  const std::string UndefinedRequest = "path_matcher_undefined_request";
 };
 using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
 
@@ -51,15 +60,18 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
     RequestHeaderMap& headers, bool) {
   if (!headers.Method()) {
     rejectRequest(Envoy::Http::Code::BadRequest,
-                  "No method in request headers.");
+                  "No method in request headers.",
+                  RcDetails::get().MissingMethod);
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   } else if (!headers.Path()) {
-    rejectRequest(Envoy::Http::Code::BadRequest, "No path in request headers.");
+    rejectRequest(Envoy::Http::Code::BadRequest, "No path in request headers.",
+                  RcDetails::get().MissingPath);
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   } else if (headers.Path()->value().size() > PathMaxSize) {
     rejectRequest(Envoy::Http::Code::BadRequest,
                   absl::StrCat("Path is too long, max allowed size is ",
-                               PathMaxSize, "."));
+                               PathMaxSize, "."),
+                  RcDetails::get().OversizePath);
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 
@@ -76,7 +88,8 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
   if (rule == nullptr) {
     rejectRequest(Envoy::Http::Code::NotFound,
                   absl::StrCat("Request `", method, " ", path,
-                               "` is not defined by this API."));
+                               "` is not defined by this API."),
+                  RcDetails::get().UndefinedRequest);
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 
@@ -106,12 +119,12 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
   return Envoy::Http::FilterHeadersStatus::Continue;
 }
 
-void Filter::rejectRequest(Envoy::Http::Code code,
-                           absl::string_view error_msg) {
+void Filter::rejectRequest(Envoy::Http::Code code, absl::string_view error_msg,
+                           absl::string_view rc_detail) {
   config_->stats().denied_.inc();
 
   decoder_callbacks_->sendLocalReply(code, error_msg, nullptr, absl::nullopt,
-                                     RcDetails::get().PathNotDefined);
+                                     rc_detail);
   decoder_callbacks_->streamInfo().setResponseFlag(
       Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService);
 }

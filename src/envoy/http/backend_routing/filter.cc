@@ -28,7 +28,15 @@ namespace backend_routing {
 
 namespace {
 struct RcDetailsValues {
-  const std::string BadRequest = "bad_request";
+  // The request doesn't contain PATH header.
+  const std::string MissingPath = "backend_routing_bad_request{MISSING_PATH}";
+
+  // The path contains fragment identifiers `#`.
+  const std::string FragmentIdentifier =
+      "backend_routing_bad_request{PATH_WITH_FRAGMENT_IDENTIFIER}";
+
+  // Missing operation in internal filter state.
+  const std::string MissingOperation = "backend_routing_missing_operation";
 };
 using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
 }  // namespace
@@ -45,7 +53,7 @@ FilterHeadersStatus Filter::decodeHeaders(
     // have already rejected the request.
     config_->stats().denied_by_no_path_.inc();
     rejectRequest(Envoy::Http::Code::BadRequest, "No path in request headers",
-                  RcDetails::get().BadRequest);
+                  RcDetails::get().MissingPath);
     return FilterHeadersStatus::StopIteration;
   }
 
@@ -58,7 +66,7 @@ FilterHeadersStatus Filter::decodeHeaders(
     config_->stats().denied_by_no_operation_.inc();
     rejectRequest(Envoy::Http::Code::InternalServerError,
                   "No operation found from DynamicMetadata",
-                  RcDetails::get().BadRequest);
+                  RcDetails::get().MissingOperation);
     return FilterHeadersStatus::StopIteration;
   }
 
@@ -85,7 +93,7 @@ FilterHeadersStatus Filter::decodeHeaders(
     config_->stats().denied_by_invalid_path_.inc();
     rejectRequest(Envoy::Http::Code::BadRequest,
                   "Path cannot contain fragment identifier (#)",
-                  RcDetails::get().BadRequest);
+                  RcDetails::get().FragmentIdentifier);
     return FilterHeadersStatus::StopIteration;
   }
 

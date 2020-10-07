@@ -33,7 +33,8 @@ class Filter : public Envoy::Http::PassThroughDecoderFilter,
                                                  bool) override;
 
  private:
-  void rejectRequest(Envoy::Http::Code code, absl::string_view error_msg);
+  void rejectRequest(Envoy::Http::Code code, absl::string_view error_msg,
+                     absl::string_view rc_detail);
 
   const FilterConfigSharedPtr config_;
 };
