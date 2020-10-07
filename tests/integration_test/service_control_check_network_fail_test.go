@@ -230,7 +230,7 @@ func TestServiceControlNetworkFailFlagForTimeout(t *testing.T) {
 					ResponseCode:        503,
 					Platform:            util.GCE,
 					Location:            "test-zone",
-					ResponseCodeDetail: "service_control_check_network_failure{UNAVAILABLE}",
+					ResponseCodeDetail:  "service_control_check_network_failure{UNAVAILABLE}",
 				},
 			},
 		},
