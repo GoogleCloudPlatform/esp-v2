@@ -83,7 +83,6 @@ func TestWebsocket(t *testing.T) {
 					LogMessage:                   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.WebsocketEcho is called",
 					StatusCode:                   "0",
 					ResponseCode:                 101,
-					ResponseCodeDetail:           "via_upstream",
 					Platform:                     util.GCE,
 					Location:                     "test-zone",
 					ApiVersion:                   "1.0.0",
