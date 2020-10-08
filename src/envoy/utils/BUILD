@@ -93,7 +93,6 @@ envoy_cc_library(
     repository = "@envoy",
 )
 
-
 envoy_cc_test(
     name = "http_header_utils_test",
     srcs = ["http_header_utils_test.cc"],
@@ -104,6 +103,7 @@ envoy_cc_test(
         "@envoy//test/test_common:utility_lib",
     ],
 )
+
 envoy_cc_test(
     name = "rc_detail_utils_test",
     srcs = ["rc_detail_utils_test.cc"],
