@@ -19,8 +19,8 @@ namespace espv2 {
 namespace envoy {
 namespace utils {
 
-std::string generateRcDetails(absl::string_view filter_name,
-                              absl::string_view error_type,
+std::string generateRcDetails(const std::string&  filter_name,
+                              const std::string&  error_type,
                               const std::string& error_detail) {
   if (error_detail.length() > 0) {
     return absl::StrCat(filter_name, "_", error_type, "{", error_detail, "}");

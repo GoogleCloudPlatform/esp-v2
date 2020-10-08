@@ -46,8 +46,8 @@ const char kRcDetailErrorMissingPath[] = "MISSING_PATH";
 const char kRcDetailErrorOversizePath[] = "OVERSIZE_PATH";
 const char kRcDetailErrorFragmentIdentifier[] = "PATH_WITH_FRAGMENT_IDENTIFIER";
 
-std::string generateRcDetails(absl::string_view filter_name,
-                              absl::string_view error_type,
+std::string generateRcDetails(const std::string& filter_name,
+                              const std::string& error_type,
                               const std::string& error_detail = "");
 
 }  // namespace utils
