@@ -46,6 +46,8 @@ const char kRcDetailErrorMissingPath[] = "MISSING_PATH";
 const char kRcDetailErrorOversizePath[] = "OVERSIZE_PATH";
 const char kRcDetailErrorFragmentIdentifier[] = "PATH_WITH_FRAGMENT_IDENTIFIER";
 
+// Generate a string for response code details in format of
+// `filter_name`_`error_type`_{`error_detail`}.
 std::string generateRcDetails(const std::string& filter_name,
                               const std::string& error_type,
                               const std::string& error_detail = "");
