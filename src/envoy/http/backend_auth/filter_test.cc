@@ -73,6 +73,12 @@ TEST_F(BackendAuthFilterTest, MissingOperationNameRejected) {
       setResponseFlag(
           Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
 
+  EXPECT_CALL(
+      mock_decoder_callbacks_,
+      sendLocalReply(Envoy::Http::Code::InternalServerError,
+                     "Request `GET /books/1` is not defined by this API.", _, _,
+                     "backend_auth_undefined_request"));
+
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
 
@@ -133,6 +139,10 @@ TEST_F(BackendAuthFilterTest, HasAudienceButGetsEmptyTokenRejected) {
       mock_decoder_callbacks_.stream_info_,
       setResponseFlag(
           Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
+  EXPECT_CALL(mock_decoder_callbacks_,
+              sendLocalReply(Envoy::Http::Code::InternalServerError,
+                             "Token not found for audience: this-is-audience",
+                             _, _, "backend_auth_missing_backend_token"));
 
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);

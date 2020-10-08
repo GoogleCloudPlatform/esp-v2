@@ -146,6 +146,7 @@ envoy_cc_library(
         ":handler_interface",
         "//src/envoy/utils:filter_state_utils_lib",
         "//src/envoy/utils:http_header_utils_lib",
+        "//src/envoy/utils:rc_detail_utils_lib",
         "@envoy//source/common/config:metadata_lib",
         "@envoy//source/common/grpc:common_lib",
         "@envoy//source/common/http:headers_lib",

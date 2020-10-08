@@ -21,6 +21,7 @@
 #include "src/envoy/http/service_control/handler_utils.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
+#include "src/envoy/utils/rc_detail_utils.h"
 
 namespace espv2 {
 namespace envoy {
@@ -55,33 +56,6 @@ const Envoy::Http::LowerCaseString kAndroidCertHeader{"x-android-cert"};
 
 constexpr char JwtPayloadIssuerPath[] = "iss";
 constexpr char JwtPayloadAudiencePath[] = "aud";
-
-std::string CheckErrorToRcDetail(const ScResponseError& error) {
-  return error.is_network_error
-             ? absl::StrCat("service_control_check_network_failure{",
-                            error.name, "}")
-             : absl::StrCat("service_control_check_error{", error.name, "}");
-}
-
-std::string QuotaErrorToRcDetail(const ScResponseError& error) {
-  return error.is_network_error
-             ? absl::StrCat("service_control_quota_network_failure{",
-                            error.name, "}")
-             : absl::StrCat("service_control_quota_error{", error.name, "}");
-}
-
-struct RcDetailsValues {
-  // The request isn't defined in the service config.
-  const std::string UndefinedRequest =
-      "service_control_bad_request{UNDEFINED_REQUEST}";
-
-  // The request corresponding to the registered operation doesn't have api key.
-  const std::string MissingApiKey =
-      "service_control_bad_request{MISSING_API_KEY}";
-};
-
-using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
-
 }  // namespace
 
 ServiceControlHandlerImpl::ServiceControlHandlerImpl(
@@ -190,10 +164,16 @@ void ServiceControlHandlerImpl::prepareReportRequest(
 void ServiceControlHandlerImpl::callCheck(
     Envoy::Http::RequestHeaderMap& headers, Envoy::Tracing::Span& parent_span,
     CheckDoneCallback& callback) {
+  // NOTE: this shouldn't happen in practice because Path Matcher filter would
+  // have already rejected the request.
   if (!isConfigured()) {
     filter_stats_.filter_.denied_producer_error_.inc();
-    callback.onCheckDone(Status(Code::NOT_FOUND, "Method does not exist."),
-                         RcDetails::get().UndefinedRequest);
+    callback.onCheckDone(
+        Status(Code::NOT_FOUND,
+               absl::StrCat("Request `", http_method_, " ", path_,
+                            "` is not defined by this API.")),
+        utils::generateRcDetails(utils::kRcDetailFilterServiceControl,
+                                 utils::kRcDetailErrorTypeUndefinedRequest));
     return;
   }
   check_callback_ = &callback;
@@ -210,7 +190,11 @@ void ServiceControlHandlerImpl::callCheck(
                "Method doesn't allow unregistered callers (callers without "
                "established identity). Please use API Key or other form of "
                "API consumer identity to call this API.");
-    callback.onCheckDone(check_status_, RcDetails::get().MissingApiKey);
+    callback.onCheckDone(
+        check_status_,
+        utils::generateRcDetails(utils::kRcDetailFilterServiceControl,
+                                 utils::kRcDetailErrorTypeBadRequest,
+                                 utils::kRcDetailErrorMissingApiKey));
     return;
   }
 
@@ -261,7 +245,12 @@ void ServiceControlHandlerImpl::callQuota() {
       info,
       [this](const Status& status, const QuotaResponseInfo& response_info) {
         if (!response_info.error.name.empty()) {
-          rc_detail_ = QuotaErrorToRcDetail(response_info.error);
+          rc_detail_ = utils::generateRcDetails(
+              utils::kRcDetailFilterServiceControl,
+              response_info.error.is_network_error
+                  ? utils::kRcDetailErrorTypeScQuotaNetwork
+                  : utils::kRcDetailErrorTypeScQuota,
+              response_info.error.name);
         }
         check_status_ = status;
         check_callback_->onCheckDone(status, rc_detail_);
@@ -274,7 +263,12 @@ void ServiceControlHandlerImpl::onCheckResponse(
   check_response_info_ = response_info;
 
   if (!response_info.error.name.empty()) {
-    rc_detail_ = CheckErrorToRcDetail(response_info.error);
+    rc_detail_ =
+        utils::generateRcDetails(utils::kRcDetailFilterServiceControl,
+                                 response_info.error.is_network_error
+                                     ? utils::kRcDetailErrorTypeScCheckNetwork
+                                     : utils::kRcDetailErrorTypeScCheck,
+                                 response_info.error.name);
   }
   check_status_ = status;
 

@@ -34,6 +34,7 @@ envoy_cc_library(
         ":filter_config_lib",
         "//src/envoy/utils:filter_state_utils_lib",
         "//src/envoy/utils:http_header_utils_lib",
+        "//src/envoy/utils:rc_detail_utils_lib",
         "@envoy//source/common/protobuf:utility_lib",
         "@envoy//source/exe:envoy_common_lib",
         "@envoy//source/extensions/filters/http/common:pass_through_filter_lib",

@@ -166,7 +166,7 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersNoMatch) {
   EXPECT_CALL(mock_cb_,
               sendLocalReply(Envoy::Http::Code::NotFound,
                              "Request `POST /bar` is not defined by this API.",
-                             _, _, "path_not_defined"));
+                             _, _, "path_matcher_undefined_request"));
 
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
             filter_->decodeHeaders(headers, true));
@@ -193,15 +193,17 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersMissingHeaders) {
                   Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService))
       .Times(2);
 
-  EXPECT_CALL(mock_cb_, sendLocalReply(Envoy::Http::Code::BadRequest,
-                                       "No path in request headers.", _, _,
-                                       "path_not_defined"))
+  EXPECT_CALL(mock_cb_,
+              sendLocalReply(Envoy::Http::Code::BadRequest,
+                             "No path in request headers.", _, _,
+                             "path_matcher_bad_request{MISSING_PATH}"))
       .Times(1);
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
             filter_->decodeHeaders(missingPath, true));
-  EXPECT_CALL(mock_cb_, sendLocalReply(Envoy::Http::Code::BadRequest,
-                                       "No method in request headers.", _, _,
-                                       "path_not_defined"))
+  EXPECT_CALL(mock_cb_,
+              sendLocalReply(Envoy::Http::Code::BadRequest,
+                             "No method in request headers.", _, _,
+                             "path_matcher_bad_request{MISSING_METHOD}"))
       .Times(1);
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
             filter_->decodeHeaders(missingMethod, true));
@@ -236,7 +238,7 @@ TEST_F(PathMatcherFilterTest, DecodeHeadersOverflowWildcard) {
   EXPECT_CALL(mock_cb_,
               sendLocalReply(Envoy::Http::Code::BadRequest,
                              "Path is too long, max allowed size is 8192.", _,
-                             _, "path_not_defined"))
+                             _, "path_matcher_bad_request{OVERSIZE_PATH}"))
       .Times(1);
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
             filter_->decodeHeaders(headers, true));
