@@ -79,6 +79,7 @@ const (
 	TestInvalidOpenIDConnectDiscovery
 	TestJwtLocations
 	TestMetadataRequestsPerPlatform
+	TestMetadataRequestsWithBackendAuthPerPlatform
 	TestManagedServiceConfig
 	TestMethodOverrideBackendMethod
 	TestMethodOverrideBackendBody

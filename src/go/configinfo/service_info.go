@@ -518,23 +518,35 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 		Deadline:        deadline,
 	}
 
+	jwtAud := s.determineBackendAuthJwtAud(r, scheme, hostname)
+	if jwtAud != "" && s.Options.CommonOptions.NonGCP {
+		glog.Warningf("Backend authentication is enabled for method %v, "+
+			"but ESPv2 is running on non-GCP. To prevent contacting GCP services, "+
+			"backend authentication is automatically being disabled for this method.",
+			r.Selector)
+		jwtAud = ""
+	}
+	method.BackendInfo.JwtAudience = jwtAud
+
+	return nil
+}
+
+func (s *ServiceInfo) determineBackendAuthJwtAud(r *confpb.BackendRule, scheme string, hostname string) string {
 	//TODO(taoxuy): b/149334660 Check if the scopes for IAM include the path prefix
 	switch r.GetAuthentication().(type) {
 	case *confpb.BackendRule_JwtAudience:
-		method.BackendInfo.JwtAudience = r.GetJwtAudience()
+		return r.GetJwtAudience()
 	case *confpb.BackendRule_DisableAuth:
 		if r.GetDisableAuth() {
-			break
+			return ""
 		}
-		method.BackendInfo.JwtAudience = getJwtAudienceFromBackendAddr(scheme, hostname)
+		return getJwtAudienceFromBackendAddr(scheme, hostname)
 	default:
 		if r.Address == "" {
-			break
+			return ""
 		}
-		method.BackendInfo.JwtAudience = getJwtAudienceFromBackendAddr(scheme, hostname)
+		return getJwtAudienceFromBackendAddr(scheme, hostname)
 	}
-
-	return nil
 }
 
 // For methods that are not associated with any backend rules, create one

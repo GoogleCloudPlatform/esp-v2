@@ -1813,7 +1813,7 @@ func TestProcessBackendRuleForJwtAudience(t *testing.T) {
 	testData := []struct {
 		desc              string
 		fakeServiceConfig *confpb.Service
-
+		nonGcp            bool
 		wantedJwtAudience map[string]string
 	}{
 
@@ -1935,6 +1935,30 @@ func TestProcessBackendRuleForJwtAudience(t *testing.T) {
 			},
 		},
 		{
+			desc:   "JwtAudience is set, but non-GCP runtime disables backend auth",
+			nonGcp: true,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:        "grpc://abc.com/api",
+							Selector:       "abc.com.api",
+							Deadline:       10.5,
+							Authentication: &confpb.BackendRule_JwtAudience{JwtAudience: "audience-foo"},
+						},
+					},
+				},
+			},
+			wantedJwtAudience: map[string]string{
+				"abc.com.api": "",
+			},
+		},
+		{
 			desc: "Mix all Authentication cases",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
@@ -1986,23 +2010,25 @@ func TestProcessBackendRuleForJwtAudience(t *testing.T) {
 		},
 	}
 
-	for i, tc := range testData {
-		opts := options.DefaultConfigGeneratorOptions()
-		s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.NonGCP = tc.nonGcp
+			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 
-		if err != nil {
-			t.Errorf("Test Desc(%d): %s, error not expected, got: %v", i, tc.desc, err)
-			return
-		}
-
-		for _, rule := range tc.fakeServiceConfig.Backend.Rules {
-			gotJwtAudience := s.Methods[rule.Selector].BackendInfo.JwtAudience
-			wantedJwtAudience := tc.wantedJwtAudience[rule.Selector]
-
-			if wantedJwtAudience != gotJwtAudience {
-				t.Errorf("Test Desc(%d): %s, JwtAudience not expected, got: %v, want: %v", i, tc.desc, gotJwtAudience, wantedJwtAudience)
+			if err != nil {
+				t.Fatalf("error not expected, got: %v", err)
 			}
-		}
+
+			for _, rule := range tc.fakeServiceConfig.Backend.Rules {
+				gotJwtAudience := s.Methods[rule.Selector].BackendInfo.JwtAudience
+				wantedJwtAudience := tc.wantedJwtAudience[rule.Selector]
+
+				if wantedJwtAudience != gotJwtAudience {
+					t.Errorf("JwtAudience mismatch, got: %v, want: %v", gotJwtAudience, wantedJwtAudience)
+				}
+			}
+		})
 	}
 }
 
