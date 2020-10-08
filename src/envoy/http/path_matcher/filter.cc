@@ -20,6 +20,7 @@
 #include "src/envoy/http/path_matcher/filter.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
+#include "src/envoy/utils/rc_detail_utils.h"
 
 namespace espv2 {
 namespace envoy {
@@ -39,21 +40,6 @@ namespace {
 // 4x the standard browser request size.
 constexpr uint32_t PathMaxSize = 8192;
 
-struct RcDetailsValues {
-  // The request doesn't contain METHOD header.
-  const std::string MissingMethod = "path_matcher_bad_request{MISSING_METHOD}";
-
-  // The request doesn't contain PATH header.
-  const std::string MissingPath = "path_matcher_bad_request{MISSING_PATH}";
-
-  // The PATH is oversize..
-  const std::string OversizePath = "path_matcher_bad_request{OVERSIZE_PATH}";
-
-  // The request is not defined in the service config.
-  const std::string UndefinedRequest = "path_matcher_undefined_request";
-};
-using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
-
 }  // namespace
 
 Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
@@ -61,17 +47,23 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
   if (!headers.Method()) {
     rejectRequest(Envoy::Http::Code::BadRequest,
                   "No method in request headers.",
-                  RcDetails::get().MissingMethod);
+                  utils::generateRcDetails(utils::kRcDetailFilterPathMatcher,
+                                           utils::kRcDetailErrorTypeBadRequest,
+                                           utils::kRcDetailErrorMissingMethod));
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   } else if (!headers.Path()) {
     rejectRequest(Envoy::Http::Code::BadRequest, "No path in request headers.",
-                  RcDetails::get().MissingPath);
+                  utils::generateRcDetails(utils::kRcDetailFilterPathMatcher,
+                                           utils::kRcDetailErrorTypeBadRequest,
+                                           utils::kRcDetailErrorMissingPath));
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   } else if (headers.Path()->value().size() > PathMaxSize) {
     rejectRequest(Envoy::Http::Code::BadRequest,
                   absl::StrCat("Path is too long, max allowed size is ",
                                PathMaxSize, "."),
-                  RcDetails::get().OversizePath);
+                  utils::generateRcDetails(utils::kRcDetailFilterPathMatcher,
+                                           utils::kRcDetailErrorTypeBadRequest,
+                                           utils::kRcDetailErrorOversizePath));
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 
@@ -86,10 +78,12 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
   std::string path(headers.Path()->value().getStringView());
   const PathMatcherRule* rule = config_->findRule(method, path);
   if (rule == nullptr) {
-    rejectRequest(Envoy::Http::Code::NotFound,
-                  absl::StrCat("Request `", method, " ", path,
-                               "` is not defined by this API."),
-                  RcDetails::get().UndefinedRequest);
+    rejectRequest(
+        Envoy::Http::Code::NotFound,
+        absl::StrCat("Request `", method, " ", path,
+                     "` is not defined by this API."),
+        utils::generateRcDetails(utils::kRcDetailFilterPathMatcher,
+                                 utils::kRcDetailErrorTypeUndefinedRequest));
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 

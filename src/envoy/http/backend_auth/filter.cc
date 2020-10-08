@@ -23,6 +23,7 @@
 #include "envoy/http/header_map.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
+#include "src/envoy/utils/rc_detail_utils.h"
 
 namespace espv2 {
 namespace envoy {
@@ -42,16 +43,6 @@ constexpr char kBearer[] = "Bearer ";
 
 RegisterCustomInlineHeader<CustomInlineHeaderRegistry::Type::RequestHeaders>
     authorization_handle(CustomHeaders::get().Authorization);
-
-struct RcDetailsValues {
-  // Missing backend auth token in internal filter config.
-  const std::string MissingBackendToken = "backend_auth_missing_backend_token";
-
-  // Undefined request in internal filter state.
-  const std::string UndefinedRequest = "backend_auth_undefined_request";
-};
-
-using RcDetails = Envoy::ConstSingleton<RcDetailsValues>;
 
 // The Http header to copy the original Authorization before it is overwritten.
 const Envoy::Http::LowerCaseString kXForwardedAuthorization{
@@ -73,7 +64,8 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
         absl::StrCat("Request `", utils::readHeaderEntry(headers.Method()), " ",
                      utils::readHeaderEntry(headers.Path()),
                      "` is not defined by this API."),
-        RcDetails::get().UndefinedRequest);
+        utils::generateRcDetails(utils::kRcDetailFilterBackendAuth,
+                                 utils::kRcDetailErrorTypeUndefinedRequest));
     return FilterHeadersStatus::StopIteration;
   }
 
@@ -91,9 +83,11 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   const TokenSharedPtr jwt_token = config_->cfg_parser().getJwtToken(audience);
   if (!jwt_token) {
     config_->stats().denied_by_no_token_.inc();
-    rejectRequest(Envoy::Http::Code::InternalServerError,
-                  absl::StrCat("Token not found for audience: ", audience),
-                  RcDetails::get().MissingBackendToken);
+    rejectRequest(
+        Envoy::Http::Code::InternalServerError,
+        absl::StrCat("Token not found for audience: ", audience),
+        utils::generateRcDetails(utils::kRcDetailFilterBackendAuth,
+                                 utils::kRcDetailErrorTypeMissingBackendToken));
     return FilterHeadersStatus::StopIteration;
   }
 

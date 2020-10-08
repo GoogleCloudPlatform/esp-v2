@@ -146,6 +146,7 @@ envoy_cc_library(
         ":handler_interface",
         "//src/envoy/utils:filter_state_utils_lib",
         "//src/envoy/utils:http_header_utils_lib",
+             "//src/envoy/utils:rc_detail_utils_lib",
         "@envoy//source/common/config:metadata_lib",
         "@envoy//source/common/grpc:common_lib",
         "@envoy//source/common/http:headers_lib",
@@ -279,6 +280,7 @@ envoy_cc_test(
         ":handler_impl_lib",
         ":mocks_lib",
         "@envoy//source/common/common:empty_string",
+
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/mocks/stats:stats_mocks",
         "@envoy//test/mocks/tracing:tracing_mocks",

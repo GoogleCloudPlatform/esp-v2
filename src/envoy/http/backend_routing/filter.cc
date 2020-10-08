@@ -21,6 +21,7 @@
 #include "common/http/headers.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
+#include "src/envoy/utils/rc_detail_utils.h"
 
 namespace espv2 {
 namespace envoy {
@@ -54,7 +55,9 @@ FilterHeadersStatus Filter::decodeHeaders(
     // have already rejected the request.
     config_->stats().denied_by_no_path_.inc();
     rejectRequest(Envoy::Http::Code::BadRequest, "No path in request headers",
-                  RcDetails::get().MissingPath);
+                  utils::generateRcDetails(utils::kRcDetailFilterBackendRouting,
+                                           utils::kRcDetailErrorTypeBadRequest,
+                                           utils::kRcDetailErrorMissingPath));
     return FilterHeadersStatus::StopIteration;
   }
 
@@ -70,7 +73,8 @@ FilterHeadersStatus Filter::decodeHeaders(
         absl::StrCat("Request `", utils::readHeaderEntry(headers.Method()), " ",
                      utils::readHeaderEntry(headers.Path()),
                      "` is not defined by this API."),
-        RcDetails::get().UndefinedRequest);
+        utils::generateRcDetails(utils::kRcDetailFilterBackendRouting,
+                                 utils::kRcDetailErrorTypeUndefinedRequest));
     return FilterHeadersStatus::StopIteration;
   }
 
@@ -95,9 +99,12 @@ FilterHeadersStatus Filter::decodeHeaders(
   // appended incorrectly).
   if (absl::StrContains(original_path, "#")) {
     config_->stats().denied_by_invalid_path_.inc();
-    rejectRequest(Envoy::Http::Code::BadRequest,
-                  "Path cannot contain fragment identifier (#)",
-                  RcDetails::get().FragmentIdentifier);
+    rejectRequest(
+        Envoy::Http::Code::BadRequest,
+        "Path cannot contain fragment identifier (#)",
+        utils::generateRcDetails(utils::kRcDetailFilterBackendRouting,
+                                 utils::kRcDetailErrorTypeBadRequest,
+                                 utils::kRcDetailErrorFragmentIdentifier));
     return FilterHeadersStatus::StopIteration;
   }
 

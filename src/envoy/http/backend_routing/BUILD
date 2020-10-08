@@ -38,6 +38,7 @@ envoy_cc_library(
         "@envoy//source/common/common:assert_lib",
         "@envoy//source/common/http:codes_lib",
         "@envoy//source/common/http:headers_lib",
+         "//src/envoy/utils:rc_detail_utils_lib",
         "@envoy//source/common/protobuf:utility_lib",
         "@envoy//source/exe:envoy_common_lib",
         "@envoy//source/extensions/filters/http/common:pass_through_filter_lib",

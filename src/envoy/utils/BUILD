@@ -86,6 +86,14 @@ envoy_cc_library(
     ],
 )
 
+envoy_cc_library(
+    name = "rc_detail_utils_lib",
+    srcs = ["rc_detail_utils.cc"],
+    hdrs = ["rc_detail_utils.h"],
+    repository = "@envoy",
+)
+
+
 envoy_cc_test(
     name = "http_header_utils_test",
     srcs = ["http_header_utils_test.cc"],
@@ -94,5 +102,13 @@ envoy_cc_test(
         ":http_header_utils_lib",
         "@envoy//source/common/common:empty_string",
         "@envoy//test/test_common:utility_lib",
+    ],
+)
+envoy_cc_test(
+    name = "rc_detail_utils_test",
+    srcs = ["rc_detail_utils_test.cc"],
+    repository = "@envoy",
+    deps = [
+        "rc_detail_utils_lib",
     ],
 )

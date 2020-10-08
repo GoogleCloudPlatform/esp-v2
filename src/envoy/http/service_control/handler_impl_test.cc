@@ -328,7 +328,7 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
       mock_check_done_callback_,
       onCheckDone(Status(Code::NOT_FOUND,
                          "Request `GET /echo` is not defined by this API."),
-                  "service_control_bad_request{UNDEFINED_REQUEST}"));
+                  "service_control_undefined_request"));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
@@ -360,7 +360,7 @@ TEST_F(HandlerTest, HandlerMissingHeaders) {
   EXPECT_CALL(mock_check_done_callback_,
               onCheckDone(Status(Code::NOT_FOUND,
                                  "Request ` ` is not defined by this API."),
-                          "service_control_bad_request{UNDEFINED_REQUEST}"));
+                          "service_control_undefined_request"));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   handler.callCheck(req_headers_, *mock_span_, mock_check_done_callback_);
 
@@ -391,7 +391,7 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
       mock_check_done_callback_,
       onCheckDone(Status(Code::NOT_FOUND,
                          "Request `GET /echo` is not defined by this API."),
-                  "service_control_bad_request{UNDEFINED_REQUEST}"));
+                  "service_control_undefined_request"));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
