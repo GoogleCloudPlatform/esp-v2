@@ -161,6 +161,12 @@ var (
                                  "route":{
                                     "cluster":"%s",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.CreateShelf"
+                                    }
                                  }
                               }
                            ]
@@ -348,6 +354,12 @@ var (
                                  "route":{
                                     "cluster":"%s",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.CreateShelf"
+                                    }
                                  }
                               }
                            ]
@@ -571,6 +583,12 @@ var (
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.CreateShelf"
+                                    }
                                  }
                               },
                               {
@@ -589,6 +607,12 @@ var (
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.CreateShelf"
+                                    }
                                  }
                               },
                               {
@@ -607,6 +631,12 @@ var (
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.ListShelves"
+                                    }
                                  }
                               },
                               {
@@ -625,6 +655,12 @@ var (
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.ListShelves"
+                                    }
                                  }
                               }
                            ]
@@ -884,6 +920,12 @@ var (
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.DeleteBook"
+                                    }
                                  }
                               },
                               {
@@ -902,6 +944,12 @@ var (
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.DeleteBook"
+                                    }
                                  }
                               },
                               {
@@ -925,6 +973,12 @@ var (
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.GetBook"
+                                    }
                                  }
                               },
                               {
@@ -943,6 +997,12 @@ var (
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.GetBook"
+                                    }
                                  }
                               }
                            ]
@@ -1172,6 +1232,12 @@ var (
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.CreateShelf"
+                                    }
                                  }
                               },
                               {
@@ -1190,6 +1256,12 @@ var (
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.CreateShelf"
+                                    }
                                  }
                               },
                               {
@@ -1208,6 +1280,12 @@ var (
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.ListShelves"
+                                    }
                                  }
                               },
                               {
@@ -1226,6 +1304,12 @@ var (
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.ListShelves"
+                                    }
                                  }
                               }
                            ]
@@ -1427,6 +1511,12 @@ var (
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo"
+                                    }
                                  }
                               },
                               {
@@ -1445,6 +1535,12 @@ var (
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt"
+                                    }
                                  }
                               }
                            ]
@@ -1620,6 +1716,12 @@ var (
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors"
+                                    }
                                  }
                               },
                               {
@@ -1638,6 +1740,12 @@ var (
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.ESPv2_Autogenerated_CORS_simplegetcors"
+                                    }
                                  }
                               }
                            ]

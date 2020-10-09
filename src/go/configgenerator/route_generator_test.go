@@ -100,6 +100,12 @@ func TestMakeRouteConfig(t *testing.T) {
           "route":{
             "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
             "timeout":"15s"
+          },
+          "typedPerFilterConfig":{
+            "com.google.espv2.filters.http.service_control":{
+              "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName":"endpoints.examples.bookstore.Bookstore.Echo"
+            }
           }
         }
       ]
@@ -175,6 +181,12 @@ func TestMakeRouteConfig(t *testing.T) {
             "cluster": "backend-cluster-testapipb.com:443",
             "hostRewriteLiteral": "testapipb.com",
             "timeout": "15s"
+          },
+          "typedPerFilterConfig":{
+            "com.google.espv2.filters.http.service_control":{
+              "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName":"endpoints.examples.bookstore.Bookstore.Foo"
+            }
           }
         }
       ]
@@ -241,6 +253,12 @@ func TestMakeRouteConfig(t *testing.T) {
             "cluster":"backend-cluster-testapipb.com:443",
             "hostRewriteLiteral":"testapipb.com",
             "timeout":"15s"
+          },
+          "typedPerFilterConfig":{
+            "com.google.espv2.filters.http.service_control":{
+              "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName":"endpoints.examples.bookstore.Bookstore.Foo"
+            }
           }
         }
       ]

@@ -982,6 +982,12 @@
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "timeout": "300s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "test.grpc.Test.Echo"
+                              }
                             }
                           },
                           {
@@ -1001,6 +1007,12 @@
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "timeout": "300s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "test.grpc.Test.Echo"
+                              }
                             }
                           },
                           {
@@ -1020,6 +1032,12 @@
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "timeout": "0s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "test.grpc.Test.EchoStream"
+                              }
                             }
                           },
                           {
@@ -1039,6 +1057,12 @@
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "timeout": "0s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "test.grpc.Test.EchoStream"
+                              }
                             }
                           },
                           {
@@ -1058,6 +1082,12 @@
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "timeout": "0s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "test.grpc.Test.Cork"
+                              }
                             }
                           },
                           {
@@ -1077,6 +1107,12 @@
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "timeout": "300s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "test.grpc.Test.EchoReport"
+                              }
                             }
                           },
                           {
@@ -1096,6 +1132,12 @@
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "timeout": "300s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "test.grpc.Test.EchoReport"
+                              }
                             }
                           }
                         ]
