@@ -100,6 +100,9 @@ var (
 					{
 						Name: "dynamic_routing_Wildcards",
 					},
+					{
+						Name: "dynamic_routing_FieldPath",
+					},
 
 					// Regression test for operation ordering: b/145520483.
 					// Config manager should not change method ordering.
@@ -276,6 +279,14 @@ var (
 					},
 				},
 				{
+					// Regression test for b/170259809.
+					// Envoy route config could not handle field path segment bindings.
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_FieldPath",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/field_path/{s_1=a/*/b/*}/{s_2=x/**}:upload",
+					},
+				},
+				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_first_matched",
 					Pattern: &annotationspb.HttpRule_Post{
 						Post: "/allow-all/abc",
@@ -393,6 +404,10 @@ var (
 				},
 				{
 					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Wildcards",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_FieldPath",
 					AllowUnregisteredCalls: true,
 				},
 				{
@@ -594,6 +609,11 @@ var (
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Wildcards",
+					Address:         fmt.Sprintf("https://localhost:%s/dynamicrouting/const_wildcard", platform.WorkingBackendPort),
+					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+				},
+				{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_FieldPath",
 					Address:         fmt.Sprintf("https://localhost:%s/dynamicrouting/const_wildcard", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
