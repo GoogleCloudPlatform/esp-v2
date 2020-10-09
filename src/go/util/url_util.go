@@ -38,19 +38,23 @@ const (
 )
 
 var (
-	// Match and capture the segment binding for a named field path.
-	// /v1/{resource=shelves/*/books/**} -> /v1/shelves/*/books/**
-	fieldPathSegmentSimplifier = regexp.MustCompile(`{[^{}]+=([^{}]+)}`)
-
 	// Various hacky regular expressions to match a subset of the http template syntax.
-	// Replace segments with single wildcards: /v1/books/*
+
+	// Match and capture the segment binding for a named field path.
+	// - /v1/{resource=shelves/*/books/**} -> /v1/shelves/*/books/**
+	fieldPathSegmentSimplifier = regexp.MustCompile(`{[^{}]+=([^{}]+)}`)
+	// Replace segments with single wildcards
+	// - /v1/books/* -> /v1/books/[^/]+
 	singleWildcardMatcher = regexp.MustCompile(`/\*`)
-	// Replace segments with double wildcards: /v1/**
+	// Replace segments with double wildcards
+	// - /v1/** -> /v1/.*
 	doubleWildcardMatcher = regexp.MustCompile(`/\*\*`)
-	// Replace any path templates: /v1/books/{book_id}
+	// Replace any path templates
+	// - /v1/books/{book_id} -> /v1/books/[^/]+
 	pathParamMatcher = regexp.MustCompile(`/{[^{}]+}`)
 
 	// Common regex forms that emulate http template syntax.
+
 	// Matches 1 or more segments of any character except '/'.
 	singleWildcardReplacementRegex = `/[^\/]+`
 	// Matches any character or no characters at all.
