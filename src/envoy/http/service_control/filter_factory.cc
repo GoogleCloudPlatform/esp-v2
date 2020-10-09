@@ -25,16 +25,16 @@ namespace envoy {
 namespace http_filters {
 namespace service_control {
 
-const std::string FilterName = "com.google.espv2.filters.http.service_control";
-
 /**
  * Config registration for ESPv2 service control filter.
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::espv2::api::envoy::v9::http::service_control::FilterConfig> {
+          ::espv2::api::envoy::v9::http::service_control::FilterConfig,
+          ::espv2::api::envoy::v9::http::service_control::
+              PerRouteFilterConfig> {
  public:
-  FilterFactory() : FactoryBase(FilterName) {}
+  FilterFactory() : FactoryBase(ServiceControlFilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
@@ -53,6 +53,15 @@ class FilterFactory
       callbacks.addAccessLogHandler(
           Envoy::AccessLog::InstanceSharedPtr(filter));
     };
+  }
+
+  Envoy::Router::RouteSpecificFilterConfigConstSharedPtr
+  createRouteSpecificFilterConfigTyped(
+      const ::espv2::api::envoy::v9::http::service_control::
+          PerRouteFilterConfig& per_route,
+      Envoy::Server::Configuration::ServerFactoryContext&,
+      Envoy::ProtobufMessage::ValidationVisitor&) override {
+    return std::make_shared<PerRouteFilterConfig>(per_route);
   }
 };
 

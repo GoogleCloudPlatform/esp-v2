@@ -51,6 +51,7 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         ":service_control_call_interface",
+        "@envoy//include/envoy/router:router_interface",
         "@envoy//source/common/protobuf:utility_lib",
     ],
 )
@@ -147,6 +148,7 @@ envoy_cc_library(
         "//src/envoy/utils:filter_state_utils_lib",
         "//src/envoy/utils:http_header_utils_lib",
         "//src/envoy/utils:rc_detail_utils_lib",
+        "@envoy//source/common/common:empty_string",
         "@envoy//source/common/config:metadata_lib",
         "@envoy//source/common/grpc:common_lib",
         "@envoy//source/common/http:headers_lib",

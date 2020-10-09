@@ -63,6 +63,9 @@ class ServiceControlHandlerImpl
   void onDestroy() override;
 
  private:
+  absl::string_view getOperationFromPerRoute(
+      const Envoy::StreamInfo::StreamInfo& stream_info);
+
   void callQuota();
 
   void fillOperationInfo(
