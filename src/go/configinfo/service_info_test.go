@@ -2445,11 +2445,16 @@ func TestProcessTypes(t *testing.T) {
 		desc                            string
 		fakeServiceConfig               *confpb.Service
 		fakeRequestTypeNamesByOperation map[string]string
+		urlTemplateByOperation          map[string]string
 		wantSegmentsByOperation         map[string]SnakeToJsonSegments
+		wantUrlTemplateByOperation      map[string]string
 		wantErr                         error
 	}{
 		{
 			desc: "Success for single type with multiple distinct fields",
+			fakeRequestTypeNamesByOperation: map[string]string{
+				"api-1.operation-1": "CreateShelvesRequest",
+			},
 			fakeServiceConfig: &confpb.Service{
 				Types: []*ptypepb.Type{
 					{
@@ -2467,18 +2472,18 @@ func TestProcessTypes(t *testing.T) {
 					},
 				},
 			},
-			fakeRequestTypeNamesByOperation: map[string]string{
-				"api-1.operation-1": "CreateShelvesRequest",
+			urlTemplateByOperation: map[string]string{
+				"api-1.operation-1": "/foo/{foo_bar}/bar/{x_y}",
 			},
-			wantSegmentsByOperation: map[string]SnakeToJsonSegments{
-				"api-1.operation-1": {
-					"foo_bar": "fooBar",
-					"x_y":     "xY",
-				},
+			wantUrlTemplateByOperation: map[string]string{
+				"api-1.operation-1": "/foo/{fooBar}/bar/{xY}",
 			},
 		},
 		{
 			desc: "Success for single type with multiple duplicated fields, which can be de-duped",
+			fakeRequestTypeNamesByOperation: map[string]string{
+				"api-1.operation-1": "CreateShelvesRequest",
+			},
 			fakeServiceConfig: &confpb.Service{
 				Types: []*ptypepb.Type{
 					{
@@ -2496,17 +2501,19 @@ func TestProcessTypes(t *testing.T) {
 					},
 				},
 			},
-			fakeRequestTypeNamesByOperation: map[string]string{
-				"api-1.operation-1": "CreateShelvesRequest",
+
+			urlTemplateByOperation: map[string]string{
+				"api-1.operation-1": "/foo/{foo_bar}/bar",
 			},
-			wantSegmentsByOperation: map[string]SnakeToJsonSegments{
-				"api-1.operation-1": {
-					"foo_bar": "fooBar",
-				},
+			wantUrlTemplateByOperation: map[string]string{
+				"api-1.operation-1": "/foo/{fooBar}/bar",
 			},
 		},
 		{
 			desc: "Success for single type with multiple non-conflicting fields",
+			fakeRequestTypeNamesByOperation: map[string]string{
+				"api-1.operation-1": "CreateShelvesRequest",
+			},
 			fakeServiceConfig: &confpb.Service{
 				Types: []*ptypepb.Type{
 					{
@@ -2525,17 +2532,18 @@ func TestProcessTypes(t *testing.T) {
 					},
 				},
 			},
-			fakeRequestTypeNamesByOperation: map[string]string{
-				"api-1.operation-1": "CreateShelvesRequest",
+			urlTemplateByOperation: map[string]string{
+				"api-1.operation-1": "/foo/{foo_bar}",
 			},
-			wantSegmentsByOperation: map[string]SnakeToJsonSegments{
-				"api-1.operation-1": {
-					"foo_bar": "fooBar",
-				},
+			wantUrlTemplateByOperation: map[string]string{
+				"api-1.operation-1": "/foo/{fooBar}",
 			},
 		},
 		{
 			desc: "Failure for single type with multiple conflicting fields",
+			fakeRequestTypeNamesByOperation: map[string]string{
+				"api-1.operation-1": "CreateShelvesRequest",
+			},
 			fakeServiceConfig: &confpb.Service{
 				Types: []*ptypepb.Type{
 					{
@@ -2553,13 +2561,19 @@ func TestProcessTypes(t *testing.T) {
 					},
 				},
 			},
-			fakeRequestTypeNamesByOperation: map[string]string{
-				"api-1.operation-1": "CreateShelvesRequest",
-			},
 			wantErr: fmt.Errorf("for operation (api-1.operation-1): detected two types with same snake_name (foo_bar) but mistmatching json_name"),
 		},
 		{
 			desc: "Success for multiple types with distinct fields",
+			fakeRequestTypeNamesByOperation: map[string]string{
+				"api-1.operation-1": "CreateShelvesRequest",
+				"api-1.operation-2": "CreateBookRequest",
+				"api-2.operation-1": "google.protobuf.Empty",
+				// This will be ignored, it doesn't exist in types.
+				"api-3.operation-1": "NonExistingType",
+				// This will be ignored, it is empty.
+				"api-3.operation-2": "",
+			},
 			fakeServiceConfig: &confpb.Service{
 				Types: []*ptypepb.Type{
 					{
@@ -2606,27 +2620,21 @@ func TestProcessTypes(t *testing.T) {
 					},
 				},
 			},
-			fakeRequestTypeNamesByOperation: map[string]string{
-				"api-1.operation-1": "CreateShelvesRequest",
-				"api-1.operation-2": "CreateBookRequest",
-				"api-2.operation-1": "google.protobuf.Empty",
-				// This will be ignored, it doesn't exist in types.
-				"api-3.operation-1": "NonExistingType",
-				// This will be ignored, it is empty.
-				"api-3.operation-2": "",
+			urlTemplateByOperation: map[string]string{
+				"api-1.operation-1": "/foo/{foo_bar}/bar/{x_y}",
+				"api-1.operation-2": "/foo/{a_b}",
 			},
-			wantSegmentsByOperation: map[string]SnakeToJsonSegments{
-				"api-1.operation-1": {
-					"foo_bar": "fooBar",
-					"x_y":     "xY",
-				},
-				"api-1.operation-2": {
-					"a_b": "aB",
-				},
+			wantUrlTemplateByOperation: map[string]string{
+				"api-1.operation-1": "/foo/{fooBar}/bar/{xY}",
+				"api-1.operation-2": "/foo/{aB}",
 			},
 		},
 		{
 			desc: "Success for multiple types with conflicting fields across types, but no conflicts within a single type",
+			fakeRequestTypeNamesByOperation: map[string]string{
+				"api-1.operation-1": "CreateShelvesRequest",
+				"api-1.operation-2": "CreateBookRequest",
+			},
 			fakeServiceConfig: &confpb.Service{
 				Types: []*ptypepb.Type{
 					{
@@ -2649,17 +2657,13 @@ func TestProcessTypes(t *testing.T) {
 					},
 				},
 			},
-			fakeRequestTypeNamesByOperation: map[string]string{
-				"api-1.operation-1": "CreateShelvesRequest",
-				"api-1.operation-2": "CreateBookRequest",
+			urlTemplateByOperation: map[string]string{
+				"api-1.operation-1": "/foo/{foo_bar}",
+				"api-1.operation-2": "/foo/{foo_bar}",
 			},
-			wantSegmentsByOperation: map[string]SnakeToJsonSegments{
-				"api-1.operation-1": {
-					"foo_bar": "foo-bar",
-				},
-				"api-1.operation-2": {
-					"foo_bar": "fooBar",
-				},
+			wantUrlTemplateByOperation: map[string]string{
+				"api-1.operation-1": "/foo/{foo-bar}",
+				"api-1.operation-2": "/foo/{fooBar}",
 			},
 		},
 	}
@@ -2673,6 +2677,11 @@ func TestProcessTypes(t *testing.T) {
 		for operation, requestType := range tc.fakeRequestTypeNamesByOperation {
 			mi := &methodInfo{
 				RequestTypeName: requestType,
+				HttpRule: []*commonpb.Pattern{
+					{
+						UriTemplate: tc.urlTemplateByOperation[operation],
+					},
+				},
 			}
 			serviceInfo.Methods[operation] = mi
 		}
@@ -2690,12 +2699,13 @@ func TestProcessTypes(t *testing.T) {
 			t.Errorf("Test(%v): Expected err (%v), got no err", tc.desc, tc.wantErr)
 		}
 
-		for operation, wantMapping := range tc.wantSegmentsByOperation {
-			gotMapping := serviceInfo.Methods[operation].SegmentMappings
-			if !reflect.DeepEqual(wantMapping, gotMapping) {
-				t.Errorf("Test(%v): For operation (%v), expected segment mapping (%v), got segments (%v)", tc.desc, operation, wantMapping, gotMapping)
+		for operation, wantUrlTemplate := range tc.wantUrlTemplateByOperation {
+			getUrlTemplate := serviceInfo.Methods[operation].HttpRule[0].UriTemplate
+			if getUrlTemplate != wantUrlTemplate {
+				t.Errorf("Test(%v): For operation (%v), expected urlTemplate (%v), got urlTemplate(%v)", tc.desc, operation, wantUrlTemplate, getUrlTemplate)
 			}
 		}
+
 	}
 }
 

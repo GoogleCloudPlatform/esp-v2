@@ -343,12 +343,6 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 					Operation: operation,
 					Pattern:   httpRule,
 				}
-				if method.BackendInfo != nil && method.BackendInfo.TranslationType == confpb.BackendRule_CONSTANT_ADDRESS && hasPathParameter(newHttpRule.Pattern.UriTemplate) {
-					pathRule := &pmpb.PathParameterExtractionRule{
-						SnakeToJsonSegments: method.SegmentMappings,
-					}
-					newHttpRule.PathParameterExtraction = pathRule
-				}
 				rules = append(rules, newHttpRule)
 			}
 		}
