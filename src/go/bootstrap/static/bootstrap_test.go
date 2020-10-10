@@ -153,7 +153,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 				t.Fatal(err)
 			}
 			if err := util.JsonEqual(wantString, gotString); err != nil {
-				t.Fatalf("Test(%s) fail, got err: %v", tc.desc, err)
+				t.Fatalf("got err: %v", err)
 			}
 		})
 	}

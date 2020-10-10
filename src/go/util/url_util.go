@@ -208,6 +208,9 @@ func WildcardMatcherForPath(uri string) string {
 //     the char after which is '}' or '.' or '='
 //   - replace that substring with the jsonName
 //
+// Same replacement cane be expressed as regexReplace(`(?<=[.{])${snakeName}(?=[.}=])`, ${jsonName})
+// but golang doesn't support such look around syntax.
+//
 // It should match the variable name extraction behavior in
 // https://github.com/GoogleCloudPlatform/esp-v2/blob/34314a46a54001f83508071e78596cba08b6f456/src/api_proxy/path_matcher/http_template_test.cc
 //

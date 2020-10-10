@@ -51,49 +51,49 @@ func TestDynamicRouting(t *testing.T) {
 		wantResp      string
 		httpCallError error
 	}{
-		//{
-		//	desc:     "Succeed, no path translation (no re-routing needed)",
-		//	path:     "/echo?key=api-key",
-		//	method:   "POST",
-		//	message:  "hello",
-		//	wantResp: `{"message":"hello"}`,
-		//},
-		//{
-		//	desc:     "Succeed, CONSTANT_ADDRESS path translation is correct",
-		//	path:     "/pet/123/num/987",
-		//	method:   "GET",
-		//	wantResp: `{"RequestURI":"/dynamicrouting/getpetbyid?pet_id=123&number=987"}`,
-		//},
-		//{
-		//	desc:     "Succeed, CONSTANT_ADDRESS path translation is correct with escaped path segment",
-		//	path:     "/pet/a%20b/num/9%3B8",
-		//	method:   "GET",
-		//	wantResp: `{"RequestURI":"/dynamicrouting/getpetbyid?pet_id=a%20b&number=9%3B8"}`,
-		//},
-		//{
-		//	desc:     "Succeed, CONSTANT_ADDRESS path translation with empty path",
-		//	path:     "/empty_path",
-		//	method:   "POST",
-		//	wantResp: `{"RequestURI":"/"}`,
-		//},
-		//{
-		//	desc:     "Succeed, CONSTANT_ADDRESS path translation is correct, original URL has query parameters, original query parameters should appear first and query parameters converted from path parameters appear later",
-		//	path:     "/pet/31/num/565?lang=US&zone=us-west1",
-		//	method:   "GET",
-		//	wantResp: `{"RequestURI":"/dynamicrouting/getpetbyid?lang=US&zone=us-west1&pet_id=31&number=565"}`,
-		//},
-		//{
-		//	desc:     "Succeed, CONSTANT_ADDRESS path translation is correct, original URL has query parameters, original query parameters should appear first and query parameters converted from path parameters appear later. Both have escaped characters",
-		//	path:     "/pet/a%20b/num/9%3B8?lang=U%20S&zone=us%3Bwest",
-		//	method:   "GET",
-		//	wantResp: `{"RequestURI":"/dynamicrouting/getpetbyid?lang=U%20S&zone=us%3Bwest&pet_id=a%20b&number=9%3B8"}`,
-		//},
-		//{
-		//	desc:     "Succeed, CONSTANT_ADDRESS path translation with snake case is correct",
-		//	path:     "/shelves/123/books/info/987",
-		//	method:   "GET",
-		//	wantResp: `{"RequestURI":"/dynamicrouting/bookinfo?SHELF=123&BOOK=987"}`,
-		//},
+		{
+			desc:     "Succeed, no path translation (no re-routing needed)",
+			path:     "/echo?key=api-key",
+			method:   "POST",
+			message:  "hello",
+			wantResp: `{"message":"hello"}`,
+		},
+		{
+			desc:     "Succeed, CONSTANT_ADDRESS path translation is correct",
+			path:     "/pet/123/num/987",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/getpetbyid?pet_id=123&number=987"}`,
+		},
+		{
+			desc:     "Succeed, CONSTANT_ADDRESS path translation is correct with escaped path segment",
+			path:     "/pet/a%20b/num/9%3B8",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/getpetbyid?pet_id=a%20b&number=9%3B8"}`,
+		},
+		{
+			desc:     "Succeed, CONSTANT_ADDRESS path translation with empty path",
+			path:     "/empty_path",
+			method:   "POST",
+			wantResp: `{"RequestURI":"/"}`,
+		},
+		{
+			desc:     "Succeed, CONSTANT_ADDRESS path translation is correct, original URL has query parameters, original query parameters should appear first and query parameters converted from path parameters appear later",
+			path:     "/pet/31/num/565?lang=US&zone=us-west1",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/getpetbyid?lang=US&zone=us-west1&pet_id=31&number=565"}`,
+		},
+		{
+			desc:     "Succeed, CONSTANT_ADDRESS path translation is correct, original URL has query parameters, original query parameters should appear first and query parameters converted from path parameters appear later. Both have escaped characters",
+			path:     "/pet/a%20b/num/9%3B8?lang=U%20S&zone=us%3Bwest",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/getpetbyid?lang=U%20S&zone=us%3Bwest&pet_id=a%20b&number=9%3B8"}`,
+		},
+		{
+			desc:     "Succeed, CONSTANT_ADDRESS path translation with snake case is correct",
+			path:     "/shelves/123/books/info/987",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/bookinfo?SHELF=123&BOOK=987"}`,
+		},
 		{
 			desc:     "Succeed, CONSTANT_ADDRESS path translation with snake case is correct, supports {foo.bar} style path, if corresponding jsonName not found, origin snake case path is used.",
 			path:     "/shelves/221/books/id/2019",
