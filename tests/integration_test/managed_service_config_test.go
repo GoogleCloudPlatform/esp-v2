@@ -146,7 +146,7 @@ func TestRetryCallServiceManagement(t *testing.T) {
 
 	url := fmt.Sprintf("http://localhost:%v/echo", s.Ports().ListenerPort)
 
-	resp, err := echoClient.DoPost(fmt.Sprintf("%s?key=api-key", url), echo)
+	resp, err := echoClient.DoPost(fmt.Sprintf("%s?key=api-key", url), "hello")
 	if err != nil {
 		t.Errorf("got unexpected error: %v", err)
 	}
