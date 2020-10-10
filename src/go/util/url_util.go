@@ -223,8 +223,16 @@ func SnakeNamesToJsonNamesInPathParam(uri string, snakeNameToJsonName map[string
 				return -1
 			}
 
-			if index != 0 && (uri[index-1] == '{' || uri[index-1] == '.') && (uri[index+len(snakeName)] == '}' || uri[index+len(snakeName)] == '.' || uri[index+len(snakeName)] == '=') {
-				return index
+			if index != 0 && index+len(snakeName) < len(uri) {
+				// If the leftSide of snakeName match is `{` or '.'.
+				leftSide := uri[index-1] == '{' || uri[index-1] == '.'
+
+				// If the rightSide of snakeName match is `}`, '.' or '='.
+				rightSide := uri[index+len(snakeName)] == '}' || uri[index+len(snakeName)] == '.' || uri[index+len(snakeName)] == '='
+
+				if leftSide && rightSide {
+					return index
+				}
 			}
 
 			uri = uri[index+len(snakeName):]
