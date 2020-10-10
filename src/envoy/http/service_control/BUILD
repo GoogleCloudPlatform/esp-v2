@@ -182,6 +182,8 @@ envoy_cc_library(
     deps = [
         ":filter_stats_lib",
         ":handler_interface",
+        "//src/envoy/utils:http_header_utils_lib",
+        "//src/envoy/utils:rc_detail_utils_lib",
         "@envoy//source/common/grpc:status_lib",
         "@envoy//source/common/http:headers_lib",
         "@envoy//source/exe:envoy_common_lib",

@@ -39,7 +39,7 @@ constexpr int64_t kLowerBoundMinStreamReportIntervalMs = 100;
 }  // namespace
 
 // The filter name.
-const std::string ServiceControlFilterName =
+constexpr const char kFilterName[] =
     "com.google.espv2.filters.http.service_control";
 
 class ServiceContext {

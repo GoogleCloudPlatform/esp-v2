@@ -203,7 +203,7 @@ class HandlerTest : public ::testing::Test {
     auto per_route = std::make_shared<PerRouteFilterConfig>(per_route_cfg);
     EXPECT_CALL(mock_stream_info_, routeEntry())
         .WillRepeatedly(Return(&mock_route_entry_));
-    EXPECT_CALL(mock_route_entry_, perFilterConfig(ServiceControlFilterName))
+    EXPECT_CALL(mock_route_entry_, perFilterConfig(kFilterName))
         .WillRepeatedly(
             Invoke([per_route](const std::string&)
                        -> const Envoy::Router::RouteSpecificFilterConfig* {

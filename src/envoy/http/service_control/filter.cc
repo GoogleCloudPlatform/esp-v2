@@ -18,11 +18,21 @@
 #include "envoy/http/header_map.h"
 #include "src/envoy/http/service_control/filter.h"
 #include "src/envoy/http/service_control/handler.h"
+#include "src/envoy/utils/http_header_utils.h"
+#include "src/envoy/utils/rc_detail_utils.h"
 
 namespace espv2 {
 namespace envoy {
 namespace http_filters {
 namespace service_control {
+
+namespace {
+
+// Half of the max header value size Envoy allows.
+// 4x the standard browser request size.
+constexpr uint32_t PathMaxSize = 8192;
+
+}  // namespace
 
 void ServiceControlFilter::onDestroy() {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
@@ -35,13 +45,56 @@ Envoy::Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
     Envoy::Http::RequestHeaderMap& headers, bool) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
 
-  Envoy::Tracing::Span& parent_span = decoder_callbacks_->activeSpan();
+  if (!headers.Method()) {
+    rejectRequest(Envoy::Http::Code::BadRequest,
+                  "No method in request headers.",
+                  utils::generateRcDetails(utils::kRcDetailFilterServiceControl,
+                                           utils::kRcDetailErrorTypeBadRequest,
+                                           utils::kRcDetailErrorMissingMethod));
+    return Envoy::Http::FilterHeadersStatus::StopIteration;
+  } else if (!headers.Path()) {
+    rejectRequest(Envoy::Http::Code::BadRequest, "No path in request headers.",
+                  utils::generateRcDetails(utils::kRcDetailFilterServiceControl,
+                                           utils::kRcDetailErrorTypeBadRequest,
+                                           utils::kRcDetailErrorMissingPath));
+    return Envoy::Http::FilterHeadersStatus::StopIteration;
+  } else if (headers.Path()->value().size() > PathMaxSize) {
+    rejectRequest(Envoy::Http::Code::BadRequest,
+                  absl::StrCat("Path is too long, max allowed size is ",
+                               PathMaxSize, "."),
+                  utils::generateRcDetails(utils::kRcDetailFilterServiceControl,
+                                           utils::kRcDetailErrorTypeBadRequest,
+                                           utils::kRcDetailErrorOversizePath));
+    return Envoy::Http::FilterHeadersStatus::StopIteration;
+  }
+
+  if (utils::handleHttpMethodOverride(headers)) {
+    // Update later filters that the HTTP method has changed by clearing the
+    // route cache.
+    ENVOY_LOG(debug, "HTTP method override occurred, recalculating route");
+    decoder_callbacks_->clearRouteCache();
+  }
+
+  // Make sure route is calculated
+  auto route = decoder_callbacks_->route();
+  if (route == nullptr) {
+    rejectRequest(
+        Envoy::Http::Code::NotFound,
+        absl::StrCat("Request `", utils::readHeaderEntry(headers.Method()), " ",
+                     utils::readHeaderEntry(headers.Path()),
+                     "` is not defined by this API."),
+        utils::generateRcDetails(utils::kRcDetailFilterServiceControl,
+                                 utils::kRcDetailErrorTypeUndefinedRequest));
+    return Envoy::Http::FilterHeadersStatus::StopIteration;
+  }
 
   handler_ =
       factory_.createHandler(headers, decoder_callbacks_->streamInfo(), stats_);
   handler_->fillFilterState(*decoder_callbacks_->streamInfo().filterState());
   state_ = Calling;
   stopped_ = false;
+
+  Envoy::Tracing::Span& parent_span = decoder_callbacks_->activeSpan();
 
   handler_->callCheck(headers, parent_span, *this);
 

@@ -34,7 +34,7 @@ class FilterFactory
           ::espv2::api::envoy::v9::http::service_control::
               PerRouteFilterConfig> {
  public:
-  FilterFactory() : FactoryBase(ServiceControlFilterName) {}
+  FilterFactory() : FactoryBase(kFilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(

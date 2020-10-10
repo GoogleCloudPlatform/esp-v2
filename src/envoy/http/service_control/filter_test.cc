@@ -47,7 +47,8 @@ class ServiceControlFilterTest : public ::testing::Test {
  protected:
   ServiceControlFilterTest()
       : stats_(ServiceControlFilterStats::create(Envoy::EMPTY_STRING,
-                                                 mock_stats_scope_)) {}
+                                                 mock_stats_scope_)),
+        req_headers_{{":method", "GET"}, {":path", "/bar"}} {}
 
   void SetUp() override {
     filter_ =

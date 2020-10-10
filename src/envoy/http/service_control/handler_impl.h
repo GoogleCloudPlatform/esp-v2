@@ -73,7 +73,9 @@ class ServiceControlHandlerImpl
   void prepareReportRequest(
       ::espv2::api_proxy::service_control::ReportRequestInfo& info);
 
-  bool isConfigured() const { return require_ctx_ != nullptr; }
+  bool isConfigured() const {
+    return require_ctx_ != cfg_parser_.non_match_rqm_ctx();
+  }
 
   bool isQuotaRequired() const {
     return !require_ctx_->config().skip_service_control() &&

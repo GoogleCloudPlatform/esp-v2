@@ -107,7 +107,7 @@ func (sv StatsVerifier) VerifyInvariants() error {
 		return fmt.Errorf("sc allowed invariant failed: %v", counters)
 	}
 
-	if counters["http.ingress_http.service_control.denied"] !=
+	if counters["http.ingress_http.service_control.denied"] <
 		counters["http.ingress_http.service_control.denied_control_plane_fault"]+
 			counters["http.ingress_http.service_control.denied_producer_error"]+
 			counters["http.ingress_http.service_control.denied_consumer_quota"]+
