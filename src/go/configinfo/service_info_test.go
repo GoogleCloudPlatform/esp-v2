@@ -2446,7 +2446,6 @@ func TestProcessTypes(t *testing.T) {
 		fakeServiceConfig               *confpb.Service
 		fakeRequestTypeNamesByOperation map[string]string
 		urlTemplateByOperation          map[string]string
-		wantSegmentsByOperation         map[string]SnakeToJsonSegments
 		wantUrlTemplateByOperation      map[string]string
 		wantErr                         error
 	}{
