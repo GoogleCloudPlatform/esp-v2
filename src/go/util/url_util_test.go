@@ -605,11 +605,11 @@ func TestSnakeNameToJsonNameInPathParam(t *testing.T) {
 		},
 		{
 			desc: "snake name found but not as variable",
-			uri:  "/x_y/{x_y_foo}/{x_y_z=*}",
+			uri:  "/x_y/{x_y_foo}/{x_y_bar=*}",
 			snakeNameToJsonNames: map[string]string{
 				"x_y": "xY",
 			},
-			wantUri: "/x_y/{x_y_foo}/{x_y_z=*}",
+			wantUri: "/x_y/{x_y_foo}/{x_y_bar=*}",
 		},
 	}
 
