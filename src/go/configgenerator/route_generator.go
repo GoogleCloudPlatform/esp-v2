@@ -24,9 +24,12 @@ import (
 	"github.com/golang/protobuf/ptypes"
 
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/common"
+	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/service_control"
+
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
+	anypb "github.com/golang/protobuf/ptypes/any"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 )
 
@@ -178,6 +181,13 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 					Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
 				},
 			}
+
+			scPerRoute := &scpb.PerRouteFilterConfig{
+				OperationName: operation,
+			}
+			scpr, _ := ptypes.MarshalAny(scPerRoute)
+			r.TypedPerFilterConfig = make(map[string]*anypb.Any)
+			r.TypedPerFilterConfig[util.ServiceControl] = scpr
 
 			if method.BackendInfo.Hostname != "" {
 				// For routing to remote backends.

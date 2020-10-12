@@ -14,9 +14,11 @@
 
 #pragma once
 
-#include <common/protobuf/utility.h>
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/string_view.h"
+
+#include "common/protobuf/utility.h"
+#include "envoy/router/router.h"
 
 #include "api/envoy/v9/http/service_control/config.pb.h"
 #include "api/envoy/v9/http/service_control/requirement.pb.h"
@@ -35,6 +37,10 @@ constexpr int64_t kDefaultMinStreamReportIntervalMs = 10000;
 // This represents a realistic round-trip time for SC Report from GCP.
 constexpr int64_t kLowerBoundMinStreamReportIntervalMs = 100;
 }  // namespace
+
+// The filter name.
+constexpr const char kFilterName[] =
+    "com.google.espv2.filters.http.service_control";
 
 class ServiceContext {
  public:
@@ -147,6 +153,20 @@ class FilterConfigParser {
   ::espv2::api::envoy::v9::http::service_control::ApiKeyRequirement
       default_api_keys_;
 };
+
+class PerRouteFilterConfig : public Envoy::Router::RouteSpecificFilterConfig {
+ public:
+  PerRouteFilterConfig(const ::espv2::api::envoy::v9::http::service_control::
+                           PerRouteFilterConfig& per_route)
+      : operation_name_(per_route.operation_name()) {}
+
+  absl::string_view operation_name() const { return operation_name_; }
+
+ private:
+  std::string operation_name_;
+};
+
+using PerRouteFilterConfigSharedPtr = std::shared_ptr<PerRouteFilterConfig>;
 
 }  // namespace service_control
 }  // namespace http_filters

@@ -15,6 +15,7 @@
 #include <chrono>
 
 #include "absl/strings/match.h"
+#include "common/common/empty_string.h"
 #include "common/http/headers.h"
 #include "common/http/utility.h"
 #include "src/envoy/http/service_control/handler_impl.h"
@@ -78,27 +79,18 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
   http_method_ = std::string(utils::readHeaderEntry(headers.Method()));
   path_ = std::string(utils::readHeaderEntry(headers.Path()));
 
-  const absl::string_view operation = utils::getStringFilterState(
-      stream_info_.filterState(), utils::kFilterStateOperation);
-
-  // NOTE: this shouldn't happen in practice because Path Matcher filter would
-  // have already rejected the request.
-  if (operation.empty()) {
+  const auto operation = getOperationFromPerRoute(stream_info_);
+  if (!operation.empty()) {
+    require_ctx_ = cfg_parser_.find_requirement(operation);
+    if (!require_ctx_) {
+      ENVOY_LOG(debug, "No requirement matched!");
+    }
+  } else {
     ENVOY_LOG(debug, "No operation found");
-    // Extract api-key to be used for Report for non-matched requests.
-    extractAPIKey(headers, cfg_parser_.default_api_keys().locations(),
-                  api_key_);
-    return;
   }
-
-  require_ctx_ = cfg_parser_.find_requirement(operation);
-  if (!require_ctx_) {
-    ENVOY_LOG(debug, "No requirement matched!");
-    // Extract api-key to be used for Report for an operation without
-    // requirement.
-    extractAPIKey(headers, cfg_parser_.default_api_keys().locations(),
-                  api_key_);
-    return;
+  if (require_ctx_ == nullptr) {
+    ENVOY_LOG(debug, "Use non matched requirement.");
+    require_ctx_ = cfg_parser_.non_match_rqm_ctx();
   }
 
   if (require_ctx_->config().api_key().locations_size() > 0) {
@@ -111,6 +103,24 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
 }
 
 ServiceControlHandlerImpl::~ServiceControlHandlerImpl() {}
+
+absl::string_view ServiceControlHandlerImpl::getOperationFromPerRoute(
+    const Envoy::StreamInfo::StreamInfo& stream_info) {
+  if (stream_info_.routeEntry() == nullptr) {
+    ENVOY_LOG(debug, "No route entry");
+    return Envoy::EMPTY_STRING;
+  }
+
+  const auto* per_route =
+      stream_info.routeEntry()->perFilterConfigTyped<PerRouteFilterConfig>(
+          kFilterName);
+  if (per_route == nullptr) {
+    ENVOY_LOG(debug, "no per-route config");
+    return Envoy::EMPTY_STRING;
+  }
+  ENVOY_LOG(debug, "get operation_name: {}", per_route->operation_name());
+  return per_route->operation_name();
+}
 
 void ServiceControlHandlerImpl::fillFilterState(FilterState& filter_state) {
   utils::setStringFilterState(filter_state, utils::kFilterStateApiKey,
@@ -295,10 +305,6 @@ void ServiceControlHandlerImpl::callReport(
     const Envoy::Http::RequestHeaderMap* request_headers,
     const Envoy::Http::ResponseHeaderMap* response_headers,
     const Envoy::Http::ResponseTrailerMap* response_trailers) {
-  if (require_ctx_ == nullptr) {
-    require_ctx_ = cfg_parser_.non_match_rqm_ctx();
-  }
-
   if (!isReportRequired()) {
     return;
   }

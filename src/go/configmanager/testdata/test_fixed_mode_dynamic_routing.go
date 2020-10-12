@@ -401,6 +401,12 @@ var (
                                  "route":{
                                     "cluster":"backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo"
+                                    }
                                  }
                               },
                               {
@@ -420,6 +426,12 @@ var (
                                     "cluster":"backend-cluster-pets.appspot.com:443",
                                     "hostRewriteLiteral":"pets.appspot.com",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet"
+                                    }
                                  }
                               },
                               {
@@ -442,6 +454,12 @@ var (
                                     "cluster":"backend-cluster-pets.appspot.com:8008",
                                     "hostRewriteLiteral":"pets.appspot.com",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById"
+                                    }
                                  }
                               },
                               {
@@ -461,6 +479,12 @@ var (
                                     "cluster":"backend-cluster-us-central1-cloud-esf.cloudfunctions.net:443",
                                     "hostRewriteLiteral":"us-central1-cloud-esf.cloudfunctions.net",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello"
+                                    }
                                  }
                               },
                               {
@@ -480,6 +504,12 @@ var (
                                     "cluster":"backend-cluster-pets.appspot.com:443",
                                     "hostRewriteLiteral":"pets.appspot.com",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets"
+                                    }
                                  }
                               },
                               {
@@ -499,6 +529,12 @@ var (
                                     "cluster":"backend-cluster-us-west2-cloud-esf.cloudfunctions.net:443",
                                     "hostRewriteLiteral":"us-west2-cloud-esf.cloudfunctions.net",
                                     "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search"
+                                    }
                                  }
                               }
                            ]

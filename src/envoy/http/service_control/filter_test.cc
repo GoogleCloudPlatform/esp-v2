@@ -47,7 +47,8 @@ class ServiceControlFilterTest : public ::testing::Test {
  protected:
   ServiceControlFilterTest()
       : stats_(ServiceControlFilterStats::create(Envoy::EMPTY_STRING,
-                                                 mock_stats_scope_)) {}
+                                                 mock_stats_scope_)),
+        req_headers_{{":method", "GET"}, {":path", "/bar"}} {}
 
   void SetUp() override {
     filter_ =
@@ -79,6 +80,71 @@ class ServiceControlFilterTest : public ::testing::Test {
   // Tracing mocks
   std::unique_ptr<Envoy::Tracing::MockSpan> mock_span_;
 };
+
+TEST_F(ServiceControlFilterTest, DecodeHeadersMissingHeaders) {
+  Envoy::Http::TestRequestHeaderMapImpl missingPath{{":method", "POST"}};
+  Envoy::Http::TestRequestHeaderMapImpl missingMethod{{":path", "/bar"}};
+
+  // Filter should reject this request
+  EXPECT_CALL(mock_decoder_callbacks_.stream_info_,
+              setResponseFlag(
+                  Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService))
+      .Times(2);
+
+  EXPECT_CALL(mock_decoder_callbacks_,
+              sendLocalReply(Envoy::Http::Code::BadRequest,
+                             "No path in request headers.", _, _,
+                             "service_control_bad_request{MISSING_PATH}"))
+      .Times(1);
+  EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
+            filter_->decodeHeaders(missingPath, true));
+  EXPECT_CALL(mock_decoder_callbacks_,
+              sendLocalReply(Envoy::Http::Code::BadRequest,
+                             "No method in request headers.", _, _,
+                             "service_control_bad_request{MISSING_METHOD}"))
+      .Times(1);
+  EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
+            filter_->decodeHeaders(missingMethod, true));
+}
+
+TEST_F(ServiceControlFilterTest, DecodeHeadersOverflowWildcard) {
+  // Construct a request with a long path: "/aaa...aaa/long"
+  std::string a_chars(9000, 'a');
+  std::string path = absl::StrCat("/", a_chars, "/long");
+
+  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                                {":path", path}};
+
+  // Filter should reject the request.
+  EXPECT_CALL(
+      mock_decoder_callbacks_.stream_info_,
+      setResponseFlag(
+          Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
+
+  EXPECT_CALL(mock_decoder_callbacks_,
+              sendLocalReply(Envoy::Http::Code::BadRequest,
+                             "Path is too long, max allowed size is 8192.", _,
+                             _, "service_control_bad_request{OVERSIZE_PATH}"))
+      .Times(1);
+  EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
+            filter_->decodeHeaders(headers, true));
+}
+
+TEST_F(ServiceControlFilterTest, MissingRoute) {
+  EXPECT_CALL(mock_decoder_callbacks_, route()).WillOnce(Return(nullptr));
+
+  EXPECT_CALL(
+      mock_decoder_callbacks_.stream_info_,
+      setResponseFlag(
+          Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
+
+  EXPECT_CALL(mock_decoder_callbacks_,
+              sendLocalReply(Envoy::Http::Code::NotFound,
+                             "Request `GET /bar` is not defined by this API.",
+                             _, _, "service_control_undefined_request"));
+  EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
+            filter_->decodeHeaders(req_headers_, true));
+}
 
 TEST_F(ServiceControlFilterTest, DecodeHeadersSyncOKStatus) {
   // Test: If onCall is called with OK status, return Continue

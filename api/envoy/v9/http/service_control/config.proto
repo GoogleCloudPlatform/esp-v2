@@ -135,3 +135,8 @@ message FilterConfig {
     min_len: 1,
   }];
 }
+
+message PerRouteFilterConfig {
+  // The operation name.
+  string operation_name = 1 [(validate.rules).string.min_bytes = 1];
+}

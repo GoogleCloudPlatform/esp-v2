@@ -308,6 +308,12 @@
                               "cluster": "backend-cluster-http-bookstore-abc123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-abc123456-uc.a.run.app",
                               "timeout": "7s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.ListShelves"
+                              }
                             }
                           },
                           {
@@ -327,6 +333,12 @@
                               "cluster": "backend-cluster-http-bookstore-edf123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-edf123456-uc.a.run.app",
                               "timeout": "23s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.CreateShelf"
+                              }
                             }
                           }
                         ]
