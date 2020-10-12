@@ -37,6 +37,11 @@ exit 1; }
 . ${ROOT}/tests/e2e/scripts/prow-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
 
+echo '======================================================='
+echo '===================== Setup Cache ====================='
+echo '======================================================='
+try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "presubmit-api"
+
 # This integration test is used to ensure the backward-compatibility between ESPv2
 # and API Gateway use case. Once this test is broken, it reminds us to increment
 # api version if necessary.
