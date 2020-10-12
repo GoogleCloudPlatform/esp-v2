@@ -53,6 +53,7 @@ rules {
 }
 rules {
   operation: "1.cloudesf_testing_cloud_goog.Foo"
+  extract_path_parameters: true
   pattern {
     http_method: "GET"
     uri_template: "/foo/{id}"
@@ -78,6 +79,7 @@ TEST(FilterConfigTest, VariableBinding) {
   const char kFilterConfigBasic[] = R"(
 rules {
   operation: "1.cloudesf_testing_cloud_goog.Foo"
+  extract_path_parameters: true
   pattern {
     http_method: "GET"
     uri_template: "/foo/{id}"
@@ -109,6 +111,7 @@ TEST(FilterConfigTest, DuplicatedPatterns) {
   const char kFilterConfig[] = R"(
 rules {
   operation: "1.cloudesf_testing_cloud_goog.Bar"
+  extract_path_parameters: true
   pattern {
     http_method: "GET"
     uri_template: "/bar/{id}"
@@ -116,6 +119,7 @@ rules {
 }
 rules {
   operation: "1.cloudesf_testing_cloud_goog.Bar1"
+  extract_path_parameters: true
   pattern {
     http_method: "GET"
     uri_template: "/bar/{x}"
@@ -136,6 +140,7 @@ TEST(FilterConfigTest, InvalidPattern) {
   const char kFilterConfig[] = R"(
 rules {
   operation: "1.cloudesf_testing_cloud_goog.Bar"
+  extract_path_parameters: true
   pattern {
     http_method: "GET"
     uri_template: "/bar/{id{x}}"

@@ -93,13 +93,15 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
   utils::setStringFilterState(filter_state, utils::kFilterStateOperation,
                               operation);
 
-  std::vector<VariableBinding> variable_bindings;
-  config_->findRule(method, path, &variable_bindings);
+  if (rule->extract_path_parameters()) {
+    std::vector<VariableBinding> variable_bindings;
+    config_->findRule(method, path, &variable_bindings);
 
-  if (!variable_bindings.empty()) {
-    utils::setStringFilterState(
-        filter_state, utils::kFilterStateQueryParams,
-        VariableBindingsToQueryParameters(variable_bindings));
+    if (!variable_bindings.empty()) {
+      utils::setStringFilterState(
+          filter_state, utils::kFilterStateQueryParams,
+          VariableBindingsToQueryParameters(variable_bindings));
+    }
   }
 
   config_->stats().allowed_.inc();

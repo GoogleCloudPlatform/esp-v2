@@ -42,6 +42,7 @@ rules {
 }
 rules {
   operation: "1.cloudesf_testing_cloud_goog.Foo"
+  extract_path_parameters: true
   pattern {
     http_method: "GET"
     uri_template: "/foo/{fooBar}"
