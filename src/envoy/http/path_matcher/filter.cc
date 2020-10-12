@@ -97,10 +97,9 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
   config_->findRule(method, path, &variable_bindings);
 
   if (!variable_bindings.empty()) {
-    const std::string query_params =
-        VariableBindingsToQueryParameters(variable_bindings);
-    utils::setStringFilterState(filter_state, utils::kFilterStateQueryParams,
-                                query_params);
+    utils::setStringFilterState(
+        filter_state, utils::kFilterStateQueryParams,
+        VariableBindingsToQueryParameters(variable_bindings));
   }
 
   config_->stats().allowed_.inc();
