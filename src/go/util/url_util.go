@@ -204,6 +204,65 @@ func WildcardMatcherForPath(uri string) string {
 	return "^" + matcher + "$"
 }
 
+// This function return the uri string with snakeNames replaced with jsonName.
+// It assume:
+//   - the input uri template is valid and it won't verify the uri.
+//   - each snakeName as variable in the input uri appear equal to or less than once.
+//
+// It uses the hacky substring replacement:
+//   - find the first appearance of snakeName, the char before which is '{' or '.',
+//     the char after which is '}' or '.' or '='
+//   - replace that substring with the jsonName
+//
+// Same replacement cane be expressed as regexReplace(`(?<=[.{])${snakeName}(?=[.}=])`, ${jsonName})
+// but golang doesn't support such look around syntax.
+//
+// It should match the variable name extraction behavior in
+// https://github.com/GoogleCloudPlatform/esp-v2/blob/34314a46a54001f83508071e78596cba08b6f456/src/api_proxy/path_matcher/http_template_test.cc
+//
+// TODO(taoxuy@): extract variable name by syntax parsing.
+func SnakeNamesToJsonNamesInPathParam(uri string, snakeNameToJsonName map[string]string) string {
+	findPathParamIndex := func(uri, snakeName string) int {
+		for {
+			index := strings.Index(uri, snakeName)
+			if index == -1 {
+				return -1
+			}
+
+			if index != 0 && index+len(snakeName) < len(uri) {
+				// If the leftSide of snakeName match is `{` or '.'.
+				leftSide := uri[index-1] == '{' || uri[index-1] == '.'
+
+				// If the rightSide of snakeName match is `}`, '.' or '='.
+				rightSide := uri[index+len(snakeName)] == '}' || uri[index+len(snakeName)] == '.' || uri[index+len(snakeName)] == '='
+
+				if leftSide && rightSide {
+					return index
+				}
+			}
+
+			uri = uri[index+len(snakeName):]
+			continue
+		}
+	}
+
+	snakeNameToJsonNameInPathParam := func(uri, snakeName, jsonName string) string {
+		index := findPathParamIndex(uri, snakeName)
+		if index == -1 {
+			return uri
+		}
+
+		return uri[0:index] + jsonName + uri[index+len(snakeName):]
+	}
+
+	for snakeName, jsonName := range snakeNameToJsonName {
+		uri = snakeNameToJsonNameInPathParam(uri, snakeName, jsonName)
+
+	}
+
+	return uri
+}
+
 var (
 	FetchRolloutIdURL = func(serviceControlUrl, serviceName string) string {
 		return fmt.Sprintf("%v/v1/services/%s:report",

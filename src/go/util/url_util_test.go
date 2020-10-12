@@ -578,3 +578,66 @@ func TestWildcardMatcherForPath(t *testing.T) {
 		}
 	}
 }
+
+func TestSnakeNameToJsonNameInPathParam(t *testing.T) {
+
+	testCases := []struct {
+		desc                 string
+		uri                  string
+		snakeNameToJsonNames map[string]string
+		wantUri              string
+		wantError            string
+	}{
+		{
+			desc: "variable type {x}",
+			uri:  "/a/{x_y}/b",
+			snakeNameToJsonNames: map[string]string{
+				"x_y": "xY",
+			},
+			wantUri: "/a/{xY}/b",
+		},
+		{
+			desc: "variable type {x=*}",
+			uri:  "/a/{x_y=*}/b",
+			snakeNameToJsonNames: map[string]string{
+				"x_y": "xY",
+			},
+			wantUri: "/a/{xY=*}/b",
+		},
+		{
+			desc: "variable type {x.y.z=*}",
+			uri:  "/a/{x_y.a_b=*}/b",
+			snakeNameToJsonNames: map[string]string{
+				"x_y": "xY",
+				"a_b": "aB",
+			},
+			wantUri: "/a/{xY.aB=*}/b",
+		},
+		{
+			desc: "snake name not found",
+			uri:  "/a/{x_y}/b",
+			snakeNameToJsonNames: map[string]string{
+				"a_b": "aB",
+			},
+			wantUri: "/a/{x_y}/b",
+		},
+		{
+			desc: "snake name found but not as variable",
+			uri:  "/x_y/{x_y_foo}/{x_y_bar=*}",
+			snakeNameToJsonNames: map[string]string{
+				"x_y": "xY",
+			},
+			wantUri: "/x_y/{x_y_foo}/{x_y_bar=*}",
+		},
+	}
+
+	for _, tc := range testCases {
+		getUri := SnakeNamesToJsonNamesInPathParam(tc.uri, tc.snakeNameToJsonNames)
+
+		if getUri != tc.wantUri {
+			t.Errorf("Test(%s) fail, want uri: %s, get uri: %s", tc.desc, tc.wantUri, getUri)
+		}
+
+	}
+
+}

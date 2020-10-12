@@ -206,14 +206,10 @@
                         "rules": [
                           {
                             "operation": "1.examples_path_matcher_endpoints_cloudesf_testing_cloud_goog.GetShelf",
-                            "pathParameterExtraction": {
-                              "snakeToJsonSegments": {
-                                "shelf_id": "shelfId"
-                              }
-                            },
+                            "pathParameterExtraction": {},
                             "pattern": {
                               "httpMethod": "GET",
-                              "uriTemplate": "/libraries/{library_id}/shelves/{shelf_id}"
+                              "uriTemplate": "/libraries/{library_id}/shelves/{shelfId}"
                             }
                           },
                           {

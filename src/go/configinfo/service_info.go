@@ -716,9 +716,12 @@ func (s *ServiceInfo) processTypes() error {
 			}
 		}
 
-		// Store the mapping per selector.
+		// Replace the snake name with the json name in url template
 		if len(snakeToJson) > 0 {
-			mi.SegmentMappings = snakeToJson
+			for _, httpRule := range mi.HttpRule {
+				httpRule.UriTemplate = util.SnakeNamesToJsonNamesInPathParam(httpRule.UriTemplate, snakeToJson)
+			}
+
 		}
 	}
 	return nil
