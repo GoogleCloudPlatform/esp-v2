@@ -1262,8 +1262,7 @@ func TestPathMatcherFilter(t *testing.T) {
             "pattern":{
                "httpMethod":"GET",
                "uriTemplate":"foo/{id}"
-            },
-            "pathParameterExtraction":{}
+            }
          }
       ]
    }
@@ -1410,7 +1409,6 @@ func TestPathMatcherFilter(t *testing.T) {
       "rules":[
          {
             "operation":"1.cloudesf_testing_cloud_goog.Baz",
-            "pathParameterExtraction":{},
             "pattern":{
                "httpMethod":"GET",
                "uriTemplate":"baz/{bazBaz}"
@@ -1418,7 +1416,6 @@ func TestPathMatcherFilter(t *testing.T) {
          },
          {
             "operation":"1.cloudesf_testing_cloud_goog.Foo",
-            "pathParameterExtraction":{},
             "pattern":{
                "httpMethod":"GET",
                "uriTemplate":"foo/{fooBar}"

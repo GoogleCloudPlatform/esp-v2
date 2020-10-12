@@ -26,15 +26,13 @@ namespace api_proxy {
 namespace path_matcher {
 
 // Converts `VariableBinding`s to a query parameter string.
-// For example, given the following `VariableBinding`s and
-// snake-cased to JSON map {"foo_bar": "fooBar"}:
-//  * {"foo_bar"}  : "42"
+// For example, given the following variableBinding map:
+//  * {"fooBar"}  : "42"
 //  * {"foo", "bar"} : "42"
 //  * {"a", "b", "c"}: "xyz"
 // it returns "fooBar=42&foo.bar=42&a.b.c=xyz".
 const std::string VariableBindingsToQueryParameters(
-    const std::vector<VariableBinding>& variable_bindings,
-    const ::google::protobuf::Map<std::string, std::string>& snake_to_json);
+    const std::vector<VariableBinding>& variable_bindings);
 
 }  // namespace path_matcher
 }  // namespace api_proxy

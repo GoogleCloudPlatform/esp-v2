@@ -44,13 +44,7 @@ rules {
   operation: "1.cloudesf_testing_cloud_goog.Foo"
   pattern {
     http_method: "GET"
-    uri_template: "/foo/{foo_bar}"
-  }
-  path_parameter_extraction {
-    snake_to_json_segments {
-      key: "foo_bar"
-      value: "fooBar"
-    }
+    uri_template: "/foo/{fooBar}"
   }
 }
 rules {

@@ -339,14 +339,11 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		// Adds PathMatcherRule for HTTP method, whose HttpRule is not empty.
 		for _, httpRule := range method.HttpRule {
 			if httpRule.UriTemplate != "" && httpRule.HttpMethod != "" {
-				newHttpRule := &pmpb.PathMatcherRule{
+				rules = append(rules, &pmpb.PathMatcherRule{
 					Operation: operation,
 					Pattern:   httpRule,
-				}
-				if method.BackendInfo != nil && method.BackendInfo.TranslationType == confpb.BackendRule_CONSTANT_ADDRESS && hasPathParameter(newHttpRule.Pattern.UriTemplate) {
-					newHttpRule.PathParameterExtraction = &pmpb.PathParameterExtractionRule{}
-				}
-				rules = append(rules, newHttpRule)
+				})
+
 			}
 		}
 	}
