@@ -233,6 +233,24 @@ func TestDynamicRouting(t *testing.T) {
 			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?key=value&name=2"}`,
 		},
 		{
+			desc:     "Succeed, CONSTANT_ADDRESS with query params for variable bindings with multiple segments",
+			path:     "/field_path/a/1/b/2/x/9/8/7:upload",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?s_1=a/1/b/2&s_2=x/9/8/7"}`,
+		},
+		{
+			desc:          "Fail, CONSTANT_ADDRESS but verb is incorrect",
+			path:          "/field_path/a/1/b/2/x/9/8/7:incorrect_verb",
+			method:        "GET",
+			httpCallError: fmt.Errorf("http response status is not 200 OK: 404 Not Found"),
+		},
+		{
+			desc:          "Fail, CONSTANT_ADDRESS but first variable binding is incorrect",
+			path:          "/field_path/a/1/incorrect_segment/2/x/9/8/7:upload",
+			method:        "GET",
+			httpCallError: fmt.Errorf("http response status is not 200 OK: 404 Not Found"),
+		},
+		{
 			desc:          "Operation ordering - The first operation is matched, resulting in an invalid host rewrite.",
 			path:          "/allow-all/abc",
 			method:        "POST",
@@ -255,28 +273,29 @@ func TestDynamicRouting(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
-		gotResp, err := client.DoWithHeaders(url, tc.method, tc.message, nil)
+		t.Run(tc.desc, func(t *testing.T) {
+			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+			gotResp, err := client.DoWithHeaders(url, tc.method, tc.message, nil)
 
-		if tc.httpCallError == nil {
-			if err != nil {
-				t.Fatal(err)
-			}
-		} else {
-			if err == nil {
-				t.Errorf("Test(%s): got no error, expected err: %v", tc.desc, tc.httpCallError)
-				continue
-			}
+			if tc.httpCallError == nil {
+				if err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				if err == nil {
+					t.Fatalf("got no error, expected err: %v", tc.httpCallError)
+				}
 
-			if !strings.Contains(err.Error(), tc.httpCallError.Error()) {
-				t.Errorf("Test(%s): expected Http call error: %v, got: %v", tc.desc, tc.httpCallError, err)
+				if !strings.Contains(err.Error(), tc.httpCallError.Error()) {
+					t.Fatalf("expected Http call error: %v, got: %v", tc.httpCallError, err)
+				}
+				return
 			}
-			continue
-		}
-		gotRespStr := string(gotResp)
-		if err := util.JsonEqual(tc.wantResp, gotRespStr); err != nil {
-			t.Errorf("Test(%s) fails: \n %s", tc.desc, err)
-		}
+			gotRespStr := string(gotResp)
+			if err := util.JsonEqual(tc.wantResp, gotRespStr); err != nil {
+				t.Errorf("fail: \n %s", err)
+			}
+		})
 	}
 }
 

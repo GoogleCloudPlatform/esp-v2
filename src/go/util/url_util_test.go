@@ -523,9 +523,19 @@ func TestWildcardMatcherForPath(t *testing.T) {
 			wantMatcher: `^/shelves/[^\/]+/books/[^\/]+$`,
 		},
 		{
+			desc:        "Path params with fieldpath-only bindings and verb",
+			uri:         "/shelves/{shelf_id}/books/{book.id}:checkout",
+			wantMatcher: `^/shelves/[^\/]+/books/[^\/]+:checkout$`,
+		},
+		{
 			desc:        "Path param with wildcard segments",
 			uri:         "/test/*/test/**",
 			wantMatcher: `^/test/[^\/]+/test/.*$`,
+		},
+		{
+			desc:        "Path param with wildcard segments and verb",
+			uri:         "/test/*/test/**:upload",
+			wantMatcher: `^/test/[^\/]+/test/.*:upload$`,
 		},
 		{
 			desc:        "Path param with wildcard in segment binding",
@@ -543,12 +553,20 @@ func TestWildcardMatcherForPath(t *testing.T) {
 			wantMatcher: "",
 		},
 		{
-			// TODO(nareddyt): This is incorrect. But it should be fine, it's only a problem
-			// when user configures gRPC transcoding manually. OpenAPI compiler will
-			// never generate such a segment binding.
 			desc:        "Path params with full segment binding",
 			uri:         "/v1/{name=books/*}",
-			wantMatcher: `^/v1/[^\/]+$`,
+			wantMatcher: `^/v1/books/[^\/]+$`,
+		},
+		{
+			desc:        "Path params with multiple field path segment bindings",
+			uri:         "/v1/{test=a/b/*}/route/{resource_id=shelves/*/books/**}:upload",
+			wantMatcher: `^/v1/a/b/[^\/]+/route/shelves/[^\/]+/books/.*:upload$`,
+		},
+		{
+			// TODO(nareddyt): How can we improve validation once we remove path matcher?
+			desc:        "BUG - Incorrect http template syntax is not validated",
+			uri:         "/v1/{name=/books/*}",
+			wantMatcher: `^/v1//books/[^\/]+$`,
 		},
 	}
 

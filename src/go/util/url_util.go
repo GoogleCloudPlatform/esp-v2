@@ -39,16 +39,22 @@ const (
 
 var (
 	// Various hacky regular expressions to match a subset of the http template syntax.
-	// Replace segments with single wildcards: /v1/books/*
+
+	// Match and capture the segment binding for a named field path.
+	// - /v1/{resource=shelves/*/books/**} -> /v1/shelves/*/books/**
+	fieldPathSegmentSimplifier = regexp.MustCompile(`{[^{}]+=([^{}]+)}`)
+	// Replace segments with single wildcards
+	// - /v1/books/* -> /v1/books/[^/]+
 	singleWildcardMatcher = regexp.MustCompile(`/\*`)
-	// Replace segments with double wildcards: /v1/**
+	// Replace segments with double wildcards
+	// - /v1/** -> /v1/.*
 	doubleWildcardMatcher = regexp.MustCompile(`/\*\*`)
-	// Replace any path templates: /v1/books/{book_id}
+	// Replace any path templates
+	// - /v1/books/{book_id} -> /v1/books/[^/]+
 	pathParamMatcher = regexp.MustCompile(`/{[^{}]+}`)
-	// Replace path templates with double wildcards: /v1/{name=**}
-	pathParamDoubleWildcardMatcher = regexp.MustCompile(`/{[^{}]+=\*\*}`)
 
 	// Common regex forms that emulate http template syntax.
+
 	// Matches 1 or more segments of any character except '/'.
 	singleWildcardReplacementRegex = `/[^\/]+`
 	// Matches any character or no characters at all.
@@ -185,7 +191,7 @@ func ExtraAddressFromURI(jwksUri string) (string, error) {
 func WildcardMatcherForPath(uri string) string {
 
 	// Ordering matters, start with most specific and work upwards.
-	matcher := pathParamDoubleWildcardMatcher.ReplaceAllString(uri, doubleWildcardReplacementRegex)
+	matcher := fieldPathSegmentSimplifier.ReplaceAllString(uri, "$1")
 	matcher = pathParamMatcher.ReplaceAllString(matcher, singleWildcardReplacementRegex)
 	matcher = doubleWildcardMatcher.ReplaceAllString(matcher, doubleWildcardReplacementRegex)
 	matcher = singleWildcardMatcher.ReplaceAllString(matcher, singleWildcardReplacementRegex)
