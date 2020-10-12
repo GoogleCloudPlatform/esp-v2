@@ -67,7 +67,6 @@ FilterConfigParser::FilterConfigParser(const FilterConfig& config,
   // Construct a requirement for non matched requests
   non_match_rqm_cfg_.set_service_name(first_srv_ctx->config().service_name());
   non_match_rqm_cfg_.set_operation_name(kUnrecognizedOperation);
-  non_match_rqm_cfg_.mutable_api_key()->set_allow_without_api_key(true);
   non_match_rqm_ctx_.reset(
       new RequirementContext(non_match_rqm_cfg_, *first_srv_ctx));
 
