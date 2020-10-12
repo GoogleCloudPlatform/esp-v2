@@ -184,7 +184,7 @@ function setup() {
     # b/142752619: The cluster version should be >= 1.15 to be compatible with istio.
     gcloud beta container clusters create ${CLUSTER_NAME} \
       --addons=HorizontalPodAutoscaling,HttpLoadBalancing,CloudRun \
-      --machine-type=n1-standard-4 \
+      --machine-type=e2-standard-4 \
       --cluster-version=${CLUSTER_VERSION} \
       --enable-stackdriver-kubernetes \
       --service-account=${PROXY_RUNTIME_SERVICE_ACCOUNT} \
