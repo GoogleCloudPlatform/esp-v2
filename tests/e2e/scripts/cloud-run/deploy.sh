@@ -184,7 +184,7 @@ function setup() {
     # b/142752619: The cluster version should be >= 1.15 to be compatible with istio.
     gcloud beta container clusters create ${CLUSTER_NAME} \
       --addons=HorizontalPodAutoscaling,HttpLoadBalancing,CloudRun \
-      --machine-type=n1-standard-4 \
+      --machine-type=e2-standard-4 \
       --cluster-version=${CLUSTER_VERSION} \
       --enable-stackdriver-kubernetes \
       --service-account=${PROXY_RUNTIME_SERVICE_ACCOUNT} \
@@ -372,9 +372,16 @@ function test() {
   then
     local scheme="http"
     local port="80"
+
     # Get the external ip of cluster
+    sleep_wrapper "3m" "Sleep 3m for external IP to be allocated"
     local host
     host=$( kubectl get svc istio-ingress -n gke-system | awk 'END {print $4}')
+    if [[ $host == *"pending"* ]]; then
+      echo "IP Address not allocated, even after sleep"
+      return 1
+    fi
+
     # Pass the real host by header `HOST`
     local host_header=${PROXY_HOST}
     local service_name=${PROXY_HOST}
