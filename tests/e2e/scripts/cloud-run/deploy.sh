@@ -372,9 +372,16 @@ function test() {
   then
     local scheme="http"
     local port="80"
+
     # Get the external ip of cluster
+    sleep_wrapper "3m" "Sleep 3m for external IP to be allocated"
     local host
     host=$( kubectl get svc istio-ingress -n gke-system | awk 'END {print $4}')
+    if [[ $host == *"pending"* ]]; then
+      echo "IP Address not allocated, even after sleep"
+      return 1
+    fi
+
     # Pass the real host by header `HOST`
     local host_header=${PROXY_HOST}
     local service_name=${PROXY_HOST}
