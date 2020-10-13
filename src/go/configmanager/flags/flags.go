@@ -55,9 +55,11 @@ var (
 	Healthz      = flag.String("healthz", "", "path for health check of ESPv2 proxy itself")
 
 	SslServerCertPath                = flag.String("ssl_server_cert_path", "", "Path to the certificate and key that ESPv2 uses to act as a HTTPS server")
+	SslServerCipherSuites            = flag.String("ssl_server_cipher_suites", "", "Cipher suites to use for downstream connections as a comma-separated list.")
 	SslSidestreamClientRootCertsPath = flag.String("ssl_sidestream_client_root_certs_path", util.DefaultRootCAPaths, "Path to the root certificates to make TLS connection to all external services other than the backend.")
 	SslBackendClientCertPath         = flag.String("ssl_backend_client_cert_path", "", "Path to the certificate and key that ESPv2 uses to enable TLS mutual authentication for HTTPS backend")
 	SslBackendClientRootCertsPath    = flag.String("ssl_backend_client_root_certs_path", util.DefaultRootCAPaths, "Path to the root certificates to make TLS connection to the HTTPS backend.")
+	SslBackendClientCipherSuites     = flag.String("ssl_backend_client_cipher_suites", "", "Cipher suites to use for HTTPS backends as a comma-separated list.")
 	SslMinimumProtocol               = flag.String("ssl_minimum_protocol", "", "Minimum TLS protocol version for Downstream connections.")
 	SslMaximumProtocol               = flag.String("ssl_maximum_protocol", "", "Maximum TLS protocol version for Downstream connections.")
 	EnableHSTS                       = flag.Bool("enable_strict_transport_security", false, "Enable HSTS (HTTP Strict Transport Security).")
@@ -147,7 +149,9 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		SslSidestreamClientRootCertsPath:        *SslSidestreamClientRootCertsPath,
 		SslBackendClientCertPath:                *SslBackendClientCertPath,
 		SslBackendClientRootCertsPath:           *SslBackendClientRootCertsPath,
+		SslBackendClientCipherSuites:            *SslBackendClientCipherSuites,
 		SslServerCertPath:                       *SslServerCertPath,
+		SslServerCipherSuites:                   *SslServerCipherSuites,
 		SslMinimumProtocol:                      *SslMinimumProtocol,
 		SslMaximumProtocol:                      *SslMaximumProtocol,
 		EnableHSTS:                              *EnableHSTS,

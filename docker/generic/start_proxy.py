@@ -150,6 +150,10 @@ environment variable or by passing "-k" flag to this script.
         HTTP/2 secure connections on listener_port. Requires the certificate and
         key files "server.crt" and "server.key" within this path.''')
 
+    parser.add_argument('--ssl_server_cipher_suites', default=None, help='''
+        Cipher suites to use for downstream connections as a comma-separated list.
+        Please refer to https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/auth/common.proto#auth-tlsparameters''')
+
     parser.add_argument('--ssl_backend_client_cert_path', default=None, help='''
         Proxy's client cert path. When configured, ESPv2 enables TLS mutual
         authentication for HTTPS backends. Requires the certificate and
@@ -158,6 +162,10 @@ environment variable or by passing "-k" flag to this script.
     parser.add_argument('--ssl_backend_client_root_certs_file', default=None, help='''
         The file path of root certificates that ESPv2 uses to verify backend server certificate.
         If not specified, ESPv2 uses '/etc/ssl/certs/ca-certificates.crt' by default.''')
+
+    parser.add_argument('--ssl_backend_client_cipher_suites', default=None, help='''
+        Cipher suites to use for HTTPS backends as a comma-separated list.
+        Please refer to https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/auth/common.proto#auth-tlsparameters''')
 
     parser.add_argument('--ssl_minimum_protocol', default=None,
         choices=['TLSv1.0', 'TLSv1.1', 'TLSv1.2', 'TLSv1.3'],
@@ -809,6 +817,11 @@ def gen_proxy_config(args):
         proxy_conf.extend(["--ssl_backend_client_root_certs_path", str(args.ssl_backend_client_root_certs_file)])
     if args.ssl_client_root_certs_file:
         proxy_conf.extend(["--ssl_backend_client_root_certs_path", str(args.ssl_client_root_certs_file)])
+
+    if args.ssl_server_cipher_suites:
+        proxy_conf.extend(["--ssl_server_cipher_suites", str(args.ssl_server_cipher_suites)])
+    if args.ssl_backend_client_cipher_suites:
+        proxy_conf.extend(["--ssl_backend_client_cipher_suites", str(args.ssl_backend_client_cipher_suites)])
 
     if args.tls_mutual_auth:
         proxy_conf.extend(["--ssl_backend_client_cert_path", "/etc/nginx/ssl"])

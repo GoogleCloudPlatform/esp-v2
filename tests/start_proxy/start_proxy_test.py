@@ -201,6 +201,17 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8080', '--ssl_minimum_protocol',
               'TLSv1.1','--ssl_maximum_protocol','TLSv1.3', '--disable_tracing'
               ]),
+            # ssl_server_cipher_suites and ssl_backend_client_cipher_suites specified
+            (['-R=managed','--listener_port=8080',  '--disable_tracing',
+              '--ssl_server_cipher_suites=AES128-SHA,AES256-GCM-SHA384',
+              '--ssl_backend_client_cipher_suites=AES256-SHA'],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--listener_port', '8080',
+              '--ssl_server_cipher_suites', 'AES128-SHA,AES256-GCM-SHA384',
+              '--ssl_backend_client_cipher_suites', 'AES256-SHA',
+              '--disable_tracing'
+              ]),
             # legacy --ssl_protocols specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
               '--ssl_protocols=TLSv1.3', '--ssl_protocols=TLSv1.2'],
