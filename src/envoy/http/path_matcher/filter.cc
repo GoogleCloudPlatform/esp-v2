@@ -29,7 +29,6 @@ namespace path_matcher {
 
 using ::Envoy::Http::RequestHeaderMap;
 using ::espv2::api::envoy::v9::http::path_matcher::PathMatcherRule;
-using ::espv2::api::envoy::v9::http::path_matcher::PathParameterExtractionRule;
 using ::espv2::api_proxy::path_matcher::VariableBinding;
 using ::espv2::api_proxy::path_matcher::VariableBindingsToQueryParameters;
 using ::google::protobuf::util::Status;
@@ -94,18 +93,14 @@ Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
   utils::setStringFilterState(filter_state, utils::kFilterStateOperation,
                               operation);
 
-  if (rule->has_path_parameter_extraction()) {
-    const PathParameterExtractionRule& param_rule =
-        rule->path_parameter_extraction();
-
+  if (rule->extract_path_parameters()) {
     std::vector<VariableBinding> variable_bindings;
     config_->findRule(method, path, &variable_bindings);
 
     if (!variable_bindings.empty()) {
-      const std::string query_params = VariableBindingsToQueryParameters(
-          variable_bindings, param_rule.snake_to_json_segments());
-      utils::setStringFilterState(filter_state, utils::kFilterStateQueryParams,
-                                  query_params);
+      utils::setStringFilterState(
+          filter_state, utils::kFilterStateQueryParams,
+          VariableBindingsToQueryParameters(variable_bindings));
     }
   }
 
