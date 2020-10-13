@@ -70,7 +70,8 @@ var (
 	TokenAgentPort = flag.Uint("token_agent_port", 8791, "Port that configmanager use to setup server to provide envoy with access token using service account credential, for accessing servicecontrol.")
 
 	// Flags for external calls.
-	DisableOidcDiscovery = flag.Bool("disable_oidc_discovery", false, `Disable OpenID Connect Discovery, prevents config generator from making external calls to determine the JWKS URI. 
+	DisableOidcDiscovery = flag.Bool("disable_oidc_discovery", false, `Disable OpenID Connect Discovery. 
+  When disabled, config generator will not make external calls to determine the JWKS URI. 
 	This should be disabled when the URLs configured by the API Producer cannot be trusted.`)
 
 	// Envoy configurations.
