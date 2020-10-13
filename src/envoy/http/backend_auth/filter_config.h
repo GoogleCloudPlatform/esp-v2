@@ -29,7 +29,7 @@ namespace backend_auth {
 #define ALL_BACKEND_AUTH_FILTER_STATS(COUNTER) \
   COUNTER(denied_by_no_route)                  \
   COUNTER(denied_by_no_token)                  \
-  COUNTER(allowed_by_disable_auth)             \
+  COUNTER(allowed_by_auth_not_required)        \
   COUNTER(token_added)
 
 /**

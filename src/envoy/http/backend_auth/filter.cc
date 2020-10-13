@@ -71,7 +71,7 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
           kFilterName);
   if (per_route == nullptr) {
     ENVOY_LOG(debug, "no per-route config");
-    config_->stats().allowed_by_disable_auth_.inc();
+    config_->stats().allowed_by_auth_not_required_.inc();
     return FilterHeadersStatus::Continue;
   }
 

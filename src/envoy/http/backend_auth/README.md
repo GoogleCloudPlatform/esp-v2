@@ -29,9 +29,11 @@ This filter records statistics.
 ### Counters
 
 - `denied_by_no_token`: Number of API Consumer requests that are denied due to the filter
- missing a token needed for the request.
-- `denied_by_no_operation`: Number of API Consumer requests that are denied due to missing filter state.
-- `allowed_by_no_configured_rules`: Number of API Consumer requests that are allowed through
- without modification. Occurs when the operation is not configured for auth rewrite.
+ missing a token needed for the request. Two possible causes: 1) the `jwt_audience` specified in the
+ route entry perFilterConfig for this filter PerRouteFilerConfig is not in the `jwt_audience_list` in
+ the FilterConfig. 2) fails to fetch ID token.
+- `denied_by_no_route`: Number of API Consumer requests that are denied due to not route configurated.
+- `allowed_by_auth_not_required`: Number of API Consumer requests that are allowed without sending ID
+ token to the backend.
 - `token_added`: Number of API Consumer requests that are allowed through with
  modification for backend authentication.

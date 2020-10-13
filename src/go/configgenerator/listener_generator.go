@@ -746,6 +746,7 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 }
 
 func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
+	// Use map to collect list of unique jwt audiences.
 	audMap := make(map[string]bool)
 	for _, method := range serviceInfo.Methods {
 		if method.BackendInfo != nil && method.BackendInfo.JwtAudience != "" {
@@ -761,7 +762,7 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	for aud := range audMap {
 		audList = append(audList, aud)
 	}
-	// This sort is just for reliable unit-test
+	// This sort is just for unit-test to compare with expected result.
 	sort.Strings(audList)
 	backendAuthConfig := &bapb.FilterConfig{
 		JwtAudienceList: audList,

@@ -132,8 +132,8 @@ TEST_F(BackendAuthFilterTest, NotPerRouteConfigAllowed) {
 
   // Stats.
   const Envoy::Stats::CounterSharedPtr counter =
-      Envoy::TestUtility::findCounter(scope_,
-                                      "backend_auth.allowed_by_disable_auth");
+      Envoy::TestUtility::findCounter(
+          scope_, "backend_auth.allowed_by_auth_not_required");
   ASSERT_NE(counter, nullptr);
   EXPECT_EQ(counter->value(), 1);
 }
