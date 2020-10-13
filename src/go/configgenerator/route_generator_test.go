@@ -183,6 +183,10 @@ func TestMakeRouteConfig(t *testing.T) {
             "timeout": "15s"
           },
           "typedPerFilterConfig":{
+            "com.google.espv2.filters.http.backend_auth":{
+              "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience":"bar.com"
+            },
             "com.google.espv2.filters.http.service_control":{
               "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
               "operationName":"endpoints.examples.bookstore.Bookstore.Foo"
@@ -255,6 +259,10 @@ func TestMakeRouteConfig(t *testing.T) {
             "timeout":"15s"
           },
           "typedPerFilterConfig":{
+            "com.google.espv2.filters.http.backend_auth":{
+              "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience":"bar.com"
+            },
             "com.google.espv2.filters.http.service_control":{
               "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
               "operationName":"endpoints.examples.bookstore.Bookstore.Foo"
