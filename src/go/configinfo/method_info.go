@@ -40,6 +40,10 @@ type methodInfo struct {
 
 	// The request type name (not the entire type URL).
 	RequestTypeName string
+
+	// The auto-generated cors methods, used to replace snakeName with jsonName in their
+	// url templates in config time.
+	GeneratedCorsMethod *methodInfo
 }
 
 // backendInfo stores information from Backend rule for backend rerouting.

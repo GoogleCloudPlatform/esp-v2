@@ -323,8 +323,9 @@ func TestDynamicRoutingWithAllowCors(t *testing.T) {
 	}
 
 	testData := []struct {
-		desc string
-		url  string
+		desc           string
+		url            string
+		wantRequestUrl string
 	}{
 		{
 			// when allowCors, passes preflight CORS request to backend.
@@ -336,6 +337,16 @@ func TestDynamicRoutingWithAllowCors(t *testing.T) {
 			// even the origin method requires authentication.
 			desc: "TestDynamicRoutingWithAllowCors Succeed without jwt token, response has CORS headers",
 			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/auth/info/firebase"),
+		},
+		{
+			// when allowCors, passes preflight CORS request to backend.
+			// Test the path extraction for the auto-generated method for cors requests.
+			// Original method:
+			//   1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetBookInfoWithSnakeCase
+			//   Get: "/shelves/{s_h_e_l_f}/books/info/{b_o_o_k}",
+			desc:           "TestDynamicRoutingWithAllowCors Succeed with path extraction, response has CORS headers",
+			url:            fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/shelves/8/books/info/24"),
+			wantRequestUrl: "/dynamicrouting/bookinfo?SHELF=8&BOOK=24",
 		},
 	}
 
@@ -349,6 +360,12 @@ func TestDynamicRoutingWithAllowCors(t *testing.T) {
 		for key, value := range respHeaderMap {
 			if respHeader.Get(key) != value {
 				t.Errorf("Test(%v, %s)%s expected: %s, got: %s", idx, tc.desc, key, value, respHeader.Get(key))
+			}
+		}
+
+		if tc.wantRequestUrl != "" {
+			if getRequestUrl := respHeader.Get("Request-Url"); getRequestUrl != tc.wantRequestUrl {
+				t.Errorf("Test(%v, %s) expected request url: %s, got request url: %s", idx, tc.desc, tc.wantRequestUrl, getRequestUrl)
 			}
 		}
 	}
