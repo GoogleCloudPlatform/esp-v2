@@ -429,7 +429,7 @@ func (s *ServiceInfo) addOptionMethod(originalMethod *methodInfo, path string) e
 		HttpMethod:  util.OPTIONS,
 	})
 
-	originalMethod.GeneratedCorsMethods = append(originalMethod.GeneratedCorsMethods, method)
+	originalMethod.GeneratedCorsMethod = method
 
 	return nil
 }
@@ -724,10 +724,11 @@ func (s *ServiceInfo) processTypes() error {
 				httpRule.UriTemplate = util.SnakeNamesToJsonNamesInPathParam(httpRule.UriTemplate, snakeToJson)
 			}
 
-			for _, gen := range mi.GeneratedCorsMethods {
-				for _, httpRule := range gen.HttpRule {
+			if mi.GeneratedCorsMethod != nil {
+				for _, httpRule := range mi.GeneratedCorsMethod.HttpRule {
 					httpRule.UriTemplate = util.SnakeNamesToJsonNamesInPathParam(httpRule.UriTemplate, snakeToJson)
 				}
+
 			}
 
 		}
