@@ -21,10 +21,10 @@ This section gives examples of how to run the fuzz tests locally using [LibFuzze
 
 #### Prerequisites
 
-You need LLVM and `clang-8` to run fuzz tests with LibFuzzer.
+You need LLVM and `clang-10` to run fuzz tests with LibFuzzer.
 
 ```.shell script
-sudo apt install llvm-8-dev libclang-8-dev clang-8 xz-utils lld
+sudo apt install llvm-10-dev libclang-10-dev clang-10 xz-utils lld
 ```
 
 #### Running Regression Tests
