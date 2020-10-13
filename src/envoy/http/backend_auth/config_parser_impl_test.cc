@@ -44,28 +44,9 @@ class ConfigParserImplTest : public ::testing::Test {
   std::unique_ptr<FilterConfigParser> config_parser_;
 };
 
-TEST_F(ConfigParserImplTest, DuplicateOperationThrows) {
-  const char filter_config[] = R"(
-imds_token {
-  uri: "this-is-uri"
-  cluster: "this-is-cluster"
-}
-rules {
-  operation: "operation-dup"
-  jwt_audience: "audience-foo"
-}
-rules {
-  operation: "operation-dup"
-  jwt_audience: "audience-bar"
-}
-)";
-
-  EXPECT_THROW_WITH_REGEX(setUp(filter_config), Envoy::ProtoValidationException,
-                          "Duplicated operation");
-}
-
 TEST_F(ConfigParserImplTest, GetIdTokenByImds) {
   const char filter_config[] = R"(
+jwt_audience_list: ["audience-foo","audience-bar"]
 imds_token {
   uri: "this-is-uri"
   cluster: "this-is-cluster"
@@ -73,17 +54,8 @@ imds_token {
     seconds: 20
   }
 }
-rules {
-  operation: "operation-foo"
-  jwt_audience: "audience-foo"
-}
-rules {
-  operation: "operation-bar"
-  jwt_audience: "audience-bar"
-}
 )";
   const std::string token_foo("token-foo");
-
   const std::string token_bar("token-bar");
 
   EXPECT_CALL(mock_token_subscriber_factory_,
@@ -113,19 +85,15 @@ rules {
 
   setUp(filter_config);
 
-  EXPECT_EQ(config_parser_->getAudience("operation-foo"), "audience-foo");
-  EXPECT_EQ(config_parser_->getAudience("operation-bar"), "audience-bar");
-
   EXPECT_EQ(*config_parser_->getJwtToken("audience-foo"), "token-foo");
   EXPECT_EQ(*config_parser_->getJwtToken("audience-bar"), "token-bar");
 
   EXPECT_EQ(config_parser_->getJwtToken("audience-non-existent"), nullptr);
-  EXPECT_EQ(config_parser_->getAudience("operation-non-existent"),
-            Envoy::EMPTY_STRING);
 }
 
 TEST_F(ConfigParserImplTest, GetIdTokenByIam) {
   const char filter_config[] = R"(
+jwt_audience_list: ["audience-foo","audience-bar"]
 iam_token {
   access_token {
     remote_token {
@@ -143,14 +111,6 @@ iam_token {
       seconds: 4
     }
   }
-}
-rules {
-  operation: "operation-foo"
-  jwt_audience: "audience-foo"
-}
-rules {
-  operation: "operation-bar"
-  jwt_audience: "audience-bar"
 }
 )";
   const std::string access_token("access_token");
@@ -204,9 +164,6 @@ rules {
           }));
 
   setUp(filter_config);
-
-  EXPECT_EQ(config_parser_->getAudience("operation-foo"), "audience-foo");
-  EXPECT_EQ(config_parser_->getAudience("operation-bar"), "audience-bar");
 
   EXPECT_EQ(*config_parser_->getJwtToken("audience-foo"), "id-token-foo");
   EXPECT_EQ(*config_parser_->getJwtToken("audience-bar"), "id-token-bar");

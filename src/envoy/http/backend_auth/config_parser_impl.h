@@ -36,8 +36,7 @@ class TokenCache : public Envoy::ThreadLocal::ThreadLocalObject {
 class AudienceContext {
  public:
   AudienceContext(
-      const ::espv2::api::envoy::v9::http::backend_auth::BackendAuthRule&
-          proto_config,
+      const std::string& jwt_audience,
       Envoy::Server::Configuration::FactoryContext& context,
       const ::espv2::api::envoy::v9::http::backend_auth::FilterConfig& config,
       const token::TokenSubscriberFactory& token_subscriber_factory,
@@ -66,14 +65,6 @@ class FilterConfigParserImpl
       Envoy::Server::Configuration::FactoryContext& context,
       const token::TokenSubscriberFactory& token_subscriber_factory);
 
-  absl::string_view getAudience(absl::string_view operation) const override {
-    auto operation_it = operation_map_.find(operation);
-    if (operation_it == operation_map_.end()) {
-      return Envoy::EMPTY_STRING;
-    }
-    return operation_it->second;
-  }
-
   const TokenSharedPtr getJwtToken(absl::string_view audience) const override {
     auto audience_it = audience_map_.find(audience);
     if (audience_it == audience_map_.end()) {
@@ -87,7 +78,6 @@ class FilterConfigParserImpl
   //  IAM server.
   std::string access_token_;
   token::TokenSubscriberPtr access_token_sub_ptr_;
-  absl::flat_hash_map<std::string, std::string> operation_map_;
   absl::flat_hash_map<std::string, AudienceContextPtr> audience_map_;
 };
 

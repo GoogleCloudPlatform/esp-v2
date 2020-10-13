@@ -19,14 +19,14 @@ package espv2.api.envoy.v9.http.backend_auth;
 import "api/envoy/v9/http/common/base.proto";
 import "validate/validate.proto";
 
-message BackendAuthRule {
-  // Operation name, also known as selector.
-  string operation = 1 [(validate.rules).string.min_bytes = 1];
-
+// This config will be use in RouteEntry perFilterConfig
+// If a route entry doesn't have this config, it doesn't need to send the jwt
+// token to the backend.
+message PerRouteFilterConfig {
   // Audience used to create the JWT token sent to the backend.
-  // Must have a value, otherwise JWT is not valid.
   // https://cloud.google.com/endpoints/docs/openapi/openapi-extensions#jwt_audience_disable_auth
-  string jwt_audience = 2 [(validate.rules).string = {
+  // It has to be in the `jwt_audience_list`.
+  string jwt_audience = 1 [(validate.rules).string = {
     min_bytes: 1,
     well_known_regex: HTTP_HEADER_VALUE,
     strict: false
@@ -34,8 +34,12 @@ message BackendAuthRule {
 }
 
 message FilterConfig {
-  // A list of backend auth rules.
-  repeated BackendAuthRule rules = 1;
+  // Supported audience list. Each audience has its token.
+  // The tokens from this list will be prefetched.
+  repeated string jwt_audience_list = 1 [(validate.rules).repeated = {
+    min_items: 1
+    items { string { well_known_regex: HTTP_HEADER_VALUE strict: false } }
+  }];
 
   oneof id_token_info {
     option (validate.required) = true;
