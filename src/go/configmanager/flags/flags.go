@@ -69,6 +69,10 @@ var (
   omitted, the proxy contacts the metadata service to fetch an access token`)
 	TokenAgentPort = flag.Uint("token_agent_port", 8791, "Port that configmanager use to setup server to provide envoy with access token using service account credential, for accessing servicecontrol.")
 
+	// Flags for external calls.
+	DisableOidcDiscovery = flag.Bool("disable_oidc_discovery", false, `Disable OpenID Connect Discovery, prevents config generator from making external calls to determine the JWKS URI. 
+	This should be disabled when the URLs configured by the API Producer cannot be trusted.`)
+
 	// Envoy configurations.
 	AccessLog       = flag.String("access_log", "", "Path to a local file to which the access log entries will be written")
 	AccessLogFormat = flag.String("access_log_format", "", `String format to specify the format of access log.
@@ -154,6 +158,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		DnsResolverAddresses:                    *DnsResolverAddresses,
 		ServiceAccountKey:                       *ServiceAccountKey,
 		TokenAgentPort:                          *TokenAgentPort,
+		DisableOidcDiscovery:                    *DisableOidcDiscovery,
 		SkipJwtAuthnFilter:                      *SkipJwtAuthnFilter,
 		SkipServiceControlFilter:                *SkipServiceControlFilter,
 		EnvoyUseRemoteAddress:                   *EnvoyUseRemoteAddress,

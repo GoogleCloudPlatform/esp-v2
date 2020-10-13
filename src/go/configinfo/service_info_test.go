@@ -2167,13 +2167,14 @@ func TestProcessEmptyJwksUriByOpenID(t *testing.T) {
 	openIDServer := httptest.NewServer(r)
 
 	testData := []struct {
-		desc              string
-		fakeServiceConfig *confpb.Service
-		wantedJwksUri     string
-		wantErr           bool
+		desc                 string
+		fakeServiceConfig    *confpb.Service
+		disableOidcDiscovery bool
+		wantedJwksUri        string
+		wantErr              bool
 	}{
 		{
-			desc: "Empty jwksUri, use jwksUri acquired by openID",
+			desc: "Success, empty JWKS URI, so it's acquired using OpenID Connect Discovery.",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
@@ -2192,7 +2193,7 @@ func TestProcessEmptyJwksUriByOpenID(t *testing.T) {
 			wantedJwksUri: "this-is-jwksUri",
 		},
 		{
-			desc: "Empty jwksUri and Open ID Connect Discovery failed",
+			desc: "Fail, empty JWKS URI and Open ID Connect Discovery failed.",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
@@ -2210,10 +2211,31 @@ func TestProcessEmptyJwksUriByOpenID(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			desc: "Fail, empty JWKS URI but OpenID Connect Discovery disabled.",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
+						{
+							Id:     "auth_provider",
+							Issuer: openIDServer.URL,
+						},
+					},
+				},
+			},
+			disableOidcDiscovery: true,
+			wantErr:              true,
+		},
 	}
 
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
+		opts.DisableOidcDiscovery = tc.disableOidcDiscovery
 		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 
 		if tc.wantErr {

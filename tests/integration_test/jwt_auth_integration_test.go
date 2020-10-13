@@ -126,7 +126,7 @@ func TestAsymmetricKeys(t *testing.T) {
 			wantError:      `401 Unauthorized, {"code":401,"message":"Jwks remote fetch is failed"}`,
 		},
 		{
-			desc:           "Succeeded, using openID discovery",
+			desc:           "Succeeded, using OpenID Connect Discovery",
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
@@ -134,7 +134,7 @@ func TestAsymmetricKeys(t *testing.T) {
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
 		{
-			desc:           "Failed, the provider found by openID discovery providing invalid jwks",
+			desc:           "Failed, the provider found by OpenID Connect Discovery providing invalid jwks",
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
@@ -190,29 +190,36 @@ func TestAsymmetricKeys(t *testing.T) {
 func TestInvalidOpenIDConnectDiscovery(t *testing.T) {
 	t.Parallel()
 
-	configID := "test-config-id"
-	args := []string{"--service_config_id=" + configID,
-		"--rollout_strategy=fixed"}
-
 	tests := []struct {
 		desc        string
 		providerId  string
+		configArgs  []string
 		expectedErr string
 	}{
 		{
-			desc:        "Fail with provider with invalid response",
+			desc:        "Fail with provider with invalid response.",
 			providerId:  testdata.OpenIdInvalidProvider,
+			configArgs:  utils.CommonArgs(),
 			expectedErr: "health check response was not healthy",
 		},
 		{
-			desc:        "Fail with provider that does not exist",
+			desc:        "Fail with provider that does not exist.",
 			providerId:  testdata.OpenIdNonexistentProvider,
+			configArgs:  utils.CommonArgs(),
+			expectedErr: "health check response was not healthy",
+		},
+		{
+			desc:       "Fail when OpenID Connect Discovery is disabled.",
+			providerId: testdata.OpenIdInvalidProvider,
+			configArgs: append([]string{
+				"--disable_oidc_discovery",
+			}, utils.CommonArgs()...),
 			expectedErr: "health check response was not healthy",
 		},
 	}
 
 	for _, tc := range tests {
-		func() {
+		t.Run(tc.desc, func(t *testing.T) {
 			s := env.NewTestEnv(platform.TestInvalidOpenIDConnectDiscovery, platform.GrpcBookstoreSidecar)
 			if err := s.FakeJwtService.SetupInvalidOpenId(); err != nil {
 				t.Fatalf("fail to setup open id servers: %v", err)
@@ -232,18 +239,18 @@ func TestInvalidOpenIDConnectDiscovery(t *testing.T) {
 				},
 			})
 
-			err := s.Setup(args)
+			err := s.Setup(tc.configArgs)
 
 			// LIFO ordering. Disable health checks before teardown, we expect a failure.
 			defer s.TearDown(t)
 			defer s.SkipHealthChecks()
 
 			if err == nil {
-				t.Errorf("Test (%s): failed, expected error, got no err", tc.desc)
+				t.Errorf("failed, expected error, got no err")
 			} else if !strings.Contains(err.Error(), tc.expectedErr) {
-				t.Errorf("Test (%s): failed, expected err: %v, got err: %v", tc.desc, tc.expectedErr, err)
+				t.Errorf("failed, expected err: %v, got err: %v", tc.expectedErr, err)
 			}
-		}()
+		})
 	}
 }
 
