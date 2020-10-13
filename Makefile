@@ -326,7 +326,7 @@ lint: tools.golint
 docker.build-prow:
 	docker build -f docker/Dockerfile-prow-env --build-arg IMAGE_ARG=$(IMG):$(TAG)-$(K8S) -t $(IMG):$(TAG)-$(K8S) .
 
-docker.push-prow: docker.build-prow
+docker.push-prow:
 	docker push $(IMG):$(TAG)-$(K8S)
 
 # bookstore image used in e2e test. Only push when there is changes.
