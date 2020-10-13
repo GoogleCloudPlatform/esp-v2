@@ -57,18 +57,24 @@ make build
 # Get the SHA of the head of master
 SHA=$(git ls-remote https://github.com/GoogleCloudPlatform/esp-v2.git HEAD | cut -f 1)
 
-# keep the current version (used by tests) and bazelrc (modifed for remote cache)
+# keep the current version (used by tests)
 VERSION=$(cat ${ROOT}/VERSION)
-BAZEL_RC=$(cat ${ROOT}/.bazelrc)
 
 # Checkout to the head of master
-git stash
+git reset --hard
 git checkout ${SHA}
 
 # Keep files
 echo ${VERSION} > ${ROOT}/VERSION
-echo ${BAZEL_RC} > ${ROOT}/.bazelrc
 
+echo '======================================================='
+echo '===================== Setup Cache ====================='
+echo '======================================================='
+try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "presubmit-api"
+
+echo '======================================================'
+echo '===================== Bazel test ====================='
+echo '======================================================'
 make depend.install
 make build-envoy build-grpc-interop build-grpc-echo
 
