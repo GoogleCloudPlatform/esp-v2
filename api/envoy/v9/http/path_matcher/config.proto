@@ -26,15 +26,10 @@ message PathMatcherRule {
   // Operation name (selector) used as a unique ID for the operation.
   string operation = 2 [(validate.rules).string.min_bytes = 1];
 
-  // If set, the path parameters in the `pattern` must be extracted. Ref:
+  // If true, the path parameters in the `pattern` must be extracted.
+  // Ref:
   // https://cloud.google.com/endpoints/docs/openapi/openapi-extensions#understanding_path_translation
-  PathParameterExtractionRule path_parameter_extraction = 3;
-}
-
-message PathParameterExtractionRule {
-  // Each rule has a mapping of snake_case segments to jsonCase segments.
-  // If the map is empty, the path params still need to be extracted.
-  map<string, string> snake_to_json_segments = 2;
+  bool extract_path_parameters = 3;
 }
 
 message FilterConfig {

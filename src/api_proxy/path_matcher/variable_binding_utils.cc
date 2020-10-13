@@ -21,25 +21,17 @@ namespace api_proxy {
 namespace path_matcher {
 
 const std::string VariableBindingsToQueryParameters(
-    const std::vector<VariableBinding>& variable_bindings,
-    const ::google::protobuf::Map<std::string, std::string>& snake_to_json) {
+    const std::vector<VariableBinding>& variable_bindings) {
   std::string query_params;
   for (size_t i = 0; i < variable_bindings.size(); i++) {
     const VariableBinding& variable_binding = variable_bindings[i];
     for (size_t j = 0; j < variable_binding.field_path.size(); j++) {
+      // This segment should be camel case instead of snake case.
+      // We can add validation here but it will be unnecessary after we have
+      // syntax parser in the control plane to ensure the correctness of url
+      // template.
       const std::string& segment = variable_binding.field_path[j];
-
-      // If the segment has JSON name, use JSON name instead.
-      if (absl::StrContains(segment, "_")) {
-        auto json_name_it = snake_to_json.find(segment);
-        if (json_name_it != snake_to_json.end()) {
-          query_params.append(json_name_it->second);
-        } else {
-          query_params.append(segment);
-        }
-      } else {
-        query_params.append(segment);
-      }
+      query_params.append(segment);
 
       if (j < variable_binding.field_path.size() - 1) {
         query_params.append(".");
