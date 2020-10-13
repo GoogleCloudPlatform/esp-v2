@@ -89,9 +89,8 @@ func main() {
 		HandlerFunc(authInfoHandler)
 	r.PathPrefix("/bearertoken/").Methods("GET", "OPTIONS").
 		HandlerFunc(bearerTokenHandler)
-	r.PathPrefix("/dynamicrouting").Methods("GET", "POST").
-		HandlerFunc(dynamicRoutingHandler)
-
+	r.PathPrefix("/dynamicrouting").Methods("OPTIONS", "GET", "POST").
+		Handler(corsHandler(dynamicRoutingHandler))
 	r.PathPrefix("/sleep").Methods("GET").
 		HandlerFunc(sleepHandler)
 
@@ -257,6 +256,7 @@ func (h corsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Access-Control-Allow-Headers", "Authorization")
 			w.Header().Set("Access-Control-Expose-Headers", "Cache-Control,Content-Type,Authorization, X-PINGOTHER")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			w.Header().Set("Request-Url", r.RequestURI)
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}

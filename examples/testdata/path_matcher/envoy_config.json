@@ -252,7 +252,7 @@
                             "pathParameterExtraction": {},
                             "pattern": {
                               "httpMethod": "OPTIONS",
-                              "uriTemplate": "/libraries/{library_id}/shelves/{shelf_id}"
+                              "uriTemplate": "/libraries/{library_id}/shelves/{shelfId}"
                             }
                           },
                           {
