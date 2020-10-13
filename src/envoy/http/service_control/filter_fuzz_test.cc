@@ -120,8 +120,7 @@ DEFINE_PROTO_FUZZER(
         if (response_data.has_http_body() &&
             response_data.http_body().data_size() > 0) {
           // FIXME(nareddyt): For now, just grab 1 HTTP body data.
-          msg->body().add(
-              response_data.http_body().data().Get(0));
+          msg->body().add(response_data.http_body().data().Get(0));
         }
 
         // Callback.
