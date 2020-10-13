@@ -71,7 +71,8 @@ var (
 
 	// Flags for external calls.
 	DisableOidcDiscovery = flag.Bool("disable_oidc_discovery", false, `Disable OpenID Connect Discovery. 
-  When disabled, config generator will not make external calls to determine the JWKS URI. 
+  When disabled, config generator will not make external calls to determine the JWKS URI, 
+	but the 'jwks_uri' field must not be empty in any authentication provider. 
 	This should be disabled when the URLs configured by the API Producer cannot be trusted.`)
 
 	// Envoy configurations.
