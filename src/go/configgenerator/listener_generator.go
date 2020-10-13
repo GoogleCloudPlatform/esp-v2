@@ -746,26 +746,25 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 }
 
 func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
-	var rules []*bapb.BackendAuthRule
-	for _, operation := range serviceInfo.Operations {
-		method := serviceInfo.Methods[operation]
-		if method.BackendInfo == nil || method.BackendInfo.JwtAudience == "" {
-			continue
+	var audMap map[string]bool
+	for _, method := range serviceInfo.Methods {
+		if method.BackendInfo != nil && method.BackendInfo.JwtAudience != "" {
+			audMap[method.BackendInfo.JwtAudience] = true
 		}
-		rules = append(rules,
-			&bapb.BackendAuthRule{
-				Operation:   operation,
-				JwtAudience: method.BackendInfo.JwtAudience,
-			})
 	}
-	// If none of BackendRules need auth, rules will be empty, not need to add the filter.
-	if len(rules) == 0 {
+	// If audMap is empty, not need to add the filter.
+	if len(audMap) == 0 {
 		return nil
 	}
 
-	backendAuthConfig := &bapb.FilterConfig{
-		Rules: rules,
+	var audList []string
+	for aud := range audMap {
+		audList = append(audList, aud)
 	}
+	backendAuthConfig := &bapb.FilterConfig{
+		JwtAudienceList: audList,
+	}
+
 	if serviceInfo.Options.BackendAuthCredentials != nil {
 		backendAuthConfig.IdTokenInfo = &bapb.FilterConfig_IamToken{
 			IamToken: &commonpb.IamTokenInfo{
