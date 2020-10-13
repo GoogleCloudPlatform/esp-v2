@@ -120,10 +120,8 @@ DEFINE_PROTO_FUZZER(
         if (response_data.has_http_body() &&
             response_data.http_body().data_size() > 0) {
           // FIXME(nareddyt): For now, just grab 1 HTTP body data.
-          msg->body() = std::make_unique<Envoy::Buffer::OwnedImpl>(
+          msg->body().add(
               response_data.http_body().data().Get(0));
-        } else {
-          msg->body() = std::make_unique<Envoy::Buffer::OwnedImpl>();
         }
 
         // Callback.

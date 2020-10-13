@@ -57,14 +57,17 @@ make build
 # Get the SHA of the head of master
 SHA=$(git ls-remote https://github.com/GoogleCloudPlatform/esp-v2.git HEAD | cut -f 1)
 
-# keep the current version
+# keep the current version (used by tests) and bazelrc (modifed for remote cache)
 VERSION=$(cat ${ROOT}/VERSION)
+BAZEL_RC=$(cat ${ROOT}/.bazelrc)
 
 # Checkout to the head of master
+git stash
 git checkout ${SHA}
 
-# keep the current version
+# Keep files
 echo ${VERSION} > ${ROOT}/VERSION
+echo ${BAZEL_RC} > ${ROOT}/.bazelrc
 
 make depend.install
 make build-envoy build-grpc-interop build-grpc-echo
