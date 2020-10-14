@@ -26,7 +26,7 @@ wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key| apt-key add -
 echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-10 main" >> /etc/apt/sources.list
 sudo apt-get update
 sudo apt-get install -y llvm-10-dev libclang-10-dev clang-10 \
-    clang-tools-10 clang-format-10 xz-utils lld
+    clang-tools-10 clang-format-10 xz-utils lld-10
 ```
 
 ## Install Golang
