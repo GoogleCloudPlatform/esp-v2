@@ -205,6 +205,7 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*listenerpb.Listener, error) {
 			serviceInfo.Options.SslServerCertPath,
 			serviceInfo.Options.SslMinimumProtocol,
 			serviceInfo.Options.SslMaximumProtocol,
+			serviceInfo.Options.SslServerCipherSuites,
 		)
 		if err != nil {
 			return nil, err

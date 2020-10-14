@@ -51,12 +51,14 @@ type ConfigGeneratorOptions struct {
 	ServiceControlURL                string
 	ListenerPort                     int
 	SslServerCertPath                string
+	SslServerCipherSuites            string
 	SslMinimumProtocol               string
 	SslMaximumProtocol               string
 	EnableHSTS                       bool
 	SslSidestreamClientRootCertsPath string
 	SslBackendClientCertPath         string
 	SslBackendClientRootCertsPath    string
+	SslBackendClientCipherSuites     string
 	DnsResolverAddresses             string
 
 	// Flags for non_gcp deployment.

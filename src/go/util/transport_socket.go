@@ -39,7 +39,7 @@ var (
 )
 
 // CreateUpstreamTransportSocket creates a TransportSocket for Upstream
-func CreateUpstreamTransportSocket(hostname, rootCertsPath, sslClientPath string, alpnProtocols []string) (*corepb.TransportSocket, error) {
+func CreateUpstreamTransportSocket(hostname, rootCertsPath, sslClientPath string, alpnProtocols []string, cipherSuites string) (*corepb.TransportSocket, error) {
 	if rootCertsPath == "" {
 		return nil, fmt.Errorf("root certs path cannot be empty.")
 	}
@@ -50,17 +50,17 @@ func CreateUpstreamTransportSocket(hostname, rootCertsPath, sslClientPath string
 		sslFileName = "backend"
 	}
 
-	common_tls, err := createCommonTlsContext(rootCertsPath, sslClientPath, sslFileName, "", "")
+	commonTls, err := createCommonTlsContext(rootCertsPath, sslClientPath, sslFileName, "", "", cipherSuites)
 	if err != nil {
 		return nil, err
 	}
 	if len(alpnProtocols) > 0 {
-		common_tls.AlpnProtocols = alpnProtocols
+		commonTls.AlpnProtocols = alpnProtocols
 	}
 
 	tlsContext, err := ptypes.MarshalAny(&tlspb.UpstreamTlsContext{
 		Sni:              hostname,
-		CommonTlsContext: common_tls,
+		CommonTlsContext: commonTls,
 	},
 	)
 	if err != nil {
@@ -75,7 +75,7 @@ func CreateUpstreamTransportSocket(hostname, rootCertsPath, sslClientPath string
 }
 
 // CreateDownstreamTransportSocket creates a TransportSocket for Downstream
-func CreateDownstreamTransportSocket(sslServerPath, sslMinimumProtocol, sslMaximumProtocol string) (*corepb.TransportSocket, error) {
+func CreateDownstreamTransportSocket(sslServerPath, sslMinimumProtocol, sslMaximumProtocol string, cipherSuites string) (*corepb.TransportSocket, error) {
 	if sslServerPath == "" {
 		return nil, fmt.Errorf("SSL path cannot be empty.")
 	}
@@ -86,13 +86,13 @@ func CreateDownstreamTransportSocket(sslServerPath, sslMinimumProtocol, sslMaxim
 		sslFileName = "nginx"
 	}
 
-	common_tls, err := createCommonTlsContext("", sslServerPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol)
+	commonTls, err := createCommonTlsContext("", sslServerPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol, cipherSuites)
 	if err != nil {
 		return nil, err
 	}
-	common_tls.AlpnProtocols = []string{"h2", "http/1.1"}
+	commonTls.AlpnProtocols = []string{"h2", "http/1.1"}
 	tlsContext, err := ptypes.MarshalAny(&tlspb.DownstreamTlsContext{
-		CommonTlsContext: common_tls,
+		CommonTlsContext: commonTls,
 	},
 	)
 	if err != nil {
@@ -106,15 +106,15 @@ func CreateDownstreamTransportSocket(sslServerPath, sslMinimumProtocol, sslMaxim
 	}, nil
 }
 
-func createCommonTlsContext(rootCertsPath, sslPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol string) (*tlspb.CommonTlsContext, error) {
-	common_tls := &tlspb.CommonTlsContext{}
+func createCommonTlsContext(rootCertsPath, sslPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol string, cipherSuites string) (*tlspb.CommonTlsContext, error) {
+	commonTls := &tlspb.CommonTlsContext{}
 	// Add TLS certificate
 	if sslPath != "" && sslFileName != "" {
 		if !strings.HasSuffix(sslPath, "/") {
 			sslPath = fmt.Sprintf("%s/", sslPath)
 		}
 
-		common_tls.TlsCertificates = []*tlspb.TlsCertificate{
+		commonTls.TlsCertificates = []*tlspb.TlsCertificate{
 			{
 				CertificateChain: &corepb.DataSource{
 					Specifier: &corepb.DataSource_Filename{
@@ -132,7 +132,7 @@ func createCommonTlsContext(rootCertsPath, sslPath, sslFileName, sslMinimumProto
 
 	// Add Validation Context
 	if rootCertsPath != "" {
-		common_tls.ValidationContextType = &tlspb.CommonTlsContext_ValidationContext{
+		commonTls.ValidationContextType = &tlspb.CommonTlsContext_ValidationContext{
 			ValidationContext: &tlspb.CertificateValidationContext{
 				TrustedCa: &corepb.DataSource{
 					Specifier: &corepb.DataSource_Filename{
@@ -143,14 +143,20 @@ func createCommonTlsContext(rootCertsPath, sslPath, sslFileName, sslMinimumProto
 		}
 	}
 
-	if sslMinimumProtocol != "" || sslMaximumProtocol != "" {
-		common_tls.TlsParams = &tlspb.TlsParameters{}
+	if sslMinimumProtocol != "" || sslMaximumProtocol != "" || cipherSuites != "" {
+		commonTls.TlsParams = &tlspb.TlsParameters{}
 		if minVersion, ok := tlsProtocolVersionMap[sslMinimumProtocol]; ok {
-			common_tls.TlsParams.TlsMinimumProtocolVersion = minVersion
+			commonTls.TlsParams.TlsMinimumProtocolVersion = minVersion
 		}
 		if maxVersion, ok := tlsProtocolVersionMap[sslMaximumProtocol]; ok {
-			common_tls.TlsParams.TlsMaximumProtocolVersion = maxVersion
+			commonTls.TlsParams.TlsMaximumProtocolVersion = maxVersion
+		}
+
+		if cipherSuites != "" {
+			cipherSuitesList := strings.Split(cipherSuites, ",")
+			commonTls.TlsParams.CipherSuites = cipherSuitesList
 		}
 	}
-	return common_tls, nil
+
+	return commonTls, nil
 }

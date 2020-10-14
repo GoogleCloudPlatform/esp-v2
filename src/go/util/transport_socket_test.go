@@ -27,6 +27,7 @@ func TestCreateUpstreamTransportSocket(t *testing.T) {
 		rootCertsPath       string
 		sslBackendPath      string
 		alpnProtocols       []string
+		cipherSuites        string
 		wantTransportSocket string
 	}{
 		{
@@ -34,6 +35,7 @@ func TestCreateUpstreamTransportSocket(t *testing.T) {
 			hostName:      "https://echo-http-12345-uc.a.run.app",
 			rootCertsPath: "/etc/ssl/certs/ca-certificates.crt",
 			alpnProtocols: []string{"h2"},
+			cipherSuites:  "ECDHE-ECDSA-AES128-GCM-SHA256,ECDHE-RSA-AES128-GCM-SHA256",
 			wantTransportSocket: `
 {
    "name":"envoy.transport_sockets.tls",
@@ -43,6 +45,12 @@ func TestCreateUpstreamTransportSocket(t *testing.T) {
          "alpnProtocols":[
             "h2"
          ],
+         "tlsParams":{
+            "cipherSuites":[
+               "ECDHE-ECDSA-AES128-GCM-SHA256",
+               "ECDHE-RSA-AES128-GCM-SHA256"
+            ]
+         },
          "validationContext":{
             "trustedCa":{
                "filename":"/etc/ssl/certs/ca-certificates.crt"
@@ -129,7 +137,7 @@ func TestCreateUpstreamTransportSocket(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		gotTransportSocket, err := CreateUpstreamTransportSocket(tc.hostName, tc.rootCertsPath, tc.sslBackendPath, tc.alpnProtocols)
+		gotTransportSocket, err := CreateUpstreamTransportSocket(tc.hostName, tc.rootCertsPath, tc.sslBackendPath, tc.alpnProtocols, tc.cipherSuites)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -150,6 +158,7 @@ func TestCreateDownstreamTransportSocket(t *testing.T) {
 		sslPath             string
 		sslMinimumProtocol  string
 		sslMaximumProtocol  string
+		cipherSuites        string
 		wantTransportSocket string
 	}{
 		{
@@ -184,6 +193,7 @@ func TestCreateDownstreamTransportSocket(t *testing.T) {
 			sslPath:            "/etc/ssl/endpoints/",
 			sslMinimumProtocol: "TLSv1.1",
 			sslMaximumProtocol: "TLSv1.3",
+			cipherSuites:       "ECDHE-ECDSA-AES128-GCM-SHA256,ECDHE-RSA-AES128-GCM-SHA256",
 			wantTransportSocket: `{
 				"name":"envoy.transport_sockets.tls",
 				"typedConfig":{
@@ -201,6 +211,10 @@ func TestCreateDownstreamTransportSocket(t *testing.T) {
 							}
 						],
 						"tlsParams":{
+							"cipherSuites":[
+								"ECDHE-ECDSA-AES128-GCM-SHA256",
+								"ECDHE-RSA-AES128-GCM-SHA256"
+							],
 							"tlsMaximumProtocolVersion":"TLSv1_3",
 							"tlsMinimumProtocolVersion":"TLSv1_1"
 						}
@@ -238,7 +252,7 @@ func TestCreateDownstreamTransportSocket(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		gotTransportSocket, err := CreateDownstreamTransportSocket(tc.sslPath, tc.sslMinimumProtocol, tc.sslMaximumProtocol)
+		gotTransportSocket, err := CreateDownstreamTransportSocket(tc.sslPath, tc.sslMinimumProtocol, tc.sslMaximumProtocol, tc.cipherSuites)
 		if err != nil {
 			t.Fatal(err)
 		}
