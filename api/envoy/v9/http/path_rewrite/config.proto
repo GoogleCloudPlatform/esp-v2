@@ -59,20 +59,7 @@ message ConstantPath {
   }];
 
   // If not empty, specify the url template with variable names.
-  // The varaibles and their values will be converted to query parameters.
-  //
-  // Example: if the config is:
-  //   path: "/prefix"
-  //   url_template: "/foo/{bookID}/create"
-  //
-  // Request 1: without query parmeter
-  //   input path:  "/foo/1234/create"
-  //   output path: "/prefix?bookID=1234"
-  //
-  // Request 2: with query parameters
-  //   input path:  "/foo/1234/create?bar=100"
-  //   output path: "/prefix?bar=100&bookID=1234"
-  //
+  // The varaible names and their values will be converted to query parameters.
   string url_template = 2;
 }
 
@@ -82,6 +69,7 @@ message PerRouteFilterConfig {
     option (validate.required) = true;
 
     // Prepend the following path_prefix to the incoming request path.
+    // The whole path including its query parameters will not appended.
     string path_prefix = 1
         [(validate.rules).string = {
             // Should not be empty.
