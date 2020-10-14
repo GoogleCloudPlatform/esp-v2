@@ -1,24 +1,22 @@
+#include <fstream>
+#include <stdexcept>
+#include <string>
+
+#include "api/envoy/v9/http/service_control/config.pb.validate.h"
 #include "common/http/message_impl.h"
 #include "common/tracing/http_tracer_impl.h"
+#include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
+#include "gtest/gtest.h"
+#include "src/envoy/http/service_control/filter.h"
+#include "src/envoy/http/service_control/filter_config.h"
+#include "src/envoy/utils/filter_state_utils.h"
 #include "test/extensions/filters/http/common/fuzz/uber_filter.h"
 #include "test/fuzz/fuzz_runner.h"
 #include "test/fuzz/utility.h"
 #include "test/mocks/http/mocks.h"
 #include "test/mocks/server/mocks.h"
-
-#include "api/envoy/v9/http/service_control/config.pb.validate.h"
-#include "src/envoy/http/service_control/filter.h"
-#include "src/envoy/http/service_control/filter_config.h"
-#include "src/envoy/utils/filter_state_utils.h"
 #include "tests/fuzz/structured_inputs/service_control_filter.pb.validate.h"
-
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-
-#include <fstream>
-#include <stdexcept>
-#include <string>
 
 namespace espv2 {
 namespace envoy {

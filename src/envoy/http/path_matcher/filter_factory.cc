@@ -14,11 +14,10 @@
 
 #include "api/envoy/v9/http/path_matcher/config.pb.h"
 #include "api/envoy/v9/http/path_matcher/config.pb.validate.h"
-#include "src/envoy/http/path_matcher/filter.h"
-#include "src/envoy/http/path_matcher/filter_config.h"
-
 #include "envoy/registry/registry.h"
 #include "extensions/filters/http/common/factory_base.h"
+#include "src/envoy/http/path_matcher/filter.h"
+#include "src/envoy/http/path_matcher/filter_config.h"
 
 namespace espv2 {
 namespace envoy {

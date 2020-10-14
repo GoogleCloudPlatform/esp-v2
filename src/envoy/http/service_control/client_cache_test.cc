@@ -14,11 +14,10 @@
 
 #include "src/envoy/http/service_control/client_cache.h"
 
+#include "absl/functional/bind_front.h"
 #include "common/common/empty_string.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-
-#include "absl/functional/bind_front.h"
 #include "src/envoy/http/service_control/mocks.h"
 #include "src/envoy/http/service_control/service_control_callback_func.h"
 #include "test/mocks/common.h"

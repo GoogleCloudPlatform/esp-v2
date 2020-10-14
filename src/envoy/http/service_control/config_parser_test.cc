@@ -13,12 +13,12 @@
 // limitations under the License.
 
 #include "src/envoy/http/service_control/config_parser.h"
-#include "src/envoy/http/service_control/mocks.h"
-#include "test/test_common/utility.h"
 
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
+#include "src/envoy/http/service_control/mocks.h"
+#include "test/test_common/utility.h"
 
 namespace espv2 {
 namespace envoy {

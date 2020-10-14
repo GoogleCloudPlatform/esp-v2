@@ -13,17 +13,17 @@
 // limitations under the License.
 
 #include "src/envoy/http/service_control/http_call.h"
+
+#include <vector>
+
 #include "absl/strings/string_view.h"
 #include "common/http/headers.h"
 #include "common/http/message_impl.h"
 #include "common/tracing/http_tracer_impl.h"
 #include "envoy/http/async_client.h"
+#include "gmock/gmock.h"
 #include "google/api/servicecontrol/v1/service_controller.pb.h"
 #include "google/protobuf/stubs/status.h"
-
-#include <vector>
-
-#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "test/mocks/common.h"
 #include "test/mocks/event/mocks.h"

@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "src/envoy/http/service_control/filter.h"
+
 #include "common/common/empty_string.h"
 #include "envoy/http/header_map.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
+#include "src/envoy/http/service_control/handler.h"
+#include "src/envoy/http/service_control/mocks.h"
 #include "test/mocks/server/mocks.h"
 #include "test/mocks/stats/mocks.h"
 #include "test/mocks/tracing/mocks.h"
 #include "test/test_common/utility.h"
-
-#include "src/envoy/http/service_control/filter.h"
-#include "src/envoy/http/service_control/handler.h"
-#include "src/envoy/http/service_control/mocks.h"
 
 using Envoy::Http::MockStreamDecoderFilterCallbacks;
 using Envoy::Server::Configuration::MockFactoryContext;

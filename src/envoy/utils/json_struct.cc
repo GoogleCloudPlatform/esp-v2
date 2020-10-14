@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "json_struct.h"
+
 #include "google/protobuf/util/time_util.h"
 
 using ::google::protobuf::Value;

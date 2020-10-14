@@ -13,13 +13,13 @@
 // limitations under the License.
 
 #include "src/envoy/http/path_matcher/filter_config.h"
-#include "common/common/empty_string.h"
-#include "test/mocks/server/mocks.h"
-#include "test/test_common/utility.h"
 
+#include "common/common/empty_string.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
+#include "test/mocks/server/mocks.h"
+#include "test/test_common/utility.h"
 
 namespace espv2 {
 namespace envoy {

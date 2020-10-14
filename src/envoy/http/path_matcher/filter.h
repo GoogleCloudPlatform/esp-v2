@@ -14,10 +14,10 @@
 
 #pragma once
 
+#include <string>
+
 #include "extensions/filters/http/common/pass_through_filter.h"
 #include "src/envoy/http/path_matcher/filter_config.h"
-
-#include <string>
 
 namespace espv2 {
 namespace envoy {

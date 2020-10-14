@@ -1,7 +1,6 @@
 #include "src/api_proxy/path_matcher/http_template.h"
 #include "test/fuzz/fuzz_runner.h"
 #include "test/fuzz/utility.h"
-
 #include "tests/fuzz/structured_inputs/http_template.pb.validate.h"
 
 namespace espv2 {

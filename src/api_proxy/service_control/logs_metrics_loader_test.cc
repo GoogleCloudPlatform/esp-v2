@@ -14,10 +14,9 @@
 
 #include "src/api_proxy/service_control/logs_metrics_loader.h"
 
+#include "gmock/gmock.h"
 #include "google/protobuf/io/zero_copy_stream_impl_lite.h"
 #include "google/protobuf/text_format.h"
-
-#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
 namespace espv2 {

@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "json_struct.h"
 #include "test/fuzz/fuzz_runner.h"
 #include "test/fuzz/utility.h"
-
-#include "json_struct.h"
 #include "tests/fuzz/structured_inputs/json_struct.pb.validate.h"
 
 namespace espv2 {

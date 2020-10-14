@@ -16,12 +16,10 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/string_view.h"
-
-#include "common/protobuf/utility.h"
-#include "envoy/router/router.h"
-
 #include "api/envoy/v9/http/service_control/config.pb.h"
 #include "api/envoy/v9/http/service_control/requirement.pb.h"
+#include "common/protobuf/utility.h"
+#include "envoy/router/router.h"
 #include "src/envoy/http/service_control/service_control_call.h"
 
 namespace espv2 {

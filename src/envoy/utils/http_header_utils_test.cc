@@ -15,10 +15,9 @@
 #include "src/envoy/utils/http_header_utils.h"
 
 #include "envoy/http/header_map.h"
-#include "test/test_common/utility.h"
-
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "test/test_common/utility.h"
 
 namespace espv2 {
 namespace envoy {

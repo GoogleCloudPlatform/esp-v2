@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "google/protobuf/stubs/status.h"
-
 #include "src/envoy/http/service_control/filter_stats.h"
+
+#include "google/protobuf/stubs/status.h"
 
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;

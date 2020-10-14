@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "src/envoy/http/service_control/handler_impl.h"
+
 #include <chrono>
 
 #include "absl/strings/match.h"
 #include "common/common/empty_string.h"
 #include "common/http/headers.h"
 #include "common/http/utility.h"
-#include "src/envoy/http/service_control/handler_impl.h"
 #include "src/envoy/http/service_control/handler_utils.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"

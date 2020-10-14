@@ -13,11 +13,12 @@
 // limitations under the License.
 
 #include "src/api_proxy/path_matcher/http_template.h"
-#include "gtest/gtest.h"
 
 #include <ostream>
 #include <string>
 #include <vector>
+
+#include "gtest/gtest.h"
 
 namespace espv2 {
 namespace api_proxy {

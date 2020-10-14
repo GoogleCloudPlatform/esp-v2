@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "src/envoy/http/service_control/filter.h"
+
 #include <chrono>
 
 #include "common/grpc/status.h"
 #include "envoy/http/header_map.h"
-#include "src/envoy/http/service_control/filter.h"
 #include "src/envoy/http/service_control/handler.h"
 #include "src/envoy/utils/http_header_utils.h"
 #include "src/envoy/utils/rc_detail_utils.h"

@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <string>
-
 #include "src/envoy/http/grpc_metadata_scrubber/filter.h"
+
+#include <string>
 
 #include "common/grpc/common.h"
 #include "common/http/headers.h"
