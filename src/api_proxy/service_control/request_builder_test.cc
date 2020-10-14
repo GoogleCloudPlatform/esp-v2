@@ -13,9 +13,9 @@
 // limitations under the License.
 
 #include "src/api_proxy/service_control/request_builder.h"
-#include "gtest/gtest.h"
 
 #include <assert.h>
+
 #include <chrono>
 #include <fstream>
 #include <string>
@@ -24,7 +24,7 @@
 #include "absl/strings/str_replace.h"
 #include "google/protobuf/struct.pb.h"
 #include "google/protobuf/text_format.h"
-
+#include "gtest/gtest.h"
 #include "src/api_proxy/utils/version.h"
 
 namespace espv2 {

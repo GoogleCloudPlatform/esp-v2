@@ -13,9 +13,10 @@
 // limitations under the License.
 
 #include "src/api_proxy/service_control/logs_metrics_loader.h"
-#include "src/api_proxy/service_control/request_builder.h"
 
 #include <algorithm>
+
+#include "src/api_proxy/service_control/request_builder.h"
 
 namespace espv2 {
 namespace api_proxy {

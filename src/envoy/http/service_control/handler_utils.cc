@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "src/envoy/http/service_control/handler_utils.h"
+
 #include <sstream>
 #include <vector>
 
@@ -24,7 +26,6 @@
 #include "envoy/server/filter_config.h"
 #include "extensions/filters/http/well_known_names.h"
 #include "src/api_proxy/service_control/request_builder.h"
-#include "src/envoy/http/service_control/handler_utils.h"
 
 using ::espv2::api::envoy::v9::http::service_control::ApiKeyLocation;
 using ::espv2::api::envoy::v9::http::service_control::Service;

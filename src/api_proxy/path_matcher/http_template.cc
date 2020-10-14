@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "src/api_proxy/path_matcher/http_template.h"
+
 #include <cassert>
 #include <string>
 #include <vector>
-
-#include "src/api_proxy/path_matcher/http_template.h"
 
 namespace espv2 {
 namespace api_proxy {

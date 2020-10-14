@@ -13,16 +13,15 @@
 // limitations under the License.
 
 #include "src/envoy/token/token_subscriber.h"
-#include "src/envoy/token/mocks.h"
 
 #include "common/http/message_impl.h"
 #include "common/tracing/http_tracer_impl.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "src/envoy/token/mocks.h"
 #include "test/mocks/init/mocks.h"
 #include "test/mocks/server/mocks.h"
 #include "test/test_common/utility.h"
-
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 
 namespace espv2 {
 namespace envoy {

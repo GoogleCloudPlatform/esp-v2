@@ -344,11 +344,12 @@ CancelFunc ClientCache::callCheck(const CheckRequest& request,
                   "Service Control cache query: Check");
 
   auto* response = new CheckResponse;
-  client_->Check(request, response,
-                 [this, response, on_done](const Status& http_status) {
-                   handleCheckResponse(http_status, response, on_done);
-                 },
-                 check_transport);
+  client_->Check(
+      request, response,
+      [this, response, on_done](const Status& http_status) {
+        handleCheckResponse(http_status, response, on_done);
+      },
+      check_transport);
   return cancel_fn;
 }
 

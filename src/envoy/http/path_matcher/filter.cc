@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "src/envoy/http/path_matcher/filter.h"
+
 #include <string>
 
 #include "common/http/utility.h"
-
 #include "src/api_proxy/path_matcher/variable_binding_utils.h"
-#include "src/envoy/http/path_matcher/filter.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
 #include "src/envoy/utils/rc_detail_utils.h"

@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "src/envoy/token/iam_token_info.h"
 #include "test/fuzz/fuzz_runner.h"
 #include "test/fuzz/utility.h"
-
-#include "src/envoy/token/iam_token_info.h"
 #include "tests/fuzz/structured_inputs/iam_token_info.pb.validate.h"
 
 namespace espv2 {

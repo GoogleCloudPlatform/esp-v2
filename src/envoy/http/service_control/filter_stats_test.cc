@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "src/envoy/http/service_control/filter_stats.h"
+
 #include "test/mocks/server/mocks.h"
 #include "test/test_common/utility.h"
-
-#include "src/envoy/http/service_control/filter_stats.h"
 
 using ::Envoy::Server::Configuration::MockFactoryContext;
 using ::google::protobuf::util::Status;

@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "src/envoy/http/backend_auth/config_parser_impl.h"
+
 #include <memory>
 
 #include "common/common/assert.h"
 #include "google/protobuf/util/time_util.h"
-#include "src/envoy/http/backend_auth/config_parser_impl.h"
 
 namespace espv2 {
 namespace envoy {

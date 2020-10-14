@@ -22,7 +22,6 @@
 #include "google/api/servicecontrol/v1/service_controller.pb.h"
 #include "google/protobuf/stubs/status.h"
 #include "google/protobuf/timestamp.pb.h"
-
 #include "src/api_proxy/service_control/request_info.h"
 
 namespace espv2 {

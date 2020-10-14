@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "src/envoy/token/imds_token_info.h"
+
 #include "absl/strings/str_cat.h"
 #include "common/http/headers.h"
 #include "common/http/message_impl.h"

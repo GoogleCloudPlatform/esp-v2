@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <string>
+
 #include "common/common/logger.h"
 #include "envoy/access_log/access_log.h"
 #include "envoy/http/filter.h"
@@ -21,8 +23,6 @@
 #include "extensions/filters/http/common/pass_through_filter.h"
 #include "src/envoy/http/service_control/filter_stats.h"
 #include "src/envoy/http/service_control/handler.h"
-
-#include <string>
 
 namespace espv2 {
 namespace envoy {

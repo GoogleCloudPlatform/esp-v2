@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "src/envoy/token/token_subscriber.h"
+
 #include "absl/strings/str_cat.h"
 #include "common/common/assert.h"
 #include "common/common/enum_to_int.h"

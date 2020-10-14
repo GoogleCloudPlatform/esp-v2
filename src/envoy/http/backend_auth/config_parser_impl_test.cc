@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "src/envoy/http/backend_auth/config_parser_impl.h"
+
 #include "common/common/empty_string.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
