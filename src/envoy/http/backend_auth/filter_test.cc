@@ -22,10 +22,15 @@
 #include "src/envoy/http/backend_auth/mocks.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "test/mocks/http/mocks.h"
+#include "test/mocks/router/mocks.h"
 #include "test/mocks/server/mocks.h"
 #include "test/test_common/utility.h"
 
 using ::testing::_;
+using ::testing::NiceMock;
+using ::testing::Return;
+using ::testing::ReturnRef;
+
 namespace espv2 {
 namespace envoy {
 namespace http_filters {
@@ -45,11 +50,29 @@ class BackendAuthFilterTest : public ::testing::Test {
         std::make_shared<NiceMock<MockFilterConfigParser>>();
     mock_filter_config_ = std::make_shared<NiceMock<MockFilterConfig>>();
 
-    EXPECT_CALL(*mock_filter_config_, stats)
-        .WillRepeatedly(testing::ReturnRef(stats_));
+    EXPECT_CALL(*mock_filter_config_, stats).WillRepeatedly(ReturnRef(stats_));
+    EXPECT_CALL(*mock_filter_config_, cfg_parser)
+        .WillRepeatedly(ReturnRef(*mock_filter_config_parser_));
+
+    mock_route_ = std::make_shared<NiceMock<Envoy::Router::MockRoute>>();
 
     filter_ = std::make_unique<Filter>(mock_filter_config_);
     filter_->setDecoderFilterCallbacks(mock_decoder_callbacks_);
+  }
+
+  void setPerRouteJwtAudience(const std::string& jwt_audience) {
+    ::espv2::api::envoy::v9::http::backend_auth::PerRouteFilterConfig
+        per_route_cfg;
+    per_route_cfg.set_jwt_audience(jwt_audience);
+    auto per_route = std::make_shared<PerRouteFilterConfig>(per_route_cfg);
+    EXPECT_CALL(mock_decoder_callbacks_, route())
+        .WillRepeatedly(Return(mock_route_));
+    EXPECT_CALL(mock_route_->route_entry_, perFilterConfig(kFilterName))
+        .WillRepeatedly(
+            Invoke([per_route](const std::string&)
+                       -> const Envoy::Router::RouteSpecificFilterConfig* {
+              return per_route.get();
+            }));
   }
 
   testing::NiceMock<Envoy::Stats::MockIsolatedStatsStore> scope_;
@@ -60,14 +83,16 @@ class BackendAuthFilterTest : public ::testing::Test {
   std::shared_ptr<MockFilterConfig> mock_filter_config_;
   testing::NiceMock<Envoy::Http::MockStreamDecoderFilterCallbacks>
       mock_decoder_callbacks_;
+  std::shared_ptr<NiceMock<Envoy::Router::MockRoute>> mock_route_;
   std::unique_ptr<Filter> filter_;
 };
 
-TEST_F(BackendAuthFilterTest, MissingOperationNameRejected) {
+TEST_F(BackendAuthFilterTest, NoRouteRejected) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
 
-  EXPECT_CALL(*mock_filter_config_, cfg_parser).Times(0);
+  EXPECT_CALL(mock_decoder_callbacks_, route()).WillOnce(Return(nullptr));
+
   EXPECT_CALL(
       mock_decoder_callbacks_.stream_info_,
       setResponseFlag(
@@ -75,7 +100,7 @@ TEST_F(BackendAuthFilterTest, MissingOperationNameRejected) {
 
   EXPECT_CALL(
       mock_decoder_callbacks_,
-      sendLocalReply(Envoy::Http::Code::InternalServerError,
+      sendLocalReply(Envoy::Http::Code::NotFound,
                      "Request `GET /books/1` is not defined by this API.", _, _,
                      "backend_auth_undefined_request"));
 
@@ -87,25 +112,18 @@ TEST_F(BackendAuthFilterTest, MissingOperationNameRejected) {
   // Stats.
   const Envoy::Stats::CounterSharedPtr counter =
       Envoy::TestUtility::findCounter(scope_,
-                                      "backend_auth.denied_by_no_operation");
+                                      "backend_auth.denied_by_no_route");
   ASSERT_NE(counter, nullptr);
   EXPECT_EQ(counter->value(), 1);
 }
 
-TEST_F(BackendAuthFilterTest, MissingAudienceAllowed) {
+TEST_F(BackendAuthFilterTest, NotPerRouteConfigAllowed) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
-  utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_,
-      utils::kFilterStateOperation, "operation-without-audience");
-
-  EXPECT_CALL(*mock_filter_config_, cfg_parser)
-      .Times(1)
-      .WillRepeatedly(testing::ReturnRef(*mock_filter_config_parser_));
-  EXPECT_CALL(*mock_filter_config_parser_, getAudience)
-      .Times(1)
-      .WillRepeatedly(testing::Return(Envoy::EMPTY_STRING));
-  EXPECT_CALL(*mock_filter_config_parser_, getJwtToken).Times(0);
+  EXPECT_CALL(mock_decoder_callbacks_, route())
+      .WillRepeatedly(Return(mock_route_));
+  EXPECT_CALL(mock_route_->route_entry_, perFilterConfig(kFilterName))
+      .WillRepeatedly(Return(nullptr));
 
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
@@ -115,26 +133,18 @@ TEST_F(BackendAuthFilterTest, MissingAudienceAllowed) {
   // Stats.
   const Envoy::Stats::CounterSharedPtr counter =
       Envoy::TestUtility::findCounter(
-          scope_, "backend_auth.allowed_by_no_configured_rules");
+          scope_, "backend_auth.allowed_by_auth_not_required");
   ASSERT_NE(counter, nullptr);
   EXPECT_EQ(counter->value(), 1);
 }
 
-TEST_F(BackendAuthFilterTest, HasAudienceButGetsEmptyTokenRejected) {
+TEST_F(BackendAuthFilterTest, EmptyTokenRejected) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
-  utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_,
-      utils::kFilterStateOperation, "operation-with-audience");
+  setPerRouteJwtAudience("this-is-audience");
 
-  EXPECT_CALL(*mock_filter_config_, cfg_parser)
-      .WillRepeatedly(testing::ReturnRef(*mock_filter_config_parser_));
-  EXPECT_CALL(*mock_filter_config_parser_, getAudience)
-      .Times(1)
-      .WillRepeatedly(testing::Return("this-is-audience"));
-  EXPECT_CALL(*mock_filter_config_parser_, getJwtToken)
-      .Times(1)
-      .WillRepeatedly(testing::Return(nullptr));
+  EXPECT_CALL(*mock_filter_config_parser_, getJwtToken("this-is-audience"))
+      .WillOnce(Return(nullptr));
   EXPECT_CALL(
       mock_decoder_callbacks_.stream_info_,
       setResponseFlag(
@@ -160,20 +170,11 @@ TEST_F(BackendAuthFilterTest, HasAudienceButGetsEmptyTokenRejected) {
 TEST_F(BackendAuthFilterTest, SucceedAppendToken) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
-  utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_,
-      utils::kFilterStateOperation, "operation-with-audience");
+  setPerRouteJwtAudience("this-is-audience");
 
-  EXPECT_CALL(*mock_filter_config_, cfg_parser)
-      .WillRepeatedly(testing::ReturnRef(*mock_filter_config_parser_));
-
-  EXPECT_CALL(*mock_filter_config_parser_, getAudience)
+  EXPECT_CALL(*mock_filter_config_parser_, getJwtToken("this-is-audience"))
       .Times(1)
-      .WillRepeatedly(testing::Return("this-is-audience"));
-  EXPECT_CALL(*mock_filter_config_parser_, getJwtToken)
-      .Times(1)
-      .WillRepeatedly(
-          testing::Return(std::make_shared<std::string>("this-is-token")));
+      .WillRepeatedly(Return(std::make_shared<std::string>("this-is-token")));
 
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
@@ -197,20 +198,12 @@ TEST_F(BackendAuthFilterTest, SucceedTokenCopied) {
       {":method", "GET"},
       {":path", "/books/1"},
       {"authorization", "Bearer origin-token"}};
-  utils::setStringFilterState(
-      *mock_decoder_callbacks_.stream_info_.filter_state_,
-      utils::kFilterStateOperation, "operation-with-audience");
 
-  EXPECT_CALL(*mock_filter_config_, cfg_parser)
-      .WillRepeatedly(testing::ReturnRef(*mock_filter_config_parser_));
+  setPerRouteJwtAudience("this-is-audience");
 
-  EXPECT_CALL(*mock_filter_config_parser_, getAudience)
+  EXPECT_CALL(*mock_filter_config_parser_, getJwtToken("this-is-audience"))
       .Times(1)
-      .WillRepeatedly(testing::Return("this-is-audience"));
-  EXPECT_CALL(*mock_filter_config_parser_, getJwtToken)
-      .Times(1)
-      .WillRepeatedly(
-          testing::Return(std::make_shared<std::string>("new-id-token")));
+      .WillRepeatedly(Return(std::make_shared<std::string>("new-id-token")));
 
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);

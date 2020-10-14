@@ -23,9 +23,9 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 
+	aupb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/backend_auth"
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/common"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/service_control"
-
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
@@ -182,12 +182,23 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 				},
 			}
 
+			r.TypedPerFilterConfig = make(map[string]*anypb.Any)
+
+			// ServiceControl PerRoute
 			scPerRoute := &scpb.PerRouteFilterConfig{
 				OperationName: operation,
 			}
 			scpr, _ := ptypes.MarshalAny(scPerRoute)
-			r.TypedPerFilterConfig = make(map[string]*anypb.Any)
 			r.TypedPerFilterConfig[util.ServiceControl] = scpr
+
+			// BackendAuth PerRoute
+			if method.BackendInfo != nil && method.BackendInfo.JwtAudience != "" {
+				auPerRoute := &aupb.PerRouteFilterConfig{
+					JwtAudience: method.BackendInfo.JwtAudience,
+				}
+				aupr, _ := ptypes.MarshalAny(auPerRoute)
+				r.TypedPerFilterConfig[util.BackendAuth] = aupr
+			}
 
 			if method.BackendInfo.Hostname != "" {
 				// For routing to remote backends.

@@ -22,9 +22,6 @@ namespace http_filters {
 namespace backend_auth {
 class MockFilterConfigParser : public FilterConfigParser {
  public:
-  MOCK_METHOD(absl::string_view, getAudience, (absl::string_view operation),
-              (const));
-
   MOCK_METHOD(const TokenSharedPtr, getJwtToken, (absl::string_view audience),
               (const));
 };

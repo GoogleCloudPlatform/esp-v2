@@ -914,23 +914,8 @@
                           "timeout": "30s",
                           "uri": "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
                         },
-                        "rules": [
-                          {
-                            "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app",
-                            "operation": "test.grpc.Test.Echo"
-                          },
-                          {
-                            "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app",
-                            "operation": "test.grpc.Test.EchoStream"
-                          },
-                          {
-                            "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app",
-                            "operation": "test.grpc.Test.Cork"
-                          },
-                          {
-                            "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app",
-                            "operation": "test.grpc.Test.EchoReport"
-                          }
+                        "jwtAudienceList": [
+                          "https://grpc-echo-oxouww7xzq-uc.a.run.app"
                         ]
                       }
                     },
@@ -984,6 +969,10 @@
                               "timeout": "300s"
                             },
                             "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.backend_auth": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app"
+                              },
                               "com.google.espv2.filters.http.service_control": {
                                 "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                 "operationName": "test.grpc.Test.Echo"
@@ -1009,6 +998,10 @@
                               "timeout": "300s"
                             },
                             "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.backend_auth": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app"
+                              },
                               "com.google.espv2.filters.http.service_control": {
                                 "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                 "operationName": "test.grpc.Test.Echo"
@@ -1034,6 +1027,10 @@
                               "timeout": "0s"
                             },
                             "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.backend_auth": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app"
+                              },
                               "com.google.espv2.filters.http.service_control": {
                                 "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                 "operationName": "test.grpc.Test.EchoStream"
@@ -1059,6 +1056,10 @@
                               "timeout": "0s"
                             },
                             "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.backend_auth": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app"
+                              },
                               "com.google.espv2.filters.http.service_control": {
                                 "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                 "operationName": "test.grpc.Test.EchoStream"
@@ -1084,6 +1085,10 @@
                               "timeout": "0s"
                             },
                             "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.backend_auth": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app"
+                              },
                               "com.google.espv2.filters.http.service_control": {
                                 "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                 "operationName": "test.grpc.Test.Cork"
@@ -1109,6 +1114,10 @@
                               "timeout": "300s"
                             },
                             "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.backend_auth": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app"
+                              },
                               "com.google.espv2.filters.http.service_control": {
                                 "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                 "operationName": "test.grpc.Test.EchoReport"
@@ -1134,6 +1143,10 @@
                               "timeout": "300s"
                             },
                             "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.backend_auth": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app"
+                              },
                               "com.google.espv2.filters.http.service_control": {
                                 "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                 "operationName": "test.grpc.Test.EchoReport"

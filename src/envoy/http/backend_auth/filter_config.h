@@ -27,9 +27,9 @@ namespace backend_auth {
  * All stats for the backend auth filter. @see stats_macros.h
  */
 #define ALL_BACKEND_AUTH_FILTER_STATS(COUNTER) \
-  COUNTER(denied_by_no_operation)              \
+  COUNTER(denied_by_no_route)                  \
   COUNTER(denied_by_no_token)                  \
-  COUNTER(allowed_by_no_configured_rules)      \
+  COUNTER(allowed_by_auth_not_required)        \
   COUNTER(token_added)
 
 /**

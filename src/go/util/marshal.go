@@ -91,6 +91,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(scpb.PerRouteFilterConfig), nil
 	case "type.googleapis.com/espv2.api.envoy.v9.http.service_control.FilterConfig":
 		return new(scpb.FilterConfig), nil
+	case "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig":
+		return new(bapb.PerRouteFilterConfig), nil
 	case "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.FilterConfig":
 		return new(bapb.FilterConfig), nil
 	case "type.googleapis.com/espv2.api.envoy.v9.http.backend_routing.FilterConfig":

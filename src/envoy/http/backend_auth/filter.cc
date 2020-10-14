@@ -51,16 +51,13 @@ const Envoy::Http::LowerCaseString kXForwardedAuthorization{
 }  // namespace
 
 FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
-  absl::string_view operation = utils::getStringFilterState(
-      *decoder_callbacks_->streamInfo().filterState(),
-      utils::kFilterStateOperation);
-  // NOTE: this shouldn't happen in practice because Path Matcher filter would
-  // have already rejected the request.
-  if (operation.empty()) {
-    config_->stats().denied_by_no_operation_.inc();
+  // Make sure route is calculated
+  auto route = decoder_callbacks_->route();
+  if (route == nullptr || route->routeEntry() == nullptr) {
+    config_->stats().denied_by_no_route_.inc();
 
     rejectRequest(
-        Envoy::Http::Code::InternalServerError,
+        Envoy::Http::Code::NotFound,
         absl::StrCat("Request `", utils::readHeaderEntry(headers.Method()), " ",
                      utils::readHeaderEntry(headers.Path()),
                      "` is not defined by this API."),
@@ -69,17 +66,17 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
     return FilterHeadersStatus::StopIteration;
   }
 
-  ENVOY_LOG(debug, "Found operation: {}", operation);
-  absl::string_view audience = config_->cfg_parser().getAudience(operation);
-  if (audience.empty()) {
-    // By design, we only want to apply the filter to operations that are in the
-    // configuration. Otherwise, let it pass through (no need to add a JWT for
-    // this request). If the request already has an Authorization header, it
-    // will be preserved.
-    config_->stats().allowed_by_no_configured_rules_.inc();
+  const auto* per_route =
+      route->routeEntry()->perFilterConfigTyped<PerRouteFilterConfig>(
+          kFilterName);
+  if (per_route == nullptr) {
+    ENVOY_LOG(debug, "no per-route config");
+    config_->stats().allowed_by_auth_not_required_.inc();
     return FilterHeadersStatus::Continue;
   }
 
+  const auto& audience = per_route->jwt_audience();
+  ENVOY_LOG(debug, "Found jwt_audience: {}", audience);
   const TokenSharedPtr jwt_token = config_->cfg_parser().getJwtToken(audience);
   if (!jwt_token) {
     config_->stats().denied_by_no_token_.inc();

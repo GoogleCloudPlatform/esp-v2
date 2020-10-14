@@ -33,8 +33,7 @@ using token::TokenType;
 using token::UpdateTokenCallback;
 
 AudienceContext::AudienceContext(
-    const ::espv2::api::envoy::v9::http::backend_auth::BackendAuthRule&
-        proto_config,
+    const std::string& jwt_audience,
     Envoy::Server::Configuration::FactoryContext& context,
     const FilterConfig& filter_config,
     const token::TokenSubscriberFactory& token_subscriber_factory,
@@ -62,7 +61,7 @@ AudienceContext::AudienceContext(
       const std::chrono::seconds fetch_timeout(TimeUtil::DurationToSeconds(
           filter_config.iam_token().iam_uri().timeout()));
       const std::string real_uri =
-          absl::StrCat(uri, "?audience=", proto_config.jwt_audience());
+          absl::StrCat(uri, "?audience=", jwt_audience);
       const ::google::protobuf::RepeatedPtrField<std::string>& delegates =
           filter_config.iam_token().delegates();
       iam_token_sub_ptr_ = token_subscriber_factory.createIamTokenSubscriber(
@@ -76,8 +75,8 @@ AudienceContext::AudienceContext(
       const std::string& cluster = filter_config.imds_token().cluster();
       const std::chrono::seconds fetch_timeout(
           TimeUtil::DurationToSeconds(filter_config.imds_token().timeout()));
-      const std::string real_uri = absl::StrCat(
-          uri, "?format=standard&audience=", proto_config.jwt_audience());
+      const std::string real_uri =
+          absl::StrCat(uri, "?format=standard&audience=", jwt_audience);
 
       imds_token_sub_ptr_ = token_subscriber_factory.createImdsTokenSubscriber(
           TokenType::IdentityToken, cluster, real_uri, fetch_timeout, callback);
@@ -115,20 +114,10 @@ FilterConfigParserImpl::FilterConfigParserImpl(
     }
   }
 
-  for (const auto& rule : config.rules()) {
-    auto insert =
-        operation_map_.insert({rule.operation(), rule.jwt_audience()});
-    if (!insert.second) {
-      throw Envoy::ProtoValidationException(
-          absl::StrCat("Duplicated operation: ", rule.operation()), config);
-    }
-
-    auto it = audience_map_.find(rule.jwt_audience());
-    if (it == audience_map_.end()) {
-      audience_map_[rule.jwt_audience()] = AudienceContextPtr(
-          new AudienceContext(rule, context, config, token_subscriber_factory,
-                              [this]() { return access_token_; }));
-    }
+  for (const auto& jwt_audience : config.jwt_audience_list()) {
+    audience_map_[jwt_audience] = AudienceContextPtr(new AudienceContext(
+        jwt_audience, context, config, token_subscriber_factory,
+        [this]() { return access_token_; }));
   }
 }
 }  // namespace backend_auth

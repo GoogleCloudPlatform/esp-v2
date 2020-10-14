@@ -25,6 +25,11 @@ namespace espv2 {
 namespace envoy {
 namespace http_filters {
 namespace backend_auth {
+
+// The filter name.
+constexpr const char kFilterName[] =
+    "com.google.espv2.filters.http.backend_auth";
+
 // Use shared_ptr to do atomic token update.
 using TokenSharedPtr = std::shared_ptr<std::string>;
 
@@ -32,13 +37,26 @@ class FilterConfigParser {
  public:
   virtual ~FilterConfigParser() = default;
 
-  virtual absl::string_view getAudience(absl::string_view operation) const PURE;
-
   virtual const TokenSharedPtr getJwtToken(
       absl::string_view audience) const PURE;
 };
 
 using FilterConfigParserPtr = std::unique_ptr<FilterConfigParser>;
+
+class PerRouteFilterConfig : public Envoy::Router::RouteSpecificFilterConfig {
+ public:
+  PerRouteFilterConfig(
+      const ::espv2::api::envoy::v9::http::backend_auth::PerRouteFilterConfig&
+          per_route)
+      : jwt_audience_(per_route.jwt_audience()) {}
+
+  absl::string_view jwt_audience() const { return jwt_audience_; }
+
+ private:
+  std::string jwt_audience_;
+};
+
+using PerRouteFilterConfigSharedPtr = std::shared_ptr<PerRouteFilterConfig>;
 
 }  // namespace backend_auth
 }  // namespace http_filters

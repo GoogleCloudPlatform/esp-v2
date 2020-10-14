@@ -25,16 +25,15 @@ namespace envoy {
 namespace http_filters {
 namespace backend_auth {
 
-const std::string FilterName = "com.google.espv2.filters.http.backend_auth";
-
 /**
  * Config registration for ESPv2 backend auth filter.
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::espv2::api::envoy::v9::http::backend_auth::FilterConfig> {
+          ::espv2::api::envoy::v9::http::backend_auth::FilterConfig,
+          ::espv2::api::envoy::v9::http::backend_auth::PerRouteFilterConfig> {
  public:
-  FilterFactory() : FactoryBase(FilterName) {}
+  FilterFactory() : FactoryBase(kFilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
@@ -51,7 +50,17 @@ class FilterFactory
           Envoy::Http::StreamDecoderFilterSharedPtr(filter));
     };
   }
+
+  Envoy::Router::RouteSpecificFilterConfigConstSharedPtr
+  createRouteSpecificFilterConfigTyped(
+      const ::espv2::api::envoy::v9::http::backend_auth::PerRouteFilterConfig&
+          per_route,
+      Envoy::Server::Configuration::ServerFactoryContext&,
+      Envoy::ProtobufMessage::ValidationVisitor&) override {
+    return std::make_shared<PerRouteFilterConfig>(per_route);
+  }
 };
+
 /**
  * Static registration for the rate limit filter. @see RegisterFactory.
  */
