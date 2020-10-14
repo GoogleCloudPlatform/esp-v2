@@ -186,7 +186,12 @@ func (s *ServiceInfo) processEmptyJwksUriByOpenID() error {
 		// Note: When jwksUri is empty, proxy will try to find jwksUri using the
 		// OpenID Connect Discovery protocol.
 		if jwksUri == "" {
-			glog.Infof("jwks_uri is empty, using OpenID Connect Discovery protocol")
+			if s.Options.DisableOidcDiscovery {
+				return fmt.Errorf("jwks_uri is empty for provider (%v), but OpenID Connect Discovery is disabled. "+
+					"Consider specifying the jwks_uri in the provider config", provider.Id)
+			}
+
+			glog.Infof("jwks_uri is empty for provider (%v), using OpenID Connect Discovery protocol", provider.Id)
 			jwksUriByOpenID, err := util.ResolveJwksUriUsingOpenID(provider.GetIssuer())
 			if err != nil {
 				return fmt.Errorf("failed OpenID Connect Discovery protocol: %v", err)

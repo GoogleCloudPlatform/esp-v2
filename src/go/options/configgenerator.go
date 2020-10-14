@@ -63,6 +63,9 @@ type ConfigGeneratorOptions struct {
 	ServiceAccountKey string
 	TokenAgentPort    uint
 
+	// Flags for external calls.
+	DisableOidcDiscovery bool
+
 	// Flags for testing purpose.
 	SkipJwtAuthnFilter       bool
 	SkipServiceControlFilter bool
@@ -119,6 +122,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		ListenerAddress:                  "0.0.0.0",
 		ListenerPort:                     8080,
 		TokenAgentPort:                   8791,
+		DisableOidcDiscovery:             false,
 		SslSidestreamClientRootCertsPath: util.DefaultRootCAPaths,
 		SslBackendClientRootCertsPath:    util.DefaultRootCAPaths,
 		SuppressEnvoyHeaders:             true,
