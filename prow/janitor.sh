@@ -49,7 +49,7 @@ echo "Done cleaning up Cloud Run services"
 
 ### Cloud Functions ###
 GOOGLE_FUNCTIONS=$(gcloud functions list \
-    --filter="name ~ ^e2e-test- \
+    --filter="name ~ e2e-test- \
     AND updateTime < ${LIMIT_DATE}" \
   --format="value(name)")
 
