@@ -86,6 +86,7 @@ func TestWebsocket(t *testing.T) {
 					Platform:                     util.GCE,
 					Location:                     "test-zone",
 					ApiVersion:                   "1.0.0",
+					ResponseCodeDetail:           "downstream_remote_disconnect",
 				},
 			},
 		},

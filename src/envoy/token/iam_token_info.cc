@@ -98,8 +98,7 @@ Envoy::Http::RequestMessagePtr IamTokenInfo::prepareRequest(
   if (!delegates_.empty() || !scopes_.empty() || include_email_) {
     std::string bodyStr =
         Envoy::MessageUtil::getJsonStringFromMessage(body, false, false);
-    message->body() = std::make_unique<Envoy::Buffer::OwnedImpl>(
-        bodyStr.data(), bodyStr.size());
+    message->body().add(bodyStr.data(), bodyStr.size());
   }
   return message;
 }

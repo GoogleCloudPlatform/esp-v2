@@ -29,3 +29,6 @@ EXTENSIONS = {
     "envoy.stat_sinks.metrics_service": "//source/extensions/stat_sinks/metrics_service:config",
     "envoy.stat_sinks.statsd": "//source/extensions/stat_sinks/statsd:config",
 }
+
+EXTENSION_CONFIG_VISIBILITY = ["//visibility:public"]
+EXTENSION_PACKAGE_VISIBILITY = ["//visibility:public"]

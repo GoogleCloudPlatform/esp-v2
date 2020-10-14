@@ -104,7 +104,7 @@ TEST_F(BackendAuthFilterTest, MissingAudienceAllowed) {
       .WillRepeatedly(testing::ReturnRef(*mock_filter_config_parser_));
   EXPECT_CALL(*mock_filter_config_parser_, getAudience)
       .Times(1)
-      .WillRepeatedly(testing::Return(nullptr));
+      .WillRepeatedly(testing::Return(Envoy::EMPTY_STRING));
   EXPECT_CALL(*mock_filter_config_parser_, getJwtToken).Times(0);
 
   Envoy::Http::FilterHeadersStatus status =

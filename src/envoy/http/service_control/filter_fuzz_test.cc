@@ -1,3 +1,5 @@
+#include "common/http/message_impl.h"
+#include "common/tracing/http_tracer_impl.h"
 #include "google/protobuf/text_format.h"
 #include "test/extensions/filters/http/common/fuzz/uber_filter.h"
 #include "test/fuzz/fuzz_runner.h"
@@ -18,18 +20,21 @@
 #include <stdexcept>
 #include <string>
 
-namespace filter_api = ::espv2::api::envoy::v9::http::service_control;
-namespace sc_api = ::google::api::servicecontrol::v1;
-using ::Envoy::Server::Configuration::MockFactoryContext;
-using ::testing::MockFunction;
-using ::testing::Return;
-using ::testing::ReturnRef;
-
 namespace espv2 {
 namespace envoy {
 namespace http_filters {
 namespace service_control {
 namespace fuzz {
+
+namespace filter_api = ::espv2::api::envoy::v9::http::service_control;
+namespace sc_api = ::google::api::servicecontrol::v1;
+
+using ::Envoy::TestStreamInfo;
+using ::Envoy::Http::ResponseMessageImpl;
+using ::Envoy::Server::Configuration::MockFactoryContext;
+using ::testing::MockFunction;
+using ::testing::Return;
+using ::testing::ReturnRef;
 
 // Needed for logger macro expansion.
 namespace Logger = Envoy::Logger;
@@ -109,16 +114,13 @@ DEFINE_PROTO_FUZZER(
         auto trailers_ptr =
             std::make_unique<Envoy::Http::TestResponseTrailerMapImpl>(trailers);
 
-        auto msg = std::make_unique<Envoy::Http::ResponseMessageImpl>(
-            std::move(headers_ptr));
+        auto msg =
+            std::make_unique<ResponseMessageImpl>(std::move(headers_ptr));
         msg->trailers(std::move(trailers_ptr));
         if (response_data.has_http_body() &&
             response_data.http_body().data_size() > 0) {
           // FIXME(nareddyt): For now, just grab 1 HTTP body data.
-          msg->body() = std::make_unique<Envoy::Buffer::OwnedImpl>(
-              response_data.http_body().data().Get(0));
-        } else {
-          msg->body() = std::make_unique<Envoy::Buffer::OwnedImpl>();
+          msg->body().add(response_data.http_body().data().Get(0));
         }
 
         // Callback.
@@ -128,10 +130,10 @@ DEFINE_PROTO_FUZZER(
 
   try {
     // Fuzz the stream info.
-    Envoy::TestStreamInfo stream_info =
+    std::unique_ptr<TestStreamInfo> stream_info =
         Envoy::Fuzz::fromStreamInfo(input.stream_info());
     EXPECT_CALL(mock_decoder_callbacks, streamInfo())
-        .WillRepeatedly(ReturnRef(stream_info));
+        .WillRepeatedly(ReturnRef(*stream_info));
 
     // Create filter config.
     ServiceControlFilterConfig filter_config(input.config(), "fuzz-test-stats",
@@ -141,7 +143,7 @@ DEFINE_PROTO_FUZZER(
     // and has configured metric costs.
     // This ensures both CHECK and QUOTA are called.
     utils::setStringFilterState(
-        *stream_info.filter_state_, utils::kFilterStateOperation,
+        *stream_info->filter_state_, utils::kFilterStateOperation,
         input.config().requirements(0).operation_name());
 
     // Create filter.
@@ -155,7 +157,7 @@ DEFINE_PROTO_FUZZER(
     }
 
     // Run data against the filter.
-    ASSERT_NO_THROW(doTest(filter, stream_info, input));
+    ASSERT_NO_THROW(doTest(filter, *stream_info, input));
 
   } catch (const Envoy::EnvoyException& e) {
     ENVOY_LOG_MISC(debug, "Controlled envoy exception: {}", e.what());

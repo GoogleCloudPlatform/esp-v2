@@ -94,9 +94,9 @@ class HttpCallImpl : public HttpCall,
                             std::to_string(status_code));
       request_span_->finishSpan();
 
-      if (response->body()) {
-        const auto len = response->body()->length();
-        body = std::string(static_cast<char*>(response->body()->linearize(len)),
+      if (response->body().length() > 0) {
+        const auto len = response->body().length();
+        body = std::string(static_cast<char*>(response->body().linearize(len)),
                            len);
       }
       if (status_code == Envoy::enumToInt(Envoy::Http::Code::OK)) {
@@ -245,9 +245,8 @@ class HttpCallImpl : public HttpCall,
     message->headers().setReferenceMethod(
         Envoy::Http::Headers::get().MethodValues.Post);
 
-    message->body() = std::make_unique<Envoy::Buffer::OwnedImpl>(
-        str_body_.data(), str_body_.size());
-    message->headers().setContentLength(message->body()->length());
+    message->body().add(str_body_.data(), str_body_.size());
+    message->headers().setContentLength(message->body().length());
 
     // assume token is not empty
     message->headers().setInline(authorization_handle.handle(),

@@ -42,10 +42,12 @@ void ServiceControlCallImpl::createImdsTokenSub() {
       TokenType::AccessToken, token_cluster, token_uri, fetch_timeout,
       [this](absl::string_view token) {
         TokenSharedPtr new_token = std::make_shared<std::string>(token);
-        tls_->runOnAllThreads([this, new_token]() {
-          tls_->getTyped<ThreadLocalCache>().set_sc_token(new_token);
-          tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
-        });
+        tls_->runOnAllThreads(
+            [new_token](Envoy::ThreadLocal::ThreadLocalObjectSharedPtr object) {
+              object->asType<ThreadLocalCache>().set_sc_token(new_token);
+              object->asType<ThreadLocalCache>().set_quota_token(new_token);
+              return object;
+            });
       });
 }
 
@@ -82,10 +84,12 @@ void ServiceControlCallImpl::createIamTokenSub() {
       TokenType::AccessToken, token_cluster, token_uri, fetch_timeout,
       [this](absl::string_view token) {
         TokenSharedPtr new_token = std::make_shared<std::string>(token);
-        tls_->runOnAllThreads([this, new_token]() {
-          tls_->getTyped<ThreadLocalCache>().set_sc_token(new_token);
-          tls_->getTyped<ThreadLocalCache>().set_quota_token(new_token);
-        });
+        tls_->runOnAllThreads(
+            [new_token](Envoy::ThreadLocal::ThreadLocalObjectSharedPtr object) {
+              object->asType<ThreadLocalCache>().set_sc_token(new_token);
+              object->asType<ThreadLocalCache>().set_quota_token(new_token);
+              return object;
+            });
       },
       filter_config_.iam_token().delegates(), scopes,
       [this]() { return access_token_for_iam_; });

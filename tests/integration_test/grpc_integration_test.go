@@ -162,9 +162,7 @@ func TestGrpcConnectionBufferLimit(t *testing.T) {
 			}, utils.CommonArgs()...),
 			clientProtocol: "http",
 			method:         "/v1/shelves/200?key=api-key",
-			// Due to a bug in Envoy gRPC Transcoder, the correct error is not returned to the client.
-			// Ref: https://github.com/envoyproxy/envoy/issues/13207
-			wantResp: ``,
+			wantError:      `500 Internal Server Error`,
 		},
 		{
 			desc: "Transcoding succeeds when buffer limit is higher.",
@@ -192,7 +190,7 @@ func TestGrpcConnectionBufferLimit(t *testing.T) {
 			}
 
 			if tc.wantError == "" && err != nil {
-				t.Errorf("Got unexpected error: %s", resp)
+				t.Errorf("Got unexpected error: %s", err)
 			}
 
 			if !strings.Contains(resp, tc.wantResp) {
