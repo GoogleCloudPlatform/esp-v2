@@ -59,7 +59,7 @@ message ConstantPath {
   }];
 
   // If not empty, specify the url template with variable names.
-  // The varaible names and their values will be converted to query parameters.
+  // The variable names and their values will be converted to query parameters.
   string url_template = 2;
 }
 
