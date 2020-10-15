@@ -26,7 +26,8 @@ class ConfigParser {
 
   // If return false, fails to generate new path due to:
   // origin_path doesn't match with the url_template in the const_path.
-  virtual bool rewrite(absl::string_view origin_path, std::string& new_path) const PURE;
+  virtual bool rewrite(absl::string_view origin_path,
+                       std::string& new_path) const PURE;
 };
 
 using ConstConfigParserPtr = std::unique_ptr<const ConfigParser>;

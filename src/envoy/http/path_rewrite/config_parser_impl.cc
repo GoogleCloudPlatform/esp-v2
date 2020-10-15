@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "absl/strings/str_cat.h"
-
-#include "common/common/empty_string.h"
-
-#include "src/api_proxy/path_matcher/variable_binding_utils.h"
 #include "src/envoy/http/path_rewrite/config_parser_impl.h"
+
+#include "absl/strings/str_cat.h"
+#include "common/common/empty_string.h"
+#include "src/api_proxy/path_matcher/variable_binding_utils.h"
 
 namespace espv2 {
 namespace envoy {
@@ -32,24 +31,30 @@ constexpr const char kHttpMethod[] = "GET";
 
 ConfigParserImpl::ConfigParserImpl(
     const ::espv2::api::envoy::v9::http::path_rewrite::PerRouteFilterConfig&
-    config) : config_(config) {
+        config)
+    : config_(config) {
   if (config_.has_constant_path()) {
     const auto& path_cfg = config_.constant_path();
     if (!path_cfg.url_template().empty()) {
-      ENVOY_LOG(debug, "Building path_matcher for url_template: {}", path_cfg.url_template());
+      ENVOY_LOG(debug, "Building path_matcher for url_template: {}",
+                path_cfg.url_template());
 
       ::espv2::api_proxy::path_matcher::PathMatcherBuilder<
-          const ::espv2::api::envoy::v9::http::path_rewrite::PerRouteFilterConfig*>
+          const ::espv2::api::envoy::v9::http::path_rewrite::
+              PerRouteFilterConfig*>
           pmb;
-      pmb.Register(kHttpMethod, path_cfg.url_template(), Envoy::EMPTY_STRING, &config_);
+      pmb.Register(kHttpMethod, path_cfg.url_template(), Envoy::EMPTY_STRING,
+                   &config_);
       path_matcher_ = pmb.Build();
     }
 
-    // If the last char of the path is "/", remove it, unless it is just root "/".
+    // If the last char of the path is "/", remove it, unless it is just root
+    // "/".
     const std::string& path = path_cfg.path();
     if (path.size() > 1 && path[path.size() - 1] == '/') {
       ENVOY_LOG(warn, "Remove last slash of constant_path.path: {}", path);
-      config_.mutable_constant_path()->set_path(path.substr(0, path.size() - 1));
+      config_.mutable_constant_path()->set_path(
+          path.substr(0, path.size() - 1));
     }
   } else {
     // even "/" should be removed
@@ -61,7 +66,8 @@ ConfigParserImpl::ConfigParserImpl(
   }
 }
 
-bool ConfigParserImpl::rewrite(absl::string_view origin_path, std::string& new_path) const {
+bool ConfigParserImpl::rewrite(absl::string_view origin_path,
+                               std::string& new_path) const {
   if (config_.has_constant_path()) {
     return constPath(std::string(origin_path), new_path);
   }
@@ -71,11 +77,14 @@ bool ConfigParserImpl::rewrite(absl::string_view origin_path, std::string& new_p
   return true;
 }
 
-bool ConfigParserImpl::getVariableBindings(const std::string& origin_path, std::string& query) const {
+bool ConfigParserImpl::getVariableBindings(const std::string& origin_path,
+                                           std::string& query) const {
   query = Envoy::EMPTY_STRING;
   if (path_matcher_) {
-    std::vector<espv2::api_proxy::path_matcher::VariableBinding> variable_bindings;
-    if (path_matcher_->Lookup(kHttpMethod, origin_path, &variable_bindings) == nullptr) {
+    std::vector<espv2::api_proxy::path_matcher::VariableBinding>
+        variable_bindings;
+    if (path_matcher_->Lookup(kHttpMethod, origin_path, &variable_bindings) ==
+        nullptr) {
       // mismatched case
       ENVOY_LOG(warn, "Request path: {} doesn't match url_template: {}",
                 origin_path, config_.constant_path().url_template());
@@ -83,14 +92,16 @@ bool ConfigParserImpl::getVariableBindings(const std::string& origin_path, std::
     }
 
     if (!variable_bindings.empty()) {
-      query = espv2::api_proxy::path_matcher::VariableBindingsToQueryParameters(variable_bindings);
+      query = espv2::api_proxy::path_matcher::VariableBindingsToQueryParameters(
+          variable_bindings);
       ENVOY_LOG(debug, "Extracted query parameters: {}", query);
     }
   }
   return true;
 }
 
-bool ConfigParserImpl::constPath(const std::string& origin_path, std::string& new_path) const {
+bool ConfigParserImpl::constPath(const std::string& origin_path,
+                                 std::string& new_path) const {
   std::string extracted_query_params;
   if (!getVariableBindings(origin_path, extracted_query_params)) {
     return false;

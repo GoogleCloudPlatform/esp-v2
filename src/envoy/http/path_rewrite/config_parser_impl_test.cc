@@ -13,9 +13,9 @@
 // limitations under the License.
 
 #include "src/envoy/http/path_rewrite/config_parser_impl.h"
+
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
-
 
 namespace espv2 {
 namespace envoy {
@@ -25,12 +25,12 @@ namespace path_rewrite {
 class ConfigParserImplTest : public ::testing::Test {
  protected:
   void setUp(const std::string& config_str) {
-    google::protobuf::TextFormat::ParseFromString(config_str,
-                                                  &proto_config_);
+    google::protobuf::TextFormat::ParseFromString(config_str, &proto_config_);
     obj_ = std::make_unique<ConfigParserImpl>(proto_config_);
   }
 
-  ::espv2::api::envoy::v9::http::path_rewrite::PerRouteFilterConfig proto_config_;
+  ::espv2::api::envoy::v9::http::path_rewrite::PerRouteFilterConfig
+      proto_config_;
   std::unique_ptr<ConfigParserImpl> obj_;
   std::string new_path_;
 };
@@ -71,7 +71,6 @@ TEST_F(ConfigParserImplTest, PathPrefixBasicRoot) {
   EXPECT_TRUE(obj_->rewrite("/bar?xyz=123", new_path_));
   EXPECT_EQ(new_path_, "/bar?xyz=123");
 }
-
 
 TEST_F(ConfigParserImplTest, ConstantPathNoUrlTemplate) {
   setUp(R"(
@@ -140,7 +139,6 @@ TEST_F(ConfigParserImplTest, ConstantPathNoUrlTemplateRoot) {
   EXPECT_TRUE(obj_->rewrite("/bar?xyz=123", new_path_));
   EXPECT_EQ(new_path_, "/?xyz=123");
 }
-
 
 }  // namespace path_rewrite
 }  // namespace http_filters

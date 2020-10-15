@@ -13,9 +13,8 @@
 // limitations under the License.
 #pragma once
 
-#include "common/common/logger.h"
-
 #include "api/envoy/v9/http/path_rewrite/config.pb.h"
+#include "common/common/logger.h"
 #include "src/api_proxy/path_matcher/path_matcher.h"
 #include "src/envoy/http/path_rewrite/config_parser.h"
 
@@ -24,25 +23,29 @@ namespace envoy {
 namespace http_filters {
 namespace path_rewrite {
 
-class ConfigParserImpl : public ConfigParser,
-                         public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
+class ConfigParserImpl
+    : public ConfigParser,
+      public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   ConfigParserImpl(
       const ::espv2::api::envoy::v9::http::path_rewrite::PerRouteFilterConfig&
-      config);
+          config);
 
-  bool rewrite(absl::string_view origin_path, std::string& new_path) const override;
+  bool rewrite(absl::string_view origin_path,
+               std::string& new_path) const override;
 
  private:
   // rewrite const path.
   bool constPath(const std::string& origin_path, std::string& new_path) const;
   // extract query parameters from variable bindings
-  bool getVariableBindings(const std::string& origin_path, std::string& query) const;
+  bool getVariableBindings(const std::string& origin_path,
+                           std::string& query) const;
 
   // the per-route config
   ::espv2::api::envoy::v9::http::path_rewrite::PerRouteFilterConfig config_;
   // path matcher for extracting variable binding.
-  ::espv2::api_proxy::path_matcher::PathMatcherPtr<const ::espv2::api::envoy::v9::http::path_rewrite::PerRouteFilterConfig*>
+  ::espv2::api_proxy::path_matcher::PathMatcherPtr<
+      const ::espv2::api::envoy::v9::http::path_rewrite::PerRouteFilterConfig*>
       path_matcher_;
 };
 

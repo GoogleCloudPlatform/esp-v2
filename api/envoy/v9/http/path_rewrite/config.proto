@@ -70,14 +70,13 @@ message PerRouteFilterConfig {
 
     // Prepend the following path_prefix to the incoming request path.
     // The whole path including its query parameters will not appended.
-    string path_prefix = 1
-        [(validate.rules).string = {
-            // Should not be empty.
-            min_len: 1,
-            // Does not contain query params ('?'), fragments ('#'), or invalid
-            // HTTP_HEADER_VALUE ('\r', '\n', '\0') characters.
-            pattern: '^[^?#\\r\\n\\0]+$',
-          }];
+    string path_prefix = 1 [(validate.rules).string = {
+      // Should not be empty.
+      min_len: 1,
+      // Does not contain query params ('?'), fragments ('#'), or invalid
+      // HTTP_HEADER_VALUE ('\r', '\n', '\0') characters.
+      pattern: '^[^?#\\r\\n\\0]+$',
+    }];
 
     // Translate to a constant path.
     ConstantPath constant_path = 2;
@@ -87,6 +86,6 @@ message PerRouteFilterConfig {
 }
 
 // Filter level config is not needed.
-// All configurations are moved to RouteEntry PerFilterConfig as per-route config.
-message FilterConfig {
-}
+// All configurations are moved to RouteEntry PerFilterConfig as per-route
+// config.
+message FilterConfig {}
