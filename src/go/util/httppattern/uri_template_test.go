@@ -988,6 +988,7 @@ func TestUriTemplateParseError(t *testing.T) {
 		"/a/{x}b/s",
 		"/a/b{x}c/s",
 		"/a/{x}b{y}/s",
+		"/a/**/*",
 		// No verb test cases.
 		":",
 		"/:",
