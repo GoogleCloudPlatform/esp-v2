@@ -26,6 +26,7 @@ const char kRcDetailFilterServiceControl[] = "service_control";
 const char kRcDetailFilterPathMatcher[] = "path_matcher";
 const char kRcDetailFilterBackendAuth[] = "backend_auth";
 const char kRcDetailFilterBackendRouting[] = "backend_routing";
+const char kRcDetailFilterPathRewrite[] = "path_rewrite";
 
 // The error types
 //
@@ -39,6 +40,8 @@ const char kRcDetailErrorTypeScCheckNetwork[] = "check_network_failure";
 const char kRcDetailErrorTypeScQuotaNetwork[] = "quota_network_failure";
 // The ones specific to the backend auth filter
 const char kRcDetailErrorTypeMissingBackendToken[] = "missing_backend_token";
+// The ones specific to the path rewrite filter
+const char kRcDetailErrorTypeWrongRouteConfig[] = "wrong_route_config";
 
 // The detailed errors.
 const char kRcDetailErrorMissingApiKey[] = "MISSING_API_KEY";

@@ -12,28 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #pragma once
-
-#include "envoy/common/pure.h"
+#include "gmock/gmock.h"
+#include "src/envoy/http/path_rewrite/config_parser.h"
 
 namespace espv2 {
 namespace envoy {
 namespace http_filters {
 namespace path_rewrite {
 
-class ConfigParser {
+class MockConfigParser : public ConfigParser {
  public:
-  virtual ~ConfigParser() = default;
-
-  // If return false, fails to generate new path due to:
-  // origin_path doesn't match with the url_template in the const_path.
-  virtual bool rewrite(absl::string_view origin_path,
-                       std::string& new_path) const PURE;
-
-  // Get the url template
-  virtual absl::string_view url_template() const PURE;
+  MOCK_METHOD(bool, rewrite,
+              (absl::string_view origin_path, std::string& new_path), (const));
+  MOCK_METHOD(absl::string_view, url_template, (), (const));
 };
-
-using ConfigParserPtr = std::unique_ptr<ConfigParser>;
 
 }  // namespace path_rewrite
 }  // namespace http_filters
