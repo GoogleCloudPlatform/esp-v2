@@ -14,8 +14,10 @@
 
 #include "src/envoy/http/path_rewrite/config_parser_impl.h"
 
+#include "common/protobuf/utility.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
+#include "test/test_common/utility.h"
 
 namespace espv2 {
 namespace envoy {
@@ -25,8 +27,15 @@ namespace path_rewrite {
 class ConfigParserImplTest : public ::testing::Test {
  protected:
   void setUp(const std::string& config_str) {
-    google::protobuf::TextFormat::ParseFromString(config_str, &proto_config_);
+    ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(config_str,
+                                                              &proto_config_));
     obj_ = std::make_unique<ConfigParserImpl>(proto_config_);
+  }
+
+  void validateConfig(const std::string& config_str) {
+    ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(config_str,
+                                                              &proto_config_));
+    Envoy::TestUtility::validate(proto_config_);
   }
 
   ::espv2::api::envoy::v9::http::path_rewrite::PerRouteFilterConfig
@@ -34,6 +43,67 @@ class ConfigParserImplTest : public ::testing::Test {
   std::unique_ptr<ConfigParserImpl> obj_;
   std::string new_path_;
 };
+
+TEST_F(ConfigParserImplTest, ValidatePathPrefixEmptyConfig) {
+  EXPECT_THROW_WITH_REGEX(validateConfig(R"(
+  )"),
+                          Envoy::ProtoValidationException,
+                          "Proto constraint validation failed");
+}
+
+TEST_F(ConfigParserImplTest, ValidatePathPrefixWithRoot) {
+  EXPECT_THROW_WITH_REGEX(validateConfig(R"(
+    path_prefix: "/"
+  )"),
+                          Envoy::ProtoValidationException,
+                          "Proto constraint validation failed");
+}
+
+TEST_F(ConfigParserImplTest, ValidatePathPrefixWithQuestionMark) {
+  EXPECT_THROW_WITH_REGEX(validateConfig(R"(
+    path_prefix: "/foo?a=1"
+  )"),
+                          Envoy::ProtoValidationException,
+                          "Proto constraint validation failed");
+}
+
+TEST_F(ConfigParserImplTest, ValidatePathPrefixWithFragment) {
+  EXPECT_THROW_WITH_REGEX(validateConfig(R"(
+    path_prefix: "/foo#a=1"
+  )"),
+                          Envoy::ProtoValidationException,
+                          "Proto constraint validation failed");
+}
+
+TEST_F(ConfigParserImplTest, ValidateConstPathEmpty) {
+  EXPECT_THROW_WITH_REGEX(validateConfig(R"(
+    constant_path: {
+      path: ""
+    }
+  )"),
+                          Envoy::ProtoValidationException,
+                          "Proto constraint validation failed");
+}
+
+TEST_F(ConfigParserImplTest, ValidateConstPathWithQuestionMark) {
+  EXPECT_THROW_WITH_REGEX(validateConfig(R"(
+    constant_path: {
+      path: "/foo?a=1"
+    }
+  )"),
+                          Envoy::ProtoValidationException,
+                          "Proto constraint validation failed");
+}
+
+TEST_F(ConfigParserImplTest, ValidateConstPathWithFragment) {
+  EXPECT_THROW_WITH_REGEX(validateConfig(R"(
+    constant_path: {
+      path: "/bar#abc"
+    }
+  )"),
+                          Envoy::ProtoValidationException,
+                          "Proto constraint validation failed");
+}
 
 TEST_F(ConfigParserImplTest, PathPrefixBasic) {
   setUp(R"(

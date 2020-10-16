@@ -35,6 +35,7 @@ envoy_cc_test(
     repository = "@envoy",
     deps = [
         ":config_parser_lib",
+        "@envoy//source/common/protobuf:utility_lib",
         "@envoy//test/test_common:utility_lib",
     ],
 )

@@ -14,6 +14,7 @@
 #pragma once
 
 #include "api/envoy/v9/http/path_rewrite/config.pb.h"
+#include "api/envoy/v9/http/path_rewrite/config.pb.validate.h"
 #include "common/common/logger.h"
 #include "src/api_proxy/path_matcher/path_matcher.h"
 #include "src/envoy/http/path_rewrite/config_parser.h"

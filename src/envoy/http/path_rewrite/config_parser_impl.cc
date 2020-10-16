@@ -80,22 +80,24 @@ bool ConfigParserImpl::rewrite(absl::string_view origin_path,
 bool ConfigParserImpl::getVariableBindings(const std::string& origin_path,
                                            std::string& query) const {
   query = Envoy::EMPTY_STRING;
-  if (path_matcher_) {
-    std::vector<espv2::api_proxy::path_matcher::VariableBinding>
-        variable_bindings;
-    if (path_matcher_->Lookup(kHttpMethod, origin_path, &variable_bindings) ==
-        nullptr) {
-      // mismatched case
-      ENVOY_LOG(warn, "Request path: {} doesn't match url_template: {}",
-                origin_path, config_.constant_path().url_template());
-      return false;
-    }
+  if (!path_matcher_) {
+    return true;
+  }
 
-    if (!variable_bindings.empty()) {
-      query = espv2::api_proxy::path_matcher::VariableBindingsToQueryParameters(
-          variable_bindings);
-      ENVOY_LOG(debug, "Extracted query parameters: {}", query);
-    }
+  std::vector<espv2::api_proxy::path_matcher::VariableBinding>
+      variable_bindings;
+  if (path_matcher_->Lookup(kHttpMethod, origin_path, &variable_bindings) ==
+      nullptr) {
+    // mismatched case
+    ENVOY_LOG(warn, "Request path: {} doesn't match url_template: {}",
+              origin_path, config_.constant_path().url_template());
+    return false;
+  }
+
+  if (!variable_bindings.empty()) {
+    query = espv2::api_proxy::path_matcher::VariableBindingsToQueryParameters(
+        variable_bindings);
+    ENVOY_LOG(debug, "Extracted query parameters: {}", query);
   }
   return true;
 }
