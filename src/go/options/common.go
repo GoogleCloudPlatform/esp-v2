@@ -24,7 +24,7 @@ type CommonOptions struct {
 	// Flags for envoy
 	AdminAddress          string
 	AdminPort             int
-	DiscoveryPort         int
+	AdsNamedPipe          string
 	Node                  string
 	GeneratedHeaderPrefix string
 
@@ -77,9 +77,9 @@ type IAMCredentialsOptions struct {
 // The default values are expected to match the default values from the flags.
 func DefaultCommonOptions() CommonOptions {
 	return CommonOptions{
-		AdminAddress:  "0.0.0.0",
-		AdminPort:     8001,
-		DiscoveryPort: 8790,
+		AdminAddress: "0.0.0.0",
+		AdminPort:    8001,
+		AdsNamedPipe: "@espv2-ads-cluster",
 
 		// b/148454048: This should be at least 20s due to IMDS latency issues with k8s workload identities.
 		HttpRequestTimeout: 30 * time.Second,

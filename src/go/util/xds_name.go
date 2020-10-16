@@ -67,6 +67,9 @@ const (
 	// The service control server cluster name.
 	ServiceControlClusterName = "service-control-cluster"
 
+	// The ADS cluster name.
+	AdsClusterName = "ads-cluster"
+
 	IngressListenerName  = "ingress_listener"
 	LoopbackListenerName = "loopback_listener"
 )

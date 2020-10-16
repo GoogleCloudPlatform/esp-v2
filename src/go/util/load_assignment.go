@@ -19,7 +19,7 @@ import (
 	endpointpb "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 )
 
-// CreateLoadAssignment creates a ClusterLoadAssignment
+// CreateLoadAssignment creates a cluster for a TCP/IP port.
 func CreateLoadAssignment(hostname string, port uint32) *endpointpb.ClusterLoadAssignment {
 	return &endpointpb.ClusterLoadAssignment{
 		ClusterName: hostname,
@@ -36,6 +36,32 @@ func CreateLoadAssignment(hostname string, port uint32) *endpointpb.ClusterLoadA
 											PortSpecifier: &corepb.SocketAddress_PortValue{
 												PortValue: port,
 											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+// CreateUdsLoadAssignment creates a cluster for a unix domain socket.
+func CreateUdsLoadAssignment(clusterName string) *endpointpb.ClusterLoadAssignment {
+	return &endpointpb.ClusterLoadAssignment{
+		ClusterName: clusterName,
+		Endpoints: []*endpointpb.LocalityLbEndpoints{
+			{
+				LbEndpoints: []*endpointpb.LbEndpoint{
+					{
+						HostIdentifier: &endpointpb.LbEndpoint_Endpoint{
+							Endpoint: &endpointpb.Endpoint{
+								Address: &corepb.Address{
+									Address: &corepb.Address_Pipe{
+										Pipe: &corepb.Pipe{
+											Path: clusterName,
 										},
 									},
 								},
