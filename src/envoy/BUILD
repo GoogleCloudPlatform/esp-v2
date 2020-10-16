@@ -17,6 +17,7 @@ envoy_cc_binary(
         "//src/envoy/http/backend_routing:filter_factory",
         "//src/envoy/http/grpc_metadata_scrubber:filter_factory",
         "//src/envoy/http/path_matcher:filter_factory",
+        "//src/envoy/http/path_rewrite:filter_factory",
         "//src/envoy/http/service_control:filter_factory",
         "@envoy//source/exe:envoy_main_entry_lib",
     ],
