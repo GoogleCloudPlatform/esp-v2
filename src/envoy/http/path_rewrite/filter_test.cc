@@ -85,6 +85,36 @@ TEST_F(FilterTest, NoPathHeaderBlocked) {
   EXPECT_EQ(counter->value(), 1);
 }
 
+TEST_F(FilterTest, DecodeHeadersOverflowWildcard) {
+  // Construct a request with a long path: "/aaa...aaa/long"
+  std::string a_chars(9000, 'a');
+  std::string path = absl::StrCat("/", a_chars, "/long");
+
+  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                                {":path", path}};
+
+  // Filter should reject the request.
+  EXPECT_CALL(
+      mock_decoder_callbacks_.stream_info_,
+      setResponseFlag(
+          Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
+
+  EXPECT_CALL(mock_decoder_callbacks_,
+              sendLocalReply(Envoy::Http::Code::BadRequest,
+                             "Path is too long, max allowed size is 8192.", _,
+                             _, "path_rewrite_bad_request{OVERSIZE_PATH}"))
+      .Times(1);
+  EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
+            filter_->decodeHeaders(headers, true));
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(scope_,
+                                      "path_rewrite.denied_by_oversize_path");
+  EXPECT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
+}
+
 TEST_F(FilterTest, FragmentPathHeaderBlocked) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1#abc"}};
@@ -188,12 +218,12 @@ TEST_F(FilterTest, RejectedByMismatchUrlTemplate) {
               setResponseFlag(
                   Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService))
       .Times(1);
-  EXPECT_CALL(
-      mock_decoder_callbacks_,
-      sendLocalReply(
-          Envoy::Http::Code::InternalServerError,
-          "Request `GET /books/1` is mismatched with url_template: /bar/{xyz}",
-          _, _, "path_rewrite_undefined_request"));
+  EXPECT_CALL(mock_decoder_callbacks_,
+              sendLocalReply(
+                  Envoy::Http::Code::InternalServerError,
+                  "Request `GET /books/1` is getting wrong route config", _, _,
+                  "path_rewrite_wrong_route_config{Request path: /books/1 is "
+                  "mismatched with url_template: /bar/{xyz}}"));
 
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);

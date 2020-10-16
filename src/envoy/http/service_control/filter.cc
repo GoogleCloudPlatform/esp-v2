@@ -27,14 +27,6 @@ namespace envoy {
 namespace http_filters {
 namespace service_control {
 
-namespace {
-
-// Half of the max header value size Envoy allows.
-// 4x the standard browser request size.
-constexpr uint32_t PathMaxSize = 8192;
-
-}  // namespace
-
 void ServiceControlFilter::onDestroy() {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (handler_) {
@@ -58,14 +50,6 @@ Envoy::Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
                   utils::generateRcDetails(utils::kRcDetailFilterServiceControl,
                                            utils::kRcDetailErrorTypeBadRequest,
                                            utils::kRcDetailErrorMissingPath));
-    return Envoy::Http::FilterHeadersStatus::StopIteration;
-  } else if (headers.Path()->value().size() > PathMaxSize) {
-    rejectRequest(Envoy::Http::Code::BadRequest,
-                  absl::StrCat("Path is too long, max allowed size is ",
-                               PathMaxSize, "."),
-                  utils::generateRcDetails(utils::kRcDetailFilterServiceControl,
-                                           utils::kRcDetailErrorTypeBadRequest,
-                                           utils::kRcDetailErrorOversizePath));
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 

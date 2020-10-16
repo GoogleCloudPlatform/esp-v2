@@ -32,6 +32,15 @@ using Envoy::Http::FilterHeadersStatus;
 using Envoy::Http::FilterTrailersStatus;
 using Envoy::Http::RequestHeaderMap;
 
+namespace {
+
+// Half of the max header value size Envoy allows.
+// 4x the standard browser request size.
+// This is need for path_matcher lookup.
+constexpr uint32_t PathMaxSize = 8192;
+
+}  // namespace
+
 FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   if (headers.Path() == nullptr) {
     // NOTE: this shouldn't happen in practice because ServiceControl filter
@@ -42,6 +51,15 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
                                            utils::kRcDetailErrorTypeBadRequest,
                                            utils::kRcDetailErrorMissingPath));
     return FilterHeadersStatus::StopIteration;
+  } else if (headers.Path()->value().size() > PathMaxSize) {
+    config_->stats().denied_by_oversize_path_.inc();
+    rejectRequest(Envoy::Http::Code::BadRequest,
+                  absl::StrCat("Path is too long, max allowed size is ",
+                               PathMaxSize, "."),
+                  utils::generateRcDetails(utils::kRcDetailFilterPathRewrite,
+                                           utils::kRcDetailErrorTypeBadRequest,
+                                           utils::kRcDetailErrorOversizePath));
+    return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 
   absl::string_view original_path = headers.Path()->value().getStringView();
@@ -78,7 +96,8 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
       route->routeEntry()->perFilterConfigTyped<PerRouteFilterConfig>(
           kFilterName);
   if (per_route == nullptr) {
-    ENVOY_LOG(debug, "no per-route path_rewrite config");
+    ENVOY_LOG(debug,
+              "no per-route config, request is passed through unmodified");
     config_->stats().path_not_changed_.inc();
     return FilterHeadersStatus::Continue;
   }
@@ -90,10 +109,14 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
         Envoy::Http::Code::InternalServerError,
         absl::StrCat("Request `", utils::readHeaderEntry(headers.Method()), " ",
                      utils::readHeaderEntry(headers.Path()),
-                     "` is mismatched with url_template: ",
-                     per_route->config_parser().url_template()),
-        utils::generateRcDetails(utils::kRcDetailFilterPathRewrite,
-                                 utils::kRcDetailErrorTypeUndefinedRequest));
+                     "` is getting wrong route config"),
+        utils::generateRcDetails(
+            utils::kRcDetailFilterPathRewrite,
+            utils::kRcDetailErrorTypeWrongRouteConfig,
+            absl::StrCat(
+                "Request path: ", utils::readHeaderEntry(headers.Path()),
+                " is mismatched with url_template: ",
+                per_route->config_parser().url_template())));
     return FilterHeadersStatus::StopIteration;
   }
 

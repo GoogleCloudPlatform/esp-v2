@@ -107,29 +107,6 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersMissingHeaders) {
             filter_->decodeHeaders(missingMethod, true));
 }
 
-TEST_F(ServiceControlFilterTest, DecodeHeadersOverflowWildcard) {
-  // Construct a request with a long path: "/aaa...aaa/long"
-  std::string a_chars(9000, 'a');
-  std::string path = absl::StrCat("/", a_chars, "/long");
-
-  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
-                                                {":path", path}};
-
-  // Filter should reject the request.
-  EXPECT_CALL(
-      mock_decoder_callbacks_.stream_info_,
-      setResponseFlag(
-          Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
-
-  EXPECT_CALL(mock_decoder_callbacks_,
-              sendLocalReply(Envoy::Http::Code::BadRequest,
-                             "Path is too long, max allowed size is 8192.", _,
-                             _, "service_control_bad_request{OVERSIZE_PATH}"))
-      .Times(1);
-  EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
-            filter_->decodeHeaders(headers, true));
-}
-
 TEST_F(ServiceControlFilterTest, MissingRoute) {
   EXPECT_CALL(mock_decoder_callbacks_, route()).WillOnce(Return(nullptr));
 
