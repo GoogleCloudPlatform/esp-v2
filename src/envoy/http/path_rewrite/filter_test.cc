@@ -40,7 +40,7 @@ class FilterTest : public ::testing::Test {
     filter_ = std::make_unique<Filter>(filter_config_);
     filter_->setDecoderFilterCallbacks(mock_decoder_callbacks_);
 
-    auto mock_parser = std::make_unique<MockConfigParser>();
+    auto mock_parser = std::make_unique<NiceMock<MockConfigParser>>();
     raw_mock_parser_ = mock_parser.get();
     per_route_config_ =
         std::make_shared<PerRouteFilterConfig>(std::move(mock_parser));
@@ -48,7 +48,7 @@ class FilterTest : public ::testing::Test {
 
   NiceMock<Envoy::Stats::MockIsolatedStatsStore> scope_;
 
-  std::shared_ptr<MockConfigParser> mock_config_parser_;
+  std::shared_ptr<NiceMock<MockConfigParser>> mock_config_parser_;
   std::shared_ptr<FilterConfig> filter_config_;
   NiceMock<Envoy::Http::MockStreamDecoderFilterCallbacks>
       mock_decoder_callbacks_;
@@ -181,6 +181,7 @@ TEST_F(FilterTest, RejectedByMismatchUrlTemplate) {
   EXPECT_CALL(*raw_mock_parser_, rewrite("/books/1", _))
       .WillOnce(Invoke(
           [](absl::string_view, std::string&) -> bool { return false; }));
+  EXPECT_CALL(*raw_mock_parser_, url_template()).WillOnce(Return("/bar/{xyz}"));
 
   // The request is rejected
   EXPECT_CALL(mock_decoder_callbacks_.stream_info_,
@@ -189,9 +190,10 @@ TEST_F(FilterTest, RejectedByMismatchUrlTemplate) {
       .Times(1);
   EXPECT_CALL(
       mock_decoder_callbacks_,
-      sendLocalReply(Envoy::Http::Code::InternalServerError,
-                     "Request `GET /books/1` is mismatched with url_template.",
-                     _, _, "path_rewrite_undefined_request"));
+      sendLocalReply(
+          Envoy::Http::Code::InternalServerError,
+          "Request `GET /books/1` is mismatched with url_template: /bar/{xyz}",
+          _, _, "path_rewrite_undefined_request"));
 
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);

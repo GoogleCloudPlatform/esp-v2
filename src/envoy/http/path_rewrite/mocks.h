@@ -24,6 +24,7 @@ class MockConfigParser : public ConfigParser {
  public:
   MOCK_METHOD(bool, rewrite,
               (absl::string_view origin_path, std::string& new_path), (const));
+  MOCK_METHOD(absl::string_view, url_template, (), (const));
 };
 
 }  // namespace path_rewrite

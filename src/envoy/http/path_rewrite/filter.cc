@@ -90,7 +90,8 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
         Envoy::Http::Code::InternalServerError,
         absl::StrCat("Request `", utils::readHeaderEntry(headers.Method()), " ",
                      utils::readHeaderEntry(headers.Path()),
-                     "` is mismatched with url_template."),
+                     "` is mismatched with url_template: ",
+                     per_route->config_parser().url_template()),
         utils::generateRcDetails(utils::kRcDetailFilterPathRewrite,
                                  utils::kRcDetailErrorTypeUndefinedRequest));
     return FilterHeadersStatus::StopIteration;

@@ -77,6 +77,13 @@ bool ConfigParserImpl::rewrite(absl::string_view origin_path,
   return true;
 }
 
+absl::string_view ConfigParserImpl::url_template() const {
+  if (config_.has_constant_path()) {
+    return config_.constant_path().url_template();
+  }
+  return Envoy::EMPTY_STRING;
+}
+
 bool ConfigParserImpl::getVariableBindings(const std::string& origin_path,
                                            std::string& query) const {
   query = Envoy::EMPTY_STRING;

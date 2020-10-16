@@ -35,6 +35,8 @@ class ConfigParserImpl
   bool rewrite(absl::string_view origin_path,
                std::string& new_path) const override;
 
+  absl::string_view url_template() const override;
+
  private:
   // rewrite const path.
   bool constPath(const std::string& origin_path, std::string& new_path) const;
