@@ -61,10 +61,6 @@ class FilterTest : public ::testing::Test {
 TEST_F(FilterTest, NoPathHeaderBlocked) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"}};
 
-  EXPECT_CALL(mock_decoder_callbacks_.stream_info_,
-              setResponseFlag(
-                  Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService))
-      .Times(1);
   EXPECT_CALL(mock_decoder_callbacks_,
               sendLocalReply(Envoy::Http::Code::BadRequest,
                              "No path in request headers", _, _,
@@ -94,11 +90,6 @@ TEST_F(FilterTest, DecodeHeadersOverflowWildcard) {
                                                 {":path", path}};
 
   // Filter should reject the request.
-  EXPECT_CALL(
-      mock_decoder_callbacks_.stream_info_,
-      setResponseFlag(
-          Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
-
   EXPECT_CALL(mock_decoder_callbacks_,
               sendLocalReply(Envoy::Http::Code::BadRequest,
                              "Path is too long, max allowed size is 8192.", _,
@@ -119,10 +110,6 @@ TEST_F(FilterTest, FragmentPathHeaderBlocked) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1#abc"}};
 
-  EXPECT_CALL(mock_decoder_callbacks_.stream_info_,
-              setResponseFlag(
-                  Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService))
-      .Times(1);
   EXPECT_CALL(mock_decoder_callbacks_,
               sendLocalReply(
                   Envoy::Http::Code::BadRequest,
@@ -151,11 +138,8 @@ TEST_F(FilterTest, NoRouteRejected) {
 
   EXPECT_CALL(mock_decoder_callbacks_, route()).WillOnce(Return(nullptr));
 
-  EXPECT_CALL(
-      mock_decoder_callbacks_.stream_info_,
-      setResponseFlag(
-          Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
-
+  EXPECT_CALL(mock_decoder_callbacks_.stream_info_,
+              setResponseFlag(Envoy::StreamInfo::ResponseFlag::NoRouteFound));
   EXPECT_CALL(
       mock_decoder_callbacks_,
       sendLocalReply(Envoy::Http::Code::NotFound,
@@ -214,10 +198,6 @@ TEST_F(FilterTest, RejectedByMismatchUrlTemplate) {
   EXPECT_CALL(*raw_mock_parser_, url_template()).WillOnce(Return("/bar/{xyz}"));
 
   // The request is rejected
-  EXPECT_CALL(mock_decoder_callbacks_.stream_info_,
-              setResponseFlag(
-                  Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService))
-      .Times(1);
   EXPECT_CALL(mock_decoder_callbacks_,
               sendLocalReply(
                   Envoy::Http::Code::InternalServerError,

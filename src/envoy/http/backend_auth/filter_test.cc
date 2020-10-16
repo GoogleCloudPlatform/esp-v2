@@ -93,10 +93,8 @@ TEST_F(BackendAuthFilterTest, NoRouteRejected) {
 
   EXPECT_CALL(mock_decoder_callbacks_, route()).WillOnce(Return(nullptr));
 
-  EXPECT_CALL(
-      mock_decoder_callbacks_.stream_info_,
-      setResponseFlag(
-          Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
+  EXPECT_CALL(mock_decoder_callbacks_.stream_info_,
+              setResponseFlag(Envoy::StreamInfo::ResponseFlag::NoRouteFound));
 
   EXPECT_CALL(
       mock_decoder_callbacks_,
@@ -145,10 +143,6 @@ TEST_F(BackendAuthFilterTest, EmptyTokenRejected) {
 
   EXPECT_CALL(*mock_filter_config_parser_, getJwtToken("this-is-audience"))
       .WillOnce(Return(nullptr));
-  EXPECT_CALL(
-      mock_decoder_callbacks_.stream_info_,
-      setResponseFlag(
-          Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
   EXPECT_CALL(mock_decoder_callbacks_,
               sendLocalReply(Envoy::Http::Code::InternalServerError,
                              "Token not found for audience: this-is-audience",
