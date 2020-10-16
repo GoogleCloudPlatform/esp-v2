@@ -350,7 +350,6 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	}
 
 	confArgs = append(confArgs, fmt.Sprintf("--listener_port=%v", e.ports.ListenerPort))
-	confArgs = append(confArgs, fmt.Sprintf("--ads_named_pipe=@espv2-ads-cluster-integ-test-%v", e.ports.TestId))
 	confArgs = append(confArgs, fmt.Sprintf("--service=%v", e.fakeServiceConfig.Name))
 
 	// Tracing configuration.
@@ -390,7 +389,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	if err = e.configMgr.StartAndWait(); err != nil {
 		return err
 	}
-	// e.healthRegistry.RegisterHealthChecker(e.configMgr)
+	e.healthRegistry.RegisterHealthChecker(e.configMgr)
 
 	// Starts envoy.
 	envoyConfPath := fmt.Sprintf("/tmp/apiproxy-testdata-bootstrap-%v.yaml", e.ports.TestId)
