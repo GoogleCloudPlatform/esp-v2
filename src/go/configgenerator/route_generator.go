@@ -20,6 +20,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 
@@ -146,9 +147,25 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 
 func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, error) {
 	var backendRoutes []*routepb.Route
-	for _, operation := range serviceInfo.Operations {
-		method := serviceInfo.Methods[operation]
-		var routeMatcher *routepb.RouteMatch
+	matchSequenceGenerator := httppattern.NewMatchSequenceGenerator()
+	for operation, method := range serviceInfo.Methods {
+		for _, httpRule := range method.HttpRule {
+			if err := matchSequenceGenerator.Register(&httppattern.Method{
+				UriTemplate: httpRule.UriTemplate,
+				HttpMethod:  httpRule.HttpMethod,
+				Operation:   operation,
+			}); err != nil {
+				return nil, fmt.Errorf("fail to register %s's http template `%s %s` in route table: %v", operation, httpRule.HttpMethod, httpRule.UriTemplate, err)
+			}
+		}
+	}
+
+	var routeMatcher *routepb.RouteMatch
+	sortedMethods := matchSequenceGenerator.Generate()
+
+	for _, hp := range *sortedMethods {
+		operation := hp.Operation
+		method := serviceInfo.Methods[hp.Operation]
 
 		// Response timeouts are not compatible with streaming methods (documented in Envoy).
 		// If this method is non-unary gRPC, explicitly set 0s to disable the timeout.
@@ -160,68 +177,66 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 			respTimeout = method.BackendInfo.Deadline
 		}
 
-		for _, httpRule := range method.HttpRule {
-			var err error
-			if routeMatcher, err = makeHttpRouteMatcher(httpRule); err != nil {
-				return nil, fmt.Errorf("error making HTTP route matcher for selector (%v): %v", operation, err)
-			}
-
-			r := routepb.Route{
-				Match: routeMatcher,
-				Action: &routepb.Route_Route{
-					Route: &routepb.RouteAction{
-						ClusterSpecifier: &routepb.RouteAction_Cluster{
-							Cluster: method.BackendInfo.ClusterName,
-						},
-						Timeout: ptypes.DurationProto(respTimeout),
-					},
-				},
-				Decorator: &routepb.Decorator{
-					// Note we don't add ApiName to reduce the length of the span name.
-					Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
-				},
-			}
-
-			r.TypedPerFilterConfig = make(map[string]*anypb.Any)
-
-			// ServiceControl PerRoute
-			scPerRoute := &scpb.PerRouteFilterConfig{
-				OperationName: operation,
-			}
-			scpr, _ := ptypes.MarshalAny(scPerRoute)
-			r.TypedPerFilterConfig[util.ServiceControl] = scpr
-
-			// BackendAuth PerRoute
-			if method.BackendInfo != nil && method.BackendInfo.JwtAudience != "" {
-				auPerRoute := &aupb.PerRouteFilterConfig{
-					JwtAudience: method.BackendInfo.JwtAudience,
-				}
-				aupr, _ := ptypes.MarshalAny(auPerRoute)
-				r.TypedPerFilterConfig[util.BackendAuth] = aupr
-			}
-
-			if method.BackendInfo.Hostname != "" {
-				// For routing to remote backends.
-				r.GetRoute().HostRewriteSpecifier = &routepb.RouteAction_HostRewriteLiteral{
-					HostRewriteLiteral: method.BackendInfo.Hostname,
-				}
-			}
-
-			if serviceInfo.Options.EnableHSTS {
-				r.ResponseHeadersToAdd = []*corepb.HeaderValueOption{
-					{
-						Header: &corepb.HeaderValue{
-							Key:   util.HSTSHeaderKey,
-							Value: util.HSTSHeaderValue,
-						},
-					},
-				}
-			}
-			backendRoutes = append(backendRoutes, &r)
-
-			jsonStr, _ := util.ProtoToJson(&r)
-			glog.Infof("adding route: %v", jsonStr)
+		var err error
+		if routeMatcher, err = makeHttpRouteMatcher(&commonpb.Pattern{UriTemplate: hp.UriTemplate, HttpMethod: hp.HttpMethod}); err != nil {
+			return nil, fmt.Errorf("error making HTTP route matcher for selector (%v): %v", operation, err)
 		}
+
+		r := routepb.Route{
+			Match: routeMatcher,
+			Action: &routepb.Route_Route{
+				Route: &routepb.RouteAction{
+					ClusterSpecifier: &routepb.RouteAction_Cluster{
+						Cluster: method.BackendInfo.ClusterName,
+					},
+					Timeout: ptypes.DurationProto(respTimeout),
+				},
+			},
+			Decorator: &routepb.Decorator{
+				// Note we don't add ApiName to reduce the length of the span name.
+				Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
+			},
+		}
+
+		r.TypedPerFilterConfig = make(map[string]*anypb.Any)
+
+		// ServiceControl PerRoute
+		scPerRoute := &scpb.PerRouteFilterConfig{
+			OperationName: operation,
+		}
+		scpr, _ := ptypes.MarshalAny(scPerRoute)
+		r.TypedPerFilterConfig[util.ServiceControl] = scpr
+
+		// BackendAuth PerRoute
+		if method.BackendInfo != nil && method.BackendInfo.JwtAudience != "" {
+			auPerRoute := &aupb.PerRouteFilterConfig{
+				JwtAudience: method.BackendInfo.JwtAudience,
+			}
+			aupr, _ := ptypes.MarshalAny(auPerRoute)
+			r.TypedPerFilterConfig[util.BackendAuth] = aupr
+		}
+
+		if method.BackendInfo.Hostname != "" {
+			// For routing to remote backends.
+			r.GetRoute().HostRewriteSpecifier = &routepb.RouteAction_HostRewriteLiteral{
+				HostRewriteLiteral: method.BackendInfo.Hostname,
+			}
+		}
+
+		if serviceInfo.Options.EnableHSTS {
+			r.ResponseHeadersToAdd = []*corepb.HeaderValueOption{
+				{
+					Header: &corepb.HeaderValue{
+						Key:   util.HSTSHeaderKey,
+						Value: util.HSTSHeaderValue,
+					},
+				},
+			}
+		}
+		backendRoutes = append(backendRoutes, &r)
+
+		jsonStr, _ := util.ProtoToJson(&r)
+		glog.Infof("adding route: %v", jsonStr)
 	}
 	return backendRoutes, nil
 }

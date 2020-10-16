@@ -140,7 +140,7 @@ func TestMakeRouteConfig(t *testing.T) {
 						{
 							Selector: "endpoints.examples.bookstore.Bookstore.Foo",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "foo",
+								Get: "/foo",
 							},
 						},
 					},
@@ -167,7 +167,7 @@ func TestMakeRouteConfig(t *testing.T) {
                 "name": ":method"
               }
             ],
-            "path": "foo"
+            "path": "/foo"
           },
           "responseHeadersToAdd": [
             {
@@ -275,39 +275,101 @@ func TestMakeRouteConfig(t *testing.T) {
 }`,
 		},
 		{
-			desc: "Oversize wildcard path regex",
+			desc:                          "Use error format http template",
+			enableStrictTransportSecurity: true,
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
-					},
-				},
-				Backend: &confpb.Backend{
-					Rules: []*confpb.BackendRule{
-						{
-							Selector:        "endpoints.examples.bookstore.Bookstore.Foo",
-							Address:         "https://testapipb.com/foo",
-							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
-							Authentication: &confpb.BackendRule_JwtAudience{
-								JwtAudience: "bar.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo",
 							},
 						},
 					},
 				},
-				Http: &annotationspb.Http{
-					Rules: []*annotationspb.HttpRule{
-						{
-							Selector: "endpoints.examples.bookstore.Bookstore.Foo",
-							Pattern: &annotationspb.HttpRule_Get{
-								Get: getOverSizeRegexForTest(),
-							},
+				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
+					{
+						Selector: fmt.Sprintf("%s.Echo", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/**/**",
 						},
 					},
+				},
 				},
 			},
-			wantedError: "invalid route path regex: regex program size(1003) is larger than the max expected(1000)",
+			wantedError: "fail to register endpoints.examples.bookstore.Bookstore.Echo's http template `GET /**/**` in route table",
 		},
+		{
+			desc:                          "Use duplicate http template",
+			enableStrictTransportSecurity: true,
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
+					{
+						Selector: fmt.Sprintf("%s.Echo", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/{echoSize}",
+						},
+					},
+					{
+						Selector: fmt.Sprintf("%s.Echo", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/{echoId}",
+						},
+					},
+				},
+				},
+			},
+			wantedError: "fail to register endpoints.examples.bookstore.Bookstore.Echo's http template `GET /{echoId}` in route table",
+		},
+		// TDOO(taoxuy@): Try to re-enable the regex re2 oversize unit test. The current
+		// regex test case is not accepted as valid uri template.
+		//{
+		//	desc: "Oversize wildcard path regex",
+		//	fakeServiceConfig: &confpb.Service{
+		//		Name: testProjectName,
+		//		Apis: []*apipb.Api{
+		//			{
+		//				Name: testApiName,
+		//			},
+		//		},
+		//		Backend: &confpb.Backend{
+		//			Rules: []*confpb.BackendRule{
+		//				{
+		//					Selector:        "endpoints.examples.bookstore.Bookstore.Foo",
+		//					Address:         "https://testapipb.com/foo",
+		//					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+		//					Authentication: &confpb.BackendRule_JwtAudience{
+		//						JwtAudience: "bar.com",
+		//					},
+		//				},
+		//			},
+		//		},
+		//		Http: &annotationspb.Http{
+		//			Rules: []*annotationspb.HttpRule{
+		//				{
+		//					Selector: "endpoints.examples.bookstore.Bookstore.Foo",
+		//					Pattern: &annotationspb.HttpRule_Get{
+		//						Get: getOverSizeRegexForTest(),
+		//					},
+		//				},
+		//			},
+		//		},
+		//	},
+		//	wantedError: "invalid route path regex: regex program size(1003) is larger than the max expected(1000)",
+		//},
 	}
 
 	for _, tc := range testData {
