@@ -56,10 +56,10 @@ func TestStatistics(t *testing.T) {
 			reqCnt:      2,
 			reqDuration: time.Second * 1,
 			wantCounters: utils.StatCounters{
-				"http.ingress_http.backend_auth.token_added":                       2,
-				"http.ingress_http.backend_routing.allowed_by_no_configured_rules": 2,
-				"http.ingress_http.path_matcher.allowed":                           2,
-				"http.ingress_http.service_control.allowed":                        2,
+				"http.ingress_http.backend_auth.token_added":      2,
+				"http.ingress_http.path_rewrite.path_not_changed": 2,
+				"http.ingress_http.path_matcher.allowed":          2,
+				"http.ingress_http.service_control.allowed":       2,
 			},
 			wantHistograms: utils.StatHistograms{
 				"http.ingress_http.service_control.overhead_time": {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
