@@ -23,7 +23,7 @@ import (
 // http pattern. The sequence should be same as the matching order of
 // https://github.com/GoogleCloudPlatform/esp-v2/blob/641ce1d5c177401e424f2b27dd45de1bf797530b/src/api_proxy/path_matcher/path_matcher.h#L1
 type MatchSequenceGenerator struct {
-	RootPtr     *sorterNode
+	RootPtr     *matchSequenceGeneratorNode
 	CustomVerbs map[string]bool
 	Methods     []*methodData
 }

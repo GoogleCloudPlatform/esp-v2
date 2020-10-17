@@ -718,6 +718,8 @@ func TestMatchSequenceGeneratorRequestMatch(t *testing.T) {
 		sg := NewMatchSequenceGenerator()
 		insertedTemplateToMethod := make(map[string]*Method)
 		methodToUrlTemplate := make(map[*Method]string)
+
+		// Add the http pattern into the generator.
 		for _, result := range tc.requestToMatchResult {
 			if result.httpPattern == "" {
 				continue
@@ -736,6 +738,7 @@ func TestMatchSequenceGeneratorRequestMatch(t *testing.T) {
 			}
 		}
 
+		// Check if the found the method is the registered one.
 		for req, result := range tc.requestToMatchResult {
 			t.Run(tc.desc+" "+req, func(t *testing.T) {
 				httpMethod, path := parsePattern(req)

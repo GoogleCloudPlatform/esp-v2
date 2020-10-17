@@ -20,21 +20,21 @@ import (
 
 const HttpMethodWildCard = "*"
 
-// Trie node to implement sequence generator.
-type sorterNode struct {
+// Trie node to implement match uence generator.
+type matchSequenceGeneratorNode struct {
 	ResultMap map[string]*lookupResult
-	Children  map[string]*sorterNode
+	Children  map[string]*matchSequenceGeneratorNode
 	WildCard  bool
 }
 
-func newMatchSequenceGeneratorNode() *sorterNode {
-	return &sorterNode{
+func newMatchSequenceGeneratorNode() *matchSequenceGeneratorNode {
+	return &matchSequenceGeneratorNode{
 		ResultMap: make(map[string]*lookupResult),
-		Children:  make(map[string]*sorterNode),
+		Children:  make(map[string]*matchSequenceGeneratorNode),
 	}
 }
 
-func (hn *sorterNode) insertTemplate(pathParts []string, pathPartsIdxCur int, httpMethod string, methodData *methodData, markDuplicate bool) bool {
+func (hn *matchSequenceGeneratorNode) insertTemplate(pathParts []string, pathPartsIdxCur int, httpMethod string, methodData *methodData, markDuplicate bool) bool {
 	if pathPartsIdxCur == len(pathParts) {
 		if val, ok := hn.ResultMap[httpMethod]; ok {
 			if markDuplicate {
@@ -63,11 +63,11 @@ func (hn *sorterNode) insertTemplate(pathParts []string, pathPartsIdxCur int, ht
 	return child.insertTemplate(pathParts, pathPartsIdxCur+1, httpMethod, methodData, markDuplicate)
 }
 
-func (hn *sorterNode) insertPath(pathParts []string, httpMethod string, methodData *methodData, markDuplicate bool) bool {
+func (hn *matchSequenceGeneratorNode) insertPath(pathParts []string, httpMethod string, methodData *methodData, markDuplicate bool) bool {
 	return hn.insertTemplate(pathParts, 0, httpMethod, methodData, markDuplicate)
 }
 
-func (hn *sorterNode) lookupPath(pathParts []string, pathPartsIdxCur int, httpMethod string, result *lookupResult) {
+func (hn *matchSequenceGeneratorNode) lookupPath(pathParts []string, pathPartsIdxCur int, httpMethod string, result *lookupResult) {
 	GetResultForHttpMethod := func(resultMap map[string]*lookupResult, m string, result *lookupResult) bool {
 		if val, ok := resultMap[m]; ok {
 			*result = *val
@@ -124,7 +124,7 @@ func (hn *sorterNode) lookupPath(pathParts []string, pathPartsIdxCur int, httpMe
 }
 
 // Traverse the sorter trie in matching order and add the visited method in result.
-func (hn *sorterNode) traverse(result *MatchSequence) {
+func (hn *matchSequenceGeneratorNode) traverse(result *MatchSequence) {
 	appendMethodOnCurrentNode := func() {
 		// Put the wildcard method in the end.
 		var wildMethodResult *lookupResult
@@ -153,9 +153,9 @@ func (hn *sorterNode) traverse(result *MatchSequence) {
 	}
 
 	traverseChildren := func() {
-		var singleParameterChild *sorterNode
-		var wildCardPathPartChild *sorterNode
-		var wildCardPathChild *sorterNode
+		var singleParameterChild *matchSequenceGeneratorNode
+		var wildCardPathPartChild *matchSequenceGeneratorNode
+		var wildCardPathChild *matchSequenceGeneratorNode
 		var exactMatchChildKey []string
 		for key, child := range hn.Children {
 			switch key {
@@ -180,7 +180,7 @@ func (hn *sorterNode) traverse(result *MatchSequence) {
 		}
 
 		// Visit vague match children after.
-		for _, child := range []*sorterNode{singleParameterChild, wildCardPathPartChild, wildCardPathChild} {
+		for _, child := range []*matchSequenceGeneratorNode{singleParameterChild, wildCardPathPartChild, wildCardPathChild} {
 			if child != nil {
 				child.traverse(result)
 			}
