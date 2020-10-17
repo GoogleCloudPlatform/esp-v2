@@ -147,13 +147,13 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*listenerpb.Listener, error) {
 		glog.Infof("adding Backend Auth Filter config: %v", jsonStr)
 	}
 
-	// Always add path_rewrite filter. If no per-route config, it is NO-OP.
-	// Checking per-route config is fast.
-	backendRoutingFilter := &hcmpb.HttpFilter{
-		Name: util.PathRewrite,
+	if needPathRewrite(serviceInfo) {
+		pathRewriteFilter := &hcmpb.HttpFilter{
+			Name: util.PathRewrite,
+		}
+		httpFilters = append(httpFilters, pathRewriteFilter)
+		glog.Infof("adding Path Rewrite Filter.")
 	}
-	httpFilters = append(httpFilters, backendRoutingFilter)
-	glog.Infof("adding Path Rewrite Filter.")
 
 	if serviceInfo.Options.EnableGrpcForHttp1 {
 		// Add GrpcMetadataScrubber filter to retain gRPC trailers
@@ -356,6 +356,18 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: pathMatcherConfigStruct},
 	}
 	return pathMatcherFilter
+}
+
+func needPathRewrite(serviceInfo *sc.ServiceInfo) bool {
+	for _, method := range serviceInfo.Methods {
+		// Determined by the method only. Hence just pass in the first httpRule.
+		if len(method.HttpRule) > 0 {
+			if pr := MakePathRewriteConfig(method, method.HttpRule[0]); pr != nil {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func defaultJwtLocations() ([]*jwtpb.JwtHeader, []string) {

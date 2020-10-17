@@ -147,7 +147,7 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 	}, nil
 }
 
-func makePathRewriteConfig(method *configinfo.MethodInfo, httpRule *commonpb.Pattern) *prpb.PerRouteFilterConfig {
+func MakePathRewriteConfig(method *configinfo.MethodInfo, httpRule *commonpb.Pattern) *prpb.PerRouteFilterConfig {
 	if method.BackendInfo == nil {
 		return nil
 	}
@@ -197,7 +197,7 @@ func makePerRouteFilterConfig(operation string, method *configinfo.MethodInfo, h
 	}
 
 	// add PathRewrite PerRouteConfig if needed
-	if pr := makePathRewriteConfig(method, httpRule); pr != nil {
+	if pr := MakePathRewriteConfig(method, httpRule); pr != nil {
 		prAny, _ := ptypes.MarshalAny(pr)
 		perFilterConfig[util.PathRewrite] = prAny
 	}

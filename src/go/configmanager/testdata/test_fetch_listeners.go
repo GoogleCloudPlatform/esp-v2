@@ -123,9 +123,6 @@ var (
                         }
                      },
                      {
-                        "name":"com.google.espv2.filters.http.path_rewrite"
-                     },
-                     {
                         "name":"com.google.espv2.filters.http.grpc_metadata_scrubber"
                      },
                      {
@@ -320,9 +317,6 @@ var (
                      },
                      {
                         "name":"envoy.filters.http.grpc_web"
-                     },
-                     {
-                        "name":"com.google.espv2.filters.http.path_rewrite"
                      },
                      {
                        "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
@@ -547,9 +541,6 @@ var (
                      },
                      {
                         "name":"envoy.filters.http.grpc_web"
-                     },
-                     {
-                        "name":"com.google.espv2.filters.http.path_rewrite"
                      },
                      {
                        "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
@@ -889,9 +880,6 @@ var (
                         "name":"envoy.filters.http.grpc_web"
                      },
                      {
-                        "name":"com.google.espv2.filters.http.path_rewrite"
-                     },
-                     {
                        "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
                      },
                      {
@@ -1209,9 +1197,6 @@ var (
                         "name":"envoy.filters.http.grpc_web"
                      },
                      {
-                        "name":"com.google.espv2.filters.http.path_rewrite"
-                     },
-                     {
                        "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
                      },
                      {
@@ -1491,9 +1476,6 @@ var (
                         }
                      },
                      {
-                        "name":"com.google.espv2.filters.http.path_rewrite"
-                     },
-                     {
                        "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
                      },
                      {
@@ -1697,9 +1679,6 @@ var (
                               }
                            ]
                         }
-                     },
-                     {
-                        "name":"com.google.espv2.filters.http.path_rewrite"
                      },
                      {
                        "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"

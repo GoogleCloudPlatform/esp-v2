@@ -1263,9 +1263,6 @@ func TestMakeListeners(t *testing.T) {
             "commonHttpProtocolOptions":{},
             "httpFilters":[
               {
-                "name": "com.google.espv2.filters.http.path_rewrite"
-              },
-              {
                 "name":"com.google.espv2.filters.http.grpc_metadata_scrubber"
               },
               {
