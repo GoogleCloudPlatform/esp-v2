@@ -79,11 +79,17 @@ func InitMockServerFromPathResp(pathResp map[string]string) *httptest.Server {
 // JsonEqual compares two JSON strings after normalizing them.
 // Should be used for test only.
 func JsonEqual(want, got string) error {
+	return JsonEqualWithNormalizer(want, got, normalizeJsonMap)
+}
+
+// JsonEqual compares two JSON strings after normalizing them.
+// Should be used for test only.
+func JsonEqualWithNormalizer(want, got string, normalizer func(string) (string, error)) error {
 	var err error
-	if got, err = normalizeJson(got); err != nil {
+	if got, err = normalizer(got); err != nil {
 		return err
 	}
-	if want, err = normalizeJson(want); err != nil {
+	if want, err = normalizer(want); err != nil {
 		return err
 	}
 	if !strings.EqualFold(want, got) {
@@ -97,7 +103,7 @@ func JsonEqual(want, got string) error {
 // JsonContains will remove regex(`(\t|\n|\s)`) inside target so it shouldn't
 // contains these chars in its content.
 func JsonContains(source, target string) error {
-	normalizedSource, err := normalizeJson(source)
+	normalizedSource, err := normalizeJsonMap(source)
 	if err != nil {
 		return err
 	}
@@ -111,9 +117,19 @@ func JsonContains(source, target string) error {
 	return nil
 }
 
-// normalizeJson returns normalized JSON string.
-func normalizeJson(input string) (string, error) {
+// normalizeJsonMap receives a json map string and returns normalized JSON string.
+var normalizeJsonMap = func(input string) (string, error) {
 	var jsonObject map[string]interface{}
+	if err := json.Unmarshal([]byte(input), &jsonObject); err != nil {
+		return "", err
+	}
+	outputString, err := json.Marshal(jsonObject)
+	return string(outputString), err
+}
+
+// normalizeJsonList receives a json list string and returns normalized JSON string.
+var NormalizeJsonList = func(input string) (string, error) {
+	var jsonObject []interface{}
 	if err := json.Unmarshal([]byte(input), &jsonObject); err != nil {
 		return "", err
 	}
