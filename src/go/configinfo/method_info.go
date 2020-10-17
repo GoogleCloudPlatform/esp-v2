@@ -22,8 +22,8 @@ import (
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-// methodInfo contains all information about this method.
-type methodInfo struct {
+// MethodInfo contains all information about this method.
+type MethodInfo struct {
 	ShortName              string
 	ApiName                string
 	ApiVersion             string
@@ -43,7 +43,7 @@ type methodInfo struct {
 
 	// The auto-generated cors methods, used to replace snakeName with jsonName in their
 	// url templates in config time.
-	GeneratedCorsMethod *methodInfo
+	GeneratedCorsMethod *MethodInfo
 }
 
 // backendInfo stores information from Backend rule for backend rerouting.

@@ -48,10 +48,10 @@ const (
 	ServiceControl = "com.google.espv2.filters.http.service_control"
 	// PathMatcher filter.
 	PathMatcher = "com.google.espv2.filters.http.path_matcher"
+	// PathRewrite filter.
+	PathRewrite = "com.google.espv2.filters.http.path_rewrite"
 	// BackendAuth filter.
 	BackendAuth = "com.google.espv2.filters.http.backend_auth"
-	// BackendRouting filter.
-	BackendRouting = "com.google.espv2.filters.http.backend_routing"
 	// gRPC Metadata Scrubber filter.
 	GrpcMetadataScrubber = "com.google.espv2.filters.http.grpc_metadata_scrubber"
 

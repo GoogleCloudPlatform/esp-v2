@@ -187,6 +187,10 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
               "jwtAudience":"bar.com"
             },
+            "com.google.espv2.filters.http.path_rewrite":{
+              "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "constantPath":{"path":"/foo"}
+            },
             "com.google.espv2.filters.http.service_control":{
               "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
               "operationName":"endpoints.examples.bookstore.Bookstore.Foo"
@@ -263,6 +267,13 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
               "jwtAudience":"bar.com"
             },
+            "com.google.espv2.filters.http.path_rewrite":{
+              "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+             "constantPath": {
+                "path": "/foo",
+                "urlTemplate": "/v1/{book_name=*}/test/**"
+              }
+            },
             "com.google.espv2.filters.http.service_control":{
               "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
               "operationName":"endpoints.examples.bookstore.Bookstore.Foo"
@@ -307,6 +318,738 @@ func TestMakeRouteConfig(t *testing.T) {
 				},
 			},
 			wantedError: "invalid route path regex: regex program size(1003) is larger than the max expected(1000)",
+		},
+		{
+			desc: "Success, generate backend routing filter for gRPC",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "endpoints.examples.bookstore.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name: "CreateShelf",
+							},
+							{
+								Name: "ListShelves",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/v1/shelves",
+							},
+						},
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.CreateShelf",
+							Pattern: &annotationspb.HttpRule_Post{
+								Post: "/v1/shelves",
+							},
+							Body: "shelf",
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector:        "endpoints.examples.bookstore.Bookstore.CreateShelf",
+							Address:         "https://testapipb.com/foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+						},
+						{
+							Selector:        "endpoints.examples.bookstore.Bookstore.ListShelves",
+							Address:         "https://testapipb.com/foo",
+							PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "bar.com",
+							},
+						},
+					},
+				},
+			},
+			wantRouteConfig: `{
+ "name": "local_route",
+  "virtualHosts": [
+    {
+      "domains": [
+        "*"
+      ],
+      "name": "backend",
+      "routes": [
+        {
+          "decorator": {
+            "operation": "ingress CreateShelf"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "POST",
+                "name": ":method"
+              }
+            ],
+            "path": "/v1/shelves"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "https://testapipb.com"
+            },
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "constantPath": {
+                "path": "/foo"
+              }
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress ListShelves"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/v1/shelves"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "bar.com"
+            },
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "pathPrefix": "/foo"
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.ListShelves"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}`,
+		},
+		{
+			desc: "Success, generate backend routing filter for http",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "testapi",
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+							{
+								Name: "bar",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "testapi.foo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "foo",
+							},
+						},
+						{
+							Selector: "testapi.bar",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "bar",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector:        "testapi.foo",
+							Address:         "https://testapipb.com/foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "foo.com",
+							},
+						},
+						{
+							Selector:        "testapi.bar",
+							Address:         "https://testapipb.com/foo",
+							PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "bar.com",
+							},
+						},
+					},
+				},
+			},
+			wantRouteConfig: `{
+ "name": "local_route",
+  "virtualHosts": [
+    {
+      "domains": [
+        "*"
+      ],
+      "name": "backend",
+      "routes": [
+        {
+          "decorator": {
+            "operation": "ingress foo"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "foo"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "foo.com"
+            },
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "constantPath": {
+                "path": "/foo"
+              }
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "testapi.foo"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress bar"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "bar"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "bar.com"
+            },
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "pathPrefix": "/foo"
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "testapi.bar"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}`,
+		},
+		{
+			desc: "Success, generate backend routing filter with allow Cors",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Endpoints: []*confpb.Endpoint{
+					{
+						Name:      testProjectName,
+						AllowCors: true,
+					},
+				},
+				Apis: []*apipb.Api{
+					{
+						Name: "testapi",
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+							{
+								Name: "bar",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "testapi.foo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "foo",
+							},
+						},
+						{
+							Selector: "testapi.bar",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "bar",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector:        "testapi.foo",
+							Address:         "https://testapipb.com/foo?query=ignored",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "foo.com",
+							},
+						},
+						{
+							Selector:        "testapi.bar",
+							Address:         "https://testapipb.com/bar",
+							PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "bar.com",
+							},
+						},
+					},
+				},
+			},
+			wantRouteConfig: `{
+ "name": "local_route",
+  "virtualHosts": [
+    {
+      "domains": [
+        "*"
+      ],
+      "name": "backend",
+      "routes": [
+        {
+          "decorator": {
+            "operation": "ingress foo"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "foo"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "foo.com"
+            },
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "constantPath": {
+                "path": "/foo"
+              }
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "testapi.foo"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress bar"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "bar"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "bar.com"
+            },
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "pathPrefix": "/bar"
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "testapi.bar"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress ESPv2_Autogenerated_CORS_foo"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "OPTIONS",
+                "name": ":method"
+              }
+            ],
+            "path": "foo"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "foo.com"
+            },
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "constantPath": {
+                "path": "/foo"
+              }
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "testapi.ESPv2_Autogenerated_CORS_foo"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress ESPv2_Autogenerated_CORS_bar"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "OPTIONS",
+                "name": ":method"
+              }
+            ],
+            "path": "bar"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "bar.com"
+            },
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "pathPrefix": "/bar"
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "testapi.ESPv2_Autogenerated_CORS_bar"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}`,
+		},
+		{
+			desc: "Success, empty path for APPEND generate no backend filter",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "testapi",
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+							{
+								Name: "bar",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "testapi.foo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "foo",
+							},
+						},
+						{
+							Selector: "testapi.bar",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "bar",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector:        "testapi.foo",
+							Address:         "https://testapipb.com",
+							PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+						},
+						{
+							Selector:        "testapi.bar",
+							Address:         "https://testapipb.com/",
+							PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+						},
+					},
+				},
+			},
+			wantRouteConfig: `{
+  "name": "local_route",
+  "virtualHosts": [
+    {
+      "domains": [
+        "*"
+      ],
+      "name": "backend",
+      "routes": [
+        {
+          "decorator": {
+            "operation": "ingress foo"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "foo"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "https://testapipb.com"
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "testapi.foo"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress bar"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "bar"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "https://testapipb.com"
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "testapi.bar"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}`,
+		},
+		{
+			desc: "Success, empty path for CONST always generates `/` prefix",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "testapi",
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+							{
+								Name: "bar",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "testapi.foo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "foo",
+							},
+						},
+						{
+							Selector: "testapi.bar",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "bar",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector:        "testapi.foo",
+							Address:         "https://testapipb.com",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+						},
+						{
+							Selector:        "testapi.bar",
+							Address:         "https://testapipb.com/",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+						},
+					},
+				},
+			},
+			wantRouteConfig: `{
+  "name": "local_route",
+  "virtualHosts": [
+    {
+      "domains": [
+        "*"
+      ],
+      "name": "backend",
+      "routes": [
+        {
+          "decorator": {
+            "operation": "ingress foo"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "foo"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "https://testapipb.com"
+            },
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "constantPath": {
+                "path": "/"
+              }
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "testapi.foo"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress bar"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "bar"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "https://testapipb.com"
+            },
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "constantPath": {
+                "path": "/"
+              }
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "testapi.bar"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}`,
 		},
 	}
 

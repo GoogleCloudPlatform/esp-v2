@@ -240,22 +240,7 @@
                       }
                     },
                     {
-                      "name": "com.google.espv2.filters.http.backend_routing",
-                      "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_routing.FilterConfig",
-                        "rules": [
-                          {
-                            "operation": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.ListShelves",
-                            "pathPrefix": "/shelves",
-                            "pathTranslation": "APPEND_PATH_TO_ADDRESS"
-                          },
-                          {
-                            "operation": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.CreateShelf",
-                            "pathPrefix": "/shelves",
-                            "pathTranslation": "CONSTANT_ADDRESS"
-                          }
-                        ]
-                      }
+                      "name": "com.google.espv2.filters.http.path_rewrite"
                     },
                     {
                       "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
@@ -311,6 +296,10 @@
                                 "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
                                 "jwtAudience": "ESPv2"
                               },
+                              "com.google.espv2.filters.http.path_rewrite": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+                                "pathPrefix": "/shelves"
+                              },
                               "com.google.espv2.filters.http.service_control": {
                                 "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                 "operationName": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.ListShelves"
@@ -336,6 +325,12 @@
                               "timeout": "23s"
                             },
                             "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.path_rewrite": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+                                "constantPath": {
+                                  "path": "/shelves"
+                                }
+                              },
                               "com.google.espv2.filters.http.service_control": {
                                 "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                 "operationName": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.CreateShelf"
