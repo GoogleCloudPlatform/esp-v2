@@ -63,6 +63,8 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
                      "` is not defined by this API."),
         utils::generateRcDetails(utils::kRcDetailFilterBackendAuth,
                                  utils::kRcDetailErrorTypeUndefinedRequest));
+    decoder_callbacks_->streamInfo().setResponseFlag(
+        Envoy::StreamInfo::ResponseFlag::NoRouteFound);
     return FilterHeadersStatus::StopIteration;
   }
 
@@ -107,8 +109,6 @@ void Filter::rejectRequest(Envoy::Http::Code code, absl::string_view error_msg,
   ENVOY_LOG(debug, "{}", error_msg);
   decoder_callbacks_->sendLocalReply(code, error_msg, nullptr, absl::nullopt,
                                      details);
-  decoder_callbacks_->streamInfo().setResponseFlag(
-      Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService);
 }
 
 }  // namespace backend_auth
