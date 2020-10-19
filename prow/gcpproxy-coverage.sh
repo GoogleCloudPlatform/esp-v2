@@ -54,7 +54,7 @@ exit 1; }
 #echo '======================================================='
 #echo '===================== Setup Cache ====================='
 #echo '======================================================='
-try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "${JOB_TYPE}-coverage"
+#try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "${JOB_TYPE}-coverage"
 
 echo '======================================================='
 echo '==================== C++ Coverage ====================='
