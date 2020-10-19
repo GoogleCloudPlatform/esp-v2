@@ -126,16 +126,16 @@ func (hn *matchSequenceGeneratorNode) lookupPath(pathParts []string, pathPartsId
 // Traverse the sorter trie in matching order and add the visited method in result.
 func (hn *matchSequenceGeneratorNode) traverse(result *MatchSequence) {
 	appendMethodOnCurrentNode := func() {
-		// Put the wildcard method in the end.
-		var wildMethodResult *lookupResult
-		if val, ok := hn.ResultMap[HttpMethodWildCard]; ok {
-			wildMethodResult = val
-			delete(hn.ResultMap, HttpMethodWildCard)
-		}
 
 		// Sort the method in alphabet order to generate deterministic sequence for better unit testing.
 		var sortedKeys []string
-		for key, _ := range hn.ResultMap {
+		// Put the wildcard method in the end.
+		var wildMethodResult *lookupResult
+		for key, val := range hn.ResultMap {
+			if key == HttpMethodWildCard {
+				wildMethodResult = val
+				continue
+			}
 			sortedKeys = append(sortedKeys, key)
 		}
 		sort.Strings(sortedKeys)
@@ -146,6 +146,7 @@ func (hn *matchSequenceGeneratorNode) traverse(result *MatchSequence) {
 			}
 		}
 
+		// Put the wildcard method in the end.
 		if wildMethodResult != nil {
 			result.appendMethod(wildMethodResult.data.Method)
 		}
@@ -189,7 +190,9 @@ func (hn *matchSequenceGeneratorNode) traverse(result *MatchSequence) {
 
 	// If the current node is wildcard(**), its children has higher priority.
 	if hn.WildCard {
+		// Pre-order traverse.
 		traverseChildren()
+		// Post-order traverse.
 		appendMethodOnCurrentNode()
 	} else {
 		appendMethodOnCurrentNode()
