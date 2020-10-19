@@ -320,7 +320,7 @@ func TestMakeRouteConfig(t *testing.T) {
 			wantedError: "invalid route path regex: regex program size(1003) is larger than the max expected(1000)",
 		},
 		{
-			desc: "Success, generate backend routing filter for gRPC",
+			desc: "path_rewrite: http rule url_templates with variable bindings.",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -341,13 +341,13 @@ func TestMakeRouteConfig(t *testing.T) {
 						{
 							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/v1/shelves",
+								Get: "/v1/shelves/{shelves}",
 							},
 						},
 						{
 							Selector: "endpoints.examples.bookstore.Bookstore.CreateShelf",
 							Pattern: &annotationspb.HttpRule_Post{
-								Post: "/v1/shelves",
+								Post: "/v1/shelves/{shelves}",
 							},
 							Body: "shelf",
 						},
@@ -391,7 +391,10 @@ func TestMakeRouteConfig(t *testing.T) {
                 "name": ":method"
               }
             ],
-            "path": "/v1/shelves"
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/v1/shelves/[^\\/]+$"
+            }
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
@@ -406,7 +409,8 @@ func TestMakeRouteConfig(t *testing.T) {
             "com.google.espv2.filters.http.path_rewrite": {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
               "constantPath": {
-                "path": "/foo"
+                "path": "/foo",
+                "urlTemplate": "/v1/shelves/{shelves}"
               }
             },
             "com.google.espv2.filters.http.service_control": {
@@ -426,7 +430,10 @@ func TestMakeRouteConfig(t *testing.T) {
                 "name": ":method"
               }
             ],
-            "path": "/v1/shelves"
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/v1/shelves/[^\\/]+$"
+            }
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
@@ -454,7 +461,7 @@ func TestMakeRouteConfig(t *testing.T) {
 }`,
 		},
 		{
-			desc: "Success, generate backend routing filter for http",
+			desc: "path_rewrite: http rule url_templates without variable bindings.",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -590,7 +597,7 @@ func TestMakeRouteConfig(t *testing.T) {
 }`,
 		},
 		{
-			desc: "Success, generate backend routing filter with allow Cors",
+			desc: "http rule url_templates with allow Cors",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Endpoints: []*confpb.Endpoint{
@@ -617,7 +624,7 @@ func TestMakeRouteConfig(t *testing.T) {
 						{
 							Selector: "testapi.foo",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "foo",
+								Get: "foo/{x}",
 							},
 						},
 						{
@@ -669,7 +676,10 @@ func TestMakeRouteConfig(t *testing.T) {
                 "name": ":method"
               }
             ],
-            "path": "foo"
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^foo/[^\\/]+$"
+            }
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
@@ -684,7 +694,8 @@ func TestMakeRouteConfig(t *testing.T) {
             "com.google.espv2.filters.http.path_rewrite": {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
               "constantPath": {
-                "path": "/foo"
+                "path": "/foo",
+                "urlTemplate": "foo/{x}"
               }
             },
             "com.google.espv2.filters.http.service_control": {
@@ -737,7 +748,10 @@ func TestMakeRouteConfig(t *testing.T) {
                 "name": ":method"
               }
             ],
-            "path": "foo"
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^foo/[^\\/]+$"
+            }
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
@@ -752,7 +766,8 @@ func TestMakeRouteConfig(t *testing.T) {
             "com.google.espv2.filters.http.path_rewrite": {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
               "constantPath": {
-                "path": "/foo"
+                "path": "/foo",
+                "urlTemplate": "foo/{x}"
               }
             },
             "com.google.espv2.filters.http.service_control": {
@@ -800,7 +815,7 @@ func TestMakeRouteConfig(t *testing.T) {
 }`,
 		},
 		{
-			desc: "Success, empty path for APPEND generate no backend filter",
+			desc: "path_rewrite: empty path for APPEND, no path_rewrite",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -920,7 +935,7 @@ func TestMakeRouteConfig(t *testing.T) {
 }`,
 		},
 		{
-			desc: "Success, empty path for CONST always generates `/` prefix",
+			desc: "path_rewrite: empty path for CONST always generates `/` prefix",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -1052,7 +1067,7 @@ func TestMakeRouteConfig(t *testing.T) {
 }`,
 		},
 		{
-			desc: "Success, generate backend routing filter with allow Cors",
+			desc: "path_rewrite: both url_template and path_prefix are `/` for CONST",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -1135,7 +1150,7 @@ func TestMakeRouteConfig(t *testing.T) {
 }`,
 		},
 		{
-			desc: "Success, generate backend routing filter with allow Cors",
+			desc: "Multiple http rules for one selector",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
