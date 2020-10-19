@@ -90,9 +90,9 @@ load("//bazel:repositories.bzl", "service_control_repositories")
 
 service_control_repositories()
 
-load("@io_bazel_rules_python//python:pip.bzl", "pip_import")
+load("@io_bazel_rules_python//python:pip.bzl", "pip_install")
 
-pip_import(
+pip_install(
     name = "grpc_python_dependencies",
     requirements = "@com_github_grpc_grpc//:requirements.bazel.txt",
 )
