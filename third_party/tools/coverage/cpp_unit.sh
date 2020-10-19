@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 # Copied from here
 # https://github.com/envoyproxy/envoy/blob/master/test/run_envoy_bazel_coverage.sh
