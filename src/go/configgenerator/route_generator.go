@@ -165,6 +165,8 @@ func MakePathRewriteConfig(method *configinfo.MethodInfo, httpRule *commonpb.Pat
 		constPath := &prpb.ConstantPath{
 			Path: method.BackendInfo.Path,
 		}
+		// TODO(qiwzhang): Once httppattern.Urltemplate parser is used, change this
+		// checking to use len(template.variable) > 0
 		if strings.ContainsRune(httpRule.UriTemplate, '{') {
 			constPath.UrlTemplate = httpRule.UriTemplate
 		}
