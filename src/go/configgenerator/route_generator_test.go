@@ -140,7 +140,7 @@ func TestMakeRouteConfig(t *testing.T) {
 						{
 							Selector: "endpoints.examples.bookstore.Bookstore.Foo",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "foo",
+								Get: "/foo",
 							},
 						},
 					},
@@ -167,7 +167,7 @@ func TestMakeRouteConfig(t *testing.T) {
                 "name": ":method"
               }
             ],
-            "path": "foo"
+            "path": "/foo"
           },
           "responseHeadersToAdd": [
             {
@@ -482,13 +482,13 @@ func TestMakeRouteConfig(t *testing.T) {
 						{
 							Selector: "testapi.foo",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "foo",
+								Get: "/foo",
 							},
 						},
 						{
 							Selector: "testapi.bar",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "bar",
+								Get: "/bar",
 							},
 						},
 					},
@@ -534,7 +534,7 @@ func TestMakeRouteConfig(t *testing.T) {
                 "name": ":method"
               }
             ],
-            "path": "foo"
+            "path": "/foo"
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
@@ -569,7 +569,7 @@ func TestMakeRouteConfig(t *testing.T) {
                 "name": ":method"
               }
             ],
-            "path": "bar"
+            "path": "/bar"
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
@@ -624,13 +624,13 @@ func TestMakeRouteConfig(t *testing.T) {
 						{
 							Selector: "testapi.foo",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "foo/{x}",
+								Get: "/foo/{x}",
 							},
 						},
 						{
 							Selector: "testapi.bar",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "bar",
+								Get: "/bar",
 							},
 						},
 					},
@@ -678,7 +678,7 @@ func TestMakeRouteConfig(t *testing.T) {
             ],
             "safeRegex": {
               "googleRe2": {},
-              "regex": "^foo/[^\\/]+$"
+              "regex": "^/foo/[^\\/]+$"
             }
           },
           "route": {
@@ -695,7 +695,7 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
               "constantPath": {
                 "path": "/foo",
-                "urlTemplate": "foo/{x}"
+                "urlTemplate": "/foo/{x}"
               }
             },
             "com.google.espv2.filters.http.service_control": {
@@ -715,7 +715,7 @@ func TestMakeRouteConfig(t *testing.T) {
                 "name": ":method"
               }
             ],
-            "path": "bar"
+            "path": "/bar"
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
@@ -750,7 +750,7 @@ func TestMakeRouteConfig(t *testing.T) {
             ],
             "safeRegex": {
               "googleRe2": {},
-              "regex": "^foo/[^\\/]+$"
+              "regex": "^/foo/[^\\/]+$"
             }
           },
           "route": {
@@ -767,7 +767,7 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
               "constantPath": {
                 "path": "/foo",
-                "urlTemplate": "foo/{x}"
+                "urlTemplate": "/foo/{x}"
               }
             },
             "com.google.espv2.filters.http.service_control": {
@@ -787,7 +787,7 @@ func TestMakeRouteConfig(t *testing.T) {
                 "name": ":method"
               }
             ],
-            "path": "bar"
+            "path": "/bar"
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
@@ -836,13 +836,13 @@ func TestMakeRouteConfig(t *testing.T) {
 						{
 							Selector: "testapi.foo",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "foo",
+								Get: "/foo",
 							},
 						},
 						{
 							Selector: "testapi.bar",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "bar",
+								Get: "/bar",
 							},
 						},
 					},
@@ -882,7 +882,7 @@ func TestMakeRouteConfig(t *testing.T) {
                 "name": ":method"
               }
             ],
-            "path": "foo"
+            "path": "/foo"
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
@@ -911,7 +911,7 @@ func TestMakeRouteConfig(t *testing.T) {
                 "name": ":method"
               }
             ],
-            "path": "bar"
+            "path": "/bar"
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
@@ -956,13 +956,13 @@ func TestMakeRouteConfig(t *testing.T) {
 						{
 							Selector: "testapi.foo",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "foo",
+								Get: "/foo",
 							},
 						},
 						{
 							Selector: "testapi.bar",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "bar",
+								Get: "/bar",
 							},
 						},
 					},
@@ -1002,7 +1002,7 @@ func TestMakeRouteConfig(t *testing.T) {
                 "name": ":method"
               }
             ],
-            "path": "foo"
+            "path": "/foo"
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
@@ -1037,7 +1037,7 @@ func TestMakeRouteConfig(t *testing.T) {
                 "name": ":method"
               }
             ],
-            "path": "bar"
+            "path": "/bar"
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",

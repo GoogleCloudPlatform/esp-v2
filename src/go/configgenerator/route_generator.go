@@ -16,11 +16,11 @@ package configgenerator
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -165,9 +165,8 @@ func MakePathRewriteConfig(method *configinfo.MethodInfo, httpRule *commonpb.Pat
 		constPath := &prpb.ConstantPath{
 			Path: method.BackendInfo.Path,
 		}
-		// TODO(qiwzhang): Once httppattern.Urltemplate parser is used, change this
-		// checking to use len(template.variable) > 0
-		if strings.ContainsRune(httpRule.UriTemplate, '{') {
+		// Parse the url_template to see if containing variables.
+		if u := httppattern.Parse(httpRule.UriTemplate); u != nil && len(u.Variables) > 0 {
 			constPath.UrlTemplate = httpRule.UriTemplate
 		}
 		return &prpb.PerRouteFilterConfig{
