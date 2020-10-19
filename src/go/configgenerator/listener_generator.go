@@ -360,9 +360,8 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 
 func needPathRewrite(serviceInfo *sc.ServiceInfo) bool {
 	for _, method := range serviceInfo.Methods {
-		// Determined by the method only. Hence just pass in the first httpRule.
-		if len(method.HttpRule) > 0 {
-			if pr := MakePathRewriteConfig(method, method.HttpRule[0]); pr != nil {
+		for _, httpRule := range method.HttpRule {
+			if pr := MakePathRewriteConfig(method, httpRule); pr != nil {
 				return true
 			}
 		}
