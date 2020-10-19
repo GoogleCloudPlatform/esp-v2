@@ -1,12 +1,10 @@
 #!/bin/bash
 
-set -e
-
 # Copied from here
 # https://github.com/envoyproxy/envoy/blob/master/test/run_envoy_bazel_coverage.sh
 
 [[ -z "${SRCDIR}" ]] && SRCDIR="${PWD}"
-[[ -z "${VALIDATE_COVERAGE}" ]] && VALIDATE_COVERAGE=true
+[[ -z "${VALIDATE_COVERAGE}" ]] && VALIDATE_COVERAGE=false
 [[ -z "${FUZZ_COVERAGE}" ]] && FUZZ_COVERAGE=false
 
 echo "Starting run_envoy_bazel_coverage.sh..."

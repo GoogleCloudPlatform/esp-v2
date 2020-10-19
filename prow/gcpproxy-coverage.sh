@@ -19,30 +19,42 @@
 # Fail on any error.
 set -eo pipefail
 
-gcloud config set core/project cloudesf-testing
-gcloud auth activate-service-account \
-  --key-file="${GOOGLE_APPLICATION_CREDENTIALS}"
+# Note that JOB_TYPE is set by Prow.
+# https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md#job-environment-variables
+PUBLIC_DIRECTORY=""
+case "${JOB_TYPE}" in
+  "presubmit")
+    # Store in directory with the SHA for each presubmit run.
+    PUBLIC_DIRECTORY=$(get_tag_name)
+
+    gcloud config set core/project cloudesf-testing
+    gcloud auth activate-service-account \
+      --key-file="${GOOGLE_APPLICATION_CREDENTIALS}"
+    ;;
+  "periodic")
+    # Overwrite global directory with latest coverage for all continuous runs.
+    PUBLIC_DIRECTORY="latest"
+
+    gcloud config set core/project cloudesf-testing
+    gcloud auth activate-service-account \
+      --key-file="${GOOGLE_APPLICATION_CREDENTIALS}"
+    ;;
+  *)
+    # If running locally, just upload to special-case folder.
+    echo "Unknown job type: ${JOB_TYPE}"
+    PUBLIC_DIRECTORY="local-run"
+    ;;
+esac
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT}"
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
 
-# https://github.com/bazelbuild/bazel/issues/7247
-# TODO(nareddyt): See if there are workarounds.
-case "${JOB_TYPE}" in
-  "presubmit")
-    echo "Coverage job is disabled for presubmits due to a bug with remote caching."
-    echo "Otherwise, presubmits would take too long to complete."
-    echo "If you need to see coverage for your commit, please run this script locally."
-    echo "Coverage job will still run periodically on the master branch."
-    exit 0
-    ;;
-esac
 #echo '======================================================='
 #echo '===================== Setup Cache ====================='
 #echo '======================================================='
-#try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "${JOB_TYPE}-coverage"
+try_setup_bazel_remote_cache "${PROW_JOB_ID}" "${IMAGE}" "${ROOT}" "${JOB_TYPE}-coverage"
 
 echo '======================================================='
 echo '==================== C++ Coverage ====================='
@@ -52,25 +64,6 @@ echo '======================================================='
 echo '======================================================='
 echo '=================== Upload Coverage ==================='
 echo '======================================================='
-
-# Note that JOB_TYPE is set by Prow.
-# https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md#job-environment-variables
-PUBLIC_DIRECTORY=""
-case "${JOB_TYPE}" in
-  "presubmit")
-    # Store in directory with the SHA for each presubmit run.
-    PUBLIC_DIRECTORY=$(get_tag_name)
-    ;;
-  "periodic")
-    # Overwrite global directory with latest coverage for all continuous runs.
-    PUBLIC_DIRECTORY="latest"
-    ;;
-  *)
-    # If running locally, just upload to special-case folder.
-    echo "Unknown job type: ${JOB_TYPE}"
-    PUBLIC_DIRECTORY="local-run"
-    ;;
-esac
 
 # Upload folder.
 gsutil -m rsync -r -d "${ROOT}/generated" "gs://esp-v2-coverage/${PUBLIC_DIRECTORY}"
@@ -82,4 +75,4 @@ echo '======================================================='
 echo '==================== View Coverage ===================='
 echo '======================================================='
 echo "C++ Unit test coverage is viewable at the URL below"
-echo "https://storage.googleapis.com/esp-v2-coverage/${PUBLIC_DIRECTORY}/third_party/tools/coverage/coverage_tests/index.html"
+echo "https://storage.googleapis.com/esp-v2-coverage/${PUBLIC_DIRECTORY}/coverage/index.html"
