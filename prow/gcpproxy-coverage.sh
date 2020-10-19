@@ -19,9 +19,14 @@
 # Fail on any error.
 set -eo pipefail
 
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "${ROOT}"
+. ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities';
+exit 1; }
+PUBLIC_DIRECTORY=""
+
 # Note that JOB_TYPE is set by Prow.
 # https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md#job-environment-variables
-PUBLIC_DIRECTORY=""
 case "${JOB_TYPE}" in
   "presubmit")
     # Store in directory with the SHA for each presubmit run.
@@ -52,11 +57,6 @@ case "${JOB_TYPE}" in
     PUBLIC_DIRECTORY="local-run"
     ;;
 esac
-
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "${ROOT}"
-. ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities';
-exit 1; }
 
 echo '======================================================='
 echo '==================== C++ Coverage ====================='
