@@ -19,19 +19,20 @@ sudo chmod +x /usr/local/bin/bazel
 
 To get started building Envoy locally, following the instructions from [Envoy](https://github.com/envoyproxy/envoy/blob/master/bazel/README.md#quick-start-bazel-build-for-developers).
 
-## Install clang-9
+## Install Clang-10
 
 ```
-wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key| apt-key add - && \
-    echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-9 main" >> /etc/apt/sources.list && \
-    sudo apt-get update && \
-    sudo apt-get install -y llvm-9-dev libclang-9-dev clang-9 xz-utils lld-9 clang-tools-9 clang-format-9
+wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key| apt-key add -
+echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-10 main" >> /etc/apt/sources.list
+sudo apt-get update
+sudo apt-get install -y llvm-10-dev libclang-10-dev clang-10 \
+    clang-tools-10 clang-format-10 xz-utils lld-10
 ```
 
 ## Install Golang
 
 ```
-sudo apt-get install golang-1.11
+sudo apt-get install golang-1.15
 ```
 
 Add the following setting in .profile, then source it:
