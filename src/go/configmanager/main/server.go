@@ -28,7 +28,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configmanager/flags"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/tokengenerator"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
 
@@ -56,7 +55,7 @@ func main() {
 	}
 	server := xds.NewServer(ctx, m.Cache(), nil)
 	grpcServer := grpc.NewServer()
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", util.LoopbackIPv4Addr, opts.DiscoveryPort))
+	lis, err := net.Listen("unix", opts.AdsNamedPipe)
 	if err != nil {
 		glog.Exitf("Server failed to listen: %v", err)
 	}
@@ -64,7 +63,7 @@ func main() {
 	// Register Envoy discovery services.
 	discoverygrpc.RegisterAggregatedDiscoveryServiceServer(grpcServer, server)
 
-	fmt.Printf("config manager server is running at %s .......\n", lis.Addr())
+	glog.Infof("config manager server is running at %s .......\n", lis.Addr())
 
 	// Handle signals gracefully
 	signalChan := make(chan os.Signal, 1)

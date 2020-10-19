@@ -25,15 +25,18 @@ import (
 
 type ConfigManagerServer struct {
 	*Cmd
-	grpcPort uint16
+	adsNamedPipe string
 }
 
 func NewConfigManagerServer(debugMode bool, ports *platform.Ports, args []string) (*ConfigManagerServer, error) {
+
+	adsNamedPipe := fmt.Sprintf("@espv2-ads-cluster-integ-test-%v", ports.TestId)
 
 	// Set config manager flags.
 	args = append(args, "--listener_address", platform.GetAnyAddress())
 	args = append(args, "--backend_dns_lookup_family", platform.GetDnsFamily())
 	args = append(args, "--ssl_backend_client_root_certs_path", platform.GetFilePath(platform.ProxyCert))
+	args = append(args, fmt.Sprintf("--ads_named_pipe=%v", adsNamedPipe))
 
 	if debugMode {
 		args = append(args, "--logtostderr", "--v=1")
@@ -48,7 +51,7 @@ func NewConfigManagerServer(debugMode bool, ports *platform.Ports, args []string
 			name: "ConfigManager",
 			Cmd:  cmd,
 		},
-		grpcPort: ports.DiscoveryPort,
+		adsNamedPipe: adsNamedPipe,
 	}, nil
 }
 
@@ -58,6 +61,5 @@ func (s ConfigManagerServer) String() string {
 
 func (s ConfigManagerServer) CheckHealth() error {
 	opts := NewHealthCheckOptions()
-	addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.grpcPort)
-	return GrpcConnectionCheck(addr, opts)
+	return UdsConnectionCheck(s.adsNamedPipe, opts)
 }

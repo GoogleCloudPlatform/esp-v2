@@ -15,10 +15,7 @@
 package options
 
 import (
-	"fmt"
 	"time"
-
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 )
 
 // AdsBootstrapperOptions describes the possible overrides used by the ADS bootstrapper to create the envoy bootstrap config.
@@ -27,7 +24,6 @@ type AdsBootstrapperOptions struct {
 
 	// Flags for ADS
 	AdsConnectTimeout time.Duration
-	DiscoveryAddress  string
 }
 
 // DefaultAdsBootstrapperOptions returns AdsBootstrapperOptions with default values.
@@ -37,6 +33,5 @@ func DefaultAdsBootstrapperOptions() AdsBootstrapperOptions {
 	return AdsBootstrapperOptions{
 		CommonOptions:     DefaultCommonOptions(),
 		AdsConnectTimeout: 10 * time.Second,
-		DiscoveryAddress:  fmt.Sprintf("%s:8790", util.LoopbackIPv4Addr),
 	}
 }

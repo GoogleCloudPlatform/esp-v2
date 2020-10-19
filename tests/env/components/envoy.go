@@ -35,7 +35,7 @@ func createEnvoyConf(configPath string, bootstrapArgs []string, ports *platform.
 
 	glog.Infof("Outputting envoy bootstrap config to: %v", configPath)
 
-	bootstrapArgs = append(bootstrapArgs, fmt.Sprintf("--discovery_port=%v", ports.DiscoveryPort))
+	bootstrapArgs = append(bootstrapArgs, fmt.Sprintf("--ads_named_pipe=@espv2-ads-cluster-integ-test-%v", ports.TestId))
 	bootstrapArgs = append(bootstrapArgs, fmt.Sprintf("--admin_port=%v", ports.AdminPort))
 	bootstrapArgs = append(bootstrapArgs, "--admin_address", platform.GetAnyAddress())
 	bootstrapArgs = append(bootstrapArgs, configPath)
@@ -49,7 +49,7 @@ func createEnvoyConf(configPath string, bootstrapArgs []string, ports *platform.
 }
 
 // NewEnvoy creates a new Envoy struct and starts envoy.
-func NewEnvoy(args []string, bootstrapArgs []string, confPath string, ports *platform.Ports, testId uint16) (*Envoy, error) {
+func NewEnvoy(args []string, bootstrapArgs []string, confPath string, ports *platform.Ports) (*Envoy, error) {
 
 	if err := createEnvoyConf(confPath, bootstrapArgs, ports); err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func NewEnvoy(args []string, bootstrapArgs []string, confPath string, ports *pla
 		// Allows multiple envoys to run on a single machine. If one test fails to stop envoy, this ID
 		// will allow other tests to run afterwords without conflicting.
 		// See: https://www.envoyproxy.io/docs/envoy/latest/operations/cli#cmdoption-base-id
-		"--base-id", strconv.Itoa(int(testId)),
+		"--base-id", strconv.Itoa(int(ports.TestId)),
 	)
 
 	glog.Infof("Calling envoy at %v with args: %v", platform.GetFilePath(platform.Envoy), args)

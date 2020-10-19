@@ -16,12 +16,10 @@ package flags
 
 import (
 	"flag"
-	"fmt"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/commonflags"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
 )
 
@@ -34,7 +32,6 @@ func DefaultBootstrapperOptionsFromFlags() options.AdsBootstrapperOptions {
 	opts := options.AdsBootstrapperOptions{
 		CommonOptions:     common_option,
 		AdsConnectTimeout: *AdsConnectTimeout,
-		DiscoveryAddress:  fmt.Sprintf("%s:%d", util.LoopbackIPv4Addr, common_option.DiscoveryPort),
 	}
 
 	glog.Infof("ADS Bootstrapper options: %+v", opts)

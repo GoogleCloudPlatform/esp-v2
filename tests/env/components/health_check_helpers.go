@@ -79,7 +79,25 @@ func withRetry(attempts int, waitTime time.Duration, retryFn func() error) error
 	return err
 }
 
-// BasicGrpcConnectionCheck performs a basic connectivity check to the underlying server using the standard gRPC connectivity semantics.
+// UdsConnectionCheck performs a basic connectivity check to the underlying server using a unix domain socket.
+func UdsConnectionCheck(pipe string, opts *HealthCheckOptions) error {
+	err := withRetry(opts.HealthCheckRetries, opts.HealthCheckRetryBackoff, func() error {
+		// Connect to pipe
+		conn, err := net.Dial("unix", pipe)
+		if err != nil {
+			return fmt.Errorf("health check response was not healthy: %v", err)
+		}
+		defer conn.Close()
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GrpcConnectionCheck performs a basic connectivity check to the underlying server using the standard gRPC connectivity semantics.
 // https://github.com/grpc/grpc/blob/master/doc/connectivity-semantics-and-api.md
 // This can be used if the server does not support the gRPC health checking protocol, but is generally less accurate.
 func GrpcConnectionCheck(addr string, opts *HealthCheckOptions) error {

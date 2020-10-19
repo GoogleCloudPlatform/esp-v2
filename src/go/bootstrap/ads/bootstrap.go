@@ -31,12 +31,6 @@ import (
 func CreateBootstrapConfig(opts options.AdsBootstrapperOptions) (string, error) {
 	apiVersion := corepb.ApiVersion_V3
 
-	// Parse the ADS address
-	_, adsHostname, adsPort, _, err := util.ParseURI(opts.DiscoveryAddress)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse discovery address: %v", err)
-	}
-
 	// Parse ADS connect timeout
 	connectTimeoutProto := ptypes.DurationProto(opts.AdsConnectTimeout)
 
@@ -70,7 +64,7 @@ func CreateBootstrapConfig(opts options.AdsBootstrapperOptions) (string, error) 
 				GrpcServices: []*corepb.GrpcService{{
 					TargetSpecifier: &corepb.GrpcService_EnvoyGrpc_{
 						EnvoyGrpc: &corepb.GrpcService_EnvoyGrpc{
-							ClusterName: "ads_cluster",
+							ClusterName: opts.AdsNamedPipe,
 						},
 					},
 				}},
@@ -81,14 +75,14 @@ func CreateBootstrapConfig(opts options.AdsBootstrapperOptions) (string, error) 
 		StaticResources: &bootstrappb.Bootstrap_StaticResources{
 			Clusters: []*clusterpb.Cluster{
 				{
-					Name:           "ads_cluster",
+					Name:           opts.AdsNamedPipe,
 					LbPolicy:       clusterpb.Cluster_ROUND_ROBIN,
 					ConnectTimeout: connectTimeoutProto,
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{
-						Type: clusterpb.Cluster_STRICT_DNS,
+						Type: clusterpb.Cluster_STATIC,
 					},
 					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{},
-					LoadAssignment:       util.CreateLoadAssignment(adsHostname, adsPort),
+					LoadAssignment:       util.CreateUdsLoadAssignment(opts.AdsNamedPipe),
 				},
 			},
 		},

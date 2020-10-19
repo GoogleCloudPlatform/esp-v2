@@ -40,11 +40,10 @@ const (
 )
 
 var (
-	debugComponents = flag.String("debug_components", "", `display debug logs for components, can be "all", "envoy", "configmanager"`)
+	debugComponents = flag.String("debug_components", "", `display debug logs for components, can be "all", "envoy", "configmanager", "bootstrap"`)
 )
 
 type TestEnv struct {
-	testId  uint16
 	backend platform.Backend
 
 	mockMetadata                    bool
@@ -94,7 +93,6 @@ func NewTestEnv(testId uint16, backend platform.Backend) *TestEnv {
 	fakeServiceConfig := testdata.SetupServiceConfig(backend)
 
 	return &TestEnv{
-		testId:                      testId,
 		backend:                     backend,
 		mockMetadata:                true,
 		MockServiceManagementServer: components.NewMockServiceMrg(fakeServiceConfig.GetName(), initRolloutId, fakeServiceConfig),
@@ -352,7 +350,6 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	}
 
 	confArgs = append(confArgs, fmt.Sprintf("--listener_port=%v", e.ports.ListenerPort))
-	confArgs = append(confArgs, fmt.Sprintf("--discovery_port=%v", e.ports.DiscoveryPort))
 	confArgs = append(confArgs, fmt.Sprintf("--service=%v", e.fakeServiceConfig.Name))
 
 	// Tracing configuration.
@@ -367,6 +364,10 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	// Starts XDS.
 	var err error
 	debugConfigMgr := *debugComponents == "all" || *debugComponents == "configmanager"
+
+	if *debugComponents == "all" || *debugComponents == "bootstrap" {
+		bootstrapperArgs = append(bootstrapperArgs, "--logtostderr", "--v=1")
+	}
 
 	// Set backend flag (for sidecar)
 	if e.backendAddress == "" {
@@ -391,7 +392,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	e.healthRegistry.RegisterHealthChecker(e.configMgr)
 
 	// Starts envoy.
-	envoyConfPath := fmt.Sprintf("/tmp/apiproxy-testdata-bootstrap-%v.yaml", e.testId)
+	envoyConfPath := fmt.Sprintf("/tmp/apiproxy-testdata-bootstrap-%v.yaml", e.ports.TestId)
 	if *debugComponents == "all" || *debugComponents == "envoy" {
 		envoyArgs = append(envoyArgs, "--log-level", "debug")
 		if e.envoyDrainTimeInSec == 0 {
@@ -402,7 +403,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		envoyArgs = append(envoyArgs, "--drain-time-s", strconv.Itoa(e.envoyDrainTimeInSec))
 	}
 
-	e.envoy, err = components.NewEnvoy(envoyArgs, bootstrapperArgs, envoyConfPath, e.ports, e.testId)
+	e.envoy, err = components.NewEnvoy(envoyArgs, bootstrapperArgs, envoyConfPath, e.ports)
 	if err != nil {
 		glog.Errorf("unable to create Envoy %v", err)
 		return err

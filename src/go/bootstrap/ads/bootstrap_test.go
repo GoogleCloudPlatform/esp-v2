@@ -46,7 +46,7 @@ func TestCreateBootstrapConfig(t *testing.T) {
          "grpcServices":[
             {
                "envoyGrpc":{
-                  "clusterName":"ads_cluster"
+                  "clusterName":"@espv2-ads-cluster"
                }
             }
          ],
@@ -87,16 +87,15 @@ func TestCreateBootstrapConfig(t *testing.T) {
                
             },
             "loadAssignment":{
-               "clusterName":"127.0.0.1",
+               "clusterName":"@espv2-ads-cluster",
                "endpoints":[
                   {
                      "lbEndpoints":[
                         {
                            "endpoint":{
                               "address":{
-                                 "socketAddress":{
-                                    "address":"127.0.0.1",
-                                    "portValue":8790
+                                 "pipe":{
+                                    "path":"@espv2-ads-cluster"
                                  }
                               }
                            }
@@ -105,12 +104,13 @@ func TestCreateBootstrapConfig(t *testing.T) {
                   }
                ]
             },
-            "name":"ads_cluster",
-            "type":"STRICT_DNS"
+            "name":"@espv2-ads-cluster",
+            "type":"STATIC"
          }
       ]
    }
-}`,
+}
+`,
 		},
 		{
 			desc: "bootstrap with options",
@@ -137,7 +137,7 @@ func TestCreateBootstrapConfig(t *testing.T) {
          "grpcServices":[
             {
                "envoyGrpc":{
-                  "clusterName":"ads_cluster"
+                  "clusterName":"@espv2-ads-cluster"
                }
             }
          ],
@@ -178,16 +178,15 @@ func TestCreateBootstrapConfig(t *testing.T) {
                
             },
             "loadAssignment":{
-               "clusterName":"127.0.0.1",
+               "clusterName":"@espv2-ads-cluster",
                "endpoints":[
                   {
                      "lbEndpoints":[
                         {
                            "endpoint":{
                               "address":{
-                                 "socketAddress":{
-                                    "address":"127.0.0.1",
-                                    "portValue":8790
+                                 "pipe":{
+                                    "path":"@espv2-ads-cluster"
                                  }
                               }
                            }
@@ -196,8 +195,8 @@ func TestCreateBootstrapConfig(t *testing.T) {
                   }
                ]
             },
-            "name":"ads_cluster",
-            "type":"STRICT_DNS"
+            "name":"@espv2-ads-cluster",
+            "type":"STATIC"
          }
       ]
    }

@@ -152,7 +152,7 @@ const (
 	portBase uint16 = 20000
 
 	// Maximum number of ports used by non-jwt components.
-	portNum uint16 = 7
+	portNum uint16 = 6
 )
 
 const (
@@ -179,11 +179,11 @@ type Ports struct {
 	BackendServerPort         uint16
 	DynamicRoutingBackendPort uint16
 	ListenerPort              uint16
-	DiscoveryPort             uint16
 	AdminPort                 uint16
 	FakeStackdriverPort       uint16
 	DnsResolverPort           uint16
 	JwtRangeBase              uint16
+	TestId                    uint16
 }
 
 func allocPortBase(testId uint16) uint16 {
@@ -241,11 +241,11 @@ func NewPorts(testId uint16) *Ports {
 		BackendServerPort:         base,
 		DynamicRoutingBackendPort: base + 1,
 		ListenerPort:              base + 2,
-		DiscoveryPort:             base + 3,
 		AdminPort:                 base + 4,
 		FakeStackdriverPort:       base + 5,
 		DnsResolverPort:           base + 6,
 		JwtRangeBase:              base + 7,
+		TestId:                    testId,
 	}
 	glog.Infof(fmt.Sprintf("Ports generated for test(%v) are: %+v", testId, ports))
 	return ports
