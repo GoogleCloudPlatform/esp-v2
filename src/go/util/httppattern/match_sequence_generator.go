@@ -40,7 +40,7 @@ func NewMatchSequenceGenerator() *MatchSequenceGenerator {
 	}
 }
 
-func (h *MatchSequenceGenerator) Register(method *Method) error {
+func (m *MatchSequenceGenerator) Register(method *Method) error {
 	if method == nil {
 		return fmt.Errorf("empty method")
 	}
@@ -59,12 +59,12 @@ func (h *MatchSequenceGenerator) Register(method *Method) error {
 		Variable: ht.Variables,
 	}
 
-	if !h.RootPtr.insertPath(pathInfo, httpMethod, methodData, true) {
+	if !m.RootPtr.insertPath(pathInfo, httpMethod, methodData, true) {
 		return fmt.Errorf("duplicate http pattern `%s %s`", httpMethod, uriTemplate)
 	}
 
 	if ht.Verb != "" {
-		h.CustomVerbs[ht.Verb] = true
+		m.CustomVerbs[ht.Verb] = true
 	}
 
 	return nil
@@ -73,9 +73,9 @@ func (h *MatchSequenceGenerator) Register(method *Method) error {
 type MatchSequence []*Method
 
 // Return a sorted slice of methods, used to match incoming request in sequence.
-func (h *MatchSequenceGenerator) Generate() *MatchSequence {
+func (m *MatchSequenceGenerator) Generate() *MatchSequence {
 	result := &MatchSequence{}
-	h.RootPtr.traverse(result)
+	m.RootPtr.traverse(result)
 	return result
 
 }
@@ -99,25 +99,6 @@ func (sr *MatchSequence) appendMethod(m *Method) {
 	if m != nil {
 		*sr = append(*sr, m)
 	}
-}
-
-/////////////////////////////////////////////
-// following lookup code are for test-only //
-/////////////////////////////////////////////
-func (h *MatchSequenceGenerator) lookup(httpMethod string, path string) (*Method, []*variableBinding) {
-	parts := extractRequestParts(path, h.CustomVerbs)
-
-	if h.RootPtr == nil {
-		return nil, nil
-	}
-
-	result := &lookupResult{}
-	h.RootPtr.lookupPath(parts, 0, httpMethod, result)
-	if result.data == nil {
-		return nil, nil
-	}
-
-	return result.data.Method, extractBindingsFromPath(result.data.Variable, parts)
 }
 
 func extractRequestParts(path string, customVerbs map[string]bool) []string {

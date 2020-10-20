@@ -34,15 +34,15 @@ func newMatchSequenceGeneratorNode() *matchSequenceGeneratorNode {
 	}
 }
 
-func (hn *matchSequenceGeneratorNode) insertTemplate(pathParts []string, pathPartsIdxCur int, httpMethod string, methodData *methodData, markDuplicate bool) bool {
+func (mn *matchSequenceGeneratorNode) insertTemplate(pathParts []string, pathPartsIdxCur int, httpMethod string, methodData *methodData, markDuplicate bool) bool {
 	if pathPartsIdxCur == len(pathParts) {
-		if val, ok := hn.ResultMap[httpMethod]; ok {
+		if val, ok := mn.ResultMap[httpMethod]; ok {
 			if markDuplicate {
 				val.isMultiple = true
 			}
 			return false
 		}
-		hn.ResultMap[httpMethod] = &lookupResult{
+		mn.ResultMap[httpMethod] = &lookupResult{
 			data:       methodData,
 			isMultiple: false,
 		}
@@ -51,11 +51,11 @@ func (hn *matchSequenceGeneratorNode) insertTemplate(pathParts []string, pathPar
 
 	curSeg := pathParts[pathPartsIdxCur]
 
-	if _, ok := hn.Children[curSeg]; !ok {
-		hn.Children[curSeg] = newMatchSequenceGeneratorNode()
+	if _, ok := mn.Children[curSeg]; !ok {
+		mn.Children[curSeg] = newMatchSequenceGeneratorNode()
 	}
 
-	child, _ := hn.Children[curSeg]
+	child, _ := mn.Children[curSeg]
 	if curSeg == WildCardPathKey {
 		child.WildCard = true
 	}
@@ -63,19 +63,19 @@ func (hn *matchSequenceGeneratorNode) insertTemplate(pathParts []string, pathPar
 	return child.insertTemplate(pathParts, pathPartsIdxCur+1, httpMethod, methodData, markDuplicate)
 }
 
-func (hn *matchSequenceGeneratorNode) insertPath(pathParts []string, httpMethod string, methodData *methodData, markDuplicate bool) bool {
-	return hn.insertTemplate(pathParts, 0, httpMethod, methodData, markDuplicate)
+func (mn *matchSequenceGeneratorNode) insertPath(pathParts []string, httpMethod string, methodData *methodData, markDuplicate bool) bool {
+	return mn.insertTemplate(pathParts, 0, httpMethod, methodData, markDuplicate)
 }
 
 // Traverse the sorter trie in matching order and add the visited method in result.
-func (hn *matchSequenceGeneratorNode) traverse(result *MatchSequence) {
+func (mn *matchSequenceGeneratorNode) traverse(result *MatchSequence) {
 	appendMethodOnCurrentNode := func() {
 
 		// Sort the method in alphabet order to generate deterministic sequence for better unit testing.
 		var sortedKeys []string
 		// Put the wildcard method in the end.
 		var wildMethodResult *lookupResult
-		for key, val := range hn.ResultMap {
+		for key, val := range mn.ResultMap {
 			if key == HttpMethodWildCard {
 				wildMethodResult = val
 				continue
@@ -85,7 +85,7 @@ func (hn *matchSequenceGeneratorNode) traverse(result *MatchSequence) {
 		sort.Strings(sortedKeys)
 
 		for _, key := range sortedKeys {
-			if val, ok := hn.ResultMap[key]; ok {
+			if val, ok := mn.ResultMap[key]; ok {
 				result.appendMethod(val.data.Method)
 			}
 		}
@@ -102,7 +102,7 @@ func (hn *matchSequenceGeneratorNode) traverse(result *MatchSequence) {
 		var wildCardPathPartChild *matchSequenceGeneratorNode
 		var wildCardPathChild *matchSequenceGeneratorNode
 		var exactMatchChildKey []string
-		for key, child := range hn.Children {
+		for key, child := range mn.Children {
 			switch key {
 			case SingleParameterKey:
 				singleParameterChild = child
@@ -119,7 +119,7 @@ func (hn *matchSequenceGeneratorNode) traverse(result *MatchSequence) {
 		// Sort the child keys to generate deterministic sequence for better unit testing.
 		sort.Strings(exactMatchChildKey)
 		for _, key := range exactMatchChildKey {
-			if child, ok := hn.Children[key]; ok {
+			if child, ok := mn.Children[key]; ok {
 				child.traverse(result)
 			}
 		}
@@ -133,7 +133,7 @@ func (hn *matchSequenceGeneratorNode) traverse(result *MatchSequence) {
 	}
 
 	// If the current node is wildcard(**), its children has higher priority.
-	if hn.WildCard {
+	if mn.WildCard {
 		// Pre-order traverse.
 		traverseChildren()
 		// Post-order traverse.
@@ -141,64 +141,5 @@ func (hn *matchSequenceGeneratorNode) traverse(result *MatchSequence) {
 	} else {
 		appendMethodOnCurrentNode()
 		traverseChildren()
-	}
-}
-
-/////////////////////////////////////////////
-// following lookup code are for test-only //
-/////////////////////////////////////////////
-func (hn *matchSequenceGeneratorNode) lookupPath(pathParts []string, pathPartsIdxCur int, httpMethod string, result *lookupResult) {
-	GetResultForHttpMethod := func(resultMap map[string]*lookupResult, m string, result *lookupResult) bool {
-		if val, ok := resultMap[m]; ok {
-			*result = *val
-			return true
-		}
-		if val, ok := resultMap[HttpMethodWildCard]; ok {
-			*result = *val
-			return true
-		}
-		return false
-	}
-
-	lookupPathFromChild := func(childKey string, pathParts []string, pathPartsIdxCur int, httpMethod string, result *lookupResult) bool {
-		if child, ok := hn.Children[childKey]; ok {
-			child.lookupPath(pathParts, pathPartsIdxCur+1, httpMethod, result)
-			if result != nil && result.data != nil {
-				return true
-			}
-		}
-		return false
-	}
-
-	if pathPartsIdxCur == len(pathParts) {
-		if !GetResultForHttpMethod(hn.ResultMap, httpMethod, result) {
-			// If we didn't find a wrapper graph at this node, check if we have one
-			// in a wildcard (**) child. If we do, use it. This will ensure we match
-			// the root with wildcard templates.
-			if child, ok := hn.Children[WildCardPathKey]; ok {
-				GetResultForHttpMethod(child.ResultMap, httpMethod, result)
-			}
-		}
-		return
-	}
-
-	if lookupPathFromChild(pathParts[pathPartsIdxCur], pathParts, pathPartsIdxCur, httpMethod, result) {
-		return
-	}
-
-	// For wild card node, keeps searching for next path segment until either
-	// 1) reaching the end (/foo/** case), or 2) all remaining segments match
-	// one of child branches (/foo/**/bar/xyz case).
-	if hn.WildCard {
-		hn.lookupPath(pathParts, pathPartsIdxCur+1, httpMethod, result)
-		// Since only constant segments are allowed after wild card, no need to
-		// search another wild card nodes from children, so bail out here.
-		return
-	}
-
-	for _, childKey := range []string{SingleParameterKey, WildCardPathPartKey, WildCardPathKey} {
-		if lookupPathFromChild(childKey, pathParts, pathPartsIdxCur, httpMethod, result) {
-			return
-		}
 	}
 }
