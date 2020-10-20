@@ -27,7 +27,6 @@ import (
 
 	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/backend_auth"
-	brpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/backend_routing"
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/common"
 	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/path_matcher"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/service_control"
@@ -148,15 +147,12 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*listenerpb.Listener, error) {
 		glog.Infof("adding Backend Auth Filter config: %v", jsonStr)
 	}
 
-	backendRoutingFilter, err := makeBackendRoutingFilter(serviceInfo)
-	if err != nil {
-		return nil, err
-	}
-
-	if backendRoutingFilter != nil {
-		httpFilters = append(httpFilters, backendRoutingFilter)
-		jsonStr, _ := util.ProtoToJson(backendRoutingFilter)
-		glog.Infof("adding Backend Routing Filter config: %v", jsonStr)
+	if needPathRewrite(serviceInfo) {
+		pathRewriteFilter := &hcmpb.HttpFilter{
+			Name: util.PathRewrite,
+		}
+		httpFilters = append(httpFilters, pathRewriteFilter)
+		glog.Infof("adding Path Rewrite Filter.")
 	}
 
 	if serviceInfo.Options.EnableGrpcForHttp1 {
@@ -344,9 +340,6 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 					Operation: operation,
 					Pattern:   httpRule,
 				}
-				if method.BackendInfo != nil && method.BackendInfo.TranslationType == confpb.BackendRule_CONSTANT_ADDRESS && hasPathParameter(newHttpRule.Pattern.UriTemplate) {
-					newHttpRule.ExtractPathParameters = true
-				}
 				rules = append(rules, newHttpRule)
 			}
 		}
@@ -365,8 +358,15 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	return pathMatcherFilter
 }
 
-func hasPathParameter(httpPattern string) bool {
-	return strings.ContainsRune(httpPattern, '{')
+func needPathRewrite(serviceInfo *sc.ServiceInfo) bool {
+	for _, method := range serviceInfo.Methods {
+		for _, httpRule := range method.HttpRule {
+			if pr := MakePathRewriteConfig(method, httpRule); pr != nil {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func defaultJwtLocations() ([]*jwtpb.JwtHeader, []string) {
@@ -798,60 +798,6 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{backendAuthConfigStruct},
 	}
 	return backendAuthFilter
-}
-
-func makeBackendRoutingFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
-	var rules []*brpb.BackendRoutingRule
-	for _, operation := range serviceInfo.Operations {
-		method := serviceInfo.Methods[operation]
-
-		if method.BackendInfo != nil {
-
-			// For gRPC service config that has no path translation, no need for backend routing filter (only host rewrite via route config).
-			if method.BackendInfo.TranslationType == confpb.BackendRule_PATH_TRANSLATION_UNSPECIFIED {
-				continue
-			}
-
-			newRule := &brpb.BackendRoutingRule{
-				Operation: operation,
-			}
-
-			switch method.BackendInfo.TranslationType {
-			case confpb.BackendRule_CONSTANT_ADDRESS:
-				newRule.PathTranslation = brpb.BackendRoutingRule_CONSTANT_ADDRESS
-			case confpb.BackendRule_APPEND_PATH_TO_ADDRESS:
-				newRule.PathTranslation = brpb.BackendRoutingRule_APPEND_PATH_TO_ADDRESS
-			default:
-				return nil, fmt.Errorf("invalid translation type %v for BackendRule in operation %v", method.BackendInfo.TranslationType, operation)
-			}
-
-			if method.BackendInfo != nil {
-				newRule.PathPrefix = method.BackendInfo.Path
-			}
-
-			// If the path prefix is empty, then the filter is a no-op for this operation.
-			// It doesn't need to be in the filter config, skip it.
-			if newRule.PathPrefix == "" {
-				continue
-			}
-
-			rules = append(rules, newRule)
-		}
-	}
-	// If none of BackendRules need path translation, rules will be empty, not need to add the filter.
-	// For example, grpc backend rules don't need to do path translation.
-	if len(rules) == 0 {
-		return nil, nil
-	}
-
-	backendRoutingConfigStruct, err := ptypes.MarshalAny(&brpb.FilterConfig{Rules: rules})
-	if err != nil {
-		return nil, err
-	}
-	return &hcmpb.HttpFilter{
-		Name:       util.BackendRouting,
-		ConfigType: &hcmpb.HttpFilter_TypedConfig{backendRoutingConfigStruct},
-	}, nil
 }
 
 func makeHealthCheckFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {

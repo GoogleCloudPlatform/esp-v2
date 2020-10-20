@@ -35,11 +35,11 @@ cp -f bazel-bin/api/envoy/v9/http/service_control/config_go_proto_/github.com/Go
 bazel build //api/envoy/v9/http/path_matcher:config_go_proto
 mkdir -p src/go/proto/api/envoy/v9/http/path_matcher
 cp -f bazel-bin/api/envoy/v9/http/path_matcher/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/path_matcher/* src/go/proto/api/envoy/v9/http/path_matcher
+# HTTP filter path_rewrite
+bazel build //api/envoy/v9/http/path_rewrite:config_go_proto
+mkdir -p src/go/proto/api/envoy/v9/http/path_rewrite
+cp -f bazel-bin/api/envoy/v9/http/path_rewrite/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/path_rewrite/* src/go/proto/api/envoy/v9/http/path_rewrite
 # HTTP filter backend_auth
 bazel build //api/envoy/v9/http/backend_auth:config_go_proto
 mkdir -p src/go/proto/api/envoy/v9/http/backend_auth
 cp -f bazel-bin/api/envoy/v9/http/backend_auth/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/backend_auth/* src/go/proto/api/envoy/v9/http/backend_auth
-# HTTP filter backend_routing
-bazel build //api/envoy/v9/http/backend_routing:config_go_proto
-mkdir -p src/go/proto/api/envoy/v9/http/backend_routing
-cp -f bazel-bin/api/envoy/v9/http/backend_routing/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/backend_routing/* src/go/proto/api/envoy/v9/http/backend_routing

@@ -51,8 +51,8 @@ envoy_cc_library(
     repository = "@envoy",
     visibility = ["//src/envoy:__subpackages__"],
     deps = [
-        ":filter_lib",
         ":config_parser_lib",
+        ":filter_lib",
     ],
 )
 

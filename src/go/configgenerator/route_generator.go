@@ -20,11 +20,14 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 
 	aupb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/backend_auth"
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/common"
+	prpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/path_rewrite"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/service_control"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
@@ -144,6 +147,64 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 	}, nil
 }
 
+func MakePathRewriteConfig(method *configinfo.MethodInfo, httpRule *commonpb.Pattern) *prpb.PerRouteFilterConfig {
+	if method.BackendInfo == nil {
+		return nil
+	}
+
+	if method.BackendInfo.TranslationType == confpb.BackendRule_APPEND_PATH_TO_ADDRESS {
+		if method.BackendInfo.Path != "" {
+			return &prpb.PerRouteFilterConfig{
+				PathTranslationSpecifier: &prpb.PerRouteFilterConfig_PathPrefix{
+					PathPrefix: method.BackendInfo.Path,
+				},
+			}
+		}
+	}
+	if method.BackendInfo.TranslationType == confpb.BackendRule_CONSTANT_ADDRESS {
+		constPath := &prpb.ConstantPath{
+			Path: method.BackendInfo.Path,
+		}
+		// Parse the url_template to see if containing variables.
+		if u := httppattern.Parse(httpRule.UriTemplate); u != nil && len(u.Variables) > 0 {
+			constPath.UrlTemplate = httpRule.UriTemplate
+		}
+		return &prpb.PerRouteFilterConfig{
+			PathTranslationSpecifier: &prpb.PerRouteFilterConfig_ConstantPath{
+				ConstantPath: constPath,
+			},
+		}
+	}
+	return nil
+}
+
+func makePerRouteFilterConfig(operation string, method *configinfo.MethodInfo, httpRule *commonpb.Pattern) map[string]*anypb.Any {
+	perFilterConfig := make(map[string]*anypb.Any)
+
+	// Always add ServiceControl PerRouteConfig
+	scPerRoute := &scpb.PerRouteFilterConfig{
+		OperationName: operation,
+	}
+	scpr, _ := ptypes.MarshalAny(scPerRoute)
+	perFilterConfig[util.ServiceControl] = scpr
+
+	// add BackendAuth PerRouteConfig if needed
+	if method.BackendInfo != nil && method.BackendInfo.JwtAudience != "" {
+		auPerRoute := &aupb.PerRouteFilterConfig{
+			JwtAudience: method.BackendInfo.JwtAudience,
+		}
+		aupr, _ := ptypes.MarshalAny(auPerRoute)
+		perFilterConfig[util.BackendAuth] = aupr
+	}
+
+	// add PathRewrite PerRouteConfig if needed
+	if pr := MakePathRewriteConfig(method, httpRule); pr != nil {
+		prAny, _ := ptypes.MarshalAny(pr)
+		perFilterConfig[util.PathRewrite] = prAny
+	}
+	return perFilterConfig
+}
+
 func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, error) {
 	var backendRoutes []*routepb.Route
 	for _, operation := range serviceInfo.Operations {
@@ -180,24 +241,7 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 					// Note we don't add ApiName to reduce the length of the span name.
 					Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
 				},
-			}
-
-			r.TypedPerFilterConfig = make(map[string]*anypb.Any)
-
-			// ServiceControl PerRoute
-			scPerRoute := &scpb.PerRouteFilterConfig{
-				OperationName: operation,
-			}
-			scpr, _ := ptypes.MarshalAny(scPerRoute)
-			r.TypedPerFilterConfig[util.ServiceControl] = scpr
-
-			// BackendAuth PerRoute
-			if method.BackendInfo != nil && method.BackendInfo.JwtAudience != "" {
-				auPerRoute := &aupb.PerRouteFilterConfig{
-					JwtAudience: method.BackendInfo.JwtAudience,
-				}
-				aupr, _ := ptypes.MarshalAny(auPerRoute)
-				r.TypedPerFilterConfig[util.BackendAuth] = aupr
+				TypedPerFilterConfig: makePerRouteFilterConfig(operation, method, httpRule),
 			}
 
 			if method.BackendInfo.Hostname != "" {

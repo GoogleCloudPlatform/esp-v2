@@ -27,7 +27,7 @@ type StatHistograms map[string][]float64
 
 const (
 	// Path with filtering for ESPv2 stats.
-	ESpv2FiltersStatsPath = "/stats?format=json&usedonly&filter=http.ingress_http.(path_matcher|backend_auth|service_control|backend_routing)"
+	ESpv2FiltersStatsPath = "/stats?format=json&usedonly&filter=http.ingress_http.(path_matcher|backend_auth|service_control|path_rewrite)"
 )
 
 // Stats is the struct to decode envoy admin json raw data.
