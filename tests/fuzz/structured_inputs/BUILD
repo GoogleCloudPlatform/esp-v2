@@ -27,15 +27,6 @@ envoy_proto_library(
 )
 
 envoy_proto_library(
-    name = "backend_routing_filter_proto",
-    srcs = ["backend_routing_filter.proto"],
-    deps = [
-        "//api/envoy/v9/http/backend_routing:config_proto",
-        "@envoy//test/fuzz:common_proto",
-    ],
-)
-
-envoy_proto_library(
     name = "http_template_proto",
     srcs = ["http_template.proto"],
     deps = [

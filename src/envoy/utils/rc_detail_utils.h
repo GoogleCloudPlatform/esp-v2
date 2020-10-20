@@ -25,7 +25,6 @@ namespace utils {
 const char kRcDetailFilterServiceControl[] = "service_control";
 const char kRcDetailFilterPathMatcher[] = "path_matcher";
 const char kRcDetailFilterBackendAuth[] = "backend_auth";
-const char kRcDetailFilterBackendRouting[] = "backend_routing";
 const char kRcDetailFilterPathRewrite[] = "path_rewrite";
 
 // The error types

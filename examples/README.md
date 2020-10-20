@@ -45,7 +45,7 @@ Configurations of Dynamic Routing, where ESPv2 acts as an API Gateway.
 Google's OpenAPI `x-google-backend` extension is converted into:
 
 - The Envoy `routeConfig` for host rewrite to the remote backend.
-- The [Backend Routing](../src/envoy/http/backend_routing/README.md) filter for path rewrite to the remote backend.
+- The [Path Rewrite](../src/envoy/http/path_rewrite/README.md) filter for path rewrite to the remote backend.
 - The [Backend Auth](../src/envoy/http/backend_auth/README.md) filter for authentication with the remote backend.
 
 ## [gRPC Dynamic Routing](grpc_dynamic_routing)

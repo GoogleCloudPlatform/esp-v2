@@ -14,7 +14,6 @@ envoy_cc_binary(
     repository = "@envoy",
     deps = [
         "//src/envoy/http/backend_auth:filter_factory",
-        "//src/envoy/http/backend_routing:filter_factory",
         "//src/envoy/http/grpc_metadata_scrubber:filter_factory",
         "//src/envoy/http/path_matcher:filter_factory",
         "//src/envoy/http/path_rewrite:filter_factory",
