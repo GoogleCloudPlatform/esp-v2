@@ -33,6 +33,8 @@ type Method struct {
 	Operation   string
 }
 
+type MatchSequence []*Method
+
 func NewMatchSequenceGenerator() *MatchSequenceGenerator {
 	return &MatchSequenceGenerator{
 		RootPtr:     newMatchSequenceGeneratorNode(),
@@ -69,8 +71,6 @@ func (m *MatchSequenceGenerator) Register(method *Method) error {
 
 	return nil
 }
-
-type MatchSequence []*Method
 
 // Return a sorted slice of methods, used to match incoming request in sequence.
 func (m *MatchSequenceGenerator) Generate() *MatchSequence {
