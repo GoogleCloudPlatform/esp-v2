@@ -25,7 +25,6 @@ import (
 type MatchSequenceGenerator struct {
 	RootPtr     *matchSequenceGeneratorNode
 	CustomVerbs map[string]bool
-	Methods     []*methodData
 }
 
 type Method struct {
@@ -63,7 +62,7 @@ func (h *MatchSequenceGenerator) Register(method *Method) error {
 	if !h.RootPtr.insertPath(pathInfo, httpMethod, methodData, true) {
 		return fmt.Errorf("duplicate http pattern `%s %s`", httpMethod, uriTemplate)
 	}
-	h.Methods = append(h.Methods, methodData)
+
 	if ht.Verb != "" {
 		h.CustomVerbs[ht.Verb] = true
 	}
@@ -102,7 +101,9 @@ func (sr *MatchSequence) appendMethod(m *Method) {
 	}
 }
 
-// This method is used for test only so far.
+/////////////////////////////////////////////
+// following lookup code are for test-only //
+/////////////////////////////////////////////
 func (h *MatchSequenceGenerator) lookup(httpMethod string, path string) (*Method, []*variableBinding) {
 	parts := extractRequestParts(path, h.CustomVerbs)
 

@@ -67,62 +67,6 @@ func (hn *matchSequenceGeneratorNode) insertPath(pathParts []string, httpMethod 
 	return hn.insertTemplate(pathParts, 0, httpMethod, methodData, markDuplicate)
 }
 
-func (hn *matchSequenceGeneratorNode) lookupPath(pathParts []string, pathPartsIdxCur int, httpMethod string, result *lookupResult) {
-	GetResultForHttpMethod := func(resultMap map[string]*lookupResult, m string, result *lookupResult) bool {
-		if val, ok := resultMap[m]; ok {
-			*result = *val
-			return true
-		}
-		if val, ok := resultMap[HttpMethodWildCard]; ok {
-			*result = *val
-			return true
-		}
-		return false
-	}
-
-	lookupPathFromChild := func(childKey string, pathParts []string, pathPartsIdxCur int, httpMethod string, result *lookupResult) bool {
-		if child, ok := hn.Children[childKey]; ok {
-			child.lookupPath(pathParts, pathPartsIdxCur+1, httpMethod, result)
-			if result != nil && result.data != nil {
-				return true
-			}
-		}
-		return false
-	}
-
-	if pathPartsIdxCur == len(pathParts) {
-		if !GetResultForHttpMethod(hn.ResultMap, httpMethod, result) {
-			// If we didn't find a wrapper graph at this node, check if we have one
-			// in a wildcard (**) child. If we do, use it. This will ensure we match
-			// the root with wildcard templates.
-			if child, ok := hn.Children[WildCardPathKey]; ok {
-				GetResultForHttpMethod(child.ResultMap, httpMethod, result)
-			}
-		}
-		return
-	}
-
-	if lookupPathFromChild(pathParts[pathPartsIdxCur], pathParts, pathPartsIdxCur, httpMethod, result) {
-		return
-	}
-
-	// For wild card node, keeps searching for next path segment until either
-	// 1) reaching the end (/foo/** case), or 2) all remaining segments match
-	// one of child branches (/foo/**/bar/xyz case).
-	if hn.WildCard {
-		hn.lookupPath(pathParts, pathPartsIdxCur+1, httpMethod, result)
-		// Since only constant segments are allowed after wild card, no need to
-		// search another wild card nodes from children, so bail out here.
-		return
-	}
-
-	for _, childKey := range []string{SingleParameterKey, WildCardPathPartKey, WildCardPathKey} {
-		if lookupPathFromChild(childKey, pathParts, pathPartsIdxCur, httpMethod, result) {
-			return
-		}
-	}
-}
-
 // Traverse the sorter trie in matching order and add the visited method in result.
 func (hn *matchSequenceGeneratorNode) traverse(result *MatchSequence) {
 	appendMethodOnCurrentNode := func() {
@@ -197,5 +141,64 @@ func (hn *matchSequenceGeneratorNode) traverse(result *MatchSequence) {
 	} else {
 		appendMethodOnCurrentNode()
 		traverseChildren()
+	}
+}
+
+/////////////////////////////////////////////
+// following lookup code are for test-only //
+/////////////////////////////////////////////
+func (hn *matchSequenceGeneratorNode) lookupPath(pathParts []string, pathPartsIdxCur int, httpMethod string, result *lookupResult) {
+	GetResultForHttpMethod := func(resultMap map[string]*lookupResult, m string, result *lookupResult) bool {
+		if val, ok := resultMap[m]; ok {
+			*result = *val
+			return true
+		}
+		if val, ok := resultMap[HttpMethodWildCard]; ok {
+			*result = *val
+			return true
+		}
+		return false
+	}
+
+	lookupPathFromChild := func(childKey string, pathParts []string, pathPartsIdxCur int, httpMethod string, result *lookupResult) bool {
+		if child, ok := hn.Children[childKey]; ok {
+			child.lookupPath(pathParts, pathPartsIdxCur+1, httpMethod, result)
+			if result != nil && result.data != nil {
+				return true
+			}
+		}
+		return false
+	}
+
+	if pathPartsIdxCur == len(pathParts) {
+		if !GetResultForHttpMethod(hn.ResultMap, httpMethod, result) {
+			// If we didn't find a wrapper graph at this node, check if we have one
+			// in a wildcard (**) child. If we do, use it. This will ensure we match
+			// the root with wildcard templates.
+			if child, ok := hn.Children[WildCardPathKey]; ok {
+				GetResultForHttpMethod(child.ResultMap, httpMethod, result)
+			}
+		}
+		return
+	}
+
+	if lookupPathFromChild(pathParts[pathPartsIdxCur], pathParts, pathPartsIdxCur, httpMethod, result) {
+		return
+	}
+
+	// For wild card node, keeps searching for next path segment until either
+	// 1) reaching the end (/foo/** case), or 2) all remaining segments match
+	// one of child branches (/foo/**/bar/xyz case).
+	if hn.WildCard {
+		hn.lookupPath(pathParts, pathPartsIdxCur+1, httpMethod, result)
+		// Since only constant segments are allowed after wild card, no need to
+		// search another wild card nodes from children, so bail out here.
+		return
+	}
+
+	for _, childKey := range []string{SingleParameterKey, WildCardPathPartKey, WildCardPathKey} {
+		if lookupPathFromChild(childKey, pathParts, pathPartsIdxCur, httpMethod, result) {
+			return
+		}
 	}
 }
