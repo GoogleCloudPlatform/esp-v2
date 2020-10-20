@@ -31,7 +31,7 @@ type MethodSlice []*Method
 func Sort(methods *MethodSlice) error {
 	s := newHttpPatternTrie()
 	for _, m := range *methods {
-		if err := s.register(m); err != nil {
+		if err := s.insert(m); err != nil {
 			return err
 		}
 	}

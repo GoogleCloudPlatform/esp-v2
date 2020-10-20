@@ -46,7 +46,7 @@ func TestSortErrorHttpPattern(t *testing.T) {
 			})
 
 			if err := Sort(methods); err == nil || strings.Index(err.Error(), "invalid url template") == -1 {
-				t.Errorf("expect failing to register the template: %s but it succeed", tc)
+				t.Errorf("expect failing to insert the template: %s but it succeed", tc)
 			}
 		})
 	}
@@ -89,10 +89,10 @@ func TestSortDuplicateHttpPattern(t *testing.T) {
 
 			if err := Sort(methods); err != nil {
 				if err.Error() != tc.wantError {
-					t.Errorf("expect registering http pattern error: %s, but get error: %v", tc.wantError, err)
+					t.Errorf("expect inserting http pattern error: %s, but get error: %v", tc.wantError, err)
 				}
 			} else {
-				t.Errorf("expect registering http pattern error: %s, but get success", tc.wantError)
+				t.Errorf("expect inserting http pattern error: %s, but get success", tc.wantError)
 			}
 		})
 	}

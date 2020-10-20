@@ -57,7 +57,7 @@ func newHttpPatternTrie() *httpPatternTrie {
 	}
 }
 
-func (h *httpPatternTrie) register(method *Method) error {
+func (h *httpPatternTrie) insert(method *Method) error {
 	if method == nil {
 		return fmt.Errorf("empty method")
 	}
