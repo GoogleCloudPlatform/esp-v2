@@ -107,36 +107,6 @@ func (sr *MethodSlice) appendMethod(m *Method) {
 	}
 }
 
-func extractBindingsFromPath(vars []*variable, parts []string) []*variableBinding {
-	var bindings []*variableBinding
-	for _, v := range vars {
-		// Determine the subpath bound to the variable based on the
-		// [start_segment, end_segment) segment range of the variable.
-		//
-		// In case of matching "**" - end_segment is negative and is relative to
-		// the end such that end_segment = -1 will match all subsequent segmenth.
-		binding := &variableBinding{
-			FieldPath: v.FieldPath,
-		}
-
-		// Calculate the absolute index of the ending segment in case it's negative.
-		endSegment := v.EndSegment
-		if v.EndSegment < 0 {
-			endSegment = len(parts) + v.EndSegment + 1
-		}
-		for i := v.StartSegment; i < endSegment; i += 1 {
-			binding.Value = binding.Value + parts[i]
-			if i < endSegment-1 {
-				binding.Value = binding.Value + "/"
-			}
-		}
-		bindings = append(bindings, binding)
-
-	}
-
-	return bindings
-}
-
 func transferFromUriTemplate(ht *UriTemplate) []string {
 	var pathParts []string
 	for _, segment := range ht.Segments {
