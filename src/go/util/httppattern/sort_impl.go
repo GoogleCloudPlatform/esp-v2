@@ -87,13 +87,6 @@ func (h *httpPatternTrie) insert(method *Method) error {
 	return nil
 }
 
-func (h *httpPatternTrie) sort() *MethodSlice {
-	result := &MethodSlice{}
-	h.RootPtr.traverse(result)
-	return result
-
-}
-
 func newHttpPatternTrieNode() *httpPatternTrieNode {
 	return &httpPatternTrieNode{
 		ResultMap: make(map[string]*lookupResult),
