@@ -25,7 +25,7 @@ func parsePattern(pattern string) (string, string) {
 	return s[0], s[1]
 }
 
-func TestMatchSequenceGeneratorRegisterErrorHttpPattern(t *testing.T) {
+func TestSortErrorHttpPattern(t *testing.T) {
 	testCases := []string{
 		"GET /a{x=b/**}/bb/{y=*}",
 		"GET /a{x=b/**}/{y=**}",
@@ -38,79 +38,67 @@ func TestMatchSequenceGeneratorRegisterErrorHttpPattern(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc, func(t *testing.T) {
-			sg := NewMatchSequenceGenerator()
+			methods := &MethodSlice{}
 			httpMethod, uriTemplate := parsePattern(tc)
-			if err := sg.Register(&Method{HttpMethod: httpMethod, UriTemplate: uriTemplate}); err == nil || strings.Index(err.Error(), "invalid url template") == -1 {
+			methods.appendMethod(&Method{
+				UriTemplate: uriTemplate,
+				HttpMethod:  httpMethod,
+			})
+
+			if err := Sort(methods); err == nil || strings.Index(err.Error(), "invalid url template") == -1 {
 				t.Errorf("expect failing to register the template: %s but it succeed", tc)
 			}
 		})
 	}
 }
 
-func TestMatchSequenceGeneratorDuplicateHttpPattern(t *testing.T) {
+func TestSortDuplicateHttpPattern(t *testing.T) {
 	testCases := []struct {
-		desc     string
-		register []struct {
-			httpPattern              string
-			wantRegisterPatternError string
-		}
+		desc         string
+		httpPatterns []string
+		wantError    string
 	}{
 		{
 			desc: "duplicate in constant segments",
-			register: []struct {
-				httpPattern              string
-				wantRegisterPatternError string
-			}{
-				{
-					httpPattern: "GET /foo/bar",
-				},
-				{
-					httpPattern:              "GET /foo/bar",
-					wantRegisterPatternError: "duplicate http pattern `GET /foo/bar`",
-				},
+			httpPatterns: []string{
+				"GET /foo/bar",
+				"GET /foo/bar",
 			},
+			wantError: "duplicate http pattern `GET /foo/bar`",
 		},
 		{
 			desc: "duplicate in variable segments",
-			register: []struct {
-				httpPattern              string
-				wantRegisterPatternError string
-			}{
-				{
-					httpPattern: "GET /a/{id}",
-				},
-				{
-					httpPattern:              "GET /a/{name}",
-					wantRegisterPatternError: "duplicate http pattern `GET /a/{name}`",
-				},
+			httpPatterns: []string{
+				"GET /a/{id}",
+				"GET /a/{name}",
 			},
+			wantError: "duplicate http pattern `GET /a/{name}`",
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sg := NewMatchSequenceGenerator()
-			for _, r := range tc.register {
-				httpMethod, uriTemplate := parsePattern(r.httpPattern)
-				method := &Method{
+
+			methods := &MethodSlice{}
+			for _, hp := range tc.httpPatterns {
+				httpMethod, uriTemplate := parsePattern(hp)
+				methods.appendMethod(&Method{
 					UriTemplate: uriTemplate,
 					HttpMethod:  httpMethod,
-				}
-				if err := sg.Register(method); err == nil && r.wantRegisterPatternError != "" {
-					t.Errorf("expect registering http pattern error: %s, but get success", r.wantRegisterPatternError)
-				} else if err != nil && err.Error() != r.wantRegisterPatternError {
-					if r.wantRegisterPatternError == "" {
-						t.Errorf("expect registering http pattern error: %s, but get error: %v", r.wantRegisterPatternError, err)
-					} else {
-						t.Errorf("expect succeful registering http pattern,b ut get error: %v", err)
-					}
+				})
+			}
 
+			if err := Sort(methods); err != nil {
+				if err.Error() != tc.wantError {
+					t.Errorf("expect registering http pattern error: %s, but get error: %v", tc.wantError, err)
 				}
+			} else {
+				t.Errorf("expect registering http pattern error: %s, but get success", tc.wantError)
 			}
 		})
 	}
 }
 
-func TestMatchSequenceGeneratorSort(t *testing.T) {
+func TestSort(t *testing.T) {
 	testCases := []struct {
 		desc              string
 		httpPatterns      []string
@@ -233,21 +221,20 @@ func TestMatchSequenceGeneratorSort(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sg := NewMatchSequenceGenerator()
+			methods := &MethodSlice{}
 			for _, hp := range tc.httpPatterns {
 				httpMethod, uriTemplate := parsePattern(hp)
-				if err := sg.Register(&Method{
+				methods.appendMethod(&Method{
 					UriTemplate: uriTemplate,
 					HttpMethod:  httpMethod,
-				}); err != nil {
-					t.Errorf("fail to register httpPatternL `%s`: %v", hp, err)
-				}
+				})
 			}
-			res := sg.Generate()
-			if len(*res) != len(tc.sortedHttpPattern) {
-				t.Fatalf("different size of http pattern, expect: %v, get: %v", len(tc.sortedHttpPattern), len(*res))
+
+			if err := Sort(methods); err != nil {
+				t.Fatalf("fail to sort the methods with error: %v", err)
 			}
-			for idx, r := range *res {
+
+			for idx, r := range *methods {
 				if getHttpPattern := fmt.Sprintf("%s %s", r.HttpMethod, r.UriTemplate); getHttpPattern != tc.sortedHttpPattern[idx] {
 					t.Errorf("expect http pattern: % s, get http pattern: %s", tc.sortedHttpPattern[idx], getHttpPattern)
 				}
