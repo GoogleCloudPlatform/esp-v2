@@ -5,11 +5,13 @@ import (
 	"strings"
 )
 
-//  The special segment keys during uri template parsing.
 const (
+	//  The special segment keys during uri template parsing.
 	SingleParameterKey = "/."
 	SingleWildCardKey  = "*"
 	DoubleWildCardKey  = "**"
+
+	HttpMethodWildCard = "*"
 )
 
 var (

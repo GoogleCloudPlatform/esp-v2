@@ -258,7 +258,7 @@ func makeHttpRouteMatcher(httpRule *commonpb.Pattern) (*routepb.RouteMatch, erro
 		}
 	}
 
-	if httpRule.HttpMethod != "*" {
+	if httpRule.HttpMethod != httppattern.HttpMethodWildCard {
 		routeMatcher.Headers = []*routepb.HeaderMatcher{
 			{
 				Name: ":method",
