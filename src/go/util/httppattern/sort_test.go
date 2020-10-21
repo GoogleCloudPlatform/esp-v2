@@ -40,7 +40,7 @@ func TestSortErrorHttpPattern(t *testing.T) {
 		t.Run(tc, func(t *testing.T) {
 			methods := &MethodSlice{}
 			httpMethod, uriTemplate := parsePattern(tc)
-			methods.appendMethod(&Method{
+			methods.AppendMethod(&Method{
 				UriTemplate: uriTemplate,
 				HttpMethod:  httpMethod,
 			})
@@ -81,7 +81,7 @@ func TestSortDuplicateHttpPattern(t *testing.T) {
 			methods := &MethodSlice{}
 			for _, hp := range tc.httpPatterns {
 				httpMethod, uriTemplate := parsePattern(hp)
-				methods.appendMethod(&Method{
+				methods.AppendMethod(&Method{
 					UriTemplate: uriTemplate,
 					HttpMethod:  httpMethod,
 				})
@@ -263,7 +263,7 @@ func TestSort(t *testing.T) {
 			methods := &MethodSlice{}
 			for _, hp := range tc.httpPatterns {
 				httpMethod, uriTemplate := parsePattern(hp)
-				methods.appendMethod(&Method{
+				methods.AppendMethod(&Method{
 					UriTemplate: uriTemplate,
 					HttpMethod:  httpMethod,
 				})

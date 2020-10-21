@@ -41,3 +41,9 @@ func Sort(methods *MethodSlice) error {
 
 	return nil
 }
+
+func (sr *MethodSlice) AppendMethod(m *Method) {
+	if m != nil {
+		*sr = append(*sr, m)
+	}
+}

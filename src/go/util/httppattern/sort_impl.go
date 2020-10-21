@@ -92,12 +92,6 @@ func newHttpPatternTrieNode() *httpPatternTrieNode {
 	}
 }
 
-func (sr *MethodSlice) appendMethod(m *Method) {
-	if m != nil {
-		*sr = append(*sr, m)
-	}
-}
-
 func transferFromUriTemplate(ht *UriTemplate) []string {
 	var pathParts []string
 	for _, segment := range ht.Segments {
@@ -163,13 +157,13 @@ func (hn *httpPatternTrieNode) traverse(result *MethodSlice) {
 
 		for _, key := range sortedKeys {
 			if val, ok := hn.ResultMap[key]; ok {
-				result.appendMethod(val.data.Method)
+				result.AppendMethod(val.data.Method)
 			}
 		}
 
 		// Put the wildcard method in the end.
 		if wildMethodResult != nil {
-			result.appendMethod(wildMethodResult.data.Method)
+			result.AppendMethod(wildMethodResult.data.Method)
 		}
 
 	}
