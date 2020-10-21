@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 
@@ -334,7 +335,7 @@ func addHttpRule(method *MethodInfo, r *annotationspb.HttpRule, httpMatcherWithO
 
 		if httpMethod == util.OPTIONS {
 			// Ensure we don't generate duplicate methods later for AllowCors.
-			matcher := util.WildcardMatcherForPath(r.GetCustom().GetPath())
+			matcher := httppattern.WildcardMatcherForPath(r.GetCustom().GetPath())
 			if matcher == "" {
 				matcher = r.GetCustom().GetPath()
 			}
@@ -379,7 +380,7 @@ func (s *ServiceInfo) processHttpRule() error {
 			method := s.Methods[r.GetSelector()]
 			for _, httpRule := range method.HttpRule {
 				if httpRule.HttpMethod != util.OPTIONS {
-					matcher := util.WildcardMatcherForPath(httpRule.UriTemplate)
+					matcher := httppattern.WildcardMatcherForPath(httpRule.UriTemplate)
 					if matcher == "" {
 						matcher = httpRule.UriTemplate
 					}
@@ -726,12 +727,12 @@ func (s *ServiceInfo) processTypes() error {
 		// Replace the snake name with the json name in url template
 		if len(snakeToJson) > 0 {
 			for _, httpRule := range mi.HttpRule {
-				httpRule.UriTemplate = util.SnakeNamesToJsonNamesInPathParam(httpRule.UriTemplate, snakeToJson)
+				httpRule.UriTemplate = httppattern.SnakeNamesToJsonNamesInPathParam(httpRule.UriTemplate, snakeToJson)
 			}
 
 			if mi.GeneratedCorsMethod != nil {
 				for _, httpRule := range mi.GeneratedCorsMethod.HttpRule {
-					httpRule.UriTemplate = util.SnakeNamesToJsonNamesInPathParam(httpRule.UriTemplate, snakeToJson)
+					httpRule.UriTemplate = httppattern.SnakeNamesToJsonNamesInPathParam(httpRule.UriTemplate, snakeToJson)
 				}
 
 			}

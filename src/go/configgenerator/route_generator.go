@@ -276,7 +276,7 @@ func makeHttpRouteMatcher(httpRule *commonpb.Pattern) (*routepb.RouteMatch, erro
 	}
 	var routeMatcher routepb.RouteMatch
 
-	regex := util.WildcardMatcherForPath(httpRule.UriTemplate)
+	regex := httppattern.WildcardMatcherForPath(httpRule.UriTemplate)
 	if regex == "" {
 		// Match with HttpHeader method. Some methods may have same path.
 		routeMatcher = routepb.RouteMatch{
@@ -301,7 +301,7 @@ func makeHttpRouteMatcher(httpRule *commonpb.Pattern) (*routepb.RouteMatch, erro
 		}
 	}
 
-	if httpRule.HttpMethod != "*" {
+	if httpRule.HttpMethod != httppattern.HttpMethodWildCard {
 		routeMatcher.Headers = []*routepb.HeaderMatcher{
 			{
 				Name: ":method",

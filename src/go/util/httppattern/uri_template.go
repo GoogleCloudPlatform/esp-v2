@@ -18,6 +18,11 @@ import (
 	"bytes"
 )
 
+// Use null char to denote coming into invalid char.
+const (
+	InvalidChar = byte(0)
+)
+
 // UriTemplate is used to syntax pairse uri templates. It is based on the grammar
 // on https://github.com/googleapis/googleapis/blob/e5211c547d63632963f9125e2b333185d57ff8f6/google/api/http.proto#L224.
 type UriTemplate struct {
@@ -90,22 +95,15 @@ func (p *parser) parse() bool {
 	return true
 }
 
-const (
-	SingleParameterKey  = "/."
-	WildCardPathPartKey = "*"
-	WildCardPathKey     = "**"
-	InvalidChar         = byte(0)
-)
-
 // only constant path segments are allowed after '**'.
 func (p *parser) validateParts() bool {
 	foundWildCard := false
 	for i := 0; i < len(p.segments); i += 1 {
 		if !foundWildCard {
-			if p.segments[i] == WildCardPathKey {
+			if p.segments[i] == DoubleWildCardKey {
 				foundWildCard = true
 			}
-		} else if p.segments[i] == SingleParameterKey || p.segments[i] == WildCardPathPartKey || p.segments[i] == WildCardPathKey {
+		} else if p.segments[i] == SingleParameterKey || p.segments[i] == SingleWildCardKey || p.segments[i] == DoubleWildCardKey {
 			return false
 		}
 	}
