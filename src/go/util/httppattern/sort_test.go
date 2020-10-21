@@ -105,6 +105,45 @@ func TestSort(t *testing.T) {
 		sortedHttpPattern []string
 	}{
 		{
+			desc: "wildcard prefix",
+			httpPatterns: []string{
+				"GET /**",
+				"GET /**/a",
+				"GET /**:verb",
+			},
+			sortedHttpPattern: []string{
+				"GET /**/a",
+				"GET /**:verb",
+				"GET /**",
+			},
+		},
+		{
+			desc: "constant prefix",
+			httpPatterns: []string{
+				"GET /foo",
+				"GET /foo/a",
+				"GET /foo:verb",
+			},
+			sortedHttpPattern: []string{
+				"GET /foo",
+				"GET /foo/a",
+				"GET /foo:verb",
+			},
+		},
+		{
+			desc: "root prefix",
+			httpPatterns: []string{
+				"GET /",
+				"GET /**",
+				"GET /foo",
+			},
+			sortedHttpPattern: []string{
+				"GET /",
+				"GET /foo",
+				"GET /**",
+			},
+		},
+		{
 			desc: "constant with wildcard",
 			httpPatterns: []string{
 				"GET /a/**/b/c",

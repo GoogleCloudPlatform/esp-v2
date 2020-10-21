@@ -135,7 +135,7 @@ func (hn *httpPatternTrieNode) insertTemplate(pathParts []string, pathPartsIdxCu
 	}
 
 	child, _ := hn.Children[curSeg]
-	if curSeg == WildCardPathKey {
+	if curSeg == DoubleWildCardKey {
 		child.WildCard = true
 	}
 
@@ -178,33 +178,33 @@ func (hn *httpPatternTrieNode) traverse(result *MethodSlice) {
 
 	traverseChildren := func() {
 		var singleParameterChild *httpPatternTrieNode
-		var wildCardPathPartChild *httpPatternTrieNode
-		var wildCardPathChild *httpPatternTrieNode
-		var exactMatchChildKey []string
+		var singleWildCardChild *httpPatternTrieNode
+		var doubleWildCardChild *httpPatternTrieNode
+		var exactMatchChildKeys []string
 		for key, child := range hn.Children {
 			switch key {
 			case SingleParameterKey:
 				singleParameterChild = child
-			case WildCardPathPartKey:
-				wildCardPathPartChild = child
-			case WildCardPathKey:
-				wildCardPathChild = child
+			case SingleWildCardKey:
+				singleWildCardChild = child
+			case DoubleWildCardKey:
+				doubleWildCardChild = child
 			default:
-				exactMatchChildKey = append(exactMatchChildKey, key)
+				exactMatchChildKeys = append(exactMatchChildKeys, key)
 			}
 		}
 
 		// Visit exact match children first.
 		// Sort the child keys to generate deterministic sequence for better unit testing.
-		sort.Strings(exactMatchChildKey)
-		for _, key := range exactMatchChildKey {
+		sort.Strings(exactMatchChildKeys)
+		for _, key := range exactMatchChildKeys {
 			if child, ok := hn.Children[key]; ok {
 				child.traverse(result)
 			}
 		}
 
 		// Visit vague match children after.
-		for _, child := range []*httpPatternTrieNode{singleParameterChild, wildCardPathPartChild, wildCardPathChild} {
+		for _, child := range []*httpPatternTrieNode{singleParameterChild, singleWildCardChild, doubleWildCardChild} {
 			if child != nil {
 				child.traverse(result)
 			}
@@ -212,6 +212,15 @@ func (hn *httpPatternTrieNode) traverse(result *MethodSlice) {
 	}
 
 	// If the current node is wildcard(**), its children has higher priority.
+	// For the wildcard case, it is necessary to traverse children then collect
+	// the current node.
+	// ex. /**/a
+	//     /**
+	//
+	// For the non-wildcard, it is necessary to collect the current node then
+	// traver children.
+	// ex. /a
+	//     /a/b
 	if hn.WildCard {
 		// Pre-order traverse.
 		traverseChildren()

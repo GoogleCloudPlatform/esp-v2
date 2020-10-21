@@ -20,6 +20,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 
@@ -232,7 +233,7 @@ func makeHttpRouteMatcher(httpRule *commonpb.Pattern) (*routepb.RouteMatch, erro
 	}
 	var routeMatcher routepb.RouteMatch
 
-	regex := util.WildcardMatcherForPath(httpRule.UriTemplate)
+	regex := httppattern.WildcardMatcherForPath(httpRule.UriTemplate)
 	if regex == "" {
 		// Match with HttpHeader method. Some methods may have same path.
 		routeMatcher = routepb.RouteMatch{
