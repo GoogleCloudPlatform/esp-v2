@@ -1248,6 +1248,13 @@ func TestMakeRouteConfig(t *testing.T) {
   ]
 }`,
 		},
+		// In this test, the route configs will be in the order of
+		//		GET /foo/bar
+		//		* /foo/bar,
+		//		GET /foo/*
+		//		GET /foo/*/bar
+		//		GET /foo/**/bar
+		//		GET /foo/**:verb
 		{
 			desc:                          "Order route match config",
 			enableStrictTransportSecurity: true,
