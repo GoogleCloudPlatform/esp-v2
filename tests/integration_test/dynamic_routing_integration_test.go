@@ -253,8 +253,8 @@ func TestDynamicRouting(t *testing.T) {
 		// The following three test cases cover when requests can be matched by multiple
 		// http patterns, the most specific will be matched.
 		{
-			desc:     "Route match ordering - Match http pattern `POST /allow-all/abc`",
-			path:     "/allow-all/abc",
+			desc:     "Route match ordering - Match http pattern `POST /allow-all/exact-match`",
+			path:     "/allow-all/exact-match",
 			method:   "POST",
 			message:  "hello",
 			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard"}`,

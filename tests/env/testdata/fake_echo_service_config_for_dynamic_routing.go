@@ -289,7 +289,7 @@ var (
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_exact_match",
 					Pattern: &annotationspb.HttpRule_Post{
-						Post: "/allow-all/abc",
+						Post: "/allow-all/exact-match",
 					},
 				},
 				{
