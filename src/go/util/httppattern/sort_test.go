@@ -64,7 +64,7 @@ func TestSortDuplicateHttpPattern(t *testing.T) {
 				"GET /foo/bar",
 				"GET /foo/bar",
 			},
-			wantError: "duplicate http pattern `GET /foo/bar`",
+			wantError: "operation has duplicate http pattern `GET /foo/bar`",
 		},
 		{
 			desc: "duplicate in variable segments",
@@ -72,7 +72,7 @@ func TestSortDuplicateHttpPattern(t *testing.T) {
 				"GET /a/{id}",
 				"GET /a/{name}",
 			},
-			wantError: "duplicate http pattern `GET /a/{name}`",
+			wantError: "operation has duplicate http pattern `GET /a/{name}`",
 		},
 	}
 	for _, tc := range testCases {
@@ -84,6 +84,7 @@ func TestSortDuplicateHttpPattern(t *testing.T) {
 				methods.AppendMethod(&Method{
 					UriTemplate: uriTemplate,
 					HttpMethod:  httpMethod,
+					Operation:   "operation",
 				})
 			}
 
