@@ -962,13 +962,13 @@ func TestPathMatcherFilter(t *testing.T) {
 						{
 							Selector: "1.cloudesf_testing_cloud_goog.Foo",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "foo/{foo_bar}",
+								Get: "/foo/{foo_bar}",
 							},
 						},
 						{
 							Selector: "1.cloudesf_testing_cloud_goog.Baz",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "baz/{baz_baz}",
+								Get: "/baz/{baz_baz}",
 							},
 						},
 					},
@@ -985,14 +985,14 @@ func TestPathMatcherFilter(t *testing.T) {
             "operation":"1.cloudesf_testing_cloud_goog.Baz",
             "pattern":{
                "httpMethod":"GET",
-               "uriTemplate":"baz/{bazBaz}"
+               "uriTemplate":"/baz/{bazBaz=*}"
             }
          },
          {
             "operation":"1.cloudesf_testing_cloud_goog.Foo",
             "pattern":{
                "httpMethod":"GET",
-               "uriTemplate":"foo/{fooBar}"
+               "uriTemplate":"/foo/{fooBar=*}"
             }
          }
       ]
@@ -1006,7 +1006,7 @@ func TestPathMatcherFilter(t *testing.T) {
 		opts.Healthz = tc.healthz
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
-			t.Errorf("Test(%v): makePathMatcherFilter failed with err: \n %v", tc.desc, err)
+			t.Fatalf("Test(%v): makePathMatcherFilter failed with err: \n %v", tc.desc, err)
 		}
 		marshaler := &jsonpb.Marshaler{}
 		gotFilter, err := marshaler.MarshalToString(makePathMatcherFilter(fakeServiceInfo))

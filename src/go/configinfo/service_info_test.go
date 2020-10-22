@@ -2576,7 +2576,7 @@ func TestProcessTypes(t *testing.T) {
 				"api-1.operation-1": "/foo/{foo_bar}/bar/{x_y}",
 			},
 			wantUrlTemplateByOperation: map[string]string{
-				"api-1.operation-1": "/foo/{fooBar}/bar/{xY}",
+				"api-1.operation-1": "/foo/{fooBar=*}/bar/{xY=*}",
 			},
 		},
 		{
@@ -2606,7 +2606,7 @@ func TestProcessTypes(t *testing.T) {
 				"api-1.operation-1": "/foo/{foo_bar}/bar",
 			},
 			wantUrlTemplateByOperation: map[string]string{
-				"api-1.operation-1": "/foo/{fooBar}/bar",
+				"api-1.operation-1": "/foo/{fooBar=*}/bar",
 			},
 		},
 		{
@@ -2636,7 +2636,7 @@ func TestProcessTypes(t *testing.T) {
 				"api-1.operation-1": "/foo/{foo_bar}",
 			},
 			wantUrlTemplateByOperation: map[string]string{
-				"api-1.operation-1": "/foo/{fooBar}",
+				"api-1.operation-1": "/foo/{fooBar=*}",
 			},
 		},
 		{
@@ -2725,8 +2725,8 @@ func TestProcessTypes(t *testing.T) {
 				"api-1.operation-2": "/foo/{a_b}",
 			},
 			wantUrlTemplateByOperation: map[string]string{
-				"api-1.operation-1": "/foo/{fooBar}/bar/{xY}",
-				"api-1.operation-2": "/foo/{aB}",
+				"api-1.operation-1": "/foo/{fooBar=*}/bar/{xY=*}",
+				"api-1.operation-2": "/foo/{aB=*}",
 			},
 		},
 		{
@@ -2762,8 +2762,8 @@ func TestProcessTypes(t *testing.T) {
 				"api-1.operation-2": "/foo/{foo_bar}",
 			},
 			wantUrlTemplateByOperation: map[string]string{
-				"api-1.operation-1": "/foo/{foo-bar}",
-				"api-1.operation-2": "/foo/{fooBar}",
+				"api-1.operation-1": "/foo/{foo-bar=*}",
+				"api-1.operation-2": "/foo/{fooBar=*}",
 			},
 		},
 	}

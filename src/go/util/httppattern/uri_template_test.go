@@ -47,7 +47,7 @@ func TestUriTemplateParse(t *testing.T) {
      "FieldPath": [
        "shelf"
      ],
-     "HasWildcardPath": false
+     "HasDoubleWildCard": false
    },
    {
      "StartSegment": 3,
@@ -55,7 +55,7 @@ func TestUriTemplateParse(t *testing.T) {
      "FieldPath": [
        "book"
      ],
-     "HasWildcardPath": false
+     "HasDoubleWildCard": false
    }
  ]
 }
@@ -168,7 +168,7 @@ func TestUriTemplateParse(t *testing.T) {
         "b",
         "c"
       ],
-      "HasWildcardPath": false,
+      "HasDoubleWildCard": false,
       "StartSegment": 1
     }
   ],
@@ -192,7 +192,7 @@ func TestUriTemplateParse(t *testing.T) {
         "b",
         "c"
       ],
-      "HasWildcardPath": false,
+      "HasDoubleWildCard": false,
       "StartSegment": 1
     }
   ],
@@ -214,7 +214,7 @@ func TestUriTemplateParse(t *testing.T) {
       "FieldPath": [
         "b"
       ],
-      "HasWildcardPath": false,
+      "HasDoubleWildCard": false,
       "StartSegment": 1
     }
   ],
@@ -236,7 +236,7 @@ func TestUriTemplateParse(t *testing.T) {
       "FieldPath": [
         "b"
       ],
-      "HasWildcardPath": true,
+      "HasDoubleWildCard": true,
       "StartSegment": 1
     }
   ],
@@ -259,7 +259,7 @@ func TestUriTemplateParse(t *testing.T) {
       "FieldPath": [
         "b"
       ],
-      "HasWildcardPath": false,
+      "HasDoubleWildCard": false,
       "StartSegment": 1
     }
   ],
@@ -283,7 +283,7 @@ func TestUriTemplateParse(t *testing.T) {
       "FieldPath": [
         "b"
       ],
-      "HasWildcardPath": false,
+      "HasDoubleWildCard": false,
       "StartSegment": 1
     }
   ],
@@ -306,7 +306,7 @@ func TestUriTemplateParse(t *testing.T) {
       "FieldPath": [
         "b"
       ],
-      "HasWildcardPath": true,
+      "HasDoubleWildCard": true,
       "StartSegment": 1
     }
   ],
@@ -331,7 +331,7 @@ func TestUriTemplateParse(t *testing.T) {
       "FieldPath": [
         "b"
       ],
-      "HasWildcardPath": true,
+      "HasDoubleWildCard": true,
       "StartSegment": 1
     }
   ],
@@ -356,7 +356,7 @@ func TestUriTemplateParse(t *testing.T) {
       "FieldPath": [
         "b"
       ],
-      "HasWildcardPath": false,
+      "HasDoubleWildCard": false,
       "StartSegment": 1
     }
   ],
@@ -381,7 +381,7 @@ func TestUriTemplateParse(t *testing.T) {
       "FieldPath": [
         "b"
       ],
-      "HasWildcardPath": false,
+      "HasDoubleWildCard": false,
       "StartSegment": 1
     }
   ],
@@ -426,7 +426,7 @@ func TestUriTemplateParse(t *testing.T) {
       "FieldPath": [
         "a"
       ],
-      "HasWildcardPath": false,
+      "HasDoubleWildCard": false,
       "StartSegment": 0
     }
   ],
@@ -478,7 +478,7 @@ func TestUriTemplateParse(t *testing.T) {
       "FieldPath": [
         "a"
       ],
-      "HasWildcardPath": false,
+      "HasDoubleWildCard": false,
       "StartSegment": 2
     }
   ],
@@ -499,7 +499,7 @@ func TestUriTemplateParse(t *testing.T) {
       "FieldPath": [
         "x"
       ],
-      "HasWildcardPath": false,
+      "HasDoubleWildCard": false,
       "StartSegment": 0
     }
   ],
@@ -522,7 +522,7 @@ func TestUriTemplateParse(t *testing.T) {
         "y",
         "z"
       ],
-      "HasWildcardPath": false,
+      "HasDoubleWildCard": false,
       "StartSegment": 0
     }
   ],
@@ -543,7 +543,7 @@ func TestUriTemplateParse(t *testing.T) {
       "FieldPath": [
         "x"
       ],
-      "HasWildcardPath": false,
+      "HasDoubleWildCard": false,
       "StartSegment": 0
     }
   ],
@@ -565,7 +565,7 @@ func TestUriTemplateParse(t *testing.T) {
       "FieldPath": [
         "x"
       ],
-      "HasWildcardPath": false,
+      "HasDoubleWildCard": false,
       "StartSegment": 0
     }
   ],
@@ -591,7 +591,7 @@ func TestUriTemplateParse(t *testing.T) {
         "y",
         "z"
       ],
-      "HasWildcardPath": false,
+      "HasDoubleWildCard": false,
       "StartSegment": 0
     }
   ],
@@ -612,7 +612,7 @@ func TestUriTemplateParse(t *testing.T) {
       "FieldPath": [
         "x"
       ],
-      "HasWildcardPath": true,
+      "HasDoubleWildCard": true,
       "StartSegment": 0
     }
   ],
@@ -636,7 +636,7 @@ func TestUriTemplateParse(t *testing.T) {
         "y",
         "z"
       ],
-      "HasWildcardPath": true,
+      "HasDoubleWildCard": true,
       "StartSegment": 0
     }
   ],
@@ -661,7 +661,7 @@ func TestUriTemplateParse(t *testing.T) {
         "y",
         "z"
       ],
-      "HasWildcardPath": true,
+      "HasDoubleWildCard": true,
       "StartSegment": 0
     }
   ],
@@ -688,7 +688,7 @@ func TestUriTemplateParse(t *testing.T) {
         "y",
         "z"
       ],
-      "HasWildcardPath": true,
+      "HasDoubleWildCard": true,
       "StartSegment": 0
     }
   ],
@@ -709,7 +709,7 @@ func TestUriTemplateParse(t *testing.T) {
       "FieldPath": [
         "x"
       ],
-      "HasWildcardPath": false,
+      "HasDoubleWildCard": false,
       "StartSegment": 0
     }
   ],
@@ -732,7 +732,7 @@ func TestUriTemplateParse(t *testing.T) {
         "y",
         "z"
       ],
-      "HasWildcardPath": false,
+      "HasDoubleWildCard": false,
       "StartSegment": 0
     }
   ],
@@ -756,7 +756,7 @@ func TestUriTemplateParse(t *testing.T) {
         "y",
         "z"
       ],
-      "HasWildcardPath": false,
+      "HasDoubleWildCard": false,
       "StartSegment": 0
     }
   ],
@@ -777,7 +777,7 @@ func TestUriTemplateParse(t *testing.T) {
       "FieldPath": [
         "x"
       ],
-      "HasWildcardPath": true,
+      "HasDoubleWildCard": true,
       "StartSegment": 0
     }
   ],
@@ -800,7 +800,7 @@ func TestUriTemplateParse(t *testing.T) {
         "y",
         "z"
       ],
-      "HasWildcardPath": true,
+      "HasDoubleWildCard": true,
       "StartSegment": 0
     }
   ],
@@ -825,7 +825,7 @@ func TestUriTemplateParse(t *testing.T) {
         "y",
         "z"
       ],
-      "HasWildcardPath": true,
+      "HasDoubleWildCard": true,
       "StartSegment": 0
     }
   ],
@@ -852,7 +852,7 @@ func TestUriTemplateParse(t *testing.T) {
         "y",
         "z"
       ],
-      "HasWildcardPath": true,
+      "HasDoubleWildCard": true,
       "StartSegment": 0
     }
   ],
@@ -911,7 +911,7 @@ func TestUriTemplateParse(t *testing.T) {
       "FieldPath": [
         "b"
       ],
-      "HasWildcardPath": false,
+      "HasDoubleWildCard": false,
       "StartSegment": 1
     }
   ],
@@ -922,13 +922,13 @@ func TestUriTemplateParse(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			ht := Parse(tc.UriTemplate)
-			if ht == nil {
+			ut := Parse(tc.UriTemplate)
+			if ut == nil {
 				t.Fatal("fail to generate UriTemplate")
 			}
 
 			if tc.wantUriTemplate != "" {
-				bytes, _ := json.Marshal(ht)
+				bytes, _ := json.Marshal(ut)
 				getUriTemplate := string(bytes)
 
 				if err := util.JsonEqual(tc.wantUriTemplate, getUriTemplate); err != nil {
@@ -989,7 +989,6 @@ func TestUriTemplateParseError(t *testing.T) {
 		"/a/b{x}c/s",
 		"/a/{x}b{y}/s",
 		"/a/**/*",
-		// No verb test cases.
 		":",
 		"/:",
 		"/a/:",
@@ -1002,6 +1001,132 @@ func TestUriTemplateParseError(t *testing.T) {
 		t.Run(fmt.Sprintf("`%s`", tc), func(t *testing.T) {
 			if Parse(tc) != nil {
 				t.Fatalf("succeed parsing %s but expect to fail", tc)
+			}
+		})
+
+	}
+}
+
+func TestReplaceVariableFieldNameRebuild(t *testing.T) {
+	testCases := []string{
+		"/shelves/{shelf}/books/{book}",
+		"/shelves/**",
+		"/**",
+		"/*",
+		"/a:foo",
+		"/a/b/c:foo",
+		"/*/**",
+		"/a/{a.b.c}",
+		"/a/{a.b.c=*}",
+		"/a/{b=*}",
+		"/a/{b=**}",
+		"/a/{b=c/*}",
+		"/a/{b=c/*/d}",
+		"/a/{b=c/**}",
+		"/a/{b=c/**}/d/e",
+		"/a/{b=c/*/d}/e",
+		"/a/{b=c/*/d}/e:verb",
+		"/*:verb",
+		"/**:verb",
+		"/{a}:verb",
+		"/a/b/*:verb",
+		"/a/b/**:verb",
+		"/a/b/{a}:verb",
+		"/{x}",
+		"/{x.y.z}",
+		"/{x=*}",
+		"/{x=a/*}",
+		"/{x.y.z=*/a/b}/c",
+		"/{x=**}",
+		"/{x.y.z=**}",
+		"/{x.y.z=a/**/b}",
+		"/{x.y.z=a/**/b}/c/d",
+		"/{x}:verb",
+		"/{x.y.z}:verb",
+		"/{x.y.z=*/*}:verb",
+		"/{x=**}:myverb",
+		"/{x.y.z=**}:myverb",
+		"/{x.y.z=a/**/b}:custom",
+		"/{x.y.z=a/**/b}/c/d:custom",
+		"/",
+		"/a/*:verb",
+		"/a/**:verb",
+		"/a/{b=*}/**:verb",
+	}
+
+	uriTemplateStrEqual := func(get string, want string) bool {
+		getUriTemplate := Parse(get)
+		wantUriTemplate := Parse(want)
+		getUriTemplateBytes, _ := json.Marshal(getUriTemplate)
+		wantUriTemplateBytes, _ := json.Marshal(wantUriTemplate)
+		return string(getUriTemplateBytes) == string(wantUriTemplateBytes)
+	}
+
+	for _, tc := range testCases {
+		// Some uri templates are equal in syntax through not equal in string comparison.
+		if getUriTemplate, _ := ReplaceVariableFieldName(tc, nil); !uriTemplateStrEqual(getUriTemplate, tc) {
+			t.Errorf("fail to rebuild, wante uriTemplate: %s, get uriTemplate: %s", tc, getUriTemplate)
+		}
+	}
+}
+
+func TestReplaceVariableFieldName(t *testing.T) {
+	testCases := []struct {
+		desc            string
+		uriTemplate     string
+		varReplace      map[string]string
+		wantUriTemplate string
+	}{
+		{
+			desc:        "replace with {var} syntax",
+			uriTemplate: "/shelves/{shelf}/books/{book}",
+			varReplace: map[string]string{
+				"shelf": "SHELF",
+				"book":  "BOOK",
+			},
+			wantUriTemplate: "/shelves/{SHELF=*}/books/{BOOK=*}",
+		},
+		{
+			desc:        "replace with {var=*} syntax",
+			uriTemplate: "/a/{b=*}",
+			varReplace: map[string]string{
+				"a": "FOO",
+				"b": "BAR",
+			},
+			wantUriTemplate: "/a/{BAR=*}",
+		},
+		{
+			desc:        "replace with {a.b.c=*} syntax",
+			uriTemplate: "/a/{a.b.c=*}",
+			varReplace: map[string]string{
+				"a": "FOO",
+				"c": "BAR",
+			},
+			wantUriTemplate: "/a/{FOO.b.BAR=*}",
+		},
+		{
+			desc:        "replace with {a.b.c=x/**} syntax",
+			uriTemplate: "/a/{b.c=x/**}",
+			varReplace: map[string]string{
+				"b": "FOO",
+				"c": "BAR",
+			},
+			wantUriTemplate: "/a/{FOO.BAR=x/**}",
+		},
+		{
+			desc:        "replace with verb syntax",
+			uriTemplate: "/a/{b=c/**}:verb",
+			varReplace: map[string]string{
+				"b": "BAR",
+			},
+			wantUriTemplate: "/a/{BAR=c/**}:verb",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if getUriTemplate, _ := ReplaceVariableFieldName(tc.uriTemplate, tc.varReplace); getUriTemplate != tc.wantUriTemplate {
+				t.Errorf("fail to rebuild, wante uriTemplate: %s, get uriTemplate: %s", tc.wantUriTemplate, getUriTemplate)
 			}
 		})
 
