@@ -1276,6 +1276,332 @@ func TestMakeRouteConfig(t *testing.T) {
 			wantedError: "fail to sort route match, endpoints.examples.bookstore.Bookstore.Echo has invalid url template `/**/**`",
 		},
 		{
+			desc:                          "Order route match config",
+			enableStrictTransportSecurity: true,
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+							{
+								Name: "Bar",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
+					{
+						Selector: fmt.Sprintf("%s.Foo", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/foo/**",
+						},
+					},
+					{
+						Selector: fmt.Sprintf("%s.Foo", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/foo/*",
+						},
+					},
+					{
+						Selector: fmt.Sprintf("%s.Bar", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/foo/**:verb",
+						},
+					},
+					{
+						Selector: fmt.Sprintf("%s.Bar", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/foo/bar",
+						},
+					},
+					{
+						Selector: fmt.Sprintf("%s.Bar", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/foo/*/bar",
+						},
+					},
+					{
+						Selector: fmt.Sprintf("%s.Foo", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/foo/**/bar",
+						},
+					},
+					{
+						Selector: fmt.Sprintf("%s.Bar", testApiName),
+						Pattern: &annotationspb.HttpRule_Custom{
+							Custom: &annotationspb.CustomHttpPattern{
+								Path: "/foo/bar",
+								Kind: "*",
+							},
+						},
+					},
+				},
+				},
+			},
+			wantRouteConfig: `
+{
+   "name":"local_route",
+   "virtualHosts":[
+      {
+         "domains":[
+            "*"
+         ],
+         "name":"backend",
+         "routes":[
+            {
+               "decorator":{
+                  "operation":"ingress Bar"
+               },
+               "match":{
+                  "headers":[
+                     {
+                        "exactMatch":"GET",
+                        "name":":method"
+                     }
+                  ],
+                  "path":"/foo/bar"
+               },
+               "responseHeadersToAdd":[
+                  {
+                     "header":{
+                        "key":"Strict-Transport-Security",
+                        "value":"max-age=31536000; includeSubdomains"
+                     }
+                  }
+               ],
+               "route":{
+                  "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                  "timeout":"15s"
+               },
+               "typedPerFilterConfig":{
+                  "com.google.espv2.filters.http.service_control":{
+                     "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                     "operationName":"endpoints.examples.bookstore.Bookstore.Bar"
+                  }
+               }
+            },
+            {
+               "decorator":{
+                  "operation":"ingress Bar"
+               },
+               "match":{
+                  "path":"/foo/bar"
+               },
+               "responseHeadersToAdd":[
+                  {
+                     "header":{
+                        "key":"Strict-Transport-Security",
+                        "value":"max-age=31536000; includeSubdomains"
+                     }
+                  }
+               ],
+               "route":{
+                  "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                  "timeout":"15s"
+               },
+               "typedPerFilterConfig":{
+                  "com.google.espv2.filters.http.service_control":{
+                     "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                     "operationName":"endpoints.examples.bookstore.Bookstore.Bar"
+                  }
+               }
+            },
+            {
+               "decorator":{
+                  "operation":"ingress Foo"
+               },
+               "match":{
+                  "headers":[
+                     {
+                        "exactMatch":"GET",
+                        "name":":method"
+                     }
+                  ],
+                  "safeRegex":{
+                     "googleRe2":{
+                        
+                     },
+                     "regex":"^/foo/[^\\/]+$"
+                  }
+               },
+               "responseHeadersToAdd":[
+                  {
+                     "header":{
+                        "key":"Strict-Transport-Security",
+                        "value":"max-age=31536000; includeSubdomains"
+                     }
+                  }
+               ],
+               "route":{
+                  "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                  "timeout":"15s"
+               },
+               "typedPerFilterConfig":{
+                  "com.google.espv2.filters.http.service_control":{
+                     "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                     "operationName":"endpoints.examples.bookstore.Bookstore.Foo"
+                  }
+               }
+            },
+            {
+               "decorator":{
+                  "operation":"ingress Bar"
+               },
+               "match":{
+                  "headers":[
+                     {
+                        "exactMatch":"GET",
+                        "name":":method"
+                     }
+                  ],
+                  "safeRegex":{
+                     "googleRe2":{
+                        
+                     },
+                     "regex":"^/foo/[^\\/]+/bar$"
+                  }
+               },
+               "responseHeadersToAdd":[
+                  {
+                     "header":{
+                        "key":"Strict-Transport-Security",
+                        "value":"max-age=31536000; includeSubdomains"
+                     }
+                  }
+               ],
+               "route":{
+                  "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                  "timeout":"15s"
+               },
+               "typedPerFilterConfig":{
+                  "com.google.espv2.filters.http.service_control":{
+                     "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                     "operationName":"endpoints.examples.bookstore.Bookstore.Bar"
+                  }
+               }
+            },
+            {
+               "decorator":{
+                  "operation":"ingress Foo"
+               },
+               "match":{
+                  "headers":[
+                     {
+                        "exactMatch":"GET",
+                        "name":":method"
+                     }
+                  ],
+                  "safeRegex":{
+                     "googleRe2":{
+                        
+                     },
+                     "regex":"^/foo/.*/bar$"
+                  }
+               },
+               "responseHeadersToAdd":[
+                  {
+                     "header":{
+                        "key":"Strict-Transport-Security",
+                        "value":"max-age=31536000; includeSubdomains"
+                     }
+                  }
+               ],
+               "route":{
+                  "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                  "timeout":"15s"
+               },
+               "typedPerFilterConfig":{
+                  "com.google.espv2.filters.http.service_control":{
+                     "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                     "operationName":"endpoints.examples.bookstore.Bookstore.Foo"
+                  }
+               }
+            },
+            {
+               "decorator":{
+                  "operation":"ingress Bar"
+               },
+               "match":{
+                  "headers":[
+                     {
+                        "exactMatch":"GET",
+                        "name":":method"
+                     }
+                  ],
+                  "safeRegex":{
+                     "googleRe2":{
+                        
+                     },
+                     "regex":"^/foo/.*:verb$"
+                  }
+               },
+               "responseHeadersToAdd":[
+                  {
+                     "header":{
+                        "key":"Strict-Transport-Security",
+                        "value":"max-age=31536000; includeSubdomains"
+                     }
+                  }
+               ],
+               "route":{
+                  "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                  "timeout":"15s"
+               },
+               "typedPerFilterConfig":{
+                  "com.google.espv2.filters.http.service_control":{
+                     "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                     "operationName":"endpoints.examples.bookstore.Bookstore.Bar"
+                  }
+               }
+            },
+            {
+               "decorator":{
+                  "operation":"ingress Foo"
+               },
+               "match":{
+                  "headers":[
+                     {
+                        "exactMatch":"GET",
+                        "name":":method"
+                     }
+                  ],
+                  "safeRegex":{
+                     "googleRe2":{
+                        
+                     },
+                     "regex":"^/foo/.*$"
+                  }
+               },
+               "responseHeadersToAdd":[
+                  {
+                     "header":{
+                        "key":"Strict-Transport-Security",
+                        "value":"max-age=31536000; includeSubdomains"
+                     }
+                  }
+               ],
+               "route":{
+                  "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                  "timeout":"15s"
+               },
+               "typedPerFilterConfig":{
+                  "com.google.espv2.filters.http.service_control":{
+                     "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                     "operationName":"endpoints.examples.bookstore.Bookstore.Foo"
+                  }
+               }
+            }
+         ]
+      }
+   ]
+}
+`,
+		},
+		{
 			desc:                          "Use duplicate http template",
 			enableStrictTransportSecurity: true,
 			fakeServiceConfig: &confpb.Service{
