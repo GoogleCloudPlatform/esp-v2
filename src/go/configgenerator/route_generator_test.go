@@ -1249,12 +1249,12 @@ func TestMakeRouteConfig(t *testing.T) {
 }`,
 		},
 		// In this test, the route configs will be in the order of
-		//		GET /foo/bar
-		//		* /foo/bar,
-		//		GET /foo/*
-		//		GET /foo/*/bar
-		//		GET /foo/**/bar
-		//		GET /foo/**:verb
+		//    GET /foo/bar
+		//    * /foo/bar,
+		//    GET /foo/*
+		//    GET /foo/*/bar
+		//    GET /foo/**/bar
+		//    GET /foo/**:verb
 		//    GET /foo/**
 		{
 			desc:                          "Order route match config",
