@@ -103,21 +103,15 @@ var (
 					{
 						Name: "dynamic_routing_FieldPath",
 					},
-
-					// Regression test for operation ordering: b/145520483.
-					// Config manager should not change method ordering.
-					// We test that the third method below will never be routed to.
 					{
-						Name: "operation_order_exact_match",
+						Name: "route_match_order_exact_match",
 					},
 					{
-						Name: "operation_order_single_wildcard_match",
+						Name: "route_match_order_single_wildcard_match",
 					},
 					{
-						Name: "operation_order_double_wildcard_match",
+						Name: "route_match_order_double_wildcard_match",
 					},
-					// End operation ordering methods.
-
 				},
 				Version: "1.0.0",
 			},
@@ -287,19 +281,19 @@ var (
 					},
 				},
 				{
-					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_exact_match",
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.route_match_order_exact_match",
 					Pattern: &annotationspb.HttpRule_Post{
 						Post: "/allow-all/exact-match",
 					},
 				},
 				{
-					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_single_wildcard_match",
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.route_match_order_single_wildcard_match",
 					Pattern: &annotationspb.HttpRule_Post{
 						Post: "/allow-all/{single_wildcard=*}",
 					},
 				},
 				{
-					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_double_wildcard_match",
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.route_match_order_double_wildcard_match",
 					Pattern: &annotationspb.HttpRule_Post{
 						Post: "/allow-all/{double_wildcard=**}",
 					},
@@ -411,15 +405,15 @@ var (
 					AllowUnregisteredCalls: true,
 				},
 				{
-					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_exact_match",
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.route_match_order_exact_match",
 					AllowUnregisteredCalls: true,
 				},
 				{
-					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_single_wildcard_match",
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.route_match_order_single_wildcard_match",
 					AllowUnregisteredCalls: true,
 				},
 				{
-					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_double_wildcard_match",
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.route_match_order_double_wildcard_match",
 					AllowUnregisteredCalls: true,
 				},
 			},
@@ -618,17 +612,17 @@ var (
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
 				{
-					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_exact_match",
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.route_match_order_exact_match",
 					Address:         fmt.Sprintf("https://localhost:%s/dynamicrouting/const_wildcard", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
 				{
-					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_single_wildcard_match",
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.route_match_order_single_wildcard_match",
 					Address:         fmt.Sprintf("https://localhost:%s/dynamicrouting/const_wildcard", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
 				{
-					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.operation_order_double_wildcard_match",
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.route_match_order_double_wildcard_match",
 					Address:         fmt.Sprintf("https://localhost:%s/dynamicrouting/const_wildcard", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
