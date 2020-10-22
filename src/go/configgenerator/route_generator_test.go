@@ -1249,33 +1249,6 @@ func TestMakeRouteConfig(t *testing.T) {
 }`,
 		},
 		{
-			desc:                          "Use error format http template",
-			enableStrictTransportSecurity: true,
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
-				Apis: []*apipb.Api{
-					{
-						Name: testApiName,
-						Methods: []*apipb.Method{
-							{
-								Name: "Echo",
-							},
-						},
-					},
-				},
-				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
-					{
-						Selector: fmt.Sprintf("%s.Echo", testApiName),
-						Pattern: &annotationspb.HttpRule_Get{
-							Get: "/**/**",
-						},
-					},
-				},
-				},
-			},
-			wantedError: "fail to sort route match, endpoints.examples.bookstore.Bookstore.Echo has invalid url template `/**/**`",
-		},
-		{
 			desc:                          "Order route match config",
 			enableStrictTransportSecurity: true,
 			fakeServiceConfig: &confpb.Service{
@@ -1600,6 +1573,33 @@ func TestMakeRouteConfig(t *testing.T) {
    ]
 }
 `,
+		},
+		{
+			desc:                          "Use error format http template",
+			enableStrictTransportSecurity: true,
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
+					{
+						Selector: fmt.Sprintf("%s.Echo", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/**/**",
+						},
+					},
+				},
+				},
+			},
+			wantedError: "fail to sort route match, endpoints.examples.bookstore.Bookstore.Echo has invalid url template `/**/**`",
 		},
 		{
 			desc:                          "Use duplicate http template",
