@@ -1255,6 +1255,7 @@ func TestMakeRouteConfig(t *testing.T) {
 		//		GET /foo/*/bar
 		//		GET /foo/**/bar
 		//		GET /foo/**:verb
+		//    GET /foo/**
 		{
 			desc:                          "Order route match config",
 			enableStrictTransportSecurity: true,
